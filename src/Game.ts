@@ -2,10 +2,11 @@ import * as THREE from 'three';
 import { Renderer } from './render/Renderer';
 import { FontAtlas } from './render/FontAtlas';
 import { SpriteRenderer, type SpriteHandle } from './render/SpriteRenderer';
+import { TerrainRenderer } from './render/TerrainRenderer';
 import { COLORS } from './render/palette';
 import { Clock } from './core/Clock';
 import { EventBus } from './core/EventBus';
-import { TICK_RATE } from './config';
+import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
 
 /**
@@ -18,6 +19,7 @@ export class Game {
   private readonly renderer: Renderer;
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
+  private readonly terrain: TerrainRenderer;
   private tickCount = 0;
 
   // Step 2.3 verify state. Removed at Step 3.2 when real units take over.
@@ -39,6 +41,11 @@ export class Game {
       this.clock.advance(dt);
       this.updateAnimation(dt);
     });
+
+    // Terrain first so opaque-before-transparent render order is natural.
+    // Seed is hardcoded for Step 2.4 verify; the Run will own this at Step 4.3.
+    this.terrain = new TerrainRenderer(12345, GRID_SIZE);
+    this.renderer.scene.add(this.terrain.mesh);
 
     this.sprites = new SpriteRenderer(this.fontAtlas);
     this.renderer.scene.add(this.sprites.mesh);

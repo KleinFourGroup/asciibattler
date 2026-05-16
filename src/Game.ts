@@ -6,6 +6,8 @@ import { TerrainRenderer } from './render/TerrainRenderer';
 import { COLORS } from './render/palette';
 import { Clock } from './core/Clock';
 import { EventBus } from './core/EventBus';
+import { RNG } from './core/RNG';
+import { World } from './sim/World';
 import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
 
@@ -20,7 +22,7 @@ export class Game {
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
   private readonly terrain: TerrainRenderer;
-  private tickCount = 0;
+  private readonly world: World;
 
   // Step 2.3 verify state. Removed at Step 3.2 when real units take over.
   private elapsedSeconds = 0;
@@ -32,10 +34,11 @@ export class Game {
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas) {
     this.fontAtlas = fontAtlas;
 
-    this.clock = new Clock(TICK_RATE, () => {
-      this.tickCount++;
-      this.bus.emit('tick', { tick: this.tickCount });
-    });
+    // TODO(roadmap-4.3): Run will fork this RNG from the run-level stream
+    // instead of hardcoding a seed here.
+    this.world = new World(this.bus, new RNG(54321), GRID_SIZE);
+
+    this.clock = new Clock(TICK_RATE, () => this.world.tick());
 
     this.renderer = new Renderer(canvas, (dt) => {
       this.clock.advance(dt);

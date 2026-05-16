@@ -1,4 +1,7 @@
-// ASCIIbattler entry point.
-// Step 0.1 scaffold: nothing renders yet — Step 0.2 will bootstrap Game + Renderer.
+import { Game } from './Game';
 
-console.log('asciibattler scaffold ready');
+const canvas = document.querySelector<HTMLCanvasElement>('#game-canvas');
+if (!canvas) throw new Error('Missing <canvas id="game-canvas"> in index.html');
+
+const game = new Game(canvas);
+game.start();

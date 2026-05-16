@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { COLORS } from './palette';
 
 /**
@@ -16,6 +17,8 @@ export class Renderer {
 
   // TODO(roadmap-5.3): remove OrbitControls and lock the camera before MVP ships.
   private readonly controls: OrbitControls;
+  // TODO(roadmap-5.3): remove the Stats panel before MVP ships.
+  private readonly stats: Stats;
 
   private rafId: number | null = null;
 
@@ -36,6 +39,11 @@ export class Renderer {
     this.controls = new OrbitControls(this.camera, this.webgl.domElement);
     this.controls.enableDamping = true;
 
+    this.stats = new Stats();
+    // Position top-right; stats.js defaults to top-left.
+    this.stats.dom.style.cssText = 'position:fixed;top:0;right:0;left:auto;cursor:pointer;z-index:10000;';
+    document.body.appendChild(this.stats.dom);
+
     this.handleResize();
     window.addEventListener('resize', this.handleResize);
   }
@@ -43,8 +51,10 @@ export class Renderer {
   start(): void {
     const loop = (): void => {
       this.rafId = requestAnimationFrame(loop);
+      this.stats.begin();
       this.controls.update();
       this.webgl.render(this.scene, this.camera);
+      this.stats.end();
     };
     loop();
   }
@@ -54,6 +64,7 @@ export class Renderer {
     this.rafId = null;
     window.removeEventListener('resize', this.handleResize);
     this.controls.dispose();
+    this.stats.dom.remove();
     this.webgl.dispose();
   }
 

@@ -1,3 +1,10 @@
+:root {
+  /* JetBrains Mono is loaded via `@fontsource/jetbrains-mono/latin-400.css`
+     in src/main.ts. The fallback chain catches the brief moment before the
+     font is parsed, plus belt-and-suspenders if the bundle ever changes. */
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+}
+
 html,
 body {
   margin: 0;
@@ -5,7 +12,7 @@ body {
   background: #000;
   overflow: hidden;
   height: 100%;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: var(--font-mono);
   color: #fff;
 }
 

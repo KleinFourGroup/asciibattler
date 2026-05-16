@@ -38,11 +38,20 @@ const GLYPHS = [
   '.', ':', '/', '-', '+', '%', '!', '?',
 ] as const;
 
+/**
+ * UV rectangle for one glyph in the atlas, in **GL texture space** (not
+ * canvas space): `(u0, v0)` is the bottom-left of the glyph cell, `(u1, v1)`
+ * is the top-right. Sampling at these UVs gives the glyph right-side up,
+ * which lets the sprite shader do a single `mix(zw, xy, uv)` with no Y flip.
+ *
+ * The Y-axis flip from canvas convention (top-down) to GL convention
+ * (bottom-up) happens once, here, when the atlas is built.
+ */
 export interface GlyphUV {
-  readonly u0: number;
-  readonly v0: number;
-  readonly u1: number;
-  readonly v1: number;
+  readonly u0: number; // left
+  readonly v0: number; // bottom (GL)
+  readonly u1: number; // right
+  readonly v1: number; // top (GL)
 }
 
 export class FontAtlas {
@@ -86,11 +95,15 @@ export class FontAtlas {
 
       ctx.fillText(glyph, cx + CELL_PX / 2, cy + CELL_PX / 2);
 
+      // Flip the canvas Y axis on the way in so the stored UVs are GL-ready.
+      // Canvas top (small canvas-y) becomes GL top (large GL-v); canvas bottom
+      // becomes GL bottom. After this transform the sprite shader needs no
+      // 1.0-v adjustment.
       uvByGlyph.set(glyph, {
         u0: cx / ATLAS_W,
-        v0: cy / ATLAS_H,
+        v0: 1 - (cy + CELL_PX) / ATLAS_H, // bottom (GL)
         u1: (cx + CELL_PX) / ATLAS_W,
-        v1: (cy + CELL_PX) / ATLAS_H,
+        v1: 1 - cy / ATLAS_H, // top (GL)
       });
     }
 

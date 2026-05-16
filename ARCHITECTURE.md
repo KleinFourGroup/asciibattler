@@ -120,6 +120,8 @@ Typed events keyed by name. Returns an unsubscribe function. We define a single 
 
 Drives the simulation at a fixed tick rate (10Hz) decoupled from render framerate. Standard fixed-timestep accumulator pattern: render loop runs at requestAnimationFrame, accumulates real time, and calls `world.tick()` zero or more times per frame to catch up.
 
+Gameplay code never hardcodes tick counts. Cooldowns, durations, and timers are authored *in seconds* and converted through `secondsToTicks(s)` / `ticksToSeconds(t)` in `src/config.ts`. Changing `TICK_RATE` is a one-line change that re-discretizes the sim without re-tuning balance.
+
 ### `Unit` and `Behavior`
 
 ```ts

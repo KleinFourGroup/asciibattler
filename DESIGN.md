@@ -36,7 +36,9 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
 
 ## Battle mechanics
 
-**Tick rate:** 10Hz. All cooldowns and timers are expressed in ticks. The simulation is fully deterministic given a seed and an initial unit configuration.
+**Tick rate:** 10Hz. The simulation is fully deterministic given a seed and an initial unit configuration.
+
+**Authoring convention:** all cooldowns, durations, and timers in gameplay code are authored *in seconds* and converted to ticks via the `secondsToTicks` helper in `src/config.ts`. The simulation runs in ticks; the source of truth for balance is wall-clock seconds. Changing `TICK_RATE` re-discretizes the sim but leaves balance intact — a "0.5 s attack cooldown" stays 0.5 s in wall time regardless of tick rate.
 
 **Grid:** 12×12, square cells, 8-directional adjacency (Chebyshev distance for range checks).
 

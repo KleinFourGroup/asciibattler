@@ -61,6 +61,7 @@ src/
     Renderer.ts              # Wraps WebGLRenderer + EffectComposer; owns the render loop
     SpriteRenderer.ts        # InstancedMesh of billboarded ASCII quads; addSprite/updateSprite/removeSprite
     TerrainRenderer.ts       # Procedural plane with displaced verts and palette shader
+    BattleRenderer.ts        # Sim/render seam: subscribes to unit:* events, drives SpriteRenderer
     FontAtlas.ts             # Generates the monospace glyph atlas via canvas2d at startup
     PostProcess.ts           # EffectComposer setup; palette quantization, scanlines, dither
     shaders/
@@ -126,22 +127,24 @@ Gameplay code never hardcodes tick counts. Cooldowns, durations, and timers are 
 
 ```ts
 interface Behavior {
-  update(dt: number, unit: Unit, world: World): void;
+  update(unit: Unit, world: World): void;
 }
 
 class Unit {
   id: number;
   team: 'player' | 'enemy';
   glyph: string;
-  color: string;
   stats: UnitStats;
   position: GridCoord;       // current cell
   behaviors: Behavior[];
-  // ... runtime state: cooldowns, current target, etc.
+  currentHp: number;
+  // ... more runtime state as behaviors land: cooldowns, current target, etc.
 }
 ```
 
-Behaviors run in order on every tick. For MVP, every unit has `[MovementBehavior, AttackBehavior, DeathBehavior]`. New unit kinds post-MVP add or swap behaviors rather than subclassing.
+Color is *not* on `Unit` — that's a renderer-side concern. `BattleRenderer` maps `team` → palette color so the simulation has no opinions about visuals.
+
+Behaviors run on each `World.tick()` (the sim is fully discrete; behaviors don't take real-time `dt`). For MVP, every unit has `[MovementBehavior, AttackBehavior, DeathBehavior]`. New unit kinds post-MVP add or swap behaviors rather than subclassing.
 
 ### `World`
 

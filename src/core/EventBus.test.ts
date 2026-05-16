@@ -115,8 +115,19 @@ describe('EventBus', () => {
     bus.emit('run:nodeEntered', { nodeId: 'n0' });
     bus.emit('run:victory', {});
     bus.emit('run:defeated', {});
-    bus.emit('recruit:offered', { units: [{ archetype: 'melee' }] });
-    bus.emit('recruit:chosen', { unitTemplate: { archetype: 'ranged' } });
+    const stubStats = {
+      maxHp: 1,
+      attackDamage: 1,
+      attackRange: 1,
+      attackCooldownTicks: 1,
+      moveCooldownTicks: 1,
+    };
+    bus.emit('recruit:offered', {
+      units: [{ archetype: 'melee', stats: stubStats }],
+    });
+    bus.emit('recruit:chosen', {
+      unitTemplate: { archetype: 'ranged', stats: stubStats },
+    });
     // Reaching this line means every catalog entry compiles.
     expect(true).toBe(true);
   });

@@ -13,20 +13,13 @@ const PALETTE_ENTRIES = Object.values(COLORS);
 const PALETTE_SIZE = PALETTE_ENTRIES.length;
 
 /**
- * Index of TERMINAL_BLACK in the palette uniform. The shader applies a small
- * distance handicap to this entry so dark terrain pixels prefer a colored
- * dark neighbor over snapping to the same color as the scene background
- * (which would punch a visible "hole" through the terrain).
+ * Index of TERMINAL_BLACK in the palette uniform. The shader uses it as a
+ * color-key sentinel (background pixels land EXACTLY here because the scene
+ * draws a uniform full-screen quad before any geometry), and as the index to
+ * exclude from foreground quantization so dark terrain can't snap to the
+ * background color and read as a hole punched through the terrain.
  */
 const BLACK_INDEX = PALETTE_ENTRIES.indexOf(COLORS.TERMINAL_BLACK);
-
-/**
- * Tuned by hand: linear-space distance from TERMINAL_BLACK to its nearest
- * neighbor (DARK_TERMINAL_GREEN) is ~0.00132, so a bias well under that
- * still lets exact-black inputs (distance 0) win, but pushes borderline
- * dark terrain pixels to a colored neighbor.
- */
-const BLACK_DISTANCE_BIAS = 0.0008;
 
 /**
  * Build the palette uniform as an array of vec3s. `new THREE.Color(hex)`
@@ -64,18 +57,28 @@ const PALETTE_QUANT_SHADER = {
 
     void main() {
       vec3 src = texture2D(tDiffuse, vUv).rgb;
+      vec3 bgColor = uPalette[${BLACK_INDEX}];
 
-      // Snap to nearest palette entry by squared-Euclidean distance.
-      // (sqrt is monotonic; comparing squared distances is identical and
-      // cheaper.) TERMINAL_BLACK gets a tiny additive handicap so dark
-      // terrain pixels don't snap to the background color and read as holes.
-      vec3 best = uPalette[0];
-      float bestDist = dot(src - best, src - best);
-      if (0 == ${BLACK_INDEX}) bestDist += float(${BLACK_DISTANCE_BIAS});
-      for (int i = 1; i < ${PALETTE_SIZE}; i++) {
+      // Color-key: scene.background draws a uniform TERMINAL_BLACK quad before
+      // any geometry, so background pixels land EXACTLY at bgColor in linear
+      // RGB. Terrain and sprite shaders never produce a perfectly gray color
+      // (R != G != B by construction), so a tight distance threshold cleanly
+      // separates background from foreground. Background pixels pass through
+      // unchanged; foreground pixels then quantize over a palette that
+      // *excludes* BLACK, so dark terrain can never snap to the background
+      // color and punch a visible hole.
+      if (distance(src, bgColor) < 0.001) {
+        gl_FragColor = vec4(bgColor, 1.0);
+        return;
+      }
+
+      // Snap to nearest non-BLACK palette entry by squared-Euclidean distance.
+      vec3 best = vec3(0.0);
+      float bestDist = 1e9;
+      for (int i = 0; i < ${PALETTE_SIZE}; i++) {
+        if (i == ${BLACK_INDEX}) continue;
         vec3 p = uPalette[i];
         float d = dot(src - p, src - p);
-        if (i == ${BLACK_INDEX}) d += float(${BLACK_DISTANCE_BIAS});
         if (d < bestDist) {
           bestDist = d;
           best = p;

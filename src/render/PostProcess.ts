@@ -13,6 +13,22 @@ const PALETTE_ENTRIES = Object.values(COLORS);
 const PALETTE_SIZE = PALETTE_ENTRIES.length;
 
 /**
+ * Index of TERMINAL_BLACK in the palette uniform. The shader applies a small
+ * distance handicap to this entry so dark terrain pixels prefer a colored
+ * dark neighbor over snapping to the same color as the scene background
+ * (which would punch a visible "hole" through the terrain).
+ */
+const BLACK_INDEX = PALETTE_ENTRIES.indexOf(COLORS.TERMINAL_BLACK);
+
+/**
+ * Tuned by hand: linear-space distance from TERMINAL_BLACK to its nearest
+ * neighbor (DARK_TERMINAL_GREEN) is ~0.00132, so a bias well under that
+ * still lets exact-black inputs (distance 0) win, but pushes borderline
+ * dark terrain pixels to a colored neighbor.
+ */
+const BLACK_DISTANCE_BIAS = 0.0008;
+
+/**
  * Build the palette uniform as an array of vec3s. `new THREE.Color(hex)`
  * interprets the string as sRGB and stores it in the working color space
  * (linear by default in modern three.js), so palette comparisons happen in
@@ -51,12 +67,15 @@ const PALETTE_QUANT_SHADER = {
 
       // Snap to nearest palette entry by squared-Euclidean distance.
       // (sqrt is monotonic; comparing squared distances is identical and
-      // cheaper.)
+      // cheaper.) TERMINAL_BLACK gets a tiny additive handicap so dark
+      // terrain pixels don't snap to the background color and read as holes.
       vec3 best = uPalette[0];
       float bestDist = dot(src - best, src - best);
+      if (0 == ${BLACK_INDEX}) bestDist += float(${BLACK_DISTANCE_BIAS});
       for (int i = 1; i < ${PALETTE_SIZE}; i++) {
         vec3 p = uPalette[i];
         float d = dot(src - p, src - p);
+        if (i == ${BLACK_INDEX}) d += float(${BLACK_DISTANCE_BIAS});
         if (d < bestDist) {
           bestDist = d;
           best = p;

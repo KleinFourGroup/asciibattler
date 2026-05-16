@@ -179,6 +179,29 @@ export class SpriteRenderer {
     return { id };
   }
 
+  /**
+   * Update any subset of a sprite's attributes. Unspecified fields are
+   * untouched. Idempotent: updating a removed handle is a silent no-op,
+   * matching `removeSprite`'s semantics.
+   */
+  updateSprite(
+    handle: SpriteHandle,
+    opts: {
+      position?: THREE.Vector3;
+      color?: THREE.ColorRepresentation;
+      glyph?: string;
+      alpha?: number;
+    },
+  ): void {
+    const slot = this.slotByHandle.get(handle.id);
+    if (slot === undefined) return;
+
+    if (opts.position !== undefined) this.writePosition(slot, opts.position);
+    if (opts.color !== undefined) this.writeColor(slot, opts.color);
+    if (opts.glyph !== undefined) this.writeGlyph(slot, opts.glyph);
+    if (opts.alpha !== undefined) this.writeAlpha(slot, opts.alpha);
+  }
+
   /** Remove a sprite. Idempotent: removing an already-removed handle is a no-op. */
   removeSprite(handle: SpriteHandle): void {
     const slot = this.slotByHandle.get(handle.id);

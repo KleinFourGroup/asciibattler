@@ -41,6 +41,13 @@ export class Renderer {
     this.webgl.setClearColor(COLORS.TERMINAL_BLACK, 1);
 
     this.scene = new THREE.Scene();
+    // Set the background as scene state (rendered as a full-screen quad with
+    // proper color management) rather than relying on the gl clear color
+    // reaching the EffectComposer's HalfFloat render targets correctly.
+    // Without this, the cleared RT lands at a value bright enough that the
+    // palette-quant pass snaps the background to DARK_TERMINAL_AMBER instead
+    // of TERMINAL_BLACK.
+    this.scene.background = new THREE.Color(COLORS.TERMINAL_BLACK);
 
     // Tilted ~45° down per DESIGN.md "fixed perspective". The exact position
     // is provisional — when the 12×12 grid lands (Step 3.1) the camera will

@@ -74,6 +74,7 @@ export class Game {
     // compaction work in practice.
     window.addEventListener('keydown', this.handleKeyDown);
     console.log('[step 2.3] press `s` to spawn a random sprite, `d` to despawn one');
+    console.log('[step 2.5] press `q` to toggle palette-quantization post-process');
 
     // Step 1.3 verify: prove the clock is ticking at ~10Hz independent of FPS.
     // Remove (or move behind a debug flag) once real sim code starts logging.
@@ -121,6 +122,9 @@ export class Game {
       } else {
         console.log('[sprites] no dynamic sprites left to despawn');
       }
+    } else if (e.key === 'q') {
+      const enabled = this.renderer.togglePostProcess();
+      console.log(`[post-process] palette quantization: ${enabled ? 'ON' : 'OFF'}`);
     }
   };
 }

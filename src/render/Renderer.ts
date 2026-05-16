@@ -1,7 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { COLORS } from './palette';
+import { createPaletteQuantPass } from './PostProcess';
 
 /**
  * Wraps `WebGLRenderer` + (eventually) `EffectComposer` and owns the
@@ -19,6 +23,10 @@ export class Renderer {
   private readonly controls: OrbitControls;
   // TODO(roadmap-5.3): remove the Stats panel before MVP ships.
   private readonly stats: Stats;
+
+  private readonly composer: EffectComposer;
+  private readonly paletteQuantPass: ShaderPass;
+  private postProcessEnabled = true;
 
   private readonly onFrame: (dtSeconds: number) => void;
 
@@ -48,8 +56,27 @@ export class Renderer {
     this.stats.dom.style.cssText = 'position:fixed;top:0;right:0;left:auto;cursor:pointer;z-index:10000;';
     document.body.appendChild(this.stats.dom);
 
+    this.composer = new EffectComposer(this.webgl);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.paletteQuantPass = createPaletteQuantPass();
+    this.composer.addPass(this.paletteQuantPass);
+
     this.handleResize();
     window.addEventListener('resize', this.handleResize);
+  }
+
+  /**
+   * Toggle the entire post-process pipeline. Used for A/B comparison during
+   * Step 2.5 verify; left in as a useful debug affordance through MVP.
+   * TODO(roadmap-5.3): remove (or gate behind a debug flag) before ship.
+   */
+  setPostProcessEnabled(enabled: boolean): void {
+    this.postProcessEnabled = enabled;
+  }
+
+  togglePostProcess(): boolean {
+    this.postProcessEnabled = !this.postProcessEnabled;
+    return this.postProcessEnabled;
   }
 
   start(): void {
@@ -64,7 +91,12 @@ export class Renderer {
 
       this.controls.update();
       this.onFrame(dt);
-      this.webgl.render(this.scene, this.camera);
+
+      if (this.postProcessEnabled) {
+        this.composer.render();
+      } else {
+        this.webgl.render(this.scene, this.camera);
+      }
 
       this.stats.end();
     };
@@ -85,6 +117,7 @@ export class Renderer {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     this.webgl.setSize(w, h, false);
+    this.composer.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
   };

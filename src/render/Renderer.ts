@@ -20,9 +20,13 @@ export class Renderer {
   // TODO(roadmap-5.3): remove the Stats panel before MVP ships.
   private readonly stats: Stats;
 
-  private rafId: number | null = null;
+  private readonly onFrame: (dtSeconds: number) => void;
 
-  constructor(canvas: HTMLCanvasElement) {
+  private rafId: number | null = null;
+  private lastFrameMs = 0;
+
+  constructor(canvas: HTMLCanvasElement, onFrame: (dtSeconds: number) => void) {
+    this.onFrame = onFrame;
     this.webgl = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.webgl.setPixelRatio(window.devicePixelRatio);
     this.webgl.setClearColor(COLORS.TERMINAL_BLACK, 1);
@@ -49,11 +53,19 @@ export class Renderer {
   }
 
   start(): void {
+    this.lastFrameMs = performance.now();
     const loop = (): void => {
       this.rafId = requestAnimationFrame(loop);
       this.stats.begin();
+
+      const now = performance.now();
+      const dt = (now - this.lastFrameMs) / 1000;
+      this.lastFrameMs = now;
+
       this.controls.update();
+      this.onFrame(dt);
       this.webgl.render(this.scene, this.camera);
+
       this.stats.end();
     };
     loop();

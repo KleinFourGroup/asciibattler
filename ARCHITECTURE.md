@@ -8,8 +8,9 @@ How the code is organized and why. The companion to `DESIGN.md` (what we're buil
 - **Renderer:** three.js
 - **Build/dev server:** Vite
 - **Lint/format:** ESLint + Prettier
+- **Tests:** Vitest (shares Vite config; covers `core`, `sim`, `run` only — render/UI are eyeball-verified). See `TESTING.md` for conventions and the determinism contract.
 - **Dependencies (runtime):** `three`, `simplex-noise` (for terrain + map gen)
-- **Dependencies (dev):** `vite`, `typescript`, `@types/three`, `eslint`, `prettier`
+- **Dependencies (dev):** `vite`, `vitest`, `typescript`, `@types/three`, `eslint`, `prettier`
 
 No frameworks beyond that. UI is plain HTML/CSS overlaid on the canvas via absolutely positioned DOM. No React, no state-management library.
 

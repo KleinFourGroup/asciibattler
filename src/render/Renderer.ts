@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { COLORS } from './palette';
@@ -60,6 +61,12 @@ export class Renderer {
     this.composer.addPass(new RenderPass(this.scene, this.camera));
     this.paletteQuantPass = createPaletteQuantPass();
     this.composer.addPass(this.paletteQuantPass);
+    // OutputPass converts the composer's internal linear-sRGB framebuffer to
+    // the canvas's sRGB output space. Without this last step, every linear
+    // RGB value gets written to the screen as if it were sRGB, which makes
+    // brights look dim and shifts hues unpredictably (TERMINAL_GREEN #33FF00
+    // rendered as #08FF00, background snapped to amber, etc.).
+    this.composer.addPass(new OutputPass());
 
     this.handleResize();
     window.addEventListener('resize', this.handleResize);

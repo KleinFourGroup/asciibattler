@@ -27,6 +27,7 @@ import { RNG } from '../core/RNG';
 import type { UnitTemplate, Team } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap } from './NodeMap';
+import { rollOffer } from './Recruitment';
 
 export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat';
 
@@ -46,6 +47,14 @@ export class Run {
   currentNodeId: number;
   phase: RunPhase = 'map';
   currentEncounter: BattleEncounter | null = null;
+  /** Recruit offer presented after victory, cleared on choice. */
+  currentOffer: UnitTemplate[] | null = null;
+  /**
+   * Nodes the player has cleared (entered + survived). Used by MapScreen to
+   * draw a visual trail of completed nodes. Root is never added — it's not
+   * "completed" in the battle sense, it's just the starting point.
+   */
+  readonly visitedNodes = new Set<number>();
 
   private readonly bus: EventBus<GameEvents>;
 
@@ -58,6 +67,7 @@ export class Run {
 
     bus.on('run:nodeEntered', ({ nodeId }) => this.handleNodeEntered(nodeId));
     bus.on('battle:ended', ({ winner }) => this.handleBattleEnded(winner));
+    bus.on('recruit:chosen', ({ unitTemplate }) => this.handleRecruitChosen(unitTemplate));
 
     bus.emit('run:started', { seed });
   }
@@ -71,6 +81,11 @@ export class Run {
     if (this.phase !== 'map') return;
     if (!this.isFrontier(nodeId)) return;
 
+    // The departing node counts as cleared — except the very first hop,
+    // where we're leaving the root and root isn't a battle node.
+    if (this.currentNodeId !== this.nodeMap.rootId) {
+      this.visitedNodes.add(this.currentNodeId);
+    }
     this.currentNodeId = nodeId;
     this.phase = 'battle';
 
@@ -89,9 +104,21 @@ export class Run {
   private handleBattleEnded(winner: Team): void {
     if (this.phase !== 'battle') return;
     this.currentEncounter = null;
-    // 4.3 auto-skips recruit; 4.4 inserts the recruit phase between victory
-    // and map. Defeat just halts here — 4.5 will wire reset-to-fresh-run.
-    this.phase = winner === 'player' ? 'map' : 'defeat';
+    if (winner === 'player') {
+      this.phase = 'recruit';
+      this.currentOffer = rollOffer(this.rng.fork());
+      this.bus.emit('recruit:offered', { units: this.currentOffer });
+    } else {
+      // 4.5 will wire reset-to-fresh-run here.
+      this.phase = 'defeat';
+    }
+  }
+
+  private handleRecruitChosen(unitTemplate: UnitTemplate): void {
+    if (this.phase !== 'recruit') return;
+    this.team.push(unitTemplate);
+    this.currentOffer = null;
+    this.phase = 'map';
   }
 
   private isFrontier(nodeId: number): boolean {

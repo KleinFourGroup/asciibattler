@@ -26,9 +26,9 @@ export class MapScreen {
     this.bus = bus;
   }
 
-  show(map: NodeMap, currentNodeId: number): void {
+  show(map: NodeMap, currentNodeId: number, visited: ReadonlySet<number> = new Set()): void {
     this.hide();
-    this.container = this.render(map, currentNodeId);
+    this.container = this.render(map, currentNodeId, visited);
     this.mount.appendChild(this.container);
   }
 
@@ -39,7 +39,11 @@ export class MapScreen {
     }
   }
 
-  private render(map: NodeMap, currentNodeId: number): HTMLDivElement {
+  private render(
+    map: NodeMap,
+    currentNodeId: number,
+    visited: ReadonlySet<number>,
+  ): HTMLDivElement {
     const frontier = new Set<number>();
     for (const e of map.edges) {
       if (e.from === currentNodeId) frontier.add(e.to);
@@ -99,6 +103,8 @@ export class MapScreen {
         div.addEventListener('click', () => {
           this.bus.emit('run:nodeEntered', { nodeId: node.id });
         });
+      } else if (visited.has(node.id)) {
+        div.classList.add('visited');
       } else {
         div.classList.add('locked');
       }

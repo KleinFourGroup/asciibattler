@@ -99,22 +99,35 @@ describe('Run', () => {
   });
 
   describe('handleBattleEnded', () => {
-    it('player win → back to map phase at the new node', () => {
+    it('player win → recruit phase with an offer', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       bus.emit('run:nodeEntered', { nodeId: frontier });
       bus.emit('battle:ended', { winner: 'player' });
-      expect(run.phase).toBe('map');
-      expect(run.currentNodeId).toBe(frontier);
+      expect(run.phase).toBe('recruit');
       expect(run.currentEncounter).toBeNull();
+      expect(run.currentOffer).not.toBeNull();
+      expect(run.currentOffer).toHaveLength(3);
     });
 
-    it('enemy win → defeat phase', () => {
+    it('emits recruit:offered with the rolled units on victory', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      bus.emit('run:nodeEntered', { nodeId: frontier });
+      const offers: number[] = [];
+      bus.on('recruit:offered', ({ units }) => offers.push(units.length));
+      bus.emit('battle:ended', { winner: 'player' });
+      expect(offers).toEqual([3]);
+      expect(run.currentOffer).toHaveLength(3);
+    });
+
+    it('enemy win → defeat phase (no recruit)', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       bus.emit('run:nodeEntered', { nodeId: frontier });
       bus.emit('battle:ended', { winner: 'enemy' });
       expect(run.phase).toBe('defeat');
+      expect(run.currentOffer).toBeNull();
     });
 
     it('ignores battle:ended when not in battle phase', () => {
@@ -123,7 +136,58 @@ describe('Run', () => {
       expect(run.phase).toBe('map');
     });
   });
+
+  describe('handleRecruitChosen', () => {
+    it('adds the chosen unit to the team and returns to map phase', () => {
+      const { run, bus } = freshRunWithBus(1);
+      driveToRecruitPhase(run, bus);
+      const teamSizeBefore = run.team.length;
+      const pick = run.currentOffer![0]!;
+      bus.emit('recruit:chosen', { unitTemplate: pick });
+      expect(run.phase).toBe('map');
+      expect(run.team).toHaveLength(teamSizeBefore + 1);
+      expect(run.team[run.team.length - 1]).toEqual(pick);
+      expect(run.currentOffer).toBeNull();
+    });
+
+    it('ignores recruit:chosen outside of recruit phase', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const sizeBefore = run.team.length;
+      // Run starts in map phase — emitting recruit:chosen here is a no-op.
+      bus.emit('recruit:chosen', { unitTemplate: run.team[0]! });
+      expect(run.team).toHaveLength(sizeBefore);
+    });
+  });
+
+  describe('visitedNodes', () => {
+    it('starts empty (root is the player\'s starting cell, not a cleared battle)', () => {
+      const { run } = freshRunWithBus(1);
+      expect(run.visitedNodes.size).toBe(0);
+    });
+
+    it('records the previous node after a second hop', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      bus.emit('run:nodeEntered', { nodeId: first });
+      // After leaving root → first, root is NOT visited (it's the start).
+      expect(run.visitedNodes.has(run.rootId)).toBe(false);
+      expect(run.visitedNodes.has(first)).toBe(false);
+
+      // Now complete the battle, pick a recruit, and hop to the next node.
+      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('recruit:chosen', { unitTemplate: run.currentOffer![0]! });
+      const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
+      bus.emit('run:nodeEntered', { nodeId: second });
+      expect(run.visitedNodes.has(first)).toBe(true);
+    });
+  });
 });
+
+function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
+  const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+  bus.emit('run:nodeEntered', { nodeId: frontier });
+  bus.emit('battle:ended', { winner: 'player' });
+}
 
 interface RunHandle {
   run: Run & { rootId: number };

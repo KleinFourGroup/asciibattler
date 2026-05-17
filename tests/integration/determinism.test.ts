@@ -105,6 +105,9 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
   bus.emit('run:nodeEntered', { nodeId: first });
   encounters.push(run.currentEncounter!);
   bus.emit('battle:ended', { winner: 'player' });
+  // 4.4: victory routes through recruit phase. Pick the first offer to
+  // get back to 'map' so the second hop is accepted.
+  bus.emit('recruit:chosen', { unitTemplate: run.currentOffer![0]! });
 
   const second = run.nodeMap.edges.find((e) => e.from === first)?.to;
   if (second === undefined) throw new Error('test setup: first frontier has no outgoing edge');

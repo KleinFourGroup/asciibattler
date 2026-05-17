@@ -18,6 +18,7 @@ import type { Team, UnitTemplate } from './sim/Unit';
 import { Run } from './run/Run';
 import { dump as dumpNodeMap } from './run/NodeMap';
 import { MapScreen } from './ui/MapScreen';
+import { RecruitScreen } from './ui/RecruitScreen';
 
 // Hardcoded for development. TODO(roadmap-4.5): roll fresh from Date.now()
 // on defeat / new run.
@@ -51,6 +52,7 @@ export class Game {
   private readonly gridHelper: THREE.GridHelper;
   private readonly run: Run;
   private readonly mapScreen: MapScreen;
+  private readonly recruitScreen: RecruitScreen;
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
     this.fontAtlas = fontAtlas;
@@ -118,7 +120,20 @@ export class Game {
     this.bus.on('battle:ended', ({ winner }) => this.endBattle(winner));
 
     this.mapScreen = new MapScreen(uiMount, this.bus);
-    this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId);
+    this.recruitScreen = new RecruitScreen(uiMount, this.bus);
+
+    this.bus.on('recruit:offered', ({ units }) => {
+      this.recruitScreen.show(units);
+    });
+    this.bus.on('recruit:chosen', ({ unitTemplate }) => {
+      this.recruitScreen.hide();
+      console.log(
+        `[recruit] picked ${unitTemplate.archetype} (HP ${unitTemplate.stats.maxHp}, DMG ${unitTemplate.stats.attackDamage})`,
+      );
+      this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
+    });
+
+    this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
   }
 
   start(): void {
@@ -152,10 +167,11 @@ export class Game {
     this.battleRenderer.detach();
     this.world = null;
 
-    if (this.run.phase === 'map') {
-      this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId);
-    } else if (this.run.phase === 'defeat') {
-      // TODO(roadmap-4.5): wire the Game Over screen + fresh-run reset.
+    // Run has already advanced its phase by now (subscription order). On
+    // victory: phase=recruit and the recruit:offered handler already showed
+    // RecruitScreen; nothing to do here. On defeat: log and halt — 4.5
+    // wires the Game Over screen + reset.
+    if (this.run.phase === 'defeat') {
       console.log('[run] defeated — refresh the page to start a new run');
     }
   }

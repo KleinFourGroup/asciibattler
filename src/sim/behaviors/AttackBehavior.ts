@@ -4,24 +4,18 @@ import type { GridCoord } from '../../core/types';
 import { findTarget } from '../Targeting';
 
 /**
- * Per-unit attack. On each tick the cooldown counts down; when it hits 0 and
- * the nearest enemy is within attack range, the attacker deals flat
- * `attackDamage` and emits `unit:attacked`. Death is not handled here — when
- * `target.currentHp` drops to or below 0 the target becomes invisible to
- * Targeting; DeathBehavior (Step 3.8) takes it off the grid.
+ * Per-unit attack. Reads `unit.actionCooldown` (shared with MovementBehavior)
+ * and only acts when it's 0 and the nearest enemy is within attack range —
+ * so a unit that just moved is locked out until its move cooldown elapses,
+ * giving "first hit after the charge" some weight.
  *
- * Cooldown lives on the behavior instance (one per unit). The `- 1` after
- * acting is the same idiom MovementBehavior uses — see that file for the
- * reasoning.
+ * Death is not handled here — when `target.currentHp` drops to 0 or below
+ * the target becomes invisible to Targeting; DeathBehavior (Step 3.8) takes
+ * it off the grid.
  */
 export class AttackBehavior implements Behavior {
-  private cooldown = 0;
-
   update(unit: Unit, world: World): void {
-    if (this.cooldown > 0) {
-      this.cooldown--;
-      return;
-    }
+    if (unit.actionCooldown > 0) return;
 
     const target = findTarget(unit, world);
     if (target === null) return;
@@ -29,7 +23,7 @@ export class AttackBehavior implements Behavior {
 
     const damage = unit.stats.attackDamage;
     target.currentHp -= damage;
-    this.cooldown = unit.stats.attackCooldownTicks - 1;
+    unit.actionCooldown = unit.stats.attackCooldownTicks;
     world.emit('unit:attacked', {
       attackerId: unit.id,
       targetId: target.id,

@@ -5,24 +5,20 @@ import { findTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
 
 /**
- * Per-unit movement. On each tick the cooldown counts down; when it hits 0
- * the unit picks the nearest enemy, finds a cell within attack range of that
- * enemy, pathfinds to it, and steps one cell along the path. Cooldown resets
- * only on a successful move — when blocked or already in range the unit
- * keeps trying every tick (DESIGN.md "waits 1 tick and retries").
+ * Per-unit movement. Reads `unit.actionCooldown` (shared with AttackBehavior
+ * and any future action behavior) and only acts when it's 0. On act: pick
+ * the nearest enemy, find a cell within attack range, pathfind to it, and
+ * step one cell along the path. Cooldown resets only on a successful move —
+ * blocked / no-target / already-in-range leaves it at 0 so the unit (or a
+ * later behavior in the chain like AttackBehavior) can act this tick.
  *
- * Cooldown lives on the behavior instance rather than the Unit so new
- * behaviors don't bloat the Unit class with their bookkeeping. One
- * MovementBehavior per Unit; never share an instance across units.
+ * Stateless across ticks; safe to share an instance across units, though
+ * Game still creates one per unit for symmetry with future stateful
+ * behaviors.
  */
 export class MovementBehavior implements Behavior {
-  private cooldown = 0;
-
   update(unit: Unit, world: World): void {
-    if (this.cooldown > 0) {
-      this.cooldown--;
-      return;
-    }
+    if (unit.actionCooldown > 0) return;
 
     const target = findTarget(unit, world);
     if (target === null) return;
@@ -41,11 +37,11 @@ export class MovementBehavior implements Behavior {
     const from = unit.position;
     const to = path[1]!;
     unit.position = to;
-    // `- 1` accounts for the next tick spent in the `cooldown > 0` branch
-    // above. Net: action ticks are exactly `moveCooldownTicks` apart, which
-    // matches `durationTicks` on the event so the sprite lerp has no idle
-    // gap between consecutive steps. AttackBehavior follows the same idiom.
-    this.cooldown = unit.stats.moveCooldownTicks - 1;
+    // Action ticks are exactly `moveCooldownTicks` apart because World
+    // decrements `actionCooldown` once per tick before behaviors run.
+    // Matches `durationTicks` on the event so the sprite lerp has no idle
+    // gap between consecutive steps.
+    unit.actionCooldown = unit.stats.moveCooldownTicks;
     world.emit('unit:moved', {
       unitId: unit.id,
       from,

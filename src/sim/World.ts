@@ -47,6 +47,7 @@ export class World {
     this.tickCount++;
     this.bus.emit('tick', { tick: this.tickCount });
     for (const unit of this.units) {
+      if (unit.actionCooldown > 0) unit.actionCooldown--;
       for (const behavior of unit.behaviors) {
         behavior.update(unit, this);
       }

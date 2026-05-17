@@ -48,6 +48,14 @@ export class Unit {
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
+  /**
+   * Shared cooldown across all action behaviors (movement, attack, …). Each
+   * behavior sets it to its own stat-driven value after acting, so a unit
+   * can only take one action per "decision" — no move-and-attack in the
+   * same tick. World.tick() decrements it once per tick before behaviors
+   * run.
+   */
+  actionCooldown = 0;
 
   constructor(init: UnitInit) {
     this.id = init.id;

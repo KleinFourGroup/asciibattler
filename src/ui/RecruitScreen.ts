@@ -13,6 +13,7 @@ import type { GameEvents } from '../core/events';
 import type { UnitTemplate } from '../sim/Unit';
 import { glyphForArchetype } from '../sim/archetypes';
 import { ticksToSeconds } from '../config';
+import { fadeIn, fadeOutAndRemove } from './fade';
 
 export class RecruitScreen {
   private container: HTMLDivElement | null = null;
@@ -25,12 +26,14 @@ export class RecruitScreen {
   show(offer: readonly UnitTemplate[]): void {
     this.hide();
     this.container = this.render(offer);
+    this.container.classList.add('screen-fade');
     this.mount.appendChild(this.container);
+    fadeIn(this.container);
   }
 
   hide(): void {
     if (this.container) {
-      this.container.remove();
+      fadeOutAndRemove(this.container);
       this.container = null;
     }
   }

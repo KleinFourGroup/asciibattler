@@ -32,6 +32,22 @@ body {
   pointer-events: auto;
 }
 
+/* Step 5.2: shared fade transition. Screens start invisible; flipping the
+   `is-visible` class triggers the opacity ramp. Pointer-events drop while
+   faded so a partially-faded screen can't intercept clicks meant for the
+   next one. Duration mirrors FADE_MS in src/ui/fade.ts. */
+
+.screen-fade {
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+.screen-fade.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* MapScreen (Step 4.2). Right-side panel that floats over the canvas so the
    battle is still visible during eyeball verification. Colors drawn from
    src/render/palette.ts so the overlay matches the in-canvas palette. */

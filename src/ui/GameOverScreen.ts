@@ -10,6 +10,7 @@
 
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
+import { fadeIn, fadeOutAndRemove } from './fade';
 
 export type GameOverVariant = 'defeat' | 'complete';
 
@@ -34,12 +35,14 @@ export class GameOverScreen {
   show(variant: GameOverVariant = 'defeat'): void {
     this.hide();
     this.container = this.render(variant);
+    this.container.classList.add('screen-fade');
     this.mount.appendChild(this.container);
+    fadeIn(this.container);
   }
 
   hide(): void {
     if (this.container) {
-      this.container.remove();
+      fadeOutAndRemove(this.container);
       this.container = null;
     }
   }

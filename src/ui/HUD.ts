@@ -5,6 +5,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
+import { fadeIn } from './fade';
 
 export class HUD {
   private readonly root: HTMLElement;
@@ -18,8 +19,10 @@ export class HUD {
 
   constructor(mount: HTMLElement, bus: EventBus<GameEvents>) {
     this.root = document.createElement('div');
-    this.root.className = 'hud';
-    this.root.hidden = true;
+    // `screen-fade` keeps the panel at opacity:0 until show() flips
+    // is-visible; that's also why the HUD doesn't use `hidden` — `display:
+    // none` can't transition.
+    this.root.className = 'hud screen-fade';
 
     this.floorLabel = document.createElement('div');
     this.floorLabel.className = 'hud-floor';
@@ -59,11 +62,14 @@ export class HUD {
     this.playerBody.replaceChildren();
     this.enemyBody.replaceChildren();
     this.rows.clear();
-    this.root.hidden = false;
+    fadeIn(this.root);
   }
 
   hide(): void {
-    this.root.hidden = true;
+    // Just drop is-visible; the panel stays in the DOM and fades back in on
+    // the next battle. Rows from the dying battle are kept until the next
+    // show() so the fade-out has something to display.
+    this.root.classList.remove('is-visible');
     this.world = null;
   }
 

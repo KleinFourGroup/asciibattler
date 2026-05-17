@@ -167,6 +167,24 @@ describe('Run', () => {
       bus.emit('battle:ended', { winner: 'player' });
       expect(run.phase).toBe('map');
     });
+
+    it('winning at the terminal node routes to complete (not recruit)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      // Force currentNodeId to the terminal so the next battle's win is the
+      // final one. Manual state surgery is acceptable for this targeted
+      // test — driving a full run is the browser-verify path.
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      let victoryCount = 0;
+      let offeredCount = 0;
+      bus.on('run:victory', () => victoryCount++);
+      bus.on('recruit:offered', () => offeredCount++);
+      bus.emit('battle:ended', { winner: 'player' });
+      expect(run.phase).toBe('complete');
+      expect(victoryCount).toBe(1);
+      expect(offeredCount).toBe(0);
+      expect(run.currentOffer).toBeNull();
+    });
   });
 
   describe('handleRecruitChosen', () => {

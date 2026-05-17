@@ -176,7 +176,10 @@ export class Game {
       this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
     });
     this.bus.on('run:defeated', () => {
-      this.gameOverScreen.show();
+      this.gameOverScreen.show('defeat');
+    });
+    this.bus.on('run:victory', () => {
+      this.gameOverScreen.show('complete');
     });
     this.bus.on('run:resetRequested', () => {
       this.resetRun();

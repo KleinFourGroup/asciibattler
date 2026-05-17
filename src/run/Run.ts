@@ -29,7 +29,7 @@ import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap } from './NodeMap';
 import { rollOffer } from './Recruitment';
 
-export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat';
+export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat' | 'complete';
 
 export interface BattleEncounter {
   readonly worldSeed: number;
@@ -133,9 +133,16 @@ export class Run {
     if (this.phase !== 'battle') return;
     this.currentEncounter = null;
     if (winner === 'player') {
-      this.phase = 'recruit';
-      this.currentOffer = rollOffer(this.rng.fork());
-      this.bus.emit('recruit:offered', { units: this.currentOffer });
+      if (this.currentNodeId === this.nodeMap.terminalId) {
+        // Winning the terminal battle ends the run — no recruit offer,
+        // straight to the run-complete screen via run:victory.
+        this.phase = 'complete';
+        this.bus.emit('run:victory', {});
+      } else {
+        this.phase = 'recruit';
+        this.currentOffer = rollOffer(this.rng.fork());
+        this.bus.emit('recruit:offered', { units: this.currentOffer });
+      }
     } else {
       this.phase = 'defeat';
       this.bus.emit('run:defeated', {});

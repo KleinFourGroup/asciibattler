@@ -204,15 +204,32 @@ body {
 }
 
 .gameover-heading {
-  color: #ff3131; /* NEON_RED */
   font-size: 42px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
 .gameover-subtext {
-  color: #990000; /* DARK_NEON_RED */
   font-size: 14px;
+}
+
+.gameover-screen--defeat .gameover-heading {
+  color: #ff3131; /* NEON_RED */
+}
+
+.gameover-screen--defeat .gameover-subtext {
+  color: #990000; /* DARK_NEON_RED */
+}
+
+.gameover-screen--complete .gameover-heading {
+  color: #33ff00; /* TERMINAL_GREEN */
+}
+
+.gameover-screen--complete .gameover-subtext {
+  color: #0a3300; /* DARK_TERMINAL_GREEN */
+  /* DARK_TERMINAL_GREEN is very dim against black; lift slightly so the
+     subtext reads cleanly without competing with the heading. */
+  filter: brightness(2);
 }
 
 .gameover-button {

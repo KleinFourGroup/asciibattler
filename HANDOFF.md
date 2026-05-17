@@ -1,4 +1,4 @@
-# HANDOFF — Phase 4 pickup
+# HANDOFF — Phase 5 pickup
 
 A fresh-session orientation for ASCIIbattler. Read this first; then dive into the docs only where they're called out.
 
@@ -8,10 +8,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **Phase 1** (core primitives — RNG, EventBus, Clock) ✓
 - **Phase 2** (rendering — FontAtlas, SpriteRenderer, TerrainRenderer, PostProcess) ✓
 - **Phase 3** (battle simulation, 3.1–3.9) ✓
-- **CHECKPOINT 5** passed; tuning landed (faster cooldowns, mixed-archetype spawn, target flash).
-- **Phase 4** (run structure) — **starts now at Step 4.1**.
-- **Tests:** 88 passed + 2 `it.todo()` (Phase 4 territory: run-level RNG isolation, NodeMap generation). Run with `npm test`.
-- **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`).
+- **Phase 4** (run structure, 4.1–4.6) ✓
+- **CHECKPOINT 6** resolved: enemy team = `playerTeam.length - 1`, enemy `maxHp × (1 + 0.05 × floor)`, recruit offers guarantee at least one melee + one ranged. See DESIGN.md "Run structure" for the full rule.
+- **Phase 5** (HUD and polish) — **starts now at Step 5.1**.
+- **Tests:** 136 passed, 0 `it.todo()`. Run with `npm test`.
+- **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`; remember Vite spawns child Node processes that survive `taskkill` on the parent).
 
 ## How we collaborate
 
@@ -19,7 +20,7 @@ Read in order: `DESIGN.md` → `ARCHITECTURE.md` → `ROADMAP.md`. Then follow `
 
 - **One step at a time.** Don't merge steps for efficiency.
 - **Test before continuing.** Each step has a verify note.
-- **Checkpoints are mandatory stops.** When you hit `**CHECKPOINT**`, surface the listed questions to the user — do NOT default silently.
+- **Checkpoints are mandatory stops.** When you hit `**CHECKPOINT**`, surface the listed questions to the user — do NOT default silently. Watch placement carefully: CHECKPOINT 6 sits *after* Step 4.6, not before.
 - **Commit after each step** with a descriptive message (look at `git log` for examples).
 - **Keep `DESIGN.md` / `ARCHITECTURE.md` honest.** If a step reveals a documented decision is wrong, update the doc in the same commit.
 - **One step → one or a few small files.** Avoid wide refactors unless the roadmap says to.
@@ -40,6 +41,10 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 8. **`World.tick()` iterates `this.units.slice()`, not `this.units`.** DeathBehavior splices the list mid-tick; without the snapshot copy the loop skips the next unit after each removal. The behaviors themselves early-return on `unit.currentHp <= 0` so dead-but-not-yet-removed units don't get posthumous swings.
 9. **`checkBattleEnd` guards on an empty world.** Without the guard, `World.tick()` fires `battle:ended` the very first tick before Game spawns anything — and also breaks any low-level World test that ticks without spawning. The guard happens to also cover the (currently impossible-with-current-stats) mutual-annihilation case.
 10. **`exactOptionalPropertyTypes` gotcha.** When an object literal might assign `undefined` to a callback property, declare it as `prop: (() => void) | undefined` instead of `prop?: () => void` — the latter rejects an explicit `undefined`. Bit us in [SpriteAnimator's `ActiveFade`](src/render/animation/SpriteAnimator.ts).
+11. **Subscription order matters between Run and Game.** Run is constructed before Game subscribes its own handlers, so on `battle:ended` Run advances `phase` *before* Game reads it. Game's `endBattle` and recruit/defeat/victory handlers all rely on this. If you ever construct Run after Game's subscriptions, the read-after-set ordering flips and things break. See [src/Game.ts](src/Game.ts) constructor.
+12. **`Run.dispose()` unsubscribes on reset.** When the run resets (`run:resetRequested`), Game creates a new Run on the same bus. Without `dispose()` on the old Run, two Runs respond to every event. The unsubscribe pattern is captured-in-array; if you add a new `bus.on(...)` inside Run, push the unsub into `this.subscriptions`.
+13. **Recruited units spawn via `distributeColumns`, not fixed-length arrays.** The original `MELEE_COLUMNS = [2, 6, 10]` blew up at index 3 once a recruit grew the team. Default 3M+2R formation is still preserved exactly by a fast-path; any other size uses an even-spread function. See [src/Game.ts](src/Game.ts) `spawnTeam`.
+14. **Death fade gets cut short on `battle:ended` (acceptable).** When the killing blow is the final tick, `DeathBehavior.startFade` and `BattleRenderer.detach` happen in the same synchronous burst. The fade dies on the floor. The RecruitScreen / GameOverScreen modals come up immediately after and hide the cut-short visual, so it's invisible in practice. Note in [src/render/BattleRenderer.ts](src/render/BattleRenderer.ts).
 
 ## Active dev affordances (all marked `TODO(roadmap-5.3)`)
 
@@ -49,21 +54,21 @@ These get removed at Step 5.3 — listed in `TODO.md`:
 - `Stats` panel top-right (FPS/MS/MB)
 - `GridHelper` overlay — toggle with **`g`** (will be replaced by terrain-baked grid post-MVP, see TODO.md)
 - Keypresses: **`q`** toggle palette-quantization post-process, **`g`** toggle grid overlay
-- Hardcoded seed `54321` for the World (terrain still uses `12345`) — Run takes over at Step 4.3
+- Hardcoded `RUN_SEED = 54321` in [src/Game.ts](src/Game.ts) (initial run only — `Date.now()` is used on reset)
 - `[clock] tick N` console log every 10 ticks
 - `[attack] #A → #B: -X HP (now Y/Z)` per attack (replaced by HUD at 5.1)
-- `[battle] ended — winner: X` on battle end (replaced by Run state machine at 4.3)
+- `[battle] ended — winner: X` and `[recruit] picked ...` on battle/recruit events
 
 ## Project shape
 
 ```
 src/
   main.ts              # entry; top-level await on FontAtlas.create()
-  Game.ts              # top-level orchestrator (spawns units, wires battle)
+  Game.ts              # top-level orchestrator: Run lifecycle, per-battle World, screen mounts
   config.ts            # TICK_RATE=10, GRID_SIZE=12, secondsToTicks/ticksToSeconds
   core/
     RNG.ts             # mulberry32, fork(), pick(), int()
-    EventBus.ts        # typed pub/sub
+    EventBus.ts        # typed pub/sub; on() returns unsub
     Clock.ts           # fixed-timestep accumulator
     events.ts          # GameEvents catalog (typed event payloads)
     types.ts           # GridCoord, Vec2
@@ -77,55 +82,63 @@ src/
       MovementBehavior.ts    # uses Pathfinding + Targeting; sets actionCooldown
       AttackBehavior.ts      # damage + unit:attacked + sets actionCooldown
       DeathBehavior.ts       # currentHp<=0 → removeUnit + unit:died
-  run/                 # STUBS — Phase 4
-    Run.ts, NodeMap.ts, Recruitment.ts
+  run/
+    Run.ts             # state machine: map|battle|recruit|defeat|complete + RNG + team + nodeMap
+    NodeMap.ts         # DAG generation + dump
+    Recruitment.ts     # rollOffer with archetype-variety guarantee
   render/
     Renderer.ts        # WebGLRenderer + EffectComposer + RAF loop
     FontAtlas.ts       # canvas2d glyph atlas → THREE.CanvasTexture
     SpriteRenderer.ts  # InstancedBufferGeometry + custom shaders
     TerrainRenderer.ts # fBm-displaced plane + palette shader
-    BattleRenderer.ts  # sim/render seam: subscribes to unit:* + tick, drives sprites
+    BattleRenderer.ts  # sim/render seam: attach/detach per battle
     PostProcess.ts     # palette-quantization ShaderPass factory
     palette.ts         # COLORS table
-    animation/SpriteAnimator.ts  # startLerp (position) + startFade (alpha)
-  ui/                  # STUBS — Phases 4–5
+    animation/SpriteAnimator.ts  # startLerp + startFade + clear()
+  ui/
+    ui.css
+    MapScreen.ts       # node map view + frontier click → run:nodeEntered
+    RecruitScreen.ts   # 3-card recruit offer → recruit:chosen
+    GameOverScreen.ts  # defeat / complete variants → run:resetRequested
+    HUD.ts             # stub — Step 5.1
 
 tests/
   smoke.test.ts                       # vitest + module resolution
-  integration/determinism.test.ts     # 4 real + 2 todo (Phase 4)
+  integration/determinism.test.ts     # 6 real (no more it.todo)
 ```
 
 Co-located `*.test.ts` next to source for unit tests. Integration tests under `tests/`.
 
-## Next step: 4.1 — `NodeMap` generation
+## Next step: 5.1 — In-battle HUD
 
 From `ROADMAP.md`:
 
-> Implement DAG generation. Layered structure: N floors, each floor has 1–4 nodes, edges connect nodes between adjacent floors with some branching density. Root and terminal are single nodes. Seeded from the run RNG. All nodes are battle nodes for MVP.
+> Build a tiny HUD overlay in HTML/CSS. Shows both team rosters with HP bars, the current floor (or node id), and a "battle resolving…" indicator. Updates from `unit:attacked` and `unit:died`.
 >
-> Write a quick text-based dump (`console.log` an ASCII representation) to verify structure.
->
-> **Verify:** Generated maps look reasonable: connected, layered, branchy but not chaotic. Same seed → same map.
+> **Verify:** During a battle, HUD reflects damage in real time. After death, that unit drops off the roster.
 
-DESIGN.md tightened "10–15 nodes" → "7–10 nodes" at CHECKPOINT 5. Use that as the floor-count target.
+This replaces the `[attack] #A → #B: -X HP` console logs (one of the TODO(roadmap-5.1) dev affordances).
 
 Files involved:
-- [src/run/NodeMap.ts](src/run/NodeMap.ts) — currently `export {};`, needs DAG generation logic.
-- [src/run/NodeMap.test.ts](src/run/NodeMap.test.ts) — new; assert connectivity, layering, branching density bounds, and determinism.
+- [src/ui/HUD.ts](src/ui/HUD.ts) — currently `export {};`, needs roster + HP bar rendering.
+- Probably [src/ui/ui.css](src/ui/ui.css) for HUD styling.
+- [src/Game.ts](src/Game.ts) — mount HUD on `battle:started`, hide on `battle:ended` (or show/hide via the phase).
 
-`NodeMap.generate(rng)` is the natural shape. No `Run` yet — that's Step 4.3.
-
-After 4.1 is **Step 4.2** (`MapScreen` UI in plain HTML/CSS over the canvas).
-
-## Pre-flight (run before starting 4.1)
+## Pre-flight (run before starting 5.1)
 
 ```bash
-git log --oneline -5    # confirm latest commit is ae38993 (target flash)
-npm test                # 88 passed + 2 todo
-npm run dev             # opens at :5173 — verify a battle plays out
+git log --oneline -5    # confirm latest is d44e17d (Run-complete screen)
+npm test                # 136 passed, 0 todo
+npm run dev             # opens at :5173 — verify the full run flow plays
 ```
 
-In the browser, you should see: dark terrain, mixed front-rank-melee + rear-rank-ranged formation on both sides, units engaging with amber attacker + cyan target flashes, dead sprites fading out, and `[battle] ended — winner: X` in the console when one side wipes.
+In the browser you should see: dark terrain, map screen on load, click a frontier → battle plays out → recruit modal (3 cards, at least one M + one a) → click a card → map screen at new node with visited trail. Win 4 in a row → "Run Complete" green screen. Lose → red "Defeat" screen. Button on either resets to a fresh map.
+
+## Browser-verify tips (learned this session)
+
+- **`preview_click` selector dispatch sometimes lands outside the clickable region** in a narrow preview viewport. When click "succeeds" but no event fires, fall back to `preview_eval` with `element.click()`.
+- **The preview MCP duplicates console output 6×** for reasons not yet understood (multiple instances? rendering pipeline?). Log de-duplication is purely cosmetic; the events are still firing once per emit.
+- **Force-verifying defeat/victory paths** when natural runs keep winning/losing the wrong way: temporarily add `(window as unknown as { __bus: typeof this.bus }).__bus = this.bus;` to Game constructor, then `window.__bus.emit('battle:ended', { winner: 'enemy' })` or `window.__bus.emit('run:victory', {})` from eval. Remove the hook before committing.
 
 ## Toolchain versions
 

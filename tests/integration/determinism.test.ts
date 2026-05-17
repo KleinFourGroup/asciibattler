@@ -11,24 +11,146 @@
  *   - Catches accidental non-determinism that ESLint can't see: Map iteration
  *     order, Date.now()-as-randomness, Set ordering, sort stability assumptions,
  *     parallel async resolving in different orders, etc.
- *
- * The tests below are `todo` until Phase 3 lands. They document the shape so
- * future-us can fill in the body without re-deriving the contract.
  */
 
-import { describe, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import { World } from '../../src/sim/World';
+import { Unit, type Team, type UnitStats } from '../../src/sim/Unit';
+import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
+import { AttackBehavior } from '../../src/sim/behaviors/AttackBehavior';
+import { DeathBehavior } from '../../src/sim/behaviors/DeathBehavior';
+import { rollUnit } from '../../src/sim/archetypes';
+import { EventBus } from '../../src/core/EventBus';
+import { RNG } from '../../src/core/RNG';
+import type { GameEvents } from '../../src/core/events';
 
 describe('determinism: world tick replay', () => {
-  it.todo('same seed + same initial team → same final unit positions after N ticks');
-  it.todo('same seed + same initial team → same emitted event sequence');
+  it('same seed + same initial team → same final unit positions after N ticks', () => {
+    const a = runBattle(54321, 500);
+    const b = runBattle(54321, 500);
+    expect(snapshotPositions(a.world)).toEqual(snapshotPositions(b.world));
+    expect(a.world.currentTick).toBe(b.world.currentTick);
+  });
+
+  it('same seed + same initial team → same emitted event sequence', () => {
+    const a = runBattle(54321, 500);
+    const b = runBattle(54321, 500);
+    expect(a.events).toEqual(b.events);
+    // Sanity: the recording is actually substantial.
+    expect(a.events.length).toBeGreaterThan(20);
+  });
+
   it.todo('forked RNG for a battle does not perturb the run-level RNG stream');
-  it.todo('two parallel battles with the same forked seed resolve identically');
+
+  it('two parallel battles with the same forked seed resolve identically', () => {
+    // Simulates Phase 4's expected pattern: a run RNG forks per battle so
+    // running the same battle "again" produces the same outcome. Here we
+    // model that by forking from a shared parent.
+    const parentA = new RNG(99);
+    const parentB = new RNG(99);
+    const battleA = runBattle(parentA.fork().next() * 0x100000000, 500);
+    const battleB = runBattle(parentB.fork().next() * 0x100000000, 500);
+    expect(snapshotPositions(battleA.world)).toEqual(snapshotPositions(battleB.world));
+    expect(battleA.events).toEqual(battleB.events);
+  });
 });
 
 describe('determinism: stat rolls', () => {
-  it.todo('rollUnit(archetype, rng) with the same rng state produces the same stats');
+  it('rollUnit(archetype, rng) with the same rng state produces the same stats', () => {
+    const a = rollUnit('melee', new RNG(7));
+    const b = rollUnit('melee', new RNG(7));
+    expect(a).toEqual(b);
+  });
 });
 
 describe('determinism: map generation', () => {
   it.todo('NodeMap.generate(seed) produces the same DAG across runs');
 });
+
+/**
+ * Run a deterministic battle from a seed and tick cap. Mirrors the spawn
+ * layout Game.ts uses so the harness exercises the same code paths.
+ */
+function runBattle(
+  seed: number,
+  maxTicks: number,
+): { world: World; events: RecordedEvent[] } {
+  const bus = new EventBus<GameEvents>();
+  const world = new World(bus, new RNG(seed));
+  const events = recordEvents(bus);
+
+  const COLUMNS = [2, 4, 6, 8, 10];
+  for (const x of COLUMNS) {
+    const u = world.spawnUnit(rollUnit('melee', world.rng), 'player', { x, y: 2 });
+    u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
+  }
+  for (const x of COLUMNS) {
+    const u = world.spawnUnit(rollUnit('melee', world.rng), 'enemy', { x, y: 9 });
+    u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
+  }
+
+  for (let i = 0; i < maxTicks && !world.ended; i++) world.tick();
+
+  return { world, events };
+}
+
+interface UnitSnapshot {
+  id: number;
+  team: Team;
+  x: number;
+  y: number;
+  currentHp: number;
+  stats: UnitStats;
+}
+
+function snapshotPositions(world: World): UnitSnapshot[] {
+  return world.units
+    .map<UnitSnapshot>((u: Unit) => ({
+      id: u.id,
+      team: u.team,
+      x: u.position.x,
+      y: u.position.y,
+      currentHp: u.currentHp,
+      stats: u.stats,
+    }))
+    .sort((a, b) => a.id - b.id);
+}
+
+type RecordedEvent =
+  | { kind: 'tick'; tick: number }
+  | { kind: 'unit:spawned'; unitId: number }
+  | { kind: 'unit:moved'; unitId: number; fx: number; fy: number; tx: number; ty: number }
+  | { kind: 'unit:attacked'; attackerId: number; targetId: number; damage: number }
+  | { kind: 'unit:died'; unitId: number }
+  | { kind: 'battle:ended'; winner: Team };
+
+/**
+ * Tap every event we care about into a flat ordered list. Used to assert
+ * that two runs produce byte-identical event streams.
+ */
+function recordEvents(bus: EventBus<GameEvents>): RecordedEvent[] {
+  const out: RecordedEvent[] = [];
+  bus.on('tick', (p) => out.push({ kind: 'tick', tick: p.tick }));
+  bus.on('unit:spawned', (p) => out.push({ kind: 'unit:spawned', unitId: p.unitId }));
+  bus.on('unit:moved', (p) =>
+    out.push({
+      kind: 'unit:moved',
+      unitId: p.unitId,
+      fx: p.from.x,
+      fy: p.from.y,
+      tx: p.to.x,
+      ty: p.to.y,
+    }),
+  );
+  bus.on('unit:attacked', (p) =>
+    out.push({
+      kind: 'unit:attacked',
+      attackerId: p.attackerId,
+      targetId: p.targetId,
+      damage: p.damage,
+    }),
+  );
+  bus.on('unit:died', (p) => out.push({ kind: 'unit:died', unitId: p.unitId }));
+  bus.on('battle:ended', (p) => out.push({ kind: 'battle:ended', winner: p.winner }));
+  return out;
+}

@@ -82,3 +82,61 @@ describe('World.findUnit', () => {
     expect(w.findUnit(9999)).toBeUndefined();
   });
 });
+
+describe('World battle-end detection', () => {
+  it('emits battle:ended with player as winner when no enemies remain', () => {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    w.tick();
+
+    expect(ends).toEqual([{ winner: 'player' }]);
+    expect(w.ended).toBe(true);
+  });
+
+  it('emits battle:ended with enemy as winner when no players remain', () => {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    w.spawnUnit(rollUnit('melee', rng), 'enemy', { x: 0, y: 0 });
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    w.tick();
+
+    expect(ends).toEqual([{ winner: 'enemy' }]);
+  });
+
+  it('does not emit battle:ended while both teams have units', () => {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    w.spawnUnit(rollUnit('melee', rng), 'enemy', { x: 5, y: 5 });
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    for (let i = 0; i < 10; i++) w.tick();
+
+    expect(ends).toHaveLength(0);
+    expect(w.ended).toBe(false);
+  });
+
+  it('stops processing ticks once ended', () => {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    w.tick(); // ends immediately
+    expect(w.ended).toBe(true);
+    const tickBefore = w.currentTick;
+
+    w.tick();
+    w.tick();
+    expect(w.currentTick).toBe(tickBefore);
+  });
+});

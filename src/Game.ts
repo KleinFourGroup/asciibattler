@@ -94,6 +94,11 @@ export class Game {
         `[attack] #${attackerId} → #${targetId}: -${damage} HP (now ${target.currentHp}/${target.stats.maxHp})`,
       );
     });
+
+    // Step 3.9 verify: log battle outcome. Phase 4 wires this to Run state.
+    this.bus.on('battle:ended', ({ winner }) => {
+      console.log(`[battle] ended — winner: ${winner}`);
+    });
   }
 
   start(): void {

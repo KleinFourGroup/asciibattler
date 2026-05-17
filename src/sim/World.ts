@@ -19,6 +19,7 @@ export class World {
   private readonly bus: EventBus<GameEvents>;
   private tickCount = 0;
   private nextUnitId = 1;
+  private _ended = false;
 
   constructor(bus: EventBus<GameEvents>, rng: RNG, gridSize: number = GRID_SIZE) {
     this.bus = bus;
@@ -28,6 +29,10 @@ export class World {
 
   get currentTick(): number {
     return this.tickCount;
+  }
+
+  get ended(): boolean {
+    return this._ended;
   }
 
   /**
@@ -46,6 +51,7 @@ export class World {
    * doesn't break the loop or skip neighbours.
    */
   tick(): void {
+    if (this._ended) return;
     this.tickCount++;
     this.bus.emit('tick', { tick: this.tickCount });
     for (const unit of this.units.slice()) {
@@ -54,6 +60,24 @@ export class World {
         behavior.update(unit, this);
       }
     }
+    this.checkBattleEnd();
+  }
+
+  private checkBattleEnd(): void {
+    // Empty world isn't "battle over" — it's "no battle yet." Guards the
+    // pre-spawn ticks and the (currently impossible, but theoretical)
+    // mutual-annihilation case where both teams hit 0 in the same tick.
+    if (this.units.length === 0) return;
+    let playerAlive = false;
+    let enemyAlive = false;
+    for (const u of this.units) {
+      if (u.team === 'player') playerAlive = true;
+      else enemyAlive = true;
+      if (playerAlive && enemyAlive) return;
+    }
+    const winner: Team = playerAlive ? 'player' : 'enemy';
+    this._ended = true;
+    this.bus.emit('battle:ended', { winner });
   }
 
   removeUnit(id: number): void {

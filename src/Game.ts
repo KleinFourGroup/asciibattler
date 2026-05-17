@@ -19,6 +19,7 @@ import { Run } from './run/Run';
 import { dump as dumpNodeMap } from './run/NodeMap';
 import { MapScreen } from './ui/MapScreen';
 import { RecruitScreen } from './ui/RecruitScreen';
+import { GameOverScreen } from './ui/GameOverScreen';
 
 // Hardcoded for development. TODO(roadmap-4.5): roll fresh from Date.now()
 // on defeat / new run.
@@ -85,9 +86,15 @@ export class Game {
   readonly battleRenderer: BattleRenderer;
   // TODO(roadmap-5.3): debug grid overlay — remove before MVP ships.
   private readonly gridHelper: THREE.GridHelper;
-  private readonly run: Run;
+  /**
+   * Active run. Replaced on `run:resetRequested` (Step 4.5), so it's not
+   * readonly — but every method should still treat `this.run` as the
+   * authoritative source for meta state.
+   */
+  private run: Run;
   private readonly mapScreen: MapScreen;
   private readonly recruitScreen: RecruitScreen;
+  private readonly gameOverScreen: GameOverScreen;
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
     this.fontAtlas = fontAtlas;
@@ -156,6 +163,7 @@ export class Game {
 
     this.mapScreen = new MapScreen(uiMount, this.bus);
     this.recruitScreen = new RecruitScreen(uiMount, this.bus);
+    this.gameOverScreen = new GameOverScreen(uiMount, this.bus);
 
     this.bus.on('recruit:offered', ({ units }) => {
       this.recruitScreen.show(units);
@@ -166,6 +174,12 @@ export class Game {
         `[recruit] picked ${unitTemplate.archetype} (HP ${unitTemplate.stats.maxHp}, DMG ${unitTemplate.stats.attackDamage})`,
       );
       this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
+    });
+    this.bus.on('run:defeated', () => {
+      this.gameOverScreen.show();
+    });
+    this.bus.on('run:resetRequested', () => {
+      this.resetRun();
     });
 
     this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
@@ -203,12 +217,23 @@ export class Game {
     this.world = null;
 
     // Run has already advanced its phase by now (subscription order). On
-    // victory: phase=recruit and the recruit:offered handler already showed
-    // RecruitScreen; nothing to do here. On defeat: log and halt — 4.5
-    // wires the Game Over screen + reset.
-    if (this.run.phase === 'defeat') {
-      console.log('[run] defeated — refresh the page to start a new run');
-    }
+    // victory the recruit:offered handler already showed RecruitScreen; on
+    // defeat the run:defeated handler showed GameOverScreen. Nothing to do
+    // here either way.
+  }
+
+  /**
+   * Tear down the current Run and start a fresh one with a new seed. Wired
+   * to GameOverScreen's "Begin a new run" button via `run:resetRequested`.
+   * Date.now() seed gives a different map and team per restart; replay /
+   * shareable seeds can hook in later by reading from URL or a debug panel.
+   */
+  private resetRun(): void {
+    this.gameOverScreen.hide();
+    this.run.dispose();
+    this.run = new Run(Date.now(), this.bus);
+    console.log(dumpNodeMap(this.run.nodeMap));
+    this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
   }
 
   /**

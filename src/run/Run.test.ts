@@ -130,6 +130,17 @@ describe('Run', () => {
       expect(run.currentOffer).toBeNull();
     });
 
+    it('emits run:defeated on enemy win', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      bus.emit('run:nodeEntered', { nodeId: frontier });
+      let defeatedCount = 0;
+      bus.on('run:defeated', () => defeatedCount++);
+      bus.emit('battle:ended', { winner: 'enemy' });
+      expect(defeatedCount).toBe(1);
+      expect(run.phase).toBe('defeat');
+    });
+
     it('ignores battle:ended when not in battle phase', () => {
       const { run, bus } = freshRunWithBus(1);
       bus.emit('battle:ended', { winner: 'player' });
@@ -156,6 +167,32 @@ describe('Run', () => {
       // Run starts in map phase — emitting recruit:chosen here is a no-op.
       bus.emit('recruit:chosen', { unitTemplate: run.team[0]! });
       expect(run.team).toHaveLength(sizeBefore);
+    });
+  });
+
+  describe('dispose', () => {
+    it('detaches all subscriptions so a disposed Run ignores future events', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.dispose();
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      bus.emit('run:nodeEntered', { nodeId: frontier });
+      // A live Run would advance to battle phase here; the disposed one stays put.
+      expect(run.phase).toBe('map');
+      expect(run.currentNodeId).toBe(run.rootId);
+    });
+
+    it('two Runs sharing a bus do not double-handle once the old one is disposed', () => {
+      const bus = new EventBus<GameEvents>();
+      const oldRun = new Run(1, bus);
+      oldRun.dispose();
+      const newRun = new Run(2, bus);
+      const frontier = newRun.nodeMap.edges.find(
+        (e) => e.from === newRun.nodeMap.rootId,
+      )!.to;
+      bus.emit('run:nodeEntered', { nodeId: frontier });
+      expect(newRun.phase).toBe('battle');
+      // The old Run did NOT advance — its handler is gone.
+      expect(oldRun.phase).toBe('map');
     });
   });
 

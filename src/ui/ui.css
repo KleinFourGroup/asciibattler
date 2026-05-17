@@ -185,3 +185,51 @@ body {
   display: flex;
   justify-content: space-between;
 }
+
+/* GameOverScreen (Step 4.5). Full-overlay defeat modal with a single button
+   to start a fresh run. NEON_RED heading sets the "you died" tone; the
+   button uses the same amber-on-hover affordance as other interactive
+   elements. */
+
+.gameover-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.85);
+  font-family: var(--font-mono);
+}
+
+.gameover-heading {
+  color: #ff3131; /* NEON_RED */
+  font-size: 42px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.gameover-subtext {
+  color: #990000; /* DARK_NEON_RED */
+  font-size: 14px;
+}
+
+.gameover-button {
+  margin-top: 16px;
+  background: transparent;
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  color: #ffb000;
+  padding: 10px 24px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.gameover-button:hover {
+  background: #ffb000;
+  color: #000;
+}

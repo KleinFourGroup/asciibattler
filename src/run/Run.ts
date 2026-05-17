@@ -57,6 +57,7 @@ export class Run {
   readonly visitedNodes = new Set<number>();
 
   private readonly bus: EventBus<GameEvents>;
+  private readonly subscriptions: Array<() => void> = [];
 
   constructor(seed: number, bus: EventBus<GameEvents>) {
     this.bus = bus;
@@ -65,11 +66,23 @@ export class Run {
     this.team = rollTeam(this.rng.fork());
     this.currentNodeId = this.nodeMap.rootId;
 
-    bus.on('run:nodeEntered', ({ nodeId }) => this.handleNodeEntered(nodeId));
-    bus.on('battle:ended', ({ winner }) => this.handleBattleEnded(winner));
-    bus.on('recruit:chosen', ({ unitTemplate }) => this.handleRecruitChosen(unitTemplate));
+    this.subscriptions.push(
+      bus.on('run:nodeEntered', ({ nodeId }) => this.handleNodeEntered(nodeId)),
+      bus.on('battle:ended', ({ winner }) => this.handleBattleEnded(winner)),
+      bus.on('recruit:chosen', ({ unitTemplate }) => this.handleRecruitChosen(unitTemplate)),
+    );
 
     bus.emit('run:started', { seed });
+  }
+
+  /**
+   * Detach every bus subscription. Required when replacing a Run on reset
+   * (Step 4.5) — otherwise the dead Run keeps responding to events and the
+   * new one races against it.
+   */
+  dispose(): void {
+    for (const unsub of this.subscriptions) unsub();
+    this.subscriptions.length = 0;
   }
 
   /**
@@ -109,8 +122,8 @@ export class Run {
       this.currentOffer = rollOffer(this.rng.fork());
       this.bus.emit('recruit:offered', { units: this.currentOffer });
     } else {
-      // 4.5 will wire reset-to-fresh-run here.
       this.phase = 'defeat';
+      this.bus.emit('run:defeated', {});
     }
   }
 

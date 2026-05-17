@@ -30,6 +30,7 @@ export interface GameEvents extends Record<string, unknown> {
   'run:nodeEntered': { nodeId: number };
   'run:victory': Record<string, never>;
   'run:defeated': Record<string, never>;
+  'run:resetRequested': Record<string, never>;
 
   'recruit:offered': { units: UnitTemplate[] };
   'recruit:chosen': { unitTemplate: UnitTemplate };

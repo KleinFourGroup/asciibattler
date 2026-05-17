@@ -41,7 +41,11 @@ export class MovementBehavior implements Behavior {
     const from = unit.position;
     const to = path[1]!;
     unit.position = to;
-    this.cooldown = unit.stats.moveCooldownTicks;
+    // `- 1` accounts for the next tick spent in the `cooldown > 0` branch
+    // above. Net: action ticks are exactly `moveCooldownTicks` apart, which
+    // matches `durationTicks` on the event so the sprite lerp has no idle
+    // gap between consecutive steps. AttackBehavior follows the same idiom.
+    this.cooldown = unit.stats.moveCooldownTicks - 1;
     world.emit('unit:moved', {
       unitId: unit.id,
       from,

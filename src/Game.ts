@@ -43,6 +43,7 @@ export class Game {
 
     this.renderer = new Renderer(canvas, (dt) => {
       this.clock.advance(dt);
+      this.battleRenderer.update(dt);
     });
 
     // Terrain first so opaque-before-transparent render order is natural.

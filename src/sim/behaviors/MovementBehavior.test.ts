@@ -45,7 +45,9 @@ describe('MovementBehavior', () => {
     });
   });
 
-  it('waits cooldownTicks after a move before moving again', () => {
+  it('waits exactly moveCooldownTicks between consecutive moves', () => {
+    // Action ticks must be N apart so the sprite lerp (durationTicks=N)
+    // dovetails into the next move with no idle frame in between.
     const { world, moves } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 1, moveCooldownTicks: 3 },
       { team: 'enemy', x: 8, y: 0, inert: true },
@@ -53,11 +55,10 @@ describe('MovementBehavior', () => {
 
     world.tick(); // tick 1: moves
     expect(moves).toHaveLength(1);
-    world.tick(); // tick 2: cooldown 3 → 2
-    world.tick(); // tick 3: cooldown 2 → 1
-    world.tick(); // tick 4: cooldown 1 → 0
+    world.tick(); // tick 2: cooldown 2 → 1
+    world.tick(); // tick 3: cooldown 1 → 0
     expect(moves).toHaveLength(1);
-    world.tick(); // tick 5: cooldown 0 → moves
+    world.tick(); // tick 4: cooldown 0 → moves
     expect(moves).toHaveLength(2);
   });
 

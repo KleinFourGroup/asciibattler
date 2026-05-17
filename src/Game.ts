@@ -15,6 +15,8 @@ import { AttackBehavior } from './sim/behaviors/AttackBehavior';
 import { DeathBehavior } from './sim/behaviors/DeathBehavior';
 import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
+import { generate as generateNodeMap, dump as dumpNodeMap, type NodeMap } from './run/NodeMap';
+import { MapScreen } from './ui/MapScreen';
 
 /**
  * Top-level orchestrator. Owns the EventBus, Clock, Renderer, FontAtlas,
@@ -33,8 +35,13 @@ export class Game {
   readonly battleRenderer: BattleRenderer;
   // TODO(roadmap-5.3): debug grid overlay — remove before MVP ships.
   private readonly gridHelper: THREE.GridHelper;
+  // TODO(roadmap-4.3): currentNodeId moves to Run.ts when the run state machine
+  // lands. For now Game owns it so MapScreen stays a pure view.
+  private readonly nodeMap: NodeMap;
+  private currentNodeId: number;
+  private readonly mapScreen: MapScreen;
 
-  constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas) {
+  constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
     this.fontAtlas = fontAtlas;
 
     // TODO(roadmap-4.3): Run will fork this RNG from the run-level stream
@@ -98,6 +105,21 @@ export class Game {
     // Step 3.9 verify: log battle outcome. Phase 4 wires this to Run state.
     this.bus.on('battle:ended', ({ winner }) => {
       console.log(`[battle] ended — winner: ${winner}`);
+    });
+
+    // Step 4.2: render the node map. Hardcoded seed for now — Run.ts will
+    // own NodeMap generation from the run-level RNG stream at Step 4.3.
+    this.nodeMap = generateNodeMap(new RNG(54321));
+    this.currentNodeId = this.nodeMap.rootId;
+    console.log(dumpNodeMap(this.nodeMap));
+    this.mapScreen = new MapScreen(uiMount, this.bus);
+    this.mapScreen.show(this.nodeMap, this.currentNodeId);
+
+    // Step 4.2 verify: log node entry until Run.ts wires battle transitions.
+    this.bus.on('run:nodeEntered', ({ nodeId }) => {
+      console.log(`[run] entered node ${nodeId}`);
+      this.currentNodeId = nodeId;
+      this.mapScreen.show(this.nodeMap, this.currentNodeId);
     });
   }
 

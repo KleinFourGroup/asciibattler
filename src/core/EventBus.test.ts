@@ -112,7 +112,7 @@ describe('EventBus', () => {
     bus.emit('unit:attacked', { attackerId: 1, targetId: 2, damage: 3 });
     bus.emit('unit:died', { unitId: 1 });
     bus.emit('run:started', { seed: 42 });
-    bus.emit('run:nodeEntered', { nodeId: 'n0' });
+    bus.emit('run:nodeEntered', { nodeId: 0 });
     bus.emit('run:victory', {});
     bus.emit('run:defeated', {});
     const stubStats = {

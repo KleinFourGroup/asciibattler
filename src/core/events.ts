@@ -27,7 +27,7 @@ export interface GameEvents extends Record<string, unknown> {
   'unit:died': { unitId: number };
 
   'run:started': { seed: number };
-  'run:nodeEntered': { nodeId: string };
+  'run:nodeEntered': { nodeId: number };
   'run:victory': Record<string, never>;
   'run:defeated': Record<string, never>;
 

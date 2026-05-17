@@ -177,7 +177,7 @@ unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durati
 unit:attacked           { attackerId: number; targetId: number; damage: number }
 unit:died               { unitId: number }
 run:started             { seed: number }
-run:nodeEntered         { nodeId: string }
+run:nodeEntered         { nodeId: number }
 run:victory             { }
 run:defeated            { }
 recruit:offered         { units: UnitTemplate[] }

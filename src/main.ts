@@ -8,9 +8,12 @@ import { FontAtlas } from './render/FontAtlas';
 const canvas = document.querySelector<HTMLCanvasElement>('#game-canvas');
 if (!canvas) throw new Error('Missing <canvas id="game-canvas"> in index.html');
 
+const uiMount = document.querySelector<HTMLDivElement>('#ui');
+if (!uiMount) throw new Error('Missing <div id="ui"> in index.html');
+
 // Top-level await: Vite + ESM + modern browsers handle it; the module just
 // pauses until the font has parsed and the atlas is rasterized.
 const fontAtlas = await FontAtlas.create();
 
-const game = new Game(canvas, fontAtlas);
+const game = new Game(canvas, fontAtlas, uiMount);
 game.start();

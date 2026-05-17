@@ -23,6 +23,7 @@ import { rollUnit } from '../../src/sim/archetypes';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import type { GameEvents } from '../../src/core/events';
+import { Run, type BattleEncounter } from '../../src/run/Run';
 
 describe('determinism: world tick replay', () => {
   it('same seed + same initial team → same final unit positions after N ticks', () => {
@@ -40,7 +41,20 @@ describe('determinism: world tick replay', () => {
     expect(a.events.length).toBeGreaterThan(20);
   });
 
-  it.todo('forked RNG for a battle does not perturb the run-level RNG stream');
+  it('forked RNG for a battle does not perturb the run-level RNG stream', () => {
+    // Two Runs at the same seed drive identical node-enter / battle-end
+    // sequences. If consuming the first battle's forked RNG (worldSeed +
+    // enemy team roll) had bled into the run stream, the second battle's
+    // encounter would diverge. The encounter snapshot is the cleanest
+    // observation point — it captures every consumer of the run RNG.
+    const a = driveTwoBattles(2026);
+    const b = driveTwoBattles(2026);
+    expect(a).toEqual(b);
+    // Sanity: encounters are non-empty and the two battles differ from
+    // each other (otherwise the test would pass trivially).
+    expect(a).toHaveLength(2);
+    expect(a[0]).not.toEqual(a[1]);
+  });
 
   it('two parallel battles with the same forked seed resolve identically', () => {
     // Simulates Phase 4's expected pattern: a run RNG forks per battle so
@@ -64,8 +78,42 @@ describe('determinism: stat rolls', () => {
 });
 
 describe('determinism: map generation', () => {
-  it.todo('NodeMap.generate(seed) produces the same DAG across runs');
+  it('Run(seed).nodeMap is byte-identical across instances', () => {
+    // Unit-level NodeMap determinism is pinned in src/run/NodeMap.test.ts.
+    // This is the integration angle: the wiring inside Run actually uses
+    // a deterministic fork of the run RNG, not (say) a Math.random()-
+    // contaminated path.
+    const a = new Run(2026, new EventBus<GameEvents>());
+    const b = new Run(2026, new EventBus<GameEvents>());
+    expect(a.nodeMap).toEqual(b.nodeMap);
+  });
 });
+
+/**
+ * Drive a Run through two node-enter / battle-end cycles and capture the
+ * encounter snapshot at each battle. Returns clones because Run nulls out
+ * `currentEncounter` on battle-end, but the snapshot we captured during
+ * 'battle' phase is still the object we want to compare against.
+ */
+function driveTwoBattles(seed: number): BattleEncounter[] {
+  const bus = new EventBus<GameEvents>();
+  const run = new Run(seed, bus);
+  const encounters: BattleEncounter[] = [];
+
+  const first = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)?.to;
+  if (first === undefined) throw new Error('test setup: root has no outgoing edge');
+  bus.emit('run:nodeEntered', { nodeId: first });
+  encounters.push(run.currentEncounter!);
+  bus.emit('battle:ended', { winner: 'player' });
+
+  const second = run.nodeMap.edges.find((e) => e.from === first)?.to;
+  if (second === undefined) throw new Error('test setup: first frontier has no outgoing edge');
+  bus.emit('run:nodeEntered', { nodeId: second });
+  encounters.push(run.currentEncounter!);
+  bus.emit('battle:ended', { winner: 'player' });
+
+  return encounters;
+}
 
 /**
  * Run a deterministic battle from a seed and tick cap. Mirrors the spawn

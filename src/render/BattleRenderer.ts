@@ -59,6 +59,12 @@ export class BattleRenderer {
    * animation state so the next battle starts clean. Bus subscriptions
    * stay live — only the World reference and the per-battle sprite state
    * are reset.
+   *
+   * Side effect: any in-flight death fades (started in the same tick
+   * battle:ended fired) get cut short. Acceptable for 4.3 because Run
+   * has no pause between battle-end and the next screen. Step 4.4 inserts
+   * the RecruitScreen (and 4.5 the Game Over screen) — once those pauses
+   * exist the fade plays out behind them and this no longer shows.
    */
   detach(): void {
     this.animator.clear();

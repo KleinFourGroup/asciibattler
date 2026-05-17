@@ -1,13 +1,16 @@
+import * as THREE from 'three';
 import { Renderer } from './render/Renderer';
 import { FontAtlas } from './render/FontAtlas';
 import { SpriteRenderer } from './render/SpriteRenderer';
 import { TerrainRenderer } from './render/TerrainRenderer';
 import { BattleRenderer } from './render/BattleRenderer';
+import { COLORS } from './render/palette';
 import { Clock } from './core/Clock';
 import { EventBus } from './core/EventBus';
 import { RNG } from './core/RNG';
 import { World } from './sim/World';
 import { rollUnit } from './sim/archetypes';
+import { MovementBehavior } from './sim/behaviors/MovementBehavior';
 import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
 
@@ -26,6 +29,8 @@ export class Game {
   // Public so noUnusedLocals doesn't fire on the construct-and-subscribe field.
   // The bus subscription keeps the instance alive regardless of this reference.
   readonly battleRenderer: BattleRenderer;
+  // TODO(roadmap-5.3): debug grid overlay — remove before MVP ships.
+  private readonly gridHelper: THREE.GridHelper;
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas) {
     this.fontAtlas = fontAtlas;
@@ -53,10 +58,22 @@ export class Game {
     // events fire after the subscription is in place.
     this.battleRenderer = new BattleRenderer(this.sprites, this.world, this.bus);
 
+    // GridHelper: 12 divisions over a 12-unit span aligns its lines with the
+    // BattleRenderer cell edges (centered on origin). Lifted to y=0 to sit
+    // between the terrain (base y=-0.5) and the sprites (y=0.5).
+    this.gridHelper = new THREE.GridHelper(
+      GRID_SIZE,
+      GRID_SIZE,
+      COLORS.FLOURESCENT_BLUE,
+      COLORS.FLOURESCENT_BLUE,
+    );
+    this.gridHelper.position.y = 0;
+    this.renderer.scene.add(this.gridHelper);
+
     this.spawnInitialUnits();
 
     window.addEventListener('keydown', this.handleKeyDown);
-    console.log('[step 2.5] press `q` to toggle palette-quantization post-process');
+    console.log('[keys] q: toggle post-process · g: toggle grid overlay');
 
     // Step 1.3 verify: prove the clock is ticking at ~10Hz independent of FPS.
     // TODO(roadmap-5.3): remove (or gate behind a debug flag) once real sim
@@ -81,10 +98,12 @@ export class Game {
     const PLAYER_ROW = 2;
     const ENEMY_ROW = 9;
     for (const x of COLUMNS) {
-      this.world.spawnUnit(rollUnit('melee', this.world.rng), 'player', { x, y: PLAYER_ROW });
+      const u = this.world.spawnUnit(rollUnit('melee', this.world.rng), 'player', { x, y: PLAYER_ROW });
+      u.behaviors.push(new MovementBehavior());
     }
     for (const x of COLUMNS) {
-      this.world.spawnUnit(rollUnit('melee', this.world.rng), 'enemy', { x, y: ENEMY_ROW });
+      const u = this.world.spawnUnit(rollUnit('melee', this.world.rng), 'enemy', { x, y: ENEMY_ROW });
+      u.behaviors.push(new MovementBehavior());
     }
   }
 
@@ -92,6 +111,9 @@ export class Game {
     if (e.key === 'q') {
       const enabled = this.renderer.togglePostProcess();
       console.log(`[post-process] palette quantization: ${enabled ? 'ON' : 'OFF'}`);
+    } else if (e.key === 'g') {
+      this.gridHelper.visible = !this.gridHelper.visible;
+      console.log(`[grid] overlay: ${this.gridHelper.visible ? 'ON' : 'OFF'}`);
     }
   };
 }

@@ -30,10 +30,27 @@ export class World {
     return this.tickCount;
   }
 
-  /** Advance the simulation by one tick. Emits `tick` with the new counter. */
+  /**
+   * Behaviors call this to publish sim events (unit:moved, unit:attacked,
+   * etc.) without holding a reference to the bus. The signature is the
+   * EventBus.emit one — the World is just a passthrough.
+   */
+  emit<K extends keyof GameEvents>(event: K, payload: GameEvents[K]): void {
+    this.bus.emit(event, payload);
+  }
+
+  /**
+   * Advance the simulation by one tick. Emits `tick` with the new counter,
+   * then runs every unit's behaviors in insertion order.
+   */
   tick(): void {
     this.tickCount++;
     this.bus.emit('tick', { tick: this.tickCount });
+    for (const unit of this.units) {
+      for (const behavior of unit.behaviors) {
+        behavior.update(unit, this);
+      }
+    }
   }
 
   /**

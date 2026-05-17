@@ -25,6 +25,7 @@ export class BattleRenderer {
     bus: EventBus<GameEvents>,
   ) {
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
+    this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
   }
 
   dispose(): void {
@@ -41,6 +42,18 @@ export class BattleRenderer {
       gridToWorld(unit.position, this.world.gridSize),
     );
     this.handles.set(unit.id, handle);
+  };
+
+  /**
+   * Step 3.5: teleport the sprite to its new cell. Step 3.6 swaps this for a
+   * lerp driven by SpriteAnimator using `from` + `durationTicks`.
+   */
+  private onUnitMoved = ({ unitId, to }: GameEvents['unit:moved']): void => {
+    const handle = this.handles.get(unitId);
+    if (!handle) return;
+    this.sprites.updateSprite(handle, {
+      position: gridToWorld(to, this.world.gridSize),
+    });
   };
 }
 

@@ -12,6 +12,13 @@ These are already marked with `TODO(roadmap-5.3)` in source; listed here for vis
 
 - [ ] `OrbitControls` in `src/render/Renderer.ts` — replace with a fixed camera.
 - [ ] `Stats` (FPS panel) in `src/render/Renderer.ts` — remove from production build.
+- [ ] Debug `GridHelper` overlay in `src/Game.ts` + the `g` keypress toggle — remove before MVP ships.
+
+## Post-MVP polish
+
+- [ ] **Pathfinding directional bias.** A* in `src/sim/Pathfinding.ts` iterates neighbours in fixed `(dx, dy)` order with a strict `<` for `gScore` updates, so on equal-cost ties the path consistently drifts toward lower-x / lower-y cells. Visible at Step 3.5 as units crabbing leftward while they advance. Fix is either a tiebreaker (e.g. prefer the neighbour closer to the straight line from `start` to `goal`) or randomising the neighbour iteration order from the world RNG. Not critical for MVP — battles still resolve correctly.
+- [ ] **Bake grid lines into the terrain shader.** The dev `GridHelper` overlay (toggleable with `g`) reads well — keep it permanently, but as part of the terrain fragment shader (`src/render/TerrainRenderer.ts`) instead of a separate overlay mesh. Will replace the Step 5.3 removal of the dev GridHelper.
+- [ ] **Tighten vertical layout.** Terrain (`PLANE_BASE_Y = -0.5`, displacement `±0.4`), grid overlay (y=0), and sprites (`SPRITE_Y = 0.5` in `BattleRenderer`) sit further apart than necessary — the diorama feels stacked rather than flush. Reduce the gaps once the terrain-baked grid lands and we can eyeball the whole stack together.
 
 ## Bundle / perf
 

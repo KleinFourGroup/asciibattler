@@ -72,7 +72,28 @@ describe('Run', () => {
       bus.emit('run:nodeEntered', { nodeId: frontier });
       expect(run.currentEncounter).not.toBeNull();
       expect(run.currentEncounter!.playerTeam).toEqual(run.team);
-      expect(run.currentEncounter!.enemyTeam).toHaveLength(5);
+      // CHECKPOINT 6: enemy team is sized at playerTeam.length - 1.
+      expect(run.currentEncounter!.enemyTeam).toHaveLength(run.team.length - 1);
+    });
+
+    it('scales enemy maxHp by 1 + 0.05 × destination floor', () => {
+      // Two fresh runs at the same seed, but compare the enemy team's
+      // first-melee maxHp on floor 1 vs the same role on floor 2. The
+      // floor-2 fork consumes more parent RNG, but the per-unit roll
+      // before HP scaling is unrelated to the multiplier we want to
+      // observe — so instead we just verify the rule analytically by
+      // checking the maxHp lies inside the scaled bound.
+      const { run, bus } = freshRunWithBus(1);
+      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      bus.emit('run:nodeEntered', { nodeId: first });
+      const floor = run.nodeMap.nodes.find((n) => n.id === first)!.floor;
+      const multiplier = 1 + 0.05 * floor;
+      for (const u of run.currentEncounter!.enemyTeam) {
+        const baseMin = u.archetype === 'melee' ? 40 : 20;
+        const baseMax = u.archetype === 'melee' ? 60 : 30;
+        expect(u.stats.maxHp).toBeGreaterThanOrEqual(Math.round(baseMin * multiplier));
+        expect(u.stats.maxHp).toBeLessThanOrEqual(Math.round(baseMax * multiplier));
+      }
     });
 
     it('ignores non-frontier nodes', () => {

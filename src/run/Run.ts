@@ -40,6 +40,15 @@ export interface BattleEncounter {
 const STARTING_MELEE = 3;
 const STARTING_RANGED = 2;
 
+/**
+ * CHECKPOINT 6 difficulty tuning. Enemy team size lags the player by one
+ * to give a slight per-battle edge that breaks the snowball: after each
+ * recruit the player team grows but so does the enemy. Per-floor HP
+ * multiplier compensates by making deeper enemies tougher.
+ */
+const ENEMY_SIZE_DELTA = -1;
+const ENEMY_HP_PER_FLOOR = 0.05;
+
 export class Run {
   readonly rng: RNG;
   readonly nodeMap: NodeMap;
@@ -104,7 +113,7 @@ export class Run {
 
     const battleRng = this.rng.fork();
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
-    const enemyTeam = rollTeam(battleRng);
+    const enemyTeam = rollEnemyTeam(battleRng, this.team.length, this.floorOf(nodeId));
 
     this.currentEncounter = {
       worldSeed,
@@ -112,6 +121,12 @@ export class Run {
       enemyTeam,
     };
     this.bus.emit('battle:started', { worldSeed });
+  }
+
+  private floorOf(nodeId: number): number {
+    const node = this.nodeMap.nodes.find((n) => n.id === nodeId);
+    if (!node) throw new Error(`Run.floorOf: no node ${nodeId} in map`);
+    return node.floor;
   }
 
   private handleBattleEnded(winner: Team): void {
@@ -143,14 +158,44 @@ export class Run {
 }
 
 /**
- * Starting / enemy team composition: a fixed 3-melee + 2-ranged formation.
- * Comparable strength for player vs. enemy is enforced by both teams rolling
- * from this shared template — only stat rolls vary. Post-MVP recruitment
- * will let teams diverge in size and composition.
+ * Player starting team: fixed 3 melee + 2 ranged. Doesn't change with run
+ * progress — recruits grow the team via Run.handleRecruitChosen.
  */
 function rollTeam(rng: RNG): UnitTemplate[] {
   const team: UnitTemplate[] = [];
   for (let i = 0; i < STARTING_MELEE; i++) team.push(rollUnit('melee', rng));
   for (let i = 0; i < STARTING_RANGED; i++) team.push(rollUnit('ranged', rng));
   return team;
+}
+
+/**
+ * Enemy team for a battle on `floor`, sized relative to the player. Composition
+ * stays ~60% melee / 40% ranged via Math.round so the formation reads the same
+ * at any team size. Per-floor HP multiplier toughens deeper enemies; size delta
+ * keeps the player marginally ahead in unit count.
+ */
+function rollEnemyTeam(rng: RNG, playerSize: number, floor: number): UnitTemplate[] {
+  const size = Math.max(1, playerSize + ENEMY_SIZE_DELTA);
+  const meleeCount = Math.round(size * 0.6);
+  const rangedCount = size - meleeCount;
+  const hpMultiplier = 1 + ENEMY_HP_PER_FLOOR * floor;
+
+  const team: UnitTemplate[] = [];
+  for (let i = 0; i < meleeCount; i++) {
+    team.push(scaleMaxHp(rollUnit('melee', rng), hpMultiplier));
+  }
+  for (let i = 0; i < rangedCount; i++) {
+    team.push(scaleMaxHp(rollUnit('ranged', rng), hpMultiplier));
+  }
+  return team;
+}
+
+function scaleMaxHp(template: UnitTemplate, multiplier: number): UnitTemplate {
+  return {
+    archetype: template.archetype,
+    stats: {
+      ...template.stats,
+      maxHp: Math.round(template.stats.maxHp * multiplier),
+    },
+  };
 }

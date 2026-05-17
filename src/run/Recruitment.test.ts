@@ -35,10 +35,27 @@ describe('rollOffer', () => {
     }
   });
 
-  it('eventually rolls both archetypes across many offers', () => {
-    const offer = rollOffer(new RNG(1), 50);
-    const archetypes = new Set(offer.map((u) => u.archetype));
-    expect(archetypes).toEqual(new Set(['melee', 'ranged']));
+  it('guarantees at least one melee and one ranged per offer (size >= 2)', () => {
+    for (let s = 0; s < 50; s++) {
+      const offer = rollOffer(new RNG(s));
+      const archetypes = new Set(offer.map((u) => u.archetype));
+      expect(archetypes.has('melee')).toBe(true);
+      expect(archetypes.has('ranged')).toBe(true);
+    }
+  });
+
+  it('size=1 falls back to a single random archetype', () => {
+    const offer = rollOffer(new RNG(1), 1);
+    expect(offer).toHaveLength(1);
+    expect(['melee', 'ranged']).toContain(offer[0]!.archetype);
+  });
+
+  it('size=2 always produces exactly one of each archetype', () => {
+    for (let s = 0; s < 20; s++) {
+      const offer = rollOffer(new RNG(s), 2);
+      const archetypes = offer.map((u) => u.archetype).sort();
+      expect(archetypes).toEqual(['melee', 'ranged']);
+    }
   });
 
   it('same seed → same offer', () => {

@@ -209,10 +209,10 @@ When the player reaches the terminal node and wins: show a "run complete" versio
 
 **Verify:** Play through to the terminal node, win, see the completion screen.
 
-**CHECKPOINT 6.** Confirm with user:
-- Map size and branching density right for the MVP?
-- Recruitment offer count (2 vs 3) and how the offered units are rolled (purely random vs. some scaling)?
-- Difficulty curve across floors — too flat, too steep, fine?
+**CHECKPOINT 6.** Resolved:
+- Map size and branching density: keep 5 floors / 8–10 nodes / 2–3 wide.
+- Recruit offers: 3 cards, but each offer guarantees at least one melee + one ranged so the choice is never archetype-locked.
+- Difficulty: enemy team size = `playerTeam.length - 1` (keeps the player marginally ahead, no snowball amplification); enemy `maxHp × (1 + 0.05 × floor)` so deeper battles toughen up. Stat-roll bounds otherwise shared.
 
 ---
 

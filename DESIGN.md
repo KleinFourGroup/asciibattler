@@ -15,7 +15,7 @@ Concretely, the MVP includes:
 - A 12×12 grid battle arena rendered on procedurally generated terrain
 - Tick-based combat at 10Hz with deterministic resolution from a seeded RNG
 - Two unit archetypes — melee and ranged — with randomized stats (HP, speed, damage) drawn within archetype bounds
-- Player team of 5 starting units vs. an enemy team of comparable strength
+- Player team of 5 starting units vs. an enemy team sized one below the player (CHECKPOINT 6 tuning — see Run structure for the full difficulty rule)
 - Smooth visual lerping of units between grid cells (animation duration = move cooldown)
 - Nearest-enemy targeting (Chebyshev distance, ties broken by lowest HP)
 - A minimal node-map screen between battles — branching DAG of battle nodes only, no rest/shop nodes
@@ -65,7 +65,9 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
 
 For MVP, *every node is a battle node*. Rest, shop, elite, and event nodes are deferred.
 
-**Recruitment:** After each victory, the player is offered a choice between 2–3 randomly generated units (within the existing archetypes). They pick one to add to their team. Skipping is not an option in MVP.
+**Recruitment:** After each victory, the player is offered a choice between 3 randomly generated units (within the existing archetypes). Each offer is guaranteed to contain at least one melee and at least one ranged option, so the choice is never "stat reroll only." The player picks one to add to their team. Skipping is not an option in MVP.
+
+**Difficulty curve (CHECKPOINT 6):** The enemy team in every battle is sized at `playerTeam.length - 1`, with composition ~60% melee / 40% ranged. The first battle is therefore 5v4 in the player's favor, but every recruit grows the enemy too, so the team-size advantage stays a constant +1 and doesn't snowball. Enemy `maxHp` is scaled by `1 + 0.05 × destinationFloor`, so deeper battles get tougher even at matched composition. Player and enemy stat rolls otherwise share the same bounds.
 
 **Defeat:** Full run reset. A new seed is rolled and a fresh map is generated.
 

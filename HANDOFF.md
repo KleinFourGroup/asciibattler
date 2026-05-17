@@ -25,7 +25,7 @@ Read in order: `DESIGN.md` → `ARCHITECTURE.md` → `ROADMAP.md`. Then follow `
 - **Keep `DESIGN.md` / `ARCHITECTURE.md` honest.** If a step reveals a documented decision is wrong, update the doc in the same commit.
 - **One step → one or a few small files.** Avoid wide refactors unless the roadmap says to.
 
-See also: `TESTING.md` for the testing policy (`core`/`sim`/`run` get tests, `render`/`ui` get visual verify), and `RETROSPECTIVE.md` for the post-MVP discussion queue.
+See also: `TESTING.md` for the testing policy (`core`/`sim`/`run` get tests, `render`/`ui` get visual verify), and `retro/` for the post-MVP discussion queue and the shipped-MVP review.
 
 ## Things that bit us — DON'T re-litigate
 

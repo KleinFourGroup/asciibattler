@@ -106,21 +106,28 @@ export class Game {
   }
 
   /**
-   * Step 3.2 verify: a fixed face-off — 5 player melees vs 5 enemy melees,
-   * front and back rows, evenly spread. Stats rolled from the battle RNG so
-   * the lineup is deterministic for seed 54321. Step 4.3 lifts team
-   * composition into Run.
+   * Step 3.2 verify + CHECKPOINT 5 mixed-archetype sanity check: each side
+   * fields a 3-melee front rank and a 2-ranged rear rank. Stats rolled from
+   * the battle RNG so the lineup is deterministic for seed 54321. Step 4.3
+   * lifts team composition into Run.
    */
   private spawnInitialUnits(): void {
-    const COLUMNS = [2, 4, 6, 8, 10] as const;
-    const PLAYER_ROW = 2;
-    const ENEMY_ROW = 9;
-    for (const x of COLUMNS) {
-      const u = this.world.spawnUnit(rollUnit('melee', this.world.rng), 'player', { x, y: PLAYER_ROW });
-      u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
-    }
-    for (const x of COLUMNS) {
-      const u = this.world.spawnUnit(rollUnit('melee', this.world.rng), 'enemy', { x, y: ENEMY_ROW });
+    const MELEE_COLUMNS = [2, 6, 10] as const;
+    const RANGED_COLUMNS = [4, 8] as const;
+    this.spawnRank('player', 'melee', MELEE_COLUMNS, 2);
+    this.spawnRank('player', 'ranged', RANGED_COLUMNS, 1);
+    this.spawnRank('enemy', 'melee', MELEE_COLUMNS, 9);
+    this.spawnRank('enemy', 'ranged', RANGED_COLUMNS, 10);
+  }
+
+  private spawnRank(
+    team: 'player' | 'enemy',
+    archetype: 'melee' | 'ranged',
+    columns: readonly number[],
+    row: number,
+  ): void {
+    for (const x of columns) {
+      const u = this.world.spawnUnit(rollUnit(archetype, this.world.rng), team, { x, y: row });
       u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
     }
   }

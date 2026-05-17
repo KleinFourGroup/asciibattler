@@ -23,15 +23,15 @@ const BOUNDS: Record<Archetype, ArchetypeBounds> = {
     hp: [40, 60],
     attackDamage: [8, 14],
     attackRange: 1,
-    attackCooldownSeconds: [1.2, 2.0],
-    moveCooldownSeconds: [0.7, 1.1],
+    attackCooldownSeconds: [0.9, 1.5],
+    moveCooldownSeconds: [0.5, 0.8],
   },
   ranged: {
     hp: [20, 30],
     attackDamage: [5, 9],
-    attackRange: 4,
-    attackCooldownSeconds: [1.4, 2.4],
-    moveCooldownSeconds: [0.8, 1.4],
+    attackRange: 3,
+    attackCooldownSeconds: [1.0, 1.8],
+    moveCooldownSeconds: [0.6, 1.0],
   },
 };
 

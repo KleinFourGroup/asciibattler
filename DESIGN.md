@@ -61,7 +61,7 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
 
 ## Run structure
 
-**Node map:** A directed acyclic graph generated from the seed. Roughly 10–15 nodes per run, arranged in layered "floors" with branching paths between them. Player starts at the single root, advances one layer at a time, and must reach the single terminal node to complete the run.
+**Node map:** A directed acyclic graph generated from the seed. Roughly 7–10 nodes per run, arranged in layered "floors" with branching paths between them. Player starts at the single root, advances one layer at a time, and must reach the single terminal node to complete the run.
 
 For MVP, *every node is a battle node*. Rest, shop, elite, and event nodes are deferred.
 

@@ -75,16 +75,27 @@ export class BattleRenderer {
   };
 
   /**
-   * Briefly overrides the attacker's sprite color so attacks are visible.
-   * TERMINAL_AMBER over the team color reads as a contrast flash and stays on
-   * palette (literal white would snap to amber anyway via palette quant).
+   * Flash both sides of the swing: TERMINAL_AMBER on the attacker so you
+   * can see who's acting, FLOURESCENT_BLUE on the target so impacts read
+   * clearly. Both fall back to the unit's team color when the per-flash
+   * tick counter runs out. Mutual hits in the same tick are fine — the
+   * later `startFlash` overwrites the earlier one and starts a fresh
+   * countdown.
    */
-  private onUnitAttacked = ({ attackerId }: GameEvents['unit:attacked']): void => {
-    const handle = this.handles.get(attackerId);
-    if (!handle) return;
-    this.sprites.updateSprite(handle, { color: COLORS.TERMINAL_AMBER });
-    this.flashes.set(attackerId, FLASH_TICKS);
+  private onUnitAttacked = ({
+    attackerId,
+    targetId,
+  }: GameEvents['unit:attacked']): void => {
+    this.startFlash(attackerId, COLORS.TERMINAL_AMBER);
+    this.startFlash(targetId, COLORS.FLOURESCENT_BLUE);
   };
+
+  private startFlash(unitId: number, color: string): void {
+    const handle = this.handles.get(unitId);
+    if (!handle) return;
+    this.sprites.updateSprite(handle, { color });
+    this.flashes.set(unitId, FLASH_TICKS);
+  }
 
   /**
    * Fade the dead unit's sprite out, then remove it. Cancels any in-flight

@@ -9,18 +9,27 @@ import { Clock } from './core/Clock';
 import { EventBus } from './core/EventBus';
 import { RNG } from './core/RNG';
 import { World } from './sim/World';
-import { rollUnit } from './sim/archetypes';
 import { MovementBehavior } from './sim/behaviors/MovementBehavior';
 import { AttackBehavior } from './sim/behaviors/AttackBehavior';
 import { DeathBehavior } from './sim/behaviors/DeathBehavior';
 import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
-import { generate as generateNodeMap, dump as dumpNodeMap, type NodeMap } from './run/NodeMap';
+import type { Team, UnitTemplate } from './sim/Unit';
+import { Run } from './run/Run';
+import { dump as dumpNodeMap } from './run/NodeMap';
 import { MapScreen } from './ui/MapScreen';
+
+// Hardcoded for development. TODO(roadmap-4.5): roll fresh from Date.now()
+// on defeat / new run.
+const RUN_SEED = 54321;
+
+const MELEE_COLUMNS = [2, 6, 10] as const;
+const RANGED_COLUMNS = [4, 8] as const;
 
 /**
  * Top-level orchestrator. Owns the EventBus, Clock, Renderer, FontAtlas,
- * SpriteRenderer, and (eventually) the run state machine + current screen.
+ * SpriteRenderer, the Run state machine, and the active battle World (when
+ * one is running).
  */
 export class Game {
   private readonly bus = new EventBus<GameEvents>();
@@ -29,26 +38,30 @@ export class Game {
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
   private readonly terrain: TerrainRenderer;
-  private readonly world: World;
+  /**
+   * The active battle's World, or null when between battles (map screen,
+   * defeat). Recreated per battle on `battle:started`; torn down on
+   * `battle:ended`.
+   */
+  private world: World | null = null;
   // Public so noUnusedLocals doesn't fire on the construct-and-subscribe field.
   // The bus subscription keeps the instance alive regardless of this reference.
   readonly battleRenderer: BattleRenderer;
   // TODO(roadmap-5.3): debug grid overlay — remove before MVP ships.
   private readonly gridHelper: THREE.GridHelper;
-  // TODO(roadmap-4.3): currentNodeId moves to Run.ts when the run state machine
-  // lands. For now Game owns it so MapScreen stays a pure view.
-  private readonly nodeMap: NodeMap;
-  private currentNodeId: number;
+  private readonly run: Run;
   private readonly mapScreen: MapScreen;
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
     this.fontAtlas = fontAtlas;
 
-    // TODO(roadmap-4.3): Run will fork this RNG from the run-level stream
-    // instead of hardcoding a seed here.
-    this.world = new World(this.bus, new RNG(54321), GRID_SIZE);
+    // Construct Run first so its battle:ended handler subscribes before
+    // Game's — Game's handler reads run.phase, which Run must have already
+    // updated by then.
+    this.run = new Run(RUN_SEED, this.bus);
+    console.log(dumpNodeMap(this.run.nodeMap));
 
-    this.clock = new Clock(TICK_RATE, () => this.world.tick());
+    this.clock = new Clock(TICK_RATE, () => this.world?.tick());
 
     this.renderer = new Renderer(canvas, (dt) => {
       this.clock.advance(dt);
@@ -56,7 +69,8 @@ export class Game {
     });
 
     // Terrain first so opaque-before-transparent render order is natural.
-    // Seed is hardcoded for Step 2.4 verify; the Run will own this at Step 4.3.
+    // Terrain seed is independent — terrain is decorative and doesn't need
+    // to follow the run RNG.
     this.terrain = new TerrainRenderer(12345, GRID_SIZE);
     this.renderer.scene.add(this.terrain.mesh);
 
@@ -64,9 +78,9 @@ export class Game {
     this.renderer.scene.add(this.sprites.mesh);
 
     // The sim/render seam: subscribes to unit:* events and translates them
-    // into SpriteRenderer calls. Constructed before any spawns so the spawn
-    // events fire after the subscription is in place.
-    this.battleRenderer = new BattleRenderer(this.sprites, this.world, this.bus);
+    // into SpriteRenderer calls. Bus subscriptions are set up here; per-
+    // battle World binding happens later via `attach` in beginBattle().
+    this.battleRenderer = new BattleRenderer(this.sprites, this.bus);
 
     // GridHelper: 12 divisions over a 12-unit span aligns its lines with the
     // BattleRenderer cell edges (centered on origin). Lifted to y=0 to sit
@@ -79,8 +93,6 @@ export class Game {
     );
     this.gridHelper.position.y = 0;
     this.renderer.scene.add(this.gridHelper);
-
-    this.spawnInitialUnits();
 
     window.addEventListener('keydown', this.handleKeyDown);
     console.log('[keys] q: toggle post-process · g: toggle grid overlay');
@@ -95,32 +107,18 @@ export class Game {
     // Step 3.7 verify: log HP changes until the HUD lands.
     // TODO(roadmap-5.1): replaced by the in-battle HUD.
     this.bus.on('unit:attacked', ({ attackerId, targetId, damage }) => {
-      const target = this.world.findUnit(targetId);
+      const target = this.world?.findUnit(targetId);
       if (!target) return;
       console.log(
         `[attack] #${attackerId} → #${targetId}: -${damage} HP (now ${target.currentHp}/${target.stats.maxHp})`,
       );
     });
 
-    // Step 3.9 verify: log battle outcome. Phase 4 wires this to Run state.
-    this.bus.on('battle:ended', ({ winner }) => {
-      console.log(`[battle] ended — winner: ${winner}`);
-    });
+    this.bus.on('battle:started', () => this.beginBattle());
+    this.bus.on('battle:ended', ({ winner }) => this.endBattle(winner));
 
-    // Step 4.2: render the node map. Hardcoded seed for now — Run.ts will
-    // own NodeMap generation from the run-level RNG stream at Step 4.3.
-    this.nodeMap = generateNodeMap(new RNG(54321));
-    this.currentNodeId = this.nodeMap.rootId;
-    console.log(dumpNodeMap(this.nodeMap));
     this.mapScreen = new MapScreen(uiMount, this.bus);
-    this.mapScreen.show(this.nodeMap, this.currentNodeId);
-
-    // Step 4.2 verify: log node entry until Run.ts wires battle transitions.
-    this.bus.on('run:nodeEntered', ({ nodeId }) => {
-      console.log(`[run] entered node ${nodeId}`);
-      this.currentNodeId = nodeId;
-      this.mapScreen.show(this.nodeMap, this.currentNodeId);
-    });
+    this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId);
   }
 
   start(): void {
@@ -128,28 +126,57 @@ export class Game {
   }
 
   /**
-   * Step 3.2 verify + CHECKPOINT 5 mixed-archetype sanity check: each side
-   * fields a 3-melee front rank and a 2-ranged rear rank. Stats rolled from
-   * the battle RNG so the lineup is deterministic for seed 54321. Step 4.3
-   * lifts team composition into Run.
+   * Spin up a fresh World for the encounter Run just announced. Order
+   * matters: attach BattleRenderer to the new world *before* spawning, so
+   * unit:spawned events find the renderer ready.
    */
-  private spawnInitialUnits(): void {
-    const MELEE_COLUMNS = [2, 6, 10] as const;
-    const RANGED_COLUMNS = [4, 8] as const;
-    this.spawnRank('player', 'melee', MELEE_COLUMNS, 2);
-    this.spawnRank('player', 'ranged', RANGED_COLUMNS, 1);
-    this.spawnRank('enemy', 'melee', MELEE_COLUMNS, 9);
-    this.spawnRank('enemy', 'ranged', RANGED_COLUMNS, 10);
+  private beginBattle(): void {
+    const encounter = this.run.currentEncounter;
+    if (!encounter) {
+      throw new Error('battle:started fired without a Run encounter');
+    }
+
+    this.mapScreen.hide();
+    this.world = new World(this.bus, new RNG(encounter.worldSeed), GRID_SIZE);
+    this.battleRenderer.attach(this.world);
+    this.spawnTeam('player', encounter.playerTeam);
+    this.spawnTeam('enemy', encounter.enemyTeam);
   }
 
-  private spawnRank(
-    team: 'player' | 'enemy',
-    archetype: 'melee' | 'ranged',
-    columns: readonly number[],
-    row: number,
-  ): void {
-    for (const x of columns) {
-      const u = this.world.spawnUnit(rollUnit(archetype, this.world.rng), team, { x, y: row });
+  /**
+   * Tear down the finished battle. Run has already advanced its phase by the
+   * time this runs (subscription order); we just react to the new phase.
+   */
+  private endBattle(winner: Team): void {
+    console.log(`[battle] ended — winner: ${winner}`);
+    this.battleRenderer.detach();
+    this.world = null;
+
+    if (this.run.phase === 'map') {
+      this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId);
+    } else if (this.run.phase === 'defeat') {
+      // TODO(roadmap-4.5): wire the Game Over screen + fresh-run reset.
+      console.log('[run] defeated — refresh the page to start a new run');
+    }
+  }
+
+  /**
+   * Spawn a pre-rolled team into the active world. Positions follow the
+   * CHECKPOINT 5 formation: 3 melee front rank, 2 ranged rear rank. Player
+   * faces north (rows 1–2); enemy faces south (rows 9–10).
+   */
+  private spawnTeam(team: Team, templates: readonly UnitTemplate[]): void {
+    if (!this.world) throw new Error('spawnTeam called without an active world');
+    const meleeRow = team === 'player' ? 2 : 9;
+    const rangedRow = team === 'player' ? 1 : 10;
+    let meleeIdx = 0;
+    let rangedIdx = 0;
+    for (const tmpl of templates) {
+      const position =
+        tmpl.archetype === 'melee'
+          ? { x: MELEE_COLUMNS[meleeIdx++]!, y: meleeRow }
+          : { x: RANGED_COLUMNS[rangedIdx++]!, y: rangedRow };
+      const u = this.world.spawnUnit(tmpl, team, position);
       u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
     }
   }

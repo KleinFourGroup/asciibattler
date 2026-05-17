@@ -23,10 +23,14 @@ export class BattleRenderer {
   private readonly animator: SpriteAnimator;
   /** unitId → ticks left on its attack-flash override. */
   private readonly flashes = new Map<number, number>();
+  /**
+   * The currently-attached battle World. Null when no battle is running (map
+   * screen, defeat state). Set by `attach`, cleared by `detach`.
+   */
+  private world: World | null = null;
 
   constructor(
     private readonly sprites: SpriteRenderer,
-    private readonly world: World,
     bus: EventBus<GameEvents>,
   ) {
     this.animator = new SpriteAnimator(this.sprites);
@@ -42,12 +46,37 @@ export class BattleRenderer {
     this.animator.update(dt);
   }
 
+  /**
+   * Bind the renderer to a freshly-built World for the next battle. Must be
+   * called before any unit:spawned event fires on that world.
+   */
+  attach(world: World): void {
+    this.world = world;
+  }
+
+  /**
+   * End-of-battle teardown. Drops every sprite handle and clears all
+   * animation state so the next battle starts clean. Bus subscriptions
+   * stay live — only the World reference and the per-battle sprite state
+   * are reset.
+   */
+  detach(): void {
+    this.animator.clear();
+    for (const handle of this.handles.values()) {
+      this.sprites.removeSprite(handle);
+    }
+    this.handles.clear();
+    this.flashes.clear();
+    this.world = null;
+  }
+
   dispose(): void {
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
   }
 
   private onUnitSpawned = ({ unitId }: { unitId: number }): void => {
+    if (!this.world) return;
     const unit = this.world.findUnit(unitId);
     if (!unit) return;
     const handle = this.sprites.addSprite(
@@ -64,6 +93,7 @@ export class BattleRenderer {
     to,
     durationTicks,
   }: GameEvents['unit:moved']): void => {
+    if (!this.world) return;
     const handle = this.handles.get(unitId);
     if (!handle) return;
     this.animator.startLerp(
@@ -114,6 +144,7 @@ export class BattleRenderer {
 
   /** Decrements active flashes; reverts each sprite when its counter hits 0. */
   private onTick = (): void => {
+    if (!this.world) return;
     for (const [unitId, remaining] of this.flashes) {
       if (remaining <= 1) {
         const handle = this.handles.get(unitId);

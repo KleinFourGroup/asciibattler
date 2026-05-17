@@ -75,6 +75,17 @@ export class SpriteAnimator {
     this.lerps.delete(handle);
   }
 
+  /**
+   * Drops every in-flight lerp and fade without firing fade onComplete
+   * callbacks. Used by BattleRenderer.detach to flush state between battles
+   * without triggering removeSprite on handles that are about to be wiped
+   * out anyway.
+   */
+  clear(): void {
+    this.lerps.clear();
+    this.fades.clear();
+  }
+
   update(dt: number): void {
     for (const [handle, lerp] of this.lerps) {
       lerp.elapsed += dt;

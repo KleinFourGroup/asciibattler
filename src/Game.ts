@@ -1,10 +1,8 @@
-import * as THREE from 'three';
 import { Renderer } from './render/Renderer';
 import { FontAtlas } from './render/FontAtlas';
 import { SpriteRenderer } from './render/SpriteRenderer';
 import { TerrainRenderer } from './render/TerrainRenderer';
 import { BattleRenderer } from './render/BattleRenderer';
-import { COLORS } from './render/palette';
 import { Clock } from './core/Clock';
 import { EventBus } from './core/EventBus';
 import { RNG } from './core/RNG';
@@ -16,15 +14,10 @@ import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
 import type { Team, UnitTemplate } from './sim/Unit';
 import { Run } from './run/Run';
-import { dump as dumpNodeMap } from './run/NodeMap';
 import { MapScreen } from './ui/MapScreen';
 import { RecruitScreen } from './ui/RecruitScreen';
 import { GameOverScreen } from './ui/GameOverScreen';
 import { HUD } from './ui/HUD';
-
-// Hardcoded for development. TODO(roadmap-4.5): roll fresh from Date.now()
-// on defeat / new run.
-const RUN_SEED = 54321;
 
 /**
  * CHECKPOINT 5 formation anchors for the starting 3-melee + 2-ranged team.
@@ -85,8 +78,6 @@ export class Game {
   // Public so noUnusedLocals doesn't fire on the construct-and-subscribe field.
   // The bus subscription keeps the instance alive regardless of this reference.
   readonly battleRenderer: BattleRenderer;
-  // TODO(roadmap-5.3): debug grid overlay — remove before MVP ships.
-  private readonly gridHelper: THREE.GridHelper;
   /**
    * Active run. Replaced on `run:resetRequested` (Step 4.5), so it's not
    * readonly — but every method should still treat `this.run` as the
@@ -104,8 +95,7 @@ export class Game {
     // Construct Run first so its battle:ended handler subscribes before
     // Game's — Game's handler reads run.phase, which Run must have already
     // updated by then.
-    this.run = new Run(RUN_SEED, this.bus);
-    console.log(dumpNodeMap(this.run.nodeMap));
+    this.run = new Run(Date.now(), this.bus);
 
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
 
@@ -128,30 +118,8 @@ export class Game {
     // battle World binding happens later via `attach` in beginBattle().
     this.battleRenderer = new BattleRenderer(this.sprites, this.bus);
 
-    // GridHelper: 12 divisions over a 12-unit span aligns its lines with the
-    // BattleRenderer cell edges (centered on origin). Lifted to y=0 to sit
-    // between the terrain (base y=-0.5) and the sprites (y=0.5).
-    this.gridHelper = new THREE.GridHelper(
-      GRID_SIZE,
-      GRID_SIZE,
-      COLORS.FLOURESCENT_BLUE,
-      COLORS.FLOURESCENT_BLUE,
-    );
-    this.gridHelper.position.y = 0;
-    this.renderer.scene.add(this.gridHelper);
-
-    window.addEventListener('keydown', this.handleKeyDown);
-    console.log('[keys] q: toggle post-process · g: toggle grid overlay');
-
-    // Step 1.3 verify: prove the clock is ticking at ~10Hz independent of FPS.
-    // TODO(roadmap-5.3): remove (or gate behind a debug flag) once real sim
-    // code starts logging.
-    this.bus.on('tick', ({ tick }) => {
-      if (tick % 10 === 0) console.log(`[clock] tick ${tick}`);
-    });
-
     this.bus.on('battle:started', () => this.beginBattle());
-    this.bus.on('battle:ended', ({ winner }) => this.endBattle(winner));
+    this.bus.on('battle:ended', () => this.endBattle());
 
     this.mapScreen = new MapScreen(uiMount, this.bus);
     this.recruitScreen = new RecruitScreen(uiMount, this.bus);
@@ -161,11 +129,8 @@ export class Game {
     this.bus.on('recruit:offered', ({ units }) => {
       this.recruitScreen.show(units);
     });
-    this.bus.on('recruit:chosen', ({ unitTemplate }) => {
+    this.bus.on('recruit:chosen', () => {
       this.recruitScreen.hide();
-      console.log(
-        `[recruit] picked ${unitTemplate.archetype} (HP ${unitTemplate.stats.maxHp}, DMG ${unitTemplate.stats.attackDamage})`,
-      );
       this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
     });
     this.bus.on('run:defeated', () => {
@@ -210,8 +175,7 @@ export class Game {
    * Tear down the finished battle. Run has already advanced its phase by the
    * time this runs (subscription order); we just react to the new phase.
    */
-  private endBattle(winner: Team): void {
-    console.log(`[battle] ended — winner: ${winner}`);
+  private endBattle(): void {
     this.battleRenderer.detach();
     this.hud.hide();
     this.world = null;
@@ -232,7 +196,6 @@ export class Game {
     this.gameOverScreen.hide();
     this.run.dispose();
     this.run = new Run(Date.now(), this.bus);
-    console.log(dumpNodeMap(this.run.nodeMap));
     this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
   }
 
@@ -261,14 +224,4 @@ export class Game {
       u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
     }
   }
-
-  private handleKeyDown = (e: KeyboardEvent): void => {
-    if (e.key === 'q') {
-      const enabled = this.renderer.togglePostProcess();
-      console.log(`[post-process] palette quantization: ${enabled ? 'ON' : 'OFF'}`);
-    } else if (e.key === 'g') {
-      this.gridHelper.visible = !this.gridHelper.visible;
-      console.log(`[grid] overlay: ${this.gridHelper.visible ? 'ON' : 'OFF'}`);
-    }
-  };
 }

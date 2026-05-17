@@ -8,11 +8,9 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Dev affordances to remove before MVP ships (tracked under ROADMAP Step 5.3)
 
-These are already marked with `TODO(roadmap-5.3)` in source; listed here for visibility.
-
-- [ ] `OrbitControls` in `src/render/Renderer.ts` — replace with a fixed camera.
-- [ ] `Stats` (FPS panel) in `src/render/Renderer.ts` — remove from production build.
-- [ ] Debug `GridHelper` overlay in `src/Game.ts` + the `g` keypress toggle — remove before MVP ships.
+All items previously listed here landed in Step 5.3 (`OrbitControls`, `Stats`,
+`GridHelper`, `q`/`g` keypresses, `RUN_SEED`, debug logs). Camera is locked
+to a fixed pitch and fits the arena AABB to the viewport on every resize.
 
 ## Post-MVP polish
 

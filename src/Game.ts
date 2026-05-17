@@ -24,8 +24,43 @@ import { RecruitScreen } from './ui/RecruitScreen';
 // on defeat / new run.
 const RUN_SEED = 54321;
 
-const MELEE_COLUMNS = [2, 6, 10] as const;
-const RANGED_COLUMNS = [4, 8] as const;
+/**
+ * CHECKPOINT 5 formation anchors for the starting 3-melee + 2-ranged team.
+ * Preserved exactly so default-team battle outcomes don't shift; recruited
+ * extras fall through to `distributeColumns`.
+ */
+const DEFAULT_MELEE_COLUMNS = [2, 6, 10] as const;
+const DEFAULT_RANGED_COLUMNS = [4, 8] as const;
+
+/**
+ * Evenly spread `count` units across grid columns 1..10 (leaving columns 0
+ * and 11 as buffer). Returns integer column indices. Handles up to 10 units
+ * per rank without collisions; recruitment-driven team growth bounded by
+ * MVP run length stays well inside that.
+ */
+function distributeColumns(count: number): number[] {
+  if (count === 0) return [];
+  if (count === 1) return [6];
+  const cols: number[] = [];
+  const left = 1;
+  const right = 10;
+  for (let i = 0; i < count; i++) {
+    cols.push(Math.round(left + ((right - left) * i) / (count - 1)));
+  }
+  return cols;
+}
+
+function meleeColumnsFor(count: number): readonly number[] {
+  return count === DEFAULT_MELEE_COLUMNS.length
+    ? DEFAULT_MELEE_COLUMNS
+    : distributeColumns(count);
+}
+
+function rangedColumnsFor(count: number): readonly number[] {
+  return count === DEFAULT_RANGED_COLUMNS.length
+    ? DEFAULT_RANGED_COLUMNS
+    : distributeColumns(count);
+}
 
 /**
  * Top-level orchestrator. Owns the EventBus, Clock, Renderer, FontAtlas,
@@ -177,22 +212,27 @@ export class Game {
   }
 
   /**
-   * Spawn a pre-rolled team into the active world. Positions follow the
-   * CHECKPOINT 5 formation: 3 melee front rank, 2 ranged rear rank. Player
-   * faces north (rows 1–2); enemy faces south (rows 9–10).
+   * Spawn a pre-rolled team into the active world. Melee fills the front
+   * rank (row 2 player / 9 enemy), ranged fills the rear (row 1 / 10), each
+   * spread evenly across the row so growing teams from recruitment don't
+   * fall off a fixed column array.
    */
   private spawnTeam(team: Team, templates: readonly UnitTemplate[]): void {
     if (!this.world) throw new Error('spawnTeam called without an active world');
     const meleeRow = team === 'player' ? 2 : 9;
     const rangedRow = team === 'player' ? 1 : 10;
-    let meleeIdx = 0;
-    let rangedIdx = 0;
-    for (const tmpl of templates) {
-      const position =
-        tmpl.archetype === 'melee'
-          ? { x: MELEE_COLUMNS[meleeIdx++]!, y: meleeRow }
-          : { x: RANGED_COLUMNS[rangedIdx++]!, y: rangedRow };
-      const u = this.world.spawnUnit(tmpl, team, position);
+
+    const melee = templates.filter((t) => t.archetype === 'melee');
+    const ranged = templates.filter((t) => t.archetype === 'ranged');
+    const meleeCols = meleeColumnsFor(melee.length);
+    const rangedCols = rangedColumnsFor(ranged.length);
+
+    for (let i = 0; i < melee.length; i++) {
+      const u = this.world.spawnUnit(melee[i]!, team, { x: meleeCols[i]!, y: meleeRow });
+      u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
+    }
+    for (let i = 0; i < ranged.length; i++) {
+      const u = this.world.spawnUnit(ranged[i]!, team, { x: rangedCols[i]!, y: rangedRow });
       u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
     }
   }

@@ -4,7 +4,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { COLORS } from './palette';
-import { createPaletteQuantPass } from './PostProcess';
+import { createDitherPass, createPaletteQuantPass, createScanlinePass } from './PostProcess';
 import { GRID_SIZE } from '../config';
 
 /** Camera pitch from horizontal. 45° down matches the diorama framing. */
@@ -64,8 +64,15 @@ export class Renderer {
 
     this.composer = new EffectComposer(this.webgl);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
+    // Step 5.4 post-process polish. Dither runs BEFORE palette quant so its
+    // sub-palette offsets influence quantization decisions (smooth gradients
+    // land on a stippled mix of two palette entries instead of hard bands).
+    // Scanlines run AFTER quant; the darkened lines fall off-palette but
+    // the effect is sub-pixel enough to read as palette-correct anyway.
+    this.composer.addPass(createDitherPass());
     this.paletteQuantPass = createPaletteQuantPass();
     this.composer.addPass(this.paletteQuantPass);
+    this.composer.addPass(createScanlinePass());
     // OutputPass converts the composer's internal linear-sRGB framebuffer to
     // the canvas's sRGB output space. Without this last step, every linear
     // RGB value gets written to the screen as if it were sRGB, which makes

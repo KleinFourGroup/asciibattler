@@ -1,4 +1,4 @@
-# HANDOFF — Phase 3 pickup
+# HANDOFF — Phase 4 pickup
 
 A fresh-session orientation for ASCIIbattler. Read this first; then dive into the docs only where they're called out.
 
@@ -7,9 +7,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **Phase 0** (project setup) ✓
 - **Phase 1** (core primitives — RNG, EventBus, Clock) ✓
 - **Phase 2** (rendering — FontAtlas, SpriteRenderer, TerrainRenderer, PostProcess) ✓
-- **Phase 3** (battle simulation) — **starts now at Step 3.1**.
-- **Tests:** 34 passed + 6 `it.todo()` placeholders + 1 skipped file. Run with `npm test`.
-- **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/.
+- **Phase 3** (battle simulation, 3.1–3.9) ✓
+- **CHECKPOINT 5** passed; tuning landed (faster cooldowns, mixed-archetype spawn, target flash).
+- **Phase 4** (run structure) — **starts now at Step 4.1**.
+- **Tests:** 88 passed + 2 `it.todo()` (Phase 4 territory: run-level RNG isolation, NodeMap generation). Run with `npm test`.
+- **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`).
 
 ## How we collaborate
 
@@ -22,17 +24,22 @@ Read in order: `DESIGN.md` → `ARCHITECTURE.md` → `ROADMAP.md`. Then follow `
 - **Keep `DESIGN.md` / `ARCHITECTURE.md` honest.** If a step reveals a documented decision is wrong, update the doc in the same commit.
 - **One step → one or a few small files.** Avoid wide refactors unless the roadmap says to.
 
-See also: `TESTING.md` for the testing policy (`core`/`sim`/`run` get tests, `render`/`ui` get visual verify).
+See also: `TESTING.md` for the testing policy (`core`/`sim`/`run` get tests, `render`/`ui` get visual verify), and `RETROSPECTIVE.md` for the post-MVP discussion queue.
 
 ## Things that bit us — DON'T re-litigate
 
 These hard-won fixes will look weird out of context. Don't "clean them up" without understanding why they exist.
 
-1. **`scene.background = new THREE.Color(TERMINAL_BLACK)`, not `setClearColor`.** The clear-color path through the EffectComposer's HalfFloat render targets lands at a value that makes the palette-quant pass snap to `DARK_TERMINAL_AMBER`. Some color-management handoff that bypasses scene.background. Lives in [src/render/Renderer.ts](src/render/Renderer.ts). Commit `8491daa`.
-2. **`OutputPass` at the END of the composer chain.** Custom `ShaderPass`es don't auto-convert linear → sRGB at the canvas blit; `OutputPass` does. Without it, every color displays as its linear value re-interpreted as sRGB (TERMINAL_GREEN `#33FF00` showed as `#08FF00`). Commit `fb5e878`.
-3. **Palette quantization uses a color-key approach.** The shader detects background pixels by exact RGB match to the cleared background, passes them through, and quantizes the rest over a palette that **excludes `TERMINAL_BLACK`**. This is what stops dark terrain from snapping to the background color and "punching a hole." Commit `2857c91`.
-4. **`Math.random()` is banned in `src/sim/` and `src/run/`** (ESLint enforced). Use the `RNG` from `src/core/RNG.ts`; thread instances explicitly. Per-battle randomness via `parentRng.fork()` so battle dice don't perturb the run stream.
+1. **`scene.background = new THREE.Color(TERMINAL_BLACK)`, not `setClearColor`.** The clear-color path through the EffectComposer's HalfFloat render targets lands at a value that makes the palette-quant pass snap to `DARK_TERMINAL_AMBER`. Lives in [src/render/Renderer.ts](src/render/Renderer.ts). Commit `8491daa`.
+2. **`OutputPass` at the END of the composer chain.** Custom `ShaderPass`es don't auto-convert linear → sRGB at the canvas blit; `OutputPass` does. Without it, every color displays as its linear value re-interpreted as sRGB. Commit `fb5e878`.
+3. **Palette quantization uses a color-key approach** to skip background pixels and exclude `TERMINAL_BLACK` from the snap palette — stops dark terrain from "punching a hole" by snapping to the background color. Commit `2857c91`.
+4. **`Math.random()` is banned in `src/sim/` and `src/run/`** (ESLint enforced). Use `RNG` from `src/core/RNG.ts`; per-battle randomness via `parentRng.fork()`.
 5. **Author durations in seconds, not ticks.** Use `secondsToTicks` / `ticksToSeconds` from `src/config.ts`. Changing `TICK_RATE` shouldn't require re-tuning balance — that's the contract.
+6. **Cooldown semantics are "decrement-then-check," not "check-then-decrement."** [World.tick()](src/sim/World.ts) decrements `unit.actionCooldown` once per tick before behaviors run; behaviors set it to the *full* `moveCooldownTicks` / `attackCooldownTicks` value after acting (NOT `N-1`). The match between cooldown gap and event `durationTicks` is what keeps the sprite lerp from leaving a visible idle frame between moves. Commit `3b5083f` is where this was first found and fixed in the per-behavior form; `d67593d` refactored it into the shared cooldown.
+7. **Behaviors share one `actionCooldown` on Unit.** Movement, Attack, and Death all read/write `unit.actionCooldown`. The shared cooldown is what enforces "one action per tick" — without it, a unit can move into melee range AND attack on the same tick, which made hits feel weightless. Behaviors are stateless w.r.t. cooldown; safe to share instances across units. Priority falls out of array order in `unit.behaviors` (post-MVP: replace with an action selector, see TODO.md).
+8. **`World.tick()` iterates `this.units.slice()`, not `this.units`.** DeathBehavior splices the list mid-tick; without the snapshot copy the loop skips the next unit after each removal. The behaviors themselves early-return on `unit.currentHp <= 0` so dead-but-not-yet-removed units don't get posthumous swings.
+9. **`checkBattleEnd` guards on an empty world.** Without the guard, `World.tick()` fires `battle:ended` the very first tick before Game spawns anything — and also breaks any low-level World test that ticks without spawning. The guard happens to also cover the (currently impossible-with-current-stats) mutual-annihilation case.
+10. **`exactOptionalPropertyTypes` gotcha.** When an object literal might assign `undefined` to a callback property, declare it as `prop: (() => void) | undefined` instead of `prop?: () => void` — the latter rejects an explicit `undefined`. Bit us in [SpriteAnimator's `ActiveFade`](src/render/animation/SpriteAnimator.ts).
 
 ## Active dev affordances (all marked `TODO(roadmap-5.3)`)
 
@@ -40,27 +47,36 @@ These get removed at Step 5.3 — listed in `TODO.md`:
 
 - `OrbitControls` (mouse-orbit/zoom)
 - `Stats` panel top-right (FPS/MS/MB)
-- 5 fixed test sprites + 1 orbiter — set up in `Game.ts`, deleted at Step 3.2 when real units take over
-- Keypresses: `s` spawn random sprite, `d` despawn last spawned, `q` toggle post-process pipeline
-- Hardcoded seed `12345` in `Game.ts` for the terrain — Run takes over the seed at Step 4.3
+- `GridHelper` overlay — toggle with **`g`** (will be replaced by terrain-baked grid post-MVP, see TODO.md)
+- Keypresses: **`q`** toggle palette-quantization post-process, **`g`** toggle grid overlay
+- Hardcoded seed `54321` for the World (terrain still uses `12345`) — Run takes over at Step 4.3
 - `[clock] tick N` console log every 10 ticks
+- `[attack] #A → #B: -X HP (now Y/Z)` per attack (replaced by HUD at 5.1)
+- `[battle] ended — winner: X` on battle end (replaced by Run state machine at 4.3)
 
 ## Project shape
 
 ```
 src/
   main.ts              # entry; top-level await on FontAtlas.create()
-  Game.ts              # top-level orchestrator
+  Game.ts              # top-level orchestrator (spawns units, wires battle)
   config.ts            # TICK_RATE=10, GRID_SIZE=12, secondsToTicks/ticksToSeconds
   core/
-    RNG.ts             # mulberry32, fork(), pick(), int(); 12 tests
-    EventBus.ts        # typed pub/sub; 9 tests
-    Clock.ts           # fixed-timestep accumulator; 7 tests
+    RNG.ts             # mulberry32, fork(), pick(), int()
+    EventBus.ts        # typed pub/sub
+    Clock.ts           # fixed-timestep accumulator
     events.ts          # GameEvents catalog (typed event payloads)
     types.ts           # GridCoord, Vec2
-  sim/                 # STUBS — Phase 3 fills these in
-    World.ts, Unit.ts, Pathfinding.ts, Targeting.ts, archetypes.ts
-    behaviors/{Movement,Attack,Death}Behavior.ts
+  sim/
+    World.ts           # tick(), spawnUnit(), removeUnit(), findUnit(), checkBattleEnd
+    Unit.ts            # Unit + UnitTemplate + UnitStats + Team + Behavior + actionCooldown
+    Pathfinding.ts     # A* king's-move, Chebyshev heuristic
+    Targeting.ts       # findTarget — nearest enemy, ties by HP then id
+    archetypes.ts      # MELEE/RANGED bounds, rollUnit, glyphForArchetype
+    behaviors/
+      MovementBehavior.ts    # uses Pathfinding + Targeting; sets actionCooldown
+      AttackBehavior.ts      # damage + unit:attacked + sets actionCooldown
+      DeathBehavior.ts       # currentHp<=0 → removeUnit + unit:died
   run/                 # STUBS — Phase 4
     Run.ts, NodeMap.ts, Recruitment.ts
   render/
@@ -68,47 +84,48 @@ src/
     FontAtlas.ts       # canvas2d glyph atlas → THREE.CanvasTexture
     SpriteRenderer.ts  # InstancedBufferGeometry + custom shaders
     TerrainRenderer.ts # fBm-displaced plane + palette shader
+    BattleRenderer.ts  # sim/render seam: subscribes to unit:* + tick, drives sprites
     PostProcess.ts     # palette-quantization ShaderPass factory
-    palette.ts         # COLORS table (sRGB hex)
-    animation/SpriteAnimator.ts  # stub (Step 3.6)
+    palette.ts         # COLORS table
+    animation/SpriteAnimator.ts  # startLerp (position) + startFade (alpha)
   ui/                  # STUBS — Phases 4–5
-    HUD.ts, MapScreen.ts, RecruitScreen.ts, GameOverScreen.ts, ui.css
 
 tests/
   smoke.test.ts                       # vitest + module resolution
-  integration/determinism.test.ts     # 6 it.todo() — Phase 3 fills these in
+  integration/determinism.test.ts     # 4 real + 2 todo (Phase 4)
 ```
 
 Co-located `*.test.ts` next to source for unit tests. Integration tests under `tests/`.
 
-## Next step: 3.1 — `World` skeleton
+## Next step: 4.1 — `NodeMap` generation
 
 From `ROADMAP.md`:
 
-> Define `World` with: grid dimensions (12×12), unit list (empty for now), current tick (0), and an `RNG` instance. Implement `tick()` as a no-op that increments the counter and emits the `tick` event. Wire `Game` to construct a `World` and call `tick()` from the clock.
+> Implement DAG generation. Layered structure: N floors, each floor has 1–4 nodes, edges connect nodes between adjacent floors with some branching density. Root and terminal are single nodes. Seeded from the run RNG. All nodes are battle nodes for MVP.
 >
-> **Verify:** `tick` events fire from the world; tick counter advances.
+> Write a quick text-based dump (`console.log` an ASCII representation) to verify structure.
+>
+> **Verify:** Generated maps look reasonable: connected, layered, branchy but not chaotic. Same seed → same map.
 
-Practically: right now `Game` increments `tickCount` inline in the Clock callback and emits `tick` directly. Step 3.1 lifts that logic into `World.tick()`.
+DESIGN.md tightened "10–15 nodes" → "7–10 nodes" at CHECKPOINT 5. Use that as the floor-count target.
 
 Files involved:
-- [src/sim/World.ts](src/sim/World.ts) — currently `export {};`, needs the class.
-- [src/Game.ts](src/Game.ts) — construct `World`, change the Clock callback to `() => world.tick()`.
-- Possibly a test for `World.tick()` advancing the counter (pure logic — fits the testing policy).
+- [src/run/NodeMap.ts](src/run/NodeMap.ts) — currently `export {};`, needs DAG generation logic.
+- [src/run/NodeMap.test.ts](src/run/NodeMap.test.ts) — new; assert connectivity, layering, branching density bounds, and determinism.
 
-`World` needs the `EventBus` (to emit `tick`) and an `RNG` — both come in via constructor injection from `Game`. See ARCHITECTURE.md §"`World`".
+`NodeMap.generate(rng)` is the natural shape. No `Run` yet — that's Step 4.3.
 
-After 3.1 is **Step 3.2** (`Unit` + archetypes + `BattleRenderer` translator), which culminates in **CHECKPOINT 4** about grid-to-world coordinate mapping.
+After 4.1 is **Step 4.2** (`MapScreen` UI in plain HTML/CSS over the canvas).
 
-## Pre-flight (run before starting 3.1)
+## Pre-flight (run before starting 4.1)
 
 ```bash
-git log --oneline -5    # confirm latest commit is 2857c91 (color-key fix)
-npm test                # 34 passed + 6 todo
-npm run dev             # opens at :5173 — verify scene renders correctly
+git log --oneline -5    # confirm latest commit is ae38993 (target flash)
+npm test                # 88 passed + 2 todo
+npm run dev             # opens at :5173 — verify a battle plays out
 ```
 
-In the browser, you should see: dark terrain plane, 5 colored sprites at the row level, 1 amber `@` orbiting above. Toggle `q` to confirm palette quantization works. Press `s` to spawn random sprites.
+In the browser, you should see: dark terrain, mixed front-rank-melee + rear-rank-ranged formation on both sides, units engaging with amber attacker + cyan target flashes, dead sprites fading out, and `[battle] ended — winner: X` in the console when one side wipes.
 
 ## Toolchain versions
 
@@ -119,4 +136,5 @@ In the browser, you should see: dark terrain plane, 5 colored sprites at the row
 
 ## Existing memories
 
+- `project_asciibattler.md` — points here. Update at major phase boundaries.
 - `feedback_context_estimates.md` — don't fabricate context-window %s; use qualitative terms or trust the user's actual number.

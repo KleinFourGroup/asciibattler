@@ -123,6 +123,14 @@ export class Run {
     this.bus.emit('battle:started', { worldSeed });
   }
 
+  /**
+   * Floor index of the current node. Public so UI surfaces (HUD) can label
+   * the active battle's depth without duplicating the node-lookup logic.
+   */
+  get currentFloor(): number {
+    return this.floorOf(this.currentNodeId);
+  }
+
   private floorOf(nodeId: number): number {
     const node = this.nodeMap.nodes.find((n) => n.id === nodeId);
     if (!node) throw new Error(`Run.floorOf: no node ${nodeId} in map`);

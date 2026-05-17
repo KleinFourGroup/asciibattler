@@ -250,3 +250,124 @@ body {
   background: #ffb000;
   color: #000;
 }
+
+/* HUD (Step 5.1). Left-side panel mirroring MapScreen on the right. Shown
+   during battles, hidden between. Player roster on top, enemy roster below,
+   floor + status header. Palette: amber chrome, TERMINAL_GREEN for player
+   HP fills, NEON_RED for enemy. */
+
+.hud {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 240px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  font-family: var(--font-mono);
+  color: #ffb000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud[hidden] {
+  display: none;
+}
+
+.hud-floor {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ffb000; /* TERMINAL_AMBER */
+}
+
+.hud-status {
+  font-size: 11px;
+  color: #664600; /* DARK_TERMINAL_AMBER */
+  letter-spacing: 0.05em;
+  /* Subtle pulse so "Battle resolving…" reads as live, not static. */
+  animation: hud-status-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes hud-status-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.hud-rosters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hud-roster-heading {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+  color: #664600; /* DARK_TERMINAL_AMBER — heading is chrome, rows carry color */
+}
+
+.hud-roster--player .hud-glyph {
+  color: #33ff00; /* TERMINAL_GREEN */
+}
+
+.hud-roster--player .hud-hp-fill {
+  background: #33ff00; /* TERMINAL_GREEN */
+}
+
+.hud-roster--enemy .hud-glyph {
+  color: #ff3131; /* NEON_RED */
+}
+
+.hud-roster--enemy .hud-hp-fill {
+  background: #ff3131; /* NEON_RED */
+}
+
+.hud-roster-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hud-row {
+  display: grid;
+  grid-template-columns: 16px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.hud-glyph {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+}
+
+.hud-hp {
+  height: 8px;
+  background: #1a1a1a;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  overflow: hidden;
+}
+
+.hud-hp-fill {
+  height: 100%;
+  width: 100%;
+  /* Width transition so HP changes read as a visible drain rather than a
+     pop, but short enough that it tracks the simulated tick cadence. */
+  transition: width 0.12s linear;
+}
+
+.hud-hp-text {
+  text-align: right;
+  color: #ffb000; /* TERMINAL_AMBER */
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}

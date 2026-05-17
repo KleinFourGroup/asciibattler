@@ -20,6 +20,7 @@ import { dump as dumpNodeMap } from './run/NodeMap';
 import { MapScreen } from './ui/MapScreen';
 import { RecruitScreen } from './ui/RecruitScreen';
 import { GameOverScreen } from './ui/GameOverScreen';
+import { HUD } from './ui/HUD';
 
 // Hardcoded for development. TODO(roadmap-4.5): roll fresh from Date.now()
 // on defeat / new run.
@@ -95,6 +96,7 @@ export class Game {
   private readonly mapScreen: MapScreen;
   private readonly recruitScreen: RecruitScreen;
   private readonly gameOverScreen: GameOverScreen;
+  private readonly hud: HUD;
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
     this.fontAtlas = fontAtlas;
@@ -148,22 +150,13 @@ export class Game {
       if (tick % 10 === 0) console.log(`[clock] tick ${tick}`);
     });
 
-    // Step 3.7 verify: log HP changes until the HUD lands.
-    // TODO(roadmap-5.1): replaced by the in-battle HUD.
-    this.bus.on('unit:attacked', ({ attackerId, targetId, damage }) => {
-      const target = this.world?.findUnit(targetId);
-      if (!target) return;
-      console.log(
-        `[attack] #${attackerId} → #${targetId}: -${damage} HP (now ${target.currentHp}/${target.stats.maxHp})`,
-      );
-    });
-
     this.bus.on('battle:started', () => this.beginBattle());
     this.bus.on('battle:ended', ({ winner }) => this.endBattle(winner));
 
     this.mapScreen = new MapScreen(uiMount, this.bus);
     this.recruitScreen = new RecruitScreen(uiMount, this.bus);
     this.gameOverScreen = new GameOverScreen(uiMount, this.bus);
+    this.hud = new HUD(uiMount, this.bus);
 
     this.bus.on('recruit:offered', ({ units }) => {
       this.recruitScreen.show(units);
@@ -205,6 +198,9 @@ export class Game {
 
     this.mapScreen.hide();
     this.world = new World(this.bus, new RNG(encounter.worldSeed), GRID_SIZE);
+    // HUD.show must run before spawnTeam so its unit:spawned handler finds
+    // the bound world; same ordering rule as BattleRenderer.attach.
+    this.hud.show(this.world, this.run.currentFloor);
     this.battleRenderer.attach(this.world);
     this.spawnTeam('player', encounter.playerTeam);
     this.spawnTeam('enemy', encounter.enemyTeam);
@@ -217,6 +213,7 @@ export class Game {
   private endBattle(winner: Team): void {
     console.log(`[battle] ended — winner: ${winner}`);
     this.battleRenderer.detach();
+    this.hud.hide();
     this.world = null;
 
     // Run has already advanced its phase by now (subscription order). On

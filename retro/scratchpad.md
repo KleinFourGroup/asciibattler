@@ -1,8 +1,8 @@
-# RETROSPECTIVE — discussion queue for post-MVP review
+# Scratchpad — rolling notes on process, decisions, gotchas
 
-The user wants a small retrospective after the MVP ships. This file is the scratchpad — drop anything worth talking about here as we go, so we're not reconstructing it cold weeks later.
+Running notebook of "things worth talking about" — drop anything useful here as you build, so we're not reconstructing it cold weeks later. Most of this fed into the MVP retrospective at [post-mvp-review.md](post-mvp-review.md); keep adding new observations as post-MVP work continues.
 
-Keep entries short. Link commits and files where useful. Group loosely by theme; merge or prune at retro time.
+Keep entries short. Link commits and files where useful. Group loosely by theme.
 
 ---
 

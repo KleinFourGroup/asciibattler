@@ -33,6 +33,7 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
+    this.subscriptions.push(bus.on('unit:died', this.onUnitDied));
     this.subscriptions.push(bus.on('tick', this.onTick));
   }
 
@@ -85,6 +86,21 @@ export class BattleRenderer {
     this.flashes.set(attackerId, FLASH_TICKS);
   };
 
+  /**
+   * Fade the dead unit's sprite out, then remove it. Cancels any in-flight
+   * position lerp and pending flash revert so they can't fight the fade.
+   */
+  private onUnitDied = ({ unitId }: GameEvents['unit:died']): void => {
+    const handle = this.handles.get(unitId);
+    if (!handle) return;
+    this.animator.cancel(handle);
+    this.flashes.delete(unitId);
+    this.animator.startFade(handle, FADE_SECONDS, () => {
+      this.sprites.removeSprite(handle);
+      this.handles.delete(unitId);
+    });
+  };
+
   /** Decrements active flashes; reverts each sprite when its counter hits 0. */
   private onTick = (): void => {
     for (const [unitId, remaining] of this.flashes) {
@@ -104,6 +120,9 @@ export class BattleRenderer {
 
 /** Duration of the attacker-flash color override. */
 const FLASH_TICKS = 2;
+
+/** Duration of the dead-unit alpha fade-out. */
+const FADE_SECONDS = 0.3;
 
 function colorForTeam(team: Team): string {
   return team === 'player' ? COLORS.TERMINAL_GREEN : COLORS.NEON_RED;

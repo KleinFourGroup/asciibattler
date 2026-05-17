@@ -15,6 +15,7 @@ import { findTarget } from '../Targeting';
  */
 export class AttackBehavior implements Behavior {
   update(unit: Unit, world: World): void {
+    if (unit.currentHp <= 0) return;
     if (unit.actionCooldown > 0) return;
 
     const target = findTarget(unit, world);

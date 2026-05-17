@@ -12,6 +12,7 @@ import { World } from './sim/World';
 import { rollUnit } from './sim/archetypes';
 import { MovementBehavior } from './sim/behaviors/MovementBehavior';
 import { AttackBehavior } from './sim/behaviors/AttackBehavior';
+import { DeathBehavior } from './sim/behaviors/DeathBehavior';
 import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
 
@@ -111,11 +112,11 @@ export class Game {
     const ENEMY_ROW = 9;
     for (const x of COLUMNS) {
       const u = this.world.spawnUnit(rollUnit('melee', this.world.rng), 'player', { x, y: PLAYER_ROW });
-      u.behaviors.push(new MovementBehavior(), new AttackBehavior());
+      u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
     }
     for (const x of COLUMNS) {
       const u = this.world.spawnUnit(rollUnit('melee', this.world.rng), 'enemy', { x, y: ENEMY_ROW });
-      u.behaviors.push(new MovementBehavior(), new AttackBehavior());
+      u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
     }
   }
 

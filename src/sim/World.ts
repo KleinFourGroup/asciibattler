@@ -41,17 +41,24 @@ export class World {
 
   /**
    * Advance the simulation by one tick. Emits `tick` with the new counter,
-   * then runs every unit's behaviors in insertion order.
+   * then runs every unit's behaviors in insertion order. Iterates a
+   * snapshot of `units` so a behavior splicing the list (DeathBehavior)
+   * doesn't break the loop or skip neighbours.
    */
   tick(): void {
     this.tickCount++;
     this.bus.emit('tick', { tick: this.tickCount });
-    for (const unit of this.units) {
+    for (const unit of this.units.slice()) {
       if (unit.actionCooldown > 0) unit.actionCooldown--;
       for (const behavior of unit.behaviors) {
         behavior.update(unit, this);
       }
     }
+  }
+
+  removeUnit(id: number): void {
+    const i = this.units.findIndex((u) => u.id === id);
+    if (i >= 0) this.units.splice(i, 1);
   }
 
   /**

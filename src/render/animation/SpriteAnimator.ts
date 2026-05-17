@@ -19,8 +19,15 @@ interface ActiveLerp {
   elapsed: number;
 }
 
+interface ActiveFade {
+  readonly duration: number;
+  elapsed: number;
+  readonly onComplete: (() => void) | undefined;
+}
+
 export class SpriteAnimator {
   private readonly lerps = new Map<SpriteHandle, ActiveLerp>();
+  private readonly fades = new Map<SpriteHandle, ActiveFade>();
   private readonly scratch = new THREE.Vector3();
 
   constructor(private readonly sprites: SpriteRenderer) {}
@@ -44,7 +51,26 @@ export class SpriteAnimator {
     });
   }
 
-  /** Drops a handle's in-flight lerp without touching its sprite. */
+  /**
+   * Fade the sprite's alpha from 1 → 0 over `durationSeconds`, then call
+   * `onComplete` (typically used to remove the sprite). Replaces any
+   * in-flight fade for the same handle.
+   */
+  startFade(
+    handle: SpriteHandle,
+    durationSeconds: number,
+    onComplete?: () => void,
+  ): void {
+    if (durationSeconds <= 0) {
+      this.sprites.updateSprite(handle, { alpha: 0 });
+      this.fades.delete(handle);
+      onComplete?.();
+      return;
+    }
+    this.fades.set(handle, { duration: durationSeconds, elapsed: 0, onComplete });
+  }
+
+  /** Drops a handle's in-flight position lerp without touching its sprite. */
   cancel(handle: SpriteHandle): void {
     this.lerps.delete(handle);
   }
@@ -56,6 +82,15 @@ export class SpriteAnimator {
       this.scratch.copy(lerp.from).lerp(lerp.to, t);
       this.sprites.updateSprite(handle, { position: this.scratch });
       if (t >= 1) this.lerps.delete(handle);
+    }
+    for (const [handle, fade] of this.fades) {
+      fade.elapsed += dt;
+      const t = fade.elapsed >= fade.duration ? 1 : fade.elapsed / fade.duration;
+      this.sprites.updateSprite(handle, { alpha: 1 - t });
+      if (t >= 1) {
+        this.fades.delete(handle);
+        fade.onComplete?.();
+      }
     }
   }
 }

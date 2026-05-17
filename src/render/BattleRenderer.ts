@@ -21,6 +21,8 @@ export class BattleRenderer {
   private readonly handles = new Map<number, SpriteHandle>();
   private readonly subscriptions: Array<() => void> = [];
   private readonly animator: SpriteAnimator;
+  /** unitId → ticks left on its attack-flash override. */
+  private readonly flashes = new Map<number, number>();
 
   constructor(
     private readonly sprites: SpriteRenderer,
@@ -30,6 +32,8 @@ export class BattleRenderer {
     this.animator = new SpriteAnimator(this.sprites);
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
+    this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
+    this.subscriptions.push(bus.on('tick', this.onTick));
   }
 
   /** Per-render-frame tick. Drives in-flight sprite lerps. */
@@ -68,7 +72,38 @@ export class BattleRenderer {
       ticksToSeconds(durationTicks),
     );
   };
+
+  /**
+   * Briefly overrides the attacker's sprite color so attacks are visible.
+   * TERMINAL_AMBER over the team color reads as a contrast flash and stays on
+   * palette (literal white would snap to amber anyway via palette quant).
+   */
+  private onUnitAttacked = ({ attackerId }: GameEvents['unit:attacked']): void => {
+    const handle = this.handles.get(attackerId);
+    if (!handle) return;
+    this.sprites.updateSprite(handle, { color: COLORS.TERMINAL_AMBER });
+    this.flashes.set(attackerId, FLASH_TICKS);
+  };
+
+  /** Decrements active flashes; reverts each sprite when its counter hits 0. */
+  private onTick = (): void => {
+    for (const [unitId, remaining] of this.flashes) {
+      if (remaining <= 1) {
+        const handle = this.handles.get(unitId);
+        const unit = this.world.findUnit(unitId);
+        if (handle && unit) {
+          this.sprites.updateSprite(handle, { color: colorForTeam(unit.team) });
+        }
+        this.flashes.delete(unitId);
+      } else {
+        this.flashes.set(unitId, remaining - 1);
+      }
+    }
+  };
 }
+
+/** Duration of the attacker-flash color override. */
+const FLASH_TICKS = 2;
 
 function colorForTeam(team: Team): string {
   return team === 'player' ? COLORS.TERMINAL_GREEN : COLORS.NEON_RED;

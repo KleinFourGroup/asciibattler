@@ -11,6 +11,7 @@ import { RNG } from './core/RNG';
 import { World } from './sim/World';
 import { rollUnit } from './sim/archetypes';
 import { MovementBehavior } from './sim/behaviors/MovementBehavior';
+import { AttackBehavior } from './sim/behaviors/AttackBehavior';
 import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
 
@@ -82,6 +83,16 @@ export class Game {
     this.bus.on('tick', ({ tick }) => {
       if (tick % 10 === 0) console.log(`[clock] tick ${tick}`);
     });
+
+    // Step 3.7 verify: log HP changes until the HUD lands.
+    // TODO(roadmap-5.1): replaced by the in-battle HUD.
+    this.bus.on('unit:attacked', ({ attackerId, targetId, damage }) => {
+      const target = this.world.findUnit(targetId);
+      if (!target) return;
+      console.log(
+        `[attack] #${attackerId} → #${targetId}: -${damage} HP (now ${target.currentHp}/${target.stats.maxHp})`,
+      );
+    });
   }
 
   start(): void {
@@ -100,11 +111,11 @@ export class Game {
     const ENEMY_ROW = 9;
     for (const x of COLUMNS) {
       const u = this.world.spawnUnit(rollUnit('melee', this.world.rng), 'player', { x, y: PLAYER_ROW });
-      u.behaviors.push(new MovementBehavior());
+      u.behaviors.push(new MovementBehavior(), new AttackBehavior());
     }
     for (const x of COLUMNS) {
       const u = this.world.spawnUnit(rollUnit('melee', this.world.rng), 'enemy', { x, y: ENEMY_ROW });
-      u.behaviors.push(new MovementBehavior());
+      u.behaviors.push(new MovementBehavior(), new AttackBehavior());
     }
   }
 

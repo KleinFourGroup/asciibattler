@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { World } from './World';
+import { Unit, type Team, type UnitStats } from './Unit';
+import { MovementBehavior } from './behaviors/MovementBehavior';
+import { AttackBehavior } from './behaviors/AttackBehavior';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { rollUnit } from './archetypes';
@@ -140,3 +143,111 @@ describe('World battle-end detection', () => {
     expect(w.currentTick).toBe(tickBefore);
   });
 });
+
+describe('World inline death handling', () => {
+  it('removes a unit with currentHp <= 0 and emits unit:died on the next tick', () => {
+    const { world, units, deaths } = scene([
+      { team: 'player', x: 0, y: 0, hp: 0 },
+      { team: 'enemy', x: 5, y: 5, hp: 30 },
+    ]);
+
+    world.tick();
+    expect(world.findUnit(units[0]!.id)).toBeUndefined();
+    expect(deaths).toEqual([{ unitId: units[0]!.id }]);
+  });
+
+  it('removes units with negative HP (overkill)', () => {
+    const { world, units, deaths } = scene([
+      { team: 'player', x: 0, y: 0, hp: -42 },
+      { team: 'enemy', x: 5, y: 5, hp: 30 },
+    ]);
+    world.tick();
+    expect(world.findUnit(units[0]!.id)).toBeUndefined();
+    expect(deaths).toHaveLength(1);
+  });
+
+  it('dead units do not act the tick they die', () => {
+    // Player and enemy adjacent. Player one-shots enemy. Enemy must not
+    // get a posthumous swing back at the player even though its turn in
+    // the iteration order comes after the kill.
+    const { world, units, attacks } = scene([
+      {
+        team: 'player',
+        x: 0,
+        y: 0,
+        hp: 50,
+        attackDamage: 999,
+        attackRange: 1,
+        attackCooldownTicks: 5,
+        behaviors: ['movement', 'attack'],
+      },
+      {
+        team: 'enemy',
+        x: 1,
+        y: 0,
+        hp: 30,
+        attackDamage: 999,
+        attackRange: 1,
+        attackCooldownTicks: 5,
+        behaviors: ['movement', 'attack'],
+      },
+    ]);
+
+    world.tick();
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0]?.attackerId).toBe(units[0]!.id);
+    expect(units[0]!.currentHp).toBe(50);
+    expect(world.findUnit(units[1]!.id)).toBeUndefined();
+  });
+});
+
+interface DeathSceneUnit {
+  team: Team;
+  x: number;
+  y: number;
+  hp?: number;
+  attackDamage?: number;
+  attackRange?: number;
+  attackCooldownTicks?: number;
+  behaviors?: readonly ('movement' | 'attack')[];
+}
+
+function scene(specs: DeathSceneUnit[]): {
+  world: World;
+  units: Unit[];
+  deaths: GameEvents['unit:died'][];
+  attacks: GameEvents['unit:attacked'][];
+} {
+  const bus = new EventBus<GameEvents>();
+  const world = new World(bus, new RNG(1));
+  const deaths: GameEvents['unit:died'][] = [];
+  const attacks: GameEvents['unit:attacked'][] = [];
+  bus.on('unit:died', (p) => deaths.push(p));
+  bus.on('unit:attacked', (p) => attacks.push(p));
+
+  let nextId = 1;
+  const units = specs.map((s) => {
+    const stats: UnitStats = {
+      maxHp: 50,
+      attackDamage: s.attackDamage ?? 10,
+      attackRange: s.attackRange ?? 1,
+      attackCooldownTicks: s.attackCooldownTicks ?? 8,
+      moveCooldownTicks: 5,
+    };
+    const u = new Unit({
+      id: nextId++,
+      team: s.team,
+      glyph: 'M',
+      stats,
+      position: { x: s.x, y: s.y },
+    });
+    if (s.hp !== undefined) u.currentHp = s.hp;
+    for (const b of s.behaviors ?? []) {
+      if (b === 'movement') u.behaviors.push(new MovementBehavior());
+      else if (b === 'attack') u.behaviors.push(new AttackBehavior());
+    }
+    world.units.push(u);
+    return u;
+  });
+  return { world, units, deaths, attacks };
+}

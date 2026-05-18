@@ -1,35 +1,35 @@
 import type { Behavior, Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
+import type { ActionProposal } from '../Action';
+import { AttackAction } from '../actions/AttackAction';
 import { findTarget } from '../Targeting';
 
 /**
- * Per-unit attack. Reads `unit.actionCooldown` (shared with MovementBehavior)
- * and only acts when it's 0 and the nearest enemy is within attack range —
- * so a unit that just moved is locked out until its move cooldown elapses,
- * giving "first hit after the charge" some weight.
+ * Proposes a melee/ranged strike on the nearest enemy in attack range.
+ * Abstains (returns null) when no enemy is reachable. Scores higher than
+ * MovementBehavior so a unit that's just stepped into range prefers
+ * attacking over taking another step.
  *
- * Death is not handled here — when `target.currentHp` drops to 0 or below
- * the target becomes invisible to Targeting; DeathBehavior (Step 3.8) takes
- * it off the grid.
+ * Score 10 — comfortably above MovementBehavior's 1. The gap leaves
+ * headroom for future behaviors (e.g. a healer that scores higher than
+ * attack when an ally is critical).
  */
 export class AttackBehavior implements Behavior {
-  update(unit: Unit, world: World): void {
-    if (unit.currentHp <= 0) return;
-    if (unit.actionCooldown > 0) return;
-
+  proposeAction(unit: Unit, world: World): ActionProposal | null {
     const target = findTarget(unit, world);
-    if (target === null) return;
-    if (chebyshev(unit.position, target.position) > unit.stats.attackRange) return;
+    if (target === null) return null;
+    if (chebyshev(unit.position, target.position) > unit.stats.attackRange) return null;
 
     const damage = unit.stats.attackDamage;
-    target.currentHp -= damage;
-    unit.actionCooldown = unit.stats.attackCooldownTicks;
-    world.emit('unit:attacked', {
-      attackerId: unit.id,
-      targetId: target.id,
-      damage,
-    });
+    const durationTicks = unit.stats.attackCooldownTicks;
+
+    return {
+      action: new AttackAction(target, damage),
+      score: 10,
+      cooldown: durationTicks,
+      duration: durationTicks,
+    };
   }
 }
 

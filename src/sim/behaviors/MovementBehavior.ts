@@ -1,54 +1,49 @@
 import type { Behavior, Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
+import type { ActionProposal } from '../Action';
+import { MoveAction } from '../actions/MoveAction';
 import { findTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
 
 /**
- * Per-unit movement. Reads `unit.actionCooldown` (shared with AttackBehavior
- * and any future action behavior) and only acts when it's 0. On act: pick
- * the nearest enemy, find a cell within attack range, pathfind to it, and
- * step one cell along the path. Cooldown resets only on a successful move —
- * blocked / no-target / already-in-range leaves it at 0 so the unit (or a
- * later behavior in the chain like AttackBehavior) can act this tick.
+ * Proposes a one-cell step toward the nearest enemy when out of attack
+ * range. Abstains (returns null) when no enemy exists, when the unit is
+ * already in range, or when the path is blocked — the selector treats
+ * null as "I have no opinion this tick," so attack proposals from other
+ * behaviors can still fire.
  *
- * Stateless across ticks; safe to share an instance across units, though
- * Game still creates one per unit for symmetry with future stateful
- * behaviors.
+ * Score 1 (low). Attack proposals score higher when in range; the score
+ * differentiation isn't strictly needed today because movement abstains
+ * when in range, but it sets the pattern for archetypes whose move and
+ * attack windows overlap.
  */
 export class MovementBehavior implements Behavior {
-  update(unit: Unit, world: World): void {
-    if (unit.currentHp <= 0) return;
-    if (unit.actionCooldown > 0) return;
-
+  proposeAction(unit: Unit, world: World): ActionProposal | null {
     const target = findTarget(unit, world);
-    if (target === null) return;
+    if (target === null) return null;
 
     if (chebyshev(unit.position, target.position) <= unit.stats.attackRange) {
-      return;
+      return null;
     }
 
     const goal = pickGoalCellInRange(unit, target, world);
-    if (goal === null) return;
+    if (goal === null) return null;
 
     const blockers = world.units.map((u) => u.position);
     const path = findPath(unit.position, goal, blockers, world.gridSize);
-    if (path.length < 2) return;
+    if (path.length < 2) return null;
 
     const from = unit.position;
     const to = path[1]!;
-    unit.position = to;
-    // Action ticks are exactly `moveCooldownTicks` apart because World
-    // decrements `actionCooldown` once per tick before behaviors run.
-    // Matches `durationTicks` on the event so the sprite lerp has no idle
-    // gap between consecutive steps.
-    unit.actionCooldown = unit.stats.moveCooldownTicks;
-    world.emit('unit:moved', {
-      unitId: unit.id,
-      from,
-      to,
-      durationTicks: unit.stats.moveCooldownTicks,
-    });
+    const durationTicks = unit.stats.moveCooldownTicks;
+
+    return {
+      action: new MoveAction(from, to, durationTicks),
+      score: 1,
+      cooldown: durationTicks,
+      duration: durationTicks,
+    };
   }
 }
 

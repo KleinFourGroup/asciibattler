@@ -1,6 +1,7 @@
 import type { GridCoord } from '../core/types';
 // Type-only — World imports Unit too, but TS resolves type-only cycles fine.
 import type { World } from './World';
+import type { ActionProposal, ActiveAction } from './Action';
 
 export type Team = 'player' | 'enemy';
 
@@ -24,12 +25,20 @@ export interface UnitTemplate {
 }
 
 /**
- * Behaviors run in order on every tick. For MVP, every unit will end up with
- * [MovementBehavior, AttackBehavior, DeathBehavior] (Steps 3.5–3.8); new unit
- * kinds post-MVP add or swap behaviors rather than subclassing.
+ * Decision-making component. Each tick the selector polls every behavior
+ * for an `ActionProposal`; the highest-scoring valid proposal wins. A
+ * behavior returns `null` to abstain (precondition unmet, target dead,
+ * etc.) — the selector treats null as "this behavior has no opinion this
+ * tick," not as a vote against.
+ *
+ * Cooldown gating is handled by the selector via `unit.actionCooldowns`,
+ * not by the behavior — behaviors don't need to read cooldown state at
+ * all. Behaviors are stateless across ticks; safe to share an instance
+ * across units (though Game still creates one per unit for symmetry with
+ * future stateful behaviors).
  */
 export interface Behavior {
-  update(unit: Unit, world: World): void;
+  proposeAction(unit: Unit, world: World): ActionProposal | null;
 }
 
 export interface UnitInit {
@@ -49,13 +58,17 @@ export class Unit {
   currentHp: number;
   readonly behaviors: Behavior[] = [];
   /**
-   * Shared cooldown across all action behaviors (movement, attack, …). Each
-   * behavior sets it to its own stat-driven value after acting, so a unit
-   * can only take one action per "decision" — no move-and-attack in the
-   * same tick. World.tick() decrements it once per tick before behaviors
-   * run.
+   * Per-action cooldown counters keyed by `Action.id`. Decremented once per
+   * tick by World; selector filters out proposals whose remaining cooldown
+   * is > 0. Missing key = 0 (never proposed before, or fully recharged).
    */
-  actionCooldown = 0;
+  readonly actionCooldowns = new Map<string, number>();
+  /**
+   * Set while an action is in flight. Locks out the selector — no new
+   * proposal can fire until `currentTick >= activeAction.finishTick`. Null
+   * means the unit is free to choose its next action.
+   */
+  activeAction: ActiveAction | null = null;
 
   constructor(init: UnitInit) {
     this.id = init.id;

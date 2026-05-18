@@ -17,11 +17,15 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 ## What's next
 
-Post-MVP backlog lives in [TODO.md](TODO.md). The CHECKPOINT 7 review in [retro/post-mvp-review.md](retro/post-mvp-review.md) recommends, in order:
+Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundation refactors → B style/visual → C gameplay expansion). [TODO.md](TODO.md) holds the small follow-ups that aren't roadmap steps.
 
-1. **Action-selector refactor.** Foundation work — replace behavior-array-order priority with an explicit action selector before any new gameplay feature with status effects, abilities, or archetype-specific actions lands. The current `[Movement, Attack, Death]` array works only because it's exactly two priority levels (plus death). Anything more nuanced will fight back.
-2. **Floating per-unit HP bars** + bake grid into terrain shader. Visual polish the user has already flagged for larger arenas.
-3. **Audio.** Big perceptual win for contained scope.
+**A1 landed.** Action selector + cooldown/duration split + multi-tick effects are in. Next up per ROADMAP:
+
+1. **A2 — Headless input + serialization plumbing.** Foundation for in-battle commands (C5), save/load, and the fuzz harness (A3).
+2. **A3 — Headless fuzz harness.** Needed before C6's longer-run balance tuning.
+3. **B6 — Audio**, **B3 — Floating per-unit HP bars + action progress bar.** Big perceptual wins for contained scope; B3 builds on A1's `activeAction` duration as the progress-bar source.
+
+Open the roadmap for the full plan and decision-point flags.
 
 Beyond those, see [DESIGN.md](DESIGN.md) "Out of scope" for the gameplay backlog (shop, synergies, boss nodes, etc.) and [TODO.md](TODO.md) for the smaller code-level follow-ups.
 
@@ -46,9 +50,9 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 4. **Any post-process pass placed BEFORE palette-quant must respect the bg color-key.** The dither pass perturbed background pixels off the exact sentinel, which then made the quant pass snap them to a non-black palette entry — flashing the void around the arena bright green/amber. Fix: skip pixels where `distance(src, uBgColor) < 0.001`. Same `uBgColor` uniform pattern works for any future pre-quant pass. See [src/render/PostProcess.ts](src/render/PostProcess.ts) `DITHER_SHADER`. Commit `3334c27`.
 5. **`Math.random()` is banned in `src/sim/` and `src/run/`** (ESLint enforced). Use `RNG` from `src/core/RNG.ts`; per-battle randomness via `parentRng.fork()`.
 6. **Author durations in seconds, not ticks.** Use `secondsToTicks` / `ticksToSeconds` from `src/config.ts`. Changing `TICK_RATE` shouldn't require re-tuning balance — that's the contract.
-7. **Cooldown semantics are "decrement-then-check," not "check-then-decrement."** [World.tick()](src/sim/World.ts) decrements `unit.actionCooldown` once per tick before behaviors run; behaviors set it to the *full* `moveCooldownTicks` / `attackCooldownTicks` value after acting (NOT `N-1`). The match between cooldown gap and event `durationTicks` is what keeps the sprite lerp from leaving a visible idle frame between moves. Commit `3b5083f` is where this was first found and fixed in the per-behavior form; `d67593d` refactored it into the shared cooldown.
-8. **Behaviors share one `actionCooldown` on Unit.** Movement, Attack, and Death all read/write `unit.actionCooldown`. The shared cooldown is what enforces "one action per tick" — without it, a unit can move into melee range AND attack on the same tick, which made hits feel weightless. Behaviors are stateless w.r.t. cooldown; safe to share instances across units. Priority falls out of array order in `unit.behaviors` (queued for refactor; see TODO.md "action selector").
-9. **`World.tick()` iterates `this.units.slice()`, not `this.units`.** DeathBehavior splices the list mid-tick; without the snapshot copy the loop skips the next unit after each removal. The behaviors themselves early-return on `unit.currentHp <= 0` so dead-but-not-yet-removed units don't get posthumous swings.
+7. **Cooldown semantics are "decrement-then-check," not "check-then-decrement."** [World.tick()](src/sim/World.ts) decrements every entry in `unit.actionCooldowns` once per tick before the selector runs; behaviors set the proposal's `cooldown` to the *full* `moveCooldownTicks` / `attackCooldownTicks` value (NOT `N-1`). The match between cooldown gap and event `durationTicks` is what keeps the sprite lerp from leaving a visible idle frame between moves. Lived in a shared `Unit.actionCooldown` field through MVP; refactored to per-action `Map<string, number>` plus `activeAction` duration lockout in A1.
+8. **A1 model: per-action cooldown + activeAction duration lockout.** Each tick the selector polls every `Behavior.proposeAction`, filters proposals whose action is still on cooldown (`unit.actionCooldowns.get(id) > 0`), and picks the highest-scoring proposal. The chosen action sets its per-action cooldown and an `activeAction` with `startTick` / `finishTick` / `effectTicks`; while `activeAction != null`, the selector short-circuits (unit is busy). For single-tick actions like move/attack, `cooldown` and `duration` are equal — preserving the MVP "one action per tick" feel — but charge-ups and channels diverge them. Behaviors are stateless and produce per-proposal Action instances (see [src/sim/actions/MoveAction.ts](src/sim/actions/MoveAction.ts) and [src/sim/actions/AttackAction.ts](src/sim/actions/AttackAction.ts)). MovementBehavior scores 1; AttackBehavior scores 10. Score-tie handling is "first proposer wins."
+9. **`World.tick()` iterates `this.units.slice()`, not `this.units`.** Inline death handling splices the list mid-tick (was DeathBehavior pre-A1); without the snapshot copy the loop skips the next unit after each removal. The death short-circuit at the top of the per-unit step also ensures dead-but-not-yet-removed units don't propose actions on the tick they die.
 10. **`checkBattleEnd` guards on an empty world.** Without the guard, `World.tick()` fires `battle:ended` the very first tick before Game spawns anything — and also breaks any low-level World test that ticks without spawning. The guard happens to also cover the (currently impossible-with-current-stats) mutual-annihilation case.
 11. **`exactOptionalPropertyTypes` gotcha.** When an object literal might assign `undefined` to a callback property, declare it as `prop: (() => void) | undefined` instead of `prop?: () => void` — the latter rejects an explicit `undefined`. Bit us in [SpriteAnimator's `ActiveFade`](src/render/animation/SpriteAnimator.ts).
 12. **Subscription order matters between Run and Game.** Run is constructed before Game subscribes its own handlers, so on `battle:ended` Run advances `phase` *before* Game reads it. Game's `endBattle` and recruit/defeat/victory handlers all rely on this. If you ever construct Run after Game's subscriptions, the read-after-set ordering flips and things break. See [src/Game.ts](src/Game.ts) constructor.
@@ -81,14 +85,19 @@ src/
     types.ts           # GridCoord, Vec2
   sim/
     World.ts           # tick(), spawnUnit(), removeUnit(), findUnit(), checkBattleEnd
-    Unit.ts            # Unit + UnitTemplate + UnitStats + Team + Behavior + actionCooldown
+                       # selector + activeAction loop, inline death handling (A1)
+    Unit.ts            # Unit + UnitTemplate + UnitStats + Team + Behavior
+                       # + actionCooldowns Map + activeAction (A1)
+    Action.ts          # Action / ActionProposal / ActiveAction interfaces (A1)
     Pathfinding.ts     # A* king's-move, Chebyshev heuristic
     Targeting.ts       # findTarget — nearest enemy, ties by HP then id
     archetypes.ts      # MELEE/RANGED bounds, rollUnit, glyphForArchetype
+    actions/
+      MoveAction.ts          # logical position update + unit:moved event
+      AttackAction.ts        # damage + unit:attacked event
     behaviors/
-      MovementBehavior.ts    # uses Pathfinding + Targeting; sets actionCooldown
-      AttackBehavior.ts      # damage + unit:attacked + sets actionCooldown
-      DeathBehavior.ts       # currentHp<=0 → removeUnit + unit:died
+      MovementBehavior.ts    # proposeAction → MoveAction when out of range
+      AttackBehavior.ts      # proposeAction → AttackAction when in range
   run/
     Run.ts             # state machine: map|battle|recruit|defeat|complete + RNG + team + nodeMap
     NodeMap.ts         # DAG generation + dump

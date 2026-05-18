@@ -35,6 +35,43 @@ Keep entries short. Link commits and files where useful. Group loosely by theme.
 - **Move geometry helpers (`chebyshev`, `inBounds`) to a shared module.** Currently duplicated in `Pathfinding`, `Targeting`, `MovementBehavior`. Rule of three was hit; we deferred extraction to avoid a wide refactor mid-step. Worth extracting before more callers appear.
 - **Behaviors as functions vs classes.** Now that they're stateless w.r.t. cooldown, `update(unit, world)` could be a plain function. Class-instance-per-unit is overhead. Defer until a second stateful field appears (then revisit whether to extract per-unit runtime).
 
+## A1 — Action selector + cooldown/duration split (post-MVP foundation)
+
+- **Behavior-produces-Action picked over Action-first.** Kept `Behavior` as
+  the decision-making noun; it returns scored `ActionProposal`s consumed by
+  a selector in `World.tick()`. Allows future behaviors to wrap/decorate
+  each other without restructuring archetypes.
+- **`activeAction` state-machine picked over queued effects.** Single
+  in-flight action per unit; selector short-circuits while busy; effect
+  ticks fire from the active action's listed offsets. Gives a clean "what
+  is this unit doing?" read for the future per-unit progress bar (B3).
+- **Mid-impl refinement: `cooldown` / `duration` / `effectTicks` live on
+  `ActionProposal`, not on `Action`.** Per-unit stats give per-unit
+  timings; if those fields lived on `Action` as readonly, `MoveAction`
+  would need to be per-unit (or carry methods reading from unit). Putting
+  them on the proposal keeps Actions as pure verbs.
+- **Score gap 1 (move) vs 10 (attack)** leaves headroom for future
+  behaviors (healers scoring ~15 when ally critical, rogues using score for
+  kiting decisions, etc.). Score-tie tiebreaker is "first proposer wins" —
+  flag in C2 if it bites.
+- **DeathBehavior deleted; death folded into `World.tick`** as a
+  top-of-loop short-circuit. Cleaner than a "pseudo-behavior with priority
+  Infinity" workaround. Death tests moved from `DeathBehavior.test.ts` to
+  `World.test.ts` so the contract survives the file deletion.
+- **Per-action cooldown via `Map<string, number>` on Unit.** Keyed by
+  `Action.id`. Loses some serialization niceness vs an array — A2 should
+  decide whether to keep Map or shift to a typed record.
+- **Determinism test didn't need a re-baseline.** It asserts equality
+  *between* two runs at the same seed, not absolute event values. The
+  refactor preserved determinism intrinsically; no snapshot fixture to
+  update. Worth remembering: equality-of-replays beats absolute-value
+  assertions for refactor-tolerance.
+- **Cadence tests survived the refactor unchanged.** Movement / Attack /
+  shared-cooldown tests passed without edits — the new model produces the
+  same "N ticks apart" cadence for move/attack as the old shared
+  cooldown. The retro's "write down expected cadence" lesson held: those
+  tests already encoded the load-bearing contract.
+
 ## Phase 4 notes (run structure)
 
 - **`Run` as pure meta-state, `Game` owns World lifecycle.** Run never touches World — it only emits `battle:started` with an encounter snapshot, and Game spins up the actual `World`. Kept the sim/meta seam clean and made the per-battle teardown (BattleRenderer.detach + world=null) easy to reason about. This pattern is worth repeating for any future "meta vs sim" split.

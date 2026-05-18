@@ -1,0 +1,188 @@
+import { describe, it, expect } from 'vitest';
+import { World } from '../World';
+import { Unit, type Behavior } from '../Unit';
+import type { Action, ActionProposal } from '../Action';
+import { EventBus } from '../../core/EventBus';
+import { RNG } from '../../core/RNG';
+import type { GameEvents } from '../../core/events';
+
+/**
+ * Fixture exercising the multi-tick portion of the A1 action machinery:
+ * an action whose damage lands at an effect tick *between* start and
+ * finish, with a cooldown that gates re-proposal independently of the
+ * duration lockout.
+ *
+ * Charge-up attack contract:
+ *   - duration N: unit is busy for N ticks after start.
+ *   - effectTicks [k]: damage applies at tick start+k (0 < k < N).
+ *   - cooldown M >= duration: the action can't be re-proposed until M
+ *     ticks have elapsed from start, so a long-cooldown high-damage
+ *     skill can't fire back-to-back even after the unit is free.
+ */
+class ChargeAttackAction implements Action {
+  readonly id = 'charge-attack';
+
+  constructor(
+    private readonly target: Unit,
+    private readonly damage: number,
+  ) {}
+
+  start(_unit: Unit, _world: World): void {
+    // No immediate effect — the punch lands during applyEffect.
+  }
+
+  applyEffect(unit: Unit, world: World, _tickOffset: number): void {
+    if (this.target.currentHp <= 0) return;
+    this.target.currentHp -= this.damage;
+    world.emit('unit:attacked', {
+      attackerId: unit.id,
+      targetId: this.target.id,
+      damage: this.damage,
+    });
+  }
+}
+
+interface ChargeAttackOpts {
+  readonly damage: number;
+  readonly cooldown: number;
+  readonly duration: number;
+  readonly effectAt: number;
+}
+
+class ChargeAttackBehavior implements Behavior {
+  constructor(private readonly opts: ChargeAttackOpts) {}
+
+  proposeAction(unit: Unit, world: World): ActionProposal | null {
+    const target = world.units.find((u) => u.team !== unit.team && u.currentHp > 0);
+    if (!target) return null;
+    return {
+      action: new ChargeAttackAction(target, this.opts.damage),
+      score: 100,
+      cooldown: this.opts.cooldown,
+      duration: this.opts.duration,
+      effectTicks: [this.opts.effectAt],
+    };
+  }
+}
+
+describe('multi-tick action machinery', () => {
+  it('fires applyEffect at the listed offset, not at start or finish', () => {
+    const { world, attacks, target } = scene({
+      damage: 20,
+      cooldown: 10,
+      duration: 10,
+      effectAt: 5,
+    });
+
+    // Tick 1: action starts. No damage yet.
+    world.tick();
+    expect(attacks).toHaveLength(0);
+    expect(target.currentHp).toBe(100);
+
+    // Ticks 2..5: still charging, no damage.
+    for (let i = 2; i <= 5; i++) {
+      world.tick();
+      expect(attacks).toHaveLength(0);
+    }
+
+    // Tick 6 (offset 5): damage lands.
+    world.tick();
+    expect(attacks).toHaveLength(1);
+    expect(target.currentHp).toBe(80);
+
+    // Ticks 7..10: still in duration window, no more damage.
+    for (let i = 7; i <= 10; i++) {
+      world.tick();
+      expect(attacks).toHaveLength(1);
+    }
+  });
+
+  it('locks the unit out of new actions for the full duration', () => {
+    const { world, attacks } = scene({
+      damage: 20,
+      cooldown: 10,
+      duration: 10,
+      effectAt: 5,
+    });
+
+    // Tick 1: action starts. Tick 6: damage. Tick 11: free again.
+    for (let i = 1; i <= 10; i++) world.tick();
+    expect(attacks).toHaveLength(1);
+
+    // Tick 11: action finishes, selector re-runs, new charge starts.
+    world.tick();
+    expect(attacks).toHaveLength(1); // still charging again
+    // Tick 16: second damage.
+    for (let i = 12; i <= 16; i++) world.tick();
+    expect(attacks).toHaveLength(2);
+  });
+
+  it('keeps the action on cooldown for `cooldown` ticks from start, independent of duration', () => {
+    // Cooldown longer than duration: unit is free at finishTick but can't
+    // re-propose charge-attack until the cooldown elapses too.
+    const { world, attacks } = scene({
+      damage: 20,
+      cooldown: 20,
+      duration: 10,
+      effectAt: 5,
+    });
+
+    // Tick 1: charge starts. Tick 6: damage. Tick 11: action ends.
+    for (let i = 1; i <= 11; i++) world.tick();
+    expect(attacks).toHaveLength(1);
+
+    // Ticks 12..20: cooldown still > 0; nothing fires.
+    for (let i = 12; i <= 20; i++) world.tick();
+    expect(attacks).toHaveLength(1);
+
+    // Tick 21: cooldown clears; charge re-proposed; ticks 21..26 to next hit.
+    world.tick();
+    for (let i = 22; i <= 26; i++) world.tick();
+    expect(attacks).toHaveLength(2);
+  });
+});
+
+function scene(opts: ChargeAttackOpts): {
+  world: World;
+  attacker: Unit;
+  target: Unit;
+  attacks: GameEvents['unit:attacked'][];
+} {
+  const bus = new EventBus<GameEvents>();
+  const world = new World(bus, new RNG(1));
+  const attacks: GameEvents['unit:attacked'][] = [];
+  bus.on('unit:attacked', (p) => attacks.push(p));
+
+  const attacker = new Unit({
+    id: 1,
+    team: 'player',
+    glyph: 'M',
+    stats: {
+      maxHp: 100,
+      attackDamage: opts.damage,
+      attackRange: 99,
+      attackCooldownTicks: 1,
+      moveCooldownTicks: 1,
+    },
+    position: { x: 0, y: 0 },
+  });
+  attacker.behaviors.push(new ChargeAttackBehavior(opts));
+  world.units.push(attacker);
+
+  const target = new Unit({
+    id: 2,
+    team: 'enemy',
+    glyph: 'M',
+    stats: {
+      maxHp: 100,
+      attackDamage: 0,
+      attackRange: 1,
+      attackCooldownTicks: 1,
+      moveCooldownTicks: 1,
+    },
+    position: { x: 5, y: 0 },
+  });
+  world.units.push(target);
+
+  return { world, attacker, target, attacks };
+}

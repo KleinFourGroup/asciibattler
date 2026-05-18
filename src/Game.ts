@@ -9,7 +9,6 @@ import { RNG } from './core/RNG';
 import { World } from './sim/World';
 import { MovementBehavior } from './sim/behaviors/MovementBehavior';
 import { AttackBehavior } from './sim/behaviors/AttackBehavior';
-import { DeathBehavior } from './sim/behaviors/DeathBehavior';
 import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
 import type { Team, UnitTemplate } from './sim/Unit';
@@ -217,11 +216,11 @@ export class Game {
 
     for (let i = 0; i < melee.length; i++) {
       const u = this.world.spawnUnit(melee[i]!, team, { x: meleeCols[i]!, y: meleeRow });
-      u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
+      u.behaviors.push(new MovementBehavior(), new AttackBehavior());
     }
     for (let i = 0; i < ranged.length; i++) {
       const u = this.world.spawnUnit(ranged[i]!, team, { x: rangedCols[i]!, y: rangedRow });
-      u.behaviors.push(new MovementBehavior(), new AttackBehavior(), new DeathBehavior());
+      u.behaviors.push(new MovementBehavior(), new AttackBehavior());
     }
   }
 }

@@ -1,0 +1,29 @@
+import type { Action } from '../Action';
+import type { World } from '../World';
+import { MOVE_ACTION_ID, MoveAction, type MoveActionData } from './MoveAction';
+import { ATTACK_ACTION_ID, AttackAction, type AttackActionData } from './AttackAction';
+
+/**
+ * Action factories keyed by `Action.id`. `World.fromJSON` uses these to
+ * rehydrate every unit's `activeAction` from a snapshot. New action kinds
+ * register here; the registry stays a thin lookup table so the union of
+ * supported actions is discoverable in one place.
+ *
+ * Factories take `(data, world)` because some actions reference live world
+ * state (e.g. `AttackAction` resolves a `targetId` via `world.findUnit`).
+ * Pure-data actions like `MoveAction` ignore the world arg.
+ */
+export type ActionFactory = (data: unknown, world: World) => Action;
+
+const FACTORIES: Record<string, ActionFactory> = {
+  [MOVE_ACTION_ID]: (data) => MoveAction.fromData(data as MoveActionData),
+  [ATTACK_ACTION_ID]: (data, world) => AttackAction.fromData(data as AttackActionData, world),
+};
+
+export function createAction(id: string, data: unknown, world: World): Action {
+  const factory = FACTORIES[id];
+  if (!factory) {
+    throw new Error(`createAction: no factory registered for action id '${id}'`);
+  }
+  return factory(data, world);
+}

@@ -41,17 +41,17 @@ describe('Run', () => {
       const a = freshRunWithBus(42);
       const b = freshRunWithBus(42);
       const frontier = a.run.nodeMap.edges.find((e) => e.from === a.run.rootId)!.to;
-      a.bus.emit('run:nodeEntered', { nodeId: frontier });
-      b.bus.emit('run:nodeEntered', { nodeId: frontier });
+      a.run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      b.run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(a.run.currentEncounter).toEqual(b.run.currentEncounter);
     });
   });
 
-  describe('handleNodeEntered', () => {
+  describe('enterNode command', () => {
     it('transitions to battle phase on a frontier hop', () => {
-      const { run, bus } = freshRunWithBus(1);
+      const { run } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: frontier });
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.phase).toBe('battle');
       expect(run.currentNodeId).toBe(frontier);
     });
@@ -61,15 +61,15 @@ describe('Run', () => {
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       const seeds: number[] = [];
       bus.on('battle:started', ({ worldSeed }) => seeds.push(worldSeed));
-      bus.emit('run:nodeEntered', { nodeId: frontier });
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(seeds).toHaveLength(1);
       expect(seeds[0]).toBe(run.currentEncounter!.worldSeed);
     });
 
     it('builds an encounter snapshot with the current player team', () => {
-      const { run, bus } = freshRunWithBus(1);
+      const { run } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: frontier });
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.currentEncounter).not.toBeNull();
       expect(run.currentEncounter!.playerTeam).toEqual(run.team);
       // CHECKPOINT 6: enemy team is sized at playerTeam.length - 1.
@@ -77,15 +77,9 @@ describe('Run', () => {
     });
 
     it('scales enemy maxHp by 1 + 0.05 × destination floor', () => {
-      // Two fresh runs at the same seed, but compare the enemy team's
-      // first-melee maxHp on floor 1 vs the same role on floor 2. The
-      // floor-2 fork consumes more parent RNG, but the per-unit roll
-      // before HP scaling is unrelated to the multiplier we want to
-      // observe — so instead we just verify the rule analytically by
-      // checking the maxHp lies inside the scaled bound.
-      const { run, bus } = freshRunWithBus(1);
+      const { run } = freshRunWithBus(1);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: first });
+      run.dispatch({ kind: 'enterNode', nodeId: first });
       const floor = run.nodeMap.nodes.find((n) => n.id === first)!.floor;
       const multiplier = 1 + 0.05 * floor;
       for (const u of run.currentEncounter!.enemyTeam) {
@@ -97,23 +91,23 @@ describe('Run', () => {
     });
 
     it('ignores non-frontier nodes', () => {
-      const { run, bus } = freshRunWithBus(1);
+      const { run } = freshRunWithBus(1);
       const unreachable = farthestNodeId(run);
-      bus.emit('run:nodeEntered', { nodeId: unreachable });
+      run.dispatch({ kind: 'enterNode', nodeId: unreachable });
       expect(run.phase).toBe('map');
       expect(run.currentNodeId).toBe(run.rootId);
       expect(run.currentEncounter).toBeNull();
     });
 
-    it('ignores events when not in map phase', () => {
-      const { run, bus } = freshRunWithBus(1);
+    it('ignores enterNode when not in map phase', () => {
+      const { run } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: frontier });
-      // Now in battle phase. A second click should not retransition.
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // Now in battle phase. A second dispatch should not retransition.
       const nextFrontier = run.nodeMap.edges.find((e) => e.from === frontier)?.to;
       if (nextFrontier === undefined) throw new Error('test setup: expected a 2nd hop');
       const encounterBefore = run.currentEncounter;
-      bus.emit('run:nodeEntered', { nodeId: nextFrontier });
+      run.dispatch({ kind: 'enterNode', nodeId: nextFrontier });
       expect(run.currentNodeId).toBe(frontier);
       expect(run.currentEncounter).toBe(encounterBefore);
     });
@@ -123,7 +117,7 @@ describe('Run', () => {
     it('player win → recruit phase with an offer', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: frontier });
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
       bus.emit('battle:ended', { winner: 'player' });
       expect(run.phase).toBe('recruit');
       expect(run.currentEncounter).toBeNull();
@@ -134,7 +128,7 @@ describe('Run', () => {
     it('emits recruit:offered with the rolled units on victory', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: frontier });
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
       bus.emit('battle:ended', { winner: 'player' });
@@ -145,7 +139,7 @@ describe('Run', () => {
     it('enemy win → defeat phase (no recruit)', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: frontier });
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
       bus.emit('battle:ended', { winner: 'enemy' });
       expect(run.phase).toBe('defeat');
       expect(run.currentOffer).toBeNull();
@@ -154,7 +148,7 @@ describe('Run', () => {
     it('emits run:defeated on enemy win', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: frontier });
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
       let defeatedCount = 0;
       bus.on('run:defeated', () => defeatedCount++);
       bus.emit('battle:ended', { winner: 'enemy' });
@@ -187,51 +181,71 @@ describe('Run', () => {
     });
   });
 
-  describe('handleRecruitChosen', () => {
+  describe('chooseRecruit command', () => {
     it('adds the chosen unit to the team and returns to map phase', () => {
       const { run, bus } = freshRunWithBus(1);
       driveToRecruitPhase(run, bus);
       const teamSizeBefore = run.team.length;
       const pick = run.currentOffer![0]!;
-      bus.emit('recruit:chosen', { unitTemplate: pick });
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: pick });
       expect(run.phase).toBe('map');
       expect(run.team).toHaveLength(teamSizeBefore + 1);
       expect(run.team[run.team.length - 1]).toEqual(pick);
       expect(run.currentOffer).toBeNull();
     });
 
-    it('ignores recruit:chosen outside of recruit phase', () => {
-      const { run, bus } = freshRunWithBus(1);
+    it('ignores chooseRecruit outside of recruit phase', () => {
+      const { run } = freshRunWithBus(1);
       const sizeBefore = run.team.length;
-      // Run starts in map phase — emitting recruit:chosen here is a no-op.
-      bus.emit('recruit:chosen', { unitTemplate: run.team[0]! });
+      // Run starts in map phase — dispatching here is a no-op.
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.team[0]! });
       expect(run.team).toHaveLength(sizeBefore);
     });
   });
 
+  describe('resetRun command at Run level', () => {
+    it('is a silent no-op (Game intercepts reset, not Run)', () => {
+      const { run } = freshRunWithBus(1);
+      const phaseBefore = run.phase;
+      const nodeBefore = run.currentNodeId;
+      run.dispatch({ kind: 'resetRun' });
+      expect(run.phase).toBe(phaseBefore);
+      expect(run.currentNodeId).toBe(nodeBefore);
+    });
+  });
+
   describe('dispose', () => {
-    it('detaches all subscriptions so a disposed Run ignores future events', () => {
+    it('detaches the battle:ended subscription so a disposed Run ignores future battles', () => {
       const { run, bus } = freshRunWithBus(1);
-      run.dispose();
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: frontier });
-      // A live Run would advance to battle phase here; the disposed one stays put.
-      expect(run.phase).toBe('map');
-      expect(run.currentNodeId).toBe(run.rootId);
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      expect(run.phase).toBe('battle');
+      run.dispose();
+      bus.emit('battle:ended', { winner: 'player' });
+      // A live Run would advance to recruit phase here; the disposed one stays.
+      expect(run.phase).toBe('battle');
     });
 
     it('two Runs sharing a bus do not double-handle once the old one is disposed', () => {
       const bus = new EventBus<GameEvents>();
       const oldRun = new Run(1, bus);
+      const oldFrontier = oldRun.nodeMap.edges.find((e) => e.from === oldRun.nodeMap.rootId)!.to;
+      oldRun.dispatch({ kind: 'enterNode', nodeId: oldFrontier });
+      // Both runs are now in battle phase (well, oldRun is). Dispose it.
       oldRun.dispose();
+
       const newRun = new Run(2, bus);
-      const frontier = newRun.nodeMap.edges.find(
+      const newFrontier = newRun.nodeMap.edges.find(
         (e) => e.from === newRun.nodeMap.rootId,
       )!.to;
-      bus.emit('run:nodeEntered', { nodeId: frontier });
+      newRun.dispatch({ kind: 'enterNode', nodeId: newFrontier });
       expect(newRun.phase).toBe('battle');
-      // The old Run did NOT advance — its handler is gone.
-      expect(oldRun.phase).toBe('map');
+
+      // Now end the new run's battle. The old Run is disposed, so its
+      // battle:ended handler is gone — only newRun reacts.
+      bus.emit('battle:ended', { winner: 'player' });
+      expect(newRun.phase).toBe('recruit');
+      expect(oldRun.phase).toBe('battle'); // unchanged
     });
   });
 
@@ -244,24 +258,60 @@ describe('Run', () => {
     it('records the previous node after a second hop', () => {
       const { run, bus } = freshRunWithBus(1);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      bus.emit('run:nodeEntered', { nodeId: first });
+      run.dispatch({ kind: 'enterNode', nodeId: first });
       // After leaving root → first, root is NOT visited (it's the start).
       expect(run.visitedNodes.has(run.rootId)).toBe(false);
       expect(run.visitedNodes.has(first)).toBe(false);
 
       // Now complete the battle, pick a recruit, and hop to the next node.
       bus.emit('battle:ended', { winner: 'player' });
-      bus.emit('recruit:chosen', { unitTemplate: run.currentOffer![0]! });
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
-      bus.emit('run:nodeEntered', { nodeId: second });
+      run.dispatch({ kind: 'enterNode', nodeId: second });
       expect(run.visitedNodes.has(first)).toBe(true);
+    });
+  });
+
+  describe('round-trip serialization', () => {
+    it('toJSON → fromJSON preserves phase, position, team, and visited set', () => {
+      const { run, bus } = freshRunWithBus(7);
+      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: first });
+      bus.emit('battle:ended', { winner: 'player' });
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+
+      const snap = run.toJSON();
+      const restored = Run.fromJSON(snap, new EventBus<GameEvents>());
+      expect(restored.phase).toBe(run.phase);
+      expect(restored.currentNodeId).toBe(run.currentNodeId);
+      expect(restored.team).toEqual(run.team);
+      expect(Array.from(restored.visitedNodes)).toEqual(Array.from(run.visitedNodes));
+      expect(restored.currentOffer).toBeNull();
+      expect(restored.nodeMap).toEqual(run.nodeMap);
+    });
+
+    it('a restored Run produces the same next encounter as the original', () => {
+      // Walk one Run to mid-map, snapshot, restore on a fresh bus, then
+      // make the same enterNode call on both — they should agree on the
+      // resulting encounter.
+      const { run, bus } = freshRunWithBus(7);
+      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: first });
+      bus.emit('battle:ended', { winner: 'player' });
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+
+      const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
+      const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: second });
+      restored.dispatch({ kind: 'enterNode', nodeId: second });
+      expect(restored.currentEncounter).toEqual(run.currentEncounter);
     });
   });
 });
 
 function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
   const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
-  bus.emit('run:nodeEntered', { nodeId: frontier });
+  run.dispatch({ kind: 'enterNode', nodeId: frontier });
   bus.emit('battle:ended', { winner: 'player' });
 }
 

@@ -40,6 +40,10 @@ class ChargeAttackAction implements Action {
       damage: this.damage,
     });
   }
+
+  toData(): { targetId: number; damage: number } {
+    return { targetId: this.target.id, damage: this.damage };
+  }
 }
 
 interface ChargeAttackOpts {
@@ -50,6 +54,8 @@ interface ChargeAttackOpts {
 }
 
 class ChargeAttackBehavior implements Behavior {
+  readonly kind = 'charge-attack';
+
   constructor(private readonly opts: ChargeAttackOpts) {}
 
   proposeAction(unit: Unit, world: World): ActionProposal | null {

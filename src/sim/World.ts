@@ -1,16 +1,56 @@
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
-import type { RNG } from '../core/RNG';
+import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { GridCoord } from '../core/types';
 import { GRID_SIZE } from '../config';
-import { Unit, type Team, type UnitTemplate } from './Unit';
+import { Unit, type Team, type UnitStats, type UnitTemplate } from './Unit';
 import type { ActionProposal } from './Action';
 import { glyphForArchetype } from './archetypes';
+import type { WorldCommand } from './Command';
+import { createAction } from './actions/registry';
+import { createBehavior } from './behaviors/registry';
+
+const WORLD_SCHEMA_VERSION = 1;
+
+interface ActiveActionSnapshot {
+  actionId: string;
+  actionData: unknown;
+  startTick: number;
+  finishTick: number;
+  effectTicks: readonly number[];
+}
+
+export interface UnitSnapshot {
+  id: number;
+  team: Team;
+  glyph: string;
+  stats: UnitStats;
+  position: GridCoord;
+  currentHp: number;
+  behaviors: string[];
+  actionCooldowns: [string, number][];
+  activeAction: ActiveActionSnapshot | null;
+}
+
+export interface WorldSnapshot {
+  schemaVersion: typeof WORLD_SCHEMA_VERSION;
+  gridSize: number;
+  tickCount: number;
+  ended: boolean;
+  nextUnitId: number;
+  rng: RNGSnapshot;
+  units: UnitSnapshot[];
+  pendingCommands: WorldCommand[];
+}
 
 /**
  * Battle state: grid, units, current tick. Owns the battle's RNG (forked from
  * the run RNG at Step 4.3) so combat rolls don't perturb the run stream.
- * Serializable.
+ *
+ * JSON-serializable end-to-end via `toJSON()` / `World.fromJSON()`. The bus
+ * is intentionally NOT part of the snapshot — callers provide one at
+ * rehydrate time, so a replay or a headless harness can attach its own
+ * recorder.
  */
 export class World {
   readonly gridSize: number;
@@ -21,6 +61,12 @@ export class World {
   private tickCount = 0;
   private nextUnitId = 1;
   private _ended = false;
+  /**
+   * Commands waiting to be applied at the next tick boundary. UI and the
+   * headless harness push via `enqueueCommand`; `tick()` drains the queue
+   * before per-unit step so the apply-point is deterministic for replay.
+   */
+  private readonly commands: WorldCommand[] = [];
 
   constructor(bus: EventBus<GameEvents>, rng: RNG, gridSize: number = GRID_SIZE) {
     this.bus = bus;
@@ -45,10 +91,24 @@ export class World {
   }
 
   /**
+   * Queue a command for the next tick. Commands drain at the top of
+   * `tick()`, before any per-unit step, so order is `tick N enqueued
+   * commands → tick N per-unit step`. Calling this on an ended world is a
+   * no-op (matches `tick()`'s short-circuit).
+   */
+  enqueueCommand(command: WorldCommand): void {
+    if (this._ended) return;
+    this.commands.push(command);
+  }
+
+  /**
    * Advance the simulation by one tick. Per-unit step (in snapshot
    * iteration order, so DeathBehavior-style splicing doesn't skip
    * neighbours):
    *
+   *   0. Drain `commands` queue and apply each at a deterministic point
+   *      (before per-unit step) so command-affected state is visible to
+   *      every unit on the same tick.
    *   1. Death short-circuit. `currentHp <= 0` → emit unit:died, remove
    *      from world, continue. Used to live in DeathBehavior; folded in
    *      here at A1 because a dead unit can't choose to do anything else.
@@ -71,6 +131,11 @@ export class World {
     if (this._ended) return;
     this.tickCount++;
     this.bus.emit('tick', { tick: this.tickCount });
+
+    if (this.commands.length > 0) {
+      const drained = this.commands.splice(0, this.commands.length);
+      for (const cmd of drained) this.applyCommand(cmd);
+    }
 
     for (const unit of this.units.slice()) {
       // 1. Death.
@@ -125,6 +190,16 @@ export class World {
     this.checkBattleEnd();
   }
 
+  /**
+   * Currently a no-op switch — the WorldCommand union is a placeholder
+   * pending C5. Kept here (rather than inlined in tick) so adding new
+   * command kinds is one explicit case statement, not a tick rewrite.
+   */
+  private applyCommand(_command: WorldCommand): void {
+    // C5 fills this in. The 'noop' kind exists so the channel can be
+    // exercised by snapshot tests without coupling to gameplay yet.
+  }
+
   private checkBattleEnd(): void {
     // Empty world isn't "battle over" — it's "no battle yet." Guards the
     // pre-spawn ticks and the (currently impossible, but theoretical)
@@ -168,4 +243,98 @@ export class World {
   findUnit(id: number): Unit | undefined {
     return this.units.find((u) => u.id === id);
   }
+
+  /**
+   * Capture the World's full state as plain JSON. Every field that
+   * affects determinism — RNG state, tick count, every unit's HP /
+   * cooldowns / activeAction, pending command queue — is included. The
+   * bus is excluded; rehydration takes a fresh bus.
+   */
+  toJSON(): WorldSnapshot {
+    return {
+      schemaVersion: WORLD_SCHEMA_VERSION,
+      gridSize: this.gridSize,
+      tickCount: this.tickCount,
+      ended: this._ended,
+      nextUnitId: this.nextUnitId,
+      rng: this.rng.toJSON(),
+      units: this.units.map(snapshotUnit),
+      pendingCommands: this.commands.slice(),
+    };
+  }
+
+  /**
+   * Reconstruct a World from a snapshot. Two-phase: units are
+   * instantiated first (no `activeAction`), then `activeAction`s are
+   * resolved once all units exist (an in-flight `AttackAction` may
+   * reference another unit by id, which has to be present first).
+   */
+  static fromJSON(snap: WorldSnapshot, bus: EventBus<GameEvents>): World {
+    if (snap.schemaVersion !== WORLD_SCHEMA_VERSION) {
+      throw new Error(
+        `World.fromJSON: unsupported schema version ${snap.schemaVersion}`,
+      );
+    }
+    const rng = RNG.fromJSON(snap.rng);
+    const world = new World(bus, rng, snap.gridSize);
+    world.tickCount = snap.tickCount;
+    world._ended = snap.ended;
+    world.nextUnitId = snap.nextUnitId;
+
+    // Phase 1: bare units.
+    for (const us of snap.units) {
+      const unit = new Unit({
+        id: us.id,
+        team: us.team,
+        glyph: us.glyph,
+        stats: us.stats,
+        position: us.position,
+      });
+      unit.currentHp = us.currentHp;
+      for (const [actionId, cd] of us.actionCooldowns) {
+        unit.actionCooldowns.set(actionId, cd);
+      }
+      for (const kind of us.behaviors) unit.behaviors.push(createBehavior(kind));
+      world.units.push(unit);
+    }
+
+    // Phase 2: in-flight actions, now that every unit exists for id lookup.
+    for (let i = 0; i < snap.units.length; i++) {
+      const us = snap.units[i]!;
+      const unit = world.units[i]!;
+      if (us.activeAction) {
+        unit.activeAction = {
+          action: createAction(us.activeAction.actionId, us.activeAction.actionData, world),
+          startTick: us.activeAction.startTick,
+          finishTick: us.activeAction.finishTick,
+          effectTicks: us.activeAction.effectTicks.slice(),
+        };
+      }
+    }
+
+    for (const cmd of snap.pendingCommands) world.commands.push(cmd);
+    return world;
+  }
+}
+
+function snapshotUnit(unit: Unit): UnitSnapshot {
+  return {
+    id: unit.id,
+    team: unit.team,
+    glyph: unit.glyph,
+    stats: unit.stats,
+    position: unit.position,
+    currentHp: unit.currentHp,
+    behaviors: unit.behaviors.map((b) => b.kind),
+    actionCooldowns: Array.from(unit.actionCooldowns.entries()),
+    activeAction: unit.activeAction
+      ? {
+          actionId: unit.activeAction.action.id,
+          actionData: unit.activeAction.action.toData(),
+          startTick: unit.activeAction.startTick,
+          finishTick: unit.activeAction.finishTick,
+          effectTicks: unit.activeAction.effectTicks.slice(),
+        }
+      : null,
+  };
 }

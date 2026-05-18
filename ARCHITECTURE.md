@@ -24,9 +24,9 @@ No frameworks beyond that. UI is plain HTML/CSS overlaid on the canvas via absol
 
 4. **The renderer hides three.js details from gameplay.** Gameplay code calls `spriteRenderer.addSprite(...)` and gets back an opaque handle. It never touches `InstancedMesh`, `BufferAttribute`, or shader uniforms directly. This is the contract that lets us swap the renderer implementation (e.g. to WebGPU) without touching simulation.
 
-5. **Loose coupling via events.** Combat, UI, and FX talk to each other through a tiny event bus. `unit:died`, `battle:started`, `battle:ended`, `tick`, etc. UI never reaches into the scene graph; combat never knows the UI exists.
+5. **Loose coupling via events for outputs; a command channel for inputs.** Notifications of what *happened* (`unit:died`, `battle:started`, `battle:ended`, `tick`) flow through the typed `EventBus`. Player intent — entering a node, picking a recruit, resetting the run, future in-battle commands — flows through a separate typed `Command` channel (`RunCommand` on `Run`, `WorldCommand` on `World`). The bus is fire-and-forget pub/sub; the channel is a deterministic apply-point. Mixing the two breaks both replay-trace stability and the past-tense reading of bus events.
 
-6. **Serializable world state.** The `World` (battle state) and `Run` (meta state) should be JSON-serializable. We don't need save/load for MVP, but designing for it now costs nothing and makes replays + bug repros nearly free later.
+6. **Serializable world state.** The `World` (battle state) and `Run` (meta state) are JSON-serializable end-to-end. `World.toJSON` / `World.fromJSON` and `Run.toJSON` / `Run.fromJSON` capture every field that affects determinism (RNG state, tick count, per-unit HP/cooldowns/activeAction, pending command queue, NodeMap, team, phase, encounter, offer, visited set). The snapshot-roundtrip test in `tests/integration/snapshot-roundtrip.test.ts` asserts that a deserialized World continues to produce a byte-identical event trace compared to the un-roundtripped baseline.
 
 ## Top-level structure
 
@@ -166,7 +166,7 @@ Internally manages a single `InstancedMesh` with instanced attributes for `posit
 
 Bridges simulation and rendering. Subscribes to `unit:moved` events and starts a lerp from the old cell to the new cell over the move-cooldown duration. Per frame, it interpolates every active lerp and pushes positions to the `SpriteRenderer`. Owns visual transient state (in-flight lerps, fade-outs) that has no place in the simulation.
 
-## Event catalog (MVP)
+## Event catalog (outputs)
 
 ```
 tick                    { tick: number }
@@ -177,15 +177,28 @@ unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durati
 unit:attacked           { attackerId: number; targetId: number; damage: number }
 unit:died               { unitId: number }
 run:started             { seed: number }
-run:nodeEntered         { nodeId: number }
-run:resetRequested      { }
 run:victory             { }
 run:defeated            { }
 recruit:offered         { units: UnitTemplate[] }
-recruit:chosen          { unitTemplate: UnitTemplate }
 ```
 
-This list will grow; events are cheap to add. The naming convention is `subject:verbed`.
+This list will grow; events are cheap to add. The naming convention is `subject:verbed`. Bus events are past-tense notifications only — anything imperative goes through the command channel below.
+
+## Command catalog (inputs)
+
+Two channels, both typed unions defined in their respective `Command.ts`:
+
+```
+RunCommand (synchronous; Run.dispatch / RunDispatcher)
+  enterNode               { nodeId: number }
+  chooseRecruit           { unitTemplate: UnitTemplate }
+  resetRun                { }
+
+WorldCommand (queued; drained at top of tick)
+  noop                    { }     # C5 fills this in
+```
+
+UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.dispatch(cmd)`. The headless harness (A3) and any future replay system call the same entry points, so a saved input stream replays identically. Pending `WorldCommand`s are part of the `WorldSnapshot` — a save mid-battle preserves intent.
 
 ## Rendering pipeline
 
@@ -207,4 +220,4 @@ A few things would be over-engineering at MVP scope; flagging them so we know wh
 - **No ECS library.** Behaviors-on-units is enough structure for the foreseeable game. If the unit count explodes or behaviors get genuinely many-to-many, we revisit.
 - **No scene/screen manager class.** `Game.ts` switches between `BattleScreen`, `MapScreen`, etc. with simple if/else for MVP. If we add more screens, we extract a state machine.
 - **No asset loader.** No assets to load. The font atlas is generated at startup synchronously.
-- **No input abstraction.** UI clicks go through DOM event listeners on UI elements. There's no in-canvas input for MVP.
+- **No save/load UI yet.** A2 lays the JSON serialization plumbing (`World.toJSON` / `Run.toJSON`); UI for choosing a save slot and resuming a run waits until C6 makes runs long enough that save matters.

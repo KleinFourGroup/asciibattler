@@ -16,6 +16,9 @@ import { findTarget } from '../Targeting';
  * attack when an ally is critical).
  */
 export class AttackBehavior implements Behavior {
+  static readonly kind = 'attack';
+  readonly kind = AttackBehavior.kind;
+
   proposeAction(unit: Unit, world: World): ActionProposal | null {
     const target = findTarget(unit, world);
     if (target === null) return null;

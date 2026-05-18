@@ -93,6 +93,10 @@ describe('determinism: map generation', () => {
  * encounter snapshot at each battle. Returns clones because Run nulls out
  * `currentEncounter` on battle-end, but the snapshot we captured during
  * 'battle' phase is still the object we want to compare against.
+ *
+ * A2: imperative inputs (enter node, pick recruit) go through Run.dispatch
+ * rather than bus events. `battle:ended` stays on the bus — it's a
+ * notification, not a command.
  */
 function driveTwoBattles(seed: number): BattleEncounter[] {
   const bus = new EventBus<GameEvents>();
@@ -101,16 +105,16 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
 
   const first = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)?.to;
   if (first === undefined) throw new Error('test setup: root has no outgoing edge');
-  bus.emit('run:nodeEntered', { nodeId: first });
+  run.dispatch({ kind: 'enterNode', nodeId: first });
   encounters.push(run.currentEncounter!);
   bus.emit('battle:ended', { winner: 'player' });
-  // 4.4: victory routes through recruit phase. Pick the first offer to
-  // get back to 'map' so the second hop is accepted.
-  bus.emit('recruit:chosen', { unitTemplate: run.currentOffer![0]! });
+  // Victory routes through recruit phase. Pick the first offer to get
+  // back to 'map' so the second hop is accepted.
+  run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
   const second = run.nodeMap.edges.find((e) => e.from === first)?.to;
   if (second === undefined) throw new Error('test setup: first frontier has no outgoing edge');
-  bus.emit('run:nodeEntered', { nodeId: second });
+  run.dispatch({ kind: 'enterNode', nodeId: second });
   encounters.push(run.currentEncounter!);
   bus.emit('battle:ended', { winner: 'player' });
 

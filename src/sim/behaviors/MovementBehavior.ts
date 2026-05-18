@@ -19,6 +19,9 @@ import { findPath } from '../Pathfinding';
  * attack windows overlap.
  */
 export class MovementBehavior implements Behavior {
+  static readonly kind = 'movement';
+  readonly kind = MovementBehavior.kind;
+
   proposeAction(unit: Unit, world: World): ActionProposal | null {
     const target = findTarget(unit, world);
     if (target === null) return null;

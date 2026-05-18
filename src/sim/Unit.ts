@@ -36,8 +36,14 @@ export interface UnitTemplate {
  * all. Behaviors are stateless across ticks; safe to share an instance
  * across units (though Game still creates one per unit for symmetry with
  * future stateful behaviors).
+ *
+ * `kind` is the registry key used by `World` snapshots to rehydrate a
+ * unit's behaviors after JSON round-trip. New Behavior implementations
+ * declare a unique string `kind` and register a factory in
+ * `src/sim/behaviors/registry.ts`.
  */
 export interface Behavior {
+  readonly kind: string;
   proposeAction(unit: Unit, world: World): ActionProposal | null;
 }
 

@@ -13,6 +13,7 @@ import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
 import type { Team, UnitTemplate } from './sim/Unit';
 import { Run } from './run/Run';
+import type { RunCommand, RunDispatcher } from './run/Command';
 import { MapScreen } from './ui/MapScreen';
 import { RecruitScreen } from './ui/RecruitScreen';
 import { GameOverScreen } from './ui/GameOverScreen';
@@ -60,8 +61,14 @@ function rangedColumnsFor(count: number): readonly number[] {
  * Top-level orchestrator. Owns the EventBus, Clock, Renderer, FontAtlas,
  * SpriteRenderer, the Run state machine, and the active battle World (when
  * one is running).
+ *
+ * A2: implements `RunDispatcher`. UI screens hold this as their command
+ * sink. Game forwards `enterNode` / `chooseRecruit` to the live Run and
+ * handles `resetRun` itself (resetting can't be done by the Run being
+ * reset). Because UI captures `Game` rather than `Run`, swapping the
+ * underlying Run on reset is invisible to the UI.
  */
-export class Game {
+export class Game implements RunDispatcher {
   private readonly bus = new EventBus<GameEvents>();
   private readonly clock: Clock;
   private readonly renderer: Renderer;
@@ -78,9 +85,9 @@ export class Game {
   // The bus subscription keeps the instance alive regardless of this reference.
   readonly battleRenderer: BattleRenderer;
   /**
-   * Active run. Replaced on `run:resetRequested` (Step 4.5), so it's not
-   * readonly — but every method should still treat `this.run` as the
-   * authoritative source for meta state.
+   * Active run. Replaced on `resetRun` command, so it's not readonly — but
+   * every method should still treat `this.run` as the authoritative source
+   * for meta state.
    */
   private run: Run;
   private readonly mapScreen: MapScreen;
@@ -120,17 +127,16 @@ export class Game {
     this.bus.on('battle:started', () => this.beginBattle());
     this.bus.on('battle:ended', () => this.endBattle());
 
-    this.mapScreen = new MapScreen(uiMount, this.bus);
-    this.recruitScreen = new RecruitScreen(uiMount, this.bus);
-    this.gameOverScreen = new GameOverScreen(uiMount, this.bus);
+    // UI screens hold `this` as their RunDispatcher. Captured-once is fine
+    // because Game persists for the lifetime of the page; the `run` field
+    // it forwards to is what gets swapped on reset.
+    this.mapScreen = new MapScreen(uiMount, this);
+    this.recruitScreen = new RecruitScreen(uiMount, this);
+    this.gameOverScreen = new GameOverScreen(uiMount, this);
     this.hud = new HUD(uiMount, this.bus);
 
     this.bus.on('recruit:offered', ({ units }) => {
       this.recruitScreen.show(units);
-    });
-    this.bus.on('recruit:chosen', () => {
-      this.recruitScreen.hide();
-      this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
     });
     this.bus.on('run:defeated', () => {
       this.gameOverScreen.show('defeat');
@@ -138,11 +144,42 @@ export class Game {
     this.bus.on('run:victory', () => {
       this.gameOverScreen.show('complete');
     });
-    this.bus.on('run:resetRequested', () => {
-      this.resetRun();
-    });
 
     this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
+  }
+
+  /**
+   * RunDispatcher entry point. UI screens call this; Game routes:
+   *   - `resetRun` → tear down the current Run and start a fresh one.
+   *   - everything else → forward to `this.run.dispatch(cmd)`, then react
+   *     to whatever phase Run is now in.
+   */
+  dispatch(command: RunCommand): void {
+    switch (command.kind) {
+      case 'enterNode':
+        this.run.dispatch(command);
+        // Hide the map screen once the run actually moved into a battle —
+        // if the hop was rejected (non-frontier, wrong phase) the map
+        // stays visible.
+        if (this.run.phase === 'battle') {
+          this.mapScreen.hide();
+        }
+        break;
+      case 'chooseRecruit':
+        this.run.dispatch(command);
+        if (this.run.phase === 'map') {
+          this.recruitScreen.hide();
+          this.mapScreen.show(
+            this.run.nodeMap,
+            this.run.currentNodeId,
+            this.run.visitedNodes,
+          );
+        }
+        break;
+      case 'resetRun':
+        this.resetRun();
+        break;
+    }
   }
 
   start(): void {
@@ -160,7 +197,6 @@ export class Game {
       throw new Error('battle:started fired without a Run encounter');
     }
 
-    this.mapScreen.hide();
     this.world = new World(this.bus, new RNG(encounter.worldSeed), GRID_SIZE);
     // HUD.show must run before spawnTeam so its unit:spawned handler finds
     // the bound world; same ordering rule as BattleRenderer.attach.
@@ -187,9 +223,10 @@ export class Game {
 
   /**
    * Tear down the current Run and start a fresh one with a new seed. Wired
-   * to GameOverScreen's "Begin a new run" button via `run:resetRequested`.
-   * Date.now() seed gives a different map and team per restart; replay /
-   * shareable seeds can hook in later by reading from URL or a debug panel.
+   * to GameOverScreen's "Begin a new run" button via the `resetRun`
+   * command. Date.now() seed gives a different map and team per restart;
+   * replay / shareable seeds can hook in later by reading from URL or a
+   * debug panel.
    */
   private resetRun(): void {
     this.gameOverScreen.hide();

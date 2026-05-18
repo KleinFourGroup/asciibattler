@@ -3,17 +3,24 @@
  * the seeded RNG, the generated NodeMap, the player roster, the current
  * position on the map, and which phase the run is in.
  *
- * Phases follow ROADMAP Step 4.3:
+ * Phases:
  *
- *   map ── run:nodeEntered (frontier) ──▶ battle
- *   battle ── battle:ended (player win) ──▶ map  (recruit phase comes in 4.4)
- *   battle ── battle:ended (enemy win) ──▶ defeat
+ *   map ── enterNode (frontier) ──▶ battle
+ *   battle ── battle:ended (player win, non-terminal) ──▶ recruit
+ *   battle ── battle:ended (player win, terminal)     ──▶ complete
+ *   battle ── battle:ended (enemy win)                ──▶ defeat
+ *   recruit ── chooseRecruit ──▶ map
  *
  * Run does NOT construct the World. Instead it builds an Encounter snapshot
  * (worldSeed + rolled teams) and fires `battle:started`; Game owns the World
- * lifecycle and reads `run.currentEncounter` to set up the next battle. This
- * keeps Run a pure meta-state object — matches ARCHITECTURE.md's "Game owns
- * the orchestration" principle and keeps the sim/meta split clean.
+ * lifecycle and reads `run.currentEncounter` to set up the next battle.
+ *
+ * **A2 command channel.** Imperative inputs from the UI — entering a node,
+ * picking a recruit, resetting the run — come in through `dispatch()` /
+ * the `RunDispatcher` interface, not via bus events. Output notifications
+ * (run:started, recruit:offered, run:victory, run:defeated) stay on the
+ * bus. The split mirrors the inputs (commands) vs outputs (events)
+ * distinction the rest of the codebase now keeps.
  *
  * The RNG hierarchy is the load-bearing determinism invariant: one run RNG,
  * forked once per major draw (nodeMap, starting team, each battle). The
@@ -23,11 +30,12 @@
 
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
-import { RNG } from '../core/RNG';
+import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate, Team } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap } from './NodeMap';
 import { rollOffer } from './Recruitment';
+import type { RunCommand } from './Command';
 
 export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat' | 'complete';
 
@@ -35,6 +43,20 @@ export interface BattleEncounter {
   readonly worldSeed: number;
   readonly playerTeam: readonly UnitTemplate[];
   readonly enemyTeam: readonly UnitTemplate[];
+}
+
+const RUN_SCHEMA_VERSION = 1;
+
+export interface RunSnapshot {
+  schemaVersion: typeof RUN_SCHEMA_VERSION;
+  rng: RNGSnapshot;
+  nodeMap: NodeMap;
+  team: UnitTemplate[];
+  currentNodeId: number;
+  phase: RunPhase;
+  currentEncounter: BattleEncounter | null;
+  currentOffer: UnitTemplate[] | null;
+  visitedNodes: number[];
 }
 
 const STARTING_MELEE = 3;
@@ -63,10 +85,10 @@ export class Run {
    * draw a visual trail of completed nodes. Root is never added — it's not
    * "completed" in the battle sense, it's just the starting point.
    */
-  readonly visitedNodes = new Set<number>();
+  readonly visitedNodes: Set<number>;
 
   private readonly bus: EventBus<GameEvents>;
-  private readonly subscriptions: Array<() => void> = [];
+  private subscriptions: Array<() => void> = [];
 
   constructor(seed: number, bus: EventBus<GameEvents>) {
     this.bus = bus;
@@ -74,20 +96,21 @@ export class Run {
     this.nodeMap = generateNodeMap(this.rng.fork());
     this.team = rollTeam(this.rng.fork());
     this.currentNodeId = this.nodeMap.rootId;
-
-    this.subscriptions.push(
-      bus.on('run:nodeEntered', ({ nodeId }) => this.handleNodeEntered(nodeId)),
-      bus.on('battle:ended', ({ winner }) => this.handleBattleEnded(winner)),
-      bus.on('recruit:chosen', ({ unitTemplate }) => this.handleRecruitChosen(unitTemplate)),
-    );
-
+    this.visitedNodes = new Set<number>();
+    this.subscribe();
     bus.emit('run:started', { seed });
   }
 
+  private subscribe(): void {
+    this.subscriptions.push(
+      this.bus.on('battle:ended', ({ winner }) => this.handleBattleEnded(winner)),
+    );
+  }
+
   /**
-   * Detach every bus subscription. Required when replacing a Run on reset
-   * (Step 4.5) — otherwise the dead Run keeps responding to events and the
-   * new one races against it.
+   * Detach every bus subscription. Required when replacing a Run on reset —
+   * otherwise the dead Run keeps responding to `battle:ended` events and
+   * the new one races against it.
    */
   dispose(): void {
     for (const unsub of this.subscriptions) unsub();
@@ -95,11 +118,34 @@ export class Run {
   }
 
   /**
-   * MapScreen → run. Validates the click is a legal frontier hop, builds the
-   * battle encounter (deterministic from a forked RNG), and announces the
-   * battle so Game can spin up a fresh World.
+   * Apply a command synchronously. Run isn't tick-driven (its lifecycle is
+   * event-driven), so commands are applied immediately rather than queued
+   * for a drain point. `resetRun` isn't handled here — Game intercepts it
+   * because resetting requires disposing this Run and constructing a new
+   * one, which the Run itself can't do for itself.
    */
-  private handleNodeEntered(nodeId: number): void {
+  dispatch(command: RunCommand): void {
+    switch (command.kind) {
+      case 'enterNode':
+        this.handleEnterNode(command.nodeId);
+        break;
+      case 'chooseRecruit':
+        this.handleChooseRecruit(command.unitTemplate);
+        break;
+      case 'resetRun':
+        // No-op at this layer — Game handles reset by disposing this Run
+        // and constructing a new one. Falls through silently rather than
+        // throwing so a misrouted command doesn't crash a battle.
+        break;
+    }
+  }
+
+  /**
+   * MapScreen dispatch → run. Validates the node is a legal frontier hop,
+   * builds the battle encounter (deterministic from a forked RNG), and
+   * announces the battle so Game can spin up a fresh World.
+   */
+  private handleEnterNode(nodeId: number): void {
     if (this.phase !== 'map') return;
     if (!this.isFrontier(nodeId)) return;
 
@@ -157,7 +203,7 @@ export class Run {
     }
   }
 
-  private handleRecruitChosen(unitTemplate: UnitTemplate): void {
+  private handleChooseRecruit(unitTemplate: UnitTemplate): void {
     if (this.phase !== 'recruit') return;
     this.team.push(unitTemplate);
     this.currentOffer = null;
@@ -170,11 +216,56 @@ export class Run {
     }
     return false;
   }
+
+  toJSON(): RunSnapshot {
+    return {
+      schemaVersion: RUN_SCHEMA_VERSION,
+      rng: this.rng.toJSON(),
+      nodeMap: this.nodeMap,
+      team: this.team.slice(),
+      currentNodeId: this.currentNodeId,
+      phase: this.phase,
+      currentEncounter: this.currentEncounter,
+      currentOffer: this.currentOffer ? this.currentOffer.slice() : null,
+      visitedNodes: Array.from(this.visitedNodes),
+    };
+  }
+
+  /**
+   * Rehydrate a Run from a snapshot. Bypasses the constructor (no
+   * `run:started` emit, no nodeMap regeneration) and assigns each field
+   * from the snapshot, then subscribes to the bus for the live
+   * `battle:ended` event. Caller supplies the bus — typically a fresh one
+   * for replay-trace comparison, or the active game bus for save/load.
+   */
+  static fromJSON(snap: RunSnapshot, bus: EventBus<GameEvents>): Run {
+    if (snap.schemaVersion !== RUN_SCHEMA_VERSION) {
+      throw new Error(`Run.fromJSON: unsupported schema version ${snap.schemaVersion}`);
+    }
+    const run = Object.create(Run.prototype) as Run;
+    type Mut = { -readonly [K in keyof Run]: Run[K] } & {
+      bus: EventBus<GameEvents>;
+      subscriptions: Array<() => void>;
+    };
+    const m = run as unknown as Mut;
+    m.bus = bus;
+    m.subscriptions = [];
+    m.rng = RNG.fromJSON(snap.rng);
+    m.nodeMap = snap.nodeMap;
+    m.team = snap.team.slice();
+    m.currentNodeId = snap.currentNodeId;
+    m.phase = snap.phase;
+    m.currentEncounter = snap.currentEncounter;
+    m.currentOffer = snap.currentOffer ? snap.currentOffer.slice() : null;
+    m.visitedNodes = new Set(snap.visitedNodes);
+    run['subscribe']();
+    return run;
+  }
 }
 
 /**
  * Player starting team: fixed 3 melee + 2 ranged. Doesn't change with run
- * progress — recruits grow the team via Run.handleRecruitChosen.
+ * progress — recruits grow the team via Run.handleChooseRecruit.
  */
 function rollTeam(rng: RNG): UnitTemplate[] {
   const team: UnitTemplate[] = [];

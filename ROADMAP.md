@@ -62,22 +62,31 @@ because tests asserted ticks-in-isolation, not cadence-relative-to-lerp).
 - whether to introduce an `Action` interface as a first-class noun, or
   keep `Behavior` and let it produce `Action` candidates internally.
 
-### A2 — Headless input + serialization plumbing
+### A2 — Headless input + serialization plumbing ✓ LANDED
 
-Why now: unlocks both in-battle commands (C5) and save/load + fuzz
-testing. Each becomes a thin layer rather than a wrapper-and-rewrite.
+Unlocks both in-battle commands (C5) and save/load + fuzz testing (A3).
 
-- Define a typed `Command` channel on [World](src/sim/World.ts) and
-  [Run](src/run/Run.ts). Same channel used by the in-browser UI and by a
-  headless test harness.
-- Make `World` and `Run` JSON-round-trippable end-to-end. The contract
-  was always implicit ([ARCHITECTURE.md](ARCHITECTURE.md) principle #6);
-  tighten it. Behavior class instances rehydrate via a registry keyed by
-  `kind`.
-- Snapshot test: serialize → deserialize → simulate N ticks → identical
-  event sequence to the no-roundtrip baseline.
+- Typed `RunCommand` channel + `RunDispatcher` interface in
+  [src/run/Command.ts](src/run/Command.ts). Synchronous dispatch.
+  `enterNode` / `chooseRecruit` / `resetRun` replaced their bus-event
+  imperatives; bus now carries only past-tense notifications.
+- Typed `WorldCommand` channel in [src/sim/Command.ts](src/sim/Command.ts).
+  Queued, drained at top of `World.tick()` (deterministic apply-point).
+  Currently a placeholder — C5 fills in the actual command kinds.
+- `World.toJSON` / `World.fromJSON` and `Run.toJSON` / `Run.fromJSON` —
+  end-to-end JSON round-trip. RNG state, per-unit cooldowns,
+  `activeAction`, NodeMap, phase, encounter, offer, visited set.
+  Behaviors rehydrate via `kind` registry
+  ([src/sim/behaviors/registry.ts](src/sim/behaviors/registry.ts));
+  Actions via `id` registry
+  ([src/sim/actions/registry.ts](src/sim/actions/registry.ts)) with
+  `toData()`/`fromData()` on each Action class.
+- [tests/integration/snapshot-roundtrip.test.ts](tests/integration/snapshot-roundtrip.test.ts)
+  asserts mid-battle snapshot → restore continues the event trace
+  byte-identically with the un-roundtripped baseline.
 
-Save/load UI is *not* part of this; just the plumbing.
+Save/load UI deliberately deferred until C6 (see "What we're explicitly
+NOT doing yet").
 
 ### A3 — Headless fuzz harness
 

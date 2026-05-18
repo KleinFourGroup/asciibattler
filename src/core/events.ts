@@ -3,8 +3,13 @@
  * type system can guide every emitter and subscriber. Naming convention:
  * `subject:verbed` (past tense, lowercase, colon-separated).
  *
- * Mirrors ARCHITECTURE.md "Event catalog (MVP)". When the two drift, this
- * file wins — but please update the doc in the same commit.
+ * Mirrors ARCHITECTURE.md "Event catalog". When the two drift, this file
+ * wins — but please update the doc in the same commit.
+ *
+ * A2: imperative inputs (player wants to enter a node, pick a recruit,
+ * reset the run) moved off the bus and onto the `RunCommand` channel in
+ * `src/run/Command.ts`. The bus carries only outputs ("X just happened")
+ * — that's why every name here is past-tense.
  */
 
 import type { GridCoord } from './types';
@@ -27,11 +32,8 @@ export interface GameEvents extends Record<string, unknown> {
   'unit:died': { unitId: number };
 
   'run:started': { seed: number };
-  'run:nodeEntered': { nodeId: number };
   'run:victory': Record<string, never>;
   'run:defeated': Record<string, never>;
-  'run:resetRequested': Record<string, never>;
 
   'recruit:offered': { units: UnitTemplate[] };
-  'recruit:chosen': { unitTemplate: UnitTemplate };
 }

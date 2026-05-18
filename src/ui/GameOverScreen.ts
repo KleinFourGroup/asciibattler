@@ -1,15 +1,16 @@
 /**
  * Game Over modal. Two variants:
- *   - 'defeat'  — enemy wiped the player team. (Step 4.5)
- *   - 'complete' — player won the terminal battle. (Step 4.6)
+ *   - 'defeat'  — enemy wiped the player team.
+ *   - 'complete' — player won the terminal battle.
  *
  * Same structure for both: heading, subtext, "Begin a new run" button.
  * Variant only changes the copy and accent color, so reusing one component
- * keeps the reset/button flow uniform.
+ * keeps the reset/button flow uniform. The button dispatches a `resetRun`
+ * command (Game handles it by disposing the current Run and starting a
+ * fresh one).
  */
 
-import type { EventBus } from '../core/EventBus';
-import type { GameEvents } from '../core/events';
+import type { RunDispatcher } from '../run/Command';
 import { fadeIn, fadeOutAndRemove } from './fade';
 
 export type GameOverVariant = 'defeat' | 'complete';
@@ -29,7 +30,7 @@ export class GameOverScreen {
 
   constructor(
     private readonly mount: HTMLElement,
-    private readonly bus: EventBus<GameEvents>,
+    private readonly dispatcher: RunDispatcher,
   ) {}
 
   show(variant: GameOverVariant = 'defeat'): void {
@@ -67,7 +68,7 @@ export class GameOverScreen {
     button.className = 'gameover-button';
     button.textContent = 'Begin a new run';
     button.addEventListener('click', () => {
-      this.bus.emit('run:resetRequested', {});
+      this.dispatcher.dispatch({ kind: 'resetRun' });
     });
     panel.appendChild(button);
 

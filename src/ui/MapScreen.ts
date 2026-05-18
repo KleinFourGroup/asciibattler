@@ -1,30 +1,27 @@
 /**
  * Run-level map screen. Renders a NodeMap as positioned `<div>`s wired up
  * with an SVG edge layer behind them. The screen is a *pure view* — it
- * doesn't track which node is current or advance the run. Whoever owns the
- * run state (Game for now, Run.ts at Step 4.3) passes `currentNodeId` into
- * `show()` and listens for `run:nodeEntered` to update it.
+ * doesn't track which node is current or advance the run.
  *
  * Three node states:
  *   - **current** — the player's position. Amber, non-clickable.
  *   - **frontier** — one edge hop from current. Cyan, clickable; click
- *     emits `run:nodeEntered`.
+ *     dispatches an `enterNode` command on the run dispatcher.
  *   - **locked** — everything else. Dimmed, non-clickable.
  */
 
-import type { EventBus } from '../core/EventBus';
-import type { GameEvents } from '../core/events';
 import type { NodeMap } from '../run/NodeMap';
+import type { RunDispatcher } from '../run/Command';
 import { fadeIn, fadeOutAndRemove } from './fade';
 
 export class MapScreen {
   private readonly mount: HTMLElement;
-  private readonly bus: EventBus<GameEvents>;
+  private readonly dispatcher: RunDispatcher;
   private container: HTMLDivElement | null = null;
 
-  constructor(mount: HTMLElement, bus: EventBus<GameEvents>) {
+  constructor(mount: HTMLElement, dispatcher: RunDispatcher) {
     this.mount = mount;
-    this.bus = bus;
+    this.dispatcher = dispatcher;
   }
 
   show(map: NodeMap, currentNodeId: number, visited: ReadonlySet<number> = new Set()): void {
@@ -104,7 +101,7 @@ export class MapScreen {
       } else if (frontier.has(node.id)) {
         div.classList.add('frontier');
         div.addEventListener('click', () => {
-          this.bus.emit('run:nodeEntered', { nodeId: node.id });
+          this.dispatcher.dispatch({ kind: 'enterNode', nodeId: node.id });
         });
       } else if (visited.has(node.id)) {
         div.classList.add('visited');

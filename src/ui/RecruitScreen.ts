@@ -1,16 +1,16 @@
 /**
  * Post-victory recruit modal. Renders the offer as a row of unit cards;
- * clicking a card emits `recruit:chosen`, which Run handles by appending the
- * template to the team and transitioning back to map phase.
+ * clicking a card dispatches a `chooseRecruit` command on the run
+ * dispatcher, which Run handles by appending the template to the team and
+ * transitioning back to map phase.
  *
  * Like MapScreen, this is a pure view — it doesn't track which card is
  * chosen or update Run.team. show/hide is driven by Game in response to
- * recruit:offered / recruit:chosen events.
+ * recruit:offered events and the chooseRecruit command.
  */
 
-import type { EventBus } from '../core/EventBus';
-import type { GameEvents } from '../core/events';
 import type { UnitTemplate } from '../sim/Unit';
+import type { RunDispatcher } from '../run/Command';
 import { glyphForArchetype } from '../sim/archetypes';
 import { ticksToSeconds } from '../config';
 import { fadeIn, fadeOutAndRemove } from './fade';
@@ -20,7 +20,7 @@ export class RecruitScreen {
 
   constructor(
     private readonly mount: HTMLElement,
-    private readonly bus: EventBus<GameEvents>,
+    private readonly dispatcher: RunDispatcher,
   ) {}
 
   show(offer: readonly UnitTemplate[]): void {
@@ -84,7 +84,7 @@ export class RecruitScreen {
     card.appendChild(stats);
 
     card.addEventListener('click', () => {
-      this.bus.emit('recruit:chosen', { unitTemplate: template });
+      this.dispatcher.dispatch({ kind: 'chooseRecruit', unitTemplate: template });
     });
 
     return card;

@@ -7,7 +7,14 @@
  * `fork()` is the load-bearing method: each battle/encounter takes a forked
  * RNG so its randomness can't perturb the run-level stream. See
  * ARCHITECTURE.md and TESTING.md for the full contract.
+ *
+ * `toJSON()` / `fromJSON()` expose the single uint32 of internal state so
+ * `World` and `Run` snapshots can resume the stream exactly mid-flight.
  */
+export interface RNGSnapshot {
+  readonly state: number;
+}
+
 export class RNG {
   private state: number;
 
@@ -15,6 +22,16 @@ export class RNG {
     // Normalize to uint32. Accepts negative or fractional seeds without
     // surprising the caller.
     this.state = seed >>> 0;
+  }
+
+  toJSON(): RNGSnapshot {
+    return { state: this.state };
+  }
+
+  static fromJSON(snap: RNGSnapshot): RNG {
+    const rng = new RNG(0);
+    rng.state = snap.state >>> 0;
+    return rng;
   }
 
   /** Returns a number in `[0, 1)`. */

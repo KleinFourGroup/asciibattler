@@ -3,20 +3,28 @@ import type { World } from './World';
 
 /**
  * An action is the "verb" a unit performs on a tick: move one cell, swing
- * the sword, channel a heal. Actions are stateless singletons — the same
- * `MOVE_ACTION` is shared across every unit that can move. Per-unit timing
- * (cooldowns, durations, effect-tick offsets) is carried by `ActionProposal`,
- * not the Action itself, because per-unit stat rolls vary those numbers.
+ * the sword, channel a heal. Per-unit timing (cooldowns, durations,
+ * effect-tick offsets) is carried by `ActionProposal`, not the Action
+ * itself, because per-unit stat rolls vary those numbers. Move/Attack
+ * capture their other parameters (target unit, dest cell, damage) on the
+ * instance at propose time, since those vary per call.
  *
  * For most actions, `start` does all the work (logical position update,
  * damage, event emission). Multi-tick actions (charge attacks, channelled
  * heals) use `applyEffect` for work that lands later in the action's
  * lifetime — see `effectTicks` on `ActionProposal`.
+ *
+ * `toData()` returns the plain-JSON payload sufficient to reconstruct this
+ * Action via its registered factory (see `src/sim/actions/registry.ts`).
+ * Needed for `World` snapshots — when a unit's `activeAction` is in flight
+ * mid-tick, the snapshot has to carry enough state for future `applyEffect`
+ * calls after rehydrate.
  */
 export interface Action {
   readonly id: string;
   start(unit: Unit, world: World): void;
   applyEffect?(unit: Unit, world: World, tickOffset: number): void;
+  toData(): unknown;
 }
 
 /**

@@ -3,6 +3,14 @@ import type { Action } from '../Action';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 
+export const MOVE_ACTION_ID = 'move';
+
+export interface MoveActionData {
+  from: GridCoord;
+  to: GridCoord;
+  durationTicks: number;
+}
+
 /**
  * Single-step grid movement. Position update is instantaneous on `start`;
  * the renderer reads `durationTicks` from the emitted `unit:moved` event
@@ -13,7 +21,7 @@ import type { World } from '../World';
  * counts.
  */
 export class MoveAction implements Action {
-  readonly id = 'move';
+  readonly id = MOVE_ACTION_ID;
 
   constructor(
     private readonly from: GridCoord,
@@ -29,5 +37,13 @@ export class MoveAction implements Action {
       to: this.to,
       durationTicks: this.durationTicks,
     });
+  }
+
+  toData(): MoveActionData {
+    return { from: this.from, to: this.to, durationTicks: this.durationTicks };
+  }
+
+  static fromData(data: MoveActionData): MoveAction {
+    return new MoveAction(data.from, data.to, data.durationTicks);
   }
 }

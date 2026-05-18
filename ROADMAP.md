@@ -1,254 +1,318 @@
-# ROADMAP.md
+# ROADMAP — Post-MVP
 
-The MVP build order. Each step is small enough to test in isolation. Many steps end with an explicit **CHECKPOINT** where Claude Code should stop, summarize what's been built, and ask the user before proceeding — these are the places where design decisions tend to surface that weren't visible in advance.
+The build order after MVP shipped at CHECKPOINT 7. Companion to
+[DESIGN.md](DESIGN.md), [ARCHITECTURE.md](ARCHITECTURE.md),
+[TODO.md](TODO.md), and the MVP roadmap (now at
+[archive/mvp-roadmap.md](archive/mvp-roadmap.md)).
+
+Synthesized from `feedback.md`, `TODO.md`, and
+[retro/post-mvp-review.md](retro/post-mvp-review.md). Once you've read this,
+`feedback.md` is fully absorbed and can be deleted.
 
 ## Conventions
 
-- **One step at a time.** Don't merge steps for "efficiency." The point is frequent testable increments.
-- **Test before continuing.** Each step has a "verify" note describing what the user should see/do to confirm it works. Don't move to the next step until verified.
-- **Checkpoints are mandatory stops.** When you hit a `**CHECKPOINT**` marker, *stop* and surface the listed questions to the user. Do not silently default.
-- **Defer over-engineering.** If a step tempts you to add structure for a future need, write it down as a comment or a `TODO.md` entry instead of building it.
-- **Keep `DESIGN.md` and `ARCHITECTURE.md` honest.** If a step reveals that a documented decision is wrong, update the doc *in the same commit* as the code change.
+Less rigid than the MVP roadmap. Post-MVP habits (from
+[HANDOFF.md](HANDOFF.md)):
+
+- **Commit per logical change**, not per session.
+- **Surface tradeoffs** before non-obvious calls.
+- **Browser-verify visual work at native resolution.** Preview MCP
+  screenshots are unreliable for sub-pixel detail.
+- **Keep DESIGN.md / ARCHITECTURE.md honest.** Update docs in the same
+  commit as the code that invalidates them.
+
+"Decision points" (rather than mandatory CHECKPOINTs) flag user-input
+moments — palette direction, naming, design tradeoffs. Stop and ask.
 
 ---
 
-## Phase 0 — Project setup
+## Phase A — Foundation refactors
 
-### Step 0.1 — Scaffold the project
+These touch load-bearing seams in sim, render, and infra. Landing them
+*before* gameplay expansion (Phase C) avoids fighting array-order
+behavior priority, hard-coded stats, and DOM-only screens forever after.
 
-Initialize a Vite + TypeScript project. Install `three`, `simplex-noise`, dev dependencies (`@types/three`, ESLint, Prettier). Set up `tsconfig.json` with strict mode. Create the folder structure from `ARCHITECTURE.md`, with empty placeholder files where helpful. Configure ESLint to flag direct `Math.random()` usage in `src/sim/` and `src/run/`.
+### A1 — Action selector + cooldown/duration split + multi-tick effects
 
-**Verify:** `npm run dev` starts Vite without errors. Opening the page shows a blank canvas. ESLint runs clean.
+Bundled because all three touch the same call sites
+([World.tick()](src/sim/World.ts), `Behavior.update`, `Unit.actionCooldown`).
+One disruptive refactor is cheaper than three.
 
-### Step 0.2 — Bootstrap the render loop
+- Replace [src/sim/Unit.ts](src/sim/Unit.ts) `behaviors` array-order
+  priority with an explicit selector. Each candidate action scores or
+  vetoes itself; unit picks the highest-scoring valid action.
+- Split the cooldown concept:
+  - **Action cooldown** — ticks before the *same* action can fire again.
+  - **Action duration** — ticks before *any* action can fire next. Captures
+    "this action takes time to perform" (windup + recovery). For movement
+    and basic attack these are equal, hence the existing shared
+    `actionCooldown`. New actions (charge, channel) will set them
+    independently.
+- Support multi-tick action effects: an action may schedule execution at
+  ticks `start + k` for one or more k > 0, not only `start`. Charge-up
+  attacks, delayed AoEs, "hits twice over 3 ticks" become expressible.
 
-Create `Game.ts` and `Renderer.ts`. Set up a `WebGLRenderer`, a `PerspectiveCamera` positioned at the planned fixed angle (~45° down), a `Scene`, and a `requestAnimationFrame` loop. Clear color: `TERMINAL_BLACK`. Add a single placeholder mesh (a wireframe cube at origin) just to confirm rendering works. Add `OrbitControls` *temporarily* for dev convenience — we'll remove before MVP ships.
+Test: extend [tests/integration/determinism.test.ts](tests/integration/determinism.test.ts)
+with a fixture that includes a multi-tick action; add a cooldown-cadence
+contract test (the retro flagged that idle-frame stutter went uncaught
+because tests asserted ticks-in-isolation, not cadence-relative-to-lerp).
 
-**Verify:** A wireframe cube renders on a black background. FPS counter (browser devtools) shows steady framerate.
+**Decision point A1:** before implementing, confirm
+- naming: `cooldown` vs `duration` clear enough, or pick different words?
+- whether to introduce an `Action` interface as a first-class noun, or
+  keep `Behavior` and let it produce `Action` candidates internally.
+
+### A2 — Headless input + serialization plumbing
+
+Why now: unlocks both in-battle commands (C5) and save/load + fuzz
+testing. Each becomes a thin layer rather than a wrapper-and-rewrite.
+
+- Define a typed `Command` channel on [World](src/sim/World.ts) and
+  [Run](src/run/Run.ts). Same channel used by the in-browser UI and by a
+  headless test harness.
+- Make `World` and `Run` JSON-round-trippable end-to-end. The contract
+  was always implicit ([ARCHITECTURE.md](ARCHITECTURE.md) principle #6);
+  tighten it. Behavior class instances rehydrate via a registry keyed by
+  `kind`.
+- Snapshot test: serialize → deserialize → simulate N ticks → identical
+  event sequence to the no-roundtrip baseline.
+
+Save/load UI is *not* part of this; just the plumbing.
+
+### A3 — Headless fuzz harness
+
+Why now: Phase C content (longer runs, new archetypes, leveling) needs
+empirical balance data. Also: catches determinism violations the eyeball
+will miss.
+
+- Entry point that runs N full runs headless from a seed list, with a
+  pluggable "strategy" interface for recruit and (later) in-battle
+  command decisions.
+- Modes to start:
+  - **Pure random** — recruit picks chosen uniformly.
+  - **Greedy** — recruit prefers the archetype with lowest current count.
+- Output: aggregated CSV (run length, deaths per floor, win rate by team
+  composition) plus a per-run markdown trace for the failures.
+- Lands as `tests/fuzz/`, opt-in (skipped by default in `npm test`).
+
+### A4 — Config externalization
+
+Why now: before stat-roll tables grow with new archetypes (C2/C3), pull
+them out of TypeScript so balance edits don't require recompiling.
+
+- Move archetype stat bounds, recruitment composition rules, difficulty
+  curve, etc., into `config/*.json` files. Validate against TS interfaces
+  at boot.
+- Hoist the shader source out of the `const` literals in
+  [src/render/PostProcess.ts](src/render/PostProcess.ts) and friends into
+  the existing-but-empty `*.glsl` stub files. Vite has `?raw` imports.
+
+### A5 — Scene system
+
+Why deferred (but not skipped): every non-battle "screen" today is a DOM
+modal toggled by [Game.ts](src/Game.ts). The first feature requiring
+engine rendering outside battle (a 3D map view, a minigame, an animated
+recruit screen) forces this refactor. Flagging here so it lands *before*
+that feature, not during.
+
+- `Scene` interface: `mount(canvas)`, `tick(dt)`, `dispose()`. `Game`
+  becomes a scene-stack manager.
+- Migration: wrap the current `BattleRenderer + World` pair into a
+  `BattleScene`. DOM-only screens stay DOM-only for now; they just become
+  `Scene` instances that mount no 3D content.
 
 ---
 
-## Phase 1 — Core engine primitives
+## Phase B — Style and visual direction
 
-### Step 1.1 — `RNG`
+Mostly independent of Phase A and of each other. Order by what you want
+to look at first.
 
-Implement the seeded RNG (mulberry32 is fine — small, fast, good enough). Include `next`, `int`, `pick`, and `fork`. Write a tiny test (just a script, no test framework needed) that demonstrates: same seed → same sequence; `fork()` produces an independent stream that's also deterministic.
+### B1 — Palette experiment ("Tron shift")
 
-**Verify:** Run the test script, confirm output is identical across runs.
+Per feedback: the strict palette quant is too restrictive for glow
+effects. Move toward terminal greens + ambers + neons + any darker/lighter
+shades up to black/white. Vibe shifts from "old terminal" toward "Tron."
 
-### Step 1.2 — `EventBus`
+**Approach:** build a side-by-side demo page rendering the same battle
+frame under several variants:
+- (a) current strict palette
+- (b) hue-locked, free luminance (palette controls hue families, allows
+  any brightness)
+- (c) full-RGB but saturation-clamped
+- (d) a user-proposed alternative
 
-Implement the typed event bus. Define a `GameEvents` type with the events from `ARCHITECTURE.md` (just the type shapes; nothing emits them yet).
+**Decision point B1:** user picks; update DESIGN.md aesthetic section
+and the palette-quant pass in [PostProcess.ts](src/render/PostProcess.ts).
 
-**Verify:** Compiles. Manual smoke test: subscribe to an event, emit it, confirm handler fires.
+Touches the load-bearing palette-quant gotchas (HANDOFF #2–#4). Re-read
+those before designing the new pass.
 
-### Step 1.3 — `Clock` and fixed-timestep loop
+### B2 — Low-poly 3D asset style
 
-Implement the accumulator-based fixed-timestep clock. Wire it into `Game`. For now, the "tick" just emits a `tick` event and logs the tick number every 10 ticks.
+Feedback: more deliberate low-poly style for 3D assets.
 
-**Verify:** Console shows ticks accumulating at ~10/sec regardless of render framerate. Try blocking the main thread briefly — when it unblocks, the clock catches up by running multiple ticks in one frame.
+**Decision point B2:** flat-shaded or smooth-shaded? Hand-authored
+meshes or procedural-from-simplex? Wall/obstacle look (couples to C1).
 
-**CHECKPOINT 1.** Confirm with user:
-- Tick rate of 10Hz feels right? (Easy to change; surfaced now because it affects unit stat tuning later.)
-- Anything to add to the event catalog before we start using it?
+### B3 — Floating per-unit HP bars + action progress bar
 
----
+[TODO](TODO.md) item, expanded. Two `InstancedBufferGeometry` quads per
+unit (background + width-scaled fill) tracked through `SpriteAnimator`'s
+lerp pipeline. Plus a thinner second bar showing action progress (the
+"duration" portion of A1 — useful only after A1 lands).
 
-## Phase 2 — Rendering primitives
+Avoid HTML overlay — palette quant doesn't apply to DOM, would clash.
 
-### Step 2.1 — Font atlas
+### B4 — Bake grid + tighten vertical layout
 
-Build `FontAtlas.ts`. At startup, render a fixed set of glyphs (`M`, `a`, `@`, plus digits and a few punctuation marks for HUD use later) onto a canvas2d in a monospace font, in white. Upload the canvas as a `THREE.Texture`. Expose a `getGlyphUV(glyph: string): { u0, v0, u1, v1 }` lookup.
+[TODO](TODO.md) items: bake grid lines into the terrain fragment shader
+([TerrainRenderer.ts](src/render/TerrainRenderer.ts)) instead of a
+dev-only `GridHelper` overlay; reduce the `PLANE_BASE_Y / SPRITE_Y` gaps
+so the diorama feels flush rather than stacked.
 
-**Verify:** Render the atlas texture to a plane in the scene temporarily. Glyphs are crisp, well-spaced, and the lookup returns sensible UVs.
+### B5 — Scanlines extending over DOM UI
 
-### Step 2.2 — `SpriteRenderer`: static sprites
+Feedback: dither staying canvas-only is fine, but scanlines breaking at
+the canvas/DOM seam reads as incongruous.
 
-Build `SpriteRenderer.ts` with a single `InstancedMesh` of quads. Instanced attributes: `instancePosition` (vec3), `instanceGlyphUV` (vec4), `instanceColor` (vec3), `instanceAlpha` (float). Vertex shader: standard billboard math (cancel camera rotation). Fragment shader: sample the atlas with `instanceGlyphUV`, multiply by `instanceColor`, output with `instanceAlpha`. Implement `addSprite`, `removeSprite`, but **no updates yet** — keep it simple.
+Options:
+- CSS `repeating-linear-gradient` overlay on the UI layer, synced to the
+  canvas scanline pass parameters.
+- A second full-screen canvas above the DOM with `mix-blend-mode`.
 
-Add 5 sprites at random positions to confirm it works.
+**Decision point B5:** which approach. Depends on whether DOM scanlines
+need to exactly track the canvas pass (frequency, intensity, alignment).
 
-**Verify:** Five glyphs render in 3D space, billboarded toward the camera (try moving the OrbitControls camera; they should always face you). Colors are correct per-instance.
+### B6 — Audio
 
-### Step 2.3 — `SpriteRenderer`: dynamic updates
+Big perceptual win for contained scope. Retro flagged this; autobattlers
+live or die on attack/death sound feedback.
 
-Implement `updateSprite`. Confirm you can change a sprite's position, color, and alpha after creation. Confirm `removeSprite` correctly compacts the instance buffer and decrements the active count.
+Scope: attack-impact, death, recruit-card-flip, UI clicks, run-complete
+fanfare. HTMLAudioElement to start; revisit Web Audio API if we need
+spatialization or precise scheduling.
 
-**Verify:** Animate one sprite in a circle via `updateSprite` calls from the render loop. Spawn and despawn sprites with a keypress; instance count is correctly maintained.
+### B7 — Root node clarity
 
-**CHECKPOINT 2.** Confirm with user:
-- Glyph appearance / font choice acceptable?
-- Sprite scale relative to grid (which doesn't exist yet) — eyeball check before we lock dimensions?
-
-### Step 2.4 — `TerrainRenderer`
-
-Generate a subdivided plane (e.g. 64×64 segments) sized to the planned grid. Displace vertices in the vertex shader (or CPU-side at generation; either is fine for static terrain) using seeded simplex noise. Fragment shader: color by height and slope, quantized to dark palette variants (`DARK_TERMINAL_GREEN`, `DARK_TERMINAL_AMBER`, `DARK_FLOURESCENT_BLUE`).
-
-**Verify:** Terrain renders under the sprites. Same seed produces the same terrain.
-
-### Step 2.5 — Post-process pipeline
-
-Wire up `EffectComposer`. Add a `RenderPass` followed by a custom palette-quantization pass that snaps every output pixel to the nearest color in the palette. This is the always-on pass. Leave hooks for scanlines/dither but don't implement them yet — note as `TODO`.
-
-**Verify:** Whole scene now visibly snaps to palette. Compare side-by-side with composer disabled to confirm the effect is doing something.
-
-**CHECKPOINT 3.** Confirm with user:
-- Overall look — does the rendering vibe match the intended aesthetic? This is the last cheap moment to course-correct before gameplay layers on top.
-- Should we add scanlines / dither now, or defer until after gameplay works?
-
----
-
-## Phase 3 — Simulation: the battle loop
-
-### Step 3.1 — `World` skeleton
-
-Define `World` with: grid dimensions (12×12), unit list (empty for now), current tick (0), and an `RNG` instance. Implement `tick()` as a no-op that increments the counter and emits the `tick` event. Wire `Game` to construct a `World` and call `tick()` from the clock.
-
-**Verify:** `tick` events fire from the world; tick counter advances.
-
-### Step 3.2 — `Unit` and archetypes
-
-Define `Unit` and `Behavior` per `ARCHITECTURE.md`. Define `archetypes.ts` with melee and ranged stat bounds and a `rollUnit(archetype, rng)` function. Add a `spawnUnit(template, team, position)` method to `World`.
-
-Spawn 5 player melees and 5 enemy melees at fixed positions on the grid. Have `World` emit a sprite for each via `unit:spawned` — but actually, this is where the simulation/render seam matters: a `BattleRenderer` class subscribes to `unit:spawned` and tells `SpriteRenderer` to create a sprite. The sim doesn't call `SpriteRenderer` directly.
-
-**Verify:** 10 sprites appear on the grid in the correct grid-aligned world positions. Player units green, enemies red. They don't do anything yet.
-
-**CHECKPOINT 4.** Confirm with user:
-- Grid → world coordinate mapping (cell size, where origin sits, etc.) looks right?
-- The `BattleRenderer`-as-translator pattern is what we want for keeping sim and render separate?
-
-### Step 3.3 — `Pathfinding`
-
-Implement A* on the grid as a pure function: `findPath(start, goal, blockers, gridSize): GridCoord[]`. No behaviors use it yet. Write a tiny test that pathfinds around a few blockers.
-
-**Verify:** Test passes. Pathfinding handles "no path" gracefully (returns empty array).
-
-### Step 3.4 — `Targeting`
-
-Implement nearest-enemy targeting as a pure function: `findTarget(unit, world): Unit | null`. Chebyshev distance, ties broken by lowest HP, deterministic for equal HP (e.g. by unit id).
-
-**Verify:** Test with a contrived `World` state.
-
-### Step 3.5 — `MovementBehavior`
-
-Implement `MovementBehavior`. On each tick where the move cooldown has elapsed: find target (if any), compute path to a cell within attack range, move one step along the path, reset cooldown. Emit `unit:moved` with `from`, `to`, and `durationTicks` (= move cooldown). The simulation updates `unit.position` *instantly* on the tick — the event tells the renderer how long to animate.
-
-Wire this behavior onto all spawned units. For now, sprites still teleport (we haven't built the animator yet).
-
-**Verify:** Units snap-move toward each other across the grid each tick. Two opposing teams converge.
-
-### Step 3.6 — `SpriteAnimator`
-
-Subscribe to `unit:moved`. Convert tick durations to seconds. Start a lerp from the old cell's world position to the new cell's world position over that duration. Each frame, update active lerps and push interpolated positions to the `SpriteRenderer`. On completion, snap to final position.
-
-**Verify:** Units now glide smoothly between cells instead of teleporting. Movement reads as continuous even though the sim is discrete.
-
-### Step 3.7 — `AttackBehavior`
-
-Implement `AttackBehavior`. On each tick where the attack cooldown has elapsed and a target is within range: deal damage, emit `unit:attacked`, reset cooldown. Add a brief shader flash on the attacker (color → white for 2 ticks) so attacks are visible.
-
-**Verify:** Units stop when adjacent to an enemy and visibly attack. HP decreases (log to console; HUD comes later).
-
-### Step 3.8 — `DeathBehavior`
-
-Implement death. When `currentHp <= 0`, emit `unit:died`, remove from world. Renderer subscribes and fades the sprite out (alpha lerp over ~0.3s) before removing it.
-
-**Verify:** Units die when their HP hits zero, fade out cleanly, and are removed.
-
-### Step 3.9 — Battle end condition
-
-Detect when one team is fully eliminated. Emit `battle:ended` with the winner. For now, just log it and freeze the world.
-
-**Verify:** A battle plays out to completion and `battle:ended` fires with the correct winner. Try several seeds — outcomes vary but are deterministic per seed.
-
-**CHECKPOINT 5.** Confirm with user:
-- Battle pacing — too fast, too slow, about right? This is when we tune `TICK_RATE` and the per-archetype cooldown bounds.
-- Stat bounds for melee vs. ranged producing interesting fights?
-- Anything visually missing from combat (clearer attack indicator, damage numbers, etc.)?
+[TODO](TODO.md) item. Node 0 reads as a skipped option because it uses
+the same numbered-circle visual as battle nodes. Swap the glyph (`▶` or
+`@`) or change the shape so it visually reads as origin.
 
 ---
 
-## Phase 4 — Run structure
+## Phase C — Gameplay expansion
 
-### Step 4.1 — `NodeMap` generation
+**Hard prerequisite:** A1 (action selector) before any of these. A4
+(config externalization) before C2/C3. A3 (fuzz harness) before C6.
 
-Implement DAG generation. Layered structure: N floors, each floor has 1–4 nodes, edges connect nodes between adjacent floors with some branching density. Root and terminal are single nodes. Seeded from the run RNG. All nodes are battle nodes for MVP.
+### C1 — Tile-based terrain with obstacles
 
-Write a quick text-based dump (`console.log` an ASCII representation) to verify structure.
+Replace "terrain is decoration" with a grid of tile types. Each tile
+type has properties: passable / blocking, optional movement cost
+modifier, optional combat modifier (cover, damage bonus, etc.). Walls
+and obstacles populate the arena per encounter seed.
 
-**Verify:** Generated maps look reasonable: connected, layered, branchy but not chaotic. Same seed → same map.
+**Decision point C1:** walls as rendered 3D blocks or roguelike
+billboarded `#`? Likely couples to B2 (low-poly direction).
 
-### Step 4.2 — `MapScreen` UI
+Pathfinding ([src/sim/Pathfinding.ts](src/sim/Pathfinding.ts)) already
+takes blockers; the integration cost is mostly in encounter generation
+and the renderer.
 
-Build the node map UI in plain HTML/CSS. Render nodes as positioned `<div>`s with SVG edges between them. Highlight the current node and the accessible frontier. Clicking an accessible node fires a `run:nodeEntered` event.
+### C2 — New archetypes: mage, rogue, healer
 
-**Verify:** Map renders, you can click a frontier node, the event fires.
+Enabled by A1 (none of these fit the move-or-attack mental model).
+Sketches — refine during impl:
+- **Mage** — slow charge-up attack, AoE or long range. Uses multi-tick
+  action.
+- **Rogue** — fast attack speed, low HP, kites between attacks. New
+  action: post-attack reposition.
+- **Healer** — avoids combat; heals lowest-HP ally in range each cycle.
 
-### Step 4.3 — `Run` state machine
+**Decision point C2:** glyph assignments (`M`/`a`/`m`/`r`/`h`? lowercase
+`m` vs uppercase `M` ambiguity?). Update the
+[FontAtlas](src/render/FontAtlas.ts) glyph set.
 
-Implement `Run`. Owns the current map, player team, position. Wire `Game` to switch between `MapScreen` and battle view based on run state. On entering a battle node, generate a battle (forked RNG, enemy team scaled to floor depth in a trivial way for MVP — e.g. enemy count = floor + 4).
+### C3 — Recruitment refactor: draft from pool + rarity
 
-**Verify:** Start a run → see map → click a node → battle plays out → currently freezes at end (next step handles transition).
+Feedback: random stat rolls are too unconstrained. Shift to drafting
+from a pool of pre-defined unit types with rarity tiers.
 
-### Step 4.4 — Victory and recruitment
+- Pool grows as we add archetypes (C2 unlocks the variety).
+- Rarity tiers: common (base archetypes), uncommon (mage, healer), rare
+  (specialist variants). Offer composition weighted by floor depth.
+- Existing "guarantee at least one melee + one ranged" rule generalizes
+  to "guarantee role diversity" — define carefully when C2 has landed.
 
-On `battle:ended` with player winning: show `RecruitScreen` with 2–3 randomly rolled unit options. Player picks one; it's added to their team. Then return to `MapScreen`, with the chosen node marked completed and the new frontier updated.
+### C4 — Unit upgrade / leveling system
 
-**Verify:** Win a battle → see 3 unit choices → pick one → return to map with the new unit in the team. Next battle has the new unit.
+After C3 stabilizes. Sketch: post-battle option to level an existing
+unit instead of (or in addition to) recruit. Levels grant +stats and
+possibly +abilities at thresholds. Needs A4 for level curves.
 
-### Step 4.5 — Defeat and run reset
+**Decision point C4:** level vs recruit as exclusive choice or both per
+battle? Tied to how steep the difficulty curve is at C6.
 
-On `battle:ended` with enemy winning: show `GameOverScreen`. Button to start a new run with a fresh seed.
+### C5 — Limited in-battle commands
 
-**Verify:** Lose a battle → see game over → start new run → fresh map, fresh team.
+Enabled by A2. Targetless commands (switch to defensive AI, retreat) and
+single-target commands (focus this enemy, hold this location).
 
-### Step 4.6 — Run completion
+**Decision point C5:** how many command uses per battle? Cost gating
+(cooldown, charges, none)? Interaction with difficulty.
 
-When the player reaches the terminal node and wins: show a "run complete" version of `GameOverScreen`.
+### C6 — Multi-map / longer runs
 
-**Verify:** Play through to the terminal node, win, see the completion screen.
+Expand each map to 10 floors. Multiple maps per run. Target ~1 hour per
+run.
 
-**CHECKPOINT 6.** Resolved:
-- Map size and branching density: keep 5 floors / 8–10 nodes / 2–3 wide.
-- Recruit offers: 3 cards, but each offer guarantees at least one melee + one ranged so the choice is never archetype-locked.
-- Difficulty: enemy team size = `playerTeam.length - 1` (keeps the player marginally ahead, no snowball amplification); enemy `maxHp × (1 + 0.05 × floor)` so deeper battles toughen up. Stat-roll bounds otherwise shared.
+Hard prerequisite: A3 (fuzz harness) — difficulty scaling will need
+empirical tuning. The current `enemy.length = playerSize - 1` and `+5%
+HP per floor` formula works for 4-floor MVP runs; it won't survive
+40+ floors without tuning.
+
+**Decision point C6:** terminology for the multi-map structure. "Acts"?
+"Regions"? Inter-map transitions and persistent state (HP carry-over?
+recruit availability?).
+
+### C7 — (Speculative) Split battles + meta-health
+
+User-flagged: each combat as a series of smaller battles drawing
+subsets of the team, with wins/losses depleting a meta-health pool.
+Deckbuilder-roguelike inspiration.
+
+Tabled until C6 lands and we can see whether snowballing is still a
+problem at longer-run scale. Large design surface — don't build
+speculatively.
 
 ---
 
-## Phase 5 — HUD and polish
+## Cleanup / chores
 
-### Step 5.1 — In-battle HUD
+Not gated; can land any time.
 
-Build the HUD: current floor, both team rosters with HP bars, current tick (optional, debug). Subscribe to relevant events to keep it live.
-
-**Verify:** HUD updates in real time during battles.
-
-### Step 5.2 — Map → battle transitions
-
-Add a brief fade transition between screens so context changes don't feel abrupt. CSS animations on the UI layer are sufficient.
-
-**Verify:** Transitions feel smooth.
-
-### Step 5.3 — Remove dev affordances
-
-Remove `OrbitControls`, debug logs, debug overlays. Lock the camera to the intended fixed angle.
-
-**Verify:** Game looks like a game, not a dev build.
-
-### Step 5.4 — Pass on post-process polish
-
-Implement the deferred scanlines / dither passes if not already done. Tune intensity.
-
-**Verify:** Final look matches the intended aesthetic.
-
-**CHECKPOINT 7 — MVP REVIEW.** Stop and demo to user end-to-end. Confirm:
-- Loop feels complete?
-- Anything that should be in MVP that isn't?
-- What's the top-priority post-MVP item to plan for next?
+- **Pathfinding directional tie-break.** [TODO](TODO.md) — units crab
+  leftward on equal-cost ties.
+- **`world.findUnit` O(n).** Retro flagged. Add `Map<id, Unit>` alongside
+  the array. Cheap when it starts to bite (probably during C6).
+- **Favicon.** [TODO](TODO.md). Inline SVG glyph.
+- **`.gitattributes`** to normalize line endings. Stops the CRLF warnings
+  on every commit (retro item).
+- **Bundle chunk-size warning.** Bump `chunkSizeWarningLimit` in
+  [vite.config.ts](vite.config.ts), or code-split three.js if it gets
+  noisy.
 
 ---
 
-## After MVP
+## What we're explicitly NOT doing yet
 
-Refer to the "Out of scope" list in `DESIGN.md` for the post-MVP backlog. Don't start picking those up until the user explicitly chooses what's next — many of them interact (e.g. shop nodes assume an economy assumes synergies-worth-buying), so they need to be sequenced together.
+- **Save/load UI.** A2 lays the plumbing; the actual "load this saved
+  run" UX is deferred until C6 (long enough runs that save matters).
+- **Replay system.** Free once A2 lands; build the UI when there's a
+  reason (shareable seeds, bug repros).
+- **Generic status-effect system.** A1 will support multi-tick effects
+  technically. Resist building a generic status system until C2 reveals
+  what's actually needed.
+- **Boss / elite encounters.** Deferred until C3 + C6 stabilize the
+  recruit/depth surface.

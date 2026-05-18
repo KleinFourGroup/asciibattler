@@ -1,0 +1,171 @@
+# AGENTS.md
+
+Orientation doc for AI coding assistants (Claude Code, etc.) picking up
+this project cold. If you're a human, you probably want
+[HANDOFF.md](HANDOFF.md) instead.
+
+## First thing
+
+**Read [HANDOFF.md](HANDOFF.md) before doing anything else.** It is the
+authoritative session-start orientation: where the project stands, what's
+next, how we collaborate, and — importantly — the list of hard-won fixes
+that will look weird without context. Do not "clean up" anything on that
+list without understanding why it exists.
+
+After HANDOFF, the docs you'll cross-reference most often:
+
+- [DESIGN.md](DESIGN.md) — what we're building and why it feels the way
+  it feels. The aesthetic / mechanics source of truth.
+- [ARCHITECTURE.md](ARCHITECTURE.md) — how the code is organized.
+  Includes the event catalog, key abstractions, the sim/render seam.
+- [ROADMAP.md](ROADMAP.md) — post-MVP build order. Phase A (foundation
+  refactors) → B (style/visual) → C (gameplay expansion). The original
+  MVP roadmap is at [archive/mvp-roadmap.md](archive/mvp-roadmap.md).
+- [TODO.md](TODO.md) — small follow-ups that aren't roadmap steps.
+- [TESTING.md](TESTING.md) — what gets tested (`core`, `sim`, `run`),
+  what doesn't (`render`, `ui`), and the determinism contract.
+- [retro/](retro/) — [scratchpad.md](retro/scratchpad.md) (rolling
+  process notes) and [post-mvp-review.md](retro/post-mvp-review.md)
+  (CHECKPOINT 7 retrospective).
+
+## What this project is
+
+A browser-based tick-based autobattler with a Slay-the-Spire-style run
+structure. ASCII glyphs on billboarded quads, palette-quantized via
+post-process, CRT-diorama feel. MVP shipped — playable end-to-end at
+[asciibattler on GitHub Pages]. Now in post-MVP territory.
+
+Stack: TypeScript (strict), three.js, Vite, Vitest. No frameworks; UI is
+plain HTML/CSS overlaid on the canvas. See ARCHITECTURE.md for the full
+shape.
+
+## How we collaborate
+
+The strict "one step → one commit, stop at every CHECKPOINT" rhythm was
+for the MVP build. Post-MVP is freer, but the underlying habits still
+apply:
+
+- **Commit per logical change**, not per session-of-work. Split commits
+  when a step's intent grows mid-flight.
+- **Surface tradeoffs to the user** before non-obvious calls (shader
+  thresholds, refactor scope, API shape, naming decisions). Don't ship
+  on "looks great!" when there are open questions — the retrospective
+  flagged this as something to be more deliberate about.
+- **Browser-verify visual work at native resolution.** The Preview MCP
+  screenshots are unreliable for sub-pixel detail (JPEG compression
+  smears 1–2px features). If a screenshot contradicts intuition, sample
+  canvas pixels via `getImageData` first, or ask the user to check in
+  their native browser.
+- **Keep DESIGN.md / ARCHITECTURE.md honest.** If a change reveals a
+  documented decision is wrong, update the doc in the same commit as
+  the code change.
+- **Roadmap "decision points" are stops.** Post-MVP doesn't have the
+  rigid CHECKPOINT markers, but ROADMAP entries flagged "Decision
+  point" call out moments where user input is required — stop and ask.
+
+## Load-bearing invariants
+
+These are documented in detail in HANDOFF's "Things that bit us" list,
+but the headline rules:
+
+- **Determinism is structural.** Anything consuming randomness takes an
+  `RNG` from [src/core/RNG.ts](src/core/RNG.ts). `Math.random()` is
+  ESLint-banned in `src/sim/` and `src/run/`. Per-battle randomness via
+  `parentRng.fork()`. See [TESTING.md](TESTING.md) for the contract.
+- **Cooldowns/durations authored in seconds, not ticks.** Use
+  `secondsToTicks` / `ticksToSeconds` from [src/config.ts](src/config.ts).
+  Changing `TICK_RATE` (currently 10Hz) must not re-tune balance.
+- **Sim/render separation.** Simulation is a pure, deterministic state
+  machine. The renderer subscribes via the EventBus. Sim code never
+  imports from `src/render/` or `src/ui/`.
+- **Palette-quant pipeline has co-dependent passes.** Any post-process
+  pass placed before palette-quant must respect the background
+  color-key (see HANDOFF gotchas #2–#4). Re-read those before adding a
+  new pass.
+- **Cooldown semantics are "decrement-then-check."** The shared
+  `unit.actionCooldown` is decremented once per tick before behaviors
+  run; behaviors set it to the *full* cooldown value after acting (not
+  N-1). This is what keeps the sprite lerp from leaving a visible idle
+  frame between moves. Slated for refactor in ROADMAP Phase A1.
+
+## Pre-flight when picking up a session
+
+```bash
+git log --oneline -5    # confirm latest commit
+npm test                # should be all green, 0 todo
+npm run dev             # opens at :5173 (or :5174 if stale process held :5173)
+```
+
+In the browser: dark terrain with subtle dither + 4px scanlines, map on
+load. Click a frontier node → battle → recruit modal → back to map. Win
+4 → green "Run Complete." Lose → red "Defeat." Screen transitions fade
+over 180ms.
+
+If `:5173` is held by a stale process, Vite silently falls back to
+`:5174`. Vite spawns child Node processes that survive `taskkill` on
+the parent — check with `Get-NetTCPConnection -LocalPort 5173` on
+Windows.
+
+## Toolchain
+
+- Node 25.5, npm 11.8
+- TypeScript 6.0.3, Vite 8.0.13
+- three.js 0.184.0, simplex-noise 4.0.3, @fontsource/jetbrains-mono 5.2.8
+- Vitest 4.1.6, ESLint 10.4.0
+
+## Project tree (abbreviated)
+
+```
+src/
+  main.ts              # entry; top-level await on FontAtlas.create()
+  Game.ts              # top-level orchestrator
+  config.ts            # TICK_RATE=10, GRID_SIZE=12, secondsToTicks
+  core/                # RNG, EventBus, Clock, events catalog, types
+  sim/                 # World, Unit, Pathfinding, Targeting, archetypes
+    behaviors/         # MovementBehavior, AttackBehavior, DeathBehavior
+  run/                 # Run, NodeMap, Recruitment
+  render/              # Renderer, FontAtlas, SpriteRenderer,
+                       # TerrainRenderer, BattleRenderer, PostProcess,
+                       # palette, animation/SpriteAnimator
+  ui/                  # ui.css, fade, MapScreen, RecruitScreen,
+                       # GameOverScreen, HUD
+tests/
+  smoke.test.ts
+  integration/determinism.test.ts
+retro/                 # scratchpad + MVP retrospective
+archive/               # mvp-roadmap.md (the original ROADMAP)
+```
+
+See ARCHITECTURE.md for the full structure and the rationale behind
+each abstraction.
+
+## Where to add things
+
+- **A bug fix or behavior change in sim:** edit under `src/sim/`,
+  co-locate a `*.test.ts`. Update the determinism integration test
+  if the event sequence changes.
+- **A new render feature:** edit under `src/render/`, visual-verify in
+  the browser. No tests; the `render`/`ui` policy is eyeball-only.
+- **A new event:** add to the catalog in [src/core/events.ts](src/core/events.ts).
+  Naming: `subject:verbed`. Document it in ARCHITECTURE.md's event
+  catalog table.
+- **A new gotcha that bit you:** add to HANDOFF.md's "Things that bit
+  us" list with a commit reference. Future-you will thank you.
+- **A process observation worth keeping:** drop a short note in
+  [retro/scratchpad.md](retro/scratchpad.md). Group by theme; keep
+  entries short; link commits.
+
+## Things to avoid
+
+- **Don't re-litigate the HANDOFF gotchas list** without understanding
+  why each item exists. The fixes look weird because the problems were
+  weird.
+- **Don't claim a visual change works based on Preview MCP screenshots
+  alone.** Sample pixels or ask the user to verify natively.
+- **Don't introduce abstractions for hypothetical future needs.** The
+  MVP held the line on this; keep it. ARCHITECTURE.md's "deliberately
+  not abstracted yet" section is the receipt.
+- **Don't use `Math.random()` in `src/sim/` or `src/run/`.** ESLint will
+  catch the direct call; if you find a non-obvious source of
+  non-determinism, the determinism integration test will catch it
+  eventually but at much higher cost.

@@ -15,6 +15,7 @@
  */
 
 import { RNG } from '../core/RNG';
+import { NODE_MAP } from '../config/nodemap';
 
 export type NodeKind = 'battle';
 
@@ -38,11 +39,15 @@ export interface NodeMap {
   readonly floors: readonly (readonly number[])[];
 }
 
-const FLOOR_COUNT = 5;
-const MIDDLE_WIDTH_MIN = 2;
-const MIDDLE_WIDTH_MAX = 3;
-const TARGET_TOTAL_MAX = 10;
-const MAX_OUT_DEGREE = 2;
+// Shape parameters live in config/nodemap.json. Bound to locals here so
+// the existing call sites read the same way.
+const {
+  floorCount: FLOOR_COUNT,
+  middleWidthMin: MIDDLE_WIDTH_MIN,
+  middleWidthMax: MIDDLE_WIDTH_MAX,
+  targetTotalMax: TARGET_TOTAL_MAX,
+  maxOutDegree: MAX_OUT_DEGREE,
+} = NODE_MAP;
 
 export function generate(rng: RNG): NodeMap {
   const floors: number[][] = [];

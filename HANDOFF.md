@@ -19,13 +19,15 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundation refactors → B style/visual → C gameplay expansion). [TODO.md](TODO.md) holds the small follow-ups that aren't roadmap steps.
 
-**A1 + A2 + A3 landed.** Action selector + cooldown/duration split + multi-tick effects (A1), command channel + JSON snapshot plumbing (A2), and headless fuzz harness (A3). Next up per ROADMAP:
+**Phase A foundation refactors all landed: A1, A2, A3, A4.** A1 = action selector + cooldown/duration split + multi-tick effects. A2 = command channel + JSON snapshot plumbing. A3 = headless fuzz harness. A4 = config externalization (JSON balance + .glsl shaders). Next up per ROADMAP:
 
 1. **B6 — Audio**, **B3 — Floating per-unit HP bars + action progress bar.** Big perceptual wins for contained scope; B3 builds on A1's `activeAction` duration as the progress-bar source.
-2. **A4 — Config externalization.** Pre-requisite before adding new archetypes in C2/C3.
-3. **C2 — New archetypes (mage, rogue, healer).** Now unblocked by A1+A2; A4 makes adding their stat tables easier.
+2. **C2 — New archetypes (mage, rogue, healer).** Unblocked by A1+A2; A4 makes adding their stat tables a `config/archetypes.json` edit.
+3. **A5 — Scene system.** Deferred but flagged before any feature that needs engine rendering outside battle.
 
-**Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning.
+**Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning. (5-seed sample post-A4 hints at greedy edge, but N is too small to be sure — re-run at 100+ when something invalidates the cache.)
+
+**Balance tuning:** numbers live in `config/*.json` (archetype stats, difficulty curve, recruitment composition, nodemap shape). Edit the JSON, refresh the browser — no recompile, just a Vite hot-reload. Schemas + validation in `src/config/*.ts` (zod). Malformed JSON throws at boot with a readable error trace.
 
 Open the roadmap for the full plan and decision-point flags.
 
@@ -69,6 +71,8 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 21. **`Run.fromJSON` uses `Object.create` to bypass the constructor.** A fresh `new Run(seed, bus)` regenerates the NodeMap and emits `run:started`; neither is what we want when restoring a snapshot. The factory uses `Object.create(Run.prototype)` plus a mutable cast to set the readonly fields, then calls `subscribe()` to wire up `battle:ended`. Don't replace this with constructor surgery without preserving both behaviors.
 22. **A3 fuzz CLI uses tsx, smoke uses a separate vitest config.** Node ESM can't resolve extensionless `.ts` imports natively, so `npm run fuzz` runs through `tsx` (added as devDep). `npm run fuzz:smoke` uses [vitest.fuzz.config.ts](vitest.fuzz.config.ts) — the default `vite.config.ts` *excludes* `tests/fuzz/**` from `npm test` to keep pre-commit fast, so the smoke needs its own config to flip the include. If you ever wire fuzz into CI, call `npm run fuzz:smoke` not `npm test`.
 23. **Battle-setup logic lives in [src/sim/battleSetup.ts](src/sim/battleSetup.ts), not Game.** `Game.beginBattle` and the fuzz harness both call `spawnTeam` / `spawnEncounter` from this module. If formation columns ever change (or new behaviors are added to default-spawned units), it has to land there — both call sites pick it up automatically. Don't reintroduce a local copy in either consumer.
+24. **A4 config split — JSON source of truth, TS validator.** Balance numbers live in `config/*.json`; each one has a zod schema + parsed export in `src/config/*.ts`. Validation runs at module load, so a malformed JSON crashes the app at boot with a readable zod trace — that's the intended failure mode. To add a new tunable: drop it in the JSON file, extend the schema in the matching TS module, import the parsed value at the call site. The `Archetype` TS union in [src/sim/archetypes.ts](src/sim/archetypes.ts) stays the canonical list of archetype keys; the JSON keys must match it. C2 (mage/rogue/healer) will add to both in lockstep.
+25. **A4 shader split — `.glsl` files + `?raw` imports.** Shader sources moved out of TS string literals into `src/render/shaders/*.glsl`. Three post-process passes share `fullscreen-pass.vert.glsl` (everything that doesn't transform geometry just passes UV through). The palette fragment shader carries `__PALETTE_SIZE__` / `__BLACK_INDEX__` placeholders substituted by `substituteShaderConstants` at module load — GLSL ES 1.00 can't index a uniform array by a non-const variable, so these need to be integer literals at compile time. Don't substitute via `#define` (would require multi-pass shader assembly); the placeholder approach is fine because we never need to change these at runtime.
 
 ## Browser-verify tips (learned the hard way)
 
@@ -85,6 +89,13 @@ src/
   main.ts              # entry; top-level await on FontAtlas.create()
   Game.ts              # top-level orchestrator: Run lifecycle, per-battle World, screen mounts
   config.ts            # TICK_RATE=10, GRID_SIZE=12, secondsToTicks/ticksToSeconds
+                       # (engine knobs; balance lives in config/*.json — see src/config/)
+  config/
+    archetypes.ts      # validated wrapper around config/archetypes.json (A4)
+    difficulty.ts      # validated wrapper around config/difficulty.json (A4)
+    recruitment.ts     # validated wrapper around config/recruitment.json (A4)
+    nodemap.ts         # validated wrapper around config/nodemap.json (A4)
+    schemas.ts         # shared zod helpers (RangeSchema) (A4)
   core/
     RNG.ts             # mulberry32, fork(), pick(), int()
     EventBus.ts        # typed pub/sub; on() returns unsub
@@ -125,8 +136,9 @@ src/
     SpriteRenderer.ts  # InstancedBufferGeometry + custom shaders
     TerrainRenderer.ts # fBm-displaced plane + palette shader
     BattleRenderer.ts  # sim/render seam: attach/detach per battle
-    PostProcess.ts     # Dither + PaletteQuant + Scanlines ShaderPass factories
+    PostProcess.ts     # Dither + PaletteQuant + Scanlines ShaderPass factories (loads .glsl A4)
     palette.ts         # COLORS table
+    shaders/           # .glsl source files loaded via Vite ?raw imports (A4)
     animation/SpriteAnimator.ts  # startLerp + startFade + clear()
   ui/
     ui.css
@@ -153,6 +165,12 @@ tests/
 retro/
   scratchpad.md           # rolling scratchpad of process notes / gotchas
   post-mvp-review.md      # CHECKPOINT 7 retrospective written after MVP shipped
+
+config/                              # A4: balance JSON source-of-truth
+  archetypes.json                    # melee + ranged stat bands + glyphs
+  difficulty.json                    # enemy size delta + per-floor HP scale
+  recruitment.json                   # starting team + offer size
+  nodemap.json                       # floor count + width bands + degree cap
 ```
 
 Co-located `*.test.ts` next to source for unit tests. Integration tests under `tests/`.

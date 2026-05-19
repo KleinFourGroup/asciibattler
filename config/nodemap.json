@@ -1,0 +1,7 @@
+{
+  "floorCount": 5,
+  "middleWidthMin": 2,
+  "middleWidthMax": 3,
+  "targetTotalMax": 10,
+  "maxOutDegree": 2
+}

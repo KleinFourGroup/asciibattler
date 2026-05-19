@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { createNoise2D } from 'simplex-noise';
 import { RNG } from '../core/RNG';
 import { COLORS } from './palette';
+import VERTEX_SHADER from './shaders/terrain.vert.glsl?raw';
+import FRAGMENT_SHADER from './shaders/terrain.frag.glsl?raw';
 
 /**
  * Procedural terrain plane that sits under the battle grid. Purely
@@ -23,45 +25,6 @@ const PLANE_BASE_Y = -0.5;
 const DISPLACEMENT_AMPLITUDE = 0.4;
 /** Base noise frequency. Smaller = larger features. */
 const NOISE_FREQUENCY = 0.25;
-
-const VERTEX_SHADER = /* glsl */ `
-  varying float vWorldY;
-  varying vec3 vNormalW;
-
-  void main() {
-    vWorldY = position.y;
-    vNormalW = normalize(normalMatrix * normal);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const FRAGMENT_SHADER = /* glsl */ `
-  precision highp float;
-
-  uniform vec3 uColorLow;
-  uniform vec3 uColorMid;
-  uniform vec3 uColorHigh;
-  uniform float uMinY;
-  uniform float uMaxY;
-
-  varying float vWorldY;
-  varying vec3 vNormalW;
-
-  void main() {
-    float t = smoothstep(uMinY, uMaxY, vWorldY);
-
-    // Two-stop palette blend: low → mid → high.
-    vec3 color = t < 0.5
-      ? mix(uColorLow, uColorMid, smoothstep(0.0, 0.5, t))
-      : mix(uColorMid, uColorHigh, smoothstep(0.5, 1.0, t));
-
-    // Slope darkening: world up is +Y, so abs(normal.y) ≈ 1 on flat ground.
-    float slope = 1.0 - clamp(abs(vNormalW.y), 0.0, 1.0);
-    color *= 1.0 - slope * 0.35;
-
-    gl_FragColor = vec4(color, 1.0);
-  }
-`;
 
 export class TerrainRenderer {
   readonly mesh: THREE.Mesh;

@@ -14,10 +14,12 @@
 import type { RNG } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit, type Archetype } from './../sim/archetypes';
+import { RECRUITMENT } from '../config/recruitment';
 
-const DEFAULT_OFFER_SIZE = 3;
-
-export function rollOffer(rng: RNG, size: number = DEFAULT_OFFER_SIZE): UnitTemplate[] {
+export function rollOffer(
+  rng: RNG,
+  size: number = RECRUITMENT.defaultOfferSize,
+): UnitTemplate[] {
   if (size <= 0) return [];
   if (size === 1) {
     return [rollUnit(rng.pick(['melee', 'ranged'] as const), rng)];

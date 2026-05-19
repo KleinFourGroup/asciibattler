@@ -36,6 +36,8 @@ import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap } from './NodeMap';
 import { rollOffer } from './Recruitment';
 import type { RunCommand } from './Command';
+import { RECRUITMENT } from '../config/recruitment';
+import { DIFFICULTY } from '../config/difficulty';
 
 export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat' | 'complete';
 
@@ -59,17 +61,11 @@ export interface RunSnapshot {
   visitedNodes: number[];
 }
 
-const STARTING_MELEE = 3;
-const STARTING_RANGED = 2;
-
-/**
- * CHECKPOINT 6 difficulty tuning. Enemy team size lags the player by one
- * to give a slight per-battle edge that breaks the snowball: after each
- * recruit the player team grows but so does the enemy. Per-floor HP
- * multiplier compensates by making deeper enemies tougher.
- */
-const ENEMY_SIZE_DELTA = -1;
-const ENEMY_HP_PER_FLOOR = 0.05;
+// Balance constants now live in config/*.json — see src/config/recruitment.ts
+// and src/config/difficulty.ts. Bound to locals here just for readability at
+// the call sites.
+const { startingMelee: STARTING_MELEE, startingRanged: STARTING_RANGED } = RECRUITMENT;
+const { enemySizeDelta: ENEMY_SIZE_DELTA, enemyHpPerFloor: ENEMY_HP_PER_FLOOR } = DIFFICULTY;
 
 export class Run {
   readonly rng: RNG;

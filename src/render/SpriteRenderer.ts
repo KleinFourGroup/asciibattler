@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import type { FontAtlas } from './FontAtlas';
+import VERTEX_SHADER from './shaders/billboard.vert.glsl?raw';
+import FRAGMENT_SHADER from './shaders/sprite.frag.glsl?raw';
 
 /**
  * Renders all in-scene ASCII sprites in a single draw call. One
@@ -41,54 +43,6 @@ const QUAD_POSITIONS = new Float32Array([
 const QUAD_UVS = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
 
 const QUAD_INDICES = new Uint16Array([0, 1, 2, 0, 2, 3]);
-
-const VERTEX_SHADER = /* glsl */ `
-  attribute vec3 instancePosition;
-  attribute vec4 instanceGlyphUV;
-  attribute vec3 instanceColor;
-  attribute float instanceAlpha;
-
-  uniform float uSpriteSize;
-
-  varying vec2 vAtlasUV;
-  varying vec3 vColor;
-  varying float vAlpha;
-
-  void main() {
-    // Billboard: transform the instance's world position into view space,
-    // then offset by the quad-local position in view space. In view space
-    // the camera looks down -Z, so X/Y are screen-right/up regardless of
-    // camera orientation — the quad ends up facing the camera for free.
-    vec4 mvPos = modelViewMatrix * vec4(instancePosition, 1.0);
-    mvPos.xy += position.xy * uSpriteSize;
-    gl_Position = projectionMatrix * mvPos;
-
-    // Interpolate the per-instance glyph UV rect by the quad's local UV:
-    // bottom-left of quad (uv=0,0) -> (u0,v0); top-right (uv=1,1) -> (u1,v1).
-    vAtlasUV = mix(instanceGlyphUV.xy, instanceGlyphUV.zw, uv);
-    vColor = instanceColor;
-    vAlpha = instanceAlpha;
-  }
-`;
-
-const FRAGMENT_SHADER = /* glsl */ `
-  precision highp float;
-
-  uniform sampler2D uAtlas;
-
-  varying vec2 vAtlasUV;
-  varying vec3 vColor;
-  varying float vAlpha;
-
-  void main() {
-    vec4 sampled = texture2D(uAtlas, vAtlasUV);
-    // Atlas is white glyphs on transparent; the .a channel carries coverage.
-    // Tint by per-instance color and modulate by per-instance alpha.
-    float a = sampled.a * vAlpha;
-    if (a < 0.01) discard;
-    gl_FragColor = vec4(vColor, a);
-  }
-`;
 
 export class SpriteRenderer {
   readonly mesh: THREE.Mesh;

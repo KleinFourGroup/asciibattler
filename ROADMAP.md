@@ -122,17 +122,45 @@ MVP baseline at 10 seeds × 2 strategies: both at 50% win rate, average
 floor 3.6, no hangs. Recruit picks barely move the needle at 4-floor
 scope — data point for the C6 tuning conversation.
 
-### A4 — Config externalization
+### A4 — Config externalization ✓ LANDED
 
-Why now: before stat-roll tables grow with new archetypes (C2/C3), pull
-them out of TypeScript so balance edits don't require recompiling.
+Pulled tunables out of TS so balance and shader edits don't require
+hunting through source.
 
-- Move archetype stat bounds, recruitment composition rules, difficulty
-  curve, etc., into `config/*.json` files. Validate against TS interfaces
-  at boot.
-- Hoist the shader source out of the `const` literals in
-  [src/render/PostProcess.ts](src/render/PostProcess.ts) and friends into
-  the existing-but-empty `*.glsl` stub files. Vite has `?raw` imports.
+**Balance JSON.** Four files in `config/` cover the tunables that were
+spread across `src/sim/archetypes.ts`, `src/run/Run.ts`,
+`src/run/Recruitment.ts`, and `src/run/NodeMap.ts`:
+
+- [config/archetypes.json](config/archetypes.json) — per-archetype stat
+  bands (hp, attackDamage, attackRange, cooldowns) + glyph.
+- [config/difficulty.json](config/difficulty.json) — `enemySizeDelta`,
+  `enemyHpPerFloor`.
+- [config/recruitment.json](config/recruitment.json) — starting team
+  composition, default offer size.
+- [config/nodemap.json](config/nodemap.json) — floor count, middle-
+  floor width band, total-node cap, out-degree cap.
+
+Each JSON has a matching `src/config/*.ts` module: imports the JSON,
+validates it via zod, exports the parsed value with strict TS types.
+Validation runs at module load — malformed JSON crashes at boot with a
+readable zod trace.
+
+**Shader files.** Shader sources moved out of TS string literals into
+`src/render/shaders/*.glsl`:
+
+- `fullscreen-pass.vert.glsl` — shared by the three post-process passes.
+- `palette.frag.glsl`, `dither.frag.glsl`, `scanlines.frag.glsl` — the
+  three post-process fragment shaders.
+- `billboard.vert.glsl`, `sprite.frag.glsl` — SpriteRenderer.
+- `terrain.vert.glsl`, `terrain.frag.glsl` — TerrainRenderer.
+
+Loaded via Vite's `?raw` imports. The palette fragment carries
+`__PALETTE_SIZE__` / `__BLACK_INDEX__` placeholders substituted at
+module load by `substituteShaderConstants` — GLSL ES 1.00 needs
+integer literals for array bounds.
+
+Browser-verified: full run flow plays, no GL errors, no console errors,
+all 146 tests still pass, prod build clean.
 
 ### A5 — Scene system
 

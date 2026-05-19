@@ -1,47 +1,21 @@
 import type { RNG } from '../core/RNG';
 import { secondsToTicks } from '../config';
 import type { UnitTemplate } from './Unit';
+import { ARCHETYPES, type ArchetypeConfig } from '../config/archetypes';
 
 export type Archetype = 'melee' | 'ranged';
 
-interface ArchetypeBounds {
-  readonly hp: readonly [number, number];
-  readonly attackDamage: readonly [number, number];
-  readonly attackRange: number;
-  readonly attackCooldownSeconds: readonly [number, number];
-  readonly moveCooldownSeconds: readonly [number, number];
-}
-
 /**
- * Per-archetype stat ranges. Bounds are intentionally tight so battles read
- * cleanly even with random rolls — see DESIGN.md "Battle mechanics". These
- * are first-draft values; CHECKPOINT 5 (after combat is wired up) is where
- * we tune them against actual battle pacing.
+ * Per-archetype stat ranges, sourced from `config/archetypes.json` and
+ * validated by [src/config/archetypes.ts](src/config/archetypes.ts).
+ * Re-exported as `ARCHETYPE_BOUNDS` for tests that assert against the
+ * configured ranges. Bounds are intentionally tight so battles read
+ * cleanly even with random rolls — see DESIGN.md "Battle mechanics".
  */
-const BOUNDS: Record<Archetype, ArchetypeBounds> = {
-  melee: {
-    hp: [40, 60],
-    attackDamage: [8, 14],
-    attackRange: 1,
-    attackCooldownSeconds: [0.9, 1.5],
-    moveCooldownSeconds: [0.5, 0.8],
-  },
-  ranged: {
-    hp: [20, 30],
-    attackDamage: [5, 9],
-    attackRange: 3,
-    attackCooldownSeconds: [1.0, 1.8],
-    moveCooldownSeconds: [0.6, 1.0],
-  },
-};
-
-const GLYPHS: Record<Archetype, string> = {
-  melee: 'M',
-  ranged: 'a',
-};
+const BOUNDS: Record<Archetype, ArchetypeConfig> = ARCHETYPES;
 
 export function glyphForArchetype(archetype: Archetype): string {
-  return GLYPHS[archetype];
+  return BOUNDS[archetype].glyph;
 }
 
 export function rollUnit(archetype: Archetype, rng: RNG): UnitTemplate {
@@ -64,4 +38,4 @@ function rollFloat(rng: RNG, [lo, hi]: readonly [number, number]): number {
 }
 
 // Re-exported for tests that want to assert bounds.
-export const ARCHETYPE_BOUNDS: Record<Archetype, ArchetypeBounds> = BOUNDS;
+export const ARCHETYPE_BOUNDS: Record<Archetype, ArchetypeConfig> = BOUNDS;

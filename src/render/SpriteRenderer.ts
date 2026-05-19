@@ -2,19 +2,32 @@ import * as THREE from 'three';
 import type { FontAtlas } from './FontAtlas';
 import VERTEX_SHADER from './shaders/billboard.vert.glsl?raw';
 import FRAGMENT_SHADER from './shaders/sprite.frag.glsl?raw';
+import BLOOM_FRAGMENT_SHADER from './shaders/sprite-bloom.frag.glsl?raw';
+
+/** Three.js layer the bloom-only sprite mesh lives on (B1.1 selective bloom). */
+export const BLOOM_LAYER = 1;
 
 /**
- * Renders all in-scene ASCII sprites in a single draw call. One
- * `InstancedBufferGeometry` quad, four per-instance attributes (position,
- * glyph UV rect, color, alpha), and a tiny custom shader that handles
- * camera-facing billboarding in view space.
+ * Renders all in-scene ASCII sprites with selective per-sprite bloom. One
+ * `InstancedBufferGeometry` quad, five per-instance attributes (position,
+ * glyph UV rect, color, alpha, bloomIntensity), and two camera-facing
+ * billboard meshes sharing those buffers:
+ *
+ *   - `mesh` (default layer 0): renders the visible sprite at its natural
+ *     color. Ignores bloomIntensity. This is what the player sees.
+ *   - `bloomMesh` (layer BLOOM_LAYER): renders `color * bloomIntensity`
+ *     into the bloom-only render target. Multiplier semantics:
+ *     0 = no halo, 1 = natural (blooms iff color crosses threshold),
+ *     >1 = forced strong glow. The main mesh is unaffected.
+ *
+ * The bloom mesh is sent to a separate `EffectComposer` (see Renderer.ts)
+ * that runs the bloom blur + high-pass, then additively mixes the result
+ * back onto the main framebuffer. Decoupling the two means bloomIntensity
+ * never darkens the visible sprite.
  *
  * Gameplay code holds an opaque `SpriteHandle` and never touches three.js
  * directly — the renderer can be replaced (e.g. with WebGPU) without any
  * call-site change. See ARCHITECTURE.md guiding principle 4.
- *
- * Step 2.2 ships add/remove only; Step 2.3 layers updates on top using the
- * same handle.
  */
 
 export interface SpriteHandle {
@@ -46,9 +59,11 @@ const QUAD_INDICES = new Uint16Array([0, 1, 2, 0, 2, 3]);
 
 export class SpriteRenderer {
   readonly mesh: THREE.Mesh;
+  readonly bloomMesh: THREE.Mesh;
 
   private readonly geometry: THREE.InstancedBufferGeometry;
   private readonly material: THREE.ShaderMaterial;
+  private readonly bloomMaterial: THREE.ShaderMaterial;
   private readonly capacity: number;
 
   private readonly aPosition: THREE.InstancedBufferAttribute;
@@ -108,10 +123,33 @@ export class SpriteRenderer {
       },
     });
 
+    // Separate material for the bloom-only render. Same vertex shader and
+    // atlas uniform — only the fragment shader differs (multiplies output
+    // by per-instance bloomIntensity). Sharing the uAtlas uniform value
+    // would let the textures diverge accidentally; cheap to recreate.
+    this.bloomMaterial = new THREE.ShaderMaterial({
+      vertexShader: VERTEX_SHADER,
+      fragmentShader: BLOOM_FRAGMENT_SHADER,
+      transparent: true,
+      depthWrite: false,
+      uniforms: {
+        uAtlas: { value: atlas.texture },
+        uSpriteSize: { value: spriteSize },
+      },
+    });
+
     this.mesh = new THREE.Mesh(this.geometry, this.material);
     // Bounding-sphere-based frustum culling lies when instances are placed
     // far from the geometry origin. Disable; the sprite count is small.
     this.mesh.frustumCulled = false;
+
+    // Shares geometry (and therefore the per-instance buffers) with `mesh`,
+    // so every write to position/color/alpha/bloomIntensity reaches both
+    // renders. Lives on BLOOM_LAYER so only the bloomComposer's RenderPass
+    // picks it up.
+    this.bloomMesh = new THREE.Mesh(this.geometry, this.bloomMaterial);
+    this.bloomMesh.frustumCulled = false;
+    this.bloomMesh.layers.set(BLOOM_LAYER);
   }
 
   /** Add a sprite. Returns an opaque handle for later removal/update. */
@@ -127,7 +165,7 @@ export class SpriteRenderer {
     this.writeGlyph(slot, glyph);
     this.writeColor(slot, color);
     this.writeAlpha(slot, 1);
-    this.writeBloomIntensity(slot, 1);
+    this.writeBloomIntensity(slot, 0.15);
 
     this.slotByHandle.set(id, slot);
     this.handleAtSlot[slot] = id;
@@ -192,6 +230,7 @@ export class SpriteRenderer {
   dispose(): void {
     this.geometry.dispose();
     this.material.dispose();
+    this.bloomMaterial.dispose();
   }
 
   // ---- Instance-buffer helpers ----

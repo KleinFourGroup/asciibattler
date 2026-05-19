@@ -205,16 +205,19 @@ sat-clamped / hue-locked+bloom). User picked: drop palette-quant
 entirely. The `COLORS` table stays the canonical vocabulary in code, but
 no shader enforces it post-hoc.
 
-New composer chain: `RenderPass → SatClamped → Bloom → Scanlines →
-OutputPass`. UnrealBloomPass's high-pass patched to `max(R,G,B)` so red
-glows on equal footing with green (gotcha #29).
-[SpriteRenderer](src/render/SpriteRenderer.ts) gained a per-instance
-`bloomIntensity` attribute (default 1.0) for forced-glow effects — B3
-HP-bar fill, C2 mage charge-up, and the existing attack flash will reach
-for it.
+UnrealBloomPass's high-pass patched to `max(R,G,B)` so red glows on
+equal footing with green (gotcha #29). **B1.1 follow-up** refactored
+this into selective bloom: two `EffectComposer`s, a layer-0 visible
+mesh and a layer-1 bloom mesh sharing the same instance buffers.
+[SpriteRenderer](src/render/SpriteRenderer.ts)'s `bloomIntensity`
+attribute (default 1.0) multiplies the bloom-buffer contribution only,
+so 0 = no halo (sprite still visible at natural color), 1 = natural
+halo, >1 = forced glow. Visible color and halo strength are independent
+— B3 HP-bar fill, C2 mage charge-up, and the existing attack flash can
+all ramp the attribute smoothly without ever darkening the sprite.
 
-Gotchas #1, #3, #4 retired; #29 (max-channel bloom) and #30
-(bloomIntensity instance attribute) added.
+Gotchas #1, #3, #4 retired; #29 (max-channel bloom) and #30 (selective
+bloom architecture + per-instance `bloomIntensity`) added.
 
 ### B2 — Low-poly 3D asset style
 

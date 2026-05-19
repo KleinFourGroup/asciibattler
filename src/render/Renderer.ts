@@ -2,8 +2,15 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { COLORS } from './palette';
-import { createBloomPass, createSatClampedPass, createScanlinePass } from './PostProcess';
+import {
+  createBloomMixPass,
+  createBloomPass,
+  createSatClampedPass,
+  createScanlinePass,
+} from './PostProcess';
+import { BLOOM_LAYER } from './SpriteRenderer';
 import { GRID_SIZE } from '../config';
 
 /** Camera pitch from horizontal. 45° down matches the diorama framing. */
@@ -34,7 +41,16 @@ export class Renderer {
   readonly camera: THREE.PerspectiveCamera;
   readonly webgl: THREE.WebGLRenderer;
 
-  private readonly composer: EffectComposer;
+  // B1.1 selective bloom: two composers driven off the same scene+camera
+  // via layer membership. `bloomComposer` renders only BLOOM_LAYER (the
+  // SpriteRenderer's bloomMesh) and blurs the result; `mainComposer`
+  // renders the visible scene (layer 0) and additively mixes the bloom
+  // output back in. Decoupling means sprite-level bloomIntensity controls
+  // halo strength without ever darkening the visible sprite.
+  private readonly bloomComposer: EffectComposer;
+  private readonly mainComposer: EffectComposer;
+  private readonly bloomMixPass: ShaderPass;
+  private readonly sceneBackground: THREE.Color;
 
   private readonly onFrame: (dtSeconds: number) => void;
 
@@ -51,30 +67,51 @@ export class Renderer {
     // Background as scene state, not just the gl clear color — keeps the
     // bg color consistent through the EffectComposer's HalfFloat render
     // targets regardless of how downstream passes treat alpha/clear.
-    this.scene.background = new THREE.Color(COLORS.TERMINAL_BLACK);
+    this.sceneBackground = new THREE.Color(COLORS.TERMINAL_BLACK);
+    this.scene.background = this.sceneBackground;
 
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
     // Position + lookAt are set by fitCamera() in handleResize once aspect is
     // known; no placeholder needed because handleResize runs before start().
 
-    this.composer = new EffectComposer(this.webgl);
-    this.composer.addPass(new RenderPass(this.scene, this.camera));
-    // B1 post-process chain. Saturation-clamp first so the bloom high-pass
-    // operates on consistent-vibrancy input. Bloom next so its blur lands
-    // on the final foreground colors. Scanlines last — they're a screen-
-    // space overlay and shouldn't influence anything upstream.
+    // ---- bloomComposer: layer-1 only, output captured in renderTarget2 ----
     //
-    // Bloom is sized to the canvas; handleResize propagates via
-    // composer.setSize, which UnrealBloomPass picks up.
-    this.composer.addPass(createSatClampedPass());
-    this.composer.addPass(createBloomPass(new THREE.Vector2(1, 1)));
-    this.composer.addPass(createScanlinePass());
+    // The render loop swaps scene.background to null and camera.layers to
+    // BLOOM_LAYER before .render(); RenderPass picks up both. The explicit
+    // (0,0,0)/alpha-0 clear color is critical: the renderer's default
+    // clear color is TERMINAL_BLACK sRGB (`#282828`), which lands as raw
+    // 0.157 in the HalfFloat linear target — well below the bloom
+    // threshold, but UnrealBloomPass *additively* composites its bloom
+    // output onto the un-cleared input, so any non-zero ground floor
+    // leaks across the whole bloom buffer and brightens the final mix.
+    // Pure-black ground floor means the bloom buffer ends up containing
+    // only the sprite bloomMesh contribution + its blurred halo.
+    this.bloomComposer = new EffectComposer(this.webgl);
+    this.bloomComposer.renderToScreen = false;
+    this.bloomComposer.addPass(
+      new RenderPass(this.scene, this.camera, null, new THREE.Color(0x000000), 0),
+    );
+    this.bloomComposer.addPass(createBloomPass(new THREE.Vector2(1, 1)));
+
+    // ---- mainComposer: layer-0 only, mixes bloom in, scanlines, output ----
+    //
+    // Saturation-clamp first so any color the bloom mix adds doesn't get
+    // re-saturated (bloom is meant to be additive HDR-ish glow on top of
+    // the clamped main render). MixPass reads bloomComposer's output via
+    // its uBloom uniform — wired up after construction since renderTarget2
+    // is only valid after EffectComposer's first .render() initializes it.
+    this.bloomMixPass = createBloomMixPass();
+    this.mainComposer = new EffectComposer(this.webgl);
+    this.mainComposer.addPass(new RenderPass(this.scene, this.camera));
+    this.mainComposer.addPass(createSatClampedPass());
+    this.mainComposer.addPass(this.bloomMixPass);
+    this.mainComposer.addPass(createScanlinePass());
     // OutputPass converts the composer's internal linear-sRGB framebuffer to
     // the canvas's sRGB output space. Without this last step, every linear
     // RGB value gets written to the screen as if it were sRGB, which makes
     // brights look dim and shifts hues unpredictably (TERMINAL_GREEN #33FF00
     // rendered as #08FF00, background snapped to amber, etc.).
-    this.composer.addPass(new OutputPass());
+    this.mainComposer.addPass(new OutputPass());
 
     this.handleResize();
     window.addEventListener('resize', this.handleResize);
@@ -90,9 +127,35 @@ export class Renderer {
       this.lastFrameMs = now;
 
       this.onFrame(dt);
-      this.composer.render();
+      this.renderTwoPass();
     };
     loop();
+  }
+
+  /**
+   * Two-pass render for B1.1 selective bloom:
+   *
+   * 1. Bloom layer: camera.layers → BLOOM_LAYER and scene.background → null
+   *    so the bloom RenderPass sees ONLY the sprite bloomMesh against a
+   *    transparent black background. UnrealBloomPass then high-passes +
+   *    blurs the result into bloomComposer.renderTarget2.
+   * 2. Main layer: camera.layers → 0 and scene.background restored, so the
+   *    main RenderPass sees the visible scene. MixPass adds the blurred
+   *    bloom buffer in, then scanlines + OutputPass finish the chain.
+   *
+   * scene.background must be cleared during the bloom pass: otherwise the
+   * full-screen background quad fills every pixel and the bloom buffer
+   * never has the pure black it needs for the high-pass to subtract.
+   */
+  private renderTwoPass(): void {
+    this.scene.background = null;
+    this.camera.layers.set(BLOOM_LAYER);
+    this.bloomComposer.render();
+
+    this.scene.background = this.sceneBackground;
+    this.camera.layers.set(0);
+    this.bloomMixPass.uniforms['uBloom']!.value = this.bloomComposer.renderTarget2.texture;
+    this.mainComposer.render();
   }
 
   stop(): void {
@@ -107,7 +170,8 @@ export class Renderer {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     this.webgl.setSize(w, h, false);
-    this.composer.setSize(w, h);
+    this.bloomComposer.setSize(w, h);
+    this.mainComposer.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.fitCamera();

@@ -87,10 +87,14 @@ but the headline rules:
 - **Palette is art-direction discipline, not shader enforcement (B1).**
   The `COLORS` table is the canonical color vocabulary code reaches for,
   but the rendering chain doesn't post-quantize. The chain is
-  `RenderPass → SatClamped → Bloom → Scanlines → OutputPass`. The
-  UnrealBloomPass uses a max-channel high-pass (not Rec.709) so red and
-  green glow equally — see HANDOFF gotcha #29. SpriteRenderer has a
-  per-instance `bloomIntensity` for forced glow (gotcha #30).
+  B1.1 selective bloom uses two composers: a `bloomComposer` (layer-1
+  sprite bloom mesh → UnrealBloomPass) feeds its result into a
+  `mainComposer` (`RenderPass → SatClamped → MixPass → Scanlines →
+  OutputPass`). UnrealBloomPass's high-pass uses max-channel (not
+  Rec.709) so red and green glow equally — see HANDOFF gotcha #29.
+  SpriteRenderer's per-instance `bloomIntensity` controls halo strength
+  independently of visible color: 0 = no halo, 1 = natural, >1 = forced
+  (gotcha #30).
 - **Cooldown semantics are "decrement-then-check."** The shared
   `unit.actionCooldown` is decremented once per tick before behaviors
   run; behaviors set it to the *full* cooldown value after acting (not

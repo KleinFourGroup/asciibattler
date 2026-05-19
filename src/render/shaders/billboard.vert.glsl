@@ -12,10 +12,13 @@ attribute vec3 instancePosition;
 attribute vec4 instanceGlyphUV;
 attribute vec3 instanceColor;
 attribute float instanceAlpha;
-// Per-sprite multiplier on output color, used to push values above the
-// bloom high-pass threshold (B1). 1.0 = baseline (sprite glows only if
-// its color is already saturated); >1.0 = forced glow for emphasis
-// (attack windups, criticals, elite tier). Sub-1.0 dims without alpha.
+// Per-sprite multiplier on the sprite's contribution to the bloom buffer
+// (B1.1 selective bloom). Only the bloom-layer fragment shader applies
+// it; the main-layer shader ignores it. 0.0 = no halo (sprite still
+// visible at natural color); 1.0 = natural contribution (halo iff color
+// crosses the high-pass threshold); >1.0 = forced strong glow for
+// emphasis (attack windups, criticals, elite tier). Lerping 0↔1 fades
+// the halo smoothly while the sprite's visible color never changes.
 attribute float instanceBloomIntensity;
 
 uniform float uSpriteSize;

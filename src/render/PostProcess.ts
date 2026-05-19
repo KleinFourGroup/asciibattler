@@ -5,6 +5,7 @@ import { COLORS } from './palette';
 import fullscreenVert from './shaders/fullscreen-pass.vert.glsl?raw';
 import paletteSatClampedFrag from './shaders/palette-sat-clamped.frag.glsl?raw';
 import scanlinesFrag from './shaders/scanlines.frag.glsl?raw';
+import mixBloomFrag from './shaders/mix-bloom.frag.glsl?raw';
 
 /**
  * Post-process passes. Three are wired into the main composer chain (see
@@ -52,8 +53,17 @@ export function createSatClampedPass(): ShaderPass {
 
 /**
  * UnrealBloomPass tuned for the "Tron"-style neon glow. Strength + radius
- * are generous so bright pixels really halo; threshold sits at 0.6 in
- * max-channel terms (see below) so unsaturated darks don't bleed.
+ * are generous so bright pixels really halo.
+ *
+ * Threshold is 0 (not the more-typical 0.6+) because in the B1.1
+ * selective-bloom setup the bloom layer renders ONLY sprite bloom
+ * contributions against a hard (0,0,0) cleared background — there are
+ * no dim background pixels that need filtering out. A non-zero threshold
+ * here gates sub-threshold `bloomIntensity` values to zero, which makes
+ * the attribute behave as a step function (off below ~0.6, full above)
+ * instead of the smooth linear knob that B3 HP-bar fade and C2 charge-up
+ * ramps need. With threshold=0, the bloom contribution scales linearly
+ * with `color × bloomIntensity` all the way down.
  *
  * Out of the box UnrealBloomPass uses Rec.709 perception-weighted
  * luminance (`0.299·R + 0.587·G + 0.114·B`) for its high-pass, which
@@ -61,18 +71,42 @@ export function createSatClampedPass(): ShaderPass {
  * — physically correct for HDR scenes, actively wrong for stylized
  * glyphs where we want "any saturated channel triggers glow." We swap in
  * a max-channel high-pass so NEON_RED enemies bloom on the same footing
- * as TERMINAL_GREEN allies.
+ * as TERMINAL_GREEN allies. (With threshold=0 the high-pass effectively
+ * accepts every non-zero pixel, so the max-vs-Rec.709 difference only
+ * shows up near alpha=0; the patch stays for the sub-threshold curve
+ * shape and as documentation of why the bloom feels even across hues.)
  */
 export function createBloomPass(size: THREE.Vector2): UnrealBloomPass {
   const STRENGTH = 1.2;
   const RADIUS = 0.5;
-  const THRESHOLD = 0.6;
+  const THRESHOLD = 0;
   const bloom = new UnrealBloomPass(size, STRENGTH, RADIUS, THRESHOLD);
 
-  const material = (bloom as unknown as { materialHighPassFilter: THREE.ShaderMaterial })
-    .materialHighPassFilter;
-  material.fragmentShader = MAX_CHANNEL_HIGH_PASS_FRAG;
-  material.needsUpdate = true;
+  const internals = bloom as unknown as {
+    materialHighPassFilter: THREE.ShaderMaterial;
+    blendMaterial: THREE.ShaderMaterial;
+  };
+
+  // Patch 1 (gotcha #29): high-pass uses max(R,G,B) instead of Rec.709
+  // luminance so NEON_RED bloom on equal footing with TERMINAL_GREEN.
+  internals.materialHighPassFilter.fragmentShader = MAX_CHANNEL_HIGH_PASS_FRAG;
+  internals.materialHighPassFilter.needsUpdate = true;
+
+  // Patch 2 (B1.1 selective bloom): UnrealBloomPass's final step copies
+  // the bloom result onto its input target (`readBuffer`) with
+  // AdditiveBlending via `blendMaterial`. In the canonical single-
+  // composer setup that's exactly right — the bloom smears glow on top
+  // of the scene already in readBuffer. In a two-composer selective-
+  // bloom setup we want the bloom composer to output JUST the halo (not
+  // input + halo), because the visible sprite already lives in
+  // mainComposer's framebuffer. Switching to NormalBlending makes the
+  // final copy *replace* readBuffer with the halo blur; transparent=
+  // false ensures fully-dark pixels (alpha=0) still overwrite to 0,0,0
+  // instead of bleeding through whatever was there. Property name is
+  // `blendMaterial` in three.js r184+ (was `materialCopy` pre-r163).
+  internals.blendMaterial.blending = THREE.NormalBlending;
+  internals.blendMaterial.transparent = false;
+  internals.blendMaterial.needsUpdate = true;
 
   return bloom;
 }
@@ -98,6 +132,23 @@ const MAX_CHANNEL_HIGH_PASS_FRAG = /* glsl */ `
     gl_FragColor = mix(outputColor, texel, alpha);
   }
 `;
+
+/**
+ * Additively mixes a bloom-buffer texture onto the main framebuffer
+ * (B1.1 selective bloom). Pair with a separate `bloomComposer` that
+ * renders the bloom layer and runs UnrealBloomPass; pass its output
+ * render-target texture in as `uBloom` after each frame.
+ */
+export function createBloomMixPass(): ShaderPass {
+  return new ShaderPass({
+    uniforms: {
+      tDiffuse: { value: null },
+      uBloom: { value: null },
+    },
+    vertexShader: fullscreenVert,
+    fragmentShader: mixBloomFrag,
+  });
+}
 
 const SCANLINE_SHADER = {
   uniforms: {

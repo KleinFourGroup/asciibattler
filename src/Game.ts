@@ -71,7 +71,11 @@ export class Game implements RunDispatcher {
     this.renderer.scene.add(this.terrain.mesh);
 
     this.sprites = new SpriteRenderer(this.fontAtlas);
+    // Both meshes live in the same scene; layer membership routes them to
+    // the right composer. `mesh` (layer 0) → mainComposer (visible color);
+    // `bloomMesh` (BLOOM_LAYER) → bloomComposer (halo input).
     this.renderer.scene.add(this.sprites.mesh);
+    this.renderer.scene.add(this.sprites.bloomMesh);
 
     // Scene transitions driven by Run lifecycle events. All three of the
     // post-battle handlers fire from Run.handleBattleEnded *after* Run has

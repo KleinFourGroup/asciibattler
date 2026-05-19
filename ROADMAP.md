@@ -162,19 +162,34 @@ integer literals for array bounds.
 Browser-verified: full run flow plays, no GL errors, no console errors,
 all 146 tests still pass, prod build clean.
 
-### A5 — Scene system
+### A5 — Scene system ✓ LANDED
 
-Why deferred (but not skipped): every non-battle "screen" today is a DOM
-modal toggled by [Game.ts](src/Game.ts). The first feature requiring
-engine rendering outside battle (a 3D map view, a minigame, an animated
-recruit screen) forces this refactor. Flagging here so it lands *before*
-that feature, not during.
+Closed out Phase A. Speculative (no feature was pulling on it yet) but
+landed because Phase A wanted to ship as a coherent foundation pass —
+deferring further would just have meant retouching the same files when
+the first 3D-outside-battle feature arrived.
 
-- `Scene` interface: `mount(canvas)`, `tick(dt)`, `dispose()`. `Game`
-  becomes a scene-stack manager.
-- Migration: wrap the current `BattleRenderer + World` pair into a
-  `BattleScene`. DOM-only screens stay DOM-only for now; they just become
-  `Scene` instances that mount no 3D content.
+- [src/scenes/Scene.ts](src/scenes/Scene.ts) — `Scene` interface
+  (`mount(ctx) / tick(dt) / dispose()`) + `SceneContext` bundle (bus,
+  scene3D, sprites, terrain, fontAtlas, uiMount, dispatcher, run).
+- Single-active swap (not a stack — current usage doesn't need overlays,
+  and HUD is naturally a child of BattleScene). Easy upgrade to a stack
+  later if a real overlay use-case appears.
+- Four scenes:
+  [BattleScene](src/scenes/BattleScene.ts) wraps World + Clock +
+  BattleRenderer + HUD;
+  [MapScene](src/scenes/MapScene.ts) /
+  [RecruitScene](src/scenes/RecruitScene.ts) /
+  [GameOverScene](src/scenes/GameOverScene.ts) wrap the matching DOM
+  screens with no 3D content. `tick(dt)` is a no-op on the DOM-only
+  scenes.
+- [Game.ts](src/Game.ts) became a Scene swapper: subscribes to
+  `battle:started` / `recruit:offered` / `run:victory` / `run:defeated`
+  and drives `swap(newScene)`. Renderer's RAF callback now goes
+  `(dt) => activeScene?.tick(dt)` — so the simulation Clock lives inside
+  BattleScene and ticks only during battle.
+- HUD gained a `dispose()` (unsubscribes from bus + fadeOutAndRemove)
+  because it's per-battle now instead of a Game-lifetime singleton.
 
 ---
 

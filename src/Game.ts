@@ -2,75 +2,69 @@ import { Renderer } from './render/Renderer';
 import { FontAtlas } from './render/FontAtlas';
 import { SpriteRenderer } from './render/SpriteRenderer';
 import { TerrainRenderer } from './render/TerrainRenderer';
-import { BattleRenderer } from './render/BattleRenderer';
-import { Clock } from './core/Clock';
 import { EventBus } from './core/EventBus';
-import { RNG } from './core/RNG';
-import { World } from './sim/World';
-import { spawnTeam } from './sim/battleSetup';
-import { GRID_SIZE, TICK_RATE } from './config';
+import { GRID_SIZE } from './config';
 import type { GameEvents } from './core/events';
 import { Run } from './run/Run';
 import type { RunCommand, RunDispatcher } from './run/Command';
-import { MapScreen } from './ui/MapScreen';
-import { RecruitScreen } from './ui/RecruitScreen';
-import { GameOverScreen } from './ui/GameOverScreen';
-import { HUD } from './ui/HUD';
+import type { Scene, SceneContext } from './scenes/Scene';
+import { MapScene } from './scenes/MapScene';
+import { BattleScene } from './scenes/BattleScene';
+import { RecruitScene } from './scenes/RecruitScene';
+import { GameOverScene } from './scenes/GameOverScene';
 
 /**
- * Top-level orchestrator. Owns the EventBus, Clock, Renderer, FontAtlas,
- * SpriteRenderer, the Run state machine, and the active battle World (when
- * one is running).
+ * Top-level orchestrator. Owns the EventBus, Renderer, FontAtlas, persistent
+ * 3D meshes (TerrainRenderer + SpriteRenderer), and the Run state machine —
+ * everything that lives for the page's lifetime.
  *
- * A2: implements `RunDispatcher`. UI screens hold this as their command
- * sink. Game forwards `enterNode` / `chooseRecruit` to the live Run and
- * handles `resetRun` itself (resetting can't be done by the Run being
- * reset). Because UI captures `Game` rather than `Run`, swapping the
- * underlying Run on reset is invisible to the UI.
+ * A5 turned Game from a battle host into a scene manager. The "what's on
+ * screen right now" lives in `activeScene`, which is swapped on Run
+ * lifecycle events:
+ *
+ *   - battle:started → BattleScene
+ *   - recruit:offered → RecruitScene
+ *   - run:victory → GameOverScene('complete')
+ *   - run:defeated → GameOverScene('defeat')
+ *   - chooseRecruit returning to phase=='map' → MapScene (driven from
+ *     dispatch, since no bus event fires for that transition)
+ *   - resetRun → MapScene (new Run)
+ *
+ * A2: implements `RunDispatcher`. UI screens (now Scene-owned) hold this as
+ * their command sink. Game forwards `enterNode` / `chooseRecruit` to the
+ * live Run and handles `resetRun` itself (a Run can't reset itself).
+ * Because UI captures `Game` rather than `Run`, swapping the underlying Run
+ * on reset is invisible to the UI.
  */
 export class Game implements RunDispatcher {
   private readonly bus = new EventBus<GameEvents>();
-  private readonly clock: Clock;
   private readonly renderer: Renderer;
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
   private readonly terrain: TerrainRenderer;
-  /**
-   * The active battle's World, or null when between battles (map screen,
-   * defeat). Recreated per battle on `battle:started`; torn down on
-   * `battle:ended`.
-   */
-  private world: World | null = null;
-  // Public so noUnusedLocals doesn't fire on the construct-and-subscribe field.
-  // The bus subscription keeps the instance alive regardless of this reference.
-  readonly battleRenderer: BattleRenderer;
+  private readonly uiMount: HTMLElement;
   /**
    * Active run. Replaced on `resetRun` command, so it's not readonly — but
    * every method should still treat `this.run` as the authoritative source
    * for meta state.
    */
   private run: Run;
-  private readonly mapScreen: MapScreen;
-  private readonly recruitScreen: RecruitScreen;
-  private readonly gameOverScreen: GameOverScreen;
-  private readonly hud: HUD;
+  /** The scene currently mounted. Null only briefly during swap(). */
+  private activeScene: Scene | null = null;
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
     this.fontAtlas = fontAtlas;
+    this.uiMount = uiMount;
 
-    // Construct Run first so its battle:ended handler subscribes before
-    // Game's — Game's handler reads run.phase, which Run must have already
-    // updated by then.
+    // Construct Run first so its battle:ended handler subscribes before any
+    // Game listener that reads run.phase. The recruit:offered/run:victory/
+    // run:defeated subscriptions below all run *after* Run has updated phase
+    // because Run emits those from within its own battle:ended handler.
     this.run = new Run(Date.now(), this.bus);
 
-    this.clock = new Clock(TICK_RATE, () => this.world?.tick());
+    // Renderer drives the per-frame tick of whatever scene is active.
+    this.renderer = new Renderer(canvas, (dt) => this.activeScene?.tick(dt));
 
-    this.renderer = new Renderer(canvas, (dt) => {
-      this.clock.advance(dt);
-      this.battleRenderer.update(dt);
-    });
-
-    // Terrain first so opaque-before-transparent render order is natural.
     // Terrain seed is independent — terrain is decorative and doesn't need
     // to follow the run RNG.
     this.terrain = new TerrainRenderer(12345, GRID_SIZE);
@@ -79,61 +73,43 @@ export class Game implements RunDispatcher {
     this.sprites = new SpriteRenderer(this.fontAtlas);
     this.renderer.scene.add(this.sprites.mesh);
 
-    // The sim/render seam: subscribes to unit:* events and translates them
-    // into SpriteRenderer calls. Bus subscriptions are set up here; per-
-    // battle World binding happens later via `attach` in beginBattle().
-    this.battleRenderer = new BattleRenderer(this.sprites, this.bus);
+    // Scene transitions driven by Run lifecycle events. All three of the
+    // post-battle handlers fire from Run.handleBattleEnded *after* Run has
+    // already updated phase + currentOffer, so the new Scene can read
+    // ctx.run consistently.
+    this.bus.on('battle:started', () => this.swap(new BattleScene()));
+    this.bus.on('recruit:offered', ({ units }) => this.swap(new RecruitScene(units)));
+    this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
+    this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
 
-    this.bus.on('battle:started', () => this.beginBattle());
-    this.bus.on('battle:ended', () => this.endBattle());
-
-    // UI screens hold `this` as their RunDispatcher. Captured-once is fine
-    // because Game persists for the lifetime of the page; the `run` field
-    // it forwards to is what gets swapped on reset.
-    this.mapScreen = new MapScreen(uiMount, this);
-    this.recruitScreen = new RecruitScreen(uiMount, this);
-    this.gameOverScreen = new GameOverScreen(uiMount, this);
-    this.hud = new HUD(uiMount, this.bus);
-
-    this.bus.on('recruit:offered', ({ units }) => {
-      this.recruitScreen.show(units);
-    });
-    this.bus.on('run:defeated', () => {
-      this.gameOverScreen.show('defeat');
-    });
-    this.bus.on('run:victory', () => {
-      this.gameOverScreen.show('complete');
-    });
-
-    this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
+    // Boot into the map.
+    this.swap(new MapScene());
   }
 
   /**
-   * RunDispatcher entry point. UI screens call this; Game routes:
+   * RunDispatcher entry point. UI screens (held by Scenes) call this; Game
+   * routes:
    *   - `resetRun` → tear down the current Run and start a fresh one.
-   *   - everything else → forward to `this.run.dispatch(cmd)`, then react
-   *     to whatever phase Run is now in.
+   *   - everything else → forward to `this.run.dispatch(cmd)`. Most phase
+   *     transitions emit a bus event that drives the Scene swap; the one
+   *     exception is recruit → map, which is silent, so we swap explicitly.
    */
   dispatch(command: RunCommand): void {
     switch (command.kind) {
       case 'enterNode':
+        // If the hop is accepted, Run synchronously emits `battle:started`,
+        // which fires the BattleScene swap before this line returns.
+        // Rejected hops (non-frontier, wrong phase) emit nothing — we stay
+        // on the map.
         this.run.dispatch(command);
-        // Hide the map screen once the run actually moved into a battle —
-        // if the hop was rejected (non-frontier, wrong phase) the map
-        // stays visible.
-        if (this.run.phase === 'battle') {
-          this.mapScreen.hide();
-        }
         break;
       case 'chooseRecruit':
         this.run.dispatch(command);
+        // Non-terminal recruit: phase falls back to 'map' with no event
+        // emit. The terminal-floor case fires `run:victory` which is handled
+        // by the bus subscription above.
         if (this.run.phase === 'map') {
-          this.recruitScreen.hide();
-          this.mapScreen.show(
-            this.run.nodeMap,
-            this.run.currentNodeId,
-            this.run.visitedNodes,
-          );
+          this.swap(new MapScene());
         }
         break;
       case 'resetRun':
@@ -147,41 +123,6 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * Spin up a fresh World for the encounter Run just announced. Order
-   * matters: attach BattleRenderer to the new world *before* spawning, so
-   * unit:spawned events find the renderer ready.
-   */
-  private beginBattle(): void {
-    const encounter = this.run.currentEncounter;
-    if (!encounter) {
-      throw new Error('battle:started fired without a Run encounter');
-    }
-
-    this.world = new World(this.bus, new RNG(encounter.worldSeed), GRID_SIZE);
-    // HUD.show must run before spawnTeam so its unit:spawned handler finds
-    // the bound world; same ordering rule as BattleRenderer.attach.
-    this.hud.show(this.world, this.run.currentFloor);
-    this.battleRenderer.attach(this.world);
-    spawnTeam(this.world, 'player', encounter.playerTeam);
-    spawnTeam(this.world, 'enemy', encounter.enemyTeam);
-  }
-
-  /**
-   * Tear down the finished battle. Run has already advanced its phase by the
-   * time this runs (subscription order); we just react to the new phase.
-   */
-  private endBattle(): void {
-    this.battleRenderer.detach();
-    this.hud.hide();
-    this.world = null;
-
-    // Run has already advanced its phase by now (subscription order). On
-    // victory the recruit:offered handler already showed RecruitScreen; on
-    // defeat the run:defeated handler showed GameOverScreen. Nothing to do
-    // here either way.
-  }
-
-  /**
    * Tear down the current Run and start a fresh one with a new seed. Wired
    * to GameOverScreen's "Begin a new run" button via the `resetRun`
    * command. Date.now() seed gives a different map and team per restart;
@@ -189,10 +130,33 @@ export class Game implements RunDispatcher {
    * debug panel.
    */
   private resetRun(): void {
-    this.gameOverScreen.hide();
     this.run.dispose();
     this.run = new Run(Date.now(), this.bus);
-    this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
+    this.swap(new MapScene());
   }
 
+  /**
+   * Disposing the old scene before mounting the new one keeps subscriptions
+   * and DOM single-instanced. Context is rebuilt per-swap so `ctx.run`
+   * reflects the current run instance (which may have been swapped by
+   * resetRun since the last call).
+   */
+  private swap(next: Scene): void {
+    this.activeScene?.dispose();
+    this.activeScene = next;
+    next.mount(this.buildContext());
+  }
+
+  private buildContext(): SceneContext {
+    return {
+      bus: this.bus,
+      scene3D: this.renderer.scene,
+      sprites: this.sprites,
+      terrain: this.terrain,
+      fontAtlas: this.fontAtlas,
+      uiMount: this.uiMount,
+      dispatcher: this,
+      run: this.run,
+    };
+  }
 }

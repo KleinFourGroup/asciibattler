@@ -5,7 +5,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
-import { fadeIn } from './fade';
+import { fadeIn, fadeOutAndRemove } from './fade';
 
 export class HUD {
   private readonly root: HTMLElement;
@@ -16,6 +16,12 @@ export class HUD {
   private world: World | null = null;
   /** unitId → roster row element so updates and removals are O(1). */
   private readonly rows = new Map<number, HTMLElement>();
+  /**
+   * Bus unsubscribers. A5 makes HUD a per-battle object (owned by
+   * BattleScene), so subscriptions get torn down on dispose to keep them
+   * from accumulating across battles.
+   */
+  private readonly subscriptions: Array<() => void> = [];
 
   constructor(mount: HTMLElement, bus: EventBus<GameEvents>) {
     this.root = document.createElement('div');
@@ -45,11 +51,9 @@ export class HUD {
 
     mount.appendChild(this.root);
 
-    // Subscriptions live for the HUD's lifetime (matches BattleRenderer's
-    // pattern). Per-battle attach/detach is handled by show()/hide().
-    bus.on('unit:spawned', ({ unitId }) => this.addUnit(unitId));
-    bus.on('unit:attacked', ({ targetId }) => this.refreshHp(targetId));
-    bus.on('unit:died', ({ unitId }) => this.removeUnit(unitId));
+    this.subscriptions.push(bus.on('unit:spawned', ({ unitId }) => this.addUnit(unitId)));
+    this.subscriptions.push(bus.on('unit:attacked', ({ targetId }) => this.refreshHp(targetId)));
+    this.subscriptions.push(bus.on('unit:died', ({ unitId }) => this.removeUnit(unitId)));
   }
 
   /**
@@ -70,6 +74,18 @@ export class HUD {
     // the next battle. Rows from the dying battle are kept until the next
     // show() so the fade-out has something to display.
     this.root.classList.remove('is-visible');
+    this.world = null;
+  }
+
+  /**
+   * Permanent teardown — BattleScene calls this when the battle ends.
+   * Unsubscribes from the bus, then fades the root out and removes it so the
+   * following Scene's screen-fade can take over cleanly.
+   */
+  dispose(): void {
+    for (const unsub of this.subscriptions) unsub();
+    this.subscriptions.length = 0;
+    fadeOutAndRemove(this.root);
     this.world = null;
   }
 

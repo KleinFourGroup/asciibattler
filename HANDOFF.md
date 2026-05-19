@@ -19,11 +19,10 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundation refactors → B style/visual → C gameplay expansion). [TODO.md](TODO.md) holds the small follow-ups that aren't roadmap steps.
 
-**Phase A 4-of-5 landed: A1, A2, A3, A4.** A1 = action selector + cooldown/duration split + multi-tick effects. A2 = command channel + JSON snapshot plumbing. A3 = headless fuzz harness. A4 = config externalization (JSON balance + .glsl shaders). **A5 (scene system) is deliberately deferred** — it lands before the first feature that needs engine rendering outside battle (3D map view, animated recruit, etc.), not speculatively. Next up per ROADMAP:
+**Phase A complete: A1–A5 all landed.** A1 = action selector + cooldown/duration split + multi-tick effects. A2 = command channel + JSON snapshot plumbing. A3 = headless fuzz harness. A4 = config externalization (JSON balance + .glsl shaders). A5 = scene system (Scene interface, single-active swap, BattleScene + Map/Recruit/GameOver scenes). Next up per ROADMAP:
 
 1. **B6 — Audio**, **B3 — Floating per-unit HP bars + action progress bar.** Big perceptual wins for contained scope; B3 builds on A1's `activeAction` duration as the progress-bar source.
 2. **C2 — New archetypes (mage, rogue, healer).** Unblocked by A1+A2; A4 makes adding their stat tables a `config/archetypes.json` edit.
-3. **A5 — Scene system.** Deferred but flagged before any feature that needs engine rendering outside battle.
 
 **Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning. (5-seed sample post-A4 hints at greedy edge, but N is too small to be sure — re-run at 100+ when something invalidates the cache.)
 
@@ -73,6 +72,9 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 23. **Battle-setup logic lives in [src/sim/battleSetup.ts](src/sim/battleSetup.ts), not Game.** `Game.beginBattle` and the fuzz harness both call `spawnTeam` / `spawnEncounter` from this module. If formation columns ever change (or new behaviors are added to default-spawned units), it has to land there — both call sites pick it up automatically. Don't reintroduce a local copy in either consumer.
 24. **A4 config split — JSON source of truth, TS validator.** Balance numbers live in `config/*.json`; each one has a zod schema + parsed export in `src/config/*.ts`. Validation runs at module load, so a malformed JSON crashes the app at boot with a readable zod trace — that's the intended failure mode. To add a new tunable: drop it in the JSON file, extend the schema in the matching TS module, import the parsed value at the call site. The `Archetype` TS union in [src/sim/archetypes.ts](src/sim/archetypes.ts) stays the canonical list of archetype keys; the JSON keys must match it. C2 (mage/rogue/healer) will add to both in lockstep.
 25. **A4 shader split — `.glsl` files + `?raw` imports.** Shader sources moved out of TS string literals into `src/render/shaders/*.glsl`. Three post-process passes share `fullscreen-pass.vert.glsl` (everything that doesn't transform geometry just passes UV through). The palette fragment shader carries `__PALETTE_SIZE__` / `__BLACK_INDEX__` placeholders substituted by `substituteShaderConstants` at module load — GLSL ES 1.00 can't index a uniform array by a non-const variable, so these need to be integer literals at compile time. Don't substitute via `#define` (would require multi-pass shader assembly); the placeholder approach is fine because we never need to change these at runtime.
+26. **A5 Scene swap is single-active + bus-driven.** `Game.bus.on('battle:started' | 'recruit:offered' | 'run:victory' | 'run:defeated', …)` does the entire scene routing — Run emits the event from inside its own `battle:ended` handler so phase is already updated by the time the swap fires. The one transition not driven by a bus event is recruit→map (Run.handleChooseRecruit doesn't emit anything), so Game.dispatch checks `run.phase === 'map'` after `chooseRecruit` and swaps explicitly. Don't add an event for that single case; the explicit branch is cheaper than a one-consumer event.
+27. **HUD has a real `dispose()` post-A5.** Pre-A5 HUD was a Game-lifetime singleton — subscriptions were never torn down because the object lived forever. A5 made it per-battle (BattleScene owns it), so HUD captures its subscriptions into `this.subscriptions[]` and `dispose()` unsubscribes them + `fadeOutAndRemove`s the root. Any new long-lived bus subscription added to HUD must be pushed onto that array, same pattern as BattleRenderer + Run.
+28. **`SceneContext` is rebuilt per swap.** `Game.buildContext()` returns a fresh bundle on every `swap()` call so `ctx.run` reflects the current Run instance — important because `resetRun` replaces `this.run`, and a stale closure-captured ctx would still point at the disposed Run. Scenes that need scene-specific args (recruit offer, gameover variant) take them via constructor, not via ctx, because ctx is supposed to be stable across all scenes.
 
 ## Browser-verify tips (learned the hard way)
 
@@ -87,7 +89,7 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 ```
 src/
   main.ts              # entry; top-level await on FontAtlas.create()
-  Game.ts              # top-level orchestrator: Run lifecycle, per-battle World, screen mounts
+  Game.ts              # top-level orchestrator: owns Renderer/Bus/Run; scene swapper (A5)
   config.ts            # TICK_RATE=10, GRID_SIZE=12, secondsToTicks/ticksToSeconds
                        # (engine knobs; balance lives in config/*.json — see src/config/)
   config/
@@ -140,6 +142,12 @@ src/
     palette.ts         # COLORS table
     shaders/           # .glsl source files loaded via Vite ?raw imports (A4)
     animation/SpriteAnimator.ts  # startLerp + startFade + clear()
+  scenes/              # A5: Scene system — single-active swap driven from Game
+    Scene.ts           #   Scene interface + SceneContext bundle type
+    BattleScene.ts     #   wraps World + Clock + BattleRenderer + HUD
+    MapScene.ts        #   DOM-only, wraps MapScreen
+    RecruitScene.ts    #   DOM-only, wraps RecruitScreen
+    GameOverScene.ts   #   DOM-only, wraps GameOverScreen
   ui/
     ui.css
     fade.ts            # fadeIn / fadeOutAndRemove — shared screen transitions (Step 5.2)

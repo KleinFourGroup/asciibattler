@@ -62,6 +62,12 @@ apply:
 - **Roadmap "decision points" are stops.** Post-MVP doesn't have the
   rigid CHECKPOINT markers, but ROADMAP entries flagged "Decision
   point" call out moments where user input is required — stop and ask.
+- **Stop preview servers (and other background processes) before
+  ending the session.** If you called `preview_start`, call
+  `preview_stop` before signing off. Vite spawns child Node processes
+  that survive `taskkill` on the parent — letting the preview MCP
+  shut down cleanly is what reaps them. Same applies to any
+  long-running `run_in_background` Bash call.
 
 ## Load-bearing invariants
 

@@ -7,55 +7,15 @@ import { Clock } from './core/Clock';
 import { EventBus } from './core/EventBus';
 import { RNG } from './core/RNG';
 import { World } from './sim/World';
-import { MovementBehavior } from './sim/behaviors/MovementBehavior';
-import { AttackBehavior } from './sim/behaviors/AttackBehavior';
+import { spawnTeam } from './sim/battleSetup';
 import { GRID_SIZE, TICK_RATE } from './config';
 import type { GameEvents } from './core/events';
-import type { Team, UnitTemplate } from './sim/Unit';
 import { Run } from './run/Run';
 import type { RunCommand, RunDispatcher } from './run/Command';
 import { MapScreen } from './ui/MapScreen';
 import { RecruitScreen } from './ui/RecruitScreen';
 import { GameOverScreen } from './ui/GameOverScreen';
 import { HUD } from './ui/HUD';
-
-/**
- * CHECKPOINT 5 formation anchors for the starting 3-melee + 2-ranged team.
- * Preserved exactly so default-team battle outcomes don't shift; recruited
- * extras fall through to `distributeColumns`.
- */
-const DEFAULT_MELEE_COLUMNS = [2, 6, 10] as const;
-const DEFAULT_RANGED_COLUMNS = [4, 8] as const;
-
-/**
- * Evenly spread `count` units across grid columns 1..10 (leaving columns 0
- * and 11 as buffer). Returns integer column indices. Handles up to 10 units
- * per rank without collisions; recruitment-driven team growth bounded by
- * MVP run length stays well inside that.
- */
-function distributeColumns(count: number): number[] {
-  if (count === 0) return [];
-  if (count === 1) return [6];
-  const cols: number[] = [];
-  const left = 1;
-  const right = 10;
-  for (let i = 0; i < count; i++) {
-    cols.push(Math.round(left + ((right - left) * i) / (count - 1)));
-  }
-  return cols;
-}
-
-function meleeColumnsFor(count: number): readonly number[] {
-  return count === DEFAULT_MELEE_COLUMNS.length
-    ? DEFAULT_MELEE_COLUMNS
-    : distributeColumns(count);
-}
-
-function rangedColumnsFor(count: number): readonly number[] {
-  return count === DEFAULT_RANGED_COLUMNS.length
-    ? DEFAULT_RANGED_COLUMNS
-    : distributeColumns(count);
-}
 
 /**
  * Top-level orchestrator. Owns the EventBus, Clock, Renderer, FontAtlas,
@@ -202,8 +162,8 @@ export class Game implements RunDispatcher {
     // the bound world; same ordering rule as BattleRenderer.attach.
     this.hud.show(this.world, this.run.currentFloor);
     this.battleRenderer.attach(this.world);
-    this.spawnTeam('player', encounter.playerTeam);
-    this.spawnTeam('enemy', encounter.enemyTeam);
+    spawnTeam(this.world, 'player', encounter.playerTeam);
+    spawnTeam(this.world, 'enemy', encounter.enemyTeam);
   }
 
   /**
@@ -235,29 +195,4 @@ export class Game implements RunDispatcher {
     this.mapScreen.show(this.run.nodeMap, this.run.currentNodeId, this.run.visitedNodes);
   }
 
-  /**
-   * Spawn a pre-rolled team into the active world. Melee fills the front
-   * rank (row 2 player / 9 enemy), ranged fills the rear (row 1 / 10), each
-   * spread evenly across the row so growing teams from recruitment don't
-   * fall off a fixed column array.
-   */
-  private spawnTeam(team: Team, templates: readonly UnitTemplate[]): void {
-    if (!this.world) throw new Error('spawnTeam called without an active world');
-    const meleeRow = team === 'player' ? 2 : 9;
-    const rangedRow = team === 'player' ? 1 : 10;
-
-    const melee = templates.filter((t) => t.archetype === 'melee');
-    const ranged = templates.filter((t) => t.archetype === 'ranged');
-    const meleeCols = meleeColumnsFor(melee.length);
-    const rangedCols = rangedColumnsFor(ranged.length);
-
-    for (let i = 0; i < melee.length; i++) {
-      const u = this.world.spawnUnit(melee[i]!, team, { x: meleeCols[i]!, y: meleeRow });
-      u.behaviors.push(new MovementBehavior(), new AttackBehavior());
-    }
-    for (let i = 0; i < ranged.length; i++) {
-      const u = this.world.spawnUnit(ranged[i]!, team, { x: rangedCols[i]!, y: rangedRow });
-      u.behaviors.push(new MovementBehavior(), new AttackBehavior());
-    }
-  }
 }

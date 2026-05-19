@@ -19,11 +19,13 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundation refactors → B style/visual → C gameplay expansion). [TODO.md](TODO.md) holds the small follow-ups that aren't roadmap steps.
 
-**A1 + A2 landed.** Action selector + cooldown/duration split + multi-tick effects (A1) plus the command channel + JSON snapshot plumbing (A2). Next up per ROADMAP:
+**A1 + A2 + A3 landed.** Action selector + cooldown/duration split + multi-tick effects (A1), command channel + JSON snapshot plumbing (A2), and headless fuzz harness (A3). Next up per ROADMAP:
 
-1. **A3 — Headless fuzz harness.** Needed before C6's longer-run balance tuning. Now unblocked because A2's snapshot determinism gives the harness its substrate.
-2. **B6 — Audio**, **B3 — Floating per-unit HP bars + action progress bar.** Big perceptual wins for contained scope; B3 builds on A1's `activeAction` duration as the progress-bar source.
-3. **A4 — Config externalization.** Pre-requisite before adding new archetypes in C2/C3.
+1. **B6 — Audio**, **B3 — Floating per-unit HP bars + action progress bar.** Big perceptual wins for contained scope; B3 builds on A1's `activeAction` duration as the progress-bar source.
+2. **A4 — Config externalization.** Pre-requisite before adding new archetypes in C2/C3.
+3. **C2 — New archetypes (mage, rogue, healer).** Now unblocked by A1+A2; A4 makes adding their stat tables easier.
+
+**Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning.
 
 Open the roadmap for the full plan and decision-point flags.
 
@@ -65,6 +67,8 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 19. **A2 snapshot rehydration is two-phase for World.** Units are instantiated first (no `activeAction`), then `activeAction` references are resolved once every unit exists — an in-flight `AttackAction` may reference another unit by id, and that target has to be present first. `World.fromJSON` enforces this order; if you add a new Action whose `fromData` looks up world state, follow the same pattern. Same applies if multi-unit links (e.g. a "guard ally X" behavior) ever exist.
 20. **Behavior/Action registry. `kind` is the contract.** New Behavior implementations declare `static readonly kind = '...'` AND `readonly kind = X.kind`, plus a factory in [src/sim/behaviors/registry.ts](src/sim/behaviors/registry.ts). New Action implementations declare an `id`, a `toData()`, a `static fromData(data, world)`, and register in [src/sim/actions/registry.ts](src/sim/actions/registry.ts). Skipping either side breaks `World.fromJSON` only for snapshots that mention the new kind — easy to miss until someone tries to save mid-battle.
 21. **`Run.fromJSON` uses `Object.create` to bypass the constructor.** A fresh `new Run(seed, bus)` regenerates the NodeMap and emits `run:started`; neither is what we want when restoring a snapshot. The factory uses `Object.create(Run.prototype)` plus a mutable cast to set the readonly fields, then calls `subscribe()` to wire up `battle:ended`. Don't replace this with constructor surgery without preserving both behaviors.
+22. **A3 fuzz CLI uses tsx, smoke uses a separate vitest config.** Node ESM can't resolve extensionless `.ts` imports natively, so `npm run fuzz` runs through `tsx` (added as devDep). `npm run fuzz:smoke` uses [vitest.fuzz.config.ts](vitest.fuzz.config.ts) — the default `vite.config.ts` *excludes* `tests/fuzz/**` from `npm test` to keep pre-commit fast, so the smoke needs its own config to flip the include. If you ever wire fuzz into CI, call `npm run fuzz:smoke` not `npm test`.
+23. **Battle-setup logic lives in [src/sim/battleSetup.ts](src/sim/battleSetup.ts), not Game.** `Game.beginBattle` and the fuzz harness both call `spawnTeam` / `spawnEncounter` from this module. If formation columns ever change (or new behaviors are added to default-spawned units), it has to land there — both call sites pick it up automatically. Don't reintroduce a local copy in either consumer.
 
 ## Browser-verify tips (learned the hard way)
 
@@ -100,6 +104,7 @@ src/
     Pathfinding.ts     # A* king's-move, Chebyshev heuristic
     Targeting.ts       # findTarget — nearest enemy, ties by HP then id
     archetypes.ts      # MELEE/RANGED bounds, rollUnit, glyphForArchetype
+    battleSetup.ts     # shared spawnTeam/spawnEncounter — Game + fuzz harness (A3)
     actions/
       MoveAction.ts          # logical position update + unit:moved event
       AttackAction.ts        # damage + unit:attacked event
@@ -135,6 +140,15 @@ tests/
   smoke.test.ts                              # vitest + module resolution
   integration/determinism.test.ts            # deterministic replay contract
   integration/snapshot-roundtrip.test.ts     # A2: World/Run JSON round-trip
+  fuzz/                                      # A3: opt-in headless balance harness
+    Strategy.ts                              #   pickNextNode / pickRecruit interface
+    strategies/PureRandom.ts                 #   uniform-random baseline
+    strategies/Greedy.ts                     #   prefer lowest-count archetype
+    harness.ts                               #   runOne / runMany; RunResult shape
+    reporters.ts                             #   CSV summary + markdown failure traces
+    cli.ts                                   #   `npm run fuzz` entry point
+    harness.test.ts                          #   smoke (run via `npm run fuzz:smoke`)
+    output/                                  #   gitignored — regenerated each fuzz run
 
 retro/
   scratchpad.md           # rolling scratchpad of process notes / gotchas
@@ -148,6 +162,7 @@ Co-located `*.test.ts` next to source for unit tests. Integration tests under `t
 ```bash
 git log --oneline -5    # confirm latest commit
 npm test                # 146 passed, 0 todo
+npm run fuzz:smoke      # 7 passed — confirms the harness still runs
 npm run dev             # opens at :5173 — verify the full run flow plays
 ```
 

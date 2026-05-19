@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "fuzz": "tsx tests/fuzz/cli.ts",
+    "fuzz:smoke": "vitest run --config vitest.fuzz.config.ts"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.2.8",
@@ -22,6 +24,7 @@
     "eslint": "^10.4.0",
     "globals": "^17.6.0",
     "prettier": "^3.8.3",
+    "tsx": "^4.22.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.3",
     "vite": "^8.0.13",

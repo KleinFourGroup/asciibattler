@@ -11,6 +11,11 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+    // Fuzz harness lives under tests/fuzz/ — opt-in via `npm run fuzz`
+    // (CLI) or `npm run fuzz:smoke` (a small vitest run that asserts
+    // the harness still runs). Default `npm test` skips it to keep
+    // pre-commit fast.
+    exclude: ['node_modules/**', 'dist/**', 'tests/fuzz/**'],
     // Sim/core/run code is pure logic — no DOM needed. Render code is not
     // tested here (visual verification handles that).
     environment: 'node',

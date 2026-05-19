@@ -88,21 +88,39 @@ Unlocks both in-battle commands (C5) and save/load + fuzz testing (A3).
 Save/load UI deliberately deferred until C6 (see "What we're explicitly
 NOT doing yet").
 
-### A3 — Headless fuzz harness
+### A3 — Headless fuzz harness ✓ LANDED
 
-Why now: Phase C content (longer runs, new archetypes, leveling) needs
-empirical balance data. Also: catches determinism violations the eyeball
-will miss.
+Phase C content needs empirical balance data; this is its substrate.
 
-- Entry point that runs N full runs headless from a seed list, with a
-  pluggable "strategy" interface for recruit and (later) in-battle
-  command decisions.
-- Modes to start:
-  - **Pure random** — recruit picks chosen uniformly.
-  - **Greedy** — recruit prefers the archetype with lowest current count.
-- Output: aggregated CSV (run length, deaths per floor, win rate by team
-  composition) plus a per-run markdown trace for the failures.
-- Lands as `tests/fuzz/`, opt-in (skipped by default in `npm test`).
+- [tests/fuzz/Strategy.ts](tests/fuzz/Strategy.ts) — `FuzzStrategy`
+  interface (`pickNextNode`, `pickRecruit`). Both methods receive a
+  read-only `Run` view and a strategy-scoped RNG.
+- Two strategies shipped:
+  - [PureRandomStrategy](tests/fuzz/strategies/PureRandom.ts) — every
+    choice is a uniform draw. The no-information baseline.
+  - [GreedyStrategy](tests/fuzz/strategies/Greedy.ts) — recruit prefers
+    the archetype with the lowest current count, breaks ties randomly.
+- [harness.ts](tests/fuzz/harness.ts) `runOne(seed, strategy)` drives a
+  Run end-to-end headlessly: hot-loops `World.tick()` between phase
+  transitions, captures per-battle stats + recruit history, returns a
+  `RunResult`. Hangs are detected at `maxTicksPerBattle` (default 1000)
+  and surfaced as `outcome: 'hang'`.
+- [reporters.ts](tests/fuzz/reporters.ts) — CSV summary + per-failure
+  markdown trace. Pure functions; the CLI writes to disk.
+- [cli.ts](tests/fuzz/cli.ts) — `npm run fuzz` entry point. Writes
+  `tests/fuzz/output/summary.csv` + `tests/fuzz/output/failures/*.md`.
+  Args: `--count=N`, `--seed=N`, `--strategy=name`, `--out=path`.
+- [vitest.fuzz.config.ts](vitest.fuzz.config.ts) +
+  [harness.test.ts](tests/fuzz/harness.test.ts) — opt-in smoke test via
+  `npm run fuzz:smoke`. Default `npm test` excludes `tests/fuzz/**` so
+  pre-commit stays fast.
+- Shared `spawnTeam` / `spawnEncounter` extracted into
+  [src/sim/battleSetup.ts](src/sim/battleSetup.ts) so Game and the
+  harness can't drift on formation rules.
+
+MVP baseline at 10 seeds × 2 strategies: both at 50% win rate, average
+floor 3.6, no hangs. Recruit picks barely move the needle at 4-floor
+scope — data point for the C6 tuning conversation.
 
 ### A4 — Config externalization
 

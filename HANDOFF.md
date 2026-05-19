@@ -19,7 +19,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundation refactors → B style/visual → C gameplay expansion). [TODO.md](TODO.md) holds the small follow-ups that aren't roadmap steps.
 
-**Phase A foundation refactors all landed: A1, A2, A3, A4.** A1 = action selector + cooldown/duration split + multi-tick effects. A2 = command channel + JSON snapshot plumbing. A3 = headless fuzz harness. A4 = config externalization (JSON balance + .glsl shaders). Next up per ROADMAP:
+**Phase A 4-of-5 landed: A1, A2, A3, A4.** A1 = action selector + cooldown/duration split + multi-tick effects. A2 = command channel + JSON snapshot plumbing. A3 = headless fuzz harness. A4 = config externalization (JSON balance + .glsl shaders). **A5 (scene system) is deliberately deferred** — it lands before the first feature that needs engine rendering outside battle (3D map view, animated recruit, etc.), not speculatively. Next up per ROADMAP:
 
 1. **B6 — Audio**, **B3 — Floating per-unit HP bars + action progress bar.** Big perceptual wins for contained scope; B3 builds on A1's `activeAction` duration as the progress-bar source.
 2. **C2 — New archetypes (mage, rogue, healer).** Unblocked by A1+A2; A4 makes adding their stat tables a `config/archetypes.json` edit.

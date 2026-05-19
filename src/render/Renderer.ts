@@ -2,9 +2,8 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { COLORS } from './palette';
-import { createDitherPass, createPaletteQuantPass, createScanlinePass } from './PostProcess';
+import { createBloomPass, createSatClampedPass, createScanlinePass } from './PostProcess';
 import { GRID_SIZE } from '../config';
 
 /** Camera pitch from horizontal. 45° down matches the diorama framing. */
@@ -36,7 +35,6 @@ export class Renderer {
   readonly webgl: THREE.WebGLRenderer;
 
   private readonly composer: EffectComposer;
-  private readonly paletteQuantPass: ShaderPass;
 
   private readonly onFrame: (dtSeconds: number) => void;
 
@@ -50,12 +48,9 @@ export class Renderer {
     this.webgl.setClearColor(COLORS.TERMINAL_BLACK, 1);
 
     this.scene = new THREE.Scene();
-    // Set the background as scene state (rendered as a full-screen quad with
-    // proper color management) rather than relying on the gl clear color
-    // reaching the EffectComposer's HalfFloat render targets correctly.
-    // Without this, the cleared RT lands at a value bright enough that the
-    // palette-quant pass snaps the background to DARK_TERMINAL_AMBER instead
-    // of TERMINAL_BLACK.
+    // Background as scene state, not just the gl clear color — keeps the
+    // bg color consistent through the EffectComposer's HalfFloat render
+    // targets regardless of how downstream passes treat alpha/clear.
     this.scene.background = new THREE.Color(COLORS.TERMINAL_BLACK);
 
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
@@ -64,14 +59,15 @@ export class Renderer {
 
     this.composer = new EffectComposer(this.webgl);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    // Step 5.4 post-process polish. Dither runs BEFORE palette quant so its
-    // sub-palette offsets influence quantization decisions (smooth gradients
-    // land on a stippled mix of two palette entries instead of hard bands).
-    // Scanlines run AFTER quant; the darkened lines fall off-palette but
-    // the effect is sub-pixel enough to read as palette-correct anyway.
-    this.composer.addPass(createDitherPass());
-    this.paletteQuantPass = createPaletteQuantPass();
-    this.composer.addPass(this.paletteQuantPass);
+    // B1 post-process chain. Saturation-clamp first so the bloom high-pass
+    // operates on consistent-vibrancy input. Bloom next so its blur lands
+    // on the final foreground colors. Scanlines last — they're a screen-
+    // space overlay and shouldn't influence anything upstream.
+    //
+    // Bloom is sized to the canvas; handleResize propagates via
+    // composer.setSize, which UnrealBloomPass picks up.
+    this.composer.addPass(createSatClampedPass());
+    this.composer.addPass(createBloomPass(new THREE.Vector2(1, 1)));
     this.composer.addPass(createScanlinePass());
     // OutputPass converts the composer's internal linear-sRGB framebuffer to
     // the canvas's sRGB output space. Without this last step, every linear

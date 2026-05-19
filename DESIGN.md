@@ -88,7 +88,7 @@ For MVP, *every node is a battle node*. Rest, shop, elite, and event nodes are d
 | `DARK_NEON_RED` | Low-HP enemy states, defeated states |
 | `NEON_PURPLE` | Reserved for rare/elite content post-MVP |
 
-The fragment shader **quantizes all output to this palette** — no off-palette colors reach the screen. This is the single biggest stylistic lever and earns its keep cheaply.
+The palette is **enforced at art-direction time**, not by the shader. The `COLORS` table is the canonical color vocabulary code reaches for (`team === 'enemy' ? NEON_RED : TERMINAL_GREEN`); rendering doesn't post-quantize. The MVP shipped a strict palette-quant pass; B1 swapped it for a vibrancy-clamp + bloom chain after side-by-side testing — it gave smooth glow gradients (which the strict quant fought) without losing the terminal-palette identity.
 
 **Sprites:** ASCII glyphs rendered to a monospace texture atlas at startup, then sampled per-instance on billboarded quads. The shader handles billboarding in the vertex stage. Each unit instance picks its glyph via an instanced attribute.
 
@@ -97,11 +97,11 @@ The fragment shader **quantizes all output to this palette** — no off-palette 
 - `a` — ranged unit (lowercase, classic roguelike convention)
 - `@` — reserved for the player-protagonist concept post-MVP
 
-Color per instance is also an instanced attribute so a single draw call covers all units of all teams.
+Color + bloomIntensity per instance are instanced attributes so a single draw call covers all units of all teams. `bloomIntensity` (default 1.0) multiplies the output color; bumping it past 1.0 pushes the sprite over the bloom high-pass threshold for a forced glow — used for attack flashes, charge-ups, elite tier, etc. Future systems (B3 HP bars, C2 mage charge windup) read/write the same channel.
 
-**Terrain:** A subdivided plane with vertex displacement from seeded simplex noise. Colored in the fragment shader by height and slope, quantized to dark palette variants. Decorative only for MVP — does not affect movement or combat.
+**Terrain:** A subdivided plane with vertex displacement from seeded simplex noise. Colored in the fragment shader by height and slope using dark palette variants (DARK_FLOURESCENT_BLUE → DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER). Decorative only for MVP — does not affect movement or combat.
 
-**Post-processing:** `EffectComposer` is wired up from the start with at least one pass. MVP target effects include subtle scanlines, light dithering, and palette quantization. The pipeline being in place from day one means adding more passes (bloom, chromatic aberration, CRT curvature) later is a one-line addition rather than a refactor.
+**Post-processing:** `EffectComposer` chain — RenderPass → saturation-clamp → bloom (UnrealBloomPass with a max-channel high-pass) → scanlines → OutputPass. CRT curvature and chromatic aberration are future hooks (drop-in additions).
 
 **Camera:** Fixed perspective, tilted ~45° down with a slight angle so the grid reads as a grid but billboards face the camera cleanly. Non-rotatable in MVP. Camera rotation is deferred along with larger maps.
 

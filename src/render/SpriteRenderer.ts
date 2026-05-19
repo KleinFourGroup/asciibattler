@@ -55,6 +55,7 @@ export class SpriteRenderer {
   private readonly aGlyphUV: THREE.InstancedBufferAttribute;
   private readonly aColor: THREE.InstancedBufferAttribute;
   private readonly aAlpha: THREE.InstancedBufferAttribute;
+  private readonly aBloomIntensity: THREE.InstancedBufferAttribute;
 
   private readonly atlas: FontAtlas;
 
@@ -82,8 +83,9 @@ export class SpriteRenderer {
     this.aGlyphUV = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     this.aColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
     this.aAlpha = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 1), 1);
+    this.aBloomIntensity = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 1), 1);
 
-    for (const attr of [this.aPosition, this.aGlyphUV, this.aColor, this.aAlpha]) {
+    for (const attr of [this.aPosition, this.aGlyphUV, this.aColor, this.aAlpha, this.aBloomIntensity]) {
       attr.setUsage(THREE.DynamicDrawUsage);
     }
 
@@ -91,6 +93,7 @@ export class SpriteRenderer {
     this.geometry.setAttribute('instanceGlyphUV', this.aGlyphUV);
     this.geometry.setAttribute('instanceColor', this.aColor);
     this.geometry.setAttribute('instanceAlpha', this.aAlpha);
+    this.geometry.setAttribute('instanceBloomIntensity', this.aBloomIntensity);
 
     this.geometry.instanceCount = 0;
 
@@ -124,6 +127,7 @@ export class SpriteRenderer {
     this.writeGlyph(slot, glyph);
     this.writeColor(slot, color);
     this.writeAlpha(slot, 1);
+    this.writeBloomIntensity(slot, 1);
 
     this.slotByHandle.set(id, slot);
     this.handleAtSlot[slot] = id;
@@ -145,6 +149,7 @@ export class SpriteRenderer {
       color?: THREE.ColorRepresentation;
       glyph?: string;
       alpha?: number;
+      bloomIntensity?: number;
     },
   ): void {
     const slot = this.slotByHandle.get(handle.id);
@@ -154,6 +159,7 @@ export class SpriteRenderer {
     if (opts.color !== undefined) this.writeColor(slot, opts.color);
     if (opts.glyph !== undefined) this.writeGlyph(slot, opts.glyph);
     if (opts.alpha !== undefined) this.writeAlpha(slot, opts.alpha);
+    if (opts.bloomIntensity !== undefined) this.writeBloomIntensity(slot, opts.bloomIntensity);
   }
 
   /** Remove a sprite. Idempotent: removing an already-removed handle is a no-op. */
@@ -223,6 +229,12 @@ export class SpriteRenderer {
     this.aAlpha.needsUpdate = true;
   }
 
+  private writeBloomIntensity(slot: number, intensity: number): void {
+    const arr = this.aBloomIntensity.array as Float32Array;
+    arr[slot] = intensity;
+    this.aBloomIntensity.needsUpdate = true;
+  }
+
   /**
    * Copy every per-instance attribute from one slot to another. Used by
    * `removeSprite` to compact the live range.
@@ -239,5 +251,6 @@ export class SpriteRenderer {
     copyN(this.aGlyphUV, 4);
     copyN(this.aColor, 3);
     copyN(this.aAlpha, 1);
+    copyN(this.aBloomIntensity, 1);
   }
 }

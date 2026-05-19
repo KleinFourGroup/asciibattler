@@ -198,25 +198,23 @@ the first 3D-outside-battle feature arrived.
 Mostly independent of Phase A and of each other. Order by what you want
 to look at first.
 
-### B1 — Palette experiment ("Tron shift")
+### B1 — Palette experiment ("Tron shift") ✓ LANDED
 
-Per feedback: the strict palette quant is too restrictive for glow
-effects. Move toward terminal greens + ambers + neons + any darker/lighter
-shades up to black/white. Vibe shifts from "old terminal" toward "Tron."
+Decision-point demo built (4-variant side-by-side: strict / hue-locked /
+sat-clamped / hue-locked+bloom). User picked: drop palette-quant
+entirely. The `COLORS` table stays the canonical vocabulary in code, but
+no shader enforces it post-hoc.
 
-**Approach:** build a side-by-side demo page rendering the same battle
-frame under several variants:
-- (a) current strict palette
-- (b) hue-locked, free luminance (palette controls hue families, allows
-  any brightness)
-- (c) full-RGB but saturation-clamped
-- (d) a user-proposed alternative
+New composer chain: `RenderPass → SatClamped → Bloom → Scanlines →
+OutputPass`. UnrealBloomPass's high-pass patched to `max(R,G,B)` so red
+glows on equal footing with green (gotcha #29).
+[SpriteRenderer](src/render/SpriteRenderer.ts) gained a per-instance
+`bloomIntensity` attribute (default 1.0) for forced-glow effects — B3
+HP-bar fill, C2 mage charge-up, and the existing attack flash will reach
+for it.
 
-**Decision point B1:** user picks; update DESIGN.md aesthetic section
-and the palette-quant pass in [PostProcess.ts](src/render/PostProcess.ts).
-
-Touches the load-bearing palette-quant gotchas (HANDOFF #2–#4). Re-read
-those before designing the new pass.
+Gotchas #1, #3, #4 retired; #29 (max-channel bloom) and #30
+(bloomIntensity instance attribute) added.
 
 ### B2 — Low-poly 3D asset style
 

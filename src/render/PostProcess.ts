@@ -1,94 +1,103 @@
 import * as THREE from 'three';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { COLORS } from './palette';
 import fullscreenVert from './shaders/fullscreen-pass.vert.glsl?raw';
-import paletteFragSource from './shaders/palette.frag.glsl?raw';
-import ditherFrag from './shaders/dither.frag.glsl?raw';
+import paletteSatClampedFrag from './shaders/palette-sat-clamped.frag.glsl?raw';
 import scanlinesFrag from './shaders/scanlines.frag.glsl?raw';
 
 /**
- * Post-process passes. The palette-quantization pass is always on (it's the
- * single biggest stylistic lever per DESIGN.md). Scanlines, dither, and CRT
- * curvature are future hooks — placeholders called out below so the pipeline
- * extends with a one-liner instead of a refactor.
+ * Post-process passes. Three are wired into the main composer chain (see
+ * Renderer.ts):
  *
- * Shader sources live under `src/render/shaders/*.glsl` (Vite `?raw`
- * imports). The palette fragment shader carries two compile-time
- * constants (`__PALETTE_SIZE__`, `__BLACK_INDEX__`) substituted at load
- * because GLSL ES 1.00 can't index `uPalette` by a non-const variable
- * and can't `#define` from a uniform.
+ *   1. Saturation-clamp — pulls every fragment into a vibrancy band so
+ *      nothing reads muddy. Replaces the MVP palette-quant pass; the
+ *      palette is now an art-direction discipline (the COLORS table is
+ *      still the canonical source of unit/team colors in code), not a
+ *      shader-enforced post-quantization.
+ *   2. Bloom (UnrealBloomPass) — bright pixels smear into a glow halo.
+ *      The high-pass shader is patched to use max(R,G,B) instead of
+ *      Rec.709 luminance so NEON_RED enemies glow on the same footing as
+ *      TERMINAL_GREEN allies.
+ *   3. Scanlines — CRT-diorama band overlay.
+ *
+ * Sprites can opt into stronger bloom by bumping `bloomIntensity` per-
+ * instance in [SpriteRenderer.ts](./SpriteRenderer.ts) — pushing the
+ * output color past the bloom threshold gives the sprite a halo without
+ * a separate render layer.
  */
 
-const PALETTE_ENTRIES = Object.values(COLORS);
-const PALETTE_SIZE = PALETTE_ENTRIES.length;
+const TERMINAL_BLACK_LINEAR = new THREE.Color(COLORS.TERMINAL_BLACK);
 
-/**
- * Index of TERMINAL_BLACK in the palette uniform. The shader uses it as a
- * color-key sentinel (background pixels land EXACTLY here because the scene
- * draws a uniform full-screen quad before any geometry), and as the index to
- * exclude from foreground quantization so dark terrain can't snap to the
- * background color and read as a hole punched through the terrain.
- */
-const BLACK_INDEX = PALETTE_ENTRIES.indexOf(COLORS.TERMINAL_BLACK);
+const PALETTE_SAT_CLAMPED_SHADER = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uBgColor: {
+      value: new THREE.Vector3(
+        TERMINAL_BLACK_LINEAR.r,
+        TERMINAL_BLACK_LINEAR.g,
+        TERMINAL_BLACK_LINEAR.b,
+      ),
+    },
+    uSatMin: { value: 0.4 },
+    uSatMax: { value: 1.0 },
+  },
+  vertexShader: fullscreenVert,
+  fragmentShader: paletteSatClampedFrag,
+};
 
-/**
- * Build the palette uniform as an array of vec3s. `new THREE.Color(hex)`
- * interprets the string as sRGB and stores it in the working color space
- * (linear by default in modern three.js), so palette comparisons happen in
- * the same linear space as the sampled scene color. Linear-vs-linear is the
- * boring-and-correct version.
- */
-function buildPaletteUniform(): THREE.Vector3[] {
-  return PALETTE_ENTRIES.map((hex) => {
-    const c = new THREE.Color(hex);
-    return new THREE.Vector3(c.r, c.g, c.b);
-  });
+export function createSatClampedPass(): ShaderPass {
+  return new ShaderPass(PALETTE_SAT_CLAMPED_SHADER);
 }
 
 /**
- * Replace `__NAME__`-style placeholders in a shader source. The palette
- * pass uses this for two compile-time constants the GLSL compiler needs
- * to see as integer literals; other passes don't need it yet.
+ * UnrealBloomPass tuned for the "Tron"-style neon glow. Strength + radius
+ * are generous so bright pixels really halo; threshold sits at 0.6 in
+ * max-channel terms (see below) so unsaturated darks don't bleed.
+ *
+ * Out of the box UnrealBloomPass uses Rec.709 perception-weighted
+ * luminance (`0.299·R + 0.587·G + 0.114·B`) for its high-pass, which
+ * makes pure red glow far less than pure green at the same RGB intensity
+ * — physically correct for HDR scenes, actively wrong for stylized
+ * glyphs where we want "any saturated channel triggers glow." We swap in
+ * a max-channel high-pass so NEON_RED enemies bloom on the same footing
+ * as TERMINAL_GREEN allies.
  */
-function substituteShaderConstants(source: string, subs: Record<string, string | number>): string {
-  let out = source;
-  for (const [key, value] of Object.entries(subs)) {
-    out = out.replaceAll(`__${key}__`, String(value));
+export function createBloomPass(size: THREE.Vector2): UnrealBloomPass {
+  const STRENGTH = 1.2;
+  const RADIUS = 0.5;
+  const THRESHOLD = 0.6;
+  const bloom = new UnrealBloomPass(size, STRENGTH, RADIUS, THRESHOLD);
+
+  const material = (bloom as unknown as { materialHighPassFilter: THREE.ShaderMaterial })
+    .materialHighPassFilter;
+  material.fragmentShader = MAX_CHANNEL_HIGH_PASS_FRAG;
+  material.needsUpdate = true;
+
+  return bloom;
+}
+
+/**
+ * Replacement for three's LuminosityHighPassShader fragment. Same
+ * uniforms + signature; only the brightness measure differs (max of the
+ * three channels instead of Rec.709 luminance).
+ */
+const MAX_CHANNEL_HIGH_PASS_FRAG = /* glsl */ `
+  uniform sampler2D tDiffuse;
+  uniform float luminosityThreshold;
+  uniform float smoothWidth;
+  uniform vec3 defaultColor;
+  uniform float defaultOpacity;
+  varying vec2 vUv;
+
+  void main() {
+    vec4 texel = texture2D(tDiffuse, vUv);
+    float v = max(max(texel.r, texel.g), texel.b);
+    vec4 outputColor = vec4(defaultColor.rgb, defaultOpacity);
+    float alpha = smoothstep(luminosityThreshold, luminosityThreshold + smoothWidth, v);
+    gl_FragColor = mix(outputColor, texel, alpha);
   }
-  return out;
-}
-
-const PALETTE_FRAG = substituteShaderConstants(paletteFragSource, {
-  PALETTE_SIZE,
-  BLACK_INDEX,
-});
-
-const PALETTE_QUANT_SHADER = {
-  uniforms: {
-    tDiffuse: { value: null },
-    uPalette: { value: buildPaletteUniform() },
-  },
-  vertexShader: fullscreenVert,
-  fragmentShader: PALETTE_FRAG,
-};
-
-export function createPaletteQuantPass(): ShaderPass {
-  return new ShaderPass(PALETTE_QUANT_SHADER);
-}
-
-const DITHER_SHADER = {
-  uniforms: {
-    tDiffuse: { value: null },
-    uStrength: { value: 0.05 },
-    uBgColor: { value: buildPaletteUniform()[BLACK_INDEX] },
-  },
-  vertexShader: fullscreenVert,
-  fragmentShader: ditherFrag,
-};
-
-export function createDitherPass(): ShaderPass {
-  return new ShaderPass(DITHER_SHADER);
-}
+`;
 
 const SCANLINE_SHADER = {
   uniforms: {

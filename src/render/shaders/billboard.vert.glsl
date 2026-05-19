@@ -12,12 +12,18 @@ attribute vec3 instancePosition;
 attribute vec4 instanceGlyphUV;
 attribute vec3 instanceColor;
 attribute float instanceAlpha;
+// Per-sprite multiplier on output color, used to push values above the
+// bloom high-pass threshold (B1). 1.0 = baseline (sprite glows only if
+// its color is already saturated); >1.0 = forced glow for emphasis
+// (attack windups, criticals, elite tier). Sub-1.0 dims without alpha.
+attribute float instanceBloomIntensity;
 
 uniform float uSpriteSize;
 
 varying vec2 vAtlasUV;
 varying vec3 vColor;
 varying float vAlpha;
+varying float vBloomIntensity;
 
 void main() {
   vec4 mvPos = modelViewMatrix * vec4(instancePosition, 1.0);
@@ -27,4 +33,5 @@ void main() {
   vAtlasUV = mix(instanceGlyphUV.xy, instanceGlyphUV.zw, uv);
   vColor = instanceColor;
   vAlpha = instanceAlpha;
+  vBloomIntensity = instanceBloomIntensity;
 }

@@ -84,15 +84,19 @@ but the headline rules:
 - **Sim/render separation.** Simulation is a pure, deterministic state
   machine. The renderer subscribes via the EventBus. Sim code never
   imports from `src/render/` or `src/ui/`.
-- **Palette-quant pipeline has co-dependent passes.** Any post-process
-  pass placed before palette-quant must respect the background
-  color-key (see HANDOFF gotchas #2–#4). Re-read those before adding a
-  new pass.
+- **Palette is art-direction discipline, not shader enforcement (B1).**
+  The `COLORS` table is the canonical color vocabulary code reaches for,
+  but the rendering chain doesn't post-quantize. The chain is
+  `RenderPass → SatClamped → Bloom → Scanlines → OutputPass`. The
+  UnrealBloomPass uses a max-channel high-pass (not Rec.709) so red and
+  green glow equally — see HANDOFF gotcha #29. SpriteRenderer has a
+  per-instance `bloomIntensity` for forced glow (gotcha #30).
 - **Cooldown semantics are "decrement-then-check."** The shared
   `unit.actionCooldown` is decremented once per tick before behaviors
   run; behaviors set it to the *full* cooldown value after acting (not
   N-1). This is what keeps the sprite lerp from leaving a visible idle
-  frame between moves. Slated for refactor in ROADMAP Phase A1.
+  frame between moves. Refactored to per-action map + activeAction
+  lockout in ROADMAP Phase A1 (gotcha #8).
 
 ## Pre-flight when picking up a session
 
@@ -102,10 +106,11 @@ npm test                # should be all green, 0 todo
 npm run dev             # opens at :5173 (or :5174 if stale process held :5173)
 ```
 
-In the browser: dark terrain with subtle dither + 4px scanlines, map on
-load. Click a frontier node → battle → recruit modal → back to map. Win
-4 → green "Run Complete." Lose → red "Defeat." Screen transitions fade
-over 180ms.
+In the browser: dark terrain (smooth blue/green/amber gradient) with 4px
+scanlines, glowing neon sprites (green allies + red enemies bloom on
+attack), map on load. Click a frontier node → battle → recruit modal →
+back to map. Win 4 → green "Run Complete." Lose → red "Defeat." Screen
+transitions fade over 180ms.
 
 If `:5173` is held by a stale process, Vite silently falls back to
 `:5174`. Vite spawns child Node processes that survive `taskkill` on

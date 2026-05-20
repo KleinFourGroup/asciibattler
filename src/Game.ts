@@ -1,6 +1,7 @@
 import { Renderer } from './render/Renderer';
 import { FontAtlas } from './render/FontAtlas';
 import { SpriteRenderer } from './render/SpriteRenderer';
+import { BarRenderer } from './render/BarRenderer';
 import { TerrainRenderer } from './render/TerrainRenderer';
 import { EventBus } from './core/EventBus';
 import { GRID_SIZE } from './config';
@@ -41,6 +42,7 @@ export class Game implements RunDispatcher {
   private readonly renderer: Renderer;
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
+  private readonly bars: BarRenderer;
   private readonly terrain: TerrainRenderer;
   private readonly uiMount: HTMLElement;
   /**
@@ -76,6 +78,11 @@ export class Game implements RunDispatcher {
     // `bloomMesh` (BLOOM_LAYER) → bloomComposer (halo input).
     this.renderer.scene.add(this.sprites.mesh);
     this.renderer.scene.add(this.sprites.bloomMesh);
+
+    // B3: HP / action-progress bars. Single mesh on layer 0 — bars don't
+    // bloom by design (the visual budget stays on the sprites).
+    this.bars = new BarRenderer();
+    this.renderer.scene.add(this.bars.mesh);
 
     // Scene transitions driven by Run lifecycle events. All three of the
     // post-battle handlers fire from Run.handleBattleEnded *after* Run has
@@ -156,6 +163,7 @@ export class Game implements RunDispatcher {
       bus: this.bus,
       scene3D: this.renderer.scene,
       sprites: this.sprites,
+      bars: this.bars,
       terrain: this.terrain,
       fontAtlas: this.fontAtlas,
       uiMount: this.uiMount,

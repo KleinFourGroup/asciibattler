@@ -21,6 +21,7 @@ import type * as THREE from 'three';
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { SpriteRenderer } from '../render/SpriteRenderer';
+import type { BarRenderer } from '../render/BarRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
@@ -30,6 +31,7 @@ export interface SceneContext {
   readonly bus: EventBus<GameEvents>;
   readonly scene3D: THREE.Scene;
   readonly sprites: SpriteRenderer;
+  readonly bars: BarRenderer;
   readonly terrain: TerrainRenderer;
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;

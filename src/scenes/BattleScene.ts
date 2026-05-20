@@ -32,7 +32,7 @@ export class BattleScene implements Scene {
 
     this.world = new World(ctx.bus, new RNG(encounter.worldSeed), GRID_SIZE);
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
-    this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.bus);
+    this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.bars, ctx.bus);
     this.hud = new HUD(ctx.uiMount, ctx.bus);
 
     // HUD and BattleRenderer must be bound BEFORE spawnTeam so unit:spawned

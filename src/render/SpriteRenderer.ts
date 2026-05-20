@@ -226,6 +226,19 @@ export class SpriteRenderer {
     return this.activeCount;
   }
 
+  /**
+   * Read a sprite's current world position into `out` and return it. Returns
+   * `null` if the handle has been removed. Used by followers (HP/progress
+   * bars) that need to track a sprite's position through SpriteAnimator
+   * lerps each render frame without coupling to the animator's lerp state.
+   */
+  getPosition(handle: SpriteHandle, out: THREE.Vector3): THREE.Vector3 | null {
+    const slot = this.slotByHandle.get(handle.id);
+    if (slot === undefined) return null;
+    const arr = this.aPosition.array as Float32Array;
+    return out.set(arr[slot * 3]!, arr[slot * 3 + 1]!, arr[slot * 3 + 2]!);
+  }
+
   /** Dispose the GPU resources. Called when the renderer is torn down. */
   dispose(): void {
     this.geometry.dispose();

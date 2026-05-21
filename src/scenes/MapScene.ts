@@ -16,7 +16,7 @@ export class MapScene implements Scene {
   private screen: MapScreen | null = null;
 
   mount(ctx: SceneContext): void {
-    this.screen = new MapScreen(ctx.uiMount, ctx.dispatcher);
+    this.screen = new MapScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
     this.screen.show(ctx.run.nodeMap, ctx.run.currentNodeId, ctx.run.visitedNodes);
   }
 

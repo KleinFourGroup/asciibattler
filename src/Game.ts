@@ -13,6 +13,7 @@ import { MapScene } from './scenes/MapScene';
 import { BattleScene } from './scenes/BattleScene';
 import { RecruitScene } from './scenes/RecruitScene';
 import { GameOverScene } from './scenes/GameOverScene';
+import { AudioPlayer } from './audio/AudioPlayer';
 
 /**
  * Top-level orchestrator. Owns the EventBus, Renderer, FontAtlas, persistent
@@ -45,6 +46,7 @@ export class Game implements RunDispatcher {
   private readonly bars: BarRenderer;
   private readonly terrain: TerrainRenderer;
   private readonly uiMount: HTMLElement;
+  private readonly audio: AudioPlayer;
   /**
    * Active run. Replaced on `resetRun` command, so it's not readonly — but
    * every method should still treat `this.run` as the authoritative source
@@ -57,6 +59,7 @@ export class Game implements RunDispatcher {
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
     this.fontAtlas = fontAtlas;
     this.uiMount = uiMount;
+    this.audio = new AudioPlayer();
 
     // Construct Run first so its battle:ended handler subscribes before any
     // Game listener that reads run.phase. The recruit:offered/run:victory/
@@ -92,6 +95,14 @@ export class Game implements RunDispatcher {
     this.bus.on('recruit:offered', ({ units }) => this.swap(new RecruitScene(units)));
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
+
+    // B6 audio hooks at the page-lifetime layer. Subscriptions tied to
+    // World/Scene lifetimes live in BattleScene (see unit:attacked /
+    // unit:died handlers there); subscriptions that span scenes belong
+    // here so they survive scene swaps.
+    this.bus.on('recruit:offered', () => this.audio.play('recruit'));
+    this.bus.on('run:victory', () => this.audio.play('win'));
+    this.bus.on('run:defeated', () => this.audio.play('lose'));
 
     // Boot into the map.
     this.swap(new MapScene());
@@ -169,6 +180,7 @@ export class Game implements RunDispatcher {
       uiMount: this.uiMount,
       dispatcher: this,
       run: this.run,
+      audio: this.audio,
     };
   }
 }

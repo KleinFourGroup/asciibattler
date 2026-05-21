@@ -13,7 +13,7 @@ export class GameOverScene implements Scene {
   constructor(private readonly variant: GameOverVariant) {}
 
   mount(ctx: SceneContext): void {
-    this.screen = new GameOverScreen(ctx.uiMount, ctx.dispatcher);
+    this.screen = new GameOverScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
     this.screen.show(this.variant);
   }
 

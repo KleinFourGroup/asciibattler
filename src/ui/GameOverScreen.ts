@@ -11,6 +11,7 @@
  */
 
 import type { RunDispatcher } from '../run/Command';
+import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
 
 export type GameOverVariant = 'defeat' | 'complete';
@@ -31,6 +32,7 @@ export class GameOverScreen {
   constructor(
     private readonly mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
+    private readonly audio: AudioPlayer,
   ) {}
 
   show(variant: GameOverVariant = 'defeat'): void {
@@ -68,6 +70,7 @@ export class GameOverScreen {
     button.className = 'gameover-button';
     button.textContent = 'Begin a new run';
     button.addEventListener('click', () => {
+      this.audio.play('click');
       this.dispatcher.dispatch({ kind: 'resetRun' });
     });
     panel.appendChild(button);

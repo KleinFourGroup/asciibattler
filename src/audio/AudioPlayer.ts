@@ -1,0 +1,132 @@
+/**
+ * Audio playback layer (B6). Preloads a fixed set of SFX/music clips and
+ * exposes overlap-safe `play(key)`. HTMLAudioElement is enough for our
+ * scope; revisit Web Audio API if we ever need spatialization, precise
+ * scheduling, or fade curves.
+ *
+ * Overlap: each sound has a small ring of cloned `<audio>` nodes. play()
+ * picks the next slot, rewinds it, and plays. With POOL_SIZE=4 we can
+ * absorb four simultaneous triggers (e.g. multi-unit attacks on the same
+ * tick) before stealing the oldest.
+ *
+ * Browsers block audio playback until the first user gesture. The first
+ * trigger in this game is a map-node click — itself a gesture — so the
+ * unlock happens transparently. play() rejections from the autoplay
+ * policy are swallowed: gameplay should not break when audio is blocked.
+ *
+ * Assets live in `public/audio/` and are referenced by relative path so
+ * the same build works under any deploy subpath (vite.config.ts uses
+ * `base: './'`).
+ */
+
+export type SoundKey =
+  | 'click'
+  | 'death'
+  | 'lose'
+  | 'melee'
+  | 'recruit'
+  | 'shoot'
+  | 'win';
+
+const SOURCES: Record<SoundKey, string> = {
+  click: 'audio/click.wav',
+  death: 'audio/death.wav',
+  lose: 'audio/lose.wav',
+  melee: 'audio/melee.wav',
+  recruit: 'audio/recruit.wav',
+  shoot: 'audio/shoot.wav',
+  win: 'audio/win.wav',
+};
+
+/**
+ * Per-sound volume relative to master. SFX play loud (1.0); the longer
+ * fanfares are softer so they don't dominate when win/lose lands at the
+ * same loudness as the impact sounds that preceded them.
+ */
+const VOLUMES: Record<SoundKey, number> = {
+  click: 0.7,
+  death: 1.0,
+  lose: 0.7,
+  melee: 1.0,
+  recruit: 0.8,
+  shoot: 1.0,
+  win: 0.7,
+};
+
+/**
+ * Per-sound pitch variance. On each play() the playbackRate is jittered
+ * to `1 ± variance` (uniform), which shifts pitch AND tempo together —
+ * exactly what you want for repeated impact SFX so the ear doesn't lock
+ * onto a single tone. Capped at ~0.1 (±10%): beyond that the variation
+ * is perceptible as a "broken sample" rather than just a different hit.
+ * One-shot cues (click, recruit, fanfares) stay at 0 — variation on
+ * something you only hear once reads as inconsistency, not life.
+ */
+const PITCH_VARIANCE: Record<SoundKey, number> = {
+  click: 0,
+  death: 0.08,
+  lose: 0,
+  melee: 0.1,
+  recruit: 0,
+  shoot: 0.1,
+  win: 0,
+};
+
+const POOL_SIZE = 4;
+const DEFAULT_MASTER_VOLUME = 0.5;
+
+export class AudioPlayer {
+  private masterVolume = DEFAULT_MASTER_VOLUME;
+  private muted = false;
+  private readonly pools: Record<SoundKey, HTMLAudioElement[]>;
+  private readonly cursors: Record<SoundKey, number>;
+
+  constructor() {
+    this.pools = {} as Record<SoundKey, HTMLAudioElement[]>;
+    this.cursors = {} as Record<SoundKey, number>;
+    for (const key of Object.keys(SOURCES) as SoundKey[]) {
+      const pool: HTMLAudioElement[] = [];
+      for (let i = 0; i < POOL_SIZE; i++) {
+        const audio = new Audio(SOURCES[key]);
+        audio.preload = 'auto';
+        audio.volume = this.masterVolume * VOLUMES[key];
+        pool.push(audio);
+      }
+      this.pools[key] = pool;
+      this.cursors[key] = 0;
+    }
+  }
+
+  play(key: SoundKey): void {
+    if (this.muted) return;
+    const pool = this.pools[key];
+    const cursor = this.cursors[key];
+    const audio = pool[cursor]!;
+    this.cursors[key] = (cursor + 1) % POOL_SIZE;
+    const variance = PITCH_VARIANCE[key];
+    audio.playbackRate = variance > 0 ? 1 + (Math.random() * 2 - 1) * variance : 1;
+    audio.currentTime = 0;
+    audio.play().catch(() => {
+      // Autoplay policy may reject before any user gesture, and stolen
+      // playback can throw an AbortError. Neither should break the game.
+    });
+  }
+
+  setMasterVolume(v: number): void {
+    this.masterVolume = Math.max(0, Math.min(1, v));
+    for (const key of Object.keys(this.pools) as SoundKey[]) {
+      const target = this.masterVolume * VOLUMES[key];
+      for (const audio of this.pools[key]) {
+        audio.volume = target;
+      }
+    }
+  }
+
+  setMuted(muted: boolean): void {
+    this.muted = muted;
+  }
+
+  get isMuted(): boolean {
+    return this.muted;
+  }
+}

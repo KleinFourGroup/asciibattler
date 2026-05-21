@@ -15,7 +15,7 @@ export class RecruitScene implements Scene {
   constructor(private readonly offer: readonly UnitTemplate[]) {}
 
   mount(ctx: SceneContext): void {
-    this.screen = new RecruitScreen(ctx.uiMount, ctx.dispatcher);
+    this.screen = new RecruitScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
     this.screen.show(this.offer);
   }
 

@@ -26,6 +26,7 @@ import type { TerrainRenderer } from '../render/TerrainRenderer';
 import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
 import type { RunDispatcher } from '../run/Command';
+import type { AudioPlayer } from '../audio/AudioPlayer';
 
 export interface SceneContext {
   readonly bus: EventBus<GameEvents>;
@@ -37,6 +38,7 @@ export interface SceneContext {
   readonly uiMount: HTMLElement;
   readonly dispatcher: RunDispatcher;
   readonly run: Run;
+  readonly audio: AudioPlayer;
 }
 
 export interface Scene {

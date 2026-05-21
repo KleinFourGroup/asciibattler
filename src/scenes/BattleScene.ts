@@ -23,6 +23,7 @@ export class BattleScene implements Scene {
   private world: World | null = null;
   private battleRenderer: BattleRenderer | null = null;
   private hud: HUD | null = null;
+  private readonly subscriptions: Array<() => void> = [];
 
   mount(ctx: SceneContext): void {
     const encounter = ctx.run.currentEncounter;
@@ -34,6 +35,18 @@ export class BattleScene implements Scene {
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
     this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.bars, ctx.bus);
     this.hud = new HUD(ctx.uiMount, ctx.bus);
+
+    // B6 audio: per-battle subscriptions that need the World to look up
+    // the attacker's archetype (attackRange<=1 → melee, else ranged).
+    // Lives here rather than Game so it tears down with the world.
+    this.subscriptions.push(
+      ctx.bus.on('unit:attacked', ({ attackerId }) => {
+        const attacker = this.world?.findUnit(attackerId);
+        if (!attacker) return;
+        ctx.audio.play(attacker.stats.attackRange <= 1 ? 'melee' : 'shoot');
+      }),
+      ctx.bus.on('unit:died', () => ctx.audio.play('death')),
+    );
 
     // HUD and BattleRenderer must be bound BEFORE spawnTeam so unit:spawned
     // handlers find the world.
@@ -49,6 +62,8 @@ export class BattleScene implements Scene {
   }
 
   dispose(): void {
+    for (const unsub of this.subscriptions) unsub();
+    this.subscriptions.length = 0;
     this.battleRenderer?.detach();
     this.battleRenderer?.dispose();
     this.hud?.dispose();

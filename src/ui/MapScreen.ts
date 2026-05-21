@@ -12,16 +12,19 @@
 
 import type { NodeMap } from '../run/NodeMap';
 import type { RunDispatcher } from '../run/Command';
+import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
 
 export class MapScreen {
   private readonly mount: HTMLElement;
   private readonly dispatcher: RunDispatcher;
+  private readonly audio: AudioPlayer;
   private container: HTMLDivElement | null = null;
 
-  constructor(mount: HTMLElement, dispatcher: RunDispatcher) {
+  constructor(mount: HTMLElement, dispatcher: RunDispatcher, audio: AudioPlayer) {
     this.mount = mount;
     this.dispatcher = dispatcher;
+    this.audio = audio;
   }
 
   show(map: NodeMap, currentNodeId: number, visited: ReadonlySet<number> = new Set()): void {
@@ -108,6 +111,7 @@ export class MapScreen {
       } else if (frontier.has(node.id)) {
         div.classList.add('frontier');
         div.addEventListener('click', () => {
+          this.audio.play('click');
           this.dispatcher.dispatch({ kind: 'enterNode', nodeId: node.id });
         });
       } else if (visited.has(node.id)) {

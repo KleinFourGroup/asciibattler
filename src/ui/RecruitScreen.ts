@@ -11,6 +11,7 @@
 
 import type { UnitTemplate } from '../sim/Unit';
 import type { RunDispatcher } from '../run/Command';
+import type { AudioPlayer } from '../audio/AudioPlayer';
 import { glyphForArchetype } from '../sim/archetypes';
 import { ticksToSeconds } from '../config';
 import { fadeIn, fadeOutAndRemove } from './fade';
@@ -21,6 +22,7 @@ export class RecruitScreen {
   constructor(
     private readonly mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
+    private readonly audio: AudioPlayer,
   ) {}
 
   show(offer: readonly UnitTemplate[]): void {
@@ -84,6 +86,7 @@ export class RecruitScreen {
     card.appendChild(stats);
 
     card.addEventListener('click', () => {
+      this.audio.play('click');
       this.dispatcher.dispatch({ kind: 'chooseRecruit', unitTemplate: template });
     });
 

@@ -93,8 +93,15 @@ export class MapScreen {
       div.className = 'map-node';
       div.style.left = `${pos.x * 100}%`;
       div.style.top = `${pos.y * 100}%`;
-      div.textContent = String(node.id);
+      // Root reads as the run's origin marker (roguelike "@") rather than
+      // a battle node you skipped past — the numbered-circle visual was
+      // making node 0 feel like a never-chosen option. Battle nodes keep
+      // their numeral. Style hook (.root) lets CSS lean into the
+      // distinction further without touching this dispatch logic.
+      const isRoot = node.id === map.rootId;
+      div.textContent = isRoot ? '@' : String(node.id);
       div.dataset.nodeId = String(node.id);
+      if (isRoot) div.classList.add('root');
 
       if (node.id === currentNodeId) {
         div.classList.add('current');

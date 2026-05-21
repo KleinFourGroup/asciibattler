@@ -4,12 +4,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { COLORS } from './palette';
-import {
-  createBloomMixPass,
-  createBloomPass,
-  createSatClampedPass,
-  createScanlinePass,
-} from './PostProcess';
+import { createBloomMixPass, createBloomPass, createSatClampedPass } from './PostProcess';
 import { BLOOM_LAYER } from './SpriteRenderer';
 import { GRID_SIZE } from '../config';
 
@@ -100,12 +95,17 @@ export class Renderer {
     // the clamped main render). MixPass reads bloomComposer's output via
     // its uBloom uniform — wired up after construction since renderTarget2
     // is only valid after EffectComposer's first .render() initializes it.
+    //
+    // B5: scanlines moved out of the composer chain and into a CSS overlay
+    // (see #scanlines in src/ui/ui.css) so the same lines run across the
+    // canvas/DOM seam instead of cutting off at the canvas edge. The
+    // shader factory + glsl source stay in PostProcess.ts as dormant code
+    // so the revert is a one-line addPass restore.
     this.bloomMixPass = createBloomMixPass();
     this.mainComposer = new EffectComposer(this.webgl);
     this.mainComposer.addPass(new RenderPass(this.scene, this.camera));
     this.mainComposer.addPass(createSatClampedPass());
     this.mainComposer.addPass(this.bloomMixPass);
-    this.mainComposer.addPass(createScanlinePass());
     // OutputPass converts the composer's internal linear-sRGB framebuffer to
     // the canvas's sRGB output space. Without this last step, every linear
     // RGB value gets written to the screen as if it were sRGB, which makes

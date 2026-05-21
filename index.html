@@ -9,6 +9,9 @@
   <body>
     <canvas id="game-canvas"></canvas>
     <div id="ui"></div>
+    <!-- B5: CRT scanline overlay. Sits on top of canvas + UI so the diorama
+         framing is unified across the canvas/DOM seam. Pointer-events: none. -->
+    <div id="scanlines"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

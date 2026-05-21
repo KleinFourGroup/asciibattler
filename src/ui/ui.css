@@ -32,6 +32,37 @@ body {
   pointer-events: auto;
 }
 
+/* B5: CRT scanline overlay. Replaces the canvas-only ShaderPass so the
+   scanlines extend uniformly across the canvas/DOM seam — the diorama
+   framing was breaking at panel edges before. Band thickness (6px dark /
+   6px light, 50% duty cycle) is tuned for visibility on modern high-DPI
+   displays where the previous 4-device-pixel shader read as a uniform
+   dimming.
+
+   The dual-polarity intensity (dark bands subtract, light bands add) is
+   deliberate: pure-darkening scanlines are invisible on near-black
+   surfaces, which is most of the map / recruit / HUD panel backgrounds
+   (rgba(0,0,0,0.7-0.8)). The 0.04 white lift in the light bands gives
+   scanlines real contrast against any underlying brightness — bright
+   content gets the darkening, dark content gets the brightening, both
+   read as horizontal banding. */
+
+#scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* Above #ui (which has no z-index, so default stacking) but high enough
+     to land on top of any future overlay layer too. */
+  z-index: 1000;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0,
+    rgba(0, 0, 0, 0.15) 6px,
+    rgba(255, 255, 255, 0.04) 6px,
+    rgba(255, 255, 255, 0.04) 12px
+  );
+}
+
 /* Step 5.2: shared fade transition. Screens start invisible; flipping the
    `is-visible` class triggers the opacity ramp. Pointer-events drop while
    faded so a partially-faded screen can't intercept clicks meant for the

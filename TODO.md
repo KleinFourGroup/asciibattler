@@ -15,10 +15,23 @@ to a fixed pitch and fits the arena AABB to the viewport on every resize.
 ## Post-MVP polish
 
 - [ ] **Pathfinding directional bias.** A* in `src/sim/Pathfinding.ts` iterates neighbours in fixed `(dx, dy)` order with a strict `<` for `gScore` updates, so on equal-cost ties the path consistently drifts toward lower-x / lower-y cells. Visible at Step 3.5 as units crabbing leftward while they advance. Fix is either a tiebreaker (e.g. prefer the neighbour closer to the straight line from `start` to `goal`) or randomising the neighbour iteration order from the world RNG. Not critical for MVP — battles still resolve correctly.
-- [ ] **Bake grid lines into the terrain shader.** The dev `GridHelper` overlay (toggleable with `g`) reads well — keep it permanently, but as part of the terrain fragment shader (`src/render/TerrainRenderer.ts`) instead of a separate overlay mesh. Will replace the Step 5.3 removal of the dev GridHelper.
-- [ ] **Tighten vertical layout.** Terrain (`PLANE_BASE_Y = -0.5`, displacement `±0.4`), grid overlay (y=0), and sprites (`SPRITE_Y = 0.5` in `BattleRenderer`) sit further apart than necessary — the diorama feels stacked rather than flush. Reduce the gaps once the terrain-baked grid lands and we can eyeball the whole stack together.
-- [ ] **Root node reads as selectable.** Node 0 is the run's starting position — shown on the map as the "current" node, never clickable — but it's drawn with the same numbered circle as battle nodes, which makes "you never pick 0" feel like a quirk instead of "0 is where you start." Either drop the number on the root (replace with a glyph like `▶` or `@`, or just an empty filled dot), or give the root a different shape so it visually reads as origin rather than skipped-option. Lives in [src/ui/MapScreen.ts](src/ui/MapScreen.ts).
-- [ ] **Floating per-unit HP bars.** The Step 5.1 HUD shows full roster + HP on the left panel, which works at MVP scale (≤9 units/team) but won't scale to larger arenas. Add small bars under each unit's billboarded sprite, probably as a second `InstancedBufferGeometry` in a `HealthBarRenderer` (2 instances per unit: background + width-scaled fill), wired through `BattleRenderer` on `unit:spawned` / `:attacked` / `:died`. The fiddly part is position-following: bars need to track `SpriteAnimator` lerps every frame during movement, not just snap to grid cells. Avoid HTML overlay — would skip the palette quant and clash with the diorama. Could either replace the panel HUD or complement it; defer that call to when larger arenas land.
+- [x] **Bake grid lines into the terrain shader.** Folded into ROADMAP C1
+      (C1c visual + layout pass) — C1 replaces the terrain mesh and the grid
+      IS the tile boundaries, so doing this standalone would just need
+      redoing.
+- [x] **Tighten vertical layout.** Folded into ROADMAP C1 (C1c) — only worth
+      tuning once the terrain has its final height profile.
+- [x] **Root node reads as selectable.** Landed in ROADMAP B7. Node 0 now
+      renders the roguelike `@` glyph with a `.root` class hook in
+      [src/ui/MapScreen.ts](src/ui/MapScreen.ts); other state classes still
+      apply on top so the root reads as origin regardless of where the
+      player currently is.
+- [x] **Floating per-unit HP bars.** Landed in ROADMAP B3 — new
+      `BarRenderer` mirrors the SpriteRenderer instancing pattern, two
+      bars per unit (HP + action progress), green→amber→red gradient,
+      position-follow via `SpriteRenderer.getPosition`. Action progress
+      skipped for movement so it doesn't flash every step. See HANDOFF for
+      the full summary.
 - [x] **Replace behavior-order priority with a proper action selector.** Landed
       in ROADMAP A1 alongside the cooldown/duration split and multi-tick action
       machinery. Behaviors implement `proposeAction(unit, world)` returning a

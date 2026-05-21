@@ -219,41 +219,68 @@ all ramp the attribute smoothly without ever darkening the sprite.
 Gotchas #1, #3, #4 retired; #29 (max-channel bloom) and #30 (selective
 bloom architecture + per-instance `bloomIntensity`) added.
 
-### B2 — Low-poly 3D asset style
+### B2 — Low-poly 3D asset style → FOLDED INTO C1
 
-Feedback: more deliberate low-poly style for 3D assets.
+Originally: more deliberate low-poly direction for 3D assets, with a
+decision point on flat vs smooth shading and on wall/obstacle look.
 
-**Decision point B2:** flat-shaded or smooth-shaded? Hand-authored
-meshes or procedural-from-simplex? Wall/obstacle look (couples to C1).
+Folded into C1 because every concrete sub-question (terrain mesh
+style, wall form, sprite-stays-billboard) is something C1 will
+rewrite. Tuning standalone would just need redoing. See the C1
+"Visual style" subsection below.
 
-### B3 — Floating per-unit HP bars + action progress bar
+### B3 — Floating per-unit HP bars + action progress bar ✓ LANDED
 
-[TODO](TODO.md) item, expanded. Two `InstancedBufferGeometry` quads per
-unit (background + width-scaled fill) tracked through `SpriteAnimator`'s
-lerp pipeline. Plus a thinner second bar showing action progress (the
-"duration" portion of A1 — useful only after A1 lands).
+New `BarRenderer` mirrors the SpriteRenderer instancing recipe —
+single `InstancedBufferGeometry` quad with per-instance position /
+size / fillPct / bgColor / fillColor / alpha, billboarded by
+[bar.vert.glsl](src/render/shaders/bar.vert.glsl), shader-cutoff
+fill in [bar.frag.glsl](src/render/shaders/bar.frag.glsl). Single
+mesh on layer 0 — bars don't participate in the selective-bloom
+pass (user-picked direction; visual budget stays on the sprites).
 
-Avoid HTML overlay — palette quant doesn't apply to DOM, would clash.
+Two bars per unit driven by [BattleRenderer](src/render/BattleRenderer.ts).
+HP bar refreshes on `unit:attacked` and lerps fill color
+green→amber→red as a universal HP-state gradient (team identity is
+already on the sprite color). Progress bar hidden by default, fills
+smoothly between sim ticks for in-flight actions; movement is
+explicitly skipped via an `action.id === MOVE_ACTION_ID` short-
+circuit so 1-tick move steps don't flash the bar every step (the
+progress bar pulls its real weight once C2's mage charge-ups land).
+Per-frame position-follow via new
+`SpriteRenderer.getPosition(handle, out)`. On death both bars fade
+alpha 1→0 in lockstep with the sprite over 0.3s and get removed;
+`BattleRenderer.detach()` also drains in-flight bar fades so the
+killing-blow victim's bars don't leak onto the next scene.
 
-### B4 — Bake grid + tighten vertical layout
+### B4 — Bake grid + tighten vertical layout → FOLDED INTO C1
 
-[TODO](TODO.md) items: bake grid lines into the terrain fragment shader
-([TerrainRenderer.ts](src/render/TerrainRenderer.ts)) instead of a
-dev-only `GridHelper` overlay; reduce the `PLANE_BASE_Y / SPRITE_Y` gaps
-so the diorama feels flush rather than stacked.
+Originally: bake grid lines into the terrain fragment shader; reduce
+`PLANE_BASE_Y` / `SPRITE_Y` gaps so the diorama feels flush.
 
-### B5 — Scanlines extending over DOM UI
+Folded into C1 because C1 replaces the terrain mesh wholesale (the
+grid IS the tile boundaries under C1) and the vertical layout is
+only worth tuning once the terrain has its final height profile.
+See the C1 "Layout" subsection below.
 
-Feedback: dither staying canvas-only is fine, but scanlines breaking at
-the canvas/DOM seam reads as incongruous.
+### B5 — Scanlines extending over DOM UI ✓ LANDED
 
-Options:
-- CSS `repeating-linear-gradient` overlay on the UI layer, synced to the
-  canvas scanline pass parameters.
-- A second full-screen canvas above the DOM with `mix-blend-mode`.
-
-**Decision point B5:** which approach. Depends on whether DOM scanlines
-need to exactly track the canvas pass (frequency, intensity, alignment).
+Replaced the canvas-only scanline ShaderPass with a single
+`#scanlines` `<div>` (position: fixed, inset: 0, pointer-events:
+none, z-index: 1000) layered over canvas + UI. One source of truth,
+runs uniformly across the canvas/DOM seam, no possible drift
+between parallel effects. Two intentional shifts from the previous
+shader: CSS-pixel sizing (6px dark / 6px light) instead of device-
+pixel (so high-DPI displays don't read the lines as uniform
+dimming), and dual-polarity intensity (dark bands subtract
+`rgba(0,0,0,0.15)`, light bands lift `rgba(255,255,255,0.04)`) so
+scanlines have visible contrast on near-black panel surfaces — the
+original pure-darkening was invisible on the map / recruit / HUD
+panel backgrounds (~0.7-0.8 black). The `createScanlinePass`
+factory + `scanlines.frag.glsl` stay in
+[PostProcess.ts](src/render/PostProcess.ts) /
+[shaders/](src/render/shaders/) as dormant code so the revert is a
+one-line addPass restore.
 
 ### B6 — Audio
 
@@ -264,11 +291,17 @@ Scope: attack-impact, death, recruit-card-flip, UI clicks, run-complete
 fanfare. HTMLAudioElement to start; revisit Web Audio API if we need
 spatialization or precise scheduling.
 
-### B7 — Root node clarity
+**Gated on asset selection.** Wiring Web Audio scaffolding without
+sounds to play feels backwards; pick out a sample set first.
 
-[TODO](TODO.md) item. Node 0 reads as a skipped option because it uses
-the same numbered-circle visual as battle nodes. Swap the glyph (`▶` or
-`@`) or change the shape so it visually reads as origin.
+### B7 — Root node clarity ✓ LANDED
+
+Node 0 renders the roguelike `@` glyph instead of `0`, with a
+`.root` CSS class hook in [MapScreen.ts](src/ui/MapScreen.ts) for
+future tuning. All other state classes (current / frontier /
+visited / locked) still apply on top, so the root reads as origin
+regardless of where the player currently is. Uses `map.rootId`, not
+hardcoded 0.
 
 ---
 
@@ -277,19 +310,36 @@ the same numbered-circle visual as battle nodes. Swap the glyph (`▶` or
 **Hard prerequisite:** A1 (action selector) before any of these. A4
 (config externalization) before C2/C3. A3 (fuzz harness) before C6.
 
-### C1 — Tile-based terrain with obstacles
+### C1 — Tile-based terrain with obstacles (+ B2 visual + B4 layout)
 
 Replace "terrain is decoration" with a grid of tile types. Each tile
 type has properties: passable / blocking, optional movement cost
 modifier, optional combat modifier (cover, damage bonus, etc.). Walls
 and obstacles populate the arena per encounter seed.
 
-**Decision point C1:** walls as rendered 3D blocks or roguelike
-billboarded `#`? Likely couples to B2 (low-poly direction).
+Now also absorbs the deferred B2 + B4 scope (see notes under those
+headings above). Worth sub-phasing into three:
+
+- **C1a — Tile system + flat geometry.** Pure logic: tile type union
+  + grid + per-encounter generator + pathfinding integration.
+  Renderer ships flat-colored quads as a stand-in.
+- **C1b — Walls and obstacles.** Decision point: 3D blocks vs
+  billboarded `#`. Hooks into encounter generation from C1a.
+- **C1c — Visual style + layout pass** (folded from B2 + B4).
+  Locks the low-poly direction (flat vs smooth, hand-authored vs
+  procedural); bakes grid lines into the new terrain shader;
+  tightens the `PLANE_BASE_Y / SPRITE_Y` vertical stack so the
+  diorama reads flush rather than stacked.
 
 Pathfinding ([src/sim/Pathfinding.ts](src/sim/Pathfinding.ts)) already
 takes blockers; the integration cost is mostly in encounter generation
 and the renderer.
+
+**Decision points to surface when C1 starts:** terrain visual
+direction (flat-shaded vs smooth-shaded, hand-authored mesh vs
+procedural-from-simplex); wall/obstacle form (3D blocks vs
+billboarded `#` glyph); whether sprites stay 2D billboards (likely
+yes — core to the ASCII aesthetic).
 
 ### C2 — New archetypes: mage, rogue, healer
 

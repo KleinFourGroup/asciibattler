@@ -93,6 +93,9 @@ export class HUD {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
     if (!unit) return;
+    // Neutrals (walls, environment) don't appear in either roster — they're
+    // background, not combatants.
+    if (unit.team === 'neutral') return;
     const row = this.makeRow(unit);
     this.rows.set(unitId, row);
     (unit.team === 'player' ? this.playerBody : this.enemyBody).appendChild(row);

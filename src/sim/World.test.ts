@@ -129,6 +129,39 @@ describe('World battle-end detection', () => {
     expect(w.ended).toBe(false);
   });
 
+  it('does not emit battle:ended for a walls-only (neutrals-only) world', () => {
+    // Pre-spawn phase parallel: terrain generator drops walls first, then
+    // teams. The intermediate "walls + nothing else" tick must not trip
+    // the win condition.
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 3, y: 3 });
+    w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 5, y: 5 });
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    w.tick();
+
+    expect(ends).toHaveLength(0);
+    expect(w.ended).toBe(false);
+  });
+
+  it('ignores neutrals when scoring the win condition (player + walls = player wins)', () => {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 5, y: 5 });
+    w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 7, y: 7 });
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    w.tick();
+
+    expect(ends).toEqual([{ winner: 'player' }]);
+  });
+
   it('stops processing ticks once ended', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);

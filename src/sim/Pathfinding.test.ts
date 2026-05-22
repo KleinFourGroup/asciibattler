@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findPath } from './Pathfinding';
+import { findPath, type CostFn } from './Pathfinding';
 import type { GridCoord } from '../core/types';
 
 const G = 12;
@@ -78,6 +78,67 @@ describe('Pathfinding / findPath', () => {
     const a = findPath({ x: 1, y: 1 }, { x: 8, y: 6 }, [{ x: 4, y: 3 }], G);
     const b = findPath({ x: 1, y: 1 }, { x: 8, y: 6 }, [{ x: 4, y: 3 }], G);
     expect(a).toEqual(b);
+  });
+});
+
+describe('Pathfinding / findPath with per-cell costs', () => {
+  it('explicit unit-cost callback matches the default', () => {
+    const unit: CostFn = () => 1;
+    const withCallback = findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [], G, unit);
+    const withDefault = findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [], G);
+    expect(withCallback).toEqual(withDefault);
+  });
+
+  it('reroutes around a high-cost column when a cheaper detour exists', () => {
+    // Column at x=3 costs 5; cheaper to skirt above/below. Direct line is
+    // 4 steps × 1 cost = 4; route via (3,5) at cost 5 vs. detour via y=5
+    // staying on cost-1 tiles. Path from (0,5) to (5,5): direct goes
+    // through (3,5) for 4 unit-cost steps + 1 cost-5 step = 9. Detour
+    // via (3,6) [or (3,4)] still has to cross x=3, so what we actually
+    // care about is the path *length* — equal, so it picks the diagonal.
+    // Better test: make one column WALL-LIKE expensive and check the path
+    // crosses the cheaper cells.
+    const heavyColumn = new Set(['3,3', '3,4', '3,5', '3,6', '3,7']);
+    const costAt: CostFn = (c) => (heavyColumn.has(`${c.x},${c.y}`) ? 10 : 1);
+
+    const path = findPath({ x: 0, y: 5 }, { x: 6, y: 5 }, [], G, costAt);
+    expect(path.length).toBeGreaterThan(0);
+    // The min-cost path crosses x=3 exactly once; that crossing must be at
+    // y=2 or y=8 (the cheap rows above/below the heavy column).
+    const xThreeCrossings = path.filter((c) => c.x === 3);
+    expect(xThreeCrossings.length).toBe(1);
+    const crossing = xThreeCrossings[0]!;
+    expect(heavyColumn.has(`${crossing.x},${crossing.y}`)).toBe(false);
+  });
+
+  it('still routes through high-cost tile when no cheaper alternative exists', () => {
+    // Whole grid is high-cost except the direct line; path should still find it.
+    const onLine = (c: GridCoord): boolean => c.y === 0;
+    const costAt: CostFn = (c) => (onLine(c) ? 1 : 10);
+
+    const path = findPath({ x: 0, y: 0 }, { x: 5, y: 0 }, [], G, costAt);
+    expect(path.length).toBe(6);
+    for (const c of path) expect(c.y).toBe(0);
+  });
+
+  it('treats Infinity cost as a data-driven block (equivalent to a blocker)', () => {
+    // Wall x=5 via cost=Infinity instead of the blockers list.
+    const walled = new Set(['5,3', '5,4', '5,5', '5,6', '5,7']);
+    const costAt: CostFn = (c) => (walled.has(`${c.x},${c.y}`) ? Infinity : 1);
+
+    const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, [], G, costAt);
+    expect(path.length).toBeGreaterThan(0);
+    for (const c of path) {
+      expect(walled.has(`${c.x},${c.y}`)).toBe(false);
+    }
+  });
+
+  it('start cell cost is not charged (you start there for free)', () => {
+    // Even if the start cell has huge cost, A* should still find a path
+    // because it doesn't pay to be there.
+    const costAt: CostFn = (c) => (c.x === 0 && c.y === 0 ? 1000 : 1);
+    const path = findPath({ x: 0, y: 0 }, { x: 3, y: 0 }, [], G, costAt);
+    expect(path.length).toBe(4);
   });
 });
 

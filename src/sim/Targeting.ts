@@ -16,6 +16,9 @@ export function findTarget(unit: Unit, world: World): Unit | null {
 
   for (const candidate of world.units) {
     if (candidate.team === unit.team) continue;
+    // Neutrals (walls, environment entities) are never enemies — they sit
+    // on the grid as blockers but are not valid attack targets.
+    if (candidate.team === 'neutral') continue;
     if (candidate.currentHp <= 0) continue;
 
     const dist = chebyshev(unit.position, candidate.position);

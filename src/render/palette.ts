@@ -13,6 +13,12 @@ export const COLORS = {
   NEON_RED: '#FF3131', // User flagged this one as unsatisfying in the prior game — revisit.
   DARK_NEON_RED: '#990000',
   NEON_PURPLE: '#9D00FF',
+  // Desaturated warm gray for environment entities (walls, future shrines).
+  // Picked to read as "inert" — sits between TERMINAL_BLACK and
+  // DARK_TERMINAL_AMBER on the warm axis, doesn't fight green/red for
+  // attention. Neutrals also have bloom suppressed at the renderer side
+  // so they don't compete with combatants for halo budget.
+  TERMINAL_STONE: '#7A7066',
 } as const;
 
 export type PaletteName = keyof typeof COLORS;

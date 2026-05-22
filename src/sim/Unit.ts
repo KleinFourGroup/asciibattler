@@ -3,7 +3,14 @@ import type { GridCoord } from '../core/types';
 import type { World } from './World';
 import type { ActionProposal, ActiveAction } from './Action';
 
-export type Team = 'player' | 'enemy';
+/**
+ * Combatant alignment. `'neutral'` is for environment entities (walls,
+ * future healing shrines, hazards) — Targeting ignores neutrals when
+ * picking enemies, HUD doesn't list them in either roster, and
+ * `World.checkBattleEnd` doesn't count them toward either side's
+ * "alive?" check. See HANDOFF `src/sim/Unit.ts` notes on C1a.
+ */
+export type Team = 'player' | 'enemy' | 'neutral';
 
 export interface UnitStats {
   readonly maxHp: number;

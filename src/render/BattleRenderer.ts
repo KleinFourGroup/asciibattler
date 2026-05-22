@@ -137,6 +137,15 @@ export class BattleRenderer {
     const handle = this.sprites.addSprite(unit.glyph, colorForTeam(unit.team), spritePos);
     this.handles.set(unit.id, handle);
 
+    // Neutrals (walls, environment) are inert background — suppress the
+    // halo and skip HP/progress bars entirely. C1a walls are indestructible
+    // so an HP bar would be visual noise; destructible variants later can
+    // opt back in.
+    if (unit.team === 'neutral') {
+      this.sprites.updateSprite(handle, { bloomIntensity: 0 });
+      return;
+    }
+
     // HP bar above the sprite; progress bar tucked between sprite and HP bar.
     // Both start in their full-fill state; the per-frame update tick will
     // hide the progress bar immediately (no activeAction at spawn).
@@ -379,7 +388,9 @@ function progressBarPos(spritePos: THREE.Vector3, out: THREE.Vector3): THREE.Vec
 }
 
 function colorForTeam(team: Team): string {
-  return team === 'player' ? COLORS.TERMINAL_GREEN : COLORS.NEON_RED;
+  if (team === 'player') return COLORS.TERMINAL_GREEN;
+  if (team === 'enemy') return COLORS.NEON_RED;
+  return COLORS.TERMINAL_STONE;
 }
 
 /** Sprite center height. Sits just above the terrain plane (base Y = -0.5). */

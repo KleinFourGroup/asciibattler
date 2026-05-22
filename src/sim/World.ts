@@ -209,9 +209,14 @@ export class World {
     let enemyAlive = false;
     for (const u of this.units) {
       if (u.team === 'player') playerAlive = true;
-      else enemyAlive = true;
+      else if (u.team === 'enemy') enemyAlive = true;
+      // Neutrals (walls, environment entities) don't count toward either
+      // side — a battlefield of just walls + corpses isn't a victory.
       if (playerAlive && enemyAlive) return;
     }
+    // No combatants left = mutual annihilation OR walls-only post-clear.
+    // Either way, don't synthesize a winner.
+    if (!playerAlive && !enemyAlive) return;
     const winner: Team = playerAlive ? 'player' : 'enemy';
     this._ended = true;
     this.bus.emit('battle:ended', { winner });
@@ -228,12 +233,52 @@ export class World {
    * off `team` (see render/BattleRenderer.ts).
    */
   spawnUnit(template: UnitTemplate, team: Team, position: GridCoord): Unit {
-    const unit = new Unit({
-      id: this.nextUnitId++,
+    return this.addUnit({
       team,
       glyph: glyphForArchetype(template.archetype),
       stats: template.stats,
       position,
+    });
+  }
+
+  /**
+   * Spawn an environment entity — a wall, future shrine, hazard, anything
+   * that lives on the grid as a unit but isn't a combatant. Defaults to
+   * the `'neutral'` team (Targeting skips, HUD ignores, checkBattleEnd
+   * doesn't count) and a single-HP degenerate stat block. Has no
+   * `behaviors`, so the selector never fires for it. Renderer-side
+   * suppresses bloom + bars for the neutral team.
+   *
+   * For destructible variants (future C1b+), pass a non-trivial `maxHp`;
+   * Targeting still ignores neutrals by team, so destructibility would
+   * need a separate "damage walls" hook (out of scope for C1a).
+   */
+  spawnEnvironment(opts: {
+    glyph: string;
+    position: GridCoord;
+    maxHp?: number;
+    team?: Team;
+  }): Unit {
+    return this.addUnit({
+      team: opts.team ?? 'neutral',
+      glyph: opts.glyph,
+      stats: makeInertStats(opts.maxHp ?? 1),
+      position: opts.position,
+    });
+  }
+
+  private addUnit(init: {
+    team: Team;
+    glyph: string;
+    stats: UnitStats;
+    position: GridCoord;
+  }): Unit {
+    const unit = new Unit({
+      id: this.nextUnitId++,
+      team: init.team,
+      glyph: init.glyph,
+      stats: init.stats,
+      position: init.position,
     });
     this.units.push(unit);
     this.bus.emit('unit:spawned', { unitId: unit.id });
@@ -315,6 +360,22 @@ export class World {
     for (const cmd of snap.pendingCommands) world.commands.push(cmd);
     return world;
   }
+}
+
+/**
+ * Stat block for env entities that don't act and don't fight back. Damage
+ * / range / cooldowns are all zero — if a future destructible-wall mode
+ * lets attacks target them, they'll just take damage and die without
+ * retaliation.
+ */
+function makeInertStats(maxHp: number): UnitStats {
+  return {
+    maxHp,
+    attackDamage: 0,
+    attackRange: 0,
+    attackCooldownTicks: 0,
+    moveCooldownTicks: 0,
+  };
 }
 
 function snapshotUnit(unit: Unit): UnitSnapshot {

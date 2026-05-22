@@ -62,6 +62,24 @@ describe('Targeting / findTarget', () => {
     ]);
     expect(findTarget(units[0]!, world)?.id).toBe(3);
   });
+
+  it('skips neutral units (walls, env entities) even when closer than enemies', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0 },
+      { id: 2, team: 'neutral', x: 1, y: 1 }, // closer, but inert
+      { id: 3, team: 'enemy', x: 5, y: 5 },
+    ]);
+    expect(findTarget(units[0]!, world)?.id).toBe(3);
+  });
+
+  it('returns null when only neutrals are present', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0 },
+      { id: 2, team: 'neutral', x: 1, y: 1 },
+      { id: 3, team: 'neutral', x: 2, y: 2 },
+    ]);
+    expect(findTarget(units[0]!, world)).toBeNull();
+  });
 });
 
 /**

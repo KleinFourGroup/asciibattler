@@ -4,6 +4,7 @@ import type { GridCoord } from '../../core/types';
 import type { ActionProposal } from '../Action';
 import { AttackAction } from '../actions/AttackAction';
 import { findTarget } from '../Targeting';
+import { hasLineOfSight } from '../LineOfSight';
 
 /**
  * Proposes a melee/ranged strike on the nearest enemy in attack range.
@@ -14,6 +15,13 @@ import { findTarget } from '../Targeting';
  * Score 10 — comfortably above MovementBehavior's 1. The gap leaves
  * headroom for future behaviors (e.g. a healer that scores higher than
  * attack when an ally is critical).
+ *
+ * C1b: ranged attacks require a clear line of sight through walls. Melee
+ * (adjacent target) trivially passes — there are no intermediate cells —
+ * but the check runs uniformly so future short-range AoE / cone attacks
+ * pick up the same gate. Walls are gathered from the neutral-team unit
+ * pool; if a non-wall neutral entity (shrine, hazard) ever needs to
+ * transmit LOS, give it a distinguishing property on Unit and filter here.
  */
 export class AttackBehavior implements Behavior {
   static readonly kind = 'attack';
@@ -23,6 +31,11 @@ export class AttackBehavior implements Behavior {
     const target = findTarget(unit, world);
     if (target === null) return null;
     if (chebyshev(unit.position, target.position) > unit.stats.attackRange) return null;
+
+    const walls = collectWalls(world);
+    if (walls.length > 0 && !hasLineOfSight(unit.position, target.position, walls)) {
+      return null;
+    }
 
     const damage = unit.stats.attackDamage;
     const durationTicks = unit.stats.attackCooldownTicks;
@@ -34,6 +47,14 @@ export class AttackBehavior implements Behavior {
       duration: durationTicks,
     };
   }
+}
+
+function collectWalls(world: World): GridCoord[] {
+  const walls: GridCoord[] = [];
+  for (const u of world.units) {
+    if (u.team === 'neutral') walls.push(u.position);
+  }
+  return walls;
 }
 
 function chebyshev(a: GridCoord, b: GridCoord): number {

@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { AttackBehavior } from './AttackBehavior';
 import { World } from '../World';
-import { Unit, type Team, type UnitStats } from '../Unit';
+import type { Unit, Team, UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
+import { spawnWall } from '../environment';
 import type { GameEvents } from '../../core/events';
 
 describe('AttackBehavior', () => {
@@ -71,6 +72,62 @@ describe('AttackBehavior', () => {
     expect(units[1]!.currentHp).toBe(30);
     expect(attacks).toHaveLength(0);
   });
+
+  it('abstains when a wall is on the line to a ranged target', () => {
+    const { world, units, attacks } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+    ]);
+    spawnWall(world, { x: 3, y: 0 });
+    world.tick();
+    expect(units[1]!.currentHp).toBe(30);
+    expect(attacks).toHaveLength(0);
+  });
+
+  it('still fires on a ranged target when the wall is off the line', () => {
+    const { world, units, attacks } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+    ]);
+    spawnWall(world, { x: 3, y: 3 });
+    world.tick();
+    expect(units[1]!.currentHp).toBe(25);
+    expect(attacks).toHaveLength(1);
+  });
+
+  it('melee attack against an adjacent target is unaffected by surrounding walls', () => {
+    const { world, units, attacks } = scene([
+      { team: 'player', x: 1, y: 1, attackRange: 1, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'enemy', x: 2, y: 1, hp: 30, inert: true },
+    ]);
+    // Surround both units with walls — adjacent attack has no intermediate cells.
+    spawnWall(world, { x: 0, y: 1 });
+    spawnWall(world, { x: 1, y: 0 });
+    spawnWall(world, { x: 2, y: 2 });
+    spawnWall(world, { x: 3, y: 1 });
+    world.tick();
+    expect(units[1]!.currentHp).toBe(25);
+    expect(attacks).toHaveLength(1);
+  });
+
+  it('fires once the blocking wall is destroyed (HP forced to 0)', () => {
+    const { world, units, attacks } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 1 },
+      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+    ]);
+    const wall = spawnWall(world, { x: 3, y: 0 });
+
+    world.tick(); // blocked
+    expect(attacks).toHaveLength(0);
+
+    wall.currentHp = 0; // simulate destruction (C2 AoE will do this for real)
+    world.tick(); // World removes the wall, then runs the selector — but
+                  // the death short-circuit happens before selector, so the
+                  // attack fires next tick.
+    world.tick();
+    expect(attacks.length).toBeGreaterThanOrEqual(1);
+    expect(units[1]!.currentHp).toBeLessThan(30);
+  });
 });
 
 interface SceneUnit {
@@ -94,7 +151,6 @@ function scene(specs: SceneUnit[]): {
   const attacks: GameEvents['unit:attacked'][] = [];
   bus.on('unit:attacked', (p) => attacks.push(p));
 
-  let nextId = 1;
   const units = specs.map((s) => {
     const stats: UnitStats = {
       maxHp: s.hp ?? 50,
@@ -103,16 +159,11 @@ function scene(specs: SceneUnit[]): {
       attackCooldownTicks: s.attackCooldownTicks ?? 8,
       moveCooldownTicks: 5,
     };
-    const u = new Unit({
-      id: nextId++,
-      team: s.team,
-      glyph: 'M',
-      stats,
-      position: { x: s.x, y: s.y },
-    });
+    // Spawn through World so id allocation is consistent with any
+    // subsequent spawnWall / spawnEnvironment calls in the test body.
+    const u = world.spawnUnit({ archetype: 'melee', stats }, s.team, { x: s.x, y: s.y });
     if (s.hp !== undefined) u.currentHp = s.hp;
     if (!s.inert) u.behaviors.push(new AttackBehavior());
-    world.units.push(u);
     return u;
   });
   return { world, units, attacks };

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Run } from './Run';
 import { EventBus } from '../core/EventBus';
+import { LAYOUT_IDS } from '../sim/layouts';
 import type { GameEvents } from '../core/events';
 
 describe('Run', () => {
@@ -110,6 +111,37 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: nextFrontier });
       expect(run.currentNodeId).toBe(frontier);
       expect(run.currentEncounter).toBe(encounterBefore);
+    });
+
+    it('encounter layoutId is null OR a registered library id (C1b 50/50 mix)', () => {
+      // Sample many seeds to confirm both branches of the 50/50 roll are
+      // reachable AND that the picked ids always come from LAYOUT_IDS.
+      let proceduralCount = 0;
+      const layoutCounts = new Map<string, number>();
+      for (let seed = 1; seed <= 200; seed++) {
+        const { run } = freshRunWithBus(seed);
+        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        run.dispatch({ kind: 'enterNode', nodeId: frontier });
+        const id = run.currentEncounter!.layoutId;
+        if (id === null) {
+          proceduralCount++;
+        } else {
+          expect(LAYOUT_IDS).toContain(id);
+          layoutCounts.set(id, (layoutCounts.get(id) ?? 0) + 1);
+        }
+      }
+      // Both branches must fire across 200 seeds, and every layout in the
+      // library must be picked at least once (uniform draw, large N).
+      expect(proceduralCount).toBeGreaterThan(0);
+      expect(layoutCounts.size).toBe(LAYOUT_IDS.length);
+      for (const id of LAYOUT_IDS) {
+        expect(layoutCounts.get(id) ?? 0).toBeGreaterThan(0);
+      }
+      // Rough sanity on the split — leave wide tolerance so we don't fight
+      // the PRNG. The point is to catch outright bias, not to assert exact
+      // uniformity.
+      expect(proceduralCount).toBeGreaterThan(50);
+      expect(proceduralCount).toBeLessThan(150);
     });
   });
 

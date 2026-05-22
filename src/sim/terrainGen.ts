@@ -6,10 +6,11 @@
  * into neutral-team Units via `spawnWall`. That seam keeps the generator
  * independent of World construction and easy to test in isolation.
  *
- * Hybrid model: in C1a only the procedural path is reachable; the
- * `layoutId` parameter is plumbed but the library is empty, so a non-null
- * id throws. C1b+ will wire up the layout resolver alongside hand-
- * authored set pieces.
+ * Hybrid model: when `layoutId` is null the generator uses the procedural
+ * density-driven path; when non-null it dispatches to the hand-authored
+ * library at `src/sim/layouts.ts`. `Run` rolls a 50/50 split between the
+ * two at encounter creation time, so a given playthrough sees a mix of
+ * procedural variety and tactically-tuned set pieces.
  *
  * Determinism contract: same `(rng state, gridSize, config, layoutId)` →
  * identical `GeneratedTerrain`. Tests rely on this so the fuzz harness
@@ -21,11 +22,16 @@ import { TileGrid } from './TileGrid';
 import type { TerrainConfig } from '../config/terrain';
 import type { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
+import { getLayout, type LayoutDef } from './layouts';
 
 export interface GeneratedTerrain {
   readonly tileGrid: TileGrid;
   readonly walls: readonly GridCoord[];
 }
+
+/** Grid size that hand-authored layouts are designed against. Layouts
+ *  refuse to resolve at other sizes — see `src/sim/layouts.ts`. */
+const LAYOUT_GRID_SIZE = 12;
 
 export function generateTerrain(
   rng: RNG,
@@ -34,11 +40,52 @@ export function generateTerrain(
   layoutId: string | null = null,
 ): GeneratedTerrain {
   if (layoutId !== null) {
-    throw new Error(
-      `generateTerrain: layout library not implemented yet (layoutId="${layoutId}")`,
-    );
+    const layout = getLayout(layoutId);
+    if (!layout) {
+      throw new Error(`generateTerrain: unknown layoutId="${layoutId}"`);
+    }
+    return generateFromLayout(layout, gridSize, config);
   }
   return generateProcedural(rng, gridSize, config);
+}
+
+/**
+ * Resolve a hand-authored layout into a `GeneratedTerrain`. Validates
+ * that the layout's wall coordinates respect the reserved spawn rows and
+ * the configured grid size; a violation is a layout-authoring bug, so
+ * the dispatcher throws rather than silently rescuing it (the procedural
+ * path's `ensureConnectivity` wall-peel doesn't apply here — hand
+ * authored means hand verified).
+ */
+function generateFromLayout(
+  layout: LayoutDef,
+  gridSize: number,
+  config: TerrainConfig,
+): GeneratedTerrain {
+  if (gridSize !== LAYOUT_GRID_SIZE) {
+    throw new Error(
+      `generateTerrain: layout "${layout.id}" requires gridSize=${LAYOUT_GRID_SIZE} (got ${gridSize})`,
+    );
+  }
+  const reservedRows = new Set(config.spawnRowsClear);
+  for (const w of layout.walls) {
+    if (reservedRows.has(w.y)) {
+      throw new Error(
+        `generateTerrain: layout "${layout.id}" places a wall on reserved spawn row ${w.y}`,
+      );
+    }
+    if (w.x < 0 || w.y < 0 || w.x >= gridSize || w.y >= gridSize) {
+      throw new Error(
+        `generateTerrain: layout "${layout.id}" places a wall at out-of-bounds (${w.x},${w.y})`,
+      );
+    }
+  }
+
+  const tileGrid = new TileGrid(gridSize, gridSize);
+  if (layout.water) {
+    for (const w of layout.water) tileGrid.setKind(w, 'shallow_water');
+  }
+  return { tileGrid, walls: layout.walls.slice() };
 }
 
 function generateProcedural(

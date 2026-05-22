@@ -38,6 +38,7 @@ import { rollOffer } from './Recruitment';
 import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
 import { DIFFICULTY } from '../config/difficulty';
+import { LAYOUT_IDS } from '../sim/layouts';
 
 export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat' | 'complete';
 
@@ -169,12 +170,13 @@ export class Run {
     const battleRng = this.rng.fork();
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
     const terrainSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
+    const layoutId = rollLayoutId(battleRng);
     const enemyTeam = rollEnemyTeam(battleRng, this.team.length, this.floorOf(nodeId));
 
     this.currentEncounter = {
       worldSeed,
       terrainSeed,
-      layoutId: null,
+      layoutId,
       playerTeam: this.team.slice(),
       enemyTeam,
     };
@@ -316,4 +318,16 @@ function scaleMaxHp(template: UnitTemplate, multiplier: number): UnitTemplate {
       maxHp: Math.round(template.stats.maxHp * multiplier),
     },
   };
+}
+
+/**
+ * 50/50 split between procedural terrain (`null`) and a hand-authored
+ * layout. When picking a layout, choose uniformly across `LAYOUT_IDS` —
+ * tuning that mix (weight by floor depth, weight by recent picks, etc.)
+ * is a future tuning lever; for C1b we keep it flat so the player sees
+ * each layout often enough to learn it.
+ */
+function rollLayoutId(rng: RNG): string | null {
+  if (rng.next() < 0.5) return null;
+  return rng.pick(LAYOUT_IDS);
 }

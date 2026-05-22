@@ -98,8 +98,22 @@ describe('generateTerrain (procedural)', () => {
     expect(foundSevered).toBe(true);
   });
 
-  it('throws when a non-null layoutId is supplied (library not implemented yet)', () => {
-    expect(() => generateTerrain(new RNG(1), G, BASE, 'arena_1')).toThrow(/not implemented/i);
+  it('dispatches to the hand-authored library when layoutId is set', () => {
+    const { walls } = generateTerrain(new RNG(1), G, BASE, 'corridor');
+    // Corridor places 16 walls (2 rows × 8 cells); procedural at the BASE
+    // densities targets ~9. The count mismatch is a sufficient signal that
+    // the library path ran rather than the procedural one.
+    expect(walls.length).toBe(16);
+  });
+
+  it('layout dispatch ignores the RNG (same layoutId → same walls regardless of seed)', () => {
+    const a = generateTerrain(new RNG(1), G, BASE, 'corridor');
+    const b = generateTerrain(new RNG(999), G, BASE, 'corridor');
+    expect(a.walls).toEqual(b.walls);
+  });
+
+  it('throws on an unknown layoutId', () => {
+    expect(() => generateTerrain(new RNG(1), G, BASE, 'nonexistent')).toThrow(/unknown layoutId/i);
   });
 });
 

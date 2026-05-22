@@ -25,9 +25,22 @@ import type { World } from './World';
 /** Glyph rendered for impassable wall obstacles. Roguelike convention. */
 export const WALL_GLYPH = '#';
 
-/** Spawn an indestructible wall at the given cell. C1a-only signature —
- *  destructible variants will gain a `hp` arg in C1b alongside the
- *  damage-walls Targeting hook. */
-export function spawnWall(world: World, position: GridCoord): Unit {
-  return world.spawnEnvironment({ glyph: WALL_GLYPH, position });
+/**
+ * Spawn a wall at the given cell.
+ *
+ * `maxHp` defaults to 1, which makes the wall functionally indestructible
+ * because nothing currently *targets* walls — Targeting filters neutrals
+ * out of the candidate pool. The argument is plumbed (C1b) so the
+ * destructibility path is exercisable in tests, and ready for C2's AoE
+ * archetypes which will introduce damage that lands on neutral cells
+ * regardless of Targeting's enemy-only filter.
+ *
+ * Lifecycle when a wall does take fatal damage: `World.tick`'s death
+ * short-circuit picks it up the next tick, splices it from `world.units`,
+ * emits `unit:died` with `team: 'neutral'`. BattleRenderer fades the
+ * sprite; BattleScene's audio handler skips neutrals so the standard
+ * combat death sound doesn't play for crumbling masonry.
+ */
+export function spawnWall(world: World, position: GridCoord, maxHp = 1): Unit {
+  return world.spawnEnvironment({ glyph: WALL_GLYPH, position, maxHp });
 }

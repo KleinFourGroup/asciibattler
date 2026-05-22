@@ -156,7 +156,7 @@ export class World {
       // 1. Death.
       if (unit.currentHp <= 0) {
         this.removeUnit(unit.id);
-        this.bus.emit('unit:died', { unitId: unit.id });
+        this.bus.emit('unit:died', { unitId: unit.id, team: unit.team });
         continue;
       }
 

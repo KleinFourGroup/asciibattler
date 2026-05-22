@@ -65,4 +65,31 @@ describe('environment / spawnWall', () => {
     expect(restored.units[0]!.position).toEqual({ x: 2, y: 3 });
     expect(restored.units[1]!.position).toEqual({ x: 4, y: 5 });
   });
+
+  it('spawns with the requested maxHp (C1b destructibility plumbing)', () => {
+    const bus = new EventBus<GameEvents>();
+    const w = new World(bus, new RNG(1));
+    const wall = spawnWall(w, { x: 1, y: 1 }, 5);
+    expect(wall.stats.maxHp).toBe(5);
+    expect(wall.currentHp).toBe(5);
+  });
+
+  it('removes a wall when its HP drops to 0 and emits unit:died with team neutral', () => {
+    // Nothing in the current codebase targets walls (Targeting filters
+    // neutrals), so this test exercises the path C2's AoE damage will
+    // light up: drop wall HP from outside, advance a tick, expect the
+    // wall to be cleaned up just like any other dying Unit.
+    const bus = new EventBus<GameEvents>();
+    const w = new World(bus, new RNG(1));
+    const deaths: GameEvents['unit:died'][] = [];
+    bus.on('unit:died', (p) => deaths.push(p));
+
+    const wall = spawnWall(w, { x: 3, y: 3 }, 5);
+    wall.currentHp = 0;
+
+    w.tick();
+
+    expect(w.findUnit(wall.id)).toBeUndefined();
+    expect(deaths).toEqual([{ unitId: wall.id, team: 'neutral' }]);
+  });
 });

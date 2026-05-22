@@ -43,13 +43,21 @@ export class BattleScene implements Scene {
     // B6 audio: per-battle subscriptions that need the World to look up
     // the attacker's archetype (attackRange<=1 → melee, else ranged).
     // Lives here rather than Game so it tears down with the world.
+    //
+    // C1b: skip neutral-team deaths — walls have HP plumbed but the
+    // generic combat death cry would read as a unit dying rather than a
+    // wall crumbling. When C2's AoE damage actually lands wall hits, swap
+    // this for a dedicated `wall_destroyed` sample.
     this.subscriptions.push(
       ctx.bus.on('unit:attacked', ({ attackerId }) => {
         const attacker = this.world?.findUnit(attackerId);
         if (!attacker) return;
         ctx.audio.play(attacker.stats.attackRange <= 1 ? 'melee' : 'shoot');
       }),
-      ctx.bus.on('unit:died', () => ctx.audio.play('death')),
+      ctx.bus.on('unit:died', ({ team }) => {
+        if (team === 'neutral') return;
+        ctx.audio.play('death');
+      }),
     );
 
     // HUD and BattleRenderer must be bound BEFORE any spawn so unit:spawned

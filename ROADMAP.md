@@ -379,6 +379,46 @@ headings above). Worth sub-phasing into three:
   tightens the `PLANE_BASE_Y / SPRITE_Y` vertical stack so the
   diorama reads flush rather than stacked. Replaces the C1a water
   stand-in and the decorative fBm TerrainRenderer.
+- **C1d — Layout authoring: JSON config + editor.** C1b ships two
+  hand-coded layouts in [src/sim/layouts.ts](src/sim/layouts.ts);
+  growing the library past a handful means hoisting them to a
+  config file and giving us a way to author new ones without
+  hand-counting cell coordinates.
+
+  Two parts that can land together or separately:
+
+  - **C1d.A — Hoist to JSON.** Move wall + water coords out to
+    `config/layouts.json` matching the A4 pattern (zod schema in
+    `src/config/layouts.ts`, validation at module load,
+    malformed-JSON crashes at boot). [`src/sim/layouts.ts`](src/sim/layouts.ts)
+    becomes a thin wrapper exporting `LAYOUTS` / `LAYOUT_IDS` from
+    the validated config. Independent of C1c; could be pulled
+    forward if useful.
+  - **C1d.B — Editor.** A small dev tool for painting new layouts
+    on a 12×12 grid. Click toggles wall, shift-click toggles water,
+    reserved spawn rows shown as a tinted overlay. Save produces a
+    JSON snippet ready for `config/layouts.json`. Should include a
+    connectivity warning when the layout severs the board and a
+    test-play button that swaps the painted layout into a battle.
+
+  **Decision points for C1d:**
+  - Where the editor lives: separate route in the existing Vite
+    app (e.g. `?editor` URL flag, swap Game for editor view),
+    standalone HTML page in `tools/`, or behind a dev-only build
+    flag. Tradeoff: in-app shares the 3D renderer (free preview)
+    but bloats the production bundle unless gated; standalone is
+    cleaner but duplicates setup.
+  - Output mode: export-only (editor produces JSON, author pastes
+    into the config file) vs direct-write (tiny Vite middleware
+    writes the file on save). Direct-write is a tighter authoring
+    loop but only works in local dev.
+  - Whether layouts gain metadata fields beyond the cell grid —
+    `name`, `description`, picker weight, floor-depth gating, etc.
+    Easier to add the schema slot now than to rev later.
+  - Whether the editor preview uses the game's 3D renderer or a
+    simpler 2D CSS grid. 2D is faster to build and easier to debug;
+    3D matches what the player will see. Could start 2D and add a
+    preview pane.
 
 Pathfinding ([src/sim/Pathfinding.ts](src/sim/Pathfinding.ts)) already
 takes blockers; the integration cost is mostly in encounter generation

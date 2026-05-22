@@ -11,7 +11,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **Phase 3** (battle simulation, 3.1–3.9) ✓
 - **Phase 4** (run structure, 4.1–4.6) ✓
 - **Phase 5** (HUD, fade transitions, dev-affordance cleanup, dither + scanline polish) ✓
-- **Tests:** 176 passed, 0 `it.todo()`. Run with `npm test`.
+- **Tests:** 211 passed, 0 `it.todo()`. Run with `npm test`.
 - **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`; remember Vite spawns child Node processes that survive `taskkill` on the parent).
 - **Build:** `npm run build`. `vite.config.ts` uses `base: './'` so the same `dist/` works at any subpath.
 
@@ -37,11 +37,20 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **C1a landed (tile foundation).** Two-stage rollout: foundation commit `4572d8a` shipped pure-logic scaffolding (TileGrid + neutral Team + cost-aware Pathfinding + spawnEnvironment/spawnWall), integration commit added per-encounter terrain generation + renderer wiring. Per the user's design call, **walls are neutral-team `Unit`s** (not a tile kind), so they reuse the existing Unit pipeline — appear in pathfinding's blocker list for free, snapshot-rehydrate via the existing UnitSnapshot, and a future destructible variant just needs a "walls take damage" Targeting hook. **Tiles** are surface properties — `floor | shallow_water`, the latter doubling movement cost. New `config/terrain.json` knobs: wall density 0.06, water density 0.04, spawn rows 1/2/9/10 reserved (always clear of obstacles), connectivity guard on. Generator (`src/sim/terrainGen.ts`) is procedural with a `layoutId` hook plumbed for C1b's hand-authored set pieces (resolver throws if invoked in C1a). Water visual is a flat-colored InstancedMesh (`src/render/WaterRenderer.ts`) — deliberate stand-in, gets rewritten in C1c. WorldSnapshot bumped to schema version 2; the round-trip test was extended to cover the new tileGrid + neutral wall units. **C1a punts**: destructibility (walls have HP=1 but nothing targets them since Targeting filters neutrals), ranged LOS through walls (still allowed — C1b territory), full visual polish (C1c).
 
+**C1b landed (obstacle polish).** Three logical commits, in order:
+
+1. **Ranged LOS through walls** (`bc8c5d8`). New `src/sim/LineOfSight.ts` with a Bresenham `hasLineOfSight(from, to, blockers)`. `AttackBehavior` collects neutral-team units as wall blockers and abstains when the line is broken — melee (adjacent target) trivially passes since there are no intermediate cells. Endpoints excluded from the blocker check (the attacker shouldn't block themselves; the target's own cell may or may not appear in the list and shouldn't matter). Bresenham picked over supercover because it matches the existing 8-dir Chebyshev movement: a unit reachable in one orthogonal step traces the same line LOS walks.
+
+2. **Wall destructibility plumbing** (`8f71818`). Make the wall-takes-damage path end-to-end without enabling it. `unit:died` payload gains a `team` field so subscribers can branch on combatant vs neutral death without re-querying the world (by emit time the unit is already removed from `world.units`). `spawnWall(world, position, maxHp = 1)` plumbs the maxHp arg through `spawnEnvironment`; default 1 makes walls functionally indestructible because nothing targets neutrals — `Targeting.findTarget` still filters them. BattleScene's audio handler skips neutral deaths so a future wall hit won't play the unit death cry; comment flags the C2 follow-up to add a dedicated `wall_destroyed` sample when AoE actually lands wall hits.
+
+3. **Hand-authored layout library + 50/50 mix** (`dd1e1fa`). Two starter layouts in `src/sim/layouts.ts`: **corridor** (two horizontal wall bands at rows 4 and 7 with a 4-cell center gap, forces a chokepoint) and **diamond** (4×4 center block with corners knocked off, forces armies to flank). `generateTerrain` dispatches on `layoutId`: null → procedural; known id → library; unknown id → throws. Layout resolution validates spawn-row + bounds invariants and refuses any gridSize ≠ 12. `Run.handleEnterNode` does a third draw on `battleRng` (50% null, 50% uniform pick from `LAYOUT_IDS`) — that draw lands between `terrainSeed` and `rollEnemyTeam`, so enemy compositions shifted for existing seeds (acceptable; fuzz baselines are recomputed on balance changes).
+
+**C1b explicit punts:** wall *visual form* (3D vs billboard) folded into C1c's visual pass — locking it now would mean retuning under C1c. Wall targeting in Targeting still skips neutrals — the destructibility plumbing exists but no behavior currently damages walls; C2's AoE archetypes will be the first consumer.
+
 Next up per ROADMAP:
 
-1. **C1b — Walls and obstacles polish.** 3D-block vs billboarded-`#` decision point; LOS for ranged units; destructible walls; hand-authored layout library (the `layoutId` resolver currently throws).
-2. **C1c — Visual + layout pass** (folds B2 + B4). Locks the low-poly direction; bakes grid lines into the new terrain shader; tightens the vertical stack so the diorama reads flush. Replaces the current WaterRenderer stand-in and the fBm decorative TerrainRenderer.
-3. **C2 — New archetypes (mage, rogue, healer).** Fully independent of C1; A4 makes adding their stat bands a `config/archetypes.json` edit. Mage charge-up is the natural use case for B3's currently-dormant action progress bar.
+1. **C1c — Visual + layout pass** (folds B2 + B4). Locks the low-poly direction; bakes grid lines into the new terrain shader; tightens the vertical stack so the diorama reads flush. Replaces the current WaterRenderer stand-in and the fBm decorative TerrainRenderer. Decision points: flat-shaded vs smooth-shaded, hand-authored mesh vs procedural-from-simplex, wall form (3D vs billboard), sprites stay 2D (likely yes).
+2. **C2 — New archetypes (mage, rogue, healer).** Fully independent of C1; A4 makes adding their stat bands a `config/archetypes.json` edit. Mage charge-up is the natural use case for B3's currently-dormant action progress bar. Also the first consumer of the C1b wall destructibility plumbing (AoE damage lands on neutral cells regardless of Targeting's enemy-only filter).
 
 **Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning. (5-seed sample post-A4 hints at greedy edge, but N is too small to be sure — re-run at 100+ when something invalidates the cache.)
 
@@ -117,6 +126,16 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 
 37. **C1a: `applyTerrain` MUST run before `spawnTeam`.** The terrain generator guarantees walls + water never land on `config.spawnRowsClear`, so spawning teams after applyTerrain means units never land on a wall. Mounting in the opposite order would put units on walls (or worse, fail in pathfinding when the unit's own cell is blocked). Both call sites — `spawnEncounter` (fuzz harness) and `BattleScene.mount` — already follow this order; if you add a third, mirror it.
 
+38. **C1b: ranged LOS uses Bresenham, NOT supercover.** [`hasLineOfSight`](src/sim/LineOfSight.ts) walks integer cells along the Bresenham line from attacker to target and rejects on any cell in `blockers`. Supercover (every cell the geometric line touches) was the alternative and would block diagonal "squeezes" between corner-touching walls — geometrically purer but tactically inconsistent with 8-dir Chebyshev movement, where a unit *can* step diagonally between such walls. The line walk skips both endpoints: the attacker's own cell isn't a self-block, and the target's cell may appear in the blocker list (typically it doesn't, but the guard is there) and shouldn't block a shot at the target itself. If a future feature needs strict diagonal-squeeze prevention, swap the loop body — not the call sites.
+
+39. **C1b: `unit:died` carries `team`.** By the time the event fires, `World.tick` has already spliced the unit out of `world.units`, so `world.findUnit(unitId)` returns undefined. Subscribers that need to branch on combatant vs neutral death (BattleScene's audio handler, future wall-destruction VFX) read `team` from the payload. New `unit:died` subscribers MUST include `team` if they care about that distinction — there's no other source of truth post-removal.
+
+40. **C1b: `AttackBehavior.collectWalls` filters by `team === 'neutral'`.** Today neutrals == walls, but the moment we add other neutral entities (healing shrines, hazards) the filter starts overcollecting. The right fix at that point is a per-Unit `blocksLineOfSight` flag (or similar) — not a glyph check. Don't paper over by inspecting the glyph; that ties LOS semantics to a rendering detail.
+
+41. **C1b: hand-authored layouts assume `gridSize = 12`.** [`generateTerrain`](src/sim/terrainGen.ts)'s layout path throws on any other size rather than silently scaling. Layouts are design artifacts authored against a known canvas; resizing the arena (future C1c work or beyond) means re-authoring them. The procedural path stays grid-size-agnostic for the fuzz harness and any future scaling experiments.
+
+42. **C1b: `Run.handleEnterNode` now does 3 RNG draws on `battleRng` before `rollEnemyTeam`.** Order is `worldSeed → terrainSeed → layoutId → rollEnemyTeam`. The third draw (introduced by `rollLayoutId`) means enemy compositions shifted for existing seeds vs. the C1a baseline. Existing tests that assert enemy stat ranges still pass (the ranges are permissive), but the byte-identical replay tests in `tests/integration/` reflect the new stream — old fuzz output CSVs are stale on this dimension and shouldn't be compared across the C1b cut.
+
 ## Browser-verify tips (learned the hard way)
 
 - **Preview MCP screenshots are unreliable for sub-pixel detail.** JPEG compression smears 1-2px features (scanlines, dither stipple) into uniform tints; resize timing can produce thumbnail-sized images that look like rendering bugs. **If a screenshot contradicts intuition, sample canvas pixels via `getImageData` first** — they're more reliable than the screenshot tool for detecting real issues. Even better: ask the user to look in their native browser.
@@ -157,6 +176,7 @@ src/
                        # Behavior gains `kind` for snapshot rehydration (A2)
                        # Team union grows 'neutral' for env entities (C1a)
     TileGrid.ts        # floor / shallow_water tiles + per-cell movement cost (C1a)
+    LineOfSight.ts     # Bresenham line walk for ranged-attack LOS (C1b)
     Action.ts          # Action / ActionProposal / ActiveAction interfaces (A1)
                        # + toData() on Action for snapshot rehydration (A2)
     Command.ts         # WorldCommand union — drained at tick boundary (A2)
@@ -167,6 +187,9 @@ src/
     archetypes.ts      # MELEE/RANGED bounds, rollUnit, glyphForArchetype
     environment.ts     # spawnWall + WALL_GLYPH — neutral-team env factory (C1a)
     terrainGen.ts      # per-encounter procedural tile + wall generator (C1a)
+                       # + layout-library dispatch (C1b)
+    layouts.ts         # C1b: hand-authored layouts (corridor, diamond) +
+                       # LAYOUT_IDS picklist for Run's 50/50 roll
     battleSetup.ts     # shared applyTerrain/spawnTeam/spawnEncounter (A3 + C1a)
     actions/
       MoveAction.ts          # logical position update + unit:moved event
@@ -243,7 +266,7 @@ Co-located `*.test.ts` next to source for unit tests. Integration tests under `t
 
 ```bash
 git log --oneline -5    # confirm latest commit
-npm test                # 176 passed, 0 todo
+npm test                # 211 passed, 0 todo
 npm run fuzz:smoke      # 7 passed — confirms the harness still runs
 npm run dev             # opens at :5173 — verify the full run flow plays
 ```
@@ -251,6 +274,8 @@ npm run dev             # opens at :5173 — verify the full run flow plays
 In the browser you should see: dark terrain (smooth blue→green→amber gradient) with 4px-thick scanlines, neon-glowing sprites (green allies + red enemies bloom equally on attack), map screen on load (right panel), click a frontier → battle plays out with in-battle HUD on the left → recruit modal (3 cards, at least one M + one a) → click a card → map screen at new node with visited trail. Win 4 in a row → green "Run Complete" screen. Lose → red "Defeat" screen. Button on either resets to a fresh map. All screen transitions fade over 180ms.
 
 C1a adds: per-encounter terrain with gray `#` walls scattered on the arena (~9 per battle), shallow_water tiles rendered as flat blue patches (~6 per battle, units move through them at half speed). Walls + water never overlap the spawn rows; the arena always has a path between teams.
+
+C1b adds: about half the battles use a hand-authored layout (corridor with two horizontal wall bands, or diamond with a center block) instead of scattered procedural walls; ranged units stop firing when a wall lands on the line between them and their target (you'll see them path-step around the wall rather than shoot through it).
 
 ## Toolchain versions
 

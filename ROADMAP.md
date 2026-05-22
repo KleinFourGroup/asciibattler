@@ -355,11 +355,24 @@ headings above). Worth sub-phasing into three:
   deliberately crude, C1c replaces it. Pathfinding gained an
   optional `CostFn`; Chebyshev stays admissible since cost >= 1.
   Foundation commit `4572d8a`, integration commit followed.
-- **C1b — Walls and obstacles.** Decision point: 3D blocks vs
-  billboarded `#`. Also: ranged LOS through walls (C1a left it
-  permissive), destructible walls (the `maxHp` arg on
-  `spawnEnvironment` is already plumbed), and the hand-authored
-  layout library (the resolver currently throws — wire it up).
+- **C1b — Walls and obstacles. ✓ LANDED.** Three commits:
+  *ranged LOS through walls* (`bc8c5d8`) — new
+  [`hasLineOfSight`](src/sim/LineOfSight.ts) (Bresenham);
+  AttackBehavior collects neutral-team units as blockers and
+  abstains when the line is broken (melee passes trivially);
+  *destructibility plumbing* (`8f71818`) — `unit:died` gains a
+  `team` field so subscribers can branch on neutral deaths;
+  `spawnWall` takes optional `maxHp`; BattleScene's audio handler
+  skips neutral deaths so wall destruction doesn't play the unit
+  death cry. No Targeting changes — wall destructibility is
+  dormant until C2's AoE archetypes land damage on neutral cells;
+  *layout library + 50/50 mix* (`dd1e1fa`) — two starter
+  layouts in [`src/sim/layouts.ts`](src/sim/layouts.ts) (corridor +
+  diamond); `generateTerrain` dispatches on `layoutId`; `Run`
+  rolls 50/50 between procedural and a uniform pick from
+  `LAYOUT_IDS`. Wall *visual form* (3D vs billboard) deliberately
+  punted to C1c — locking it under C1b would mean retuning under
+  C1c's broader visual pass.
 - **C1c — Visual style + layout pass** (folded from B2 + B4).
   Locks the low-poly direction (flat vs smooth, hand-authored vs
   procedural); bakes grid lines into the new terrain shader;
@@ -371,11 +384,12 @@ Pathfinding ([src/sim/Pathfinding.ts](src/sim/Pathfinding.ts)) already
 takes blockers; the integration cost is mostly in encounter generation
 and the renderer.
 
-**Decision points still open for C1b/C1c:** terrain visual
-direction (flat-shaded vs smooth-shaded, hand-authored mesh vs
-procedural-from-simplex); wall form (3D blocks vs billboarded `#`
-glyph); whether sprites stay 2D billboards (likely yes — core to the
-ASCII aesthetic).
+**Decision points still open for C1c:** terrain visual direction
+(flat-shaded vs smooth-shaded, hand-authored mesh vs procedural-
+from-simplex); wall form (3D blocks vs billboarded `#` glyph —
+C1b kept billboard as the C1a default, C1c locks it); whether
+sprites stay 2D billboards (likely yes — core to the ASCII
+aesthetic).
 
 ### C2 — New archetypes: mage, rogue, healer
 

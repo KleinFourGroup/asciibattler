@@ -31,13 +31,14 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **B7 landed (root node clarity).** Node 0 now renders the roguelike `@` glyph instead of `0`, with a `.root` CSS class hook for future tuning. All other state classes (current/frontier/visited/locked) still apply on top, so the root reads as origin regardless of where the player currently is. Uses `map.rootId`, not hardcoded 0.
 
+**B6 landed (audio).** New `AudioPlayer` ([src/audio/AudioPlayer.ts](src/audio/AudioPlayer.ts)) preloads seven placeholder wavs from `public/audio/` at boot and exposes overlap-safe `play(key)` — each sound owns a 4-deep ring of cloned `HTMLAudioElement`s with a cursor that advances on every play, so simultaneous triggers (multi-unit attacks on the same tick) don't truncate each other. Wiring split by lifetime: Game subscribes to `recruit:offered` / `run:victory` / `run:defeated` (no world needed); BattleScene subscribes to `unit:attacked` (looks up attacker via `world.findUnit` and picks `melee` vs `shoot` from `stats.attackRange`) and `unit:died` — these live with the world so they tear down with it (subscriptions array + dispose unsub, same pattern as HUD/BattleRenderer/Run). UI clicks (MapScreen frontier, RecruitScreen card pick, GameOverScreen restart) fire `click.wav` directly from existing handlers; `AudioPlayer` threaded through screens via `SceneContext`. Per-sound pitch jitter via `playbackRate` (`±10%` for melee/shoot, `±8%` for death, 0 for everything else) prevents the ear locking onto a single tone in sustained combat without needing variant samples — shifting pitch + tempo together keeps the waveform intact. Volume + variance tables sit at the top of `AudioPlayer.ts` for easy tuning. Commit `7d8f3a8`.
+
 **B2 + B4 deferred → folded into C1.** Both were touching what the C1 refactor will rewrite (terrain mesh + grid + sprite layout). Tuning them standalone would just need redoing under C1, so they get absorbed when C1 lands.
 
 Next up per ROADMAP:
 
 1. **C2 — New archetypes (mage, rogue, healer).** Fully independent of C1; A4 makes adding their stat bands a `config/archetypes.json` edit. Mage charge-up is the natural use case for B3's currently-dormant action progress bar.
 2. **C1 — Tile-based terrain with obstacles** (now also absorbing B2 visual-style direction + B4 baked grid / vertical layout). Hard prerequisite for C6. Worth sub-phasing when it starts; surface the visual direction as its own decision point.
-3. **B6 — Audio.** Pending audio asset selection.
 
 **Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning. (5-seed sample post-A4 hints at greedy edge, but N is too small to be sure — re-run at 100+ when something invalidates the cache.)
 

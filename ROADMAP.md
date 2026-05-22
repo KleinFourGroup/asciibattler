@@ -282,17 +282,37 @@ factory + `scanlines.frag.glsl` stay in
 [shaders/](src/render/shaders/) as dormant code so the revert is a
 one-line addPass restore.
 
-### B6 — Audio
+### B6 — Audio ✓ LANDED
 
-Big perceptual win for contained scope. Retro flagged this; autobattlers
-live or die on attack/death sound feedback.
+New [AudioPlayer](src/audio/AudioPlayer.ts) preloads seven wavs from
+`public/audio/` at boot and exposes overlap-safe `play(key)` — each
+sound owns a 4-deep ring of cloned `HTMLAudioElement`s with a cursor
+that advances on every play, so multi-unit attacks on the same tick
+don't truncate each other.
 
-Scope: attack-impact, death, recruit-card-flip, UI clicks, run-complete
-fanfare. HTMLAudioElement to start; revisit Web Audio API if we need
-spatialization or precise scheduling.
+Wiring split by lifetime. **Page-lifetime** subscriptions live on
+Game (recruit:offered → recruit, run:victory → win, run:defeated →
+lose); **world-aware** subscriptions live on BattleScene because
+unit:attacked needs `world.findUnit(attackerId).stats.attackRange`
+to pick melee vs shoot, and unit:died wants to fire while the world
+is still alive. BattleScene gains a subscriptions array + dispose
+unsub, same pattern as HUD / BattleRenderer / Run.
 
-**Gated on asset selection.** Wiring Web Audio scaffolding without
-sounds to play feels backwards; pick out a sample set first.
+UI clicks (MapScreen frontier, RecruitScreen card pick, GameOverScreen
+restart) fire `click.wav` directly from the existing click handlers;
+AudioPlayer threaded through each screen via SceneContext.
+
+Per-sound pitch jitter via `playbackRate` (±10% for melee/shoot, ±8%
+for death, 0 for one-shots like click/recruit/win/lose) prevents the
+ear locking onto a single tone during sustained combat without needing
+variant samples — shifting pitch + tempo together keeps the waveform
+intact. One-shots stay flat because variance on something you only
+hear once reads as inconsistency, not life.
+
+Volume + variance tables sit at the top of AudioPlayer.ts for tuning.
+HTMLAudioElement was sufficient for our scope; revisit Web Audio API
+if we ever need spatialization, detune-without-tempo-shift, or precise
+scheduling.
 
 ### B7 — Root node clarity ✓ LANDED
 

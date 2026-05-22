@@ -23,6 +23,7 @@ import type { GameEvents } from '../core/events';
 import type { SpriteRenderer } from '../render/SpriteRenderer';
 import type { BarRenderer } from '../render/BarRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
+import type { WaterRenderer } from '../render/WaterRenderer';
 import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
 import type { RunDispatcher } from '../run/Command';
@@ -34,6 +35,7 @@ export interface SceneContext {
   readonly sprites: SpriteRenderer;
   readonly bars: BarRenderer;
   readonly terrain: TerrainRenderer;
+  readonly water: WaterRenderer;
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;
   readonly dispatcher: RunDispatcher;

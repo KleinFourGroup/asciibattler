@@ -12,8 +12,9 @@
 import { Clock } from '../core/Clock';
 import { RNG } from '../core/RNG';
 import { World } from '../sim/World';
-import { spawnTeam } from '../sim/battleSetup';
+import { applyTerrain, spawnTeam } from '../sim/battleSetup';
 import { BattleRenderer } from '../render/BattleRenderer';
+import type { WaterRenderer } from '../render/WaterRenderer';
 import { HUD } from '../ui/HUD';
 import { GRID_SIZE, TICK_RATE } from '../config';
 import type { Scene, SceneContext } from './Scene';
@@ -23,6 +24,9 @@ export class BattleScene implements Scene {
   private world: World | null = null;
   private battleRenderer: BattleRenderer | null = null;
   private hud: HUD | null = null;
+  /** Held only so `dispose` can clear the water quads — the renderer
+   *  itself is page-lifetime and owned by Game. */
+  private water: WaterRenderer | null = null;
   private readonly subscriptions: Array<() => void> = [];
 
   mount(ctx: SceneContext): void {
@@ -48,10 +52,17 @@ export class BattleScene implements Scene {
       ctx.bus.on('unit:died', () => ctx.audio.play('death')),
     );
 
-    // HUD and BattleRenderer must be bound BEFORE spawnTeam so unit:spawned
-    // handlers find the world.
+    // HUD and BattleRenderer must be bound BEFORE any spawn so unit:spawned
+    // handlers find the world. Terrain comes before teams so the spawn rows
+    // are guaranteed clear (walls + water never land on them per
+    // config.spawnRowsClear — see src/config/terrain.ts).
     this.hud.show(this.world, ctx.run.currentFloor);
     this.battleRenderer.attach(this.world);
+    applyTerrain(this.world, encounter);
+    // After terrain is in place, the water renderer reflects the tile grid.
+    // Walls already render via SpriteRenderer (they're neutral-team Units).
+    ctx.water.setTiles(this.world.tileGrid, this.world.gridSize);
+    this.water = ctx.water;
     spawnTeam(this.world, 'player', encounter.playerTeam);
     spawnTeam(this.world, 'enemy', encounter.enemyTeam);
   }
@@ -67,9 +78,13 @@ export class BattleScene implements Scene {
     this.battleRenderer?.detach();
     this.battleRenderer?.dispose();
     this.hud?.dispose();
+    // Drop water quads so the next non-battle scene (map / recruit /
+    // gameover) isn't painting a stale lake under nothing.
+    this.water?.clear();
     this.battleRenderer = null;
     this.hud = null;
     this.world = null;
     this.clock = null;
+    this.water = null;
   }
 }

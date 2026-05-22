@@ -19,6 +19,7 @@ import { Unit, type Team } from '../../src/sim/Unit';
 import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
 import { AttackBehavior } from '../../src/sim/behaviors/AttackBehavior';
 import { rollUnit } from '../../src/sim/archetypes';
+import { applyTerrain } from '../../src/sim/battleSetup';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import type { GameEvents } from '../../src/core/events';
@@ -103,6 +104,34 @@ describe('A2 round-trip: World', () => {
     // Tick once: commands drain at top of tick. After this the queue is empty.
     restored.tick();
     expect(restored.toJSON().pendingCommands).toHaveLength(0);
+  });
+
+  it('round-trips the tile grid + neutral wall units (C1a terrain)', () => {
+    // Build a non-trivial battle, run it for a few ticks, snapshot, restore.
+    const { world } = freshBattle(11111);
+    applyTerrain(world, {
+      worldSeed: 0,
+      terrainSeed: 4242,
+      layoutId: null,
+      playerTeam: [],
+      enemyTeam: [],
+    });
+    for (let i = 0; i < 5; i++) world.tick();
+
+    const wallCoordsBefore = world.units
+      .filter((u) => u.team === 'neutral')
+      .map((u) => ({ ...u.position }));
+    const tileSnapBefore = world.tileGrid.toJSON();
+    expect(wallCoordsBefore.length).toBeGreaterThan(0);
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+
+    const wallCoordsAfter = restored.units
+      .filter((u) => u.team === 'neutral')
+      .map((u) => ({ ...u.position }));
+    expect(wallCoordsAfter).toEqual(wallCoordsBefore);
+    expect(restored.tileGrid.toJSON()).toEqual(tileSnapBefore);
   });
 });
 

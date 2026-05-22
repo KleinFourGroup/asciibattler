@@ -340,26 +340,42 @@ and obstacles populate the arena per encounter seed.
 Now also absorbs the deferred B2 + B4 scope (see notes under those
 headings above). Worth sub-phasing into three:
 
-- **C1a — Tile system + flat geometry.** Pure logic: tile type union
-  + grid + per-encounter generator + pathfinding integration.
-  Renderer ships flat-colored quads as a stand-in.
+- **C1a — Tile system + flat geometry. ✓ LANDED.** Per the user's
+  design call, walls are neutral-team `Unit`s (not a `TileKind`) —
+  reuses the existing Unit pipeline (pathfinding blockers, snapshot
+  rehydration, sprite rendering) and leaves the door open for
+  destructible walls + healing shrines + hazards without a new
+  abstraction. Tiles are surface properties (`floor` |
+  `shallow_water`, the latter doubling movement cost). New
+  `config/terrain.json` + zod schema; procedural generator with a
+  `layoutId` hook plumbed for C1b's hand-authored library.
+  WorldSnapshot bumped to v2 with `tileGrid`. Water visual is a
+  flat-colored InstancedMesh stand-in
+  ([src/render/WaterRenderer.ts](src/render/WaterRenderer.ts)) —
+  deliberately crude, C1c replaces it. Pathfinding gained an
+  optional `CostFn`; Chebyshev stays admissible since cost >= 1.
+  Foundation commit `4572d8a`, integration commit followed.
 - **C1b — Walls and obstacles.** Decision point: 3D blocks vs
-  billboarded `#`. Hooks into encounter generation from C1a.
+  billboarded `#`. Also: ranged LOS through walls (C1a left it
+  permissive), destructible walls (the `maxHp` arg on
+  `spawnEnvironment` is already plumbed), and the hand-authored
+  layout library (the resolver currently throws — wire it up).
 - **C1c — Visual style + layout pass** (folded from B2 + B4).
   Locks the low-poly direction (flat vs smooth, hand-authored vs
   procedural); bakes grid lines into the new terrain shader;
   tightens the `PLANE_BASE_Y / SPRITE_Y` vertical stack so the
-  diorama reads flush rather than stacked.
+  diorama reads flush rather than stacked. Replaces the C1a water
+  stand-in and the decorative fBm TerrainRenderer.
 
 Pathfinding ([src/sim/Pathfinding.ts](src/sim/Pathfinding.ts)) already
 takes blockers; the integration cost is mostly in encounter generation
 and the renderer.
 
-**Decision points to surface when C1 starts:** terrain visual
+**Decision points still open for C1b/C1c:** terrain visual
 direction (flat-shaded vs smooth-shaded, hand-authored mesh vs
-procedural-from-simplex); wall/obstacle form (3D blocks vs
-billboarded `#` glyph); whether sprites stay 2D billboards (likely
-yes — core to the ASCII aesthetic).
+procedural-from-simplex); wall form (3D blocks vs billboarded `#`
+glyph); whether sprites stay 2D billboards (likely yes — core to the
+ASCII aesthetic).
 
 ### C2 — New archetypes: mage, rogue, healer
 

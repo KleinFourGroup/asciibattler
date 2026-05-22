@@ -43,6 +43,19 @@ export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat' | 'complete';
 
 export interface BattleEncounter {
   readonly worldSeed: number;
+  /**
+   * Independent RNG seed for terrain generation (C1a). Forked separately
+   * from the combat seed so tweaking obstacle placement doesn't shift
+   * unit roll outcomes. Drives wall + shallow-water layout via
+   * `generateTerrain` in `src/sim/battleSetup.ts`.
+   */
+  readonly terrainSeed: number;
+  /**
+   * Optional hand-authored layout id (C1a plumbed but null-only — the
+   * library lands in C1b+). When set, `generateTerrain` bypasses the
+   * procedural path and loads a named layout from the library.
+   */
+  readonly layoutId: string | null;
   readonly playerTeam: readonly UnitTemplate[];
   readonly enemyTeam: readonly UnitTemplate[];
 }
@@ -155,10 +168,13 @@ export class Run {
 
     const battleRng = this.rng.fork();
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
+    const terrainSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
     const enemyTeam = rollEnemyTeam(battleRng, this.team.length, this.floorOf(nodeId));
 
     this.currentEncounter = {
       worldSeed,
+      terrainSeed,
+      layoutId: null,
       playerTeam: this.team.slice(),
       enemyTeam,
     };

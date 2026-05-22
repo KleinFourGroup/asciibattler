@@ -9,8 +9,9 @@ import { glyphForArchetype } from './archetypes';
 import type { WorldCommand } from './Command';
 import { createAction } from './actions/registry';
 import { createBehavior } from './behaviors/registry';
+import { TileGrid, type TileGridSnapshot } from './TileGrid';
 
-const WORLD_SCHEMA_VERSION = 1;
+const WORLD_SCHEMA_VERSION = 2;
 
 interface ActiveActionSnapshot {
   actionId: string;
@@ -41,6 +42,7 @@ export interface WorldSnapshot {
   rng: RNGSnapshot;
   units: UnitSnapshot[];
   pendingCommands: WorldCommand[];
+  tileGrid: TileGridSnapshot;
 }
 
 /**
@@ -56,6 +58,13 @@ export class World {
   readonly gridSize: number;
   readonly rng: RNG;
   readonly units: Unit[] = [];
+  /**
+   * Per-cell tile data (floor / shallow_water). Defaults to all-floor when
+   * the World is constructed without one — preserves the pre-C1a "open
+   * arena" behaviour for tests and the headless fuzz harness. Battle
+   * setup calls `applyTerrain` to populate it from the encounter seed.
+   */
+  readonly tileGrid: TileGrid;
 
   private readonly bus: EventBus<GameEvents>;
   private tickCount = 0;
@@ -68,10 +77,16 @@ export class World {
    */
   private readonly commands: WorldCommand[] = [];
 
-  constructor(bus: EventBus<GameEvents>, rng: RNG, gridSize: number = GRID_SIZE) {
+  constructor(
+    bus: EventBus<GameEvents>,
+    rng: RNG,
+    gridSize: number = GRID_SIZE,
+    tileGrid?: TileGrid,
+  ) {
     this.bus = bus;
     this.rng = rng;
     this.gridSize = gridSize;
+    this.tileGrid = tileGrid ?? new TileGrid(gridSize, gridSize);
   }
 
   get currentTick(): number {
@@ -305,6 +320,7 @@ export class World {
       rng: this.rng.toJSON(),
       units: this.units.map(snapshotUnit),
       pendingCommands: this.commands.slice(),
+      tileGrid: this.tileGrid.toJSON(),
     };
   }
 
@@ -321,7 +337,7 @@ export class World {
       );
     }
     const rng = RNG.fromJSON(snap.rng);
-    const world = new World(bus, rng, snap.gridSize);
+    const world = new World(bus, rng, snap.gridSize, TileGrid.fromJSON(snap.tileGrid));
     world.tickCount = snap.tickCount;
     world._ended = snap.ended;
     world.nextUnitId = snap.nextUnitId;

@@ -1,0 +1,6 @@
+{
+  "wallDensity": 0.06,
+  "shallowWaterDensity": 0.04,
+  "spawnRowsClear": [1, 2, 9, 10],
+  "ensureConnectivity": true
+}

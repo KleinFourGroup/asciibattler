@@ -34,7 +34,14 @@ export class MovementBehavior implements Behavior {
     if (goal === null) return null;
 
     const blockers = world.units.map((u) => u.position);
-    const path = findPath(unit.position, goal, blockers, world.gridSize);
+    // Per-cell cost reads from World's TileGrid so shallow_water cells
+    // (cost 2 vs floor's 1) are routed around when a cheaper detour
+    // exists. C1a: walls are still in the blocker list (they're
+    // neutral-team units), so the cost function only matters for the
+    // surface-property tiles.
+    const path = findPath(unit.position, goal, blockers, world.gridSize, (c) =>
+      world.tileGrid.costAt(c),
+    );
     if (path.length < 2) return null;
 
     const from = unit.position;

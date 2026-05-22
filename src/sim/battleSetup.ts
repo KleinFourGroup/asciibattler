@@ -17,6 +17,10 @@ import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AttackBehavior } from './behaviors/AttackBehavior';
 import type { Team, UnitTemplate } from './Unit';
 import type { BattleEncounter } from '../run/Run';
+import { RNG } from '../core/RNG';
+import { TERRAIN } from '../config/terrain';
+import { generateTerrain } from './terrainGen';
+import { spawnWall } from './environment';
 
 /**
  * CHECKPOINT 5 formation anchors for the starting 3-melee + 2-ranged team.
@@ -87,12 +91,42 @@ export function spawnTeam(
 }
 
 /**
+ * C1a terrain application. Generates the per-encounter tile layout +
+ * wall coords from the encounter's terrain seed, copies the tiles onto
+ * `world.tileGrid` in place (World.tileGrid is constructed at World
+ * construction time and stays referenced; we mutate kinds rather than
+ * swapping the instance), and spawns each wall as a neutral-team Unit so
+ * pathfinding's blocker list includes them for free.
+ *
+ * Must run BEFORE any `spawnTeam` so the spawn rows are guaranteed clear
+ * of walls. Both call sites (`spawnEncounter` and `BattleScene.mount`)
+ * follow that order — if you add a third, mirror it.
+ */
+export function applyTerrain(world: World, encounter: BattleEncounter): void {
+  const { tileGrid, walls } = generateTerrain(
+    new RNG(encounter.terrainSeed),
+    world.gridSize,
+    TERRAIN,
+    encounter.layoutId,
+  );
+  // Copy tile kinds onto the World's TileGrid (kept-by-reference so
+  // existing handles to world.tileGrid stay valid post-application).
+  for (const cell of tileGrid.cells()) {
+    world.tileGrid.setKind({ x: cell.x, y: cell.y }, cell.kind);
+  }
+  for (const coord of walls) {
+    spawnWall(world, coord);
+  }
+}
+
+/**
  * Spawn both sides of a `BattleEncounter` into a fresh world. Convenience
- * wrapper around `spawnTeam` for the harness loop; Game spawns player and
- * enemy in two separate calls because it interleaves HUD setup between
- * them.
+ * wrapper for the harness loop; Game spawns player and enemy in two
+ * separate calls because it interleaves HUD setup between them. Terrain
+ * is applied first so spawn rows are guaranteed clear of obstacles.
  */
 export function spawnEncounter(world: World, encounter: BattleEncounter): void {
+  applyTerrain(world, encounter);
   spawnTeam(world, 'player', encounter.playerTeam);
   spawnTeam(world, 'enemy', encounter.enemyTeam);
 }

@@ -3,6 +3,7 @@ import { FontAtlas } from './render/FontAtlas';
 import { SpriteRenderer } from './render/SpriteRenderer';
 import { BarRenderer } from './render/BarRenderer';
 import { TerrainRenderer } from './render/TerrainRenderer';
+import { WaterRenderer } from './render/WaterRenderer';
 import { EventBus } from './core/EventBus';
 import { GRID_SIZE } from './config';
 import type { GameEvents } from './core/events';
@@ -45,6 +46,7 @@ export class Game implements RunDispatcher {
   private readonly sprites: SpriteRenderer;
   private readonly bars: BarRenderer;
   private readonly terrain: TerrainRenderer;
+  private readonly water: WaterRenderer;
   private readonly uiMount: HTMLElement;
   private readonly audio: AudioPlayer;
   /**
@@ -74,6 +76,11 @@ export class Game implements RunDispatcher {
     // to follow the run RNG.
     this.terrain = new TerrainRenderer(12345, GRID_SIZE);
     this.renderer.scene.add(this.terrain.mesh);
+
+    // C1a shallow-water visual stand-in. Empty at boot; BattleScene calls
+    // setTiles after applyTerrain has populated world.tileGrid.
+    this.water = new WaterRenderer();
+    this.renderer.scene.add(this.water.mesh);
 
     this.sprites = new SpriteRenderer(this.fontAtlas);
     // Both meshes live in the same scene; layer membership routes them to
@@ -176,6 +183,7 @@ export class Game implements RunDispatcher {
       sprites: this.sprites,
       bars: this.bars,
       terrain: this.terrain,
+      water: this.water,
       fontAtlas: this.fontAtlas,
       uiMount: this.uiMount,
       dispatcher: this,

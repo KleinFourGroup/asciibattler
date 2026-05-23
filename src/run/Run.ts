@@ -173,6 +173,13 @@ export class Run {
     const layoutId = rollLayoutId(battleRng);
     const enemyTeam = rollEnemyTeam(battleRng, this.team.length, this.floorOf(nodeId));
 
+    // Browser-only diagnostic: confirm the layout picker hits the full
+    // library across a session. Gated on `typeof window` so the fuzz
+    // harness (tsx, no Vite) and vitest (node environment) don't spam.
+    if (typeof window !== 'undefined') {
+      console.log('[layout]', layoutId ?? 'procedural');
+    }
+
     this.currentEncounter = {
       worldSeed,
       terrainSeed,
@@ -321,13 +328,18 @@ function scaleMaxHp(template: UnitTemplate, multiplier: number): UnitTemplate {
 }
 
 /**
- * 50/50 split between procedural terrain (`null`) and a hand-authored
- * layout. When picking a layout, choose uniformly across `LAYOUT_IDS` —
- * tuning that mix (weight by floor depth, weight by recent picks, etc.)
- * is a future tuning lever; for C1b we keep it flat so the player sees
- * each layout often enough to learn it.
+ * 25% procedural (`null`) / 75% hand-authored layout, chosen uniformly
+ * across `LAYOUT_IDS`. Tilted away from procedural at the C1d follow-up
+ * since the layout library is now big enough to carry the bulk of
+ * encounters — procedural stays in the mix as a "wildcard" variant.
+ * Weighting by floor depth or recent picks is a future tuning lever.
+ *
+ * The `rng.next()` call always runs, so the parent stream advances
+ * identically whether we return null or a layout — changing the
+ * threshold doesn't shift downstream draws (enemy team, etc.) for
+ * existing seeds.
  */
 function rollLayoutId(rng: RNG): string | null {
-  if (rng.next() < 0.5) return null;
+  if (rng.next() < 0.25) return null;
   return rng.pick(LAYOUT_IDS);
 }

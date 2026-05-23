@@ -298,6 +298,27 @@ body {
   color: #000;
 }
 
+/* Battle banner (C1d follow-up). Top-center label naming the encounter's
+   hand-authored layout ("Corridor" / "Diamond" / etc.) or "Nowhere" for
+   procedural battles. Shares the HUD's amber chrome and screen-fade
+   lifecycle so it appears with the panel and fades out together. */
+
+.battle-banner {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 20px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  color: #ffb000;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 /* HUD (Step 5.1). Left-side panel mirroring MapScreen on the right. Shown
    during battles, hidden between. Player roster on top, enemy roster below,
    floor + status header. Palette: amber chrome, TERMINAL_GREEN for player

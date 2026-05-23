@@ -113,8 +113,8 @@ describe('Run', () => {
       expect(run.currentEncounter).toBe(encounterBefore);
     });
 
-    it('encounter layoutId is null OR a registered library id (C1b 50/50 mix)', () => {
-      // Sample many seeds to confirm both branches of the 50/50 roll are
+    it('encounter layoutId is null OR a registered library id (C1d 25/75 mix)', () => {
+      // Sample many seeds to confirm both branches of the 25/75 roll are
       // reachable AND that the picked ids always come from LAYOUT_IDS.
       let proceduralCount = 0;
       const layoutCounts = new Map<string, number>();
@@ -138,10 +138,11 @@ describe('Run', () => {
         expect(layoutCounts.get(id) ?? 0).toBeGreaterThan(0);
       }
       // Rough sanity on the split — leave wide tolerance so we don't fight
-      // the PRNG. The point is to catch outright bias, not to assert exact
-      // uniformity.
-      expect(proceduralCount).toBeGreaterThan(50);
-      expect(proceduralCount).toBeLessThan(150);
+      // the PRNG. Expected ~50 procedural out of 200 (binomial p=0.25,
+      // sd ≈ 6.1); ±25 window is well beyond ±3σ either way. The point is
+      // to catch outright bias, not to assert exact uniformity.
+      expect(proceduralCount).toBeGreaterThan(25);
+      expect(proceduralCount).toBeLessThan(75);
     });
   });
 

@@ -9,6 +9,7 @@ import { fadeIn, fadeOutAndRemove } from './fade';
 
 export class HUD {
   private readonly root: HTMLElement;
+  private readonly banner: HTMLElement;
   private readonly floorLabel: HTMLElement;
   private readonly status: HTMLElement;
   private readonly playerBody: HTMLElement;
@@ -29,6 +30,14 @@ export class HUD {
     // is-visible; that's also why the HUD doesn't use `hidden` — `display:
     // none` can't transition.
     this.root.className = 'hud screen-fade';
+
+    // C1d follow-up: top-of-screen banner naming the current battle's
+    // layout ("Corridor" / "Diamond" / "Labyrinth" / "Nowhere" for
+    // procedural). Lives outside the side-panel root so it can center on
+    // the viewport; same screen-fade lifecycle as the panel.
+    this.banner = document.createElement('div');
+    this.banner.className = 'battle-banner screen-fade';
+    mount.appendChild(this.banner);
 
     this.floorLabel = document.createElement('div');
     this.floorLabel.className = 'hud-floor';
@@ -59,14 +68,18 @@ export class HUD {
   /**
    * Bind to a fresh battle world. Must be called *before* the battle starts
    * spawning so unit:spawned events find a world to look up against.
+   * `locationName` populates the top banner — pass "Nowhere" for procedural
+   * encounters (no hand-authored layout).
    */
-  show(world: World, floor: number): void {
+  show(world: World, floor: number, locationName: string): void {
     this.world = world;
     this.floorLabel.textContent = `Floor ${floor}`;
+    this.banner.textContent = locationName;
     this.playerBody.replaceChildren();
     this.enemyBody.replaceChildren();
     this.rows.clear();
     fadeIn(this.root);
+    fadeIn(this.banner);
   }
 
   hide(): void {
@@ -74,6 +87,7 @@ export class HUD {
     // the next battle. Rows from the dying battle are kept until the next
     // show() so the fade-out has something to display.
     this.root.classList.remove('is-visible');
+    this.banner.classList.remove('is-visible');
     this.world = null;
   }
 
@@ -86,6 +100,7 @@ export class HUD {
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
     fadeOutAndRemove(this.root);
+    fadeOutAndRemove(this.banner);
     this.world = null;
   }
 

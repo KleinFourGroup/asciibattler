@@ -17,6 +17,7 @@ import { BattleRenderer } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { HUD } from '../ui/HUD';
 import { GRID_SIZE, TICK_RATE } from '../config';
+import { getLayout } from '../sim/layouts';
 import type { Scene, SceneContext } from './Scene';
 
 export class BattleScene implements Scene {
@@ -64,7 +65,15 @@ export class BattleScene implements Scene {
     // handlers find the world. Terrain comes before teams so the spawn rows
     // are guaranteed clear (walls + water never land on them per
     // config.spawnRowsClear — see src/config/terrain.ts).
-    this.hud.show(this.world, ctx.run.currentFloor);
+    //
+    // C1d follow-up: resolve the encounter's layoutId to a display name for
+    // the top banner. Procedural encounters (layoutId === null) read as
+    // "Nowhere" — no hand-authored location, no name.
+    const locationName =
+      encounter.layoutId === null
+        ? 'Nowhere'
+        : (getLayout(encounter.layoutId)?.name ?? encounter.layoutId);
+    this.hud.show(this.world, ctx.run.currentFloor, locationName);
     this.battleRenderer.attach(this.world);
     applyTerrain(this.world, encounter);
     // After terrain is in place, the terrain renderer reflects the tile

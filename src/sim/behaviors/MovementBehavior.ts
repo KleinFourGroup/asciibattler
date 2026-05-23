@@ -5,18 +5,48 @@ import type { ActionProposal } from '../Action';
 import { MoveAction } from '../actions/MoveAction';
 import { findTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
+import { hasLineOfSight } from '../LineOfSight';
 
 /**
  * Proposes a one-cell step toward the nearest enemy when out of attack
  * range. Abstains (returns null) when no enemy exists, when the unit is
- * already in range, or when the path is blocked — the selector treats
- * null as "I have no opinion this tick," so attack proposals from other
- * behaviors can still fire.
+ * in range AND has line-of-sight, when no path to target exists, or when
+ * the next step is currently occupied by another unit. Score 1 (low);
+ * AttackBehavior scores 10 so the selector prefers attacking over moving
+ * when both fire.
  *
- * Score 1 (low). Attack proposals score higher when in range; the score
- * differentiation isn't strictly needed today because movement abstains
- * when in range, but it sets the pattern for archetypes whose move and
- * attack windows overlap.
+ * Pathing model (C1d follow-up):
+ *
+ * 1. **Path to the target's cell**, not to a precomputed "goal cell
+ *    within attackRange of target." The earlier `pickGoalCellInRange`
+ *    heuristic froze when every range-1 neighbor of the target was a
+ *    wall or an ally — common in tight layouts. The target itself is
+ *    excluded from the blocker set so findPath has a reachable goal;
+ *    the unit never actually steps onto target because the in-range
+ *    abstain at the top of `proposeAction` fires at least one cell
+ *    before reaching it.
+ *
+ * 2. **Soft ally blocking**, not hard. Walls (neutral-team units) stay
+ *    hard blockers — they're permanent terrain. Other units (allies
+ *    and non-target enemies) become high-cost cells via the CostFn.
+ *    A* routes around them when possible but routes through them when
+ *    no alternative exists, so two units facing each other across a
+ *    1-cell chokepoint don't both findPath()→[] and freeze (the
+ *    Labyrinth deadlock — see tests/integration/layout-deadlock.test.ts).
+ *    Chebyshev heuristic stays admissible since all costs are >= 1.
+ *
+ * 3. **Step collision check.** path[1] may be an ally/enemy cell A*
+ *    routed through under (2). Two units can't share a cell, so abstain
+ *    this tick — the blocker may move out of the way next tick. This
+ *    creates queueing behavior in corridors without explicit
+ *    coordination.
+ *
+ * 4. **LOS-gated in-range abstain.** The "I'm in attack range, let
+ *    AttackBehavior fire" abstain also checks line-of-sight. A ranged
+ *    unit in chebyshev range with a wall between it and target would
+ *    otherwise freeze (AttackBehavior abstains on no LOS; MovementBehavior
+ *    would also abstain on in-range). Now it keeps pathing forward —
+ *    usually one more step brings it past the wall.
  */
 export class MovementBehavior implements Behavior {
   static readonly kind = 'movement';
@@ -26,26 +56,36 @@ export class MovementBehavior implements Behavior {
     const target = findTarget(unit, world);
     if (target === null) return null;
 
-    if (chebyshev(unit.position, target.position) <= unit.stats.attackRange) {
+    // Split blockers by kind:
+    //   walls (neutral)   → hard blockers + LOS occluders
+    //   other units       → soft cells (high cost), tracked separately
+    //                        for the step collision check
+    const walls: GridCoord[] = [];
+    const otherUnitCells = new Set<string>();
+    for (const u of world.units) {
+      if (u.id === unit.id) continue;
+      if (u.team === 'neutral') {
+        walls.push(u.position);
+        continue;
+      }
+      if (u.id === target.id) continue;
+      otherUnitCells.add(`${u.position.x},${u.position.y}`);
+    }
+
+    const inRange = chebyshev(unit.position, target.position) <= unit.stats.attackRange;
+    if (inRange && hasLineOfSight(unit.position, target.position, walls)) {
       return null;
     }
 
-    const goal = pickGoalCellInRange(unit, target, world);
-    if (goal === null) return null;
-
-    const blockers = world.units.map((u) => u.position);
-    // Per-cell cost reads from World's TileGrid so shallow_water cells
-    // (cost 2 vs floor's 1) are routed around when a cheaper detour
-    // exists. C1a: walls are still in the blocker list (they're
-    // neutral-team units), so the cost function only matters for the
-    // surface-property tiles.
-    const path = findPath(unit.position, goal, blockers, world.gridSize, (c) =>
-      world.tileGrid.costAt(c),
+    const path = findPath(unit.position, target.position, walls, world.gridSize, (c) =>
+      costAt(c, world, otherUnitCells),
     );
     if (path.length < 2) return null;
 
-    const from = unit.position;
     const to = path[1]!;
+    if (otherUnitCells.has(`${to.x},${to.y}`)) return null;
+
+    const from = unit.position;
     const durationTicks = unit.stats.moveCooldownTicks;
 
     return {
@@ -58,42 +98,20 @@ export class MovementBehavior implements Behavior {
 }
 
 /**
- * Closest unblocked cell within `unit.stats.attackRange` of the target.
- * Tiebreak by iteration order (deterministic). Returns null if every
- * candidate cell is blocked or out of bounds — caller waits a tick.
+ * Penalty for routing through a cell currently occupied by another unit
+ * (ally or non-target enemy). Picked to be a lot larger than any
+ * realistic detour on a 12×12 grid — so A* prefers any wall-free route
+ * up to ~100 cells long over going through a single occupied cell — but
+ * still finite, so a fully clogged corridor doesn't lock the path
+ * solver. Chebyshev heuristic stays admissible (all costs are >= 1).
  */
-function pickGoalCellInRange(unit: Unit, target: Unit, world: World): GridCoord | null {
-  const r = unit.stats.attackRange;
-  const tx = target.position.x;
-  const ty = target.position.y;
+const OCCUPIED_CELL_PENALTY = 100;
 
-  let best: GridCoord | null = null;
-  let bestDist = Infinity;
-
-  for (let dx = -r; dx <= r; dx++) {
-    for (let dy = -r; dy <= r; dy++) {
-      if (dx === 0 && dy === 0) continue;
-      const cell: GridCoord = { x: tx + dx, y: ty + dy };
-      if (cell.x < 0 || cell.y < 0 || cell.x >= world.gridSize || cell.y >= world.gridSize) {
-        continue;
-      }
-      if (isOccupiedByOther(cell, world, unit.id)) continue;
-      const d = chebyshev(unit.position, cell);
-      if (d < bestDist) {
-        best = cell;
-        bestDist = d;
-      }
-    }
-  }
-  return best;
-}
-
-function isOccupiedByOther(cell: GridCoord, world: World, exceptUnitId: number): boolean {
-  for (const u of world.units) {
-    if (u.id === exceptUnitId) continue;
-    if (u.position.x === cell.x && u.position.y === cell.y) return true;
-  }
-  return false;
+function costAt(c: GridCoord, world: World, occupied: ReadonlySet<string>): number {
+  const tileCost = world.tileGrid.costAt(c);
+  if (!isFinite(tileCost)) return tileCost;
+  if (occupied.has(`${c.x},${c.y}`)) return tileCost + OCCUPIED_CELL_PENALTY;
+  return tileCost;
 }
 
 function chebyshev(a: GridCoord, b: GridCoord): number {

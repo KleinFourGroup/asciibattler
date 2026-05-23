@@ -81,6 +81,47 @@ describe('MovementBehavior', () => {
     expect(units[0]!.position).toEqual({ x: 5, y: 5 });
   });
 
+  it('moves toward a target whose attack-range neighbors are all walls + allies (C1d Labyrinth regression)', () => {
+    // C1d Labyrinth softlock: pre-fix MovementBehavior picked a goal cell
+    // within attackRange of target, then pathed there. When every in-range
+    // cell was a wall (e.g. row 8 of the Labyrinth) or an ally (rest of
+    // the team packed on the spawn row), the goal-picker returned null
+    // and the unit froze — even though target was reachable through a
+    // diagonal squeeze. The fix paths to target's cell directly, with
+    // target excluded from blockers.
+    //
+    // Setup on a 5x5 grid:
+    //   row 0: P . . . .       <- player at (0,0)
+    //   row 1: . . . . .
+    //   row 2: . . . . .
+    //   row 3: # # . # #       <- walls at x=0,1,3,4 ; gap at (2,3)
+    //   row 4: . . A T A       <- allies at (2,4),(4,4) ; target T at (3,4)
+    // Target T's 5 in-bounds neighbors are: (2,3) wall, (3,3) wall,
+    // (4,3) wall, (2,4) ally, (4,4) ally. All blocked → pre-fix freezes.
+    // Post-fix steps from (0,0) toward (3,4) via (2,3).
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 1, moveCooldownTicks: 1 },
+      // Target first so it gets the lowest enemy id and wins the
+      // chebyshev tie at distance 4 against the two allies.
+      { team: 'enemy', x: 3, y: 4, inert: true },
+      { team: 'enemy', x: 2, y: 4, inert: true },
+      { team: 'enemy', x: 4, y: 4, inert: true },
+      { team: 'player', x: 0, y: 3, inert: true },
+      { team: 'player', x: 1, y: 3, inert: true },
+      { team: 'player', x: 3, y: 3, inert: true },
+      { team: 'player', x: 4, y: 3, inert: true },
+    ]);
+
+    world.tick();
+
+    expect(moves).toHaveLength(1);
+    // Step must approach (3,4). Pre-fix this would be 0 moves.
+    const newPos = units[0]!.position;
+    expect(newPos).not.toEqual({ x: 0, y: 0 });
+    const distAfter = Math.max(Math.abs(newPos.x - 3), Math.abs(newPos.y - 4));
+    expect(distAfter).toBeLessThan(4);
+  });
+
   it('two opposing units converge until adjacent, then stop', () => {
     const { world, units } = scene([
       { team: 'player', x: 0, y: 5, attackRange: 1, moveCooldownTicks: 1 },

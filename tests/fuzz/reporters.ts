@@ -28,6 +28,7 @@ const CSV_HEADER = [
   'totalEnemyDeaths',
   'recruitedMelee',
   'recruitedRanged',
+  'hangLayout',
 ].join(',');
 
 export function renderSummaryCsv(results: readonly RunResult[]): string {
@@ -37,6 +38,12 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
     const enemyDeaths = r.battles.reduce((acc, b) => acc + b.enemyDeaths, 0);
     const meleeRecruits = r.recruits.filter((x) => x.archetype === 'melee').length;
     const rangedRecruits = r.recruits.filter((x) => x.archetype === 'ranged').length;
+    // The hung battle (if any) is always the last entry — harness aborts
+    // the run on hang. Empty string for non-hung runs so CSV consumers
+    // can spreadsheet-filter on layout without nulls.
+    const hangBattle =
+      r.outcome === 'hang' ? r.battles[r.battles.length - 1] : undefined;
+    const hangLayout = hangBattle ? (hangBattle.layoutId ?? 'procedural') : '';
     lines.push(
       [
         r.seed,
@@ -50,6 +57,7 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
         enemyDeaths,
         meleeRecruits,
         rangedRecruits,
+        hangLayout,
       ].join(','),
     );
   }
@@ -63,6 +71,14 @@ export interface AggregateStats {
   averageFloorReached: number;
   averageTicks: number;
   hangs: number;
+  /**
+   * Per-layout hang counts — keyed by `layoutId`, with `'procedural'` for
+   * the null path. Only populated when the strategy actually hung
+   * somewhere; empty `{}` when `hangs === 0`. Lets you tell at a glance
+   * whether a hang cluster lives in one specific layout (the C1d
+   * Labyrinth signature) or is spread across the library.
+   */
+  hangsByLayout: Record<string, number>;
 }
 
 /**
@@ -73,6 +89,7 @@ export interface AggregateStats {
  */
 export function aggregate(results: readonly RunResult[]): AggregateStats {
   const byOutcome: Record<string, number> = {};
+  const hangsByLayout: Record<string, number> = {};
   let floorSum = 0;
   let tickSum = 0;
   let wins = 0;
@@ -82,7 +99,12 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
     floorSum += r.finalFloorReached;
     tickSum += r.totalTicks;
     if (r.outcome === 'complete') wins++;
-    if (r.outcome === 'hang') hangs++;
+    if (r.outcome === 'hang') {
+      hangs++;
+      const hangBattle = r.battles[r.battles.length - 1];
+      const key = hangBattle ? (hangBattle.layoutId ?? 'procedural') : 'unknown';
+      hangsByLayout[key] = (hangsByLayout[key] ?? 0) + 1;
+    }
   }
   const n = results.length;
   return {
@@ -92,6 +114,7 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
     averageFloorReached: n === 0 ? 0 : floorSum / n,
     averageTicks: n === 0 ? 0 : tickSum / n,
     hangs,
+    hangsByLayout,
   };
 }
 
@@ -113,11 +136,12 @@ export function renderFailureTrace(result: RunResult): string {
   lines.push('');
   lines.push('## Battles');
   lines.push('');
-  lines.push('| Floor | Winner | Ticks | Player deaths | Enemy deaths | Player size | Enemy size |');
-  lines.push('|------:|:-------|------:|--------------:|-------------:|------------:|-----------:|');
+  lines.push('| Floor | Layout | Winner | Ticks | Player deaths | Enemy deaths | Player size | Enemy size |');
+  lines.push('|------:|:-------|:-------|------:|--------------:|-------------:|------------:|-----------:|');
   for (const b of result.battles) {
+    const layout = b.layoutId ?? 'procedural';
     lines.push(
-      `| ${b.floor} | ${b.winner} | ${b.ticks} | ${b.playerDeaths} | ${b.enemyDeaths} | ${b.playerTeamSize} | ${b.enemyTeamSize} |`,
+      `| ${b.floor} | ${layout} | ${b.winner} | ${b.ticks} | ${b.playerDeaths} | ${b.enemyDeaths} | ${b.playerTeamSize} | ${b.enemyTeamSize} |`,
     );
   }
   lines.push('');

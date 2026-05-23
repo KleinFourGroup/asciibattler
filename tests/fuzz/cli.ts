@@ -122,6 +122,9 @@ function main(): void {
     process.stdout.write(`  avg floor:  ${stats.averageFloorReached.toFixed(2)}\n`);
     process.stdout.write(`  avg ticks:  ${stats.averageTicks.toFixed(0)}\n`);
     process.stdout.write(`  hangs:      ${stats.hangs}\n`);
+    if (stats.hangs > 0) {
+      process.stdout.write(`  hangs by layout: ${JSON.stringify(stats.hangsByLayout)}\n`);
+    }
     process.stdout.write(`  by outcome: ${JSON.stringify(stats.byOutcome)}\n\n`);
   }
   process.stdout.write(`Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`);

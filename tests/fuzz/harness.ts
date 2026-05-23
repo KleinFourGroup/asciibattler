@@ -32,6 +32,11 @@ export type RunOutcome = 'complete' | 'defeat' | 'hang' | 'aborted';
 export interface BattleResult {
   floor: number;
   worldSeed: number;
+  /** Hand-authored layout id, or `null` for procedural terrain. Threaded
+   *  through so per-layout hang rates surface in the summary — useful
+   *  when a future layout's narrow corridors recreate the C1d Labyrinth
+   *  deadlock pattern. */
+  layoutId: string | null;
   winner: Team | 'hang';
   ticks: number;
   playerDeaths: number;
@@ -103,6 +108,7 @@ export function runOne(
     currentBattle = {
       floor: run.currentFloor,
       worldSeed,
+      layoutId: encounter.layoutId,
       playerTeamSize: encounter.playerTeam.length,
       enemyTeamSize: encounter.enemyTeam.length,
       playerDeaths: 0,
@@ -132,6 +138,7 @@ export function runOne(
     battles.push({
       floor: currentBattle.floor,
       worldSeed: currentBattle.worldSeed,
+      layoutId: currentBattle.layoutId,
       winner,
       ticks: currentWorld.currentTick,
       playerDeaths: currentBattle.playerDeaths,
@@ -184,6 +191,7 @@ export function runOne(
             battles.push({
               floor: currentBattle.floor,
               worldSeed: currentBattle.worldSeed,
+              layoutId: currentBattle.layoutId,
               winner: 'hang',
               ticks: battleTicks,
               playerDeaths: currentBattle.playerDeaths,
@@ -227,6 +235,7 @@ export function runOne(
 interface PartialBattle {
   floor: number;
   worldSeed: number;
+  layoutId: string | null;
   playerTeamSize: number;
   enemyTeamSize: number;
   playerDeaths: number;

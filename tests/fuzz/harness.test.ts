@@ -27,6 +27,13 @@ describe('fuzz harness', () => {
     expect(result.strategyName).toBe('pure-random');
     expect(['complete', 'defeat', 'hang', 'aborted']).toContain(result.outcome);
     expect(result.battles.length).toBeGreaterThan(0);
+    // Every battle carries its layout id (null for procedural). Pins the
+    // C1d follow-up field so format drift breaks the smoke instead of
+    // silently emptying the per-layout hang report.
+    for (const b of result.battles) {
+      expect(b).toHaveProperty('layoutId');
+      expect(b.layoutId === null || typeof b.layoutId === 'string').toBe(true);
+    }
   });
 
   it('is deterministic per (seed, strategy)', () => {
@@ -87,6 +94,10 @@ describe('fuzz reporters', () => {
     expect(stats.winRate).toBeLessThanOrEqual(1);
     expect(stats.averageFloorReached).toBeGreaterThanOrEqual(0);
     expect(Object.keys(stats.byOutcome).length).toBeGreaterThan(0);
+    // hangsByLayout is always present; empty when no hangs occurred.
+    expect(stats.hangsByLayout).toBeDefined();
+    const sumHangs = Object.values(stats.hangsByLayout).reduce((a, b) => a + b, 0);
+    expect(sumHangs).toBe(stats.hangs);
   });
 
   it('renders a failure trace for a non-complete result', () => {

@@ -47,11 +47,20 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **C1b explicit punts:** wall *visual form* (3D vs billboard) folded into C1c's visual pass — locking it now would mean retuning under C1c. Wall targeting in Targeting still skips neutrals — the destructibility plumbing exists but no behavior currently damages walls; C2's AoE archetypes will be the first consumer.
 
+**C1c landed (visual + layout pass).** Two commits:
+
+1. **Demo** (`f61b0f5`). 3-variant side-by-side comparison built into the live battle scene, hotkey 1 / 2 / 3 swaps the active `TerrainRenderer` in place while a battle plays. Variants: A — flat plane with shader-baked grid lines, B — faceted low-poly prism-per-tile (continuous simplex heights), C — stepped simplex (heights snapped to 4 plateaus). User picked B: stepped's terraces hinted at a mechanical elevation tier the sim doesn't (and won't) deliver, while faceted's organic variance reads as visual texture without making that gameplay promise.
+
+2. **Lock-in** (`526520d`). Replaced the old fBm `TerrainRenderer` + C1a `WaterRenderer` stand-in with a single canonical `TerrainRenderer`: one faceted prism per tile, fixed-seed simplex heights for floor tiles in [-0.3, 0], water tiles sunk to -0.4, top color lerps `DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER` over the floor range. Hard-edged faceted shading from a baked light direction (no scene lights — sprites stay unlit by design). Non-indexed geometry so every face owns its normals; buffers pre-sized at gridSize² and rewritten in place per `setTiles`. Grid lines stamped on the top face only via a per-vertex `aTopUV` attribute + smoothstep band.
+
+    `TerrainRenderer.heightAt(cx, cy, kind)` is the canonical height function — the same one the geometry uses, exposed so other renderers stay in sync with the surface. `BattleRenderer.tileWorldPos(coord)` threads it through: sprites (units + neutral-team walls) now stand on their actual tile top instead of floating at the pre-C1c fixed Y=0.5. Applies to spawn AND lerp endpoints, so a unit moving between tiles of different heights gets a Y-interpolated path "for free" via the existing SpriteAnimator lerp. Bars follow automatically through the existing `sprites.getPosition` read.
+
+**C1c absorbed B2 + B4:** the low-poly direction, the grid-line bake, and the vertical-stack tightening all land here. Both originals are now retired in ROADMAP.
+
 Next up per ROADMAP:
 
-1. **C1c — Visual + layout pass** (folds B2 + B4). Locks the low-poly direction; bakes grid lines into the new terrain shader; tightens the vertical stack so the diorama reads flush. Replaces the current WaterRenderer stand-in and the fBm decorative TerrainRenderer. Decision points: flat-shaded vs smooth-shaded, hand-authored mesh vs procedural-from-simplex, wall form (3D vs billboard), sprites stay 2D (likely yes).
-2. **C1d — Layout authoring: JSON config + editor.** Hoist the hand-coded layouts in `src/sim/layouts.ts` to `config/layouts.json` (A4 pattern: zod schema, validation at boot), and build a small editor for painting new ones onto a 12×12 grid with save-as-JSON. Part A (JSON hoist) is independent and can land before C1c if useful; Part B (editor) is the bigger design surface — see ROADMAP for the open decision points (where the editor lives, export-only vs direct-write, metadata fields, 2D vs 3D preview).
-3. **C2 — New archetypes (mage, rogue, healer).** Fully independent of C1; A4 makes adding their stat bands a `config/archetypes.json` edit. Mage charge-up is the natural use case for B3's currently-dormant action progress bar. Also the first consumer of the C1b wall destructibility plumbing (AoE damage lands on neutral cells regardless of Targeting's enemy-only filter).
+1. **C1d — Layout authoring: JSON config + editor.** Hoist the hand-coded layouts in `src/sim/layouts.ts` to `config/layouts.json` (A4 pattern: zod schema, validation at boot), and build a small editor for painting new ones onto a 12×12 grid with save-as-JSON. Part A (JSON hoist) is independent; Part B (editor) is the bigger design surface — see ROADMAP for the open decision points (where the editor lives, export-only vs direct-write, metadata fields, 2D vs 3D preview).
+2. **C2 — New archetypes (mage, rogue, healer).** Fully independent of C1; A4 makes adding their stat bands a `config/archetypes.json` edit. Mage charge-up is the natural use case for B3's currently-dormant action progress bar. Also the first consumer of the C1b wall destructibility plumbing (AoE damage lands on neutral cells regardless of Targeting's enemy-only filter).
 
 **Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning. (5-seed sample post-A4 hints at greedy edge, but N is too small to be sure — re-run at 100+ when something invalidates the cache.)
 
@@ -137,6 +146,14 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 
 42. **C1b: `Run.handleEnterNode` now does 3 RNG draws on `battleRng` before `rollEnemyTeam`.** Order is `worldSeed → terrainSeed → layoutId → rollEnemyTeam`. The third draw (introduced by `rollLayoutId`) means enemy compositions shifted for existing seeds vs. the C1a baseline. Existing tests that assert enemy stat ranges still pass (the ranges are permissive), but the byte-identical replay tests in `tests/integration/` reflect the new stream — old fuzz output CSVs are stale on this dimension and shouldn't be compared across the C1b cut.
 
+43. **C1c: `TerrainRenderer.heightAt(cx, cy, kind)` is the canonical height function.** Both the prism geometry AND `BattleRenderer.tileWorldPos` read from it. Don't compute heights in a second place — keep `heightAt` as the single source of truth. Heights are deterministic functions of `(cx, cy, kind)` over a fixed-seed simplex; per-battle terrain seed is intentionally NOT used here so the visual character of the world stays canonical across battles. If a future feature wants per-encounter terrain variety, introduce a separate seed plumbed through `setTiles` rather than reaching into the noise instance.
+
+44. **C1c: Sprite Y is per-tile via `BattleRenderer.tileWorldPos`, not the pre-C1c fixed `SPRITE_Y`.** `gridToWorld` still exists but only computes XZ + a default Y for callers without terrain context; `tileWorldPos(coord)` is what `onUnitSpawned` and `onUnitMoved` use. Both spawn AND lerp endpoints go through it, so a unit moving across a height seam gets a smooth Y-interpolated path via the existing SpriteAnimator lerp — no extra animation wiring. If you add a new spawn point or lerp endpoint, use `tileWorldPos`, not raw `gridToWorld`.
+
+45. **C1c: Walls inherit per-tile Y via the unit-spawn pipeline.** Walls are neutral-team Units (see #31) and spawn through the same `onUnitSpawned` path as combatants, so `tileWorldPos` automatically places them on their tile top. If a future feature wants walls at a Y different from their tile top (e.g. ceiling-mounted hazards, floor traps that flush below tile level), the wall path needs its own branch — but for the default "obstacle on floor" case it just works.
+
+46. **C1c: No scene lights — terrain shades from a baked light direction in `terrain.frag.glsl`.** `LIGHT_DIR` + `AMBIENT` + per-face normal go directly into a Lambert term in the shader; there is no `THREE.DirectionalLight` in the scene. This is deliberate: sprites use a custom unlit ShaderMaterial, and adding a real scene light would mean either tagging it to a layer the sprites don't read (fragile) or rewriting the sprite shader to ignore lights (pointless). If you add a new material that *does* want lighting, mirror the same baked-direction pattern rather than adding a `Light`.
+
 ## Browser-verify tips (learned the hard way)
 
 - **Preview MCP screenshots are unreliable for sub-pixel detail.** JPEG compression smears 1-2px features (scanlines, dither stipple) into uniform tints; resize timing can produce thumbnail-sized images that look like rendering bugs. **If a screenshot contradicts intuition, sample canvas pixels via `getImageData` first** — they're more reliable than the screenshot tool for detecting real issues. Even better: ask the user to look in their native browser.
@@ -212,14 +229,18 @@ src/
     SpriteRenderer.ts  # InstancedBufferGeometry + custom shaders
                        # + dual mesh (layer 0 visible / layer 1 bloom)
                        # + per-instance bloomIntensity attr (B1.1 selective bloom)
-    TerrainRenderer.ts # fBm-displaced plane + palette shader (decorative;
-                       # C1c rewrites it as a real tile mesh)
-    WaterRenderer.ts   # C1a stand-in: flat instanced quads on water tiles
+    TerrainRenderer.ts # C1c: faceted low-poly prism-per-tile (replaces the
+                       # old fBm decorative plane + C1a WaterRenderer
+                       # stand-in). Fixed-seed simplex heights, water tiles
+                       # sunk to -0.4, heightAt(cx,cy,kind) is canonical
+                       # for sprite Y too
     BattleRenderer.ts  # sim/render seam: attach/detach per battle
                        # neutral team → TERMINAL_STONE color, no bars/bloom (C1a)
+                       # + tileWorldPos(coord) for per-tile sprite Y (C1c)
     PostProcess.ts     # SatClamp + Bloom + Scanlines + BloomMix factories (B1.1)
     palette.ts         # COLORS table — added TERMINAL_STONE for neutrals (C1a)
     shaders/           # .glsl source files loaded via Vite ?raw imports (A4)
+                       # terrain.{vert,frag}.glsl rewritten for C1c faceted look
     animation/SpriteAnimator.ts  # startLerp + startFade + clear()
   scenes/              # A5: Scene system — single-active swap driven from Game
     Scene.ts           #   Scene interface + SceneContext bundle type
@@ -277,6 +298,8 @@ In the browser you should see: dark terrain (smooth blue→green→amber gradien
 C1a adds: per-encounter terrain with gray `#` walls scattered on the arena (~9 per battle), shallow_water tiles rendered as flat blue patches (~6 per battle, units move through them at half speed). Walls + water never overlap the spawn rows; the arena always has a path between teams.
 
 C1b adds: about half the battles use a hand-authored layout (corridor with two horizontal wall bands, or diamond with a center block) instead of scattered procedural walls; ranged units stop firing when a wall lands on the line between them and their target (you'll see them path-step around the wall rather than shoot through it).
+
+C1c adds: the arena is now a faceted low-poly tile mesh — each cell is its own short prism with a hard-edged top facing up, height varies subtly per tile, water tiles drop into a visible sunken pool, grid lines bake into the top face of every prism. Sprites and walls stand on the actual tile they occupy (no more floating plane) and Y-lerp across height seams when they move.
 
 ## Toolchain versions
 

@@ -349,11 +349,11 @@ headings above). Worth sub-phasing into three:
   `shallow_water`, the latter doubling movement cost). New
   `config/terrain.json` + zod schema; procedural generator with a
   `layoutId` hook plumbed for C1b's hand-authored library.
-  WorldSnapshot bumped to v2 with `tileGrid`. Water visual is a
-  flat-colored InstancedMesh stand-in
-  ([src/render/WaterRenderer.ts](src/render/WaterRenderer.ts)) —
-  deliberately crude, C1c replaces it. Pathfinding gained an
-  optional `CostFn`; Chebyshev stays admissible since cost >= 1.
+  WorldSnapshot bumped to v2 with `tileGrid`. Water visual was a
+  flat-colored InstancedMesh stand-in in `src/render/WaterRenderer.ts`
+  at C1a; C1c replaced it with per-tile water inside the new
+  `TerrainRenderer`. Pathfinding gained an optional `CostFn`;
+  Chebyshev stays admissible since cost >= 1.
   Foundation commit `4572d8a`, integration commit followed.
 - **C1b — Walls and obstacles. ✓ LANDED.** Three commits:
   *ranged LOS through walls* (`bc8c5d8`) — new
@@ -373,12 +373,31 @@ headings above). Worth sub-phasing into three:
   `LAYOUT_IDS`. Wall *visual form* (3D vs billboard) deliberately
   punted to C1c — locking it under C1b would mean retuning under
   C1c's broader visual pass.
-- **C1c — Visual style + layout pass** (folded from B2 + B4).
-  Locks the low-poly direction (flat vs smooth, hand-authored vs
-  procedural); bakes grid lines into the new terrain shader;
-  tightens the `PLANE_BASE_Y / SPRITE_Y` vertical stack so the
-  diorama reads flush rather than stacked. Replaces the C1a water
-  stand-in and the decorative fBm TerrainRenderer.
+- **C1c — Visual style + layout pass ✓ LANDED** (folded from B2 +
+  B4). Two commits: *demo* (`f61b0f5`) shipped three side-by-side
+  variants (flat + grid bake, faceted low-poly, stepped simplex)
+  swappable on hotkeys 1 / 2 / 3 during a live battle; *lock-in*
+  (`526520d`) picked variant B (faceted low-poly) and replaced the
+  old fBm `TerrainRenderer` + C1a `WaterRenderer` stand-in with a
+  single canonical `TerrainRenderer`. One prism per tile, fixed-
+  seed simplex heights for floor in [-0.3, 0], water tiles sunk to
+  -0.4, top color lerps `DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER`
+  over the floor range. Hard-edged faceted shading from a baked
+  light direction in `terrain.frag.glsl` (no scene lights — sprites
+  stay unlit). Grid line stamped on the top face only.
+
+  `TerrainRenderer.heightAt(cx, cy, kind)` is the canonical height
+  function and is exposed for sprite-Y alignment.
+  `BattleRenderer.tileWorldPos(coord)` threads it through both spawn
+  AND lerp endpoints, so sprites and walls stand on their actual
+  tile top instead of floating at the pre-C1c fixed plane — and
+  units moving across height seams get a smooth Y-interpolated path
+  via the existing SpriteAnimator lerp.
+
+  User picked variant B over C because stepped's terraces hinted at
+  a mechanical elevation tier the sim doesn't (and won't) deliver,
+  while faceted's organic variance reads as visual texture without
+  making that gameplay promise.
 - **C1d — Layout authoring: JSON config + editor.** C1b ships two
   hand-coded layouts in [src/sim/layouts.ts](src/sim/layouts.ts);
   growing the library past a handful means hoisting them to a
@@ -424,12 +443,12 @@ Pathfinding ([src/sim/Pathfinding.ts](src/sim/Pathfinding.ts)) already
 takes blockers; the integration cost is mostly in encounter generation
 and the renderer.
 
-**Decision points still open for C1c:** terrain visual direction
-(flat-shaded vs smooth-shaded, hand-authored mesh vs procedural-
-from-simplex); wall form (3D blocks vs billboarded `#` glyph —
-C1b kept billboard as the C1a default, C1c locks it); whether
-sprites stay 2D billboards (likely yes — core to the ASCII
-aesthetic).
+**C1c decision-point resolutions:** terrain visual direction →
+*faceted low-poly* (procedural-from-simplex, hard-edged faces);
+wall form → *billboarded `#` glyph* (the C1a/C1b default stays);
+sprites → *2D billboards* (locked, no change). Stepped simplex
+was tabled because its terraces implied a mechanical elevation
+tier the sim doesn't model.
 
 ### C2 — New archetypes: mage, rogue, healer
 

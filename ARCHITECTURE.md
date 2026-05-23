@@ -60,7 +60,7 @@ src/
   render/
     Renderer.ts              # Wraps WebGLRenderer + EffectComposer; owns the render loop
     SpriteRenderer.ts        # InstancedMesh of billboarded ASCII quads; addSprite/updateSprite/removeSprite
-    TerrainRenderer.ts       # Procedural plane with displaced verts and palette shader
+    TerrainRenderer.ts       # Faceted low-poly prism-per-tile (C1c); also renders water tiles + exposes heightAt for per-tile sprite Y
     BattleRenderer.ts        # Sim/render seam: subscribes to unit:* events, drives SpriteRenderer
     FontAtlas.ts             # Generates the monospace glyph atlas via canvas2d at startup
     PostProcess.ts           # EffectComposer setup; palette quantization, scanlines, dither

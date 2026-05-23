@@ -2,8 +2,10 @@ import { Renderer } from './render/Renderer';
 import { FontAtlas } from './render/FontAtlas';
 import { SpriteRenderer } from './render/SpriteRenderer';
 import { BarRenderer } from './render/BarRenderer';
-import { TerrainRenderer } from './render/TerrainRenderer';
-import { WaterRenderer } from './render/WaterRenderer';
+import { TerrainController } from './render/terrain/TerrainController';
+import { FlatGridTerrain } from './render/terrain/FlatGridTerrain';
+import { createLowPolyTerrain } from './render/terrain/lowPolyTerrain';
+import { createSteppedTerrain } from './render/terrain/steppedTerrain';
 import { EventBus } from './core/EventBus';
 import { GRID_SIZE } from './config';
 import type { GameEvents } from './core/events';
@@ -45,8 +47,7 @@ export class Game implements RunDispatcher {
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
   private readonly bars: BarRenderer;
-  private readonly terrain: TerrainRenderer;
-  private readonly water: WaterRenderer;
+  private readonly terrain: TerrainController;
   private readonly uiMount: HTMLElement;
   private readonly audio: AudioPlayer;
   /**
@@ -72,15 +73,16 @@ export class Game implements RunDispatcher {
     // Renderer drives the per-frame tick of whatever scene is active.
     this.renderer = new Renderer(canvas, (dt) => this.activeScene?.tick(dt));
 
-    // Terrain seed is independent — terrain is decorative and doesn't need
-    // to follow the run RNG.
-    this.terrain = new TerrainRenderer(12345, GRID_SIZE);
-    this.renderer.scene.add(this.terrain.mesh);
-
-    // C1a shallow-water visual stand-in. Empty at boot; BattleScene calls
-    // setTiles after applyTerrain has populated world.tileGrid.
-    this.water = new WaterRenderer();
-    this.renderer.scene.add(this.water.mesh);
+    // C1c decision-point demo: TerrainController owns three terrain
+    // variants and swaps the active one on 1 / 2 / 3 hotkeys. Starts on
+    // variant A (flat + grid bake). Replaces the old TerrainRenderer + the
+    // C1a WaterRenderer stand-in (water is now rendered by the active
+    // variant directly).
+    this.terrain = new TerrainController(this.renderer.scene, [
+      new FlatGridTerrain(GRID_SIZE),
+      createLowPolyTerrain(GRID_SIZE),
+      createSteppedTerrain(GRID_SIZE),
+    ]);
 
     this.sprites = new SpriteRenderer(this.fontAtlas);
     // Both meshes live in the same scene; layer membership routes them to
@@ -183,7 +185,6 @@ export class Game implements RunDispatcher {
       sprites: this.sprites,
       bars: this.bars,
       terrain: this.terrain,
-      water: this.water,
       fontAtlas: this.fontAtlas,
       uiMount: this.uiMount,
       dispatcher: this,

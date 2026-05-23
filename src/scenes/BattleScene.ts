@@ -14,7 +14,7 @@ import { RNG } from '../core/RNG';
 import { World } from '../sim/World';
 import { applyTerrain, spawnTeam } from '../sim/battleSetup';
 import { BattleRenderer } from '../render/BattleRenderer';
-import type { WaterRenderer } from '../render/WaterRenderer';
+import type { TerrainController } from '../render/terrain/TerrainController';
 import { HUD } from '../ui/HUD';
 import { GRID_SIZE, TICK_RATE } from '../config';
 import type { Scene, SceneContext } from './Scene';
@@ -24,9 +24,9 @@ export class BattleScene implements Scene {
   private world: World | null = null;
   private battleRenderer: BattleRenderer | null = null;
   private hud: HUD | null = null;
-  /** Held only so `dispose` can clear the water quads — the renderer
-   *  itself is page-lifetime and owned by Game. */
-  private water: WaterRenderer | null = null;
+  /** Held only so `dispose` can clear the active variant's per-tile state —
+   *  the controller itself is page-lifetime and owned by Game. */
+  private terrain: TerrainController | null = null;
   private readonly subscriptions: Array<() => void> = [];
 
   mount(ctx: SceneContext): void {
@@ -67,10 +67,11 @@ export class BattleScene implements Scene {
     this.hud.show(this.world, ctx.run.currentFloor);
     this.battleRenderer.attach(this.world);
     applyTerrain(this.world, encounter);
-    // After terrain is in place, the water renderer reflects the tile grid.
-    // Walls already render via SpriteRenderer (they're neutral-team Units).
-    ctx.water.setTiles(this.world.tileGrid, this.world.gridSize);
-    this.water = ctx.water;
+    // After terrain is in place, the active terrain variant reflects the
+    // tile grid. Walls render via SpriteRenderer (they're neutral-team
+    // Units) regardless of variant.
+    ctx.terrain.setTiles(this.world.tileGrid, this.world.gridSize);
+    this.terrain = ctx.terrain;
     spawnTeam(this.world, 'player', encounter.playerTeam);
     spawnTeam(this.world, 'enemy', encounter.enemyTeam);
   }
@@ -86,13 +87,13 @@ export class BattleScene implements Scene {
     this.battleRenderer?.detach();
     this.battleRenderer?.dispose();
     this.hud?.dispose();
-    // Drop water quads so the next non-battle scene (map / recruit /
-    // gameover) isn't painting a stale lake under nothing.
-    this.water?.clear();
+    // Drop the active variant's tile visuals so the next non-battle scene
+    // (map / recruit / gameover) isn't painting stale terrain under nothing.
+    this.terrain?.clear();
     this.battleRenderer = null;
     this.hud = null;
     this.world = null;
     this.clock = null;
-    this.water = null;
+    this.terrain = null;
   }
 }

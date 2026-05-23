@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Layout Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Layout Editor</h1>
+        <span class="subtitle">12x12 arena · paint walls and water · export to <code>config/layouts.json</code></span>
+      </header>
+      <section class="workspace">
+        <div class="grid-pane">
+          <div id="grid" class="grid"></div>
+          <ul class="legend">
+            <li><span class="swatch wall"></span> Click — wall</li>
+            <li><span class="swatch water"></span> Shift+click — water</li>
+            <li><span class="swatch erase"></span> Right-click — erase</li>
+            <li><span class="swatch spawn"></span> Reserved spawn row (walls/water forbidden here)</li>
+          </ul>
+        </div>
+        <aside class="side-pane">
+          <section class="card">
+            <h2>Metadata</h2>
+            <label>
+              ID
+              <input id="meta-id" type="text" autocomplete="off" spellcheck="false" />
+            </label>
+            <label>
+              Name
+              <input id="meta-name" type="text" autocomplete="off" spellcheck="false" />
+            </label>
+            <label>
+              Description
+              <textarea id="meta-description" rows="3" spellcheck="false"></textarea>
+            </label>
+          </section>
+          <section class="card">
+            <h2>Tools</h2>
+            <div class="row">
+              <label class="inline">
+                Load existing
+                <select id="load-select">
+                  <option value="">— pick a layout —</option>
+                </select>
+              </label>
+              <button id="load-btn" type="button">Load</button>
+            </div>
+            <div class="row">
+              <button id="clear-btn" type="button" class="danger">Clear grid</button>
+            </div>
+          </section>
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation">
+              <li class="ok">Empty grid — ready.</li>
+            </ul>
+          </section>
+          <section class="card">
+            <h2>Export</h2>
+            <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+            <p class="hint">
+              Paste into <code>config/layouts.json</code> as a new array entry,
+              then <code>npm test</code> to validate.
+            </p>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

@@ -57,12 +57,15 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **C1c absorbed B2 + B4:** the low-poly direction, the grid-line bake, and the vertical-stack tightening all land here. Both originals are now retired in ROADMAP.
 
-**C1d.A landed (JSON hoist).** The two hand-authored layouts now live in `config/layouts.json` with a zod schema at `src/config/layouts.ts` (A4 pattern — validate at module load, malformed JSON crashes at boot). `LayoutDef` gained `name` and `description` fields ready for the C1d.B editor UI; the existing `walls` / optional `water` shape is unchanged. `src/sim/layouts.ts` is now a thin re-export so Run / terrainGen / the existing test suite keep working without churn. Schema is a flat array (preserves order, which drives `LAYOUT_IDS` and therefore `rng.pick` determinism — append-only).
+**C1d landed (layout authoring).** Two commits:
+
+1. **C1d.A — JSON hoist.** The two hand-authored layouts now live in `config/layouts.json` with a zod schema at `src/config/layouts.ts` (A4 pattern — validate at module load, malformed JSON crashes at boot). `LayoutDef` gained `name` and `description` fields ready for the editor UI; the existing `walls` / optional `water` shape is unchanged. `src/sim/layouts.ts` is now a thin re-export so Run / terrainGen / the existing test suite keep working without churn. Schema is a flat array (preserves order, which drives `LAYOUT_IDS` and therefore `rng.pick` determinism — append-only). Duplicate-id detection runs after parse so the loud-failure mode covers it too.
+
+2. **C1d.B — Editor.** Standalone Vite page at `tools/layout-editor/index.html` (HTML + `editor.ts` + `editor.css` + `README.md`). Visit `http://localhost:5173/tools/layout-editor/` after `npm run dev`. Click → wall, shift+click → water, right-click → erase. Reserved spawn rows from `config/terrain.json` shown as a diagonal-stripe overlay; painting on them is flagged as a validation error. Live JSON export panel with Copy + Download buttons; round-trip with `LAYOUTS` confirmed byte-clean. Connectivity check mirrors the BFS in `layouts.test.ts` (king's-move from topmost to bottommost reserved spawn row). Imports the schema + palette + terrain config directly from `src/`, so the editor can't drift from the game. **Dev-only**: `vite.config.ts` has no `rollupOptions.input` so the production build still emits only the root `index.html` — `tools/` is served by the dev server and never lands in `dist/`. **Punted to follow-ups**: a test-play button (would need URL-encoded handoff to the live game); pick-weight + floor-depth gating fields (the roadmap deferred those out of C1d).
 
 Next up per ROADMAP:
 
-1. **C1d.B — Layout editor.** Standalone Vite page at `tools/layout-editor/` for painting new layouts onto a 12x12 grid and exporting JSON snippets. Decisions locked: standalone HTML in `tools/` (not in-app), export-only output (no Vite middleware), 2D CSS grid preview (no 3D). Test-play deferred as a follow-up.
-2. **C2 — New archetypes (mage, rogue, healer).** Fully independent of C1; A4 makes adding their stat bands a `config/archetypes.json` edit. Mage charge-up is the natural use case for B3's currently-dormant action progress bar. Also the first consumer of the C1b wall destructibility plumbing (AoE damage lands on neutral cells regardless of Targeting's enemy-only filter).
+1. **C2 — New archetypes (mage, rogue, healer).** Fully independent of C1; A4 makes adding their stat bands a `config/archetypes.json` edit. Mage charge-up is the natural use case for B3's currently-dormant action progress bar. Also the first consumer of the C1b wall destructibility plumbing (AoE damage lands on neutral cells regardless of Targeting's enemy-only filter).
 
 **Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning. (5-seed sample post-A4 hints at greedy edge, but N is too small to be sure — re-run at 100+ when something invalidates the cache.)
 
@@ -286,6 +289,14 @@ config/                              # A4: balance JSON source-of-truth
   terrain.json                       # C1a: wall + water density + spawn rows
   layouts.json                       # C1d.A: hand-authored layout array
                                      # (id, name, description, walls, water?)
+
+tools/                                       # dev-only, never in dist/
+  layout-editor/                             # C1d.B: 12x12 grid painter
+    index.html                               #   Vite entry — open at
+                                             #   /tools/layout-editor/ in dev
+    editor.ts                                #   paint + validate + export
+    editor.css                               #   terminal-palette styling
+    README.md                                #   launch + workflow notes
 ```
 
 Co-located `*.test.ts` next to source for unit tests. Integration tests under `tests/`.

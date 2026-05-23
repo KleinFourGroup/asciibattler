@@ -419,31 +419,36 @@ headings above). Worth sub-phasing into three:
     duplicate ids at load time; the test suite still asserts grid
     bounds, spawn-row reservation, no duplicate coords, and
     connectivity between spawn rows per layout.
-  - **C1d.B — Editor.** A small dev tool for painting new layouts
-    on a 12×12 grid. Click toggles wall, shift-click toggles water,
-    reserved spawn rows shown as a tinted overlay. Save produces a
-    JSON snippet ready for `config/layouts.json`. Should include a
-    connectivity warning when the layout severs the board and a
-    test-play button that swaps the painted layout into a battle.
+  - **C1d.B — Editor ✓ LANDED.** Standalone Vite page at
+    [`tools/layout-editor/`](tools/layout-editor/) — visit
+    `http://localhost:5173/tools/layout-editor/` after `npm run dev`.
+    Click → wall, shift+click → water, right-click → erase. Reserved
+    spawn rows from `config/terrain.json` shown as a diagonal-stripe
+    overlay; painting on them is flagged with a red outline and a
+    validation error. Live JSON export panel with Copy + Download
+    buttons; round-trip against `LAYOUTS` confirmed byte-clean.
+    Connectivity check mirrors the BFS in
+    [`layouts.test.ts`](src/sim/layouts.test.ts) (king's-move from
+    topmost to bottommost reserved spawn row). The editor imports
+    the schema + palette + terrain config directly from `src/`, so
+    it can't drift from the game. Dev-only: `vite.config.ts` has no
+    `rollupOptions.input` for `tools/`, so `vite build` still emits
+    only the root `index.html` — confirmed `dist/` is identical
+    before/after `tools/` exists. Punted to follow-ups: a test-play
+    button (would need URL-encoded handoff to the live game), and
+    pick-weight + floor-depth gating fields (the roadmap deferred
+    those out of C1d).
 
-  **Decision points for C1d:**
-  - Where the editor lives: separate route in the existing Vite
-    app (e.g. `?editor` URL flag, swap Game for editor view),
-    standalone HTML page in `tools/`, or behind a dev-only build
-    flag. Tradeoff: in-app shares the 3D renderer (free preview)
-    but bloats the production bundle unless gated; standalone is
-    cleaner but duplicates setup.
-  - Output mode: export-only (editor produces JSON, author pastes
-    into the config file) vs direct-write (tiny Vite middleware
-    writes the file on save). Direct-write is a tighter authoring
-    loop but only works in local dev.
-  - Whether layouts gain metadata fields beyond the cell grid —
-    `name`, `description`, picker weight, floor-depth gating, etc.
-    Easier to add the schema slot now than to rev later.
-  - Whether the editor preview uses the game's 3D renderer or a
-    simpler 2D CSS grid. 2D is faster to build and easier to debug;
-    3D matches what the player will see. Could start 2D and add a
-    preview pane.
+  **C1d decision-point resolutions:** scope → *both A and B
+  together* (shared schema, single landing); editor home →
+  *standalone HTML in `tools/`* (zero production-bundle impact, no
+  dev-flag plumbing); output mode → *export-only* (clipboard +
+  download, no Vite middleware to maintain); metadata → *id, name,
+  description* (required slots ready for the editor UI; pick-weight
+  and floor-depth gating deferred until a concrete picker rule
+  needs them); preview → *2D CSS grid* (standalone doesn't share
+  the game's 3D renderer; a 3D preview pane could land later as a
+  follow-up if the 2D view proves insufficient).
 
 Pathfinding ([src/sim/Pathfinding.ts](src/sim/Pathfinding.ts)) already
 takes blockers; the integration cost is mostly in encounter generation

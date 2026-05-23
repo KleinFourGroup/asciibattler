@@ -22,7 +22,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { SpriteRenderer } from '../render/SpriteRenderer';
 import type { BarRenderer } from '../render/BarRenderer';
-import type { TerrainController } from '../render/terrain/TerrainController';
+import type { TerrainRenderer } from '../render/TerrainRenderer';
 import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
 import type { RunDispatcher } from '../run/Command';
@@ -33,7 +33,7 @@ export interface SceneContext {
   readonly scene3D: THREE.Scene;
   readonly sprites: SpriteRenderer;
   readonly bars: BarRenderer;
-  readonly terrain: TerrainController;
+  readonly terrain: TerrainRenderer;
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;
   readonly dispatcher: RunDispatcher;

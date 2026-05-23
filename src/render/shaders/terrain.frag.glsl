@@ -1,28 +1,33 @@
-// Terrain fragment shader. Two-stop palette blend by height (low → mid
-// → high) plus a subtle slope-darkening factor so steeper faces read
-// distinct from flat ground. World up is +Y, so abs(normal.y) ≈ 1 on
-// flat ground.
+// Terrain (C1c faceted low-poly).
+//
+// Diffuse shading from a fixed light direction plus an ambient floor.
+// No scene lights — this material has no spill into the sprite renderers
+// (which are unlit by design). Grid line stamped on the top face only,
+// via `vIsTop` from the vertex shader.
 
 precision highp float;
 
-uniform vec3 uColorLow;
-uniform vec3 uColorMid;
-uniform vec3 uColorHigh;
-uniform float uMinY;
-uniform float uMaxY;
+uniform vec3 uLightDir;
+uniform float uAmbient;
+uniform vec3 uGridLineColor;
+uniform float uGridLineWidth;
 
-varying float vWorldY;
+varying vec3 vColor;
 varying vec3 vNormalW;
+varying vec2 vTopUV;
+varying float vIsTop;
 
 void main() {
-  float t = smoothstep(uMinY, uMaxY, vWorldY);
+  float diffuse = max(0.0, dot(normalize(vNormalW), normalize(uLightDir)));
+  float shading = uAmbient + (1.0 - uAmbient) * diffuse;
+  vec3 base = vColor * shading;
 
-  vec3 color = t < 0.5
-    ? mix(uColorLow, uColorMid, smoothstep(0.0, 0.5, t))
-    : mix(uColorMid, uColorHigh, smoothstep(0.5, 1.0, t));
+  if (vIsTop > 0.5) {
+    vec2 edgeDist = min(vTopUV, 1.0 - vTopUV);
+    float edge = min(edgeDist.x, edgeDist.y);
+    float lineAlpha = 1.0 - smoothstep(0.0, uGridLineWidth, edge);
+    base = mix(base, uGridLineColor, lineAlpha * 0.6);
+  }
 
-  float slope = 1.0 - clamp(abs(vNormalW.y), 0.0, 1.0);
-  color *= 1.0 - slope * 0.35;
-
-  gl_FragColor = vec4(color, 1.0);
+  gl_FragColor = vec4(base, 1.0);
 }

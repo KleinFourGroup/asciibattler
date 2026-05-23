@@ -6,6 +6,7 @@ import type { World } from '../sim/World';
 import type { Team, Unit } from '../sim/Unit';
 import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
 import type { BarHandle, BarRenderer } from './BarRenderer';
+import type { TerrainRenderer } from './TerrainRenderer';
 import { COLORS } from './palette';
 import { SpriteAnimator } from './animation/SpriteAnimator';
 import { TICK_RATE, ticksToSeconds } from '../config';
@@ -66,6 +67,9 @@ export class BattleRenderer {
   constructor(
     private readonly sprites: SpriteRenderer,
     private readonly bars: BarRenderer,
+    /** C1c: queried at sprite spawn + move endpoints so units stand on
+     *  the tile top instead of floating at a fixed plane. */
+    private readonly terrain: TerrainRenderer,
     bus: EventBus<GameEvents>,
   ) {
     this.animator = new SpriteAnimator(this.sprites);
@@ -133,7 +137,7 @@ export class BattleRenderer {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
     if (!unit) return;
-    const spritePos = gridToWorld(unit.position, this.world.gridSize);
+    const spritePos = this.tileWorldPos(unit.position);
     const handle = this.sprites.addSprite(unit.glyph, colorForTeam(unit.team), spritePos);
     this.handles.set(unit.id, handle);
 
@@ -180,11 +184,25 @@ export class BattleRenderer {
     if (!handle) return;
     this.animator.startLerp(
       handle,
-      gridToWorld(from, this.world.gridSize),
-      gridToWorld(to, this.world.gridSize),
+      this.tileWorldPos(from),
+      this.tileWorldPos(to),
       ticksToSeconds(durationTicks),
     );
   };
+
+  /**
+   * World position for the sprite standing on cell `coord`. XZ from
+   * gridToWorld; Y is the terrain top-of-tile (per-cell from
+   * `TerrainRenderer.heightAt`) plus the sprite's center offset so the
+   * 1×1 quad's base sits flush on the surface.
+   */
+  private tileWorldPos(coord: GridCoord): THREE.Vector3 {
+    if (!this.world) throw new Error('BattleRenderer.tileWorldPos: no attached world');
+    const pos = gridToWorld(coord, this.world.gridSize);
+    const kind = this.world.tileGrid.kindAt(coord);
+    pos.y = this.terrain.heightAt(coord.x, coord.y, kind) + SPRITE_CENTER_OFFSET;
+    return pos;
+  }
 
   /**
    * Flash both sides of the swing: TERMINAL_AMBER on the attacker so you
@@ -393,16 +411,26 @@ function colorForTeam(team: Team): string {
   return COLORS.TERMINAL_STONE;
 }
 
-/** Sprite center height. Sits just above the terrain plane (base Y = -0.5). */
-const SPRITE_Y = 0.5;
+/**
+ * Sprite center height above the tile top. The 1×1 sprite quad is centered
+ * on `SPRITE_CENTER_OFFSET`, so with this at 0.5 the quad's base sits flush
+ * on whatever Y the terrain reports for the cell — no floating gap on lower
+ * tiles, no clipping into higher ones. Pre-C1c this was a fixed `SPRITE_Y`
+ * relative to world origin; now it's a delta off `TerrainRenderer.heightAt`.
+ */
+const SPRITE_CENTER_OFFSET = 0.5;
 
 /**
- * Grid → world coordinates. Cells are 1×1; the grid is centered on the world
- * origin. `cell.y` (grid axis 2) maps to world `-z` so grid (0, 0) is the
- * near-left cell from the camera's POV — matches the "(0, 0) is bottom-left"
- * convention in core/types.ts.
+ * Grid → world coordinates (XZ only). Cells are 1×1; the grid is centered
+ * on the world origin. `cell.y` (grid axis 2) maps to world `-z` so grid
+ * (0, 0) is the near-left cell from the camera's POV — matches the
+ * "(0, 0) is bottom-left" convention in core/types.ts.
+ *
+ * Y is left at `SPRITE_CENTER_OFFSET` as a sensible default for callers
+ * without per-tile-height context; BattleRenderer overrides Y per cell via
+ * `tileWorldPos`.
  */
 export function gridToWorld(cell: GridCoord, gridSize: number): THREE.Vector3 {
   const half = gridSize / 2;
-  return new THREE.Vector3(cell.x + 0.5 - half, SPRITE_Y, half - cell.y - 0.5);
+  return new THREE.Vector3(cell.x + 0.5 - half, SPRITE_CENTER_OFFSET, half - cell.y - 0.5);
 }

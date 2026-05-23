@@ -2,10 +2,7 @@ import { Renderer } from './render/Renderer';
 import { FontAtlas } from './render/FontAtlas';
 import { SpriteRenderer } from './render/SpriteRenderer';
 import { BarRenderer } from './render/BarRenderer';
-import { TerrainController } from './render/terrain/TerrainController';
-import { FlatGridTerrain } from './render/terrain/FlatGridTerrain';
-import { createLowPolyTerrain } from './render/terrain/lowPolyTerrain';
-import { createSteppedTerrain } from './render/terrain/steppedTerrain';
+import { TerrainRenderer } from './render/TerrainRenderer';
 import { EventBus } from './core/EventBus';
 import { GRID_SIZE } from './config';
 import type { GameEvents } from './core/events';
@@ -47,7 +44,7 @@ export class Game implements RunDispatcher {
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
   private readonly bars: BarRenderer;
-  private readonly terrain: TerrainController;
+  private readonly terrain: TerrainRenderer;
   private readonly uiMount: HTMLElement;
   private readonly audio: AudioPlayer;
   /**
@@ -73,16 +70,13 @@ export class Game implements RunDispatcher {
     // Renderer drives the per-frame tick of whatever scene is active.
     this.renderer = new Renderer(canvas, (dt) => this.activeScene?.tick(dt));
 
-    // C1c decision-point demo: TerrainController owns three terrain
-    // variants and swaps the active one on 1 / 2 / 3 hotkeys. Starts on
-    // variant A (flat + grid bake). Replaces the old TerrainRenderer + the
-    // C1a WaterRenderer stand-in (water is now rendered by the active
-    // variant directly).
-    this.terrain = new TerrainController(this.renderer.scene, [
-      new FlatGridTerrain(GRID_SIZE),
-      createLowPolyTerrain(GRID_SIZE),
-      createSteppedTerrain(GRID_SIZE),
-    ]);
+    // C1c terrain: faceted low-poly prism-per-tile. Renders floor + water
+    // tiles directly (no separate WaterRenderer); BattleScene calls
+    // setTiles after applyTerrain has populated world.tileGrid. The
+    // decision-process predecessors (3-variant demo, controller, hotkey
+    // swap) landed in the C1c demo commit and were removed at lock-in.
+    this.terrain = new TerrainRenderer(GRID_SIZE);
+    this.renderer.scene.add(this.terrain.mesh);
 
     this.sprites = new SpriteRenderer(this.fontAtlas);
     // Both meshes live in the same scene; layer membership routes them to

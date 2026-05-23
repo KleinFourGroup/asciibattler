@@ -14,7 +14,7 @@ import { RNG } from '../core/RNG';
 import { World } from '../sim/World';
 import { applyTerrain, spawnTeam } from '../sim/battleSetup';
 import { BattleRenderer } from '../render/BattleRenderer';
-import type { TerrainController } from '../render/terrain/TerrainController';
+import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { HUD } from '../ui/HUD';
 import { GRID_SIZE, TICK_RATE } from '../config';
 import type { Scene, SceneContext } from './Scene';
@@ -24,9 +24,9 @@ export class BattleScene implements Scene {
   private world: World | null = null;
   private battleRenderer: BattleRenderer | null = null;
   private hud: HUD | null = null;
-  /** Held only so `dispose` can clear the active variant's per-tile state —
-   *  the controller itself is page-lifetime and owned by Game. */
-  private terrain: TerrainController | null = null;
+  /** Held only so `dispose` can clear the terrain's per-tile state — the
+   *  renderer itself is page-lifetime and owned by Game. */
+  private terrain: TerrainRenderer | null = null;
   private readonly subscriptions: Array<() => void> = [];
 
   mount(ctx: SceneContext): void {
@@ -37,7 +37,7 @@ export class BattleScene implements Scene {
 
     this.world = new World(ctx.bus, new RNG(encounter.worldSeed), GRID_SIZE);
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
-    this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.bars, ctx.bus);
+    this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.bars, ctx.terrain, ctx.bus);
     this.hud = new HUD(ctx.uiMount, ctx.bus);
 
     // B6 audio: per-battle subscriptions that need the World to look up
@@ -67,9 +67,10 @@ export class BattleScene implements Scene {
     this.hud.show(this.world, ctx.run.currentFloor);
     this.battleRenderer.attach(this.world);
     applyTerrain(this.world, encounter);
-    // After terrain is in place, the active terrain variant reflects the
-    // tile grid. Walls render via SpriteRenderer (they're neutral-team
-    // Units) regardless of variant.
+    // After terrain is in place, the terrain renderer reflects the tile
+    // grid. Walls render via SpriteRenderer (they're neutral-team Units),
+    // and their per-tile Y is picked up via `terrain.heightAt` inside
+    // BattleRenderer.
     ctx.terrain.setTiles(this.world.tileGrid, this.world.gridSize);
     this.terrain = ctx.terrain;
     spawnTeam(this.world, 'player', encounter.playerTeam);
@@ -87,8 +88,9 @@ export class BattleScene implements Scene {
     this.battleRenderer?.detach();
     this.battleRenderer?.dispose();
     this.hud?.dispose();
-    // Drop the active variant's tile visuals so the next non-battle scene
-    // (map / recruit / gameover) isn't painting stale terrain under nothing.
+    // Drop the terrain's per-battle tile visuals so the next non-battle
+    // scene (map / recruit / gameover) isn't painting stale terrain under
+    // nothing.
     this.terrain?.clear();
     this.battleRenderer = null;
     this.hud = null;

@@ -406,13 +406,19 @@ headings above). Worth sub-phasing into three:
 
   Two parts that can land together or separately:
 
-  - **C1d.A — Hoist to JSON.** Move wall + water coords out to
-    `config/layouts.json` matching the A4 pattern (zod schema in
-    `src/config/layouts.ts`, validation at module load,
-    malformed-JSON crashes at boot). [`src/sim/layouts.ts`](src/sim/layouts.ts)
-    becomes a thin wrapper exporting `LAYOUTS` / `LAYOUT_IDS` from
-    the validated config. Independent of C1c; could be pulled
-    forward if useful.
+  - **C1d.A — Hoist to JSON ✓ LANDED.** Layouts now live in
+    [`config/layouts.json`](config/layouts.json) (a flat array preserving
+    `LAYOUT_IDS` order) with the zod schema at
+    [`src/config/layouts.ts`](src/config/layouts.ts) matching the A4
+    pattern — validate at module load, malformed JSON throws a zod
+    trace at boot. `LayoutDef` gained required `name` + `description`
+    fields ready for C1d.B's editor UI; existing `walls` + optional
+    `water` shape is unchanged. [`src/sim/layouts.ts`](src/sim/layouts.ts)
+    shrunk to a thin re-export so Run / terrainGen / the existing
+    layouts test suite keep working without churn. The schema rejects
+    duplicate ids at load time; the test suite still asserts grid
+    bounds, spawn-row reservation, no duplicate coords, and
+    connectivity between spawn rows per layout.
   - **C1d.B — Editor.** A small dev tool for painting new layouts
     on a 12×12 grid. Click toggles wall, shift-click toggles water,
     reserved spawn rows shown as a tinted overlay. Save produces a

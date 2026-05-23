@@ -1,0 +1,24 @@
+[
+  {
+    "id": "corridor",
+    "name": "Corridor",
+    "description": "Two horizontal wall bands with a central 4-cell gap. Forces both armies through a chokepoint; favors ranged from the back rank and rewards melee that commits to the gap first.",
+    "walls": [
+      { "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 },
+      { "x": 8, "y": 4 }, { "x": 9, "y": 4 }, { "x": 10, "y": 4 }, { "x": 11, "y": 4 },
+      { "x": 0, "y": 7 }, { "x": 1, "y": 7 }, { "x": 2, "y": 7 }, { "x": 3, "y": 7 },
+      { "x": 8, "y": 7 }, { "x": 9, "y": 7 }, { "x": 10, "y": 7 }, { "x": 11, "y": 7 }
+    ]
+  },
+  {
+    "id": "diamond",
+    "name": "Diamond",
+    "description": "Central 4x4 block with the corners knocked off. Forces armies to flank one side; ranged LOS across the middle is broken, melee must commit to a flank.",
+    "walls": [
+      { "x": 5, "y": 4 }, { "x": 6, "y": 4 },
+      { "x": 4, "y": 5 }, { "x": 5, "y": 5 }, { "x": 6, "y": 5 }, { "x": 7, "y": 5 },
+      { "x": 4, "y": 6 }, { "x": 5, "y": 6 }, { "x": 6, "y": 6 }, { "x": 7, "y": 6 },
+      { "x": 5, "y": 7 }, { "x": 6, "y": 7 }
+    ]
+  }
+]

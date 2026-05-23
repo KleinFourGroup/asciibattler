@@ -57,9 +57,11 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **C1c absorbed B2 + B4:** the low-poly direction, the grid-line bake, and the vertical-stack tightening all land here. Both originals are now retired in ROADMAP.
 
+**C1d.A landed (JSON hoist).** The two hand-authored layouts now live in `config/layouts.json` with a zod schema at `src/config/layouts.ts` (A4 pattern — validate at module load, malformed JSON crashes at boot). `LayoutDef` gained `name` and `description` fields ready for the C1d.B editor UI; the existing `walls` / optional `water` shape is unchanged. `src/sim/layouts.ts` is now a thin re-export so Run / terrainGen / the existing test suite keep working without churn. Schema is a flat array (preserves order, which drives `LAYOUT_IDS` and therefore `rng.pick` determinism — append-only).
+
 Next up per ROADMAP:
 
-1. **C1d — Layout authoring: JSON config + editor.** Hoist the hand-coded layouts in `src/sim/layouts.ts` to `config/layouts.json` (A4 pattern: zod schema, validation at boot), and build a small editor for painting new ones onto a 12×12 grid with save-as-JSON. Part A (JSON hoist) is independent; Part B (editor) is the bigger design surface — see ROADMAP for the open decision points (where the editor lives, export-only vs direct-write, metadata fields, 2D vs 3D preview).
+1. **C1d.B — Layout editor.** Standalone Vite page at `tools/layout-editor/` for painting new layouts onto a 12x12 grid and exporting JSON snippets. Decisions locked: standalone HTML in `tools/` (not in-app), export-only output (no Vite middleware), 2D CSS grid preview (no 3D). Test-play deferred as a follow-up.
 2. **C2 — New archetypes (mage, rogue, healer).** Fully independent of C1; A4 makes adding their stat bands a `config/archetypes.json` edit. Mage charge-up is the natural use case for B3's currently-dormant action progress bar. Also the first consumer of the C1b wall destructibility plumbing (AoE damage lands on neutral cells regardless of Targeting's enemy-only filter).
 
 **Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning. (5-seed sample post-A4 hints at greedy edge, but N is too small to be sure — re-run at 100+ when something invalidates the cache.)
@@ -176,6 +178,7 @@ src/
     recruitment.ts     # validated wrapper around config/recruitment.json (A4)
     nodemap.ts         # validated wrapper around config/nodemap.json (A4)
     terrain.ts         # validated wrapper around config/terrain.json (C1a)
+    layouts.ts         # validated wrapper around config/layouts.json (C1d.A)
     schemas.ts         # shared zod helpers (RangeSchema) (A4)
   core/
     RNG.ts             # mulberry32, fork(), pick(), int()
@@ -206,8 +209,9 @@ src/
     environment.ts     # spawnWall + WALL_GLYPH — neutral-team env factory (C1a)
     terrainGen.ts      # per-encounter procedural tile + wall generator (C1a)
                        # + layout-library dispatch (C1b)
-    layouts.ts         # C1b: hand-authored layouts (corridor, diamond) +
-                       # LAYOUT_IDS picklist for Run's 50/50 roll
+    layouts.ts         # C1b + C1d.A: thin re-export of validated config
+                       # (see src/config/layouts.ts) — LAYOUT_IDS picklist
+                       # for Run's 50/50 roll lives here for sim callers
     battleSetup.ts     # shared applyTerrain/spawnTeam/spawnEncounter (A3 + C1a)
     actions/
       MoveAction.ts          # logical position update + unit:moved event
@@ -280,6 +284,8 @@ config/                              # A4: balance JSON source-of-truth
   recruitment.json                   # starting team + offer size
   nodemap.json                       # floor count + width bands + degree cap
   terrain.json                       # C1a: wall + water density + spawn rows
+  layouts.json                       # C1d.A: hand-authored layout array
+                                     # (id, name, description, walls, water?)
 ```
 
 Co-located `*.test.ts` next to source for unit tests. Integration tests under `tests/`.

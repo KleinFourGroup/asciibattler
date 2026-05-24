@@ -40,7 +40,7 @@ export interface BarUpdate {
   alpha?: number;
 }
 
-const DEFAULT_CAPACITY = 256;
+const DEFAULT_CAPACITY = 2048;
 
 const QUAD_POSITIONS = new Float32Array([
   -0.5, -0.5, 0,

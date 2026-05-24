@@ -34,7 +34,7 @@ export interface SpriteHandle {
   readonly id: number;
 }
 
-const DEFAULT_CAPACITY = 256;
+const DEFAULT_CAPACITY = 1024;
 
 /**
  * Quad in local space: 1×1 centered at origin, in the XY plane.

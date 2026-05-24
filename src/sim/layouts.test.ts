@@ -1,21 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { LAYOUT_IDS, getLayout, type LayoutDef } from './layouts';
-import { generateTerrain } from './terrainGen';
+import { generateTerrain, reservedSpawnRows } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { TerrainConfig } from '../config/terrain';
-
-const G = 12;
 
 const BASE: TerrainConfig = {
   wallDensity: 0.06,
   shallowWaterDensity: 0.04,
-  spawnRowsClear: [1, 2, 9, 10],
+  proceduralMinSize: 10,
+  proceduralMaxSize: 20,
   ensureConnectivity: true,
 };
 
 describe('layouts library', () => {
   it('exposes at least two layouts', () => {
-    // The 50/50 mix in Run only pulls its weight if the library is bigger
+    // The 25/75 mix in Run only pulls its weight if the library is bigger
     // than one entry; this is a guard against accidentally shrinking it.
     expect(LAYOUT_IDS.length).toBeGreaterThanOrEqual(2);
   });
@@ -33,18 +32,26 @@ describe('layouts library', () => {
         expect(layout.id).toBe(id);
       });
 
+      it('declares D3 grid dimensions in [8, 32]', () => {
+        expect(layout.gridW).toBeGreaterThanOrEqual(8);
+        expect(layout.gridW).toBeLessThanOrEqual(32);
+        expect(layout.gridH).toBeGreaterThanOrEqual(8);
+        expect(layout.gridH).toBeLessThanOrEqual(32);
+      });
+
       it('places no walls on reserved spawn rows', () => {
+        const reserved = new Set(reservedSpawnRows(layout.gridH));
         for (const w of layout.walls) {
-          expect(BASE.spawnRowsClear).not.toContain(w.y);
+          expect(reserved.has(w.y)).toBe(false);
         }
       });
 
-      it('places every wall inside the grid', () => {
+      it('places every wall inside the layout grid', () => {
         for (const w of layout.walls) {
           expect(w.x).toBeGreaterThanOrEqual(0);
           expect(w.y).toBeGreaterThanOrEqual(0);
-          expect(w.x).toBeLessThan(G);
-          expect(w.y).toBeLessThan(G);
+          expect(w.x).toBeLessThan(layout.gridW);
+          expect(w.y).toBeLessThan(layout.gridH);
         }
       });
 
@@ -60,11 +67,13 @@ describe('layouts library', () => {
       it('leaves at least one path between the spawn rows', () => {
         // Mirror of terrainGen's connectivity check: hand-authored layouts
         // that sever the board are bugs, not seeds to be rescued.
-        expect(hasPathThrough(layout.walls, G, BASE.spawnRowsClear)).toBe(true);
+        expect(
+          hasPathThrough(layout.walls, layout.gridW, layout.gridH, reservedSpawnRows(layout.gridH)),
+        ).toBe(true);
       });
 
-      it('resolves through generateTerrain to the same wall set', () => {
-        const { walls } = generateTerrain(new RNG(1), G, BASE, id);
+      it('resolves through generateTerrain at the layout\'s own dimensions', () => {
+        const { walls } = generateTerrain(new RNG(1), layout.gridW, layout.gridH, BASE, id);
         expect(walls.length).toBe(layout.walls.length);
         for (const w of layout.walls) {
           expect(walls).toContainEqual(w);
@@ -73,19 +82,27 @@ describe('layouts library', () => {
     });
   }
 
-  it('generateTerrain throws when grid size mismatches the layout assumption', () => {
-    expect(() => generateTerrain(new RNG(1), 10, BASE, 'corridor')).toThrow(/requires gridSize/);
+  it('generateTerrain throws when dimensions mismatch the layout assumption', () => {
+    const corridor = getLayout('corridor')!;
+    expect(() =>
+      generateTerrain(new RNG(1), corridor.gridW + 1, corridor.gridH, BASE, 'corridor'),
+    ).toThrow(/requires gridW/);
+    expect(() =>
+      generateTerrain(new RNG(1), corridor.gridW, corridor.gridH + 1, BASE, 'corridor'),
+    ).toThrow(/requires gridW/);
   });
 });
 
 function hasPathThrough(
   walls: readonly { x: number; y: number }[],
-  gridSize: number,
-  spawnRowsClear: readonly number[],
+  gridW: number,
+  gridH: number,
+  reservedRows: readonly number[],
 ): boolean {
-  const center = Math.floor(gridSize / 2);
-  const start = { x: center, y: Math.min(...spawnRowsClear) };
-  const goal = { x: center, y: Math.max(...spawnRowsClear) };
+  if (reservedRows.length < 2) return true;
+  const center = Math.floor(gridW / 2);
+  const start = { x: center, y: Math.min(...reservedRows) };
+  const goal = { x: center, y: Math.max(...reservedRows) };
   const blocked = new Set<string>();
   for (const w of walls) blocked.add(`${w.x},${w.y}`);
   if (blocked.has(`${goal.x},${goal.y}`)) return false;
@@ -100,7 +117,7 @@ function hasPathThrough(
         if (dx === 0 && dy === 0) continue;
         const nx = c.x + dx;
         const ny = c.y + dy;
-        if (nx < 0 || ny < 0 || nx >= gridSize || ny >= gridSize) continue;
+        if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
         const k = `${nx},${ny}`;
         if (visited.has(k) || blocked.has(k)) continue;
         visited.add(k);

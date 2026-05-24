@@ -11,6 +11,11 @@
  * kind. That keeps destructibility, healing shrines, and any other
  * "static thing with optional behaviour" inside the existing Unit
  * pipeline.
+ *
+ * **D3:** width and height are independent. Constructors that take a
+ * single dimension are gone; callers now pass `(width, height)`
+ * explicitly so the rectangular case can't be silently squashed back to
+ * square by an accidental single-arg call.
  */
 
 import { GRID_SIZE } from '../config';

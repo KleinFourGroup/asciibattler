@@ -4,7 +4,6 @@ import { SpriteRenderer } from './render/SpriteRenderer';
 import { BarRenderer } from './render/BarRenderer';
 import { TerrainRenderer } from './render/TerrainRenderer';
 import { EventBus } from './core/EventBus';
-import { GRID_SIZE } from './config';
 import type { GameEvents } from './core/events';
 import { Run } from './run/Run';
 import type { RunCommand, RunDispatcher } from './run/Command';
@@ -72,10 +71,11 @@ export class Game implements RunDispatcher {
 
     // C1c terrain: faceted low-poly prism-per-tile. Renders floor + water
     // tiles directly (no separate WaterRenderer); BattleScene calls
-    // setTiles after applyTerrain has populated world.tileGrid. The
-    // decision-process predecessors (3-variant demo, controller, hotkey
-    // swap) landed in the C1c demo commit and were removed at lock-in.
-    this.terrain = new TerrainRenderer(GRID_SIZE);
+    // setTiles after applyTerrain has populated world.tileGrid. D3
+    // sizes the vertex buffers at LAYOUT_MAX_SIDE² so any per-encounter
+    // grid up to that cap renders without reallocation; setDrawRange
+    // exposes only the active cells.
+    this.terrain = new TerrainRenderer();
     this.renderer.scene.add(this.terrain.mesh);
 
     this.sprites = new SpriteRenderer(this.fontAtlas);
@@ -176,6 +176,7 @@ export class Game implements RunDispatcher {
     return {
       bus: this.bus,
       scene3D: this.renderer.scene,
+      renderer: this.renderer,
       sprites: this.sprites,
       bars: this.bars,
       terrain: this.terrain,

@@ -77,8 +77,13 @@ export class MovementBehavior implements Behavior {
       return null;
     }
 
-    const path = findPath(unit.position, target.position, walls, world.gridSize, (c) =>
-      costAt(c, world, otherUnitCells),
+    const path = findPath(
+      unit.position,
+      target.position,
+      walls,
+      world.gridW,
+      world.gridH,
+      (c) => costAt(c, world, otherUnitCells),
     );
     if (path.length < 2) return null;
 
@@ -100,8 +105,9 @@ export class MovementBehavior implements Behavior {
 /**
  * Penalty for routing through a cell currently occupied by another unit
  * (ally or non-target enemy). Picked to be a lot larger than any
- * realistic detour on a 12×12 grid — so A* prefers any wall-free route
- * up to ~100 cells long over going through a single occupied cell — but
+ * realistic detour on a D3-allowed grid (up to 32×32) — so A* prefers
+ * any wall-free route up to ~100 cells long over going through a single
+ * occupied cell — but
  * still finite, so a fully clogged corridor doesn't lock the path
  * solver. Chebyshev heuristic stays admissible (all costs are >= 1).
  */

@@ -65,7 +65,11 @@ body {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(420px, 480px) 1fr;
+  /* Grid pane gets all the remaining horizontal space (roughly half the
+     viewport on a normal monitor); side pane is fixed at a comfortable
+     reading width. The grid sizing in editor.ts scales cells to fill
+     this column. */
+  grid-template-columns: minmax(0, 1fr) 420px;
   gap: 24px;
   align-items: start;
 }
@@ -74,14 +78,39 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+}
+
+.size-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--dark-terminal-amber);
+}
+
+.size-row label.inline {
+  flex: 0 0 auto;
+}
+
+.size-row select {
+  background: var(--terminal-black);
+  border: 1px solid var(--panel-border);
+  color: var(--terminal-amber);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
+.size-row select:focus {
+  outline: 1px solid var(--terminal-green);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(12, 1fr);
-  width: 480px;
-  height: 480px;
+  /* grid-template-columns / -rows + dimensions are assigned by editor.ts
+     each time the size changes, so a W×H rebuild only swaps two style
+     properties and replaces the cell children. */
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   user-select: none;

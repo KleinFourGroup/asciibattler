@@ -12,12 +12,13 @@ import { GRID_SIZE } from '../config';
 const CAMERA_PITCH_RAD = Math.PI / 4;
 
 /**
- * Half-extents of the volume the camera must always keep fully visible.
- * X/Z cover the grid plus a small padding so the terrain edge has breathing
- * room; Y covers ground (y=0) up through the sprite layer (y=~1) with a
- * little headroom.
+ * X/Z padding around the arena AABB and Y headroom for the sprite layer.
+ * X/Z scales with `gridW` / `gridH` (set per battle via `fitToBoard`);
+ * the constant terms here give the terrain edge a bit of breathing room
+ * and cover ground (y=0) up through the sprite layer (y=~1).
  */
-const FIT_HALF_EXTENTS = { x: GRID_SIZE / 2 + 0.5, y: 1.0, z: GRID_SIZE / 2 + 0.5 };
+const XZ_PADDING = 0.5;
+const Y_HALF_EXTENT = 1.0;
 
 /** Distance multiplier on top of the analytic fit so nothing hugs the frame edge. */
 const FIT_MARGIN = 1.05;
@@ -27,9 +28,9 @@ const FIT_MARGIN = 1.05;
  * loop. The scene, camera, and clear color live here so gameplay code never
  * reaches into three.js directly.
  *
- * Camera is locked to a fixed pitch (CAMERA_PITCH_RAD) and fits the arena
- * AABB to the viewport on every resize — distance adapts to aspect so the
- * grid never clips off frame.
+ * Camera is locked to a fixed pitch (CAMERA_PITCH_RAD). The visible-arena
+ * size is set per-encounter via `fitToBoard(gridW, gridH)` (D3); pre-D3
+ * the size was a fixed `GRID_SIZE × GRID_SIZE` constant.
  */
 export class Renderer {
   readonly scene: THREE.Scene;
@@ -51,6 +52,13 @@ export class Renderer {
 
   private rafId: number | null = null;
   private lastFrameMs = 0;
+
+  /** Current arena dimensions used by `fitCamera`. Defaults to the
+   *  square `GRID_SIZE × GRID_SIZE` so the boot map-screen render before
+   *  any battle has a sensible frame. BattleScene overrides via
+   *  `fitToBoard` on mount. */
+  private boardW: number = GRID_SIZE;
+  private boardH: number = GRID_SIZE;
 
   constructor(canvas: HTMLCanvasElement, onFrame: (dtSeconds: number) => void) {
     this.onFrame = onFrame;
@@ -133,6 +141,20 @@ export class Renderer {
   }
 
   /**
+   * D3: BattleScene calls this on mount with the current encounter's
+   * dimensions so the camera frames the arena. Idempotent; safe to call
+   * mid-battle if size ever changes. Map/Recruit/GameOver scenes don't
+   * call this and inherit whatever the last battle left (or the
+   * `GRID_SIZE × GRID_SIZE` default at boot) — they don't render
+   * arena content so the camera state is irrelevant for them.
+   */
+  fitToBoard(gridW: number, gridH: number): void {
+    this.boardW = gridW;
+    this.boardH = gridH;
+    this.fitCamera();
+  }
+
+  /**
    * Two-pass render for B1.1 selective bloom:
    *
    * 1. Bloom layer: camera.layers → BLOOM_LAYER and scene.background → null
@@ -179,11 +201,14 @@ export class Renderer {
 
   /**
    * Position the camera so the arena AABB fits the viewport with margin at
-   * the current pitch and aspect. For each of the 8 corners of the box,
-   * compute the minimum camera distance D such that the corner sits inside
-   * both the vertical and horizontal FOV cones; take the max. Pitch is
-   * fixed, so position is `(0, D·sinθ, D·cosθ)` and we always look at the
-   * world origin.
+   * the current pitch and aspect. The arena half-extents come from the
+   * per-battle `boardW × boardH` set by `fitToBoard`; X/Z scale with the
+   * board, Y stays a fixed sprite-layer headroom.
+   *
+   * For each of the 8 corners of the box, compute the minimum camera
+   * distance D such that the corner sits inside both the vertical and
+   * horizontal FOV cones; take the max. Pitch is fixed, so position is
+   * `(0, D·sinθ, D·cosθ)` and we always look at the world origin.
    *
    * Derivation: camera basis vectors at pitch θ are
    *   forward = (0, -sinθ, -cosθ),  up = (0, cosθ, -sinθ),  right = (1, 0, 0)
@@ -201,7 +226,9 @@ export class Renderer {
     const cosP = Math.cos(CAMERA_PITCH_RAD);
     const tanV = Math.tan(fovV / 2);
     const tanH = Math.tan(fovH / 2);
-    const { x: hx, y: hy, z: hz } = FIT_HALF_EXTENTS;
+    const hx = this.boardW / 2 + XZ_PADDING;
+    const hy = Y_HALF_EXTENT;
+    const hz = this.boardH / 2 + XZ_PADDING;
 
     let maxD = 0;
     for (const sx of [-1, 1] as const) {

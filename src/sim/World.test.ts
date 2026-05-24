@@ -15,14 +15,16 @@ describe('World (Step 3.1 skeleton)', () => {
     expect(w.units).toEqual([]);
   });
 
-  it('uses the default grid size when none is provided', () => {
+  it('uses the default square grid when no dimensions are provided', () => {
     const w = new World(new EventBus<GameEvents>(), new RNG(1));
-    expect(w.gridSize).toBe(12);
+    expect(w.gridW).toBe(12);
+    expect(w.gridH).toBe(12);
   });
 
-  it('accepts an explicit grid size', () => {
-    const w = new World(new EventBus<GameEvents>(), new RNG(1), 8);
-    expect(w.gridSize).toBe(8);
+  it('accepts explicit rectangular dimensions (D3)', () => {
+    const w = new World(new EventBus<GameEvents>(), new RNG(1), 15, 10);
+    expect(w.gridW).toBe(15);
+    expect(w.gridH).toBe(10);
   });
 
   it('tick() increments the counter and emits `tick` with the new value', () => {

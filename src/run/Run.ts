@@ -38,7 +38,8 @@ import { rollOffer } from './Recruitment';
 import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
 import { DIFFICULTY } from '../config/difficulty';
-import { LAYOUT_IDS } from '../sim/layouts';
+import { TERRAIN } from '../config/terrain';
+import { LAYOUT_IDS, getLayout } from '../sim/layouts';
 
 export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat' | 'complete';
 
@@ -57,6 +58,16 @@ export interface BattleEncounter {
    * procedural path and loads a named layout from the library.
    */
   readonly layoutId: string | null;
+  /**
+   * D3 — battlefield dimensions for this encounter. Procedural encounters
+   * roll a square side length in `[TERRAIN.proceduralMinSize,
+   * TERRAIN.proceduralMaxSize]` from `battleRng` and set
+   * `gridW === gridH`; hand-authored layouts pull from their own
+   * `LayoutDef.gridW` / `LayoutDef.gridH`. Threaded into World +
+   * TerrainRenderer + camera fit at battle-setup time.
+   */
+  readonly gridW: number;
+  readonly gridH: number;
   readonly playerTeam: readonly UnitTemplate[];
   readonly enemyTeam: readonly UnitTemplate[];
 }
@@ -171,19 +182,29 @@ export class Run {
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
     const terrainSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
     const layoutId = rollLayoutId(battleRng);
+    // D3: procedural draws ALWAYS run so the RNG stream advances
+    // identically regardless of branch (same invariant as the layoutId
+    // roll above — keeps enemy-team byte continuity across seeds when
+    // the procedural-size band is later retuned).
+    const proceduralSide = rollProceduralSide(battleRng);
+    const { gridW, gridH } = layoutId === null
+      ? { gridW: proceduralSide, gridH: proceduralSide }
+      : layoutDimensions(layoutId);
     const enemyTeam = rollEnemyTeam(battleRng, this.team.length, this.floorOf(nodeId));
 
     // Browser-only diagnostic: confirm the layout picker hits the full
     // library across a session. Gated on `typeof window` so the fuzz
     // harness (tsx, no Vite) and vitest (node environment) don't spam.
     if (typeof window !== 'undefined') {
-      console.log('[layout]', layoutId ?? 'procedural');
+      console.log('[layout]', layoutId ?? 'procedural', `${gridW}x${gridH}`);
     }
 
     this.currentEncounter = {
       worldSeed,
       terrainSeed,
       layoutId,
+      gridW,
+      gridH,
       playerTeam: this.team.slice(),
       enemyTeam,
     };
@@ -342,4 +363,24 @@ function scaleMaxHp(template: UnitTemplate, multiplier: number): UnitTemplate {
 function rollLayoutId(rng: RNG): string | null {
   if (rng.next() < 0.25) return null;
   return rng.pick(LAYOUT_IDS);
+}
+
+/**
+ * D3: pick the procedural arena's side length, uniformly in
+ * `[TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize]`. Always
+ * consumes one RNG step — including on layout encounters that ignore
+ * the result — so the stream advances identically regardless of
+ * branch. That mirrors the invariant `rollLayoutId` already maintains
+ * for the layoutId roll.
+ */
+function rollProceduralSide(rng: RNG): number {
+  return rng.int(TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize);
+}
+
+function layoutDimensions(layoutId: string): { gridW: number; gridH: number } {
+  const layout = getLayout(layoutId);
+  if (!layout) {
+    throw new Error(`Run.handleEnterNode: unknown layoutId="${layoutId}"`);
+  }
+  return { gridW: layout.gridW, gridH: layout.gridH };
 }

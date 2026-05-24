@@ -3,6 +3,8 @@
     "id": "corridor",
     "name": "Corridor",
     "description": "Two horizontal wall bands with a central 4-cell gap. Forces both armies through a chokepoint; favors ranged from the back rank and rewards melee that commits to the gap first.",
+    "gridW": 12,
+    "gridH": 12,
     "walls": [
       { "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 },
       { "x": 8, "y": 4 }, { "x": 9, "y": 4 }, { "x": 10, "y": 4 }, { "x": 11, "y": 4 },
@@ -14,6 +16,8 @@
     "id": "diamond",
     "name": "Diamond",
     "description": "Central 4x4 block with the corners knocked off. Forces armies to flank one side; ranged LOS across the middle is broken, melee must commit to a flank.",
+    "gridW": 12,
+    "gridH": 12,
     "walls": [
       { "x": 5, "y": 4 }, { "x": 6, "y": 4 },
       { "x": 4, "y": 5 }, { "x": 5, "y": 5 }, { "x": 6, "y": 5 }, { "x": 7, "y": 5 },
@@ -25,6 +29,8 @@
     "id": "labyrinth",
     "name": "Labyrinth",
     "description": "Both armies must walk through a small labyrinth towards each other, forcing them into a very small corridor / choke-point fight.",
+    "gridW": 12,
+    "gridH": 12,
     "walls": [
       { "x": 1, "y": 3 },
       { "x": 2, "y": 3 },
@@ -68,6 +74,8 @@
     "id": "river",
     "name": "River",
     "description": "A small river runs through the middle of the map, forcing units to wade through water.",
+    "gridW": 12,
+    "gridH": 12,
     "walls": [
     ],
     "water": [

@@ -1,14 +1,16 @@
 /**
  * C1d.A: hand-authored encounter layouts as validated config.
+ * D3: each layout now declares its own `gridW` × `gridH` (8-32).
  *
  * Source of truth at `config/layouts.json` — a flat array preserving
  * order (the order seeds `rng.pick` in `Run.handleEnterNode`, so
  * reordering changes determinism for past seeds — append only).
  *
- * Each layout pins a tactical situation onto the 12x12 arena: a wall
- * topology, an optional water topology, plus a `name` + `description`
- * for the editor UI and future picker hooks. The grid-size assumption
- * is enforced by `generateTerrain` at resolve time, not the schema.
+ * Each layout pins a tactical situation onto a rectangular arena: its
+ * own grid size, a wall topology, an optional water topology, plus a
+ * `name` + `description` for the editor UI and future picker hooks.
+ * `generateTerrain` enforces in-bounds on every wall/water cell against
+ * the layout's own dimensions.
  *
  * Validation runs at module load. Malformed JSON throws a zod trace at
  * boot — the loud-failure mode A4 settled on for balance configs.
@@ -16,7 +18,8 @@
  * Adding a layout:
  *   1. Append an entry to `config/layouts.json` (use the editor at
  *      `tools/layout-editor/` to paint and export).
- *   2. The `id` must be unique. `name` and `description` are required.
+ *   2. The `id` must be unique. `name`, `description`, `gridW`, `gridH`
+ *      are required.
  *   3. Validate by running `npm test` — the layouts test suite checks
  *      grid bounds, spawn-row reservation, duplicate coords, and
  *      connectivity between spawn rows.
@@ -30,10 +33,18 @@ const CoordSchema = z.object({
   y: z.number().int().nonnegative(),
 });
 
+/** Hand-authored layouts pick their own grid size in this range. */
+export const LAYOUT_MIN_SIDE = 8;
+export const LAYOUT_MAX_SIDE = 32;
+
+const SideSchema = z.number().int().min(LAYOUT_MIN_SIDE).max(LAYOUT_MAX_SIDE);
+
 const LayoutSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string().min(1),
+  gridW: SideSchema,
+  gridH: SideSchema,
   walls: z.array(CoordSchema),
   water: z.array(CoordSchema).optional(),
 });

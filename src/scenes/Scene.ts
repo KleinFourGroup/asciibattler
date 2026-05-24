@@ -20,6 +20,7 @@
 import type * as THREE from 'three';
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
+import type { Renderer } from '../render/Renderer';
 import type { SpriteRenderer } from '../render/SpriteRenderer';
 import type { BarRenderer } from '../render/BarRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
@@ -31,6 +32,9 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 export interface SceneContext {
   readonly bus: EventBus<GameEvents>;
   readonly scene3D: THREE.Scene;
+  /** D3: BattleScene calls `renderer.fitToBoard(gridW, gridH)` per encounter so
+   *  the camera frames variable-size arenas. Non-battle scenes ignore it. */
+  readonly renderer: Renderer;
   readonly sprites: SpriteRenderer;
   readonly bars: BarRenderer;
   readonly terrain: TerrainRenderer;

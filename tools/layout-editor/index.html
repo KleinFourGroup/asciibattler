@@ -9,10 +9,21 @@
     <main id="editor-root">
       <header class="bar">
         <h1>Layout Editor</h1>
-        <span class="subtitle">12x12 arena · paint walls and water · export to <code>config/layouts.json</code></span>
+        <span class="subtitle">Rectangular arena (8&ndash;32) · paint walls and water · export to <code>config/layouts.json</code></span>
       </header>
       <section class="workspace">
         <div class="grid-pane">
+          <div class="size-row">
+            <label class="inline">
+              W
+              <select id="grid-w"></select>
+            </label>
+            <label class="inline">
+              H
+              <select id="grid-h"></select>
+            </label>
+            <span class="hint">Resizing preserves cells that still fit; cells outside the new bounds are dropped.</span>
+          </div>
           <div id="grid" class="grid"></div>
           <ul class="legend">
             <li><span class="swatch wall"></span> Click — wall</li>

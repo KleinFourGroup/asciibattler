@@ -106,7 +106,19 @@ the question is "does right-drag clear *everything* on the active layer
 or just paint floor?" Recommend: clear the active layer's content for
 each cell (matches the current click-to-erase semantics).
 
-### D3 — Variable map sizes
+### D3 — Variable map sizes ✅ LANDED
+
+User picked rectangular for hand-authored (`gridW`/`gridH`, 8-32),
+square for procedural (10-20). Sim layer rewritten to take both
+dimensions independently; `World.gridSize` gone; WorldSnapshot v3.
+`reservedSpawnRows(gridH)` replaces the retired `terrain.json
+spawnRowsClear` array. Renderer pre-allocates terrain buffers at the
+32×32 cap and uses `setDrawRange`; `Renderer.fitToBoard(w, h)` is the
+per-battle camera-fit hook. Editor: W/H dropdowns (8-32), in-place
+rebuild, clip warning. Headless tests cover 10/15/20 procedural +
+per-layout deadlock. See HANDOFF.md for the full diff. Next up: D4.
+
+Original plan (left for reference):
 
 Foundation change. Touches sim, render, config, and every layout. The
 later D-steps and the C-phase items all consume this.

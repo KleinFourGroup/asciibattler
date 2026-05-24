@@ -198,7 +198,7 @@ export class BattleRenderer {
    */
   private tileWorldPos(coord: GridCoord): THREE.Vector3 {
     if (!this.world) throw new Error('BattleRenderer.tileWorldPos: no attached world');
-    const pos = gridToWorld(coord, this.world.gridSize);
+    const pos = gridToWorld(coord, this.world.gridW, this.world.gridH);
     const kind = this.world.tileGrid.kindAt(coord);
     pos.y = this.terrain.heightAt(coord.x, coord.y, kind) + SPRITE_CENTER_OFFSET;
     return pos;
@@ -426,11 +426,16 @@ const SPRITE_CENTER_OFFSET = 0.5;
  * (0, 0) is the near-left cell from the camera's POV — matches the
  * "(0, 0) is bottom-left" convention in core/types.ts.
  *
+ * D3: X and Z half-extents come from `gridW` and `gridH` independently
+ * so rectangular arenas stay centered on the world origin (pre-D3 took
+ * a single `gridSize`).
+ *
  * Y is left at `SPRITE_CENTER_OFFSET` as a sensible default for callers
  * without per-tile-height context; BattleRenderer overrides Y per cell via
  * `tileWorldPos`.
  */
-export function gridToWorld(cell: GridCoord, gridSize: number): THREE.Vector3 {
-  const half = gridSize / 2;
-  return new THREE.Vector3(cell.x + 0.5 - half, SPRITE_CENTER_OFFSET, half - cell.y - 0.5);
+export function gridToWorld(cell: GridCoord, gridW: number, gridH: number): THREE.Vector3 {
+  const halfX = gridW / 2;
+  const halfZ = gridH / 2;
+  return new THREE.Vector3(cell.x + 0.5 - halfX, SPRITE_CENTER_OFFSET, halfZ - cell.y - 0.5);
 }

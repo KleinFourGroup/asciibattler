@@ -19,7 +19,6 @@
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import { World } from '../../src/sim/World';
-import { GRID_SIZE } from '../../src/config';
 import type { GameEvents } from '../../src/core/events';
 import type { Team } from '../../src/sim/Unit';
 import type { Archetype } from '../../src/sim/archetypes';
@@ -103,7 +102,7 @@ export function runOne(
 
   bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
-    currentWorld = new World(bus, new RNG(worldSeed), GRID_SIZE);
+    currentWorld = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
     unitTeams = new Map();
     currentBattle = {
       floor: run.currentFloor,

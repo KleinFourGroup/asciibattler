@@ -11,7 +11,8 @@ import { createAction } from './actions/registry';
 import { createBehavior } from './behaviors/registry';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 
-const WORLD_SCHEMA_VERSION = 2;
+/** D3 bumped from 2 → 3: replaced single `gridSize` with `gridW` + `gridH`. */
+const WORLD_SCHEMA_VERSION = 3;
 
 interface ActiveActionSnapshot {
   actionId: string;
@@ -35,7 +36,8 @@ export interface UnitSnapshot {
 
 export interface WorldSnapshot {
   schemaVersion: typeof WORLD_SCHEMA_VERSION;
-  gridSize: number;
+  gridW: number;
+  gridH: number;
   tickCount: number;
   ended: boolean;
   nextUnitId: number;
@@ -53,9 +55,17 @@ export interface WorldSnapshot {
  * is intentionally NOT part of the snapshot — callers provide one at
  * rehydrate time, so a replay or a headless harness can attach its own
  * recorder.
+ *
+ * D3: grid is rectangular. `gridW` and `gridH` are independent;
+ * pre-D3 callers passed a single `gridSize` and got a square — those
+ * call sites have been updated to pass both dimensions. Default
+ * constructor still produces a square `GRID_SIZE × GRID_SIZE` for the
+ * fuzz harness and the headful tests that don't care about the
+ * dimensions.
  */
 export class World {
-  readonly gridSize: number;
+  readonly gridW: number;
+  readonly gridH: number;
   readonly rng: RNG;
   readonly units: Unit[] = [];
   /**
@@ -80,13 +90,15 @@ export class World {
   constructor(
     bus: EventBus<GameEvents>,
     rng: RNG,
-    gridSize: number = GRID_SIZE,
+    gridW: number = GRID_SIZE,
+    gridH: number = GRID_SIZE,
     tileGrid?: TileGrid,
   ) {
     this.bus = bus;
     this.rng = rng;
-    this.gridSize = gridSize;
-    this.tileGrid = tileGrid ?? new TileGrid(gridSize, gridSize);
+    this.gridW = gridW;
+    this.gridH = gridH;
+    this.tileGrid = tileGrid ?? new TileGrid(gridW, gridH);
   }
 
   get currentTick(): number {
@@ -313,7 +325,8 @@ export class World {
   toJSON(): WorldSnapshot {
     return {
       schemaVersion: WORLD_SCHEMA_VERSION,
-      gridSize: this.gridSize,
+      gridW: this.gridW,
+      gridH: this.gridH,
       tickCount: this.tickCount,
       ended: this._ended,
       nextUnitId: this.nextUnitId,
@@ -337,7 +350,7 @@ export class World {
       );
     }
     const rng = RNG.fromJSON(snap.rng);
-    const world = new World(bus, rng, snap.gridSize, TileGrid.fromJSON(snap.tileGrid));
+    const world = new World(bus, rng, snap.gridW, snap.gridH, TileGrid.fromJSON(snap.tileGrid));
     world.tickCount = snap.tickCount;
     world._ended = snap.ended;
     world.nextUnitId = snap.nextUnitId;

@@ -25,6 +25,11 @@ const UNIT_COST: CostFn = () => 1;
  *   to a blocked target" should pick a valid neighbour cell as the goal — see
  *   the Step 3.5 movement behaviour notes in ROADMAP.md.
  *
+ * D3 takes `(gridW, gridH)` independently so rectangular arenas pathfind
+ * correctly — passing a single value where two are wanted would
+ * mis-clip one axis silently, which is exactly the bug the signature
+ * change is meant to prevent.
+ *
  * Returns the path as `[start, ..., goal]` (both ends inclusive), or `[]`
  * if no path exists or either endpoint is out of bounds / the goal is blocked.
  */
@@ -32,10 +37,11 @@ export function findPath(
   start: GridCoord,
   goal: GridCoord,
   blockers: readonly GridCoord[],
-  gridSize: number,
+  gridW: number,
+  gridH: number,
   costAt: CostFn = UNIT_COST,
 ): GridCoord[] {
-  if (!inBounds(start, gridSize) || !inBounds(goal, gridSize)) return [];
+  if (!inBounds(start, gridW, gridH) || !inBounds(goal, gridW, gridH)) return [];
 
   const startKey = key(start);
   const goalKey = key(goal);
@@ -67,7 +73,7 @@ export function findPath(
         if (dx === 0 && dy === 0) continue;
         const nx = current.x + dx;
         const ny = current.y + dy;
-        if (nx < 0 || ny < 0 || nx >= gridSize || ny >= gridSize) continue;
+        if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
         const nKey = `${nx},${ny}`;
         if (blocked.has(nKey)) continue;
 
@@ -86,8 +92,8 @@ export function findPath(
   return [];
 }
 
-function inBounds(c: GridCoord, gridSize: number): boolean {
-  return c.x >= 0 && c.y >= 0 && c.x < gridSize && c.y < gridSize;
+function inBounds(c: GridCoord, gridW: number, gridH: number): boolean {
+  return c.x >= 0 && c.y >= 0 && c.x < gridW && c.y < gridH;
 }
 
 function chebyshev(a: GridCoord, b: GridCoord): number {
@@ -104,8 +110,9 @@ function fromKey(k: string): GridCoord {
 }
 
 /**
- * Linear-scan pop. The 12×12 grid caps the open set at ~144 entries; a binary
- * heap would be overkill and harder to debug.
+ * Linear-scan pop. The largest D3-allowed grid (32×32) caps the open set
+ * at ~1024 entries; a binary heap would be overkill and harder to debug
+ * at this scale.
  */
 function popLowestF(open: Set<string>, fScore: Map<string, number>): string {
   let bestKey = '';

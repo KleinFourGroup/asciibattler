@@ -16,7 +16,7 @@ import { applyTerrain, spawnTeam } from '../sim/battleSetup';
 import { BattleRenderer } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { HUD } from '../ui/HUD';
-import { GRID_SIZE, TICK_RATE } from '../config';
+import { TICK_RATE } from '../config';
 import { getLayout } from '../sim/layouts';
 import type { Scene, SceneContext } from './Scene';
 
@@ -36,7 +36,12 @@ export class BattleScene implements Scene {
       throw new Error('BattleScene.mount: no Run encounter');
     }
 
-    this.world = new World(ctx.bus, new RNG(encounter.worldSeed), GRID_SIZE);
+    this.world = new World(
+      ctx.bus,
+      new RNG(encounter.worldSeed),
+      encounter.gridW,
+      encounter.gridH,
+    );
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
     this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.bars, ctx.terrain, ctx.bus);
     this.hud = new HUD(ctx.uiMount, ctx.bus);
@@ -80,8 +85,11 @@ export class BattleScene implements Scene {
     // grid. Walls render via SpriteRenderer (they're neutral-team Units),
     // and their per-tile Y is picked up via `terrain.heightAt` inside
     // BattleRenderer.
-    ctx.terrain.setTiles(this.world.tileGrid, this.world.gridSize);
+    ctx.terrain.setTiles(this.world.tileGrid, this.world.gridW, this.world.gridH);
     this.terrain = ctx.terrain;
+    // D3 — frame the camera to whatever rectangle this encounter rolled
+    // (procedural sizes range up to 20×20; hand-authored up to 32×32).
+    ctx.renderer.fitToBoard(this.world.gridW, this.world.gridH);
     spawnTeam(this.world, 'player', encounter.playerTeam);
     spawnTeam(this.world, 'enemy', encounter.enemyTeam);
   }

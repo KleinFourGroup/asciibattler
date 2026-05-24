@@ -1,13 +1,21 @@
 /**
- * Layout editor (C1d.B). Standalone Vite page — visit
+ * Layout editor (C1d.B + D3). Standalone Vite page — visit
  * http://localhost:5173/tools/layout-editor/ after `npm run dev`. Not
  * included in the production build (no entry in vite.config.ts's
  * rollupOptions.input).
  *
- * Paints walls + water onto a 12x12 grid, validates against the same
- * invariants the layouts.test.ts suite enforces (in-bounds, no
- * duplicates, spawn-row reservation, spawn-row connectivity), and
- * exports a JSON snippet shaped like one entry of `config/layouts.json`.
+ * Paints walls + water onto a rectangular arena and exports a JSON
+ * snippet shaped like one entry of `config/layouts.json`. Drag-paint
+ * groundwork (D2) is preserved across the D3 size rebuild: drag with
+ * left for wall, shift+left for water, right for erase; one validation
+ * + JSON refresh per stroke.
+ *
+ * D3 — variable map sizes. Width and Height dropdowns (8–32 each)
+ * rebuild the DOM grid in place; cells that still fit are preserved
+ * and any wall/water outside the new bounds is dropped (with a
+ * validation warning so the author notices). Reserved spawn rows are
+ * recomputed per-height via `reservedSpawnRows`, so the diagonal-stripe
+ * overlay tracks the resize.
  *
  * Output is export-only: the editor prints the JSON to a textarea with
  * Copy + Download buttons; the author pastes it into
@@ -19,11 +27,13 @@
  */
 
 import './editor.css';
-import { LAYOUTS, type LayoutDef } from '../../src/config/layouts';
-import { TERRAIN } from '../../src/config/terrain';
-
-const GRID_SIZE = 12;
-const RESERVED_ROWS: ReadonlySet<number> = new Set(TERRAIN.spawnRowsClear);
+import {
+  LAYOUTS,
+  LAYOUT_MIN_SIDE,
+  LAYOUT_MAX_SIDE,
+  type LayoutDef,
+} from '../../src/config/layouts';
+import { reservedSpawnRows } from '../../src/sim/terrainGen';
 
 type Cell = 'floor' | 'wall' | 'water';
 
@@ -32,15 +42,22 @@ interface Coord {
   readonly y: number;
 }
 
-const grid: Cell[][] = makeEmptyGrid();
+const DEFAULT_SIDE = 12;
 
-const cellEls: HTMLDivElement[][] = [];
+let gridW = DEFAULT_SIDE;
+let gridH = DEFAULT_SIDE;
+let grid: Cell[][] = makeEmptyGrid(gridW, gridH);
+let cellEls: HTMLDivElement[][] = [];
+let reservedRows: ReadonlySet<number> = new Set(reservedSpawnRows(gridH));
+/** Number of cells dropped on the most recent resize. Surfaced as a
+ *  validation warning so the author doesn't lose paint silently. */
+let lastClipCount = 0;
 
-function makeEmptyGrid(): Cell[][] {
+function makeEmptyGrid(w: number, h: number): Cell[][] {
   const g: Cell[][] = [];
-  for (let y = 0; y < GRID_SIZE; y++) {
+  for (let y = 0; y < h; y++) {
     const row: Cell[] = [];
-    for (let x = 0; x < GRID_SIZE; x++) row.push('floor');
+    for (let x = 0; x < w; x++) row.push('floor');
     g.push(row);
   }
   return g;
@@ -57,17 +74,81 @@ const loadBtn = mustQuery<HTMLButtonElement>('#load-btn');
 const clearBtn = mustQuery<HTMLButtonElement>('#clear-btn');
 const copyBtn = mustQuery<HTMLButtonElement>('#copy-btn');
 const downloadBtn = mustQuery<HTMLButtonElement>('#download-btn');
+const gridWSelectEl = mustQuery<HTMLSelectElement>('#grid-w');
+const gridHSelectEl = mustQuery<HTMLSelectElement>('#grid-h');
 
+populateSizeSelects();
 buildGrid();
 populateLoadSelect();
 attachMetaWatchers();
 attachToolButtons();
+attachSizeWatchers();
+window.addEventListener('mouseup', endStroke);
+// Re-fit the grid when the viewport changes so cells keep filling the
+// available pane width. Throttled to a rAF so resize spam doesn't
+// rebuild on every event.
+let resizePending = false;
+window.addEventListener('resize', () => {
+  if (resizePending) return;
+  resizePending = true;
+  requestAnimationFrame(() => {
+    resizePending = false;
+    buildGrid();
+    refreshGrid();
+  });
+});
 refreshAll();
 
+function populateSizeSelects(): void {
+  for (let s = LAYOUT_MIN_SIDE; s <= LAYOUT_MAX_SIDE; s++) {
+    const optW = document.createElement('option');
+    optW.value = String(s);
+    optW.textContent = String(s);
+    if (s === gridW) optW.selected = true;
+    gridWSelectEl.appendChild(optW);
+
+    const optH = document.createElement('option');
+    optH.value = String(s);
+    optH.textContent = String(s);
+    if (s === gridH) optH.selected = true;
+    gridHSelectEl.appendChild(optH);
+  }
+}
+
+/**
+ * Build (or rebuild) the DOM grid for the current `gridW × gridH`.
+ * Replaces all children of `#grid` and rebinds the per-cell mouse
+ * handlers. The grid is sized to take roughly half of the viewport
+ * horizontally; tall grids squish vertically so the whole grid fits
+ * without scrolling. Cells are square in the common case (when the
+ * height-fit would let them be), and stretched to a flatter
+ * rectangle when the height budget is tight — the alternative was
+ * shrinking the whole grid to keep cells square, which made tall
+ * layouts unusably tiny on the canvas.
+ */
 function buildGrid(): void {
-  for (let y = 0; y < GRID_SIZE; y++) {
+  gridEl.innerHTML = '';
+  gridEl.style.gridTemplateColumns = `repeat(${gridW}, 1fr)`;
+  gridEl.style.gridTemplateRows = `repeat(${gridH}, 1fr)`;
+  // Horizontal: 50% of viewport width across the grid, clamped to the
+  // grid-pane column so a narrow window doesn't blow out the layout.
+  const pane = gridEl.parentElement!;
+  const targetGridW = Math.min(window.innerWidth * 0.5, pane.clientWidth);
+  const cellW = Math.max(8, Math.floor(targetGridW / gridW));
+  // Vertical: the viewport minus a budget for the page chrome (header,
+  // size-row, legend, padding). If the natural square height (gridH
+  // × cellW) fits in that budget, keep cells square; otherwise squish
+  // the row height to fit. Minimum 6px so cells stay clickable on
+  // extreme tall grids.
+  const availH = Math.max(120, window.innerHeight - 220);
+  const cellH = Math.max(6, Math.min(cellW, Math.floor(availH / gridH)));
+  gridEl.style.width = `${gridW * cellW}px`;
+  gridEl.style.height = `${gridH * cellH}px`;
+
+  cellEls = [];
+  for (let y = 0; y < gridH; y++) {
     const rowEls: HTMLDivElement[] = [];
-    for (let x = 0; x < GRID_SIZE; x++) {
+    for (let x = 0; x < gridW; x++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
       cell.dataset.x = String(x);
@@ -80,9 +161,37 @@ function buildGrid(): void {
     }
     cellEls.push(rowEls);
   }
-  // Stroke commits on the global mouseup so dragging off-grid (or into a
-  // gutter between cells) still ends the stroke cleanly.
-  window.addEventListener('mouseup', endStroke);
+}
+
+/**
+ * Resize the underlying `grid` array and reserved-rows set to match
+ * `gridW × gridH`. Cells outside the new bounds are dropped; cells
+ * inside keep their kind. Returns the count of dropped non-floor
+ * cells so the validation can flag a clip.
+ */
+function resizeGridData(newW: number, newH: number): number {
+  let clipped = 0;
+  const next: Cell[][] = [];
+  for (let y = 0; y < newH; y++) {
+    const row: Cell[] = [];
+    for (let x = 0; x < newW; x++) {
+      const existing = y < grid.length && x < grid[y]!.length ? grid[y]![x]! : 'floor';
+      row.push(existing);
+    }
+    next.push(row);
+  }
+  // Count any non-floor cell that USED to exist but is now outside the
+  // new bounds.
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[y]!.length; x++) {
+      if ((y >= newH || x >= newW) && grid[y]![x] !== 'floor') clipped++;
+    }
+  }
+  grid = next;
+  gridW = newW;
+  gridH = newH;
+  reservedRows = new Set(reservedSpawnRows(gridH));
+  return clipped;
 }
 
 // ---- Drag-paint stroke (D2) ----
@@ -149,22 +258,22 @@ function refreshCell(c: Coord): void {
   const el = cellEls[c.y]![c.x]!;
   const value = grid[c.y]![c.x]!;
   el.classList.remove('wall', 'water', 'spawn', 'invalid');
-  if (RESERVED_ROWS.has(c.y) && value === 'floor') el.classList.add('spawn');
+  if (reservedRows.has(c.y) && value === 'floor') el.classList.add('spawn');
   if (value === 'wall') el.classList.add('wall');
   if (value === 'water') el.classList.add('water');
-  if (RESERVED_ROWS.has(c.y) && value !== 'floor') el.classList.add('invalid');
+  if (reservedRows.has(c.y) && value !== 'floor') el.classList.add('invalid');
 }
 
 function refreshGrid(): void {
-  for (let y = 0; y < GRID_SIZE; y++) {
-    for (let x = 0; x < GRID_SIZE; x++) refreshCell({ x, y });
+  for (let y = 0; y < gridH; y++) {
+    for (let x = 0; x < gridW; x++) refreshCell({ x, y });
   }
 }
 
 function collectCells(kind: Exclude<Cell, 'floor'>): Coord[] {
   const out: Coord[] = [];
-  for (let y = 0; y < GRID_SIZE; y++) {
-    for (let x = 0; x < GRID_SIZE; x++) {
+  for (let y = 0; y < gridH; y++) {
+    for (let x = 0; x < gridW; x++) {
       if (grid[y]![x] === kind) out.push({ x, y });
     }
   }
@@ -183,6 +292,13 @@ function validate(): ValidationItem[] {
 
   if (walls.length === 0 && water.length === 0) {
     items.push({ level: 'ok', text: 'Empty grid — paint something.' });
+  }
+
+  if (lastClipCount > 0) {
+    items.push({
+      level: 'warn',
+      text: `${lastClipCount} cell(s) dropped on resize — outside the new ${gridW}×${gridH} bounds.`,
+    });
   }
 
   if (!metaIdEl.value.trim()) {
@@ -208,7 +324,7 @@ function validate(): ValidationItem[] {
     items.push({ level: 'warn', text: 'Missing description — required.' });
   }
 
-  const spawnViolations = [...walls, ...water].filter((c) => RESERVED_ROWS.has(c.y));
+  const spawnViolations = [...walls, ...water].filter((c) => reservedRows.has(c.y));
   if (spawnViolations.length > 0) {
     items.push({
       level: 'error',
@@ -226,7 +342,7 @@ function validate(): ValidationItem[] {
   if (items.length === 0 || items.every((i) => i.level === 'ok')) {
     items.push({
       level: 'ok',
-      text: `Looks good — ${walls.length} wall(s), ${water.length} water cell(s).`,
+      text: `Looks good — ${walls.length} wall(s), ${water.length} water cell(s) on ${gridW}×${gridH}.`,
     });
   }
   return items;
@@ -250,11 +366,11 @@ function refreshValidation(): void {
  * (water is passable, just slow).
  */
 function isConnected(walls: readonly Coord[]): boolean {
-  const reserved = [...RESERVED_ROWS].sort((a, b) => a - b);
+  const reserved = [...reservedRows].sort((a, b) => a - b);
   if (reserved.length < 2) return true;
   const topRow = reserved[0]!;
   const bottomRow = reserved[reserved.length - 1]!;
-  const center = Math.floor(GRID_SIZE / 2);
+  const center = Math.floor(gridW / 2);
   const start = { x: center, y: topRow };
   const goal = { x: center, y: bottomRow };
 
@@ -273,7 +389,7 @@ function isConnected(walls: readonly Coord[]): boolean {
         if (dx === 0 && dy === 0) continue;
         const nx = c.x + dx;
         const ny = c.y + dy;
-        if (nx < 0 || ny < 0 || nx >= GRID_SIZE || ny >= GRID_SIZE) continue;
+        if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
         const key = `${nx},${ny}`;
         if (visited.has(key) || blocked.has(key)) continue;
         visited.add(key);
@@ -291,6 +407,8 @@ function refreshExport(): void {
     id: metaIdEl.value.trim() || 'unnamed',
     name: metaNameEl.value.trim() || 'Unnamed',
     description: metaDescriptionEl.value.trim() || 'TODO: describe this layout.',
+    gridW,
+    gridH,
     walls,
   };
   if (water.length > 0) (payload as { water?: Coord[] }).water = water;
@@ -308,6 +426,8 @@ function formatLayoutJson(layout: LayoutDef): string {
   parts.push(`  "id": ${JSON.stringify(layout.id)},`);
   parts.push(`  "name": ${JSON.stringify(layout.name)},`);
   parts.push(`  "description": ${JSON.stringify(layout.description)},`);
+  parts.push(`  "gridW": ${layout.gridW},`);
+  parts.push(`  "gridH": ${layout.gridH},`);
   parts.push(`  "walls": [`);
   parts.push(...formatCoords(layout.walls));
   const hasWater = layout.water && layout.water.length > 0;
@@ -338,7 +458,7 @@ function populateLoadSelect(): void {
   for (const layout of LAYOUTS) {
     const opt = document.createElement('option');
     opt.value = layout.id;
-    opt.textContent = `${layout.name} (${layout.id})`;
+    opt.textContent = `${layout.name} (${layout.id} · ${layout.gridW}×${layout.gridH})`;
     loadSelectEl.appendChild(opt);
   }
 }
@@ -346,21 +466,25 @@ function populateLoadSelect(): void {
 function loadLayout(id: string): void {
   const found = LAYOUTS.find((l) => l.id === id);
   if (!found) return;
-  for (let y = 0; y < GRID_SIZE; y++) {
-    for (let x = 0; x < GRID_SIZE; x++) grid[y]![x] = 'floor';
-  }
+  gridW = found.gridW;
+  gridH = found.gridH;
+  reservedRows = new Set(reservedSpawnRows(gridH));
+  grid = makeEmptyGrid(gridW, gridH);
   for (const w of found.walls) grid[w.y]![w.x] = 'wall';
   if (found.water) for (const w of found.water) grid[w.y]![w.x] = 'water';
   metaIdEl.value = found.id;
   metaNameEl.value = found.name;
   metaDescriptionEl.value = found.description;
+  gridWSelectEl.value = String(gridW);
+  gridHSelectEl.value = String(gridH);
+  lastClipCount = 0;
+  buildGrid();
   refreshAll();
 }
 
 function clearGrid(): void {
-  for (let y = 0; y < GRID_SIZE; y++) {
-    for (let x = 0; x < GRID_SIZE; x++) grid[y]![x] = 'floor';
-  }
+  grid = makeEmptyGrid(gridW, gridH);
+  lastClipCount = 0;
   refreshAll();
 }
 
@@ -390,6 +514,21 @@ function attachToolButtons(): void {
     a.click();
     URL.revokeObjectURL(url);
   });
+}
+
+function attachSizeWatchers(): void {
+  gridWSelectEl.addEventListener('change', onSizeChange);
+  gridHSelectEl.addEventListener('change', onSizeChange);
+}
+
+function onSizeChange(): void {
+  const newW = Number(gridWSelectEl.value);
+  const newH = Number(gridHSelectEl.value);
+  if (!Number.isFinite(newW) || !Number.isFinite(newH)) return;
+  if (newW === gridW && newH === gridH) return;
+  lastClipCount = resizeGridData(newW, newH);
+  buildGrid();
+  refreshAll();
 }
 
 function flashButton(btn: HTMLButtonElement, label: string): void {

@@ -34,7 +34,8 @@ describe('A2 round-trip: World', () => {
     const restored = World.fromJSON(snap, new EventBus<GameEvents>());
 
     expect(restored.currentTick).toBe(world.currentTick);
-    expect(restored.gridSize).toBe(world.gridSize);
+    expect(restored.gridW).toBe(world.gridW);
+    expect(restored.gridH).toBe(world.gridH);
     expect(restored.ended).toBe(world.ended);
     expect(restored.rng.toJSON()).toEqual(world.rng.toJSON());
     expect(restored.units.length).toBe(world.units.length);
@@ -113,6 +114,8 @@ describe('A2 round-trip: World', () => {
       worldSeed: 0,
       terrainSeed: 4242,
       layoutId: null,
+      gridW: world.gridW,
+      gridH: world.gridH,
       playerTeam: [],
       enemyTeam: [],
     });

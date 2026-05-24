@@ -3,11 +3,12 @@ import { createNoise2D } from 'simplex-noise';
 import { RNG } from '../core/RNG';
 import type { TileGrid, TileKind } from '../sim/TileGrid';
 import { COLORS } from './palette';
+import { LAYOUT_MAX_SIDE } from '../config/layouts';
 import VERTEX_SHADER from './shaders/terrain.vert.glsl?raw';
 import FRAGMENT_SHADER from './shaders/terrain.frag.glsl?raw';
 
 /**
- * C1c terrain: one faceted prism per tile in a 12×12 arena.
+ * C1c terrain: one faceted prism per tile.
  *
  * Heights come from a fixed-seed simplex field — the visual character
  * is part of the canonical look, not a per-battle roll. Floor tile tops
@@ -21,8 +22,13 @@ import FRAGMENT_SHADER from './shaders/terrain.frag.glsl?raw';
  * fragment shader — no scene lights, so this material has no spill into
  * the sprite renderers (which are unlit by design).
  *
- * Buffers are sized once at gridSize² and rewritten in-place per
- * setTiles; nothing allocates per battle.
+ * **D3 — variable map sizes.** The renderer is allocated once at the
+ * largest D3-allowed grid (`LAYOUT_MAX_SIDE × LAYOUT_MAX_SIDE`) and
+ * uses `geometry.setDrawRange` per `setTiles` to expose only the cells
+ * the current encounter occupies. Per-encounter dimensions can change
+ * freely up to that cap — no reallocation, no GPU re-upload of unused
+ * vertex slots. Trade-off: a flat ~1 MB of vertex buffer reserved at
+ * boot vs. a frame stall every time the board size changes.
  *
  * `heightAt(cx, cy, kind)` is the public hook into the height field —
  * BattleRenderer uses it to set per-tile sprite Y so units stand on
@@ -48,10 +54,15 @@ const SIDE_SHADE = 0.7;
 /** Top-face grid-line width as a fraction of cell size. */
 const GRID_LINE_WIDTH = 0.06;
 
+/** Per-renderer-instance vertex capacity. Sized at the largest D3-allowed
+ *  grid (32×32) so any per-encounter size fits without reallocating. */
+const MAX_TILES = LAYOUT_MAX_SIDE * LAYOUT_MAX_SIDE;
+
 export class TerrainRenderer {
   readonly mesh: THREE.Mesh;
 
-  private readonly gridSize: number;
+  private gridW: number;
+  private gridH: number;
   private readonly geometry: THREE.BufferGeometry;
   private readonly material: THREE.ShaderMaterial;
   private readonly positions: Float32Array;
@@ -67,13 +78,14 @@ export class TerrainRenderer {
   private readonly tmpTopColor = new THREE.Color();
   private readonly tmpSideColor = new THREE.Color();
 
-  constructor(gridSize: number) {
-    this.gridSize = gridSize;
+  constructor() {
+    this.gridW = 0;
+    this.gridH = 0;
 
     const rng = new RNG(NOISE_SEED);
     this.noise2D = createNoise2D(() => rng.next());
 
-    const totalVerts = gridSize * gridSize * VERTS_PER_TILE;
+    const totalVerts = MAX_TILES * VERTS_PER_TILE;
     this.positions = new Float32Array(totalVerts * 3);
     this.normals = new Float32Array(totalVerts * 3);
     this.colors = new Float32Array(totalVerts * 3);
@@ -91,13 +103,16 @@ export class TerrainRenderer {
     this.geometry.setAttribute('normal', this.normalAttr);
     this.geometry.setAttribute('aColor', this.colorAttr);
     this.geometry.setAttribute('aTopUV', this.topUVAttr);
-    // Loose bounding sphere: the mesh is always inside the camera frustum
-    // at our framing, so skipping the per-setTiles `computeBoundingSphere`
-    // costs nothing.
+    // Loose bounding sphere sized at the renderer's max extent. Since the
+    // mesh is always centered on the world origin and our camera framing
+    // sees the whole arena, frustum culling at this radius costs nothing.
     this.geometry.boundingSphere = new THREE.Sphere(
       new THREE.Vector3(0, BOTTOM_Y / 2, 0),
-      gridSize,
+      LAYOUT_MAX_SIDE,
     );
+    // Start with nothing drawn — `setTiles` configures both the content
+    // and the draw range. Pre-setTiles renders read an empty mesh.
+    this.geometry.setDrawRange(0, 0);
 
     this.material = new THREE.ShaderMaterial({
       vertexShader: VERTEX_SHADER,
@@ -111,10 +126,6 @@ export class TerrainRenderer {
     });
 
     this.mesh = new THREE.Mesh(this.geometry, this.material);
-
-    // Initial content: an all-floor grid so the mesh reads as a clean
-    // empty stage between battles.
-    this.fillFromKindFn(() => 'floor');
   }
 
   /**
@@ -130,17 +141,29 @@ export class TerrainRenderer {
     return FLOOR_RANGE_LO + (FLOOR_RANGE_HI - FLOOR_RANGE_LO) * t;
   }
 
-  setTiles(tileGrid: TileGrid, gridSize: number): void {
-    if (gridSize !== this.gridSize) {
+  /**
+   * Configure the terrain mesh for an encounter of the given dimensions.
+   * The renderer's vertex buffers were sized once at construction for
+   * the max D3 grid; `setDrawRange` exposes the right slice for this
+   * encounter so non-square (or smaller-than-max) boards render
+   * correctly without zero-area junk geometry from unused slots.
+   */
+  setTiles(tileGrid: TileGrid, gridW: number, gridH: number): void {
+    if (gridW * gridH > MAX_TILES) {
       throw new Error(
-        `TerrainRenderer.setTiles: gridSize mismatch ${gridSize} vs ${this.gridSize}`,
+        `TerrainRenderer.setTiles: ${gridW}x${gridH} exceeds capacity ${MAX_TILES}`,
       );
     }
+    this.gridW = gridW;
+    this.gridH = gridH;
     this.fillFromKindFn((x, y) => tileGrid.kindAt({ x, y }));
+    this.geometry.setDrawRange(0, gridW * gridH * VERTS_PER_TILE);
   }
 
   clear(): void {
-    this.fillFromKindFn(() => 'floor');
+    this.gridW = 0;
+    this.gridH = 0;
+    this.geometry.setDrawRange(0, 0);
   }
 
   dispose(): void {
@@ -150,8 +173,10 @@ export class TerrainRenderer {
 
   /** Walks every cell, computes height + color, writes 30 verts per cell. */
   private fillFromKindFn(kindAt: (x: number, y: number) => TileKind): void {
-    const n = this.gridSize;
-    const half = n / 2;
+    const w = this.gridW;
+    const h = this.gridH;
+    const halfX = w / 2;
+    const halfZ = h / 2;
     const pos = this.positions;
     const norm = this.normals;
     const col = this.colors;
@@ -173,8 +198,8 @@ export class TerrainRenderer {
       vi++;
     };
 
-    for (let cy = 0; cy < n; cy++) {
-      for (let cx = 0; cx < n; cx++) {
+    for (let cy = 0; cy < h; cy++) {
+      for (let cx = 0; cx < w; cx++) {
         const kind = kindAt(cx, cy);
         const topY = this.heightAt(cx, cy, kind);
         topColorFor(topY, kind, this.tmpTopColor);
@@ -182,11 +207,11 @@ export class TerrainRenderer {
         const top = this.tmpTopColor;
         const side = this.tmpSideColor;
 
-        // World coords match BattleRenderer.gridToWorld.
-        const x0 = cx - half;
-        const x1 = cx + 1 - half;
-        const zHi = half - cy;     // close to camera
-        const zLo = half - cy - 1; // far from camera
+        // World coords match BattleRenderer.gridToWorld (axes are independent).
+        const x0 = cx - halfX;
+        const x1 = cx + 1 - halfX;
+        const zHi = halfZ - cy;     // close to camera
+        const zLo = halfZ - cy - 1; // far from camera
 
         // Top face. CCW viewed from +Y → normal +Y.
         writeVert(x0, topY, zHi, 0, 1, 0, top, 0, 0);

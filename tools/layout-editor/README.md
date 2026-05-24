@@ -1,7 +1,8 @@
 # Layout Editor
 
 A standalone Vite page for painting hand-authored encounter layouts onto
-a 12×12 grid and exporting them to `config/layouts.json`.
+a rectangular grid (D3: 8–32 in either dimension) and exporting them to
+`config/layouts.json`.
 
 ## Launch
 
@@ -17,17 +18,24 @@ files by the Vite dev server and never lands in `dist/`.
 
 ## Controls
 
-- **Click** a cell — toggle wall.
-- **Shift + click** — toggle shallow water.
-- **Right-click** — erase (back to floor).
+- **W / H** dropdowns — set the arena width and height (8–32 each).
+  Resizing preserves cells that still fit; any wall/water outside the
+  new bounds is dropped and surfaced as a validation warning.
+- **Click + drag** a cell — paint wall. The stroke kind is fixed at
+  mousedown and applies to every cell the cursor crosses until the next
+  global mouseup.
+- **Shift + click + drag** — paint shallow water.
+- **Right-click + drag** — erase (back to floor).
 - **Load existing** — populate the grid + metadata from a layout in
-  `config/layouts.json`. Useful for tweaking what's already shipped.
-- **Clear grid** — reset everything to floor.
+  `config/layouts.json`. The W/H dropdowns snap to the loaded layout's
+  declared dimensions.
+- **Clear grid** — reset everything to floor at the current size.
 
-Reserved spawn rows (taken from `config/terrain.json` →
-`spawnRowsClear`) are shown with a diagonal-stripe overlay. Painting on
-them is allowed but flagged as an error in the validation panel
-because the game would refuse to load such a layout.
+Reserved spawn rows (computed per-height as rows 1, 2, `gridH-3`,
+`gridH-2`, mirroring `battleSetup.spawnTeam`) are shown with a
+diagonal-stripe overlay. Painting on them is allowed but flagged as an
+error in the validation panel because the game would refuse to load
+such a layout.
 
 ## Validation
 
@@ -40,6 +48,8 @@ The panel mirrors the same invariants the layouts test suite enforces:
 - Connectivity: a path exists between the topmost spawn row and the
   bottommost spawn row (using the same king's-move neighborhood
   `Pathfinding` uses in-game).
+- Resize-clip warning: count of non-floor cells that fell outside the
+  new bounds on the most recent W/H change.
 
 ## Export
 
@@ -67,3 +77,6 @@ Workflow:
 - **Pick weight / floor-depth gating fields.** The roadmap left those
   out of the C1d schema; add them when there's a concrete picker
   rule to implement.
+- **Layer system + spawn-region painting.** D5 introduces an explicit
+  `SpawnRegion` schema; the row-based reservation overlay shown here
+  is interim until that lands.

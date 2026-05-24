@@ -16,6 +16,9 @@
  * notice when both sides try to traverse at once. So this is the
  * integration test for that dynamic property.
  *
+ * D3: scenarios run at each layout's declared `gridW × gridH`; the
+ * procedural scenario uses a default `GRID_SIZE × GRID_SIZE` square
+ * since the procedural-size roll is owned by `Run`, not battleSetup.
  * Multiple seeds per layout. A single unlucky stat roll could mask the
  * bug; running across N seeds makes the failure deterministic and gives
  * us a tight reproduction case when one shows up.
@@ -28,7 +31,7 @@ import { RNG } from '../../src/core/RNG';
 import { spawnEncounter } from '../../src/sim/battleSetup';
 import { rollUnit } from '../../src/sim/archetypes';
 import { GRID_SIZE } from '../../src/config';
-import { LAYOUT_IDS } from '../../src/sim/layouts';
+import { LAYOUT_IDS, getLayout } from '../../src/sim/layouts';
 import type { GameEvents } from '../../src/core/events';
 import type { BattleEncounter } from '../../src/run/Run';
 
@@ -42,28 +45,39 @@ const SEEDS_PER_LAYOUT = 3;
 // thread a maze before engaging.
 const MAX_TICKS = 2000;
 
-// Every registered layout plus the procedural path.
-const SCENARIOS: ReadonlyArray<string | null> = [...LAYOUT_IDS, null];
+interface Scenario {
+  readonly label: string;
+  readonly layoutId: string | null;
+  readonly gridW: number;
+  readonly gridH: number;
+}
+
+const SCENARIOS: readonly Scenario[] = [
+  ...LAYOUT_IDS.map((id): Scenario => {
+    const layout = getLayout(id)!;
+    return { label: id, layoutId: id, gridW: layout.gridW, gridH: layout.gridH };
+  }),
+  { label: 'procedural', layoutId: null, gridW: GRID_SIZE, gridH: GRID_SIZE },
+];
 
 describe('Layout deadlock regression (C1d follow-up)', () => {
-  for (const layoutId of SCENARIOS) {
-    const label = layoutId ?? 'procedural';
-    it(`layout=${label} resolves across ${SEEDS_PER_LAYOUT} seeds`, () => {
+  for (const scenario of SCENARIOS) {
+    it(`layout=${scenario.label} resolves across ${SEEDS_PER_LAYOUT} seeds`, () => {
       for (let i = 0; i < SEEDS_PER_LAYOUT; i++) {
         const seed = 100 + i;
-        const { world, ticks } = runHeadlessBattle(seed, layoutId);
+        const { world, ticks } = runHeadlessBattle(seed, scenario);
         expect(
           world.ended,
-          `seed=${seed} layout=${label} did not resolve in ${MAX_TICKS} ticks (got ${ticks})`,
+          `seed=${seed} layout=${scenario.label} did not resolve in ${MAX_TICKS} ticks (got ${ticks})`,
         ).toBe(true);
       }
     });
   }
 });
 
-function runHeadlessBattle(seed: number, layoutId: string | null): { world: World; ticks: number } {
+function runHeadlessBattle(seed: number, scenario: Scenario): { world: World; ticks: number } {
   const bus = new EventBus<GameEvents>();
-  const world = new World(bus, new RNG(seed), GRID_SIZE);
+  const world = new World(bus, new RNG(seed), scenario.gridW, scenario.gridH);
   // Separate RNG for unit rolls so changing tick logic doesn't perturb
   // the team composition for the same seed.
   const teamRng = new RNG(seed * 31 + 7);
@@ -84,7 +98,9 @@ function runHeadlessBattle(seed: number, layoutId: string | null): { world: Worl
   const encounter: BattleEncounter = {
     worldSeed: seed,
     terrainSeed: seed,
-    layoutId,
+    layoutId: scenario.layoutId,
+    gridW: scenario.gridW,
+    gridH: scenario.gridH,
     playerTeam,
     enemyTeam,
   };

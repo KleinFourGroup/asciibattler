@@ -8,14 +8,23 @@
  *
  * Hybrid model: when `layoutId` is null the generator uses the procedural
  * density-driven path; when non-null it dispatches to the hand-authored
- * library at `src/sim/layouts.ts`. `Run` rolls a 50/50 split between the
- * two at encounter creation time, so a given playthrough sees a mix of
- * procedural variety and tactically-tuned set pieces.
+ * library at `src/sim/layouts.ts`. `Run` rolls the split at encounter
+ * creation time, so a given playthrough sees a mix of procedural variety
+ * and tactically-tuned set pieces.
  *
- * Determinism contract: same `(rng state, gridSize, config, layoutId)` →
- * identical `GeneratedTerrain`. Tests rely on this so the fuzz harness
- * can replay any seed; the integration commit feeds in a per-encounter
- * RNG fork so terrain doesn't perturb the battle RNG stream.
+ * **D3 — rectangular arenas.** The generator now takes `(gridW, gridH)`
+ * independently. The procedural path scatters walls + water onto any
+ * rectangle in the configured size range; the layout path reads the
+ * layout's own `gridW` × `gridH` and refuses if the caller's dimensions
+ * disagree. The pre-D3 `config.spawnRowsClear` array is gone — reserved
+ * rows are computed per-encounter from `gridH` (top 2 rows + bottom 2
+ * rows) inside this module via `reservedSpawnRows(gridH)`. D5 will
+ * replace this row-based reservation with per-layout spawn regions.
+ *
+ * Determinism contract: same `(rng state, gridW, gridH, config, layoutId)`
+ * → identical `GeneratedTerrain`. Tests rely on this so the fuzz harness
+ * can replay any seed; battleSetup feeds in a per-encounter RNG fork so
+ * terrain doesn't perturb the battle RNG stream.
  */
 
 import { TileGrid } from './TileGrid';
@@ -29,13 +38,31 @@ export interface GeneratedTerrain {
   readonly walls: readonly GridCoord[];
 }
 
-/** Grid size that hand-authored layouts are designed against. Layouts
- *  refuse to resolve at other sizes — see `src/sim/layouts.ts`. */
-const LAYOUT_GRID_SIZE = 12;
+/**
+ * Rows that the spawn formation in `battleSetup.spawnTeam` will fill
+ * (player melee on row 2, ranged on row 1; enemy melee on `gridH - 3`,
+ * ranged on `gridH - 2`). Terrain generation must leave these clear of
+ * walls + water so no unit spawns on an obstacle.
+ *
+ * Returns `[]` for grids too short to spawn into; callers (procedural
+ * generator + layout validator) treat this as "no reservation," which
+ * makes the lower limit (`gridH < 4`) a layout-bug surface rather than a
+ * silent-corruption one — pathological dimensions will surface as
+ * out-of-bounds spawn writes downstream.
+ *
+ * D5 retires this in favor of per-layout `SpawnRegion`s; until then it
+ * stays the canonical "where do units land" function so the editor's
+ * overlay, the generator's reservation, and the validator agree.
+ */
+export function reservedSpawnRows(gridH: number): number[] {
+  if (gridH < 4) return [];
+  return [1, 2, gridH - 3, gridH - 2];
+}
 
 export function generateTerrain(
   rng: RNG,
-  gridSize: number,
+  gridW: number,
+  gridH: number,
   config: TerrainConfig,
   layoutId: string | null = null,
 ): GeneratedTerrain {
@@ -44,44 +71,58 @@ export function generateTerrain(
     if (!layout) {
       throw new Error(`generateTerrain: unknown layoutId="${layoutId}"`);
     }
-    return generateFromLayout(layout, gridSize, config);
+    return generateFromLayout(layout, gridW, gridH);
   }
-  return generateProcedural(rng, gridSize, config);
+  return generateProcedural(rng, gridW, gridH, config);
 }
 
 /**
  * Resolve a hand-authored layout into a `GeneratedTerrain`. Validates
  * that the layout's wall coordinates respect the reserved spawn rows and
- * the configured grid size; a violation is a layout-authoring bug, so
- * the dispatcher throws rather than silently rescuing it (the procedural
- * path's `ensureConnectivity` wall-peel doesn't apply here — hand
- * authored means hand verified).
+ * the caller's dimensions match the layout's own `gridW` × `gridH`; a
+ * violation is a layout-authoring bug, so the dispatcher throws rather
+ * than silently rescuing it (the procedural path's `ensureConnectivity`
+ * wall-peel doesn't apply here — hand authored means hand verified).
  */
 function generateFromLayout(
   layout: LayoutDef,
-  gridSize: number,
-  config: TerrainConfig,
+  gridW: number,
+  gridH: number,
 ): GeneratedTerrain {
-  if (gridSize !== LAYOUT_GRID_SIZE) {
+  if (gridW !== layout.gridW || gridH !== layout.gridH) {
     throw new Error(
-      `generateTerrain: layout "${layout.id}" requires gridSize=${LAYOUT_GRID_SIZE} (got ${gridSize})`,
+      `generateTerrain: layout "${layout.id}" requires gridW=${layout.gridW} gridH=${layout.gridH} (got ${gridW}x${gridH})`,
     );
   }
-  const reservedRows = new Set(config.spawnRowsClear);
+  const reserved = new Set(reservedSpawnRows(layout.gridH));
   for (const w of layout.walls) {
-    if (reservedRows.has(w.y)) {
+    if (reserved.has(w.y)) {
       throw new Error(
         `generateTerrain: layout "${layout.id}" places a wall on reserved spawn row ${w.y}`,
       );
     }
-    if (w.x < 0 || w.y < 0 || w.x >= gridSize || w.y >= gridSize) {
+    if (w.x < 0 || w.y < 0 || w.x >= layout.gridW || w.y >= layout.gridH) {
       throw new Error(
         `generateTerrain: layout "${layout.id}" places a wall at out-of-bounds (${w.x},${w.y})`,
       );
     }
   }
+  if (layout.water) {
+    for (const w of layout.water) {
+      if (reserved.has(w.y)) {
+        throw new Error(
+          `generateTerrain: layout "${layout.id}" places water on reserved spawn row ${w.y}`,
+        );
+      }
+      if (w.x < 0 || w.y < 0 || w.x >= layout.gridW || w.y >= layout.gridH) {
+        throw new Error(
+          `generateTerrain: layout "${layout.id}" places water at out-of-bounds (${w.x},${w.y})`,
+        );
+      }
+    }
+  }
 
-  const tileGrid = new TileGrid(gridSize, gridSize);
+  const tileGrid = new TileGrid(layout.gridW, layout.gridH);
   if (layout.water) {
     for (const w of layout.water) tileGrid.setKind(w, 'shallow_water');
   }
@@ -90,28 +131,30 @@ function generateFromLayout(
 
 function generateProcedural(
   rng: RNG,
-  gridSize: number,
+  gridW: number,
+  gridH: number,
   config: TerrainConfig,
 ): GeneratedTerrain {
-  const total = gridSize * gridSize;
+  const total = gridW * gridH;
   const targetWalls = Math.floor(total * config.wallDensity);
   const targetWater = Math.floor(total * config.shallowWaterDensity);
 
   // Build candidate pool: every cell EXCEPT the spawn rows. Shuffling once
   // and slicing off two disjoint chunks (walls then water) gives both
   // distributions for free, with zero overlap by construction.
-  const reservedRows = new Set(config.spawnRowsClear);
+  const reservedRows = reservedSpawnRows(gridH);
+  const reservedSet = new Set(reservedRows);
   const candidates: GridCoord[] = [];
-  for (let y = 0; y < gridSize; y++) {
-    if (reservedRows.has(y)) continue;
-    for (let x = 0; x < gridSize; x++) {
+  for (let y = 0; y < gridH; y++) {
+    if (reservedSet.has(y)) continue;
+    for (let x = 0; x < gridW; x++) {
       candidates.push({ x, y });
     }
   }
   shuffleInPlace(candidates, rng);
 
   let walls: GridCoord[] = candidates.slice(0, Math.min(targetWalls, candidates.length));
-  const tileGrid = new TileGrid(gridSize, gridSize);
+  const tileGrid = new TileGrid(gridW, gridH);
   const waterStart = walls.length;
   const waterEnd = Math.min(candidates.length, waterStart + targetWater);
   for (let i = waterStart; i < waterEnd; i++) {
@@ -119,7 +162,7 @@ function generateProcedural(
   }
 
   if (config.ensureConnectivity) {
-    walls = openCutsUntilConnected(walls, gridSize, config.spawnRowsClear);
+    walls = openCutsUntilConnected(walls, gridW, gridH, reservedRows);
   }
 
   return { tileGrid, walls };
@@ -148,16 +191,17 @@ function shuffleInPlace<T>(arr: T[], rng: RNG): void {
  */
 function openCutsUntilConnected(
   walls: readonly GridCoord[],
-  gridSize: number,
-  spawnRowsClear: readonly number[],
+  gridW: number,
+  gridH: number,
+  reservedRows: readonly number[],
 ): GridCoord[] {
-  if (spawnRowsClear.length < 2) return walls.slice();
-  const center = Math.floor(gridSize / 2);
-  const start: GridCoord = { x: center, y: Math.min(...spawnRowsClear) };
-  const goal: GridCoord = { x: center, y: Math.max(...spawnRowsClear) };
+  if (reservedRows.length < 2) return walls.slice();
+  const center = Math.floor(gridW / 2);
+  const start: GridCoord = { x: center, y: Math.min(...reservedRows) };
+  const goal: GridCoord = { x: center, y: Math.max(...reservedRows) };
 
   const remaining = walls.slice();
-  while (!hasPath(start, goal, remaining, gridSize)) {
+  while (!hasPath(start, goal, remaining, gridW, gridH)) {
     if (remaining.length === 0) return remaining;
     remaining.shift();
   }
@@ -168,7 +212,8 @@ function hasPath(
   start: GridCoord,
   goal: GridCoord,
   walls: readonly GridCoord[],
-  gridSize: number,
+  gridW: number,
+  gridH: number,
 ): boolean {
   const blocked = new Set<string>();
   for (const w of walls) blocked.add(`${w.x},${w.y}`);
@@ -184,7 +229,7 @@ function hasPath(
         if (dx === 0 && dy === 0) continue;
         const nx = c.x + dx;
         const ny = c.y + dy;
-        if (nx < 0 || ny < 0 || nx >= gridSize || ny >= gridSize) continue;
+        if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
         const k = `${nx},${ny}`;
         if (visited.has(k) || blocked.has(k)) continue;
         visited.add(k);

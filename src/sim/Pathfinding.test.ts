@@ -6,11 +6,11 @@ const G = 12;
 
 describe('Pathfinding / findPath', () => {
   it('returns [start] when start equals goal', () => {
-    expect(findPath({ x: 3, y: 3 }, { x: 3, y: 3 }, [], G)).toEqual([{ x: 3, y: 3 }]);
+    expect(findPath({ x: 3, y: 3 }, { x: 3, y: 3 }, [], G, G)).toEqual([{ x: 3, y: 3 }]);
   });
 
   it('finds a straight diagonal path on an empty grid', () => {
-    const path = findPath({ x: 0, y: 0 }, { x: 3, y: 3 }, [], G);
+    const path = findPath({ x: 0, y: 0 }, { x: 3, y: 3 }, [], G, G);
     expect(path.length).toBe(4); // unit-cost diagonals: Chebyshev distance + 1 cell
     expect(path[0]).toEqual({ x: 0, y: 0 });
     expect(path[path.length - 1]).toEqual({ x: 3, y: 3 });
@@ -18,7 +18,7 @@ describe('Pathfinding / findPath', () => {
   });
 
   it('finds a straight orthogonal path on an empty grid', () => {
-    const path = findPath({ x: 0, y: 5 }, { x: 4, y: 5 }, [], G);
+    const path = findPath({ x: 0, y: 5 }, { x: 4, y: 5 }, [], G, G);
     expect(path.length).toBe(5);
     assertContiguous(path);
   });
@@ -32,7 +32,7 @@ describe('Pathfinding / findPath', () => {
       { x: 5, y: 6 },
       { x: 5, y: 7 },
     ];
-    const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, blockers, G);
+    const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, blockers, G, G);
     expect(path.length).toBeGreaterThan(0);
     expect(path[0]).toEqual({ x: 3, y: 5 });
     expect(path[path.length - 1]).toEqual({ x: 7, y: 5 });
@@ -54,29 +54,38 @@ describe('Pathfinding / findPath', () => {
         blockers.push({ x: 5 + dx, y: 5 + dy });
       }
     }
-    expect(findPath({ x: 5, y: 5 }, { x: 0, y: 0 }, blockers, G)).toEqual([]);
+    expect(findPath({ x: 5, y: 5 }, { x: 0, y: 0 }, blockers, G, G)).toEqual([]);
   });
 
   it('returns [] when the goal cell itself is blocked', () => {
-    expect(findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [{ x: 5, y: 5 }], G)).toEqual([]);
+    expect(findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [{ x: 5, y: 5 }], G, G)).toEqual([]);
   });
 
   it('treats the start cell as passable even if listed as a blocker', () => {
     // A unit pathfinds out of its own cell; the world unit list naturally
     // includes its own position.
-    const path = findPath({ x: 0, y: 0 }, { x: 2, y: 0 }, [{ x: 0, y: 0 }], G);
+    const path = findPath({ x: 0, y: 0 }, { x: 2, y: 0 }, [{ x: 0, y: 0 }], G, G);
     expect(path[0]).toEqual({ x: 0, y: 0 });
     expect(path[path.length - 1]).toEqual({ x: 2, y: 0 });
   });
 
   it('returns [] for out-of-bounds endpoints', () => {
-    expect(findPath({ x: -1, y: 0 }, { x: 0, y: 0 }, [], G)).toEqual([]);
-    expect(findPath({ x: 0, y: 0 }, { x: 12, y: 0 }, [], G)).toEqual([]);
+    expect(findPath({ x: -1, y: 0 }, { x: 0, y: 0 }, [], G, G)).toEqual([]);
+    expect(findPath({ x: 0, y: 0 }, { x: 12, y: 0 }, [], G, G)).toEqual([]);
+  });
+
+  it('respects asymmetric bounds (D3 rectangular grids)', () => {
+    // 20 wide x 10 tall — (15, 8) is in-bounds; (5, 12) is not.
+    expect(findPath({ x: 0, y: 0 }, { x: 15, y: 8 }, [], 20, 10)).not.toEqual([]);
+    expect(findPath({ x: 0, y: 0 }, { x: 5, y: 12 }, [], 20, 10)).toEqual([]);
+    // And the reverse: 10 wide x 20 tall — (15, 5) is out of width.
+    expect(findPath({ x: 0, y: 0 }, { x: 15, y: 5 }, [], 10, 20)).toEqual([]);
+    expect(findPath({ x: 0, y: 0 }, { x: 5, y: 15 }, [], 10, 20)).not.toEqual([]);
   });
 
   it('is deterministic for the same inputs', () => {
-    const a = findPath({ x: 1, y: 1 }, { x: 8, y: 6 }, [{ x: 4, y: 3 }], G);
-    const b = findPath({ x: 1, y: 1 }, { x: 8, y: 6 }, [{ x: 4, y: 3 }], G);
+    const a = findPath({ x: 1, y: 1 }, { x: 8, y: 6 }, [{ x: 4, y: 3 }], G, G);
+    const b = findPath({ x: 1, y: 1 }, { x: 8, y: 6 }, [{ x: 4, y: 3 }], G, G);
     expect(a).toEqual(b);
   });
 });
@@ -84,8 +93,8 @@ describe('Pathfinding / findPath', () => {
 describe('Pathfinding / findPath with per-cell costs', () => {
   it('explicit unit-cost callback matches the default', () => {
     const unit: CostFn = () => 1;
-    const withCallback = findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [], G, unit);
-    const withDefault = findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [], G);
+    const withCallback = findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [], G, G, unit);
+    const withDefault = findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [], G, G);
     expect(withCallback).toEqual(withDefault);
   });
 
@@ -101,7 +110,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     const heavyColumn = new Set(['3,3', '3,4', '3,5', '3,6', '3,7']);
     const costAt: CostFn = (c) => (heavyColumn.has(`${c.x},${c.y}`) ? 10 : 1);
 
-    const path = findPath({ x: 0, y: 5 }, { x: 6, y: 5 }, [], G, costAt);
+    const path = findPath({ x: 0, y: 5 }, { x: 6, y: 5 }, [], G, G, costAt);
     expect(path.length).toBeGreaterThan(0);
     // The min-cost path crosses x=3 exactly once; that crossing must be at
     // y=2 or y=8 (the cheap rows above/below the heavy column).
@@ -116,7 +125,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     const onLine = (c: GridCoord): boolean => c.y === 0;
     const costAt: CostFn = (c) => (onLine(c) ? 1 : 10);
 
-    const path = findPath({ x: 0, y: 0 }, { x: 5, y: 0 }, [], G, costAt);
+    const path = findPath({ x: 0, y: 0 }, { x: 5, y: 0 }, [], G, G, costAt);
     expect(path.length).toBe(6);
     for (const c of path) expect(c.y).toBe(0);
   });
@@ -126,7 +135,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     const walled = new Set(['5,3', '5,4', '5,5', '5,6', '5,7']);
     const costAt: CostFn = (c) => (walled.has(`${c.x},${c.y}`) ? Infinity : 1);
 
-    const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, [], G, costAt);
+    const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, [], G, G, costAt);
     expect(path.length).toBeGreaterThan(0);
     for (const c of path) {
       expect(walled.has(`${c.x},${c.y}`)).toBe(false);
@@ -137,7 +146,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     // Even if the start cell has huge cost, A* should still find a path
     // because it doesn't pay to be there.
     const costAt: CostFn = (c) => (c.x === 0 && c.y === 0 ? 1000 : 1);
-    const path = findPath({ x: 0, y: 0 }, { x: 3, y: 0 }, [], G, costAt);
+    const path = findPath({ x: 0, y: 0 }, { x: 3, y: 0 }, [], G, G, costAt);
     expect(path.length).toBe(4);
   });
 });

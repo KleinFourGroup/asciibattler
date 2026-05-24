@@ -73,30 +73,76 @@ function buildGrid(): void {
       cell.dataset.x = String(x);
       cell.dataset.y = String(y);
       cell.addEventListener('mousedown', (e) => onCellMouseDown(e, { x, y }));
+      cell.addEventListener('mouseenter', () => onCellMouseEnter({ x, y }));
       cell.addEventListener('contextmenu', (e) => e.preventDefault());
       gridEl.appendChild(cell);
       rowEls.push(cell);
     }
     cellEls.push(rowEls);
   }
+  // Stroke commits on the global mouseup so dragging off-grid (or into a
+  // gutter between cells) still ends the stroke cleanly.
+  window.addEventListener('mouseup', endStroke);
 }
+
+// ---- Drag-paint stroke (D2) ----
+//
+// A stroke runs from a mousedown on a cell to the next global mouseup.
+// The stroke's kind is fixed at mousedown — left paints wall, shift+left
+// paints water, right erases (clears the active layer's content at the
+// crossed cell, which today means setting it back to floor). The kind
+// applies to every cell the cursor crosses for the rest of the stroke.
+//
+// Validation + JSON export refresh once per stroke (on mouseup), not
+// per cell — keeps the export panel from flickering during a drag and
+// matches the roadmap's "stroke determinism" note.
+type StrokeKind = 'paint-wall' | 'paint-water' | 'erase';
+
+let activeStroke: StrokeKind | null = null;
+let strokeDirty = false;
+const strokeAppliedCells = new Set<string>();
 
 function onCellMouseDown(e: MouseEvent, c: Coord): void {
   e.preventDefault();
-  if (e.button === 2) {
-    setCell(c, 'floor');
-    return;
-  }
-  const target: Cell = e.shiftKey ? 'water' : 'wall';
-  const current = grid[c.y]![c.x]!;
-  setCell(c, current === target ? 'floor' : target);
+  activeStroke = strokeFromMouseEvent(e);
+  strokeDirty = false;
+  strokeAppliedCells.clear();
+  applyStrokeTo(c);
 }
 
-function setCell(c: Coord, value: Cell): void {
-  grid[c.y]![c.x] = value;
+function onCellMouseEnter(c: Coord): void {
+  if (activeStroke !== null) applyStrokeTo(c);
+}
+
+function endStroke(): void {
+  if (activeStroke === null) return;
+  activeStroke = null;
+  strokeAppliedCells.clear();
+  if (strokeDirty) {
+    refreshValidation();
+    refreshExport();
+    strokeDirty = false;
+  }
+}
+
+function strokeFromMouseEvent(e: MouseEvent): StrokeKind {
+  if (e.button === 2) return 'erase';
+  if (e.shiftKey) return 'paint-water';
+  return 'paint-wall';
+}
+
+function applyStrokeTo(c: Coord): void {
+  if (activeStroke === null) return;
+  const key = `${c.x},${c.y}`;
+  if (strokeAppliedCells.has(key)) return;
+  strokeAppliedCells.add(key);
+
+  const target: Cell =
+    activeStroke === 'erase' ? 'floor' : activeStroke === 'paint-water' ? 'water' : 'wall';
+  if (grid[c.y]![c.x] === target) return;
+  grid[c.y]![c.x] = target;
+  strokeDirty = true;
   refreshCell(c);
-  refreshValidation();
-  refreshExport();
 }
 
 function refreshCell(c: Coord): void {

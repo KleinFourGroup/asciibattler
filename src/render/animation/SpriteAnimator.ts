@@ -22,6 +22,10 @@ interface ActiveLerp {
 interface ActiveFade {
   readonly duration: number;
   elapsed: number;
+  /** Starting alpha. 1 for fade-out (default), 0 for fade-in. */
+  readonly fromAlpha: number;
+  /** Ending alpha. 0 for fade-out, 1 for fade-in. */
+  readonly toAlpha: number;
   readonly onComplete: (() => void) | undefined;
 }
 
@@ -67,7 +71,35 @@ export class SpriteAnimator {
       onComplete?.();
       return;
     }
-    this.fades.set(handle, { duration: durationSeconds, elapsed: 0, onComplete });
+    this.fades.set(handle, {
+      duration: durationSeconds,
+      elapsed: 0,
+      fromAlpha: 1,
+      toAlpha: 0,
+      onComplete,
+    });
+  }
+
+  /**
+   * D5.C — overflow-spawn fade-in. Sprite snaps to alpha 0 immediately,
+   * then lerps to 1 over `durationSeconds`. Replaces any in-flight fade
+   * for the same handle. No onComplete — the sprite stays at full alpha
+   * after.
+   */
+  startFadeIn(handle: SpriteHandle, durationSeconds: number): void {
+    if (durationSeconds <= 0) {
+      this.sprites.updateSprite(handle, { alpha: 1 });
+      this.fades.delete(handle);
+      return;
+    }
+    this.sprites.updateSprite(handle, { alpha: 0 });
+    this.fades.set(handle, {
+      duration: durationSeconds,
+      elapsed: 0,
+      fromAlpha: 0,
+      toAlpha: 1,
+      onComplete: undefined,
+    });
   }
 
   /** Drops a handle's in-flight position lerp without touching its sprite. */
@@ -97,7 +129,8 @@ export class SpriteAnimator {
     for (const [handle, fade] of this.fades) {
       fade.elapsed += dt;
       const t = fade.elapsed >= fade.duration ? 1 : fade.elapsed / fade.duration;
-      this.sprites.updateSprite(handle, { alpha: 1 - t });
+      const alpha = fade.fromAlpha + (fade.toAlpha - fade.fromAlpha) * t;
+      this.sprites.updateSprite(handle, { alpha });
       if (t >= 1) {
         this.fades.delete(handle);
         fade.onComplete?.();

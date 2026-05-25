@@ -28,7 +28,7 @@ describe('environment / spawnWall', () => {
 
     const wall = spawnWall(w, { x: 0, y: 0 });
 
-    expect(events).toEqual([{ unitId: wall.id }]);
+    expect(events).toEqual([{ unitId: wall.id, instant: true }]);
   });
 
   it('is never picked as a target by findTarget', () => {

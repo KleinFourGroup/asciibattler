@@ -17,3 +17,11 @@ const fontAtlas = await FontAtlas.create();
 
 const game = new Game(canvas, fontAtlas, uiMount);
 game.start();
+
+// Dev-only debug handle. Exposes the live Game so the browser console
+// (and the preview MCP) can poke at world state for verification work
+// — D5.C overflow scenarios, animator fade probing, etc. Excluded from
+// the production bundle by `import.meta.env.DEV`.
+if (import.meta.env.DEV) {
+  (window as unknown as { __game: typeof game }).__game = game;
+}

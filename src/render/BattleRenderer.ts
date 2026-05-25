@@ -11,6 +11,8 @@ import { COLORS } from './palette';
 import { SpriteAnimator } from './animation/SpriteAnimator';
 import { TICK_RATE, ticksToSeconds } from '../config';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
+import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
+import { SPAWN } from '../config/spawn';
 
 /**
  * The simulation/render seam. Subscribes to sim events and turns them into
@@ -44,6 +46,15 @@ interface BarFade {
   readonly pair: BarPair;
 }
 
+/** D5.C — overflow-spawn bar fade-in. Lerps HP-bar alpha 0 → 1 over
+ *  `duration`; the progress bar stays hidden during the spawn lockout
+ *  (filtered alongside MoveAction in `updateProgressFill`). */
+interface BarFadeIn {
+  elapsed: number;
+  readonly duration: number;
+  readonly pair: BarPair;
+}
+
 export class BattleRenderer {
   private readonly handles = new Map<number, SpriteHandle>();
   private readonly barPairs = new Map<number, BarPair>();
@@ -55,6 +66,8 @@ export class BattleRenderer {
   private readonly progress = new Map<number, ActiveProgress>();
   /** unitId → ongoing post-death bar fade. */
   private readonly barFades = new Map<number, BarFade>();
+  /** D5.C: unitId → ongoing overflow-spawn bar fade-in. */
+  private readonly barFadeIns = new Map<number, BarFadeIn>();
   /** Scratch vectors to avoid per-frame allocation when reading + offsetting sprite positions. */
   private readonly scratchPos = new THREE.Vector3();
   private readonly scratchBarPos = new THREE.Vector3();
@@ -123,6 +136,7 @@ export class BattleRenderer {
       this.bars.removeBar(fade.pair.progress);
     }
     this.barFades.clear();
+    this.barFadeIns.clear();
     this.flashes.clear();
     this.progress.clear();
     this.world = null;
@@ -133,7 +147,7 @@ export class BattleRenderer {
     this.subscriptions.length = 0;
   }
 
-  private onUnitSpawned = ({ unitId }: { unitId: number }): void => {
+  private onUnitSpawned = ({ unitId, instant }: GameEvents['unit:spawned']): void => {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
     if (!unit) return;
@@ -150,9 +164,18 @@ export class BattleRenderer {
       return;
     }
 
+    // D5.C — overflow-queue spawn? Lerp sprite alpha 0 → 1 over the
+    // SpawnAction lockout window so the unit fades in rather than
+    // popping. Bars start at alpha 0 too and fade in alongside via the
+    // BarFadeIn lane in `updateBars`.
+    const initialAlpha = instant ? 1 : 0;
+    if (!instant) {
+      this.animator.startFadeIn(handle, SPAWN.durationSeconds);
+    }
+
     // HP bar above the sprite; progress bar tucked between sprite and HP bar.
     // Both start in their full-fill state; the per-frame update tick will
-    // hide the progress bar immediately (no activeAction at spawn).
+    // hide the progress bar immediately (no non-spawn activeAction).
     const hpColor = hpFillColor(1);
     const hp = this.bars.addBar({
       position: hpBarPos(spritePos, this.scratchPos),
@@ -160,7 +183,7 @@ export class BattleRenderer {
       fillPct: 1,
       bgColor: HP_BAR_BG,
       fillColor: hpColor,
-      alpha: 1,
+      alpha: initialAlpha,
     });
     const progress = this.bars.addBar({
       position: progressBarPos(spritePos, this.scratchPos),
@@ -170,7 +193,15 @@ export class BattleRenderer {
       fillColor: PROGRESS_BAR_FILL,
       alpha: 0,
     });
-    this.barPairs.set(unit.id, { hp, progress });
+    const pair: BarPair = { hp, progress };
+    this.barPairs.set(unit.id, pair);
+    if (!instant) {
+      this.barFadeIns.set(unit.id, {
+        elapsed: 0,
+        duration: SPAWN.durationSeconds,
+        pair,
+      });
+    }
   };
 
   private onUnitMoved = ({
@@ -249,6 +280,10 @@ export class BattleRenderer {
     this.animator.cancel(handle);
     this.flashes.delete(unitId);
     this.progress.delete(unitId);
+    // D5.C — if the unit died mid-spawn-in fade (rare but possible if
+    // checkBattleEnd or AoE wipes a freshly-queued unit), drop the
+    // bar fade-in so it doesn't fight the bar fade-out below.
+    this.barFadeIns.delete(unitId);
     this.animator.startFade(handle, FADE_SECONDS, () => {
       this.sprites.removeSprite(handle);
       this.handles.delete(unitId);
@@ -310,6 +345,16 @@ export class BattleRenderer {
       }
     }
 
+    // D5.C — drive overflow-spawn fade-ins; HP bar lerps 0 → 1, progress
+    // bar stays hidden (the spawn lockout is filtered out of
+    // updateProgressFill, so no progress-fill writes will fight this).
+    for (const [unitId, fadeIn] of this.barFadeIns) {
+      fadeIn.elapsed += dt;
+      const t = fadeIn.elapsed >= fadeIn.duration ? 1 : fadeIn.elapsed / fadeIn.duration;
+      this.bars.updateBar(fadeIn.pair.hp, { alpha: t });
+      if (t >= 1) this.barFadeIns.delete(unitId);
+    }
+
     if (!this.world) return;
 
     for (const [unitId, pair] of this.barPairs) {
@@ -332,7 +377,16 @@ export class BattleRenderer {
     // bar, which reads as visual noise. The bar is meant for "this unit is
     // doing something that takes time" (attack swings, charge-ups, channels);
     // movement is handled by the sprite lerp itself.
-    if (!active || active.finishTick <= active.startTick || active.action.id === MOVE_ACTION_ID) {
+    //
+    // D5.C — also hide during SpawnAction lockout. The fade-in is the
+    // visual feedback for spawning; a second progress bar on top of a
+    // half-faded sprite would compete for attention.
+    if (
+      !active ||
+      active.finishTick <= active.startTick ||
+      active.action.id === MOVE_ACTION_ID ||
+      active.action.id === SPAWN_ACTION_ID
+    ) {
       if (this.progress.has(unitId)) this.progress.delete(unitId);
       this.bars.updateBar(pair.progress, { alpha: 0 });
       return;

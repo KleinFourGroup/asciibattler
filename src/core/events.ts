@@ -21,7 +21,13 @@ export interface GameEvents extends Record<string, unknown> {
   'battle:started': { worldSeed: number };
   'battle:ended': { winner: 'player' | 'enemy' };
 
-  'unit:spawned': { unitId: number };
+  /**
+   * Fires once per unit appearing on the grid. `instant: true` for
+   * setup-time spawns (battle start, initial team layout); `false` for
+   * D5.C overflow-queue spawns that come in mid-battle and visually
+   * lerp their alpha 0 → 1 over the SpawnAction lockout window.
+   */
+  'unit:spawned': { unitId: number; instant: boolean };
   'unit:moved': {
     unitId: number;
     from: GridCoord;

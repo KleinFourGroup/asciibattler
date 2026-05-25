@@ -10,9 +10,27 @@ import type { WorldCommand } from './Command';
 import { createAction } from './actions/registry';
 import { createBehavior } from './behaviors/registry';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
+import { MovementBehavior } from './behaviors/MovementBehavior';
+import { AttackBehavior } from './behaviors/AttackBehavior';
+import { SpawnAction } from './actions/SpawnAction';
+import { SPAWN } from '../config/spawn';
+import type { SpawnRegion } from './layouts';
 
-/** D3 bumped from 2 → 3: replaced single `gridSize` with `gridW` + `gridH`. */
-const WORLD_SCHEMA_VERSION = 3;
+/**
+ * Schema history:
+ *   2 — C1a added tileGrid.
+ *   3 — D3 replaced single `gridSize` with `gridW` + `gridH`.
+ *   4 — D5.C added per-team `spawnQueue` (overflow UnitTemplate[]) +
+ *       `spawnRegions` (each team's authoritative spawn region).
+ */
+const WORLD_SCHEMA_VERSION = 4;
+
+/**
+ * Deterministic team iteration order for the post-death overflow scan.
+ * Neutrals never appear in the queue (walls don't have templates), so
+ * skipping them here is a deliberate scope.
+ */
+const QUEUE_TEAMS: readonly Team[] = ['player', 'enemy'];
 
 interface ActiveActionSnapshot {
   actionId: string;
@@ -34,6 +52,16 @@ export interface UnitSnapshot {
   activeAction: ActiveActionSnapshot | null;
 }
 
+export interface SpawnQueueSnapshot {
+  team: Team;
+  templates: UnitTemplate[];
+}
+
+export interface SpawnRegionAssignment {
+  team: Team;
+  region: SpawnRegion;
+}
+
 export interface WorldSnapshot {
   schemaVersion: typeof WORLD_SCHEMA_VERSION;
   gridW: number;
@@ -45,6 +73,8 @@ export interface WorldSnapshot {
   units: UnitSnapshot[];
   pendingCommands: WorldCommand[];
   tileGrid: TileGridSnapshot;
+  spawnQueues: SpawnQueueSnapshot[];
+  spawnRegions: SpawnRegionAssignment[];
 }
 
 /**
@@ -86,6 +116,19 @@ export class World {
    * before per-unit step so the apply-point is deterministic for replay.
    */
   private readonly commands: WorldCommand[] = [];
+  /**
+   * D5.C overflow queue. Templates pushed here when battleSetup runs
+   * out of region tiles; drained at end-of-tick by `runOverflowScan`
+   * as tiles vacate (combatant deaths). Per-team FIFO so the layout
+   * author's roster order is preserved.
+   */
+  private readonly spawnQueues: Map<Team, UnitTemplate[]> = new Map();
+  /**
+   * D5.C: each team's authoritative spawn region. `runOverflowScan`
+   * walks `region.tiles` in stored order to find the first free cell,
+   * so determinism is `queue FIFO × region tile order`.
+   */
+  private readonly spawnRegions: Map<Team, SpawnRegion> = new Map();
 
   constructor(
     bus: EventBus<GameEvents>,
@@ -126,6 +169,36 @@ export class World {
   enqueueCommand(command: WorldCommand): void {
     if (this._ended) return;
     this.commands.push(command);
+  }
+
+  /**
+   * Register the authoritative spawn region for a team. Battle setup
+   * calls this once per team after picking regions; the overflow scan
+   * uses the stored region to find free tiles. Calling a second time
+   * for the same team replaces the prior region (also serves rehydrate
+   * from snapshot).
+   */
+  setTeamSpawnRegion(team: Team, region: SpawnRegion): void {
+    this.spawnRegions.set(team, region);
+  }
+
+  /**
+   * Push a template onto a team's overflow queue. Used by battleSetup
+   * when a team's roster has more units than its region has tiles —
+   * the extras spawn in as tiles vacate, in queue (FIFO) order.
+   */
+  queueUnit(team: Team, template: UnitTemplate): void {
+    let q = this.spawnQueues.get(team);
+    if (!q) {
+      q = [];
+      this.spawnQueues.set(team, q);
+    }
+    q.push(template);
+  }
+
+  /** Test/debug read of the queue depth for a team. */
+  queueLength(team: Team): number {
+    return this.spawnQueues.get(team)?.length ?? 0;
   }
 
   /**
@@ -214,7 +287,68 @@ export class World {
       best.action.start(unit, this);
     }
 
+    // D5.C — after deaths + movements settle for the tick, drain any
+    // overflow templates whose team's spawn region has free tiles.
+    // Runs before checkBattleEnd so a wiped team with units still in
+    // queue gets a chance to reinforce before victory triggers.
+    this.runOverflowScan();
+
     this.checkBattleEnd();
+  }
+
+  /**
+   * D5.C overflow scan. For each team with a non-empty queue, walks
+   * its spawn region tiles in stored order and instantiates queued
+   * templates onto free cells (no living unit currently occupies the
+   * cell). Each spawn fires `unit:spawned` with `instant: false` so
+   * the renderer fades the sprite in, and seats the unit with a
+   * `SpawnAction` activeAction so the selector keeps it busy for
+   * `SPAWN.durationTicks` ticks.
+   *
+   * Determinism: team order is `QUEUE_TEAMS`, queue order is FIFO,
+   * tile order is the region's stored tile array.
+   */
+  private runOverflowScan(): void {
+    for (const team of QUEUE_TEAMS) {
+      const queue = this.spawnQueues.get(team);
+      if (!queue || queue.length === 0) continue;
+      const region = this.spawnRegions.get(team);
+      if (!region) continue;
+
+      for (const tile of region.tiles) {
+        if (queue.length === 0) break;
+        if (this.isOccupied(tile)) continue;
+        const template = queue.shift()!;
+        this.spawnFromQueue(template, team, tile);
+      }
+    }
+  }
+
+  private isOccupied(coord: GridCoord): boolean {
+    for (const u of this.units) {
+      if (u.position.x === coord.x && u.position.y === coord.y) return true;
+    }
+    return false;
+  }
+
+  private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {
+    const unit = this.addUnit(
+      {
+        team,
+        glyph: glyphForArchetype(template.archetype),
+        stats: template.stats,
+        position,
+      },
+      false,
+    );
+    unit.behaviors.push(new MovementBehavior(), new AttackBehavior());
+    unit.activeAction = {
+      action: new SpawnAction(),
+      startTick: this.tickCount,
+      finishTick: this.tickCount + SPAWN.durationTicks,
+      effectTicks: [],
+    };
+    return unit;
   }
 
   /**
@@ -231,7 +365,7 @@ export class World {
     // Empty world isn't "battle over" — it's "no battle yet." Guards the
     // pre-spawn ticks and the (currently impossible, but theoretical)
     // mutual-annihilation case where both teams hit 0 in the same tick.
-    if (this.units.length === 0) return;
+    if (this.units.length === 0 && this.spawnQueues.size === 0) return;
     let playerAlive = false;
     let enemyAlive = false;
     for (const u of this.units) {
@@ -241,6 +375,12 @@ export class World {
       // side — a battlefield of just walls + corpses isn't a victory.
       if (playerAlive && enemyAlive) return;
     }
+    // D5.C — a team with units still in queue isn't wiped; the overflow
+    // scan will reinforce as tiles vacate. Treat them as alive so the
+    // battle doesn't end prematurely.
+    if ((this.spawnQueues.get('player')?.length ?? 0) > 0) playerAlive = true;
+    if ((this.spawnQueues.get('enemy')?.length ?? 0) > 0) enemyAlive = true;
+    if (playerAlive && enemyAlive) return;
     // No combatants left = mutual annihilation OR walls-only post-clear.
     // Either way, don't synthesize a winner.
     if (!playerAlive && !enemyAlive) return;
@@ -260,12 +400,15 @@ export class World {
    * off `team` (see render/BattleRenderer.ts).
    */
   spawnUnit(template: UnitTemplate, team: Team, position: GridCoord): Unit {
-    return this.addUnit({
-      team,
-      glyph: glyphForArchetype(template.archetype),
-      stats: template.stats,
-      position,
-    });
+    return this.addUnit(
+      {
+        team,
+        glyph: glyphForArchetype(template.archetype),
+        stats: template.stats,
+        position,
+      },
+      true,
+    );
   }
 
   /**
@@ -286,20 +429,34 @@ export class World {
     maxHp?: number;
     team?: Team;
   }): Unit {
-    return this.addUnit({
-      team: opts.team ?? 'neutral',
-      glyph: opts.glyph,
-      stats: makeInertStats(opts.maxHp ?? 1),
-      position: opts.position,
-    });
+    return this.addUnit(
+      {
+        team: opts.team ?? 'neutral',
+        glyph: opts.glyph,
+        stats: makeInertStats(opts.maxHp ?? 1),
+        position: opts.position,
+      },
+      true,
+    );
   }
 
-  private addUnit(init: {
-    team: Team;
-    glyph: string;
-    stats: UnitStats;
-    position: GridCoord;
-  }): Unit {
+  /**
+   * `instant` distinguishes setup-time spawns (initial battle layout —
+   * renderer pops the sprite in at full alpha, matching the screen-fade
+   * lifecycle) from D5.C overflow-queue spawns (renderer lerps alpha
+   * 0 → 1 over the SpawnAction lockout window). Threaded into the
+   * `unit:spawned` payload so every subscriber can branch without
+   * re-querying world state.
+   */
+  private addUnit(
+    init: {
+      team: Team;
+      glyph: string;
+      stats: UnitStats;
+      position: GridCoord;
+    },
+    instant: boolean,
+  ): Unit {
     const unit = new Unit({
       id: this.nextUnitId++,
       team: init.team,
@@ -308,7 +465,7 @@ export class World {
       position: init.position,
     });
     this.units.push(unit);
-    this.bus.emit('unit:spawned', { unitId: unit.id });
+    this.bus.emit('unit:spawned', { unitId: unit.id, instant });
     return unit;
   }
 
@@ -323,6 +480,20 @@ export class World {
    * bus is excluded; rehydration takes a fresh bus.
    */
   toJSON(): WorldSnapshot {
+    const spawnQueues: SpawnQueueSnapshot[] = [];
+    for (const [team, templates] of this.spawnQueues) {
+      // Deep copy templates so a post-snapshot push doesn't mutate the wire image.
+      spawnQueues.push({ team, templates: templates.map((t) => ({ ...t, stats: { ...t.stats } })) });
+    }
+    const spawnRegions: SpawnRegionAssignment[] = [];
+    for (const [team, region] of this.spawnRegions) {
+      // SpawnRegion tile arrays are immutable in practice but a defensive
+      // slice keeps the snapshot independent of the live region reference.
+      spawnRegions.push({
+        team,
+        region: { tiles: region.tiles.map((t) => ({ ...t })), availability: region.availability },
+      });
+    }
     return {
       schemaVersion: WORLD_SCHEMA_VERSION,
       gridW: this.gridW,
@@ -334,6 +505,8 @@ export class World {
       units: this.units.map(snapshotUnit),
       pendingCommands: this.commands.slice(),
       tileGrid: this.tileGrid.toJSON(),
+      spawnQueues,
+      spawnRegions,
     };
   }
 
@@ -387,6 +560,16 @@ export class World {
     }
 
     for (const cmd of snap.pendingCommands) world.commands.push(cmd);
+
+    // D5.C — restore overflow queues + regions BEFORE the next tick so
+    // the post-death scan and checkBattleEnd both see consistent state.
+    for (const entry of snap.spawnQueues) {
+      world.spawnQueues.set(entry.team, entry.templates.slice());
+    }
+    for (const entry of snap.spawnRegions) {
+      world.spawnRegions.set(entry.team, entry.region);
+    }
+
     return world;
   }
 }

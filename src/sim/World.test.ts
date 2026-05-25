@@ -62,8 +62,8 @@ describe('World.spawnUnit', () => {
     expect(a.team).toBe('player');
     expect(b.team).toBe('enemy');
     expect(handler).toHaveBeenCalledTimes(2);
-    expect(handler).toHaveBeenNthCalledWith(1, { unitId: 1 });
-    expect(handler).toHaveBeenNthCalledWith(2, { unitId: 2 });
+    expect(handler).toHaveBeenNthCalledWith(1, { unitId: 1, instant: true });
+    expect(handler).toHaveBeenNthCalledWith(2, { unitId: 2, instant: true });
   });
 
   it('derives glyph from the template archetype', () => {

@@ -75,9 +75,15 @@ export function pickSpawnRegions(
  * Each spawned unit gets `MovementBehavior` + `AttackBehavior` — the
  * MVP behavior pair.
  *
- * Templates beyond `region.tiles.length` are silently dropped at D5.B.
- * D5.C re-enables them via a per-team overflow queue that spawns extras
- * as tiles vacate.
+ * **D5.C** — templates beyond `region.tiles.length` are pushed onto
+ * `world.spawnQueues[team]`; `World.runOverflowScan` drains them as
+ * tiles vacate during the battle. Also registers `region` as the
+ * team's authoritative spawn region via `world.setTeamSpawnRegion` so
+ * the scan knows where to look. The same registration carries the
+ * tile ORDER, which is the deterministic scan order — using the
+ * un-shuffled `region.tiles` here (the shuffled copy is only for the
+ * initial placement) keeps overflow scans stable across reruns of the
+ * same seed.
  */
 export function spawnTeam(
   world: World,
@@ -86,12 +92,16 @@ export function spawnTeam(
   region: SpawnRegion,
   rng: RNG,
 ): void {
+  world.setTeamSpawnRegion(team, region);
   const tiles = region.tiles.slice();
   shuffleTilesInPlace(tiles, rng);
   const n = Math.min(templates.length, tiles.length);
   for (let i = 0; i < n; i++) {
     const u = world.spawnUnit(templates[i]!, team, tiles[i]!);
     u.behaviors.push(new MovementBehavior(), new AttackBehavior());
+  }
+  for (let i = n; i < templates.length; i++) {
+    world.queueUnit(team, templates[i]!);
   }
 }
 

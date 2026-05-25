@@ -2,6 +2,7 @@ import type { Action } from '../Action';
 import type { World } from '../World';
 import { MOVE_ACTION_ID, MoveAction, type MoveActionData } from './MoveAction';
 import { ATTACK_ACTION_ID, AttackAction, type AttackActionData } from './AttackAction';
+import { SPAWN_ACTION_ID, SpawnAction } from './SpawnAction';
 
 /**
  * Action factories keyed by `Action.id`. `World.fromJSON` uses these to
@@ -18,6 +19,7 @@ export type ActionFactory = (data: unknown, world: World) => Action;
 const FACTORIES: Record<string, ActionFactory> = {
   [MOVE_ACTION_ID]: (data) => MoveAction.fromData(data as MoveActionData),
   [ATTACK_ACTION_ID]: (data, world) => AttackAction.fromData(data as AttackActionData, world),
+  [SPAWN_ACTION_ID]: () => SpawnAction.fromData(),
 };
 
 export function createAction(id: string, data: unknown, world: World): Action {

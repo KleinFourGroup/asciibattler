@@ -167,7 +167,42 @@ square layouts exist. Recommend: yes, rectangular for hand-authored
 (separate `gridW`, `gridH`, both 8-32); procedural stays square (one
 `gridSize`).
 
-### D4 — Camera overhaul (dev fit + game scroll)
+### D4 — Camera overhaul (dev fit + game scroll) ✅ LANDED
+
+Two camera modes on `Renderer` (constants at the top of
+[src/render/Renderer.ts](src/render/Renderer.ts)):
+
+- **Mode A `fit`** — size-aware version of the pre-D4 framing.
+  `fitCameraFit()` computes camera distance from the board AABB
+  (`boardW + 2·XZ_PADDING` × `boardH + 2·XZ_PADDING` × `2·Y_HALF_EXTENT`)
+  and looks at world origin. Default through D4 (`DEV_DEFAULT_MODE`).
+- **Mode B `scroll`** — fixed `SCROLL_WINDOW_TILES = 12` window AABB,
+  looks at `(cameraTargetX, 0, cameraTargetZ)`. Per-frame
+  `updateScrollFromInput(dt)` sums pan keys (WASD + arrow keys both
+  active, `PAN_KEY_CODES`) + edge-scroll (mouse within
+  `EDGE_SCROLL_THRESHOLD_PX = 40` of any canvas edge) into XZ
+  direction; pans at `PAN_SPEED_TILES_PER_SEC = 12`. Pitch stays locked; only XZ position moves. `clampCameraTarget`
+  caps target to `±max(0, boardDim/2 - 6)` so the visible window stays
+  inside the board (boards ≤ 12 in a dim → target snaps to 0 in that
+  dim, no pan possible).
+- **Toggle:** `e.code === 'Backquote'` (the `` ` ``/`~` key) swaps
+  modes; logs `[camera] mode: fit|scroll`. Defaults to `fit` through
+  D4 — D5 flips to `scroll` once spawn regions land.
+- **Initial anchor:** `BattleScene.mount` calls
+  `renderer.setCameraTarget(0, world.gridH/2 - 2)` after `fitToBoard`,
+  anchoring on the player spawn rows (1-2). Preserved across mode
+  toggles. D5 will switch this to the centroid of the rolled player
+  region.
+- **Listeners:** `keydown`/`keyup` on window (no canvas focus needed),
+  `mousemove`/`mouseleave` on canvas (so HUD hover doesn't pan). Torn
+  down in `Renderer.stop()`.
+- Math factored — `computeCameraDistance(hx, hy, hz)` is the shared
+  per-corner FOV math both modes call.
+
+No new tests (render code is verified by eyeball per
+[TESTING.md](TESTING.md)); 248 tests still pass. Next up: D5.
+
+Original plan (left for reference):
 
 Variable map sizes break the "single fixed camera frames the arena"
 assumption. c1-feedback asks for two modes, both available now,
@@ -195,19 +230,14 @@ default-mode question deferred to beta-testing.
 No editor scope — the editor is a 2D grid, unrelated to the game
 camera.
 
-**Decision points D4:**
+**Decision points D4 (resolved at impl time, recommendations all
+accepted):**
 
-- Scroll-mode visible window size. 12×12 feels like the "playing zoom"
-  for continuity with pre-D3 framing, but at gridSize=20 procedural
-  that's 36% of the board visible. Recommend 12×12 as the start and
-  tune during browser-verify.
-- Edge-scroll thresholds (px from edge, scroll speed). Sensible
-  defaults (e.g. 40px threshold, 12 tiles/sec at edge) and revisit if
-  it feels off.
-- Whether mode B is the default in production builds from day one or
-  ships behind a settings toggle. Recommend: keep mode A as default
-  through D3, flip the default once D5 (spawn regions) lands so the
-  scroll camera has a sensible initial focal point.
+- Scroll-mode visible window size → **12×12** (`SCROLL_WINDOW_TILES`).
+- Edge-scroll thresholds → **40px / 12 tiles/sec**
+  (`EDGE_SCROLL_THRESHOLD_PX`, `PAN_SPEED_TILES_PER_SEC`).
+- Mode B as production default → **deferred**; keep `fit` as
+  `DEV_DEFAULT_MODE` through D4, flip when D5 spawn regions land.
 
 ### D5 — Spawn-region system
 

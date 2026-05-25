@@ -23,6 +23,41 @@ const Y_HALF_EXTENT = 1.0;
 /** Distance multiplier on top of the analytic fit so nothing hugs the frame edge. */
 const FIT_MARGIN = 1.05;
 
+/** D4: which camera framing is active. */
+export type CameraMode = 'fit' | 'scroll';
+
+/**
+ * D4 dev default. Scroll mode is implemented and toggleable via the dev
+ * keystroke from day one, but the default stays `fit` until D5 (spawn
+ * regions) gives scroll a richer initial focal point than "player rows".
+ */
+const DEV_DEFAULT_MODE: CameraMode = 'fit';
+
+/**
+ * D4 scroll-mode visible window — tiles per side. Matches the pre-D3
+ * `GRID_SIZE` so scroll-mode framing feels like the original game zoom
+ * on any board that's >= this size; smaller boards fall back to "show
+ * everything" (camera clamps to the world origin in that dim).
+ */
+const SCROLL_WINDOW_TILES = 12;
+
+/** D4 edge-scroll trigger zone: px from canvas edge that activates pan. */
+const EDGE_SCROLL_THRESHOLD_PX = 40;
+
+/** D4 pan speed (tiles/sec) for both WASD and edge-scroll. */
+const PAN_SPEED_TILES_PER_SEC = 12;
+
+/** D4 dev keystroke that toggles camera mode (Backquote = the `~` key). */
+const CAMERA_TOGGLE_CODE = 'Backquote';
+
+/** D4 pan keys: WASD and arrow keys (both active simultaneously). Tracked
+ *  in `keysHeld` and summed into the XZ pan direction in
+ *  `updateScrollFromInput`. `e.code` is layout-independent. */
+const PAN_KEY_CODES = new Set<string>([
+  'KeyW', 'KeyA', 'KeyS', 'KeyD',
+  'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight',
+]);
+
 /**
  * Wraps `WebGLRenderer` + `EffectComposer` and owns the requestAnimationFrame
  * loop. The scene, camera, and clear color live here so gameplay code never
@@ -59,6 +94,24 @@ export class Renderer {
    *  `fitToBoard` on mount. */
   private boardW: number = GRID_SIZE;
   private boardH: number = GRID_SIZE;
+
+  /**
+   * D4 camera state. `cameraMode` swaps between fit (whole arena framed)
+   * and scroll (fixed window pannable with WASD + edge-scroll). Target
+   * is the world XZ point the scroll camera is centered on; ignored in
+   * fit mode but preserved across toggles so flipping back to scroll
+   * resumes where the player left it.
+   */
+  private cameraMode: CameraMode = DEV_DEFAULT_MODE;
+  private cameraTargetX = 0;
+  private cameraTargetZ = 0;
+
+  /** D4 input state. Held WASD keys + last-known mouse XY relative to
+   *  the canvas (null when mouse is outside the canvas — edge-scroll
+   *  shouldn't fire from a mouse parked over the HUD or browser chrome). */
+  private readonly keysHeld = new Set<string>();
+  private mouseX: number | null = null;
+  private mouseY: number | null = null;
 
   constructor(canvas: HTMLCanvasElement, onFrame: (dtSeconds: number) => void) {
     this.onFrame = onFrame;
@@ -123,6 +176,13 @@ export class Renderer {
 
     this.handleResize();
     window.addEventListener('resize', this.handleResize);
+    // D4 input listeners: keys on window so the user doesn't need to focus
+    // the canvas; mouse position on the canvas so edge-scroll only triggers
+    // when the cursor is over the play area (HUD hover doesn't pan).
+    window.addEventListener('keydown', this.handleKeyDown);
+    window.addEventListener('keyup', this.handleKeyUp);
+    this.webgl.domElement.addEventListener('mousemove', this.handleMouseMove);
+    this.webgl.domElement.addEventListener('mouseleave', this.handleMouseLeave);
   }
 
   start(): void {
@@ -134,6 +194,7 @@ export class Renderer {
       const dt = (now - this.lastFrameMs) / 1000;
       this.lastFrameMs = now;
 
+      if (this.cameraMode === 'scroll') this.updateScrollFromInput(dt);
       this.onFrame(dt);
       this.renderTwoPass();
     };
@@ -147,11 +208,45 @@ export class Renderer {
    * call this and inherit whatever the last battle left (or the
    * `GRID_SIZE × GRID_SIZE` default at boot) — they don't render
    * arena content so the camera state is irrelevant for them.
+   *
+   * D4: in scroll mode the board size also drives the clamp range for
+   * `cameraTargetX/Z`, so calling this re-clamps the saved target.
    */
   fitToBoard(gridW: number, gridH: number): void {
     this.boardW = gridW;
     this.boardH = gridH;
     this.fitCamera();
+  }
+
+  /**
+   * D4: BattleScene calls this after team spawn to anchor the scroll
+   * camera on the player area. World XZ; gets clamped to the board on
+   * apply. No-op for fit mode visually, but the target is preserved so
+   * a toggle to scroll picks up at this anchor.
+   */
+  setCameraTarget(worldX: number, worldZ: number): void {
+    this.cameraTargetX = worldX;
+    this.cameraTargetZ = worldZ;
+    this.fitCamera();
+  }
+
+  /**
+   * D4: dev/debug camera-mode swap. Re-fits the camera so the change is
+   * visible immediately. Logs to console so it's obvious which mode is
+   * active during browser-verify.
+   */
+  setCameraMode(mode: CameraMode): void {
+    if (this.cameraMode === mode) return;
+    this.cameraMode = mode;
+    this.fitCamera();
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line no-console
+      console.log(`[camera] mode: ${mode}`);
+    }
+  }
+
+  getCameraMode(): CameraMode {
+    return this.cameraMode;
   }
 
   /**
@@ -184,6 +279,10 @@ export class Renderer {
     if (this.rafId !== null) cancelAnimationFrame(this.rafId);
     this.rafId = null;
     window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('keydown', this.handleKeyDown);
+    window.removeEventListener('keyup', this.handleKeyUp);
+    this.webgl.domElement.removeEventListener('mousemove', this.handleMouseMove);
+    this.webgl.domElement.removeEventListener('mouseleave', this.handleMouseLeave);
     this.webgl.dispose();
   }
 
@@ -200,35 +299,73 @@ export class Renderer {
   };
 
   /**
-   * Position the camera so the arena AABB fits the viewport with margin at
-   * the current pitch and aspect. The arena half-extents come from the
-   * per-battle `boardW × boardH` set by `fitToBoard`; X/Z scale with the
-   * board, Y stays a fixed sprite-layer headroom.
+   * Position the camera so the active frame (whole arena in fit mode;
+   * fixed window in scroll mode) sits inside the viewport at the current
+   * pitch and aspect.
    *
-   * For each of the 8 corners of the box, compute the minimum camera
-   * distance D such that the corner sits inside both the vertical and
-   * horizontal FOV cones; take the max. Pitch is fixed, so position is
-   * `(0, D·sinθ, D·cosθ)` and we always look at the world origin.
-   *
-   * Derivation: camera basis vectors at pitch θ are
-   *   forward = (0, -sinθ, -cosθ),  up = (0, cosθ, -sinθ),  right = (1, 0, 0)
-   * For a corner P relative to camera C = (0, D·sinθ, D·cosθ):
-   *   depth     = (D - py·sinθ - pz·cosθ)
-   *   up_coord  = py·cosθ - pz·sinθ           (D cancels)
-   *   rightC    = px                          (D cancels)
-   * Fit constraints: |up_coord| ≤ depth·tan(fovV/2) and same for horizontal.
-   * Solving for D yields  D ≥ py·sinθ + pz·cosθ + |coord|/tan(fov/2).
+   * Shared math lives in `computeCameraDistance`. The two modes differ
+   * only in (a) the half-extents that drive the AABB, and (b) the look-at
+   * point — fit always points at world origin; scroll points at
+   * `(cameraTargetX, 0, cameraTargetZ)` so panning translates the frame.
    */
   private fitCamera(): void {
+    if (this.cameraMode === 'fit') {
+      this.fitCameraFit();
+    } else {
+      this.fitCameraScroll();
+    }
+  }
+
+  private fitCameraFit(): void {
+    const sinP = Math.sin(CAMERA_PITCH_RAD);
+    const cosP = Math.cos(CAMERA_PITCH_RAD);
+    const hx = this.boardW / 2 + XZ_PADDING;
+    const hz = this.boardH / 2 + XZ_PADDING;
+    const D = this.computeCameraDistance(hx, Y_HALF_EXTENT, hz);
+    this.camera.position.set(0, D * sinP, D * cosP);
+    this.camera.lookAt(0, 0, 0);
+  }
+
+  private fitCameraScroll(): void {
+    this.clampCameraTarget();
+    const sinP = Math.sin(CAMERA_PITCH_RAD);
+    const cosP = Math.cos(CAMERA_PITCH_RAD);
+    const half = SCROLL_WINDOW_TILES / 2;
+    const D = this.computeCameraDistance(half, Y_HALF_EXTENT, half);
+    this.camera.position.set(
+      this.cameraTargetX,
+      D * sinP,
+      this.cameraTargetZ + D * cosP,
+    );
+    this.camera.lookAt(this.cameraTargetX, 0, this.cameraTargetZ);
+  }
+
+  /**
+   * Min camera distance D such that the box of half-extents (hx, hy, hz)
+   * centered at the camera's look-at point fits inside both FOV cones.
+   *
+   * For each of the 8 corners, compute the minimum D such that the
+   * corner sits inside both the vertical and horizontal FOV cones; take
+   * the max across corners and both axes, then apply FIT_MARGIN.
+   *
+   * Derivation: camera basis at pitch θ is
+   *   forward = (0, -sinθ, -cosθ),  up = (0, cosθ, -sinθ),  right = (1, 0, 0)
+   * For a corner P relative to camera at (0, D·sinθ, D·cosθ):
+   *   depth     = D - py·sinθ - pz·cosθ
+   *   up_coord  = py·cosθ - pz·sinθ           (D cancels)
+   *   right_coord = px                        (D cancels)
+   * Fit: |up_coord| ≤ depth·tan(fovV/2) and same for horizontal. Solving
+   * yields D ≥ py·sinθ + pz·cosθ + |coord|/tan(fov/2). Translation of
+   * the look-at point doesn't change this — both camera and box shift
+   * by the same amount.
+   */
+  private computeCameraDistance(hx: number, hy: number, hz: number): number {
     const fovV = (this.camera.fov * Math.PI) / 180;
     const fovH = 2 * Math.atan(Math.tan(fovV / 2) * this.camera.aspect);
     const sinP = Math.sin(CAMERA_PITCH_RAD);
     const cosP = Math.cos(CAMERA_PITCH_RAD);
     const tanV = Math.tan(fovV / 2);
     const tanH = Math.tan(fovH / 2);
-    const hx = this.boardW / 2 + XZ_PADDING;
-    const hy = Y_HALF_EXTENT;
-    const hz = this.boardH / 2 + XZ_PADDING;
 
     let maxD = 0;
     for (const sx of [-1, 1] as const) {
@@ -246,8 +383,80 @@ export class Renderer {
         }
       }
     }
-    const D = maxD * FIT_MARGIN;
-    this.camera.position.set(0, D * sinP, D * cosP);
-    this.camera.lookAt(0, 0, 0);
+    return maxD * FIT_MARGIN;
   }
+
+  /**
+   * Clamp the scroll camera target so the visible window stays inside
+   * the board's XZ AABB. When the board is smaller than the window in a
+   * dim, the camera centers at 0 in that dim (no pan possible).
+   */
+  private clampCameraTarget(): void {
+    const half = SCROLL_WINDOW_TILES / 2;
+    const maxX = Math.max(0, this.boardW / 2 - half);
+    const maxZ = Math.max(0, this.boardH / 2 - half);
+    if (this.cameraTargetX > maxX) this.cameraTargetX = maxX;
+    else if (this.cameraTargetX < -maxX) this.cameraTargetX = -maxX;
+    if (this.cameraTargetZ > maxZ) this.cameraTargetZ = maxZ;
+    else if (this.cameraTargetZ < -maxZ) this.cameraTargetZ = -maxZ;
+  }
+
+  /**
+   * D4 per-frame scroll-camera driver. Sums WASD and edge-scroll input
+   * into an XZ direction, then translates the camera target at
+   * PAN_SPEED_TILES_PER_SEC scaled by dt. Cheap to call every frame;
+   * skips the matrix update + clamp when no input is active.
+   *
+   * Screen-up at the locked pitch maps to world -Z (the far edge of the
+   * arena), so W / mouse-near-top → -Z, S / mouse-near-bottom → +Z.
+   */
+  private updateScrollFromInput(dt: number): void {
+    let dx = 0;
+    let dz = 0;
+    if (this.keysHeld.has('KeyA') || this.keysHeld.has('ArrowLeft')) dx -= 1;
+    if (this.keysHeld.has('KeyD') || this.keysHeld.has('ArrowRight')) dx += 1;
+    if (this.keysHeld.has('KeyW') || this.keysHeld.has('ArrowUp')) dz -= 1;
+    if (this.keysHeld.has('KeyS') || this.keysHeld.has('ArrowDown')) dz += 1;
+
+    if (this.mouseX !== null && this.mouseY !== null) {
+      const w = this.webgl.domElement.clientWidth;
+      const h = this.webgl.domElement.clientHeight;
+      if (this.mouseX < EDGE_SCROLL_THRESHOLD_PX) dx -= 1;
+      else if (this.mouseX > w - EDGE_SCROLL_THRESHOLD_PX) dx += 1;
+      if (this.mouseY < EDGE_SCROLL_THRESHOLD_PX) dz -= 1;
+      else if (this.mouseY > h - EDGE_SCROLL_THRESHOLD_PX) dz += 1;
+    }
+
+    if (dx === 0 && dz === 0) return;
+    const step = PAN_SPEED_TILES_PER_SEC * dt;
+    this.cameraTargetX += dx * step;
+    this.cameraTargetZ += dz * step;
+    this.fitCamera();
+  }
+
+  private handleKeyDown = (e: KeyboardEvent): void => {
+    if (e.code === CAMERA_TOGGLE_CODE) {
+      if (e.repeat) return;
+      this.setCameraMode(this.cameraMode === 'fit' ? 'scroll' : 'fit');
+      return;
+    }
+    if (PAN_KEY_CODES.has(e.code)) {
+      this.keysHeld.add(e.code);
+    }
+  };
+
+  private handleKeyUp = (e: KeyboardEvent): void => {
+    this.keysHeld.delete(e.code);
+  };
+
+  private handleMouseMove = (e: MouseEvent): void => {
+    const rect = this.webgl.domElement.getBoundingClientRect();
+    this.mouseX = e.clientX - rect.left;
+    this.mouseY = e.clientY - rect.top;
+  };
+
+  private handleMouseLeave = (): void => {
+    this.mouseX = null;
+    this.mouseY = null;
+  };
 }

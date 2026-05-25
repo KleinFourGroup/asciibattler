@@ -90,6 +90,14 @@ export class BattleScene implements Scene {
     // D3 — frame the camera to whatever rectangle this encounter rolled
     // (procedural sizes range up to 20×20; hand-authored up to 32×32).
     ctx.renderer.fitToBoard(this.world.gridW, this.world.gridH);
+    // D4 — anchor the scroll-mode camera on the player spawn area so a
+    // toggle-to-scroll (or the eventual D5 default flip) shows the
+    // player's team first. spawnTeam puts player at grid rows 1 and 2;
+    // gridToWorld maps grid row r → world z = gridH/2 - r - 0.5, so the
+    // midpoint of player rows is world z = gridH/2 - 2. Renderer clamps
+    // for boards too small to actually pan. No-op visually in fit mode,
+    // but the target is preserved across toggles.
+    ctx.renderer.setCameraTarget(0, this.world.gridH / 2 - 2);
     spawnTeam(this.world, 'player', encounter.playerTeam);
     spawnTeam(this.world, 'enemy', encounter.enemyTeam);
   }

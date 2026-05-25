@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { generateTerrain, reservedSpawnRows } from './terrainGen';
 import { RNG } from '../core/RNG';
+import type { GridCoord } from '../core/types';
 import type { TerrainConfig } from '../config/terrain';
+import type { SpawnRegion } from './layouts';
 
 const G = 12;
 
@@ -13,7 +15,10 @@ const BASE: TerrainConfig = {
   ensureConnectivity: true,
 };
 
-describe('reservedSpawnRows', () => {
+describe('reservedSpawnRows (pre-D5 legacy export)', () => {
+  // Kept as a legacy export for the layout editor's diagonal-stripe
+  // overlay until D5.D swaps the overlay for explicit spawn-region
+  // shading. The procedural generator no longer consumes it.
   it('returns [1, 2, gridH-3, gridH-2] for normal grid heights', () => {
     expect(reservedSpawnRows(12)).toEqual([1, 2, 9, 10]);
     expect(reservedSpawnRows(20)).toEqual([1, 2, 17, 18]);
@@ -27,16 +32,28 @@ describe('reservedSpawnRows', () => {
 });
 
 describe('generateTerrain (procedural)', () => {
-  it('leaves every reserved spawn row free of walls and water', () => {
-    const { tileGrid, walls } = generateTerrain(new RNG(42), G, G, BASE);
-    const reserved = new Set(reservedSpawnRows(G));
-    for (const row of reserved) {
-      for (let x = 0; x < G; x++) {
-        expect(tileGrid.kindAt({ x, y: row })).toBe('floor');
-      }
+  it('emits two `both` spawn regions on the literal top + bottom edges', () => {
+    const { spawnRegions } = generateTerrain(new RNG(42), G, G, BASE);
+    expect(spawnRegions.length).toBe(2);
+    for (const region of spawnRegions) {
+      expect(region.availability).toBe('both');
+      expect(region.tiles.length).toBe(8);
     }
-    for (const w of walls) {
-      expect(reserved.has(w.y)).toBe(false);
+    // Top band on y=0, bottom band on y=gridH-1.
+    const ys = spawnRegions.map((r) => r.tiles[0]!.y);
+    expect(ys).toContain(0);
+    expect(ys).toContain(G - 1);
+  });
+
+  it('leaves every spawn-region tile free of walls and water', () => {
+    const { tileGrid, walls, spawnRegions } = generateTerrain(new RNG(42), G, G, BASE);
+    const spawnTiles = collectSpawnTiles(spawnRegions);
+    for (const t of spawnTiles) {
+      expect(tileGrid.kindAt(t)).toBe('floor');
+    }
+    const wallSet = new Set(walls.map((w) => `${w.x},${w.y}`));
+    for (const t of spawnTiles) {
+      expect(wallSet.has(`${t.x},${t.y}`)).toBe(false);
     }
   });
 
@@ -63,6 +80,7 @@ describe('generateTerrain (procedural)', () => {
     const b = generateTerrain(new RNG(99), G, G, BASE);
     expect(a.walls).toEqual(b.walls);
     expect(a.tileGrid.toJSON()).toEqual(b.tileGrid.toJSON());
+    expect(a.spawnRegions).toEqual(b.spawnRegions);
   });
 
   it('produces different terrain for different seeds', () => {
@@ -81,17 +99,18 @@ describe('generateTerrain (procedural)', () => {
     for (const c of tileGrid.cells()) expect(c.kind).toBe('floor');
   });
 
-  it('ensureConnectivity peels walls until a path exists between spawn rows', () => {
+  it('ensureConnectivity peels walls until a path exists between spawn regions', () => {
     // High wall density would normally risk severing the arena. With
-    // ensureConnectivity on, the post-fix guarantees a path.
+    // ensureConnectivity on, the post-fix guarantees a path between the
+    // first two spawn-region centroids.
     const cfg: TerrainConfig = {
       ...BASE,
       wallDensity: 0.4, // ~58 walls — easily enough to cut the board
       shallowWaterDensity: 0,
       ensureConnectivity: true,
     };
-    const { walls } = generateTerrain(new RNG(5), G, G, cfg);
-    expect(hasPathThrough(walls, G, G, reservedSpawnRows(G))).toBe(true);
+    const { walls, spawnRegions } = generateTerrain(new RNG(5), G, G, cfg);
+    expect(hasPathBetweenRegions(walls, G, G, spawnRegions[0]!, spawnRegions[1]!)).toBe(true);
   });
 
   it('without ensureConnectivity, a pathological seed CAN sever the board', () => {
@@ -106,10 +125,11 @@ describe('generateTerrain (procedural)', () => {
       ensureConnectivity: false,
     };
     let foundSevered = false;
-    const reserved = reservedSpawnRows(G);
     for (let seed = 1; seed <= 20 && !foundSevered; seed++) {
-      const { walls } = generateTerrain(new RNG(seed), G, G, cfg);
-      if (!hasPathThrough(walls, G, G, reserved)) foundSevered = true;
+      const { walls, spawnRegions } = generateTerrain(new RNG(seed), G, G, cfg);
+      if (!hasPathBetweenRegions(walls, G, G, spawnRegions[0]!, spawnRegions[1]!)) {
+        foundSevered = true;
+      }
     }
     expect(foundSevered).toBe(true);
   });
@@ -123,7 +143,7 @@ describe('generateTerrain (procedural)', () => {
     };
     const gridW = 15;
     const gridH = 10;
-    const { tileGrid, walls } = generateTerrain(new RNG(7), gridW, gridH, cfg);
+    const { tileGrid, walls, spawnRegions } = generateTerrain(new RNG(7), gridW, gridH, cfg);
     expect(tileGrid.width).toBe(gridW);
     expect(tileGrid.height).toBe(gridH);
     for (const w of walls) {
@@ -132,8 +152,11 @@ describe('generateTerrain (procedural)', () => {
       expect(w.y).toBeGreaterThanOrEqual(0);
       expect(w.y).toBeLessThan(gridH);
     }
-    const reserved = new Set(reservedSpawnRows(gridH));
-    for (const w of walls) expect(reserved.has(w.y)).toBe(false);
+    const spawnTiles = collectSpawnTiles(spawnRegions);
+    const wallSet = new Set(walls.map((w) => `${w.x},${w.y}`));
+    for (const t of spawnTiles) {
+      expect(wallSet.has(`${t.x},${t.y}`)).toBe(false);
+    }
   });
 
   it('dispatches to the hand-authored library when layoutId is set', () => {
@@ -142,6 +165,14 @@ describe('generateTerrain (procedural)', () => {
     // densities targets ~9. The count mismatch is a sufficient signal that
     // the library path ran rather than the procedural one.
     expect(walls.length).toBe(16);
+  });
+
+  it('layout dispatch returns the layout-declared spawn regions verbatim', () => {
+    const { spawnRegions } = generateTerrain(new RNG(1), G, G, BASE, 'corridor');
+    expect(spawnRegions.length).toBeGreaterThanOrEqual(2);
+    for (const region of spawnRegions) {
+      expect(region.tiles.length).toBe(8);
+    }
   });
 
   it('layout dispatch ignores the RNG (same layoutId → same walls regardless of seed)', () => {
@@ -155,23 +186,29 @@ describe('generateTerrain (procedural)', () => {
   });
 });
 
-/** Mirror of terrainGen's internal hasPath: 8-dir BFS, used only by tests. */
-function hasPathThrough(
+function collectSpawnTiles(regions: readonly SpawnRegion[]): GridCoord[] {
+  const out: GridCoord[] = [];
+  for (const region of regions) {
+    for (const t of region.tiles) out.push(t);
+  }
+  return out;
+}
+
+function hasPathBetweenRegions(
   walls: readonly { x: number; y: number }[],
   gridW: number,
   gridH: number,
-  reservedRows: readonly number[],
+  a: SpawnRegion,
+  b: SpawnRegion,
 ): boolean {
-  if (reservedRows.length < 2) return true;
-  const center = Math.floor(gridW / 2);
-  const start = { x: center, y: Math.min(...reservedRows) };
-  const goal = { x: center, y: Math.max(...reservedRows) };
+  const start = centroid(a);
+  const goal = centroid(b);
   const blocked = new Set<string>();
   for (const w of walls) blocked.add(`${w.x},${w.y}`);
   if (blocked.has(`${goal.x},${goal.y}`)) return false;
 
   const visited = new Set<string>([`${start.x},${start.y}`]);
-  const queue = [start];
+  const queue: GridCoord[] = [start];
   while (queue.length > 0) {
     const c = queue.shift()!;
     if (c.x === goal.x && c.y === goal.y) return true;
@@ -189,4 +226,14 @@ function hasPathThrough(
     }
   }
   return false;
+}
+
+function centroid(region: SpawnRegion): GridCoord {
+  let sx = 0;
+  let sy = 0;
+  for (const t of region.tiles) {
+    sx += t.x;
+    sy += t.y;
+  }
+  return { x: Math.round(sx / region.tiles.length), y: Math.round(sy / region.tiles.length) };
 }

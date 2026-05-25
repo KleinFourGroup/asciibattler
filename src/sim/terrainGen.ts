@@ -1,58 +1,66 @@
 /**
- * Per-encounter terrain generator. Given an encounter's RNG fork and the
- * terrain config, returns a freshly-built TileGrid plus a list of wall
- * coordinates. Walls are returned as raw `GridCoord`s rather than spawned
- * directly — the caller (battle setup) is responsible for turning them
- * into neutral-team Units via `spawnWall`. That seam keeps the generator
- * independent of World construction and easy to test in isolation.
+ * Per-encounter terrain generator. Given an encounter's RNG fork, the
+ * arena dimensions, and the terrain config, returns a freshly-built
+ * `GeneratedTerrain` — TileGrid + wall coords + spawn regions. The
+ * caller (battle setup) is responsible for turning the walls into
+ * neutral-team `Unit`s via `spawnWall` and for drawing player + enemy
+ * regions from the returned `spawnRegions`. That seam keeps the
+ * generator independent of World construction and easy to test in
+ * isolation.
  *
- * Hybrid model: when `layoutId` is null the generator uses the procedural
- * density-driven path; when non-null it dispatches to the hand-authored
- * library at `src/sim/layouts.ts`. `Run` rolls the split at encounter
- * creation time, so a given playthrough sees a mix of procedural variety
- * and tactically-tuned set pieces.
+ * Hybrid model: when `layoutId` is null the generator uses the
+ * procedural density-driven path; when non-null it dispatches to the
+ * hand-authored library at `src/sim/layouts.ts`. `Run` rolls the split
+ * at encounter creation time, so a given playthrough sees a mix of
+ * procedural variety and tactically-tuned set pieces.
  *
- * **D3 — rectangular arenas.** The generator now takes `(gridW, gridH)`
- * independently. The procedural path scatters walls + water onto any
- * rectangle in the configured size range; the layout path reads the
- * layout's own `gridW` × `gridH` and refuses if the caller's dimensions
- * disagree. The pre-D3 `config.spawnRowsClear` array is gone — reserved
- * rows are computed per-encounter from `gridH` (top 2 rows + bottom 2
- * rows) inside this module via `reservedSpawnRows(gridH)`. D5 will
- * replace this row-based reservation with per-layout spawn regions.
+ * **D3 — rectangular arenas.** The generator takes `(gridW, gridH)`
+ * independently. Procedural scatters obstacles on any rectangle in the
+ * configured size range; the layout path reads the layout's own
+ * `gridW` × `gridH` and refuses if the caller's dimensions disagree.
  *
- * Determinism contract: same `(rng state, gridW, gridH, config, layoutId)`
- * → identical `GeneratedTerrain`. Tests rely on this so the fuzz harness
- * can replay any seed; battleSetup feeds in a per-encounter RNG fork so
- * terrain doesn't perturb the battle RNG stream.
+ * **D5 — explicit spawn regions.** Every encounter now carries
+ * `SpawnRegion[]` (each region is exactly 8 tiles + an availability
+ * flag). Hand-authored layouts declare their regions in JSON;
+ * procedural emits two `'both'`-availability bands on the top and
+ * bottom edges of the arena. Walls + water mask against the union of
+ * all spawn tiles instead of the pre-D5 `reservedSpawnRows` array.
+ * `reservedSpawnRows` is still exported so the layout editor's stripe
+ * overlay (pre-D5.D) keeps importing it; the procedural generator no
+ * longer consumes it.
+ *
+ * Determinism contract: same `(rng state, gridW, gridH, config,
+ * layoutId)` → identical `GeneratedTerrain`. Tests rely on this so the
+ * fuzz harness can replay any seed; battleSetup feeds in a per-
+ * encounter RNG fork so terrain doesn't perturb the battle RNG stream.
  */
 
 import { TileGrid } from './TileGrid';
 import type { TerrainConfig } from '../config/terrain';
 import type { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
-import { getLayout, type LayoutDef } from './layouts';
+import {
+  getLayout,
+  SPAWN_REGION_TILE_COUNT,
+  type LayoutDef,
+  type SpawnRegion,
+} from './layouts';
 
 export interface GeneratedTerrain {
   readonly tileGrid: TileGrid;
   readonly walls: readonly GridCoord[];
+  readonly spawnRegions: readonly SpawnRegion[];
 }
 
 /**
- * Rows that the spawn formation in `battleSetup.spawnTeam` will fill
- * (player melee on row 2, ranged on row 1; enemy melee on `gridH - 3`,
- * ranged on `gridH - 2`). Terrain generation must leave these clear of
- * walls + water so no unit spawns on an obstacle.
+ * Pre-D5 compatibility export. The procedural generator no longer
+ * consumes this — wall + water reservation masks against spawn-region
+ * tiles instead. The layout editor still imports it for the diagonal-
+ * stripe overlay; D5.D retires the overlay and this can go with it.
  *
- * Returns `[]` for grids too short to spawn into; callers (procedural
- * generator + layout validator) treat this as "no reservation," which
- * makes the lower limit (`gridH < 4`) a layout-bug surface rather than a
- * silent-corruption one — pathological dimensions will surface as
- * out-of-bounds spawn writes downstream.
- *
- * D5 retires this in favor of per-layout `SpawnRegion`s; until then it
- * stays the canonical "where do units land" function so the editor's
- * overlay, the generator's reservation, and the validator agree.
+ * Returns `[]` for grids too short to spawn into (`gridH < 4`); the
+ * formula `[1, 2, gridH-3, gridH-2]` is preserved for the editor's
+ * benefit.
  */
 export function reservedSpawnRows(gridH: number): number[] {
   if (gridH < 4) return [];
@@ -78,11 +86,14 @@ export function generateTerrain(
 
 /**
  * Resolve a hand-authored layout into a `GeneratedTerrain`. Validates
- * that the layout's wall coordinates respect the reserved spawn rows and
- * the caller's dimensions match the layout's own `gridW` × `gridH`; a
- * violation is a layout-authoring bug, so the dispatcher throws rather
+ * that the caller's dimensions match the layout's own `gridW` × `gridH`;
+ * a violation is a layout-authoring bug, so the dispatcher throws rather
  * than silently rescuing it (the procedural path's `ensureConnectivity`
  * wall-peel doesn't apply here — hand authored means hand verified).
+ *
+ * D5 — wall/water overlap with spawn tiles is enforced by zod at
+ * module-load time (see `src/config/layouts.ts`); the generator no
+ * longer re-checks it.
  */
 function generateFromLayout(
   layout: LayoutDef,
@@ -94,39 +105,16 @@ function generateFromLayout(
       `generateTerrain: layout "${layout.id}" requires gridW=${layout.gridW} gridH=${layout.gridH} (got ${gridW}x${gridH})`,
     );
   }
-  const reserved = new Set(reservedSpawnRows(layout.gridH));
-  for (const w of layout.walls) {
-    if (reserved.has(w.y)) {
-      throw new Error(
-        `generateTerrain: layout "${layout.id}" places a wall on reserved spawn row ${w.y}`,
-      );
-    }
-    if (w.x < 0 || w.y < 0 || w.x >= layout.gridW || w.y >= layout.gridH) {
-      throw new Error(
-        `generateTerrain: layout "${layout.id}" places a wall at out-of-bounds (${w.x},${w.y})`,
-      );
-    }
-  }
-  if (layout.water) {
-    for (const w of layout.water) {
-      if (reserved.has(w.y)) {
-        throw new Error(
-          `generateTerrain: layout "${layout.id}" places water on reserved spawn row ${w.y}`,
-        );
-      }
-      if (w.x < 0 || w.y < 0 || w.x >= layout.gridW || w.y >= layout.gridH) {
-        throw new Error(
-          `generateTerrain: layout "${layout.id}" places water at out-of-bounds (${w.x},${w.y})`,
-        );
-      }
-    }
-  }
 
   const tileGrid = new TileGrid(layout.gridW, layout.gridH);
   if (layout.water) {
     for (const w of layout.water) tileGrid.setKind(w, 'shallow_water');
   }
-  return { tileGrid, walls: layout.walls.slice() };
+  return {
+    tileGrid,
+    walls: layout.walls.slice(),
+    spawnRegions: layout.spawns,
+  };
 }
 
 function generateProcedural(
@@ -135,19 +123,23 @@ function generateProcedural(
   gridH: number,
   config: TerrainConfig,
 ): GeneratedTerrain {
+  const spawnRegions = defaultProceduralSpawnRegions(gridW, gridH);
+  const reservedCells = new Set<string>();
+  for (const region of spawnRegions) {
+    for (const t of region.tiles) reservedCells.add(`${t.x},${t.y}`);
+  }
+
   const total = gridW * gridH;
   const targetWalls = Math.floor(total * config.wallDensity);
   const targetWater = Math.floor(total * config.shallowWaterDensity);
 
-  // Build candidate pool: every cell EXCEPT the spawn rows. Shuffling once
+  // Build candidate pool: every cell EXCEPT spawn tiles. Shuffling once
   // and slicing off two disjoint chunks (walls then water) gives both
   // distributions for free, with zero overlap by construction.
-  const reservedRows = reservedSpawnRows(gridH);
-  const reservedSet = new Set(reservedRows);
   const candidates: GridCoord[] = [];
   for (let y = 0; y < gridH; y++) {
-    if (reservedSet.has(y)) continue;
     for (let x = 0; x < gridW; x++) {
+      if (reservedCells.has(`${x},${y}`)) continue;
       candidates.push({ x, y });
     }
   }
@@ -162,10 +154,39 @@ function generateProcedural(
   }
 
   if (config.ensureConnectivity) {
-    walls = openCutsUntilConnected(walls, gridW, gridH, reservedRows);
+    walls = openCutsUntilConnected(walls, gridW, gridH, spawnRegions);
   }
 
-  return { tileGrid, walls };
+  return { tileGrid, walls, spawnRegions };
+}
+
+/**
+ * Two `'both'` bands on the literal top and bottom edges (y=0 and
+ * y=gridH-1), each exactly `SPAWN_REGION_TILE_COUNT` (8) tiles wide,
+ * centered horizontally. Requires `gridW >= 8` and `gridH >= 2` — the
+ * procedural side range (10-20) and the layout side range (8-32) both
+ * satisfy this.
+ */
+function defaultProceduralSpawnRegions(gridW: number, gridH: number): SpawnRegion[] {
+  if (gridW < SPAWN_REGION_TILE_COUNT) {
+    throw new Error(
+      `defaultProceduralSpawnRegions: gridW=${gridW} < ${SPAWN_REGION_TILE_COUNT} cannot hold an 8-tile band`,
+    );
+  }
+  if (gridH < 2) {
+    throw new Error(`defaultProceduralSpawnRegions: gridH=${gridH} < 2 cannot hold top + bottom bands`);
+  }
+  const xStart = Math.floor((gridW - SPAWN_REGION_TILE_COUNT) / 2);
+  const topTiles: GridCoord[] = [];
+  const bottomTiles: GridCoord[] = [];
+  for (let i = 0; i < SPAWN_REGION_TILE_COUNT; i++) {
+    topTiles.push({ x: xStart + i, y: 0 });
+    bottomTiles.push({ x: xStart + i, y: gridH - 1 });
+  }
+  return [
+    { tiles: topTiles, availability: 'both' },
+    { tiles: bottomTiles, availability: 'both' },
+  ];
 }
 
 /**
@@ -180,25 +201,29 @@ function shuffleInPlace<T>(arr: T[], rng: RNG): void {
 }
 
 /**
- * Connectivity guard. Probes a path from the lowest spawn row to the
- * highest using 8-dir BFS over the unblocked cells; if blocked, drops
- * walls one at a time (in input order) until the path opens. Worst case
- * removes every wall, which is fine — degenerate seeds turn into bare
- * arenas rather than unplayable battles.
+ * Connectivity guard. Probes a path between the first two distinct
+ * spawn regions using 8-dir BFS over the unblocked cells; if blocked,
+ * drops walls one at a time (in input order) until the path opens.
+ * Worst case removes every wall, which is fine — degenerate seeds turn
+ * into bare arenas rather than unplayable battles.
  *
- * Input order is deterministic (Fisher–Yates output), so the "which wall
- * gets removed first" choice is also deterministic per seed.
+ * Endpoints: the geometric centroid of each region (rounded to the
+ * nearest integer cell). For the procedural defaults — top + bottom
+ * bands of 8 contiguous tiles — these land on the center column of
+ * each band, mirroring the pre-D5 column-of-spawn-row check.
+ *
+ * Input order is deterministic (Fisher–Yates output), so the "which
+ * wall gets removed first" choice is also deterministic per seed.
  */
 function openCutsUntilConnected(
   walls: readonly GridCoord[],
   gridW: number,
   gridH: number,
-  reservedRows: readonly number[],
+  spawnRegions: readonly SpawnRegion[],
 ): GridCoord[] {
-  if (reservedRows.length < 2) return walls.slice();
-  const center = Math.floor(gridW / 2);
-  const start: GridCoord = { x: center, y: Math.min(...reservedRows) };
-  const goal: GridCoord = { x: center, y: Math.max(...reservedRows) };
+  if (spawnRegions.length < 2) return walls.slice();
+  const start = centroidOf(spawnRegions[0]!);
+  const goal = centroidOf(spawnRegions[1]!);
 
   const remaining = walls.slice();
   while (!hasPath(start, goal, remaining, gridW, gridH)) {
@@ -206,6 +231,16 @@ function openCutsUntilConnected(
     remaining.shift();
   }
   return remaining;
+}
+
+function centroidOf(region: SpawnRegion): GridCoord {
+  let sx = 0;
+  let sy = 0;
+  for (const t of region.tiles) {
+    sx += t.x;
+    sy += t.y;
+  }
+  return { x: Math.round(sx / region.tiles.length), y: Math.round(sy / region.tiles.length) };
 }
 
 function hasPath(

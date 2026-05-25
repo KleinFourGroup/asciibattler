@@ -12,7 +12,7 @@
 import { Clock } from '../core/Clock';
 import { RNG } from '../core/RNG';
 import { World } from '../sim/World';
-import { applyTerrain, spawnTeam } from '../sim/battleSetup';
+import { applyTerrain, pickSpawnRegions, setupRngFor, spawnTeam } from '../sim/battleSetup';
 import { BattleRenderer } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { HUD } from '../ui/HUD';
@@ -67,9 +67,10 @@ export class BattleScene implements Scene {
     );
 
     // HUD and BattleRenderer must be bound BEFORE any spawn so unit:spawned
-    // handlers find the world. Terrain comes before teams so the spawn rows
-    // are guaranteed clear (walls + water never land on them per
-    // config.spawnRowsClear — see src/config/terrain.ts).
+    // handlers find the world. Terrain comes before teams so the spawn
+    // tiles are guaranteed clear (walls + water never land on them per
+    // the D5 schema in src/config/layouts.ts and the procedural mask in
+    // src/sim/terrainGen.ts).
     //
     // C1d follow-up: resolve the encounter's layoutId to a display name for
     // the top banner. Procedural encounters (layoutId === null) read as
@@ -80,7 +81,7 @@ export class BattleScene implements Scene {
         : (getLayout(encounter.layoutId)?.name ?? encounter.layoutId);
     this.hud.show(this.world, ctx.run.currentFloor, locationName);
     this.battleRenderer.attach(this.world);
-    applyTerrain(this.world, encounter);
+    const spawnRegions = applyTerrain(this.world, encounter);
     // After terrain is in place, the terrain renderer reflects the tile
     // grid. Walls render via SpriteRenderer (they're neutral-team Units),
     // and their per-tile Y is picked up via `terrain.heightAt` inside
@@ -91,15 +92,24 @@ export class BattleScene implements Scene {
     // (procedural sizes range up to 20×20; hand-authored up to 32×32).
     ctx.renderer.fitToBoard(this.world.gridW, this.world.gridH);
     // D4 — anchor the scroll-mode camera on the player spawn area so a
-    // toggle-to-scroll (or the eventual D5 default flip) shows the
-    // player's team first. spawnTeam puts player at grid rows 1 and 2;
-    // gridToWorld maps grid row r → world z = gridH/2 - r - 0.5, so the
-    // midpoint of player rows is world z = gridH/2 - 2. Renderer clamps
-    // for boards too small to actually pan. No-op visually in fit mode,
-    // but the target is preserved across toggles.
+    // toggle-to-scroll shows the player's team first. Pre-D5 used the
+    // fixed `(0, gridH/2 - 2)` heuristic from the legacy row formation.
+    // D5.E will replace this with the centroid of the rolled player
+    // region (the centroid info is one extra plumbing step away — kept
+    // as a follow-on commit). For now the heuristic still works as a
+    // sensible default; renderer clamps to the board.
     ctx.renderer.setCameraTarget(0, this.world.gridH / 2 - 2);
-    spawnTeam(this.world, 'player', encounter.playerTeam);
-    spawnTeam(this.world, 'enemy', encounter.enemyTeam);
+
+    // D5 — pick a region for each team off the same fork the fuzz
+    // harness uses, then place units one per shuffled tile within
+    // their region.
+    const setupRng = setupRngFor(encounter);
+    const { player: playerRegion, enemy: enemyRegion } = pickSpawnRegions(
+      spawnRegions,
+      setupRng,
+    );
+    spawnTeam(this.world, 'player', encounter.playerTeam, playerRegion, setupRng);
+    spawnTeam(this.world, 'enemy', encounter.enemyTeam, enemyRegion, setupRng);
   }
 
   tick(dt: number): void {

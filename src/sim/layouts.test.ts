@@ -4,9 +4,11 @@ import {
   getLayout,
   SPAWN_REGION_TILE_COUNT,
   type LayoutDef,
+  type SpawnRegion,
 } from './layouts';
-import { generateTerrain, reservedSpawnRows } from './terrainGen';
+import { generateTerrain } from './terrainGen';
 import { RNG } from '../core/RNG';
+import type { GridCoord } from '../core/types';
 import type { TerrainConfig } from '../config/terrain';
 
 const BASE: TerrainConfig = {
@@ -44,13 +46,6 @@ describe('layouts library', () => {
         expect(layout.gridH).toBeLessThanOrEqual(32);
       });
 
-      it('places no walls on reserved spawn rows', () => {
-        const reserved = new Set(reservedSpawnRows(layout.gridH));
-        for (const w of layout.walls) {
-          expect(reserved.has(w.y)).toBe(false);
-        }
-      });
-
       it('places every wall inside the layout grid', () => {
         for (const w of layout.walls) {
           expect(w.x).toBeGreaterThanOrEqual(0);
@@ -69,11 +64,12 @@ describe('layouts library', () => {
         }
       });
 
-      it('leaves at least one path between the spawn rows', () => {
+      it('leaves at least one path between the first two spawn regions', () => {
         // Mirror of terrainGen's connectivity check: hand-authored layouts
         // that sever the board are bugs, not seeds to be rescued.
+        const [a, b] = layout.spawns;
         expect(
-          hasPathThrough(layout.walls, layout.gridW, layout.gridH, reservedSpawnRows(layout.gridH)),
+          hasPathBetween(layout.walls, layout.gridW, layout.gridH, a!, b!),
         ).toBe(true);
       });
 
@@ -137,22 +133,21 @@ describe('layouts library', () => {
   });
 });
 
-function hasPathThrough(
+function hasPathBetween(
   walls: readonly { x: number; y: number }[],
   gridW: number,
   gridH: number,
-  reservedRows: readonly number[],
+  a: SpawnRegion,
+  b: SpawnRegion,
 ): boolean {
-  if (reservedRows.length < 2) return true;
-  const center = Math.floor(gridW / 2);
-  const start = { x: center, y: Math.min(...reservedRows) };
-  const goal = { x: center, y: Math.max(...reservedRows) };
+  const start = centroid(a);
+  const goal = centroid(b);
   const blocked = new Set<string>();
   for (const w of walls) blocked.add(`${w.x},${w.y}`);
   if (blocked.has(`${goal.x},${goal.y}`)) return false;
 
   const visited = new Set<string>([`${start.x},${start.y}`]);
-  const queue = [start];
+  const queue: GridCoord[] = [start];
   while (queue.length > 0) {
     const c = queue.shift()!;
     if (c.x === goal.x && c.y === goal.y) return true;
@@ -170,4 +165,14 @@ function hasPathThrough(
     }
   }
   return false;
+}
+
+function centroid(region: SpawnRegion): GridCoord {
+  let sx = 0;
+  let sy = 0;
+  for (const t of region.tiles) {
+    sx += t.x;
+    sy += t.y;
+  }
+  return { x: Math.round(sx / region.tiles.length), y: Math.round(sy / region.tiles.length) };
 }

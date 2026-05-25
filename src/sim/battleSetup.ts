@@ -1,142 +1,163 @@
 /**
- * Shared battle-setup logic. Game.ts and the headless fuzz harness both
- * need to take a Run's `BattleEncounter` and spawn the two teams into a
- * fresh `World` at the right formation. Putting it here keeps the two
- * code paths from drifting — e.g., if formation columns ever change, the
- * fuzz harness keeps producing balance data that reflects the real game.
+ * Shared battle-setup logic. Game.ts (via `BattleScene.mount`) and the
+ * headless fuzz harness both need to take a Run's `BattleEncounter`,
+ * apply terrain, pick spawn regions, and place both teams into a fresh
+ * `World`. Putting it here keeps the two code paths from drifting — if
+ * spawn placement ever changes, both the live game and the fuzz harness
+ * pick it up.
  *
- * The formation rule (D3 — rectangular-arena-aware):
- *   - Player melee on row 2, ranged on row 1 (closer to enemy).
- *   - Enemy melee on row `gridH - 3`, ranged on row `gridH - 2`.
- *   - Default 3 melee + 2 ranged uses the CHECKPOINT 5 anchor columns
- *     on a 12-wide grid; other sizes (post-recruit growth) spread evenly
- *     across cols 1..gridW-2.
+ * **D5** retired the row-based / fixed-column formation in favor of
+ * explicit per-encounter `SpawnRegion`s. Hand-authored layouts declare
+ * their own spawns; the procedural generator emits two `'both'`-
+ * availability bands on the top + bottom edges. Battle setup picks one
+ * region for the player and a distinct one for the enemy, then places
+ * each team into shuffled tiles within their region.
  *
- * The rows are pinned to the bottom and top edges so the gap between
- * teams scales with `gridH`: a tall arena gives ranged time to fire
- * before melee closes; a short one collapses to a brawl. The reserved
- * rows in `terrainGen.reservedSpawnRows(gridH)` mirror this formation
- * one-for-one, so terrain never spawns walls / water on a spawn cell.
+ * RNG: the spawn picker + per-region shuffle both consume the same
+ * `RNG`, derived as `new RNG(encounter.terrainSeed).fork()`. Using
+ * `fork()` gives a child stream independent of terrain-gen's RNG
+ * advancement — so changing wall density doesn't shift spawn picks for
+ * the same encounter seed. The fresh-parent-then-fork pattern keeps the
+ * picks deterministic without bumping `Run.handleEnterNode`'s byte
+ * stream.
  */
 
+import { RNG } from '../core/RNG';
 import type { World } from './World';
 import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AttackBehavior } from './behaviors/AttackBehavior';
 import type { Team, UnitTemplate } from './Unit';
 import type { BattleEncounter } from '../run/Run';
-import { RNG } from '../core/RNG';
 import { TERRAIN } from '../config/terrain';
 import { generateTerrain } from './terrainGen';
 import { spawnWall } from './environment';
+import type { SpawnRegion } from './layouts';
+
+export interface PickedSpawnRegions {
+  readonly player: SpawnRegion;
+  readonly enemy: SpawnRegion;
+}
 
 /**
- * CHECKPOINT 5 formation anchors for the starting 3-melee + 2-ranged team
- * on the canonical 12-wide arena. Preserved exactly so default-team
- * battle outcomes on `gridW=12` don't shift; wider/narrower arenas and
- * recruited extras fall through to `distributeColumns`.
+ * Sequential draw: player picks first from `{ availability: player |
+ * both }`, then enemy picks from `{ availability: enemy | both } \
+ * { player's region }`. Throws if either pool ends up empty — zod
+ * validation upstream (see `src/config/layouts.ts`) is supposed to
+ * make this impossible, but the runtime guard catches procedural
+ * configurations or future hand-authored ones that slip through.
  */
-const DEFAULT_GRID_W = 12;
-const DEFAULT_MELEE_COLUMNS = [2, 6, 10] as const;
-const DEFAULT_RANGED_COLUMNS = [4, 8] as const;
-
-/**
- * Evenly spread `count` units across grid columns 1..gridW-2 (leaving
- * column 0 and column `gridW-1` as buffer). Returns integer column
- * indices. Handles up to `gridW - 2` units per rank without collisions;
- * MVP team sizes stay well inside that on every D3-allowed width.
- */
-export function distributeColumns(count: number, gridW: number): number[] {
-  if (count === 0) return [];
-  const left = 1;
-  const right = Math.max(left, gridW - 2);
-  if (count === 1) return [Math.round((left + right) / 2)];
-  const cols: number[] = [];
-  for (let i = 0; i < count; i++) {
-    cols.push(Math.round(left + ((right - left) * i) / (count - 1)));
+export function pickSpawnRegions(
+  spawnRegions: readonly SpawnRegion[],
+  rng: RNG,
+): PickedSpawnRegions {
+  const playerPool = spawnRegions.filter(
+    (r) => r.availability === 'player' || r.availability === 'both',
+  );
+  if (playerPool.length === 0) {
+    throw new Error('pickSpawnRegions: no player-available regions');
   }
-  return cols;
-}
-
-export function meleeColumnsFor(count: number, gridW: number): readonly number[] {
-  return gridW === DEFAULT_GRID_W && count === DEFAULT_MELEE_COLUMNS.length
-    ? DEFAULT_MELEE_COLUMNS
-    : distributeColumns(count, gridW);
-}
-
-export function rangedColumnsFor(count: number, gridW: number): readonly number[] {
-  return gridW === DEFAULT_GRID_W && count === DEFAULT_RANGED_COLUMNS.length
-    ? DEFAULT_RANGED_COLUMNS
-    : distributeColumns(count, gridW);
+  const player = rng.pick(playerPool);
+  const enemyPool = spawnRegions.filter(
+    (r) => (r.availability === 'enemy' || r.availability === 'both') && r !== player,
+  );
+  if (enemyPool.length === 0) {
+    throw new Error(
+      'pickSpawnRegions: no enemy-available region distinct from the player region',
+    );
+  }
+  const enemy = rng.pick(enemyPool);
+  return { player, enemy };
 }
 
 /**
- * Spawn a pre-rolled team into the active world. Melee fills the front
- * rank (row 2 player / `gridH-3` enemy), ranged fills the rear (row 1 /
- * `gridH-2`), each spread evenly across the row so growing teams from
- * recruitment don't fall off a fixed column array. Each spawned unit
- * gets MovementBehavior + AttackBehavior — the MVP behavior pair.
+ * Spawn a pre-rolled team into the active world, placing each unit on
+ * one of the region's tiles (shuffled deterministically via `rng`).
+ * Each spawned unit gets `MovementBehavior` + `AttackBehavior` — the
+ * MVP behavior pair.
+ *
+ * Templates beyond `region.tiles.length` are silently dropped at D5.B.
+ * D5.C re-enables them via a per-team overflow queue that spawns extras
+ * as tiles vacate.
  */
 export function spawnTeam(
   world: World,
   team: Team,
   templates: readonly UnitTemplate[],
+  region: SpawnRegion,
+  rng: RNG,
 ): void {
-  const meleeRow = team === 'player' ? 2 : world.gridH - 3;
-  const rangedRow = team === 'player' ? 1 : world.gridH - 2;
-
-  const melee = templates.filter((t) => t.archetype === 'melee');
-  const ranged = templates.filter((t) => t.archetype === 'ranged');
-  const meleeCols = meleeColumnsFor(melee.length, world.gridW);
-  const rangedCols = rangedColumnsFor(ranged.length, world.gridW);
-
-  for (let i = 0; i < melee.length; i++) {
-    const u = world.spawnUnit(melee[i]!, team, { x: meleeCols[i]!, y: meleeRow });
-    u.behaviors.push(new MovementBehavior(), new AttackBehavior());
-  }
-  for (let i = 0; i < ranged.length; i++) {
-    const u = world.spawnUnit(ranged[i]!, team, { x: rangedCols[i]!, y: rangedRow });
+  const tiles = region.tiles.slice();
+  shuffleTilesInPlace(tiles, rng);
+  const n = Math.min(templates.length, tiles.length);
+  for (let i = 0; i < n; i++) {
+    const u = world.spawnUnit(templates[i]!, team, tiles[i]!);
     u.behaviors.push(new MovementBehavior(), new AttackBehavior());
   }
 }
 
+function shuffleTilesInPlace<T>(arr: T[], rng: RNG): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = rng.int(0, i);
+    [arr[i], arr[j]] = [arr[j]!, arr[i]!];
+  }
+}
+
 /**
- * C1a terrain application. Generates the per-encounter tile layout +
- * wall coords from the encounter's terrain seed, copies the tiles onto
- * `world.tileGrid` in place (World.tileGrid is constructed at World
- * construction time and stays referenced; we mutate kinds rather than
- * swapping the instance), and spawns each wall as a neutral-team Unit so
- * pathfinding's blocker list includes them for free.
+ * Apply per-encounter terrain to a fresh World. Generates the tile
+ * layout + wall coords + spawn regions from the encounter's terrain
+ * seed, copies tile kinds onto `world.tileGrid` in place (the World's
+ * grid is kept-by-reference so existing handles stay valid), spawns
+ * each wall as a neutral-team Unit, and returns the regions so the
+ * caller can pick + spawn teams. The two callers (`BattleScene.mount`
+ * + `spawnEncounter`) consume the returned regions immediately.
  *
- * Must run BEFORE any `spawnTeam` so the spawn rows are guaranteed clear
- * of walls. Both call sites (`spawnEncounter` and `BattleScene.mount`)
- * follow that order — if you add a third, mirror it.
+ * Must run BEFORE any `spawnTeam`. spawnEncounter does this internally;
+ * BattleScene mirrors the order explicitly.
  */
-export function applyTerrain(world: World, encounter: BattleEncounter): void {
-  const { tileGrid, walls } = generateTerrain(
+export function applyTerrain(
+  world: World,
+  encounter: BattleEncounter,
+): readonly SpawnRegion[] {
+  const { tileGrid, walls, spawnRegions } = generateTerrain(
     new RNG(encounter.terrainSeed),
     world.gridW,
     world.gridH,
     TERRAIN,
     encounter.layoutId,
   );
-  // Copy tile kinds onto the World's TileGrid (kept-by-reference so
-  // existing handles to world.tileGrid stay valid post-application).
   for (const cell of tileGrid.cells()) {
     world.tileGrid.setKind({ x: cell.x, y: cell.y }, cell.kind);
   }
   for (const coord of walls) {
     spawnWall(world, coord);
   }
+  return spawnRegions;
 }
 
 /**
- * Spawn both sides of a `BattleEncounter` into a fresh world. Convenience
- * wrapper for the harness loop; Game spawns player and enemy in two
- * separate calls because it interleaves HUD setup between them. Terrain
- * is applied first so spawn rows are guaranteed clear of obstacles.
+ * Spawn both sides of a `BattleEncounter` into a fresh world.
+ * Convenience wrapper for the fuzz harness; Game spawns player and
+ * enemy in two separate calls because it interleaves HUD setup
+ * between them. Terrain is applied first so spawn rows are guaranteed
+ * clear of obstacles, and a single `setupRng` drives both the region
+ * pick and each team's intra-region shuffle so the deterministic
+ * order is "pick player → shuffle player tiles → pick enemy →
+ * shuffle enemy tiles".
  */
 export function spawnEncounter(world: World, encounter: BattleEncounter): void {
-  applyTerrain(world, encounter);
-  spawnTeam(world, 'player', encounter.playerTeam);
-  spawnTeam(world, 'enemy', encounter.enemyTeam);
+  const spawnRegions = applyTerrain(world, encounter);
+  const setupRng = new RNG(encounter.terrainSeed).fork();
+  const { player, enemy } = pickSpawnRegions(spawnRegions, setupRng);
+  spawnTeam(world, 'player', encounter.playerTeam, player, setupRng);
+  spawnTeam(world, 'enemy', encounter.enemyTeam, enemy, setupRng);
+}
+
+/**
+ * Helper used by `BattleScene` to derive the same fork the headless
+ * `spawnEncounter` uses, so both paths agree on the per-battle
+ * shuffles. Exported so the centroid-based scroll-camera anchor (D5.E)
+ * can also peek at the picked regions via the same fork.
+ */
+export function setupRngFor(encounter: BattleEncounter): RNG {
+  return new RNG(encounter.terrainSeed).fork();
 }

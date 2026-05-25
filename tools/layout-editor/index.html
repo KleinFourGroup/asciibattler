@@ -40,6 +40,14 @@
             </label>
             <span class="hint">Only the active layer accepts edits; others render dimmed.</span>
           </div>
+          <div id="neutral-row" class="neutral-row" hidden>
+            <span class="neutral-label">Kind</span>
+            <div class="neutral-kind-radios" role="radiogroup" aria-label="Active neutral unit kind">
+              <label class="inline"><input type="radio" name="neutral-kind" value="wall" checked /> wall (#)</label>
+              <label class="inline"><input type="radio" name="neutral-kind" value="halfCover" /> half-cover (&#x2565;)</label>
+            </div>
+            <span class="hint">Walls block pathing + LOS. Half-cover blocks pathing but ranged shots pass over.</span>
+          </div>
           <div id="region-row" class="region-row" hidden>
             <div class="region-row-line">
               <span class="region-label">Region</span>
@@ -60,7 +68,8 @@
           <div id="grid" class="grid" data-active-layer="terrain"></div>
           <ul class="legend">
             <li><span class="swatch water"></span> Terrain layer — click paints water</li>
-            <li><span class="swatch wall"></span> Neutral-units layer — click paints wall</li>
+            <li><span class="swatch wall"></span> Neutral-units layer — paint wall or half-cover (sub-toggle)</li>
+            <li><span class="swatch halfCover"></span> Half-cover (&#x2565;) — pathing blocker, LOS-transparent</li>
             <li><span class="swatch erase"></span> Right-click — erases active layer at the cell</li>
             <li><span class="swatch region-0"></span> Spawn regions — color-coded by index</li>
           </ul>

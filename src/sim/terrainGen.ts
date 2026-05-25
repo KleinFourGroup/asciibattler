@@ -47,6 +47,10 @@ import {
 export interface GeneratedTerrain {
   readonly tileGrid: TileGrid;
   readonly walls: readonly GridCoord[];
+  /** D6: neutral-team LOS-transparent obstacles. Empty for procedural
+   *  (D6 is hand-authored-only); hand-authored layouts may declare any
+   *  count. Pathfinding blocks through them; AttackBehavior shoots over. */
+  readonly halfCovers: readonly GridCoord[];
   readonly spawnRegions: readonly SpawnRegion[];
 }
 
@@ -96,6 +100,7 @@ function generateFromLayout(
   return {
     tileGrid,
     walls: layout.walls.slice(),
+    halfCovers: layout.halfCovers ? layout.halfCovers.slice() : [],
     spawnRegions: layout.spawns,
   };
 }
@@ -140,7 +145,10 @@ function generateProcedural(
     walls = openCutsUntilConnected(walls, gridW, gridH, spawnRegions);
   }
 
-  return { tileGrid, walls, spawnRegions };
+  // D6: procedural is hand-authored-only for half-cover (no density
+  // knob in config/terrain.json). Returning an empty array keeps the
+  // shape stable for the caller.
+  return { tileGrid, walls, halfCovers: [], spawnRegions };
 }
 
 /**

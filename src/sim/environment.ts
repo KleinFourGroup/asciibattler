@@ -26,6 +26,13 @@ import type { World } from './World';
 export const WALL_GLYPH = '#';
 
 /**
+ * D6 — half-cover glyph. Box-drawing `╥` (U+2565): a horizontal rail
+ * with two short vertical posts, reading as a low fence. JetBrains Mono
+ * supports it (verified at FontAtlas build).
+ */
+export const HALF_COVER_GLYPH = '╥';
+
+/**
  * Spawn a wall at the given cell.
  *
  * `maxHp` defaults to 1, which makes the wall functionally indestructible
@@ -40,7 +47,33 @@ export const WALL_GLYPH = '#';
  * emits `unit:died` with `team: 'neutral'`. BattleRenderer fades the
  * sprite; BattleScene's audio handler skips neutrals so the standard
  * combat death sound doesn't play for crumbling masonry.
+ *
+ * Default `blocksLineOfSight: true` — ranged units can't shoot through
+ * walls (the C1b LOS contract).
  */
 export function spawnWall(world: World, position: GridCoord, maxHp = 1): Unit {
   return world.spawnEnvironment({ glyph: WALL_GLYPH, position, maxHp });
+}
+
+/**
+ * D6 — spawn half-cover at the given cell. Pathfinding still blocks
+ * through it (the half-cover is a Unit, every Unit appears in the
+ * MovementBehavior blocker list), so units route around exactly like
+ * walls. Ranged attacks see THROUGH it: `blocksLineOfSight: false`
+ * removes it from the wall pool `AttackBehavior` builds for the
+ * Bresenham LOS check.
+ *
+ * Damage / destructibility: same plumbing as walls — `maxHp` defaults
+ * to 1, no behavior targets neutrals today, so practically
+ * indestructible until C2's AoE archetypes land. The combat-modifier
+ * hook ("ranged defense bonus for shooting from behind half-cover")
+ * is explicitly C2-era and stays unbuilt in D6.
+ */
+export function spawnHalfCover(world: World, position: GridCoord, maxHp = 1): Unit {
+  return world.spawnEnvironment({
+    glyph: HALF_COVER_GLYPH,
+    position,
+    maxHp,
+    blocksLineOfSight: false,
+  });
 }

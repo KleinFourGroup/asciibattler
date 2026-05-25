@@ -22,8 +22,10 @@ import type { SpawnRegion } from './layouts';
  *   3 — D3 replaced single `gridSize` with `gridW` + `gridH`.
  *   4 — D5.C added per-team `spawnQueue` (overflow UnitTemplate[]) +
  *       `spawnRegions` (each team's authoritative spawn region).
+ *   5 — D6 added per-unit `blocksLineOfSight` (defaults `true` for
+ *       combatants + walls; half-cover sets `false`).
  */
-const WORLD_SCHEMA_VERSION = 4;
+const WORLD_SCHEMA_VERSION = 5;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -47,6 +49,7 @@ export interface UnitSnapshot {
   stats: UnitStats;
   position: GridCoord;
   currentHp: number;
+  blocksLineOfSight: boolean;
   behaviors: string[];
   actionCooldowns: [string, number][];
   activeAction: ActiveActionSnapshot | null;
@@ -428,6 +431,8 @@ export class World {
     position: GridCoord;
     maxHp?: number;
     team?: Team;
+    /** D6: defaults to `true` (wall semantics). Half-cover passes `false`. */
+    blocksLineOfSight?: boolean;
   }): Unit {
     return this.addUnit(
       {
@@ -435,6 +440,7 @@ export class World {
         glyph: opts.glyph,
         stats: makeInertStats(opts.maxHp ?? 1),
         position: opts.position,
+        blocksLineOfSight: opts.blocksLineOfSight ?? true,
       },
       true,
     );
@@ -454,6 +460,7 @@ export class World {
       glyph: string;
       stats: UnitStats;
       position: GridCoord;
+      blocksLineOfSight?: boolean;
     },
     instant: boolean,
   ): Unit {
@@ -463,6 +470,7 @@ export class World {
       glyph: init.glyph,
       stats: init.stats,
       position: init.position,
+      blocksLineOfSight: init.blocksLineOfSight ?? true,
     });
     this.units.push(unit);
     this.bus.emit('unit:spawned', { unitId: unit.id, instant });
@@ -536,6 +544,7 @@ export class World {
         glyph: us.glyph,
         stats: us.stats,
         position: us.position,
+        blocksLineOfSight: us.blocksLineOfSight,
       });
       unit.currentHp = us.currentHp;
       for (const [actionId, cd] of us.actionCooldowns) {
@@ -598,6 +607,7 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
     stats: unit.stats,
     position: unit.position,
     currentHp: unit.currentHp,
+    blocksLineOfSight: unit.blocksLineOfSight,
     behaviors: unit.behaviors.map((b) => b.kind),
     actionCooldowns: Array.from(unit.actionCooldowns.entries()),
     activeAction: unit.activeAction

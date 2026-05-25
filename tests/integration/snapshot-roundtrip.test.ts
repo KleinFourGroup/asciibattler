@@ -107,6 +107,27 @@ describe('A2 round-trip: World', () => {
     expect(restored.toJSON().pendingCommands).toHaveLength(0);
   });
 
+  it('D6: round-trips per-unit blocksLineOfSight (walls true, half-cover false)', () => {
+    const { world } = freshBattle(99999);
+    // Walls default true; spawnHalfCover sets false.
+    const wall = world.spawnEnvironment({ glyph: '#', position: { x: 0, y: 6 } });
+    const halfCover = world.spawnEnvironment({
+      glyph: '╥',
+      position: { x: 1, y: 6 },
+      blocksLineOfSight: false,
+    });
+    expect(wall.blocksLineOfSight).toBe(true);
+    expect(halfCover.blocksLineOfSight).toBe(false);
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+
+    const restoredWall = restored.units.find((u) => u.id === wall.id)!;
+    const restoredHC = restored.units.find((u) => u.id === halfCover.id)!;
+    expect(restoredWall.blocksLineOfSight).toBe(true);
+    expect(restoredHC.blocksLineOfSight).toBe(false);
+  });
+
   it('round-trips the tile grid + neutral wall units (C1a terrain)', () => {
     // Build a non-trivial battle, run it for a few ticks, snapshot, restore.
     const { world } = freshBattle(11111);

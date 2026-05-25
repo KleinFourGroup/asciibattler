@@ -4,7 +4,7 @@ import { World } from '../World';
 import type { Unit, Team, UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
-import { spawnWall } from '../environment';
+import { spawnHalfCover, spawnWall } from '../environment';
 import type { GameEvents } from '../../core/events';
 
 describe('AttackBehavior', () => {
@@ -108,6 +108,31 @@ describe('AttackBehavior', () => {
     world.tick();
     expect(units[1]!.currentHp).toBe(25);
     expect(attacks).toHaveLength(1);
+  });
+
+  it('D6: ranged attack passes through half-cover (LOS-transparent)', () => {
+    const { world, units, attacks } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+    ]);
+    // Same geometry as the "wall blocks" test above, but with half-cover
+    // instead. Should fire through.
+    spawnHalfCover(world, { x: 3, y: 0 });
+    world.tick();
+    expect(units[1]!.currentHp).toBe(25);
+    expect(attacks).toHaveLength(1);
+  });
+
+  it('D6: wall + half-cover mix — wall blocks, half-cover does not contribute', () => {
+    const { world, units, attacks } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+    ]);
+    spawnHalfCover(world, { x: 2, y: 0 }); // on line, ignored
+    spawnWall(world, { x: 3, y: 0 }); // on line, blocks
+    world.tick();
+    expect(units[1]!.currentHp).toBe(30);
+    expect(attacks).toHaveLength(0);
   });
 
   it('fires once the blocking wall is destroyed (HP forced to 0)', () => {

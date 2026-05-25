@@ -30,7 +30,7 @@ import type { Team, UnitTemplate } from './Unit';
 import type { BattleEncounter } from '../run/Run';
 import { TERRAIN } from '../config/terrain';
 import { generateTerrain } from './terrainGen';
-import { spawnWall } from './environment';
+import { spawnHalfCover, spawnWall } from './environment';
 import type { SpawnRegion } from './layouts';
 
 export interface PickedSpawnRegions {
@@ -128,7 +128,7 @@ export function applyTerrain(
   world: World,
   encounter: BattleEncounter,
 ): readonly SpawnRegion[] {
-  const { tileGrid, walls, spawnRegions } = generateTerrain(
+  const { tileGrid, walls, halfCovers, spawnRegions } = generateTerrain(
     new RNG(encounter.terrainSeed),
     world.gridW,
     world.gridH,
@@ -140,6 +140,13 @@ export function applyTerrain(
   }
   for (const coord of walls) {
     spawnWall(world, coord);
+  }
+  // D6: half-cover spawns after walls so any future "stack on same
+  // cell" diagnostic sees walls first (today schema validation
+  // prevents the overlap, but keeping the order stable means future
+  // failure modes are predictable).
+  for (const coord of halfCovers) {
+    spawnHalfCover(world, coord);
   }
   return spawnRegions;
 }

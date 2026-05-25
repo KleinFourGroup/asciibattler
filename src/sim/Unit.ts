@@ -60,6 +60,9 @@ export interface UnitInit {
   readonly glyph: string;
   readonly stats: UnitStats;
   readonly position: GridCoord;
+  /** D6: defaults to `true` so existing combatants + walls keep their
+   *  LOS-blocking behavior. Half-cover sets this to `false`. */
+  readonly blocksLineOfSight?: boolean;
 }
 
 export class Unit {
@@ -70,6 +73,13 @@ export class Unit {
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
+  /**
+   * D6: when `false`, ranged attacks see THROUGH this unit (the
+   * half-cover archetype). Pathfinding still treats it as a blocker via
+   * the existing "every Unit blocks" rule — half-cover is shoot-over,
+   * not walk-through. Combatants + walls default `true`.
+   */
+  readonly blocksLineOfSight: boolean;
   /**
    * Per-action cooldown counters keyed by `Action.id`. Decremented once per
    * tick by World; selector filters out proposals whose remaining cooldown
@@ -90,5 +100,6 @@ export class Unit {
     this.stats = init.stats;
     this.position = init.position;
     this.currentHp = init.stats.maxHp;
+    this.blocksLineOfSight = init.blocksLineOfSight ?? true;
   }
 }

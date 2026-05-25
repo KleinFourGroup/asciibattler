@@ -56,8 +56,12 @@ import {
   type SpawnRegion,
 } from '../../src/config/layouts';
 
-type Cell = 'floor' | 'wall' | 'water';
+type Cell = 'floor' | 'wall' | 'water' | 'halfCover';
 type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
+/** D6: sub-tool within the neutral-units layer. The layer radio picks
+ *  the layer; this radio picks which kind of neutral entity that
+ *  layer paints. */
+type NeutralKind = 'wall' | 'halfCover';
 
 interface Coord {
   readonly x: number;
@@ -79,6 +83,7 @@ let gridH = DEFAULT_SIDE;
 let grid: Cell[][] = makeEmptyGrid(gridW, gridH);
 let cellEls: HTMLDivElement[][] = [];
 let activeLayer: Layer = 'terrain';
+let activeNeutralKind: NeutralKind = 'wall';
 /** Spawn regions for export. D5.D.A: initialized + reset to the
  *  procedural default (two top/bottom 'both' bands); loaded layouts
  *  populate from their JSON. D5.D.B: painting + add/delete + the
@@ -115,6 +120,10 @@ const gridHSelectEl = mustQuery<HTMLSelectElement>('#grid-h');
 const layerRadioEls = Array.from(
   document.querySelectorAll<HTMLInputElement>('input[name="layer"]'),
 );
+const neutralRowEl = mustQuery<HTMLDivElement>('#neutral-row');
+const neutralKindRadioEls = Array.from(
+  document.querySelectorAll<HTMLInputElement>('input[name="neutral-kind"]'),
+);
 const regionRowEl = mustQuery<HTMLDivElement>('#region-row');
 const regionPickerEl = mustQuery<HTMLDivElement>('#region-picker');
 const availabilityRadioEls = Array.from(
@@ -130,6 +139,7 @@ attachMetaWatchers();
 attachToolButtons();
 attachSizeWatchers();
 attachLayerWatchers();
+attachNeutralKindWatchers();
 attachRegionControls();
 window.addEventListener('mouseup', endStroke);
 // Re-fit the grid when the viewport changes so cells keep filling the
@@ -306,8 +316,10 @@ function defaultSpawns(w: number, h: number): SpawnRegion[] {
 // matches the roadmap's "stroke determinism" note.
 type StrokeKind =
   | 'paint-wall'
+  | 'paint-halfCover'
   | 'paint-water'
   | 'erase-wall'
+  | 'erase-halfCover'
   | 'erase-water'
   | 'paint-region'
   | 'erase-region'
@@ -344,11 +356,20 @@ function strokeFromMouseEvent(e: MouseEvent): StrokeKind {
   // D5.D.A: the active layer + mouse button uniquely determine the
   // stroke kind. Shift+click is retired — the layer radio is the kind
   // picker now.
+  //
+  // D6: neutral-units layer further splits by `activeNeutralKind`
+  // (wall vs halfCover). Erase respects the sub-tool too — erasing
+  // while half-cover is selected only clears half-cover cells, leaving
+  // walls untouched (mirrors the per-layer erase scope rule from
+  // gotcha #65).
   const erasing = e.button === 2;
   switch (activeLayer) {
     case 'terrain':
       return erasing ? 'erase-water' : 'paint-water';
     case 'neutral-units':
+      if (activeNeutralKind === 'halfCover') {
+        return erasing ? 'erase-halfCover' : 'paint-halfCover';
+      }
       return erasing ? 'erase-wall' : 'paint-wall';
     case 'spawn-regions':
       // No-op if there's no active region (deleted last, picker
@@ -368,8 +389,10 @@ function applyStrokeTo(c: Coord): void {
   switch (activeStroke) {
     case 'paint-water':
     case 'paint-wall':
+    case 'paint-halfCover':
     case 'erase-water':
     case 'erase-wall':
+    case 'erase-halfCover':
       applyTerrainStroke(c);
       return;
     case 'paint-region':
@@ -386,7 +409,8 @@ function applyTerrainStroke(c: Coord): void {
   // Each stroke kind only touches its layer's content: erase-water
   // leaves walls alone, paint-wall over a water cell wins (cell kinds
   // are still mutex — the layer system is a UX overlay, not a multi-
-  // layer per-cell data model in D5.D).
+  // layer per-cell data model in D5.D). D6 extends the same rule to
+  // half-cover: erase-halfCover leaves walls + water alone.
   let next: Cell | null = null;
   switch (activeStroke) {
     case 'paint-water':
@@ -395,11 +419,17 @@ function applyTerrainStroke(c: Coord): void {
     case 'paint-wall':
       next = 'wall';
       break;
+    case 'paint-halfCover':
+      next = 'halfCover';
+      break;
     case 'erase-water':
       if (current === 'water') next = 'floor';
       break;
     case 'erase-wall':
       if (current === 'wall') next = 'floor';
+      break;
+    case 'erase-halfCover':
+      if (current === 'halfCover') next = 'floor';
       break;
   }
   if (next === null || next === current) return;
@@ -449,6 +479,7 @@ function refreshCell(c: Coord): void {
   el.classList.remove(
     'wall',
     'water',
+    'halfCover',
     'invalid',
     'active-region-0',
     'active-region-1',
@@ -457,6 +488,7 @@ function refreshCell(c: Coord): void {
   );
   if (value === 'wall') el.classList.add('wall');
   if (value === 'water') el.classList.add('water');
+  if (value === 'halfCover') el.classList.add('halfCover');
 
   // Tear down any prior region tags + outline. Rebuilt below based
   // on current spawns membership.
@@ -506,8 +538,9 @@ function validate(): ValidationItem[] {
   const items: ValidationItem[] = [];
   const walls = collectCells('wall');
   const water = collectCells('water');
+  const halfCovers = collectCells('halfCover');
 
-  if (walls.length === 0 && water.length === 0) {
+  if (walls.length === 0 && water.length === 0 && halfCovers.length === 0) {
     items.push({ level: 'ok', text: 'Empty grid — paint something.' });
   }
 
@@ -548,6 +581,7 @@ function validate(): ValidationItem[] {
   const blockedSet = new Set<string>();
   for (const w of walls) blockedSet.add(`${w.x},${w.y}`);
   for (const w of water) blockedSet.add(`${w.x},${w.y}`);
+  for (const hc of halfCovers) blockedSet.add(`${hc.x},${hc.y}`);
   let spawnOverlap = 0;
   for (const region of spawns) {
     for (const t of region.tiles) {
@@ -557,7 +591,7 @@ function validate(): ValidationItem[] {
   if (spawnOverlap > 0) {
     items.push({
       level: 'error',
-      text: `${spawnOverlap} spawn tile(s) overlap walls or water — paint to move them.`,
+      text: `${spawnOverlap} spawn tile(s) overlap walls, water, or half-cover — paint to move them.`,
     });
   }
 
@@ -602,7 +636,10 @@ function validate(): ValidationItem[] {
     });
   }
 
-  if (!isConnected(walls)) {
+  // Connectivity treats half-cover as a path blocker (D6 — pathfinding
+  // blocks through it just like walls). The LOS-transparency only
+  // affects ranged-attack visibility, not movement reachability.
+  if (!isConnected([...walls, ...halfCovers])) {
     items.push({
       level: 'error',
       text: 'Spawn regions are severed — no path between the first two spawn regions.',
@@ -612,7 +649,7 @@ function validate(): ValidationItem[] {
   if (items.length === 0 || items.every((i) => i.level === 'ok')) {
     items.push({
       level: 'ok',
-      text: `Looks good — ${walls.length} wall(s), ${water.length} water cell(s), ${spawns.length} spawn region(s) on ${gridW}×${gridH}.`,
+      text: `Looks good — ${walls.length} wall(s), ${halfCovers.length} half-cover(s), ${water.length} water cell(s), ${spawns.length} spawn region(s) on ${gridW}×${gridH}.`,
     });
   }
   return items;
@@ -684,6 +721,7 @@ function centroidOf(region: SpawnRegion): Coord {
 function refreshExport(): void {
   const walls = collectCells('wall');
   const water = collectCells('water');
+  const halfCovers = collectCells('halfCover');
   const payload: LayoutDef = {
     id: metaIdEl.value.trim() || 'unnamed',
     name: metaNameEl.value.trim() || 'Unnamed',
@@ -694,6 +732,7 @@ function refreshExport(): void {
     spawns,
   };
   if (water.length > 0) payload.water = water;
+  if (halfCovers.length > 0) payload.halfCovers = halfCovers;
   exportEl.value = formatLayoutJson(payload);
 }
 
@@ -718,6 +757,11 @@ function formatLayoutJson(layout: LayoutDef): string {
   if (layout.water && layout.water.length > 0) {
     parts.push(`  "water": [`);
     parts.push(...formatCoords(layout.water));
+    parts.push(`  ],`);
+  }
+  if (layout.halfCovers && layout.halfCovers.length > 0) {
+    parts.push(`  "halfCovers": [`);
+    parts.push(...formatCoords(layout.halfCovers));
     parts.push(`  ],`);
   }
   parts.push(`  "spawns": [`);
@@ -773,6 +817,7 @@ function loadLayout(id: string): void {
   grid = makeEmptyGrid(gridW, gridH);
   for (const w of found.walls) grid[w.y]![w.x] = 'wall';
   if (found.water) for (const w of found.water) grid[w.y]![w.x] = 'water';
+  if (found.halfCovers) for (const c of found.halfCovers) grid[c.y]![c.x] = 'halfCover';
   // Deep-copy spawns so live editing can't mutate the canonical
   // LAYOUTS array.
   spawns = found.spawns.map((r) => ({
@@ -845,10 +890,27 @@ function attachLayerWatchers(): void {
       activeLayer = value;
       gridEl.dataset.activeLayer = value;
       regionRowEl.hidden = value !== 'spawn-regions';
+      // D6 — show the wall/half-cover sub-tool only while the
+      // neutral-units layer is active.
+      neutralRowEl.hidden = value !== 'neutral-units';
       // Region tag opacity is class-driven via [data-active-layer],
       // but the active-region outline is per-cell — refresh so the
       // outline appears only when spawn-regions is the active layer.
       refreshGrid();
+    });
+  }
+}
+
+function attachNeutralKindWatchers(): void {
+  for (const radio of neutralKindRadioEls) {
+    radio.addEventListener('change', () => {
+      if (!radio.checked) return;
+      const value = radio.value as NeutralKind;
+      if (value === activeNeutralKind) return;
+      // Same mid-stroke rule as layer-switch: synchronously commit
+      // before swapping the active sub-tool.
+      if (activeStroke !== null) endStroke();
+      activeNeutralKind = value;
     });
   }
 }

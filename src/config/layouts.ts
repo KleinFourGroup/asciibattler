@@ -76,12 +76,47 @@ const LayoutSchema = z
     gridH: SideSchema,
     walls: z.array(CoordSchema),
     water: z.array(CoordSchema).optional(),
+    /** D6: optional neutral-team half-cover entities. Pathfinding blocks
+     *  through them like walls; ranged LOS shoots OVER them. Validation
+     *  rejects overlap with walls, water, spawn regions, or self. */
+    halfCovers: z.array(CoordSchema).optional(),
     spawns: z.array(SpawnRegionSchema).min(2),
   })
   .superRefine((layout, ctx) => {
     const blocked = new Set<string>();
     for (const w of layout.walls) blocked.add(`${w.x},${w.y}`);
     for (const w of layout.water ?? []) blocked.add(`${w.x},${w.y}`);
+
+    // D6 — half-cover overlap checks. Half-covers can't sit on walls or
+    // water (the cell would be doubly-claimed); after this check they
+    // also reserve their cells against spawn regions.
+    const seenHalfCovers = new Set<string>();
+    (layout.halfCovers ?? []).forEach((hc, idx) => {
+      const k = `${hc.x},${hc.y}`;
+      if (hc.x < 0 || hc.x >= layout.gridW || hc.y < 0 || hc.y >= layout.gridH) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['halfCovers', idx],
+          message: `half-cover (${hc.x},${hc.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
+        });
+      }
+      if (blocked.has(k)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['halfCovers', idx],
+          message: `half-cover (${hc.x},${hc.y}) overlaps a wall or water`,
+        });
+      }
+      if (seenHalfCovers.has(k)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['halfCovers', idx],
+          message: `duplicate half-cover (${hc.x},${hc.y})`,
+        });
+      }
+      seenHalfCovers.add(k);
+      blocked.add(k);
+    });
 
     layout.spawns.forEach((region, regionIdx) => {
       region.tiles.forEach((t, tileIdx) => {
@@ -96,7 +131,7 @@ const LayoutSchema = z
           ctx.addIssue({
             code: 'custom',
             path: ['spawns', regionIdx, 'tiles', tileIdx],
-            message: `spawn tile (${t.x},${t.y}) overlaps a wall or water`,
+            message: `spawn tile (${t.x},${t.y}) overlaps a wall, water, or half-cover`,
           });
         }
       });

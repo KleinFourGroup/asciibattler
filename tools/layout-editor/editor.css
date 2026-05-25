@@ -156,6 +156,67 @@ body {
   outline: 1px solid var(--terminal-green);
 }
 
+/* D6 — neutral-unit sub-tool row. Only visible while the neutral-
+   units layer is active (toggled via [hidden] on #neutral-row).
+   Visually mirrors .region-row to keep the editor's row family
+   consistent. */
+.neutral-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--dark-terminal-amber);
+  border-top: 1px dashed var(--panel-border);
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+
+.neutral-row[hidden] {
+  display: none;
+}
+
+.neutral-row .neutral-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--terminal-green);
+  font-weight: 700;
+  min-width: 80px;
+}
+
+.neutral-kind-radios {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.neutral-kind-radios label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--terminal-amber);
+  cursor: pointer;
+}
+
+.neutral-kind-radios input[type='radio'] {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--terminal-amber);
+  border-radius: 50%;
+  background: var(--terminal-black);
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+}
+
+.neutral-kind-radios input[type='radio']:checked::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--terminal-green);
+}
+
 /* D5.D.B region picker. Only visible while the spawn-regions layer
    is active (toggled via the [hidden] attribute on #region-row). */
 .region-row {
@@ -321,6 +382,26 @@ body {
   pointer-events: none;
 }
 
+/* D6 — half-cover cell. Same dark-stone background family as walls
+   so the neutral-units layer reads as one visual group, but with
+   the ╥ glyph and a dimmer fill so the LOS-transparent semantic is
+   visually distinct from a solid wall. */
+.cell.halfCover {
+  background: var(--dark-stone);
+}
+
+.cell.halfCover::after {
+  content: '\2565';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--terminal-stone);
+  font-weight: 700;
+  font-size: 22px;
+  pointer-events: none;
+}
+
 .cell.invalid {
   outline: 2px solid var(--neon-red);
   outline-offset: -2px;
@@ -331,14 +412,19 @@ body {
    renders at full strength; other layers fade so the author still
    sees overall composition but knows which clicks land where. Tuned
    to 0.3 per the D5.D recommendation — adjust during browser-verify
-   if it reads too dim against the dark cell background. */
+   if it reads too dim against the dark cell background.
+   D6: half-cover dims with the rest of the neutral-units layer (it's
+   in the same layer as walls — the wall/half-cover sub-tool is a
+   per-stroke pick, not a separate layer). */
 .grid[data-active-layer='neutral-units'] .cell.water,
 .grid[data-active-layer='spawn-regions'] .cell.water {
   opacity: 0.3;
 }
 
 .grid[data-active-layer='terrain'] .cell.wall,
-.grid[data-active-layer='spawn-regions'] .cell.wall {
+.grid[data-active-layer='terrain'] .cell.halfCover,
+.grid[data-active-layer='spawn-regions'] .cell.wall,
+.grid[data-active-layer='spawn-regions'] .cell.halfCover {
   opacity: 0.3;
 }
 
@@ -425,6 +511,10 @@ body {
 
 .swatch.water {
   background: var(--dark-fluorescent-blue);
+}
+
+.swatch.halfCover {
+  background: var(--dark-stone);
 }
 
 .swatch.erase {

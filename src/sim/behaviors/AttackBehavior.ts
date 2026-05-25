@@ -19,9 +19,12 @@ import { hasLineOfSight } from '../LineOfSight';
  * C1b: ranged attacks require a clear line of sight through walls. Melee
  * (adjacent target) trivially passes — there are no intermediate cells —
  * but the check runs uniformly so future short-range AoE / cone attacks
- * pick up the same gate. Walls are gathered from the neutral-team unit
- * pool; if a non-wall neutral entity (shrine, hazard) ever needs to
- * transmit LOS, give it a distinguishing property on Unit and filter here.
+ * pick up the same gate.
+ *
+ * D6: LOS blockers are gathered via per-Unit `blocksLineOfSight` — walls
+ * stay in (default `true`), half-cover (`false`) is filtered out so
+ * ranged units shoot OVER it. The pre-D6 "team === 'neutral'" filter
+ * (HANDOFF gotcha #40's flagged-to-rewrite collector) is gone.
  */
 export class AttackBehavior implements Behavior {
   static readonly kind = 'attack';
@@ -32,8 +35,8 @@ export class AttackBehavior implements Behavior {
     if (target === null) return null;
     if (chebyshev(unit.position, target.position) > unit.stats.attackRange) return null;
 
-    const walls = collectWalls(world);
-    if (walls.length > 0 && !hasLineOfSight(unit.position, target.position, walls)) {
+    const blockers = collectLosBlockers(world);
+    if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {
       return null;
     }
 
@@ -49,12 +52,12 @@ export class AttackBehavior implements Behavior {
   }
 }
 
-function collectWalls(world: World): GridCoord[] {
-  const walls: GridCoord[] = [];
+function collectLosBlockers(world: World): GridCoord[] {
+  const blockers: GridCoord[] = [];
   for (const u of world.units) {
-    if (u.team === 'neutral') walls.push(u.position);
+    if (u.team === 'neutral' && u.blocksLineOfSight) blockers.push(u.position);
   }
-  return walls;
+  return blockers;
 }
 
 function chebyshev(a: GridCoord, b: GridCoord): number {

@@ -4,6 +4,7 @@ import { World } from '../World';
 import { Unit, type Team, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
+import { spawnHalfCover } from '../environment';
 import type { GameEvents } from '../../core/events';
 
 describe('MovementBehavior', () => {
@@ -120,6 +121,42 @@ describe('MovementBehavior', () => {
     expect(newPos).not.toEqual({ x: 0, y: 0 });
     const distAfter = Math.max(Math.abs(newPos.x - 3), Math.abs(newPos.y - 4));
     expect(distAfter).toBeLessThan(4);
+  });
+
+  it('D6: paths AROUND a half-cover (pathfinding still treats it as a blocker)', () => {
+    // Straight line player→enemy passes through (3,0); half-cover sits there.
+    // Player should detour rather than walking through.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 1, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 5, y: 0, inert: true },
+    ]);
+    spawnHalfCover(world, { x: 3, y: 0 });
+
+    world.tick();
+    expect(moves).toHaveLength(1);
+    // First step should be a valid neighbor of (0,0) other than (3,0).
+    const newPos = units[0]!.position;
+    expect(newPos).not.toEqual({ x: 3, y: 0 });
+    // Chebyshev distance to (3,0) should be > 0 after one step (didn't land on it).
+    const distToHC = Math.max(Math.abs(newPos.x - 3), Math.abs(newPos.y - 0));
+    expect(distToHC).toBeGreaterThan(0);
+  });
+
+  it('D6: ranged unit with half-cover on the LOS line still abstains in-range (lets AttackBehavior fire)', () => {
+    // The pre-D6 MovementBehavior treated half-cover as an LOS blocker,
+    // so a ranged unit in range with a half-cover between it and target
+    // would keep stepping forward (LOS-gated in-range abstain failed).
+    // Post-D6 the LOS check ignores half-cover, so movement abstains and
+    // AttackBehavior is free to fire.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 5, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 4, y: 0, inert: true },
+    ]);
+    spawnHalfCover(world, { x: 2, y: 0 });
+
+    world.tick();
+    expect(moves).toHaveLength(0);
+    expect(units[0]!.position).toEqual({ x: 0, y: 0 });
   });
 
   it('two opposing units converge until adjacent, then stop', () => {

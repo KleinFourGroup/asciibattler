@@ -37,6 +37,7 @@ const GLYPHS = [
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
   '.', ':', '/', '-', '+', '%', '!', '?',
   '#', // C1a: wall obstacle (neutral-team environment entity).
+  '╥', // D6: half-cover (LOS-transparent neutral obstacle). U+2565.
 ] as const;
 
 /**

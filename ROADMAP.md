@@ -345,7 +345,23 @@ region-pick is at the region level, not tile level.
 - Inactive-layer dimming intensity (e.g. 30% opacity for layers not
   currently active). Tune during browser-verify.
 
-### D6 — New neutral unit: half-cover
+### D6 — New neutral unit: half-cover ✅ LANDED
+
+Per-Unit `blocksLineOfSight` (default true), `spawnHalfCover` factory,
+AttackBehavior's `collectWalls` → `collectLosBlockers` filtered by the
+flag (retires gotcha #40). MovementBehavior splits its neutral-collector
+into `pathBlockers` + `losBlockers` to keep the LOS-gated in-range
+abstain consistent with the AttackBehavior view (new gotcha #71). Snapshot
+schema 4 → 5. Glyph `╥` (U+2565) — JetBrains Mono renders a top rail
+with two posts, reads as a low fence (user pick). Editor neutral-units
+layer gains a wall/half-cover sub-tool radio in a new `#neutral-row`;
+schema `LayoutDef.halfCovers?: Coord[]` with zod validation against
+walls/water/spawn-region overlap; export JSON emits `halfCovers` after
+`water`. Hand-authored only — procedural emits `[]` (gotcha #72). 284
+tests pass. See HANDOFF.md for the full per-step breakdown and gotchas
+#70-#72.
+
+Original plan (left for reference):
 
 Wall-shaped but transparent to LOS. Pre-planned in gotcha #40: the
 right form is a per-Unit `blocksLineOfSight` flag, not a glyph check on

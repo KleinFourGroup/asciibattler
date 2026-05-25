@@ -57,15 +57,20 @@ export class MovementBehavior implements Behavior {
     if (target === null) return null;
 
     // Split blockers by kind:
-    //   walls (neutral)   → hard blockers + LOS occluders
+    //   neutrals          → hard blockers for pathfinding
+    //   neutrals w/ LOS   → ALSO LOS occluders for the in-range abstain
+    //                       (half-cover is `blocksLineOfSight: false`, so
+    //                        it pathing-blocks but doesn't break LOS — D6)
     //   other units       → soft cells (high cost), tracked separately
     //                        for the step collision check
-    const walls: GridCoord[] = [];
+    const pathBlockers: GridCoord[] = [];
+    const losBlockers: GridCoord[] = [];
     const otherUnitCells = new Set<string>();
     for (const u of world.units) {
       if (u.id === unit.id) continue;
       if (u.team === 'neutral') {
-        walls.push(u.position);
+        pathBlockers.push(u.position);
+        if (u.blocksLineOfSight) losBlockers.push(u.position);
         continue;
       }
       if (u.id === target.id) continue;
@@ -73,14 +78,14 @@ export class MovementBehavior implements Behavior {
     }
 
     const inRange = chebyshev(unit.position, target.position) <= unit.stats.attackRange;
-    if (inRange && hasLineOfSight(unit.position, target.position, walls)) {
+    if (inRange && hasLineOfSight(unit.position, target.position, losBlockers)) {
       return null;
     }
 
     const path = findPath(
       unit.position,
       target.position,
-      walls,
+      pathBlockers,
       world.gridW,
       world.gridH,
       (c) => costAt(c, world, otherUnitCells),

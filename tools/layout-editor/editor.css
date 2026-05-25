@@ -468,6 +468,11 @@ body {
   align-items: center;
   gap: 8px;
   flex: 1;
+  /* Without min-width: 0, a long-option <select> inside this
+     label.inline grows to its content size and eats the row's gap
+     (or pushes the LOAD button off the panel). min-width: 0 lets
+     flex shrinkage apply; the select below caps + truncates. */
+  min-width: 0;
 }
 
 .card input,
@@ -479,6 +484,14 @@ body {
   font-family: inherit;
   font-size: 13px;
   padding: 6px 8px;
+}
+
+.card select {
+  max-width: 100%;
+  min-width: 0;
+  /* Native <option> elements ignore text-overflow in most browsers,
+     so the closed-state display element handles truncation here. */
+  text-overflow: ellipsis;
 }
 
 .card input:focus,

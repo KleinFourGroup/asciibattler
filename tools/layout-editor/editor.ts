@@ -173,6 +173,19 @@ function populateSizeSelects(): void {
  * rectangle when the height budget is tight — the alternative was
  * shrinking the whole grid to keep cells square, which made tall
  * layouts unusably tiny on the canvas.
+ *
+ * **Y-axis convention** — rows are appended in reverse y order so
+ * y=0 lands at the BOTTOM of the CSS grid (last-appended →
+ * bottom row under `grid-auto-flow: row`). This matches the game's
+ * bottom-left origin: `gridToWorld` in BattleRenderer.ts maps
+ * cell.y=0 to +Z (the camera-near edge of the frame), so an
+ * asymmetric layout painted with y=0 at the visual bottom of the
+ * editor renders the same way in-game. Pre-fix, asymmetric
+ * layouts (river, anything off-center) appeared vertically
+ * mirrored between editor and game.
+ *
+ * `cellEls[y][x]` stays indexed normally so click handlers + cell
+ * lookups don't have to know about the DOM order.
  */
 function buildGrid(): void {
   gridEl.innerHTML = '';
@@ -193,9 +206,12 @@ function buildGrid(): void {
   gridEl.style.width = `${gridW * cellW}px`;
   gridEl.style.height = `${gridH * cellH}px`;
 
+  // Pre-allocate cellEls so we can index by [y][x] normally while
+  // appending DOM children in reverse y order (see docstring).
   cellEls = [];
-  for (let y = 0; y < gridH; y++) {
-    const rowEls: HTMLDivElement[] = [];
+  for (let y = 0; y < gridH; y++) cellEls.push([] as HTMLDivElement[]);
+
+  for (let y = gridH - 1; y >= 0; y--) {
     for (let x = 0; x < gridW; x++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
@@ -205,9 +221,8 @@ function buildGrid(): void {
       cell.addEventListener('mouseenter', () => onCellMouseEnter({ x, y }));
       cell.addEventListener('contextmenu', (e) => e.preventDefault());
       gridEl.appendChild(cell);
-      rowEls.push(cell);
+      cellEls[y]!.push(cell);
     }
-    cellEls.push(rowEls);
   }
 }
 
@@ -741,7 +756,11 @@ function populateLoadSelect(): void {
   for (const layout of LAYOUTS) {
     const opt = document.createElement('option');
     opt.value = layout.id;
-    opt.textContent = `${layout.name} (${layout.id} · ${layout.gridW}×${layout.gridH})`;
+    // The id is redundant when the human-readable name carries the
+    // same info (e.g. "Junction Ambush" vs id "junctionAmbush").
+    // Long labels would otherwise push the select past its flex
+    // container and crowd the LOAD button.
+    opt.textContent = `${layout.name} (${layout.gridW}×${layout.gridH})`;
     loadSelectEl.appendChild(opt);
   }
 }

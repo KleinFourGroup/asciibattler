@@ -14,6 +14,15 @@
   --neon-red: #ff3131;
   --panel-bg: #141414;
   --panel-border: #2c2c2c;
+  /* D5.D.B — distinct per-region tints. Picked off the terminal
+     palette so they read as part of the same visual language; the
+     fluorescent-blue collision with water is mitigated by region
+     tags rendering as corner badges, not full-cell fills. Indices >3
+     wrap modulo 4 — D5 layouts in practice use ≤4 regions. */
+  --region-color-0: var(--terminal-amber);
+  --region-color-1: var(--fluorescent-blue);
+  --region-color-2: var(--neon-red);
+  --region-color-3: var(--terminal-green);
 }
 
 * {
@@ -147,6 +156,122 @@ body {
   outline: 1px solid var(--terminal-green);
 }
 
+/* D5.D.B region picker. Only visible while the spawn-regions layer
+   is active (toggled via the [hidden] attribute on #region-row). */
+.region-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--dark-terminal-amber);
+  border-top: 1px dashed var(--panel-border);
+  padding-top: 8px;
+}
+
+.region-row[hidden] {
+  display: none;
+}
+
+.region-row-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.region-row .region-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--terminal-green);
+  font-weight: 700;
+  min-width: 80px;
+}
+
+.region-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.region-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--terminal-black);
+  color: var(--terminal-amber);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.region-pill:hover {
+  border-color: var(--terminal-amber);
+}
+
+.region-pill.active {
+  border-color: var(--terminal-green);
+  outline: 1px solid var(--terminal-green);
+  outline-offset: -1px;
+}
+
+.region-pill .pill-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--panel-border);
+}
+
+.region-row .availability-radios label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--terminal-amber);
+  cursor: pointer;
+}
+
+.region-row input[type='radio'] {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--terminal-amber);
+  border-radius: 50%;
+  background: var(--terminal-black);
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+}
+
+.region-row input[type='radio']:checked::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--terminal-green);
+}
+
+.small-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.small-btn.danger-outline {
+  background: transparent;
+  color: var(--neon-red);
+  border-color: var(--neon-red);
+}
+
+.small-btn.danger-outline:hover {
+  background: var(--neon-red);
+  color: var(--terminal-black);
+}
+
+.small-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .grid {
   display: grid;
   /* grid-template-columns / -rows + dimensions are assigned by editor.ts
@@ -206,8 +331,7 @@ body {
    renders at full strength; other layers fade so the author still
    sees overall composition but knows which clicks land where. Tuned
    to 0.3 per the D5.D recommendation — adjust during browser-verify
-   if it reads too dim against the dark cell background. Spawn-region
-   dimming rules land with D5.D.B's spawn overlay. */
+   if it reads too dim against the dark cell background. */
 .grid[data-active-layer='neutral-units'] .cell.water,
 .grid[data-active-layer='spawn-regions'] .cell.water {
   opacity: 0.3;
@@ -216,6 +340,59 @@ body {
 .grid[data-active-layer='terrain'] .cell.wall,
 .grid[data-active-layer='spawn-regions'] .cell.wall {
   opacity: 0.3;
+}
+
+/* D5.D.B spawn-region tags. Each region membership renders a
+   colored corner badge so multiple-region overlap stays visible on
+   a single cell. Position by region-index mod 4 (top-left, top-
+   right, bottom-right, bottom-left); index >= 4 cycles back to top-
+   left (acceptable — layouts in practice have ≤4 regions). The
+   active region's tag glows fully; inactive regions render dim so
+   the author can still see overall composition while editing one. */
+.cell .region-tag {
+  position: absolute;
+  width: 38%;
+  height: 38%;
+  pointer-events: none;
+  opacity: 0.55;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+}
+
+.cell .region-tag.active {
+  opacity: 1;
+}
+
+/* Corners by region index mod 4. */
+.cell .region-tag[data-corner='0'] { top: 0; left: 0; }
+.cell .region-tag[data-corner='1'] { top: 0; right: 0; }
+.cell .region-tag[data-corner='2'] { bottom: 0; right: 0; }
+.cell .region-tag[data-corner='3'] { bottom: 0; left: 0; }
+
+/* Per-region color. */
+.cell .region-tag[data-color='0'] { background: var(--region-color-0); }
+.cell .region-tag[data-color='1'] { background: var(--region-color-1); }
+.cell .region-tag[data-color='2'] { background: var(--region-color-2); }
+.cell .region-tag[data-color='3'] { background: var(--region-color-3); }
+
+/* When the spawn-regions layer is active and the cell is in the
+   active region, glow the cell edges in the active region's color.
+   Use an outline so it stacks visually with wall/water content. */
+.cell.active-region-0 { outline: 2px solid var(--region-color-0); outline-offset: -2px; }
+.cell.active-region-1 { outline: 2px solid var(--region-color-1); outline-offset: -2px; }
+.cell.active-region-2 { outline: 2px solid var(--region-color-2); outline-offset: -2px; }
+.cell.active-region-3 { outline: 2px solid var(--region-color-3); outline-offset: -2px; }
+
+/* Inactive layers (not spawn-regions) dim the region tags so the
+   author still sees them but knows clicks land elsewhere. */
+.grid[data-active-layer='terrain'] .cell .region-tag,
+.grid[data-active-layer='neutral-units'] .cell .region-tag {
+  opacity: 0.3;
+}
+
+/* The legend swatch for spawn regions uses the first region color. */
+.swatch.region-0 {
+  background: var(--region-color-0);
 }
 
 .legend {

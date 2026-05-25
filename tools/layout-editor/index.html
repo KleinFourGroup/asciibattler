@@ -40,11 +40,29 @@
             </label>
             <span class="hint">Only the active layer accepts edits; others render dimmed.</span>
           </div>
+          <div id="region-row" class="region-row" hidden>
+            <div class="region-row-line">
+              <span class="region-label">Region</span>
+              <div id="region-picker" class="region-picker" role="radiogroup" aria-label="Active spawn region"></div>
+              <button id="add-region-btn" type="button" class="small-btn">+ Add region</button>
+            </div>
+            <div class="region-row-line">
+              <span class="region-label">Availability</span>
+              <div id="availability-radios" class="availability-radios" role="radiogroup" aria-label="Active region availability">
+                <label class="inline"><input type="radio" name="availability" value="player" /> player</label>
+                <label class="inline"><input type="radio" name="availability" value="enemy" /> enemy</label>
+                <label class="inline"><input type="radio" name="availability" value="both" checked /> both</label>
+              </div>
+              <button id="delete-region-btn" type="button" class="small-btn danger-outline">Delete region</button>
+              <span class="hint">Left-click paints into the active region (FIFO 8-tile cap); right-click removes a tile.</span>
+            </div>
+          </div>
           <div id="grid" class="grid" data-active-layer="terrain"></div>
           <ul class="legend">
             <li><span class="swatch water"></span> Terrain layer — click paints water</li>
             <li><span class="swatch wall"></span> Neutral-units layer — click paints wall</li>
             <li><span class="swatch erase"></span> Right-click — erases active layer at the cell</li>
+            <li><span class="swatch region-0"></span> Spawn regions — color-coded by index</li>
           </ul>
         </div>
         <aside class="side-pane">

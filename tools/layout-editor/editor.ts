@@ -9,25 +9,32 @@
  * `config/layouts.json`.
  *
  * D5.D.A — layer system. Three radio-toggle layers: terrain (water),
- * neutral units (walls), spawn regions (D5.D.B adds painting). Only
- * the active layer accepts edits; other layers render dimmed so the
- * author still sees overall composition. Left-click paints the active
- * layer's primary kind; right-click erases the active layer's content
- * at the cell. Shift+click is retired — the active-layer radio replaces
- * it as the kind picker. The pre-D5 reserved-row diagonal-stripe
- * overlay is retired with this commit (the D5 schema's `SpawnRegion[]`
- * is the canonical spawn reservation now).
+ * neutral units (walls), spawn regions. Only the active layer accepts
+ * edits; other layers render dimmed so the author still sees overall
+ * composition. Left-click paints the active layer's primary kind;
+ * right-click erases the active layer's content at the cell.
+ * Shift+click is retired — the active-layer radio replaces it as the
+ * kind picker. The pre-D5 reserved-row diagonal-stripe overlay is
+ * retired (the D5 schema's `SpawnRegion[]` is canonical now).
  *
- * D5.D.A also auto-populates the exported `spawns` field with two
- * `availability: 'both'` 8-tile bands on the top + bottom edges, so a
- * new layout authored before D5.D.B's painting UI lands still validates
- * at module load. Loaded layouts preserve their authored spawns through
- * the round trip.
+ * D5.D.B — spawn-region painting. While on the spawn-regions layer,
+ * left-click paints the cell into the *active region* (FIFO 8-tile
+ * cap — a 9th paint evicts the oldest tile); right-click removes the
+ * tile from the active region. Active region picked via a region
+ * pill row; "+ Add region" appends a new empty region; "Delete
+ * region" removes the active one (zod requires ≥2, so deletes
+ * below 2 are blocked). Availability radio (player/enemy/both)
+ * mutates the active region in place. Each region's color comes
+ * from a fixed 4-color palette indexed by region position; multi-
+ * region membership renders as corner-tag badges so overlap is
+ * visible.
  *
  * D3 — variable map sizes. Width and Height dropdowns (8–32 each)
  * rebuild the DOM grid in place; cells that still fit are preserved
  * and any wall/water outside the new bounds is dropped (with a
- * validation warning so the author notices).
+ * validation warning so the author notices). Spawn regions reset to
+ * the procedural default on resize since their tiles may now be out
+ * of bounds.
  *
  * Output is export-only: the editor prints the JSON to a textarea with
  * Copy + Download buttons; the author pastes it into
@@ -45,6 +52,7 @@ import {
   LAYOUT_MAX_SIDE,
   SPAWN_REGION_TILE_COUNT,
   type LayoutDef,
+  type SpawnAvailability,
   type SpawnRegion,
 } from '../../src/config/layouts';
 
@@ -56,6 +64,14 @@ interface Coord {
   readonly y: number;
 }
 
+/** zod requires this many spawn regions at minimum (see
+ *  LayoutSchema). Deletes that would drop below it are blocked in
+ *  the UI rather than allowed-then-flagged. */
+const MIN_SPAWN_REGIONS = 2;
+/** Per-region color palette index. Multi-region overlap renders by
+ *  region position MOD this count; layouts in practice have ≤4. */
+const REGION_COLOR_COUNT = 4;
+
 const DEFAULT_SIDE = 12;
 
 let gridW = DEFAULT_SIDE;
@@ -65,9 +81,10 @@ let cellEls: HTMLDivElement[][] = [];
 let activeLayer: Layer = 'terrain';
 /** Spawn regions for export. D5.D.A: initialized + reset to the
  *  procedural default (two top/bottom 'both' bands); loaded layouts
- *  populate from their JSON. D5.D.B will add a painting UI that
- *  mutates this state directly. */
+ *  populate from their JSON. D5.D.B: painting + add/delete + the
+ *  availability radio all mutate this array in place. */
 let spawns: SpawnRegion[] = defaultSpawns(gridW, gridH);
+let activeRegionIdx = 0;
 /** Number of cells dropped on the most recent resize. Surfaced as a
  *  validation warning so the author doesn't lose paint silently. */
 let lastClipCount = 0;
@@ -98,6 +115,13 @@ const gridHSelectEl = mustQuery<HTMLSelectElement>('#grid-h');
 const layerRadioEls = Array.from(
   document.querySelectorAll<HTMLInputElement>('input[name="layer"]'),
 );
+const regionRowEl = mustQuery<HTMLDivElement>('#region-row');
+const regionPickerEl = mustQuery<HTMLDivElement>('#region-picker');
+const availabilityRadioEls = Array.from(
+  document.querySelectorAll<HTMLInputElement>('input[name="availability"]'),
+);
+const addRegionBtn = mustQuery<HTMLButtonElement>('#add-region-btn');
+const deleteRegionBtn = mustQuery<HTMLButtonElement>('#delete-region-btn');
 
 populateSizeSelects();
 buildGrid();
@@ -106,6 +130,7 @@ attachMetaWatchers();
 attachToolButtons();
 attachSizeWatchers();
 attachLayerWatchers();
+attachRegionControls();
 window.addEventListener('mouseup', endStroke);
 // Re-fit the grid when the viewport changes so cells keep filling the
 // available pane width. Throttled to a rAF so resize spam doesn't
@@ -216,10 +241,11 @@ function resizeGridData(newW: number, newH: number): number {
   gridH = newH;
   // Spawn regions are tied to specific tiles + the arena's dimensions;
   // resizing may push them out of bounds. Reset to the procedural
-  // default so the export stays valid. D5.D.B will refine — keep
-  // painted regions that still fit, drop ones that don't, with a clip
-  // warning of their own.
+  // default so the export stays valid. (Possible refinement later:
+  // keep painted regions that still fit, drop ones that don't, with
+  // a clip warning of their own — not in D5.D scope.)
   spawns = defaultSpawns(gridW, gridH);
+  activeRegionIdx = 0;
   return clipped;
 }
 
@@ -251,19 +277,26 @@ function defaultSpawns(w: number, h: number): SpawnRegion[] {
   ];
 }
 
-// ---- Drag-paint stroke (D2 + D5.D.A) ----
+// ---- Drag-paint stroke (D2 + D5.D.A + D5.D.B) ----
 //
 // A stroke runs from a mousedown on a cell to the next global mouseup.
 // The stroke's kind is fixed at mousedown from the (active layer,
 // mouse button) pair: left-click paints the active layer's primary
-// kind (terrain → water, neutral units → wall); right-click erases the
-// active layer's content at the cell. Spawn-regions painting lands in
-// D5.D.B — for now the layer accepts no input.
+// kind (terrain → water, neutral units → wall, spawn-regions → tile
+// into the active region with FIFO 8-cap); right-click erases the
+// active layer's content at the cell.
 //
 // Validation + JSON export refresh once per stroke (on mouseup), not
 // per cell — keeps the export panel from flickering during a drag and
 // matches the roadmap's "stroke determinism" note.
-type StrokeKind = 'paint-wall' | 'paint-water' | 'erase-wall' | 'erase-water' | 'noop';
+type StrokeKind =
+  | 'paint-wall'
+  | 'paint-water'
+  | 'erase-wall'
+  | 'erase-water'
+  | 'paint-region'
+  | 'erase-region'
+  | 'noop';
 
 let activeStroke: StrokeKind | null = null;
 let strokeDirty = false;
@@ -303,8 +336,11 @@ function strokeFromMouseEvent(e: MouseEvent): StrokeKind {
     case 'neutral-units':
       return erasing ? 'erase-wall' : 'paint-wall';
     case 'spawn-regions':
-      // D5.D.B will replace this with the per-region paint/erase flow.
-      return 'noop';
+      // No-op if there's no active region (deleted last, picker
+      // empty). UI prevents going below MIN_SPAWN_REGIONS, so this
+      // is defensive.
+      if (!hasActiveRegion()) return 'noop';
+      return erasing ? 'erase-region' : 'paint-region';
   }
 }
 
@@ -314,6 +350,23 @@ function applyStrokeTo(c: Coord): void {
   if (strokeAppliedCells.has(key)) return;
   strokeAppliedCells.add(key);
 
+  switch (activeStroke) {
+    case 'paint-water':
+    case 'paint-wall':
+    case 'erase-water':
+    case 'erase-wall':
+      applyTerrainStroke(c);
+      return;
+    case 'paint-region':
+      applyPaintRegion(c);
+      return;
+    case 'erase-region':
+      applyEraseRegion(c);
+      return;
+  }
+}
+
+function applyTerrainStroke(c: Coord): void {
   const current = grid[c.y]![c.x]!;
   // Each stroke kind only touches its layer's content: erase-water
   // leaves walls alone, paint-wall over a water cell wins (cell kinds
@@ -340,12 +393,77 @@ function applyStrokeTo(c: Coord): void {
   refreshCell(c);
 }
 
+function applyPaintRegion(c: Coord): void {
+  const region = spawns[activeRegionIdx];
+  if (!region) return;
+  // Already in the region → no-op (don't FIFO-bump on re-paint over
+  // a tile the active stroke already owns).
+  if (region.tiles.some((t) => t.x === c.x && t.y === c.y)) return;
+  region.tiles.push({ x: c.x, y: c.y });
+  let evicted: Coord | null = null;
+  if (region.tiles.length > SPAWN_REGION_TILE_COUNT) {
+    evicted = region.tiles.shift() ?? null;
+  }
+  strokeDirty = true;
+  refreshCell(c);
+  if (evicted) refreshCell(evicted);
+  // The pill's tile-count badge changes on every paint — refresh
+  // mid-stroke so the author sees the cap-fill happen live, even
+  // though the export panel waits until mouseup.
+  refreshRegionPicker();
+}
+
+function applyEraseRegion(c: Coord): void {
+  const region = spawns[activeRegionIdx];
+  if (!region) return;
+  const before = region.tiles.length;
+  region.tiles = region.tiles.filter((t) => t.x !== c.x || t.y !== c.y);
+  if (region.tiles.length === before) return;
+  strokeDirty = true;
+  refreshCell(c);
+  refreshRegionPicker();
+}
+
+function hasActiveRegion(): boolean {
+  return activeRegionIdx >= 0 && activeRegionIdx < spawns.length;
+}
+
 function refreshCell(c: Coord): void {
   const el = cellEls[c.y]![c.x]!;
   const value = grid[c.y]![c.x]!;
-  el.classList.remove('wall', 'water', 'invalid');
+  el.classList.remove(
+    'wall',
+    'water',
+    'invalid',
+    'active-region-0',
+    'active-region-1',
+    'active-region-2',
+    'active-region-3',
+  );
   if (value === 'wall') el.classList.add('wall');
   if (value === 'water') el.classList.add('water');
+
+  // Tear down any prior region tags + outline. Rebuilt below based
+  // on current spawns membership.
+  for (const old of Array.from(el.querySelectorAll('.region-tag'))) old.remove();
+
+  let activeMembership = -1;
+  spawns.forEach((region, idx) => {
+    if (!region.tiles.some((t) => t.x === c.x && t.y === c.y)) return;
+    const tag = document.createElement('span');
+    tag.className = 'region-tag';
+    const colorBucket = idx % REGION_COLOR_COUNT;
+    tag.dataset.color = String(colorBucket);
+    tag.dataset.corner = String(colorBucket);
+    if (idx === activeRegionIdx) {
+      tag.classList.add('active');
+      activeMembership = colorBucket;
+    }
+    el.appendChild(tag);
+  });
+  if (activeMembership >= 0) {
+    el.classList.add(`active-region-${activeMembership}`);
+  }
 }
 
 function refreshGrid(): void {
@@ -408,12 +526,10 @@ function validate(): ValidationItem[] {
     items.push({ level: 'warn', text: 'Missing description — required.' });
   }
 
-  // D5.D.A: spawn regions checked against walls + water for overlap.
-  // The painting UI (D5.D.B) enforces the 8-tile-per-region cap +
-  // valid-pair rule live; for now the auto-default + loaded-layout
-  // paths both produce schema-valid spawns, so this only flags
-  // unexpected drift (e.g. a load-time overlap that resize didn't
-  // catch).
+  // D5.D.B: live spawn-region validation against the D5 schema.
+  // Mirrors `src/config/layouts.ts` — flagged as errors here so the
+  // author sees them while painting, before the JSON paste at boot
+  // would catch them.
   const blockedSet = new Set<string>();
   for (const w of walls) blockedSet.add(`${w.x},${w.y}`);
   for (const w of water) blockedSet.add(`${w.x},${w.y}`);
@@ -427,6 +543,47 @@ function validate(): ValidationItem[] {
     items.push({
       level: 'error',
       text: `${spawnOverlap} spawn tile(s) overlap walls or water — paint to move them.`,
+    });
+  }
+
+  // Per-region tile count. The painting flow naturally lands in the
+  // [0, 8] range — empty regions on freshly-added pills surface
+  // until the author paints 8 tiles in.
+  const undersized: number[] = [];
+  spawns.forEach((region, idx) => {
+    if (region.tiles.length !== SPAWN_REGION_TILE_COUNT) undersized.push(idx);
+  });
+  if (undersized.length > 0) {
+    const lines = undersized
+      .map((idx) => `#${idx}: ${spawns[idx]!.tiles.length}/${SPAWN_REGION_TILE_COUNT}`)
+      .join(', ');
+    items.push({
+      level: 'error',
+      text: `Region(s) ${lines} — each region needs exactly ${SPAWN_REGION_TILE_COUNT} tiles.`,
+    });
+  }
+
+  // Valid-pair rule (subsumes "≥1 player-available" and "≥1 enemy-
+  // available" — see `LayoutSchema.superRefine` in
+  // `src/config/layouts.ts` for the canonical reasoning).
+  const playerPool: SpawnRegion[] = [];
+  const enemyPool: SpawnRegion[] = [];
+  for (const region of spawns) {
+    if (region.availability === 'player' || region.availability === 'both') playerPool.push(region);
+    if (region.availability === 'enemy' || region.availability === 'both') enemyPool.push(region);
+  }
+  const hasValidPair = playerPool.some((p) => enemyPool.some((e) => e !== p));
+  if (!hasValidPair) {
+    items.push({
+      level: 'error',
+      text: 'No valid (player, enemy) region pair — at least two regions must allow opposing teams.',
+    });
+  }
+
+  if (spawns.length < MIN_SPAWN_REGIONS) {
+    items.push({
+      level: 'error',
+      text: `Layout needs ≥${MIN_SPAWN_REGIONS} spawn regions (currently ${spawns.length}).`,
     });
   }
 
@@ -574,6 +731,7 @@ function formatCoords(coords: readonly Coord[]): string[] {
 }
 
 function refreshAll(): void {
+  refreshRegionUI();
   refreshGrid();
   refreshValidation();
   refreshExport();
@@ -596,12 +754,13 @@ function loadLayout(id: string): void {
   grid = makeEmptyGrid(gridW, gridH);
   for (const w of found.walls) grid[w.y]![w.x] = 'wall';
   if (found.water) for (const w of found.water) grid[w.y]![w.x] = 'water';
-  // Deep-copy spawns so live editing (D5.D.B) can't mutate the
-  // canonical LAYOUTS array.
+  // Deep-copy spawns so live editing can't mutate the canonical
+  // LAYOUTS array.
   spawns = found.spawns.map((r) => ({
     availability: r.availability,
     tiles: r.tiles.map((t) => ({ x: t.x, y: t.y })),
   }));
+  activeRegionIdx = 0;
   metaIdEl.value = found.id;
   metaNameEl.value = found.name;
   metaDescriptionEl.value = found.description;
@@ -615,6 +774,7 @@ function loadLayout(id: string): void {
 function clearGrid(): void {
   grid = makeEmptyGrid(gridW, gridH);
   spawns = defaultSpawns(gridW, gridH);
+  activeRegionIdx = 0;
   lastClipCount = 0;
   refreshAll();
 }
@@ -665,8 +825,93 @@ function attachLayerWatchers(): void {
       if (activeStroke !== null) endStroke();
       activeLayer = value;
       gridEl.dataset.activeLayer = value;
+      regionRowEl.hidden = value !== 'spawn-regions';
+      // Region tag opacity is class-driven via [data-active-layer],
+      // but the active-region outline is per-cell — refresh so the
+      // outline appears only when spawn-regions is the active layer.
+      refreshGrid();
     });
   }
+}
+
+function attachRegionControls(): void {
+  addRegionBtn.addEventListener('click', () => {
+    spawns.push({ tiles: [], availability: 'both' });
+    activeRegionIdx = spawns.length - 1;
+    refreshRegionUI();
+    refreshGrid();
+    refreshValidation();
+    refreshExport();
+  });
+  deleteRegionBtn.addEventListener('click', () => {
+    if (spawns.length <= MIN_SPAWN_REGIONS) return;
+    if (!hasActiveRegion()) return;
+    spawns.splice(activeRegionIdx, 1);
+    if (activeRegionIdx >= spawns.length) activeRegionIdx = spawns.length - 1;
+    refreshRegionUI();
+    refreshGrid();
+    refreshValidation();
+    refreshExport();
+  });
+  for (const radio of availabilityRadioEls) {
+    radio.addEventListener('change', () => {
+      if (!radio.checked) return;
+      if (!hasActiveRegion()) return;
+      const region = spawns[activeRegionIdx]!;
+      region.availability = radio.value as SpawnAvailability;
+      refreshValidation();
+      refreshExport();
+    });
+  }
+}
+
+/**
+ * Rebuild the region pill picker from `spawns` and sync the
+ * availability radios + Delete button enabled-state to the active
+ * region. Called whenever spawns changes shape (add/delete/load/
+ * resize/clear) or the active region switches.
+ */
+function refreshRegionPicker(): void {
+  regionPickerEl.innerHTML = '';
+  spawns.forEach((region, idx) => {
+    const pill = document.createElement('button');
+    pill.type = 'button';
+    pill.className = 'region-pill';
+    if (idx === activeRegionIdx) pill.classList.add('active');
+    pill.dataset.regionIdx = String(idx);
+    const swatch = document.createElement('span');
+    swatch.className = 'pill-swatch';
+    swatch.style.background = `var(--region-color-${idx % REGION_COLOR_COUNT})`;
+    const label = document.createElement('span');
+    label.textContent = `#${idx} (${region.tiles.length}/${SPAWN_REGION_TILE_COUNT})`;
+    pill.appendChild(swatch);
+    pill.appendChild(label);
+    pill.addEventListener('click', () => {
+      if (idx === activeRegionIdx) return;
+      // Mid-stroke region switch implicitly commits the current
+      // stroke (per the user's D5.D answer on region-switch:
+      // "Can't switch mid-stroke" — closest mapping for click).
+      if (activeStroke !== null) endStroke();
+      activeRegionIdx = idx;
+      refreshRegionUI();
+      refreshGrid();
+    });
+    regionPickerEl.appendChild(pill);
+  });
+  deleteRegionBtn.disabled = spawns.length <= MIN_SPAWN_REGIONS;
+}
+
+function refreshAvailabilityRadios(): void {
+  const region = hasActiveRegion() ? spawns[activeRegionIdx]! : null;
+  for (const radio of availabilityRadioEls) {
+    radio.checked = region !== null && radio.value === region.availability;
+    radio.disabled = region === null;
+  }
+}
+
+function refreshRegionUI(): void {
+  refreshRegionPicker();
+  refreshAvailabilityRadios();
 }
 
 function onSizeChange(): void {

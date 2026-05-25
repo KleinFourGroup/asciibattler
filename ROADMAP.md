@@ -239,7 +239,18 @@ accepted):**
 - Mode B as production default → **deferred**; keep `fit` as
   `DEV_DEFAULT_MODE` through D4, flip when D5 spawn regions land.
 
-### D5 — Spawn-region system
+### D5 — Spawn-region system ✅ LANDED (A through E)
+
+D5.A: schema + retrofit. D5.B: sim consumes regions. D5.C: overflow
+queue + SpawnAction + WorldSnapshot v4. D5.D: editor layer system +
+spawn-region painting. **D5.E (newest): `BattleScene.mount` anchors
+the scroll-mode camera on the player region's centroid via
+`gridToWorld({x:meanX,y:meanY},gridW,gridH)`, replacing D4's
+`(0, gridH/2 - 2)` legacy heuristic.** `DEV_DEFAULT_MODE` stays `fit`
+through D5 — the default flip is deferred. See HANDOFF.md for the
+full per-step breakdown and gotchas #55-#69.
+
+Original plan (left for reference):
 
 Replaces the current `spawnRowsClear` / `spawnTeam`-into-fixed-columns
 machinery with explicit per-layout spawn regions. Each region is exactly

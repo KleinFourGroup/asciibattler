@@ -13,7 +13,7 @@ import { Clock } from '../core/Clock';
 import { RNG } from '../core/RNG';
 import { World } from '../sim/World';
 import { applyTerrain, pickSpawnRegions, setupRngFor, spawnTeam } from '../sim/battleSetup';
-import { BattleRenderer } from '../render/BattleRenderer';
+import { BattleRenderer, gridToWorld } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { HUD } from '../ui/HUD';
 import { TICK_RATE } from '../config';
@@ -91,14 +91,6 @@ export class BattleScene implements Scene {
     // D3 — frame the camera to whatever rectangle this encounter rolled
     // (procedural sizes range up to 20×20; hand-authored up to 32×32).
     ctx.renderer.fitToBoard(this.world.gridW, this.world.gridH);
-    // D4 — anchor the scroll-mode camera on the player spawn area so a
-    // toggle-to-scroll shows the player's team first. Pre-D5 used the
-    // fixed `(0, gridH/2 - 2)` heuristic from the legacy row formation.
-    // D5.E will replace this with the centroid of the rolled player
-    // region (the centroid info is one extra plumbing step away — kept
-    // as a follow-on commit). For now the heuristic still works as a
-    // sensible default; renderer clamps to the board.
-    ctx.renderer.setCameraTarget(0, this.world.gridH / 2 - 2);
 
     // D5 — pick a region for each team off the same fork the fuzz
     // harness uses, then place units one per shuffled tile within
@@ -108,6 +100,29 @@ export class BattleScene implements Scene {
       spawnRegions,
       setupRng,
     );
+
+    // D5.E — anchor the scroll-mode camera on the centroid of the
+    // player's rolled spawn region (replaces D4's `(0, gridH/2 - 2)`
+    // legacy heuristic from the row-formation era). Region tiles are
+    // grid coords; convert the mean through `gridToWorld` so the anchor
+    // lands in the same world-XZ space the renderer pans. fit mode
+    // ignores this visually, but the target is preserved across the
+    // backtick toggle. Renderer.clampCameraTarget caps to the board.
+    let sumX = 0;
+    let sumY = 0;
+    for (const t of playerRegion.tiles) {
+      sumX += t.x;
+      sumY += t.y;
+    }
+    const meanX = sumX / playerRegion.tiles.length;
+    const meanY = sumY / playerRegion.tiles.length;
+    const anchor = gridToWorld(
+      { x: meanX, y: meanY },
+      this.world.gridW,
+      this.world.gridH,
+    );
+    ctx.renderer.setCameraTarget(anchor.x, anchor.z);
+
     spawnTeam(this.world, 'player', encounter.playerTeam, playerRegion, setupRng);
     spawnTeam(this.world, 'enemy', encounter.enemyTeam, enemyRegion, setupRng);
   }

@@ -9,7 +9,7 @@
     <main id="editor-root">
       <header class="bar">
         <h1>Layout Editor</h1>
-        <span class="subtitle">Rectangular arena (8&ndash;32) · paint walls and water · export to <code>config/layouts.json</code></span>
+        <span class="subtitle">Rectangular arena (8&ndash;32) · paint terrain, neutral units, spawn regions · export to <code>config/layouts.json</code></span>
       </header>
       <section class="workspace">
         <div class="grid-pane">
@@ -24,12 +24,27 @@
             </label>
             <span class="hint">Resizing preserves cells that still fit; cells outside the new bounds are dropped.</span>
           </div>
-          <div id="grid" class="grid"></div>
+          <div class="layer-row" role="radiogroup" aria-label="Active layer">
+            <span class="layer-label">Layer</span>
+            <label class="inline">
+              <input type="radio" name="layer" value="terrain" checked />
+              Terrain
+            </label>
+            <label class="inline">
+              <input type="radio" name="layer" value="neutral-units" />
+              Neutral units
+            </label>
+            <label class="inline">
+              <input type="radio" name="layer" value="spawn-regions" />
+              Spawn regions
+            </label>
+            <span class="hint">Only the active layer accepts edits; others render dimmed.</span>
+          </div>
+          <div id="grid" class="grid" data-active-layer="terrain"></div>
           <ul class="legend">
-            <li><span class="swatch wall"></span> Click — wall</li>
-            <li><span class="swatch water"></span> Shift+click — water</li>
-            <li><span class="swatch erase"></span> Right-click — erase</li>
-            <li><span class="swatch spawn"></span> Reserved spawn row (walls/water forbidden here)</li>
+            <li><span class="swatch water"></span> Terrain layer — click paints water</li>
+            <li><span class="swatch wall"></span> Neutral-units layer — click paints wall</li>
+            <li><span class="swatch erase"></span> Right-click — erases active layer at the cell</li>
           </ul>
         </div>
         <aside class="side-pane">

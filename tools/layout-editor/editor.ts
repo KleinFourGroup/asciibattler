@@ -1,21 +1,33 @@
 /**
- * Layout editor (C1d.B + D3). Standalone Vite page — visit
+ * Layout editor (C1d.B + D3 + D5.D). Standalone Vite page — visit
  * http://localhost:5173/tools/layout-editor/ after `npm run dev`. Not
  * included in the production build (no entry in vite.config.ts's
  * rollupOptions.input).
  *
- * Paints walls + water onto a rectangular arena and exports a JSON
- * snippet shaped like one entry of `config/layouts.json`. Drag-paint
- * groundwork (D2) is preserved across the D3 size rebuild: drag with
- * left for wall, shift+left for water, right for erase; one validation
- * + JSON refresh per stroke.
+ * Paints terrain + neutral units + spawn regions onto a rectangular
+ * arena and exports a JSON snippet shaped like one entry of
+ * `config/layouts.json`.
+ *
+ * D5.D.A — layer system. Three radio-toggle layers: terrain (water),
+ * neutral units (walls), spawn regions (D5.D.B adds painting). Only
+ * the active layer accepts edits; other layers render dimmed so the
+ * author still sees overall composition. Left-click paints the active
+ * layer's primary kind; right-click erases the active layer's content
+ * at the cell. Shift+click is retired — the active-layer radio replaces
+ * it as the kind picker. The pre-D5 reserved-row diagonal-stripe
+ * overlay is retired with this commit (the D5 schema's `SpawnRegion[]`
+ * is the canonical spawn reservation now).
+ *
+ * D5.D.A also auto-populates the exported `spawns` field with two
+ * `availability: 'both'` 8-tile bands on the top + bottom edges, so a
+ * new layout authored before D5.D.B's painting UI lands still validates
+ * at module load. Loaded layouts preserve their authored spawns through
+ * the round trip.
  *
  * D3 — variable map sizes. Width and Height dropdowns (8–32 each)
  * rebuild the DOM grid in place; cells that still fit are preserved
  * and any wall/water outside the new bounds is dropped (with a
- * validation warning so the author notices). Reserved spawn rows are
- * recomputed per-height via `reservedSpawnRows`, so the diagonal-stripe
- * overlay tracks the resize.
+ * validation warning so the author notices).
  *
  * Output is export-only: the editor prints the JSON to a textarea with
  * Copy + Download buttons; the author pastes it into
@@ -31,11 +43,13 @@ import {
   LAYOUTS,
   LAYOUT_MIN_SIDE,
   LAYOUT_MAX_SIDE,
+  SPAWN_REGION_TILE_COUNT,
   type LayoutDef,
+  type SpawnRegion,
 } from '../../src/config/layouts';
-import { reservedSpawnRows } from '../../src/sim/terrainGen';
 
 type Cell = 'floor' | 'wall' | 'water';
+type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
 
 interface Coord {
   readonly x: number;
@@ -48,7 +62,12 @@ let gridW = DEFAULT_SIDE;
 let gridH = DEFAULT_SIDE;
 let grid: Cell[][] = makeEmptyGrid(gridW, gridH);
 let cellEls: HTMLDivElement[][] = [];
-let reservedRows: ReadonlySet<number> = new Set(reservedSpawnRows(gridH));
+let activeLayer: Layer = 'terrain';
+/** Spawn regions for export. D5.D.A: initialized + reset to the
+ *  procedural default (two top/bottom 'both' bands); loaded layouts
+ *  populate from their JSON. D5.D.B will add a painting UI that
+ *  mutates this state directly. */
+let spawns: SpawnRegion[] = defaultSpawns(gridW, gridH);
 /** Number of cells dropped on the most recent resize. Surfaced as a
  *  validation warning so the author doesn't lose paint silently. */
 let lastClipCount = 0;
@@ -76,6 +95,9 @@ const copyBtn = mustQuery<HTMLButtonElement>('#copy-btn');
 const downloadBtn = mustQuery<HTMLButtonElement>('#download-btn');
 const gridWSelectEl = mustQuery<HTMLSelectElement>('#grid-w');
 const gridHSelectEl = mustQuery<HTMLSelectElement>('#grid-h');
+const layerRadioEls = Array.from(
+  document.querySelectorAll<HTMLInputElement>('input[name="layer"]'),
+);
 
 populateSizeSelects();
 buildGrid();
@@ -83,6 +105,7 @@ populateLoadSelect();
 attachMetaWatchers();
 attachToolButtons();
 attachSizeWatchers();
+attachLayerWatchers();
 window.addEventListener('mouseup', endStroke);
 // Re-fit the grid when the viewport changes so cells keep filling the
 // available pane width. Throttled to a rAF so resize spam doesn't
@@ -164,10 +187,11 @@ function buildGrid(): void {
 }
 
 /**
- * Resize the underlying `grid` array and reserved-rows set to match
- * `gridW × gridH`. Cells outside the new bounds are dropped; cells
- * inside keep their kind. Returns the count of dropped non-floor
- * cells so the validation can flag a clip.
+ * Resize the underlying `grid` array to match `gridW × gridH`. Cells
+ * outside the new bounds are dropped; cells inside keep their kind.
+ * Returns the count of dropped non-floor cells so the validation can
+ * flag a clip. Spawn regions reset to the procedural default since
+ * the prior tiles may now be out of bounds.
  */
 function resizeGridData(newW: number, newH: number): number {
   let clipped = 0;
@@ -190,22 +214,56 @@ function resizeGridData(newW: number, newH: number): number {
   grid = next;
   gridW = newW;
   gridH = newH;
-  reservedRows = new Set(reservedSpawnRows(gridH));
+  // Spawn regions are tied to specific tiles + the arena's dimensions;
+  // resizing may push them out of bounds. Reset to the procedural
+  // default so the export stays valid. D5.D.B will refine — keep
+  // painted regions that still fit, drop ones that don't, with a clip
+  // warning of their own.
+  spawns = defaultSpawns(gridW, gridH);
   return clipped;
 }
 
-// ---- Drag-paint stroke (D2) ----
+/**
+ * The procedural-default spawn region pair: two `availability: 'both'`
+ * bands on the literal top + bottom edges (y=0 and y=gridH-1), each
+ * `SPAWN_REGION_TILE_COUNT` (8) tiles wide and centered horizontally.
+ * Mirrors `defaultProceduralSpawnRegions` in `src/sim/terrainGen.ts`.
+ * Both code paths produce identical output for the same dimensions —
+ * intentional duplication so the editor stays self-contained.
+ */
+function defaultSpawns(w: number, h: number): SpawnRegion[] {
+  if (w < SPAWN_REGION_TILE_COUNT || h < 2) {
+    // Min grid side is 8 (LAYOUT_MIN_SIDE), so this branch is
+    // unreachable in practice — guard kept for the same defensive
+    // reason as the sim-side helper.
+    return [];
+  }
+  const xStart = Math.floor((w - SPAWN_REGION_TILE_COUNT) / 2);
+  const topTiles: Coord[] = [];
+  const bottomTiles: Coord[] = [];
+  for (let i = 0; i < SPAWN_REGION_TILE_COUNT; i++) {
+    topTiles.push({ x: xStart + i, y: 0 });
+    bottomTiles.push({ x: xStart + i, y: h - 1 });
+  }
+  return [
+    { tiles: topTiles, availability: 'both' },
+    { tiles: bottomTiles, availability: 'both' },
+  ];
+}
+
+// ---- Drag-paint stroke (D2 + D5.D.A) ----
 //
 // A stroke runs from a mousedown on a cell to the next global mouseup.
-// The stroke's kind is fixed at mousedown — left paints wall, shift+left
-// paints water, right erases (clears the active layer's content at the
-// crossed cell, which today means setting it back to floor). The kind
-// applies to every cell the cursor crosses for the rest of the stroke.
+// The stroke's kind is fixed at mousedown from the (active layer,
+// mouse button) pair: left-click paints the active layer's primary
+// kind (terrain → water, neutral units → wall); right-click erases the
+// active layer's content at the cell. Spawn-regions painting lands in
+// D5.D.B — for now the layer accepts no input.
 //
 // Validation + JSON export refresh once per stroke (on mouseup), not
 // per cell — keeps the export panel from flickering during a drag and
 // matches the roadmap's "stroke determinism" note.
-type StrokeKind = 'paint-wall' | 'paint-water' | 'erase';
+type StrokeKind = 'paint-wall' | 'paint-water' | 'erase-wall' | 'erase-water' | 'noop';
 
 let activeStroke: StrokeKind | null = null;
 let strokeDirty = false;
@@ -235,21 +293,49 @@ function endStroke(): void {
 }
 
 function strokeFromMouseEvent(e: MouseEvent): StrokeKind {
-  if (e.button === 2) return 'erase';
-  if (e.shiftKey) return 'paint-water';
-  return 'paint-wall';
+  // D5.D.A: the active layer + mouse button uniquely determine the
+  // stroke kind. Shift+click is retired — the layer radio is the kind
+  // picker now.
+  const erasing = e.button === 2;
+  switch (activeLayer) {
+    case 'terrain':
+      return erasing ? 'erase-water' : 'paint-water';
+    case 'neutral-units':
+      return erasing ? 'erase-wall' : 'paint-wall';
+    case 'spawn-regions':
+      // D5.D.B will replace this with the per-region paint/erase flow.
+      return 'noop';
+  }
 }
 
 function applyStrokeTo(c: Coord): void {
-  if (activeStroke === null) return;
+  if (activeStroke === null || activeStroke === 'noop') return;
   const key = `${c.x},${c.y}`;
   if (strokeAppliedCells.has(key)) return;
   strokeAppliedCells.add(key);
 
-  const target: Cell =
-    activeStroke === 'erase' ? 'floor' : activeStroke === 'paint-water' ? 'water' : 'wall';
-  if (grid[c.y]![c.x] === target) return;
-  grid[c.y]![c.x] = target;
+  const current = grid[c.y]![c.x]!;
+  // Each stroke kind only touches its layer's content: erase-water
+  // leaves walls alone, paint-wall over a water cell wins (cell kinds
+  // are still mutex — the layer system is a UX overlay, not a multi-
+  // layer per-cell data model in D5.D).
+  let next: Cell | null = null;
+  switch (activeStroke) {
+    case 'paint-water':
+      next = 'water';
+      break;
+    case 'paint-wall':
+      next = 'wall';
+      break;
+    case 'erase-water':
+      if (current === 'water') next = 'floor';
+      break;
+    case 'erase-wall':
+      if (current === 'wall') next = 'floor';
+      break;
+  }
+  if (next === null || next === current) return;
+  grid[c.y]![c.x] = next;
   strokeDirty = true;
   refreshCell(c);
 }
@@ -257,11 +343,9 @@ function applyStrokeTo(c: Coord): void {
 function refreshCell(c: Coord): void {
   const el = cellEls[c.y]![c.x]!;
   const value = grid[c.y]![c.x]!;
-  el.classList.remove('wall', 'water', 'spawn', 'invalid');
-  if (reservedRows.has(c.y) && value === 'floor') el.classList.add('spawn');
+  el.classList.remove('wall', 'water', 'invalid');
   if (value === 'wall') el.classList.add('wall');
   if (value === 'water') el.classList.add('water');
-  if (reservedRows.has(c.y) && value !== 'floor') el.classList.add('invalid');
 }
 
 function refreshGrid(): void {
@@ -324,25 +408,39 @@ function validate(): ValidationItem[] {
     items.push({ level: 'warn', text: 'Missing description — required.' });
   }
 
-  const spawnViolations = [...walls, ...water].filter((c) => reservedRows.has(c.y));
-  if (spawnViolations.length > 0) {
+  // D5.D.A: spawn regions checked against walls + water for overlap.
+  // The painting UI (D5.D.B) enforces the 8-tile-per-region cap +
+  // valid-pair rule live; for now the auto-default + loaded-layout
+  // paths both produce schema-valid spawns, so this only flags
+  // unexpected drift (e.g. a load-time overlap that resize didn't
+  // catch).
+  const blockedSet = new Set<string>();
+  for (const w of walls) blockedSet.add(`${w.x},${w.y}`);
+  for (const w of water) blockedSet.add(`${w.x},${w.y}`);
+  let spawnOverlap = 0;
+  for (const region of spawns) {
+    for (const t of region.tiles) {
+      if (blockedSet.has(`${t.x},${t.y}`)) spawnOverlap++;
+    }
+  }
+  if (spawnOverlap > 0) {
     items.push({
       level: 'error',
-      text: `${spawnViolations.length} cell(s) on reserved spawn rows — units spawn there and would conflict.`,
+      text: `${spawnOverlap} spawn tile(s) overlap walls or water — paint to move them.`,
     });
   }
 
   if (!isConnected(walls)) {
     items.push({
       level: 'error',
-      text: 'Spawn rows are severed — no path between the top spawn rows and the bottom spawn rows.',
+      text: 'Spawn regions are severed — no path between the first two spawn regions.',
     });
   }
 
   if (items.length === 0 || items.every((i) => i.level === 'ok')) {
     items.push({
       level: 'ok',
-      text: `Looks good — ${walls.length} wall(s), ${water.length} water cell(s) on ${gridW}×${gridH}.`,
+      text: `Looks good — ${walls.length} wall(s), ${water.length} water cell(s), ${spawns.length} spawn region(s) on ${gridW}×${gridH}.`,
     });
   }
   return items;
@@ -360,19 +458,17 @@ function refreshValidation(): void {
 }
 
 /**
- * BFS reachability between the topmost reserved spawn row and the
- * bottommost. Mirrors `layouts.test.ts`'s `hasPathThrough` — same
+ * BFS reachability between the first two spawn regions' centroids.
+ * Mirrors `openCutsUntilConnected` in `src/sim/terrainGen.ts` — same
  * king's-move neighborhood as Pathfinding, walls as the only blockers
- * (water is passable, just slow).
+ * (water is passable, just slow). Returns true when there are fewer
+ * than two regions; the schema requires ≥2, so that branch only fires
+ * on a transient editor state, never on exported JSON.
  */
 function isConnected(walls: readonly Coord[]): boolean {
-  const reserved = [...reservedRows].sort((a, b) => a - b);
-  if (reserved.length < 2) return true;
-  const topRow = reserved[0]!;
-  const bottomRow = reserved[reserved.length - 1]!;
-  const center = Math.floor(gridW / 2);
-  const start = { x: center, y: topRow };
-  const goal = { x: center, y: bottomRow };
+  if (spawns.length < 2) return true;
+  const start = centroidOf(spawns[0]!);
+  const goal = centroidOf(spawns[1]!);
 
   const blocked = new Set<string>();
   for (const w of walls) blocked.add(`${w.x},${w.y}`);
@@ -400,25 +496,41 @@ function isConnected(walls: readonly Coord[]): boolean {
   return false;
 }
 
+function centroidOf(region: SpawnRegion): Coord {
+  let sx = 0;
+  let sy = 0;
+  for (const t of region.tiles) {
+    sx += t.x;
+    sy += t.y;
+  }
+  return {
+    x: Math.round(sx / region.tiles.length),
+    y: Math.round(sy / region.tiles.length),
+  };
+}
+
 function refreshExport(): void {
   const walls = collectCells('wall');
   const water = collectCells('water');
-  const payload: Partial<LayoutDef> = {
+  const payload: LayoutDef = {
     id: metaIdEl.value.trim() || 'unnamed',
     name: metaNameEl.value.trim() || 'Unnamed',
     description: metaDescriptionEl.value.trim() || 'TODO: describe this layout.',
     gridW,
     gridH,
     walls,
+    spawns,
   };
-  if (water.length > 0) (payload as { water?: Coord[] }).water = water;
-  exportEl.value = formatLayoutJson(payload as LayoutDef);
+  if (water.length > 0) payload.water = water;
+  exportEl.value = formatLayoutJson(payload);
 }
 
 /**
  * Match the indentation of `config/layouts.json` so a paste keeps the
  * file readable. `JSON.stringify(_, null, 2)` puts every coord on its
- * own line; we collapse coord objects to one line each.
+ * own line; we collapse coord objects to one line each, and emit each
+ * spawn region as a one-line `availability` header followed by its
+ * tiles array.
  */
 function formatLayoutJson(layout: LayoutDef): string {
   const parts: string[] = [];
@@ -430,13 +542,26 @@ function formatLayoutJson(layout: LayoutDef): string {
   parts.push(`  "gridH": ${layout.gridH},`);
   parts.push(`  "walls": [`);
   parts.push(...formatCoords(layout.walls));
-  const hasWater = layout.water && layout.water.length > 0;
-  parts.push(`  ]${hasWater ? ',' : ''}`);
-  if (hasWater) {
+  parts.push(`  ],`);
+  if (layout.water && layout.water.length > 0) {
     parts.push(`  "water": [`);
-    parts.push(...formatCoords(layout.water!));
-    parts.push(`  ]`);
+    parts.push(...formatCoords(layout.water));
+    parts.push(`  ],`);
   }
+  parts.push(`  "spawns": [`);
+  layout.spawns.forEach((region, i) => {
+    const sep = i === layout.spawns.length - 1 ? '' : ',';
+    parts.push(`    {`);
+    parts.push(`      "availability": ${JSON.stringify(region.availability)},`);
+    parts.push(`      "tiles": [`);
+    parts.push(...region.tiles.map((c, j) => {
+      const tileSep = j === region.tiles.length - 1 ? '' : ',';
+      return `        { "x": ${c.x}, "y": ${c.y} }${tileSep}`;
+    }));
+    parts.push(`      ]`);
+    parts.push(`    }${sep}`);
+  });
+  parts.push(`  ]`);
   parts.push('}');
   return parts.join('\n');
 }
@@ -468,10 +593,15 @@ function loadLayout(id: string): void {
   if (!found) return;
   gridW = found.gridW;
   gridH = found.gridH;
-  reservedRows = new Set(reservedSpawnRows(gridH));
   grid = makeEmptyGrid(gridW, gridH);
   for (const w of found.walls) grid[w.y]![w.x] = 'wall';
   if (found.water) for (const w of found.water) grid[w.y]![w.x] = 'water';
+  // Deep-copy spawns so live editing (D5.D.B) can't mutate the
+  // canonical LAYOUTS array.
+  spawns = found.spawns.map((r) => ({
+    availability: r.availability,
+    tiles: r.tiles.map((t) => ({ x: t.x, y: t.y })),
+  }));
   metaIdEl.value = found.id;
   metaNameEl.value = found.name;
   metaDescriptionEl.value = found.description;
@@ -484,6 +614,7 @@ function loadLayout(id: string): void {
 
 function clearGrid(): void {
   grid = makeEmptyGrid(gridW, gridH);
+  spawns = defaultSpawns(gridW, gridH);
   lastClipCount = 0;
   refreshAll();
 }
@@ -519,6 +650,23 @@ function attachToolButtons(): void {
 function attachSizeWatchers(): void {
   gridWSelectEl.addEventListener('change', onSizeChange);
   gridHSelectEl.addEventListener('change', onSizeChange);
+}
+
+function attachLayerWatchers(): void {
+  for (const radio of layerRadioEls) {
+    radio.addEventListener('change', () => {
+      if (!radio.checked) return;
+      const value = radio.value as Layer;
+      if (value === activeLayer) return;
+      // Switching layer mid-stroke would orphan the in-progress paint
+      // on the wrong layer — end the stroke synchronously, then swap.
+      // Per the D5.D scope: "Can't switch mid-stroke" — we treat the
+      // radio click as an implicit mouseup of the active stroke.
+      if (activeStroke !== null) endStroke();
+      activeLayer = value;
+      gridEl.dataset.activeLayer = value;
+    });
+  }
 }
 
 function onSizeChange(): void {

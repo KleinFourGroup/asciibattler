@@ -24,10 +24,8 @@
  * flag). Hand-authored layouts declare their regions in JSON;
  * procedural emits two `'both'`-availability bands on the top and
  * bottom edges of the arena. Walls + water mask against the union of
- * all spawn tiles instead of the pre-D5 `reservedSpawnRows` array.
- * `reservedSpawnRows` is still exported so the layout editor's stripe
- * overlay (pre-D5.D) keeps importing it; the procedural generator no
- * longer consumes it.
+ * all spawn tiles instead of the pre-D5 `reservedSpawnRows` array
+ * (retired in D5.D.A along with the editor's stripe overlay).
  *
  * Determinism contract: same `(rng state, gridW, gridH, config,
  * layoutId)` → identical `GeneratedTerrain`. Tests rely on this so the
@@ -50,21 +48,6 @@ export interface GeneratedTerrain {
   readonly tileGrid: TileGrid;
   readonly walls: readonly GridCoord[];
   readonly spawnRegions: readonly SpawnRegion[];
-}
-
-/**
- * Pre-D5 compatibility export. The procedural generator no longer
- * consumes this — wall + water reservation masks against spawn-region
- * tiles instead. The layout editor still imports it for the diagonal-
- * stripe overlay; D5.D retires the overlay and this can go with it.
- *
- * Returns `[]` for grids too short to spawn into (`gridH < 4`); the
- * formula `[1, 2, gridH-3, gridH-2]` is preserved for the editor's
- * benefit.
- */
-export function reservedSpawnRows(gridH: number): number[] {
-  if (gridH < 4) return [];
-  return [1, 2, gridH - 3, gridH - 2];
 }
 
 export function generateTerrain(

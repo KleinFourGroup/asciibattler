@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateTerrain, reservedSpawnRows } from './terrainGen';
+import { generateTerrain } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
 import type { TerrainConfig } from '../config/terrain';
@@ -14,22 +14,6 @@ const BASE: TerrainConfig = {
   proceduralMaxSize: 20,
   ensureConnectivity: true,
 };
-
-describe('reservedSpawnRows (pre-D5 legacy export)', () => {
-  // Kept as a legacy export for the layout editor's diagonal-stripe
-  // overlay until D5.D swaps the overlay for explicit spawn-region
-  // shading. The procedural generator no longer consumes it.
-  it('returns [1, 2, gridH-3, gridH-2] for normal grid heights', () => {
-    expect(reservedSpawnRows(12)).toEqual([1, 2, 9, 10]);
-    expect(reservedSpawnRows(20)).toEqual([1, 2, 17, 18]);
-    expect(reservedSpawnRows(8)).toEqual([1, 2, 5, 6]);
-  });
-
-  it('returns [] for pathologically short grids', () => {
-    expect(reservedSpawnRows(3)).toEqual([]);
-    expect(reservedSpawnRows(0)).toEqual([]);
-  });
-});
 
 describe('generateTerrain (procedural)', () => {
   it('emits two `both` spawn regions on the literal top + bottom edges', () => {

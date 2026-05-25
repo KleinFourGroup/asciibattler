@@ -81,7 +81,8 @@ body {
   min-width: 0;
 }
 
-.size-row {
+.size-row,
+.layer-row {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -89,7 +90,8 @@ body {
   color: var(--dark-terminal-amber);
 }
 
-.size-row label.inline {
+.size-row label.inline,
+.layer-row label.inline {
   flex: 0 0 auto;
 }
 
@@ -103,6 +105,45 @@ body {
 }
 
 .size-row select:focus {
+  outline: 1px solid var(--terminal-green);
+}
+
+.layer-row .layer-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--terminal-green);
+  font-weight: 700;
+}
+
+.layer-row label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--terminal-amber);
+  cursor: pointer;
+}
+
+.layer-row input[type='radio'] {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--terminal-amber);
+  border-radius: 50%;
+  background: var(--terminal-black);
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+}
+
+.layer-row input[type='radio']:checked::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--terminal-green);
+}
+
+.layer-row input[type='radio']:focus-visible {
   outline: 1px solid var(--terminal-green);
 }
 
@@ -121,17 +162,6 @@ body {
   border: 1px solid #1f1f1f;
   background: var(--dark-terminal-green);
   cursor: crosshair;
-}
-
-.cell.spawn {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--dark-terminal-green) 0,
-    var(--dark-terminal-green) 4px,
-    #0d2a0d 4px,
-    #0d2a0d 8px
-  );
-  cursor: not-allowed;
 }
 
 .cell.wall {
@@ -172,6 +202,22 @@ body {
   z-index: 1;
 }
 
+/* D5.D.A inactive-layer dimming. Only the active layer's content
+   renders at full strength; other layers fade so the author still
+   sees overall composition but knows which clicks land where. Tuned
+   to 0.3 per the D5.D recommendation — adjust during browser-verify
+   if it reads too dim against the dark cell background. Spawn-region
+   dimming rules land with D5.D.B's spawn overlay. */
+.grid[data-active-layer='neutral-units'] .cell.water,
+.grid[data-active-layer='spawn-regions'] .cell.water {
+  opacity: 0.3;
+}
+
+.grid[data-active-layer='terrain'] .cell.wall,
+.grid[data-active-layer='spawn-regions'] .cell.wall {
+  opacity: 0.3;
+}
+
 .legend {
   list-style: none;
   padding: 0;
@@ -206,16 +252,6 @@ body {
 
 .swatch.erase {
   background: var(--dark-terminal-green);
-}
-
-.swatch.spawn {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--dark-terminal-green) 0,
-    var(--dark-terminal-green) 4px,
-    #0d2a0d 4px,
-    #0d2a0d 8px
-  );
 }
 
 .side-pane {

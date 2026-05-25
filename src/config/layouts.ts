@@ -1,6 +1,8 @@
 /**
  * C1d.A: hand-authored encounter layouts as validated config.
  * D3: each layout now declares its own `gridW` × `gridH` (8-32).
+ * D5: each layout now declares explicit `spawns: SpawnRegion[]` (each
+ *     region is exactly 8 tiles + an availability flag).
  *
  * Source of truth at `config/layouts.json` — a flat array preserving
  * order (the order seeds `rng.pick` in `Run.handleEnterNode`, so
@@ -9,8 +11,6 @@
  * Each layout pins a tactical situation onto a rectangular arena: its
  * own grid size, a wall topology, an optional water topology, plus a
  * `name` + `description` for the editor UI and future picker hooks.
- * `generateTerrain` enforces in-bounds on every wall/water cell against
- * the layout's own dimensions.
  *
  * Validation runs at module load. Malformed JSON throws a zod trace at
  * boot — the loud-failure mode A4 settled on for balance configs.
@@ -18,11 +18,11 @@
  * Adding a layout:
  *   1. Append an entry to `config/layouts.json` (use the editor at
  *      `tools/layout-editor/` to paint and export).
- *   2. The `id` must be unique. `name`, `description`, `gridW`, `gridH`
- *      are required.
+ *   2. The `id` must be unique. `name`, `description`, `gridW`, `gridH`,
+ *      and `spawns` are required.
  *   3. Validate by running `npm test` — the layouts test suite checks
- *      grid bounds, spawn-row reservation, duplicate coords, and
- *      connectivity between spawn rows.
+ *      grid bounds, region invariants, duplicate coords, and
+ *      connectivity.
  */
 
 import { z } from 'zod';
@@ -37,17 +37,93 @@ const CoordSchema = z.object({
 export const LAYOUT_MIN_SIDE = 8;
 export const LAYOUT_MAX_SIDE = 32;
 
+/** Exactly this many tiles per spawn region. */
+export const SPAWN_REGION_TILE_COUNT = 8;
+
 const SideSchema = z.number().int().min(LAYOUT_MIN_SIDE).max(LAYOUT_MAX_SIDE);
 
-const LayoutSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  description: z.string().min(1),
-  gridW: SideSchema,
-  gridH: SideSchema,
-  walls: z.array(CoordSchema),
-  water: z.array(CoordSchema).optional(),
-});
+const SpawnAvailabilitySchema = z.enum(['player', 'enemy', 'both']);
+export type SpawnAvailability = z.infer<typeof SpawnAvailabilitySchema>;
+
+const SpawnRegionSchema = z
+  .object({
+    tiles: z.array(CoordSchema).length(SPAWN_REGION_TILE_COUNT),
+    availability: SpawnAvailabilitySchema,
+  })
+  .superRefine((region, ctx) => {
+    const seen = new Set<string>();
+    region.tiles.forEach((t, i) => {
+      const k = `${t.x},${t.y}`;
+      if (seen.has(k)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['tiles', i],
+          message: `SpawnRegion: duplicate tile (${t.x},${t.y})`,
+        });
+      }
+      seen.add(k);
+    });
+  });
+
+export type SpawnRegion = z.infer<typeof SpawnRegionSchema>;
+
+const LayoutSchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    description: z.string().min(1),
+    gridW: SideSchema,
+    gridH: SideSchema,
+    walls: z.array(CoordSchema),
+    water: z.array(CoordSchema).optional(),
+    spawns: z.array(SpawnRegionSchema).min(2),
+  })
+  .superRefine((layout, ctx) => {
+    const blocked = new Set<string>();
+    for (const w of layout.walls) blocked.add(`${w.x},${w.y}`);
+    for (const w of layout.water ?? []) blocked.add(`${w.x},${w.y}`);
+
+    layout.spawns.forEach((region, regionIdx) => {
+      region.tiles.forEach((t, tileIdx) => {
+        if (t.x < 0 || t.x >= layout.gridW || t.y < 0 || t.y >= layout.gridH) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['spawns', regionIdx, 'tiles', tileIdx],
+            message: `tile (${t.x},${t.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
+          });
+        }
+        if (blocked.has(`${t.x},${t.y}`)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['spawns', regionIdx, 'tiles', tileIdx],
+            message: `spawn tile (${t.x},${t.y}) overlaps a wall or water`,
+          });
+        }
+      });
+    });
+
+    // The battle picker draws the player region first, then the enemy
+    // region from { enemy | both } \ { player's }. A valid layout needs
+    // at least one (P, E) pair where P ≠ E, P ∈ player-pool, E ∈ enemy-
+    // pool. This rule subsumes "≥1 player-available" + "≥1 enemy-
+    // available" and also catches the degenerate "one 'both' region"
+    // case where the enemy pool would be empty after the player draws.
+    const playerPool: SpawnRegion[] = [];
+    const enemyPool: SpawnRegion[] = [];
+    for (const region of layout.spawns) {
+      if (region.availability === 'player' || region.availability === 'both') playerPool.push(region);
+      if (region.availability === 'enemy' || region.availability === 'both') enemyPool.push(region);
+    }
+    const hasValidPair = playerPool.some((p) => enemyPool.some((e) => e !== p));
+    if (!hasValidPair) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['spawns'],
+        message:
+          'layout must allow at least one (player, enemy) region pair with player ≠ enemy',
+      });
+    }
+  });
 
 const LayoutsSchema = z.array(LayoutSchema).min(1);
 

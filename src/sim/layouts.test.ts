@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { LAYOUT_IDS, getLayout, type LayoutDef } from './layouts';
+import {
+  LAYOUT_IDS,
+  getLayout,
+  SPAWN_REGION_TILE_COUNT,
+  type LayoutDef,
+} from './layouts';
 import { generateTerrain, reservedSpawnRows } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { TerrainConfig } from '../config/terrain';
@@ -78,6 +83,45 @@ describe('layouts library', () => {
         for (const w of layout.walls) {
           expect(walls).toContainEqual(w);
         }
+      });
+
+      // D5: explicit per-layout spawn regions.
+      it('declares at least two spawn regions', () => {
+        expect(layout.spawns.length).toBeGreaterThanOrEqual(2);
+      });
+
+      it('every spawn region has exactly 8 in-bounds tiles', () => {
+        for (const region of layout.spawns) {
+          expect(region.tiles.length).toBe(SPAWN_REGION_TILE_COUNT);
+          for (const t of region.tiles) {
+            expect(t.x).toBeGreaterThanOrEqual(0);
+            expect(t.y).toBeGreaterThanOrEqual(0);
+            expect(t.x).toBeLessThan(layout.gridW);
+            expect(t.y).toBeLessThan(layout.gridH);
+          }
+        }
+      });
+
+      it('spawn tiles never overlap walls or water', () => {
+        const blocked = new Set<string>();
+        for (const w of layout.walls) blocked.add(`${w.x},${w.y}`);
+        for (const w of layout.water ?? []) blocked.add(`${w.x},${w.y}`);
+        for (const region of layout.spawns) {
+          for (const t of region.tiles) {
+            expect(blocked.has(`${t.x},${t.y}`)).toBe(false);
+          }
+        }
+      });
+
+      it('admits at least one valid (player, enemy) region pair', () => {
+        const playerPool = layout.spawns.filter(
+          (r) => r.availability === 'player' || r.availability === 'both',
+        );
+        const enemyPool = layout.spawns.filter(
+          (r) => r.availability === 'enemy' || r.availability === 'both',
+        );
+        const hasPair = playerPool.some((p) => enemyPool.some((e) => e !== p));
+        expect(hasPair).toBe(true);
       });
     });
   }

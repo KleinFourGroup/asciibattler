@@ -11,7 +11,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **Phase 3** (battle simulation, 3.1–3.9) ✓
 - **Phase 4** (run structure, 4.1–4.6) ✓
 - **Phase 5** (HUD, fade transitions, dev-affordance cleanup, dither + scanline polish) ✓
-- **Tests:** 279 passed, 0 `it.todo()`. Run with `npm test`.
+- **Tests:** 284 passed, 0 `it.todo()`. Run with `npm test`.
 - **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`; remember Vite spawns child Node processes that survive `taskkill` on the parent).
 - **Build:** `npm run build`. `vite.config.ts` uses `base: './'` so the same `dist/` works at any subpath.
 
@@ -124,9 +124,9 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **Out of scope for D6 (per ROADMAP):** the ranged-defense / accuracy combat modifier for shooting from behind half-cover is C2-era — D6 ships only the LOS plumbing. The combat-modifier hook is more interesting once mage AoE and rogue burst exist (per the ROADMAP "D6 ships the unit type with an LOS flag only" punt).
 
-284 tests pass (was 279 pre-D6; +5 = 2 AttackBehavior LOS-through cases, 2 MovementBehavior cases, 1 snapshot round-trip). Browser-verified: ╥ glyph renders in JetBrains Mono (visible top rail + two stems); spawnHalfCover places the unit at correct world XYZ with neutral-stone color, alpha 1; battle plays through with half-covers in place (no console errors); editor neutral-row toggles + sub-tool radio toggle + per-layer erase scope all work; export JSON correctly contains `halfCovers` array. Commit `TBD`.
+284 tests pass (was 279 pre-D6; +5 = 2 AttackBehavior LOS-through cases, 2 MovementBehavior cases, 1 snapshot round-trip). Browser-verified: ╥ glyph renders in JetBrains Mono (visible top rail + two stems); spawnHalfCover places the unit at correct world XYZ with neutral-stone color, alpha 1; battle plays through with half-covers in place (no console errors); editor neutral-row toggles + sub-tool radio toggle + per-layer erase scope all work; export JSON correctly contains `halfCovers` array. Commit `eb9d8da`.
 
-**D5.E landed (scroll camera anchors on player region centroid).** In `BattleScene.mount`, the legacy D4 heuristic `renderer.setCameraTarget(0, world.gridH/2 - 2)` is replaced with the centroid of the rolled player region. The call moved AFTER `pickSpawnRegions` so the player region is known; centroid = `(mean(tiles.x), mean(tiles.y))` in grid coords (fractional — `gridToWorld` accepts that fine), converted via `gridToWorld(...).x/.z` to land in the same world-XZ space the renderer pans. `gridToWorld` is now exported by name from [BattleRenderer.ts](src/render/BattleRenderer.ts) (already was — just newly imported by BattleScene). `DEV_DEFAULT_MODE` stays `fit` per user direction; D5.E is pure plumbing, the default flip is deferred. No tests added — renderer-anchor wiring is verified by eyeball + runtime inspection per [TESTING.md](TESTING.md). Browser-verified two cases: (a) Labyrinth (player region y=0) → targetZ=5.5 = `gridToWorld({x:5.5,y:0},12,12).z` ✓; (b) procedural 14×14 with player rolling the bottom band (y=13) → targetZ=-6.5 = `gridToWorld({x:6.5,y:13},14,14).z` ✓. 279 tests pass.
+**D5.E landed (scroll camera anchors on player region centroid).** In `BattleScene.mount`, the legacy D4 heuristic `renderer.setCameraTarget(0, world.gridH/2 - 2)` is replaced with the centroid of the rolled player region. The call moved AFTER `pickSpawnRegions` so the player region is known; centroid = `(mean(tiles.x), mean(tiles.y))` in grid coords (fractional — `gridToWorld` accepts that fine), converted via `gridToWorld(...).x/.z` to land in the same world-XZ space the renderer pans. `gridToWorld` is now exported by name from [BattleRenderer.ts](src/render/BattleRenderer.ts) (already was — just newly imported by BattleScene). `DEV_DEFAULT_MODE` stays `fit` per user direction; D5.E is pure plumbing, the default flip is deferred. No tests added — renderer-anchor wiring is verified by eyeball + runtime inspection per [TESTING.md](TESTING.md). Browser-verified two cases: (a) Labyrinth (player region y=0) → targetZ=5.5 = `gridToWorld({x:5.5,y:0},12,12).z` ✓; (b) procedural 14×14 with player rolling the bottom band (y=13) → targetZ=-6.5 = `gridToWorld({x:6.5,y:13},14,14).z` ✓. 279 tests pass. Commit `8d82c3a`.
 
 **Visible effect:** on boards where a dim exceeds `SCROLL_WINDOW_TILES = 12`, the scroll-mode camera now anchors as close to the player's spawn edge as the clamp allows. On 12×12 boards both old and new heuristics get clamped to 0 in scroll mode (gotcha #53 — no pan room when board ≤ window in a dim), so the change is observable only on boards >12. fit mode itself ignores the target visually (always looks at world origin), but the target is preserved across backtick toggles so the post-toggle anchor is correct.
 
@@ -440,7 +440,7 @@ Co-located `*.test.ts` next to source for unit tests. Integration tests under `t
 
 ```bash
 git log --oneline -5    # confirm latest commit
-npm test                # 279 passed, 0 todo
+npm test                # 284 passed, 0 todo
 npm run fuzz:smoke      # 7 passed — confirms the harness still runs
 npm run dev             # opens at :5173 — verify the full run flow plays
 ```

@@ -3,7 +3,7 @@ import { generateTerrain } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
 import type { TerrainConfig } from '../config/terrain';
-import type { SpawnRegion } from './layouts';
+import { getLayout, type SpawnRegion } from './layouts';
 
 const G = 12;
 
@@ -144,15 +144,19 @@ describe('generateTerrain (procedural)', () => {
   });
 
   it('dispatches to the hand-authored library when layoutId is set', () => {
-    const { walls } = generateTerrain(new RNG(1), G, G, BASE, 'corridor');
-    // Corridor places 16 walls (2 rows × 8 cells); procedural at the BASE
-    // densities targets ~9. The count mismatch is a sufficient signal that
-    // the library path ran rather than the procedural one.
-    expect(walls.length).toBe(16);
+    // `labyrinth` is the canonical 12×12 layout in the library; the test
+    // cares about the dispatch path, not the specific layout. Assert the
+    // emitted wall count matches the layout's declared walls — that's a
+    // tight enough fingerprint to distinguish library dispatch from the
+    // procedural path (procedural at BASE densities targets ~9 walls,
+    // labyrinth ships 36).
+    const layout = getLayout('labyrinth')!;
+    const { walls } = generateTerrain(new RNG(1), G, G, BASE, 'labyrinth');
+    expect(walls.length).toBe(layout.walls.length);
   });
 
   it('layout dispatch returns the layout-declared spawn regions verbatim', () => {
-    const { spawnRegions } = generateTerrain(new RNG(1), G, G, BASE, 'corridor');
+    const { spawnRegions } = generateTerrain(new RNG(1), G, G, BASE, 'labyrinth');
     expect(spawnRegions.length).toBeGreaterThanOrEqual(2);
     for (const region of spawnRegions) {
       expect(region.tiles.length).toBe(8);
@@ -160,8 +164,8 @@ describe('generateTerrain (procedural)', () => {
   });
 
   it('layout dispatch ignores the RNG (same layoutId → same walls regardless of seed)', () => {
-    const a = generateTerrain(new RNG(1), G, G, BASE, 'corridor');
-    const b = generateTerrain(new RNG(999), G, G, BASE, 'corridor');
+    const a = generateTerrain(new RNG(1), G, G, BASE, 'labyrinth');
+    const b = generateTerrain(new RNG(999), G, G, BASE, 'labyrinth');
     expect(a.walls).toEqual(b.walls);
   });
 

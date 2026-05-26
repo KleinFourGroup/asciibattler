@@ -172,12 +172,16 @@ describe('layouts library', () => {
   }
 
   it('generateTerrain throws when dimensions mismatch the layout assumption', () => {
-    const corridor = getLayout('corridor')!;
+    // Pick any registered layout for the dispatcher-behavior check —
+    // the test cares that mismatched dimensions throw, not about a
+    // specific layout. `labyrinth` happens to be the first in the
+    // library; any id would do.
+    const layout = getLayout('labyrinth')!;
     expect(() =>
-      generateTerrain(new RNG(1), corridor.gridW + 1, corridor.gridH, BASE, 'corridor'),
+      generateTerrain(new RNG(1), layout.gridW + 1, layout.gridH, BASE, layout.id),
     ).toThrow(/requires gridW/);
     expect(() =>
-      generateTerrain(new RNG(1), corridor.gridW, corridor.gridH + 1, BASE, 'corridor'),
+      generateTerrain(new RNG(1), layout.gridW, layout.gridH + 1, BASE, layout.id),
     ).toThrow(/requires gridW/);
   });
 });

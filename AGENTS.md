@@ -58,6 +58,22 @@ apply:
   smears 1–2px features). If a screenshot contradicts intuition, sample
   canvas pixels via `getImageData` first, or ask the user to check in
   their native browser.
+- **Headless-first for sim/run/core/config logic.** For bug repro or
+  new-behavior work in `src/sim/`, `src/run/`, `src/core/`, or
+  `src/config/`, write a vitest test as the FIRST reproduction step —
+  don't drive the browser. Patterns to copy:
+  [tests/integration/determinism.test.ts](tests/integration/determinism.test.ts)
+  (hot-loop ticks + assert state),
+  [tests/integration/layout-deadlock.test.ts](tests/integration/layout-deadlock.test.ts)
+  (specific encounter setup),
+  [tests/fuzz/harness.ts](tests/fuzz/harness.ts) `runOne` (full-run drive).
+  The C1d Labyrinth pathfinding deadlock burned ~an hour of browser
+  polling before a headless test reproduced it in ~580ms and exposed
+  the real failure (mutual `findPath()→[]`, not the goal-picker bug
+  initially hypothesized); the test then survived as a regression.
+  Don't reach for `window.__world` / `window.__game` debug hooks for the
+  same purpose — a failing test surfaces the same state with a stack
+  trace.
 - **Keep DESIGN.md / ARCHITECTURE.md honest.** If a change reveals a
   documented decision is wrong, update the doc in the same commit as
   the code change.

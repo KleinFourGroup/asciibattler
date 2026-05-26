@@ -213,6 +213,7 @@ The strict roadmap (one step → one commit, stop at every checkpoint) was for M
 - **Commit per logical change**, not per "session of work." Split commits when a step's intent grows.
 - **Surface tradeoffs to the user** before making non-obvious calls (shader thresholds, refactor scope, API shape decisions).
 - **Browser-verify visual work** — and verify at native resolution. The Preview MCP screenshots are unreliable for sub-pixel detail (see gotcha #15).
+- **Headless-first for sim/run/core/config logic.** Write a vitest test as the first reproduction step — don't drive the browser to repro logic bugs. See [AGENTS.md](AGENTS.md) for test patterns to copy and the C1d Labyrinth backstory.
 - **Keep `DESIGN.md` / `ARCHITECTURE.md` honest.** If a change reveals a documented decision is wrong, update the doc in the same commit.
 
 See also: [TESTING.md](TESTING.md) for the testing policy (`core`/`sim`/`run` get tests, `render`/`ui` get visual verify), and [retro/](retro/) for the rolling scratchpad and the shipped-MVP review.

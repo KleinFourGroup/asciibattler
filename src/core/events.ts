@@ -36,6 +36,21 @@ export interface GameEvents extends Record<string, unknown> {
   };
   'unit:attacked': { attackerId: number; targetId: number; damage: number };
   /**
+   * D7.B: per-tick chip damage from standing on a `fire` tile. Separate
+   * event from `unit:attacked` so consumers can branch cleanly without
+   * an `attackerId: null` / sentinel dance — fire damage has no
+   * attacker. Subscribers that need to refresh visible HP state should
+   * subscribe to all three of `unit:attacked` / `unit:burned` /
+   * `unit:healed`. Emits AFTER currentHp is updated and BEFORE
+   * `unit:died` if the damage kills.
+   */
+  'unit:burned': { unitId: number; damage: number };
+  /** D7.B: per-tick chip heal from standing on a `healing` tile. Emits
+   *  AFTER currentHp is updated; healing is clamped at maxHp, so the
+   *  emitted `amount` is the actual HP delta (0 when the unit is
+   *  already full — we still emit so subscribers can debounce / log). */
+  'unit:healed': { unitId: number; amount: number };
+  /**
    * Fires once per unit removal from the world. `team` is included so
    * subscribers can branch on combatant vs neutral (wall / environment)
    * deaths without re-querying the world — by the time this event fires

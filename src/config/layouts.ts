@@ -86,6 +86,15 @@ const LayoutSchema = z
      *  rejects overlap with walls, water, half-covers, spawn regions,
      *  or self. */
     chasms: z.array(CoordSchema).optional(),
+    /** D7.B: optional fire tile (normal pathing cost, per-tick chip
+     *  damage to standing combatants). Hand-authored-only. Validation
+     *  rejects overlap with any other reservation (including healing
+     *  — tile-kind is mutex per cell). */
+    fires: z.array(CoordSchema).optional(),
+    /** D7.B: optional healing tile (normal pathing cost, per-tick heal
+     *  to standing combatants, clamped at maxHp). Hand-authored-only.
+     *  Same overlap rules as fires. */
+    healings: z.array(CoordSchema).optional(),
     spawns: z.array(SpawnRegionSchema).min(2),
   })
   .superRefine((layout, ctx) => {
@@ -155,6 +164,47 @@ const LayoutSchema = z
       blocked.add(k);
     });
 
+    // D7.B — fire + healing overlap checks. Tile-kind is mutex per cell,
+    // so each fire/healing tile must be unique and not overlap any prior
+    // reservation. They reserve their cells against subsequent spawn-
+    // region overlap too.
+    const checkTileEffect = (
+      coords: ReadonlyArray<{ x: number; y: number }> | undefined,
+      pathKey: 'fires' | 'healings',
+      label: string,
+    ): void => {
+      if (!coords) return;
+      const seen = new Set<string>();
+      coords.forEach((t, idx) => {
+        const k = `${t.x},${t.y}`;
+        if (t.x < 0 || t.x >= layout.gridW || t.y < 0 || t.y >= layout.gridH) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [pathKey, idx],
+            message: `${label} (${t.x},${t.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
+          });
+        }
+        if (blocked.has(k)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [pathKey, idx],
+            message: `${label} (${t.x},${t.y}) overlaps an earlier reservation`,
+          });
+        }
+        if (seen.has(k)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [pathKey, idx],
+            message: `duplicate ${label} (${t.x},${t.y})`,
+          });
+        }
+        seen.add(k);
+        blocked.add(k);
+      });
+    };
+    checkTileEffect(layout.fires, 'fires', 'fire');
+    checkTileEffect(layout.healings, 'healings', 'healing');
+
     layout.spawns.forEach((region, regionIdx) => {
       region.tiles.forEach((t, tileIdx) => {
         if (t.x < 0 || t.x >= layout.gridW || t.y < 0 || t.y >= layout.gridH) {
@@ -168,7 +218,7 @@ const LayoutSchema = z
           ctx.addIssue({
             code: 'custom',
             path: ['spawns', regionIdx, 'tiles', tileIdx],
-            message: `spawn tile (${t.x},${t.y}) overlaps a wall, water, half-cover, or chasm`,
+            message: `spawn tile (${t.x},${t.y}) overlaps a wall, water, half-cover, chasm, fire, or healing tile`,
           });
         }
       });

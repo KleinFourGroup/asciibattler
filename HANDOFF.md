@@ -11,7 +11,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **Phase 3** (battle simulation, 3.1–3.9) ✓
 - **Phase 4** (run structure, 4.1–4.6) ✓
 - **Phase 5** (HUD, fade transitions, dev-affordance cleanup, dither + scanline polish) ✓
-- **Tests:** 306 passed, 0 `it.todo()`. Run with `npm test`.
+- **Tests:** 320 passed, 0 `it.todo()`. Run with `npm test`.
 - **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`; remember Vite spawns child Node processes that survive `taskkill` on the parent).
 - **Build:** `npm run build`. `vite.config.ts` uses `base: './'` so the same `dist/` works at any subpath.
 
@@ -146,18 +146,34 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **Tests added** (306 passed, was 284 pre-D7.A): TileGrid chasm cost = Infinity + JSON round-trip; layouts.test per-layout chasms-in-grid invariant + chasm-aware spawn-overlap + chasm-aware connectivity BFS; Pathfinding routes around chasm via TileGrid.costAt; AttackBehavior fires through a chasm column (LOS contract); World snapshot round-trips chasm tiles. Commit `56adba0`.
 
-Next up per ROADMAP — **D7.B (fire + healing tile kinds):**
+**D7.B landed (fire + healing tile kinds — per-tick chip effects).** Pure-logic continuation of the D7 split. Seven changes:
 
-1. Extend `TileKind` union with `fire | healing`.
-2. New `config/tiles.json` with `fire.damagePerSec: 2` and `healing.amountPerSec: 1` (locked defaults from the D7 decision); zod schema + parsed wrapper in `src/config/tiles.ts`.
-3. New World.tick hook iterating combatant units (player + enemy only, NOT neutrals per the D7 decision — walls and half-cover ignore tile effects) AFTER the death splice but BEFORE `checkBattleEnd`, emitting per-tile chip damage / heal. Order matters: damage from fire can kill, and the death splice already ran, so a unit that dies to fire this tick gets handled on the NEXT tick's death pass.
-4. New `unit:healed` event payload `{ unitId, amount }`; extend `unit:attacked` with optional `reason: 'attack' | 'fire'`. Audio handler in BattleScene branches on `reason` (`'attack'` → existing melee/shoot sounds; `'fire'` → no sound in D7.B, queued for D7.C).
-5. `LayoutDef` gains optional `fires?: Coord[]` + `healings?: Coord[]` with the same overlap rules as chasms (one tile per cell, mutex with walls / water / halfCovers / chasms / spawn regions).
-6. Hand-authored-only in D7.B (no procedural density knob — symmetric with chasm + half-cover).
+1. **`TileKind` extended** to `'floor' | 'shallow_water' | 'chasm' | 'fire' | 'healing'`. Both new kinds cost 1 (normal pathing — they're surface effects, not obstacles); the chip damage/heal is a per-tick `World.tick` pass, not a pathing weight.
 
-Then D7.C (editor + visual + half-cover-pathing-cost-tweaks-if-any) per ROADMAP.
+2. **`config/tiles.json` + [src/config/tiles.ts](src/config/tiles.ts).** Rates authored in HP/sec (`fire.damagePerSec: 2`, `healing.amountPerSec: 1`) per gotcha #6. Module load converts to integer-tick cadences: `FIRE_TICKS_PER_DAMAGE = Math.max(1, round(TICK_RATE / damagePerSec)) = 5`, `HEALING_TICKS_PER_HEAL = 10`. The `Math.max(1, …)` guard catches absurd rates that would round to 0 — a 0-tick cadence would silently apply damage every tick. A4 pattern: zod parse at module load; malformed JSON crashes loudly.
 
-Decision points D7.B during implementation: fire visual style (shader-driven flicker?) is D7.C scope; whether `unit:attacked` `reason` should default to `'attack'` when omitted (yes, for back-compat).
+3. **Two new events** added to [src/core/events.ts](src/core/events.ts): `'unit:burned': { unitId, damage }` and `'unit:healed': { unitId, amount }`. **Separate-event design** (not extending `unit:attacked`) per the D7.B decision — there's no attacker for fire damage, so a `attackerId: number | null` change would force every existing subscriber to handle null. The separate events are symmetric, leave `unit:attacked` shape untouched, and read more clearly at consumer sites.
+
+4. **Global-cadence tile-effect pass** in `World.tick`. Runs AFTER the per-unit selector loop, AFTER `runOverflowScan`, BEFORE `checkBattleEnd`. Each tick: if `currentTick % FIRE_TICKS_PER_DAMAGE === 0`, iterate live combatant units (skip neutrals, skip already-dead) and apply 1 HP damage to any on a `fire` tile. Symmetric for healing. Cadences are independent — at the locked defaults a fire-tick + heal-tick coincide every 10 ticks.
+
+5. **Separate `reapDead()` pass** runs immediately after `applyTileEffects()`. A unit killed by fire has `currentHp <= 0` after step 4 but is still in `this.units` (the per-unit-loop death check ran at the start of the tick, before fire damage applied). Without an extra reap, `checkBattleEnd` would see the dead unit as alive (it counts by team membership, not HP), and the battle would end one tick late. The new reap pass closes that gap: a fire-kill of the last enemy ends the battle on the same tick, matching combat-kill ordering.
+
+6. **`LayoutDef.fires?: Coord[]` + `healings?: Coord[]`** with zod overlap rules — each cell is mutex with walls / water / halfCovers / chasms / spawn-regions / other fires/healings (tile-kind is mutex per cell). `GeneratedTerrain` gains `fires` + `healings` parallel coord readouts (same pattern as `chasms`); procedural emits `[]` for both — hand-authored-only in D7, matching gotcha #74's chasm scope decision. `generateFromLayout` calls `tileGrid.setKind(c, 'fire' | 'healing')` for each cell; `applyTerrain` requires no change since it already iterates `tileGrid.cells()`.
+
+7. **BattleRenderer subscribes to `unit:burned` + `unit:healed`** to call `refreshHpBar(unitId)` so the visible HP bar stays in sync with chip changes. No flash visuals in D7.B (those land in D7.C alongside the tile-kind shader work).
+
+**No snapshot version bump.** Same reasoning as gotcha #75 — adding tile-kind values doesn't change the wire format (kinds are discriminator strings), and no new fields are added to UnitSnapshot or WorldSnapshot for D7.B. The tile-effect cadence is a function of `world.tickCount` and `world.tileGrid` only — both already snapshotted.
+
+**Tests added** (320 passed, was 306 pre-D7.B): TileGrid fire+healing as normal cost + JSON round-trip carries them; World tile-effect pass: fire chip damage on cadence, healing chip heal on cadence with maxHp clamp + `amount: 0` emit, neutrals skipped, fire-kill emits unit:burned + unit:died + battle:ended on same tick, dead units skipped; snapshot round-trips fire+healing tiles; layouts per-layout fire/healing-in-grid invariant + extended spawn-overlap check. Commit pending.
+
+Next up per ROADMAP — **D7.C (editor + visual lock-in for all three new tile kinds):**
+
+1. **TerrainRenderer**: extend `heightAt` and `topColorFor` (currently fall-through to floor for chasm/fire/healing — gotcha #76). Chasm = sunken visual (low top Y, dark color); fire = warm color (red/amber lerp), possibly shader-driven flicker via `uTime`; healing = cool color (green/cyan lerp). All three with no scene lights (gotcha #46 — baked light direction only).
+2. **Editor terrain palette**: add chasm / fire / healing entries to the terrain layer's sub-tool radio (joining water). Each gets a color swatch + drag-paint integration. Erase-scope rule (gotcha #65) extends naturally — terrain-layer erase clears only terrain content, leaves units/regions alone.
+3. **Editor connectivity check**: already chasm-aware via the layouts.test mirror (commit `56adba0` widened the connectivity test pool); editor's live check needs the same widening.
+4. **Fire audio**: optional. Quiet ambient crackle on fire tiles? Or just a 1-shot per `unit:burned` event? D7.B left fire damage silent (audio TODO comment in BattleScene's unit:attacked handler).
+
+Then C2 (combat archetype expansion — mage, rogue, healer) per ROADMAP. Phase D is the foundation; Phase C is the gameplay.
 
 Then D8 (tile theming) per the unchanged Phase D plan in ROADMAP.
 
@@ -317,6 +333,16 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 75. **D7.A: TileKind expansion doesn't bump snapshot schema version.** The TileGrid stores tile kinds as discriminator strings (`'floor'` / `'shallow_water'` / `'chasm'`), so a new kind value just expands the set of legal strings — v5 snapshots written before chasm existed simply contain no chasm cells. Contrast with adding a new FIELD to UnitSnapshot or WorldSnapshot, which DOES require a version bump (D6 `blocksLineOfSight` was 4→5). The TileGrid.ts comment "adding a new TileKind doesn't invalidate existing snapshots" calls this out explicitly. If a future tile kind needs auxiliary per-cell data (e.g. fire intensity, healing remaining), THAT'S the change that bumps the version.
 
 76. **D7.A: no exhaustive `switch (kind: TileKind)` exists in the codebase.** `TerrainRenderer.heightAt` and `topColorFor` use a `if (kind === 'shallow_water') return ...; fall-through to floor` shape. Adding chasm fell through to the floor branch without compile errors AND without runtime crashes — chasm renders as floor visually in D7.A. The D7.C visual pass will explicitly branch chasm into a sunken-pit visual. If you introduce an exhaustive switch later (e.g. via a `assertNever(kind)` helper), audit ALL existing call sites — there are currently zero, and the implicit fall-through is what made the D7.A stopgap a no-op for the renderer.
+
+77. **D7.B: tile effects use GLOBAL cadence, not per-unit accumulators.** `applyTileEffects` checks `currentTick % FIRE_TICKS_PER_DAMAGE === 0` (and the healing equivalent) and applies 1 HP delta per matching cell, to every live combatant on a matching tile, in `this.units` insertion order. Zero per-unit state, no snapshot bump. Known edge case: a fast-moving unit can theoretically dance onto fire between cadence ticks and dance off before the next one, skipping damage entirely. With default rates (5 ticks/fire, MoveCooldown ~5 ticks), the unit is almost always on the tile during exactly one cadence tick → 1 damage per visit, which is what we want. The "fast-unit-skips-fire" exploit is mild and intentional for D7.B; if playtest reveals it feels broken, switch to a per-unit "ticks-on-current-effect-tile" accumulator (resets on tile-kind change) — that's the migration path documented in the D7.B "Tile cadence" decision answer.
+
+78. **D7.B: tile-effect pass runs AFTER per-unit selector, AFTER overflow scan, BEFORE checkBattleEnd, AND immediately followed by `reapDead()`.** The full tick() order is now: (1) drain commands, (2) per-unit loop (death-reap + cooldown decrement + selector + action execute), (3) `runOverflowScan` (D5.C reinforcement), (4) `applyTileEffects` (D7.B chip damage/heal), (5) `reapDead` (clean up any units killed in step 4), (6) `checkBattleEnd`. The `reapDead` pass is what makes a fire-kill end the battle on the same tick — without it, `checkBattleEnd` counts the dead-but-not-yet-spliced unit as alive and the battle ends one tick late. Don't fold `reapDead` into the per-unit loop's step-1 death check — they handle different deaths (step 1 = combat kills + lingering 0-HP from prior ticks; step 5 = fire kills that happened in step 4). Both emit `unit:died`.
+
+79. **D7.B: fire damage uses a separate `unit:burned` event, NOT an extended `unit:attacked`.** The original ROADMAP entry said "extend unit:attacked with reason," but the D7.B design call landed on a separate event because (a) fire has no attacker, so reusing the existing shape would require `attackerId: number | null` and a null-guard at every subscriber, and (b) `unit:healed` is its own event by necessity, and asymmetry between burn and heal would read worse than two parallel events. `unit:attacked` shape is unchanged for back-compat. Subscribers that need to track "any HP change" should subscribe to all three (`unit:attacked` / `unit:burned` / `unit:healed`) — BattleRenderer is the canonical example, refreshing the HP bar on all three. Audio currently fires for `unit:attacked` only; fire-burn audio is queued for D7.C alongside the visual flicker.
+
+80. **D7.B: healing emits `amount: 0` when clamped at maxHp.** A unit at maxHp still gets `unit:healed` fired on each heal-cadence tick, with `amount: 0`. Subscribers that want to debounce (e.g. avoid a no-op refresh of the HP bar) should check `amount > 0` themselves. The sim emits unconditionally because it's a deterministic side effect of the cadence — observers like the determinism replay test would otherwise see different event streams depending on which unit happened to be at full HP. Don't "optimize" by suppressing the emit when amount is 0; that introduces a hidden branch in the event log.
+
+81. **D7.B: tile-effect pass skips already-dead units.** `if (unit.currentHp <= 0) continue;` guards against re-burning a corpse that died in step 2 (combat kill) but is still in `this.units` waiting for step 5's reap. Without the guard, a unit on fire that was just slain by an adjacent enemy would emit a posthumous `unit:burned` event with `unitId` pointing at a unit that the next tick's per-unit loop is about to reap. The combination of "skip dead in step 4" + "reap in step 5" gives clean death semantics: one `unit:died` per kill, never doubled, never delayed.
 
 ## Browser-verify tips (learned the hard way)
 

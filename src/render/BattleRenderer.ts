@@ -91,6 +91,11 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
     this.subscriptions.push(bus.on('unit:died', this.onUnitDied));
     this.subscriptions.push(bus.on('tick', this.onTick));
+    // D7.B: keep HP bars in sync with tile-effect chip damage / heal.
+    // Flash visuals for these events are D7.C scope — D7.B just keeps
+    // the bar fill honest.
+    this.subscriptions.push(bus.on('unit:burned', ({ unitId }) => this.refreshHpBar(unitId)));
+    this.subscriptions.push(bus.on('unit:healed', ({ unitId }) => this.refreshHpBar(unitId)));
   }
 
   /** Per-render-frame tick. Drives sprite lerps + bar position-follow + progress fill. */

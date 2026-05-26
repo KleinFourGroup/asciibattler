@@ -142,6 +142,20 @@ describe('A2 round-trip: World', () => {
     expect(restored.tileGrid.kindAt({ x: 0, y: 0 })).toBe('floor');
   });
 
+  it('D7.B: round-trips fire + healing tiles through World snapshot', () => {
+    const { world } = freshBattle(54321);
+    world.tileGrid.setKind({ x: 2, y: 2 }, 'fire');
+    world.tileGrid.setKind({ x: 3, y: 3 }, 'healing');
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+
+    expect(restored.tileGrid.kindAt({ x: 2, y: 2 })).toBe('fire');
+    expect(restored.tileGrid.kindAt({ x: 3, y: 3 })).toBe('healing');
+    expect(restored.tileGrid.costAt({ x: 2, y: 2 })).toBe(1);
+    expect(restored.tileGrid.costAt({ x: 3, y: 3 })).toBe(1);
+  });
+
   it('round-trips the tile grid + neutral wall units (C1a terrain)', () => {
     // Build a non-trivial battle, run it for a few ticks, snapshot, restore.
     const { world } = freshBattle(11111);

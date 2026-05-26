@@ -57,6 +57,14 @@ export interface GeneratedTerrain {
    *  chasm coords without re-walking the grid. Empty for procedural —
    *  hand-authored-only in D7. */
   readonly chasms: readonly GridCoord[];
+  /** D7.B: fire tile coords (per-tick chip damage to standing units).
+   *  Stored on `tileGrid` as `kind === 'fire'`; parallel readout same
+   *  pattern as chasm. Empty for procedural — hand-authored-only in D7. */
+  readonly fires: readonly GridCoord[];
+  /** D7.B: healing tile coords (per-tick heal to standing units).
+   *  Stored on `tileGrid` as `kind === 'healing'`; parallel readout
+   *  same pattern as chasm. Empty for procedural. */
+  readonly healings: readonly GridCoord[];
   readonly spawnRegions: readonly SpawnRegion[];
 }
 
@@ -106,11 +114,19 @@ function generateFromLayout(
   if (layout.chasms) {
     for (const c of layout.chasms) tileGrid.setKind(c, 'chasm');
   }
+  if (layout.fires) {
+    for (const f of layout.fires) tileGrid.setKind(f, 'fire');
+  }
+  if (layout.healings) {
+    for (const h of layout.healings) tileGrid.setKind(h, 'healing');
+  }
   return {
     tileGrid,
     walls: layout.walls.slice(),
     halfCovers: layout.halfCovers ? layout.halfCovers.slice() : [],
     chasms: layout.chasms ? layout.chasms.slice() : [],
+    fires: layout.fires ? layout.fires.slice() : [],
+    healings: layout.healings ? layout.healings.slice() : [],
     spawnRegions: layout.spawns,
   };
 }
@@ -155,10 +171,18 @@ function generateProcedural(
     walls = openCutsUntilConnected(walls, gridW, gridH, spawnRegions);
   }
 
-  // D6 + D7.A: procedural is hand-authored-only for half-cover AND
-  // chasm (no density knobs in config/terrain.json). Returning empty
-  // arrays keeps the shape stable for the caller.
-  return { tileGrid, walls, halfCovers: [], chasms: [], spawnRegions };
+  // D6 + D7: procedural is hand-authored-only for half-cover, chasm,
+  // fire, and healing (no density knobs in config/terrain.json).
+  // Returning empty arrays keeps the shape stable for the caller.
+  return {
+    tileGrid,
+    walls,
+    halfCovers: [],
+    chasms: [],
+    fires: [],
+    healings: [],
+    spawnRegions,
+  };
 }
 
 /**

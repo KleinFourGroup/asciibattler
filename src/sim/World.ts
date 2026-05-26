@@ -14,6 +14,7 @@ import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AttackBehavior } from './behaviors/AttackBehavior';
 import { SpawnAction } from './actions/SpawnAction';
 import { SPAWN } from '../config/spawn';
+import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
 import type { SpawnRegion } from './layouts';
 
 /**
@@ -296,7 +297,70 @@ export class World {
     // queue gets a chance to reinforce before victory triggers.
     this.runOverflowScan();
 
+    // D7.B — per-tile chip damage/heal. Runs AFTER the overflow scan
+    // so freshly-spawned units take immediate effect if they land on
+    // a fire/healing tile during a cadence tick. Followed by a reap
+    // pass so a unit killed by fire dies on the SAME tick (matches
+    // combat-kill ordering — without the reap, a fire-kill would
+    // linger one tick before checkBattleEnd notices).
+    this.applyTileEffects();
+    this.reapDead();
+
     this.checkBattleEnd();
+  }
+
+  /**
+   * D7.B — global-cadence tile-effect pass. Every `FIRE_TICKS_PER_DAMAGE`
+   * ticks (5 @ 2 HP/sec, TICK_RATE=10), iterate live combatant units
+   * and apply 1 HP fire damage to any standing on a `fire` tile.
+   * Symmetric for `HEALING_TICKS_PER_HEAL` (10 @ 1 HP/sec). The
+   * cadences are independent — a fire-tick and a heal-tick can coincide
+   * (every 10 ticks for the default rates).
+   *
+   * Neutrals (walls, half-cover) are skipped per the D7 "combatants
+   * only" decision. Already-dead units (currentHp <= 0, awaiting reap)
+   * also skipped so a fire pass doesn't double-burn a corpse.
+   *
+   * Iteration order is `this.units` insertion order (deterministic by
+   * spawn sequence), so the event stream is replay-stable for fuzz.
+   */
+  private applyTileEffects(): void {
+    const fireTick = this.tickCount % FIRE_TICKS_PER_DAMAGE === 0;
+    const healTick = this.tickCount % HEALING_TICKS_PER_HEAL === 0;
+    if (!fireTick && !healTick) return;
+
+    for (const unit of this.units) {
+      if (unit.team === 'neutral') continue;
+      if (unit.currentHp <= 0) continue;
+      const kind = this.tileGrid.kindAt(unit.position);
+      if (kind === 'fire' && fireTick) {
+        const damage = 1;
+        unit.currentHp -= damage;
+        this.bus.emit('unit:burned', { unitId: unit.id, damage });
+      } else if (kind === 'healing' && healTick) {
+        const before = unit.currentHp;
+        unit.currentHp = Math.min(unit.stats.maxHp, before + 1);
+        const amount = unit.currentHp - before;
+        this.bus.emit('unit:healed', { unitId: unit.id, amount });
+      }
+    }
+  }
+
+  /**
+   * D7.B — reap any unit whose currentHp has dropped to 0 (or below)
+   * after the tile-effect pass. Combat kills are already reaped inside
+   * the per-unit loop's step-1 death check, so in practice this pass
+   * only matches fire-kills. Kept as an unconditional sweep because
+   * O(N) on a small N is cheaper than auditing every damage source
+   * for an inline reap.
+   */
+  private reapDead(): void {
+    for (const unit of this.units.slice()) {
+      if (unit.currentHp <= 0) {
+        this.removeUnit(unit.id);
+        this.bus.emit('unit:died', { unitId: unit.id, team: unit.team });
+      }
+    }
   }
 
   /**

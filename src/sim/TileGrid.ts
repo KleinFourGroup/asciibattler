@@ -21,7 +21,7 @@
 import { GRID_SIZE } from '../config';
 import type { GridCoord } from '../core/types';
 
-export type TileKind = 'floor' | 'shallow_water' | 'chasm';
+export type TileKind = 'floor' | 'shallow_water' | 'chasm' | 'fire' | 'healing';
 
 /**
  * Movement cost to ENTER a tile of this kind. Pathfinding weights
@@ -34,11 +34,17 @@ export type TileKind = 'floor' | 'shallow_water' | 'chasm';
  * `!isFinite(stepCost)` guard in `Pathfinding.findPath`. LOS is a
  * unit-blocker check (see `LineOfSight.ts`), so chasm is automatically
  * LOS-transparent — tiles never enter the LOS pipeline.
+ *
+ * D7.B: `fire` and `healing` are surface effects, not obstacles —
+ * normal floor cost (1). Per-tick chip damage / heal is applied by
+ * `World.tick`'s tile-effect pass, not by pathfinding.
  */
 const TILE_COSTS: Record<TileKind, number> = {
   floor: 1,
   shallow_water: 2,
   chasm: Infinity,
+  fire: 1,
+  healing: 1,
 };
 
 export interface TileGridSnapshot {

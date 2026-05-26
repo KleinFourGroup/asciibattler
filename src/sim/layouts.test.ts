@@ -77,11 +77,27 @@ describe('layouts library', () => {
         }
       });
 
+      it('places every fire/healing tile inside the layout grid with no duplicates', () => {
+        for (const arrName of ['fires', 'healings'] as const) {
+          const seen = new Set<string>();
+          for (const c of layout[arrName] ?? []) {
+            expect(c.x).toBeGreaterThanOrEqual(0);
+            expect(c.y).toBeGreaterThanOrEqual(0);
+            expect(c.x).toBeLessThan(layout.gridW);
+            expect(c.y).toBeLessThan(layout.gridH);
+            const k = `${c.x},${c.y}`;
+            expect(seen.has(k)).toBe(false);
+            seen.add(k);
+          }
+        }
+      });
+
       it('leaves at least one path between the first two spawn regions', () => {
         // Mirror of terrainGen's connectivity check: hand-authored layouts
         // that sever the board are bugs, not seeds to be rescued. Walls,
-        // half-covers, and chasms all block movement, so all three count
-        // as static blockers for this check.
+        // half-covers, and chasms block movement (chasm = Infinity cost).
+        // Fire + healing don't block — they're normal-cost surface effects
+        // — so they're not added to the blocker pool.
         const [a, b] = layout.spawns;
         const blockers = [
           ...layout.walls,
@@ -118,12 +134,14 @@ describe('layouts library', () => {
         }
       });
 
-      it('spawn tiles never overlap walls, water, half-covers, or chasms', () => {
+      it('spawn tiles never overlap walls, water, half-covers, chasms, fires, or healings', () => {
         const blocked = new Set<string>();
         for (const w of layout.walls) blocked.add(`${w.x},${w.y}`);
         for (const w of layout.water ?? []) blocked.add(`${w.x},${w.y}`);
         for (const hc of layout.halfCovers ?? []) blocked.add(`${hc.x},${hc.y}`);
         for (const c of layout.chasms ?? []) blocked.add(`${c.x},${c.y}`);
+        for (const f of layout.fires ?? []) blocked.add(`${f.x},${f.y}`);
+        for (const h of layout.healings ?? []) blocked.add(`${h.x},${h.y}`);
         for (const region of layout.spawns) {
           for (const t of region.tiles) {
             expect(blocked.has(`${t.x},${t.y}`)).toBe(false);

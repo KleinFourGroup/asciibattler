@@ -6,6 +6,8 @@ import { AttackBehavior } from './behaviors/AttackBehavior';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { rollUnit } from './archetypes';
+import { spawnWall } from './environment';
+import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
 import type { GameEvents } from '../core/events';
 
 describe('World (Step 3.1 skeleton)', () => {
@@ -233,6 +235,123 @@ describe('World inline death handling', () => {
     expect(attacks[0]?.attackerId).toBe(units[0]!.id);
     expect(units[0]!.currentHp).toBe(50);
     expect(world.findUnit(units[1]!.id)).toBeUndefined();
+  });
+});
+
+describe('World D7.B tile effects', () => {
+  // Spec helper: an inert enemy stationed far away keeps checkBattleEnd
+  // happy so the tile-effect tests can tick freely without the battle
+  // ending. The inert team has no behaviors and never moves.
+  const KEEP_BATTLE_ALIVE: DeathSceneUnit = { team: 'enemy', x: 11, y: 11, hp: 50 };
+
+  it('fire deals 1 HP damage to combatants every FIRE_TICKS_PER_DAMAGE ticks', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 3, y: 3, hp: 50 },
+      KEEP_BATTLE_ALIVE,
+    ]);
+    world.tileGrid.setKind({ x: 3, y: 3 }, 'fire');
+    const burns: GameEvents['unit:burned'][] = [];
+    (world as unknown as { bus: EventBus<GameEvents> }).bus.on('unit:burned', (p) => burns.push(p));
+
+    // Off-cadence ticks: no damage.
+    for (let t = 1; t < FIRE_TICKS_PER_DAMAGE; t++) world.tick();
+    expect(units[0]!.currentHp).toBe(50);
+    expect(burns).toHaveLength(0);
+
+    // Cadence tick: 1 damage lands.
+    world.tick();
+    expect(units[0]!.currentHp).toBe(49);
+    expect(burns).toHaveLength(1);
+    expect(burns[0]).toEqual({ unitId: units[0]!.id, damage: 1 });
+
+    // Another full cycle.
+    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE; t++) world.tick();
+    expect(units[0]!.currentHp).toBe(48);
+    expect(burns).toHaveLength(2);
+  });
+
+  it('healing restores 1 HP every HEALING_TICKS_PER_HEAL ticks and clamps at maxHp', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 3, y: 3, hp: 10 },
+      KEEP_BATTLE_ALIVE,
+    ]);
+    world.tileGrid.setKind({ x: 3, y: 3 }, 'healing');
+    const heals: GameEvents['unit:healed'][] = [];
+    (world as unknown as { bus: EventBus<GameEvents> }).bus.on('unit:healed', (p) => heals.push(p));
+
+    // One cadence tick: +1 HP.
+    for (let t = 0; t < HEALING_TICKS_PER_HEAL; t++) world.tick();
+    expect(units[0]!.currentHp).toBe(11);
+    expect(heals).toHaveLength(1);
+    expect(heals[0]).toEqual({ unitId: units[0]!.id, amount: 1 });
+
+    // Force currentHp to maxHp; next heal-tick clamps and emits
+    // amount=0 (subscribers can debounce; the sim still fires for
+    // observability).
+    units[0]!.currentHp = units[0]!.stats.maxHp;
+    for (let t = 0; t < HEALING_TICKS_PER_HEAL; t++) world.tick();
+    expect(units[0]!.currentHp).toBe(units[0]!.stats.maxHp);
+    expect(heals[heals.length - 1]).toEqual({ unitId: units[0]!.id, amount: 0 });
+  });
+
+  it('neutrals on fire/healing tiles are skipped (combatants-only policy)', () => {
+    const { world } = scene([
+      { team: 'player', x: 0, y: 0, hp: 50 },
+      KEEP_BATTLE_ALIVE,
+    ]);
+    const wall = spawnWall(world, { x: 5, y: 5 });
+    world.tileGrid.setKind({ x: 5, y: 5 }, 'fire');
+    const startHp = wall.currentHp;
+    const burns: GameEvents['unit:burned'][] = [];
+    (world as unknown as { bus: EventBus<GameEvents> }).bus.on('unit:burned', (p) => burns.push(p));
+
+    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE * 3; t++) world.tick();
+    expect(wall.currentHp).toBe(startHp);
+    expect(burns).toHaveLength(0);
+  });
+
+  it('a fire-kill emits unit:burned + unit:died and ends the battle on the same tick', () => {
+    // Player adjacent unit on healing (so the battle has both teams),
+    // enemy on a fire tile with 1 HP. Fire-kill should remove the
+    // enemy and end the battle this tick.
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0, hp: 50 },
+      { team: 'enemy', x: 5, y: 5, hp: 1 },
+    ]);
+    world.tileGrid.setKind({ x: 5, y: 5 }, 'fire');
+    const burns: GameEvents['unit:burned'][] = [];
+    const deaths: GameEvents['unit:died'][] = [];
+    const ends: GameEvents['battle:ended'][] = [];
+    const bus = (world as unknown as { bus: EventBus<GameEvents> }).bus;
+    bus.on('unit:burned', (p) => burns.push(p));
+    bus.on('unit:died', (p) => deaths.push(p));
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    // Tick until the fire cadence fires.
+    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE; t++) world.tick();
+    expect(burns).toHaveLength(1);
+    expect(burns[0]!.unitId).toBe(units[1]!.id);
+    expect(deaths.some((d) => d.unitId === units[1]!.id)).toBe(true);
+    expect(ends).toEqual([{ winner: 'player' }]);
+  });
+
+  it('does not apply effects to already-dead units waiting for reap', () => {
+    // Force a unit's HP to 0 and ensure a fire cadence tick doesn't
+    // re-burn the corpse (which would double-emit unit:burned for an
+    // already-reaped id).
+    const { world, units } = scene([
+      { team: 'player', x: 3, y: 3, hp: 0 },
+      KEEP_BATTLE_ALIVE,
+    ]);
+    world.tileGrid.setKind({ x: 3, y: 3 }, 'fire');
+    const burns: GameEvents['unit:burned'][] = [];
+    (world as unknown as { bus: EventBus<GameEvents> }).bus.on('unit:burned', (p) => burns.push(p));
+
+    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE * 2; t++) world.tick();
+    // The unit gets reaped at the start of tick 1 (per-unit death
+    // pass). No burn emit expected at all.
+    expect(burns).toHaveLength(0);
+    expect(world.findUnit(units[0]!.id)).toBeUndefined();
   });
 });
 

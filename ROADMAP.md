@@ -118,55 +118,6 @@ per-battle camera-fit hook. Editor: W/H dropdowns (8-32), in-place
 rebuild, clip warning. Headless tests cover 10/15/20 procedural +
 per-layout deadlock. See HANDOFF.md for the full diff. Next up: D4.
 
-Original plan (left for reference):
-
-Foundation change. Touches sim, render, config, and every layout. The
-later D-steps and the C-phase items all consume this.
-
-- **Procedural maps** roll a side length uniformly in `[10, 20]` and
-  stay square (per c1-feedback).
-- **Hand-authored layouts** declare their own `gridSize` (8-32) as a
-  required field on `LayoutDef`.
-- `config/terrain.json` gains `proceduralMinSize` / `proceduralMaxSize`;
-  the existing `spawnRowsClear` array is retired (D5 replaces row-based
-  reservation with per-layout spawn regions).
-- `generateTerrain` no longer asserts `gridSize === 12` on the
-  layout-library path; the procedural path reads the rolled size.
-- `BattleScene.mount` threads gridSize through to TerrainRenderer +
-  SpriteRenderer + BarRenderer + WorldClock setup.
-- `Renderer.fitCamera()` already runs on every resize; it gains a
-  per-battle update that takes `gridSize` as input so the AABB and
-  resulting camera distance scale up for bigger boards. This is the
-  *dev/zoomed-out* camera and stays the default until D4 lands the
-  player-scroll alternative.
-- Existing four layouts (`corridor`, `diamond`, `labyrinth`, `river`)
-  get `gridSize: 12` added in the JSON. Schema migration is mechanical;
-  zod fails loudly at boot if any layout lacks the field.
-
-**Editor scope (lands in this step):**
-
-- Grid-size selector in the editor (dropdown for 8-32 square; separate
-  `gridW` / `gridH` controls if rectangular layouts are in scope —
-  see decision point).
-- The editor's grid DOM rebuilds when size changes; the in-progress
-  layout is preserved where it fits and clipped where it doesn't, with
-  a validation warning for the clipped cells.
-
-Tests: most existing tests construct World/TileGrid with no explicit
-size and use the default — those keep passing. Add a size-parameterized
-integration test that runs a procedural battle at `gridSize = 10`, 15,
-and 20 and asserts the battle resolves. Update
-`tests/integration/layout-deadlock.test.ts` to iterate over each
-layout's own `gridSize` rather than a hard-coded 12.
-
-**Decision point D3:** rectangular maps. c1-feedback says "Length and
-width need not be the same" for hand-authored. Adding `gridW` / `gridH`
-to `LayoutDef` instead of a single `gridSize` is mostly a schema +
-TileGrid signature change — cheap if done now, expensive once a dozen
-square layouts exist. Recommend: yes, rectangular for hand-authored
-(separate `gridW`, `gridH`, both 8-32); procedural stays square (one
-`gridSize`).
-
 ### D4 — Camera overhaul (dev fit + game scroll) ✅ LANDED
 
 Two camera modes on `Renderer` (constants at the top of
@@ -202,43 +153,6 @@ Two camera modes on `Renderer` (constants at the top of
 No new tests (render code is verified by eyeball per
 [TESTING.md](TESTING.md)); 248 tests still pass. Next up: D5.
 
-Original plan (left for reference):
-
-Variable map sizes break the "single fixed camera frames the arena"
-assumption. c1-feedback asks for two modes, both available now,
-default-mode question deferred to beta-testing.
-
-- **Mode A — `fit` (dev default).** Current behavior, just size-aware:
-  `fitCamera()` computes camera distance from the arena AABB
-  (`gridSize × CELL_SIZE`) + pitch + FOV + aspect. Already aspect-aware
-  (gotcha #17). At gridSize=32 the whole board is visible from above
-  with no scroll.
-- **Mode B — `scroll` (game default — pending beta-test).** Camera
-  shows a fixed visible window (e.g. 12×12 tiles, matching pre-D3
-  feel); player pans with **WASD** keys and **RTS-style edge scroll**
-  (mouse near a screen edge → pan in that direction). Camera pitch
-  stays locked; only XZ position moves. On battle start, camera
-  initializes centered on the player team's spawn region (D5) so the
-  player sees their units first.
-- Mode toggle via a dev panel keystroke and a future user-facing
-  setting — for now both modes are available, the dev/game default
-  split is asserted in code.
-- **Touch controls deferred.** c1-feedback explicitly defers touch.
-  Don't pre-design for it; the WASD + edge-scroll path won't conflict
-  with a future touch overlay.
-
-No editor scope — the editor is a 2D grid, unrelated to the game
-camera.
-
-**Decision points D4 (resolved at impl time, recommendations all
-accepted):**
-
-- Scroll-mode visible window size → **12×12** (`SCROLL_WINDOW_TILES`).
-- Edge-scroll thresholds → **40px / 12 tiles/sec**
-  (`EDGE_SCROLL_THRESHOLD_PX`, `PAN_SPEED_TILES_PER_SEC`).
-- Mode B as production default → **deferred**; keep `fit` as
-  `DEV_DEFAULT_MODE` through D4, flip when D5 spawn regions land.
-
 ### D5 — Spawn-region system ✅ LANDED (A through E)
 
 D5.A: schema + retrofit. D5.B: sim consumes regions. D5.C: overflow
@@ -249,101 +163,6 @@ the scroll-mode camera on the player region's centroid via
 `(0, gridH/2 - 2)` legacy heuristic.** `DEV_DEFAULT_MODE` stays `fit`
 through D5 — the default flip is deferred. See HANDOFF.md for the
 full per-step breakdown and gotchas #55-#69.
-
-Original plan (left for reference):
-
-Replaces the current `spawnRowsClear` / `spawnTeam`-into-fixed-columns
-machinery with explicit per-layout spawn regions. Each region is exactly
-eight tiles, need not be contiguous, and carries an `availability` flag.
-
-**Schema (`LayoutDef.spawns: SpawnRegion[]`):**
-
-```ts
-type SpawnAvailability = 'player' | 'enemy' | 'both';
-interface SpawnRegion {
-  tiles: Coord[];               // exactly 8, in-bounds for the layout's gridSize/gridW/gridH
-  availability: SpawnAvailability;
-}
-```
-
-zod validates: exactly 8 tiles per region; tiles in-bounds for the
-layout's grid; no tile-duplication within a region; no overlap with the
-layout's `walls` / `water` / `chasm` (D7) cells; at least one region
-with player availability and at least one with enemy availability
-(`'both'` counts toward both). Tiles *may* be shared between regions
-(two player-available regions can both include tile X), since
-region-pick is at the region level, not tile level.
-
-**Battle setup (`battleSetup.ts`):**
-
-- After layout resolution, draw the player's spawn region from
-  `{regions where availability ∈ {'player', 'both'}}` using
-  `battleRng.pick`.
-- Then draw the enemy's spawn region from `{regions where availability
-  ∈ {'enemy', 'both'}} \ {player's region}`. **Sequential pick — player
-  draws first** (per user direction; layout author controls likely
-  matchups via availability flags). Throws if the enemy pool is empty
-  after subtracting the player's region; the schema validation upstream
-  should make this impossible.
-- `spawnTeam(team, region, world, rng)` shuffles the region's 8 tiles
-  (rng-deterministic) and places team members one per tile until either
-  team is empty or the region is full.
-- **Overflow handling — extras spawn as tiles vacate.** Team members
-  beyond 8 sit in a per-region spawn queue. After each tick, World
-  checks each team's queue + their region; for each free tile, pop one
-  unit and place it (deterministic order: queue order, sorted tile
-  scan). Implementation lives in World.tick after the existing death
-  splice, before the next selector pass.
-
-**Procedural generator:**
-
-- Emits two default 8-tile regions, both `availability: 'both'`, on the
-  top and bottom edges of the board. Center-x bias so the player isn't
-  spawn-camping the corners on a 20×20 board.
-- Wall + water placement masks against the spawn regions (replaces the
-  old `spawnRowsClear` check).
-
-**Existing 4 layouts retrofit (per user direction):**
-
-- Auto-add two `availability: 'both'` regions: top band (y=0, x=2..9 →
-  8 tiles) and bottom band (y=11, x=2..9 → 8 tiles).
-- This shifts the spawn y-coordinate by 1 vs. the pre-D5 implicit
-  spawn (which used rows 1-2 for player and 9-10 for enemy) —
-  acceptable, seed-byte continuity is already broken by D3 anyway
-  (gotcha #42 already documents prior breakage on this dimension).
-
-**Editor scope (lands in this step):**
-
-- **Layer system arrives.** Three layer toggles (radio): terrain /
-  neutral units / spawn regions. Only the active layer accepts
-  edits; the other two render dimmed so the author sees overall
-  composition.
-- Spawn-region painting: click/drag (D2) paints tiles into the
-  *active region*; a region selector lets the author add new regions
-  or pick an existing one to extend.
-- 8-tile constraint enforced live: painting a 9th tile into the
-  active region replaces the oldest tile in that region (visual
-  count badge per region).
-- Per-region availability radio: player / enemy / both.
-- Multiple regions per layout are color-coded so they're
-  distinguishable when both visible.
-- Reserved-row diagonal-stripe overlay is retired (the spawn regions
-  ARE the reserved tiles now).
-- Validation gains the D5 schema rules (8 tiles, no overlap with
-  walls/water, ≥1 player-available + ≥1 enemy-available).
-
-**Decision points D5:**
-
-- Edge-tile y-coordinate for retrofit (y=0 vs y=1 for top; y=`gridSize-1` vs y=`gridSize-2` for bottom). Edge gives the most movement
-  headroom; one-in gives a margin. Recommend y=0 / y=11 (literal edge)
-  for simplicity.
-- Whether overflow-queue spawning is in-scope for D5 or deferred. The
-  team sizes today (~5-8) rarely overflow, but C6 (longer runs) will
-  push past. Recommend: implement the queue in D5, since it's the
-  natural unit of work; the deterministic-order rules are easier to
-  reason about now than retrofit later.
-- Inactive-layer dimming intensity (e.g. 30% opacity for layers not
-  currently active). Tune during browser-verify.
 
 ### D6 — New neutral unit: half-cover ✅ LANDED
 
@@ -360,36 +179,6 @@ walls/water/spawn-region overlap; export JSON emits `halfCovers` after
 `water`. Hand-authored only — procedural emits `[]` (gotcha #72). 284
 tests pass. See HANDOFF.md for the full per-step breakdown and gotchas
 #70-#72.
-
-Original plan (left for reference):
-
-Wall-shaped but transparent to LOS. Pre-planned in gotcha #40: the
-right form is a per-Unit `blocksLineOfSight` flag, not a glyph check on
-AttackBehavior's collector.
-
-- Add `blocksLineOfSight: boolean` to Unit, defaulting `true` for
-  combatants and existing walls.
-- `spawnHalfCover(world, position, maxHp = 1)` in `src/sim/environment.ts`
-  — neutral team, configurable HP, `blocksLineOfSight: false`.
-- `AttackBehavior.collectWalls` is renamed to `collectLosBlockers` and
-  filters `team === 'neutral' && blocksLineOfSight === true`.
-- Pathfinding treats half-cover the same as walls (blocker list
-  membership; `blocksMovement` is implicit for neutral team in the
-  current architecture).
-- Glyph for half-cover: needs a FontAtlas addition (gotcha #33).
-- Future combat-modifier hook: half-cover *might* eventually grant a
-  ranged-defense bonus to units behind it. Scope question for C2-era —
-  leave the hook unbuilt in D6.
-
-**Editor scope (lands in this step):**
-
-- Half-cover entry in the neutral-units layer palette (alongside wall).
-- Drag-paint works for it via D2's groundwork.
-
-**Decision point D6:** glyph for half-cover. Candidates: `n` (low
-profile), `o` (round/rock), `=` (barrier-like), `+` (crate-like). Avoid
-collisions with existing combat units (M / a) and the wall (#). Pick
-one when implementing; FontAtlas append is cheap.
 
 ### D7 — New tile kinds: chasm, fire, healing
 
@@ -497,50 +286,6 @@ per-step breakdown.
 up a level — each node map carries a theme, procedural battles inherit
 from the map's. `rollTheme` exits `Run.handleEnterNode` at that point.
 
-Original plan (left for reference):
-
-Visual reskinning across the existing tile kinds. Cosmetic only — no
-sim effects.
-
-- `LayoutDef.theme: 'default' | 'rock' | 'volcanic'` (required, default
-  to `'default'` for retrofit).
-- Procedural also rolls a theme on `battleRng` (deterministic).
-- `TerrainRenderer` consumes a theme on `setTiles`; the fragment
-  shader picks per-tile colors from a theme-keyed palette table.
-- Themes:
-  - `default`: current `DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER`.
-  - `rock`: gray tones (variants of `TERMINAL_STONE`).
-  - `volcanic`: dark red base with amber accents; pairs naturally with
-    fire tiles (D7).
-- Banner copy (`battle-banner` from the C1d follow-up) gains a theme
-  hint, e.g. "Corridor — Volcanic".
-
-**Editor scope (lands in this step):**
-
-- Theme dropdown per layout.
-- Preview updates live so the author sees the rock/volcanic palette
-  applied to the in-progress layout.
-
-**Decision points D8:**
-
-- Naming. "rock" and "volcanic" are the c1-feedback starters; more are
-  pending. Keep the union closed — schema validation fails on unknown
-  themes so the picker can't accidentally roll a name that has no
-  palette.
-- Theme/tile interaction. Should fire tiles only appear in volcanic
-  themes? Healing only in default/forest? Don't gate at the schema
-  level — let the layout author and the editor produce any
-  combination, treat the theme as pure visual flavor for now.
-
----
-
-## Phase C (continued) — Combat mechanics and progression
-
-Gated behind Phase D. c1-feedback's read is that the constrained 12×12
-arena makes these hard to assess; resume once D ships. Numbering stays
-as previously written so the in-code references (`C2's AoE archetypes`,
-`C2 mage charge-up`, `gotcha #40 → C2 era`, etc.) remain valid.
-
 ### C2 — New archetypes: mage, rogue, healer
 
 Enabled by A1 (done — action selector + multi-tick effects). Sketches —
@@ -629,8 +374,8 @@ Not gated; can land any time.
 - **Pathfinding directional tie-break.** [TODO](TODO.md) — units crab
   leftward on equal-cost ties.
 - **`world.findUnit` O(n).** Retro flagged. Add `Map<id, Unit>` alongside
-  the array. Cheap when it starts to bite — probably during D3-D5 when
-  unit counts grow.
+  the array. Didn't bite in Phase D; re-evaluate during C6 (multi-map
+  runs) when team sizes grow past the current ~8-unit band.
 - **Favicon.** [TODO](TODO.md). Inline SVG glyph.
 - **`.gitattributes`** to normalize line endings. Stops the CRLF warnings
   on every commit (retro item).
@@ -638,9 +383,11 @@ Not gated; can land any time.
   [vite.config.ts](vite.config.ts), or code-split three.js if it gets
   noisy.
 - **Terrain generator: bias water placement toward unit paths.**
-  [TODO](TODO.md) — pre-D5 the generator scatters water uniformly. D5's
-  spawn-region rewrite touches the same code; consider landing this
-  cluster-placement pass alongside D5 rather than as a follow-up.
+  [TODO](TODO.md) — the generator scatters water uniformly, so the
+  shallow-water cost-2 rule rarely gets exercised in practice. D5's
+  spawn-region rewrite shipped without absorbing this; standalone
+  follow-up now. Probably wants "place water in N clusters of size M"
+  rather than per-cell Bernoulli.
 
 ---
 

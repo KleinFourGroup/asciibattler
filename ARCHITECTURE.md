@@ -33,55 +33,130 @@ No frameworks beyond that. UI is plain HTML/CSS overlaid on the canvas via absol
 ```
 src/
   main.ts                    # Entry point: bootstraps Game, mounts canvas, kicks off run
-  Game.ts                    # Owns renderer, scene, camera, clock, current screen
-  
+  Game.ts                    # Top-level orchestrator: owns Renderer/Bus/Run; scene swapper (A5)
+  config.ts                  # Engine constants: TICK_RATE=10, GRID_SIZE=12, secondsToTicks
+                             # (balance lives in config/*.json — see src/config/)
+
   core/
-    EventBus.ts              # Tiny pub/sub; ~20 LOC
-    RNG.ts                   # Seeded PRNG (mulberry32 or similar); takes a seed, returns deterministic stream
+    EventBus.ts              # Tiny typed pub/sub; on() returns unsub
+    RNG.ts                   # Mulberry32 PRNG; .next/.int/.pick/.fork
     Clock.ts                 # Fixed-timestep tick loop separated from render loop
-    types.ts                 # Shared primitives: Vec2, GridCoord, Handle, etc.
-  
+    events.ts                # GameEvents catalog (typed event payloads)
+    types.ts                 # Shared primitives: Vec2, GridCoord
+
+  config/                    # A4: zod-validated wrappers around config/*.json
+    archetypes.ts            #   melee + ranged stat bands + glyphs
+    difficulty.ts            #   enemy size delta + per-floor HP scale
+    recruitment.ts           #   starting team + offer size
+    nodemap.ts               #   floor count + width bands + degree cap
+    terrain.ts               #   C1a: wall + water density
+    layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
+    spawn.ts                 #   D5.C: SpawnAction lockout duration
+    tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
+    schemas.ts               #   shared zod helpers
+
   sim/
-    World.ts                 # Battle state: grid, units, current tick. Serializable.
-    Unit.ts                  # Unit class + behavior composition machinery
+    World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
+                             # overflow scan, tile-effect pass, reapDead, checkBattleEnd.
+                             # Serializable; WorldSnapshot v5 (C1a v2, D3 v3, D5.C v4, D6 v5)
+    Unit.ts                  # Unit + UnitTemplate + UnitStats + Team + Behavior
+                             # actionCooldowns Map + activeAction + blocksLineOfSight (D6)
+    TileGrid.ts              # Tile kinds: floor | shallow_water | chasm | fire | healing
+                             # Per-cell movement cost; chasm = Infinity (data-driven block)
+    LineOfSight.ts           # Bresenham line walk for ranged-attack LOS (C1b)
+    Action.ts                # Action / ActionProposal / ActiveAction interfaces (A1)
+                             # + toData()/fromData for snapshot rehydration (A2)
+    Command.ts               # WorldCommand union — drained at tick boundary (A2)
+    Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a)
+    Targeting.ts             # findTarget — nearest enemy, ties by HP then id; skips neutrals
+    archetypes.ts            # MELEE/RANGED bounds, rollUnit, glyphForArchetype
+    environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories
+    terrainGen.ts            # Per-encounter procedural tile + wall generator; layout dispatch
+    layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
+    battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter
+    actions/
+      MoveAction.ts          # Logical position update + unit:moved event
+      AttackAction.ts        # Damage + unit:attacked event
+      SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns
+      registry.ts            # Action factories keyed by Action.id (A2)
     behaviors/
-      MovementBehavior.ts    # Pathfinding + move cooldown
-      AttackBehavior.ts      # Targeting + attack cooldown + damage
-      DeathBehavior.ts       # HP <= 0 handling
-    Pathfinding.ts           # A* on the grid; pure function of (start, goal, blockers)
-    Targeting.ts             # Nearest-enemy resolution; pure function
-    archetypes.ts            # MVP unit archetypes (melee, ranged) and stat-roll functions
-  
+      MovementBehavior.ts    # proposeAction → MoveAction when out of range
+                             # Splits neutrals into pathBlockers + losBlockers (D6)
+      AttackBehavior.ts      # proposeAction → AttackAction when in range + LOS
+      registry.ts            # Behavior factories keyed by Behavior.kind (A2)
+
   run/
-    Run.ts                   # Meta state: current map, player team, position on map
-    NodeMap.ts               # DAG generation + traversal
-    Recruitment.ts           # Post-battle unit-offer generation
-  
+    Run.ts                   # State machine: map|battle|recruit|defeat|complete
+                             # + dispatch(RunCommand) + toJSON/fromJSON (A2)
+                             # RUN_SCHEMA_VERSION 2 (D8 added BattleEncounter.theme)
+    Command.ts               # RunCommand union + RunDispatcher interface (A2)
+    NodeMap.ts               # DAG generation + dump
+    Recruitment.ts           # rollOffer with archetype-variety guarantee
+
   render/
-    Renderer.ts              # Wraps WebGLRenderer + EffectComposer; owns the render loop
-    SpriteRenderer.ts        # InstancedMesh of billboarded ASCII quads; addSprite/updateSprite/removeSprite
-    TerrainRenderer.ts       # Faceted low-poly prism-per-tile (C1c); also renders water tiles + exposes heightAt for per-tile sprite Y
-    BattleRenderer.ts        # Sim/render seam: subscribes to unit:* events, drives SpriteRenderer
-    FontAtlas.ts             # Generates the monospace glyph atlas via canvas2d at startup
-    PostProcess.ts           # EffectComposer setup; palette quantization, scanlines, dither
-    shaders/
-      billboard.vert.glsl
-      sprite.frag.glsl
-      terrain.vert.glsl
-      terrain.frag.glsl
-      palette.frag.glsl      # Post-process palette quantization
-    palette.ts               # The COLORS enum; single source of truth for the palette
+    Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
+                             # + RAF loop + two camera modes (fit / scroll, D4)
+    SpriteRenderer.ts        # InstancedBufferGeometry + dual mesh (layer 0 visible / layer 1
+                             # bloom) + per-instance bloomIntensity attr (B1.1)
+    BarRenderer.ts           # B3: HP + action progress bars (single instanced mesh, layer 0)
+    TerrainRenderer.ts       # C1c: faceted low-poly prism-per-tile, heightAt is canonical
+                             # for sprite Y. D7.C: per-tile flicker/pulse + chasm sink + theme
+    BattleRenderer.ts        # Sim/render seam: subscribes to unit:* events
+                             # tileWorldPos(coord) for per-tile sprite Y (C1c)
+    FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture
+    PostProcess.ts           # SatClamp + Bloom + BloomMix factories (B1.1)
+                             # Scanlines retained as dormant code; CRT lines now run via CSS (B5)
+    shaders/                 # .glsl source files loaded via Vite ?raw imports (A4)
+    palette.ts               # COLORS table — TERMINAL_STONE added for neutrals (C1a)
     animation/
-      SpriteAnimator.ts      # Lerps sprite positions between grid cells; reads sim state
-  
+      SpriteAnimator.ts      # Lerps + fades (generalized fromAlpha/toAlpha for D5.C fade-in)
+
+  scenes/                    # A5: Scene system — single-active swap driven from Game
+    Scene.ts                 #   Scene interface + SceneContext bundle
+    BattleScene.ts           #   World + Clock + BattleRenderer + HUD + per-battle audio
+    MapScene.ts              #   DOM-only, wraps MapScreen
+    RecruitScene.ts          #   DOM-only, wraps RecruitScreen
+    GameOverScene.ts         #   DOM-only, wraps GameOverScreen
+
   ui/
     ui.css
-    HUD.ts                   # In-battle HUD: round state, team rosters
-    MapScreen.ts             # Node map view + node selection
-    RecruitScreen.ts         # Post-battle unit choice
-    GameOverScreen.ts        # Defeat / run complete
-  
-  config.ts                  # Tunable constants: TICK_RATE, GRID_SIZE, archetype stat bounds, etc.
+    fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
+    HUD.ts                   # In-battle HUD: floor, rosters, banner (per-battle, A5)
+    MapScreen.ts             # Node map view + frontier click → dispatch enterNode
+    RecruitScreen.ts         # 3-card recruit offer → dispatch chooseRecruit
+    GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
+
+  audio/
+    AudioPlayer.ts           # B6: 4-deep clone ring per sound; per-key volume + pitch jitter
+
+config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
+  archetypes.json
+  difficulty.json
+  recruitment.json
+  nodemap.json
+  terrain.json
+  layouts.json
+  spawn.json
+  tiles.json
+
+public/
+  audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, ...)
+
+tools/                       # Dev-only; not bundled into dist/
+  layout-editor/             # C1d.B → D2/D5.D/D6/D7.C/D8: layout painter
+                             # at /tools/layout-editor/ via Vite dev server
+
+tests/
+  smoke.test.ts
+  integration/               # determinism, snapshot-roundtrip, variable-size,
+                             # layout-deadlock, spawn-overflow, etc.
+  fuzz/                      # A3: headless balance harness (opt-in CLI)
+
+retro/
+  scratchpad.md              # rolling process notes
+  post-mvp-review.md         # CHECKPOINT 7 retrospective
+
+archive/                     # historical: mvp-roadmap, mvp-feedback, post-mvp-roadmap, c1-feedback
 
 index.html                   # Mounts <canvas> + <div id="ui">
 vite.config.ts
@@ -127,24 +202,29 @@ Gameplay code never hardcodes tick counts. Cooldowns, durations, and timers are 
 
 ```ts
 interface Behavior {
-  update(unit: Unit, world: World): void;
+  readonly kind: string;     // registry key for snapshot rehydration (A2)
+  proposeAction(unit: Unit, world: World): ActionProposal | null;
 }
 
 class Unit {
-  id: number;
-  team: 'player' | 'enemy';
-  glyph: string;
-  stats: UnitStats;
-  position: GridCoord;       // current cell
-  behaviors: Behavior[];
+  readonly id: number;
+  readonly team: 'player' | 'enemy' | 'neutral';   // 'neutral' for env entities (C1a)
+  readonly glyph: string;
+  readonly stats: UnitStats;
+  position: GridCoord;
   currentHp: number;
-  // ... more runtime state as behaviors land: cooldowns, current target, etc.
+  readonly behaviors: Behavior[];
+  readonly blocksLineOfSight: boolean;             // D6 — true for combatants/walls; false for half-cover
+  readonly actionCooldowns: Map<string, number>;   // A1 — per-action, keyed by Action.id
+  activeAction: ActiveAction | null;               // A1 — set while an action is in flight
 }
 ```
 
 Color is *not* on `Unit` — that's a renderer-side concern. `BattleRenderer` maps `team` → palette color so the simulation has no opinions about visuals.
 
-Behaviors run on each `World.tick()` (the sim is fully discrete; behaviors don't take real-time `dt`). For MVP, every unit has `[MovementBehavior, AttackBehavior, DeathBehavior]`. New unit kinds post-MVP add or swap behaviors rather than subclassing.
+Each `World.tick()` runs an **action selector** (A1): polls every behavior's `proposeAction`, filters proposals whose action is still on cooldown (`unit.actionCooldowns.get(id) > 0`), and picks the highest-scoring valid proposal. The chosen `Action` runs its lifecycle (`start` → effect ticks → finish), and while `unit.activeAction != null` the selector short-circuits. For single-tick actions (move, attack) the cooldown and duration coincide — preserving the MVP feel — but charge-ups and channels diverge them. Behaviors are stateless across ticks. New unit kinds add or swap behaviors rather than subclassing.
+
+Death is handled inline at the top of `World.tick`'s per-unit loop (no `DeathBehavior` — folded into the tick itself at A1). A separate `reapDead()` pass runs after the D7.B tile-effect pass so fire-kills end the battle on the same tick.
 
 ### `World`
 
@@ -172,17 +252,19 @@ Bridges simulation and rendering. Subscribes to `unit:moved` events and starts a
 tick                    { tick: number }
 battle:started          { worldSeed: number }
 battle:ended            { winner: 'player' | 'enemy' }
-unit:spawned            { unitId: number }
+unit:spawned            { unitId: number; instant: boolean }                       # instant=false → D5.C overflow-queue spawn (fade-in)
 unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }
 unit:attacked           { attackerId: number; targetId: number; damage: number }
-unit:died               { unitId: number }
+unit:burned             { unitId: number; damage: number }                         # D7.B: per-tick chip from fire tile (no attacker)
+unit:healed             { unitId: number; amount: number }                         # D7.B: per-tick chip from healing tile (emits amount=0 at maxHp)
+unit:died               { unitId: number; team: Team }                             # team carried because the unit is already spliced out (C1b)
 run:started             { seed: number }
 run:victory             { }
 run:defeated            { }
 recruit:offered         { units: UnitTemplate[] }
 ```
 
-This list will grow; events are cheap to add. The naming convention is `subject:verbed`. Bus events are past-tense notifications only — anything imperative goes through the command channel below.
+`src/core/events.ts` is the authoritative type definition — when these drift, the source file wins. Naming convention: `subject:verbed`, past-tense. Bus events are past-tense notifications only; anything imperative goes through the command channel below.
 
 ## Command catalog (inputs)
 
@@ -205,19 +287,22 @@ UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.disp
 1. `Renderer` drives `requestAnimationFrame`. Each frame:
    - Compute real `dt` since last frame
    - Pass `dt` to `Clock`, which calls `world.tick()` zero or more times to keep sim time aligned with real time
-   - Call `SpriteAnimator.update(dt)` to advance in-flight visual lerps
-   - Render scene through `EffectComposer`
+   - Call `SpriteAnimator.update(dt)` to advance in-flight visual lerps + fades
+   - Render scene through two `EffectComposer`s (selective bloom, B1.1)
 2. The scene contains:
-   - One terrain mesh (`TerrainRenderer`)
-   - One `InstancedMesh` for all sprites (`SpriteRenderer`)
+   - One faceted-prism terrain mesh (`TerrainRenderer`, C1c) — also the canonical source of per-tile Y via `heightAt`
+   - One `InstancedMesh` for all sprites (`SpriteRenderer`) — actually two meshes sharing one geometry: layer 0 visible, layer 1 bloom (B1.1)
+   - One `InstancedMesh` for HP + action progress bars (`BarRenderer`, B3)
    - No per-unit `Object3D`s. Ever. This is the performance contract.
-3. Post-process passes apply palette quantization (always on) and configurable extras (scanlines, dither).
+3. **Bloom** is selective via two composers (B1.1): `bloomComposer` renders the layer-1 bloom mesh through `UnrealBloomPass` (max-channel high-pass, not Rec.709 — gotcha #29) into an offscreen RT; `mainComposer` renders the layer-0 visible mesh, then folds the bloom RT in additively via `MixPass`. Sat-clamp + `OutputPass` finish the chain. Per-instance `bloomIntensity` decouples halo strength from visible color: 0 suppresses, 1 is natural, >1 forces.
+4. **CRT scanlines** are a CSS `<div>` overlay (`#scanlines`), not a post-process pass (B5). One source of truth across the canvas/DOM seam. The original `createScanlinePass` + shader remain as dormant code for cheap revert.
+5. **Palette quantization is GONE** (retired at B1). The `COLORS` table is art-direction discipline now, not shader enforcement. Gotchas #1/#3/#4 retired as a consequence.
 
 ## What's deliberately not abstracted yet
 
-A few things would be over-engineering at MVP scope; flagging them so we know what we're choosing not to build:
+A few things would be over-engineering at the current scope; flagging them so we know what we're choosing not to build:
 
 - **No ECS library.** Behaviors-on-units is enough structure for the foreseeable game. If the unit count explodes or behaviors get genuinely many-to-many, we revisit.
-- **No scene/screen manager class.** `Game.ts` switches between `BattleScreen`, `MapScreen`, etc. with simple if/else for MVP. If we add more screens, we extract a state machine.
-- **No asset loader.** No assets to load. The font atlas is generated at startup synchronously.
+- **No asset loader.** The font atlas is generated at startup synchronously; audio preloads from `public/audio/` via `AudioPlayer`'s constructor.
 - **No save/load UI yet.** A2 lays the JSON serialization plumbing (`World.toJSON` / `Run.toJSON`); UI for choosing a save slot and resuming a run waits until C6 makes runs long enough that save matters.
+- **No generic status-effect system.** A1's multi-tick effects can carry one, and D7.B added per-tick tile effects with a targeted hook (fire damage, healing). Resist building a generic status system until C2 reveals what's actually needed beyond these.

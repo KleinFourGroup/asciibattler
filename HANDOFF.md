@@ -2,18 +2,18 @@
 
 A fresh-session orientation for ASCIIbattler. Read this first; then dive into the docs only where they're called out.
 
-## Where we are
+## Current state
 
-- **MVP shipped** at CHECKPOINT 7 — deployed to GitHub Pages, full loop playable.
-- **Phase 0** (project setup) ✓
-- **Phase 1** (core primitives — RNG, EventBus, Clock) ✓
-- **Phase 2** (rendering — FontAtlas, SpriteRenderer, TerrainRenderer, PostProcess) ✓
-- **Phase 3** (battle simulation, 3.1–3.9) ✓
-- **Phase 4** (run structure, 4.1–4.6) ✓
-- **Phase 5** (HUD, fade transitions, dev-affordance cleanup, dither + scanline polish) ✓
-- **Tests:** 320 passed, 0 `it.todo()`. Run with `npm test`.
-- **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`; remember Vite spawns child Node processes that survive `taskkill` on the parent).
+- **MVP shipped** at CHECKPOINT 7 (Phases 0–5 complete; deployed to GitHub Pages, full loop playable).
+- **Phase A complete** — A1–A5 (action selector, command channel, fuzz harness, config externalization, scene system).
+- **Phase B complete** — B1/B1.1 (palette + selective bloom), B3 (HP/progress bars), B5 (CSS scanlines), B6 (audio), B7 (root node `@`).
+- **Phase C1 complete** — C1a/b/c/d (terrain + walls + LOS + faceted prisms + layout editor + Labyrinth pathfinding fix).
+- **Phase D complete** — D1 (renderer cap), D2 (drag-paint), D3 (variable sizes), D4 (fit/scroll camera), D5.A–E (spawn regions + overflow queue), D6 (half-cover), D7.A–C (chasm + fire + healing), D8 (theming).
+- **Next up** — Phase C resumes with **C2 (mage / rogue / healer)**. User is drafting a new C-phase guideline; until that lands, prefer reading rather than scoping new C-phase work.
+- **Tests:** 316 passed, 0 `it.todo()`. Run with `npm test`. Fuzz smoke: `npm run fuzz:smoke`.
+- **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`; Vite spawns child Node processes that survive `taskkill` on the parent).
 - **Build:** `npm run build`. `vite.config.ts` uses `base: './'` so the same `dist/` works at any subpath.
+- **Canonical references:** [ARCHITECTURE.md](ARCHITECTURE.md) for the project tree + event/command catalogs; [ROADMAP.md](ROADMAP.md) for forward-looking steps; the "Things that bit us" list below for the hard-won fixes that look weird without context — don't refactor those without understanding why.
 
 ## What's next
 
@@ -194,7 +194,7 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **No snapshot bump for World, just Run.** TileGrid still doesn't bump (gotcha #75 still holds — no new tile kinds). UnitSnapshot still doesn't bump (no new fields). Only `RunSnapshot.currentEncounter.theme` is the new persisted field, hence `RUN_SCHEMA_VERSION 1 → 2`.
 
-**Tests** 312 passing where D8-relevant (was 303 pre-D8; +9 new: per-layout theme assertion ×6 in [src/sim/layouts.test.ts](src/sim/layouts.test.ts), +3 in [src/run/Run.test.ts](src/run/Run.test.ts) covering "encounter.theme is always a registered theme," "hand-authored encounters use the layout-declared theme," "procedural rolls cover all themes across enough seeds"). Four pre-existing failures in [src/sim/terrainGen.test.ts](src/sim/terrainGen.test.ts) + [src/sim/layouts.test.ts](src/sim/layouts.test.ts) reference the removed `corridor` layout (from commit `c36134b`, before D8) — flagged as a follow-up cleanup, NOT a D8 regression. Browser-verified: editor dropdown changes the floor color live for all three themes; loading an existing layout sets the dropdown + grid `data-theme` correctly; JSON export contains the theme line. In-game: hand-authored encounters use `layout.theme` (junctionAmbush battle shows banner "JUNCTION AMBUSH" without suffix — default theme); manual `terrain.setTiles(..., 'volcanic')` + banner override produces the expected dark-red/amber palette + "ENDLESS CORRIDORS — VOLCANIC" banner; same dance with `'rock'` produces the gray-stone palette + "ENDLESS CORRIDORS — ROCK" banner. Console error-free across all paths.
+**Tests** 312 passing where D8-relevant (was 303 pre-D8; +9 new: per-layout theme assertion ×6 in [src/sim/layouts.test.ts](src/sim/layouts.test.ts), +3 in [src/run/Run.test.ts](src/run/Run.test.ts) covering "encounter.theme is always a registered theme," "hand-authored encounters use the layout-declared theme," "procedural rolls cover all themes across enough seeds"). (Four pre-existing failures referencing the removed `corridor` layout were cleaned up in commit `0f51ed9` after D8 landed.) Browser-verified: editor dropdown changes the floor color live for all three themes; loading an existing layout sets the dropdown + grid `data-theme` correctly; JSON export contains the theme line. In-game: hand-authored encounters use `layout.theme` (junctionAmbush battle shows banner "JUNCTION AMBUSH" without suffix — default theme); manual `terrain.setTiles(..., 'volcanic')` + banner override produces the expected dark-red/amber palette + "ENDLESS CORRIDORS — VOLCANIC" banner; same dance with `'rock'` produces the gray-stone palette + "ENDLESS CORRIDORS — ROCK" banner. Console error-free across all paths.
 
 **Phase D is now COMPLETE.** Next up per ROADMAP — **Phase C (continued)**, starting with **C2 (combat archetype expansion: mage, rogue, healer)**. Phase D was the foundation; Phase C is the gameplay. C2 has priors already in place: A1's action selector + multi-tick effects (gotcha #8), B3's dormant action progress bar (gotcha #30) wired up for mage charge-ups, and C1b's wall destructibility plumbing (gotcha #39) ready for AoE damage on neutrals. ROADMAP also flags that **multi-map runs (C6) will eventually push theme up a level** — each node map will carry a theme; procedural encounters within that map inherit it. At that point `rollTheme` moves out of `Run.handleEnterNode` into nodeMap construction. The user surfaced this design when answering the D8 procedural-roll decision.
 
@@ -221,10 +221,10 @@ See also: [TESTING.md](TESTING.md) for the testing policy (`core`/`sim`/`run` ge
 
 These hard-won fixes will look weird out of context. Don't "clean them up" without understanding why they exist.
 
-1. **RETIRED at B1.** ~~`scene.background = new THREE.Color(TERMINAL_BLACK)`, not `setClearColor`.~~ Was load-bearing for the palette-quant pass (the clear-color path produced a value that snapped to DARK_TERMINAL_AMBER). Palette-quant gone → bug gone. The `scene.background` pattern still lives in [src/render/Renderer.ts](src/render/Renderer.ts) because it's a fine pattern; just no longer dangerous to "clean up." Original commit `8491daa`.
+1. **RETIRED at B1** (was: `scene.background` vs `setClearColor` mattered for palette-quant). Palette-quant is gone; the pattern stays but no longer load-bearing. Commit `8491daa`.
 2. **`OutputPass` at the END of the composer chain.** Custom `ShaderPass`es don't auto-convert linear → sRGB at the canvas blit; `OutputPass` does. Without it, every color displays as its linear value re-interpreted as sRGB. Commit `fb5e878`.
-3. **RETIRED at B1.** ~~Palette quantization uses a color-key approach~~ — the palette-quant pass was removed entirely. The color-key dance is no longer in the codebase. Original commit `2857c91`.
-4. **RETIRED at B1.** ~~Any post-process pass placed BEFORE palette-quant must respect the bg color-key.~~ Same retirement as #3 — no quant pass means no color-key contract. The new chain (sat-clamp → bloom → scanlines) doesn't need the sentinel. Original commit `3334c27`.
+3. **RETIRED at B1** (was: palette-quant used a color-key approach). Whole quant pass removed. Commit `2857c91`.
+4. **RETIRED at B1** (was: pre-quant passes must respect the bg color-key). No quant pass → no color-key contract. Commit `3334c27`.
 5. **`Math.random()` is banned in `src/sim/` and `src/run/`** (ESLint enforced). Use `RNG` from `src/core/RNG.ts`; per-battle randomness via `parentRng.fork()`.
 6. **Author durations in seconds, not ticks.** Use `secondsToTicks` / `ticksToSeconds` from `src/config.ts`. Changing `TICK_RATE` shouldn't require re-tuning balance — that's the contract.
 7. **Cooldown semantics are "decrement-then-check," not "check-then-decrement."** [World.tick()](src/sim/World.ts) decrements every entry in `unit.actionCooldowns` once per tick before the selector runs; behaviors set the proposal's `cooldown` to the *full* `moveCooldownTicks` / `attackCooldownTicks` value (NOT `N-1`). The match between cooldown gap and event `durationTicks` is what keeps the sprite lerp from leaving a visible idle frame between moves. Lived in a shared `Unit.actionCooldown` field through MVP; refactored to per-action `Map<string, number>` plus `activeAction` duration lockout in A1.
@@ -398,6 +398,10 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 
 ## Project shape
 
+[ARCHITECTURE.md](ARCHITECTURE.md) carries the canonical tree. The summary
+below highlights post-MVP additions and their phase tags; refer to
+ARCHITECTURE for the full layout.
+
 ```
 src/
   main.ts              # entry; top-level await on FontAtlas.create()
@@ -419,16 +423,16 @@ src/
     events.ts          # GameEvents catalog (typed event payloads)
     types.ts           # GridCoord, Vec2
   sim/
-    World.ts           # tick(), spawnUnit(), spawnEnvironment(), removeUnit(),
-                       # findUnit(), checkBattleEnd
-                       # selector + activeAction loop, inline death handling (A1)
-                       # + command queue drain + toJSON/fromJSON (A2)
-                       # + tileGrid field + WorldSnapshot v2 (C1a)
+    World.ts           # tick(): selector + overflow scan (D5.C) + tile-effect
+                       #   pass (D7.B) + reapDead + checkBattleEnd
+                       # spawnUnit/spawnEnvironment/spawnFromQueue, command-queue
+                       # drain (A2), toJSON/fromJSON. WorldSnapshot v5 (D6).
     Unit.ts            # Unit + UnitTemplate + UnitStats + Team + Behavior
                        # + actionCooldowns Map + activeAction (A1)
-                       # Behavior gains `kind` for snapshot rehydration (A2)
-                       # Team union grows 'neutral' for env entities (C1a)
-    TileGrid.ts        # floor / shallow_water tiles + per-cell movement cost (C1a)
+                       # + blocksLineOfSight: boolean (D6, default true)
+                       # Team union: 'player' | 'enemy' | 'neutral' (C1a)
+    TileGrid.ts        # floor | shallow_water | chasm | fire | healing (D7)
+                       # per-cell movement cost; chasm = Infinity (data-driven block)
     LineOfSight.ts     # Bresenham line walk for ranged-attack LOS (C1b)
     Action.ts          # Action / ActionProposal / ActiveAction interfaces (A1)
                        # + toData() on Action for snapshot rehydration (A2)
@@ -438,7 +442,7 @@ src/
     Targeting.ts       # findTarget — nearest enemy, ties by HP then id
                        # skips neutrals (C1a)
     archetypes.ts      # MELEE/RANGED bounds, rollUnit, glyphForArchetype
-    environment.ts     # spawnWall + WALL_GLYPH — neutral-team env factory (C1a)
+    environment.ts     # spawnWall (C1a) + spawnHalfCover (D6) — neutral-team factories
     terrainGen.ts      # per-encounter procedural tile + wall generator (C1a)
                        # + layout-library dispatch (C1b)
     layouts.ts         # C1b + C1d.A: thin re-export of validated config
@@ -448,6 +452,7 @@ src/
     actions/
       MoveAction.ts          # logical position update + unit:moved event
       AttackAction.ts        # damage + unit:attacked event
+      SpawnAction.ts         # D5.C: pure-lockout action for overflow-queue spawns
       registry.ts            # action factories keyed by Action.id (A2)
     behaviors/
       MovementBehavior.ts    # proposeAction → MoveAction when out of range
@@ -460,24 +465,26 @@ src/
     NodeMap.ts         # DAG generation + dump
     Recruitment.ts     # rollOffer with archetype-variety guarantee
   render/
-    Renderer.ts        # WebGLRenderer + EffectComposer + RAF loop + aspect-aware fitCamera
+    Renderer.ts        # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
+                       # + RAF loop + two camera modes: fit / scroll (D4)
     FontAtlas.ts       # canvas2d glyph atlas → THREE.CanvasTexture
     SpriteRenderer.ts  # InstancedBufferGeometry + custom shaders
                        # + dual mesh (layer 0 visible / layer 1 bloom)
                        # + per-instance bloomIntensity attr (B1.1 selective bloom)
-    TerrainRenderer.ts # C1c: faceted low-poly prism-per-tile (replaces the
-                       # old fBm decorative plane + C1a WaterRenderer
-                       # stand-in). Fixed-seed simplex heights, water tiles
-                       # sunk to -0.4, heightAt(cx,cy,kind) is canonical
-                       # for sprite Y too
+    BarRenderer.ts     # B3: HP + action progress bars (single instanced mesh, layer 0)
+    TerrainRenderer.ts # C1c: faceted low-poly prism-per-tile
+                       # heightAt(cx,cy,kind) is canonical for sprite Y
+                       # D7.C: per-tile flicker/pulse + chasm sink, D8: theme palettes
     BattleRenderer.ts  # sim/render seam: attach/detach per battle
                        # neutral team → TERMINAL_STONE color, no bars/bloom (C1a)
                        # + tileWorldPos(coord) for per-tile sprite Y (C1c)
-    PostProcess.ts     # SatClamp + Bloom + Scanlines + BloomMix factories (B1.1)
+    PostProcess.ts     # SatClamp + Bloom + BloomMix factories (B1.1)
+                       # Scanlines factory + shader retained as dormant code; B5
+                       # moved CRT lines to a CSS overlay (#scanlines)
     palette.ts         # COLORS table — added TERMINAL_STONE for neutrals (C1a)
     shaders/           # .glsl source files loaded via Vite ?raw imports (A4)
-                       # terrain.{vert,frag}.glsl rewritten for C1c faceted look
-    animation/SpriteAnimator.ts  # startLerp + startFade + clear()
+                       # terrain.{vert,frag}.glsl: C1c faceted + D7.C animation
+    animation/SpriteAnimator.ts  # startLerp + startFade w/ fromAlpha/toAlpha (D5.C) + clear()
   scenes/              # A5: Scene system — single-active swap driven from Game
     Scene.ts           #   Scene interface + SceneContext bundle type
     BattleScene.ts     #   wraps World + Clock + BattleRenderer + HUD
@@ -490,7 +497,9 @@ src/
     MapScreen.ts       # node map view + frontier click → dispatch enterNode
     RecruitScreen.ts   # 3-card recruit offer → dispatch chooseRecruit
     GameOverScreen.ts  # defeat / complete variants → dispatch resetRun
-    HUD.ts             # in-battle HUD: floor, rosters, HP bars (Step 5.1)
+    HUD.ts             # in-battle HUD: floor, rosters, banner (per-battle, A5)
+  audio/
+    AudioPlayer.ts     # B6: 4-deep clone ring per sound; per-key volume + pitch jitter
 
 tests/
   smoke.test.ts                              # vitest + module resolution
@@ -515,9 +524,15 @@ config/                              # A4: balance JSON source-of-truth
   difficulty.json                    # enemy size delta + per-floor HP scale
   recruitment.json                   # starting team + offer size
   nodemap.json                       # floor count + width bands + degree cap
-  terrain.json                       # C1a: wall + water density + spawn rows
+  terrain.json                       # C1a: wall + water density
   layouts.json                       # C1d.A: hand-authored layout array
-                                     # (id, name, description, walls, water?)
+                                     # (id, name, description, gridW/H, theme,
+                                     # walls, water?, halfCovers?, chasms?,
+                                     # fires?, healings?, spawns)
+  spawn.json                         # D5.C: SpawnAction lockout duration
+  tiles.json                         # D7.B: fire/healing chip rates → tick cadences
+
+public/audio/                        # B6: preloaded .wav files
 
 tools/                                       # dev-only, never in dist/
   layout-editor/                             # C1d.B: 12x12 grid painter
@@ -534,7 +549,7 @@ Co-located `*.test.ts` next to source for unit tests. Integration tests under `t
 
 ```bash
 git log --oneline -5    # confirm latest commit
-npm test                # 284 passed, 0 todo
+npm test                # 316 passed, 0 todo
 npm run fuzz:smoke      # 7 passed — confirms the harness still runs
 npm run dev             # opens at :5173 — verify the full run flow plays
 ```

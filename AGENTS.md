@@ -19,7 +19,9 @@ After HANDOFF, the docs you'll cross-reference most often:
 - [ARCHITECTURE.md](ARCHITECTURE.md) — how the code is organized.
   Includes the event catalog, key abstractions, the sim/render seam.
 - [ROADMAP.md](ROADMAP.md) — post-MVP build order. Phase A (foundation
-  refactors) → B (style/visual) → C (gameplay expansion). The original
+  refactors) → B (style/visual) → C1 (terrain + tile foundation) → D
+  (battle-layout expansion) → C2+ (combat/progression, gated behind D).
+  Phases A, B, C1, and D are all complete; C2 is next up. The original
   MVP roadmap is at [archive/mvp-roadmap.md](archive/mvp-roadmap.md).
 - [TODO.md](TODO.md) — small follow-ups that aren't roadmap steps.
 - [TESTING.md](TESTING.md) — what gets tested (`core`, `sim`, `run`),
@@ -133,26 +135,42 @@ Windows.
 ```
 src/
   main.ts              # entry; top-level await on FontAtlas.create()
-  Game.ts              # top-level orchestrator
+  Game.ts              # top-level orchestrator + scene swapper (A5)
   config.ts            # TICK_RATE=10, GRID_SIZE=12, secondsToTicks
   core/                # RNG, EventBus, Clock, events catalog, types
-  sim/                 # World, Unit, Pathfinding, Targeting, archetypes
-    behaviors/         # MovementBehavior, AttackBehavior, DeathBehavior
-  run/                 # Run, NodeMap, Recruitment
-  render/              # Renderer, FontAtlas, SpriteRenderer,
-                       # TerrainRenderer, BattleRenderer, PostProcess,
-                       # palette, animation/SpriteAnimator
-  ui/                  # ui.css, fade, MapScreen, RecruitScreen,
-                       # GameOverScreen, HUD
+  config/              # A4: zod-validated wrappers around config/*.json
+                       # (archetypes, difficulty, recruitment, nodemap,
+                       # terrain, layouts, spawn, tiles)
+  sim/                 # World, Unit, TileGrid, LineOfSight, Action,
+                       # Command, Pathfinding, Targeting, archetypes,
+                       # environment, terrainGen, layouts, battleSetup
+    actions/           # MoveAction, AttackAction, SpawnAction (+ registry)
+    behaviors/         # MovementBehavior, AttackBehavior (+ registry)
+                       # — DeathBehavior folded into World.tick at A1
+  run/                 # Run, NodeMap, Recruitment, Command
+  render/              # Renderer (two camera modes, D4),
+                       # SpriteRenderer (selective bloom, B1.1),
+                       # BarRenderer (B3), TerrainRenderer (C1c + D7.C + D8),
+                       # BattleRenderer, FontAtlas, PostProcess, palette,
+                       # animation/SpriteAnimator
+  scenes/              # A5: BattleScene, MapScene, RecruitScene, GameOverScene
+  ui/                  # ui.css, fade, HUD, MapScreen, RecruitScreen,
+                       # GameOverScreen
+  audio/               # B6: AudioPlayer
+config/                # JSON balance (paired with src/config/*.ts)
+public/audio/          # preloaded .wav files
+tools/layout-editor/   # dev-only painter at /tools/layout-editor/
 tests/
   smoke.test.ts
-  integration/determinism.test.ts
+  integration/         # determinism, snapshot-roundtrip, variable-size,
+                       # layout-deadlock, spawn-overflow
+  fuzz/                # A3: headless balance harness (opt-in)
 retro/                 # scratchpad + MVP retrospective
-archive/               # mvp-roadmap.md (the original ROADMAP)
+archive/               # mvp-roadmap, mvp-feedback, post-mvp-roadmap, c1-feedback
 ```
 
-See ARCHITECTURE.md for the full structure and the rationale behind
-each abstraction.
+See ARCHITECTURE.md for the canonical structure and the rationale
+behind each abstraction.
 
 ## Where to add things
 

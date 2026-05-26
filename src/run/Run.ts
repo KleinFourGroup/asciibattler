@@ -39,7 +39,7 @@ import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
 import { DIFFICULTY } from '../config/difficulty';
 import { TERRAIN } from '../config/terrain';
-import { LAYOUT_IDS, getLayout } from '../sim/layouts';
+import { LAYOUT_IDS, THEMES, getLayout, type Theme } from '../sim/layouts';
 
 export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat' | 'complete';
 
@@ -68,11 +68,24 @@ export interface BattleEncounter {
    */
   readonly gridW: number;
   readonly gridH: number;
+  /**
+   * D8 — visual theme for this encounter's terrain palette. Cosmetic only;
+   * no sim effects. Hand-authored layouts pull from `LayoutDef.theme`;
+   * procedural encounters roll uniformly off `battleRng` (see
+   * `rollTheme` below). The roll always runs even on hand-authored
+   * encounters so the RNG stream advances identically across branches
+   * (same byte-continuity invariant as `rollLayoutId` /
+   * `rollProceduralSide` — gotcha #49).
+   */
+  readonly theme: Theme;
   readonly playerTeam: readonly UnitTemplate[];
   readonly enemyTeam: readonly UnitTemplate[];
 }
 
-const RUN_SCHEMA_VERSION = 1;
+/** D8: bumped 1→2 — BattleEncounter now carries a required `theme` field.
+ *  v1 snapshots throw on load (loud-failure mode A4 settled on; no shipping
+ *  save format). */
+const RUN_SCHEMA_VERSION = 2;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -190,6 +203,15 @@ export class Run {
     const { gridW, gridH } = layoutId === null
       ? { gridW: proceduralSide, gridH: proceduralSide }
       : layoutDimensions(layoutId);
+    // D8 — the theme roll always runs (byte-continuity invariant, gotcha
+    // #49). For hand-authored layouts the discrete `layout.theme` wins
+    // and the rolled value is discarded; for procedural encounters the
+    // rolled value is what gets used. C6's multi-map runs will eventually
+    // replace this with a per-map theme that procedural inherits from.
+    const proceduralTheme = rollTheme(battleRng);
+    const theme = layoutId === null
+      ? proceduralTheme
+      : (getLayout(layoutId)?.theme ?? proceduralTheme);
     const enemyTeam = rollEnemyTeam(battleRng, this.team.length, this.floorOf(nodeId));
 
     // Browser-only diagnostic: confirm the layout picker hits the full
@@ -205,6 +227,7 @@ export class Run {
       layoutId,
       gridW,
       gridH,
+      theme,
       playerTeam: this.team.slice(),
       enemyTeam,
     };
@@ -375,6 +398,23 @@ function rollLayoutId(rng: RNG): string | null {
  */
 function rollProceduralSide(rng: RNG): number {
   return rng.int(TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize);
+}
+
+/**
+ * D8: pick a visual theme for the procedural side of the encounter. Uniform
+ * across `THEMES`. ALWAYS consumes one RNG step — even on hand-authored
+ * encounters where the rolled value is discarded for `layout.theme` —
+ * so the stream advances identically regardless of branch. Same invariant
+ * the layout + size rolls already maintain (gotcha #49).
+ *
+ * Multi-map runs (C6) will eventually push theme up a level (the node
+ * map carries a theme; procedural encounters inherit it). At that point
+ * this function moves out of `Run.handleEnterNode` into nodeMap
+ * construction; the byte-continuity dance can simplify too. For now,
+ * theme rolls per battle.
+ */
+function rollTheme(rng: RNG): Theme {
+  return rng.pick(THEMES);
 }
 
 function layoutDimensions(layoutId: string): { gridW: number; gridH: number } {

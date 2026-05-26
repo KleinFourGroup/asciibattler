@@ -28,7 +28,9 @@ export {
   LAYOUT_IDS,
   getLayout,
   SPAWN_REGION_TILE_COUNT,
+  THEMES,
   type LayoutDef,
   type SpawnRegion,
   type SpawnAvailability,
+  type Theme,
 } from '../config/layouts';

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Run } from './Run';
 import { EventBus } from '../core/EventBus';
-import { LAYOUT_IDS } from '../sim/layouts';
+import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import type { GameEvents } from '../core/events';
 
 describe('Run', () => {
@@ -111,6 +111,53 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: nextFrontier });
       expect(run.currentNodeId).toBe(frontier);
       expect(run.currentEncounter).toBe(encounterBefore);
+    });
+
+    it('D8: encounter.theme is always a registered theme', () => {
+      // Sample many seeds — procedural rolls land random theme, hand-
+      // authored layouts pin to layout.theme. Both paths must produce
+      // valid Theme values.
+      for (let seed = 1; seed <= 60; seed++) {
+        const { run } = freshRunWithBus(seed);
+        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        run.dispatch({ kind: 'enterNode', nodeId: frontier });
+        expect(THEMES).toContain(run.currentEncounter!.theme);
+      }
+    });
+
+    it('D8: hand-authored encounters use the layout-declared theme', () => {
+      // For every seed that lands on a layout (rather than procedural),
+      // run.currentEncounter.theme must equal the layout's declared theme
+      // — the rolled procedural theme is discarded on the layout branch.
+      let layoutHits = 0;
+      for (let seed = 1; seed <= 60; seed++) {
+        const { run } = freshRunWithBus(seed);
+        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        run.dispatch({ kind: 'enterNode', nodeId: frontier });
+        const enc = run.currentEncounter!;
+        if (enc.layoutId === null) continue;
+        layoutHits++;
+        expect(enc.theme).toBe(getLayout(enc.layoutId)!.theme);
+      }
+      // Sanity — we hit the layout branch at least sometimes (~75% of 60).
+      expect(layoutHits).toBeGreaterThan(0);
+    });
+
+    it('D8: procedural encounters cover all themes across enough seeds', () => {
+      // Across a wide sample, every theme in THEMES should fire on the
+      // procedural branch at least once — confirms `rollTheme` is uniform
+      // and the picker pool plumbs through cleanly.
+      const seen = new Set<string>();
+      for (let seed = 1; seed <= 400; seed++) {
+        const { run } = freshRunWithBus(seed);
+        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        run.dispatch({ kind: 'enterNode', nodeId: frontier });
+        const enc = run.currentEncounter!;
+        if (enc.layoutId === null) seen.add(enc.theme);
+      }
+      for (const t of THEMES) {
+        expect(seen.has(t)).toBe(true);
+      }
     });
 
     it('encounter layoutId is null OR a registered library id (C1d 25/75 mix)', () => {

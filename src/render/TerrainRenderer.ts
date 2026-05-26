@@ -3,7 +3,7 @@ import { createNoise2D } from 'simplex-noise';
 import { RNG } from '../core/RNG';
 import type { TileGrid, TileKind } from '../sim/TileGrid';
 import { COLORS } from './palette';
-import { LAYOUT_MAX_SIDE } from '../config/layouts';
+import { LAYOUT_MAX_SIDE, type Theme } from '../config/layouts';
 import VERTEX_SHADER from './shaders/terrain.vert.glsl?raw';
 import FRAGMENT_SHADER from './shaders/terrain.frag.glsl?raw';
 
@@ -78,6 +78,9 @@ export class TerrainRenderer {
 
   private gridW: number;
   private gridH: number;
+  /** D8: current encounter's theme, captured at `setTiles` time. Drives
+   *  the floor-tile palette branch in `topColorFor`. */
+  private theme: Theme = 'default';
   private readonly geometry: THREE.BufferGeometry;
   private readonly material: THREE.ShaderMaterial;
   private readonly positions: Float32Array;
@@ -191,7 +194,7 @@ export class TerrainRenderer {
    * encounter so non-square (or smaller-than-max) boards render
    * correctly without zero-area junk geometry from unused slots.
    */
-  setTiles(tileGrid: TileGrid, gridW: number, gridH: number): void {
+  setTiles(tileGrid: TileGrid, gridW: number, gridH: number, theme: Theme = 'default'): void {
     if (gridW * gridH > MAX_TILES) {
       throw new Error(
         `TerrainRenderer.setTiles: ${gridW}x${gridH} exceeds capacity ${MAX_TILES}`,
@@ -199,6 +202,7 @@ export class TerrainRenderer {
     }
     this.gridW = gridW;
     this.gridH = gridH;
+    this.theme = theme;
     this.fillFromKindFn((x, y) => tileGrid.kindAt({ x, y }));
     this.geometry.setDrawRange(0, gridW * gridH * VERTS_PER_TILE);
   }
@@ -246,7 +250,7 @@ export class TerrainRenderer {
       for (let cx = 0; cx < w; cx++) {
         const kind = kindAt(cx, cy);
         const topY = this.heightAt(cx, cy, kind);
-        topColorFor(topY, kind, this.tmpTopColor);
+        topColorFor(topY, kind, this.theme, this.tmpTopColor);
         this.tmpSideColor.copy(this.tmpTopColor).multiplyScalar(SIDE_SHADE);
         const top = this.tmpTopColor;
         const side = this.tmpSideColor;
@@ -326,8 +330,44 @@ export class TerrainRenderer {
   }
 }
 
-const _floorLow = new THREE.Color(COLORS.DARK_TERMINAL_GREEN);
-const _floorHigh = new THREE.Color(COLORS.DARK_TERMINAL_AMBER);
+/**
+ * D8 — per-theme floor-tile palette. Each entry is the (low, high) endpoints
+ * of the simplex-height lerp; the same noise field shifts color across
+ * adjacent floor tiles within a theme so the surface stays visually varied.
+ * Water / chasm / fire / healing keep their fixed D7 palettes regardless of
+ * theme — they're functional indicators players need to recognize at a
+ * glance, so re-tinting them per theme would risk parsing-load (per the
+ * D8 scope decision).
+ *
+ * - `default`: the canonical DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER lerp.
+ * - `rock`: gray tones. Low end DARK_STONE, high end TERMINAL_STONE — same
+ *   neutral-stone family the wall sprite already uses, so a rock-theme
+ *   board reads as "stone arena."
+ * - `volcanic`: dark red base climbing into amber. The high end shares
+ *   DARK_TERMINAL_AMBER with the default palette so fire tiles (D7) blend
+ *   organically into a volcanic floor instead of jumping out as alien.
+ *
+ * Adding a theme: extend `ThemeSchema` in `src/config/layouts.ts`,
+ * append an entry here, and the editor + procedural picker pick it up
+ * automatically (THEMES is the source of truth).
+ */
+const FLOOR_PALETTE: Record<Theme, { low: THREE.Color; high: THREE.Color }> = {
+  default: {
+    low: new THREE.Color(COLORS.DARK_TERMINAL_GREEN),
+    high: new THREE.Color(COLORS.DARK_TERMINAL_AMBER),
+  },
+  rock: {
+    // Low end is a stone-dark companion to TERMINAL_STONE (same hue family,
+    // ~50% value). High end is TERMINAL_STONE itself — the same color the
+    // wall sprite uses, so a rock arena reads as "stone everywhere."
+    low: new THREE.Color('#3a342f'),
+    high: new THREE.Color(COLORS.TERMINAL_STONE),
+  },
+  volcanic: {
+    low: new THREE.Color('#3a0a04'),
+    high: new THREE.Color(COLORS.DARK_TERMINAL_AMBER),
+  },
+};
 const _waterColor = new THREE.Color('#1F5B7A');
 /** D7.C chasm: very dark (near-black) so the pit reads as inhospitable
  *  void; the depth difference (CHASM_TOP_Y vs floor) does the heavy
@@ -352,9 +392,11 @@ const _healHigh = new THREE.Color('#15f4ee');
  * does the work). Floor / fire / healing tiles share the simplex height
  * field and lerp their respective palette pair across it, so adjacent
  * cells of the same kind show subtle variance as well as the per-tile
- * shader animation.
+ * shader animation. **D8**: only the floor branch consults `theme` —
+ * water / chasm / fire / healing keep their fixed D7 palettes so they
+ * read the same regardless of the surrounding board's theming.
  */
-function topColorFor(topY: number, kind: TileKind, out: THREE.Color): void {
+function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THREE.Color): void {
   if (kind === 'shallow_water') {
     out.copy(_waterColor);
     return;
@@ -372,5 +414,6 @@ function topColorFor(topY: number, kind: TileKind, out: THREE.Color): void {
     out.copy(_healLow).lerp(_healHigh, t);
     return;
   }
-  out.copy(_floorLow).lerp(_floorHigh, t);
+  const palette = FLOOR_PALETTE[theme];
+  out.copy(palette.low).lerp(palette.high, t);
 }

@@ -17,8 +17,15 @@ import { BattleRenderer, gridToWorld } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { HUD } from '../ui/HUD';
 import { TICK_RATE } from '../config';
-import { getLayout } from '../sim/layouts';
+import { getLayout, type Theme } from '../sim/layouts';
 import type { Scene, SceneContext } from './Scene';
+
+/** D8 — banner suffix helper. The theme enum stores lowercase
+ *  (default / rock / volcanic); the banner wants Title Case so the
+ *  suffix reads as a proper noun. */
+function titleCaseTheme(theme: Theme): string {
+  return theme.charAt(0).toUpperCase() + theme.slice(1);
+}
 
 export class BattleScene implements Scene {
   private clock: Clock | null = null;
@@ -90,18 +97,31 @@ export class BattleScene implements Scene {
     // C1d follow-up: resolve the encounter's layoutId to a display name for
     // the top banner. Procedural encounters (layoutId === null) read as
     // "Nowhere" — no hand-authored location, no name.
+    // D8: append the theme as a banner suffix (e.g. "Corridor — Volcanic")
+    // so the visual reskin reads as deliberate flavor, not a bug. The
+    // `default` theme is the canonical look — no suffix added, to keep
+    // the banner clean when the palette is the baseline.
     const locationName =
       encounter.layoutId === null
         ? 'Nowhere'
         : (getLayout(encounter.layoutId)?.name ?? encounter.layoutId);
-    this.hud.show(this.world, ctx.run.currentFloor, locationName);
+    const bannerText =
+      encounter.theme === 'default'
+        ? locationName
+        : `${locationName} — ${titleCaseTheme(encounter.theme)}`;
+    this.hud.show(this.world, ctx.run.currentFloor, bannerText);
     this.battleRenderer.attach(this.world);
     const spawnRegions = applyTerrain(this.world, encounter);
     // After terrain is in place, the terrain renderer reflects the tile
     // grid. Walls render via SpriteRenderer (they're neutral-team Units),
     // and their per-tile Y is picked up via `terrain.heightAt` inside
     // BattleRenderer.
-    ctx.terrain.setTiles(this.world.tileGrid, this.world.gridW, this.world.gridH);
+    ctx.terrain.setTiles(
+      this.world.tileGrid,
+      this.world.gridW,
+      this.world.gridH,
+      encounter.theme,
+    );
     this.terrain = ctx.terrain;
     // D3 — frame the camera to whatever rectangle this encounter rolled
     // (procedural sizes range up to 20×20; hand-authored up to 32×32).

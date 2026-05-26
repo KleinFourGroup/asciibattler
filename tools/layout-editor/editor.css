@@ -343,10 +343,27 @@ body {
   user-select: none;
 }
 
+/* D8 — per-theme floor preview. The editor doesn't run the faceted-prism
+   shader, so it can't show the per-tile lerp the game renders; we pick
+   ONE flat color per theme (the "high" endpoint of FLOOR_PALETTE in
+   TerrainRenderer.ts) as a representative preview. Keep these in lockstep
+   when tuning a palette. Implemented as a CSS variable so the wall /
+   water / halfCover / chasm / fire / healing rules below still override
+   per-cell — only the floor (no kind class) reads --floor-bg. */
+.grid {
+  --floor-bg: var(--dark-terminal-green);
+}
+.grid[data-theme='rock'] {
+  --floor-bg: var(--terminal-stone);
+}
+.grid[data-theme='volcanic'] {
+  --floor-bg: #3a0a04;
+}
+
 .cell {
   position: relative;
   border: 1px solid #1f1f1f;
-  background: var(--dark-terminal-green);
+  background: var(--floor-bg);
   cursor: crosshair;
 }
 

@@ -54,6 +54,7 @@ import {
   type LayoutDef,
   type SpawnAvailability,
   type SpawnRegion,
+  type Theme,
 } from '../../src/config/layouts';
 
 type Cell = 'floor' | 'wall' | 'water' | 'halfCover' | 'chasm' | 'fire' | 'healing';
@@ -90,6 +91,10 @@ let cellEls: HTMLDivElement[][] = [];
 let activeLayer: Layer = 'terrain';
 let activeNeutralKind: NeutralKind = 'wall';
 let activeTerrainKind: TerrainKind = 'water';
+/** D8 — currently-edited layout's visual theme. Drives both the JSON
+ *  export's `theme` field and a `data-theme` attribute on the grid for
+ *  the live floor-color preview. */
+let activeTheme: Theme = 'default';
 /** Spawn regions for export. D5.D.A: initialized + reset to the
  *  procedural default (two top/bottom 'both' bands); loaded layouts
  *  populate from their JSON. D5.D.B: painting + add/delete + the
@@ -116,6 +121,7 @@ const validationEl = mustQuery<HTMLUListElement>('#validation');
 const metaIdEl = mustQuery<HTMLInputElement>('#meta-id');
 const metaNameEl = mustQuery<HTMLInputElement>('#meta-name');
 const metaDescriptionEl = mustQuery<HTMLTextAreaElement>('#meta-description');
+const metaThemeEl = mustQuery<HTMLSelectElement>('#meta-theme');
 const loadSelectEl = mustQuery<HTMLSelectElement>('#load-select');
 const loadBtn = mustQuery<HTMLButtonElement>('#load-btn');
 const clearBtn = mustQuery<HTMLButtonElement>('#clear-btn');
@@ -144,6 +150,9 @@ const deleteRegionBtn = mustQuery<HTMLButtonElement>('#delete-region-btn');
 
 populateSizeSelects();
 buildGrid();
+// D8 — sync the grid's data-theme to the initial activeTheme so the CSS
+// floor-color rule picks up before the first refresh.
+gridEl.dataset.theme = activeTheme;
 populateLoadSelect();
 attachMetaWatchers();
 attachToolButtons();
@@ -810,6 +819,7 @@ function refreshExport(): void {
     description: metaDescriptionEl.value.trim() || 'TODO: describe this layout.',
     gridW,
     gridH,
+    theme: activeTheme,
     walls,
     spawns,
   };
@@ -836,6 +846,9 @@ function formatLayoutJson(layout: LayoutDef): string {
   parts.push(`  "description": ${JSON.stringify(layout.description)},`);
   parts.push(`  "gridW": ${layout.gridW},`);
   parts.push(`  "gridH": ${layout.gridH},`);
+  // D8 — theme is REQUIRED in the schema (no `?` on LayoutDef.theme).
+  // Emit unconditionally so the export pastes cleanly into layouts.json.
+  parts.push(`  "theme": ${JSON.stringify(layout.theme)},`);
   parts.push(`  "walls": [`);
   parts.push(...formatCoords(layout.walls));
   parts.push(`  ],`);
@@ -931,6 +944,9 @@ function loadLayout(id: string): void {
   metaIdEl.value = found.id;
   metaNameEl.value = found.name;
   metaDescriptionEl.value = found.description;
+  activeTheme = found.theme;
+  metaThemeEl.value = found.theme;
+  gridEl.dataset.theme = found.theme;
   gridWSelectEl.value = String(gridW);
   gridHSelectEl.value = String(gridH);
   lastClipCount = 0;
@@ -953,6 +969,13 @@ function attachMetaWatchers(): void {
       refreshExport();
     });
   }
+  // D8 — theme dropdown. `change` (not `input`) since <select> fires
+  // `change` reliably across browsers on option pick.
+  metaThemeEl.addEventListener('change', () => {
+    activeTheme = metaThemeEl.value as Theme;
+    gridEl.dataset.theme = activeTheme;
+    refreshExport();
+  });
 }
 
 function attachToolButtons(): void {

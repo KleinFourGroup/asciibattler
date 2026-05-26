@@ -467,7 +467,37 @@ determinism) and:
   shader uniform with a sine flicker (analogous to the bloom max-
   channel pattern from gotcha #29). Don't add a `THREE.PointLight`.
 
-### D8 — Tile theming
+### D8 — Tile theming ✅ LANDED
+
+Closed-union `Theme = 'default' | 'rock' | 'volcanic'` on `LayoutDef`
+(required, all 6 existing layouts retrofit with `default` per user
+direction). `Run.handleEnterNode` adds a `rollTheme` draw on
+`battleRng` between `rollProceduralSide` and `rollEnemyTeam` —
+always advances (byte-continuity invariant, gotcha #89). Hand-authored
+encounters use `layout.theme`; procedural uses the rolled value.
+`TerrainRenderer.setTiles(tileGrid, gridW, gridH, theme)` consumes a
+theme; `topColorFor` branches the FLOOR palette only — water / chasm /
+fire / healing keep their fixed D7 colors per the D8 scope decision
+(gotcha #88). Palettes: `default` = green→amber (unchanged); `rock` =
+stone-dark→TERMINAL_STONE; `volcanic` = dark-red→amber (shares high
+endpoint with default so fire tiles blend organically into volcanic
+floors). HUD banner suffix: `"<name> — <Theme>"` for non-default themes
+("Endless Corridors — Volcanic"); naked name for default
+(gotcha #92). Editor: theme `<select>` in the Metadata card +
+CSS-variable-driven live floor preview (gotcha #91); JSON export emits
+`"theme"` immediately after `gridH`; round-trip byte-clean. Snapshot
+`RUN_SCHEMA_VERSION` 1 → 2 (gotcha #90; TileGrid + Unit unchanged).
+312 tests pass (was 303 pre-D8; +9 new). Browser-verified all three
+themes in both editor and live battle. See HANDOFF.md for the full
+per-step breakdown.
+
+**Phase D is now COMPLETE.** Resume Phase C.
+
+**Future work flagged for C6**: when multi-map runs land, theme moves
+up a level — each node map carries a theme, procedural battles inherit
+from the map's. `rollTheme` exits `Run.handleEnterNode` at that point.
+
+Original plan (left for reference):
 
 Visual reskinning across the existing tile kinds. Cosmetic only — no
 sim effects.

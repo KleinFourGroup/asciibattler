@@ -45,6 +45,25 @@ const SideSchema = z.number().int().min(LAYOUT_MIN_SIDE).max(LAYOUT_MAX_SIDE);
 const SpawnAvailabilitySchema = z.enum(['player', 'enemy', 'both']);
 export type SpawnAvailability = z.infer<typeof SpawnAvailabilitySchema>;
 
+/**
+ * D8 — visual theme for the layout's tile palette. Cosmetic only; no sim
+ * effects. Closed union so the procedural-side roll in `Run.handleEnterNode`
+ * and the editor dropdown can't drift onto a name that has no palette.
+ *
+ * - `default`: the canonical DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER lerp.
+ * - `rock`: gray tones (variants of TERMINAL_STONE).
+ * - `volcanic`: dark red base with amber accents; pairs naturally with
+ *   D7 fire tiles.
+ *
+ * Adding a theme: extend `ThemeSchema` and add a palette entry in
+ * `TerrainRenderer.topColorFor`. The editor + procedural picker both
+ * read from this enum, so a new theme automatically appears in both.
+ */
+const ThemeSchema = z.enum(['default', 'rock', 'volcanic']);
+export type Theme = z.infer<typeof ThemeSchema>;
+/** Picker pool for the procedural roll + the editor dropdown. */
+export const THEMES: readonly Theme[] = ['default', 'rock', 'volcanic'];
+
 const SpawnRegionSchema = z
   .object({
     tiles: z.array(CoordSchema).length(SPAWN_REGION_TILE_COUNT),
@@ -96,6 +115,10 @@ const LayoutSchema = z
      *  Same overlap rules as fires. */
     healings: z.array(CoordSchema).optional(),
     spawns: z.array(SpawnRegionSchema).min(2),
+    /** D8 — visual theme. Required: every layout (including retrofitted
+     *  ones) declares its palette explicitly so the loader never has to
+     *  guess. Procedural encounters roll this off `battleRng` instead. */
+    theme: ThemeSchema,
   })
   .superRefine((layout, ctx) => {
     const blocked = new Set<string>();

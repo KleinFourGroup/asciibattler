@@ -3,6 +3,7 @@ import {
   LAYOUT_IDS,
   getLayout,
   SPAWN_REGION_TILE_COUNT,
+  THEMES,
   type LayoutDef,
   type SpawnRegion,
 } from './layouts';
@@ -147,6 +148,14 @@ describe('layouts library', () => {
             expect(blocked.has(`${t.x},${t.y}`)).toBe(false);
           }
         }
+      });
+
+      it('declares a known D8 theme', () => {
+        // The zod schema already gates on this at module load, so a
+        // failure here would mean the JSON shipped without going through
+        // the loader (impossible) — but the explicit assertion documents
+        // intent and catches a future refactor that bypasses parsing.
+        expect(THEMES).toContain(layout.theme);
       });
 
       it('admits at least one valid (player, enemy) region pair', () => {

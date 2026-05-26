@@ -4,12 +4,10 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { COLORS } from './palette';
 import fullscreenVert from './shaders/fullscreen-pass.vert.glsl?raw';
 import paletteSatClampedFrag from './shaders/palette-sat-clamped.frag.glsl?raw';
-import scanlinesFrag from './shaders/scanlines.frag.glsl?raw';
 import mixBloomFrag from './shaders/mix-bloom.frag.glsl?raw';
 
 /**
- * Post-process passes. Three are wired into the main composer chain (see
- * Renderer.ts):
+ * Post-process passes wired into the main composer chain (see Renderer.ts):
  *
  *   1. Saturation-clamp — pulls every fragment into a vibrancy band so
  *      nothing reads muddy. Replaces the MVP palette-quant pass; the
@@ -20,7 +18,11 @@ import mixBloomFrag from './shaders/mix-bloom.frag.glsl?raw';
  *      The high-pass shader is patched to use max(R,G,B) instead of
  *      Rec.709 luminance so NEON_RED enemies glow on the same footing as
  *      TERMINAL_GREEN allies.
- *   3. Scanlines — CRT-diorama band overlay.
+ *   3. Bloom mix — additively composites the bloom-buffer texture from
+ *      the selective-bloom side-composer onto the main framebuffer.
+ *
+ * CRT scanlines live as a CSS overlay on `#scanlines` (B5), not a
+ * post-process pass.
  *
  * Sprites can opt into stronger bloom by bumping `bloomIntensity` per-
  * instance in [SpriteRenderer.ts](./SpriteRenderer.ts) — pushing the
@@ -150,18 +152,3 @@ export function createBloomMixPass(): ShaderPass {
   });
 }
 
-const SCANLINE_SHADER = {
-  uniforms: {
-    tDiffuse: { value: null },
-    uIntensity: { value: 0.15 },
-    uBandSize: { value: 4.0 },
-  },
-  vertexShader: fullscreenVert,
-  fragmentShader: scanlinesFrag,
-};
-
-export function createScanlinePass(): ShaderPass {
-  return new ShaderPass(SCANLINE_SHADER);
-}
-
-// TODO(future): CRT curvature pass — barrel-distort UVs and vignette edges.

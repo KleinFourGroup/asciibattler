@@ -295,7 +295,7 @@ UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.disp
    - One `InstancedMesh` for HP + action progress bars (`BarRenderer`, B3)
    - No per-unit `Object3D`s. Ever. This is the performance contract.
 3. **Bloom** is selective via two composers (B1.1): `bloomComposer` renders the layer-1 bloom mesh through `UnrealBloomPass` (max-channel high-pass, not Rec.709 — gotcha #29) into an offscreen RT; `mainComposer` renders the layer-0 visible mesh, then folds the bloom RT in additively via `MixPass`. Sat-clamp + `OutputPass` finish the chain. Per-instance `bloomIntensity` decouples halo strength from visible color: 0 suppresses, 1 is natural, >1 forces.
-4. **CRT scanlines** are a CSS `<div>` overlay (`#scanlines`), not a post-process pass (B5). One source of truth across the canvas/DOM seam. The original `createScanlinePass` + shader remain as dormant code for cheap revert.
+4. **CRT scanlines** are a CSS `<div>` overlay (`#scanlines`), not a post-process pass (B5). One source of truth across the canvas/DOM seam.
 5. **Palette quantization is GONE** (retired at B1). The `COLORS` table is art-direction discipline now, not shader enforcement. Gotchas #1/#3/#4 retired as a consequence.
 
 ## What's deliberately not abstracted yet

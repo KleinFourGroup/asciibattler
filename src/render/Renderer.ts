@@ -149,7 +149,7 @@ export class Renderer {
     );
     this.bloomComposer.addPass(createBloomPass(new THREE.Vector2(1, 1)));
 
-    // ---- mainComposer: layer-0 only, mixes bloom in, scanlines, output ----
+    // ---- mainComposer: layer-0 only, mixes bloom in, output ----
     //
     // Saturation-clamp first so any color the bloom mix adds doesn't get
     // re-saturated (bloom is meant to be additive HDR-ish glow on top of
@@ -157,11 +157,8 @@ export class Renderer {
     // its uBloom uniform — wired up after construction since renderTarget2
     // is only valid after EffectComposer's first .render() initializes it.
     //
-    // B5: scanlines moved out of the composer chain and into a CSS overlay
-    // (see #scanlines in src/ui/ui.css) so the same lines run across the
-    // canvas/DOM seam instead of cutting off at the canvas edge. The
-    // shader factory + glsl source stay in PostProcess.ts as dormant code
-    // so the revert is a one-line addPass restore.
+    // CRT scanlines live as a CSS overlay on `#scanlines` (B5), not a
+    // post-process pass.
     this.bloomMixPass = createBloomMixPass();
     this.mainComposer = new EffectComposer(this.webgl);
     this.mainComposer.addPass(new RenderPass(this.scene, this.camera));
@@ -258,7 +255,7 @@ export class Renderer {
    *    blurs the result into bloomComposer.renderTarget2.
    * 2. Main layer: camera.layers → 0 and scene.background restored, so the
    *    main RenderPass sees the visible scene. MixPass adds the blurred
-   *    bloom buffer in, then scanlines + OutputPass finish the chain.
+   *    bloom buffer in, then OutputPass finishes the chain.
    *
    * scene.background must be cleared during the bloom pass: otherwise the
    * full-screen background quad fills every pixel and the bloom buffer

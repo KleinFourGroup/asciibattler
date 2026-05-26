@@ -36,9 +36,17 @@ import FRAGMENT_SHADER from './shaders/terrain.frag.glsl?raw';
  */
 
 const VERTS_PER_TILE = 30; // 5 quads × 2 tris × 3 verts (top + 4 sides; bottom omitted — never visible from the locked camera pitch)
-const BOTTOM_Y = -0.7;
+/** Lowered from -0.7 in D7.C so the chasm prism (top -1.2) still has 0.3
+ *  units of side visible. Non-chasm tiles' visible sides are still bounded
+ *  at the top by their topY, so the deeper bottom only shows up at the
+ *  chasm boundary (and at the literal board edge, which the camera
+ *  pitch barely sees). */
+const BOTTOM_Y = -1.5;
 
 const WATER_TOP_Y = -0.4;
+/** D7.C: chasm top Y. Deep enough (vs water's -0.4) to read as "pit, don't
+ *  step here" against the green-amber floor at the locked camera pitch. */
+const CHASM_TOP_Y = -1.2;
 const FLOOR_RANGE_LO = -0.3;
 const FLOOR_RANGE_HI = 0.0;
 const NOISE_FREQ = 0.42;
@@ -53,6 +61,13 @@ const AMBIENT = 0.45;
 const SIDE_SHADE = 0.7;
 /** Top-face grid-line width as a fraction of cell size. */
 const GRID_LINE_WIDTH = 0.06;
+
+/** D7.C: per-tile animation type encoded into the `aAnim.x` attribute.
+ *  The fragment shader switches on these values to apply a sine flicker
+ *  (fire) or a slower pulse (healing). 0 = no animation. */
+const ANIM_NONE = 0;
+const ANIM_FIRE = 1;
+const ANIM_HEALING = 2;
 
 /** Per-renderer-instance vertex capacity. Sized at the largest D3-allowed
  *  grid (32×32) so any per-encounter size fits without reallocating. */
@@ -69,10 +84,15 @@ export class TerrainRenderer {
   private readonly normals: Float32Array;
   private readonly colors: Float32Array;
   private readonly topUVs: Float32Array;
+  /** D7.C: per-vertex (animType, phase). animType drives the fragment-
+   *  shader effect branch (fire flicker / healing pulse); phase is a
+   *  per-tile offset so neighboring fire tiles don't pulse in unison. */
+  private readonly anims: Float32Array;
   private readonly positionAttr: THREE.BufferAttribute;
   private readonly normalAttr: THREE.BufferAttribute;
   private readonly colorAttr: THREE.BufferAttribute;
   private readonly topUVAttr: THREE.BufferAttribute;
+  private readonly animAttr: THREE.BufferAttribute;
 
   private readonly noise2D: (x: number, y: number) => number;
   private readonly tmpTopColor = new THREE.Color();
@@ -90,19 +110,23 @@ export class TerrainRenderer {
     this.normals = new Float32Array(totalVerts * 3);
     this.colors = new Float32Array(totalVerts * 3);
     this.topUVs = new Float32Array(totalVerts * 2);
+    this.anims = new Float32Array(totalVerts * 2);
 
     this.geometry = new THREE.BufferGeometry();
     this.positionAttr = new THREE.BufferAttribute(this.positions, 3);
     this.normalAttr = new THREE.BufferAttribute(this.normals, 3);
     this.colorAttr = new THREE.BufferAttribute(this.colors, 3);
     this.topUVAttr = new THREE.BufferAttribute(this.topUVs, 2);
+    this.animAttr = new THREE.BufferAttribute(this.anims, 2);
     this.positionAttr.setUsage(THREE.DynamicDrawUsage);
     this.normalAttr.setUsage(THREE.DynamicDrawUsage);
     this.colorAttr.setUsage(THREE.DynamicDrawUsage);
+    this.animAttr.setUsage(THREE.DynamicDrawUsage);
     this.geometry.setAttribute('position', this.positionAttr);
     this.geometry.setAttribute('normal', this.normalAttr);
     this.geometry.setAttribute('aColor', this.colorAttr);
     this.geometry.setAttribute('aTopUV', this.topUVAttr);
+    this.geometry.setAttribute('aAnim', this.animAttr);
     // Loose bounding sphere sized at the renderer's max extent. Since the
     // mesh is always centered on the world origin and our camera framing
     // sees the whole arena, frustum culling at this radius costs nothing.
@@ -122,6 +146,10 @@ export class TerrainRenderer {
         uAmbient: { value: AMBIENT },
         uGridLineColor: { value: new THREE.Color(COLORS.TERMINAL_BLACK) },
         uGridLineWidth: { value: GRID_LINE_WIDTH },
+        // D7.C: monotonically increasing seconds since this renderer was
+        // created (or since the last advanceTime caller wraps it — there's
+        // no wrap; fp32 holds a clean second-grain accumulator for ~hours).
+        uTime: { value: 0 },
       },
     });
 
@@ -136,9 +164,24 @@ export class TerrainRenderer {
    */
   heightAt(cx: number, cy: number, kind: TileKind): number {
     if (kind === 'shallow_water') return WATER_TOP_Y;
+    if (kind === 'chasm') return CHASM_TOP_Y;
+    // D7.C: fire + healing live on the same noise field as floor — they're
+    // surface effects, not elevation changes. Sprites standing on a fire
+    // tile still want a tile top to plant on.
     const n = this.noise2D(cx * NOISE_FREQ, cy * NOISE_FREQ); // [-1, 1]
     const t = (n + 1) * 0.5;
     return FLOOR_RANGE_LO + (FLOOR_RANGE_HI - FLOOR_RANGE_LO) * t;
+  }
+
+  /**
+   * D7.C: advance the shader's `uTime` uniform for per-tile fire/healing
+   * animation. Called from BattleScene.tick (only ticks during battle, so
+   * non-battle scenes pay nothing). Pure accumulation — no wrap, no
+   * modular reduction; fp32 keeps a clean second-grain count for hours.
+   */
+  advanceTime(dt: number): void {
+    const u = this.material.uniforms['uTime']!;
+    u.value = (u.value as number) + dt;
   }
 
   /**
@@ -181,6 +224,7 @@ export class TerrainRenderer {
     const norm = this.normals;
     const col = this.colors;
     const uv = this.topUVs;
+    const anim = this.anims;
     let vi = 0;
 
     const writeVert = (
@@ -206,6 +250,18 @@ export class TerrainRenderer {
         this.tmpSideColor.copy(this.tmpTopColor).multiplyScalar(SIDE_SHADE);
         const top = this.tmpTopColor;
         const side = this.tmpSideColor;
+        // D7.C per-tile anim — same value across all 30 verts of the tile.
+        // Writing it once per cell after the side/top verts is simpler than
+        // threading it through every writeVert call. Phase is a deterministic
+        // hash of (cx, cy) so neighboring fire tiles don't pulse in unison;
+        // doesn't need to be uniform-distributed, just non-coherent.
+        const animType =
+          kind === 'fire' ? ANIM_FIRE :
+          kind === 'healing' ? ANIM_HEALING :
+          ANIM_NONE;
+        const animPhase = (cx * 13 + cy * 7) * 0.43;
+        const tileVertStart = vi; // captured before writes; the 30 verts
+                                  // below all land in [tileVertStart, vi)
 
         // World coords match BattleRenderer.gridToWorld (axes are independent).
         const x0 = cx - halfX;
@@ -252,30 +308,69 @@ export class TerrainRenderer {
         writeVert(x0, topY, zLo, -1, 0, 0, side, 0, 0);
         writeVert(x0, BOTTOM_Y, zHi, -1, 0, 0, side, 0, 0);
         writeVert(x0, topY, zHi, -1, 0, 0, side, 0, 0);
+
+        // D7.C per-tile anim. All VERTS_PER_TILE verts of this cell share
+        // the same (type, phase).
+        for (let i = tileVertStart; i < vi; i++) {
+          const ai = i * 2;
+          anim[ai] = animType;
+          anim[ai + 1] = animPhase;
+        }
       }
     }
     this.positionAttr.needsUpdate = true;
     this.normalAttr.needsUpdate = true;
     this.colorAttr.needsUpdate = true;
     this.topUVAttr.needsUpdate = true;
+    this.animAttr.needsUpdate = true;
   }
 }
 
 const _floorLow = new THREE.Color(COLORS.DARK_TERMINAL_GREEN);
 const _floorHigh = new THREE.Color(COLORS.DARK_TERMINAL_AMBER);
 const _waterColor = new THREE.Color('#1F5B7A');
+/** D7.C chasm: very dark (near-black) so the pit reads as inhospitable
+ *  void; the depth difference (CHASM_TOP_Y vs floor) does the heavy
+ *  lifting and the color just confirms the read. */
+const _chasmColor = new THREE.Color('#0a0a0a');
+/** D7.C fire: dim-ember red to bright amber across the floor height range.
+ *  The shader flicker (uTime + per-tile phase) is what makes it feel alive;
+ *  the lerp adds spatial variance between adjacent fire tiles. */
+const _fireLow = new THREE.Color('#aa1c00');
+const _fireHigh = new THREE.Color('#ffaa00');
+/** D7.C healing: dark teal to FLOURESCENT_BLUE-ish cyan. Deliberately
+ *  distinct from TERMINAL_GREEN (ally sprite color) so healing tiles
+ *  don't read as "an ally is here." Terrain doesn't render on the bloom
+ *  layer (camera layer 0 only), so the bright cyan doesn't trigger the
+ *  sprite bloom shader. */
+const _healLow = new THREE.Color('#0d4d4a');
+const _healHigh = new THREE.Color('#15f4ee');
 
 /**
  * Top-face color. Water gets a flat blue (the recess reads through depth,
- * not color variance). Floor tiles lerp DARK_TERMINAL_GREEN →
- * DARK_TERMINAL_AMBER across the floor height range so height variance
- * shows up as a subtle palette shift as well as geometric relief.
+ * not color variance). Chasm gets a flat near-black (same reason — depth
+ * does the work). Floor / fire / healing tiles share the simplex height
+ * field and lerp their respective palette pair across it, so adjacent
+ * cells of the same kind show subtle variance as well as the per-tile
+ * shader animation.
  */
 function topColorFor(topY: number, kind: TileKind, out: THREE.Color): void {
   if (kind === 'shallow_water') {
     out.copy(_waterColor);
     return;
   }
+  if (kind === 'chasm') {
+    out.copy(_chasmColor);
+    return;
+  }
   const t = Math.max(0, Math.min(1, (topY - FLOOR_RANGE_LO) / (FLOOR_RANGE_HI - FLOOR_RANGE_LO)));
+  if (kind === 'fire') {
+    out.copy(_fireLow).lerp(_fireHigh, t);
+    return;
+  }
+  if (kind === 'healing') {
+    out.copy(_healLow).lerp(_healHigh, t);
+    return;
+  }
   out.copy(_floorLow).lerp(_floorHigh, t);
 }

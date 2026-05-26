@@ -56,12 +56,17 @@ import {
   type SpawnRegion,
 } from '../../src/config/layouts';
 
-type Cell = 'floor' | 'wall' | 'water' | 'halfCover';
+type Cell = 'floor' | 'wall' | 'water' | 'halfCover' | 'chasm' | 'fire' | 'healing';
 type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
 /** D6: sub-tool within the neutral-units layer. The layer radio picks
  *  the layer; this radio picks which kind of neutral entity that
  *  layer paints. */
 type NeutralKind = 'wall' | 'halfCover';
+/** D7.C: sub-tool within the terrain layer. Mirrors the D6 neutral-row
+ *  pattern — same shape, same mid-stroke commit rule. Tile-kind stays
+ *  mutex per cell (paint-chasm over a water cell wins; the layer system
+ *  is a UX overlay, not a multi-layer per-cell data model). */
+type TerrainKind = 'water' | 'chasm' | 'fire' | 'healing';
 
 interface Coord {
   readonly x: number;
@@ -84,6 +89,7 @@ let grid: Cell[][] = makeEmptyGrid(gridW, gridH);
 let cellEls: HTMLDivElement[][] = [];
 let activeLayer: Layer = 'terrain';
 let activeNeutralKind: NeutralKind = 'wall';
+let activeTerrainKind: TerrainKind = 'water';
 /** Spawn regions for export. D5.D.A: initialized + reset to the
  *  procedural default (two top/bottom 'both' bands); loaded layouts
  *  populate from their JSON. D5.D.B: painting + add/delete + the
@@ -124,6 +130,10 @@ const neutralRowEl = mustQuery<HTMLDivElement>('#neutral-row');
 const neutralKindRadioEls = Array.from(
   document.querySelectorAll<HTMLInputElement>('input[name="neutral-kind"]'),
 );
+const terrainRowEl = mustQuery<HTMLDivElement>('#terrain-row');
+const terrainKindRadioEls = Array.from(
+  document.querySelectorAll<HTMLInputElement>('input[name="terrain-kind"]'),
+);
 const regionRowEl = mustQuery<HTMLDivElement>('#region-row');
 const regionPickerEl = mustQuery<HTMLDivElement>('#region-picker');
 const availabilityRadioEls = Array.from(
@@ -139,6 +149,7 @@ attachMetaWatchers();
 attachToolButtons();
 attachSizeWatchers();
 attachLayerWatchers();
+attachTerrainKindWatchers();
 attachNeutralKindWatchers();
 attachRegionControls();
 window.addEventListener('mouseup', endStroke);
@@ -318,9 +329,15 @@ type StrokeKind =
   | 'paint-wall'
   | 'paint-halfCover'
   | 'paint-water'
+  | 'paint-chasm'
+  | 'paint-fire'
+  | 'paint-healing'
   | 'erase-wall'
   | 'erase-halfCover'
   | 'erase-water'
+  | 'erase-chasm'
+  | 'erase-fire'
+  | 'erase-healing'
   | 'paint-region'
   | 'erase-region'
   | 'noop';
@@ -362,10 +379,23 @@ function strokeFromMouseEvent(e: MouseEvent): StrokeKind {
   // while half-cover is selected only clears half-cover cells, leaving
   // walls untouched (mirrors the per-layer erase scope rule from
   // gotcha #65).
+  //
+  // D7.C: terrain layer further splits by `activeTerrainKind`
+  // (water vs chasm vs fire vs healing). Same per-sub-tool erase rule:
+  // erasing while fire is selected only clears fire cells, leaving
+  // water / chasm / healing untouched.
   const erasing = e.button === 2;
   switch (activeLayer) {
     case 'terrain':
-      return erasing ? 'erase-water' : 'paint-water';
+      switch (activeTerrainKind) {
+        case 'water': return erasing ? 'erase-water' : 'paint-water';
+        case 'chasm': return erasing ? 'erase-chasm' : 'paint-chasm';
+        case 'fire': return erasing ? 'erase-fire' : 'paint-fire';
+        case 'healing': return erasing ? 'erase-healing' : 'paint-healing';
+      }
+      // Unreachable — TerrainKind is exhaustive. Fall through for
+      // safety; equivalent to "no-op" semantics.
+      return 'noop';
     case 'neutral-units':
       if (activeNeutralKind === 'halfCover') {
         return erasing ? 'erase-halfCover' : 'paint-halfCover';
@@ -390,9 +420,15 @@ function applyStrokeTo(c: Coord): void {
     case 'paint-water':
     case 'paint-wall':
     case 'paint-halfCover':
+    case 'paint-chasm':
+    case 'paint-fire':
+    case 'paint-healing':
     case 'erase-water':
     case 'erase-wall':
     case 'erase-halfCover':
+    case 'erase-chasm':
+    case 'erase-fire':
+    case 'erase-healing':
       applyTerrainStroke(c);
       return;
     case 'paint-region':
@@ -410,7 +446,8 @@ function applyTerrainStroke(c: Coord): void {
   // leaves walls alone, paint-wall over a water cell wins (cell kinds
   // are still mutex — the layer system is a UX overlay, not a multi-
   // layer per-cell data model in D5.D). D6 extends the same rule to
-  // half-cover: erase-halfCover leaves walls + water alone.
+  // half-cover. D7.C extends the same rule again to chasm / fire /
+  // healing — each erase-X only clears its own kind.
   let next: Cell | null = null;
   switch (activeStroke) {
     case 'paint-water':
@@ -422,6 +459,15 @@ function applyTerrainStroke(c: Coord): void {
     case 'paint-halfCover':
       next = 'halfCover';
       break;
+    case 'paint-chasm':
+      next = 'chasm';
+      break;
+    case 'paint-fire':
+      next = 'fire';
+      break;
+    case 'paint-healing':
+      next = 'healing';
+      break;
     case 'erase-water':
       if (current === 'water') next = 'floor';
       break;
@@ -430,6 +476,15 @@ function applyTerrainStroke(c: Coord): void {
       break;
     case 'erase-halfCover':
       if (current === 'halfCover') next = 'floor';
+      break;
+    case 'erase-chasm':
+      if (current === 'chasm') next = 'floor';
+      break;
+    case 'erase-fire':
+      if (current === 'fire') next = 'floor';
+      break;
+    case 'erase-healing':
+      if (current === 'healing') next = 'floor';
       break;
   }
   if (next === null || next === current) return;
@@ -480,6 +535,9 @@ function refreshCell(c: Coord): void {
     'wall',
     'water',
     'halfCover',
+    'chasm',
+    'fire',
+    'healing',
     'invalid',
     'active-region-0',
     'active-region-1',
@@ -489,6 +547,9 @@ function refreshCell(c: Coord): void {
   if (value === 'wall') el.classList.add('wall');
   if (value === 'water') el.classList.add('water');
   if (value === 'halfCover') el.classList.add('halfCover');
+  if (value === 'chasm') el.classList.add('chasm');
+  if (value === 'fire') el.classList.add('fire');
+  if (value === 'healing') el.classList.add('healing');
 
   // Tear down any prior region tags + outline. Rebuilt below based
   // on current spawns membership.
@@ -539,8 +600,14 @@ function validate(): ValidationItem[] {
   const walls = collectCells('wall');
   const water = collectCells('water');
   const halfCovers = collectCells('halfCover');
+  const chasms = collectCells('chasm');
+  const fires = collectCells('fire');
+  const healings = collectCells('healing');
 
-  if (walls.length === 0 && water.length === 0 && halfCovers.length === 0) {
+  if (
+    walls.length === 0 && water.length === 0 && halfCovers.length === 0 &&
+    chasms.length === 0 && fires.length === 0 && healings.length === 0
+  ) {
     items.push({ level: 'ok', text: 'Empty grid — paint something.' });
   }
 
@@ -582,6 +649,9 @@ function validate(): ValidationItem[] {
   for (const w of walls) blockedSet.add(`${w.x},${w.y}`);
   for (const w of water) blockedSet.add(`${w.x},${w.y}`);
   for (const hc of halfCovers) blockedSet.add(`${hc.x},${hc.y}`);
+  for (const ch of chasms) blockedSet.add(`${ch.x},${ch.y}`);
+  for (const f of fires) blockedSet.add(`${f.x},${f.y}`);
+  for (const hl of healings) blockedSet.add(`${hl.x},${hl.y}`);
   let spawnOverlap = 0;
   for (const region of spawns) {
     for (const t of region.tiles) {
@@ -591,7 +661,7 @@ function validate(): ValidationItem[] {
   if (spawnOverlap > 0) {
     items.push({
       level: 'error',
-      text: `${spawnOverlap} spawn tile(s) overlap walls, water, or half-cover — paint to move them.`,
+      text: `${spawnOverlap} spawn tile(s) overlap walls / water / half-cover / chasm / fire / healing — paint to move them.`,
     });
   }
 
@@ -636,10 +706,14 @@ function validate(): ValidationItem[] {
     });
   }
 
-  // Connectivity treats half-cover as a path blocker (D6 — pathfinding
-  // blocks through it just like walls). The LOS-transparency only
-  // affects ranged-attack visibility, not movement reachability.
-  if (!isConnected([...walls, ...halfCovers])) {
+  // Connectivity treats half-cover and chasm as path blockers — D6 walls
+  // off through half-cover (pathfinding rejects), D7.A makes chasm
+  // Infinity-cost (A* skips). Mirrors the BFS in layouts.test.ts that
+  // pins this at module-load time. The LOS-transparency of half-cover +
+  // chasm only affects ranged-attack visibility, not movement
+  // reachability. Fire + healing pass freely (cost 1) — they're surface
+  // effects, not obstacles.
+  if (!isConnected([...walls, ...halfCovers, ...chasms])) {
     items.push({
       level: 'error',
       text: 'Spawn regions are severed — no path between the first two spawn regions.',
@@ -647,9 +721,14 @@ function validate(): ValidationItem[] {
   }
 
   if (items.length === 0 || items.every((i) => i.level === 'ok')) {
+    const extras: string[] = [];
+    if (chasms.length > 0) extras.push(`${chasms.length} chasm`);
+    if (fires.length > 0) extras.push(`${fires.length} fire`);
+    if (healings.length > 0) extras.push(`${healings.length} healing`);
+    const extrasText = extras.length > 0 ? `, ${extras.join(', ')}` : '';
     items.push({
       level: 'ok',
-      text: `Looks good — ${walls.length} wall(s), ${halfCovers.length} half-cover(s), ${water.length} water cell(s), ${spawns.length} spawn region(s) on ${gridW}×${gridH}.`,
+      text: `Looks good — ${walls.length} wall(s), ${halfCovers.length} half-cover(s), ${water.length} water cell(s)${extrasText}, ${spawns.length} spawn region(s) on ${gridW}×${gridH}.`,
     });
   }
   return items;
@@ -722,6 +801,9 @@ function refreshExport(): void {
   const walls = collectCells('wall');
   const water = collectCells('water');
   const halfCovers = collectCells('halfCover');
+  const chasms = collectCells('chasm');
+  const fires = collectCells('fire');
+  const healings = collectCells('healing');
   const payload: LayoutDef = {
     id: metaIdEl.value.trim() || 'unnamed',
     name: metaNameEl.value.trim() || 'Unnamed',
@@ -733,6 +815,9 @@ function refreshExport(): void {
   };
   if (water.length > 0) payload.water = water;
   if (halfCovers.length > 0) payload.halfCovers = halfCovers;
+  if (chasms.length > 0) payload.chasms = chasms;
+  if (fires.length > 0) payload.fires = fires;
+  if (healings.length > 0) payload.healings = healings;
   exportEl.value = formatLayoutJson(payload);
 }
 
@@ -762,6 +847,21 @@ function formatLayoutJson(layout: LayoutDef): string {
   if (layout.halfCovers && layout.halfCovers.length > 0) {
     parts.push(`  "halfCovers": [`);
     parts.push(...formatCoords(layout.halfCovers));
+    parts.push(`  ],`);
+  }
+  if (layout.chasms && layout.chasms.length > 0) {
+    parts.push(`  "chasms": [`);
+    parts.push(...formatCoords(layout.chasms));
+    parts.push(`  ],`);
+  }
+  if (layout.fires && layout.fires.length > 0) {
+    parts.push(`  "fires": [`);
+    parts.push(...formatCoords(layout.fires));
+    parts.push(`  ],`);
+  }
+  if (layout.healings && layout.healings.length > 0) {
+    parts.push(`  "healings": [`);
+    parts.push(...formatCoords(layout.healings));
     parts.push(`  ],`);
   }
   parts.push(`  "spawns": [`);
@@ -818,6 +918,9 @@ function loadLayout(id: string): void {
   for (const w of found.walls) grid[w.y]![w.x] = 'wall';
   if (found.water) for (const w of found.water) grid[w.y]![w.x] = 'water';
   if (found.halfCovers) for (const c of found.halfCovers) grid[c.y]![c.x] = 'halfCover';
+  if (found.chasms) for (const c of found.chasms) grid[c.y]![c.x] = 'chasm';
+  if (found.fires) for (const c of found.fires) grid[c.y]![c.x] = 'fire';
+  if (found.healings) for (const c of found.healings) grid[c.y]![c.x] = 'healing';
   // Deep-copy spawns so live editing can't mutate the canonical
   // LAYOUTS array.
   spawns = found.spawns.map((r) => ({
@@ -893,6 +996,9 @@ function attachLayerWatchers(): void {
       // D6 — show the wall/half-cover sub-tool only while the
       // neutral-units layer is active.
       neutralRowEl.hidden = value !== 'neutral-units';
+      // D7.C — show the water/chasm/fire/healing sub-tool only while the
+      // terrain layer is active. Matches the neutral-row pattern.
+      terrainRowEl.hidden = value !== 'terrain';
       // Region tag opacity is class-driven via [data-active-layer],
       // but the active-region outline is per-cell — refresh so the
       // outline appears only when spawn-regions is the active layer.
@@ -911,6 +1017,20 @@ function attachNeutralKindWatchers(): void {
       // before swapping the active sub-tool.
       if (activeStroke !== null) endStroke();
       activeNeutralKind = value;
+    });
+  }
+}
+
+function attachTerrainKindWatchers(): void {
+  for (const radio of terrainKindRadioEls) {
+    radio.addEventListener('change', () => {
+      if (!radio.checked) return;
+      const value = radio.value as TerrainKind;
+      if (value === activeTerrainKind) return;
+      // Same mid-stroke rule as layer-switch + neutral-kind-switch:
+      // synchronously commit before swapping the active sub-tool.
+      if (activeStroke !== null) endStroke();
+      activeTerrainKind = value;
     });
   }
 }

@@ -40,6 +40,16 @@
             </label>
             <span class="hint">Only the active layer accepts edits; others render dimmed.</span>
           </div>
+          <div id="terrain-row" class="neutral-row">
+            <span class="neutral-label">Kind</span>
+            <div class="neutral-kind-radios" role="radiogroup" aria-label="Active terrain kind">
+              <label class="inline"><input type="radio" name="terrain-kind" value="water" checked /> water (~)</label>
+              <label class="inline"><input type="radio" name="terrain-kind" value="chasm" /> chasm (.)</label>
+              <label class="inline"><input type="radio" name="terrain-kind" value="fire" /> fire (^)</label>
+              <label class="inline"><input type="radio" name="terrain-kind" value="healing" /> healing (+)</label>
+            </div>
+            <span class="hint">Water slows pathing. Chasm is impassable (Infinity cost). Fire chips HP per tick; healing heals per tick.</span>
+          </div>
           <div id="neutral-row" class="neutral-row" hidden>
             <span class="neutral-label">Kind</span>
             <div class="neutral-kind-radios" role="radiogroup" aria-label="Active neutral unit kind">
@@ -67,8 +77,11 @@
           </div>
           <div id="grid" class="grid" data-active-layer="terrain"></div>
           <ul class="legend">
-            <li><span class="swatch water"></span> Terrain layer — click paints water</li>
-            <li><span class="swatch wall"></span> Neutral-units layer — paint wall or half-cover (sub-toggle)</li>
+            <li><span class="swatch water"></span> Water (~) — pathing cost 2</li>
+            <li><span class="swatch chasm"></span> Chasm (.) — impassable</li>
+            <li><span class="swatch fire"></span> Fire (^) — chip damage per tick</li>
+            <li><span class="swatch healing"></span> Healing (+) — chip heal per tick</li>
+            <li><span class="swatch wall"></span> Wall (#) — blocks pathing + LOS</li>
             <li><span class="swatch halfCover"></span> Half-cover (&#x2565;) — pathing blocker, LOS-transparent</li>
             <li><span class="swatch erase"></span> Right-click — erases active layer at the cell</li>
             <li><span class="swatch region-0"></span> Spawn regions — color-coded by index</li>

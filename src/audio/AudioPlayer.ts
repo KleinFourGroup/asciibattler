@@ -20,8 +20,10 @@
  */
 
 export type SoundKey =
+  | 'burn'
   | 'click'
   | 'death'
+  | 'healtick'
   | 'lose'
   | 'melee'
   | 'recruit'
@@ -29,8 +31,10 @@ export type SoundKey =
   | 'win';
 
 const SOURCES: Record<SoundKey, string> = {
+  burn: 'audio/burn.wav',
   click: 'audio/click.wav',
   death: 'audio/death.wav',
+  healtick: 'audio/healtick.wav',
   lose: 'audio/lose.wav',
   melee: 'audio/melee.wav',
   recruit: 'audio/recruit.wav',
@@ -41,11 +45,16 @@ const SOURCES: Record<SoundKey, string> = {
 /**
  * Per-sound volume relative to master. SFX play loud (1.0); the longer
  * fanfares are softer so they don't dominate when win/lose lands at the
- * same loudness as the impact sounds that preceded them.
+ * same loudness as the impact sounds that preceded them. D7.C burn +
+ * healtick are quieter — they fire on a tick cadence (every 0.5s for
+ * fire, every 1.0s for healing) so the sustained beat would dominate at
+ * full SFX volume.
  */
 const VOLUMES: Record<SoundKey, number> = {
+  burn: 0.6,
   click: 0.7,
   death: 1.0,
+  healtick: 0.55,
   lose: 0.7,
   melee: 1.0,
   recruit: 0.8,
@@ -61,10 +70,19 @@ const VOLUMES: Record<SoundKey, number> = {
  * is perceptible as a "broken sample" rather than just a different hit.
  * One-shot cues (click, recruit, fanfares) stay at 0 — variation on
  * something you only hear once reads as inconsistency, not life.
+ *
+ * D7.C — burn fires on a 5-tick cadence (every 0.5s) and many units may
+ * burn the same tick if a fire band spans the board, so its jitter is
+ * pushed up to 0.12 to break up the rhythm aggressively. healtick fires
+ * on a 10-tick cadence and is much rarer, but a single healing tile can
+ * still hold one unit for many ticks; ±0.08 keeps the heal cue feeling
+ * organic without losing the "I'm being healed" identity.
  */
 const PITCH_VARIANCE: Record<SoundKey, number> = {
+  burn: 0.12,
   click: 0,
   death: 0.08,
+  healtick: 0.08,
   lose: 0,
   melee: 0.1,
   recruit: 0,

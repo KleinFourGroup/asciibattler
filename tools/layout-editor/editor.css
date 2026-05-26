@@ -402,6 +402,63 @@ body {
   pointer-events: none;
 }
 
+/* D7.C — chasm / fire / healing cells. Each tile kind has a distinct
+   color family so a glance at the editor maps onto the in-game look:
+   - chasm: near-black void, no glyph (it's a pit, not an object).
+   - fire: warm red base, "^" glyph for visual texture.
+   - healing: cool cyan base, "+" glyph.
+   Background colors are chosen DIM so the editor isn't visually loud
+   — the in-game terrain shader has a per-tile flicker / pulse that
+   makes them feel active; the editor doesn't, so subtler tints read
+   right against the dark grid. */
+.cell.chasm {
+  background: #060606;
+}
+
+.cell.chasm::after {
+  content: '.';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--terminal-stone);
+  font-weight: 700;
+  font-size: 22px;
+  pointer-events: none;
+}
+
+.cell.fire {
+  background: #4a1505;
+}
+
+.cell.fire::after {
+  content: '^';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #ffaa33;
+  font-weight: 700;
+  font-size: 22px;
+  pointer-events: none;
+}
+
+.cell.healing {
+  background: #07332f;
+}
+
+.cell.healing::after {
+  content: '+';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--fluorescent-blue);
+  font-weight: 700;
+  font-size: 22px;
+  pointer-events: none;
+}
+
 .cell.invalid {
   outline: 2px solid var(--neon-red);
   outline-offset: -2px;
@@ -416,8 +473,16 @@ body {
    D6: half-cover dims with the rest of the neutral-units layer (it's
    in the same layer as walls — the wall/half-cover sub-tool is a
    per-stroke pick, not a separate layer). */
+/* D7.C — chasm / fire / healing dim alongside water on non-terrain
+   layers (they're all "terrain" content from the dim-others perspective). */
 .grid[data-active-layer='neutral-units'] .cell.water,
-.grid[data-active-layer='spawn-regions'] .cell.water {
+.grid[data-active-layer='neutral-units'] .cell.chasm,
+.grid[data-active-layer='neutral-units'] .cell.fire,
+.grid[data-active-layer='neutral-units'] .cell.healing,
+.grid[data-active-layer='spawn-regions'] .cell.water,
+.grid[data-active-layer='spawn-regions'] .cell.chasm,
+.grid[data-active-layer='spawn-regions'] .cell.fire,
+.grid[data-active-layer='spawn-regions'] .cell.healing {
   opacity: 0.3;
 }
 
@@ -515,6 +580,18 @@ body {
 
 .swatch.halfCover {
   background: var(--dark-stone);
+}
+
+.swatch.chasm {
+  background: #060606;
+}
+
+.swatch.fire {
+  background: #4a1505;
+}
+
+.swatch.healing {
+  background: #07332f;
 }
 
 .swatch.erase {

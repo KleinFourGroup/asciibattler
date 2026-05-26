@@ -64,6 +64,21 @@ export class BattleScene implements Scene {
         if (team === 'neutral') return;
         ctx.audio.play('death');
       }),
+      // D7.C — fire chip damage. The sim emits unit:burned regardless of
+      // whether the unit died from the same tick's damage; ordering is
+      // fine because the audio fires before the death's `unit:died`
+      // sound, so both land in the same tick like a "burn → death cry"
+      // sequence.
+      ctx.bus.on('unit:burned', () => {
+        ctx.audio.play('burn');
+      }),
+      // D7.C — healing tile chip heal. Skip when amount === 0 (the sim
+      // emits a no-op heal each cadence tick on a maxHp unit per gotcha
+      // #80; playing a sound for a zero-effect event would feel buggy).
+      ctx.bus.on('unit:healed', ({ amount }) => {
+        if (amount <= 0) return;
+        ctx.audio.play('healtick');
+      }),
     );
 
     // HUD and BattleRenderer must be bound BEFORE any spawn so unit:spawned
@@ -130,6 +145,11 @@ export class BattleScene implements Scene {
   tick(dt: number): void {
     this.clock?.advance(dt);
     this.battleRenderer?.update(dt);
+    // D7.C: drive the terrain shader's `uTime` for per-tile fire flicker
+    // and healing pulse. Lives on tick (not the rAF loop) because only
+    // BattleScene puts animated tile kinds into the renderer — non-battle
+    // scenes call terrain.clear() and don't need the animation to advance.
+    this.terrain?.advanceTime(dt);
   }
 
   dispose(): void {

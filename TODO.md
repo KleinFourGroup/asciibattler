@@ -6,12 +6,6 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 - [ ] **Favicon.** Browser logs an error on every load because there's no `/favicon.ico`. Add one — could be a tiny inline-SVG `M` or `@` glyph in `TERMINAL_GREEN` matching the aesthetic. (Quick fix: add `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,..."/>` to `index.html`.)
 
-## Dev affordances to remove before MVP ships (tracked under ROADMAP Step 5.3)
-
-All items previously listed here landed in Step 5.3 (`OrbitControls`, `Stats`,
-`GridHelper`, `q`/`g` keypresses, `RUN_SEED`, debug logs). Camera is locked
-to a fixed pitch and fits the arena AABB to the viewport on every resize.
-
 ## Post-MVP polish
 
 - [ ] **Pathfinding directional bias.** A* in `src/sim/Pathfinding.ts` iterates neighbours in fixed `(dx, dy)` order with a strict `<` for `gScore` updates, so on equal-cost ties the path consistently drifts toward lower-x / lower-y cells. Visible at Step 3.5 as units crabbing leftward while they advance. Fix is either a tiebreaker (e.g. prefer the neighbour closer to the straight line from `start` to `goal`) or randomising the neighbour iteration order from the world RNG. Not critical for MVP — battles still resolve correctly.

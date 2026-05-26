@@ -5,7 +5,7 @@
     "description": "Both armies must walk through a small labyrinth towards each other, forcing them into a very small corridor / choke-point fight.",
     "gridW": 12,
     "gridH": 12,
-    "theme": "default",
+    "theme": "rock",
     "walls": [
       { "x": 1, "y": 3 },
       { "x": 2, "y": 3 },
@@ -123,7 +123,7 @@
     "description": "A really long map funneling units into four corridors.",
     "gridW": 8,
     "gridH": 32,
-    "theme": "default",
+    "theme": "rock",
     "walls": [
       { "x": 1, "y": 3 },
       { "x": 3, "y": 3 },
@@ -255,7 +255,7 @@
     "description": "The player is surrounded by enemies in a small junction of tunnels.",
     "gridW": 11,
     "gridH": 11,
-    "theme": "default",
+    "theme": "rock",
     "walls": [
       { "x": 3, "y": 0 },
       { "x": 7, "y": 0 },
@@ -321,7 +321,7 @@
     "description": "Units are funneled into a small arena on concurrent pathways separated only by half-cover.",
     "gridW": 12,
     "gridH": 8,
-    "theme": "default",
+    "theme": "volcanic",
     "walls": [
     ],
     "water": [
@@ -409,7 +409,7 @@
     "description": "Units are funneled along a winding, burning spiral to an arena of healing tiles.",
     "gridW": 15,
     "gridH": 15,
-    "theme": "default",
+    "theme": "volcanic",
     "walls": [
     ],
     "chasms": [

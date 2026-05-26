@@ -144,7 +144,7 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **TerrainRenderer stopgap.** `heightAt(kind)` and `topColorFor(kind)` both use a `if (kind === 'shallow_water') return ...; fall-through to floor` shape — adding `chasm` to the union doesn't break compilation (no exhaustive switch anywhere on TileKind), and chasm tiles fall through to the floor branch. So a chasm tile in D7.A renders as a floor tile visually but blocks pathfinding logically. The proper sunken visual lands in D7.C.
 
-**Tests added** (306 passed, was 284 pre-D7.A): TileGrid chasm cost = Infinity + JSON round-trip; layouts.test per-layout chasms-in-grid invariant + chasm-aware spawn-overlap + chasm-aware connectivity BFS; Pathfinding routes around chasm via TileGrid.costAt; AttackBehavior fires through a chasm column (LOS contract); World snapshot round-trips chasm tiles. Commit pending.
+**Tests added** (306 passed, was 284 pre-D7.A): TileGrid chasm cost = Infinity + JSON round-trip; layouts.test per-layout chasms-in-grid invariant + chasm-aware spawn-overlap + chasm-aware connectivity BFS; Pathfinding routes around chasm via TileGrid.costAt; AttackBehavior fires through a chasm column (LOS contract); World snapshot round-trips chasm tiles. Commit `56adba0`.
 
 Next up per ROADMAP — **D7.B (fire + healing tile kinds):**
 

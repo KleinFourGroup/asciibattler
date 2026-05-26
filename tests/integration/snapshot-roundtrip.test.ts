@@ -128,6 +128,20 @@ describe('A2 round-trip: World', () => {
     expect(restoredHC.blocksLineOfSight).toBe(false);
   });
 
+  it('D7.A: round-trips chasm tiles through World snapshot', () => {
+    const { world } = freshBattle(54321);
+    world.tileGrid.setKind({ x: 4, y: 4 }, 'chasm');
+    world.tileGrid.setKind({ x: 5, y: 4 }, 'chasm');
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+
+    expect(restored.tileGrid.kindAt({ x: 4, y: 4 })).toBe('chasm');
+    expect(restored.tileGrid.kindAt({ x: 5, y: 4 })).toBe('chasm');
+    expect(restored.tileGrid.costAt({ x: 4, y: 4 })).toBe(Infinity);
+    expect(restored.tileGrid.kindAt({ x: 0, y: 0 })).toBe('floor');
+  });
+
   it('round-trips the tile grid + neutral wall units (C1a terrain)', () => {
     // Build a non-trivial battle, run it for a few ticks, snapshot, restore.
     const { world } = freshBattle(11111);

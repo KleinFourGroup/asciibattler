@@ -64,12 +64,32 @@ describe('layouts library', () => {
         }
       });
 
+      it('places every chasm inside the layout grid with no duplicates', () => {
+        const seen = new Set<string>();
+        for (const c of layout.chasms ?? []) {
+          expect(c.x).toBeGreaterThanOrEqual(0);
+          expect(c.y).toBeGreaterThanOrEqual(0);
+          expect(c.x).toBeLessThan(layout.gridW);
+          expect(c.y).toBeLessThan(layout.gridH);
+          const k = `${c.x},${c.y}`;
+          expect(seen.has(k)).toBe(false);
+          seen.add(k);
+        }
+      });
+
       it('leaves at least one path between the first two spawn regions', () => {
         // Mirror of terrainGen's connectivity check: hand-authored layouts
-        // that sever the board are bugs, not seeds to be rescued.
+        // that sever the board are bugs, not seeds to be rescued. Walls,
+        // half-covers, and chasms all block movement, so all three count
+        // as static blockers for this check.
         const [a, b] = layout.spawns;
+        const blockers = [
+          ...layout.walls,
+          ...(layout.halfCovers ?? []),
+          ...(layout.chasms ?? []),
+        ];
         expect(
-          hasPathBetween(layout.walls, layout.gridW, layout.gridH, a!, b!),
+          hasPathBetween(blockers, layout.gridW, layout.gridH, a!, b!),
         ).toBe(true);
       });
 
@@ -98,10 +118,12 @@ describe('layouts library', () => {
         }
       });
 
-      it('spawn tiles never overlap walls or water', () => {
+      it('spawn tiles never overlap walls, water, half-covers, or chasms', () => {
         const blocked = new Set<string>();
         for (const w of layout.walls) blocked.add(`${w.x},${w.y}`);
         for (const w of layout.water ?? []) blocked.add(`${w.x},${w.y}`);
+        for (const hc of layout.halfCovers ?? []) blocked.add(`${hc.x},${hc.y}`);
+        for (const c of layout.chasms ?? []) blocked.add(`${c.x},${c.y}`);
         for (const region of layout.spawns) {
           for (const t of region.tiles) {
             expect(blocked.has(`${t.x},${t.y}`)).toBe(false);

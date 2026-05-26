@@ -20,6 +20,13 @@ describe('TileGrid', () => {
     expect(g.costAt({ x: 0, y: 0 })).toBe(1);
   });
 
+  it('reports chasm as Infinity cost (data-driven block)', () => {
+    const g = new TileGrid(2, 2);
+    g.setKind({ x: 1, y: 1 }, 'chasm');
+    expect(g.kindAt({ x: 1, y: 1 })).toBe('chasm');
+    expect(g.costAt({ x: 1, y: 1 })).toBe(Infinity);
+  });
+
   it('throws on out-of-bounds read/write', () => {
     const g = new TileGrid(3, 3);
     expect(() => g.kindAt({ x: -1, y: 0 })).toThrow();
@@ -47,11 +54,14 @@ describe('TileGrid', () => {
     const g = new TileGrid(4, 4);
     g.setKind({ x: 1, y: 2 }, 'shallow_water');
     g.setKind({ x: 3, y: 3 }, 'shallow_water');
+    g.setKind({ x: 2, y: 0 }, 'chasm');
     const restored = TileGrid.fromJSON(g.toJSON());
     expect(restored.width).toBe(4);
     expect(restored.height).toBe(4);
     expect(restored.kindAt({ x: 1, y: 2 })).toBe('shallow_water');
     expect(restored.kindAt({ x: 3, y: 3 })).toBe('shallow_water');
+    expect(restored.kindAt({ x: 2, y: 0 })).toBe('chasm');
+    expect(restored.costAt({ x: 2, y: 0 })).toBe(Infinity);
     expect(restored.kindAt({ x: 0, y: 0 })).toBe('floor');
   });
 

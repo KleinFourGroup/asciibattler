@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { findPath, type CostFn } from './Pathfinding';
+import { TileGrid } from './TileGrid';
 import type { GridCoord } from '../core/types';
 
 const G = 12;
@@ -148,6 +149,23 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     const costAt: CostFn = (c) => (c.x === 0 && c.y === 0 ? 1000 : 1);
     const path = findPath({ x: 0, y: 0 }, { x: 3, y: 0 }, [], G, G, costAt);
     expect(path.length).toBe(4);
+  });
+
+  it('D7.A: chasm tiles via TileGrid.costAt block paths and route around', () => {
+    // Wall x=5 via chasm (Infinity cost in TileGrid) instead of the
+    // blockers list. End-to-end check that TileGrid → CostFn → A* glues
+    // correctly for the D7.A chasm kind.
+    const grid = new TileGrid(G, G);
+    for (let y = 3; y <= 7; y++) grid.setKind({ x: 5, y }, 'chasm');
+    const costAt: CostFn = (c) => grid.costAt(c);
+
+    const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, [], G, G, costAt);
+    expect(path.length).toBeGreaterThan(0);
+    for (const c of path) {
+      expect(grid.kindAt(c)).not.toBe('chasm');
+    }
+    // The path must detour off y=5 at least once (straight line is chasm-walled).
+    expect(path.some((c) => c.y !== 5)).toBe(true);
   });
 });
 

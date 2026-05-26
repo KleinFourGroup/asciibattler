@@ -11,7 +11,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **Phase 3** (battle simulation, 3.1–3.9) ✓
 - **Phase 4** (run structure, 4.1–4.6) ✓
 - **Phase 5** (HUD, fade transitions, dev-affordance cleanup, dither + scanline polish) ✓
-- **Tests:** 284 passed, 0 `it.todo()`. Run with `npm test`.
+- **Tests:** 306 passed, 0 `it.todo()`. Run with `npm test`.
 - **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`; remember Vite spawns child Node processes that survive `taskkill` on the parent).
 - **Build:** `npm run build`. `vite.config.ts` uses `base: './'` so the same `dist/` works at any subpath.
 
@@ -130,17 +130,34 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **Visible effect:** on boards where a dim exceeds `SCROLL_WINDOW_TILES = 12`, the scroll-mode camera now anchors as close to the player's spawn edge as the clamp allows. On 12×12 boards both old and new heuristics get clamped to 0 in scroll mode (gotcha #53 — no pan room when board ≤ window in a dim), so the change is observable only on boards >12. fit mode itself ignores the target visually (always looks at world origin), but the target is preserved across backtick toggles so the post-toggle anchor is correct.
 
-Next up per ROADMAP — **D7 (new tile kinds: chasm, fire, healing):**
+**D7.A landed (chasm tile kind — pure logic).** D7 split into three commits per the D7.A/D7.B/D7.C decision: A = chasm only (sim layer), B = fire + healing (the new World.tick hook + events), C = editor + visual lock-in. D7.A is the pure-logic cut: no new event, no new World.tick hook, no editor changes, no visual work. Five changes:
 
-1. Extend `TileKind` union with `chasm | fire | healing` (`src/sim/TileGrid.ts`).
-2. `chasm`: Infinity cost (pathfinding-blocked, LOS-transparent).
-3. `fire` / `healing`: normal cost, per-tick chip damage / heal.
-4. New World.tick hook iterating units after death-splice, emitting per-tile effects.
-5. New `unit:healed` event; extend `unit:attacked` with optional `reason: 'attack' | 'fire'`.
-6. Renderer: extend `terrain.frag.glsl` palette table for the new kinds; chasm sunken visual, fire/healing top-face color shifts.
-7. Editor: new entries in the terrain-layer palette + drag-paint integration; validation rejects spawn-region tiles on chasm.
+1. **`TileKind` extended** from `'floor' | 'shallow_water'` to `'floor' | 'shallow_water' | 'chasm'` in [src/sim/TileGrid.ts](src/sim/TileGrid.ts). `TILE_COSTS[chasm] = Infinity`. Pathfinding already short-circuits on `!isFinite(stepCost)` so no Pathfinding code change — A* skips chasm cells via the existing data-driven block path (gotcha #34). LOS is a unit-blocker-list check ([src/sim/LineOfSight.ts](src/sim/LineOfSight.ts)) and tiles never enter that pipeline, so chasm is automatically LOS-transparent — also no LOS code change.
 
-Decision points D7: chip rates (defaults fire 2 HP/sec, healing 1 HP/sec — tune in browser-verify), fire visual without scene lights (shader-driven flicker), and whether half-cover and the new tile kinds should ever interact.
+2. **`LayoutDef.chasms?: Coord[]`** in [src/config/layouts.ts](src/config/layouts.ts), mirroring the D6 halfCovers shape. Zod validates: in-bounds for `gridW`/`gridH`, no duplicates within `chasms`, no overlap with walls / water / halfCovers / spawn regions. Chasms reserve their cells against subsequent spawn-region overlap (same chained `blocked` Set the halfCovers check populates), so the existing spawn-tile-overlap rule catches chasm clashes too — no separate spawn vs chasm rule.
+
+3. **`GeneratedTerrain.chasms: readonly GridCoord[]`** added to the dispatcher shape. `generateFromLayout` reads `layout.chasms ?? []`, calls `tileGrid.setKind(c, 'chasm')` on each (alongside the existing water-setting loop), and returns the parallel coord array. `generateProcedural` emits `[]` (hand-authored-only in D7.A, mirroring the half-cover decision from gotcha #72). `applyTerrain` needs no change — it already iterates `tileGrid.cells()` and copies kinds into the world's grid, so chasm cells flow through naturally without a new array consumer.
+
+4. **No snapshot version bump.** The TileGrid serialization stores kinds as discriminator strings (`'floor'` / `'shallow_water'` / `'chasm'`) per the existing comment "adding a new TileKind doesn't invalidate existing snapshots." v5 snapshots written before D7.A simply contain no chasm cells and load fine on v5-aware loaders that know about chasm. Contrast with D6 which DID bump 4→5 because UnitSnapshot gained a new field (`blocksLineOfSight`).
+
+5. **Connectivity check in [src/sim/layouts.test.ts](src/sim/layouts.test.ts) updated** to treat chasms (and half-covers, which it previously missed) as path blockers, so an author-error chasm wall fragmenting an arena fails the static check at test time. The procedural `hasPath` in [src/sim/terrainGen.ts](src/sim/terrainGen.ts) is unchanged — procedural emits no chasm in D7.A so the test-time guard is enough.
+
+**TerrainRenderer stopgap.** `heightAt(kind)` and `topColorFor(kind)` both use a `if (kind === 'shallow_water') return ...; fall-through to floor` shape — adding `chasm` to the union doesn't break compilation (no exhaustive switch anywhere on TileKind), and chasm tiles fall through to the floor branch. So a chasm tile in D7.A renders as a floor tile visually but blocks pathfinding logically. The proper sunken visual lands in D7.C.
+
+**Tests added** (306 passed, was 284 pre-D7.A): TileGrid chasm cost = Infinity + JSON round-trip; layouts.test per-layout chasms-in-grid invariant + chasm-aware spawn-overlap + chasm-aware connectivity BFS; Pathfinding routes around chasm via TileGrid.costAt; AttackBehavior fires through a chasm column (LOS contract); World snapshot round-trips chasm tiles. Commit pending.
+
+Next up per ROADMAP — **D7.B (fire + healing tile kinds):**
+
+1. Extend `TileKind` union with `fire | healing`.
+2. New `config/tiles.json` with `fire.damagePerSec: 2` and `healing.amountPerSec: 1` (locked defaults from the D7 decision); zod schema + parsed wrapper in `src/config/tiles.ts`.
+3. New World.tick hook iterating combatant units (player + enemy only, NOT neutrals per the D7 decision — walls and half-cover ignore tile effects) AFTER the death splice but BEFORE `checkBattleEnd`, emitting per-tile chip damage / heal. Order matters: damage from fire can kill, and the death splice already ran, so a unit that dies to fire this tick gets handled on the NEXT tick's death pass.
+4. New `unit:healed` event payload `{ unitId, amount }`; extend `unit:attacked` with optional `reason: 'attack' | 'fire'`. Audio handler in BattleScene branches on `reason` (`'attack'` → existing melee/shoot sounds; `'fire'` → no sound in D7.B, queued for D7.C).
+5. `LayoutDef` gains optional `fires?: Coord[]` + `healings?: Coord[]` with the same overlap rules as chasms (one tile per cell, mutex with walls / water / halfCovers / chasms / spawn regions).
+6. Hand-authored-only in D7.B (no procedural density knob — symmetric with chasm + half-cover).
+
+Then D7.C (editor + visual + half-cover-pathing-cost-tweaks-if-any) per ROADMAP.
+
+Decision points D7.B during implementation: fire visual style (shader-driven flicker?) is D7.C scope; whether `unit:attacked` `reason` should default to `'attack'` when omitted (yes, for back-compat).
 
 Then D8 (tile theming) per the unchanged Phase D plan in ROADMAP.
 
@@ -292,6 +309,14 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 71. **D6: `MovementBehavior` collects neutrals into TWO separate lists (`pathBlockers` + `losBlockers`).** Pre-D6 a single `walls` list served both pathfinding and the LOS-gated in-range abstain. With half-cover that's broken: half-cover blocks pathing (it's a unit, units occupy cells) but is LOS-transparent (the `blocksLineOfSight: false` flag exempts it from the AttackBehavior pool). MovementBehavior must mirror AttackBehavior's LOS view, OR a ranged unit in range with half-cover between it and target keeps stepping (LOS reads broken via the old wall pool → in-range abstain fails) while AttackBehavior would fire. Two lists is the fix: every neutral lands in `pathBlockers`; only `blocksLineOfSight: true` neutrals land in `losBlockers`. Symptom if you collapse it back to one list is unit "wobble" near a half-cover at range.
 
 72. **D6: half-cover is hand-authored-only in D6.** `GeneratedTerrain.halfCovers` is non-empty only for the layout-library path; procedural emits `[]`. There's no `config/terrain.json` knob (yet). When C6 (longer runs) wants procedural half-cover density tuning, add a `halfCoverDensity` field to the terrain config and roll it like walls; the masking-against-spawn-regions step already considers union of all reservations and doesn't need to know about half-cover specifically.
+
+73. **D7.A: chasm relies entirely on Infinity-cost path blocking + tile-not-in-LOS-blocker pipeline.** No Pathfinding code change, no LineOfSight code change. The two contracts that make this work: (a) `Pathfinding.findPath`'s `if (!isFinite(stepCost)) continue;` short-circuit (gotcha #34 documents this for general data-driven blocks), and (b) `hasLineOfSight` only consumes a `blockers: GridCoord[]` of unit cells — tiles never enter that pipeline, so a chasm cell on the Bresenham line is invisible to LOS. If a future feature ever wants chasm to break LOS (e.g. a chasm so deep it occludes shots), that's a behavior change requiring a new "tile LOS blocker" predicate — don't try to retrofit by stuffing chasm coords into AttackBehavior's blocker list; that'd recreate the gotcha #40 anti-pattern.
+
+74. **D7.A: chasm is hand-authored-only in D7 (same scope as half-cover in D6).** `GeneratedTerrain.chasms` is non-empty only for the layout path; procedural emits `[]`. No `config/terrain.json` density knob. When future work wants procedural chasm density, mirror the half-cover punt (gotcha #72): add a `chasmDensity` field and a separate reservation-aware roll, since chasm tiles need the same "no overlap with walls / water / spawn regions" guarantee that walls and water already get via the candidate pool. Note that procedural's internal `hasPath` BFS only blocks on walls today — if procedural chasm is ever introduced, the BFS needs to also block on chasm tiles via the tileGrid.
+
+75. **D7.A: TileKind expansion doesn't bump snapshot schema version.** The TileGrid stores tile kinds as discriminator strings (`'floor'` / `'shallow_water'` / `'chasm'`), so a new kind value just expands the set of legal strings — v5 snapshots written before chasm existed simply contain no chasm cells. Contrast with adding a new FIELD to UnitSnapshot or WorldSnapshot, which DOES require a version bump (D6 `blocksLineOfSight` was 4→5). The TileGrid.ts comment "adding a new TileKind doesn't invalidate existing snapshots" calls this out explicitly. If a future tile kind needs auxiliary per-cell data (e.g. fire intensity, healing remaining), THAT'S the change that bumps the version.
+
+76. **D7.A: no exhaustive `switch (kind: TileKind)` exists in the codebase.** `TerrainRenderer.heightAt` and `topColorFor` use a `if (kind === 'shallow_water') return ...; fall-through to floor` shape. Adding chasm fell through to the floor branch without compile errors AND without runtime crashes — chasm renders as floor visually in D7.A. The D7.C visual pass will explicitly branch chasm into a sunken-pit visual. If you introduce an exhaustive switch later (e.g. via a `assertNever(kind)` helper), audit ALL existing call sites — there are currently zero, and the implicit fall-through is what made the D7.A stopgap a no-op for the renderer.
 
 ## Browser-verify tips (learned the hard way)
 

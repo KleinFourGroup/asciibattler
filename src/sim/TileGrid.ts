@@ -21,7 +21,7 @@
 import { GRID_SIZE } from '../config';
 import type { GridCoord } from '../core/types';
 
-export type TileKind = 'floor' | 'shallow_water';
+export type TileKind = 'floor' | 'shallow_water' | 'chasm';
 
 /**
  * Movement cost to ENTER a tile of this kind. Pathfinding weights
@@ -29,10 +29,16 @@ export type TileKind = 'floor' | 'shallow_water';
  * heuristic) is a lower bound on min-cost path length only when every
  * cost is >= 1 — don't add free tiles or the heuristic stops being
  * admissible.
+ *
+ * D7.A: `chasm` is `Infinity` — pathfinding short-circuits via the
+ * `!isFinite(stepCost)` guard in `Pathfinding.findPath`. LOS is a
+ * unit-blocker check (see `LineOfSight.ts`), so chasm is automatically
+ * LOS-transparent — tiles never enter the LOS pipeline.
  */
 const TILE_COSTS: Record<TileKind, number> = {
   floor: 1,
   shallow_water: 2,
+  chasm: Infinity,
 };
 
 export interface TileGridSnapshot {

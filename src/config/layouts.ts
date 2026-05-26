@@ -80,6 +80,12 @@ const LayoutSchema = z
      *  through them like walls; ranged LOS shoots OVER them. Validation
      *  rejects overlap with walls, water, spawn regions, or self. */
     halfCovers: z.array(CoordSchema).optional(),
+    /** D7.A: optional impassable tile (Infinity pathfinding cost, LOS-
+     *  transparent — LOS never inspects tiles). Hand-authored-only in
+     *  D7 like half-cover (no procedural density knob). Validation
+     *  rejects overlap with walls, water, half-covers, spawn regions,
+     *  or self. */
+    chasms: z.array(CoordSchema).optional(),
     spawns: z.array(SpawnRegionSchema).min(2),
   })
   .superRefine((layout, ctx) => {
@@ -118,6 +124,37 @@ const LayoutSchema = z
       blocked.add(k);
     });
 
+    // D7.A — chasm overlap checks. Mirrors the half-cover pattern;
+    // chasms reserve their cells against subsequent spawn-region
+    // overlap.
+    const seenChasms = new Set<string>();
+    (layout.chasms ?? []).forEach((ch, idx) => {
+      const k = `${ch.x},${ch.y}`;
+      if (ch.x < 0 || ch.x >= layout.gridW || ch.y < 0 || ch.y >= layout.gridH) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['chasms', idx],
+          message: `chasm (${ch.x},${ch.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
+        });
+      }
+      if (blocked.has(k)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['chasms', idx],
+          message: `chasm (${ch.x},${ch.y}) overlaps a wall, water, or half-cover`,
+        });
+      }
+      if (seenChasms.has(k)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['chasms', idx],
+          message: `duplicate chasm (${ch.x},${ch.y})`,
+        });
+      }
+      seenChasms.add(k);
+      blocked.add(k);
+    });
+
     layout.spawns.forEach((region, regionIdx) => {
       region.tiles.forEach((t, tileIdx) => {
         if (t.x < 0 || t.x >= layout.gridW || t.y < 0 || t.y >= layout.gridH) {
@@ -131,7 +168,7 @@ const LayoutSchema = z
           ctx.addIssue({
             code: 'custom',
             path: ['spawns', regionIdx, 'tiles', tileIdx],
-            message: `spawn tile (${t.x},${t.y}) overlaps a wall, water, or half-cover`,
+            message: `spawn tile (${t.x},${t.y}) overlaps a wall, water, half-cover, or chasm`,
           });
         }
       });

@@ -135,6 +135,21 @@ describe('AttackBehavior', () => {
     expect(attacks).toHaveLength(0);
   });
 
+  it('D7.A: chasm tile between attacker and target does NOT block ranged LOS', () => {
+    // Chasm is a TILE, not a unit-blocker — never enters the LOS
+    // pipeline. A ranged attacker should fire straight through a chasm
+    // column with no wall on the line. Geometry mirrors the wall-block
+    // case at line 76 above.
+    const { world, units, attacks } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+    ]);
+    world.tileGrid.setKind({ x: 3, y: 0 }, 'chasm');
+    world.tick();
+    expect(units[1]!.currentHp).toBe(25);
+    expect(attacks).toHaveLength(1);
+  });
+
   it('fires once the blocking wall is destroyed (HP forced to 0)', () => {
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 1 },

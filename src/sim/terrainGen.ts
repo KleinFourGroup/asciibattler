@@ -51,6 +51,12 @@ export interface GeneratedTerrain {
    *  (D6 is hand-authored-only); hand-authored layouts may declare any
    *  count. Pathfinding blocks through them; AttackBehavior shoots over. */
   readonly halfCovers: readonly GridCoord[];
+  /** D7.A: impassable tile (Infinity pathfinding cost, LOS-transparent).
+   *  Stored on `tileGrid` itself as `kind === 'chasm'`; this array is a
+   *  parallel readout so callers (renderer, editor, tests) can iterate
+   *  chasm coords without re-walking the grid. Empty for procedural —
+   *  hand-authored-only in D7. */
+  readonly chasms: readonly GridCoord[];
   readonly spawnRegions: readonly SpawnRegion[];
 }
 
@@ -97,10 +103,14 @@ function generateFromLayout(
   if (layout.water) {
     for (const w of layout.water) tileGrid.setKind(w, 'shallow_water');
   }
+  if (layout.chasms) {
+    for (const c of layout.chasms) tileGrid.setKind(c, 'chasm');
+  }
   return {
     tileGrid,
     walls: layout.walls.slice(),
     halfCovers: layout.halfCovers ? layout.halfCovers.slice() : [],
+    chasms: layout.chasms ? layout.chasms.slice() : [],
     spawnRegions: layout.spawns,
   };
 }
@@ -145,10 +155,10 @@ function generateProcedural(
     walls = openCutsUntilConnected(walls, gridW, gridH, spawnRegions);
   }
 
-  // D6: procedural is hand-authored-only for half-cover (no density
-  // knob in config/terrain.json). Returning an empty array keeps the
-  // shape stable for the caller.
-  return { tileGrid, walls, halfCovers: [], spawnRegions };
+  // D6 + D7.A: procedural is hand-authored-only for half-cover AND
+  // chasm (no density knobs in config/terrain.json). Returning empty
+  // arrays keeps the shape stable for the caller.
+  return { tileGrid, walls, halfCovers: [], chasms: [], spawnRegions };
 }
 
 /**

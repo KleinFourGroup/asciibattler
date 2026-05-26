@@ -164,7 +164,7 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **No snapshot version bump.** Same reasoning as gotcha #75 — adding tile-kind values doesn't change the wire format (kinds are discriminator strings), and no new fields are added to UnitSnapshot or WorldSnapshot for D7.B. The tile-effect cadence is a function of `world.tickCount` and `world.tileGrid` only — both already snapshotted.
 
-**Tests added** (320 passed, was 306 pre-D7.B): TileGrid fire+healing as normal cost + JSON round-trip carries them; World tile-effect pass: fire chip damage on cadence, healing chip heal on cadence with maxHp clamp + `amount: 0` emit, neutrals skipped, fire-kill emits unit:burned + unit:died + battle:ended on same tick, dead units skipped; snapshot round-trips fire+healing tiles; layouts per-layout fire/healing-in-grid invariant + extended spawn-overlap check. Commit pending.
+**Tests added** (320 passed, was 306 pre-D7.B): TileGrid fire+healing as normal cost + JSON round-trip carries them; World tile-effect pass: fire chip damage on cadence, healing chip heal on cadence with maxHp clamp + `amount: 0` emit, neutrals skipped, fire-kill emits unit:burned + unit:died + battle:ended on same tick, dead units skipped; snapshot round-trips fire+healing tiles; layouts per-layout fire/healing-in-grid invariant + extended spawn-overlap check. Commit `fe34ada`.
 
 Next up per ROADMAP — **D7.C (editor + visual lock-in for all three new tile kinds):**
 

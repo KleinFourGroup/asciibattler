@@ -133,7 +133,7 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.units.filter((u) => u.team === 'player')).toHaveLength(1);
   });
 
-  it('round-trips queue + regions through WorldSnapshot v6', () => {
+  it('round-trips queue + regions + abilities through WorldSnapshot v7', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
@@ -142,7 +142,7 @@ describe('D5.C spawn overflow queue', () => {
     spawnTeam(world, 'player', templates, region, rng);
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(6);
+    expect(wire.schemaVersion).toBe(7);
     expect(wire.spawnQueues).toHaveLength(1);
     expect(wire.spawnQueues[0].team).toBe('player');
     expect(wire.spawnQueues[0].templates).toHaveLength(2);
@@ -150,8 +150,17 @@ describe('D5.C spawn overflow queue', () => {
     expect(wire.spawnRegions[0].team).toBe('player');
     expect(wire.spawnRegions[0].region.tiles).toEqual(region.tiles);
 
+    // E2: every melee unit on the wire carries `abilities: ['melee_strike']`.
+    for (const us of wire.units) {
+      expect(us.abilities).toEqual(['melee_strike']);
+    }
+
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.queueLength('player')).toBe(2);
+    // Each restored unit gets one MeleeStrike ability back.
+    for (const u of restored.units) {
+      expect(u.abilities.map((a) => a.id)).toEqual(['melee_strike']);
+    }
 
     // After restore, killing a unit + ticking continues draining the queue.
     const victim = restored.units.find((u) => u.position.x === 2)!;
@@ -160,11 +169,11 @@ describe('D5.C spawn overflow queue', () => {
     expect(restored.queueLength('player')).toBe(1);
   });
 
-  it('rejects v5 snapshots (E1 schema bump is loud)', () => {
+  it('rejects v6 snapshots (E2 schema bump is loud)', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    wire.schemaVersion = 5;
+    wire.schemaVersion = 6;
     expect(() => World.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,
     );

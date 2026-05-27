@@ -161,7 +161,19 @@ out of scope until C6+ lands).
   current melee/ranged balance (melee tougher + harder-hitting, ranged
   fragile + reaches) within the new vocabulary. Tune in E4.
 
-### E2 — Ability primitives
+### E2 — Ability primitives ✅ landed
+
+**Status:** complete. See [HANDOFF.md](HANDOFF.md) "E2 landed (ability
+primitives)" for the breakdown. Net: `AttackBehavior` → generic
+`AbilityBehavior` walking `unit.abilities`; concrete `MeleeStrike` +
+`RangedShot` in `src/sim/abilities/strikes.ts`; archetype config
+gains `abilities: string[]` validated against the registry at boot;
+`ActionProposal.cooldownKey` lets multi-ability units have independent
+cooldowns. **Half-cover damage modifier deferred to E4** per the
+decision call (tune alongside the rest of the stat curve). WorldSnapshot
+v6→v7. 336 tests pass (was 333).
+
+Original design (preserved for the E3+ trail of decisions):
 
 Extract the "attack" behavior into a more general `Ability` concept so
 mage spells, rogue burst, healer beams (E7) plug in cleanly. The big

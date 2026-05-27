@@ -21,6 +21,17 @@ export function attackRangeForArchetype(archetype: Archetype): number {
 }
 
 /**
+ * E2 — registry ids of the abilities an archetype unit spawns with.
+ * Order is significant: `AbilityBehavior` walks the list in stored
+ * order and ties go to the first proposer. Spawn-site callers pass each
+ * id through `createAbility` to instantiate a fresh stateless ability
+ * per unit.
+ */
+export function abilityIdsForArchetype(archetype: Archetype): readonly string[] {
+  return CONFIGS[archetype].abilities;
+}
+
+/**
  * E1 — produce a level-1 template from the archetype's baseStats.
  *
  * **No RNG draws today.** Stat rolls land in E3 via `simulateLevelUps`

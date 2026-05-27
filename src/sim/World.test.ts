@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { World } from './World';
 import { Unit, type Team, type UnitStats } from './Unit';
 import { MovementBehavior } from './behaviors/MovementBehavior';
-import { AttackBehavior } from './behaviors/AttackBehavior';
+import { AbilityBehavior } from './behaviors/AbilityBehavior';
+import { MeleeStrike } from './abilities/strikes';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { rollUnit } from './archetypes';
@@ -415,7 +416,10 @@ function scene(specs: DeathSceneUnit[]): {
     if (s.hp !== undefined) u.currentHp = s.hp;
     for (const b of s.behaviors ?? []) {
       if (b === 'movement') u.behaviors.push(new MovementBehavior());
-      else if (b === 'attack') u.behaviors.push(new AttackBehavior());
+      else if (b === 'attack') {
+        u.behaviors.push(new AbilityBehavior());
+        u.abilities.push(new MeleeStrike());
+      }
     }
     world.units.push(u);
     return u;

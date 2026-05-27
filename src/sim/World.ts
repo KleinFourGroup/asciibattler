@@ -12,13 +12,14 @@ import {
   type UnitTemplate,
 } from './Unit';
 import type { ActionProposal } from './Action';
-import { attackRangeForArchetype, glyphForArchetype } from './archetypes';
+import { abilityIdsForArchetype, attackRangeForArchetype, glyphForArchetype } from './archetypes';
 import type { WorldCommand } from './Command';
 import { createAction } from './actions/registry';
 import { createBehavior } from './behaviors/registry';
+import { createAbility } from './abilities/registry';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { MovementBehavior } from './behaviors/MovementBehavior';
-import { AttackBehavior } from './behaviors/AttackBehavior';
+import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { SpawnAction } from './actions/SpawnAction';
 import { SPAWN } from '../config/spawn';
 import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
@@ -38,8 +39,13 @@ import { ZERO_STATS, deriveStats, inertDerived } from './stats';
  *       endurance), added `UnitSnapshot.archetype` + `.derived`, and
  *       added a top-level `combatRng` channel for AttackAction's
  *       start-time crit roll.
+ *   7 — E2 added per-unit `abilities: string[]` (registry ids) so the
+ *       new `AbilityBehavior` rehydrates the right concrete classes
+ *       after round-trip. AttackBehavior retired; v6 `behaviors`
+ *       arrays referencing `'attack'` would throw on rehydrate, but
+ *       the version bump already rejects v6 wholesale.
  */
-const WORLD_SCHEMA_VERSION = 6;
+const WORLD_SCHEMA_VERSION = 7;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -67,6 +73,14 @@ export interface UnitSnapshot {
   currentHp: number;
   blocksLineOfSight: boolean;
   behaviors: string[];
+  /**
+   * E2 — registry ids for the unit's abilities (e.g. `['melee_strike']`,
+   * `['ranged_shot']`). Order is preserved across the round-trip since
+   * AbilityBehavior uses array order to break score ties. Environment
+   * units (walls, half-cover) have no behaviors and no abilities, so
+   * this serializes as an empty array.
+   */
+  abilities: string[];
   actionCooldowns: [string, number][];
   activeAction: ActiveActionSnapshot | null;
 }
@@ -309,13 +323,19 @@ export class World {
       for (const behavior of unit.behaviors) {
         const proposal = behavior.proposeAction(unit, this);
         if (proposal === null) continue;
-        const remainingCd = unit.actionCooldowns.get(proposal.action.id) ?? 0;
+        // E2: cooldownKey defaults to action.id (the pre-E2 behavior).
+        // Abilities override with their own id so a multi-ability unit
+        // gets independent cooldowns even when two abilities wrap the
+        // same Action class.
+        const cdKey = proposal.cooldownKey ?? proposal.action.id;
+        const remainingCd = unit.actionCooldowns.get(cdKey) ?? 0;
         if (remainingCd > 0) continue;
         if (best === null || proposal.score > best.score) best = proposal;
       }
       if (best === null) continue;
 
-      unit.actionCooldowns.set(best.action.id, best.cooldown);
+      const cdKey = best.cooldownKey ?? best.action.id;
+      unit.actionCooldowns.set(cdKey, best.cooldown);
       unit.activeAction = {
         action: best.action,
         startTick: this.tickCount,
@@ -446,7 +466,10 @@ export class World {
       },
       false,
     );
-    unit.behaviors.push(new MovementBehavior(), new AttackBehavior());
+    unit.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+    for (const id of abilityIdsForArchetype(template.archetype)) {
+      unit.abilities.push(createAbility(id));
+    }
     unit.activeAction = {
       action: new SpawnAction(),
       startTick: this.tickCount,
@@ -680,6 +703,7 @@ export class World {
         unit.actionCooldowns.set(actionId, cd);
       }
       for (const kind of us.behaviors) unit.behaviors.push(createBehavior(kind));
+      for (const id of us.abilities) unit.abilities.push(createAbility(id));
       world.units.push(unit);
     }
 
@@ -724,6 +748,7 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
     currentHp: unit.currentHp,
     blocksLineOfSight: unit.blocksLineOfSight,
     behaviors: unit.behaviors.map((b) => b.kind),
+    abilities: unit.abilities.map((a) => a.id),
     actionCooldowns: Array.from(unit.actionCooldowns.entries()),
     activeAction: unit.activeAction
       ? {

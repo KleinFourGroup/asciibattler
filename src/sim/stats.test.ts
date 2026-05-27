@@ -14,7 +14,8 @@ import { RNG } from '../core/RNG';
 import { EventBus } from '../core/EventBus';
 import { World } from './World';
 import { Unit, type UnitStats } from './Unit';
-import { AttackBehavior } from './behaviors/AttackBehavior';
+import { AbilityBehavior } from './behaviors/AbilityBehavior';
+import { MeleeStrike } from './abilities/strikes';
 import { ZERO_STATS, basicAttackDamage, deriveStats, inertDerived } from './stats';
 import { STATS } from '../config/stats';
 import { secondsToTicks } from '../config';
@@ -186,7 +187,8 @@ describe('combatRng determinism', () => {
         derived: deriveStats(attackerStats, 1),
         position: { x: 0, y: 0 },
       });
-      attacker.behaviors.push(new AttackBehavior());
+      attacker.behaviors.push(new AbilityBehavior());
+      attacker.abilities.push(new MeleeStrike());
 
       // Target: huge HP so it doesn't die before the trace finishes.
       const targetStats: UnitStats = { ...TEMPLATE, constitution: 99 };
@@ -225,7 +227,8 @@ describe('combatRng determinism', () => {
         id: 1, team: 'player', archetype: 'melee', glyph: 'M',
         stats, derived, position: { x: 0, y: 0 },
       });
-      a.behaviors.push(new AttackBehavior());
+      a.behaviors.push(new AbilityBehavior());
+      a.abilities.push(new MeleeStrike());
       const t = new Unit({
         id: 2, team: 'enemy', archetype: 'melee', glyph: 'M',
         stats, derived, position: { x: 1, y: 0 },

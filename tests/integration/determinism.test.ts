@@ -17,7 +17,8 @@ import { describe, it, expect } from 'vitest';
 import { World } from '../../src/sim/World';
 import { Unit, type Team, type UnitStats } from '../../src/sim/Unit';
 import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
-import { AttackBehavior } from '../../src/sim/behaviors/AttackBehavior';
+import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
+import { MeleeStrike } from '../../src/sim/abilities/strikes';
 import { rollUnit } from '../../src/sim/archetypes';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
@@ -136,11 +137,13 @@ function runBattle(
   const COLUMNS = [2, 4, 6, 8, 10];
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('melee', world.rng), 'player', { x, y: 2 });
-    u.behaviors.push(new MovementBehavior(), new AttackBehavior());
+    u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+    u.abilities.push(new MeleeStrike());
   }
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('melee', world.rng), 'enemy', { x, y: 9 });
-    u.behaviors.push(new MovementBehavior(), new AttackBehavior());
+    u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+    u.abilities.push(new MeleeStrike());
   }
 
   for (let i = 0; i < maxTicks && !world.ended; i++) world.tick();

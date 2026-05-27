@@ -1,14 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { AttackBehavior } from './AttackBehavior';
+import { AbilityBehavior } from './AbilityBehavior';
 import { World } from '../World';
-import type { Unit, Team, UnitStats, UnitTemplate } from '../Unit';
+import { Unit, type Team, type UnitStats, type UnitTemplate } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { spawnHalfCover, spawnWall } from '../environment';
 import { ARCHETYPE_CONFIG } from '../archetypes';
+import { MeleeStrike, RangedShot } from '../abilities/strikes';
+import type { Ability } from '../abilities/Ability';
+import type { ActionProposal } from '../Action';
 import type { GameEvents } from '../../core/events';
+import { AttackAction } from '../actions/AttackAction';
 
-describe('AttackBehavior', () => {
+describe('AbilityBehavior', () => {
   it('does not attack when no enemy is in range', () => {
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 1 },
@@ -102,7 +106,6 @@ describe('AttackBehavior', () => {
       { team: 'player', x: 1, y: 1, attackRange: 1, attackDamage: 5, attackCooldownTicks: 5 },
       { team: 'enemy', x: 2, y: 1, hp: 30, inert: true },
     ]);
-    // Surround both units with walls — adjacent attack has no intermediate cells.
     spawnWall(world, { x: 0, y: 1 });
     spawnWall(world, { x: 1, y: 0 });
     spawnWall(world, { x: 2, y: 2 });
@@ -117,8 +120,6 @@ describe('AttackBehavior', () => {
       { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
-    // Same geometry as the "wall blocks" test above, but with half-cover
-    // instead. Should fire through.
     spawnHalfCover(world, { x: 3, y: 0 });
     world.tick();
     expect(units[1]!.currentHp).toBe(25);
@@ -130,18 +131,14 @@ describe('AttackBehavior', () => {
       { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
-    spawnHalfCover(world, { x: 2, y: 0 }); // on line, ignored
-    spawnWall(world, { x: 3, y: 0 }); // on line, blocks
+    spawnHalfCover(world, { x: 2, y: 0 });
+    spawnWall(world, { x: 3, y: 0 });
     world.tick();
     expect(units[1]!.currentHp).toBe(30);
     expect(attacks).toHaveLength(0);
   });
 
   it('D7.A: chasm tile between attacker and target does NOT block ranged LOS', () => {
-    // Chasm is a TILE, not a unit-blocker — never enters the LOS
-    // pipeline. A ranged attacker should fire straight through a chasm
-    // column with no wall on the line. Geometry mirrors the wall-block
-    // case at line 76 above.
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
@@ -162,15 +159,88 @@ describe('AttackBehavior', () => {
     world.tick(); // blocked
     expect(attacks).toHaveLength(0);
 
-    wall.currentHp = 0; // simulate destruction (C2 AoE will do this for real)
-    world.tick(); // World removes the wall, then runs the selector — but
-                  // the death short-circuit happens before selector, so the
-                  // attack fires next tick.
+    wall.currentHp = 0;
+    world.tick();
     world.tick();
     expect(attacks.length).toBeGreaterThanOrEqual(1);
     expect(units[1]!.currentHp).toBeLessThan(30);
   });
+
+  // ─── E2 — multi-ability scoring + per-ability cooldown ───────────────────
+
+  it('E2: picks the higher-scoring ability when both fire on the same tick', () => {
+    // Synthetic unit with two abilities: a low-score one and a high-score
+    // one, both proposing on every tick. AbilityBehavior should always
+    // pick the high-score ability. Wraps AttackAction so the existing
+    // damage path lights up — the test reads damage to verify which
+    // ability fired (low: 3 damage, high: 9).
+    const { world, units, attacks } = sceneWithAbilities(
+      [
+        { team: 'player', x: 0, y: 0, hp: 50 },
+        { team: 'enemy', x: 1, y: 0, hp: 100, inert: true },
+      ],
+      [new LowScoreStrike(3), new HighScoreStrike(9)],
+    );
+
+    world.tick();
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0]!.damage).toBe(9);
+    expect(units[1]!.currentHp).toBe(91);
+  });
+
+  it('E2: ties go to the first ability in config order (array order)', () => {
+    // Two abilities, same score, different damage. AbilityBehavior uses
+    // strict `>` against `best.score`, so the FIRST proposer wins.
+    const { world, attacks } = sceneWithAbilities(
+      [
+        { team: 'player', x: 0, y: 0, hp: 50 },
+        { team: 'enemy', x: 1, y: 0, hp: 100, inert: true },
+      ],
+      [new TaggedStrike('first', 4), new TaggedStrike('second', 7)],
+    );
+
+    world.tick();
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0]!.damage).toBe(4);
+  });
+
+  it('E2: per-ability cooldown — sibling fires while a higher-scoring ability cools', () => {
+    // Two abilities on one unit:
+    //   slow — damage 11, score 10, cooldown 10, duration 1.
+    //          Single-tick "execute" but can't be reused for 10 ticks.
+    //   fast — damage 3,  score 9,  cooldown 1,  duration 1.
+    //          Plinks every tick.
+    // Tick 1: slow fires (its cd -> 10, duration 1 so unit is free
+    // immediately next tick). Tick 2: slow's cd filter blocks it, fast
+    // wins by default. Without per-ability cooldown isolation (both
+    // keyed off AttackAction.id), tick 2 would skip fast too — pinning
+    // the contract.
+    const { world, attacks } = sceneWithAbilities(
+      [
+        { team: 'player', x: 0, y: 0, hp: 50 },
+        { team: 'enemy', x: 1, y: 0, hp: 500, inert: true },
+      ],
+      [
+        new ConfigurableStrike({ id: 'slow', score: 10, damage: 11, cooldown: 10, duration: 1 }),
+        new ConfigurableStrike({ id: 'fast', score: 9, damage: 3, cooldown: 1, duration: 1 }),
+      ],
+    );
+
+    world.tick(); // slow fires (damage 11)
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0]!.damage).toBe(11);
+
+    world.tick(); // slow cooling → fast fires (damage 3)
+    expect(attacks).toHaveLength(2);
+    expect(attacks[1]!.damage).toBe(3);
+
+    world.tick(); // slow still cooling → fast fires again
+    expect(attacks).toHaveLength(3);
+    expect(attacks[2]!.damage).toBe(3);
+  });
 });
+
+// ─── helpers ─────────────────────────────────────────────────────────────
 
 interface SceneUnit {
   team: Team;
@@ -181,6 +251,16 @@ interface SceneUnit {
   attackDamage?: number;
   attackCooldownTicks?: number;
   inert?: boolean;
+}
+
+function buildStats(s: SceneUnit, archetype: 'melee' | 'ranged'): UnitStats {
+  const baseStats = ARCHETYPE_CONFIG[archetype].baseStats;
+  return {
+    ...baseStats,
+    luck: 0,
+    strength: s.attackDamage ?? baseStats.strength,
+    ranged: s.attackDamage ?? baseStats.ranged,
+  };
 }
 
 function scene(specs: SceneUnit[]): {
@@ -194,29 +274,10 @@ function scene(specs: SceneUnit[]): {
   bus.on('unit:attacked', (p) => attacks.push(p));
 
   const units = specs.map((s) => {
-    // E1: pick the archetype that gives the right attackRange (melee=1,
-    // ranged=3+). Tests pass `attackRange: 5` etc. to force ranged-style
-    // shots — we honor that by overriding `derived.attackRange` after
-    // spawnUnit, since attackRange is a per-archetype primitive at the
-    // config layer.
     const archetype = (s.attackRange ?? 1) > 1 ? 'ranged' : 'melee';
-    const baseStats = ARCHETYPE_CONFIG[archetype].baseStats;
-    // luck=0 keeps the crit roll deterministically false so the per-test
-    // exact damage assertions hold. Damage source is strength (melee) or
-    // ranged (ranged stat) — we set both to `s.attackDamage` so either
-    // archetype produces the requested damage. Constitution drives maxHp
-    // via deriveStats (con=20 → 50 hp for melee, con=12 → 30 for ranged).
-    const stats: UnitStats = {
-      ...baseStats,
-      luck: 0,
-      strength: s.attackDamage ?? baseStats.strength,
-      ranged: s.attackDamage ?? baseStats.ranged,
-    };
+    const stats = buildStats(s, archetype);
     const template: UnitTemplate = { archetype, stats };
-    // Spawn through World so id allocation is consistent with any
-    // subsequent spawnWall / spawnEnvironment calls in the test body.
     const u = world.spawnUnit(template, s.team, { x: s.x, y: s.y });
-    // Override per-test knobs on top of the spawn-time derived values.
     if (s.attackRange !== undefined || s.attackCooldownTicks !== undefined) {
       const mutDerived = u as unknown as { derived: { -readonly [K in keyof typeof u.derived]: number } };
       if (s.attackRange !== undefined) mutDerived.derived.attackRange = s.attackRange;
@@ -225,8 +286,89 @@ function scene(specs: SceneUnit[]): {
       }
     }
     if (s.hp !== undefined) u.currentHp = s.hp;
-    if (!s.inert) u.behaviors.push(new AttackBehavior());
+    if (!s.inert) {
+      u.behaviors.push(new AbilityBehavior());
+      u.abilities.push(archetype === 'melee' ? new MeleeStrike() : new RangedShot());
+    }
     return u;
   });
   return { world, units, attacks };
+}
+
+/**
+ * E2 multi-ability scene: place units exactly as `scene` would, but
+ * attach the caller-provided ability list onto the first unit. The
+ * second unit is always the target. Used to pin AbilityBehavior's
+ * scoring + per-ability cooldown contracts without relying on the
+ * archetype config.
+ */
+function sceneWithAbilities(
+  specs: SceneUnit[],
+  abilities: Ability[],
+): {
+  world: World;
+  units: Unit[];
+  attacks: GameEvents['unit:attacked'][];
+} {
+  const result = scene(specs);
+  const attacker = result.units[0]!;
+  // Replace whatever scene() set up — synthetic abilities only.
+  attacker.abilities.length = 0;
+  for (const a of abilities) attacker.abilities.push(a);
+  return result;
+}
+
+/** A synthetic ability that always proposes against any in-range enemy. */
+class ConfigurableStrike implements Ability {
+  readonly id: string;
+  private readonly score: number;
+  private readonly damage: number;
+  private readonly cooldown: number;
+  private readonly duration: number;
+  constructor(opts: {
+    id: string;
+    score: number;
+    damage: number;
+    cooldown: number;
+    /** Defaults to 1 — most of these synthetic tests want a single-tick
+     *  action so the unit is free to re-propose next tick. The per-ability
+     *  cooldown test uses cooldown > duration to keep the unit acting
+     *  while the slow ability recharges. */
+    duration?: number;
+  }) {
+    this.id = opts.id;
+    this.score = opts.score;
+    this.damage = opts.damage;
+    this.cooldown = opts.cooldown;
+    this.duration = opts.duration ?? 1;
+  }
+  propose(unit: Unit, world: World): ActionProposal | null {
+    const target = world.units.find((u) => u.team !== unit.team && u.team !== 'neutral');
+    if (!target) return null;
+    return {
+      action: new AttackAction(target, this.damage, 0),
+      score: this.score,
+      cooldown: this.cooldown,
+      duration: this.duration,
+      cooldownKey: this.id,
+    };
+  }
+}
+
+class LowScoreStrike extends ConfigurableStrike {
+  constructor(damage: number) {
+    super({ id: 'low', score: 5, damage, cooldown: 1 });
+  }
+}
+
+class HighScoreStrike extends ConfigurableStrike {
+  constructor(damage: number) {
+    super({ id: 'high', score: 15, damage, cooldown: 1 });
+  }
+}
+
+class TaggedStrike extends ConfigurableStrike {
+  constructor(id: string, damage: number) {
+    super({ id, score: 7, damage, cooldown: 1 });
+  }
 }

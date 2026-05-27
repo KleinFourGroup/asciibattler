@@ -41,6 +41,10 @@ export interface Action {
  * - `effectTicks`: tick offsets (measured from start) at which
  *   `Action.applyEffect` should fire. Empty/omitted for actions that
  *   complete all work in `start`.
+ * - `cooldownKey` (E2): selector key for `unit.actionCooldowns`. Defaults
+ *   to `action.id` (the pre-E2 behavior); abilities override with their
+ *   own id so a multi-ability unit gets independent cooldowns even when
+ *   two abilities wrap the same Action class.
  */
 export interface ActionProposal {
   readonly action: Action;
@@ -48,6 +52,7 @@ export interface ActionProposal {
   readonly cooldown: number;
   readonly duration: number;
   readonly effectTicks?: readonly number[];
+  readonly cooldownKey?: string;
 }
 
 /**

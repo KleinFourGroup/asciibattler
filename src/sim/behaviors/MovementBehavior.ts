@@ -12,8 +12,8 @@ import { hasLineOfSight } from '../LineOfSight';
  * range. Abstains (returns null) when no enemy exists, when the unit is
  * in range AND has line-of-sight, when no path to target exists, or when
  * the next step is currently occupied by another unit. Score 1 (low);
- * AttackBehavior scores 10 so the selector prefers attacking over moving
- * when both fire.
+ * AbilityBehavior scores 10 (via each ability) so the selector prefers
+ * attacking over moving when both fire.
  *
  * Pathing model (C1d follow-up):
  *
@@ -42,11 +42,11 @@ import { hasLineOfSight } from '../LineOfSight';
  *    coordination.
  *
  * 4. **LOS-gated in-range abstain.** The "I'm in attack range, let
- *    AttackBehavior fire" abstain also checks line-of-sight. A ranged
+ *    AbilityBehavior fire" abstain also checks line-of-sight. A ranged
  *    unit in chebyshev range with a wall between it and target would
- *    otherwise freeze (AttackBehavior abstains on no LOS; MovementBehavior
- *    would also abstain on in-range). Now it keeps pathing forward —
- *    usually one more step brings it past the wall.
+ *    otherwise freeze (the basic-strike ability abstains on no LOS;
+ *    MovementBehavior would also abstain on in-range). Now it keeps
+ *    pathing forward — usually one more step brings it past the wall.
  */
 export class MovementBehavior implements Behavior {
   static readonly kind = 'movement';

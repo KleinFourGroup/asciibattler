@@ -2,6 +2,7 @@ import type { GridCoord } from '../core/types';
 // Type-only — World imports Unit too, but TS resolves type-only cycles fine.
 import type { World } from './World';
 import type { ActionProposal, ActiveAction } from './Action';
+import type { Ability } from './abilities/Ability';
 
 /**
  * Combatant alignment. `'neutral'` is for environment entities (walls,
@@ -119,6 +120,15 @@ export class Unit {
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
+  /**
+   * E2 — per-unit ability list. `AbilityBehavior` walks this each tick
+   * to pick its proposal; array order is the tiebreaker when two
+   * abilities return the same score (first proposer wins). Populated
+   * at spawn time from `ARCHETYPE_CONFIG[archetype].abilities`,
+   * snapshotted as a `string[]` of ids and rehydrated via
+   * `src/sim/abilities/registry.ts#createAbility`.
+   */
+  readonly abilities: Ability[] = [];
   /**
    * D6: when `false`, ranged attacks see THROUGH this unit (the
    * half-cover archetype). Pathfinding still treats it as a blocker via

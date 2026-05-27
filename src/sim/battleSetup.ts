@@ -25,7 +25,9 @@
 import { RNG } from '../core/RNG';
 import type { World } from './World';
 import { MovementBehavior } from './behaviors/MovementBehavior';
-import { AttackBehavior } from './behaviors/AttackBehavior';
+import { AbilityBehavior } from './behaviors/AbilityBehavior';
+import { createAbility } from './abilities/registry';
+import { abilityIdsForArchetype } from './archetypes';
 import type { Team, UnitTemplate } from './Unit';
 import type { BattleEncounter } from '../run/Run';
 import { TERRAIN } from '../config/terrain';
@@ -72,8 +74,9 @@ export function pickSpawnRegions(
 /**
  * Spawn a pre-rolled team into the active world, placing each unit on
  * one of the region's tiles (shuffled deterministically via `rng`).
- * Each spawned unit gets `MovementBehavior` + `AttackBehavior` — the
- * MVP behavior pair.
+ * Each spawned unit gets `MovementBehavior` + `AbilityBehavior`, plus
+ * the archetype's configured abilities (E2: `melee → [melee_strike]`,
+ * `ranged → [ranged_shot]`; future archetypes add more).
  *
  * **D5.C** — templates beyond `region.tiles.length` are pushed onto
  * `world.spawnQueues[team]`; `World.runOverflowScan` drains them as
@@ -97,8 +100,12 @@ export function spawnTeam(
   shuffleTilesInPlace(tiles, rng);
   const n = Math.min(templates.length, tiles.length);
   for (let i = 0; i < n; i++) {
-    const u = world.spawnUnit(templates[i]!, team, tiles[i]!);
-    u.behaviors.push(new MovementBehavior(), new AttackBehavior());
+    const template = templates[i]!;
+    const u = world.spawnUnit(template, team, tiles[i]!);
+    u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+    for (const id of abilityIdsForArchetype(template.archetype)) {
+      u.abilities.push(createAbility(id));
+    }
   }
   for (let i = n; i < templates.length; i++) {
     world.queueUnit(team, templates[i]!);

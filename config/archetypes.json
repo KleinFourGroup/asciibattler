@@ -2,6 +2,7 @@
   "melee": {
     "glyph": "M",
     "attackRange": 1,
+    "abilities": ["melee_strike"],
     "baseStats": {
       "constitution": 20,
       "strength": 8,
@@ -15,6 +16,7 @@
   "ranged": {
     "glyph": "a",
     "attackRange": 3,
+    "abilities": ["ranged_shot"],
     "baseStats": {
       "constitution": 12,
       "strength": 0,

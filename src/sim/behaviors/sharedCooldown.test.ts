@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { World } from '../World';
 import { Unit, type Team, type UnitStats } from '../Unit';
 import { MovementBehavior } from './MovementBehavior';
-import { AttackBehavior } from './AttackBehavior';
+import { AbilityBehavior } from './AbilityBehavior';
+import { MeleeStrike } from '../abilities/strikes';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats } from '../stats';
@@ -163,7 +164,8 @@ function scene(specs: SceneUnit[]): {
     });
     if (s.hp !== undefined) u.currentHp = s.hp;
     if (s.behaviors === 'all') {
-      u.behaviors.push(new MovementBehavior(), new AttackBehavior());
+      u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+      u.abilities.push(new MeleeStrike());
     }
     world.units.push(u);
     return u;

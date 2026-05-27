@@ -16,8 +16,13 @@
  * knob — the practical 0-50 range never touches it. E3 will add
  * `growthRates` alongside `baseStats` for per-archetype leveling.
  *
+ * E2: each archetype declares an `abilities: string[]` list of registry
+ * ids resolved at module load against `knownAbilityIds()`. Unknown ids
+ * fail the parse loudly (A4 pattern) — keeping the JSON tunable while
+ * the ability behavior itself stays type-checked in TS.
+ *
  * Adding a new archetype:
- *   1. Add its key + baseStats to `config/archetypes.json`
+ *   1. Add its key + abilities + baseStats to `config/archetypes.json`
  *   2. Extend the `Archetype` union in `src/sim/archetypes.ts`
  *   3. Extend the `Archetypes` zod object below
  *   4. The compiler will surface remaining sites that need a case.
@@ -25,6 +30,7 @@
 
 import { z } from 'zod';
 import archetypesJson from '../../config/archetypes.json';
+import { knownAbilityIds } from '../sim/abilities/registry';
 
 /** Defensive cap to catch a designer typo (e.g. 500 instead of 5). */
 const STAT_CAP = 99;
@@ -39,9 +45,15 @@ const BaseStatsSchema = z.object({
   endurance: z.number().int().nonnegative().max(STAT_CAP),
 });
 
+const ABILITY_IDS = knownAbilityIds();
+const AbilityIdSchema = z.string().refine((id) => ABILITY_IDS.includes(id), {
+  message: `unknown ability id; known: [${ABILITY_IDS.join(', ')}]`,
+});
+
 const ArchetypeSchema = z.object({
   glyph: z.string().length(1),
   attackRange: z.number().int().positive(),
+  abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,
 });
 

@@ -109,18 +109,20 @@ describe('EventBus', () => {
       to: { x: 1, y: 0 },
       durationTicks: 5,
     });
-    bus.emit('unit:attacked', { attackerId: 1, targetId: 2, damage: 3 });
+    bus.emit('unit:attacked', { attackerId: 1, targetId: 2, damage: 3, crit: false });
     bus.emit('unit:died', { unitId: 1, team: 'player' });
     bus.emit('run:started', { seed: 42 });
     bus.emit('run:nodeEntered', { nodeId: 0 });
     bus.emit('run:victory', {});
     bus.emit('run:defeated', {});
     const stubStats = {
-      maxHp: 1,
-      attackDamage: 1,
-      attackRange: 1,
-      attackCooldownTicks: 1,
-      moveCooldownTicks: 1,
+      constitution: 1,
+      strength: 1,
+      ranged: 1,
+      magic: 1,
+      luck: 1,
+      speed: 1,
+      endurance: 1,
     };
     bus.emit('recruit:offered', {
       units: [{ archetype: 'melee', stats: stubStats }],

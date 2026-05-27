@@ -8,8 +8,13 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Post-MVP polish
 
-- [ ] **Pathfinding directional bias.** A* in `src/sim/Pathfinding.ts` iterates neighbours in fixed `(dx, dy)` order with a strict `<` for `gScore` updates, so on equal-cost ties the path consistently drifts toward lower-x / lower-y cells. Visible at Step 3.5 as units crabbing leftward while they advance. Fix is either a tiebreaker (e.g. prefer the neighbour closer to the straight line from `start` to `goal`) or randomising the neighbour iteration order from the world RNG. Not critical for MVP — battles still resolve correctly.
-- [ ] **Terrain generator: bias water placement toward unit paths.** The C1a generator scatters water uniformly across non-spawn rows, but unit paths run nearly straight between spawn bands so the shallow-water movement cost almost never gets exercised in practice — water tiles end up purely decorative. Options to make water meaningful: cluster tiles into patches (so they form actual obstacles rather than isolated singletons), bias placement toward the middle rows where unit traffic concentrates, or seed water specifically along the straight line between spawn columns + spread outward. Probably wants a small "place water in N clusters of size M" pass rather than per-cell Bernoulli. Folds naturally into a broader generation pass alongside C1b's hand-authored layout library — both want the generator to think in terms of features, not independent cells.
+- [x] **Pathfinding directional bias.** Folded into ROADMAP E5.B
+      (pathfinding refresh) — the boids-style sidestep step is going to
+      overhaul neighbor iteration anyway, so the tie-break lands as part
+      of that pass. Recommended fix kept: deterministic straight-line
+      bias rather than RNG-shuffled iteration (RNG-shuffling shifts the
+      byte stream every tick a tie fires).
+- [ ] **Terrain generator: bias water placement toward unit paths.** The C1a generator scatters water uniformly across non-spawn rows, but unit paths run nearly straight between spawn bands so the shallow-water movement cost almost never gets exercised in practice — water tiles end up purely decorative. Options to make water meaningful: cluster tiles into patches (so they form actual obstacles rather than isolated singletons), bias placement toward the middle rows where unit traffic concentrates, or seed water specifically along the straight line between spawn columns + spread outward. Probably wants a small "place water in N clusters of size M" pass rather than per-cell Bernoulli. (Lower priority post-D5: spawn regions can be anywhere on the board now, not just the rows water used to dodge. Listed in ROADMAP cleanup.)
 - [x] **Renderer capacity audit.** Landed in ROADMAP D1 — `SpriteRenderer`
       default bumped 256 → 1024, `BarRenderer` 256 → 2048 (two bars per unit,
       headroom for D3's larger boards). Error paths already throw with the

@@ -1,32 +1,35 @@
-# ROADMAP — Post-C1
+# ROADMAP — Post-D
 
-The build order after Phase C1 (terrain + tile foundation) landed. Companion
+The build order after Phase D (battle-layout expansion) landed. Companion
 to [DESIGN.md](DESIGN.md), [ARCHITECTURE.md](ARCHITECTURE.md),
 [TODO.md](TODO.md), and the prior roadmaps now at
-[archive/mvp-roadmap.md](archive/mvp-roadmap.md) and
-[archive/post-mvp-roadmap.md](archive/post-mvp-roadmap.md).
+[archive/mvp-roadmap.md](archive/mvp-roadmap.md),
+[archive/post-mvp-roadmap.md](archive/post-mvp-roadmap.md), and
+[archive/post-c1-roadmap.md](archive/post-c1-roadmap.md).
 
-Synthesized from [archive/c1-feedback.md](archive/c1-feedback.md), the
-unfinished tail of the prior post-MVP roadmap, and [TODO.md](TODO.md). Once
-you've read this, `c1-feedback.md` is fully absorbed and lives in the
-archive purely as a historical artifact.
+Synthesized from [archive/combat-feedback.md](archive/combat-feedback.md),
+the unfinished tail of the post-C1 roadmap, and [TODO.md](TODO.md). Once
+you've read this, `combat-feedback.md` is fully absorbed and lives in
+the archive purely as a historical artifact.
 
 ## Where this came from
 
-Phase C1 shipped the tile foundation, walls, ranged LOS, faceted-low-poly
-terrain, and a hand-authored layout library with a 2D editor. Playing
-with the editor surfaced that the 12×12 arena is the bottleneck on
-*everything that's interesting* about future combat: archetype variety
-(C2), recruitment depth (C3), unit upgrades (C4), and in-battle commands
-(C5) all want more spatial room and richer board state than the current
-fixed grid allows. The c1-feedback pass is therefore prioritized ahead of
-the C2-C7 work that was previously next in line — Phase D (this
-document's first phase) expands the battle-layout substrate; C2 and
-beyond resume after.
+Phase D shipped variable map sizes, two camera modes, spawn regions +
+overflow queues, half-cover, the chasm/fire/healing tile family, and
+tile theming — the spatial substrate. Playing on the bigger boards made
+it obvious that the combat *mechanics* are now the bottleneck: a single
+`{ hp, attackDamage, attackRange, attackCooldown, moveCooldown }` stat
+block can't carry the four-dimensional archetype variety the c1-feedback
+asked for (mage / rogue / healer were stubbed in C2 but never had the
+substrate to be more than re-skins). The combat-feedback pass therefore
+sits *between* the layout work and the archetype work — Phase E (this
+document's first phase) is the combat-mechanics foundation that lets C2
+become more than glyph swaps. C3 onward (recruitment depth, in-battle
+commands, longer runs) resumes after.
 
 ## Conventions
 
-Same shape as the post-MVP roadmap (less rigid than the MVP one):
+Same shape as the post-C1 roadmap:
 
 - **Commit per logical change**, not per session.
 - **Surface tradeoffs** before non-obvious calls.
@@ -35,334 +38,630 @@ Same shape as the post-MVP roadmap (less rigid than the MVP one):
   [HANDOFF.md](HANDOFF.md) tips).
 - **Keep DESIGN.md / ARCHITECTURE.md honest.** Update docs in the same
   commit as the code that invalidates them.
-- **Headless-first for sim/run/core changes** — write a vitest test
-  before reaching for the browser preview.
+- **Headless-first for sim/run/core/config changes** — write a vitest
+  test before reaching for the browser preview. The combat foundation
+  work is almost entirely headless-testable; E6 (animations + hitsplats)
+  is the only step where eyeball verification is primary.
+- **Hoist numbers to config.** Phase E will introduce several new
+  multipliers (crit damage, speed/endurance cooldown scaling, growth
+  rates, XP curve). Land them in `config/*.json` from day one — see
+  HANDOFF gotcha #24 for the A4 pattern. Anything you'd want to tune
+  without recompiling belongs in JSON.
 
 "Decision points" flag user-input moments (naming, design tradeoffs,
-shader thresholds). Stop and ask.
+balance knobs). Stop and ask.
 
 ---
 
-## Phase D — Battle-layout expansion
+## Phase E — Combat foundation
 
-The c1-feedback synthesis. Each step is sized to one or a small handful
-of commits. Order is chosen to minimize rewrites: foundational data-
-model changes land first, and **each step grows the editor with whatever
-new schema it introduces** — so the editor's always usable for
-authoring test maps as features land, not stuck at C1d.B's shape until a
-late "editor overhaul" arrives.
+The combat-feedback synthesis. Order is chosen so each step's
+infrastructure is in place before the next consumes it: stats →
+abilities → archetypes/leveling → balance + difficulty rework →
+correctness/legibility fixes → new archetypes that exercise everything.
 
-The drag-paint and multi-layer UX bits with no schema prereq land at
-the front of the phase (D2) so subsequent feature steps inherit them
-rather than retrofit them.
+Pathfinding and visual fixes (E5, E6) could in principle land anywhere,
+but they're sequenced *after* the data-model work so the diagnostic
+work (eyeballing why a unit backpedals; tuning a hitsplat) happens once,
+on the final combat mechanics — not on a mid-refactor state.
 
-### D1 — Renderer capacity bump
+### E1 — Stats overhaul
 
-Quick, forward-compatible, unblocks everything else. The current
-SpriteRenderer + BarRenderer caps (256 instances each) start to bite at
-larger map sizes — a 32×32 board with 25% walls already crosses 256
-sprites, and BarRenderer needs 2× the sprite count for HP + progress
-bars.
+Replace `UnitStats { maxHp, attackDamage, attackRange, attackCooldownTicks,
+moveCooldownTicks }` with a richer block of named stats, plus a derived-
+values layer that turns stats into the numbers the sim already cares
+about.
 
-- Bump SpriteRenderer to 1024 instances (per the c1-feedback ask).
-- Bump BarRenderer to 2048 (two bars per unit, headroom for D3's larger
-  boards).
-- Audit `addSprite` / `addBar` error paths — the current "capacity
-  exhausted" throw is correct, just needs to be triggered far less
-  often.
+**New stats** (per combat-feedback): `constitution`, `strength`,
+`ranged`, `magic`, `luck`, `speed`, `endurance`. `power` is deferred
+(it's the meta-stat for the C-era multi-round-battle idea, which stays
+out of scope until C6+ lands).
 
-**Decision point D1:** fixed cap vs. auto-grow. Auto-grow (allocate a
-bigger `Float32Array`, copy, re-upload) is ~30 lines per renderer and
-permanently retires the cap conversation, but every grow stalls a frame.
-Fixed cap is simpler and predictable. Recommend fixed 1024/2048 now;
-auto-grow if a real board needs it.
+**Derived values** (consumed by sim + UI):
 
-### D2 — Editor groundwork: drag-paint
+- `maxHp = HP_PER_CONSTITUTION * constitution` (linear; tunable in
+  `config/stats.json`).
+- Per-ability damage roll uses the relevant stat:
+  - basic melee strike → `strength` (plus weapon-style modifiers later)
+  - basic ranged strike → `ranged`
+  - basic magic bolt (C2-era mage, E7) → `magic`
+- `critChance = min(CRIT_CAP, luck * CRIT_PER_LUCK)`, damage multiplier
+  on a crit is `CRIT_MULT` (defaults: perLuck=0.01, cap=0.6, mult=2.0 —
+  literal `luck%` per combat-feedback, with a high cap as a safety net
+  the practical 0-50 stat range never touches).
+- `attackCooldownTicks = round(BASE_ATTACK_CD * cooldownScale(speed))`
+- `moveCooldownTicks = round(BASE_MOVE_CD * cooldownScale(endurance))`
+  where `cooldownScale(s) = max(MIN_CD_SCALE, 1 - s * CD_PER_STAT)`
+  (defaults: perStat=0.01, MIN_SCALE=0.4 — literal `1 - speed%` per
+  combat-feedback; the floor is a defensive guard, not a design knob
+  the practical 0-50 range hits).
 
-Pure interaction-model change to the existing C1d.B editor, no schema
-prereq. Lands early so every subsequent D-step's editor scope inherits
-the drag-paint affordance and doesn't have to retrofit it across newly-
-added tools.
+**Implementation notes:**
 
-- **Drag-paint primary tool.** Mousedown anywhere → mousemove paints
-  every cell the cursor crosses with the current tool. Mouseup ends
-  the stroke.
-- **Drag-erase.** Right-click + drag erases (currently right-click is
-  per-cell erase only).
-- **Shift modifier stays.** Shift+click → water remains for one-off
-  taps; drag with Shift held paints water continuously.
-- **Stroke determinism.** Each stroke produces a single coalesced
-  update to the JSON export panel + validation pass (not per-cell), so
-  the export panel doesn't flicker during a drag.
+- `UnitStats` becomes the *new* stat block; derived values live in a
+  parallel `UnitDerived` snapshot computed once per stat change (level-
+  up, status effect later). Keep them as plain typed fields, NOT a
+  `Map<string, number>` — type safety wins, and adding a stat is one
+  schema bump in a closed set, not threaded across the codebase.
+- `Unit.currentHp` keeps its current shape; only `maxHp` is now derived
+  rather than rolled.
+- `AttackAction.damage` becomes either pre-computed at propose time
+  (capturing the stat × ability multiplier) or computed at start —
+  decide during impl. The crit roll happens at start, not propose, so
+  the sim's tick determinism stays intact (one RNG draw per action
+  start). Crit RNG channel: `world.combatRng` (new — fork from the
+  battle RNG at battle setup; keeps stat noise out of the
+  pathfinding/setup streams that downstream tests pin).
+- WorldSnapshot bumps schema version: UnitSnapshot stats field is
+  rewritten. Existing v5 snapshots throw on load (loud-failure A4
+  pattern; no shipping save format).
 
-Scope is intentionally tight: this step does not add layers, tile
-kinds, gridSize selection, or anything schema-touching — those land
-with the steps that introduce them.
+**Headless tests:**
 
-**Decision point D2:** drag-erase vs. drag-paint-floor as the right-
-click drag behavior. Equivalent today (only "floor" exists as a non-
-content tile), but once D7's tile kinds and D5's spawn regions exist
-the question is "does right-drag clear *everything* on the active layer
-or just paint floor?" Recommend: clear the active layer's content for
-each cell (matches the current click-to-erase semantics).
+- Stats → derived values: table-driven test in `tests/sim/stats.test.ts`
+  covering the documented formulas across edge cases (0-stat unit,
+  max-stat unit, crit cap, cooldown floor).
+- AttackAction crit determinism: same seed + same combatRng position →
+  same crit/no-crit decision.
+- Snapshot round-trip with the new stats shape.
 
-### D3 — Variable map sizes ✅ LANDED
+**Decision points E1:**
 
-User picked rectangular for hand-authored (`gridW`/`gridH`, 8-32),
-square for procedural (10-20). Sim layer rewritten to take both
-dimensions independently; `World.gridSize` gone; WorldSnapshot v3.
-`reservedSpawnRows(gridH)` replaces the retired `terrain.json
-spawnRowsClear` array. Renderer pre-allocates terrain buffers at the
-32×32 cap and uses `setDrawRange`; `Renderer.fitToBoard(w, h)` is the
-per-battle camera-fit hook. Editor: W/H dropdowns (8-32), in-place
-rebuild, clip warning. Headless tests cover 10/15/20 procedural +
-per-layout deadlock. See HANDOFF.md for the full diff. Next up: D4.
+- **Crit formula.** Combat-feedback's literal `crit = luck%` is the
+  recommendation — given the user-stated design range of "base stats
+  rarely zero, 50 is the practical ceiling and unlikely," literal
+  `luck * 0.01` gives a starting unit ~3% crit and a high-luck max-
+  level unit ~50% crit. Both endpoints feel right at this range. The
+  `CRIT_CAP = 0.6` is a defensive guard for the case where future
+  buffs or stat-stacking push beyond the 0-50 band, not a design knob
+  the base game touches. (Earlier draft pushed back on this assuming
+  a 0-100 stat range — retracted.)
+- **Cooldown formula.** Same story as crit. Literal `cooldown = base ×
+  (1 - speed × 0.01)` is the recommendation — at stat=50 that's 50%
+  reduction, at stat=5 it's 5%, both reasonable. `MIN_CD_SCALE = 0.4`
+  is a defensive floor (cooldowns can't drop below 40% of base) only
+  load-bearing if a future feature pushes speed beyond 60. Same for
+  endurance/move. (Earlier draft also pushed back on the 0→0
+  cooldown endpoint; retracted under the 0-50 stat range.)
+- **Stat caps.** With the 0-50 design range, a runtime hard cap is
+  mostly redundant — growth rates < 1 asymptote naturally below 50
+  given a sensible level cap (E4's recommended 20). Recommend no
+  runtime hard cap, with the level cap doing the asymptote-enforcement
+  job. Add a zod validation cap of 99 on base stats in
+  `config/archetypes.json` purely as a typo guard (a designer typing
+  500 instead of 5).
+- **HP-per-constitution scaling.** Linear (HP = K × constitution) is
+  simplest. Curved (HP = K × constitution^1.1 or K × sqrt) gives more
+  texture but obscures the contract. Recommend linear.
+- **Starting stat ranges for melee + ranged.** Combat-feedback says
+  "I just picked reasonable-sounding numbers" — they need to be picked.
+  Recommend: melee `constitution=10, strength=8, ranged=0, magic=0,
+  luck=3, speed=5, endurance=6`; ranged `constitution=6, strength=2,
+  ranged=8, magic=0, luck=3, speed=5, endurance=5`. These keep the
+  current melee/ranged balance (melee tougher + harder-hitting, ranged
+  fragile + reaches) within the new vocabulary. Tune in E4.
 
-### D4 — Camera overhaul (dev fit + game scroll) ✅ LANDED
+### E2 — Ability primitives
 
-Two camera modes on `Renderer` (constants at the top of
-[src/render/Renderer.ts](src/render/Renderer.ts)):
+Extract the "attack" behavior into a more general `Ability` concept so
+mage spells, rogue burst, healer beams (E7) plug in cleanly. The big
+lever combat-feedback names is "the only hard-coded thing is the attack
+abilities; archetype-to-ability mapping is config."
 
-- **Mode A `fit`** — size-aware version of the pre-D4 framing.
-  `fitCameraFit()` computes camera distance from the board AABB
-  (`boardW + 2·XZ_PADDING` × `boardH + 2·XZ_PADDING` × `2·Y_HALF_EXTENT`)
-  and looks at world origin. Default through D4 (`DEV_DEFAULT_MODE`).
-- **Mode B `scroll`** — fixed `SCROLL_WINDOW_TILES = 12` window AABB,
-  looks at `(cameraTargetX, 0, cameraTargetZ)`. Per-frame
-  `updateScrollFromInput(dt)` sums pan keys (WASD + arrow keys both
-  active, `PAN_KEY_CODES`) + edge-scroll (mouse within
-  `EDGE_SCROLL_THRESHOLD_PX = 40` of any canvas edge) into XZ
-  direction; pans at `PAN_SPEED_TILES_PER_SEC = 12`. Pitch stays locked; only XZ position moves. `clampCameraTarget`
-  caps target to `±max(0, boardDim/2 - 6)` so the visible window stays
-  inside the board (boards ≤ 12 in a dim → target snaps to 0 in that
-  dim, no pan possible).
-- **Toggle:** `e.code === 'Backquote'` (the `` ` ``/`~` key) swaps
-  modes; logs `[camera] mode: fit|scroll`. Defaults to `fit` through
-  D4 — D5 flips to `scroll` once spawn regions land.
-- **Initial anchor:** `BattleScene.mount` calls
-  `renderer.setCameraTarget(0, world.gridH/2 - 2)` after `fitToBoard`,
-  anchoring on the player spawn rows (1-2). Preserved across mode
-  toggles. D5 will switch this to the centroid of the rolled player
-  region.
-- **Listeners:** `keydown`/`keyup` on window (no canvas focus needed),
-  `mousemove`/`mouseleave` on canvas (so HUD hover doesn't pan). Torn
-  down in `Renderer.stop()`.
-- Math factored — `computeCameraDistance(hx, hy, hz)` is the shared
-  per-corner FOV math both modes call.
+**Shape:**
 
-No new tests (render code is verified by eyeball per
-[TESTING.md](TESTING.md)); 248 tests still pass. Next up: D5.
+- `Ability` interface: `id`, `targeting` (single-enemy / single-ally /
+  self / AoE-tile / etc.), `range`, optional `cooldownOverride`,
+  `propose(unit, world): ActionProposal | null`, plus a damage/effect
+  resolver invoked by the Action it produces.
+- Refactor existing `AttackBehavior` into a generic `AbilityBehavior`
+  that walks a list of abilities and proposes the highest-scoring one.
+  Unit gains `abilities: Ability[]` (one entry for melee in melee
+  archetype, one for ranged in ranged archetype; multi-ability units
+  arrive in E7).
+- AbilityBehavior's scoring stays at 10 (MovementBehavior remains 1).
+  Score-tie handling stays "first proposer wins" (gotcha #8).
+- Per-ability cooldown lives in `Unit.actionCooldowns` keyed by ability
+  id (same Map A1 already added). Per-action `cooldown` value in the
+  proposal == derived attackCooldownTicks UNLESS the ability declares
+  an override (mage charge-up will).
+- AttackAction stays as the single-tick damage primitive; new ability
+  classes (charge-up, AoE) get their own Action subclasses registered
+  via the existing registry pattern (gotcha #20).
+- Half-cover combat modifier (deferred all the way back from D6, then
+  C2-era) lands here: the ability resolver sees the LOS-blocker list +
+  the half-cover list, and a shot that passes through a half-cover
+  applies `HALF_COVER_DAMAGE_MULT` (default 0.5) to the rolled damage.
+  Cheap to plumb now while the resolver path is being touched anyway.
 
-### D5 — Spawn-region system ✅ LANDED (A through E)
+**Headless tests:**
 
-D5.A: schema + retrofit. D5.B: sim consumes regions. D5.C: overflow
-queue + SpawnAction + WorldSnapshot v4. D5.D: editor layer system +
-spawn-region painting. **D5.E (newest): `BattleScene.mount` anchors
-the scroll-mode camera on the player region's centroid via
-`gridToWorld({x:meanX,y:meanY},gridW,gridH)`, replacing D4's
-`(0, gridH/2 - 2)` legacy heuristic.** `DEV_DEFAULT_MODE` stays `fit`
-through D5 — the default flip is deferred. See HANDOFF.md for the
-full per-step breakdown and gotchas #55-#69.
+- Existing AttackBehavior tests rewritten against the new shape, all
+  green.
+- New tests: multi-ability unit (synthetic — used to pin the scoring
+  path for E7); half-cover damage attenuation; crit roll respects
+  ability damage formula.
+- Snapshot round-trip with multi-ability units.
 
-### D6 — New neutral unit: half-cover ✅ LANDED
+**Decision points E2:**
 
-Per-Unit `blocksLineOfSight` (default true), `spawnHalfCover` factory,
-AttackBehavior's `collectWalls` → `collectLosBlockers` filtered by the
-flag (retires gotcha #40). MovementBehavior splits its neutral-collector
-into `pathBlockers` + `losBlockers` to keep the LOS-gated in-range
-abstain consistent with the AttackBehavior view (new gotcha #71). Snapshot
-schema 4 → 5. Glyph `╥` (U+2565) — JetBrains Mono renders a top rail
-with two posts, reads as a low fence (user pick). Editor neutral-units
-layer gains a wall/half-cover sub-tool radio in a new `#neutral-row`;
-schema `LayoutDef.halfCovers?: Coord[]` with zod validation against
-walls/water/spawn-region overlap; export JSON emits `halfCovers` after
-`water`. Hand-authored only — procedural emits `[]` (gotcha #72). 284
-tests pass. See HANDOFF.md for the full per-step breakdown and gotchas
-#70-#72.
+- **Ability config vs code.** Recommend: ability *behavior* (damage
+  formula, targeting predicate, effect resolution) lives in TS; the
+  *list of ability ids* per archetype lives in `config/archetypes.json`.
+  This matches combat-feedback's "only hardcode the attack abilities"
+  framing — the things that can vary by tuning (which abilities, on
+  which archetype) move to config; the actual implementation of each
+  ability stays in code where it can use the type system.
+- **Score model.** The selector currently does fixed scores (movement 1,
+  attack 10). With multiple abilities per unit, do we score them
+  identically (first proposer wins → ability order matters) or compute
+  a context-dependent score? Recommend identical scores within the
+  ability pool; archetype config sets `abilities: [a, b, c]` and ties
+  go to the head — predictable, mirrors how MVP did it.
 
-### D7 — New tile kinds: chasm, fire, healing
+### E3 — Archetype config + leveling
 
-Three new entries in the `TileKind` union — `chasm | fire | healing` —
-each with distinct movement and per-tick effects. Lands together
-because they share the same World-tick hook and the same TerrainRenderer
-visual path.
+Hoist archetype definitions into config and add a level dimension. This
+is the step that retires the "balance via %HP buff" pattern and replaces
+it with "balance via enemy level."
 
-**TileGrid:**
+**Schema (`config/archetypes.json`, breaking change):**
 
-- `chasm`: `Infinity` movement cost (data-driven block; equivalent to a
-  blocker entry — gotcha #34 still holds for the heuristic).
-  `blocksLineOfSight = false` (LOS crosses it freely).
-- `fire`: normal cost 1; chip damage to occupants per tick. Open
-  question on rate — see decision point.
-- `healing`: normal cost 1; chip heal to occupants per tick. Same open
-  question.
+```jsonc
+{
+  "melee": {
+    "glyph": "M",
+    "baseStats": { "constitution": 10, "strength": 8, "ranged": 0,
+                   "magic": 0, "luck": 3, "speed": 5, "endurance": 6 },
+    "growthRates": { "constitution": 0.7, "strength": 0.6, "ranged": 0,
+                     "magic": 0, "luck": 0.3, "speed": 0.3, "endurance": 0.4 },
+    "abilities": ["melee_strike"]
+  },
+  "ranged": { /* analogous */ }
+}
+```
 
-**Per-tick effects (new World.tick hook):**
+`growthRates` are per-stat in `[0, 1]` — the chance that the stat
+increments by 1 on a single level-up. A growth rate of 0 means the stat
+never grows (useful for archetype-orthogonal stats: melee's ranged stat
+stays 0 forever).
 
-After the selector + death splice, iterate units (id-sorted for
-determinism) and:
+**Level-up math:**
 
-- For each unit on a `fire` tile, deal `fireDamagePerTick` and emit
-  `unit:attacked` (with `reason: 'fire'`) so HUD/BarRenderer pick up
-  the HP change.
-- For each unit on a `healing` tile, heal `healingPerTick` and emit
-  `unit:healed` (new event, payload `{ unitId, amount, fromTile: true }`).
-- Death handling reuses the existing splice path (no separate
-  "killed-by-fire" branch).
+- `simulateLevelUps(baseStats, growthRates, n, rng) → UnitStats`:
+  iterates n times, each iteration rolls per-stat against `growthRates`,
+  increments on success. Used at recruit time for player units. Stays
+  byte-deterministic per fork of the recruit RNG.
+- `scaleStats(baseStats, growthRates, n) → UnitStats`:
+  `stat += round(growthRate * n)` per stat. Used for enemies — fast,
+  no RNG, predictable for difficulty curves.
 
-**Events:**
+**Unit changes:**
 
-- Add `unit:healed` to `core/events.ts`.
-- Extend `unit:attacked` payload with an optional `reason` field (`'attack' | 'fire'`,
-  default `'attack'`) so subscribers can branch.
+- `Unit.level: number` field (default 1; serialized in UnitSnapshot
+  bump).
+- Stat block on the unit is the *post-level-up* stats — the level is
+  metadata for display, not a runtime modifier.
+- `UnitTemplate` carries the level too, plus a "how were these stats
+  produced" tag (recruit / scaled / direct) for snapshot-test
+  determinism.
 
-**Snapshot/determinism:**
+**Difficulty rescaling (companion change):**
 
-- TileGrid serialization already covers new tile kinds (the union is
-  closed in zod and the snapshot path just stores the kind name).
-- The tick hook's iteration order is fixed (`units.slice().sort(byId)`)
-  so seed → outcome stays byte-stable.
+- `config/difficulty.json` replaces `enemyHpPerFloor` with
+  `enemyLevelPerFloor` (initial: 1 per floor, tunable). Enemies on
+  floor N spawn at level `1 + (N-1) * enemyLevelPerFloor`.
+- `enemySizeDelta` stays.
+- `scaleStats` is the enemy path; player units come in at level 1 from
+  recruitment until E4 lands player-side leveling.
 
-**Renderer:**
+**Snapshot bump.** WorldSnapshot version bumps again. v6 → v7. Old
+snapshots throw; loud failure (A4).
 
-- `TerrainRenderer.heightAt` extended for new kinds:
-  - chasm: deep negative Y (sunken pit, e.g. -0.8 vs water's -0.4)
-  - fire: floor height; visual is a hot-red emissive flicker (decision
-    point on how to drive without scene lights)
-  - healing: floor height; visual is a cool-cyan/blue glow
-- Top-face color in `terrain.frag.glsl` branches on tile kind — extend
-  the existing floor→water lerp to a full per-kind palette table.
+**Headless tests:**
 
-**Editor scope (lands in this step):**
+- `simulateLevelUps`: per-stat distribution over many runs lands within
+  expected bounds for a given growth rate.
+- `scaleStats`: pure-function correctness across a few growth rate +
+  level pairs.
+- Enemy level scales with floor depth per `config/difficulty.json`.
+- Snapshot round-trips through level + stat block.
+- `config/archetypes.json` zod schema rejects out-of-range growth rates
+  (must be in `[0, 1]`), unknown ability ids, etc.
 
-- Chasm, fire, and healing-pool entries in the terrain-layer palette
-  (alongside floor and water).
-- Drag-paint works for each via D2's groundwork.
-- Validation rejects spawn-region tiles that land on chasm (cosmetic
-  shape; spawning a unit into a pit is nonsense).
+**Decision points E3:**
 
-**Decision points D7:**
+- **Enemy stat path: simulate or scale?** Combat-feedback offers both —
+  simulate-N-level-ups for player units (drama, dice rolls) and
+  `+= growth × N` for enemies (fast, predictable). Recommend exactly
+  that split: enemies use `scaleStats` (deterministic, no
+  per-encounter RNG state to plumb), player recruits use
+  `simulateLevelUps` (rolls feel rewarding). The two functions are
+  shipped in the same module; they don't share state.
+- **Initial player-unit level on a new run.** All level 1? Or scale
+  starting units to floor 1's enemy level? Recommend level 1 for the
+  starting roster — the 3M+2R starting team's identity is "raw
+  recruits."
+- **Recruit-offered level.** Combat-feedback says drafted units are
+  produced by simulating level-ups; how many? Tied to current floor
+  depth, or always level 1? Recommend `recruitLevel = currentFloor`
+  (so a floor-4 recruit comes in at level 4 simulated rolls — keeps
+  pace with enemies). Surfaces in the recruit UI as "Level N
+  <archetype>."
+- **Crit / cooldown formula re-tune.** E1 picked starting numbers based
+  on level-1 stats; with leveling in place, max-level stats will be
+  much higher. Revisit `CRIT_CAP` + `MIN_CD_SCALE` + `CD_PER_STAT` in
+  E4 once playtesting reveals where the ceiling actually lives.
 
-- **Chip rates.** Authored in seconds, converted via `secondsToTicks`
-  (gotcha #6). Sensible defaults: fire 2 HP/sec, healing 1 HP/sec
-  (fire more punishing than healing to keep healing pools from being
-  free-camp spots). Tune during browser-verify.
-- **"Pool" topology for healing.** c1-feedback flagged uncertainty.
-  Don't enforce a topology — let the editor place healing as any
-  shape, contiguous or scattered. The "pool" reading is purely
-  visual.
-- **Fire visual without scene lights.** Sprites are unlit by design
-  (gotcha #46). Drive fire emissive via a baked color + a per-tile
-  shader uniform with a sine flicker (analogous to the bloom max-
-  channel pattern from gotcha #29). Don't add a `THREE.PointLight`.
+### E4 — XP + difficulty rebalance
 
-### D8 — Tile theming ✅ LANDED
+E3 lands the data model and the enemy-side scaling. E4 lands the
+player-side leveling path + the post-battle XP loop.
 
-Closed-union `Theme = 'default' | 'rock' | 'volcanic'` on `LayoutDef`
-(required, all 6 existing layouts retrofit with `default` per user
-direction). `Run.handleEnterNode` adds a `rollTheme` draw on
-`battleRng` between `rollProceduralSide` and `rollEnemyTeam` —
-always advances (byte-continuity invariant, gotcha #89). Hand-authored
-encounters use `layout.theme`; procedural uses the rolled value.
-`TerrainRenderer.setTiles(tileGrid, gridW, gridH, theme)` consumes a
-theme; `topColorFor` branches the FLOOR palette only — water / chasm /
-fire / healing keep their fixed D7 colors per the D8 scope decision
-(gotcha #88). Palettes: `default` = green→amber (unchanged); `rock` =
-stone-dark→TERMINAL_STONE; `volcanic` = dark-red→amber (shares high
-endpoint with default so fire tiles blend organically into volcanic
-floors). HUD banner suffix: `"<name> — <Theme>"` for non-default themes
-("Endless Corridors — Volcanic"); naked name for default
-(gotcha #92). Editor: theme `<select>` in the Metadata card +
-CSS-variable-driven live floor preview (gotcha #91); JSON export emits
-`"theme"` immediately after `gridH`; round-trip byte-clean. Snapshot
-`RUN_SCHEMA_VERSION` 1 → 2 (gotcha #90; TileGrid + Unit unchanged).
-312 tests pass (was 303 pre-D8; +9 new). Browser-verified all three
-themes in both editor and live battle. See HANDOFF.md for the full
-per-step breakdown.
+**XP source.** Combat-feedback explicitly leaves this open:
 
-**Phase D is now COMPLETE.** Resume Phase C.
+> I'm still not sure what's going to feel best here, but my initial
+> thought is units keep a standard XP pool and gain XP proportional to
+> damage dealt. But I've also thought about just doing flat rates per
+> participation, or even just per battle.
 
-**Future work flagged for C6**: when multi-map runs land, theme moves
-up a level — each node map carries a theme, procedural battles inherit
-from the map's. `rollTheme` exits `Run.handleEnterNode` at that point.
+This is the E4 decision point. Each option has a snowball/anti-snowball
+texture worth thinking through:
 
-### C2 — New archetypes: mage, rogue, healer
+- **Damage-dealt XP.** Aggressive units snowball (the more they hit,
+  the harder they hit, the more they hit). Healers/tanks fall behind
+  permanently. Reinforces the "carry" archetype but punishes
+  specialization.
+- **Flat per participation.** Every unit alive at battle end gets
+  the same XP. Specialists keep pace; encourages putting low-level
+  units in front. No snowball, but no "I earned this" feeling either.
+- **Flat per battle, party-wide.** Levels are a team-wide currency,
+  applied where the player wants. Cleanest UX, decouples leveling
+  from per-unit performance entirely — but loses some of the per-unit
+  identity combat-feedback was building toward.
+- **Hybrid (recommend).** Small flat per participation + per-damage-
+  share bonus. Tunable knobs. Picks up most of the upside of each.
 
-Enabled by A1 (done — action selector + multi-tick effects). Sketches —
-refine during impl:
+**Implementation (regardless of source):**
 
-- **Mage** — slow charge-up attack, AoE or long range. Uses multi-tick
-  action; also the first consumer of B3's currently-dormant action
-  progress bar (gotcha #30 designed for this) and of C1b's wall
-  destructibility plumbing (AoE damage lands on neutral cells
-  regardless of Targeting's enemy-only filter).
-- **Rogue** — fast attack speed, low HP, kites between attacks. New
-  action: post-attack reposition.
-- **Healer** — avoids combat; heals lowest-HP ally in range each cycle.
-  Distinct from D7's healing-tile chip-heal (the tile is environmental,
-  the healer unit is targeted).
+- New event `battle:ended` payload extension: `xpAwards: { unitId,
+  xpGained }[]` per surviving unit. Run + Game subscribe to bank XP
+  into the persistent roster.
+- `Unit.xp` + `Unit.xpToNext` (or just `xp` + a global curve from
+  `config/leveling.json`) — see decision point.
+- When `xp >= xpToNext`, level-up triggers automatically (consume the
+  XP, increment level, re-roll growth rates against the unit's
+  archetype). This happens on the run side, not in the World — World
+  is per-battle, leveling is across-battles.
+- Recruit screen + HUD show level + XP bar (decision point on whether
+  to surface XP).
+- Difficulty: `config/difficulty.json` knobs tuned via fuzz harness.
+  Re-run fuzz at 100+ seeds post-E3 to set the baseline; then again
+  after E4 to verify the XP curve doesn't create new pathologies (a
+  too-steep curve = nothing levels; too-shallow = everything maxes
+  by floor 3).
 
-**Decision point C2:** glyph assignments (`M`/`a`/`m`/`r`/`h`?
-lowercase `m` vs uppercase `M` ambiguity?). Update the
-[FontAtlas](src/render/FontAtlas.ts) glyph set. Also pick glyphs that
-don't collide with D6's half-cover (whatever that ends up being) and
-D7's tile-effect visuals.
+**Headless tests:**
 
-### C3 — Recruitment refactor: draft from pool + rarity
+- XP award computed per source rule, fed back into Run, level-up
+  triggered when threshold crossed.
+- Fuzz integration smoke: a long-run game still resolves (no infinite
+  level loops, etc.).
+- Recruitment offer carries level + stats per the E3 decision
+  (recruitLevel = currentFloor).
 
-Feedback: random stat rolls are too unconstrained. Shift to drafting
-from a pool of pre-defined unit types with rarity tiers.
+**Decision points E4:**
 
-- Pool grows as we add archetypes (C2 unlocks the variety).
-- Rarity tiers: common (base archetypes), uncommon (mage, healer), rare
-  (specialist variants). Offer composition weighted by floor depth.
-- Existing "guarantee at least one melee + one ranged" rule generalizes
-  to "guarantee role diversity" — define carefully when C2 has landed.
+- **XP source.** See the four options above. The hybrid is the
+  recommendation but the user explicitly flagged this as open — pick
+  one and we tune from there.
+- **Curve shape.** Linear (`xpToNext = K * level`)? Exponential
+  (`xpToNext = K * level^1.5`)? Table-driven? Recommend table-driven
+  in `config/leveling.json` so the curve can be edited without a
+  formula tweak; ship a hand-authored 10-entry table covering level
+  1→10 to start.
+- **XP display.** Floating XP-bar on each unit (would need a third
+  BarRenderer lane) vs. number-in-HUD vs. hidden-until-level-up.
+  Recommend: number on the recruit screen + HUD roster only; in-
+  battle floating bars would be visual clutter on top of HP +
+  progress.
+- **Difficulty knob defaults.** Set during E4 impl; pin via fuzz
+  baseline before declaring E4 done.
+- **Level cap.** With no runtime stat cap (E1) and growth rates < 1,
+  the level cap is what enforces the asymptote — without it stats
+  drift toward the user's "50 is the unlikely ceiling" target and
+  past. Recommend an explicit level cap of 20 — at growth ~0.6 most
+  stats are well into the 30s-40s by level 15-18, hitting the
+  intended ceiling without exceeding it, and a cap stops the
+  "infinite XP grind" temptation that doesn't fit a ~1-hour run
+  anyway.
 
-### C4 — Unit upgrade / leveling system
+### E5 — Pathfinding refresh
 
-After C3 stabilizes. Sketch: post-battle option to level an existing
-unit instead of (or in addition to) recruit. Levels grant +stats and
-possibly +abilities at thresholds. Needs A4 for level curves.
+Two issues combat-feedback flagged on the long-corridor layouts
+(Endless Corridors, Strafing Funnel): "units backpedal and reroute,
+seemingly at random." Two theories from the user:
 
-**Decision point C4:** level vs recruit as exclusive choice or both per
-battle? Tied to how steep the difficulty curve is at C6.
+1. **Friendly units block the path** — current pathfinding treats
+   allies as soft-cost cells (gotcha #38, MovementBehavior cost rule),
+   so an ally one step ahead doesn't block but does inflate cost
+   enough to favor a detour. On a wide-open board the detour is fine;
+   in a 1-tile corridor the detour is "back up and try another row."
+2. **Target switches** — `findTarget` picks the nearest enemy each
+   tick. In a long corridor with multiple front-line enemies, the
+   "nearest" enemy can flip tick-to-tick as enemies move, sending a
+   unit's path bouncing.
 
-### C5 — Limited in-battle commands
+Both look real. Fix order:
+
+**E5.A — Target stickiness.** Cheaper change, addresses theory 2
+in isolation:
+
+- `Unit.targetId: number | null` (snapshotted). MovementBehavior +
+  AttackBehavior consult `unit.targetId` first; if the unit is alive
+  and reachable, keep targeting it.
+- Re-target rule: switch when (a) target is dead/missing, (b) target
+  is much farther than the next-nearest viable target (configurable
+  ratio, default 1.5×), or (c) target has been out-of-LOS for N ticks
+  for ranged units (default 5 ticks @ 10Hz = 0.5s).
+- Audit: this changes the deterministic byte stream for any test that
+  pins enemy-team behaviour. Existing range-based tests should still
+  pass; integration replay tests will need fresh baselines.
+
+**E5.B — Boids-style nudge for blocked units.** Addresses theory 1:
+
+- When MovementBehavior's chosen `path[1]` is occupied by another unit
+  (currently abstain — gotcha #71 region's step collision check), try
+  a one-cell sidestep instead of giving up.
+- Sidestep candidates: the 2-3 cells perpendicular to the target
+  direction, picked closest-to-target. Skip blockers + tile costs as
+  normal. If none are viable, fall back to current "abstain" behavior
+  so corridor queueing still emerges naturally.
+- Worth pinning in a new `tests/integration/corridor-flow.test.ts`:
+  five-unit train through Endless Corridors resolves within a
+  predictable tick count without anyone backpedaling more than `K`
+  cells from peak progress.
+
+**Cleanup folded in:** the long-standing pathfinding directional
+tie-break TODO (units crab leftward on equal-cost ties) gets sorted in
+E5.B's neighbor-iteration overhaul. Recommend: deterministic tie-break
+biased toward the straight line from start to goal, *not* RNG-shuffled
+neighbor order (RNG-shuffling would shift the deterministic byte
+stream every tick a tie is encountered, and that's a lot of test
+churn).
+
+**Decision points E5:**
+
+- **Both fixes, or sequence them?** Recommend both, in the A→B order
+  above. Theory 2 (target switching) is the cheaper, more isolated
+  change and we can verify the backpedal goes away before adding
+  boids; if E5.A turns out to fix the visible symptom, E5.B becomes
+  cleanup-only.
+- **Target-stickiness re-target ratio + LOS timeout.** Defaults 1.5×
+  and 5 ticks; tune during playtest. Both live in `config/sim.json`
+  (new file? — could reuse `config/spawn.json`'s pattern: per-
+  subsystem tunable JSON).
+- **Sidestep candidate count.** 2 cells (left/right perpendicular) or
+  3 (left/right + back-step-forward)? Recommend 2 — back-step-forward
+  is what the current pathing already does via cost gradient, the
+  symptom is precisely that 2 perpendicular options weren't tried.
+
+### E6 — Combat visuals
+
+Three legibility wins combat-feedback flagged. None are gameplay-
+critical, but with the bigger boards from Phase D and the higher unit
+counts E3+ will allow, the current visual feedback breaks down.
+
+**E6.A — Melee shove animation.** When a melee unit attacks, lerp the
+sprite ~0.3 tiles toward the target's cell over the attack windup,
+then snap back. Hooks into SpriteAnimator's existing lerp path
+(`startLerp`) — should be ~40 lines.
+
+**E6.B — Ranged projectile.** Spawn a small glyph sprite (`*` or `·`)
+that lerps from attacker to target over the attack windup. Despawns
+on hit. Needs a small projectile-pool renderer akin to BarRenderer
+(or extend SpriteRenderer with a dedicated layer); reuse the
+`InstancedBufferGeometry` recipe (HANDOFF #30 pattern). Pool size
+~64 should be plenty.
+
+**E6.C — Hitsplats.** Replace the current sprite color flash on
+`unit:attacked` with floating damage numbers above the hit unit:
+
+- Use the existing FontAtlas glyphs (we already have `0-9`).
+- New TextRenderer (or extend BarRenderer's recipe) that draws a
+  short-lived text quad per hit, lerps it upward over ~0.5s while
+  fading alpha.
+- Color-code: white for normal hits, neon-red for crits, optionally
+  cyan for heals (sets up E7's healer).
+- Cluster-safe: stack adjacent hits vertically (offset Y by ~0.2 per
+  active hit on the same target).
+
+**Verification:** eyeball-only per [TESTING.md](TESTING.md). Capture
+preview screenshots of a 2v2 battle to A/B against the current
+flash-only version before lock-in.
+
+**Decision points E6:**
+
+- **Hitsplat font scale.** Same as sprite glyphs vs ~0.7× smaller?
+  Recommend 0.7× — keeps them readable but doesn't compete with the
+  unit sprite.
+- **Projectile spawn point + arc.** Straight line lerp vs slight
+  parabolic arc? Recommend straight line — matches the discrete grid
+  feel, no extra math, easier to read.
+- **Keep the damage flash as a secondary cue, or fully replace?**
+  Recommend fully replace — the flash was a fallback for "no
+  hitsplats yet"; once hitsplats land it's redundant and reads as
+  noise.
+
+### E7 — New archetypes: mage, rogue, healer
+
+The original C2 step, now mostly config + a few new Ability classes.
+Phase E has done all the heavy lifting: stats vocabulary (E1), ability
+primitives (E2), archetype config + leveling (E3), legibility (E5/E6).
+
+Sketches — refine during impl, but each archetype has obvious mappings
+to the E1 stat block:
+
+- **Mage** — high `magic`, low `constitution` + `endurance`. New
+  ability `magic_bolt` with a long charge-up (multi-tick action via
+  A1's primitive; B3's dormant action progress bar finally pulls its
+  weight) and either AoE or long single-target range. AoE damage
+  variant is also the first consumer of C1b's wall destructibility
+  plumbing — AoE attacks pass damage through Targeting's neutral
+  filter via an ability-level `affectsNeutrals: true` flag.
+- **Rogue** — high `speed` + `luck`, low `constitution`. New ability
+  `gambit_strike` that adds a post-attack reposition: after the
+  strike, the rogue gets a free `MoveAction` step away from the
+  target (1 cell, deterministic — picks the cell maximizing distance
+  with tie-break toward open space). The "kite" pattern emerges from
+  attack→reposition→attack cycles, no extra state needed. High luck
+  means the crit math from E1 actually does work here.
+- **Healer** — high `magic`, low `strength` + `ranged`. New ability
+  `heal_ally` that targets the lowest-HP ally in range; new
+  `HealAction` that adds HP rather than subtracting, emitting a
+  reused `unit:healed` event (already exists from D7's tile chip-
+  heal). Avoids combat via a new targeting mode: pick the friendly
+  unit cluster's centroid + (-direction from nearest enemy), step
+  toward it if no allies are wounded; abstain otherwise.
+
+**Glyph assignments.** Combat-feedback doesn't pick these but C1a's
+gotcha #33 means we MUST add new entries to FontAtlas. Recommend
+`m` (lowercase, mage), `r` (rogue), `h` (healer). All three are
+lowercase to distinguish from the existing uppercase melee `M`,
+mirroring the existing convention (melee `M` + ranged `a` — melee
+uppercase, all others lowercase). Must not collide with D6's `╥`
+or D7's tile-effect glyphs (chasm `.`, fire `^`, healing `+`).
+
+**Recruitment integration.** Once E7 ships, three new archetypes
+become valid recruit offers. The current "guarantee at least one
+melee + one ranged" rule from `battleSetup` generalizes to
+"guarantee role diversity" — landed in F1 (recruitment refactor).
+
+**Decision points E7:**
+
+- **Mage payload: AoE or single-target?** AoE exercises the
+  destructibility plumbing and feels more "mage"-shaped; single-
+  target is simpler and chains cleaner with the charge-up bar.
+  Recommend AoE, 3×3 around target, with falloff at range edges.
+- **Rogue reposition direction.** Always away from target? Away
+  from *any* nearest enemy (handles flanking)? Recommend "away from
+  attacked target" — predictable, the player learns the dance.
+- **Healer combat-avoidance scoring.** "Step toward allies, away from
+  enemies" can produce frozen units in mid-board. Recommend: if no
+  allies in healing range AND nearest enemy is within `panicRange`,
+  retreat priority spikes (score 5 — above movement, below ally
+  attack). Otherwise heal/idle.
+
+---
+
+## Phase F — Run depth
+
+The residual C-phase content. None of these need to land before E
+finishes; sequence within F is recommendable rather than required.
+
+### F1 — Recruitment refactor: draft from pool + rarity
+
+The c1-feedback ask was "draft from a pool of pre-defined unit types
+with rarity tiers." Phase E makes the pool meaningful (archetype +
+level + stat texture).
+
+- Recruitment pool grows from `[melee, ranged]` to `[melee, ranged,
+  mage, rogue, healer]` (E7 unlocks the variety).
+- Rarity tiers in `config/recruitment.json`:
+  - common: melee, ranged
+  - uncommon: mage, healer
+  - rare: rogue (reads as the "specialist" of the three new ones;
+    rebalance per playtest)
+- Offer composition weighted by floor depth: floor 1 = mostly
+  common; floor N = increasing uncommon/rare odds.
+- "Guarantee role diversity" generalization: at least one
+  damage-dealer + one specialist-or-support in each offer (concrete
+  rule pending the C2 mage/rogue/healer landing).
+- Recruit cards display archetype, level, abilities, key stats.
+
+**Decision point F1:**
+
+- **Recruit-vs-level-up exclusivity.** When a recruit offer fires,
+  should there be an "instead of recruiting, level an existing unit"
+  option? Combat-feedback doesn't say. Recommend: keep them
+  *separate* (level-ups happen automatically from XP per E4);
+  recruit offers stay strictly "add a new unit." Mixing the two
+  conflates two different progression dimensions.
+- **Pool growth from custom unit definitions?** Punted until
+  layouts-editor parity exists for archetypes — far future, not F1.
+
+### F2 — Limited in-battle commands
 
 Enabled by A2 (done). Targetless commands (switch to defensive AI,
 retreat) and single-target commands (focus this enemy, hold this
-location).
+location). The plumbing is in place via the `WorldCommand` channel;
+this step is the UI + the command implementations.
 
-**Decision point C5:** how many command uses per battle? Cost gating
-(cooldown, charges, none)? Interaction with difficulty.
+**Decision points F2:**
 
-### C6 — Multi-map / longer runs
+- **How many command uses per battle?** Recommend a small shared
+  pool (3-5 per battle, charges refund on victory). Charges-based
+  feels tighter than cooldown-based for the autobattler-with-
+  steering vibe.
+- **Cost gating model.** Charges per battle (recommend), per-run
+  resource, or cooldown? Tied to F3's run length — a 40-floor run
+  with battle-only charges is very different from per-run charges.
 
-Expand each map to 10 floors. Multiple maps per run. Target ~1 hour per
-run.
+### F3 — Multi-map / longer runs
 
-Hard prerequisite: A3 (done — fuzz harness) — difficulty scaling will
-need empirical tuning. The current `enemy.length = playerSize - 1` and
-`+5% HP per floor` formula works for 4-floor MVP runs; it won't survive
-40+ floors without tuning.
+Expand each map to ~10 floors. Multiple maps per run. Target ~1 hour
+per run.
 
-Also a natural consumer of D5's overflow-queue spawn (team sizes grow
-past 8 over a long run) and D3's larger boards (more units want more
-room).
+Hard prereqs: A3 (done — fuzz harness; difficulty scaling needs
+empirical tuning), E4 (done — XP curve has to hold up across 40+
+floors). Natural consumer of D5's overflow queue (team sizes grow
+past 8 over a long run) and D3's larger boards.
 
-**Decision point C6:** terminology for the multi-map structure. "Acts"?
-"Regions"? Inter-map transitions and persistent state (HP carry-over?
-recruit availability?).
+**Theme migration (carried over from D8).** Multi-map runs are the
+moment theme moves up a level — each node map carries a theme,
+procedural battles within that map inherit. `rollTheme` exits
+`Run.handleEnterNode` at that point. See HANDOFF gotcha #92's flagged
+follow-up.
 
-### C7 — (Speculative) Split battles + meta-health
+**Decision points F3:**
 
-User-flagged: each combat as a series of smaller battles drawing
-subsets of the team, with wins/losses depleting a meta-health pool.
-Deckbuilder-roguelike inspiration.
+- **Multi-map terminology.** "Acts"? "Regions"? "Chapters"? Recommend
+  "Regions" — neutral, doesn't pre-commit to a narrative frame.
+- **Inter-map transitions.** HP carry-over (yes/partial-heal/full-
+  heal)? Recruit availability between maps (fresh pool / continued)?
+  Punted to F3 impl — these are big design knobs.
+- **Save/load UI surfaces here.** A2's plumbing has been waiting;
+  long runs are when save matters.
 
-Tabled until C6 lands and we can see whether snowballing is still a
-problem at longer-run scale. Large design surface — don't build
+### F4 — (Speculative) Split battles + meta-health
+
+User-flagged in the original c1-feedback. Each combat becomes a
+series of smaller battles drawing subsets of the team, with wins/
+losses depleting a meta-health pool. Deckbuilder-roguelike
+inspiration.
+
+Tabled until F3 ships and we can see whether snowballing is still a
+problem at long-run scale. Large design surface — don't build
 speculatively.
 
 ---
@@ -371,47 +670,50 @@ speculatively.
 
 Not gated; can land any time.
 
-- **Pathfinding directional tie-break.** [TODO](TODO.md) — units crab
-  leftward on equal-cost ties.
-- **`world.findUnit` O(n).** Retro flagged. Add `Map<id, Unit>` alongside
-  the array. Didn't bite in Phase D; re-evaluate during C6 (multi-map
-  runs) when team sizes grow past the current ~8-unit band.
+- **`world.findUnit` O(n).** Retro flagged. Add `Map<id, Unit>`
+  alongside the array. Didn't bite in Phase D; re-evaluate early in
+  Phase E (the ability system will be calling findUnit more often
+  across multi-ability units and AoE targeting).
 - **Favicon.** [TODO](TODO.md). Inline SVG glyph.
-- **`.gitattributes`** to normalize line endings. Stops the CRLF warnings
-  on every commit (retro item).
+- **`.gitattributes`** to normalize line endings. Stops the CRLF
+  warnings on every commit (retro item).
 - **Bundle chunk-size warning.** Bump `chunkSizeWarningLimit` in
   [vite.config.ts](vite.config.ts), or code-split three.js if it gets
   noisy.
 - **Terrain generator: bias water placement toward unit paths.**
   [TODO](TODO.md) — the generator scatters water uniformly, so the
-  shallow-water cost-2 rule rarely gets exercised in practice. D5's
-  spawn-region rewrite shipped without absorbing this; standalone
-  follow-up now. Probably wants "place water in N clusters of size M"
-  rather than per-cell Bernoulli.
+  shallow-water cost-2 rule rarely gets exercised in practice.
+  Probably wants "place water in N clusters of size M" rather than
+  per-cell Bernoulli. Lower priority post-D5 since spawn regions can
+  be anywhere on the board, not just the rows water used to dodge.
 
 ---
 
 ## What we're explicitly NOT doing yet
 
-- **Save/load UI.** A2 (done) laid the plumbing; the actual "load this
-  saved run" UX is deferred until C6 (long enough runs that save
-  matters).
+- **`power` stat / multi-round battles.** Combat-feedback explicitly
+  deferred. Revisit only if F4 (split battles) lands and exposes a
+  use for a persistent across-battle stat.
+- **Dodge mechanics.** Combat-feedback explicitly deferred to "after
+  we see how dodge-less feels." Phase E is the dodge-less baseline;
+  revisit only if playtesting flags the need.
+- **Save/load UI.** A2 (done) laid the plumbing; the actual "load
+  this saved run" UX is deferred until F3 (long enough runs that
+  save matters).
 - **Replay system.** Free once A2 (done) lands; build the UI when
   there's a reason (shareable seeds, bug repros).
-- **Generic status-effect system.** A1 supports multi-tick effects
-  technically. D7 adds per-tick tile effects with a targeted hook
-  (fire damage, healing). Resist building a generic status system
-  until C2 reveals what's actually needed beyond these.
-- **Boss / elite encounters.** Deferred until C3 + C6 stabilize the
+- **Generic status-effect system.** A1 supports multi-tick effects;
+  D7 added per-tick tile effects via a targeted hook; E2's ability
+  refactor will add several short-duration effects (charge-up,
+  reposition, crit windup). Resist building a generic status system
+  until E7 (and possibly F1) reveals what's actually needed beyond
+  these.
+- **Boss / elite encounters.** Deferred until F1 + F3 stabilize the
   recruit/depth surface.
 - **Touch controls** for the camera. Deferred per c1-feedback; D4
-  ships WASD + edge-scroll only.
-- **Half-cover combat modifier.** D6 ships the unit type with an LOS
-  flag only; any ranged-defense / accuracy bonus from being behind
-  half-cover is a C2-era addition (the modifier is more interesting
-  once mage AoE and rogue burst exist).
-- **Editor "test play" button.** Carried over from the C1d.B punt.
-  Would need URL-encoded handoff to the live game or a Vite middleware
-  bridge. Re-evaluate after Phase D ships in full — the editor's other
-  affordances may make this unnecessary, or the manual paste-into-JSON
-  loop may finally hurt enough to justify the plumbing.
+  shipped WASD + edge-scroll only and the same scope applies through
+  Phase F.
+- **Editor "test play" button.** Carried over from C1d.B + the post-
+  C1 roadmap. Re-evaluate once Phase E ships — if the combat work
+  reveals a layout-tuning bottleneck, the URL-encoded handoff finally
+  earns its complexity.

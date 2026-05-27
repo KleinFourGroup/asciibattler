@@ -77,7 +77,7 @@ export class MovementBehavior implements Behavior {
       otherUnitCells.add(`${u.position.x},${u.position.y}`);
     }
 
-    const inRange = chebyshev(unit.position, target.position) <= unit.stats.attackRange;
+    const inRange = chebyshev(unit.position, target.position) <= unit.derived.attackRange;
     if (inRange && hasLineOfSight(unit.position, target.position, losBlockers)) {
       return null;
     }
@@ -96,7 +96,7 @@ export class MovementBehavior implements Behavior {
     if (otherUnitCells.has(`${to.x},${to.y}`)) return null;
 
     const from = unit.position;
-    const durationTicks = unit.stats.moveCooldownTicks;
+    const durationTicks = unit.derived.moveCooldownTicks;
 
     return {
       action: new MoveAction(from, to, durationTicks),

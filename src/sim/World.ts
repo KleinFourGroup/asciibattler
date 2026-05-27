@@ -3,9 +3,16 @@ import type { GameEvents } from '../core/events';
 import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { GridCoord } from '../core/types';
 import { GRID_SIZE } from '../config';
-import { Unit, type Team, type UnitStats, type UnitTemplate } from './Unit';
+import {
+  Unit,
+  type Team,
+  type UnitArchetype,
+  type UnitDerived,
+  type UnitStats,
+  type UnitTemplate,
+} from './Unit';
 import type { ActionProposal } from './Action';
-import { glyphForArchetype } from './archetypes';
+import { attackRangeForArchetype, glyphForArchetype } from './archetypes';
 import type { WorldCommand } from './Command';
 import { createAction } from './actions/registry';
 import { createBehavior } from './behaviors/registry';
@@ -16,6 +23,7 @@ import { SpawnAction } from './actions/SpawnAction';
 import { SPAWN } from '../config/spawn';
 import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
 import type { SpawnRegion } from './layouts';
+import { ZERO_STATS, deriveStats, inertDerived } from './stats';
 
 /**
  * Schema history:
@@ -25,8 +33,13 @@ import type { SpawnRegion } from './layouts';
  *       `spawnRegions` (each team's authoritative spawn region).
  *   5 — D6 added per-unit `blocksLineOfSight` (defaults `true` for
  *       combatants + walls; half-cover sets `false`).
+ *   6 — E1 rewrote `UnitSnapshot.stats` to the new vocabulary
+ *       (constitution / strength / ranged / magic / luck / speed /
+ *       endurance), added `UnitSnapshot.archetype` + `.derived`, and
+ *       added a top-level `combatRng` channel for AttackAction's
+ *       start-time crit roll.
  */
-const WORLD_SCHEMA_VERSION = 5;
+const WORLD_SCHEMA_VERSION = 6;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -46,8 +59,10 @@ interface ActiveActionSnapshot {
 export interface UnitSnapshot {
   id: number;
   team: Team;
+  archetype: UnitArchetype;
   glyph: string;
   stats: UnitStats;
+  derived: UnitDerived;
   position: GridCoord;
   currentHp: number;
   blocksLineOfSight: boolean;
@@ -74,6 +89,10 @@ export interface WorldSnapshot {
   ended: boolean;
   nextUnitId: number;
   rng: RNGSnapshot;
+  /** E1: independent RNG for AttackAction's crit roll. Forked at battle
+   *  setup from a parent the spawn-setup stream also forks off, so
+   *  combat noise stays out of the spawn-pick + intra-region shuffle. */
+  combatRng: RNGSnapshot;
   units: UnitSnapshot[];
   pendingCommands: WorldCommand[];
   tileGrid: TileGridSnapshot;
@@ -101,6 +120,16 @@ export class World {
   readonly gridW: number;
   readonly gridH: number;
   readonly rng: RNG;
+  /**
+   * E1 — dedicated RNG for combat rolls (currently just AttackAction's
+   * crit decision; E2's Ability resolvers + E5's pathfinding nudges
+   * may join). Lives on its own stream so adding/removing combat
+   * sources doesn't perturb the spawn-setup stream that pathfinding /
+   * region-pick fuzz tests pin. Default forks from `rng` when the
+   * constructor caller doesn't provide one (preserves the behaviour
+   * tests that build a naked `new World(bus, rng)` rely on).
+   */
+  readonly combatRng: RNG;
   readonly units: Unit[] = [];
   /**
    * Per-cell tile data (floor / shallow_water). Defaults to all-floor when
@@ -140,12 +169,17 @@ export class World {
     gridW: number = GRID_SIZE,
     gridH: number = GRID_SIZE,
     tileGrid?: TileGrid,
+    combatRng?: RNG,
   ) {
     this.bus = bus;
     this.rng = rng;
     this.gridW = gridW;
     this.gridH = gridH;
     this.tileGrid = tileGrid ?? new TileGrid(gridW, gridH);
+    // E1: default fork keeps unit tests that build a naked World working;
+    // battleSetup passes an explicit forked combatRng so its determinism
+    // is anchored on `encounter.terrainSeed`, not `rng`.
+    this.combatRng = combatRng ?? rng.fork();
   }
 
   get currentTick(): number {
@@ -339,7 +373,7 @@ export class World {
         this.bus.emit('unit:burned', { unitId: unit.id, damage });
       } else if (kind === 'healing' && healTick) {
         const before = unit.currentHp;
-        unit.currentHp = Math.min(unit.stats.maxHp, before + 1);
+        unit.currentHp = Math.min(unit.derived.maxHp, before + 1);
         const amount = unit.currentHp - before;
         this.bus.emit('unit:healed', { unitId: unit.id, amount });
       }
@@ -399,11 +433,15 @@ export class World {
   }
 
   private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {
+    const attackRange = attackRangeForArchetype(template.archetype);
+    const derived = deriveStats(template.stats, attackRange);
     const unit = this.addUnit(
       {
         team,
+        archetype: template.archetype,
         glyph: glyphForArchetype(template.archetype),
         stats: template.stats,
+        derived,
         position,
       },
       false,
@@ -465,13 +503,23 @@ export class World {
    * Instantiate a unit from a rolled template and place it on the grid.
    * Glyph is derived from archetype; color is a renderer-side concern keyed
    * off `team` (see render/BattleRenderer.ts).
+   *
+   * E1: derives the unit's `UnitDerived` snapshot from the template's
+   * stats + archetype attackRange. The template carries baseStats only;
+   * battle-time numbers (maxHp, cooldowns, crit chance) are computed
+   * here so the same template can be respawned with a different per-
+   * encounter modifier without a stale-template footgun.
    */
   spawnUnit(template: UnitTemplate, team: Team, position: GridCoord): Unit {
+    const attackRange = attackRangeForArchetype(template.archetype);
+    const derived = deriveStats(template.stats, attackRange);
     return this.addUnit(
       {
         team,
+        archetype: template.archetype,
         glyph: glyphForArchetype(template.archetype),
         stats: template.stats,
+        derived,
         position,
       },
       true,
@@ -501,8 +549,10 @@ export class World {
     return this.addUnit(
       {
         team: opts.team ?? 'neutral',
+        archetype: 'environment',
         glyph: opts.glyph,
-        stats: makeInertStats(opts.maxHp ?? 1),
+        stats: ZERO_STATS,
+        derived: inertDerived(opts.maxHp ?? 1),
         position: opts.position,
         blocksLineOfSight: opts.blocksLineOfSight ?? true,
       },
@@ -521,8 +571,10 @@ export class World {
   private addUnit(
     init: {
       team: Team;
+      archetype: UnitArchetype;
       glyph: string;
       stats: UnitStats;
+      derived: UnitDerived;
       position: GridCoord;
       blocksLineOfSight?: boolean;
     },
@@ -531,8 +583,10 @@ export class World {
     const unit = new Unit({
       id: this.nextUnitId++,
       team: init.team,
+      archetype: init.archetype,
       glyph: init.glyph,
       stats: init.stats,
+      derived: init.derived,
       position: init.position,
       blocksLineOfSight: init.blocksLineOfSight ?? true,
     });
@@ -574,6 +628,7 @@ export class World {
       ended: this._ended,
       nextUnitId: this.nextUnitId,
       rng: this.rng.toJSON(),
+      combatRng: this.combatRng.toJSON(),
       units: this.units.map(snapshotUnit),
       pendingCommands: this.commands.slice(),
       tileGrid: this.tileGrid.toJSON(),
@@ -595,7 +650,15 @@ export class World {
       );
     }
     const rng = RNG.fromJSON(snap.rng);
-    const world = new World(bus, rng, snap.gridW, snap.gridH, TileGrid.fromJSON(snap.tileGrid));
+    const combatRng = RNG.fromJSON(snap.combatRng);
+    const world = new World(
+      bus,
+      rng,
+      snap.gridW,
+      snap.gridH,
+      TileGrid.fromJSON(snap.tileGrid),
+      combatRng,
+    );
     world.tickCount = snap.tickCount;
     world._ended = snap.ended;
     world.nextUnitId = snap.nextUnitId;
@@ -605,8 +668,10 @@ export class World {
       const unit = new Unit({
         id: us.id,
         team: us.team,
+        archetype: us.archetype,
         glyph: us.glyph,
         stats: us.stats,
+        derived: us.derived,
         position: us.position,
         blocksLineOfSight: us.blocksLineOfSight,
       });
@@ -647,28 +712,14 @@ export class World {
   }
 }
 
-/**
- * Stat block for env entities that don't act and don't fight back. Damage
- * / range / cooldowns are all zero — if a future destructible-wall mode
- * lets attacks target them, they'll just take damage and die without
- * retaliation.
- */
-function makeInertStats(maxHp: number): UnitStats {
-  return {
-    maxHp,
-    attackDamage: 0,
-    attackRange: 0,
-    attackCooldownTicks: 0,
-    moveCooldownTicks: 0,
-  };
-}
-
 function snapshotUnit(unit: Unit): UnitSnapshot {
   return {
     id: unit.id,
     team: unit.team,
+    archetype: unit.archetype,
     glyph: unit.glyph,
     stats: unit.stats,
+    derived: unit.derived,
     position: unit.position,
     currentHp: unit.currentHp,
     blocksLineOfSight: unit.blocksLineOfSight,

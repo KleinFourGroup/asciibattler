@@ -353,20 +353,29 @@ function rollEnemyTeam(rng: RNG, playerSize: number, floor: number): UnitTemplat
 
   const team: UnitTemplate[] = [];
   for (let i = 0; i < meleeCount; i++) {
-    team.push(scaleMaxHp(rollUnit('melee', rng), hpMultiplier));
+    team.push(scaleConstitution(rollUnit('melee', rng), hpMultiplier));
   }
   for (let i = 0; i < rangedCount; i++) {
-    team.push(scaleMaxHp(rollUnit('ranged', rng), hpMultiplier));
+    team.push(scaleConstitution(rollUnit('ranged', rng), hpMultiplier));
   }
   return team;
 }
 
-function scaleMaxHp(template: UnitTemplate, multiplier: number): UnitTemplate {
+/**
+ * E1: enemy-difficulty HP scaling now drives `constitution` (the stat
+ * that derives maxHp via `deriveStats`), not the post-derive maxHp
+ * value. Keeps the derivation chain canonical — every unit's maxHp
+ * trails its constitution × `STATS.hpPerConstitution`. E3 replaces
+ * this with `enemyLevelPerFloor` driving a `scaleStats` per-stat
+ * growth pass; until then the constitution-only scaling preserves
+ * Phase D's "tougher enemies deeper in" feel.
+ */
+function scaleConstitution(template: UnitTemplate, multiplier: number): UnitTemplate {
   return {
     archetype: template.archetype,
     stats: {
       ...template.stats,
-      maxHp: Math.round(template.stats.maxHp * multiplier),
+      constitution: Math.round(template.stats.constitution * multiplier),
     },
   };
 }

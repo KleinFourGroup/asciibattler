@@ -177,7 +177,7 @@ function updateRow(row: HTMLElement, unit: Unit): void {
   // unit:attacked and DeathBehavior firing in the next tick (~100ms). Show 0
   // so the player never sees an "M-10/48" flash.
   const hp = Math.max(0, unit.currentHp);
-  const pct = hp / unit.stats.maxHp;
+  const pct = hp / unit.derived.maxHp;
   fill.style.width = `${pct * 100}%`;
-  text.textContent = `${hp}/${unit.stats.maxHp}`;
+  text.textContent = `${hp}/${unit.derived.maxHp}`;
 }

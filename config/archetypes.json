@@ -1,18 +1,28 @@
 {
   "melee": {
     "glyph": "M",
-    "hp": [40, 60],
-    "attackDamage": [8, 14],
     "attackRange": 1,
-    "attackCooldownSeconds": [0.9, 1.5],
-    "moveCooldownSeconds": [0.5, 0.8]
+    "baseStats": {
+      "constitution": 20,
+      "strength": 8,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 3,
+      "speed": 5,
+      "endurance": 6
+    }
   },
   "ranged": {
     "glyph": "a",
-    "hp": [20, 30],
-    "attackDamage": [5, 9],
     "attackRange": 3,
-    "attackCooldownSeconds": [1.0, 1.8],
-    "moveCooldownSeconds": [0.6, 1.0]
+    "baseStats": {
+      "constitution": 12,
+      "strength": 0,
+      "ranged": 5,
+      "magic": 0,
+      "luck": 3,
+      "speed": 5,
+      "endurance": 5
+    }
   }
 }

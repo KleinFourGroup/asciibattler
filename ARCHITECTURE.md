@@ -45,7 +45,7 @@ src/
     types.ts                 # Shared primitives: Vec2, GridCoord
 
   config/                    # A4: zod-validated wrappers around config/*.json
-    archetypes.ts            #   melee + ranged stat bands + glyphs
+    archetypes.ts            #   E1: melee + ranged glyph + attackRange + baseStats
     difficulty.ts            #   enemy size delta + per-floor HP scale
     recruitment.ts           #   starting team + offer size
     nodemap.ts               #   floor count + width bands + degree cap
@@ -53,14 +53,19 @@ src/
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
+    stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base cooldowns, cdPerStat, minCdScale
     schemas.ts               #   shared zod helpers
 
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v5 (C1a v2, D3 v3, D5.C v4, D6 v5)
-    Unit.ts                  # Unit + UnitTemplate + UnitStats + Team + Behavior
+                             # Serializable; WorldSnapshot v6 (C1a v2, D3 v3, D5.C v4, D6 v5, E1 v6)
+                             # E1: added `combatRng` (forked from `rng`) for AttackAction crit rolls
+    Unit.ts                  # Unit + UnitTemplate + UnitStats + UnitDerived + Team + Behavior
+                             # archetype: 'melee' | 'ranged' | 'environment' (E1)
                              # actionCooldowns Map + activeAction + blocksLineOfSight (D6)
+    stats.ts                 # E1: deriveStats / inertDerived / basicAttackDamage / ZERO_STATS
+                             # — pure functions; crit RNG rolls happen at AttackAction.start
     TileGrid.ts              # Tile kinds: floor | shallow_water | chasm | fire | healing
                              # Per-cell movement cost; chasm = Infinity (data-driven block)
     LineOfSight.ts           # Bresenham line walk for ranged-attack LOS (C1b)
@@ -76,7 +81,8 @@ src/
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter
     actions/
       MoveAction.ts          # Logical position update + unit:moved event
-      AttackAction.ts        # Damage + unit:attacked event
+      AttackAction.ts        # E1: start-time crit roll via world.combatRng → damage + unit:attacked
+                             # event (with `crit` flag)
       SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns
       registry.ts            # Action factories keyed by Action.id (A2)
     behaviors/
@@ -130,7 +136,7 @@ src/
     AudioPlayer.ts           # B6: 4-deep clone ring per sound; per-key volume + pitch jitter
 
 config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
-  archetypes.json
+  archetypes.json            # E1: per-archetype glyph + attackRange + baseStats
   difficulty.json
   recruitment.json
   nodemap.json
@@ -138,6 +144,8 @@ config/                      # A4: balance JSON source of truth (paired with src
   layouts.json
   spawn.json
   tiles.json
+  stats.json                 # E1: hpPerConstitution, crit cap/mult, base cooldowns,
+                             #     cdPerStat, minCdScale
 
 public/
   audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, ...)

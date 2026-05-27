@@ -8,6 +8,8 @@ import { RNG } from '../core/RNG';
 import { rollUnit } from './archetypes';
 import { spawnWall } from './environment';
 import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
+import { ZERO_STATS, deriveStats } from './stats';
+import { ARCHETYPE_CONFIG } from './archetypes';
 import type { GameEvents } from '../core/events';
 
 describe('World (Step 3.1 skeleton)', () => {
@@ -288,9 +290,9 @@ describe('World D7.B tile effects', () => {
     // Force currentHp to maxHp; next heal-tick clamps and emits
     // amount=0 (subscribers can debounce; the sim still fires for
     // observability).
-    units[0]!.currentHp = units[0]!.stats.maxHp;
+    units[0]!.currentHp = units[0]!.derived.maxHp;
     for (let t = 0; t < HEALING_TICKS_PER_HEAL; t++) world.tick();
-    expect(units[0]!.currentHp).toBe(units[0]!.stats.maxHp);
+    expect(units[0]!.currentHp).toBe(units[0]!.derived.maxHp);
     expect(heals[heals.length - 1]).toEqual({ unitId: units[0]!.id, amount: 0 });
   });
 
@@ -360,8 +362,11 @@ interface DeathSceneUnit {
   x: number;
   y: number;
   hp?: number;
+  /** Maps to `strength` (melee) — drives basic-strike damage. */
   attackDamage?: number;
+  /** Maps to `derived.attackRange` (per-archetype primitive, not a stat). */
   attackRange?: number;
+  /** Per-test override; otherwise comes from deriveStats(speed). */
   attackCooldownTicks?: number;
   behaviors?: readonly ('movement' | 'attack')[];
 }
@@ -381,18 +386,30 @@ function scene(specs: DeathSceneUnit[]): {
 
   let nextId = 1;
   const units = specs.map((s) => {
+    // E1: melee archetype, with `strength` set to the legacy
+    // `attackDamage` knob so tests that one-shot via 999-damage attacks
+    // still work. Constitution=20 → maxHp=50 (matches the pre-E1
+    // hard-coded default).
+    const baseMelee = ARCHETYPE_CONFIG.melee.baseStats;
     const stats: UnitStats = {
-      maxHp: 50,
-      attackDamage: s.attackDamage ?? 10,
-      attackRange: s.attackRange ?? 1,
-      attackCooldownTicks: s.attackCooldownTicks ?? 8,
-      moveCooldownTicks: 5,
+      ...baseMelee,
+      // Default constitution=20 → derived.maxHp = 50 (round(20*2.5)).
+      // No knob exposed for it here — tests use `s.hp` to override
+      // currentHp post-construction.
+      strength: s.attackDamage ?? baseMelee.strength,
     };
+    const range = s.attackRange ?? 1;
+    let derived = deriveStats(stats, range);
+    if (s.attackCooldownTicks !== undefined) {
+      derived = { ...derived, attackCooldownTicks: s.attackCooldownTicks };
+    }
     const u = new Unit({
       id: nextId++,
       team: s.team,
+      archetype: 'melee',
       glyph: 'M',
       stats,
+      derived,
       position: { x: s.x, y: s.y },
     });
     if (s.hp !== undefined) u.currentHp = s.hp;
@@ -405,3 +422,6 @@ function scene(specs: DeathSceneUnit[]): {
   });
   return { world, units, deaths, attacks };
 }
+
+// Keep imports referenced even when a specific test stops using them.
+void ZERO_STATS;

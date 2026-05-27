@@ -1,58 +1,64 @@
 import { describe, it, expect } from 'vitest';
-import { rollUnit, glyphForArchetype, ARCHETYPE_BOUNDS } from './archetypes';
+import {
+  rollUnit,
+  glyphForArchetype,
+  attackRangeForArchetype,
+  ARCHETYPE_CONFIG,
+} from './archetypes';
 import { RNG } from '../core/RNG';
-import { secondsToTicks } from '../config';
 
-describe('archetypes / rollUnit', () => {
-  it('produces a melee template with stats inside the documented bounds', () => {
+describe('archetypes / rollUnit (E1: returns baseStats verbatim, no rolls)', () => {
+  it('produces a melee template equal to the configured baseStats', () => {
     const rng = new RNG(1);
-    const b = ARCHETYPE_BOUNDS.melee;
+    const expected = ARCHETYPE_CONFIG.melee.baseStats;
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 5; i++) {
       const t = rollUnit('melee', rng);
       expect(t.archetype).toBe('melee');
-      expect(t.stats.maxHp).toBeGreaterThanOrEqual(b.hp[0]);
-      expect(t.stats.maxHp).toBeLessThanOrEqual(b.hp[1]);
-      expect(t.stats.attackDamage).toBeGreaterThanOrEqual(b.attackDamage[0]);
-      expect(t.stats.attackDamage).toBeLessThanOrEqual(b.attackDamage[1]);
-      expect(t.stats.attackRange).toBe(b.attackRange);
-      expect(t.stats.attackCooldownTicks).toBeGreaterThanOrEqual(
-        secondsToTicks(b.attackCooldownSeconds[0]),
-      );
-      expect(t.stats.attackCooldownTicks).toBeLessThanOrEqual(
-        secondsToTicks(b.attackCooldownSeconds[1]),
-      );
-      expect(t.stats.moveCooldownTicks).toBeGreaterThanOrEqual(
-        secondsToTicks(b.moveCooldownSeconds[0]),
-      );
-      expect(t.stats.moveCooldownTicks).toBeLessThanOrEqual(
-        secondsToTicks(b.moveCooldownSeconds[1]),
-      );
+      expect(t.stats).toEqual(expected);
     }
   });
 
-  it('produces a ranged template with attackRange > 1', () => {
-    const t = rollUnit('ranged', new RNG(1));
+  it('produces a ranged template equal to the configured baseStats', () => {
+    const rng = new RNG(1);
+    const expected = ARCHETYPE_CONFIG.ranged.baseStats;
+    const t = rollUnit('ranged', rng);
     expect(t.archetype).toBe('ranged');
-    expect(t.stats.attackRange).toBeGreaterThan(1);
+    expect(t.stats).toEqual(expected);
   });
 
-  it('is deterministic for the same seed', () => {
+  it('same seed → same template (trivially: no RNG draws today)', () => {
     const a = rollUnit('melee', new RNG(42));
     const b = rollUnit('melee', new RNG(42));
     expect(a).toEqual(b);
   });
 
-  it('produces different rolls for different seeds (very high probability)', () => {
+  it('different seeds produce IDENTICAL templates today (rolls land in E3)', () => {
+    // Documents the E1 contract: stats come straight from the archetype
+    // config, no per-stat randomization yet. E3's `simulateLevelUps`
+    // will restore the "different seed → different stats" property.
     const a = rollUnit('melee', new RNG(1));
     const b = rollUnit('melee', new RNG(2));
-    expect(a).not.toEqual(b);
+    expect(a).toEqual(b);
+  });
+
+  it('melee and ranged templates have non-overlapping stat profiles', () => {
+    // Smoke check that the JSON wasn't accidentally symmetric.
+    const m = rollUnit('melee', new RNG(0));
+    const r = rollUnit('ranged', new RNG(0));
+    expect(m.stats.strength).toBeGreaterThan(r.stats.strength);
+    expect(r.stats.ranged).toBeGreaterThan(m.stats.ranged);
   });
 });
 
-describe('archetypes / glyphForArchetype', () => {
-  it('maps melee to M and ranged to a', () => {
+describe('archetypes / lookups', () => {
+  it('glyphForArchetype maps to M / a', () => {
     expect(glyphForArchetype('melee')).toBe('M');
     expect(glyphForArchetype('ranged')).toBe('a');
+  });
+
+  it('attackRangeForArchetype matches config (melee=1, ranged>1)', () => {
+    expect(attackRangeForArchetype('melee')).toBe(1);
+    expect(attackRangeForArchetype('ranged')).toBeGreaterThan(1);
   });
 });

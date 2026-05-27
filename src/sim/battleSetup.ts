@@ -163,7 +163,7 @@ export function applyTerrain(
  */
 export function spawnEncounter(world: World, encounter: BattleEncounter): void {
   const spawnRegions = applyTerrain(world, encounter);
-  const setupRng = new RNG(encounter.terrainSeed).fork();
+  const setupRng = setupRngFor(encounter);
   const { player, enemy } = pickSpawnRegions(spawnRegions, setupRng);
   spawnTeam(world, 'player', encounter.playerTeam, player, setupRng);
   spawnTeam(world, 'enemy', encounter.enemyTeam, enemy, setupRng);
@@ -174,6 +174,12 @@ export function spawnEncounter(world: World, encounter: BattleEncounter): void {
  * `spawnEncounter` uses, so both paths agree on the per-battle
  * shuffles. Exported so the centroid-based scroll-camera anchor (D5.E)
  * can also peek at the picked regions via the same fork.
+ *
+ * E1 note: AttackAction's crit roll consumes `world.combatRng`, which
+ * is forked from World's main `rng` (seeded by `encounter.worldSeed`)
+ * inside the World constructor. That makes the crit stream independent
+ * of `setupRngFor`'s `encounter.terrainSeed` line — adding or removing
+ * an attack doesn't shift spawn picks for the same encounter.
  */
 export function setupRngFor(encounter: BattleEncounter): RNG {
   return new RNG(encounter.terrainSeed).fork();

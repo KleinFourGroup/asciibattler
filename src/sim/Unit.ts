@@ -12,22 +12,64 @@ import type { ActionProposal, ActiveAction } from './Action';
  */
 export type Team = 'player' | 'enemy' | 'neutral';
 
+/**
+ * E1 — combatant archetype tag, the same closed set the UnitTemplate
+ * + archetype config carry. The extra `'environment'` variant covers
+ * walls + half-cover (neutrals with no abilities) so a single
+ * `unit.archetype` lookup answers "which stat drives a basic strike?"
+ * without needing the caller to branch on team first.
+ */
+export type Archetype = 'melee' | 'ranged';
+export type UnitArchetype = Archetype | 'environment';
+
+/**
+ * E1 — per-unit base stat block. Replaces the MVP `{maxHp, attackDamage,
+ * attackRange, attackCooldownTicks, moveCooldownTicks}` shape. These
+ * are the values that grow via level-up (E3); battle-time numbers
+ * (maxHp, cooldown ticks, crit chance) live on `UnitDerived` and
+ * recompute from this block via `deriveStats` in `src/sim/stats.ts`.
+ *
+ * Closed set of named fields, not a `Map<string, number>`: adding a
+ * stat is one schema bump, and the type system surfaces every consumer
+ * that needs to react.
+ */
 export interface UnitStats {
-  readonly maxHp: number;
-  readonly attackDamage: number;
-  readonly attackRange: number;
-  /** Ticks between consecutive attacks. Authored in seconds, see archetypes.ts. */
-  readonly attackCooldownTicks: number;
-  /** Ticks between consecutive moves. Authored in seconds, see archetypes.ts. */
-  readonly moveCooldownTicks: number;
+  readonly constitution: number;
+  readonly strength: number;
+  readonly ranged: number;
+  readonly magic: number;
+  readonly luck: number;
+  readonly speed: number;
+  readonly endurance: number;
 }
 
 /**
- * Pre-instantiation description of a unit: archetype + rolled stats. The
+ * E1 — values derived once at construction time from `UnitStats` plus
+ * archetype context (attackRange is a per-archetype primitive, not
+ * computed from any stat). Treated as a snapshot — recompute via
+ * `deriveStats` when stats change (level-up, future status effects).
+ * Crit RNG rolls happen at action-start in AttackAction, NOT here;
+ * `critChance` is just the probability that gets fed into that roll.
+ */
+export interface UnitDerived {
+  readonly maxHp: number;
+  /** Probability in `[0, STATS.critCap]` that a basic strike crits. */
+  readonly critChance: number;
+  readonly attackCooldownTicks: number;
+  readonly moveCooldownTicks: number;
+  /** Per-archetype primitive, plumbed through `deriveStats`. */
+  readonly attackRange: number;
+}
+
+/**
+ * Pre-instantiation description of a unit: archetype + base stats. The
  * recruitment screen surfaces these as options; choosing one creates a `Unit`.
+ * Derived values are NOT carried on the template — they're recomputed at
+ * spawn time via `deriveStats` so future per-encounter modifiers can
+ * fold in cleanly without a stale-template footgun.
  */
 export interface UnitTemplate {
-  readonly archetype: 'melee' | 'ranged';
+  readonly archetype: Archetype;
   readonly stats: UnitStats;
 }
 
@@ -57,8 +99,10 @@ export interface Behavior {
 export interface UnitInit {
   readonly id: number;
   readonly team: Team;
+  readonly archetype: UnitArchetype;
   readonly glyph: string;
   readonly stats: UnitStats;
+  readonly derived: UnitDerived;
   readonly position: GridCoord;
   /** D6: defaults to `true` so existing combatants + walls keep their
    *  LOS-blocking behavior. Half-cover sets this to `false`. */
@@ -68,8 +112,10 @@ export interface UnitInit {
 export class Unit {
   readonly id: number;
   readonly team: Team;
+  readonly archetype: UnitArchetype;
   readonly glyph: string;
   readonly stats: UnitStats;
+  readonly derived: UnitDerived;
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
@@ -96,10 +142,12 @@ export class Unit {
   constructor(init: UnitInit) {
     this.id = init.id;
     this.team = init.team;
+    this.archetype = init.archetype;
     this.glyph = init.glyph;
     this.stats = init.stats;
+    this.derived = init.derived;
     this.position = init.position;
-    this.currentHp = init.stats.maxHp;
+    this.currentHp = init.derived.maxHp;
     this.blocksLineOfSight = init.blocksLineOfSight ?? true;
   }
 }

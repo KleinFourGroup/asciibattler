@@ -38,6 +38,8 @@ describe('A2 round-trip: World', () => {
     expect(restored.gridH).toBe(world.gridH);
     expect(restored.ended).toBe(world.ended);
     expect(restored.rng.toJSON()).toEqual(world.rng.toJSON());
+    // E1 — combatRng is its own stream; the round-trip preserves it too.
+    expect(restored.combatRng.toJSON()).toEqual(world.combatRng.toJSON());
     expect(restored.units.length).toBe(world.units.length);
     for (let i = 0; i < world.units.length; i++) {
       const a = world.units[i]!;

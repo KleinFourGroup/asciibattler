@@ -65,7 +65,7 @@ export class BattleScene implements Scene {
       ctx.bus.on('unit:attacked', ({ attackerId }) => {
         const attacker = this.world?.findUnit(attackerId);
         if (!attacker) return;
-        ctx.audio.play(attacker.stats.attackRange <= 1 ? 'melee' : 'shoot');
+        ctx.audio.play(attacker.derived.attackRange <= 1 ? 'melee' : 'shoot');
       }),
       ctx.bus.on('unit:died', ({ team }) => {
         if (team === 'neutral') return;

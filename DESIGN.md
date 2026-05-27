@@ -45,17 +45,26 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
 **Units:**
 - Single-tile, omnidirectional (no facing).
 - Block movement for both allies and enemies.
-- Stats: `maxHp`, `currentHp`, `moveCooldown` (ticks between moves), `attackCooldown` (ticks between attacks), `attackDamage`, `attackRange`.
+- **E1 stat vocabulary** (replaces the MVP `{maxHp, attackDamage, attackRange, attackCooldownTicks, moveCooldownTicks}` block — see [ROADMAP.md](ROADMAP.md) Phase E):
+  - `constitution` — drives maxHp (linear, `HP_PER_CONSTITUTION × constitution`).
+  - `strength` — basic melee strike damage.
+  - `ranged` — basic ranged strike damage.
+  - `magic` — placeholder for E7 mage / healer abilities.
+  - `luck` — crit chance via `min(critCap, luck × critPerLuck)`.
+  - `speed` — attack-cooldown scaling via `cooldownScale(speed) = max(minCdScale, 1 − speed × cdPerStat)`.
+  - `endurance` — move-cooldown scaling, same formula on the move side.
+- **Derived values** (computed once at unit construction time by `deriveStats` in [src/sim/stats.ts](src/sim/stats.ts)): `maxHp`, `critChance`, `attackCooldownTicks`, `moveCooldownTicks`, and `attackRange` (the last is a per-archetype primitive, plumbed through verbatim).
+- All stat / derive knobs live in [config/stats.json](config/stats.json) (linear HP-per-constitution, crit cap + multiplier, base cooldowns, scale floor). Archetype baselines live in [config/archetypes.json](config/archetypes.json).
 - Archetypes for MVP:
-  - **Melee** (`M`): higher HP, higher damage, range 1, moderate speed.
-  - **Ranged** (`a`): lower HP, moderate damage, range 3–5, moderate speed.
-- Stat randomization stays within tight per-archetype bounds so battles remain readable.
+  - **Melee** (`M`): higher constitution + strength, range 1, moderate speed/endurance.
+  - **Ranged** (`a`): lower constitution, no strength, ranged damage on the `ranged` stat, range 3–5, moderate speed/endurance.
+- E1 ships every unit at its archetype's exact baseStats (no per-stat randomization). E3 reintroduces variety via `simulateLevelUps` (player recruits) and `scaleStats` (enemies), driven by per-archetype `growthRates`.
 
 **Targeting:** Nearest enemy by Chebyshev distance. Ties broken by lowest current HP. Re-evaluated each time a unit's attack cooldown elapses or its current target dies.
 
 **Movement:** A* pathfinding to a cell within attack range of the current target. Units block pathing. If no path exists, the unit waits (1 tick) and retries. Logical move is instantaneous on the tick it occurs; the *visual* sprite lerps from the previous cell to the new cell over a duration equal to the move cooldown, snapping on arrival.
 
-**Combat:** When a unit's attack cooldown elapses and a valid target is within range, it deals `attackDamage` instantly. No damage rolls in MVP — flat damage values. Death is immediate at HP ≤ 0; the sprite plays a brief fade-out shader effect and is removed.
+**Combat:** When a unit's attack cooldown elapses and a valid target is within range, `AttackAction` resolves at action-start: it rolls once against `derived.critChance` from `world.combatRng` (a dedicated stream forked from the battle RNG, kept separate from spawn-pick / pathfinding noise), multiplies the base damage (`strength` for melee, `ranged` for archers) by `STATS.critMult` on a crit, and applies the result instantly. The `unit:attacked` event carries the resolved damage plus a `crit` flag for downstream consumers (E6's hitsplats colour-code on it). Death is immediate at HP ≤ 0; the sprite plays a brief fade-out shader effect and is removed.
 
 **Win condition:** One team fully eliminated.
 
@@ -67,7 +76,7 @@ For MVP, *every node is a battle node*. Rest, shop, elite, and event nodes are d
 
 **Recruitment:** After each victory, the player is offered a choice between 3 randomly generated units (within the existing archetypes). Each offer is guaranteed to contain at least one melee and at least one ranged option, so the choice is never "stat reroll only." The player picks one to add to their team. Skipping is not an option in MVP.
 
-**Difficulty curve (CHECKPOINT 6):** The enemy team in every battle is sized at `playerTeam.length - 1`, with composition ~60% melee / 40% ranged. The first battle is therefore 5v4 in the player's favor, but every recruit grows the enemy too, so the team-size advantage stays a constant +1 and doesn't snowball. Enemy `maxHp` is scaled by `1 + 0.05 × destinationFloor`, so deeper battles get tougher even at matched composition. Player and enemy stat rolls otherwise share the same bounds.
+**Difficulty curve (CHECKPOINT 6, retuned at E1):** The enemy team in every battle is sized at `playerTeam.length - 1`, with composition ~60% melee / 40% ranged. The first battle is therefore 5v4 in the player's favor, but every recruit grows the enemy too, so the team-size advantage stays a constant +1 and doesn't snowball. Enemy `constitution` is scaled by `1 + 0.05 × destinationFloor` — E1 moved the scaling knob from post-derive `maxHp` to the stat itself, so `deriveStats` continues to be the single source of truth for HP. Player and enemy stat baselines otherwise share the same archetype config. E3 replaces this with per-floor `enemyLevelPerFloor` driving a full `scaleStats` pass.
 
 **Defeat:** Full run reset. A new seed is rolled and a fresh map is generated.
 

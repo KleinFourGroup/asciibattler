@@ -270,7 +270,7 @@ export class BattleRenderer {
     const unit = this.world.findUnit(unitId);
     const pair = this.barPairs.get(unitId);
     if (!unit || !pair) return;
-    const pct = Math.max(0, unit.currentHp) / unit.stats.maxHp;
+    const pct = Math.max(0, unit.currentHp) / unit.derived.maxHp;
     this.bars.updateBar(pair.hp, { fillPct: pct, fillColor: hpFillColor(pct) });
   }
 

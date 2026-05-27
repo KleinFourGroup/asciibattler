@@ -1,0 +1,239 @@
+/**
+ * E1 — coverage for `deriveStats`, `basicAttackDamage`, `inertDerived`,
+ * and the `world.combatRng` crit-roll determinism contract.
+ *
+ * Formula-level tests are table-driven against the JSON-authored
+ * constants in `config/stats.json` so tuning the knobs doesn't force a
+ * separate test churn. Edge cases (constitution=0 → maxHp=1 floor,
+ * luck=99 → critCap, speed=99 → minCdScale floor) are pinned
+ * explicitly so a regression on the guards surfaces loudly.
+ */
+
+import { describe, it, expect } from 'vitest';
+import { RNG } from '../core/RNG';
+import { EventBus } from '../core/EventBus';
+import { World } from './World';
+import { Unit, type UnitStats } from './Unit';
+import { AttackBehavior } from './behaviors/AttackBehavior';
+import { ZERO_STATS, basicAttackDamage, deriveStats, inertDerived } from './stats';
+import { STATS } from '../config/stats';
+import { secondsToTicks } from '../config';
+import type { GameEvents } from '../core/events';
+
+const TEMPLATE: UnitStats = {
+  constitution: 20,
+  strength: 8,
+  ranged: 0,
+  magic: 0,
+  luck: 3,
+  speed: 5,
+  endurance: 6,
+};
+
+describe('deriveStats — maxHp', () => {
+  it('scales linearly with constitution at the configured rate', () => {
+    for (const con of [1, 5, 10, 20, 40]) {
+      const d = deriveStats({ ...TEMPLATE, constitution: con }, 1);
+      expect(d.maxHp).toBe(Math.round(STATS.hpPerConstitution * con));
+    }
+  });
+
+  it('floors at 1 even when constitution=0', () => {
+    const d = deriveStats({ ...TEMPLATE, constitution: 0 }, 1);
+    expect(d.maxHp).toBe(1);
+  });
+});
+
+describe('deriveStats — critChance', () => {
+  it('is luck × critPerLuck below the cap', () => {
+    for (const luck of [0, 1, 5, 10, 30]) {
+      const d = deriveStats({ ...TEMPLATE, luck }, 1);
+      expect(d.critChance).toBeCloseTo(luck * STATS.critPerLuck, 10);
+    }
+  });
+
+  it('clamps at critCap for high luck (defensive guard, not a base-game knob)', () => {
+    // Pick luck so that luck × critPerLuck exceeds critCap. At default
+    // config that's luck >= 60. Pinning at 99 (zod's STAT_CAP) gives a
+    // wide safety margin.
+    const d = deriveStats({ ...TEMPLATE, luck: 99 }, 1);
+    expect(d.critChance).toBe(STATS.critCap);
+  });
+});
+
+describe('deriveStats — cooldowns', () => {
+  it('attackCooldownTicks shrinks with speed via cooldownScale', () => {
+    const d = deriveStats({ ...TEMPLATE, speed: 5 }, 1);
+    const expectedScale = 1 - 5 * STATS.cdPerStat;
+    const expected = Math.max(
+      1,
+      secondsToTicks(STATS.baseAttackCooldownSeconds * expectedScale),
+    );
+    expect(d.attackCooldownTicks).toBe(expected);
+  });
+
+  it('moveCooldownTicks shrinks with endurance via cooldownScale', () => {
+    const d = deriveStats({ ...TEMPLATE, endurance: 6 }, 1);
+    const expectedScale = 1 - 6 * STATS.cdPerStat;
+    const expected = Math.max(
+      1,
+      secondsToTicks(STATS.baseMoveCooldownSeconds * expectedScale),
+    );
+    expect(d.moveCooldownTicks).toBe(expected);
+  });
+
+  it('cooldownScale floors at minCdScale for very high stat values', () => {
+    // Pick stat so that 1 - stat × cdPerStat < minCdScale. At default
+    // config that's stat > (1 - minCdScale) / cdPerStat = 60. Use 99.
+    const d = deriveStats({ ...TEMPLATE, speed: 99, endurance: 99 }, 1);
+    const flooredAttack = Math.max(
+      1,
+      secondsToTicks(STATS.baseAttackCooldownSeconds * STATS.minCdScale),
+    );
+    const flooredMove = Math.max(
+      1,
+      secondsToTicks(STATS.baseMoveCooldownSeconds * STATS.minCdScale),
+    );
+    expect(d.attackCooldownTicks).toBe(flooredAttack);
+    expect(d.moveCooldownTicks).toBe(flooredMove);
+  });
+
+  it('cooldown ticks floor at 1 (defense against absurd base/scale combos)', () => {
+    // The Math.max(1, ...) wrapping in deriveStats catches future tunings
+    // that would otherwise round to 0. Hard to exercise with default
+    // config; the test pins the floor so a regression on the wrapping
+    // is loud.
+    const fake = {
+      ...TEMPLATE,
+      // speed/endurance high enough to maximize scale clamp without
+      // affecting the floor itself.
+      speed: 99,
+      endurance: 99,
+    };
+    const d = deriveStats(fake, 1);
+    expect(d.attackCooldownTicks).toBeGreaterThanOrEqual(1);
+    expect(d.moveCooldownTicks).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('deriveStats — attackRange', () => {
+  it('passes through the per-archetype primitive verbatim', () => {
+    expect(deriveStats(TEMPLATE, 1).attackRange).toBe(1);
+    expect(deriveStats(TEMPLATE, 3).attackRange).toBe(3);
+    expect(deriveStats(TEMPLATE, 7).attackRange).toBe(7);
+  });
+});
+
+describe('inertDerived', () => {
+  it('produces a degenerate derived block with the requested maxHp', () => {
+    const d = inertDerived(5);
+    expect(d.maxHp).toBe(5);
+    expect(d.critChance).toBe(0);
+    expect(d.attackCooldownTicks).toBe(0);
+    expect(d.moveCooldownTicks).toBe(0);
+    expect(d.attackRange).toBe(0);
+  });
+});
+
+describe('basicAttackDamage', () => {
+  function makeUnit(arch: 'melee' | 'ranged' | 'environment', stats: UnitStats): Unit {
+    return new Unit({
+      id: 1,
+      team: arch === 'environment' ? 'neutral' : 'player',
+      archetype: arch,
+      glyph: arch === 'melee' ? 'M' : arch === 'ranged' ? 'a' : '#',
+      stats,
+      derived: arch === 'environment' ? inertDerived(1) : deriveStats(stats, 1),
+      position: { x: 0, y: 0 },
+    });
+  }
+
+  it('melee → strength', () => {
+    const u = makeUnit('melee', { ...TEMPLATE, strength: 13 });
+    expect(basicAttackDamage(u)).toBe(13);
+  });
+
+  it('ranged → ranged stat', () => {
+    const u = makeUnit('ranged', { ...TEMPLATE, ranged: 7 });
+    expect(basicAttackDamage(u)).toBe(7);
+  });
+
+  it('environment → 0 (walls never strike)', () => {
+    const u = makeUnit('environment', ZERO_STATS);
+    expect(basicAttackDamage(u)).toBe(0);
+  });
+});
+
+describe('combatRng determinism', () => {
+  it('same seed → same crit decision sequence', () => {
+    // Build a minimal "attacker adjacent to a punching-bag target" scene
+    // for each of two worlds with identical seeds. Run a fixed number of
+    // ticks, compare the `crit` field on every emitted unit:attacked.
+    function trace(seed: number): boolean[] {
+      const bus = new EventBus<GameEvents>();
+      const world = new World(bus, new RNG(seed));
+      const out: boolean[] = [];
+      bus.on('unit:attacked', (p) => out.push(p.crit));
+
+      // Attacker: high-luck so crits actually fire across the sample.
+      const attackerStats: UnitStats = { ...TEMPLATE, luck: 30 };
+      const attacker = new Unit({
+        id: 1,
+        team: 'player',
+        archetype: 'melee',
+        glyph: 'M',
+        stats: attackerStats,
+        derived: deriveStats(attackerStats, 1),
+        position: { x: 0, y: 0 },
+      });
+      attacker.behaviors.push(new AttackBehavior());
+
+      // Target: huge HP so it doesn't die before the trace finishes.
+      const targetStats: UnitStats = { ...TEMPLATE, constitution: 99 };
+      const target = new Unit({
+        id: 2,
+        team: 'enemy',
+        archetype: 'melee',
+        glyph: 'M',
+        stats: targetStats,
+        derived: deriveStats(targetStats, 1),
+        position: { x: 1, y: 0 },
+      });
+      world.units.push(attacker, target);
+
+      for (let i = 0; i < 200; i++) world.tick();
+      return out;
+    }
+
+    const a = trace(42);
+    const b = trace(42);
+    expect(a).toEqual(b);
+    expect(a.some((c) => c)).toBe(true); // at least one crit fired
+    expect(a.some((c) => !c)).toBe(true); // and at least one non-crit
+  });
+
+  it('different seeds produce different crit sequences (high probability)', () => {
+    function trace(seed: number): boolean[] {
+      const bus = new EventBus<GameEvents>();
+      const world = new World(bus, new RNG(seed));
+      const out: boolean[] = [];
+      bus.on('unit:attacked', (p) => out.push(p.crit));
+
+      const stats: UnitStats = { ...TEMPLATE, luck: 30, constitution: 99 };
+      const derived = deriveStats(stats, 1);
+      const a = new Unit({
+        id: 1, team: 'player', archetype: 'melee', glyph: 'M',
+        stats, derived, position: { x: 0, y: 0 },
+      });
+      a.behaviors.push(new AttackBehavior());
+      const t = new Unit({
+        id: 2, team: 'enemy', archetype: 'melee', glyph: 'M',
+        stats, derived, position: { x: 1, y: 0 },
+      });
+      world.units.push(a, t);
+      for (let i = 0; i < 200; i++) world.tick();
+      return out;
+    }
+    expect(trace(1)).not.toEqual(trace(2));
+  });
+});

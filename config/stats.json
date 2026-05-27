@@ -1,0 +1,10 @@
+{
+  "hpPerConstitution": 2.5,
+  "baseAttackCooldownSeconds": 1.2,
+  "baseMoveCooldownSeconds": 0.7,
+  "critPerLuck": 0.01,
+  "critCap": 0.6,
+  "critMult": 2.0,
+  "cdPerStat": 0.01,
+  "minCdScale": 0.4
+}

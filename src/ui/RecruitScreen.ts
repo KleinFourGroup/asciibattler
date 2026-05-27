@@ -12,7 +12,8 @@
 import type { UnitTemplate } from '../sim/Unit';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
-import { glyphForArchetype } from '../sim/archetypes';
+import { attackRangeForArchetype, glyphForArchetype } from '../sim/archetypes';
+import { deriveStats } from '../sim/stats';
 import { ticksToSeconds } from '../config';
 import { fadeIn, fadeOutAndRemove } from './fade';
 
@@ -73,17 +74,27 @@ export class RecruitScreen {
     label.textContent = template.archetype;
     card.appendChild(label);
 
-    const stats = document.createElement('div');
-    stats.className = 'recruit-stats';
+    // E1: card values are DERIVED (maxHp / cooldowns / crit) — the
+    // template only carries base stats. Mirroring `World.spawnUnit`'s
+    // derive call so the card preview matches the actual in-battle unit
+    // exactly. Basic damage comes from the archetype's primary stat
+    // (melee → strength, ranged → ranged) — same lookup
+    // `basicAttackDamage` uses inside AttackBehavior.
     const s = template.stats;
-    stats.append(
-      statLine('HP', String(s.maxHp)),
-      statLine('DMG', String(s.attackDamage)),
-      statLine('RNG', String(s.attackRange)),
-      statLine('ATK', `${ticksToSeconds(s.attackCooldownTicks).toFixed(2)}s`),
-      statLine('MOV', `${ticksToSeconds(s.moveCooldownTicks).toFixed(2)}s`),
+    const attackRange = attackRangeForArchetype(template.archetype);
+    const derived = deriveStats(s, attackRange);
+    const baseDamage = template.archetype === 'melee' ? s.strength : s.ranged;
+    const statsEl = document.createElement('div');
+    statsEl.className = 'recruit-stats';
+    statsEl.append(
+      statLine('HP', String(derived.maxHp)),
+      statLine('DMG', String(baseDamage)),
+      statLine('RNG', String(derived.attackRange)),
+      statLine('ATK', `${ticksToSeconds(derived.attackCooldownTicks).toFixed(2)}s`),
+      statLine('MOV', `${ticksToSeconds(derived.moveCooldownTicks).toFixed(2)}s`),
+      statLine('CRIT', `${Math.round(derived.critChance * 100)}%`),
     );
-    card.appendChild(stats);
+    card.appendChild(statsEl);
 
     card.addEventListener('click', () => {
       this.audio.play('click');

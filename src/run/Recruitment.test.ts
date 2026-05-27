@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
 import { rollOffer } from './Recruitment';
+import { ARCHETYPE_CONFIG } from '../sim/archetypes';
 
 describe('rollOffer', () => {
   it('defaults to 3 units', () => {
@@ -20,18 +21,14 @@ describe('rollOffer', () => {
     }
   });
 
-  it('stat rolls land within archetype bounds', () => {
+  it('E1: every offered unit has its archetype baseStats verbatim', () => {
+    // No per-stat randomization at E1 — rolls land in E3 via
+    // `simulateLevelUps`. Until then offered units are exact archetype
+    // baselines, so an exhaustive equality check is the cleanest
+    // assertion.
     const offer = rollOffer(new RNG(1), 50);
     for (const u of offer) {
-      if (u.archetype === 'melee') {
-        expect(u.stats.maxHp).toBeGreaterThanOrEqual(40);
-        expect(u.stats.maxHp).toBeLessThanOrEqual(60);
-        expect(u.stats.attackRange).toBe(1);
-      } else {
-        expect(u.stats.maxHp).toBeGreaterThanOrEqual(20);
-        expect(u.stats.maxHp).toBeLessThanOrEqual(30);
-        expect(u.stats.attackRange).toBe(3);
-      }
+      expect(u.stats).toEqual(ARCHETYPE_CONFIG[u.archetype].baseStats);
     }
   });
 

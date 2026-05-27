@@ -34,7 +34,19 @@ export interface GameEvents extends Record<string, unknown> {
     to: GridCoord;
     durationTicks: number;
   };
-  'unit:attacked': { attackerId: number; targetId: number; damage: number };
+  /**
+   * E1: `crit` flags whether AttackAction's start-time crit roll landed.
+   * `damage` is the resolved post-crit value (already multiplied by
+   * `STATS.critMult` when `crit === true`), so subscribers that only
+   * care about HP change don't need to re-multiply. The dedicated flag
+   * is what E6's hitsplats key off to render crits in red.
+   */
+  'unit:attacked': {
+    attackerId: number;
+    targetId: number;
+    damage: number;
+    crit: boolean;
+  };
   /**
    * D7.B: per-tick chip damage from standing on a `fire` tile. Separate
    * event from `unit:attacked` so consumers can branch cleanly without

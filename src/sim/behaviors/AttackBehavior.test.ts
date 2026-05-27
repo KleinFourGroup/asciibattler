@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { AttackBehavior } from './AttackBehavior';
 import { World } from '../World';
-import type { Unit, Team, UnitStats } from '../Unit';
+import type { Unit, Team, UnitStats, UnitTemplate } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { spawnHalfCover, spawnWall } from '../environment';
+import { ARCHETYPE_CONFIG } from '../archetypes';
 import type { GameEvents } from '../../core/events';
 
 describe('AttackBehavior', () => {
@@ -30,6 +31,7 @@ describe('AttackBehavior', () => {
       attackerId: units[0]!.id,
       targetId: units[1]!.id,
       damage: 7,
+      crit: false,
     });
   });
 
@@ -192,16 +194,36 @@ function scene(specs: SceneUnit[]): {
   bus.on('unit:attacked', (p) => attacks.push(p));
 
   const units = specs.map((s) => {
+    // E1: pick the archetype that gives the right attackRange (melee=1,
+    // ranged=3+). Tests pass `attackRange: 5` etc. to force ranged-style
+    // shots — we honor that by overriding `derived.attackRange` after
+    // spawnUnit, since attackRange is a per-archetype primitive at the
+    // config layer.
+    const archetype = (s.attackRange ?? 1) > 1 ? 'ranged' : 'melee';
+    const baseStats = ARCHETYPE_CONFIG[archetype].baseStats;
+    // luck=0 keeps the crit roll deterministically false so the per-test
+    // exact damage assertions hold. Damage source is strength (melee) or
+    // ranged (ranged stat) — we set both to `s.attackDamage` so either
+    // archetype produces the requested damage. Constitution drives maxHp
+    // via deriveStats (con=20 → 50 hp for melee, con=12 → 30 for ranged).
     const stats: UnitStats = {
-      maxHp: s.hp ?? 50,
-      attackDamage: s.attackDamage ?? 10,
-      attackRange: s.attackRange ?? 1,
-      attackCooldownTicks: s.attackCooldownTicks ?? 8,
-      moveCooldownTicks: 5,
+      ...baseStats,
+      luck: 0,
+      strength: s.attackDamage ?? baseStats.strength,
+      ranged: s.attackDamage ?? baseStats.ranged,
     };
+    const template: UnitTemplate = { archetype, stats };
     // Spawn through World so id allocation is consistent with any
     // subsequent spawnWall / spawnEnvironment calls in the test body.
-    const u = world.spawnUnit({ archetype: 'melee', stats }, s.team, { x: s.x, y: s.y });
+    const u = world.spawnUnit(template, s.team, { x: s.x, y: s.y });
+    // Override per-test knobs on top of the spawn-time derived values.
+    if (s.attackRange !== undefined || s.attackCooldownTicks !== undefined) {
+      const mutDerived = u as unknown as { derived: { -readonly [K in keyof typeof u.derived]: number } };
+      if (s.attackRange !== undefined) mutDerived.derived.attackRange = s.attackRange;
+      if (s.attackCooldownTicks !== undefined) {
+        mutDerived.derived.attackCooldownTicks = s.attackCooldownTicks;
+      }
+    }
     if (s.hp !== undefined) u.currentHp = s.hp;
     if (!s.inert) u.behaviors.push(new AttackBehavior());
     return u;

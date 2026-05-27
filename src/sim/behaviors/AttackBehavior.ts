@@ -5,6 +5,7 @@ import type { ActionProposal } from '../Action';
 import { AttackAction } from '../actions/AttackAction';
 import { findTarget } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
+import { basicAttackDamage } from '../stats';
 
 /**
  * Proposes a melee/ranged strike on the nearest enemy in attack range.
@@ -23,8 +24,13 @@ import { hasLineOfSight } from '../LineOfSight';
  *
  * D6: LOS blockers are gathered via per-Unit `blocksLineOfSight` — walls
  * stay in (default `true`), half-cover (`false`) is filtered out so
- * ranged units shoot OVER it. The pre-D6 "team === 'neutral'" filter
- * (HANDOFF gotcha #40's flagged-to-rewrite collector) is gone.
+ * ranged units shoot OVER it.
+ *
+ * E1: damage + cooldown come from `unit.derived` (precomputed from stats
+ * at spawn time) and `basicAttackDamage` (per-archetype stat lookup —
+ * melee → strength, ranged → ranged). Crit is rolled at start-time in
+ * AttackAction via `world.combatRng`; the proposal just carries the
+ * base damage + derived crit probability.
  */
 export class AttackBehavior implements Behavior {
   static readonly kind = 'attack';
@@ -33,18 +39,18 @@ export class AttackBehavior implements Behavior {
   proposeAction(unit: Unit, world: World): ActionProposal | null {
     const target = findTarget(unit, world);
     if (target === null) return null;
-    if (chebyshev(unit.position, target.position) > unit.stats.attackRange) return null;
+    if (chebyshev(unit.position, target.position) > unit.derived.attackRange) return null;
 
     const blockers = collectLosBlockers(world);
     if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {
       return null;
     }
 
-    const damage = unit.stats.attackDamage;
-    const durationTicks = unit.stats.attackCooldownTicks;
+    const baseDamage = basicAttackDamage(unit);
+    const durationTicks = unit.derived.attackCooldownTicks;
 
     return {
-      action: new AttackAction(target, damage),
+      action: new AttackAction(target, baseDamage, unit.derived.critChance),
       score: 10,
       cooldown: durationTicks,
       duration: durationTicks,

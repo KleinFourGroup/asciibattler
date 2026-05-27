@@ -9,8 +9,9 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 - **Phase B complete** — B1/B1.1 (palette + selective bloom), B3 (HP/progress bars), B5 (CSS scanlines), B6 (audio), B7 (root node `@`).
 - **Phase C1 complete** — C1a/b/c/d (terrain + walls + LOS + faceted prisms + layout editor + Labyrinth pathfinding fix).
 - **Phase D complete** — D1 (renderer cap), D2 (drag-paint), D3 (variable sizes), D4 (fit/scroll camera), D5.A–E (spawn regions + overflow queue), D6 (half-cover), D7.A–C (chasm + fire + healing), D8 (theming).
-- **Next up** — **Phase E (combat foundation)**. The post-D combat-feedback synthesis landed in [ROADMAP.md](ROADMAP.md) — Phase E is stats overhaul → ability primitives → archetype config + leveling → XP/difficulty rework → pathfinding refresh → combat visuals → new archetypes (mage/rogue/healer was the original C2; E7 now). C3 onward continues as Phase F (recruitment refactor, in-battle commands, multi-map, split battles). Old roadmap archived at [archive/post-c1-roadmap.md](archive/post-c1-roadmap.md); the feedback at [archive/combat-feedback.md](archive/combat-feedback.md). **E1 has several decision points the user needs to call** — crit formula, cooldown formula, stat caps, starting stat ranges — see ROADMAP.md "Decision points E1".
-- **Tests:** 316 passed, 0 `it.todo()`. Run with `npm test`. Fuzz smoke: `npm run fuzz:smoke`.
+- **E1 complete** — stats overhaul. Replaced MVP `{maxHp/attackDamage/...}` block with the new vocabulary (constitution/strength/ranged/magic/luck/speed/endurance) + `UnitDerived` layer (maxHp, critChance, cooldown ticks, attackRange) computed via `deriveStats`. Knobs in [config/stats.json](config/stats.json). AttackAction rolls crit at start against `world.combatRng`. WorldSnapshot v5→v6. Difficulty curve scales constitution (not post-derive maxHp) so `deriveStats` stays canonical.
+- **Next up** — **E2 (ability primitives)**. Extract AttackBehavior → generic AbilityBehavior; archetype config declares each unit's ability ids; D6 half-cover damage modifier finally lands. See [ROADMAP.md](ROADMAP.md) "E2".
+- **Tests:** 333 passed, 0 `it.todo()`. Run with `npm test`. Fuzz smoke: `npm run fuzz:smoke`.
 - **Dev server:** not running. Start with `npm run dev` → http://localhost:5173/ (port 5174 if 5173 is held by a stale process — check with `Get-NetTCPConnection -LocalPort 5173`; Vite spawns child Node processes that survive `taskkill` on the parent).
 - **Build:** `npm run build`. `vite.config.ts` uses `base: './'` so the same `dist/` works at any subpath.
 - **Canonical references:** [ARCHITECTURE.md](ARCHITECTURE.md) for the project tree + event/command catalogs; [ROADMAP.md](ROADMAP.md) for forward-looking steps; the "Things that bit us" list below for the hard-won fixes that look weird without context — don't refactor those without understanding why.
@@ -196,7 +197,29 @@ Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundat
 
 **Tests** 312 passing where D8-relevant (was 303 pre-D8; +9 new: per-layout theme assertion ×6 in [src/sim/layouts.test.ts](src/sim/layouts.test.ts), +3 in [src/run/Run.test.ts](src/run/Run.test.ts) covering "encounter.theme is always a registered theme," "hand-authored encounters use the layout-declared theme," "procedural rolls cover all themes across enough seeds"). (Four pre-existing failures referencing the removed `corridor` layout were cleaned up in commit `0f51ed9` after D8 landed.) Browser-verified: editor dropdown changes the floor color live for all three themes; loading an existing layout sets the dropdown + grid `data-theme` correctly; JSON export contains the theme line. In-game: hand-authored encounters use `layout.theme` (junctionAmbush battle shows banner "JUNCTION AMBUSH" without suffix — default theme); manual `terrain.setTiles(..., 'volcanic')` + banner override produces the expected dark-red/amber palette + "ENDLESS CORRIDORS — VOLCANIC" banner; same dance with `'rock'` produces the gray-stone palette + "ENDLESS CORRIDORS — ROCK" banner. Console error-free across all paths.
 
-**Phase D is now COMPLETE.** Next up per ROADMAP — **Phase E (combat foundation)**. Phase D was the spatial substrate; Phase E is the combat-mechanics substrate that lets mage/rogue/healer be more than glyph swaps. Synthesized from the post-D combat-feedback at [archive/combat-feedback.md](archive/combat-feedback.md). E1 (stats overhaul: constitution/strength/ranged/magic/luck/speed/endurance vocabulary, derived values, crit + cooldown formulas) is the foundation; E2-E6 build on it; E7 = the old C2 (new archetypes, now small once Phase E has done the heavy lifting). E has priors already in place: A1's action selector + multi-tick effects (gotcha #8), B3's dormant action progress bar (gotcha #30) for mage charge-ups (E7), C1b's wall destructibility plumbing (gotcha #39) for AoE on neutrals (E7). ROADMAP also flags that **multi-map runs (now F3) will eventually push theme up a level** — each node map will carry a theme; procedural encounters within that map inherit it. At that point `rollTheme` moves out of `Run.handleEnterNode` into nodeMap construction. The user surfaced this design when answering the D8 procedural-roll decision.
+**Phase D is now COMPLETE.** **E1 landed (stats overhaul).** Replaced the MVP `{maxHp, attackDamage, attackRange, attackCooldownTicks, moveCooldownTicks}` block with the new vocabulary (`constitution`, `strength`, `ranged`, `magic`, `luck`, `speed`, `endurance`) and a parallel `UnitDerived` snapshot computed once at spawn time via `deriveStats` in [src/sim/stats.ts](src/sim/stats.ts). Knob set lives in [config/stats.json](config/stats.json) (linear `hpPerConstitution=2.5`; `critPerLuck=0.01`, `critCap=0.6`, `critMult=2.0`; `baseAttackCooldownSeconds=1.2`, `baseMoveCooldownSeconds=0.7`, `cdPerStat=0.01`, `minCdScale=0.4`). Archetype baselines flipped in [config/archetypes.json](config/archetypes.json) — `melee` con=20 str=8 luck=3 speed=5 end=6, `ranged` con=12 str=0 ranged=5 luck=3 speed=5 end=5. Per the user's call: doubled MVP-baseline constitution so archers don't get one-shot, dropped archer strength to 0 + archer ranged 8→5 to balance the durability bump.
+
+Eight interlocking changes:
+
+1. **`UnitStats` rewrite + `UnitDerived` layer + `Unit.archetype`** ([src/sim/Unit.ts](src/sim/Unit.ts)). UnitStats is now the 7-stat baseline; derived values (`maxHp`, `critChance`, `attackCooldownTicks`, `moveCooldownTicks`, `attackRange`) live on `UnitDerived` and recompute via `deriveStats(stats, attackRange)`. `Unit.currentHp` now seeds from `derived.maxHp`, not `stats.maxHp`. `Unit.archetype: 'melee' | 'ranged' | 'environment'` distinguishes combatants from walls / half-cover (which `spawnEnvironment` flags `'environment'` with `ZERO_STATS` + `inertDerived(maxHp)`).
+
+2. **`config/stats.json` + zod parser** at [src/config/stats.ts](src/config/stats.ts). A4 pattern — parse at module load, throw on malformed. All E1 knobs live here so balance tuning is a JSON edit + Vite hot-reload, not a recompile.
+
+3. **`config/archetypes.json` schema flip** ([src/config/archetypes.ts](src/config/archetypes.ts)). Per-archetype `{glyph, attackRange, baseStats}` replaces the old range-based shape. `STAT_CAP=99` is a defensive typo guard, not a design knob — the practical 0-50 stat range never touches it. `rollUnit` returns the archetype's `baseStats` verbatim today (E3 reintroduces variance via `simulateLevelUps` for player recruits + `scaleStats` for enemies); the `rng` param stays on the signature so callers don't churn at E3.
+
+4. **AttackAction crit roll at start, not propose** ([src/sim/actions/AttackAction.ts](src/sim/actions/AttackAction.ts)). The proposal carries `(target, baseDamage, critChance)` — base damage from `basicAttackDamage(unit)` (melee → strength, ranged → ranged stat), crit chance from `derived.critChance`. `start` draws once against `world.combatRng`, multiplies base by `STATS.critMult` on a crit, applies the result. `unit:attacked` payload gains a `crit: boolean` field that E6's hitsplats will key off.
+
+5. **`world.combatRng`** — dedicated RNG channel forked from `World.rng` at construction time (default fork; battle-setup paths pass an explicit one if needed). Keeps stat-noise out of the spawn-setup / pathfinding streams that downstream tests pin. Snapshotted alongside `world.rng` so replay determinism extends to crit decisions.
+
+6. **WorldSnapshot v5 → v6.** `UnitSnapshot.stats` shape rewritten; new `UnitSnapshot.archetype` + `UnitSnapshot.derived`; top-level `combatRng: RNGSnapshot`. v5 throws on load (loud-failure mode A4 settled on; no shipping save format).
+
+7. **Difficulty scaling moved from `maxHp` to `constitution`** ([src/run/Run.ts](src/run/Run.ts) `scaleConstitution`). The enemy `1 + 0.05 × floor` curve now scales the stat that *feeds* the derivation, so `deriveStats` stays the single source of truth for HP. E3 replaces this with `enemyLevelPerFloor` + a full `scaleStats` pass.
+
+8. **All consumers updated** — `BattleRenderer` HP bar uses `derived.maxHp`; HUD ditto; `BattleScene` audio dispatch reads `derived.attackRange`; `World.applyTileEffects` healing clamp uses `derived.maxHp`; AttackBehavior reads `derived.attackCooldownTicks` + `basicAttackDamage`; MovementBehavior reads `derived.{attackRange, moveCooldownTicks}`.
+
+**Tests**: 333 passing (was 312 pre-E1; +21 — new [src/sim/stats.test.ts](src/sim/stats.test.ts) covers formula edges + combatRng determinism, behavior + helper scenes ported to new shape with `luck=0` so crit roll is deterministic for exact-damage assertions, archetype-test rewritten to assert exact baselines, Run.test scaleConstitution check, env.test uses `derived.maxHp`). Fuzz smoke 7/7. Browser-verified Floor 1: melee con=20 → maxHp=50, attackCD=11 ticks, critChance=0.03; enemy melee con=21 = round(20×1.05) → maxHp=53; banner + theme + audio + bars all correct, console clean.
+
+Next up per ROADMAP — **E2 (ability primitives)**. Extract `AttackBehavior` into a generic `AbilityBehavior` walking a list of `Ability` instances per unit; archetype config declares each unit's ability ids in JSON; D6's half-cover combat modifier finally lands (`HALF_COVER_DAMAGE_MULT` on shots that pass through). Stats vocabulary + crit RNG channel + derived layer are the substrate E2 builds on; mage charge-up (E7) plugs into A1's already-present multi-tick effect machinery (gotcha #8) + B3's dormant progress bar (gotcha #30). ROADMAP also flags that **multi-map runs (now F3) will eventually push theme up a level** — each node map will carry a theme; procedural encounters within that map inherit it. At that point `rollTheme` moves out of `Run.handleEnterNode` into nodeMap construction. The user surfaced this design when answering the D8 procedural-roll decision.
 
 **Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning. (5-seed sample post-A4 hints at greedy edge, but N is too small to be sure — re-run at 100+ when something invalidates the cache.)
 
@@ -388,6 +411,18 @@ These hard-won fixes will look weird out of context. Don't "clean them up" witho
 
 92. **D8: banner suffix is suppressed for `theme === 'default'`.** `bannerText = encounter.theme === 'default' ? locationName : `${locationName} — ${titleCaseTheme(theme)}``. Reason: `default` IS the baseline visual look, so writing "Corridor — Default" everywhere reads as boilerplate noise. Non-default themes get the suffix because they're flavor variants worth surfacing. If you add a fourth theme that's also meant to be "the new baseline," update this conditional alongside whatever scope decision drove the change — don't accumulate special-cases (this would be a smell pointing at "the theme list grew, time to revisit the suffix rule").
 
+93. **E1: `UnitStats` is the new vocabulary; battle-time numbers live on `UnitDerived`.** Old `{maxHp, attackDamage, attackRange, attackCooldownTicks, moveCooldownTicks}` is gone. UnitStats now carries `constitution / strength / ranged / magic / luck / speed / endurance`; everything the sim or renderer reads at battle time (`maxHp` for HP bars, `attackCooldownTicks` / `moveCooldownTicks` for selector cadence, `attackRange` for in-range checks, `critChance` for AttackAction's roll) lives on `derived: UnitDerived`, computed once at construction via `deriveStats(stats, attackRange)` in [src/sim/stats.ts](src/sim/stats.ts). The two reads to fix on the day stats start mutating mid-battle (status effects, future buffs): (a) recompute `derived` whenever `stats` changes; (b) audit `Unit.currentHp` clamping — `World.applyTileEffects` already uses `derived.maxHp`, but other future damage / heal sources need the same. Don't put battle-time numbers on `UnitStats` to "shortcut" the derive — the split is what lets E3's level-up dial stats cleanly.
+
+94. **E1: `Unit.archetype: 'melee' | 'ranged' | 'environment'`.** Combatants carry the same archetype tag as their template; environment entities (walls + half-cover, spawned via `World.spawnEnvironment`) get `'environment'` + `ZERO_STATS` + `inertDerived(maxHp)`. The tag is what `basicAttackDamage(unit)` switches on (melee → strength, ranged → ranged stat, environment → 0). Don't infer archetype from glyph (gotcha #40 retired that pattern with `blocksLineOfSight`; same anti-pattern applies here). E7 will add `'mage'` / `'rogue'` / `'healer'` to the union; the basicAttackDamage switch is the one place to extend. Tests that hand-build `Unit` need `archetype` in the init bundle — same way `team` is required.
+
+95. **E1: `world.combatRng` is a dedicated RNG channel, forked from `world.rng` at construction.** AttackAction's start-time crit roll consumes it; the spawn-setup `setupRngFor` stream (anchored on `encounter.terrainSeed`) and World.rng (anchored on `encounter.worldSeed`) stay independent of crit noise. Default fork inside the constructor preserves naked-test ergonomics (`new World(bus, rng)` still works). Snapshotted alongside `rng` in WorldSnapshot v6 so replays produce byte-identical crit sequences. Don't reach into `world.rng` for any combat roll — that'd re-tangle pathfinding tests with combat outcomes. If E2's Ability resolvers add more RNG draws (e.g. AoE target selection), route them through `combatRng` too.
+
+96. **E1: `rollUnit` does NO RNG draws today.** Returns `{ archetype, stats: { ...CONFIGS[archetype].baseStats } }` verbatim — every melee unit on a given run is the exact same template. The `rng` argument stays on the signature because callers (`rollOffer`, `rollTeam`, `rollEnemyTeam`) already thread one; preserving the param keeps the E3 transition painless (E3's `simulateLevelUps(baseStats, growthRates, n, rng)` will start consuming it). Tests that asserted "different seeds → different stat rolls" had to flip to "different seeds → IDENTICAL templates (no roll today)" — the [src/sim/archetypes.test.ts](src/sim/archetypes.test.ts) check documents this contract explicitly so the next refactor doesn't accidentally restore non-determinism.
+
+97. **E1: `AttackAction` snapshot shape + `unit:attacked.crit` flag.** `AttackActionData` is now `{ targetId, baseDamage, critChance }` (was `{ targetId, damage }`). Crit resolves at action start, not propose, so the stored data is the pre-crit base; the rolled `damage` lands on the event. `unit:attacked` carries `crit: boolean` — every emit site has to set it (today just AttackAction.start and the multiTick test fixture). E6's hitsplats will key off it to colour-code crits. If you add a future Action that emits `unit:attacked` (channel cast, AoE pulse), pass `crit` even if it's always `false`; missing-field is a type error.
+
+98. **E1: difficulty scaling moved from `maxHp` to `constitution`.** `Run.scaleConstitution` (was `scaleMaxHp`) bumps `template.stats.constitution` by the per-floor multiplier; `deriveStats` then produces the scaled maxHp downstream. Reason: maxHp is now a derived quantity — scaling it directly would create two sources of truth that drift when E3 changes the derive formula. The same rule applies for any future "make this unit tougher" hook: bump the *stat*, never the derived. E3 retires this scaling entirely in favor of `enemyLevelPerFloor` driving a full `scaleStats` pass per the ROADMAP, so the constitution-only path is intentionally narrow.
+
 ## Browser-verify tips (learned the hard way)
 
 - **Preview MCP screenshots are unreliable for sub-pixel detail.** JPEG compression smears 1-2px features (scanlines, dither stipple) into uniform tints; resize timing can produce thumbnail-sized images that look like rendering bugs. **If a screenshot contradicts intuition, sample canvas pixels via `getImageData` first** — they're more reliable than the screenshot tool for detecting real issues. Even better: ask the user to look in their native browser.
@@ -410,12 +445,13 @@ src/
   config.ts            # TICK_RATE=10, GRID_SIZE=12, secondsToTicks/ticksToSeconds
                        # (engine knobs; balance lives in config/*.json — see src/config/)
   config/
-    archetypes.ts      # validated wrapper around config/archetypes.json (A4)
+    archetypes.ts      # E1: glyph + attackRange + baseStats (was Range bands)
     difficulty.ts      # validated wrapper around config/difficulty.json (A4)
     recruitment.ts     # validated wrapper around config/recruitment.json (A4)
     nodemap.ts         # validated wrapper around config/nodemap.json (A4)
     terrain.ts         # validated wrapper around config/terrain.json (C1a)
     layouts.ts         # validated wrapper around config/layouts.json (C1d.A)
+    stats.ts           # E1: hpPerConstitution, crit knobs, base cooldown knobs
     schemas.ts         # shared zod helpers (RangeSchema) (A4)
   core/
     RNG.ts             # mulberry32, fork(), pick(), int()
@@ -427,11 +463,14 @@ src/
     World.ts           # tick(): selector + overflow scan (D5.C) + tile-effect
                        #   pass (D7.B) + reapDead + checkBattleEnd
                        # spawnUnit/spawnEnvironment/spawnFromQueue, command-queue
-                       # drain (A2), toJSON/fromJSON. WorldSnapshot v5 (D6).
-    Unit.ts            # Unit + UnitTemplate + UnitStats + Team + Behavior
+                       # drain (A2), toJSON/fromJSON. WorldSnapshot v6 (E1).
+                       # E1: + combatRng (forked from rng) for AttackAction crit roll
+    Unit.ts            # Unit + UnitTemplate + UnitStats (E1 vocabulary) +
+                       # UnitDerived (E1) + archetype tag (E1) + Team + Behavior
                        # + actionCooldowns Map + activeAction (A1)
                        # + blocksLineOfSight: boolean (D6, default true)
                        # Team union: 'player' | 'enemy' | 'neutral' (C1a)
+    stats.ts           # E1: deriveStats / inertDerived / basicAttackDamage / ZERO_STATS
     TileGrid.ts        # floor | shallow_water | chasm | fire | healing (D7)
                        # per-cell movement cost; chasm = Infinity (data-driven block)
     LineOfSight.ts     # Bresenham line walk for ranged-attack LOS (C1b)
@@ -520,7 +559,7 @@ retro/
   post-mvp-review.md      # CHECKPOINT 7 retrospective written after MVP shipped
 
 config/                              # A4: balance JSON source-of-truth
-  archetypes.json                    # melee + ranged stat bands + glyphs
+  archetypes.json                    # E1: glyph + attackRange + baseStats per archetype
   difficulty.json                    # enemy size delta + per-floor HP scale
   recruitment.json                   # starting team + offer size
   nodemap.json                       # floor count + width bands + degree cap
@@ -531,6 +570,8 @@ config/                              # A4: balance JSON source-of-truth
                                      # fires?, healings?, spawns)
   spawn.json                         # D5.C: SpawnAction lockout duration
   tiles.json                         # D7.B: fire/healing chip rates → tick cadences
+  stats.json                         # E1: hpPerConstitution, crit cap/mult,
+                                     # base cooldowns (s), cdPerStat, minCdScale
 
 public/audio/                        # B6: preloaded .wav files
 

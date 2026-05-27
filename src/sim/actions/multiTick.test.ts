@@ -4,6 +4,8 @@ import { Unit, type Behavior } from '../Unit';
 import type { Action, ActionProposal } from '../Action';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
+import { deriveStats } from '../stats';
+import { ARCHETYPE_CONFIG } from '../archetypes';
 import type { GameEvents } from '../../core/events';
 
 /**
@@ -38,6 +40,7 @@ class ChargeAttackAction implements Action {
       attackerId: unit.id,
       targetId: this.target.id,
       damage: this.damage,
+      crit: false,
     });
   }
 
@@ -159,33 +162,32 @@ function scene(opts: ChargeAttackOpts): {
   const attacks: GameEvents['unit:attacked'][] = [];
   bus.on('unit:attacked', (p) => attacks.push(p));
 
+  // E1: build a "100 HP" stat profile via constitution=40 → maxHp=100
+  // (hpPerConstitution=2.5). Cooldown=1 by overriding derived after
+  // construction so the speed-based scale doesn't muddy the fixture.
+  const stats = { ...ARCHETYPE_CONFIG.melee.baseStats, constitution: 40, luck: 0 };
+  const derived = { ...deriveStats(stats, 99), attackCooldownTicks: 1, moveCooldownTicks: 1 };
+
   const attacker = new Unit({
     id: 1,
     team: 'player',
+    archetype: 'melee',
     glyph: 'M',
-    stats: {
-      maxHp: 100,
-      attackDamage: opts.damage,
-      attackRange: 99,
-      attackCooldownTicks: 1,
-      moveCooldownTicks: 1,
-    },
+    stats,
+    derived,
     position: { x: 0, y: 0 },
   });
   attacker.behaviors.push(new ChargeAttackBehavior(opts));
   world.units.push(attacker);
 
+  const targetDerived = { ...deriveStats(stats, 1), attackCooldownTicks: 1, moveCooldownTicks: 1 };
   const target = new Unit({
     id: 2,
     team: 'enemy',
+    archetype: 'melee',
     glyph: 'M',
-    stats: {
-      maxHp: 100,
-      attackDamage: 0,
-      attackRange: 1,
-      attackCooldownTicks: 1,
-      moveCooldownTicks: 1,
-    },
+    stats,
+    derived: targetDerived,
     position: { x: 5, y: 0 },
   });
   world.units.push(target);

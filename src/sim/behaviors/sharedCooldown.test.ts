@@ -5,6 +5,8 @@ import { MovementBehavior } from './MovementBehavior';
 import { AttackBehavior } from './AttackBehavior';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
+import { deriveStats } from '../stats';
+import { ARCHETYPE_CONFIG } from '../archetypes';
 import type { GameEvents } from '../../core/events';
 
 /**
@@ -133,18 +135,30 @@ function scene(specs: SceneUnit[]): {
 
   let nextId = 1;
   const units = specs.map((s) => {
+    // E1: melee baseline + luck=0 (deterministic crit roll = always
+    // false) + `strength` = test-knob attackDamage so the existing
+    // exact-damage assertions hold.
+    const baseStats = ARCHETYPE_CONFIG.melee.baseStats;
     const stats: UnitStats = {
-      maxHp: s.hp ?? 50,
-      attackDamage: s.attackDamage ?? 10,
-      attackRange: s.attackRange ?? 1,
-      attackCooldownTicks: s.attackCooldownTicks ?? 8,
-      moveCooldownTicks: s.moveCooldownTicks ?? 5,
+      ...baseStats,
+      luck: 0,
+      strength: s.attackDamage ?? baseStats.strength,
     };
+    const range = s.attackRange ?? 1;
+    let derived = deriveStats(stats, range);
+    if (s.attackCooldownTicks !== undefined) {
+      derived = { ...derived, attackCooldownTicks: s.attackCooldownTicks };
+    }
+    if (s.moveCooldownTicks !== undefined) {
+      derived = { ...derived, moveCooldownTicks: s.moveCooldownTicks };
+    }
     const u = new Unit({
       id: nextId++,
       team: s.team,
+      archetype: 'melee',
       glyph: 'M',
       stats,
+      derived,
       position: { x: s.x, y: s.y },
     });
     if (s.hp !== undefined) u.currentHp = s.hp;

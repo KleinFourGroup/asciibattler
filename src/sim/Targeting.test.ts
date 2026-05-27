@@ -4,6 +4,8 @@ import { World } from './World';
 import { Unit, type Team, type UnitStats } from './Unit';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
+import { deriveStats } from './stats';
+import { ARCHETYPE_CONFIG } from './archetypes';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 
@@ -96,19 +98,18 @@ interface UnitSpec {
 
 function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
   const world = new World(new EventBus<GameEvents>(), new RNG(1));
-  const stats: UnitStats = {
-    maxHp: 50,
-    attackDamage: 10,
-    attackRange: 1,
-    attackCooldownTicks: 8,
-    moveCooldownTicks: 5,
-  };
+  // E1: melee baseline. luck=0 keeps the crit roll deterministically
+  // off, though Targeting never ticks the world so it can't matter here.
+  const stats: UnitStats = { ...ARCHETYPE_CONFIG.melee.baseStats, luck: 0 };
+  const derived = deriveStats(stats, 1);
   const units = specs.map((s) => {
     const u = new Unit({
       id: s.id,
       team: s.team,
+      archetype: s.team === 'neutral' ? 'environment' : 'melee',
       glyph: 'M',
       stats,
+      derived,
       position: { x: s.x, y: s.y } satisfies GridCoord,
     });
     if (s.currentHp !== undefined) u.currentHp = s.currentHp;

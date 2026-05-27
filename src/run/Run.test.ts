@@ -77,17 +77,20 @@ describe('Run', () => {
       expect(run.currentEncounter!.enemyTeam).toHaveLength(run.team.length - 1);
     });
 
-    it('scales enemy maxHp by 1 + 0.05 × destination floor', () => {
+    it('E1: scales enemy constitution by 1 + 0.05 × destination floor', () => {
+      // Pre-E1 the difficulty curve scaled maxHp directly. E1 made
+      // maxHp a derived value, so the equivalent dial is constitution
+      // (which feeds the derive function via `HP_PER_CONSTITUTION`).
+      // E3 will replace this with `enemyLevelPerFloor` driving a full
+      // `scaleStats` pass.
       const { run } = freshRunWithBus(1);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const floor = run.nodeMap.nodes.find((n) => n.id === first)!.floor;
       const multiplier = 1 + 0.05 * floor;
       for (const u of run.currentEncounter!.enemyTeam) {
-        const baseMin = u.archetype === 'melee' ? 40 : 20;
-        const baseMax = u.archetype === 'melee' ? 60 : 30;
-        expect(u.stats.maxHp).toBeGreaterThanOrEqual(Math.round(baseMin * multiplier));
-        expect(u.stats.maxHp).toBeLessThanOrEqual(Math.round(baseMax * multiplier));
+        const baseCon = u.archetype === 'melee' ? 20 : 12;
+        expect(u.stats.constitution).toBe(Math.round(baseCon * multiplier));
       }
     });
 

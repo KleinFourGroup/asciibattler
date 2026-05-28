@@ -624,9 +624,28 @@ Co-located `*.test.ts` next to source for unit tests. Integration tests under `t
 ```bash
 git log --oneline -5    # confirm latest commit
 npm test                # 316 passed, 0 todo
+npm run typecheck       # tsc --noEmit; should be clean (E3.5 added this script)
 npm run fuzz:smoke      # 7 passed — confirms the harness still runs
 npm run dev             # opens at :5173 — verify the full run flow plays
 ```
+
+## Pre-commit checklist
+
+Before every commit (especially the AI-driven ones — `npm test` doesn't
+catch type errors that vitest happens to tolerate):
+
+```bash
+npm test                # 0 failures, 0 it.todo() regressions
+npm run typecheck       # tsc --noEmit clean
+# only if touching sim/run/core logic that could affect long-run behavior:
+npm run fuzz:smoke      # 7 passed
+```
+
+`npm test` and `npm run typecheck` are non-overlapping: vitest runs
+the test files through esbuild's loose-mode transformer, which accepts
+some constructs strict tsc rejects (readonly mutation, unused locals,
+exact-optional-property mismatches). Catching those before the commit
+lands keeps `npm run build` from breaking on push.
 
 In the browser you should see: dark terrain (smooth blue→green→amber gradient) with 4px-thick scanlines, neon-glowing sprites (green allies + red enemies bloom equally on attack), map screen on load (right panel), click a frontier → battle plays out with in-battle HUD on the left → recruit modal (3 cards, at least one M + one a) → click a card → map screen at new node with visited trail. Win 4 in a row → green "Run Complete" screen. Lose → red "Defeat" screen. Button on either resets to a fresh map. All screen transitions fade over 180ms.
 

@@ -135,7 +135,12 @@ describe('simulateLevelUps — distribution lands near expected value', () => {
   it('mean increment over 200 trials approximates growth × n', () => {
     const TRIALS = 200;
     const N = 10;
-    const tally: Partial<UnitStats> = {
+    // Writable mirror of UnitStats keys — UnitStats fields are readonly
+    // (deliberate, the sim never mutates stats in place), so a `Partial<UnitStats>`
+    // tally fails tsc strict-mode under exactOptionalPropertyTypes when we
+    // do `tally.foo! += …`. `Record<keyof UnitStats, number>` strips the
+    // readonly and gives us full type safety on the key set.
+    const tally: Partial<Record<keyof UnitStats, number>> = {
       constitution: 0,
       strength: 0,
       luck: 0,

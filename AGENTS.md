@@ -125,8 +125,27 @@ but the headline rules:
 ```bash
 git log --oneline -5    # confirm latest commit
 npm test                # should be all green, 0 todo
+npm run typecheck       # tsc --noEmit; clean (added E3.5)
 npm run dev             # opens at :5173 (or :5174 if stale process held :5173)
 ```
+
+## Pre-commit checklist
+
+Run before every commit. Vitest and tsc are non-overlapping —
+vitest's esbuild transformer accepts some strict-tsc rejections
+(readonly mutation, `exactOptionalPropertyTypes` mismatches, etc.),
+so a green `npm test` is not sufficient for type safety.
+
+```bash
+npm test                # 0 failures
+npm run typecheck       # tsc --noEmit clean
+# only if changes touch sim/run/core behavior:
+npm run fuzz:smoke      # 7 passed
+```
+
+If `typecheck` fails on a file you didn't touch, that's a pre-existing
+issue — flag it as a side task rather than bundling the fix into the
+current change.
 
 In the browser: dark terrain (smooth blue/green/amber gradient) with 4px
 scanlines, glowing neon sprites (green allies + red enemies bloom on

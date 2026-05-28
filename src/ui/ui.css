@@ -32,6 +32,91 @@ body {
   pointer-events: auto;
 }
 
+/* E3.6: per-unit DOM overlay layer (HP bar + action progress + level
+   badge). Replaces the canvas-instanced BarRenderer. Each overlay is
+   absolutely positioned at the projected world point of the unit's
+   sprite via inline transform: translate3d(...) (GPU compositing, no
+   layout thrash). The internal stack centers itself horizontally on the
+   anchor and floats above the sprite via the negative Y translate on
+   `.unit-overlay-stack`. z-index sits below #scanlines so the CRT
+   raking still applies. */
+
+#unit-overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  font-family: var(--font-mono);
+}
+
+.unit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform, opacity;
+}
+
+.unit-overlay-stack {
+  position: absolute;
+  /* Anchor at (0,0); center horizontally on the projected point and
+     float well above it so the sprite glyph stays unobscured. The
+     vertical offset is the world-space HP_BAR_Y_OFFSET in B3 terms,
+     baked here as a fixed CSS offset. Reads correctly across both
+     fit and scroll camera modes at the default board sizes. */
+  transform: translate(-50%, -260%);
+  width: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.unit-overlay .level-badge {
+  align-self: flex-end;
+  padding: 0 4px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  color: #ffb000; /* TERMINAL_AMBER */
+  font-size: 9px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 1px;
+}
+
+.unit-overlay .hp-bar,
+.unit-overlay .action-progress {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.unit-overlay .hp-bar {
+  height: 6px;
+}
+
+.unit-overlay .action-progress {
+  height: 3px;
+  border-color: rgba(21, 244, 238, 0.4);
+}
+
+.unit-overlay .action-progress[hidden] {
+  display: none;
+}
+
+.unit-overlay .hp-bar-fill {
+  height: 100%;
+  /* Width drives the fill amount; transition gives a short drain
+     animation on damage that mirrors the HUD's hp-fill behavior. */
+  transition: width 0.12s linear, background-color 0.12s linear;
+}
+
+.unit-overlay .action-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #15f4ee; /* FLOURESCENT_BLUE */
+}
+
 /* B5: CRT scanline overlay. Replaces the canvas-only ShaderPass so the
    scanlines extend uniformly across the canvas/DOM seam — the diorama
    framing was breaking at panel edges before. Band thickness (6px dark /

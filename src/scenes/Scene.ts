@@ -22,7 +22,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { Renderer } from '../render/Renderer';
 import type { SpriteRenderer } from '../render/SpriteRenderer';
-import type { BarRenderer } from '../render/BarRenderer';
+import type { UnitOverlayLayer } from '../render/UnitOverlayLayer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
@@ -36,7 +36,7 @@ export interface SceneContext {
    *  the camera frames variable-size arenas. Non-battle scenes ignore it. */
   readonly renderer: Renderer;
   readonly sprites: SpriteRenderer;
-  readonly bars: BarRenderer;
+  readonly overlays: UnitOverlayLayer;
   readonly terrain: TerrainRenderer;
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;

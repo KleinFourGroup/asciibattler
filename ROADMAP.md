@@ -412,7 +412,23 @@ needs to be a visible move-CD shift, not a rounding artifact.
   determinism to user hardware — keep the sim discrete and let the
   renderer lerp.
 
-### E3.6 — DOM migration for unit overlays
+### E3.6 — DOM migration for unit overlays — **SHIPPED**
+
+E3.6 landed: `BarRenderer` + its shader pair retired in favor of
+[src/render/UnitOverlayLayer.ts](src/render/UnitOverlayLayer.ts), a DOM
+container of per-unit `<div class="unit-overlay">` elements positioned
+each frame via `camera.project(...)`. Three children per overlay:
+`.level-badge` (`Lv N`), `.hp-bar` (universal green→amber→red gradient),
+`.action-progress` (hidden by default, will pull its weight with E7's
+mage charge-ups). Inserted between `#game-canvas` and `#ui` so HUD
+chrome paints on top; `#scanlines` (z=1000) still rakes across.
+Browser-verified across both camera modes + procedural / Endless
+Corridors / Junction Ambush / Spiral Fire/Life. See HANDOFF.md for
+the full breakdown.
+
+Next up: **E4 (XP + difficulty rebalance + pre-recruit PromotionScene)**.
+
+Original design (preserved for the trail of decisions that follows):
 
 Move HP bar + action progress bar from the canvas-instanced
 `BarRenderer` to DOM elements, and add a per-unit level badge while

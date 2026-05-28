@@ -5,7 +5,7 @@ import type { GridCoord } from '../core/types';
 import type { World } from '../sim/World';
 import type { Team, Unit } from '../sim/Unit';
 import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
-import type { BarHandle, BarRenderer } from './BarRenderer';
+import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
 import type { TerrainRenderer } from './TerrainRenderer';
 import { COLORS } from './palette';
 import { SpriteAnimator } from './animation/SpriteAnimator';
@@ -16,19 +16,15 @@ import { SPAWN } from '../config/spawn';
 
 /**
  * The simulation/render seam. Subscribes to sim events and turns them into
- * SpriteRenderer + BarRenderer calls — sim never imports from render. New
- * events get a new handler here; the renderers stay dumb instance-buffer
- * managers.
+ * SpriteRenderer + UnitOverlayLayer calls — sim never imports from render.
+ * New events get a new handler here; the renderers stay dumb instance-buffer
+ * / DOM managers.
  *
  * Owns the per-frame SpriteAnimator that turns unit:moved events into smooth
  * lerps. Game calls `update(dt)` once per render frame; that drives sprite
- * lerps and bar position-follow + progress-bar fill (B3).
+ * lerps, overlay position-follow, and progress-bar fill (B3 lineage, E3.6
+ * DOM port).
  */
-
-interface BarPair {
-  readonly hp: BarHandle;
-  readonly progress: BarHandle;
-}
 
 /** Tracks an in-flight action's wall-clock start so the progress bar can fill smoothly between sim ticks. */
 interface ActiveProgress {
@@ -40,37 +36,36 @@ interface ActiveProgress {
   durationMs: number;
 }
 
-interface BarFade {
+interface OverlayFade {
   elapsed: number;
   readonly duration: number;
-  readonly pair: BarPair;
+  readonly handle: UnitOverlayHandle;
 }
 
-/** D5.C — overflow-spawn bar fade-in. Lerps HP-bar alpha 0 → 1 over
- *  `duration`; the progress bar stays hidden during the spawn lockout
- *  (filtered alongside MoveAction in `updateProgressFill`). */
-interface BarFadeIn {
+/** E3.6 — overflow-spawn overlay fade-in. Lerps overlay opacity 0 → 1
+ *  over `duration`; the progress bar stays hidden during the spawn
+ *  lockout (filtered alongside MoveAction in `updateProgressFill`). */
+interface OverlayFadeIn {
   elapsed: number;
   readonly duration: number;
-  readonly pair: BarPair;
+  readonly handle: UnitOverlayHandle;
 }
 
 export class BattleRenderer {
   private readonly handles = new Map<number, SpriteHandle>();
-  private readonly barPairs = new Map<number, BarPair>();
+  private readonly overlayHandles = new Map<number, UnitOverlayHandle>();
   private readonly subscriptions: Array<() => void> = [];
   private readonly animator: SpriteAnimator;
   /** unitId → ticks left on its attack-flash override. */
   private readonly flashes = new Map<number, number>();
   /** unitId → in-flight action timing for the progress bar. */
   private readonly progress = new Map<number, ActiveProgress>();
-  /** unitId → ongoing post-death bar fade. */
-  private readonly barFades = new Map<number, BarFade>();
-  /** D5.C: unitId → ongoing overflow-spawn bar fade-in. */
-  private readonly barFadeIns = new Map<number, BarFadeIn>();
-  /** Scratch vectors to avoid per-frame allocation when reading + offsetting sprite positions. */
+  /** unitId → ongoing post-death overlay fade. */
+  private readonly overlayFades = new Map<number, OverlayFade>();
+  /** E3.6: unitId → ongoing overflow-spawn overlay fade-in. */
+  private readonly overlayFadeIns = new Map<number, OverlayFadeIn>();
+  /** Scratch vector to avoid per-frame allocation when reading sprite positions. */
   private readonly scratchPos = new THREE.Vector3();
-  private readonly scratchBarPos = new THREE.Vector3();
   /**
    * The currently-attached battle World. Null when no battle is running (map
    * screen, defeat state). Set by `attach`, cleared by `detach`.
@@ -79,7 +74,7 @@ export class BattleRenderer {
 
   constructor(
     private readonly sprites: SpriteRenderer,
-    private readonly bars: BarRenderer,
+    private readonly overlays: UnitOverlayLayer,
     /** C1c: queried at sprite spawn + move endpoints so units stand on
      *  the tile top instead of floating at a fixed plane. */
     private readonly terrain: TerrainRenderer,
@@ -98,10 +93,10 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:healed', ({ unitId }) => this.refreshHpBar(unitId)));
   }
 
-  /** Per-render-frame tick. Drives sprite lerps + bar position-follow + progress fill. */
+  /** Per-render-frame tick. Drives sprite lerps + overlay position-follow + progress fill. */
   update(dt: number): void {
     this.animator.update(dt);
-    this.updateBars(dt);
+    this.updateOverlays(dt);
   }
 
   /**
@@ -113,9 +108,9 @@ export class BattleRenderer {
   }
 
   /**
-   * End-of-battle teardown. Drops every sprite + bar handle and clears all
-   * animation state so the next battle starts clean. Bus subscriptions stay
-   * live — only the World reference and the per-battle state are reset.
+   * End-of-battle teardown. Drops every sprite + overlay handle and clears
+   * all animation state so the next battle starts clean. Bus subscriptions
+   * stay live — only the World reference and the per-battle state are reset.
    *
    * Side effect: any in-flight death fades (started in the same tick
    * battle:ended fired) get cut short. Acceptable: subsequent screens hide
@@ -127,21 +122,16 @@ export class BattleRenderer {
       this.sprites.removeSprite(handle);
     }
     this.handles.clear();
-    for (const pair of this.barPairs.values()) {
-      this.bars.removeBar(pair.hp);
-      this.bars.removeBar(pair.progress);
-    }
-    this.barPairs.clear();
-    // Also clean up bars that were mid-fade when the battle ended (typically
-    // the killing-blow victim — its onUnitDied fired in the same synchronous
-    // burst as battle:ended). Without this the fade map gets cleared but the
-    // bar handles linger in the scene and show up on the map screen.
-    for (const fade of this.barFades.values()) {
-      this.bars.removeBar(fade.pair.hp);
-      this.bars.removeBar(fade.pair.progress);
-    }
-    this.barFades.clear();
-    this.barFadeIns.clear();
+    // overlays.clear() drops every <div> the overlay layer owns in a single
+    // sweep — covers both live overlays (this.overlayHandles) and any that
+    // were mid-fade when the battle ended (typically the killing-blow
+    // victim — its onUnitDied fired in the same synchronous burst as
+    // battle:ended). Without the sweep, those DOM nodes would linger into
+    // the next scene.
+    this.overlays.clear();
+    this.overlayHandles.clear();
+    this.overlayFades.clear();
+    this.overlayFadeIns.clear();
     this.flashes.clear();
     this.progress.clear();
     this.world = null;
@@ -161,7 +151,7 @@ export class BattleRenderer {
     this.handles.set(unit.id, handle);
 
     // Neutrals (walls, environment) are inert background — suppress the
-    // halo and skip HP/progress bars entirely. C1a walls are indestructible
+    // halo and skip the overlay entirely. C1a walls are indestructible
     // so an HP bar would be visual noise; destructible variants later can
     // opt back in.
     if (unit.team === 'neutral') {
@@ -171,40 +161,24 @@ export class BattleRenderer {
 
     // D5.C — overflow-queue spawn? Lerp sprite alpha 0 → 1 over the
     // SpawnAction lockout window so the unit fades in rather than
-    // popping. Bars start at alpha 0 too and fade in alongside via the
-    // BarFadeIn lane in `updateBars`.
+    // popping. The overlay starts at opacity 0 too and fades in alongside
+    // via the OverlayFadeIn lane in `updateOverlays`.
     const initialAlpha = instant ? 1 : 0;
     if (!instant) {
       this.animator.startFadeIn(handle, SPAWN.durationSeconds);
     }
 
-    // HP bar above the sprite; progress bar tucked between sprite and HP bar.
-    // Both start in their full-fill state; the per-frame update tick will
-    // hide the progress bar immediately (no non-spawn activeAction).
-    const hpColor = hpFillColor(1);
-    const hp = this.bars.addBar({
-      position: hpBarPos(spritePos, this.scratchPos),
-      size: HP_BAR_SIZE,
-      fillPct: 1,
-      bgColor: HP_BAR_BG,
-      fillColor: hpColor,
-      alpha: initialAlpha,
-    });
-    const progress = this.bars.addBar({
-      position: progressBarPos(spritePos, this.scratchPos),
-      size: PROGRESS_BAR_SIZE,
-      fillPct: 0,
-      bgColor: PROGRESS_BAR_BG,
-      fillColor: PROGRESS_BAR_FILL,
-      alpha: 0,
-    });
-    const pair: BarPair = { hp, progress };
-    this.barPairs.set(unit.id, pair);
+    const overlay = this.overlays.add(unit.team, unit.level, initialAlpha);
+    const pct = Math.max(0, unit.currentHp) / unit.derived.maxHp;
+    this.overlays.updateHp(overlay, pct);
+    this.overlays.updatePosition(overlay, spritePos);
+    this.overlayHandles.set(unit.id, overlay);
+
     if (!instant) {
-      this.barFadeIns.set(unit.id, {
+      this.overlayFadeIns.set(unit.id, {
         elapsed: 0,
         duration: SPAWN.durationSeconds,
-        pair,
+        handle: overlay,
       });
     }
   };
@@ -268,16 +242,17 @@ export class BattleRenderer {
   private refreshHpBar(unitId: number): void {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
-    const pair = this.barPairs.get(unitId);
-    if (!unit || !pair) return;
+    const overlay = this.overlayHandles.get(unitId);
+    if (!unit || !overlay) return;
     const pct = Math.max(0, unit.currentHp) / unit.derived.maxHp;
-    this.bars.updateBar(pair.hp, { fillPct: pct, fillColor: hpFillColor(pct) });
+    this.overlays.updateHp(overlay, pct);
   }
 
   /**
    * Fade the dead unit's sprite out, then remove it. Cancels any in-flight
    * position lerp and pending flash revert so they can't fight the fade.
-   * Bars fade alongside the sprite for visual coherence, then get removed.
+   * The overlay fades alongside the sprite for visual coherence, then
+   * gets removed.
    */
   private onUnitDied = ({ unitId }: GameEvents['unit:died']): void => {
     const handle = this.handles.get(unitId);
@@ -287,16 +262,16 @@ export class BattleRenderer {
     this.progress.delete(unitId);
     // D5.C — if the unit died mid-spawn-in fade (rare but possible if
     // checkBattleEnd or AoE wipes a freshly-queued unit), drop the
-    // bar fade-in so it doesn't fight the bar fade-out below.
-    this.barFadeIns.delete(unitId);
+    // overlay fade-in so it doesn't fight the fade-out below.
+    this.overlayFadeIns.delete(unitId);
     this.animator.startFade(handle, FADE_SECONDS, () => {
       this.sprites.removeSprite(handle);
       this.handles.delete(unitId);
     });
-    const pair = this.barPairs.get(unitId);
-    if (pair) {
-      this.barFades.set(unitId, { elapsed: 0, duration: FADE_SECONDS, pair });
-      this.barPairs.delete(unitId);
+    const overlay = this.overlayHandles.get(unitId);
+    if (overlay) {
+      this.overlayFades.set(unitId, { elapsed: 0, duration: FADE_SECONDS, handle: overlay });
+      this.overlayHandles.delete(unitId);
     }
   };
 
@@ -318,65 +293,68 @@ export class BattleRenderer {
   };
 
   /**
-   * Per-frame bar driver. Three responsibilities:
+   * Per-frame overlay driver. Three responsibilities:
    *
-   * 1. Bar position-follow: bars track the sprite's *current* world position,
-   *    not the grid cell. Reading from SpriteRenderer.getPosition picks up
-   *    SpriteAnimator lerps for free, so bars glide with their unit through
-   *    a move instead of teleporting to the destination cell.
+   * 1. Overlay position-follow: project the sprite's *current* world
+   *    position to CSS pixels each frame. Reading from
+   *    SpriteRenderer.getPosition picks up SpriteAnimator lerps for
+   *    free, so overlays glide with their unit through a move instead
+   *    of teleporting to the destination cell.
    * 2. Progress bar fill: anchor wall-clock to `activeAction.startTick`
    *    transitions so progress fills smoothly between sim ticks. The
    *    Clock owns sub-tick time and doesn't expose it, but anchoring on
    *    `performance.now()` at the first frame we observe an activeAction
    *    gives equivalent smoothness for actions long enough to matter.
-   *    Progress bar is hidden (alpha=0) when no action is in flight.
-   * 3. Bar fade-out on death: lerp alpha 1→0 over FADE_SECONDS, mirroring
-   *    the sprite fade, then remove the bars.
+   *    The progress bar is hidden (null) when no action is in flight.
+   * 3. Overlay fade on death / spawn: lerp opacity 0↔1 over FADE_SECONDS
+   *    or SPAWN.durationSeconds, then remove the overlay on death.
    */
-  private updateBars(dt: number): void {
+  private updateOverlays(dt: number): void {
     const now = performance.now();
 
     // Drive post-death fades; remove when complete.
-    for (const [unitId, fade] of this.barFades) {
+    for (const [unitId, fade] of this.overlayFades) {
       fade.elapsed += dt;
       const t = fade.elapsed >= fade.duration ? 1 : fade.elapsed / fade.duration;
       const alpha = 1 - t;
-      this.bars.updateBar(fade.pair.hp, { alpha });
-      this.bars.updateBar(fade.pair.progress, { alpha: 0 });
+      this.overlays.setAlpha(fade.handle, alpha);
+      this.overlays.updateProgress(fade.handle, null);
       if (t >= 1) {
-        this.bars.removeBar(fade.pair.hp);
-        this.bars.removeBar(fade.pair.progress);
-        this.barFades.delete(unitId);
+        this.overlays.remove(fade.handle);
+        this.overlayFades.delete(unitId);
       }
     }
 
-    // D5.C — drive overflow-spawn fade-ins; HP bar lerps 0 → 1, progress
-    // bar stays hidden (the spawn lockout is filtered out of
-    // updateProgressFill, so no progress-fill writes will fight this).
-    for (const [unitId, fadeIn] of this.barFadeIns) {
+    // D5.C — drive overflow-spawn fade-ins; overlay lerps 0 → 1, the
+    // progress bar stays hidden (the spawn lockout is filtered out of
+    // updateProgressFill, so no progress writes will fight this).
+    for (const [unitId, fadeIn] of this.overlayFadeIns) {
       fadeIn.elapsed += dt;
       const t = fadeIn.elapsed >= fadeIn.duration ? 1 : fadeIn.elapsed / fadeIn.duration;
-      this.bars.updateBar(fadeIn.pair.hp, { alpha: t });
-      if (t >= 1) this.barFadeIns.delete(unitId);
+      this.overlays.setAlpha(fadeIn.handle, t);
+      if (t >= 1) this.overlayFadeIns.delete(unitId);
     }
 
     if (!this.world) return;
 
-    for (const [unitId, pair] of this.barPairs) {
+    for (const [unitId, overlay] of this.overlayHandles) {
       const handle = this.handles.get(unitId);
       const unit = this.world.findUnit(unitId);
       if (!handle || !unit) continue;
       const spritePos = this.sprites.getPosition(handle, this.scratchPos);
       if (!spritePos) continue;
 
-      this.bars.updateBar(pair.hp, { position: hpBarPos(spritePos, this.scratchBarPos) });
-      this.bars.updateBar(pair.progress, { position: progressBarPos(spritePos, this.scratchBarPos) });
-
-      this.updateProgressFill(unitId, unit, pair, now);
+      this.overlays.updatePosition(overlay, spritePos);
+      this.updateProgressFill(unitId, unit, overlay, now);
     }
   }
 
-  private updateProgressFill(unitId: number, unit: Unit, pair: BarPair, now: number): void {
+  private updateProgressFill(
+    unitId: number,
+    unit: Unit,
+    overlay: UnitOverlayHandle,
+    now: number,
+  ): void {
     const active = unit.activeAction;
     // Hide the progress bar for movement — every step would flash a 1-tick
     // bar, which reads as visual noise. The bar is meant for "this unit is
@@ -393,7 +371,7 @@ export class BattleRenderer {
       active.action.id === SPAWN_ACTION_ID
     ) {
       if (this.progress.has(unitId)) this.progress.delete(unitId);
-      this.bars.updateBar(pair.progress, { alpha: 0 });
+      this.overlays.updateProgress(overlay, null);
       return;
     }
 
@@ -413,56 +391,15 @@ export class BattleRenderer {
 
     const elapsed = now - entry.startedAtMs;
     const fillPct = Math.max(0, Math.min(1, elapsed / entry.durationMs));
-    this.bars.updateBar(pair.progress, { fillPct, alpha: 1 });
+    this.overlays.updateProgress(overlay, fillPct);
   }
 }
 
 /** Duration of the attacker-flash color override. */
 const FLASH_TICKS = 2;
 
-/** Duration of the dead-unit alpha fade-out (sprite + bars). */
+/** Duration of the dead-unit alpha fade-out (sprite + overlay). */
 const FADE_SECONDS = 0.3;
-
-/** HP bar geometry. World units; sprite quad is 1×1 so 0.8 is most-but-not-all of the unit's width. */
-const HP_BAR_SIZE = new THREE.Vector2(0.8, 0.1);
-const PROGRESS_BAR_SIZE = new THREE.Vector2(0.6, 0.05);
-
-/** Vertical offsets above the sprite center (world Y units). */
-const HP_BAR_Y_OFFSET = 0.6;
-const PROGRESS_BAR_Y_OFFSET = 0.45;
-
-const HP_BAR_BG = COLORS.TERMINAL_BLACK;
-const PROGRESS_BAR_BG = COLORS.TERMINAL_BLACK;
-const PROGRESS_BAR_FILL = COLORS.FLOURESCENT_BLUE;
-
-const _gradientScratch = new THREE.Color();
-const _gradientLow = new THREE.Color(COLORS.NEON_RED);
-const _gradientMid = new THREE.Color(COLORS.TERMINAL_AMBER);
-const _gradientHigh = new THREE.Color(COLORS.TERMINAL_GREEN);
-
-/**
- * HP gradient: green at full → amber at half → red at zero. Per the B3
- * design pick — same color for both teams so HP state reads independent of
- * which side the unit is on (team identity is already conveyed by the
- * sprite's color).
- */
-function hpFillColor(pct: number): THREE.Color {
-  const p = Math.max(0, Math.min(1, pct));
-  if (p >= 0.5) {
-    const t = (p - 0.5) * 2;
-    return _gradientScratch.copy(_gradientMid).lerp(_gradientHigh, t);
-  }
-  const t = p * 2;
-  return _gradientScratch.copy(_gradientLow).lerp(_gradientMid, t);
-}
-
-function hpBarPos(spritePos: THREE.Vector3, out: THREE.Vector3): THREE.Vector3 {
-  return out.set(spritePos.x, spritePos.y + HP_BAR_Y_OFFSET, spritePos.z);
-}
-
-function progressBarPos(spritePos: THREE.Vector3, out: THREE.Vector3): THREE.Vector3 {
-  return out.set(spritePos.x, spritePos.y + PROGRESS_BAR_Y_OFFSET, spritePos.z);
-}
 
 function colorForTeam(team: Team): string {
   if (team === 'player') return COLORS.TERMINAL_GREEN;

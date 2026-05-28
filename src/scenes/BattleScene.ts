@@ -50,7 +50,7 @@ export class BattleScene implements Scene {
       encounter.gridH,
     );
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
-    this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.bars, ctx.terrain, ctx.bus);
+    this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.overlays, ctx.terrain, ctx.bus);
     this.hud = new HUD(ctx.uiMount, ctx.bus);
 
     // B6 audio: per-battle subscriptions that need the World to look up

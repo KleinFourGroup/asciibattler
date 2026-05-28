@@ -11,6 +11,7 @@ import type { Scene, SceneContext } from './scenes/Scene';
 import { MapScene } from './scenes/MapScene';
 import { BattleScene } from './scenes/BattleScene';
 import { RecruitScene } from './scenes/RecruitScene';
+import { PromotionScene } from './scenes/PromotionScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { AudioPlayer } from './audio/AudioPlayer';
 
@@ -98,6 +99,12 @@ export class Game implements RunDispatcher {
     // already updated phase + currentOffer, so the new Scene can read
     // ctx.run consistently.
     this.bus.on('battle:started', () => this.swap(new BattleScene()));
+    // E4: promotion fires BEFORE recruit:offered when units leveled up.
+    // Run rolls the recruit offer only after `dismissPromotion`, so
+    // recruit:offered still fires exactly once per non-terminal win.
+    this.bus.on('promotion:pending', ({ promotions }) =>
+      this.swap(new PromotionScene(promotions)),
+    );
     this.bus.on('recruit:offered', ({ units }) => this.swap(new RecruitScene(units)));
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
@@ -139,6 +146,12 @@ export class Game implements RunDispatcher {
         if (this.run.phase === 'map') {
           this.swap(new MapScene());
         }
+        break;
+      case 'dismissPromotion':
+        // Run resolves dismiss into either recruit:offered (non-terminal
+        // victory) or run:victory (terminal), both of which fire their
+        // own scene swaps via bus subscription. No explicit swap here.
+        this.run.dispatch(command);
         break;
       case 'resetRun':
         this.resetRun();

@@ -318,6 +318,104 @@ body {
   justify-content: space-between;
 }
 
+/* PromotionScreen (E4). Slots between BattleScene and RecruitScene when
+   one or more roster units leveled up post-victory. Heading tells the
+   player WHAT just happened (the count); cards show the per-stat
+   delta so the leveling system feels visible rather than silent. */
+
+.promotion-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.promotion-heading {
+  color: #15f4ee; /* FLOURESCENT_BLUE — distinguishes from recruit's amber */
+  font-family: var(--font-mono);
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.promotion-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 90vw;
+}
+
+.promotion-card {
+  width: 180px;
+  padding: 16px 12px;
+  border: 1px solid #0a6a66; /* dim FLOURESCENT_BLUE */
+  background: #000;
+  color: #15f4ee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+}
+
+.promotion-glyph {
+  font-size: 48px;
+  line-height: 1;
+  color: #33ff00; /* TERMINAL_GREEN — player team */
+  font-weight: bold;
+}
+
+.promotion-level {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.85;
+}
+
+.promotion-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  align-self: stretch;
+}
+
+.promotion-stat {
+  display: flex;
+  justify-content: space-between;
+  color: #ffb000; /* TERMINAL_AMBER baseline */
+  opacity: 0.55;
+}
+
+.promotion-stat--gain {
+  color: #33ff00; /* TERMINAL_GREEN — eyes pulled to the growth */
+  opacity: 1;
+}
+
+.promotion-continue {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 28px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  background: #000;
+  color: #ffb000;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, color 0.1s;
+}
+
+.promotion-continue:hover {
+  border-color: #15f4ee;
+  background: rgba(21, 244, 238, 0.08);
+  color: #15f4ee;
+}
+
 /* GameOverScreen (Step 4.5). Full-overlay defeat modal with a single button
    to start a fresh run. NEON_RED heading sets the "you died" tone; the
    button uses the same amber-on-hover affordance as other interactive

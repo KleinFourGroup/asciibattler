@@ -29,7 +29,8 @@
  */
 
 import type { EventBus } from '../core/EventBus';
-import type { GameEvents } from '../core/events';
+import type { GameEvents, PromotionInfo } from '../core/events';
+import { glyphForArchetype } from '../sim/archetypes';
 import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate, Team } from '../sim/Unit';
 import { rollUnit, scaledUnit } from '../sim/archetypes';
@@ -46,7 +47,7 @@ import { simulateLevelUps } from '../sim/leveling';
 import { growthRatesForArchetype } from '../sim/archetypes';
 import type { Archetype } from '../sim/archetypes';
 
-export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat' | 'complete';
+export type RunPhase = 'map' | 'battle' | 'promotion' | 'recruit' | 'defeat' | 'complete';
 
 export interface BattleEncounter {
   readonly worldSeed: number;
@@ -87,11 +88,11 @@ export interface BattleEncounter {
   readonly enemyTeam: readonly UnitTemplate[];
 }
 
-/** E4: bumped 3→4 — `UnitTemplate` now carries `xp: number` (banked toward
- *  the next level-up). Snapshot also gains `levelupRng: RNGSnapshot` so the
- *  next batch of level-up rolls stays deterministic across save/load. v3
- *  snapshots throw on load. */
-const RUN_SCHEMA_VERSION = 4;
+/** E4: bumped 3→5 in two steps. v4 added `xp` on UnitTemplate + the
+ *  `levelupRng` stream. v5 adds `pendingPromotions` so a snapshot taken
+ *  while PromotionScene is up restores in the same phase with the same
+ *  per-unit deltas to render. v4 + earlier throw on load. */
+const RUN_SCHEMA_VERSION = 5;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -107,6 +108,10 @@ export interface RunSnapshot {
   currentEncounter: BattleEncounter | null;
   currentOffer: UnitTemplate[] | null;
   visitedNodes: number[];
+  /** E4: the promotions awaiting PromotionScene dismissal. Non-null only
+   *  while `phase === 'promotion'`. Snapshotted so a save mid-promotion
+   *  restores to the same screen with the same deltas. */
+  pendingPromotions: PromotionInfo[] | null;
 }
 
 // Balance constants now live in config/*.json — see src/config/recruitment.ts
@@ -128,6 +133,13 @@ export class Run {
   currentEncounter: BattleEncounter | null = null;
   /** Recruit offer presented after victory, cleared on choice. */
   currentOffer: UnitTemplate[] | null = null;
+  /**
+   * E4 — level-ups awaiting PromotionScene dismissal. Set inside
+   * `handleBattleEnded` when `bankXpAwards` reports promotions;
+   * cleared when `handleDismissPromotion` rolls the next step
+   * (recruit offer or run:victory).
+   */
+  pendingPromotions: PromotionInfo[] | null = null;
   /**
    * Nodes the player has cleared (entered + survived). Used by MapScreen to
    * draw a visual trail of completed nodes. Root is never added — it's not
@@ -182,6 +194,9 @@ export class Run {
         break;
       case 'chooseRecruit':
         this.handleChooseRecruit(command.unitTemplate);
+        break;
+      case 'dismissPromotion':
+        this.handleDismissPromotion();
         break;
       case 'resetRun':
         // No-op at this layer — Game handles reset by disposing this Run
@@ -278,23 +293,19 @@ export class Run {
     if (this.phase !== 'battle') return;
     this.currentEncounter = null;
     if (winner === 'player') {
-      // E4 — bank XP into the roster BEFORE the recruit offer rolls,
-      // so the recruit screen / promotion scene already reflect the
-      // post-battle state. Level-up stat rolls advance `levelupRng`
-      // here; the offer still uses `this.rng.fork()` independently.
-      this.bankXpAwards(xpAwards);
-      if (this.currentNodeId === this.nodeMap.terminalId) {
-        // Winning the terminal battle ends the run — no recruit offer,
-        // straight to the run-complete screen via run:victory.
-        this.phase = 'complete';
-        this.bus.emit('run:victory', {});
+      // E4 — bank XP into the roster BEFORE rolling the next step
+      // so post-victory screens (promotion / recruit) already reflect
+      // updated levels + stats. Level-up stat rolls advance
+      // `levelupRng`; the recruit offer's RNG fork is independent.
+      const promotions = this.bankXpAwards(xpAwards);
+      if (promotions.length > 0) {
+        // Pause on PromotionScene; the post-promotion step (recruit
+        // offer or run:victory) runs from `handleDismissPromotion`.
+        this.phase = 'promotion';
+        this.pendingPromotions = promotions;
+        this.bus.emit('promotion:pending', { promotions });
       } else {
-        this.phase = 'recruit';
-        // E3 — recruits come in at the just-cleared floor's level. A
-        // floor-4 recruit gets 4 simulated level-ups, keeping pace with
-        // enemies at that depth. See ROADMAP E3 decision point.
-        this.currentOffer = rollOffer(this.rng.fork(), undefined, this.currentFloor);
-        this.bus.emit('recruit:offered', { units: this.currentOffer });
+        this.advancePastBattle();
       }
     } else {
       this.phase = 'defeat';
@@ -303,7 +314,30 @@ export class Run {
   }
 
   /**
-   * E4 — apply an award batch to `this.team`. For each award:
+   * E4 — common tail for "battle just resolved in player's favor and
+   * the PromotionScene (if any) is done." Splits run:victory from
+   * recruit:offered the same way handleBattleEnded used to.
+   */
+  private advancePastBattle(): void {
+    if (this.currentNodeId === this.nodeMap.terminalId) {
+      this.phase = 'complete';
+      this.bus.emit('run:victory', {});
+    } else {
+      this.phase = 'recruit';
+      this.currentOffer = rollOffer(this.rng.fork(), undefined, this.currentFloor);
+      this.bus.emit('recruit:offered', { units: this.currentOffer });
+    }
+  }
+
+  private handleDismissPromotion(): void {
+    if (this.phase !== 'promotion') return;
+    this.pendingPromotions = null;
+    this.advancePastBattle();
+  }
+
+  /**
+   * E4 — apply an award batch to `this.team`, returning any promotion
+   * deltas for PromotionScene. For each award:
    *   1. Find the roster template via `rosterIndex` (skip if null — a
    *      test fixture spawn that didn't stamp the field).
    *   2. Add `xpGained` to the template's banked XP.
@@ -320,12 +354,15 @@ export class Run {
    */
   private bankXpAwards(
     awards: GameEvents['battle:ended']['xpAwards'],
-  ): void {
+  ): PromotionInfo[] {
+    const promotions: PromotionInfo[] = [];
     for (const award of awards) {
       if (award.rosterIndex === null) continue;
       const idx = award.rosterIndex;
       const template = this.team[idx];
       if (!template) continue;
+      const oldLevel = template.level;
+      const oldStats = template.stats;
       let xp = template.xp + award.xpGained;
       let level = template.level;
       let stats = template.stats;
@@ -344,7 +381,19 @@ export class Run {
       }
       if (level >= LEVELING.levelCap) xp = 0;
       this.team[idx] = { ...template, xp, level, stats };
+      if (level > oldLevel) {
+        promotions.push({
+          rosterIndex: idx,
+          archetype: template.archetype,
+          glyph: glyphForArchetype(template.archetype),
+          oldLevel,
+          newLevel: level,
+          oldStats,
+          newStats: stats,
+        });
+      }
     }
+    return promotions;
   }
 
   private handleChooseRecruit(unitTemplate: UnitTemplate): void {
@@ -373,6 +422,9 @@ export class Run {
       currentEncounter: this.currentEncounter,
       currentOffer: this.currentOffer ? this.currentOffer.slice() : null,
       visitedNodes: Array.from(this.visitedNodes),
+      pendingPromotions: this.pendingPromotions
+        ? this.pendingPromotions.slice()
+        : null,
     };
   }
 
@@ -404,6 +456,9 @@ export class Run {
     m.currentEncounter = snap.currentEncounter;
     m.currentOffer = snap.currentOffer ? snap.currentOffer.slice() : null;
     m.visitedNodes = new Set(snap.visitedNodes);
+    m.pendingPromotions = snap.pendingPromotions
+      ? snap.pendingPromotions.slice()
+      : null;
     run['subscribe']();
     return run;
   }

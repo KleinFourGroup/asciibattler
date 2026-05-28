@@ -13,7 +13,8 @@
  */
 
 import type { GridCoord } from './types';
-import type { Team, UnitTemplate } from '../sim/Unit';
+import type { Team, UnitStats, UnitTemplate } from '../sim/Unit';
+import type { Archetype } from '../sim/archetypes';
 
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
@@ -101,4 +102,29 @@ export interface GameEvents extends Record<string, unknown> {
   'run:defeated': Record<string, never>;
 
   'recruit:offered': { units: UnitTemplate[] };
+
+  /**
+   * E4: one or more player roster units crossed an XP threshold during
+   * battle-end banking. Game swaps to PromotionScene which renders the
+   * deltas; dismiss → recruit offer (existing flow) or run:victory at
+   * terminal. The payload is the closed set of "what changed" snapshots
+   * the scene needs — no follow-up world query required.
+   */
+  'promotion:pending': { promotions: readonly PromotionInfo[] };
+}
+
+/**
+ * E4 — one roster slot's level-up details. Mirrors what PromotionScene
+ * renders: glyph + archetype + old→new level + per-stat deltas. Stats
+ * before/after are kept whole (not just the deltas) so the scene can
+ * show "STR 6 → 7" rather than just "+1 STR".
+ */
+export interface PromotionInfo {
+  rosterIndex: number;
+  archetype: Archetype;
+  glyph: string;
+  oldLevel: number;
+  newLevel: number;
+  oldStats: UnitStats;
+  newStats: UnitStats;
 }

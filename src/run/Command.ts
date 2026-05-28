@@ -19,6 +19,13 @@ import type { UnitTemplate } from '../sim/Unit';
 export type RunCommand =
   | { readonly kind: 'enterNode'; readonly nodeId: number }
   | { readonly kind: 'chooseRecruit'; readonly unitTemplate: UnitTemplate }
+  /**
+   * E4 — dismiss the PromotionScene. Run rolls the recruit offer (or
+   * routes to run:victory at terminal) only after this command lands;
+   * the pause between battle-end banking and the offer is the scene
+   * the player is reading.
+   */
+  | { readonly kind: 'dismissPromotion' }
   | { readonly kind: 'resetRun' };
 
 export interface RunDispatcher {

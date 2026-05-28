@@ -372,6 +372,108 @@ describe('Run', () => {
     });
   });
 
+  describe('E4 — promotion phase', () => {
+    it('skips promotion when no unit leveled (sub-threshold awards)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      const promotions: number[] = [];
+      bus.on('promotion:pending', ({ promotions: p }) => promotions.push(p.length));
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 5 }],
+      });
+      expect(promotions).toEqual([]);
+      // Flow lands directly in recruit phase.
+      expect(run.phase).toBe('recruit');
+      expect(run.currentOffer).not.toBeNull();
+    });
+
+    it('enters promotion phase + emits promotion:pending when a unit levels', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      const promotions: number[][] = [];
+      const offers: number[] = [];
+      bus.on('promotion:pending', ({ promotions: p }) =>
+        promotions.push(p.map((x) => x.rosterIndex)),
+      );
+      bus.on('recruit:offered', ({ units }) => offers.push(units.length));
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
+      });
+      expect(run.phase).toBe('promotion');
+      expect(run.pendingPromotions).not.toBeNull();
+      expect(run.pendingPromotions).toHaveLength(1);
+      expect(run.pendingPromotions![0]!.rosterIndex).toBe(0);
+      expect(run.pendingPromotions![0]!.oldLevel).toBe(1);
+      expect(run.pendingPromotions![0]!.newLevel).toBe(2);
+      expect(promotions).toEqual([[0]]);
+      // Recruit offer is deferred — the player hasn't dismissed the
+      // promotion screen yet.
+      expect(offers).toEqual([]);
+      expect(run.currentOffer).toBeNull();
+    });
+
+    it('dismissPromotion routes to recruit phase + emits recruit:offered', () => {
+      const { run, bus } = freshRunWithBus(2);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      const offers: number[] = [];
+      bus.on('recruit:offered', ({ units }) => offers.push(units.length));
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
+      });
+      expect(run.phase).toBe('promotion');
+      run.dispatch({ kind: 'dismissPromotion' });
+      expect(run.phase).toBe('recruit');
+      expect(run.pendingPromotions).toBeNull();
+      expect(offers).toEqual([3]);
+      expect(run.currentOffer).toHaveLength(3);
+    });
+
+    it('dismissPromotion at the terminal node routes to complete (not recruit)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      let victoryCount = 0;
+      let offerCount = 0;
+      bus.on('run:victory', () => victoryCount++);
+      bus.on('recruit:offered', () => offerCount++);
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
+      });
+      expect(run.phase).toBe('promotion');
+      run.dispatch({ kind: 'dismissPromotion' });
+      expect(run.phase).toBe('complete');
+      expect(victoryCount).toBe(1);
+      expect(offerCount).toBe(0);
+    });
+
+    it('dismissPromotion is a no-op outside of promotion phase', () => {
+      const { run } = freshRunWithBus(1);
+      const phaseBefore = run.phase;
+      run.dispatch({ kind: 'dismissPromotion' });
+      expect(run.phase).toBe(phaseBefore);
+    });
+
+    it('round-trips pendingPromotions through snapshot', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
+      });
+      const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
+      expect(restored.phase).toBe('promotion');
+      expect(restored.pendingPromotions).toEqual(run.pendingPromotions);
+    });
+  });
+
   describe('chooseRecruit command', () => {
     it('adds the chosen unit to the team and returns to map phase', () => {
       const { run, bus } = freshRunWithBus(1);

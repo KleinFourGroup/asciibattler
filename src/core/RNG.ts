@@ -25,7 +25,12 @@ export class RNG {
   }
 
   toJSON(): RNGSnapshot {
-    return { state: this.state };
+    // Normalize to uint32 — internal step uses `| 0` (signed cast), but the
+    // constructor and fromJSON both normalize with `>>> 0`. Without this,
+    // snapshotting a fresh RNG and a round-tripped RNG at the same logical
+    // step can return `state` values that differ by 2^32 (same bit pattern,
+    // different sign interpretation) and break strict equality in tests.
+    return { state: this.state >>> 0 };
   }
 
   static fromJSON(snap: RNGSnapshot): RNG {

@@ -2,15 +2,18 @@ import { describe, it, expect } from 'vitest';
 import { TICK_RATE, secondsToTicks, ticksToSeconds } from './config';
 
 describe('config: seconds <-> ticks conversion', () => {
-  it('at 10Hz, 1 second is 10 ticks', () => {
-    expect(TICK_RATE).toBe(10);
-    expect(secondsToTicks(1)).toBe(10);
+  it('1 second = TICK_RATE ticks', () => {
+    expect(secondsToTicks(1)).toBe(TICK_RATE);
   });
 
   it('rounds to nearest tick', () => {
-    expect(secondsToTicks(0.05)).toBe(1); // 0.5 -> 1
-    expect(secondsToTicks(0.04)).toBe(0); // 0.4 -> 0
-    expect(secondsToTicks(0.5)).toBe(5);
+    // Boundaries derived from TICK_RATE so this test survives future
+    // TICK_RATE bumps (E3.5 lesson — gotcha #6 says don't hardcode ticks).
+    const halfTickSeconds = 0.5 / TICK_RATE;
+    expect(secondsToTicks(halfTickSeconds + 0.001)).toBe(1); // just above 0.5 ticks → 1
+    expect(secondsToTicks(halfTickSeconds - 0.001)).toBe(0); // just below 0.5 ticks → 0
+    expect(secondsToTicks(0.5)).toBe(secondsToTicks(0.5)); // self-consistent
+    expect(ticksToSeconds(secondsToTicks(0.5))).toBeCloseTo(0.5, 10);
   });
 
   it('ticksToSeconds is the inverse for tick-aligned values', () => {

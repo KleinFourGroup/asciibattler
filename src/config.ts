@@ -8,7 +8,7 @@
  *  simulation but leaves authored balance intact — a "0.5 s cooldown" is
  *  always 0.5 s of wall time, regardless of TICK_RATE.
  */
-export const TICK_RATE = 10;
+export const TICK_RATE = 20;
 
 /** Convenience derivative: seconds per tick. */
 export const TICK_SECONDS = 1 / TICK_RATE;

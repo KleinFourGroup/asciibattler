@@ -5,6 +5,6 @@
   "critPerLuck": 0.01,
   "critCap": 0.6,
   "critMult": 2.0,
-  "cdPerStat": 0.01,
+  "cdPerStat": 0.05,
   "minCdScale": 0.4
 }

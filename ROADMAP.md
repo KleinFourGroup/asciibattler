@@ -231,7 +231,19 @@ abilities; archetype-to-ability mapping is config."
   ability pool; archetype config sets `abilities: [a, b, c]` and ties
   go to the head — predictable, mirrors how MVP did it.
 
-### E3 — Archetype config + leveling
+### E3 — Archetype config + leveling ✅ landed
+
+**Status:** complete. See [HANDOFF.md](HANDOFF.md) "E3 complete" for the
+breakdown. Net: `growthRates` hoisted alongside `baseStats` in
+`config/archetypes.json`; `simulateLevelUps` (player recruits, per-stat
+RNG vs growth) + `scaleStats` (enemies, deterministic
+`stat += round(growth × n)`) in `src/sim/leveling.ts`; `Unit.level`
+field; difficulty curve moved from `enemyHpPerFloor` to
+`enemyLevelPerFloor`. WorldSnapshot v7→v8, Run snapshot v2→v3. Player
+recruits arrive at `currentFloor` simulated level-ups; starting roster
+stays level 1.
+
+Original design (preserved for the trail of decisions that follows):
 
 Hoist archetype definitions into config and add a level dimension. This
 is the step that retires the "balance via %HP buff" pattern and replaces
@@ -325,6 +337,180 @@ snapshots throw; loud failure (A4).
   much higher. Revisit `CRIT_CAP` + `MIN_CD_SCALE` + `CD_PER_STAT` in
   E4 once playtesting reveals where the ceiling actually lives.
 
+### E3.5 — Tick rate + cooldown sensitivity
+
+Two paired knob bumps that make `speed` and `endurance` actually
+matter at the stat values player units are realistically running.
+
+**Why now.** With E3's growth-rate framework in place, the cooldown
+math from E1 (`cdPerStat = 0.01`, `baseAttackCooldownSeconds = 1.2`,
+`baseMoveCooldownSeconds = 0.7`, `TICK_RATE = 10`) means:
+
+- attack CD: `1.2s × 10Hz = 12 ticks` baseline, `0.01 × 12 = 0.12 ticks
+  per stat` → ~9 stat points before the round drops attack CD by 1 tick.
+- move CD: `0.7s × 10Hz = 7 ticks` baseline, `0.07 ticks per stat` →
+  ~14 stat points before move CD drops by 1.
+
+So at typical stat values, every melee unit has the same attack CD and
+every unit has the same move CD. The same-move-CD case in particular
+makes the audio interactions wonky (every attack lands on the same
+tick, melee sounds smear into one).
+
+**Bump 1: TICK_RATE 10 → 20.** Doubles tick granularity. Per HANDOFF
+gotcha #6, durations are authored in seconds and convert via
+`secondsToTicks`, so all cooldown derives, tile-effect cadences
+(D7.B's `FIRE_TICKS_PER_DAMAGE = round(TICK_RATE / damagePerSec)`),
+spawn lockout (D5.C's `SPAWN.durationTicks`), and ability cooldown
+overrides re-derive automatically. No balance numbers move in seconds.
+
+**Bump 2: cdPerStat 0.01 → 0.05.** A 5% reduction per stat means at
+20 Hz:
+
+- attack CD: `0.05 × 24 = 1.2 ticks per stat` → every stat point shifts
+  attack CD by ~1 tick.
+- move CD: `0.05 × 14 = 0.7 ticks per stat` → every other stat point
+  shifts move CD by 1 tick.
+
+The user's design intent here: endurance growth rate will be low, so
+players who invest in endurance should feel each point. At growth ~0.3,
+a level-10 unit gains ~3 endurance over its starting baseline; that
+needs to be a visible move-CD shift, not a rounding artifact.
+
+**Implementation:**
+
+- `TICK_RATE = 20` in `src/config.ts`. Trust the seconds→ticks contract;
+  don't audit every consumer hoping to find one that hardcoded a tick
+  count (per gotcha #6, none should). The audit if it's needed surfaces
+  as test failures or visible animation glitches, not as production
+  bugs.
+- `cdPerStat: 0.05` in `config/stats.json`. Zod schema unchanged.
+- No snapshot version bump. Tick counts inside `actionCooldowns` and
+  `activeAction.{startTick,finishTick}` double, but the schema shape
+  is identical. WorldSnapshot stays v8.
+
+**Test churn (the cost):**
+
+- Any test asserting a specific tick count (e.g. `expect(unit.actionCooldowns.get('attack')).toBe(12)`) needs updating.
+  The pattern to prefer going forward: derive expected ticks via
+  `secondsToTicks(0.7)` rather than hardcoding `7`, so future tick-
+  rate changes don't churn the test suite again.
+- Fuzz baselines shift (battles run twice as many ticks). Re-run
+  `npm run fuzz` after E3.5 lands to refresh the CSV summary.
+- Spawn-overflow + multi-tick attack tests should be checked first
+  (they're the most tick-count-sensitive).
+
+**Decision points E3.5:**
+
+- **Knob value.** 5% per stat is the recommendation, matching the
+  user's "endurance growth will be rather low" framing. 2% would be
+  too small to feel; 10% would risk speed-stacked units perma-firing
+  faster than the renderer can lerp. 5% sits in the middle.
+- **Bump TICK_RATE further (to 30 or 60)?** No. 20 Hz already gives
+  tick-per-stat resolution on attack CD; going higher costs sim CPU
+  without buying gameplay legibility. 60 Hz would also synchronize
+  sim ticks with display refresh, which sounds tempting but ties
+  determinism to user hardware — keep the sim discrete and let the
+  renderer lerp.
+
+### E3.6 — DOM migration for unit overlays
+
+Move HP bar + action progress bar from the canvas-instanced
+`BarRenderer` to DOM elements, and add a per-unit level badge while
+we're there. Sets up the infrastructure E6.C (hitsplats) will reuse.
+
+**Why now.** Three independent forces converge:
+
+1. **Level badge** needs text rendering attached to each unit. The
+   canvas path means either extending FontAtlas + a new instanced
+   text quad geometry, or stretching BarRenderer to carry glyph
+   indices. Both are real shader work.
+2. **E6.C hitsplats** want the same shape: short-lived text quads
+   billboarded above units, color-coded for crit/heal/normal,
+   cluster-safe stacking. Doing them in canvas means a new
+   TextRenderer (~the BarRenderer recipe but for glyphs).
+3. **HP bars** already work in canvas, but maintaining two
+   positioning systems (canvas instances + DOM hitsplats) is a
+   long-term headache. One system, one source of truth.
+
+DOM gives all three free: CSS text rendering (JetBrains Mono is
+already in the page), CSS transitions for fades, no font atlas
+extension needed for arbitrary numbers, easier to style hierarchies
+(crit vs normal, low-HP red vs full green).
+
+**Shape:**
+
+- New `UnitOverlayLayer` (DOM): a `<div>` container layered over
+  the canvas (z-index above #scanlines or below, decide during
+  impl — the scanlines should still rake across overlays).
+- Per-unit `<div class="unit-overlay">` with three child elements:
+  - `.hp-bar` (background + fill, width from `currentHp / maxHp`,
+    color lerps green→amber→red via CSS variables on the parent)
+  - `.action-progress` (hidden by default, fills smoothly between
+    sim ticks for in-flight actions, skipped for MoveAction +
+    SpawnAction per the existing rules)
+  - `.level-badge` (`Lv N`, top-right corner of the overlay)
+- World-to-screen projector: `vector.project(camera)` returns NDC;
+  multiply by `(viewport.width / 2, viewport.height / 2)` and
+  offset by viewport center → CSS pixel coords. Called per-frame
+  for visible units; positions written via `transform: translate(...)`
+  (GPU-composited, no layout thrash).
+- BattleRenderer subscribes to the same events as today
+  (`unit:spawned` / `unit:moved` / `unit:attacked` / `unit:burned` /
+  `unit:healed` / `unit:died`) and either creates / updates / removes
+  the overlay element. Sprite Y lerp through SpriteAnimator drives
+  overlay re-projection.
+- Death fade applies CSS `opacity` transition + element removal on
+  transitionend. Mirrors B3's "both bars fade in lockstep with
+  sprite" but via CSS instead of the SpriteAnimator fade lane.
+- `BarRenderer` deleted entirely (not "kept dormant" — the canvas
+  path stops earning its complexity once everything moved). Same
+  for the `bar.vert.glsl` / `bar.frag.glsl` shader pair.
+
+**Tradeoffs (worth flagging up front):**
+
+- **DOM bars don't bloom.** B3 already chose "bars don't bloom"
+  as the design direction, so this is consistent — the canvas
+  bars weren't on the bloom layer either.
+- **World-to-screen projection per frame** for up to ~50 visible
+  unit overlays. Cheap if we stick to `transform: translate(...)`
+  only (GPU compositing, no layout invalidation). Audit if frame
+  budget tightens.
+- **Z-ordering vs the canvas.** DOM is always above the canvas
+  — fine for HP bars + level + hitsplats (all are UI overlays
+  anyway). If a future feature wants an effect that's behind a
+  sprite, it stays in canvas.
+
+**Headless tests:**
+
+- BattleRenderer attach / detach lifecycle covered by existing
+  tests; rewrite assertions against the DOM element rather than
+  the canvas instance handle.
+- HP bar fill percentage on `unit:attacked` (assert via DOM
+  attribute or computed style).
+- Level badge renders `Lv ${unit.level}` and updates on a
+  hypothetical level-change event (E4 will start emitting those).
+- Cluster stacking deferred to E6.C — hitsplats need it, the
+  three permanent overlays don't.
+
+**Decision points E3.6:**
+
+- **Single overlay element vs. three siblings.** Recommend a single
+  parent `<div>` per unit with three children. One projection
+  update per unit (cheaper) and CSS positioning handles the
+  internal layout. Three siblings would mean three projections
+  per unit + three element lookups per event.
+- **Action progress bar fate.** User flagged considering retiring
+  it. Recommend: ship E3.6 with the progress bar still present
+  (B3's mage charge-up use case is still on the table for E7);
+  if E7's mage feels readable without it, revisit then. Cheap
+  to drop later; expensive to re-add.
+- **Hitsplat infrastructure scope creep.** Keep E3.6 strictly to
+  the three permanent overlays. Hitsplats are short-lived DOM
+  elements with a different lifecycle (event-driven create →
+  animation → self-destroy); they reuse the world-to-screen
+  projector E3.6 builds, but their per-element machinery lands
+  in E6.C.
+
 ### E4 — XP + difficulty rebalance
 
 E3 lands the data model and the enemy-side scaling. E4 lands the
@@ -367,6 +553,21 @@ texture worth thinking through:
   is per-battle, leveling is across-battles.
 - Recruit screen + HUD show level + XP bar (decision point on whether
   to surface XP).
+- **Pre-recruit promotion scene.** New `PromotionScene` (DOM-only,
+  same family as `RecruitScene` / `GameOverScene` / `MapScene`) slots
+  between BattleScene and RecruitScene whenever at least one surviving
+  unit leveled up. Lists each promoted unit with archetype + glyph +
+  old→new level, and the per-stat growth deltas from the E3
+  `simulateLevelUps` rolls (the rolls are deterministic given the unit
+  + battle seed, so the displayed values match what got banked). Click
+  to dismiss → RecruitScene. If no units leveled, skip the scene
+  entirely (no empty-state). Scene routing: extend Game's
+  `battle:ended` handler to check `xpAwards` for level crossings; if
+  any, swap to PromotionScene first; PromotionScene's dismiss command
+  triggers the existing recruit swap. Re-uses the world-to-screen
+  projector infrastructure E3.6 builds if we want to anchor the
+  promotion cards above the unit's last position; otherwise a stacked
+  card list works fine. Decision deferred to impl.
 - Difficulty: `config/difficulty.json` knobs tuned via fuzz harness.
   Re-run fuzz at 100+ seeds post-E3 to set the baseline; then again
   after E4 to verify the XP curve doesn't create new pathologies (a
@@ -499,14 +700,20 @@ on hit. Needs a small projectile-pool renderer akin to BarRenderer
 **E6.C — Hitsplats.** Replace the current sprite color flash on
 `unit:attacked` with floating damage numbers above the hit unit:
 
-- Use the existing FontAtlas glyphs (we already have `0-9`).
-- New TextRenderer (or extend BarRenderer's recipe) that draws a
-  short-lived text quad per hit, lerps it upward over ~0.5s while
-  fading alpha.
-- Color-code: white for normal hits, neon-red for crits, optionally
-  cyan for heals (sets up E7's healer).
+- Builds on E3.6's DOM overlay infrastructure — hitsplats are
+  short-lived `<div>` elements positioned via the same world-to-screen
+  projector the HP bar uses. No new TextRenderer needed; CSS handles
+  the text + animation.
+- On `unit:attacked`, create a `.hitsplat` element anchored above the
+  target's overlay. CSS keyframe lerps it upward ~0.5s while fading
+  opacity 1 → 0; `animationend` self-removes the element.
+- Color-code via CSS class: `.hitsplat-normal` (white), `.hitsplat-crit`
+  (neon-red, keyed off `unit:attacked.crit` from E1), `.hitsplat-heal`
+  (cyan, keyed off `unit:healed` for E7's healer). Optionally also
+  `.hitsplat-burn` for `unit:burned` if it reads as too noisy without.
 - Cluster-safe: stack adjacent hits vertically (offset Y by ~0.2 per
-  active hit on the same target).
+  active hit on the same target). Track active hitsplat count per
+  unitId in a Map; decrement on `animationend`.
 
 **Verification:** eyeball-only per [TESTING.md](TESTING.md). Capture
 preview screenshots of a 2v2 battle to A/B against the current

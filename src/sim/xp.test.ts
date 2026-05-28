@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { isAtLevelCap, xpToNext } from './xp';
+import { computeXpAwards, isAtLevelCap, xpToNext } from './xp';
 import { LEVELING } from '../config/leveling';
 
 describe('xpToNext', () => {
@@ -44,5 +44,36 @@ describe('isAtLevelCap', () => {
   it('is true at and past the cap', () => {
     expect(isAtLevelCap(LEVELING.levelCap)).toBe(true);
     expect(isAtLevelCap(LEVELING.levelCap + 1)).toBe(true);
+  });
+});
+
+describe('computeXpAwards', () => {
+  it('returns an empty array when no units are passed', () => {
+    expect(computeXpAwards([], new Map())).toEqual([]);
+  });
+
+  it('hands out only the flat slice when nobody dealt damage', () => {
+    const awards = computeXpAwards([{ id: 1 }, { id: 2 }], new Map());
+    expect(awards).toHaveLength(2);
+    expect(awards[0]!.xpGained).toBe(Math.round(LEVELING.xpFlatPerSurvivor));
+    expect(awards[0]!.damageDealt).toBe(0);
+  });
+
+  it('stacks flat + per-damage for damage-dealing survivors', () => {
+    const damage = new Map<number, number>([[1, 50]]);
+    const [award] = computeXpAwards([{ id: 1 }], damage);
+    expect(award!.damageDealt).toBe(50);
+    expect(award!.xpGained).toBe(
+      Math.round(LEVELING.xpFlatPerSurvivor + LEVELING.xpPerDamage * 50),
+    );
+  });
+
+  it('iterates units in input order (stable for snapshot determinism)', () => {
+    const damage = new Map<number, number>([[2, 10], [1, 30]]);
+    const awards = computeXpAwards([{ id: 1 }, { id: 2 }, { id: 3 }], damage);
+    expect(awards.map((a) => a.unitId)).toEqual([1, 2, 3]);
+    expect(awards[0]!.damageDealt).toBe(30);
+    expect(awards[1]!.damageDealt).toBe(10);
+    expect(awards[2]!.damageDealt).toBe(0);
   });
 });

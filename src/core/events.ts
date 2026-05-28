@@ -19,7 +19,21 @@ export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
 
   'battle:started': { worldSeed: number };
-  'battle:ended': { winner: 'player' | 'enemy' };
+  /**
+   * E4: payload extended with `xpAwards` — one entry per surviving
+   * player unit on a player victory. Empty array on enemy victory or
+   * mutual annihilation (no awards). `damageDealt` is the raw HP-loss
+   * tally the World accumulated for that unit; `xpGained` is the
+   * `LEVELING`-resolved value (`xpFlatPerSurvivor + xpPerDamage ×
+   * damageDealt`). Run banks it into the persistent roster.
+   *
+   * Including damageDealt + xpGained lets PromotionScene surface
+   * "you dealt X damage, earned Y XP" without re-querying the World.
+   */
+  'battle:ended': {
+    winner: 'player' | 'enemy';
+    xpAwards: readonly { unitId: number; damageDealt: number; xpGained: number }[];
+  };
 
   /**
    * Fires once per unit appearing on the grid. `instant: true` for

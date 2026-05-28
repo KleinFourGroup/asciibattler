@@ -27,3 +27,37 @@ export function xpToNext(level: number): number {
 export function isAtLevelCap(level: number): boolean {
   return level >= LEVELING.levelCap;
 }
+
+export interface XpAward {
+  unitId: number;
+  damageDealt: number;
+  xpGained: number;
+}
+
+/**
+ * E4 — hybrid XP source. Each surviving unit's award:
+ *
+ *   xpGained = LEVELING.xpFlatPerSurvivor + LEVELING.xpPerDamage × damageDealt
+ *
+ * The flat slice is the participation reward (tank / healer / cover
+ * unit gets the same baseline as the carry); the per-damage slice
+ * rewards damage carries proportionally. The caller is responsible for
+ * passing only the units that should be awarded (typically surviving
+ * player units on a player victory). Returns an empty array if `units`
+ * is empty.
+ */
+export function computeXpAwards(
+  units: readonly { id: number }[],
+  damageDealt: ReadonlyMap<number, number>,
+): XpAward[] {
+  const out: XpAward[] = [];
+  for (const u of units) {
+    const dmg = damageDealt.get(u.id) ?? 0;
+    out.push({
+      unitId: u.id,
+      damageDealt: dmg,
+      xpGained: Math.round(LEVELING.xpFlatPerSurvivor + LEVELING.xpPerDamage * dmg),
+    });
+  }
+  return out;
+}

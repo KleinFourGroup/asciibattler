@@ -209,7 +209,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       expect(run.phase).toBe('recruit');
       expect(run.currentEncounter).toBeNull();
       expect(run.currentOffer).not.toBeNull();
@@ -222,7 +222,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
-      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       expect(offers).toEqual([3]);
       expect(run.currentOffer).toHaveLength(3);
     });
@@ -231,7 +231,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      bus.emit('battle:ended', { winner: 'enemy' });
+      bus.emit('battle:ended', { winner: 'enemy', xpAwards: [] });
       expect(run.phase).toBe('defeat');
       expect(run.currentOffer).toBeNull();
     });
@@ -242,14 +242,14 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       let defeatedCount = 0;
       bus.on('run:defeated', () => defeatedCount++);
-      bus.emit('battle:ended', { winner: 'enemy' });
+      bus.emit('battle:ended', { winner: 'enemy', xpAwards: [] });
       expect(defeatedCount).toBe(1);
       expect(run.phase).toBe('defeat');
     });
 
     it('ignores battle:ended when not in battle phase', () => {
       const { run, bus } = freshRunWithBus(1);
-      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       expect(run.phase).toBe('map');
     });
 
@@ -264,7 +264,7 @@ describe('Run', () => {
       let offeredCount = 0;
       bus.on('run:victory', () => victoryCount++);
       bus.on('recruit:offered', () => offeredCount++);
-      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       expect(run.phase).toBe('complete');
       expect(victoryCount).toBe(1);
       expect(offeredCount).toBe(0);
@@ -312,7 +312,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.phase).toBe('battle');
       run.dispose();
-      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       // A live Run would advance to recruit phase here; the disposed one stays.
       expect(run.phase).toBe('battle');
     });
@@ -334,7 +334,7 @@ describe('Run', () => {
 
       // Now end the new run's battle. The old Run is disposed, so its
       // battle:ended handler is gone — only newRun reacts.
-      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       expect(newRun.phase).toBe('recruit');
       expect(oldRun.phase).toBe('battle'); // unchanged
     });
@@ -355,7 +355,7 @@ describe('Run', () => {
       expect(run.visitedNodes.has(first)).toBe(false);
 
       // Now complete the battle, pick a recruit, and hop to the next node.
-      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -368,7 +368,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(7);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
-      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       const snap = run.toJSON();
@@ -388,7 +388,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(7);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
-      bus.emit('battle:ended', { winner: 'player' });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
@@ -403,7 +403,7 @@ describe('Run', () => {
 function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
   const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
   run.dispatch({ kind: 'enterNode', nodeId: frontier });
-  bus.emit('battle:ended', { winner: 'player' });
+  bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
 }
 
 interface RunHandle {

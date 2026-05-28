@@ -30,6 +30,7 @@ import { SPAWN } from '../config/spawn';
 import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
 import type { SpawnRegion } from './layouts';
 import { ZERO_STATS, deriveStats, inertDerived } from './stats';
+import { computeXpAwards } from './xp';
 
 /**
  * Schema history:
@@ -53,8 +54,15 @@ import { ZERO_STATS, deriveStats, inertDerived } from './stats';
  *       defaults to 1 for environment entities). Spawn-queue templates
  *       gained a `level` field on the same bump (UnitTemplate is now
  *       `{archetype, level, stats}`). v7 throws on load.
+ *   9 — E4 added the battle-scoped damage ledger
+ *       (`damageDealt: [attackerId, total][]`) so a mid-battle snapshot
+ *       round-trip preserves the XP awarded on battle:ended. Without
+ *       round-trip, restoring a mid-battle world would start the
+ *       ledger empty and a finished restored battle would award less
+ *       XP than the un-roundtripped baseline — failing the
+ *       snapshot-roundtrip determinism contract. v8 throws on load.
  */
-const WORLD_SCHEMA_VERSION = 8;
+const WORLD_SCHEMA_VERSION = 9;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -123,6 +131,11 @@ export interface WorldSnapshot {
   tileGrid: TileGridSnapshot;
   spawnQueues: SpawnQueueSnapshot[];
   spawnRegions: SpawnRegionAssignment[];
+  /** E4: battle-scoped per-attacker damage tally (damage dealt to the
+   *  opposing team only; neutral hits ignored). Read once at
+   *  battle:ended to build `xpAwards`. Serialized as `[attackerId,
+   *  total]` pairs so the wire format stays plain JSON. */
+  damageDealt: [number, number][];
 }
 
 /**
@@ -187,6 +200,16 @@ export class World {
    * so determinism is `queue FIFO × region tile order`.
    */
   private readonly spawnRegions: Map<Team, SpawnRegion> = new Map();
+  /**
+   * E4: battle-scoped damage tally. Key = attacker unit id, value =
+   * total HP-of-damage dealt to opposing-team combatants over the
+   * battle's lifetime. Damage to walls, half-cover, or same-team
+   * (currently impossible) units is NOT counted — see
+   * `recordDamage`. Read once at `battle:ended` to compute
+   * `xpAwards`; the map is otherwise opaque to callers. Snapshotted
+   * so a mid-battle round-trip preserves XP outcomes.
+   */
+  private readonly damageDealt: Map<number, number> = new Map();
 
   constructor(
     bus: EventBus<GameEvents>,
@@ -262,6 +285,38 @@ export class World {
   /** Test/debug read of the queue depth for a team. */
   queueLength(team: Team): number {
     return this.spawnQueues.get(team)?.length ?? 0;
+  }
+
+  /**
+   * E4: tally a damage event for the XP ledger. Called from
+   * `AttackAction.start` after the HP deduction. Filters here (not at
+   * the consumer) so a single `damageDealt.get(id)` at battle end is
+   * already the "damage to enemies" number:
+   *
+   *   - Damage to the attacker's own team is ignored (currently
+   *     impossible; future friendly-fire abilities still won't earn
+   *     XP for it).
+   *   - Damage to neutrals (walls, half-cover) is ignored — half-cover
+   *     destruction will surface its own progression later if needed,
+   *     but XP rides on opposed combat.
+   *
+   * Overkill damage is recorded as-is (not clamped to the victim's
+   * pre-hit HP). Flat-XP dominates at the values we ship and a 1-tick
+   * AttackAction can't double-hit a corpse, so the simpler unclamped
+   * path stays.
+   */
+  recordDamage(attackerId: number, target: Unit, damage: number): void {
+    if (damage <= 0) return;
+    if (target.team === 'neutral') return;
+    const attacker = this.findUnit(attackerId);
+    if (!attacker) return;
+    if (attacker.team === target.team) return;
+    this.damageDealt.set(attackerId, (this.damageDealt.get(attackerId) ?? 0) + damage);
+  }
+
+  /** Test-only read of the damage ledger. */
+  damageDealtBy(attackerId: number): number {
+    return this.damageDealt.get(attackerId) ?? 0;
   }
 
   /**
@@ -527,7 +582,18 @@ export class World {
     if (!playerAlive && !enemyAlive) return;
     const winner: Team = playerAlive ? 'player' : 'enemy';
     this._ended = true;
-    this.bus.emit('battle:ended', { winner });
+    // E4: surviving player units only — enemies never earn XP, and
+    // dead-on-arrival players banked their damage but won't level (the
+    // "I dealt 50 damage and died" case still earns nothing, by
+    // design; the flat slice is a *survivor* reward).
+    const xpAwards =
+      winner === 'player'
+        ? computeXpAwards(
+            this.units.filter((u) => u.team === 'player' && u.currentHp > 0),
+            this.damageDealt,
+          )
+        : [];
+    this.bus.emit('battle:ended', { winner, xpAwards });
   }
 
   removeUnit(id: number): void {
@@ -681,6 +747,7 @@ export class World {
       tileGrid: this.tileGrid.toJSON(),
       spawnQueues,
       spawnRegions,
+      damageDealt: Array.from(this.damageDealt.entries()),
     };
   }
 
@@ -755,6 +822,12 @@ export class World {
     }
     for (const entry of snap.spawnRegions) {
       world.spawnRegions.set(entry.team, entry.region);
+    }
+
+    // E4 — restore damage ledger so battle:ended's xpAwards match the
+    // un-roundtripped baseline.
+    for (const [attackerId, total] of snap.damageDealt) {
+      world.damageDealt.set(attackerId, total);
     }
 
     return world;

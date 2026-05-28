@@ -101,7 +101,7 @@ describe('EventBus', () => {
     const bus = new EventBus<GameEvents>();
     bus.emit('tick', { tick: 1 });
     bus.emit('battle:started', { worldSeed: 42 });
-    bus.emit('battle:ended', { winner: 'player' });
+    bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
     bus.emit('unit:spawned', { unitId: 1, instant: true });
     bus.emit('unit:moved', {
       unitId: 1,

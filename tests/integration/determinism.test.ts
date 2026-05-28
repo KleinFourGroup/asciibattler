@@ -108,7 +108,7 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
   if (first === undefined) throw new Error('test setup: root has no outgoing edge');
   run.dispatch({ kind: 'enterNode', nodeId: first });
   encounters.push(run.currentEncounter!);
-  bus.emit('battle:ended', { winner: 'player' });
+  bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
   // Victory routes through recruit phase. Pick the first offer to get
   // back to 'map' so the second hop is accepted.
   run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
@@ -117,7 +117,7 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
   if (second === undefined) throw new Error('test setup: first frontier has no outgoing edge');
   run.dispatch({ kind: 'enterNode', nodeId: second });
   encounters.push(run.currentEncounter!);
-  bus.emit('battle:ended', { winner: 'player' });
+  bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
 
   return encounters;
 }

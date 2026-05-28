@@ -51,6 +51,9 @@ export class AttackAction implements Action {
       ? Math.round(this.baseDamage * STATS.critMult)
       : this.baseDamage;
     this.target.currentHp -= damage;
+    // E4 — feed the World's XP ledger. World filters team relationship
+    // (no self-damage / neutral damage), so the call is unconditional.
+    world.recordDamage(unit.id, this.target, damage);
     world.emit('unit:attacked', {
       attackerId: unit.id,
       targetId: this.target.id,

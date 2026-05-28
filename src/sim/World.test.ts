@@ -98,13 +98,19 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    const survivor = w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
     w.tick();
 
-    expect(ends).toEqual([{ winner: 'player' }]);
+    // E4: lone surviving player still gets the flat-XP slice
+    // (damageDealt=0 → xpFlatPerSurvivor + 0).
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('player');
+    expect(ends[0]!.xpAwards).toHaveLength(1);
+    expect(ends[0]!.xpAwards[0]!.unitId).toBe(survivor.id);
+    expect(ends[0]!.xpAwards[0]!.damageDealt).toBe(0);
     expect(w.ended).toBe(true);
   });
 
@@ -118,7 +124,8 @@ describe('World battle-end detection', () => {
 
     w.tick();
 
-    expect(ends).toEqual([{ winner: 'enemy' }]);
+    // E4: enemy victories carry no awards — only player survivors earn XP.
+    expect(ends).toEqual([{ winner: 'enemy', xpAwards: [] }]);
   });
 
   it('does not emit battle:ended while both teams have units', () => {
@@ -166,7 +173,11 @@ describe('World battle-end detection', () => {
 
     w.tick();
 
-    expect(ends).toEqual([{ winner: 'player' }]);
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('player');
+    // Surviving player picks up the flat slice — neutrals never appear.
+    expect(ends[0]!.xpAwards).toHaveLength(1);
+    expect(ends[0]!.xpAwards[0]!.damageDealt).toBe(0);
   });
 
   it('stops processing ticks once ended', () => {
@@ -335,7 +346,12 @@ describe('World D7.B tile effects', () => {
     expect(burns).toHaveLength(1);
     expect(burns[0]!.unitId).toBe(units[1]!.id);
     expect(deaths.some((d) => d.unitId === units[1]!.id)).toBe(true);
-    expect(ends).toEqual([{ winner: 'player' }]);
+    // E4: fire-kills don't credit any attacker — player survivor still
+    // earns the flat XP slice. damageDealt=0 because nobody hit anyone.
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('player');
+    expect(ends[0]!.xpAwards).toHaveLength(1);
+    expect(ends[0]!.xpAwards[0]!.damageDealt).toBe(0);
   });
 
   it('does not apply effects to already-dead units waiting for reap', () => {

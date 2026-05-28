@@ -80,6 +80,24 @@ export interface UnitTemplate {
   readonly archetype: Archetype;
   readonly level: number;
   readonly stats: UnitStats;
+  /**
+   * E4 — banked XP toward the next level. Persists across battles on
+   * the roster side (`Run.team`); enemies always carry 0 (they never
+   * level via XP, only via `scaleStats` on rollEnemyTeam). New
+   * recruits + the starting team begin at 0.
+   */
+  readonly xp: number;
+  /**
+   * E4 — opaque roster slot id for player units. `null` for enemies +
+   * fresh roster entries that haven't been linked yet. `Run.handleEnterNode`
+   * stamps each player template with its array index in `run.team`
+   * when building the encounter; spawn queues round-trip the stamp so
+   * overflow-queue spawns carry the same rosterIndex as their initial-
+   * spawn siblings. The field stays optional so existing inline
+   * `{ archetype, level, stats, xp }` callers don't have to thread a
+   * null through.
+   */
+  readonly rosterIndex?: number | null;
 }
 
 /**
@@ -119,6 +137,15 @@ export interface UnitInit {
   /** E3: defaults to `1`. Environment entities (walls, half-cover)
    *  ignore the field entirely — it's combatant display metadata. */
   readonly level?: number;
+  /** E4: defaults to `0`. The banked XP the unit spawned with — display
+   *  only during the battle. Run banks new XP from `xpAwards` into the
+   *  roster after `battle:ended`, not back into Unit.xp. */
+  readonly xp?: number;
+  /** E4: defaults to `null`. Set for player-team units only — the index
+   *  into `run.team` that this unit was spawned from. Carried into
+   *  `xpAwards` so Run can bank XP into the right roster slot without
+   *  reverse-mapping unit ids. */
+  readonly rosterIndex?: number | null;
 }
 
 export class Unit {
@@ -136,6 +163,19 @@ export class Unit {
    * default — they don't level.
    */
   readonly level: number;
+  /**
+   * E4 — banked XP at spawn time. Display-only during battle (HUD
+   * roster reads this); new XP from a battle's `xpAwards` is banked
+   * into the roster-side template, not back here.
+   */
+  readonly xp: number;
+  /**
+   * E4 — index into `Run.team` for player units; `null` for enemies
+   * + environment entities. Plumbed into `xpAwards` so Run can bank
+   * XP into the right roster slot at `battle:ended` without
+   * maintaining its own unitId-to-rosterIndex map.
+   */
+  readonly rosterIndex: number | null;
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
@@ -179,5 +219,7 @@ export class Unit {
     this.currentHp = init.derived.maxHp;
     this.blocksLineOfSight = init.blocksLineOfSight ?? true;
     this.level = init.level ?? 1;
+    this.xp = init.xp ?? 0;
+    this.rosterIndex = init.rosterIndex ?? null;
   }
 }

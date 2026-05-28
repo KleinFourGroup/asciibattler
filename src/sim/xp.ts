@@ -30,6 +30,15 @@ export function isAtLevelCap(level: number): boolean {
 
 export interface XpAward {
   unitId: number;
+  /**
+   * Index into `Run.team` for the surviving player unit. Set by
+   * `spawnTeam` at battle setup; carried verbatim into the award so
+   * Run can bank XP into the right roster slot without keeping its
+   * own unitId-to-rosterIndex map. Will be `null` only for the
+   * pathological case of a player unit spawned without a rosterIndex
+   * (e.g. directly via `World.spawnUnit` in a test) — Run skips those.
+   */
+  rosterIndex: number | null;
   damageDealt: number;
   xpGained: number;
 }
@@ -47,7 +56,7 @@ export interface XpAward {
  * is empty.
  */
 export function computeXpAwards(
-  units: readonly { id: number }[],
+  units: readonly { id: number; rosterIndex: number | null }[],
   damageDealt: ReadonlyMap<number, number>,
 ): XpAward[] {
   const out: XpAward[] = [];
@@ -55,6 +64,7 @@ export function computeXpAwards(
     const dmg = damageDealt.get(u.id) ?? 0;
     out.push({
       unitId: u.id,
+      rosterIndex: u.rosterIndex,
       damageDealt: dmg,
       xpGained: Math.round(LEVELING.xpFlatPerSurvivor + LEVELING.xpPerDamage * dmg),
     });

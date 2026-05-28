@@ -61,8 +61,13 @@ import { computeXpAwards } from './xp';
  *       ledger empty and a finished restored battle would award less
  *       XP than the un-roundtripped baseline — failing the
  *       snapshot-roundtrip determinism contract. v8 throws on load.
+ *  10 — E4 added per-unit `xp: number` (display data; banked on the
+ *       roster side post-battle) and `rosterIndex: number | null`
+ *       (set for player units only; carried into `xpAwards` so Run
+ *       can bank into the right slot). Spawn-queue templates also
+ *       carry `xp` now. v9 throws on load.
  */
-const WORLD_SCHEMA_VERSION = 9;
+const WORLD_SCHEMA_VERSION = 10;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -86,6 +91,10 @@ export interface UnitSnapshot {
   glyph: string;
   /** E3 — combatant level (1 for environment entities + level-1 units). */
   level: number;
+  /** E4 — display-only banked XP at spawn time. */
+  xp: number;
+  /** E4 — index into Run.team for player units; null otherwise. */
+  rosterIndex: number | null;
   stats: UnitStats;
   derived: UnitDerived;
   position: GridCoord;
@@ -531,6 +540,11 @@ export class World {
         derived,
         position,
         level: template.level,
+        xp: template.xp,
+        // E4: queue templates retain the same rosterIndex they were
+        // pushed onto the queue with (player overflow carries through
+        // from encounter.playerTeam; enemy queue templates carry null).
+        rosterIndex: template.rosterIndex ?? null,
       },
       false,
     );
@@ -612,7 +626,12 @@ export class World {
    * here so the same template can be respawned with a different per-
    * encounter modifier without a stale-template footgun.
    */
-  spawnUnit(template: UnitTemplate, team: Team, position: GridCoord): Unit {
+  spawnUnit(
+    template: UnitTemplate,
+    team: Team,
+    position: GridCoord,
+    rosterIndex: number | null = null,
+  ): Unit {
     const attackRange = attackRangeForArchetype(template.archetype);
     const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
     const derived = deriveStats(template.stats, attackRange, moveCD);
@@ -625,6 +644,8 @@ export class World {
         derived,
         position,
         level: template.level,
+        xp: template.xp,
+        rosterIndex,
       },
       true,
     );
@@ -682,6 +703,8 @@ export class World {
       position: GridCoord;
       blocksLineOfSight?: boolean;
       level?: number;
+      xp?: number;
+      rosterIndex?: number | null;
     },
     instant: boolean,
   ): Unit {
@@ -695,6 +718,8 @@ export class World {
       position: init.position,
       blocksLineOfSight: init.blocksLineOfSight ?? true,
       level: init.level ?? 1,
+      xp: init.xp ?? 0,
+      rosterIndex: init.rosterIndex ?? null,
     });
     this.units.push(unit);
     this.bus.emit('unit:spawned', { unitId: unit.id, instant });
@@ -717,11 +742,20 @@ export class World {
       // Deep copy templates so a post-snapshot push doesn't mutate the wire image.
       spawnQueues.push({
         team,
-        templates: templates.map((t) => ({
-          archetype: t.archetype,
-          level: t.level,
-          stats: { ...t.stats },
-        })),
+        templates: templates.map((t) => {
+          // E4: include rosterIndex only when set, to keep
+          // exactOptionalPropertyTypes happy and the wire image clean.
+          const tpl: UnitTemplate = {
+            archetype: t.archetype,
+            level: t.level,
+            stats: { ...t.stats },
+            xp: t.xp,
+            ...(t.rosterIndex !== undefined && t.rosterIndex !== null
+              ? { rosterIndex: t.rosterIndex }
+              : {}),
+          };
+          return tpl;
+        }),
       });
     }
     const spawnRegions: SpawnRegionAssignment[] = [];
@@ -789,6 +823,8 @@ export class World {
         position: us.position,
         blocksLineOfSight: us.blocksLineOfSight,
         level: us.level,
+        xp: us.xp,
+        rosterIndex: us.rosterIndex,
       });
       unit.currentHp = us.currentHp;
       for (const [actionId, cd] of us.actionCooldowns) {
@@ -841,6 +877,8 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
     archetype: unit.archetype,
     glyph: unit.glyph,
     level: unit.level,
+    xp: unit.xp,
+    rosterIndex: unit.rosterIndex,
     stats: unit.stats,
     derived: unit.derived,
     position: unit.position,

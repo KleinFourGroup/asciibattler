@@ -71,12 +71,13 @@ export function abilityIdsForArchetype(archetype: Archetype): readonly string[] 
 export function rollUnit(archetype: Archetype, rng: RNG, level: number = 1): UnitTemplate {
   const cfg = CONFIGS[archetype];
   if (level <= 1) {
-    return { archetype, level: 1, stats: { ...cfg.baseStats } };
+    return { archetype, level: 1, stats: { ...cfg.baseStats }, xp: 0 };
   }
   return {
     archetype,
     level,
     stats: simulateLevelUps(cfg.baseStats, cfg.growthRates, level - 1, rng),
+    xp: 0,
   };
 }
 
@@ -89,12 +90,13 @@ export function rollUnit(archetype: Archetype, rng: RNG, level: number = 1): Uni
 export function scaledUnit(archetype: Archetype, level: number): UnitTemplate {
   const cfg = CONFIGS[archetype];
   if (level <= 1) {
-    return { archetype, level: 1, stats: { ...cfg.baseStats } };
+    return { archetype, level: 1, stats: { ...cfg.baseStats }, xp: 0 };
   }
   return {
     archetype,
     level,
     stats: scaleStats(cfg.baseStats, cfg.growthRates, level - 1),
+    xp: 0,
   };
 }
 

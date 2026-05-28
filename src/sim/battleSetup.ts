@@ -101,7 +101,11 @@ export function spawnTeam(
   const n = Math.min(templates.length, tiles.length);
   for (let i = 0; i < n; i++) {
     const template = templates[i]!;
-    const u = world.spawnUnit(template, team, tiles[i]!);
+    // E4: pass through the template's rosterIndex (set by
+    // `Run.handleEnterNode` for player templates; null/undefined for
+    // enemy templates). Plumbs into `xpAwards` so Run can bank XP
+    // into the right roster slot without a separate id map.
+    const u = world.spawnUnit(template, team, tiles[i]!, template.rosterIndex ?? null);
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
     for (const id of abilityIdsForArchetype(template.archetype)) {
       u.abilities.push(createAbility(id));

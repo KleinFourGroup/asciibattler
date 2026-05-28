@@ -72,7 +72,15 @@ describe('Run', () => {
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.currentEncounter).not.toBeNull();
-      expect(run.currentEncounter!.playerTeam).toEqual(run.team);
+      // E4: encounter stamps each player template with a `rosterIndex`
+      // equal to its position in run.team; compare the un-stamped
+      // shape via map.
+      expect(
+        run.currentEncounter!.playerTeam.map(({ rosterIndex: _ri, ...rest }) => rest),
+      ).toEqual(run.team);
+      expect(
+        run.currentEncounter!.playerTeam.map((t) => t.rosterIndex),
+      ).toEqual(run.team.map((_, i) => i));
       // CHECKPOINT 6: enemy team is sized at playerTeam.length - 1.
       expect(run.currentEncounter!.enemyTeam).toHaveLength(run.team.length - 1);
     });
@@ -269,6 +277,98 @@ describe('Run', () => {
       expect(victoryCount).toBe(1);
       expect(offeredCount).toBe(0);
       expect(run.currentOffer).toBeNull();
+    });
+  });
+
+  describe('E4 — XP banking + level-up loop', () => {
+    it('starting roster begins at xp=0 and level=1', () => {
+      const { run } = freshRunWithBus(1);
+      for (const t of run.team) {
+        expect(t.xp).toBe(0);
+        expect(t.level).toBe(1);
+      }
+    });
+
+    it('banks xpGained into the right roster slot via rosterIndex', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // Award 5 XP to roster index 2 (a melee unit); it shouldn't be
+      // enough to level (LEVELING.baseXp × 1^2 = 100 at default
+      // config), so the only observable effect is xp bumping.
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 99, rosterIndex: 2, damageDealt: 5, xpGained: 5 }],
+      });
+      expect(run.team[2]!.xp).toBe(5);
+      expect(run.team[2]!.level).toBe(1);
+      // Other slots untouched.
+      expect(run.team[0]!.xp).toBe(0);
+      expect(run.team[4]!.xp).toBe(0);
+    });
+
+    it('triggers a level-up when banked xp crosses xpToNext(level)', () => {
+      const { run, bus } = freshRunWithBus(7);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // Default config: baseXp=100, exponent=2 → xpToNext(1) = 100.
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
+      });
+      expect(run.team[0]!.level).toBe(2);
+      expect(run.team[0]!.xp).toBe(0);
+    });
+
+    it('cascades multiple level-ups in one award if banked xp covers them', () => {
+      const { run, bus } = freshRunWithBus(11);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // baseXp=100, exponent=2: 1→2 costs 100, 2→3 costs 400, 3→4 costs
+      // 900. 500 is enough for 1→2 + 2→3 with 0 left over.
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 500 }],
+      });
+      expect(run.team[0]!.level).toBe(3);
+      expect(run.team[0]!.xp).toBe(0);
+    });
+
+    it('drains banked xp at the level cap (no infinite-grind overflow)', () => {
+      const { run, bus } = freshRunWithBus(99);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // Surgically promote slot 0 to one short of cap with massive
+      // pending XP — checks the cap-drain branch, not the curve.
+      run.team[0] = { ...run.team[0]!, level: 19, xp: 0 };
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 999_999 }],
+      });
+      expect(run.team[0]!.level).toBe(20); // cap
+      expect(run.team[0]!.xp).toBe(0);
+    });
+
+    it('skips awards whose rosterIndex is null (test-fixture safety net)', () => {
+      const { run, bus } = freshRunWithBus(2);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      const xpBefore = run.team.map((t) => t.xp);
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [{ unitId: 1, rosterIndex: null, damageDealt: 50, xpGained: 60 }],
+      });
+      expect(run.team.map((t) => t.xp)).toEqual(xpBefore);
+    });
+
+    it('ignores xpAwards on enemy-victory (defeat already routes to game over)', () => {
+      const { run, bus } = freshRunWithBus(3);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // World emits empty xpAwards on enemy victory; pin that Run
+      // doesn't mutate the roster regardless.
+      bus.emit('battle:ended', { winner: 'enemy', xpAwards: [] });
+      expect(run.team.every((t) => t.xp === 0 && t.level === 1)).toBe(true);
     });
   });
 

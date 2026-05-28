@@ -40,6 +40,11 @@ import { RECRUITMENT } from '../config/recruitment';
 import { DIFFICULTY } from '../config/difficulty';
 import { TERRAIN } from '../config/terrain';
 import { LAYOUT_IDS, THEMES, getLayout, type Theme } from '../sim/layouts';
+import { LEVELING } from '../config/leveling';
+import { xpToNext } from '../sim/xp';
+import { simulateLevelUps } from '../sim/leveling';
+import { growthRatesForArchetype } from '../sim/archetypes';
+import type { Archetype } from '../sim/archetypes';
 
 export type RunPhase = 'map' | 'battle' | 'recruit' | 'defeat' | 'complete';
 
@@ -82,15 +87,19 @@ export interface BattleEncounter {
   readonly enemyTeam: readonly UnitTemplate[];
 }
 
-/** E3: bumped 2→3 — `UnitTemplate` now carries `level: number`, and the
- *  enemy-team builder uses `enemyLevelPerFloor` against `scaleStats` rather
- *  than the retired `enemyHpPerFloor` constitution multiplier. v2 snapshots
- *  throw on load (loud-failure mode A4 settled on; no shipping save format). */
-const RUN_SCHEMA_VERSION = 3;
+/** E4: bumped 3→4 — `UnitTemplate` now carries `xp: number` (banked toward
+ *  the next level-up). Snapshot also gains `levelupRng: RNGSnapshot` so the
+ *  next batch of level-up rolls stays deterministic across save/load. v3
+ *  snapshots throw on load. */
+const RUN_SCHEMA_VERSION = 4;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
   rng: RNGSnapshot;
+  /** E4: separate stream for level-up stat rolls, forked from `rng` at
+   *  Run construction. Lives independently so adding/removing a level-up
+   *  source doesn't shift other run-RNG draws. */
+  levelupRng: RNGSnapshot;
   nodeMap: NodeMap;
   team: UnitTemplate[];
   currentNodeId: number;
@@ -108,6 +117,10 @@ const { enemySizeDelta: ENEMY_SIZE_DELTA, enemyLevelPerFloor: ENEMY_LEVEL_PER_FL
 
 export class Run {
   readonly rng: RNG;
+  /** E4: dedicated stream for level-up stat rolls. Forked once at
+   *  construction so `simulateLevelUps` draws here, not against the
+   *  parent stream that drives nodeMap + battle picks. */
+  readonly levelupRng: RNG;
   readonly nodeMap: NodeMap;
   team: UnitTemplate[];
   currentNodeId: number;
@@ -130,6 +143,7 @@ export class Run {
     this.rng = new RNG(seed);
     this.nodeMap = generateNodeMap(this.rng.fork());
     this.team = rollTeam(this.rng.fork());
+    this.levelupRng = this.rng.fork();
     this.currentNodeId = this.nodeMap.rootId;
     this.visitedNodes = new Set<number>();
     this.subscribe();
@@ -138,7 +152,9 @@ export class Run {
 
   private subscribe(): void {
     this.subscriptions.push(
-      this.bus.on('battle:ended', ({ winner }) => this.handleBattleEnded(winner)),
+      this.bus.on('battle:ended', ({ winner, xpAwards }) =>
+        this.handleBattleEnded(winner, xpAwards),
+      ),
     );
   }
 
@@ -222,6 +238,12 @@ export class Run {
       console.log('[layout]', layoutId ?? 'procedural', `${gridW}x${gridH}`);
     }
 
+    // E4: stamp each player template with its `Run.team` index so
+    // `xpAwards` can carry it back at battle end. The roster itself
+    // doesn't store rosterIndex — array position IS the index — so
+    // the stamp is applied here at handoff time, never on
+    // `this.team`. Enemy templates leave rosterIndex undefined.
+    const stampedPlayerTeam = this.team.map((t, i) => ({ ...t, rosterIndex: i }));
     this.currentEncounter = {
       worldSeed,
       terrainSeed,
@@ -229,7 +251,7 @@ export class Run {
       gridW,
       gridH,
       theme,
-      playerTeam: this.team.slice(),
+      playerTeam: stampedPlayerTeam,
       enemyTeam,
     };
     this.bus.emit('battle:started', { worldSeed });
@@ -249,10 +271,18 @@ export class Run {
     return node.floor;
   }
 
-  private handleBattleEnded(winner: Team): void {
+  private handleBattleEnded(
+    winner: Team,
+    xpAwards: GameEvents['battle:ended']['xpAwards'],
+  ): void {
     if (this.phase !== 'battle') return;
     this.currentEncounter = null;
     if (winner === 'player') {
+      // E4 — bank XP into the roster BEFORE the recruit offer rolls,
+      // so the recruit screen / promotion scene already reflect the
+      // post-battle state. Level-up stat rolls advance `levelupRng`
+      // here; the offer still uses `this.rng.fork()` independently.
+      this.bankXpAwards(xpAwards);
       if (this.currentNodeId === this.nodeMap.terminalId) {
         // Winning the terminal battle ends the run — no recruit offer,
         // straight to the run-complete screen via run:victory.
@@ -269,6 +299,51 @@ export class Run {
     } else {
       this.phase = 'defeat';
       this.bus.emit('run:defeated', {});
+    }
+  }
+
+  /**
+   * E4 — apply an award batch to `this.team`. For each award:
+   *   1. Find the roster template via `rosterIndex` (skip if null — a
+   *      test fixture spawn that didn't stamp the field).
+   *   2. Add `xpGained` to the template's banked XP.
+   *   3. While banked >= `xpToNext(level)` AND level < cap: spend the
+   *      threshold, level up, roll new stats via `simulateLevelUps(1)`
+   *      against `levelupRng`. At cap, drain any remaining banked XP
+   *      (no infinite-grind overflow).
+   *   4. Write the new template back into the roster slot.
+   *
+   * Deterministic ordering: awards are iterated as received from the
+   * event payload, which World produces in unit-iteration order. RNG
+   * draws come off `levelupRng` in that same order. So a snapshot at
+   * any point round-trips identically.
+   */
+  private bankXpAwards(
+    awards: GameEvents['battle:ended']['xpAwards'],
+  ): void {
+    for (const award of awards) {
+      if (award.rosterIndex === null) continue;
+      const idx = award.rosterIndex;
+      const template = this.team[idx];
+      if (!template) continue;
+      let xp = template.xp + award.xpGained;
+      let level = template.level;
+      let stats = template.stats;
+      // `xpToNext` returns Infinity at the cap, so the loop naturally
+      // exits there — the explicit cap drain below covers the
+      // "leftover xp at cap" edge case.
+      while (level < LEVELING.levelCap && xp >= xpToNext(level)) {
+        xp -= xpToNext(level);
+        level += 1;
+        stats = simulateLevelUps(
+          stats,
+          growthRatesForArchetype(template.archetype as Archetype),
+          1,
+          this.levelupRng,
+        );
+      }
+      if (level >= LEVELING.levelCap) xp = 0;
+      this.team[idx] = { ...template, xp, level, stats };
     }
   }
 
@@ -290,6 +365,7 @@ export class Run {
     return {
       schemaVersion: RUN_SCHEMA_VERSION,
       rng: this.rng.toJSON(),
+      levelupRng: this.levelupRng.toJSON(),
       nodeMap: this.nodeMap,
       team: this.team.slice(),
       currentNodeId: this.currentNodeId,
@@ -320,6 +396,7 @@ export class Run {
     m.bus = bus;
     m.subscriptions = [];
     m.rng = RNG.fromJSON(snap.rng);
+    m.levelupRng = RNG.fromJSON(snap.levelupRng);
     m.nodeMap = snap.nodeMap;
     m.team = snap.team.slice();
     m.currentNodeId = snap.currentNodeId;

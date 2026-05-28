@@ -32,7 +32,18 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'battle:ended': {
     winner: 'player' | 'enemy';
-    xpAwards: readonly { unitId: number; damageDealt: number; xpGained: number }[];
+    xpAwards: readonly {
+      unitId: number;
+      /**
+       * Index into `Run.team` for the surviving player unit. Null for
+       * the rare test fixture that spawned a player unit directly via
+       * `World.spawnUnit` without threading rosterIndex; Run skips
+       * those.
+       */
+      rosterIndex: number | null;
+      damageDealt: number;
+      xpGained: number;
+    }[];
   };
 
   /**

@@ -9,6 +9,14 @@ export interface AttackActionData {
   targetId: number;
   baseDamage: number;
   critChance: number;
+  /**
+   * E4: pre-crit multiplier applied to `baseDamage` at start. Defaults
+   * to 1; basic strikes set < 1 when the shot crosses a half-cover
+   * unit on the LOS line (see `proposeBasicStrike`). Round happens
+   * after both crit + cover multiply, so a 50% half-cover crit reads
+   * `round(base × critMult × 0.5)`.
+   */
+  damageMultiplier: number;
 }
 
 /**
@@ -42,14 +50,14 @@ export class AttackAction implements Action {
     private readonly target: Unit | undefined,
     private readonly baseDamage: number,
     private readonly critChance: number,
+    private readonly damageMultiplier: number = 1,
   ) {}
 
   start(unit: Unit, world: World): void {
     if (!this.target || this.target.currentHp <= 0) return;
     const crit = world.combatRng.next() < this.critChance;
-    const damage = crit
-      ? Math.round(this.baseDamage * STATS.critMult)
-      : this.baseDamage;
+    const critFactor = crit ? STATS.critMult : 1;
+    const damage = Math.round(this.baseDamage * critFactor * this.damageMultiplier);
     this.target.currentHp -= damage;
     // E4 — feed the World's XP ledger. World filters team relationship
     // (no self-damage / neutral damage), so the call is unconditional.
@@ -67,6 +75,7 @@ export class AttackAction implements Action {
       targetId: this.target?.id ?? -1,
       baseDamage: this.baseDamage,
       critChance: this.critChance,
+      damageMultiplier: this.damageMultiplier,
     };
   }
 
@@ -75,6 +84,9 @@ export class AttackAction implements Action {
       world.findUnit(data.targetId),
       data.baseDamage,
       data.critChance,
+      // Default to 1 when an older snapshot omits the field; AttackAction
+      // is the only loaded place that reads it.
+      data.damageMultiplier ?? 1,
     );
   }
 }

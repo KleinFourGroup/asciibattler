@@ -6,6 +6,7 @@ import { AttackAction } from '../actions/AttackAction';
 import { findTarget } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
 import { basicAttackDamage } from '../stats';
+import { LEVELING } from '../../config/leveling';
 import type { Ability } from './Ability';
 
 /**
@@ -14,11 +15,13 @@ import type { Ability } from './Ability';
  * the registry id they wear (and indirectly through `basicAttackDamage`
  * picking strength vs. ranged via the unit's archetype).
  *
- * Half-cover damage attenuation deferred to E4 (the multiplier needs to
- * be tuned alongside the rest of the stat curve, not in isolation). The
- * LOS-blocker collection here already filters half-covers (`blocksLineOfSight`
- * false) the same way pre-E2 `AttackBehavior` did — D6's contract is
- * preserved exactly.
+ * E4 — the half-cover damage multiplier finally lands. Walls (neutral +
+ * `blocksLineOfSight: true`) still abort the proposal entirely; half-
+ * cover (neutral + `blocksLineOfSight: false`) lets the shot through
+ * but at `LEVELING.halfCoverDamageMult` of the damage. The check runs
+ * at propose time so the multiplier rides into AttackAction with the
+ * resolved base damage — AttackAction stays a thin "apply damage +
+ * crit" primitive.
  *
  * The proposal score is 10 — same as pre-E2 — chosen so AbilityBehavior's
  * basic-strike proposal beats MovementBehavior's 1. Future per-ability
@@ -38,11 +41,21 @@ function proposeBasicStrike(
     return null;
   }
 
+  // E4: half-cover detection. `hasLineOfSight` returns `false` when any
+  // blocker sits on the Bresenham line strictly between the endpoints,
+  // so passing the half-cover positions as blockers and inverting the
+  // result tells us whether the shot crosses one.
+  const halfCovers = collectHalfCoverPositions(world);
+  const behindCover =
+    halfCovers.length > 0 &&
+    !hasLineOfSight(unit.position, target.position, halfCovers);
+  const damageMultiplier = behindCover ? LEVELING.halfCoverDamageMult : 1;
+
   const baseDamage = basicAttackDamage(unit);
   const durationTicks = unit.derived.attackCooldownTicks;
 
   return {
-    action: new AttackAction(target, baseDamage, unit.derived.critChance),
+    action: new AttackAction(target, baseDamage, unit.derived.critChance, damageMultiplier),
     score: 10,
     cooldown: durationTicks,
     duration: durationTicks,
@@ -72,6 +85,19 @@ function collectLosBlockers(world: World): GridCoord[] {
     if (u.team === 'neutral' && u.blocksLineOfSight) blockers.push(u.position);
   }
   return blockers;
+}
+
+/**
+ * E4 — half-cover positions: neutral units whose `blocksLineOfSight` is
+ * `false`. Symmetric to `collectLosBlockers` but for the OTHER half of
+ * the neutral-team population.
+ */
+function collectHalfCoverPositions(world: World): GridCoord[] {
+  const out: GridCoord[] = [];
+  for (const u of world.units) {
+    if (u.team === 'neutral' && !u.blocksLineOfSight) out.push(u.position);
+  }
+  return out;
 }
 
 function chebyshev(a: GridCoord, b: GridCoord): number {

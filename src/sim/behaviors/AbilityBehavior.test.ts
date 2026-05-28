@@ -115,15 +115,18 @@ describe('AbilityBehavior', () => {
     expect(attacks).toHaveLength(1);
   });
 
-  it('D6: ranged attack passes through half-cover (LOS-transparent)', () => {
+  it('D6/E4: ranged attack passes through half-cover (LOS-transparent) but at reduced damage', () => {
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
     spawnHalfCover(world, { x: 3, y: 0 });
     world.tick();
-    expect(units[1]!.currentHp).toBe(25);
+    // E4: damage multiplier is `LEVELING.halfCoverDamageMult` (default
+    // 0.5). round(5 × 0.5) = 3 → 30 - 3 = 27.
+    expect(units[1]!.currentHp).toBe(27);
     expect(attacks).toHaveLength(1);
+    expect(attacks[0]!.damage).toBe(3);
   });
 
   it('D6: wall + half-cover mix — wall blocks, half-cover does not contribute', () => {

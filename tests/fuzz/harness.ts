@@ -203,6 +203,15 @@ export function runOne(
         }
         break;
       }
+      case 'promotion': {
+        // E4: headless run; PromotionScene has no observable side
+        // effects on the sim, just dismiss and continue. Run resolves
+        // dismissal into the same recruit-offer / run:victory branch
+        // a no-promotion battle would take, so the next loop tick
+        // lands in 'recruit' or 'complete' naturally.
+        run.dispatch({ kind: 'dismissPromotion' });
+        break;
+      }
       case 'recruit': {
         const offer = run.currentOffer!;
         const idx = strategy.pickRecruit(offer, run, strategyRng);

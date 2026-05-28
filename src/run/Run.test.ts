@@ -3,6 +3,8 @@ import { Run } from './Run';
 import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import type { GameEvents } from '../core/events';
+import { ARCHETYPE_CONFIG } from '../sim/archetypes';
+import { xpToNext } from '../sim/xp';
 
 describe('Run', () => {
   describe('initial state', () => {
@@ -96,16 +98,19 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const floor = run.nodeMap.nodes.find((n) => n.id === first)!.floor;
       const enemyLevel = 1 + (floor - 1) * 1; // enemyLevelPerFloor = 1 at default config
+      // Source baseStats + growthRates from the live config so balance
+      // tweaks don't strand this test.
       for (const u of run.currentEncounter!.enemyTeam) {
         expect(u.level).toBe(enemyLevel);
+        const cfg = ARCHETYPE_CONFIG[u.archetype];
+        const baseCon = cfg.baseStats.constitution;
         if (enemyLevel === 1) {
-          const baseCon = u.archetype === 'melee' ? 20 : 12;
           expect(u.stats.constitution).toBe(baseCon);
         } else {
           // Deterministic growth: constitution increases by round(growthRate × (level - 1)).
-          const baseCon = u.archetype === 'melee' ? 20 : 12;
-          const growthCon = u.archetype === 'melee' ? 0.7 : 0.5;
-          expect(u.stats.constitution).toBe(baseCon + Math.round(growthCon * (enemyLevel - 1)));
+          expect(u.stats.constitution).toBe(
+            baseCon + Math.round(cfg.growthRates.constitution * (enemyLevel - 1)),
+          );
         }
       }
     });
@@ -324,14 +329,17 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(11);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // baseXp=100, exponent=2: 1→2 costs 100, 2→3 costs 400, 3→4 costs
-      // 900. 500 is enough for 1→2 + 2→3 with 0 left over.
+      // Compute the exact threshold from the curve so the test stays
+      // pinned regardless of `baseXp` / `exponent` tuning.
+      const cost1To2 = xpToNext(1);
+      const cost2To3 = xpToNext(2);
+      const award = cost1To2 + cost2To3 + 5; // 5 XP leftover after cascading
       bus.emit('battle:ended', {
         winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 500 }],
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: award }],
       });
       expect(run.team[0]!.level).toBe(3);
-      expect(run.team[0]!.xp).toBe(0);
+      expect(run.team[0]!.xp).toBe(5);
     });
 
     it('drains banked xp at the level cap (no infinite-grind overflow)', () => {
@@ -359,6 +367,26 @@ describe('Run', () => {
         xpAwards: [{ unitId: 1, rosterIndex: null, damageDealt: 50, xpGained: 60 }],
       });
       expect(run.team.map((t) => t.xp)).toEqual(xpBefore);
+    });
+
+    it('banks damage XP for a fallen unit (rosterIndex set even though unit died)', () => {
+      // E4 follow-up: roster persists across battles, so a unit that
+      // died in this battle still gets damage credit on its roster
+      // slot. The xpFlatPerFallen slice is the participation reward;
+      // the per-damage share is paid regardless.
+      const { run, bus } = freshRunWithBus(4);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      bus.emit('battle:ended', {
+        winner: 'player',
+        xpAwards: [
+          // Slot 0 fell with 30 damage — World pays it
+          // xpFlatPerFallen + xpPerDamage × 30 via computeXpAwards.
+          // Run just banks whatever World sent.
+          { unitId: 9, rosterIndex: 0, damageDealt: 30, xpGained: 91 },
+        ],
+      });
+      expect(run.team[0]!.xp).toBe(91);
     });
 
     it('ignores xpAwards on enemy-victory (defeat already routes to game over)', () => {

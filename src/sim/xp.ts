@@ -44,29 +44,39 @@ export interface XpAward {
 }
 
 /**
- * E4 — hybrid XP source. Each surviving unit's award:
+ * E4 — hybrid XP source. Each player unit's award:
  *
- *   xpGained = LEVELING.xpFlatPerSurvivor + LEVELING.xpPerDamage × damageDealt
+ *   xpGained = (alive ? xpFlatPerSurvivor : xpFlatPerFallen)
+ *            + xpPerDamage × damageDealt
  *
- * The flat slice is the participation reward (tank / healer / cover
- * unit gets the same baseline as the carry); the per-damage slice
- * rewards damage carries proportionally. The caller is responsible for
- * passing only the units that should be awarded (typically surviving
- * player units on a player victory). Returns an empty array if `units`
- * is empty.
+ * The survivor flat slice is the participation reward (tank / healer /
+ * cover unit gets the same baseline as the carry); the per-damage
+ * slice rewards damage carries proportionally; the fallen flat slice
+ * (default 0) is a separate knob — the roster persists across battles,
+ * so a fallen unit isn't really *gone*, just sidelined for the next
+ * battle.
+ *
+ * Caller passes `playerRosterIds` (every player unit that ever spawned
+ * this battle — even reaped ones) keyed by unitId; `livingUnitIds`
+ * (subset still alive at battle end); and the `damageDealt` ledger.
+ * Iteration order is insertion order on `playerRosterIds`, which is
+ * spawn order — stable for snapshot determinism.
  */
 export function computeXpAwards(
-  units: readonly { id: number; rosterIndex: number | null }[],
+  playerRosterIds: ReadonlyMap<number, number>,
+  livingUnitIds: ReadonlySet<number>,
   damageDealt: ReadonlyMap<number, number>,
 ): XpAward[] {
   const out: XpAward[] = [];
-  for (const u of units) {
-    const dmg = damageDealt.get(u.id) ?? 0;
+  for (const [unitId, rosterIndex] of playerRosterIds) {
+    const dmg = damageDealt.get(unitId) ?? 0;
+    const alive = livingUnitIds.has(unitId);
+    const flatSlice = alive ? LEVELING.xpFlatPerSurvivor : LEVELING.xpFlatPerFallen;
     out.push({
-      unitId: u.id,
-      rosterIndex: u.rosterIndex,
+      unitId,
+      rosterIndex,
       damageDealt: dmg,
-      xpGained: Math.round(LEVELING.xpFlatPerSurvivor + LEVELING.xpPerDamage * dmg),
+      xpGained: Math.round(flatSlice + LEVELING.xpPerDamage * dmg),
     });
   }
   return out;

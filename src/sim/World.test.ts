@@ -98,18 +98,21 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    const survivor = w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    // E4 follow-up: spawn WITH rosterIndex so the survivor lands in
+    // playerRosterIds and earns its flat-XP slice; otherwise the
+    // bare-spawn path treats it as a non-roster fixture and emits
+    // an empty awards list.
+    const survivor = w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 }, 0);
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
     w.tick();
 
-    // E4: lone surviving player still gets the flat-XP slice
-    // (damageDealt=0 → xpFlatPerSurvivor + 0).
     expect(ends).toHaveLength(1);
     expect(ends[0]!.winner).toBe('player');
     expect(ends[0]!.xpAwards).toHaveLength(1);
     expect(ends[0]!.xpAwards[0]!.unitId).toBe(survivor.id);
+    expect(ends[0]!.xpAwards[0]!.rosterIndex).toBe(0);
     expect(ends[0]!.xpAwards[0]!.damageDealt).toBe(0);
     expect(w.ended).toBe(true);
   });
@@ -165,7 +168,7 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 }, 0);
     w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 5, y: 5 });
     w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 7, y: 7 });
     const ends: GameEvents['battle:ended'][] = [];
@@ -346,12 +349,13 @@ describe('World D7.B tile effects', () => {
     expect(burns).toHaveLength(1);
     expect(burns[0]!.unitId).toBe(units[1]!.id);
     expect(deaths.some((d) => d.unitId === units[1]!.id)).toBe(true);
-    // E4: fire-kills don't credit any attacker — player survivor still
-    // earns the flat XP slice. damageDealt=0 because nobody hit anyone.
     expect(ends).toHaveLength(1);
     expect(ends[0]!.winner).toBe('player');
-    expect(ends[0]!.xpAwards).toHaveLength(1);
-    expect(ends[0]!.xpAwards[0]!.damageDealt).toBe(0);
+    // E4 follow-up: the fire-kill scene helper spawns via the bare
+    // path without rosterIndex, so the player unit doesn't land in
+    // playerRosterIds and earns no XP — the scene file separately
+    // pins the *award* behavior in its own roster-aware tests.
+    expect(ends[0]!.xpAwards).toHaveLength(0);
   });
 
   it('does not apply effects to already-dead units waiting for reap', () => {

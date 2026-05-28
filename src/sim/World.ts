@@ -66,8 +66,14 @@ import { computeXpAwards } from './xp';
  *       (set for player units only; carried into `xpAwards` so Run
  *       can bank into the right slot). Spawn-queue templates also
  *       carry `xp` now. v9 throws on load.
+ *  11 — E4 follow-up added `playerRosterIds: [unitId, rosterIndex][]`
+ *       so a player unit that died during the battle still earns
+ *       its damage-share XP plus the new `xpFlatPerFallen` slice.
+ *       Without this, the dead unit's tally was orphaned at battle
+ *       end because the unit was already spliced from `world.units`.
+ *       v10 throws on load.
  */
-const WORLD_SCHEMA_VERSION = 10;
+const WORLD_SCHEMA_VERSION = 11;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -145,6 +151,11 @@ export interface WorldSnapshot {
    *  battle:ended to build `xpAwards`. Serialized as `[attackerId,
    *  total]` pairs so the wire format stays plain JSON. */
   damageDealt: [number, number][];
+  /** E4 follow-up: every player unit ever spawned this battle, mapped
+   *  unitId → rosterIndex. Populated on spawn (initial + overflow) for
+   *  player team only; entries persist even after the unit dies so
+   *  fallen damage-dealers still earn their damage-share XP. */
+  playerRosterIds: [number, number][];
 }
 
 /**
@@ -219,6 +230,22 @@ export class World {
    * so a mid-battle round-trip preserves XP outcomes.
    */
   private readonly damageDealt: Map<number, number> = new Map();
+  /**
+   * E4 follow-up: per-battle "every player unit that ever spawned"
+   * record. Key = unitId, value = rosterIndex. Populated in `addUnit`
+   * for player-team spawns whose rosterIndex is non-null; entries
+   * stick around even after the unit dies + is spliced from
+   * `world.units`, so `checkBattleEnd` can pay XP to the dead.
+   *
+   * Combined with `damageDealt` (also persistent through deaths) +
+   * `livingPlayerIds = units.filter(team === 'player' && hp > 0)`,
+   * the award generator can produce four cases cleanly:
+   *   survivor + dealt damage  → flatSurvivor + share
+   *   survivor + no damage     → flatSurvivor only
+   *   fallen + dealt damage    → flatFallen + share
+   *   fallen + no damage       → flatFallen only (0 at default knobs)
+   */
+  private readonly playerRosterIds: Map<number, number> = new Map();
 
   constructor(
     bus: EventBus<GameEvents>,
@@ -596,16 +623,18 @@ export class World {
     if (!playerAlive && !enemyAlive) return;
     const winner: Team = playerAlive ? 'player' : 'enemy';
     this._ended = true;
-    // E4: surviving player units only — enemies never earn XP, and
-    // dead-on-arrival players banked their damage but won't level (the
-    // "I dealt 50 damage and died" case still earns nothing, by
-    // design; the flat slice is a *survivor* reward).
+    // E4 follow-up: roster persists across battles, so a "dead" player
+    // unit isn't really gone — they're just sidelined for this
+    // battle's flat-survivor slice. Pay them their damage share plus
+    // an explicit `xpFlatPerFallen` slice so the suicide-DPS trade
+    // isn't punished, just slightly under-rewarded vs. survivors.
+    const livingPlayerIds = new Set<number>();
+    for (const u of this.units) {
+      if (u.team === 'player' && u.currentHp > 0) livingPlayerIds.add(u.id);
+    }
     const xpAwards =
       winner === 'player'
-        ? computeXpAwards(
-            this.units.filter((u) => u.team === 'player' && u.currentHp > 0),
-            this.damageDealt,
-          )
+        ? computeXpAwards(this.playerRosterIds, livingPlayerIds, this.damageDealt)
         : [];
     this.bus.emit('battle:ended', { winner, xpAwards });
   }
@@ -722,6 +751,13 @@ export class World {
       rosterIndex: init.rosterIndex ?? null,
     });
     this.units.push(unit);
+    // E4 follow-up: stash the unit's roster slot before any death can
+    // reap it from `units`. Player units with a rosterIndex are the
+    // only ones that earn XP, so the filter is symmetric with the
+    // award-generation path in `checkBattleEnd`.
+    if (unit.team === 'player' && unit.rosterIndex !== null) {
+      this.playerRosterIds.set(unit.id, unit.rosterIndex);
+    }
     this.bus.emit('unit:spawned', { unitId: unit.id, instant });
     return unit;
   }
@@ -782,6 +818,7 @@ export class World {
       spawnQueues,
       spawnRegions,
       damageDealt: Array.from(this.damageDealt.entries()),
+      playerRosterIds: Array.from(this.playerRosterIds.entries()),
     };
   }
 
@@ -864,6 +901,12 @@ export class World {
     // un-roundtripped baseline.
     for (const [attackerId, total] of snap.damageDealt) {
       world.damageDealt.set(attackerId, total);
+    }
+    // E4 follow-up — restore player roster ids. addUnit's auto-populate
+    // doesn't fire on rehydrate (we push directly onto `world.units`
+    // in Phase 1 above), so the only path back is the snapshot copy.
+    for (const [unitId, rosterIndex] of snap.playerRosterIds) {
+      world.playerRosterIds.set(unitId, rosterIndex);
     }
 
     return world;

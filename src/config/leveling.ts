@@ -12,13 +12,20 @@
  * a one-file edit.
  *
  * Hybrid XP source per ROADMAP E4:
- *   per-unit XP = xpFlatPerSurvivor (alive at battle end)
+ *   per-unit XP = (xpFlatPerSurvivor if alive else xpFlatPerFallen)
  *               + xpPerDamage × HP-of-damage-dealt-to-enemies
  *
  * The flat slice keeps tanks / healers / specialists from falling behind;
  * the damage slice rewards carries. Tuned against floor-1 baselines where
  * a contributing unit should earn ~half a level per battle and a level-5
  * unit should clear a level every ~5 battles.
+ *
+ * `xpFlatPerFallen` is the participation reward for player units that
+ * died during the battle. Defaults to 0 — fallen units still earn their
+ * damage share so suicide-DPS trades aren't *punished*, but they don't
+ * get the survivor participation bonus by default. Bump it (or set it
+ * equal to `xpFlatPerSurvivor`) if death-to-stay-on-curve feels too
+ * harsh in playtest.
  *
  * `levelCap` enforces the asymptote — without it stats drift past the
  * user's "~50 unlikely ceiling" on long runs. Cap of 20 lands most stats
@@ -42,6 +49,7 @@ const LevelingSchema = z.object({
   exponent: z.number().positive(),
   levelCap: z.number().int().min(1),
   xpFlatPerSurvivor: z.number().nonnegative(),
+  xpFlatPerFallen: z.number().nonnegative(),
   xpPerDamage: z.number().nonnegative(),
   halfCoverDamageMult: z.number().min(0).max(1),
 });

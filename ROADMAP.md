@@ -527,7 +527,32 @@ extension needed for arbitrary numbers, easier to style hierarchies
   projector E3.6 builds, but their per-element machinery lands
   in E6.C.
 
-### E4 — XP + difficulty rebalance
+### E4 — XP + difficulty rebalance ✅ landed
+
+Decisions settled by user:
+- **XP source: hybrid (flat + damage share).** Each surviving player
+  unit earns `LEVELING.xpFlatPerSurvivor + LEVELING.xpPerDamage ×
+  damageDealt`. Defaults in `config/leveling.json`.
+- **Curve shape: classic quadratic per-level.** `xpToNext(L) = baseXp
+  × L^exponent` with `exponent: 2` (per-level quadratic; cumulative
+  cubic). Knob isolated in [src/sim/xp.ts](src/sim/xp.ts) so
+  swapping shapes is a one-file edit.
+- **XP display:** HUD roster (player rows show `Lv N · XP/Next`,
+  enemy rows just `Lv N`) + RecruitScreen card (`XP 0/Next`). No
+  in-battle floating XP bar.
+- **Level cap: 20.** `xpToNext` returns Infinity at the cap;
+  banked overflow drains.
+- **Half-cover damage multiplier: 0.5.** Applied at propose time
+  when the Bresenham line from attacker to target clips a
+  half-cover unit; AttackAction multiplies in alongside the crit
+  factor.
+
+Shipped in 6 commits (E4.1–E4.6). PromotionScene slots between
+BattleScene and RecruitScene whenever any player unit crossed an
+XP threshold during battle-end banking — cards show old→new level
++ per-stat deltas (growth rows highlighted green, unchanged dim).
+
+Original decision-point discussion preserved below.
 
 E3 lands the data model and the enemy-side scaling. E4 lands the
 player-side leveling path + the post-battle XP loop.

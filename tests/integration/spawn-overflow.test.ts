@@ -133,7 +133,7 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.units.filter((u) => u.team === 'player')).toHaveLength(1);
   });
 
-  it('round-trips queue + regions + abilities through WorldSnapshot v7', () => {
+  it('round-trips queue + regions + abilities + level through WorldSnapshot v8', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
@@ -142,17 +142,21 @@ describe('D5.C spawn overflow queue', () => {
     spawnTeam(world, 'player', templates, region, rng);
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(7);
+    expect(wire.schemaVersion).toBe(8);
     expect(wire.spawnQueues).toHaveLength(1);
     expect(wire.spawnQueues[0].team).toBe('player');
     expect(wire.spawnQueues[0].templates).toHaveLength(2);
+    // E3: queued templates carry their level on the wire.
+    expect(wire.spawnQueues[0].templates[0].level).toBe(1);
     expect(wire.spawnRegions).toHaveLength(1);
     expect(wire.spawnRegions[0].team).toBe('player');
     expect(wire.spawnRegions[0].region.tiles).toEqual(region.tiles);
 
     // E2: every melee unit on the wire carries `abilities: ['melee_strike']`.
+    // E3: every unit on the wire carries `level` (1 for these level-1 rolls).
     for (const us of wire.units) {
       expect(us.abilities).toEqual(['melee_strike']);
+      expect(us.level).toBe(1);
     }
 
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
@@ -169,11 +173,11 @@ describe('D5.C spawn overflow queue', () => {
     expect(restored.queueLength('player')).toBe(1);
   });
 
-  it('rejects v6 snapshots (E2 schema bump is loud)', () => {
+  it('rejects v7 snapshots (E3 schema bump is loud)', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    wire.schemaVersion = 6;
+    wire.schemaVersion = 7;
     expect(() => World.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,
     );

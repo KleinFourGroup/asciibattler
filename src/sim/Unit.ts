@@ -63,14 +63,22 @@ export interface UnitDerived {
 }
 
 /**
- * Pre-instantiation description of a unit: archetype + base stats. The
- * recruitment screen surfaces these as options; choosing one creates a `Unit`.
- * Derived values are NOT carried on the template — they're recomputed at
- * spawn time via `deriveStats` so future per-encounter modifiers can
- * fold in cleanly without a stale-template footgun.
+ * Pre-instantiation description of a unit: archetype + leveled stat
+ * snapshot + level metadata. The recruitment screen surfaces these as
+ * options; choosing one creates a `Unit`. Derived values are NOT
+ * carried on the template — they're recomputed at spawn time via
+ * `deriveStats` so future per-encounter modifiers can fold in cleanly
+ * without a stale-template footgun.
+ *
+ * E3: `stats` is the *post-level-up* block (already advanced via
+ * `simulateLevelUps` for player recruits or `scaleStats` for enemies);
+ * `level` is display metadata and round-trip continuity, not a runtime
+ * modifier — the unit's stats already reflect its level. Level 1
+ * templates carry baseStats verbatim.
  */
 export interface UnitTemplate {
   readonly archetype: Archetype;
+  readonly level: number;
   readonly stats: UnitStats;
 }
 
@@ -108,6 +116,9 @@ export interface UnitInit {
   /** D6: defaults to `true` so existing combatants + walls keep their
    *  LOS-blocking behavior. Half-cover sets this to `false`. */
   readonly blocksLineOfSight?: boolean;
+  /** E3: defaults to `1`. Environment entities (walls, half-cover)
+   *  ignore the field entirely — it's combatant display metadata. */
+  readonly level?: number;
 }
 
 export class Unit {
@@ -117,6 +128,14 @@ export class Unit {
   readonly glyph: string;
   readonly stats: UnitStats;
   readonly derived: UnitDerived;
+  /**
+   * E3 — combatant level. The unit's `stats` already reflect this
+   * level (post-`simulateLevelUps` / post-`scaleStats`); the field is
+   * preserved for display in the HUD + recruit card and for snapshot
+   * round-trip continuity. Environment entities carry `1` as a no-op
+   * default — they don't level.
+   */
+  readonly level: number;
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
@@ -159,5 +178,6 @@ export class Unit {
     this.position = init.position;
     this.currentHp = init.derived.maxHp;
     this.blocksLineOfSight = init.blocksLineOfSight ?? true;
+    this.level = init.level ?? 1;
   }
 }

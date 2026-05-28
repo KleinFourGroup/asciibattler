@@ -1,6 +1,7 @@
 import type { RNG } from '../core/RNG';
 import type { UnitTemplate } from './Unit';
 import { ARCHETYPES, type ArchetypeConfig } from '../config/archetypes';
+import { scaleStats, simulateLevelUps } from './leveling';
 
 export type Archetype = 'melee' | 'ranged';
 
@@ -21,6 +22,35 @@ export function attackRangeForArchetype(archetype: Archetype): number {
 }
 
 /**
+ * E3 — per-archetype move-cooldown base in seconds, or `undefined` if
+ * the archetype inherits the global default from `config/stats.json`.
+ * Threaded into `deriveStats` so slow-walking archetypes can lengthen
+ * their move CD without touching the global knob.
+ */
+export function baseMoveCooldownSecondsForArchetype(
+  archetype: Archetype,
+): number | undefined {
+  return CONFIGS[archetype].baseMoveCooldownSeconds;
+}
+
+/**
+ * E3 — per-archetype `growthRates` block, used by `simulateLevelUps`
+ * (player recruits) and `scaleStats` (enemies).
+ */
+export function growthRatesForArchetype(archetype: Archetype) {
+  return CONFIGS[archetype].growthRates;
+}
+
+/**
+ * E3 — per-archetype `baseStats` block, used as the starting point for
+ * level-up math. Returned by reference (frozen-by-zod-parse JSON), so
+ * callers MUST spread before mutating.
+ */
+export function baseStatsForArchetype(archetype: Archetype) {
+  return CONFIGS[archetype].baseStats;
+}
+
+/**
  * E2 — registry ids of the abilities an archetype unit spawns with.
  * Order is significant: `AbilityBehavior` walks the list in stored
  * order and ties go to the first proposer. Spawn-site callers pass each
@@ -32,18 +62,39 @@ export function abilityIdsForArchetype(archetype: Archetype): readonly string[] 
 }
 
 /**
- * E1 — produce a level-1 template from the archetype's baseStats.
- *
- * **No RNG draws today.** Stat rolls land in E3 via `simulateLevelUps`
- * (player recruits) and `scaleStats` (enemies); for now every unit
- * spawns at exactly the baseStats numbers. The `_rng` param stays on
- * the signature so callers don't churn when E3 plugs in — they already
- * thread an RNG through `rollOffer` / `rollTeam` / `rollEnemyTeam`.
+ * E3 — produce a player-side template at the given level via simulated
+ * level-ups. Level 1 returns baseStats verbatim (no RNG draws); higher
+ * levels consume `7 × (level - 1)` RNG draws against the archetype's
+ * growthRates. Used by `rollTeam` (level 1) and `rollOffer` (recruits
+ * at currentFloor — see ROADMAP E3 decision point).
  */
-export function rollUnit(archetype: Archetype, _rng: RNG): UnitTemplate {
+export function rollUnit(archetype: Archetype, rng: RNG, level: number = 1): UnitTemplate {
+  const cfg = CONFIGS[archetype];
+  if (level <= 1) {
+    return { archetype, level: 1, stats: { ...cfg.baseStats } };
+  }
   return {
     archetype,
-    stats: { ...CONFIGS[archetype].baseStats },
+    level,
+    stats: simulateLevelUps(cfg.baseStats, cfg.growthRates, level - 1, rng),
+  };
+}
+
+/**
+ * E3 — produce an enemy-side template at the given level via the
+ * deterministic `scaleStats` path. No RNG draws; same `(archetype,
+ * level)` pair always produces the same stats. Used by `rollEnemyTeam`
+ * — the difficulty curve is `enemyLevel = 1 + (floor-1) × enemyLevelPerFloor`.
+ */
+export function scaledUnit(archetype: Archetype, level: number): UnitTemplate {
+  const cfg = CONFIGS[archetype];
+  if (level <= 1) {
+    return { archetype, level: 1, stats: { ...cfg.baseStats } };
+  }
+  return {
+    archetype,
+    level,
+    stats: scaleStats(cfg.baseStats, cfg.growthRates, level - 1),
   };
 }
 

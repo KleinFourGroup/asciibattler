@@ -18,6 +18,14 @@
  * or base values drop low enough to round to 0; at default config it's
  * unreachable.
  *
+ * E3: `baseMoveCooldownSeconds` is now overridable per archetype. The
+ * argument defaults to the global `STATS.baseMoveCooldownSeconds`
+ * (which most archetypes still inherit); slow-walking archetypes can
+ * pass a higher value to lengthen their move CD without touching the
+ * global. Attack CD does NOT have an analogous override here on
+ * purpose — attack timing belongs on the Ability layer (one unit can
+ * carry several abilities with different timings).
+ *
  * `inertDerived` is the environment-entity path (walls / half-cover) —
  * non-combatants need a maxHp anchor for HP display and the future
  * destructibility plumbing, but no cooldowns / crit / range.
@@ -32,7 +40,11 @@ import { secondsToTicks } from '../config';
 import { STATS } from '../config/stats';
 import type { Unit, UnitDerived, UnitStats } from './Unit';
 
-export function deriveStats(stats: UnitStats, attackRange: number): UnitDerived {
+export function deriveStats(
+  stats: UnitStats,
+  attackRange: number,
+  baseMoveCooldownSeconds: number = STATS.baseMoveCooldownSeconds,
+): UnitDerived {
   return {
     maxHp: Math.max(1, Math.round(STATS.hpPerConstitution * stats.constitution)),
     critChance: Math.min(STATS.critCap, stats.luck * STATS.critPerLuck),
@@ -42,7 +54,7 @@ export function deriveStats(stats: UnitStats, attackRange: number): UnitDerived 
     ),
     moveCooldownTicks: Math.max(
       1,
-      secondsToTicks(STATS.baseMoveCooldownSeconds * cooldownScale(stats.endurance)),
+      secondsToTicks(baseMoveCooldownSeconds * cooldownScale(stats.endurance)),
     ),
     attackRange,
   };

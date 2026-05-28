@@ -1,4 +1,4 @@
 {
   "enemySizeDelta": -1,
-  "enemyHpPerFloor": 0.05
+  "enemyLevelPerFloor": 1
 }

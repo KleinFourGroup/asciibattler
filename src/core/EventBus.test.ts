@@ -125,10 +125,10 @@ describe('EventBus', () => {
       endurance: 1,
     };
     bus.emit('recruit:offered', {
-      units: [{ archetype: 'melee', stats: stubStats }],
+      units: [{ archetype: 'melee', level: 1, stats: stubStats }],
     });
     bus.emit('recruit:chosen', {
-      unitTemplate: { archetype: 'ranged', stats: stubStats },
+      unitTemplate: { archetype: 'ranged', level: 1, stats: stubStats },
     });
     // Reaching this line means every catalog entry compiles.
     expect(true).toBe(true);

@@ -12,7 +12,12 @@ import {
   type UnitTemplate,
 } from './Unit';
 import type { ActionProposal } from './Action';
-import { abilityIdsForArchetype, attackRangeForArchetype, glyphForArchetype } from './archetypes';
+import {
+  abilityIdsForArchetype,
+  attackRangeForArchetype,
+  baseMoveCooldownSecondsForArchetype,
+  glyphForArchetype,
+} from './archetypes';
 import type { WorldCommand } from './Command';
 import { createAction } from './actions/registry';
 import { createBehavior } from './behaviors/registry';
@@ -44,8 +49,12 @@ import { ZERO_STATS, deriveStats, inertDerived } from './stats';
  *       after round-trip. AttackBehavior retired; v6 `behaviors`
  *       arrays referencing `'attack'` would throw on rehydrate, but
  *       the version bump already rejects v6 wholesale.
+ *   8 — E3 added per-unit `level: number` (combatant display metadata;
+ *       defaults to 1 for environment entities). Spawn-queue templates
+ *       gained a `level` field on the same bump (UnitTemplate is now
+ *       `{archetype, level, stats}`). v7 throws on load.
  */
-const WORLD_SCHEMA_VERSION = 7;
+const WORLD_SCHEMA_VERSION = 8;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -67,6 +76,8 @@ export interface UnitSnapshot {
   team: Team;
   archetype: UnitArchetype;
   glyph: string;
+  /** E3 — combatant level (1 for environment entities + level-1 units). */
+  level: number;
   stats: UnitStats;
   derived: UnitDerived;
   position: GridCoord;
@@ -454,7 +465,8 @@ export class World {
 
   private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {
     const attackRange = attackRangeForArchetype(template.archetype);
-    const derived = deriveStats(template.stats, attackRange);
+    const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
+    const derived = deriveStats(template.stats, attackRange, moveCD);
     const unit = this.addUnit(
       {
         team,
@@ -463,6 +475,7 @@ export class World {
         stats: template.stats,
         derived,
         position,
+        level: template.level,
       },
       false,
     );
@@ -535,7 +548,8 @@ export class World {
    */
   spawnUnit(template: UnitTemplate, team: Team, position: GridCoord): Unit {
     const attackRange = attackRangeForArchetype(template.archetype);
-    const derived = deriveStats(template.stats, attackRange);
+    const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
+    const derived = deriveStats(template.stats, attackRange, moveCD);
     return this.addUnit(
       {
         team,
@@ -544,6 +558,7 @@ export class World {
         stats: template.stats,
         derived,
         position,
+        level: template.level,
       },
       true,
     );
@@ -600,6 +615,7 @@ export class World {
       derived: UnitDerived;
       position: GridCoord;
       blocksLineOfSight?: boolean;
+      level?: number;
     },
     instant: boolean,
   ): Unit {
@@ -612,6 +628,7 @@ export class World {
       derived: init.derived,
       position: init.position,
       blocksLineOfSight: init.blocksLineOfSight ?? true,
+      level: init.level ?? 1,
     });
     this.units.push(unit);
     this.bus.emit('unit:spawned', { unitId: unit.id, instant });
@@ -632,7 +649,14 @@ export class World {
     const spawnQueues: SpawnQueueSnapshot[] = [];
     for (const [team, templates] of this.spawnQueues) {
       // Deep copy templates so a post-snapshot push doesn't mutate the wire image.
-      spawnQueues.push({ team, templates: templates.map((t) => ({ ...t, stats: { ...t.stats } })) });
+      spawnQueues.push({
+        team,
+        templates: templates.map((t) => ({
+          archetype: t.archetype,
+          level: t.level,
+          stats: { ...t.stats },
+        })),
+      });
     }
     const spawnRegions: SpawnRegionAssignment[] = [];
     for (const [team, region] of this.spawnRegions) {
@@ -697,6 +721,7 @@ export class World {
         derived: us.derived,
         position: us.position,
         blocksLineOfSight: us.blocksLineOfSight,
+        level: us.level,
       });
       unit.currentHp = us.currentHp;
       for (const [actionId, cd] of us.actionCooldowns) {
@@ -742,6 +767,7 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
     team: unit.team,
     archetype: unit.archetype,
     glyph: unit.glyph,
+    level: unit.level,
     stats: unit.stats,
     derived: unit.derived,
     position: unit.position,

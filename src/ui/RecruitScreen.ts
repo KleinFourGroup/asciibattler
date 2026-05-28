@@ -12,7 +12,11 @@
 import type { UnitTemplate } from '../sim/Unit';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
-import { attackRangeForArchetype, glyphForArchetype } from '../sim/archetypes';
+import {
+  attackRangeForArchetype,
+  baseMoveCooldownSecondsForArchetype,
+  glyphForArchetype,
+} from '../sim/archetypes';
 import { deriveStats } from '../sim/stats';
 import { ticksToSeconds } from '../config';
 import { fadeIn, fadeOutAndRemove } from './fade';
@@ -71,18 +75,19 @@ export class RecruitScreen {
 
     const label = document.createElement('div');
     label.className = 'recruit-archetype';
-    label.textContent = template.archetype;
+    label.textContent = `Level ${template.level} ${template.archetype}`;
     card.appendChild(label);
 
     // E1: card values are DERIVED (maxHp / cooldowns / crit) — the
-    // template only carries base stats. Mirroring `World.spawnUnit`'s
-    // derive call so the card preview matches the actual in-battle unit
-    // exactly. Basic damage comes from the archetype's primary stat
-    // (melee → strength, ranged → ranged) — same lookup
-    // `basicAttackDamage` uses inside AttackBehavior.
+    // template only carries the leveled stat snapshot (E3). Mirroring
+    // `World.spawnUnit`'s derive call so the card preview matches the
+    // actual in-battle unit exactly. Basic damage comes from the
+    // archetype's primary stat (melee → strength, ranged → ranged) —
+    // same lookup `basicAttackDamage` uses inside AbilityBehavior.
     const s = template.stats;
     const attackRange = attackRangeForArchetype(template.archetype);
-    const derived = deriveStats(s, attackRange);
+    const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
+    const derived = deriveStats(s, attackRange, moveCD);
     const baseDamage = template.archetype === 'melee' ? s.strength : s.ranged;
     const statsEl = document.createElement('div');
     statsEl.className = 'recruit-stats';

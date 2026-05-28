@@ -276,7 +276,7 @@ function scene(specs: SceneUnit[]): {
   const units = specs.map((s) => {
     const archetype = (s.attackRange ?? 1) > 1 ? 'ranged' : 'melee';
     const stats = buildStats(s, archetype);
-    const template: UnitTemplate = { archetype, stats };
+    const template: UnitTemplate = { archetype, level: 1, stats };
     const u = world.spawnUnit(template, s.team, { x: s.x, y: s.y });
     if (s.attackRange !== undefined || s.attackCooldownTicks !== undefined) {
       const mutDerived = u as unknown as { derived: { -readonly [K in keyof typeof u.derived]: number } };

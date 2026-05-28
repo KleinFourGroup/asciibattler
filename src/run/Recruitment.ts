@@ -7,8 +7,13 @@
  * rolls would too often produce all-same-archetype offers, which feels
  * like a bad-luck choice rather than a real one.
  *
- * No floor / battle-count scaling on the offer: difficulty ramp lives on
- * the enemy side (see Run.ts).
+ * E3: recruits arrive at `level` (defaults to 1). Run threads
+ * `currentFloor` through so a floor-N recruit gets N simulated level-ups
+ * via `rollUnit` — keeps recruits in pace with the enemies on the floor
+ * the player just cleared. Order of draws (archetype assignment first,
+ * then per-unit stat rolls) is fixed by the loops below; tuning the
+ * level math here will shift downstream byte continuity, but that's
+ * scoped to this fork of the run RNG.
  */
 
 import type { RNG } from '../core/RNG';
@@ -19,10 +24,11 @@ import { RECRUITMENT } from '../config/recruitment';
 export function rollOffer(
   rng: RNG,
   size: number = RECRUITMENT.defaultOfferSize,
+  level: number = 1,
 ): UnitTemplate[] {
   if (size <= 0) return [];
   if (size === 1) {
-    return [rollUnit(rng.pick(['melee', 'ranged'] as const), rng)];
+    return [rollUnit(rng.pick(['melee', 'ranged'] as const), rng, level)];
   }
 
   // Reserve one slot for a guaranteed melee and one for a guaranteed ranged.
@@ -37,5 +43,5 @@ export function rollOffer(
     archetypes[i] ??= rng.pick(['melee', 'ranged'] as const);
   }
 
-  return archetypes.map((a) => rollUnit(a, rng));
+  return archetypes.map((a) => rollUnit(a, rng, level));
 }

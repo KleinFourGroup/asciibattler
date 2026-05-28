@@ -32,7 +32,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate, Team } from '../sim/Unit';
-import { rollUnit } from '../sim/archetypes';
+import { rollUnit, scaledUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap } from './NodeMap';
 import { rollOffer } from './Recruitment';
 import type { RunCommand } from './Command';
@@ -82,10 +82,11 @@ export interface BattleEncounter {
   readonly enemyTeam: readonly UnitTemplate[];
 }
 
-/** D8: bumped 1→2 — BattleEncounter now carries a required `theme` field.
- *  v1 snapshots throw on load (loud-failure mode A4 settled on; no shipping
- *  save format). */
-const RUN_SCHEMA_VERSION = 2;
+/** E3: bumped 2→3 — `UnitTemplate` now carries `level: number`, and the
+ *  enemy-team builder uses `enemyLevelPerFloor` against `scaleStats` rather
+ *  than the retired `enemyHpPerFloor` constitution multiplier. v2 snapshots
+ *  throw on load (loud-failure mode A4 settled on; no shipping save format). */
+const RUN_SCHEMA_VERSION = 3;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -103,7 +104,7 @@ export interface RunSnapshot {
 // and src/config/difficulty.ts. Bound to locals here just for readability at
 // the call sites.
 const { startingMelee: STARTING_MELEE, startingRanged: STARTING_RANGED } = RECRUITMENT;
-const { enemySizeDelta: ENEMY_SIZE_DELTA, enemyHpPerFloor: ENEMY_HP_PER_FLOOR } = DIFFICULTY;
+const { enemySizeDelta: ENEMY_SIZE_DELTA, enemyLevelPerFloor: ENEMY_LEVEL_PER_FLOOR } = DIFFICULTY;
 
 export class Run {
   readonly rng: RNG;
@@ -259,7 +260,10 @@ export class Run {
         this.bus.emit('run:victory', {});
       } else {
         this.phase = 'recruit';
-        this.currentOffer = rollOffer(this.rng.fork());
+        // E3 — recruits come in at the just-cleared floor's level. A
+        // floor-4 recruit gets 4 simulated level-ups, keeping pace with
+        // enemies at that depth. See ROADMAP E3 decision point.
+        this.currentOffer = rollOffer(this.rng.fork(), undefined, this.currentFloor);
         this.bus.emit('recruit:offered', { units: this.currentOffer });
       }
     } else {
@@ -342,42 +346,35 @@ function rollTeam(rng: RNG): UnitTemplate[] {
 /**
  * Enemy team for a battle on `floor`, sized relative to the player. Composition
  * stays ~60% melee / 40% ranged via Math.round so the formation reads the same
- * at any team size. Per-floor HP multiplier toughens deeper enemies; size delta
- * keeps the player marginally ahead in unit count.
+ * at any team size. Size delta keeps the player marginally ahead in unit count.
+ *
+ * E3: difficulty curve runs through `enemyLevelPerFloor` + `scaleStats`
+ * instead of the retired `enemyHpPerFloor` post-derive multiplier. Enemies
+ * on floor N spawn at level `1 + (N-1) × enemyLevelPerFloor` — same axis as
+ * player progression. Floor 1 enemies are level 1 (baseStats verbatim).
+ * Path is fully deterministic — no per-unit RNG draws — matching the
+ * pre-E3 behaviour (the RNG param stays threaded for callers that don't
+ * need to know which path is RNG-free).
  */
-function rollEnemyTeam(rng: RNG, playerSize: number, floor: number): UnitTemplate[] {
+function rollEnemyTeam(_rng: RNG, playerSize: number, floor: number): UnitTemplate[] {
   const size = Math.max(1, playerSize + ENEMY_SIZE_DELTA);
   const meleeCount = Math.round(size * 0.6);
   const rangedCount = size - meleeCount;
-  const hpMultiplier = 1 + ENEMY_HP_PER_FLOOR * floor;
+  const enemyLevel = enemyLevelForFloor(floor);
 
   const team: UnitTemplate[] = [];
   for (let i = 0; i < meleeCount; i++) {
-    team.push(scaleConstitution(rollUnit('melee', rng), hpMultiplier));
+    team.push(scaledUnit('melee', enemyLevel));
   }
   for (let i = 0; i < rangedCount; i++) {
-    team.push(scaleConstitution(rollUnit('ranged', rng), hpMultiplier));
+    team.push(scaledUnit('ranged', enemyLevel));
   }
   return team;
 }
 
-/**
- * E1: enemy-difficulty HP scaling now drives `constitution` (the stat
- * that derives maxHp via `deriveStats`), not the post-derive maxHp
- * value. Keeps the derivation chain canonical — every unit's maxHp
- * trails its constitution × `STATS.hpPerConstitution`. E3 replaces
- * this with `enemyLevelPerFloor` driving a `scaleStats` per-stat
- * growth pass; until then the constitution-only scaling preserves
- * Phase D's "tougher enemies deeper in" feel.
- */
-function scaleConstitution(template: UnitTemplate, multiplier: number): UnitTemplate {
-  return {
-    archetype: template.archetype,
-    stats: {
-      ...template.stats,
-      constitution: Math.round(template.stats.constitution * multiplier),
-    },
-  };
+/** E3: floor 1 = level 1, floor N = `1 + (N-1) × enemyLevelPerFloor`. */
+function enemyLevelForFloor(floor: number): number {
+  return 1 + Math.max(0, floor - 1) * ENEMY_LEVEL_PER_FLOOR;
 }
 
 /**

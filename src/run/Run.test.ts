@@ -77,20 +77,28 @@ describe('Run', () => {
       expect(run.currentEncounter!.enemyTeam).toHaveLength(run.team.length - 1);
     });
 
-    it('E1: scales enemy constitution by 1 + 0.05 × destination floor', () => {
-      // Pre-E1 the difficulty curve scaled maxHp directly. E1 made
-      // maxHp a derived value, so the equivalent dial is constitution
-      // (which feeds the derive function via `HP_PER_CONSTITUTION`).
-      // E3 will replace this with `enemyLevelPerFloor` driving a full
-      // `scaleStats` pass.
+    it('E3: scales enemy stats via scaleStats at level = 1 + (floor-1) × enemyLevelPerFloor', () => {
+      // E1's constitution-only multiplier was retired; the difficulty
+      // curve now runs through the leveling system. Floor 1 enemies are
+      // level 1 (baseStats verbatim); floor N enemies are level
+      // `1 + (N-1) × enemyLevelPerFloor` with `scaleStats` applied to
+      // baseStats × growthRates.
       const { run } = freshRunWithBus(1);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const floor = run.nodeMap.nodes.find((n) => n.id === first)!.floor;
-      const multiplier = 1 + 0.05 * floor;
+      const enemyLevel = 1 + (floor - 1) * 1; // enemyLevelPerFloor = 1 at default config
       for (const u of run.currentEncounter!.enemyTeam) {
-        const baseCon = u.archetype === 'melee' ? 20 : 12;
-        expect(u.stats.constitution).toBe(Math.round(baseCon * multiplier));
+        expect(u.level).toBe(enemyLevel);
+        if (enemyLevel === 1) {
+          const baseCon = u.archetype === 'melee' ? 20 : 12;
+          expect(u.stats.constitution).toBe(baseCon);
+        } else {
+          // Deterministic growth: constitution increases by round(growthRate × (level - 1)).
+          const baseCon = u.archetype === 'melee' ? 20 : 12;
+          const growthCon = u.archetype === 'melee' ? 0.7 : 0.5;
+          expect(u.stats.constitution).toBe(baseCon + Math.round(growthCon * (enemyLevel - 1)));
+        }
       }
     });
 

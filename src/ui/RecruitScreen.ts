@@ -20,6 +20,7 @@ import {
 import { deriveStats } from '../sim/stats';
 import { ticksToSeconds } from '../config';
 import { fadeIn, fadeOutAndRemove } from './fade';
+import { isAtLevelCap, xpToNext } from '../sim/xp';
 
 export class RecruitScreen {
   private container: HTMLDivElement | null = null;
@@ -98,6 +99,15 @@ export class RecruitScreen {
       statLine('ATK', `${ticksToSeconds(derived.attackCooldownTicks).toFixed(2)}s`),
       statLine('MOV', `${ticksToSeconds(derived.moveCooldownTicks).toFixed(2)}s`),
       statLine('CRIT', `${Math.round(derived.critChance * 100)}%`),
+      // E4: surface the level-up cost so the player knows what banked
+      // XP is doing on the persistent roster (fresh recruits arrive at
+      // xp=0 so the value here is `0/xpToNext(level)`).
+      statLine(
+        'XP',
+        isAtLevelCap(template.level)
+          ? 'MAX'
+          : `${template.xp}/${xpToNext(template.level)}`,
+      ),
     );
     card.appendChild(statsEl);
 

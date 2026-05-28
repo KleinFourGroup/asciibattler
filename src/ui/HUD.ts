@@ -6,6 +6,7 @@ import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
+import { isAtLevelCap, xpToNext } from '../sim/xp';
 
 export class HUD {
   private readonly root: HTMLElement;
@@ -164,6 +165,17 @@ export class HUD {
     row.appendChild(glyph);
     row.appendChild(bar);
     row.appendChild(text);
+
+    // E4: secondary line beneath the HP for the persistent unit
+    // metadata. Player rows show `Lv N · XP/Next` so the leveling
+    // progress is visible across the run; enemy rows just show
+    // `Lv N` (their XP is meaningless — they don't level via XP).
+    // Neutrals already get filtered out in addUnit, so they never
+    // reach makeRow.
+    const sub = document.createElement('div');
+    sub.className = 'hud-sub';
+    row.appendChild(sub);
+
     updateRow(row, unit);
     return row;
   }
@@ -172,6 +184,7 @@ export class HUD {
 function updateRow(row: HTMLElement, unit: Unit): void {
   const fill = row.querySelector<HTMLElement>('.hud-hp-fill');
   const text = row.querySelector<HTMLElement>('.hud-hp-text');
+  const sub = row.querySelector<HTMLElement>('.hud-sub');
   if (!fill || !text) return;
   // Clamp displayed HP: currentHp can briefly dip negative between the lethal
   // unit:attacked and DeathBehavior firing in the next tick (~100ms). Show 0
@@ -180,4 +193,11 @@ function updateRow(row: HTMLElement, unit: Unit): void {
   const pct = hp / unit.derived.maxHp;
   fill.style.width = `${pct * 100}%`;
   text.textContent = `${hp}/${unit.derived.maxHp}`;
+  if (sub) sub.textContent = formatSub(unit);
+}
+
+function formatSub(unit: Unit): string {
+  if (unit.team !== 'player') return `Lv ${unit.level}`;
+  if (isAtLevelCap(unit.level)) return `Lv ${unit.level} · MAX`;
+  return `Lv ${unit.level} · ${unit.xp}/${xpToNext(unit.level)} XP`;
 }

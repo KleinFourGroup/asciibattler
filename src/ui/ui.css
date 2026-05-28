@@ -590,18 +590,23 @@ body {
 .hud-row {
   display: grid;
   grid-template-columns: 16px 1fr 56px;
+  grid-template-areas:
+    "glyph hp text"
+    "sub   sub sub";
   align-items: center;
-  gap: 8px;
+  gap: 2px 8px;
   font-size: 12px;
 }
 
 .hud-glyph {
+  grid-area: glyph;
   font-weight: bold;
   font-size: 14px;
   text-align: center;
 }
 
 .hud-hp {
+  grid-area: hp;
   height: 8px;
   background: #1a1a1a;
   border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
@@ -617,8 +622,22 @@ body {
 }
 
 .hud-hp-text {
+  grid-area: text;
   text-align: right;
   color: #ffb000; /* TERMINAL_AMBER */
   font-variant-numeric: tabular-nums;
   font-size: 11px;
+}
+
+/* E4: per-row XP + level subline. Lives in its own grid area so the
+   row's existing glyph / HP / HP-text columns are untouched. Dim
+   amber so the eye still leads with HP. */
+.hud-sub {
+  grid-area: sub;
+  font-size: 10px;
+  color: #ffb000;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  padding-left: 24px; /* aligns under the HP bar, past the glyph */
 }

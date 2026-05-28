@@ -5,7 +5,7 @@
     "abilities": ["melee_strike"],
     "baseStats": {
       "constitution": 20,
-      "strength": 8,
+      "strength": 6,
       "ranged": 0,
       "magic": 0,
       "luck": 3,
@@ -29,7 +29,7 @@
     "baseStats": {
       "constitution": 12,
       "strength": 0,
-      "ranged": 5,
+      "ranged": 4,
       "magic": 0,
       "luck": 3,
       "speed": 5,

@@ -250,10 +250,14 @@ export class BattleRenderer {
   };
 
   /**
-   * E6.C — float a number over a unit's current sprite position. Delegates
-   * positioning + lifecycle to UnitOverlayLayer, which reuses the same
-   * world→screen projector the HP bars ride. No-op if the unit has no live
-   * sprite (e.g. mid-teardown) or projects off-screen.
+   * E6.C — float a number over a unit. Anchors at the *top* of the sprite
+   * (getPosition returns the sprite center, so lift by HITSPLAT_Y_OFFSET ≈
+   * half the 1×1 quad) rather than the center, so the number reads off the
+   * top edge of the glyph. Done in world space so the offset tracks the
+   * sprite's apparent size across camera zoom (a CSS % offset wouldn't).
+   * Delegates positioning + lifecycle to UnitOverlayLayer, which reuses the
+   * same world→screen projector the HP bars ride. No-op if the unit has no
+   * live sprite (e.g. mid-teardown) or projects off-screen.
    */
   private spawnHitsplat(
     unitId: number,
@@ -264,6 +268,7 @@ export class BattleRenderer {
     if (!handle) return;
     const pos = this.sprites.getPosition(handle, this.scratchPos);
     if (!pos) return;
+    pos.y += HITSPLAT_Y_OFFSET;
     this.overlays.spawnHitsplat(pos, text, kind, unitId);
   }
 
@@ -493,6 +498,11 @@ const PROJECTILE_BLOOM = 1.2;
 /** Per-sprite size multiplier for the tracer (1 = full unit-glyph size).
  *  Shrinks the `*` so it reads as a bolt rather than a flying letter. */
 const PROJECTILE_SIZE = 0.6;
+
+/** World-Y lift applied to a hitsplat's anchor so it sits at the TOP of the
+ *  sprite rather than its center. The sprite quad is 1×1 centered at
+ *  SPRITE_CENTER_OFFSET, so half the quad (0.5) reaches the top edge. */
+const HITSPLAT_Y_OFFSET = 0.5;
 
 function colorForTeam(team: Team): string {
   if (team === 'player') return COLORS.TERMINAL_GREEN;

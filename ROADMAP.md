@@ -659,13 +659,16 @@ breakdown. Net: per-ability attack range migrated off the archetype into
 `updateTarget`/`currentTarget` in Targeting.ts, knobs in new
 `config/sim.json`, WorldSnapshot v12→v13); **E5.B** boids sidestep in
 MovementBehavior + a straight-line A* tie-break in `popLowestF`. Plus a
-stale-fuzz-cap fix (`DEFAULT_MAX_TICKS` now derives from TICK_RATE).
-Browser-verified on a live endlessCorridors battle (sticky targeting
-visibly converged; clean resolution). 400 tests pass; fuzz 20-seed: 0
-hangs. **Both A and B landed** (the decision-point recommendation);
-E5.A's stickiness carries most of the fix — the sidestep is a marginal
-safety net since soft-block A* already routes around allies when there's
-room (see HANDOFF gotcha on E5.B).
+stale-fuzz-cap fix (`DEFAULT_MAX_TICKS` now derives from TICK_RATE) and a
+post-playtest follow-up: the ally-detour soft-block penalty became a
+`config/sim.json` knob (`occupiedCellPenalty`) and dropped 100→4 — the
+old 100 was steep enough to send units on long backward flanks off the
+spawn band, which a 24-seed sweep + user playtest confirmed. 400 tests
+pass; fuzz 20-seed: 0 hangs. **Both A and B landed** (the decision-point
+recommendation): E5.A's stickiness killed the target-thrash backpedal,
+and lowering the soft-block penalty killed the early spawn-band flanking
+— at the lower penalty the E5.B sidestep is an active contributor, not
+the near-dormant safety net it was at 100 (see HANDOFF gotchas #104/#107).
 
 Original design (preserved for the trail of decisions):
 

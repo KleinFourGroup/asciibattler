@@ -5,6 +5,7 @@ import type { ActionProposal } from '../Action';
 import { MoveAction } from '../actions/MoveAction';
 import { currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
+import { SIM } from '../../config/sim';
 import { hasLineOfSight } from '../LineOfSight';
 
 /**
@@ -166,20 +167,24 @@ function sidestep(
 }
 
 /**
- * Penalty for routing through a cell currently occupied by another unit
- * (ally or non-target enemy). Picked to be a lot larger than any
- * realistic detour on a D3-allowed grid (up to 32×32) — so A* prefers
- * any wall-free route up to ~100 cells long over going through a single
- * occupied cell — but
- * still finite, so a fully clogged corridor doesn't lock the path
- * solver. Chebyshev heuristic stays admissible (all costs are >= 1).
+ * Penalty added (on top of tile cost) for routing through a cell occupied
+ * by another *unit* (ally or non-target enemy). This is the soft-block
+ * knob: A* detours around an occupied cell only when the detour costs less
+ * than the penalty, and routes *through* it (→ step-collision abstain /
+ * E5.B sidestep) otherwise. So the value is the dial between "flank around
+ * allies" (high) and "hold the line / queue" (low).
+ *
+ * Walls + half-cover are NOT affected — they're hard `blockers` in
+ * `findPath` and never reach this function. Stays finite (and >= 0, so
+ * total cost stays >= 1 and the Chebyshev heuristic stays admissible —
+ * gotcha #34) so a fully clogged corridor never deadlocks the solver; the
+ * E5.A note explains why the old 100 was too steep. Tunable in
+ * `config/sim.json`.
  */
-const OCCUPIED_CELL_PENALTY = 100;
-
 function costAt(c: GridCoord, world: World, occupied: ReadonlySet<string>): number {
   const tileCost = world.tileGrid.costAt(c);
   if (!isFinite(tileCost)) return tileCost;
-  if (occupied.has(`${c.x},${c.y}`)) return tileCost + OCCUPIED_CELL_PENALTY;
+  if (occupied.has(`${c.x},${c.y}`)) return tileCost + SIM.occupiedCellPenalty;
   return tileCost;
 }
 

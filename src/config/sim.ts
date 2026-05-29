@@ -15,6 +15,14 @@
  *   rangedRetargetLosSeconds — a ranged unit that can't see its sticky
  *     target for this long drops it and re-picks. Converted to
  *     `rangedRetargetLosTicks`.
+ *   occupiedCellPenalty — extra A* cost (on top of tile cost) for routing
+ *     MovementBehavior's path through a cell occupied by another unit
+ *     (ally / non-target enemy). The soft-block dial: high → flank around
+ *     allies (the old hardcoded 100 was steep enough to favour long
+ *     backward flanks off the spawn band); low → go straight and
+ *     queue/sidestep when blocked. Must stay >= 0 (keeps total cost >= 1,
+ *     Chebyshev admissible) and finite (no deadlock). Does NOT affect
+ *     walls/half-cover — those are hard blockers, not penalised cells.
  */
 
 import { z } from 'zod';
@@ -24,6 +32,7 @@ import { secondsToTicks } from '../config';
 const SimSchema = z.object({
   retargetCloserRatio: z.number().min(1),
   rangedRetargetLosSeconds: z.number().positive(),
+  occupiedCellPenalty: z.number().nonnegative(),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -31,4 +40,5 @@ const parsed = SimSchema.parse(simJson);
 export const SIM = {
   retargetCloserRatio: parsed.retargetCloserRatio,
   rangedRetargetLosTicks: Math.max(1, secondsToTicks(parsed.rangedRetargetLosSeconds)),
-} as const;
+  occupiedCellPenalty: parsed.occupiedCellPenalty,
+};

@@ -9,7 +9,7 @@
       "ranged": 0,
       "magic": 0,
       "luck": 3,
-      "speed": 5,
+      "speed": 6,
       "endurance": 6
     },
     "growthRates": {
@@ -29,7 +29,7 @@
     "baseStats": {
       "constitution": 18,
       "strength": 0,
-      "ranged": 4,
+      "ranged": 6,
       "magic": 0,
       "luck": 3,
       "speed": 5,

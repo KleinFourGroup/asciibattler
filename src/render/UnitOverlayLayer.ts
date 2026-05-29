@@ -46,6 +46,10 @@ export class UnitOverlayLayer {
   private readonly overlays = new Map<number, UnitOverlayHandle>();
   private nextId = 1;
   private readonly projectScratch = new THREE.Vector3();
+  /** E6.C — live floating-number anchors, swept on `clear`. */
+  private readonly hitsplats = new Set<HTMLDivElement>();
+  /** E6.C — per-unit count of active hitsplats, for vertical stacking. */
+  private readonly hitsplatCounts = new Map<number, number>();
 
   /**
    * `insertBefore` is the reference element the overlay container is
@@ -138,21 +142,76 @@ export class UnitOverlayLayer {
    * hidden (visibility: hidden, preserving the DOM node).
    */
   updatePosition(handle: UnitOverlayHandle, worldPos: THREE.Vector3): void {
-    const v = this.projectScratch.copy(worldPos).project(this.camera);
-    // NDC z > 1 means behind the camera or past the far plane; |x|, |y| > 1
-    // means off-screen. Hide rather than translate to negative pixels so
-    // overlays don't pile up off-canvas as half-rendered ghosts.
-    const offscreen = v.z > 1 || v.z < -1;
-    if (offscreen) {
+    const p = this.projectToCss(worldPos);
+    // Off-screen (behind camera / past far plane): hide rather than
+    // translate to negative pixels so overlays don't pile up off-canvas
+    // as half-rendered ghosts.
+    if (!p) {
       if (handle.root.style.visibility !== 'hidden') handle.root.style.visibility = 'hidden';
       return;
     }
     if (handle.root.style.visibility === 'hidden') handle.root.style.visibility = '';
+    handle.root.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0)`;
+  }
+
+  /**
+   * Project a world point to CSS pixel coords, or null when it's behind the
+   * camera / past the far plane. Shared by per-frame overlay position-follow
+   * and E6.C hitsplats — one source of truth for world→screen.
+   */
+  private projectToCss(worldPos: THREE.Vector3): { x: number; y: number } | null {
+    const v = this.projectScratch.copy(worldPos).project(this.camera);
+    if (v.z > 1 || v.z < -1) return null;
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
-    const x = (v.x * 0.5 + 0.5) * w;
-    const y = (-v.y * 0.5 + 0.5) * h;
-    handle.root.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    return { x: (v.x * 0.5 + 0.5) * w, y: (-v.y * 0.5 + 0.5) * h };
+  }
+
+  /**
+   * E6.C — spawn a transient floating number above a world point. The anchor
+   * is positioned ONCE at the projected point (screen-space; it does not
+   * follow the unit for its ~0.6s life, which is fine at that duration). The
+   * inner element runs the CSS rise+fade keyframe and self-removes on
+   * animationend. Concurrent hitsplats sharing a `stackKey` (the unit id)
+   * stagger upward so clustered hits don't overlap. No-op when the anchor
+   * point is off-screen.
+   */
+  spawnHitsplat(
+    worldPos: THREE.Vector3,
+    text: string,
+    kind: 'normal' | 'crit' | 'heal' | 'burn',
+    stackKey: number,
+  ): void {
+    const p = this.projectToCss(worldPos);
+    if (!p) return;
+
+    const stack = this.hitsplatCounts.get(stackKey) ?? 0;
+    this.hitsplatCounts.set(stackKey, stack + 1);
+
+    const anchor = document.createElement('div');
+    anchor.className = 'hitsplat-anchor';
+    const y = p.y - stack * HITSPLAT_STACK_PX;
+    anchor.style.transform = `translate3d(${p.x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+
+    const el = document.createElement('div');
+    el.className = `hitsplat hitsplat--${kind}`;
+    el.textContent = text;
+    anchor.appendChild(el);
+
+    this.root.appendChild(anchor);
+    this.hitsplats.add(anchor);
+
+    el.addEventListener(
+      'animationend',
+      () => {
+        anchor.remove();
+        this.hitsplats.delete(anchor);
+        const c = (this.hitsplatCounts.get(stackKey) ?? 1) - 1;
+        if (c <= 0) this.hitsplatCounts.delete(stackKey);
+        else this.hitsplatCounts.set(stackKey, c);
+      },
+      { once: true },
+    );
   }
 
   updateHp(handle: UnitOverlayHandle, pct: number): void {
@@ -198,6 +257,12 @@ export class UnitOverlayLayer {
       handle.root.remove();
     }
     this.overlays.clear();
+    // E6.C — drop any in-flight hitsplats so they don't linger into the
+    // next scene. Removing the element skips its animationend, so reset
+    // the per-unit counts explicitly here.
+    for (const anchor of this.hitsplats) anchor.remove();
+    this.hitsplats.clear();
+    this.hitsplatCounts.clear();
   }
 
   /** Remove the container from the document. Page-lifetime teardown. */
@@ -212,6 +277,10 @@ export class UnitOverlayLayer {
     handle.hpFill.style.background = hpFillColor(pct);
   }
 }
+
+/** E6.C — vertical stagger (CSS px) between concurrent hitsplats on the
+ *  same unit so clustered hits read as a stack rather than overlapping. */
+const HITSPLAT_STACK_PX = 14;
 
 /**
  * HP gradient: green at full → amber at half → red at zero. Mirrors the

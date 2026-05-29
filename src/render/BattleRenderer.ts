@@ -56,8 +56,6 @@ export class BattleRenderer {
   private readonly overlayHandles = new Map<number, UnitOverlayHandle>();
   private readonly subscriptions: Array<() => void> = [];
   private readonly animator: SpriteAnimator;
-  /** unitId → ticks left on its attack-flash override. */
-  private readonly flashes = new Map<number, number>();
   /** E6.B: in-flight ranged projectile sprite handles. They live in the
    *  shared SpriteRenderer but NOT in `handles` (they're not units), so
    *  detach sweeps them separately. */
@@ -89,12 +87,22 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
     this.subscriptions.push(bus.on('unit:died', this.onUnitDied));
-    this.subscriptions.push(bus.on('tick', this.onTick));
-    // D7.B: keep HP bars in sync with tile-effect chip damage / heal.
-    // Flash visuals for these events are D7.C scope — D7.B just keeps
-    // the bar fill honest.
-    this.subscriptions.push(bus.on('unit:burned', ({ unitId }) => this.refreshHpBar(unitId)));
-    this.subscriptions.push(bus.on('unit:healed', ({ unitId }) => this.refreshHpBar(unitId)));
+    // D7.B: keep HP bars in sync with tile-effect chip damage / heal. E6.C
+    // also floats a hitsplat for each: burn damage in amber, heal in cyan.
+    // The healing tile emits a no-op heal every cadence tick on a full unit
+    // (gotcha #80), so skip amount <= 0 to avoid "+0" spam.
+    this.subscriptions.push(
+      bus.on('unit:burned', ({ unitId, damage }) => {
+        this.refreshHpBar(unitId);
+        this.spawnHitsplat(unitId, String(damage), 'burn');
+      }),
+    );
+    this.subscriptions.push(
+      bus.on('unit:healed', ({ unitId, amount }) => {
+        this.refreshHpBar(unitId);
+        if (amount > 0) this.spawnHitsplat(unitId, `+${amount}`, 'heal');
+      }),
+    );
   }
 
   /** Per-render-frame tick. Drives sprite lerps + overlay position-follow + progress fill. */
@@ -141,7 +149,6 @@ export class BattleRenderer {
     this.overlayHandles.clear();
     this.overlayFades.clear();
     this.overlayFadeIns.clear();
-    this.flashes.clear();
     this.progress.clear();
     this.world = null;
   }
@@ -224,23 +231,41 @@ export class BattleRenderer {
   }
 
   /**
-   * Flash both sides of the swing: TERMINAL_AMBER on the attacker so you
-   * can see who's acting, FLOURESCENT_BLUE on the target so impacts read
-   * clearly. Both fall back to the unit's team color when the per-flash
-   * tick counter runs out. Mutual hits in the same tick are fine — the
-   * later `startFlash` overwrites the earlier one and starts a fresh
-   * countdown. Also refreshes the target's HP bar (the sim has applied
-   * damage by the time this event fires).
+   * E6 — physicalize the swing (shove or projectile via triggerAttackVisual)
+   * and float a damage hitsplat over the target: neon-red for a crit (the
+   * E1 `crit` flag), white otherwise. The pre-E6 attacker/target color
+   * flash is gone — the shove + projectile show who's acting and the
+   * hitsplat shows the impact, so the flash is redundant. Also refreshes
+   * the target's HP bar (the sim has applied damage by the time this fires).
    */
   private onUnitAttacked = ({
     attackerId,
     targetId,
+    damage,
+    crit,
   }: GameEvents['unit:attacked']): void => {
     this.triggerAttackVisual(attackerId, targetId);
-    this.startFlash(attackerId, COLORS.TERMINAL_AMBER);
-    this.startFlash(targetId, COLORS.FLOURESCENT_BLUE);
+    this.spawnHitsplat(targetId, String(damage), crit ? 'crit' : 'normal');
     this.refreshHpBar(targetId);
   };
+
+  /**
+   * E6.C — float a number over a unit's current sprite position. Delegates
+   * positioning + lifecycle to UnitOverlayLayer, which reuses the same
+   * world→screen projector the HP bars ride. No-op if the unit has no live
+   * sprite (e.g. mid-teardown) or projects off-screen.
+   */
+  private spawnHitsplat(
+    unitId: number,
+    text: string,
+    kind: 'normal' | 'crit' | 'heal' | 'burn',
+  ): void {
+    const handle = this.handles.get(unitId);
+    if (!handle) return;
+    const pos = this.sprites.getPosition(handle, this.scratchPos);
+    if (!pos) return;
+    this.overlays.spawnHitsplat(pos, text, kind, unitId);
+  }
 
   /**
    * E6.A/B — physicalize the swing. Melee attackers lunge toward the
@@ -303,13 +328,6 @@ export class BattleRenderer {
     });
   }
 
-  private startFlash(unitId: number, color: string): void {
-    const handle = this.handles.get(unitId);
-    if (!handle) return;
-    this.sprites.updateSprite(handle, { color });
-    this.flashes.set(unitId, FLASH_TICKS);
-  }
-
   private refreshHpBar(unitId: number): void {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
@@ -321,15 +339,13 @@ export class BattleRenderer {
 
   /**
    * Fade the dead unit's sprite out, then remove it. Cancels any in-flight
-   * position lerp and pending flash revert so they can't fight the fade.
-   * The overlay fades alongside the sprite for visual coherence, then
-   * gets removed.
+   * position lerp / shove so they can't fight the fade. The overlay fades
+   * alongside the sprite for visual coherence, then gets removed.
    */
   private onUnitDied = ({ unitId }: GameEvents['unit:died']): void => {
     const handle = this.handles.get(unitId);
     if (!handle) return;
     this.animator.cancel(handle);
-    this.flashes.delete(unitId);
     this.progress.delete(unitId);
     // D5.C — if the unit died mid-spawn-in fade (rare but possible if
     // checkBattleEnd or AoE wipes a freshly-queued unit), drop the
@@ -343,23 +359,6 @@ export class BattleRenderer {
     if (overlay) {
       this.overlayFades.set(unitId, { elapsed: 0, duration: FADE_SECONDS, handle: overlay });
       this.overlayHandles.delete(unitId);
-    }
-  };
-
-  /** Decrements active flashes; reverts each sprite when its counter hits 0. */
-  private onTick = (): void => {
-    if (!this.world) return;
-    for (const [unitId, remaining] of this.flashes) {
-      if (remaining <= 1) {
-        const handle = this.handles.get(unitId);
-        const unit = this.world.findUnit(unitId);
-        if (handle && unit) {
-          this.sprites.updateSprite(handle, { color: colorForTeam(unit.team) });
-        }
-        this.flashes.delete(unitId);
-      } else {
-        this.flashes.set(unitId, remaining - 1);
-      }
     }
   };
 
@@ -465,9 +464,6 @@ export class BattleRenderer {
     this.overlays.updateProgress(overlay, fillPct);
   }
 }
-
-/** Duration of the attacker-flash color override. */
-const FLASH_TICKS = 2;
 
 /** Duration of the dead-unit alpha fade-out (sprite + overlay). */
 const FADE_SECONDS = 0.3;

@@ -103,19 +103,24 @@ src/
     Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
                              # + RAF loop + two camera modes (fit / scroll, D4)
     SpriteRenderer.ts        # InstancedBufferGeometry + dual mesh (layer 0 visible / layer 1
-                             # bloom) + per-instance bloomIntensity attr (B1.1)
-    BarRenderer.ts           # B3: HP + action progress bars (single instanced mesh, layer 0)
+                             # bloom) + per-instance bloomIntensity attr (B1.1). E6.B: also
+                             # hosts ranged projectile tracer sprites (transient)
+    UnitOverlayLayer.ts      # E3.6: DOM per-unit overlays (HP bar + action progress + level
+                             # badge), positioned via projectToCss. E6.C: spawnHitsplat floats
+                             # transient damage/crit/heal/burn numbers via the same projector
     TerrainRenderer.ts       # C1c: faceted low-poly prism-per-tile, heightAt is canonical
                              # for sprite Y. D7.C: per-tile flicker/pulse + chasm sink + theme
     BattleRenderer.ts        # Sim/render seam: subscribes to unit:* events
-                             # tileWorldPos(coord) for per-tile sprite Y (C1c)
-    FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture
+                             # tileWorldPos(coord) for per-tile sprite Y (C1c). E6: routes
+                             # attacks to melee shove / ranged projectile + spawns hitsplats
+    FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture (E6.B: + `*` tracer)
     PostProcess.ts           # SatClamp + Bloom + BloomMix factories (B1.1)
                              # Scanlines retained as dormant code; CRT lines now run via CSS (B5)
     shaders/                 # .glsl source files loaded via Vite ?raw imports (A4)
     palette.ts               # COLORS table — TERMINAL_STONE added for neutrals (C1a)
     animation/
-      SpriteAnimator.ts      # Lerps + fades (generalized fromAlpha/toAlpha for D5.C fade-in)
+      SpriteAnimator.ts      # Lerps + fades (fromAlpha/toAlpha for D5.C fade-in) + E6.A shove
+                             # channel (there-and-back lunge) + onComplete on lerp (E6.B)
 
   scenes/                    # A5: Scene system — single-active swap driven from Game
     Scene.ts                 #   Scene interface + SceneContext bundle

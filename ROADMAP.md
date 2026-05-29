@@ -740,7 +740,26 @@ churn).
   is what the current pathing already does via cost gradient, the
   symptom is precisely that 2 perpendicular options weren't tried.
 
-### E6 — Combat visuals
+### E6 — Combat visuals ✅ landed
+
+**Status:** complete. See [HANDOFF.md](HANDOFF.md) "E6 complete" for the
+breakdown. Net (3 render-only commits, no snapshot/config/event changes):
+**E6.A** melee shove (`SpriteAnimator` there-and-back `shoves` channel,
+mutually exclusive with move-lerp; `BattleRenderer` routes
+`attackRange <= 1` → lunge); **E6.B** ranged projectile (`*` tracer flies
+shooter→target over 0.18s and despawns via `startLerp`'s new `onComplete`,
+reusing the shared SpriteRenderer — gotcha #108 on the full-size
+tradeoff); **E6.C** hitsplats (`UnitOverlayLayer.spawnHitsplat` floats
+white/neon-red-crit/cyan-heal/amber-burn numbers via the shared
+`projectToCss` projector, CSS rise+fade keyframe) and the pre-E6 attacker/
+target color flash is removed entirely. User decisions: flash fully
+replaced, ~0.7× glyph hitsplats, straight-line projectile, hitsplats on
+attack+crit+heal+burn. 400 tests still pass (render is eyeball-verified —
+no new tests); functionally verified via the dev `__game` handle. Tuning
+(shove distance/timing, projectile size, hitsplat sizes/colors) is isolated
+render consts + CSS for the user's feel pass.
+
+Original design (preserved for the trail of decisions):
 
 Three legibility wins combat-feedback flagged. None are gameplay-
 critical, but with the bigger boards from Phase D and the higher unit

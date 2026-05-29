@@ -227,10 +227,48 @@ export class BattleRenderer {
     attackerId,
     targetId,
   }: GameEvents['unit:attacked']): void => {
+    this.triggerAttackVisual(attackerId, targetId);
     this.startFlash(attackerId, COLORS.TERMINAL_AMBER);
     this.startFlash(targetId, COLORS.FLOURESCENT_BLUE);
     this.refreshHpBar(targetId);
   };
+
+  /**
+   * E6.A/B — physicalize the swing. Melee attackers lunge toward the
+   * target and snap back (a shove); ranged attackers fire a projectile
+   * (E6.B). The melee/ranged split mirrors the audio cue in BattleScene
+   * (`derived.attackRange <= 1` → melee), so the visual and the sound
+   * agree on what kind of attack just happened. For E7's multi-ability
+   * units (a melee + a ranged on one unit) the engagement-range max can
+   * misclassify a point-blank bolt as a shove; revisit by threading the
+   * firing ability's kind through the `unit:attacked` event then.
+   */
+  private triggerAttackVisual(attackerId: number, targetId: number): void {
+    if (!this.world) return;
+    const attacker = this.world.findUnit(attackerId);
+    const target = this.world.findUnit(targetId);
+    if (!attacker || !target) return;
+    const handle = this.handles.get(attackerId);
+    if (!handle) return;
+
+    const from = this.tileWorldPos(attacker.position);
+    const to = this.tileWorldPos(target.position);
+    const dx = to.x - from.x;
+    const dz = to.z - from.z;
+    const len = Math.hypot(dx, dz) || 1;
+
+    if (attacker.derived.attackRange <= 1) {
+      this.animator.startShove(
+        handle,
+        dx / len,
+        dz / len,
+        SHOVE_DISTANCE,
+        SHOVE_OUT_SECONDS,
+        SHOVE_BACK_SECONDS,
+      );
+    }
+    // E6.B — ranged attackers spawn a projectile here.
+  }
 
   private startFlash(unitId: number, color: string): void {
     const handle = this.handles.get(unitId);
@@ -400,6 +438,16 @@ const FLASH_TICKS = 2;
 
 /** Duration of the dead-unit alpha fade-out (sprite + overlay). */
 const FADE_SECONDS = 0.3;
+
+/**
+ * E6.A — melee shove geometry. The attacker lunges this far (world units,
+ * ≈ tiles) toward its target, then recovers. A fast snap out + a slightly
+ * slower recover reads as a committed strike rather than a wobble; total
+ * ~0.2s comfortably fits inside the shortest attack cadence.
+ */
+const SHOVE_DISTANCE = 0.35;
+const SHOVE_OUT_SECONDS = 0.07;
+const SHOVE_BACK_SECONDS = 0.13;
 
 function colorForTeam(team: Team): string {
   if (team === 'player') return COLORS.TERMINAL_GREEN;

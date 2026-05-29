@@ -11,7 +11,8 @@
  *   critChance      = min(critCap, luck * critPerLuck)
  *   moveCooldown    = max(1, secondsToTicks(baseMoveCD * cooldownScale(endurance)))
  *   cooldownScale s = max(minCdScale, 1 - s * cdPerStat)
- *   attackRange     = per-archetype primitive, passed through verbatim
+ *   attackRange     = effective engagement range (max over the unit's
+ *                     abilities, via `rangeForArchetype`), passed through verbatim
  *
  * The 1-tick cooldown floor catches future tuning where `minCdScale`
  * or base values drop low enough to round to 0; at default config it's

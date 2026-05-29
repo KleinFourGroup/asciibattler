@@ -34,6 +34,11 @@
  * deliberately stay out — those will live on ability definitions, since
  * a single unit can carry several abilities with different timings.
  *
+ * E5: `attackRange` left the archetype schema for the same reason —
+ * range is now a per-ability tunable in `config/abilities.json`. A
+ * unit's effective engagement range is the MAX over its abilities (see
+ * `rangeForArchetype` in `src/sim/archetypes.ts`).
+ *
  * Adding a new archetype:
  *   1. Add its key + abilities + baseStats + growthRates to
  *      `config/archetypes.json` (and `baseMoveCooldownSeconds` if it
@@ -77,7 +82,6 @@ const AbilityIdSchema = z.string().refine((id) => ABILITY_IDS.includes(id), {
 
 const ArchetypeSchema = z.object({
   glyph: z.string().length(1),
-  attackRange: z.number().int().positive(),
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,
   growthRates: GrowthRatesSchema,

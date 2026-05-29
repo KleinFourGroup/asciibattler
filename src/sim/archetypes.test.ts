@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   rollUnit,
   glyphForArchetype,
-  attackRangeForArchetype,
+  rangeForArchetype,
   ARCHETYPE_CONFIG,
 } from './archetypes';
 import { RNG } from '../core/RNG';
@@ -57,8 +57,8 @@ describe('archetypes / lookups', () => {
     expect(glyphForArchetype('ranged')).toBe('a');
   });
 
-  it('attackRangeForArchetype matches config (melee=1, ranged>1)', () => {
-    expect(attackRangeForArchetype('melee')).toBe(1);
-    expect(attackRangeForArchetype('ranged')).toBeGreaterThan(1);
+  it('rangeForArchetype is the max over abilities (melee=1, ranged>1)', () => {
+    expect(rangeForArchetype('melee')).toBe(1);
+    expect(rangeForArchetype('ranged')).toBeGreaterThan(1);
   });
 });

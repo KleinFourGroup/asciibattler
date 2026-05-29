@@ -37,7 +37,11 @@ function proposeBasicStrike(
 ): ActionProposal | null {
   const target = findTarget(unit, world);
   if (target === null) return null;
-  if (chebyshev(unit.position, target.position) > unit.derived.attackRange) return null;
+  // E5: gate on THIS ability's own range (config/abilities.json), not
+  // the unit's max engagement range — a multi-ability unit's short-range
+  // strike must abstain when only its long-range ability can reach.
+  const range = abilityConfig(abilityId).range;
+  if (chebyshev(unit.position, target.position) > range) return null;
 
   const blockers = collectLosBlockers(world);
   if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {

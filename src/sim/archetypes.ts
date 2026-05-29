@@ -1,6 +1,7 @@
 import type { RNG } from '../core/RNG';
 import type { UnitTemplate } from './Unit';
 import { ARCHETYPES, type ArchetypeConfig } from '../config/archetypes';
+import { abilityConfig } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
 
 export type Archetype = 'melee' | 'ranged';
@@ -9,7 +10,7 @@ export type Archetype = 'melee' | 'ranged';
  * Per-archetype config, sourced from `config/archetypes.json` and
  * validated by [src/config/archetypes.ts](src/config/archetypes.ts).
  * Re-exported as `ARCHETYPE_CONFIG` for tests that want to assert
- * baseStats / attackRange / glyph without re-importing from config.
+ * baseStats / glyph without re-importing from config.
  */
 const CONFIGS: Record<Archetype, ArchetypeConfig> = ARCHETYPES;
 
@@ -17,8 +18,18 @@ export function glyphForArchetype(archetype: Archetype): string {
   return CONFIGS[archetype].glyph;
 }
 
-export function attackRangeForArchetype(archetype: Archetype): number {
-  return CONFIGS[archetype].attackRange;
+/**
+ * E5 — a unit's effective engagement range: the MAX attack range over
+ * the archetype's abilities. Range moved off the archetype (E1's
+ * `attackRange` primitive) onto each ability in `config/abilities.json`,
+ * so this is now derived rather than read directly. Fed into
+ * `deriveStats` as `derived.attackRange` — the value MovementBehavior's
+ * in-range abstain and the HUD/audio readers consult. Per-ability gates
+ * (whether a *specific* strike can reach) read the ability's own range
+ * in `proposeBasicStrike`, not this max.
+ */
+export function rangeForArchetype(archetype: Archetype): number {
+  return Math.max(...CONFIGS[archetype].abilities.map((id) => abilityConfig(id).range));
 }
 
 /**

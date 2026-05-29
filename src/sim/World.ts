@@ -14,7 +14,7 @@ import {
 import type { ActionProposal } from './Action';
 import {
   abilityIdsForArchetype,
-  attackRangeForArchetype,
+  rangeForArchetype,
   baseMoveCooldownSecondsForArchetype,
   glyphForArchetype,
 } from './archetypes';
@@ -560,7 +560,7 @@ export class World {
   }
 
   private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {
-    const attackRange = attackRangeForArchetype(template.archetype);
+    const attackRange = rangeForArchetype(template.archetype);
     const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
     const derived = deriveStats(template.stats, attackRange, moveCD);
     const unit = this.addUnit(
@@ -666,7 +666,7 @@ export class World {
     position: GridCoord,
     rosterIndex: number | null = null,
   ): Unit {
-    const attackRange = attackRangeForArchetype(template.archetype);
+    const attackRange = rangeForArchetype(template.archetype);
     const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
     const derived = deriveStats(template.stats, attackRange, moveCD);
     return this.addUnit(

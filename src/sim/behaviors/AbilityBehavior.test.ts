@@ -90,11 +90,13 @@ describe('AbilityBehavior', () => {
   });
 
   it('abstains when a wall is on the line to a ranged target', () => {
+    // E5: ranged_shot's config range is 3, so the target sits at chebyshev
+    // 3 (in range) with the wall strictly between attacker and target.
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
-      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+      { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
+      { team: 'enemy', x: 3, y: 0, hp: 30, inert: true },
     ]);
-    spawnWall(world, { x: 3, y: 0 });
+    spawnWall(world, { x: 2, y: 0 });
     world.tick();
     expect(units[1]!.currentHp).toBe(30);
     expect(attacks).toHaveLength(0);
@@ -102,13 +104,27 @@ describe('AbilityBehavior', () => {
 
   it('still fires on a ranged target when the wall is off the line', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
-      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+      { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
+      { team: 'enemy', x: 3, y: 0, hp: 30, inert: true },
     ]);
-    spawnWall(world, { x: 3, y: 3 });
+    spawnWall(world, { x: 1, y: 2 });
     world.tick();
     expect(units[1]!.currentHp).toBe(25);
     expect(attacks).toHaveLength(1);
+  });
+
+  it('E5: a strike gates on its ability config range, not the unit engagement range', () => {
+    // `derived.attackRange` is force-set to 5 here, but ranged_shot's
+    // config range is 3 — the strike must consult the ability's OWN range
+    // and abstain at chebyshev 4. Pre-E5 this read `derived.attackRange`
+    // and would have fired. Pins the per-ability range migration.
+    const { world, units, attacks } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
+      { team: 'enemy', x: 4, y: 0, hp: 30, inert: true },
+    ]);
+    world.tick();
+    expect(attacks).toHaveLength(0);
+    expect(units[1]!.currentHp).toBe(30);
   });
 
   it('melee attack against an adjacent target is unaffected by surrounding walls', () => {
@@ -127,10 +143,10 @@ describe('AbilityBehavior', () => {
 
   it('D6/E4: ranged attack passes through half-cover (LOS-transparent), scaled by LEVELING.halfCoverDamageMult', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
-      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+      { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
+      { team: 'enemy', x: 3, y: 0, hp: 30, inert: true },
     ]);
-    spawnHalfCover(world, { x: 3, y: 0 });
+    spawnHalfCover(world, { x: 2, y: 0 });
     world.tick();
     // The shot passes (half-cover is LOS-transparent) but rides the
     // `LEVELING.halfCoverDamageMult` knob. Derive the expectation from
@@ -146,11 +162,11 @@ describe('AbilityBehavior', () => {
 
   it('D6: wall + half-cover mix — wall blocks, half-cover does not contribute', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
-      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+      { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
+      { team: 'enemy', x: 3, y: 0, hp: 30, inert: true },
     ]);
-    spawnHalfCover(world, { x: 2, y: 0 });
-    spawnWall(world, { x: 3, y: 0 });
+    spawnHalfCover(world, { x: 1, y: 0 });
+    spawnWall(world, { x: 2, y: 0 });
     world.tick();
     expect(units[1]!.currentHp).toBe(30);
     expect(attacks).toHaveLength(0);
@@ -158,10 +174,10 @@ describe('AbilityBehavior', () => {
 
   it('D7.A: chasm tile between attacker and target does NOT block ranged LOS', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
-      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+      { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
+      { team: 'enemy', x: 3, y: 0, hp: 30, inert: true },
     ]);
-    world.tileGrid.setKind({ x: 3, y: 0 }, 'chasm');
+    world.tileGrid.setKind({ x: 2, y: 0 }, 'chasm');
     world.tick();
     expect(units[1]!.currentHp).toBe(25);
     expect(attacks).toHaveLength(1);
@@ -169,10 +185,10 @@ describe('AbilityBehavior', () => {
 
   it('fires once the blocking wall is destroyed (HP forced to 0)', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
-      { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
+      { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
+      { team: 'enemy', x: 3, y: 0, hp: 30, inert: true },
     ]);
-    const wall = spawnWall(world, { x: 3, y: 0 });
+    const wall = spawnWall(world, { x: 2, y: 0 });
 
     world.tick(); // blocked
     expect(attacks).toHaveLength(0);

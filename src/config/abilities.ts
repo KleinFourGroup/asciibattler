@@ -11,11 +11,18 @@
  * via `cooldownScale` at propose time (see `attackCooldownTicksFor` in
  * [src/sim/stats.ts](src/sim/stats.ts)).
  *
- * Deliberately minimal for now: only `cooldownSeconds`. Damage stays
- * hard-coded in `basicAttackDamage` because a single `damageStat` field
- * would misrepresent future abilities that scale on several stats — the
- * expressive damage-formula JSON is a later step, designed when there's
- * a real multi-stat consumer to design against.
+ * E5 — `range` joins `cooldownSeconds` here. Attack range used to be a
+ * per-archetype primitive (`config/archetypes.json#attackRange`) fed
+ * through `deriveStats`; it now lives per ability, since a multi-ability
+ * unit (E7 mage/rogue) can carry a melee swing and a long-range bolt
+ * with different reaches. `proposeBasicStrike` gates on the firing
+ * ability's own range; a unit's `derived.attackRange` is the MAX over
+ * its abilities (its effective engagement range — see `rangeForArchetype`).
+ *
+ * Damage still stays hard-coded in `basicAttackDamage` because a single
+ * `damageStat` field would misrepresent future abilities that scale on
+ * several stats — the expressive damage-formula JSON is a later step,
+ * designed when there's a real multi-stat consumer to design against.
  *
  * A4 pattern: parse at module load, throw on malformed JSON. The
  * registry ([src/sim/abilities/registry.ts](src/sim/abilities/registry.ts))
@@ -29,6 +36,7 @@ import abilitiesJson from '../../config/abilities.json';
 
 const AbilitySchema = z.object({
   cooldownSeconds: z.number().positive(),
+  range: z.number().int().positive(),
 });
 
 const AbilitiesSchema = z.record(z.string(), AbilitySchema);

@@ -46,8 +46,8 @@ export interface UnitStats {
 
 /**
  * E1 — values derived once at construction time from `UnitStats` plus
- * archetype context (attackRange is a per-archetype primitive, not
- * computed from any stat). Treated as a snapshot — recompute via
+ * archetype context (attackRange is the max over the unit's abilities'
+ * ranges, not computed from any stat). Treated as a snapshot — recompute via
  * `deriveStats` when stats change (level-up, future status effects).
  * Crit RNG rolls happen at action-start in AttackAction, NOT here;
  * `critChance` is just the probability that gets fed into that roll.
@@ -57,7 +57,14 @@ export interface UnitDerived {
   /** Probability in `[0, STATS.critCap]` that a basic strike crits. */
   readonly critChance: number;
   readonly moveCooldownTicks: number;
-  /** Per-archetype primitive, plumbed through `deriveStats`. */
+  /**
+   * E5 — effective engagement range: the MAX attack range over the
+   * unit's abilities (range moved off the archetype onto each ability in
+   * `config/abilities.json`). MovementBehavior's in-range abstain plus
+   * the HUD/audio readers consult this; per-ability range gates ("can
+   * THIS strike reach?") live in `proposeBasicStrike`. Computed at spawn
+   * via `rangeForArchetype` and plumbed through `deriveStats`.
+   */
   readonly attackRange: number;
   // E5 pre-work: attack cadence is no longer a per-unit derived value —
   // it lives on each Ability (resolved via `attackCooldownTicksFor` from

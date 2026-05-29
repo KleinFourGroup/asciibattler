@@ -14,7 +14,7 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import {
   abilityIdsForArchetype,
-  attackRangeForArchetype,
+  rangeForArchetype,
   baseMoveCooldownSecondsForArchetype,
   glyphForArchetype,
 } from '../sim/archetypes';
@@ -88,7 +88,7 @@ export class RecruitScreen {
     // archetype's primary stat (melee → strength, ranged → ranged) —
     // same lookup `basicAttackDamage` uses inside AbilityBehavior.
     const s = template.stats;
-    const attackRange = attackRangeForArchetype(template.archetype);
+    const attackRange = rangeForArchetype(template.archetype);
     const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
     const derived = deriveStats(s, attackRange, moveCD);
     const baseDamage = template.archetype === 'melee' ? s.strength : s.ranged;

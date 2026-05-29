@@ -58,6 +58,10 @@ export class BattleRenderer {
   private readonly animator: SpriteAnimator;
   /** unitId → ticks left on its attack-flash override. */
   private readonly flashes = new Map<number, number>();
+  /** E6.B: in-flight ranged projectile sprite handles. They live in the
+   *  shared SpriteRenderer but NOT in `handles` (they're not units), so
+   *  detach sweeps them separately. */
+  private readonly projectiles = new Set<SpriteHandle>();
   /** unitId → in-flight action timing for the progress bar. */
   private readonly progress = new Map<number, ActiveProgress>();
   /** unitId → ongoing post-death overlay fade. */
@@ -122,6 +126,11 @@ export class BattleRenderer {
       this.sprites.removeSprite(handle);
     }
     this.handles.clear();
+    // E6.B — animator.clear() drops the projectile lerps without firing
+    // their onComplete (the despawn callback), so sweep the tracer sprites
+    // here. removeSprite is idempotent, so a late callback is harmless.
+    for (const proj of this.projectiles) this.sprites.removeSprite(proj);
+    this.projectiles.clear();
     // overlays.clear() drops every <div> the overlay layer owns in a single
     // sweep — covers both live overlays (this.overlayHandles) and any that
     // were mid-fade when the battle ended (typically the killing-blow
@@ -248,26 +257,50 @@ export class BattleRenderer {
     const attacker = this.world.findUnit(attackerId);
     const target = this.world.findUnit(targetId);
     if (!attacker || !target) return;
-    const handle = this.handles.get(attackerId);
-    if (!handle) return;
-
-    const from = this.tileWorldPos(attacker.position);
-    const to = this.tileWorldPos(target.position);
-    const dx = to.x - from.x;
-    const dz = to.z - from.z;
-    const len = Math.hypot(dx, dz) || 1;
+    const attackerHandle = this.handles.get(attackerId);
+    if (!attackerHandle) return;
 
     if (attacker.derived.attackRange <= 1) {
+      // Melee: lunge toward the target's cell. Direction comes from cell
+      // centers (stable even while the sprite is mid-lerp); startShove
+      // captures the sprite's live position as the shove origin.
+      const from = this.tileWorldPos(attacker.position);
+      const to = this.tileWorldPos(target.position);
+      const dx = to.x - from.x;
+      const dz = to.z - from.z;
+      const len = Math.hypot(dx, dz) || 1;
       this.animator.startShove(
-        handle,
+        attackerHandle,
         dx / len,
         dz / len,
         SHOVE_DISTANCE,
         SHOVE_OUT_SECONDS,
         SHOVE_BACK_SECONDS,
       );
+      return;
     }
-    // E6.B — ranged attackers spawn a projectile here.
+
+    // Ranged: fly a tracer glyph from the attacker's sprite to the target's.
+    // Damage already landed this tick (the sim is instantaneous); the
+    // projectile is a cosmetic that despawns on arrival. Spawn from the live
+    // sprite positions so the bolt emanates from / lands on what the player
+    // actually sees, falling back to cell centers if a handle is mid-teardown.
+    const from = (
+      this.sprites.getPosition(attackerHandle, this.scratchPos) ??
+      this.tileWorldPos(attacker.position)
+    ).clone();
+    const targetHandle = this.handles.get(targetId);
+    const to = (
+      (targetHandle && this.sprites.getPosition(targetHandle, this.scratchPos)) ??
+      this.tileWorldPos(target.position)
+    ).clone();
+    const proj = this.sprites.addSprite(PROJECTILE_GLYPH, colorForTeam(attacker.team), from);
+    this.sprites.updateSprite(proj, { bloomIntensity: PROJECTILE_BLOOM });
+    this.projectiles.add(proj);
+    this.animator.startLerp(proj, from, to, PROJECTILE_SECONDS, () => {
+      this.sprites.removeSprite(proj);
+      this.projectiles.delete(proj);
+    });
   }
 
   private startFlash(unitId: number, color: string): void {
@@ -448,6 +481,19 @@ const FADE_SECONDS = 0.3;
 const SHOVE_DISTANCE = 0.35;
 const SHOVE_OUT_SECONDS = 0.07;
 const SHOVE_BACK_SECONDS = 0.13;
+
+/**
+ * E6.B — ranged projectile tracer. The glyph flies a straight line from
+ * shooter to target (per the E6 decision) over a fixed duration regardless
+ * of distance, so a shot reads as fast and stays well inside the attack
+ * cadence. The tracer reuses the shared SpriteRenderer, so it renders at
+ * the same world size as a unit glyph (no per-instance scale); `*` reads
+ * smaller than a letter thanks to its internal whitespace. PROJECTILE_BLOOM
+ * pushes it above the unit baseline (0.15) so it glows like a bolt.
+ */
+const PROJECTILE_GLYPH = '*';
+const PROJECTILE_SECONDS = 0.18;
+const PROJECTILE_BLOOM = 1.2;
 
 function colorForTeam(team: Team): string {
   if (team === 'player') return COLORS.TERMINAL_GREEN;

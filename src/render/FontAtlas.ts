@@ -38,6 +38,7 @@ const GLYPHS = [
   '.', ':', '/', '-', '+', '%', '!', '?',
   '#', // C1a: wall obstacle (neutral-team environment entity).
   '╥', // D6: half-cover (LOS-transparent neutral obstacle). U+2565.
+  '*', // E6.B: ranged projectile tracer glyph.
 ] as const;
 
 /**

@@ -650,7 +650,24 @@ texture worth thinking through:
   "infinite XP grind" temptation that doesn't fit a ~1-hour run
   anyway.
 
-### E5 — Pathfinding refresh
+### E5 — Pathfinding refresh ✅ landed
+
+**Status:** complete. See [HANDOFF.md](HANDOFF.md) "E5 landed" for the
+breakdown. Net: per-ability attack range migrated off the archetype into
+`config/abilities.json` (folded in per the pre-E5 cleanup #2 flag);
+**E5.A** target stickiness (`Unit.targetId` + `outOfLosTicks`,
+`updateTarget`/`currentTarget` in Targeting.ts, knobs in new
+`config/sim.json`, WorldSnapshot v12→v13); **E5.B** boids sidestep in
+MovementBehavior + a straight-line A* tie-break in `popLowestF`. Plus a
+stale-fuzz-cap fix (`DEFAULT_MAX_TICKS` now derives from TICK_RATE).
+Browser-verified on a live endlessCorridors battle (sticky targeting
+visibly converged; clean resolution). 400 tests pass; fuzz 20-seed: 0
+hangs. **Both A and B landed** (the decision-point recommendation);
+E5.A's stickiness carries most of the fix — the sidestep is a marginal
+safety net since soft-block A* already routes around allies when there's
+room (see HANDOFF gotcha on E5.B).
+
+Original design (preserved for the trail of decisions):
 
 Two issues combat-feedback flagged on the long-corridor layouts
 (Endless Corridors, Strafing Funnel): "units backpedal and reroute,

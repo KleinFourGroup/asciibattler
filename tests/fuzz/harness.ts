@@ -18,6 +18,7 @@
 
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
+import { secondsToTicks } from '../../src/config';
 import { World } from '../../src/sim/World';
 import type { GameEvents } from '../../src/core/events';
 import type { Team } from '../../src/sim/Unit';
@@ -62,7 +63,9 @@ export interface RunResult {
 }
 
 export interface HarnessOptions {
-  /** Per-battle tick cap. Default 1000 (≈100s at TICK_RATE=10). */
+  /** Per-battle tick cap. Default ≈100s of game time, derived from
+   *  TICK_RATE so it tracks the E3.5 tick-rate change instead of going
+   *  stale (gotcha #6). */
   readonly maxTicksPerBattle?: number;
   /** Safety cap on total node hops per run. Default 50. */
   readonly maxNodeHops?: number;
@@ -74,7 +77,12 @@ export interface HarnessOptions {
   readonly strategySeed?: number;
 }
 
-const DEFAULT_MAX_TICKS = 1000;
+// ≈100s of game time. Authored in seconds and converted via the
+// TICK_RATE contract so the E3.5 doubling (10 → 20 Hz) didn't silently
+// halve the real cap — which is exactly what made grown-team battles on
+// the 32-long endlessCorridors board read as false "hangs" at the old
+// hardcoded 1000 (= 50s post-E3.5).
+const DEFAULT_MAX_TICKS = secondsToTicks(100);
 const DEFAULT_MAX_HOPS = 50;
 
 /**

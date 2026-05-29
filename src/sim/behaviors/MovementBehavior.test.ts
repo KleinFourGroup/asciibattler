@@ -197,7 +197,6 @@ interface SceneUnit {
   y: number;
   attackRange?: number;
   moveCooldownTicks?: number;
-  attackCooldownTicks?: number;
   /** Skip attaching MovementBehavior — for static targets and walls. */
   inert?: boolean;
 }
@@ -220,9 +219,6 @@ function scene(specs: SceneUnit[]): {
     const stats: UnitStats = { ...ARCHETYPE_CONFIG.melee.baseStats, luck: 0 };
     const range = s.attackRange ?? 1;
     let derived = deriveStats(stats, range);
-    if (s.attackCooldownTicks !== undefined) {
-      derived = { ...derived, attackCooldownTicks: s.attackCooldownTicks };
-    }
     if (s.moveCooldownTicks !== undefined) {
       derived = { ...derived, moveCooldownTicks: s.moveCooldownTicks };
     }

@@ -56,10 +56,13 @@ export interface UnitDerived {
   readonly maxHp: number;
   /** Probability in `[0, STATS.critCap]` that a basic strike crits. */
   readonly critChance: number;
-  readonly attackCooldownTicks: number;
   readonly moveCooldownTicks: number;
   /** Per-archetype primitive, plumbed through `deriveStats`. */
   readonly attackRange: number;
+  // E5 pre-work: attack cadence is no longer a per-unit derived value —
+  // it lives on each Ability (resolved via `attackCooldownTicksFor` from
+  // `config/abilities.json`) so multi-ability units can carry several
+  // independent timings.
 }
 
 /**

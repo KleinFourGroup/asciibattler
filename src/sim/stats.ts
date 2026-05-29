@@ -9,7 +9,6 @@
  *
  *   maxHp           = max(1, round(hpPerConstitution * constitution))
  *   critChance      = min(critCap, luck * critPerLuck)
- *   attackCooldown  = max(1, secondsToTicks(baseAtkCD * cooldownScale(speed)))
  *   moveCooldown    = max(1, secondsToTicks(baseMoveCD * cooldownScale(endurance)))
  *   cooldownScale s = max(minCdScale, 1 - s * cdPerStat)
  *   attackRange     = per-archetype primitive, passed through verbatim
@@ -22,9 +21,14 @@
  * argument defaults to the global `STATS.baseMoveCooldownSeconds`
  * (which most archetypes still inherit); slow-walking archetypes can
  * pass a higher value to lengthen their move CD without touching the
- * global. Attack CD does NOT have an analogous override here on
- * purpose — attack timing belongs on the Ability layer (one unit can
- * carry several abilities with different timings).
+ * global.
+ *
+ * E5 pre-work: attack cadence is NO LONGER derived here. It moved to
+ * the Ability layer — a unit can carry several abilities with different
+ * timings, so a single per-unit `attackCooldownTicks` couldn't
+ * represent them. `attackCooldownTicksFor` resolves an ability's
+ * `cooldownSeconds` (from `config/abilities.json`) against the unit's
+ * `speed` at propose time, reusing the same `cooldownScale` curve.
  *
  * `inertDerived` is the environment-entity path (walls / half-cover) —
  * non-combatants need a maxHp anchor for HP display and the future
@@ -48,16 +52,25 @@ export function deriveStats(
   return {
     maxHp: Math.max(1, Math.round(STATS.hpPerConstitution * stats.constitution)),
     critChance: Math.min(STATS.critCap, stats.luck * STATS.critPerLuck),
-    attackCooldownTicks: Math.max(
-      1,
-      secondsToTicks(STATS.baseAttackCooldownSeconds * cooldownScale(stats.speed)),
-    ),
     moveCooldownTicks: Math.max(
       1,
       secondsToTicks(baseMoveCooldownSeconds * cooldownScale(stats.endurance)),
     ),
     attackRange,
   };
+}
+
+/**
+ * E5 pre-work — resolve an ability's attack cadence to ticks for a
+ * specific unit. `cooldownSeconds` is the ability's authored base
+ * interval (`config/abilities.json`); the unit's `speed` shrinks it via
+ * the same `cooldownScale` curve that governs movement, so faster units
+ * still swing/shoot more often. Floored at 1 tick (mirrors the move-CD
+ * floor) so an extreme base/scale combo can't round to a 0-tick — i.e.
+ * fire-every-tick — cadence.
+ */
+export function attackCooldownTicksFor(cooldownSeconds: number, speed: number): number {
+  return Math.max(1, secondsToTicks(cooldownSeconds * cooldownScale(speed)));
 }
 
 /**
@@ -68,7 +81,6 @@ export function inertDerived(maxHp: number): UnitDerived {
   return {
     maxHp,
     critChance: 0,
-    attackCooldownTicks: 0,
     moveCooldownTicks: 0,
     attackRange: 0,
   };

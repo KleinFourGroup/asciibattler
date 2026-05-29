@@ -3,11 +3,14 @@
  *
  * - `hpPerConstitution` — maxHp scales linearly with constitution.
  *   `maxHp = round(hpPerConstitution * constitution)` with a floor of 1.
- * - `baseAttackCooldownSeconds` / `baseMoveCooldownSeconds` — the base
- *   cooldown a unit with stat=0 would have. The derived cooldown is
- *   `secondsToTicks(base * cooldownScale(stat))`, where
- *   `cooldownScale(s) = max(minCdScale, 1 - s * cdPerStat)`. Speed
- *   governs attackCooldown, endurance governs moveCooldown.
+ * - `baseMoveCooldownSeconds` — the base move cooldown a unit with
+ *   endurance=0 would have. The derived cooldown is
+ *   `secondsToTicks(base * cooldownScale(endurance))`, where
+ *   `cooldownScale(s) = max(minCdScale, 1 - s * cdPerStat)`. The
+ *   analogous *attack* cadence knob moved out of this file in E5
+ *   pre-work — it's now per-ability in `config/abilities.json`
+ *   (speed still drives `cooldownScale` there). No silent global
+ *   fallback: every ability must author its own `cooldownSeconds`.
  * - `critPerLuck` / `critCap` — `critChance = min(critCap, luck * critPerLuck)`.
  *   At the user's design range (0-50 base stats), a luck=50 unit lands
  *   at 50% crit and never touches the 60% cap. The cap is a defensive
@@ -27,7 +30,6 @@ import statsJson from '../../config/stats.json';
 
 const StatsSchema = z.object({
   hpPerConstitution: z.number().positive(),
-  baseAttackCooldownSeconds: z.number().positive(),
   baseMoveCooldownSeconds: z.number().positive(),
   critPerLuck: z.number().nonnegative(),
   critCap: z.number().min(0).max(1),

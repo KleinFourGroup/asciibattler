@@ -26,7 +26,7 @@ describe('AbilityBehavior', () => {
 
   it('attacks an adjacent enemy, deals damage, and emits unit:attacked', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 1, attackDamage: 7, attackCooldownTicks: 5 },
+      { team: 'player', x: 0, y: 0, attackRange: 1, attackDamage: 7 },
       { team: 'enemy', x: 1, y: 0, hp: 30, inert: true },
     ]);
     world.tick();
@@ -40,16 +40,24 @@ describe('AbilityBehavior', () => {
     });
   });
 
-  it('attacks at attackCooldownTicks cadence (action ticks exactly N apart)', () => {
-    const { world, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 1, attackDamage: 1, attackCooldownTicks: 3 },
-      { team: 'enemy', x: 1, y: 0, hp: 100, inert: true },
-    ]);
+  it('fires at the ability cadence (action ticks exactly N apart)', () => {
+    // The selector's per-ability cadence mechanic, pinned with an
+    // explicit cooldown/duration (synthetic ability) rather than the
+    // real strike's `config/abilities.json`-derived ticks — keeps the
+    // assertion small and decoupled from cadence tuning. cooldown ==
+    // duration == 3 mirrors exactly what `proposeBasicStrike` emits.
+    const { world, attacks } = sceneWithAbilities(
+      [
+        { team: 'player', x: 0, y: 0 },
+        { team: 'enemy', x: 1, y: 0, hp: 100, inert: true },
+      ],
+      [new ConfigurableStrike({ id: 'cadence', score: 10, damage: 1, cooldown: 3, duration: 3 })],
+    );
 
     world.tick(); // tick 1: attacks
     expect(attacks).toHaveLength(1);
-    world.tick(); // tick 2: cooldown 2 → 1
-    world.tick(); // tick 3: cooldown 1 → 0
+    world.tick(); // tick 2: busy / cooling
+    world.tick(); // tick 3: busy / cooling
     expect(attacks).toHaveLength(1);
     world.tick(); // tick 4: attacks
     expect(attacks).toHaveLength(2);
@@ -57,15 +65,16 @@ describe('AbilityBehavior', () => {
 
   it('stops attacking once the target is dead', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 1, attackDamage: 10, attackCooldownTicks: 1 },
+      { team: 'player', x: 0, y: 0, attackRange: 1, attackDamage: 20 },
       { team: 'enemy', x: 1, y: 0, hp: 15, inert: true },
     ]);
 
-    world.tick(); // hits for 10 (hp=5)
-    world.tick(); // cooldown 0 → hits for 10 (hp=-5, target now "dead")
+    world.tick(); // one-shots the target (20 dmg > 15 hp)
     const attackCountAfterKill = attacks.length;
     expect(units[1]!.currentHp).toBeLessThanOrEqual(0);
 
+    // findTarget returns null for the dead unit, so no further attacks
+    // fire regardless of where the attack cadence sits.
     for (let i = 0; i < 5; i++) world.tick();
     expect(attacks).toHaveLength(attackCountAfterKill);
   });
@@ -82,7 +91,7 @@ describe('AbilityBehavior', () => {
 
   it('abstains when a wall is on the line to a ranged target', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
     spawnWall(world, { x: 3, y: 0 });
@@ -93,7 +102,7 @@ describe('AbilityBehavior', () => {
 
   it('still fires on a ranged target when the wall is off the line', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
     spawnWall(world, { x: 3, y: 3 });
@@ -104,7 +113,7 @@ describe('AbilityBehavior', () => {
 
   it('melee attack against an adjacent target is unaffected by surrounding walls', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 1, y: 1, attackRange: 1, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'player', x: 1, y: 1, attackRange: 1, attackDamage: 5 },
       { team: 'enemy', x: 2, y: 1, hp: 30, inert: true },
     ]);
     spawnWall(world, { x: 0, y: 1 });
@@ -118,7 +127,7 @@ describe('AbilityBehavior', () => {
 
   it('D6/E4: ranged attack passes through half-cover (LOS-transparent), scaled by LEVELING.halfCoverDamageMult', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
     spawnHalfCover(world, { x: 3, y: 0 });
@@ -137,7 +146,7 @@ describe('AbilityBehavior', () => {
 
   it('D6: wall + half-cover mix — wall blocks, half-cover does not contribute', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
     spawnHalfCover(world, { x: 2, y: 0 });
@@ -149,7 +158,7 @@ describe('AbilityBehavior', () => {
 
   it('D7.A: chasm tile between attacker and target does NOT block ranged LOS', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
     world.tileGrid.setKind({ x: 3, y: 0 }, 'chasm');
@@ -160,7 +169,7 @@ describe('AbilityBehavior', () => {
 
   it('fires once the blocking wall is destroyed (HP forced to 0)', () => {
     const { world, units, attacks } = scene([
-      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 1 },
+      { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
     const wall = spawnWall(world, { x: 3, y: 0 });
@@ -258,7 +267,6 @@ interface SceneUnit {
   hp?: number;
   attackRange?: number;
   attackDamage?: number;
-  attackCooldownTicks?: number;
   inert?: boolean;
 }
 
@@ -287,12 +295,9 @@ function scene(specs: SceneUnit[]): {
     const stats = buildStats(s, archetype);
     const template: UnitTemplate = { archetype, level: 1, stats, xp: 0 };
     const u = world.spawnUnit(template, s.team, { x: s.x, y: s.y });
-    if (s.attackRange !== undefined || s.attackCooldownTicks !== undefined) {
+    if (s.attackRange !== undefined) {
       const mutDerived = u as unknown as { derived: { -readonly [K in keyof typeof u.derived]: number } };
-      if (s.attackRange !== undefined) mutDerived.derived.attackRange = s.attackRange;
-      if (s.attackCooldownTicks !== undefined) {
-        mutDerived.derived.attackCooldownTicks = s.attackCooldownTicks;
-      }
+      mutDerived.derived.attackRange = s.attackRange;
     }
     if (s.hp !== undefined) u.currentHp = s.hp;
     if (!s.inert) {

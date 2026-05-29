@@ -16,7 +16,14 @@ import { World } from './World';
 import { Unit, type UnitStats } from './Unit';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { MeleeStrike } from './abilities/strikes';
-import { ZERO_STATS, basicAttackDamage, deriveStats, inertDerived } from './stats';
+import {
+  ZERO_STATS,
+  basicAttackDamage,
+  deriveStats,
+  inertDerived,
+  attackCooldownTicksFor,
+} from './stats';
+import { ABILITIES } from '../config/abilities';
 import { STATS } from '../config/stats';
 import { secondsToTicks } from '../config';
 import type { GameEvents } from '../core/events';
@@ -62,17 +69,7 @@ describe('deriveStats — critChance', () => {
   });
 });
 
-describe('deriveStats — cooldowns', () => {
-  it('attackCooldownTicks shrinks with speed via cooldownScale', () => {
-    const d = deriveStats({ ...TEMPLATE, speed: 5 }, 1);
-    const expectedScale = 1 - 5 * STATS.cdPerStat;
-    const expected = Math.max(
-      1,
-      secondsToTicks(STATS.baseAttackCooldownSeconds * expectedScale),
-    );
-    expect(d.attackCooldownTicks).toBe(expected);
-  });
-
+describe('deriveStats — move cooldown', () => {
   it('moveCooldownTicks shrinks with endurance via cooldownScale', () => {
     const d = deriveStats({ ...TEMPLATE, endurance: 6 }, 1);
     const expectedScale = 1 - 6 * STATS.cdPerStat;
@@ -83,37 +80,47 @@ describe('deriveStats — cooldowns', () => {
     expect(d.moveCooldownTicks).toBe(expected);
   });
 
-  it('cooldownScale floors at minCdScale for very high stat values', () => {
+  it('cooldownScale floors at minCdScale for very high endurance', () => {
     // Pick stat so that 1 - stat × cdPerStat < minCdScale. At default
     // config that's stat > (1 - minCdScale) / cdPerStat = 60. Use 99.
-    const d = deriveStats({ ...TEMPLATE, speed: 99, endurance: 99 }, 1);
-    const flooredAttack = Math.max(
-      1,
-      secondsToTicks(STATS.baseAttackCooldownSeconds * STATS.minCdScale),
-    );
+    const d = deriveStats({ ...TEMPLATE, endurance: 99 }, 1);
     const flooredMove = Math.max(
       1,
       secondsToTicks(STATS.baseMoveCooldownSeconds * STATS.minCdScale),
     );
-    expect(d.attackCooldownTicks).toBe(flooredAttack);
     expect(d.moveCooldownTicks).toBe(flooredMove);
   });
 
-  it('cooldown ticks floor at 1 (defense against absurd base/scale combos)', () => {
+  it('moveCooldownTicks floors at 1 (defense against absurd base/scale combos)', () => {
     // The Math.max(1, ...) wrapping in deriveStats catches future tunings
     // that would otherwise round to 0. Hard to exercise with default
     // config; the test pins the floor so a regression on the wrapping
     // is loud.
-    const fake = {
-      ...TEMPLATE,
-      // speed/endurance high enough to maximize scale clamp without
-      // affecting the floor itself.
-      speed: 99,
-      endurance: 99,
-    };
-    const d = deriveStats(fake, 1);
-    expect(d.attackCooldownTicks).toBeGreaterThanOrEqual(1);
+    const d = deriveStats({ ...TEMPLATE, endurance: 99 }, 1);
     expect(d.moveCooldownTicks).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('attackCooldownTicksFor — per-ability attack cadence', () => {
+  // E5 pre-work: attack cadence left `deriveStats` for the Ability
+  // layer. These mirror the old deriveStats attack-CD tests but against
+  // the new helper, deriving the base seconds from `config/abilities.json`
+  // so a cadence re-tune doesn't churn the test.
+  const base = ABILITIES.melee_strike!.cooldownSeconds;
+
+  it('shrinks with speed via cooldownScale', () => {
+    const expectedScale = 1 - 5 * STATS.cdPerStat;
+    const expected = Math.max(1, secondsToTicks(base * expectedScale));
+    expect(attackCooldownTicksFor(base, 5)).toBe(expected);
+  });
+
+  it('floors at minCdScale for very high speed', () => {
+    const floored = Math.max(1, secondsToTicks(base * STATS.minCdScale));
+    expect(attackCooldownTicksFor(base, 99)).toBe(floored);
+  });
+
+  it('floors at 1 tick (defense against absurd base/scale combos)', () => {
+    expect(attackCooldownTicksFor(0.001, 99)).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -130,7 +137,6 @@ describe('inertDerived', () => {
     const d = inertDerived(5);
     expect(d.maxHp).toBe(5);
     expect(d.critChance).toBe(0);
-    expect(d.attackCooldownTicks).toBe(0);
     expect(d.moveCooldownTicks).toBe(0);
     expect(d.attackRange).toBe(0);
   });

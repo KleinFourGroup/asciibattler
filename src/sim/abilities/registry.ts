@@ -1,5 +1,6 @@
 import type { Ability } from './Ability';
 import { MeleeStrike, RangedShot } from './strikes';
+import { ABILITIES } from '../../config/abilities';
 
 /**
  * Ability factories keyed by `Ability.id`. `World.fromJSON` uses these
@@ -19,6 +20,32 @@ const FACTORIES: Record<string, AbilityFactory> = {
   [MeleeStrike.id]: () => new MeleeStrike(),
   [RangedShot.id]: () => new RangedShot(),
 };
+
+/**
+ * A4 boot validation: the ability factories and `config/abilities.json`
+ * must cover exactly the same id set. A registered ability with no
+ * cadence config (or a cadence for an ability that was never
+ * registered) is a wiring mistake — fail loudly at module load rather
+ * than at the first propose tick or, worse, with a silent default the
+ * user explicitly didn't want. Mirrors the archetype-abilities check in
+ * `src/config/archetypes.ts`.
+ */
+(function assertAbilityConfigCoverage(): void {
+  const factoryIds = Object.keys(FACTORIES);
+  const configIds = Object.keys(ABILITIES);
+  const missingConfig = factoryIds.filter((id) => !(id in ABILITIES));
+  const orphanConfig = configIds.filter((id) => !(id in FACTORIES));
+  if (missingConfig.length > 0) {
+    throw new Error(
+      `abilities registry: no config/abilities.json entry for ${missingConfig.join(', ')}`,
+    );
+  }
+  if (orphanConfig.length > 0) {
+    throw new Error(
+      `config/abilities.json: entry for unregistered ability id ${orphanConfig.join(', ')}`,
+    );
+  }
+})();
 
 export function createAbility(id: string): Ability {
   const factory = FACTORIES[id];

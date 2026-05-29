@@ -232,7 +232,6 @@ describe('World inline death handling', () => {
         hp: 50,
         attackDamage: 999,
         attackRange: 1,
-        attackCooldownTicks: 5,
         behaviors: ['movement', 'attack'],
       },
       {
@@ -242,7 +241,6 @@ describe('World inline death handling', () => {
         hp: 30,
         attackDamage: 999,
         attackRange: 1,
-        attackCooldownTicks: 5,
         behaviors: ['movement', 'attack'],
       },
     ]);
@@ -387,8 +385,6 @@ interface DeathSceneUnit {
   attackDamage?: number;
   /** Maps to `derived.attackRange` (per-archetype primitive, not a stat). */
   attackRange?: number;
-  /** Per-test override; otherwise comes from deriveStats(speed). */
-  attackCooldownTicks?: number;
   behaviors?: readonly ('movement' | 'attack')[];
 }
 
@@ -420,10 +416,7 @@ function scene(specs: DeathSceneUnit[]): {
       strength: s.attackDamage ?? baseMelee.strength,
     };
     const range = s.attackRange ?? 1;
-    let derived = deriveStats(stats, range);
-    if (s.attackCooldownTicks !== undefined) {
-      derived = { ...derived, attackCooldownTicks: s.attackCooldownTicks };
-    }
+    const derived = deriveStats(stats, range);
     const u = new Unit({
       id: nextId++,
       team: s.team,

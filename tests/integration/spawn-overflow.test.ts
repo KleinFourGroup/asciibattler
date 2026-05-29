@@ -133,7 +133,7 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.units.filter((u) => u.team === 'player')).toHaveLength(1);
   });
 
-  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids through WorldSnapshot v11', () => {
+  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids through WorldSnapshot v12', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
@@ -142,7 +142,7 @@ describe('D5.C spawn overflow queue', () => {
     spawnTeam(world, 'player', templates, region, rng);
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(11);
+    expect(wire.schemaVersion).toBe(12);
     expect(wire.damageDealt).toEqual([]);
     expect(wire.playerRosterIds).toEqual([]);
     // E4: every queued template carries an xp (0 on a fresh roll).
@@ -177,11 +177,11 @@ describe('D5.C spawn overflow queue', () => {
     expect(restored.queueLength('player')).toBe(1);
   });
 
-  it('rejects v10 snapshots (E4 follow-up playerRosterIds bump is loud)', () => {
+  it('rejects v11 snapshots (E5 pre-work attackCooldownTicks removal is loud)', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    wire.schemaVersion = 10;
+    wire.schemaVersion = 11;
     expect(() => World.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,
     );

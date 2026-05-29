@@ -13,11 +13,13 @@ import type { UnitTemplate } from '../sim/Unit';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import {
+  abilityIdsForArchetype,
   attackRangeForArchetype,
   baseMoveCooldownSecondsForArchetype,
   glyphForArchetype,
 } from '../sim/archetypes';
-import { deriveStats } from '../sim/stats';
+import { deriveStats, attackCooldownTicksFor } from '../sim/stats';
+import { abilityConfig } from '../config/abilities';
 import { ticksToSeconds } from '../config';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { isAtLevelCap, xpToNext } from '../sim/xp';
@@ -90,13 +92,25 @@ export class RecruitScreen {
     const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
     const derived = deriveStats(s, attackRange, moveCD);
     const baseDamage = template.archetype === 'melee' ? s.strength : s.ranged;
+    // E5 pre-work: ATK cadence now comes from the archetype's primary
+    // ability config (scaled by speed), matching what the unit will
+    // actually fire at in battle. Archetypes carry one basic strike
+    // today; the `[0]` is the primary ability and the guard covers a
+    // hypothetical ability-less archetype.
+    const primaryAbilityId = abilityIdsForArchetype(template.archetype)[0];
+    const attackSeconds =
+      primaryAbilityId === undefined
+        ? null
+        : ticksToSeconds(
+            attackCooldownTicksFor(abilityConfig(primaryAbilityId).cooldownSeconds, s.speed),
+          );
     const statsEl = document.createElement('div');
     statsEl.className = 'recruit-stats';
     statsEl.append(
       statLine('HP', String(derived.maxHp)),
       statLine('DMG', String(baseDamage)),
       statLine('RNG', String(derived.attackRange)),
-      statLine('ATK', `${ticksToSeconds(derived.attackCooldownTicks).toFixed(2)}s`),
+      statLine('ATK', attackSeconds === null ? '—' : `${attackSeconds.toFixed(2)}s`),
       statLine('MOV', `${ticksToSeconds(derived.moveCooldownTicks).toFixed(2)}s`),
       statLine('CRIT', `${Math.round(derived.critChance * 100)}%`),
       // E4: surface the level-up cost so the player knows what banked

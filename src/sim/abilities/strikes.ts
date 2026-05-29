@@ -5,15 +5,18 @@ import type { ActionProposal } from '../Action';
 import { AttackAction } from '../actions/AttackAction';
 import { findTarget } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
-import { basicAttackDamage } from '../stats';
+import { basicAttackDamage, attackCooldownTicksFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
+import { abilityConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
 
 /**
  * The pre-E2 `AttackBehavior` propose path, generalized over ability id.
- * Both `MeleeStrike` and `RangedShot` share this — they differ only in
- * the registry id they wear (and indirectly through `basicAttackDamage`
- * picking strength vs. ranged via the unit's archetype).
+ * Both `MeleeStrike` and `RangedShot` share this; they diverge through
+ * their registry id — which drives `basicAttackDamage` (strength vs.
+ * ranged via the unit's archetype) and now the per-ability cadence in
+ * `config/abilities.json`, so a swing and a shot can fire at different
+ * rates without re-pointing the stat curve.
  *
  * E4 — the half-cover damage multiplier finally lands. Walls (neutral +
  * `blocksLineOfSight: true`) still abort the proposal entirely; half-
@@ -52,7 +55,13 @@ function proposeBasicStrike(
   const damageMultiplier = behindCover ? LEVELING.halfCoverDamageMult : 1;
 
   const baseDamage = basicAttackDamage(unit);
-  const durationTicks = unit.derived.attackCooldownTicks;
+  // E5 pre-work: cadence is the ability's own `cooldownSeconds` (from
+  // `config/abilities.json`), scaled by the unit's `speed` — no longer
+  // the single global attack-CD that melee + ranged used to share.
+  const durationTicks = attackCooldownTicksFor(
+    abilityConfig(abilityId).cooldownSeconds,
+    unit.stats.speed,
+  );
 
   return {
     action: new AttackAction(target, baseDamage, unit.derived.critChance, damageMultiplier),

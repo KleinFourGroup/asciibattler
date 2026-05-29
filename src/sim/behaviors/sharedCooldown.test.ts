@@ -6,8 +6,9 @@ import { AbilityBehavior } from './AbilityBehavior';
 import { MeleeStrike } from '../abilities/strikes';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
-import { deriveStats } from '../stats';
+import { deriveStats, attackCooldownTicksFor } from '../stats';
 import { ARCHETYPE_CONFIG } from '../archetypes';
+import { ABILITIES } from '../../config/abilities';
 import type { GameEvents } from '../../core/events';
 
 /**
@@ -28,7 +29,6 @@ describe('shared actionCooldown', () => {
         y: 0,
         attackRange: 1,
         attackDamage: 5,
-        attackCooldownTicks: 8,
         moveCooldownTicks: moveCD,
         behaviors: 'all',
       },
@@ -60,7 +60,6 @@ describe('shared actionCooldown', () => {
         y: 5,
         attackRange: 1,
         attackDamage: 3,
-        attackCooldownTicks: 6,
         moveCooldownTicks: 4,
         behaviors: 'all',
       },
@@ -74,8 +73,15 @@ describe('shared actionCooldown', () => {
   it('cannot move during the attack cooldown that follows an attack', () => {
     // Adjacent on tick 1: unit attacks (sets CD to attackCD). Even though it
     // could otherwise step toward a different target, the shared CD locks
-    // movement out until the attack cooldown elapses.
-    const attackCD = 5;
+    // movement out until the attack cooldown elapses. attackCD is the
+    // real melee_strike cadence (config-derived) — the scene builds a
+    // melee unit at the archetype's base speed, so this matches what
+    // MeleeStrike actually proposes; deriving it keeps the test pinned
+    // through any cadence re-tune.
+    const attackCD = attackCooldownTicksFor(
+      ABILITIES.melee_strike!.cooldownSeconds,
+      ARCHETYPE_CONFIG.melee.baseStats.speed,
+    );
     const { world, units, moves } = scene([
       {
         team: 'player',
@@ -83,7 +89,6 @@ describe('shared actionCooldown', () => {
         y: 5,
         attackRange: 1,
         attackDamage: 999, // one-shot the adjacent enemy
-        attackCooldownTicks: attackCD,
         moveCooldownTicks: 1,
         behaviors: 'all',
       },
@@ -116,7 +121,6 @@ interface SceneUnit {
   hp?: number;
   attackRange?: number;
   attackDamage?: number;
-  attackCooldownTicks?: number;
   moveCooldownTicks?: number;
   behaviors: 'all' | 'none';
 }
@@ -147,9 +151,6 @@ function scene(specs: SceneUnit[]): {
     };
     const range = s.attackRange ?? 1;
     let derived = deriveStats(stats, range);
-    if (s.attackCooldownTicks !== undefined) {
-      derived = { ...derived, attackCooldownTicks: s.attackCooldownTicks };
-    }
     if (s.moveCooldownTicks !== undefined) {
       derived = { ...derived, moveCooldownTicks: s.moveCooldownTicks };
     }

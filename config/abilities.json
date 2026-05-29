@@ -1,0 +1,4 @@
+{
+  "melee_strike": { "cooldownSeconds": 1.5 },
+  "ranged_shot": { "cooldownSeconds": 1.5 }
+}

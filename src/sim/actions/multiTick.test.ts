@@ -168,7 +168,7 @@ function scene(opts: ChargeAttackOpts): {
   // by overriding derived after construction so the speed-based scale
   // doesn't muddy the fixture.
   const stats = { ...ARCHETYPE_CONFIG.melee.baseStats, constitution: 100, luck: 0 };
-  const derived = { ...deriveStats(stats, 99), attackCooldownTicks: 1, moveCooldownTicks: 1 };
+  const derived = { ...deriveStats(stats, 99), moveCooldownTicks: 1 };
 
   const attacker = new Unit({
     id: 1,
@@ -182,7 +182,7 @@ function scene(opts: ChargeAttackOpts): {
   attacker.behaviors.push(new ChargeAttackBehavior(opts));
   world.units.push(attacker);
 
-  const targetDerived = { ...deriveStats(stats, 1), attackCooldownTicks: 1, moveCooldownTicks: 1 };
+  const targetDerived = { ...deriveStats(stats, 1), moveCooldownTicks: 1 };
   const target = new Unit({
     id: 2,
     team: 'enemy',

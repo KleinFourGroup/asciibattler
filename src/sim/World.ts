@@ -72,8 +72,13 @@ import { computeXpAwards } from './xp';
  *       Without this, the dead unit's tally was orphaned at battle
  *       end because the unit was already spliced from `world.units`.
  *       v10 throws on load.
+ *  12 — E5 pre-work removed `attackCooldownTicks` from
+ *       `UnitSnapshot.derived` (the `UnitDerived` shape is stored
+ *       verbatim). Attack cadence moved to the Ability layer, resolved
+ *       from `config/abilities.json` at propose time, so the field no
+ *       longer exists to serialize. v11 throws on load.
  */
-const WORLD_SCHEMA_VERSION = 11;
+const WORLD_SCHEMA_VERSION = 12;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.

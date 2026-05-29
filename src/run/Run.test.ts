@@ -299,8 +299,8 @@ describe('Run', () => {
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Award 5 XP to roster index 2 (a melee unit); it shouldn't be
-      // enough to level (LEVELING.baseXp × 1^2 = 100 at default
-      // config), so the only observable effect is xp bumping.
+      // enough to level (xpToNext(1) = LEVELING.baseXp, far more than 5
+      // at any sane curve), so the only observable effect is xp bumping.
       bus.emit('battle:ended', {
         winner: 'player',
         xpAwards: [{ unitId: 99, rosterIndex: 2, damageDealt: 5, xpGained: 5 }],
@@ -316,10 +316,11 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(7);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // Default config: baseXp=100, exponent=2 → xpToNext(1) = 100.
+      // Award exactly the level-1→2 threshold from the curve so the test
+      // stays pinned regardless of `baseXp` / `exponent` tuning.
       bus.emit('battle:ended', {
         winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
+        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }],
       });
       expect(run.team[0]!.level).toBe(2);
       expect(run.team[0]!.xp).toBe(0);
@@ -380,9 +381,12 @@ describe('Run', () => {
       bus.emit('battle:ended', {
         winner: 'player',
         xpAwards: [
-          // Slot 0 fell with 30 damage — World pays it
-          // xpFlatPerFallen + xpPerDamage × 30 via computeXpAwards.
-          // Run just banks whatever World sent.
+          // Slot 0 fell but still earned XP. `xpGained` here is an
+          // arbitrary World-supplied figure — this test only pins that
+          // Run banks whatever World sent onto the right roster slot,
+          // even for a unit that died. The fallen-XP *formula* itself
+          // (xpFlatPerFallen + xpPerDamage × damage) is pinned, derived
+          // from config, in xp.test.ts.
           { unitId: 9, rosterIndex: 0, damageDealt: 30, xpGained: 91 },
         ],
       });

@@ -11,6 +11,7 @@ import type { Ability } from '../abilities/Ability';
 import type { ActionProposal } from '../Action';
 import type { GameEvents } from '../../core/events';
 import { AttackAction } from '../actions/AttackAction';
+import { LEVELING } from '../../config/leveling';
 
 describe('AbilityBehavior', () => {
   it('does not attack when no enemy is in range', () => {
@@ -115,18 +116,23 @@ describe('AbilityBehavior', () => {
     expect(attacks).toHaveLength(1);
   });
 
-  it('D6/E4: ranged attack passes through half-cover (LOS-transparent) but at reduced damage', () => {
+  it('D6/E4: ranged attack passes through half-cover (LOS-transparent), scaled by LEVELING.halfCoverDamageMult', () => {
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 5, attackDamage: 5, attackCooldownTicks: 5 },
       { team: 'enemy', x: 5, y: 0, hp: 30, inert: true },
     ]);
     spawnHalfCover(world, { x: 3, y: 0 });
     world.tick();
-    // E4: damage multiplier is `LEVELING.halfCoverDamageMult` (default
-    // 0.5). round(5 × 0.5) = 3 → 30 - 3 = 27.
-    expect(units[1]!.currentHp).toBe(27);
+    // The shot passes (half-cover is LOS-transparent) but rides the
+    // `LEVELING.halfCoverDamageMult` knob. Derive the expectation from
+    // the config the production path reads so re-tuning the multiplier
+    // can't break this wiring test — the attenuation *mechanic* (that a
+    // multiplier < 1 actually reduces damage) is pinned config-free in
+    // AttackAction.test.ts.
+    const expectedDamage = Math.round(5 * LEVELING.halfCoverDamageMult);
+    expect(units[1]!.currentHp).toBe(30 - expectedDamage);
     expect(attacks).toHaveLength(1);
-    expect(attacks[0]!.damage).toBe(3);
+    expect(attacks[0]!.damage).toBe(expectedDamage);
   });
 
   it('D6: wall + half-cover mix — wall blocks, half-cover does not contribute', () => {

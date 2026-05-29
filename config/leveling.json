@@ -1,9 +1,9 @@
 {
   "baseXp": 100,
-  "exponent": 1.5,
+  "exponent": 1.25,
   "levelCap": 20,
-  "xpFlatPerSurvivor": 20,
-  "xpFlatPerFallen": 0,
+  "xpFlatPerSurvivor": 25,
+  "xpFlatPerFallen": 20,
   "xpPerDamage": 3,
-  "halfCoverDamageMult": 0.5
+  "halfCoverDamageMult": 1.0
 }

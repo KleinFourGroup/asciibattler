@@ -28,6 +28,20 @@ export function isAtLevelCap(level: number): boolean {
   return level >= LEVELING.levelCap;
 }
 
+/**
+ * The integer level to *show* the player. A unit's `level` can be
+ * fractional for enemies: a fractional `difficulty.enemyLevelPerFloor`
+ * (e.g. 0.5 for "+1 level every 2 floors") feeds `scaleStats` a
+ * fractional level so the stat ramp softens smoothly — but a "Lv 1.5"
+ * badge reads as a bug. Player levels are always whole (per-level
+ * increments), so this is a no-op for them. Rounding lives here, at the
+ * display boundary, NOT at the source: the fractional value must reach
+ * `scaleStats` intact for the gentle ramp to work.
+ */
+export function displayLevel(level: number): number {
+  return Math.round(level);
+}
+
 export interface XpAward {
   unitId: number;
   /**

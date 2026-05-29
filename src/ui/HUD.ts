@@ -6,7 +6,7 @@ import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
-import { isAtLevelCap, xpToNext } from '../sim/xp';
+import { isAtLevelCap, xpToNext, displayLevel } from '../sim/xp';
 
 export class HUD {
   private readonly root: HTMLElement;
@@ -197,7 +197,8 @@ function updateRow(row: HTMLElement, unit: Unit): void {
 }
 
 function formatSub(unit: Unit): string {
-  if (unit.team !== 'player') return `Lv ${unit.level}`;
-  if (isAtLevelCap(unit.level)) return `Lv ${unit.level} · MAX`;
-  return `Lv ${unit.level} · ${unit.xp}/${xpToNext(unit.level)} XP`;
+  const lv = displayLevel(unit.level);
+  if (unit.team !== 'player') return `Lv ${lv}`;
+  if (isAtLevelCap(unit.level)) return `Lv ${lv} · MAX`;
+  return `Lv ${lv} · ${unit.xp}/${xpToNext(unit.level)} XP`;
 }

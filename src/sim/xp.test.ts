@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { computeXpAwards, isAtLevelCap, xpToNext } from './xp';
+import { computeXpAwards, displayLevel, isAtLevelCap, xpToNext } from './xp';
 import { LEVELING } from '../config/leveling';
 
 describe('xpToNext', () => {
@@ -32,6 +32,21 @@ describe('xpToNext', () => {
   it('returns Infinity at and past the cap', () => {
     expect(xpToNext(LEVELING.levelCap)).toBe(Infinity);
     expect(xpToNext(LEVELING.levelCap + 5)).toBe(Infinity);
+  });
+});
+
+describe('displayLevel', () => {
+  it('passes integer levels through unchanged', () => {
+    expect(displayLevel(1)).toBe(1);
+    expect(displayLevel(7)).toBe(7);
+  });
+
+  it('rounds fractional enemy levels to the nearest integer', () => {
+    // Fractional levels arise from a fractional enemyLevelPerFloor; the
+    // raw value still drives scaleStats, but the badge shows a whole #.
+    expect(displayLevel(1.5)).toBe(2);
+    expect(displayLevel(2.4)).toBe(2);
+    expect(displayLevel(2.5)).toBe(3);
   });
 });
 

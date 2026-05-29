@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Team } from '../sim/Unit';
+import { displayLevel } from '../sim/xp';
 
 /**
  * E3.6 — DOM-based per-unit overlay (HP bar + action progress bar + level
@@ -81,7 +82,7 @@ export class UnitOverlayLayer {
 
     const levelBadge = document.createElement('div');
     levelBadge.className = 'level-badge';
-    levelBadge.textContent = `Lv ${level}`;
+    levelBadge.textContent = `Lv ${displayLevel(level)}`;
 
     const hpBar = document.createElement('div');
     hpBar.className = 'hp-bar';
@@ -178,7 +179,7 @@ export class UnitOverlayLayer {
   updateLevel(handle: UnitOverlayHandle, level: number): void {
     if (handle.level === level) return;
     handle.level = level;
-    handle.levelBadge.textContent = `Lv ${level}`;
+    handle.levelBadge.textContent = `Lv ${displayLevel(level)}`;
   }
 
   setAlpha(handle: UnitOverlayHandle, alpha: number): void {

@@ -320,7 +320,7 @@ export class BattleRenderer {
       this.tileWorldPos(target.position)
     ).clone();
     const proj = this.sprites.addSprite(PROJECTILE_GLYPH, colorForTeam(attacker.team), from);
-    this.sprites.updateSprite(proj, { bloomIntensity: PROJECTILE_BLOOM });
+    this.sprites.updateSprite(proj, { bloomIntensity: PROJECTILE_BLOOM, size: PROJECTILE_SIZE });
     this.projectiles.add(proj);
     this.animator.startLerp(proj, from, to, PROJECTILE_SECONDS, () => {
       this.sprites.removeSprite(proj);
@@ -490,6 +490,9 @@ const SHOVE_BACK_SECONDS = 0.13;
 const PROJECTILE_GLYPH = '*';
 const PROJECTILE_SECONDS = 0.18;
 const PROJECTILE_BLOOM = 1.2;
+/** Per-sprite size multiplier for the tracer (1 = full unit-glyph size).
+ *  Shrinks the `*` so it reads as a bolt rather than a flying letter. */
+const PROJECTILE_SIZE = 0.6;
 
 function colorForTeam(team: Team): string {
   if (team === 'player') return COLORS.TERMINAL_GREEN;

@@ -20,6 +20,12 @@ attribute float instanceAlpha;
 // emphasis (attack windups, criticals, elite tier). Lerping 0↔1 fades
 // the halo smoothly while the sprite's visible color never changes.
 attribute float instanceBloomIntensity;
+// Per-sprite size multiplier on top of the global uSpriteSize. 1.0 = the
+// default unit/wall glyph size; <1.0 shrinks (E6.B ranged tracers spawn
+// smaller so they read as a bolt rather than a full glyph). Scales the
+// quad symmetrically about instancePosition, so the bloom mesh — which
+// shares this shader + these buffers — shrinks its halo to match for free.
+attribute float instanceSize;
 
 uniform float uSpriteSize;
 
@@ -30,7 +36,7 @@ varying float vBloomIntensity;
 
 void main() {
   vec4 mvPos = modelViewMatrix * vec4(instancePosition, 1.0);
-  mvPos.xy += position.xy * uSpriteSize;
+  mvPos.xy += position.xy * uSpriteSize * instanceSize;
   gl_Position = projectionMatrix * mvPos;
 
   vAtlasUV = mix(instanceGlyphUV.xy, instanceGlyphUV.zw, uv);

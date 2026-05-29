@@ -103,8 +103,8 @@ src/
     Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
                              # + RAF loop + two camera modes (fit / scroll, D4)
     SpriteRenderer.ts        # InstancedBufferGeometry + dual mesh (layer 0 visible / layer 1
-                             # bloom) + per-instance bloomIntensity attr (B1.1). E6.B: also
-                             # hosts ranged projectile tracer sprites (transient)
+                             # bloom) + per-instance bloomIntensity attr (B1.1) + per-instance
+                             # size attr (E6.B). Also hosts transient ranged tracer sprites (0.6×)
     UnitOverlayLayer.ts      # E3.6: DOM per-unit overlays (HP bar + action progress + level
                              # badge), positioned via projectToCss. E6.C: spawnHitsplat floats
                              # transient damage/crit/heal/burn numbers via the same projector

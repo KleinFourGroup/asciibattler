@@ -748,8 +748,8 @@ breakdown. Net (3 render-only commits, no snapshot/config/event changes):
 mutually exclusive with move-lerp; `BattleRenderer` routes
 `attackRange <= 1` → lunge); **E6.B** ranged projectile (`*` tracer flies
 shooter→target over 0.18s and despawns via `startLerp`'s new `onComplete`,
-reusing the shared SpriteRenderer — gotcha #108 on the full-size
-tradeoff); **E6.C** hitsplats (`UnitOverlayLayer.spawnHitsplat` floats
+reusing the shared SpriteRenderer at a per-instance 0.6 size via the new
+`instanceSize` attribute — gotcha #108); **E6.C** hitsplats (`UnitOverlayLayer.spawnHitsplat` floats
 white/neon-red-crit/cyan-heal/amber-burn numbers via the shared
 `projectToCss` projector, CSS rise+fade keyframe) and the pre-E6 attacker/
 target color flash is removed entirely. User decisions: flash fully

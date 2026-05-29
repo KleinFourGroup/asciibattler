@@ -62,7 +62,7 @@ export function findPath(
   const open = new Set<string>([startKey]);
 
   while (open.size > 0) {
-    const currentKey = popLowestF(open, fScore);
+    const currentKey = popLowestF(open, fScore, goal);
     if (currentKey === goalKey) return reconstruct(cameFrom, currentKey);
 
     const current = fromKey(currentKey);
@@ -113,14 +113,29 @@ function fromKey(k: string): GridCoord {
  * Linear-scan pop. The largest D3-allowed grid (32×32) caps the open set
  * at ~1024 entries; a binary heap would be overkill and harder to debug
  * at this scale.
+ *
+ * E5.B — f-ties break toward the goal: among equal-f nodes, expand the one
+ * with the lower Chebyshev distance to goal (h), then the lexicographically
+ * lower key as a final deterministic fallback. This is a pure ordering of
+ * equal-f nodes, so it does NOT change f-values and keeps the Chebyshev
+ * heuristic admissible (gotcha #34) — paths stay min-cost. What changes is
+ * WHICH min-cost path is returned: the old insertion-order tie-break let
+ * the `dx=-1..1` neighbour scan bias paths leftward (units crabbing on
+ * open ground); the goal-directed tie-break yields straighter routes. RNG
+ * shuffling was rejected — it would perturb the deterministic byte stream
+ * on every tie.
  */
-function popLowestF(open: Set<string>, fScore: Map<string, number>): string {
+function popLowestF(open: Set<string>, fScore: Map<string, number>, goal: GridCoord): string {
   let bestKey = '';
   let bestF = Infinity;
+  let bestH = Infinity;
   for (const k of open) {
     const f = fScore.get(k) ?? Infinity;
-    if (f < bestF) {
+    if (f > bestF) continue;
+    const h = chebyshev(fromKey(k), goal);
+    if (f < bestF || h < bestH || (h === bestH && k < bestKey)) {
       bestF = f;
+      bestH = h;
       bestKey = k;
     }
   }

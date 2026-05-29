@@ -11,7 +11,7 @@ import { hasLineOfSight } from '../LineOfSight';
  * Proposes a one-cell step toward the unit's current (E5-sticky) target
  * when out of attack range. Abstains (returns null) when no enemy exists, when the unit is
  * in range AND has line-of-sight, when no path to target exists, or when
- * the next step is currently occupied by another unit. Score 1 (low);
+ * the next step is blocked AND no sidestep is free. Score 1 (low);
  * AbilityBehavior scores 10 (via each ability) so the selector prefers
  * attacking over moving when both fire.
  *
@@ -35,11 +35,13 @@ import { hasLineOfSight } from '../LineOfSight';
  *    Labyrinth deadlock — see tests/integration/layout-deadlock.test.ts).
  *    Chebyshev heuristic stays admissible since all costs are >= 1.
  *
- * 3. **Step collision check.** path[1] may be an ally/enemy cell A*
- *    routed through under (2). Two units can't share a cell, so abstain
- *    this tick — the blocker may move out of the way next tick. This
- *    creates queueing behavior in corridors without explicit
- *    coordination.
+ * 3. **Step collision check + boids sidestep (E5.B).** path[1] may be an
+ *    ally/enemy cell A* routed through under (2). Two units can't share a
+ *    cell, so the unit can't take that step. Instead of always abstaining
+ *    (which on open ground reads as a stall/backpedal), it first tries a
+ *    one-cell perpendicular sidestep toward the target — `sidestep()`
+ *    below. Only if neither perpendicular cell is free does it abstain,
+ *    so corridor queueing still emerges naturally in a 1-wide gap.
  *
  * 4. **LOS-gated in-range abstain.** The "I'm in attack range, let
  *    AbilityBehavior fire" abstain also checks line-of-sight. A ranged
@@ -66,8 +68,12 @@ export class MovementBehavior implements Behavior {
     const pathBlockers: GridCoord[] = [];
     const losBlockers: GridCoord[] = [];
     const otherUnitCells = new Set<string>();
+    // E5.B — every other unit's cell (incl. neutrals + the target) so the
+    // sidestep never lands on an occupied square.
+    const occupied = new Set<string>();
     for (const u of world.units) {
       if (u.id === unit.id) continue;
+      occupied.add(`${u.position.x},${u.position.y}`);
       if (u.team === 'neutral') {
         pathBlockers.push(u.position);
         if (u.blocksLineOfSight) losBlockers.push(u.position);
@@ -92,19 +98,71 @@ export class MovementBehavior implements Behavior {
     );
     if (path.length < 2) return null;
 
-    const to = path[1]!;
-    if (otherUnitCells.has(`${to.x},${to.y}`)) return null;
-
     const from = unit.position;
     const durationTicks = unit.derived.moveCooldownTicks;
+    const to = path[1]!;
 
-    return {
-      action: new MoveAction(from, to, durationTicks),
-      score: 1,
-      cooldown: durationTicks,
-      duration: durationTicks,
-    };
+    if (otherUnitCells.has(`${to.x},${to.y}`)) {
+      // E5.B — the A*-chosen next step is occupied. Try a perpendicular
+      // sidestep toward the target before giving up; abstain only if both
+      // sides are blocked (1-wide corridor → queue).
+      const side = sidestep(from, target.position, world, occupied);
+      return side === null ? null : moveProposal(from, side, durationTicks);
+    }
+
+    return moveProposal(from, to, durationTicks);
   }
+}
+
+function moveProposal(
+  from: GridCoord,
+  to: GridCoord,
+  durationTicks: number,
+): ActionProposal {
+  return {
+    action: new MoveAction(from, to, durationTicks),
+    score: 1,
+    cooldown: durationTicks,
+    duration: durationTicks,
+  };
+}
+
+/**
+ * E5.B — one-cell perpendicular sidestep toward `target`, used when the
+ * A*-chosen next step is occupied by another unit. Considers exactly the
+ * two cells perpendicular to the unit→target direction (per the E5
+ * decision point: 2 candidates, not 3 — back-step-forward is what the
+ * cost gradient already does). Keeps only in-bounds, finite-cost,
+ * unoccupied cells, and returns the one closest to the target (Chebyshev),
+ * first-candidate winning a tie for determinism. Returns null when neither
+ * is viable, so the caller abstains and corridor queueing still emerges.
+ */
+function sidestep(
+  from: GridCoord,
+  target: GridCoord,
+  world: World,
+  occupied: ReadonlySet<string>,
+): GridCoord | null {
+  const sx = Math.sign(target.x - from.x);
+  const sy = Math.sign(target.y - from.y);
+  // Rotate the toward-target direction ±90°.
+  const candidates: GridCoord[] = [
+    { x: from.x - sy, y: from.y + sx },
+    { x: from.x + sy, y: from.y - sx },
+  ];
+  let best: GridCoord | null = null;
+  let bestDist = Infinity;
+  for (const c of candidates) {
+    if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) continue;
+    if (!isFinite(world.tileGrid.costAt(c))) continue;
+    if (occupied.has(`${c.x},${c.y}`)) continue;
+    const dist = chebyshev(c, target);
+    if (dist < bestDist) {
+      best = c;
+      bestDist = dist;
+    }
+  }
+  return best;
 }
 
 /**

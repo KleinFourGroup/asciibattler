@@ -5,7 +5,7 @@ import { Unit, type Team, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { spawnHalfCover } from '../environment';
-import { deriveStats } from '../stats';
+import { deriveStats, inertDerived } from '../stats';
 import { ARCHETYPE_CONFIG } from '../archetypes';
 import type { GameEvents } from '../../core/events';
 
@@ -189,6 +189,44 @@ describe('MovementBehavior', () => {
     expect(units[0]!.position).toEqual(before[0]);
     expect(units[1]!.position).toEqual(before[1]);
   });
+
+  it('E5.B: sidesteps to a free perpendicular cell when the forward step is occupied', () => {
+    // Forced chokepoint along the bottom edge (row y=0): P must reach T at
+    // (5,0); an ally sits on the only forward cell (1,0); row 1 is walled at
+    // x=1..5 so the sole route to T runs east through the occupied (1,0)
+    // (path[1] is occupied). The free perpendicular cell (0,1) only loops
+    // back, so A* doesn't route through it — confirming this is the
+    // path[1]-occupied case. Rather than abstain, the unit takes (0,1).
+    //
+    // (In open space A* simply routes around a soft-blocked ally, so the
+    // sidestep is reserved for exactly this forced case.)
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 1, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 5, y: 0, inert: true },
+      { team: 'player', x: 1, y: 0, inert: true },
+      ...[1, 2, 3, 4, 5].map((x): SceneUnit => ({ team: 'neutral', x, y: 1, inert: true })),
+    ]);
+
+    world.tick();
+    expect(moves).toHaveLength(1);
+    expect(units[0]!.position).toEqual({ x: 0, y: 1 });
+  });
+
+  it('E5.B: abstains (queues) when the forward step is occupied and no sidestep is free', () => {
+    // Same chokepoint, but row 1 is fully walled (x=0..5) so neither
+    // perpendicular cell is free. The unit falls back to abstaining —
+    // corridor queueing, the pre-E5.B behavior, still emerges.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 1, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 5, y: 0, inert: true },
+      { team: 'player', x: 1, y: 0, inert: true },
+      ...[0, 1, 2, 3, 4, 5].map((x): SceneUnit => ({ team: 'neutral', x, y: 1, inert: true })),
+    ]);
+
+    world.tick();
+    expect(moves).toHaveLength(0);
+    expect(units[0]!.position).toEqual({ x: 0, y: 0 });
+  });
 });
 
 interface SceneUnit {
@@ -200,6 +238,13 @@ interface SceneUnit {
   /** Skip attaching MovementBehavior — for static targets and walls. */
   inert?: boolean;
 }
+
+/**
+ * E5.B — `team: 'neutral'` specs become walls (hard pathfinding blockers).
+ * Routing them through `scene()`'s shared id counter avoids the id
+ * collision that `spawnWall` (which pulls ids from World's own counter)
+ * would cause against the hand-assigned combatant ids.
+ */
 
 function scene(specs: SceneUnit[]): {
   world: World;
@@ -213,25 +258,26 @@ function scene(specs: SceneUnit[]): {
 
   let nextId = 1;
   const units = specs.map((s) => {
+    const isNeutral = s.team === 'neutral';
     // E1: build stats from the melee archetype baseline (con=20 → maxHp=50,
     // matching the pre-E1 default) with luck=0 so the AttackAction crit
     // roll never fires — keeps exact-value assertions deterministic.
     const stats: UnitStats = { ...ARCHETYPE_CONFIG.melee.baseStats, luck: 0 };
     const range = s.attackRange ?? 1;
-    let derived = deriveStats(stats, range);
+    let derived = isNeutral ? inertDerived(1) : deriveStats(stats, range);
     if (s.moveCooldownTicks !== undefined) {
       derived = { ...derived, moveCooldownTicks: s.moveCooldownTicks };
     }
     const u = new Unit({
       id: nextId++,
       team: s.team,
-      archetype: 'melee',
-      glyph: 'M',
+      archetype: isNeutral ? 'environment' : 'melee',
+      glyph: isNeutral ? '#' : 'M',
       stats,
       derived,
       position: { x: s.x, y: s.y },
     });
-    if (!s.inert) u.behaviors.push(new MovementBehavior());
+    if (!s.inert && !isNeutral) u.behaviors.push(new MovementBehavior());
     world.units.push(u);
     return u;
   });

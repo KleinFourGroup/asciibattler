@@ -22,6 +22,7 @@ import type { WorldCommand } from './Command';
 import { createAction } from './actions/registry';
 import { createBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
+import { updateTarget } from './Targeting';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
@@ -78,7 +79,7 @@ import { computeXpAwards } from './xp';
  *       from `config/abilities.json` at propose time, so the field no
  *       longer exists to serialize. v11 throws on load.
  */
-const WORLD_SCHEMA_VERSION = 12;
+const WORLD_SCHEMA_VERSION = 13;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -111,6 +112,10 @@ export interface UnitSnapshot {
   position: GridCoord;
   currentHp: number;
   blocksLineOfSight: boolean;
+  /** E5 — sticky target id (null = uncommitted). */
+  targetId: number | null;
+  /** E5 — consecutive out-of-LOS ticks for the ranged re-target timeout. */
+  outOfLosTicks: number;
   behaviors: string[];
   /**
    * E2 — registry ids for the unit's abilities (e.g. `['melee_strike']`,
@@ -424,6 +429,13 @@ export class World {
           continue;
         }
       }
+
+      // 3.5. E5 — refresh the sticky target ONCE per free unit, before
+      // behaviors poll. Both MovementBehavior and the strike abilities
+      // read `unit.targetId` via `currentTarget`; updating here (not
+      // inside each behavior) keeps the re-target decision + outOfLosTicks
+      // counter advancing exactly once per tick.
+      updateTarget(unit, this);
 
       // 4. Selector.
       let best: ActionProposal | null = null;
@@ -869,6 +881,8 @@ export class World {
         rosterIndex: us.rosterIndex,
       });
       unit.currentHp = us.currentHp;
+      unit.targetId = us.targetId;
+      unit.outOfLosTicks = us.outOfLosTicks;
       for (const [actionId, cd] of us.actionCooldowns) {
         unit.actionCooldowns.set(actionId, cd);
       }
@@ -932,6 +946,8 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
     position: unit.position,
     currentHp: unit.currentHp,
     blocksLineOfSight: unit.blocksLineOfSight,
+    targetId: unit.targetId,
+    outOfLosTicks: unit.outOfLosTicks,
     behaviors: unit.behaviors.map((b) => b.kind),
     abilities: unit.abilities.map((a) => a.id),
     actionCooldowns: Array.from(unit.actionCooldowns.entries()),

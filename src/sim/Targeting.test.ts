@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { findTarget } from './Targeting';
+import { findTarget, updateTarget, currentTarget } from './Targeting';
 import { World } from './World';
-import { Unit, type Team, type UnitStats } from './Unit';
+import { Unit, type Team, type UnitArchetype, type UnitStats } from './Unit';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
+import { SIM } from '../config/sim';
+import { spawnWall } from './environment';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 
@@ -84,6 +86,107 @@ describe('Targeting / findTarget', () => {
   });
 });
 
+describe('Targeting / target stickiness (E5)', () => {
+  it('currentTarget falls back to the nearest enemy when uncommitted (targetId null)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0 },
+      { id: 2, team: 'enemy', x: 2, y: 0 },
+      { id: 3, team: 'enemy', x: 6, y: 0 },
+    ]);
+    expect(units[0]!.targetId).toBeNull();
+    expect(currentTarget(units[0]!, world)?.id).toBe(2);
+  });
+
+  it('currentTarget honors a committed target even when it is not the nearest', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0 },
+      { id: 2, team: 'enemy', x: 2, y: 0 }, // nearest
+      { id: 3, team: 'enemy', x: 6, y: 0 }, // committed
+    ]);
+    units[0]!.targetId = 3;
+    expect(currentTarget(units[0]!, world)?.id).toBe(3);
+  });
+
+  it('currentTarget falls back to nearest when the committed target is dead', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0 },
+      { id: 2, team: 'enemy', x: 2, y: 0 },
+      { id: 3, team: 'enemy', x: 6, y: 0, currentHp: 0 }, // committed but dead
+    ]);
+    units[0]!.targetId = 3;
+    expect(currentTarget(units[0]!, world)?.id).toBe(2);
+  });
+
+  it('(a) updateTarget commits to the nearest enemy, then re-picks when it dies', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0 },
+      { id: 2, team: 'enemy', x: 2, y: 0 },
+      { id: 3, team: 'enemy', x: 5, y: 0 },
+    ]);
+    updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(2);
+
+    units[1]!.currentHp = 0; // kill the committed target
+    updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(3);
+  });
+
+  it('(b) stays locked when a rival is only slightly closer (< ratio)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0 },
+      { id: 2, team: 'enemy', x: 6, y: 0 }, // committed (chebyshev 6)
+      { id: 3, team: 'enemy', x: 5, y: 0 }, // nearer, but only 6/5 = 1.2x < 1.5x
+    ]);
+    units[0]!.targetId = 2;
+    updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(2);
+  });
+
+  it('(b) switches when a rival is at least ratio-times closer', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0 },
+      { id: 2, team: 'enemy', x: 9, y: 0 }, // committed (chebyshev 9)
+      { id: 3, team: 'enemy', x: 5, y: 0 }, // 9/5 = 1.8x >= 1.5x → switch
+    ]);
+    units[0]!.targetId = 2;
+    updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(3);
+  });
+
+  it('(c) ranged unit drops a target hidden behind a wall after the LOS timeout', () => {
+    const { world, units } = scene([
+      // chebyshev 4, behind a wall — the slightly-nearer rival (3) is NOT
+      // 1.5x closer (3*1.5=4.5 > 4) so rule (b) never fires; only the LOS
+      // timeout breaks the lock.
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged' },
+      { id: 2, team: 'enemy', x: 4, y: 0 }, // committed, will be occluded
+      { id: 3, team: 'enemy', x: 3, y: 3 }, // visible alternative, chebyshev 3
+    ]);
+    spawnWall(world, { x: 2, y: 0 }); // occludes the line to (4,0)
+    units[0]!.targetId = 2;
+
+    // Below the timeout: stays locked on the hidden target.
+    for (let i = 0; i < SIM.rangedRetargetLosTicks - 1; i++) updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(2);
+
+    // The tick that hits the timeout re-picks the nearest (visible) enemy.
+    updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(3);
+  });
+
+  it('(c) is melee-exempt: a melee unit keeps a hidden, non-much-closer target', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0 }, // melee (default)
+      { id: 2, team: 'enemy', x: 4, y: 0 },
+      { id: 3, team: 'enemy', x: 3, y: 3 },
+    ]);
+    spawnWall(world, { x: 2, y: 0 });
+    units[0]!.targetId = 2;
+    for (let i = 0; i < SIM.rangedRetargetLosTicks + 2; i++) updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(2);
+  });
+});
+
 /**
  * Build a World seeded with hand-placed units. We bypass spawnUnit because
  * Targeting tests want precise ids and HPs without rolling templates.
@@ -94,6 +197,8 @@ interface UnitSpec {
   x: number;
   y: number;
   currentHp?: number;
+  /** Defaults to melee for combatants, environment for neutrals. */
+  archetype?: UnitArchetype;
 }
 
 function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
@@ -106,7 +211,7 @@ function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
     const u = new Unit({
       id: s.id,
       team: s.team,
-      archetype: s.team === 'neutral' ? 'environment' : 'melee',
+      archetype: s.archetype ?? (s.team === 'neutral' ? 'environment' : 'melee'),
       glyph: 'M',
       stats,
       derived,

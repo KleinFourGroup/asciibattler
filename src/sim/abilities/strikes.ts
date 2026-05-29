@@ -3,7 +3,7 @@ import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
 import type { ActionProposal } from '../Action';
 import { AttackAction } from '../actions/AttackAction';
-import { findTarget } from '../Targeting';
+import { currentTarget, collectLosBlockers } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
 import { basicAttackDamage, attackCooldownTicksFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
@@ -35,7 +35,7 @@ function proposeBasicStrike(
   world: World,
   abilityId: string,
 ): ActionProposal | null {
-  const target = findTarget(unit, world);
+  const target = currentTarget(unit, world);
   if (target === null) return null;
   // E5: gate on THIS ability's own range (config/abilities.json), not
   // the unit's max engagement range — a multi-ability unit's short-range
@@ -90,14 +90,6 @@ export class RangedShot implements Ability {
   propose(unit: Unit, world: World): ActionProposal | null {
     return proposeBasicStrike(unit, world, this.id);
   }
-}
-
-function collectLosBlockers(world: World): GridCoord[] {
-  const blockers: GridCoord[] = [];
-  for (const u of world.units) {
-    if (u.team === 'neutral' && u.blocksLineOfSight) blockers.push(u.position);
-  }
-  return blockers;
 }
 
 /**

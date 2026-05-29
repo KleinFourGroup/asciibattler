@@ -217,6 +217,23 @@ export class Unit {
    * means the unit is free to choose its next action.
    */
   activeAction: ActiveAction | null = null;
+  /**
+   * E5 — target stickiness. The id of the enemy this unit is currently
+   * committed to. `updateTarget` (Targeting.ts, run once per free unit in
+   * the selector) sets it; MovementBehavior + the strike abilities read
+   * it via `currentTarget` instead of re-running nearest-enemy every
+   * tick, which was the source of the corridor target-thrash combat-
+   * feedback flagged. `null` = no commitment yet (resolves to nearest on
+   * the next update). Snapshotted (WorldSnapshot v13).
+   */
+  targetId: number | null = null;
+  /**
+   * E5 — consecutive ticks the current target has been out of line of
+   * sight. Drives the ranged re-target timeout (`updateTarget`); reset to
+   * 0 whenever LOS holds or the target changes. Only ranged units read
+   * it, but it's snapshotted uniformly for replay determinism.
+   */
+  outOfLosTicks = 0;
 
   constructor(init: UnitInit) {
     this.id = init.id;

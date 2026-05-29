@@ -133,7 +133,7 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.units.filter((u) => u.team === 'player')).toHaveLength(1);
   });
 
-  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids through WorldSnapshot v12', () => {
+  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v13', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
@@ -141,8 +141,14 @@ describe('D5.C spawn overflow queue', () => {
     const templates = Array.from({ length: 10 }, () => rollUnit('melee', rng));
     spawnTeam(world, 'player', templates, region, rng);
 
+    // E5: pin sticky-target round-trip with non-default values.
+    world.units[0]!.targetId = world.units[1]!.id;
+    world.units[0]!.outOfLosTicks = 3;
+
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(12);
+    expect(wire.schemaVersion).toBe(13);
+    expect(wire.units[0].targetId).toBe(world.units[1]!.id);
+    expect(wire.units[0].outOfLosTicks).toBe(3);
     expect(wire.damageDealt).toEqual([]);
     expect(wire.playerRosterIds).toEqual([]);
     // E4: every queued template carries an xp (0 on a fresh roll).
@@ -165,6 +171,8 @@ describe('D5.C spawn overflow queue', () => {
 
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.queueLength('player')).toBe(2);
+    expect(restored.units[0]!.targetId).toBe(world.units[1]!.id);
+    expect(restored.units[0]!.outOfLosTicks).toBe(3);
     // Each restored unit gets one MeleeStrike ability back.
     for (const u of restored.units) {
       expect(u.abilities.map((a) => a.id)).toEqual(['melee_strike']);
@@ -177,11 +185,11 @@ describe('D5.C spawn overflow queue', () => {
     expect(restored.queueLength('player')).toBe(1);
   });
 
-  it('rejects v11 snapshots (E5 pre-work attackCooldownTicks removal is loud)', () => {
+  it('rejects v12 snapshots (E5 target-stickiness fields are new; old format dies loudly)', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    wire.schemaVersion = 11;
+    wire.schemaVersion = 12;
     expect(() => World.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,
     );

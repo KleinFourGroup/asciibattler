@@ -3,13 +3,13 @@ import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
 import type { ActionProposal } from '../Action';
 import { MoveAction } from '../actions/MoveAction';
-import { findTarget } from '../Targeting';
+import { currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
 import { hasLineOfSight } from '../LineOfSight';
 
 /**
- * Proposes a one-cell step toward the nearest enemy when out of attack
- * range. Abstains (returns null) when no enemy exists, when the unit is
+ * Proposes a one-cell step toward the unit's current (E5-sticky) target
+ * when out of attack range. Abstains (returns null) when no enemy exists, when the unit is
  * in range AND has line-of-sight, when no path to target exists, or when
  * the next step is currently occupied by another unit. Score 1 (low);
  * AbilityBehavior scores 10 (via each ability) so the selector prefers
@@ -53,7 +53,7 @@ export class MovementBehavior implements Behavior {
   readonly kind = MovementBehavior.kind;
 
   proposeAction(unit: Unit, world: World): ActionProposal | null {
-    const target = findTarget(unit, world);
+    const target = currentTarget(unit, world);
     if (target === null) return null;
 
     // Split blockers by kind:

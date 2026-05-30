@@ -22,6 +22,7 @@ import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
 import { MeleeStrike } from '../../src/sim/abilities/strikes';
 import { HealAlly } from '../../src/sim/abilities/heal';
 import { MagicBolt } from '../../src/sim/abilities/magic';
+import { CatapultShot } from '../../src/sim/abilities/catapult';
 import { rollUnit } from '../../src/sim/archetypes';
 import { applyTerrain } from '../../src/sim/battleSetup';
 import { EventBus } from '../../src/core/EventBus';
@@ -267,6 +268,49 @@ describe('A2 round-trip: World', () => {
     // The enemy is inert (no behaviors → never moves), so the captured
     // center stays dead-on it and the detonation deals damage.
     const finishTick = restoredMage.activeAction!.finishTick;
+    while (restored.currentTick < finishTick && !restored.ended) restored.tick();
+    expect(restored.findUnit(enemy.id)!.currentHp).toBeLessThan(enemyHpAtSnapshot);
+  });
+
+  it('E7.D: round-trips a catapult MID-WIND-UP and still lands the shot post-restore', () => {
+    // The catapult is the second multi-tick combat action and the first
+    // HOMING one — its in-flight wind-up holds a live target REFERENCE
+    // (serialized as targetId, re-resolved via world.findUnit on load).
+    // Snapshot WHILE winding up, restore, and prove the restored world still
+    // lands the shot on the same locked enemy.
+    const bus = new EventBus<GameEvents>();
+    const world = new World(bus, new RNG(1357));
+    const cat = world.spawnUnit(rollUnit('catapult', new RNG(1)), 'player', { x: 5, y: 5 });
+    cat.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+    cat.abilities.push(new CatapultShot());
+    const enemy = world.spawnUnit(rollUnit('melee', new RNG(2)), 'enemy', { x: 5, y: 9 });
+
+    // Advance until the catapult is mid-wind-up (activeAction set, shot not
+    // landed yet — currentTick strictly before finishTick).
+    let midCharge = false;
+    for (let i = 0; i < 200 && !midCharge; i++) {
+      world.tick();
+      const a = world.findUnit(cat.id)?.activeAction;
+      if (a?.action.id === 'catapult_shot' && world.currentTick < a.finishTick - 1) midCharge = true;
+    }
+    expect(midCharge, 'catapult should be mid-wind-up within the window').toBe(true);
+    const enemyHpAtSnapshot = world.findUnit(enemy.id)!.currentHp;
+
+    const live = world.findUnit(cat.id)!;
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    const restoredCat = restored.units.find((u) => u.id === cat.id)!;
+
+    expect(restoredCat.behaviors.map((b) => b.kind)).toEqual(['movement', 'ability']);
+    expect(restoredCat.abilities.map((a) => a.id)).toEqual(['catapult_shot']);
+    expect(restoredCat.activeAction?.action.id).toBe('catapult_shot');
+    expect(restoredCat.activeAction?.startTick).toBe(live.activeAction?.startTick);
+    expect(restoredCat.activeAction?.finishTick).toBe(live.activeAction?.finishTick);
+    expect(restoredCat.activeAction?.effectTicks).toEqual(live.activeAction?.effectTicks);
+
+    // Tick the restored world past the wind-up: the shot must still land on
+    // the locked enemy (inert → never moves, so the homing reference holds).
+    const finishTick = restoredCat.activeAction!.finishTick;
     while (restored.currentTick < finishTick && !restored.ended) restored.tick();
     expect(restored.findUnit(enemy.id)!.currentHp).toBeLessThan(enemyHpAtSnapshot);
   });

@@ -161,6 +161,39 @@ describe('MovementBehavior', () => {
     expect(units[0]!.position).toEqual({ x: 0, y: 0 });
   });
 
+  it('E7.D: a unit whose ability ignores LOS abstains in-range even with a wall on the line', () => {
+    // The catapult lobs an arcing shot over walls. In chebyshev range of the
+    // target with a wall breaking LOS, a ranged/mage unit would keep pathing
+    // forward to clear the wall (LOS-gated abstain fails) — but the catapult
+    // has nothing to path around, so MovementBehavior abstains and lets the
+    // shot fire.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 6, moveCooldownTicks: 1, ignoresLos: true },
+      { team: 'enemy', x: 4, y: 0, inert: true },
+      { team: 'neutral', x: 2, y: 0, inert: true }, // wall on the LOS line
+    ]);
+
+    world.tick();
+    expect(moves).toHaveLength(0);
+    expect(units[0]!.position).toEqual({ x: 0, y: 0 });
+  });
+
+  it('E7.D: a normal LOS-gated unit in the SAME spot keeps pathing to clear the wall', () => {
+    // Contrast to the catapult case above: without an LOS-ignoring ability,
+    // the in-range abstain requires line of sight, so the wall makes the unit
+    // step forward for a clear shot. This pins that the abstain is genuinely
+    // CONDITIONAL on the ability flag, not unconditionally dropped.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 6, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 4, y: 0, inert: true },
+      { team: 'neutral', x: 2, y: 0, inert: true }, // same wall on the LOS line
+    ]);
+
+    world.tick();
+    expect(moves).toHaveLength(1);
+    expect(units[0]!.position).not.toEqual({ x: 0, y: 0 });
+  });
+
   it('two opposing units converge until adjacent, then stop', () => {
     const { world, units } = scene([
       { team: 'player', x: 0, y: 5, attackRange: 1, moveCooldownTicks: 1 },
@@ -237,6 +270,12 @@ interface SceneUnit {
   moveCooldownTicks?: number;
   /** Skip attaching MovementBehavior — for static targets and walls. */
   inert?: boolean;
+  /**
+   * E7.D — give the unit an ability that ignores line of sight (a catapult
+   * stand-in). Only the `ignoresLineOfSight` flag matters to MovementBehavior;
+   * the stub never proposes, so the test isolates the movement abstain.
+   */
+  ignoresLos?: boolean;
 }
 
 /**
@@ -278,6 +317,9 @@ function scene(specs: SceneUnit[]): {
       position: { x: s.x, y: s.y },
     });
     if (!s.inert && !isNeutral) u.behaviors.push(new MovementBehavior());
+    if (s.ignoresLos) {
+      u.abilities.push({ id: 'stub_los_ignorer', ignoresLineOfSight: true, propose: () => null });
+    }
     world.units.push(u);
     return u;
   });

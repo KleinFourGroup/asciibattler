@@ -832,8 +832,10 @@ friendly-fire).
   definition in `Unit.ts` (re-exported from `archetypes.ts`); the archetype→
   damage-stat mapping consolidated into `damageStatFor` (sim + HUD +
   RecruitScreen share it). Dev-only `?roster=` URL override (Game.ts) fields
-  new archetypes before F1 recruitment integration. 410 tests (+10); fuzz 7/7;
-  typecheck clean.
+  new archetypes before F1 recruitment integration, plus a FontAtlas glyph
+  fix + a headless glyph-coverage guard ([src/render/FontAtlas.test.ts](src/render/FontAtlas.test.ts))
+  after the `r` glyph shipped missing. 414 tests (+14); fuzz 7/7; typecheck
+  + lint clean.
 
 The original C2 step, now mostly config + a few new Ability classes.
 Phase E has done all the heavy lifting: stats vocabulary (E1), ability

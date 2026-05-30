@@ -25,6 +25,7 @@ export type SoundKey =
   | 'death'
   | 'healtick'
   | 'lose'
+  | 'magicboom'
   | 'melee'
   | 'recruit'
   | 'shoot'
@@ -36,6 +37,8 @@ const SOURCES: Record<SoundKey, string> = {
   death: 'audio/death.wav',
   healtick: 'audio/healtick.wav',
   lose: 'audio/lose.wav',
+  // E7.C — the mage bolt's detonation. One per cast (off `magic:detonated`).
+  magicboom: 'audio/magicboom.wav',
   melee: 'audio/melee.wav',
   recruit: 'audio/recruit.wav',
   shoot: 'audio/shoot.wav',
@@ -56,6 +59,9 @@ const VOLUMES: Record<SoundKey, number> = {
   death: 1.0,
   healtick: 0.55,
   lose: 0.7,
+  // E7.C — the mage's signature impact. Slightly under the melee/shoot 1.0 so
+  // a two-mage barrage (~one cast each per 2s) doesn't dominate the mix.
+  magicboom: 0.9,
   melee: 1.0,
   recruit: 0.8,
   shoot: 1.0,
@@ -84,6 +90,9 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
   death: 0.08,
   healtick: 0.08,
   lose: 0,
+  // E7.C — subtle jitter so repeated booms don't sound identical, but kept
+  // low (±8%): too much tempo shift makes an explosion read as a broken sample.
+  magicboom: 0.08,
   melee: 0.1,
   recruit: 0,
   shoot: 0.1,

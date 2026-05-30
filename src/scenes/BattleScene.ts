@@ -72,10 +72,9 @@ export class BattleScene implements Scene {
         ctx.audio.play(attacker.derived.attackRange <= 1 ? 'melee' : 'shoot');
       }),
       // E7.C — one sound per mage bolt cast (fires even on a whiff), matching
-      // the single projectile + explosion visual. Reuses the `shoot` sample
-      // for now; a dedicated boom sample can drop into config/audio later.
+      // the single projectile + explosion visual.
       ctx.bus.on('magic:detonated', () => {
-        ctx.audio.play('shoot');
+        ctx.audio.play('magicboom');
       }),
       ctx.bus.on('unit:died', ({ team }) => {
         if (team === 'neutral') return;

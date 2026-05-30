@@ -17,8 +17,10 @@ import { describe, it, expect } from 'vitest';
 import { World } from '../../src/sim/World';
 import { Unit, type Team } from '../../src/sim/Unit';
 import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
+import { SupportMovementBehavior } from '../../src/sim/behaviors/SupportMovementBehavior';
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
 import { MeleeStrike } from '../../src/sim/abilities/strikes';
+import { HealAlly } from '../../src/sim/abilities/heal';
 import { rollUnit } from '../../src/sim/archetypes';
 import { applyTerrain } from '../../src/sim/battleSetup';
 import { EventBus } from '../../src/core/EventBus';
@@ -187,6 +189,40 @@ describe('A2 round-trip: World', () => {
       .map((u) => ({ ...u.position }));
     expect(wallCoordsAfter).toEqual(wallCoordsBefore);
     expect(restored.tileGrid.toJSON()).toEqual(tileSnapBefore);
+  });
+
+  it('E7.B: round-trips a healer mid-heal (support_movement behavior + heal action)', () => {
+    // Mirror freshBattle's manual behavior attach (bare spawnUnit doesn't
+    // wire behaviors — the team-spawn path does; that path is exercised by
+    // healer-battle.test.ts). Healer + a wounded ally in heal range so the
+    // heal fires on the first free tick; a far inert enemy keeps the battle
+    // from ending.
+    const bus = new EventBus<GameEvents>();
+    const world = new World(bus, new RNG(777));
+    const healer = world.spawnUnit(rollUnit('healer', new RNG(1)), 'player', { x: 5, y: 5 });
+    healer.behaviors.push(new SupportMovementBehavior(), new AbilityBehavior());
+    healer.abilities.push(new HealAlly());
+    const ally = world.spawnUnit(rollUnit('melee', new RNG(2)), 'player', { x: 5, y: 6 });
+    ally.currentHp = 1; // wounded, stays below maxHp after one heal
+    world.spawnUnit(rollUnit('melee', new RNG(3)), 'enemy', { x: 11, y: 11 });
+
+    let cast = false;
+    for (let i = 0; i < 200 && !cast; i++) {
+      world.tick();
+      if (world.findUnit(healer.id)?.activeAction?.action.id === 'heal') cast = true;
+    }
+    expect(cast, 'healer should cast a heal within the window').toBe(true);
+
+    const live = world.findUnit(healer.id)!;
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    const restoredHealer = restored.units.find((u) => u.id === healer.id)!;
+
+    expect(restoredHealer.behaviors.map((b) => b.kind)).toEqual(['support_movement', 'ability']);
+    expect(restoredHealer.abilities.map((a) => a.id)).toEqual(['heal_ally']);
+    expect(restoredHealer.activeAction?.action.id).toBe('heal');
+    expect(restoredHealer.activeAction?.startTick).toBe(live.activeAction?.startTick);
+    expect(restoredHealer.activeAction?.finishTick).toBe(live.activeAction?.finishTick);
   });
 });
 

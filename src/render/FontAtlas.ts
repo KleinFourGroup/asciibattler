@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLYPHS } from './glyphs';
 
 /**
  * Generates a monospace glyph atlas at startup. Each glyph occupies a fixed-
@@ -26,21 +27,10 @@ const ROWS = 4;
 const ATLAS_W = COLS * CELL_PX; // 512
 const ATLAS_H = ROWS * CELL_PX; // 256
 
-/**
- * The MVP glyph set. Order is stable — adding a glyph appends to the end so
- * existing UV lookups stay valid. (`M` and `a` are the unit glyphs; `@` is
- * reserved for the post-MVP player-protagonist concept; digits + punctuation
- * are for the HUD.)
- */
-const GLYPHS = [
-  'M', 'a', '@',
-  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  '.', ':', '/', '-', '+', '%', '!', '?',
-  '#', // C1a: wall obstacle (neutral-team environment entity).
-  '╥', // D6: half-cover (LOS-transparent neutral obstacle). U+2565.
-  '*', // E6.B: ranged projectile tracer glyph.
-  'r', // E7.A: rogue unit glyph.
-] as const;
+// The registered glyph set moved to ./glyphs (a THREE-free module) so the
+// headless suite can import it without pulling in the renderer — see
+// FontAtlas.test.ts for the archetype-glyph-coverage guard. Append new
+// glyphs there (gotcha #33, append-only).
 
 /**
  * UV rectangle for one glyph in the atlas, in **GL texture space** (not

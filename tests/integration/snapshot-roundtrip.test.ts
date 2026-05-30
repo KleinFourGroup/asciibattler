@@ -21,6 +21,7 @@ import { SupportMovementBehavior } from '../../src/sim/behaviors/SupportMovement
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
 import { MeleeStrike } from '../../src/sim/abilities/strikes';
 import { HealAlly } from '../../src/sim/abilities/heal';
+import { MagicBolt } from '../../src/sim/abilities/magic';
 import { rollUnit } from '../../src/sim/archetypes';
 import { applyTerrain } from '../../src/sim/battleSetup';
 import { EventBus } from '../../src/core/EventBus';
@@ -223,6 +224,51 @@ describe('A2 round-trip: World', () => {
     expect(restoredHealer.activeAction?.action.id).toBe('heal');
     expect(restoredHealer.activeAction?.startTick).toBe(live.activeAction?.startTick);
     expect(restoredHealer.activeAction?.finishTick).toBe(live.activeAction?.finishTick);
+  });
+
+  it('E7.C: round-trips a mage MID-CHARGE and still detonates post-restore', () => {
+    // The mage is the first multi-tick combat action, so the in-flight
+    // charge (activeAction with effectTicks at the end) is the load-bearing
+    // round-trip. Mage + enemy in bolt range so the charge starts on the
+    // first free tick; snapshot WHILE charging, restore, and prove the
+    // restored world still lands the bolt (same event-trace contract as the
+    // healer mid-heal case, but the effect lands later than start).
+    const bus = new EventBus<GameEvents>();
+    const world = new World(bus, new RNG(2468));
+    const mage = world.spawnUnit(rollUnit('mage', new RNG(1)), 'player', { x: 5, y: 5 });
+    mage.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+    mage.abilities.push(new MagicBolt());
+    const enemy = world.spawnUnit(rollUnit('melee', new RNG(2)), 'enemy', { x: 5, y: 7 });
+
+    // Advance until the mage is mid-charge (activeAction set, but the bolt
+    // hasn't landed yet — currentTick strictly before finishTick).
+    let midCharge = false;
+    for (let i = 0; i < 200 && !midCharge; i++) {
+      world.tick();
+      const a = world.findUnit(mage.id)?.activeAction;
+      if (a?.action.id === 'magic_bolt' && world.currentTick < a.finishTick - 1) midCharge = true;
+    }
+    expect(midCharge, 'mage should be mid-charge within the window').toBe(true);
+    const enemyHpAtSnapshot = world.findUnit(enemy.id)!.currentHp;
+
+    const live = world.findUnit(mage.id)!;
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    const restoredMage = restored.units.find((u) => u.id === mage.id)!;
+
+    expect(restoredMage.behaviors.map((b) => b.kind)).toEqual(['movement', 'ability']);
+    expect(restoredMage.abilities.map((a) => a.id)).toEqual(['magic_bolt']);
+    expect(restoredMage.activeAction?.action.id).toBe('magic_bolt');
+    expect(restoredMage.activeAction?.startTick).toBe(live.activeAction?.startTick);
+    expect(restoredMage.activeAction?.finishTick).toBe(live.activeAction?.finishTick);
+    expect(restoredMage.activeAction?.effectTicks).toEqual(live.activeAction?.effectTicks);
+
+    // Tick the restored world past the charge: the bolt must still land.
+    // The enemy is inert (no behaviors → never moves), so the captured
+    // center stays dead-on it and the detonation deals damage.
+    const finishTick = restoredMage.activeAction!.finishTick;
+    while (restored.currentTick < finishTick && !restored.ended) restored.tick();
+    expect(restored.findUnit(enemy.id)!.currentHp).toBeLessThan(enemyHpAtSnapshot);
   });
 });
 

@@ -814,13 +814,14 @@ flash-only version before lock-in.
 
 ### E7 — New archetypes: mage, rogue, healer
 
-**Status:** in progress — shipping one archetype per commit (E7.A→D) with a
-playtest pause between each. Scope refined with the user: mage AoE is radius-1
-(3×3), center-full + reduced-ring, with a toggleable `affectsFriendly` flag
-(default off) and neutral interaction deferred; a new **catapult** archetype
-joins the three (slow — first consumer of the per-archetype move-CD override —
-long range 6, ignores LOS, arcing shot, single-target hard hit, no
-friendly-fire).
+**Status:** ✅ complete — all four archetypes shipped one per commit
+(rogue → healer → mage → catapult) with a playtest pause between each. Scope
+refined with the user: mage AoE is radius-1 (3×3), center-full + reduced-ring,
+with a toggleable `affectsFriendly` flag (default off) and neutral interaction
+deferred; the **catapult** is slow (first consumer of the per-archetype
+move-CD override), long range 6, ignores LOS (arcing shot), single-target hard
+hit, no friendly-fire. All four are dev-only via `?roster=` until F1 folds them
+into the recruit pool.
 
 - **E7.A — Rogue ✅ landed.** New `rogue` archetype (glyph `r`; fragile, high
   speed + luck) with `gambit_strike`: a melee strike that also takes a free
@@ -850,6 +851,36 @@ friendly-fire).
   movement, self-heal allowed, no-LOS heal. Dev-only `?roster=healer,…`;
   pools unchanged so determinism + fuzz hold; no snapshot bump. 440 tests
   (+26); fuzz 7/7; typecheck + lint clean. Live heal/kite feel = playtest.
+
+- **E7.C — Mage ✅ landed.** New `mage` archetype (glyph `m`; high `magic`,
+  fragile) with `magic_bolt`: the game's FIRST multi-tick combat action (and
+  first consumer of A1's `effectTicks` / B3's dormant action-progress bar) —
+  a charged, **ground-targeted** 3×3 blast (center full `magic`, ring
+  `× ringMultiplier`, one crit roll for the whole blast). New
+  `MagicBoltAction` detonates in `applyEffect`; can whiff if the cluster
+  scatters during the ~2s charge. Hits enemies only (no friendly fire),
+  spares neutral walls/half-cover. AoE radius + ring tunable via the new
+  optional `aoe` block in abilities.json. VFX follow-up: drove the bolt's one
+  projectile + explosion off a new `magic:detonated` event instead of the
+  per-victim `unit:attacked` stream (which read/sounded like multishot).
+  Dev-only `?roster=mage,…`; pools unchanged; no snapshot bump. 463 tests
+  (+23); fuzz 7/7. Live AoE feel + whiff-rate = playtest.
+
+- **E7.D — Catapult ✅ landed.** New `catapult` archetype (glyph `c`; high
+  `ranged`, slow) — the FIRST consumer of the per-archetype
+  `baseMoveCooldownSeconds` override (2.5s; ~3× slower than melee). Its
+  `catapult_shot` is the game's second multi-tick action and first **homing**
+  one: a wind-up that LOCKS the target (user call — not the mage's
+  ground-target) and lands a single heavy hit on it at impact via the new
+  `CatapultShotAction`; **fizzles silently** if the target died mid-charge.
+  **Ignores LOS** (arcing shot — propose gates on range only). Damage scales
+  on `ranged` (user call — a heavy ranged unit). Generalized the LOS-ignoring
+  intent into an `Ability.ignoresLineOfSight?` flag that `MovementBehavior`'s
+  in-range abstain reads (holds + fires over walls instead of creeping for
+  LOS). Single-target → reuses E6.B's ranged tracer + `shoot` cue for free (no
+  multishot, so no dedicated detonation event). Dev-only `?roster=catapult,…`;
+  pools unchanged; no snapshot bump. 486 tests (+23); fuzz 7/7; typecheck +
+  lint clean. Live wind-up/whiff/balance feel = playtest.
 
 The original C2 step, now mostly config + a few new Ability classes.
 Phase E has done all the heavy lifting: stats vocabulary (E1), ability

@@ -53,6 +53,22 @@ apply:
   thresholds, refactor scope, API shape, naming decisions). Don't ship
   on "looks great!" when there are open questions — the retrospective
   flagged this as something to be more deliberate about.
+- **Claim only what a tool result proves.** "Verified / works / done /
+  green" must point at concrete output you actually read. An errored or
+  empty tool result is "could not verify" — never fill the gap with
+  plausible-sounding specifics. (E7.A produced *two* fabricated
+  "browser-verified" rogue reports — "held 14 HP", "tick 71", "live
+  5v5" — from `preview_*` calls that had all errored.) Note `window.__game`
+  is the top-level `Game`, not the battle world: `__game.world` returns
+  `"none"`, so it can't confirm live unit state — use a headless test for
+  that.
+- **Native Read/Grep/Glob for file inspection; Bash only for real
+  commands** (`npm`, `git`, `node`). Reading files via shell
+  `sed`/`grep`/`cat`/`head`/`tail` triggers permission prompts (friction
+  for the user) and, when over-batched alongside edits, causes
+  out-of-order results and silently no-op'd edits. Batch only genuinely
+  independent calls; never read-and-edit the same file in one message,
+  and confirm an edit landed before stacking the next on it.
 - **Browser-verify visual work at native resolution.** The Preview MCP
   screenshots are unreliable for sub-pixel detail (JPEG compression
   smears 1–2px features). If a screenshot contradicts intuition, sample
@@ -142,6 +158,14 @@ npm run typecheck       # tsc --noEmit clean
 # only if changes touch sim/run/core behavior:
 npm run fuzz:smoke      # 7 passed
 ```
+
+Run this **before** `git commit`, not after — and first confirm your
+edits actually landed (`Edit` can silently no-op on a bad anchor or a
+leading-space mismatch, and a flaky harness may report "updated
+successfully" for a write that never persisted). E7.A committed a
+broken build (`TS2304: Cannot find name 'damageStatFor'`) because an
+import edit no-op'd and the commit happened before re-checking. Green
+tree + landed edits, then commit.
 
 If `typecheck` fails on a file you didn't touch, that's a pre-existing
 issue — flag it as a side task rather than bundling the fix into the

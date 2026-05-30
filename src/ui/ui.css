@@ -134,7 +134,7 @@ body {
   position: absolute;
   /* Center on the anchor and sit just above the unit body; the keyframe
      takes over the transform for the rise. */
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;

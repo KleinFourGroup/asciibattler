@@ -844,8 +844,8 @@ friendly-fire).
   reuses the `unit:healed` event → E6.C cyan `+N` hitsplat). New
   `SupportMovementBehavior` replaces the enemy-charging `MovementBehavior` for
   healers: idle-when-healable → panic-retreat (score 5) from an enemy within
-  `SIM.healerPanicRangeCells` → approach a wounded ally → follow the nearest
-  ally to stay in support range. Movement is now archetype-aware via a shared
+  `SIM.healerPanicRangeCells` → approach a wounded ally → trail the centroid
+  of living allies (gap `SIM.healerFollowGapCells`) to stay mid-formation. Movement is now archetype-aware via a shared
   `createMovementBehavior` (both spawn paths). Decisions: active-support
   movement, self-heal allowed, no-LOS heal. Dev-only `?roster=healer,…`;
   pools unchanged so determinism + fuzz hold; no snapshot bump. 440 tests

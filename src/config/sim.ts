@@ -29,6 +29,12 @@
  *     timing — passed through verbatim like `occupiedCellPenalty`, not
  *     `secondsToTicks`-converted. Higher → flightier healer; 0 disables
  *     the retreat (healer only ever heals/follows).
+ *   healerFollowGapCells — E7.B: when nothing is healable and no enemy is
+ *     near, the healer trails the CENTROID of its living allies, stepping
+ *     whenever it's more than this many cells (Chebyshev) from that point.
+ *     The deadzone that turns the old static-then-lurch follow into a smooth
+ *     trail: small (1) → hugs the pack centre continuously; larger → hangs
+ *     back loosely. A distance, not a timing.
  */
 
 import { z } from 'zod';
@@ -40,6 +46,7 @@ const SimSchema = z.object({
   rangedRetargetLosSeconds: z.number().positive(),
   occupiedCellPenalty: z.number().nonnegative(),
   healerPanicRangeCells: z.number().int().nonnegative(),
+  healerFollowGapCells: z.number().int().nonnegative(),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -49,4 +56,5 @@ export const SIM = {
   rangedRetargetLosTicks: Math.max(1, secondsToTicks(parsed.rangedRetargetLosSeconds)),
   occupiedCellPenalty: parsed.occupiedCellPenalty,
   healerPanicRangeCells: parsed.healerPanicRangeCells,
+  healerFollowGapCells: parsed.healerFollowGapCells,
 };

@@ -19,6 +19,7 @@ import type { GameEvents } from '../../core/events';
 
 const HEAL_RANGE = 3;
 const PANIC = SIM.healerPanicRangeCells;
+const FOLLOW = SIM.healerFollowGapCells;
 
 const HEALER_STATS: UnitStats = {
   constitution: 20, strength: 0, ranged: 0, magic: 8, luck: 0, speed: 6, endurance: 5,
@@ -117,17 +118,28 @@ describe('SupportMovementBehavior', () => {
     expect(cheb(dest(proposal!), wounded.position)).toBeLessThan(cheb(healer.position, wounded.position));
   });
 
-  it('follows the nearest living ally (score 1) to stay in support range', () => {
-    const healer = makeHealer({ x: 1, y: 1 });
-    const ally = makeUnit(2, 'player', { x: 1, y: 9 }, {}); // full HP, far away
-    const proposal = new SupportMovementBehavior().proposeAction(healer, world([healer, ally]));
+  it('trails toward the allies CENTROID (score 1), not an individual ally', () => {
+    // Nearest ally is one cell WEST; a second ally is far EAST, so the
+    // centroid sits east of the healer. A centroid anchor steps EAST (toward
+    // the average); a nearest-ally anchor would step WEST onto its neighbor.
+    const healer = makeHealer({ x: 5, y: 5 });
+    const nearWest = makeUnit(2, 'player', { x: 4, y: 5 }); // full HP, dist 1
+    const farEast = makeUnit(3, 'player', { x: 10, y: 5 }); // full HP, dist 5
+    const centroid = { x: 7, y: 5 }; // round((4+10)/2)=7
+    const proposal = new SupportMovementBehavior().proposeAction(
+      healer,
+      world([healer, nearWest, farEast]),
+    );
     expect(proposal!.score).toBe(1);
-    expect(cheb(dest(proposal!), ally.position)).toBeLessThan(cheb(healer.position, ally.position));
+    expect(dest(proposal!).x).toBeGreaterThan(healer.position.x); // east, toward centroid
+    expect(cheb(dest(proposal!), centroid)).toBeLessThan(cheb(healer.position, centroid));
   });
 
-  it('idles when in formation (ally within heal range) with no threat or wounded', () => {
+  it('idles when within healerFollowGapCells of the allies centroid', () => {
     const healer = makeHealer({ x: 5, y: 5 });
-    const ally = makeUnit(2, 'player', { x: 5, y: 5 + HEAL_RANGE - 1 }, {}); // full HP, in range
+    // Single ally exactly FOLLOW cells away → centroid == ally, gap == FOLLOW
+    // (not strictly greater) → in formation, idle.
+    const ally = makeUnit(2, 'player', { x: 5, y: 5 + FOLLOW });
     expect(new SupportMovementBehavior().proposeAction(healer, world([healer, ally]))).toBeNull();
   });
 

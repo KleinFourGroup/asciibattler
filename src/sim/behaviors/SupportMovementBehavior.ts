@@ -29,9 +29,14 @@ import { SIM } from '../../config/sim';
  *      `speed` vs. the enemy's re-approach, same engine as the rogue.
  *   3. Else a wounded ally exists but is out of range → step toward the
  *      nearest one (score 1) to bring it into heal range.
- *   4. Else trail the nearest living ally until within heal range (score 1)
- *      so the healer stays with the formation; abstain once close enough or
- *      if it has no living allies at all.
+ *   4. Else trail the CENTROID of its living allies, stepping whenever it's
+ *      more than `SIM.healerFollowGapCells` from that point (score 1), so it
+ *      stays tucked mid-formation; abstain once inside the gap or if it has
+ *      no living allies. Anchoring on the centroid (not the nearest ally, at
+ *      the full heal range) is what makes the follow read as a smooth trail
+ *      rather than a static-then-lurch: the centroid drifts continuously as
+ *      the army advances, and it lags the front line so the healer settles
+ *      behind the fighters rather than hugging a charger into melee.
  *
  * Pathing reuses `findPath` with the same soft-block model as
  * `MovementBehavior`: neutrals (walls) are hard blockers, other units are
@@ -68,10 +73,10 @@ export class SupportMovementBehavior implements Behavior {
       return to === null ? null : moveProposal(unit.position, to, durationTicks, 1);
     }
 
-    // 4. Trail the nearest living ally to stay in support range.
-    const ally = nearestAlly(unit, world, () => true);
-    if (ally !== null && chebyshev(unit.position, ally.position) > healRange) {
-      const to = stepToward(unit, ally.position, world);
+    // 4. Trail the centroid of living allies to stay tucked in formation.
+    const anchor = alliesCentroidCell(unit, world);
+    if (anchor !== null && chebyshev(unit.position, anchor) > SIM.healerFollowGapCells) {
+      const to = stepToward(unit, anchor, world);
       return to === null ? null : moveProposal(unit.position, to, durationTicks, 1);
     }
 
@@ -120,6 +125,29 @@ function nearestAlly(
     }
   }
   return best;
+}
+
+/**
+ * Cell-rounded centroid (average position) of `unit`'s living allies,
+ * EXCLUDING the unit itself so its own position never anchors the point to
+ * where it already stands. Returns null when the unit has no living allies.
+ * Used as the healer's formation anchor: trailing the centroid keeps it
+ * mid-pack and tracks the army's advance smoothly.
+ */
+function alliesCentroidCell(unit: Unit, world: World): GridCoord | null {
+  let sx = 0;
+  let sy = 0;
+  let n = 0;
+  for (const c of world.units) {
+    if (c.team !== unit.team) continue;
+    if (c.id === unit.id) continue;
+    if (c.currentHp <= 0) continue;
+    sx += c.position.x;
+    sy += c.position.y;
+    n++;
+  }
+  if (n === 0) return null;
+  return { x: Math.round(sx / n), y: Math.round(sy / n) };
 }
 
 /**

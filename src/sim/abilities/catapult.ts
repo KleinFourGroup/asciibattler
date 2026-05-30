@@ -53,7 +53,12 @@ export class CatapultShot implements Ability {
     const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
 
     return {
-      action: new CatapultShotAction(target, baseDamage, unit.derived.critChance),
+      action: new CatapultShotAction(
+        target,
+        baseDamage,
+        unit.derived.critChance,
+        { ...target.position },
+      ),
       score: 10,
       cooldown: durationTicks,
       duration: durationTicks,

@@ -65,16 +65,24 @@ export class BattleScene implements Scene {
       ctx.bus.on('unit:attacked', ({ attackerId }) => {
         const attacker = this.world?.findUnit(attackerId);
         if (!attacker) return;
-        // E7.C — the mage's AoE emits one `unit:attacked` per victim; without
-        // this skip it would play one `shoot` per hit (multishot audio). Its
-        // single cast sound rides `magic:detonated` instead (below).
-        if (attacker.archetype === 'mage') return;
+        // E7.C/E7.D — the mage's bolt and the catapult's shot each play one
+        // sound off their own dedicated event (below), not the per-hit
+        // `unit:attacked`. For the mage that avoids multishot audio (one event
+        // per AoE victim); for the catapult the event also fires on an aborted
+        // shot where no `unit:attacked` exists.
+        if (attacker.archetype === 'mage' || attacker.archetype === 'catapult') return;
         ctx.audio.play(attacker.derived.attackRange <= 1 ? 'melee' : 'shoot');
       }),
       // E7.C — one sound per mage bolt cast (fires even on a whiff), matching
       // the single projectile + explosion visual.
       ctx.bus.on('magic:detonated', () => {
         ctx.audio.play('magicboom');
+      }),
+      // E7.D — one sound per catapult shot, fired on hit AND abort (so a
+      // fizzle still thunks), matching the single arcing-projectile visual.
+      // Reuses `shoot` for now — a dedicated catapult SFX is a later polish.
+      ctx.bus.on('catapult:fired', () => {
+        ctx.audio.play('shoot');
       }),
       ctx.bus.on('unit:died', ({ team }) => {
         if (team === 'neutral') return;

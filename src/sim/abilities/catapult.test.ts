@@ -91,6 +91,8 @@ describe('CatapultShot.propose', () => {
     expect(data.targetId).toBe(enemy.id); // homing — locks the unit, not a cell
     expect(data.baseDamage).toBe(catapultShotDamage(cat));
     expect(data.baseDamage).toBe(CATAPULT_STATS.ranged);
+    // castPosition is captured for the VFX fallback (the target's cell at cast).
+    expect(data.castPosition).toEqual({ x: 6, y: 6 });
   });
 
   it('FIRES THROUGH a wall — the arcing shot ignores line of sight', () => {

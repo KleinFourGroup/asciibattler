@@ -110,6 +110,20 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'magic:detonated': { casterId: number; center: GridCoord };
 
+  /**
+   * E7.D — a catapult's `catapult_shot` completed its wind-up. Fires exactly
+   * ONCE per shot from `CatapultShotAction.applyEffect`, ALWAYS — including
+   * when the locked target died mid-charge (`hit: false`, an aborted shot).
+   * `impact` is the cell the lobbed boulder lands on (the live target's cell
+   * on a hit; its last-known cell — or the cast cell after a snapshot that
+   * dropped the target — on an abort). The render + audio layers drive the
+   * single arcing projectile off this (so an aborted shot still shows a
+   * lobbed dud instead of nothing), mirroring `magic:detonated`. The damage
+   * itself still rides `unit:attacked` on a hit, so hitsplats / HP bars / the
+   * XP ledger are unchanged.
+   */
+  'catapult:fired': { casterId: number; impact: GridCoord; hit: boolean };
+
   'run:started': { seed: number };
   'run:victory': Record<string, never>;
   'run:defeated': Record<string, never>;

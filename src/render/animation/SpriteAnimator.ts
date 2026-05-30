@@ -17,6 +17,14 @@ interface ActiveLerp {
   readonly to: THREE.Vector3;
   readonly duration: number;
   elapsed: number;
+  /**
+   * E7.D — peak extra height (world-Y) of a parabolic arc added on top of the
+   * straight from→to interpolation: `+arcHeight · 4t(1−t)`, zero at both
+   * endpoints, max at the midpoint. 0 (the default) means a flat line — moves,
+   * the ranged tracer, and the mage bolt all stay straight; only the catapult
+   * lob passes a positive value.
+   */
+  readonly arcHeight: number;
   /** Fired once when the lerp completes. E6.B uses it to despawn a
    *  projectile sprite on arrival. Undefined for plain move lerps. */
   readonly onComplete: (() => void) | undefined;
@@ -66,6 +74,7 @@ export class SpriteAnimator {
     to: THREE.Vector3,
     durationSeconds: number,
     onComplete?: () => void,
+    arcHeight = 0,
   ): void {
     // A move overrides any in-flight melee shove (E6.A) so the two never
     // fight over this sprite's position.
@@ -81,6 +90,7 @@ export class SpriteAnimator {
       to: to.clone(),
       duration: durationSeconds,
       elapsed: 0,
+      arcHeight,
       onComplete,
     });
   }
@@ -188,6 +198,9 @@ export class SpriteAnimator {
       lerp.elapsed += dt;
       const t = lerp.elapsed >= lerp.duration ? 1 : lerp.elapsed / lerp.duration;
       this.scratch.copy(lerp.from).lerp(lerp.to, t);
+      // E7.D — parabolic arc: lift Y by arcHeight·4t(1−t) (0 at the ends,
+      // peak at the midpoint). arcHeight 0 leaves the straight-line path.
+      if (lerp.arcHeight !== 0) this.scratch.y += lerp.arcHeight * 4 * t * (1 - t);
       this.sprites.updateSprite(handle, { position: this.scratch });
       if (t >= 1) {
         this.lerps.delete(handle);

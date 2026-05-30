@@ -1,6 +1,7 @@
 import type { Action } from '../Action';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
+import type { GridCoord } from '../../core/types';
 import { STATS } from '../../config/stats';
 
 export const CATAPULT_SHOT_ACTION_ID = 'catapult_shot';
@@ -11,6 +12,14 @@ export interface CatapultShotActionData {
   /** Damage before the crit factor. */
   baseDamage: number;
   critChance: number;
+  /**
+   * The target's cell at cast START. A VFX-only fallback for the impact
+   * position when the live target ref is gone (e.g. a snapshot dropped it),
+   * so `catapult:fired` always carries somewhere for the lob to land. The
+   * damage still homes on the live `target` ref — this is never the hit cell
+   * while the target exists.
+   */
+  castPosition: GridCoord;
 }
 
 /**
@@ -31,10 +40,10 @@ export interface CatapultShotActionData {
  * (serialized as `targetId`), so the hit follows the unit wherever it moved
  * during the ~wind-up — a reliable artillery strike whose counterplay is
  * rushing/killing the slow catapult mid-charge, not dodging the shot. If the
- * target died (or vanished) during the wind-up, the shot fizzles silently —
- * no damage, no `unit:attacked`, no combatRng draw. (Contrast the mage's
- * `MagicBoltAction`, which is ground-targeted and detonates on a fixed cell
- * even on a whiff.)
+ * target died (or vanished) during the wind-up, the shot deals no damage and
+ * skips the combatRng draw — but it is NOT silent: see the `catapult:fired`
+ * note below. (Contrast the mage's `MagicBoltAction`, which is ground-targeted
+ * and detonates on a fixed cell even on a whiff.)
  *
  * Single hard hit, ENEMY only: there is exactly one victim (the locked
  * target), so "no friendly fire" is structural — the catapult never targets
@@ -46,10 +55,13 @@ export interface CatapultShotActionData {
  * Damage scales on `ranged` (E7.D decision — a heavy ranged unit, distinct
  * from the magic mage and the light archer); see `catapultShotDamage`.
  *
- * VFX/audio ride the single `unit:attacked` it emits on a hit: `attackRange
- * > 1` routes it through E6.B's ranged path → one `*` tracer (caster →
- * target) + one `shoot` cue. Single-target means one event, so there's no
- * multishot problem the mage's AoE had — hence no dedicated detonation event.
+ * VFX/audio ride the `catapult:fired` event it emits ONCE per shot, ALWAYS
+ * (hit or abort) — the render layer flies one arcing projectile to `impact`
+ * and shows a dud puff when `hit` is false, so an aborted shot reads as a
+ * lobbed-but-fizzled boulder instead of nothing. (The per-hit `unit:attacked`
+ * still floats the damage hitsplat + refreshes the HP bar; the catapult is
+ * skipped in `BattleRenderer.triggerAttackVisual` so it doesn't ALSO spawn a
+ * straight tracer — mirrors the mage's `magic:detonated` split.)
  *
  * Serialization stores `{ targetId, baseDamage, critChance }`; `fromData`
  * re-resolves the live target via `world.findUnit`, exactly like
@@ -64,6 +76,7 @@ export class CatapultShotAction implements Action {
     private readonly target: Unit | undefined,
     private readonly baseDamage: number,
     private readonly critChance: number,
+    private readonly castPosition: GridCoord,
   ) {}
 
   start(_unit: Unit, _world: World): void {
@@ -72,20 +85,32 @@ export class CatapultShotAction implements Action {
   }
 
   applyEffect(unit: Unit, world: World, _tickOffset: number): void {
-    // Fizzle if the locked target died or vanished during the wind-up. No
-    // combatRng draw on a fizzle so the roll only happens when damage lands.
-    if (!this.target || this.target.currentHp <= 0) return;
+    // Did the locked target survive the wind-up? A dead-but-still-referenced
+    // target (object persists after removal) reads its last cell; a target
+    // dropped by a snapshot falls back to the cast cell.
+    const hit = !!this.target && this.target.currentHp > 0;
+    const impact = this.target ? this.target.position : this.castPosition;
+
+    // Announce the shot ONCE, ALWAYS — hit or abort — so the render + audio
+    // layers play one lobbed projectile (a dud on an abort) instead of the
+    // per-hit `unit:attacked` stream, which is silent on a miss. Emitted
+    // before the damage so the "loose" is the first signal of the shot.
+    world.emit('catapult:fired', { casterId: unit.id, impact: { ...impact }, hit });
+
+    // Fizzle: no damage, and no combatRng draw — the crit roll only happens
+    // when damage actually lands (keeps the draw out of the abort path).
+    if (!hit) return;
 
     const crit = world.combatRng.next() < this.critChance;
     const critFactor = crit ? STATS.critMult : 1;
     const damage = Math.round(this.baseDamage * critFactor);
     if (damage <= 0) return;
 
-    this.target.currentHp -= damage;
-    world.recordDamage(unit.id, this.target, damage);
+    this.target!.currentHp -= damage;
+    world.recordDamage(unit.id, this.target!, damage);
     world.emit('unit:attacked', {
       attackerId: unit.id,
-      targetId: this.target.id,
+      targetId: this.target!.id,
       damage,
       crit,
     });
@@ -96,6 +121,7 @@ export class CatapultShotAction implements Action {
       targetId: this.target?.id ?? -1,
       baseDamage: this.baseDamage,
       critChance: this.critChance,
+      castPosition: { ...this.castPosition },
     };
   }
 
@@ -104,6 +130,7 @@ export class CatapultShotAction implements Action {
       world.findUnit(data.targetId),
       data.baseDamage,
       data.critChance,
+      { ...data.castPosition },
     );
   }
 }

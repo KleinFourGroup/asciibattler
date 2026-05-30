@@ -111,6 +111,9 @@ export class BattleRenderer {
     // E7.C: the mage's bolt detonation drives ONE projectile + explosion,
     // replacing the per-hit tracers `unit:attacked` would otherwise spawn.
     this.subscriptions.push(bus.on('magic:detonated', this.onMagicDetonated));
+    // E7.D: the catapult's shot drives ONE arcing projectile — and a dud puff
+    // when the shot aborts (target died mid-charge), so a fizzle isn't silent.
+    this.subscriptions.push(bus.on('catapult:fired', this.onCatapultFired));
     // D7.B: keep HP bars in sync with tile-effect chip damage / heal. E6.C
     // also floats a hitsplat for each: burn damage in amber, heal in cyan.
     // The healing tile emits a no-op heal every cadence tick on a full unit
@@ -342,12 +345,14 @@ export class BattleRenderer {
     const attackerHandle = this.handles.get(attackerId);
     if (!attackerHandle) return;
 
-    // E7.C — the mage's AoE emits one `unit:attacked` per victim, which would
-    // read as multishot here. Its visual is the single projectile + explosion
-    // driven by `magic:detonated` instead, so skip the per-hit tracer. (The
-    // per-victim hitsplat + HP-bar refresh in `onUnitAttacked` still fire —
-    // those correctly show each unit taking damage.)
-    if (attacker.archetype === 'mage') return;
+    // E7.C/E7.D — the mage's bolt (`magic:detonated`) and the catapult's shot
+    // (`catapult:fired`) each drive their OWN single projectile off a dedicated
+    // event, so skip the per-hit tracer here. For the mage it'd read as
+    // multishot (one `unit:attacked` per AoE victim); for the catapult the
+    // event also fires on an aborted shot (target died mid-charge) where there
+    // is no `unit:attacked` at all. The per-victim hitsplat + HP-bar refresh in
+    // `onUnitAttacked` still fire for both — those correctly show the damage.
+    if (attacker.archetype === 'mage' || attacker.archetype === 'catapult') return;
 
     if (attacker.derived.attackRange <= 1) {
       // Melee: lunge toward the target's cell. Direction comes from cell
@@ -400,15 +405,23 @@ export class BattleRenderer {
     to: THREE.Vector3,
     color: string,
     onArrive?: () => void,
+    arcHeight = 0,
   ): void {
     const proj = this.sprites.addSprite(PROJECTILE_GLYPH, color, from);
     this.sprites.updateSprite(proj, { bloomIntensity: PROJECTILE_BLOOM, size: PROJECTILE_SIZE });
     this.projectiles.add(proj);
-    this.animator.startLerp(proj, from, to, PROJECTILE_SECONDS, () => {
-      this.sprites.removeSprite(proj);
-      this.projectiles.delete(proj);
-      onArrive?.();
-    });
+    this.animator.startLerp(
+      proj,
+      from,
+      to,
+      PROJECTILE_SECONDS,
+      () => {
+        this.sprites.removeSprite(proj);
+        this.projectiles.delete(proj);
+        onArrive?.();
+      },
+      arcHeight,
+    );
   }
 
   /**
@@ -467,6 +480,70 @@ export class BattleRenderer {
     }
   }
 
+  /**
+   * E7.D — the catapult's shot landed (or aborted). Fly ONE arcing tracer
+   * from the caster to the impact cell, then on arrival show the impact: a
+   * gray dust DUD when `hit` is false (the locked target died mid-charge — the
+   * boulder lobs to where it was and kicks up nothing), or nothing extra on a
+   * hit (the `unit:attacked` hitsplat already floats the damage there). Fires
+   * once per shot off `catapult:fired`, so an aborted shot is visible instead
+   * of silent. Mirrors `onMagicDetonated`, but a straight-line bolt becomes a
+   * lobbed arc (CATAPULT_ARC_HEIGHT) befitting an over-the-wall siege shot.
+   */
+  private onCatapultFired = ({ casterId, impact, hit }: GameEvents['catapult:fired']): void => {
+    if (!this.world) return;
+    const caster = this.world.findUnit(casterId);
+    const color = caster ? colorForTeam(caster.team) : COLORS.TERMINAL_STONE;
+    const impactAt = this.tileWorldPos(impact);
+    const casterHandle = this.handles.get(casterId);
+    const from = (
+      (casterHandle && this.sprites.getPosition(casterHandle, this.scratchPos)) ??
+      impactAt
+    ).clone();
+    const landing = impactAt.clone();
+    this.spawnProjectile(
+      from,
+      landing,
+      color,
+      hit ? undefined : () => this.spawnDud(landing),
+      CATAPULT_ARC_HEIGHT,
+    );
+  };
+
+  /**
+   * E7.D — a small gray dust puff for an ABORTED catapult shot: a central
+   * glyph that grows + fades plus a few short low-glow sparks, all in the
+   * neutral stone color so it reads as "thud, no hit" rather than a team-
+   * colored impact. Reuses the explosion-particle lane (swept by `detach`).
+   */
+  private spawnDud(center: THREE.Vector3): void {
+    this.addExplosionParticle(
+      center,
+      center,
+      EXPLOSION_FLASH_GLYPH,
+      CATAPULT_DUD_COLOR,
+      CATAPULT_DUD_FLASH_SIZE_FROM,
+      CATAPULT_DUD_FLASH_SIZE_TO,
+      CATAPULT_DUD_SECONDS,
+      CATAPULT_DUD_BLOOM,
+    );
+    for (const [dx, dz] of EXPLOSION_RING_DIRS.slice(0, 4)) {
+      const dest = center.clone();
+      dest.x += dx * CATAPULT_DUD_SPREAD;
+      dest.z += dz * CATAPULT_DUD_SPREAD;
+      this.addExplosionParticle(
+        center,
+        dest,
+        PROJECTILE_GLYPH,
+        CATAPULT_DUD_COLOR,
+        CATAPULT_DUD_SPARK_SIZE,
+        CATAPULT_DUD_SPARK_SIZE,
+        CATAPULT_DUD_SECONDS,
+        CATAPULT_DUD_BLOOM,
+      );
+    }
+  }
+
   private addExplosionParticle(
     from: THREE.Vector3,
     to: THREE.Vector3,
@@ -475,11 +552,12 @@ export class BattleRenderer {
     sizeFrom: number,
     sizeTo: number,
     duration: number,
+    bloom: number = EXPLOSION_BLOOM,
   ): void {
     const handle = this.sprites.addSprite(glyph, color, from);
     this.sprites.updateSprite(handle, {
       size: sizeFrom,
-      bloomIntensity: EXPLOSION_BLOOM,
+      bloomIntensity: bloom,
       alpha: 1,
     });
     this.explosions.push({
@@ -687,6 +765,24 @@ const EXPLOSION_RING_DIRS: ReadonlyArray<readonly [number, number]> = [
   [-0.7071, 0.7071],
   [-0.7071, -0.7071],
 ];
+
+/**
+ * E7.D — catapult shot tuning. The lobbed boulder arcs CATAPULT_ARC_HEIGHT
+ * world units above the straight caster→impact line (peak at the midpoint),
+ * reading as an over-the-wall siege shot rather than a flat bolt. On an
+ * aborted shot (target died mid-charge) the projectile lands in a gray dust
+ * DUD — a small central puff + 4 short low-glow sparks in the neutral stone
+ * color, so a fizzle shows "thud, no hit" instead of nothing. All eyeball-
+ * tunable — bump freely.
+ */
+const CATAPULT_ARC_HEIGHT = 2.0;
+const CATAPULT_DUD_COLOR = COLORS.TERMINAL_STONE;
+const CATAPULT_DUD_FLASH_SIZE_FROM = 0.5;
+const CATAPULT_DUD_FLASH_SIZE_TO = 1.6;
+const CATAPULT_DUD_SPARK_SIZE = 0.4;
+const CATAPULT_DUD_SPREAD = 0.5;
+const CATAPULT_DUD_SECONDS = 0.35;
+const CATAPULT_DUD_BLOOM = 0.3;
 
 /** World-Y lift applied to a hitsplat's anchor so it sits at the TOP of the
  *  sprite rather than its center. The sprite quad is 1×1 centered at

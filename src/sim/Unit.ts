@@ -20,7 +20,7 @@ export type Team = 'player' | 'enemy' | 'neutral';
  * `unit.archetype` lookup answers "which stat drives a basic strike?"
  * without needing the caller to branch on team first.
  */
-export type Archetype = 'melee' | 'ranged';
+export type Archetype = 'melee' | 'ranged' | 'rogue';
 export type UnitArchetype = Archetype | 'environment';
 
 /**

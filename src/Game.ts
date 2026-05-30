@@ -6,6 +6,8 @@ import { TerrainRenderer } from './render/TerrainRenderer';
 import { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
 import { Run } from './run/Run';
+import { RNG } from './core/RNG';
+import { rollUnit, type Archetype } from './sim/archetypes';
 import type { RunCommand, RunDispatcher } from './run/Command';
 import type { Scene, SceneContext } from './scenes/Scene';
 import { MapScene } from './scenes/MapScene';
@@ -14,6 +16,32 @@ import { RecruitScene } from './scenes/RecruitScene';
 import { PromotionScene } from './scenes/PromotionScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { AudioPlayer } from './audio/AudioPlayer';
+
+/**
+ * E7.A — dev-only starting-roster override. `?roster=rogue,melee,ranged`
+ * replaces the rolled starting team so new archetypes can be playtested
+ * before recruitment integration (F1) makes them draftable. Unknown tokens
+ * are dropped; an empty / all-invalid list leaves the rolled team intact.
+ * Rolls off a throwaway RNG (dev-only, determinism irrelevant) so it never
+ * perturbs the run's own forked streams. Normal play never sets the param,
+ * so production + tests are untouched. Extend `DEV_ROSTER_ARCHETYPES` as
+ * E7.B–D land their archetypes.
+ */
+const DEV_ROSTER_ARCHETYPES: readonly Archetype[] = ['melee', 'ranged', 'rogue'];
+
+function applyRosterOverride(run: Run): void {
+  if (typeof location === 'undefined') return;
+  const param = new URLSearchParams(location.search).get('roster');
+  if (!param) return;
+  const valid = param
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter((a): a is Archetype => (DEV_ROSTER_ARCHETYPES as readonly string[]).includes(a));
+  if (valid.length === 0) return;
+  const rng = new RNG(1);
+  run.team = valid.map((a) => rollUnit(a, rng));
+  console.warn(`[dev] starting roster override: ${valid.join(', ')}`);
+}
 
 /**
  * Top-level orchestrator. Owns the EventBus, Renderer, FontAtlas, persistent
@@ -66,6 +94,7 @@ export class Game implements RunDispatcher {
     // run:defeated subscriptions below all run *after* Run has updated phase
     // because Run emits those from within its own battle:ended handler.
     this.run = new Run(Date.now(), this.bus);
+    applyRosterOverride(this.run);
 
     // Renderer drives the per-frame tick of whatever scene is active.
     this.renderer = new Renderer(canvas, (dt) => this.activeScene?.tick(dt));
@@ -173,6 +202,7 @@ export class Game implements RunDispatcher {
   private resetRun(): void {
     this.run.dispose();
     this.run = new Run(Date.now(), this.bus);
+    applyRosterOverride(this.run);
     this.swap(new MapScene());
   }
 

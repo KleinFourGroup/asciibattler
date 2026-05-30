@@ -1,10 +1,14 @@
 import type { RNG } from '../core/RNG';
-import type { UnitTemplate } from './Unit';
+import type { Archetype, UnitTemplate } from './Unit';
 import { ARCHETYPES, type ArchetypeConfig } from '../config/archetypes';
 import { abilityConfig } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
 
-export type Archetype = 'melee' | 'ranged';
+// E7.A — `Archetype` is now defined once in `./Unit` (the canonical closed
+// set) and re-exported here so the many `import { Archetype } from
+// './archetypes'` sites keep working. Adding an archetype is a one-line edit
+// to the union in Unit.ts, not two definitions that can drift apart.
+export type { Archetype };
 
 /**
  * Per-archetype config, sourced from `config/archetypes.json` and

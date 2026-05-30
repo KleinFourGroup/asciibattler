@@ -18,7 +18,7 @@ import {
   baseMoveCooldownSecondsForArchetype,
   glyphForArchetype,
 } from '../sim/archetypes';
-import { deriveStats, attackCooldownTicksFor } from '../sim/stats';
+import { deriveStats, attackCooldownTicksFor, damageStatFor } from '../sim/stats';
 import { abilityConfig } from '../config/abilities';
 import { ticksToSeconds } from '../config';
 import { fadeIn, fadeOutAndRemove } from './fade';
@@ -91,7 +91,7 @@ export class RecruitScreen {
     const attackRange = rangeForArchetype(template.archetype);
     const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
     const derived = deriveStats(s, attackRange, moveCD);
-    const baseDamage = template.archetype === 'melee' ? s.strength : s.ranged;
+    const baseDamage = damageStatFor(template.archetype, s);
     // E5 pre-work: ATK cadence now comes from the archetype's primary
     // ability config (scaled by speed), matching what the unit will
     // actually fire at in battle. Archetypes carry one basic strike

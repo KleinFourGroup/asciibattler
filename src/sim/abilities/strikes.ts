@@ -1,14 +1,35 @@
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
-import type { ActionProposal } from '../Action';
+import type { ActionProposal, Action } from '../Action';
 import { AttackAction } from '../actions/AttackAction';
+import { GambitStrikeAction } from '../actions/GambitStrikeAction';
 import { currentTarget, collectLosBlockers } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
 import { basicAttackDamage, attackCooldownTicksFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
 import { abilityConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
+
+/**
+ * E7.A — strikes diverge only in the Action they produce. The melee/ranged
+ * basic strikes wrap `AttackAction`; the rogue's gambit wraps
+ * `GambitStrikeAction` (same damage resolution + a free reposition). The
+ * propose path (target, range gate, LOS, half-cover, crit, cadence) is
+ * identical, so it's shared via this factory rather than duplicated.
+ */
+type StrikeActionFactory = (
+  target: Unit,
+  baseDamage: number,
+  critChance: number,
+  damageMultiplier: number,
+) => Action;
+
+const attackActionFactory: StrikeActionFactory = (target, baseDamage, critChance, damageMultiplier) =>
+  new AttackAction(target, baseDamage, critChance, damageMultiplier);
+
+const gambitActionFactory: StrikeActionFactory = (target, baseDamage, critChance, damageMultiplier) =>
+  new GambitStrikeAction(target, baseDamage, critChance, damageMultiplier);
 
 /**
  * The pre-E2 `AttackBehavior` propose path, generalized over ability id.
@@ -34,6 +55,7 @@ function proposeBasicStrike(
   unit: Unit,
   world: World,
   abilityId: string,
+  makeAction: StrikeActionFactory = attackActionFactory,
 ): ActionProposal | null {
   const target = currentTarget(unit, world);
   if (target === null) return null;
@@ -68,7 +90,7 @@ function proposeBasicStrike(
   );
 
   return {
-    action: new AttackAction(target, baseDamage, unit.derived.critChance, damageMultiplier),
+    action: makeAction(target, baseDamage, unit.derived.critChance, damageMultiplier),
     score: 10,
     cooldown: durationTicks,
     duration: durationTicks,
@@ -89,6 +111,14 @@ export class RangedShot implements Ability {
   readonly id = RangedShot.id;
   propose(unit: Unit, world: World): ActionProposal | null {
     return proposeBasicStrike(unit, world, this.id);
+  }
+}
+
+export class GambitStrike implements Ability {
+  static readonly id = 'gambit_strike';
+  readonly id = GambitStrike.id;
+  propose(unit: Unit, world: World): ActionProposal | null {
+    return proposeBasicStrike(unit, world, this.id, gambitActionFactory);
   }
 }
 

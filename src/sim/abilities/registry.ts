@@ -1,5 +1,5 @@
 import type { Ability } from './Ability';
-import { MeleeStrike, RangedShot } from './strikes';
+import { MeleeStrike, RangedShot, GambitStrike } from './strikes';
 import { ABILITIES } from '../../config/abilities';
 
 /**
@@ -19,6 +19,7 @@ export type AbilityFactory = () => Ability;
 const FACTORIES: Record<string, AbilityFactory> = {
   [MeleeStrike.id]: () => new MeleeStrike(),
   [RangedShot.id]: () => new RangedShot(),
+  [GambitStrike.id]: () => new GambitStrike(),
 };
 
 /**

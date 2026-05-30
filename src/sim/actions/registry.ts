@@ -3,6 +3,11 @@ import type { World } from '../World';
 import { MOVE_ACTION_ID, MoveAction, type MoveActionData } from './MoveAction';
 import { ATTACK_ACTION_ID, AttackAction, type AttackActionData } from './AttackAction';
 import { SPAWN_ACTION_ID, SpawnAction } from './SpawnAction';
+import {
+  GAMBIT_STRIKE_ACTION_ID,
+  GambitStrikeAction,
+  type GambitStrikeActionData,
+} from './GambitStrikeAction';
 
 /**
  * Action factories keyed by `Action.id`. `World.fromJSON` uses these to
@@ -20,6 +25,8 @@ const FACTORIES: Record<string, ActionFactory> = {
   [MOVE_ACTION_ID]: (data) => MoveAction.fromData(data as MoveActionData),
   [ATTACK_ACTION_ID]: (data, world) => AttackAction.fromData(data as AttackActionData, world),
   [SPAWN_ACTION_ID]: () => SpawnAction.fromData(),
+  [GAMBIT_STRIKE_ACTION_ID]: (data, world) =>
+    GambitStrikeAction.fromData(data as GambitStrikeActionData, world),
 };
 
 export function createAction(id: string, data: unknown, world: World): Action {

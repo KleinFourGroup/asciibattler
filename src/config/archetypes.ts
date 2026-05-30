@@ -91,6 +91,7 @@ const ArchetypeSchema = z.object({
 const ArchetypesSchema = z.object({
   melee: ArchetypeSchema,
   ranged: ArchetypeSchema,
+  rogue: ArchetypeSchema,
 });
 
 export type ArchetypeConfig = z.infer<typeof ArchetypeSchema>;

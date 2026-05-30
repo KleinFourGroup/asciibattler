@@ -43,7 +43,7 @@
 
 import { secondsToTicks } from '../config';
 import { STATS } from '../config/stats';
-import type { Unit, UnitDerived, UnitStats } from './Unit';
+import type { Unit, UnitArchetype, UnitDerived, UnitStats } from './Unit';
 
 export function deriveStats(
   stats: UnitStats,
@@ -88,20 +88,35 @@ export function inertDerived(maxHp: number): UnitDerived {
 }
 
 /**
- * E1 — basic-strike damage source. Melee strikes use `strength`; ranged
- * strikes use `ranged`. Environment entities don't strike (their team
- * has no behaviors), but the 0 fallback is here for type-completeness
- * and as a guard if a future code path ever asks.
+ * E1 — which base stat drives a unit's basic strike, given its archetype +
+ * stat block. The SINGLE source of truth for the archetype→damage-stat
+ * mapping, shared by the sim (`basicAttackDamage`) and the display surfaces
+ * (HUD + RecruitScreen "ATK" rows) so they can never disagree. Melee + rogue
+ * strike on `strength`; ranged on `ranged`. Environment entities don't
+ * strike — the 0 is type-completeness + a guard if a future path asks.
  */
-export function basicAttackDamage(unit: Unit): number {
-  switch (unit.archetype) {
+export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): number {
+  switch (archetype) {
     case 'melee':
-      return unit.stats.strength;
+      return stats.strength;
     case 'ranged':
-      return unit.stats.ranged;
+      return stats.ranged;
+    // E7.A — rogue is a melee striker: its gambit damage scales on
+    // strength, with the payoff coming from its high luck (crit) rather
+    // than raw strength. Its identity is mobility + crit, not big hits.
+    case 'rogue':
+      return stats.strength;
     case 'environment':
       return 0;
   }
+}
+
+/**
+ * E1 — basic-strike damage for a live unit. Thin wrapper over
+ * `damageStatFor` (see there for the archetype→stat mapping).
+ */
+export function basicAttackDamage(unit: Unit): number {
+  return damageStatFor(unit.archetype, unit.stats);
 }
 
 function cooldownScale(stat: number): number {

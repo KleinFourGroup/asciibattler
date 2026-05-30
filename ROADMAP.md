@@ -814,6 +814,27 @@ flash-only version before lock-in.
 
 ### E7 — New archetypes: mage, rogue, healer
 
+**Status:** in progress — shipping one archetype per commit (E7.A→D) with a
+playtest pause between each. Scope refined with the user: mage AoE is radius-1
+(3×3), center-full + reduced-ring, with a toggleable `affectsFriendly` flag
+(default off) and neutral interaction deferred; a new **catapult** archetype
+joins the three (slow — first consumer of the per-archetype move-CD override —
+long range 6, ignores LOS, arcing shot, single-target hard hit, no
+friendly-fire).
+
+- **E7.A — Rogue ✅ landed.** New `rogue` archetype (glyph `r`; fragile, high
+  speed + luck) with `gambit_strike`: a melee strike that also takes a free
+  one-cell reposition away from the struck target. `GambitStrikeAction` shares
+  AttackAction's damage/crit/half-cover resolution and adds a deterministic
+  retreat step (max Chebyshev distance, ties toward open space; holds when
+  boxed in). The kite emerges from the rogue's speed outrunning the target's
+  re-approach — no extra state. `Archetype` consolidated to a single
+  definition in `Unit.ts` (re-exported from `archetypes.ts`); the archetype→
+  damage-stat mapping consolidated into `damageStatFor` (sim + HUD +
+  RecruitScreen share it). Dev-only `?roster=` URL override (Game.ts) fields
+  new archetypes before F1 recruitment integration. 410 tests (+10); fuzz 7/7;
+  typecheck clean.
+
 The original C2 step, now mostly config + a few new Ability classes.
 Phase E has done all the heavy lifting: stats vocabulary (E1), ability
 primitives (E2), archetype config + leveling (E3), legibility (E5/E6).

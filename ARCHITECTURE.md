@@ -74,7 +74,7 @@ src/
     Command.ts               # WorldCommand union — drained at tick boundary (A2)
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a)
     Targeting.ts             # findTarget — nearest enemy, ties by HP then id; skips neutrals
-    archetypes.ts            # MELEE/RANGED bounds, rollUnit, glyphForArchetype
+    archetypes.ts            # melee/ranged/rogue archetypes, rollUnit, glyphForArchetype
     environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories
     terrainGen.ts            # Per-encounter procedural tile + wall generator; layout dispatch
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
@@ -84,6 +84,7 @@ src/
       AttackAction.ts        # E1: start-time crit roll via world.combatRng → damage + unit:attacked
                              # event (with `crit` flag)
       SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns
+      GambitStrikeAction.ts  # E7.A: rogue strike — AttackAction damage + free reposition
       registry.ts            # Action factories keyed by Action.id (A2)
     behaviors/
       MovementBehavior.ts    # proposeAction → MoveAction when out of range

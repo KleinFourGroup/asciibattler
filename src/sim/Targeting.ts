@@ -128,6 +128,36 @@ export function currentTarget(unit: Unit, world: World): Unit | null {
 }
 
 /**
+ * E7.B — the healer's target pick: the lowest-HP *wounded* ally within
+ * `range` (Chebyshev), INCLUDING the healer itself (per the E7.B design
+ * call — a fragile solo healer can self-heal, so it sits in its own
+ * ally pool). "Wounded" = `currentHp < maxHp`, so a full-HP ally is never
+ * targeted (a 0-delta heal is wasted). No line-of-sight requirement — heal
+ * is a magic support buff, not a shot (E7.B call), so a wall between healer
+ * and ally doesn't block it. Ties on `currentHp` go to the lower id for
+ * determinism; returns null when nobody in range is hurt.
+ */
+export function lowestWoundedAlly(unit: Unit, world: World, range: number): Unit | null {
+  let best: Unit | null = null;
+  for (const candidate of world.units) {
+    // Same team only — this naturally excludes enemies AND neutral walls
+    // (team 'neutral'), and naturally INCLUDES `unit` itself.
+    if (candidate.team !== unit.team) continue;
+    if (candidate.currentHp <= 0) continue;
+    if (candidate.currentHp >= candidate.derived.maxHp) continue;
+    if (chebyshev(unit.position, candidate.position) > range) continue;
+    if (
+      best === null ||
+      candidate.currentHp < best.currentHp ||
+      (candidate.currentHp === best.currentHp && candidate.id < best.id)
+    ) {
+      best = candidate;
+    }
+  }
+  return best;
+}
+
+/**
  * Neutral units (walls, half-cover) whose `blocksLineOfSight` is true —
  * the LOS-occluder pool shared by the ranged re-target check here and the
  * strike abilities' shot gate. Half-cover (`blocksLineOfSight: false`) is

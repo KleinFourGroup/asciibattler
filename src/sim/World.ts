@@ -20,11 +20,10 @@ import {
 } from './archetypes';
 import type { WorldCommand } from './Command';
 import { createAction } from './actions/registry';
-import { createBehavior } from './behaviors/registry';
+import { createBehavior, createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
 import { updateTarget } from './Targeting';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
-import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { SpawnAction } from './actions/SpawnAction';
 import { SPAWN } from '../config/spawn';
@@ -592,7 +591,12 @@ export class World {
       },
       false,
     );
-    unit.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+    // E7.B — archetype-aware movement (healer → SupportMovementBehavior,
+    // else MovementBehavior), shared with battleSetup's initial-team spawn
+    // via `createMovementBehavior` so the two paths can't drift. The chosen
+    // behavior's `kind` is snapshotted per-unit and rehydrated via
+    // `createBehavior`, so the choice round-trips with no schema bump.
+    unit.behaviors.push(createMovementBehavior(template.archetype), new AbilityBehavior());
     for (const id of abilityIdsForArchetype(template.archetype)) {
       unit.abilities.push(createAbility(id));
     }

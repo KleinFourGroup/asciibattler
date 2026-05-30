@@ -106,6 +106,12 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
     // than raw strength. Its identity is mobility + crit, not big hits.
     case 'rogue':
       return stats.strength;
+    // E7.B — the healer has no basic strike at all (its only ability is
+    // `heal_ally`, which restores HP via `healAmountFor`, not damage). The
+    // 0 keeps the switch exhaustive; nothing calls `basicAttackDamage` on a
+    // healer because it carries no strike ability.
+    case 'healer':
+      return 0;
     case 'environment':
       return 0;
   }
@@ -117,6 +123,17 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
  */
 export function basicAttackDamage(unit: Unit): number {
   return damageStatFor(unit.archetype, unit.stats);
+}
+
+/**
+ * E7.B — HP restored by a healer's `heal_ally` cast. Scales on `magic`
+ * (raw), mirroring how `basicAttackDamage` reads `strength`/`ranged` raw
+ * for strikes. Kept as a named helper (not inlined in the ability) so the
+ * heal-scaling stat has a single source of truth, ready for a future
+ * expressive heal-formula step alongside the damage one.
+ */
+export function healAmountFor(unit: Unit): number {
+  return unit.stats.magic;
 }
 
 function cooldownScale(stat: number): number {

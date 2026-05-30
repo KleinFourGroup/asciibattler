@@ -20,4 +20,5 @@ export const GLYPHS = [
   '╥', // D6: half-cover (LOS-transparent neutral obstacle). U+2565.
   '*', // E6.B: ranged projectile tracer glyph.
   'r', // E7.A: rogue unit glyph.
+  'h', // E7.B: healer unit glyph.
 ] as const;

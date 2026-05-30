@@ -1,5 +1,6 @@
 import type { Ability } from './Ability';
 import { MeleeStrike, RangedShot, GambitStrike } from './strikes';
+import { HealAlly } from './heal';
 import { ABILITIES } from '../../config/abilities';
 
 /**
@@ -20,6 +21,7 @@ const FACTORIES: Record<string, AbilityFactory> = {
   [MeleeStrike.id]: () => new MeleeStrike(),
   [RangedShot.id]: () => new RangedShot(),
   [GambitStrike.id]: () => new GambitStrike(),
+  [HealAlly.id]: () => new HealAlly(),
 };
 
 /**

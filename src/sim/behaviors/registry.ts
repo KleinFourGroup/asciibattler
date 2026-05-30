@@ -1,5 +1,6 @@
-import type { Behavior } from '../Unit';
+import type { Archetype, Behavior } from '../Unit';
 import { MovementBehavior } from './MovementBehavior';
+import { SupportMovementBehavior } from './SupportMovementBehavior';
 import { AbilityBehavior } from './AbilityBehavior';
 
 /**
@@ -17,6 +18,7 @@ export type BehaviorFactory = () => Behavior;
 
 const FACTORIES: Record<string, BehaviorFactory> = {
   [MovementBehavior.kind]: () => new MovementBehavior(),
+  [SupportMovementBehavior.kind]: () => new SupportMovementBehavior(),
   [AbilityBehavior.kind]: () => new AbilityBehavior(),
 };
 
@@ -26,4 +28,17 @@ export function createBehavior(kind: string): Behavior {
     throw new Error(`createBehavior: no factory registered for behavior kind '${kind}'`);
   }
   return factory();
+}
+
+/**
+ * E7.B — the movement behavior an archetype spawns with. The healer
+ * positions defensively (`SupportMovementBehavior` — keep allies in heal
+ * range, flee when threatened); every other archetype charges the nearest
+ * enemy (`MovementBehavior`). Shared by both spawn paths — `battleSetup`'s
+ * initial team spawn and `World.spawnFromQueue`'s D5.C overflow spawn — so
+ * the two can't drift. The chosen behavior's `kind` is snapshotted and
+ * rehydrated via `createBehavior`, so this only runs at fresh spawn time.
+ */
+export function createMovementBehavior(archetype: Archetype): Behavior {
+  return archetype === 'healer' ? new SupportMovementBehavior() : new MovementBehavior();
 }

@@ -24,8 +24,8 @@
 
 import { RNG } from '../core/RNG';
 import type { World } from './World';
-import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
+import { createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
 import { abilityIdsForArchetype } from './archetypes';
 import type { Team, UnitTemplate } from './Unit';
@@ -106,7 +106,7 @@ export function spawnTeam(
     // enemy templates). Plumbs into `xpAwards` so Run can bank XP
     // into the right roster slot without a separate id map.
     const u = world.spawnUnit(template, team, tiles[i]!, template.rosterIndex ?? null);
-    u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+    u.behaviors.push(createMovementBehavior(template.archetype), new AbilityBehavior());
     for (const id of abilityIdsForArchetype(template.archetype)) {
       u.abilities.push(createAbility(id));
     }

@@ -1,5 +1,6 @@
 {
   "melee_strike": { "cooldownSeconds": 1.5, "range": 1 },
   "ranged_shot": { "cooldownSeconds": 2.0, "range": 3 },
-  "gambit_strike": { "cooldownSeconds": 1.2, "range": 1 }
+  "gambit_strike": { "cooldownSeconds": 1.2, "range": 1 },
+  "heal_ally": { "cooldownSeconds": 2.0, "range": 3 }
 }

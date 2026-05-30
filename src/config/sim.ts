@@ -23,6 +23,12 @@
  *     queue/sidestep when blocked. Must stay >= 0 (keeps total cost >= 1,
  *     Chebyshev admissible) and finite (no deadlock). Does NOT affect
  *     walls/half-cover — those are hard blockers, not penalised cells.
+ *   healerPanicRangeCells — E7.B: when a healer (`SupportMovementBehavior`)
+ *     has no wounded ally in heal range, it panic-retreats from the nearest
+ *     enemy that is within this many cells (Chebyshev). A distance, not a
+ *     timing — passed through verbatim like `occupiedCellPenalty`, not
+ *     `secondsToTicks`-converted. Higher → flightier healer; 0 disables
+ *     the retreat (healer only ever heals/follows).
  */
 
 import { z } from 'zod';
@@ -33,6 +39,7 @@ const SimSchema = z.object({
   retargetCloserRatio: z.number().min(1),
   rangedRetargetLosSeconds: z.number().positive(),
   occupiedCellPenalty: z.number().nonnegative(),
+  healerPanicRangeCells: z.number().int().nonnegative(),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -41,4 +48,5 @@ export const SIM = {
   retargetCloserRatio: parsed.retargetCloserRatio,
   rangedRetargetLosTicks: Math.max(1, secondsToTicks(parsed.rangedRetargetLosSeconds)),
   occupiedCellPenalty: parsed.occupiedCellPenalty,
+  healerPanicRangeCells: parsed.healerPanicRangeCells,
 };

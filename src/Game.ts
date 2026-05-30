@@ -27,7 +27,7 @@ import { AudioPlayer } from './audio/AudioPlayer';
  * so production + tests are untouched. Extend `DEV_ROSTER_ARCHETYPES` as
  * E7.B–D land their archetypes.
  */
-const DEV_ROSTER_ARCHETYPES: readonly Archetype[] = ['melee', 'ranged', 'rogue'];
+const DEV_ROSTER_ARCHETYPES: readonly Archetype[] = ['melee', 'ranged', 'rogue', 'healer'];
 
 function applyRosterOverride(run: Run): void {
   if (typeof location === 'undefined') return;

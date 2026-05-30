@@ -837,6 +837,20 @@ friendly-fire).
   after the `r` glyph shipped missing. 414 tests (+14); fuzz 7/7; typecheck
   + lint clean.
 
+- **E7.B — Healer ✅ landed.** New `healer` archetype (glyph `h`; high `magic`,
+  no `strength`/`ranged`, pure support — no basic strike) with `heal_ally`:
+  picks the lowest-HP wounded ally in range (self included, no LOS) and
+  restores `magic` HP via the new `HealAction` (single-tick, clamps at maxHp,
+  reuses the `unit:healed` event → E6.C cyan `+N` hitsplat). New
+  `SupportMovementBehavior` replaces the enemy-charging `MovementBehavior` for
+  healers: idle-when-healable → panic-retreat (score 5) from an enemy within
+  `SIM.healerPanicRangeCells` → approach a wounded ally → follow the nearest
+  ally to stay in support range. Movement is now archetype-aware via a shared
+  `createMovementBehavior` (both spawn paths). Decisions: active-support
+  movement, self-heal allowed, no-LOS heal. Dev-only `?roster=healer,…`;
+  pools unchanged so determinism + fuzz hold; no snapshot bump. 440 tests
+  (+26); fuzz 7/7; typecheck + lint clean. Live heal/kite feel = playtest.
+
 The original C2 step, now mostly config + a few new Ability classes.
 Phase E has done all the heavy lifting: stats vocabulary (E1), ability
 primitives (E2), archetype config + leveling (E3), legibility (E5/E6).

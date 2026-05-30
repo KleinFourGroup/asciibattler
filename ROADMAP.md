@@ -877,10 +877,12 @@ into the recruit pool.
   on `ranged` (user call — a heavy ranged unit). Generalized the LOS-ignoring
   intent into an `Ability.ignoresLineOfSight?` flag that `MovementBehavior`'s
   in-range abstain reads (holds + fires over walls instead of creeping for
-  LOS). Single-target → reuses E6.B's ranged tracer + `shoot` cue for free (no
-  multishot, so no dedicated detonation event). Dev-only `?roster=catapult,…`;
-  pools unchanged; no snapshot bump. 486 tests (+23); fuzz 7/7; typecheck +
-  lint clean. Live wind-up/whiff/balance feel = playtest.
+  LOS). A playtest-driven VFX follow-up drives the shot off a dedicated
+  `catapult:fired` event (always — hit or abort): one projectile that LOBS in
+  a parabolic arc (new `SpriteAnimator` `arcHeight`), and a gray dust dud on
+  an aborted shot (locked target died mid-charge) so the fizzle isn't silent.
+  Dev-only `?roster=catapult,…`; pools unchanged; no snapshot bump. 489 tests
+  (+26); fuzz 7/7; typecheck + lint clean. On-screen arc/dud look = playtest.
 
 The original C2 step, now mostly config + a few new Ability classes.
 Phase E has done all the heavy lifting: stats vocabulary (E1), ability

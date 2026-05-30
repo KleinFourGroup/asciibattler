@@ -112,6 +112,14 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
     // healer because it carries no strike ability.
     case 'healer':
       return 0;
+    // E7.C — the mage's damage is its `magic_bolt` (resolved via
+    // `magicBoltDamage` below), but the display surfaces (HUD / RecruitScreen
+    // "ATK" row) read this single source of truth, so a mage's shown attack
+    // stat is its `magic`. The sim never calls `basicAttackDamage` on a mage
+    // (it carries no basic strike) — the case keeps the switch exhaustive AND
+    // gives the display the right stat.
+    case 'mage':
+      return stats.magic;
     case 'environment':
       return 0;
   }
@@ -133,6 +141,17 @@ export function basicAttackDamage(unit: Unit): number {
  * expressive heal-formula step alongside the damage one.
  */
 export function healAmountFor(unit: Unit): number {
+  return unit.stats.magic;
+}
+
+/**
+ * E7.C — base damage of a mage's `magic_bolt` (the center-cell hit, before
+ * the crit factor and the per-cell AoE ring multiplier). Scales on `magic`
+ * (raw), mirroring `basicAttackDamage` (strength/ranged) and `healAmountFor`
+ * (magic). Kept as a named helper so the mage's damage-scaling stat has one
+ * source of truth, ready for a future expressive damage-formula step.
+ */
+export function magicBoltDamage(unit: Unit): number {
   return unit.stats.magic;
 }
 

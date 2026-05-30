@@ -21,4 +21,5 @@ export const GLYPHS = [
   '*', // E6.B: ranged projectile tracer glyph.
   'r', // E7.A: rogue unit glyph.
   'h', // E7.B: healer unit glyph.
+  'm', // E7.C: mage unit glyph.
 ] as const;

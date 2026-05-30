@@ -34,9 +34,26 @@
 import { z } from 'zod';
 import abilitiesJson from '../../config/abilities.json';
 
+/**
+ * E7.C — area-of-effect shape for abilities that blast a region instead
+ * of hitting a single unit. Optional: only the mage's `magic_bolt`
+ * carries it today, so the field is absent on every single-target
+ * ability. `radius` is a Chebyshev radius (radius 1 = the 3×3 around the
+ * blast center); `ringMultiplier` is the damage factor applied to cells
+ * OUTSIDE the center cell (center always takes full damage). Authored as
+ * tunable balance per A4 so the blast shape is a JSON edit, not a recompile.
+ */
+const AoeSchema = z.object({
+  radius: z.number().int().positive(),
+  ringMultiplier: z.number().min(0).max(1),
+});
+
+export type AoeConfig = z.infer<typeof AoeSchema>;
+
 const AbilitySchema = z.object({
   cooldownSeconds: z.number().positive(),
   range: z.number().int().positive(),
+  aoe: AoeSchema.optional(),
 });
 
 const AbilitiesSchema = z.record(z.string(), AbilitySchema);

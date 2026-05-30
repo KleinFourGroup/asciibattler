@@ -93,6 +93,7 @@ const ArchetypesSchema = z.object({
   ranged: ArchetypeSchema,
   rogue: ArchetypeSchema,
   healer: ArchetypeSchema,
+  mage: ArchetypeSchema,
 });
 
 export type ArchetypeConfig = z.infer<typeof ArchetypeSchema>;

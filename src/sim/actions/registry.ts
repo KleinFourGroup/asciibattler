@@ -9,6 +9,11 @@ import {
   type GambitStrikeActionData,
 } from './GambitStrikeAction';
 import { HEAL_ACTION_ID, HealAction, type HealActionData } from './HealAction';
+import {
+  MAGIC_BOLT_ACTION_ID,
+  MagicBoltAction,
+  type MagicBoltActionData,
+} from './MagicBoltAction';
 
 /**
  * Action factories keyed by `Action.id`. `World.fromJSON` uses these to
@@ -29,6 +34,7 @@ const FACTORIES: Record<string, ActionFactory> = {
   [GAMBIT_STRIKE_ACTION_ID]: (data, world) =>
     GambitStrikeAction.fromData(data as GambitStrikeActionData, world),
   [HEAL_ACTION_ID]: (data, world) => HealAction.fromData(data as HealActionData, world),
+  [MAGIC_BOLT_ACTION_ID]: (data) => MagicBoltAction.fromData(data as MagicBoltActionData),
 };
 
 export function createAction(id: string, data: unknown, world: World): Action {

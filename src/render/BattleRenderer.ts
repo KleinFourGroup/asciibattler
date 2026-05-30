@@ -51,6 +51,23 @@ interface OverlayFadeIn {
   readonly handle: UnitOverlayHandle;
 }
 
+/**
+ * E7.C — one particle of a magic-bolt explosion (the central flash or one of
+ * the outward sparks). A standalone sprite (not a unit, not in `handles`)
+ * driven per render frame: lerps `from → to` in XZ while growing `sizeFrom →
+ * sizeTo` and fading alpha 1 → 0, then self-removes. Swept by `detach` like
+ * the projectile tracers.
+ */
+interface ExplosionParticle {
+  readonly handle: SpriteHandle;
+  elapsed: number;
+  readonly duration: number;
+  readonly from: THREE.Vector3;
+  readonly to: THREE.Vector3;
+  readonly sizeFrom: number;
+  readonly sizeTo: number;
+}
+
 export class BattleRenderer {
   private readonly handles = new Map<number, SpriteHandle>();
   private readonly overlayHandles = new Map<number, UnitOverlayHandle>();
@@ -60,6 +77,10 @@ export class BattleRenderer {
    *  shared SpriteRenderer but NOT in `handles` (they're not units), so
    *  detach sweeps them separately. */
   private readonly projectiles = new Set<SpriteHandle>();
+  /** E7.C: in-flight magic-bolt explosion particles (flash + sparks). Like
+   *  `projectiles`, they live in the shared SpriteRenderer but not in
+   *  `handles`, and are swept by `detach`. */
+  private readonly explosions: ExplosionParticle[] = [];
   /** unitId → in-flight action timing for the progress bar. */
   private readonly progress = new Map<number, ActiveProgress>();
   /** unitId → ongoing post-death overlay fade. */
@@ -87,6 +108,9 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
     this.subscriptions.push(bus.on('unit:died', this.onUnitDied));
+    // E7.C: the mage's bolt detonation drives ONE projectile + explosion,
+    // replacing the per-hit tracers `unit:attacked` would otherwise spawn.
+    this.subscriptions.push(bus.on('magic:detonated', this.onMagicDetonated));
     // D7.B: keep HP bars in sync with tile-effect chip damage / heal. E6.C
     // also floats a hitsplat for each: burn damage in amber, heal in cyan.
     // The healing tile emits a no-op heal every cadence tick on a full unit
@@ -108,7 +132,31 @@ export class BattleRenderer {
   /** Per-render-frame tick. Drives sprite lerps + overlay position-follow + progress fill. */
   update(dt: number): void {
     this.animator.update(dt);
+    this.updateExplosions(dt);
     this.updateOverlays(dt);
+  }
+
+  /**
+   * E7.C — advance every live explosion particle: ease its position out
+   * toward `to`, grow its size, fade its alpha, and remove it once its
+   * lifetime elapses. Iterates back-to-front so in-place removal is safe.
+   */
+  private updateExplosions(dt: number): void {
+    for (let i = this.explosions.length - 1; i >= 0; i--) {
+      const p = this.explosions[i]!;
+      p.elapsed += dt;
+      const t = p.elapsed >= p.duration ? 1 : p.elapsed / p.duration;
+      // Ease-out: sparks shoot out fast then settle, which reads more
+      // explosive than a linear drift.
+      const eased = 1 - (1 - t) * (1 - t);
+      const pos = this.scratchPos.copy(p.from).lerp(p.to, eased);
+      const size = p.sizeFrom + (p.sizeTo - p.sizeFrom) * t;
+      this.sprites.updateSprite(p.handle, { position: pos, size, alpha: 1 - t });
+      if (t >= 1) {
+        this.sprites.removeSprite(p.handle);
+        this.explosions.splice(i, 1);
+      }
+    }
   }
 
   /**
@@ -139,6 +187,10 @@ export class BattleRenderer {
     // here. removeSprite is idempotent, so a late callback is harmless.
     for (const proj of this.projectiles) this.sprites.removeSprite(proj);
     this.projectiles.clear();
+    // E7.C — same deal for in-flight explosion particles: animator.clear()
+    // doesn't own them, so sweep their sprites here.
+    for (const p of this.explosions) this.sprites.removeSprite(p.handle);
+    this.explosions.length = 0;
     // overlays.clear() drops every <div> the overlay layer owns in a single
     // sweep — covers both live overlays (this.overlayHandles) and any that
     // were mid-fade when the battle ended (typically the killing-blow
@@ -290,6 +342,13 @@ export class BattleRenderer {
     const attackerHandle = this.handles.get(attackerId);
     if (!attackerHandle) return;
 
+    // E7.C — the mage's AoE emits one `unit:attacked` per victim, which would
+    // read as multishot here. Its visual is the single projectile + explosion
+    // driven by `magic:detonated` instead, so skip the per-hit tracer. (The
+    // per-victim hitsplat + HP-bar refresh in `onUnitAttacked` still fire —
+    // those correctly show each unit taking damage.)
+    if (attacker.archetype === 'mage') return;
+
     if (attacker.derived.attackRange <= 1) {
       // Melee: lunge toward the target's cell. Direction comes from cell
       // centers (stable even while the sprite is mid-lerp); startShove
@@ -324,12 +383,113 @@ export class BattleRenderer {
       (targetHandle && this.sprites.getPosition(targetHandle, this.scratchPos)) ??
       this.tileWorldPos(target.position)
     ).clone();
-    const proj = this.sprites.addSprite(PROJECTILE_GLYPH, colorForTeam(attacker.team), from);
+    this.spawnProjectile(from, to, colorForTeam(attacker.team));
+  }
+
+  /**
+   * E6.B/E7.C — fly a `*` tracer in a straight line `from → to` over
+   * `PROJECTILE_SECONDS` and despawn on arrival. Shared by the ranged strike
+   * (shooter → target) and the mage bolt (caster → target tile); the latter
+   * passes `onArrive` to detonate the explosion when the bolt lands. The
+   * tracer lives in `projectiles` (not `handles`) so `detach` sweeps it; note
+   * `animator.clear()` drops the lerp WITHOUT firing `onArrive` (gotcha #108),
+   * so a battle that ends mid-flight spawns no orphan explosion.
+   */
+  private spawnProjectile(
+    from: THREE.Vector3,
+    to: THREE.Vector3,
+    color: string,
+    onArrive?: () => void,
+  ): void {
+    const proj = this.sprites.addSprite(PROJECTILE_GLYPH, color, from);
     this.sprites.updateSprite(proj, { bloomIntensity: PROJECTILE_BLOOM, size: PROJECTILE_SIZE });
     this.projectiles.add(proj);
     this.animator.startLerp(proj, from, to, PROJECTILE_SECONDS, () => {
       this.sprites.removeSprite(proj);
       this.projectiles.delete(proj);
+      onArrive?.();
+    });
+  }
+
+  /**
+   * E7.C — the mage's bolt landed. Fly ONE tracer from the caster to the
+   * target tile, then detonate a flash + spark-ring explosion there. Fires
+   * once per cast (off `magic:detonated`) regardless of how many units the
+   * blast hit — so it reads as a single exploding missile, and a whiff still
+   * shows the impact. The boom position is captured NOW (world attached); if
+   * the battle ends before the tracer lands, `animator.clear()` drops the
+   * lerp without firing `onArrive`, so no explosion spawns post-detach.
+   */
+  private onMagicDetonated = ({ casterId, center }: GameEvents['magic:detonated']): void => {
+    if (!this.world) return;
+    const caster = this.world.findUnit(casterId);
+    const color = caster ? colorForTeam(caster.team) : COLORS.TERMINAL_STONE;
+    const boomAt = this.tileWorldPos(center);
+    const casterHandle = this.handles.get(casterId);
+    const from = (
+      (casterHandle && this.sprites.getPosition(casterHandle, this.scratchPos)) ??
+      boomAt
+    ).clone();
+    this.spawnProjectile(from, boomAt.clone(), color, () => this.spawnExplosion(boomAt, color));
+  };
+
+  /**
+   * E7.C — flash + spark-ring burst at `center`. One central flash glyph
+   * that grows + fades, plus a ring of sparks that shoot outward to roughly
+   * the 3×3 blast edge and fade. All ride the shared bloom pipeline so the
+   * burst glows in the team color. Tunable via the EXPLOSION_* consts below.
+   */
+  private spawnExplosion(center: THREE.Vector3, color: string): void {
+    // Central flash: stays put, grows large, fades.
+    this.addExplosionParticle(
+      center,
+      center,
+      EXPLOSION_FLASH_GLYPH,
+      color,
+      EXPLOSION_FLASH_SIZE_FROM,
+      EXPLOSION_FLASH_SIZE_TO,
+      EXPLOSION_FLASH_SECONDS,
+    );
+    // Spark ring: 8 tracers fly outward to the blast edge.
+    for (const [dx, dz] of EXPLOSION_RING_DIRS) {
+      const dest = center.clone();
+      dest.x += dx * EXPLOSION_RING_SPREAD;
+      dest.z += dz * EXPLOSION_RING_SPREAD;
+      this.addExplosionParticle(
+        center,
+        dest,
+        PROJECTILE_GLYPH,
+        color,
+        EXPLOSION_SPARK_SIZE,
+        EXPLOSION_SPARK_SIZE,
+        EXPLOSION_RING_SECONDS,
+      );
+    }
+  }
+
+  private addExplosionParticle(
+    from: THREE.Vector3,
+    to: THREE.Vector3,
+    glyph: string,
+    color: string,
+    sizeFrom: number,
+    sizeTo: number,
+    duration: number,
+  ): void {
+    const handle = this.sprites.addSprite(glyph, color, from);
+    this.sprites.updateSprite(handle, {
+      size: sizeFrom,
+      bloomIntensity: EXPLOSION_BLOOM,
+      alpha: 1,
+    });
+    this.explosions.push({
+      handle,
+      elapsed: 0,
+      duration,
+      from: from.clone(),
+      to: to.clone(),
+      sizeFrom,
+      sizeTo,
     });
   }
 
@@ -498,6 +658,35 @@ const PROJECTILE_BLOOM = 1.2;
 /** Per-sprite size multiplier for the tracer (1 = full unit-glyph size).
  *  Shrinks the `*` so it reads as a bolt rather than a flying letter. */
 const PROJECTILE_SIZE = 0.6;
+
+/**
+ * E7.C — magic-bolt explosion tuning. The flash is a central `*` that grows
+ * from FLASH_SIZE_FROM → FLASH_SIZE_TO while fading; the spark ring is 8 `*`
+ * tracers that shoot RING_SPREAD world units outward (cells are 1×1, blast
+ * radius is 1, so ~1.1 lands the sparks at the 3×3 edge) and fade. EXPLOSION_
+ * BLOOM pushes the whole burst well above the unit baseline so it glows. All
+ * eyeball-tuned — bump freely.
+ */
+const EXPLOSION_FLASH_GLYPH = '*';
+const EXPLOSION_FLASH_SIZE_FROM = 0.8;
+const EXPLOSION_FLASH_SIZE_TO = 3.0;
+const EXPLOSION_FLASH_SECONDS = 0.35;
+const EXPLOSION_SPARK_SIZE = 0.55;
+const EXPLOSION_RING_SPREAD = 1.1;
+const EXPLOSION_RING_SECONDS = 0.3;
+const EXPLOSION_BLOOM = 2.2;
+/** 8 unit-ish directions (orthogonal + diagonal, diagonals normalized) so the
+ *  spark ring expands evenly to the blast edge. */
+const EXPLOSION_RING_DIRS: ReadonlyArray<readonly [number, number]> = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+  [0.7071, 0.7071],
+  [0.7071, -0.7071],
+  [-0.7071, 0.7071],
+  [-0.7071, -0.7071],
+];
 
 /** World-Y lift applied to a hitsplat's anchor so it sits at the TOP of the
  *  sprite rather than its center. The sprite quad is 1×1 centered at

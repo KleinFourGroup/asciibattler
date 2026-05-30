@@ -74,6 +74,14 @@ export class MagicBoltAction implements Action {
   }
 
   applyEffect(unit: Unit, world: World, _tickOffset: number): void {
+    // Announce the detonation ONCE, regardless of how many units the blast
+    // hits (zero included — a whiff). The render + audio layers play a single
+    // projectile → explosion + cast sound off this, instead of the per-victim
+    // `unit:attacked` stream (which would read/sound like multishot, and is
+    // silent on a miss). Emitted before the damage loop so the "boom" is the
+    // first signal of the cast resolving.
+    world.emit('magic:detonated', { casterId: unit.id, center: { ...this.center } });
+
     // One crit roll for the whole blast (determinism: a single combatRng
     // draw per detonation, in tick order — same channel AttackAction uses).
     const crit = world.combatRng.next() < this.critChance;

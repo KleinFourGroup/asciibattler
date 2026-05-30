@@ -161,6 +161,23 @@ describe('MagicBoltAction.applyEffect — blast shape', () => {
     expect(w.damageDealtBy(caster.id)).toBe(10 + 5); // center + ring
   });
 
+  it('emits magic:detonated exactly once per detonation, with the center, even on a whiff', () => {
+    const detonations: GameEvents['magic:detonated'][] = [];
+    const bus = new EventBus<GameEvents>();
+    bus.on('magic:detonated', (p) => detonations.push(p));
+    const w = new World(bus, new RNG(1));
+    const caster = makeUnit('player', { x: 2, y: 3 }, 'mage');
+    // No enemy anywhere near the center → the blast hits nobody (a whiff).
+    const farEnemy = makeUnit('enemy', { x: 11, y: 11 });
+    w.units.push(caster, farEnemy);
+
+    bolt({ x: 5, y: 5 }, 10).applyEffect(caster, w, 0);
+
+    expect(detonations).toHaveLength(1); // fires despite hitting nothing
+    expect(detonations[0]).toEqual({ casterId: caster.id, center: { x: 5, y: 5 } });
+    expect(farEnemy.currentHp).toBe(farEnemy.derived.maxHp); // genuinely a whiff
+  });
+
   it('is ground-targeted: an enemy that left the captured cell escapes the blast', () => {
     const caster = makeUnit('player', { x: 0, y: 0 }, 'mage');
     // Captured center is (5,5); the enemy is now far away (it "walked off"

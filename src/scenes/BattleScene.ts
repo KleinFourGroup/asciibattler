@@ -65,7 +65,17 @@ export class BattleScene implements Scene {
       ctx.bus.on('unit:attacked', ({ attackerId }) => {
         const attacker = this.world?.findUnit(attackerId);
         if (!attacker) return;
+        // E7.C — the mage's AoE emits one `unit:attacked` per victim; without
+        // this skip it would play one `shoot` per hit (multishot audio). Its
+        // single cast sound rides `magic:detonated` instead (below).
+        if (attacker.archetype === 'mage') return;
         ctx.audio.play(attacker.derived.attackRange <= 1 ? 'melee' : 'shoot');
+      }),
+      // E7.C — one sound per mage bolt cast (fires even on a whiff), matching
+      // the single projectile + explosion visual. Reuses the `shoot` sample
+      // for now; a dedicated boom sample can drop into config/audio later.
+      ctx.bus.on('magic:detonated', () => {
+        ctx.audio.play('shoot');
       }),
       ctx.bus.on('unit:died', ({ team }) => {
         if (team === 'neutral') return;

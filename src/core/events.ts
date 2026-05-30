@@ -97,6 +97,19 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'unit:died': { unitId: number; team: Team };
 
+  /**
+   * E7.C — a mage's `magic_bolt` detonated at `center` (the ground-targeted
+   * blast cell). Fires exactly ONCE per cast from `MagicBoltAction.applyEffect`,
+   * regardless of how many units the blast hit — including zero (a whiff) —
+   * carrying the caster + center so the render + audio layers can play a
+   * single impact (one projectile → explosion + one cast sound) instead of
+   * keying off the per-target `unit:attacked` stream, which fires once per
+   * victim (reads as multishot) and not at all on a miss. The damage itself
+   * still rides `unit:attacked` per hit, so hitsplats / HP bars / the XP
+   * ledger are unchanged.
+   */
+  'magic:detonated': { casterId: number; center: GridCoord };
+
   'run:started': { seed: number };
   'run:victory': Record<string, never>;
   'run:defeated': Record<string, never>;

@@ -120,6 +120,14 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
     // gives the display the right stat.
     case 'mage':
       return stats.magic;
+    // E7.D — the catapult is a heavy RANGED unit: its `catapult_shot` damage
+    // scales on `ranged` (resolved via `catapultShotDamage` below). The sim
+    // never calls `basicAttackDamage` on a catapult (it carries no basic
+    // strike), but the display surfaces (HUD / RecruitScreen "ATK" row) read
+    // this single source of truth — so a catapult's shown attack stat is its
+    // `ranged`. The case also keeps the switch exhaustive.
+    case 'catapult':
+      return stats.ranged;
     case 'environment':
       return 0;
   }
@@ -153,6 +161,17 @@ export function healAmountFor(unit: Unit): number {
  */
 export function magicBoltDamage(unit: Unit): number {
   return unit.stats.magic;
+}
+
+/**
+ * E7.D — base damage of a catapult's `catapult_shot` (before the crit
+ * factor). Scales on `ranged` (raw), mirroring `basicAttackDamage`
+ * (strength/ranged) and `magicBoltDamage` (magic). Kept as a named helper so
+ * the catapult's damage-scaling stat has one source of truth, ready for a
+ * future expressive damage-formula step.
+ */
+export function catapultShotDamage(unit: Unit): number {
+  return unit.stats.ranged;
 }
 
 function cooldownScale(stat: number): number {

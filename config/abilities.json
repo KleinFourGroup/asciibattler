@@ -3,5 +3,6 @@
   "ranged_shot": { "cooldownSeconds": 2.0, "range": 3 },
   "gambit_strike": { "cooldownSeconds": 1.2, "range": 1 },
   "heal_ally": { "cooldownSeconds": 2.0, "range": 3 },
-  "magic_bolt": { "cooldownSeconds": 2.5, "range": 5, "aoe": { "radius": 1, "ringMultiplier": 0.5 } }
+  "magic_bolt": { "cooldownSeconds": 2.5, "range": 5, "aoe": { "radius": 1, "ringMultiplier": 0.5 } },
+  "catapult_shot": { "cooldownSeconds": 3.0, "range": 6 }
 }

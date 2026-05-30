@@ -27,4 +27,13 @@ import type { World } from '../World';
 export interface Ability {
   readonly id: string;
   propose(unit: Unit, world: World): ActionProposal | null;
+  /**
+   * E7.D — when `true`, this ability engages without needing line of sight
+   * (e.g. the catapult's arcing shot lobs over walls). `MovementBehavior`'s
+   * in-range abstain reads it: a unit carrying an LOS-ignoring ability holds
+   * + lets the ability fire the moment it's in range, instead of creeping
+   * forward to clear a wall it doesn't need cleared. Absent/false on every
+   * line-of-sight-gated ability (strikes, ranged, magic).
+   */
+  readonly ignoresLineOfSight?: boolean;
 }

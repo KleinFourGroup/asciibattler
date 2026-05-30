@@ -50,6 +50,9 @@ import { hasLineOfSight } from '../LineOfSight';
  *    otherwise freeze (the basic-strike ability abstains on no LOS;
  *    MovementBehavior would also abstain on in-range). Now it keeps
  *    pathing forward — usually one more step brings it past the wall.
+ *    EXCEPTION (E7.D): a unit carrying an LOS-ignoring ability (the
+ *    catapult) abstains on range alone — it lobs over the wall, so there's
+ *    nothing to path around.
  */
 export class MovementBehavior implements Behavior {
   static readonly kind = 'movement';
@@ -84,8 +87,14 @@ export class MovementBehavior implements Behavior {
       otherUnitCells.add(`${u.position.x},${u.position.y}`);
     }
 
+    // E7.D — a unit whose engagement ability ignores LOS (the catapult's
+    // arcing shot) abstains on range alone: no point creeping forward to
+    // clear a wall it lobs over. LOS-gated units (strikes/ranged/magic) keep
+    // the original `inRange && hasLOS` abstain so a wall between them and the
+    // target makes them path for a clear shot instead of freezing.
+    const ignoresLos = unit.abilities.some((a) => a.ignoresLineOfSight === true);
     const inRange = chebyshev(unit.position, target.position) <= unit.derived.attackRange;
-    if (inRange && hasLineOfSight(unit.position, target.position, losBlockers)) {
+    if (inRange && (ignoresLos || hasLineOfSight(unit.position, target.position, losBlockers))) {
       return null;
     }
 

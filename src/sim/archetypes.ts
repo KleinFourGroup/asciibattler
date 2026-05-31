@@ -118,3 +118,15 @@ export function scaledUnit(archetype: Archetype, level: number): UnitTemplate {
 // Re-exported for tests / fuzz harness diagnostic that want to peek
 // at the parsed config without reaching into the config module.
 export const ARCHETYPE_CONFIG: Record<Archetype, ArchetypeConfig> = CONFIGS;
+
+/**
+ * F1 — the draft / recruit pool: every defined archetype, in
+ * `config/archetypes.json` key order (melee, ranged, rogue, healer,
+ * mage, catapult). Derived from the config so a newly-added archetype
+ * joins the pool automatically; the stable key order keeps the byte
+ * stream deterministic for whoever samples from it. `rollOffer` draws
+ * DISTINCT archetypes from this at uniform weight (F1, recruit-only) —
+ * rarity tiers + floor-depth weighting + enemy-side diversification
+ * layer on top in Phase G (recruitment refactor).
+ */
+export const ALL_ARCHETYPES: readonly Archetype[] = Object.keys(CONFIGS) as Archetype[];

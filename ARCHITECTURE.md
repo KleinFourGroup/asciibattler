@@ -98,7 +98,7 @@ src/
                              # RUN_SCHEMA_VERSION 2 (D8 added BattleEncounter.theme)
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
     NodeMap.ts               # DAG generation + dump
-    Recruitment.ts           # rollOffer with archetype-variety guarantee
+    Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1)
 
   render/
     Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)

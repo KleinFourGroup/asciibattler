@@ -1,24 +1,34 @@
 /**
- * Post-victory unit-offer generation. Step 4.4; tuned at CHECKPOINT 6.
+ * Post-victory unit-offer generation.
  *
- * Each offered unit is rolled independently (archetype uniformly, stats
- * inside that archetype's bounds). The one constraint: every offer of size
- * >= 2 contains at least one melee AND one ranged — purely independent
- * rolls would too often produce all-same-archetype offers, which feels
- * like a bad-luck choice rather than a real one.
+ * F1 (draft-pool pull-forward): each offer is a set of DISTINCT
+ * archetypes sampled uniformly from the full pool (`ALL_ARCHETYPES` —
+ * all six: melee, ranged, rogue, healer, mage, catapult), so the four
+ * E7 archetypes are draftable for playtest balancing instead of being
+ * dev-only `?roster=` units. Distinctness replaces the old "guarantee
+ * >=1 melee + >=1 ranged" reservation: with six archetypes an all-same
+ * offer can't happen anyway, and three *different* choices is the point.
+ * The sample is capped at the pool size (can't draw more distinct than
+ * exist). Rarity tiers + floor-depth weighting + enemy-side
+ * diversification land in Phase G — F1 is recruit-only at uniform weight
+ * (enemies stay melee/ranged, so you draft the new archetypes before you
+ * fight them).
  *
  * E3: recruits arrive at `level` (defaults to 1). Run threads
  * `currentFloor` through so a floor-N recruit gets N simulated level-ups
  * via `rollUnit` — keeps recruits in pace with the enemies on the floor
- * the player just cleared. Order of draws (archetype assignment first,
- * then per-unit stat rolls) is fixed by the loops below; tuning the
- * level math here will shift downstream byte continuity, but that's
- * scoped to this fork of the run RNG.
+ * the player just cleared.
+ *
+ * Determinism: the partial Fisher–Yates below draws `min(size, pool)`
+ * ints from `rng`, then each `rollUnit` draws `7 × (level − 1)` more.
+ * Widening the pool changes the draw sequence, so F1 deliberately resets
+ * the fuzz baseline (the E7 steps kept pools unchanged precisely to
+ * avoid this; F1 spends the reset on purpose).
  */
 
 import type { RNG } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
-import { rollUnit, type Archetype } from './../sim/archetypes';
+import { rollUnit, ALL_ARCHETYPES, type Archetype } from './../sim/archetypes';
 import { RECRUITMENT } from '../config/recruitment';
 
 export function rollOffer(
@@ -27,21 +37,23 @@ export function rollOffer(
   level: number = 1,
 ): UnitTemplate[] {
   if (size <= 0) return [];
-  if (size === 1) {
-    return [rollUnit(rng.pick(['melee', 'ranged'] as const), rng, level)];
-  }
+  return sampleDistinctArchetypes(rng, size).map((a) => rollUnit(a, rng, level));
+}
 
-  // Reserve one slot for a guaranteed melee and one for a guaranteed ranged.
-  // The remaining slots roll archetype uniformly.
-  const archetypes: Archetype[] = new Array(size).fill(null) as Archetype[];
-  const meleeSlot = rng.int(0, size - 1);
-  let rangedSlot = rng.int(0, size - 1);
-  while (rangedSlot === meleeSlot) rangedSlot = rng.int(0, size - 1);
-  archetypes[meleeSlot] = 'melee';
-  archetypes[rangedSlot] = 'ranged';
-  for (let i = 0; i < size; i++) {
-    archetypes[i] ??= rng.pick(['melee', 'ranged'] as const);
+/**
+ * Sample up to `count` distinct archetypes uniformly from `ALL_ARCHETYPES`
+ * via a partial Fisher–Yates shuffle: swap each of the first `n` slots
+ * with a uniformly-random later-or-equal slot. Capped at the pool size.
+ * Works on a fresh copy — never mutates the shared pool.
+ */
+function sampleDistinctArchetypes(rng: RNG, count: number): Archetype[] {
+  const pool = [...ALL_ARCHETYPES];
+  const n = Math.min(count, pool.length);
+  for (let i = 0; i < n; i++) {
+    const j = rng.int(i, pool.length - 1);
+    const tmp = pool[i]!;
+    pool[i] = pool[j]!;
+    pool[j] = tmp;
   }
-
-  return archetypes.map((a) => rollUnit(a, rng, level));
+  return pool.slice(0, n);
 }

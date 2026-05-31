@@ -16,7 +16,7 @@ import type { FuzzStrategy } from '../Strategy';
 import type { RNG } from '../../../src/core/RNG';
 import type { Run } from '../../../src/run/Run';
 import type { UnitTemplate } from '../../../src/sim/Unit';
-import type { Archetype } from '../../../src/sim/archetypes';
+import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
 
 export class GreedyStrategy implements FuzzStrategy {
   readonly name = 'greedy';
@@ -46,7 +46,12 @@ export class GreedyStrategy implements FuzzStrategy {
 }
 
 function countByArchetype(team: readonly UnitTemplate[]): Record<Archetype, number> {
-  const counts: Record<Archetype, number> = { melee: 0, ranged: 0 };
+  // Initialize every archetype to 0 (F1 widened the recruit pool past
+  // melee/ranged) so a new-archetype offer reads a real 0, not undefined.
+  const counts = Object.fromEntries(ALL_ARCHETYPES.map((a) => [a, 0])) as Record<
+    Archetype,
+    number
+  >;
   for (const t of team) counts[t.archetype]++;
   return counts;
 }

@@ -120,6 +120,12 @@ A single seeded RNG instance is threaded through everything that involves random
 
 The RNG is *not* shared with anything visual (post-process noise, shader randomness) — those can use whatever they want, since they don't affect simulation state.
 
+## Action timing — the phase system (F2)
+
+Combat actions separate **logical timing** (deterministic, counted in ticks — the sim owns it, authoritative) from **presentation timing** (animation, in seconds — the renderer owns it, free to lead or lag). Each action declares an ordered **phase timeline** — `windup → release → travel → impact → recovery`, all optional / zero-length — and the effect lands on the `impact` phase, not at cast. `World.tick` emits a transient `action:phase` event at every boundary that begins on a tick; the renderer schedules VFX/SFX against it (a projectile launches on `release`, the hitsplat lands on `impact`) without ever driving simulation state. The "locked target died before the effect lands" case is a declared per-action **`OrphanPolicy`** (`commit-at-cast` / `fizzle` / `ground-target` / `re-home`), so elaborate multi-phase attacks become *data*, not new event plumbing.
+
+This is the *timing substrate* for abilities — deliberately **not** a generic status-effect system. Cross-unit persistent buffs/debuffs are a different axis, deferred until a concrete consumer reveals its shape (see [ROADMAP.md](ROADMAP.md)).
+
 ## Out of scope (post-MVP backlog)
 
 Captured here so we can confidently say "not now" during the jam without losing the idea:

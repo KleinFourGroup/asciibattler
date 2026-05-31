@@ -15,6 +15,7 @@
 import type { GridCoord } from './types';
 import type { Team, UnitStats, UnitTemplate } from '../sim/Unit';
 import type { Archetype } from '../sim/archetypes';
+import type { ActionPhaseName } from '../sim/Action';
 
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
@@ -123,6 +124,26 @@ export interface GameEvents extends Record<string, unknown> {
    * XP ledger are unchanged.
    */
   'catapult:fired': { casterId: number; impact: GridCoord; hit: boolean };
+
+  /**
+   * F2 — transient phase-boundary signal. Fires once per phase that BEGINS
+   * on a tick, in declared order, for every in-flight action (zero-length
+   * phases included — they share a boundary tick). Renderer-only consumer
+   * (F3 launches projectiles on `release` + moves impact VFX to `impact`;
+   * F4 sequences the rogue gambit). Carries NO damage — that still rides
+   * `unit:attacked` / `unit:healed`. `targetId` is set for homing actions
+   * (strikes, catapult), `targetCell` for ground-target / fixed-cell actions
+   * (mage); both omitted for self / no-target actions (heal-self, move,
+   * spawn). No sim/run subscriber exists in F2, so emitting it cannot perturb
+   * the deterministic sim or the fuzz baseline.
+   */
+  'action:phase': {
+    unitId: number;
+    actionId: string;
+    phase: ActionPhaseName;
+    targetId?: number | undefined;
+    targetCell?: GridCoord | undefined;
+  };
 
   'run:started': { seed: number };
   'run:victory': Record<string, never>;

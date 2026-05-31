@@ -93,7 +93,13 @@ function proposeBasicStrike(
     action: makeAction(target, baseDamage, unit.derived.critChance, damageMultiplier),
     score: 10,
     cooldown: durationTicks,
-    duration: durationTicks,
+    // F2 — the strike's damage lands in `start` (impact at offset 0); the
+    // unit is then locked for the cadence window. `[impact 0, recovery D]`
+    // reproduces the pre-F2 busy window exactly.
+    phases: [
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: durationTicks },
+    ],
     cooldownKey: abilityId,
   };
 }

@@ -40,7 +40,12 @@ export class HealAlly implements Ability {
       action: new HealAction(target, amount),
       score: 10,
       cooldown: durationTicks,
-      duration: durationTicks,
+      // F2 — heal lands in `start` (impact at offset 0); unit then locked for
+      // the cadence window. Same busy window as pre-F2.
+      phases: [
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: durationTicks },
+      ],
       cooldownKey: this.id,
     };
   }

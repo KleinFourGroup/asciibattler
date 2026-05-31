@@ -1,4 +1,4 @@
-import type { Action } from '../Action';
+import type { Action, OrphanPolicy } from '../Action';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import { STATS } from '../../config/stats';
@@ -45,6 +45,10 @@ export interface AttackActionData {
  */
 export class AttackAction implements Action {
   readonly id = ATTACK_ACTION_ID;
+  // F2 — single-tick: the damage resolves against the ref captured at cast
+  // (in `start`), guarded if the target died earlier this tick. Phase list
+  // is `[{impact,0},{recovery,D}]`; the effect stays in `start`.
+  readonly orphanPolicy: OrphanPolicy = 'commit-at-cast';
 
   constructor(
     private readonly target: Unit | undefined,
@@ -68,6 +72,10 @@ export class AttackAction implements Action {
       damage,
       crit,
     });
+  }
+
+  phaseTarget(): { targetId?: number | undefined } {
+    return { targetId: this.target?.id };
   }
 
   toData(): AttackActionData {

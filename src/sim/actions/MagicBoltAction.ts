@@ -1,4 +1,4 @@
-import type { Action } from '../Action';
+import type { Action, OrphanPolicy } from '../Action';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
@@ -59,6 +59,11 @@ export interface MagicBoltActionData {
  */
 export class MagicBoltAction implements Action {
   readonly id = MAGIC_BOLT_ACTION_ID;
+  // F2 — ground-target: the blast detonates on the fixed `center` cell and
+  // hits whoever stands there at impact, so a dead original target is
+  // irrelevant (no fizzle). Phase list `[{windup,D},{impact,0}]`; the
+  // detonation is `applyEffect` at the impact boundary.
+  readonly orphanPolicy: OrphanPolicy = 'ground-target';
 
   constructor(
     private readonly center: GridCoord,
@@ -111,6 +116,10 @@ export class MagicBoltAction implements Action {
         crit,
       });
     }
+  }
+
+  phaseTarget(): { targetCell?: GridCoord } {
+    return { targetCell: { ...this.center } };
   }
 
   toData(): MagicBoltActionData {

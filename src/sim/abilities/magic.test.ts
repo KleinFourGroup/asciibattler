@@ -74,10 +74,13 @@ describe('MagicBolt.propose', () => {
 
     const expected = attackCooldownTicksFor(BOLT.cooldownSeconds, MAGE_STATS.speed);
     expect(proposal!.cooldown).toBe(expected);
-    expect(proposal!.duration).toBe(expected);
-    // The blast lands on the tick the charge completes — the multi-tick
-    // signature that exercises A1's applyEffect / the action progress bar.
-    expect(proposal!.effectTicks).toEqual([expected]);
+    // F2 — charge for the whole window, detonate at impact. Σ ticks ==
+    // expected (the busy window); the blast lands at offset `expected` —
+    // the multi-tick signature that exercises applyEffect + the progress bar.
+    expect(proposal!.phases).toEqual([
+      { phase: 'windup', ticks: expected },
+      { phase: 'impact', ticks: 0 },
+    ]);
     expect(expected).toBeGreaterThan(1); // it's a genuine charge, not single-tick
   });
 

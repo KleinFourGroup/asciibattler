@@ -75,10 +75,15 @@ describe('CatapultShot.propose', () => {
 
     const expected = attackCooldownTicksFor(SHOT.cooldownSeconds, CATAPULT_STATS.speed);
     expect(proposal!.cooldown).toBe(expected);
-    expect(proposal!.duration).toBe(expected);
-    // The shot lands on the tick the wind-up completes — the multi-tick
-    // signature that fills the action-progress bar.
-    expect(proposal!.effectTicks).toEqual([expected]);
+    // F2 — wind up for the whole window, then loose: release/travel/impact
+    // all fall at offset `expected` (travel is 0-length in F2). The hit lands
+    // at impact — the multi-tick signature that fills the action-progress bar.
+    expect(proposal!.phases).toEqual([
+      { phase: 'windup', ticks: expected },
+      { phase: 'release', ticks: 0 },
+      { phase: 'travel', ticks: 0 },
+      { phase: 'impact', ticks: 0 },
+    ]);
     expect(expected).toBeGreaterThan(1); // it's a genuine wind-up, not single-tick
   });
 

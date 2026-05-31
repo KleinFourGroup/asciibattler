@@ -113,7 +113,7 @@ describe('HealAlly.propose', () => {
     expect(new HealAlly().propose(healer, world([healer, woundedEnemy, woundedWall]))).toBeNull();
   });
 
-  it('derives cooldown + duration from config × speed', () => {
+  it('derives cooldown + busy window from config × speed', () => {
     const healer = makeHealer({ x: 5, y: 5 });
     const ally = makeUnit(2, 'player', { x: 5, y: 6 }, { hp: 10 });
     const proposal = new HealAlly().propose(healer, world([healer, ally]));
@@ -122,6 +122,11 @@ describe('HealAlly.propose', () => {
       HEALER_STATS.speed,
     );
     expect(proposal!.cooldown).toBe(expected);
-    expect(proposal!.duration).toBe(expected);
+    // F2 — single-tick heal: impact at offset 0, recovery fills the cadence
+    // window (== the pre-F2 duration lockout).
+    expect(proposal!.phases).toEqual([
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: expected },
+    ]);
   });
 });

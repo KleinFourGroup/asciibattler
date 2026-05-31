@@ -61,8 +61,16 @@ export class CatapultShot implements Ability {
       ),
       score: 10,
       cooldown: durationTicks,
-      duration: durationTicks,
-      effectTicks: [durationTicks],
+      // F2 — wind up for the whole window, then loose: release/travel/impact
+      // all fall at offset `durationTicks` (travel is 0-length in F2; F3
+      // gives it real ticks). The hit (`applyEffect`) lands at impact —
+      // exactly where the pre-F2 `effectTicks:[durationTicks]` fired.
+      phases: [
+        { phase: 'windup', ticks: durationTicks },
+        { phase: 'release', ticks: 0 },
+        { phase: 'travel', ticks: 0 },
+        { phase: 'impact', ticks: 0 },
+      ],
       cooldownKey: this.id,
     };
   }

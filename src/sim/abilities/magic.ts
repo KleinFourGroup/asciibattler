@@ -73,8 +73,13 @@ export class MagicBolt implements Ability {
       ),
       score: 10,
       cooldown: durationTicks,
-      duration: durationTicks,
-      effectTicks: [durationTicks],
+      // F2 — charge for the whole wind-up, then detonate at impact. The blast
+      // (`applyEffect`) lands at offset `durationTicks` — exactly where the
+      // pre-F2 `effectTicks:[durationTicks]` fired.
+      phases: [
+        { phase: 'windup', ticks: durationTicks },
+        { phase: 'impact', ticks: 0 },
+      ],
       cooldownKey: this.id,
     };
   }

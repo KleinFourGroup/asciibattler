@@ -230,7 +230,7 @@ class Unit {
   readonly behaviors: Behavior[];
   readonly blocksLineOfSight: boolean;             // D6 — true for combatants/walls; false for half-cover
   readonly actionCooldowns: Map<string, number>;   // A1 — per-action, keyed by Action.id
-  activeAction: ActiveAction | null;               // A1 — set while an action is in flight
+  activeAction: ActiveAction | null;               // A1 — set while in flight; F2 — carries the phase timeline
 }
 ```
 
@@ -272,11 +272,17 @@ unit:attacked           { attackerId: number; targetId: number; damage: number }
 unit:burned             { unitId: number; damage: number }                         # D7.B: per-tick chip from fire tile (no attacker)
 unit:healed             { unitId: number; amount: number }                         # D7.B: per-tick chip from healing tile (emits amount=0 at maxHp)
 unit:died               { unitId: number; team: Team }                             # team carried because the unit is already spliced out (C1b)
+magic:detonated         { casterId: number; center: GridCoord }                     # E7.C: once per mage cast (whiff incl.) — drives one boom VFX
+catapult:fired          { casterId: number; impact: GridCoord; hit: boolean }       # E7.D: once per shot (abort incl.) — drives the lobbed projectile
+action:phase            { unitId; actionId; phase; targetId?; targetCell? }         # F2: phase-boundary signal; renderer schedules VFX against it
 run:started             { seed: number }
 run:victory             { }
 run:defeated            { }
 recruit:offered         { units: UnitTemplate[] }
+promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
 ```
+
+`action:phase` (F2): every action declares an ordered phase timeline (`windup → release → travel → impact → recovery`, all optional/zero-length); `World.tick` fires this event at each boundary that begins on a tick (zero-length phases share one), and runs the action's effect (`applyEffect`) at `impact`. It carries no damage — that still rides `unit:attacked` / `unit:healed`. Renderer-only consumer (F3/F4). The "target died mid-flight" handling is a declared per-action `OrphanPolicy` (`commit-at-cast` / `fizzle` / `ground-target` / `re-home`).
 
 `src/core/events.ts` is the authoritative type definition — when these drift, the source file wins. Naming convention: `subject:verbed`, past-tense. Bus events are past-tense notifications only; anything imperative goes through the command channel below.
 

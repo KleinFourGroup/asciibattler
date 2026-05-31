@@ -1,4 +1,4 @@
-import type { Action } from '../Action';
+import type { Action, OrphanPolicy } from '../Action';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
@@ -41,6 +41,10 @@ export interface GambitStrikeActionData {
  */
 export class GambitStrikeAction implements Action {
   readonly id = GAMBIT_STRIKE_ACTION_ID;
+  // F2 — single-tick strike (+ reposition), same commit-at-cast guard as
+  // AttackAction. F4 will sequence the strike vs the retreat across phases;
+  // for F2 both stay in `start` (behavior-preserving).
+  readonly orphanPolicy: OrphanPolicy = 'commit-at-cast';
 
   constructor(
     private readonly target: Unit | undefined,
@@ -77,6 +81,10 @@ export class GambitStrikeAction implements Action {
         durationTicks: unit.derived.moveCooldownTicks,
       });
     }
+  }
+
+  phaseTarget(): { targetId?: number | undefined } {
+    return { targetId: this.target?.id };
   }
 
   toData(): GambitStrikeActionData {

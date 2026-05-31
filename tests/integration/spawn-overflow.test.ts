@@ -133,7 +133,7 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.units.filter((u) => u.team === 'player')).toHaveLength(1);
   });
 
-  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v13', () => {
+  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v14', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
@@ -146,7 +146,7 @@ describe('D5.C spawn overflow queue', () => {
     world.units[0]!.outOfLosTicks = 3;
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(13);
+    expect(wire.schemaVersion).toBe(14);
     expect(wire.units[0].targetId).toBe(world.units[1]!.id);
     expect(wire.units[0].outOfLosTicks).toBe(3);
     expect(wire.damageDealt).toEqual([]);
@@ -185,13 +185,18 @@ describe('D5.C spawn overflow queue', () => {
     expect(restored.queueLength('player')).toBe(1);
   });
 
-  it('rejects v12 snapshots (E5 target-stickiness fields are new; old format dies loudly)', () => {
+  it('rejects pre-current snapshots loudly (v12 E5, v13 pre-F2 — old format dies)', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
-    const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    wire.schemaVersion = 12;
-    expect(() => World.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
-      /unsupported schema version/,
-    );
+    // v13 is the immediately-prior format F2 obsoleted (effectTicks → phases);
+    // v12 is older still. Any non-current version must throw, not silently
+    // mis-load.
+    for (const stale of [12, 13]) {
+      const wire = JSON.parse(JSON.stringify(world.toJSON()));
+      wire.schemaVersion = stale;
+      expect(() => World.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
+        /unsupported schema version/,
+      );
+    }
   });
 });

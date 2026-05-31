@@ -379,7 +379,12 @@ class ConfigurableStrike implements Ability {
       action: new AttackAction(target, this.damage, 0),
       score: this.score,
       cooldown: this.cooldown,
-      duration: this.duration,
+      // F2 — single-tick strike: impact at offset 0, recovery fills the
+      // duration lockout.
+      phases: [
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: this.duration },
+      ],
       cooldownKey: this.id,
     };
   }

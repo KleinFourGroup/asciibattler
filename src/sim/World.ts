@@ -11,7 +11,14 @@ import {
   type UnitStats,
   type UnitTemplate,
 } from './Unit';
-import type { ActionProposal } from './Action';
+import {
+  totalTicks,
+  phasesBeginningAt,
+  type Action,
+  type ActionProposal,
+  type ActionPhase,
+  type ActionPhaseName,
+} from './Action';
 import {
   abilityIdsForArchetype,
   rangeForArchetype,
@@ -77,8 +84,13 @@ import { computeXpAwards } from './xp';
  *       verbatim). Attack cadence moved to the Ability layer, resolved
  *       from `config/abilities.json` at propose time, so the field no
  *       longer exists to serialize. v11 throws on load.
+ *  14 — F2 replaced `ActiveActionSnapshot.effectTicks: number[]` with a
+ *       declared `phases: {phase, ticks}[]` timeline (the action phase
+ *       system). The impact tick is derived from the timeline rather than
+ *       stored as a raw offset list. v13 (and earlier) throw on load. (v13
+ *       was E5.A's `targetId`/`outOfLosTicks` add — see UnitSnapshot.)
  */
-const WORLD_SCHEMA_VERSION = 13;
+const WORLD_SCHEMA_VERSION = 14;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -92,7 +104,14 @@ interface ActiveActionSnapshot {
   actionData: unknown;
   startTick: number;
   finishTick: number;
-  effectTicks: readonly number[];
+  /**
+   * F2 — the in-flight action's declared phase timeline. Replaces the pre-F2
+   * `effectTicks` offset list: the impact tick (and every other boundary) is
+   * derived from this on resume, so a mid-`windup` snapshot picks up on the
+   * right phase. MUST be stored — the cadence-scaled tick counts aren't
+   * reconstructable from the action's `toData()`.
+   */
+  phases: readonly ActionPhase[];
 }
 
 export interface UnitSnapshot {
@@ -392,8 +411,9 @@ export class World {
    *   4. Otherwise run the selector: poll every behavior, filter
    *      proposals whose action is still on cooldown, pick the highest
    *      score. Apply: set per-action cooldown to the proposal's value,
-   *      set activeAction with `startTick`/`finishTick`/`effectTicks`,
-   *      call `action.start(unit, world)`.
+   *      set activeAction with `startTick`/`finishTick`/`phases` (F2: the
+   *      declared phase timeline), call `action.start(unit, world)`, then
+   *      emit the offset-0 `action:phase` boundary(ies).
    *
    * Cooldown semantics are still decrement-then-check: behaviors set the
    * proposal's cooldown to the *full* value (not N-1), and World
@@ -422,16 +442,23 @@ export class World {
         if (cd > 0) unit.actionCooldowns.set(actionId, cd - 1);
       }
 
-      // 3. In-flight action.
+      // 3. In-flight action. F2 — walk the declared phase timeline: emit an
+      // `action:phase` event for every phase that BEGINS at the current
+      // offset (zero-length phases share a boundary, so several can fire on
+      // one tick, in declared order), and fire `applyEffect` at `impact`.
+      // Behavior-preserving vs pre-F2: a multi-tick action's `impact` sits at
+      // offset == duration == finishTick (exactly where `effectTicks:[D]`
+      // fired before), then the finish check clears it on the same tick.
       if (unit.activeAction !== null) {
-        const offset = this.tickCount - unit.activeAction.startTick;
-        if (
-          unit.activeAction.effectTicks.includes(offset) &&
-          unit.activeAction.action.applyEffect
-        ) {
-          unit.activeAction.action.applyEffect(unit, this, offset);
+        const aa = unit.activeAction;
+        const offset = this.tickCount - aa.startTick;
+        for (const phase of phasesBeginningAt(aa.phases, offset)) {
+          this.emitActionPhase(unit, aa.action, phase);
+          if (phase === 'impact' && aa.action.applyEffect) {
+            aa.action.applyEffect(unit, this, offset, 'impact');
+          }
         }
-        if (this.tickCount >= unit.activeAction.finishTick) {
+        if (this.tickCount >= aa.finishTick) {
           unit.activeAction = null;
         } else {
           continue;
@@ -463,13 +490,27 @@ export class World {
 
       const cdKey = best.cooldownKey ?? best.action.id;
       unit.actionCooldowns.set(cdKey, best.cooldown);
-      unit.activeAction = {
+      const activeAction = {
         action: best.action,
         startTick: this.tickCount,
-        finishTick: this.tickCount + best.duration,
-        effectTicks: best.effectTicks ?? [],
+        finishTick: this.tickCount + totalTicks(best.phases),
+        phases: best.phases,
       };
+      unit.activeAction = activeAction;
       best.action.start(unit, this);
+      // F2 — emit the offset-0 phase boundary(ies) on the start tick, AFTER
+      // start(), so the renderer hears `windup` (or `impact` for a strike)
+      // the instant the action begins — mirroring step 3's per-tick handling
+      // for actions already in flight at tick top. No migrated action has
+      // BOTH an offset-0 `impact` AND an `applyEffect` (a strike's effect is
+      // in `start()`, which already ran), so the guarded `applyEffect` call
+      // never fires here in F2 — no effect or combatRng draw moves.
+      for (const phase of phasesBeginningAt(activeAction.phases, 0)) {
+        this.emitActionPhase(unit, activeAction.action, phase);
+        if (phase === 'impact' && activeAction.action.applyEffect) {
+          activeAction.action.applyEffect(unit, this, 0, 'impact');
+        }
+      }
     }
 
     // D5.C — after deaths + movements settle for the tick, drain any
@@ -488,6 +529,23 @@ export class World {
     this.reapDead();
 
     this.checkBattleEnd();
+  }
+
+  /**
+   * F2 — emit a single `action:phase` boundary event, pulling optional
+   * target info from the action's `phaseTarget()` (a homing action surfaces
+   * `targetId`, a ground-target surfaces `targetCell`) without exposing the
+   * action's internals. Transient + renderer-only; no sim state is touched.
+   */
+  private emitActionPhase(unit: Unit, action: Action, phase: ActionPhaseName): void {
+    const { targetId, targetCell } = action.phaseTarget?.() ?? {};
+    this.bus.emit('action:phase', {
+      unitId: unit.id,
+      actionId: action.id,
+      phase,
+      targetId,
+      targetCell,
+    });
   }
 
   /**
@@ -613,7 +671,10 @@ export class World {
       action: new SpawnAction(),
       startTick: this.tickCount,
       finishTick: this.tickCount + SPAWN.durationTicks,
-      effectTicks: [],
+      // F2 — a single lockout phase spanning the spawn window; SpawnAction
+      // has no `applyEffect`, so `impact` here only times the busy window
+      // (matches the pre-F2 `effectTicks:[]` + `duration` lockout exactly).
+      phases: [{ phase: 'impact', ticks: SPAWN.durationTicks }],
     };
     return unit;
   }
@@ -924,7 +985,7 @@ export class World {
           action: createAction(us.activeAction.actionId, us.activeAction.actionData, world),
           startTick: us.activeAction.startTick,
           finishTick: us.activeAction.finishTick,
-          effectTicks: us.activeAction.effectTicks.slice(),
+          phases: us.activeAction.phases.map((p) => ({ ...p })),
         };
       }
     }
@@ -981,7 +1042,7 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
           actionData: unit.activeAction.action.toData(),
           startTick: unit.activeAction.startTick,
           finishTick: unit.activeAction.finishTick,
-          effectTicks: unit.activeAction.effectTicks.slice(),
+          phases: unit.activeAction.phases.map((p) => ({ ...p })),
         }
       : null,
   };

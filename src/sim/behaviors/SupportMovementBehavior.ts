@@ -95,7 +95,9 @@ function moveProposal(
     action: new MoveAction(from, to, durationTicks),
     score,
     cooldown: durationTicks,
-    duration: durationTicks,
+    // F2 — step applied in `start` (offset 0); unit locked for the
+    // move-cooldown window. Single `impact` phase = the lockout.
+    phases: [{ phase: 'impact', ticks: durationTicks }],
   };
 }
 

@@ -68,8 +68,14 @@ class ChargeAttackBehavior implements Behavior {
       action: new ChargeAttackAction(target, this.opts.damage),
       score: 100,
       cooldown: this.opts.cooldown,
-      duration: this.opts.duration,
-      effectTicks: [this.opts.effectAt],
+      // F2 — windup until the effect tick, impact there (applyEffect lands
+      // the hit), recovery for the rest of the busy window. Σ ticks ==
+      // duration; impact offset == effectAt (pre-F2 `effectTicks:[effectAt]`).
+      phases: [
+        { phase: 'windup', ticks: this.opts.effectAt },
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: this.opts.duration - this.opts.effectAt },
+      ],
     };
   }
 }

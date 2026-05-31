@@ -229,8 +229,8 @@ describe('A2 round-trip: World', () => {
 
   it('E7.C: round-trips a mage MID-CHARGE and still detonates post-restore', () => {
     // The mage is the first multi-tick combat action, so the in-flight
-    // charge (activeAction with effectTicks at the end) is the load-bearing
-    // round-trip. Mage + enemy in bolt range so the charge starts on the
+    // charge (activeAction whose phase timeline puts impact at the end) is
+    // the load-bearing round-trip. Mage + enemy in bolt range so the charge starts on the
     // first free tick; snapshot WHILE charging, restore, and prove the
     // restored world still lands the bolt (same event-trace contract as the
     // healer mid-heal case, but the effect lands later than start).
@@ -262,7 +262,9 @@ describe('A2 round-trip: World', () => {
     expect(restoredMage.activeAction?.action.id).toBe('magic_bolt');
     expect(restoredMage.activeAction?.startTick).toBe(live.activeAction?.startTick);
     expect(restoredMage.activeAction?.finishTick).toBe(live.activeAction?.finishTick);
-    expect(restoredMage.activeAction?.effectTicks).toEqual(live.activeAction?.effectTicks);
+    // F2 — the phase timeline round-trips intact, so the restored mid-charge
+    // resumes on the right phase at the right offset.
+    expect(restoredMage.activeAction?.phases).toEqual(live.activeAction?.phases);
 
     // Tick the restored world past the charge: the bolt must still land.
     // The enemy is inert (no behaviors → never moves), so the captured
@@ -306,7 +308,9 @@ describe('A2 round-trip: World', () => {
     expect(restoredCat.activeAction?.action.id).toBe('catapult_shot');
     expect(restoredCat.activeAction?.startTick).toBe(live.activeAction?.startTick);
     expect(restoredCat.activeAction?.finishTick).toBe(live.activeAction?.finishTick);
-    expect(restoredCat.activeAction?.effectTicks).toEqual(live.activeAction?.effectTicks);
+    // F2 — phase timeline round-trips intact (windup/release/travel/impact);
+    // the restored mid-wind-up resumes on the right phase at the right offset.
+    expect(restoredCat.activeAction?.phases).toEqual(live.activeAction?.phases);
 
     // Tick the restored world past the wind-up: the shot must still land on
     // the locked enemy (inert → never moves, so the homing reference holds).

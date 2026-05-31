@@ -1,4 +1,4 @@
-import type { Action } from '../Action';
+import type { Action, OrphanPolicy } from '../Action';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
@@ -71,6 +71,12 @@ export interface CatapultShotActionData {
  */
 export class CatapultShotAction implements Action {
   readonly id = CATAPULT_SHOT_ACTION_ID;
+  // F2 — fizzle: the shot homes on the LOCKED target; if it died during the
+  // wind-up the boulder lands with no damage + no combatRng draw (still
+  // emits `catapult:fired{hit:false}`). Phase list
+  // `[{windup,D},{release,0},{travel,0},{impact,0}]` — travel is 0 in F2;
+  // F3 gives it real ticks (the orphan check then covers travel too).
+  readonly orphanPolicy: OrphanPolicy = 'fizzle';
 
   constructor(
     private readonly target: Unit | undefined,
@@ -114,6 +120,12 @@ export class CatapultShotAction implements Action {
       damage,
       crit,
     });
+  }
+
+  phaseTarget(): { targetId?: number | undefined; targetCell?: GridCoord } {
+    // Homing id for the live target; cast cell as the fixed VFX fallback for
+    // when the target ref is gone (mirrors `catapult:fired.impact`).
+    return { targetId: this.target?.id, targetCell: { ...this.castPosition } };
   }
 
   toData(): CatapultShotActionData {

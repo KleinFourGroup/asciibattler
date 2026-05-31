@@ -1,4 +1,4 @@
-import type { Action } from '../Action';
+import type { Action, OrphanPolicy } from '../Action';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 
@@ -30,6 +30,10 @@ export interface HealActionData {
  */
 export class HealAction implements Action {
   readonly id = HEAL_ACTION_ID;
+  // F2 — single-tick: heals the ally captured at cast, guarded if it died
+  // earlier this tick. Phase list `[{impact,0},{recovery,D}]`; effect in
+  // `start`. `targetCell` is omitted (heal isn't a line-of-sight shot).
+  readonly orphanPolicy: OrphanPolicy = 'commit-at-cast';
 
   constructor(
     private readonly target: Unit | undefined,
@@ -42,6 +46,10 @@ export class HealAction implements Action {
     this.target.currentHp = Math.min(this.target.derived.maxHp, before + this.amount);
     const healed = this.target.currentHp - before;
     world.emit('unit:healed', { unitId: this.target.id, amount: healed });
+  }
+
+  phaseTarget(): { targetId?: number | undefined } {
+    return { targetId: this.target?.id };
   }
 
   toData(): HealActionData {

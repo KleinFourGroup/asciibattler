@@ -179,7 +179,10 @@ type RecordedEvent =
   | { kind: 'unit:moved'; unitId: number; fx: number; fy: number; tx: number; ty: number }
   | { kind: 'unit:attacked'; attackerId: number; targetId: number; damage: number }
   | { kind: 'unit:died'; unitId: number }
-  | { kind: 'battle:ended'; winner: Team };
+  | { kind: 'battle:ended'; winner: Team }
+  // F2 — the phase-boundary stream must be deterministic too. Tapping it
+  // here makes the "same seed → same event sequence" test cover it for free.
+  | { kind: 'action:phase'; unitId: number; actionId: string; phase: string };
 
 /**
  * Tap every event we care about into a flat ordered list. Used to assert
@@ -209,5 +212,8 @@ function recordEvents(bus: EventBus<GameEvents>): RecordedEvent[] {
   );
   bus.on('unit:died', (p) => out.push({ kind: 'unit:died', unitId: p.unitId }));
   bus.on('battle:ended', (p) => out.push({ kind: 'battle:ended', winner: p.winner }));
+  bus.on('action:phase', (p) =>
+    out.push({ kind: 'action:phase', unitId: p.unitId, actionId: p.actionId, phase: p.phase }),
+  );
   return out;
 }

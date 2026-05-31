@@ -199,6 +199,15 @@ export class World {
   readonly combatRng: RNG;
   readonly units: Unit[] = [];
   /**
+   * O(1) id → unit index over `units`, maintained in `addUnit` /
+   * `removeUnit` / `fromJSON`. `findUnit` reads it (with a linear-scan
+   * fallback for fixtures that push directly to `units`). Read-only by id
+   * — never iterated — so its insertion order can't leak into the
+   * deterministic sim. Added in F2: the phase system + AoE targeting call
+   * `findUnit` far more often than the old O(n) scan could afford.
+   */
+  private readonly unitsById: Map<number, Unit> = new Map();
+  /**
    * Per-cell tile data (floor / shallow_water). Defaults to all-floor when
    * the World is constructed without one — preserves the pre-C1a "open
    * arena" behaviour for tests and the headless fuzz harness. Battle
@@ -663,6 +672,7 @@ export class World {
   removeUnit(id: number): void {
     const i = this.units.findIndex((u) => u.id === id);
     if (i >= 0) this.units.splice(i, 1);
+    this.unitsById.delete(id);
   }
 
   /**
@@ -772,6 +782,7 @@ export class World {
       rosterIndex: init.rosterIndex ?? null,
     });
     this.units.push(unit);
+    this.unitsById.set(unit.id, unit);
     // E4 follow-up: stash the unit's roster slot before any death can
     // reap it from `units`. Player units with a rosterIndex are the
     // only ones that earn XP, so the filter is symmetric with the
@@ -784,6 +795,14 @@ export class World {
   }
 
   findUnit(id: number): Unit | undefined {
+    const hit = this.unitsById.get(id);
+    if (hit !== undefined) return hit;
+    // Fallback for test fixtures that push directly onto `units` (bypassing
+    // `addUnit`, so they never populate the index). Production add paths
+    // (`addUnit` / `fromJSON`) always set the map, so this is a test-only
+    // safety net, not a hot path — and it keeps the map authoritative
+    // wherever it IS populated. A post-F2 chore can migrate fixtures to
+    // `addUnit` and drop this.
     return this.units.find((u) => u.id === id);
   }
 
@@ -893,6 +912,7 @@ export class World {
       for (const kind of us.behaviors) unit.behaviors.push(createBehavior(kind));
       for (const id of us.abilities) unit.abilities.push(createAbility(id));
       world.units.push(unit);
+      world.unitsById.set(unit.id, unit);
     }
 
     // Phase 2: in-flight actions, now that every unit exists for id lookup.

@@ -1,4 +1,4 @@
-import type { Action, OrphanPolicy } from '../Action';
+import type { Action, ActionPhaseName, OrphanPolicy } from '../Action';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
@@ -11,6 +11,11 @@ export interface GambitStrikeActionData {
   baseDamage: number;
   critChance: number;
   damageMultiplier: number;
+  /** F4 — the struck target's cell, captured at cast, that the deferred
+   *  reposition retreats AWAY from. Serialized so a snapshot taken mid-windup
+   *  (before the `impact` boundary fires `applyEffect`) still knows where to
+   *  dart back from. */
+  struckFrom?: GridCoord | undefined;
 }
 
 /**
@@ -20,11 +25,17 @@ export interface GambitStrikeActionData {
  * XP ledger entry) PLUS a free one-cell reposition AWAY from the unit it
  * just struck.
  *
- * Both happen in `start` on the same tick: there's no separate
- * cooldown-gated MoveAction, so the "kite" pattern (strike → dart back →
- * strike) emerges from the rogue's high `speed` outrunning the target's
- * re-approach via MovementBehavior — no extra unit state needed (see
- * ROADMAP E7). Against an equal-speed enemy it's a wash; that speed
+ * F4 — the two are SEQUENCED across the action's phase timeline so the
+ * on-screen strike shove plays out before the retreat lerp (E6.A made shove
+ * and move-lerp mutually exclusive per sprite, so a same-tick reposition
+ * clobbered the shove and the strike vanished). The damage lands in `start`
+ * at offset 0; the reposition moves to `applyEffect`, which `World.tick` fires
+ * at the `impact` boundary `gambit_strike.retreatDelaySeconds` later (the
+ * windup-split lives in `strikePhases`, abilities/strikes.ts). The busy window
+ * and cadence cooldown are unchanged, so only WHEN within the cycle the rogue
+ * darts back moves — the kite pattern (strike → dart back → strike) still
+ * emerges from the rogue's high `speed` outrunning the target's re-approach
+ * via MovementBehavior. Against an equal-speed enemy it's a wash; that speed
  * differential IS the rogue's identity.
  *
  * The reposition is deliberately conservative: it only fires when a
@@ -41,9 +52,10 @@ export interface GambitStrikeActionData {
  */
 export class GambitStrikeAction implements Action {
   readonly id = GAMBIT_STRIKE_ACTION_ID;
-  // F2 — single-tick strike (+ reposition), same commit-at-cast guard as
-  // AttackAction. F4 will sequence the strike vs the retreat across phases;
-  // for F2 both stay in `start` (behavior-preserving).
+  // The strike commits at cast (damage in `start`); the deferred reposition
+  // (F4) retreats from the cell captured at cast, so a target that dies during
+  // the windup never strands the rogue — same commit-at-cast spirit as
+  // AttackAction.
   readonly orphanPolicy: OrphanPolicy = 'commit-at-cast';
 
   constructor(
@@ -51,12 +63,20 @@ export class GambitStrikeAction implements Action {
     private readonly baseDamage: number,
     private readonly critChance: number,
     private readonly damageMultiplier: number = 1,
+    // F4 — the cell to retreat AWAY from, captured at cast (defaults to the
+    // target's position when constructed at propose time; `fromData` restores
+    // the serialized value on snapshot resume). Mirrors E7.D's
+    // `CatapultShotAction.castPosition` captured-at-cast pattern.
+    private readonly struckFrom: GridCoord | undefined = target
+      ? { ...target.position }
+      : undefined,
   ) {}
 
   start(unit: Unit, world: World): void {
     if (!this.target || this.target.currentHp <= 0) return;
 
-    // --- Damage (mirrors AttackAction.start) ---
+    // --- Damage (mirrors AttackAction.start), at offset 0. The reposition is
+    //     deferred to `applyEffect` at the `impact` boundary (F4). ---
     const crit = world.combatRng.next() < this.critChance;
     const critFactor = crit ? STATS.critMult : 1;
     const damage = Math.round(this.baseDamage * critFactor * this.damageMultiplier);
@@ -68,9 +88,20 @@ export class GambitStrikeAction implements Action {
       damage,
       crit,
     });
+  }
 
-    // --- Gambit reposition: free step away from the struck target ---
-    const dest = retreatCell(unit, this.target.position, world);
+  /**
+   * F4 — the gambit's free step away from the struck target, deferred to the
+   * `impact` boundary (`retreatDelaySeconds` after the strike landed in
+   * `start`) so the on-screen retreat lerp no longer clobbers the strike shove.
+   * Retreats from `struckFrom` (the target's cell at cast), NOT the live
+   * target, so a target that died during the windup — including from this very
+   * strike — still lets the rogue dart back, matching pre-F4 behaviour. Draws
+   * no RNG (the crit roll stayed in `start`), so deferring it moves no draw.
+   */
+  applyEffect(unit: Unit, world: World, _tickOffset: number, _phase?: ActionPhaseName): void {
+    if (this.struckFrom === undefined) return;
+    const dest = retreatCell(unit, this.struckFrom, world);
     if (dest !== null) {
       const from = unit.position;
       unit.position = dest;
@@ -93,6 +124,7 @@ export class GambitStrikeAction implements Action {
       baseDamage: this.baseDamage,
       critChance: this.critChance,
       damageMultiplier: this.damageMultiplier,
+      struckFrom: this.struckFrom,
     };
   }
 
@@ -102,6 +134,7 @@ export class GambitStrikeAction implements Action {
       data.baseDamage,
       data.critChance,
       data.damageMultiplier ?? 1,
+      data.struckFrom,
     );
   }
 }

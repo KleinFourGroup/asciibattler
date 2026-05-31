@@ -63,6 +63,20 @@ const AbilitySchema = z.object({
    * carry it; every single-tick strike/heal omits it). Tune by feel.
    */
   travelSeconds: z.number().nonnegative().optional(),
+  /**
+   * F4 — the gambit's strike→retreat sequencing knob. When present, the
+   * strike's busy window is split `windup(this) → impact → recovery` instead
+   * of the plain `impact(0) → recovery(D)` of a basic strike: the damage still
+   * lands eagerly in `start` (offset 0), but the rogue's free reposition is
+   * deferred to the `impact` boundary this many seconds later, so on screen the
+   * strike shove plays out BEFORE the retreat lerp (E6.A made the two mutually
+   * exclusive per sprite — a same-tick reposition clobbered the shove). Σ ticks
+   * / cooldown are unchanged (the windup is carved out of recovery), so the
+   * attack cadence holds; only WHEN within the cycle the rogue darts back moves.
+   * Set ≥ the shove duration (~0.2s). Absent → a basic strike (every ability
+   * except `gambit_strike`). Tune by feel.
+   */
+  retreatDelaySeconds: z.number().nonnegative().optional(),
   aoe: AoeSchema.optional(),
 });
 

@@ -1,7 +1,8 @@
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
-import type { ActionProposal, Action } from '../Action';
+import type { ActionPhase, ActionProposal, Action } from '../Action';
+import { secondsToTicks } from '../../config';
 import { AttackAction } from '../actions/AttackAction';
 import { GambitStrikeAction } from '../actions/GambitStrikeAction';
 import { currentTarget, collectLosBlockers } from '../Targeting';
@@ -93,15 +94,43 @@ function proposeBasicStrike(
     action: makeAction(target, baseDamage, unit.derived.critChance, damageMultiplier),
     score: 10,
     cooldown: durationTicks,
-    // F2 — the strike's damage lands in `start` (impact at offset 0); the
-    // unit is then locked for the cadence window. `[impact 0, recovery D]`
-    // reproduces the pre-F2 busy window exactly.
-    phases: [
-      { phase: 'impact', ticks: 0 },
-      { phase: 'recovery', ticks: durationTicks },
-    ],
+    phases: strikePhases(abilityId, durationTicks),
     cooldownKey: abilityId,
   };
+}
+
+/**
+ * The strike's busy-window timeline. A basic strike's damage lands in `start`
+ * (impact at offset 0) and the unit is then locked for the cadence window —
+ * `[impact 0, recovery D]` reproduces the pre-F2 busy window exactly.
+ *
+ * F4 — when the ability declares `retreatDelaySeconds` (only the rogue's
+ * `gambit_strike` does), carve a leading `windup` of that length out of the
+ * recovery: `[windup R, impact 0, recovery D−R]`. The strike STILL lands in
+ * `start` at offset 0 (during the windup); the windup is the on-screen
+ * strike-contact/recoil beat, and the `impact` boundary R ticks later is where
+ * `GambitStrikeAction.applyEffect` commits the dart-back. Σ ticks (= the busy
+ * window) and the cadence cooldown are unchanged, so this is balance-neutral
+ * on the rogue's attack rate — it only defers the reposition past the shove so
+ * the two no longer fight over the sprite (E6.A mutual-exclusion). The
+ * gambit's `action:phase` events have no consumer (the renderer's
+ * `onActionPhase` handles only mage/catapult `release`), so the `windup` label
+ * is internal-only. `min(..., D)` guards a degenerately short cadence.
+ */
+function strikePhases(abilityId: string, durationTicks: number): ActionPhase[] {
+  const retreatSeconds = abilityConfig(abilityId).retreatDelaySeconds;
+  if (retreatSeconds === undefined) {
+    return [
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: durationTicks },
+    ];
+  }
+  const windup = Math.min(secondsToTicks(retreatSeconds), durationTicks);
+  return [
+    { phase: 'windup', ticks: windup },
+    { phase: 'impact', ticks: 0 },
+    { phase: 'recovery', ticks: durationTicks - windup },
+  ];
 }
 
 export class MeleeStrike implements Ability {

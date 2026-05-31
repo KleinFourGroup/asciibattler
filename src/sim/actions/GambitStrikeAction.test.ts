@@ -83,9 +83,9 @@ describe('GambitStrikeAction — damage', () => {
   });
 });
 
-describe('GambitStrikeAction — reposition', () => {
-  it('steps away from the struck target, increasing Chebyshev distance', () => {
-    const { world, moves } = makeScene();
+describe('GambitStrikeAction — reposition (F4: deferred to applyEffect)', () => {
+  it('start lands the damage but does NOT move the rogue (reposition waits)', () => {
+    const { world, moves, hits } = makeScene();
     const rogue = makeUnit(1, 'player', { x: 5, y: 5 }, 'rogue');
     const target = makeUnit(2, 'enemy', { x: 6, y: 5 });
     target.currentHp = 100;
@@ -93,11 +93,49 @@ describe('GambitStrikeAction — reposition', () => {
 
     new GambitStrikeAction(target, 5, 0, 1).start(rogue, world);
 
+    // Strike resolved at offset 0...
+    expect(hits).toHaveLength(1);
+    expect(target.currentHp).toBe(95);
+    // ...but the rogue is still adjacent — the dart-back is deferred.
+    expect(rogue.position).toEqual({ x: 5, y: 5 });
+    expect(moves).toHaveLength(0);
+  });
+
+  it('applyEffect steps away from the struck cell, increasing Chebyshev distance', () => {
+    const { world, moves } = makeScene();
+    const rogue = makeUnit(1, 'player', { x: 5, y: 5 }, 'rogue');
+    const target = makeUnit(2, 'enemy', { x: 6, y: 5 });
+    target.currentHp = 100;
+    world.units.push(rogue, target);
+
+    const action = new GambitStrikeAction(target, 5, 0, 1);
+    action.start(rogue, world);
+    action.applyEffect(rogue, world, 5, 'impact');
+
     expect(chebyshev(rogue.position, target.position)).toBe(2);
     expect(rogue.position).not.toEqual({ x: 5, y: 5 });
     expect(moves).toHaveLength(1);
     expect(moves[0]!.from).toEqual({ x: 5, y: 5 });
     expect(moves[0]!.to).toEqual(rogue.position);
+  });
+
+  it('retreats from the cell struck even if the target died during the windup', () => {
+    const { world, moves } = makeScene();
+    const rogue = makeUnit(1, 'player', { x: 5, y: 5 }, 'rogue');
+    const target = makeUnit(2, 'enemy', { x: 6, y: 5 });
+    target.currentHp = 100;
+    world.units.push(rogue, target);
+
+    const action = new GambitStrikeAction(target, 5, 0, 1);
+    action.start(rogue, world);
+    // Target dies (e.g. an ally finished it) and is removed before impact.
+    world.units.splice(world.units.indexOf(target), 1);
+    action.applyEffect(rogue, world, 5, 'impact');
+
+    // struckFrom (captured at cast) still anchors the dart-back away from (6,5).
+    expect(rogue.position.x).toBeLessThan(5);
+    expect(moves).toHaveLength(1);
+    expect(moves[0]!.from).toEqual({ x: 5, y: 5 });
   });
 
   it('holds position in a corner where no neighbor increases distance', () => {
@@ -107,7 +145,9 @@ describe('GambitStrikeAction — reposition', () => {
     target.currentHp = 100;
     world.units.push(rogue, target);
 
-    new GambitStrikeAction(target, 5, 0, 1).start(rogue, world);
+    const action = new GambitStrikeAction(target, 5, 0, 1);
+    action.start(rogue, world);
+    action.applyEffect(rogue, world, 5, 'impact');
 
     expect(rogue.position).toEqual({ x: 0, y: 0 });
     expect(moves).toHaveLength(0);
@@ -129,7 +169,9 @@ describe('GambitStrikeAction — reposition', () => {
     ];
     world.units.push(rogue, target, ...blockers);
 
-    new GambitStrikeAction(target, 5, 0, 1).start(rogue, world);
+    const action = new GambitStrikeAction(target, 5, 0, 1);
+    action.start(rogue, world);
+    action.applyEffect(rogue, world, 5, 'impact');
 
     expect(rogue.position).toEqual({ x: 5, y: 5 });
     expect(moves).toHaveLength(0);
@@ -137,16 +179,26 @@ describe('GambitStrikeAction — reposition', () => {
 });
 
 describe('GambitStrikeAction — serialization', () => {
-  it('round-trips through the action registry', () => {
-    const { world } = makeScene();
+  it('round-trips damage + struckFrom; the deferred reposition resolves after rehydrate', () => {
+    const { world, moves } = makeScene();
     const rogue = makeUnit(1, 'player', { x: 5, y: 5 }, 'rogue');
     const target = makeUnit(2, 'enemy', { x: 6, y: 5 });
     target.currentHp = 100;
     world.units.push(rogue, target);
 
-    const data = new GambitStrikeAction(target, 7, 0, 1).toData();
+    const data = new GambitStrikeAction(target, 7, 0, 1).toData() as {
+      struckFrom?: { x: number; y: number };
+    };
+    // struckFrom is captured at cast (the target's cell) and serialized so a
+    // snapshot taken mid-windup still knows where to dart back from.
+    expect(data.struckFrom).toEqual({ x: 6, y: 5 });
+
     const rehydrated = createAction(GAMBIT_STRIKE_ACTION_ID, data, world);
     rehydrated.start(rogue, world);
     expect(target.currentHp).toBe(93);
+    // The reposition survives the round-trip (struckFrom drives applyEffect).
+    rehydrated.applyEffect!(rogue, world, 5, 'impact');
+    expect(chebyshev(rogue.position, { x: 6, y: 5 })).toBe(2);
+    expect(moves).toHaveLength(1);
   });
 });

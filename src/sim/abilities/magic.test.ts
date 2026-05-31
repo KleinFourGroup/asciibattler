@@ -7,6 +7,8 @@ import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, inertDerived, magicBoltDamage, attackCooldownTicksFor } from '../stats';
 import { abilityConfig } from '../../config/abilities';
+import { secondsToTicks } from '../../config';
+import { phasesBeginningAt, totalTicks } from '../Action';
 import { rangeForArchetype } from '../archetypes';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
@@ -74,14 +76,31 @@ describe('MagicBolt.propose', () => {
 
     const expected = attackCooldownTicksFor(BOLT.cooldownSeconds, MAGE_STATS.speed);
     expect(proposal!.cooldown).toBe(expected);
-    // F2 — charge for the whole window, detonate at impact. Σ ticks ==
-    // expected (the busy window); the blast lands at offset `expected` —
-    // the multi-tick signature that exercises applyEffect + the progress bar.
+    // F3 — charge for `expected - travel`, release the bolt, let it fly for
+    // `travel`, then detonate at impact. F3 gave the mage the `release` +
+    // `travel` phases it lacked in F2; `travel` is carved OUT of the charge so
+    // Σ ticks (busy window) + the impact offset stay `expected`.
+    const travel = Math.min(secondsToTicks(BOLT.travelSeconds ?? 0), expected);
+    expect(travel).toBeGreaterThan(0); // F3 carved a real travel window
     expect(proposal!.phases).toEqual([
-      { phase: 'windup', ticks: expected },
+      { phase: 'windup', ticks: expected - travel },
+      { phase: 'release', ticks: 0 },
+      { phase: 'travel', ticks: travel },
       { phase: 'impact', ticks: 0 },
     ]);
     expect(expected).toBeGreaterThan(1); // it's a genuine charge, not single-tick
+  });
+
+  it('F3 split is behavior-preserving: busy window unchanged, blast still at the end, release leads it by travel', () => {
+    const mage = makeMage({ x: 5, y: 5 });
+    const enemy = makeUnit(2, 'enemy', { x: 5, y: 7 });
+    const proposal = new MagicBolt().propose(mage, world([mage, enemy]));
+
+    const expected = attackCooldownTicksFor(BOLT.cooldownSeconds, MAGE_STATS.speed);
+    const travel = Math.min(secondsToTicks(BOLT.travelSeconds ?? 0), expected);
+    expect(totalTicks(proposal!.phases)).toBe(expected); // busy window unchanged
+    expect(phasesBeginningAt(proposal!.phases, expected - travel)).toEqual(['release', 'travel']);
+    expect(phasesBeginningAt(proposal!.phases, expected)).toEqual(['impact']);
   });
 
   it('ground-targets the enemy cell at cast time + scales damage on magic', () => {

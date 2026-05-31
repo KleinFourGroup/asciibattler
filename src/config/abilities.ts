@@ -53,6 +53,16 @@ export type AoeConfig = z.infer<typeof AoeSchema>;
 const AbilitySchema = z.object({
   cooldownSeconds: z.number().positive(),
   range: z.number().int().positive(),
+  /**
+   * F3 — the slice of a multi-tick action's wind-up that the projectile
+   * spends in flight: the action declares a `travel` phase of this length
+   * (carved OUT of the wind-up, so the total busy window / impact tick /
+   * cooldown are unchanged), and the renderer launches the projectile on the
+   * `release` boundary so it arrives exactly on `impact`. Absent → no travel
+   * phase (the projectile-bearing abilities `magic_bolt` / `catapult_shot`
+   * carry it; every single-tick strike/heal omits it). Tune by feel.
+   */
+  travelSeconds: z.number().nonnegative().optional(),
   aoe: AoeSchema.optional(),
 });
 

@@ -7,6 +7,8 @@ import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, inertDerived, catapultShotDamage, attackCooldownTicksFor } from '../stats';
 import { abilityConfig } from '../../config/abilities';
+import { secondsToTicks } from '../../config';
+import { phasesBeginningAt, totalTicks } from '../Action';
 import { rangeForArchetype } from '../archetypes';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
@@ -75,16 +77,36 @@ describe('CatapultShot.propose', () => {
 
     const expected = attackCooldownTicksFor(SHOT.cooldownSeconds, CATAPULT_STATS.speed);
     expect(proposal!.cooldown).toBe(expected);
-    // F2 — wind up for the whole window, then loose: release/travel/impact
-    // all fall at offset `expected` (travel is 0-length in F2). The hit lands
-    // at impact — the multi-tick signature that fills the action-progress bar.
+    // F3 — the wind-up is SPLIT: charge for `expected - travel`, loose
+    // (`release`), let the boulder arc for `travel`, then land the hit at
+    // `impact`. `travel` is carved OUT of the wind-up (derived from the
+    // ability's travelSeconds), so the impact offset + busy window stay
+    // `expected`. `release` is the renderer's launch cue.
+    const travel = Math.min(secondsToTicks(SHOT.travelSeconds ?? 0), expected);
+    expect(travel).toBeGreaterThan(0); // F3 carved a real travel window
     expect(proposal!.phases).toEqual([
-      { phase: 'windup', ticks: expected },
+      { phase: 'windup', ticks: expected - travel },
       { phase: 'release', ticks: 0 },
-      { phase: 'travel', ticks: 0 },
+      { phase: 'travel', ticks: travel },
       { phase: 'impact', ticks: 0 },
     ]);
     expect(expected).toBeGreaterThan(1); // it's a genuine wind-up, not single-tick
+  });
+
+  it('F3 split is behavior-preserving: busy window unchanged, impact still at the end, release leads it by travel', () => {
+    const cat = makeCatapult({ x: 5, y: 5 });
+    const enemy = makeUnit(2, 'enemy', { x: 5, y: 9 });
+    const proposal = new CatapultShot().propose(cat, world([cat, enemy]));
+
+    const expected = attackCooldownTicksFor(SHOT.cooldownSeconds, CATAPULT_STATS.speed);
+    const travel = Math.min(secondsToTicks(SHOT.travelSeconds ?? 0), expected);
+    // Σ ticks is the busy window the unit is locked for — unchanged by the split.
+    expect(totalTicks(proposal!.phases)).toBe(expected);
+    // `release` + `travel` both begin at offset `expected - travel` (the
+    // zero-length release shares the boundary with travel, in declared order).
+    expect(phasesBeginningAt(proposal!.phases, expected - travel)).toEqual(['release', 'travel']);
+    // The effect still lands at the very end — exactly where the pre-F3 impact fired.
+    expect(phasesBeginningAt(proposal!.phases, expected)).toEqual(['impact']);
   });
 
   it('locks the live enemy target + scales damage on ranged', () => {

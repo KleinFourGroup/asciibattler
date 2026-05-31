@@ -28,6 +28,14 @@ interface ActiveLerp {
   /** Fired once when the lerp completes. E6.B uses it to despawn a
    *  projectile sprite on arrival. Undefined for plain move lerps. */
   readonly onComplete: (() => void) | undefined;
+  /**
+   * F3 — optional moving-target source for a homing projectile. When present,
+   * `to` is refreshed from it each frame before interpolating, so the lerp
+   * tracks a target sprite that moves during flight (the catapult lob). A
+   * null return holds the last `to` (e.g. the target's sprite was swept on
+   * death). Undefined for fixed-destination lerps (moves, mage bolt, tracer).
+   */
+  readonly targetProvider: (() => THREE.Vector3 | null) | undefined;
 }
 
 interface ActiveFade {
@@ -75,6 +83,7 @@ export class SpriteAnimator {
     durationSeconds: number,
     onComplete?: () => void,
     arcHeight = 0,
+    targetProvider?: () => THREE.Vector3 | null,
   ): void {
     // A move overrides any in-flight melee shove (E6.A) so the two never
     // fight over this sprite's position.
@@ -92,6 +101,7 @@ export class SpriteAnimator {
       elapsed: 0,
       arcHeight,
       onComplete,
+      targetProvider,
     });
   }
 
@@ -196,6 +206,14 @@ export class SpriteAnimator {
   update(dt: number): void {
     for (const [handle, lerp] of this.lerps) {
       lerp.elapsed += dt;
+      // F3 — homing: re-point `to` at the moving target each frame (a null
+      // return holds the last destination). The provider writes into a
+      // caller-owned scratch we immediately copy out of, so it can't alias
+      // this.scratch used just below.
+      if (lerp.targetProvider) {
+        const tgt = lerp.targetProvider();
+        if (tgt) lerp.to.copy(tgt);
+      }
       const t = lerp.elapsed >= lerp.duration ? 1 : lerp.elapsed / lerp.duration;
       this.scratch.copy(lerp.from).lerp(lerp.to, t);
       // E7.D — parabolic arc: lift Y by arcHeight·4t(1−t) (0 at the ends,

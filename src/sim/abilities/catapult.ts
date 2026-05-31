@@ -4,6 +4,7 @@ import type { ActionProposal } from '../Action';
 import { CatapultShotAction } from '../actions/CatapultShotAction';
 import { currentTarget } from '../Targeting';
 import { catapultShotDamage, attackCooldownTicksFor } from '../stats';
+import { secondsToTicks } from '../../config';
 import { abilityConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
 import type { GridCoord } from '../../core/types';
@@ -51,6 +52,13 @@ export class CatapultShot implements Ability {
 
     const baseDamage = catapultShotDamage(unit);
     const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
+    // F3 — carve the boulder's flight OUT of the wind-up so it travels
+    // *during* the charge and lands on the impact tick (the renderer launches
+    // it on `release`). `min(..., durationTicks)` keeps `windupTicks >= 0`;
+    // Σ(windup, travel) == durationTicks, so the impact offset, busy window,
+    // and cooldown are all unchanged vs the F2 zero-travel shape.
+    const travelTicks = Math.min(secondsToTicks(cfg.travelSeconds ?? 0), durationTicks);
+    const windupTicks = durationTicks - travelTicks;
 
     return {
       action: new CatapultShotAction(
@@ -61,14 +69,14 @@ export class CatapultShot implements Ability {
       ),
       score: 10,
       cooldown: durationTicks,
-      // F2 — wind up for the whole window, then loose: release/travel/impact
-      // all fall at offset `durationTicks` (travel is 0-length in F2; F3
-      // gives it real ticks). The hit (`applyEffect`) lands at impact —
-      // exactly where the pre-F2 `effectTicks:[durationTicks]` fired.
+      // F3 — charge for `windupTicks`, then loose (`release`) and let the
+      // boulder arc for `travelTicks` before the hit (`applyEffect`) lands at
+      // `impact` (offset durationTicks — exactly where F2's zero-travel impact
+      // fired). `release` is the renderer's launch cue.
       phases: [
-        { phase: 'windup', ticks: durationTicks },
+        { phase: 'windup', ticks: windupTicks },
         { phase: 'release', ticks: 0 },
-        { phase: 'travel', ticks: 0 },
+        { phase: 'travel', ticks: travelTicks },
         { phase: 'impact', ticks: 0 },
       ],
       cooldownKey: this.id,

@@ -12,6 +12,8 @@ import { SpriteAnimator } from './animation/SpriteAnimator';
 import { TICK_RATE, ticksToSeconds } from '../config';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
 import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
+import { MAGIC_BOLT_ACTION_ID } from '../sim/actions/MagicBoltAction';
+import { CATAPULT_SHOT_ACTION_ID } from '../sim/actions/CatapultShotAction';
 import { SPAWN } from '../config/spawn';
 
 /**
@@ -89,6 +91,9 @@ export class BattleRenderer {
   private readonly overlayFadeIns = new Map<number, OverlayFadeIn>();
   /** Scratch vector to avoid per-frame allocation when reading sprite positions. */
   private readonly scratchPos = new THREE.Vector3();
+  /** F3 — dedicated scratch for a homing projectile's per-frame target re-read,
+   *  kept separate from `scratchPos` so the two can't alias mid-frame. */
+  private readonly homingScratch = new THREE.Vector3();
   /**
    * The currently-attached battle World. Null when no battle is running (map
    * screen, defeat state). Set by `attach`, cleared by `detach`.
@@ -114,6 +119,12 @@ export class BattleRenderer {
     // E7.D: the catapult's shot drives ONE arcing projectile — and a dud puff
     // when the shot aborts (target died mid-charge), so a fizzle isn't silent.
     this.subscriptions.push(bus.on('catapult:fired', this.onCatapultFired));
+    // F3: the mage bolt / catapult lob launch their projectile on the action's
+    // `release` boundary (carved out of the wind-up), so it travels DURING the
+    // charge and arrives on the impact tick — instead of launching at impact
+    // and flying after the damage. The impact-side VFX (explosion/dud) stay on
+    // the events above, which fire at impact.
+    this.subscriptions.push(bus.on('action:phase', this.onActionPhase));
     // D7.B: keep HP bars in sync with tile-effect chip damage / heal. E6.C
     // also floats a hitsplat for each: burn damage in amber, heal in cyan.
     // The healing tile emits a no-op heal every cadence tick on a full unit
@@ -393,12 +404,15 @@ export class BattleRenderer {
 
   /**
    * E6.B/E7.C — fly a `*` tracer in a straight line `from → to` over
-   * `PROJECTILE_SECONDS` and despawn on arrival. Shared by the ranged strike
-   * (shooter → target) and the mage bolt (caster → target tile); the latter
-   * passes `onArrive` to detonate the explosion when the bolt lands. The
-   * tracer lives in `projectiles` (not `handles`) so `detach` sweeps it; note
-   * `animator.clear()` drops the lerp WITHOUT firing `onArrive` (gotcha #108),
-   * so a battle that ends mid-flight spawns no orphan explosion.
+   * `durationSeconds` (default `PROJECTILE_SECONDS`) and despawn on arrival.
+   * Shared by the ranged strike (shooter → target) and, since F3, the mage
+   * bolt + catapult lob launched on their `release` boundary (timed via
+   * `ticksToSeconds(travelTicks)` to arrive on impact). The tracer lives in
+   * `projectiles` (not `handles`) so `detach` sweeps it; note `animator.clear()`
+   * drops the lerp WITHOUT firing `onArrive` (gotcha #108), so a battle that
+   * ends mid-flight spawns no orphan callback. `targetProvider` (F3) makes the
+   * lerp HOME on a moving target sprite (the catapult lob); absent → a fixed
+   * destination (ranged tracer, mage ground-target bolt).
    */
   private spawnProjectile(
     from: THREE.Vector3,
@@ -406,6 +420,8 @@ export class BattleRenderer {
     color: string,
     onArrive?: () => void,
     arcHeight = 0,
+    durationSeconds = PROJECTILE_SECONDS,
+    targetProvider?: () => THREE.Vector3 | null,
   ): void {
     const proj = this.sprites.addSprite(PROJECTILE_GLYPH, color, from);
     this.sprites.updateSprite(proj, { bloomIntensity: PROJECTILE_BLOOM, size: PROJECTILE_SIZE });
@@ -414,36 +430,86 @@ export class BattleRenderer {
       proj,
       from,
       to,
-      PROJECTILE_SECONDS,
+      durationSeconds,
       () => {
         this.sprites.removeSprite(proj);
         this.projectiles.delete(proj);
         onArrive?.();
       },
       arcHeight,
+      targetProvider,
     );
   }
 
   /**
-   * E7.C — the mage's bolt landed. Fly ONE tracer from the caster to the
-   * target tile, then detonate a flash + spark-ring explosion there. Fires
-   * once per cast (off `magic:detonated`) regardless of how many units the
-   * blast hit — so it reads as a single exploding missile, and a whiff still
-   * shows the impact. The boom position is captured NOW (world attached); if
-   * the battle ends before the tracer lands, `animator.clear()` drops the
-   * lerp without firing `onArrive`, so no explosion spawns post-detach.
+   * F3 — launch a caster's projectile on the action's `release` boundary,
+   * timed to ARRIVE on the impact tick. Only the mage bolt + catapult lob
+   * declare `release`; everything else is ignored here. The flight duration is
+   * read from the caster's live `activeAction.phases` `travel` length — a
+   * single source of truth with the sim, so there's no duplicated render const
+   * and no rounding drift. The impact-side VFX (explosion / dud) + audio stay
+   * on `magic:detonated` / `catapult:fired`, which fire at the impact tick, so
+   * they land WITH the projectile's arrival.
+   */
+  private onActionPhase = ({
+    unitId,
+    actionId,
+    phase,
+    targetId,
+    targetCell,
+  }: GameEvents['action:phase']): void => {
+    if (phase !== 'release') return;
+    if (actionId !== MAGIC_BOLT_ACTION_ID && actionId !== CATAPULT_SHOT_ACTION_ID) return;
+    if (!this.world) return;
+    const caster = this.world.findUnit(unitId);
+    if (!caster) return;
+
+    const travelTicks =
+      caster.activeAction?.phases.find((p) => p.phase === 'travel')?.ticks ?? 0;
+    const flightSeconds = travelTicks > 0 ? ticksToSeconds(travelTicks) : PROJECTILE_SECONDS;
+    const color = colorForTeam(caster.team);
+    const casterHandle = this.handles.get(unitId);
+    const from = (
+      (casterHandle && this.sprites.getPosition(casterHandle, this.scratchPos)) ??
+      this.tileWorldPos(caster.position)
+    ).clone();
+
+    if (actionId === MAGIC_BOLT_ACTION_ID) {
+      // Ground-targeted: fly straight to the captured blast cell. The explosion
+      // detonates there on `magic:detonated` (impact), so no onArrive VFX here.
+      if (!targetCell) return;
+      this.spawnProjectile(from, this.tileWorldPos(targetCell), color, undefined, 0, flightSeconds);
+      return;
+    }
+
+    // Catapult: a homing arc. Re-read the locked target's sprite each frame so
+    // the boulder reaches the unit even after it walked during the wind-up;
+    // fall back to the cast cell if the target sprite is gone. The dud (on an
+    // abort) fires on `catapult:fired` (impact), so no onArrive VFX here.
+    const targetHandle = targetId !== undefined ? this.handles.get(targetId) : undefined;
+    const to = (
+      (targetHandle && this.sprites.getPosition(targetHandle, this.scratchPos)) ??
+      (targetCell ? this.tileWorldPos(targetCell) : from)
+    ).clone();
+    const provider = targetHandle
+      ? (): THREE.Vector3 | null => this.sprites.getPosition(targetHandle, this.homingScratch)
+      : undefined;
+    this.spawnProjectile(from, to, color, undefined, CATAPULT_ARC_HEIGHT, flightSeconds, provider);
+  };
+
+  /**
+   * E7.C/F3 — the mage's bolt landed (the impact tick). Detonate the flash +
+   * spark-ring explosion at the blast center. Fires once per cast (off
+   * `magic:detonated`) regardless of how many units the blast hit, so it reads
+   * as a single burst and a whiff still shows the impact. F3 moved the bolt's
+   * flight to the earlier `release` boundary (see `onActionPhase`); this
+   * handler now only owns the detonation, which lands WITH the damage + boom.
    */
   private onMagicDetonated = ({ casterId, center }: GameEvents['magic:detonated']): void => {
     if (!this.world) return;
     const caster = this.world.findUnit(casterId);
     const color = caster ? colorForTeam(caster.team) : COLORS.TERMINAL_STONE;
-    const boomAt = this.tileWorldPos(center);
-    const casterHandle = this.handles.get(casterId);
-    const from = (
-      (casterHandle && this.sprites.getPosition(casterHandle, this.scratchPos)) ??
-      boomAt
-    ).clone();
-    this.spawnProjectile(from, boomAt.clone(), color, () => this.spawnExplosion(boomAt, color));
+    this.spawnExplosion(this.tileWorldPos(center), color);
   };
 
   /**
@@ -481,33 +547,17 @@ export class BattleRenderer {
   }
 
   /**
-   * E7.D — the catapult's shot landed (or aborted). Fly ONE arcing tracer
-   * from the caster to the impact cell, then on arrival show the impact: a
-   * gray dust DUD when `hit` is false (the locked target died mid-charge — the
-   * boulder lobs to where it was and kicks up nothing), or nothing extra on a
-   * hit (the `unit:attacked` hitsplat already floats the damage there). Fires
-   * once per shot off `catapult:fired`, so an aborted shot is visible instead
-   * of silent. Mirrors `onMagicDetonated`, but a straight-line bolt becomes a
-   * lobbed arc (CATAPULT_ARC_HEIGHT) befitting an over-the-wall siege shot.
+   * E7.D/F3 — the catapult's shot landed or aborted (the impact tick). On an
+   * abort (`hit` false — the locked target died mid-charge) kick up a gray dust
+   * DUD at the impact cell so the fizzle reads as "thunk, no hit" rather than
+   * nothing; on a hit, the `unit:attacked` hitsplat already floats the damage,
+   * so nothing extra is shown here. F3 moved the lobbed projectile's flight to
+   * the earlier `release` boundary (see `onActionPhase`) — its arc reaches the
+   * impact cell as this handler fires, so the dud lands WITH the boulder.
    */
-  private onCatapultFired = ({ casterId, impact, hit }: GameEvents['catapult:fired']): void => {
+  private onCatapultFired = ({ impact, hit }: GameEvents['catapult:fired']): void => {
     if (!this.world) return;
-    const caster = this.world.findUnit(casterId);
-    const color = caster ? colorForTeam(caster.team) : COLORS.TERMINAL_STONE;
-    const impactAt = this.tileWorldPos(impact);
-    const casterHandle = this.handles.get(casterId);
-    const from = (
-      (casterHandle && this.sprites.getPosition(casterHandle, this.scratchPos)) ??
-      impactAt
-    ).clone();
-    const landing = impactAt.clone();
-    this.spawnProjectile(
-      from,
-      landing,
-      color,
-      hit ? undefined : () => this.spawnDud(landing),
-      CATAPULT_ARC_HEIGHT,
-    );
+    if (!hit) this.spawnDud(this.tileWorldPos(impact));
   };
 
   /**

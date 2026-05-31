@@ -13,13 +13,15 @@ import type { GridCoord } from '../core/types';
  *  - windup   — charging / anticipation; no effect lands.
  *  - release  — the projectile / charge leaves the caster (F3 launch hook).
  *  - travel   — projectile in flight. A real, tick-counted SIM phase
- *               (deterministic arrival tick), but 0-length for every action
- *               in F2 — F3 gives it real ticks; the orphan check covers it.
+ *               (deterministic arrival tick). F3 gave it real ticks on the
+ *               mage/catapult (carved out of the wind-up, so the impact tick
+ *               is unchanged); still 0-length where a projectile is cosmetic.
  *  - impact   — THE effect boundary. `Action.applyEffect` fires here.
  *  - recovery — follow-through / lockout tail; no effect.
  *
  * Most actions use a subset: a basic strike is `impact` (offset 0) +
- * `recovery`; a charged spell is `windup` + `impact`.
+ * `recovery`; a charged projectile spell is
+ * `windup` + `release` + `travel` + `impact`.
  */
 export type ActionPhaseName = 'windup' | 'release' | 'travel' | 'impact' | 'recovery';
 

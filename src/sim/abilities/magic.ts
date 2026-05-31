@@ -5,6 +5,7 @@ import { MagicBoltAction } from '../actions/MagicBoltAction';
 import { currentTarget, collectLosBlockers } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
 import { magicBoltDamage, attackCooldownTicksFor } from '../stats';
+import { secondsToTicks } from '../../config';
 import { abilityConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
 import type { GridCoord } from '../../core/types';
@@ -62,6 +63,13 @@ export class MagicBolt implements Ability {
     const center: GridCoord = { ...target.position };
     const baseDamage = magicBoltDamage(unit);
     const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
+    // F3 — carve the bolt's flight OUT of the charge so it travels *during* the
+    // wind-up and detonates on the impact tick (the renderer launches it on
+    // `release`). `min(..., durationTicks)` keeps `windupTicks >= 0`;
+    // Σ(windup, travel) == durationTicks, so the impact offset, busy window,
+    // and cooldown are all unchanged vs the F2 zero-travel shape.
+    const travelTicks = Math.min(secondsToTicks(cfg.travelSeconds ?? 0), durationTicks);
+    const windupTicks = durationTicks - travelTicks;
 
     return {
       action: new MagicBoltAction(
@@ -73,11 +81,15 @@ export class MagicBolt implements Ability {
       ),
       score: 10,
       cooldown: durationTicks,
-      // F2 — charge for the whole wind-up, then detonate at impact. The blast
-      // (`applyEffect`) lands at offset `durationTicks` — exactly where the
-      // pre-F2 `effectTicks:[durationTicks]` fired.
+      // F3 — charge for `windupTicks`, then release the bolt (`release`) and let
+      // it fly for `travelTicks` before the blast (`applyEffect`) detonates at
+      // `impact` (offset durationTicks — exactly where F2's zero-travel impact
+      // fired). The mage gains `release`/`travel` it lacked in F2; `release` is
+      // the renderer's launch cue.
       phases: [
-        { phase: 'windup', ticks: durationTicks },
+        { phase: 'windup', ticks: windupTicks },
+        { phase: 'release', ticks: 0 },
+        { phase: 'travel', ticks: travelTicks },
         { phase: 'impact', ticks: 0 },
       ],
       cooldownKey: this.id,

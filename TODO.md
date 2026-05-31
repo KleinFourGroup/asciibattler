@@ -5,6 +5,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 ## Polish / pre-launch
 
 - [ ] **Favicon.** Browser logs an error on every load because there's no `/favicon.ico`. Add one — could be a tiny inline-SVG `M` or `@` glyph in `TERMINAL_GREEN` matching the aesthetic. (Quick fix: add `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,..."/>` to `index.html`.)
+- [ ] **Recruit-card accent CSS for the new archetypes.** `RecruitScreen.renderCard` ([src/ui/RecruitScreen.ts](src/ui/RecruitScreen.ts)) stamps a `recruit-card--{archetype}` class per card, but `ui.css` only carries accent rules for `--melee` / `--ranged`. The rogue / healer / mage / catapult cards fall back to base styling (functional + on-aesthetic, just no per-archetype accent color). Add `recruit-card--rogue` / `--healer` / `--mage` / `--catapult` accent rules (border / glyph tint) matching the palette. Cosmetic; surfaced during F1's browser-verify pass.
 
 ## Post-MVP polish
 

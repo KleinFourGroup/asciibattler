@@ -126,6 +126,17 @@ describe('determinism: RunConfig (G1)', () => {
       /forcedLayoutId/,
     );
   });
+
+  it('a leveled startingRoster is reproducible and applies the level', () => {
+    // Level-ups draw from the team fork (a child stream), so same seed +
+    // same config → identical leveled stats. The level field is honored.
+    const config: RunConfig = { startingRoster: [{ archetype: 'rogue', level: 3 }] };
+    const a = new Run(11, new EventBus<GameEvents>(), config);
+    const b = new Run(11, new EventBus<GameEvents>(), config);
+    expect(a.team).toEqual(b.team);
+    expect(a.team).toHaveLength(1);
+    expect(a.team[0]!.level).toBe(3);
+  });
 });
 
 /**

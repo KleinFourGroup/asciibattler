@@ -197,7 +197,10 @@ export class Game implements RunDispatcher {
   private createRun(): Run {
     const run = new Run(this.runConfig.seed ?? Date.now(), this.bus, this.runConfig);
     if (this.runConfig.startingRoster) {
-      console.warn(`[dev] starting roster override: ${this.runConfig.startingRoster.join(', ')}`);
+      const desc = this.runConfig.startingRoster
+        .map((e) => (e.level > 1 ? `${e.archetype} Lv${e.level}` : e.archetype))
+        .join(', ');
+      console.warn(`[dev] starting roster override: ${desc}`);
     }
     return run;
   }

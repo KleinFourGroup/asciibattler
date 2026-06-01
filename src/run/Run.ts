@@ -169,7 +169,7 @@ export class Run {
     this.nodeMap = generateNodeMap(this.rng.fork(), config);
     const teamRng = this.rng.fork();
     this.team = config?.startingRoster
-      ? config.startingRoster.map((a) => rollUnit(a, teamRng))
+      ? config.startingRoster.map((e) => rollUnit(e.archetype, teamRng, e.level))
       : rollTeam(teamRng);
     this.levelupRng = this.rng.fork();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);

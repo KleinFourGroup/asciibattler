@@ -7,6 +7,7 @@ import {
 } from './RunConfig';
 import { ALL_ARCHETYPES } from '../sim/archetypes';
 import { LAYOUT_IDS } from '../sim/layouts';
+import { LEVELING } from '../config/leveling';
 
 // Mechanic-level tests: the parser logic is config-free, so explicit inputs
 // are fine. The only "data" we lean on is the live archetype + layout sets
@@ -26,7 +27,10 @@ describe('RunConfig parsing', () => {
     expect(c).toEqual({
       seed: 42,
       floorCount: 2,
-      startingRoster: [A0, A1],
+      startingRoster: [
+        { archetype: A0, level: 1 },
+        { archetype: A1, level: 1 },
+      ],
       forcedLayoutId: LAYOUT,
       mapMaxWidth: 4,
     });
@@ -44,8 +48,8 @@ describe('RunConfig parsing', () => {
     expect(cfg('width=abc').mapMaxWidth).toBeUndefined();
   });
 
-  it('drops invalid roster tokens, keeping the valid ones', () => {
-    expect(cfg(`roster=${A0},notreal,___`).startingRoster).toEqual([A0]);
+  it('drops invalid roster tokens, keeping the valid ones (default level 1)', () => {
+    expect(cfg(`roster=${A0},notreal,___`).startingRoster).toEqual([{ archetype: A0, level: 1 }]);
   });
 
   it('omits startingRoster when no token is valid', () => {
@@ -53,15 +57,37 @@ describe('RunConfig parsing', () => {
   });
 
   it('trims + lowercases roster tokens', () => {
-    expect(cfg(`roster= ${A0.toUpperCase()} `).startingRoster).toEqual([A0]);
+    expect(cfg(`roster= ${A0.toUpperCase()} `).startingRoster).toEqual([
+      { archetype: A0, level: 1 },
+    ]);
+  });
+
+  it('parses per-unit levels via archetype:level', () => {
+    expect(cfg(`roster=${A0}:3,${A1}:2,${A0}`).startingRoster).toEqual([
+      { archetype: A0, level: 3 },
+      { archetype: A1, level: 2 },
+      { archetype: A0, level: 1 },
+    ]);
+  });
+
+  it('falls back to level 1 on a missing / non-positive / non-integer level', () => {
+    expect(cfg(`roster=${A0}:`).startingRoster).toEqual([{ archetype: A0, level: 1 }]);
+    expect(cfg(`roster=${A0}:0`).startingRoster).toEqual([{ archetype: A0, level: 1 }]);
+    expect(cfg(`roster=${A0}:abc`).startingRoster).toEqual([{ archetype: A0, level: 1 }]);
+  });
+
+  it('clamps a roster level to the level cap', () => {
+    expect(cfg(`roster=${A0}:9999`).startingRoster).toEqual([
+      { archetype: A0, level: LEVELING.levelCap },
+    ]);
   });
 
   it('drops an unknown layout id', () => {
     expect(cfg('layout=not_a_layout').forcedLayoutId).toBeUndefined();
   });
 
-  it('round-trips through runConfigToQueryString', () => {
-    const original = cfg(`seed=7&floors=3&roster=${A0},${A1}&layout=${LAYOUT}&width=5`);
+  it('round-trips through runConfigToQueryString (incl. per-unit levels)', () => {
+    const original = cfg(`seed=7&floors=3&roster=${A0}:4,${A1}&layout=${LAYOUT}&width=5`);
     const query = runConfigToQueryString(original);
     expect(parseRunConfig(new URLSearchParams(query))).toEqual(original);
   });

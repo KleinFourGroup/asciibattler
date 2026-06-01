@@ -18,6 +18,13 @@
 
 import { ALL_ARCHETYPES, type Archetype } from '../sim/archetypes';
 import { LAYOUT_IDS } from '../sim/layouts';
+import { LEVELING } from '../config/leveling';
+
+/** One starting-roster slot: an archetype at a chosen level (>= 1, capped). */
+export interface RosterEntry {
+  readonly archetype: Archetype;
+  readonly level: number;
+}
 
 export interface RunConfig {
   /**
@@ -32,10 +39,11 @@ export interface RunConfig {
    */
   readonly floorCount?: number;
   /**
-   * Replace the rolled starting roster with these archetypes (dev / playtest).
-   * Supersedes the old `?roster=` override.
+   * Replace the rolled starting roster with these archetypes, each at a chosen
+   * level (dev / playtest). Supersedes the old `?roster=` override. URL form:
+   * `roster=rogue:3,healer:2,melee` — `:level` is optional (default 1).
    */
-  readonly startingRoster?: readonly Archetype[];
+  readonly startingRoster?: readonly RosterEntry[];
   /** Force every battle onto a named layout (must be a known `LAYOUT_IDS` member). */
   readonly forcedLayoutId?: string;
   /**
@@ -73,14 +81,28 @@ function parsePositiveInt(raw: string | null): number | undefined {
   return n !== undefined && n > 0 ? n : undefined;
 }
 
-/** Comma-separated archetypes, validated against `ALL_ARCHETYPES`. Undefined if none valid. */
-function parseRoster(raw: string | null): Archetype[] | undefined {
+/** Clamp a roster level into `[1, levelCap]`. */
+function clampLevel(level: number): number {
+  return Math.min(Math.max(1, level), LEVELING.levelCap);
+}
+
+/**
+ * Comma-separated `archetype[:level]` tokens. Archetype validated against
+ * `ALL_ARCHETYPES` (invalid tokens dropped); `:level` optional (default 1,
+ * clamped to the level cap; a missing / non-positive level falls back to 1).
+ * Undefined if no token is valid.
+ */
+function parseRoster(raw: string | null): RosterEntry[] | undefined {
   if (!raw) return undefined;
-  const valid = raw
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter((a): a is Archetype => (ALL_ARCHETYPES as readonly string[]).includes(a));
-  return valid.length > 0 ? valid : undefined;
+  const entries: RosterEntry[] = [];
+  for (const token of raw.split(',')) {
+    const [namePart, levelPart] = token.split(':');
+    const name = namePart?.trim().toLowerCase() ?? '';
+    if (!(ALL_ARCHETYPES as readonly string[]).includes(name)) continue;
+    const level = clampLevel(parsePositiveInt(levelPart ?? null) ?? 1);
+    entries.push({ archetype: name as Archetype, level });
+  }
+  return entries.length > 0 ? entries : undefined;
 }
 
 /** A known layout id. Undefined if absent or not in `LAYOUT_IDS`. */
@@ -131,7 +153,12 @@ export function runConfigToQueryString(config: RunConfig): string {
     params.set(RUN_CONFIG_PARAMS.floors, String(config.floorCount));
   }
   if (config.startingRoster && config.startingRoster.length > 0) {
-    params.set(RUN_CONFIG_PARAMS.roster, config.startingRoster.join(','));
+    params.set(
+      RUN_CONFIG_PARAMS.roster,
+      config.startingRoster
+        .map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype))
+        .join(','),
+    );
   }
   if (config.forcedLayoutId !== undefined) {
     params.set(RUN_CONFIG_PARAMS.layout, config.forcedLayoutId);

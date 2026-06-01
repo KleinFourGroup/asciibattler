@@ -1,70 +1,123 @@
-# ROADMAP — Post-E
+# ROADMAP — Post-F
 
-The build order after Phase E (combat foundation + the four new
-archetypes) landed. Companion to [DESIGN.md](DESIGN.md),
+The build order after Phase F (combat polish + the Phase-E playtest
+response) landed. Companion to [DESIGN.md](DESIGN.md),
 [ARCHITECTURE.md](ARCHITECTURE.md), [TODO.md](TODO.md), and the prior
-roadmaps now at [archive/mvp-roadmap.md](archive/mvp-roadmap.md),
+roadmaps now in the archive:
+[archive/mvp-roadmap.md](archive/mvp-roadmap.md),
 [archive/post-mvp-roadmap.md](archive/post-mvp-roadmap.md),
-[archive/post-c1-roadmap.md](archive/post-c1-roadmap.md), and
-[archive/post-d-roadmap.md](archive/post-d-roadmap.md).
+[archive/post-c1-roadmap.md](archive/post-c1-roadmap.md),
+[archive/post-d-roadmap.md](archive/post-d-roadmap.md), and
+[archive/post-e-roadmap.md](archive/post-e-roadmap.md) (the immediately
+preceding roadmap this one supersedes).
 
-Synthesized from [archive/phase-e-feedback.md](archive/phase-e-feedback.md)
-(the Phase E playtest pass), the unfinished tail of the post-D roadmap,
-and [TODO.md](TODO.md). Once you've read this, `phase-e-feedback.md` is
-fully absorbed and lives in the archive purely as a historical artifact.
+Synthesized from [archive/phase-g-details.md](archive/phase-g-details.md)
+(the user's Phase-G design brief), the residual Phase-G content of the
+post-E roadmap, and [TODO.md](TODO.md). Once you've read this,
+`phase-g-details.md` is fully absorbed and lives in the archive purely as
+a historical artifact.
 
 ## Where this came from
 
-Phase E delivered the combat-mechanics foundation the post-D roadmap
-laid out: the stats overhaul (E1), ability primitives (E2), archetype
-config + leveling (E3), the XP/promotion loop (E4), pathfinding refresh
-(E5), combat visuals (E6), and — the headline — the four new archetypes
-(E7: rogue, healer, mage, catapult), each shipped one commit at a time
-with a playtest pause between. See [HANDOFF.md](HANDOFF.md) for the full
-per-step breakdown; treat it as the source of truth for *what shipped*,
+Phase F delivered the combat-polish cluster the post-E roadmap laid out:
+the draft-pool pull-forward (F1), the **action phase system** (F2) and
+its first consumers — projectile/impact re-timing (F3), rogue gambit
+sequencing (F4) — plus the heal-feedback VFX (F5) and the heal/utility
+XP ledger (F6). All landed; see [HANDOFF.md](HANDOFF.md) for the full
+per-step breakdown — treat it as the source of truth for *what shipped*,
 this doc for *what's next*.
 
-Playing the four new archetypes surfaced a tight cluster of feedback,
-almost all of it about **legibility** — the combat now *does* more than
-the renderer can *show*. Three of the six items turned out to share one
-root cause (presentation timing welded to simulation timing), one is a
-straight XP-model gap, one is a VFX gap, and one is a playtest-velocity
-unblocker. Phase F (this document's first new phase) is that cluster.
-The old run-depth work (recruitment rarity, in-battle commands,
-multi-map, split battles) is preserved verbatim as **Phase G**.
+Phase G turns the lens from **individual battles to run progression.**
+The user's brief lays out five threads — a sustainable **enemy-level
+budget** (replacing the linear per-floor ramp), **longer maps** with a
+proper full-screen map scene, **non-combat node types** (rest / boss),
+a trial of **multi-turn "deckbuilder" battles** (player + encounter
+health pools, a card-drawn hand, a new `power` stat), and the
+**testing/tooling** to keep all of that playtestable without grinding a
+15-minute run by hand. This roadmap sequences those into **Phase G**
+(G1–G5 — the run-progression structure) and **Phase H** (H1–H6 — the
+multi-turn trial).
 
-**Renumber note.** The post-D roadmap's "Phase F — Run depth" is now
-**Phase G** here, unchanged in content. The Phase-E playtest response
-took priority in front of it and claimed the F slot. Old → new mapping
-is 1:1 (F1→G1 recruitment, F2→G2 commands, F3→G3 multi-map, F4→G4 split
-battles). HANDOFF's "Next up" pointer is updated to match. No code or
-ARCHITECTURE.md text references roadmap phases by letter, so there's
-nothing else to renumber; ARCHITECTURE's `Recruitment.ts` description
-("rollOffer with archetype-variety guarantee") still describes current
-code and gets updated in the F1 commit that changes it.
+### Supersession note (old Phase G → new Phases G & H)
+
+The post-E roadmap's Phase G was a placeholder carried verbatim from the
+post-D roadmap. The brief reshapes it; the mapping:
+
+- **old G4 (split battles + meta-health)** → **new Phase H (multi-turn
+  battles)**, promoted from speculative to its own phase now that the user
+  has a concrete scheme to trial (it's phase-sized — see Phase H).
+- **old G3 (multi-map / longer runs)** → **new G2 (longer *single*
+  map)**. True multi-map / "Regions" + the D8 theme-per-map migration
+  stay deferred (see *What we're NOT doing yet*).
+- **old G1 (recruitment rarity + enemy diversity)** → the recruit model
+  is replaced by **G4** (level = avg-team-level + exponential bonus) and
+  **Phase H** (a pass / no-recruit option); **enemy-archetype diversification
+  is explicitly deferred** by the brief ("keep enemies as just melee and
+  archers"), and **rarity tiers** are parked until the budget + card
+  systems stabilize.
+- **old G2 (in-battle commands)** → parked. The Phase H card-draw *is* the new
+  steering layer; revisit tactical commands only if cards prove
+  insufficient.
+
+No code or ARCHITECTURE.md text references roadmap phases by letter, so
+there is nothing else to renumber.
+
+## Sequencing rationale
+
+The brief lists testing last; this roadmap pulls the **run-config
+foundation forward to G1**. Reason: G2 makes a run ten floors deep, so
+*without* a way to launch a 1–2 floor run (or a single forced layout)
+headlessly and in-browser, every subsequent step's playtest becomes the
+15-minute grind the brief is explicitly trying to avoid. G1 is the
+F1-style unblocker. It also supplies the configurable `floorCount` that
+G2 needs anyway. The run-structure *fuzz-strategy* work and the GUI
+launcher stay at the back of Phase G (G5); the multi-turn-specific tooling
++ the full balance sweep land with the trial they test (Phase H, H6).
+
+**Phase G** is the run-progression *structure*: the **run layer** (G1
+config, G2 maps, G3 node types — all touching `NodeMap` + `MapScreen` +
+`Run`'s node-resolution), the **enemy-balance** rebuild (G4), and the
+**run-structure tooling** (G5). **Phase H** is the multi-turn battle trial
+(H1–H6) — the experimental work, isolated so a reshape after Phase G
+playtest doesn't renumber the structural steps. The one cross-phase seam
+to hold in mind: G4 introduces a single `playerTeamLevel()` function that
+**Phase H (H5)** swaps from "roster total" to "expected hand total" —
+build it as a seam from day one so the swap is a one-function edit, not a
+balance rewrite.
+
+Nothing in G2–G5 is hard-gated on a strict order, but the recommended path
+is G1 → G2 → G3 → G4 → G5, then Phase H (H1 → … → H6).
 
 ## Conventions
 
-Same shape as the post-D roadmap:
+Same shape as the prior roadmaps:
 
 - **Commit per logical change**, not per session.
 - **Pause between commits on multi-commit features** for the user's
-  manual playtest run (the E7 cadence — keep it).
-- **Surface tradeoffs** before non-obvious calls.
+  manual playtest run (the Phase-E/F cadence — keep it). Phase H especially.
+- **Surface tradeoffs** before non-obvious calls; stop at "Decision
+  points."
 - **Headless-first for sim/run/core/config changes** — write a vitest
-  test before reaching for the browser preview. F2 (phase system) and
-  F6 (utility XP) are almost entirely headless-testable; F3/F4/F5 are
-  the render-timing/VFX steps where eyeball verification is primary.
-- **Browser-verify render changes at native resolution**, and only
-  claim "verified" with concrete output (see the verify-before-claiming
-  + browser-verify-render discipline). New unit glyphs still need a
-  `glyphs.ts` GLYPHS entry — the [FontAtlas.test.ts](src/render/FontAtlas.test.ts)
-  guard catches a missing one headlessly.
-- **Hoist numbers to config.** Phase F introduces phase durations,
-  projectile speeds, heal-VFX timings, and an `xpPerHealing` knob — land
-  them in `config/*.json` (or isolated render consts for pure-VFX
-  values) from day one. A4 pattern.
-- **Keep DESIGN.md / ARCHITECTURE.md honest.** Update docs in the same
+  test before reaching for the browser preview. Almost all of G1, G3
+  (resolution), G4, and the Phase H sim layers are headless-testable; the
+  map-scene rewrite (G2) and any new battle UI (Phase H) are the
+  eyeball-verified surfaces.
+- **Browser-verify render changes** and only claim "verified" with
+  concrete output (the verify-before-claiming + browser-verify-render
+  discipline). **Note:** the new node icons (X / Z / !) live in the
+  **DOM `MapScreen`**, not the 3D `FontAtlas` — they're CSS text, so
+  they need *no* `glyphs.ts` entry. Any genuinely new 3D glyph still
+  does, and [FontAtlas.test.ts](src/render/FontAtlas.test.ts) guards it.
+- **Hoist numbers to config from day one** (A4 pattern). Phases G + H add a
+  lot of knobs — enemy-budget deltas, map dimensions, rest-XP, health
+  pools, `power` growth, hand size, recruit-bonus exponent. Land them in
+  `config/*.json` (or isolated render consts for pure-VFX values), never
+  hardcoded.
+- **Balance-proof tests derive from the config module** the production
+  code reads — never hardcode the balance arithmetic (a JSON tweak should
+  be a one-file edit, not test churn). Mechanic/primitive tests use
+  explicit literals and never read the shipped JSON.
+- **Keep DESIGN.md / ARCHITECTURE.md honest** — update docs in the same
   commit as the code that invalidates them.
 
 "Decision points" flag user-input moments (naming, design tradeoffs,
@@ -72,439 +125,575 @@ balance knobs). Stop and ask.
 
 ---
 
-## Phase E — Combat foundation ✅ complete
+## Phase F — Combat polish & playtest response ✅ complete
 
-E1 (stats) → E2 (abilities) → E3 (archetypes + leveling) → E3.5/E3.6
-(tick-rate + DOM overlays) → E4 (XP + promotion + half-cover) → E5
-(pathfinding) → E6 (combat visuals) → E7 (rogue/healer/mage/catapult).
-All landed; 489 tests, fuzz 7/7. Full breakdown in
+F1 (draft-pool pull-forward) → F2 (action phase system + `findUnit` Map
+index) → F3 (projectile/impact re-timing) → F4 (rogue gambit
+sequencing) → F5 (heal feedback VFX) → F6 (heal/utility XP ledger). All
+landed; 514 tests, fuzz smoke 7/7. Full breakdown in
 [HANDOFF.md](HANDOFF.md).
 
-The four new archetypes are **dev-only via `?roster=`** and absent from
-the recruit + enemy pools — Phase F (F1) starts to fix that.
+Two seams Phase F leaves for Phase G:
+- **The phase timeline** ([Action.ts](src/sim/Action.ts)) is now the
+  substrate for any multi-phase action — G3's rest "action" and any Phase H
+  wave-resolution effects ride it instead of inventing new event types.
+- **The recruit pool holds all six archetypes** (F1), so any change
+  touching a *recruitable* archetype's XP/behavior shifts the fuzz
+  baseline — expected, not a regression; verify via stash+diff.
 
 ---
 
-## Phase F — Combat polish & playtest response
+## Phase G — Run progression structure
 
-The Phase E playtest cluster. Ordering puts the playtest *unblocker*
-first (F1), then the foundation refactor everything else needs (F2),
-then the presentation + VFX steps that build on it (F3–F5), then the
-XP-model gap (F6). F1 and F6 are independent of the phase system and can
-slot anywhere; F3/F4 hard-depend on F2.
+Run-level depth: a sustainable difficulty curve, longer and more legible
+maps, node variety, and the tooling to playtest it all. The multi-turn
+battle trial this sets up is its own **Phase H** below (it grew
+phase-sized).
 
-**Decisions settled with the user this round** (see per-step decision
-points for detail):
-- **#1 attack timing → build the full phase system now** (F2), not a
-  render-only patch.
-- **#5 heal/utility XP → per *effective* HP healed**, as a general
-  utility-contribution ledger (F6).
-- **#6 draft pool → player recruit pool only for now** (F1); enemy
-  diversification + rarity tiers stay in G1.
-- **#4 heal VFX → rich healer effect; regen-tile chip-heal keeps the
-  existing cyan `+N`** (F5).
+### G1 — Run configuration & short-run harness (foundation + unblocker)
 
-### F1 — Draft-pool pull-forward (immediate)
-
-The playtest unblocker. Per the feedback: *"It's hard for the
-playtesting to manually gauge balance when the new units only appear in
-a manner dictated by a URL argument."* Pull the minimal recruitable
-slice of G1 forward now; defer rarity tiers + floor-weighting +
-enemy-side diversification to G1 proper.
+The playtest-velocity unblocker, pulled forward (see *Sequencing
+rationale*). Today a run's floor count is hardcoded in
+[config/nodemap.json](config/nodemap.json) (`floorCount: 5`, read into
+`FLOOR_COUNT` in [NodeMap.ts](src/run/NodeMap.ts)); there is no
+`RunConfig`, and the only dev override is the `?roster=` flag parsed in
+[Game.ts](src/Game.ts) (`DEV_ROSTER_ARCHETYPES`). G1 generalizes that
+into a single configurable entry point for *short* runs and *specific*
+layouts, headless and in-browser.
 
 **Shape:**
-- [rollOffer](src/run/Recruitment.ts) pool grows from `['melee',
-  'ranged']` to all six archetypes at **uniform weight**.
-- Each offer is **three *distinct* archetypes** (the feedback's "three
-  separate unit archetypes"). Replace the now-obsolete "guarantee ≥1
-  melee + ≥1 ranged" reservation with a "distinct archetypes per offer"
-  rule (sample without replacement from the six).
-- `rollUnit` already produces any archetype — the four new ones were
-  gated *only* by the hardcoded pick-lists, so this is a small, local
-  change to `rollOffer` + the two `rng.pick([...])` sites.
-- **Recruit-only.** [rollEnemyTeam](src/run/Run.ts) stays 60/40
-  melee/ranged. **Accepted tradeoff:** you can draft + field the new
-  archetypes (gauge their *offense* and team-fit) but won't *fight*
-  them until G1 diversifies the enemy roll. Flagged so it's a known
-  limitation, not a surprise.
+- New `RunConfig` (`{ seed?, floorCount?, startingRoster?,
+  forcedLayoutId?, mapMaxWidth? }`) consumed by `Run` construction and
+  threaded into `NodeMap.generate(rng, config?)`. `config/nodemap.json`
+  and `config/recruitment.json` stay the **defaults**; `RunConfig`
+  overrides per-run. A `floorCount: 1` run is now expressible.
+- One `parseRunConfigFromURL()` (extending the `?roster=` parser) used
+  by **both** [Game.ts](src/Game.ts) (browser) and the headless paths —
+  single source of truth, so a browser launch URL and a headless run
+  describe the same run.
+- CLI tool under `tools/run-config/` (dev-only, same posture as
+  `tools/layout-editor/` — served by Vite, never in `dist/`): takes
+  flags (`--floors`, `--seed`, `--roster`, `--layout`) and prints the
+  launch URL **and** can drive a headless run to completion for a quick
+  sanity pass. The **GUI wrapper** the brief wants is deferred to **G5**
+  (it pairs naturally with the fuzz tooling there).
+- The fuzz harness ([tests/fuzz/harness.ts](tests/fuzz/harness.ts))
+  accepts a `RunConfig` so a sweep can target a 1-floor run or a forced
+  layout.
 
 **Cost / blast radius:**
-- Expanding the pool shifts the run RNG draw sequence → **fuzz +
-  determinism baselines reset** (one-time, expected — the E7 steps kept
-  pools unchanged precisely to avoid this; F1 spends it deliberately).
-  Re-run `npm run fuzz` to refresh the baseline.
-- Recruit strategies in the fuzz harness
-  ([PureRandom](tests/fuzz/strategies/PureRandom.ts) /
-  [Greedy](tests/fuzz/strategies/Greedy.ts)) already index offers
-  generically — they should survive a wider pool, but verify Greedy's
-  archetype-count heuristic still terminates with six archetypes.
-- WorldSnapshot/Run snapshot **unchanged** (archetype is already a
-  string field; no new persisted state).
+- `RunConfig` threads through `Run` + `NodeMap.generate`. **Do not
+  persist it in the snapshot yet** — it's a run *input*, fully
+  reconstructable; persisting it is a save/load concern, deferred.
+  **No snapshot bump.**
+- Default behavior (no config) must be byte-identical to today — the
+  RNG draw sequence cannot move for the default path. Pin this.
 
 **Headless tests:**
-- Offer of size 3 always yields 3 distinct archetypes drawn from the
-  six (rewrite the melee+ranged-guarantee tests in
-  [Recruitment.test.ts](src/run/Recruitment.test.ts)).
-- All six archetypes appear across a wide seed sample (uniformity smoke).
-- `rollUnit` produces valid stat blocks for each of the four new
-  archetypes at recruit level.
+- `NodeMap.generate` at `floorCount` 1, 2, default → valid DAGs
+  (reachable + co-reachable, invariants hold).
+- `parseRunConfigFromURL` round-trips a config string.
+- A forced `RunConfig` (1 floor, fixed seed, fixed layout) drives a full
+  headless run that resolves deterministically.
+- **Default-path determinism:** a `Run` built with no `RunConfig`
+  produces the identical nodeMap + draw sequence as pre-G1.
 
-**Decision points F1:**
-- **Offer size.** User said three. `defaultOfferSize` in
-  `config/recruitment.json` — set to 3 if it isn't already.
-- **Distinct vs. role-diversity guarantee.** Recommend pure
-  distinct-archetype sampling (simplest, and with six archetypes an
-  all-same offer is already impossible). A "≥1 damage-dealer" style
-  guarantee is a G1 concern once rarity weighting exists — don't
-  pre-build it here.
-- **Six distinct from a pool that may grow.** Sampling 3-distinct-of-6
-  is fine; if the pool ever exceeds offer size this is just
-  sample-without-replacement. No special-casing needed now.
+**Decision points G1:**
+- **Config surface.** URL params + CLI flags now; a config *file* is
+  unnecessary (recommend not adding one). Confirm the param names.
+- **Persist `RunConfig` in the snapshot?** Recommend **no** until
+  save/load is real — it's reconstructable from the seed. Revisit when
+  long runs (G2) + run-loss (Phase H) make save matter.
 
-### F2 — Action phase system (foundation)
+### G2 — Longer maps & full-screen map scene
 
-**User call: build the full system now.** Generalize A1's ad-hoc
-multi-tick `effectTicks` into a first-class, declared **phase timeline**
-per action, so elaborate multi-phase attacks become data, not new
-event types — and so the renderer has explicit hooks to animate
-*against* instead of welding visuals to the damage tick.
+Bigger, more legible run maps, and a map-select scene that fills the
+screen instead of hugging a strip.
 
-**Why this is the right foundation (industry framing).** Every
-deterministic-lockstep game (RTS, autobattler, rollback fighter)
-separates **logical timing** (deterministic, in ticks — authoritative,
-the sim owns it) from **presentation timing** (animation, in seconds —
-the renderer owns it, free to lead or lag). Abilities are modeled as
-named phases — fighting games call them *startup → active → recovery*,
-MOBAs call it *cast point + projectile travel*, animators call it
-*anticipation → contact → follow-through*. The effect lands on the
-*active/contact* phase, not frame 0. AAA wires the contact moment via
-**animation notifies** (Unreal `AnimNotify`, Unity Animation Events) —
-the art timeline carries "apply effect here" markers. We can't let art
-drive a deterministic sim, but we reproduce it by giving each phase a
-tick duration and emitting a **phase-transition event** the renderer
-schedules against.
+**Shape — generator** ([NodeMap.ts](src/run/NodeMap.ts) +
+[config/nodemap.json](config/nodemap.json)):
+- `floorCount` 5 → **11** (spawn/root at floor 0 + ten levels — confirm
+  the off-by-one against the existing root/terminal convention before
+  committing). `middleWidthMax` 3 → **6**. `maxOutDegree` 2 → **3** ("no
+  node has more than three successors"). `targetTotalMax` (10) was a
+  *small-map* tightening — raise it to fit an 11-floor board (~40–50
+  nodes) or drop the cap.
+- **No crossing edges.** This is the algorithmic core. The current
+  generator picks children "uniformly" with an orphan backfill and has
+  **no planarity constraint**; [MapScreen.ts](src/ui/MapScreen.ts)
+  already positions nodes by a fractional x-slot per floor, so the order
+  exists in *rendering* but the generator doesn't respect it. Recommended
+  provably-non-crossing construction: give each floor's nodes integer
+  x-slots; connect floor *i* (sorted by x) to floor *i+1* (sorted by x)
+  with a **monotonic, contiguous** assignment — each parent links to a
+  contiguous run of children, and adjacent parents' runs may share a
+  boundary child but never invert. Planar by construction. Then enforce
+  connectivity (every child ≥1 parent; every node reaches the terminal)
+  and `out-degree ≤ 3` as post-passes. A **crossing-checker** is the
+  headless guard (see tests).
 
-We already have ~80% of the sim half: A1's `start` (wind-up) +
-`applyEffect` at `effectTicks:[duration]` (contact) + cooldown
-(recovery) is a three-phase system in disguise. F2 makes it explicit,
-named, optional-per-phase, and event-emitting.
+**Shape — scene** ([MapScreen.ts](src/ui/MapScreen.ts) +
+[MapScene.ts](src/scenes/MapScene.ts) + `ui.css`):
+- The brief reports the map screen as "a gray screen with the map on a
+  thin strip on the right." `MapScreen` is *already* pure DOM/CSS (no 3D
+  background) — so the gray is most likely **the cleared WebGL battle
+  canvas showing through** behind a width-constrained map container.
+  **First task: confirm the source** (is the `#game-canvas` still visible
+  under the map phase? is the map container column-constrained?), then
+  fix it: hide/clear the battle canvas on non-battle scenes and rebuild
+  the map container as a **full-viewport CSS layout**. The wider/taller
+  10-floor DAG needs the real estate anyway, which reinforces the
+  rewrite. Scroll if the board exceeds the viewport.
 
-**Shape:**
-- An action declares an ordered phase list, e.g.
-  `[{ phase: 'windup', ticks }, { phase: 'release', ticks: 0 },
-  { phase: 'travel', ticks }, { phase: 'impact', ticks: 0 },
-  { phase: 'recovery', ticks }]`. Phases are optional / zero-length (a
-  basic melee swing is ~all `impact`, near-zero windup).
-- Each phase boundary emits a transient event (`action:phase` with
-  `{ unitId, actionId, phase, targetCell?/targetId? }`) the renderer
-  subscribes to generically. New elaborate attacks = a new phase list,
-  no new event plumbing.
-- The damage/effect resolver fires on the `impact` phase (was
-  `applyEffect` at the effect tick) — logically identical to today for
-  the existing actions, just named.
-- **Migrate the existing actions** onto the new shape:
-  melee/ranged/gambit strikes (trivial — windup 0, impact, recovery),
-  `HealAction`, `MagicBoltAction` (windup = charge → impact = detonate),
-  `CatapultShotAction` (windup → release → travel → impact). The mage
-  and catapult are the ones that visibly benefit.
-- **Target-orphan handling becomes a declared per-ability policy.** The
-  "attack fired at a unit that dies before it lands" problem has a
-  standard menu — make it explicit:
-  - `commit-at-cast` — damage locked at the active phase; projectile is
-    pure VFX that always lands (on the empty tile if needed).
-  - `fizzle` — abort if the locked target dies (catapult's current
-    choice; counterplay = kill the slow caster during the telegraph).
-  - `ground-target` — hit the tile, whoever's there takes it (mage AoE's
-    current behavior).
-  - `re-home` — retarget mid-flight (available, not recommended by
-    default — reads as unfair).
-  Today's behaviors map onto this menu unchanged; F2 just gives them a
-  name and extends the "is the target still alive?" check to cover a
-  `travel` phase, not only `windup`.
-
-**Snapshot:** `activeAction` gains phase state (current phase + ticks
-elapsed) → **WorldSnapshot bump** (old versions throw; loud-failure A4).
-Mid-phase round-trip is the key test (a snapshot taken during a
-catapult's `travel` resumes on the right phase at the right tick).
+**Cost / blast radius:**
+- Generator changes shift the run RNG draw sequence → **fuzz +
+  determinism baseline reset** (one-time, like F1). Re-run `npm run
+  fuzz`. Bundle this reset with **G3** if they land close together so
+  it's one reset, not two.
+- `RunSnapshot` stores `nodeMap` whole — a bigger map just serializes
+  bigger; the *shape* is unchanged, so **no schema bump**.
+- The map scene is render — eyeball-verified per [TESTING.md](TESTING.md).
 
 **Headless tests:**
-- Phase timeline advances tick-by-tick through the declared phases;
-  zero-length phases fire-and-advance in the same tick.
-- `impact` resolves damage identically to the pre-F2 `applyEffect`
-  (regression-pin each migrated action).
-- Each orphan policy: target dies in `windup` vs `travel` →
-  fizzle/commit/ground-target behaves per the declared policy, with the
-  right (or absent) `combatRng` draw.
-- Mid-phase snapshot round-trip for a multi-phase action.
-- Determinism: same seed → same phase-event stream + same outcomes.
+- Generator invariants at the new dimensions: `floorCount`, width ≤ 6,
+  out-degree ≤ 3, exactly one root + one terminal.
+- **No-crossing checker:** for every pair of edges, assert they don't
+  geometrically cross given the per-floor x-ordering. This both pins the
+  property and documents it.
+- Connectivity: every node reachable from root **and** co-reachable to
+  the terminal, across a wide seed sample.
+- Determinism per seed.
 
-**Decision points F2:**
-- **Phase vocabulary.** Recommend the five above
-  (`windup/release/travel/impact/recovery`), `release` and `travel`
-  present only for projectile actions. Keep the set small + closed
-  (a union type, not free strings) — adding a phase is one schema bump,
-  same discipline as the stat block.
-- **Is `travel` a sim phase or render-only?** Recommend a **sim phase**
-  for projectile actions (deterministic arrival tick → the "slow the
-  projectile down" knob in F3 is honest and the orphan-during-travel
-  check is real). The alternative (render fakes travel by launching
-  early) is cheaper but makes travel time a lie the sim can't reason
-  about — worse fit for a deterministic sim.
-- **Event granularity.** One `action:phase` event per boundary
-  (recommend) vs. distinct event names per phase. One generic event
-  with a `phase` field keeps the renderer subscription single and the
-  catalog small.
-- **Overlap with the deferred "generic status system."** The old
-  roadmap deferred a generic status-effect system until a consumer
-  revealed its shape. F2 is *not* that system — it's per-action phase
-  timing, not cross-unit persistent effects. Keep them separate; note
-  in DESIGN.md that the phase system is the timing substrate, status
-  effects (if ever) are a different axis.
+**Decision points G2:**
+- **Floor semantics.** "Ten levels plus spawn" — confirm `floorCount`
+  counts the root (→ 11) vs. ten *battle* floors plus an implicit root.
+- **Planarity method.** Recommend the monotonic-contiguous construction
+  above (planar by construction beats generate-then-reject). Flag if you
+  hit a variety-vs-planarity tension (too-rigid connections make every
+  map look the same).
+- **Map-scene camera.** A 10-deep map likely overflows vertically —
+  scroll vs. scale-to-fit. Recommend scroll with the current node
+  centered.
 
-### F3 — Projectile & impact timing (presentation)
+### G3 — Node types: plumbing + rest & boss + icons
 
-Builds on F2's phase events. The actual fix for the felt mismatch in
-feedback #1 + the catapult-misses-the-sprite in #2.
+The minimal node-type system: the plumbing plus two example kinds. A
+full event system is **out of scope** (brief) — this is the substrate it
+will later plug into.
 
-- **Launch on `release`, arrive on `impact`.** The renderer starts the
-  projectile/charge animation on the `release` phase event, timed so it
-  *arrives* exactly on the `impact` tick — so the animation plays
-  *during* the wind-up window, not after the damage. This is what lets
-  the catapult projectile **slow down** (feedback's explicit wish)
-  without adding lag: travel now occupies the windup, so a slower arc
-  just fills more of a window that already exists.
-- **Move the visual impact to contact.** Hitsplat, HP-bar drop, and
-  impact SFX fire on the projectile's *arrival* (the `impact` event as
-  the renderer schedules it), not at action start. The mage's boom
-  should sound when the bolt lands; right now it sounds at cast.
-- **Aim at the sprite, not the tile (feedback #2).** Projectiles target
-  the target's *interpolated sprite position* via the same
-  `SpriteRenderer.getPosition` the overlays already use, re-read during
-  flight for a moving target — instead of the grid-cell center the arc
-  currently homes on.
-- Reuses the E6.B/E6.C/E7 projectile + explosion + dud lanes; this is
-  re-timing + re-aiming them, not new VFX primitives.
+**Shape — node kind** ([NodeMap.ts](src/run/NodeMap.ts)):
+- `MapNode.kind` is already a field (currently the lone value
+  `'battle'`). Widen the union to `'battle' | 'rest' | 'boss'` (closed
+  union, A4 discipline). Generator: the **terminal** node → `'boss'`;
+  scatter `'rest'` **infrequently** among middle floors (config:
+  rest frequency + a minimum-spacing rule so two rests don't cluster).
+  The root stays the spawn `@`, not a resolvable kind.
 
-**Verification:** eyeball-only per [TESTING.md](TESTING.md) — A/B a
-mage cast + a catapult shot before/after, confirming SFX + hitsplat now
-land *with* the projectile and the arc reaches the sprite. The dev
-`__game.activeScene.world` handle is reachable; the rAF auto-resolve
-race is the staging blocker (drive the sim by hand / freeze the world).
+**Shape — node resolution** ([Run.ts](src/run/Run.ts) `handleEnterNode`):
+- `handleEnterNode` currently always builds a `BattleEncounter`. Dispatch
+  on `kind`:
+  - `battle` / `boss` → battle encounter as today. **Boss is a regular
+    fight for now** (brief) — tag it so future mechanics have a hook; no
+    new combat behavior in G3.
+  - `rest` → a **non-combat resolution**: grant a flat `restXp` (default
+    **200**, config knob) to *every* player roster slot, then advance to
+    the map. **Reuse the existing XP pipeline:** synthesize `XpAward`s of
+    +200 per `rosterIndex` and feed `bankXpAwards` — that already bumps
+    levels, builds `PromotionInfo[]`, and routes through `PromotionScene`
+    (a rest can legitimately trigger promotions). Clean reuse, no parallel
+    leveling path. **Phase H forward ref:** once the player health pool
+    exists, a rest *also* heals it by `restHealAmount` (default 5) — added
+    in H6 (the pool isn't born until H4).
 
-**Decision points F3:**
-- **Projectile speed knobs.** Catapult slower (feedback); expose
-  `*_PROJECTILE_SECONDS` / arc consts (already isolated render consts).
-  Tune by feel against the windup length so arrival ≈ impact tick.
-- **Off-by-a-tick tolerance.** The renderer lerps in real seconds; the
-  sim ticks discretely. Arrival won't be pixel-perfect on the impact
-  tick every frame. Recommend snapping the hitsplat/SFX to the `impact`
-  event and letting the projectile's final approach visually catch up
-  (≤1 tick) rather than chasing sub-tick precision.
+**Shape — icons** ([MapScreen.ts](src/ui/MapScreen.ts)):
+- Replace the numeric node label (`isRoot ? '@' : String(node.id)`) with
+  a **kind → glyph** map: combat `X`, rest `Z`, boss `!`, root `@`. DOM
+  text — no `FontAtlas` / `glyphs.ts` involvement. The brief wants
+  route-planning legibility; the icon *is* the affordance.
 
-### F4 — Rogue gambit sequencing (presentation)
-
-Feedback #3: the gambit *"just looks like it's retreating while damage
-is mysteriously applied to adjacent units."* Root cause: E6.A made the
-shove and move-lerp channels **mutually exclusive per handle**
-(`startLerp` drops any active shove), and `GambitStrikeAction` does
-strike + reposition in one tick — so the retreat lerp clobbers the
-attack shove and the strike vanishes.
-
-- Sequence the presentation: **strike-contact, then retreat.** With F2's
-  phases this is natural — the gambit declares `impact` (strike +
-  shove) then a short reposition window the move-lerp plays in, so the
-  two no longer fight over the sprite in the same instant.
-- Alternatively (or additionally) let shove + move *compose* for this
-  one action rather than cancel — but the phase-sequenced version is
-  cleaner and is the gambit's first real use of F2.
-
-**Verification:** eyeball — confirm a visible strike (shove/contact +
-hitsplat on the struck target) precedes the rogue's kite step.
-
-### F5 — Heal feedback VFX (presentation)
-
-Feedback #4: *"We need more visual indication around heals."* Precise
-starting point — healer heals **and** regen-tile chip-heals already emit
-`unit:healed` → the E6.C cyan `+N` hitsplat. So this isn't zero→some;
-it's "the floating number alone doesn't read." Add presence *on the
-healed unit* + make the *source* legible (a cousin of #3's "who did what
-to whom").
-
-- **Healer casts:** a target-side green/cyan pulse or `+` aura on the
-  healed unit, optionally a short healer→target beam so the source
-  reads. Isolated render consts + CSS, same family as the hitsplat.
-- **Regen-tile chip-heal:** keeps just the existing `+N` (user call —
-  the tile is already an obvious source; a lush effect there would read
-  as noise on the per-tick chip).
-
-**Verification:** eyeball — a wounded ally visibly "blooms" on a healer
-cast; the beam (if added) makes it obvious *which* healer.
-
-**Decision points F5:**
-- **Beam vs. pulse-only.** Recommend trying the target-side pulse first
-  (cheapest, fixes "is this unit being healed?"); add the source beam
-  only if "which healer?" still reads ambiguously in a crowd.
-
-### F6 — Heal / utility XP (sim + config)
-
-Feedback #5: *"Healing (and really any future utility abilities) needs
-to award XP."* **User call: per *effective* HP healed**, as a general
-utility-contribution ledger. Symmetric with E4's `xpPerDamage` /
-`damageDealt`.
-
-- New per-unit **utility-contribution ledger** in World (a `healingDone`
-  / `utilityDone` map, mirror of `damageDealt`), accumulated at the
-  point HealAction emits its delta.
-- Award `LEVELING.xpPerHealing × effectiveHealing` at battle end,
-  folded into the existing `computeXpAwards` alongside the damage share.
-  Knob in [config/leveling.json](config/leveling.json).
-- **Effective HP only.** HealAction already emits the real, clamped,
-  non-overheal delta (0 included) — count that, so healing a full-HP
-  ally for spam-XP earns nothing. Kills the degenerate case.
-- **General, not heal-specific.** Make the ledger a `utilityContribution`
-  axis so E7+/G-era buffs/shields plug in without another snapshot bump.
-- This directly resolves E4's old worry that damage-only XP permanently
-  starves support archetypes — the healer now earns its keep.
-
-**Snapshot:** World gains the ledger → **WorldSnapshot bump** (can ride
-with F2's bump if F6 lands in the same window, or its own otherwise).
+**Cost / blast radius:**
+- Widening `MapNode.kind` is shape-compatible (string field already
+  serialized); old saves with only `'battle'` still load.
+- Adding rest nodes shifts the generator's RNG draws → baseline reset
+  (bundle with G2's reset).
+- Rest resolution is a small new branch in `Run`; reusing `bankXpAwards`
+  keeps it tiny. No snapshot bump beyond G2's (none).
 
 **Headless tests:**
-- Effective-heal ledger accumulates the clamped delta; overheal
-  contributes 0.
-- `computeXpAwards` adds `xpPerHealing × healingDone` to the right
-  roster slot; a heal-only healer that dealt 0 damage still levels.
-- Ledger round-trips through the snapshot.
-- Balance-proof: derive the expected XP from `LEVELING.*`, never
-  hardcode the arithmetic.
+- Generator: exactly one `boss` (the terminal); rest nodes obey the
+  frequency + spacing rule; all kinds reachable.
+- Rest resolution: entering a `rest` node grants `restXp × rosterSize`,
+  banks it, produces the right `PromotionInfo`, and advances **without**
+  a battle (derive the XP from `LEVELING`/the rest knob, never hardcode).
+- Boss node builds a normal battle encounter (regression-equivalent to a
+  battle node).
+- Icon mapping is render — eyeball-verified.
 
-**Decision points F6:**
-- **Knob default.** Pick `xpPerHealing` relative to `xpPerDamage` so a
-  healer keeps rough pace with a damage-dealer — tune via fuzz/playtest;
-  start at parity (1 HP healed ≈ 1 damage dealt) and adjust.
-- **Does the per-tick regen tile award XP?** Recommend **no** — chip
-  heal is the *tile's* output, not a unit's contribution. Only
-  ability-driven heals feed the ledger. (Matches the F5 call to keep
-  chip-heal visually minimal too.)
+**Decision points G3:**
+- **Rest placement rule.** Frequency + min-spacing knobs — recommend
+  "~1 per N floors, never adjacent, never on the first or last floor."
+  Tune by feel.
+- **Does a rest trigger `PromotionScene`?** Recommend **yes** (reuse the
+  XP pipeline; a level-up from resting is satisfying).
+- **Rest as a distinct `RunPhase`?** Recommend **no** — resolve inline
+  (bank XP → existing promotion/advance path). A distinct phase only
+  earns its keep once rests have an interactive screen (future event
+  system).
+
+### G4 — Enemy level-budget balance + recruit leveling
+
+Replace the linear `enemyLevelForFloor` ramp (which assumes the player
+levels linearly — they don't) with a **team-level budget**, and re-base
+recruit levels on the team average. Independent of the map work; this is
+where the **Phase H seam** is born.
+
+**Shape — enemy budget** ([Run.ts](src/run/Run.ts) `rollEnemyTeam` +
+[config/difficulty.json](config/difficulty.json)):
+- New `playerTeamLevel(team)` **— the seam.** For now it returns the
+  **sum of roster unit levels** (single-battle model). **Phase H (H5)
+  swaps this** to `avgLevel × min(rosterSize, handSize)`. Document the seam
+  loudly at the definition site so the H5 swap is a one-function edit.
+- New knobs: `totalLevelDelta` (enemy total = `playerTeamLevel −
+  totalLevelDelta`), `unitLevelDelta` (per-enemy cap above the player's
+  highest unit). Re-purpose / keep `enemySizeDelta` as the **upper-bound**
+  driver (count up to `2 × playerSize`).
+- Algorithm (`rollEnemyTeam`, now genuinely consuming `battleRng`):
+  1. `budget = max(minBudget, playerTeamLevel − totalLevelDelta)`
+  2. `cap = highestPlayerUnitLevel + unitLevelDelta`
+  3. `minCount = ceil(budget / cap)`, `maxCount = 2 × playerSize`
+  4. choose `count ∈ [minCount, maxCount]`, **biased toward `maxCount`**
+     ("on average we want to be mowing down swarms of weaker units")
+  5. distribute `budget` across `count` units **roughly equally**
+     (≈ `budget/count` each, jittered), each `≥ 1`, none `> cap`
+  6. archetype per unit: **melee/ranged 60/40, unchanged** (brief: keep
+     enemies melee + archers only)
+  7. build via the existing deterministic `scaledUnit(archetype, level)`.
+- **Spawn-queue transition.** Up to `2 × playerSize` enemies on a fixed
+  board may exceed the spawn region → they overflow onto
+  `world.spawnQueues` via the existing `spawnTeam` → `queueUnit` →
+  `runOverflowScan` (D5). This is the brief's "transition us to the
+  spawn queue system." Verify the queue-aware battle-end check handles a
+  large queued enemy team (it already accounts for queued units).
+
+**Shape — recruit leveling** ([Recruitment.ts](src/run/Recruitment.ts) +
+`Run.advancePastBattle` + [config/recruitment.json](config/recruitment.json)):
+- Today a recruit comes in at `currentFloor` simulated level-ups. Change
+  to: **level = round(avgTeamLevel) + bonus**, where `bonus` is an
+  **exponential draw** (50% +0, 25% +1, 12.5% +2, … ; base/decay is a
+  config knob `recruitBonusExponent`). New `recruitLevelBonus(rng,
+  exponent)`; feed the resulting level into the existing
+  `simulateLevelUps` stat-build path.
+
+**Cost / blast radius:**
+- `rollEnemyTeam` now draws from `battleRng` (it was deterministic) and
+  recruit leveling draws from `levelupRng`/`rng` → **fuzz + determinism
+  baseline reset.** Expected.
+- Levels/templates are existing fields → **no snapshot bump.**
+- `config/difficulty.json` + `config/recruitment.json` gain knobs.
+
+**Headless tests** (all balance-proof — derive from the config modules):
+- Enemy total level ≈ `budget` (= `playerTeamLevel − totalLevelDelta`)
+  within rounding; **no** enemy exceeds `cap`; `count ∈ [minCount,
+  2×size]`; `count == minCount` at the high-budget edge; per-unit levels
+  roughly equal (variance bound).
+- **Swarm bias:** average `count` trends toward `maxCount` across seeds.
+- Recruit level == `round(avgTeamLevel) + bonus`; the bonus distribution
+  over a wide sample matches ≈ 50/25/12.5 within tolerance.
+- Spawn-queue: a `2×`-size enemy team that exceeds the region gets
+  queued and **all** units eventually spawn; the battle doesn't
+  false-end while units are queued.
+- Determinism per seed.
+
+**Decision points G4:**
+- **Count selection within `[minCount, maxCount]`.** Recommend a
+  high-skewed draw (or `maxCount` outright) for the swarm feel, exposed
+  as a knob (`swarmBias`).
+- **`minBudget` floor** so the enemy total can't drop below 1 on floor 1
+  (where `playerTeamLevel − totalLevelDelta` may go negative).
+- **Rounding of `avgTeamLevel`** for recruits (round vs floor).
+- **The `playerTeamLevel` seam** is the single most important
+  extensibility point in Phase G — keep it a one-line function.
+
+### G5 — Fuzz tooling & GUI launcher (run-structure)
+
+The run-structure-testable slice of the original tooling step. It needs
+G1 (run-config) + G3 (node kinds) but **not** the multi-turn battle model,
+so it closes out Phase G; the multi-turn-specific tooling + the full
+long-run balance sweep move to **Phase H (H6)**.
+
+**Shape — fuzz strategies** ([tests/fuzz/](tests/fuzz)):
+- The `FuzzStrategy` interface decides `pickNextNode` + `pickRecruit`.
+  Refactor toward a **parameterized strategy factory** rather than N
+  copy-pasted classes (clarity/extensibility): one recruit-priority
+  strategy parameterized by archetype, one by stat; one path strategy
+  parameterized by the node-kind it maximizes. The Phase-G slice of the
+  brief's menu:
+  - recruit-priority **per archetype** (6),
+  - recruit-priority **per stat** (the 7 base stats; `power` waits for H1),
+  - path strategies that **maximize each node type** (combat / rest).
+- All must handle the wider recruit pool (already generic post-F1). The
+  **pass-option** and **`power`-stat** strategy variants are deferred to
+  **H6** (they need Phase H's pass choice + `power` stat).
+
+**Shape — GUI launcher** (`tools/run-config/`):
+- The GUI wrapper over G1's CLI the brief wants "for me": a small dev-only
+  HTML page (sibling of the layout editor) to pick
+  floors/roster/layout/seed and get a launch link — so an eyeball test is
+  a click, not a hand-typed URL. (The health-pool knobs get added in H6.)
+
+**Decision points G5:**
+- **Strategy parameterization granularity.** Recommend factories over
+  explicit subclasses (one file, data-driven), matching the config-derived
+  ethos.
 
 ---
 
-## Phase G — Run depth
+## Phase H — Multi-turn battle trial
 
-The residual C-phase content, carried over verbatim from the post-D
-roadmap's Phase F (renumbered). None of these need to land before Phase
-F finishes; sequence within G is recommendable rather than required.
+The brief's explicit *trial* of a scheme, promoted to its own phase: it's
+phase-sized (six commits, a playtest pause between each) and the most
+**experimental** work in the plan, so it lands after Phase G's structural
+work has stabilized — with G1's short-run harness + G5's fuzz tooling
+already in place to support it. It layers a meta-combat loop **on top of**
+the existing tactical battle: an encounter is now several **turns**, each
+turn a card-drawn **hand** of the roster fighting a freshly-rolled
+**wave**, with two **health pools** deciding the encounter (and the run).
+Locked with the user to the sub-step + decision level below.
 
-### G1 — Recruitment refactor: pool rarity + enemy diversity
+**Hard prereqs:** **G4** (the `playerTeamLevel` seam H5 swaps), **G3**
+(rest nodes H6 extends), **G1** (short-run harness). Independent of G2.
 
-F1 pulled the *recruitable* slice forward at uniform weight. G1 is the
-full version the c1-feedback asked for ("draft from a pool of
-pre-defined unit types with rarity tiers"), plus the enemy-side
-diversification F1 deferred.
+**The scheme — as locked with the user:**
+- A **player health pool** persists across the whole run (default **20**,
+  knob). At 0, the run is lost.
+- An **encounter health pool** persists only within an encounter (default
+  **8**, knob). The encounter ends when the enemy pool hits 0 (player
+  wins) or the player pool hits 0 (run lost).
+- An encounter is a series of **turns**. Each turn: draw a **hand** from
+  the roster-deck → the hand fights a **freshly-rolled enemy wave** (the
+  existing tactical battle = one turn) → **each side's survivors chip the
+  *opposing* pool by their Σ`power`**.
+- **No within-encounter attrition** (user call). Each turn is an
+  independent skirmish: units start at **full HP**, and a unit that dies
+  in a turn simply isn't a survivor that turn — it **recycles through the
+  discard** (no permadeath, no carried wounds). Outcome variance comes
+  instead from **(a)** the enemy rolling a *new* wave each turn and **(b)**
+  randomized spawn positions — not from an HP grind.
+- **`power`** is a new stat: base **1**, growth **0.20** under the existing
+  *additive* model (~20% chance of +1 per level-up, so `E[power] ≈ 1 + 0.2
+  × levelups` ≈ 3 at the high end — **not** exponential; the pool↔power
+  balance is pure knob-tuning).
+- The hand is a **draw → hand → discard** cycle (reshuffle discard into
+  draw when empty); **target hand size 5** (knob `handSize`; see "the
+  cliff").
+- For enemy balance, **`playerTeamLevel` = `avgLevel × min(rosterSize,
+  handSize)`** — the **G4 seam swap** (generalized to the `handSize` knob).
+- **Recruitment** gains a **pass / no-recruit** option (see "the
+  treadmill").
 
-- Rarity tiers in `config/recruitment.json`:
-  - common: melee, ranged
-  - uncommon: mage, healer, catapult
-  - rare: rogue (the "specialist"; rebalance per playtest)
-- Offer composition weighted by floor depth: floor 1 = mostly common;
-  floor N = increasing uncommon/rare odds. (Replaces F1's flat uniform
-  weighting.)
-- **Enemy diversification.** [rollEnemyTeam](src/run/Run.ts) grows past
-  60/40 melee/ranged to field the new archetypes (weighted by floor) —
-  the other half of F1's "recruit-only" deferral. Another fuzz baseline
-  reset; bundle it with the rarity change so it's one reset, not two.
-- "Guarantee role diversity" generalization: at least one damage-dealer
-  + one specialist-or-support in each offer (concrete rule pending
-  playtest of the F1 uniform pool).
-- Recruit cards display archetype, level, abilities, key stats.
+**Why hand size dropped 8 → 5 (the cliff).** With hand 8 and a starting
+roster of 5, `min(roster, 8)` is the *whole roster* until you've recruited
+past 8 — so for the first several floors there'd be no draw variance, no
+deck dilution, and "pass" would never be correct (the deckbuilder asleep).
+Hand **5** flips the deck "on" after the *first* recruit (roster 6 > hand
+5). The lone pre-recruit encounter is still a full-roster hand, but the
+fresh-wave + random-spawn variance keeps even that from being a foregone
+conclusion.
 
-**Decision points G1:**
-- **Recruit-vs-level-up exclusivity.** Recommend keeping them separate
-  (level-ups are automatic from XP per E4; recruit offers strictly add a
-  unit). Mixing conflates two progression dimensions.
-- **Pool growth from custom unit definitions.** Punted until a
-  layouts-editor-parity for archetypes exists — far future, not G1.
+**The fatigue hook (architecture now, debuff later).** With no attrition,
+a winnable matchup might win *every* turn → the pools stay untouched and
+the encounter is a 1–2-turn formality. Whether that actually happens is
+empirical (the wave/spawn variance may already break it). So **H3 builds a
+per-unit deployment counter** (increments each time a unit is deployed in
+a turn, snapshotted) with a clean read-point for a future **fatigue
+debuff** that scales off it — the escape hatch if H6's fuzz/playtest shows
+battles are foregone conclusions. The debuff itself is **deferred**; only
+the counter + plumbing land in this phase.
 
-### G2 — Limited in-battle commands
+**The treadmill — mostly neutralized by hand size 5 (resolved).** An
+earlier draft worried that recruiting toughens the enemy, since the budget
+is `playerTeamLevel − delta` and `playerTeamLevel = avgLevel × min(roster,
+handSize)`. But the **starting roster (5) already equals `handSize` (5)**,
+so `min(roster, handSize)` is pinned at 5 and never grows — recruiting
+adds **no** enemy slot. The budget therefore tracks your **average unit
+level**, not roster size (the clean curve we want). The residual coupling
+is small and runs through `avgLevel` only: an above-average recruit nudges
+difficulty up a hair; a below-average one nudges it *down* (a minor
+sandbag). So the **"pass" rationale reverts to deck dilution** — weak for
+the first recruit or two (roster ≈ hand), growing as the roster outpaces
+5. Keep the pass option; don't expect agonizing early recruit choices.
 
-Enabled by A2 (done). Targetless commands (switch to defensive AI,
-retreat) and single-target commands (focus this enemy, hold this
-location). Plumbing exists via the `WorldCommand` channel; this step is
-the UI + the command implementations.
+**Decomposition** (one commit each, pause between):
+- **H1 — `power` stat.** Add `power` to the stat block
+  ([config/stats.json](config/stats.json) `baseStats` per archetype = 1,
+  `growthRates` = 0.20) and to `UnitStats` / template / HUD + recruit
+  display. Levels like any other stat (additive growth). **WorldSnapshot
+  bump.** Behavior-neutral until H4 consumes it. Fully headless.
+- **H2 — Randomized spawn-tile selection.** In `spawnTeam`, when units <
+  region tiles, pick the *used* tiles at random instead of filling
+  first-N (both teams). This is the positional variance that — with no
+  attrition — keeps a repeated matchup from being a foregone conclusion.
+  Consumes RNG → **fuzz baseline shift.** Mechanically independent of the
+  turn loop (it improves any battle), but motivated by H4; lands first as
+  a cheap, isolated commit.
+- **H3 — Per-unit deployment counter (fatigue hook).** A per-unit counter
+  that increments each time a unit is deployed in a turn, **reset per
+  encounter**, snapshotted. Pure bookkeeping now — it ships with a clean
+  read-point for the *future* fatigue debuff (deferred; wired in H6 only
+  if needed). Snapshot round-trips the counts.
+- **H4 — Health pools + turn/encounter loop.** `playerHealth` (on `Run`,
+  persists) + per-encounter `enemyHealth`; node resolution runs an
+  **encounter loop**: each turn spawn a hand (the **full roster** as the
+  placeholder hand — cards arrive in H5) + a **freshly-rolled enemy wave**
+  (budget constant per encounter from the *expected* hand level;
+  composition re-rolled each turn) → tactical battle → survivors' Σ`power`
+  chips the opposing pool → check end. **Turn resolution:** one side wiped
+  → its survivors chip; a **tick-capped draw → *both* sides' survivors
+  chip** their Σ`power`. **Termination safety:** cap encounter turns — a
+  mutual 0-survivor wipe deals 0 to both pools, so without a cap an
+  all-mutual-wipe encounter could loop forever; on the cap, resolve by
+  remaining pool fraction (the sophisticated version is the post-G
+  [TODO.md](TODO.md) dive). Defaults: player 20, enemy 8. Keep the tactical
+  `World` layer untouched; the loop wraps it — the riskiest
+  `Run`/orchestration change in the plan.
+- **H5 — Card-drawn hand + seam swap.** Deck/hand/discard (deck = roster;
+  hand ≤ `handSize` = 5; reshuffle on empty); only the hand fights.
+  **Swap `playerTeamLevel`** (the G4 seam) → `avgLevel × min(roster,
+  handSize)`. Draw variance + deck dilution activate here.
+- **H6 — Recruitment pass, rest-heal, fuzz + balance sweep.** The closer;
+  several threads converge:
+  - **Pass / no-recruit option** in the offer (UI + the pass-option
+    fuzz-strategy variant deferred from G5).
+  - **Rest-node pool heal:** extend G3's rest resolution to also heal the
+    player pool by `restHealAmount` (default **5**, knob; capped at the
+    pool max) — deferred from G3 because the pool isn't born until H4. A
+    placeholder beside the +200 XP (the user flagged the XP+heal combo is
+    probably unbalanced — fine for now; both rework with the real event
+    system).
+  - **`power`-stat fuzz strategy** variant (deferred from G5; needs H1).
+  - **Long-run balance sweep + foregone-conclusion check:** with every
+    system in, sweep the fuzz harness at long-run scale and tune by
+    win-rate feel — `difficulty.json` (budget deltas, swarm bias),
+    `leveling.json` (XP + `xpPerHealing`), the health pools + `power`
+    growth, `recruitBonusExponent`, rest XP/heal. **Measure whether turns
+    are foregone conclusions**; if they are, wire the **fatigue debuff**
+    off H3's counter.
+  - Add the health-pool knobs to G5's GUI launcher.
 
-**Decision points G2:**
-- **Uses per battle.** Recommend a small shared pool (3–5/battle, refund
-  on victory). Charges feel tighter than cooldowns for the
-  autobattler-with-steering vibe.
-- **Cost gating.** Charges per battle (recommend) vs per-run resource vs
-  cooldown — tied to G3's run length.
+**Settled with the user (across the design rounds):**
+- **No attrition** — fresh-HP skirmishes; variance from fresh waves +
+  random spawns; **deployment counter (H3) built as the fatigue hook**,
+  reset **per encounter** (per-run judged too harsh).
+- **Enemy rolls a new wave each turn** (placeholder) — no enemy deck;
+  budget constant per encounter, composition re-rolled per turn.
+- **Hand size 5** (knob); **unit death is per-turn** (recycles via discard
+  — no permadeath, no carried wounds).
+- **Random spawn-tile subset** when units < region tiles (H2).
+- **In-battle agency is intentionally near-zero** — the hand is *drawn*,
+  not chosen, then autobattles; the bulk of agency is out-of-battle (draft
+  + path). *Future* low-level controls (unit **pathing** + **targeting
+  priority**) are planned but out of scope (see *What we're NOT doing
+  yet*).
+- **XP / promotion cadence: per encounter** — bank the turn-by-turn XP and
+  pop one `PromotionScene` at encounter end, never per turn.
+- **Tick-capped turn = a draw where *both* sides' survivors chip the
+  opposing pool** (not a no-damage stalemate); the deeper turn-limit
+  system is a post-Phase-H exploration ([TODO.md](TODO.md)).
+- **Rest nodes heal the player pool +5** (H6).
 
-### G3 — Multi-map / longer runs
+**One trial default still loose:**
+- **Pass option** — assume **always available + free** for the trial; add
+  a cost only if playtest shows passing is too obviously correct.
 
-Expand each map to ~10 floors; multiple maps per run; target ~1 hour per
-run. Hard prereqs done (A3 fuzz harness; E4 XP curve). Natural consumer
-of D5's overflow queue + D3's larger boards.
+**Snapshot scope.** `Run` gains `playerHealth` + deck/hand/discard +
+per-unit deployment counts; an encounter gains `enemyHealth` + turn/wave
+progress → **Run + WorldSnapshot bumps.** Mid-encounter round-trip is the
+key test.
 
-**Theme migration (carried from D8).** Multi-map runs are when theme
-moves up a level — each node map carries a theme, procedural battles
-within inherit. `rollTheme` exits `Run.handleEnterNode` at that point.
+**Headless tests** (per sub-step; balance-proof):
+- H1: `power` levels per `growthRates`; snapshot round-trips the stat.
+- H2: the random spawn-tile subset stays within the region + covers every
+  tile over many seeds; deterministic per seed.
+- H3: the deployment counter increments, **resets at encounter start**,
+  and round-trips.
+- H4: encounter loop ends on either pool reaching 0; survivor Σ`power`
+  hits the correct pool; a **tick-capped turn chips *both* pools**; the
+  encounter terminates within the max-turns safety even under forced
+  repeated mutual wipes; run lost at `playerHealth == 0`; the wave
+  re-rolls per turn (composition varies, budget constant); pools
+  round-trip.
+- H5: draw/hand/discard cycles correctly (reshuffle on empty, hand capped
+  at `handSize`); `playerTeamLevel == avgLevel × min(roster, handSize)`.
+- H6: a passed offer leaves the roster unchanged + advances; a rest node
+  heals the pool by `restHealAmount` (capped at max); (if built) the
+  fatigue debuff scales off the deployment count.
+- Determinism across a whole multi-turn encounter per seed.
 
-**Decision points G3:**
-- **Multi-map terminology.** Recommend "Regions" (neutral).
-- **Inter-map transitions.** HP carry-over? Recruit availability between
-  maps? Big knobs — punt to impl.
-- **Save/load UI surfaces here.** A2's plumbing has been waiting; long
-  runs are when save matters.
-
-### G4 — (Speculative) Split battles + meta-health
-
-User-flagged in the original c1-feedback. Each combat becomes a series
-of smaller battles drawing subsets of the team, wins/losses depleting a
-meta-health pool. Deckbuilder-roguelike inspiration. Tabled until G3
-ships and we can see whether snowballing persists at long-run scale.
-Large design surface — don't build speculatively.
+**Heaviest verification phase** — lean on G1's short-run harness to
+iterate encounters fast, and the H6 sweep to balance + measure the
+foregone-conclusion rate.
 
 ---
 
 ## Cleanup / chores
 
-Not gated; can land any time.
+Not gated; can land any time. (The post-E `world.findUnit` O(n) item
+shipped in F2 — dropped.)
 
-- **`world.findUnit` O(n).** Add `Map<id, Unit>` alongside the array.
-  The phase system (F2) + AoE targeting call `findUnit` more often —
-  good moment to do it early in Phase F.
-- **Favicon.** [TODO](TODO.md). Inline SVG `M`/`@` glyph in
-  TERMINAL_GREEN. Stops the per-load 404.
+- **Recruit-card accent CSS for the new archetypes.** [TODO](TODO.md) —
+  `recruit-card--{rogue|healer|mage|catapult}` accent rules in `ui.css`
+  (the cards currently fall back to base styling). Cosmetic. Good to fold
+  into G4's + H6's recruit-UI touches.
+- **Dedicated catapult SFX (+ the F3 launch/impact split).** [TODO](TODO.md)
+  — play a launch "creak/thunk" on the `release` phase and a heavy crash
+  on `impact`; needs 1–2 assets in `public/audio/`.
+- **Favicon.** [TODO](TODO.md) — inline SVG `M`/`@` glyph in
+  TERMINAL_GREEN; stops the per-load 404.
 - **`.gitattributes`** to normalize line endings (stops CRLF warnings on
   every commit).
 - **Bundle chunk-size warning.** Bump `chunkSizeWarningLimit` in
   [vite.config.ts](vite.config.ts), or code-split three.js if noisy.
 - **Terrain generator: bias water toward unit paths.** [TODO](TODO.md) —
-  water scatters uniformly so the cost-2 shallow-water rule rarely gets
-  exercised. Wants "N clusters of size M" rather than per-cell
-  Bernoulli. Lower priority post-D5.
+  water scatters uniformly so the cost-2 shallow-water rule rarely fires.
+  Wants "N clusters of size M" rather than per-cell Bernoulli. Lower
+  priority.
 
 ---
 
 ## What we're explicitly NOT doing yet
 
-- **`power` stat / multi-round battles.** Deferred since combat-feedback;
-  revisit only if G4 (split battles) exposes a use for a persistent
-  across-battle stat.
-- **Generic status-effect system.** A1 supports multi-tick effects; F2
-  formalizes per-action *phase timing* (NOT cross-unit persistent
-  effects — a different axis). Resist a generic status system until a
-  consumer beyond phase timing + tile effects reveals its shape.
-- **Dodge mechanics.** Deferred to "after we see how dodge-less feels."
-  Phase E/F is the dodge-less baseline; revisit only if playtest flags
-  it.
-- **Save/load UI.** A2 laid the plumbing; the load-a-saved-run UX waits
-  for G3 (runs long enough that save matters).
-- **Replay system.** Free off A2; build the UI when there's a reason
-  (shareable seeds, bug repros).
-- **Boss / elite encounters.** Deferred until G1 + G3 stabilize the
-  recruit/depth surface.
-- **Touch controls** for the camera. D4 shipped WASD + edge-scroll only;
-  same scope through Phase G.
-- **Editor "test play" button.** Carried from C1d.B. Re-evaluate if a
-  layout-tuning bottleneck appears.
+- **Enemy-archetype diversification.** The brief keeps enemies
+  melee/archer-only through Phase G so the budget system (G4) + the
+  multi-turn trial (Phase H) can be balanced against a simple, legible enemy
+  roster. Fielding rogue/healer/mage/catapult on the enemy side is the
+  first thing to revisit once those stabilize.
+- **Recruit rarity tiers + floor-weighted offers** (old G1). Parked. G4's
+  avg+exponential leveling + Phase H's pass option reshape recruitment first;
+  layer rarity on top later.
+- **In-battle controls** (old G2, reframed). The Phase H model is intentionally
+  low-agency (draft + path out of battle). The planned *future* additions
+  are **low-level** controls — unit **pathing** + **targeting priority** —
+  not old-G2's high-level tactical commands. Out of Phase G; revisit after
+  the multi-turn loop settles.
+- **Multi-map / "Regions" + theme-per-map migration** (old G3 + D8). G2
+  does a longer *single* map. Multiple maps per run, HP/recruit carry-over
+  between maps, and moving `rollTheme` up to the map level wait until the
+  single-long-map + multi-turn loop settle.
+- **Generic status-effect system.** F2 formalized per-action *phase
+  timing* (the timing substrate), **not** cross-unit persistent effects.
+  Resist a generic status system until a consumer beyond phase timing +
+  tile effects reveals its shape.
+- **Dodge mechanics.** Still the dodge-less baseline; revisit only if
+  playtest flags it.
+- **Save/load UI.** A2 laid the plumbing. Long runs (G2) + run-loss (Phase H)
+  raise the value — but the load-a-run UX still waits until the run shape
+  stops moving.
+- **Replay system.** Free off A2; build the UI when there's a reason.
+- **Boss / elite *mechanics*.** G3 adds the boss *node* (a tagged regular
+  fight); bespoke boss mechanics wait until the recruit/depth/multi-turn
+  surface stabilizes.
+- **Touch controls** for the camera. WASD + edge-scroll only through
+  Phase G.
+- **Editor "test play" button.** Carried from C1d.B; re-evaluate if a
+  layout-tuning bottleneck appears (G1's run-config tooling may subsume
+  it).

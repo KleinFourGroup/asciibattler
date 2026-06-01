@@ -45,6 +45,20 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
       scored `ActionProposal`; the selector in `World.tick()` picks the
       highest-scoring valid proposal. See HANDOFF gotcha #8 for the model.
 
+## Design explorations (post-Phase-G)
+
+- [ ] **Turn-limit / tick-cap resolution — a deeper system.** In the G5
+      multi-turn battle model, a *turn* whose tactical battle hits the
+      tick-cap resolves as a **draw**: both sides' surviving units chip the
+      opposing health pool by their Σpower (the placeholder rule). Worth a
+      deeper dive — e.g. scaling the chip by how decisively the cap was
+      approached, a sudden-death escalation, or a smarter "who was winning"
+      heuristic than raw survivor count. Must also handle the
+      mutual-total-wipe edge (0 survivors on both sides → 0 damage → relies
+      on the encounter max-turns safety cap so it can't loop forever). Out
+      of scope for Phase G; revisit once the multi-turn loop has playtest
+      data. (Flagged by the user during the Phase-G roadmap sync.)
+
 ## Bundle / perf
 
 - [ ] Vite reports the production JS chunk is >500KB (essentially all three.js). Fine for an MVP, but worth a `build.chunkSizeWarningLimit` bump or a code-split pass if it gets noisy.

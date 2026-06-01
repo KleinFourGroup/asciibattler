@@ -49,7 +49,7 @@ describe('HealAction', () => {
     ally.currentHp = ally.derived.maxHp - 20;
     new HealAction(ally, 8).start(healer, world);
     expect(ally.currentHp).toBe(ally.derived.maxHp - 12);
-    expect(heals[0]).toEqual({ unitId: ally.id, amount: 8 });
+    expect(heals[0]).toEqual({ unitId: ally.id, amount: 8, healerId: healer.id });
   });
 
   it('clamps at maxHp and emits the actual (smaller) delta', () => {
@@ -57,7 +57,7 @@ describe('HealAction', () => {
     ally.currentHp = ally.derived.maxHp - 3;
     new HealAction(ally, 8).start(healer, world);
     expect(ally.currentHp).toBe(ally.derived.maxHp); // not maxHp + 5
-    expect(heals[0]).toEqual({ unitId: ally.id, amount: 3 });
+    expect(heals[0]).toEqual({ unitId: ally.id, amount: 3, healerId: healer.id });
   });
 
   it('emits a 0 delta when the target is already full (renderer skips it)', () => {
@@ -65,7 +65,16 @@ describe('HealAction', () => {
     expect(ally.currentHp).toBe(ally.derived.maxHp);
     new HealAction(ally, 8).start(healer, world);
     expect(ally.currentHp).toBe(ally.derived.maxHp);
-    expect(heals[0]).toEqual({ unitId: ally.id, amount: 0 });
+    expect(heals[0]).toEqual({ unitId: ally.id, amount: 0, healerId: healer.id });
+  });
+
+  it('tags the emitted heal with the casting unit as healerId (F5 source)', () => {
+    const { world, healer, ally, heals } = scene();
+    ally.currentHp = ally.derived.maxHp - 5;
+    new HealAction(ally, 8).start(healer, world);
+    // healerId = the caster so the renderer fires the F5 sparkle for ability
+    // heals only; tile chip-heals emit `healerId: null` (see World.test.ts).
+    expect(heals[0]?.healerId).toBe(healer.id);
   });
 
   it('skips a dead target (no resurrection, no event)', () => {

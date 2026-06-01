@@ -40,12 +40,15 @@ export class HealAction implements Action {
     private readonly amount: number,
   ) {}
 
-  start(_unit: Unit, world: World): void {
+  start(unit: Unit, world: World): void {
     if (!this.target || this.target.currentHp <= 0) return;
     const before = this.target.currentHp;
     this.target.currentHp = Math.min(this.target.derived.maxHp, before + this.amount);
     const healed = this.target.currentHp - before;
-    world.emit('unit:healed', { unitId: this.target.id, amount: healed });
+    // F5: tag the SOURCE with the caster id so the renderer can fire the
+    // heal-sparkle for ability heals only (tile chip-heals emit `healerId:
+    // null` and keep just the `+N`).
+    world.emit('unit:healed', { unitId: this.target.id, amount: healed, healerId: unit.id });
   }
 
   phaseTarget(): { targetId?: number | undefined } {

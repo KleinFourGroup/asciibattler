@@ -298,7 +298,9 @@ describe('World D7.B tile effects', () => {
     for (let t = 0; t < HEALING_TICKS_PER_HEAL; t++) world.tick();
     expect(units[0]!.currentHp).toBe(11);
     expect(heals).toHaveLength(1);
-    expect(heals[0]).toEqual({ unitId: units[0]!.id, amount: 1 });
+    // F5: a tile chip-heal has no casting unit → healerId is null, so the
+    // renderer keeps it to just the `+N` (no ability heal-sparkle).
+    expect(heals[0]).toEqual({ unitId: units[0]!.id, amount: 1, healerId: null });
 
     // Force currentHp to maxHp; next heal-tick clamps and emits
     // amount=0 (subscribers can debounce; the sim still fires for
@@ -306,7 +308,7 @@ describe('World D7.B tile effects', () => {
     units[0]!.currentHp = units[0]!.derived.maxHp;
     for (let t = 0; t < HEALING_TICKS_PER_HEAL; t++) world.tick();
     expect(units[0]!.currentHp).toBe(units[0]!.derived.maxHp);
-    expect(heals[heals.length - 1]).toEqual({ unitId: units[0]!.id, amount: 0 });
+    expect(heals[heals.length - 1]).toEqual({ unitId: units[0]!.id, amount: 0, healerId: null });
   });
 
   it('neutrals on fire/healing tiles are skipped (combatants-only policy)', () => {

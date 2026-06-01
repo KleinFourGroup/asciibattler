@@ -580,7 +580,9 @@ export class World {
         const before = unit.currentHp;
         unit.currentHp = Math.min(unit.derived.maxHp, before + 1);
         const amount = unit.currentHp - before;
-        this.bus.emit('unit:healed', { unitId: unit.id, amount });
+        // F5: `healerId: null` marks this as an environment chip-heal (no
+        // casting unit) so the renderer keeps it to just the `+N` hitsplat.
+        this.bus.emit('unit:healed', { unitId: unit.id, amount, healerId: null });
       }
     }
   }

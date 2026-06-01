@@ -136,9 +136,14 @@ export class BattleRenderer {
       }),
     );
     this.subscriptions.push(
-      bus.on('unit:healed', ({ unitId, amount }) => {
+      bus.on('unit:healed', ({ unitId, amount, healerId }) => {
         this.refreshHpBar(unitId);
-        if (amount > 0) this.spawnHitsplat(unitId, `+${amount}`, 'heal');
+        if (amount > 0) {
+          this.spawnHitsplat(unitId, `+${amount}`, 'heal');
+          // F5: the cyan twinkle is for ABILITY heals only (healerId set);
+          // a `null` source is a regen-tile chip-heal and keeps just the `+N`.
+          if (healerId !== null) this.spawnHealSparkle(unitId);
+        }
       }),
     );
   }
@@ -594,6 +599,38 @@ export class BattleRenderer {
     }
   }
 
+  /**
+   * F5 — a brief cyan twinkle on a unit that just received an ABILITY heal,
+   * anchored at the unit's LIVE sprite position (same read + top-lift recipe
+   * as `spawnHitsplat`, so it tracks a mid-lerp sprite). A handful of `*`
+   * motes rise + fan out and fade, reusing the explosion-particle lane
+   * (swept by `detach`). Gated to ability heals in the `unit:healed` handler
+   * so the per-tick regen-tile chip stays just its `+N`.
+   */
+  private spawnHealSparkle(unitId: number): void {
+    const handle = this.handles.get(unitId);
+    if (!handle) return;
+    const center = this.sprites.getPosition(handle, this.scratchPos);
+    if (!center) return;
+    center.y += HITSPLAT_Y_OFFSET;
+    for (const [dx, dz] of HEAL_SPARKLE_DIRS) {
+      const dest = center.clone();
+      dest.x += dx * HEAL_SPARKLE_SPREAD;
+      dest.z += dz * HEAL_SPARKLE_SPREAD;
+      dest.y += HEAL_SPARKLE_RISE;
+      this.addExplosionParticle(
+        center,
+        dest,
+        HEAL_SPARKLE_GLYPH,
+        HEAL_SPARKLE_COLOR,
+        HEAL_SPARKLE_SIZE,
+        HEAL_SPARKLE_SIZE,
+        HEAL_SPARKLE_SECONDS,
+        HEAL_SPARKLE_BLOOM,
+      );
+    }
+  }
+
   private addExplosionParticle(
     from: THREE.Vector3,
     to: THREE.Vector3,
@@ -814,6 +851,33 @@ const EXPLOSION_RING_DIRS: ReadonlyArray<readonly [number, number]> = [
   [0.7071, -0.7071],
   [-0.7071, 0.7071],
   [-0.7071, -0.7071],
+];
+
+/**
+ * F5 — heal-sparkle tuning. A wounded ally that receives an ABILITY heal
+ * gets a small cyan twinkle ON the unit (on top of the existing `+N`
+ * hitsplat) so the heal reads as presence, not just a floating number.
+ * Reuses the explosion-particle lane: a few `*` motes that rise + fan out
+ * gently and fade. Cyan matches the `+N` (FLOURESCENT_BLUE); the burst is
+ * smaller/dimmer than the mage explosion (this is a soothe, not a boom).
+ * Tile chip-heals are intentionally excluded (see the `unit:healed`
+ * handler). All eyeball-tunable — bump freely.
+ */
+const HEAL_SPARKLE_GLYPH = PROJECTILE_GLYPH; // already in the FontAtlas
+const HEAL_SPARKLE_COLOR = COLORS.FLOURESCENT_BLUE;
+const HEAL_SPARKLE_SIZE = 0.4;
+const HEAL_SPARKLE_SPREAD = 0.45; // lateral fan, world units
+const HEAL_SPARKLE_RISE = 0.7; // upward drift, world units (the "lift")
+const HEAL_SPARKLE_SECONDS = 0.45;
+const HEAL_SPARKLE_BLOOM = 1.6;
+/** Center mote + 4 orthogonal fan directions (XZ plane); every mote also
+ *  rises by HEAL_SPARKLE_RISE so the burst lifts off the unit. */
+const HEAL_SPARKLE_DIRS: ReadonlyArray<readonly [number, number]> = [
+  [0, 0],
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
 ];
 
 /**

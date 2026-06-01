@@ -600,19 +600,21 @@ export class BattleRenderer {
   }
 
   /**
-   * F5 — a brief cyan twinkle on a unit that just received an ABILITY heal,
-   * anchored at the unit's LIVE sprite position (same read + top-lift recipe
-   * as `spawnHitsplat`, so it tracks a mid-lerp sprite). A handful of `*`
-   * motes rise + fan out and fade, reusing the explosion-particle lane
-   * (swept by `detach`). Gated to ability heals in the `unit:healed` handler
-   * so the per-tick regen-tile chip stays just its `+N`.
+   * F5 — a brief cyan twinkle on a unit that just received an ABILITY heal.
+   * Reads the unit's LIVE sprite position like `spawnHitsplat` (so it tracks a
+   * mid-lerp sprite), but anchors on the BODY (`HEAL_SPARKLE_Y_OFFSET`) rather
+   * than the top edge where the `+N` floats — in a crowd that keeps the cloud
+   * reading as on THIS unit, not the one behind it. A handful of `*` motes rise
+   * + fan out and fade, reusing the explosion-particle lane (swept by `detach`).
+   * Gated to ability heals in the `unit:healed` handler so the per-tick regen-
+   * tile chip stays just its `+N`.
    */
   private spawnHealSparkle(unitId: number): void {
     const handle = this.handles.get(unitId);
     if (!handle) return;
     const center = this.sprites.getPosition(handle, this.scratchPos);
     if (!center) return;
-    center.y += HITSPLAT_Y_OFFSET;
+    center.y += HEAL_SPARKLE_Y_OFFSET;
     for (const [dx, dz] of HEAL_SPARKLE_DIRS) {
       const dest = center.clone();
       dest.x += dx * HEAL_SPARKLE_SPREAD;
@@ -867,9 +869,16 @@ const HEAL_SPARKLE_GLYPH = PROJECTILE_GLYPH; // already in the FontAtlas
 const HEAL_SPARKLE_COLOR = COLORS.FLOURESCENT_BLUE;
 const HEAL_SPARKLE_SIZE = 0.4;
 const HEAL_SPARKLE_SPREAD = 0.45; // lateral fan, world units
-const HEAL_SPARKLE_RISE = 0.7; // upward drift, world units (the "lift")
+const HEAL_SPARKLE_RISE = 0.35; // upward drift from the anchor, world units (the "lift")
 const HEAL_SPARKLE_SECONDS = 0.45;
 const HEAL_SPARKLE_BLOOM = 1.6;
+/** World-Y of the sparkle's anchor, from the sprite CENTER (getPosition).
+ *  Deliberately decoupled from the hitsplat's HITSPLAT_Y_OFFSET (0.5 = the top
+ *  edge, where the `+N` floats): the sparkle hugs the unit's BODY so in a crowd
+ *  it reads as on THIS unit, not the one standing behind it. 0 = center; with
+ *  HEAL_SPARKLE_RISE the cloud peaks at +0.35, still within the sprite's own
+ *  height (below the +0.5 top), so it never floats over a unit's head. */
+const HEAL_SPARKLE_Y_OFFSET = 0.0;
 /** Center mote + 4 orthogonal fan directions (XZ plane); every mote also
  *  rises by HEAL_SPARKLE_RISE so the burst lifts off the unit. */
 const HEAL_SPARKLE_DIRS: ReadonlyArray<readonly [number, number]> = [

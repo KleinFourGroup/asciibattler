@@ -23,7 +23,9 @@ import { rollUnit } from '../../src/sim/archetypes';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import type { GameEvents } from '../../src/core/events';
-import { Run, type BattleEncounter } from '../../src/run/Run';
+import { Run, type BattleEncounter, type RunPhase } from '../../src/run/Run';
+import type { RunConfig } from '../../src/run/RunConfig';
+import { LAYOUT_IDS } from '../../src/sim/layouts';
 
 describe('determinism: world tick replay', () => {
   it('same seed + same initial team → same final unit positions after N ticks', () => {
@@ -89,6 +91,43 @@ describe('determinism: map generation', () => {
   });
 });
 
+describe('determinism: RunConfig (G1)', () => {
+  it('no config == empty config == undefined config (default path unmoved)', () => {
+    const base = new Run(2026, new EventBus<GameEvents>());
+    const empty = new Run(2026, new EventBus<GameEvents>(), {});
+    const undef = new Run(2026, new EventBus<GameEvents>(), undefined);
+    expect(empty.nodeMap).toEqual(base.nodeMap);
+    expect(undef.nodeMap).toEqual(base.nodeMap);
+    expect(empty.team).toEqual(base.team);
+    expect(undef.team).toEqual(base.team);
+  });
+
+  it('a nodeMap-shape override leaves the team fork (next in order) unmoved', () => {
+    // The fork hierarchy (nodeMap → team → levelup) means overriding the
+    // *nodeMap* only changes its forked child stream — the parent advances by
+    // exactly one fork either way, so the team fork is byte-identical.
+    const base = new Run(2026, new EventBus<GameEvents>());
+    const shaped = new Run(2026, new EventBus<GameEvents>(), { floorCount: 2 });
+    expect(shaped.nodeMap).not.toEqual(base.nodeMap);
+    expect(shaped.team).toEqual(base.team);
+  });
+
+  it('a forced short run resolves deterministically to completion', () => {
+    const config: RunConfig = { floorCount: 2, forcedLayoutId: LAYOUT_IDS[0]! };
+    const first = driveForcedRun(7, config);
+    const second = driveForcedRun(7, config);
+    expect(first).toEqual(second);
+    expect(first.phase).toBe('complete');
+    expect(first.encounter.layoutId).toBe(LAYOUT_IDS[0]!);
+  });
+
+  it('throws fast on an unknown forced layout id', () => {
+    expect(() => new Run(7, new EventBus<GameEvents>(), { forcedLayoutId: 'not_a_layout' })).toThrow(
+      /forcedLayoutId/,
+    );
+  });
+});
+
 /**
  * Drive a Run through two node-enter / battle-end cycles and capture the
  * encounter snapshot at each battle. Returns clones because Run nulls out
@@ -120,6 +159,25 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
   bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
 
   return encounters;
+}
+
+/**
+ * G1 — drive a forced short run (floorCount 2 = exactly one battle) through
+ * its single battle to completion, capturing the encounter (which Run nulls
+ * out on battle-end). Used to prove a configured run is reproducible.
+ */
+function driveForcedRun(
+  seed: number,
+  config: RunConfig,
+): { phase: RunPhase; encounter: BattleEncounter } {
+  const bus = new EventBus<GameEvents>();
+  const run = new Run(seed, bus, config);
+  const next = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)?.to;
+  if (next === undefined) throw new Error('test setup: root has no outgoing edge');
+  run.dispatch({ kind: 'enterNode', nodeId: next });
+  const encounter = run.currentEncounter!;
+  bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+  return { phase: run.phase, encounter };
 }
 
 /**

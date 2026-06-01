@@ -6,8 +6,7 @@ import { TerrainRenderer } from './render/TerrainRenderer';
 import { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
 import { Run } from './run/Run';
-import { RNG } from './core/RNG';
-import { rollUnit, type Archetype } from './sim/archetypes';
+import { parseRunConfigFromURL, type RunConfig } from './run/RunConfig';
 import type { RunCommand, RunDispatcher } from './run/Command';
 import type { Scene, SceneContext } from './scenes/Scene';
 import { MapScene } from './scenes/MapScene';
@@ -16,32 +15,6 @@ import { RecruitScene } from './scenes/RecruitScene';
 import { PromotionScene } from './scenes/PromotionScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { AudioPlayer } from './audio/AudioPlayer';
-
-/**
- * E7.A — dev-only starting-roster override. `?roster=rogue,melee,ranged`
- * replaces the rolled starting team so new archetypes can be playtested
- * before recruitment integration (F1) makes them draftable. Unknown tokens
- * are dropped; an empty / all-invalid list leaves the rolled team intact.
- * Rolls off a throwaway RNG (dev-only, determinism irrelevant) so it never
- * perturbs the run's own forked streams. Normal play never sets the param,
- * so production + tests are untouched. Extend `DEV_ROSTER_ARCHETYPES` as
- * E7.B–D land their archetypes.
- */
-const DEV_ROSTER_ARCHETYPES: readonly Archetype[] = ['melee', 'ranged', 'rogue', 'healer', 'mage', 'catapult'];
-
-function applyRosterOverride(run: Run): void {
-  if (typeof location === 'undefined') return;
-  const param = new URLSearchParams(location.search).get('roster');
-  if (!param) return;
-  const valid = param
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter((a): a is Archetype => (DEV_ROSTER_ARCHETYPES as readonly string[]).includes(a));
-  if (valid.length === 0) return;
-  const rng = new RNG(1);
-  run.team = valid.map((a) => rollUnit(a, rng));
-  console.warn(`[dev] starting roster override: ${valid.join(', ')}`);
-}
 
 /**
  * Top-level orchestrator. Owns the EventBus, Renderer, FontAtlas, persistent
@@ -81,6 +54,13 @@ export class Game implements RunDispatcher {
    * for meta state.
    */
   private run: Run;
+  /**
+   * G1 — the RunConfig parsed once from the launch URL. Reused on `resetRun`
+   * so a reset re-rolls a fresh run with the *same* shape (short floor count /
+   * forced layout / roster). A pinned `seed` reproduces the same run on reset;
+   * an unset seed gives a new `Date.now()` run each time.
+   */
+  private readonly runConfig: RunConfig;
   /** The scene currently mounted. Null only briefly during swap(). */
   private activeScene: Scene | null = null;
 
@@ -89,12 +69,16 @@ export class Game implements RunDispatcher {
     this.uiMount = uiMount;
     this.audio = new AudioPlayer();
 
+    // G1 — one URL parser builds the RunConfig (seed / floors / roster /
+    // layout / width). No params ⇒ empty config ⇒ a normal `Date.now()`-seeded
+    // run, byte-identical to pre-G1. Supersedes the old inline `?roster=`.
+    this.runConfig = parseRunConfigFromURL();
+
     // Construct Run first so its battle:ended handler subscribes before any
     // Game listener that reads run.phase. The recruit:offered/run:victory/
     // run:defeated subscriptions below all run *after* Run has updated phase
     // because Run emits those from within its own battle:ended handler.
-    this.run = new Run(Date.now(), this.bus);
-    applyRosterOverride(this.run);
+    this.run = this.createRun();
 
     // Renderer drives the per-frame tick of whatever scene is active.
     this.renderer = new Renderer(canvas, (dt) => this.activeScene?.tick(dt));
@@ -201,9 +185,21 @@ export class Game implements RunDispatcher {
    */
   private resetRun(): void {
     this.run.dispose();
-    this.run = new Run(Date.now(), this.bus);
-    applyRosterOverride(this.run);
+    this.run = this.createRun();
     this.swap(new MapScene());
+  }
+
+  /**
+   * G1 — build a fresh Run from the parsed RunConfig. Shared by the
+   * constructor and `resetRun` so both honor `?floors=` / `?layout=` /
+   * `?roster=` / `?width=` (and a pinned `?seed=`) identically.
+   */
+  private createRun(): Run {
+    const run = new Run(this.runConfig.seed ?? Date.now(), this.bus, this.runConfig);
+    if (this.runConfig.startingRoster) {
+      console.warn(`[dev] starting roster override: ${this.runConfig.startingRoster.join(', ')}`);
+    }
+    return run;
   }
 
   /**

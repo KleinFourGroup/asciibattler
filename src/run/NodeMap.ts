@@ -16,6 +16,7 @@
 
 import { RNG } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
+import type { RunConfig } from './RunConfig';
 
 export type NodeKind = 'battle';
 
@@ -49,24 +50,31 @@ const {
   maxOutDegree: MAX_OUT_DEGREE,
 } = NODE_MAP;
 
-export function generate(rng: RNG): NodeMap {
+export function generate(rng: RNG, config?: RunConfig): NodeMap {
+  // G1: RunConfig overrides the shape per-run; absent fields fall back to the
+  // config/nodemap.json defaults, so a no-config call is byte-identical to
+  // pre-G1. Only `floorCount` + `mapMaxWidth` are tunable here; the min width,
+  // total cap, and out-degree stay on the JSON defaults.
+  const floorCount = config?.floorCount ?? FLOOR_COUNT;
+  const maxWidth = config?.mapMaxWidth ?? MIDDLE_WIDTH_MAX;
+
   const floors: number[][] = [];
   const nodes: MapNode[] = [];
   let nextId = 0;
   let placedSoFar = 0;
 
-  for (let f = 0; f < FLOOR_COUNT; f++) {
+  for (let f = 0; f < floorCount; f++) {
     let width: number;
-    if (f === 0 || f === FLOOR_COUNT - 1) {
+    if (f === 0 || f === floorCount - 1) {
       width = 1;
     } else {
       // Cap so later floors can still hit their minimum width without
       // blowing past TARGET_TOTAL_MAX. Without this, three middle floors
-      // independently rolling MIDDLE_WIDTH_MAX would yield 11 nodes.
-      const remainingMiddleFloors = FLOOR_COUNT - 2 - f;
+      // independently rolling maxWidth would yield 11 nodes.
+      const remainingMiddleFloors = floorCount - 2 - f;
       const minNodesAfter = remainingMiddleFloors * MIDDLE_WIDTH_MIN + 1;
       const budget = TARGET_TOTAL_MAX - placedSoFar - minNodesAfter;
-      const cap = Math.max(MIDDLE_WIDTH_MIN, Math.min(MIDDLE_WIDTH_MAX, budget));
+      const cap = Math.max(MIDDLE_WIDTH_MIN, Math.min(maxWidth, budget));
       width = rng.int(MIDDLE_WIDTH_MIN, cap);
     }
     const ids: number[] = [];
@@ -80,7 +88,7 @@ export function generate(rng: RNG): NodeMap {
   }
 
   const edges: MapEdge[] = [];
-  for (let f = 0; f < FLOOR_COUNT - 1; f++) {
+  for (let f = 0; f < floorCount - 1; f++) {
     const parents = floors[f]!;
     const children = floors[f + 1]!;
     const inbound = new Set<number>();
@@ -109,7 +117,7 @@ export function generate(rng: RNG): NodeMap {
     nodes,
     edges,
     rootId: floors[0]![0]!,
-    terminalId: floors[FLOOR_COUNT - 1]![0]!,
+    terminalId: floors[floorCount - 1]![0]!,
     floors,
   };
 }

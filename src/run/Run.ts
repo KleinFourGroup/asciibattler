@@ -35,6 +35,7 @@ import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate, Team } from '../sim/Unit';
 import { rollUnit, scaledUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap } from './NodeMap';
+import type { RunConfig } from './RunConfig';
 import { rollOffer } from './Recruitment';
 import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
@@ -147,15 +148,31 @@ export class Run {
    */
   readonly visitedNodes: Set<number>;
 
+  /**
+   * G1 — when set (via `RunConfig.forcedLayoutId`), every battle uses this
+   * hand-authored layout instead of `rollLayoutId`. Null = normal procedural
+   * roll. Not persisted (RunConfig is a run input, reconstructable from seed);
+   * a rehydrated Run resets this to null.
+   */
+  private readonly forcedLayoutId: string | null;
+
   private readonly bus: EventBus<GameEvents>;
   private subscriptions: Array<() => void> = [];
 
-  constructor(seed: number, bus: EventBus<GameEvents>) {
+  constructor(seed: number, bus: EventBus<GameEvents>, config?: RunConfig) {
     this.bus = bus;
     this.rng = new RNG(seed);
-    this.nodeMap = generateNodeMap(this.rng.fork());
-    this.team = rollTeam(this.rng.fork());
+    // Fork order is the determinism invariant (nodeMap → team → levelup). Each
+    // override only changes a forked *child* stream's content, never how many
+    // times the parent is forked — so the default path stays byte-identical
+    // and a configured run keeps the same parent alignment. (G1)
+    this.nodeMap = generateNodeMap(this.rng.fork(), config);
+    const teamRng = this.rng.fork();
+    this.team = config?.startingRoster
+      ? config.startingRoster.map((a) => rollUnit(a, teamRng))
+      : rollTeam(teamRng);
     this.levelupRng = this.rng.fork();
+    this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.currentNodeId = this.nodeMap.rootId;
     this.visitedNodes = new Set<number>();
     this.subscribe();
@@ -226,7 +243,11 @@ export class Run {
     const battleRng = this.rng.fork();
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
     const terrainSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
-    const layoutId = rollLayoutId(battleRng);
+    // G1: always roll (advance the stream — gotcha #49 byte-continuity), then
+    // let a forced layout override the result. So `forcedLayoutId` doesn't
+    // shift any downstream draw (enemy team, etc.) relative to a normal run.
+    const rolledLayoutId = rollLayoutId(battleRng);
+    const layoutId = this.forcedLayoutId ?? rolledLayoutId;
     // D3: procedural draws ALWAYS run so the RNG stream advances
     // identically regardless of branch (same invariant as the layoutId
     // roll above — keeps enemy-team byte continuity across seeds when
@@ -443,10 +464,13 @@ export class Run {
     type Mut = { -readonly [K in keyof Run]: Run[K] } & {
       bus: EventBus<GameEvents>;
       subscriptions: Array<() => void>;
+      forcedLayoutId: string | null;
     };
     const m = run as unknown as Mut;
     m.bus = bus;
     m.subscriptions = [];
+    // RunConfig isn't persisted; a restored run uses normal procedural rolls.
+    m.forcedLayoutId = null;
     m.rng = RNG.fromJSON(snap.rng);
     m.levelupRng = RNG.fromJSON(snap.levelupRng);
     m.nodeMap = snap.nodeMap;
@@ -473,6 +497,20 @@ function rollTeam(rng: RNG): UnitTemplate[] {
   for (let i = 0; i < STARTING_MELEE; i++) team.push(rollUnit('melee', rng));
   for (let i = 0; i < STARTING_RANGED; i++) team.push(rollUnit('ranged', rng));
   return team;
+}
+
+/**
+ * G1 — validate a `RunConfig.forcedLayoutId` against the layout library at
+ * construction (loud throw, mirroring `layoutDimensions`), so a typo'd layout
+ * fails fast at run start rather than silently per-battle. Undefined → null
+ * (normal procedural rolls).
+ */
+function resolveForcedLayoutId(id: string | undefined): string | null {
+  if (id === undefined) return null;
+  if (!LAYOUT_IDS.includes(id)) {
+    throw new Error(`Run: unknown forcedLayoutId="${id}" (not in LAYOUT_IDS)`);
+  }
+  return id;
 }
 
 /**

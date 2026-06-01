@@ -126,6 +126,55 @@ describe('NodeMap.generate', () => {
     });
   });
 
+  describe('RunConfig overrides (G1)', () => {
+    it('honors floorCount and stays a valid DAG at 1 / 2 / 3 floors', () => {
+      for (const floorCount of [1, 2, 3]) {
+        for (let s = 0; s < 10; s++) {
+          const map = generate(new RNG(s), { floorCount });
+          expect(map.floors).toHaveLength(floorCount);
+          expect(nodeById(map, map.rootId).floor).toBe(0);
+          expect(nodeById(map, map.terminalId).floor).toBe(floorCount - 1);
+          // Reachable from root AND co-reachable to terminal — the DAG invariants.
+          expect(reachableFrom(map, map.rootId).size).toBe(map.nodes.length);
+          expect(coReachableTo(map, map.terminalId).size).toBe(map.nodes.length);
+          const floorOf = new Map(map.nodes.map((n) => [n.id, n.floor]));
+          for (const e of map.edges) {
+            expect(floorOf.get(e.to)! - floorOf.get(e.from)!).toBe(1);
+          }
+        }
+      }
+    });
+
+    it('floorCount 1 is a single root==terminal node with no edges', () => {
+      const map = generate(new RNG(0), { floorCount: 1 });
+      expect(map.nodes).toHaveLength(1);
+      expect(map.rootId).toBe(map.terminalId);
+      expect(map.edges).toHaveLength(0);
+    });
+
+    it('floorCount 2 is root -> terminal: the minimal one-battle run', () => {
+      const map = generate(new RNG(0), { floorCount: 2 });
+      expect(map.nodes).toHaveLength(2);
+      expect(map.edges).toEqual([{ from: map.rootId, to: map.terminalId }]);
+    });
+
+    it('mapMaxWidth caps middle-floor width', () => {
+      const maxWidth = 4;
+      for (let s = 0; s < 20; s++) {
+        const map = generate(new RNG(s), { floorCount: 5, mapMaxWidth: maxWidth });
+        for (let f = 1; f < map.floors.length - 1; f++) {
+          expect(map.floors[f]!.length).toBeLessThanOrEqual(maxWidth);
+        }
+      }
+    });
+
+    it('no config is byte-identical to an empty config (default path)', () => {
+      for (let s = 0; s < 20; s++) {
+        expect(generate(new RNG(s))).toEqual(generate(new RNG(s), {}));
+      }
+    });
+  });
+
   describe('determinism', () => {
     it('same seed → identical map', () => {
       const a = generate(new RNG(42));
@@ -173,6 +222,25 @@ function reachableFrom(map: NodeMap, start: number): Set<number> {
     if (visited.has(cur)) continue;
     visited.add(cur);
     for (const next of adj.get(cur) ?? []) stack.push(next);
+  }
+  return visited;
+}
+
+/** Reverse-BFS: the set of nodes that can reach `target` (co-reachability). */
+function coReachableTo(map: NodeMap, target: number): Set<number> {
+  const radj = new Map<number, number[]>();
+  for (const e of map.edges) {
+    const list = radj.get(e.to) ?? [];
+    list.push(e.from);
+    radj.set(e.to, list);
+  }
+  const visited = new Set<number>();
+  const stack = [target];
+  while (stack.length) {
+    const cur = stack.pop()!;
+    if (visited.has(cur)) continue;
+    visited.add(cur);
+    for (const prev of radj.get(cur) ?? []) stack.push(prev);
   }
   return visited;
 }

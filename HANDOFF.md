@@ -300,6 +300,7 @@ Beyond those, see [DESIGN.md](DESIGN.md) "Out of scope" for the gameplay backlog
 
 The strict roadmap (one step → one commit, stop at every checkpoint) was for MVP. Post-MVP work is freer, but the underlying habits still apply:
 
+- **Work on `main`.** All work happens directly on `main`; never create a feature branch unless the user explicitly asks for one.
 - **Commit per logical change**, not per "session of work." Split commits when a step's intent grows.
 - **Surface tradeoffs to the user** before making non-obvious calls (shader thresholds, refactor scope, API shape decisions).
 - **Browser-verify visual work** — and verify at native resolution. The Preview MCP screenshots are unreliable for sub-pixel detail (see gotcha #15).

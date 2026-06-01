@@ -64,13 +64,13 @@ describe('isAtLevelCap', () => {
 
 describe('computeXpAwards', () => {
   it('returns an empty array when no units spawned', () => {
-    expect(computeXpAwards(new Map(), new Set(), new Map())).toEqual([]);
+    expect(computeXpAwards(new Map(), new Set(), new Map(), new Map())).toEqual([]);
   });
 
   it('survivor with no damage → flat survivor slice only', () => {
     const roster = new Map<number, number>([[1, 0]]);
     const living = new Set<number>([1]);
-    const [award] = computeXpAwards(roster, living, new Map());
+    const [award] = computeXpAwards(roster, living, new Map(), new Map());
     expect(award!.damageDealt).toBe(0);
     expect(award!.xpGained).toBe(Math.round(LEVELING.xpFlatPerSurvivor));
   });
@@ -79,7 +79,7 @@ describe('computeXpAwards', () => {
     const roster = new Map<number, number>([[1, 0]]);
     const living = new Set<number>([1]);
     const damage = new Map<number, number>([[1, 50]]);
-    const [award] = computeXpAwards(roster, living, damage);
+    const [award] = computeXpAwards(roster, living, damage, new Map());
     expect(award!.damageDealt).toBe(50);
     expect(award!.xpGained).toBe(
       Math.round(LEVELING.xpFlatPerSurvivor + LEVELING.xpPerDamage * 50),
@@ -90,7 +90,7 @@ describe('computeXpAwards', () => {
     const roster = new Map<number, number>([[7, 3]]);
     const living = new Set<number>(); // unit 7 died this battle
     const damage = new Map<number, number>([[7, 40]]);
-    const [award] = computeXpAwards(roster, living, damage);
+    const [award] = computeXpAwards(roster, living, damage, new Map());
     expect(award!.rosterIndex).toBe(3);
     expect(award!.damageDealt).toBe(40);
     expect(award!.xpGained).toBe(
@@ -100,9 +100,41 @@ describe('computeXpAwards', () => {
 
   it('fallen with no damage → flat fallen only (0 at default knobs)', () => {
     const roster = new Map<number, number>([[9, 4]]);
-    const [award] = computeXpAwards(roster, new Set(), new Map());
+    const [award] = computeXpAwards(roster, new Set(), new Map(), new Map());
     expect(award!.damageDealt).toBe(0);
     expect(award!.xpGained).toBe(Math.round(LEVELING.xpFlatPerFallen));
+  });
+
+  // F6 — healing feeds XP symmetrically with damage, via the utilityDone
+  // ledger. Expectations derive from LEVELING.* (balance-proof), never the
+  // shipped arithmetic.
+  it('heal-only healer (0 damage) → flat survivor + per-healing share', () => {
+    const roster = new Map<number, number>([[1, 0]]);
+    const living = new Set<number>([1]);
+    const healing = new Map<number, number>([[1, 60]]);
+    const [award] = computeXpAwards(roster, living, new Map(), healing);
+    // Damage stays 0 — a pure support unit dealt none...
+    expect(award!.damageDealt).toBe(0);
+    // ...yet still levels off its contribution, so it isn't starved.
+    expect(award!.xpGained).toBe(
+      Math.round(LEVELING.xpFlatPerSurvivor + LEVELING.xpPerHealing * 60),
+    );
+  });
+
+  it('mixed damage + healing → both shares sum on top of the flat slice', () => {
+    const roster = new Map<number, number>([[1, 0]]);
+    const living = new Set<number>([1]);
+    const damage = new Map<number, number>([[1, 20]]);
+    const healing = new Map<number, number>([[1, 15]]);
+    const [award] = computeXpAwards(roster, living, damage, healing);
+    expect(award!.damageDealt).toBe(20);
+    expect(award!.xpGained).toBe(
+      Math.round(
+        LEVELING.xpFlatPerSurvivor +
+          LEVELING.xpPerDamage * 20 +
+          LEVELING.xpPerHealing * 15,
+      ),
+    );
   });
 
   it('iterates roster in insertion order (stable for snapshot determinism)', () => {
@@ -113,7 +145,7 @@ describe('computeXpAwards', () => {
     ]);
     const living = new Set<number>([1, 3]);
     const damage = new Map<number, number>([[2, 10], [1, 30]]);
-    const awards = computeXpAwards(roster, living, damage);
+    const awards = computeXpAwards(roster, living, damage, new Map());
     expect(awards.map((a) => a.unitId)).toEqual([1, 2, 3]);
     expect(awards[0]!.damageDealt).toBe(30);
     expect(awards[1]!.damageDealt).toBe(10);

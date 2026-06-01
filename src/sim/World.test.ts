@@ -309,6 +309,11 @@ describe('World D7.B tile effects', () => {
     for (let t = 0; t < HEALING_TICKS_PER_HEAL; t++) world.tick();
     expect(units[0]!.currentHp).toBe(units[0]!.derived.maxHp);
     expect(heals[heals.length - 1]).toEqual({ unitId: units[0]!.id, amount: 0, healerId: null });
+
+    // F6: the per-tick regen-tile chip-heal is the *tile's* output, not a
+    // unit's contribution, so it must NOT feed the utility-XP ledger (only
+    // ability heals do). The unit gained HP above, yet earns no heal-XP.
+    expect(world.utilityDoneBy(units[0]!.id)).toBe(0);
   });
 
   it('neutrals on fire/healing tiles are skipped (combatants-only policy)', () => {

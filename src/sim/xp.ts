@@ -58,21 +58,26 @@ export interface XpAward {
 }
 
 /**
- * E4 — hybrid XP source. Each player unit's award:
+ * E4 — hybrid XP source. Each player unit's award (F6 adds the healing
+ * term):
  *
  *   xpGained = (alive ? xpFlatPerSurvivor : xpFlatPerFallen)
- *            + xpPerDamage × damageDealt
+ *            + xpPerDamage  × damageDealt
+ *            + xpPerHealing × utilityDone
  *
  * The survivor flat slice is the participation reward (tank / healer /
  * cover unit gets the same baseline as the carry); the per-damage
- * slice rewards damage carries proportionally; the fallen flat slice
- * (default 0) is a separate knob — the roster persists across battles,
- * so a fallen unit isn't really *gone*, just sidelined for the next
- * battle.
+ * slice rewards damage carries proportionally; the F6 per-healing slice
+ * rewards support contribution (effective HP healed) symmetrically, so a
+ * heal-only healer that dealt 0 damage still levels; the fallen flat
+ * slice (default 0) is a separate knob — the roster persists across
+ * battles, so a fallen unit isn't really *gone*, just sidelined for the
+ * next battle.
  *
  * Caller passes `playerRosterIds` (every player unit that ever spawned
  * this battle — even reaped ones) keyed by unitId; `livingUnitIds`
- * (subset still alive at battle end); and the `damageDealt` ledger.
+ * (subset still alive at battle end); the `damageDealt` ledger; and the
+ * F6 `utilityDone` ledger (effective HP healed by ability casts).
  * Iteration order is insertion order on `playerRosterIds`, which is
  * spawn order — stable for snapshot determinism.
  */
@@ -80,17 +85,21 @@ export function computeXpAwards(
   playerRosterIds: ReadonlyMap<number, number>,
   livingUnitIds: ReadonlySet<number>,
   damageDealt: ReadonlyMap<number, number>,
+  utilityDone: ReadonlyMap<number, number>,
 ): XpAward[] {
   const out: XpAward[] = [];
   for (const [unitId, rosterIndex] of playerRosterIds) {
     const dmg = damageDealt.get(unitId) ?? 0;
+    const util = utilityDone.get(unitId) ?? 0;
     const alive = livingUnitIds.has(unitId);
     const flatSlice = alive ? LEVELING.xpFlatPerSurvivor : LEVELING.xpFlatPerFallen;
     out.push({
       unitId,
       rosterIndex,
       damageDealt: dmg,
-      xpGained: Math.round(flatSlice + LEVELING.xpPerDamage * dmg),
+      xpGained: Math.round(
+        flatSlice + LEVELING.xpPerDamage * dmg + LEVELING.xpPerHealing * util,
+      ),
     });
   }
   return out;

@@ -12,7 +12,8 @@ import type { GameEvents } from '../../core/events';
  * constructor (never config-derived), so re-tuning the healer's `magic`
  * curve can't break them. They pin the primitive: HP is added, the heal
  * clamps at maxHp, the emitted `amount` is the actual delta, a dead target
- * is skipped, and the action round-trips through the registry. The *wiring*
+ * is skipped, the effective delta credits the F6 utility-XP ledger, and the
+ * action round-trips through the registry. The *wiring*
  * (amount = `healAmountFor`, target = lowest-HP wounded ally) lives in
  * `abilities/heal.test.ts`.
  */
@@ -92,5 +93,38 @@ describe('HealAction', () => {
     const rehydrated = createAction(HEAL_ACTION_ID, data, world);
     rehydrated.start(healer, world);
     expect(ally.currentHp).toBe(ally.derived.maxHp - 4);
+  });
+
+  // F6 — the caster's utility-contribution ledger (read via the test-only
+  // World.utilityDoneBy) is credited with the *effective* heal, so
+  // computeXpAwards can pay the healer heal-XP at battle end.
+  it('credits the caster utility ledger by the effective heal', () => {
+    const { world, healer, ally } = scene();
+    ally.currentHp = ally.derived.maxHp - 20;
+    new HealAction(ally, 8).start(healer, world);
+    expect(world.utilityDoneBy(healer.id)).toBe(8);
+  });
+
+  it('credits only the clamped delta when a heal overheals', () => {
+    const { world, healer, ally } = scene();
+    ally.currentHp = ally.derived.maxHp - 3;
+    new HealAction(ally, 8).start(healer, world);
+    // 3 effective HP restored, not the requested 8 — the overheal earns nothing.
+    expect(world.utilityDoneBy(healer.id)).toBe(3);
+  });
+
+  it('credits nothing for a heal on a full-HP ally (no spam-XP)', () => {
+    const { world, healer, ally } = scene();
+    expect(ally.currentHp).toBe(ally.derived.maxHp);
+    new HealAction(ally, 8).start(healer, world);
+    expect(world.utilityDoneBy(healer.id)).toBe(0);
+  });
+
+  it('accumulates across multiple heals by the same caster', () => {
+    const { world, healer, ally } = scene();
+    ally.currentHp = ally.derived.maxHp - 20;
+    new HealAction(ally, 5).start(healer, world);
+    new HealAction(ally, 4).start(healer, world);
+    expect(world.utilityDoneBy(healer.id)).toBe(9);
   });
 });

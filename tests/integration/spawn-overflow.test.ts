@@ -133,7 +133,7 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.units.filter((u) => u.team === 'player')).toHaveLength(1);
   });
 
-  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v14', () => {
+  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v15', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
@@ -146,11 +146,13 @@ describe('D5.C spawn overflow queue', () => {
     world.units[0]!.outOfLosTicks = 3;
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(14);
+    expect(wire.schemaVersion).toBe(15);
     expect(wire.units[0].targetId).toBe(world.units[1]!.id);
     expect(wire.units[0].outOfLosTicks).toBe(3);
     expect(wire.damageDealt).toEqual([]);
     expect(wire.playerRosterIds).toEqual([]);
+    // F6: utility-contribution ledger serializes (empty on a fresh spawn).
+    expect(wire.utilityDone).toEqual([]);
     // E4: every queued template carries an xp (0 on a fresh roll).
     expect(wire.spawnQueues[0].templates.every((t: { xp: number }) => t.xp === 0)).toBe(true);
     expect(wire.spawnQueues).toHaveLength(1);

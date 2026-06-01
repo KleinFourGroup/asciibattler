@@ -193,6 +193,25 @@ describe('A2 round-trip: World', () => {
     expect(restored.tileGrid.toJSON()).toEqual(tileSnapBefore);
   });
 
+  it('F6: round-trips the utility-contribution (healing) ledger', () => {
+    // The ledger is action-fed (HealAction → recordHealing); here we credit
+    // it directly to exercise the *serialization* in isolation (HealAction's
+    // own crediting is pinned in HealAction.test.ts). Without round-tripping
+    // this, a mid-battle restore would award the healer less heal-XP than the
+    // un-roundtripped baseline — same contract that v9 added for damageDealt.
+    const { world } = freshBattle(54321);
+    const [a, b] = world.units;
+    world.recordHealing(a!.id, 12);
+    world.recordHealing(a!.id, 5); // accumulates → 17
+    world.recordHealing(b!.id, 8);
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+
+    expect(restored.utilityDoneBy(a!.id)).toBe(17);
+    expect(restored.utilityDoneBy(b!.id)).toBe(8);
+  });
+
   it('E7.B: round-trips a healer mid-heal (support_movement behavior + heal action)', () => {
     // Mirror freshBattle's manual behavior attach (bare spawnUnit doesn't
     // wire behaviors — the team-spawn path does; that path is exercised by

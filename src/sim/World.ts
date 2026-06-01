@@ -89,8 +89,15 @@ import { computeXpAwards } from './xp';
  *       system). The impact tick is derived from the timeline rather than
  *       stored as a raw offset list. v13 (and earlier) throw on load. (v13
  *       was E5.A's `targetId`/`outOfLosTicks` add — see UnitSnapshot.)
+ *  15 — F6 added the utility-contribution ledger
+ *       (`utilityDone: [unitId, total][]`) — effective HP healed by
+ *       ability casts — so a mid-battle round-trip preserves the heal-XP
+ *       awarded on `battle:ended`. Without it a restored mid-battle world
+ *       would start the ledger empty and under-award a healer's XP,
+ *       failing the snapshot-roundtrip determinism contract (same reason
+ *       v9 added `damageDealt`). v14 throws on load.
  */
-const WORLD_SCHEMA_VERSION = 14;
+const WORLD_SCHEMA_VERSION = 15;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -184,6 +191,11 @@ export interface WorldSnapshot {
    *  player team only; entries persist even after the unit dies so
    *  fallen damage-dealers still earn their damage-share XP. */
   playerRosterIds: [number, number][];
+  /** F6: battle-scoped utility-contribution ledger (effective HP healed
+   *  by ability casts), mapped unitId → total. Serialized as `[unitId,
+   *  total]` pairs alongside `damageDealt` so a mid-battle round-trip
+   *  preserves the heal-XP awarded at battle:ended. */
+  utilityDone: [number, number][];
 }
 
 /**
@@ -283,6 +295,19 @@ export class World {
    *   fallen + no damage       → flatFallen only (0 at default knobs)
    */
   private readonly playerRosterIds: Map<number, number> = new Map();
+  /**
+   * F6 — battle-scoped utility-contribution ledger. Key = the acting
+   * unit's id, value = total *effective* utility credited over the
+   * battle. Today the only contributor is HP healed by ability casts
+   * (`recordHealing`, fed from `HealAction`); a future buff/shield axis
+   * adds here so it rides the same `xpPerHealing` slice + snapshot field
+   * without another schema bump. Deliberately NOT fed by the per-tick
+   * regen-tile chip-heal (that's the tile's output, not a unit's
+   * contribution) — see `applyTileEffects`. Read once at `battle:ended`
+   * alongside `damageDealt`; snapshotted so a mid-battle round-trip
+   * preserves the heal-XP awarded on win.
+   */
+  private readonly utilityDone: Map<number, number> = new Map();
 
   constructor(
     bus: EventBus<GameEvents>,
@@ -390,6 +415,29 @@ export class World {
   /** Test-only read of the damage ledger. */
   damageDealtBy(attackerId: number): number {
     return this.damageDealt.get(attackerId) ?? 0;
+  }
+
+  /**
+   * F6 — feed the utility-contribution ledger. `amount` is the *effective*
+   * (clamped, non-overheal) delta the action actually applied; a 0 (full-HP
+   * target, no-op) contributes nothing, which kills the heal-a-full-ally
+   * spam-XP case. Called from `HealAction` after it computes the delta —
+   * the analogue of `recordDamage`'s call from `AttackAction`.
+   *
+   * Deliberately leaner than `recordDamage` (no `target` / `findUnit` team
+   * guard): heals only ever target allies, and `computeXpAwards` reads this
+   * ledger only for ids in `playerRosterIds`, so an enemy-healer or
+   * self-heal entry is harmless and never paid out. Skipping the lookup
+   * also keeps this off the O(n) `findUnit` path.
+   */
+  recordHealing(healerId: number, amount: number): void {
+    if (amount <= 0) return;
+    this.utilityDone.set(healerId, (this.utilityDone.get(healerId) ?? 0) + amount);
+  }
+
+  /** Test-only read of the utility-contribution ledger. */
+  utilityDoneBy(unitId: number): number {
+    return this.utilityDone.get(unitId) ?? 0;
   }
 
   /**
@@ -727,7 +775,12 @@ export class World {
     }
     const xpAwards =
       winner === 'player'
-        ? computeXpAwards(this.playerRosterIds, livingPlayerIds, this.damageDealt)
+        ? computeXpAwards(
+            this.playerRosterIds,
+            livingPlayerIds,
+            this.damageDealt,
+            this.utilityDone,
+          )
         : [];
     this.bus.emit('battle:ended', { winner, xpAwards });
   }
@@ -922,6 +975,7 @@ export class World {
       spawnRegions,
       damageDealt: Array.from(this.damageDealt.entries()),
       playerRosterIds: Array.from(this.playerRosterIds.entries()),
+      utilityDone: Array.from(this.utilityDone.entries()),
     };
   }
 
@@ -1013,6 +1067,11 @@ export class World {
     // in Phase 1 above), so the only path back is the snapshot copy.
     for (const [unitId, rosterIndex] of snap.playerRosterIds) {
       world.playerRosterIds.set(unitId, rosterIndex);
+    }
+    // F6 — restore the utility-contribution ledger (mirror of damageDealt)
+    // so a mid-battle restore awards the same heal-XP at battle:ended.
+    for (const [unitId, total] of snap.utilityDone) {
+      world.utilityDone.set(unitId, total);
     }
 
     return world;

@@ -20,6 +20,17 @@
  * a contributing unit should earn ~half a level per battle and a level-5
  * unit should clear a level every ~5 battles.
  *
+ * `xpPerHealing` (F6) is the utility-contribution analogue of
+ * `xpPerDamage`: per-unit XP also gains `xpPerHealing × effective-HP-
+ * healed-by-ability-casts` (the World `utilityDone` ledger). Defaults to
+ * parity with `xpPerDamage` (1 HP healed ≈ 1 damage dealt) so a pure
+ * healer keeps pace with a carry instead of being starved by the
+ * damage-only model. Only ability heals feed the ledger — the per-tick
+ * regen-tile chip-heal is the *tile's* output, not a unit's contribution,
+ * so it earns nothing (and overheal counts 0, since the ledger only sees
+ * the clamped delta). A future buff/shield axis can ride the same ledger
+ * without a snapshot bump.
+ *
  * `xpFlatPerFallen` is the participation reward for player units that
  * died during the battle. Defaults to 0 — fallen units still earn their
  * damage share so suicide-DPS trades aren't *punished*, but they don't
@@ -51,6 +62,7 @@ const LevelingSchema = z.object({
   xpFlatPerSurvivor: z.number().nonnegative(),
   xpFlatPerFallen: z.number().nonnegative(),
   xpPerDamage: z.number().nonnegative(),
+  xpPerHealing: z.number().nonnegative(),
   halfCoverDamageMult: z.number().min(0).max(1),
 });
 

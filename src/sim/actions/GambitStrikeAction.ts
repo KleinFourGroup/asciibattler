@@ -105,11 +105,27 @@ export class GambitStrikeAction implements Action {
     if (dest !== null) {
       const from = unit.position;
       unit.position = dest;
+      // F4 — lerp the dart-back over the rogue's REMAINING busy window (the
+      // gambit's recovery phase), capped at a normal move's duration. At the
+      // rogue's high speed the gambit cadence is short, so the recovery window
+      // is often SHORTER than `moveCooldownTicks`: a full-cooldown lerp would
+      // still be mid-flight when the unit frees up and starts its next action,
+      // whose `startLerp` snaps the sprite — cutting the retreat off (the bug
+      // this fixes). Capping at the recovery window lands the dart exactly as
+      // the rogue frees up, the way a normal move's lerp fills its cooldown.
+      // Falls back to the move cooldown when there's no `activeAction` (the
+      // direct-construction unit tests; at runtime `applyEffect` only fires
+      // from `World.tick` while the action is live).
+      const moveTicks = unit.derived.moveCooldownTicks;
+      const remaining = unit.activeAction
+        ? unit.activeAction.finishTick - world.currentTick
+        : moveTicks;
+      const durationTicks = Math.max(1, Math.min(moveTicks, remaining));
       world.emit('unit:moved', {
         unitId: unit.id,
         from,
         to: dest,
-        durationTicks: unit.derived.moveCooldownTicks,
+        durationTicks,
       });
     }
   }

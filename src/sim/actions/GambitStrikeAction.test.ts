@@ -176,6 +176,54 @@ describe('GambitStrikeAction — reposition (F4: deferred to applyEffect)', () =
     expect(rogue.position).toEqual({ x: 5, y: 5 });
     expect(moves).toHaveLength(0);
   });
+
+  it('lerps the dart over the remaining busy window, not a full move cooldown', () => {
+    const { world, moves } = makeScene();
+    const rogue = makeUnit(1, 'player', { x: 5, y: 5 }, 'rogue');
+    const target = makeUnit(2, 'enemy', { x: 6, y: 5 });
+    target.currentHp = 100;
+    world.units.push(rogue, target);
+
+    const action = new GambitStrikeAction(target, 5, 0, 1);
+    // Mid-gambit: the action is the unit's activeAction with R ticks of recovery
+    // left at impact. A fresh world's currentTick is 0, so finishTick === R makes
+    // (finishTick - currentTick) === R — the remaining busy window.
+    const R = 6;
+    rogue.activeAction = {
+      action,
+      startTick: 0,
+      finishTick: R,
+      phases: [
+        { phase: 'windup', ticks: 0 },
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: R },
+      ],
+    };
+    // The cap matters only because the window is SHORTER than a full move
+    // cooldown — that's the cut-off bug this guards.
+    expect(rogue.derived.moveCooldownTicks).toBeGreaterThan(R);
+
+    action.start(rogue, world);
+    action.applyEffect(rogue, world, 0, 'impact');
+
+    expect(moves).toHaveLength(1);
+    expect(moves[0]!.durationTicks).toBe(R);
+  });
+
+  it('falls back to the move cooldown when there is no activeAction', () => {
+    const { world, moves } = makeScene();
+    const rogue = makeUnit(1, 'player', { x: 5, y: 5 }, 'rogue');
+    const target = makeUnit(2, 'enemy', { x: 6, y: 5 });
+    target.currentHp = 100;
+    world.units.push(rogue, target);
+
+    const action = new GambitStrikeAction(target, 5, 0, 1);
+    action.start(rogue, world);
+    action.applyEffect(rogue, world, 5, 'impact');
+
+    expect(moves).toHaveLength(1);
+    expect(moves[0]!.durationTicks).toBe(rogue.derived.moveCooldownTicks);
+  });
 });
 
 describe('GambitStrikeAction — serialization', () => {

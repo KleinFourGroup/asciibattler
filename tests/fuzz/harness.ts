@@ -24,6 +24,7 @@ import type { GameEvents } from '../../src/core/events';
 import type { Team } from '../../src/sim/Unit';
 import type { Archetype } from '../../src/sim/archetypes';
 import { Run } from '../../src/run/Run';
+import type { RunConfig } from '../../src/run/RunConfig';
 import { spawnEncounter } from '../../src/sim/battleSetup';
 import type { FuzzStrategy } from './Strategy';
 
@@ -75,6 +76,13 @@ export interface HarnessOptions {
    * sweeping the strategy independent of the run.
    */
   readonly strategySeed?: number;
+  /**
+   * G1 — optional RunConfig (short floor count, forced layout, leveled
+   * roster, …) so a sweep can target a 1-floor run or a specific layout.
+   * `runConfig.seed` (if set) overrides the run seed; the `seed` arg still
+   * identifies the run (strategy RNG + `RunResult.seed`).
+   */
+  readonly runConfig?: RunConfig;
 }
 
 // ≈100s of game time. Authored in seconds and converted via the
@@ -157,7 +165,7 @@ export function runOne(
     currentWorld = null;
   });
 
-  const run = new Run(seed, bus);
+  const run = new Run(options.runConfig?.seed ?? seed, bus, options.runConfig);
 
   let hops = 0;
   let totalTicks = 0;

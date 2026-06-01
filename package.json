@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "fuzz": "tsx tests/fuzz/cli.ts",
-    "fuzz:smoke": "vitest run --config vitest.fuzz.config.ts"
+    "fuzz:smoke": "vitest run --config vitest.fuzz.config.ts",
+    "run-config": "tsx tools/run-config/cli.ts"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.2.8",

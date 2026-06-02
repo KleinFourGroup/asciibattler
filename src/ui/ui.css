@@ -306,7 +306,32 @@ body {
 }
 
 .map-node.locked {
-  opacity: 0.4;
+  /* De-emphasized but still legible. We deliberately AVOID element `opacity`
+     here: it would make the #000 background semi-transparent (so the SVG
+     edges show through and muddy the glyph) and dim the kind glow + glyph
+     into illegibility. Instead the background stays opaque (covering the
+     edges beneath the node) and the node reads as "inactive" via a neutral
+     dim border + a muted-grey glyph — the actionable states still stand out
+     by HUE (saturated cyan/amber), not brightness, so the hierarchy holds. */
+  border-color: #404040;
+  color: #b0b0b0;
+}
+
+/* G3 — node-kind accents. Color-code the GLYPH by kind so rests and the boss
+   read at a glance during route planning. (A text-shadow glow alone was too
+   subtle on a 16px glyph — the color carries it now, the glow is just a neon
+   halo.) These rules sit AFTER the state rules above, so they override the
+   glyph color for rest/boss nodes ONLY — battle nodes keep their state-based
+   grey/cyan/amber, and state is still conveyed by the border + ring/glow.
+   Rest = TERMINAL_GREEN (a respite), boss = NEON_RED (the destination). */
+.map-node.boss {
+  color: #ff3131; /* NEON_RED */
+  text-shadow: 0 0 4px #ff3131, 0 0 9px #ff3131;
+}
+
+.map-node.rest {
+  color: #33ff00; /* TERMINAL_GREEN */
+  text-shadow: 0 0 4px #33ff00, 0 0 9px #33ff00;
 }
 
 /* RecruitScreen (Step 4.4). Full-overlay modal that appears between

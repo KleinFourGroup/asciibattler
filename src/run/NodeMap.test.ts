@@ -47,10 +47,100 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('all nodes are battle nodes (kinds land in G3)', () => {
-      const map = generate(new RNG(1));
-      for (const n of map.nodes) {
-        expect(n.kind).toBe('battle');
+    it('root and the first battle floor are always battle nodes', () => {
+      // Root (floor 0) is an inert battle (rendered @); floor 1 is the first
+      // battle and never rest-eligible — so single-hop-from-root navigation
+      // always lands on a battle. Boss/rest land in the `node kinds (G3)`
+      // block below.
+      for (let s = 0; s < 50; s++) {
+        const map = generate(new RNG(s));
+        for (const n of map.nodes) {
+          if (n.floor === 0 || n.floor === 1) expect(n.kind).toBe('battle');
+        }
+      }
+    });
+  });
+
+  describe('node kinds (G3)', () => {
+    // Balance-proof: spacing bound comes from the config the generator reads.
+    const { restMinSpacing } = NODE_MAP;
+
+    it('the terminal is the one and only boss', () => {
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const bosses = map.nodes.filter((n) => n.kind === 'boss');
+        expect(bosses).toHaveLength(1);
+        expect(bosses[0]!.id).toBe(map.terminalId);
+      }
+    });
+
+    it('every node kind is battle | rest | boss', () => {
+      for (let s = 0; s < 50; s++) {
+        const map = generate(new RNG(s));
+        for (const n of map.nodes) {
+          expect(['battle', 'rest', 'boss']).toContain(n.kind);
+        }
+      }
+    });
+
+    it('rest nodes only sit on eligible middle floors [2, floorCount-2]', () => {
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const lastFloor = map.floors.length - 1;
+        for (const n of map.nodes) {
+          if (n.kind === 'rest') {
+            expect(n.floor).toBeGreaterThanOrEqual(2);
+            expect(n.floor).toBeLessThanOrEqual(lastFloor - 1);
+          }
+        }
+      }
+    });
+
+    it('at most one rest per floor, and rest floors respect the min spacing', () => {
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const perFloor = new Map<number, number>();
+        for (const n of map.nodes) {
+          if (n.kind === 'rest') perFloor.set(n.floor, (perFloor.get(n.floor) ?? 0) + 1);
+        }
+        for (const count of perFloor.values()) expect(count).toBe(1);
+        const restFloors = [...perFloor.keys()].sort((a, b) => a - b);
+        for (let i = 1; i < restFloors.length; i++) {
+          expect(restFloors[i]! - restFloors[i - 1]!).toBeGreaterThanOrEqual(restMinSpacing);
+        }
+      }
+    });
+
+    it('rest scatter is reachable: some seeds produce at least one rest', () => {
+      let withRest = 0;
+      for (let s = 0; s < 100; s++) {
+        if (generate(new RNG(s)).nodes.some((n) => n.kind === 'rest')) withRest++;
+      }
+      expect(withRest).toBeGreaterThan(0);
+    });
+
+    it('rest nodes stay root-reachable and co-reachable to the boss', () => {
+      // Kinds are a tail pass over the finished structure, so connectivity is
+      // untouched — pin it so a future placement change can't strand a rest.
+      for (let s = 0; s < 50; s++) {
+        const map = generate(new RNG(s));
+        const fromRoot = reachableFrom(map, map.rootId);
+        const toBoss = coReachableTo(map, map.terminalId);
+        for (const n of map.nodes) {
+          if (n.kind === 'rest') {
+            expect(fromRoot.has(n.id)).toBe(true);
+            expect(toBoss.has(n.id)).toBe(true);
+          }
+        }
+      }
+    });
+
+    it('floorCount <= 3 produces no rest nodes (empty eligible band)', () => {
+      for (const fc of [1, 2, 3]) {
+        for (let s = 0; s < 20; s++) {
+          const map = generate(new RNG(s), { floorCount: fc });
+          expect(map.nodes.some((n) => n.kind === 'rest')).toBe(false);
+        }
       }
     });
   });
@@ -222,7 +312,7 @@ describe('NodeMap.generate', () => {
       const text = dump(map);
       expect(text).toContain('NodeMap');
       expect(text).toContain('(root)');
-      expect(text).toContain('(terminal)');
+      expect(text).toContain('(boss)');
       expect(text).toContain('Floor 0:');
       expect(text).toContain('Edges:');
     });

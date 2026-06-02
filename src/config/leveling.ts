@@ -49,6 +49,13 @@
  * deferred the value here so it could be tuned alongside the rest of
  * the E-stat curve.
  *
+ * `restXp` (G3) is the flat XP a rest node grants to *every* roster slot.
+ * It feeds the same `bankXpAwards` pipeline a battle win uses (synthesized
+ * as one award per slot), so a rest can legitimately trigger level-ups +
+ * PromotionScene. Lives here with the XP knobs (not in nodemap.json, which
+ * owns rest *placement*) since it's a leveling reward. Lower it if rests
+ * out-pace battle XP.
+ *
  * A4 pattern: parse at module load, throw on malformed JSON.
  */
 
@@ -64,6 +71,7 @@ const LevelingSchema = z.object({
   xpPerDamage: z.number().nonnegative(),
   xpPerHealing: z.number().nonnegative(),
   halfCoverDamageMult: z.number().min(0).max(1),
+  restXp: z.number().nonnegative(),
 });
 
 export type LevelingConfig = z.infer<typeof LevelingSchema>;

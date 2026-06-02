@@ -34,7 +34,7 @@ import { glyphForArchetype } from '../sim/archetypes';
 import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate, Team } from '../sim/Unit';
 import { rollUnit, scaledUnit } from '../sim/archetypes';
-import { generate as generateNodeMap, type NodeMap } from './NodeMap';
+import { generate as generateNodeMap, type NodeMap, type NodeKind } from './NodeMap';
 import type { RunConfig } from './RunConfig';
 import { rollOffer } from './Recruitment';
 import type { RunCommand } from './Command';
@@ -238,6 +238,16 @@ export class Run {
       this.visitedNodes.add(this.currentNodeId);
     }
     this.currentNodeId = nodeId;
+
+    // G3 — dispatch on node kind. A rest resolves inline (no battle); battle
+    // and boss both build an encounter (boss is a regular fight, just tagged
+    // — the terminal-win → run:victory path in `advancePastBattle` already
+    // handles it). The frontier check above gates entry the same for all.
+    if (this.kindOf(nodeId) === 'rest') {
+      this.resolveRest();
+      return;
+    }
+
     this.phase = 'battle';
 
     const battleRng = this.rng.fork();
@@ -307,6 +317,13 @@ export class Run {
     return node.floor;
   }
 
+  /** G3 — node kind, for the rest/battle dispatch + the post-promotion route. */
+  private kindOf(nodeId: number): NodeKind {
+    const node = this.nodeMap.nodes.find((n) => n.id === nodeId);
+    if (!node) throw new Error(`Run.kindOf: no node ${nodeId} in map`);
+    return node.kind;
+  }
+
   private handleBattleEnded(
     winner: Team,
     xpAwards: GameEvents['battle:ended']['xpAwards'],
@@ -350,10 +367,44 @@ export class Run {
     }
   }
 
+  /**
+   * G3 — resolve a rest node inline (no battle). Synthesize a flat
+   * `LEVELING.restXp` award per roster slot and feed the SAME `bankXpAwards`
+   * pipeline a battle win uses (it reads only `rosterIndex` + `xpGained`), so
+   * a rest can legitimately level units and pop PromotionScene — no parallel
+   * leveling path. A rest never offers a recruit: with promotions we pause on
+   * PromotionScene (the dismiss routes back to map via `kindOf`), otherwise we
+   * return to the map silently (Game swaps MapScene on `phase === 'map'`).
+   */
+  private resolveRest(): void {
+    const awards = this.team.map((_, i) => ({
+      unitId: i,
+      rosterIndex: i,
+      damageDealt: 0,
+      xpGained: LEVELING.restXp,
+    }));
+    const promotions = this.bankXpAwards(awards);
+    if (promotions.length > 0) {
+      this.phase = 'promotion';
+      this.pendingPromotions = promotions;
+      this.bus.emit('promotion:pending', { promotions });
+    } else {
+      this.phase = 'map';
+    }
+  }
+
   private handleDismissPromotion(): void {
     if (this.phase !== 'promotion') return;
     this.pendingPromotions = null;
-    this.advancePastBattle();
+    // G3 — a promotion can come from a battle/boss win OR a rest node. The
+    // current node's kind is the discriminator (no extra persisted state): a
+    // rest returns to the map (no recruit), a battle/boss takes the normal
+    // post-battle path (recruit or, at the terminal, run:victory).
+    if (this.kindOf(this.currentNodeId) === 'rest') {
+      this.phase = 'map';
+    } else {
+      this.advancePastBattle();
+    }
   }
 
   /**

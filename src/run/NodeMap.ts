@@ -1,7 +1,9 @@
 /**
  * Run-level node map: a layered DAG the player traverses one floor at a time.
- * MVP scope is intentionally narrow — every node is a battle, no rest / shop /
- * elite kinds (see DESIGN.md "Run structure"; node kinds land in G3).
+ * Node kinds (G3): the terminal is a `boss` (a regular fight for now, tagged so
+ * future mechanics have a hook); `rest` nodes scatter through the middle floors
+ * (a non-combat XP grant — see `Run.resolveRest`); everything else is a
+ * `battle`. A full event system (shop / elite / etc.) is still future work.
  *
  * Layout (G2): `FLOOR_COUNT` floors total. Floor 0 and the last floor are
  * single nodes (root / terminal). Middle floors are `MIDDLE_WIDTH_MIN`..
@@ -28,11 +30,18 @@
  * systematically rightward; see git history if the funkier look is ever
  * wanted back.)
  *
- * Seed-stability contract: draws happen **widths-then-edges**; per floor pair
- * the parent sweep runs first (each parent **`a` before `b`**), then a single
- * **mirror bit** (only when both floors are wider than 1). The number and
- * order of RNG draws *is* the seed→map mapping; reordering them silently
- * remaps every seed.
+ * Seed-stability contract: draws happen **widths → edges → kinds** (G3). The
+ * width loop runs first; then per floor pair the parent sweep (each parent
+ * **`a` before `b`**) followed by a single **mirror bit** (only when both
+ * floors are wider than 1); then the rest-kind scatter pass (one draw per
+ * eligible middle floor, plus a node-pick draw only when a rest is placed).
+ * The kinds pass runs **after** the full structure is built and appends its
+ * draws at the tail, so the width+edge stream — and thus the map *structure*
+ * for any seed — is byte-identical to the pre-G3 generator; only which nodes
+ * carry the `rest`/`boss` kind is new. (Gameplay still shifts, since rests
+ * replace battles on some paths → expected fuzz/determinism baseline reset.)
+ * The number and order of RNG draws *is* the seed→map mapping; reordering
+ * them silently remaps every seed.
  *
  * NB: no max-*in*-degree is assumed. Boundary children may collect several
  * parents (the merges/diamonds that give the map variety). Adding an in-degree
@@ -44,7 +53,7 @@ import { RNG } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
 import type { RunConfig } from './RunConfig';
 
-export type NodeKind = 'battle';
+export type NodeKind = 'battle' | 'rest' | 'boss';
 
 export interface MapNode {
   readonly id: number;
@@ -74,6 +83,8 @@ const {
   middleWidthMax: MIDDLE_WIDTH_MAX,
   targetTotalMax: TARGET_TOTAL_MAX,
   maxOutDegree: MAX_OUT_DEGREE,
+  restChance: REST_CHANCE,
+  restMinSpacing: REST_MIN_SPACING,
 } = NODE_MAP;
 
 export function generate(rng: RNG, config?: RunConfig): NodeMap {
@@ -191,8 +202,40 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     }
   }
 
+  // G3 node kinds — a tail pass over the finished structure (see the
+  // seed-stability contract above). The terminal is the boss; rests scatter
+  // through the eligible middle floors `[2, floorCount-2]` — never floor 0
+  // (root), floor 1 (so the player always fights before the first rest), or
+  // the boss floor. One `rng.next()` per eligible floor decides whether it
+  // hosts a rest (subject to `REST_MIN_SPACING` between rest floors); when it
+  // does, one node on that floor is picked uniformly, so a wide floor keeps a
+  // battle sibling (taking the rest is a route choice) while a width-1 floor
+  // yields a forced rest.
+  const bossId = floors[floorCount - 1]![0]!;
+  const restIds = new Set<number>();
+  let lastRestFloor = -Infinity;
+  for (let f = 2; f <= floorCount - 2; f++) {
+    const roll = rng.next();
+    if (roll < REST_CHANCE && f - lastRestFloor >= REST_MIN_SPACING) {
+      const ids = floors[f]!;
+      const pick = ids[rng.int(0, ids.length - 1)]!;
+      restIds.add(pick);
+      lastRestFloor = f;
+    }
+  }
+  // floorCount === 1 degenerates to root == terminal: `bossId` is the root.
+  // Tagging it boss is inert — nothing dispatches on the root's kind and the
+  // renderer overrides its glyph with `@` (isRoot). No special-case needed.
+  const kindedNodes: MapNode[] = nodes.map((n) =>
+    n.id === bossId
+      ? { ...n, kind: 'boss' }
+      : restIds.has(n.id)
+        ? { ...n, kind: 'rest' }
+        : n,
+  );
+
   return {
-    nodes,
+    nodes: kindedNodes,
     edges,
     rootId: floors[0]![0]!,
     terminalId: floors[floorCount - 1]![0]!,
@@ -217,7 +260,9 @@ export function dump(map: NodeMap): string {
   for (let f = 0; f < map.floors.length; f++) {
     const labeled = map.floors[f]!.map((id) => {
       if (id === map.rootId) return `${id}(root)`;
-      if (id === map.terminalId) return `${id}(terminal)`;
+      if (id === map.terminalId) return `${id}(boss)`;
+      const node = map.nodes.find((n) => n.id === id);
+      if (node?.kind === 'rest') return `${id}(rest)`;
       return String(id);
     });
     lines.push(`  Floor ${f}: ${labeled.join(', ')}`);

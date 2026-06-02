@@ -3,5 +3,7 @@
   "middleWidthMin": 2,
   "middleWidthMax": 6,
   "targetTotalMax": 50,
-  "maxOutDegree": 3
+  "maxOutDegree": 3,
+  "restChance": 0.35,
+  "restMinSpacing": 2
 }

@@ -10,10 +10,18 @@
  *   - **locked** — everything else. Dimmed, non-clickable.
  */
 
-import type { NodeMap } from '../run/NodeMap';
+import type { NodeMap, NodeKind } from '../run/NodeMap';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
+
+/**
+ * G3 — node-kind glyphs. The icon IS the route-planning affordance, so it
+ * replaces the old numeric label. DOM text only (no FontAtlas). Root is
+ * rendered as `@` separately (the run's origin marker), so it's not keyed
+ * here. `Record<NodeKind, …>` keeps this exhaustive if the union grows.
+ */
+const KIND_GLYPH: Record<NodeKind, string> = { battle: 'X', rest: 'Z', boss: '!' };
 
 /**
  * Vertical pixels allotted per floor on the scrollable board. The board height
@@ -121,14 +129,15 @@ export class MapScreen {
       div.className = 'map-node';
       div.style.left = `${pos.x * 100}%`;
       div.style.top = `${pos.y * 100}%`;
-      // Root reads as the run's origin marker (roguelike "@") rather than
-      // a battle node you skipped past — the numbered-circle visual was
-      // making node 0 feel like a never-chosen option. Battle nodes keep
-      // their numeral. Style hook (.root) lets CSS lean into the
-      // distinction further without touching this dispatch logic.
+      // Root reads as the run's origin marker (roguelike "@"); every other
+      // node shows its kind glyph (G3): X battle, Z rest, ! boss. The glyph is
+      // the route-planning affordance. A `.{kind}` class rides alongside the
+      // state classes (.current/.frontier/…) so CSS can color rest/boss
+      // distinctly without touching this dispatch logic.
       const isRoot = node.id === map.rootId;
-      div.textContent = isRoot ? '@' : String(node.id);
+      div.textContent = isRoot ? '@' : KIND_GLYPH[node.kind];
       div.dataset.nodeId = String(node.id);
+      div.classList.add(node.kind);
       if (isRoot) div.classList.add('root');
 
       if (node.id === currentNodeId) {

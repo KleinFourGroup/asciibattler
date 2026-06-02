@@ -150,6 +150,13 @@ export class Game implements RunDispatcher {
         // Rejected hops (non-frontier, wrong phase) emit nothing — we stay
         // on the map.
         this.run.dispatch(command);
+        // G3 — a rest node resolves inline. If it banked XP without a
+        // level-up, phase falls to 'map' with no event (like chooseRecruit
+        // below), so refresh the map explicitly. A battle (battle:started) or
+        // a rest-with-promotion (promotion:pending) fires its own swap.
+        if (this.run.phase === 'map') {
+          this.swap(new MapScene());
+        }
         break;
       case 'chooseRecruit':
         this.run.dispatch(command);
@@ -161,10 +168,15 @@ export class Game implements RunDispatcher {
         }
         break;
       case 'dismissPromotion':
-        // Run resolves dismiss into either recruit:offered (non-terminal
-        // victory) or run:victory (terminal), both of which fire their
-        // own scene swaps via bus subscription. No explicit swap here.
+        // After a battle win, Run resolves dismiss into either recruit:offered
+        // (non-terminal) or run:victory (terminal), both of which fire their
+        // own scene swaps via bus subscription. After a G3 rest-triggered
+        // promotion it instead falls back to 'map' with no event, so swap
+        // explicitly (same pattern as chooseRecruit / enterNode above).
         this.run.dispatch(command);
+        if (this.run.phase === 'map') {
+          this.swap(new MapScene());
+        }
         break;
       case 'resetRun':
         this.resetRun();

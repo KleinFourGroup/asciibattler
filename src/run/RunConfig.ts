@@ -34,8 +34,8 @@ export interface RunConfig {
   readonly seed?: number;
   /**
    * Total floors including root + terminal (default
-   * `config/nodemap.json#floorCount` = 5). A *playable* run needs >= 2 (root
-   * + a terminal battle); `floorCount: 2` is the minimal one-battle run.
+   * `config/nodemap.json#floorCount` = 11). A *playable* run needs >= 2 (root
+   * + a terminal boss fight); `floorCount: 2` is the minimal one-battle run.
    */
   readonly floorCount?: number;
   /**

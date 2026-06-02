@@ -5,6 +5,8 @@ import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import type { GameEvents } from '../core/events';
 import { ARCHETYPE_CONFIG } from '../sim/archetypes';
 import { xpToNext } from '../sim/xp';
+import { LEVELING } from '../config/leveling';
+import type { RunConfig } from './RunConfig';
 
 describe('Run', () => {
   describe('initial state', () => {
@@ -632,6 +634,105 @@ describe('Run', () => {
       expect(restored.currentEncounter).toEqual(run.currentEncounter);
     });
   });
+
+  describe('rest nodes (G3)', () => {
+    it('banks restXp into every roster slot and starts no battle', () => {
+      // floorCount 4 → a floor-2 rest is the first reachable rest. Default
+      // level-1 roster; clear the floor-1 battle with no XP so the only XP
+      // the team carries into the rest is the rest grant itself.
+      const { run, bus, restId } = driveToRestFrontier({ floorCount: 4 }, 2);
+      const before = run.team.map((t) => ({ level: t.level, xp: t.xp }));
+      let battleStarts = 0;
+      bus.on('battle:started', () => battleStarts++);
+
+      run.dispatch({ kind: 'enterNode', nodeId: restId });
+
+      expect(battleStarts).toBe(0);
+      expect(run.currentEncounter).toBeNull();
+      // Balance-proof: expected level/xp derived from the curve + the knob.
+      for (let i = 0; i < before.length; i++) {
+        const want = expectedAfterBank(before[i]!.level, before[i]!.xp, LEVELING.restXp);
+        expect(run.team[i]!.level).toBe(want.level);
+        expect(run.team[i]!.xp).toBe(want.xp);
+      }
+    });
+
+    it('triggers PromotionScene on a level-up and dismissing returns to the map (not recruit)', () => {
+      const { run, bus, restId } = driveToRestFrontier({ floorCount: 4 }, 2);
+      // Level-1 roster + restXp (>= xpToNext(1)) guarantees promotions.
+      expect(LEVELING.restXp).toBeGreaterThanOrEqual(xpToNext(1));
+      const promotions: number[][] = [];
+      let recruitOffers = 0;
+      bus.on('promotion:pending', ({ promotions: p }) =>
+        promotions.push(p.map((x) => x.rosterIndex)),
+      );
+      bus.on('recruit:offered', () => recruitOffers++);
+
+      run.dispatch({ kind: 'enterNode', nodeId: restId });
+      expect(run.phase).toBe('promotion');
+      expect(promotions).toHaveLength(1);
+      // Every slot was level 1, so every rosterIndex promotes.
+      expect(promotions[0]).toEqual(run.team.map((_, i) => i));
+
+      run.dispatch({ kind: 'dismissPromotion' });
+      expect(run.phase).toBe('map'); // back to the map, NOT recruit
+      expect(recruitOffers).toBe(0);
+    });
+
+    it('returns to the map silently when no unit levels up', () => {
+      // floorCount 5 → a floor-3 rest. Start at the cap and vault each
+      // recruited unit to the cap on its battle, so the only fresh unit at
+      // rest time is the floor-2 recruit (level 2): restXp < xpToNext(2), so
+      // nobody levels → no promotion → silent return to map.
+      // Premise: a level-2 unit must NOT level on restXp (else the floor-2
+      // recruit promotes and this branch can't be reached).
+      expect(LEVELING.restXp).toBeLessThan(xpToNext(2));
+      const cap = LEVELING.levelCap;
+      const startingRoster = [
+        { archetype: 'melee' as const, level: cap },
+        { archetype: 'ranged' as const, level: cap },
+      ];
+      const vaultAll = (r: Run) =>
+        r.team.map((_, i) => ({ unitId: i, rosterIndex: i, damageDealt: 0, xpGained: 1e9 }));
+      const { run, bus, restId } = driveToRestFrontier(
+        { floorCount: 5, startingRoster },
+        3,
+        vaultAll,
+      );
+      let promotionPending = 0;
+      let recruitOffers = 0;
+      bus.on('promotion:pending', () => promotionPending++);
+      bus.on('recruit:offered', () => recruitOffers++);
+
+      run.dispatch({ kind: 'enterNode', nodeId: restId });
+
+      expect(run.phase).toBe('map');
+      expect(promotionPending).toBe(0);
+      expect(recruitOffers).toBe(0);
+      // The floor-2 recruit (level 2) banked the grant without leveling.
+      expect(run.team.some((t) => t.level === 2 && t.xp === LEVELING.restXp)).toBe(true);
+    });
+
+    it('a boss node builds a normal battle encounter (regression-equivalent to a battle)', () => {
+      // floorCount 2 → root -> terminal; the terminal is the boss, reachable
+      // in one hop.
+      const bus = new EventBus<GameEvents>();
+      const run = new Run(1, bus, { floorCount: 2 });
+      const boss = run.nodeMap.terminalId;
+      expect(run.nodeMap.nodes.find((n) => n.id === boss)!.kind).toBe('boss');
+      let battleStarts = 0;
+      bus.on('battle:started', () => battleStarts++);
+
+      run.dispatch({ kind: 'enterNode', nodeId: boss });
+      expect(run.phase).toBe('battle');
+      expect(battleStarts).toBe(1);
+      expect(run.currentEncounter).not.toBeNull();
+
+      // And a win at the boss completes the run (existing terminal path).
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      expect(run.phase).toBe('complete');
+    });
+  });
 });
 
 function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
@@ -654,4 +755,77 @@ function freshRunWithBus(seed: number): RunHandle {
 /** A node that's never a frontier of the root — useful for "not reachable" tests. */
 function farthestNodeId(run: Run): number {
   return run.nodeMap.terminalId;
+}
+
+/**
+ * Replicates bankXpAwards' level math (level + xp only — stats roll on RNG)
+ * so rest-XP expectations derive from the curve + the knob, never hardcoded.
+ */
+function expectedAfterBank(
+  level: number,
+  xp: number,
+  gain: number,
+): { level: number; xp: number } {
+  let l = level;
+  let x = xp + gain;
+  while (l < LEVELING.levelCap && x >= xpToNext(l)) {
+    x -= xpToNext(l);
+    l += 1;
+  }
+  if (l >= LEVELING.levelCap) x = 0;
+  return { level: l, xp: x };
+}
+
+/**
+ * Search seeds for a map (under `config`) with a rest node on floor `floor`,
+ * and return a fresh Run/bus on that seed plus the root→…→rest path (node ids,
+ * including the root at index 0 and the rest last). Every hop before the rest
+ * is a battle by construction (floor 1 is never rest-eligible and the
+ * min-spacing rule keeps the floor below a rest a battle), so the path can be
+ * cleared with ordinary battle resolutions.
+ */
+function findRestRun(
+  config: RunConfig,
+  floor: number,
+): { run: Run; bus: EventBus<GameEvents>; path: number[] } {
+  for (let s = 0; s < 800; s++) {
+    const bus = new EventBus<GameEvents>();
+    const run = new Run(s, bus, config);
+    const rest = run.nodeMap.nodes.find((n) => n.kind === 'rest' && n.floor === floor);
+    if (!rest) continue;
+    const path = [rest.id];
+    let cur = rest.id;
+    while (run.nodeMap.nodes.find((n) => n.id === cur)!.floor > 0) {
+      const parent = run.nodeMap.edges.find((e) => e.to === cur)!.from;
+      path.unshift(parent);
+      cur = parent;
+    }
+    const intermediate = path.slice(1, -1).map((id) => run.nodeMap.nodes.find((n) => n.id === id)!.kind);
+    if (intermediate.some((k) => k !== 'battle')) continue;
+    return { run, bus, path };
+  }
+  throw new Error(`findRestRun: no seed with a rest on floor ${floor}`);
+}
+
+/**
+ * Drive a Run up to (but not into) a rest node on floor `floor`: clear every
+ * intervening battle with `awardsForHop` (default: no XP) and the mandatory
+ * recruit, leaving the rest as the current frontier. Returns the rest id.
+ */
+function driveToRestFrontier(
+  config: RunConfig,
+  floor: number,
+  awardsForHop: (run: Run, hop: number) => GameEvents['battle:ended']['xpAwards'] = () => [],
+): { run: Run; bus: EventBus<GameEvents>; restId: number } {
+  const { run, bus, path } = findRestRun(config, floor);
+  const restId = path[path.length - 1]!;
+  for (let i = 1; i < path.length - 1; i++) {
+    run.dispatch({ kind: 'enterNode', nodeId: path[i]! });
+    bus.emit('battle:ended', { winner: 'player', xpAwards: awardsForHop(run, i) });
+    // A battle whose awards level a unit pauses on promotion first; clear it
+    // so we land in the recruit phase (the mandatory post-battle recruit).
+    if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
+    run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+  }
+  return { run, bus, restId };
 }

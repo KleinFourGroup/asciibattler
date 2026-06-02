@@ -6,5 +6,6 @@
   "xpFlatPerFallen": 20,
   "xpPerDamage": 3,
   "xpPerHealing": 3,
-  "halfCoverDamageMult": 1.0
+  "halfCoverDamageMult": 1.0,
+  "restXp": 200
 }

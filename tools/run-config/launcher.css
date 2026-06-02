@@ -1,0 +1,246 @@
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/700.css';
+
+/* Palette mirrors the layout editor (tools/layout-editor/editor.css) so the
+   two dev tools read as one visual language. */
+:root {
+  --terminal-black: #282828;
+  --terminal-green: #33ff00;
+  --dark-terminal-green: #0a3300;
+  --terminal-amber: #ffb000;
+  --dark-terminal-amber: #664600;
+  --fluorescent-blue: #15f4ee;
+  --neon-red: #ff3131;
+  --panel-bg: #141414;
+  --panel-border: #2c2c2c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--terminal-black);
+  color: var(--terminal-amber);
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+}
+
+#launcher-root {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 8px;
+}
+
+.bar h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--terminal-green);
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+
+.bar .subtitle {
+  font-size: 12px;
+  color: var(--dark-terminal-amber);
+  line-height: 1.4;
+}
+
+code {
+  color: var(--terminal-amber);
+}
+
+.panes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card h2 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--terminal-green);
+}
+
+label.inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--dark-terminal-amber);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Fixed-width label column so the controls line up across rows. */
+.lbl {
+  flex: 0 0 84px;
+}
+
+input,
+select,
+textarea {
+  background: var(--terminal-black);
+  border: 1px solid var(--panel-border);
+  color: var(--terminal-amber);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  min-width: 0;
+}
+
+label.inline input,
+label.inline select {
+  flex: 1;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 1px solid var(--terminal-green);
+}
+
+textarea {
+  resize: vertical;
+  width: 100%;
+  color: var(--terminal-green);
+  word-break: break-all;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+button {
+  background: var(--dark-terminal-green);
+  color: var(--terminal-green);
+  border: 1px solid var(--terminal-green);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+button:hover {
+  background: var(--terminal-green);
+  color: var(--terminal-black);
+}
+
+.small-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.small-btn.danger-outline {
+  background: transparent;
+  color: var(--neon-red);
+  border-color: var(--neon-red);
+}
+
+.small-btn.danger-outline:hover {
+  background: var(--neon-red);
+  color: var(--terminal-black);
+}
+
+/* Roster builder rows. */
+.roster-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.roster-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roster-row .roster-archetype {
+  flex: 1;
+}
+
+.roster-row label.lvl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--dark-terminal-amber);
+  letter-spacing: 0.06em;
+}
+
+.roster-row .roster-level {
+  width: 56px;
+}
+
+/* Launch link styled as a primary action, distinct from buttons. */
+.launch-link {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--dark-terminal-green);
+  border: 1px solid var(--terminal-green);
+  color: var(--terminal-green);
+  text-decoration: none;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.launch-link:hover {
+  background: var(--terminal-green);
+  color: var(--terminal-black);
+}
+
+.summary {
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--terminal-black);
+  border: 1px dashed var(--panel-border);
+  color: var(--fluorescent-blue);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--dark-terminal-amber);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.hint code {
+  color: var(--terminal-amber);
+}

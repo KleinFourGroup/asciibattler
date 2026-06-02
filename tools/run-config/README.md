@@ -1,9 +1,34 @@
 # run-config (dev tool)
 
-A tiny CLI for **short / specific runs** during playtest and balance work. It
-builds a `RunConfig`, prints a browser launch URL describing that run, and
-(unless `--no-run`) drives the run headlessly to completion for a quick sanity
-pass.
+Two ways to build **short / specific runs** during playtest and balance work,
+both over the same `RunConfig` (`src/run/RunConfig.ts`):
+
+- a **GUI launcher** (browser page) — point-and-click, see below;
+- a **CLI** (`npm run run-config`) — scriptable, also drives a headless run.
+
+## GUI launcher
+
+A dev-only page to pick seed / floors / map width / layout and build a starting
+roster (per-unit archetype + level), emitting a launch URL for the game. The
+browser sibling of the CLI — an eyeball test is a click + paste, not a
+hand-typed query string.
+
+```bash
+npm run dev
+```
+
+then open <http://localhost:5173/tools/run-config/>. Fill the fields (blank =
+game default), add roster units if you want a fixed team, and use **Open run**
+(new tab) or **Copy URL**. The form is round-tripped through the *same*
+`parseRunConfig` → `runConfigToQueryString` pair the game and CLI use, so it
+validates / clamps / drops fields exactly as the game will. Not in the
+production build — `tools/` is served statically by the dev server only.
+
+## CLI
+
+A tiny CLI that builds a `RunConfig`, prints a browser launch URL describing
+that run, and (unless `--no-run`) drives the run headlessly to completion for a
+quick sanity pass.
 
 ```bash
 # Print a launch URL AND drive a headless run:

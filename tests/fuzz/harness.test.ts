@@ -11,8 +11,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { runOne } from './harness';
-import { PureRandomStrategy } from './strategies/PureRandom';
-import { GreedyStrategy } from './strategies/Greedy';
+import { makeStrategy } from './strategies/registry';
 import {
   aggregate,
   renderSummaryCsv,
@@ -24,7 +23,7 @@ import {
 
 describe('fuzz harness', () => {
   it('completes a single run without throwing', () => {
-    const result = runOne(1, new PureRandomStrategy());
+    const result = runOne(1, makeStrategy('pure-random')!);
     expect(result.seed).toBe(1);
     expect(result.strategyName).toBe('pure-random');
     expect(['complete', 'defeat', 'hang', 'aborted']).toContain(result.outcome);
@@ -39,23 +38,37 @@ describe('fuzz harness', () => {
   });
 
   it('is deterministic per (seed, strategy)', () => {
-    const a = runOne(42, new PureRandomStrategy());
-    const b = runOne(42, new PureRandomStrategy());
+    const a = runOne(42, makeStrategy('pure-random')!);
+    const b = runOne(42, makeStrategy('pure-random')!);
     expect(a).toEqual(b);
   });
 
   it('greedy strategy is deterministic too', () => {
-    const a = runOne(42, new GreedyStrategy());
-    const b = runOne(42, new GreedyStrategy());
+    const a = runOne(42, makeStrategy('greedy')!);
+    const b = runOne(42, makeStrategy('greedy')!);
     expect(a).toEqual(b);
+  });
+
+  it('G5 menu strategies each drive a full run deterministically', () => {
+    // One representative per family (recruit / stat / path). Each must drive a
+    // real run end-to-end without throwing and be byte-stable per (seed,
+    // strategy) — the harness's "add a determinism case for a new strategy"
+    // contract, covering the parameterized factory output.
+    for (const name of ['recruit:mage', 'stat:constitution', 'path:rest']) {
+      const a = runOne(7, makeStrategy(name)!);
+      const b = runOne(7, makeStrategy(name)!);
+      expect(a).toEqual(b);
+      expect(a.strategyName).toBe(name);
+      expect(['complete', 'defeat', 'hang', 'aborted']).toContain(a.outcome);
+    }
   });
 
   it('greedy and pure-random can diverge on the same seed', () => {
     // Not a balance assertion — just that the strategy actually
     // affects something. Recruit picks alone are enough to push the
     // run's team composition onto a different track.
-    const random = runOne(42, new PureRandomStrategy());
-    const greedy = runOne(42, new GreedyStrategy());
+    const random = runOne(42, makeStrategy('pure-random')!);
+    const greedy = runOne(42, makeStrategy('greedy')!);
     // They start identically (same nodeMap, same first encounter), but
     // the recruit lists end up different OR the final team size
     // differs, depending on luck. If both happen to converge, fall
@@ -68,8 +81,8 @@ describe('fuzz harness', () => {
 describe('fuzz reporters', () => {
   it('renders a well-formed CSV summary', () => {
     const results = [
-      runOne(1, new PureRandomStrategy()),
-      runOne(2, new GreedyStrategy()),
+      runOne(1, makeStrategy('pure-random')!),
+      runOne(2, makeStrategy('greedy')!),
     ];
     const csv = renderSummaryCsv(results);
     const lines = csv.trim().split('\n');
@@ -86,9 +99,9 @@ describe('fuzz reporters', () => {
 
   it('aggregates win rate and floor stats', () => {
     const results = [
-      runOne(1, new PureRandomStrategy()),
-      runOne(2, new PureRandomStrategy()),
-      runOne(3, new PureRandomStrategy()),
+      runOne(1, makeStrategy('pure-random')!),
+      runOne(2, makeStrategy('pure-random')!),
+      runOne(3, makeStrategy('pure-random')!),
     ];
     const stats = aggregate(results);
     expect(stats.totalRuns).toBe(3);
@@ -105,7 +118,7 @@ describe('fuzz reporters', () => {
   it('every battle carries player/enemy level arrays matching the team sizes', () => {
     // G4 per-floor telemetry: the level arrays must be present and aligned
     // with the recorded team sizes, or the per-floor analysis silently lies.
-    const result = runOne(3, new GreedyStrategy());
+    const result = runOne(3, makeStrategy('greedy')!);
     expect(result.battles.length).toBeGreaterThan(0);
     for (const b of result.battles) {
       expect(b.playerLevels).toHaveLength(b.playerTeamSize);
@@ -117,9 +130,9 @@ describe('fuzz reporters', () => {
 
   it('per-floor stats aggregate by floor with sane bounds', () => {
     const results = [
-      runOne(1, new PureRandomStrategy()),
-      runOne(2, new GreedyStrategy()),
-      runOne(3, new GreedyStrategy()),
+      runOne(1, makeStrategy('pure-random')!),
+      runOne(2, makeStrategy('greedy')!),
+      runOne(3, makeStrategy('greedy')!),
     ];
     const stats = perFloorStats(results);
     expect(stats.length).toBeGreaterThan(0);
@@ -142,7 +155,7 @@ describe('fuzz reporters', () => {
     // Force-construct a synthetic defeat by reaching into the harness
     // result. Don't need to actually lose a run — the trace renderer
     // is pure w.r.t. its input.
-    const result = runOne(1, new PureRandomStrategy());
+    const result = runOne(1, makeStrategy('pure-random')!);
     const synthetic = { ...result, outcome: 'defeat' as const };
     const md = renderFailureTrace(synthetic);
     expect(md).toContain('# Fuzz failure');

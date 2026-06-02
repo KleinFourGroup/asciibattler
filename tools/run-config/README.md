@@ -17,7 +17,10 @@ npm run run-config -- --seed=42 --strategy=greedy
 ```
 
 Flags: `--seed`, `--floors`, `--roster` (`archetype[:level],…`), `--layout`,
-`--width`, `--strategy` (`pure-random` | `greedy`), `--no-run`, `--help`.
+`--width`, `--strategy` (any G5-menu entry — `pure-random` | `greedy` |
+`recruit:<archetype>` | `stat:<stat>` | `path:battle` | `path:rest`),
+`--no-run`, `--help`. The strategy menu is the shared registry in
+`tests/fuzz/strategies/registry.ts`.
 
 The run-config flags reuse the **same param names and validation** as the
 browser URL (`src/run/RunConfig.ts`), so a CLI invocation and a browser launch

@@ -6,11 +6,17 @@
  *   tests/fuzz/output/failures/<name>.md     — markdown trace per failure
  *
  * Usage:
- *   npm run fuzz                  # 20 seeds × all strategies
+ *   npm run fuzz                  # 20 seeds × the default (baseline) strategies
  *   npm run fuzz -- --count=50    # 50 seeds
  *   npm run fuzz -- --seed=42     # single seed (and only that one)
- *   npm run fuzz -- --strategy=greedy
+ *   npm run fuzz -- --strategy=greedy        # one named strategy
+ *   npm run fuzz -- --strategy=stat:constitution   # any G5 menu entry
+ *   npm run fuzz -- --strategy=all           # the whole G5 menu
  *   npm run fuzz -- --per-floor   # + per-floor team analysis (stdout + per-floor.csv)
+ *
+ * Strategies come from the shared registry (tests/fuzz/strategies/registry.ts);
+ * the default sweep is just the two baselines so a no-flag run stays fast — the
+ * full parameterized menu is opt-in via `--strategy=NAME` or `--strategy=all`.
  *
  * Argument parsing is intentionally minimal — this is a dev-only tool,
  * not a published CLI.
@@ -22,8 +28,12 @@ import { fileURLToPath } from 'node:url';
 import { runOne } from './harness';
 import type { FuzzStrategy } from './Strategy';
 import type { RunResult } from './harness';
-import { PureRandomStrategy } from './strategies/PureRandom';
-import { GreedyStrategy } from './strategies/Greedy';
+import {
+  makeStrategy,
+  makeDefaultStrategies,
+  makeAllStrategies,
+  STRATEGY_NAMES,
+} from './strategies/registry';
 import {
   aggregate,
   renderSummaryCsv,
@@ -32,11 +42,6 @@ import {
   renderPerFloorAnalysis,
   perFloorStats,
 } from './reporters';
-
-const STRATEGIES: Record<string, () => FuzzStrategy> = {
-  'pure-random': () => new PureRandomStrategy(),
-  greedy: () => new GreedyStrategy(),
-};
 
 interface CliArgs {
   count: number;
@@ -94,9 +99,7 @@ function defaultOutDir(): string {
 
 function main(): void {
   const args = parseArgs(process.argv.slice(2));
-  const strategies = args.strategy
-    ? [STRATEGIES[args.strategy]?.() ?? bail(`Unknown strategy: ${args.strategy}`)]
-    : Object.values(STRATEGIES).map((f) => f());
+  const strategies = selectStrategies(args.strategy);
 
   const seeds = args.seed !== undefined ? [args.seed] : range(1, args.count);
 
@@ -159,6 +162,17 @@ function main(): void {
     process.stdout.write(`  by outcome: ${JSON.stringify(stats.byOutcome)}\n\n`);
   }
   process.stdout.write(`Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`);
+}
+
+/** Resolve the `--strategy` flag: a name, the `all` keyword, or (unset) the
+ *  default baseline sweep. Bails loudly on an unknown name. */
+function selectStrategies(name?: string): FuzzStrategy[] {
+  if (name === undefined) return makeDefaultStrategies();
+  if (name === 'all') return makeAllStrategies();
+  return [
+    makeStrategy(name) ??
+      bail(`Unknown strategy: ${name} (choices: ${STRATEGY_NAMES.join(', ')}, all)`),
+  ];
 }
 
 function range(start: number, count: number): number[] {

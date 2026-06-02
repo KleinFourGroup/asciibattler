@@ -19,20 +19,13 @@
  */
 
 import { runOne } from '../../tests/fuzz/harness';
-import type { FuzzStrategy } from '../../tests/fuzz/Strategy';
-import { PureRandomStrategy } from '../../tests/fuzz/strategies/PureRandom';
-import { GreedyStrategy } from '../../tests/fuzz/strategies/Greedy';
+import { makeStrategy, STRATEGY_NAMES } from '../../tests/fuzz/strategies/registry';
 import {
   parseRunConfig,
   runConfigToQueryString,
   RUN_CONFIG_PARAMS,
   type RunConfig,
 } from '../../src/run/RunConfig';
-
-const STRATEGIES: Record<string, () => FuzzStrategy> = {
-  'pure-random': () => new PureRandomStrategy(),
-  greedy: () => new GreedyStrategy(),
-};
 
 const BASE_URL = 'http://localhost:5173/';
 const RUN_CONFIG_KEYS = new Set<string>(Object.values(RUN_CONFIG_PARAMS));
@@ -87,7 +80,8 @@ function printHelp(): void {
       '  --roster=LIST    archetype[:level],...  e.g. rogue:3,healer:2,melee',
       '  --layout=ID      force every battle onto a named layout',
       '  --width=N        middle-floor max width',
-      '  --strategy=NAME  headless drive strategy: pure-random (default) | greedy',
+      '  --strategy=NAME  headless drive strategy from the G5 menu (default: pure-random);',
+      '                   e.g. greedy | recruit:mage | stat:constitution | path:rest',
       '  --no-run         print the launch URL only; skip the headless run',
       '  --help           show this help',
       '',
@@ -97,10 +91,10 @@ function printHelp(): void {
 
 function main(): void {
   const args = parseArgs(process.argv.slice(2));
-  const makeStrategy = STRATEGIES[args.strategy];
-  if (!makeStrategy) {
+  const strategy = makeStrategy(args.strategy);
+  if (!strategy) {
     process.stderr.write(
-      `Unknown strategy: ${args.strategy} (choices: ${Object.keys(STRATEGIES).join(', ')})\n`,
+      `Unknown strategy: ${args.strategy} (choices: ${STRATEGY_NAMES.join(', ')})\n`,
     );
     process.exit(1);
   }
@@ -121,7 +115,7 @@ function main(): void {
 
   if (!args.run) return;
 
-  const result = runOne(seed, makeStrategy(), { runConfig: config });
+  const result = runOne(seed, strategy, { runConfig: config });
   process.stdout.write('\nHeadless run:\n');
   process.stdout.write(`  strategy:   ${result.strategyName}\n`);
   process.stdout.write(`  outcome:    ${result.outcome}\n`);

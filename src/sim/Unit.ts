@@ -93,7 +93,7 @@ export interface UnitTemplate {
   /**
    * E4 — banked XP toward the next level. Persists across battles on
    * the roster side (`Run.team`); enemies always carry 0 (they never
-   * level via XP, only via `scaleStats` on rollEnemyTeam). New
+   * level via XP, only via `scaleStats` in `buildEnemyTeam`). New
    * recruits + the starting team begin at 0.
    */
   readonly xp: number;

@@ -4,8 +4,10 @@ import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import type { GameEvents } from '../core/events';
 import { ARCHETYPE_CONFIG } from '../sim/archetypes';
+import { scaleStats } from '../sim/leveling';
 import { xpToNext } from '../sim/xp';
 import { LEVELING } from '../config/leveling';
+import { DIFFICULTY } from '../config/difficulty';
 import type { RunConfig } from './RunConfig';
 
 describe('Run', () => {
@@ -85,35 +87,29 @@ describe('Run', () => {
       expect(
         run.currentEncounter!.playerTeam.map((t) => t.rosterIndex),
       ).toEqual(run.team.map((_, i) => i));
-      // CHECKPOINT 6: enemy team is sized at playerTeam.length - 1.
-      expect(run.currentEncounter!.enemyTeam).toHaveLength(run.team.length - 1);
+      // G4: enemy team is a budget-distributed swarm of up to
+      // `swarmMaxMultiplier × playerSize` units (no longer a fixed size).
+      const maxCount = Math.round(DIFFICULTY.swarmMaxMultiplier * run.team.length);
+      expect(run.currentEncounter!.enemyTeam.length).toBeGreaterThanOrEqual(1);
+      expect(run.currentEncounter!.enemyTeam.length).toBeLessThanOrEqual(maxCount);
     });
 
-    it('E3: scales enemy stats via scaleStats at level = 1 + (floor-1) × enemyLevelPerFloor', () => {
-      // E1's constitution-only multiplier was retired; the difficulty
-      // curve now runs through the leveling system. Floor 1 enemies are
-      // level 1 (baseStats verbatim); floor N enemies are level
-      // `1 + (N-1) × enemyLevelPerFloor` with `scaleStats` applied to
-      // baseStats × growthRates.
+    it('G4: enemy levels stay within cap; stats built via the deterministic scaleStats path', () => {
+      // The floor-linear ramp is gone — enemies now share a level budget
+      // derived from the player roster. The integration assertion here is
+      // that every enemy is ≤ the per-unit cap and its stats come from the
+      // canonical `scaleStats` build (the budget math itself is unit-tested
+      // in enemyBudget.test.ts). Cap + stats derive from live config.
       const { run } = freshRunWithBus(1);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
-      const floor = run.nodeMap.nodes.find((n) => n.id === first)!.floor;
-      const enemyLevel = 1 + (floor - 1) * 1; // enemyLevelPerFloor = 1 at default config
-      // Source baseStats + growthRates from the live config so balance
-      // tweaks don't strand this test.
+      const highest = Math.max(1, ...run.team.map((t) => t.level));
+      const cap = highest + DIFFICULTY.unitLevelDelta;
       for (const u of run.currentEncounter!.enemyTeam) {
-        expect(u.level).toBe(enemyLevel);
+        expect(u.level).toBeGreaterThanOrEqual(1);
+        expect(u.level).toBeLessThanOrEqual(cap);
         const cfg = ARCHETYPE_CONFIG[u.archetype];
-        const baseCon = cfg.baseStats.constitution;
-        if (enemyLevel === 1) {
-          expect(u.stats.constitution).toBe(baseCon);
-        } else {
-          // Deterministic growth: constitution increases by round(growthRate × (level - 1)).
-          expect(u.stats.constitution).toBe(
-            baseCon + Math.round(cfg.growthRates.constitution * (enemyLevel - 1)),
-          );
-        }
+        expect(u.stats).toEqual(scaleStats(cfg.baseStats, cfg.growthRates, u.level - 1));
       }
     });
 

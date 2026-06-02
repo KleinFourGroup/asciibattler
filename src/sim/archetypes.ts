@@ -99,8 +99,8 @@ export function rollUnit(archetype: Archetype, rng: RNG, level: number = 1): Uni
 /**
  * E3 — produce an enemy-side template at the given level via the
  * deterministic `scaleStats` path. No RNG draws; same `(archetype,
- * level)` pair always produces the same stats. Used by `rollEnemyTeam`
- * — the difficulty curve is `enemyLevel = 1 + (floor-1) × enemyLevelPerFloor`.
+ * level)` pair always produces the same stats. Used by G4's
+ * `buildEnemyTeam` to materialize each budget-allocated enemy level.
  */
 export function scaledUnit(archetype: Archetype, level: number): UnitTemplate {
   const cfg = CONFIGS[archetype];

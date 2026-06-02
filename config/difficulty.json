@@ -1,4 +1,7 @@
 {
-  "enemySizeDelta": -1,
-  "enemyLevelPerFloor": 0.5
+  "totalLevelDelta": 3,
+  "unitLevelDelta": 2,
+  "minBudget": 3,
+  "swarmBias": 0.7,
+  "swarmMaxMultiplier": 1.2
 }

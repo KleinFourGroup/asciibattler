@@ -22,6 +22,8 @@ import { World } from '../../src/sim/World';
 import { RNG } from '../../src/core/RNG';
 import { spawnTeam } from '../../src/sim/battleSetup';
 import { rollUnit } from '../../src/sim/archetypes';
+import { buildEnemyTeam } from '../../src/run/enemyBudget';
+import { DIFFICULTY } from '../../src/config/difficulty';
 import { SPAWN } from '../../src/config/spawn';
 import { SPAWN_ACTION_ID } from '../../src/sim/actions/SpawnAction';
 import type { GameEvents } from '../../src/core/events';
@@ -31,6 +33,12 @@ function makePlayerRegion(): SpawnRegion {
   // 8 tiles in row y=5, columns 2..9.
   const tiles = Array.from({ length: 8 }, (_, i) => ({ x: i + 2, y: 5 }));
   return { tiles, availability: 'player' };
+}
+
+function makeEnemyRegion(): SpawnRegion {
+  // 8 tiles in row y=8, columns 2..9.
+  const tiles = Array.from({ length: 8 }, (_, i) => ({ x: i + 2, y: 8 }));
+  return { tiles, availability: 'enemy' };
 }
 
 describe('D5.C spawn overflow queue', () => {
@@ -131,6 +139,47 @@ describe('D5.C spawn overflow queue', () => {
     expect(ends).toHaveLength(0);
     expect(world.queueLength('player')).toBe(0);
     expect(world.units.filter((u) => u.team === 'player')).toHaveLength(1);
+  });
+
+  it('G4: a budget swarm larger than the spawn region overflows + fully drains', () => {
+    // The G4 brief's "transition enemies onto the spawn queue." Enemy count is
+    // `min(swarmMaxMultiplier × playerSize, budget)`, so a swarm only exceeds
+    // the 8-tile region with a large-enough (grown) roster — size it from the
+    // shipped multiplier so this holds independent of difficulty tuning. A
+    // high level makes the budget large enough to afford the full count.
+    const REGION = 8;
+    const size = Math.max(5, Math.ceil((REGION + 1) / DIFFICULTY.swarmMaxMultiplier));
+    const bus = new EventBus<GameEvents>();
+    const world = new World(bus, new RNG(1));
+    const player = Array.from({ length: size }, () => rollUnit('melee', new RNG(1), 12));
+
+    // Find a seed whose swarm exceeds the 8-tile region (most do at the
+    // default swarmBias; the loop makes the test independent of the knob).
+    let enemyTeam = buildEnemyTeam(new RNG(0), player);
+    for (let s = 1; enemyTeam.length <= 8 && s < 200; s++) {
+      enemyTeam = buildEnemyTeam(new RNG(s), player);
+    }
+    expect(enemyTeam.length).toBeGreaterThan(8);
+    const queued = enemyTeam.length - 8;
+
+    // A lone, far-away player unit keeps the battle from ending while we drain.
+    spawnTeam(world, 'player', [rollUnit('melee', new RNG(2))], {
+      tiles: [{ x: 0, y: 11 }],
+      availability: 'player',
+    }, new RNG(2));
+    spawnTeam(world, 'enemy', enemyTeam, makeEnemyRegion(), new RNG(7));
+
+    expect(world.units.filter((u) => u.team === 'enemy')).toHaveLength(8);
+    expect(world.queueLength('enemy')).toBe(queued);
+
+    // Free one enemy tile per tick; runOverflowScan pulls one queued unit each
+    // time. `queued` frees drain the queue completely.
+    for (let i = 0; i < queued; i++) {
+      const victim = world.units.find((u) => u.team === 'enemy')!;
+      victim.currentHp = 0;
+      world.tick();
+    }
+    expect(world.queueLength('enemy')).toBe(0);
   });
 
   it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v15', () => {

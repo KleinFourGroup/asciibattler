@@ -33,13 +33,13 @@ import type { GameEvents, PromotionInfo } from '../core/events';
 import { glyphForArchetype } from '../sim/archetypes';
 import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate, Team } from '../sim/Unit';
-import { rollUnit, scaledUnit } from '../sim/archetypes';
+import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap, type NodeKind } from './NodeMap';
 import type { RunConfig } from './RunConfig';
 import { rollOffer } from './Recruitment';
+import { buildEnemyTeam } from './enemyBudget';
 import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
-import { DIFFICULTY } from '../config/difficulty';
 import { TERRAIN } from '../config/terrain';
 import { LAYOUT_IDS, THEMES, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
@@ -115,11 +115,10 @@ export interface RunSnapshot {
   pendingPromotions: PromotionInfo[] | null;
 }
 
-// Balance constants now live in config/*.json — see src/config/recruitment.ts
-// and src/config/difficulty.ts. Bound to locals here just for readability at
-// the call sites.
+// Balance constants now live in config/*.json — see src/config/recruitment.ts.
+// Bound to locals here just for readability at the call sites. (The G4 enemy
+// budget reads `config/difficulty.json` inside `src/run/enemyBudget.ts`.)
 const { startingMelee: STARTING_MELEE, startingRanged: STARTING_RANGED } = RECRUITMENT;
-const { enemySizeDelta: ENEMY_SIZE_DELTA, enemyLevelPerFloor: ENEMY_LEVEL_PER_FLOOR } = DIFFICULTY;
 
 export class Run {
   readonly rng: RNG;
@@ -275,7 +274,10 @@ export class Run {
     const theme = layoutId === null
       ? proceduralTheme
       : (getLayout(layoutId)?.theme ?? proceduralTheme);
-    const enemyTeam = rollEnemyTeam(battleRng, this.team.length, this.floorOf(nodeId));
+    // G4 — enemy team is a level-budget swarm derived from the player roster
+    // (replaces the old floor-linear `rollEnemyTeam`). Last consumer of
+    // `battleRng`, so its now-variable draw count stays downstream-safe.
+    const enemyTeam = buildEnemyTeam(battleRng, this.team);
 
     // Browser-only diagnostic: confirm the layout picker hits the full
     // library across a session. Gated on `typeof window` so the fuzz
@@ -562,40 +564,6 @@ function resolveForcedLayoutId(id: string | undefined): string | null {
     throw new Error(`Run: unknown forcedLayoutId="${id}" (not in LAYOUT_IDS)`);
   }
   return id;
-}
-
-/**
- * Enemy team for a battle on `floor`, sized relative to the player. Composition
- * stays ~60% melee / 40% ranged via Math.round so the formation reads the same
- * at any team size. Size delta keeps the player marginally ahead in unit count.
- *
- * E3: difficulty curve runs through `enemyLevelPerFloor` + `scaleStats`
- * instead of the retired `enemyHpPerFloor` post-derive multiplier. Enemies
- * on floor N spawn at level `1 + (N-1) × enemyLevelPerFloor` — same axis as
- * player progression. Floor 1 enemies are level 1 (baseStats verbatim).
- * Path is fully deterministic — no per-unit RNG draws — matching the
- * pre-E3 behaviour (the RNG param stays threaded for callers that don't
- * need to know which path is RNG-free).
- */
-function rollEnemyTeam(_rng: RNG, playerSize: number, floor: number): UnitTemplate[] {
-  const size = Math.max(1, playerSize + ENEMY_SIZE_DELTA);
-  const meleeCount = Math.round(size * 0.6);
-  const rangedCount = size - meleeCount;
-  const enemyLevel = enemyLevelForFloor(floor);
-
-  const team: UnitTemplate[] = [];
-  for (let i = 0; i < meleeCount; i++) {
-    team.push(scaledUnit('melee', enemyLevel));
-  }
-  for (let i = 0; i < rangedCount; i++) {
-    team.push(scaledUnit('ranged', enemyLevel));
-  }
-  return team;
-}
-
-/** E3: floor 1 = level 1, floor N = `1 + (N-1) × enemyLevelPerFloor`. */
-function enemyLevelForFloor(floor: number): number {
-  return 1 + Math.max(0, floor - 1) * ENEMY_LEVEL_PER_FLOOR;
 }
 
 /**

@@ -18,6 +18,8 @@ import {
   renderSummaryCsv,
   renderFailureTrace,
   failureFilename,
+  perFloorStats,
+  renderPerFloorAnalysis,
 } from './reporters';
 
 describe('fuzz harness', () => {
@@ -98,6 +100,42 @@ describe('fuzz reporters', () => {
     expect(stats.hangsByLayout).toBeDefined();
     const sumHangs = Object.values(stats.hangsByLayout).reduce((a, b) => a + b, 0);
     expect(sumHangs).toBe(stats.hangs);
+  });
+
+  it('every battle carries player/enemy level arrays matching the team sizes', () => {
+    // G4 per-floor telemetry: the level arrays must be present and aligned
+    // with the recorded team sizes, or the per-floor analysis silently lies.
+    const result = runOne(3, new GreedyStrategy());
+    expect(result.battles.length).toBeGreaterThan(0);
+    for (const b of result.battles) {
+      expect(b.playerLevels).toHaveLength(b.playerTeamSize);
+      expect(b.enemyLevels).toHaveLength(b.enemyTeamSize);
+      expect(b.playerLevels.every((l) => l >= 1)).toBe(true);
+      expect(b.enemyLevels.every((l) => l >= 1)).toBe(true);
+    }
+  });
+
+  it('per-floor stats aggregate by floor with sane bounds', () => {
+    const results = [
+      runOne(1, new PureRandomStrategy()),
+      runOne(2, new GreedyStrategy()),
+      runOne(3, new GreedyStrategy()),
+    ];
+    const stats = perFloorStats(results);
+    expect(stats.length).toBeGreaterThan(0);
+    // Floors are sorted ascending; battle counts sum to all battles played.
+    const floors = stats.map((s) => s.floor);
+    expect([...floors].sort((a, b) => a - b)).toEqual(floors);
+    const totalBattles = results.reduce((acc, r) => acc + r.battles.length, 0);
+    expect(stats.reduce((acc, s) => acc + s.battles, 0)).toBe(totalBattles);
+    for (const s of stats) {
+      expect(s.playerAvgLevel).toBeGreaterThanOrEqual(1);
+      expect(s.enemyAvgLevel).toBeGreaterThanOrEqual(1);
+      expect(s.playerSize).toBeGreaterThan(0);
+      expect(s.enemySize).toBeGreaterThan(0);
+      expect(s.playerLevelSpread).toBeGreaterThanOrEqual(0);
+    }
+    expect(renderPerFloorAnalysis(results)).toContain('Per-floor team analysis');
   });
 
   it('renders a failure trace for a non-complete result', () => {

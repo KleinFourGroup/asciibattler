@@ -10,6 +10,7 @@
  *   npm run fuzz -- --count=50    # 50 seeds
  *   npm run fuzz -- --seed=42     # single seed (and only that one)
  *   npm run fuzz -- --strategy=greedy
+ *   npm run fuzz -- --per-floor   # + per-floor team analysis (stdout + per-floor.csv)
  *
  * Argument parsing is intentionally minimal — this is a dev-only tool,
  * not a published CLI.
@@ -28,6 +29,8 @@ import {
   renderSummaryCsv,
   renderFailureTrace,
   failureFilename,
+  renderPerFloorAnalysis,
+  perFloorStats,
 } from './reporters';
 
 const STRATEGIES: Record<string, () => FuzzStrategy> = {
@@ -40,12 +43,14 @@ interface CliArgs {
   seed?: number;
   strategy?: string;
   outDir: string;
+  perFloor: boolean;
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
   const args: CliArgs = {
     count: 20,
     outDir: defaultOutDir(),
+    perFloor: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -61,6 +66,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--out':
         args.outDir = v ?? args.outDir;
+        break;
+      case '--per-floor':
+        args.perFloor = true;
         break;
       default:
         if (raw.startsWith('--')) {
@@ -103,6 +111,29 @@ function main(): void {
   }
 
   writeFileSync(join(args.outDir, 'summary.csv'), renderSummaryCsv(allResults));
+
+  if (args.perFloor) {
+    process.stdout.write('\n' + renderPerFloorAnalysis(allResults));
+    const stats = perFloorStats(allResults);
+    const header =
+      'floor,battles,playerSize,playerAvgLevel,playerMedianLevel,playerLevelSpread,' +
+      'enemySize,enemyAvgLevel,enemyMedianLevel,enemyLevelSpread';
+    const rows = stats.map((s) =>
+      [
+        s.floor,
+        s.battles,
+        s.playerSize.toFixed(3),
+        s.playerAvgLevel.toFixed(3),
+        s.playerMedianLevel.toFixed(3),
+        s.playerLevelSpread.toFixed(3),
+        s.enemySize.toFixed(3),
+        s.enemyAvgLevel.toFixed(3),
+        s.enemyMedianLevel.toFixed(3),
+        s.enemyLevelSpread.toFixed(3),
+      ].join(','),
+    );
+    writeFileSync(join(args.outDir, 'per-floor.csv'), [header, ...rows].join('\n') + '\n');
+  }
 
   let failuresWritten = 0;
   for (const r of allResults) {

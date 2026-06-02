@@ -44,6 +44,11 @@ export interface BattleResult {
   enemyDeaths: number;
   playerTeamSize: number;
   enemyTeamSize: number;
+  /** G4 telemetry — per-unit levels of each team at battle START (from the
+   *  encounter snapshot), for the per-floor level/size analysis. Captured
+   *  before any deaths so it reflects the composition entering the floor. */
+  playerLevels: number[];
+  enemyLevels: number[];
 }
 
 export interface RecruitChoice {
@@ -126,6 +131,8 @@ export function runOne(
       layoutId: encounter.layoutId,
       playerTeamSize: encounter.playerTeam.length,
       enemyTeamSize: encounter.enemyTeam.length,
+      playerLevels: encounter.playerTeam.map((u) => u.level),
+      enemyLevels: encounter.enemyTeam.map((u) => u.level),
       playerDeaths: 0,
       enemyDeaths: 0,
       startTick: 0,
@@ -160,6 +167,8 @@ export function runOne(
       enemyDeaths: currentBattle.enemyDeaths,
       playerTeamSize: currentBattle.playerTeamSize,
       enemyTeamSize: currentBattle.enemyTeamSize,
+      playerLevels: currentBattle.playerLevels,
+      enemyLevels: currentBattle.enemyLevels,
     });
     currentBattle = null;
     currentWorld = null;
@@ -213,6 +222,8 @@ export function runOne(
               enemyDeaths: currentBattle.enemyDeaths,
               playerTeamSize: currentBattle.playerTeamSize,
               enemyTeamSize: currentBattle.enemyTeamSize,
+              playerLevels: currentBattle.playerLevels,
+              enemyLevels: currentBattle.enemyLevels,
             });
           }
           return finalize(seed, strategy.name, 'hang', run, battles, recruits, totalTicks);
@@ -262,6 +273,8 @@ interface PartialBattle {
   layoutId: string | null;
   playerTeamSize: number;
   enemyTeamSize: number;
+  playerLevels: number[];
+  enemyLevels: number[];
   playerDeaths: number;
   enemyDeaths: number;
   startTick: number;

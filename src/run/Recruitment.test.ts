@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
-import { rollOffer } from './Recruitment';
+import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { ALL_ARCHETYPES, ARCHETYPE_CONFIG } from '../sim/archetypes';
+import { RECRUITMENT } from '../config/recruitment';
 
 describe('rollOffer', () => {
   it('defaults to 3 units', () => {
@@ -67,5 +68,35 @@ describe('rollOffer', () => {
 
   it('same seed → same offer', () => {
     expect(rollOffer(new RNG(42))).toEqual(rollOffer(new RNG(42)));
+  });
+});
+
+describe('recruitLevelBonus (G4 geometric bonus)', () => {
+  it('matches P(+k) = (1−c)·c^k over a wide sample (derives c from config)', () => {
+    const c = RECRUITMENT.recruitBonusChance;
+    const N = 40000;
+    const rng = new RNG(12345);
+    const counts = new Map<number, number>();
+    for (let i = 0; i < N; i++) {
+      const b = recruitLevelBonus(rng, c);
+      counts.set(b, (counts.get(b) ?? 0) + 1);
+    }
+    const p = (k: number) => (counts.get(k) ?? 0) / N;
+    // toBeCloseTo(_, 1) → within 0.05; comfortably tighter than that at N=40k.
+    expect(p(0)).toBeCloseTo(1 - c, 1);
+    expect(p(1)).toBeCloseTo((1 - c) * c, 1);
+    expect(p(2)).toBeCloseTo((1 - c) * c * c, 1);
+  });
+
+  it('is always ≥ 0 and deterministic per seed', () => {
+    for (let s = 0; s < 50; s++) {
+      const b = recruitLevelBonus(new RNG(s), RECRUITMENT.recruitBonusChance);
+      expect(b).toBeGreaterThanOrEqual(0);
+      expect(recruitLevelBonus(new RNG(s), RECRUITMENT.recruitBonusChance)).toBe(b);
+    }
+  });
+
+  it('chance 0 always yields +0', () => {
+    for (let s = 0; s < 20; s++) expect(recruitLevelBonus(new RNG(s), 0)).toBe(0);
   });
 });

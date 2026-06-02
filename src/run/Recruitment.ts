@@ -14,10 +14,11 @@
  * (enemies stay melee/ranged, so you draft the new archetypes before you
  * fight them).
  *
- * E3: recruits arrive at `level` (defaults to 1). Run threads
- * `currentFloor` through so a floor-N recruit gets N simulated level-ups
- * via `rollUnit` — keeps recruits in pace with the enemies on the floor
- * the player just cleared.
+ * Recruits arrive at `level` (defaults to 1). G4: Run computes that level as
+ * `round(avgTeamLevel) + recruitLevelBonus(...)` (replacing E3's `currentFloor`
+ * basis) so recruits scale with the *team*, not the floor — keeping a fresh
+ * draft useful on a leveled roster deep in a run. `rollUnit` then runs the
+ * level-ups.
  *
  * Determinism: the partial Fisher–Yates below draws `min(size, pool)`
  * ints from `rng`, then each `rollUnit` draws `7 × (level − 1)` more.
@@ -30,6 +31,7 @@ import type { RNG } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit, ALL_ARCHETYPES, type Archetype } from './../sim/archetypes';
 import { RECRUITMENT } from '../config/recruitment';
+import { LEVELING } from '../config/leveling';
 
 export function rollOffer(
   rng: RNG,
@@ -38,6 +40,21 @@ export function rollOffer(
 ): UnitTemplate[] {
   if (size <= 0) return [];
   return sampleDistinctArchetypes(rng, size).map((a) => rollUnit(a, rng, level));
+}
+
+/**
+ * G4 — the geometric level bonus stacked on `round(avgTeamLevel)` for a
+ * recruit. `P(+k) = (1 − chance) · chance^k`: each successful coin (prob
+ * `chance`) adds a level, the first miss stops. With chance 0.5 that's
+ * 50% +0 / 25% +1 / 12.5% +2 / … — most recruits match the team average,
+ * with an occasional over-leveled standout. Bounded by `LEVELING.levelCap`
+ * iterations so a pathological `chance ≈ 1` can't loop unboundedly (the
+ * caller also clamps the final level to the cap).
+ */
+export function recruitLevelBonus(rng: RNG, chance: number): number {
+  let bonus = 0;
+  while (bonus < LEVELING.levelCap && rng.next() < chance) bonus++;
+  return bonus;
 }
 
 /**

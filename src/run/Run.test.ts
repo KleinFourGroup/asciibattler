@@ -8,6 +8,7 @@ import { scaleStats } from '../sim/leveling';
 import { xpToNext } from '../sim/xp';
 import { LEVELING } from '../config/leveling';
 import { DIFFICULTY } from '../config/difficulty';
+import { avgTeamLevel } from './enemyBudget';
 import type { RunConfig } from './RunConfig';
 
 describe('Run', () => {
@@ -262,6 +263,34 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1);
       bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
       expect(run.phase).toBe('map');
+    });
+
+    it('G4: recruit level tracks round(avgTeamLevel) + bonus, not the floor', () => {
+      // A leveled starting roster (avg 6) lands at floor 1. Under the old
+      // `currentFloor` basis the offer would be level 1; G4 keys it off the
+      // team average, so offered cards are ≥ round(avg) (= 6). Empty xpAwards
+      // keep the roster levels fixed so the average is exactly the config.
+      const bus = new EventBus<GameEvents>();
+      const run = new Run(1, bus, {
+        startingRoster: [
+          { archetype: 'melee', level: 6 },
+          { archetype: 'melee', level: 6 },
+          { archetype: 'ranged', level: 6 },
+        ],
+      });
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+
+      const offer = run.currentOffer!;
+      expect(offer).not.toBeNull();
+      const avg = Math.round(avgTeamLevel(run.team)); // 6 — well above floor 1
+      for (const u of offer) {
+        expect(u.level).toBeGreaterThanOrEqual(avg);
+        expect(u.level).toBeLessThanOrEqual(LEVELING.levelCap);
+      }
+      // One bonus draw per offer → every card shares the level.
+      expect(new Set(offer.map((u) => u.level)).size).toBe(1);
     });
 
     it('winning at the terminal node routes to complete (not recruit)', () => {
@@ -676,13 +705,13 @@ describe('Run', () => {
     });
 
     it('returns to the map silently when no unit levels up', () => {
-      // floorCount 5 → a floor-3 rest. Start at the cap and vault each
-      // recruited unit to the cap on its battle, so the only fresh unit at
-      // rest time is the floor-2 recruit (level 2): restXp < xpToNext(2), so
-      // nobody levels → no promotion → silent return to map.
-      // Premise: a level-2 unit must NOT level on restXp (else the floor-2
-      // recruit promotes and this branch can't be reached).
-      expect(LEVELING.restXp).toBeLessThan(xpToNext(2));
+      // floorCount 5 → a floor-3 rest. G4: recruits arrive at round(avgTeamLevel)
+      // + bonus, so with an all-cap starting roster (and vaultAll keeping each
+      // recruit at the cap) the whole team sits at the level cap by rest time.
+      // Granting restXp then can't level anyone (cap units drain banked xp), so
+      // the rest resolves to a SILENT return to the map — no promotion, no
+      // recruit. (The boundary "a low unit banks restXp without leveling" can't
+      // arise under G4: a low-avg team levels ON rest, which wouldn't be silent.)
       const cap = LEVELING.levelCap;
       const startingRoster = [
         { archetype: 'melee' as const, level: cap },
@@ -705,8 +734,8 @@ describe('Run', () => {
       expect(run.phase).toBe('map');
       expect(promotionPending).toBe(0);
       expect(recruitOffers).toBe(0);
-      // The floor-2 recruit (level 2) banked the grant without leveling.
-      expect(run.team.some((t) => t.level === 2 && t.xp === LEVELING.restXp)).toBe(true);
+      // Nobody leveled — every unit (incl. the cap-level recruits) is still at cap.
+      expect(run.team.every((t) => t.level === cap)).toBe(true);
     });
 
     it('a boss node builds a normal battle encounter (regression-equivalent to a battle)', () => {

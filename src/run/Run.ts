@@ -36,8 +36,8 @@ import type { UnitTemplate, Team } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap, type NodeKind } from './NodeMap';
 import type { RunConfig } from './RunConfig';
-import { rollOffer } from './Recruitment';
-import { buildEnemyTeam } from './enemyBudget';
+import { rollOffer, recruitLevelBonus } from './Recruitment';
+import { buildEnemyTeam, avgTeamLevel } from './enemyBudget';
 import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
@@ -364,7 +364,13 @@ export class Run {
       this.bus.emit('run:victory', {});
     } else {
       this.phase = 'recruit';
-      this.currentOffer = rollOffer(this.rng.fork(), undefined, this.currentFloor);
+      // G4 — recruit level tracks the TEAM (round avg + geometric bonus), not
+      // the floor, so a fresh draft stays useful on a leveled roster. One bonus
+      // draw per offer (all cards share the level); clamped to the level cap.
+      const offerRng = this.rng.fork();
+      const bonus = recruitLevelBonus(offerRng, RECRUITMENT.recruitBonusChance);
+      const level = Math.min(LEVELING.levelCap, Math.round(avgTeamLevel(this.team)) + bonus);
+      this.currentOffer = rollOffer(offerRng, undefined, level);
       this.bus.emit('recruit:offered', { units: this.currentOffer });
     }
   }

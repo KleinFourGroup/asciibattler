@@ -8,6 +8,7 @@ import { scaleStats } from '../sim/leveling';
 import { xpToNext } from '../sim/xp';
 import { LEVELING } from '../config/leveling';
 import { DIFFICULTY } from '../config/difficulty';
+import { RECRUITMENT } from '../config/recruitment';
 import { avgTeamLevel } from './enemyBudget';
 import type { RunConfig } from './RunConfig';
 
@@ -313,16 +314,16 @@ describe('Run', () => {
   });
 
   describe('E4 — XP banking + level-up loop', () => {
-    it('starting roster begins at xp=0 and level=1', () => {
+    it('starting roster begins at xp=0 and the configured startingLevel', () => {
       const { run } = freshRunWithBus(1);
       for (const t of run.team) {
         expect(t.xp).toBe(0);
-        expect(t.level).toBe(1);
+        expect(t.level).toBe(RECRUITMENT.startingLevel);
       }
     });
 
     it('banks xpGained into the right roster slot via rosterIndex', () => {
-      const { run, bus } = freshRunWithBus(1);
+      const { run, bus } = freshLvl1RunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Award 5 XP to roster index 2 (a melee unit); it shouldn't be
@@ -340,7 +341,7 @@ describe('Run', () => {
     });
 
     it('triggers a level-up when banked xp crosses xpToNext(level)', () => {
-      const { run, bus } = freshRunWithBus(7);
+      const { run, bus } = freshLvl1RunWithBus(7);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Award exactly the level-1→2 threshold from the curve so the test
@@ -354,7 +355,7 @@ describe('Run', () => {
     });
 
     it('cascades multiple level-ups in one award if banked xp covers them', () => {
-      const { run, bus } = freshRunWithBus(11);
+      const { run, bus } = freshLvl1RunWithBus(11);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Compute the exact threshold from the curve so the test stays
@@ -421,7 +422,7 @@ describe('Run', () => {
     });
 
     it('ignores xpAwards on enemy-victory (defeat already routes to game over)', () => {
-      const { run, bus } = freshRunWithBus(3);
+      const { run, bus } = freshLvl1RunWithBus(3);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // World emits empty xpAwards on enemy victory; pin that Run
@@ -449,7 +450,7 @@ describe('Run', () => {
     });
 
     it('enters promotion phase + emits promotion:pending when a unit levels', () => {
-      const { run, bus } = freshRunWithBus(1);
+      const { run, bus } = freshLvl1RunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const promotions: number[][] = [];
@@ -476,7 +477,7 @@ describe('Run', () => {
     });
 
     it('dismissPromotion routes to recruit phase + emits recruit:offered', () => {
-      const { run, bus } = freshRunWithBus(2);
+      const { run, bus } = freshLvl1RunWithBus(2);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const offers: number[] = [];
@@ -494,7 +495,7 @@ describe('Run', () => {
     });
 
     it('dismissPromotion at the terminal node routes to complete (not recruit)', () => {
-      const { run, bus } = freshRunWithBus(1);
+      const { run, bus } = freshLvl1RunWithBus(1);
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       let victoryCount = 0;
@@ -520,7 +521,7 @@ describe('Run', () => {
     });
 
     it('round-trips pendingPromotions through snapshot', () => {
-      const { run, bus } = freshRunWithBus(1);
+      const { run, bus } = freshLvl1RunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       bus.emit('battle:ended', {
@@ -662,9 +663,10 @@ describe('Run', () => {
 
   describe('rest nodes (G3)', () => {
     it('banks restXp into every roster slot and starts no battle', () => {
-      // floorCount 4 → a floor-2 rest is the first reachable rest. Default
-      // level-1 roster; clear the floor-1 battle with no XP so the only XP
-      // the team carries into the rest is the rest grant itself.
+      // floorCount 4 → a floor-2 rest is the first reachable rest. Clear the
+      // floor-1 battle with no XP so the only XP the team carries into the rest
+      // is the rest grant itself (expected level/xp derive from the actual
+      // starting level, so this is robust to the startingLevel dial).
       const { run, bus, restId } = driveToRestFrontier({ floorCount: 4 }, 2);
       const before = run.team.map((t) => ({ level: t.level, xp: t.xp }));
       let battleStarts = 0;
@@ -683,7 +685,10 @@ describe('Run', () => {
     });
 
     it('triggers PromotionScene on a level-up and dismissing returns to the map (not recruit)', () => {
-      const { run, bus, restId } = driveToRestFrontier({ floorCount: 4 }, 2);
+      const { run, bus, restId } = driveToRestFrontier(
+        { floorCount: 4, startingRoster: LVL1_ROSTER },
+        2,
+      );
       // Level-1 roster + restXp (>= xpToNext(1)) guarantees promotions.
       expect(LEVELING.restXp).toBeGreaterThanOrEqual(xpToNext(1));
       const promotions: number[][] = [];
@@ -696,8 +701,10 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: restId });
       expect(run.phase).toBe('promotion');
       expect(promotions).toHaveLength(1);
-      // Every slot was level 1, so every rosterIndex promotes.
-      expect(promotions[0]).toEqual(run.team.map((_, i) => i));
+      // The 5 level-1 starters all promote on restXp (≥ xpToNext(1)). The
+      // floor-1 recruit comes in at round(avg)+bonus, so it may be level 2 and
+      // skip promotion — don't require it.
+      expect(promotions[0]).toEqual(expect.arrayContaining([0, 1, 2, 3, 4]));
 
       run.dispatch({ kind: 'dismissPromotion' });
       expect(run.phase).toBe('map'); // back to the map, NOT recruit
@@ -774,6 +781,25 @@ interface RunHandle {
 function freshRunWithBus(seed: number): RunHandle {
   const bus = new EventBus<GameEvents>();
   const run = new Run(seed, bus);
+  return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
+}
+
+/** Canonical level-1 starting roster (3 melee + 2 ranged, matching the default
+ *  composition + slot order). */
+const LVL1_ROSTER = [
+  { archetype: 'melee' as const, level: 1 },
+  { archetype: 'melee' as const, level: 1 },
+  { archetype: 'melee' as const, level: 1 },
+  { archetype: 'ranged' as const, level: 1 },
+  { archetype: 'ranged' as const, level: 1 },
+];
+
+/** Like `freshRunWithBus` but pins a level-1 roster, for XP / promotion
+ *  MECHANIC tests that award `xpToNext(1)` to force a 1→2 level-up — they must
+ *  not depend on the `startingLevel` balance dial (which ships at 5). */
+function freshLvl1RunWithBus(seed: number): RunHandle {
+  const bus = new EventBus<GameEvents>();
+  const run = new Run(seed, bus, { startingRoster: LVL1_ROSTER });
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
 }
 

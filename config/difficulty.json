@@ -1,7 +1,8 @@
 {
-  "totalLevelDelta": 5,
+  "budgetFactor": 0.35,
+  "budgetOffset": 0,
   "unitLevelDelta": 2,
-  "minBudget": 3,
+  "minBudget": 1,
   "swarmBias": 0.7,
-  "swarmMaxMultiplier": 1.2
+  "swarmMaxMultiplier": 1.5
 }

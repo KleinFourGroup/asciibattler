@@ -1,6 +1,7 @@
 {
   "startingMelee": 3,
   "startingRanged": 2,
+  "startingLevel": 5,
   "defaultOfferSize": 3,
   "recruitBonusChance": 0.5
 }

@@ -101,12 +101,16 @@ describe('chooseSwarmCount', () => {
 });
 
 describe('buildEnemyTeam (balance-proof — derives from DIFFICULTY)', () => {
-  const { totalLevelDelta, unitLevelDelta, minBudget, swarmBias, swarmMaxMultiplier } = DIFFICULTY;
+  const { budgetFactor, budgetOffset, unitLevelDelta, minBudget, swarmBias, swarmMaxMultiplier } =
+    DIFFICULTY;
 
   // A mid-run roster: 5 units, summed level 25, highest 6.
   const player = roster([6, 5, 5, 5, 4]);
   const size = player.length;
-  const budget = Math.max(minBudget, playerTeamLevel(player) - totalLevelDelta);
+  const budget = Math.max(
+    minBudget,
+    Math.round(budgetOffset + budgetFactor * playerTeamLevel(player)),
+  );
   const cap = Math.max(...player.map((u) => u.level)) + unitLevelDelta;
   const minCount = Math.max(1, Math.ceil(budget / cap));
   const maxCount = Math.max(minCount, Math.min(Math.round(swarmMaxMultiplier * size), budget));
@@ -159,14 +163,15 @@ describe('buildEnemyTeam (balance-proof — derives from DIFFICULTY)', () => {
     expect(melee).toBe(Math.round(team.length * 0.6));
   });
 
-  it('minBudget floors the budget when the summed level is tiny', () => {
-    // sum 1; `1 − totalLevelDelta` would go ≤ 0 without the floor → empty fight.
+  it('budget follows the affine formula, floored at minBudget', () => {
+    // A tiny roster (sum 1) — the budget is the affine result, clamped up to
+    // minBudget if the offset/factor would push it below (the safety floor).
     const tiny = roster([1]);
+    const expectedBudget = Math.max(minBudget, Math.round(budgetOffset + budgetFactor * 1));
     for (let s = 0; s < 30; s++) {
       const team = buildEnemyTeam(new RNG(s), tiny);
       expect(team.length).toBeGreaterThanOrEqual(1);
-      // Budget floored at minBudget, and total tracks it exactly.
-      expect(team.reduce((a, u) => a + u.level, 0)).toBe(minBudget);
+      expect(team.reduce((a, u) => a + u.level, 0)).toBe(expectedBudget);
     }
   });
 

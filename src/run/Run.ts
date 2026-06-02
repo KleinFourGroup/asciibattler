@@ -118,7 +118,11 @@ export interface RunSnapshot {
 // Balance constants now live in config/*.json — see src/config/recruitment.ts.
 // Bound to locals here just for readability at the call sites. (The G4 enemy
 // budget reads `config/difficulty.json` inside `src/run/enemyBudget.ts`.)
-const { startingMelee: STARTING_MELEE, startingRanged: STARTING_RANGED } = RECRUITMENT;
+const {
+  startingMelee: STARTING_MELEE,
+  startingRanged: STARTING_RANGED,
+  startingLevel: STARTING_LEVEL,
+} = RECRUITMENT;
 
 export class Run {
   readonly rng: RNG;
@@ -548,13 +552,15 @@ export class Run {
 }
 
 /**
- * Player starting team: fixed 3 melee + 2 ranged. Doesn't change with run
- * progress — recruits grow the team via Run.handleChooseRecruit.
+ * Player starting team: fixed 3 melee + 2 ranged at `RECRUITMENT.startingLevel`
+ * (default 1 → byte-identical to the pre-knob roll, since rollUnit short-circuits
+ * level 1 without drawing). Doesn't change with run progress — recruits grow the
+ * team via Run.handleChooseRecruit.
  */
 function rollTeam(rng: RNG): UnitTemplate[] {
   const team: UnitTemplate[] = [];
-  for (let i = 0; i < STARTING_MELEE; i++) team.push(rollUnit('melee', rng));
-  for (let i = 0; i < STARTING_RANGED; i++) team.push(rollUnit('ranged', rng));
+  for (let i = 0; i < STARTING_MELEE; i++) team.push(rollUnit('melee', rng, STARTING_LEVEL));
+  for (let i = 0; i < STARTING_RANGED; i++) team.push(rollUnit('ranged', rng, STARTING_LEVEL));
   return team;
 }
 

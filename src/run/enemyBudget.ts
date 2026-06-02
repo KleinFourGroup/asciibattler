@@ -46,7 +46,7 @@ export function avgTeamLevel(team: readonly UnitTemplate[]): number {
  * (count skew + which units carry the budget remainder), unlike the old
  * deterministic `rollEnemyTeam`.
  *
- *   budget   = max(minBudget, playerTeamLevel − totalLevelDelta)
+ *   budget   = max(minBudget, round(budgetOffset + budgetFactor × playerTeamLevel))
  *   cap      = highestPlayerUnitLevel + unitLevelDelta
  *   minCount = ceil(budget / cap)               (so cap·minCount ≥ budget)
  *   maxCount = min(swarmMaxMultiplier × size, budget)   (guarded ≥ minCount)
@@ -68,11 +68,18 @@ export function avgTeamLevel(team: readonly UnitTemplate[]): number {
  * queued team as alive).
  */
 export function buildEnemyTeam(rng: RNG, playerTeam: readonly UnitTemplate[]): UnitTemplate[] {
-  const { totalLevelDelta, unitLevelDelta, minBudget, swarmBias, swarmMaxMultiplier } = DIFFICULTY;
+  const { budgetFactor, budgetOffset, unitLevelDelta, minBudget, swarmBias, swarmMaxMultiplier } =
+    DIFFICULTY;
   const size = Math.max(1, playerTeam.length);
   const highest = playerTeam.reduce((m, u) => Math.max(m, u.level), 1);
 
-  const budget = Math.max(minBudget, playerTeamLevel(playerTeam) - totalLevelDelta);
+  // Affine handicap: a proportional `factor` scales with the player's level, so
+  // the enemy total stays a fixed fraction of the roster at any depth (a flat
+  // subtraction got swamped late). `round` keeps the budget an integer.
+  const budget = Math.max(
+    minBudget,
+    Math.round(budgetOffset + budgetFactor * playerTeamLevel(playerTeam)),
+  );
   const cap = highest + unitLevelDelta;
   const minCount = Math.max(1, Math.ceil(budget / cap));
   // Bounded by the budget so the enemy total stays ≈ budget (see above). The

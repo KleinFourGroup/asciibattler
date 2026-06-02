@@ -19,10 +19,11 @@
  * has ≥1 child → co-reachable to terminal) and a hard `MAX_OUT_DEGREE` cap
  * (interval width ≤ D) with no orphan-backfill pass that could violate it.
  *
- * Seed-stability contract: draws happen **widths-then-edges**, and per parent
- * **`a` (interval start) before `b` (interval end)**. The number and order of
- * RNG draws *is* the seed→map mapping; reordering them silently remaps every
- * seed.
+ * Seed-stability contract: draws happen **widths-then-edges**; per floor pair
+ * the parent sweep runs first (each parent **`a` before `b`**), then a single
+ * **mirror bit** (only when both floors are wider than 1). The number and
+ * order of RNG draws *is* the seed→map mapping; reordering them silently
+ * remaps every seed.
  *
  * NB: no max-*in*-degree is assumed. Boundary children may collect several
  * parents (the merges/diamonds that give the map variety). Adding an in-degree
@@ -133,6 +134,7 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     // a diamond/merge; =b_p+1 is disjoint). Overlapping by two or more inverts
     // (parent q>p reaching a child left of one of p's). That single rule gives
     // planar + fully connected + out-degree ≤ D by construction — see header.
+    const intervals: Array<[number, number]> = [];
     let prevB = -1; // sentinel: no interval yet
     for (let p = 0; p < m; p++) {
       const remaining = m - 1 - p; // parents strictly after p
@@ -147,10 +149,24 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
       const bMin = Math.max(a, n - 1 - remaining * D);
       const bMax = Math.min(a + D - 1, n - 1);
       const b = remaining === 0 ? n - 1 : rng.int(bMin, bMax);
+      intervals.push([a, b]);
+      prevB = b;
+    }
+
+    // The sweep above is handed: it pins each interval's start to the previous
+    // parent's end but lets the end run free to the right, so intervals
+    // systematically lean toward higher child indices (measured ~+0.15 mean
+    // shear). Reflection is a symmetry of the layout — it preserves planarity,
+    // coverage, and the out-degree cap — so mirroring each floor pair 50/50
+    // cancels the directional bias in expectation while keeping the exact
+    // branching density. Skipped when either floor is width 1 (a no-op). One
+    // draw per qualifying pair, after the sweep, to keep the order documented.
+    const flip = m > 1 && n > 1 && rng.int(0, 1) === 1;
+    for (let p = 0; p < m; p++) {
+      const [a, b] = flip ? reflect(intervals[m - 1 - p]!, n) : intervals[p]!;
       for (let c = a; c <= b; c++) {
         edges.push({ from: parents[p]!, to: children[c]! });
       }
-      prevB = b;
     }
   }
 
@@ -161,6 +177,16 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     terminalId: floors[floorCount - 1]![0]!,
     floors,
   };
+}
+
+/**
+ * Horizontally mirror a child interval `[a, b]` within a floor of width `n`.
+ * Parent `m-1-p`'s interval maps to parent `p`'s slot, so the reflected map is
+ * emitted in ascending parent/child order (a clean edge array). Endpoints
+ * swap: the left end `a` becomes the right end `n-1-a`, and vice versa.
+ */
+function reflect([a, b]: [number, number], n: number): [number, number] {
+  return [n - 1 - b, n - 1 - a];
 }
 
 /** Human-readable dump for eyeball verification of generated maps. */

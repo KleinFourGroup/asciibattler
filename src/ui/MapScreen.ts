@@ -15,6 +15,15 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
 
+/**
+ * Vertical pixels allotted per floor on the scrollable board. The board height
+ * is `floorCount * FLOOR_PX`; a tall board (10+ floors) overflows the viewport
+ * and scrolls, with the current node centered on show. `.map-board`'s
+ * `min-height: 100%` keeps a short board (e.g. a floorCount-2 forced run)
+ * filling the viewport instead of collapsing to a sliver.
+ */
+const FLOOR_PX = 90;
+
 export class MapScreen {
   private readonly mount: HTMLElement;
   private readonly dispatcher: RunDispatcher;
@@ -32,6 +41,14 @@ export class MapScreen {
     this.container = this.render(map, currentNodeId, visited);
     this.container.classList.add('screen-fade');
     this.mount.appendChild(this.container);
+    // Center the current node in the viewport. Reading offsetTop forces the
+    // layout that makes the scroll math valid; the browser clamps scrollTop to
+    // range, so the root (near the board top) settles at the top and deeper
+    // nodes pull the view down with them.
+    const current = this.container.querySelector<HTMLElement>('.map-node.current');
+    if (current) {
+      this.container.scrollTop = current.offsetTop - this.container.clientHeight / 2;
+    }
     fadeIn(this.container);
   }
 
@@ -69,8 +86,16 @@ export class MapScreen {
     const container = document.createElement('div');
     container.className = 'map-screen';
 
+    // The board carries the floor-scaled height; the scroll container
+    // (.map-screen) clips it. Edges + nodes lay out against the board, not the
+    // viewport, so a tall board scrolls without distorting the layout.
+    const board = document.createElement('div');
+    board.className = 'map-board';
+    board.style.height = `${floorCount * FLOOR_PX}px`;
+    container.appendChild(board);
+
     // SVG edge layer. Sits behind the node divs by virtue of DOM order; CSS
-    // pins it to inset:0 so its 100×100 viewBox stretches to the panel.
+    // pins it to inset:0 so its 100×100 viewBox stretches to the board.
     const svgNs = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(svgNs, 'svg');
     svg.classList.add('map-edges');
@@ -88,7 +113,7 @@ export class MapScreen {
       if (e.from === currentNodeId) line.classList.add('frontier');
       svg.appendChild(line);
     }
-    container.appendChild(svg);
+    board.appendChild(svg);
 
     for (const node of map.nodes) {
       const pos = positions.get(node.id)!;
@@ -120,7 +145,7 @@ export class MapScreen {
         div.classList.add('locked');
       }
 
-      container.appendChild(div);
+      board.appendChild(div);
     }
 
     return container;

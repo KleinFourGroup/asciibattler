@@ -38,15 +38,16 @@
  *   A "elite even"   factor 0.50, swarmMax 1.2 — ~even counts, enemies ≈ ½ your
  *                    level (every enemy a real threat). Gentle, tuning-robust.
  *                    Win 23% / 15%.
- *   B "swarm fodder" factor 0.25, swarmMax 2.0 — outnumbered by waves of lv-1
- *                    fodder you mow down (gap grows to 5). Win 21% / 22%, but
- *                    sits near a cliff (factor 0.30 → 0%) — tune gently.
- *   C "mild middle"  factor 0.35, swarmMax 1.5 — SHIPPED. Slightly outnumbered
- *                    by weak (lv 1–2) enemies; gap ~4–5. Tense for the dumb
- *                    fuzz bots (win 5% / 4%) but a focus-firing human handles
- *                    floor 1's 5×lv5 vs 6×lv1 easily.
+ *   B "swarm fodder" factor 0.25, swarmMax 2.0 — SHIPPED (playtested). Out-
+ *                    numbered by waves of lv-1 fodder you mow down (gap grows to
+ *                    5). Win 21% / 22%. Sits near a cliff (factor 0.30 → 0%) —
+ *                    tune gently.
+ *   C "mild middle"  factor 0.35, swarmMax 1.5 — playtested + rejected (too many
+ *                    floor-1 deaths: numerous enough to overwhelm, not weak
+ *                    enough to free-kill — the valley between A and B). Win 5% /
+ *                    4%.
  * Rebalance is expected once G5 adds smarter strategies and Phase H changes the
- * model — these are starting points, not final answers. Revisit A/B then.
+ * model — these are starting points, not final answers. Revisit A/C then.
  *
  * Source of truth at `config/difficulty.json`.
  */

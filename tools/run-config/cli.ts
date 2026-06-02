@@ -87,7 +87,6 @@ function printHelp(): void {
       '  --roster=LIST    archetype[:level],...  e.g. rogue:3,healer:2,melee',
       '  --layout=ID      force every battle onto a named layout',
       '  --width=N        middle-floor max width',
-      '  --mapgen=MODE    map-gen A/B: default (shipped) | centered (even lean + in-degree)',
       '  --strategy=NAME  headless drive strategy: pure-random (default) | greedy',
       '  --no-run         print the launch URL only; skip the headless run',
       '  --help           show this help',

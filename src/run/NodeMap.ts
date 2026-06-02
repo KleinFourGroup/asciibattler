@@ -19,6 +19,15 @@
  * has ≥1 child → co-reachable to terminal) and a hard `MAX_OUT_DEGREE` cap
  * (interval width ≤ D) with no orphan-backfill pass that could violate it.
  *
+ * Centering (G2): each interval's END is biased toward the parent's *diagonal
+ * slot* (its proportional column in the child floor) rather than left to run
+ * free. That keeps a parent's children near its own column, so per-floor lean
+ * stays gentle and in-degree spreads evenly instead of piling onto one node.
+ * A 50/50 per-pair horizontal mirror then cancels the small residual lean so
+ * there's no global left/right bias. (An earlier free-running sweep leaned
+ * systematically rightward; see git history if the funkier look is ever
+ * wanted back.)
+ *
  * Seed-stability contract: draws happen **widths-then-edges**; per floor pair
  * the parent sweep runs first (each parent **`a` before `b`**), then a single
  * **mirror bit** (only when both floors are wider than 1). The number and
@@ -74,10 +83,6 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
   // total cap, and out-degree stay on the JSON defaults.
   const floorCount = config?.floorCount ?? FLOOR_COUNT;
   const maxWidth = config?.mapMaxWidth ?? MIDDLE_WIDTH_MAX;
-  // G2 A/B: `default` = handed sweep + per-floor mirror; `centered` biases each
-  // interval end toward the diagonal (no mirror needed). Only affects edge
-  // draws — widths are identical, so the default path is byte-for-byte unmoved.
-  const mode = config?.mapGen ?? 'default';
 
   const floors: number[][] = [];
   const nodes: MapNode[] = [];
@@ -154,34 +159,29 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
       const bMax = Math.min(a + D - 1, n - 1);
       let b: number;
       if (remaining === 0) {
-        b = n - 1;
-      } else if (mode === 'centered') {
-        // Bias the end toward parent p's diagonal slot (the proportional
-        // boundary into the child floor) instead of letting it run free. This
-        // keeps each parent's children near its own column, so per-floor lean
-        // cancels and in-degree spreads evenly (no single hub) — at the cost of
-        // funkier asymmetry. ±1 jitter keeps variety; the clamp preserves the
-        // same feasible [bMin,bMax] as default, so all invariants still hold.
+        b = n - 1; // last parent closes at the rightmost child
+      } else {
+        // Bias the end toward parent p's diagonal slot (its proportional column
+        // in the child floor) instead of letting it run free, so children stay
+        // near the parent's own column — gentle per-floor lean, in-degree
+        // spread evenly rather than piled onto one node. ±1 jitter keeps
+        // variety; the clamp preserves the feasible [bMin,bMax], so every
+        // invariant still holds.
         const target = Math.round(((p + 1) / m) * n) - 1;
         b = Math.min(bMax, Math.max(bMin, target + (rng.int(0, 2) - 1)));
-      } else {
-        b = rng.int(bMin, bMax);
       }
       intervals.push([a, b]);
       prevB = b;
     }
 
-    // The sweep above is handed: it pins each interval's start to the previous
-    // parent's end but lets the end run free to the right, so intervals
-    // systematically lean toward higher child indices (measured ~+0.15 mean
-    // shear). Reflection is a symmetry of the layout — it preserves planarity,
-    // coverage, and the out-degree cap — so mirroring each floor pair 50/50
-    // cancels the directional bias in expectation while keeping the exact
-    // branching density. Skipped when either floor is width 1 (a no-op). One
-    // draw per qualifying pair, after the sweep, to keep the order documented.
-    // Both modes mirror: it negates a floor's residual lean (and flips the
-    // in-degree hub's side) without changing its magnitude, so centered's small
-    // diagonal residual cancels to ~0 too.
+    // The diagonal centering above still leaves a small residual lean (the
+    // forced first/last anchors aren't symmetric). Reflection is a symmetry of
+    // the layout — it preserves planarity, coverage, and the out-degree cap —
+    // so a 50/50 per-pair mirror negates that residual (and flips which side a
+    // floor's in-degree hub lands on) without changing magnitude, cancelling
+    // any global left/right bias. Skipped when either floor is width 1 (a
+    // no-op). One draw per qualifying pair, after the sweep, to keep the order
+    // documented (see the seed-stability contract in the header).
     const flip = m > 1 && n > 1 && rng.int(0, 1) === 1;
     for (let p = 0; p < m; p++) {
       const [a, b] = flip ? reflect(intervals[m - 1 - p]!, n) : intervals[p]!;

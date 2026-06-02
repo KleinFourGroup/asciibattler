@@ -26,15 +26,6 @@ export interface RosterEntry {
   readonly level: number;
 }
 
-/**
- * Map-generation mode (dev / playtest A/B — G2). `default` is the shipped
- * construction (handed sweep + per-floor mirror; wild + varied, balanced only
- * in aggregate). `centered` biases each parent's children toward its diagonal
- * slot, evening out per-floor lean AND in-degree (no single hub) at the cost
- * of funkier asymmetry.
- */
-export type MapGenMode = 'default' | 'centered';
-
 export interface RunConfig {
   /**
    * Override the run seed. When unset, the caller picks one (the browser uses
@@ -61,11 +52,6 @@ export interface RunConfig {
    * width by the generator, so a too-small value just pins to the minimum.
    */
   readonly mapMaxWidth?: number;
-  /**
-   * Map-generation mode (default = the shipped mirror construction). URL form:
-   * `mapgen=centered`. Dev / playtest A/B — see `MapGenMode`.
-   */
-  readonly mapGen?: MapGenMode;
 }
 
 /**
@@ -78,7 +64,6 @@ export const RUN_CONFIG_PARAMS = {
   roster: 'roster',
   layout: 'layout',
   width: 'width',
-  mapgen: 'mapgen',
 } as const;
 
 type MutableRunConfig = { -readonly [K in keyof RunConfig]: RunConfig[K] };
@@ -127,15 +112,6 @@ function parseLayout(raw: string | null): string | undefined {
 }
 
 /**
- * Map-gen mode. Only `centered` is recognized; anything else (incl. absent or
- * an explicit `default`) leaves it unset so the default path stays byte-for-
- * byte the shipped construction.
- */
-function parseMapGen(raw: string | null): MapGenMode | undefined {
-  return raw?.trim().toLowerCase() === 'centered' ? 'centered' : undefined;
-}
-
-/**
  * Build a RunConfig from `URLSearchParams`. Unset / invalid fields are
  * omitted, so the result carries only explicit overrides. Pure (no DOM
  * access) so the CLI can call it on a synthetic params object too.
@@ -152,8 +128,6 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (forcedLayoutId !== undefined) config.forcedLayoutId = forcedLayoutId;
   const mapMaxWidth = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.width));
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
-  const mapGen = parseMapGen(params.get(RUN_CONFIG_PARAMS.mapgen));
-  if (mapGen !== undefined) config.mapGen = mapGen;
   return config;
 }
 
@@ -191,9 +165,6 @@ export function runConfigToQueryString(config: RunConfig): string {
   }
   if (config.mapMaxWidth !== undefined) {
     params.set(RUN_CONFIG_PARAMS.width, String(config.mapMaxWidth));
-  }
-  if (config.mapGen !== undefined) {
-    params.set(RUN_CONFIG_PARAMS.mapgen, config.mapGen);
   }
   return params.toString();
 }

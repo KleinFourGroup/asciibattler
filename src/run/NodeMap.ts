@@ -74,6 +74,10 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
   // total cap, and out-degree stay on the JSON defaults.
   const floorCount = config?.floorCount ?? FLOOR_COUNT;
   const maxWidth = config?.mapMaxWidth ?? MIDDLE_WIDTH_MAX;
+  // G2 A/B: `default` = handed sweep + per-floor mirror; `centered` biases each
+  // interval end toward the diagonal (no mirror needed). Only affects edge
+  // draws — widths are identical, so the default path is byte-for-byte unmoved.
+  const mode = config?.mapGen ?? 'default';
 
   const floors: number[][] = [];
   const nodes: MapNode[] = [];
@@ -148,7 +152,21 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
       // still reach the last child; the last parent is forced to close at n-1.
       const bMin = Math.max(a, n - 1 - remaining * D);
       const bMax = Math.min(a + D - 1, n - 1);
-      const b = remaining === 0 ? n - 1 : rng.int(bMin, bMax);
+      let b: number;
+      if (remaining === 0) {
+        b = n - 1;
+      } else if (mode === 'centered') {
+        // Bias the end toward parent p's diagonal slot (the proportional
+        // boundary into the child floor) instead of letting it run free. This
+        // keeps each parent's children near its own column, so per-floor lean
+        // cancels and in-degree spreads evenly (no single hub) — at the cost of
+        // funkier asymmetry. ±1 jitter keeps variety; the clamp preserves the
+        // same feasible [bMin,bMax] as default, so all invariants still hold.
+        const target = Math.round(((p + 1) / m) * n) - 1;
+        b = Math.min(bMax, Math.max(bMin, target + (rng.int(0, 2) - 1)));
+      } else {
+        b = rng.int(bMin, bMax);
+      }
       intervals.push([a, b]);
       prevB = b;
     }
@@ -161,6 +179,9 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     // cancels the directional bias in expectation while keeping the exact
     // branching density. Skipped when either floor is width 1 (a no-op). One
     // draw per qualifying pair, after the sweep, to keep the order documented.
+    // Both modes mirror: it negates a floor's residual lean (and flips the
+    // in-degree hub's side) without changing its magnitude, so centered's small
+    // diagonal residual cancels to ~0 too.
     const flip = m > 1 && n > 1 && rng.int(0, 1) === 1;
     for (let p = 0; p < m; p++) {
       const [a, b] = flip ? reflect(intervals[m - 1 - p]!, n) : intervals[p]!;

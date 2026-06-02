@@ -23,7 +23,7 @@ describe('RunConfig parsing', () => {
   });
 
   it('parses every field', () => {
-    const c = cfg(`seed=42&floors=2&roster=${A0},${A1}&layout=${LAYOUT}&width=4`);
+    const c = cfg(`seed=42&floors=2&roster=${A0},${A1}&layout=${LAYOUT}&width=4&mapgen=centered`);
     expect(c).toEqual({
       seed: 42,
       floorCount: 2,
@@ -33,7 +33,16 @@ describe('RunConfig parsing', () => {
       ],
       forcedLayoutId: LAYOUT,
       mapMaxWidth: 4,
+      mapGen: 'centered',
     });
+  });
+
+  it('only recognizes mapgen=centered; default / unknown leave it unset', () => {
+    expect(cfg('mapgen=centered').mapGen).toBe('centered');
+    expect(cfg('mapgen=CENTERED').mapGen).toBe('centered'); // case-insensitive
+    expect(cfg('mapgen=default').mapGen).toBeUndefined();
+    expect(cfg('mapgen=wild').mapGen).toBeUndefined();
+    expect(cfg('').mapGen).toBeUndefined();
   });
 
   it('allows seed 0 and negative seeds (RNG normalizes via >>> 0)', () => {
@@ -86,8 +95,8 @@ describe('RunConfig parsing', () => {
     expect(cfg('layout=not_a_layout').forcedLayoutId).toBeUndefined();
   });
 
-  it('round-trips through runConfigToQueryString (incl. per-unit levels)', () => {
-    const original = cfg(`seed=7&floors=3&roster=${A0}:4,${A1}&layout=${LAYOUT}&width=5`);
+  it('round-trips through runConfigToQueryString (incl. per-unit levels + mapgen)', () => {
+    const original = cfg(`seed=7&floors=3&roster=${A0}:4,${A1}&layout=${LAYOUT}&width=5&mapgen=centered`);
     const query = runConfigToQueryString(original);
     expect(parseRunConfig(new URLSearchParams(query))).toEqual(original);
   });

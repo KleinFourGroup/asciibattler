@@ -200,6 +200,26 @@ describe('NodeMap.generate', () => {
         expect(generate(new RNG(s))).toEqual(generate(new RNG(s), {}));
       }
     });
+
+    it('centered mapGen mode keeps every invariant (planar, connected, capped)', () => {
+      // The A/B `centered` mode only biases the interval-end draw; it must
+      // still satisfy the full invariant set across the seed sweep.
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s), { mapGen: 'centered' });
+        expect(map.floors).toHaveLength(NODE_MAP.floorCount);
+        expect(crossings(map)).toEqual([]);
+        expect(maxOutDegreeOf(map)).toBeLessThanOrEqual(maxOutDegree);
+        expect(reachableFrom(map, map.rootId).size).toBe(map.nodes.length);
+        expect(coReachableTo(map, map.terminalId).size).toBe(map.nodes.length);
+      }
+    });
+
+    it('centered mode differs from default but is itself deterministic', () => {
+      const def = generate(new RNG(7));
+      const cen = generate(new RNG(7), { mapGen: 'centered' });
+      expect(cen).not.toEqual(def); // the bias actually changes the map
+      expect(cen).toEqual(generate(new RNG(7), { mapGen: 'centered' })); // reproducible
+    });
   });
 
   describe('determinism', () => {

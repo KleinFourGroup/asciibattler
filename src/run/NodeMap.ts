@@ -1,17 +1,33 @@
 /**
- * Run-level node map: a small layered DAG the player traverses one floor at a
- * time. MVP scope is intentionally narrow — every node is a battle, no rest /
- * shop / elite kinds (see DESIGN.md "Run structure").
+ * Run-level node map: a layered DAG the player traverses one floor at a time.
+ * MVP scope is intentionally narrow — every node is a battle, no rest / shop /
+ * elite kinds (see DESIGN.md "Run structure"; node kinds land in G3).
  *
- * Layout: `FLOOR_COUNT` floors total. Floor 0 and the last floor are single
- * nodes (root / terminal). Middle floors are 2–3 nodes wide, drawn from the
- * supplied RNG. That puts the total node count in [8, 10], which sits inside
- * the 7–10 target DESIGN tightened to at CHECKPOINT 5.
+ * Layout (G2): `FLOOR_COUNT` floors total. Floor 0 and the last floor are
+ * single nodes (root / terminal). Middle floors are `MIDDLE_WIDTH_MIN`..
+ * `MIDDLE_WIDTH_MAX` nodes wide, drawn from the supplied RNG and bounded by a
+ * total-node budget (`TARGET_TOTAL_MAX`).
  *
- * Edge generation goes parent-first: each parent picks 1–2 distinct children
- * from the next floor, then any orphaned child gets a backfill edge from a
- * random parent. The result is a DAG where every node is reachable from the
- * root AND can reach the terminal, with some branching but no chaos.
+ * Planarity (G2): the map is drawn with each floor's nodes in a fixed
+ * left-to-right order — that order *is* the `floors[f]` array index, which the
+ * renderer reads directly. Edge generation guarantees **no two edges cross**
+ * given that ordering: per adjacent floor pair, each parent is assigned a
+ * *contiguous* interval of children, with the intervals monotone
+ * non-decreasing and gap-free across parents (sorted by x). That staircase
+ * structure is planar by construction, and it simultaneously guarantees full
+ * connectivity (every child has ≥1 parent → reachable from root; every parent
+ * has ≥1 child → co-reachable to terminal) and a hard `MAX_OUT_DEGREE` cap
+ * (interval width ≤ D) with no orphan-backfill pass that could violate it.
+ *
+ * Seed-stability contract: draws happen **widths-then-edges**, and per parent
+ * **`a` (interval start) before `b` (interval end)**. The number and order of
+ * RNG draws *is* the seed→map mapping; reordering them silently remaps every
+ * seed.
+ *
+ * NB: no max-*in*-degree is assumed. Boundary children may collect several
+ * parents (the merges/diamonds that give the map variety). Adding an in-degree
+ * cap later would break feasibility of wide→narrow transitions — see the
+ * `n ≤ m·D` feasibility note in `generate`.
  */
 
 import { RNG } from '../core/RNG';
@@ -62,19 +78,27 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
   const nodes: MapNode[] = [];
   let nextId = 0;
   let placedSoFar = 0;
+  let prevWidth = 1; // floor 0 is the single root node
 
   for (let f = 0; f < floorCount; f++) {
     let width: number;
     if (f === 0 || f === floorCount - 1) {
       width = 1;
     } else {
-      // Cap so later floors can still hit their minimum width without
-      // blowing past TARGET_TOTAL_MAX. Without this, three middle floors
-      // independently rolling maxWidth would yield 11 nodes.
+      // Cap so later floors can still hit their minimum width without blowing
+      // past TARGET_TOTAL_MAX (budget term), AND so the *next* floor stays
+      // coverable under the out-degree cap (`prevWidth * MAX_OUT_DEGREE`): m
+      // parents each spanning ≤ D contiguous children can cover at most m·D
+      // children, so the edge sweep below needs `n ≤ m·D`. With D=3 this only
+      // ever binds on floor 1 (root width 1 → floor 1 ≤ 3); 2·3 = 6 ≥ maxWidth
+      // thereafter.
       const remainingMiddleFloors = floorCount - 2 - f;
       const minNodesAfter = remainingMiddleFloors * MIDDLE_WIDTH_MIN + 1;
       const budget = TARGET_TOTAL_MAX - placedSoFar - minNodesAfter;
-      const cap = Math.max(MIDDLE_WIDTH_MIN, Math.min(maxWidth, budget));
+      const cap = Math.max(
+        MIDDLE_WIDTH_MIN,
+        Math.min(maxWidth, budget, prevWidth * MAX_OUT_DEGREE),
+      );
       width = rng.int(MIDDLE_WIDTH_MIN, cap);
     }
     const ids: number[] = [];
@@ -85,31 +109,48 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     }
     floors.push(ids);
     placedSoFar += width;
+    prevWidth = width;
   }
 
   const edges: MapEdge[] = [];
   for (let f = 0; f < floorCount - 1; f++) {
     const parents = floors[f]!;
     const children = floors[f + 1]!;
-    const inbound = new Set<number>();
-
-    for (const p of parents) {
-      const maxOut = Math.min(MAX_OUT_DEGREE, children.length);
-      const outDegree = rng.int(1, maxOut);
-      for (const c of pickDistinct(rng, children, outDegree)) {
-        edges.push({ from: p, to: c });
-        inbound.add(c);
-      }
+    const m = parents.length;
+    const n = children.length;
+    const D = MAX_OUT_DEGREE;
+    // Feasibility guard: the contiguous-interval sweep can only cover n
+    // children with m parents capped at D each when n ≤ m·D. The width loop's
+    // `prevWidth * D` cap guarantees this; assert so a future config change
+    // surfaces loudly instead of producing infeasible bounds.
+    if (n > m * D) {
+      throw new Error(`NodeMap: floor ${f + 1} (${n} nodes) not coverable by floor ${f} (${m}×${D})`);
     }
 
-    // Backfill: any child with no inbound edge gets one from a random parent.
-    // Without this, the parent-first loop above can leave a child orphaned
-    // when each parent's random picks all happen to miss it.
-    for (const c of children) {
-      if (!inbound.has(c)) {
-        edges.push({ from: rng.pick(parents), to: c });
-        inbound.add(c);
+    // Assign each parent (in x-order) a contiguous child interval [a, b].
+    // Non-crossing requires consecutive intervals overlap by AT MOST their
+    // shared boundary child: `a_{p+1} ∈ {b_p, b_p+1}` (=b_p shares one child →
+    // a diamond/merge; =b_p+1 is disjoint). Overlapping by two or more inverts
+    // (parent q>p reaching a child left of one of p's). That single rule gives
+    // planar + fully connected + out-degree ≤ D by construction — see header.
+    let prevB = -1; // sentinel: no interval yet
+    for (let p = 0; p < m; p++) {
+      const remaining = m - 1 - p; // parents strictly after p
+      // Interval start. Floored at `prevB` (overlap ≤ 1) and the lookahead
+      // `n-(remaining+1)*D` (reserve children for the parents after p);
+      // capped at `prevB+1` (gap-free coverage). First parent anchors at 0.
+      const aMin = Math.max(prevB, n - (remaining + 1) * D);
+      const aMax = Math.min(prevB + 1, n - 1);
+      const a = p === 0 ? 0 : rng.int(aMin, aMax);
+      // Interval end. `n-1-remaining*D` guarantees the remaining parents can
+      // still reach the last child; the last parent is forced to close at n-1.
+      const bMin = Math.max(a, n - 1 - remaining * D);
+      const bMax = Math.min(a + D - 1, n - 1);
+      const b = remaining === 0 ? n - 1 : rng.int(bMin, bMax);
+      for (let c = a; c <= b; c++) {
+        edges.push({ from: parents[p]!, to: children[c]! });
       }
+      prevB = b;
     }
   }
 
@@ -120,19 +161,6 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     terminalId: floors[floorCount - 1]![0]!,
     floors,
   };
-}
-
-/**
- * Fisher–Yates partial shuffle: returns `n` distinct elements of `arr` in
- * random order. Trusts `n <= arr.length`.
- */
-function pickDistinct(rng: RNG, arr: readonly number[], n: number): number[] {
-  const copy = arr.slice();
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = rng.int(0, i);
-    [copy[i], copy[j]] = [copy[j]!, copy[i]!];
-  }
-  return copy.slice(0, n);
 }
 
 /** Human-readable dump for eyeball verification of generated maps. */

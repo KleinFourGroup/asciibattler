@@ -1,16 +1,27 @@
 import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
-import { generate, dump, type NodeMap } from './NodeMap';
+import { NODE_MAP } from '../config/nodemap';
+import { generate, dump, type NodeMap, type MapEdge } from './NodeMap';
+
+// Balance-proof: derive every bound from the config the generator actually
+// reads, so a config/nodemap.json tweak is a one-file edit, not test churn.
+const { floorCount, middleWidthMin, middleWidthMax, targetTotalMax, maxOutDegree } = NODE_MAP;
+// A map is root(1) + (floorCount-2) middle floors at ≥ middleWidthMin + terminal(1).
+const MIN_TOTAL = 1 + (floorCount - 2) * middleWidthMin + 1;
 
 describe('NodeMap.generate', () => {
   describe('shape', () => {
-    it('produces 7–10 nodes (DESIGN target)', () => {
+    it('node count stays within the config-derived budget', () => {
       // Sweep seeds to catch a bad bound, not just the lucky one.
-      for (let s = 0; s < 50; s++) {
+      for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
-        expect(map.nodes.length).toBeGreaterThanOrEqual(7);
-        expect(map.nodes.length).toBeLessThanOrEqual(10);
+        expect(map.nodes.length).toBeGreaterThanOrEqual(MIN_TOTAL);
+        expect(map.nodes.length).toBeLessThanOrEqual(targetTotalMax);
       }
+    });
+
+    it('has the configured floor count', () => {
+      expect(generate(new RNG(1)).floors).toHaveLength(floorCount);
     });
 
     it('has a single root on floor 0', () => {
@@ -26,20 +37,42 @@ describe('NodeMap.generate', () => {
       expect(nodeById(map, map.terminalId).floor).toBe(map.floors.length - 1);
     });
 
-    it('every middle floor has 1–4 nodes', () => {
-      for (let s = 0; s < 20; s++) {
+    it('every middle floor width is within [middleWidthMin, middleWidthMax]', () => {
+      for (let s = 0; s < 50; s++) {
         const map = generate(new RNG(s));
         for (let f = 1; f < map.floors.length - 1; f++) {
-          expect(map.floors[f]!.length).toBeGreaterThanOrEqual(1);
-          expect(map.floors[f]!.length).toBeLessThanOrEqual(4);
+          expect(map.floors[f]!.length).toBeGreaterThanOrEqual(middleWidthMin);
+          expect(map.floors[f]!.length).toBeLessThanOrEqual(middleWidthMax);
         }
       }
     });
 
-    it('all nodes are battle nodes (MVP)', () => {
+    it('all nodes are battle nodes (kinds land in G3)', () => {
       const map = generate(new RNG(1));
       for (const n of map.nodes) {
         expect(n.kind).toBe('battle');
+      }
+    });
+  });
+
+  describe('planarity (G2)', () => {
+    it('no two edges cross given the per-floor x-ordering', () => {
+      // The headline G2 guard: with x = index within floors[f], no pair of
+      // edges on the same adjacent floor pair geometrically inverts. This both
+      // pins the property and documents what "planar" means here.
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const bad = crossings(map);
+        expect(bad, `seed ${s}: ${bad.join('; ')}`).toEqual([]);
+      }
+    });
+
+    it('out-degree never exceeds maxOutDegree', () => {
+      // No orphan-backfill pass exists to violate this — the interval width is
+      // hard-capped at D. Sweep to prove it.
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        expect(maxOutDegreeOf(map)).toBeLessThanOrEqual(maxOutDegree);
       }
     });
   });
@@ -85,22 +118,7 @@ describe('NodeMap.generate', () => {
     it('terminal is reachable from every node', () => {
       for (let s = 0; s < 20; s++) {
         const map = generate(new RNG(s));
-        // Build reverse-adjacency once, then BFS from terminal back to root.
-        const radj = new Map<number, number[]>();
-        for (const e of map.edges) {
-          const list = radj.get(e.to) ?? [];
-          list.push(e.from);
-          radj.set(e.to, list);
-        }
-        const visited = new Set<number>();
-        const stack = [map.terminalId];
-        while (stack.length) {
-          const cur = stack.pop()!;
-          if (visited.has(cur)) continue;
-          visited.add(cur);
-          for (const prev of radj.get(cur) ?? []) stack.push(prev);
-        }
-        expect(visited.size).toBe(map.nodes.length);
+        expect(coReachableTo(map, map.terminalId).size).toBe(map.nodes.length);
       }
     });
 
@@ -116,27 +134,34 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('branching density is non-trivial (>1 edge per non-terminal on average)', () => {
-      // Soft sanity check: with up to 2 outbound per parent, the average
-      // out-degree across non-terminal nodes should comfortably exceed 1.
-      // If this drops, edge generation has likely become too sparse.
-      const map = generate(new RNG(1));
-      const nonTerminal = map.nodes.filter((n) => n.id !== map.terminalId).length;
-      expect(map.edges.length / nonTerminal).toBeGreaterThan(1);
+    it('branches: average out-degree exceeds 1 across a seed sweep', () => {
+      // Soft sanity: the contiguous-interval sweep should produce real
+      // fan-out, not a pure chain. Aggregate over seeds so a single
+      // narrow-map seed can't flake it.
+      let edges = 0;
+      let nonTerminal = 0;
+      for (let s = 0; s < 50; s++) {
+        const map = generate(new RNG(s));
+        edges += map.edges.length;
+        nonTerminal += map.nodes.filter((n) => n.id !== map.terminalId).length;
+      }
+      expect(edges / nonTerminal).toBeGreaterThan(1);
     });
   });
 
   describe('RunConfig overrides (G1)', () => {
-    it('honors floorCount and stays a valid DAG at 1 / 2 / 3 floors', () => {
-      for (const floorCount of [1, 2, 3]) {
+    it('honors floorCount and stays a valid planar DAG at 1 / 2 / 3 floors', () => {
+      for (const fc of [1, 2, 3]) {
         for (let s = 0; s < 10; s++) {
-          const map = generate(new RNG(s), { floorCount });
-          expect(map.floors).toHaveLength(floorCount);
+          const map = generate(new RNG(s), { floorCount: fc });
+          expect(map.floors).toHaveLength(fc);
           expect(nodeById(map, map.rootId).floor).toBe(0);
-          expect(nodeById(map, map.terminalId).floor).toBe(floorCount - 1);
-          // Reachable from root AND co-reachable to terminal — the DAG invariants.
+          expect(nodeById(map, map.terminalId).floor).toBe(fc - 1);
+          // The full invariant set: reachable, co-reachable, planar, capped.
           expect(reachableFrom(map, map.rootId).size).toBe(map.nodes.length);
           expect(coReachableTo(map, map.terminalId).size).toBe(map.nodes.length);
+          expect(crossings(map)).toEqual([]);
+          expect(maxOutDegreeOf(map)).toBeLessThanOrEqual(maxOutDegree);
           const floorOf = new Map(map.nodes.map((n) => [n.id, n.floor]));
           for (const e of map.edges) {
             expect(floorOf.get(e.to)! - floorOf.get(e.from)!).toBe(1);
@@ -158,13 +183,15 @@ describe('NodeMap.generate', () => {
       expect(map.edges).toEqual([{ from: map.rootId, to: map.terminalId }]);
     });
 
-    it('mapMaxWidth caps middle-floor width', () => {
+    it('mapMaxWidth caps middle-floor width and stays planar', () => {
       const maxWidth = 4;
       for (let s = 0; s < 20; s++) {
         const map = generate(new RNG(s), { floorCount: 5, mapMaxWidth: maxWidth });
         for (let f = 1; f < map.floors.length - 1; f++) {
           expect(map.floors[f]!.length).toBeLessThanOrEqual(maxWidth);
         }
+        expect(crossings(map)).toEqual([]);
+        expect(maxOutDegreeOf(map)).toBeLessThanOrEqual(maxOutDegree);
       }
     });
 
@@ -206,6 +233,56 @@ function nodeById(map: NodeMap, id: number) {
   const n = map.nodes.find((n) => n.id === id);
   if (!n) throw new Error(`no node with id ${id}`);
   return n;
+}
+
+/** x-position of every node = its index within its floor's left-to-right array. */
+function xOf(map: NodeMap): Map<number, number> {
+  const x = new Map<number, number>();
+  for (const floor of map.floors) {
+    for (let i = 0; i < floor.length; i++) x.set(floor[i]!, i);
+  }
+  return x;
+}
+
+/**
+ * Every pair of edges (on the same adjacent floor pair) that geometrically
+ * crosses, given the per-floor x-ordering. Empty array ⇒ planar.
+ */
+function crossings(map: NodeMap): string[] {
+  const x = xOf(map);
+  const floorOf = new Map(map.nodes.map((n) => [n.id, n.floor]));
+  const byFloor = new Map<number, MapEdge[]>();
+  for (const e of map.edges) {
+    const f = floorOf.get(e.from)!;
+    const list = byFloor.get(f) ?? [];
+    list.push(e);
+    byFloor.set(f, list);
+  }
+  const out: string[] = [];
+  for (const group of byFloor.values()) {
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        const e1 = group[i]!;
+        const e2 = group[j]!;
+        const xa = x.get(e1.from)!;
+        const xb = x.get(e1.to)!;
+        const xc = x.get(e2.from)!;
+        const xd = x.get(e2.to)!;
+        if ((xa < xc && xb > xd) || (xa > xc && xb < xd)) {
+          out.push(`${e1.from}->${e1.to} x ${e2.from}->${e2.to}`);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+function maxOutDegreeOf(map: NodeMap): number {
+  const deg = new Map<number, number>();
+  for (const e of map.edges) deg.set(e.from, (deg.get(e.from) ?? 0) + 1);
+  let max = 0;
+  for (const d of deg.values()) max = Math.max(max, d);
+  return max;
 }
 
 function reachableFrom(map: NodeMap, start: number): Set<number> {

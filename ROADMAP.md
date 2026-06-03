@@ -598,7 +598,23 @@ Ability display names = a **UI id→label map** (render-only; NOT a `name` field
 in [abilities.json](config/abilities.json)). Accents deferred (above). Full
 kickoff in the session memory (`project_gp3_kickoff`).
 
-### GP4 — Ranged firing-position pathing (#6)
+### GP4 — Ranged firing-position pathing (#6) ✅ shipped
+
+**✅ Shipped** — generalized to **ranged + catapult** (both path to the nearest
+cell they can fire from via the new `nearestActingCell` BFS in
+[src/sim/actingPosition.ts](src/sim/actingPosition.ts); range-only for the
+LOS-ignoring catapult). Knob `actingCellSearchSlack` in
+[config/sim.json](config/sim.json). The fallback to charging the target's cell
+fires both when no firing cell is reachable AND when the step toward one is
+**blocked** (a contested chokepoint cell) — the load-bearing anti-freeze
+guarantee (a first internal freeze, a strafing-funnel strip where N units share
+one firing tile, was found + fixed this way). **Healer deferred to GP5** (its
+approach is already heal-range-capped by its step-1 idle, so the acting-cell
+change is a no-op there). **Residual 1/40 strafingFunnel hang** — a pre-existing
+**healer-blocks-chokepoint** deadlock GP4's run trajectory exposes (baseline
+40-seed = 0 hangs); it's GP5's yield-rule charter → **GP5 starts there.** Full
+record in the HANDOFF GP4 entry. (The spec below is the as-designed shape, kept
+for reference.)
 
 **Shape** ([MovementBehavior](src/sim/behaviors/MovementBehavior.ts)):
 - Replace "path to the target's cell" ([MovementBehavior.ts:101-108](src/sim/behaviors/MovementBehavior.ts))
@@ -626,6 +642,14 @@ board); determinism per seed.
 slack`).
 
 ### GP5 — Healer positioning: navigable-snap + yield rule (#4 + #5)
+
+**START with the yield rule (#5)** — GP4 surfaced a concrete, reproducible
+instance of exactly the deadlock it targets: a healer idling on the only
+chokepoint cell of a strafing-funnel gap, blocking boxed-in melee from reaching
+a near-dead enemy while it out-heals the enemy's chip damage (a 1/40 fuzz hang,
+seed 30 greedy strafingFunnel — see the HANDOFF GP4 entry to reproduce). Landing
+the yield rule first both clears that hang and validates #5 against a real
+repro; then do the #4 centroid navigable-snap.
 
 **Shape** ([SupportMovementBehavior](src/sim/behaviors/SupportMovementBehavior.ts)):
 - **#4 — snap the centroid anchor to the nearest *navigable* tile** (small

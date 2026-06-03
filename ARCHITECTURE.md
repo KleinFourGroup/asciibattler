@@ -83,6 +83,7 @@ src/
                              # + toData()/fromData for snapshot rehydration (A2); OrphanPolicy (F2)
     Command.ts               # WorldCommand union — drained at tick boundary (A2)
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a)
+    actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest in-range(+LOS) firing cell
     Targeting.ts             # currentTarget stickiness + updateTarget (E5); lowestWoundedAlly (E7.B)
                              # nearest-enemy fallback, ties by HP then id; skips neutrals
     archetypes.ts            # ALL_ARCHETYPES pool (F1), rollUnit, glyphForArchetype
@@ -182,7 +183,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;
                              #     GP1: mobilityCdPerStat/agilityCdPerStat + mobilityMinCdScale/agilityMinCdScale;
                              #     GP2: minDamage (subtractive-defense floor)
-  sim.json                   # E5: retargetCloserRatio + rangedRetargetLosSeconds + occupiedCellPenalty + healer knobs
+  sim.json                   # E5: retargetCloserRatio + rangedRetargetLosSeconds + occupiedCellPenalty + healer knobs; GP4: actingCellSearchSlack
 
 public/
   audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, magicboom, ...)

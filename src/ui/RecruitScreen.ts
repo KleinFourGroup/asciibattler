@@ -9,7 +9,7 @@
  * recruit:offered events and the chooseRecruit command.
  */
 
-import type { UnitTemplate } from '../sim/Unit';
+import type { UnitTemplate, Archetype, UnitStats } from '../sim/Unit';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import {
@@ -80,48 +80,52 @@ export class RecruitScreen {
     label.textContent = `Level ${template.level} ${template.archetype}`;
     card.appendChild(label);
 
-    // E1: card values are DERIVED (maxHp / cooldowns / crit) — the
+    // GP3: card values are DERIVED (maxHp / cooldowns / crit) — the
     // template only carries the leveled stat snapshot (E3). Mirroring
     // `World.spawnUnit`'s derive call so the card preview matches the
-    // actual in-battle unit exactly. Basic damage comes from the
-    // archetype's primary stat (melee → strength, ranged → ranged) —
-    // same lookup `basicAttackDamage` uses inside AbilityBehavior.
+    // actual in-battle unit exactly.
     const s = template.stats;
-    const attackRange = rangeForArchetype(template.archetype);
-    const derived = deriveStats(s, attackRange);
-    const baseDamage = damageStatFor(template.archetype, s);
-    // E5 pre-work: ATK cadence now comes from the archetype's primary
-    // ability config (scaled by agility), matching what the unit will
-    // actually fire at in battle. Archetypes carry one basic strike
-    // today; the `[0]` is the primary ability and the guard covers a
-    // hypothetical ability-less archetype.
-    const primaryAbilityId = abilityIdsForArchetype(template.archetype)[0];
-    const attackSeconds =
-      primaryAbilityId === undefined
-        ? null
-        : ticksToSeconds(
-            attackCooldownTicksFor(abilityConfig(primaryAbilityId).cooldownSeconds, s.agility),
-          );
+    const derived = deriveStats(s, rangeForArchetype(template.archetype));
+
+    // Section A — compact two-column stat block. HP / DEF / CRIT / XP fill
+    // the 2-col grid; the MOVE line spans the full width with its driving
+    // stat (mobility) inline — GP3's "show the driving stat next to its
+    // effect". Per-ability DMG / RNG / cadence moved to Section B below.
     const statsEl = document.createElement('div');
     statsEl.className = 'recruit-stats';
     statsEl.append(
       statLine('HP', String(derived.maxHp)),
-      statLine('DMG', String(baseDamage)),
-      statLine('RNG', String(derived.attackRange)),
-      statLine('ATK', attackSeconds === null ? '—' : `${attackSeconds.toFixed(2)}s`),
-      statLine('MOV', `${ticksToSeconds(derived.moveCooldownTicks).toFixed(2)}s`),
+      statLine('DEF', String(s.defense)),
       statLine('CRIT', `${Math.round(derived.critChance * 100)}%`),
-      // E4: surface the level-up cost so the player knows what banked
-      // XP is doing on the persistent roster (fresh recruits arrive at
-      // xp=0 so the value here is `0/xpToNext(level)`).
+      // E4: surface the level-up cost so the player knows what banked XP
+      // is doing on the persistent roster (fresh recruits arrive at xp=0).
       statLine(
         'XP',
-        isAtLevelCap(template.level)
-          ? 'MAX'
-          : `${template.xp}/${xpToNext(template.level)}`,
+        isAtLevelCap(template.level) ? 'MAX' : `${template.xp}/${xpToNext(template.level)}`,
+      ),
+      statLine(
+        'MOVE',
+        `${ticksToSeconds(derived.moveCooldownTicks).toFixed(2)}s · mob ${s.mobility}`,
+        'recruit-move',
       ),
     );
     card.appendChild(statsEl);
+
+    // Section B — abilities list. One row per ability id (in stored order),
+    // built as a loop so a future multi-ability unit just renders more
+    // rows. This self-documents *what the unit does* (Strike / Heal / Bolt)
+    // — the real legibility win over the old single ATK number, and it lets
+    // the healer read honestly ("N heal", not a misleading "DMG 0").
+    const abilities = document.createElement('div');
+    abilities.className = 'recruit-abilities';
+    const abilitiesHeading = document.createElement('div');
+    abilitiesHeading.className = 'recruit-abilities-heading';
+    abilitiesHeading.textContent = 'Abilities';
+    abilities.appendChild(abilitiesHeading);
+    for (const id of abilityIdsForArchetype(template.archetype)) {
+      abilities.appendChild(abilityRow(id, template.archetype, s));
+    }
+    card.appendChild(abilities);
 
     card.addEventListener('click', () => {
       this.audio.play('click');
@@ -132,13 +136,71 @@ export class RecruitScreen {
   }
 }
 
-function statLine(label: string, value: string): HTMLDivElement {
+/**
+ * GP3 — render-only ability descriptor map. Display labels + whether the
+ * ability heals or damages live HERE (UI), NOT in `config/abilities.json`
+ * (which stays mechanics-only — no `name` field; locked at the GP3 tee-up).
+ * An ability that ships before its entry falls back to its raw id + a
+ * damage reading, so the card never throws on an unmapped ability.
+ */
+const ABILITY_UI: Record<string, { label: string; effect: 'damage' | 'heal' }> = {
+  melee_strike: { label: 'Strike', effect: 'damage' },
+  ranged_shot: { label: 'Shot', effect: 'damage' },
+  gambit_strike: { label: 'Gambit', effect: 'damage' },
+  heal_ally: { label: 'Heal', effect: 'heal' },
+  magic_bolt: { label: 'Bolt', effect: 'damage' },
+  catapult_shot: { label: 'Lob', effect: 'damage' },
+};
+
+function statLine(label: string, value: string, extraClass?: string): HTMLDivElement {
   const div = document.createElement('div');
-  div.className = 'recruit-stat';
+  div.className = extraClass ? `recruit-stat ${extraClass}` : 'recruit-stat';
   const labelEl = document.createElement('span');
   labelEl.textContent = label;
   const valueEl = document.createElement('span');
   valueEl.textContent = value;
   div.append(labelEl, valueEl);
   return div;
+}
+
+/**
+ * GP3 — one ability row: name, then `N dmg · rng R` (or `N heal · rng R`)
+ * with an AoE tag when the ability has a blast, then `cadence s · agi A`.
+ * The damage / heal amount reuses the sim's single-source-of-truth helpers
+ * (`damageStatFor`, or the `magic`-scaled heal matching `healAmountFor`) so
+ * the card can't disagree with what the unit actually does in battle.
+ * Range / cadence / AoE come from `config/abilities.json` via `abilityConfig`.
+ */
+function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDivElement {
+  const ui = ABILITY_UI[id] ?? { label: id, effect: 'damage' as const };
+  const cfg = abilityConfig(id);
+
+  const row = document.createElement('div');
+  row.className = 'recruit-ability';
+
+  const name = document.createElement('div');
+  name.className = 'recruit-ability-name';
+  name.textContent = ui.label;
+  row.appendChild(name);
+
+  const detail = document.createElement('div');
+  detail.className = 'recruit-ability-detail';
+  const amount = ui.effect === 'heal' ? stats.magic : damageStatFor(archetype, stats);
+  detail.textContent = `${amount} ${ui.effect === 'heal' ? 'heal' : 'dmg'} · rng ${cfg.range}`;
+  if (cfg.aoe) {
+    const side = cfg.aoe.radius * 2 + 1;
+    const tag = document.createElement('span');
+    tag.className = 'recruit-ability-aoe';
+    tag.textContent = `AoE ${side}×${side}`;
+    detail.append(' ', tag);
+  }
+  row.appendChild(detail);
+
+  const cadence = document.createElement('div');
+  cadence.className = 'recruit-ability-cadence';
+  const seconds = ticksToSeconds(attackCooldownTicksFor(cfg.cooldownSeconds, stats.agility));
+  cadence.textContent = `${seconds.toFixed(2)}s · agi ${stats.agility}`;
+  row.appendChild(cadence);
+
+  return row;
 }

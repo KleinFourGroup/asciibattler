@@ -363,7 +363,7 @@ body {
 }
 
 .recruit-card {
-  width: 160px;
+  width: 184px; /* GP3: two-col stat grid + ability rows need more room than 160 */
   padding: 16px 12px;
   border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
   background: #000;
@@ -396,10 +396,13 @@ body {
   opacity: 0.7;
 }
 
+/* GP3: HP / DEF / CRIT / XP laid out two-up to stay compact now that the
+   per-ability DMG/RNG/cadence rows live in the Abilities section below. */
 .recruit-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+  row-gap: 3px;
   font-size: 13px;
   align-self: stretch;
 }
@@ -407,6 +410,60 @@ body {
 .recruit-stat {
   display: flex;
   justify-content: space-between;
+  gap: 6px;
+}
+
+/* GP3: the move line spans both stat columns and shows its driving stat
+   (mobility) inline, set off from the HP/DEF/CRIT/XP pairs by a hairline. */
+.recruit-move {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  padding-top: 5px;
+  border-top: 1px solid #664600; /* DARK_TERMINAL_AMBER divider */
+}
+
+/* GP3: Section B — the abilities list. Self-documents what the unit does;
+   one .recruit-ability row per ability id (a multi-ability unit just gets
+   more rows). The name leads (green), with the mechanics dimmer beneath. */
+.recruit-abilities {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recruit-abilities-heading {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #664600; /* DARK_TERMINAL_AMBER — chrome label */
+}
+
+.recruit-ability {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 12px;
+}
+
+.recruit-ability-name {
+  color: #33ff00; /* TERMINAL_GREEN — names lead the eye */
+  letter-spacing: 0.04em;
+}
+
+.recruit-ability-detail {
+  font-variant-numeric: tabular-nums;
+}
+
+.recruit-ability-cadence {
+  font-size: 11px;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.recruit-ability-aoe {
+  color: #15f4ee; /* FLOURESCENT_BLUE accent */
+  letter-spacing: 0.04em;
 }
 
 /* PromotionScreen (E4). Slots between BattleScene and RecruitScene when

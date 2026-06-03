@@ -732,7 +732,8 @@ body {
   grid-template-columns: 16px 1fr 56px;
   grid-template-areas:
     "glyph hp text"
-    "sub   sub sub";
+    "sub   sub sub"
+    "stats stats stats";
   align-items: center;
   gap: 2px 8px;
   font-size: 12px;
@@ -774,6 +775,19 @@ body {
    amber so the eye still leads with HP. */
 .hud-sub {
   grid-area: sub;
+  font-size: 10px;
+  color: #ffb000;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  padding-left: 24px; /* aligns under the HP bar, past the glyph */
+}
+
+/* GP3: raw driving-stat line (DEF · MOB · AGI) beneath the Lv/XP sub.
+   Same dim-amber treatment + alignment as .hud-sub so the eye still leads
+   with HP; one notch smaller-feeling via the shared opacity. */
+.hud-stats {
+  grid-area: stats;
   font-size: 10px;
   color: #ffb000;
   opacity: 0.55;

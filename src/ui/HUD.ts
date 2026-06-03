@@ -7,6 +7,7 @@ import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { isAtLevelCap, xpToNext, displayLevel } from '../sim/xp';
+import { STAT_LABELS } from './statLabels';
 
 export class HUD {
   private readonly root: HTMLElement;
@@ -176,6 +177,14 @@ export class HUD {
     sub.className = 'hud-sub';
     row.appendChild(sub);
 
+    // GP3: a second sub-line with the raw driving stats (DEF · MOB · AGI)
+    // so the live tracker surfaces what GP1/GP2 added — a light touch on
+    // the 240px panel. Reads `unit.stats` directly (no deriveStats); the
+    // full ability detail stays on the recruit card. Shown for both teams.
+    const stats = document.createElement('div');
+    stats.className = 'hud-stats';
+    row.appendChild(stats);
+
     updateRow(row, unit);
     return row;
   }
@@ -185,6 +194,7 @@ function updateRow(row: HTMLElement, unit: Unit): void {
   const fill = row.querySelector<HTMLElement>('.hud-hp-fill');
   const text = row.querySelector<HTMLElement>('.hud-hp-text');
   const sub = row.querySelector<HTMLElement>('.hud-sub');
+  const stats = row.querySelector<HTMLElement>('.hud-stats');
   if (!fill || !text) return;
   // Clamp displayed HP: currentHp can briefly dip negative between the lethal
   // unit:attacked and DeathBehavior firing in the next tick (~100ms). Show 0
@@ -194,6 +204,7 @@ function updateRow(row: HTMLElement, unit: Unit): void {
   fill.style.width = `${pct * 100}%`;
   text.textContent = `${hp}/${unit.derived.maxHp}`;
   if (sub) sub.textContent = formatSub(unit);
+  if (stats) stats.textContent = formatStats(unit);
 }
 
 function formatSub(unit: Unit): string {
@@ -201,4 +212,12 @@ function formatSub(unit: Unit): string {
   if (unit.team !== 'player') return `Lv ${lv}`;
   if (isAtLevelCap(unit.level)) return `Lv ${lv} · MAX`;
   return `Lv ${lv} · ${unit.xp}/${xpToNext(unit.level)} XP`;
+}
+
+// GP3: the raw driving-stat line beneath the Lv/XP sub. Same three stats
+// the player tunes around in combat (defense + the two cadence dials),
+// using the shared STAT_LABELS so HUD / card / promotion read identically.
+function formatStats(unit: Unit): string {
+  const s = unit.stats;
+  return `${STAT_LABELS.defense} ${s.defense} · ${STAT_LABELS.mobility} ${s.mobility} · ${STAT_LABELS.agility} ${s.agility}`;
 }

@@ -20,7 +20,7 @@ No frameworks beyond that. UI is plain HTML/CSS overlaid on the canvas via absol
 
 2. **Determinism is structural.** Anything that consumes randomness takes an `RNG` instance as an argument. There is no global `Math.random()` in simulation code. This is enforced by lint where practical and by review otherwise.
 
-3. **Composition over inheritance for units.** A `Unit` has a `behaviors: Behavior[]` array. Each `Behavior` implements `update(dt, unit, world)`. New unit kinds are new behavior combinations, not new subclasses. Keeps unit definitions data-shaped and trivial to serialize later.
+3. **Composition over inheritance for units.** A `Unit` has a `behaviors: Behavior[]` array. Each `Behavior` implements `proposeAction(unit, world)`, polled by the per-tick action selector (A1). New unit kinds are new behavior combinations, not new subclasses. Keeps unit definitions data-shaped and trivial to serialize later.
 
 4. **The renderer hides three.js details from gameplay.** Gameplay code calls `spriteRenderer.addSprite(...)` and gets back an opaque handle. It never touches `InstancedMesh`, `BufferAttribute`, or shader uniforms directly. This is the contract that lets us swap the renderer implementation (e.g. to WebGPU) without touching simulation.
 
@@ -34,7 +34,8 @@ No frameworks beyond that. UI is plain HTML/CSS overlaid on the canvas via absol
 src/
   main.ts                    # Entry point: bootstraps Game, mounts canvas, kicks off run
   Game.ts                    # Top-level orchestrator: owns Renderer/Bus/Run; scene swapper (A5)
-  config.ts                  # Engine constants: TICK_RATE=10, GRID_SIZE=12, secondsToTicks
+                             # builds Run from parseRunConfigFromURL() (G1)
+  config.ts                  # Engine constants: TICK_RATE=20, GRID_SIZE=12, secondsToTicks
                              # (balance lives in config/*.json — see src/config/)
 
   core/
@@ -45,137 +46,163 @@ src/
     types.ts                 # Shared primitives: Vec2, GridCoord
 
   config/                    # A4: zod-validated wrappers around config/*.json
-    archetypes.ts            #   E1: melee + ranged glyph + attackRange + baseStats
-    difficulty.ts            #   enemy size delta + per-floor HP scale
-    recruitment.ts           #   starting team + offer size
-    nodemap.ts               #   floor count + width bands + degree cap
+    archetypes.ts            #   glyph + baseStats + growthRates (E1/E3); attackRange moved to abilities (E5)
+    abilities.ts             #   E2+: per-ability cooldownSeconds/range/aoe/travelSeconds/retreatDelaySeconds
+    difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm) + A/B/C presets
+    recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4)
+    leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
+    nodemap.ts               #   floor count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
     terrain.ts               #   C1a: wall + water density
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
-    stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base cooldowns; GP1: per-axis mobility/agility CdPerStat + MinCdScale
+    stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
+                             #   GP1: per-axis mobility/agility CdPerStat + MinCdScale
+    sim.ts                   #   E5: targeting + pathfinding knobs (retarget, occupiedCellPenalty, healer*)
     schemas.ts               #   shared zod helpers
 
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
-                             # overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v6 (C1a v2, D3 v3, D5.C v4, D6 v5, E1 v6)
-                             # E1: added `combatRng` (forked from `rng`) for AttackAction crit rolls
-    Unit.ts                  # Unit + UnitTemplate + UnitStats + UnitDerived + Team + Behavior
-                             # archetype: 'melee' | 'ranged' | 'environment' (E1)
-                             # actionCooldowns Map + activeAction + blocksLineOfSight (D6)
-    stats.ts                 # E1: deriveStats / inertDerived / basicAttackDamage / ZERO_STATS
+                             # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
+                             # Serializable; WorldSnapshot v16 (bumped through E1–GP1)
+                             # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
+    Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab) + UnitDerived + Team + Behavior
+                             # archetype: melee|ranged|rogue|healer|mage|catapult|environment (E1–E7)
+                             # level (E3) + xp/rosterIndex (E4); actionCooldowns Map + activeAction (A1)
+                             # blocksLineOfSight (D6)
+    stats.ts                 # deriveStats / inertDerived / ZERO_STATS + damage/heal/range/cadence helpers
                              # — pure functions; crit RNG rolls happen at AttackAction.start
+    leveling.ts              # E3: simulateLevelUps (player rolls) + scaleStats (enemies, deterministic)
+    xp.ts                    # E4: xpToNext curve + computeXpAwards + displayLevel
     TileGrid.ts              # Tile kinds: floor | shallow_water | chasm | fire | healing
                              # Per-cell movement cost; chasm = Infinity (data-driven block)
     LineOfSight.ts           # Bresenham line walk for ranged-attack LOS (C1b)
-    Action.ts                # Action / ActionProposal / ActiveAction interfaces (A1)
-                             # + toData()/fromData for snapshot rehydration (A2)
+    Action.ts                # Action / ActionProposal / phase-timeline interfaces (A1 → F2)
+                             # + toData()/fromData for snapshot rehydration (A2); OrphanPolicy (F2)
     Command.ts               # WorldCommand union — drained at tick boundary (A2)
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a)
-    Targeting.ts             # findTarget — nearest enemy, ties by HP then id; skips neutrals
-    archetypes.ts            # melee/ranged/rogue archetypes, rollUnit, glyphForArchetype
+    Targeting.ts             # currentTarget stickiness + updateTarget (E5); lowestWoundedAlly (E7.B)
+                             # nearest-enemy fallback, ties by HP then id; skips neutrals
+    archetypes.ts            # ALL_ARCHETYPES pool (F1), rollUnit, glyphForArchetype
     environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories
     terrainGen.ts            # Per-encounter procedural tile + wall generator; layout dispatch
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter
     actions/
       MoveAction.ts          # Logical position update + unit:moved event
-      AttackAction.ts        # E1: start-time crit roll via world.combatRng → damage + unit:attacked
-                             # event (with `crit` flag)
+      AttackAction.ts        # E1/E4: crit roll (world.combatRng) + half-cover mult → damage + unit:attacked
+      GambitStrikeAction.ts  # E7.A: rogue strike — AttackAction damage + deferred reposition (F4)
+      HealAction.ts          # E7.B: HP restore (clamped) + heal-XP ledger (F6) → unit:healed
+      MagicBoltAction.ts     # E7.C: multi-tick ground-target 3x3 AoE
+      CatapultShotAction.ts  # E7.D: multi-tick homing heavy hit (lobs over walls)
       SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns
-      GambitStrikeAction.ts  # E7.A: rogue strike — AttackAction damage + free reposition
       registry.ts            # Action factories keyed by Action.id (A2)
+    abilities/               # E2: generic Ability layer (retired AttackBehavior)
+      Ability.ts             # Ability interface + propose() + ignoresLineOfSight flag (E7.D)
+      strikes.ts             # MeleeStrike / RangedShot / gambit via shared proposeBasicStrike
+      heal.ts                # E7.B: HealAlly — lowest-HP wounded ally in range, no LOS
+      magic.ts               # E7.C: MagicBolt — AoE ground-target
+      catapult.ts            # E7.D: CatapultShot — homing, ignores LOS
+      registry.ts            # Ability factories; boot-asserts the id-set matches abilities.json (E5)
     behaviors/
-      MovementBehavior.ts    # proposeAction → MoveAction when out of range
-                             # Splits neutrals into pathBlockers + losBlockers (D6)
-      AttackBehavior.ts      # proposeAction → AttackAction when in range + LOS
-      registry.ts            # Behavior factories keyed by Behavior.kind (A2)
+      MovementBehavior.ts    # proposeAction → MoveAction when out of range; boids sidestep (E5.B)
+                             # splits neutrals into pathBlockers + losBlockers (D6); LOS-optional abstain (E7.D)
+      AbilityBehavior.ts     # E2: walks the unit's Ability[] (replaced AttackBehavior)
+      SupportMovementBehavior.ts  # E7.B: healer idle / panic / approach / centroid-trail
+      registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
 
   run/
-    Run.ts                   # State machine: map|battle|recruit|defeat|complete
-                             # + dispatch(RunCommand) + toJSON/fromJSON (A2)
-                             # RUN_SCHEMA_VERSION 2 (D8 added BattleEncounter.theme)
+    Run.ts                   # State machine: map|battle|promotion|recruit|defeat|complete (E4.4)
+                             # rest/boss node resolution (G3); XP banking; dispatch(RunCommand)
+                             # + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 5
+    RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI)
+    enemyBudget.ts           # G4: playerTeamLevel SEAM (H5 swaps it) + affine budget + swarm count
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
-    NodeMap.ts               # DAG generation + dump
-    Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1)
+    NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3) + dump
+    Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1); per-card level (post-G5)
 
   render/
     Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
                              # + RAF loop + two camera modes (fit / scroll, D4)
     SpriteRenderer.ts        # InstancedBufferGeometry + dual mesh (layer 0 visible / layer 1
                              # bloom) + per-instance bloomIntensity attr (B1.1) + per-instance
-                             # size attr (E6.B). Also hosts transient ranged tracer sprites (0.6×)
+                             # size attr (E6.B). Also hosts transient tracer/projectile sprites
     UnitOverlayLayer.ts      # E3.6: DOM per-unit overlays (HP bar + action progress + level
                              # badge), positioned via projectToCss. E6.C: spawnHitsplat floats
                              # transient damage/crit/heal/burn numbers via the same projector
     TerrainRenderer.ts       # C1c: faceted low-poly prism-per-tile, heightAt is canonical
                              # for sprite Y. D7.C: per-tile flicker/pulse + chasm sink + theme
-    BattleRenderer.ts        # Sim/render seam: subscribes to unit:* events
-                             # tileWorldPos(coord) for per-tile sprite Y (C1c). E6: routes
-                             # attacks to melee shove / ranged projectile + spawns hitsplats
-    FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture (E6.B: + `*` tracer)
+    BattleRenderer.ts        # Sim/render seam: subscribes to unit:* + action:phase (F3)
+                             # tileWorldPos(coord) for per-tile sprite Y (C1c). E6/E7: melee shove,
+                             # ranged/lobbed projectiles, explosion/dud/heal-sparkle VFX + hitsplats
+    FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture (glyph set from glyphs.ts)
+    glyphs.ts                # E7.A: THREE-free GLYPHS set (FontAtlas.test asserts archetype coverage)
     PostProcess.ts           # SatClamp + Bloom + BloomMix factories (B1.1)
                              # Scanlines retained as dormant code; CRT lines now run via CSS (B5)
     shaders/                 # .glsl source files loaded via Vite ?raw imports (A4)
     palette.ts               # COLORS table — TERMINAL_STONE added for neutrals (C1a)
     animation/
-      SpriteAnimator.ts      # Lerps + fades (fromAlpha/toAlpha for D5.C fade-in) + E6.A shove
-                             # channel (there-and-back lunge) + onComplete on lerp (E6.B)
+      SpriteAnimator.ts      # Lerps + fades (fromAlpha/toAlpha for D5.C) + E6.A shove channel
+                             # + onComplete/arcHeight/targetProvider on lerp (E6.B/E7.D/F3)
 
   scenes/                    # A5: Scene system — single-active swap driven from Game
     Scene.ts                 #   Scene interface + SceneContext bundle
     BattleScene.ts           #   World + Clock + BattleRenderer + HUD + per-battle audio
     MapScene.ts              #   DOM-only, wraps MapScreen
     RecruitScene.ts          #   DOM-only, wraps RecruitScreen
+    PromotionScene.ts        #   E4.4: DOM-only level-up summary, shown before recruit
     GameOverScene.ts         #   DOM-only, wraps GameOverScreen
 
   ui/
     ui.css
     fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
-    HUD.ts                   # In-battle HUD: floor, rosters, banner (per-battle, A5)
-    MapScreen.ts             # Node map view + frontier click → dispatch enterNode
-    RecruitScreen.ts         # 3-card recruit offer → dispatch chooseRecruit
+    HUD.ts                   # In-battle HUD: floor, rosters, Lv/XP rows (E4.5), banner
+    MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode
+    RecruitScreen.ts         # recruit offer cards → dispatch chooseRecruit
+    PromotionScreen.ts       # E4.4: per-unit level-up rows
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
 
   audio/
-    AudioPlayer.ts           # B6: 4-deep clone ring per sound; per-key volume + pitch jitter
+    AudioPlayer.ts           # B6: 4-deep clone ring per sound; per-key volume + pitch jitter; + magicboom (E7.C)
 
 config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
-  archetypes.json            # E1: per-archetype glyph + attackRange + baseStats
-  difficulty.json
-  recruitment.json
-  nodemap.json
+  archetypes.json            # per-archetype glyph + baseStats + growthRates (E1/E3)
+  abilities.json             # E2+: per-ability cooldownSeconds/range/aoe/travel/retreatDelay
+  difficulty.json            # G4: enemy level-budget knobs + A/B/C presets
+  recruitment.json           # starting team + offer size + startingLevel + recruitBonusChance
+  leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
+  nodemap.json               # floor count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
   spawn.json
   tiles.json
-  stats.json                 # E1: hpPerConstitution, crit cap/mult, base cooldowns;
+  stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;
                              #     GP1: mobilityCdPerStat/agilityCdPerStat + mobilityMinCdScale/agilityMinCdScale
+  sim.json                   # E5: retargetCloserRatio + rangedRetargetLosSeconds + occupiedCellPenalty + healer knobs
 
 public/
-  audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, ...)
+  audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, magicboom, ...)
 
 tools/                       # Dev-only; not bundled into dist/
-  layout-editor/             # C1d.B → D2/D5.D/D6/D7.C/D8: layout painter
-                             # at /tools/layout-editor/ via Vite dev server
+  layout-editor/             # C1d.B → D8: layout painter at /tools/layout-editor/
+  run-config/                # G1/G5: short-run CLI + GUI launcher at /tools/run-config/
 
 tests/
   smoke.test.ts
-  integration/               # determinism, snapshot-roundtrip, variable-size,
-                             # layout-deadlock, spawn-overflow, etc.
+  integration/               # determinism, snapshot-roundtrip, variable-size, layout-deadlock,
+                             # spawn-overflow, corridor-flow, per-archetype battle tests
   fuzz/                      # A3: headless balance harness (opt-in CLI)
 
 retro/
   scratchpad.md              # rolling process notes
   post-mvp-review.md         # CHECKPOINT 7 retrospective
 
-archive/                     # historical: mvp-roadmap, mvp-feedback, post-mvp-roadmap, c1-feedback
+archive/                     # superseded roadmaps + feedback + phase worklogs
 
 index.html                   # Mounts <canvas> + <div id="ui">
 vite.config.ts
 tsconfig.json
-eslint.config.js             # Flat config (ESLint 9+); bans Math.random() in src/sim and src/run
+eslint.config.js             # Flat config; bans Math.random() in src/sim and src/run
 .prettierrc
 ```
 
@@ -208,7 +235,7 @@ Typed events keyed by name. Returns an unsubscribe function. We define a single 
 
 ### `Clock`
 
-Drives the simulation at a fixed tick rate (10Hz) decoupled from render framerate. Standard fixed-timestep accumulator pattern: render loop runs at requestAnimationFrame, accumulates real time, and calls `world.tick()` zero or more times per frame to catch up.
+Drives the simulation at a fixed tick rate (20Hz) decoupled from render framerate. Standard fixed-timestep accumulator pattern: render loop runs at requestAnimationFrame, accumulates real time, and calls `world.tick()` zero or more times per frame to catch up.
 
 Gameplay code never hardcodes tick counts. Cooldowns, durations, and timers are authored *in seconds* and converted through `secondsToTicks(s)` / `ticksToSeconds(t)` in `src/config.ts`. Changing `TICK_RATE` is a one-line change that re-discretizes the sim without re-tuning balance.
 
@@ -249,7 +276,7 @@ The battle state. Owns the grid, the unit list, the current tick, and the RNG fo
 ```ts
 class SpriteRenderer {
   addSprite(glyph: string, color: Color, position: Vec3): SpriteHandle;
-  updateSprite(handle: SpriteHandle, opts: { position?: Vec3; color?: Color; glyph?: string; alpha?: number }): void;
+  updateSprite(handle: SpriteHandle, opts: { position?: Vec3; color?: Color; glyph?: string; alpha?: number; size?: number; bloomIntensity?: number }): void;
   removeSprite(handle: SpriteHandle): void;
 }
 ```
@@ -265,12 +292,12 @@ Bridges simulation and rendering. Subscribes to `unit:moved` events and starts a
 ```
 tick                    { tick: number }
 battle:started          { worldSeed: number }
-battle:ended            { winner: 'player' | 'enemy' }
+battle:ended            { winner: 'player' | 'enemy'; xpAwards: { unitId; rosterIndex; damageDealt; xpGained }[] }   # E4: per-roster XP
 unit:spawned            { unitId: number; instant: boolean }                       # instant=false → D5.C overflow-queue spawn (fade-in)
 unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }
-unit:attacked           { attackerId: number; targetId: number; damage: number }
+unit:attacked           { attackerId: number; targetId: number; damage: number; crit: boolean }   # E1: damage already post-crit
 unit:burned             { unitId: number; damage: number }                         # D7.B: per-tick chip from fire tile (no attacker)
-unit:healed             { unitId: number; amount: number }                         # D7.B: per-tick chip from healing tile (emits amount=0 at maxHp)
+unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (D7.B tile chip, amount=0 at maxHp)
 unit:died               { unitId: number; team: Team }                             # team carried because the unit is already spliced out (C1b)
 magic:detonated         { casterId: number; center: GridCoord }                     # E7.C: once per mage cast (whiff incl.) — drives one boom VFX
 catapult:fired          { casterId: number; impact: GridCoord; hit: boolean }       # E7.D: once per shot (abort incl.) — drives the lobbed projectile
@@ -294,10 +321,11 @@ Two channels, both typed unions defined in their respective `Command.ts`:
 RunCommand (synchronous; Run.dispatch / RunDispatcher)
   enterNode               { nodeId: number }
   chooseRecruit           { unitTemplate: UnitTemplate }
+  dismissPromotion        { }     # E4: dismiss the PromotionScene
   resetRun                { }
 
 WorldCommand (queued; drained at top of tick)
-  noop                    { }     # C5 fills this in
+  noop                    { }     # placeholder; in-battle commands land in Phase H
 ```
 
 UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.dispatch(cmd)`. The headless harness (A3) and any future replay system call the same entry points, so a saved input stream replays identically. Pending `WorldCommand`s are part of the `WorldSnapshot` — a save mid-battle preserves intent.
@@ -312,7 +340,9 @@ UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.disp
 2. The scene contains:
    - One faceted-prism terrain mesh (`TerrainRenderer`, C1c) — also the canonical source of per-tile Y via `heightAt`
    - One `InstancedMesh` for all sprites (`SpriteRenderer`) — actually two meshes sharing one geometry: layer 0 visible, layer 1 bloom (B1.1)
-   - One `InstancedMesh` for HP + action progress bars (`BarRenderer`, B3)
+   - Per-unit HP / level / action-progress overlays are DOM elements positioned
+     via a world→screen projector (`UnitOverlayLayer`, E3.6) — the old instanced
+     `BarRenderer` mesh is retired
    - No per-unit `Object3D`s. Ever. This is the performance contract.
 3. **Bloom** is selective via two composers (B1.1): `bloomComposer` renders the layer-1 bloom mesh through `UnrealBloomPass` (max-channel high-pass, not Rec.709 — gotcha #29) into an offscreen RT; `mainComposer` renders the layer-0 visible mesh, then folds the bloom RT in additively via `MixPass`. Sat-clamp + `OutputPass` finish the chain. Per-instance `bloomIntensity` decouples halo strength from visible color: 0 suppresses, 1 is natural, >1 forces.
 4. **CRT scanlines** are a CSS `<div>` overlay (`#scanlines`), not a post-process pass (B5). One source of truth across the canvas/DOM seam.
@@ -324,5 +354,5 @@ A few things would be over-engineering at the current scope; flagging them so we
 
 - **No ECS library.** Behaviors-on-units is enough structure for the foreseeable game. If the unit count explodes or behaviors get genuinely many-to-many, we revisit.
 - **No asset loader.** The font atlas is generated at startup synchronously; audio preloads from `public/audio/` via `AudioPlayer`'s constructor.
-- **No save/load UI yet.** A2 lays the JSON serialization plumbing (`World.toJSON` / `Run.toJSON`); UI for choosing a save slot and resuming a run waits until C6 makes runs long enough that save matters.
-- **No generic status-effect system.** A1's multi-tick effects can carry one, and D7.B added per-tick tile effects with a targeted hook (fire damage, healing). Resist building a generic status system until C2 reveals what's actually needed beyond these.
+- **No save/load UI yet.** A2 lays the JSON serialization plumbing (`World.toJSON` / `Run.toJSON`); UI for choosing a save slot and resuming a run waits until runs are long enough that save matters.
+- **No generic status-effect system.** A1's multi-tick effects can carry one, and D7.B added per-tick tile effects with a targeted hook (fire damage, healing). Resist building a generic status system until a concrete need (beyond these) actually appears.

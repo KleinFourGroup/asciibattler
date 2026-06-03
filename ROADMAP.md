@@ -575,14 +575,21 @@ can hard-counter a low-damage attacker — watch in the sweep).
 - **Show the driving stat directly** next to its effect: `mobility` beside
   `MOV s`, `agility` beside the per-ability cadence, plus the new `defense`,
   alongside the existing HP / DMG / RNG / CRIT / XP.
-- Fold in the standing **recruit-card accent CSS** cleanup for the four E7
-  archetypes (currently base-styled — see *Cleanup / chores*).
+- The per-archetype **accent CSS cleanup is OUT of GP3** — deferred to the
+  post-H recruitment/rarity overhaul (user call at the GP3 tee-up; it pairs
+  with rarity tiers, not legibility). See *Cleanup / chores*.
 
 **Cost:** render-only; **browser-verified**. No snapshot / fuzz impact.
 
-**Decision points GP3:** card layout density once abilities + raw stats are
-both shown (the card already has 7 rows — may want a two-column or
-collapsible stat block).
+**Decisions locked (GP3 tee-up):** card = **two sections** — a compact
+two-column stat block (HP / DEF / CRIT / XP + `move 1.0s (mob 2)`) + an
+**Abilities** list below (per ability: name + `N dmg · rng R` + `cadence s
+(agi A)` + an AoE tag), built so a future multi-ability unit just renders more
+rows. HUD = **light touch** (keep the `Lv · XP` rows; add DEF + the driving
+stats inline; abilities stay on the card — the 240px panel stays scannable).
+Ability display names = a **UI id→label map** (render-only; NOT a `name` field
+in [abilities.json](config/abilities.json)). Accents deferred (above). Full
+kickoff in the session memory (`project_gp3_kickoff`).
 
 ### GP4 — Ranged firing-position pathing (#6)
 
@@ -843,8 +850,10 @@ shipped in F2 — dropped.)
 
 - **Recruit-card accent CSS for the new archetypes.** [TODO](TODO.md) —
   `recruit-card--{rogue|healer|mage|catapult}` accent rules in `ui.css`
-  (the cards currently fall back to base styling). Cosmetic. Good to fold
-  into G4's + H6's recruit-UI touches.
+  (the cards currently fall back to base styling; the same `--archetype`
+  classes are stamped unstyled on the **promotion** cards too). Cosmetic.
+  **Deferred to the post-H recruitment/rarity overhaul** (GP3 tee-up call —
+  pairs with rarity tiers; explicitly NOT GP3).
 - **Dedicated catapult SFX (+ the F3 launch/impact split).** [TODO](TODO.md)
   — play a launch "creak/thunk" on the `release` phase and a heavy crash
   on `impact`; needs 1–2 assets in `public/audio/`.

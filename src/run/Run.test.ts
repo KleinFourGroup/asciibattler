@@ -287,11 +287,12 @@ describe('Run', () => {
       expect(offer).not.toBeNull();
       const avg = Math.round(avgTeamLevel(run.team)); // 6 — well above floor 1
       for (const u of offer) {
-        expect(u.level).toBeGreaterThanOrEqual(avg);
+        expect(u.level).toBeGreaterThanOrEqual(avg); // base, before any per-card bonus
         expect(u.level).toBeLessThanOrEqual(LEVELING.levelCap);
       }
-      // One bonus draw per offer → every card shares the level.
-      expect(new Set(offer.map((u) => u.level)).size).toBe(1);
+      // Post-G5: the geometric bonus is drawn per card (over the shared `avg`
+      // base), so cards MAY differ — there is no "all share one level"
+      // invariant anymore. Per-card independence is pinned in Recruitment.test.
     });
 
     it('winning at the terminal node routes to complete (not recruit)', () => {

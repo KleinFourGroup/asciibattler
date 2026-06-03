@@ -369,12 +369,16 @@ export class Run {
     } else {
       this.phase = 'recruit';
       // G4 — recruit level tracks the TEAM (round avg + geometric bonus), not
-      // the floor, so a fresh draft stays useful on a leveled roster. One bonus
-      // draw per offer (all cards share the level); clamped to the level cap.
+      // the floor, so a fresh draft stays useful on a leveled roster. Post-G5:
+      // the geometric bonus is drawn INDEPENDENTLY per card over a shared
+      // `round(avgTeamLevel)` base, so a lucky offer shows one over-leveled
+      // standout rather than boosting all cards together. Each card's level is
+      // clamped to the level cap.
       const offerRng = this.rng.fork();
-      const bonus = recruitLevelBonus(offerRng, RECRUITMENT.recruitBonusChance);
-      const level = Math.min(LEVELING.levelCap, Math.round(avgTeamLevel(this.team)) + bonus);
-      this.currentOffer = rollOffer(offerRng, undefined, level);
+      const baseLevel = Math.round(avgTeamLevel(this.team));
+      this.currentOffer = rollOffer(offerRng, undefined, (cardRng) =>
+        Math.min(LEVELING.levelCap, baseLevel + recruitLevelBonus(cardRng, RECRUITMENT.recruitBonusChance)),
+      );
       this.bus.emit('recruit:offered', { units: this.currentOffer });
     }
   }

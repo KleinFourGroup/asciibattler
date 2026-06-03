@@ -14,17 +14,20 @@
  * (enemies stay melee/ranged, so you draft the new archetypes before you
  * fight them).
  *
- * Recruits arrive at `level` (defaults to 1). G4: Run computes that level as
+ * Recruits arrive at `level`, which is either a flat number OR a per-card
+ * function `(rng) => number`. G4: Run computes the level off the team —
  * `round(avgTeamLevel) + recruitLevelBonus(...)` (replacing E3's `currentFloor`
- * basis) so recruits scale with the *team*, not the floor — keeping a fresh
- * draft useful on a leveled roster deep in a run. `rollUnit` then runs the
- * level-ups.
+ * basis) so recruits scale with the *team*, not the floor. Post-G5 the
+ * geometric bonus is drawn INDEPENDENTLY per card (Run passes a function over a
+ * shared `round(avgTeamLevel)` base), so a lucky offer surfaces one
+ * over-leveled standout rather than boosting all three cards together. Each
+ * card's `rollUnit` then runs the level-ups for that card's own level.
  *
- * Determinism: the partial Fisher–Yates below draws `min(size, pool)`
- * ints from `rng`, then each `rollUnit` draws `7 × (level − 1)` more.
- * Widening the pool changes the draw sequence, so F1 deliberately resets
- * the fuzz baseline (the E7 steps kept pools unchanged precisely to
- * avoid this; F1 spends the reset on purpose).
+ * Determinism: the partial Fisher–Yates below draws `min(size, pool)` ints
+ * from `rng`; then per card the level function (if supplied) draws its bonus
+ * and `rollUnit` draws `7 × (level − 1)` more — all off the same `rng`.
+ * Widening the pool (F1) or changing the per-card draw (this post-G5 tweak)
+ * shifts the draw sequence, so each deliberately resets the fuzz baseline.
  */
 
 import type { RNG } from '../core/RNG';
@@ -36,10 +39,15 @@ import { LEVELING } from '../config/leveling';
 export function rollOffer(
   rng: RNG,
   size: number = RECRUITMENT.defaultOfferSize,
-  level: number = 1,
+  level: number | ((rng: RNG) => number) = 1,
 ): UnitTemplate[] {
   if (size <= 0) return [];
-  return sampleDistinctArchetypes(rng, size).map((a) => rollUnit(a, rng, level));
+  // A function `level` is resolved PER CARD (drawing off the shared `rng`), so
+  // a geometric bonus rolls independently for each offered unit; a number is a
+  // flat level applied to every card (the back-compat / explicit-input form).
+  return sampleDistinctArchetypes(rng, size).map((a) =>
+    rollUnit(a, rng, typeof level === 'function' ? level(rng) : level),
+  );
 }
 
 /**

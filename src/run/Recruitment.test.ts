@@ -69,6 +69,37 @@ describe('rollOffer', () => {
   it('same seed → same offer', () => {
     expect(rollOffer(new RNG(42))).toEqual(rollOffer(new RNG(42)));
   });
+
+  it('applies a flat numeric level to every card (back-compat / explicit form)', () => {
+    const offer = rollOffer(new RNG(1), 3, 4);
+    expect(offer.map((u) => u.level)).toEqual([4, 4, 4]);
+  });
+
+  it('resolves a level FUNCTION once per card, in order', () => {
+    // Post-G5: a function `level` is drawn per card. A deterministic counter
+    // (config-free) proves each card gets its own value, in iteration order.
+    const seq = [1, 3, 5];
+    let i = 0;
+    const offer = rollOffer(new RNG(1), 3, () => seq[i++]!);
+    expect(offer.map((u) => u.level)).toEqual(seq);
+  });
+
+  it('draws the geometric recruit bonus INDEPENDENTLY per card', () => {
+    // Reproduce Run's recruit policy (shared base + per-card geometric bonus)
+    // with explicit inputs. Under the pre-tweak single-draw-per-offer model
+    // every card shared a level, so a mixed-level offer could NEVER occur;
+    // seeing one proves the bonus is now per-card. chance=0.9 makes the
+    // variation overwhelmingly likely, so the seed scan is a hard assertion.
+    const base = 3;
+    const chance = 0.9;
+    let sawMixedOffer = false;
+    for (let s = 0; s < 40 && !sawMixedOffer; s++) {
+      const offer = rollOffer(new RNG(s), 3, (r) => base + recruitLevelBonus(r, chance));
+      for (const u of offer) expect(u.level).toBeGreaterThanOrEqual(base);
+      if (new Set(offer.map((u) => u.level)).size > 1) sawMixedOffer = true;
+    }
+    expect(sawMixedOffer).toBe(true);
+  });
 });
 
 describe('recruitLevelBonus (G4 geometric bonus)', () => {

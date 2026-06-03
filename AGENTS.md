@@ -18,11 +18,12 @@ After HANDOFF, the docs you'll cross-reference most often:
   it feels. The aesthetic / mechanics source of truth.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — how the code is organized.
   Includes the event catalog, key abstractions, the sim/render seam.
-- [ROADMAP.md](ROADMAP.md) — post-MVP build order. Phase A (foundation
-  refactors) → B (style/visual) → C1 (terrain + tile foundation) → D
-  (battle-layout expansion) → C2+ (combat/progression, gated behind D).
-  Phases A, B, C1, and D are all complete; C2 is next up. The original
-  MVP roadmap is at [archive/mvp-roadmap.md](archive/mvp-roadmap.md).
+- [ROADMAP.md](ROADMAP.md) — post-MVP build order. Phases A (foundation
+  refactors), B (style/visual), C1 (terrain), D (battle-layout), E
+  (combat + the six archetypes), F (Phase-E playtest response), and G
+  (run depth) are all complete, as is GP1. **Next up: GP2** (defense
+  stat), then Phase H (the deckbuilder battle trial). Superseded
+  roadmaps and feedback are in [archive/](archive/).
 - [TODO.md](TODO.md) — small follow-ups that aren't roadmap steps.
 - [TESTING.md](TESTING.md) — what gets tested (`core`, `sim`, `run`),
   what doesn't (`render`, `ui`), and the determinism contract.
@@ -33,9 +34,10 @@ After HANDOFF, the docs you'll cross-reference most often:
 ## What this project is
 
 A browser-based tick-based autobattler with a Slay-the-Spire-style run
-structure. ASCII glyphs on billboarded quads, palette-quantized via
-post-process, CRT-diorama feel. MVP shipped — playable end-to-end at
-[asciibattler on GitHub Pages]. Now in post-MVP territory.
+structure. ASCII glyphs on billboarded quads, saturation-clamped with
+selective bloom (palette-quant was dropped at B1), CRT-diorama feel. MVP
+shipped — playable end-to-end at [asciibattler on GitHub Pages]. Now in
+post-MVP territory.
 
 Stack: TypeScript (strict), three.js, Vite, Vitest. No frameworks; UI is
 plain HTML/CSS overlaid on the canvas. See ARCHITECTURE.md for the full
@@ -93,6 +95,15 @@ apply:
 - **Keep DESIGN.md / ARCHITECTURE.md honest.** If a change reveals a
   documented decision is wrong, update the doc in the same commit as
   the code change.
+- **Trim HANDOFF when it grows unwieldy.** [HANDOFF.md](HANDOFF.md)
+  accretes a per-phase "X landed" narrative with no natural cap (it
+  passed 250KB by GP1). When it gets too large to scan, move the oldest
+  completed-phase detail into [archive/](archive/) and leave a one-line
+  pointer — precedent: the Phases A–E worklog was split out to
+  [archive/phase-a-e-worklog.md](archive/phase-a-e-worklog.md). Preserve
+  the `Things that bit us` gotchas (referenced as "gotcha #N" — never
+  renumber; retired ones stay as tombstones), the short operational
+  sections, and the most recent `Current state` entries.
 - **Roadmap "decision points" are stops.** Post-MVP doesn't have the
   rigid CHECKPOINT markers, but ROADMAP entries flagged "Decision
   point" call out moments where user input is required — stop and ask.
@@ -114,14 +125,14 @@ but the headline rules:
   `parentRng.fork()`. See [TESTING.md](TESTING.md) for the contract.
 - **Cooldowns/durations authored in seconds, not ticks.** Use
   `secondsToTicks` / `ticksToSeconds` from [src/config.ts](src/config.ts).
-  Changing `TICK_RATE` (currently 10Hz) must not re-tune balance.
+  Changing `TICK_RATE` (currently 20Hz) must not re-tune balance.
 - **Sim/render separation.** Simulation is a pure, deterministic state
   machine. The renderer subscribes via the EventBus. Sim code never
   imports from `src/render/` or `src/ui/`.
 - **Palette is art-direction discipline, not shader enforcement (B1).**
   The `COLORS` table is the canonical color vocabulary code reaches for,
-  but the rendering chain doesn't post-quantize. The chain is
-  B1.1 selective bloom uses two composers: a `bloomComposer` (layer-1
+  but the rendering chain doesn't post-quantize. B1.1 selective bloom
+  uses two composers: a `bloomComposer` (layer-1
   sprite bloom mesh → UnrealBloomPass) feeds its result into a
   `mainComposer` (`RenderPass → SatClamped → MixPass → Scanlines →
   OutputPass`). UnrealBloomPass's high-pass uses max-channel (not
@@ -129,12 +140,14 @@ but the headline rules:
   SpriteRenderer's per-instance `bloomIntensity` controls halo strength
   independently of visible color: 0 = no halo, 1 = natural, >1 = forced
   (gotcha #30).
-- **Cooldown semantics are "decrement-then-check."** The shared
-  `unit.actionCooldown` is decremented once per tick before behaviors
-  run; behaviors set it to the *full* cooldown value after acting (not
-  N-1). This is what keeps the sprite lerp from leaving a visible idle
-  frame between moves. Refactored to per-action map + activeAction
-  lockout in ROADMAP Phase A1 (gotcha #8).
+- **Cooldown semantics are "decrement-then-check."** Each tick, every
+  entry in the per-action `unit.actionCooldowns` Map is decremented
+  before the selector runs; a behavior sets its proposal's cooldown to
+  the *full* cadence after acting (move cadence from `UnitDerived`,
+  attack cadence from `attackCooldownTicksFor`), not N-1. This is what
+  keeps the sprite lerp from leaving a visible idle frame between moves.
+  The MVP's single `unit.actionCooldown` field became the per-action
+  Map + `activeAction` lockout in Phase A1 (gotchas #7, #8, #101).
 
 ## Pre-flight when picking up a session
 
@@ -156,7 +169,7 @@ so a green `npm test` is not sufficient for type safety.
 npm test                # 0 failures
 npm run typecheck       # tsc --noEmit clean
 # only if changes touch sim/run/core behavior:
-npm run fuzz:smoke      # 7 passed
+npm run fuzz:smoke      # 22 passed
 ```
 
 Run this **before** `git commit`, not after — and first confirm your
@@ -173,9 +186,11 @@ current change.
 
 In the browser: dark terrain (smooth blue/green/amber gradient) with 4px
 scanlines, glowing neon sprites (green allies + red enemies bloom on
-attack), map on load. Click a frontier node → battle → recruit modal →
-back to map. Win 4 → green "Run Complete." Lose → red "Defeat." Screen
-transitions fade over 180ms.
+attack), full-viewport node map on load. Click a frontier node → battle
+→ promotion (if a unit leveled) → recruit modal → back to map; a rest
+node (`Z`) banks XP and the boss (`!`) is the final floor. Clear the
+boss → green "Run Complete." Lose → red "Defeat." Screen transitions
+fade over 180ms.
 
 If `:5173` is held by a stale process, Vite silently falls back to
 `:5174`. Vite spawns child Node processes that survive `taskkill` on
@@ -195,37 +210,44 @@ Windows.
 src/
   main.ts              # entry; top-level await on FontAtlas.create()
   Game.ts              # top-level orchestrator + scene swapper (A5)
-  config.ts            # TICK_RATE=10, GRID_SIZE=12, secondsToTicks
+  config.ts            # TICK_RATE=20, GRID_SIZE=12, secondsToTicks
   core/                # RNG, EventBus, Clock, events catalog, types
-  config/              # A4: zod-validated wrappers around config/*.json
-                       # (archetypes, difficulty, recruitment, nodemap,
-                       # terrain, layouts, spawn, tiles)
-  sim/                 # World, Unit, TileGrid, LineOfSight, Action,
-                       # Command, Pathfinding, Targeting, archetypes,
-                       # environment, terrainGen, layouts, battleSetup
-    actions/           # MoveAction, AttackAction, SpawnAction (+ registry)
-    behaviors/         # MovementBehavior, AttackBehavior (+ registry)
+  config/              # A4: zod wrappers for config/*.json (archetypes,
+                       # abilities, difficulty, recruitment, leveling,
+                       # nodemap, stats, sim, terrain, layouts, spawn, tiles)
+  sim/                 # World, Unit, stats, leveling, xp, TileGrid,
+                       # LineOfSight, Action, Command, Pathfinding,
+                       # Targeting, archetypes, environment, terrainGen,
+                       # layouts, battleSetup
+    actions/           # Move, Attack, GambitStrike, Heal, MagicBolt,
+                       # CatapultShot, Spawn (+ registry)
+    abilities/         # E2: Ability layer — strikes, heal, magic, catapult
+                       # (+ registry); replaced the retired AttackBehavior
+    behaviors/         # Movement, Ability, SupportMovement (+ registry)
                        # — DeathBehavior folded into World.tick at A1
-  run/                 # Run, NodeMap, Recruitment, Command
-  render/              # Renderer (two camera modes, D4),
+  run/                 # Run, RunConfig, enemyBudget, NodeMap,
+                       # Recruitment, Command
+  render/              # Renderer (fit/scroll camera, D4),
                        # SpriteRenderer (selective bloom, B1.1),
-                       # BarRenderer (B3), TerrainRenderer (C1c + D7.C + D8),
-                       # BattleRenderer, FontAtlas, PostProcess, palette,
+                       # UnitOverlayLayer (DOM HP/badge/hitsplats, E3.6),
+                       # TerrainRenderer (C1c + D7.C + D8), BattleRenderer,
+                       # FontAtlas, glyphs, PostProcess, palette,
                        # animation/SpriteAnimator
-  scenes/              # A5: BattleScene, MapScene, RecruitScene, GameOverScene
+  scenes/              # A5: Battle, Map, Recruit, Promotion (E4.4), GameOver
   ui/                  # ui.css, fade, HUD, MapScreen, RecruitScreen,
-                       # GameOverScreen
+                       # PromotionScreen, GameOverScreen
   audio/               # B6: AudioPlayer
 config/                # JSON balance (paired with src/config/*.ts)
 public/audio/          # preloaded .wav files
-tools/layout-editor/   # dev-only painter at /tools/layout-editor/
+tools/                 # dev-only: layout-editor + run-config (G1/G5)
 tests/
   smoke.test.ts
   integration/         # determinism, snapshot-roundtrip, variable-size,
-                       # layout-deadlock, spawn-overflow
+                       # layout-deadlock, spawn-overflow, corridor-flow,
+                       # + per-archetype battle tests (rogue/healer/mage/catapult)
   fuzz/                # A3: headless balance harness (opt-in)
 retro/                 # scratchpad + MVP retrospective
-archive/               # mvp-roadmap, mvp-feedback, post-mvp-roadmap, c1-feedback
+archive/               # superseded roadmaps + feedback + phase worklogs
 ```
 
 See ARCHITECTURE.md for the canonical structure and the rationale

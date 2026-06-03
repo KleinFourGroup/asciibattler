@@ -79,242 +79,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 ## What's next
 
-Post-MVP work is now structured around [ROADMAP.md](ROADMAP.md) (Phase A foundation refactors → B style/visual → C gameplay expansion). [TODO.md](TODO.md) holds the small follow-ups that aren't roadmap steps.
+Forward-looking work lives in [ROADMAP.md](ROADMAP.md) -- see the **Next up** bullet at the end of `## Current state` above for the immediate step (currently **GP2**: the `defense` stat + `world.applyDamage` consolidation). Smaller code-level follow-ups are in [TODO.md](TODO.md); the gameplay backlog (shop, synergies, boss variety, etc.) is under [DESIGN.md](DESIGN.md) "Out of scope".
 
-**Phase A complete: A1–A5 all landed.** A1 = action selector + cooldown/duration split + multi-tick effects. A2 = command channel + JSON snapshot plumbing. A3 = headless fuzz harness. A4 = config externalization (JSON balance + .glsl shaders). A5 = scene system (Scene interface, single-active swap, BattleScene + Map/Recruit/GameOver scenes).
+Balance numbers live in `config/*.json` (zod-validated by `src/config/*.ts`) -- edit the JSON and refresh for a Vite hot-reload, no recompile.
 
-**B1 landed (palette direction).** Side-by-side decision-point demo of 4 variants (strict / hue-locked / sat-clamped / hue-locked+bloom). User picked: drop palette-quant entirely (palette becomes art-direction discipline, not shader enforcement), keep saturation-clamp + bloom. UnrealBloomPass's high-pass is patched to use `max(R,G,B)` instead of Rec.709 luminance so NEON_RED enemies glow on equal footing with TERMINAL_GREEN allies. Gotchas #1, #3, #4 retired as a consequence.
-
-**B1.1 landed (selective bloom).** Original B1 used a single composer where `bloomIntensity` multiplied the sprite color directly — `0` zeroed the visible sprite, so suppression and darkening were the same operation. Refactored to two composers: `bloomComposer` renders an invisible layer-1 sprite mesh (color × bloomIntensity) through UnrealBloomPass into an offscreen RT; `mainComposer` renders the visible layer-0 sprite mesh at natural color, then a `MixPass` additively folds the bloom RT in. Result: `bloomIntensity = 0` kills the halo without touching visible color; lerping 0↔1 smoothly fades the glow; `>1` forces a strong halo for emphasis. Bloom threshold dropped to 0 so intensity is a true linear knob (was step-gated at 0.6 — see gotcha #30).
-
-**B3 landed (floating HP + action progress bars).** New `BarRenderer` mirrors the SpriteRenderer instancing recipe — one `InstancedBufferGeometry` quad, per-instance position/size/fillPct/bgColor/fillColor/alpha, billboarded by `bar.vert.glsl` with a shader-cutoff fill in `bar.frag.glsl`. Single mesh on layer 0; bars don't bloom (user-picked direction). Two bars per unit driven from `BattleRenderer`: HP fill lerps green→amber→red as a universal HP-state gradient (team identity is on the sprite color), refreshed on `unit:attacked`. Progress bar hidden by default, fills smoothly between ticks for in-flight actions, but skipped for `MoveAction` to avoid flashing every step (so it'll only really pull its weight once C2's mage charge-ups land). Bars follow sprites through SpriteAnimator lerps via a new `SpriteRenderer.getPosition(handle, out)` reader. On death both bars fade alpha 1→0 in lockstep with the sprite, then get removed; `detach()` also drains in-flight bar fades so the killing-blow victim's bars don't leak onto the next scene.
-
-**B5 landed (CRT scanlines on DOM seam).** Replaced the canvas-only scanline ShaderPass with a single `#scanlines` fixed-position `<div>` layered over canvas + UI. One source of truth, runs uniformly across the canvas/DOM seam, no possible drift between two effects. Two intentional shifts from the previous shader: CSS-pixel sizing (6px / 6px) instead of device-pixel (so high-DPI displays don't read the lines as uniform dimming), and dual-polarity intensity (dark bands subtract `rgba(0,0,0,0.15)`, light bands lift `rgba(255,255,255,0.04)`) so scanlines have visible contrast on near-black panel surfaces — the original pure-darkening was invisible on the map / recruit / HUD panel backgrounds (~0.7-0.8 black). The original ShaderPass factory + `scanlines.frag.glsl` were retired in a later cleanup pass once the CSS overlay was settled as the final answer.
-
-**B7 landed (root node clarity).** Node 0 now renders the roguelike `@` glyph instead of `0`, with a `.root` CSS class hook for future tuning. All other state classes (current/frontier/visited/locked) still apply on top, so the root reads as origin regardless of where the player currently is. Uses `map.rootId`, not hardcoded 0.
-
-**B6 landed (audio).** New `AudioPlayer` ([src/audio/AudioPlayer.ts](src/audio/AudioPlayer.ts)) preloads seven placeholder wavs from `public/audio/` at boot and exposes overlap-safe `play(key)` — each sound owns a 4-deep ring of cloned `HTMLAudioElement`s with a cursor that advances on every play, so simultaneous triggers (multi-unit attacks on the same tick) don't truncate each other. Wiring split by lifetime: Game subscribes to `recruit:offered` / `run:victory` / `run:defeated` (no world needed); BattleScene subscribes to `unit:attacked` (looks up attacker via `world.findUnit` and picks `melee` vs `shoot` from `stats.attackRange`) and `unit:died` — these live with the world so they tear down with it (subscriptions array + dispose unsub, same pattern as HUD/BattleRenderer/Run). UI clicks (MapScreen frontier, RecruitScreen card pick, GameOverScreen restart) fire `click.wav` directly from existing handlers; `AudioPlayer` threaded through screens via `SceneContext`. Per-sound pitch jitter via `playbackRate` (`±10%` for melee/shoot, `±8%` for death, 0 for everything else) prevents the ear locking onto a single tone in sustained combat without needing variant samples — shifting pitch + tempo together keeps the waveform intact. Volume + variance tables sit at the top of `AudioPlayer.ts` for easy tuning. Commit `7d8f3a8`.
-
-**B2 + B4 deferred → folded into C1.** Both were touching what the C1 refactor will rewrite (terrain mesh + grid + sprite layout). Tuning them standalone would just need redoing under C1, so they get absorbed when C1 lands.
-
-**C1a landed (tile foundation).** Two-stage rollout: foundation commit `4572d8a` shipped pure-logic scaffolding (TileGrid + neutral Team + cost-aware Pathfinding + spawnEnvironment/spawnWall), integration commit added per-encounter terrain generation + renderer wiring. Per the user's design call, **walls are neutral-team `Unit`s** (not a tile kind), so they reuse the existing Unit pipeline — appear in pathfinding's blocker list for free, snapshot-rehydrate via the existing UnitSnapshot, and a future destructible variant just needs a "walls take damage" Targeting hook. **Tiles** are surface properties — `floor | shallow_water`, the latter doubling movement cost. New `config/terrain.json` knobs: wall density 0.06, water density 0.04, spawn rows 1/2/9/10 reserved (always clear of obstacles), connectivity guard on. Generator (`src/sim/terrainGen.ts`) is procedural with a `layoutId` hook plumbed for C1b's hand-authored set pieces (resolver throws if invoked in C1a). Water visual is a flat-colored InstancedMesh (`src/render/WaterRenderer.ts`) — deliberate stand-in, gets rewritten in C1c. WorldSnapshot bumped to schema version 2; the round-trip test was extended to cover the new tileGrid + neutral wall units. **C1a punts**: destructibility (walls have HP=1 but nothing targets them since Targeting filters neutrals), ranged LOS through walls (still allowed — C1b territory), full visual polish (C1c).
-
-**C1b landed (obstacle polish).** Three logical commits, in order:
-
-1. **Ranged LOS through walls** (`bc8c5d8`). New `src/sim/LineOfSight.ts` with a Bresenham `hasLineOfSight(from, to, blockers)`. `AttackBehavior` collects neutral-team units as wall blockers and abstains when the line is broken — melee (adjacent target) trivially passes since there are no intermediate cells. Endpoints excluded from the blocker check (the attacker shouldn't block themselves; the target's own cell may or may not appear in the list and shouldn't matter). Bresenham picked over supercover because it matches the existing 8-dir Chebyshev movement: a unit reachable in one orthogonal step traces the same line LOS walks.
-
-2. **Wall destructibility plumbing** (`8f71818`). Make the wall-takes-damage path end-to-end without enabling it. `unit:died` payload gains a `team` field so subscribers can branch on combatant vs neutral death without re-querying the world (by emit time the unit is already removed from `world.units`). `spawnWall(world, position, maxHp = 1)` plumbs the maxHp arg through `spawnEnvironment`; default 1 makes walls functionally indestructible because nothing targets neutrals — `Targeting.findTarget` still filters them. BattleScene's audio handler skips neutral deaths so a future wall hit won't play the unit death cry; comment flags the C2 follow-up to add a dedicated `wall_destroyed` sample when AoE actually lands wall hits.
-
-3. **Hand-authored layout library + 50/50 mix** (`dd1e1fa`). Two starter layouts in `src/sim/layouts.ts`: **corridor** (two horizontal wall bands at rows 4 and 7 with a 4-cell center gap, forces a chokepoint) and **diamond** (4×4 center block with corners knocked off, forces armies to flank). `generateTerrain` dispatches on `layoutId`: null → procedural; known id → library; unknown id → throws. Layout resolution validates spawn-row + bounds invariants and refuses any gridSize ≠ 12. `Run.handleEnterNode` does a third draw on `battleRng` (50% null, 50% uniform pick from `LAYOUT_IDS`) — that draw lands between `terrainSeed` and `rollEnemyTeam`, so enemy compositions shifted for existing seeds (acceptable; fuzz baselines are recomputed on balance changes).
-
-**C1b explicit punts:** wall *visual form* (3D vs billboard) folded into C1c's visual pass — locking it now would mean retuning under C1c. Wall targeting in Targeting still skips neutrals — the destructibility plumbing exists but no behavior currently damages walls; C2's AoE archetypes will be the first consumer.
-
-**C1c landed (visual + layout pass).** Two commits:
-
-1. **Demo** (`f61b0f5`). 3-variant side-by-side comparison built into the live battle scene, hotkey 1 / 2 / 3 swaps the active `TerrainRenderer` in place while a battle plays. Variants: A — flat plane with shader-baked grid lines, B — faceted low-poly prism-per-tile (continuous simplex heights), C — stepped simplex (heights snapped to 4 plateaus). User picked B: stepped's terraces hinted at a mechanical elevation tier the sim doesn't (and won't) deliver, while faceted's organic variance reads as visual texture without making that gameplay promise.
-
-2. **Lock-in** (`526520d`). Replaced the old fBm `TerrainRenderer` + C1a `WaterRenderer` stand-in with a single canonical `TerrainRenderer`: one faceted prism per tile, fixed-seed simplex heights for floor tiles in [-0.3, 0], water tiles sunk to -0.4, top color lerps `DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER` over the floor range. Hard-edged faceted shading from a baked light direction (no scene lights — sprites stay unlit by design). Non-indexed geometry so every face owns its normals; buffers pre-sized at gridSize² and rewritten in place per `setTiles`. Grid lines stamped on the top face only via a per-vertex `aTopUV` attribute + smoothstep band.
-
-    `TerrainRenderer.heightAt(cx, cy, kind)` is the canonical height function — the same one the geometry uses, exposed so other renderers stay in sync with the surface. `BattleRenderer.tileWorldPos(coord)` threads it through: sprites (units + neutral-team walls) now stand on their actual tile top instead of floating at the pre-C1c fixed Y=0.5. Applies to spawn AND lerp endpoints, so a unit moving between tiles of different heights gets a Y-interpolated path "for free" via the existing SpriteAnimator lerp. Bars follow automatically through the existing `sprites.getPosition` read.
-
-**C1c absorbed B2 + B4:** the low-poly direction, the grid-line bake, and the vertical-stack tightening all land here. Both originals are now retired in ROADMAP.
-
-**C1d landed (layout authoring).** Two commits:
-
-1. **C1d.A — JSON hoist.** The two hand-authored layouts now live in `config/layouts.json` with a zod schema at `src/config/layouts.ts` (A4 pattern — validate at module load, malformed JSON crashes at boot). `LayoutDef` gained `name` and `description` fields ready for the editor UI; the existing `walls` / optional `water` shape is unchanged. `src/sim/layouts.ts` is now a thin re-export so Run / terrainGen / the existing test suite keep working without churn. Schema is a flat array (preserves order, which drives `LAYOUT_IDS` and therefore `rng.pick` determinism — append-only). Duplicate-id detection runs after parse so the loud-failure mode covers it too.
-
-2. **C1d.B — Editor.** Standalone Vite page at `tools/layout-editor/index.html` (HTML + `editor.ts` + `editor.css` + `README.md`). Visit `http://localhost:5173/tools/layout-editor/` after `npm run dev`. Click → wall, shift+click → water, right-click → erase. Reserved spawn rows from `config/terrain.json` shown as a diagonal-stripe overlay; painting on them is flagged as a validation error. Live JSON export panel with Copy + Download buttons; round-trip with `LAYOUTS` confirmed byte-clean. Connectivity check mirrors the BFS in `layouts.test.ts` (king's-move from topmost to bottommost reserved spawn row). Imports the schema + palette + terrain config directly from `src/`, so the editor can't drift from the game. **Dev-only**: `vite.config.ts` has no `rollupOptions.input` so the production build still emits only the root `index.html` — `tools/` is served by the dev server and never lands in `dist/`. **Punted to follow-ups**: a test-play button (would need URL-encoded handoff to the live game); pick-weight + floor-depth gating fields (the roadmap deferred those out of C1d).
-
-3. **C1d follow-up — picker + banner + diagnostic.** Three small changes after the user authored their first new layout (Labyrinth) and noticed corridor-only variety: (a) `rollLayoutId` threshold dropped from 50% to 25% procedural, so 75% of battles now pick from `LAYOUT_IDS` (the procedural pool is now a "wildcard" variant); (b) a top-center `.battle-banner` element in the HUD shows the layout's `name` ("Corridor" / "Diamond" / "Labyrinth" / "Nowhere" for procedural), with the same `screen-fade` lifecycle as the side panel; (c) a `[layout]` console.log in `Run.handleEnterNode`, gated on `typeof window !== 'undefined'` so it logs in both dev and prod browser builds but stays silent under vitest + the tsx fuzz harness. The `rng.next()` for the threshold runs unconditionally, so changing the threshold doesn't shift downstream draws (enemy team, etc.) for existing seeds — only the resulting `layoutId` branches differently. Test threshold in `Run.test.ts` updated to the new expected split (proceduralCount in [25, 75] of 200 instead of [50, 150]).
-
-4. **C1d follow-up — MovementBehavior pathing rewrite (Labyrinth deadlock fix).** The Labyrinth layout exposed two interlocking pathfinding bugs that froze battles when narrow corridors put units in mutual blocker positions. Rewrote [src/sim/behaviors/MovementBehavior.ts](src/sim/behaviors/MovementBehavior.ts) with four changes: (a) **path to the target's cell directly**, with target excluded from blockers — the prior `pickGoalCellInRange` heuristic returned null whenever every range-1 neighbor of target was a wall or another unit, freezing the unit even when a real path existed; (b) **soft ally blocking** — walls stay hard blockers but other units (allies + non-target enemies) become high-cost cells via the CostFn (penalty = 100 per occupied cell), so A* routes around them when possible but routes through when not, preventing mutual-block deadlocks where two units facing each other across a 1-cell corridor both `findPath()`→[] and freeze; (c) **step collision check** — if `path[1]` is currently occupied, abstain (queue behavior emerges naturally as the front-of-line unit steps clear); (d) **LOS-gated in-range abstain** — the `chebyshev ≤ attackRange → abstain` check also requires `hasLineOfSight(unit, target, walls)` to be true, so a ranged unit at geometric range with a wall between it and target keeps pathing instead of freezing alongside an abstaining AttackBehavior. Chebyshev heuristic stays admissible because all costs are >= 1 (per existing gotcha #34). New integration test [tests/integration/layout-deadlock.test.ts](tests/integration/layout-deadlock.test.ts) runs each registered layout (and the procedural path) across 3 seeds headlessly and asserts the battle resolves within 2000 ticks — caught the bug, now pins it. Fuzz harness: 0 hangs over 5-seed sample post-fix. The unit-level regression test in `MovementBehavior.test.ts` ("target whose attack-range neighbors are all walls + allies") still covers fix (a) at the unit level.
-
-**Roadmap restructured post-C1.** After playing with the C1d editor, the user authored more layouts (Labyrinth, River) and flagged that the 12×12 arena is now the bottleneck on every interesting future combat feature. The prior post-MVP ROADMAP was archived ([archive/post-mvp-roadmap.md](archive/post-mvp-roadmap.md)); a new [ROADMAP.md](ROADMAP.md) reorganizes the unfinished tail into **Phase D — Battle-layout expansion** (variable map sizes, two camera modes, spawn regions, new neutral units, new tile kinds, tile theming, with editor scope distributed across the steps that introduce each schema). C2-C7 (combat archetypes, recruitment refactor, leveling, in-battle commands, longer runs, split battles) keep their numbering and gate behind Phase D. The c1-feedback source is at [archive/c1-feedback.md](archive/c1-feedback.md) as a historical artifact.
-
-**D1 landed (renderer capacity bump).** `SpriteRenderer` default 256 → 1024, `BarRenderer` 256 → 2048. Headroom for D3's variable map sizes (up to 32×32) and the larger unit counts post-C6 will bring. Error paths unchanged — still throw with the live capacity in the message, just triggered far less often. Auto-grow stayed deferred per the D1 decision (fixed cap is simpler and predictable; constants are trivial to bump again if a real board needs it). TODO entry "Renderer capacity audit" closed.
-
-**D2 landed (drag-paint groundwork in the layout editor).** Mousedown on a cell starts a stroke; mousemove over subsequent cells paints with the same kind (left = wall, shift+left = water, right = erase, where erase clears the active layer's content per the D2 decision point). Global mouseup ends the stroke and commits a single validation + JSON-export refresh — the panel no longer flickers mid-drag. **Behavior shift:** the prior "left-click on a wall toggles it back to floor" implicit-erase is gone; under the painting-tool model left always paints wall/water, right (or right-drag) is the erase path. Single-tap still paints (drag of length 1, no special case). No schema changes — D2 is pure UX groundwork so D3-D8 layer/palette additions inherit drag-paint instead of retrofitting it. Verified in the editor at `http://localhost:5173/tools/layout-editor/`.
-
-**D4 landed (camera overhaul — fit + scroll modes).** Two camera modes on `Renderer` (D4 constants at the top of [src/render/Renderer.ts](src/render/Renderer.ts)): **Mode A `fit`** is the size-aware version of the pre-D4 framing — `fitCameraFit()` computes camera distance from the board AABB (`boardW + 2·XZ_PADDING` × `boardH + 2·XZ_PADDING` × `2·Y_HALF_EXTENT`) and looks at the world origin. **Mode B `scroll`** uses a fixed `SCROLL_WINDOW_TILES = 12` window AABB and looks at `(cameraTargetX, 0, cameraTargetZ)` so panning translates the frame; per-frame `updateScrollFromInput(dt)` sums pan keys (WASD and arrow keys both active simultaneously — see `PAN_KEY_CODES`) and edge-scroll (mouse within `EDGE_SCROLL_THRESHOLD_PX = 40` of any canvas edge) into an XZ direction and translates the target at `PAN_SPEED_TILES_PER_SEC = 12`. Pitch stays locked at `CAMERA_PITCH_RAD`; only XZ position moves. Both modes share `computeCameraDistance(hx, hy, hz)` — the per-corner FOV math that used to live inline in `fitCamera`. **Default through D4 is `fit`** (`DEV_DEFAULT_MODE` constant) — D5 will flip game default to `scroll` once spawn regions give it a sensible anchor. **Dev toggle:** the backquote key (the `` ` ``/`~` key, `e.code === 'Backquote'`) swaps modes; logs `[camera] mode: fit|scroll` so it's obvious during browser-verify. **Anchoring:** `BattleScene.mount` calls `renderer.setCameraTarget(0, world.gridH/2 - 2)` after `fitToBoard`, anchoring scroll on the player spawn area (rows 1-2 of the grid). Target is preserved across mode toggles. **Clamping:** `clampCameraTarget()` caps `cameraTargetX/Z` to `±max(0, boardDim/2 - 6)` so the visible window stays inside the board; on boards where a dim is ≤ 12 the target snaps to 0 in that dim (no pan possible — visible window already shows everything). Input listeners (`keydown`/`keyup` on window, `mousemove`/`mouseleave` on canvas) wired in the constructor and torn down in `stop()`. No new tests — render code is verified by eyeball per [TESTING.md](TESTING.md). 248 tests still pass.
-
-**D3 landed (variable map sizes — rectangular hand-authored, square procedural).** Per the D3 decision point, hand-authored `LayoutDef` declares both `gridW` and `gridH` (each 8-32, exported as `LAYOUT_MIN_SIDE` / `LAYOUT_MAX_SIDE` from [src/config/layouts.ts](src/config/layouts.ts)); procedural encounters stay square, rolling a side length uniformly in `[TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize]` (defaults 10-20). Each of the four existing layouts retrofit with `gridW: 12, gridH: 12`. Sim layer is rectangle-aware end-to-end: `World` exposes `gridW` + `gridH` (the pre-D3 `gridSize` is gone), `Pathfinding.findPath` takes both as separate parameters, `TileGrid` already supported the split, and `terrainGen.generateTerrain(rng, gridW, gridH, config, layoutId)` dispatches on layout dimensions for the hand-authored path. `config/terrain.json` retired `spawnRowsClear` in favor of a new `reservedSpawnRows(gridH)` helper in `terrainGen.ts` that computes `[1, 2, gridH-3, gridH-2]` — mirrors what `battleSetup.spawnTeam` actually uses (player melee/ranged at rows 2/1; enemy at rows `gridH-3`/`gridH-2`). Reserved-row logic stays this shape until D5 replaces it with explicit spawn regions. `battleSetup.distributeColumns(count, gridW)` now spreads units across cols 1..gridW-2, so recruit-grown teams don't overflow on narrow boards and don't bunch up on wide ones; the CHECKPOINT 5 anchor columns are preserved exactly for the default 3+2 team on `gridW=12`. `BattleEncounter` carries `gridW` + `gridH`; `Run.handleEnterNode` always advances the RNG via `rollProceduralSide` (even on layout encounters) so the byte continuity invariant matches the pre-existing one on `rollLayoutId`. **WorldSnapshot bumped to v3** (gridSize → gridW + gridH); v2 snapshots throw at load. Renderer: `Renderer.fitToBoard(gridW, gridH)` called from `BattleScene.mount` resizes the camera frame per-encounter; `TerrainRenderer` allocates buffers at the largest D3 grid (32×32) on construction and uses `geometry.setDrawRange` per `setTiles` so per-encounter sizes change without reallocation (~1 MB of vertex buffer reserved up front, no GPU stalls on resize); `BattleRenderer.gridToWorld` takes `(gridW, gridH)` and centers per-axis. Editor: W + H dropdowns (8-32 each), DOM rebuilds in place preserving cells that still fit, validation warns on dropped cells, reserved-row overlay tracks `reservedSpawnRows(gridH)`. Headless tests cover this end-to-end: new `tests/integration/variable-size.test.ts` runs procedural battles at 10/15/20 across two seeds each; existing `layout-deadlock.test.ts` now iterates each layout's own dimensions plus a square-procedural baseline; new `terrainGen.test.ts` case checks rectangular generation with `gridW=15, gridH=10`; new `Pathfinding.test.ts` case asserts asymmetric bounds. All 240 tests pass (was 229 pre-D3); fuzz smoke unchanged.
-
-**D5.A landed (SpawnRegion schema + retrofit).** `LayoutDef.spawns: SpawnRegion[]` is now a required field in [src/config/layouts.ts](src/config/layouts.ts). Each `SpawnRegion` is `{ tiles: Coord[], availability: 'player'|'enemy'|'both' }`; zod enforces exactly 8 tiles per region, no duplicates within a region, tiles in-bounds for the layout's gridW/gridH, no overlap with walls/water, and **at least one valid `(player, enemy)` region pair where they differ** (subsumes the simpler "≥1 player-available + ≥1 enemy-available" rule AND catches the degenerate "one 'both' region" case where the enemy pool would be empty after the player draws). All 5 existing layouts retrofit with two `availability: 'both'` bands at the literal top + bottom edges (y=0 and y=gridH-1, x centered to span 8 tiles): per the D5 decision point. Pure schema + JSON commit; no consumers yet. 268 tests pass at this point (was 248; +20 are four new per-layout checks across five layouts). Commit `9724a60`.
-
-**D5.B landed (sim consumes regions).** `generateTerrain` now returns `{ tileGrid, walls, spawnRegions }`. Procedural emits two `availability: 'both'` 8-tile bands on the literal top + bottom edges (y=0 and y=gridH-1, x centered); wall + water reservation masks against the union of spawn-region tiles instead of the pre-D5 `reservedSpawnRows`. Connectivity guard uses the first two regions' centroids as endpoints. `battleSetup.spawnTeam(world, team, templates, region, rng)` shuffles `region.tiles.slice()` deterministically and places one template per tile; templates beyond `region.tiles.length` are silently dropped at D5.B and re-enabled in D5.C. `pickSpawnRegions(regions, rng)` is the player-first / enemy-second draw with a runtime "regions differ" guard (zod is the canonical static check; this is the safety net). Both `BattleScene.mount` and `spawnEncounter` (fuzz harness) derive their setup RNG from `new RNG(encounter.terrainSeed).fork()` — using `fork()` decouples spawn picks from terrain-gen's RNG advancement, so changing wall density doesn't shift spawn picks for the same encounter. Byte continuity on `Run.battleRng` is preserved (gotcha #49 stays as 4 draws — no new draw was added). `distributeColumns` + `meleeColumnsFor` + `rangedColumnsFor` retired (no callers). `reservedSpawnRows` still exported for the editor's stripe overlay until D5.D. Browser-verified across procedural 14×14, Endless Corridors 8×32, and Diamond 12×12 — teams visibly spawn on the new top/bottom edge bands, battles play through. 265 tests pass (was 268; net -3: dropped 5 "no walls on reserved spawn rows" assertions, added 2 new "emits two `both` regions" + "layout dispatch passes regions verbatim" checks). Fuzz smoke 7/7. Commit `9410227`.
-
-**Behavior shift to remember:** D5.B collapses the pre-D5 "melee front rank / ranged back rank" formation into a single shuffled band per team (since each region is one 8-tile band on a row). Ranged units may end up in front of melee or vice versa. This is the intended D5 outcome; layout authors who want the front/rear split back must split a team's spawn across two `player`-only or two `enemy`-only regions. The default retrofit uses `both` regions on the literal edges, so player and enemy each randomly land on top or bottom — variety, not pinned. The D4 scroll-camera anchor at `(0, gridH/2 - 2)` is a leftover heuristic; D5.E will switch it to "centroid of the rolled player region."
-
-**D5.C landed (overflow queue + SpawnAction + WorldSnapshot v4).** Templates beyond `region.tiles.length` no longer drop on the floor — `battleSetup.spawnTeam` now pushes the excess onto `world.spawnQueues[team]` (FIFO `UnitTemplate[]` per team) and registers `region` via `world.setTeamSpawnRegion(team, region)`. End of every `World.tick`, after the per-unit step and BEFORE `checkBattleEnd`, `runOverflowScan` walks each team's queue (deterministic team order `QUEUE_TEAMS = ['player', 'enemy']`, then queue FIFO × region tile stored order) and instantiates one queued template per free tile. The fresh unit gets seated with an `activeAction` of a new **`SpawnAction`** (id `'spawn'`) running from `currentTick → currentTick + SPAWN.durationTicks`; the selector's standard `activeAction != null` short-circuit (gotcha #8) keeps it from proposing during the lockout. `SpawnAction.start` is a no-op — it's a pure lockout, not proposed by any Behavior. The unit IS targetable while spawning (deliberate scope; HANDOFF #50). Spawn duration is in a new **`config/spawn.json`** (authored as `durationSeconds: 0.5` per gotcha #6) parsed to ticks at module load in `src/config/spawn.ts`.
-
-`checkBattleEnd` now treats a team with `queueLength > 0` as alive — without this, killing a team's last on-board unit would declare the other side winner even when reinforcements are queued. The pre-spawn empty-world guard also widens to `units.length === 0 && spawnQueues.size === 0` so the very first tick before setup runs still short-circuits.
-
-**`unit:spawned` payload extended:** now `{ unitId, instant: boolean }`. `addUnit` takes an `instant` flag and `spawnUnit`/`spawnEnvironment` pass `true` (initial battle setup); `spawnFromQueue` passes `false`. The renderer keys off this to branch the visual: `instant=true` keeps the existing pop-in-at-full-alpha behavior; `instant=false` starts the sprite + HP bar at alpha 0 and lerps them to 1 over `SPAWN.durationSeconds` via the existing `SpriteAnimator` fade machinery. `ActiveFade` gained `fromAlpha`/`toAlpha` fields so the same map handles fade-in and fade-out; the `BarFadeIn` lane in `BattleRenderer.updateBars` mirrors `barFades` but skips the post-fade remove. The progress bar stays hidden during spawn lockout (filtered alongside `MoveAction` in `updateProgressFill` — see gotcha #51).
-
-**`WorldSnapshot` bumped 3 → 4** to carry `spawnQueues: SpawnQueueSnapshot[]` + `spawnRegions: SpawnRegionAssignment[]`. Templates are deep-copied on snapshot so a post-snapshot mutation doesn't leak. v3 throws on load (the loud-failure mode A4 settled on). `SpawnAction.toData()` returns `{}` (pure-lockout, no state) and `fromData()` returns a fresh instance; the lockout window itself lives in `activeAction.startTick`/`finishTick` which were already snapshot-carried. **Snapshot v3 in the wild dies; this is fine — no shipping save format.**
-
-**`src/main.ts`** also gained a tiny dev-only debug handle: `window.__game = game` under `import.meta.env.DEV`. Excluded from production by Vite tree-shaking. Used during D5.C browser-verify to drive the live world from the preview MCP console; useful for future verifications too.
-
-270 tests pass (was 265; +5 new in `tests/integration/spawn-overflow.test.ts` covering: queue fill + drain on death, `instant:false` event emission, queue-only-team-counts-as-alive, snapshot v4 round-trip, v3 rejection). Browser-verified the fade-in visually: with the animator update frozen partway through, the spawning sprites visibly render at the expected partial alpha (15% and 50% sample captures).
-
-**Decision shape for future D5+ work:**
-
-- SpawnAction units are targetable. If insta-killing fresh spawns feels bad in playtesting, add a "spawning units skipped by Targeting" guard — that's a tactical lever that should be a conscious gameplay choice, not a side-effect of a placeholder fade duration.
-- Spawn duration is a placeholder (0.5s). User flagged "vague ideas in the future for spawning mechanics" — long charge-ups, animated wind-ups, etc. The current SpawnAction is the spawn-mechanic primitive those will extend.
-
-**D5.D.A landed (editor layer system + retire reservedSpawnRows).** Three radio-toggle layers in the layout editor: **terrain** (water), **neutral units** (walls), **spawn regions** (D5.D.B adds painting). Active layer drives left-click paint kind; right-click erases ONLY the active layer's content (terrain-erase leaves walls alone, neutral-units-erase leaves water alone — gotcha #65). Shift+click retired — the layer radio is the kind picker now. Inactive layers render at `opacity: 0.3` per the D5.D recommendation; tunable in `editor.css` `.grid[data-active-layer=...] .cell.foo`. The pre-D5 reserved-row diagonal-stripe overlay is gone and `reservedSpawnRows` is no longer exported from `src/sim/terrainGen.ts` (gotcha #56 + #67 closed). JSON export auto-populates `spawns` with the procedural-default top + bottom 8-tile `'both'` bands (mirrors `defaultProceduralSpawnRegions`) so a new layout authored before D5.D.B's painting UI lands still validates at module load; loaded layouts preserve their authored spawns through the round trip; resize resets spawns to the new dimensions' procedural default. Validation drops the "reserved-row clear" check, adds a spawn/wall+water overlap check, swaps connectivity endpoints from reserved-row centers to the first two spawn-region centroids (mirrors `openCutsUntilConnected`). 268 tests pass (was 270; -2 retired `reservedSpawnRows` tests). Browser-verified the dimming matrix, layered erase, corridor load round-trip, 20×20 resize auto-fill. Commit `d2a2905`.
-
-**D5.D.B landed (spawn-region painting + validation).** The spawn-regions layer is interactive. Left-click paints into the active region with a FIFO 8-tile cap (a 9th paint evicts the oldest tile — gotcha #66); right-click removes the tile from the active region. Active region picked via a pill row above the grid showing index, tile count, and color swatch per region. **`+ Add region`** appends an empty region with `'both'` availability and makes it active; **`Delete region`** removes the active region (disabled when at `MIN_SPAWN_REGIONS = 2` to match zod's lower bound). Availability radio (player/enemy/both) mutates the active region in place. Mid-stroke pill clicks synchronously commit the current stroke first (matches the user's "Can't switch mid-stroke" answer). Each region's color comes from a fixed 4-color palette (amber/blue/red/green via `--region-color-N`) indexed by region position mod 4; multi-region tile overlap renders as stacked corner badges positioned by `data-corner` mod 4 (gotcha #66.1). Validation gains three D5-schema mirrors: per-region count != 8 → error, no valid `(player, enemy)` pair with `player ≠ enemy` → error, below `MIN_SPAWN_REGIONS` → error. JSON export already supported `spawns` from D5.D.A; D5.D.B just mutates the array in place rather than relying on the procedural-default auto-fill. 268 tests pass (unchanged — purely UI work). Browser-verified: FIFO eviction, multi-region corner badges, valid-pair flag, add/delete pill state, load round-trip, layer↔region-row visibility lockstep. Commit `8a587d8`.
-
-**D5.D follow-up — load-selector overflow + editor y-axis flip vs game.** Two small fixes the user surfaced after painting their first new layout (Junction Ambush). (a) The load-selector option label was `${name} (${id} · ${gridW}×${gridH})` — when name and id are the same display-name/slug pairing, the redundant id pushed the `<select>` past its `flex: 1` container and crowded the LOAD button. Dropped the id from the label (just `${name} (${gridW}×${gridH})` now) and hardened the CSS so any future long label truncates: `min-width: 0` on `.card label.inline` plus `max-width: 100%` + `min-width: 0` + `text-overflow: ellipsis` on the select. (b) The editor was rendering y=0 at the TOP of the CSS grid, but `gridToWorld` in BattleRenderer (`Z = halfZ - cell.y - 0.5`) maps y=0 to +Z — the near edge of the camera frame, i.e. the visual BOTTOM of the game view. So an asymmetric layout like `river` appeared vertically mirrored between editor and game. Symmetric layouts (corridor, diamond, labyrinth) were unaffected. Fixed by iterating y in reverse when appending DOM children in `buildGrid` — y=0 row gets appended last, lands in the bottom CSS grid row under `grid-auto-flow: row`. `cellEls[y][x]` stays indexed normally so click handlers + cell lookups don't need to know about the DOM order (gotcha #67). Commit `ca113b9`.
-
-**D6 landed (half-cover neutral unit).** New neutral-team `Unit` archetype that pathfinding treats like a wall but ranged attacks see THROUGH. Five interlocking changes:
-
-1. **Unit gains `blocksLineOfSight: boolean`.** Defaults `true` (combatants + walls keep the C1b LOS-blocking contract); `spawnHalfCover` sets `false`. UnitInit's field is `readonly blocksLineOfSight?: boolean`; `Unit` constructor resolves to `init.blocksLineOfSight ?? true`; `World.addUnit`/`spawnEnvironment` thread the optional through with the same `?? true` default. The `?? true` resolution at the construction site (rather than `init.blocksLineOfSight` raw) is the gotcha #11 pattern for `exactOptionalPropertyTypes` — passing `boolean | undefined` to a `?: boolean` field is rejected at compile time.
-
-2. **`spawnHalfCover(world, position, maxHp = 1)`** in [src/sim/environment.ts](src/sim/environment.ts). Mirrors `spawnWall` exactly but passes `blocksLineOfSight: false` and the `╥` glyph (U+2565 — JetBrains Mono renders it as a top rail with two short vertical posts, reads as a low fence). `HALF_COVER_GLYPH = '╥'` is the constant.
-
-3. **`AttackBehavior.collectWalls` renamed to `collectLosBlockers`** and filters `team === 'neutral' && blocksLineOfSight === true`. Retires the C1b "neutrals == walls" assumption flagged in gotcha #40 (now closed). The function shape is unchanged — only the filter predicate changed.
-
-4. **`MovementBehavior` splits its neutral-collector into two lists.** Pre-D6 it used a single `walls` list as both the pathfinding blocker pool AND the LOS-occluder pool for the in-range abstain. Both uses fed off `team === 'neutral'`. D6 splits: `pathBlockers` collects every neutral (half-cover blocks movement); `losBlockers` filters by `blocksLineOfSight` (half-cover doesn't break the LOS-gated in-range abstain). Without the split, a ranged unit in range with a half-cover between it and target would keep stepping (LOS would falsely report broken) while AttackBehavior abstained on cooldown — visible as wobble. The new MovementBehavior test `D6: ranged unit with half-cover on the LOS line still abstains in-range` pins this.
-
-5. **Snapshot schema 4 → 5.** `UnitSnapshot` carries `blocksLineOfSight: boolean`; `snapshotUnit` writes it, `fromJSON` Phase 1 reads it into the new `UnitInit` field. v4 snapshots throw at load (loud-failure mode A4 settled on). Spawn-overflow test's `'round-trips queue + regions through WorldSnapshot v4'` renamed to v5 and the loud-rejection test now rejects v4. The Run schema is untouched — only World bumped.
-
-**Editor (`tools/layout-editor/`).** Neutral-units layer gains a wall/half-cover sub-tool radio in a new `#neutral-row` (visually mirrors the spawn-regions `#region-row`, hidden by default, shown only when the neutral-units layer is active). Strokes: `paint-halfCover` / `erase-halfCover` join the family; the per-layer erase-scope rule (#65) extends to the sub-tool — erase-halfCover only clears `halfCover` cells, leaves walls untouched. Cell type widens to `'floor' | 'wall' | 'water' | 'halfCover'` (still mutex per cell — the editor's layer system is UX overlay, not a multi-layer data model). `LayoutDef` schema gains `halfCovers?: Coord[]`; zod validates in-bounds, no duplicates, no overlap with walls / water / spawn regions; live editor validation mirrors the same rules. Connectivity BFS treats half-cover as a path blocker (it IS blocked for pathing). Export JSON emits `halfCovers` after `water` when non-empty.
-
-**`generateTerrain` shape.** `GeneratedTerrain` gained `halfCovers: readonly GridCoord[]` — hand-authored layouts emit `layout.halfCovers ?? []`, procedural always emits `[]` (D6 is hand-authored-only; the c1-feedback "tactically tuned set pieces" framing fits half-cover better than the procedural density-driven path, and there's no `config/terrain.json` knob for half-cover density). `applyTerrain` spawns half-covers after walls so future "stack on the same cell" diagnostics see walls first.
-
-**Out of scope for D6 (per ROADMAP):** the ranged-defense / accuracy combat modifier for shooting from behind half-cover is C2-era — D6 ships only the LOS plumbing. The combat-modifier hook is more interesting once mage AoE and rogue burst exist (per the ROADMAP "D6 ships the unit type with an LOS flag only" punt).
-
-284 tests pass (was 279 pre-D6; +5 = 2 AttackBehavior LOS-through cases, 2 MovementBehavior cases, 1 snapshot round-trip). Browser-verified: ╥ glyph renders in JetBrains Mono (visible top rail + two stems); spawnHalfCover places the unit at correct world XYZ with neutral-stone color, alpha 1; battle plays through with half-covers in place (no console errors); editor neutral-row toggles + sub-tool radio toggle + per-layer erase scope all work; export JSON correctly contains `halfCovers` array. Commit `eb9d8da`.
-
-**D5.E landed (scroll camera anchors on player region centroid).** In `BattleScene.mount`, the legacy D4 heuristic `renderer.setCameraTarget(0, world.gridH/2 - 2)` is replaced with the centroid of the rolled player region. The call moved AFTER `pickSpawnRegions` so the player region is known; centroid = `(mean(tiles.x), mean(tiles.y))` in grid coords (fractional — `gridToWorld` accepts that fine), converted via `gridToWorld(...).x/.z` to land in the same world-XZ space the renderer pans. `gridToWorld` is now exported by name from [BattleRenderer.ts](src/render/BattleRenderer.ts) (already was — just newly imported by BattleScene). `DEV_DEFAULT_MODE` stays `fit` per user direction; D5.E is pure plumbing, the default flip is deferred. No tests added — renderer-anchor wiring is verified by eyeball + runtime inspection per [TESTING.md](TESTING.md). Browser-verified two cases: (a) Labyrinth (player region y=0) → targetZ=5.5 = `gridToWorld({x:5.5,y:0},12,12).z` ✓; (b) procedural 14×14 with player rolling the bottom band (y=13) → targetZ=-6.5 = `gridToWorld({x:6.5,y:13},14,14).z` ✓. 279 tests pass. Commit `8d82c3a`.
-
-**Visible effect:** on boards where a dim exceeds `SCROLL_WINDOW_TILES = 12`, the scroll-mode camera now anchors as close to the player's spawn edge as the clamp allows. On 12×12 boards both old and new heuristics get clamped to 0 in scroll mode (gotcha #53 — no pan room when board ≤ window in a dim), so the change is observable only on boards >12. fit mode itself ignores the target visually (always looks at world origin), but the target is preserved across backtick toggles so the post-toggle anchor is correct.
-
-**D7.A landed (chasm tile kind — pure logic).** D7 split into three commits per the D7.A/D7.B/D7.C decision: A = chasm only (sim layer), B = fire + healing (the new World.tick hook + events), C = editor + visual lock-in. D7.A is the pure-logic cut: no new event, no new World.tick hook, no editor changes, no visual work. Five changes:
-
-1. **`TileKind` extended** from `'floor' | 'shallow_water'` to `'floor' | 'shallow_water' | 'chasm'` in [src/sim/TileGrid.ts](src/sim/TileGrid.ts). `TILE_COSTS[chasm] = Infinity`. Pathfinding already short-circuits on `!isFinite(stepCost)` so no Pathfinding code change — A* skips chasm cells via the existing data-driven block path (gotcha #34). LOS is a unit-blocker-list check ([src/sim/LineOfSight.ts](src/sim/LineOfSight.ts)) and tiles never enter that pipeline, so chasm is automatically LOS-transparent — also no LOS code change.
-
-2. **`LayoutDef.chasms?: Coord[]`** in [src/config/layouts.ts](src/config/layouts.ts), mirroring the D6 halfCovers shape. Zod validates: in-bounds for `gridW`/`gridH`, no duplicates within `chasms`, no overlap with walls / water / halfCovers / spawn regions. Chasms reserve their cells against subsequent spawn-region overlap (same chained `blocked` Set the halfCovers check populates), so the existing spawn-tile-overlap rule catches chasm clashes too — no separate spawn vs chasm rule.
-
-3. **`GeneratedTerrain.chasms: readonly GridCoord[]`** added to the dispatcher shape. `generateFromLayout` reads `layout.chasms ?? []`, calls `tileGrid.setKind(c, 'chasm')` on each (alongside the existing water-setting loop), and returns the parallel coord array. `generateProcedural` emits `[]` (hand-authored-only in D7.A, mirroring the half-cover decision from gotcha #72). `applyTerrain` needs no change — it already iterates `tileGrid.cells()` and copies kinds into the world's grid, so chasm cells flow through naturally without a new array consumer.
-
-4. **No snapshot version bump.** The TileGrid serialization stores kinds as discriminator strings (`'floor'` / `'shallow_water'` / `'chasm'`) per the existing comment "adding a new TileKind doesn't invalidate existing snapshots." v5 snapshots written before D7.A simply contain no chasm cells and load fine on v5-aware loaders that know about chasm. Contrast with D6 which DID bump 4→5 because UnitSnapshot gained a new field (`blocksLineOfSight`).
-
-5. **Connectivity check in [src/sim/layouts.test.ts](src/sim/layouts.test.ts) updated** to treat chasms (and half-covers, which it previously missed) as path blockers, so an author-error chasm wall fragmenting an arena fails the static check at test time. The procedural `hasPath` in [src/sim/terrainGen.ts](src/sim/terrainGen.ts) is unchanged — procedural emits no chasm in D7.A so the test-time guard is enough.
-
-**TerrainRenderer stopgap.** `heightAt(kind)` and `topColorFor(kind)` both use a `if (kind === 'shallow_water') return ...; fall-through to floor` shape — adding `chasm` to the union doesn't break compilation (no exhaustive switch anywhere on TileKind), and chasm tiles fall through to the floor branch. So a chasm tile in D7.A renders as a floor tile visually but blocks pathfinding logically. The proper sunken visual lands in D7.C.
-
-**Tests added** (306 passed, was 284 pre-D7.A): TileGrid chasm cost = Infinity + JSON round-trip; layouts.test per-layout chasms-in-grid invariant + chasm-aware spawn-overlap + chasm-aware connectivity BFS; Pathfinding routes around chasm via TileGrid.costAt; AttackBehavior fires through a chasm column (LOS contract); World snapshot round-trips chasm tiles. Commit `56adba0`.
-
-**D7.B landed (fire + healing tile kinds — per-tick chip effects).** Pure-logic continuation of the D7 split. Seven changes:
-
-1. **`TileKind` extended** to `'floor' | 'shallow_water' | 'chasm' | 'fire' | 'healing'`. Both new kinds cost 1 (normal pathing — they're surface effects, not obstacles); the chip damage/heal is a per-tick `World.tick` pass, not a pathing weight.
-
-2. **`config/tiles.json` + [src/config/tiles.ts](src/config/tiles.ts).** Rates authored in HP/sec (`fire.damagePerSec: 2`, `healing.amountPerSec: 1`) per gotcha #6. Module load converts to integer-tick cadences: `FIRE_TICKS_PER_DAMAGE = Math.max(1, round(TICK_RATE / damagePerSec)) = 5`, `HEALING_TICKS_PER_HEAL = 10`. The `Math.max(1, …)` guard catches absurd rates that would round to 0 — a 0-tick cadence would silently apply damage every tick. A4 pattern: zod parse at module load; malformed JSON crashes loudly.
-
-3. **Two new events** added to [src/core/events.ts](src/core/events.ts): `'unit:burned': { unitId, damage }` and `'unit:healed': { unitId, amount }`. **Separate-event design** (not extending `unit:attacked`) per the D7.B decision — there's no attacker for fire damage, so a `attackerId: number | null` change would force every existing subscriber to handle null. The separate events are symmetric, leave `unit:attacked` shape untouched, and read more clearly at consumer sites.
-
-4. **Global-cadence tile-effect pass** in `World.tick`. Runs AFTER the per-unit selector loop, AFTER `runOverflowScan`, BEFORE `checkBattleEnd`. Each tick: if `currentTick % FIRE_TICKS_PER_DAMAGE === 0`, iterate live combatant units (skip neutrals, skip already-dead) and apply 1 HP damage to any on a `fire` tile. Symmetric for healing. Cadences are independent — at the locked defaults a fire-tick + heal-tick coincide every 10 ticks.
-
-5. **Separate `reapDead()` pass** runs immediately after `applyTileEffects()`. A unit killed by fire has `currentHp <= 0` after step 4 but is still in `this.units` (the per-unit-loop death check ran at the start of the tick, before fire damage applied). Without an extra reap, `checkBattleEnd` would see the dead unit as alive (it counts by team membership, not HP), and the battle would end one tick late. The new reap pass closes that gap: a fire-kill of the last enemy ends the battle on the same tick, matching combat-kill ordering.
-
-6. **`LayoutDef.fires?: Coord[]` + `healings?: Coord[]`** with zod overlap rules — each cell is mutex with walls / water / halfCovers / chasms / spawn-regions / other fires/healings (tile-kind is mutex per cell). `GeneratedTerrain` gains `fires` + `healings` parallel coord readouts (same pattern as `chasms`); procedural emits `[]` for both — hand-authored-only in D7, matching gotcha #74's chasm scope decision. `generateFromLayout` calls `tileGrid.setKind(c, 'fire' | 'healing')` for each cell; `applyTerrain` requires no change since it already iterates `tileGrid.cells()`.
-
-7. **BattleRenderer subscribes to `unit:burned` + `unit:healed`** to call `refreshHpBar(unitId)` so the visible HP bar stays in sync with chip changes. No flash visuals in D7.B (those land in D7.C alongside the tile-kind shader work).
-
-**No snapshot version bump.** Same reasoning as gotcha #75 — adding tile-kind values doesn't change the wire format (kinds are discriminator strings), and no new fields are added to UnitSnapshot or WorldSnapshot for D7.B. The tile-effect cadence is a function of `world.tickCount` and `world.tileGrid` only — both already snapshotted.
-
-**Tests added** (320 passed, was 306 pre-D7.B): TileGrid fire+healing as normal cost + JSON round-trip carries them; World tile-effect pass: fire chip damage on cadence, healing chip heal on cadence with maxHp clamp + `amount: 0` emit, neutrals skipped, fire-kill emits unit:burned + unit:died + battle:ended on same tick, dead units skipped; snapshot round-trips fire+healing tiles; layouts per-layout fire/healing-in-grid invariant + extended spawn-overlap check. Commit `fe34ada`.
-
-**D7.C landed (visual + editor + audio lock-in for chasm / fire / healing).** Three concerns committed together — they share the same tile-kind set and the renderer + editor pair are tightly coupled (editor authors what renderer displays).
-
-1. **TerrainRenderer + shaders.** `heightAt` branches chasm to `CHASM_TOP_Y = -1.2`; `BOTTOM_Y` lowered to -1.5 so the chasm prism still has 0.3 units of side visible. Non-chasm tiles' visible sides only differ where the deeper bottom is exposed (chasm boundaries + the board edge), so the canonical look at the floor-floor interior is unchanged. `topColorFor` gains chasm (flat near-black `#0a0a0a`), fire (`#aa1c00 → #ffaa00` lerp across the floor height range), healing (`#0d4d4a → #15f4ee` lerp). All three reuse the same simplex noise field for height variation on fire/healing (they're surface effects, not elevation changes); chasm overrides to the flat -1.2. New `aAnim: vec2` per-vertex attribute encodes (animType, phase): 0 = none, 1 = fire, 2 = healing; phase = `(cx*13 + cy*7) * 0.43` so neighboring fire tiles flicker out of sync. New `uTime` uniform driven from `BattleScene.tick(dt)` via `TerrainRenderer.advanceTime(dt)` (not the Renderer rAF loop — non-battle scenes call `terrain.clear()` and don't need anim to advance). The frag shader applies a two-sine fire flicker (amp 0.30, freqs 6.0 + 9.7) and a slower single-sine healing pulse (amp 0.10, freq 1.6) BEFORE the grid-line stamp so the grid stays canonical and doesn't itself flicker. Animation runs uniformly across the prism — sides flicker too, but the baked `SIDE_SHADE` (0.7) tapers the amplitude naturally.
-
-2. **Editor.** New `#terrain-row` sub-tool radio (water / chasm / fire / healing) mirrors the D6 `#neutral-row` pattern — same row markup family, same mid-stroke commit rule (clicking another sub-tool synchronously `endStroke()`s the in-progress paint), same per-sub-tool erase scope rule (gotcha #65: erase-fire only clears fire cells, leaves water/chasm/healing untouched). Cell type widens to `'floor' | 'wall' | 'water' | 'halfCover' | 'chasm' | 'fire' | 'healing'`. CSS adds `.cell.chasm` (background `#060606`, glyph `.`), `.cell.fire` (background `#4a1505`, glyph `^` in `#ffaa33`), `.cell.healing` (background `#07332f`, glyph `+` in fluorescent-blue). Inactive-layer dimming extended to include the three new kinds. `isConnected` BFS widened to treat chasm as a path blocker alongside walls + half-covers (fire + healing pass freely — they're cost-1 surface effects, not obstacles). `applyTerrainStroke` switches over the new paint/erase variants; `refreshCell` toggles the new classes; `validate()` includes the new kinds in the spawn-overlap blocker set with a friendlier "overlap walls / water / half-cover / chasm / fire / healing" message. `refreshExport` + `formatLayoutJson` emit `chasms` / `fires` / `healings` arrays after `water`; `loadLayout` reads them back. Round-trip with existing layouts confirmed byte-clean (no shipped layout uses the new kinds yet, but the loader is exercised by the existing 5 layouts).
-
-3. **Audio.** `AudioPlayer.SoundKey` widens to include `'burn' | 'healtick'`; both load from the pre-staged WAVs in `public/audio/`. Volume tuned lower for the chip-cadence events (burn 0.6, healtick 0.55) so the 5-tick / 10-tick beat doesn't dominate the mix; pitch variance ±12% on burn (aggressive jitter for the fastest cadence) and ±8% on healtick. BattleScene subscribes to `unit:burned` (plays burn unconditionally) and `unit:healed` (plays healtick only when `amount > 0`, gating on `amount <= 0` since the sim emits no-op heals on maxHp units each cadence tick per gotcha #80 — playing a sound for zero effect would feel buggy). Lives in BattleScene's per-battle `subscriptions[]` so it tears down with the world.
-
-**No snapshot version bump.** D7.C is pure rendering + UI + audio plumbing on top of the D7.A/B sim changes; no new persisted state.
-
-**Tests** still 320 passing (no new tests — D7.C is rendering/UI/audio per [TESTING.md](TESTING.md)). Browser-verified: editor paint/erase loop for all four terrain kinds, per-sub-tool erase scope (erase-chasm on healing is a no-op, erase-healing on healing clears), connectivity rejection on chasm-severed regions, JSON export round-trip. In-game: live battle frozen via `__game.activeScene.world.tick = ()=>{}`, tileGrid mutated to inject chasm/fire/healing rows, terrain `setTiles`-reuploaded; visible bands rendered correctly (cyan healing, red fire, dark chasm) and the `aAnim` attribute matched expected (type, phase) per tile. `uTime` advances at ~1s/s. Synthetic `bus.emit('unit:burned', …)` plays burn; `bus.emit('unit:healed', { amount: 1 })` plays healtick; `bus.emit('unit:healed', { amount: 0 })` correctly skipped. Commit `b408212`.
-
-**D7 is now fully complete.**
-
-**D8 landed (tile theming).** Closes out Phase D. Per the D8 scope decisions: themes re-color FLOOR tops only — water / chasm / fire / healing keep their D7 palettes (they're functional indicators the player needs to recognize at a glance regardless of theme). Five interlocking changes:
-
-1. **Schema (`src/config/layouts.ts` + `config/layouts.json`).** New closed-union `ThemeSchema = z.enum(['default', 'rock', 'volcanic'])` and `THEMES: readonly Theme[]` export. `LayoutDef.theme: Theme` is REQUIRED (no `?`). All 6 existing layouts (labyrinth / river / endlessCorridors / junctionAmbush / strafingFunnel / spiralFireLife) retrofit with `"theme": "default"` — the user explicitly preferred a pure-`default` retrofit so re-theming layouts is a separate, deliberate decision. `src/sim/layouts.ts` re-exports `THEMES` + `type Theme` so Run + tests can pull the picker pool without reaching into the config module directly.
-
-2. **`BattleEncounter.theme: Theme` + `Run.handleEnterNode` rolls a theme.** New `rollTheme(rng): Theme` picks uniformly from `THEMES`. Lands BETWEEN `rollProceduralSide` and `rollEnemyTeam` so the byte-continuity invariant (gotcha #49) extends: the order is now `worldSeed → terrainSeed → layoutId → proceduralSide → theme → rollEnemyTeam`. The draw ALWAYS runs even on hand-authored encounters (rolled value discarded; `layout.theme` wins) so the RNG stream advances identically regardless of branch. **Behavior shift:** enemy compositions for existing seeds shifted by one RNG draw vs the pre-D8 baseline (same kind of shift D3 made — permissive existing range assertions still pass). `RUN_SCHEMA_VERSION` bumped 1 → 2; v1 snapshots throw (the loud-failure mode A4 settled on; no shipping save format).
-
-3. **`TerrainRenderer` + palette.** `setTiles(tileGrid, gridW, gridH, theme = 'default')` stores the theme on the renderer; `topColorFor(topY, kind, theme, out)` consults a new `FLOOR_PALETTE: Record<Theme, {low, high}>` table for the floor branch only. The water / chasm / fire / healing branches are unchanged — they read fixed D7 colors. Palettes: `default` = `DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER` (unchanged); `rock` = `#3a342f → TERMINAL_STONE` (stone-dark → same gray walls use, so a rock arena reads as "stone everywhere"); `volcanic` = `#3a0a04 → DARK_TERMINAL_AMBER` (the high end shares with default so fire tiles blend organically into a volcanic floor instead of jumping out). The shader didn't need a touch — the per-vertex `aColor` attribute carries the resolved color, so JS-side palette swaps reupload through the existing `colorAttr.needsUpdate = true` path. Animation (D7.C fire flicker / healing pulse) still works regardless of theme.
-
-4. **Banner suffix.** `BattleScene.mount` builds the HUD banner as `"<name>"` for `theme === 'default'` and `"<name> — <Title>"` (e.g. `"Endless Corridors — Volcanic"`) otherwise — keeps the banner uncluttered for baseline-themed battles, adds visible flavor for non-default. `titleCaseTheme()` is a module-local helper. The "Nowhere" procedural-encounter fallback also takes the suffix when applicable (procedural rolls a theme; non-default themes get suffixed there too).
-
-5. **Editor (`tools/layout-editor/`).** Theme `<select>` in the Metadata card with the three theme options. `data-theme` attribute on `#grid` drives a CSS-variable rule (`--floor-bg`) on `.cell` so floor cells re-tint live as the dropdown changes — implementation uses a CSS variable rather than direct background-color overrides so the wall / water / halfCover / chasm / fire / healing rules below `.cell` keep their per-kind backgrounds (the kind-classes win specificity-wise when present, and the variable only fires on naked floor cells). The editor's flat-color preview shows ONE representative color per theme (the "high" endpoint of the renderer's palette) — the in-game faceted-prism lerp can't be replicated cheaply in CSS. JSON export emits `"theme": "<value>"` immediately after `gridH`; load round-trips correctly (verified byte-clean against all 5 existing layouts).
-
-**No snapshot bump for World, just Run.** TileGrid still doesn't bump (gotcha #75 still holds — no new tile kinds). UnitSnapshot still doesn't bump (no new fields). Only `RunSnapshot.currentEncounter.theme` is the new persisted field, hence `RUN_SCHEMA_VERSION 1 → 2`.
-
-**Tests** 312 passing where D8-relevant (was 303 pre-D8; +9 new: per-layout theme assertion ×6 in [src/sim/layouts.test.ts](src/sim/layouts.test.ts), +3 in [src/run/Run.test.ts](src/run/Run.test.ts) covering "encounter.theme is always a registered theme," "hand-authored encounters use the layout-declared theme," "procedural rolls cover all themes across enough seeds"). (Four pre-existing failures referencing the removed `corridor` layout were cleaned up in commit `0f51ed9` after D8 landed.) Browser-verified: editor dropdown changes the floor color live for all three themes; loading an existing layout sets the dropdown + grid `data-theme` correctly; JSON export contains the theme line. In-game: hand-authored encounters use `layout.theme` (junctionAmbush battle shows banner "JUNCTION AMBUSH" without suffix — default theme); manual `terrain.setTiles(..., 'volcanic')` + banner override produces the expected dark-red/amber palette + "ENDLESS CORRIDORS — VOLCANIC" banner; same dance with `'rock'` produces the gray-stone palette + "ENDLESS CORRIDORS — ROCK" banner. Console error-free across all paths.
-
-**Phase D is now COMPLETE.** **E1 landed (stats overhaul).** Replaced the MVP `{maxHp, attackDamage, attackRange, attackCooldownTicks, moveCooldownTicks}` block with the new vocabulary (`constitution`, `strength`, `ranged`, `magic`, `luck`, `speed`, `endurance`) and a parallel `UnitDerived` snapshot computed once at spawn time via `deriveStats` in [src/sim/stats.ts](src/sim/stats.ts). Knob set lives in [config/stats.json](config/stats.json) (linear `hpPerConstitution=2.5`; `critPerLuck=0.01`, `critCap=0.6`, `critMult=2.0`; `baseAttackCooldownSeconds=1.2`, `baseMoveCooldownSeconds=0.7`, `cdPerStat=0.01`, `minCdScale=0.4`). Archetype baselines flipped in [config/archetypes.json](config/archetypes.json) — `melee` con=20 str=8 luck=3 speed=5 end=6, `ranged` con=12 str=0 ranged=5 luck=3 speed=5 end=5. Per the user's call: doubled MVP-baseline constitution so archers don't get one-shot, dropped archer strength to 0 + archer ranged 8→5 to balance the durability bump.
-
-Eight interlocking changes:
-
-1. **`UnitStats` rewrite + `UnitDerived` layer + `Unit.archetype`** ([src/sim/Unit.ts](src/sim/Unit.ts)). UnitStats is now the 7-stat baseline; derived values (`maxHp`, `critChance`, `attackCooldownTicks`, `moveCooldownTicks`, `attackRange`) live on `UnitDerived` and recompute via `deriveStats(stats, attackRange)`. `Unit.currentHp` now seeds from `derived.maxHp`, not `stats.maxHp`. `Unit.archetype: 'melee' | 'ranged' | 'environment'` distinguishes combatants from walls / half-cover (which `spawnEnvironment` flags `'environment'` with `ZERO_STATS` + `inertDerived(maxHp)`).
-
-2. **`config/stats.json` + zod parser** at [src/config/stats.ts](src/config/stats.ts). A4 pattern — parse at module load, throw on malformed. All E1 knobs live here so balance tuning is a JSON edit + Vite hot-reload, not a recompile.
-
-3. **`config/archetypes.json` schema flip** ([src/config/archetypes.ts](src/config/archetypes.ts)). Per-archetype `{glyph, attackRange, baseStats}` replaces the old range-based shape. `STAT_CAP=99` is a defensive typo guard, not a design knob — the practical 0-50 stat range never touches it. `rollUnit` returns the archetype's `baseStats` verbatim today (E3 reintroduces variance via `simulateLevelUps` for player recruits + `scaleStats` for enemies); the `rng` param stays on the signature so callers don't churn at E3.
-
-4. **AttackAction crit roll at start, not propose** ([src/sim/actions/AttackAction.ts](src/sim/actions/AttackAction.ts)). The proposal carries `(target, baseDamage, critChance)` — base damage from `basicAttackDamage(unit)` (melee → strength, ranged → ranged stat), crit chance from `derived.critChance`. `start` draws once against `world.combatRng`, multiplies base by `STATS.critMult` on a crit, applies the result. `unit:attacked` payload gains a `crit: boolean` field that E6's hitsplats will key off.
-
-5. **`world.combatRng`** — dedicated RNG channel forked from `World.rng` at construction time (default fork; battle-setup paths pass an explicit one if needed). Keeps stat-noise out of the spawn-setup / pathfinding streams that downstream tests pin. Snapshotted alongside `world.rng` so replay determinism extends to crit decisions.
-
-6. **WorldSnapshot v5 → v6.** `UnitSnapshot.stats` shape rewritten; new `UnitSnapshot.archetype` + `UnitSnapshot.derived`; top-level `combatRng: RNGSnapshot`. v5 throws on load (loud-failure mode A4 settled on; no shipping save format).
-
-7. **Difficulty scaling moved from `maxHp` to `constitution`** ([src/run/Run.ts](src/run/Run.ts) `scaleConstitution`). The enemy `1 + 0.05 × floor` curve now scales the stat that *feeds* the derivation, so `deriveStats` stays the single source of truth for HP. E3 replaces this with `enemyLevelPerFloor` + a full `scaleStats` pass.
-
-8. **All consumers updated** — `BattleRenderer` HP bar uses `derived.maxHp`; HUD ditto; `BattleScene` audio dispatch reads `derived.attackRange`; `World.applyTileEffects` healing clamp uses `derived.maxHp`; AttackBehavior reads `derived.attackCooldownTicks` + `basicAttackDamage`; MovementBehavior reads `derived.{attackRange, moveCooldownTicks}`; **`RecruitScreen` cards** re-derive the preview row (HP / DMG / RNG / ATK / MOV) from `deriveStats(template.stats, attackRangeForArchetype(template.archetype))` so the card shows the exact same values the unit will have in-battle (and a new CRIT row since luck is now a meaningful stat).
-
-**Tests**: 333 passing (was 312 pre-E1; +21 — new [src/sim/stats.test.ts](src/sim/stats.test.ts) covers formula edges + combatRng determinism, behavior + helper scenes ported to new shape with `luck=0` so crit roll is deterministic for exact-damage assertions, archetype-test rewritten to assert exact baselines, Run.test scaleConstitution check, env.test uses `derived.maxHp`). Fuzz smoke 7/7. Browser-verified Floor 1: melee con=20 → maxHp=50, attackCD=11 ticks, critChance=0.03; enemy melee con=21 = round(20×1.05) → maxHp=53; banner + theme + audio + bars all correct, console clean.
-
-**E2 landed (ability primitives).** Extracted `AttackBehavior` into a generic `AbilityBehavior` (new at [src/sim/behaviors/AbilityBehavior.ts](src/sim/behaviors/AbilityBehavior.ts)) that walks `unit.abilities: Ability[]` each tick and returns the highest-scoring proposal. Two concrete classes in [src/sim/abilities/strikes.ts](src/sim/abilities/strikes.ts) — `MeleeStrike` (id `'melee_strike'`) and `RangedShot` (id `'ranged_shot'`) — share a `proposeBasicStrike` helper that reuses the pre-E2 propose logic exactly (target search → range gate → LOS gate → AttackAction proposal). Registry pattern at [src/sim/abilities/registry.ts](src/sim/abilities/registry.ts) mirrors `behaviors/registry.ts`. `AttackBehavior` deleted entirely; `AttackAction` (the single-tick damage primitive) stays.
-
-Six interlocking changes:
-
-1. **`Ability` interface + concrete classes + registry.** `Ability.propose(unit, world) → ActionProposal | null` — each ability decides its own score (basic strikes return 10, matching pre-E2). Stateless; factories are zero-arg per `behaviors/registry.ts` precedent.
-
-2. **`Unit.abilities: Ability[]`** ([src/sim/Unit.ts](src/sim/Unit.ts)). New mutable readonly array, mirroring the `behaviors` pattern. Populated at spawn time from `ARCHETYPE_CONFIG[archetype].abilities`; rehydrated from the snapshot's `string[]` of ids via the registry.
-
-3. **`ActionProposal.cooldownKey?: string`** ([src/sim/Action.ts](src/sim/Action.ts)). Optional — defaults to `action.id` (the pre-E2 behavior). Abilities set `cooldownKey: this.id` so a multi-ability unit gets independent cooldowns even when two abilities wrap the same `AttackAction` primitive. Selector in `World.tick` keys `unit.actionCooldowns` on `cdKey ?? action.id`. AbilityBehavior ALSO does its own inner cooldown filter on the same key — without it, a just-fired ability could win the inner score loop and then be discarded by the outer selector, leaving the unit idle while a slower-scoring sibling was ready.
-
-4. **`config/archetypes.json` gains `abilities: string[]`** per archetype (melee → `["melee_strike"]`, ranged → `["ranged_shot"]`). Zod schema in [src/config/archetypes.ts](src/config/archetypes.ts) validates each id against `knownAbilityIds()` at boot — unknown ids fail the parse loudly (A4 pattern). `abilityIdsForArchetype(archetype)` exposed from `src/sim/archetypes.ts`.
-
-5. **Spawn-site wiring** updated in [src/sim/battleSetup.ts](src/sim/battleSetup.ts) (`spawnTeam`) and [src/sim/World.ts](src/sim/World.ts) (`spawnFromQueue`): push `MovementBehavior` + `AbilityBehavior` to behaviors; for each id in `abilityIdsForArchetype(template.archetype)`, push `createAbility(id)` to `unit.abilities`.
-
-6. **WorldSnapshot v6 → v7.** `UnitSnapshot` gains `abilities: string[]`. v6 throws on load. Environment units (walls, half-cover) serialize as `abilities: []` — they have no behaviors either, so they always abstain.
-
-**Decisions (re-stated for E3 context):** ability *behavior* lives in TS where it can use the type system; the *list* per archetype lives in JSON. Per-ability scoring is context-dependent (each `Ability.propose` returns its own score), so future abilities can read world state in their scoring decision — basic strikes are 10 today, but E7's mage AoE could return 15 when N enemies cluster. **Half-cover damage modifier deferred to E4** — tuned alongside the rest of the stat curve. The LOS-blocker collection in `proposeBasicStrike` already filters half-covers exactly as pre-E2 AttackBehavior did, so D6's contract is preserved.
-
-**Tests:** 336 passing (was 333 pre-E2; +3 net — added 4 new AbilityBehavior cases [multi-ability scoring, ties go to first proposer, per-ability cooldown isolation, snapshot abilities round-trip] minus 1 pre-existing test consolidation). Fuzz smoke 7/7. Headless verified — no browser preview run since E2 is sim-layer logic with no immediate visual surface; the existing AbilityBehavior + sharedCooldown + stats integration tests pin the contracts.
-
-E3 landed in commit `d0374ae` — see the top-of-file bullet for the breakdown. Next up per ROADMAP — **E3.5 (tick rate + cdPerStat bumps)** and then **E3.6 (DOM migration for unit overlays)**, two small steps inserted after E3 to address visible gaps before E4:
-
-- **E3.5:** `TICK_RATE 10 → 20` in `src/config.ts`, `cdPerStat 0.01 → 0.05` in `config/stats.json`. At baseline values the E1 cooldown math left every unit on the same move/attack CD until ~9-14 stat points stacked; after E3.5 every stat point shifts attack CD by ~1 tick and every other point shifts move CD. Per gotcha #6 the seconds-authored balance re-derives automatically — test churn is the cost (any test asserting raw tick counts) and fuzz baselines shift. No snapshot bump.
-- **E3.6:** Retire `BarRenderer`; move HP bar + action progress bar + a new per-unit level badge to DOM elements positioned via a world-to-screen projector. Sets up the infrastructure E6.C hitsplats reuse, so hitsplats stop needing their own TextRenderer.
-- **E4 (after E3.5/E3.6):** XP source + difficulty rescaling + half-cover multiplier, plus a new pre-recruit `PromotionScene` that displays per-unit level-up details when surviving units crossed an XP threshold.
-
-ROADMAP also still flags the eventual **F3 multi-map theme migration** — each node map will carry a theme; procedural encounters within that map inherit it. At that point `rollTheme` moves out of `Run.handleEnterNode` into nodeMap construction.
-
-**Fuzz harness:** `npm run fuzz -- --count=N` runs N seeds × all strategies (currently pure-random + greedy), writes `tests/fuzz/output/summary.csv` and per-failure markdown traces. `npm run fuzz:smoke` runs vitest smoke on the harness itself (config: `vitest.fuzz.config.ts`). MVP baseline at 10 seeds: both strategies ~50% win rate, avg floor 3.6 — suggests recruit picks don't move balance much at 4-floor scope, which is data for tuning. (5-seed sample post-A4 hints at greedy edge, but N is too small to be sure — re-run at 100+ when something invalidates the cache.)
-
-**Balance tuning:** numbers live in `config/*.json` (archetype stats, difficulty curve, recruitment composition, nodemap shape). Edit the JSON, refresh the browser — no recompile, just a Vite hot-reload. Schemas + validation in `src/config/*.ts` (zod). Malformed JSON throws at boot with a readable error trace.
-
-Open the roadmap for the full plan and decision-point flags.
-
-Beyond those, see [DESIGN.md](DESIGN.md) "Out of scope" for the gameplay backlog (shop, synergies, boss nodes, etc.) and [TODO.md](TODO.md) for the smaller code-level follow-ups.
+The historical per-step "X landed" log for Phases A-E that used to live here is archived at [archive/phase-a-e-worklog.md](archive/phase-a-e-worklog.md).
 
 ## How we collaborate
 
@@ -550,152 +319,153 @@ ARCHITECTURE for the full layout.
 
 ```
 src/
-  main.ts              # entry; top-level await on FontAtlas.create()
+  main.ts              # entry; top-level await on FontAtlas.create(); dev-only window.__game (D5.C)
   Game.ts              # top-level orchestrator: owns Renderer/Bus/Run; scene swapper (A5)
-  config.ts            # TICK_RATE=10, GRID_SIZE=12, secondsToTicks/ticksToSeconds
-                       # (engine knobs; balance lives in config/*.json — see src/config/)
-  config/
-    archetypes.ts      # E1: glyph + attackRange + baseStats (was Range bands)
-    difficulty.ts      # validated wrapper around config/difficulty.json (A4)
-    recruitment.ts     # validated wrapper around config/recruitment.json (A4)
-    nodemap.ts         # validated wrapper around config/nodemap.json (A4)
-    terrain.ts         # validated wrapper around config/terrain.json (C1a)
-    layouts.ts         # validated wrapper around config/layouts.json (C1d.A)
-    stats.ts           # E1: hpPerConstitution, crit knobs, base cooldown knobs
-    schemas.ts         # shared zod helpers (RangeSchema) (A4)
+                       # builds Run from parseRunConfigFromURL() (G1)
+  config.ts            # TICK_RATE=20 (E3.5), GRID_SIZE=12, secondsToTicks/ticksToSeconds
+                       # (engine knobs; balance lives in config/*.json -- see src/config/)
+  config/              # A4: zod-validated wrappers around config/*.json
+    archetypes.ts      # glyph + baseStats + growthRates (E1/E3); attackRange moved to abilities (E5)
+    abilities.ts       # E2+: per-ability cooldownSeconds/range/aoe/travelSeconds/retreatDelaySeconds
+    difficulty.ts      # G4: enemy level-budget knobs (budgetFactor/offset, swarm) + A/B/C presets
+    recruitment.ts     # starting team + offer size + startingLevel + recruitBonusChance (G4)
+    leveling.ts        # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
+    nodemap.ts         # floor count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
+    stats.ts           # hpPerConstitution, crit, base move CD; per-axis mobility/agility CdPerStat+MinCdScale (GP1)
+    sim.ts             # E5: targeting + pathfinding knobs (retarget, occupiedCellPenalty, healer*)
+    terrain.ts         # C1a: wall + water density
+    layouts.ts         # C1d.A: hand-authored layout array
+    tiles.ts           # D7.B: fire/healing chip rates
+    spawn.ts           # D5.C: SpawnAction lockout duration
+    schemas.ts         # shared zod helpers (A4)
   core/
-    RNG.ts             # mulberry32, fork(), pick(), int()
+    RNG.ts             # mulberry32, fork(), pick(), int(); toJSON normalizes (E3.5, gotcha #100)
     EventBus.ts        # typed pub/sub; on() returns unsub
     Clock.ts           # fixed-timestep accumulator
     events.ts          # GameEvents catalog (typed event payloads)
     types.ts           # GridCoord, Vec2
   sim/
-    World.ts           # tick(): selector + overflow scan (D5.C) + tile-effect
-                       #   pass (D7.B) + reapDead + checkBattleEnd
-                       # spawnUnit/spawnEnvironment/spawnFromQueue, command-queue
-                       # drain (A2), toJSON/fromJSON. WorldSnapshot v6 (E1).
-                       # E1: + combatRng (forked from rng) for AttackAction crit roll
-    Unit.ts            # Unit + UnitTemplate + UnitStats (E1 vocabulary) +
-                       # UnitDerived (E1) + archetype tag (E1) + Team + Behavior
-                       # + actionCooldowns Map + activeAction (A1)
-                       # + blocksLineOfSight: boolean (D6, default true)
-                       # Team union: 'player' | 'enemy' | 'neutral' (C1a)
-    stats.ts           # E1: deriveStats / inertDerived / basicAttackDamage / ZERO_STATS
-    TileGrid.ts        # floor | shallow_water | chasm | fire | healing (D7)
-                       # per-cell movement cost; chasm = Infinity (data-driven block)
-    LineOfSight.ts     # Bresenham line walk for ranged-attack LOS (C1b)
-    Action.ts          # Action / ActionProposal / ActiveAction interfaces (A1)
-                       # + toData() on Action for snapshot rehydration (A2)
-    Command.ts         # WorldCommand union — drained at tick boundary (A2)
-    Pathfinding.ts     # A* king's-move, Chebyshev heuristic
-                       # + optional CostFn for per-cell weights (C1a)
-    Targeting.ts       # findTarget — nearest enemy, ties by HP then id
-                       # skips neutrals (C1a)
-    archetypes.ts      # MELEE/RANGED bounds, rollUnit, glyphForArchetype
-    environment.ts     # spawnWall (C1a) + spawnHalfCover (D6) — neutral-team factories
-    terrainGen.ts      # per-encounter procedural tile + wall generator (C1a)
-                       # + layout-library dispatch (C1b)
-    layouts.ts         # C1b + C1d.A: thin re-export of validated config
-                       # (see src/config/layouts.ts) — LAYOUT_IDS picklist
-                       # for Run's 50/50 roll lives here for sim callers
+    World.ts           # tick(): selector + phase timeline (F2) + overflow scan (D5.C)
+                       #   + tile-effect pass (D7.B) + reapDead + checkBattleEnd
+                       # combatRng (E1) + damageDealt/utilityDone XP ledgers (E4/F6)
+                       # + playerRosterIds; toJSON/fromJSON -- WorldSnapshot v16 (GP1)
+    Unit.ts            # Unit + UnitTemplate + UnitStats (GP1 vocab) + UnitDerived + level (E3)
+                       # + xp/rosterIndex (E4) + actionCooldowns/activeAction (A1)
+                       # + blocksLineOfSight (D6); Archetype = 6 combat kinds + environment
+                       # Team: 'player' | 'enemy' | 'neutral' (C1a)
+    stats.ts           # deriveStats/inertDerived/ZERO_STATS + damage/heal/range/cooldown helpers
+    leveling.ts        # E3: simulateLevelUps (player rolls) + scaleStats (enemies, deterministic)
+    xp.ts              # E4: xpToNext curve + computeXpAwards + displayLevel
+    TileGrid.ts        # floor|shallow_water|chasm|fire|healing (D7); per-cell cost
+    LineOfSight.ts     # Bresenham line walk for ranged LOS (C1b)
+    Action.ts          # Action / ActionProposal / phase timeline (F2) + OrphanPolicy
+    Command.ts         # WorldCommand union -- drained at tick boundary (A2)
+    Pathfinding.ts     # A* king's-move, Chebyshev heuristic + CostFn (C1a)
+    Targeting.ts       # updateTarget/currentTarget stickiness (E5) + lowestWoundedAlly (E7.B)
+    archetypes.ts      # ALL_ARCHETYPES pool (F1), rollUnit, glyphForArchetype
+    environment.ts     # spawnWall (C1a) + spawnHalfCover (D6) -- neutral-team factories
+    terrainGen.ts      # procedural tiles/walls (C1a) + layout-library dispatch (C1b)
+    layouts.ts         # re-export of validated config; LAYOUT_IDS picklist (C1b/C1d.A)
     battleSetup.ts     # shared applyTerrain/spawnTeam/spawnEncounter (A3 + C1a)
     actions/
-      MoveAction.ts          # logical position update + unit:moved event
-      AttackAction.ts        # damage + unit:attacked event
+      MoveAction.ts          # logical position update + unit:moved
+      AttackAction.ts        # melee/ranged damage + crit + half-cover mult (E1/E4)
+      GambitStrikeAction.ts  # E7.A: rogue strike + deferred reposition (F4)
+      HealAction.ts          # E7.B: HP restore + heal-XP ledger (F6)
+      MagicBoltAction.ts     # E7.C: multi-tick ground-target AoE
+      CatapultShotAction.ts  # E7.D: multi-tick homing heavy hit
       SpawnAction.ts         # D5.C: pure-lockout action for overflow-queue spawns
       registry.ts            # action factories keyed by Action.id (A2)
+    abilities/               # E2: generic Ability layer (retired AttackBehavior)
+      Ability.ts             #   Ability interface + ignoresLineOfSight flag (E7.D)
+      strikes.ts             #   MeleeStrike/RangedShot/gambit via shared proposeBasicStrike
+      heal.ts                #   E7.B: HealAlly (lowest-HP wounded ally, no LOS)
+      magic.ts               #   E7.C: MagicBolt (AoE ground-target)
+      catapult.ts            #   E7.D: CatapultShot (homing, lobs over walls)
+      registry.ts            #   ability factories; boot-asserts vs abilities.json (E5)
     behaviors/
-      MovementBehavior.ts    # proposeAction → MoveAction when out of range
-      AttackBehavior.ts      # proposeAction → AttackAction when in range
-      registry.ts            # behavior factories keyed by Behavior.kind (A2)
+      MovementBehavior.ts    # A* approach; boids sidestep (E5.B); LOS-optional abstain (E7.D)
+      AbilityBehavior.ts     # E2: walks per-unit Ability[] (replaced AttackBehavior)
+      SupportMovementBehavior.ts  # E7.B: healer idle/panic/approach/centroid-trail
+      registry.ts            # createMovementBehavior + behavior factories (A2)
   run/
-    Run.ts             # state machine: map|battle|recruit|defeat|complete + RNG + team + nodeMap
-                       # + dispatch(RunCommand) + toJSON/fromJSON (A2)
+    Run.ts             # state machine: map|battle|recruit|promotion|defeat|complete (E4.4)
+                       # rest/boss node resolution (G3); XP banking; toJSON/fromJSON -- Run v5
+    RunConfig.ts       # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI)
+    enemyBudget.ts     # G4: playerTeamLevel SEAM (H5 swaps it) + affine budget + swarm count
     Command.ts         # RunCommand union + RunDispatcher interface (A2)
-    NodeMap.ts         # DAG generation + dump
-    Recruitment.ts     # rollOffer: distinct archetypes from the full pool (F1)
+    NodeMap.ts         # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3)
+    Recruitment.ts     # rollOffer: distinct archetypes from full pool (F1); per-card level (post-G5)
   render/
     Renderer.ts        # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
-                       # + RAF loop + two camera modes: fit / scroll (D4)
-    FontAtlas.ts       # canvas2d glyph atlas → THREE.CanvasTexture
-    SpriteRenderer.ts  # InstancedBufferGeometry + custom shaders
-                       # + dual mesh (layer 0 visible / layer 1 bloom)
-                       # + per-instance bloomIntensity attr (B1.1 selective bloom)
-    BarRenderer.ts     # B3: HP + action progress bars (single instanced mesh, layer 0)
-    TerrainRenderer.ts # C1c: faceted low-poly prism-per-tile
-                       # heightAt(cx,cy,kind) is canonical for sprite Y
-                       # D7.C: per-tile flicker/pulse + chasm sink, D8: theme palettes
-    BattleRenderer.ts  # sim/render seam: attach/detach per battle
-                       # neutral team → TERMINAL_STONE color, no bars/bloom (C1a)
-                       # + tileWorldPos(coord) for per-tile sprite Y (C1c)
+                       # + RAF loop + fit/scroll camera modes (D4)
+    FontAtlas.ts       # canvas2d glyph atlas -> THREE.CanvasTexture (glyph set from glyphs.ts)
+    glyphs.ts          # E7.A: THREE-free GLYPHS set (FontAtlas.test asserts archetype coverage)
+    SpriteRenderer.ts  # InstancedBufferGeometry + shaders; dual mesh (visible/bloom)
+                       # + per-instance bloomIntensity (B1.1) + instanceSize (E6.B)
+    UnitOverlayLayer.ts # E3.6: DOM HP bar + level badge + action-progress + hitsplats (E6.C)
+                       #   (replaced the retired BarRenderer + bar.*.glsl)
+    TerrainRenderer.ts # C1c faceted prism-per-tile; D7.C flicker/sink; D8 theme palettes
+    BattleRenderer.ts  # sim/render seam: attach/detach; shove/projectile/explosion VFX (E6/E7)
     PostProcess.ts     # SatClamp + Bloom + BloomMix factories (B1.1)
-                       # CRT scanlines live on the #scanlines CSS overlay (B5)
-    palette.ts         # COLORS table — added TERMINAL_STONE for neutrals (C1a)
-    shaders/           # .glsl source files loaded via Vite ?raw imports (A4)
-                       # terrain.{vert,frag}.glsl: C1c faceted + D7.C animation
-    animation/SpriteAnimator.ts  # startLerp + startFade w/ fromAlpha/toAlpha (D5.C) + clear()
-  scenes/              # A5: Scene system — single-active swap driven from Game
-    Scene.ts           #   Scene interface + SceneContext bundle type
+    palette.ts         # COLORS table (+ TERMINAL_STONE neutrals, C1a)
+    shaders/           # .glsl via Vite ?raw (A4): sprite/billboard/terrain/bloom-mix/sat-clamp
+    animation/SpriteAnimator.ts  # startLerp (arc/targetProvider, F3) + startShove (E6.A) + startFade
+  scenes/              # A5: Scene system -- single-active swap driven from Game
+    Scene.ts           #   Scene interface + SceneContext (bars -> overlays, E3.6)
     BattleScene.ts     #   wraps World + Clock + BattleRenderer + HUD
     MapScene.ts        #   DOM-only, wraps MapScreen
     RecruitScene.ts    #   DOM-only, wraps RecruitScreen
-    GameOverScene.ts   #   DOM-only, wraps GameOverScreen
+    PromotionScene.ts  #   E4.4: DOM-only level-up summary, shown before recruit
+    GameOverScene.ts   #   DOM-only, defeat / complete
   ui/
     ui.css
-    fade.ts            # fadeIn / fadeOutAndRemove — shared screen transitions (Step 5.2)
-    MapScreen.ts       # node map view + frontier click → dispatch enterNode
-    RecruitScreen.ts   # 3-card recruit offer → dispatch chooseRecruit
-    GameOverScreen.ts  # defeat / complete variants → dispatch resetRun
-    HUD.ts             # in-battle HUD: floor, rosters, banner (per-battle, A5)
+    fade.ts            # fadeIn / fadeOutAndRemove -- shared screen transitions
+    MapScreen.ts       # full-viewport node map (G2) + kind icons (G3); frontier click -> enterNode
+    RecruitScreen.ts   # recruit offer cards -> dispatch chooseRecruit
+    PromotionScreen.ts # E4.4: per-unit level-up rows
+    GameOverScreen.ts  # defeat / complete variants -> dispatch resetRun
+    HUD.ts             # in-battle HUD: floor, rosters, Lv/XP rows (E4.5), banner
   audio/
-    AudioPlayer.ts     # B6: 4-deep clone ring per sound; per-key volume + pitch jitter
+    AudioPlayer.ts     # B6: clone-ring per sound; per-key volume + pitch jitter; + magicboom (E7.C)
 
 tests/
   smoke.test.ts                              # vitest + module resolution
-  integration/determinism.test.ts            # deterministic replay contract
+  integration/determinism.test.ts            # deterministic replay (taps action:phase, F2)
   integration/snapshot-roundtrip.test.ts     # A2: World/Run JSON round-trip
   fuzz/                                      # A3: opt-in headless balance harness
     Strategy.ts                              #   pickNextNode / pickRecruit interface
     strategies/policies.ts                   # G5: node + recruit decision policies
     strategies/factory.ts                    # G5: composeStrategy(name, node, recruit)
-    strategies/registry.ts                   # G5: the 17-strategy menu (shared by both CLIs)
-    strategies/strategies.test.ts            # G5: policy + registry unit tests
+    strategies/registry.ts                   # G5: 17-strategy menu (shared by both CLIs)
     harness.ts                               #   runOne / runMany; RunResult shape
-    reporters.ts                             #   CSV summary + markdown failure traces
+    reporters.ts                             #   CSV summary + per-floor (G4) + markdown traces
     cli.ts                                   #   `npm run fuzz` entry point
-    harness.test.ts                          #   smoke (run via `npm run fuzz:smoke`)
-    output/                                  #   gitignored — regenerated each fuzz run
+    output/                                  #   gitignored -- regenerated each fuzz run
 
 retro/
   scratchpad.md           # rolling scratchpad of process notes / gotchas
   post-mvp-review.md      # CHECKPOINT 7 retrospective written after MVP shipped
 
-config/                              # A4: balance JSON source-of-truth
-  archetypes.json                    # E1: glyph + attackRange + baseStats per archetype
-  difficulty.json                    # enemy size delta + per-floor HP scale
-  recruitment.json                   # starting team + offer size
-  nodemap.json                       # floor count + width bands + degree cap
+config/                              # A4: balance JSON source-of-truth (zod-checked by src/config/)
+  archetypes.json                    # glyph + baseStats + growthRates per archetype (E1/E3)
+  abilities.json                     # per-ability cooldownSeconds/range/aoe/travel/retreatDelay (E2+)
+  difficulty.json                    # G4: enemy level-budget knobs + A/B/C presets
+  recruitment.json                   # starting team + offer size + startingLevel + recruitBonusChance (G4)
+  leveling.json                      # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
+  nodemap.json                       # floor count + width bands + degree cap + rest knobs (G2/G3)
+  stats.json                         # hpPerConstitution, crit, base move CD, per-axis mobility/agility knobs (GP1)
+  sim.json                           # E5: retarget + occupiedCellPenalty + healer knobs
   terrain.json                       # C1a: wall + water density
-  layouts.json                       # C1d.A: hand-authored layout array
-                                     # (id, name, description, gridW/H, theme,
-                                     # walls, water?, halfCovers?, chasms?,
-                                     # fires?, healings?, spawns)
+  layouts.json                       # C1d.A: hand-authored layouts (walls/water/halfCovers/chasms/fires/healings/spawns/theme)
+  tiles.json                         # D7.B: fire/healing chip rates -> tick cadences
   spawn.json                         # D5.C: SpawnAction lockout duration
-  tiles.json                         # D7.B: fire/healing chip rates → tick cadences
-  stats.json                         # E1: hpPerConstitution, crit cap/mult,
-                                     # base cooldowns (s), cdPerStat, minCdScale
-  abilities.json                     # E2/E5: per-ability cooldownSeconds + range
-  sim.json                           # E5: retargetCloserRatio + rangedRetargetLosSeconds
 
-public/audio/                        # B6: preloaded .wav files
+public/audio/                        # B6: preloaded .wav files (+ magicboom, E7.C)
 
 tools/                                       # dev-only, never in dist/
-  layout-editor/                             # C1d.B: 12x12 grid painter
-    index.html                               #   Vite entry — open at
-                                             #   /tools/layout-editor/ in dev
-    editor.ts                                #   paint + validate + export
-    editor.css                               #   terminal-palette styling
-    README.md                                #   launch + workflow notes
+  layout-editor/                             # C1d.B: 12x12 grid painter (/tools/layout-editor/)
+  run-config/                                # G1/G5: short-run CLI + GUI launcher (/tools/run-config/)
 ```
 
 Co-located `*.test.ts` next to source for unit tests. Integration tests under `tests/`.

@@ -15,17 +15,7 @@ import type { UnitStats } from '../sim/Unit';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
-
-const STAT_LABELS: Record<keyof UnitStats, string> = {
-  constitution: 'CON',
-  strength: 'STR',
-  ranged: 'RNG',
-  magic: 'MAG',
-  luck: 'LCK',
-  agility: 'AGI',
-  mobility: 'MOB',
-  defense: 'DEF',
-};
+import { STAT_LABELS } from './statLabels';
 
 export class PromotionScreen {
   private container: HTMLDivElement | null = null;

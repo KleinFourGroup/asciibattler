@@ -396,8 +396,9 @@ body {
   opacity: 0.7;
 }
 
-/* GP3: HP / DEF / CRIT / XP laid out two-up to stay compact now that the
-   per-ability DMG/RNG/cadence rows live in the Abilities section below. */
+/* GP3: the full raw stat block (all 8 UnitStats) laid out two-up so the
+   card stays compact; per-ability damage/reach/cadence live in the
+   Abilities section below. */
 .recruit-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -411,15 +412,6 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 6px;
-}
-
-/* GP3: the move line spans both stat columns and shows its driving stat
-   (mobility) inline, set off from the HP/DEF/CRIT/XP pairs by a hairline. */
-.recruit-move {
-  grid-column: 1 / -1;
-  margin-top: 3px;
-  padding-top: 5px;
-  border-top: 1px solid #664600; /* DARK_TERMINAL_AMBER divider */
 }
 
 /* GP3: Section B — the abilities list. Self-documents what the unit does;

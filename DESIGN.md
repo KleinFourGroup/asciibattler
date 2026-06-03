@@ -51,13 +51,13 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
   - `ranged` — basic ranged strike damage.
   - `magic` — placeholder for E7 mage / healer abilities.
   - `luck` — crit chance via `min(critCap, luck × critPerLuck)`.
-  - `speed` — attack-cooldown scaling via `cooldownScale(speed) = max(minCdScale, 1 − speed × cdPerStat)`.
-  - `endurance` — move-cooldown scaling, same formula on the move side.
+  - `agility` — attack-cadence scaling (GP1 rename of `speed`) via `cooldownScale(agility, agilityCdPerStat, agilityMinCdScale) = max(agilityMinCdScale, 1 − agility × agilityCdPerStat)`.
+  - `mobility` — move-cooldown scaling (GP1 rename of `endurance`), the same curve on its own per-axis knobs (`mobilityCdPerStat`/`mobilityMinCdScale`). **Signed**: 0 is the universal move-CD baseline, negative is slower (the floor caps only the fast side), so a heavy unit lands around −7 instead of needing a per-archetype `baseMoveCooldownSeconds` override.
 - **Derived values** (computed once at unit construction time by `deriveStats` in [src/sim/stats.ts](src/sim/stats.ts)): `maxHp`, `critChance`, `attackCooldownTicks`, `moveCooldownTicks`, and `attackRange` (the last is a per-archetype primitive, plumbed through verbatim).
 - All stat / derive knobs live in [config/stats.json](config/stats.json) (linear HP-per-constitution, crit cap + multiplier, base cooldowns, scale floor). Archetype baselines live in [config/archetypes.json](config/archetypes.json).
 - Archetypes for MVP:
-  - **Melee** (`M`): higher constitution + strength, range 1, moderate speed/endurance.
-  - **Ranged** (`a`): lower constitution, no strength, ranged damage on the `ranged` stat, range 3–5, moderate speed/endurance.
+  - **Melee** (`M`): higher constitution + strength, range 1, moderate agility/mobility.
+  - **Ranged** (`a`): lower constitution, no strength, ranged damage on the `ranged` stat, range 3–5, moderate agility/mobility.
 - E1 ships every unit at its archetype's exact baseStats (no per-stat randomization). E3 reintroduces variety via `simulateLevelUps` (player recruits) and `scaleStats` (enemies), driven by per-archetype `growthRates`.
 
 **Targeting:** Nearest enemy by Chebyshev distance. Ties broken by lowest current HP. Re-evaluated each time a unit's attack cooldown elapses or its current target dies.

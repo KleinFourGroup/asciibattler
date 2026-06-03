@@ -53,7 +53,7 @@ src/
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
-    stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base cooldowns, cdPerStat, minCdScale
+    stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base cooldowns; GP1: per-axis mobility/agility CdPerStat + MinCdScale
     schemas.ts               #   shared zod helpers
 
   sim/
@@ -150,8 +150,8 @@ config/                      # A4: balance JSON source of truth (paired with src
   layouts.json
   spawn.json
   tiles.json
-  stats.json                 # E1: hpPerConstitution, crit cap/mult, base cooldowns,
-                             #     cdPerStat, minCdScale
+  stats.json                 # E1: hpPerConstitution, crit cap/mult, base cooldowns;
+                             #     GP1: mobilityCdPerStat/agilityCdPerStat + mobilityMinCdScale/agilityMinCdScale
 
 public/
   audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, ...)

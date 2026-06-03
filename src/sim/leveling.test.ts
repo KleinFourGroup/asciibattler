@@ -18,8 +18,8 @@ const BASE: UnitStats = {
   ranged: 0,
   magic: 0,
   luck: 3,
-  speed: 4,
-  endurance: 4,
+  agility: 4,
+  mobility: 4,
 };
 
 const GROWTH_MID: GrowthRates = {
@@ -28,8 +28,8 @@ const GROWTH_MID: GrowthRates = {
   ranged: 0,
   magic: 0,
   luck: 0.5,
-  speed: 0.5,
-  endurance: 0.5,
+  agility: 0.5,
+  mobility: 0.5,
 };
 
 const GROWTH_NONE: GrowthRates = {
@@ -38,8 +38,8 @@ const GROWTH_NONE: GrowthRates = {
   ranged: 0,
   magic: 0,
   luck: 0,
-  speed: 0,
-  endurance: 0,
+  agility: 0,
+  mobility: 0,
 };
 
 const GROWTH_ALL: GrowthRates = {
@@ -48,8 +48,8 @@ const GROWTH_ALL: GrowthRates = {
   ranged: 1,
   magic: 1,
   luck: 1,
-  speed: 1,
-  endurance: 1,
+  agility: 1,
+  mobility: 1,
 };
 
 describe('scaleStats — deterministic', () => {
@@ -64,8 +64,8 @@ describe('scaleStats — deterministic', () => {
     expect(out.ranged).toBe(0); // growth 0
     expect(out.magic).toBe(0);
     expect(out.luck).toBe(3 + 2);
-    expect(out.speed).toBe(4 + 2);
-    expect(out.endurance).toBe(4 + 2);
+    expect(out.agility).toBe(4 + 2);
+    expect(out.mobility).toBe(4 + 2);
   });
 
   it('growth = 0 → stat never grows even at high n', () => {
@@ -119,7 +119,7 @@ describe('simulateLevelUps — boundary growth rates', () => {
     expect(out.constitution).toBe(10 + 12);
     expect(out.strength).toBe(5 + 12);
     expect(out.ranged).toBe(0 + 12);
-    expect(out.endurance).toBe(4 + 12);
+    expect(out.mobility).toBe(4 + 12);
   });
 });
 
@@ -144,20 +144,20 @@ describe('simulateLevelUps — distribution lands near expected value', () => {
       constitution: 0,
       strength: 0,
       luck: 0,
-      speed: 0,
-      endurance: 0,
+      agility: 0,
+      mobility: 0,
     };
     for (let i = 0; i < TRIALS; i++) {
       const out = simulateLevelUps(BASE, GROWTH_MID, N, new RNG(i + 1));
       tally.constitution! += out.constitution - BASE.constitution;
       tally.strength! += out.strength - BASE.strength;
       tally.luck! += out.luck - BASE.luck;
-      tally.speed! += out.speed - BASE.speed;
-      tally.endurance! += out.endurance - BASE.endurance;
+      tally.agility! += out.agility - BASE.agility;
+      tally.mobility! += out.mobility - BASE.mobility;
     }
     const expectedMean = 0.5 * N; // growth 0.5, N=10 → mean 5
     const tolerance = Math.max(0.5, expectedMean * 0.15);
-    for (const k of ['constitution', 'strength', 'luck', 'speed', 'endurance'] as const) {
+    for (const k of ['constitution', 'strength', 'luck', 'agility', 'mobility'] as const) {
       const mean = tally[k]! / TRIALS;
       expect(Math.abs(mean - expectedMean)).toBeLessThanOrEqual(tolerance);
     }

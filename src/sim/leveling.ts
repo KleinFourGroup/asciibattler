@@ -31,8 +31,10 @@ const STAT_KEYS: readonly (keyof UnitStats & keyof GrowthRates)[] = [
   'ranged',
   'magic',
   'luck',
-  'speed',
-  'endurance',
+  // GP1: `agility`/`mobility` keep the 6th/7th draw positions the old
+  // `speed`/`endurance` held, so existing seeds stay byte-stable.
+  'agility',
+  'mobility',
 ];
 
 /**
@@ -61,8 +63,8 @@ export function simulateLevelUps(
     ranged: out.ranged,
     magic: out.magic,
     luck: out.luck,
-    speed: out.speed,
-    endurance: out.endurance,
+    agility: out.agility,
+    mobility: out.mobility,
   };
 }
 
@@ -78,7 +80,7 @@ export function scaleStats(base: UnitStats, growth: GrowthRates, n: number): Uni
     ranged: base.ranged + Math.round(growth.ranged * n),
     magic: base.magic + Math.round(growth.magic * n),
     luck: base.luck + Math.round(growth.luck * n),
-    speed: base.speed + Math.round(growth.speed * n),
-    endurance: base.endurance + Math.round(growth.endurance * n),
+    agility: base.agility + Math.round(growth.agility * n),
+    mobility: base.mobility + Math.round(growth.mobility * n),
   };
 }

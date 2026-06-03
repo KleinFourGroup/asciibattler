@@ -34,9 +34,10 @@ export interface GambitStrikeActionData {
  * windup-split lives in `strikePhases`, abilities/strikes.ts). The busy window
  * and cadence cooldown are unchanged, so only WHEN within the cycle the rogue
  * darts back moves — the kite pattern (strike → dart back → strike) still
- * emerges from the rogue's high `speed` outrunning the target's re-approach
- * via MovementBehavior. Against an equal-speed enemy it's a wash; that speed
- * differential IS the rogue's identity.
+ * emerges from the rogue's high `agility` (short gambit cadence) letting it
+ * re-strike before the target closes via MovementBehavior. Against an
+ * equal-cadence enemy it's a wash; that agility differential IS the rogue's
+ * identity.
  *
  * The reposition is deliberately conservative: it only fires when a
  * neighbor cell strictly increases Chebyshev distance from the target and
@@ -107,7 +108,7 @@ export class GambitStrikeAction implements Action {
       unit.position = dest;
       // F4 — lerp the dart-back over the rogue's REMAINING busy window (the
       // gambit's recovery phase), capped at a normal move's duration. At the
-      // rogue's high speed the gambit cadence is short, so the recovery window
+      // rogue's high agility the gambit cadence is short, so the recovery window
       // is often SHORTER than `moveCooldownTicks`: a full-cooldown lerp would
       // still be mid-flight when the unit frees up and starts its next action,
       // whose `startLerp` snaps the sprite — cutting the retreat off (the bug

@@ -11,9 +11,11 @@
  *
  * E1: schema flipped from the MVP `{hp, attackDamage, attackCooldown,
  * moveCooldown}` ranges to a `baseStats` block in the new stat
- * vocabulary (constitution / strength / ranged / magic / luck / speed
- * / endurance). The `STAT_CAP = 99` cap is a typo guard, not a design
- * knob — the practical 0-50 range never touches it.
+ * vocabulary (constitution / strength / ranged / magic / luck / agility
+ * / mobility). The `STAT_CAP = 99` cap is a typo guard, not a design
+ * knob — the practical range never touches it. GP1 renamed the two
+ * cadence stats (`speed → agility`, `endurance → mobility`) and made
+ * `mobility` signed (negative = slower than the move-CD baseline).
  *
  * E2: each archetype declares an `abilities: string[]` list of registry
  * ids resolved at module load against `knownAbilityIds()`. Unknown ids
@@ -28,11 +30,12 @@
  * (useful for archetype-orthogonal stats: melee's ranged stat stays 0
  * forever).
  *
- * E3: optional `baseMoveCooldownSeconds` overrides the global default
- * from `config/stats.json` for archetypes that need a different walking
- * pace (e.g. future heavy/slow units). Attack-cooldown overrides
- * deliberately stay out — those will live on ability definitions, since
- * a single unit can carry several abilities with different timings.
+ * GP1: the per-archetype `baseMoveCooldownSeconds` override is gone.
+ * There's one universal `STATS.baseMoveCooldownSeconds`; a slow walking
+ * pace now comes from low/negative `mobility` (heavy units around −7),
+ * which the move-CD curve turns into a scale > 1. Attack-cooldown bases
+ * live on ability definitions (a unit can carry several abilities with
+ * different timings), scaled per unit by `agility`.
  *
  * E5: `attackRange` left the archetype schema for the same reason —
  * range is now a per-ability tunable in `config/abilities.json`. A
@@ -41,8 +44,8 @@
  *
  * Adding a new archetype:
  *   1. Add its key + abilities + baseStats + growthRates to
- *      `config/archetypes.json` (and `baseMoveCooldownSeconds` if it
- *      needs a non-default walking pace)
+ *      `config/archetypes.json` (use low/negative `mobility` if it needs
+ *      a slow walking pace — there's no per-archetype move-CD override)
  *   2. Extend the `Archetype` union in `src/sim/archetypes.ts`
  *   3. Extend the `Archetypes` zod object below
  *   4. The compiler will surface remaining sites that need a case.
@@ -61,8 +64,11 @@ const BaseStatsSchema = z.object({
   ranged: z.number().int().nonnegative().max(STAT_CAP),
   magic: z.number().int().nonnegative().max(STAT_CAP),
   luck: z.number().int().nonnegative().max(STAT_CAP),
-  speed: z.number().int().nonnegative().max(STAT_CAP),
-  endurance: z.number().int().nonnegative().max(STAT_CAP),
+  agility: z.number().int().nonnegative().max(STAT_CAP),
+  // GP1: `mobility` is SIGNED — 0 is the universal move-CD baseline, positive
+  // is faster, negative is slower (heavy units land around −7). The other
+  // stats stay nonnegative; mobility's lower bound is the typo guard mirrored.
+  mobility: z.number().int().min(-STAT_CAP).max(STAT_CAP),
 });
 
 const GrowthRatesSchema = z.object({
@@ -71,8 +77,8 @@ const GrowthRatesSchema = z.object({
   ranged: z.number().min(0).max(1),
   magic: z.number().min(0).max(1),
   luck: z.number().min(0).max(1),
-  speed: z.number().min(0).max(1),
-  endurance: z.number().min(0).max(1),
+  agility: z.number().min(0).max(1),
+  mobility: z.number().min(0).max(1),
 });
 
 const ABILITY_IDS = knownAbilityIds();
@@ -85,7 +91,6 @@ const ArchetypeSchema = z.object({
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,
   growthRates: GrowthRatesSchema,
-  baseMoveCooldownSeconds: z.number().positive().optional(),
 });
 
 const ArchetypesSchema = z.object({

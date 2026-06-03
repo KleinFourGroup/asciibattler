@@ -171,7 +171,7 @@ function scene(opts: ChargeAttackOpts): {
   // E1: build a "100 HP" stat profile via constitution=100 → maxHp=100
   // (hpPerConstitution=1.0 post the 6244561 balance tweak; the earlier
   // 2.5 ratio used constitution=40 here for the same result). Cooldown=1
-  // by overriding derived after construction so the speed-based scale
+  // by overriding derived after construction so the agility-based scale
   // doesn't muddy the fixture.
   const stats = { ...ARCHETYPE_CONFIG.melee.baseStats, constitution: 100, luck: 0 };
   const derived = { ...deriveStats(stats, 99), moveCooldownTicks: 1 };

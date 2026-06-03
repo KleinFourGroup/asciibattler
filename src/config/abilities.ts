@@ -4,10 +4,10 @@
  *
  * Before this module, every basic strike's cadence came from the single
  * global `STATS.baseAttackCooldownSeconds`, so melee and ranged could
- * only diverge through the `speed` stat — you couldn't make a sword
+ * only diverge through the `agility` stat — you couldn't make a sword
  * swing faster than a bow fires without also re-pointing the whole stat
  * curve. Cadence now lives per ability: each entry's `cooldownSeconds`
- * is the base attack interval, still modulated by the unit's `speed`
+ * is the base attack interval, still modulated by the unit's `agility`
  * via `cooldownScale` at propose time (see `attackCooldownTicksFor` in
  * [src/sim/stats.ts](src/sim/stats.ts)).
  *

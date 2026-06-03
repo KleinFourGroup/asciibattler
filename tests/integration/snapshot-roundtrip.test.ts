@@ -64,6 +64,28 @@ describe('A2 round-trip: World', () => {
     }
   });
 
+  it('GP1: a current snapshot round-trips but a stale schema version is rejected', () => {
+    // GP1 renamed two UnitStats keys (speed→agility, endurance→mobility) and
+    // bumped WORLD_SCHEMA_VERSION. Stats round-trip as a whole object by key,
+    // so an old save would otherwise deserialize into a block missing the new
+    // keys; the version check must reject it outright instead.
+    const { world } = freshBattle(54321);
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    // Sanity: the live snapshot carries the renamed stat keys.
+    expect(wire.units[0].stats).toHaveProperty('agility');
+    expect(wire.units[0].stats).toHaveProperty('mobility');
+
+    // A current-version snapshot restores cleanly.
+    expect(() => World.fromJSON(wire, new EventBus<GameEvents>())).not.toThrow();
+
+    // A snapshot stamped with the PRIOR version (a pre-GP1 save) throws rather
+    // than mis-decoding the old `speed`/`endurance` keys.
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
   it('continuing a restored World produces the same event trace as the baseline', () => {
     // Snapshot mid-battle, restore, tick both to completion, compare.
     const baseline = freshBattle(54321);

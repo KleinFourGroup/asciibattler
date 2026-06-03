@@ -25,7 +25,7 @@ const BOLT = abilityConfig('magic_bolt');
 const BOLT_RANGE = BOLT.range;
 
 const MAGE_STATS: UnitStats = {
-  constitution: 16, strength: 0, ranged: 0, magic: 10, luck: 3, speed: 4, endurance: 4,
+  constitution: 16, strength: 0, ranged: 0, magic: 10, luck: 3, agility: 4, mobility: 4,
 };
 
 function makeUnit(
@@ -74,7 +74,7 @@ describe('MagicBolt.propose', () => {
     expect(proposal!.score).toBe(10);
     expect(proposal!.cooldownKey).toBe('magic_bolt');
 
-    const expected = attackCooldownTicksFor(BOLT.cooldownSeconds, MAGE_STATS.speed);
+    const expected = attackCooldownTicksFor(BOLT.cooldownSeconds, MAGE_STATS.agility);
     expect(proposal!.cooldown).toBe(expected);
     // F3 — charge for `expected - travel`, release the bolt, let it fly for
     // `travel`, then detonate at impact. F3 gave the mage the `release` +
@@ -96,7 +96,7 @@ describe('MagicBolt.propose', () => {
     const enemy = makeUnit(2, 'enemy', { x: 5, y: 7 });
     const proposal = new MagicBolt().propose(mage, world([mage, enemy]));
 
-    const expected = attackCooldownTicksFor(BOLT.cooldownSeconds, MAGE_STATS.speed);
+    const expected = attackCooldownTicksFor(BOLT.cooldownSeconds, MAGE_STATS.agility);
     const travel = Math.min(secondsToTicks(BOLT.travelSeconds ?? 0), expected);
     expect(totalTicks(proposal!.phases)).toBe(expected); // busy window unchanged
     expect(phasesBeginningAt(proposal!.phases, expected - travel)).toEqual(['release', 'travel']);

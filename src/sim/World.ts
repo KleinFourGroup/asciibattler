@@ -22,7 +22,6 @@ import {
 import {
   abilityIdsForArchetype,
   rangeForArchetype,
-  baseMoveCooldownSecondsForArchetype,
   glyphForArchetype,
 } from './archetypes';
 import type { WorldCommand } from './Command';
@@ -96,8 +95,15 @@ import { computeXpAwards } from './xp';
  *       would start the ledger empty and under-award a healer's XP,
  *       failing the snapshot-roundtrip determinism contract (same reason
  *       v9 added `damageDealt`). v14 throws on load.
+ *  16 — GP1 renamed two `UnitStats` keys (`speed → agility`, `endurance →
+ *       mobility`). Stats round-trip as a whole object by key, so a v15
+ *       snapshot carries the old key names and would deserialize into an
+ *       `agility`/`mobility`-less stat block; the version check rejects it
+ *       outright (no migration — the rename also re-tuned the move-CD curve,
+ *       so old derived cadences wouldn't be reproduced anyway). v15 throws
+ *       on load.
  */
-const WORLD_SCHEMA_VERSION = 15;
+const WORLD_SCHEMA_VERSION = 16;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -689,8 +695,7 @@ export class World {
 
   private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {
     const attackRange = rangeForArchetype(template.archetype);
-    const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
-    const derived = deriveStats(template.stats, attackRange, moveCD);
+    const derived = deriveStats(template.stats, attackRange);
     const unit = this.addUnit(
       {
         team,
@@ -809,8 +814,7 @@ export class World {
     rosterIndex: number | null = null,
   ): Unit {
     const attackRange = rangeForArchetype(template.archetype);
-    const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
-    const derived = deriveStats(template.stats, attackRange, moveCD);
+    const derived = deriveStats(template.stats, attackRange);
     return this.addUnit(
       {
         team,

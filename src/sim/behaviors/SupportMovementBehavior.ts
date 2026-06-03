@@ -26,7 +26,8 @@ import { SIM } from '../../config/sim';
  *   2. Else the nearest enemy is within `SIM.healerPanicRangeCells` →
  *      PANIC-RETREAT one cell directly away (score 5 — the ROADMAP value,
  *      above movement, below the heal). The kite emerges from the healer's
- *      `speed` vs. the enemy's re-approach, same engine as the rogue.
+ *      `mobility` (move cadence) vs. the enemy's re-approach — the same
+ *      kiting idea the rogue gets from its gambit, but movement-driven here.
  *   3. Else a wounded ally exists but is out of range → step toward the
  *      nearest one (score 1) to bring it into heal range.
  *   4. Else trail the CENTROID of its living allies, stepping whenever it's

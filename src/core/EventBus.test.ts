@@ -121,8 +121,8 @@ describe('EventBus', () => {
       ranged: 1,
       magic: 1,
       luck: 1,
-      speed: 1,
-      endurance: 1,
+      agility: 1,
+      mobility: 1,
     };
     bus.emit('recruit:offered', {
       units: [{ archetype: 'melee', level: 1, stats: stubStats, xp: 0 }],

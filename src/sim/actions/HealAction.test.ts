@@ -24,8 +24,8 @@ const STATS_BLOCK: UnitStats = {
   ranged: 0,
   magic: 0,
   luck: 0,
-  speed: 0,
-  endurance: 0,
+  agility: 0,
+  mobility: 0,
 };
 
 function scene(): {

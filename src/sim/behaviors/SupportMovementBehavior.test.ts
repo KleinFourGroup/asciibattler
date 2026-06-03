@@ -22,10 +22,10 @@ const PANIC = SIM.healerPanicRangeCells;
 const FOLLOW = SIM.healerFollowGapCells;
 
 const HEALER_STATS: UnitStats = {
-  constitution: 20, strength: 0, ranged: 0, magic: 8, luck: 0, speed: 6, endurance: 5,
+  constitution: 20, strength: 0, ranged: 0, magic: 8, luck: 0, agility: 6, mobility: 5,
 };
 const COMBATANT_STATS: UnitStats = {
-  constitution: 20, strength: 6, ranged: 0, magic: 0, luck: 0, speed: 5, endurance: 5,
+  constitution: 20, strength: 6, ranged: 0, magic: 0, luck: 0, agility: 5, mobility: 5,
 };
 
 function makeUnit(

@@ -22,8 +22,8 @@ const STAT_LABELS: Record<keyof UnitStats, string> = {
   ranged: 'RNG',
   magic: 'MAG',
   luck: 'LCK',
-  speed: 'SPD',
-  endurance: 'END',
+  agility: 'AGI',
+  mobility: 'MOB',
 };
 
 export class PromotionScreen {

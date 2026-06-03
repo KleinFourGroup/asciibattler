@@ -15,7 +15,6 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import {
   abilityIdsForArchetype,
   rangeForArchetype,
-  baseMoveCooldownSecondsForArchetype,
   glyphForArchetype,
 } from '../sim/archetypes';
 import { deriveStats, attackCooldownTicksFor, damageStatFor } from '../sim/stats';
@@ -89,11 +88,10 @@ export class RecruitScreen {
     // same lookup `basicAttackDamage` uses inside AbilityBehavior.
     const s = template.stats;
     const attackRange = rangeForArchetype(template.archetype);
-    const moveCD = baseMoveCooldownSecondsForArchetype(template.archetype);
-    const derived = deriveStats(s, attackRange, moveCD);
+    const derived = deriveStats(s, attackRange);
     const baseDamage = damageStatFor(template.archetype, s);
     // E5 pre-work: ATK cadence now comes from the archetype's primary
-    // ability config (scaled by speed), matching what the unit will
+    // ability config (scaled by agility), matching what the unit will
     // actually fire at in battle. Archetypes carry one basic strike
     // today; the `[0]` is the primary ability and the guard covers a
     // hypothetical ability-less archetype.
@@ -102,7 +100,7 @@ export class RecruitScreen {
       primaryAbilityId === undefined
         ? null
         : ticksToSeconds(
-            attackCooldownTicksFor(abilityConfig(primaryAbilityId).cooldownSeconds, s.speed),
+            attackCooldownTicksFor(abilityConfig(primaryAbilityId).cooldownSeconds, s.agility),
           );
     const statsEl = document.createElement('div');
     statsEl.className = 'recruit-stats';

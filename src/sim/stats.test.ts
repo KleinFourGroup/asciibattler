@@ -5,8 +5,13 @@
  * Formula-level tests are table-driven against the JSON-authored
  * constants in `config/stats.json` so tuning the knobs doesn't force a
  * separate test churn. Edge cases (constitution=0 → maxHp=1 floor,
- * luck=99 → critCap, speed=99 → minCdScale floor) are pinned
+ * luck=99 → critCap, high stat → the per-axis min-scale floor) are pinned
  * explicitly so a regression on the guards surfaces loudly.
+ *
+ * GP1: the move axis (`mobility`) and attack axis (`agility`) read SEPARATE
+ * cooldown knobs (`mobilityCdPerStat`/`mobilityMinCdScale` vs the agility
+ * pair), so the formula tests derive each expectation from its own axis's
+ * knobs and a divergence guard pins that the two helpers don't share a knob.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -25,7 +30,8 @@ import {
 } from './stats';
 import { ABILITIES } from '../config/abilities';
 import { STATS } from '../config/stats';
-import { secondsToTicks } from '../config';
+import { ARCHETYPE_CONFIG } from './archetypes';
+import { secondsToTicks, ticksToSeconds } from '../config';
 import type { GameEvents } from '../core/events';
 
 const TEMPLATE: UnitStats = {
@@ -34,8 +40,8 @@ const TEMPLATE: UnitStats = {
   ranged: 0,
   magic: 0,
   luck: 3,
-  speed: 5,
-  endurance: 6,
+  agility: 5,
+  mobility: 2,
 };
 
 describe('deriveStats — maxHp', () => {
@@ -70,9 +76,9 @@ describe('deriveStats — critChance', () => {
 });
 
 describe('deriveStats — move cooldown', () => {
-  it('moveCooldownTicks shrinks with endurance via cooldownScale', () => {
-    const d = deriveStats({ ...TEMPLATE, endurance: 6 }, 1);
-    const expectedScale = 1 - 6 * STATS.cdPerStat;
+  it('moveCooldownTicks shrinks with positive mobility via cooldownScale', () => {
+    const d = deriveStats({ ...TEMPLATE, mobility: 2 }, 1);
+    const expectedScale = 1 - 2 * STATS.mobilityCdPerStat;
     const expected = Math.max(
       1,
       secondsToTicks(STATS.baseMoveCooldownSeconds * expectedScale),
@@ -80,13 +86,26 @@ describe('deriveStats — move cooldown', () => {
     expect(d.moveCooldownTicks).toBe(expected);
   });
 
-  it('cooldownScale floors at minCdScale for very high endurance', () => {
-    // Pick stat so that 1 - stat × cdPerStat < minCdScale. At default
-    // config that's stat > (1 - minCdScale) / cdPerStat = 60. Use 99.
-    const d = deriveStats({ ...TEMPLATE, endurance: 99 }, 1);
+  it('negative mobility is SLOWER than the mobility=0 baseline (floor caps only the fast side)', () => {
+    const baseline = deriveStats({ ...TEMPLATE, mobility: 0 }, 1).moveCooldownTicks;
+    const slow = deriveStats({ ...TEMPLATE, mobility: -7 }, 1).moveCooldownTicks;
+    // scale at mobility=0 is exactly 1.0; at -7 it's 1 + 7×rate > 1, and the
+    // min-scale floor (a fast-side cap) does NOT clamp it — so the slow unit's
+    // move CD strictly exceeds the baseline.
+    expect(slow).toBeGreaterThan(baseline);
+    const expectedSlow = Math.max(
+      1,
+      secondsToTicks(STATS.baseMoveCooldownSeconds * (1 - -7 * STATS.mobilityCdPerStat)),
+    );
+    expect(slow).toBe(expectedSlow);
+  });
+
+  it('cooldownScale floors at mobilityMinCdScale for very high mobility', () => {
+    // Pick stat so that 1 - stat × mobilityCdPerStat < mobilityMinCdScale.
+    const d = deriveStats({ ...TEMPLATE, mobility: 99 }, 1);
     const flooredMove = Math.max(
       1,
-      secondsToTicks(STATS.baseMoveCooldownSeconds * STATS.minCdScale),
+      secondsToTicks(STATS.baseMoveCooldownSeconds * STATS.mobilityMinCdScale),
     );
     expect(d.moveCooldownTicks).toBe(flooredMove);
   });
@@ -96,7 +115,7 @@ describe('deriveStats — move cooldown', () => {
     // that would otherwise round to 0. Hard to exercise with default
     // config; the test pins the floor so a regression on the wrapping
     // is loud.
-    const d = deriveStats({ ...TEMPLATE, endurance: 99 }, 1);
+    const d = deriveStats({ ...TEMPLATE, mobility: 99 }, 1);
     expect(d.moveCooldownTicks).toBeGreaterThanOrEqual(1);
   });
 });
@@ -108,19 +127,56 @@ describe('attackCooldownTicksFor — per-ability attack cadence', () => {
   // so a cadence re-tune doesn't churn the test.
   const base = ABILITIES.melee_strike!.cooldownSeconds;
 
-  it('shrinks with speed via cooldownScale', () => {
-    const expectedScale = 1 - 5 * STATS.cdPerStat;
+  it('shrinks with agility via cooldownScale', () => {
+    const expectedScale = 1 - 5 * STATS.agilityCdPerStat;
     const expected = Math.max(1, secondsToTicks(base * expectedScale));
     expect(attackCooldownTicksFor(base, 5)).toBe(expected);
   });
 
-  it('floors at minCdScale for very high speed', () => {
-    const floored = Math.max(1, secondsToTicks(base * STATS.minCdScale));
+  it('floors at agilityMinCdScale for very high agility', () => {
+    const floored = Math.max(1, secondsToTicks(base * STATS.agilityMinCdScale));
     expect(attackCooldownTicksFor(base, 99)).toBe(floored);
   });
 
   it('floors at 1 tick (defense against absurd base/scale combos)', () => {
     expect(attackCooldownTicksFor(0.001, 99)).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('mobility / agility axes are independent (GP1 split guard)', () => {
+  it('move CD uses the mobility knobs and attack CD uses the agility knobs', () => {
+    // Same +stat through both axes. Each helper must resolve through its OWN
+    // axis's knobs — derive both expectations straight from STATS so the
+    // assertions survive any future re-tune that keeps the rates distinct.
+    const stat = 3;
+    const baseSeconds = 1;
+    const moveScale = Math.max(STATS.mobilityMinCdScale, 1 - stat * STATS.mobilityCdPerStat);
+    const attackScale = Math.max(STATS.agilityMinCdScale, 1 - stat * STATS.agilityCdPerStat);
+
+    expect(deriveStats({ ...TEMPLATE, mobility: stat }, 1).moveCooldownTicks).toBe(
+      Math.max(1, secondsToTicks(STATS.baseMoveCooldownSeconds * moveScale)),
+    );
+    expect(attackCooldownTicksFor(baseSeconds, stat)).toBe(
+      Math.max(1, secondsToTicks(baseSeconds * attackScale)),
+    );
+    // The shipped config gives the two axes distinct slopes, so the same +stat
+    // resolves to different scales. A regression that crosses the wires (one
+    // helper reading the other's knob) would collapse them — this catches it.
+    expect(moveScale).not.toBeCloseTo(attackScale, 10);
+  });
+});
+
+describe('catapult move cadence (universal base, no per-archetype override)', () => {
+  it('reproduces the heavy ~2.0s walk from its negative mobility alone', () => {
+    const mob = ARCHETYPE_CONFIG.catapult.baseStats.mobility;
+    const scale = Math.max(STATS.mobilityMinCdScale, 1 - mob * STATS.mobilityCdPerStat);
+    const expected = Math.max(1, secondsToTicks(STATS.baseMoveCooldownSeconds * scale));
+    const d = deriveStats(ARCHETYPE_CONFIG.catapult.baseStats, 1);
+    // GP1 dropped the per-archetype baseMoveCooldownSeconds override; the slow
+    // walk now comes from mobility alone under the universal base.
+    expect(d.moveCooldownTicks).toBe(expected);
+    expect(ticksToSeconds(d.moveCooldownTicks)).toBeGreaterThan(1.5);
+    expect(ticksToSeconds(d.moveCooldownTicks)).toBeLessThan(2.5);
   });
 });
 

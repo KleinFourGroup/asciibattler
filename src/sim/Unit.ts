@@ -40,8 +40,13 @@ export interface UnitStats {
   readonly ranged: number;
   readonly magic: number;
   readonly luck: number;
-  readonly speed: number;
-  readonly endurance: number;
+  /** GP1: per-ability attack-cadence dial (was `speed`). Higher → faster
+   *  swings/shots/casts, via `attackCooldownTicksFor`. Nonnegative. */
+  readonly agility: number;
+  /** GP1: move-cadence dial (was `endurance`). SIGNED — 0 is the universal
+   *  move-CD baseline, positive is faster, negative is slower (heavy units
+   *  around −7). Drives `moveCooldownTicks` via `deriveStats`. */
+  readonly mobility: number;
 }
 
 /**

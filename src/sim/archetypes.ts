@@ -37,18 +37,6 @@ export function rangeForArchetype(archetype: Archetype): number {
 }
 
 /**
- * E3 — per-archetype move-cooldown base in seconds, or `undefined` if
- * the archetype inherits the global default from `config/stats.json`.
- * Threaded into `deriveStats` so slow-walking archetypes can lengthen
- * their move CD without touching the global knob.
- */
-export function baseMoveCooldownSecondsForArchetype(
-  archetype: Archetype,
-): number | undefined {
-  return CONFIGS[archetype].baseMoveCooldownSeconds;
-}
-
-/**
  * E3 — per-archetype `growthRates` block, used by `simulateLevelUps`
  * (player recruits) and `scaleStats` (enemies).
  */

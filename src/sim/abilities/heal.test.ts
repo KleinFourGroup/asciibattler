@@ -19,10 +19,10 @@ import type { GameEvents } from '../../core/events';
 const HEAL_RANGE = abilityConfig('heal_ally').range;
 
 const HEALER_STATS: UnitStats = {
-  constitution: 20, strength: 0, ranged: 0, magic: 8, luck: 0, speed: 6, endurance: 5,
+  constitution: 20, strength: 0, ranged: 0, magic: 8, luck: 0, agility: 6, mobility: 5,
 };
 const ALLY_STATS: UnitStats = {
-  constitution: 20, strength: 6, ranged: 0, magic: 0, luck: 0, speed: 5, endurance: 5,
+  constitution: 20, strength: 6, ranged: 0, magic: 0, luck: 0, agility: 5, mobility: 5,
 };
 
 function makeUnit(
@@ -113,13 +113,13 @@ describe('HealAlly.propose', () => {
     expect(new HealAlly().propose(healer, world([healer, woundedEnemy, woundedWall]))).toBeNull();
   });
 
-  it('derives cooldown + busy window from config × speed', () => {
+  it('derives cooldown + busy window from config × agility', () => {
     const healer = makeHealer({ x: 5, y: 5 });
     const ally = makeUnit(2, 'player', { x: 5, y: 6 }, { hp: 10 });
     const proposal = new HealAlly().propose(healer, world([healer, ally]));
     const expected = attackCooldownTicksFor(
       abilityConfig('heal_ally').cooldownSeconds,
-      HEALER_STATS.speed,
+      HEALER_STATS.agility,
     );
     expect(proposal!.cooldown).toBe(expected);
     // F2 — single-tick heal: impact at offset 0, recovery fills the cadence

@@ -7,29 +7,34 @@
  *
  * Formula sources (`config/stats.json`):
  *
- *   maxHp           = max(1, round(hpPerConstitution * constitution))
- *   critChance      = min(critCap, luck * critPerLuck)
- *   moveCooldown    = max(1, secondsToTicks(baseMoveCD * cooldownScale(endurance)))
- *   cooldownScale s = max(minCdScale, 1 - s * cdPerStat)
- *   attackRange     = effective engagement range (max over the unit's
- *                     abilities, via `rangeForArchetype`), passed through verbatim
+ *   maxHp                   = max(1, round(hpPerConstitution * constitution))
+ *   critChance              = min(critCap, luck * critPerLuck)
+ *   moveCooldown            = max(1, secondsToTicks(baseMoveCD * cooldownScale(mobility, mobilityCdPerStat, mobilityMinCdScale)))
+ *   cooldownScale(s, p, m)  = max(m, 1 - s * p)
+ *   attackRange             = effective engagement range (max over the unit's
+ *                             abilities, via `rangeForArchetype`), passed through verbatim
  *
- * The 1-tick cooldown floor catches future tuning where `minCdScale`
+ * The 1-tick cooldown floor catches future tuning where the min scale
  * or base values drop low enough to round to 0; at default config it's
  * unreachable.
  *
- * E3: `baseMoveCooldownSeconds` is now overridable per archetype. The
- * argument defaults to the global `STATS.baseMoveCooldownSeconds`
- * (which most archetypes still inherit); slow-walking archetypes can
- * pass a higher value to lengthen their move CD without touching the
- * global.
+ * GP1: the two cadence stats drive cooldowns through SEPARATE per-axis
+ * knobs so they can diverge — `mobility` (move CD) reads
+ * `mobilityCdPerStat`/`mobilityMinCdScale`; `agility` (attack cadence)
+ * reads `agilityCdPerStat`/`agilityMinCdScale`. `cooldownScale` is now
+ * parameterized over (perStat, minScale) and each call site threads its
+ * own pair. `mobility` is signed: negative → scale > 1 → slower than the
+ * baseline (the min-scale floor caps only the fast side). GP1 also
+ * dropped the per-archetype `baseMoveCooldownSeconds` override — there's
+ * one universal `STATS.baseMoveCooldownSeconds`, and a slow walk now
+ * comes from low/negative mobility.
  *
  * E5 pre-work: attack cadence is NO LONGER derived here. It moved to
  * the Ability layer — a unit can carry several abilities with different
  * timings, so a single per-unit `attackCooldownTicks` couldn't
  * represent them. `attackCooldownTicksFor` resolves an ability's
  * `cooldownSeconds` (from `config/abilities.json`) against the unit's
- * `speed` at propose time, reusing the same `cooldownScale` curve.
+ * `agility` at propose time, reusing the same `cooldownScale` curve.
  *
  * `inertDerived` is the environment-entity path (walls / half-cover) —
  * non-combatants need a maxHp anchor for HP display and the future
@@ -45,17 +50,16 @@ import { secondsToTicks } from '../config';
 import { STATS } from '../config/stats';
 import type { Unit, UnitArchetype, UnitDerived, UnitStats } from './Unit';
 
-export function deriveStats(
-  stats: UnitStats,
-  attackRange: number,
-  baseMoveCooldownSeconds: number = STATS.baseMoveCooldownSeconds,
-): UnitDerived {
+export function deriveStats(stats: UnitStats, attackRange: number): UnitDerived {
   return {
     maxHp: Math.max(1, Math.round(STATS.hpPerConstitution * stats.constitution)),
     critChance: Math.min(STATS.critCap, stats.luck * STATS.critPerLuck),
     moveCooldownTicks: Math.max(
       1,
-      secondsToTicks(baseMoveCooldownSeconds * cooldownScale(stats.endurance)),
+      secondsToTicks(
+        STATS.baseMoveCooldownSeconds *
+          cooldownScale(stats.mobility, STATS.mobilityCdPerStat, STATS.mobilityMinCdScale),
+      ),
     ),
     attackRange,
   };
@@ -64,14 +68,20 @@ export function deriveStats(
 /**
  * E5 pre-work — resolve an ability's attack cadence to ticks for a
  * specific unit. `cooldownSeconds` is the ability's authored base
- * interval (`config/abilities.json`); the unit's `speed` shrinks it via
- * the same `cooldownScale` curve that governs movement, so faster units
+ * interval (`config/abilities.json`); the unit's `agility` shrinks it via
+ * the same `cooldownScale` curve that governs movement (GP1: through the
+ * agility-axis knobs, independent of the mobility ones), so nimbler units
  * still swing/shoot more often. Floored at 1 tick (mirrors the move-CD
  * floor) so an extreme base/scale combo can't round to a 0-tick — i.e.
  * fire-every-tick — cadence.
  */
-export function attackCooldownTicksFor(cooldownSeconds: number, speed: number): number {
-  return Math.max(1, secondsToTicks(cooldownSeconds * cooldownScale(speed)));
+export function attackCooldownTicksFor(cooldownSeconds: number, agility: number): number {
+  return Math.max(
+    1,
+    secondsToTicks(
+      cooldownSeconds * cooldownScale(agility, STATS.agilityCdPerStat, STATS.agilityMinCdScale),
+    ),
+  );
 }
 
 /**
@@ -174,8 +184,16 @@ export function catapultShotDamage(unit: Unit): number {
   return unit.stats.ranged;
 }
 
-function cooldownScale(stat: number): number {
-  return Math.max(STATS.minCdScale, 1 - stat * STATS.cdPerStat);
+/**
+ * GP1 — the shared cooldown curve, now parameterized over its slope
+ * (`perStat`) and fast-side floor (`minScale`) so the move axis (mobility)
+ * and the attack axis (agility) can thread independent knobs. `max(minScale,
+ * …)` caps only the FAST side: a negative `stat` makes `1 - stat*perStat`
+ * exceed 1 (slower than baseline), and that larger value wins the `max`, so
+ * the slow side is unbounded.
+ */
+function cooldownScale(stat: number, perStat: number, minScale: number): number {
+  return Math.max(minScale, 1 - stat * perStat);
 }
 
 /**
@@ -190,6 +208,6 @@ export const ZERO_STATS: UnitStats = Object.freeze({
   ranged: 0,
   magic: 0,
   luck: 0,
-  speed: 0,
-  endurance: 0,
+  agility: 0,
+  mobility: 0,
 });

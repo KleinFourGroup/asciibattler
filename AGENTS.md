@@ -21,9 +21,9 @@ After HANDOFF, the docs you'll cross-reference most often:
 - [ROADMAP.md](ROADMAP.md) — post-MVP build order. Phases A (foundation
   refactors), B (style/visual), C1 (terrain), D (battle-layout), E
   (combat + the six archetypes), F (Phase-E playtest response), and G
-  (run depth) are all complete, as is GP1. **Next up: GP2** (defense
-  stat), then Phase H (the deckbuilder battle trial). Superseded
-  roadmaps and feedback are in [archive/](archive/).
+  (run depth) are all complete, as are GP1–GP2. **Next up: GP3** (card
+  legibility overhaul), then Phase H (the deckbuilder battle trial).
+  Superseded roadmaps and feedback are in [archive/](archive/).
 - [TODO.md](TODO.md) — small follow-ups that aren't roadmap steps.
 - [TESTING.md](TESTING.md) — what gets tested (`core`, `sim`, `run`),
   what doesn't (`render`, `ui`), and the determinism contract.

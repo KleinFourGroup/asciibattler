@@ -57,16 +57,18 @@ src/
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
-                             #   GP1: per-axis mobility/agility CdPerStat + MinCdScale
+                             #   GP1: per-axis mobility/agility CdPerStat + MinCdScale; GP2: minDamage floor
     sim.ts                   #   E5: targeting + pathfinding knobs (retarget, occupiedCellPenalty, healer*)
     schemas.ts               #   shared zod helpers
 
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v16 (bumped through E1–GP1)
+                             # Serializable; WorldSnapshot v17 (bumped through E1–GP2)
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
-    Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab) + UnitDerived + Team + Behavior
+                             # GP2: applyDamage() — the single combat-damage chokepoint (HP -= + ledger
+                             #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it
+    Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab + GP2 defense) + UnitDerived + Team + Behavior
                              # archetype: melee|ranged|rogue|healer|mage|catapult|environment (E1–E7)
                              # level (E3) + xp/rosterIndex (E4); actionCooldowns Map + activeAction (A1)
                              # blocksLineOfSight (D6)
@@ -90,7 +92,7 @@ src/
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter
     actions/
       MoveAction.ts          # Logical position update + unit:moved event
-      AttackAction.ts        # E1/E4: crit roll (world.combatRng) + half-cover mult → damage + unit:attacked
+      AttackAction.ts        # E1/E4: crit roll (world.combatRng) + half-cover mult → world.applyDamage (GP2 chokepoint)
       GambitStrikeAction.ts  # E7.A: rogue strike — AttackAction damage + deferred reposition (F4)
       HealAction.ts          # E7.B: HP restore (clamped) + heal-XP ledger (F6) → unit:healed
       MagicBoltAction.ts     # E7.C: multi-tick ground-target 3x3 AoE
@@ -177,7 +179,8 @@ config/                      # A4: balance JSON source of truth (paired with src
   spawn.json
   tiles.json
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;
-                             #     GP1: mobilityCdPerStat/agilityCdPerStat + mobilityMinCdScale/agilityMinCdScale
+                             #     GP1: mobilityCdPerStat/agilityCdPerStat + mobilityMinCdScale/agilityMinCdScale;
+                             #     GP2: minDamage (subtractive-defense floor)
   sim.json                   # E5: retargetCloserRatio + rangedRetargetLosSeconds + occupiedCellPenalty + healer knobs
 
 public/
@@ -295,7 +298,7 @@ battle:started          { worldSeed: number }
 battle:ended            { winner: 'player' | 'enemy'; xpAwards: { unitId; rosterIndex; damageDealt; xpGained }[] }   # E4: per-roster XP
 unit:spawned            { unitId: number; instant: boolean }                       # instant=false → D5.C overflow-queue spawn (fade-in)
 unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }
-unit:attacked           { attackerId: number; targetId: number; damage: number; crit: boolean }   # E1: damage already post-crit
+unit:attacked           { attackerId: number; targetId: number; damage: number; crit: boolean }   # E1: damage post-crit; GP2: post-defense (via world.applyDamage)
 unit:burned             { unitId: number; damage: number }                         # D7.B: per-tick chip from fire tile (no attacker)
 unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (D7.B tile chip, amount=0 at maxHp)
 unit:died               { unitId: number; team: Team }                             # team carried because the unit is already spliced out (C1b)

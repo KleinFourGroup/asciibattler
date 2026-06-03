@@ -29,10 +29,10 @@ const MELEE = abilityConfig('melee_strike');
 // of the exact shipped numbers — these just need a non-zero agility so the
 // windup is strictly inside the busy window (a real split, not a degenerate 0).
 const ROGUE_STATS: UnitStats = {
-  constitution: 14, strength: 4, ranged: 0, magic: 0, luck: 10, agility: 9, mobility: 4,
+  constitution: 14, strength: 4, ranged: 0, magic: 0, luck: 10, agility: 9, mobility: 4, defense: 0,
 };
 const MELEE_STATS: UnitStats = {
-  constitution: 30, strength: 8, ranged: 0, magic: 0, luck: 2, agility: 3, mobility: 5,
+  constitution: 30, strength: 8, ranged: 0, magic: 0, luck: 2, agility: 3, mobility: 5, defense: 0,
 };
 
 function makeUnit(

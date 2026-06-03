@@ -4,6 +4,7 @@
   "critPerLuck": 0.01,
   "critCap": 0.6,
   "critMult": 2.0,
+  "minDamage": 1,
   "mobilityCdPerStat": 0.15,
   "agilityCdPerStat": 0.05,
   "mobilityMinCdScale": 0.4,

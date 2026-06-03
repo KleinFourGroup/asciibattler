@@ -47,6 +47,11 @@ export interface UnitStats {
    *  move-CD baseline, positive is faster, negative is slower (heavy units
    *  around −7). Drives `moveCooldownTicks` via `deriveStats`. */
   readonly mobility: number;
+  /** GP2: flat damage mitigation. Subtractive with a floor — an incoming hit
+   *  lands `max(STATS.minDamage, rawDamage − defense)` (post-crit, post-cover),
+   *  applied in `World.applyDamage`. Consumed raw (no derived layer).
+   *  Nonnegative; environmental fire/chasm damage is UNMITIGATED. */
+  readonly defense: number;
 }
 
 /**

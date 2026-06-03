@@ -24,6 +24,7 @@ const STAT_LABELS: Record<keyof UnitStats, string> = {
   luck: 'LCK',
   agility: 'AGI',
   mobility: 'MOB',
+  defense: 'DEF',
 };
 
 export class PromotionScreen {

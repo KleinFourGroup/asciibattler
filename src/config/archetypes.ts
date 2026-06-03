@@ -69,6 +69,9 @@ const BaseStatsSchema = z.object({
   // is faster, negative is slower (heavy units land around −7). The other
   // stats stay nonnegative; mobility's lower bound is the typo guard mirrored.
   mobility: z.number().int().min(-STAT_CAP).max(STAT_CAP),
+  // GP2: flat subtractive damage mitigation. Nonnegative like the offensive
+  // stats (0 = no armor).
+  defense: z.number().int().nonnegative().max(STAT_CAP),
 });
 
 const GrowthRatesSchema = z.object({
@@ -79,6 +82,7 @@ const GrowthRatesSchema = z.object({
   luck: z.number().min(0).max(1),
   agility: z.number().min(0).max(1),
   mobility: z.number().min(0).max(1),
+  defense: z.number().min(0).max(1),
 });
 
 const ABILITY_IDS = knownAbilityIds();

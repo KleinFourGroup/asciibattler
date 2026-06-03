@@ -20,6 +20,7 @@ const BASE: UnitStats = {
   luck: 3,
   agility: 4,
   mobility: 4,
+  defense: 2,
 };
 
 const GROWTH_MID: GrowthRates = {
@@ -30,6 +31,7 @@ const GROWTH_MID: GrowthRates = {
   luck: 0.5,
   agility: 0.5,
   mobility: 0.5,
+  defense: 0.5,
 };
 
 const GROWTH_NONE: GrowthRates = {
@@ -40,6 +42,7 @@ const GROWTH_NONE: GrowthRates = {
   luck: 0,
   agility: 0,
   mobility: 0,
+  defense: 0,
 };
 
 const GROWTH_ALL: GrowthRates = {
@@ -50,6 +53,7 @@ const GROWTH_ALL: GrowthRates = {
   luck: 1,
   agility: 1,
   mobility: 1,
+  defense: 1,
 };
 
 describe('scaleStats — deterministic', () => {

@@ -291,6 +291,11 @@ function buildStats(s: SceneUnit, archetype: 'melee' | 'ranged'): UnitStats {
   return {
     ...baseStats,
     luck: 0,
+    // GP2 — these are cadence/scoring/LOS mechanic tests; keep the target
+    // defense-free so the new subtractive mitigation doesn't perturb the
+    // explicit `attackDamage` assertions (the spread would otherwise carry the
+    // archetype's defense: melee 4 / ranged 2).
+    defense: 0,
     strength: s.attackDamage ?? baseStats.strength,
     ranged: s.attackDamage ?? baseStats.ranged,
   };

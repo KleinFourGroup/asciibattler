@@ -12,6 +12,7 @@ describe('Unit', () => {
       luck: 3,
       agility: 5,
       mobility: 6,
+      defense: 0,
     };
     const derived = deriveStats(stats, 1);
     const u = new Unit({

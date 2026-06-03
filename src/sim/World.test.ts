@@ -11,6 +11,7 @@ import { spawnWall } from './environment';
 import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
 import { ZERO_STATS, deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
+import { STATS } from '../config/stats';
 import type { GameEvents } from '../core/events';
 
 describe('World (Step 3.1 skeleton)', () => {
@@ -285,6 +286,20 @@ describe('World D7.B tile effects', () => {
     expect(burns).toHaveLength(2);
   });
 
+  it('GP2: fire damage is UNMITIGATED by defense (still exactly 1)', () => {
+    // The shared scene spawns melee units, which carry the archetype's
+    // defense — so this pins that environmental fire bypasses the
+    // World.applyDamage mitigation chokepoint entirely (raw 1 HP, no floor).
+    const { world, units } = scene([
+      { team: 'player', x: 3, y: 3, hp: 50 },
+      KEEP_BATTLE_ALIVE,
+    ]);
+    expect(units[0]!.stats.defense).toBeGreaterThan(0);
+    world.tileGrid.setKind({ x: 3, y: 3 }, 'fire');
+    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE; t++) world.tick();
+    expect(units[0]!.currentHp).toBe(49); // exactly 1 lost despite defense > 0
+  });
+
   it('healing restores 1 HP every HEALING_TICKS_PER_HEAL ticks and clamps at maxHp', () => {
     const { world, units } = scene([
       { team: 'player', x: 3, y: 3, hp: 10 },
@@ -380,6 +395,98 @@ describe('World D7.B tile effects', () => {
     // pass). No burn emit expected at all.
     expect(burns).toHaveLength(0);
     expect(world.findUnit(units[0]!.id)).toBeUndefined();
+  });
+});
+
+describe('World.applyDamage — GP2 defense mitigation', () => {
+  // Build a 2-unit duel directly so the target's `defense` is explicit (the
+  // shared `scene` helper bakes in the melee archetype's defense). Units are
+  // pushed onto `world.units`; `recordDamage`/`findUnit` resolve the attacker
+  // via the linear fallback, so the XP-ledger path is exercised end to end.
+  function duel(targetDefense: number): {
+    world: World;
+    attacker: Unit;
+    target: Unit;
+    attacks: GameEvents['unit:attacked'][];
+  } {
+    const bus = new EventBus<GameEvents>();
+    const world = new World(bus, new RNG(1));
+    const attacks: GameEvents['unit:attacked'][] = [];
+    bus.on('unit:attacked', (p) => attacks.push(p));
+
+    const mkStats = (defense: number): UnitStats => ({
+      ...ARCHETYPE_CONFIG.melee.baseStats,
+      defense,
+    });
+    const mk = (id: number, team: Team, defense: number, x: number): Unit => {
+      const stats = mkStats(defense);
+      return new Unit({
+        id,
+        team,
+        archetype: 'melee',
+        glyph: 'M',
+        stats,
+        derived: deriveStats(stats, 1),
+        position: { x, y: 0 },
+      });
+    };
+    const attacker = mk(1, 'player', 0, 0);
+    const target = mk(2, 'enemy', targetDefense, 1);
+    world.units.push(attacker, target);
+    return { world, attacker, target, attacks };
+  }
+
+  it('subtracts defense from the raw hit: final = max(minDamage, raw − defense)', () => {
+    const { world, attacker, target, attacks } = duel(3);
+    const hpBefore = target.currentHp;
+    world.applyDamage(attacker.id, target, 10, { crit: false });
+    const expected = Math.max(STATS.minDamage, 10 - 3); // 7, above the floor
+    expect(attacks[0]!.damage).toBe(expected);
+    expect(target.currentHp).toBe(hpBefore - expected);
+  });
+
+  it('honors the minDamage floor when defense ≥ raw (no full negation)', () => {
+    const { world, attacker, target, attacks } = duel(50);
+    const hpBefore = target.currentHp;
+    world.applyDamage(attacker.id, target, 5, { crit: false });
+    expect(attacks[0]!.damage).toBe(STATS.minDamage);
+    expect(target.currentHp).toBe(hpBefore - STATS.minDamage);
+  });
+
+  it('is behaviour-preserving at defense 0 (raw passes through, crit flag forwarded)', () => {
+    const { world, attacker, target, attacks } = duel(0);
+    const hpBefore = target.currentHp;
+    world.applyDamage(attacker.id, target, 8, { crit: true });
+    expect(attacks[0]!).toEqual({
+      attackerId: attacker.id,
+      targetId: target.id,
+      damage: 8,
+      crit: true,
+    });
+    expect(target.currentHp).toBe(hpBefore - 8);
+  });
+
+  it('mitigates the already crit/cover-resolved number the caller passes in', () => {
+    // applyDamage rolls nothing — callers bake crit × cover into `raw`. It just
+    // subtracts defense from the handed-in number, so mitigation is post-crit.
+    const { world, attacker, target, attacks } = duel(4);
+    const rawAfterCrit = 20; // e.g. round(10 × critMult)
+    world.applyDamage(attacker.id, target, rawAfterCrit, { crit: true });
+    expect(attacks[0]!.damage).toBe(rawAfterCrit - 4); // 16, well above the floor
+    expect(attacks[0]!.crit).toBe(true);
+  });
+
+  it('credits the XP ledger with the mitigated (post-defense) damage', () => {
+    const { world, attacker, target } = duel(3);
+    world.applyDamage(attacker.id, target, 10, { crit: false });
+    expect(world.damageDealtBy(attacker.id)).toBe(Math.max(STATS.minDamage, 10 - 3));
+  });
+
+  it('round-trips the defense stat through a WorldSnapshot', () => {
+    const { world, target } = duel(5);
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.findUnit(target.id)!.stats.defense).toBe(5);
   });
 });
 

@@ -4,7 +4,7 @@
  *
  *   simulateLevelUps — per-stat RNG roll vs growth rate, increment on
  *     success. Drives PLAYER recruits where dice rolls feel rewarding.
- *     Consumes 7 RNG draws per level (one per stat); byte-deterministic
+ *     Consumes 8 RNG draws per level (one per stat); byte-deterministic
  *     given the same RNG fork.
  *
  *   scaleStats        — deterministic `stat += round(growth × n)` per
@@ -35,6 +35,10 @@ const STAT_KEYS: readonly (keyof UnitStats & keyof GrowthRates)[] = [
   // `speed`/`endurance` held, so existing seeds stay byte-stable.
   'agility',
   'mobility',
+  // GP2: `defense` appended last so the other stats' draw positions are
+  // undisturbed (the level-up RNG stream for con/str/.../mobility is unchanged;
+  // only the new 8th draw is added).
+  'defense',
 ];
 
 /**
@@ -65,6 +69,7 @@ export function simulateLevelUps(
     luck: out.luck,
     agility: out.agility,
     mobility: out.mobility,
+    defense: out.defense,
   };
 }
 
@@ -82,5 +87,6 @@ export function scaleStats(base: UnitStats, growth: GrowthRates, n: number): Uni
     luck: base.luck + Math.round(growth.luck * n),
     agility: base.agility + Math.round(growth.agility * n),
     mobility: base.mobility + Math.round(growth.mobility * n),
+    defense: base.defense + Math.round(growth.defense * n),
   };
 }

@@ -20,6 +20,11 @@
  *   guard for future stat-stacking or status effects.
  * - `critMult` — damage multiplier on a successful crit roll. Damage is
  *   rounded after the multiply (`round(baseDamage * critMult)`).
+ * - `minDamage` — GP2 floor for the subtractive `defense` mitigation. A
+ *   confirmed combat hit lands `max(minDamage, rawDamage − defense)`, so a
+ *   high-defense target never fully negates an attack (chip/AoE always pokes
+ *   through). Applied in `World.applyDamage`; environmental fire/chasm damage
+ *   is UNMITIGATED and never sees this floor.
  * - `mobilityCdPerStat` / `agilityCdPerStat` — per-axis cooldown slope.
  *   GP1 split the single `cdPerStat` so the two cadence stats can diverge:
  *   `mobility` swings wide (incl. negative) so it wants a steeper rate
@@ -43,6 +48,7 @@ const StatsSchema = z.object({
   critPerLuck: z.number().nonnegative(),
   critCap: z.number().min(0).max(1),
   critMult: z.number().min(1),
+  minDamage: z.number().int().nonnegative(),
   mobilityCdPerStat: z.number().nonnegative(),
   agilityCdPerStat: z.number().nonnegative(),
   mobilityMinCdScale: z.number().min(0).max(1),

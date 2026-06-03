@@ -26,7 +26,7 @@ const SHOT = abilityConfig('catapult_shot');
 const SHOT_RANGE = SHOT.range;
 
 const CATAPULT_STATS: UnitStats = {
-  constitution: 24, strength: 0, ranged: 14, magic: 0, luck: 2, agility: 4, mobility: 4,
+  constitution: 24, strength: 0, ranged: 14, magic: 0, luck: 2, agility: 4, mobility: 4, defense: 0,
 };
 
 function makeUnit(

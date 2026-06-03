@@ -37,6 +37,7 @@ import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
 import type { SpawnRegion } from './layouts';
 import { ZERO_STATS, deriveStats, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
+import { STATS } from '../config/stats';
 
 /**
  * Schema history:
@@ -102,8 +103,14 @@ import { computeXpAwards } from './xp';
  *       outright (no migration — the rename also re-tuned the move-CD curve,
  *       so old derived cadences wouldn't be reproduced anyway). v15 throws
  *       on load.
+ *  17 — GP2 added the `defense` key to `UnitStats` (flat subtractive damage
+ *       mitigation). Stats round-trip as a whole object by key, so a v16
+ *       snapshot carries a `defense`-less stat block; the version check
+ *       rejects it outright (no migration — defaulting the missing key would
+ *       silently mis-derive nothing today, but the version bump keeps the
+ *       stat-shape contract honest, same as GP1). v16 throws on load.
  */
-const WORLD_SCHEMA_VERSION = 16;
+const WORLD_SCHEMA_VERSION = 17;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -434,11 +441,14 @@ export class World {
    * NOT route through here — it keeps its own `currentHp -=` + `unit:burned`
    * emit, so the GP2 `defense` mitigation never touches it.
    *
-   * GP2.1 is behaviour-preserving (`final === rawDamage`); GP2.2 inserts the
-   * subtractive `defense` mitigation on the single `final` line below.
+   * GP2.2 — subtractive `defense` mitigation lands on the single `final` line:
+   * a confirmed hit deals `max(STATS.minDamage, rawDamage − target.defense)`,
+   * applied to the already crit/cover-resolved `rawDamage`. Both operands are
+   * integers, so `final` stays integral (no re-round). The `minDamage` floor
+   * keeps a high-defense target from fully negating chip/AoE.
    */
   applyDamage(attackerId: number, target: Unit, rawDamage: number, opts: { crit: boolean }): void {
-    const final = rawDamage;
+    const final = Math.max(STATS.minDamage, rawDamage - target.stats.defense);
     target.currentHp -= final;
     this.recordDamage(attackerId, target, final);
     this.emit('unit:attacked', {

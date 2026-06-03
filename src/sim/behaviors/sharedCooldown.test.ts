@@ -147,6 +147,10 @@ function scene(specs: SceneUnit[]): {
     const stats: UnitStats = {
       ...baseStats,
       luck: 0,
+      // GP2 — cadence/shared-cooldown mechanic test; keep the target
+      // defense-free so the new subtractive mitigation doesn't perturb the
+      // explicit `attackDamage` assertions (baseStats now carries defense 4).
+      defense: 0,
       strength: s.attackDamage ?? baseStats.strength,
     };
     const range = s.attackRange ?? 1;

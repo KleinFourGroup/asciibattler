@@ -35,6 +35,18 @@
  *     The deadzone that turns the old static-then-lurch follow into a smooth
  *     trail: small (1) → hugs the pack centre continuously; larger → hangs
  *     back loosely. A distance, not a timing.
+ *   actingCellSearchSlack — GP4: when a unit approaches a target to act on it
+ *     (archers/mage shooting, the catapult lobbing, the healer healing), it
+ *     paths to the nearest cell from which it can ACT (in range, + LOS where
+ *     the action needs it) rather than to the target's own cell. That cell is
+ *     found by a bounded BFS outward from the unit, capped at `range + this`
+ *     Chebyshev steps so a far/hopeless target doesn't scan the board — beyond
+ *     the cap the unit falls back to charging the target's cell (the
+ *     anti-freeze guarantee) and snaps to the acting cell once it closes in.
+ *     The "small slack" past pure range that lets it find a LOS-clearing cell
+ *     or take a one-cell sidestep. A distance, not a timing — passed through
+ *     verbatim like `occupiedCellPenalty`. 0 = only cells already in range
+ *     qualify; higher → searches wider (more work) for a standoff cell.
  */
 
 import { z } from 'zod';
@@ -47,6 +59,7 @@ const SimSchema = z.object({
   occupiedCellPenalty: z.number().nonnegative(),
   healerPanicRangeCells: z.number().int().nonnegative(),
   healerFollowGapCells: z.number().int().nonnegative(),
+  actingCellSearchSlack: z.number().int().nonnegative(),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -57,4 +70,5 @@ export const SIM = {
   occupiedCellPenalty: parsed.occupiedCellPenalty,
   healerPanicRangeCells: parsed.healerPanicRangeCells,
   healerFollowGapCells: parsed.healerFollowGapCells,
+  actingCellSearchSlack: parsed.actingCellSearchSlack,
 };

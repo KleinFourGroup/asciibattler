@@ -7,6 +7,7 @@ import { currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
 import { SIM } from '../../config/sim';
 import { hasLineOfSight } from '../LineOfSight';
+import { nearestActingCell } from '../actingPosition';
 
 /**
  * Proposes a one-cell step toward the unit's current (E5-sticky) target
@@ -16,16 +17,34 @@ import { hasLineOfSight } from '../LineOfSight';
  * AbilityBehavior scores 10 (via each ability) so the selector prefers
  * attacking over moving when both fire.
  *
- * Pathing model (C1d follow-up):
+ * Pathing model (C1d follow-up; GP4 acting-cell refinement):
  *
- * 1. **Path to the target's cell**, not to a precomputed "goal cell
- *    within attackRange of target." The earlier `pickGoalCellInRange`
- *    heuristic froze when every range-1 neighbor of the target was a
- *    wall or an ally — common in tight layouts. The target itself is
- *    excluded from the blocker set so findPath has a reachable goal;
- *    the unit never actually steps onto target because the in-range
- *    abstain at the top of `proposeAction` fires at least one cell
- *    before reaching it.
+ * 1. **Path to a firing cell, with a target-cell fallback.** A ranged
+ *    unit (attackRange > 1) paths to the nearest cell from which it can
+ *    actually shoot — `nearestActingCell`: in range AND (for LOS-gated
+ *    abilities) with line of sight — instead of charging the target's own
+ *    cell. So it holds at standoff with a clear shot rather than creeping
+ *    into melee, or sidesteps a wall that breaks LOS rather than creeping
+ *    at it. The catapult (LOS-ignoring) uses the same search range-only.
+ *    **Melee (range 1) stays on target-cell pathing** — an adjacent cell
+ *    always has LOS, so there's nothing to reposition for.
+ *
+ *    The goal **falls back to the target's cell** whenever the firing-cell
+ *    approach can't produce a move — either no firing cell is reachable
+ *    within the cap, OR the step toward one is blocked (a contested cell in
+ *    a chokepoint: a strafing-funnel strip where every unit's nearest firing
+ *    cell is the same occupied tile would otherwise strand the whole column).
+ *    Charging the target then drains the chokepoint as a pre-GP4 unit would.
+ *    This is the load-bearing anti-freeze guarantee. The earlier
+ *    `pickGoalCellInRange` heuristic picked a single in-range goal cell and
+ *    froze when every such cell was a wall or an ally (→ findPath returns []
+ *    → stall), common in tight layouts; the fallback (plus `nearestActingCell`
+ *    only ever returning cells reachable over findPath's own blocker graph)
+ *    means we never reintroduce that freeze. The target itself is excluded
+ *    from the blocker set so findPath always has a reachable goal; the unit
+ *    never actually steps onto target/the firing cell because the in-range
+ *    abstain at the top of `proposeAction` fires at least one cell before
+ *    reaching it.
  *
  * 2. **Soft ally blocking**, not hard. Walls (neutral-team units) stay
  *    hard blockers — they're permanent terrain. Other units (allies
@@ -98,29 +117,62 @@ export class MovementBehavior implements Behavior {
       return null;
     }
 
-    const path = findPath(
-      unit.position,
-      target.position,
-      pathBlockers,
-      world.gridW,
-      world.gridH,
-      (c) => costAt(c, world, otherUnitCells),
-    );
-    if (path.length < 2) return null;
-
     const from = unit.position;
     const durationTicks = unit.derived.moveCooldownTicks;
-    const to = path[1]!;
 
-    if (otherUnitCells.has(`${to.x},${to.y}`)) {
-      // E5.B — the A*-chosen next step is occupied. Try a perpendicular
-      // sidestep toward the target before giving up; abstain only if both
-      // sides are blocked (1-wide corridor → queue).
-      const side = sidestep(from, target.position, world, occupied);
-      return side === null ? null : moveProposal(from, side, durationTicks);
+    // One A* step toward `goal`: the move, or null when no path exists or the
+    // next cell is occupied and no perpendicular sidestep is free (1-wide
+    // chokepoint → queue). Soft ally blocking + the E5.B sidestep live here so
+    // both the firing-cell goal and the target-cell fallback share them.
+    const stepToward = (goal: GridCoord): ActionProposal | null => {
+      const path = findPath(
+        from,
+        goal,
+        pathBlockers,
+        world.gridW,
+        world.gridH,
+        (c) => costAt(c, world, otherUnitCells),
+      );
+      if (path.length < 2) return null;
+      const to = path[1]!;
+      if (otherUnitCells.has(`${to.x},${to.y}`)) {
+        // E5.B — the A*-chosen next step is occupied. Try a perpendicular
+        // sidestep toward the target before giving up.
+        const side = sidestep(from, target.position, world, occupied);
+        return side === null ? null : moveProposal(from, side, durationTicks);
+      }
+      return moveProposal(from, to, durationTicks);
+    };
+
+    // GP4 — a ranged unit heads to the nearest cell it can fire from (in range
+    // + LOS, or range-only when it ignores LOS) so it holds at standoff /
+    // repositions for a blocked shot instead of charging. Melee (range 1) keeps
+    // target-cell pathing — an adjacent cell always has LOS.
+    //
+    // The fallback to charging the target's cell is load-bearing: it fires both
+    // when no firing cell is reachable within the cap AND when the step toward
+    // a firing cell is blocked (a contested cell in a chokepoint — e.g. a
+    // strafing-funnel strip where every unit's nearest firing cell is the same
+    // occupied tile). Charging the target then drains the chokepoint exactly as
+    // a pre-GP4 unit would, so a contested firing cell can never strand the
+    // unit (the C1d/E5 anti-freeze guarantee). Do NOT reintroduce the old
+    // `pickGoalCellInRange` freeze by abstaining here.
+    if (unit.derived.attackRange > 1) {
+      const firingCell = nearestActingCell(
+        from,
+        target.position,
+        unit.derived.attackRange,
+        SIM.actingCellSearchSlack,
+        world,
+        ignoresLos ? null : losBlockers,
+      );
+      if (firingCell !== null) {
+        const viaFiringCell = stepToward(firingCell);
+        if (viaFiringCell !== null) return viaFiringCell;
+      }
     }
 
-    return moveProposal(from, to, durationTicks);
+    return stepToward(target.position);
   }
 }
 

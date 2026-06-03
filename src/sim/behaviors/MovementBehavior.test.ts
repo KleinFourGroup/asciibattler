@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MovementBehavior } from './MovementBehavior';
+import { hasLineOfSight } from '../LineOfSight';
 import { World } from '../World';
 import { Unit, type Team, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
@@ -259,6 +260,49 @@ describe('MovementBehavior', () => {
     world.tick();
     expect(moves).toHaveLength(0);
     expect(units[0]!.position).toEqual({ x: 0, y: 0 });
+  });
+
+  it('GP4: a ranged unit in range but LOS-blocked repositions for a clear shot (does not charge)', () => {
+    // Player ranged (range 6) is already in chebyshev range of the target, but
+    // a wall on the straight line breaks LOS. Pre-GP4 it pathed toward the
+    // target's cell (creeping at the wall); post-GP4 it paths to the nearest
+    // cell with a clear shot and holds there.
+    const wall = { x: 2, y: 0 };
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 6, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 4, y: 0, inert: true },
+      { team: 'neutral', x: wall.x, y: wall.y, inert: true },
+    ]);
+    const target = units[1]!.position;
+
+    // Tick generously so it settles into a firing slot (the abstain then holds).
+    for (let i = 0; i < 15; i++) world.tick();
+
+    const finalPos = units[0]!.position;
+    expect(moves.length).toBeGreaterThan(0); // it repositioned
+    expect(hasLineOfSight(finalPos, target, [wall])).toBe(true); // now it can shoot
+    const dist = Math.max(Math.abs(finalPos.x - target.x), Math.abs(finalPos.y - target.y));
+    expect(dist).toBeLessThanOrEqual(6); // still in range
+    expect(dist).toBeGreaterThan(1); // held at standoff, didn't charge to melee
+  });
+
+  it('GP4: a catapult (LOS-ignoring) out of range approaches and holds at firing range', () => {
+    // Guards the dropped `!ignoresLos` exclusion: the catapult now routes via
+    // the acting-cell search (range-only), so it must still close to range and
+    // stop, not stall or overrun.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 6, moveCooldownTicks: 1, ignoresLos: true },
+      { team: 'enemy', x: 10, y: 0, inert: true },
+    ]);
+    const target = units[1]!.position;
+
+    for (let i = 0; i < 30; i++) world.tick();
+
+    const finalPos = units[0]!.position;
+    expect(moves.length).toBeGreaterThan(0);
+    const dist = Math.max(Math.abs(finalPos.x - target.x), Math.abs(finalPos.y - target.y));
+    expect(dist).toBeLessThanOrEqual(6); // reached firing range
+    expect(dist).toBeGreaterThan(1); // and held there (didn't charge to point-blank)
   });
 });
 

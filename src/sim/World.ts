@@ -418,6 +418,37 @@ export class World {
     this.damageDealt.set(attackerId, (this.damageDealt.get(attackerId) ?? 0) + damage);
   }
 
+  /**
+   * GP2 — the single chokepoint for COMBAT damage: HP mutation + XP ledger +
+   * the `unit:attacked` emit, which the four combat actions
+   * (`AttackAction` / `GambitStrikeAction` / `MagicBoltAction` /
+   * `CatapultShotAction`) used to each do inline. Callers pre-compute
+   * `rawDamage` with the crit factor, half-cover multiplier, and AoE
+   * `cellMult` already baked in, and decide WHETHER a hit happens at all (the
+   * per-action `rawDamage <= 0` / team / radius skip guards stay caller-side —
+   * they decide if a cell is a victim; this method only applies a confirmed
+   * hit). `opts.crit` is the already-rolled flag, forwarded to the event for
+   * E6.C's red hitsplats.
+   *
+   * Environmental damage (fire chip in `applyTileEffects`) deliberately does
+   * NOT route through here — it keeps its own `currentHp -=` + `unit:burned`
+   * emit, so the GP2 `defense` mitigation never touches it.
+   *
+   * GP2.1 is behaviour-preserving (`final === rawDamage`); GP2.2 inserts the
+   * subtractive `defense` mitigation on the single `final` line below.
+   */
+  applyDamage(attackerId: number, target: Unit, rawDamage: number, opts: { crit: boolean }): void {
+    const final = rawDamage;
+    target.currentHp -= final;
+    this.recordDamage(attackerId, target, final);
+    this.emit('unit:attacked', {
+      attackerId,
+      targetId: target.id,
+      damage: final,
+      crit: opts.crit,
+    });
+  }
+
   /** Test-only read of the damage ledger. */
   damageDealtBy(attackerId: number): number {
     return this.damageDealt.get(attackerId) ?? 0;

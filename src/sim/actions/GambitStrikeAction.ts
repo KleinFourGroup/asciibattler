@@ -81,14 +81,9 @@ export class GambitStrikeAction implements Action {
     const crit = world.combatRng.next() < this.critChance;
     const critFactor = crit ? STATS.critMult : 1;
     const damage = Math.round(this.baseDamage * critFactor * this.damageMultiplier);
-    this.target.currentHp -= damage;
-    world.recordDamage(unit.id, this.target, damage);
-    world.emit('unit:attacked', {
-      attackerId: unit.id,
-      targetId: this.target.id,
-      damage,
-      crit,
-    });
+    // GP2 — funnel the strike through the shared `world.applyDamage` chokepoint
+    // (HP mutation + XP ledger + `unit:attacked` emit + defense mitigation).
+    world.applyDamage(unit.id, this.target, damage, { crit });
   }
 
   /**

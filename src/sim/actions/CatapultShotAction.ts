@@ -113,14 +113,10 @@ export class CatapultShotAction implements Action {
     const damage = Math.round(this.baseDamage * critFactor);
     if (damage <= 0) return;
 
-    this.target!.currentHp -= damage;
-    world.recordDamage(unit.id, this.target!, damage);
-    world.emit('unit:attacked', {
-      attackerId: unit.id,
-      targetId: this.target!.id,
-      damage,
-      crit,
-    });
+    // GP2 — the single heavy hit funnels through the shared `world.applyDamage`
+    // chokepoint (HP mutation + XP ledger + `unit:attacked` emit + defense
+    // mitigation). The fizzle/`damage <= 0` guards above stay here.
+    world.applyDamage(unit.id, this.target!, damage, { crit });
   }
 
   phaseTarget(): { targetId?: number | undefined; targetCell?: GridCoord } {

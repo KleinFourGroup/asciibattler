@@ -62,16 +62,9 @@ export class AttackAction implements Action {
     const crit = world.combatRng.next() < this.critChance;
     const critFactor = crit ? STATS.critMult : 1;
     const damage = Math.round(this.baseDamage * critFactor * this.damageMultiplier);
-    this.target.currentHp -= damage;
-    // E4 — feed the World's XP ledger. World filters team relationship
-    // (no self-damage / neutral damage), so the call is unconditional.
-    world.recordDamage(unit.id, this.target, damage);
-    world.emit('unit:attacked', {
-      attackerId: unit.id,
-      targetId: this.target.id,
-      damage,
-      crit,
-    });
+    // GP2 — HP mutation + XP ledger + `unit:attacked` emit funnel through the
+    // single `world.applyDamage` chokepoint (where defense mitigation lands).
+    world.applyDamage(unit.id, this.target, damage, { crit });
   }
 
   phaseTarget(): { targetId?: number | undefined } {

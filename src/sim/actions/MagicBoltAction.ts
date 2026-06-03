@@ -107,14 +107,11 @@ export class MagicBoltAction implements Action {
       const damage = Math.round(this.baseDamage * critFactor * cellMult);
       if (damage <= 0) continue;
 
-      target.currentHp -= damage;
-      world.recordDamage(unit.id, target, damage);
-      world.emit('unit:attacked', {
-        attackerId: unit.id,
-        targetId: target.id,
-        damage,
-        crit,
-      });
+      // GP2 — per-cell damage funnels through the shared `world.applyDamage`
+      // chokepoint (HP mutation + XP ledger + `unit:attacked` emit + defense
+      // mitigation). The `damage <= 0` / team / radius gates above stay here —
+      // they decide WHICH cells are victims; applyDamage applies a confirmed hit.
+      world.applyDamage(unit.id, target, damage, { crit });
     }
   }
 

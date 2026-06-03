@@ -62,3 +62,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 ## Bundle / perf
 
 - [ ] Vite reports the production JS chunk is >500KB (essentially all three.js). Fine for an MVP, but worth a `build.chunkSizeWarningLimit` bump or a code-split pass if it gets noisy.
+
+## Docs / tooling
+
+- [ ] **Catch doc-tree drift automatically.** HANDOFF.md "Project shape", AGENTS.md "Project tree (abbreviated)", and ARCHITECTURE.md "Top-level structure" each carry a hand-maintained file tree that silently rots as `src/` changes — by GP1 all three listed retired files (`BarRenderer`, `AttackBehavior`), stale `WorldSnapshot` versions, and the pre-E7 archetype set; resynced in `3657bf6` + `037f634`. Worth a lightweight guard so drift is caught at the next change instead of accumulating: e.g. a vitest/CI check that parses the fenced tree in each doc and asserts every listed `src/**` path exists (optionally flagging real files absent from the tree), or — lower effort — a convention that these trees defer to one generated source instead of three hand-copies. Complements the AGENTS "Trim HANDOFF when it grows unwieldy" note (that targets size growth; this targets accuracy). Surfaced during the GP1 doc-hygiene pass.

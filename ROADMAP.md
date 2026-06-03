@@ -86,7 +86,13 @@ build it as a seam from day one so the swap is a one-function edit, not a
 balance rewrite.
 
 Nothing in G2–G5 is hard-gated on a strict order, but the recommended path
-is G1 → G2 → G3 → G4 → G5, then Phase H (H1 → … → H6).
+is G1 → G2 → G3 → G4 → G5, then the **Phase GP** playtest-response cluster
+(GP1 → GP5 — the Phase-G playtest fixes, see below), then Phase H
+(H1 → … → H6). GP lands *before* Phase H deliberately: defense, mobility,
+and the healer/ranged AI all move per-turn survivor counts, which is exactly
+what Phase H's health pools chip on — so H's balance sweep (H6) should run
+against the post-GP combat model, and GP's stat + card plumbing is what H1
+(`power` stat) and H6 (recruit/pass UI) build on.
 
 ## Conventions
 
@@ -445,6 +451,201 @@ long-run balance sweep move to **Phase H (H6)**.
 - **Strategy parameterization granularity.** Recommend factories over
   explicit subclasses (one file, data-driven), matching the config-derived
   ethos.
+
+---
+
+## Phase GP — Combat & stat-legibility playtest response (pre-H)
+
+Synthesized from the Phase-G playtest cluster: movement / attack-speed
+legibility, two healer-positioning bugs, ranged units backing off near-kills,
+and the missing defense stat. Structurally the twin of Phase F (the Phase-E
+playtest response) — a focused correctness/legibility pass that lands
+**before Phase H** (see *Sequencing rationale*). Five commits, **playtest
+pause between each** (the Phase-E/F/G cadence). **Phase H's letter is left
+untouched** — the `playerTeamLevel` seam + the H1/H5/H6 references stay valid.
+
+**User decisions locked (the design round that produced this section):**
+- **Defense formula = subtractive with floor** (`max(minDamage, raw − defense)`),
+  not diminishing-returns. Intuitive + reads well on a card; the floor +
+  modest defense values keep chip/AoE from being fully negated (watch the
+  mage ring — GP2).
+- **Attack-speed stat `speed` → `agility`** (alongside `endurance → mobility`),
+  so the two cadence stats don't both read as "movement."
+- **Healer choke fix = a yield rule**, *not* a rear-bias anchor — healers
+  frequently spawn at the **front** in labyrinth / strafing-corridor layouts,
+  so there's no rear to bias toward (it's partly a maps problem too).
+- **Run the full cluster before Phase H.**
+
+### GP1 — `endurance → mobility` rename + universal move base (#1)
+
+**Shape:**
+- Rename `endurance → mobility` AND `speed → agility` across `UnitStats`,
+  [archetypes.json](config/archetypes.json) (`baseStats` + `growthRates`),
+  the zod schema ([archetypes.ts](src/config/archetypes.ts)),
+  [leveling.ts](src/sim/leveling.ts), [stats.ts](src/sim/stats.ts)
+  (`cooldownScale` callers + `ZERO_STATS`), the
+  [PromotionScreen](src/ui/PromotionScreen.ts) label map (`END`→`MOB`,
+  `SPD`→`AGI`), and every test fixture. `mobility` drives the move cooldown,
+  `agility` the per-ability attack cadence.
+- **Split the shared cooldown rate into per-axis knobs.** Today both axes go
+  through one `cooldownScale(stat)` ([stats.ts:177-179](src/sim/stats.ts))
+  reading the single `STATS.cdPerStat` (0.05) + `STATS.minCdScale` (0.4) — fine
+  while both stats were positive-only, but wrong once `mobility` swings wide
+  and negative (catapult) while `agility` stays a gentle multiplier on the
+  already-authored ability cadences (1.2–3.0s). Split into
+  **`mobilityCdPerStat`** + **`agilityCdPerStat`** ([stats.json](config/stats.json)),
+  parameterizing `cooldownScale(stat, perStat, minScale)` and threading the
+  right knob from each of the two call sites. Default both to `0.05` so the
+  split itself is behaviour-preserving; the GP1 re-tune then moves them
+  **independently** (mobility likely wants a steeper rate so negative values
+  stay small). Likewise split **`minCdScale`** per axis (the fast-side cap) for
+  full independence — see decision point.
+- **Drop the per-archetype `baseMoveCooldownSeconds` override** (only the
+  catapult uses it, `2.5`). One universal `STATS.baseMoveCooldownSeconds`;
+  slow units now come from **low/negative mobility** — the `minCdScale` floor
+  only caps the *fast* side, so `moveCooldownScale(mobility) = max(mobilityMinCdScale,
+  1 − mobility×mobilityCdPerStat)` is unbounded on the slow side.
+- **Re-tune the two rates + per-archetype mobility values** so the numbers
+  read human — with a steeper `mobilityCdPerStat`, a heavy unit lands around
+  mobility `−4…−8`, not `−20`. Keep `mobility 0 ≈ the 1.0s baseline`; `agility`
+  stays the gentler dial on ability cadences.
+
+**Cost:** WorldSnapshot bump (two stat keys renamed; old throws). Fuzz /
+determinism outcome baseline shifts (re-tuned cadences) — regenerate the
+untracked `tests/fuzz/output/*`. No render surface beyond GP3's card.
+
+**Headless tests:** `deriveStats` move-CD from `mobility` (incl. negative →
+scale > 1 → slower) resolves the **mobility** rate; `attackCooldownTicksFor`
+reads `agility` and resolves the **agility** rate (a test pinning that the two
+axes can diverge guards the split); the catapult's ~2.0s walk reproduced under
+the universal base + its mobility value; balance-proof off `STATS` /
+`archetypes`.
+
+**Decision points GP1:** final per-archetype mobility/agility values + the two
+`*CdPerStat` rates (by feel); **whether to split `minCdScale` per axis too**
+(recommend yes — once the rates are independent, a shared fast-side cap is an
+odd half-measure; cheap to split alongside); whether mobility should floor at
+some max-slow scale (recommend no — leave it open, tune values instead).
+
+### GP2 — Defense stat + damage-application consolidation (#7)
+
+**Two commits:**
+1. **Consolidate** the four combat-damage sites — [AttackAction](src/sim/actions/AttackAction.ts),
+   [GambitStrikeAction](src/sim/actions/GambitStrikeAction.ts),
+   [MagicBoltAction](src/sim/actions/MagicBoltAction.ts),
+   [CatapultShotAction](src/sim/actions/CatapultShotAction.ts) — into one
+   `world.applyDamage(attackerId, target, rawDamage, { crit })` chokepoint
+   (the single home for `currentHp -=`, `recordDamage`, and the
+   `unit:attacked` emit). **Pure refactor, byte-identical fuzz** (no formula
+   yet).
+2. **Add `defense`** to `UnitStats` (+ `growthRates`: melee tanky, archers /
+   casters / rogue thin) and mitigate in that one place:
+   **`final = max(minDamage, raw − defense)`** (`minDamage` knob, default 1),
+   applied to the *post-crit, post-cover* number. **Environmental damage
+   (fire / chasm, [World.ts](src/sim/World.ts) `applyTileEffects`) stays
+   UNMITIGATED.** Card gets a `DEF` row (GP3).
+
+**Cost:** WorldSnapshot bump (new stat key — can share GP1's bump if landed
+the same session). Fuzz baseline shifts. Balance mini-sweep via G1's
+short-run harness + G5's fuzz tooling.
+
+**Watch (the subtractive caveat):** the mage AoE ring is `round(magic × 0.5)`
+— keep defense values modest and the min-damage floor honest so chip/AoE
+isn't gutted. Re-confirm in the H6 long-run sweep.
+
+**Headless tests (balance-proof):** `final == max(floor, raw − def)`; floor
+honored; crit/cover applied before mitigation; environmental damage
+unmitigated; the consolidation is behaviour-preserving at `defense 0`;
+snapshot round-trip.
+
+**Decision points GP2:** per-archetype defense growth; `minDamage` floor;
+whether near-immunity at the high defense end feels acceptable (subtractive
+can hard-counter a low-damage attacker — watch in the sweep).
+
+### GP3 — Card legibility overhaul (#2 + #3)
+
+**Shape** ([RecruitScreen](src/ui/RecruitScreen.ts) + [HUD](src/ui/HUD.ts) +
+`ui.css`):
+- **List the unit's abilities** — name + base cadence (s) + range + an AoE tag
+  — instead of the single primary `ATK` number ([RecruitScreen.ts:100-106](src/ui/RecruitScreen.ts)
+  only shows the primary today). Sourced from [abilities.json](config/abilities.json)
+  via the archetype's ability ids. This self-documents *what the unit does*
+  (Heal / Strike / Bolt), the real legibility win. Design the list now so a
+  future multi-ability unit just renders more rows.
+- **Show the driving stat directly** next to its effect: `mobility` beside
+  `MOV s`, `agility` beside the per-ability cadence, plus the new `defense`,
+  alongside the existing HP / DMG / RNG / CRIT / XP.
+- Fold in the standing **recruit-card accent CSS** cleanup for the four E7
+  archetypes (currently base-styled — see *Cleanup / chores*).
+
+**Cost:** render-only; **browser-verified**. No snapshot / fuzz impact.
+
+**Decision points GP3:** card layout density once abilities + raw stats are
+both shown (the card already has 7 rows — may want a two-column or
+collapsible stat block).
+
+### GP4 — Ranged firing-position pathing (#6)
+
+**Shape** ([MovementBehavior](src/sim/behaviors/MovementBehavior.ts)):
+- Replace "path to the target's cell" ([MovementBehavior.ts:101-108](src/sim/behaviors/MovementBehavior.ts))
+  with "path to the **nearest reachable cell satisfying `chebyshev(cell,
+  target) ≤ range && (ignoresLineOfSight || hasLineOfSight(cell, target))`**"
+  — BFS outward from the unit over passable cells, first qualifying cell wins.
+  **Fallback to the current target-cell pathing when no firing cell is
+  reachable** — the fallback is load-bearing: it preserves the C1d / E5
+  anti-freeze guarantee. **Do NOT reintroduce the old target-adjacent
+  goal-cell** (the `pickGoalCellInRange` that froze when every range-1
+  neighbor was a wall/ally — see the MovementBehavior comment block).
+- Keep the in-range + LOS abstain as the fast path (already in a firing slot →
+  don't move). Catapult unaffected (`ignoresLineOfSight` → abstains on range
+  alone); helps archers + mage.
+
+**Cost:** fuzz baseline shifts (paths change), **no snapshot bump.**
+
+**Headless tests:** in-range-but-LOS-blocked → steps to a clearing cell, not
+around; one-sidestep-from-a-shot → takes the sidestep; no reachable firing
+cell → falls back, **no freeze** (the `layout-deadlock` fixtures still pass);
+bounded BFS (cap the search radius so a hopeless target doesn't scan the whole
+board); determinism per seed.
+
+**Decision points GP4:** the BFS search-radius cap (recommend `range + a small
+slack`).
+
+### GP5 — Healer positioning: navigable-snap + yield rule (#4 + #5)
+
+**Shape** ([SupportMovementBehavior](src/sim/behaviors/SupportMovementBehavior.ts)):
+- **#4 — snap the centroid anchor to the nearest *navigable* tile** (small
+  BFS/spiral) before pathing. Today `alliesCentroidCell` ([SupportMovementBehavior.ts:139-153](src/sim/behaviors/SupportMovementBehavior.ts))
+  returns the raw rounded average, which can land on a wall/chasm; `stepToward`
+  then `findPath`s to an impassable goal, gets `[]`, and the healer **stalls**.
+- **#5 — a yield rule.** When the healer would otherwise idle/hold AND it
+  occupies a chokepoint cell a living ally needs to traverse (the ally's only
+  route runs through the healer's cell, no sidestep), it **vacates**: step
+  laterally to a free cell if one exists, else advance along the corridor
+  toward the formation anchor so the column flows. (**Rear-bias rejected** —
+  healers frequently spawn at the *front* in labyrinth / strafing-corridor
+  layouts, so there's no rear to retreat into.)
+
+**Related observations (NOT GP5 code — flagged for later):**
+- **Spawn placement.** Healers spawning in front is partly a
+  spawn-assignment / layout issue. A cheap complementary lever would be
+  biasing support spawn toward the rear of the spawn region — **but H2
+  randomizes spawn tiles**, which defeats spawn-order bias, so the yield rule
+  is the durable fix, not spawn ordering. Note the interaction during H2.
+- **Map design.** Some labyrinth / corridor layouts are simply unfriendly to a
+  trailing support; revisit layout tuning if the yield rule isn't enough.
+
+**Cost:** fuzz baseline shifts, **no snapshot bump.** **Browser-verify
+specifically on labyrinth / Endless Corridors layouts** (where #4 + #5
+reproduce).
+
+**Headless tests:** centroid on an impassable tile → anchor snaps to nearest
+navigable, healer advances (no stall); a healer in a 1-wide corridor with an
+ally blocked behind it vacates rather than idling; determinism per seed.
+
+**Decision points GP5:** how aggressively the healer yields (only when
+*strictly* blocking, vs. proactively avoiding 1-wide cells) — tune by feel in
+the browser.
 
 ---
 

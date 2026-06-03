@@ -158,11 +158,12 @@ src/
   ui/
     ui.css
     fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
-    HUD.ts                   # In-battle HUD: floor, rosters, Lv/XP rows (E4.5), banner
+    HUD.ts                   # In-battle HUD: floor, rosters, Lv/XP (E4.5) + DEF·MOB·AGI (GP3), banner
     MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode
-    RecruitScreen.ts         # recruit offer cards → dispatch chooseRecruit
+    RecruitScreen.ts         # recruit offer cards → dispatch chooseRecruit; raw stat block + ability list (GP3)
     PromotionScreen.ts       # E4.4: per-unit level-up rows
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
+    statLabels.ts            # GP3: shared STAT_LABELS map (card + HUD + PromotionScreen)
 
   audio/
     AudioPlayer.ts           # B6: 4-deep clone ring per sound; per-key volume + pitch jitter; + magicboom (E7.C)

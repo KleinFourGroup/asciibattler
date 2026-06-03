@@ -562,7 +562,14 @@ snapshot round-trip.
 whether near-immunity at the high defense end feels acceptable (subtractive
 can hard-counter a low-damage attacker — watch in the sweep).
 
-### GP3 — Card legibility overhaul (#2 + #3)
+### GP3 — Card legibility overhaul (#2 + #3) ✅ shipped
+
+**✅ Shipped** — recruit card → a raw **8-stat block** (CON/STR/RNG/MAG/LCK/AGI/MOB/DEF)
++ a per-ability list (name + `N dmg/heal · rng R` + AoE tag + cadence); HUD → a light
+`DEF · MOB · AGI` per-row line. An independent playtester pivoted the card's top block
+from the originally-planned *derived* summary (HP/DEF/CRIT + move line) to the raw stats.
+Render-only, no snapshot bump. Full record in the HANDOFF GP3 entry. (The spec below is
+the as-designed shape, kept for reference.)
 
 **Shape** ([RecruitScreen](src/ui/RecruitScreen.ts) + [HUD](src/ui/HUD.ts) +
 `ui.css`):

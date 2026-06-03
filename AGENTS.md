@@ -235,7 +235,7 @@ src/
                        # animation/SpriteAnimator
   scenes/              # A5: Battle, Map, Recruit, Promotion (E4.4), GameOver
   ui/                  # ui.css, fade, HUD, MapScreen, RecruitScreen,
-                       # PromotionScreen, GameOverScreen
+                       # PromotionScreen, GameOverScreen, statLabels (GP3)
   audio/               # B6: AudioPlayer
 config/                # JSON balance (paired with src/config/*.ts)
 public/audio/          # preloaded .wav files

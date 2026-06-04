@@ -464,7 +464,67 @@ describe('A2 round-trip: Run', () => {
       /unsupported schema version/,
     );
   });
+
+  it('H5: a mid-encounter Run save carries the deck (draw/discard/hand) + deckRng; a pre-H5 snapshot is rejected', () => {
+    // H5 added the card deck to the Run save → RUN_SCHEMA_VERSION bumped (8→9).
+    // An oversized roster (8 > handSize) leaves both a drawn hand AND a non-empty
+    // draw pile mid-turn, so the round-trip exercises real deck state.
+    const bus = new EventBus<GameEvents>();
+    const run = new Run(2026, bus, { startingRoster: bigRoster() });
+    const first = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+    run.dispatch({ kind: 'enterNode', nodeId: first });
+    expect(run.hand.length).toBeGreaterThan(0);
+    expect(run.drawPile.length).toBeGreaterThan(0);
+
+    const wire = JSON.parse(JSON.stringify(run.toJSON()));
+    expect(wire).toHaveProperty('drawPile');
+    expect(wire).toHaveProperty('discardPile');
+    expect(wire).toHaveProperty('hand');
+    expect(wire).toHaveProperty('deckRng');
+
+    const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.drawPile).toEqual(run.drawPile);
+    expect(restored.discardPile).toEqual(run.discardPile);
+    expect(restored.hand).toEqual(run.hand);
+    expect(restored.deckRng.toJSON()).toEqual(run.deckRng.toJSON());
+
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
+  it('H5: a restored Run draws the same NEXT hand as the original (deck determinism on resume)', () => {
+    // The payoff of snapshotting deckRng + the piles: a mid-encounter restore
+    // must reproduce the exact future draws, not just the current hand.
+    const busA = new EventBus<GameEvents>();
+    const a = new Run(2026, busA, { startingRoster: bigRoster() });
+    const first = a.nodeMap.edges.find((e) => e.from === a.nodeMap.rootId)!.to;
+    a.dispatch({ kind: 'enterNode', nodeId: first });
+
+    const busB = new EventBus<GameEvents>();
+    const b = Run.fromJSON(JSON.parse(JSON.stringify(a.toJSON())), busB);
+    expect(b.hand).toEqual(a.hand); // same current hand
+
+    // Resolve turn 1 identically on both (sub-lethal → turn 2 draws a fresh
+    // hand). The restored run must draw the same turn-2 hand + leave the same
+    // piles.
+    const chip = { winner: 'draw' as const, xpAwards: [], survivorPower: { player: 0, enemy: 0 } };
+    busA.emit('battle:ended', chip);
+    busB.emit('battle:ended', chip);
+    expect(b.hand).toEqual(a.hand);
+    expect(b.drawPile).toEqual(a.drawPile);
+    expect(b.discardPile).toEqual(a.discardPile);
+  });
 });
+
+/** An 8-card roster (> handSize) for the H5 deck round-trip tests. */
+function bigRoster(): { archetype: 'melee' | 'ranged'; level: number }[] {
+  return Array.from({ length: 8 }, (_, i) => ({
+    archetype: i % 2 === 0 ? 'melee' : 'ranged',
+    level: 1,
+  }));
+}
 
 /**
  * Spin up a fixture battle modeled on Game.spawnTeam so the test exercises

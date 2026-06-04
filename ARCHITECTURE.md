@@ -115,11 +115,13 @@ src/
       registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
 
   run/
-    Run.ts                   # State machine: map|battle|promotion|recruit|defeat|complete (E4.4)
-                             # rest/boss node resolution (G3); XP banking; dispatch(RunCommand)
-                             # + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 5
+    Run.ts                   # State machine: map|turn-intro|battle|turn-outcome|promotion|recruit|
+                             # defeat|complete (E4.4/H4b). H4 encounter loop (health pools + turns) +
+                             # H5 card deck (draw/hand/discard + deckRng). rest/boss resolution (G3);
+                             # XP banking; dispatch(RunCommand) + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 9
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI)
-    enemyBudget.ts           # G4: playerTeamLevel SEAM (H5 swaps it) + affine budget + swarm count
+    enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
+                             # + affine budget + swarm count
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
     NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3) + dump
     Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1); per-card level (post-G5)
@@ -175,6 +177,8 @@ config/                      # A4: balance JSON source of truth (paired with src
   difficulty.json            # G4: enemy level-budget knobs + A/B/C presets
   recruitment.json           # starting team + offer size + startingLevel + recruitBonusChance
   leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
+  health.json                # H4: player/enemy health pools + maxTurns/maxTurnSeconds + chipMultiplier
+  deck.json                  # H5: handSize (card-drawn hand; also the 2nd half of the playerTeamLevel seam)
   nodemap.json               # floor count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json

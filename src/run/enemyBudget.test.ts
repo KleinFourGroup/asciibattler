@@ -8,6 +8,7 @@ import {
   distributeBudget,
 } from './enemyBudget';
 import { DIFFICULTY } from '../config/difficulty';
+import { DECK } from '../config/deck';
 import { ARCHETYPE_CONFIG } from '../sim/archetypes';
 import { scaleStats } from '../sim/leveling';
 import type { UnitTemplate } from '../sim/Unit';
@@ -23,10 +24,31 @@ function roster(levels: number[], archetype: 'melee' | 'ranged' = 'melee'): Unit
   }));
 }
 
-describe('playerTeamLevel (the G4 seam)', () => {
-  it('is the SUM of roster unit levels', () => {
+describe('playerTeamLevel (the G4/H5 seam)', () => {
+  // H5: the seam is `avgLevel × min(rosterSize, handSize)` — the EXPECTED hand
+  // level, not the whole-roster sum. Expectations derive from DECK.handSize.
+  const { handSize } = DECK;
+
+  it('equals avgLevel × min(rosterSize, handSize)', () => {
+    for (const levels of [[1, 2, 3], [5, 5, 5, 5, 5], [2, 2, 2, 2, 2, 2, 2, 2], [1, 3, 9, 4, 5, 7, 2]]) {
+      const team = roster(levels);
+      const avg = levels.reduce((a, b) => a + b, 0) / levels.length;
+      expect(playerTeamLevel(team)).toBe(avg * Math.min(levels.length, handSize));
+    }
+  });
+
+  it('for a roster ≤ handSize it still equals the level SUM (avg × size == sum)', () => {
+    // Pre-H5 behavior preserved at small rosters — the swap only diverges once
+    // the roster outgrows the hand.
     expect(playerTeamLevel(roster([1, 2, 3]))).toBe(6);
-    expect(playerTeamLevel(roster([5, 5, 5, 5, 5]))).toBe(25);
+    expect(playerTeamLevel(roster(new Array(handSize).fill(5)))).toBe(5 * handSize);
+  });
+
+  it('caps at handSize: an oversized roster does NOT keep inflating the budget', () => {
+    // The treadmill fix — recruiting past handSize adds bodies to the deck but
+    // not to the enemy budget; only the average level moves it.
+    const big = roster(new Array(handSize + 4).fill(3)); // avg 3, size > handSize
+    expect(playerTeamLevel(big)).toBe(3 * handSize); // NOT 3 × (handSize+4)
   });
 
   it('is 0 for an empty roster', () => {

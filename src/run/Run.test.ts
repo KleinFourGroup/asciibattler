@@ -10,6 +10,7 @@ import { LEVELING } from '../config/leveling';
 import { DIFFICULTY } from '../config/difficulty';
 import { RECRUITMENT } from '../config/recruitment';
 import { HEALTH } from '../config/health';
+import { DECK } from '../config/deck';
 import { avgTeamLevel, enemyBudgetFor } from './enemyBudget';
 import type { RunConfig } from './RunConfig';
 
@@ -76,20 +77,25 @@ describe('Run', () => {
       expect(seeds[0]).toBe(run.currentEncounter!.worldSeed);
     });
 
-    it('builds an encounter snapshot with the current player team', () => {
+    it('builds an encounter snapshot whose hand is drawn from the roster (H5)', () => {
       const { run } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.currentEncounter).not.toBeNull();
-      // E4: encounter stamps each player template with a `rosterIndex`
-      // equal to its position in run.team; compare the un-stamped
-      // shape via map.
-      expect(
-        run.currentEncounter!.playerTeam.map(({ rosterIndex: _ri, ...rest }) => rest),
-      ).toEqual(run.team);
-      expect(
-        run.currentEncounter!.playerTeam.map((t) => t.rosterIndex),
-      ).toEqual(run.team.map((_, i) => i));
+      const hand = run.currentEncounter!.playerTeam;
+      // Starting roster (5) == handSize → the hand is the whole roster, but the
+      // draw order is SHUFFLED, so compare as a set keyed by rosterIndex rather
+      // than position. (The cap/subset case is covered in the deck suite below.)
+      const handSize = Math.min(run.team.length, DECK.handSize);
+      expect(hand).toHaveLength(handSize);
+      const indices = hand.map((t) => t.rosterIndex!);
+      expect(new Set(indices).size).toBe(handSize); // no duplicate cards
+      // E4: each drawn card carries the stats/level of its roster slot, stamped
+      // with that slot's index (never mutating run.team).
+      for (const t of hand) {
+        const { rosterIndex, ...rest } = t;
+        expect(rest).toEqual(run.team[rosterIndex!]);
+      }
       // G4: enemy team is a budget-distributed swarm of up to
       // `swarmMaxMultiplier × playerSize` units (no longer a fixed size).
       const maxCount = Math.round(DIFFICULTY.swarmMaxMultiplier * run.team.length);
@@ -898,7 +904,7 @@ describe('Run', () => {
       expect(run.deploymentCounts).toEqual(new Array(run.team.length).fill(1));
     });
 
-    it('resets at the start of each encounter (a second battle still reads 1, not 2)', () => {
+    it('resets at the start of each encounter (a second battle never reads 2)', () => {
       const { run, bus } = freshRunWithBus(1);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
@@ -906,8 +912,14 @@ describe('Run', () => {
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
-      // Without the per-encounter reset the original five slots would read 2.
-      expect(run.deploymentCounts).toEqual(new Array(run.team.length).fill(1));
+      // H5: a one-turn encounter deploys only the drawn hand, so a grown roster
+      // (6 > handSize 5) reads 1 for the drawn slots and 0 for the undrawn one.
+      // The load-bearing assertion is that NOTHING accumulated to 2 (the reset
+      // worked) and the total deployments equal exactly this encounter's one
+      // hand, not a doubled count.
+      expect(run.deploymentCounts.every((c) => c === 0 || c === 1)).toBe(true);
+      const handSize = Math.min(run.team.length, DECK.handSize);
+      expect(run.deploymentCounts.reduce((a, b) => a + b, 0)).toBe(handSize);
     });
 
     it('appends a fresh zero count when a unit is recruited', () => {
@@ -948,6 +960,100 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
       expect(restored.deploymentCounts).toEqual(run.deploymentCounts);
+    });
+  });
+
+  describe('card deck (H5)', () => {
+    // An oversized roster (> handSize) so draw variance + dilution are live.
+    type RosterSpec = { archetype: 'melee' | 'ranged'; level: number };
+    const BIG_ROSTER: RosterSpec[] = Array.from({ length: 8 }, (_, i) => ({
+      archetype: i % 2 === 0 ? 'melee' : 'ranged',
+      level: 1,
+    }));
+
+    /** Enter the first battle on a custom roster; return the live Run + bus. */
+    function enterFirstBattle(roster: RosterSpec[], seed = 1): { run: Run; bus: EventBus<GameEvents> } {
+      const bus = new EventBus<GameEvents>();
+      const run = new Run(seed, bus, { startingRoster: roster });
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      return { run, bus };
+    }
+
+    /** draw ∪ discard ∪ hand, sorted — should always be a partition of 0..n-1. */
+    function deckUnion(run: Run): number[] {
+      return [...run.drawPile, ...run.discardPile, ...run.hand].sort((a, b) => a - b);
+    }
+
+    it('caps the drawn hand at handSize for an oversized roster', () => {
+      const { run } = enterFirstBattle(BIG_ROSTER);
+      expect(run.team.length).toBeGreaterThan(DECK.handSize);
+      expect(run.hand).toHaveLength(DECK.handSize);
+      expect(run.currentEncounter!.playerTeam).toHaveLength(DECK.handSize);
+      expect(new Set(run.hand).size).toBe(DECK.handSize); // no duplicate cards
+    });
+
+    it('a roster smaller than handSize fields everyone (no overdraw)', () => {
+      const small = [
+        { archetype: 'melee' as const, level: 1 },
+        { archetype: 'ranged' as const, level: 1 },
+      ];
+      const { run } = enterFirstBattle(small);
+      expect(run.team.length).toBeLessThan(DECK.handSize);
+      expect(run.hand).toHaveLength(run.team.length);
+      expect(new Set(run.hand).size).toBe(run.team.length);
+    });
+
+    it('the deck partitions the roster (draw ∪ discard ∪ hand) every turn — no card lost or duplicated', () => {
+      const { run, bus } = enterFirstBattle(BIG_ROSTER);
+      const all = run.team.map((_, i) => i);
+      expect(deckUnion(run)).toEqual(all);
+      // Sub-lethal 0/0 chips keep the encounter ongoing; the invariant holds
+      // through every reshuffle.
+      for (let i = 0; i < 4 && run.phase === 'battle'; i++) {
+        chipTurn(bus, { player: 0, enemy: 0 });
+        if (run.phase === 'battle') expect(deckUnion(run)).toEqual(all);
+      }
+    });
+
+    it('draws every card across turns (reshuffle when the draw pile empties)', () => {
+      const { run, bus } = enterFirstBattle(BIG_ROSTER);
+      const seen = new Set<number>(run.hand);
+      for (let i = 0; i < 5 && run.phase === 'battle'; i++) {
+        chipTurn(bus, { player: 0, enemy: 0 });
+        if (run.phase === 'battle') for (const idx of run.hand) seen.add(idx);
+      }
+      // No card is permanently buried — the whole roster is dealt within a few
+      // turns once the discard reshuffles back in.
+      expect(seen.size).toBe(run.team.length);
+    });
+
+    it('rebuilds the deck for each encounter, including a freshly recruited card', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: first });
+      const sizeBefore = run.team.length;
+      winEncounter(bus);
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+      expect(run.team).toHaveLength(sizeBefore + 1);
+      const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: second });
+      // The deck spans the GROWN roster — the recruited card's index is in play.
+      expect(deckUnion(run)).toEqual(run.team.map((_, i) => i));
+      expect(deckUnion(run)).toContain(run.team.length - 1);
+    });
+
+    it('is deterministic per seed (same hand sequence)', () => {
+      const handsFor = (seed: number): number[][] => {
+        const { run, bus } = enterFirstBattle(BIG_ROSTER, seed);
+        const hands = [run.hand.slice()];
+        for (let i = 0; i < 3 && run.phase === 'battle'; i++) {
+          chipTurn(bus, { player: 0, enemy: 0 });
+          if (run.phase === 'battle') hands.push(run.hand.slice());
+        }
+        return hands;
+      };
+      expect(handsFor(123)).toEqual(handsFor(123));
     });
   });
 

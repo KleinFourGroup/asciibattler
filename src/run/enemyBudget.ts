@@ -16,29 +16,41 @@ import type { RNG } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
 import { scaledUnit, type Archetype } from '../sim/archetypes';
 import { DIFFICULTY } from '../config/difficulty';
+import { DECK } from '../config/deck';
 
-/**
- * THE G4 SEAM — the single most important extensibility point in Phase G.
- *
- * Returns the player's effective "team level," the basis for the enemy budget.
- * Single-battle model: the SUM of every roster unit's level.
- *
- * Phase H (H5) swaps THIS ONE FUNCTION to `avgLevel × min(rosterSize, handSize)`
- * once the card-drawn hand exists — the only edit needed to move the whole
- * difficulty system onto the deckbuilder model. Keep it a one-liner.
- */
-export function playerTeamLevel(team: readonly UnitTemplate[]): number {
+/** Σ of every roster unit's level — the raw total. Private: it was the G4
+ *  `playerTeamLevel`, but H5 turned the public seam into a non-sum product, so
+ *  the two readers that still want the plain sum (`avgTeamLevel` + the seam
+ *  itself) share this instead of recursing through `playerTeamLevel`. */
+function rosterLevelSum(team: readonly UnitTemplate[]): number {
   return team.reduce((sum, u) => sum + u.level, 0);
 }
 
 /**
+ * THE G4 SEAM — the single most important extensibility point in Phase G/H.
+ *
+ * Returns the player's effective "team level," the basis for the enemy budget.
+ * **H5 model (the deckbuilder swap):** the EXPECTED hand level —
+ * `avgLevel × min(rosterSize, handSize)` — because only a `handSize` hand
+ * fights each turn, not the whole roster. So the budget tracks your average
+ * unit level (recruiting past `handSize` no longer inflates the enemy; it just
+ * dilutes your draw). Pre-H5 this was the plain Σ of roster levels (the
+ * single-battle model); for a roster ≤ `handSize` the two are identical
+ * (`avg × size == sum`), so the swap only diverges once the roster outgrows the
+ * hand. Empty roster → 0 (avg 1 × min(0, handSize) = 0), as before.
+ */
+export function playerTeamLevel(team: readonly UnitTemplate[]): number {
+  return avgTeamLevel(team) * Math.min(team.length, DECK.handSize);
+}
+
+/**
  * Average roster level — the basis for *recruit* leveling (G4). Deliberately
- * NOT routed through `playerTeamLevel`: that seam becomes a non-average product
- * in H5, so recruits compute their own mean here. Empty roster → 1 (a recruit
- * onto an empty team comes in at level 1 + bonus).
+ * NOT routed through `playerTeamLevel`: that seam is a non-average product
+ * (H5), so recruits read the plain mean off `rosterLevelSum` here. Empty
+ * roster → 1 (a recruit onto an empty team comes in at level 1 + bonus).
  */
 export function avgTeamLevel(team: readonly UnitTemplate[]): number {
-  return team.length === 0 ? 1 : playerTeamLevel(team) / team.length;
+  return team.length === 0 ? 1 : rosterLevelSum(team) / team.length;
 }
 
 /**

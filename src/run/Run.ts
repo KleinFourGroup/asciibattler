@@ -42,6 +42,7 @@ import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
+import { DECK } from '../config/deck';
 import { LAYOUT_IDS, THEMES, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { xpToNext } from '../sim/xp';
@@ -123,8 +124,12 @@ export interface BattleEncounter {
  *  pool), `enemyHealth` + `turnIndex` + `encounterBudget` (the active
  *  encounter), and `pendingEncounterXp` (XP accrued across the encounter's
  *  turns, banked at encounter end). A v7 save has no pools → reject rather than
- *  rehydrate a Run mid-encounter with a missing/`NaN` health pool. */
-const RUN_SCHEMA_VERSION = 8;
+ *  rehydrate a Run mid-encounter with a missing/`NaN` health pool.
+ *  H5: bumped 8→9. Adds the card deck: `drawPile` / `discardPile` / `hand`
+ *  (rosterIndex values; the encounter-scoped draw→hand→discard cycle) + the
+ *  dedicated `deckRng` stream. A v8 save has no deck → reject rather than
+ *  rehydrate a Run mid-encounter with an undrawn (or stale) hand. */
+const RUN_SCHEMA_VERSION = 9;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -133,10 +138,20 @@ export interface RunSnapshot {
    *  Run construction. Lives independently so adding/removing a level-up
    *  source doesn't shift other run-RNG draws. */
   levelupRng: RNGSnapshot;
+  /** H5: dedicated stream for deck shuffles + draws, forked from `rng` at
+   *  construction (isolated like `levelupRng`). */
+  deckRng: RNGSnapshot;
   nodeMap: NodeMap;
   team: UnitTemplate[];
   /** H3: per-roster-slot deployment counter, parallel to `team`. */
   deploymentCounts: number[];
+  /** H5: the encounter-scoped card deck — `rosterIndex` values in three piles.
+   *  `drawPile` is the shuffled draw stack (drawn from the end), `discardPile`
+   *  collects fought hands, `hand` is the current turn's drawn cards. Rebuilt
+   *  from the roster at each encounter start. */
+  drawPile: number[];
+  discardPile: number[];
+  hand: number[];
   /** H4: the run-wide player health pool (persists across the whole run). */
   playerHealth: number;
   /** H4: the active encounter's enemy pool (reset each encounter). */
@@ -175,6 +190,10 @@ export class Run {
    *  construction so `simulateLevelUps` draws here, not against the
    *  parent stream that drives nodeMap + battle picks. */
   readonly levelupRng: RNG;
+  /** H5: dedicated stream for deck shuffles + draws. Forked once at
+   *  construction (isolated like `levelupRng`), so deck draws don't perturb
+   *  the per-turn `battleRng` forks off `this.rng`. */
+  readonly deckRng: RNG;
   readonly nodeMap: NodeMap;
   team: UnitTemplate[];
   /**
@@ -191,6 +210,19 @@ export class Run {
    * with `team`: a recruit appends a fresh `0`.
    */
   deploymentCounts: number[];
+  /**
+   * H5 — the card deck (draw → hand → discard), holding `rosterIndex` values.
+   * Each turn draws up to `DECK.handSize` cards into `hand` (only the hand
+   * fights), reshuffling `discardPile` back into `drawPile` when it empties; the
+   * fought hand recycles to `discardPile` at the next turn's start. Encounter-
+   * SCOPED: rebuilt + reshuffled from the current roster at every encounter
+   * start, so deck state never carries between encounters (the no-carry model).
+   * `drawPile` is drawn from the END (pop). Public so the turn loop + tests can
+   * inspect the piles; round-trips in the Run save (v9).
+   */
+  drawPile: number[];
+  discardPile: number[];
+  hand: number[];
   /**
    * H4 — the run-wide player health pool. Persists across the WHOLE run (every
    * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
@@ -277,6 +309,11 @@ export class Run {
       : rollTeam(teamRng);
     // H3 — one deployment slot per roster unit, all zero at run start.
     this.deploymentCounts = new Array(this.team.length).fill(0);
+    // H5 — the deck is empty until an encounter builds + shuffles it
+    // (`beginEncounter`); piles round-trip but mean nothing between encounters.
+    this.drawPile = [];
+    this.discardPile = [];
+    this.hand = [];
     // H4 — the run-wide player pool starts full; the per-encounter state
     // (enemyHealth/turnIndex/encounterBudget/pendingEncounterXp) is set when an
     // encounter actually begins (`beginEncounter`).
@@ -286,6 +323,12 @@ export class Run {
     this.encounterBudget = 0;
     this.pendingEncounterXp = [];
     this.levelupRng = this.rng.fork();
+    // H5 — fork the deck stream LAST (after levelup), consistent with the
+    // append-at-the-end fork convention. This extra construction fork shifts
+    // every subsequent `this.rng.fork()` (per-turn waves, recruit offers), so
+    // H5 re-baselines the fuzz output — acceptable, since the seam swap + the
+    // drawn-hand subset already change battle outcomes wholesale.
+    this.deckRng = this.rng.fork();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.currentNodeId = this.nodeMap.rootId;
     this.visitedNodes = new Set<number>();
@@ -385,6 +428,13 @@ export class Run {
     this.pendingEncounterXp = [];
     // Budget computed once; the wave composition re-rolls per turn against it.
     this.encounterBudget = enemyBudgetFor(this.team);
+    // H5 — rebuild + shuffle the draw deck from the CURRENT roster (so a
+    // freshly recruited card is in the deck); hand + discard start empty. The
+    // deck is per-encounter — last encounter's pile state is discarded here.
+    this.drawPile = this.team.map((_, i) => i);
+    shuffleInPlace(this.drawPile, this.deckRng);
+    this.discardPile = [];
+    this.hand = [];
     // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
     // `beginTurn` records the deployed hand.
     this.resetDeploymentCounts();
@@ -416,9 +466,10 @@ export class Run {
 
   /**
    * H4 — spin up one turn: roll this turn's battlefield + a fresh enemy wave at
-   * the encounter's fixed budget, record the deployed hand (the whole roster
-   * pre-H5), publish the per-turn `currentEncounter`, and emit `battle:started`
-   * for the driver (BattleScene / the headless harness) to build a World.
+   * the encounter's fixed budget, draw this turn's hand (H5), record the
+   * deployed hand, publish the per-turn `currentEncounter`, and emit
+   * `battle:started` for the driver (BattleScene / the headless harness) to
+   * build a World.
    *
    * Determinism: the per-turn `battleRng` is forked from `this.rng` HERE (never
    * looked ahead / stashed), so the snapshotted `this.rng` alone reconstructs
@@ -463,13 +514,18 @@ export class Run {
       );
     }
 
-    // E4: stamp each player template with its `Run.team` index so `xpAwards`
-    // can carry it back at battle end (array position IS the index; the stamp
-    // is applied here at handoff time, never on `this.team`).
-    const stampedPlayerTeam = this.team.map((t, i) => ({ ...t, rosterIndex: i }));
-    // H3 — record this turn's deployment. Pre-H5 the whole roster is the
-    // "hand", so every slot is deployed; H5 narrows this to the drawn hand.
-    this.recordDeployment(stampedPlayerTeam.map((_, i) => i));
+    // H5 — recycle the previous turn's hand into the discard, then draw this
+    // turn's. Only the drawn hand fights; cards reshuffle when the draw pile
+    // empties (see `drawHand`). Turn 1 of an encounter discards an empty hand.
+    this.discardPile.push(...this.hand);
+    this.hand = this.drawHand();
+    // E4: stamp each drawn card with its `Run.team` index so `xpAwards` can
+    // carry it back at battle end. The hand holds `rosterIndex` values directly;
+    // the stamp is applied here at handoff time, never on `this.team`.
+    const stampedPlayerTeam = this.hand.map((idx) => ({ ...this.team[idx]!, rosterIndex: idx }));
+    // H3 — record this turn's deployment (the drawn hand). The deployment
+    // counter finally varies per turn here (pre-H5 it was the whole roster).
+    this.recordDeployment(this.hand);
     this.currentEncounter = {
       worldSeed,
       terrainSeed,
@@ -816,14 +872,41 @@ export class Run {
     }
   }
 
+  /**
+   * H5 — draw up to `DECK.handSize` cards from the deck. Pulls from the end of
+   * `drawPile`; when it empties mid-draw, the `discardPile` is shuffled back in
+   * and drawing continues. Stops early only when BOTH piles are exhausted (a
+   * roster smaller than `handSize` simply fields everyone). Returns the drawn
+   * `rosterIndex` values; the caller seats them in `this.hand`.
+   */
+  private drawHand(): number[] {
+    const hand: number[] = [];
+    while (hand.length < DECK.handSize) {
+      if (this.drawPile.length === 0) {
+        if (this.discardPile.length === 0) break; // deck fully dealt this turn
+        // Reshuffle the discard back into the draw pile (the only RNG draw in
+        // the deck cycle, off the isolated `deckRng`).
+        this.drawPile = this.discardPile;
+        this.discardPile = [];
+        shuffleInPlace(this.drawPile, this.deckRng);
+      }
+      hand.push(this.drawPile.pop()!);
+    }
+    return hand;
+  }
+
   toJSON(): RunSnapshot {
     return {
       schemaVersion: RUN_SCHEMA_VERSION,
       rng: this.rng.toJSON(),
       levelupRng: this.levelupRng.toJSON(),
+      deckRng: this.deckRng.toJSON(),
       nodeMap: this.nodeMap,
       team: this.team.slice(),
       deploymentCounts: this.deploymentCounts.slice(),
+      drawPile: this.drawPile.slice(),
+      discardPile: this.discardPile.slice(),
+      hand: this.hand.slice(),
       playerHealth: this.playerHealth,
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
@@ -864,9 +947,13 @@ export class Run {
     m.forcedLayoutId = null;
     m.rng = RNG.fromJSON(snap.rng);
     m.levelupRng = RNG.fromJSON(snap.levelupRng);
+    m.deckRng = RNG.fromJSON(snap.deckRng);
     m.nodeMap = snap.nodeMap;
     m.team = snap.team.slice();
     m.deploymentCounts = snap.deploymentCounts.slice();
+    m.drawPile = snap.drawPile.slice();
+    m.discardPile = snap.discardPile.slice();
+    m.hand = snap.hand.slice();
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;
@@ -882,6 +969,18 @@ export class Run {
       : null;
     run['subscribe']();
     return run;
+  }
+}
+
+/**
+ * H5 — Fisher–Yates shuffle in place. Mirrors `battleSetup`'s tile shuffle;
+ * kept local rather than shared for one tiny helper (rule-of-three not yet hit
+ * — extract a `src/core` util if a third caller appears).
+ */
+function shuffleInPlace<T>(arr: T[], rng: RNG): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = rng.int(0, i);
+    [arr[i], arr[j]] = [arr[j]!, arr[i]!];
   }
 }
 

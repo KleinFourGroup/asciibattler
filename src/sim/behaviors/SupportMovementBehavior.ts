@@ -3,7 +3,8 @@ import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
 import type { ActionProposal } from '../Action';
 import { MoveAction } from '../actions/MoveAction';
-import { findTarget, lowestWoundedAlly } from '../Targeting';
+import { SwapAction } from '../actions/SwapAction';
+import { findTarget, lowestWoundedAlly, currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
 import { SIM } from '../../config/sim';
 
@@ -44,6 +45,16 @@ import { SIM } from '../../config/sim';
  * high-cost cells (`SIM.occupiedCellPenalty`) so the healer routes around
  * its own line but never deadlocks. A step onto a currently-occupied cell
  * is refused (abstain → natural queueing).
+ *
+ * GP5 #5 — the YIELD RULE overrides the two *idle* outcomes above (step 1's
+ * "wounded ally in range" and the step-4 "in formation / alone" fallthrough).
+ * Whenever the healer would otherwise hold, it first checks whether it's
+ * sitting on the one chokepoint cell a boxed ally needs to traverse
+ * (`blocksAnyAlly`); if so it steps off (`vacateCell`, score 1). This clears
+ * the GP4-exposed deadlock where a healer parks on a 1-wide gap and out-heals
+ * an enemy's chip damage forever while the column can't get past it. The heal
+ * itself still wins on ready ticks — `heal_ally` scores 10 vs. the yield's 1 —
+ * so the healer only shuffles off the gap on its heal-cooldown ticks.
  */
 export class SupportMovementBehavior implements Behavior {
   static readonly kind = 'support_movement';
@@ -51,11 +62,13 @@ export class SupportMovementBehavior implements Behavior {
 
   proposeAction(unit: Unit, world: World): ActionProposal | null {
     const healRange = unit.derived.attackRange;
-
-    // 1. A wounded ally (self included) is already healable → idle.
-    if (lowestWoundedAlly(unit, world, healRange) !== null) return null;
-
     const durationTicks = unit.derived.moveCooldownTicks;
+
+    // 1. A wounded ally (self included) is already healable → idle, UNLESS the
+    //    healer is blocking a boxed ally off a chokepoint (GP5 #5 yield rule).
+    if (lowestWoundedAlly(unit, world, healRange) !== null) {
+      return yieldChokepoint(unit, world, durationTicks);
+    }
 
     // 2. Panic-retreat from a too-close enemy.
     const enemy = findTarget(unit, world);
@@ -64,26 +77,198 @@ export class SupportMovementBehavior implements Behavior {
       chebyshev(unit.position, enemy.position) <= SIM.healerPanicRangeCells
     ) {
       const away = stepAwayFrom(unit, enemy.position, world);
-      return away === null ? null : moveProposal(unit.position, away, durationTicks, 5);
+      if (away !== null) return moveProposal(unit.position, away, durationTicks, 5);
+      // Boxed against the enemy with no retreat cell → don't idle ON a
+      // chokepoint. Fall through to the yield rule. This is the load-bearing
+      // path for the GP4 deadlock: a healer wedged at a 1-wide gap near the
+      // front line is always within panic range, so `stepAwayFrom` returns null
+      // and the pre-GP5 code idled here, stranding the column behind it.
+      return yieldChokepoint(unit, world, durationTicks);
     }
 
     // 3. Approach the nearest wounded ally that's out of range.
     const wounded = nearestAlly(unit, world, (c) => c.currentHp < c.derived.maxHp);
     if (wounded !== null) {
       const to = stepToward(unit, wounded.position, world);
-      return to === null ? null : moveProposal(unit.position, to, durationTicks, 1);
+      if (to !== null) return moveProposal(unit.position, to, durationTicks, 1);
+      return yieldChokepoint(unit, world, durationTicks);
     }
 
     // 4. Trail the centroid of living allies to stay tucked in formation.
     const anchor = alliesCentroidCell(unit, world);
     if (anchor !== null && chebyshev(unit.position, anchor) > SIM.healerFollowGapCells) {
       const to = stepToward(unit, anchor, world);
-      return to === null ? null : moveProposal(unit.position, to, durationTicks, 1);
+      if (to !== null) return moveProposal(unit.position, to, durationTicks, 1);
+      // Trail step blocked (an ally in a 1-wide row wants to pass the other
+      // way) → fall through to the yield: swap the boxed ally past us rather
+      // than idling in its way. With a *swap* (not a forward vacate) this is
+      // safe — the healer goes to the rear, not leading the column.
+      return yieldChokepoint(unit, world, durationTicks);
     }
 
-    // No wounded ally, no threat, already in formation (or alone) → idle.
-    return null;
+    // No wounded ally, no threat, already in formation (or alone) → idle,
+    // UNLESS blocking a boxed ally off a chokepoint (GP5 #5 yield rule).
+    return yieldChokepoint(unit, world, durationTicks);
   }
+}
+
+/**
+ * GP5 #5 — the yield move. When the healer would otherwise idle/hold AND it
+ * sits on the one cell a boxed ally needs to advance through (`blockedAlly`),
+ * it SWAPS places with that ally: the ally takes the healer's cell (a step
+ * forward toward its target) and the healer retreats onto the ally's cell.
+ *
+ * A swap rather than a step-aside because the deadlock layouts are 1-wide —
+ * there is no lateral cell to vacate to (a `nearestActingCell`-style sidestep
+ * fails, which is exactly why the column deadlocked). Stepping the healer
+ * *forward* off the gap (the obvious vacate) just makes it lead the column
+ * into the next bottleneck and re-block; swapping sends the support to the
+ * rear where it belongs and advances the fighter, draining the jam. See
+ * `SwapAction` for why the exchange has to be atomic.
+ *
+ * Returns null (→ idle) when the healer isn't strictly blocking anyone. Score
+ * 1: a ready heal (`heal_ally`, score 10) still wins, so the swap only fires
+ * on heal-cooldown ticks — exactly the ticks the deadlock would otherwise burn.
+ */
+function yieldChokepoint(
+  unit: Unit,
+  world: World,
+  durationTicks: number,
+): ActionProposal | null {
+  const ally = blockedAlly(unit, world);
+  if (ally === null) return null;
+  return swapProposal(unit.position, ally.position, ally.id, durationTicks);
+}
+
+/**
+ * The living ally (if any) for whom the healer is the *only* cell it can
+ * advance through — i.e. the ally to swap places with. An adjacent ally `a`
+ * qualifies when the healer's cell `h` is `a`'s single forward step toward its
+ * target: stepping onto `h` brings `a` closer (in real path distance) to its
+ * enemy, and every *other* available neighbour of `a` does not. That's the
+ * "strictly blocking a boxed ally" condition (ROADMAP GP5): it fires in a
+ * genuine chokepoint, not in open field where `a` always has another forward
+ * cell. Returns the first such ally in `world.units` order (deterministic), or
+ * null when the healer isn't strictly blocking anyone.
+ *
+ * "Forward" is measured by **grid path distance to the target**, NOT Chebyshev
+ * — in a funnel layout the route to an enemy can run *away* from it in
+ * straight-line terms (back through a gap, then around), so a Chebyshev test
+ * mistakes the gap cell for a retreat and never fires. A BFS distance field
+ * from the ally's target (over the static neutral-wall topology, computed once
+ * per distinct target) gives the true "does stepping here get me closer"
+ * answer for `h` and every neighbour in one sweep.
+ *
+ * Uses `currentTarget` (the ally's E5 sticky target) so the field is anchored
+ * where `a` actually paths; a null target (no enemies) is skipped. The
+ * "other forward cell" availability test runs against the NEUTRAL-INCLUSIVE
+ * occupancy set — half-cover / walls are neutral *units*, not tiles, so
+ * `passable` only rejects them when they're in `occupied`.
+ */
+function blockedAlly(unit: Unit, world: World): Unit | null {
+  const h = unit.position;
+  const hKey = key(h);
+  const occupied = occupiedCells(unit, world);
+  const walls = neutralCells(world);
+  const fields = new Map<number, Map<string, number>>(); // target id → dist field
+
+  for (const a of world.units) {
+    if (a.team !== unit.team) continue;
+    if (a.id === unit.id) continue;
+    if (a.currentHp <= 0) continue;
+    if (chebyshev(a.position, h) !== 1) continue;
+
+    const enemy = currentTarget(a, world);
+    if (enemy === null) continue;
+    let dist = fields.get(enemy.id);
+    if (dist === undefined) {
+      dist = distanceField(enemy.position, world, walls);
+      fields.set(enemy.id, dist);
+    }
+
+    const aDist = dist.get(key(a.position));
+    if (aDist === undefined) continue; // `a` can't reach its target at all
+    const hDist = dist.get(hKey);
+    // `h` must be a forward cell for `a` (stepping onto it advances it).
+    if (hDist === undefined || hDist >= aDist) continue;
+
+    // Does `a` have any OTHER available forward cell? If so, `h` isn't its
+    // only way through → the healer isn't strictly blocking it.
+    let hasOtherForward = false;
+    for (const [dx, dy] of NEIGHBORS) {
+      const n: GridCoord = { x: a.position.x + dx, y: a.position.y + dy };
+      if (n.x === h.x && n.y === h.y) continue;
+      if (!passable(n, world, occupied)) continue;
+      const nDist = dist.get(key(n));
+      if (nDist !== undefined && nDist < aDist) {
+        hasOtherForward = true;
+        break;
+      }
+    }
+    if (!hasOtherForward) return a;
+  }
+  return null;
+}
+
+/**
+ * BFS step-distance from `start` to every cell reachable over the static
+ * navigable graph (in-bounds, finite tile cost, NOT a neutral/wall cell) —
+ * 8-directional, uniform cost, fixed `NEIGHBORS` expansion order so the field
+ * is deterministic. Units other than walls are treated as passable here: this
+ * is the *topology* of the board (does a route exist through this cell), not a
+ * live occupancy check — the caller layers the unoccupied test on top. Returns
+ * a `key → distance` map; cells walled off from `start` are simply absent.
+ */
+function distanceField(start: GridCoord, world: World, walls: ReadonlySet<string>): Map<string, number> {
+  const dist = new Map<string, number>();
+  const startKey = key(start);
+  if (!isNavigable(start, world, walls)) return dist;
+  dist.set(startKey, 0);
+  const queue: GridCoord[] = [start];
+  for (let head = 0; head < queue.length; head++) {
+    const c = queue[head]!;
+    const d = dist.get(key(c))! + 1;
+    for (const [dx, dy] of NEIGHBORS) {
+      const n: GridCoord = { x: c.x + dx, y: c.y + dy };
+      const nKey = key(n);
+      if (dist.has(nKey)) continue;
+      if (!isNavigable(n, world, walls)) continue;
+      dist.set(nKey, d);
+      queue.push(n);
+    }
+  }
+  return dist;
+}
+
+/** Set of neutral-unit (wall + half-cover) cell keys — the static blockers. */
+function neutralCells(world: World): Set<string> {
+  const cells = new Set<string>();
+  for (const u of world.units) {
+    if (u.team === 'neutral') cells.add(key(u.position));
+  }
+  return cells;
+}
+
+/** In-bounds, finite tile cost (excludes chasm), and not a neutral/wall cell. */
+function isNavigable(c: GridCoord, world: World, walls: ReadonlySet<string>): boolean {
+  if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) return false;
+  if (!isFinite(world.tileGrid.costAt(c))) return false;
+  return !walls.has(key(c));
+}
+
+/**
+ * Every other unit's cell (all teams, neutrals INCLUDED) keyed for O(1)
+ * membership. Neutral inclusion is the load-bearing bit: walls + half-cover
+ * are neutral units rather than impassable tiles, so a passability check only
+ * sees them through this set.
+ */
+function occupiedCells(unit: Unit, world: World): Set<string> {
+  const occupied = new Set<string>();
+  for (const u of world.units) {
+    if (u.id === unit.id) continue;
+    occupied.add(key(u.position));
+  }
+  return occupied;
 }
 
 function moveProposal(
@@ -98,6 +283,26 @@ function moveProposal(
     cooldown: durationTicks,
     // F2 — step applied in `start` (offset 0); unit locked for the
     // move-cooldown window. Single `impact` phase = the lockout.
+    phases: [{ phase: 'impact', ticks: durationTicks }],
+  };
+}
+
+/**
+ * GP5 #5 — the swap proposal: the healer (`from`) trades cells with the boxed
+ * ally at `to` (`otherId`). Same timing shape as a move (score 1, single
+ * `impact` lockout for the move-cooldown window); the exchange itself is
+ * atomic in `SwapAction.start`.
+ */
+function swapProposal(
+  from: GridCoord,
+  to: GridCoord,
+  otherId: number,
+  durationTicks: number,
+): ActionProposal {
+  return {
+    action: new SwapAction(from, to, otherId, durationTicks),
+    score: 1,
+    cooldown: durationTicks,
     phases: [{ phase: 'impact', ticks: durationTicks }],
   };
 }
@@ -198,11 +403,7 @@ function stepToward(unit: Unit, goalPos: GridCoord, world: World): GridCoord | n
  * two retreat semantics.
  */
 function stepAwayFrom(unit: Unit, enemyPos: GridCoord, world: World): GridCoord | null {
-  const occupied = new Set<string>();
-  for (const u of world.units) {
-    if (u.id === unit.id) continue;
-    occupied.add(key(u.position));
-  }
+  const occupied = occupiedCells(unit, world);
 
   const currentDist = chebyshev(unit.position, enemyPos);
   let best: GridCoord | null = null;

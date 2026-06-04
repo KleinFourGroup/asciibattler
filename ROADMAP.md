@@ -643,6 +643,15 @@ slack`).
 
 ### GP5 — Healer positioning: navigable-snap + yield rule (#4 + #5)
 
+**#5 ✅ shipped (GP5.1)** — but as a **`SwapAction` pass mechanic**, not the
+"step aside" vacate sketched below. Tracing the real repro showed the deadlock
+layouts are 1-wide: there is no lateral cell to step to, and a forward vacate
+just makes the healer lead the column into the next bottleneck. So the healer
+now **swaps places** with the ally it strictly blocks (ally advances, support
+retreats to the rear). Cleared the seed-30 hang; see the HANDOFF GP5.1 entry for
+the full record. **#4 (navigable-snap) is the remaining GP5.2 piece** — the spec
+below is the as-designed shape, kept for reference.
+
 **START with the yield rule (#5)** — GP4 surfaced a concrete, reproducible
 instance of exactly the deadlock it targets: a healer idling on the only
 chokepoint cell of a strafing-funnel gap, blocking boxed-in melee from reaching

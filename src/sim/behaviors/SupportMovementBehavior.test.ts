@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SupportMovementBehavior } from './SupportMovementBehavior';
 import { MoveAction } from '../actions/MoveAction';
+import { SwapAction } from '../actions/SwapAction';
 import { World } from '../World';
 import { Unit, type Team, type UnitArchetype, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
@@ -57,6 +58,27 @@ function world(units: Unit[]): World {
   const w = new World(new EventBus<GameEvents>(), new RNG(1));
   w.units.push(...units);
   return w;
+}
+
+/** A neutral wall unit at `pos` (the GP5 swap tests need real chokepoints —
+ *  the bare test worlds have none). Only its team + position matter to the
+ *  movement code. */
+function makeWall(id: number, pos: { x: number; y: number }): Unit {
+  return new Unit({
+    id, team: 'neutral', archetype: 'melee',
+    glyph: '#', stats: COMBATANT_STATS,
+    derived: deriveStats(COMBATANT_STATS, 1), position: pos,
+  });
+}
+
+/** Walls lining y±1 over an x-span → a 1-wide horizontal corridor at row `y`. */
+function corridorWalls(y: number, x0: number, x1: number): Unit[] {
+  const walls: Unit[] = [];
+  let id = 100;
+  for (let x = x0; x <= x1; x++) {
+    walls.push(makeWall(id++, { x, y: y - 1 }), makeWall(id++, { x, y: y + 1 }));
+  }
+  return walls;
 }
 
 function dest(p: ActionProposal): { x: number; y: number } {
@@ -146,5 +168,61 @@ describe('SupportMovementBehavior', () => {
   it('idles when alone', () => {
     const healer = makeHealer({ x: 5, y: 5 });
     expect(new SupportMovementBehavior().proposeAction(healer, world([healer]))).toBeNull();
+  });
+});
+
+/**
+ * GP5 #5 — the yield rule. When the healer sits on the only cell a boxed ally
+ * can advance through (a 1-wide corridor, no lateral escape), it SWAPS places
+ * with that ally so the column drains instead of deadlocking. The swap is the
+ * only thing that can resolve a single-file jam where the support can't pass
+ * its own fighters; see the GP4 HANDOFF entry for the live repro it clears.
+ */
+describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
+  function swapData(p: ActionProposal): { from: { x: number; y: number }; to: { x: number; y: number }; otherId: number } {
+    return (p.action as SwapAction).toData();
+  }
+
+  it('swaps with a boxed ally when it is the ally\'s only way forward (1-wide corridor)', () => {
+    // y=5 corridor walled at y=4/y=6. Ally (west) wants the enemy (east); the
+    // healer sits between them on the ally's sole forward cell → swap.
+    const healer = makeHealer({ x: 5, y: 5 });
+    const ally = makeUnit(2, 'player', { x: 4, y: 5 });
+    const enemy = makeUnit(3, 'enemy', { x: 8, y: 5 });
+    const w = world([healer, ally, enemy, ...corridorWalls(5, 3, 8)]);
+
+    const p = new SupportMovementBehavior().proposeAction(healer, w);
+    expect(p).not.toBeNull();
+    expect(p!.action).toBeInstanceOf(SwapAction);
+    expect(p!.score).toBe(1);
+    const data = swapData(p!);
+    expect(data.from).toEqual(healer.position); // healer retreats onto…
+    expect(data.to).toEqual(ally.position); // …the ally's cell (ally advances onto the healer's)
+    expect(data.otherId).toBe(ally.id);
+  });
+
+  it('swaps from the panic-boxed branch (enemy adjacent, no retreat cell)', () => {
+    // Enemy one cell ahead in the corridor → panic fires, but the healer is
+    // boxed (no cell increases distance) → it must fall through to the swap.
+    const healer = makeHealer({ x: 5, y: 5 });
+    const ally = makeUnit(2, 'player', { x: 4, y: 5 });
+    const enemy = makeUnit(3, 'enemy', { x: 6, y: 5 });
+    const w = world([healer, ally, enemy, ...corridorWalls(5, 3, 7)]);
+
+    const p = new SupportMovementBehavior().proposeAction(healer, w);
+    expect(p).not.toBeNull();
+    expect(p!.action).toBeInstanceOf(SwapAction);
+    expect(swapData(p!).otherId).toBe(ally.id);
+  });
+
+  it('does NOT swap in the open — the ally has another way forward', () => {
+    // Same units, NO walls: the ally can route around the healer, so it isn't
+    // strictly blocked and the healer just idles.
+    const healer = makeHealer({ x: 5, y: 5 });
+    const ally = makeUnit(2, 'player', { x: 4, y: 5 });
+    const enemy = makeUnit(3, 'enemy', { x: 8, y: 5 });
+    expect(
+      new SupportMovementBehavior().proposeAction(healer, world([healer, ally, enemy])),
+    ).toBeNull();
   });
 });

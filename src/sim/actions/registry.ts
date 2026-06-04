@@ -19,6 +19,7 @@ import {
   CatapultShotAction,
   type CatapultShotActionData,
 } from './CatapultShotAction';
+import { SWAP_ACTION_ID, SwapAction, type SwapActionData } from './SwapAction';
 
 /**
  * Action factories keyed by `Action.id`. `World.fromJSON` uses these to
@@ -42,6 +43,7 @@ const FACTORIES: Record<string, ActionFactory> = {
   [MAGIC_BOLT_ACTION_ID]: (data) => MagicBoltAction.fromData(data as MagicBoltActionData),
   [CATAPULT_SHOT_ACTION_ID]: (data, world) =>
     CatapultShotAction.fromData(data as CatapultShotActionData, world),
+  [SWAP_ACTION_ID]: (data) => SwapAction.fromData(data as SwapActionData),
 };
 
 export function createAction(id: string, data: unknown, world: World): Action {

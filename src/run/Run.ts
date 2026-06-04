@@ -92,8 +92,14 @@ export interface BattleEncounter {
 /** E4: bumped 3→5 in two steps. v4 added `xp` on UnitTemplate + the
  *  `levelupRng` stream. v5 adds `pendingPromotions` so a snapshot taken
  *  while PromotionScene is up restores in the same phase with the same
- *  per-unit deltas to render. v4 + earlier throw on load. */
-const RUN_SCHEMA_VERSION = 5;
+ *  per-unit deltas to render. v4 + earlier throw on load.
+ *  H1: bumped 5→6. `power` was added to `UnitStats`, which changes the shape
+ *  of the roster `team: UnitTemplate[]` (and `currentOffer`) that this
+ *  snapshot stores. A v5 save carries `power`-less templates → reject outright
+ *  rather than load a roster that NaNs on the next level-up (the World v17→18
+ *  stat-shape-contract rationale, applied to the Run save). v5 + earlier throw
+ *  on load. */
+const RUN_SCHEMA_VERSION = 6;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;

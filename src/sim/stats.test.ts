@@ -43,6 +43,7 @@ const TEMPLATE: UnitStats = {
   agility: 5,
   mobility: 2,
   defense: 0,
+  power: 1,
 };
 
 describe('deriveStats — maxHp', () => {

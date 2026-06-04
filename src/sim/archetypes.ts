@@ -67,9 +67,9 @@ export function abilityIdsForArchetype(archetype: Archetype): readonly string[] 
 /**
  * E3 — produce a player-side template at the given level via simulated
  * level-ups. Level 1 returns baseStats verbatim (no RNG draws); higher
- * levels consume `7 × (level - 1)` RNG draws against the archetype's
- * growthRates. Used by `rollTeam` (level 1) and `rollOffer` (recruits
- * at currentFloor — see ROADMAP E3 decision point).
+ * levels consume `9 × (level - 1)` RNG draws against the archetype's
+ * growthRates (one per stat; H1 made it 9). Used by `rollTeam` (level 1)
+ * and `rollOffer` (recruits at currentFloor — see ROADMAP E3 decision point).
  */
 export function rollUnit(archetype: Archetype, rng: RNG, level: number = 1): UnitTemplate {
   const cfg = CONFIGS[archetype];

@@ -72,6 +72,9 @@ const BaseStatsSchema = z.object({
   // GP2: flat subtractive damage mitigation. Nonnegative like the offensive
   // stats (0 = no armor).
   defense: z.number().int().nonnegative().max(STAT_CAP),
+  // H1: Phase-H pool-chip stat — a turn's survivors chip the opposing health
+  // pool by their Σ`power`. Nonnegative; behavior-neutral until H4 consumes it.
+  power: z.number().int().nonnegative().max(STAT_CAP),
 });
 
 const GrowthRatesSchema = z.object({
@@ -83,6 +86,7 @@ const GrowthRatesSchema = z.object({
   agility: z.number().min(0).max(1),
   mobility: z.number().min(0).max(1),
   defense: z.number().min(0).max(1),
+  power: z.number().min(0).max(1),
 });
 
 const ABILITY_IDS = knownAbilityIds();

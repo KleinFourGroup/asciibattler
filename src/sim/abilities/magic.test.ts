@@ -25,7 +25,7 @@ const BOLT = abilityConfig('magic_bolt');
 const BOLT_RANGE = BOLT.range;
 
 const MAGE_STATS: UnitStats = {
-  constitution: 16, strength: 0, ranged: 0, magic: 10, luck: 3, agility: 4, mobility: 4, defense: 0,
+  constitution: 16, strength: 0, ranged: 0, magic: 10, luck: 3, agility: 4, mobility: 4, defense: 0, power: 1,
 };
 
 function makeUnit(

@@ -650,7 +650,8 @@ just makes the healer lead the column into the next bottleneck. So the healer
 now **swaps places** with the ally it strictly blocks (ally advances, support
 retreats to the rear). Cleared the seed-30 hang; see the HANDOFF GP5.1 entry for
 the full record. **#4 ✅ shipped (GP5.2)** — the centroid navigable-snap, as
-specced below. **Phase GP is COMPLETE (GP1–GP5); next is Phase H.** The spec
+specced below. **Phase GP is COMPLETE (GP1–GP5).** **Phase H STARTED — H1 ✅ shipped
+(the `power` stat; see the HANDOFF H1 entry); next is H2.** The spec
 below is the as-designed shape, kept for reference.
 
 **START with the yield rule (#5)** — GP4 surfaced a concrete, reproducible
@@ -773,11 +774,15 @@ the first recruit or two (roster ≈ hand), growing as the roster outpaces
 5. Keep the pass option; don't expect agonizing early recruit choices.
 
 **Decomposition** (one commit each, pause between):
-- **H1 — `power` stat.** Add `power` to the stat block
-  ([config/stats.json](config/stats.json) `baseStats` per archetype = 1,
-  `growthRates` = 0.20) and to `UnitStats` / template / HUD + recruit
+- **H1 — `power` stat. ✅ SHIPPED.** Add `power` to the stat block
+  (base per archetype = 1, `growthRates` = 0.20 — note: the per-archetype
+  base/growth live in [config/archetypes.json](config/archetypes.json), not
+  `stats.json` as drafted) and to `UnitStats` / template / HUD + recruit
   display. Levels like any other stat (additive growth). **WorldSnapshot
-  bump.** Behavior-neutral until H4 consumes it. Fully headless.
+  bump (v17→v18) — plus a Run snapshot bump (v5→v6), since the roster
+  templates in the Run save carry the stat block too.** Behavior-neutral until
+  H4 consumes it. Fully headless + a browser DOM pass on HUD/recruit/promotion.
+  See the HANDOFF H1 entry for the full record.
 - **H2 — Randomized spawn-tile selection.** In `spawnTeam`, when units <
   region tiles, pick the *used* tiles at random instead of filling
   first-N (both teams). This is the positional variance that — with no

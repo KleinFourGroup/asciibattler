@@ -109,8 +109,13 @@ import { STATS } from '../config/stats';
  *       rejects it outright (no migration — defaulting the missing key would
  *       silently mis-derive nothing today, but the version bump keeps the
  *       stat-shape contract honest, same as GP1). v16 throws on load.
+ *  18 — H1 added the `power` key to `UnitStats` (Phase-H pool-chip stat).
+ *       Stats round-trip as a whole object by key, so a v17 snapshot carries a
+ *       `power`-less stat block; the version check rejects it outright (no
+ *       migration — same stat-shape-contract rationale as GP1/GP2). v17 throws
+ *       on load.
  */
-const WORLD_SCHEMA_VERSION = 17;
+const WORLD_SCHEMA_VERSION = 18;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.

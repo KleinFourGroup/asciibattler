@@ -214,10 +214,12 @@ function formatSub(unit: Unit): string {
   return `Lv ${lv} · ${unit.xp}/${xpToNext(unit.level)} XP`;
 }
 
-// GP3: the raw driving-stat line beneath the Lv/XP sub. Same three stats
-// the player tunes around in combat (defense + the two cadence dials),
-// using the shared STAT_LABELS so HUD / card / promotion read identically.
+// GP3: the raw driving-stat line beneath the Lv/XP sub. The three stats the
+// player tunes around in combat (defense + the two cadence dials), plus H1's
+// `power` — the Phase-H meta-currency (survivors chip the opposing health pool
+// by Σ`power`), surfaced here from day one though it's inert until H4. Uses the
+// shared STAT_LABELS so HUD / card / promotion read identically.
 function formatStats(unit: Unit): string {
   const s = unit.stats;
-  return `${STAT_LABELS.defense} ${s.defense} · ${STAT_LABELS.mobility} ${s.mobility} · ${STAT_LABELS.agility} ${s.agility}`;
+  return `${STAT_LABELS.defense} ${s.defense} · ${STAT_LABELS.mobility} ${s.mobility} · ${STAT_LABELS.agility} ${s.agility} · ${STAT_LABELS.power} ${s.power}`;
 }

@@ -24,7 +24,7 @@ import type { GridCoord } from '../../core/types';
  */
 
 const COMBATANT_STATS: UnitStats = {
-  constitution: 100, strength: 0, ranged: 0, magic: 0, luck: 0, agility: 0, mobility: 0, defense: 0,
+  constitution: 100, strength: 0, ranged: 0, magic: 0, luck: 0, agility: 0, mobility: 0, defense: 0, power: 1,
 };
 
 let nextId = 1;

@@ -52,6 +52,11 @@ export interface UnitStats {
    *  applied in `World.applyDamage`. Consumed raw (no derived layer).
    *  Nonnegative; environmental fire/chasm damage is UNMITIGATED. */
   readonly defense: number;
+  /** H1: Phase-H pool-chip stat. A turn's surviving units chip the *opposing*
+   *  health pool by their Σ`power` (player pool / encounter enemy pool). Levels
+   *  like any other stat (additive growth). Behavior-NEUTRAL until H4 wires the
+   *  turn/encounter loop — no `deriveStats`/damage path reads it yet. */
+  readonly power: number;
 }
 
 /**

@@ -11,6 +11,7 @@ import { RNG } from '../core/RNG';
 import { scaleStats, simulateLevelUps } from './leveling';
 import type { UnitStats } from './Unit';
 import type { GrowthRates } from '../config/archetypes';
+import { ARCHETYPE_CONFIG, ALL_ARCHETYPES } from './archetypes';
 
 const BASE: UnitStats = {
   constitution: 10,
@@ -21,6 +22,7 @@ const BASE: UnitStats = {
   agility: 4,
   mobility: 4,
   defense: 2,
+  power: 1,
 };
 
 const GROWTH_MID: GrowthRates = {
@@ -32,6 +34,7 @@ const GROWTH_MID: GrowthRates = {
   agility: 0.5,
   mobility: 0.5,
   defense: 0.5,
+  power: 0.5,
 };
 
 const GROWTH_NONE: GrowthRates = {
@@ -43,6 +46,7 @@ const GROWTH_NONE: GrowthRates = {
   agility: 0,
   mobility: 0,
   defense: 0,
+  power: 0,
 };
 
 const GROWTH_ALL: GrowthRates = {
@@ -54,6 +58,7 @@ const GROWTH_ALL: GrowthRates = {
   agility: 1,
   mobility: 1,
   defense: 1,
+  power: 1,
 };
 
 describe('scaleStats — deterministic', () => {
@@ -164,6 +169,41 @@ describe('simulateLevelUps — distribution lands near expected value', () => {
     for (const k of ['constitution', 'strength', 'luck', 'agility', 'mobility'] as const) {
       const mean = tally[k]! / TRIALS;
       expect(Math.abs(mean - expectedMean)).toBeLessThanOrEqual(tolerance);
+    }
+  });
+});
+
+describe('H1 — `power` levels per growthRates (config-derived, balance-proof)', () => {
+  it('every archetype config defines a numeric power base + growth', () => {
+    for (const arch of ALL_ARCHETYPES) {
+      const cfg = ARCHETYPE_CONFIG[arch];
+      expect(typeof cfg.baseStats.power, `${arch} baseStats.power`).toBe('number');
+      expect(typeof cfg.growthRates.power, `${arch} growthRates.power`).toBe('number');
+    }
+  });
+
+  it('scaleStats grows power by round(growth.power × n) for every archetype', () => {
+    // Balance-proof: the expectation is derived from the shipped config, not a
+    // hardcoded base/growth — so this stays correct if the knobs are re-tuned.
+    for (const arch of ALL_ARCHETYPES) {
+      const cfg = ARCHETYPE_CONFIG[arch];
+      for (const n of [0, 1, 5, 25]) {
+        const out = scaleStats(cfg.baseStats, cfg.growthRates, n);
+        expect(out.power, `${arch} @ n=${n}`).toBe(
+          cfg.baseStats.power + Math.round(cfg.growthRates.power * n),
+        );
+      }
+    }
+  });
+
+  it('simulateLevelUps advances power deterministically and only upward', () => {
+    for (const arch of ALL_ARCHETYPES) {
+      const cfg = ARCHETYPE_CONFIG[arch];
+      const a = simulateLevelUps(cfg.baseStats, cfg.growthRates, 30, new RNG(123));
+      const b = simulateLevelUps(cfg.baseStats, cfg.growthRates, 30, new RNG(123));
+      expect(a.power, `${arch} determinism`).toBe(b.power);
+      // Additive growth never reduces a stat below its base.
+      expect(a.power, `${arch} monotonic`).toBeGreaterThanOrEqual(cfg.baseStats.power);
     }
   });
 });

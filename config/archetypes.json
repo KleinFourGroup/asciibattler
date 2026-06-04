@@ -10,7 +10,8 @@
       "luck": 3,
       "agility": 6,
       "mobility": 2,
-      "defense": 4
+      "defense": 4,
+      "power": 1
     },
     "growthRates": {
       "constitution": 0.7,
@@ -20,7 +21,8 @@
       "luck": 0.3,
       "agility": 0.3,
       "mobility": 0.13,
-      "defense": 0.2
+      "defense": 0.2,
+      "power": 0.2
     }
   },
   "ranged": {
@@ -34,7 +36,8 @@
       "luck": 3,
       "agility": 5,
       "mobility": 1,
-      "defense": 2
+      "defense": 2,
+      "power": 1
     },
     "growthRates": {
       "constitution": 0.5,
@@ -44,7 +47,8 @@
       "luck": 0.3,
       "agility": 0.3,
       "mobility": 0.1,
-      "defense": 0.1
+      "defense": 0.1,
+      "power": 0.2
     }
   },
   "rogue": {
@@ -58,7 +62,8 @@
       "luck": 10,
       "agility": 9,
       "mobility": 2,
-      "defense": 0
+      "defense": 0,
+      "power": 1
     },
     "growthRates": {
       "constitution": 0.4,
@@ -68,7 +73,8 @@
       "luck": 0.6,
       "agility": 0.6,
       "mobility": 0.1,
-      "defense": 0
+      "defense": 0,
+      "power": 0.2
     }
   },
   "healer": {
@@ -82,7 +88,8 @@
       "luck": 3,
       "agility": 6,
       "mobility": 1,
-      "defense": 0
+      "defense": 0,
+      "power": 1
     },
     "growthRates": {
       "constitution": 0.5,
@@ -92,7 +99,8 @@
       "luck": 0.3,
       "agility": 0.4,
       "mobility": 0.1,
-      "defense": 0
+      "defense": 0,
+      "power": 0.2
     }
   },
   "mage": {
@@ -106,7 +114,8 @@
       "luck": 3,
       "agility": 4,
       "mobility": 1,
-      "defense": 0
+      "defense": 0,
+      "power": 1
     },
     "growthRates": {
       "constitution": 0.4,
@@ -116,7 +125,8 @@
       "luck": 0.3,
       "agility": 0.3,
       "mobility": 0.1,
-      "defense": 0
+      "defense": 0,
+      "power": 0.2
     }
   },
   "catapult": {
@@ -130,7 +140,8 @@
       "luck": 2,
       "agility": 4,
       "mobility": -7,
-      "defense": 0
+      "defense": 0,
+      "power": 1
     },
     "growthRates": {
       "constitution": 0.5,
@@ -140,7 +151,8 @@
       "luck": 0.2,
       "agility": 0.2,
       "mobility": 0.07,
-      "defense": 0
+      "defense": 0,
+      "power": 0.2
     }
   }
 }

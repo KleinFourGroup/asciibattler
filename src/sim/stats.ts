@@ -211,4 +211,5 @@ export const ZERO_STATS: UnitStats = Object.freeze({
   agility: 0,
   mobility: 0,
   defense: 0,
+  power: 0,
 });

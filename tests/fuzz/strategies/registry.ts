@@ -12,7 +12,11 @@
  *   recruit:<archetype>   (one per ALL_ARCHETYPES)  — recruit-priority per archetype
  *   stat:<stat>           (one per STAT_KEYS)        — recruit-priority per stat
  *   path:battle, path:rest                          — path maximizing a node kind
- * (`power`-stat + pass-option variants are deferred to H6 — they need Phase H.)
+ * H1 added the `power` stat, so `stat:power` now auto-joins the per-stat set via
+ * STAT_KEYS (the config-derived menu doing its job). The `pass`/no-recruit
+ * strategy variant is still deferred to H6 — it needs a recruit policy that can
+ * decline an offer, which the H6 pass option introduces; and H6 is where the
+ * balance sweep actually leans on `stat:power`.
  *
  * `DEFAULT_STRATEGY_NAMES` is the set `npm run fuzz` sweeps when no `--strategy`
  * is given — kept to the two baselines so the default run stays fast; the full

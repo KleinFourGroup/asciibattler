@@ -86,6 +86,25 @@ describe('A2 round-trip: World', () => {
     );
   });
 
+  it('H1: a live snapshot carries `power`; a pre-H1 (power-less) version is rejected', () => {
+    // H1 added the `power` key to UnitStats and bumped WORLD_SCHEMA_VERSION
+    // (17→18). Stats round-trip as a whole object by key, so a v17 save carries
+    // a power-less block; the version check must reject it outright.
+    const { world } = freshBattle(54321);
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    expect(wire.units[0].stats).toHaveProperty('power');
+
+    // A current-version snapshot restores cleanly and preserves `power`.
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.units[0]!.stats.power).toBe(world.units[0]!.stats.power);
+
+    // A snapshot stamped with the PRIOR version (a pre-H1 save) throws.
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
   it('continuing a restored World produces the same event trace as the baseline', () => {
     // Snapshot mid-battle, restore, tick both to completion, compare.
     const baseline = freshBattle(54321);
@@ -377,6 +396,22 @@ describe('A2 round-trip: Run', () => {
     expect(b.currentEncounter).toEqual(encounterA);
     // Stream byte-equivalence: after restore, the run RNG should pick the
     // same next encounter when we resume on the next frontier.
+  });
+
+  it('H1: roster templates carry `power`; a pre-H1 Run snapshot is rejected', () => {
+    // The roster's leveled stat blocks (team: UnitTemplate[]) live in the Run
+    // save, so H1's `power` addition bumped RUN_SCHEMA_VERSION (5→6) too.
+    const run = new Run(2026, new EventBus<GameEvents>());
+    const wire = JSON.parse(JSON.stringify(run.toJSON()));
+    expect(wire.team.length).toBeGreaterThan(0);
+    expect(wire.team[0].stats).toHaveProperty('power');
+
+    expect(() => Run.fromJSON(wire, new EventBus<GameEvents>())).not.toThrow();
+
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
   });
 });
 

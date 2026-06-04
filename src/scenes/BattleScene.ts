@@ -17,6 +17,7 @@ import { BattleRenderer, gridToWorld } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { HUD } from '../ui/HUD';
 import { TICK_RATE } from '../config';
+import { HEALTH } from '../config/health';
 import { getLayout, type Theme } from '../sim/layouts';
 import type { Scene, SceneContext } from './Scene';
 
@@ -126,7 +127,16 @@ export class BattleScene implements Scene {
       encounter.theme === 'default'
         ? locationName
         : `${locationName} — ${titleCaseTheme(encounter.theme)}`;
-    this.hud.show(this.world, ctx.run.currentFloor, bannerText);
+    // H4b — surface the encounter pools + the turn being fought. `turnIndex`
+    // counts RESOLVED turns, so the current turn is +1. Pools are this turn's
+    // pre-chip state (they chip on the post-turn screen).
+    this.hud.show(this.world, ctx.run.currentFloor, bannerText, {
+      turn: ctx.run.turnIndex + 1,
+      playerHealth: ctx.run.playerHealth,
+      playerHealthMax: HEALTH.playerHealthMax,
+      enemyHealth: ctx.run.enemyHealth,
+      enemyHealthMax: HEALTH.enemyHealthMax,
+    });
     this.battleRenderer.attach(this.world);
     const spawnRegions = applyTerrain(this.world, encounter);
     // After terrain is in place, the terrain renderer reflects the tile

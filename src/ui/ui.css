@@ -795,3 +795,211 @@ body {
   letter-spacing: 0.04em;
   padding-left: 24px; /* aligns under the HP bar, past the glyph */
 }
+
+/* ── H4b: turn screens (pre-turn / post-turn) + shared pool gauges ─────────
+   Both screens are full opaque overlays (same as promotion / recruit) that
+   bracket each tactical turn. Pool palette throughout: player = TERMINAL_GREEN,
+   enemy = NEON_RED, accents = FLOURESCENT_BLUE. */
+
+.preturn-screen,
+.postturn-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: #000; /* opaque — DOM scenes fully mask the battle canvas */
+  font-family: var(--font-mono);
+}
+
+.preturn-heading,
+.postturn-heading {
+  font-size: 24px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #15f4ee; /* FLOURESCENT_BLUE */
+}
+
+.preturn-sub {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #664600; /* DARK_TERMINAL_AMBER */
+}
+
+.preturn-hint {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #664600;
+  opacity: 0.85;
+}
+
+.preturn-pools,
+.postturn-pools {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.preturn-continue,
+.postturn-continue {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 28px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  background: #000;
+  color: #ffb000;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, color 0.1s;
+}
+
+.preturn-continue:hover,
+.postturn-continue:hover {
+  border-color: #15f4ee;
+  background: rgba(21, 244, 238, 0.08);
+  color: #15f4ee;
+}
+
+/* Post-turn heading tinted by the tactical winner of the turn. */
+.postturn-heading--player {
+  color: #33ff00; /* TERMINAL_GREEN */
+}
+.postturn-heading--enemy {
+  color: #ff3131; /* NEON_RED */
+}
+.postturn-heading--draw {
+  color: #ffb000; /* TERMINAL_AMBER */
+}
+
+.postturn-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  min-width: 340px;
+}
+
+.postturn-chip {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  letter-spacing: 0.04em;
+  color: #aaa;
+}
+
+.postturn-chip-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: bold;
+}
+
+.postturn-chip--player .postturn-chip-amount {
+  color: #33ff00; /* TERMINAL_GREEN — you chipped the enemy pool */
+}
+.postturn-chip--enemy .postturn-chip-amount {
+  color: #ff3131; /* NEON_RED — the enemy chipped yours */
+}
+
+.postturn-status {
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.postturn-status--won {
+  color: #33ff00;
+}
+.postturn-status--lost {
+  color: #ff3131;
+}
+.postturn-status--ongoing {
+  color: #15f4ee;
+  opacity: 0.85;
+}
+
+/* Shared pool gauge (both screens): a labeled value over a proportional bar. */
+.pool-gauge {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pool-gauge-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pool-gauge-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: bold;
+}
+
+.pool-gauge-bar {
+  height: 14px;
+  border: 1px solid #222;
+  background: #0a0a0a;
+}
+
+.pool-gauge-fill {
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+.pool-gauge--player .pool-gauge-label,
+.pool-gauge--player .pool-gauge-value {
+  color: #33ff00;
+}
+.pool-gauge--player .pool-gauge-fill {
+  background: #33ff00;
+}
+
+.pool-gauge--enemy .pool-gauge-label,
+.pool-gauge--enemy .pool-gauge-value {
+  color: #ff3131;
+}
+.pool-gauge--enemy .pool-gauge-fill {
+  background: #ff3131;
+}
+
+/* In-battle HUD pool line: the turn + both pools, compact text in the panel. */
+.hud-pools {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-top: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.hud-pool-turn {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #15f4ee; /* FLOURESCENT_BLUE */
+}
+
+.hud-pool-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-pool-row--player {
+  color: #33ff00;
+}
+.hud-pool-row--enemy {
+  color: #ff3131;
+}
+
+.hud-pool-label {
+  opacity: 0.85;
+}

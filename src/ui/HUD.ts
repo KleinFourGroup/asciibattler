@@ -9,10 +9,21 @@ import { fadeIn, fadeOutAndRemove } from './fade';
 import { isAtLevelCap, xpToNext, displayLevel } from '../sim/xp';
 import { STAT_LABELS } from './statLabels';
 
+/** H4b — the encounter pool snapshot the HUD renders (from `Run` state). */
+interface EncounterPools {
+  turn: number;
+  playerHealth: number;
+  playerHealthMax: number;
+  enemyHealth: number;
+  enemyHealthMax: number;
+}
+
 export class HUD {
   private readonly root: HTMLElement;
   private readonly banner: HTMLElement;
   private readonly floorLabel: HTMLElement;
+  /** H4b — the encounter health pools + turn number, populated per battle. */
+  private readonly pools: HTMLElement;
   private readonly status: HTMLElement;
   private readonly playerBody: HTMLElement;
   private readonly enemyBody: HTMLElement;
@@ -45,6 +56,14 @@ export class HUD {
     this.floorLabel.className = 'hud-floor';
     this.root.appendChild(this.floorLabel);
 
+    // H4b — the two encounter pools (run-wide player pool vs per-encounter enemy
+    // pool) + the current turn. Static during a single turn (the pools chip
+    // between turns, surfaced on the post-turn screen); populated from `Run`
+    // state in show().
+    this.pools = document.createElement('div');
+    this.pools.className = 'hud-pools';
+    this.root.appendChild(this.pools);
+
     this.status = document.createElement('div');
     this.status.className = 'hud-status';
     this.status.textContent = 'Battle resolving…';
@@ -73,10 +92,16 @@ export class HUD {
    * `locationName` populates the top banner — pass "Nowhere" for procedural
    * encounters (no hand-authored layout).
    */
-  show(world: World, floor: number, locationName: string): void {
+  show(
+    world: World,
+    floor: number,
+    locationName: string,
+    encounter?: EncounterPools,
+  ): void {
     this.world = world;
     this.floorLabel.textContent = `Floor ${floor}`;
     this.banner.textContent = locationName;
+    this.renderPools(encounter);
     this.playerBody.replaceChildren();
     this.enemyBody.replaceChildren();
     this.rows.clear();
@@ -131,6 +156,21 @@ export class HUD {
     if (!row) return;
     row.remove();
     this.rows.delete(unitId);
+  }
+
+  /** H4b — render the encounter pools + turn into the HUD panel. Cleared when
+   *  no encounter info is supplied (e.g. a bare test mount). */
+  private renderPools(e?: EncounterPools): void {
+    this.pools.replaceChildren();
+    if (!e) return;
+    const turn = document.createElement('div');
+    turn.className = 'hud-pool-turn';
+    turn.textContent = `Turn ${e.turn}`;
+    this.pools.append(
+      turn,
+      poolRow('player', 'You', e.playerHealth, e.playerHealthMax),
+      poolRow('enemy', 'Foe', e.enemyHealth, e.enemyHealthMax),
+    );
   }
 
   private makeRoster(label: string, modifier: string): { root: HTMLElement; body: HTMLElement } {
@@ -205,6 +245,24 @@ function updateRow(row: HTMLElement, unit: Unit): void {
   text.textContent = `${hp}/${unit.derived.maxHp}`;
   if (sub) sub.textContent = formatSub(unit);
   if (stats) stats.textContent = formatStats(unit);
+}
+
+function poolRow(
+  side: 'player' | 'enemy',
+  label: string,
+  current: number,
+  max: number,
+): HTMLElement {
+  const row = document.createElement('div');
+  row.className = `hud-pool-row hud-pool-row--${side}`;
+  const name = document.createElement('span');
+  name.className = 'hud-pool-label';
+  name.textContent = label;
+  const value = document.createElement('span');
+  value.className = 'hud-pool-value';
+  value.textContent = `${Math.max(0, current)}/${max}`;
+  row.append(name, value);
+  return row;
 }
 
 function formatSub(unit: Unit): string {

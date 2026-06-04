@@ -14,6 +14,8 @@ import { BattleScene } from './scenes/BattleScene';
 import { RecruitScene } from './scenes/RecruitScene';
 import { PromotionScene } from './scenes/PromotionScene';
 import { GameOverScene } from './scenes/GameOverScene';
+import { PreTurnScene } from './scenes/PreTurnScene';
+import { PostTurnScene } from './scenes/PostTurnScene';
 import { AudioPlayer } from './audio/AudioPlayer';
 
 /**
@@ -122,6 +124,17 @@ export class Game implements RunDispatcher {
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
 
+    // H4b — the turn-gate screens. These only fire when `run.pauseAtTurnGates`
+    // is on (Game sets it in createRun); the headless loop never emits them.
+    // `turn:starting` opens the pre-turn screen; `turn:resolved` the post-turn
+    // outcome screen. Both advance via the `advanceTurn` command, whose
+    // continuations (battle:started / the next turn:starting / recruit:offered /
+    // promotion:pending / run:*) drive their own swaps. The turn:resolved swap
+    // fires from inside the ending world.tick() — safe because BattleScene.tick
+    // + the Clock callback null-guard everything dispose() tears down.
+    this.bus.on('turn:starting', (info) => this.swap(new PreTurnScene(info)));
+    this.bus.on('turn:resolved', (info) => this.swap(new PostTurnScene(info)));
+
     // B6 audio hooks at the page-lifetime layer. Subscriptions tied to
     // World/Scene lifetimes live in BattleScene (see unit:attacked /
     // unit:died handlers there); subscriptions that span scenes belong
@@ -178,6 +191,13 @@ export class Game implements RunDispatcher {
           this.swap(new MapScene());
         }
         break;
+      case 'advanceTurn':
+        // H4b — resume from a turn gate (pre/post-turn screen). The continuation
+        // (start the battle, the next pre-turn screen, recruit, promotion, or
+        // defeat) emits its own bus event that drives the scene swap, so there's
+        // nothing to swap explicitly here.
+        this.run.dispatch(command);
+        break;
       case 'resetRun':
         this.resetRun();
         break;
@@ -208,6 +228,10 @@ export class Game implements RunDispatcher {
    */
   private createRun(): Run {
     const run = new Run(this.runConfig.seed ?? Date.now(), this.bus, this.runConfig);
+    // H4b — the live game pauses at turn gates so the pre/post-turn screens can
+    // show. (Headless tests + the fuzz harness leave this off → the synchronous
+    // H4a loop, so they're unaffected.)
+    run.pauseAtTurnGates = true;
     if (this.runConfig.startingRoster) {
       const desc = this.runConfig.startingRoster
         .map((e) => (e.level > 1 ? `${e.archetype} Lv${e.level}` : e.archetype))

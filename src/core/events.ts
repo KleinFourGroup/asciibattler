@@ -205,6 +205,44 @@ export interface GameEvents extends Record<string, unknown> {
    * the scene needs — no follow-up world query required.
    */
   'promotion:pending': { promotions: readonly PromotionInfo[] };
+
+  /**
+   * H4b — a turn is about to begin (the pre-turn screen's cue). Fired only
+   * when `Run.pauseAtTurnGates` is on (the interactive/live path); the headless
+   * loop runs straight through and never emits it. Carries the turn number +
+   * the current health pools so the screen can show "Turn N" + both gauges
+   * before the tactical battle spins up. The screen dismisses with the
+   * `advanceTurn` command. Future home of the H5/H6 card-drawn hand.
+   */
+  'turn:starting': {
+    turn: number; // 1-based, within the current encounter
+    floor: number;
+    playerHealth: number;
+    playerHealthMax: number;
+    enemyHealth: number;
+    enemyHealthMax: number;
+  };
+
+  /**
+   * H4b — a turn just resolved into the pools (the post-turn outcome screen's
+   * cue). Fired only under `pauseAtTurnGates`. `winner` is the tactical winner
+   * of the turn; `enemyPoolChip`/`playerPoolChip` are the Σ`power` each side's
+   * survivors dealt the opposing pool; `result` is the encounter's status after
+   * this turn (`ongoing` → the next turn's `turn:starting` follows the
+   * `advanceTurn`; `won`/`lost` → the encounter ends instead). Pools are the
+   * post-chip values.
+   */
+  'turn:resolved': {
+    turn: number;
+    winner: 'player' | 'enemy' | 'draw';
+    enemyPoolChip: number;
+    playerPoolChip: number;
+    result: 'won' | 'lost' | 'ongoing';
+    playerHealth: number;
+    playerHealthMax: number;
+    enemyHealth: number;
+    enemyHealthMax: number;
+  };
 }
 
 /**

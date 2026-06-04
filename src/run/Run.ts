@@ -49,7 +49,19 @@ import { simulateLevelUps } from '../sim/leveling';
 import { growthRatesForArchetype } from '../sim/archetypes';
 import type { Archetype } from '../sim/archetypes';
 
-export type RunPhase = 'map' | 'battle' | 'promotion' | 'recruit' | 'defeat' | 'complete';
+// H4b adds the two TURN-GATE phases (`turn-intro` / `turn-outcome`) — entered
+// only when `pauseAtTurnGates` is on, so the pre/post-turn screens can pause the
+// encounter loop. The headless loop never enters them (it runs straight through
+// `battle`), so existing headless tests + the fuzz harness are unaffected.
+export type RunPhase =
+  | 'map'
+  | 'turn-intro'
+  | 'battle'
+  | 'turn-outcome'
+  | 'promotion'
+  | 'recruit'
+  | 'defeat'
+  | 'complete';
 
 /** H4: one `battle:ended` XP award entry. Accumulated across an encounter's
  *  turns in `Run.pendingEncounterXp`, then banked once at encounter end. */
@@ -212,6 +224,17 @@ export class Run {
   pendingEncounterXp: XpAward[];
   currentNodeId: number;
   phase: RunPhase = 'map';
+  /**
+   * H4b — when true (Game sets it for the live game), the encounter loop PAUSES
+   * at turn boundaries: `turn-intro` before each turn (emits `turn:starting`)
+   * and `turn-outcome` after each turn resolves (emits `turn:resolved`), each
+   * resumed by an `advanceTurn` command from the pre/post-turn screen. When
+   * false (the default — headless tests + the fuzz harness), the loop runs
+   * straight through, byte-identical to H4a. Presentation-only and
+   * reconstructed by Game, so it is deliberately NOT snapshotted (a restore
+   * defaults it off).
+   */
+  pauseAtTurnGates = false;
   currentEncounter: BattleEncounter | null = null;
   /** Recruit offer presented after victory, cleared on choice. */
   currentOffer: UnitTemplate[] | null = null;
@@ -272,11 +295,11 @@ export class Run {
 
   private subscribe(): void {
     this.subscriptions.push(
-      // H4: a `battle:ended` ends a TURN, not the node. `winner` no longer
-      // routes the outcome — the pools do (chipped symmetrically off
-      // `survivorPower`), so it isn't destructured here.
-      this.bus.on('battle:ended', ({ xpAwards, survivorPower }) =>
-        this.handleTurnEnded(xpAwards, survivorPower),
+      // H4: a `battle:ended` ends a TURN, not the node. `winner` doesn't route
+      // the outcome — the pools do (chipped symmetrically off `survivorPower`)
+      // — but H4b surfaces it on the post-turn screen, so it's passed through.
+      this.bus.on('battle:ended', ({ winner, xpAwards, survivorPower }) =>
+        this.handleTurnEnded(winner, xpAwards, survivorPower),
       ),
     );
   }
@@ -308,6 +331,9 @@ export class Run {
         break;
       case 'dismissPromotion':
         this.handleDismissPromotion();
+        break;
+      case 'advanceTurn':
+        this.handleAdvanceTurn();
         break;
       case 'resetRun':
         // No-op at this layer — Game handles reset by disposing this Run
@@ -362,7 +388,30 @@ export class Run {
     // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
     // `beginTurn` records the deployed hand.
     this.resetDeploymentCounts();
-    this.beginTurn();
+    this.startNextTurn();
+  }
+
+  /**
+   * H4b — enter the next turn through the (optional) pre-turn gate. With
+   * `pauseAtTurnGates` on, pause on `turn-intro` + emit `turn:starting` so the
+   * pre-turn screen shows (it resumes via `advanceTurn`); off, fall straight
+   * into the turn's battle (the H4a path — phase stays `battle`).
+   */
+  private startNextTurn(): void {
+    if (this.pauseAtTurnGates) {
+      this.phase = 'turn-intro';
+      this.bus.emit('turn:starting', {
+        turn: this.turnIndex + 1,
+        floor: this.currentFloor,
+        playerHealth: this.playerHealth,
+        playerHealthMax: HEALTH.playerHealthMax,
+        enemyHealth: this.enemyHealth,
+        enemyHealthMax: HEALTH.enemyHealthMax,
+      });
+    } else {
+      this.phase = 'battle';
+      this.beginTurn();
+    }
   }
 
   /**
@@ -462,6 +511,7 @@ export class Run {
    * longer ends the node — it ends a TURN.
    */
   private handleTurnEnded(
+    winner: GameEvents['battle:ended']['winner'],
     xpAwards: GameEvents['battle:ended']['xpAwards'],
     survivorPower: GameEvents['battle:ended']['survivorPower'],
   ): void {
@@ -469,7 +519,27 @@ export class Run {
     this.currentEncounter = null;
     // `survivorPower` is absent only from test fakes that drive the phase
     // machine without a real World; treat as a 0/0 (no-chip) turn.
-    this.resolveTurn(survivorPower ?? { player: 0, enemy: 0 }, xpAwards);
+    const sp = survivorPower ?? { player: 0, enemy: 0 };
+    this.resolveTurn(sp, xpAwards);
+    const result = this.turnResult();
+    if (this.pauseAtTurnGates) {
+      // Pause on the post-turn outcome screen; the player's `advanceTurn`
+      // resumes into `continueAfterTurn`.
+      this.phase = 'turn-outcome';
+      this.bus.emit('turn:resolved', {
+        turn: this.turnIndex,
+        winner,
+        enemyPoolChip: sp.player * HEALTH.chipMultiplier,
+        playerPoolChip: sp.enemy * HEALTH.chipMultiplier,
+        result,
+        playerHealth: this.playerHealth,
+        playerHealthMax: HEALTH.playerHealthMax,
+        enemyHealth: this.enemyHealth,
+        enemyHealthMax: HEALTH.enemyHealthMax,
+      });
+    } else {
+      this.continueAfterTurn(result);
+    }
   }
 
   /**
@@ -477,6 +547,8 @@ export class Run {
    * OPPOSING pool by their Σ`power` (× `chipMultiplier`); the per-turn winner is
    * irrelevant to the chip (a draw chips both; a decisive win chips one because
    * the loser's survivor power is 0). XP accrues for banking at encounter end.
+   * Decision + continuation are split out (`turnResult`/`continueAfterTurn`) so
+   * H4b's post-turn screen can show the result before the loop acts on it.
    */
   private resolveTurn(
     survivorPower: { player: number; enemy: number },
@@ -489,35 +561,60 @@ export class Run {
     this.enemyHealth = Math.max(0, this.enemyHealth - survivorPower.player * chip);
     this.playerHealth = Math.max(0, this.playerHealth - survivorPower.enemy * chip);
     this.pendingEncounterXp.push(...xpAwards);
-    this.endTurnAndContinue();
   }
 
   /**
-   * H4 — decide what happens after a resolved turn. Precedence is fixed:
-   *   1. `playerHealth <= 0` → run lost (terminal — checked FIRST, so a turn
-   *      that zeroes BOTH pools is a defeat, not a win).
-   *   2. `enemyHealth <= 0` → encounter won.
+   * H4 — the encounter's status after the just-resolved turn, WITHOUT acting on
+   * it. Precedence is fixed:
+   *   1. `playerHealth <= 0` → `lost` (run-loss is terminal — checked FIRST, so
+   *      a turn that zeroes BOTH pools is a defeat, not a win).
+   *   2. `enemyHealth <= 0` → `won`.
    *   3. `turnIndex >= maxTurns` → safety cap: resolve by remaining pool
    *      fraction (player loses ties). Bounds an all-mutual-wipe encounter that
    *      would otherwise chip 0/0 forever.
-   *   4. otherwise → next turn.
+   *   4. otherwise → `ongoing`.
+   * Pure: re-reads the pools, which don't change across the turn-outcome pause,
+   * so `continueAfterTurn` can recompute it at `advanceTurn` time identically.
    */
-  private endTurnAndContinue(): void {
-    if (this.playerHealth <= 0) {
-      this.finishEncounter('defeat');
-      return;
-    }
-    if (this.enemyHealth <= 0) {
-      this.finishEncounter('win');
-      return;
-    }
+  private turnResult(): 'won' | 'lost' | 'ongoing' {
+    if (this.playerHealth <= 0) return 'lost';
+    if (this.enemyHealth <= 0) return 'won';
     if (this.turnIndex >= HEALTH.maxTurns) {
       const playerFrac = this.playerHealth / HEALTH.playerHealthMax;
       const enemyFrac = this.enemyHealth / HEALTH.enemyHealthMax;
-      this.finishEncounter(playerFrac > enemyFrac ? 'win' : 'defeat');
-      return;
+      return playerFrac > enemyFrac ? 'won' : 'lost';
     }
-    this.beginTurn();
+    return 'ongoing';
+  }
+
+  /**
+   * H4 — act on a turn result: end the encounter (win / defeat) or roll into
+   * the next turn (through the pre-turn gate). Called synchronously in the
+   * headless path, or from `advanceTurn` (the post-turn screen) when gated.
+   */
+  private continueAfterTurn(result: 'won' | 'lost' | 'ongoing'): void {
+    if (result === 'lost') {
+      this.finishEncounter('defeat');
+    } else if (result === 'won') {
+      this.finishEncounter('win');
+    } else {
+      this.startNextTurn();
+    }
+  }
+
+  /**
+   * H4b — resume from a turn gate (the `advanceTurn` command). From
+   * `turn-intro` start the turn's battle; from `turn-outcome` continue the
+   * encounter (or end it). A no-op in any other phase, so a stray dispatch (a
+   * double-click or a fired-then-disposed screen timer) can't corrupt state.
+   */
+  private handleAdvanceTurn(): void {
+    if (this.phase === 'turn-intro') {
+      this.phase = 'battle';
+      this.beginTurn();
+    } else if (this.phase === 'turn-outcome') {
+      this.continueAfterTurn(this.turnResult());
+    }
   }
 
   /**

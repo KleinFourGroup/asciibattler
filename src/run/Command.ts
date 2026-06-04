@@ -26,6 +26,15 @@ export type RunCommand =
    * the player is reading.
    */
   | { readonly kind: 'dismissPromotion' }
+  /**
+   * H4b — advance past a turn gate (the pre-turn or post-turn screen). From
+   * `turn-intro` it starts the turn's tactical battle; from `turn-outcome` it
+   * continues the encounter (next turn) or ends it (recruit / promotion /
+   * defeat). The pre/post-turn screens dispatch it on their auto-advance timer
+   * or a skip click. A no-op outside those two phases. Only reachable when
+   * `Run.pauseAtTurnGates` is on (the headless loop has no gates to advance).
+   */
+  | { readonly kind: 'advanceTurn' }
   | { readonly kind: 'resetRun' };
 
 export interface RunDispatcher {

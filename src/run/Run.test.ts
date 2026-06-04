@@ -665,6 +665,98 @@ describe('Run', () => {
     });
   });
 
+  describe('turn gates (H4b, pauseAtTurnGates)', () => {
+    it('entering a node pauses on turn-intro + emits turn:starting (no battle yet)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.pauseAtTurnGates = true;
+      const starting: GameEvents['turn:starting'][] = [];
+      const battleStarts: number[] = [];
+      bus.on('turn:starting', (p) => starting.push(p));
+      bus.on('battle:started', () => battleStarts.push(1));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+
+      expect(run.phase).toBe('turn-intro');
+      expect(starting).toHaveLength(1);
+      expect(starting[0]!.turn).toBe(1);
+      expect(starting[0]!.playerHealth).toBe(HEALTH.playerHealthMax);
+      expect(starting[0]!.enemyHealth).toBe(HEALTH.enemyHealthMax);
+      // The battle hasn't spun up yet — the screen gates it.
+      expect(battleStarts).toHaveLength(0);
+      expect(run.currentEncounter).toBeNull();
+
+      run.dispatch({ kind: 'advanceTurn' });
+      expect(run.phase).toBe('battle');
+      expect(battleStarts).toHaveLength(1);
+      expect(run.currentEncounter).not.toBeNull();
+    });
+
+    it('a resolved turn pauses on turn-outcome + emits turn:resolved with the chips', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.pauseAtTurnGates = true;
+      const resolved: GameEvents['turn:resolved'][] = [];
+      bus.on('turn:resolved', (p) => resolved.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      run.dispatch({ kind: 'advanceTurn' }); // start the battle
+
+      chipTurn(bus, { player: 1, enemy: 2 }); // sub-lethal → ongoing
+      expect(run.phase).toBe('turn-outcome');
+      expect(resolved).toHaveLength(1);
+      expect(resolved[0]!.turn).toBe(1);
+      expect(resolved[0]!.enemyPoolChip).toBe(1);
+      expect(resolved[0]!.playerPoolChip).toBe(2);
+      expect(resolved[0]!.result).toBe('ongoing');
+      expect(resolved[0]!.enemyHealth).toBe(HEALTH.enemyHealthMax - 1);
+      expect(resolved[0]!.playerHealth).toBe(HEALTH.playerHealthMax - 2);
+
+      run.dispatch({ kind: 'advanceTurn' }); // ongoing → next turn's pre-turn gate
+      expect(run.phase).toBe('turn-intro');
+    });
+
+    it('drives a full gated encounter: intro → battle → outcome → recruit on a win', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.pauseAtTurnGates = true;
+      const resolved: GameEvents['turn:resolved'][] = [];
+      bus.on('turn:resolved', (p) => resolved.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      run.dispatch({ kind: 'advanceTurn' }); // → battle
+      expect(run.phase).toBe('battle');
+
+      chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: 0 }); // lethal → won
+      expect(run.phase).toBe('turn-outcome');
+      expect(resolved[0]!.result).toBe('won');
+
+      run.dispatch({ kind: 'advanceTurn' }); // won → finishEncounter → recruit
+      expect(run.phase).toBe('recruit');
+      expect(run.currentOffer).not.toBeNull();
+    });
+
+    it('a gated turn that empties the player pool routes to defeat on advanceTurn', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.pauseAtTurnGates = true;
+      const resolved: GameEvents['turn:resolved'][] = [];
+      bus.on('turn:resolved', (p) => resolved.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      run.dispatch({ kind: 'advanceTurn' });
+
+      chipTurn(bus, { player: 0, enemy: HEALTH.playerHealthMax });
+      expect(run.phase).toBe('turn-outcome');
+      expect(resolved[0]!.result).toBe('lost');
+
+      let defeated = 0;
+      bus.on('run:defeated', () => defeated++);
+      run.dispatch({ kind: 'advanceTurn' });
+      expect(run.phase).toBe('defeat');
+      expect(defeated).toBe(1);
+    });
+
+    it('advanceTurn is a no-op outside a turn gate', () => {
+      const { run } = freshRunWithBus(1);
+      expect(run.phase).toBe('map');
+      run.dispatch({ kind: 'advanceTurn' });
+      expect(run.phase).toBe('map');
+    });
+  });
+
   describe('chooseRecruit command', () => {
     it('adds the chosen unit to the team and returns to map phase', () => {
       const { run, bus } = freshRunWithBus(1);
@@ -1017,6 +1109,11 @@ function freshRunWithBus(seed: number): RunHandle {
   const bus = new EventBus<GameEvents>();
   const run = new Run(seed, bus);
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
+}
+
+/** The root's first frontier node — the standard "enter the first battle" hop. */
+function frontierOf(run: Run & { rootId: number }): number {
+  return run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
 }
 
 /** Canonical level-1 starting roster (3 melee + 2 ranged, matching the default

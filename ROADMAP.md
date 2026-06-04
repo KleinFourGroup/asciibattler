@@ -650,9 +650,10 @@ just makes the healer lead the column into the next bottleneck. So the healer
 now **swaps places** with the ally it strictly blocks (ally advances, support
 retreats to the rear). Cleared the seed-30 hang; see the HANDOFF GP5.1 entry for
 the full record. **#4 ✅ shipped (GP5.2)** — the centroid navigable-snap, as
-specced below. **Phase GP is COMPLETE (GP1–GP5).** **Phase H STARTED — H1 ✅ shipped
-(the `power` stat; see the HANDOFF H1 entry); next is H2.** The spec
-below is the as-designed shape, kept for reference.
+specced below. **Phase GP is COMPLETE (GP1–GP5).** **Phase H IN PROGRESS — H1 ✅
++ H2 ✅ shipped (the `power` stat; spawn-tile range — see the HANDOFF H1/H2
+entries); next is H3.** The spec below is the as-designed shape, kept for
+reference.
 
 **START with the yield rule (#5)** — GP4 surfaced a concrete, reproducible
 instance of exactly the deadlock it targets: a healer idling on the only
@@ -678,9 +679,11 @@ repro; then do the #4 centroid navigable-snap.
 **Related observations (NOT GP5 code — flagged for later):**
 - **Spawn placement.** Healers spawning in front is partly a
   spawn-assignment / layout issue. A cheap complementary lever would be
-  biasing support spawn toward the rear of the spawn region — **but H2
-  randomizes spawn tiles**, which defeats spawn-order bias, so the yield rule
-  is the durable fix, not spawn ordering. Note the interaction during H2.
+  biasing support spawn toward the rear of the spawn region — **but
+  `spawnTeam` already randomizes spawn tiles** (D5.B Fisher–Yates shuffle;
+  H2 only relaxed the per-region tile-count range), so spawn-order bias was
+  never an available lever — the yield rule is the durable fix, not spawn
+  ordering.
 - **Map design.** Some labyrinth / corridor layouts are simply unfriendly to a
   trailing support; revisit layout tuning if the yield rule isn't enough.
 
@@ -783,13 +786,17 @@ the first recruit or two (roster ≈ hand), growing as the roster outpaces
   templates in the Run save carry the stat block too.** Behavior-neutral until
   H4 consumes it. Fully headless + a browser DOM pass on HUD/recruit/promotion.
   See the HANDOFF H1 entry for the full record.
-- **H2 — Randomized spawn-tile selection.** In `spawnTeam`, when units <
-  region tiles, pick the *used* tiles at random instead of filling
-  first-N (both teams). This is the positional variance that — with no
-  attrition — keeps a repeated matchup from being a foregone conclusion.
-  Consumes RNG → **fuzz baseline shift.** Mechanically independent of the
-  turn loop (it improves any battle), but motivated by H4; lands first as
-  a cheap, isolated commit.
+- **H2 — Randomized spawn-tile selection. ✅ SHIPPED.** The specced
+  mechanic — `spawnTeam` placing units on a random tile subset (both
+  teams) when units < region tiles — turned out to be **already live since
+  D5.B** (the Fisher–Yates `shuffleTilesInPlace` + first-N slice). So H2
+  shipped instead as a **per-region tile-count relaxation** (hard 8 → a
+  1–10 range; the "8" was an old 8-card-hand relic) that gives the existing
+  random subset room to matter, plus verification tests locking the
+  property in. **No fuzz baseline shift** (the shuffle's RNG was already
+  consumed; no shipped layout changed) — contradicting this card's original
+  prediction, which confirms the mechanic predated H2. See the HANDOFF H2
+  entry for the full record.
 - **H3 — Per-unit deployment counter (fatigue hook).** A per-unit counter
   that increments each time a unit is deployed in a turn, **reset per
   encounter**, snapshotted. Pure bookkeeping now — it ships with a clean

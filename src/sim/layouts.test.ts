@@ -3,10 +3,13 @@ import {
   LAYOUT_IDS,
   getLayout,
   SPAWN_REGION_TILE_COUNT,
+  SPAWN_REGION_MIN_TILES,
+  SPAWN_REGION_MAX_TILES,
   THEMES,
   type LayoutDef,
   type SpawnRegion,
 } from './layouts';
+import { SpawnRegionSchema } from '../config/layouts';
 import { generateTerrain } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
@@ -123,9 +126,11 @@ describe('layouts library', () => {
         expect(layout.spawns.length).toBeGreaterThanOrEqual(2);
       });
 
-      it('every spawn region has exactly 8 in-bounds tiles', () => {
+      it('every spawn region holds an in-range count of in-bounds tiles', () => {
         for (const region of layout.spawns) {
-          expect(region.tiles.length).toBe(SPAWN_REGION_TILE_COUNT);
+          // H2: regions may range MIN..MAX tiles (was a hard 8).
+          expect(region.tiles.length).toBeGreaterThanOrEqual(SPAWN_REGION_MIN_TILES);
+          expect(region.tiles.length).toBeLessThanOrEqual(SPAWN_REGION_MAX_TILES);
           for (const t of region.tiles) {
             expect(t.x).toBeGreaterThanOrEqual(0);
             expect(t.y).toBeGreaterThanOrEqual(0);
@@ -183,6 +188,36 @@ describe('layouts library', () => {
     expect(() =>
       generateTerrain(new RNG(1), layout.gridW, layout.gridH + 1, BASE, layout.id),
     ).toThrow(/requires gridW/);
+  });
+});
+
+describe('SpawnRegion schema tile-count range (H2)', () => {
+  // Distinct, in-bounds tiles so only the count is under test (the
+  // duplicate-coord refine is exercised separately below).
+  const region = (n: number) => ({
+    tiles: Array.from({ length: n }, (_, i) => ({ x: i, y: 0 })),
+    availability: 'both' as const,
+  });
+
+  it('keeps the procedural/editor default inside the allowed range', () => {
+    expect(SPAWN_REGION_TILE_COUNT).toBeGreaterThanOrEqual(SPAWN_REGION_MIN_TILES);
+    expect(SPAWN_REGION_TILE_COUNT).toBeLessThanOrEqual(SPAWN_REGION_MAX_TILES);
+  });
+
+  it('accepts the min, max, and default tile counts', () => {
+    for (const n of [SPAWN_REGION_MIN_TILES, SPAWN_REGION_TILE_COUNT, SPAWN_REGION_MAX_TILES]) {
+      expect(SpawnRegionSchema.safeParse(region(n)).success).toBe(true);
+    }
+  });
+
+  it('rejects a region below the min or above the max', () => {
+    expect(SpawnRegionSchema.safeParse(region(SPAWN_REGION_MIN_TILES - 1)).success).toBe(false);
+    expect(SpawnRegionSchema.safeParse(region(SPAWN_REGION_MAX_TILES + 1)).success).toBe(false);
+  });
+
+  it('still rejects duplicate tiles within an in-range region', () => {
+    const dup = { tiles: [{ x: 1, y: 1 }, { x: 1, y: 1 }], availability: 'both' as const };
+    expect(SpawnRegionSchema.safeParse(dup).success).toBe(false);
   });
 });
 

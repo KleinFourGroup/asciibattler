@@ -37,8 +37,26 @@ const CoordSchema = z.object({
 export const LAYOUT_MIN_SIDE = 8;
 export const LAYOUT_MAX_SIDE = 32;
 
-/** Exactly this many tiles per spawn region. */
+/**
+ * Default tiles per spawn region — the procedural top/bottom edge bands
+ * and the layout editor's starting region template are both this wide.
+ * Hand-authored regions are NOT pinned to it: they may hold anywhere
+ * from `SPAWN_REGION_MIN_TILES` to `SPAWN_REGION_MAX_TILES` tiles.
+ */
 export const SPAWN_REGION_TILE_COUNT = 8;
+
+/**
+ * Inclusive tile-count range for a hand-authored spawn region. Relaxed
+ * (H2) from a hard 8 — the "8" was a relic of the old 8-card hand plan,
+ * and the sim is tile-count-agnostic (`spawnTeam` places
+ * `min(team, tiles)` on a random subset and overflows the rest to the
+ * D5.C queue; every other consumer reads `region.tiles.length`). A
+ * region smaller than the team trickle-spawns the remainder as tiles
+ * vacate; a region larger than the team picks a random subset (the H2
+ * positional-variance lever).
+ */
+export const SPAWN_REGION_MIN_TILES = 1;
+export const SPAWN_REGION_MAX_TILES = 10;
 
 const SideSchema = z.number().int().min(LAYOUT_MIN_SIDE).max(LAYOUT_MAX_SIDE);
 
@@ -64,9 +82,9 @@ export type Theme = z.infer<typeof ThemeSchema>;
 /** Picker pool for the procedural roll + the editor dropdown. */
 export const THEMES: readonly Theme[] = ['default', 'rock', 'volcanic'];
 
-const SpawnRegionSchema = z
+export const SpawnRegionSchema = z
   .object({
-    tiles: z.array(CoordSchema).length(SPAWN_REGION_TILE_COUNT),
+    tiles: z.array(CoordSchema).min(SPAWN_REGION_MIN_TILES).max(SPAWN_REGION_MAX_TILES),
     availability: SpawnAvailabilitySchema,
   })
   .superRefine((region, ctx) => {

@@ -51,6 +51,8 @@ import {
   LAYOUT_MIN_SIDE,
   LAYOUT_MAX_SIDE,
   SPAWN_REGION_TILE_COUNT,
+  SPAWN_REGION_MIN_TILES,
+  SPAWN_REGION_MAX_TILES,
   type LayoutDef,
   type SpawnAvailability,
   type SpawnRegion,
@@ -510,7 +512,7 @@ function applyPaintRegion(c: Coord): void {
   if (region.tiles.some((t) => t.x === c.x && t.y === c.y)) return;
   region.tiles.push({ x: c.x, y: c.y });
   let evicted: Coord | null = null;
-  if (region.tiles.length > SPAWN_REGION_TILE_COUNT) {
+  if (region.tiles.length > SPAWN_REGION_MAX_TILES) {
     evicted = region.tiles.shift() ?? null;
   }
   strokeDirty = true;
@@ -674,20 +676,23 @@ function validate(): ValidationItem[] {
     });
   }
 
-  // Per-region tile count. The painting flow naturally lands in the
-  // [0, 8] range — empty regions on freshly-added pills surface
-  // until the author paints 8 tiles in.
-  const undersized: number[] = [];
+  // Per-region tile count. The paint cap holds the upper bound at
+  // SPAWN_REGION_MAX_TILES, so the only invalid case is a region that
+  // dropped below SPAWN_REGION_MIN_TILES (e.g. a freshly-added pill with
+  // nothing painted yet, or one erased empty).
+  const outOfRange: number[] = [];
   spawns.forEach((region, idx) => {
-    if (region.tiles.length !== SPAWN_REGION_TILE_COUNT) undersized.push(idx);
+    if (region.tiles.length < SPAWN_REGION_MIN_TILES || region.tiles.length > SPAWN_REGION_MAX_TILES) {
+      outOfRange.push(idx);
+    }
   });
-  if (undersized.length > 0) {
-    const lines = undersized
-      .map((idx) => `#${idx}: ${spawns[idx]!.tiles.length}/${SPAWN_REGION_TILE_COUNT}`)
+  if (outOfRange.length > 0) {
+    const lines = outOfRange
+      .map((idx) => `#${idx}: ${spawns[idx]!.tiles.length}`)
       .join(', ');
     items.push({
       level: 'error',
-      text: `Region(s) ${lines} — each region needs exactly ${SPAWN_REGION_TILE_COUNT} tiles.`,
+      text: `Region(s) ${lines} — each region needs ${SPAWN_REGION_MIN_TILES}–${SPAWN_REGION_MAX_TILES} tiles.`,
     });
   }
 
@@ -1107,7 +1112,7 @@ function refreshRegionPicker(): void {
     swatch.className = 'pill-swatch';
     swatch.style.background = `var(--region-color-${idx % REGION_COLOR_COUNT})`;
     const label = document.createElement('span');
-    label.textContent = `#${idx} (${region.tiles.length}/${SPAWN_REGION_TILE_COUNT})`;
+    label.textContent = `#${idx} (${region.tiles.length}/${SPAWN_REGION_MAX_TILES})`;
     pill.appendChild(swatch);
     pill.appendChild(label);
     pill.addEventListener('click', () => {

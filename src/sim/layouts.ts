@@ -28,6 +28,8 @@ export {
   LAYOUT_IDS,
   getLayout,
   SPAWN_REGION_TILE_COUNT,
+  SPAWN_REGION_MIN_TILES,
+  SPAWN_REGION_MAX_TILES,
   THEMES,
   type LayoutDef,
   type SpawnRegion,

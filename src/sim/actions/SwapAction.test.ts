@@ -39,31 +39,41 @@ describe('SwapAction', () => {
     expect(other.position).toEqual({ x: 5, y: 5 });
   });
 
-  it('emits unit:moved for BOTH units (so the renderer lerps each sprite)', () => {
+  it('emits ONE unit:swapped event (not two moves) carrying both units', () => {
     const bus = new EventBus<GameEvents>();
     const w = makeWorld(bus);
     const mover = spawn(w, 5, 5);
     const other = spawn(w, 4, 5);
-    const moves: { unitId: number; from: { x: number; y: number }; to: { x: number; y: number } }[] = [];
-    bus.on('unit:moved', (e) => moves.push({ unitId: e.unitId, from: e.from, to: e.to }));
+    const swaps: GameEvents['unit:swapped'][] = [];
+    const moves: GameEvents['unit:moved'][] = [];
+    bus.on('unit:swapped', (e) => swaps.push(e));
+    bus.on('unit:moved', (e) => moves.push(e));
 
     new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, other.id, 10).start(mover, w);
 
-    expect(moves).toEqual([
-      { unitId: mover.id, from: { x: 5, y: 5 }, to: { x: 4, y: 5 } },
-      { unitId: other.id, from: { x: 4, y: 5 }, to: { x: 5, y: 5 } },
+    expect(moves).toEqual([]);
+    expect(swaps).toEqual([
+      { unitA: mover.id, unitB: other.id, cellA: { x: 5, y: 5 }, cellB: { x: 4, y: 5 }, durationTicks: 10 },
     ]);
   });
 
-  it('degrades to a plain step when the partner is gone from the target cell', () => {
+  it('degrades to a plain unit:moved step when the partner is gone', () => {
     // After a snapshot rehydrate the partner could have moved/died; the swap
-    // then just relocates the mover onto the (now-free) cell, never desyncing.
-    const w = makeWorld();
+    // then just relocates the mover onto the (now-free) cell (a plain move,
+    // not a swap), never desyncing.
+    const bus = new EventBus<GameEvents>();
+    const w = makeWorld(bus);
     const mover = spawn(w, 5, 5); // no unit with id 999 exists
+    const swaps: GameEvents['unit:swapped'][] = [];
+    const moves: GameEvents['unit:moved'][] = [];
+    bus.on('unit:swapped', (e) => swaps.push(e));
+    bus.on('unit:moved', (e) => moves.push(e));
 
     new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, 999, 10).start(mover, w);
 
     expect(mover.position).toEqual({ x: 4, y: 5 });
+    expect(swaps).toEqual([]);
+    expect(moves).toEqual([{ unitId: mover.id, from: { x: 5, y: 5 }, to: { x: 4, y: 5 }, durationTicks: 10 }]);
   });
 
   it('round-trips through the action registry', () => {

@@ -62,6 +62,25 @@ export interface GameEvents extends Record<string, unknown> {
     durationTicks: number;
   };
   /**
+   * GP5.1 — an atomic position SWAP (a `SwapAction`): `unitA` and `unitB`
+   * exchange cells over `durationTicks` (unitA moves `cellA → cellB`, unitB
+   * moves `cellB → cellA`). Distinct from two `unit:moved` events because a
+   * swap is one event with shared timing, and because the mechanic is
+   * non-obvious — keeping it first-class leaves a clean hook for a future
+   * swap-specific cue / VFX / telemetry without conflating it with a normal
+   * step. Today the healer (`SupportMovementBehavior`) is the only emitter and
+   * the renderer the only consumer (it lerps both sprites from their live
+   * positions). A degraded swap (partner gone after a snapshot) falls back to a
+   * plain `unit:moved`.
+   */
+  'unit:swapped': {
+    unitA: number;
+    unitB: number;
+    cellA: GridCoord;
+    cellB: GridCoord;
+    durationTicks: number;
+  };
+  /**
    * E1: `crit` flags whether AttackAction's start-time crit roll landed.
    * `damage` is the resolved post-crit value (already multiplied by
    * `STATS.critMult` when `crit === true`), so subscribers that only

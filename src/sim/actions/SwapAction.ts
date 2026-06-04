@@ -55,19 +55,25 @@ export class SwapAction implements Action {
       other.position.y === this.to.y;
 
     unit.position = this.to;
-    world.emit('unit:moved', {
-      unitId: unit.id,
-      from: this.from,
-      to: this.to,
-      durationTicks: this.durationTicks,
-    });
 
     if (swappable) {
       other.position = this.from;
+      // One swap event with shared timing — the renderer lerps both sprites
+      // from their live positions (so a partner caught mid-step stays smooth).
+      world.emit('unit:swapped', {
+        unitA: unit.id,
+        unitB: other.id,
+        cellA: this.from,
+        cellB: this.to,
+        durationTicks: this.durationTicks,
+      });
+    } else {
+      // Partner gone (only reachable after a snapshot rehydrate) → it's just a
+      // plain step onto the now-free cell.
       world.emit('unit:moved', {
-        unitId: other.id,
-        from: this.to,
-        to: this.from,
+        unitId: unit.id,
+        from: this.from,
+        to: this.to,
         durationTicks: this.durationTicks,
       });
     }

@@ -279,9 +279,18 @@ export class BattleRenderer {
     if (!this.world) return;
     const handle = this.handles.get(unitId);
     if (!handle) return;
+    // GP5.1 follow-up — lerp from the sprite's LIVE position, not the logical
+    // `from` tile. A normal move starts idle on `from` (the unit was locked for
+    // its whole move-cooldown, so its sprite finished lerping), making the two
+    // equal. But a SwapAction yanks a unit that may still be mid-lerp from its
+    // own step; starting from the tile would snap the sprite there first — the
+    // swap jitter. Reading the current position (as startShove already does for
+    // the melee lunge) keeps both swapped sprites continuous. Falls back to the
+    // tile if the sprite has no live position yet.
+    const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? this.tileWorldPos(from)).clone();
     this.animator.startLerp(
       handle,
-      this.tileWorldPos(from),
+      origin,
       this.tileWorldPos(to),
       ticksToSeconds(durationTicks),
     );

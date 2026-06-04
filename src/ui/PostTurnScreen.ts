@@ -14,7 +14,7 @@ import { renderPoolGauge } from './poolGauge';
 
 /** Auto-advance delay (ms) — a touch longer than the pre-turn screen so the
  *  outcome is readable. Tunable by feel during playtest. */
-const POSTTURN_AUTO_MS = 1900;
+const POSTTURN_AUTO_MS = 3000;
 
 export class PostTurnScreen {
   private container: HTMLDivElement | null = null;

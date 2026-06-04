@@ -17,7 +17,7 @@ import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
 
 /** Auto-advance delay (ms). Tunable by feel during playtest. */
-const PRETURN_AUTO_MS = 1300;
+const PRETURN_AUTO_MS = 2000;
 
 export class PreTurnScreen {
   private container: HTMLDivElement | null = null;

@@ -429,6 +429,41 @@ describe('A2 round-trip: Run', () => {
       /unsupported schema version/,
     );
   });
+
+  it('H4: a mid-encounter Run save carries the health pools + pending XP; a pre-H4 snapshot is rejected', () => {
+    // H4 added the encounter-loop state (playerHealth/enemyHealth/turnIndex/
+    // encounterBudget/pendingEncounterXp) to the Run save → RUN_SCHEMA_VERSION
+    // bumped (7→8). A v7 save has no pools → reject.
+    const bus = new EventBus<GameEvents>();
+    const run = new Run(2026, bus);
+    const first = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+    run.dispatch({ kind: 'enterNode', nodeId: first });
+    // Resolve one turn with a SUB-lethal chip so the encounter is still live
+    // (phase 'battle', a 2nd turn pending) with non-trivial pools + pending XP.
+    bus.emit('battle:ended', {
+      winner: 'draw',
+      xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 4, xpGained: 7 }],
+      survivorPower: { player: 1, enemy: 2 },
+    });
+    expect(run.phase).toBe('battle'); // mid-encounter
+
+    const wire = JSON.parse(JSON.stringify(run.toJSON()));
+    expect(wire).toHaveProperty('playerHealth');
+    expect(wire).toHaveProperty('enemyHealth');
+    expect(wire.pendingEncounterXp).toHaveLength(1);
+
+    const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.playerHealth).toBe(run.playerHealth);
+    expect(restored.enemyHealth).toBe(run.enemyHealth);
+    expect(restored.turnIndex).toBe(run.turnIndex);
+    expect(restored.encounterBudget).toBe(run.encounterBudget);
+    expect(restored.pendingEncounterXp).toEqual(run.pendingEncounterXp);
+
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
 });
 
 /**

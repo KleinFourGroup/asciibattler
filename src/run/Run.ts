@@ -446,8 +446,13 @@ export class Run {
    * `pauseAtTurnGates` on, pause on `turn-intro` + emit `turn:starting` so the
    * pre-turn screen shows (it resumes via `advanceTurn`); off, fall straight
    * into the turn's battle (the H4a path — phase stays `battle`).
+   *
+   * H5b — the hand is DRAWN here (before the gate), so `turn:starting` can carry
+   * it for the pre-turn screen and `beginTurn` simply fields the already-drawn
+   * hand. The draw runs on both paths, so the headless loop is unchanged.
    */
   private startNextTurn(): void {
+    this.drawTurnHand();
     if (this.pauseAtTurnGates) {
       this.phase = 'turn-intro';
       this.bus.emit('turn:starting', {
@@ -457,6 +462,7 @@ export class Run {
         playerHealthMax: HEALTH.playerHealthMax,
         enemyHealth: this.enemyHealth,
         enemyHealthMax: HEALTH.enemyHealthMax,
+        hand: this.hand.map((idx) => this.team[idx]!),
       });
     } else {
       this.phase = 'battle';
@@ -465,11 +471,25 @@ export class Run {
   }
 
   /**
+   * H5b — discard the previous turn's hand and draw the next, run once per turn
+   * from `startNextTurn` (BEFORE the pre-turn gate, so `turn:starting` carries
+   * the hand). Split out of `beginTurn` so the draw happens once per turn on
+   * both the gated + headless paths. Determinism is unchanged: the lone
+   * `deckRng` draw still fires once/turn in the same order, and `this.rng` (the
+   * per-turn `battleRng` fork in `beginTurn`) is an independent stream — moving
+   * the deck draw earlier in wall-clock doesn't shift it.
+   */
+  private drawTurnHand(): void {
+    this.discardPile.push(...this.hand);
+    this.hand = this.drawHand();
+  }
+
+  /**
    * H4 — spin up one turn: roll this turn's battlefield + a fresh enemy wave at
-   * the encounter's fixed budget, draw this turn's hand (H5), record the
-   * deployed hand, publish the per-turn `currentEncounter`, and emit
-   * `battle:started` for the driver (BattleScene / the headless harness) to
-   * build a World.
+   * the encounter's fixed budget, field this turn's already-drawn hand (H5b
+   * draws it in `startNextTurn`), record the deployed hand, publish the per-turn
+   * `currentEncounter`, and emit `battle:started` for the driver (BattleScene /
+   * the headless harness) to build a World.
    *
    * Determinism: the per-turn `battleRng` is forked from `this.rng` HERE (never
    * looked ahead / stashed), so the snapshotted `this.rng` alone reconstructs
@@ -514,14 +534,10 @@ export class Run {
       );
     }
 
-    // H5 — recycle the previous turn's hand into the discard, then draw this
-    // turn's. Only the drawn hand fights; cards reshuffle when the draw pile
-    // empties (see `drawHand`). Turn 1 of an encounter discards an empty hand.
-    this.discardPile.push(...this.hand);
-    this.hand = this.drawHand();
-    // E4: stamp each drawn card with its `Run.team` index so `xpAwards` can
-    // carry it back at battle end. The hand holds `rosterIndex` values directly;
-    // the stamp is applied here at handoff time, never on `this.team`.
+    // E4/H5 — the hand was drawn in `startNextTurn` (`drawTurnHand`) so the
+    // pre-turn screen could show it; here we just field it. Stamp each drawn
+    // card with its `Run.team` index so `xpAwards` can carry it back at battle
+    // end (the stamp is applied at handoff time, never on `this.team`).
     const stampedPlayerTeam = this.hand.map((idx) => ({ ...this.team[idx]!, rosterIndex: idx }));
     // H3 — record this turn's deployment (the drawn hand). The deployment
     // counter finally varies per turn here (pre-H5 it was the whole roster).

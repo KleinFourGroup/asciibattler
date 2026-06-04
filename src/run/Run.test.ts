@@ -1055,6 +1055,25 @@ describe('Run', () => {
       };
       expect(handsFor(123)).toEqual(handsFor(123));
     });
+
+    it('surfaces the drawn hand on turn:starting before the battle (H5b, gated path)', () => {
+      const bus = new EventBus<GameEvents>();
+      const run = new Run(1, bus, { startingRoster: BIG_ROSTER });
+      run.pauseAtTurnGates = true; // the live/interactive path
+      const starting: GameEvents['turn:starting'][] = [];
+      bus.on('turn:starting', (p) => starting.push(p));
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+
+      // The hand is drawn at the turn gate (before the battle spins up), so the
+      // pre-turn screen can show it.
+      expect(run.phase).toBe('turn-intro');
+      expect(run.currentEncounter).toBeNull();
+      expect(starting).toHaveLength(1);
+      expect(starting[0]!.hand).toHaveLength(DECK.handSize); // capped to handSize
+      // The payload's templates ARE this turn's drawn cards (in draw order).
+      expect(starting[0]!.hand).toEqual(run.hand.map((idx) => run.team[idx]));
+    });
   });
 
   describe('rest nodes (G3)', () => {

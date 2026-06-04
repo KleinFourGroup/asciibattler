@@ -212,7 +212,12 @@ export interface GameEvents extends Record<string, unknown> {
    * loop runs straight through and never emits it. Carries the turn number +
    * the current health pools so the screen can show "Turn N" + both gauges
    * before the tactical battle spins up. The screen dismisses with the
-   * `advanceTurn` command. Future home of the H5/H6 card-drawn hand.
+   * `advanceTurn` command.
+   *
+   * H5b — also carries `hand`: this turn's drawn cards (the roster templates
+   * that will fight, in draw order), so the pre-turn screen shows WHO was
+   * drawn. The hand is drawn before this fires (Run.startNextTurn), so it's
+   * authoritative — the same templates `beginTurn` then sends to the World.
    */
   'turn:starting': {
     turn: number; // 1-based, within the current encounter
@@ -221,6 +226,7 @@ export interface GameEvents extends Record<string, unknown> {
     playerHealthMax: number;
     enemyHealth: number;
     enemyHealthMax: number;
+    hand: UnitTemplate[];
   };
 
   /**

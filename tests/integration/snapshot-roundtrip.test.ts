@@ -413,6 +413,22 @@ describe('A2 round-trip: Run', () => {
       /unsupported schema version/,
     );
   });
+
+  it('H3: the Run save carries `deploymentCounts` parallel to the roster; a pre-H3 snapshot is rejected', () => {
+    // H3 added the per-roster-slot deployment counter to the Run save, so
+    // RUN_SCHEMA_VERSION bumped (6→7). A v6 save has no counts → reject.
+    const run = new Run(2026, new EventBus<GameEvents>());
+    const wire = JSON.parse(JSON.stringify(run.toJSON()));
+    expect(Array.isArray(wire.deploymentCounts)).toBe(true);
+    expect(wire.deploymentCounts).toHaveLength(wire.team.length);
+
+    expect(() => Run.fromJSON(wire, new EventBus<GameEvents>())).not.toThrow();
+
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
 });
 
 /**

@@ -651,9 +651,9 @@ now **swaps places** with the ally it strictly blocks (ally advances, support
 retreats to the rear). Cleared the seed-30 hang; see the HANDOFF GP5.1 entry for
 the full record. **#4 ✅ shipped (GP5.2)** — the centroid navigable-snap, as
 specced below. **Phase GP is COMPLETE (GP1–GP5).** **Phase H IN PROGRESS — H1 ✅
-+ H2 ✅ shipped (the `power` stat; spawn-tile range — see the HANDOFF H1/H2
-entries); next is H3.** The spec below is the as-designed shape, kept for
-reference.
++ H2 ✅ + H3 ✅ shipped (the `power` stat; spawn-tile range; deployment counter
+— see the HANDOFF H1/H2/H3 entries); next is H4.** The spec below is the
+as-designed shape, kept for reference.
 
 **START with the yield rule (#5)** — GP4 surfaced a concrete, reproducible
 instance of exactly the deadlock it targets: a healer idling on the only
@@ -797,11 +797,17 @@ the first recruit or two (roster ≈ hand), growing as the roster outpaces
   consumed; no shipped layout changed) — contradicting this card's original
   prediction, which confirms the mechanic predated H2. See the HANDOFF H2
   entry for the full record.
-- **H3 — Per-unit deployment counter (fatigue hook).** A per-unit counter
+- **H3 — Per-unit deployment counter (fatigue hook). ✅ SHIPPED.** A
+  per-roster-slot counter (`Run.deploymentCounts[]`, parallel to the
+  roster — user picked the parallel array over a `UnitTemplate` field)
   that increments each time a unit is deployed in a turn, **reset per
-  encounter**, snapshotted. Pure bookkeeping now — it ships with a clean
-  read-point for the *future* fatigue debuff (deferred; wired in H6 only
-  if needed). Snapshot round-trips the counts.
+  encounter**, snapshotted (**RunSnapshot v6→v7**). Wired live at the
+  deploy boundary (`handleEnterNode` resets at encounter start + records
+  the full-roster deployment; pre-H4 each battle reads 1/slot). Pure
+  bookkeeping now — `resetDeploymentCounts()` + `recordDeployment()` are
+  the seam H4's turn loop drives, and the clean read-point for the
+  *future* fatigue debuff (deferred; wired in H6 only if needed). No
+  RNG/fuzz impact. See the HANDOFF H3 entry for the full record.
 - **H4 — Health pools + turn/encounter loop.** `playerHealth` (on `Run`,
   persists) + per-encounter `enemyHealth`; node resolution runs an
   **encounter loop**: each turn spawn a hand (the **full roster** as the

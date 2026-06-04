@@ -98,8 +98,11 @@ export interface BattleEncounter {
  *  snapshot stores. A v5 save carries `power`-less templates → reject outright
  *  rather than load a roster that NaNs on the next level-up (the World v17→18
  *  stat-shape-contract rationale, applied to the Run save). v5 + earlier throw
- *  on load. */
-const RUN_SCHEMA_VERSION = 6;
+ *  on load.
+ *  H3: bumped 6→7. Adds `deploymentCounts: number[]` (per-roster-slot
+ *  deployment counter, parallel to `team`). A v6 save has no counts → reject
+ *  rather than rehydrate a Run whose counter is out of sync with the roster. */
+const RUN_SCHEMA_VERSION = 7;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -110,6 +113,8 @@ export interface RunSnapshot {
   levelupRng: RNGSnapshot;
   nodeMap: NodeMap;
   team: UnitTemplate[];
+  /** H3: per-roster-slot deployment counter, parallel to `team`. */
+  deploymentCounts: number[];
   currentNodeId: number;
   phase: RunPhase;
   currentEncounter: BattleEncounter | null;
@@ -138,6 +143,20 @@ export class Run {
   readonly levelupRng: RNG;
   readonly nodeMap: NodeMap;
   team: UnitTemplate[];
+  /**
+   * H3 — per-unit deployment counter (the fatigue hook). One slot per
+   * roster index, parallel to `team`; counts how many turns a unit has
+   * been deployed in the CURRENT encounter. **Pure bookkeeping for now**
+   * — a future fatigue debuff (deferred to H6 if needed) would read it at
+   * deploy time to scale the deployed unit's stats. Reset at encounter
+   * start via `resetDeploymentCounts`, bumped per deployment via
+   * `recordDeployment` — those two are the stable seam the H4 turn loop
+   * drives. Pre-H4 an encounter is a single battle and the whole roster
+   * is the "hand", so each battle resets-then-records-once → every count
+   * reads 1 mid-battle. Round-trips in the Run save (v7). Stays synced
+   * with `team`: a recruit appends a fresh `0`.
+   */
+  deploymentCounts: number[];
   currentNodeId: number;
   phase: RunPhase = 'map';
   currentEncounter: BattleEncounter | null = null;
@@ -180,6 +199,8 @@ export class Run {
     this.team = config?.startingRoster
       ? config.startingRoster.map((e) => rollUnit(e.archetype, teamRng, e.level))
       : rollTeam(teamRng);
+    // H3 — one deployment slot per roster unit, all zero at run start.
+    this.deploymentCounts = new Array(this.team.length).fill(0);
     this.levelupRng = this.rng.fork();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.currentNodeId = this.nodeMap.rootId;
@@ -258,6 +279,11 @@ export class Run {
     }
 
     this.phase = 'battle';
+    // H3 — a battle node is an encounter start (pre-H4: encounter == one
+    // battle). Zero the deployment counts here; the per-turn increment
+    // below records this encounter's deployment. H4 moves the reset to the
+    // encounter-loop entry and the record to each turn's hand spawn.
+    this.resetDeploymentCounts();
 
     const battleRng = this.rng.fork();
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
@@ -302,6 +328,9 @@ export class Run {
     // the stamp is applied here at handoff time, never on
     // `this.team`. Enemy templates leave rosterIndex undefined.
     const stampedPlayerTeam = this.team.map((t, i) => ({ ...t, rosterIndex: i }));
+    // H3 — record this turn's deployment. Pre-H5 the whole roster is the
+    // "hand", so every slot is deployed; H5 narrows this to the drawn hand.
+    this.recordDeployment(stampedPlayerTeam.map((_, i) => i));
     this.currentEncounter = {
       worldSeed,
       terrainSeed,
@@ -493,6 +522,9 @@ export class Run {
   private handleChooseRecruit(unitTemplate: UnitTemplate): void {
     if (this.phase !== 'recruit') return;
     this.team.push(unitTemplate);
+    // H3 — keep the deployment counter parallel to the roster. A fresh
+    // recruit hasn't been deployed in the current encounter yet.
+    this.deploymentCounts.push(0);
     this.currentOffer = null;
     this.phase = 'map';
   }
@@ -504,6 +536,30 @@ export class Run {
     return false;
   }
 
+  /**
+   * H3 — zero every deployment count. Called at encounter start. Public
+   * because it's the seam the H4 encounter loop drives (reset once per
+   * encounter, before the first turn).
+   */
+  resetDeploymentCounts(): void {
+    this.deploymentCounts.fill(0);
+  }
+
+  /**
+   * H3 — bump the deployment count for each deployed roster slot. Called
+   * once per turn with the slots that were actually deployed (pre-H5 that's
+   * the whole roster; H5 passes the drawn hand). Out-of-range indices are
+   * ignored so a stale hand can't write past the array. Public for the
+   * same reason as `resetDeploymentCounts` — the H4 turn loop calls it.
+   */
+  recordDeployment(rosterIndices: readonly number[]): void {
+    for (const idx of rosterIndices) {
+      if (idx >= 0 && idx < this.deploymentCounts.length) {
+        this.deploymentCounts[idx]! += 1;
+      }
+    }
+  }
+
   toJSON(): RunSnapshot {
     return {
       schemaVersion: RUN_SCHEMA_VERSION,
@@ -511,6 +567,7 @@ export class Run {
       levelupRng: this.levelupRng.toJSON(),
       nodeMap: this.nodeMap,
       team: this.team.slice(),
+      deploymentCounts: this.deploymentCounts.slice(),
       currentNodeId: this.currentNodeId,
       phase: this.phase,
       currentEncounter: this.currentEncounter,
@@ -548,6 +605,7 @@ export class Run {
     m.levelupRng = RNG.fromJSON(snap.levelupRng);
     m.nodeMap = snap.nodeMap;
     m.team = snap.team.slice();
+    m.deploymentCounts = snap.deploymentCounts.slice();
     m.currentNodeId = snap.currentNodeId;
     m.phase = snap.phase;
     m.currentEncounter = snap.currentEncounter;

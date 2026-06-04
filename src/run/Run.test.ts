@@ -662,6 +662,73 @@ describe('Run', () => {
     });
   });
 
+  describe('deployment counter (H3)', () => {
+    it('initializes one zero count per roster slot', () => {
+      const run = new Run(1, new EventBus<GameEvents>());
+      expect(run.deploymentCounts).toHaveLength(run.team.length);
+      expect(run.deploymentCounts.every((c) => c === 0)).toBe(true);
+    });
+
+    it('records one deployment per roster slot on entering a battle', () => {
+      const { run } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      expect(run.deploymentCounts).toEqual(new Array(run.team.length).fill(1));
+    });
+
+    it('resets at the start of each encounter (a second battle still reads 1, not 2)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: first });
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+      const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: second });
+      // Without the per-encounter reset the original five slots would read 2.
+      expect(run.deploymentCounts).toEqual(new Array(run.team.length).fill(1));
+    });
+
+    it('appends a fresh zero count when a unit is recruited', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: first });
+      const before = run.team.length;
+      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+      expect(run.team).toHaveLength(before + 1);
+      expect(run.deploymentCounts).toHaveLength(run.team.length);
+      // The new slot hasn't been deployed in any encounter yet.
+      expect(run.deploymentCounts[run.deploymentCounts.length - 1]).toBe(0);
+    });
+
+    it('accumulates across turns within an encounter, then zeros on reset (the H4 seam)', () => {
+      const run = new Run(1, new EventBus<GameEvents>());
+      const all = run.team.map((_, i) => i);
+      run.recordDeployment(all);
+      run.recordDeployment(all);
+      run.recordDeployment([0]);
+      expect(run.deploymentCounts[0]).toBe(3);
+      expect(run.deploymentCounts[1]).toBe(2);
+      run.resetDeploymentCounts();
+      expect(run.deploymentCounts).toEqual(new Array(run.team.length).fill(0));
+    });
+
+    it('ignores out-of-range indices in recordDeployment', () => {
+      const run = new Run(1, new EventBus<GameEvents>());
+      run.recordDeployment([-1, run.team.length, 0]);
+      expect(run.deploymentCounts[0]).toBe(1);
+      expect(run.deploymentCounts).toHaveLength(run.team.length);
+    });
+
+    it('round-trips the deployment counts through toJSON → fromJSON', () => {
+      const { run } = freshRunWithBus(7);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
+      expect(restored.deploymentCounts).toEqual(run.deploymentCounts);
+    });
+  });
+
   describe('rest nodes (G3)', () => {
     it('banks restXp into every roster slot and starts no battle', () => {
       // floorCount 4 → a floor-2 rest is the first reachable rest. Clear the

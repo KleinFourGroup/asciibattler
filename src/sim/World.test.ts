@@ -122,14 +122,60 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    w.spawnUnit(rollUnit('melee', rng), 'enemy', { x: 0, y: 0 });
+    const enemy = w.spawnUnit(rollUnit('melee', rng), 'enemy', { x: 0, y: 0 });
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
     w.tick();
 
-    // E4: enemy victories carry no awards — only player survivors earn XP.
-    expect(ends).toEqual([{ winner: 'enemy', xpAwards: [] }]);
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('enemy');
+    // No player roster units here, so still no awards — but H4 carries the
+    // per-side survivor power so the encounter loop can chip the player pool.
+    expect(ends[0]!.xpAwards).toEqual([]);
+    expect(ends[0]!.survivorPower).toEqual({ player: 0, enemy: enemy.stats.power });
+  });
+
+  it('resolveAsDraw ends the turn as a draw, reports both survivor powers, and still awards player XP', () => {
+    // H4: the driver's per-turn tick cap force-resolves a turn that hasn't
+    // resolved decisively. Both sides chip the opposing pool by Σpower; XP is
+    // awarded regardless of winner (the old player-win-only gate is gone).
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    const player = w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 }, 0);
+    const enemy = w.spawnUnit(rollUnit('melee', rng), 'enemy', { x: 5, y: 5 });
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    w.tick(); // far apart — both still alive, no decisive end
+    expect(w.ended).toBe(false);
+    w.resolveAsDraw();
+
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('draw');
+    expect(ends[0]!.survivorPower).toEqual({
+      player: player.stats.power,
+      enemy: enemy.stats.power,
+    });
+    expect(ends[0]!.xpAwards).toHaveLength(1);
+    expect(ends[0]!.xpAwards[0]!.rosterIndex).toBe(0);
+    expect(w.ended).toBe(true);
+  });
+
+  it('resolveAsDraw is a no-op once the battle already ended naturally', () => {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 }, 0);
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    w.tick(); // lone player → decisive player win, single emit
+    w.resolveAsDraw(); // already ended → must not emit again
+
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('player');
   });
 
   it('does not emit battle:ended while both teams have units', () => {

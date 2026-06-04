@@ -22,18 +22,29 @@ export interface GameEvents extends Record<string, unknown> {
 
   'battle:started': { worldSeed: number };
   /**
-   * E4: payload extended with `xpAwards` — one entry per surviving
-   * player unit on a player victory. Empty array on enemy victory or
-   * mutual annihilation (no awards). `damageDealt` is the raw HP-loss
-   * tally the World accumulated for that unit; `xpGained` is the
-   * `LEVELING`-resolved value (`xpFlatPerSurvivor + xpPerDamage ×
-   * damageDealt`). Run banks it into the persistent roster.
+   * E4: payload extended with `xpAwards` — one entry per player roster unit
+   * (survivor OR fallen) that earned XP this battle. `damageDealt` is the raw
+   * HP-loss tally the World accumulated for that unit; `xpGained` is the
+   * `LEVELING`-resolved value (`xpFlatPerSurvivor`/`xpFlatPerFallen` +
+   * `xpPerDamage × damageDealt`). Run banks it into the persistent roster.
+   *
+   * H4: awards are computed on EVERY battle end regardless of `winner` (the
+   * old player-win-only gate is gone), because an encounter is now many turns
+   * and each turn's damage banks into the per-encounter XP total — a unit that
+   * dealt damage on a turn the player didn't win still earned it. (Empty only
+   * when no roster unit dealt damage or qualified for a flat slice.)
    *
    * Including damageDealt + xpGained lets PromotionScene surface
    * "you dealt X damage, earned Y XP" without re-querying the World.
    */
   'battle:ended': {
-    winner: 'player' | 'enemy';
+    /**
+     * E4: 'player' / 'enemy' on a decisive end (one team wiped). H4 adds
+     * 'draw' for a tick-capped (or mutual-wipe) turn — the driver's
+     * `World.resolveAsDraw` — where BOTH sides' survivors chip the opposing
+     * health pool.
+     */
+    winner: 'player' | 'enemy' | 'draw';
     xpAwards: readonly {
       unitId: number;
       /**
@@ -46,6 +57,16 @@ export interface GameEvents extends Record<string, unknown> {
       damageDealt: number;
       xpGained: number;
     }[];
+    /**
+     * H4: Σ`power` over each team's living **on-grid** units at battle end —
+     * the amount each side chips the OPPOSING health pool by. Deliberately
+     * EXCLUDES the spawn queue (a queued/overflow unit never reached the grid
+     * and contributed no power, even though `checkBattleEnd` counts a
+     * non-empty queue as "alive"). Optional only so test fakes can drive
+     * Run's phase machine without a real World; every real emit
+     * (`World.emitBattleEnded`) sets it.
+     */
+    survivorPower?: { player: number; enemy: number };
   };
 
   /**

@@ -810,30 +810,71 @@ export class World {
     if ((this.spawnQueues.get('player')?.length ?? 0) > 0) playerAlive = true;
     if ((this.spawnQueues.get('enemy')?.length ?? 0) > 0) enemyAlive = true;
     if (playerAlive && enemyAlive) return;
-    // No combatants left = mutual annihilation OR walls-only post-clear.
-    // Either way, don't synthesize a winner.
+    // No combatants left = mutual annihilation OR walls-only / pre-spawn.
+    // Don't synthesize a winner here — a "walls + nothing else" setup tick
+    // must not trip the condition. H4: a GENUINE mutual wipe (both teams had
+    // units and both died) is instead resolved as a DRAW by the driver's
+    // per-turn tick cap (`resolveAsDraw`) a few ticks later, so the encounter
+    // loop still advances. Keeping the early-return preserves the pre-spawn
+    // invariant the walls-only test pins.
     if (!playerAlive && !enemyAlive) return;
-    const winner: Team = playerAlive ? 'player' : 'enemy';
+    this.emitBattleEnded(playerAlive ? 'player' : 'enemy');
+  }
+
+  /**
+   * H4 — the DRIVER (Run's per-turn tick budget, via BattleScene or the
+   * headless test harness) force-resolves a battle that hasn't reached a
+   * decisive end as a DRAW: both sides' surviving units chip the opposing
+   * health pool by their Σ`power`. Also the terminator for a mutual wipe
+   * (which `checkBattleEnd` leaves un-ended on purpose). No-op once `_ended`.
+   */
+  resolveAsDraw(): void {
+    this.emitBattleEnded('draw');
+  }
+
+  /**
+   * H4 — single battle-end emit path shared by the natural decisive end
+   * (`checkBattleEnd`) and the forced draw (`resolveAsDraw`). Idempotent: a
+   * no-op once `_ended`, so a tick-cap that races a natural end can't
+   * double-emit.
+   *
+   * E4 follow-up: the roster persists across battles, so a "dead" player unit
+   * isn't really gone — `computeXpAwards` pays survivors AND fallen units
+   * (the latter their damage share + an `xpFlatPerFallen` slice). H4 drops the
+   * old `winner === 'player'` gate so every turn's damage banks into the
+   * encounter's XP total.
+   */
+  private emitBattleEnded(winner: 'player' | 'enemy' | 'draw'): void {
+    if (this._ended) return;
     this._ended = true;
-    // E4 follow-up: roster persists across battles, so a "dead" player
-    // unit isn't really gone — they're just sidelined for this
-    // battle's flat-survivor slice. Pay them their damage share plus
-    // an explicit `xpFlatPerFallen` slice so the suicide-DPS trade
-    // isn't punished, just slightly under-rewarded vs. survivors.
     const livingPlayerIds = new Set<number>();
     for (const u of this.units) {
       if (u.team === 'player' && u.currentHp > 0) livingPlayerIds.add(u.id);
     }
-    const xpAwards =
-      winner === 'player'
-        ? computeXpAwards(
-            this.playerRosterIds,
-            livingPlayerIds,
-            this.damageDealt,
-            this.utilityDone,
-          )
-        : [];
-    this.bus.emit('battle:ended', { winner, xpAwards });
+    const xpAwards = computeXpAwards(
+      this.playerRosterIds,
+      livingPlayerIds,
+      this.damageDealt,
+      this.utilityDone,
+    );
+    this.bus.emit('battle:ended', { winner, xpAwards, survivorPower: this.survivorPower() });
+  }
+
+  /**
+   * H4 — Σ`power` over each team's living on-grid units (the chip each side
+   * deals the opposing pool). Excludes the spawn queue: a queued unit never
+   * reached the grid, so it contributed no power even though `checkBattleEnd`
+   * treats a non-empty queue as "alive" for end-detection.
+   */
+  private survivorPower(): { player: number; enemy: number } {
+    let player = 0;
+    let enemy = 0;
+    for (const u of this.units) {
+      if (u.currentHp <= 0) continue;
+      if (u.team === 'player') player += u.stats.power;
+      else if (u.team === 'enemy') enemy += u.stats.power;
+    }
+    return { player, enemy };
   }
 
   removeUnit(id: number): void {

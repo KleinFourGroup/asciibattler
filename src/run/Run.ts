@@ -32,7 +32,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents, PromotionInfo } from '../core/events';
 import { glyphForArchetype } from '../sim/archetypes';
 import { RNG, type RNGSnapshot } from '../core/RNG';
-import type { UnitTemplate, Team } from '../sim/Unit';
+import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap, type NodeKind } from './NodeMap';
 import type { RunConfig } from './RunConfig';
@@ -366,7 +366,11 @@ export class Run {
   }
 
   private handleBattleEnded(
-    winner: Team,
+    // H4 commit 2: widened to the event's winner union ('draw' added). The
+    // single-battle logic below still routes any non-'player' end to defeat;
+    // H4 commit 4 replaces this whole handler with the encounter loop, where
+    // a 'draw' chips both pools instead.
+    winner: GameEvents['battle:ended']['winner'],
     xpAwards: GameEvents['battle:ended']['xpAwards'],
   ): void {
     if (this.phase !== 'battle') return;

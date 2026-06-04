@@ -454,7 +454,7 @@ long-run balance sweep move to **Phase H (H6)**.
 
 ---
 
-## Phase GP — Combat & stat-legibility playtest response (pre-H)
+## Phase GP — Combat & stat-legibility playtest response (pre-H) ✅ complete
 
 Synthesized from the Phase-G playtest cluster: movement / attack-speed
 legibility, two healer-positioning bugs, ranged units backing off near-kills,
@@ -649,7 +649,8 @@ layouts are 1-wide: there is no lateral cell to step to, and a forward vacate
 just makes the healer lead the column into the next bottleneck. So the healer
 now **swaps places** with the ally it strictly blocks (ally advances, support
 retreats to the rear). Cleared the seed-30 hang; see the HANDOFF GP5.1 entry for
-the full record. **#4 (navigable-snap) is the remaining GP5.2 piece** — the spec
+the full record. **#4 ✅ shipped (GP5.2)** — the centroid navigable-snap, as
+specced below. **Phase GP is COMPLETE (GP1–GP5); next is Phase H.** The spec
 below is the as-designed shape, kept for reference.
 
 **START with the yield rule (#5)** — GP4 surfaced a concrete, reproducible

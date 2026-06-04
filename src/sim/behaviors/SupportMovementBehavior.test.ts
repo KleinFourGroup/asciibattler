@@ -226,3 +226,41 @@ describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
     ).toBeNull();
   });
 });
+
+/**
+ * GP5.2 #4 — navigable-snap. The allies' rounded centroid can land on an
+ * impassable cell between them; the healer must snap the anchor to the nearest
+ * navigable tile and keep trailing rather than findPath()→[] and stall.
+ */
+describe('SupportMovementBehavior — GP5.2 centroid navigable-snap', () => {
+  it('snaps the anchor off an impassable centroid cell and still trails', () => {
+    // Two allies astride a wall → their centroid rounds onto the wall cell
+    // (round((7+9)/2)=8, round(5)=5). Pre-snap the healer would path to the
+    // wall, get [], and idle; post-snap it steps toward the nearest open tile.
+    const healer = makeHealer({ x: 5, y: 5 });
+    const allyW = makeUnit(2, 'player', { x: 7, y: 5 });
+    const allyE = makeUnit(3, 'player', { x: 9, y: 5 });
+    const wall = makeWall(200, { x: 8, y: 5 });
+    const p = new SupportMovementBehavior().proposeAction(
+      healer,
+      world([healer, allyW, allyE, wall]),
+    );
+    expect(p).not.toBeNull();
+    expect(p!.action).toBeInstanceOf(MoveAction);
+    expect(dest(p!).x).toBeGreaterThan(healer.position.x); // trails toward the pack, not stuck
+  });
+
+  it('is a no-op when the centroid is already navigable (unchanged trail)', () => {
+    // Bare world, centroid on open floor → snap returns it unchanged, healer
+    // steps east toward it exactly as before GP5.2.
+    const healer = makeHealer({ x: 5, y: 5 });
+    const allyW = makeUnit(2, 'player', { x: 7, y: 5 });
+    const allyE = makeUnit(3, 'player', { x: 9, y: 5 });
+    const p = new SupportMovementBehavior().proposeAction(
+      healer,
+      world([healer, allyW, allyE]),
+    );
+    expect(p).not.toBeNull();
+    expect(dest(p!).x).toBeGreaterThan(healer.position.x);
+  });
+});

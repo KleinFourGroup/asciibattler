@@ -95,15 +95,22 @@ export class SupportMovementBehavior implements Behavior {
     }
 
     // 4. Trail the centroid of living allies to stay tucked in formation.
-    const anchor = alliesCentroidCell(unit, world);
-    if (anchor !== null && chebyshev(unit.position, anchor) > SIM.healerFollowGapCells) {
-      const to = stepToward(unit, anchor, world);
-      if (to !== null) return moveProposal(unit.position, to, durationTicks, 1);
-      // Trail step blocked (an ally in a 1-wide row wants to pass the other
-      // way) → fall through to the yield: swap the boxed ally past us rather
-      // than idling in its way. With a *swap* (not a forward vacate) this is
-      // safe — the healer goes to the rear, not leading the column.
-      return yieldChokepoint(unit, world, durationTicks);
+    const rawAnchor = alliesCentroidCell(unit, world);
+    if (rawAnchor !== null) {
+      // GP5.2 #4 — the rounded centroid can land on an impassable cell (a
+      // wall / half-cover between allies, a chasm); snap to the nearest
+      // navigable tile so `stepToward` gets a reachable goal instead of
+      // findPath()→[] and stalling.
+      const anchor = snapToNavigable(rawAnchor, world);
+      if (chebyshev(unit.position, anchor) > SIM.healerFollowGapCells) {
+        const to = stepToward(unit, anchor, world);
+        if (to !== null) return moveProposal(unit.position, to, durationTicks, 1);
+        // Trail step blocked (an ally in a 1-wide row wants to pass the other
+        // way) → fall through to the yield: swap the boxed ally past us rather
+        // than idling in its way. With a *swap* (not a forward vacate) this is
+        // safe — the healer goes to the rear, not leading the column.
+        return yieldChokepoint(unit, world, durationTicks);
+      }
     }
 
     // No wounded ally, no threat, already in formation (or alone) → idle,
@@ -254,6 +261,37 @@ function isNavigable(c: GridCoord, world: World, walls: ReadonlySet<string>): bo
   if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) return false;
   if (!isFinite(world.tileGrid.costAt(c))) return false;
   return !walls.has(key(c));
+}
+
+/**
+ * GP5.2 #4 — the nearest cell to `cell` the healer can actually path to
+ * (navigable = in-bounds, finite tile cost, not a neutral/wall).
+ * `alliesCentroidCell` returns a rounded average that can land on an
+ * impassable tile *between* allies; pathing to it returns `[]` and the healer
+ * stalls instead of trailing. BFS outward from `cell` (fixed `NEIGHBORS`
+ * order, first navigable at the minimum ring wins → deterministic), flooding
+ * through the bounded grid so it still finds open ground when `cell` sits
+ * inside a wall cluster. Returns `cell` unchanged when it's already navigable
+ * (the common case) or as a fallback if the board has no navigable cell.
+ */
+function snapToNavigable(cell: GridCoord, world: World): GridCoord {
+  const walls = neutralCells(world);
+  if (isNavigable(cell, world, walls)) return cell;
+  const visited = new Set<string>([key(cell)]);
+  const queue: GridCoord[] = [cell];
+  for (let head = 0; head < queue.length; head++) {
+    const c = queue[head]!;
+    for (const [dx, dy] of NEIGHBORS) {
+      const n: GridCoord = { x: c.x + dx, y: c.y + dy };
+      const nKey = key(n);
+      if (visited.has(nKey)) continue;
+      visited.add(nKey);
+      if (n.x < 0 || n.y < 0 || n.x >= world.gridW || n.y >= world.gridH) continue;
+      if (isNavigable(n, world, walls)) return n;
+      queue.push(n);
+    }
+  }
+  return cell;
 }
 
 /**

@@ -651,9 +651,12 @@ now **swaps places** with the ally it strictly blocks (ally advances, support
 retreats to the rear). Cleared the seed-30 hang; see the HANDOFF GP5.1 entry for
 the full record. **#4 ✅ shipped (GP5.2)** — the centroid navigable-snap, as
 specced below. **Phase GP is COMPLETE (GP1–GP5).** **Phase H IN PROGRESS — H1 ✅
-+ H2 ✅ + H3 ✅ shipped (the `power` stat; spawn-tile range; deployment counter
-— see the HANDOFF H1/H2/H3 entries); next is H4.** The spec below is the
-as-designed shape, kept for reference.
++ H2 ✅ + H3 ✅ + H4 ✅ + H5 ✅ shipped (the `power` stat; spawn-tile range;
+deployment counter; the health-pool encounter loop + pre/post-turn screens; the
+card-drawn hand + the `playerTeamLevel` seam swap + the pre-turn hand display —
+see the HANDOFF H1–H5/H5b entries); next is H6 (recruit pass + rest-pool-heal +
+the balance sweep).** The spec below is the as-designed shape, kept for
+reference.
 
 **START with the yield rule (#5)** — GP4 surfaced a concrete, reproducible
 instance of exactly the deadlock it targets: a healer idling on the only

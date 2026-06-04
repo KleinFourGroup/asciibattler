@@ -20,11 +20,16 @@ After HANDOFF, the docs you'll cross-reference most often:
   Includes the event catalog, key abstractions, the sim/render seam.
 - [ROADMAP.md](ROADMAP.md) — post-MVP build order. Phases A (foundation
   refactors), B (style/visual), C1 (terrain), D (battle-layout), E
-  (combat + the six archetypes), F (Phase-E playtest response), and G
-  (run depth) are all complete, as are GP1–GP4. **Next up: GP5** (healer
-  navigable-snap + yield rule — start with the yield rule to clear the
-  healer-chokepoint deadlock GP4 exposed), then Phase H (the deckbuilder
-  battle trial).
+  (combat + the six archetypes), F (Phase-E playtest response), G
+  (run depth), and GP1–GP5 (the Phase-G playtest response) are all
+  complete. **Phase H (the deckbuilder battle trial) is in progress —
+  H1–H5 done** (power stat; spawn-tile range; deployment counter; the
+  encounter loop + pre/post-turn screens & pool HUD; the card-drawn
+  hand + the `playerTeamLevel` seam swap + the pre-turn hand display).
+  **Next up: H6** (recruit pass/no-recruit + rest-node pool-heal + the
+  balance sweep — pool sizes / `power` growth / the H3 fatigue debuff,
+  to fix the ~100% foregone-conclusion fuzz win rate). See ROADMAP
+  §Phase H for the locked sub-step detail.
   Superseded roadmaps and feedback are in [archive/](archive/).
 - [TODO.md](TODO.md) — small follow-ups that aren't roadmap steps.
 - [TESTING.md](TESTING.md) — what gets tested (`core`, `sim`, `run`),

@@ -37,10 +37,11 @@ import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap, type NodeKind } from './NodeMap';
 import type { RunConfig } from './RunConfig';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
-import { buildEnemyTeam, avgTeamLevel } from './enemyBudget';
+import { enemyBudgetFor, rollEnemyWave, avgTeamLevel } from './enemyBudget';
 import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
+import { HEALTH } from '../config/health';
 import { LAYOUT_IDS, THEMES, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { xpToNext } from '../sim/xp';
@@ -49,6 +50,10 @@ import { growthRatesForArchetype } from '../sim/archetypes';
 import type { Archetype } from '../sim/archetypes';
 
 export type RunPhase = 'map' | 'battle' | 'promotion' | 'recruit' | 'defeat' | 'complete';
+
+/** H4: one `battle:ended` XP award entry. Accumulated across an encounter's
+ *  turns in `Run.pendingEncounterXp`, then banked once at encounter end. */
+type XpAward = GameEvents['battle:ended']['xpAwards'][number];
 
 export interface BattleEncounter {
   readonly worldSeed: number;
@@ -101,8 +106,13 @@ export interface BattleEncounter {
  *  on load.
  *  H3: bumped 6→7. Adds `deploymentCounts: number[]` (per-roster-slot
  *  deployment counter, parallel to `team`). A v6 save has no counts → reject
- *  rather than rehydrate a Run whose counter is out of sync with the roster. */
-const RUN_SCHEMA_VERSION = 7;
+ *  rather than rehydrate a Run whose counter is out of sync with the roster.
+ *  H4: bumped 7→8. Adds the encounter-loop state: `playerHealth` (the run-wide
+ *  pool), `enemyHealth` + `turnIndex` + `encounterBudget` (the active
+ *  encounter), and `pendingEncounterXp` (XP accrued across the encounter's
+ *  turns, banked at encounter end). A v7 save has no pools → reject rather than
+ *  rehydrate a Run mid-encounter with a missing/`NaN` health pool. */
+const RUN_SCHEMA_VERSION = 8;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -115,6 +125,18 @@ export interface RunSnapshot {
   team: UnitTemplate[];
   /** H3: per-roster-slot deployment counter, parallel to `team`. */
   deploymentCounts: number[];
+  /** H4: the run-wide player health pool (persists across the whole run). */
+  playerHealth: number;
+  /** H4: the active encounter's enemy pool (reset each encounter). */
+  enemyHealth: number;
+  /** H4: turns elapsed in the active encounter (drives the max-turns cap). */
+  turnIndex: number;
+  /** H4: the active encounter's fixed enemy level budget (computed once at
+   *  encounter start; the wave composition re-rolls per turn against it). */
+  encounterBudget: number;
+  /** H4: XP awards accrued across the active encounter's turns, banked once at
+   *  encounter end. Non-empty only mid-encounter. */
+  pendingEncounterXp: XpAward[];
   currentNodeId: number;
   phase: RunPhase;
   currentEncounter: BattleEncounter | null;
@@ -157,6 +179,37 @@ export class Run {
    * with `team`: a recruit appends a fresh `0`.
    */
   deploymentCounts: number[];
+  /**
+   * H4 — the run-wide player health pool. Persists across the WHOLE run (every
+   * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
+   * lost. Each turn it's chipped by the enemy survivors' Σ`power`. Init +
+   * cap from `HEALTH.playerHealthMax`. Round-trips in the Run save (v8).
+   */
+  playerHealth: number;
+  /**
+   * H4 — the ACTIVE encounter's enemy health pool. Reset to
+   * `HEALTH.enemyHealthMax` at every encounter start; at ≤ 0 the player wins
+   * the encounter. Each turn it's chipped by the player survivors' Σ`power`.
+   * Meaningful only while `phase === 'battle'`.
+   */
+  enemyHealth: number;
+  /** H4 — turns elapsed in the active encounter. Incremented once per resolved
+   *  turn; drives the `HEALTH.maxTurns` safety cap. Reset at encounter start. */
+  turnIndex: number;
+  /** H4 — the active encounter's enemy level budget, computed ONCE at encounter
+   *  start via `enemyBudgetFor`. The wave composition re-rolls per turn against
+   *  this fixed budget; persisted (not recomputed on resume) so a mid-encounter
+   *  restore can't drift if the roster changed since. */
+  encounterBudget: number;
+  /**
+   * H4 — XP awards accrued across the active encounter's turns (each turn's
+   * `battle:ended.xpAwards` appended in order). Banked ONCE at encounter end
+   * via `bankXpAwards`, so a single `PromotionScene` pops per encounter, never
+   * per turn. Order is preserved so the `levelupRng` draw order is identical
+   * with or without a mid-encounter save. Cleared at encounter start + after
+   * banking; discarded (unbanked) on defeat.
+   */
+  pendingEncounterXp: XpAward[];
   currentNodeId: number;
   phase: RunPhase = 'map';
   currentEncounter: BattleEncounter | null = null;
@@ -201,6 +254,14 @@ export class Run {
       : rollTeam(teamRng);
     // H3 — one deployment slot per roster unit, all zero at run start.
     this.deploymentCounts = new Array(this.team.length).fill(0);
+    // H4 — the run-wide player pool starts full; the per-encounter state
+    // (enemyHealth/turnIndex/encounterBudget/pendingEncounterXp) is set when an
+    // encounter actually begins (`beginEncounter`).
+    this.playerHealth = HEALTH.playerHealthMax;
+    this.enemyHealth = 0;
+    this.turnIndex = 0;
+    this.encounterBudget = 0;
+    this.pendingEncounterXp = [];
     this.levelupRng = this.rng.fork();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.currentNodeId = this.nodeMap.rootId;
@@ -211,8 +272,11 @@ export class Run {
 
   private subscribe(): void {
     this.subscriptions.push(
-      this.bus.on('battle:ended', ({ winner, xpAwards }) =>
-        this.handleBattleEnded(winner, xpAwards),
+      // H4: a `battle:ended` ends a TURN, not the node. `winner` no longer
+      // routes the outcome — the pools do (chipped symmetrically off
+      // `survivorPower`), so it isn't destructured here.
+      this.bus.on('battle:ended', ({ xpAwards, survivorPower }) =>
+        this.handleTurnEnded(xpAwards, survivorPower),
       ),
     );
   }
@@ -279,54 +343,80 @@ export class Run {
     }
 
     this.phase = 'battle';
-    // H3 — a battle node is an encounter start (pre-H4: encounter == one
-    // battle). Zero the deployment counts here; the per-turn increment
-    // below records this encounter's deployment. H4 moves the reset to the
-    // encounter-loop entry and the record to each turn's hand spawn.
-    this.resetDeploymentCounts();
+    this.beginEncounter();
+  }
 
+  /**
+   * H4 — start a fresh encounter at the current node. Resets the per-encounter
+   * state (enemy pool full, turn counter zero, no pending XP), fixes the enemy
+   * level budget for the whole encounter, zeroes the H3 deployment counts, then
+   * kicks off the first turn. The run-wide `playerHealth` is deliberately NOT
+   * reset — it persists across encounters.
+   */
+  private beginEncounter(): void {
+    this.enemyHealth = HEALTH.enemyHealthMax;
+    this.turnIndex = 0;
+    this.pendingEncounterXp = [];
+    // Budget computed once; the wave composition re-rolls per turn against it.
+    this.encounterBudget = enemyBudgetFor(this.team);
+    // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
+    // `beginTurn` records the deployed hand.
+    this.resetDeploymentCounts();
+    this.beginTurn();
+  }
+
+  /**
+   * H4 — spin up one turn: roll this turn's battlefield + a fresh enemy wave at
+   * the encounter's fixed budget, record the deployed hand (the whole roster
+   * pre-H5), publish the per-turn `currentEncounter`, and emit `battle:started`
+   * for the driver (BattleScene / the headless harness) to build a World.
+   *
+   * Determinism: the per-turn `battleRng` is forked from `this.rng` HERE (never
+   * looked ahead / stashed), so the snapshotted `this.rng` alone reconstructs
+   * every future turn's wave — a mid-encounter save/resume reproduces the same
+   * waves. Turn 1 is byte-identical to the pre-H4 single-battle setup
+   * (`enemyBudgetFor` draws no RNG, so the fork + draw order is unchanged).
+   */
+  private beginTurn(): void {
     const battleRng = this.rng.fork();
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
     const terrainSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
     // G1: always roll (advance the stream — gotcha #49 byte-continuity), then
-    // let a forced layout override the result. So `forcedLayoutId` doesn't
-    // shift any downstream draw (enemy team, etc.) relative to a normal run.
+    // let a forced layout override the result.
     const rolledLayoutId = rollLayoutId(battleRng);
     const layoutId = this.forcedLayoutId ?? rolledLayoutId;
-    // D3: procedural draws ALWAYS run so the RNG stream advances
-    // identically regardless of branch (same invariant as the layoutId
-    // roll above — keeps enemy-team byte continuity across seeds when
-    // the procedural-size band is later retuned).
+    // D3: procedural draws ALWAYS run so the RNG stream advances identically
+    // regardless of branch (same invariant as the layoutId roll above).
     const proceduralSide = rollProceduralSide(battleRng);
     const { gridW, gridH } = layoutId === null
       ? { gridW: proceduralSide, gridH: proceduralSide }
       : layoutDimensions(layoutId);
-    // D8 — the theme roll always runs (byte-continuity invariant, gotcha
-    // #49). For hand-authored layouts the discrete `layout.theme` wins
-    // and the rolled value is discarded; for procedural encounters the
-    // rolled value is what gets used. C6's multi-map runs will eventually
-    // replace this with a per-map theme that procedural inherits from.
+    // D8 — the theme roll always runs (byte-continuity invariant, gotcha #49);
+    // hand-authored layouts use `layout.theme`, procedural the rolled value.
     const proceduralTheme = rollTheme(battleRng);
     const theme = layoutId === null
       ? proceduralTheme
       : (getLayout(layoutId)?.theme ?? proceduralTheme);
-    // G4 — enemy team is a level-budget swarm derived from the player roster
-    // (replaces the old floor-linear `rollEnemyTeam`). Last consumer of
+    // H4 — fresh enemy composition each turn at the encounter's FIXED budget
+    // (G4's `buildEnemyTeam` split into budget + wave). Last consumer of
     // `battleRng`, so its now-variable draw count stays downstream-safe.
-    const enemyTeam = buildEnemyTeam(battleRng, this.team);
+    const enemyTeam = rollEnemyWave(battleRng, this.team, this.encounterBudget);
 
-    // Browser-only diagnostic: confirm the layout picker hits the full
-    // library across a session. Gated on `typeof window` so the fuzz
-    // harness (tsx, no Vite) and vitest (node environment) don't spam.
+    // Browser-only diagnostic: confirm the layout picker hits the full library
+    // across a session. Gated on `typeof window` so the fuzz harness + vitest
+    // don't spam.
     if (typeof window !== 'undefined') {
-      console.log('[layout]', layoutId ?? 'procedural', `${gridW}x${gridH}`);
+      console.log(
+        '[layout]',
+        layoutId ?? 'procedural',
+        `${gridW}x${gridH}`,
+        `turn ${this.turnIndex + 1}`,
+      );
     }
 
-    // E4: stamp each player template with its `Run.team` index so
-    // `xpAwards` can carry it back at battle end. The roster itself
-    // doesn't store rosterIndex — array position IS the index — so
-    // the stamp is applied here at handoff time, never on
-    // `this.team`. Enemy templates leave rosterIndex undefined.
+    // E4: stamp each player template with its `Run.team` index so `xpAwards`
+    // can carry it back at battle end (array position IS the index; the stamp
+    // is applied here at handoff time, never on `this.team`).
     const stampedPlayerTeam = this.team.map((t, i) => ({ ...t, rosterIndex: i }));
     // H3 — record this turn's deployment. Pre-H5 the whole roster is the
     // "hand", so every slot is deployed; H5 narrows this to the drawn hand.
@@ -365,34 +455,99 @@ export class Run {
     return node.kind;
   }
 
-  private handleBattleEnded(
-    // H4 commit 2: widened to the event's winner union ('draw' added). The
-    // single-battle logic below still routes any non-'player' end to defeat;
-    // H4 commit 4 replaces this whole handler with the encounter loop, where
-    // a 'draw' chips both pools instead.
-    winner: GameEvents['battle:ended']['winner'],
+  /**
+   * H4 — a turn's tactical battle just ended (`battle:ended`). Resolve the turn
+   * into the health pools, then either start the next turn or finish the
+   * encounter. Replaces the pre-H4 single-battle handler: a `battle:ended` no
+   * longer ends the node — it ends a TURN.
+   */
+  private handleTurnEnded(
     xpAwards: GameEvents['battle:ended']['xpAwards'],
+    survivorPower: GameEvents['battle:ended']['survivorPower'],
   ): void {
     if (this.phase !== 'battle') return;
     this.currentEncounter = null;
-    if (winner === 'player') {
-      // E4 — bank XP into the roster BEFORE rolling the next step
-      // so post-victory screens (promotion / recruit) already reflect
-      // updated levels + stats. Level-up stat rolls advance
-      // `levelupRng`; the recruit offer's RNG fork is independent.
-      const promotions = this.bankXpAwards(xpAwards);
-      if (promotions.length > 0) {
-        // Pause on PromotionScene; the post-promotion step (recruit
-        // offer or run:victory) runs from `handleDismissPromotion`.
-        this.phase = 'promotion';
-        this.pendingPromotions = promotions;
-        this.bus.emit('promotion:pending', { promotions });
-      } else {
-        this.advancePastBattle();
-      }
-    } else {
+    // `survivorPower` is absent only from test fakes that drive the phase
+    // machine without a real World; treat as a 0/0 (no-chip) turn.
+    this.resolveTurn(survivorPower ?? { player: 0, enemy: 0 }, xpAwards);
+  }
+
+  /**
+   * H4 — fold one turn's outcome into the pools. Each side's survivors chip the
+   * OPPOSING pool by their Σ`power` (× `chipMultiplier`); the per-turn winner is
+   * irrelevant to the chip (a draw chips both; a decisive win chips one because
+   * the loser's survivor power is 0). XP accrues for banking at encounter end.
+   */
+  private resolveTurn(
+    survivorPower: { player: number; enemy: number },
+    xpAwards: GameEvents['battle:ended']['xpAwards'],
+  ): void {
+    // Unconditional, at the top: even a 0/0 mutual-wipe turn must advance the
+    // counter so the max-turns safety cap can terminate the encounter.
+    this.turnIndex += 1;
+    const chip = HEALTH.chipMultiplier;
+    this.enemyHealth = Math.max(0, this.enemyHealth - survivorPower.player * chip);
+    this.playerHealth = Math.max(0, this.playerHealth - survivorPower.enemy * chip);
+    this.pendingEncounterXp.push(...xpAwards);
+    this.endTurnAndContinue();
+  }
+
+  /**
+   * H4 — decide what happens after a resolved turn. Precedence is fixed:
+   *   1. `playerHealth <= 0` → run lost (terminal — checked FIRST, so a turn
+   *      that zeroes BOTH pools is a defeat, not a win).
+   *   2. `enemyHealth <= 0` → encounter won.
+   *   3. `turnIndex >= maxTurns` → safety cap: resolve by remaining pool
+   *      fraction (player loses ties). Bounds an all-mutual-wipe encounter that
+   *      would otherwise chip 0/0 forever.
+   *   4. otherwise → next turn.
+   */
+  private endTurnAndContinue(): void {
+    if (this.playerHealth <= 0) {
+      this.finishEncounter('defeat');
+      return;
+    }
+    if (this.enemyHealth <= 0) {
+      this.finishEncounter('win');
+      return;
+    }
+    if (this.turnIndex >= HEALTH.maxTurns) {
+      const playerFrac = this.playerHealth / HEALTH.playerHealthMax;
+      const enemyFrac = this.enemyHealth / HEALTH.enemyHealthMax;
+      this.finishEncounter(playerFrac > enemyFrac ? 'win' : 'defeat');
+      return;
+    }
+    this.beginTurn();
+  }
+
+  /**
+   * H4 — end the encounter. On a win, bank the encounter's accrued XP ONCE
+   * (so a single PromotionScene pops for the whole encounter) then take the
+   * existing post-battle path (promotion → recruit, or run:victory at the
+   * terminal). On defeat, the pending XP is discarded (the run is over) and we
+   * route to game-over.
+   *
+   * E4 — banking BEFORE rolling the next step means the post-victory screens
+   * already reflect updated levels/stats. Level-up rolls advance `levelupRng`;
+   * the recruit offer's fork is independent.
+   */
+  private finishEncounter(outcome: 'win' | 'defeat'): void {
+    if (outcome === 'defeat') {
+      this.pendingEncounterXp = [];
       this.phase = 'defeat';
       this.bus.emit('run:defeated', {});
+      return;
+    }
+    const promotions = this.bankXpAwards(this.pendingEncounterXp);
+    this.pendingEncounterXp = [];
+    if (promotions.length > 0) {
+      // Pause on PromotionScene; the post-promotion step (recruit offer or
+      // run:victory) runs from `handleDismissPromotion`.
+      this.phase = 'promotion';
+      this.pendingPromotions = promotions;
+      this.bus.emit('promotion:pending', { promotions });
+    } else {
+      this.advancePastBattle();
     }
   }
 
@@ -572,6 +727,11 @@ export class Run {
       nodeMap: this.nodeMap,
       team: this.team.slice(),
       deploymentCounts: this.deploymentCounts.slice(),
+      playerHealth: this.playerHealth,
+      enemyHealth: this.enemyHealth,
+      turnIndex: this.turnIndex,
+      encounterBudget: this.encounterBudget,
+      pendingEncounterXp: this.pendingEncounterXp.slice(),
       currentNodeId: this.currentNodeId,
       phase: this.phase,
       currentEncounter: this.currentEncounter,
@@ -610,6 +770,11 @@ export class Run {
     m.nodeMap = snap.nodeMap;
     m.team = snap.team.slice();
     m.deploymentCounts = snap.deploymentCounts.slice();
+    m.playerHealth = snap.playerHealth;
+    m.enemyHealth = snap.enemyHealth;
+    m.turnIndex = snap.turnIndex;
+    m.encounterBudget = snap.encounterBudget;
+    m.pendingEncounterXp = snap.pendingEncounterXp.slice();
     m.currentNodeId = snap.currentNodeId;
     m.phase = snap.phase;
     m.currentEncounter = snap.currentEncounter;

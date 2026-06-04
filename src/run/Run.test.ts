@@ -9,7 +9,8 @@ import { xpToNext } from '../sim/xp';
 import { LEVELING } from '../config/leveling';
 import { DIFFICULTY } from '../config/difficulty';
 import { RECRUITMENT } from '../config/recruitment';
-import { avgTeamLevel } from './enemyBudget';
+import { HEALTH } from '../config/health';
+import { avgTeamLevel, enemyBudgetFor } from './enemyBudget';
 import type { RunConfig } from './RunConfig';
 
 describe('Run', () => {
@@ -222,7 +223,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       expect(run.phase).toBe('recruit');
       expect(run.currentEncounter).toBeNull();
       expect(run.currentOffer).not.toBeNull();
@@ -235,7 +236,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       expect(offers).toEqual([3]);
       expect(run.currentOffer).toHaveLength(3);
     });
@@ -244,7 +245,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      bus.emit('battle:ended', { winner: 'enemy', xpAwards: [] });
+      loseEncounter(bus);
       expect(run.phase).toBe('defeat');
       expect(run.currentOffer).toBeNull();
     });
@@ -255,14 +256,14 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       let defeatedCount = 0;
       bus.on('run:defeated', () => defeatedCount++);
-      bus.emit('battle:ended', { winner: 'enemy', xpAwards: [] });
+      loseEncounter(bus);
       expect(defeatedCount).toBe(1);
       expect(run.phase).toBe('defeat');
     });
 
     it('ignores battle:ended when not in battle phase', () => {
       const { run, bus } = freshRunWithBus(1);
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       expect(run.phase).toBe('map');
     });
 
@@ -281,7 +282,7 @@ describe('Run', () => {
       });
       const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
 
       const offer = run.currentOffer!;
       expect(offer).not.toBeNull();
@@ -306,7 +307,7 @@ describe('Run', () => {
       let offeredCount = 0;
       bus.on('run:victory', () => victoryCount++);
       bus.on('recruit:offered', () => offeredCount++);
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       expect(run.phase).toBe('complete');
       expect(victoryCount).toBe(1);
       expect(offeredCount).toBe(0);
@@ -330,10 +331,7 @@ describe('Run', () => {
       // Award 5 XP to roster index 2 (a melee unit); it shouldn't be
       // enough to level (xpToNext(1) = LEVELING.baseXp, far more than 5
       // at any sane curve), so the only observable effect is xp bumping.
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 99, rosterIndex: 2, damageDealt: 5, xpGained: 5 }],
-      });
+      winEncounter(bus, [{ unitId: 99, rosterIndex: 2, damageDealt: 5, xpGained: 5 }]);
       expect(run.team[2]!.xp).toBe(5);
       expect(run.team[2]!.level).toBe(1);
       // Other slots untouched.
@@ -347,10 +345,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Award exactly the level-1→2 threshold from the curve so the test
       // stays pinned regardless of `baseXp` / `exponent` tuning.
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }],
-      });
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
       expect(run.team[0]!.level).toBe(2);
       expect(run.team[0]!.xp).toBe(0);
     });
@@ -364,10 +359,7 @@ describe('Run', () => {
       const cost1To2 = xpToNext(1);
       const cost2To3 = xpToNext(2);
       const award = cost1To2 + cost2To3 + 5; // 5 XP leftover after cascading
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: award }],
-      });
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: award }]);
       expect(run.team[0]!.level).toBe(3);
       expect(run.team[0]!.xp).toBe(5);
     });
@@ -379,10 +371,7 @@ describe('Run', () => {
       // Surgically promote slot 0 to one short of cap with massive
       // pending XP — checks the cap-drain branch, not the curve.
       run.team[0] = { ...run.team[0]!, level: 19, xp: 0 };
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 999_999 }],
-      });
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 999_999 }]);
       expect(run.team[0]!.level).toBe(20); // cap
       expect(run.team[0]!.xp).toBe(0);
     });
@@ -392,10 +381,7 @@ describe('Run', () => {
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const xpBefore = run.team.map((t) => t.xp);
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: null, damageDealt: 50, xpGained: 60 }],
-      });
+      winEncounter(bus, [{ unitId: 1, rosterIndex: null, damageDealt: 50, xpGained: 60 }]);
       expect(run.team.map((t) => t.xp)).toEqual(xpBefore);
     });
 
@@ -407,28 +393,26 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(4);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [
-          // Slot 0 fell but still earned XP. `xpGained` here is an
-          // arbitrary World-supplied figure — this test only pins that
-          // Run banks whatever World sent onto the right roster slot,
-          // even for a unit that died. The fallen-XP *formula* itself
-          // (xpFlatPerFallen + xpPerDamage × damage) is pinned, derived
-          // from config, in xp.test.ts.
-          { unitId: 9, rosterIndex: 0, damageDealt: 30, xpGained: 91 },
-        ],
-      });
+      winEncounter(bus, [
+        // Slot 0 fell but still earned XP. `xpGained` here is an arbitrary
+        // World-supplied figure — this test only pins that Run banks whatever
+        // World sent onto the right roster slot, even for a unit that died.
+        // The fallen-XP *formula* itself (xpFlatPerFallen + xpPerDamage ×
+        // damage) is pinned, derived from config, in xp.test.ts.
+        { unitId: 9, rosterIndex: 0, damageDealt: 30, xpGained: 91 },
+      ]);
       expect(run.team[0]!.xp).toBe(91);
     });
 
-    it('ignores xpAwards on enemy-victory (defeat already routes to game over)', () => {
+    it('does not mutate the roster when the run is lost', () => {
       const { run, bus } = freshLvl1RunWithBus(3);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // World emits empty xpAwards on enemy victory; pin that Run
-      // doesn't mutate the roster regardless.
-      bus.emit('battle:ended', { winner: 'enemy', xpAwards: [] });
+      // H4: a losing turn ends the run (player pool emptied) before any pending
+      // XP is banked. (Whether non-empty awards on a losing turn are discarded
+      // is pinned separately in the encounter-loop suite.)
+      loseEncounter(bus);
+      expect(run.phase).toBe('defeat');
       expect(run.team.every((t) => t.xp === 0 && t.level === 1)).toBe(true);
     });
   });
@@ -440,10 +424,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const promotions: number[] = [];
       bus.on('promotion:pending', ({ promotions: p }) => promotions.push(p.length));
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 5 }],
-      });
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 5 }]);
       expect(promotions).toEqual([]);
       // Flow lands directly in recruit phase.
       expect(run.phase).toBe('recruit');
@@ -460,10 +441,7 @@ describe('Run', () => {
         promotions.push(p.map((x) => x.rosterIndex)),
       );
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
-      });
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }]);
       expect(run.phase).toBe('promotion');
       expect(run.pendingPromotions).not.toBeNull();
       expect(run.pendingPromotions).toHaveLength(1);
@@ -483,10 +461,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
-      });
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }]);
       expect(run.phase).toBe('promotion');
       run.dispatch({ kind: 'dismissPromotion' });
       expect(run.phase).toBe('recruit');
@@ -503,10 +478,7 @@ describe('Run', () => {
       let offerCount = 0;
       bus.on('run:victory', () => victoryCount++);
       bus.on('recruit:offered', () => offerCount++);
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
-      });
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }]);
       expect(run.phase).toBe('promotion');
       run.dispatch({ kind: 'dismissPromotion' });
       expect(run.phase).toBe('complete');
@@ -525,13 +497,171 @@ describe('Run', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      bus.emit('battle:ended', {
-        winner: 'player',
-        xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }],
-      });
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }]);
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
       expect(restored.phase).toBe('promotion');
       expect(restored.pendingPromotions).toEqual(run.pendingPromotions);
+    });
+  });
+
+  describe('encounter loop (H4)', () => {
+    it('starts with a full run-wide player pool and no active encounter', () => {
+      const run = new Run(1, new EventBus<GameEvents>());
+      expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
+      expect(run.enemyHealth).toBe(0);
+      expect(run.turnIndex).toBe(0);
+    });
+
+    it('beginEncounter fills the enemy pool + fixes the budget; playerHealth untouched', () => {
+      const { run } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax);
+      expect(run.turnIndex).toBe(0); // no turn resolved yet
+      expect(run.encounterBudget).toBe(enemyBudgetFor(run.team));
+      expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
+    });
+
+    it('a sub-lethal chip continues the encounter; a lethal chip wins it', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const starts: number[] = [];
+      bus.on('battle:started', ({ worldSeed }) => starts.push(worldSeed));
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      expect(starts).toHaveLength(1); // turn 1 spun up
+
+      // A 1-power chip can't empty the pool (max >= 2) → another turn starts.
+      chipTurn(bus, { player: 1, enemy: 0 });
+      expect(run.phase).toBe('battle');
+      expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax - 1);
+      expect(run.turnIndex).toBe(1);
+      expect(starts).toHaveLength(2); // turn 2 spun up
+
+      // A chip >= the remaining pool empties it → encounter won → recruit.
+      chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: 0 });
+      expect(run.enemyHealth).toBe(0);
+      expect(run.phase).toBe('recruit');
+      expect(run.turnIndex).toBe(2);
+      expect(starts).toHaveLength(2); // no turn 3
+    });
+
+    it('the player pool persists across encounters; the enemy pool resets', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: first });
+      // Take 5 to the player pool on a sub-lethal enemy chip (encounter continues).
+      chipTurn(bus, { player: 0, enemy: 5 });
+      expect(run.phase).toBe('battle');
+      expect(run.playerHealth).toBe(HEALTH.playerHealthMax - 5);
+      // Win the encounter, recruit, then enter the next node.
+      winEncounter(bus);
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+      const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: second });
+      expect(run.playerHealth).toBe(HEALTH.playerHealthMax - 5); // carried the wound
+      expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax); // reset for the new encounter
+    });
+
+    it('loses the run when the player pool empties', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      let defeated = 0;
+      bus.on('run:defeated', () => defeated++);
+      chipTurn(bus, { player: 0, enemy: HEALTH.playerHealthMax });
+      expect(run.playerHealth).toBe(0);
+      expect(run.phase).toBe('defeat');
+      expect(defeated).toBe(1);
+    });
+
+    it('a turn that zeroes BOTH pools is a defeat (run-loss precedence)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: HEALTH.playerHealthMax });
+      expect(run.phase).toBe('defeat');
+    });
+
+    it('the max-turns cap terminates an all-mutual-wipe encounter (pristine tie → defeat)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // Every turn chips 0/0; without the cap this would loop forever.
+      for (let i = 0; i < HEALTH.maxTurns; i++) chipTurn(bus, { player: 0, enemy: 0 });
+      expect(run.turnIndex).toBe(HEALTH.maxTurns);
+      // Pristine pools → equal fractions → player loses the tie.
+      expect(run.phase).toBe('defeat');
+    });
+
+    it('the max-turns cap awards the win when the player pool fraction leads', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // Knock the enemy pool down (but not out), then stalemate to the cap.
+      chipTurn(bus, { player: HEALTH.enemyHealthMax - 1, enemy: 0 });
+      expect(run.phase).toBe('battle');
+      while (run.turnIndex < HEALTH.maxTurns) chipTurn(bus, { player: 0, enemy: 0 });
+      // playerFrac (1.0) > enemyFrac (1/max) → encounter won.
+      expect(run.phase).toBe('recruit');
+    });
+
+    it('banks encounter XP ONCE at the end, not per turn', () => {
+      const { run, bus } = freshLvl1RunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      const promotions: number[][] = [];
+      bus.on('promotion:pending', ({ promotions: p }) =>
+        promotions.push(p.map((x) => x.rosterIndex)),
+      );
+
+      // Split exactly one level's XP across two turns; neither half alone crosses.
+      const half1 = Math.floor(xpToNext(1) / 2);
+      const half2 = xpToNext(1) - half1;
+      chipTurn(bus, { player: 1, enemy: 0 }, [
+        { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: half1 },
+      ]);
+      expect(run.phase).toBe('battle');
+      // NOT banked yet — the roster slot is still pristine mid-encounter.
+      expect(run.team[0]!.xp).toBe(0);
+      expect(run.team[0]!.level).toBe(1);
+
+      chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: 0 }, [
+        { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: half2 },
+      ]);
+      // Banked once at encounter end → exactly one level-up, one promotion.
+      expect(run.phase).toBe('promotion');
+      expect(promotions).toEqual([[0]]);
+      expect(run.team[0]!.level).toBe(2);
+      expect(run.team[0]!.xp).toBe(0);
+    });
+
+    it('discards pending encounter XP on defeat', () => {
+      const { run, bus } = freshLvl1RunWithBus(1);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // A big award on the LOSING turn must not bank (the run is over).
+      chipTurn(bus, { player: 0, enemy: HEALTH.playerHealthMax }, [
+        { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) * 5 },
+      ]);
+      expect(run.phase).toBe('defeat');
+      expect(run.team[0]!.level).toBe(1);
+      expect(run.team[0]!.xp).toBe(0);
+    });
+
+    it('round-trips the pools + pending XP mid-encounter', () => {
+      const { run, bus } = freshLvl1RunWithBus(7);
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      chipTurn(bus, { player: 1, enemy: 2 }, [
+        { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 5 },
+      ]);
+      expect(run.phase).toBe('battle'); // mid-encounter
+      const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
+      expect(restored.playerHealth).toBe(run.playerHealth);
+      expect(restored.enemyHealth).toBe(run.enemyHealth);
+      expect(restored.turnIndex).toBe(run.turnIndex);
+      expect(restored.encounterBudget).toBe(run.encounterBudget);
+      expect(restored.pendingEncounterXp).toEqual(run.pendingEncounterXp);
     });
   });
 
@@ -575,7 +705,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.phase).toBe('battle');
       run.dispose();
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       // A live Run would advance to recruit phase here; the disposed one stays.
       expect(run.phase).toBe('battle');
     });
@@ -597,7 +727,7 @@ describe('Run', () => {
 
       // Now end the new run's battle. The old Run is disposed, so its
       // battle:ended handler is gone — only newRun reacts.
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       expect(newRun.phase).toBe('recruit');
       expect(oldRun.phase).toBe('battle'); // unchanged
     });
@@ -618,7 +748,7 @@ describe('Run', () => {
       expect(run.visitedNodes.has(first)).toBe(false);
 
       // Now complete the battle, pick a recruit, and hop to the next node.
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -631,7 +761,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(7);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       const snap = run.toJSON();
@@ -651,7 +781,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(7);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
@@ -680,7 +810,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1);
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -693,7 +823,7 @@ describe('Run', () => {
       const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const before = run.team.length;
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       expect(run.team).toHaveLength(before + 1);
       expect(run.deploymentCounts).toHaveLength(run.team.length);
@@ -829,16 +959,53 @@ describe('Run', () => {
       expect(run.currentEncounter).not.toBeNull();
 
       // And a win at the boss completes the run (existing terminal path).
-      bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+      winEncounter(bus);
       expect(run.phase).toBe('complete');
     });
   });
 });
 
+/**
+ * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
+ * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn
+ * (the common "resolve this node now" case the pre-H4 tests assumed). Any
+ * `xpAwards` bank at encounter end as usual.
+ */
+function winEncounter(
+  bus: EventBus<GameEvents>,
+  xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
+): void {
+  bus.emit('battle:ended', {
+    winner: 'player',
+    xpAwards,
+    survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
+  });
+}
+
+/** H4 — emit a `battle:ended` whose ENEMY survivors chip the player pool by
+ *  `HEALTH.playerHealthMax`, losing the run in this one turn. */
+function loseEncounter(bus: EventBus<GameEvents>): void {
+  bus.emit('battle:ended', {
+    winner: 'enemy',
+    xpAwards: [],
+    survivorPower: { player: 0, enemy: HEALTH.playerHealthMax },
+  });
+}
+
+/** H4 — emit one turn's `battle:ended` with an explicit survivor-power chip
+ *  (and optional XP awards), for multi-turn encounter-loop tests. */
+function chipTurn(
+  bus: EventBus<GameEvents>,
+  survivorPower: { player: number; enemy: number },
+  xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
+): void {
+  bus.emit('battle:ended', { winner: 'draw', xpAwards, survivorPower });
+}
+
 function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
   const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
   run.dispatch({ kind: 'enterNode', nodeId: frontier });
-  bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+  winEncounter(bus);
 }
 
 interface RunHandle {
@@ -940,7 +1107,7 @@ function driveToRestFrontier(
   const restId = path[path.length - 1]!;
   for (let i = 1; i < path.length - 1; i++) {
     run.dispatch({ kind: 'enterNode', nodeId: path[i]! });
-    bus.emit('battle:ended', { winner: 'player', xpAwards: awardsForHop(run, i) });
+    winEncounter(bus, awardsForHop(run, i));
     // A battle whose awards level a unit pauses on promotion first; clear it
     // so we land in the recruit phase (the mandatory post-battle recruit).
     if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });

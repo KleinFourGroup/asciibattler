@@ -26,6 +26,7 @@ import type { GameEvents } from '../../src/core/events';
 import { Run, type BattleEncounter, type RunPhase } from '../../src/run/Run';
 import type { RunConfig } from '../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
+import { HEALTH } from '../../src/config/health';
 
 describe('determinism: world tick replay', () => {
   it('same seed + same initial team → same final unit positions after N ticks', () => {
@@ -158,7 +159,13 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
   if (first === undefined) throw new Error('test setup: root has no outgoing edge');
   run.dispatch({ kind: 'enterNode', nodeId: first });
   encounters.push(run.currentEncounter!);
-  bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+  // H4: the encounter loop ends a node when the enemy pool empties, so chip it
+  // out in one turn (player survivors >= the pool max).
+  bus.emit('battle:ended', {
+    winner: 'player',
+    xpAwards: [],
+    survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
+  });
   // Victory routes through recruit phase. Pick the first offer to get
   // back to 'map' so the second hop is accepted.
   run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
@@ -167,7 +174,13 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
   if (second === undefined) throw new Error('test setup: first frontier has no outgoing edge');
   run.dispatch({ kind: 'enterNode', nodeId: second });
   encounters.push(run.currentEncounter!);
-  bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+  // H4: the encounter loop ends a node when the enemy pool empties, so chip it
+  // out in one turn (player survivors >= the pool max).
+  bus.emit('battle:ended', {
+    winner: 'player',
+    xpAwards: [],
+    survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
+  });
 
   return encounters;
 }
@@ -187,7 +200,13 @@ function driveForcedRun(
   if (next === undefined) throw new Error('test setup: root has no outgoing edge');
   run.dispatch({ kind: 'enterNode', nodeId: next });
   const encounter = run.currentEncounter!;
-  bus.emit('battle:ended', { winner: 'player', xpAwards: [] });
+  // H4: the encounter loop ends a node when the enemy pool empties, so chip it
+  // out in one turn (player survivors >= the pool max).
+  bus.emit('battle:ended', {
+    winner: 'player',
+    xpAwards: [],
+    survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
+  });
   return { phase: run.phase, encounter };
 }
 
@@ -248,7 +267,7 @@ type RecordedEvent =
   | { kind: 'unit:moved'; unitId: number; fx: number; fy: number; tx: number; ty: number }
   | { kind: 'unit:attacked'; attackerId: number; targetId: number; damage: number }
   | { kind: 'unit:died'; unitId: number }
-  | { kind: 'battle:ended'; winner: Team }
+  | { kind: 'battle:ended'; winner: GameEvents['battle:ended']['winner'] }
   // F2 — the phase-boundary stream must be deterministic too. Tapping it
   // here makes the "same seed → same event sequence" test cover it for free.
   | { kind: 'action:phase'; unitId: number; actionId: string; phase: string };

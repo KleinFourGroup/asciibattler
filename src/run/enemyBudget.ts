@@ -42,11 +42,39 @@ export function avgTeamLevel(team: readonly UnitTemplate[]): number {
 }
 
 /**
- * Build the enemy team from a level budget. Genuinely consumes `rng` now
- * (count skew + which units carry the budget remainder), unlike the old
- * deterministic `rollEnemyTeam`.
+ * The enemy level BUDGET — total levels the wave is allowed to spend. Computed
+ * once per *encounter* (H4) and held fixed while the wave composition re-rolls
+ * each turn; pre-H4 it's an inline step of `buildEnemyTeam`. Consumes no `rng`.
  *
- *   budget   = max(minBudget, round(budgetOffset + budgetFactor × playerTeamLevel))
+ *   budget = max(minBudget, round(budgetOffset + budgetFactor × playerTeamLevel))
+ *
+ * Affine handicap: a proportional `factor` scales with the player's level, so
+ * the enemy total stays a fixed fraction of the roster at any depth (a flat
+ * subtraction got swamped late). `round` keeps the budget an integer.
+ */
+export function enemyBudgetFor(team: readonly UnitTemplate[]): number {
+  const { budgetFactor, budgetOffset, minBudget } = DIFFICULTY;
+  return Math.max(minBudget, Math.round(budgetOffset + budgetFactor * playerTeamLevel(team)));
+}
+
+/**
+ * Build a full enemy team in one shot: budget from the roster, then a wave at
+ * that budget. The single-battle entry point (any caller that just wants "an
+ * enemy team for this roster"). H4's encounter loop instead computes the budget
+ * once via `enemyBudgetFor` and re-rolls `rollEnemyWave` per turn.
+ *
+ * Byte-identical to the pre-split version: `enemyBudgetFor` draws no `rng`, so
+ * the `rng` draw order (count skew, then budget remainder) is unchanged.
+ */
+export function buildEnemyTeam(rng: RNG, playerTeam: readonly UnitTemplate[]): UnitTemplate[] {
+  return rollEnemyWave(rng, playerTeam, enemyBudgetFor(playerTeam));
+}
+
+/**
+ * Roll one enemy wave at a GIVEN budget. Genuinely consumes `rng` (count skew +
+ * which units carry the budget remainder), unlike the old deterministic
+ * `rollEnemyTeam`.
+ *
  *   cap      = highestPlayerUnitLevel + unitLevelDelta
  *   minCount = ceil(budget / cap)               (so cap·minCount ≥ budget)
  *   maxCount = min(swarmMaxMultiplier × size, budget)   (guarded ≥ minCount)
@@ -67,19 +95,15 @@ export function avgTeamLevel(team: readonly UnitTemplate[]): number {
  * tiles overflows onto the D5 spawn queue (verified — `checkBattleEnd` treats a
  * queued team as alive).
  */
-export function buildEnemyTeam(rng: RNG, playerTeam: readonly UnitTemplate[]): UnitTemplate[] {
-  const { budgetFactor, budgetOffset, unitLevelDelta, minBudget, swarmBias, swarmMaxMultiplier } =
-    DIFFICULTY;
+export function rollEnemyWave(
+  rng: RNG,
+  playerTeam: readonly UnitTemplate[],
+  budget: number,
+): UnitTemplate[] {
+  const { unitLevelDelta, swarmBias, swarmMaxMultiplier } = DIFFICULTY;
   const size = Math.max(1, playerTeam.length);
   const highest = playerTeam.reduce((m, u) => Math.max(m, u.level), 1);
 
-  // Affine handicap: a proportional `factor` scales with the player's level, so
-  // the enemy total stays a fixed fraction of the roster at any depth (a flat
-  // subtraction got swamped late). `round` keeps the budget an integer.
-  const budget = Math.max(
-    minBudget,
-    Math.round(budgetOffset + budgetFactor * playerTeamLevel(playerTeam)),
-  );
   const cap = highest + unitLevelDelta;
   const minCount = Math.max(1, Math.ceil(budget / cap));
   // Bounded by the budget so the enemy total stays ≈ budget (see above). The

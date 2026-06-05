@@ -756,6 +756,14 @@ export class Run {
    * return to the map silently (Game swaps MapScene on `phase === 'map'`).
    */
   private resolveRest(): void {
+    // H6a — a rest also heals the run-wide player pool (capped at max).
+    // Unconditional + ahead of the XP/promotion branch so a rest that ALSO
+    // levels a unit still heals. Placeholder beside the +XP award until the
+    // real event system reworks both.
+    this.playerHealth = Math.min(
+      HEALTH.playerHealthMax,
+      this.playerHealth + HEALTH.restHealAmount,
+    );
     const awards = this.team.map((_, i) => ({
       unitId: i,
       rosterIndex: i,

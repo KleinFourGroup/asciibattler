@@ -1179,6 +1179,30 @@ describe('Run', () => {
       winEncounter(bus);
       expect(run.phase).toBe('complete');
     });
+
+    it('H6a — heals the run-wide player pool by restHealAmount when wounded', () => {
+      const { run, restId } = driveToRestFrontier({ floorCount: 4 }, 2);
+      // Wound the pool deep enough that the heal can't hit the cap.
+      const before = Math.max(1, HEALTH.playerHealthMax - HEALTH.restHealAmount - 1);
+      run.playerHealth = before;
+
+      run.dispatch({ kind: 'enterNode', nodeId: restId });
+
+      // Balance-proof: expected derives from the knob + the cap, never hardcoded.
+      expect(run.playerHealth).toBe(
+        Math.min(HEALTH.playerHealthMax, before + HEALTH.restHealAmount),
+      );
+    });
+
+    it('H6a — never heals the pool above playerHealthMax', () => {
+      const { run, restId } = driveToRestFrontier({ floorCount: 4 }, 2);
+      // Already full: the heal must clamp, never overfill (robust for any knob).
+      run.playerHealth = HEALTH.playerHealthMax;
+
+      run.dispatch({ kind: 'enterNode', nodeId: restId });
+
+      expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
+    });
   });
 });
 

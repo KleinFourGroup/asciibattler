@@ -9,6 +9,11 @@
  * Each turn, a side's surviving units chip the OPPOSING pool by their Σ`power`
  * (× `chipMultiplier`). Balance-tuned in H6 — these are starting points.
  *
+ * Rest nodes (H6a):
+ * - `restHealAmount`  — how much a rest node heals the run-wide player pool
+ *                       (capped at `playerHealthMax`). Sits beside the G3 rest
+ *                       XP award; a placeholder until the real event system.
+ *
  * Safety / termination:
  * - `maxTurns`        — hard cap on turns per encounter. A run of all-mutual-
  *                       wipe turns chips 0/0 forever; on the cap the encounter
@@ -32,6 +37,7 @@ const HealthSchema = z.object({
   maxTurns: z.number().int().positive(),
   maxTurnSeconds: z.number().positive(),
   chipMultiplier: z.number().nonnegative(),
+  restHealAmount: z.number().int().nonnegative(),
 });
 
 export type HealthConfig = z.infer<typeof HealthSchema>;

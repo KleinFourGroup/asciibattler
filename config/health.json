@@ -3,5 +3,6 @@
   "enemyHealthMax": 8,
   "maxTurns": 20,
   "maxTurnSeconds": 100,
-  "chipMultiplier": 1
+  "chipMultiplier": 1,
+  "restHealAmount": 5
 }

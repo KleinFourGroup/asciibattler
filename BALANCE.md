@@ -192,3 +192,23 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     / full-length (stage 3). rogue/mage/catapult are near-noise (search doesn't value
     them at floor-4 runs).
   - **→ Stage 2:** narrow to budgetFactor 0.5–0.75 × swarmMax 1.5–2.0, medium tier.
+
+- **Stage 2 ✅ — narrowed sweep (2026-06-05).** `budgetFactor 0.5/0.625/0.75 × swarmMax
+  1.5/1.75/2.0`, medium tier (60 vec × 16 train, floor 6), 9 pts, ~36 min. CSV
+  overwrites stage-1's (gitignored; both reproducible at `samplerSeed=1`).
+  - **Win surface** (best%): bF 0.5 → 100/100/81 · 0.625 → 94/75/63 · 0.75 → 81/75/56
+    (cols swarm 1.5/1.75/2.0). **~67% lands at budgetFactor ≈ 0.625–0.70 × swarmMax ≈
+    1.75–2.0.** Finalists bracketing 67%: **(0.625, 2.0)=63% / grad 44pt**; (0.625,
+    1.75)=75% / grad 50pt; **(0.75, 2.0)=56% / grad 56pt** (baselines 0% — steepest).
+  - **Gradient sharpened** to 44–63pt (medium's 16 seeds → 6.25% steps). Gradient PEAKS
+    (62.5pt) at bF 0.5 × swarm 1.75–2.0 where best is still 81–100% — "skill matters
+    most" sits just easier than the 67% point; at the 67% point it's still a healthy
+    ~44–56pt. **This is a real skill gradient, not a foregone conclusion.**
+  - **OP-unit read (floor 6):** melee STILL dominates (dmg ~16–20k vs ranged ~7–9k,
+    ~2.3×; final ~48–57 vs ~32). **Healer signal now EMERGING** — at the harder swarm-2.0
+    points the search keeps healers (healer_final up to 6–7, heal up to 2521, xp 8208),
+    where floor-4 quick runs showed zero. Vindicates the short-run-truncation hypothesis:
+    the healer earns its slot under sustained pressure + longer runs. rogue/mage/catapult
+    still near-noise. → confirm both at FULL length in stage 3.
+  - **→ Stage 3:** heavy tier (120 vec × 30 train, FULL floor-11 runs) on 2 finalists
+    bracketing 67% → full-length OP read → archetype edits (melee nerf direction).

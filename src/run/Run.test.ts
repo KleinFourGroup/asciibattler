@@ -785,6 +785,33 @@ describe('Run', () => {
     });
   });
 
+  describe('passRecruit command (H6b)', () => {
+    it('declines the offer: roster, deck, and deploymentCounts untouched; returns to map', () => {
+      const { run, bus } = freshRunWithBus(1);
+      driveToRecruitPhase(run, bus);
+      const teamBefore = run.team.length;
+      const deployBefore = run.deploymentCounts.length;
+      const drawBefore = run.drawPile.length;
+      const discardBefore = run.discardPile.length;
+
+      run.dispatch({ kind: 'passRecruit' });
+
+      expect(run.phase).toBe('map');
+      expect(run.team).toHaveLength(teamBefore); // no recruit added
+      expect(run.deploymentCounts).toHaveLength(deployBefore); // parallel array unchanged
+      expect(run.drawPile).toHaveLength(drawBefore);
+      expect(run.discardPile).toHaveLength(discardBefore);
+      expect(run.currentOffer).toBeNull();
+    });
+
+    it('ignores passRecruit outside of recruit phase', () => {
+      const { run } = freshRunWithBus(1);
+      const phaseBefore = run.phase; // map — dispatching here is a no-op
+      run.dispatch({ kind: 'passRecruit' });
+      expect(run.phase).toBe(phaseBefore);
+    });
+  });
+
   describe('resetRun command at Run level', () => {
     it('is a silent no-op (Game intercepts reset, not Run)', () => {
       const { run } = freshRunWithBus(1);

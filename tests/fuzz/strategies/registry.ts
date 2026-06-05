@@ -13,10 +13,10 @@
  *   stat:<stat>           (one per STAT_KEYS)        — recruit-priority per stat
  *   path:battle, path:rest                          — path maximizing a node kind
  * H1 added the `power` stat, so `stat:power` now auto-joins the per-stat set via
- * STAT_KEYS (the config-derived menu doing its job). The `pass`/no-recruit
- * strategy variant is still deferred to H6 — it needs a recruit policy that can
- * decline an offer, which the H6 pass option introduces; and H6 is where the
- * balance sweep actually leans on `stat:power`.
+ * STAT_KEYS (the config-derived menu doing its job). H6b added `pass:weak` — a
+ * minimal decline-below-threshold policy that exercises the new `passRecruit`
+ * path; the expressive scorer is still H7a. It's kept OUT of the default sweep
+ * (it returns `null`, the one policy that does) so the baselines are unchanged.
  *
  * `DEFAULT_STRATEGY_NAMES` is the set `npm run fuzz` sweeps when no `--strategy`
  * is given — kept to the two baselines so the default run stays fast; the full
@@ -35,6 +35,7 @@ import {
   balancedArchetype,
   preferArchetype,
   maximizeStat,
+  declineBelowPower,
 } from './policies';
 
 /** Node kinds a path strategy can usefully target. `boss` is the forced
@@ -58,6 +59,9 @@ function buildFactories(): Record<string, () => FuzzStrategy> {
     const name = `path:${kind}`;
     out[name] = () => composeStrategy(name, maximizeKind(kind), randomRecruit);
   }
+  // H6b — the pass/no-recruit proof strategy. Declines offers whose power is
+  // below the threshold (exercising `passRecruit`), else recruits. Opt-in only.
+  out['pass:weak'] = () => composeStrategy('pass:weak', randomNode, declineBelowPower(2));
   return out;
 }
 

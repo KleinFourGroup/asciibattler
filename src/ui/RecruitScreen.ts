@@ -59,6 +59,18 @@ export class RecruitScreen {
     }
     panel.appendChild(cards);
 
+    // H6b — decline the offer. Trial default: always available + free. Leaves
+    // the roster + deck untouched and returns to the map (the deck-dilution
+    // counterplay grows as the roster outpaces the hand).
+    const pass = document.createElement('button');
+    pass.className = 'recruit-pass';
+    pass.textContent = 'Pass';
+    pass.addEventListener('click', () => {
+      this.audio.play('click');
+      this.dispatcher.dispatch({ kind: 'passRecruit' });
+    });
+    panel.appendChild(pass);
+
     return panel;
   }
 

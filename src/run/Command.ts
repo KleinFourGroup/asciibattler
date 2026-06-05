@@ -20,6 +20,13 @@ export type RunCommand =
   | { readonly kind: 'enterNode'; readonly nodeId: number }
   | { readonly kind: 'chooseRecruit'; readonly unitTemplate: UnitTemplate }
   /**
+   * H6b — decline the recruit offer. `chooseRecruit`'s sibling: leaves the
+   * roster + deck untouched and advances `phase='map'`. Trial default is
+   * always-available + free (no cost gate). Reverts to deck dilution — weak
+   * for the first recruit or two, growing as the roster outpaces the hand.
+   */
+  | { readonly kind: 'passRecruit' }
+  /**
    * E4 — dismiss the PromotionScene. Run rolls the recruit offer (or
    * routes to run:victory at terminal) only after this command lands;
    * the pause between battle-end banking and the offer is the scene

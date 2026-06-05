@@ -26,6 +26,7 @@ import {
   preferArchetype,
   maximizeStat,
   maximizeKind,
+  declineBelowPower,
 } from './policies';
 import {
   STRATEGY_NAMES,
@@ -139,14 +140,43 @@ describe('recruit policies', () => {
       expect(offer[idx]!.stats[stat]).toBe(max);
     }
   });
+
+  // H6b — the pass policy. Built with explicit `power` values (config-free) so
+  // it pins the decline-below-threshold MECHANIC, not a balance number.
+  describe('declineBelowPower (pass policy)', () => {
+    const withPower = (p: number): UnitTemplate => ({
+      archetype: 'melee',
+      level: 1,
+      stats: { ...baseStatsForArchetype('melee'), power: p },
+      xp: 0,
+    });
+
+    it('returns null (PASS) when every offer is below the threshold, drawing no RNG', () => {
+      const offer = [withPower(1), withPower(1)];
+      const rng = new RNG(7);
+      const ref = new RNG(7);
+      expect(declineBelowPower(2)(offer, NO_RUN, rng)).toBeNull();
+      expect(rng.toJSON()).toEqual(ref.toJSON()); // pass branch never draws
+    });
+
+    it('picks a qualifying (>= threshold) offer when one exists', () => {
+      const offer = [withPower(1), withPower(3), withPower(1)];
+      for (let seed = 0; seed < 10; seed++) {
+        const idx = declineBelowPower(2)(offer, NO_RUN, new RNG(seed));
+        expect(idx).not.toBeNull();
+        expect(offer[idx!]!.stats.power).toBeGreaterThanOrEqual(2);
+      }
+    });
+  });
 });
 
 // ---- registry -------------------------------------------------------------
 
 describe('strategy registry', () => {
   it('registers the full G5 menu, config-derived', () => {
-    // 2 baselines + one per archetype + one per stat + 2 path kinds.
-    const expected = 2 + ALL_ARCHETYPES.length + STAT_KEYS.length + 2;
+    // 2 baselines + one per archetype + one per stat + 2 path kinds + the H6b
+    // pass strategy.
+    const expected = 2 + ALL_ARCHETYPES.length + STAT_KEYS.length + 2 + 1;
     expect(STRATEGY_NAMES).toHaveLength(expected);
     for (const a of ALL_ARCHETYPES) expect(STRATEGY_NAMES).toContain(`recruit:${a}`);
     for (const s of STAT_KEYS) expect(STRATEGY_NAMES).toContain(`stat:${s}`);
@@ -154,6 +184,7 @@ describe('strategy registry', () => {
     expect(STRATEGY_NAMES).toContain('path:rest');
     expect(STRATEGY_NAMES).toContain('pure-random');
     expect(STRATEGY_NAMES).toContain('greedy');
+    expect(STRATEGY_NAMES).toContain('pass:weak'); // H6b — opt-in only
   });
 
   it('default sweep is the two baselines only', () => {

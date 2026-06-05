@@ -458,6 +458,29 @@ body {
   letter-spacing: 0.04em;
 }
 
+/* H6b — decline-the-offer button. Sits below the cards (panel is a centered
+   flex column); muted relative to the cards so it reads as the secondary
+   choice, with the same fluorescent-blue hover. */
+.recruit-pass {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 28px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  background: #000;
+  color: #ffb000; /* TERMINAL_AMBER */
+  opacity: 0.7;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, opacity 0.1s;
+}
+
+.recruit-pass:hover {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  background: rgba(21, 244, 238, 0.08);
+  opacity: 1;
+}
+
 /* PromotionScreen (E4). Slots between BattleScene and RecruitScene when
    one or more roster units leveled up post-victory. Heading tells the
    player WHAT just happened (the count); cards show the per-stat

@@ -372,6 +372,9 @@ export class Run {
       case 'chooseRecruit':
         this.handleChooseRecruit(command.unitTemplate);
         break;
+      case 'passRecruit':
+        this.handlePassRecruit();
+        break;
       case 'dismissPromotion':
         this.handleDismissPromotion();
         break;
@@ -861,6 +864,17 @@ export class Run {
     // H3 — keep the deployment counter parallel to the roster. A fresh
     // recruit hasn't been deployed in the current encounter yet.
     this.deploymentCounts.push(0);
+    this.currentOffer = null;
+    this.phase = 'map';
+  }
+
+  /**
+   * H6b — decline the offer. `handleChooseRecruit`'s sibling MINUS the
+   * roster/deck mutation: drop the offer and return to the map, leaving the
+   * team (and its parallel `deploymentCounts`) untouched.
+   */
+  private handlePassRecruit(): void {
+    if (this.phase !== 'recruit') return;
     this.currentOffer = null;
     this.phase = 'map';
   }

@@ -180,6 +180,16 @@ export class Game implements RunDispatcher {
           this.swap(new MapScene());
         }
         break;
+      case 'passRecruit':
+        // H6b — declining the offer also lands on 'map' with no event emit,
+        // so swap explicitly (same pattern as chooseRecruit). A non-terminal
+        // recruit is the only phase that reaches here; the terminal floor
+        // routes through run:victory, never the recruit screen.
+        this.run.dispatch(command);
+        if (this.run.phase === 'map') {
+          this.swap(new MapScene());
+        }
+        break;
       case 'dismissPromotion':
         // After a battle win, Run resolves dismiss into either recruit:offered
         // (non-terminal) or run:victory (terminal), both of which fire their

@@ -242,6 +242,12 @@ export function runOne(
       case 'recruit': {
         const offer = run.currentOffer!;
         const idx = strategy.pickRecruit(offer, run, strategyRng);
+        // H6b — `null` means PASS: decline the offer, leave the roster
+        // untouched, and record nothing (only actual recruits are logged).
+        if (idx === null) {
+          run.dispatch({ kind: 'passRecruit' });
+          break;
+        }
         const pick = offer[idx]!;
         run.dispatch({ kind: 'chooseRecruit', unitTemplate: pick });
         recruits.push({

@@ -22,5 +22,10 @@ import type { UnitTemplate } from '../../src/sim/Unit';
 export interface FuzzStrategy {
   readonly name: string;
   pickNextNode(frontier: readonly number[], run: Run, rng: RNG): number;
-  pickRecruit(offer: readonly UnitTemplate[], run: Run, rng: RNG): number;
+  /**
+   * Offer index to recruit, or `null` to PASS (H6b — decline the offer).
+   * The harness dispatches `passRecruit` on `null`. Existing policies never
+   * return `null`, so their draw sequences (and fuzz baselines) are unchanged.
+   */
+  pickRecruit(offer: readonly UnitTemplate[], run: Run, rng: RNG): number | null;
 }

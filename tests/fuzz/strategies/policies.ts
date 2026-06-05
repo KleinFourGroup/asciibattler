@@ -29,8 +29,15 @@ import {
  *  harness aborts the run before calling a policy on an empty frontier). */
 export type NodePolicy = (frontier: readonly number[], run: Run, rng: RNG) => number;
 
-/** Decides which offer index to recruit. `offer` is never empty. */
-export type RecruitPolicy = (offer: readonly UnitTemplate[], run: Run, rng: RNG) => number;
+/** Decides which offer index to recruit, or `null` to PASS (H6b — decline the
+ *  offer). `offer` is never empty. Existing policies always return a `number`;
+ *  only the H6b pass policy returns `null`, so the legacy draw patterns (and
+ *  fuzz baselines) are untouched. */
+export type RecruitPolicy = (
+  offer: readonly UnitTemplate[],
+  run: Run,
+  rng: RNG,
+) => number | null;
 
 /**
  * The base-stat keys, derived from a real archetype's `baseStats` block so the
@@ -128,6 +135,23 @@ export function maximizeStat(stat: keyof UnitStats): RecruitPolicy {
       }
     }
     return ties.length > 1 ? rng.pick(ties) : ties[0]!;
+  };
+}
+
+/**
+ * H6b — a minimal "decline weak offers" policy that PROVES the pass path: if no
+ * offered unit has `power >= minPower`, return `null` (PASS — no RNG draw);
+ * otherwise pick uniformly among the qualifying offers (one draw). The
+ * expressive scorer is H7a — this only needs to exercise `passRecruit` in the
+ * harness across a real run.
+ */
+export function declineBelowPower(minPower: number): RecruitPolicy {
+  return (offer, _run, rng) => {
+    const qualifying: number[] = [];
+    for (let i = 0; i < offer.length; i++) {
+      if (offer[i]!.stats.power >= minPower) qualifying.push(i);
+    }
+    return qualifying.length > 0 ? rng.pick(qualifying) : null;
   };
 }
 

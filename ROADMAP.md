@@ -654,9 +654,16 @@ specced below. **Phase GP is COMPLETE (GP1–GP5).** **Phase H IN PROGRESS — H
 + H2 ✅ + H3 ✅ + H4 ✅ + H5 ✅ shipped (the `power` stat; spawn-tile range;
 deployment counter; the health-pool encounter loop + pre/post-turn screens; the
 card-drawn hand + the `playerTeamLevel` seam swap + the pre-turn hand display —
-see the HANDOFF H1–H5/H5b entries); next is H6 (recruit pass + rest-pool-heal +
-the balance sweep).** The spec below is the as-designed shape, kept for
-reference.
+see the HANDOFF H1–H5/H5b entries).** Next is **H6 — the Phase-H gameplay
+closers** (rest-pool-heal + recruit-pass option + an *inert* fatigue-debuff
+hook), then the new **H7 — search-driven balance tooling** (a linear
+scored-strategy DSL + a random-search harness the long-run balance sweep runs
+on). **H6/H7 reshape locked with the user 2026-06-05:** the original single
+"H6 = recruit pass + rest-heal + balance sweep" card split once the balance work
+grew an expressive fuzz-strategy + parameter-search sub-project — the
+player-facing mechanics stay in H6, the tooling + the *measured* sweep move to
+H7 (see the H6 bullet + the `### H7` block below). The spec below is the
+as-designed shape, kept for reference.
 
 **START with the yield rule (#5)** — GP4 surfaced a concrete, reproducible
 instance of exactly the deadlock it targets: a healer idling on the only
@@ -707,7 +714,7 @@ the browser.
 ## Phase H — Multi-turn battle trial
 
 The brief's explicit *trial* of a scheme, promoted to its own phase: it's
-phase-sized (six commits, a playtest pause between each) and the most
+phase-sized (a sub-step at a time, a playtest pause between each) and the most
 **experimental** work in the plan, so it lands after Phase G's structural
 work has stabilized — with G1's short-run harness + G5's fuzz tooling
 already in place to support it. It layers a meta-combat loop **on top of**
@@ -830,25 +837,41 @@ the first recruit or two (roster ≈ hand), growing as the roster outpaces
   hand ≤ `handSize` = 5; reshuffle on empty); only the hand fights.
   **Swap `playerTeamLevel`** (the G4 seam) → `avgLevel × min(roster,
   handSize)`. Draw variance + deck dilution activate here.
-- **H6 — Recruitment pass, rest-heal, fuzz + balance sweep.** The closer;
-  several threads converge:
-  - **Pass / no-recruit option** in the offer (UI + the pass-option
-    fuzz-strategy variant deferred from G5).
-  - **Rest-node pool heal:** extend G3's rest resolution to also heal the
-    player pool by `restHealAmount` (default **5**, knob; capped at the
-    pool max) — deferred from G3 because the pool isn't born until H4. A
-    placeholder beside the +200 XP (the user flagged the XP+heal combo is
-    probably unbalanced — fine for now; both rework with the real event
-    system).
-  - **`power`-stat fuzz strategy** variant (deferred from G5; needs H1).
-  - **Long-run balance sweep + foregone-conclusion check:** with every
-    system in, sweep the fuzz harness at long-run scale and tune by
-    win-rate feel — `difficulty.json` (budget deltas, swarm bias),
-    `leveling.json` (XP + `xpPerHealing`), the health pools + `power`
-    growth, `recruitBonusExponent`, rest XP/heal. **Measure whether turns
-    are foregone conclusions**; if they are, wire the **fatigue debuff**
-    off H3's counter.
-  - Add the health-pool knobs to G5's GUI launcher.
+- **H6 — Phase-H gameplay closers.** The player-facing finish of the trial:
+  three small mechanics, each its own commit + playtest pause, leaving it
+  **fully playable end-to-end** (balance still rough — that's H7's job). The
+  old single "H6 = recruit pass + rest-heal + fuzz + balance sweep" card was
+  split here (2026-06-05): the *expressive fuzz strategy + parameter search +
+  the measured sweep* grew into their own sub-project → **H7**. The
+  `power`-stat fuzz-strategy thread dissolves (power is just one stat weight in
+  H7's scorer); the launcher health-pool knobs move to H7d.
+  - **H6a — Rest-node pool heal.** Extend G3's `Run.resolveRest` to also heal
+    `playerHealth` by `restHealAmount` (default **5**, knob in
+    `config/health.json`; capped at `playerHealthMax`) — deferred from G3
+    because the pool isn't born until H4. A placeholder beside the +200 XP (the
+    XP+heal combo is probably unbalanced — fine for now; both rework with the
+    real event system).
+  - **H6b — Pass / no-recruit option.** A `passRecruit` command + a
+    RecruitScreen "Pass" button (trial default: **always available + free**;
+    add a cost only if playtest shows passing is too obviously correct).
+    `handleChooseRecruit`'s sibling — leave the roster + deck untouched, advance
+    `phase='map'`. The fuzz interface widens `pickRecruit → number | null`
+    (null = pass) and the harness dispatches `passRecruit` on null; a minimal
+    decline-below-threshold fuzz policy proves the path (the *expressive* scorer
+    is H7a).
+  - **H6c — Fatigue-debuff hook (INERT by default).** Wire the
+    counter→factor→apply path off H3's `deploymentCounts`, shipping it with
+    **no gameplay effect**: a `fatigueFactor(deploymentCount)` driven by a
+    `config/health.json` knob whose default yields **1.0** (neutral). Applied at
+    exactly ONE site — the per-unit `power`-chip contribution to the opposing
+    pool (cleanest Run-side hook; the exact axis the foregone-conclusion problem
+    lives on). A test flips the knob and asserts the chip drops; at the default
+    the chip is unchanged. **Deliberately undecided, pending H7 data:** whether
+    the debuff is even *needed*, and if so its real **shape** (power-chip
+    scaling vs. a stat debuff vs. deploy-eligibility), **curve**, and
+    **magnitude**. H6c lands only the inert plumbing + the chosen application
+    *site*; a different eventual shape (e.g. a stat debuff applied at per-turn
+    spawn) is a known, localized re-wire.
 
 **Settled with the user (across the design rounds):**
 - **No attrition** — fresh-HP skirmishes; variance from fresh waves +
@@ -894,14 +917,131 @@ key test.
   round-trip.
 - H5: draw/hand/discard cycles correctly (reshuffle on empty, hand capped
   at `handSize`); `playerTeamLevel == avgLevel × min(roster, handSize)`.
-- H6: a passed offer leaves the roster unchanged + advances; a rest node
-  heals the pool by `restHealAmount` (capped at max); (if built) the
-  fatigue debuff scales off the deployment count.
+- H6: a passed offer leaves the roster + deck unchanged + advances (H6b); a
+  rest node heals the pool by `restHealAmount`, capped at max (H6a); the inert
+  fatigue hook is a no-op at the default knob but reduces the per-unit
+  power-chip when the knob is flipped in-test (H6c). H7's scorer + search tests
+  live in the `### H7` block.
 - Determinism across a whole multi-turn encounter per seed.
 
 **Heaviest verification phase** — lean on G1's short-run harness to
-iterate encounters fast, and the H6 sweep to balance + measure the
+iterate encounters fast, and the H7 sweep to balance + measure the
 foregone-conclusion rate.
+
+### H7 — Search-driven balance tooling
+
+**The closer's closer.** H6 leaves every Phase-H *mechanism* in place but the
+trial **balance-unmeasured** (fuzz win rate ~100% / avg floor 10 since H4 — the
+no-attrition pools make encounters foregone conclusions). H7 builds the tool to
+*measure and fix* that: an expressive, parameterized fuzz strategy + a random
+search over its parameters, using **best-achievable win rate** as the balance
+signal. Grew out of the H6 "balance sweep" thread when the user pushed for a
+more expressive strategy system (2026-06-05 design round).
+
+**Hard prereqs:** **H6b** (the `passRecruit` mechanic the scored-pass policy
+needs + the `pickRecruit → number | null` interface), the existing G5 fuzz
+harness + registry, **G1** (short-run RunConfig for cheap evals).
+
+**The idea (as locked with the user):** today's fuzz menu is
+*one-axis-at-a-time* (each strategy maximizes one thing, randomizes the rest —
+`stat:power`, `recruit:rogue`, `path:rest`). Replace/augment it with a **linear
+scored strategy** — a weighted sum of normalized features → argmax — that
+expresses path + unit + pass preference **simultaneously**, then **randomly
+search the weight space** to discover strong play. It's deliberately a *linear
+policy optimized by derivative-free search over Monte-Carlo rollout win rate* —
+ML-adjacent but NOT a neural net: the whole value is reading the winning weights
+("the strongest play hoards rogues + passes below-average offers"), which a
+black-box model would obscure. **Interpretability is the deliverable**; the
+upgrade path (feature crosses → still linear; a hidden layer → a real tiny NN;
+CMA-ES/policy-gradient over random search) exists but is explicitly out of
+scope. "More expressive than before, not full expressivity."
+
+**Measured cost basis (2026-06-05):** ~230 ms per full run today (post-H5; the
+50-vs-250-run differencing that backs this out is in the scratchpad), ~13 s
+one-time process startup. Runs are independent → trivially parallel. ~20 weights
+total, and random-search cost is **independent of dimensionality** (you draw N
+vectors regardless) — the cost driver is `vectors × seeds × run-length`, not
+knob count.
+
+**Sub-steps:**
+
+- **H7a — the linear `ScoredStrategy` + JSON config.** Three weighted axes:
+  - **Path** (homogeneous → no normalization): a weight per `NodeKind`
+    (`battle`/`rest`; `boss` is the forced terminal). Pick via **full-path
+    backward DP** — `bestScore(n) = kindWeight(n) + max(bestScore(child))`. All
+    root→terminal paths are the same length (layered DAG, one node per floor),
+    so max-total == max-average — **no long-path bias**; the frontier pick is
+    the child with max `bestScore`.
+  - **Unit** (heterogeneous → **normalize each term over `{offer ∪ roster}`**):
+    archetype **affinity** (flat per-archetype table) + **diversity**
+    (coefficient × current roster count of that archetype — "I like rogues but
+    not a 4th"; generalizes today's `greedy`) + **level** + **per-stat** (incl.
+    `power`) + **total stats**.
+  - **Pass = a virtual candidate** scored on the **continuous terms only**
+    (level + stats; archetype/diversity don't apply to a "roster-average unit",
+    matching the user's design). Pass fires when
+    `Σ w·(normBestCard − normRosterAvg) + passBias < 0`. **Normalize over
+    `{offer ∪ roster}`, NOT min-max-within-offer** — the latter makes every best
+    card score ~1.0 and silently breaks the roster comparison the pass decision
+    needs.
+  - **~20 weights** (2 path + 6 archetype + 1 diversity + 1 level + 8 stat + 1
+    total + 1 pass-bias). **Deterministic tiebreaks (lowest index, zero RNG
+    draws)** so "same weights → same decisions" is trivially true and there's no
+    draw-pattern to baseline. Generalizes the existing parameterized menu
+    (`stat:power` = weights all 0 but power=1). **Leave `pure-random` / `greedy`
+    untouched** (the byte-for-byte baselines + default sweep — do NOT re-express
+    them as scored). Config = `config/fuzz-strategies.json` (A4 zod-validated; a
+    single-vector file is BOTH the CLI input format AND the search's emitted
+    winner). CLI keeps a `--strategy=file.json` (one vector) alongside
+    `--search` (H7b).
+- **H7b — the search driver.** Factored as **propose → evaluate → keep-best** so
+  the proposer is the only swappable part:
+  - **random search** v1: `propose = () => uniformSample(box)` (ignores
+    history); **hill-climb-ready** — a later `propose = (best) =>
+    perturb(best, step)` + greedy accept is a ~15-line add reusing the same
+    `evaluate`, fitness, split, and reporting.
+  - **Fitness = win rate** (the foregone-conclusion axis; configurable later).
+  - **Train/test seed split FROM THE START**: search/select on train seeds, then
+    evaluate only the winner (+ optionally top-K) on **held-out** test seeds —
+    the split is ~1 extra eval (~46 s), and without it the "best" vector
+    memorizes seed luck and the balance signal inflates.
+  - **Seed the sampler** → the whole experiment reproduces.
+  - **Two presets** over one driver: **quick** (≈100 vectors × ~10 seeds × short
+    runs → well under a minute; the "did my change actually move balance?"
+    check) and **overnight/VPS** (≈500 vectors × ~200 seeds × full runs → ~6.4 h
+    single-core, ~50 min on 8 cores; runs are independent so cores divide wall
+    time linearly).
+  - Output: best win rate **+ the winning weight vector** (itself a balance
+    insight), re-runnable as a single-vector JSON.
+- **H7c — the long-run sweep + foregone-conclusion fix.** Run H7b at overnight
+  scale; read **best-achievable** win rate. Tune `difficulty.json` (budget
+  deltas, swarm bias), `leveling.json` (XP, `xpPerHealing`), the health pools +
+  `power` growth, `recruitBonusExponent`, rest XP/heal. **Decide whether the H6c
+  fatigue debuff is needed** — if the *strongest discoverable* play is still
+  ~100%, give the inert H6c hook a real effect **shape + curve + magnitude**
+  (the deferred decision), re-search, confirm the band drops. The metric is
+  whether a balance change moves the strongest discoverable strategy — not just
+  one hand-authored playstyle.
+- **H7d — launcher / VPS niceties.** The G5 GUI launcher gains the health-pool
+  knobs (deferred from G5/H6); a thin wrapper to kick the overnight search on a
+  VPS.
+
+**Shortcomings logged in the design round (acceptable for v1):** a linear sum
+expresses only *monotone* preference (the diversity term is the lone
+roster-aware exception — no "exactly one healer then stop" without more such
+terms); **static weights for the whole run** (can't "hoard early, pass late");
+**path scoring is thin** until nodes carry more than `kind` (~1 real knob,
+rest-vs-battle, today); **level / total-stats / `power` are correlated** so those
+knobs aren't independent levers; **pass-on-roster-average is blind to H5 deck
+dilution** (a leaner deck draws good units more often — the heuristic can't see
+it); and **seed overfitting** (the train/test split is the guard).
+
+**Headless tests (H7):** full-path DP picks the max-score path on a hand-built
+map; scorer normalization is stable + tiebreaks deterministic; pass fires iff
+best-card continuous-score < roster-avg (+bias); a single-vector JSON
+round-trips; the search is reproducible at a fixed sampler seed; the train/test
+split evaluates the winner on the held-out set. Pure logic → **headless-first**
+(the only browser surface is H6b's Pass button).
 
 ---
 

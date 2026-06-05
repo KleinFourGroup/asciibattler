@@ -837,7 +837,18 @@ the first recruit or two (roster ≈ hand), growing as the roster outpaces
   hand ≤ `handSize` = 5; reshuffle on empty); only the hand fights.
   **Swap `playerTeamLevel`** (the G4 seam) → `avgLevel × min(roster,
   handSize)`. Draw variance + deck dilution activate here.
-- **H6 — Phase-H gameplay closers.** The player-facing finish of the trial:
+- **H6 — Phase-H gameplay closers. ✅ SHIPPED 2026-06-05 (3 commits — see
+  HANDOFF.md).** H6a + H6b landed as specced below. **H6c was RE-SCOPED with
+  the user:** instead of the per-unit power-**chip** site described in the H6c
+  bullet, fatigue ships as a **spawn-time** debuff — `Run.beginTurn` bakes
+  `fatigueFactor(priorDeploymentCount)` (`src/run/fatigue.ts`, default rate 0 →
+  factor 1.0, INERT) into a fresh copy of each fielded unit's `power` at the
+  spawn-prep seam, so the debuff rides the unit into battle and flows to the
+  chip via the already-fatigued power (zero chip/World/event change, no
+  snapshot bump). The eventual shape is a stackable "Fatigued" status owned by
+  a future status-effect system. **The H6c bullet's chip-time framing below is
+  SUPERSEDED — kept for the design rationale only.**
+  The player-facing finish of the trial:
   three small mechanics, each its own commit + playtest pause, leaving it
   **fully playable end-to-end** (balance still rough — that's H7's job). The
   old single "H6 = recruit pass + rest-heal + fuzz + balance sweep" card was

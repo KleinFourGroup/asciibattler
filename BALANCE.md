@@ -144,4 +144,23 @@ archetype edits) → stage 4 (leveling) → stage 5 (overnight verify on held-ou
 ### Run log
 _(append per change: what changed → band / gradient / telemetry deltas)_
 
-- _(nothing run yet — tooling not built)_
+- **Step 0 ✅ — tooling built (2026-06-05).** `--balance-sweep` harness + `medium`/
+  `heavy` tiers + per-archetype / pool-chip / XP telemetry — all in `tests/fuzz/`,
+  **zero src change** (baselines + 675-test suite intact; fuzz smoke 58, +18).
+  Telemetry is opt-in + observation-only (per-archetype combat is player-side =
+  the OP-unit question; pool chips two-sided = the confound). The sweep mutates
+  the live `difficulty`/`health`/`leveling` objects per grid point + restores in
+  `finally`. Per point: weight-search (best-achievable) + pure-random/greedy
+  baselines (gradient) + a winner re-run with telemetry on. **Verified e2e:** the
+  locked stage-1 dry-run reproduces the foregone conclusion at its easy corner
+  (budgetFactor 0.25 × swarm 1.0 → 100% / 0pt) and a 2-pt smoke already
+  discriminates (budgetFactor 0.5 → best 75% / grad 38pt; 1.0 → 13% / grad 13pt),
+  the `meanChip` columns flipping player→enemy as it hardens.
+  - **Timing caveat:** the time-estimate-first projects off point 1 = the CHEAPEST
+    corner (smallest swarm); battle cost scales with swarm size, so the real
+    broad-sweep total runs WELL above the point-1 projection. Re-time mid-sweep.
+  - **Discovery:** `rollOffer` draws the FULL `ALL_ARCHETYPES` pool (the
+    "recruit pool = melee/ranged-only" HANDOFF note is E7-era / stale — the Phase-F/G
+    recruitment refactor widened it). So telemetry + the scored search range over
+    all 6 archetypes; **melee already leads damage ~2.5×** (the melee-OP prior,
+    pre-corroborated). Enemies stay melee/ranged-only (`enemyBudget.ts`).

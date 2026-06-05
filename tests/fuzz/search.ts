@@ -91,9 +91,17 @@ export interface SearchPreset {
   readonly floorCount?: number;
 }
 
-export const PRESETS: Record<'quick' | 'overnight', SearchPreset> = {
+export const PRESETS: Record<'quick' | 'medium' | 'heavy' | 'overnight', SearchPreset> = {
   // "Did my change move balance?" — well under a minute (short runs).
   quick: { vectors: 50, trainSeeds: 8, testSeeds: 4, floorCount: 4 },
+  // H7c stage 2 — a narrowed grid homing to the target band. Still short-ish
+  // runs (6 floors) but a wider vector pool + more train seeds than quick, so a
+  // single-config best-achievable read is tighter (~1–2 min/point).
+  medium: { vectors: 60, trainSeeds: 16, testSeeds: 4, floorCount: 6 },
+  // H7c stage 3 — the few finalists, scored at FULL run length (floorCount
+  // omitted) so the short-run inflation quick/medium carry is gone. The
+  // expensive, decision-grade read (~5–10 min/point single-core).
+  heavy: { vectors: 120, trainSeeds: 30, testSeeds: 10 },
   // The real sweep — full-length runs, hours single-core (runs are independent
   // so cores divide wall time linearly).
   overnight: { vectors: 500, trainSeeds: 200, testSeeds: 50 },

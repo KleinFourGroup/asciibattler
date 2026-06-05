@@ -22,6 +22,13 @@
  *   npm run fuzz -- --search --vectors=200 --seeds=40 --sampler-seed=7
  *   # → writes output/best-strategy.json (re-runnable via --strategy=…json) + search-results.csv
  *
+ *   # H7c — balance-sweep a config knob (or a 2-knob grid): best-achievable win
+ *   # rate + skill gradient + per-archetype telemetry at each grid point:
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.25:1.5:6 \
+ *     --knob2=difficulty.swarmMaxMultiplier --range2=1.0:3.0:5 --tier=quick
+ *   npm run fuzz -- --balance-sweep --knob=health.enemyHealthMax --range=8:16:5 --dry-run
+ *   # → writes output/balance-sweep.csv; --dry-run times point 1 + projects, no write
+ *
  * Strategies come from the shared registry (tests/fuzz/strategies/registry.ts);
  * the default sweep is just the two baselines so a no-flag run stays fast — the
  * full parameterized menu is opt-in via `--strategy=NAME` or `--strategy=all`.
@@ -46,6 +53,13 @@ import { scoredStrategy } from './strategies/scored';
 import { loadWeightsFile, serializeWeights } from './strategies/scoredWeights';
 import { runSearch, splitSeeds, presetHarnessOptions, PRESETS, DEFAULT_BOX } from './search';
 import {
+  runBalanceSweep,
+  parseRange,
+  renderSweepCsv,
+  renderSweepTable,
+  type SweepKnob,
+} from './balanceSweep';
+import {
   aggregate,
   renderSummaryCsv,
   renderFailureTrace,
@@ -66,6 +80,14 @@ interface CliArgs {
   vectors?: number;
   seeds?: number;
   samplerSeed?: number;
+  // H7c — balance-sweep mode (`--balance-sweep`).
+  balanceSweep: boolean;
+  knob?: string;
+  range?: string;
+  knob2?: string;
+  range2?: string;
+  tier?: string;
+  dryRun: boolean;
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
@@ -74,6 +96,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
     outDir: defaultOutDir(),
     perFloor: false,
     search: false,
+    balanceSweep: false,
+    dryRun: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -108,6 +132,27 @@ function parseArgs(argv: readonly string[]): CliArgs {
       case '--sampler-seed':
         args.samplerSeed = Number(v);
         break;
+      case '--balance-sweep':
+        args.balanceSweep = true;
+        break;
+      case '--knob':
+        args.knob = v;
+        break;
+      case '--range':
+        args.range = v;
+        break;
+      case '--knob2':
+        args.knob2 = v;
+        break;
+      case '--range2':
+        args.range2 = v;
+        break;
+      case '--tier':
+        args.tier = v;
+        break;
+      case '--dry-run':
+        args.dryRun = true;
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
@@ -134,6 +179,10 @@ function main(): void {
   const args = parseArgs(process.argv.slice(2));
   if (args.search) {
     runSearchCli(args);
+    return;
+  }
+  if (args.balanceSweep) {
+    runBalanceSweepCli(args);
     return;
   }
   const strategies = selectStrategies(args.strategy);
@@ -260,6 +309,81 @@ function runSearchCli(args: CliArgs): void {
   process.stdout.write(`  winning vector → ${bestPath}\n`);
   process.stdout.write(`  re-run it: npm run fuzz -- --strategy=${bestPath}\n\n`);
   process.stdout.write(serializeWeights(result.best.weights));
+}
+
+/**
+ * H7c — `--balance-sweep` mode. Sweep one knob (or a 2-knob grid) and report the
+ * best-achievable win rate + skill gradient + per-archetype telemetry at each
+ * grid point. Times the FIRST point and projects the total before committing
+ * (BALANCE.md) — `--dry-run` stops after that estimate.
+ *
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.25:1.5:6 \
+ *     --knob2=difficulty.swarmMaxMultiplier --range2=1.0:3.0:5 --tier=quick [--dry-run]
+ *
+ * Writes output/balance-sweep.csv (the full per-archetype breakdown) + a compact
+ * stdout table.
+ */
+function runBalanceSweepCli(args: CliArgs): void {
+  if (!args.knob || !args.range) {
+    bail('--balance-sweep needs --knob=group.key and --range=min:max:steps');
+  }
+  if ((args.knob2 && !args.range2) || (!args.knob2 && args.range2)) {
+    bail('--knob2 and --range2 must be given together');
+  }
+  const tierName = args.tier ?? 'quick';
+  const preset = PRESETS[tierName as keyof typeof PRESETS];
+  if (!preset) {
+    bail(`Unknown tier: ${tierName} (choices: ${Object.keys(PRESETS).join(', ')})`);
+  }
+  const samplerSeed = args.samplerSeed ?? 1;
+
+  const knobs: SweepKnob[] = [{ path: args.knob, range: parseRange(args.range) }];
+  if (args.knob2 && args.range2) {
+    knobs.push({ path: args.knob2, range: parseRange(args.range2) });
+  }
+
+  const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
+  process.stdout.write(
+    `Balance sweep: tier=${tierName} grid=${gridSize} point(s) ` +
+      `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
+  );
+
+  const result = runBalanceSweep({
+    knobs,
+    preset,
+    samplerSeed,
+    maxPoints: args.dryRun ? 1 : undefined,
+    onProgress: (index, total, point, elapsedMs) => {
+      const coord = knobs.map((k) => `${k.path}=${point.knobs[k.path]}`).join(' ');
+      process.stdout.write(
+        `  [${index + 1}/${total}] ${coord} → best ${(point.bestTrainWin * 100).toFixed(0)}% ` +
+          `grad ${(point.gradient * 100).toFixed(0)}pt (${fmtDuration(elapsedMs)})\n`,
+      );
+      if (index === 0 && total > 1) {
+        process.stdout.write(
+          `  → projected total ≈ ${fmtDuration(elapsedMs * total)} for ${total} points\n`,
+        );
+      }
+    },
+  });
+
+  process.stdout.write('\n' + renderSweepTable(result));
+
+  if (args.dryRun) {
+    process.stdout.write('\nDry run — estimate only, no CSV written.\n');
+    return;
+  }
+  mkdirSync(args.outDir, { recursive: true });
+  const csvPath = join(args.outDir, 'balance-sweep.csv');
+  writeFileSync(csvPath, renderSweepCsv(result));
+  process.stdout.write(`\nWrote ${result.points.length} point(s) → ${csvPath}\n`);
+}
+
+/** Human-readable ms → "1.2s" / "3.4m". */
+function fmtDuration(ms: number): string {
+  if (ms < 1000) return `${ms.toFixed(0)}ms`;
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${(ms / 60_000).toFixed(1)}m`;
 }
 
 /** Resolve the `--strategy` flag: a `*.json` file path (a scored-strategy weight

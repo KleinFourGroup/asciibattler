@@ -27,6 +27,8 @@ import { Run } from '../../src/run/Run';
 import type { RunConfig } from '../../src/run/RunConfig';
 import { spawnEncounter } from '../../src/sim/battleSetup';
 import type { FuzzStrategy } from './Strategy';
+import { TelemetryAccumulator } from './telemetry';
+import type { RunTelemetry } from './telemetry';
 
 export type RunOutcome = 'complete' | 'defeat' | 'hang' | 'aborted';
 
@@ -66,6 +68,14 @@ export interface RunResult {
   finalTeamSize: number;
   battles: BattleResult[];
   recruits: RecruitChoice[];
+  /**
+   * H7c — per-archetype mechanism telemetry (damage/healing/deaths/picks/
+   * composition + per-turn pool chips + XP). Present ONLY when
+   * `HarnessOptions.telemetry` is set, so the default sweep + the `--search`
+   * hot-path stay lean and the byte-for-byte fuzz baselines are untouched
+   * (a new optional field doesn't alter the existing summary.csv columns).
+   */
+  telemetry?: RunTelemetry;
 }
 
 export interface HarnessOptions {
@@ -88,6 +98,13 @@ export interface HarnessOptions {
    * identifies the run (strategy RNG + `RunResult.seed`).
    */
   readonly runConfig?: RunConfig;
+  /**
+   * H7c — collect per-archetype mechanism telemetry into `RunResult.telemetry`
+   * (opt-in; off by default so the search hot-path pays nothing). Pure
+   * observation — wires extra bus subscribers that only tally, never emit, so
+   * determinism + the fuzz baselines are unaffected.
+   */
+  readonly telemetry?: boolean;
 }
 
 // ≈100s of game time. Authored in seconds and converted via the
@@ -115,6 +132,8 @@ export function runOne(
   const bus = new EventBus<GameEvents>();
   const battles: BattleResult[] = [];
   const recruits: RecruitChoice[] = [];
+  // H7c — opt-in mechanism telemetry. Null (and zero overhead) by default.
+  const telemetry = options.telemetry ? new TelemetryAccumulator() : null;
 
   // Per-battle scratch state. Re-initialized on every battle:started.
   let currentWorld: World | null = null;
@@ -145,18 +164,47 @@ export function runOne(
 
   bus.on('unit:spawned', ({ unitId }) => {
     const unit = currentWorld?.findUnit(unitId);
-    if (unit) unitTeams.set(unitId, unit.team);
+    if (!unit) return;
+    unitTeams.set(unitId, unit.team);
+    // 'environment' neutrals (walls / half-cover) carry no combatant archetype
+    // and never figure in the per-archetype read, so skip them.
+    if (telemetry && unit.archetype !== 'environment') {
+      telemetry.registerUnit(unitId, unit.team, unit.archetype);
+    }
   });
 
   bus.on('unit:died', ({ unitId }) => {
+    telemetry?.recordDeath(unitId);
     if (!currentBattle) return;
     const team = unitTeams.get(unitId);
     if (team === 'player') currentBattle.playerDeaths++;
     else if (team === 'enemy') currentBattle.enemyDeaths++;
   });
 
-  bus.on('battle:ended', ({ winner }) => {
+  // Telemetry-only combat hooks (registered only under the flag so a default
+  // run wires no extra subscribers). XP + the per-turn pool chip ride the
+  // existing `battle:ended` handler below (where `currentBattle.floor` is still
+  // live), so they're order-safe regardless of subscriber registration order.
+  if (telemetry) {
+    bus.on('unit:attacked', ({ attackerId, damage }) => {
+      telemetry.recordAttack(attackerId, damage);
+    });
+    bus.on('unit:healed', ({ healerId, amount }) => {
+      if (healerId !== null) telemetry.recordHeal(healerId, amount);
+    });
+  }
+
+  bus.on('battle:ended', ({ winner, xpAwards, survivorPower }) => {
     if (!currentBattle || !currentWorld) return;
+    // H7c telemetry — recorded here (not in a separate subscriber) so
+    // `currentBattle.floor` is still live: each headless turn is one
+    // battle:started/ended cycle, so `survivorPower` IS this turn's pool chip.
+    if (telemetry) {
+      for (const a of xpAwards) telemetry.recordXp(a.unitId, a.xpGained);
+      if (survivorPower) {
+        telemetry.recordTurnChip(currentBattle.floor, survivorPower.player, survivorPower.enemy);
+      }
+    }
     battles.push({
       floor: currentBattle.floor,
       worldSeed: currentBattle.worldSeed,
@@ -183,14 +231,14 @@ export function runOne(
     if (run.phase === 'defeat' || run.phase === 'complete') break;
 
     if (hops > maxNodeHops) {
-      return aborted(seed, strategy.name, run, battles, recruits, totalTicks);
+      return aborted(seed, strategy.name, run, battles, recruits, totalTicks, telemetry);
     }
 
     switch (run.phase) {
       case 'map': {
         const frontier = computeFrontier(run);
         if (frontier.length === 0) {
-          return aborted(seed, strategy.name, run, battles, recruits, totalTicks);
+          return aborted(seed, strategy.name, run, battles, recruits, totalTicks, telemetry);
         }
         const nodeId = strategy.pickNextNode(frontier, run, strategyRng);
         run.dispatch({ kind: 'enterNode', nodeId });
@@ -226,7 +274,7 @@ export function runOne(
               enemyLevels: currentBattle.enemyLevels,
             });
           }
-          return finalize(seed, strategy.name, 'hang', run, battles, recruits, totalTicks);
+          return finalize(seed, strategy.name, 'hang', run, battles, recruits, totalTicks, telemetry);
         }
         break;
       }
@@ -270,6 +318,7 @@ export function runOne(
     battles,
     recruits,
     totalTicks,
+    telemetry,
   );
 }
 
@@ -302,6 +351,7 @@ function finalize(
   battles: BattleResult[],
   recruits: RecruitChoice[],
   totalTicks: number,
+  telemetry: TelemetryAccumulator | null,
 ): RunResult {
   return {
     seed,
@@ -312,6 +362,13 @@ function finalize(
     finalTeamSize: run.team.length,
     battles,
     recruits,
+    // Fold in the recruit log + final roster composition (player-side, already
+    // tracked) and emit the immutable telemetry. Absent when the flag is off.
+    telemetry:
+      telemetry?.finish(
+        recruits.map((r) => r.archetype),
+        run.team.map((u) => u.archetype),
+      ) ?? undefined,
   };
 }
 
@@ -322,8 +379,9 @@ function aborted(
   battles: BattleResult[],
   recruits: RecruitChoice[],
   totalTicks: number,
+  telemetry: TelemetryAccumulator | null,
 ): RunResult {
-  return finalize(seed, strategyName, 'aborted', run, battles, recruits, totalTicks);
+  return finalize(seed, strategyName, 'aborted', run, battles, recruits, totalTicks, telemetry);
 }
 
 /**

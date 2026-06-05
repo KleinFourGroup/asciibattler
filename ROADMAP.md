@@ -1005,7 +1005,7 @@ knob count.
     single-vector file is BOTH the CLI input format AND the search's emitted
     winner). CLI keeps a `--strategy=file.json` (one vector) alongside
     `--search` (H7b).
-- **H7b — the search driver.** Factored as **propose → evaluate → keep-best** so
+- **H7b — the search driver. ✅ SHIPPED (see HANDOFF.md).** Landed as `tests/fuzz/search.ts` + the `--search` CLI mode (quick/overnight presets, `--vectors`/`--seeds`/`--sampler-seed` overrides; emits `output/best-strategy.json` + `search-results.csv`). Box + presets live in code (experiment knobs, not balance). At the current unbalanced config the best-achievable win rate is still ~100% (the foregone-conclusion ceiling) → that's **H7c's** signal to tune against. Factored as **propose → evaluate → keep-best** so
   the proposer is the only swappable part:
   - **random search** v1: `propose = () => uniformSample(box)` (ignores
     history); **hill-climb-ready** — a later `propose = (best) =>

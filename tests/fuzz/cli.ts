@@ -16,6 +16,12 @@
  *   npm run fuzz -- --strategy=config/fuzz-strategies.json   # a scored-strategy vector from a file
  *   npm run fuzz -- --per-floor   # + per-floor team analysis (stdout + per-floor.csv)
  *
+ *   # H7b — random-search the scored-strategy weights for the best win rate:
+ *   npm run fuzz -- --search                       # quick preset (short runs, < ~1 min)
+ *   npm run fuzz -- --search --preset=overnight    # the real sweep (full runs, hours)
+ *   npm run fuzz -- --search --vectors=200 --seeds=40 --sampler-seed=7
+ *   # → writes output/best-strategy.json (re-runnable via --strategy=…json) + search-results.csv
+ *
  * Strategies come from the shared registry (tests/fuzz/strategies/registry.ts);
  * the default sweep is just the two baselines so a no-flag run stays fast — the
  * full parameterized menu is opt-in via `--strategy=NAME` or `--strategy=all`.
@@ -37,7 +43,8 @@ import {
   STRATEGY_NAMES,
 } from './strategies/registry';
 import { scoredStrategy } from './strategies/scored';
-import { loadWeightsFile } from './strategies/scoredWeights';
+import { loadWeightsFile, serializeWeights } from './strategies/scoredWeights';
+import { runSearch, splitSeeds, presetHarnessOptions, PRESETS, DEFAULT_BOX } from './search';
 import {
   aggregate,
   renderSummaryCsv,
@@ -53,6 +60,12 @@ interface CliArgs {
   strategy?: string;
   outDir: string;
   perFloor: boolean;
+  // H7b — random-search mode (`--search`).
+  search: boolean;
+  preset?: string;
+  vectors?: number;
+  seeds?: number;
+  samplerSeed?: number;
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
@@ -60,6 +73,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     count: 20,
     outDir: defaultOutDir(),
     perFloor: false,
+    search: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -78,6 +92,21 @@ function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--per-floor':
         args.perFloor = true;
+        break;
+      case '--search':
+        args.search = true;
+        break;
+      case '--preset':
+        args.preset = v;
+        break;
+      case '--vectors':
+        args.vectors = Number(v);
+        break;
+      case '--seeds':
+        args.seeds = Number(v);
+        break;
+      case '--sampler-seed':
+        args.samplerSeed = Number(v);
         break;
       default:
         if (raw.startsWith('--')) {
@@ -103,13 +132,22 @@ function defaultOutDir(): string {
 
 function main(): void {
   const args = parseArgs(process.argv.slice(2));
+  if (args.search) {
+    runSearchCli(args);
+    return;
+  }
   const strategies = selectStrategies(args.strategy);
 
   const seeds = args.seed !== undefined ? [args.seed] : range(1, args.count);
 
-  // Fresh output dir so stale failure traces from prior runs don't lie.
-  if (existsSync(args.outDir)) rmSync(args.outDir, { recursive: true, force: true });
-  mkdirSync(join(args.outDir, 'failures'), { recursive: true });
+  // Fresh failures/ dir so stale traces from prior runs don't lie. Only the
+  // failures subdir is wiped (not the whole output dir) so a search's
+  // best-strategy.json / search-results.csv survive a subsequent sweep — in
+  // particular the round-trip `--strategy=output/best-strategy.json` no longer
+  // deletes the very file it just loaded. summary.csv is overwritten below.
+  const failuresDir = join(args.outDir, 'failures');
+  if (existsSync(failuresDir)) rmSync(failuresDir, { recursive: true, force: true });
+  mkdirSync(failuresDir, { recursive: true });
 
   const allResults: RunResult[] = [];
   for (const strategy of strategies) {
@@ -166,6 +204,62 @@ function main(): void {
     process.stdout.write(`  by outcome: ${JSON.stringify(stats.byOutcome)}\n\n`);
   }
   process.stdout.write(`Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`);
+}
+
+/**
+ * H7b — `--search` mode. Random-search the scored-strategy weight space, select
+ * on a train seed set, report the winner's held-out test win rate, and write the
+ * winning vector (re-runnable via `--strategy=<best-strategy.json>`) plus a
+ * per-vector CSV. Presets `quick` (default) / `overnight`; overridable via
+ * `--vectors`, `--seeds` (total, split ~80/20), `--sampler-seed`.
+ */
+function runSearchCli(args: CliArgs): void {
+  const presetName = args.preset ?? 'quick';
+  const preset = PRESETS[presetName as keyof typeof PRESETS];
+  if (!preset) {
+    bail(`Unknown preset: ${presetName} (choices: ${Object.keys(PRESETS).join(', ')})`);
+  }
+  const vectors = args.vectors ?? preset.vectors;
+  const samplerSeed = args.samplerSeed ?? 1;
+  let trainCount = preset.trainSeeds;
+  let testCount = preset.testSeeds;
+  if (args.seeds !== undefined) {
+    trainCount = Math.max(1, Math.round(args.seeds * 0.8));
+    testCount = Math.max(1, args.seeds - trainCount);
+  }
+  const { trainSeeds, testSeeds } = splitSeeds(trainCount, testCount);
+
+  process.stdout.write(
+    `Search: preset=${presetName} vectors=${vectors} ` +
+      `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
+  );
+
+  const result = runSearch({
+    vectors,
+    trainSeeds,
+    testSeeds,
+    samplerSeed,
+    box: DEFAULT_BOX,
+    harnessOptions: presetHarnessOptions(preset),
+  });
+
+  mkdirSync(args.outDir, { recursive: true });
+  const bestPath = join(args.outDir, 'best-strategy.json');
+  writeFileSync(bestPath, serializeWeights(result.best.weights));
+  const csv =
+    ['index,trainWinRate', ...result.trainWinRates.map((w, i) => `${i},${w.toFixed(4)}`)].join(
+      '\n',
+    ) + '\n';
+  writeFileSync(join(args.outDir, 'search-results.csv'), csv);
+
+  process.stdout.write(`\nBest of ${vectors} vectors:\n`);
+  process.stdout.write(`  train win rate: ${(result.best.trainWinRate * 100).toFixed(1)}%\n`);
+  process.stdout.write(
+    `  test  win rate: ${(result.best.testWinRate * 100).toFixed(1)}%  (held-out)\n`,
+  );
+  process.stdout.write(`  winning vector → ${bestPath}\n`);
+  process.stdout.write(`  re-run it: npm run fuzz -- --strategy=${bestPath}\n\n`);
+  process.stdout.write(serializeWeights(result.best.weights));
 }
 
 /** Resolve the `--strategy` flag: a `*.json` file path (a scored-strategy weight

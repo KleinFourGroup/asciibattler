@@ -15,8 +15,9 @@
  * H1 added the `power` stat, so `stat:power` now auto-joins the per-stat set via
  * STAT_KEYS (the config-derived menu doing its job). H6b added `pass:weak` — a
  * minimal decline-below-threshold policy that exercises the new `passRecruit`
- * path; the expressive scorer is still H7a. It's kept OUT of the default sweep
- * (it returns `null`, the one policy that does) so the baselines are unchanged.
+ * path. H7a added `scored` — the expressive linear scored strategy (path + unit
+ * + pass) driven by `config/fuzz-strategies.json`. Both are kept OUT of the
+ * default sweep so the byte-for-byte baselines are unchanged; they join `all`.
  *
  * `DEFAULT_STRATEGY_NAMES` is the set `npm run fuzz` sweeps when no `--strategy`
  * is given — kept to the two baselines so the default run stays fast; the full
@@ -25,10 +26,10 @@
 
 import type { FuzzStrategy } from '../Strategy';
 import { ALL_ARCHETYPES } from '../../../src/sim/archetypes';
-import type { NodeKind } from '../../../src/run/NodeMap';
 import { composeStrategy } from './factory';
 import {
   STAT_KEYS,
+  PATH_KINDS,
   randomNode,
   maximizeKind,
   randomRecruit,
@@ -37,10 +38,8 @@ import {
   maximizeStat,
   declineBelowPower,
 } from './policies';
-
-/** Node kinds a path strategy can usefully target. `boss` is the forced
- *  terminal node (never a frontier choice), so it isn't a strategy. */
-const PATH_KINDS: readonly NodeKind[] = ['battle', 'rest'];
+import { scoredStrategy } from './scored';
+import { DEFAULT_SCORED_WEIGHTS } from './scoredWeights';
 
 function buildFactories(): Record<string, () => FuzzStrategy> {
   const out: Record<string, () => FuzzStrategy> = {
@@ -62,6 +61,12 @@ function buildFactories(): Record<string, () => FuzzStrategy> {
   // H6b — the pass/no-recruit proof strategy. Declines offers whose power is
   // below the threshold (exercising `passRecruit`), else recruits. Opt-in only.
   out['pass:weak'] = () => composeStrategy('pass:weak', randomNode, declineBelowPower(2));
+  // H7a — the linear scored strategy, driven by the default weight vector at
+  // `config/fuzz-strategies.json`. A single expressive strategy (path + unit +
+  // pass) vs the one-axis menu above; H7b's search ranges over its weights. Opt-in
+  // only (kept out of `DEFAULT_STRATEGY_NAMES`, like `pass:weak`). An arbitrary
+  // vector is loadable via `--strategy=<file>.json` (see cli.ts).
+  out['scored'] = () => scoredStrategy('scored', DEFAULT_SCORED_WEIGHTS);
   return out;
 }
 

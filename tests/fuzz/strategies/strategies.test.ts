@@ -175,8 +175,8 @@ describe('recruit policies', () => {
 describe('strategy registry', () => {
   it('registers the full G5 menu, config-derived', () => {
     // 2 baselines + one per archetype + one per stat + 2 path kinds + the H6b
-    // pass strategy.
-    const expected = 2 + ALL_ARCHETYPES.length + STAT_KEYS.length + 2 + 1;
+    // pass strategy + the H7a scored strategy.
+    const expected = 2 + ALL_ARCHETYPES.length + STAT_KEYS.length + 2 + 1 + 1;
     expect(STRATEGY_NAMES).toHaveLength(expected);
     for (const a of ALL_ARCHETYPES) expect(STRATEGY_NAMES).toContain(`recruit:${a}`);
     for (const s of STAT_KEYS) expect(STRATEGY_NAMES).toContain(`stat:${s}`);
@@ -185,6 +185,7 @@ describe('strategy registry', () => {
     expect(STRATEGY_NAMES).toContain('pure-random');
     expect(STRATEGY_NAMES).toContain('greedy');
     expect(STRATEGY_NAMES).toContain('pass:weak'); // H6b — opt-in only
+    expect(STRATEGY_NAMES).toContain('scored'); // H7a — opt-in only
   });
 
   it('default sweep is the two baselines only', () => {

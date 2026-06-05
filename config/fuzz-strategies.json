@@ -1,0 +1,27 @@
+{
+  "path": { "battle": 0, "rest": 0 },
+  "archetype": {
+    "melee": 0,
+    "ranged": 0,
+    "rogue": 0,
+    "healer": 0,
+    "mage": 0,
+    "catapult": 0
+  },
+  "diversity": 0,
+  "level": 0,
+  "stats": {
+    "constitution": 0,
+    "strength": 0,
+    "ranged": 0,
+    "magic": 0,
+    "luck": 0,
+    "agility": 0,
+    "mobility": 0,
+    "defense": 0,
+    "power": 0
+  },
+  "total": 0,
+  "passBias": 0,
+  "temperature": 0
+}

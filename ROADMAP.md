@@ -976,7 +976,7 @@ knob count.
 
 **Sub-steps:**
 
-- **H7a — the linear `ScoredStrategy` + JSON config.** Three weighted axes:
+- **H7a — the linear `ScoredStrategy` + JSON config. ✅ SHIPPED (see HANDOFF.md).** Landed as the `scored` strategy + `config/fuzz-strategies.json`, all in `tests/fuzz/` + `config/` (zero `src/` change → baselines untouched). **Spec drift corrected in-flight:** the "8 stats (7 + power)" below is stale — GP1/GP2 made it **9** (`agility`/`mobility`/`defense`/`power` + the rest), so the vector is **~21 weights**, derived from the live `STAT_KEYS`/`ALL_ARCHETYPES`/`PATH_KINDS` (self-correcting). An inert `selectByScore` `temperature` seam is reserved (default 0 = argmax; softmax/random-tiebreak a future one-flag flip) per the user. Three weighted axes:
   - **Path** (homogeneous → no normalization): a weight per `NodeKind`
     (`battle`/`rest`; `boss` is the forced terminal). Pick via **full-path
     backward DP** — `bestScore(n) = kindWeight(n) + max(bestScore(child))`. All

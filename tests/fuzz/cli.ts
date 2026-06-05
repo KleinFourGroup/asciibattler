@@ -12,6 +12,8 @@
  *   npm run fuzz -- --strategy=greedy        # one named strategy
  *   npm run fuzz -- --strategy=stat:constitution   # any G5 menu entry
  *   npm run fuzz -- --strategy=all           # the whole G5 menu
+ *   npm run fuzz -- --strategy=scored        # the H7a linear scored strategy (default weights)
+ *   npm run fuzz -- --strategy=config/fuzz-strategies.json   # a scored-strategy vector from a file
  *   npm run fuzz -- --per-floor   # + per-floor team analysis (stdout + per-floor.csv)
  *
  * Strategies come from the shared registry (tests/fuzz/strategies/registry.ts);
@@ -23,7 +25,7 @@
  */
 
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runOne } from './harness';
 import type { FuzzStrategy } from './Strategy';
@@ -34,6 +36,8 @@ import {
   makeAllStrategies,
   STRATEGY_NAMES,
 } from './strategies/registry';
+import { scoredStrategy } from './strategies/scored';
+import { loadWeightsFile } from './strategies/scoredWeights';
 import {
   aggregate,
   renderSummaryCsv,
@@ -164,11 +168,15 @@ function main(): void {
   process.stdout.write(`Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`);
 }
 
-/** Resolve the `--strategy` flag: a name, the `all` keyword, or (unset) the
- *  default baseline sweep. Bails loudly on an unknown name. */
+/** Resolve the `--strategy` flag: a `*.json` file path (a scored-strategy weight
+ *  vector — H7a), a registered name, the `all` keyword, or (unset) the default
+ *  baseline sweep. Bails loudly on an unknown name. */
 function selectStrategies(name?: string): FuzzStrategy[] {
   if (name === undefined) return makeDefaultStrategies();
   if (name === 'all') return makeAllStrategies();
+  if (name.endsWith('.json')) {
+    return [scoredStrategy(`scored:${basename(name, '.json')}`, loadWeightsFile(name))];
+  }
   return [
     makeStrategy(name) ??
       bail(`Unknown strategy: ${name} (choices: ${STRATEGY_NAMES.join(', ')}, all)`),

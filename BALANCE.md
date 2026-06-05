@@ -164,3 +164,31 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     recruitment refactor widened it). So telemetry + the scored search range over
     all 6 archetypes; **melee already leads damage ~2.5×** (the melee-OP prior,
     pre-corroborated). Enemies stay melee/ranged-only (`enemyBudget.ts`).
+
+- **Stage 1 ✅ — broad sweep (2026-06-05).** `budgetFactor 0.25→1.5 (×6) × swarmMax
+  1.0→3.0 (×5)`, quick tier, 30 pts, ~17 min single-process. `samplerSeed=1`.
+  CSV: `tests/fuzz/output/balance-sweep.csv` (gitignored).
+  - **Win surface:** a clean diagonal 100%→0%. **budgetFactor is the dominant lever**
+    (≥1.25 ⇒ best 0% everywhere; 0.25 ⇒ 100% everywhere); swarmMax hardens *within* a
+    budget band.
+  - **LEVERAGE DIAGNOSIS (the stage-1 question): budget×swarm IS the lever — NOT the
+    pools.** The surface crosses the ~67% target cleanly and bottoms out at 0% at high
+    budget, so it does NOT plateau-above-band → **no `health.json` fold-in needed for
+    stage 2.** (The pool-ratio confound is visible — `meanChipPlayer` 7.3→0.2,
+    `meanChipEnemy` 0.1→11.7 across the grid — but it's the *effect* of budget/swarm,
+    not an independent lever overpowering them.)
+  - **Target band (best ≈ 67% + steep gradient):** the ridge **budgetFactor 0.5–0.75 ×
+    swarmMax 1.5–2.0**. Standouts: (0.5, 2.0) best 75% / grad 38pt; (0.75, 1.5) best 88%
+    / grad 38pt; (0.75, 2.0) best 50% / grad 38pt. Gradient ridge maxes at 38pt = 3/8
+    (coarse — quick tier's 8 train seeds quantize win rate to 12.5%; stage-2 medium
+    sharpens it).
+  - **OP-unit read:** **melee-OP CONFIRMED** as the damage leader (≈2–2.5× ranged at
+    every point) AND the archetype the search STACKS (melee_final ~24–31 vs ranged ~16).
+    BUT not via invincibility — melee dies plenty (`deathsPerRun` high); it's
+    *damage-per-cost + tanky-enough-to-flood* (the GP2 `defense` prior). **healer-OP NOT
+    corroborated at stage 1** — the search DROPS healers under pressure (healer_heal→0,
+    healer_final→0 at every contested point); healing only shows at the easy corners.
+    Likely a short-run truncation of the healer's compounding value → re-check at heavy
+    / full-length (stage 3). rogue/mage/catapult are near-noise (search doesn't value
+    them at floor-4 runs).
+  - **→ Stage 2:** narrow to budgetFactor 0.5–0.75 × swarmMax 1.5–2.0, medium tier.

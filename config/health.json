@@ -4,5 +4,6 @@
   "maxTurns": 20,
   "maxTurnSeconds": 100,
   "chipMultiplier": 1,
-  "restHealAmount": 5
+  "restHealAmount": 5,
+  "fatiguePerStack": 0
 }

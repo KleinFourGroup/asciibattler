@@ -14,6 +14,16 @@
  *                       (capped at `playerHealthMax`). Sits beside the G3 rest
  *                       XP award; a placeholder until the real event system.
  *
+ * Fatigue (H6c — INERT by default):
+ * - `fatiguePerStack` — the per-stack debuff rate behind `fatigueFactor`. A
+ *                       unit accrues one stack per prior turn it fought THIS
+ *                       encounter (off H3's `deploymentCounts`); the factor
+ *                       scales its power as it's fielded. Default **0** ⇒
+ *                       factor 1.0 ⇒ zero gameplay effect. The real curve /
+ *                       magnitude (and whether a richer status-effect shape
+ *                       replaces the power scale) is H7's call — see
+ *                       `src/run/fatigue.ts`.
+ *
  * Safety / termination:
  * - `maxTurns`        — hard cap on turns per encounter. A run of all-mutual-
  *                       wipe turns chips 0/0 forever; on the cap the encounter
@@ -38,6 +48,7 @@ const HealthSchema = z.object({
   maxTurnSeconds: z.number().positive(),
   chipMultiplier: z.number().nonnegative(),
   restHealAmount: z.number().int().nonnegative(),
+  fatiguePerStack: z.number().nonnegative(),
 });
 
 export type HealthConfig = z.infer<typeof HealthSchema>;

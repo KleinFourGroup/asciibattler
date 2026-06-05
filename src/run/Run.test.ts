@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { Run } from './Run';
+import { fatigueFactor } from './fatigue';
 import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import type { GameEvents } from '../core/events';
@@ -809,6 +810,57 @@ describe('Run', () => {
       const phaseBefore = run.phase; // map — dispatching here is a no-op
       run.dispatch({ kind: 'passRecruit' });
       expect(run.phase).toBe(phaseBefore);
+    });
+  });
+
+  describe('spawn-time fatigue (H6c)', () => {
+    // The integration tests flip the shipped (inert) knob; restore it after
+    // each so they can't pollute the rest of the suite.
+    const originalRate = HEALTH.fatiguePerStack;
+    afterEach(() => {
+      HEALTH.fatiguePerStack = originalRate;
+    });
+
+    /** Power the run fielded for `rosterIndex` in the current turn's encounter. */
+    const fieldedPower = (run: Run, rosterIndex: number): number =>
+      run.currentEncounter!.playerTeam.find((u) => u.rosterIndex === rosterIndex)!.stats.power;
+
+    it('is inert at the shipped knob: fielded power equals the roster base power', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      // Turn 1 (0 stacks): every fielded unit carries its canonical power.
+      for (const u of run.currentEncounter!.playerTeam) {
+        expect(u.stats.power).toBe(run.team[u.rosterIndex!]!.stats.power);
+      }
+      // Turn 2 (1 prior deployment): still unchanged at the default rate 0.
+      chipTurn(bus, { player: 1, enemy: 0 }); // sub-lethal → encounter continues
+      for (const u of run.currentEncounter!.playerTeam) {
+        expect(u.stats.power).toBe(run.team[u.rosterIndex!]!.stats.power);
+      }
+    });
+
+    it('fields a redeployed unit with reduced power once the knob is positive', () => {
+      // rate > 0.5 so even a power-1 unit rounds strictly down at 1 stack.
+      HEALTH.fatiguePerStack = 0.6;
+      const { run, bus } = freshRunWithBus(1);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+
+      const baseP = run.team[0]!.stats.power;
+      expect(fieldedPower(run, 0)).toBe(baseP); // turn 1 = 0 stacks → unchanged
+
+      chipTurn(bus, { player: 1, enemy: 0 }); // → turn 2, 1 prior deployment
+      // Derived from the very factor the production seam applies — no literal.
+      expect(fieldedPower(run, 0)).toBe(Math.round(baseP * fatigueFactor(1)));
+      expect(fieldedPower(run, 0)).toBeLessThan(baseP);
+    });
+
+    it('never mutates the roster canonical stats when fielding a fatigued copy', () => {
+      HEALTH.fatiguePerStack = 0.6;
+      const { run, bus } = freshRunWithBus(1);
+      const baseP = run.team[0]!.stats.power;
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      chipTurn(bus, { player: 1, enemy: 0 });
+      expect(run.team[0]!.stats.power).toBe(baseP); // fatigue hit a copy, not the roster
     });
   });
 

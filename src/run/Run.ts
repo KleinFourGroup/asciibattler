@@ -38,6 +38,7 @@ import { generate as generateNodeMap, type NodeMap, type NodeKind } from './Node
 import type { RunConfig } from './RunConfig';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { enemyBudgetFor, rollEnemyWave, avgTeamLevel } from './enemyBudget';
+import { fatigueFactor } from './fatigue';
 import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
@@ -541,7 +542,21 @@ export class Run {
     // pre-turn screen could show it; here we just field it. Stamp each drawn
     // card with its `Run.team` index so `xpAwards` can carry it back at battle
     // end (the stamp is applied at handoff time, never on `this.team`).
-    const stampedPlayerTeam = this.hand.map((idx) => ({ ...this.team[idx]!, rosterIndex: idx }));
+    //
+    // H6c — spawn-time fatigue: a unit fielded with `deploymentCounts[idx]`
+    // PRIOR deployments this encounter (read here, BEFORE the recordDeployment
+    // bump below, so a debut unit reads 0 stacks) is baked with a fatigue
+    // factor on its `power`. INERT at the shipped knob (factor 1.0). A fresh
+    // `stats` object so `this.team` keeps its canonical, un-fatigued values.
+    const stampedPlayerTeam = this.hand.map((idx) => {
+      const t = this.team[idx]!;
+      const factor = fatigueFactor(this.deploymentCounts[idx]!);
+      return {
+        ...t,
+        rosterIndex: idx,
+        stats: { ...t.stats, power: Math.round(t.stats.power * factor) },
+      };
+    });
     // H3 — record this turn's deployment (the drawn hand). The deployment
     // counter finally varies per turn here (pre-H5 it was the whole roster).
     this.recordDeployment(this.hand);

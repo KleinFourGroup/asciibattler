@@ -27,7 +27,17 @@ import type { HarnessOptions } from './harness';
 import { aggregate } from './reporters';
 import { makeStrategy } from './strategies/registry';
 import { scoredStrategy } from './strategies/scored';
-import { runSearch, splitSeeds, DEFAULT_BOX, type SearchPreset } from './search';
+import {
+  runSearch,
+  generateVectors,
+  assembleSearchResult,
+  harnessEvaluate,
+  splitSeeds,
+  DEFAULT_BOX,
+  type SearchPreset,
+  type SearchResult,
+} from './search';
+import { evaluateVectorsSharded } from './searchShard';
 import { aggregateTelemetry, type AggregatedTelemetry } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
@@ -196,9 +206,22 @@ export interface BalanceSweepConfig {
   readonly rosterOverride?: readonly RosterEntry[];
   /** Stop after this many grid points (the `--dry-run` estimate runs 1). */
   readonly maxPoints?: number;
+  /**
+   * Parallelism for the per-point weight search: fan the vector evaluations out
+   * across this many child processes (`--jobs`). Default 1 = single-process (the
+   * original in-line `runSearch`, byte-identical results). >1 requires `tmpDir`.
+   */
+  readonly jobs?: number;
+  /** Scratch dir for the `--jobs>1` shard job/result files (the CLI points this
+   *  at `<outDir>/shard-tmp`). Unused when `jobs` is 1/undefined. */
+  readonly tmpDir?: string;
   /** Injectable per-point measurement (tests stub it). Default = the real
-   *  search + baselines + telemetry over the preset's seeds. */
-  readonly measurePoint?: (coord: SweepCoord, config: BalanceSweepConfig) => SweepPoint;
+   *  search + baselines + telemetry over the preset's seeds. May be async (the
+   *  default is, once `jobs>1` spawns child processes). */
+  readonly measurePoint?: (
+    coord: SweepCoord,
+    config: BalanceSweepConfig,
+  ) => SweepPoint | Promise<SweepPoint>;
   /** Progress callback after each point (the CLI prints + projects total time). */
   readonly onProgress?: (index: number, total: number, point: SweepPoint, elapsedMs: number) => void;
   /** Injectable clock (defaults to `Date.now`) so timing stays out of the tests. */
@@ -239,19 +262,48 @@ function harnessOptionsFor(
  * telemetry on for the mechanism read. All over the preset's TRAIN seeds (the
  * winner is additionally scored on the held-out TEST seeds inside `runSearch`).
  */
-function defaultMeasurePoint(coord: SweepCoord, config: BalanceSweepConfig): SweepPoint {
+async function defaultMeasurePoint(
+  coord: SweepCoord,
+  config: BalanceSweepConfig,
+): Promise<SweepPoint> {
   const { preset, samplerSeed } = config;
   const { trainSeeds, testSeeds } = splitSeeds(preset.trainSeeds, preset.testSeeds);
   const harnessOptions = harnessOptionsFor(preset, config.floorOverride, config.rosterOverride);
+  const jobs = Math.max(1, Math.floor(config.jobs ?? 1));
 
-  const search = runSearch({
-    vectors: preset.vectors,
-    trainSeeds,
-    testSeeds,
-    samplerSeed,
-    box: DEFAULT_BOX,
-    harnessOptions,
-  });
+  let search: SearchResult;
+  if (jobs > 1) {
+    if (!config.tmpDir) throw new Error('balance-sweep: jobs>1 requires a tmpDir for shard files');
+    // The PARENT generates the vector list (identical to runSearch's proposal),
+    // shards the train-seed evaluation across children, then assembles the result
+    // in-process — the test-seed eval reuses the config this point already applied
+    // to the live objects, so it needs no child of its own.
+    const vectors = generateVectors(DEFAULT_BOX, samplerSeed, preset.vectors);
+    const trainWinRates = await evaluateVectorsSharded({
+      vectors,
+      seeds: trainSeeds,
+      knobs: coord,
+      floorCount: config.floorOverride ?? preset.floorCount,
+      roster: config.rosterOverride,
+      jobs,
+      tmpDir: config.tmpDir,
+    });
+    search = assembleSearchResult(
+      vectors,
+      trainWinRates,
+      (w) => harnessEvaluate(w, testSeeds, harnessOptions),
+      { samplerSeed, trainSeeds, testSeeds, topK: 1 },
+    );
+  } else {
+    search = runSearch({
+      vectors: preset.vectors,
+      trainSeeds,
+      testSeeds,
+      samplerSeed,
+      box: DEFAULT_BOX,
+      harnessOptions,
+    });
+  }
 
   const pureRandomWin = baselineWin('pure-random', trainSeeds, harnessOptions);
   const greedyWin = baselineWin('greedy', trainSeeds, harnessOptions);
@@ -282,7 +334,7 @@ function defaultMeasurePoint(coord: SweepCoord, config: BalanceSweepConfig): Swe
  * config is untouched after the call, even on throw). `maxPoints` truncates the
  * run — the CLI uses `maxPoints:1` for the time-estimate-first dry run.
  */
-export function runBalanceSweep(config: BalanceSweepConfig): SweepResult {
+export async function runBalanceSweep(config: BalanceSweepConfig): Promise<SweepResult> {
   const knobPaths = config.knobs.map((k) => k.path);
   const grid = buildGrid(config.knobs);
   const resolved = config.knobs.map((k) => resolveKnob(k.path));
@@ -297,7 +349,7 @@ export function runBalanceSweep(config: BalanceSweepConfig): SweepResult {
       const coord = grid[i]!;
       for (const r of resolved) r.obj[r.key] = coord[`${r.group}.${r.key}`]!;
       const t0 = now();
-      const point = measure(coord, config);
+      const point = await measure(coord, config);
       points.push(point);
       config.onProgress?.(i, grid.length, point, now() - t0);
     }

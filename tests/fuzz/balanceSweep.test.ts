@@ -96,10 +96,10 @@ describe('resolveKnob', () => {
 });
 
 describe('runBalanceSweep orchestration (injected measurePoint)', () => {
-  it('applies each grid point to the live config, then restores the original', () => {
+  it('applies each grid point to the live config, then restores the original', async () => {
     const original = DIFFICULTY.budgetFactor;
     const seen: number[] = [];
-    const result = runBalanceSweep({
+    const result = await runBalanceSweep({
       knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.2, max: 0.6, steps: 3 } }],
       preset: PRESETS.quick,
       samplerSeed: 1,
@@ -116,9 +116,9 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     expect(DIFFICULTY.budgetFactor).toBe(original);
   });
 
-  it('restores the original even when measurePoint throws', () => {
+  it('restores the original even when measurePoint throws', async () => {
     const original = DIFFICULTY.budgetFactor;
-    expect(() =>
+    await expect(
       runBalanceSweep({
         knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.9, max: 0.9, steps: 1 } }],
         preset: PRESETS.quick,
@@ -127,13 +127,13 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
           throw new Error('boom');
         },
       }),
-    ).toThrow('boom');
+    ).rejects.toThrow('boom');
     expect(DIFFICULTY.budgetFactor).toBe(original);
   });
 
-  it('passes floorOverride through to the measured config', () => {
+  it('passes floorOverride through to the measured config', async () => {
     let seenFloors: number | undefined = -1;
-    runBalanceSweep({
+    await runBalanceSweep({
       knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
       preset: PRESETS.quick, // its own floorCount is 4
       samplerSeed: 1,
@@ -146,9 +146,9 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     expect(seenFloors).toBe(11);
   });
 
-  it('passes rosterOverride through to the measured config', () => {
+  it('passes rosterOverride through to the measured config', async () => {
     let seen: readonly { archetype: string; level: number }[] | undefined;
-    runBalanceSweep({
+    await runBalanceSweep({
       knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
       preset: PRESETS.quick,
       samplerSeed: 1,
@@ -167,8 +167,8 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     ]);
   });
 
-  it('honors maxPoints (the dry-run estimate) while reporting the full grid size', () => {
-    const result = runBalanceSweep({
+  it('honors maxPoints (the dry-run estimate) while reporting the full grid size', async () => {
+    const result = await runBalanceSweep({
       knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0, max: 1, steps: 5 } }],
       preset: PRESETS.quick,
       samplerSeed: 1,

@@ -367,3 +367,47 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     budgetFactor 0.25→1.5 (×6) × swarmMax 1.0→3.0 (×5), quick tier, samplerSeed=1 (the
     stage-1 grid). Best-achievable should RISE now that the search can reach caster comps,
     so the difficulty BAND (currently set 0.625 × 1.75) may shift.
+
+- **Step 2 interim — broad re-sweep + full-length spot-check (2026-06-06).** Both on the
+  fixed schema, samplerSeed=1, quick-tier vectors. THE REFACTOR WORKS — casters are now
+  reachable + survive.
+  - **Broad re-sweep** (stage-1 grid, quick, floor-4): surface rose ~12–25pt at the
+    contested band vs stage-1 — **(0.5,2.0) 75→100, (0.75,2.0) 50→62.5** — *despite* the
+    search now sampling +6 dims with the same 50 vectors (sparser), strong evidence the new
+    policy space holds better play (the predicted "best-achievable rises"). Casters now
+    RECRUITED + FIELDED where stage-1 had them as noise (e.g. (0.5,1.5): mage 16, catapult
+    24 deployments; per-dep they out-damage carries). Healer/rogue still rarely chosen.
+  - **Full-length spot-check** (`--floors=11`, `{0.625,0.75}×{1.75,2.0}`, quick vectors):
+    **the headline — CASTERS SURVIVE THE LENGTH TEST.** At **budget 0.625** the optimal
+    floor-11 comp fields **healer 7 + mage 5** (healer 44 fieldings @ 66 heal/dep); at
+    budget 0.75 it reverts to pure carry. **This OVERTURNS stage 3's "HEALER — OP
+    REJECTED."** That verdict was measured WITH the blind-spot in place (search couldn't
+    build support comps); the healer wasn't valueless, it was **unreachable**. ⇒ **the
+    stage-4 archetype nerfs were tuned under a now-false premise** ("healer under-valued") —
+    revisit them once the heavy read confirms healer's value, BEFORE locking difficulty.
+  - **Caveat (methodology rule):** quick-tier seeds (8 train / 4 test) are too noisy to PIN
+    the band — the train/test gap (0.625×1.75 = 88 train / 50 test) is small-sample overfit;
+    baselines are 0% everywhere (skill-required holds). The band number needs the HEAVY tier
+    (30 train) like stage 3. The robust signal here is structural (caster reachability +
+    survival), not the win-rate level.
+
+- **Parallelism shipped — `--jobs=N` vector-level sharding (2026-06-06).** Built so the
+  decision-grade HEAVY re-read doesn't cost ~70 min single-process (BALANCE.md "Parallelism"
+  — chose vector-level over grid-point so a few-point heavy run uses many cores; child_
+  process, NOT worker_threads, because each grid point MUTATES the live config and children
+  need their own). All in `tests/fuzz/`, **zero src change**; fuzz smoke 74 (+8 pure tests:
+  chunkVectors / generateVectors / assembleSearchResult), typecheck + lint clean.
+  - **Design:** the PARENT generates the deterministic vector list (`generateVectors`,
+    extracted from `runSearch` — which is otherwise UNTOUCHED, protecting its tests), splits
+    it into `min(jobs, vectors)` contiguous chunks, and spawns one `--eval-shard` child per
+    chunk (`node --import tsx cli.ts …` — cross-platform, no npx/.cmd). Each child re-applies
+    the grid point's knobs to ITS live config + evaluates its slice; the parent merges win
+    rates in index order and does the cheap test-eval/baselines/telemetry in-process (its
+    config is already applied). `runBalanceSweep`/`defaultMeasurePoint` went async; `jobs=1`
+    (default) keeps the exact single-process path.
+  - **Determinism PROVEN:** a quick sweep at `--jobs=1` vs `--jobs=4` produced a
+    **byte-identical** `balance-sweep.csv` — `--jobs` changes only wall-clock. ~2.4× at
+    jobs=4 on a tiny 50-vector workload (overhead-bound; the 120-vector heavy tier scales
+    better). Default `jobs=1`; `--jobs` is opt-in so a personal machine isn't saturated.
+  - **→ Next:** run the HEAVY bracket `{0.625,0.75}×{1.75,2.0}` full-length, `--jobs=8`, for
+    the decision-grade band + robust caster-comp / healer-value confirmation.

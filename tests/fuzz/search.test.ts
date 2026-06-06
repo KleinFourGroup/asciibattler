@@ -13,6 +13,8 @@ import { RNG } from '../../src/core/RNG';
 import {
   runSearch,
   sampleWeights,
+  generateVectors,
+  assembleSearchResult,
   splitSeeds,
   DEFAULT_BOX,
   TEST_SEED_OFFSET,
@@ -82,6 +84,47 @@ describe('runSearch keep-best', () => {
     expect(result.best.weights).toEqual(bestVec);
     expect(result.best.trainWinRate).toBe(bestPower);
     expect(result.trainWinRates).toHaveLength(vectors);
+  });
+});
+
+describe('generateVectors (shared deterministic proposal)', () => {
+  it('matches the manual sampleWeights sequence and is reproducible', () => {
+    const a = generateVectors(DEFAULT_BOX, 11, 5);
+    const b = generateVectors(DEFAULT_BOX, 11, 5);
+    expect(a).toHaveLength(5);
+    expect(b).toEqual(a); // same (seed, box, count) → identical list
+
+    const rng = new RNG(11);
+    const manual = Array.from({ length: 5 }, () => sampleWeights(DEFAULT_BOX, rng));
+    expect(a).toEqual(manual); // the parent / shard children re-derive the same vectors
+  });
+});
+
+describe('assembleSearchResult (shared keep-best)', () => {
+  it('picks the max-train winner (lowest-index tie), scores it on test, passes trainWinRates through', () => {
+    const vectors = generateVectors(DEFAULT_BOX, 3, 3);
+    const result = assembleSearchResult(vectors, [0.2, 0.9, 0.5], () => 0.42, {
+      samplerSeed: 3,
+      trainSeeds: [1],
+      testSeeds: [2],
+      topK: 1,
+    });
+    expect(result.best.weights).toEqual(vectors[1]); // 0.9 is the max train fitness
+    expect(result.best.trainWinRate).toBe(0.9);
+    expect(result.best.testWinRate).toBe(0.42); // scoreTest applied to the winner
+    expect(result.trainWinRates).toEqual([0.2, 0.9, 0.5]);
+    expect(result.vectors).toBe(3);
+  });
+
+  it('breaks train-fitness ties toward the lowest index', () => {
+    const vectors = generateVectors(DEFAULT_BOX, 3, 3);
+    const result = assembleSearchResult(vectors, [0.9, 0.9, 0.1], () => 0, {
+      samplerSeed: 3,
+      trainSeeds: [1],
+      testSeeds: [2],
+      topK: 1,
+    });
+    expect(result.best.weights).toEqual(vectors[0]);
   });
 });
 

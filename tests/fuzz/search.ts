@@ -148,12 +148,66 @@ export interface SearchResult {
   readonly trainWinRates: readonly number[];
 }
 
-function harnessEvaluate(
+export function harnessEvaluate(
   weights: ScoredWeights,
   seeds: readonly number[],
   options: HarnessOptions,
 ): number {
   return aggregate(runMany(seeds, scoredStrategy('search-candidate', weights), options)).winRate;
+}
+
+/**
+ * The deterministic proposal step, factored out so the single-process search and
+ * the `--jobs` vector-sharded path (searchShard.ts) generate the SAME vector
+ * sequence from `(samplerSeed, box, count)`. A shard then evaluates a slice of
+ * this list; the parent re-derives it identically, so sharded results are
+ * byte-identical to single-process.
+ */
+export function generateVectors(box: SearchBox, samplerSeed: number, count: number): ScoredWeights[] {
+  const rng = new RNG(samplerSeed);
+  return Array.from({ length: count }, () => sampleWeights(box, rng));
+}
+
+/**
+ * The keep-best step: rank by train fitness desc (lowest index breaks ties so
+ * the result is deterministic), take the top-K, and score each winner on the
+ * held-out test set via `scoreTest`. Shared by `runSearch` (in-process eval) and
+ * the sharded path (children compute trainWinRates, the parent supplies a
+ * `scoreTest` that runs in-process since its config is already applied).
+ */
+export function assembleSearchResult(
+  vectors: readonly ScoredWeights[],
+  trainWinRates: readonly number[],
+  scoreTest: (weights: ScoredWeights) => number,
+  meta: {
+    samplerSeed: number;
+    trainSeeds: readonly number[];
+    testSeeds: readonly number[];
+    topK: number;
+  },
+): SearchResult {
+  const candidates = vectors.map((weights, index) => ({
+    weights,
+    trainWinRate: trainWinRates[index]!,
+    index,
+  }));
+  const ranked = [...candidates].sort(
+    (a, b) => b.trainWinRate - a.trainWinRate || a.index - b.index,
+  );
+  const winners: ScoredCandidate[] = ranked.slice(0, meta.topK).map((c) => ({
+    weights: c.weights,
+    trainWinRate: c.trainWinRate,
+    testWinRate: scoreTest(c.weights),
+  }));
+  return {
+    best: winners[0]!,
+    ranked: winners,
+    samplerSeed: meta.samplerSeed,
+    vectors: vectors.length,
+    trainSeeds: meta.trainSeeds,
+    testSeeds: meta.testSeeds,
+    trainWinRates: candidates.map((c) => c.trainWinRate),
+  };
 }
 
 export function runSearch(config: SearchConfig): SearchResult {
@@ -163,32 +217,12 @@ export function runSearch(config: SearchConfig): SearchResult {
   const evaluate = config.evaluate ?? ((w, seeds) => harnessEvaluate(w, seeds, options));
   const topK = config.topK ?? 1;
 
-  const rng = new RNG(samplerSeed);
-  const candidates: Array<{ weights: ScoredWeights; trainWinRate: number; index: number }> = [];
-  for (let i = 0; i < vectors; i++) {
-    const weights = sampleWeights(box, rng); // propose
-    const trainWinRate = evaluate(weights, trainSeeds); // evaluate
-    candidates.push({ weights, trainWinRate, index: i });
-  }
-
-  // keep-best: rank by train fitness desc; lowest index breaks ties (earliest
-  // proposal wins), so the result is deterministic.
-  const ranked = [...candidates].sort(
-    (a, b) => b.trainWinRate - a.trainWinRate || a.index - b.index,
-  );
-  const winners: ScoredCandidate[] = ranked.slice(0, topK).map((c) => ({
-    weights: c.weights,
-    trainWinRate: c.trainWinRate,
-    testWinRate: evaluate(c.weights, testSeeds), // held-out
-  }));
-
-  return {
-    best: winners[0]!,
-    ranked: winners,
+  const sampled = generateVectors(box, samplerSeed, vectors); // propose
+  const trainWinRates = sampled.map((w) => evaluate(w, trainSeeds)); // evaluate
+  return assembleSearchResult(sampled, trainWinRates, (w) => evaluate(w, testSeeds), {
     samplerSeed,
-    vectors,
     trainSeeds,
     testSeeds,
-    trainWinRates: candidates.map((c) => c.trainWinRate),
-  };
+    topK,
+  });
 }

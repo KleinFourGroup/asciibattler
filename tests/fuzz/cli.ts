@@ -35,6 +35,10 @@
  *   # recruit — read its per-deployment telemetry):
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
  *     --tier=quick --floors=11 --roster=melee,melee,ranged,mage,mage
+ *   # --jobs=N fans each grid point's vector search across N child processes
+ *   # (results are byte-identical to single-process — only wall-clock changes):
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.75:2 \
+ *     --knob2=difficulty.swarmMaxMultiplier --range2=1.75:2.0:2 --tier=heavy --jobs=8
  *
  *   # H7c — re-render a past sweep's CSV as a readable per-point report:
  *   npm run fuzz -- --report                          # output/balance-sweep.csv
@@ -51,9 +55,9 @@
 import { writeFileSync, readFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runOne } from './harness';
+import { runOne, runMany } from './harness';
 import type { FuzzStrategy } from './Strategy';
-import type { RunResult } from './harness';
+import type { RunResult, HarnessOptions } from './harness';
 import {
   makeStrategy,
   makeDefaultStrategies,
@@ -61,17 +65,19 @@ import {
   STRATEGY_NAMES,
 } from './strategies/registry';
 import { scoredStrategy } from './strategies/scored';
-import { loadWeightsFile, serializeWeights } from './strategies/scoredWeights';
+import { loadWeightsFile, serializeWeights, parseWeights } from './strategies/scoredWeights';
 import { runSearch, splitSeeds, PRESETS, DEFAULT_BOX } from './search';
 import {
   runBalanceSweep,
   parseRange,
+  resolveKnob,
   renderSweepCsv,
   renderSweepTable,
   type SweepKnob,
 } from './balanceSweep';
+import type { ShardJob } from './searchShard';
 import { reportFromCsv } from './sweepReport';
-import { parseRunConfig } from '../../src/run/RunConfig';
+import { parseRunConfig, type RosterEntry } from '../../src/run/RunConfig';
 import {
   aggregate,
   renderSummaryCsv,
@@ -103,6 +109,13 @@ interface CliArgs {
   floors?: number;
   roster?: string;
   dryRun: boolean;
+  // H7c parallelism — fan the per-point vector search across N child processes.
+  jobs?: number;
+  // H7c parallelism — internal `--eval-shard` worker mode (a child of a `--jobs`
+  // sweep): evaluate the vectors in `--job=<file>`, write win rates to `--out-file`.
+  evalShard: boolean;
+  job?: string;
+  outFile?: string;
   // H7c — re-render an existing balance-sweep CSV as a readable report.
   report?: string;
 }
@@ -115,6 +128,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     search: false,
     balanceSweep: false,
     dryRun: false,
+    evalShard: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -173,6 +187,18 @@ function parseArgs(argv: readonly string[]): CliArgs {
       case '--roster':
         args.roster = v;
         break;
+      case '--jobs':
+        args.jobs = Number(v);
+        break;
+      case '--eval-shard':
+        args.evalShard = true;
+        break;
+      case '--job':
+        args.job = v;
+        break;
+      case '--out-file':
+        args.outFile = v;
+        break;
       case '--dry-run':
         args.dryRun = true;
         break;
@@ -202,14 +228,18 @@ function defaultOutDir(): string {
   return join(here, 'output');
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
+  if (args.evalShard) {
+    runEvalShardCli(args);
+    return;
+  }
   if (args.search) {
     runSearchCli(args);
     return;
   }
   if (args.balanceSweep) {
-    runBalanceSweepCli(args);
+    await runBalanceSweepCli(args);
     return;
   }
   if (args.report !== undefined) {
@@ -369,7 +399,7 @@ function runSearchCli(args: CliArgs): void {
  * Writes output/balance-sweep.csv (the full per-archetype breakdown) + a compact
  * stdout table.
  */
-function runBalanceSweepCli(args: CliArgs): void {
+async function runBalanceSweepCli(args: CliArgs): Promise<void> {
   if (!args.knob || !args.range) {
     bail('--balance-sweep needs --knob=group.key and --range=min:max:steps');
   }
@@ -394,22 +424,26 @@ function runBalanceSweepCli(args: CliArgs): void {
     ? parseRunConfig(new URLSearchParams({ roster: args.roster })).startingRoster
     : undefined;
 
+  const jobs = args.jobs !== undefined ? Math.max(1, Math.floor(args.jobs)) : 1;
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
   const floorNote = args.floors !== undefined ? ` floors=${args.floors}` : '';
   const rosterNote = rosterOverride
     ? ` roster=[${rosterOverride.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
+  const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName}${floorNote}${rosterNote} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${jobsNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
-  const result = runBalanceSweep({
+  const result = await runBalanceSweep({
     knobs,
     preset,
     samplerSeed,
     floorOverride: args.floors,
     rosterOverride,
+    jobs,
+    tmpDir: join(args.outDir, 'shard-tmp'),
     maxPoints: args.dryRun ? 1 : undefined,
     onProgress: (index, total, point, elapsedMs) => {
       const coord = knobs.map((k) => `${k.path}=${point.knobs[k.path]}`).join(' ');
@@ -441,6 +475,39 @@ function runBalanceSweepCli(args: CliArgs): void {
   writeFileSync(reportPath, reportFromCsv(csv));
   process.stdout.write(`\nWrote ${result.points.length} point(s) → ${csvPath}\n`);
   process.stdout.write(`Readable report → ${reportPath}\n`);
+}
+
+/**
+ * H7c parallelism — the internal `--eval-shard` worker, spawned by a `--jobs`
+ * sweep (searchShard.ts). Reads the job file (the grid point's config-knob
+ * override + a slice of weight vectors + the seeds + resolved run length / forced
+ * roster), RE-APPLIES the knobs to this process's live config (a child shares no
+ * memory with the parent), evaluates each vector's win rate, and writes them to
+ * `--out-file`. Not for direct human use.
+ */
+function runEvalShardCli(args: CliArgs): void {
+  if (!args.job || !args.outFile) {
+    bail('--eval-shard needs --job=<file> and --out-file=<file>');
+  }
+  const job = JSON.parse(readFileSync(args.job, 'utf8')) as ShardJob;
+
+  for (const [path, value] of Object.entries(job.knobs)) {
+    const knob = resolveKnob(path);
+    knob.obj[knob.key] = value;
+  }
+
+  const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
+  if (job.floorCount !== undefined) runConfig.floorCount = job.floorCount;
+  if (job.roster && job.roster.length > 0) runConfig.startingRoster = job.roster;
+  const harnessOptions: HarnessOptions =
+    Object.keys(runConfig).length > 0 ? { runConfig } : {};
+
+  const winRates = job.vectors.map(
+    (w) =>
+      aggregate(runMany(job.seeds, scoredStrategy('eval-shard', parseWeights(w)), harnessOptions))
+        .winRate,
+  );
+  writeFileSync(args.outFile, JSON.stringify({ winRates }));
 }
 
 /**
@@ -494,4 +561,7 @@ function bail(message: string): never {
   process.exit(1);
 }
 
-main();
+main().catch((e: unknown) => {
+  process.stderr.write(`${e instanceof Error ? (e.stack ?? e.message) : String(e)}\n`);
+  process.exit(1);
+});

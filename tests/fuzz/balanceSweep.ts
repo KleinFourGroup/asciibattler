@@ -183,6 +183,15 @@ export interface BalanceSweepConfig {
   readonly knobs: readonly SweepKnob[];
   readonly preset: SearchPreset;
   readonly samplerSeed: number;
+  /**
+   * Override the tier's run length (floor count), decoupling "how many floors"
+   * from "how big a search." Lets us run a CHEAP full-length read — e.g. quick
+   * tier's small vector/seed budget but full 11-floor runs — to catch the
+   * length-sensitive archetype effects that short runs hide (the healer
+   * mid-length artifact), without paying for the whole heavy tier. Undefined =
+   * use the tier's own floorCount.
+   */
+  readonly floorOverride?: number;
   /** Stop after this many grid points (the `--dry-run` estimate runs 1). */
   readonly maxPoints?: number;
   /** Injectable per-point measurement (tests stub it). Default = the real
@@ -207,6 +216,13 @@ function baselineWin(name: string, seeds: readonly number[], opts: HarnessOption
   return aggregate(runMany(seeds, strat, opts)).winRate;
 }
 
+/** Tier's harness options, with an optional floor-count override applied — so
+ *  the search, baselines, and telemetry re-run all share one run length. */
+function harnessOptionsFor(preset: SearchPreset, floorOverride?: number): HarnessOptions {
+  if (floorOverride !== undefined) return { runConfig: { floorCount: floorOverride } };
+  return presetHarnessOptions(preset);
+}
+
 /**
  * The real per-point work: run the weight search for the best-achievable win
  * rate, the two baselines for the gradient, and re-run the winning vector with
@@ -216,7 +232,7 @@ function baselineWin(name: string, seeds: readonly number[], opts: HarnessOption
 function defaultMeasurePoint(coord: SweepCoord, config: BalanceSweepConfig): SweepPoint {
   const { preset, samplerSeed } = config;
   const { trainSeeds, testSeeds } = splitSeeds(preset.trainSeeds, preset.testSeeds);
-  const harnessOptions = presetHarnessOptions(preset);
+  const harnessOptions = harnessOptionsFor(preset, config.floorOverride);
 
   const search = runSearch({
     vectors: preset.vectors,
@@ -298,6 +314,7 @@ const pct = (x: number): string => (x * 100).toFixed(1);
 export function renderSweepCsv(result: SweepResult): string {
   const archCols = ALL_ARCHETYPES.flatMap((a) => [
     `${a}_dmg`,
+    `${a}_dmgTaken`,
     `${a}_deathsPerRun`,
     `${a}_heal`,
     `${a}_xp`,
@@ -320,6 +337,7 @@ export function renderSweepCsv(result: SweepResult): string {
       const t = p.telemetry.perArchetype[a];
       return [
         t.damageDealt.toFixed(1),
+        t.damageTaken.toFixed(1),
         t.deathsPerRun.toFixed(3),
         t.healingDone.toFixed(1),
         t.xpEarned.toFixed(1),

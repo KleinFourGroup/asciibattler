@@ -186,8 +186,9 @@ export function runOne(
   // existing `battle:ended` handler below (where `currentBattle.floor` is still
   // live), so they're order-safe regardless of subscriber registration order.
   if (telemetry) {
-    bus.on('unit:attacked', ({ attackerId, damage }) => {
+    bus.on('unit:attacked', ({ attackerId, targetId, damage }) => {
       telemetry.recordAttack(attackerId, damage);
+      telemetry.recordDamageTaken(targetId, damage);
     });
     bus.on('unit:healed', ({ healerId, amount }) => {
       if (healerId !== null) telemetry.recordHeal(healerId, amount);

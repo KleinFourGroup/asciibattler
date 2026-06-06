@@ -247,3 +247,33 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     `archetypes.json`; (3) leveling pass — melee's 2.4× XP lead compounds, so re-read XP
     flow after the melee nerf before touching `leveling.json`. Specific edit values TBD
     WITH THE USER. Then re-sweep to re-confirm the band + re-baseline tests/fuzz.
+
+- **Step 0.5 ✅ — tooling round 2 + the config-read that decides the nerf (2026-06-06).**
+  Two telemetry/workflow adds (user-selected; per-floor + per-vector-regression DEFERRED
+  as not decision-critical yet), all `tests/fuzz/`, zero src change. fuzz smoke 63 (+5),
+  main 675 unchanged, lint+tsc clean.
+  - **Adds:** (1) **damage-TAKEN per archetype** (the victim side of `unit:attacked`,
+    which is post-`defense` HP lost — env/fire bypasses it — so it's combat HP absorbed
+    net of defense); (2) **`--floors=N`** decoupling (override the tier's run length →
+    cheap FULL-length reads: a band point ran full floor-11 in **1.4 min** on quick
+    tier's budget vs ~18 min on heavy); (3) **`--report[=csv]`** + auto `.report.txt` — a
+    human-readable per-point breakdown (humanized numbers, active-archetypes-only,
+    tolerant of older CSVs missing a column → `—`).
+  - **THE NERF-DECIDING CONFIG READ:** melee & ranged have **IDENTICAL offense** —
+    damage = raw stat − defense (`hpPerConstitution` is **1.0**, not the stale 2.5);
+    melee `strength` 6/0.6 == ranged `ranged` 6/0.6, same crit (luck 3). So melee's
+    2.66× aggregate damage is **NOT raw power** — it's uptime×numbers: HP ratio (con
+    30→30hp vs 18→18hp = **1.67×**) × stacked count (**1.6×**) ≈ 2.66×. **⇒ the nerf axis
+    is SURVIVABILITY, not strength** (cutting strength would push melee BELOW ranged on
+    offense while leaving the tank-flood loop intact).
+  - **Damage-taken CONFIRMS constitution-first:** at the band (full length) melee absorbs
+    **3.0×** ranged's combat damage ≈ its HP-pool×count (2.9×) — i.e. *in proportion to
+    HP, not disproportionately more*. Since damage-absorbed-until-death ≈ maxHp regardless
+    of defense, melee tankiness is fundamentally **constitution**; defense only changes
+    hits-to-kill. **⇒ nerf `melee.constitution` (30, an outlier vs ranged 18 / healer 20 /
+    mage 16) PRIMARY; trim `defense` (4) secondary if swarm-tankiness persists.** Values
+    TBD WITH USER; re-sweep after.
+  - **Methodology rule (from the short-runs-mislead lesson):** trust the difficulty BAND
+    from any tier (win rate shifts ~uniformly with length), but trust the OP/archetype
+    read ONLY at full length (archetype value is non-uniformly length-sensitive — the
+    healer mid-length artifact). `--floors` makes the cheap full-length OP check routine.

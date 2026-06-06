@@ -27,7 +27,14 @@
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.25:1.5:6 \
  *     --knob2=difficulty.swarmMaxMultiplier --range2=1.0:3.0:5 --tier=quick
  *   npm run fuzz -- --balance-sweep --knob=health.enemyHealthMax --range=8:16:5 --dry-run
- *   # → writes output/balance-sweep.csv; --dry-run times point 1 + projects, no write
+ *   # → writes output/balance-sweep.csv (+ .report.txt); --dry-run times point 1, no write
+ *   # --floors=N overrides the tier's run length (cheap FULL-length reads):
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
+ *     --tier=quick --floors=11
+ *
+ *   # H7c — re-render a past sweep's CSV as a readable per-point report:
+ *   npm run fuzz -- --report                          # output/balance-sweep.csv
+ *   npm run fuzz -- --report=output/balance-sweep.csv # any CSV → prints + writes .report.txt
  *
  * Strategies come from the shared registry (tests/fuzz/strategies/registry.ts);
  * the default sweep is just the two baselines so a no-flag run stays fast — the
@@ -37,7 +44,7 @@
  * not a published CLI.
  */
 
-import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runOne } from './harness';
@@ -59,6 +66,7 @@ import {
   renderSweepTable,
   type SweepKnob,
 } from './balanceSweep';
+import { reportFromCsv } from './sweepReport';
 import {
   aggregate,
   renderSummaryCsv,
@@ -87,7 +95,10 @@ interface CliArgs {
   knob2?: string;
   range2?: string;
   tier?: string;
+  floors?: number;
   dryRun: boolean;
+  // H7c — re-render an existing balance-sweep CSV as a readable report.
+  report?: string;
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
@@ -150,8 +161,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
       case '--tier':
         args.tier = v;
         break;
+      case '--floors':
+        args.floors = Number(v);
+        break;
       case '--dry-run':
         args.dryRun = true;
+        break;
+      case '--report':
+        // Empty = default to the sweep's own output dir (resolved in runReportCli).
+        args.report = v ?? '';
         break;
       default:
         if (raw.startsWith('--')) {
@@ -183,6 +201,10 @@ function main(): void {
   }
   if (args.balanceSweep) {
     runBalanceSweepCli(args);
+    return;
+  }
+  if (args.report !== undefined) {
+    runReportCli(args);
     return;
   }
   const strategies = selectStrategies(args.strategy);
@@ -343,8 +365,9 @@ function runBalanceSweepCli(args: CliArgs): void {
   }
 
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
+  const floorNote = args.floors !== undefined ? ` floors=${args.floors}` : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${floorNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -352,6 +375,7 @@ function runBalanceSweepCli(args: CliArgs): void {
     knobs,
     preset,
     samplerSeed,
+    floorOverride: args.floors,
     maxPoints: args.dryRun ? 1 : undefined,
     onProgress: (index, total, point, elapsedMs) => {
       const coord = knobs.map((k) => `${k.path}=${point.knobs[k.path]}`).join(' ');
@@ -375,8 +399,32 @@ function runBalanceSweepCli(args: CliArgs): void {
   }
   mkdirSync(args.outDir, { recursive: true });
   const csvPath = join(args.outDir, 'balance-sweep.csv');
-  writeFileSync(csvPath, renderSweepCsv(result));
+  const csv = renderSweepCsv(result);
+  writeFileSync(csvPath, csv);
+  // The human-readable companion, generated from the just-written CSV so it can
+  // never disagree with it.
+  const reportPath = join(args.outDir, 'balance-sweep.report.txt');
+  writeFileSync(reportPath, reportFromCsv(csv));
   process.stdout.write(`\nWrote ${result.points.length} point(s) → ${csvPath}\n`);
+  process.stdout.write(`Readable report → ${reportPath}\n`);
+}
+
+/**
+ * H7c — `--report[=<csv>]` mode. Re-render any existing balance-sweep CSV as a
+ * readable per-point report (defaults to output/balance-sweep.csv). Prints it
+ * and writes a `.report.txt` sibling. Lets you read a past run's results
+ * (including a heavy run you don't want to recompute) without the raw 40-column
+ * CSV.
+ */
+function runReportCli(args: CliArgs): void {
+  const csvPath = args.report ? args.report : join(args.outDir, 'balance-sweep.csv');
+  if (!existsSync(csvPath)) bail(`--report: no such file: ${csvPath}`);
+  const csv = readFileSync(csvPath, 'utf8');
+  const report = reportFromCsv(csv);
+  process.stdout.write(report);
+  const reportPath = csvPath.replace(/\.csv$/i, '') + '.report.txt';
+  writeFileSync(reportPath, report);
+  process.stdout.write(`\nWrote → ${reportPath}\n`);
 }
 
 /** Human-readable ms → "1.2s" / "3.4m". */

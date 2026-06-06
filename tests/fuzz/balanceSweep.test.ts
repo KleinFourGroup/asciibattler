@@ -131,6 +131,21 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     expect(DIFFICULTY.budgetFactor).toBe(original);
   });
 
+  it('passes floorOverride through to the measured config', () => {
+    let seenFloors: number | undefined = -1;
+    runBalanceSweep({
+      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
+      preset: PRESETS.quick, // its own floorCount is 4
+      samplerSeed: 1,
+      floorOverride: 11,
+      measurePoint: (coord, cfg) => {
+        seenFloors = cfg.floorOverride;
+        return fakePoint(coord);
+      },
+    });
+    expect(seenFloors).toBe(11);
+  });
+
   it('honors maxPoints (the dry-run estimate) while reporting the full grid size', () => {
     const result = runBalanceSweep({
       knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0, max: 1, steps: 5 } }],

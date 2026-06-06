@@ -27,6 +27,8 @@ describe('TelemetryAccumulator', () => {
 
     acc.recordAttack(1, 7); // player melee
     acc.recordAttack(2, 99); // enemy — ignored
+    acc.recordDamageTaken(1, 4); // player melee absorbs a hit
+    acc.recordDamageTaken(2, 50); // enemy absorbs — ignored
     acc.recordHeal(3, 5); // player healer
     acc.recordDeath(1);
     acc.recordXp(1, 40);
@@ -34,6 +36,7 @@ describe('TelemetryAccumulator', () => {
 
     const t = acc.finish(['melee'], ['melee', 'healer']);
     expect(t.perArchetype.melee.damageDealt).toBe(7); // enemy's 99 excluded
+    expect(t.perArchetype.melee.damageTaken).toBe(4); // enemy's 50 excluded
     expect(t.perArchetype.healer.healingDone).toBe(5);
     expect(t.perArchetype.melee.deaths).toBe(1);
     expect(t.perArchetype.melee.xpEarned).toBe(40);
@@ -89,9 +92,11 @@ describe('telemetry integration (real headless run)', () => {
 
     // The run fought at least one turn → at least one pool chip.
     expect(t.poolChips.length).toBeGreaterThan(0);
-    // Combat happened → some player archetype dealt damage.
+    // Combat happened → some player archetype dealt AND took damage.
     const totalDamage = ALL_ARCHETYPES.reduce((s, a) => s + t.perArchetype[a].damageDealt, 0);
     expect(totalDamage).toBeGreaterThan(0);
+    const totalTaken = ALL_ARCHETYPES.reduce((s, a) => s + t.perArchetype[a].damageTaken, 0);
+    expect(totalTaken).toBeGreaterThan(0);
     // Final composition is exactly the roster.
     const totalFinal = ALL_ARCHETYPES.reduce((s, a) => s + t.perArchetype[a].finalCount, 0);
     expect(totalFinal).toBe(res.finalTeamSize);

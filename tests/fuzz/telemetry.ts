@@ -32,6 +32,15 @@ import type { Archetype } from '../../src/sim/archetypes';
 export interface ArchetypeTelemetry {
   /** Σ `unit:attacked` damage dealt by player units of this archetype. */
   damageDealt: number;
+  /**
+   * Σ combat HP LOST by player units of this archetype — the victim side of
+   * `unit:attacked`. The event's `damage` is already post-`defense` mitigation
+   * (`max(minDamage, raw − defense)`), and environmental/fire chip deliberately
+   * bypasses that path, so this is **combat HP absorbed, net of defense** — the
+   * survivability signal that separates "melee is tanky via defense/HP" from
+   * "melee just out-damages." Pairs with `deaths` + the known con/defense stats.
+   */
+  damageTaken: number;
   /** Σ `unit:healed` amount credited to a player healer of this archetype
    *  (ability heals only — `healerId` non-null; tile chip-heals have no caster). */
   healingDone: number;
@@ -68,6 +77,7 @@ interface UnitMeta {
 function emptyArchetypeTelemetry(): ArchetypeTelemetry {
   return {
     damageDealt: 0,
+    damageTaken: 0,
     healingDone: 0,
     deaths: 0,
     recruitPicks: 0,
@@ -108,6 +118,12 @@ export class TelemetryAccumulator {
   recordAttack(attackerId: number, damage: number): void {
     const m = this.meta.get(attackerId);
     if (m?.team === 'player') this.perArchetype[m.archetype].damageDealt += damage;
+  }
+
+  /** The victim side of an attack — `damage` is post-defense actual HP lost. */
+  recordDamageTaken(targetId: number, damage: number): void {
+    const m = this.meta.get(targetId);
+    if (m?.team === 'player') this.perArchetype[m.archetype].damageTaken += damage;
   }
 
   recordHeal(healerId: number, amount: number): void {
@@ -181,6 +197,7 @@ export function aggregateTelemetry(telemetries: readonly RunTelemetry[]): Aggreg
       const dst = perArchetype[a];
       const src = t.perArchetype[a];
       dst.damageDealt += src.damageDealt;
+      dst.damageTaken += src.damageTaken;
       dst.healingDone += src.healingDone;
       dst.deaths += src.deaths;
       dst.recruitPicks += src.recruitPicks;

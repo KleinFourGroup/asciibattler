@@ -27,16 +27,11 @@ import type { HarnessOptions } from './harness';
 import { aggregate } from './reporters';
 import { makeStrategy } from './strategies/registry';
 import { scoredStrategy } from './strategies/scored';
-import {
-  runSearch,
-  splitSeeds,
-  presetHarnessOptions,
-  DEFAULT_BOX,
-  type SearchPreset,
-} from './search';
+import { runSearch, splitSeeds, DEFAULT_BOX, type SearchPreset } from './search';
 import { aggregateTelemetry, type AggregatedTelemetry } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
+import type { RosterEntry } from '../../src/run/RunConfig';
 import { DIFFICULTY } from '../../src/config/difficulty';
 import { HEALTH } from '../../src/config/health';
 import { LEVELING } from '../../src/config/leveling';
@@ -192,6 +187,13 @@ export interface BalanceSweepConfig {
    * use the tier's own floorCount.
    */
   readonly floorOverride?: number;
+  /**
+   * Force the starting roster (archetype + level per slot) for every run at every
+   * grid point. The way to evaluate an archetype the optimizer rarely RECRUITS:
+   * plant it on the roster so it's fielded from floor 1, then read its
+   * per-deployment telemetry. Undefined = the normal rolled starting roster.
+   */
+  readonly rosterOverride?: readonly RosterEntry[];
   /** Stop after this many grid points (the `--dry-run` estimate runs 1). */
   readonly maxPoints?: number;
   /** Injectable per-point measurement (tests stub it). Default = the real
@@ -216,11 +218,19 @@ function baselineWin(name: string, seeds: readonly number[], opts: HarnessOption
   return aggregate(runMany(seeds, strat, opts)).winRate;
 }
 
-/** Tier's harness options, with an optional floor-count override applied — so
- *  the search, baselines, and telemetry re-run all share one run length. */
-function harnessOptionsFor(preset: SearchPreset, floorOverride?: number): HarnessOptions {
-  if (floorOverride !== undefined) return { runConfig: { floorCount: floorOverride } };
-  return presetHarnessOptions(preset);
+/** Tier's harness options, with optional floor-count + starting-roster overrides
+ *  applied — so the search, baselines, and telemetry re-run all share one run
+ *  length and roster. */
+function harnessOptionsFor(
+  preset: SearchPreset,
+  floorOverride?: number,
+  roster?: readonly RosterEntry[],
+): HarnessOptions {
+  const floorCount = floorOverride ?? preset.floorCount;
+  const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
+  if (floorCount !== undefined) runConfig.floorCount = floorCount;
+  if (roster && roster.length > 0) runConfig.startingRoster = roster;
+  return Object.keys(runConfig).length > 0 ? { runConfig } : {};
 }
 
 /**
@@ -232,7 +242,7 @@ function harnessOptionsFor(preset: SearchPreset, floorOverride?: number): Harnes
 function defaultMeasurePoint(coord: SweepCoord, config: BalanceSweepConfig): SweepPoint {
   const { preset, samplerSeed } = config;
   const { trainSeeds, testSeeds } = splitSeeds(preset.trainSeeds, preset.testSeeds);
-  const harnessOptions = harnessOptionsFor(preset, config.floorOverride);
+  const harnessOptions = harnessOptionsFor(preset, config.floorOverride, config.rosterOverride);
 
   const search = runSearch({
     vectors: preset.vectors,
@@ -315,6 +325,7 @@ export function renderSweepCsv(result: SweepResult): string {
   const archCols = ALL_ARCHETYPES.flatMap((a) => [
     `${a}_dmg`,
     `${a}_dmgTaken`,
+    `${a}_deployments`,
     `${a}_deathsPerRun`,
     `${a}_heal`,
     `${a}_xp`,
@@ -338,6 +349,7 @@ export function renderSweepCsv(result: SweepResult): string {
       return [
         t.damageDealt.toFixed(1),
         t.damageTaken.toFixed(1),
+        t.deployments,
         t.deathsPerRun.toFixed(3),
         t.healingDone.toFixed(1),
         t.xpEarned.toFixed(1),

@@ -37,6 +37,10 @@ describe('TelemetryAccumulator', () => {
     const t = acc.finish(['melee'], ['melee', 'healer']);
     expect(t.perArchetype.melee.damageDealt).toBe(7); // enemy's 99 excluded
     expect(t.perArchetype.melee.damageTaken).toBe(4); // enemy's 50 excluded
+    // Deployments count player fieldings only (unit 1 melee, unit 3 healer; the
+    // enemy melee unit 2 is excluded).
+    expect(t.perArchetype.melee.deployments).toBe(1);
+    expect(t.perArchetype.healer.deployments).toBe(1);
     expect(t.perArchetype.healer.healingDone).toBe(5);
     expect(t.perArchetype.melee.deaths).toBe(1);
     expect(t.perArchetype.melee.xpEarned).toBe(40);
@@ -74,6 +78,7 @@ describe('aggregateTelemetry', () => {
     const agg = aggregateTelemetry([mk(10, 1, 2), mk(6, 3, 4)]);
     expect(agg.runs).toBe(2);
     expect(agg.perArchetype.melee.damageDealt).toBe(16);
+    expect(agg.perArchetype.melee.deployments).toBe(2); // one fielding per run
     expect(agg.perArchetype.melee.deaths).toBe(4);
     expect(agg.perArchetype.melee.deathsPerRun).toBe(2); // 4 / 2 runs
     // chips: player {2,4} enemy {3,5} over 2 turns → means 3 and 4.
@@ -97,6 +102,11 @@ describe('telemetry integration (real headless run)', () => {
     expect(totalDamage).toBeGreaterThan(0);
     const totalTaken = ALL_ARCHETYPES.reduce((s, a) => s + t.perArchetype[a].damageTaken, 0);
     expect(totalTaken).toBeGreaterThan(0);
+    // Deployments are tracked → per-deployment normalization is computable for
+    // any archetype that dealt damage (its denominator is non-zero).
+    for (const a of ALL_ARCHETYPES) {
+      if (t.perArchetype[a].damageDealt > 0) expect(t.perArchetype[a].deployments).toBeGreaterThan(0);
+    }
     // Final composition is exactly the roster.
     const totalFinal = ALL_ARCHETYPES.reduce((s, a) => s + t.perArchetype[a].finalCount, 0);
     expect(totalFinal).toBe(res.finalTeamSize);

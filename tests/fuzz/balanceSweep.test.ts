@@ -146,6 +146,27 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     expect(seenFloors).toBe(11);
   });
 
+  it('passes rosterOverride through to the measured config', () => {
+    let seen: readonly { archetype: string; level: number }[] | undefined;
+    runBalanceSweep({
+      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
+      preset: PRESETS.quick,
+      samplerSeed: 1,
+      rosterOverride: [
+        { archetype: 'mage', level: 1 },
+        { archetype: 'melee', level: 3 },
+      ],
+      measurePoint: (coord, cfg) => {
+        seen = cfg.rosterOverride;
+        return fakePoint(coord);
+      },
+    });
+    expect(seen).toEqual([
+      { archetype: 'mage', level: 1 },
+      { archetype: 'melee', level: 3 },
+    ]);
+  });
+
   it('honors maxPoints (the dry-run estimate) while reporting the full grid size', () => {
     const result = runBalanceSweep({
       knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0, max: 1, steps: 5 } }],

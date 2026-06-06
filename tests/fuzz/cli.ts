@@ -31,6 +31,10 @@
  *   # --floors=N overrides the tier's run length (cheap FULL-length reads):
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
  *     --tier=quick --floors=11
+ *   # --roster forces the starting roster (evaluate an archetype the search won't
+ *   # recruit — read its per-deployment telemetry):
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
+ *     --tier=quick --floors=11 --roster=melee,melee,ranged,mage,mage
  *
  *   # H7c — re-render a past sweep's CSV as a readable per-point report:
  *   npm run fuzz -- --report                          # output/balance-sweep.csv
@@ -67,6 +71,7 @@ import {
   type SweepKnob,
 } from './balanceSweep';
 import { reportFromCsv } from './sweepReport';
+import { parseRunConfig } from '../../src/run/RunConfig';
 import {
   aggregate,
   renderSummaryCsv,
@@ -96,6 +101,7 @@ interface CliArgs {
   range2?: string;
   tier?: string;
   floors?: number;
+  roster?: string;
   dryRun: boolean;
   // H7c — re-render an existing balance-sweep CSV as a readable report.
   report?: string;
@@ -163,6 +169,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--floors':
         args.floors = Number(v);
+        break;
+      case '--roster':
+        args.roster = v;
         break;
       case '--dry-run':
         args.dryRun = true;
@@ -364,10 +373,19 @@ function runBalanceSweepCli(args: CliArgs): void {
     knobs.push({ path: args.knob2, range: parseRange(args.range2) });
   }
 
+  // --roster=archetype[:level],... → a forced starting roster (reuses RunConfig's
+  // validated parser: invalid tokens dropped, :level optional, clamped to cap).
+  const rosterOverride = args.roster
+    ? parseRunConfig(new URLSearchParams({ roster: args.roster })).startingRoster
+    : undefined;
+
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
   const floorNote = args.floors !== undefined ? ` floors=${args.floors}` : '';
+  const rosterNote = rosterOverride
+    ? ` roster=[${rosterOverride.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
+    : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName}${floorNote} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${floorNote}${rosterNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -376,6 +394,7 @@ function runBalanceSweepCli(args: CliArgs): void {
     preset,
     samplerSeed,
     floorOverride: args.floors,
+    rosterOverride,
     maxPoints: args.dryRun ? 1 : undefined,
     onProgress: (index, total, point, elapsedMs) => {
       const coord = knobs.map((k) => `${k.path}=${point.knobs[k.path]}`).join(' ');

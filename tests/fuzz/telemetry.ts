@@ -44,6 +44,15 @@ export interface ArchetypeTelemetry {
   /** Σ `unit:healed` amount credited to a player healer of this archetype
    *  (ability heals only — `healerId` non-null; tile chip-heals have no caster). */
   healingDone: number;
+  /**
+   * Times a player unit of this archetype was FIELDED — one per spawn, across
+   * every turn (incl. mid-battle overflow spawns). The true denominator for
+   * "per-unit" reads: aggregate damage/heal conflate per-unit power with how
+   * many got deployed, so `damageDealt / deployments` is the honest per-fielding
+   * number — and it's the ONLY way to read an archetype the optimizer rarely
+   * fields (force it onto the roster, then read its per-deployment output).
+   */
+  deployments: number;
   /** Player units of this archetype that died across the run. */
   deaths: number;
   /** Times this archetype was recruited (from the run's recruit log). */
@@ -79,6 +88,7 @@ function emptyArchetypeTelemetry(): ArchetypeTelemetry {
     damageDealt: 0,
     damageTaken: 0,
     healingDone: 0,
+    deployments: 0,
     deaths: 0,
     recruitPicks: 0,
     finalCount: 0,
@@ -113,6 +123,8 @@ export class TelemetryAccumulator {
    *  real combatant archetype. */
   registerUnit(unitId: number, team: Team, archetype: Archetype): void {
     this.meta.set(unitId, { team, archetype });
+    // Each player spawn IS a deployment (a fielding) — the per-unit denominator.
+    if (team === 'player') this.perArchetype[archetype].deployments += 1;
   }
 
   recordAttack(attackerId: number, damage: number): void {
@@ -199,6 +211,7 @@ export function aggregateTelemetry(telemetries: readonly RunTelemetry[]): Aggreg
       dst.damageDealt += src.damageDealt;
       dst.damageTaken += src.damageTaken;
       dst.healingDone += src.healingDone;
+      dst.deployments += src.deployments;
       dst.deaths += src.deaths;
       dst.recruitPicks += src.recruitPicks;
       dst.finalCount += src.finalCount;

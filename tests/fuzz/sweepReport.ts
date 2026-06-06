@@ -18,7 +18,7 @@ import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import type { Archetype } from '../../src/sim/archetypes';
 
 /** The per-archetype fields the report knows how to pull, by CSV suffix. */
-const ARCH_FIELDS = ['dmg', 'dmgTaken', 'deathsPerRun', 'heal', 'xp', 'final'] as const;
+const ARCH_FIELDS = ['dmg', 'dmgTaken', 'deployments', 'deathsPerRun', 'heal', 'xp', 'final'] as const;
 type ArchField = (typeof ARCH_FIELDS)[number];
 
 const FIXED_METRICS = [
@@ -104,21 +104,43 @@ const pct = (x: number | undefined): string => (x === undefined ? '—' : `${Mat
 const f1 = (x: number | undefined): string => (x === undefined ? '—' : x.toFixed(1));
 const f2 = (x: number | undefined): string => (x === undefined ? '—' : x.toFixed(2));
 const int = (x: number | undefined): string => (x === undefined ? '—' : String(Math.round(x)));
+/** Per-deployment magnitudes are small-ish (hundreds down to fractions): round
+ *  above 100, one decimal below. */
+const compact = (x: number | undefined): string =>
+  x === undefined ? '—' : Math.abs(x) >= 100 ? String(Math.round(x)) : x.toFixed(1);
 
 // ── rendering ─────────────────────────────────────────────────────────────────
 
 function renderArchTable(row: ParsedRow): string[] {
-  // Only archetypes that actually did something — skip perpetual zeros.
+  // "Active" = fielded at all (deployed) or present in the final roster — so a
+  // FORCE-fielded archetype that underperforms still shows its row (the whole
+  // point of the roster override), not just the ones the optimizer favored.
   const active = ALL_ARCHETYPES.filter((a) => {
     const t = row.archetypes[a];
-    return (t.dmg ?? 0) > 0 || (t.final ?? 0) > 0 || (t.heal ?? 0) > 0;
+    return (t.deployments ?? 0) > 0 || (t.final ?? 0) > 0;
   });
   const inactive = ALL_ARCHETYPES.filter((a) => !active.includes(a));
 
-  const headers = ['archetype', 'dmgDealt', 'dmgTaken', 'deaths/run', 'heal', 'xp', 'final'];
+  // Per-deployment = the honest per-unit denominator (a field ÷ how many times
+  // the archetype was fielded). dmgDealt/heal/dmgTaken are otherwise dominated
+  // by how many got deployed, not how good each one is.
+  const perDep = (v: number | undefined, dep: number | undefined): number | undefined =>
+    v !== undefined && dep !== undefined && dep > 0 ? v / dep : undefined;
+
+  const headers = ['archetype', 'deployed', 'dmg/dep', 'taken/dep', 'heal/dep', 'deaths/run', 'xp', 'final'];
   const cells = (a: Archetype): string[] => {
     const t = row.archetypes[a];
-    return [a, humanK(t.dmg), humanK(t.dmgTaken), f1(t.deathsPerRun), humanK(t.heal), humanK(t.xp), int(t.final)];
+    const d = t.deployments;
+    return [
+      a,
+      int(d),
+      compact(perDep(t.dmg, d)),
+      compact(perDep(t.dmgTaken, d)),
+      compact(perDep(t.heal, d)),
+      f1(t.deathsPerRun),
+      humanK(t.xp),
+      int(t.final),
+    ];
   };
   const body = active.map(cells);
   const widths = headers.map((h, i) => Math.max(h.length, ...body.map((r) => r[i]!.length)));
@@ -135,6 +157,7 @@ export function renderSweepReport(parsed: ParsedSweep): string {
   const out: string[] = [];
   out.push(`Balance sweep — ${parsed.rows.length} grid point(s)`);
   out.push(`knobs: ${parsed.knobPaths.join(', ')}`);
+  out.push('/dep = per deployment (per fielding) — the per-unit number, not the aggregate');
   out.push('');
 
   for (const row of parsed.rows) {

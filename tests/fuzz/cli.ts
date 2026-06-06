@@ -62,7 +62,7 @@ import {
 } from './strategies/registry';
 import { scoredStrategy } from './strategies/scored';
 import { loadWeightsFile, serializeWeights } from './strategies/scoredWeights';
-import { runSearch, splitSeeds, presetHarnessOptions, PRESETS, DEFAULT_BOX } from './search';
+import { runSearch, splitSeeds, PRESETS, DEFAULT_BOX } from './search';
 import {
   runBalanceSweep,
   parseRange,
@@ -309,8 +309,23 @@ function runSearchCli(args: CliArgs): void {
   }
   const { trainSeeds, testSeeds } = splitSeeds(trainCount, testCount);
 
+  // H7c — --floors / --roster overrides also apply to the search (so we can
+  // run a full-length or roster-SEEDED search, then replay its emitted winner
+  // via --strategy). Both ride RunConfig's validated parser; the floor count
+  // falls back to the preset's when --floors is absent (behaviour-preserving).
+  const searchParams = new URLSearchParams();
+  const floorCount = args.floors ?? preset.floorCount;
+  if (floorCount !== undefined) searchParams.set('floors', String(floorCount));
+  if (args.roster) searchParams.set('roster', args.roster);
+  const runConfig = parseRunConfig(searchParams);
+  const harnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
+
+  const floorNote = floorCount !== undefined ? ` floors=${floorCount}` : ' floors=full';
+  const rosterNote = runConfig.startingRoster
+    ? ` roster=[${runConfig.startingRoster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
+    : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors} ` +
+    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -320,7 +335,7 @@ function runSearchCli(args: CliArgs): void {
     testSeeds,
     samplerSeed,
     box: DEFAULT_BOX,
-    harnessOptions: presetHarnessOptions(preset),
+    harnessOptions,
   });
 
   mkdirSync(args.outDir, { recursive: true });

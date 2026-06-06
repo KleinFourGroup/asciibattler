@@ -3,7 +3,7 @@
     "glyph": "M",
     "abilities": ["melee_strike"],
     "baseStats": {
-      "constitution": 30,
+      "constitution": 22,
       "strength": 6,
       "ranged": 0,
       "magic": 0,
@@ -14,7 +14,7 @@
       "power": 1
     },
     "growthRates": {
-      "constitution": 0.7,
+      "constitution": 0.8,
       "strength": 0.6,
       "ranged": 0,
       "magic": 0,
@@ -22,7 +22,7 @@
       "agility": 0.3,
       "mobility": 0.13,
       "defense": 0.2,
-      "power": 0.2
+      "power": 0.1
     }
   },
   "ranged": {
@@ -40,7 +40,7 @@
       "power": 1
     },
     "growthRates": {
-      "constitution": 0.5,
+      "constitution": 0.75,
       "strength": 0,
       "ranged": 0.6,
       "magic": 0,
@@ -48,14 +48,14 @@
       "agility": 0.3,
       "mobility": 0.1,
       "defense": 0.1,
-      "power": 0.2
+      "power": 0.1
     }
   },
   "rogue": {
     "glyph": "r",
     "abilities": ["gambit_strike"],
     "baseStats": {
-      "constitution": 14,
+      "constitution": 16,
       "strength": 7,
       "ranged": 0,
       "magic": 0,
@@ -66,7 +66,7 @@
       "power": 1
     },
     "growthRates": {
-      "constitution": 0.4,
+      "constitution": 0.7,
       "strength": 0.5,
       "ranged": 0,
       "magic": 0,
@@ -74,14 +74,14 @@
       "agility": 0.6,
       "mobility": 0.1,
       "defense": 0,
-      "power": 0.2
+      "power": 0.1
     }
   },
   "healer": {
     "glyph": "h",
     "abilities": ["heal_ally"],
     "baseStats": {
-      "constitution": 20,
+      "constitution": 16,
       "strength": 0,
       "ranged": 0,
       "magic": 8,
@@ -89,7 +89,7 @@
       "agility": 6,
       "mobility": 1,
       "defense": 0,
-      "power": 1
+      "power": 0
     },
     "growthRates": {
       "constitution": 0.5,
@@ -100,14 +100,14 @@
       "agility": 0.4,
       "mobility": 0.1,
       "defense": 0,
-      "power": 0.2
+      "power": 0.1
     }
   },
   "mage": {
     "glyph": "m",
     "abilities": ["magic_bolt"],
     "baseStats": {
-      "constitution": 16,
+      "constitution": 18,
       "strength": 0,
       "ranged": 0,
       "magic": 10,
@@ -118,7 +118,7 @@
       "power": 1
     },
     "growthRates": {
-      "constitution": 0.4,
+      "constitution": 0.5,
       "strength": 0,
       "ranged": 0,
       "magic": 0.7,
@@ -126,14 +126,14 @@
       "agility": 0.3,
       "mobility": 0.1,
       "defense": 0,
-      "power": 0.2
+      "power": 0.1
     }
   },
   "catapult": {
     "glyph": "c",
     "abilities": ["catapult_shot"],
     "baseStats": {
-      "constitution": 24,
+      "constitution": 20,
       "strength": 0,
       "ranged": 14,
       "magic": 0,
@@ -152,7 +152,7 @@
       "agility": 0.2,
       "mobility": 0.07,
       "defense": 0,
-      "power": 0.2
+      "power": 0.1
     }
   }
 }

@@ -8,7 +8,15 @@
     "mage": 0,
     "catapult": 0
   },
-  "diversity": 0,
+  "composition": {
+    "melee": 0,
+    "ranged": 0,
+    "rogue": 0,
+    "healer": 0,
+    "mage": 0,
+    "catapult": 0
+  },
+  "compWeight": 0,
   "level": 0,
   "stats": {
     "constitution": 0,

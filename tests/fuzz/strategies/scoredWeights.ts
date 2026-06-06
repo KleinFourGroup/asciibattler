@@ -23,11 +23,18 @@ import { STAT_KEYS, PATH_KINDS } from './policies';
 export interface ScoredWeights {
   /** Per-`NodeKind` path weight (boss is the forced terminal — no weight). */
   readonly path: Record<(typeof PATH_KINDS)[number], number>;
-  /** Flat per-archetype affinity. */
+  /** Flat per-archetype affinity (a constant pull, independent of the roster). */
   readonly archetype: Record<Archetype, number>;
-  /** Coefficient × current roster count of the offered archetype (generalizes
-   *  `greedy`: a negative value discourages duplicates). */
-  readonly diversity: number;
+  /** Per-archetype target *fraction* of the roster. Drives recruiting toward a
+   *  composition: the recruit term adds `compWeight × (composition[A] −
+   *  rosterFraction[A])`, which is positive while an archetype is under target
+   *  (a count-0 archetype gets a foothold) and saturates toward 0 / negative as
+   *  it fills — replacing the old `diversity × rosterCount` rich-get-richer term
+   *  that could never seed a caster comp from a carry-heavy start. */
+  readonly composition: Record<Archetype, number>;
+  /** Scalar strength of the composition term (decouples *what* comp from *how
+   *  much* the comp target matters vs raw stat/level quality). */
+  readonly compWeight: number;
   /** Weight on normalized level. */
   readonly level: number;
   /** Weight per normalized stat (incl. `power`). */
@@ -56,7 +63,8 @@ function numberRecordSchema<K extends string>(keys: readonly K[]) {
 const WeightsSchema = z.strictObject({
   path: numberRecordSchema(PATH_KINDS),
   archetype: numberRecordSchema(ALL_ARCHETYPES),
-  diversity: z.number(),
+  composition: numberRecordSchema(ALL_ARCHETYPES),
+  compWeight: z.number(),
   level: z.number(),
   stats: numberRecordSchema(STAT_KEYS),
   total: z.number(),

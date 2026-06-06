@@ -24,7 +24,8 @@ function allWeights(w: ScoredWeights): number[] {
   return [
     ...Object.values(w.path),
     ...Object.values(w.archetype),
-    w.diversity,
+    ...Object.values(w.composition),
+    w.compWeight,
     w.level,
     ...Object.values(w.stats),
     w.total,

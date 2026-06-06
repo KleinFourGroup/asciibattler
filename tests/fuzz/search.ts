@@ -46,9 +46,10 @@ export const DEFAULT_BOX: SearchBox = { range: { min: -1, max: 1 } };
 
 /**
  * Draw one full `ScoredWeights` from the box. Weights are drawn in a FIXED order
- * (path → archetype → diversity → level → stats → total → passBias) so the
- * sample sequence is reproducible given `(samplerSeed, box, vector index)`.
- * `temperature` is left at its inert default (not sampled this cycle).
+ * (path → archetype → composition → compWeight → level → stats → total →
+ * passBias) so the sample sequence is reproducible given `(samplerSeed, box,
+ * vector index)`. `temperature` is left at its inert default (not sampled this
+ * cycle).
  */
 export function sampleWeights(box: SearchBox, rng: RNG): ScoredWeights {
   const { min, max } = box.range;
@@ -58,12 +59,13 @@ export function sampleWeights(box: SearchBox, rng: RNG): ScoredWeights {
 
   const path = record(PATH_KINDS);
   const archetype = record(ALL_ARCHETYPES);
-  const diversity = draw();
+  const composition = record(ALL_ARCHETYPES);
+  const compWeight = draw();
   const level = draw();
   const stats = record(STAT_KEYS);
   const total = draw();
   const passBias = draw();
-  return { path, archetype, diversity, level, stats, total, passBias };
+  return { path, archetype, composition, compWeight, level, stats, total, passBias };
 }
 
 // ---- train / test seed split ----------------------------------------------

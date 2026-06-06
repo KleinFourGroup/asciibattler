@@ -162,7 +162,7 @@ function makeNormalizers(units: readonly Features[]): Normalizers {
 
 /**
  * The continuous-only weighted score (level + per-stat + total). Excludes
- * archetype/diversity — the terms that don't apply to a "roster-average unit",
+ * archetype/composition — the terms that don't apply to a "roster-average unit",
  * so this is exactly what the pass decision compares.
  */
 function continuousScore(f: Features, n: Normalizers, w: ScoredWeights): number {
@@ -213,10 +213,19 @@ export function scoredStrategy(name: string, weights: ScoredWeights): FuzzStrate
       const normalizers = makeNormalizers([...offerFeatures, ...teamFeatures]);
       const rosterCount = countByArchetype(team);
 
+      // Composition term: pull toward the per-archetype target *fraction* of the
+      // roster. `target − currentFraction` is positive while under target (a
+      // count-0 archetype still gets a foothold, unlike the old `diversity ×
+      // count`) and saturates / goes negative as it fills, so the search can
+      // seed AND stack a comp instead of only rich-get-richer-ing the incumbents.
+      const rosterFraction = (a: Archetype): number =>
+        team.length === 0 ? 0 : rosterCount[a] / team.length;
+
       const fullScores = offer.map(
         (card, i) =>
           weights.archetype[card.archetype] +
-          weights.diversity * rosterCount[card.archetype] +
+          weights.compWeight *
+            (weights.composition[card.archetype] - rosterFraction(card.archetype)) +
           continuousScore(offerFeatures[i]!, normalizers, weights),
       );
       const bestIdx = selectByScore(fullScores, rng, { temperature });

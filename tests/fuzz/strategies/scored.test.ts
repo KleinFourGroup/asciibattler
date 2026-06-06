@@ -28,7 +28,8 @@ function zeroWeights(): ScoredWeights {
   return {
     path: { battle: 0, rest: 0 },
     archetype: Object.fromEntries(ALL_ARCHETYPES.map((a) => [a, 0])) as Record<Archetype, number>,
-    diversity: 0,
+    composition: Object.fromEntries(ALL_ARCHETYPES.map((a) => [a, 0])) as Record<Archetype, number>,
+    compWeight: 0,
     level: 0,
     stats: Object.fromEntries(STAT_KEYS.map((k) => [k, 0])) as Record<keyof UnitStats, number>,
     total: 0,
@@ -164,6 +165,46 @@ describe('scored recruit policy', () => {
       expect(offer[idx!]!.stats[stat]).toBe(Math.max(...offer.map((t) => t.stats[stat])));
     }
   });
+
+  it('composition target fills the UNDER-represented archetype (not rich-get-richer)', () => {
+    // Equal targets, comp term only (continuous off), passBias huge → never pass
+    // so the result is the pure composition argmax. The old `diversity × count`
+    // term with diversity>0 would have picked the *most*-stacked archetype here;
+    // the fraction-vs-target term picks the one furthest BELOW its target.
+    const w: ScoredWeights = {
+      ...zeroWeights(),
+      compWeight: 1,
+      composition: { ...zeroWeights().composition, melee: 0.5, rogue: 0.5 },
+      passBias: 1e6,
+    };
+    const offer = [template('melee'), template('rogue')];
+
+    // Roster all melee → rogue is at fraction 0 (under target) → take rogue,
+    // a count-0 foothold the rich-get-richer term could never give.
+    const allMelee = fakeRun({ team: [template('melee'), template('melee'), template('melee')] });
+    expect(scoredStrategy('c', w).pickRecruit(offer, allMelee, ANY_RNG)).toBe(1);
+
+    // Roster now over target on rogue (0.75) but under on melee (0.25) → the
+    // preference flips: melee is now the under-represented one.
+    const heavy = fakeRun({
+      team: [template('rogue'), template('rogue'), template('rogue'), template('melee')],
+    });
+    expect(scoredStrategy('c', w).pickRecruit(offer, heavy, ANY_RNG)).toBe(0);
+  });
+
+  it('compWeight gates the composition term (0 → no composition influence)', () => {
+    // composition wants rogue, but compWeight 0 zeroes the term → all-equal
+    // scores fall back to the lowest-index tiebreak (melee at index 0).
+    const w: ScoredWeights = {
+      ...zeroWeights(),
+      compWeight: 0,
+      composition: { ...zeroWeights().composition, rogue: 1 },
+      passBias: 1e6,
+    };
+    const offer = [template('melee'), template('rogue')];
+    const heavyMelee = fakeRun({ team: [template('melee'), template('melee')] });
+    expect(scoredStrategy('c0', w).pickRecruit(offer, heavyMelee, ANY_RNG)).toBe(0);
+  });
 });
 
 // ---- weight vector config -------------------------------------------------
@@ -178,7 +219,9 @@ describe('scored weight vector config', () => {
   it('the shipped default validates and is the neutral all-zero vector', () => {
     expect(DEFAULT_SCORED_WEIGHTS.path.battle).toBe(0);
     expect(DEFAULT_SCORED_WEIGHTS.stats.power).toBe(0);
+    expect(DEFAULT_SCORED_WEIGHTS.compWeight).toBe(0);
     for (const a of ALL_ARCHETYPES) expect(DEFAULT_SCORED_WEIGHTS.archetype[a]).toBe(0);
+    for (const a of ALL_ARCHETYPES) expect(DEFAULT_SCORED_WEIGHTS.composition[a]).toBe(0);
     for (const k of STAT_KEYS) expect(DEFAULT_SCORED_WEIGHTS.stats[k]).toBe(0);
   });
 

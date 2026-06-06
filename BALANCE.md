@@ -334,3 +334,36 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   - Also pending from before: leveling pass (may self-resolve post-nerf — identical
     growth), stage-5 overnight verify on held-out seeds, re-baseline tests/fuzz, H7d
     launcher/VPS.
+
+- **Step 1 ✅ — composition-target recruit policy (2026-06-06).** The locked-plan
+  measurement fix, all in `tests/fuzz/` + the dev-only `config/fuzz-strategies.json`
+  (zero src change; fuzz smoke 66, typecheck + lint clean). Replaced the rich-get-richer
+  `diversity × rosterCount[A]` recruit term with per-archetype **composition targets**:
+  the new recruit pick score is `archetype[A] + compWeight × (composition[A] −
+  rosterFraction[A]) + continuousScore`. The `− rosterFraction[A]` makes it **saturate**
+  — a count-0 archetype gets a positive foothold and preference decays as it fills — so
+  the search can seed AND stack a caster comp from the fixed carry start, which the old
+  `×count` term could never do (the BOT ARTIFACT).
+  - **User design calls (this session):** (1) **target FRACTIONS, not counts** — keeps the
+    search box uniform `[-1,1]` (the `target − fraction` delta is bounded, same scale as
+    the stat terms) and is roster-size-invariant. (2) **KEEP the flat `archetype` affinity
+    AND add `composition`** (expressiveness over parsimony); I added a `compWeight` scalar
+    too (the natural replacement for the removed `diversity` scalar — decouples *what* comp
+    from *how much* comp matters). (3) **RECRUITS ONLY — do NOT seed the starting roster
+    from composition.** The starting roster is a **first-class designer balance knob** (set
+    via the existing `--roster` / `startingRoster` config), NOT something the search may
+    override. So two clean instruments: starting comp = designer knob; recruit comp =
+    search freedom. No `pickStartingRoster` added.
+  - **Pass gate UNCHANGED (continuous-only):** casters are reached via `composition` (wins
+    the which-card argmax) + `passBias` (global recruit-eagerness). Feeding composition into
+    the pass would re-gate casters by stat-quality and break the pass test's documented
+    semantics, so it stays factored: composition = *which* card, passBias = *whether* to
+    take any. Every existing test still passes.
+  - **Schema break (expected):** `diversity` field gone, `composition` (per-archetype) +
+    `compWeight` added → any pre-existing `best-strategy.json` is stale (gitignored output,
+    regenerated). Sample order is now path→archetype→composition→compWeight→level→stats→
+    total→passBias, so old `samplerSeed` sequences are invalidated (re-baseline expected).
+  - **→ Step 2 (running):** re-confirm the broad difficulty sweep on the fixed schema —
+    budgetFactor 0.25→1.5 (×6) × swarmMax 1.0→3.0 (×5), quick tier, samplerSeed=1 (the
+    stage-1 grid). Best-achievable should RISE now that the search can reach caster comps,
+    so the difficulty BAND (currently set 0.625 × 1.75) may shift.

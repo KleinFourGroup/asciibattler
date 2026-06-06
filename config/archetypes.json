@@ -15,7 +15,7 @@
     },
     "growthRates": {
       "constitution": 0.8,
-      "strength": 0.6,
+      "strength": 0.4,
       "ranged": 0,
       "magic": 0,
       "luck": 0.3,
@@ -36,13 +36,13 @@
       "luck": 3,
       "agility": 5,
       "mobility": 1,
-      "defense": 2,
+      "defense": 3,
       "power": 1
     },
     "growthRates": {
       "constitution": 0.75,
       "strength": 0,
-      "ranged": 0.6,
+      "ranged": 0.35,
       "magic": 0,
       "luck": 0.3,
       "agility": 0.3,
@@ -56,24 +56,24 @@
     "abilities": ["gambit_strike"],
     "baseStats": {
       "constitution": 16,
-      "strength": 7,
+      "strength": 5,
       "ranged": 0,
       "magic": 0,
       "luck": 10,
       "agility": 9,
       "mobility": 2,
-      "defense": 0,
+      "defense": 2,
       "power": 1
     },
     "growthRates": {
       "constitution": 0.7,
-      "strength": 0.5,
+      "strength": 0.25,
       "ranged": 0,
       "magic": 0,
       "luck": 0.6,
       "agility": 0.6,
       "mobility": 0.1,
-      "defense": 0,
+      "defense": 0.1,
       "power": 0.1
     }
   },
@@ -84,22 +84,22 @@
       "constitution": 16,
       "strength": 0,
       "ranged": 0,
-      "magic": 8,
+      "magic": 4,
       "luck": 3,
       "agility": 6,
       "mobility": 1,
-      "defense": 0,
+      "defense": 1,
       "power": 0
     },
     "growthRates": {
       "constitution": 0.5,
       "strength": 0,
       "ranged": 0,
-      "magic": 0.6,
+      "magic": 0.4,
       "luck": 0.3,
       "agility": 0.4,
       "mobility": 0.1,
-      "defense": 0,
+      "defense": 0.2,
       "power": 0.1
     }
   },
@@ -121,11 +121,11 @@
       "constitution": 0.5,
       "strength": 0,
       "ranged": 0,
-      "magic": 0.7,
+      "magic": 0.35,
       "luck": 0.3,
       "agility": 0.3,
       "mobility": 0.1,
-      "defense": 0,
+      "defense": 0.3,
       "power": 0.1
     }
   },
@@ -135,23 +135,23 @@
     "baseStats": {
       "constitution": 20,
       "strength": 0,
-      "ranged": 14,
+      "ranged": 10,
       "magic": 0,
       "luck": 2,
       "agility": 4,
       "mobility": -7,
-      "defense": 0,
+      "defense": 5,
       "power": 1
     },
     "growthRates": {
       "constitution": 0.5,
       "strength": 0,
-      "ranged": 0.7,
+      "ranged": 0.3,
       "magic": 0,
       "luck": 0.2,
       "agility": 0.2,
       "mobility": 0.07,
-      "defense": 0,
+      "defense": 0.2,
       "power": 0.1
     }
   }

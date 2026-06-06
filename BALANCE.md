@@ -411,3 +411,42 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     better). Default `jobs=1`; `--jobs` is opt-in so a personal machine isn't saturated.
   - **→ Next:** run the HEAVY bracket `{0.625,0.75}×{1.75,2.0}` full-length, `--jobs=8`, for
     the decision-grade band + robust caster-comp / healer-value confirmation.
+
+- **Step 2 DONE — heavy band read + difficulty SET to 0.625 × 1.90 (2026-06-06).** Heavy
+  tier (120 vec × 30 train / 10 test, full floor-11), `--jobs=8` → **~18 min vs ~69 min
+  single-process (~3.8×)**. The decision-grade re-confirm of the band.
+  - **Band (heavy, best train/test %):** (0.625,1.75) **73/80** · (0.625,2.0) 53/80 ·
+    (0.75,1.75) 43/20 · (0.75,2.0) 37/50. Baselines **0% everywhere** (skill-required holds).
+    vs stage-3 heavy (60/40/50/27): **best-achievable ROSE ~+13pt at budget 0.625** — same
+    encounters, the composition-reachable search just plays them better (a tighter lower
+    bound now, so less human-above-ceiling headroom).
+  - **HEALER OVERTURN — RETRACTED.** The step-2-interim quick-tier full-length spot-check
+    showed a healer+mage winning comp at (0.625,1.75); the HEAVY read shows the robust
+    optimum there (and at 3 of 4 points) is **pure melee+ranged** — casters inactive (only a
+    sliver healer(2)/mage(2) at 0.75×1.75). The quick "healer 7+mage 5" was an **8-seed
+    overfit** (its 88-train/50-test gap was the tell; heavy's gaps are tight, e.g. 73/80, and
+    land on pure carry). So stage-3's "pure carry optimal at the band" **HOLDS** — BUT now as
+    a *cleaner* conclusion: the refactor distinguishes **"unreachable" (fixed — the search
+    demonstrably builds caster comps) from "reachable but not the robust optimum" (the real
+    situation)**. ⇒ the "revisit stage-4 nerfs because healer under-valued" flag is **MOOT**.
+    Caveat: the search is a LOWER bound (120 random vectors, +6 dims) — "no sampled caster
+    comp beat carries robustly," not proof they can't; forced-roster already showed casters
+    are *viable* when fielded, just not the bot's default-strong line.
+  - **Melee still out-stacks ranged post-stage-4-nerf:** final 102 vs 61 (1.67×), dmg/dep 39
+    vs 29. The con 30→22 nerf narrowed but didn't close the carry gap (a separate archetype
+    axis from the difficulty band; user opted not to chase it now).
+  - **Difficulty landing — the SWARM CLIFF:** chasing ~67% revealed `swarmMaxMultiplier` is a
+    COARSE knob (it feeds `Math.round(swarmMax × teamSize)`): 1.75 & 1.85 round to the SAME
+    counts (both 73%), then 1.90 tips a boundary → +1 enemy → **57%** (1.95/2.0 also ~53%).
+    So 67% has no clean swarm point — it's 73% (≤1.85) or 57% (≥1.90). budgetFactor is the
+    finer knob (≈0.65 would interpolate ~67%), but **USER CHOSE swarm 1.90 = 57%** (stable
+    lower-plateau, slightly harder than 2/3; with the now-tight bot + human margin it lands
+    near a true 2/3 from the challenging side — genre-appropriate). **`difficulty.json`
+    swarmMaxMultiplier 1.75 → 1.90 (budgetFactor stays 0.625).**
+  - **Re-baseline CLEAN:** main suite **675 pass**, fuzz smoke **74**, typecheck + lint clean
+    — the balance-proof tests recompute from `DIFFICULTY` (no hardcoded swarm value), so the
+    change needed zero test edits.
+  - **→ Next (per locked plan):** tune ROGUE (step 3, LAST) — the one genuinely weak unit
+    (low dmg + fragile, never recruited), now against a settled difficulty + measurement
+    baseline. Also still pending: stage-5 overnight verify on held-out seeds (now cheap with
+    `--jobs`); the melee↔ranged carry gap if it bothers playtest.

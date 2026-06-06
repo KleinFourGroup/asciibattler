@@ -277,3 +277,60 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     from any tier (win rate shifts ~uniformly with length), but trust the OP/archetype
     read ONLY at full length (archetype value is non-uniformly length-sensitive — the
     healer mid-length artifact). `--floors` makes the cheap full-length OP check routine.
+
+- **Stage 4 (in progress) + the STRATEGY BLIND-SPOT discovery (2026-06-06).**
+  - **Difficulty band SET (commit `8eefd76`):** `difficulty.json` budgetFactor 0.625 ×
+    swarmMax 1.75.
+  - **Archetype rebalance, WIP (commits `8eefd76` con-narrow, `1f7c208` defense+offense-
+    growth):** narrowed the constitution spread (was [14,30] → [16,22]); melee con 30→22
+    (the nerf); raised con growths (levels matter more); ADD defense to the glass cannons
+    (ranged 2→3, rogue 0→2, healer 0→1, catapult 0→**5**, + def growths); TRIM offense
+    growths ~half + some bases (rogue str 7→5, healer magic **8→4**, catapult ranged
+    14→10); halved every power growth 0.2→0.1; healer power base **1→0**. NB **rogue
+    deliberately untouched** until the rest is stable (user's call).
+  - **More tooling (commits `782ac15`, `0825d05`):** **per-deployment telemetry**
+    (`deployments` = player fieldings; the report now shows **dmg/dep, taken/dep,
+    heal/dep** — the honest per-unit denominator, since aggregates conflate per-unit
+    power with how many got fielded); **`--roster=archetype[:level],…`** forced starting
+    roster on BOTH `--balance-sweep` and `--search`; the report's active filter keys off
+    "was deployed" so a force-fielded underperformer still shows.
+  - **CASTER VIABILITY (forced-roster eval, lvl-5 = the real start, vs 75% carry control):
+    swap one carry → catapult **100%** (+25), healer **100%** (+25), mage **50%** (−25),
+    rogue **50%** (−25).** Per-deployment overturned the naive read: **casters are NOT weak
+    per unit** — catapult 46 dmg/dep + 7 taken/dep (tankiest), mage 39 dmg/dep — they
+    OUT-damage carries. The dividing line is **survivability**: catapult (def 5) converts
+    its damage to wins; **mage (def 0 base) dies ~3× as often → needs BASE DEFENSE, not
+    damage**; **rogue is the one genuinely weak unit** (low dmg + fragile). Healer is
+    **vindicated** — best chip ratio in the whole experiment (13:1); keeping carries alive
+    IS its pool contribution.
+  - **⇒ THE STRATEGY BLIND-SPOT (confirmed, the session's key finding):** the free search
+    NEVER recruits casters because the recruit policy ([scored.ts](tests/fuzz/strategies/scored.ts:216))
+    has a **rich-get-richer** term `diversity × rosterCount[archetype]` + a **fixed**
+    3-melee-2-ranged start. With `diversity>0` (needed for the concentration that makes any
+    archetype strong) the incumbent carries get a `×3` head start and a count-0 caster gets
+    `×0` → it can never get a foothold; with `diversity<0` it diversifies but can't
+    concentrate. **No reachable weight vector builds a caster comp from a carry start.**
+    PROVEN: a catapult-SEEDED search hits 100% (recruiting 7 more catapults), but replaying
+    that EXACT winning vector on the default roster recruits **~0 catapults and scores
+    60%** (`--search --roster` + `--strategy` replay). So "the search only picks
+    melee/ranged" is a BOT ARTIFACT, not a balance signal; and the free search's
+    best-achievable is a CONSERVATIVE lower bound (skilled humans reach caster comps it
+    can't — that's a big chunk of the assumed human-above-ceiling margin).
+  - **USER DECISION — do NOT lean on forced-roster as the balance instrument** (it answers
+    "force this comp," not "is swapping an archer for a healer worth it" — the proper
+    balance knob the user wants). Instead **fix the strategy schema** to express
+    **composition targets** (per-archetype, so the search can seed + stack a caster
+    naturally and MEASURE its value). Forced-roster stays a diagnostic only.
+
+  ### LOCKED PLAN (next session)
+  1. **Add composition-target support to the strategies** — replace the scalar `diversity`
+     rich-get-richer term with per-archetype composition targets (let the search choose +
+     stack a starting/recruited composition), so "swap an archer for a healer → +X%
+     win" becomes a measurable search outcome, not a forced-roster bandaid.
+  2. **Re-confirm the broad difficulty sweep** with the fixed strategy schema (the band
+     may shift now that the search can reach caster comps — best-achievable will rise).
+  3. **Then tune rogue** (LAST — only after the measurement system + difficulty + other
+     archetypes are settled, so the rogue buff is measured against a stable baseline).
+  - Also pending from before: leveling pass (may self-resolve post-nerf — identical
+    growth), stage-5 overnight verify on held-out seeds, re-baseline tests/fuzz, H7d
+    launcher/VPS.

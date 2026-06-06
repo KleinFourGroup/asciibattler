@@ -212,3 +212,38 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     still near-noise. → confirm both at FULL length in stage 3.
   - **→ Stage 3:** heavy tier (120 vec × 30 train, FULL floor-11 runs) on 2 finalists
     bracketing 67% → full-length OP read → archetype edits (melee nerf direction).
+
+- **Stage 3 ✅ — heavy full-length read (2026-06-05).** `{0.625, 0.75} × {1.75, 2.0}`
+  2×2 bracket (the 3 finalists + free corner), heavy tier (120 vec × 30 train, **FULL
+  floor-11 runs**), 4 pts, **~69 min** compute (15–20 min/pt — well under the 30–45
+  feared). `samplerSeed=1`. CSV overwrote stage-2's (reproducible).
+  - **Win surface** (best% / baselines): (0.625,1.75) **60% / 0% / 0%**;
+    (0.625,2.0) 40 / 0 / 0; (0.75,1.75) 50 / 0 / 0; (0.75,2.0) 27 / 0 / 0.
+  - **HEADLINE: at full length the baselines are 0% EVERYWHERE** — pure-random / greedy
+    NEVER win an 11-floor run in this band; only search-optimal play does (27–60%). So
+    gradient = best% itself. The foregone conclusion is **fully** broken (if anything,
+    toward "skill-REQUIRED" — fine for a roguelike). **Short runs overstated
+    winnability** (H7b's warning, quantified): (0.625,1.75) read 75% at floor-6 → **60%
+    at floor-11**. The 11-floor compounding is real.
+  - **Recommended difficulty landing: budgetFactor 0.625 × swarmMax 1.75** = best 60%
+    (closest to the ~67% target, baselines 0%, max gradient). Humans beat the linear
+    ceiling (a LOWER bound), so true skilled-human best-achievable is north of 60% →
+    "winnable-but-losable" holds. *Optional* nudge: budgetFactor ~0.55–0.60 to buy a
+    little headroom toward 67% — a stage-5 fine-tune, not a blocker.
+  - **OP-UNIT READ (the decision):**
+    - **Melee — OP, CONFIRMED hard.** vs ranged at (0.625,1.75): damage **60918 vs 22917
+      (2.66×)**, final roster **96 vs 60 (1.6× stacked)**, XP **210529 vs 86451 (2.4×** —
+      leveling faster, compounding the lead). Melee dies plenty (deathsPerRun ~21–23) —
+      it's *damage-per-cost + tanky-enough-to-flood* (GP2 `defense`), not invincibility.
+    - **Healer — OP REJECTED.** Healer is **ZERO at 3 of 4 points** (incl. the
+      recommended 0.625×1.75); it appears ONLY at the hardest corner (0.75×2.0, best
+      27%) with final 5 / heal 2272. The floor-6 "emergence" was a mid-length artifact —
+      at full length the optimal play is pure melee+ranged. So the healer is NOT a
+      difficulty-breaker (arguably UNDER-valued; the search ignores it). rogue/mage/
+      catapult: zero everywhere.
+  - **→ Stage 4 (next session):** (1) set `difficulty.json` budgetFactor 0.625 / swarmMax
+    1.75 (from 0.25 / 2.0); (2) **nerf melee** to close the 2.66× damage gap with ranged
+    — candidate axes: `strength` (damage) and/or `defense` (the flood-enabler) in
+    `archetypes.json`; (3) leveling pass — melee's 2.4× XP lead compounds, so re-read XP
+    flow after the melee nerf before touching `leveling.json`. Specific edit values TBD
+    WITH THE USER. Then re-sweep to re-confirm the band + re-baseline tests/fuzz.

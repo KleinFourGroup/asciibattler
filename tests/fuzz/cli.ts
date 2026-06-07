@@ -271,12 +271,16 @@ async function main(): Promise<void> {
     process.stdout.write('\n' + renderPerFloorAnalysis(allResults));
     const stats = perFloorStats(allResults);
     const header =
-      'floor,battles,playerSize,playerAvgLevel,playerMedianLevel,playerLevelSpread,' +
+      'floor,runsReached,runsDied,deathRate,battles,avgPlayerDeaths,playerSize,playerAvgLevel,playerMedianLevel,playerLevelSpread,' +
       'enemySize,enemyAvgLevel,enemyMedianLevel,enemyLevelSpread';
     const rows = stats.map((s) =>
       [
         s.floor,
+        s.runsReached,
+        s.runsDied,
+        s.deathRate.toFixed(4),
         s.battles,
+        s.avgPlayerDeaths.toFixed(3),
         s.playerSize.toFixed(3),
         s.playerAvgLevel.toFixed(3),
         s.playerMedianLevel.toFixed(3),

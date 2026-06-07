@@ -11,6 +11,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { runOne } from './harness';
+import type { BattleResult, RunResult } from './harness';
 import { makeStrategy } from './strategies/registry';
 import {
   aggregate,
@@ -149,6 +150,61 @@ describe('fuzz reporters', () => {
       expect(s.playerLevelSpread).toBeGreaterThanOrEqual(0);
     }
     expect(renderPerFloorAnalysis(results)).toContain('Per-floor team analysis');
+  });
+
+  it('per-floor run-death stats are run-level, not per-wave (the pool absorbs lost waves)', () => {
+    // Config-free fixtures pin the RUN-level mechanic across the multi-wave pool
+    // system. Run A: 3 waves on floor 1 (loses 2 of them — pool absorbs it),
+    // survives to floor 2, completes. Run B: dies on floor 1. So floor 1 has 2
+    // runs reached, 1 died (B) — NOT 3 (the lost waves don't count as run-deaths).
+    const battle = (floor: number, winner: 'player' | 'enemy', playerDeaths: number): BattleResult => ({
+      floor,
+      worldSeed: 0,
+      layoutId: null,
+      winner,
+      ticks: 1,
+      playerDeaths,
+      enemyDeaths: 0,
+      playerTeamSize: 5,
+      enemyTeamSize: 8,
+      playerLevels: [1, 1, 1, 1, 1],
+      enemyLevels: [1, 1, 1, 1, 1, 1, 1, 1],
+    });
+    const run = (
+      battles: BattleResult[],
+      outcome: 'complete' | 'defeat',
+      finalFloorReached: number,
+    ): RunResult => ({
+      seed: 0,
+      strategyName: 'synthetic',
+      outcome,
+      finalFloorReached,
+      totalTicks: 0,
+      finalTeamSize: 5,
+      battles,
+      recruits: [],
+    });
+    // Run A: 3 floor-1 waves (2 lost but absorbed), then floor 2, completes.
+    const runA = run(
+      [battle(1, 'enemy', 4), battle(1, 'enemy', 3), battle(1, 'player', 1), battle(2, 'player', 0)],
+      'complete',
+      2,
+    );
+    // Run B: dies on floor 1.
+    const runB = run([battle(1, 'enemy', 5)], 'defeat', 1);
+
+    const stats = perFloorStats([runA, runB]);
+    const f1 = stats.find((s) => s.floor === 1)!;
+    const f2 = stats.find((s) => s.floor === 2)!;
+    expect(f1.runsReached).toBe(2); // both runs reached floor 1
+    expect(f1.runsDied).toBe(1); // only run B ENDED here (lost waves ≠ run-death)
+    expect(f1.deathRate).toBeCloseTo(0.5);
+    expect(f1.battles).toBe(4); // 4 total waves on floor 1 across the two runs
+    expect(f1.avgPlayerDeaths).toBeCloseTo((4 + 3 + 1 + 5) / 4); // per-wave attrition
+    expect(f2.runsReached).toBe(1); // only run A reached floor 2
+    expect(f2.runsDied).toBe(0); // run A completed, didn't die
+    // Σ runsDied across floors == total non-completing runs.
+    expect(stats.reduce((acc, s) => acc + s.runsDied, 0)).toBe(1);
   });
 
   it('renders a failure trace for a non-complete result', () => {

@@ -187,7 +187,24 @@ function stddev(xs: readonly number[]): number {
 
 export interface FloorStats {
   floor: number;
+  /** RUNS that reached this floor (`finalFloorReached >= floor`) — the survival
+   *  funnel denominator. (NOT battle count — floors have multiple waves under the
+   *  H4/H5 pool+deck system, so battles ≠ runs.) */
+  runsReached: number;
+  /** RUNS that ENDED on this floor (`outcome !== 'complete' && finalFloorReached
+   *  === floor`) — the true loss-floor histogram. Σ over floors = total non-wins.
+   *  This is run-level (a lost wave only chips the pool); use it, not wave losses,
+   *  to answer "where do runs die." */
+  runsDied: number;
+  /** `runsDied / runsReached` — the conditional run-death rate GIVEN you reached
+   *  this floor. A high floor-1 value vs later floors = a front-loaded "floor-1
+   *  wall," not a smooth ramp. */
+  deathRate: number;
+  /** Battles (waves) fought on this floor across all runs — multiple per floor. */
   battles: number;
+  /** Mean player-unit deaths per WAVE on this floor — the per-battle attrition
+   *  (distinct from run-death: heavy early attrition the pool can still absorb). */
+  avgPlayerDeaths: number;
   playerSize: number;
   playerAvgLevel: number;
   playerMedianLevel: number;
@@ -220,9 +237,17 @@ export function perFloorStats(results: readonly RunResult[]): FloorStats[] {
     .sort((a, b) => a - b)
     .map((floor) => {
       const bs = byFloor.get(floor)!;
+      const runsReached = results.filter((r) => r.finalFloorReached >= floor).length;
+      const runsDied = results.filter(
+        (r) => r.outcome !== 'complete' && r.finalFloorReached === floor,
+      ).length;
       return {
         floor,
+        runsReached,
+        runsDied,
+        deathRate: runsReached === 0 ? 0 : runsDied / runsReached,
         battles: bs.length,
+        avgPlayerDeaths: mean(bs.map((b) => b.playerDeaths)),
         playerSize: mean(bs.map((b) => b.playerTeamSize)),
         playerAvgLevel: mean(bs.flatMap((b) => b.playerLevels)),
         playerMedianLevel: median(bs.flatMap((b) => b.playerLevels)),
@@ -241,7 +266,11 @@ export function renderPerFloorAnalysis(results: readonly RunResult[]): string {
   const totalBattles = results.reduce((acc, r) => acc + r.battles.length, 0);
   const header = [
     'Floor',
-    'Battles',
+    'Runs',
+    'Died',
+    'Died%',
+    'Waves',
+    'Dths/wv',
     'P.size',
     'P.avgLv',
     'P.medLv',
@@ -253,7 +282,11 @@ export function renderPerFloorAnalysis(results: readonly RunResult[]): string {
   ];
   const cell = (rs: FloorStats): string[] => [
     String(rs.floor),
+    String(rs.runsReached),
+    String(rs.runsDied),
+    (rs.deathRate * 100).toFixed(0),
     String(rs.battles),
+    rs.avgPlayerDeaths.toFixed(1),
     rs.playerSize.toFixed(1),
     rs.playerAvgLevel.toFixed(2),
     rs.playerMedianLevel.toFixed(1),
@@ -269,6 +302,9 @@ export function renderPerFloorAnalysis(results: readonly RunResult[]): string {
   const fmt = (cells: string[]) => cells.map((c, i) => c.padStart(widths[i]!)).join('  ');
   const lines: string[] = [];
   lines.push(`### Per-floor team analysis (${totalBattles} battles across ${results.length} runs)`);
+  lines.push('Runs = runs that REACHED this floor · Died = runs that ENDED here (run-level)');
+  lines.push('Died% = Died/Runs (this floor’s conditional run-death rate — the funnel)');
+  lines.push('Waves = battles fought here (multiple/floor) · Dths/wv = mean player deaths per wave');
   lines.push('P = player, E = enemy · avgLv/medLv = mean/median unit level (pooled)');
   lines.push('spread = mean within-team level stddev · size = mean team size');
   lines.push('');

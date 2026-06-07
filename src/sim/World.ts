@@ -23,6 +23,7 @@ import {
   abilityIdsForArchetype,
   rangeForArchetype,
   glyphForArchetype,
+  targetingForArchetype,
 } from './archetypes';
 import type { WorldCommand } from './Command';
 import { createAction } from './actions/registry';
@@ -984,6 +985,7 @@ export class World {
       derived: init.derived,
       position: init.position,
       blocksLineOfSight: init.blocksLineOfSight ?? true,
+      targeting: targetingForArchetype(init.archetype),
       level: init.level ?? 1,
       xp: init.xp ?? 0,
       rosterIndex: init.rosterIndex ?? null,
@@ -1107,6 +1109,8 @@ export class World {
         derived: us.derived,
         position: us.position,
         blocksLineOfSight: us.blocksLineOfSight,
+        // Re-derived from archetype (static per archetype, not snapshotted).
+        targeting: targetingForArchetype(us.archetype),
         level: us.level,
         xp: us.xp,
         rosterIndex: us.rosterIndex,

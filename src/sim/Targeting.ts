@@ -3,20 +3,24 @@ import type { World } from './World';
 import type { GridCoord } from '../core/types';
 import { hasLineOfSight } from './LineOfSight';
 import { SIM } from '../config/sim';
+import { getTargetingStrategy } from './targetingStrategies';
 
 /**
- * Pick the nearest living enemy of `unit`. Ties on Chebyshev distance go to
- * the lower-HP candidate; ties on HP go to the lower id. Returning null is
- * a normal outcome — the caller (Step 3.5 movement, Step 3.7 attacks) treats
- * it as "no target, idle this tick."
+ * Pick the best living enemy of `unit` according to its targeting strategy
+ * (`unit.targeting`, resolved at spawn from the archetype). The default
+ * `nearest` strategy reproduces the historical pick exactly (nearest by
+ * Chebyshev, ties to lower HP then lower id); the rogue's `weakest` strategy
+ * targets the squishiest enemy. Returning null is a normal outcome — the
+ * caller (Step 3.5 movement, Step 3.7 attacks) treats it as "no target, idle
+ * this tick."
  *
  * Pure function: same `(unit, world.units)` always yields the same answer.
- * This stays the raw nearest-enemy pick; E5's target *stickiness* layers on
- * top via `updateTarget` / `currentTarget`.
+ * This stays the raw pick; E5's target *stickiness* layers on top via
+ * `updateTarget` / `currentTarget`.
  */
 export function findTarget(unit: Unit, world: World): Unit | null {
+  const strategy = getTargetingStrategy(unit.targeting);
   let best: Unit | null = null;
-  let bestDist = Infinity;
 
   for (const candidate of world.units) {
     if (candidate.team === unit.team) continue;
@@ -25,24 +29,11 @@ export function findTarget(unit: Unit, world: World): Unit | null {
     if (candidate.team === 'neutral') continue;
     if (candidate.currentHp <= 0) continue;
 
-    const dist = chebyshev(unit.position, candidate.position);
-    if (best === null || isBetter(candidate, dist, best, bestDist)) {
+    if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
       best = candidate;
-      bestDist = dist;
     }
   }
   return best;
-}
-
-function isBetter(
-  candidate: Unit,
-  candidateDist: number,
-  best: Unit,
-  bestDist: number,
-): boolean {
-  if (candidateDist !== bestDist) return candidateDist < bestDist;
-  if (candidate.currentHp !== best.currentHp) return candidate.currentHp < best.currentHp;
-  return candidate.id < best.id;
 }
 
 /**
@@ -53,9 +44,11 @@ function isBetter(
  *
  * A committed unit keeps its target until one of:
  *   (a) the target died / vanished / is no longer a valid enemy → re-pick
- *       the nearest enemy immediately;
- *   (b) another enemy is at least `SIM.retargetCloserRatio`x closer than
- *       the current one — the "a much better opportunity opened up" switch;
+ *       via the unit's strategy immediately;
+ *   (b) the strategy's fresh pick is a markedly better target than the
+ *       current one (`strategy.shouldRetarget`) — for `nearest`, "markedly
+ *       closer" (`SIM.retargetCloserRatio`); `weakest` never switches off a
+ *       live mark;
  *   (c) (ranged only) the target has been out of line-of-sight for
  *       `SIM.rangedRetargetLosTicks` — stop chasing a target hiding behind
  *       a wall and re-pick.
@@ -73,15 +66,16 @@ export function updateTarget(unit: Unit, world: World): void {
     committed.currentHp > 0;
 
   if (!valid) {
-    // (a) no valid commitment → take the nearest enemy.
-    const nearest = findTarget(unit, world);
-    unit.targetId = nearest ? nearest.id : null;
+    // (a) no valid commitment → take the strategy's best pick.
+    const pick = findTarget(unit, world);
+    unit.targetId = pick ? pick.id : null;
     unit.outOfLosTicks = 0;
     return;
   }
 
   const current = committed;
-  const nearest = findTarget(unit, world);
+  const strategy = getTargetingStrategy(unit.targeting);
+  const candidate = findTarget(unit, world);
 
   // (c) ranged: drop a target we've been unable to see for too long.
   if (unit.archetype === 'ranged') {
@@ -90,21 +84,22 @@ export function updateTarget(unit: Unit, world: World): void {
       unit.outOfLosTicks = 0;
     } else if (++unit.outOfLosTicks >= SIM.rangedRetargetLosTicks) {
       unit.outOfLosTicks = 0;
-      if (nearest && nearest.id !== current.id) {
-        unit.targetId = nearest.id;
+      if (candidate && candidate.id !== current.id) {
+        unit.targetId = candidate.id;
         return;
       }
     }
   }
 
-  // (b) switch only when a rival is markedly closer than the current target.
-  if (nearest && nearest.id !== current.id) {
-    const curDist = chebyshev(unit.position, current.position);
-    const nearDist = chebyshev(unit.position, nearest.position);
-    if (nearDist * SIM.retargetCloserRatio < curDist) {
-      unit.targetId = nearest.id;
-      unit.outOfLosTicks = 0;
-    }
+  // (b) switch only when the strategy says the fresh candidate is a markedly
+  // better target than the current commitment.
+  if (
+    candidate &&
+    candidate.id !== current.id &&
+    strategy.shouldRetarget(unit, current, candidate, world)
+  ) {
+    unit.targetId = candidate.id;
+    unit.outOfLosTicks = 0;
   }
 }
 

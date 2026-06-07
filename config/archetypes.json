@@ -2,6 +2,7 @@
   "melee": {
     "glyph": "M",
     "abilities": ["melee_strike"],
+    "targeting": "nearest",
     "baseStats": {
       "constitution": 22,
       "strength": 6,
@@ -28,6 +29,7 @@
   "ranged": {
     "glyph": "a",
     "abilities": ["ranged_shot"],
+    "targeting": "nearest",
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -54,6 +56,7 @@
   "rogue": {
     "glyph": "r",
     "abilities": ["gambit_strike"],
+    "targeting": "nearest",
     "baseStats": {
       "constitution": 16,
       "strength": 5,
@@ -80,6 +83,7 @@
   "healer": {
     "glyph": "h",
     "abilities": ["heal_ally"],
+    "targeting": "nearest",
     "baseStats": {
       "constitution": 16,
       "strength": 0,
@@ -106,6 +110,7 @@
   "mage": {
     "glyph": "m",
     "abilities": ["magic_bolt"],
+    "targeting": "nearest",
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -132,6 +137,7 @@
   "catapult": {
     "glyph": "c",
     "abilities": ["catapult_shot"],
+    "targeting": "nearest",
     "baseStats": {
       "constitution": 20,
       "strength": 0,

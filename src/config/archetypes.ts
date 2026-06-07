@@ -54,6 +54,7 @@
 import { z } from 'zod';
 import archetypesJson from '../../config/archetypes.json';
 import { knownAbilityIds } from '../sim/abilities/registry';
+import { knownTargetingIds } from '../sim/targetingStrategies';
 
 /** Defensive cap to catch a designer typo (e.g. 500 instead of 5). */
 const STAT_CAP = 99;
@@ -94,11 +95,22 @@ const AbilityIdSchema = z.string().refine((id) => ABILITY_IDS.includes(id), {
   message: `unknown ability id; known: [${ABILITY_IDS.join(', ')}]`,
 });
 
+// Per-archetype target-selection policy, validated against the strategy
+// registry (`src/sim/targetingStrategies.ts`) at load — same A4 pattern as
+// AbilityIdSchema. A typo'd or unregistered id fails the parse loudly.
+const TARGETING_IDS = knownTargetingIds();
+const TargetingIdSchema = z.string().refine((id) => TARGETING_IDS.includes(id), {
+  message: `unknown targeting id; known: [${TARGETING_IDS.join(', ')}]`,
+});
+
 const ArchetypeSchema = z.object({
   glyph: z.string().length(1),
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,
   growthRates: GrowthRatesSchema,
+  // Required — every archetype declares its targeting policy explicitly
+  // (default `nearest`); a future archetype that omits it fails at load.
+  targeting: TargetingIdSchema,
 });
 
 const ArchetypesSchema = z.object({

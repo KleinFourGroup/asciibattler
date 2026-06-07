@@ -159,6 +159,11 @@ export interface UnitInit {
   /** D6: defaults to `true` so existing combatants + walls keep their
    *  LOS-blocking behavior. Half-cover sets this to `false`. */
   readonly blocksLineOfSight?: boolean;
+  /** Target-selection strategy id (see `src/sim/targetingStrategies.ts`).
+   *  Resolved at spawn from the archetype (`targetingForArchetype`) and
+   *  threaded in like `glyph`/`derived`. Defaults to `'nearest'` so direct-
+   *  construction test fixtures + environment entities need not pass it. */
+  readonly targeting?: string;
   /** E3: defaults to `1`. Environment entities (walls, half-cover)
    *  ignore the field entirely — it's combatant display metadata. */
   readonly level?: number;
@@ -221,6 +226,13 @@ export class Unit {
    */
   readonly blocksLineOfSight: boolean;
   /**
+   * Target-selection strategy id, resolved at spawn from the archetype (see
+   * `src/sim/targetingStrategies.ts`). `Targeting.ts` reads it to pick + stick
+   * to targets. Static per archetype, so it is NOT snapshotted — `fromJSON`
+   * re-derives it from `archetype`. Defaults to `'nearest'`.
+   */
+  readonly targeting: string;
+  /**
    * Per-action cooldown counters keyed by `Action.id`. Decremented once per
    * tick by World; selector filters out proposals whose remaining cooldown
    * is > 0. Missing key = 0 (never proposed before, or fully recharged).
@@ -260,6 +272,7 @@ export class Unit {
     this.position = init.position;
     this.currentHp = init.derived.maxHp;
     this.blocksLineOfSight = init.blocksLineOfSight ?? true;
+    this.targeting = init.targeting ?? 'nearest';
     this.level = init.level ?? 1;
     this.xp = init.xp ?? 0;
     this.rosterIndex = init.rosterIndex ?? null;

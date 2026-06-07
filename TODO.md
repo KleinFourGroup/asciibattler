@@ -50,6 +50,22 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Design explorations (post-Phase-G)
 
+- [ ] **Movement abilities (dash / gap-closer) — the real rogue fix.** H7c added a
+      general per-archetype **targeting strategy** field ([config/archetypes.json](config/archetypes.json) +
+      [src/sim/targetingStrategies.ts](src/sim/targetingStrategies.ts): `nearest` / `weakest`). The plan was to
+      make the rogue target the **weakest** (squishiest) enemy = "backline assassin." A
+      forced-roster eval **disproved it for our rogue**: `weakest` *halved* the rogue's
+      damage (6.1 → 3.1 dmg/dep) and the free search still never recruited it. Mechanism:
+      the rogue is **range 1** with no gap-closer, so committing to the farthest squishy
+      mark makes it walk *past* adjacent enemies it could strike (the strike only fires on
+      the committed target), dying en route. `weakest` is left **registered but unassigned**
+      (all archetypes = `nearest`) — it's the right strategy for a unit that can actually
+      *reach* the backline. So the real rogue fix is **mobility**: a dash / leap / blink
+      ability (a new ability + likely a small action-phase + movement-intent seam) that
+      closes distance to the assassination target, at which point flipping the rogue to
+      `weakest` becomes viable and measurable (re-run the same forced-roster eval). Pairs
+      with the broader deferred rogue identity work (evasion / stealing — Phase I+ / shop).
+      Surfaced 2026-06-07 during the H7c rogue pass; full data in [BALANCE.md](BALANCE.md).
 - [ ] **Turn-limit / tick-cap resolution — a deeper system.** In the G5
       multi-turn battle model, a *turn* whose tactical battle hits the
       tick-cap resolves as a **draw**: both sides' surviving units chip the

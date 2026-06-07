@@ -3,8 +3,11 @@ import {
   rollUnit,
   glyphForArchetype,
   rangeForArchetype,
+  targetingForArchetype,
   ARCHETYPE_CONFIG,
+  ALL_ARCHETYPES,
 } from './archetypes';
+import { knownTargetingIds } from './targetingStrategies';
 import { RNG } from '../core/RNG';
 
 describe('archetypes / rollUnit (E1: returns baseStats verbatim, no rolls)', () => {
@@ -60,5 +63,30 @@ describe('archetypes / lookups', () => {
   it('rangeForArchetype is the max over abilities (melee=1, ranged>1)', () => {
     expect(rangeForArchetype('melee')).toBe(1);
     expect(rangeForArchetype('ranged')).toBeGreaterThan(1);
+  });
+});
+
+describe('archetypes / targeting config', () => {
+  it('every archetype declares a registered targeting strategy', () => {
+    const known = knownTargetingIds();
+    for (const a of ALL_ARCHETYPES) {
+      expect(known).toContain(ARCHETYPE_CONFIG[a].targeting);
+    }
+  });
+
+  // Every archetype currently targets `nearest`. `weakest` ships as
+  // dormant-but-tested infrastructure (the registry + the Targeting.test.ts
+  // weakest cases): a forced-roster eval showed it HALVES the range-1 rogue's
+  // damage — it chases an unreachable backline mark past adjacent enemies it
+  // can't strike — so it stays unassigned until a gap-closer/ranged assassin
+  // makes "dive the squishies" viable (see TODO.md "Targeting strategies").
+  it('every archetype currently targets nearest', () => {
+    for (const a of ALL_ARCHETYPES) {
+      expect(targetingForArchetype(a)).toBe('nearest');
+    }
+  });
+
+  it('environment entities fall back to nearest', () => {
+    expect(targetingForArchetype('environment')).toBe('nearest');
   });
 });

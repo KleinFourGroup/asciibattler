@@ -187,6 +187,62 @@ describe('Targeting / target stickiness (E5)', () => {
   });
 });
 
+describe('Targeting / weakest strategy (rogue)', () => {
+  it('picks the lowest max-HP enemy over a nearer, tankier one', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0, targeting: 'weakest' },
+      { id: 2, team: 'enemy', x: 1, y: 0, maxHp: 30 }, // nearest, but tanky
+      { id: 3, team: 'enemy', x: 5, y: 0, maxHp: 10 }, // far, but squishy
+    ]);
+    expect(findTarget(units[0]!, world)?.id).toBe(3);
+  });
+
+  it('breaks max-HP ties by Chebyshev distance', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0, targeting: 'weakest' },
+      { id: 5, team: 'enemy', x: 4, y: 0, maxHp: 12 }, // farther
+      { id: 6, team: 'enemy', x: 2, y: 0, maxHp: 12 }, // nearer → wins
+    ]);
+    expect(findTarget(units[0]!, world)?.id).toBe(6);
+  });
+
+  it('breaks max-HP + distance ties by lowest id', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0, targeting: 'weakest' },
+      { id: 9, team: 'enemy', x: 2, y: 0, maxHp: 12 }, // chebyshev 2
+      { id: 4, team: 'enemy', x: 0, y: 2, maxHp: 12 }, // chebyshev 2, lower id
+    ]);
+    expect(findTarget(units[0]!, world)?.id).toBe(4);
+  });
+
+  it('holds its committed mark even when a weaker enemy appears (no thrash)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0, targeting: 'weakest' },
+      { id: 2, team: 'enemy', x: 3, y: 0, maxHp: 15 }, // committed mark, alive
+      { id: 3, team: 'enemy', x: 6, y: 0, maxHp: 5 }, // weaker, but appears later
+    ]);
+    units[0]!.targetId = 2;
+    // The fresh weakest pick is now id 3, but the live mark is committed and
+    // `weakest.shouldRetarget` is false → it never switches off a live target.
+    updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(2);
+  });
+
+  it('re-picks the next weakest enemy when its mark dies', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0, targeting: 'weakest' },
+      { id: 2, team: 'enemy', x: 3, y: 0, maxHp: 8 }, // weakest
+      { id: 3, team: 'enemy', x: 6, y: 0, maxHp: 20 },
+    ]);
+    updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(2);
+
+    units[1]!.currentHp = 0; // mark dies → rule (a) re-picks
+    updateTarget(units[0]!, world);
+    expect(units[0]!.targetId).toBe(3);
+  });
+});
+
 /**
  * Build a World seeded with hand-placed units. We bypass spawnUnit because
  * Targeting tests want precise ids and HPs without rolling templates.
@@ -199,6 +255,11 @@ interface UnitSpec {
   currentHp?: number;
   /** Defaults to melee for combatants, environment for neutrals. */
   archetype?: UnitArchetype;
+  /** Target-selection strategy; defaults to the Unit ctor default (nearest). */
+  targeting?: string;
+  /** Override `derived.maxHp` for this unit — lets the `weakest` tests vary
+   *  structural HP per candidate (also sets `currentHp` via the ctor). */
+  maxHp?: number;
 }
 
 function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
@@ -208,14 +269,16 @@ function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
   const stats: UnitStats = { ...ARCHETYPE_CONFIG.melee.baseStats, luck: 0 };
   const derived = deriveStats(stats, 1);
   const units = specs.map((s) => {
+    const d = s.maxHp !== undefined ? { ...derived, maxHp: s.maxHp } : derived;
     const u = new Unit({
       id: s.id,
       team: s.team,
       archetype: s.archetype ?? (s.team === 'neutral' ? 'environment' : 'melee'),
       glyph: 'M',
       stats,
-      derived,
+      derived: d,
       position: { x: s.x, y: s.y } satisfies GridCoord,
+      ...(s.targeting !== undefined ? { targeting: s.targeting } : {}),
     });
     if (s.currentHp !== undefined) u.currentHp = s.currentHp;
     world.units.push(u);

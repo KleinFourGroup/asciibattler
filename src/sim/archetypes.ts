@@ -1,5 +1,5 @@
 import type { RNG } from '../core/RNG';
-import type { Archetype, UnitTemplate } from './Unit';
+import type { Archetype, UnitArchetype, UnitTemplate } from './Unit';
 import { ARCHETYPES, type ArchetypeConfig } from '../config/archetypes';
 import { abilityConfig } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
@@ -34,6 +34,19 @@ export function glyphForArchetype(archetype: Archetype): string {
  */
 export function rangeForArchetype(archetype: Archetype): number {
   return Math.max(...CONFIGS[archetype].abilities.map((id) => abilityConfig(id).range));
+}
+
+/**
+ * Per-archetype target-selection strategy id (resolved against the registry
+ * in `src/sim/targetingStrategies.ts`). Resolved at spawn and stashed on
+ * `Unit.targeting` so the leaf `Targeting.ts` needn't import the config layer.
+ * Accepts the full `UnitArchetype`: environment entities (walls/half-cover)
+ * never seek a target, so they get the harmless `nearest` default and callers
+ * needn't branch on team/neutral first.
+ */
+export function targetingForArchetype(archetype: UnitArchetype): string {
+  if (archetype === 'environment') return 'nearest';
+  return CONFIGS[archetype].targeting;
 }
 
 /**

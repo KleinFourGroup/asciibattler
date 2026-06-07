@@ -481,3 +481,31 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   - **Methodology keeper:** playtest feel caught what the aggregate win-rate hid; per-floor
     run-death vs per-wave attrition are different questions; harden the band on the knob that's
     binding where you WANT the difficulty (budget=late, swarm=early).
+
+- **Step 3 — ROGUE pass: targeting-strategy infra shipped; `weakest` DISPROVED for the rogue
+  (2026-06-07).** The locked-plan rogue step. Instead of buffing HP/damage (not "rogue-coded"),
+  the idea was **target priority**: re-point the rogue at the squishy backline. Built it as a
+  GENERAL, extensible per-archetype **targeting strategy** ([config/archetypes.json](config/archetypes.json) `targeting`
+  field + [src/sim/targetingStrategies.ts](src/sim/targetingStrategies.ts) registry: `nearest` = the historical pick,
+  `weakest` = lowest `derived.maxHp`). Resolved at spawn onto `Unit.targeting` (like
+  glyph/abilities) so the leaf `Targeting.ts` needn't import the config layer (no cycle). 689
+  main tests + 75 fuzz smoke green; no snapshot bump (re-derived from archetype on rehydrate).
+  - **Forced-roster eval (the measurement, quick tier, `--floors=11`, samplerSeed=1, set config
+    0.625×1.75):** swap one starting melee → a level-1 rogue, rogue on `weakest` vs `nearest`:
+    - **`weakest`: rogue dmg/dep 3.1**, taken/dep 15.6, deaths/run 8.0.
+    - **`nearest`: rogue dmg/dep 6.1**, taken/dep 15.3, deaths/run 7.1.
+    - Both lineups floor at **0% best-achievable** (a fragile L1 rogue replacing a melee tank
+      tanks the run regardless; quick-tier's 8 seeds saturate the win metric) — so dmg/dep is
+      the honest signal. The free composition search (control, rogue=`weakest`, default roster)
+      leaves the rogue **inactive** = it won't recruit it.
+  - **VERDICT: `weakest` HALVES the rogue's damage (6.1 → 3.1) — it BACKFIRES.** Mechanism: the
+    rogue is **range 1** with no gap-closer, so committing to the farthest squishy mark makes it
+    walk *past* adjacent enemies (the strike only fires on the committed target) and die en
+    route. This is the "can it REACH the backline?" caveat, quantified: without mobility, no.
+  - **DECISION (user):** **keep the infrastructure** (a general feature wanted regardless),
+    **set the rogue back to `nearest`** (no harmful change; `weakest` stays registered + tested
+    but **unassigned**, ready for a unit that can reach the backline). The real rogue fix is
+    **mobility** — a dash/leap/blink so `weakest` becomes viable; logged as a roadmap
+    exploration in [TODO.md](TODO.md) "Movement abilities (dash / gap-closer)". Net config change: targeting
+    infra added, all archetypes = `nearest` (rogue behavior UNCHANGED), so fuzz baselines hold.
+    Rogue's broader identity (evasion / stealing) stays deferred to Phase I+ / shop, as before.

@@ -84,9 +84,10 @@ src/
     Command.ts               # WorldCommand union — drained at tick boundary (A2)
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest in-range(+LOS) firing cell
-    Targeting.ts             # currentTarget stickiness + updateTarget (E5); lowestWoundedAlly (E7.B)
-                             # nearest-enemy fallback, ties by HP then id; skips neutrals
-    archetypes.ts            # ALL_ARCHETYPES pool (F1), rollUnit, glyphForArchetype
+    Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5); lowestWoundedAlly (E7.B)
+                             # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
+    targetingStrategies.ts   # per-archetype target-pick registry (nearest / weakest); Unit.targeting resolved at spawn
+    archetypes.ts            # ALL_ARCHETYPES pool (F1), rollUnit, glyphForArchetype, targetingForArchetype
     environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories
     terrainGen.ts            # Per-encounter procedural tile + wall generator; layout dispatch
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)

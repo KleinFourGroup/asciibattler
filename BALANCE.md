@@ -559,11 +559,19 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     `--seed-offset` is the missing prereq; logged in [TODO.md](TODO.md). Until then the overnight run
     is a strong best-achievable read but on the same seed bases the config was tuned against.
 
-  ### To finish H7
-  1. **Stage-5 overnight verify — the one remaining H7 step (DEFERRED by the user, run later).**
-     `--search --preset=overnight --jobs=<cores>` — now a one-liner (H7d wired `--jobs` into search).
-     For a RIGOROUS config→seed-overfit guard it wants **`--seed-offset`** (logged above + in TODO)
-     so it runs on a fresh, never-tuned seed range; without it it's still a strong best-achievable
-     read on the tuned seed bases. Confirms the 0.625 × 1.75 band + archetype edits hold out-of-sample.
-  2. *Optional:* the leveling pass (may self-resolve post-nerf — identical growth) + the melee↔ranged
-     carry gap (final 102 vs 61) if playtest bothers; re-baseline tests/fuzz after any config change.
+  ### Phase H DONE — the H7 balance deferrals resequenced behind the rogue rework (user call, 2026-06-07)
+  Phase H is **effectively complete** (H1–H7 ✅). The two open balance items are NOT dropped — they're
+  sequenced AFTER the next focus, the **rogue salvage** (a mobility / gap-closer ability; TODO.md
+  "Movement abilities"), because that's a structural combat change that will move the difficulty band +
+  XP flow, and both items must be measured against a **stable post-rogue baseline** (the same "tune
+  against a stable baseline" rule that put rogue LAST in H7c — verifying/leveling against a config we're
+  about to disturb is wasted). **Post-rogue order:**
+  1. **Re-confirm the difficulty band** — re-sweep (the band may shift now the rogue is viable, the way
+     the composition-target refactor shifted it). The sweep GUI / `--jobs` search are ready.
+  2. **Leveling pass** — against the now-stable combat baseline + fresh XP-flow telemetry (may still
+     self-resolve — identical growth across archetypes).
+  3. **Stage-5 overnight verify** — `--search --preset=overnight --jobs=<cores>` on the settled config;
+     ideally after a **`--seed-offset`** add (logged above + in TODO) for a rigorous config→seed-overfit
+     holdout. Without it it's still a strong best-achievable read, but on the tuned seed bases.
+  - *Also optional, anytime:* the melee↔ranged carry gap (final 102 vs 61) if a playtest bothers.
+  Re-baseline tests/fuzz after any config change.

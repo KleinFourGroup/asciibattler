@@ -15,6 +15,8 @@
  *   npm run fuzz -- --strategy=scored        # the H7a linear scored strategy (default weights)
  *   npm run fuzz -- --strategy=config/fuzz-strategies.json   # a scored-strategy vector from a file
  *   npm run fuzz -- --per-floor   # + per-floor team analysis (stdout + per-floor.csv)
+ *   npm run fuzz -- --per-layout  # + per-layout & layout×floor win/death breakdown (+ CSVs)
+ *   npm run fuzz -- --layout=junctionAmbush --per-floor   # force ONE layout (clean full sample)
  *
  *   # H7b — random-search the scored-strategy weights for the best win rate:
  *   npm run fuzz -- --search                       # quick preset (short runs, < ~1 min)
@@ -78,6 +80,7 @@ import {
 import type { ShardJob } from './searchShard';
 import { reportFromCsv } from './sweepReport';
 import { parseRunConfig, type RosterEntry } from '../../src/run/RunConfig';
+import { LAYOUT_IDS } from '../../src/sim/layouts';
 import {
   aggregate,
   renderSummaryCsv,
@@ -85,6 +88,11 @@ import {
   failureFilename,
   renderPerFloorAnalysis,
   perFloorStats,
+  perLayoutStats,
+  perLayoutFloorStats,
+  renderLayoutAnalysis,
+  renderLayoutCsv,
+  renderLayoutFloorCsv,
 } from './reporters';
 
 interface CliArgs {
@@ -93,6 +101,10 @@ interface CliArgs {
   strategy?: string;
   outDir: string;
   perFloor: boolean;
+  // Per-layout difficulty breakdown (`--per-layout`) + force one layout across
+  // every battle (`--layout=<id>`) for a clean full-sample isolate.
+  perLayout: boolean;
+  layout?: string;
   // H7b — random-search mode (`--search`).
   search: boolean;
   preset?: string;
@@ -125,6 +137,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     count: 20,
     outDir: defaultOutDir(),
     perFloor: false,
+    perLayout: false,
     search: false,
     balanceSweep: false,
     dryRun: false,
@@ -147,6 +160,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--per-floor':
         args.perFloor = true;
+        break;
+      case '--per-layout':
+        args.perLayout = true;
+        break;
+      case '--layout':
+        args.layout = v;
         break;
       case '--search':
         args.search = true;
@@ -250,6 +269,17 @@ async function main(): Promise<void> {
 
   const seeds = args.seed !== undefined ? [args.seed] : range(1, args.count);
 
+  // --layout=<id> forces a single hand-authored layout on EVERY battle — a clean
+  // full-sample isolate for the per-layout / per-floor difficulty read (natural
+  // runs only hit a given layout ~12% of the time). Validated against the library.
+  let harnessOptions: HarnessOptions = {};
+  if (args.layout !== undefined) {
+    if (!LAYOUT_IDS.includes(args.layout)) {
+      bail(`Unknown layout: ${args.layout} (choices: ${LAYOUT_IDS.join(', ')})`);
+    }
+    harnessOptions = { runConfig: { forcedLayoutId: args.layout } };
+  }
+
   // Fresh failures/ dir so stale traces from prior runs don't lie. Only the
   // failures subdir is wiped (not the whole output dir) so a search's
   // best-strategy.json / search-results.csv survive a subsequent sweep — in
@@ -260,9 +290,10 @@ async function main(): Promise<void> {
   mkdirSync(failuresDir, { recursive: true });
 
   const allResults: RunResult[] = [];
+  const layoutNote = args.layout ? ` (layout=${args.layout})` : '';
   for (const strategy of strategies) {
-    process.stdout.write(`Running ${seeds.length} seeds with strategy '${strategy.name}'…\n`);
-    for (const s of seeds) allResults.push(runOne(s, strategy));
+    process.stdout.write(`Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}…\n`);
+    for (const s of seeds) allResults.push(runOne(s, strategy, harnessOptions));
   }
 
   writeFileSync(join(args.outDir, 'summary.csv'), renderSummaryCsv(allResults));
@@ -292,6 +323,15 @@ async function main(): Promise<void> {
       ].join(','),
     );
     writeFileSync(join(args.outDir, 'per-floor.csv'), [header, ...rows].join('\n') + '\n');
+  }
+
+  if (args.perLayout) {
+    process.stdout.write('\n' + renderLayoutAnalysis(allResults));
+    writeFileSync(join(args.outDir, 'per-layout.csv'), renderLayoutCsv(perLayoutStats(allResults)));
+    writeFileSync(
+      join(args.outDir, 'per-layout-floor.csv'),
+      renderLayoutFloorCsv(perLayoutFloorStats(allResults)),
+    );
   }
 
   let failuresWritten = 0;

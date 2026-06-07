@@ -312,3 +312,190 @@ export function renderPerFloorAnalysis(results: readonly RunResult[]): string {
   for (const r of rows) lines.push(fmt(cell(r)));
   return lines.join('\n') + '\n';
 }
+
+// ── Per-layout difficulty analysis ───────────────────────────────────────────
+
+export interface LayoutStats {
+  /** `layoutId`, or `'procedural'` for the null (generated-terrain) path. */
+  layout: string;
+  /** Waves (battles) fought on this layout across all runs — the SAMPLE SIZE.
+   *  A hand-authored layout is only ~12% of natural battles (~75% library ÷ 6),
+   *  so weight a read by this; force the layout (`--layout`) for a clean sample. */
+  battles: number;
+  /** Fraction of those waves the PLAYER won tactically (`winner === 'player'`).
+   *  The brutality headline. WAVE-level: a lost wave chips the pool but doesn't
+   *  end the run (use the per-floor run-death rate for that). */
+  playerWinRate: number;
+  /** Fraction the ENEMY won (`winner === 'enemy'`); the remainder up to 1 is
+   *  draws (tick-cap) + hangs. */
+  enemyWinRate: number;
+  /** Mean player-unit deaths per wave on this layout — the attrition cost. */
+  avgPlayerDeaths: number;
+  avgEnemyDeaths: number;
+  /** Mean team sizes at wave START. `enemySize` ≫ `playerSize` flags an
+   *  outnumbered "ambush" layout (the spawn disadvantage, before any deaths). */
+  playerSize: number;
+  enemySize: number;
+}
+
+export interface LayoutFloorStats extends LayoutStats {
+  floor: number;
+}
+
+function layoutKey(b: BattleResult): string {
+  return b.layoutId ?? 'procedural';
+}
+
+/** Shared per-layout reduction over a battle bucket (used by both the
+ *  layout-only and the layout×floor groupings). */
+function layoutCore(layout: string, bs: readonly BattleResult[]): LayoutStats {
+  const n = bs.length;
+  const frac = (pred: (b: BattleResult) => boolean) =>
+    n === 0 ? 0 : bs.filter(pred).length / n;
+  return {
+    layout,
+    battles: n,
+    playerWinRate: frac((b) => b.winner === 'player'),
+    enemyWinRate: frac((b) => b.winner === 'enemy'),
+    avgPlayerDeaths: mean(bs.map((b) => b.playerDeaths)),
+    avgEnemyDeaths: mean(bs.map((b) => b.enemyDeaths)),
+    playerSize: mean(bs.map((b) => b.playerTeamSize)),
+    enemySize: mean(bs.map((b) => b.enemyTeamSize)),
+  };
+}
+
+/**
+ * Pool every battle by layout (across all runs/strategies). Sorted
+ * most-brutal-first (lowest player wave-win rate), ties to the bigger sample
+ * then layout name. Answers "which layouts are disproportionately hard."
+ */
+export function perLayoutStats(results: readonly RunResult[]): LayoutStats[] {
+  const byLayout = new Map<string, BattleResult[]>();
+  for (const r of results) {
+    for (const b of r.battles) {
+      const k = layoutKey(b);
+      const arr = byLayout.get(k);
+      if (arr) arr.push(b);
+      else byLayout.set(k, [b]);
+    }
+  }
+  return [...byLayout.entries()]
+    .map(([layout, bs]) => layoutCore(layout, bs))
+    .sort(
+      (a, b) =>
+        a.playerWinRate - b.playerWinRate ||
+        b.battles - a.battles ||
+        a.layout.localeCompare(b.layout),
+    );
+}
+
+/**
+ * Pool by layout × floor — disentangles "this layout is hard" from "it shows up
+ * early with a weak roster." Sorted by layout, then floor.
+ */
+export function perLayoutFloorStats(results: readonly RunResult[]): LayoutFloorStats[] {
+  const byKey = new Map<string, { layout: string; floor: number; bs: BattleResult[] }>();
+  for (const r of results) {
+    for (const b of r.battles) {
+      const layout = layoutKey(b);
+      const k = `${layout} ${b.floor}`;
+      const entry = byKey.get(k);
+      if (entry) entry.bs.push(b);
+      else byKey.set(k, { layout, floor: b.floor, bs: [b] });
+    }
+  }
+  return [...byKey.values()]
+    .map(({ layout, floor, bs }) => ({ ...layoutCore(layout, bs), floor }))
+    .sort((a, b) => a.layout.localeCompare(b.layout) || a.floor - b.floor);
+}
+
+/** Fixed-width table: left-align column 0 (labels), right-align the rest. */
+function renderTable(header: readonly string[], rows: readonly string[][]): string {
+  const widths = header.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i]!.length)));
+  const fmt = (cells: readonly string[]) =>
+    cells.map((c, i) => (i === 0 ? c.padEnd(widths[i]!) : c.padStart(widths[i]!))).join('  ');
+  return [fmt(header), ...rows.map(fmt)].join('\n');
+}
+
+/** Render the per-layout + per-layout×floor difficulty tables. */
+export function renderLayoutAnalysis(results: readonly RunResult[]): string {
+  const totalBattles = results.reduce((acc, r) => acc + r.battles.length, 0);
+  const lines: string[] = [];
+  lines.push(`### Per-layout difficulty (${totalBattles} waves across ${results.length} runs)`);
+  lines.push('Waves = battles on this layout (SAMPLE SIZE — a layout is only ~12% of natural battles;');
+  lines.push('  force one with --layout=<id> for a full sample). PWin%/EWin% = player/enemy WAVE win');
+  lines.push('  rate (remainder = draws + hangs) · Dth/wv = mean deaths per wave.');
+  lines.push('E.size ≫ P.size ⇒ outnumbered ("ambush"). Sorted most-brutal-first (lowest PWin%).');
+  lines.push('');
+  lines.push(
+    renderTable(
+      ['Layout', 'Waves', 'PWin%', 'EWin%', 'PDth/wv', 'EDth/wv', 'P.size', 'E.size'],
+      perLayoutStats(results).map((s) => [
+        s.layout,
+        String(s.battles),
+        (s.playerWinRate * 100).toFixed(0),
+        (s.enemyWinRate * 100).toFixed(0),
+        s.avgPlayerDeaths.toFixed(1),
+        s.avgEnemyDeaths.toFixed(1),
+        s.playerSize.toFixed(1),
+        s.enemySize.toFixed(1),
+      ]),
+    ),
+  );
+  lines.push('');
+  lines.push('### Per-layout × floor (disentangles layout difficulty from roster strength by depth)');
+  lines.push('');
+  lines.push(
+    renderTable(
+      ['Layout', 'Floor', 'Waves', 'PWin%', 'PDth/wv', 'P.size', 'E.size'],
+      perLayoutFloorStats(results).map((s) => [
+        s.layout,
+        String(s.floor),
+        String(s.battles),
+        (s.playerWinRate * 100).toFixed(0),
+        s.avgPlayerDeaths.toFixed(1),
+        s.playerSize.toFixed(1),
+        s.enemySize.toFixed(1),
+      ]),
+    ),
+  );
+  return lines.join('\n') + '\n';
+}
+
+/** CSV of `perLayoutStats` (one row per layout) for spreadsheet filtering. */
+export function renderLayoutCsv(stats: readonly LayoutStats[]): string {
+  const header = 'layout,waves,playerWinRate,enemyWinRate,avgPlayerDeaths,avgEnemyDeaths,playerSize,enemySize';
+  const rows = stats.map((s) =>
+    [
+      s.layout,
+      s.battles,
+      s.playerWinRate.toFixed(4),
+      s.enemyWinRate.toFixed(4),
+      s.avgPlayerDeaths.toFixed(3),
+      s.avgEnemyDeaths.toFixed(3),
+      s.playerSize.toFixed(3),
+      s.enemySize.toFixed(3),
+    ].join(','),
+  );
+  return [header, ...rows].join('\n') + '\n';
+}
+
+/** CSV of `perLayoutFloorStats` (one row per layout×floor). */
+export function renderLayoutFloorCsv(stats: readonly LayoutFloorStats[]): string {
+  const header =
+    'layout,floor,waves,playerWinRate,enemyWinRate,avgPlayerDeaths,avgEnemyDeaths,playerSize,enemySize';
+  const rows = stats.map((s) =>
+    [
+      s.layout,
+      s.floor,
+      s.battles,
+      s.playerWinRate.toFixed(4),
+      s.enemyWinRate.toFixed(4),
+      s.avgPlayerDeaths.toFixed(3),
+      s.avgEnemyDeaths.toFixed(3),
+      s.playerSize.toFixed(3),
+      s.enemySize.toFixed(3),
+    ].join(','),
+  );
+  return [header, ...rows].join('\n') + '\n';
+}

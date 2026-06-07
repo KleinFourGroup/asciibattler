@@ -20,7 +20,11 @@ import {
   failureFilename,
   perFloorStats,
   renderPerFloorAnalysis,
+  perLayoutStats,
+  perLayoutFloorStats,
+  renderLayoutAnalysis,
 } from './reporters';
+import { LAYOUT_IDS } from '../../src/sim/layouts';
 
 describe('fuzz harness', () => {
   it('completes a single run without throwing', () => {
@@ -205,6 +209,88 @@ describe('fuzz reporters', () => {
     expect(f2.runsDied).toBe(0); // run A completed, didn't die
     // Σ runsDied across floors == total non-completing runs.
     expect(stats.reduce((acc, s) => acc + s.runsDied, 0)).toBe(1);
+  });
+
+  it('per-layout stats group by layout with wave win rate, deaths, and sizes', () => {
+    const b = (
+      layoutId: string | null,
+      floor: number,
+      winner: 'player' | 'enemy',
+      playerDeaths: number,
+      enemyTeamSize: number,
+    ): BattleResult => ({
+      floor,
+      worldSeed: 0,
+      layoutId,
+      winner,
+      ticks: 1,
+      playerDeaths,
+      enemyDeaths: 0,
+      playerTeamSize: 5,
+      enemyTeamSize,
+      playerLevels: [1, 1, 1, 1, 1],
+      enemyLevels: Array<number>(enemyTeamSize).fill(1),
+    });
+    const results: RunResult[] = [
+      {
+        seed: 0,
+        strategyName: 'synthetic',
+        outcome: 'complete',
+        finalFloorReached: 2,
+        totalTicks: 0,
+        finalTeamSize: 5,
+        recruits: [],
+        battles: [
+          // junctionAmbush: 1 of 4 player wins (brutal), outnumbered 9-vs-5.
+          b('junctionAmbush', 1, 'enemy', 4, 9),
+          b('junctionAmbush', 1, 'enemy', 3, 9),
+          b('junctionAmbush', 2, 'enemy', 2, 9),
+          b('junctionAmbush', 2, 'player', 1, 9),
+          // river: 3 of 4 player wins, fair 6-vs-5.
+          b('river', 1, 'player', 0, 6),
+          b('river', 1, 'player', 0, 6),
+          b('river', 2, 'player', 1, 6),
+          b('river', 2, 'enemy', 2, 6),
+          // procedural (null → 'procedural').
+          b(null, 1, 'player', 0, 5),
+        ],
+      },
+    ];
+
+    const stats = perLayoutStats(results);
+    const ja = stats.find((s) => s.layout === 'junctionAmbush')!;
+    const river = stats.find((s) => s.layout === 'river')!;
+    expect(ja.battles).toBe(4);
+    expect(ja.playerWinRate).toBeCloseTo(0.25);
+    expect(ja.enemyWinRate).toBeCloseTo(0.75);
+    expect(ja.enemySize).toBeCloseTo(9); // outnumbered ("ambush")
+    expect(ja.playerSize).toBeCloseTo(5);
+    expect(river.playerWinRate).toBeCloseTo(0.75);
+    expect(stats.find((s) => s.layout === 'procedural')).toBeDefined(); // null → 'procedural'
+    // Sorted most-brutal-first (lowest player win rate).
+    expect(stats[0]!.layout).toBe('junctionAmbush');
+    // Total waves across layouts == total battles.
+    expect(stats.reduce((a, s) => a + s.battles, 0)).toBe(9);
+
+    // layout × floor splits junctionAmbush into floor 1 and floor 2.
+    const lf = perLayoutFloorStats(results);
+    expect(lf.filter((s) => s.layout === 'junctionAmbush').map((s) => s.floor)).toEqual([1, 2]);
+    const ja1 = lf.find((s) => s.layout === 'junctionAmbush' && s.floor === 1)!;
+    expect(ja1.battles).toBe(2);
+    expect(ja1.playerWinRate).toBeCloseTo(0); // both floor-1 ambush waves lost
+
+    expect(renderLayoutAnalysis(results)).toContain('Per-layout difficulty');
+  });
+
+  it('--layout forces a single layout on every battle (the forced-layout plumbing)', () => {
+    expect(LAYOUT_IDS).toContain('junctionAmbush');
+    const result = runOne(7, makeStrategy('greedy')!, {
+      runConfig: { forcedLayoutId: 'junctionAmbush' },
+    });
+    expect(result.battles.length).toBeGreaterThan(0);
+    for (const battle of result.battles) {
+      expect(battle.layoutId).toBe('junctionAmbush');
+    }
   });
 
   it('renders a failure trace for a non-complete result', () => {

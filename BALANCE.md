@@ -509,3 +509,33 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     exploration in [TODO.md](TODO.md) "Movement abilities (dash / gap-closer)". Net config change: targeting
     infra added, all archetypes = `nearest` (rogue behavior UNCHANGED), so fuzz baselines hold.
     Rogue's broader identity (evasion / stealing) stays deferred to Phase I+ / shop, as before.
+
+- **Layout-difficulty telemetry + the Junction Ambush read (2026-06-07).** Playtest flagged some
+  layouts (esp. Junction Ambush) as disproportionately brutal. Added per-layout instrumentation
+  (all `tests/fuzz/`, zero src; fuzz smoke 77): `npm run fuzz -- --per-layout` (per-layout +
+  layout×floor **wave win rate / deaths/wave / team sizes** tables + `per-layout.csv` /
+  `per-layout-floor.csv`) and `--layout=<id>` (force ONE layout across every battle for a clean
+  full sample — natural runs only hit a given layout ~12%). Metric is WAVE-level (a lost wave
+  chips the pool, doesn't end the run — distinct from per-floor run-death).
+  - **Survey (200 seeds × pure-random+greedy, set config):** player wave-win by layout —
+    river **41%** · junctionAmbush **45%** · procedural 45% · spiralFireLife 69% · labyrinth 83% ·
+    endlessCorridors 84% · strafingFunnel 85%. Enemy team size is ~9.5 EVERYWHERE (swarm-cap-bound,
+    NOT layout-driven), so the spread is **pure geometry**: chokepoint layouts let 5 funnel a
+    9-swarm (~85% win, ~2 deaths/wave); open/multi-approach layouts let the swarm surround you
+    (~45% win, ~3.8 deaths/wave).
+  - **Per-floor:** junctionAmbush tracks procedural almost exactly per floor (F1 70% → F5 26%,
+    ramping as the swarm grows 7.7→15+), and BOTH diverge from the chokepoint layouts immediately
+    (F2: junctionAmbush 43% vs strafingFunnel 85%). So Junction Ambush is NOT a unique outlier vs a
+    generic open battle — the real story is "open/ambush ≈ 2× harder than chokepoint," and a human's
+    positioning skill rescues them in chokepoints but not when surrounded, widening the felt gap.
+  - **DECISION (user): leave layouts as-is for now** — the **post-Phase-H rework will introduce
+    map / difficulty gating** (don't roll the hard open layouts on the weakest early floors), which
+    is the right lever; logged in [TODO.md](TODO.md). This pass was diagnosis-only.
+
+  ### To finish H7 (next session)
+  1. **Stage-5 overnight verify** — `--search --preset=overnight` on a **FRESH held-out seed range
+     never tuned against** (guards config→seed overfit; the last locked H7c step). Confirms the
+     0.625 × 1.75 band + the archetype edits hold out-of-sample. Now cheap with `--jobs=N`.
+  2. **H7d** — launcher GUI / VPS wrapper (the same `--jobs` sharded command, more cores).
+  3. *Optional:* the leveling pass (may self-resolve post-nerf — identical growth) + the melee↔ranged
+     carry gap (final 102 vs 61) if playtest bothers; re-baseline tests/fuzz after any config change.

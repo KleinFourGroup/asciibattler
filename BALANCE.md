@@ -450,3 +450,34 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     (low dmg + fragile, never recruited), now against a settled difficulty + measurement
     baseline. Also still pending: stage-5 overnight verify on held-out seeds (now cheap with
     `--jobs`); the melee↔ranged carry gap if it bothers playtest.
+
+- **Step 2 REVERSED — swarm 1.90 → 1.75 after a PLAYTEST + per-floor telemetry caught a
+  floor-1 wall (2026-06-06).** Playtesting the committed 1.90 surfaced "most deaths on floor 1,
+  before you can make a difference." Built **per-floor run-death telemetry** to verify (commit
+  `28215b4`): extended `--per-floor` (`reporters.ts#FloorStats`) with RUN-level `runsReached` /
+  `runsDied` / `deathRate` (from `RunResult.outcome`/`finalFloorReached`) distinct from the
+  per-WAVE `avgPlayerDeaths` — the two diverge under the H4/H5 pool+deck system (a lost wave
+  chips the pool, doesn't end the run). *(First cut wrongly used per-battle `winner`; the data
+  showed >1 "loss" per run — floors are multi-wave — so corrected to run-level.)*
+  - **What the telemetry found (greedy & pure-random, 50 seeds each):** run-deaths are NOT
+    floor-1-concentrated — they **ramp with depth** (floor-1 ~12% → floor-5 ~57%); the curve is
+    back-loaded. BUT floor 1 IS a unit bloodbath: outnumbered **8.6 vs 5.0 (1.7×)** at the
+    weakest fresh roster, ~3.3 of 5 lost per wave. The run survives (~88%) via pool attrition,
+    but it *feels* like dying — exactly the playtest report.
+  - **A/B — my 1.90 bump WAS the cause (swarm 1.75 vs 1.90, same seeds):** floor-1 run-deaths
+    **0% → 12%**, deaths/wave 2.7 → 3.3, enemy 7.7 → 8.6, runs reaching floor 2 50/50 → 44/50.
+    At 1.75 floor 1 is CLEAN; the 1.90 boundary-tip introduced the floor-1 deaths.
+  - **MECHANIC (why swarm is the wrong band knob):** on **floor 1 the enemy count is
+    SWARM-cap-bound** (`round(swarmMax×teamSize)`), so swarm hits the early game hardest — where
+    the player is weakest, the marginal enemy is most lethal. On **deep floors the count is
+    BUDGET-bound** (`budgetFactor×playerTeamLevel`, which grows as you level/recruit). ⇒ **swarm↑
+    hammers EARLY floors; budgetFactor↑ hammers LATE floors.** budgetFactor is the right knob to
+    harden the band without an early wall (a finding for any future difficulty tuning).
+  - **DECISION (user):** **revert to swarm 1.75 (clean floor 1), accept best-achievable 73%**
+    (slightly easier than 2/3, but a fair early game beats a hidden floor-1 wall; budgetFactor-
+    harden was the alternative, declined for simplicity). **`difficulty.json` swarmMaxMultiplier
+    1.90 → 1.75 (budgetFactor 0.625).** Net: difficulty is back to the stage-4 band; the 1.90
+    detour is fully undone, the per-floor telemetry is the keeper. Re-baseline CLEAN (675 + 75).
+  - **Methodology keeper:** playtest feel caught what the aggregate win-rate hid; per-floor
+    run-death vs per-wave attrition are different questions; harden the band on the knob that's
+    binding where you WANT the difficulty (budget=late, swarm=early).

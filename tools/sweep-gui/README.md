@@ -54,5 +54,34 @@ The knob menu and the emitted command both come from
 | Roster       | `--roster`       | `archetype[:level],…` forced starting team         |
 | Sampler seed | `--sampler-seed` | reproducibility (default 1)                        |
 
+## Overnight verify / many-core runs
+
+The expensive H7 endgame is the **overnight verify** — a full-length, large-
+vector search confirming the tuned config's best-achievable win rate holds out-
+of-sample. Vector-level sharding (`--jobs`) makes it tractable on many cores and
+applies to `--search` as well as `--balance-sweep` (so no special wrapper is
+needed — the sharded command *is* the wrapper, on a VPS or any multi-core box):
+
+```bash
+npm run fuzz -- --search --preset=overnight --jobs=<cores>
+# → tests/fuzz/output/best-strategy.json (+ search-results.csv)
+```
+
+Children are pure evaluators of an explicit (vector, seeds, config) triple, so
+sharded results are **byte-identical** to single-process — `--jobs` only changes
+wall-clock. The overnight preset is 500 vectors × 200 train / 50 test seeds ×
+full 11-floor runs.
+
+> **Held-out-seed caveat (read before trusting the number).** H7b's train/test
+> split holds the *test* seeds (`1_000_000…`) out of the **weight** search. The
+> stricter **config→seed** holdout BALANCE.md wants for the final verify — a seed
+> range *never tuned against during the config sweep* — is **not yet expressible**:
+> both `--search` and `--balance-sweep` always base their seeds at `1…` / `1_000_000…`,
+> and `--sampler-seed` only reseeds the weight *sampler*, not the eval seeds. A
+> small `--seed-offset` (shift the train/test bases) is the missing prerequisite
+> for a rigorous config-overfit verify; see TODO.md. Until then the overnight run
+> is a strong best-achievable read, but on the same seed bases the config was
+> tuned against.
+
 Not part of the production build — `vite build` only bundles the game entry; the
 `tools/` tree is served statically by the dev server and never lands in `dist/`.

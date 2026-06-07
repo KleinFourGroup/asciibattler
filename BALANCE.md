@@ -532,10 +532,38 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     map / difficulty gating** (don't roll the hard open layouts on the weakest early floors), which
     is the right lever; logged in [TODO.md](TODO.md). This pass was diagnosis-only.
 
-  ### To finish H7 (next session)
-  1. **Stage-5 overnight verify** — `--search --preset=overnight` on a **FRESH held-out seed range
-     never tuned against** (guards config→seed overfit; the last locked H7c step). Confirms the
-     0.625 × 1.75 band + the archetype edits hold out-of-sample. Now cheap with `--jobs=N`.
-  2. **H7d** — launcher GUI / VPS wrapper (the same `--jobs` sharded command, more cores).
-  3. *Optional:* the leveling pass (may self-resolve post-nerf — identical growth) + the melee↔ranged
+- **H7d ✅ — sweep GUI + `--jobs` extended to `--search` (2026-06-07).** The H7 tooling closer.
+  All `tests/fuzz/` + `tools/` + docs, **zero src change**; fuzz smoke 89 (+12 sweepCommand), main
+  689 unchanged, lint + tsc clean. **The overnight verify itself is DEFERRED** (run it later — see
+  below). Two commits + an eslint chore (`scratch/**` added to eslint ignores — gitignored per
+  `10545e1` but still linted, regressing the 0-error baseline).
+  - **Sweep GUI** ([tools/sweep-gui/](tools/sweep-gui/), served by the dev server like the run
+    launcher) — a point-and-click **command-builder** for the fuzz CLI: pick a balance-sweep grid
+    (knob + `min:max:steps`, optional 2nd knob, tier, jobs, dry-run) or a search (preset + overrides)
+    and it emits the `npm run fuzz -- …` line to paste (the search runs in Node, so it hands you the
+    command rather than running it — the GUI sibling of the run launcher's URL). Single source of
+    truth: [sweepCommand.ts](tests/fuzz/sweepCommand.ts)'s `SWEEP_KNOBS` is enumerated LIVE from
+    `DIFFICULTY`/`HEALTH`/`LEVELING` (the same three `KNOB_GROUPS` the sweep tunes) so the menu can't
+    drift / offer a rejected knob, and `buildFuzzArgs` mirrors the CLI flag rules. Browser-verified
+    end-to-end (a GUI-shaped 2-knob dry-run parsed + ran through the real CLI).
+  - **`--jobs` now parallelizes `--search` too** (was balance-sweep-only — a gap, since vector-level
+    sharding was chosen precisely so ALL searches parallelize). `runSearchCli` forks the same
+    `evaluateVectorsSharded` path with empty `knobs` (each child loads the same committed JSON the
+    parent has). **Proven byte-identical**: `--search --jobs=1` vs `--jobs=4` → identical
+    `best-strategy.json` + `search-results.csv`. So the overnight verify is now a plain
+    `--search --preset=overnight --jobs=<cores>` — **no separate VPS wrapper needed** (the sharded
+    command IS the wrapper; the H7d "VPS niceties" collapse to that + docs, per the user's docs-only call).
+  - **Found + logged (NOT fixed):** the config-overfit holdout the stage-5 verify wants (a seed range
+    *never tuned against*) is **not yet expressible** — `splitSeeds` always bases seeds at
+    `1…`/`1_000_000…` and `--sampler-seed` only reseeds the weight sampler, not the eval seeds. A
+    `--seed-offset` is the missing prereq; logged in [TODO.md](TODO.md). Until then the overnight run
+    is a strong best-achievable read but on the same seed bases the config was tuned against.
+
+  ### To finish H7
+  1. **Stage-5 overnight verify — the one remaining H7 step (DEFERRED by the user, run later).**
+     `--search --preset=overnight --jobs=<cores>` — now a one-liner (H7d wired `--jobs` into search).
+     For a RIGOROUS config→seed-overfit guard it wants **`--seed-offset`** (logged above + in TODO)
+     so it runs on a fresh, never-tuned seed range; without it it's still a strong best-achievable
+     read on the tuned seed bases. Confirms the 0.625 × 1.75 band + archetype edits hold out-of-sample.
+  2. *Optional:* the leveling pass (may self-resolve post-nerf — identical growth) + the melee↔ranged
      carry gap (final 102 vs 61) if playtest bothers; re-baseline tests/fuzz after any config change.

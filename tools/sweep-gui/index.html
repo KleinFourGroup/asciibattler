@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Balance Sweep</title>
+  </head>
+  <body>
+    <main id="sweep-root">
+      <header class="bar">
+        <h1>Balance Sweep</h1>
+        <span class="subtitle">
+          Build a <code>npm run fuzz</code> balance-sweep / search command &rarr;
+          copy &rarr; run in a terminal. Dev-only GUI over the fuzz CLI
+          (<code>tests/fuzz/cli.ts</code>); the search runs in Node, so this emits
+          a command to paste, not a URL.
+        </span>
+      </header>
+
+      <section class="panes">
+        <section class="card">
+          <h2>Mode</h2>
+          <label class="inline">
+            <span class="lbl">Mode</span>
+            <select id="mode">
+              <option value="balance-sweep">balance-sweep — grid &times; best-achievable</option>
+              <option value="search">search — best-achievable at current config</option>
+            </select>
+          </label>
+          <p class="hint" id="mode-hint"></p>
+        </section>
+
+        <!-- balance-sweep only -->
+        <section class="card" id="sweep-card">
+          <h2>Sweep grid</h2>
+          <label class="inline">
+            <span class="lbl">Knob</span>
+            <select id="knob"></select>
+          </label>
+          <label class="inline">
+            <span class="lbl">Range</span>
+            <span class="range">
+              <input id="range-min" type="number" step="any" autocomplete="off" />
+              <span class="sep">:</span>
+              <input id="range-max" type="number" step="any" autocomplete="off" />
+              <span class="sep">:</span>
+              <input id="range-steps" type="number" min="1" step="1" autocomplete="off" />
+            </span>
+          </label>
+          <p class="hint">
+            <code>min : max : steps</code> &mdash; <code>steps</code> is the point
+            count (inclusive). <code>0.625 : 0.625 : 1</code> pins one point.
+          </p>
+
+          <label class="inline">
+            <span class="lbl">2nd knob</span>
+            <select id="knob2"></select>
+          </label>
+          <label class="inline" id="range2-label">
+            <span class="lbl">Range 2</span>
+            <span class="range">
+              <input id="range2-min" type="number" step="any" autocomplete="off" />
+              <span class="sep">:</span>
+              <input id="range2-max" type="number" step="any" autocomplete="off" />
+              <span class="sep">:</span>
+              <input id="range2-steps" type="number" min="1" step="1" autocomplete="off" />
+            </span>
+          </label>
+
+          <label class="inline">
+            <span class="lbl">Tier</span>
+            <select id="tier"></select>
+          </label>
+          <label class="inline">
+            <span class="lbl">Jobs</span>
+            <input id="jobs" type="number" min="1" step="1" placeholder="1 (single process)" />
+          </label>
+          <label class="inline checkbox">
+            <input id="dry-run" type="checkbox" />
+            <span>Dry run &mdash; time point 1 + project the total, write nothing</span>
+          </label>
+          <p class="hint">
+            Each grid point runs a weight search (best-achievable) + the
+            pure-random / greedy baselines (the skill gradient) + per-archetype
+            telemetry. <code>--jobs &gt; 1</code> fans each point across child
+            processes (byte-identical results). Writes
+            <code>tests/fuzz/output/balance-sweep.csv</code> + <code>.report.txt</code>.
+          </p>
+        </section>
+
+        <!-- search only -->
+        <section class="card" id="search-card">
+          <h2>Search</h2>
+          <label class="inline">
+            <span class="lbl">Preset</span>
+            <select id="preset"></select>
+          </label>
+          <label class="inline">
+            <span class="lbl">Vectors</span>
+            <input id="vectors" type="number" min="1" step="1" placeholder="preset default" />
+          </label>
+          <label class="inline">
+            <span class="lbl">Seeds</span>
+            <input id="seeds" type="number" min="2" step="1" placeholder="preset default (~80/20 split)" />
+          </label>
+          <p class="hint">
+            Random-searches the scored-strategy weight space for the best-
+            achievable win rate at the <em>current</em> config; writes
+            <code>tests/fuzz/output/best-strategy.json</code> (re-runnable via
+            <code>--strategy=…json</code>). Tune config first via balance-sweep.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Run options</h2>
+          <label class="inline">
+            <span class="lbl">Floors</span>
+            <input id="floors" type="number" min="2" step="1" placeholder="tier / preset default" />
+          </label>
+          <label class="inline">
+            <span class="lbl">Roster</span>
+            <input id="roster" type="text" autocomplete="off"
+              placeholder="e.g. melee,ranged,healer:5 (blank = rolled team)" />
+          </label>
+          <label class="inline">
+            <span class="lbl">Sampler seed</span>
+            <input id="sampler-seed" type="number" step="1" placeholder="1" />
+          </label>
+          <p class="hint">
+            <code>--floors</code> overrides the tier/preset run length (cheap
+            full-length reads). <code>--roster</code> forces the starting team
+            (evaluate an archetype the search won't recruit). Same sampler seed +
+            grid + tier reproduces a run.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Command</h2>
+          <textarea id="command" rows="3" spellcheck="false" readonly></textarea>
+          <div class="row">
+            <button id="copy-cmd" type="button">Copy command</button>
+          </div>
+          <p class="hint">
+            Paste into a terminal at the project root (needs <code>npm install</code>).
+            The fuzz CLI runs standalone &mdash; no dev server needed.
+          </p>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="./sweep.ts"></script>
+  </body>
+</html>

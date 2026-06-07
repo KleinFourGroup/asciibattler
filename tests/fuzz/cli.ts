@@ -68,7 +68,16 @@ import {
 } from './strategies/registry';
 import { scoredStrategy } from './strategies/scored';
 import { loadWeightsFile, serializeWeights, parseWeights } from './strategies/scoredWeights';
-import { runSearch, splitSeeds, PRESETS, DEFAULT_BOX } from './search';
+import {
+  runSearch,
+  generateVectors,
+  assembleSearchResult,
+  harnessEvaluate,
+  splitSeeds,
+  PRESETS,
+  DEFAULT_BOX,
+  type SearchResult,
+} from './search';
 import {
   runBalanceSweep,
   parseRange,
@@ -77,7 +86,7 @@ import {
   renderSweepTable,
   type SweepKnob,
 } from './balanceSweep';
-import type { ShardJob } from './searchShard';
+import { evaluateVectorsSharded, type ShardJob } from './searchShard';
 import { reportFromCsv } from './sweepReport';
 import { parseRunConfig, type RosterEntry } from '../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
@@ -254,7 +263,7 @@ async function main(): Promise<void> {
     return;
   }
   if (args.search) {
-    runSearchCli(args);
+    await runSearchCli(args);
     return;
   }
   if (args.balanceSweep) {
@@ -366,8 +375,15 @@ async function main(): Promise<void> {
  * winning vector (re-runnable via `--strategy=<best-strategy.json>`) plus a
  * per-vector CSV. Presets `quick` (default) / `overnight`; overridable via
  * `--vectors`, `--seeds` (total, split ~80/20), `--sampler-seed`.
+ *
+ * `--jobs=N` (H7c parallelism) fans the train-seed evaluation across N child
+ * processes, the same vector-level sharding the balance sweep uses — chosen
+ * precisely so a plain `--search` (e.g. the overnight verify) parallelizes too,
+ * not just `--balance-sweep`. With no config override the shard's `knobs` are
+ * empty: each child loads the same committed JSON config the parent has, so
+ * sharded results are byte-identical to single-process (only wall-clock changes).
  */
-function runSearchCli(args: CliArgs): void {
+async function runSearchCli(args: CliArgs): Promise<void> {
   const presetName = args.preset ?? 'quick';
   const preset = PRESETS[presetName as keyof typeof PRESETS];
   if (!preset) {
@@ -375,6 +391,7 @@ function runSearchCli(args: CliArgs): void {
   }
   const vectors = args.vectors ?? preset.vectors;
   const samplerSeed = args.samplerSeed ?? 1;
+  const jobs = args.jobs !== undefined ? Math.max(1, Math.floor(args.jobs)) : 1;
   let trainCount = preset.trainSeeds;
   let testCount = preset.testSeeds;
   if (args.seeds !== undefined) {
@@ -398,19 +415,45 @@ function runSearchCli(args: CliArgs): void {
   const rosterNote = runConfig.startingRoster
     ? ` roster=[${runConfig.startingRoster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
+  const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${jobsNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
-  const result = runSearch({
-    vectors,
-    trainSeeds,
-    testSeeds,
-    samplerSeed,
-    box: DEFAULT_BOX,
-    harnessOptions,
-  });
+  let result: SearchResult;
+  if (jobs > 1) {
+    // Vector-level sharding (searchShard.ts) — identical to the balance sweep's
+    // parallel path, but with empty `knobs` (no config override): the PARENT
+    // generates the deterministic vector list, children evaluate slices over the
+    // train seeds, and the parent scores the winner on the held-out test set
+    // in-process. Byte-identical to single-process; only wall-clock changes.
+    const sampled = generateVectors(DEFAULT_BOX, samplerSeed, vectors);
+    const trainWinRates = await evaluateVectorsSharded({
+      vectors: sampled,
+      seeds: trainSeeds,
+      knobs: {},
+      floorCount,
+      roster: runConfig.startingRoster,
+      jobs,
+      tmpDir: join(args.outDir, 'shard-tmp'),
+    });
+    result = assembleSearchResult(
+      sampled,
+      trainWinRates,
+      (w) => harnessEvaluate(w, testSeeds, harnessOptions),
+      { samplerSeed, trainSeeds, testSeeds, topK: 1 },
+    );
+  } else {
+    result = runSearch({
+      vectors,
+      trainSeeds,
+      testSeeds,
+      samplerSeed,
+      box: DEFAULT_BOX,
+      harnessOptions,
+    });
+  }
 
   mkdirSync(args.outDir, { recursive: true });
   const bestPath = join(args.outDir, 'best-strategy.json');

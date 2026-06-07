@@ -34,9 +34,9 @@ The knob menu and the emitted command both come from
   rejects, and a newly-added numeric config key auto-appears. Each option shows
   the knob's current value.
 - `buildFuzzArgs` assembles the argv, mirroring the CLI's flags (so `--knob2`
-  only emits paired with `--range2`, `--jobs` only in balance-sweep mode and only
-  when > 1, etc.). Covered by `tests/fuzz/sweepCommand.test.ts` (`npm run
-  fuzz:smoke`).
+  only emits paired with `--range2`, `--jobs` only when > 1, `--dry-run` only in
+  balance-sweep mode, etc.). Covered by `tests/fuzz/sweepCommand.test.ts` (`npm
+  run fuzz:smoke`).
 
 ## Fields
 
@@ -45,7 +45,7 @@ The knob menu and the emitted command both come from
 | Knob / Range | `--knob` `--range` | `group.key` + `min:max:steps` (steps = point count)|
 | 2nd knob     | `--knob2` `--range2` | optional; makes a grid                           |
 | Tier         | `--tier`         | `quick` / `medium` / `heavy` / `overnight`         |
-| Jobs         | `--jobs`         | child processes per point (> 1 only); sweep-only   |
+| Jobs         | `--jobs`         | child processes (> 1 only); parallelizes both modes |
 | Dry run      | `--dry-run`      | time point 1 + project the total, write nothing    |
 | Preset       | `--preset`       | search-mode tier                                   |
 | Vectors      | `--vectors`      | search vectors (blank = preset default)            |

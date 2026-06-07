@@ -90,8 +90,9 @@ const isStr = (v: string | undefined): v is string =>
  * Build the argv that follows `npm run fuzz --`, mirroring `tests/fuzz/cli.ts`.
  * Emits a flag only when its value is meaningfully set; `--knob2`/`--range2` are
  * emitted only as a pair (the CLI rejects one without the other), and `--jobs` is
- * balance-sweep-only and only when > 1 (the single-process default needs no flag,
- * and `--search` ignores it). Whitespace-only string fields are dropped.
+ * emitted only when > 1 (the single-process default needs no flag) — it
+ * parallelizes both modes via vector-level sharding. `--dry-run` is balance-sweep
+ * only. Whitespace-only string fields are dropped.
  */
 export function buildFuzzArgs(state: SweepFormState): string[] {
   const args: string[] = [];
@@ -116,6 +117,7 @@ export function buildFuzzArgs(state: SweepFormState): string[] {
     if (isNum(state.seeds)) args.push(`--seeds=${state.seeds}`);
     if (isNum(state.floors)) args.push(`--floors=${state.floors}`);
     if (isStr(state.roster)) args.push(`--roster=${state.roster.trim()}`);
+    if (isNum(state.jobs) && state.jobs > 1) args.push(`--jobs=${state.jobs}`);
     if (isNum(state.samplerSeed)) args.push(`--sampler-seed=${state.samplerSeed}`);
   }
   return args;

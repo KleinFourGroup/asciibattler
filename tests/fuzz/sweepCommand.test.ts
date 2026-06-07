@@ -139,9 +139,13 @@ describe('sweepCommand — search args', () => {
     expect(args).toContain('--sampler-seed=7');
   });
 
-  it('never emits --jobs in search mode (the CLI ignores it there)', () => {
-    const args = buildFuzzArgs({ mode: 'search', preset: 'quick', jobs: 8 });
-    expect(args.some((a) => a.startsWith('--jobs'))).toBe(false);
+  it('parallelizes search with --jobs > 1 (vector-level sharding) and omits it at 1', () => {
+    expect(buildFuzzArgs({ mode: 'search', preset: 'overnight', jobs: 8 })).toContain('--jobs=8');
+    expect(
+      buildFuzzArgs({ mode: 'search', preset: 'overnight', jobs: 1 }).some((a) =>
+        a.startsWith('--jobs'),
+      ),
+    ).toBe(false);
   });
 });
 

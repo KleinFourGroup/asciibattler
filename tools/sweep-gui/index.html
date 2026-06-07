@@ -71,10 +71,6 @@
             <span class="lbl">Tier</span>
             <select id="tier"></select>
           </label>
-          <label class="inline">
-            <span class="lbl">Jobs</span>
-            <input id="jobs" type="number" min="1" step="1" placeholder="1 (single process)" />
-          </label>
           <label class="inline checkbox">
             <input id="dry-run" type="checkbox" />
             <span>Dry run &mdash; time point 1 + project the total, write nothing</span>
@@ -82,9 +78,8 @@
           <p class="hint">
             Each grid point runs a weight search (best-achievable) + the
             pure-random / greedy baselines (the skill gradient) + per-archetype
-            telemetry. <code>--jobs &gt; 1</code> fans each point across child
-            processes (byte-identical results). Writes
-            <code>tests/fuzz/output/balance-sweep.csv</code> + <code>.report.txt</code>.
+            telemetry. Writes <code>tests/fuzz/output/balance-sweep.csv</code> +
+            <code>.report.txt</code>.
           </p>
         </section>
 
@@ -126,11 +121,17 @@
             <span class="lbl">Sampler seed</span>
             <input id="sampler-seed" type="number" step="1" placeholder="1" />
           </label>
+          <label class="inline">
+            <span class="lbl">Jobs</span>
+            <input id="jobs" type="number" min="1" step="1" placeholder="1 (single process)" />
+          </label>
           <p class="hint">
             <code>--floors</code> overrides the tier/preset run length (cheap
             full-length reads). <code>--roster</code> forces the starting team
-            (evaluate an archetype the search won't recruit). Same sampler seed +
-            grid + tier reproduces a run.
+            (evaluate an archetype the search won't recruit).
+            <code>--jobs &gt; 1</code> fans the search across child processes
+            (vector-level sharding, byte-identical results) &mdash; works in both
+            modes. Same sampler seed + grid + tier reproduces a run.
           </p>
         </section>
 

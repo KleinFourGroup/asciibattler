@@ -36,7 +36,7 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
 
 ## Battle mechanics
 
-**Tick rate:** 10Hz. The simulation is fully deterministic given a seed and an initial unit configuration.
+**Tick rate:** 20Hz (raised from the MVP's 10Hz at E3.5). The simulation is fully deterministic given a seed and an initial unit configuration.
 
 **Authoring convention:** all cooldowns, durations, and timers in gameplay code are authored *in seconds* and converted to ticks via the `secondsToTicks` helper in `src/config.ts`. The simulation runs in ticks; the source of truth for balance is wall-clock seconds. Changing `TICK_RATE` re-discretizes the sim but leaves balance intact — a "0.5 s attack cooldown" stays 0.5 s in wall time regardless of tick rate.
 
@@ -49,7 +49,7 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
   - `constitution` — drives maxHp (linear, `HP_PER_CONSTITUTION × constitution`).
   - `strength` — basic melee strike damage.
   - `ranged` — basic ranged strike damage.
-  - `magic` — placeholder for E7 mage / healer abilities.
+  - `magic` — drives the mage's `magic_bolt` damage and the healer's `heal_ally` amount (E7).
   - `luck` — crit chance via `min(critCap, luck × critPerLuck)`.
   - `agility` — attack-cadence scaling (GP1 rename of `speed`) via `cooldownScale(agility, agilityCdPerStat, agilityMinCdScale) = max(agilityMinCdScale, 1 − agility × agilityCdPerStat)`.
   - `mobility` — move-cooldown scaling (GP1 rename of `endurance`), the same curve on its own per-axis knobs (`mobilityCdPerStat`/`mobilityMinCdScale`). **Signed**: 0 is the universal move-CD baseline, negative is slower (the floor caps only the fast side), so a heavy unit lands around −7 instead of needing a per-archetype `baseMoveCooldownSeconds` override.

@@ -8,7 +8,7 @@ this project cold. If you're a human, you probably want
 
 **Read [HANDOFF.md](HANDOFF.md) before doing anything else.** It is the
 authoritative session-start orientation: where the project stands, what's
-next, how we collaborate, and — importantly — the list of hard-won fixes
+next, how we collaborate, and — importantly — the hard-won fixes (now in [GOTCHAS.md](GOTCHAS.md))
 that will look weird without context. Do not "clean up" anything on that
 list without understanding why it exists.
 
@@ -21,15 +21,12 @@ After HANDOFF, the docs you'll cross-reference most often:
 - [ROADMAP.md](ROADMAP.md) — post-MVP build order. Phases A (foundation
   refactors), B (style/visual), C1 (terrain), D (battle-layout), E
   (combat + the six archetypes), F (Phase-E playtest response), G
-  (run depth), and GP1–GP5 (the Phase-G playtest response) are all
-  complete. **Phase H (the deckbuilder battle trial) is in progress —
-  H1–H5 done** (power stat; spawn-tile range; deployment counter; the
-  encounter loop + pre/post-turn screens & pool HUD; the card-drawn
-  hand + the `playerTeamLevel` seam swap + the pre-turn hand display).
-  **Next up: H6** (recruit pass/no-recruit + rest-node pool-heal + the
-  balance sweep — pool sizes / `power` growth / the H3 fatigue debuff,
-  to fix the ~100% foregone-conclusion fuzz win rate). See ROADMAP
-  §Phase H for the locked sub-step detail.
+  (run depth), and GP (the Phase-G playtest response) are all complete;
+  **Phase H — the deckbuilder battle trial — is in progress.** Where H
+  stands and what's next shifts often, so this doc deliberately doesn't
+  restate it (that's how it drifts): **HANDOFF's `## Current state` /
+  `## What's next` is the single source of truth for the live phase
+  cursor.** See ROADMAP §Phase H for the locked sub-step detail.
   Superseded roadmaps and feedback are in [archive/](archive/).
 - [TODO.md](TODO.md) — small follow-ups that aren't roadmap steps.
 - [TESTING.md](TESTING.md) — what gets tested (`core`, `sim`, `run`),
@@ -102,15 +99,24 @@ apply:
 - **Keep DESIGN.md / ARCHITECTURE.md honest.** If a change reveals a
   documented decision is wrong, update the doc in the same commit as
   the code change.
-- **Trim HANDOFF when it grows unwieldy.** [HANDOFF.md](HANDOFF.md)
-  accretes a per-phase "X landed" narrative with no natural cap (it
-  passed 250KB by GP1). When it gets too large to scan, move the oldest
-  completed-phase detail into [archive/](archive/) and leave a one-line
-  pointer — precedent: the Phases A–E worklog was split out to
-  [archive/phase-a-e-worklog.md](archive/phase-a-e-worklog.md). Preserve
-  the `Things that bit us` gotchas (referenced as "gotcha #N" — never
-  renumber; retired ones stay as tombstones), the short operational
-  sections, and the most recent `Current state` entries.
+- **Keep HANDOFF lean — a structural rule, not "trim when it feels big"**
+  (the old discretionary version let it reach 600+ lines before anyone
+  acted). `Current state` keeps **only the in-progress phase verbose**;
+  every *completed* phase is **one terse line + a pointer to its archive
+  worklog** (precedent:
+  [archive/phase-a-e-worklog.md](archive/phase-a-e-worklog.md),
+  [archive/phase-e-gp-worklog.md](archive/phase-e-gp-worklog.md)). Demote a
+  phase to one line *as you close it* — don't append a verbose entry and
+  "trim later." A guard test ([tests/docs.test.ts](tests/docs.test.ts))
+  backstops this: it fails if HANDOFF or its `Current state` section blows a
+  line budget — when it trips, demote completed phases (or bump the cap
+  deliberately if the current phase genuinely needs the room). Everything
+  non-state already has a home: gotchas in [GOTCHAS.md](GOTCHAS.md)
+  ("gotcha #N" — never renumber; retired ones stay as tombstones), the
+  source tree in [ARCHITECTURE.md](ARCHITECTURE.md), and the pre-flight /
+  pre-commit / toolchain / collaboration norms here in AGENTS — so HANDOFF
+  holds just `Current state`, `What's next`, and the detailed browser-verify
+  tips.
 - **Roadmap "decision points" are stops.** Post-MVP doesn't have the
   rigid CHECKPOINT markers, but ROADMAP entries flagged "Decision
   point" call out moments where user input is required — stop and ask.
@@ -123,7 +129,7 @@ apply:
 
 ## Load-bearing invariants
 
-These are documented in detail in HANDOFF's "Things that bit us" list,
+These are documented in detail in [GOTCHAS.md](GOTCHAS.md),
 but the headline rules:
 
 - **Determinism is structural.** Anything consuming randomness takes an
@@ -143,7 +149,7 @@ but the headline rules:
   sprite bloom mesh → UnrealBloomPass) feeds its result into a
   `mainComposer` (`RenderPass → SatClamped → MixPass → Scanlines →
   OutputPass`). UnrealBloomPass's high-pass uses max-channel (not
-  Rec.709) so red and green glow equally — see HANDOFF gotcha #29.
+  Rec.709) so red and green glow equally — see gotcha #29 in [GOTCHAS.md](GOTCHAS.md).
   SpriteRenderer's per-instance `bloomIntensity` controls halo strength
   independently of visible color: 0 = no halo, 1 = natural, >1 = forced
   (gotcha #30).
@@ -209,56 +215,14 @@ Windows.
 - Node 25.5, npm 11.8
 - TypeScript 6.0.3, Vite 8.0.13
 - three.js 0.184.0, simplex-noise 4.0.3, @fontsource/jetbrains-mono 5.2.8
-- Vitest 4.1.6, ESLint 10.4.0
+- Vitest 4.1.6, ESLint 10.4.0, typescript-eslint 8.59.3, prettier 3.8.3
 
 ## Project tree (abbreviated)
 
-```
-src/
-  main.ts              # entry; top-level await on FontAtlas.create()
-  Game.ts              # top-level orchestrator + scene swapper (A5)
-  config.ts            # TICK_RATE=20, GRID_SIZE=12, secondsToTicks
-  core/                # RNG, EventBus, Clock, events catalog, types
-  config/              # A4: zod wrappers for config/*.json (archetypes,
-                       # abilities, difficulty, recruitment, leveling,
-                       # nodemap, stats, sim, terrain, layouts, spawn, tiles)
-  sim/                 # World, Unit, stats, leveling, xp, TileGrid,
-                       # LineOfSight, Action, Command, Pathfinding,
-                       # Targeting, archetypes, environment, terrainGen,
-                       # layouts, battleSetup
-    actions/           # Move, Attack, GambitStrike, Heal, MagicBolt,
-                       # CatapultShot, Spawn (+ registry)
-    abilities/         # E2: Ability layer — strikes, heal, magic, catapult
-                       # (+ registry); replaced the retired AttackBehavior
-    behaviors/         # Movement, Ability, SupportMovement (+ registry)
-                       # — DeathBehavior folded into World.tick at A1
-  run/                 # Run, RunConfig, enemyBudget, NodeMap,
-                       # Recruitment, Command
-  render/              # Renderer (fit/scroll camera, D4),
-                       # SpriteRenderer (selective bloom, B1.1),
-                       # UnitOverlayLayer (DOM HP/badge/hitsplats, E3.6),
-                       # TerrainRenderer (C1c + D7.C + D8), BattleRenderer,
-                       # FontAtlas, glyphs, PostProcess, palette,
-                       # animation/SpriteAnimator
-  scenes/              # A5: Battle, Map, Recruit, Promotion (E4.4), GameOver
-  ui/                  # ui.css, fade, HUD, MapScreen, RecruitScreen,
-                       # PromotionScreen, GameOverScreen, statLabels (GP3)
-  audio/               # B6: AudioPlayer
-config/                # JSON balance (paired with src/config/*.ts)
-public/audio/          # preloaded .wav files
-tools/                 # dev-only: layout-editor + run-config (G1/G5)
-tests/
-  smoke.test.ts
-  integration/         # determinism, snapshot-roundtrip, variable-size,
-                       # layout-deadlock, spawn-overflow, corridor-flow,
-                       # + per-archetype battle tests (rogue/healer/mage/catapult)
-  fuzz/                # A3: headless balance harness (opt-in)
-retro/                 # scratchpad + MVP retrospective
-archive/               # superseded roadmaps + feedback + phase worklogs
-```
-
-See ARCHITECTURE.md for the canonical structure and the rationale
-behind each abstraction.
+The annotated source tree lives in **[ARCHITECTURE.md](ARCHITECTURE.md)**
+("Top-level structure") — the single canonical copy. Keeping it in one
+place (rather than mirrored here and in HANDOFF) is what stops the drift that left
+all three trees listing retired files and stale snapshot versions by GP1.
 
 ## Where to add things
 
@@ -278,7 +242,7 @@ behind each abstraction.
 
 ## Things to avoid
 
-- **Don't re-litigate the HANDOFF gotchas list** without understanding
+- **Don't re-litigate the [GOTCHAS.md](GOTCHAS.md) gotchas list** without understanding
   why each item exists. The fixes look weird because the problems were
   weird.
 - **Don't claim a visual change works based on Preview MCP screenshots

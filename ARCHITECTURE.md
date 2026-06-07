@@ -64,7 +64,7 @@ src/
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v17 (bumped through E1–GP2)
+                             # Serializable; WorldSnapshot v18 (bumped E1 through Phase H)
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
                              # GP2: applyDamage() — the single combat-damage chokepoint (HP -= + ledger
                              #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it

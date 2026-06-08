@@ -64,7 +64,9 @@ export class AttackAction implements Action {
     const damage = Math.round(this.baseDamage * critFactor * this.damageMultiplier);
     // GP2 — HP mutation + XP ledger + `unit:attacked` emit funnel through the
     // single `world.applyDamage` chokepoint (where defense mitigation lands).
-    world.applyDamage(unit.id, this.target, damage, { crit });
+    // I2 — a basic melee/ranged strike is single-target, so it's `evadable`:
+    // applyDamage rolls precision-vs-evasion to-hit and may emit `unit:missed`.
+    world.applyDamage(unit.id, this.target, damage, { crit, evadable: true });
   }
 
   phaseTarget(): { targetId?: number | undefined } {

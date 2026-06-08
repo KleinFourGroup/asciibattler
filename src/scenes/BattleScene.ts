@@ -74,6 +74,17 @@ export class BattleScene implements Scene {
         if (attacker.archetype === 'mage' || attacker.archetype === 'catapult') return;
         ctx.audio.play(attacker.derived.attackRange <= 1 ? 'melee' : 'shoot');
       }),
+      // I2 — a dodged strike still played its swing/shot, so it makes the SAME
+      // sound as a connecting one (the "whoosh" is the attack, not the impact).
+      // Only single-target strikes emit `unit:missed` (mage/catapult are
+      // unmissable), so the same melee/ranged branch applies; the archetype
+      // guard mirrors the hit path defensively.
+      ctx.bus.on('unit:missed', ({ attackerId }) => {
+        const attacker = this.world?.findUnit(attackerId);
+        if (!attacker) return;
+        if (attacker.archetype === 'mage' || attacker.archetype === 'catapult') return;
+        ctx.audio.play(attacker.derived.attackRange <= 1 ? 'melee' : 'shoot');
+      }),
       // E7.C — one sound per mage bolt cast (fires even on a whiff), matching
       // the single projectile + explosion visual.
       ctx.bus.on('magic:detonated', () => {

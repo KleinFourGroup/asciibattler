@@ -4,12 +4,13 @@ import { Unit, type Team, type UnitStats } from './Unit';
 import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { MeleeStrike } from './abilities/strikes';
+import { AttackAction } from './actions/AttackAction';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { rollUnit } from './archetypes';
 import { spawnWall } from './environment';
 import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
-import { ZERO_STATS, deriveStats } from './stats';
+import { ZERO_STATS, deriveStats, hitChanceFor } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { STATS } from '../config/stats';
 import type { GameEvents } from '../core/events';
@@ -533,6 +534,183 @@ describe('World.applyDamage — GP2 defense mitigation', () => {
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.findUnit(target.id)!.stats.defense).toBe(5);
+  });
+});
+
+describe('World.applyDamage — I2 dodge hit/miss roll', () => {
+  // A 2-unit duel where the attacker's precision and the target's evasion are
+  // explicit, and the World's `combatRng` is seeded directly (the 6th ctor arg)
+  // so the to-hit draw is controllable. Captures BOTH the hit and miss event
+  // channels.
+  function evadeDuel(opts: {
+    attackerPrecision: number;
+    targetEvasion: number;
+    combatSeed: number;
+  }): {
+    world: World;
+    attacker: Unit;
+    target: Unit;
+    attacks: GameEvents['unit:attacked'][];
+    misses: GameEvents['unit:missed'][];
+  } {
+    const bus = new EventBus<GameEvents>();
+    // rng (run stream) is fixed; the combatRng we care about is seeded explicitly.
+    const world = new World(bus, new RNG(1), 12, 12, undefined, new RNG(opts.combatSeed));
+    const attacks: GameEvents['unit:attacked'][] = [];
+    const misses: GameEvents['unit:missed'][] = [];
+    bus.on('unit:attacked', (p) => attacks.push(p));
+    bus.on('unit:missed', (p) => misses.push(p));
+
+    const mk = (id: number, team: Team, precision: number, evasion: number, x: number): Unit => {
+      const stats: UnitStats = {
+        ...ARCHETYPE_CONFIG.melee.baseStats,
+        defense: 0, // isolate the to-hit roll from GP2 mitigation
+        precision,
+        evasion,
+      };
+      return new Unit({
+        id,
+        team,
+        archetype: 'melee',
+        glyph: 'M',
+        stats,
+        derived: deriveStats(stats, 1),
+        position: { x, y: 0 },
+      });
+    };
+    const attacker = mk(1, 'player', opts.attackerPrecision, 0, 0);
+    const target = mk(2, 'enemy', 0, opts.targetEvasion, 1);
+    world.units.push(attacker, target);
+    return { world, attacker, target, attacks, misses };
+  }
+
+  /** Smallest seed whose FIRST combatRng draw is ≥ `threshold` — i.e. a seed
+   *  that MISSES when the hit chance equals `threshold`. Deterministic search,
+   *  not a hand-computed mulberry32 value. */
+  function seedThatMisses(hitChance: number): number {
+    for (let s = 1; s < 100_000; s++) {
+      if (new RNG(s).next() >= hitChance) return s;
+    }
+    throw new Error('no missing seed found');
+  }
+
+  it('a miss deals 0: no HP mutation, no XP-ledger entry, a unit:missed (not unit:attacked)', () => {
+    // Evasion 99 vs precision 0 floors the hit chance; a seed whose first draw
+    // clears that floor is a guaranteed miss.
+    const floor = hitChanceFor(0, 99);
+    expect(floor).toBe(STATS.hitChanceFloor);
+    const { world, attacker, target, attacks, misses } = evadeDuel({
+      attackerPrecision: 0,
+      targetEvasion: 99,
+      combatSeed: seedThatMisses(floor),
+    });
+    const hpBefore = target.currentHp;
+    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true });
+    expect(misses).toEqual([{ attackerId: attacker.id, targetId: target.id }]);
+    expect(attacks).toHaveLength(0);
+    expect(target.currentHp).toBe(hpBefore);
+    expect(world.damageDealtBy(attacker.id)).toBe(0);
+  });
+
+  it('a hit lands normally: precision at the cap always connects regardless of seed', () => {
+    // precision 100 vs evasion 0 → hit chance clamps to the cap (1.0); the roll
+    // (always < 1) can never reach it, so the strike lands on every seed.
+    expect(hitChanceFor(100, 0)).toBe(STATS.hitChanceCap);
+    const { world, attacker, target, attacks, misses } = evadeDuel({
+      attackerPrecision: 100,
+      targetEvasion: 0,
+      combatSeed: 7,
+    });
+    const hpBefore = target.currentHp;
+    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true });
+    expect(misses).toHaveLength(0);
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0]!.damage).toBe(10);
+    expect(target.currentHp).toBe(hpBefore - 10);
+    expect(world.damageDealtBy(attacker.id)).toBe(10);
+  });
+
+  it('an evadable strike draws exactly one combatRng value (the to-hit roll)', () => {
+    const { world, attacker, target } = evadeDuel({
+      attackerPrecision: 100, // cap → hit, but the roll is still drawn
+      targetEvasion: 0,
+      combatSeed: 7,
+    });
+    const before = world.combatRng.toJSON().state;
+    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true });
+    const sib = RNG.fromJSON({ state: before });
+    sib.next(); // exactly one draw
+    expect(world.combatRng.toJSON().state).toBe(sib.toJSON().state);
+  });
+
+  it('a NON-evadable hit (mage AoE / catapult / env path) is unmissable AND draws no combatRng', () => {
+    // Same floor-the-hit-chance setup that guaranteed a miss above — but with
+    // evadable omitted the chokepoint never rolls: the damage lands and the
+    // combatRng stream is untouched.
+    const { world, attacker, target, attacks, misses } = evadeDuel({
+      attackerPrecision: 0,
+      targetEvasion: 99,
+      combatSeed: seedThatMisses(hitChanceFor(0, 99)),
+    });
+    const before = world.combatRng.toJSON().state;
+    const hpBefore = target.currentHp;
+    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: false });
+    expect(world.combatRng.toJSON().state).toBe(before); // no draw
+    expect(misses).toHaveLength(0);
+    expect(attacks).toHaveLength(1);
+    expect(target.currentHp).toBe(hpBefore - 10);
+  });
+
+  it('is deterministic per seed: the same combatSeed reproduces the same hit/miss', () => {
+    const outcome = (seed: number): 'hit' | 'miss' => {
+      const d = evadeDuel({ attackerPrecision: 5, targetEvasion: 5, combatSeed: seed }); // 0.75 band
+      d.world.applyDamage(d.attacker.id, d.target, 10, { crit: false, evadable: true });
+      return d.misses.length ? 'miss' : 'hit';
+    };
+    for (const seed of [3, 11, 29, 101]) {
+      expect(outcome(seed)).toBe(outcome(seed));
+    }
+  });
+
+  it('rolls crit BEFORE the to-hit miss (combatRng order: crit → miss)', () => {
+    // The crit is drawn in AttackAction.start, the miss in applyDamage — so the
+    // stream order is crit, then miss. Find a seed where the two draws straddle
+    // the crit threshold AND the second draw is a HIT, so the crit flag is
+    // observable and DIFFERS from what a reversed (miss-first) order would give.
+    const critChance = 0.4;
+    const hitChance = hitChanceFor(5, 5); // 0.75, mid-band
+    let seed = -1;
+    let expectedCrit = false;
+    for (let s = 1; s < 1_000_000; s++) {
+      const r = new RNG(s);
+      const d1 = r.next(); // crit roll under the real (crit-first) order
+      const d2 = r.next(); // to-hit roll under the real order
+      if (d2 < hitChance && (d1 < critChance) !== (d2 < critChance)) {
+        seed = s;
+        expectedCrit = d1 < critChance;
+        break;
+      }
+    }
+    expect(seed).toBeGreaterThan(0);
+
+    const { world, attacker, target, attacks, misses } = evadeDuel({
+      attackerPrecision: 5,
+      targetEvasion: 5,
+      combatSeed: seed,
+    });
+    const before = world.combatRng.toJSON().state;
+    new AttackAction(target, 10, critChance).start(attacker, world);
+
+    // Exactly two draws consumed (crit + miss), in that order.
+    const sib = RNG.fromJSON({ state: before });
+    sib.next();
+    sib.next();
+    expect(world.combatRng.toJSON().state).toBe(sib.toJSON().state);
+    // It HIT (the 2nd draw was the to-hit roll), and the crit flag came from the
+    // 1st draw — a reversed order would have produced the opposite crit flag.
+    expect(misses).toHaveLength(0);
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0]!.crit).toBe(expectedCrit);
   });
 });
 

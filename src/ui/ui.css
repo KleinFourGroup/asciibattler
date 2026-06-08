@@ -162,6 +162,16 @@ body {
   color: #ffb000; /* TERMINAL_AMBER (orange) */
 }
 
+/* I2 — a dodged single-target strike. Desaturated steel-grey + italic + a hair
+   smaller than a damage number, so a whiff reads as a non-event (no damage)
+   rather than competing with the bright damage/crit numbers for attention. */
+.hitsplat--miss {
+  color: #9aa3ad; /* muted steel-grey */
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 600;
+}
+
 @keyframes hitsplat-rise {
   0% {
     opacity: 0;

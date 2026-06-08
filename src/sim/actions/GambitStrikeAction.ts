@@ -83,7 +83,9 @@ export class GambitStrikeAction implements Action {
     const damage = Math.round(this.baseDamage * critFactor * this.damageMultiplier);
     // GP2 — funnel the strike through the shared `world.applyDamage` chokepoint
     // (HP mutation + XP ledger + `unit:attacked` emit + defense mitigation).
-    world.applyDamage(unit.id, this.target, damage, { crit });
+    // I2 — the rogue gambit is a single-target strike, so it's `evadable`: the
+    // chokepoint rolls precision-vs-evasion to-hit and may emit `unit:missed`.
+    world.applyDamage(unit.id, this.target, damage, { crit, evadable: true });
   }
 
   /**

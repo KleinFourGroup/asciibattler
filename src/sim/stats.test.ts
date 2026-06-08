@@ -26,6 +26,7 @@ import {
   ZERO_STATS,
   basicAttackDamage,
   deriveStats,
+  hitChanceFor,
   inertDerived,
   attackCooldownTicksFor,
 } from './stats';
@@ -77,6 +78,58 @@ describe('deriveStats — critChance', () => {
     // wide safety margin.
     const d = deriveStats({ ...TEMPLATE, luck: 99 }, 1);
     expect(d.critChance).toBe(STATS.critCap);
+  });
+});
+
+describe('hitChanceFor — I2 dodge to-hit (balance-proof off config/stats.json)', () => {
+  it('equal precision and evasion cancel to exactly hitChanceBase', () => {
+    // The keystone of I1's uniform prc==eva==5 default: with the terms
+    // cancelling, every unit sits at the base rate until I5 spreads the stats.
+    for (const s of [0, 5, 12, 40]) {
+      expect(hitChanceFor(s, s)).toBeCloseTo(STATS.hitChanceBase, 10);
+    }
+  });
+
+  it('matches the subtractive formula in the unclamped middle band', () => {
+    // Pick prc/eva spreads small enough that the result stays strictly inside
+    // (floor, cap), so the clamp is inert and the raw formula is what's tested.
+    for (const [prc, eva] of [
+      [8, 5],
+      [5, 8],
+      [10, 2],
+      [3, 9],
+    ] as const) {
+      const expected =
+        STATS.hitChanceBase +
+        prc * STATS.hitChancePerPrecision -
+        eva * STATS.dodgeChancePerEvasion;
+      expect(hitChanceFor(prc, eva)).toBeCloseTo(expected, 10);
+    }
+  });
+
+  it('is monotonic: more precision never lowers, more evasion never raises hit chance', () => {
+    expect(hitChanceFor(20, 5)).toBeGreaterThanOrEqual(hitChanceFor(5, 5));
+    expect(hitChanceFor(5, 20)).toBeLessThanOrEqual(hitChanceFor(5, 5));
+  });
+
+  it('clamps to the floor when evasion overwhelms precision (chip still pokes through)', () => {
+    // A wildly evasive target vs a low-precision attacker bottoms out at the
+    // floor, never 0 — the whiff analogue of the minDamage floor.
+    expect(hitChanceFor(0, 99)).toBe(STATS.hitChanceFloor);
+  });
+
+  it('clamps to the cap when precision overwhelms evasion', () => {
+    expect(hitChanceFor(99, 0)).toBe(STATS.hitChanceCap);
+  });
+
+  it('always returns a probability within [floor, cap]', () => {
+    for (const prc of [0, 5, 25, 99]) {
+      for (const eva of [0, 5, 25, 99]) {
+        const p = hitChanceFor(prc, eva);
+        expect(p).toBeGreaterThanOrEqual(STATS.hitChanceFloor);
+        expect(p).toBeLessThanOrEqual(STATS.hitChanceCap);
+      }
+    }
   });
 });
 

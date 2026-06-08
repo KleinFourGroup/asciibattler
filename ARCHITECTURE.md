@@ -68,6 +68,8 @@ src/
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
                              # GP2: applyDamage() — the single combat-damage chokepoint (HP -= + ledger
                              #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it
+                             # I2: applyDamage(evadable) rolls precision-vs-evasion to-hit off combatRng (crit→miss order);
+                             #     a miss emits unit:missed + 0 dmg. Only single-target strikes opt in; AoE/catapult/tile unmissable
     Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab + GP2 defense) + UnitDerived + Team + Behavior
                              # archetype: melee|ranged|rogue|healer|mage|catapult|environment (E1–E7)
                              # level (E3) + xp/rosterIndex (E4); actionCooldowns Map + activeAction (A1)
@@ -306,6 +308,7 @@ battle:ended            { winner: 'player' | 'enemy'; xpAwards: { unitId; roster
 unit:spawned            { unitId: number; instant: boolean }                       # instant=false → D5.C overflow-queue spawn (fade-in)
 unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }
 unit:attacked           { attackerId: number; targetId: number; damage: number; crit: boolean }   # E1: damage post-crit; GP2: post-defense (via world.applyDamage)
+unit:missed             { attackerId: number; targetId: number }                   # I2: a single-target strike dodged (precision-vs-evasion roll); 0 dmg, no HP/ledger touch
 unit:burned             { unitId: number; damage: number }                         # D7.B: per-tick chip from fire tile (no attacker)
 unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (D7.B tile chip, amount=0 at maxHp)
 unit:died               { unitId: number; team: Team }                             # team carried because the unit is already spliced out (C1b)

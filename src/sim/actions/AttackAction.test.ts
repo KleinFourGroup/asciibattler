@@ -27,7 +27,12 @@ const STATS_BLOCK: UnitStats = {
   magic: 0,
   luck: 0,
   defense: 0,
-  precision: 0,
+  // I2 — AttackAction is now `evadable`, so every `start()` rolls to-hit. These
+  // pins are about DAMAGE resolution (multiplier/crit/rounding), not dodge, so
+  // max precision parks the hit chance at the cap (always lands) and isolates
+  // them from the roll. The to-hit roll itself is pinned in World.applyDamage's
+  // I2 tests + the hitChanceFor balance-proofs.
+  precision: 100,
   evasion: 0,
   speed: 0,
   mobility: 0,

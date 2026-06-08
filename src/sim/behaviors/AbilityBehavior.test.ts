@@ -296,6 +296,11 @@ function buildStats(s: SceneUnit, archetype: 'melee' | 'ranged'): UnitStats {
     // explicit `attackDamage` assertions (the spread would otherwise carry the
     // archetype's defense: melee 4 / ranged 2).
     defense: 0,
+    // I2 — likewise isolate from the dodge to-hit roll: max precision pins the
+    // strike's hit chance at the cap (always lands), so a whiff can't perturb
+    // the exact attack-count / cadence assertions. To-hit is exercised in its
+    // own World.applyDamage + stats tests, not here.
+    precision: 100,
     strength: s.attackDamage ?? baseStats.strength,
     ranged: s.attackDamage ?? baseStats.ranged,
   };

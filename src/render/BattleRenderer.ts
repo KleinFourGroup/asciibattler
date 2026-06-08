@@ -113,6 +113,9 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
     this.subscriptions.push(bus.on('unit:swapped', this.onUnitSwapped));
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
+    // I2: a dodged single-target strike. The attacker still swung/shot (same
+    // triggerAttackVisual lunge/tracer), but a "Miss" floats instead of damage.
+    this.subscriptions.push(bus.on('unit:missed', this.onUnitMissed));
     this.subscriptions.push(bus.on('unit:died', this.onUnitDied));
     // E7.C: the mage's bolt detonation drives ONE projectile + explosion,
     // replacing the per-hit tracers `unit:attacked` would otherwise spawn.
@@ -359,6 +362,19 @@ export class BattleRenderer {
   };
 
   /**
+   * I2 — a single-target strike was dodged. The attacker still committed the
+   * swing/shot, so play the SAME lunge/tracer as a hit (triggerAttackVisual),
+   * then float a desaturated "Miss" over the target instead of a damage number.
+   * No HP-bar refresh: a miss mutates no HP. Only single-target strikes
+   * (melee/ranged basic + rogue gambit) can emit this — the mage AoE and the
+   * catapult are unmissable, so this never reads as multishot for them.
+   */
+  private onUnitMissed = ({ attackerId, targetId }: GameEvents['unit:missed']): void => {
+    this.triggerAttackVisual(attackerId, targetId);
+    this.spawnHitsplat(targetId, 'Miss', 'miss');
+  };
+
+  /**
    * E6.C — float a number over a unit. Anchors at the *top* of the sprite
    * (getPosition returns the sprite center, so lift by HITSPLAT_Y_OFFSET ≈
    * half the 1×1 quad) rather than the center, so the number reads off the
@@ -371,7 +387,7 @@ export class BattleRenderer {
   private spawnHitsplat(
     unitId: number,
     text: string,
-    kind: 'normal' | 'crit' | 'heal' | 'burn',
+    kind: 'normal' | 'crit' | 'heal' | 'burn' | 'miss',
   ): void {
     const handle = this.handles.get(unitId);
     if (!handle) return;

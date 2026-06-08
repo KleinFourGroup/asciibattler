@@ -115,6 +115,17 @@ export interface GameEvents extends Record<string, unknown> {
     crit: boolean;
   };
   /**
+   * I2: a single-target strike (melee/ranged basic or the rogue gambit) rolled
+   * to-hit at the `World.applyDamage` chokepoint and MISSED — the target's
+   * `evasion` beat the attacker's `precision`. Distinct from a 0-damage
+   * `unit:attacked` so consumers branch cleanly (no HP was touched, no
+   * `recordDamage` entry, no crit). The attacker still swung/shot, so the
+   * render layer plays the same `triggerAttackVisual` lunge/tracer it does for
+   * a hit, then floats a "Miss" hitsplat instead of a damage number. Only the
+   * evadable single-target actions emit it; the mage AoE, the catapult, and
+   * environmental fire/chasm damage are unmissable and never do. */
+  'unit:missed': { attackerId: number; targetId: number };
+  /**
    * D7.B: per-tick chip damage from standing on a `fire` tile. Separate
    * event from `unit:attacked` so consumers can branch cleanly without
    * an `attackerId: null` / sentinel dance — fire damage has no

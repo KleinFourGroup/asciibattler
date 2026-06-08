@@ -111,7 +111,11 @@ export class MagicBoltAction implements Action {
       // chokepoint (HP mutation + XP ledger + `unit:attacked` emit + defense
       // mitigation). The `damage <= 0` / team / radius gates above stay here —
       // they decide WHICH cells are victims; applyDamage applies a confirmed hit.
-      world.applyDamage(unit.id, target, damage, { crit });
+      // I2 — the blast is UNMISSABLE (no `evadable`): an AoE detonation is
+      // dodged by leaving the area, not by a per-cell evasion roll, so a
+      // high-evasion target can't shrug off the explosion (and the ring damage
+      // isn't gutted by N independent to-hit rolls).
+      world.applyDamage(unit.id, target, damage, { crit, evadable: false });
     }
   }
 

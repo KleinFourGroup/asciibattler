@@ -179,7 +179,7 @@ export class UnitOverlayLayer {
   spawnHitsplat(
     worldPos: THREE.Vector3,
     text: string,
-    kind: 'normal' | 'crit' | 'heal' | 'burn',
+    kind: 'normal' | 'crit' | 'heal' | 'burn' | 'miss',
     stackKey: number,
   ): void {
     const p = this.projectToCss(worldPos);

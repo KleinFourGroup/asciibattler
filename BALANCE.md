@@ -89,6 +89,16 @@ levels-by-floor + XP-flow drive the leveling pass.
 - **Re-baseline**: tuning configs shifts the `pure-random`/`greedy` fuzz baselines +
   any config-derived test expectations (by design — "balance-proof"). Commit the
   tuned configs and re-run the suite.
+- **I2 dodge lengthens battles (band-mover for N2)**: the flat 25% whiff (base
+  `hitChanceBase 0.75`, uniform prc/eva until I5) stretches battles ~33%, so weak-bot
+  *hangs* rose `1→5`/`1→7` per 50 seeds — battles hitting the harness's 100s
+  decisive-wipe cap, concentrated on the slow corridor/fire layouts. These are
+  turn-cap **draws** in-game, not freezes (the harness drives the World without
+  `Run.resolveAsDraw`). Account for it in the **N2** re-sweep: longer turns mean more
+  cap-draws chipping both pools, which interacts with the pool-ratio confound above.
+  The whiff rate (`config/stats.json` hit-chance knobs) + I3's fast-forward both
+  blunt the dead-time; re-measure the band against the full post-I–M model, not
+  against I2 alone.
 
 ## Parallelism (optional; zero new dependencies)
 

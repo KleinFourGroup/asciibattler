@@ -116,7 +116,10 @@ export class CatapultShotAction implements Action {
     // GP2 — the single heavy hit funnels through the shared `world.applyDamage`
     // chokepoint (HP mutation + XP ledger + `unit:attacked` emit + defense
     // mitigation). The fizzle/`damage <= 0` guards above stay here.
-    world.applyDamage(unit.id, this.target!, damage, { crit });
+    // I2 — the catapult is UNMISSABLE (no `evadable`): its counterplay is
+    // rushing/killing the slow caster mid-charge, not dodging the lobbed shot
+    // (the homing design fiction above), so it never rolls precision-vs-evasion.
+    world.applyDamage(unit.id, this.target!, damage, { crit, evadable: false });
   }
 
   phaseTarget(): { targetId?: number | undefined; targetCell?: GridCoord } {

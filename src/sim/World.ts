@@ -36,7 +36,7 @@ import { SpawnAction } from './actions/SpawnAction';
 import { SPAWN } from '../config/spawn';
 import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
 import type { SpawnRegion } from './layouts';
-import { ZERO_STATS, deriveStats, inertDerived } from './stats';
+import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
 import { STATS } from '../config/stats';
 
@@ -458,8 +458,37 @@ export class World {
    * applied to the already crit/cover-resolved `rawDamage`. Both operands are
    * integers, so `final` stays integral (no re-round). The `minDamage` floor
    * keeps a high-defense target from fully negating chip/AoE.
+   *
+   * I2 — `opts.evadable` opts a call into the dodge to-hit roll. The caller
+   * has ALREADY drawn the crit roll (in its `start`/`applyEffect`), so the
+   * `combatRng` draw order is fixed at **crit → miss**: a missed strike simply
+   * discards the pre-rolled crit. Only single-target strikes (melee/ranged
+   * basic + the rogue gambit) pass `evadable: true`; the mage AoE, the
+   * catapult, the direct-`applyDamage` tests, and environmental fire/chasm
+   * damage (which bypasses this method entirely) are all unmissable — they omit
+   * it (default `false`) and draw nothing here. On a miss: deal 0, emit
+   * `unit:missed` (no HP mutation, no `recordDamage`, no `unit:attacked`), and
+   * return before mitigation.
    */
-  applyDamage(attackerId: number, target: Unit, rawDamage: number, opts: { crit: boolean }): void {
+  applyDamage(
+    attackerId: number,
+    target: Unit,
+    rawDamage: number,
+    opts: { crit: boolean; evadable?: boolean },
+  ): void {
+    if (opts.evadable) {
+      const attacker = this.findUnit(attackerId);
+      // A live attacker is the runtime invariant (the strike is cast by it);
+      // the guard only covers a degraded path (attacker gone) — treat it as an
+      // unmissable hit there rather than drawing combatRng against no precision.
+      if (attacker) {
+        const hitChance = hitChanceFor(attacker.stats.precision, target.stats.evasion);
+        if (this.combatRng.next() >= hitChance) {
+          this.emit('unit:missed', { attackerId, targetId: target.id });
+          return;
+        }
+      }
+    }
     const final = Math.max(STATS.minDamage, rawDamage - target.stats.defense);
     target.currentHp -= final;
     this.recordDamage(attackerId, target, final);

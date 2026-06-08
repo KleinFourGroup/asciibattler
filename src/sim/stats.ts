@@ -186,6 +186,29 @@ export function catapultShotDamage(unit: Unit): number {
 }
 
 /**
+ * I2 — to-hit probability for a single-target strike (melee/ranged basic + the
+ * rogue gambit). Fire-Emblem subtractive: the attacker's `precision` raises it,
+ * the target's `evasion` lowers it, clamped to the configured floor/cap. Pure
+ * (no RNG) — the World rolls `combatRng` against this once at the
+ * `applyDamage` chokepoint when the caller opts in via `evadable`. The mage
+ * blast, the catapult shot, and environmental fire/chasm damage never call it
+ * (unmissable).
+ *
+ * With I1's uniform `precision == evasion` the prc/eva terms cancel and every
+ * unit sits at `STATS.hitChanceBase`; the differentiation only emerges once I5
+ * gives the melee subclasses divergent precision/evasion. The floor keeps a
+ * low-precision attacker from being fully shut out by a high-evasion target
+ * (the chip-always-pokes-through analogue of `minDamage`).
+ */
+export function hitChanceFor(precision: number, evasion: number): number {
+  const raw =
+    STATS.hitChanceBase +
+    precision * STATS.hitChancePerPrecision -
+    evasion * STATS.dodgeChancePerEvasion;
+  return Math.min(STATS.hitChanceCap, Math.max(STATS.hitChanceFloor, raw));
+}
+
+/**
  * GP1 — the shared cooldown curve, now parameterized over its slope
  * (`perStat`) and fast-side floor (`minScale`) so the move axis (mobility)
  * and the attack axis (speed) can thread independent knobs. `max(minScale,

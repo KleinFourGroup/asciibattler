@@ -107,12 +107,17 @@ export interface HarnessOptions {
   readonly telemetry?: boolean;
 }
 
-// ≈100s of game time. Authored in seconds and converted via the
+// 150s of game time. Authored in seconds and converted via the
 // TICK_RATE contract so the E3.5 doubling (10 → 20 Hz) didn't silently
 // halve the real cap — which is exactly what made grown-team battles on
 // the 32-long endlessCorridors board read as false "hangs" at the old
-// hardcoded 1000 (= 50s post-E3.5).
-const DEFAULT_MAX_TICKS = secondsToTicks(100);
+// hardcoded 1000 (= 50s post-E3.5). Kept in lockstep with the in-game turn
+// cap (`config/health.json` maxTurnSeconds) — I2 raised both 100 → 150 so a
+// dodge-era battle (whiffs lengthen fights ~33–66%) gets room to resolve
+// decisively before it reads as a false hang here / a draw in-game. The two
+// caps are still SEPARATE constants (this one + the config one); unifying
+// them onto one source is a Phase-N cleanup (see ROADMAP §Phase N).
+const DEFAULT_MAX_TICKS = secondsToTicks(150);
 const DEFAULT_MAX_HOPS = 50;
 
 /**

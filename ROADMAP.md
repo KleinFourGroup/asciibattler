@@ -739,6 +739,20 @@ effects, redraw/empower, the contingent rogue change. The band
 (`budgetFactor 0.625 × swarmMax 1.75`) **will** have moved; re-find it.
 BALANCE.md's funnel (broad → medium → heavy) applies.
 
+**Cleanup folded in here — unify the two turn caps.** There are currently
+**two independent** "turn ran too long" caps, both authored at the same value:
+the **in-game** `maxTurnSeconds` ([config/health.json](config/health.json),
+consumed via `secondsToTicks` → `Run.resolveAsDraw`) and the **fuzz harness**
+`DEFAULT_MAX_TICKS` ([tests/fuzz/harness.ts](tests/fuzz/harness.ts), which drives
+the World directly and labels an un-resolved battle a *hang*). I2 raised **both
+100 → 150s** in lockstep (dodge whiffs lengthen battles), but they're still two
+constants that can silently drift. Collapse them onto **one source** (the
+harness should read the config cap), and decide whether the harness should
+**`resolveAsDraw` at the cap** like the real game rather than calling it a hang —
+which would make the fuzz "hang" metric mean *genuine non-termination* only.
+Natural to land alongside the band re-tune, since the cap is part of the same
+balance surface.
+
 ### N3 — Leveling-rate pass
 
 Tune [config/leveling.json](config/leveling.json) (XP, thresholds,

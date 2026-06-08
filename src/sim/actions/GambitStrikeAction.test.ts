@@ -38,7 +38,7 @@ function makeUnit(
   archetype: UnitArchetype = 'melee',
 ): Unit {
   const stats = {
-    constitution: 10, strength: 0, ranged: 0, magic: 0, luck: 0, agility: 0, mobility: 0, defense: 0, power: 1,
+    constitution: 10, strength: 0, ranged: 0, magic: 0, luck: 0, defense: 0, precision: 0, evasion: 0, speed: 0, mobility: 0, power: 1,
   };
   return new Unit({
     id, team, archetype, glyph: archetype === 'rogue' ? 'r' : 'M',

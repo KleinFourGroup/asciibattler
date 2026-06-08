@@ -11,7 +11,7 @@
  *   low/negative `mobility` (the floor caps only the fast side, so the
  *   slow side is unbounded). The analogous *attack* cadence base moved out
  *   of this file in E5 pre-work — it's now per-ability in
- *   `config/abilities.json`, scaled by `agility` via the same curve. No
+ *   `config/abilities.json`, scaled by `speed` via the same curve. No
  *   silent global fallback: every ability must author its own
  *   `cooldownSeconds`.
  * - `critPerLuck` / `critCap` — `critChance = min(critCap, luck * critPerLuck)`.
@@ -25,12 +25,13 @@
  *   high-defense target never fully negates an attack (chip/AoE always pokes
  *   through). Applied in `World.applyDamage`; environmental fire/chasm damage
  *   is UNMITIGATED and never sees this floor.
- * - `mobilityCdPerStat` / `agilityCdPerStat` — per-axis cooldown slope.
- *   GP1 split the single `cdPerStat` so the two cadence stats can diverge:
+ * - `mobilityCdPerStat` / `speedCdPerStat` — per-axis cooldown slope.
+ *   GP1 split the single `cdPerStat` so the two cadence stats can diverge
+ *   (I1 reverted the attack-axis name `agility → speed`, knobs included):
  *   `mobility` swings wide (incl. negative) so it wants a steeper rate
- *   (0.15 → a heavy unit lands around mobility −7), while `agility` stays
+ *   (0.15 → a heavy unit lands around mobility −7), while `speed` stays
  *   the gentler dial (0.05) on the already-authored ability cadences.
- * - `mobilityMinCdScale` / `agilityMinCdScale` — per-axis fast-side floor.
+ * - `mobilityMinCdScale` / `speedMinCdScale` — per-axis fast-side floor.
  *   Caps how short the cooldown can get at high stat; does NOT bound the
  *   slow side (negative mobility → scale > 1). GP1 split the single
  *   `minCdScale` alongside the rates so a shared fast-side cap isn't an
@@ -50,9 +51,9 @@ const StatsSchema = z.object({
   critMult: z.number().min(1),
   minDamage: z.number().int().nonnegative(),
   mobilityCdPerStat: z.number().nonnegative(),
-  agilityCdPerStat: z.number().nonnegative(),
+  speedCdPerStat: z.number().nonnegative(),
   mobilityMinCdScale: z.number().min(0).max(1),
-  agilityMinCdScale: z.number().min(0).max(1),
+  speedMinCdScale: z.number().min(0).max(1),
 });
 
 export type StatsConfig = z.infer<typeof StatsSchema>;

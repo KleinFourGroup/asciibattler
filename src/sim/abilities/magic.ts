@@ -24,7 +24,7 @@ import type { GridCoord } from '../../core/types';
  * scatters).
  *
  * The multi-tick shape is what sets this apart from every other ability so
- * far: `duration` is the full charge (cadence × agility via
+ * far: `duration` is the full charge (cadence × speed via
  * `attackCooldownTicksFor`, same curve the strikes use) and
  * `effectTicks: [duration]` lands the blast on the tick the charge
  * completes — exercising A1's `applyEffect` path and the action progress
@@ -62,7 +62,7 @@ export class MagicBolt implements Ability {
 
     const center: GridCoord = { ...target.position };
     const baseDamage = magicBoltDamage(unit);
-    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.agility);
+    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
     // F3 — carve the bolt's flight OUT of the charge so it travels *during* the
     // wind-up and detonates on the impact tick (the renderer launches it on
     // `release`). `min(..., durationTicks)` keeps `windupTicks >= 0`;

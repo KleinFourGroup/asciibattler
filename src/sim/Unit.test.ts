@@ -10,9 +10,11 @@ describe('Unit', () => {
       ranged: 0,
       magic: 0,
       luck: 3,
-      agility: 5,
-      mobility: 6,
       defense: 0,
+      precision: 5,
+      evasion: 5,
+      speed: 5,
+      mobility: 6,
       power: 1,
     };
     const derived = deriveStats(stats, 1);

@@ -83,11 +83,11 @@ function proposeBasicStrike(
 
   const baseDamage = basicAttackDamage(unit);
   // E5 pre-work: cadence is the ability's own `cooldownSeconds` (from
-  // `config/abilities.json`), scaled by the unit's `agility` — no longer
+  // `config/abilities.json`), scaled by the unit's `speed` — no longer
   // the single global attack-CD that melee + ranged used to share.
   const durationTicks = attackCooldownTicksFor(
     abilityConfig(abilityId).cooldownSeconds,
-    unit.stats.agility,
+    unit.stats.speed,
   );
 
   return {

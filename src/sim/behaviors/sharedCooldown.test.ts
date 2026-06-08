@@ -75,12 +75,12 @@ describe('shared actionCooldown', () => {
     // could otherwise step toward a different target, the shared CD locks
     // movement out until the attack cooldown elapses. attackCD is the
     // real melee_strike cadence (config-derived) — the scene builds a
-    // melee unit at the archetype's base agility, so this matches what
+    // melee unit at the archetype's base speed, so this matches what
     // MeleeStrike actually proposes; deriving it keeps the test pinned
     // through any cadence re-tune.
     const attackCD = attackCooldownTicksFor(
       ABILITIES.melee_strike!.cooldownSeconds,
-      ARCHETYPE_CONFIG.melee.baseStats.agility,
+      ARCHETYPE_CONFIG.melee.baseStats.speed,
     );
     const { world, units, moves } = scene([
       {

@@ -4,7 +4,7 @@
  *
  *   simulateLevelUps — per-stat RNG roll vs growth rate, increment on
  *     success. Drives PLAYER recruits where dice rolls feel rewarding.
- *     Consumes 9 RNG draws per level (one per stat); byte-deterministic
+ *     Consumes 11 RNG draws per level (one per stat); byte-deterministic
  *     given the same RNG fork.
  *
  *   scaleStats        — deterministic `stat += round(growth × n)` per
@@ -25,25 +25,27 @@ import type { RNG } from '../core/RNG';
 import type { UnitStats } from './Unit';
 import type { GrowthRates } from '../config/archetypes';
 
+// I1: the canonical stat order — `CON · STR · RNG · MAG · LCK · DEF · PRC ·
+// EVA · SPD · MOB · POW` (combat → dodge → cadence → meta). This is BOTH the
+// level-up RNG draw order AND the card display order (`STAT_LABELS` mirrors
+// it), so "draw order == card order" stays legible. I1 deliberately broke the
+// GP1/GP2/H1 "append new stats last" discipline (which existed only to keep
+// the draw sequence byte-stable when bolting a stat onto a settled system):
+// the `agility → speed` revert + the two new dodge stats (`precision`,
+// `evasion`) + nudging `defense` up next to `luck` re-baseline the level-up
+// stream regardless, so the reorder rides that same regen at zero extra cost.
+// Snapshots are name-keyed (order-independent) and version-bumped anyway.
 const STAT_KEYS: readonly (keyof UnitStats & keyof GrowthRates)[] = [
   'constitution',
   'strength',
   'ranged',
   'magic',
   'luck',
-  // GP1: `agility`/`mobility` keep the 6th/7th draw positions the old
-  // `speed`/`endurance` held, so existing seeds stay byte-stable.
-  'agility',
-  'mobility',
-  // GP2: `defense` appended last so the other stats' draw positions are
-  // undisturbed (the level-up RNG stream for con/str/.../mobility is unchanged;
-  // only the new 8th draw is added).
   'defense',
-  // H1: `power` appended last, same rationale — each existing stat keeps its
-  // within-level draw position; only the new 9th draw is added. (The shared
-  // `levelupRng` stream still advances one draw further per level-up, so
-  // recruited rosters across a run differ from pre-H1 — expected for any stat
-  // addition, covered by the snapshot version bump.)
+  'precision',
+  'evasion',
+  'speed',
+  'mobility',
   'power',
 ];
 
@@ -73,9 +75,11 @@ export function simulateLevelUps(
     ranged: out.ranged,
     magic: out.magic,
     luck: out.luck,
-    agility: out.agility,
-    mobility: out.mobility,
     defense: out.defense,
+    precision: out.precision,
+    evasion: out.evasion,
+    speed: out.speed,
+    mobility: out.mobility,
     power: out.power,
   };
 }
@@ -92,9 +96,11 @@ export function scaleStats(base: UnitStats, growth: GrowthRates, n: number): Uni
     ranged: base.ranged + Math.round(growth.ranged * n),
     magic: base.magic + Math.round(growth.magic * n),
     luck: base.luck + Math.round(growth.luck * n),
-    agility: base.agility + Math.round(growth.agility * n),
-    mobility: base.mobility + Math.round(growth.mobility * n),
     defense: base.defense + Math.round(growth.defense * n),
+    precision: base.precision + Math.round(growth.precision * n),
+    evasion: base.evasion + Math.round(growth.evasion * n),
+    speed: base.speed + Math.round(growth.speed * n),
+    mobility: base.mobility + Math.round(growth.mobility * n),
     power: base.power + Math.round(growth.power * n),
   };
 }

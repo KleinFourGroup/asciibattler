@@ -8,10 +8,11 @@
  * luck=99 → critCap, high stat → the per-axis min-scale floor) are pinned
  * explicitly so a regression on the guards surfaces loudly.
  *
- * GP1: the move axis (`mobility`) and attack axis (`agility`) read SEPARATE
- * cooldown knobs (`mobilityCdPerStat`/`mobilityMinCdScale` vs the agility
- * pair), so the formula tests derive each expectation from its own axis's
- * knobs and a divergence guard pins that the two helpers don't share a knob.
+ * GP1: the move axis (`mobility`) and attack axis (`speed`; I1 reverted the
+ * GP1 `agility` name) read SEPARATE cooldown knobs
+ * (`mobilityCdPerStat`/`mobilityMinCdScale` vs the speed pair), so the formula
+ * tests derive each expectation from its own axis's knobs and a divergence
+ * guard pins that the two helpers don't share a knob.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -40,9 +41,11 @@ const TEMPLATE: UnitStats = {
   ranged: 0,
   magic: 0,
   luck: 3,
-  agility: 5,
-  mobility: 2,
   defense: 0,
+  precision: 5,
+  evasion: 5,
+  speed: 5,
+  mobility: 2,
   power: 1,
 };
 
@@ -129,14 +132,14 @@ describe('attackCooldownTicksFor — per-ability attack cadence', () => {
   // so a cadence re-tune doesn't churn the test.
   const base = ABILITIES.melee_strike!.cooldownSeconds;
 
-  it('shrinks with agility via cooldownScale', () => {
-    const expectedScale = 1 - 5 * STATS.agilityCdPerStat;
+  it('shrinks with speed via cooldownScale', () => {
+    const expectedScale = 1 - 5 * STATS.speedCdPerStat;
     const expected = Math.max(1, secondsToTicks(base * expectedScale));
     expect(attackCooldownTicksFor(base, 5)).toBe(expected);
   });
 
-  it('floors at agilityMinCdScale for very high agility', () => {
-    const floored = Math.max(1, secondsToTicks(base * STATS.agilityMinCdScale));
+  it('floors at speedMinCdScale for very high speed', () => {
+    const floored = Math.max(1, secondsToTicks(base * STATS.speedMinCdScale));
     expect(attackCooldownTicksFor(base, 99)).toBe(floored);
   });
 
@@ -145,15 +148,15 @@ describe('attackCooldownTicksFor — per-ability attack cadence', () => {
   });
 });
 
-describe('mobility / agility axes are independent (GP1 split guard)', () => {
-  it('move CD uses the mobility knobs and attack CD uses the agility knobs', () => {
+describe('mobility / speed axes are independent (GP1 split guard)', () => {
+  it('move CD uses the mobility knobs and attack CD uses the speed knobs', () => {
     // Same +stat through both axes. Each helper must resolve through its OWN
     // axis's knobs — derive both expectations straight from STATS so the
     // assertions survive any future re-tune that keeps the rates distinct.
     const stat = 3;
     const baseSeconds = 1;
     const moveScale = Math.max(STATS.mobilityMinCdScale, 1 - stat * STATS.mobilityCdPerStat);
-    const attackScale = Math.max(STATS.agilityMinCdScale, 1 - stat * STATS.agilityCdPerStat);
+    const attackScale = Math.max(STATS.speedMinCdScale, 1 - stat * STATS.speedCdPerStat);
 
     expect(deriveStats({ ...TEMPLATE, mobility: stat }, 1).moveCooldownTicks).toBe(
       Math.max(1, secondsToTicks(STATS.baseMoveCooldownSeconds * moveScale)),

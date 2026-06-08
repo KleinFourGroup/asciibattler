@@ -57,14 +57,14 @@ src/
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
-                             #   GP1: per-axis mobility/agility CdPerStat + MinCdScale; GP2: minDamage floor
+                             #   GP1: per-axis mobility/speed CdPerStat + MinCdScale (I1: agility→speed); GP2: minDamage floor
     sim.ts                   #   E5: targeting + pathfinding knobs (retarget, occupiedCellPenalty, healer*)
     schemas.ts               #   shared zod helpers
 
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v18 (bumped E1 through Phase H)
+                             # Serializable; WorldSnapshot v19 (bumped E1 through Phase I; I1 = agility→speed + precision/evasion)
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
                              # GP2: applyDamage() — the single combat-damage chokepoint (HP -= + ledger
                              #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it
@@ -162,7 +162,7 @@ src/
   ui/
     ui.css
     fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
-    HUD.ts                   # In-battle HUD: floor, rosters, Lv/XP (E4.5) + DEF·MOB·AGI (GP3), banner
+    HUD.ts                   # In-battle HUD: floor, rosters, Lv/XP (E4.5) + DEF·MOB·SPD·POW (GP3/H1; I1 AGI→SPD), banner
     MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode
     RecruitScreen.ts         # recruit offer cards → dispatch chooseRecruit; raw stat block + ability list (GP3)
     PromotionScreen.ts       # E4.4: per-unit level-up rows
@@ -186,7 +186,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   spawn.json
   tiles.json
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;
-                             #     GP1: mobilityCdPerStat/agilityCdPerStat + mobilityMinCdScale/agilityMinCdScale;
+                             #     GP1/I1: mobilityCdPerStat/speedCdPerStat + mobilityMinCdScale/speedMinCdScale;
                              #     GP2: minDamage (subtractive-defense floor)
   sim.json                   # E5: retargetCloserRatio + rangedRetargetLosSeconds + occupiedCellPenalty + healer knobs; GP4: actingCellSearchSlack
 

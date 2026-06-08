@@ -25,14 +25,14 @@ const GAMBIT = abilityConfig('gambit_strike');
 const MELEE = abilityConfig('melee_strike');
 
 // Representative rogue/melee stat blocks. Cadence expectations derive from the
-// SAME `agility` via `attackCooldownTicksFor`, so the assertions hold regardless
-// of the exact shipped numbers — these just need a non-zero agility so the
+// SAME `speed` via `attackCooldownTicksFor`, so the assertions hold regardless
+// of the exact shipped numbers — these just need a non-zero speed so the
 // windup is strictly inside the busy window (a real split, not a degenerate 0).
 const ROGUE_STATS: UnitStats = {
-  constitution: 14, strength: 4, ranged: 0, magic: 0, luck: 10, agility: 9, mobility: 4, defense: 0, power: 1,
+  constitution: 14, strength: 4, ranged: 0, magic: 0, luck: 10, defense: 0, precision: 5, evasion: 5, speed: 9, mobility: 4, power: 1,
 };
 const MELEE_STATS: UnitStats = {
-  constitution: 30, strength: 8, ranged: 0, magic: 0, luck: 2, agility: 3, mobility: 5, defense: 0, power: 1,
+  constitution: 30, strength: 8, ranged: 0, magic: 0, luck: 2, defense: 0, precision: 5, evasion: 5, speed: 3, mobility: 5, power: 1,
 };
 
 function makeUnit(
@@ -69,7 +69,7 @@ describe('GambitStrike.propose — F4 phase timeline', () => {
     expect(proposal!.score).toBe(10);
     expect(proposal!.cooldownKey).toBe('gambit_strike');
 
-    const durationTicks = attackCooldownTicksFor(GAMBIT.cooldownSeconds, ROGUE_STATS.agility);
+    const durationTicks = attackCooldownTicksFor(GAMBIT.cooldownSeconds, ROGUE_STATS.speed);
     const windup = Math.min(secondsToTicks(GAMBIT.retreatDelaySeconds!), durationTicks);
     expect(windup).toBeGreaterThan(0); // a real split, not degenerate
     expect(windup).toBeLessThan(durationTicks); // strictly inside the busy window
@@ -86,7 +86,7 @@ describe('GambitStrike.propose — F4 phase timeline', () => {
     const enemy = makeUnit(2, 'enemy', { x: 6, y: 5 });
     const proposal = new GambitStrike().propose(rogue, world([rogue, enemy]));
 
-    const durationTicks = attackCooldownTicksFor(GAMBIT.cooldownSeconds, ROGUE_STATS.agility);
+    const durationTicks = attackCooldownTicksFor(GAMBIT.cooldownSeconds, ROGUE_STATS.speed);
     expect(proposal!.cooldown).toBe(durationTicks);
     expect(totalTicks(proposal!.phases)).toBe(durationTicks);
   });
@@ -100,7 +100,7 @@ describe('MeleeStrike.propose — stays a basic strike', () => {
     const enemy = makeUnit(2, 'enemy', { x: 6, y: 5 });
     const proposal = new MeleeStrike().propose(melee, world([melee, enemy]));
 
-    const durationTicks = attackCooldownTicksFor(MELEE.cooldownSeconds, MELEE_STATS.agility);
+    const durationTicks = attackCooldownTicksFor(MELEE.cooldownSeconds, MELEE_STATS.speed);
     expect(proposal!.phases).toEqual([
       { phase: 'impact', ticks: 0 },
       { phase: 'recovery', ticks: durationTicks },

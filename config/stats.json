@@ -6,7 +6,7 @@
   "critMult": 2.0,
   "minDamage": 1,
   "mobilityCdPerStat": 0.15,
-  "agilityCdPerStat": 0.05,
+  "speedCdPerStat": 0.05,
   "mobilityMinCdScale": 0.4,
-  "agilityMinCdScale": 0.4
+  "speedMinCdScale": 0.4
 }

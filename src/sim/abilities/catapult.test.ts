@@ -26,7 +26,7 @@ const SHOT = abilityConfig('catapult_shot');
 const SHOT_RANGE = SHOT.range;
 
 const CATAPULT_STATS: UnitStats = {
-  constitution: 24, strength: 0, ranged: 14, magic: 0, luck: 2, agility: 4, mobility: 4, defense: 0, power: 1,
+  constitution: 24, strength: 0, ranged: 14, magic: 0, luck: 2, defense: 0, precision: 5, evasion: 5, speed: 4, mobility: 4, power: 1,
 };
 
 function makeUnit(
@@ -75,7 +75,7 @@ describe('CatapultShot.propose', () => {
     expect(proposal!.score).toBe(10);
     expect(proposal!.cooldownKey).toBe('catapult_shot');
 
-    const expected = attackCooldownTicksFor(SHOT.cooldownSeconds, CATAPULT_STATS.agility);
+    const expected = attackCooldownTicksFor(SHOT.cooldownSeconds, CATAPULT_STATS.speed);
     expect(proposal!.cooldown).toBe(expected);
     // F3 — the wind-up is SPLIT: charge for `expected - travel`, loose
     // (`release`), let the boulder arc for `travel`, then land the hit at
@@ -98,7 +98,7 @@ describe('CatapultShot.propose', () => {
     const enemy = makeUnit(2, 'enemy', { x: 5, y: 9 });
     const proposal = new CatapultShot().propose(cat, world([cat, enemy]));
 
-    const expected = attackCooldownTicksFor(SHOT.cooldownSeconds, CATAPULT_STATS.agility);
+    const expected = attackCooldownTicksFor(SHOT.cooldownSeconds, CATAPULT_STATS.speed);
     const travel = Math.min(secondsToTicks(SHOT.travelSeconds ?? 0), expected);
     // Σ ticks is the busy window the unit is locked for — unchanged by the split.
     expect(totalTicks(proposal!.phases)).toBe(expected);

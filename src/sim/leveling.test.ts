@@ -19,9 +19,11 @@ const BASE: UnitStats = {
   ranged: 0,
   magic: 0,
   luck: 3,
-  agility: 4,
-  mobility: 4,
   defense: 2,
+  precision: 6,
+  evasion: 7,
+  speed: 4,
+  mobility: 4,
   power: 1,
 };
 
@@ -31,9 +33,11 @@ const GROWTH_MID: GrowthRates = {
   ranged: 0,
   magic: 0,
   luck: 0.5,
-  agility: 0.5,
-  mobility: 0.5,
   defense: 0.5,
+  precision: 0.5,
+  evasion: 0.5,
+  speed: 0.5,
+  mobility: 0.5,
   power: 0.5,
 };
 
@@ -43,9 +47,11 @@ const GROWTH_NONE: GrowthRates = {
   ranged: 0,
   magic: 0,
   luck: 0,
-  agility: 0,
-  mobility: 0,
   defense: 0,
+  precision: 0,
+  evasion: 0,
+  speed: 0,
+  mobility: 0,
   power: 0,
 };
 
@@ -55,9 +61,11 @@ const GROWTH_ALL: GrowthRates = {
   ranged: 1,
   magic: 1,
   luck: 1,
-  agility: 1,
-  mobility: 1,
   defense: 1,
+  precision: 1,
+  evasion: 1,
+  speed: 1,
+  mobility: 1,
   power: 1,
 };
 
@@ -73,7 +81,7 @@ describe('scaleStats — deterministic', () => {
     expect(out.ranged).toBe(0); // growth 0
     expect(out.magic).toBe(0);
     expect(out.luck).toBe(3 + 2);
-    expect(out.agility).toBe(4 + 2);
+    expect(out.speed).toBe(4 + 2);
     expect(out.mobility).toBe(4 + 2);
   });
 
@@ -153,7 +161,7 @@ describe('simulateLevelUps — distribution lands near expected value', () => {
       constitution: 0,
       strength: 0,
       luck: 0,
-      agility: 0,
+      speed: 0,
       mobility: 0,
     };
     for (let i = 0; i < TRIALS; i++) {
@@ -161,12 +169,12 @@ describe('simulateLevelUps — distribution lands near expected value', () => {
       tally.constitution! += out.constitution - BASE.constitution;
       tally.strength! += out.strength - BASE.strength;
       tally.luck! += out.luck - BASE.luck;
-      tally.agility! += out.agility - BASE.agility;
+      tally.speed! += out.speed - BASE.speed;
       tally.mobility! += out.mobility - BASE.mobility;
     }
     const expectedMean = 0.5 * N; // growth 0.5, N=10 → mean 5
     const tolerance = Math.max(0.5, expectedMean * 0.15);
-    for (const k of ['constitution', 'strength', 'luck', 'agility', 'mobility'] as const) {
+    for (const k of ['constitution', 'strength', 'luck', 'speed', 'mobility'] as const) {
       const mean = tally[k]! / TRIALS;
       expect(Math.abs(mean - expectedMean)).toBeLessThanOrEqual(tolerance);
     }
@@ -204,6 +212,49 @@ describe('H1 — `power` levels per growthRates (config-derived, balance-proof)'
       expect(a.power, `${arch} determinism`).toBe(b.power);
       // Additive growth never reduces a stat below its base.
       expect(a.power, `${arch} monotonic`).toBeGreaterThanOrEqual(cfg.baseStats.power);
+    }
+  });
+});
+
+describe('I1 — `precision`/`evasion` level per growthRates (config-derived, balance-proof)', () => {
+  // The two dodge stats are plumbed exactly like every other stat; this proves
+  // they level off the shipped config, NOT a hardcoded base/growth — so the
+  // assertions stay correct when I4/I5 re-tunes the (currently uniform) values.
+  const DODGE_STATS = ['precision', 'evasion'] as const;
+
+  it('every archetype config defines a numeric precision + evasion base + growth', () => {
+    for (const arch of ALL_ARCHETYPES) {
+      const cfg = ARCHETYPE_CONFIG[arch];
+      for (const stat of DODGE_STATS) {
+        expect(typeof cfg.baseStats[stat], `${arch} baseStats.${stat}`).toBe('number');
+        expect(typeof cfg.growthRates[stat], `${arch} growthRates.${stat}`).toBe('number');
+      }
+    }
+  });
+
+  it('scaleStats grows precision/evasion by round(growth × n) for every archetype', () => {
+    for (const arch of ALL_ARCHETYPES) {
+      const cfg = ARCHETYPE_CONFIG[arch];
+      for (const n of [0, 1, 5, 25]) {
+        const out = scaleStats(cfg.baseStats, cfg.growthRates, n);
+        for (const stat of DODGE_STATS) {
+          expect(out[stat], `${arch}.${stat} @ n=${n}`).toBe(
+            cfg.baseStats[stat] + Math.round(cfg.growthRates[stat] * n),
+          );
+        }
+      }
+    }
+  });
+
+  it('simulateLevelUps advances precision/evasion deterministically and only upward', () => {
+    for (const arch of ALL_ARCHETYPES) {
+      const cfg = ARCHETYPE_CONFIG[arch];
+      const a = simulateLevelUps(cfg.baseStats, cfg.growthRates, 30, new RNG(123));
+      const b = simulateLevelUps(cfg.baseStats, cfg.growthRates, 30, new RNG(123));
+      for (const stat of DODGE_STATS) {
+        expect(a[stat], `${arch}.${stat} determinism`).toBe(b[stat]);
+        expect(a[stat], `${arch}.${stat} monotonic`).toBeGreaterThanOrEqual(cfg.baseStats[stat]);
+      }
     }
   });
 });

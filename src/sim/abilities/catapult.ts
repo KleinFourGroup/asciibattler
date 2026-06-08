@@ -24,7 +24,7 @@ import type { GridCoord } from '../../core/types';
  * in range, abstain (let this fire) even with no LOS, instead of creeping
  * forward to clear a wall it doesn't need cleared.
  *
- * Multi-tick like the mage: `duration` is the full wind-up (cadence × agility
+ * Multi-tick like the mage: `duration` is the full wind-up (cadence × speed
  * via `attackCooldownTicksFor`) and `effectTicks: [duration]` lands the shot
  * on the tick the charge completes, filling the action-progress bar.
  * `cooldown == duration`, so the catapult re-winds immediately after each
@@ -51,7 +51,7 @@ export class CatapultShot implements Ability {
     // No LOS gate — the arcing shot ignores walls.
 
     const baseDamage = catapultShotDamage(unit);
-    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.agility);
+    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
     // F3 — carve the boulder's flight OUT of the wind-up so it travels
     // *during* the charge and lands on the impact tick (the renderer launches
     // it on `release`). `min(..., durationTicks)` keeps `windupTicks >= 0`;

@@ -217,7 +217,7 @@ export class HUD {
     sub.className = 'hud-sub';
     row.appendChild(sub);
 
-    // GP3: a second sub-line with the raw driving stats (DEF · MOB · AGI)
+    // GP3: a second sub-line with the raw driving stats (DEF · MOB · SPD)
     // so the live tracker surfaces what GP1/GP2 added — a light touch on
     // the 240px panel. Reads `unit.stats` directly (no deriveStats); the
     // full ability detail stays on the recruit card. Shown for both teams.
@@ -279,5 +279,5 @@ function formatSub(unit: Unit): string {
 // shared STAT_LABELS so HUD / card / promotion read identically.
 function formatStats(unit: Unit): string {
   const s = unit.stats;
-  return `${STAT_LABELS.defense} ${s.defense} · ${STAT_LABELS.mobility} ${s.mobility} · ${STAT_LABELS.agility} ${s.agility} · ${STAT_LABELS.power} ${s.power}`;
+  return `${STAT_LABELS.defense} ${s.defense} · ${STAT_LABELS.mobility} ${s.mobility} · ${STAT_LABELS.speed} ${s.speed} · ${STAT_LABELS.power} ${s.power}`;
 }

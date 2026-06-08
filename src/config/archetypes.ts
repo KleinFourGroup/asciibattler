@@ -11,11 +11,14 @@
  *
  * E1: schema flipped from the MVP `{hp, attackDamage, attackCooldown,
  * moveCooldown}` ranges to a `baseStats` block in the new stat
- * vocabulary (constitution / strength / ranged / magic / luck / agility
- * / mobility). The `STAT_CAP = 99` cap is a typo guard, not a design
- * knob — the practical range never touches it. GP1 renamed the two
- * cadence stats (`speed → agility`, `endurance → mobility`) and made
- * `mobility` signed (negative = slower than the move-CD baseline).
+ * vocabulary (constitution / strength / ranged / magic / luck / defense /
+ * precision / evasion / speed / mobility / power — the I1 canonical order).
+ * The `STAT_CAP = 99` cap is a typo guard, not a design knob — the practical
+ * range never touches it. GP1 renamed the two cadence stats
+ * (`speed → agility`, `endurance → mobility`) and made `mobility` signed;
+ * I1 reverted `agility → speed` (it read as "dodge chance" once the real
+ * dodge stats `precision`/`evasion` arrived) and reordered to group the
+ * direct-combat stats (incl. `defense`) ahead of dodge/cadence/meta.
  *
  * E2: each archetype declares an `abilities: string[]` list of registry
  * ids resolved at module load against `knownAbilityIds()`. Unknown ids
@@ -35,7 +38,7 @@
  * pace now comes from low/negative `mobility` (heavy units around −7),
  * which the move-CD curve turns into a scale > 1. Attack-cooldown bases
  * live on ability definitions (a unit can carry several abilities with
- * different timings), scaled per unit by `agility`.
+ * different timings), scaled per unit by `speed`.
  *
  * E5: `attackRange` left the archetype schema for the same reason —
  * range is now a per-ability tunable in `config/abilities.json`. A
@@ -65,14 +68,19 @@ const BaseStatsSchema = z.object({
   ranged: z.number().int().nonnegative().max(STAT_CAP),
   magic: z.number().int().nonnegative().max(STAT_CAP),
   luck: z.number().int().nonnegative().max(STAT_CAP),
-  agility: z.number().int().nonnegative().max(STAT_CAP),
+  // GP2: flat subtractive damage mitigation. Nonnegative like the offensive
+  // stats (0 = no armor). I1 reordered it up next to `luck` (combat stats group).
+  defense: z.number().int().nonnegative().max(STAT_CAP),
+  // I1: dodge stats — `precision` (attacker) vs `evasion` (defender) feed the
+  // hit/miss roll in `World.applyDamage`. Nonnegative; behavior-neutral until I2.
+  precision: z.number().int().nonnegative().max(STAT_CAP),
+  evasion: z.number().int().nonnegative().max(STAT_CAP),
+  // I1: `speed` (attack cadence; reverts GP1's `agility` name). Nonnegative.
+  speed: z.number().int().nonnegative().max(STAT_CAP),
   // GP1: `mobility` is SIGNED — 0 is the universal move-CD baseline, positive
   // is faster, negative is slower (heavy units land around −7). The other
   // stats stay nonnegative; mobility's lower bound is the typo guard mirrored.
   mobility: z.number().int().min(-STAT_CAP).max(STAT_CAP),
-  // GP2: flat subtractive damage mitigation. Nonnegative like the offensive
-  // stats (0 = no armor).
-  defense: z.number().int().nonnegative().max(STAT_CAP),
   // H1: Phase-H pool-chip stat — a turn's survivors chip the opposing health
   // pool by their Σ`power`. Nonnegative; behavior-neutral until H4 consumes it.
   power: z.number().int().nonnegative().max(STAT_CAP),
@@ -84,9 +92,11 @@ const GrowthRatesSchema = z.object({
   ranged: z.number().min(0).max(1),
   magic: z.number().min(0).max(1),
   luck: z.number().min(0).max(1),
-  agility: z.number().min(0).max(1),
-  mobility: z.number().min(0).max(1),
   defense: z.number().min(0).max(1),
+  precision: z.number().min(0).max(1),
+  evasion: z.number().min(0).max(1),
+  speed: z.number().min(0).max(1),
+  mobility: z.number().min(0).max(1),
   power: z.number().min(0).max(1),
 });
 

@@ -20,8 +20,9 @@
  *
  * GP1: the two cadence stats drive cooldowns through SEPARATE per-axis
  * knobs so they can diverge — `mobility` (move CD) reads
- * `mobilityCdPerStat`/`mobilityMinCdScale`; `agility` (attack cadence)
- * reads `agilityCdPerStat`/`agilityMinCdScale`. `cooldownScale` is now
+ * `mobilityCdPerStat`/`mobilityMinCdScale`; `speed` (attack cadence; I1
+ * reverted the GP1 `agility` name) reads `speedCdPerStat`/`speedMinCdScale`.
+ * `cooldownScale` is now
  * parameterized over (perStat, minScale) and each call site threads its
  * own pair. `mobility` is signed: negative → scale > 1 → slower than the
  * baseline (the min-scale floor caps only the fast side). GP1 also
@@ -34,7 +35,7 @@
  * timings, so a single per-unit `attackCooldownTicks` couldn't
  * represent them. `attackCooldownTicksFor` resolves an ability's
  * `cooldownSeconds` (from `config/abilities.json`) against the unit's
- * `agility` at propose time, reusing the same `cooldownScale` curve.
+ * `speed` at propose time, reusing the same `cooldownScale` curve.
  *
  * `inertDerived` is the environment-entity path (walls / half-cover) —
  * non-combatants need a maxHp anchor for HP display and the future
@@ -68,18 +69,18 @@ export function deriveStats(stats: UnitStats, attackRange: number): UnitDerived 
 /**
  * E5 pre-work — resolve an ability's attack cadence to ticks for a
  * specific unit. `cooldownSeconds` is the ability's authored base
- * interval (`config/abilities.json`); the unit's `agility` shrinks it via
+ * interval (`config/abilities.json`); the unit's `speed` shrinks it via
  * the same `cooldownScale` curve that governs movement (GP1: through the
- * agility-axis knobs, independent of the mobility ones), so nimbler units
+ * speed-axis knobs, independent of the mobility ones), so nimbler units
  * still swing/shoot more often. Floored at 1 tick (mirrors the move-CD
  * floor) so an extreme base/scale combo can't round to a 0-tick — i.e.
  * fire-every-tick — cadence.
  */
-export function attackCooldownTicksFor(cooldownSeconds: number, agility: number): number {
+export function attackCooldownTicksFor(cooldownSeconds: number, speed: number): number {
   return Math.max(
     1,
     secondsToTicks(
-      cooldownSeconds * cooldownScale(agility, STATS.agilityCdPerStat, STATS.agilityMinCdScale),
+      cooldownSeconds * cooldownScale(speed, STATS.speedCdPerStat, STATS.speedMinCdScale),
     ),
   );
 }
@@ -187,7 +188,7 @@ export function catapultShotDamage(unit: Unit): number {
 /**
  * GP1 — the shared cooldown curve, now parameterized over its slope
  * (`perStat`) and fast-side floor (`minScale`) so the move axis (mobility)
- * and the attack axis (agility) can thread independent knobs. `max(minScale,
+ * and the attack axis (speed) can thread independent knobs. `max(minScale,
  * …)` caps only the FAST side: a negative `stat` makes `1 - stat*perStat`
  * exceed 1 (slower than baseline), and that larger value wins the `max`, so
  * the slow side is unbounded.
@@ -208,8 +209,10 @@ export const ZERO_STATS: UnitStats = Object.freeze({
   ranged: 0,
   magic: 0,
   luck: 0,
-  agility: 0,
-  mobility: 0,
   defense: 0,
+  precision: 0,
+  evasion: 0,
+  speed: 0,
+  mobility: 0,
   power: 0,
 });

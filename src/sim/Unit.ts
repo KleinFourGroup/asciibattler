@@ -40,18 +40,30 @@ export interface UnitStats {
   readonly ranged: number;
   readonly magic: number;
   readonly luck: number;
-  /** GP1: per-ability attack-cadence dial (was `speed`). Higher → faster
-   *  swings/shots/casts, via `attackCooldownTicksFor`. Nonnegative. */
-  readonly agility: number;
+  /** GP2: flat damage mitigation. Subtractive with a floor — an incoming hit
+   *  lands `max(STATS.minDamage, rawDamage − defense)` (post-crit, post-cover),
+   *  applied in `World.applyDamage`. Consumed raw (no derived layer).
+   *  Nonnegative; environmental fire/chasm damage is UNMITIGATED. (I1 reordered
+   *  it up next to `luck` so the direct-combat stats group before dodge/cadence.) */
+  readonly defense: number;
+  /** I1: dodge — the hit-chance numerator. A unit's `precision` raises the
+   *  chance its attacks land (weighed against the target's `evasion`), rolled in
+   *  `World.applyDamage`. Behavior-NEUTRAL until I2 wires the hit/miss roll.
+   *  Nonnegative. */
+  readonly precision: number;
+  /** I1: dodge — the hit-chance denominator. A unit's `evasion` lowers the
+   *  chance an incoming attack lands (weighed against the attacker's
+   *  `precision`). Behavior-NEUTRAL until I2. Nonnegative. */
+  readonly evasion: number;
+  /** I1: per-ability attack-cadence dial (GP1 had named it `agility`; reverted
+   *  here because `agility` read as "dodge chance" once the real dodge stats
+   *  arrived). Higher → faster swings/shots/casts, via `attackCooldownTicksFor`.
+   *  Nonnegative. */
+  readonly speed: number;
   /** GP1: move-cadence dial (was `endurance`). SIGNED — 0 is the universal
    *  move-CD baseline, positive is faster, negative is slower (heavy units
    *  around −7). Drives `moveCooldownTicks` via `deriveStats`. */
   readonly mobility: number;
-  /** GP2: flat damage mitigation. Subtractive with a floor — an incoming hit
-   *  lands `max(STATS.minDamage, rawDamage − defense)` (post-crit, post-cover),
-   *  applied in `World.applyDamage`. Consumed raw (no derived layer).
-   *  Nonnegative; environmental fire/chasm damage is UNMITIGATED. */
-  readonly defense: number;
   /** H1: Phase-H pool-chip stat. A turn's surviving units chip the *opposing*
    *  health pool by their Σ`power` (player pool / encounter enemy pool). Levels
    *  like any other stat (additive growth). Behavior-NEUTRAL until H4 wires the

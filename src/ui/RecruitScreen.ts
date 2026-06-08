@@ -162,7 +162,7 @@ function statLine(label: string, value: string): HTMLDivElement {
  * truth helpers (`damageStatFor`, or the `magic`-scaled heal matching
  * `healAmountFor`) so the card can't disagree with what the unit actually
  * does in battle. Range / cadence / AoE come from `config/abilities.json`
- * via `abilityConfig`. The cadence's driving stat (agility) isn't repeated
+ * via `abilityConfig`. The cadence's driving stat (speed) isn't repeated
  * here — it's in the raw stat block above.
  */
 function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDivElement {
@@ -192,7 +192,7 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
 
   const cadence = document.createElement('div');
   cadence.className = 'recruit-ability-cadence';
-  const seconds = ticksToSeconds(attackCooldownTicksFor(cfg.cooldownSeconds, stats.agility));
+  const seconds = ticksToSeconds(attackCooldownTicksFor(cfg.cooldownSeconds, stats.speed));
   cadence.textContent = `${seconds.toFixed(2)}s`;
   row.appendChild(cadence);
 

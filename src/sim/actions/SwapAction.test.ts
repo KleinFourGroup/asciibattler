@@ -15,7 +15,7 @@ import type { GameEvents } from '../../core/events';
  */
 
 const STATS: UnitStats = {
-  constitution: 20, strength: 6, ranged: 0, magic: 0, luck: 0, agility: 5, mobility: 5, defense: 0, power: 1,
+  constitution: 20, strength: 6, ranged: 0, magic: 0, luck: 0, defense: 0, precision: 5, evasion: 5, speed: 5, mobility: 5, power: 1,
 };
 
 function spawn(w: World, x: number, y: number) {

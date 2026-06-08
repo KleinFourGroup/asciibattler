@@ -68,11 +68,13 @@ describe('A2 round-trip: World', () => {
     // GP1 renamed two UnitStats keys (speed→agility, endurance→mobility) and
     // bumped WORLD_SCHEMA_VERSION. Stats round-trip as a whole object by key,
     // so an old save would otherwise deserialize into a block missing the new
-    // keys; the version check must reject it outright instead.
+    // keys; the version check must reject it outright instead. (I1 later
+    // reverted speed→agility back to `speed`; `mobility` is the surviving GP1
+    // rename, so it's the stable sanity-key here — the dodge-stat additions are
+    // pinned by the I1 case below.)
     const { world } = freshBattle(54321);
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    // Sanity: the live snapshot carries the renamed stat keys.
-    expect(wire.units[0].stats).toHaveProperty('agility');
+    // Sanity: the live snapshot carries the (surviving) renamed stat key.
     expect(wire.units[0].stats).toHaveProperty('mobility');
 
     // A current-version snapshot restores cleanly.
@@ -99,6 +101,31 @@ describe('A2 round-trip: World', () => {
     expect(restored.units[0]!.stats.power).toBe(world.units[0]!.stats.power);
 
     // A snapshot stamped with the PRIOR version (a pre-H1 save) throws.
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
+  it('I1: a live snapshot carries `speed`/`precision`/`evasion` (not `agility`); a pre-I1 version is rejected', () => {
+    // I1 reverted agility→speed and added precision/evasion to UnitStats, bumping
+    // WORLD_SCHEMA_VERSION (18→19). Stats round-trip as a whole object by key, so
+    // a v18 save carries an `agility`-keyed, dodge-less block; the version check
+    // must reject it outright.
+    const { world } = freshBattle(54321);
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    expect(wire.units[0].stats).toHaveProperty('speed');
+    expect(wire.units[0].stats).toHaveProperty('precision');
+    expect(wire.units[0].stats).toHaveProperty('evasion');
+    expect(wire.units[0].stats).not.toHaveProperty('agility');
+
+    // A current-version snapshot restores cleanly and preserves the dodge stats.
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.units[0]!.stats.speed).toBe(world.units[0]!.stats.speed);
+    expect(restored.units[0]!.stats.precision).toBe(world.units[0]!.stats.precision);
+    expect(restored.units[0]!.stats.evasion).toBe(world.units[0]!.stats.evasion);
+
+    // A snapshot stamped with the PRIOR version (a pre-I1 save) throws.
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
     expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,
@@ -405,6 +432,27 @@ describe('A2 round-trip: Run', () => {
     const wire = JSON.parse(JSON.stringify(run.toJSON()));
     expect(wire.team.length).toBeGreaterThan(0);
     expect(wire.team[0].stats).toHaveProperty('power');
+
+    expect(() => Run.fromJSON(wire, new EventBus<GameEvents>())).not.toThrow();
+
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
+  it('I1: roster templates carry the reverted/added stat keys; a pre-I1 Run snapshot is rejected', () => {
+    // The roster's leveled stat blocks (team: UnitTemplate[]) live in the Run
+    // save, so I1's agility→speed revert + precision/evasion adds bumped
+    // RUN_SCHEMA_VERSION (9→10) too. A v9 save carries the old `agility`-keyed,
+    // dodge-less block → reject.
+    const run = new Run(2026, new EventBus<GameEvents>());
+    const wire = JSON.parse(JSON.stringify(run.toJSON()));
+    expect(wire.team.length).toBeGreaterThan(0);
+    expect(wire.team[0].stats).toHaveProperty('speed');
+    expect(wire.team[0].stats).toHaveProperty('precision');
+    expect(wire.team[0].stats).toHaveProperty('evasion');
+    expect(wire.team[0].stats).not.toHaveProperty('agility');
 
     expect(() => Run.fromJSON(wire, new EventBus<GameEvents>())).not.toThrow();
 

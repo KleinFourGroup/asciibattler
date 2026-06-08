@@ -806,7 +806,7 @@ body {
   padding-left: 24px; /* aligns under the HP bar, past the glyph */
 }
 
-/* GP3: raw driving-stat line (DEF · MOB · AGI) beneath the Lv/XP sub.
+/* GP3: raw driving-stat line (DEF · MOB · SPD) beneath the Lv/XP sub.
    Same dim-amber treatment + alignment as .hud-sub so the eye still leads
    with HP; one notch smaller-feeling via the shared opacity. */
 .hud-stats {

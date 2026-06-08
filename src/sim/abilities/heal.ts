@@ -16,7 +16,7 @@ import type { Ability } from './Ability';
  *
  * Mirrors the strike abilities' propose shape: score 10 (so a ready heal
  * beats any movement step), cadence resolved from the ability's own
- * `cooldownSeconds` scaled by the unit's `agility`, and `cooldownKey:
+ * `cooldownSeconds` scaled by the unit's `speed`, and `cooldownKey:
  * 'heal_ally'` so the heal counter stays independent of any other ability
  * the unit might gain later. Unlike the strikes there's no LOS / half-cover
  * gate — healing a friendly unit isn't a line-blocked shot (E7.B call).
@@ -33,7 +33,7 @@ export class HealAlly implements Ability {
     const amount = healAmountFor(unit);
     const durationTicks = attackCooldownTicksFor(
       abilityConfig(this.id).cooldownSeconds,
-      unit.stats.agility,
+      unit.stats.speed,
     );
 
     return {

@@ -115,8 +115,14 @@ import { STATS } from '../config/stats';
  *       `power`-less stat block; the version check rejects it outright (no
  *       migration — same stat-shape-contract rationale as GP1/GP2). v17 throws
  *       on load.
+ *  19 — I1 reverted the GP1 `agility → speed` rename and added two dodge keys
+ *       (`precision`, `evasion`) to `UnitStats` (canonical order CON·STR·RNG·
+ *       MAG·LCK·DEF·PRC·EVA·SPD·MOB·POW). Stats round-trip as a whole object by
+ *       key, so a v18 snapshot carries an `agility`-keyed, dodge-less stat
+ *       block; the version check rejects it outright (no migration — same
+ *       stat-shape-contract rationale as GP1/GP2/H1). v18 throws on load.
  */
-const WORLD_SCHEMA_VERSION = 18;
+const WORLD_SCHEMA_VERSION = 19;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.

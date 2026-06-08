@@ -129,8 +129,13 @@ export interface BattleEncounter {
  *  H5: bumped 8→9. Adds the card deck: `drawPile` / `discardPile` / `hand`
  *  (rosterIndex values; the encounter-scoped draw→hand→discard cycle) + the
  *  dedicated `deckRng` stream. A v8 save has no deck → reject rather than
- *  rehydrate a Run mid-encounter with an undrawn (or stale) hand. */
-const RUN_SCHEMA_VERSION = 9;
+ *  rehydrate a Run mid-encounter with an undrawn (or stale) hand.
+ *  I1: bumped 9→10. The roster `team: UnitTemplate[]` embeds `UnitStats`, and
+ *  I1 reverted `agility → speed` + added `precision`/`evasion`. A v9 save
+ *  carries the old `agility`-keyed, dodge-less stat block → reject rather than
+ *  rehydrate a roster that would `NaN` on the next level-up (same stat-shape
+ *  contract as the World v19 bump). */
+const RUN_SCHEMA_VERSION = 10;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;

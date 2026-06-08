@@ -375,14 +375,15 @@ export class BattleRenderer {
   };
 
   /**
-   * E6.C — float a number over a unit. Anchors at the *top* of the sprite
-   * (getPosition returns the sprite center, so lift by HITSPLAT_Y_OFFSET ≈
-   * half the 1×1 quad) rather than the center, so the number reads off the
-   * top edge of the glyph. Done in world space so the offset tracks the
-   * sprite's apparent size across camera zoom (a CSS % offset wouldn't).
-   * Delegates positioning + lifecycle to UnitOverlayLayer, which reuses the
-   * same world→screen projector the HP bars ride. No-op if the unit has no
-   * live sprite (e.g. mid-teardown) or projects off-screen.
+   * E6.C — float a number over a unit, anchored at the *top* of the sprite so
+   * it reads off the top edge of the glyph. Passes the sprite CENTER plus the
+   * world-up lift (`HITSPLAT_Y_OFFSET` ≈ half the 1×1 quad) to UnitOverlayLayer,
+   * which projects both and anchors on the billboard's screen-space top (I2 —
+   * see UnitOverlayLayer.spawnHitsplat for why the lift can't just be added in
+   * world space before projecting). World-space lift keeps the offset tracking
+   * the sprite's apparent size across camera zoom (a CSS % offset wouldn't).
+   * No-op if the unit has no live sprite (e.g. mid-teardown) or projects
+   * off-screen.
    */
   private spawnHitsplat(
     unitId: number,
@@ -393,8 +394,7 @@ export class BattleRenderer {
     if (!handle) return;
     const pos = this.sprites.getPosition(handle, this.scratchPos);
     if (!pos) return;
-    pos.y += HITSPLAT_Y_OFFSET;
-    this.overlays.spawnHitsplat(pos, text, kind, unitId);
+    this.overlays.spawnHitsplat(pos, HITSPLAT_Y_OFFSET, text, kind, unitId);
   }
 
   /**

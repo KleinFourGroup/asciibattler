@@ -162,14 +162,20 @@ body {
   color: #ffb000; /* TERMINAL_AMBER (orange) */
 }
 
-/* I2 — a dodged single-target strike. Desaturated steel-grey + italic + a hair
-   smaller than a damage number, so a whiff reads as a non-event (no damage)
-   rather than competing with the bright damage/crit numbers for attention. */
+/* I2 — a dodged single-target strike. A loud, bright italic call-out that
+   stands out against the bright sprites and is distinct from the other splat
+   colors (white damage / red crit / cyan heal / amber burn): a cool near-white
+   with a blue glow halo, bigger + heavier than a damage number. Tune freely. */
 .hitsplat--miss {
-  color: #9aa3ad; /* muted steel-grey */
-  font-size: 14px;
+  color: #eaf2ff; /* bright cool white */
+  font-size: 20px;
   font-style: italic;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 8px rgba(90, 160, 255, 0.85), /* blue glow so it pops, not red/cyan/amber */
+    0 0 3px rgba(0, 0, 0, 0.95),
+    0 1px 2px rgba(0, 0, 0, 0.95);
 }
 
 @keyframes hitsplat-rise {

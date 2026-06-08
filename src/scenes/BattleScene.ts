@@ -16,6 +16,7 @@ import { applyTerrain, pickSpawnRegions, setupRngFor, spawnTeam } from '../sim/b
 import { BattleRenderer, gridToWorld } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { HUD } from '../ui/HUD';
+import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
 import { TICK_RATE } from '../config';
 import { HEALTH } from '../config/health';
 import { getLayout, type Theme } from '../sim/layouts';
@@ -36,6 +37,9 @@ export class BattleScene implements Scene {
   /** Held only so `dispose` can clear the terrain's per-tile state — the
    *  renderer itself is page-lifetime and owned by Game. */
   private terrain: TerrainRenderer | null = null;
+  /** I3 — the page-lifetime fast-forward controller (from ctx). Read live in
+   *  `tick` so a mid-battle speed change takes effect next frame. */
+  private playback: PlaybackSpeed | null = null;
   private readonly subscriptions: Array<() => void> = [];
 
   mount(ctx: SceneContext): void {
@@ -52,7 +56,8 @@ export class BattleScene implements Scene {
     );
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
     this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.overlays, ctx.terrain, ctx.bus);
-    this.hud = new HUD(ctx.uiMount, ctx.bus);
+    this.playback = ctx.playback;
+    this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback);
 
     // B6 audio: per-battle subscriptions that need the World to look up
     // the attacker's archetype (attackRange<=1 → melee, else ranged).
@@ -201,13 +206,21 @@ export class BattleScene implements Scene {
   }
 
   tick(dt: number): void {
-    this.clock?.advance(dt);
-    this.battleRenderer?.update(dt);
+    // I3 — fast-forward. Scale the real frame `dt` by the active speed and feed
+    // it to EVERYTHING in the battle (sim clock + render animations + terrain
+    // shader) so the whole scene stays visually coherent at 2×/3×. Determinism
+    // is preserved: the Clock still fires whole fixed-timestep ticks — scaling
+    // `dt` only changes how many tick()s land per frame, not the tick sequence
+    // or its RNG (a tick-batch, not a TICK_RATE change). Read live so a
+    // mid-battle cycle takes effect immediately.
+    const dtScaled = dt * (this.playback?.current ?? 1);
+    this.clock?.advance(dtScaled);
+    this.battleRenderer?.update(dtScaled);
     // D7.C: drive the terrain shader's `uTime` for per-tile fire flicker
     // and healing pulse. Lives on tick (not the rAF loop) because only
     // BattleScene puts animated tile kinds into the renderer — non-battle
     // scenes call terrain.clear() and don't need the animation to advance.
-    this.terrain?.advanceTime(dt);
+    this.terrain?.advanceTime(dtScaled);
   }
 
   dispose(): void {
@@ -225,5 +238,6 @@ export class BattleScene implements Scene {
     this.world = null;
     this.clock = null;
     this.terrain = null;
+    this.playback = null;
   }
 }

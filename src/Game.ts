@@ -17,6 +17,7 @@ import { GameOverScene } from './scenes/GameOverScene';
 import { PreTurnScene } from './scenes/PreTurnScene';
 import { PostTurnScene } from './scenes/PostTurnScene';
 import { AudioPlayer } from './audio/AudioPlayer';
+import { PlaybackSpeed } from './ui/PlaybackSpeed';
 
 /**
  * Top-level orchestrator. Owns the EventBus, Renderer, FontAtlas, persistent
@@ -50,6 +51,12 @@ export class Game implements RunDispatcher {
   private readonly terrain: TerrainRenderer;
   private readonly uiMount: HTMLElement;
   private readonly audio: AudioPlayer;
+  /**
+   * I3 — fast-forward speed (1×/2×/3×). Page-lifetime so the chosen speed
+   * persists across turns/battles; surfaced to every Scene via buildContext.
+   * The HUD owns the per-battle button + hotkey that cycle it.
+   */
+  private readonly playback = new PlaybackSpeed();
   /**
    * Active run. Replaced on `resetRun` command, so it's not readonly — but
    * every method should still treat `this.run` as the authoritative source
@@ -276,6 +283,7 @@ export class Game implements RunDispatcher {
       dispatcher: this,
       run: this.run,
       audio: this.audio,
+      playback: this.playback,
     };
   }
 }

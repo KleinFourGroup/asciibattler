@@ -8,6 +8,7 @@ import type { Unit } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { isAtLevelCap, xpToNext, displayLevel } from '../sim/xp';
 import { STAT_LABELS } from './statLabels';
+import type { PlaybackSpeed } from './PlaybackSpeed';
 
 /** H4b — the encounter pool snapshot the HUD renders (from `Run` state). */
 interface EncounterPools {
@@ -22,6 +23,10 @@ export class HUD {
   private readonly root: HTMLElement;
   private readonly banner: HTMLElement;
   private readonly floorLabel: HTMLElement;
+  /** I3 — the fast-forward cycle button (1×/2×/3×). Label re-rendered on each
+   *  cycle; the underlying speed lives on the page-lifetime `playback`. */
+  private readonly speedButton: HTMLButtonElement;
+  private readonly playback: PlaybackSpeed;
   /** H4b — the encounter health pools + turn number, populated per battle. */
   private readonly pools: HTMLElement;
   private readonly status: HTMLElement;
@@ -37,7 +42,8 @@ export class HUD {
    */
   private readonly subscriptions: Array<() => void> = [];
 
-  constructor(mount: HTMLElement, bus: EventBus<GameEvents>) {
+  constructor(mount: HTMLElement, bus: EventBus<GameEvents>, playback: PlaybackSpeed) {
+    this.playback = playback;
     this.root = document.createElement('div');
     // `screen-fade` keeps the panel at opacity:0 until show() flips
     // is-visible; that's also why the HUD doesn't use `hidden` — `display:
@@ -55,6 +61,18 @@ export class HUD {
     this.floorLabel = document.createElement('div');
     this.floorLabel.className = 'hud-floor';
     this.root.appendChild(this.floorLabel);
+
+    // I3 — fast-forward control: a button + a hotkey, both cycling 1×/2×/3×.
+    // The button is the in-battle affordance; the hotkey (config-backed code,
+    // default KeyF) is the keyboard shortcut. Both call cycleSpeed(); the
+    // shared `playback` holds the value so it persists into the next battle.
+    this.speedButton = document.createElement('button');
+    this.speedButton.type = 'button';
+    this.speedButton.className = 'hud-speed';
+    this.speedButton.addEventListener('click', () => this.cycleSpeed());
+    this.root.appendChild(this.speedButton);
+    this.renderSpeed();
+    window.addEventListener('keydown', this.handleHotkey);
 
     // H4b — the two encounter pools (run-wide player pool vs per-encounter enemy
     // pool) + the current turn. Static during a single turn (the pools chip
@@ -126,10 +144,41 @@ export class HUD {
   dispose(): void {
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
+    // I3 — drop the fast-forward hotkey listener so it doesn't accumulate
+    // across battles (the button rides root removal below). The chosen speed
+    // itself survives — it lives on the page-lifetime `playback`.
+    window.removeEventListener('keydown', this.handleHotkey);
     fadeOutAndRemove(this.root);
     fadeOutAndRemove(this.banner);
     this.world = null;
   }
+
+  /** I3 — cycle to the next speed and re-render the button. Shared by the
+   *  click handler and the hotkey. */
+  private cycleSpeed(): void {
+    this.playback.cycle();
+    this.renderSpeed();
+  }
+
+  /** I3 — paint the button to the current speed: a chevron run mirroring the
+   *  multiplier (▶ / ▶▶ / ▶▶▶) plus the explicit `N×`. `aria-pressed` flags any
+   *  faster-than-real speed so it reads as "engaged". */
+  private renderSpeed(): void {
+    const speed = this.playback.current;
+    const chevrons = '▶'.repeat(Math.max(1, Math.round(speed)));
+    this.speedButton.textContent = `${chevrons} ${this.playback.label}`;
+    this.speedButton.title = 'Fast-forward (F)';
+    this.speedButton.setAttribute('aria-pressed', String(speed > 1));
+  }
+
+  /** I3 — keyboard shortcut for the speed cycle. Bound property so
+   *  removeEventListener works in dispose. Ignores auto-repeat (holding the
+   *  key) so one press = one step. */
+  private readonly handleHotkey = (e: KeyboardEvent): void => {
+    if (e.code !== this.playback.hotkey || e.repeat) return;
+    e.preventDefault();
+    this.cycleSpeed();
+  };
 
   private addUnit(unitId: number): void {
     if (!this.world) return;

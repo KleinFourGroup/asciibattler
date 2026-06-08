@@ -28,6 +28,7 @@ import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
+import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
 
 export interface SceneContext {
   readonly bus: EventBus<GameEvents>;
@@ -43,6 +44,10 @@ export interface SceneContext {
   readonly dispatcher: RunDispatcher;
   readonly run: Run;
   readonly audio: AudioPlayer;
+  /** I3 — the page-lifetime fast-forward speed. BattleScene reads `current`
+   *  live each tick to scale `dt`; the HUD button + hotkey cycle it. Persists
+   *  across scene swaps (set-and-forget), so it lives here, not on the Scene. */
+  readonly playback: PlaybackSpeed;
 }
 
 export interface Scene {

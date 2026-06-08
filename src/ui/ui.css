@@ -713,6 +713,37 @@ body {
   color: #ffb000; /* TERMINAL_AMBER */
 }
 
+/* I3 — fast-forward cycle button (1×/2×/3×). Amber terminal chrome to match
+   the panel; brightens to TERMINAL_GREEN with a glow when engaged (>1×, via
+   aria-pressed) so an active fast-forward reads at a glance. */
+.hud-speed {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: #ffb000; /* TERMINAL_AMBER */
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #ffb000;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.hud-speed:hover {
+  color: #ffd060;
+  border-color: #ffd060;
+}
+
+.hud-speed[aria-pressed='true'] {
+  color: #33ff00; /* TERMINAL_GREEN */
+  border-color: #33ff00;
+  box-shadow: 0 0 6px rgba(51, 255, 0, 0.5);
+}
+
 .hud-status {
   font-size: 11px;
   color: #664600; /* DARK_TERMINAL_AMBER */

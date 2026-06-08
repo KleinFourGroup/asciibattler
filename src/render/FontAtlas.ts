@@ -11,8 +11,15 @@ import { GLYPHS } from './glyphs';
  * shader can tint freely — the texture is a coverage mask, not a colored image.
  *
  * Construction is async because canvas2d's `ctx.fillText` only respects a
- * web font once the font has actually parsed. `document.fonts.ready` is the
- * portable signal for "every CSS-declared font has settled."
+ * web font once the font has actually parsed. `document.fonts.ready` alone is
+ * NOT enough: it resolves once every font that has *started* loading settles,
+ * but a CSS-declared `@font-face` is only fetched when something first USES it.
+ * If the atlas builds before any DOM text triggers that fetch, `ready` resolves
+ * with JetBrains Mono still absent and `fillText` bakes the serif fallback into
+ * the atlas (the bug: glyphs render serif on a cold load / in a clean browser
+ * where the font isn't a system install). So we explicitly `document.fonts.load`
+ * the exact face first — that kicks off the fetch and resolves once it's ready —
+ * then await `ready` as a belt-and-suspenders settle.
  */
 
 const FONT_FAMILY = 'JetBrains Mono';
@@ -62,6 +69,14 @@ export class FontAtlas {
   }
 
   static async create(): Promise<FontAtlas> {
+    // Force the JetBrains Mono fetch (the `@font-face` from
+    // `@fontsource/jetbrains-mono`, imported in main.ts) BEFORE rasterizing, so
+    // the atlas never bakes the serif fallback. `load` matches the same
+    // size/family string `fillText` uses below; it resolves with the loaded
+    // FontFace(s), or an empty array if the family is undeclared (it never
+    // throws), so a missing font degrades to the old fallback rather than
+    // crashing startup. `await fonts.ready` then settles any stragglers.
+    await document.fonts.load(`${FONT_PX}px '${FONT_FAMILY}'`);
     await document.fonts.ready;
 
     const canvas = document.createElement('canvas');

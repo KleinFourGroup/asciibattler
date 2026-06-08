@@ -122,7 +122,8 @@ body {
    translate3d (same projector as the unit overlays); the inner `.hitsplat`
    runs the rise+fade keyframe and self-removes on animationend. Replaces
    the pre-E6 sprite color flash. Sizes are fixed CSS px (the E3.6 overlay
-   tradeoff) — ~0.7x a glyph at typical zoom; tune here freely. */
+   tradeoff) — ~0.7x a glyph at typical zoom; tune here freely.
+   New to CSS / just want to restyle these? See ./HITSPLATS.md. */
 .hitsplat-anchor {
   position: absolute;
   top: 0;

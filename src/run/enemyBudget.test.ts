@@ -179,10 +179,15 @@ describe('buildEnemyTeam (balance-proof — derives from DIFFICULTY)', () => {
     }
   });
 
-  it('keeps the 60/40 melee/ranged split by index', () => {
+  it('keeps the 60/40 split by index, fielding BANDIT (not mercenary) as the enemy melee', () => {
+    // I5: the enemy melee slot is `bandit` (low-growth fodder), distinct from the
+    // player's `mercenary`. The ranged slot stays generic `ranged`.
     const team = buildEnemyTeam(new RNG(9), player);
-    const melee = team.filter((u) => u.archetype === 'mercenary').length;
-    expect(melee).toBe(Math.round(team.length * 0.6));
+    const bandits = team.filter((u) => u.archetype === 'bandit').length;
+    expect(bandits).toBe(Math.round(team.length * 0.6));
+    // No `mercenary` ever appears on the enemy side post-I5.
+    expect(team.some((u) => u.archetype === 'mercenary')).toBe(false);
+    expect(team.every((u) => u.archetype === 'bandit' || u.archetype === 'ranged')).toBe(true);
   });
 
   it('budget follows the affine formula, floored at minBudget', () => {

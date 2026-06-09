@@ -102,10 +102,18 @@ export function buildEnemyTeam(rng: RNG, playerTeam: readonly UnitTemplate[]): U
  * naturally as the player out-levels it (full 2×size swarms appear once the
  * budget can afford them).
  *
- * Archetype split stays 60/40 melee/ranged by index (enemies stay melee +
- * archers only through Phase G, per the brief). Count past the spawn region's
- * tiles overflows onto the D5 spawn queue (verified — `checkBattleEnd` treats a
- * queued team as alive).
+ * Archetype split stays 60/40 melee/ranged by index. **I5: the melee slot is
+ * now `bandit`** (the default melee ENEMY — see the brief's "one melee class
+ * forced player/enemy symmetry"), NOT the player's `mercenary`. Bandit shares
+ * Mercenary's level-1 base but scales at ~half growth, so floor-1 enemies are
+ * byte-identical to the pre-I5 melee enemy while deep-floor swarms stay "many
+ * weak bodies" — which EASES late floors vs the old full-growth melee enemy.
+ * That shift is intentional and recalibrated in Phase N's band re-sweep (the
+ * roadmap sequences the sweep after all combat-structural changes). The ranged
+ * slot stays generic `ranged`; the rest of the enemy diversification (rogue/
+ * healer/mage/catapult enemies) is still deferred to "a proper encounter
+ * system." Count past the spawn region's tiles overflows onto the D5 spawn
+ * queue (verified — `checkBattleEnd` treats a queued team as alive).
  */
 export function rollEnemyWave(
   rng: RNG,
@@ -129,7 +137,9 @@ export function rollEnemyWave(
   const meleeCount = Math.round(count * 0.6);
   const team: UnitTemplate[] = [];
   for (let i = 0; i < count; i++) {
-    const archetype: Archetype = i < meleeCount ? 'mercenary' : 'ranged';
+    // I5: the melee slot fields `bandit` (low-growth enemy fodder), not the
+    // player-grade `mercenary`. See the function comment for the difficulty note.
+    const archetype: Archetype = i < meleeCount ? 'bandit' : 'ranged';
     team.push(scaledUnit(archetype, levels[i]!));
   }
   return team;

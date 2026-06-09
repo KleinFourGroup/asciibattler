@@ -113,7 +113,11 @@ const TargetingIdSchema = z.string().refine((id) => TARGETING_IDS.includes(id), 
   message: `unknown targeting id; known: [${TARGETING_IDS.join(', ')}]`,
 });
 
-const ArchetypeSchema = z.object({
+// Exported for the dev-only archetype editor (tools/archetype-editor/), which
+// validates an edited config against the SAME schema the game boots on — so the
+// editor's "is this valid?" can never drift from the game's load-time parse.
+// Dev-tool consumption only; no sim/snapshot/fuzz behavior reads these exports.
+export const ArchetypeSchema = z.object({
   glyph: z.string().length(1),
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,
@@ -123,7 +127,7 @@ const ArchetypeSchema = z.object({
   targeting: TargetingIdSchema,
 });
 
-const ArchetypesSchema = z.object({
+export const ArchetypesSchema = z.object({
   melee: ArchetypeSchema,
   ranged: ArchetypeSchema,
   rogue: ArchetypeSchema,

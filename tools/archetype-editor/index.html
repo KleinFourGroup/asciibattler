@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Archetype Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Archetype Editor</h1>
+        <span class="subtitle"
+          >Tune <code>config/archetypes.json</code> · schema-validated · live derived-stat
+          preview · save straight to disk</span
+        >
+      </header>
+      <section class="workspace">
+        <div class="edit-pane">
+          <div id="tabs" class="tabs" role="tablist" aria-label="Archetype"></div>
+          <section class="card">
+            <h2>Identity</h2>
+            <div class="field-row">
+              <label class="inline">
+                Glyph
+                <input id="glyph" type="text" maxlength="1" autocomplete="off" spellcheck="false" />
+              </label>
+              <span class="hint"
+                >Single character. A genuinely new 3D glyph also needs a
+                <code>glyphs.ts</code> atlas entry to render in-game.</span
+              >
+            </div>
+            <div class="field-row">
+              <span class="field-label">Abilities</span>
+              <div id="abilities" class="checkbox-row"></div>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Targeting</span>
+              <div id="targeting" class="radio-row" role="radiogroup" aria-label="Targeting"></div>
+            </div>
+          </section>
+          <section class="card">
+            <h2>Base stats <span class="sub">(level 1)</span></h2>
+            <div id="base-stats" class="stat-grid"></div>
+          </section>
+          <section class="card">
+            <h2>Growth rates <span class="sub">(per-level increment chance, 0&ndash;1)</span></h2>
+            <div id="growth-rates" class="stat-grid"></div>
+          </section>
+        </div>
+        <aside class="side-pane">
+          <section class="card preview-card">
+            <h2>Derived preview</h2>
+            <div class="preview-controls">
+              <label class="inline">Level <input id="preview-level" type="number" min="1" max="30" value="1" /></label>
+              <label class="inline">vs EVA <input id="ref-evasion" type="number" min="0" max="99" value="5" /></label>
+              <label class="inline">vs PRC <input id="ref-precision" type="number" min="0" max="99" value="5" /></label>
+            </div>
+            <dl id="preview" class="preview"></dl>
+            <p class="hint">
+              Derived from the real game functions (<code>deriveStats</code>,
+              <code>hitChanceFor</code>, <code>attackCooldownTicksFor</code>,
+              <code>scaleStats</code>). Level &gt; 1 uses the deterministic
+              expected-growth path.
+            </p>
+          </section>
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation"></ul>
+          </section>
+          <section class="card">
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary">Save to config</button>
+              <button id="revert-btn" type="button" class="danger-outline">Revert all</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+          </section>
+          <section class="card">
+            <h2>Export <span class="sub">(whole file)</span></h2>
+            <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

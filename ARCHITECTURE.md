@@ -202,6 +202,7 @@ public/
 tools/                       # Dev-only; not bundled into dist/
   layout-editor/             # C1d.B → D8: layout painter at /tools/layout-editor/
   run-config/                # G1/G5: short-run CLI + GUI launcher at /tools/run-config/
+  archetype-editor/          # I4: schema-driven archetypes.json editor (live preview + save) at /tools/archetype-editor/
 
 tests/
   smoke.test.ts

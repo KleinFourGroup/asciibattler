@@ -368,6 +368,99 @@ before Phase N; map-redesign dependency (the brief: "I will have to redesign
 the maps" — the one-tile corridors are too spawn-dependent; that authoring is
 the user's, supported by Phase M's floor-gating + the layout auto-editor (M5)).
 
+### I6 — Per-ability combat profile (might / accuracy / crit)
+
+The capstone of Phase I's combat-identity work — and the change that makes I5's
+subclass split actually *feel* distinct. Today every attack computes damage, hit
+chance, and crit from the SAME formulas, so a unit's stat block is the only
+differentiator and two range-1 melee strikes are identical but for stats. This
+finishes the per-ability move **E5 started for cadence + range**: the *ability*
+(the weapon) carries its own combat profile, the stat scales it. The codebase
+anticipated it — [abilities.ts](src/config/abilities.ts) defers "the expressive
+damage-formula JSON … a later step, designed when there's a real multi-stat
+consumer." I5's four melee subclasses (all sharing `melee_strike`) are it.
+
+**Shape:** three new **required** fields on `AbilitySchema`
+([config/abilities.ts](src/config/abilities.ts) + [config/abilities.json](config/abilities.json)) —
+every ability declares all three (user call: present-but-inert beats optional-
+and-missing, so a new ability can't silently lack one):
+- **`might`** (flat base damage/heal, ≥ 0): the damage/heal formula becomes
+  `might + scalingStat` instead of the bare stat. **Flat** (a weapon constant; the
+  wielder's stat is what grows), so might is an early/mid-game texture knob the
+  stat outgrows late — the intent. Pre-defense (`max(minDamage, (might+stat)−def)`);
+  crit multiplies the whole raw.
+- **`accuracy`** (base hit chance, 0–1): **replaces** the global `STATS.hitChanceBase`
+  (0.6) in `hitChanceFor` → `clamp(accuracy + precision·k − evasion·k, floor, cap)`.
+  Consumed only by **evadable** abilities (the I2 single-target strikes: the four
+  melee weapons + bow + gambit); **inert** on the unmissable ones (magic-bolt AoE /
+  catapult / heal).
+- **`critBase`** (base crit chance, 0–1): folds into the luck calc →
+  `clamp(critBase + luck·critPerLuck, 0, critCap)`. Per-ability now, so crit stops
+  being a single `UnitDerived.critChance` and is resolved at attack time from the
+  firing ability + the unit's luck. (`critCap` still binds — a high-base weapon on
+  a lucky unit caps sooner, e.g. a 20%-crit katana on Ronin's luck.)
+
+**Weapons (rename + split):**
+- **Split `melee_strike` → per-subclass weapon ids** — `sword` (Mercenary), `club`
+  (Bandit), `katana` (Ronin), + an agile blade for Adventurer (name TBD). Each is a
+  new **registered** ability id sharing the basic-strike *behavior* but carrying its
+  own config profile (the registry boot-check requires a factory + config entry per
+  id; the melee weapons all map to the one melee-strike factory, parameterized by id).
+- **Rename `ranged_shot` → `bow`.** `magic_bolt`, `heal_ally`, `catapult_shot`,
+  `gambit_strike` **keep their ids** — none are "basic weapons" (the gambit is the
+  rogue's *special*; the basic-vs-special-ability distinction the user wants to draw
+  later lives at this seam).
+- Starting profiles to author by feel (the I2/I5 examples): Club `+2 / 40% / 0%`,
+  Sword `+5 / 60% / 5%`, Katana `+4 / 60% / 20%`, gambit `+1 / 85% / 10%`. These
+  **compound** with the I5 stat identities (Ronin's luck + the katana's crit both say
+  "crit duelist"; Bandit's fodder stats + the weak club both say "fodder"), so weapon
+  and stat reinforce one identity rather than fight.
+
+**Rollout (de-risked — the H1/I1 plumbing-then-tune discipline):**
+1. **Behavior-neutral plumbing** — add the three fields with defaults that reproduce
+   today EXACTLY (`might 0`, `accuracy 0.6`, `critBase 0`) + the formula/threading
+   rewrite. Prove byte-identical (fuzz baselines unmoved + a neutral-default canary).
+   One commit.
+2. **Author the per-weapon values + the rename/split** — config + the registry wiring.
+   The band moves here (feeds Phase N's re-sweep).
+
+**Cost / blast radius:**
+- **Almost certainly NO snapshot bump** — a config + formula change; `derived`
+  recomputes from stats+abilities at spawn, not persisted (same as E5's cadence move).
+  *Confirm `UnitDerived` isn't serialized before relying on it.*
+- Touches the formulas ([stats.ts](src/sim/stats.ts): `hitChanceFor` takes the ability
+  accuracy; the damage helpers `basicAttackDamage`/`magicBoltDamage`/`catapultShotDamage`/
+  `healAmountFor` take might; crit resolves per-ability), the actions (thread their
+  ability profile into `applyDamage`), `applyDamage` ([World.ts](src/sim/World.ts):
+  threads accuracy alongside `evadable`), the display surfaces (recruit-card ability
+  rows + the I4 archetype-editor preview → read a per-weapon profile), and the ability
+  registry (new weapon ids).
+- **Fuzz baseline shifts** at step 2. Band-mover → Phase N re-sweep absorbs it; the I2
+  whiff-lengthens-battles caveat sharpens (a 40%-accuracy club whiffs a lot — pairs
+  with I3 fast-forward + the 150s turn caps).
+- **Legibility win** — a recruit card reads "Sword · +5 / 60% / 5%": a real weapon, not
+  stat soup (the recurring legibility theme).
+
+**Headless tests:** damage/heal == `might + stat` (balance-proof off the ability config);
+hit chance uses the per-ability accuracy (floor/cap honored); crit ==
+`clamp(critBase + luck·critPerLuck, 0, critCap)`; the neutral-default plumbing reproduces
+current damage/hit/crit EXACTLY (the byte-identical canary, like H1's inert-default tests);
+each weapon derives its profile from config; the rename/split leaves every archetype
+pointing at a valid registered ability.
+
+**Decision points I6:** the per-weapon profiles + names (the by-feel authoring — the
+**Adventurer** weapon name + profile especially; whether to flavor-rename the gambit);
+whether the mage bolt / catapult carry a non-zero `critBase` (v1 lean: no); and —
+**deferred to "see where it lands"** — revisiting I5's bold stat spreads now that the
+weapon layer shares the identity load (the stats may relax once the weapon carries part
+of each archetype's character).
+
+**Explicitly deferred (user calls):**
+- **Scaling-stat on the ability** (a weapon declaring "scales on strength") — waits for
+  the basic-vs-special-ability + multi-stat-scaling distinction the user wants to design
+  properly.
+- **A weapon / attack-upgrade / loadout system** — out of scope; might stays flat until then.
+
 ---
 
 ## Phase J — In-battle agency: the objective system

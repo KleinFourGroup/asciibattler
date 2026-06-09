@@ -243,6 +243,110 @@ describe('Targeting / weakest strategy (rogue)', () => {
   });
 });
 
+describe('Targeting / shared objective (J1)', () => {
+  // The objective only steers a player unit's target via `updateObjectiveTarget`
+  // inside `updateTarget`. Applying it through the command channel + ONE tick is
+  // the faithful path: the command drains at top of tick, then `updateTarget`
+  // runs the objective branch the same tick. The scene units carry no behaviors,
+  // so nothing moves — the post-tick `targetId` is the pure objective decision.
+  function applyTileObjective(world: World, cell: GridCoord): void {
+    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell } });
+    world.tick();
+  }
+  function applyEnemyObjective(world: World, unitId: number): void {
+    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId } });
+    world.tick();
+  }
+
+  it('tile objective + no enemy in range → the unit holds no enemy target (pursues the tile)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 2, team: 'enemy', x: 10, y: 10 }, // cheby 8 > leash 3
+    ]);
+    applyTileObjective(world, { x: 0, y: 0 });
+    expect(units[0]!.targetId).toBeNull();
+    // currentTarget honors it — no nearest-enemy fallback under an objective.
+    expect(currentTarget(units[0]!, world)).toBeNull();
+  });
+
+  it('an enemy within engage range preempts the tile objective (en-route engage)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 }, // melee: engage radius = min(range 1, leash 3) = 1
+      { id: 2, team: 'enemy', x: 3, y: 2 }, // cheby 1 <= 1 → engageable
+    ]);
+    applyTileObjective(world, { x: 10, y: 10 });
+    expect(units[0]!.targetId).toBe(2);
+  });
+
+  it('an engaged unit is NOT preempted by the objective (keeps its in-range fight)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 5, y: 5, targetId: 2 },
+      { id: 2, team: 'enemy', x: 6, y: 5 }, // adjacent, committed → engaged
+    ]);
+    applyTileObjective(world, { x: 0, y: 0 });
+    expect(units[0]!.targetId).toBe(2);
+  });
+
+  it('enemy objective: an unengaged unit commits to the objective enemy even when far', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 9, team: 'enemy', x: 10, y: 10 }, // far (beyond leash), the objective
+    ]);
+    applyEnemyObjective(world, 9);
+    expect(units[0]!.targetId).toBe(9);
+  });
+
+  it('enemy objective: a closer enemy en route preempts the objective enemy', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 2, team: 'enemy', x: 3, y: 2 }, // cheby 1 → in engage range → preempts
+      { id: 9, team: 'enemy', x: 10, y: 10 }, // the objective, far
+    ]);
+    applyEnemyObjective(world, 9);
+    expect(units[0]!.targetId).toBe(2);
+  });
+
+  it('the leash CAPS a long-range unit: an enemy beyond the leash but within firing range does NOT preempt the tile', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged', attackRange: 6 },
+      { id: 2, team: 'enemy', x: 5, y: 0 }, // cheby 5 > leash 3, <= range 6
+    ]);
+    applyTileObjective(world, { x: 0, y: 10 });
+    expect(units[0]!.targetId).toBeNull(); // pursues the tile, doesn't plink
+  });
+
+  it('RETALIATION: a leashed archer engages an attacker beyond the leash that is shooting it', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged', attackRange: 6 },
+      // a ranged enemy at cheby 5 (> leash 3, within both ranges) committed to
+      // the archer (it's actively shooting) → retaliation overrides the leash.
+      { id: 2, team: 'enemy', x: 5, y: 0, archetype: 'ranged', attackRange: 6, targetId: 1 },
+    ]);
+    applyTileObjective(world, { x: 0, y: 10 });
+    expect(units[0]!.targetId).toBe(2);
+  });
+
+  it('no retaliation when the far enemy is NOT attacking this unit (leashed out)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged', attackRange: 6 },
+      { id: 2, team: 'enemy', x: 5, y: 0, archetype: 'ranged', attackRange: 6 }, // not committed
+    ]);
+    applyTileObjective(world, { x: 0, y: 10 });
+    expect(units[0]!.targetId).toBeNull();
+  });
+
+  it('enemy AI is unaffected by the player objective (still targets nearest player)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 2, team: 'enemy', x: 5, y: 5 },
+    ]);
+    applyTileObjective(world, { x: 11, y: 11 });
+    // The enemy ran the default (non-objective) targeting branch → committed to
+    // the only player. The objective never touches enemy units.
+    expect(units[1]!.targetId).toBe(1);
+  });
+});
+
 /**
  * Build a World seeded with hand-placed units. We bypass spawnUnit because
  * Targeting tests want precise ids and HPs without rolling templates.
@@ -260,6 +364,12 @@ interface UnitSpec {
   /** Override `derived.maxHp` for this unit — lets the `weakest` tests vary
    *  structural HP per candidate (also sets `currentHp` via the ctor). */
   maxHp?: number;
+  /** Override `derived.attackRange` — the J1 objective tests need long-range
+   *  units to exercise the leash cap + retaliation gate (the default scene
+   *  builds range-1 melee). */
+  attackRange?: number;
+  /** Pre-set the unit's sticky target id (the E5 commitment). */
+  targetId?: number;
 }
 
 function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
@@ -269,7 +379,9 @@ function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
   const stats: UnitStats = { ...ARCHETYPE_CONFIG.mercenary.baseStats, luck: 0 };
   const derived = deriveStats(stats, 1);
   const units = specs.map((s) => {
-    const d = s.maxHp !== undefined ? { ...derived, maxHp: s.maxHp } : derived;
+    let d = derived;
+    if (s.maxHp !== undefined) d = { ...d, maxHp: s.maxHp };
+    if (s.attackRange !== undefined) d = { ...d, attackRange: s.attackRange };
     const u = new Unit({
       id: s.id,
       team: s.team,
@@ -281,6 +393,7 @@ function scene(specs: UnitSpec[]): { world: World; units: Unit[] } {
       ...(s.targeting !== undefined ? { targeting: s.targeting } : {}),
     });
     if (s.currentHp !== undefined) u.currentHp = s.currentHp;
+    if (s.targetId !== undefined) u.targetId = s.targetId;
     world.units.push(u);
     return u;
   });

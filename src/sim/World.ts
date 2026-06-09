@@ -26,6 +26,7 @@ import {
   targetingForArchetype,
 } from './archetypes';
 import type { WorldCommand } from './Command';
+import type { BattleObjective } from './objective';
 import { createAction } from './actions/registry';
 import { createBehavior, createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
@@ -145,8 +146,15 @@ import { STATS } from '../config/stats';
  *       mapping — same rationale as I5's archetype-key rename at v20). RunSnapshot
  *       is unaffected: roster templates carry only `archetype`, and abilities are
  *       re-resolved from the (updated) archetype config at spawn.
+ *  23 — J1 added the player team's shared `objective` (a tile or an enemy unit;
+ *       see `src/sim/objective.ts`) to WorldSnapshot — a mid-battle save must
+ *       restore the active steering objective. A v22 save has no `objective`
+ *       field; rather than default it (silently dropping a saved objective is a
+ *       behavior change, not a missing-field nicety), reject v22 outright per
+ *       the established no-migration contract. RunSnapshot is unaffected — the
+ *       objective is World-side + transient per battle.
  */
-const WORLD_SCHEMA_VERSION = 22;
+const WORLD_SCHEMA_VERSION = 23;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -245,6 +253,10 @@ export interface WorldSnapshot {
    *  total]` pairs alongside `damageDealt` so a mid-battle round-trip
    *  preserves the heal-XP awarded at battle:ended. */
   utilityDone: [number, number][];
+  /** J1: the player team's shared steering objective (a tile or an enemy
+   *  unit), or null when none is set. Restored so a mid-battle save resumes
+   *  the same objective. */
+  objective: BattleObjective | null;
 }
 
 /**
@@ -357,6 +369,17 @@ export class World {
    * preserves the heal-XP awarded on win.
    */
   private readonly utilityDone: Map<number, number> = new Map();
+  /**
+   * J1: the player team's single shared objective (a tile to rally on or an
+   * enemy to converge on), or null. Set/cleared only through the command
+   * channel (`applyCommand`) so the mutation point is the deterministic
+   * top-of-tick drain; read by `updateTarget` (player units, when unengaged)
+   * + `MovementBehavior` (tile pursuit). Enemy AI never reads it. An `enemy`
+   * objective is auto-cleared the tick its target dies
+   * (`clearObjectiveIfResolved`); a `tile` objective persists until replaced
+   * or cleared. Snapshotted (v23) so a mid-battle restore resumes it.
+   */
+  private _objective: BattleObjective | null = null;
 
   constructor(
     bus: EventBus<GameEvents>,
@@ -383,6 +406,11 @@ export class World {
 
   get ended(): boolean {
     return this._ended;
+  }
+
+  /** J1: the active shared objective (player-team steering), or null. */
+  get objective(): BattleObjective | null {
+    return this._objective;
   }
 
   /**
@@ -599,6 +627,13 @@ export class World {
       const drained = this.commands.splice(0, this.commands.length);
       for (const cmd of drained) this.applyCommand(cmd);
     }
+
+    // J1 — drop an `enemy` objective whose target died (e.g. last tick), so the
+    // per-unit `updateTarget` below sees the cleared objective and reverts to
+    // default targeting this same tick. Also catches a just-enqueued objective
+    // that points at an already-dead/invalid enemy. Runs after the command
+    // drain so a set-then-resolve in one tick is consistent.
+    this.clearObjectiveIfResolved();
 
     for (const unit of this.units.slice()) {
       // 1. Death.
@@ -852,13 +887,48 @@ export class World {
   }
 
   /**
-   * Currently a no-op switch — the WorldCommand union is a placeholder
-   * pending C5. Kept here (rather than inlined in tick) so adding new
-   * command kinds is one explicit case statement, not a tick rewrite.
+   * J1 — apply a drained `WorldCommand`. One explicit case per kind (kept here
+   * rather than inlined in `tick` so a new kind is one branch, not a tick
+   * rewrite). The `setObjective` / `clearObjective` kinds drive the player
+   * team's shared steering objective; `noop` is the snapshot-test channel
+   * exerciser. `setObjective` does NOT validate the target here — an `enemy`
+   * objective pointing at a dead/invalid unit is dropped on the next
+   * `clearObjectiveIfResolved` (called right after this drain).
    */
-  private applyCommand(_command: WorldCommand): void {
-    // C5 fills this in. The 'noop' kind exists so the channel can be
-    // exercised by snapshot tests without coupling to gameplay yet.
+  private applyCommand(command: WorldCommand): void {
+    switch (command.kind) {
+      case 'noop':
+        return;
+      case 'setObjective':
+        this._objective = command.objective;
+        this.bus.emit('objective:set', { objective: command.objective });
+        return;
+      case 'clearObjective':
+        this.setObjectiveNull();
+        return;
+    }
+  }
+
+  /**
+   * J1 — clear an `enemy` objective whose target is no longer a living enemy
+   * (it died, was removed, or the objective was set on an invalid id). A `tile`
+   * objective never auto-clears (persist-until-cleared). Idempotent via
+   * `setObjectiveNull`'s guard.
+   */
+  private clearObjectiveIfResolved(): void {
+    const obj = this._objective;
+    if (obj === null || obj.kind !== 'enemy') return;
+    const target = this.findUnit(obj.unitId);
+    const alive = target !== undefined && target.team === 'enemy' && target.currentHp > 0;
+    if (!alive) this.setObjectiveNull();
+  }
+
+  /** J1 — clear the objective + emit `objective:cleared`, but only on a real
+   *  non-null → null transition (so a redundant clear is silent). */
+  private setObjectiveNull(): void {
+    if (this._objective === null) return;
+    this._objective = null;
+    this.bus.emit('objective:cleared', {});
   }
 
   private checkBattleEnd(): void {
@@ -1139,6 +1209,9 @@ export class World {
       damageDealt: Array.from(this.damageDealt.entries()),
       playerRosterIds: Array.from(this.playerRosterIds.entries()),
       utilityDone: Array.from(this.utilityDone.entries()),
+      // J1 — immutable shape (readonly fields, never mutated in place), so a
+      // direct reference is safe; callers JSON-serialize the snapshot anyway.
+      objective: this._objective,
     };
   }
 
@@ -1238,6 +1311,10 @@ export class World {
     for (const [unitId, total] of snap.utilityDone) {
       world.utilityDone.set(unitId, total);
     }
+
+    // J1 — restore the active steering objective (the version check above
+    // already rejected any v22 save that lacks the field).
+    world._objective = snap.objective;
 
     return world;
   }

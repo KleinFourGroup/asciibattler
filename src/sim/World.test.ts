@@ -714,6 +714,80 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
   });
 });
 
+describe('World shared objective (J1)', () => {
+  function setup(): { world: World; bus: EventBus<GameEvents>; player: Unit; enemy: Unit } {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const world = new World(bus, rng);
+    // Behavior-less units (spawnUnit attaches none) so the selector no-ops and
+    // the test controls every state change.
+    const player = world.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 1, y: 1 });
+    const enemy = world.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 9, y: 9 });
+    return { world, bus, player, enemy };
+  }
+
+  it('setObjective is applied at the top-of-tick drain and emits objective:set', () => {
+    const { world, bus, enemy } = setup();
+    const set = vi.fn();
+    bus.on('objective:set', set);
+
+    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: enemy.id } });
+    expect(world.objective).toBeNull(); // queued, not yet applied
+    world.tick();
+    expect(world.objective).toEqual({ kind: 'enemy', unitId: enemy.id });
+    expect(set).toHaveBeenCalledTimes(1);
+    expect(set).toHaveBeenCalledWith({ objective: { kind: 'enemy', unitId: enemy.id } });
+  });
+
+  it('clearObjective clears it + emits objective:cleared, and a redundant clear is silent', () => {
+    const { world, bus } = setup();
+    const cleared = vi.fn();
+    bus.on('objective:cleared', cleared);
+
+    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell: { x: 0, y: 0 } } });
+    world.tick();
+    world.enqueueCommand({ kind: 'clearObjective' });
+    world.tick();
+    expect(world.objective).toBeNull();
+    expect(cleared).toHaveBeenCalledTimes(1);
+
+    // Redundant clear: real null→null transition guard means no second emit.
+    world.enqueueCommand({ kind: 'clearObjective' });
+    world.tick();
+    expect(cleared).toHaveBeenCalledTimes(1);
+  });
+
+  it('a tile objective persists across ticks (never auto-clears)', () => {
+    const { world } = setup();
+    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell: { x: 3, y: 3 } } });
+    for (let i = 0; i < 11; i++) world.tick();
+    expect(world.objective).toEqual({ kind: 'tile', cell: { x: 3, y: 3 } });
+  });
+
+  it('an enemy objective auto-clears the tick its target dies (+ emits objective:cleared)', () => {
+    const { world, bus, enemy } = setup();
+    const cleared = vi.fn();
+    bus.on('objective:cleared', cleared);
+
+    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: enemy.id } });
+    world.tick();
+    expect(world.objective).not.toBeNull();
+
+    enemy.currentHp = 0; // the objective enemy dies
+    world.tick(); // clearObjectiveIfResolved runs at top of tick, before the reap
+    expect(world.objective).toBeNull();
+    expect(cleared).toHaveBeenCalledTimes(1);
+  });
+
+  it('an enemy objective set on an already-dead enemy is dropped the same tick', () => {
+    const { world, enemy } = setup();
+    enemy.currentHp = 0;
+    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: enemy.id } });
+    world.tick(); // drain sets it; clearObjectiveIfResolved (same tick) drops it
+    expect(world.objective).toBeNull();
+  });
+});
+
 interface DeathSceneUnit {
   team: Team;
   x: number;

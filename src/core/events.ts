@@ -16,6 +16,7 @@ import type { GridCoord } from './types';
 import type { Team, UnitStats, UnitTemplate } from '../sim/Unit';
 import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
+import type { BattleObjective } from '../sim/objective';
 
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
@@ -201,6 +202,23 @@ export interface GameEvents extends Record<string, unknown> {
     targetId?: number | undefined;
     targetCell?: GridCoord | undefined;
   };
+
+  /**
+   * J1 — the player team's shared objective was set (or replaced) on the
+   * battle, via the `setObjective` `WorldCommand`. Carries the new objective
+   * (a tile or an enemy unit) so the J3 UI can render its marker. Sim-side
+   * the objective only steers player units when they're not already engaged
+   * (see `Targeting.ts`).
+   */
+  'objective:set': { objective: BattleObjective };
+  /**
+   * J1 — the shared objective was cleared, either explicitly (the
+   * `clearObjective` command) or automatically when an `enemy` objective's
+   * target died (`World.clearObjectiveIfResolved`). A `tile` objective never
+   * auto-clears (persist-until-cleared). Idempotent emit guard on the World
+   * side means this fires only on a real null transition.
+   */
+  'objective:cleared': Record<string, never>;
 
   'run:started': { seed: number };
   'run:victory': Record<string, never>;

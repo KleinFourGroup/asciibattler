@@ -162,6 +162,31 @@ describe('A2 round-trip: World', () => {
     );
   });
 
+  it('J1: a live snapshot carries the active objective; a pre-J1 version is rejected', () => {
+    // J1 added the player team's shared `objective` (a tile or enemy unit) to
+    // WorldSnapshot (v22→v23). A v22 save has no objective field; rather than
+    // default it, reject outright (no migration). A `tile` objective is used
+    // here because it persists deterministically (an `enemy` objective would
+    // auto-clear if its target died mid-tick).
+    const { world } = freshBattle(24680);
+    const cell = { x: 1, y: 1 };
+    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell } });
+    world.tick(); // drains + applies the command at top of tick.
+    expect(world.objective).toEqual({ kind: 'tile', cell });
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    expect(wire.objective).toEqual({ kind: 'tile', cell });
+
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.objective).toEqual({ kind: 'tile', cell });
+
+    // A snapshot stamped with the prior version (a pre-J1 save) throws.
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
   it('continuing a restored World produces the same event trace as the baseline', () => {
     // Snapshot mid-battle, restore, tick both to completion, compare.
     const baseline = freshBattle(54321);

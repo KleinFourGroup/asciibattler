@@ -66,8 +66,9 @@ src/
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v21 (bumped E1 through Phase I; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses; I6 = removed UnitDerived.critChance, crit is per-ability now)
+                             # Serializable; WorldSnapshot v23 (bumped E1 through Phase J; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses; I6 = removed UnitDerived.critChance, crit is per-ability now; J1 = added the shared objective)
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
+                             # J1: objective (player-team shared steering, tile|enemy) — set via WorldCommand, auto-clears on enemy death
                              # GP2: applyDamage() — the single combat-damage chokepoint (HP -= + ledger
                              #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it
                              # I2/I6: applyDamage(evadable, accuracy) rolls accuracy-vs-evasion to-hit off combatRng (crit→miss order);
@@ -85,7 +86,8 @@ src/
     LineOfSight.ts           # Bresenham line walk for ranged-attack LOS (C1b)
     Action.ts                # Action / ActionProposal / phase-timeline interfaces (A1 → F2)
                              # + toData()/fromData for snapshot rehydration (A2); OrphanPolicy (F2)
-    Command.ts               # WorldCommand union — drained at tick boundary (A2)
+    Command.ts               # WorldCommand union — drained at tick boundary (A2); J1: setObjective/clearObjective
+    objective.ts             # J1: BattleObjective type (tile | enemy) — the player team's shared steering target
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest in-range(+LOS) firing cell
     Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5); lowestWoundedAlly (E7.B)
@@ -328,6 +330,8 @@ run:victory             { }
 run:defeated            { }
 recruit:offered         { units: UnitTemplate[] }
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
+objective:set           { objective: BattleObjective }                             # J1: player set/replaced the shared steering objective
+objective:cleared       { }                                                         # J1: objective cleared (explicit, or enemy-objective target died)
 ```
 
 `action:phase` (F2): every action declares an ordered phase timeline (`windup → release → travel → impact → recovery`, all optional/zero-length); `World.tick` fires this event at each boundary that begins on a tick (zero-length phases share one), and runs the action's effect (`applyEffect`) at `impact`. It carries no damage — that still rides `unit:attacked` / `unit:healed`. Renderer-only consumer (F3/F4). The "target died mid-flight" handling is a declared per-action `OrphanPolicy` (`commit-at-cast` / `fizzle` / `ground-target` / `re-home`).
@@ -346,7 +350,9 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   resetRun                { }
 
 WorldCommand (queued; drained at top of tick)
-  noop                    { }     # placeholder; in-battle commands land in Phase H
+  noop                    { }                                # snapshot-test channel exerciser
+  setObjective            { objective: BattleObjective }     # J1: set/replace the player team's shared steering objective (tile or enemy)
+  clearObjective          { }                                # J1: clear the shared objective
 ```
 
 UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.dispatch(cmd)`. The headless harness (A3) and any future replay system call the same entry points, so a saved input stream replays identically. Pending `WorldCommand`s are part of the `WorldSnapshot` — a save mid-battle preserves intent.

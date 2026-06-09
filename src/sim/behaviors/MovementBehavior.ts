@@ -79,7 +79,18 @@ export class MovementBehavior implements Behavior {
 
   proposeAction(unit: Unit, world: World): ActionProposal | null {
     const target = currentTarget(unit, world);
-    if (target === null) return null;
+    if (target === null) {
+      // J1 — no enemy to engage. A player unit under a TILE objective advances
+      // toward the rally cell (an attractor — "as close as it can"); otherwise
+      // idle as before. An `enemy` objective never reaches here: `updateTarget`
+      // commits the unit to the objective enemy, so `target` is non-null and
+      // the normal path-to-target logic below drives the approach.
+      const objective = world.objective;
+      if (objective !== null && objective.kind === 'tile' && unit.team === 'player') {
+        return stepTowardObjectiveTile(unit, world, objective.cell);
+      }
+      return null;
+    }
 
     // Split blockers by kind:
     //   neutrals          → hard blockers for pathfinding
@@ -174,6 +185,56 @@ export class MovementBehavior implements Behavior {
 
     return stepToward(target.position);
   }
+}
+
+/**
+ * J1 — one A* step toward a TILE objective's rally `cell`, reusing the same
+ * soft-block + E5.B sidestep model as enemy pursuit (neutrals hard-block;
+ * other units are high-cost cells, so the team routes around itself and
+ * clusters near the cell rather than stacking on it). There's no target to
+ * exclude, so EVERY other unit is a soft blocker — a unit already standing on
+ * the rally cell makes it occupied, and approachers settle adjacent ("as close
+ * as they can"). Abstains (idle) when already on the cell, when no path exists
+ * (e.g. the cell is a wall), or when the next step is taken and no sidestep is
+ * free (corridor queueing). Score 1, like every other movement step.
+ */
+function stepTowardObjectiveTile(
+  unit: Unit,
+  world: World,
+  cell: GridCoord,
+): ActionProposal | null {
+  const from = unit.position;
+  if (from.x === cell.x && from.y === cell.y) return null;
+
+  const pathBlockers: GridCoord[] = [];
+  const otherUnitCells = new Set<string>();
+  const occupied = new Set<string>();
+  for (const u of world.units) {
+    if (u.id === unit.id) continue;
+    occupied.add(`${u.position.x},${u.position.y}`);
+    if (u.team === 'neutral') {
+      pathBlockers.push(u.position);
+      continue;
+    }
+    otherUnitCells.add(`${u.position.x},${u.position.y}`);
+  }
+
+  const path = findPath(
+    from,
+    cell,
+    pathBlockers,
+    world.gridW,
+    world.gridH,
+    (c) => costAt(c, world, otherUnitCells),
+  );
+  if (path.length < 2) return null;
+  const to = path[1]!;
+  const durationTicks = unit.derived.moveCooldownTicks;
+  if (otherUnitCells.has(`${to.x},${to.y}`)) {
+    const side = sidestep(from, cell, world, occupied);
+    return side === null ? null : moveProposal(from, side, durationTicks);
+  }
+  return moveProposal(from, to, durationTicks);
 }
 
 function moveProposal(

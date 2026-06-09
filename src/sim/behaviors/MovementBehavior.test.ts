@@ -9,6 +9,7 @@ import { spawnHalfCover } from '../environment';
 import { deriveStats, inertDerived } from '../stats';
 import { ARCHETYPE_CONFIG } from '../archetypes';
 import type { GameEvents } from '../../core/events';
+import type { GridCoord } from '../../core/types';
 
 describe('MovementBehavior', () => {
   it('does not move on the first tick when already in attack range', () => {
@@ -303,6 +304,60 @@ describe('MovementBehavior', () => {
     const dist = Math.max(Math.abs(finalPos.x - target.x), Math.abs(finalPos.y - target.y));
     expect(dist).toBeLessThanOrEqual(6); // reached firing range
     expect(dist).toBeGreaterThan(1); // and held there (didn't charge to point-blank)
+  });
+});
+
+describe('MovementBehavior / tile objective (J1)', () => {
+  function setTileObjective(world: World, cell: GridCoord): void {
+    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell } });
+  }
+
+  // A far, inert enemy parked at (11,11) keeps `checkBattleEnd` from declaring
+  // an instant victory (a lone player team wins outright), without ever being
+  // engageable: the player paths along y=0, so the Chebyshev distance to
+  // (11,11) is always >= 11 — far past the leash, and the enemy is inert so it
+  // never approaches. The unit therefore pursues the TILE uninterrupted.
+  const farEnemy: SceneUnit = { team: 'enemy', x: 11, y: 11, inert: true };
+
+  it('an unengaged unit paths toward the tile objective (an attractor)', () => {
+    const { world, units, moves } = scene([
+      { team: 'player', x: 8, y: 0, attackRange: 1, moveCooldownTicks: 1 },
+      farEnemy,
+    ]);
+    setTileObjective(world, { x: 0, y: 0 });
+    for (let i = 0; i < 6; i++) world.tick();
+    expect(moves.length).toBeGreaterThan(0);
+    // Closer to the rally cell (0,0) than the start (Chebyshev == max(x, y)).
+    const pos = units[0]!.position;
+    expect(Math.max(pos.x, pos.y)).toBeLessThan(8);
+  });
+
+  it('reaches the rally cell, then holds (persist-until-cleared, no jitter)', () => {
+    const { world, units, moves } = scene([
+      { team: 'player', x: 4, y: 0, attackRange: 1, moveCooldownTicks: 1 },
+      farEnemy,
+    ]);
+    setTileObjective(world, { x: 0, y: 0 });
+    for (let i = 0; i < 20; i++) world.tick();
+    expect(units[0]!.position).toEqual({ x: 0, y: 0 });
+    const movesAtArrival = moves.length;
+    for (let i = 0; i < 10; i++) world.tick();
+    expect(moves.length).toBe(movesAtArrival); // parked on the cell, no further steps
+  });
+
+  it('an adjacent enemy interrupts tile pursuit (engaged → fights, does not walk on to the tile)', () => {
+    // The player is pursuing a far tile but an enemy is in engage range (cheby
+    // 1). updateTarget preempts to that enemy; MovementBehavior then abstains
+    // (in range), so the unit holds + fights instead of marching past it.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 6, y: 6, attackRange: 1, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 7, y: 6, inert: true }, // adjacent → engageable
+    ]);
+    setTileObjective(world, { x: 0, y: 0 });
+    for (let i = 0; i < 6; i++) world.tick();
+    expect(units[0]!.targetId).toBe(units[1]!.id);
+    expect(moves).toHaveLength(0); // engaged + in range → no movement toward the tile
+    expect(units[0]!.position).toEqual({ x: 6, y: 6 });
   });
 });
 

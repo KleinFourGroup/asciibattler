@@ -1,8 +1,10 @@
 import type { Unit } from './Unit';
 import type { World } from './World';
 import type { GridCoord } from '../core/types';
+import type { BattleObjective } from './objective';
 import { hasLineOfSight } from './LineOfSight';
 import { SIM } from '../config/sim';
+import { OBJECTIVE } from '../config/objective';
 import { getTargetingStrategy } from './targetingStrategies';
 
 /**
@@ -58,6 +60,15 @@ export function findTarget(unit: Unit, world: World): Unit | null {
 export function updateTarget(unit: Unit, world: World): void {
   if (unit.team === 'neutral') return;
 
+  // J1 — the player team's shared objective steers ITS units' target choice
+  // (enemy AI is unaffected). Gated on an active objective so the no-objective
+  // path below is byte-identical to pre-J1 (and the fuzz baseline unmoved).
+  const objective = world.objective;
+  if (objective !== null && unit.team === 'player') {
+    updateObjectiveTarget(unit, world, objective);
+    return;
+  }
+
   const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
   const valid =
     committed !== undefined &&
@@ -104,6 +115,120 @@ export function updateTarget(unit: Unit, world: World): void {
 }
 
 /**
+ * J1 — target selection for a PLAYER unit while a shared objective is active.
+ * The Phase-J preemption rules, in priority order:
+ *
+ *   1. ENGAGED → not preempted. A unit with a valid committed target inside its
+ *      engage radius keeps fighting; the objective doesn't yank it off. (It may
+ *      still switch to a markedly-better engageable enemy via the strategy's
+ *      `shouldRetarget`, the same anti-thrash margin as the default path.)
+ *   2. EN ROUTE → an engageable enemy preempts the objective. "Engageable" =
+ *      within the leash-capped engage radius, OR retaliation (see
+ *      `objectiveEngages`). Picked with the unit's own targeting strategy.
+ *   3. PURSUE the objective. An `enemy` objective becomes the target (so the
+ *      unit paths toward + attacks it; auto-cleared World-side on its death). A
+ *      `tile` objective leaves `targetId` null → `MovementBehavior` walks toward
+ *      the cell and the strike abilities abstain (`currentTarget` returns null).
+ *
+ * Mutates `unit.targetId` / `outOfLosTicks` exactly like the default
+ * `updateTarget`, so it stays the once-per-tick authority on the sticky target.
+ */
+function updateObjectiveTarget(unit: Unit, world: World, objective: BattleObjective): void {
+  const strategy = getTargetingStrategy(unit.targeting);
+  const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
+  const committedValid =
+    committed !== undefined &&
+    committed.team !== unit.team &&
+    committed.team !== 'neutral' &&
+    committed.currentHp > 0;
+
+  // 1. Engaged: hold the fight, allow only a markedly-better engageable switch.
+  if (committedValid && objectiveEngages(unit, committed)) {
+    const candidate = findEngageableEnemy(unit, world);
+    if (
+      candidate &&
+      candidate.id !== committed.id &&
+      strategy.shouldRetarget(unit, committed, candidate, world)
+    ) {
+      unit.targetId = candidate.id;
+      unit.outOfLosTicks = 0;
+    }
+    return;
+  }
+
+  // 2. Not engaged: a nearby (or retaliating) enemy preempts the objective.
+  const engageable = findEngageableEnemy(unit, world);
+  if (engageable) {
+    if (unit.targetId !== engageable.id) {
+      unit.targetId = engageable.id;
+      unit.outOfLosTicks = 0;
+    }
+    return;
+  }
+
+  // 3. Pursue the objective itself.
+  if (objective.kind === 'enemy') {
+    const objEnemy = world.findUnit(objective.unitId);
+    const objValid =
+      objEnemy !== undefined && objEnemy.team === 'enemy' && objEnemy.currentHp > 0;
+    unit.targetId = objValid ? objEnemy.id : null;
+  } else {
+    // Tile objective: no enemy target; MovementBehavior paths toward the cell.
+    unit.targetId = null;
+  }
+  unit.outOfLosTicks = 0;
+}
+
+/**
+ * J1 — the best ENGAGEABLE enemy of a player `unit` under an objective, ranked
+ * by the unit's targeting strategy (so `weakest` still prefers the squishiest
+ * among the engageable set). The eligible set is `findTarget`'s, further
+ * filtered by `objectiveEngages` — only enemies the unit may break off the
+ * objective for. Returns null when nothing is engageable (→ pursue the
+ * objective).
+ */
+function findEngageableEnemy(unit: Unit, world: World): Unit | null {
+  const strategy = getTargetingStrategy(unit.targeting);
+  let best: Unit | null = null;
+  for (const candidate of world.units) {
+    if (candidate.team === unit.team) continue;
+    if (candidate.team === 'neutral') continue;
+    if (candidate.currentHp <= 0) continue;
+    if (!objectiveEngages(unit, candidate)) continue;
+    if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
+      best = candidate;
+    }
+  }
+  return best;
+}
+
+/**
+ * J1 — may `unit` break off its objective to engage `enemy`? Two gates:
+ *
+ *   - PROXIMITY: within the engage radius `min(attackRange, rangedLeashCells)`.
+ *     The `min` is the leash: a long-range unit's engage radius is CAPPED at
+ *     `rangedLeashCells` so an archer doesn't abandon the objective to plink
+ *     every distant enemy in reach, while melee (range 1) is unaffected.
+ *   - RETALIATION: the enemy is actively attacking this unit (committed to it
+ *     AND within its own attack range) and the unit can shoot back (within its
+ *     own attack range). This is what lets a leashed archer defend itself
+ *     against an attacker beyond the leash — the only escape hatch past the cap.
+ *
+ * Pure; no RNG. Chebyshev throughout (the grid's 8-dir metric).
+ */
+function objectiveEngages(unit: Unit, enemy: Unit): boolean {
+  const d = chebyshev(unit.position, enemy.position);
+  const leash = Math.min(unit.derived.attackRange, OBJECTIVE.rangedLeashCells);
+  if (d <= leash) return true;
+  // Retaliation: only past the leash, and only against a real attacker.
+  return (
+    enemy.targetId === unit.id &&
+    d <= unit.derived.attackRange &&
+    d <= enemy.derived.attackRange
+  );
+}
+
+/**
  * E5 — the enemy a unit is acting against this tick: its sticky
  * `targetId` when that still resolves to a living enemy, else the nearest
  * enemy. Behaviors (MovementBehavior, the strike abilities) call this
@@ -119,6 +244,13 @@ export function currentTarget(unit: Unit, world: World): Unit | null {
       return t;
     }
   }
+  // J1 — under an active objective, a player unit's null `targetId` is
+  // DELIBERATE (set by `updateObjectiveTarget`: no engageable enemy, so it's
+  // pursuing a tile objective or holding). Suppress the nearest-enemy fallback
+  // here so it doesn't chase the whole map instead of honoring the objective.
+  // The fallback otherwise stays for enemies, the no-objective case, and unit
+  // tests that poll a behavior without a prior `updateTarget`.
+  if (world.objective !== null && unit.team === 'player') return null;
   return findTarget(unit, world);
 }
 

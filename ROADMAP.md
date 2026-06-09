@@ -380,10 +380,12 @@ anticipated it — [abilities.ts](src/config/abilities.ts) defers "the expressiv
 damage-formula JSON … a later step, designed when there's a real multi-stat
 consumer." I5's four melee subclasses (all sharing `melee_strike`) are it.
 
-**Shape:** three new **required** fields on `AbilitySchema`
+**Shape:** five new **required** fields on `AbilitySchema`
 ([config/abilities.ts](src/config/abilities.ts) + [config/abilities.json](config/abilities.json)) —
-every ability declares all three (user call: present-but-inert beats optional-
-and-missing, so a new ability can't silently lack one):
+three numeric profile values + two boolean **gates** (user call: every ability
+declares all of them, so a new attack can't silently lack one). The gates are a
+proper **"designate an attack as evadable / crit-able" system** — config, not
+hard-coded per call-site — so tweaking or extending it later is a JSON edit:
 - **`might`** (flat base damage/heal, ≥ 0): the damage/heal formula becomes
   `might + scalingStat` instead of the bare stat. **Flat** (a weapon constant; the
   wielder's stat is what grows), so might is an early/mid-game texture knob the
@@ -391,21 +393,30 @@ and-missing, so a new ability can't silently lack one):
   crit multiplies the whole raw.
 - **`accuracy`** (base hit chance, 0–1): **replaces** the global `STATS.hitChanceBase`
   (0.6) in `hitChanceFor` → `clamp(accuracy + precision·k − evasion·k, floor, cap)`.
-  Consumed only by **evadable** abilities (the I2 single-target strikes: the four
-  melee weapons + bow + gambit); **inert** on the unmissable ones (magic-bolt AoE /
-  catapult / heal).
+  Consumed only when **`evadable`** (below); inert otherwise.
 - **`critBase`** (base crit chance, 0–1): folds into the luck calc →
-  `clamp(critBase + luck·critPerLuck, 0, critCap)`. Per-ability now, so crit stops
-  being a single `UnitDerived.critChance` and is resolved at attack time from the
-  firing ability + the unit's luck. (`critCap` still binds — a high-base weapon on
-  a lucky unit caps sooner, e.g. a 20%-crit katana on Ronin's luck.)
+  `clamp(critBase + luck·critPerLuck, 0, critCap)`, consumed only when **`critable`**
+  (below). Per-ability now, so crit stops being a single `UnitDerived.critChance` and
+  is resolved at attack time from the firing ability + the unit's luck. (`critCap`
+  still binds — a high-base weapon on a lucky unit caps sooner, e.g. a 20%-crit katana
+  on Ronin's luck.)
+- **`evadable`** (bool): does this attack roll to-hit (consume `accuracy` vs the
+  target's evasion)? **MIGRATES I2's hard-coded per-call-site `evadable`** (`AttackAction`/
+  `GambitStrikeAction` passed `true`; `MagicBoltAction`/`CatapultShotAction` passed
+  `false`) into config — the action now reads `ability.evadable`. Today's set: the
+  melee weapons + bow + gambit `true`; magic-bolt AoE / catapult / heal `false`.
+- **`critable`** (bool): can this attack crit (roll `critBase + luck`)? Today's crit
+  set preserved at the neutral default (the basic strikes crit; heal doesn't; mage /
+  catapult **`false`** — user call). Lets a future attack opt in/out without code.
 
 **Weapons (rename + split):**
 - **Split `melee_strike` → per-subclass weapon ids** — `sword` (Mercenary), `club`
-  (Bandit), `katana` (Ronin), + an agile blade for Adventurer (name TBD). Each is a
-  new **registered** ability id sharing the basic-strike *behavior* but carrying its
-  own config profile (the registry boot-check requires a factory + config entry per
-  id; the melee weapons all map to the one melee-strike factory, parameterized by id).
+  (Bandit), `katana` (Ronin), and the **`whip`** (Adventurer — the *Indiana-Jones*
+  adventurer, not the D&D one; optional flavor hook for I6b: give the whip **range 2**
+  to lean into its reach, a real melee-family differentiator). Each is a new
+  **registered** ability id sharing the basic-strike *behavior* but carrying its own
+  config profile (the registry boot-check requires a factory + config entry per id;
+  the melee weapons all map to the one melee-strike factory, parameterized by id).
 - **Rename `ranged_shot` → `bow`.** `magic_bolt`, `heal_ally`, `catapult_shot`,
   `gambit_strike` **keep their ids** — none are "basic weapons" (the gambit is the
   rogue's *special*; the basic-vs-special-ability distinction the user wants to draw
@@ -448,12 +459,15 @@ current damage/hit/crit EXACTLY (the byte-identical canary, like H1's inert-defa
 each weapon derives its profile from config; the rename/split leaves every archetype
 pointing at a valid registered ability.
 
-**Decision points I6:** the per-weapon profiles + names (the by-feel authoring — the
-**Adventurer** weapon name + profile especially; whether to flavor-rename the gambit);
-whether the mage bolt / catapult carry a non-zero `critBase` (v1 lean: no); and —
-**deferred to "see where it lands"** — revisiting I5's bold stat spreads now that the
-weapon layer shares the identity load (the stats may relax once the weapon carries part
-of each archetype's character).
+**Decision points I6 (resolved with the user 2026-06-09):** weapon names LOCKED —
+Sword (Mercenary) / Club (Bandit) / Katana (Ronin) / **Whip** (Adventurer), + `bow`;
+the mage bolt / catapult are **`critable: false`** (no crit); the **gambit keeps its
+id** (a *special*, not a basic weapon — the basic/special line). Still by-feel in I6b:
+the per-weapon `might`/`accuracy`/`critBase` *values* (+ whether the Whip takes range 2).
+**Deferred** — revisiting I5's bold stat spreads once the weapon layer shares the
+identity load ("see where it lands"). **New TODO logged** — an ability **display-name +
+description** system (so a card can read "Whip — long reach, rarely misses" instead of
+the raw id; pairs with the I5 archetype display-label TODO, fold together).
 
 **Explicitly deferred (user calls):**
 - **Scaling-stat on the ability** (a weapon declaring "scales on strength") — waits for

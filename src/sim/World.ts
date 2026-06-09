@@ -136,8 +136,17 @@ import { STATS } from '../config/stats';
  *       (`attackCooldownTicks`). The evadable strike actions also thread a new
  *       `accuracy` (+ `evadable`) into their serialized `actionData`; a v20
  *       mid-action snapshot would lack them. Reject v20 outright (no migration).
+ *  22 — I6 commit 2 split the basic-strike ability ids: `melee_strike` → the
+ *       per-subclass weapons `sword`/`club`/`katana`/`whip`, and `ranged_shot`
+ *       → `bow`. `UnitSnapshot.abilities` stores the resolved id list, so a v21
+ *       save carries `['melee_strike']`/`['ranged_shot']` that no longer resolve
+ *       in the ability registry → `createAbility` would throw on rehydrate.
+ *       Reject v21 outright (no migration; the renamed ids have no automatic
+ *       mapping — same rationale as I5's archetype-key rename at v20). RunSnapshot
+ *       is unaffected: roster templates carry only `archetype`, and abilities are
+ *       re-resolved from the (updated) archetype config at spawn.
  */
-const WORLD_SCHEMA_VERSION = 21;
+const WORLD_SCHEMA_VERSION = 22;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -183,8 +192,8 @@ export interface UnitSnapshot {
   outOfLosTicks: number;
   behaviors: string[];
   /**
-   * E2 — registry ids for the unit's abilities (e.g. `['melee_strike']`,
-   * `['ranged_shot']`). Order is preserved across the round-trip since
+   * E2 — registry ids for the unit's abilities (e.g. `['sword']`,
+   * `['bow']`; I6 renamed the basic-strike ids). Order is preserved across the round-trip since
    * AbilityBehavior uses array order to break score ties. Environment
    * units (walls, half-cover) have no behaviors and no abilities, so
    * this serializes as an empty array.

@@ -4,12 +4,21 @@ import { ABILITIES, abilityConfig } from './abilities';
 /**
  * I6 — the per-ability combat profile + the evadable/critable DESIGNATION
  * system. These read the shipped `config/abilities.json` (a config-contract
- * test): they pin which attacks roll to-hit and which can crit — now declared
- * in config rather than hard-coded at each `applyDamage` call site (the I2
- * migration) — plus the commit-1 byte-identical neutral defaults. The numeric
- * to-hit/crit/damage FORMULAS are mechanic-pinned with explicit literals in
- * `src/sim/stats.test.ts`; this file is purely the config side.
+ * test): they pin the STRUCTURAL facts — which attacks roll to-hit, which can
+ * crit, and that the I6 weapon split/rename landed — NOT the by-feel
+ * might/accuracy/critBase VALUES (those are tuned in the editor and re-swept in
+ * Phase N, so per BALANCE.md they're deliberately not pinned). The numeric
+ * damage/hit/crit FORMULAS are mechanic-pinned with explicit literals in
+ * `src/sim/stats.test.ts`.
  */
+
+// The single-target strikes that roll to-hit + can crit: the four melee weapons
+// (sword/club/katana/whip, split from the old `melee_strike`), the `bow`
+// (renamed `ranged_shot`), and the rogue's `gambit_strike`.
+const BASIC_STRIKES = ['sword', 'club', 'katana', 'whip', 'bow', 'gambit_strike'];
+// The unmissable abilities: heal + the AoE blast + the artillery shot.
+const NON_STRIKES = ['heal_ally', 'magic_bolt', 'catapult_shot'];
+
 describe('abilities config — I6 combat profile', () => {
   const ids = Object.keys(ABILITIES);
 
@@ -26,39 +35,28 @@ describe('abilities config — I6 combat profile', () => {
     }
   });
 
+  it('I6 commit 2 split/renamed the basic-strike ids', () => {
+    // The shared `melee_strike` became four per-subclass weapons and
+    // `ranged_shot` became `bow`; the old ids no longer exist.
+    expect(ids).not.toContain('melee_strike');
+    expect(ids).not.toContain('ranged_shot');
+    for (const id of BASIC_STRIKES) expect(ids, `${id} registered`).toContain(id);
+  });
+
   it('evadable gate = the single-target strikes (migrated from I2 call sites)', () => {
     // Single-target strikes roll precision-vs-evasion to-hit...
-    expect(abilityConfig('melee_strike').evadable).toBe(true);
-    expect(abilityConfig('ranged_shot').evadable).toBe(true);
-    expect(abilityConfig('gambit_strike').evadable).toBe(true);
+    for (const id of BASIC_STRIKES) expect(abilityConfig(id).evadable, id).toBe(true);
     // ...the AoE blast / artillery shot / heal are unmissable (dodged
     // positionally or not at all — the I2 carve-out, now in config).
-    expect(abilityConfig('magic_bolt').evadable).toBe(false);
-    expect(abilityConfig('catapult_shot').evadable).toBe(false);
-    expect(abilityConfig('heal_ally').evadable).toBe(false);
+    for (const id of NON_STRIKES) expect(abilityConfig(id).evadable, id).toBe(false);
   });
 
-  it('critable gate: the strikes crit, heal never does', () => {
-    expect(abilityConfig('melee_strike').critable).toBe(true);
-    expect(abilityConfig('ranged_shot').critable).toBe(true);
-    expect(abilityConfig('gambit_strike').critable).toBe(true);
+  it('critable gate: the strikes crit; heal + (I6 commit 2) the mage bolt & catapult do NOT', () => {
+    for (const id of BASIC_STRIKES) expect(abilityConfig(id).critable, id).toBe(true);
     expect(abilityConfig('heal_ally').critable).toBe(false);
-    // I6 commit 1 keeps the mage bolt + catapult `critable` (pre-I6 both rolled
-    // crit → byte-identical). Commit 2 flips them to `false` (user call); update
-    // these two expectations then.
-    expect(abilityConfig('magic_bolt').critable).toBe(true);
-    expect(abilityConfig('catapult_shot').critable).toBe(true);
-  });
-
-  it('commit-1 neutral defaults reproduce the pre-I6 numbers (byte-identical canary)', () => {
-    // might 0 → bare scaling stat; accuracy 0.6 == the retired global
-    // hitChanceBase; critBase 0 → luck-only crit. Commit 2 replaces these with
-    // the authored per-weapon values (Club +2/40%/0%, Sword +5/60%/5%, …).
-    for (const id of ids) {
-      const a = abilityConfig(id);
-      expect(a.might, `${id}.might`).toBe(0);
-      expect(a.critBase, `${id}.critBase`).toBe(0);
-      expect(a.accuracy, `${id}.accuracy`).toBe(0.6);
-    }
+    // I6 commit 2 (user call): area-denial / artillery no longer crit, even
+    // though pre-I6 they rolled a luck-based crit.
+    expect(abilityConfig('magic_bolt').critable).toBe(false);
+    expect(abilityConfig('catapult_shot').critable).toBe(false);
   });
 });

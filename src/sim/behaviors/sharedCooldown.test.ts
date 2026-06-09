@@ -49,7 +49,10 @@ describe('shared actionCooldown', () => {
     // Tick moveCD + 1: cooldown is 0, in range — attack fires.
     world.tick();
     expect(attacks).toHaveLength(1);
-    expect(units[1]!.currentHp).toBe(45);
+    // I6 — the sword adds its `might` on top of the scaling stat (set to
+    // attackDamage), so the strike lands `might + 5`. Derive from config so a
+    // weapon re-tune can't break this cooldown-timing wiring test.
+    expect(units[1]!.currentHp).toBe(50 - (ABILITIES.sword!.might + 5));
   });
 
   it('attacks immediately if already in range on tick 1', () => {
@@ -74,12 +77,11 @@ describe('shared actionCooldown', () => {
     // Adjacent on tick 1: unit attacks (sets CD to attackCD). Even though it
     // could otherwise step toward a different target, the shared CD locks
     // movement out until the attack cooldown elapses. attackCD is the
-    // real melee_strike cadence (config-derived) — the scene builds a
-    // melee unit at the archetype's base speed, so this matches what
-    // MeleeStrike actually proposes; deriving it keeps the test pinned
-    // through any cadence re-tune.
+    // real sword cadence (config-derived) — the scene builds a mercenary at
+    // the archetype's base speed, so this matches what MeleeStrike actually
+    // proposes; deriving it keeps the test pinned through any cadence re-tune.
     const attackCD = attackCooldownTicksFor(
-      ABILITIES.melee_strike!.cooldownSeconds,
+      ABILITIES.sword!.cooldownSeconds,
       ARCHETYPE_CONFIG.mercenary.baseStats.speed,
     );
     const { world, units, moves } = scene([
@@ -170,7 +172,7 @@ function scene(specs: SceneUnit[]): {
     if (s.hp !== undefined) u.currentHp = s.hp;
     if (s.behaviors === 'all') {
       u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-      u.abilities.push(new MeleeStrike());
+      u.abilities.push(new MeleeStrike('sword'));
     }
     world.units.push(u);
     return u;

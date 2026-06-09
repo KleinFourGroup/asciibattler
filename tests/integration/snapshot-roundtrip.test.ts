@@ -132,24 +132,30 @@ describe('A2 round-trip: World', () => {
     );
   });
 
-  it('I6: a live snapshot\'s `derived` has no `critChance` (per-ability now); a pre-I6 version is rejected', () => {
-    // I6 removed critChance from UnitDerived (crit is resolved per-ability at
-    // attack time now), changing the serialized `UnitSnapshot.derived` shape and
-    // bumping WORLD_SCHEMA_VERSION (20→21) — the same kind of derived-field
-    // removal as E5's v12 (attackCooldownTicks). A v20 save carries a
-    // critChance-bearing derived block and must be rejected outright.
+  it('I6: live snapshot has no `critChance` + carries the renamed weapon ids; a pre-I6 version is rejected', () => {
+    // I6 made two save-shape changes, each a WORLD_SCHEMA_VERSION bump:
+    //   commit 1 (v20→v21) removed `critChance` from UnitDerived (crit is
+    //     per-ability now — like E5's v12 `attackCooldownTicks` removal);
+    //   commit 2 (v21→v22) split the basic-strike ability ids (`melee_strike` →
+    //     sword/club/katana/whip, `ranged_shot` → `bow`), so a v21 save's
+    //     ability-id list no longer resolves in the registry.
+    // Either way an older save is rejected outright (no migration).
     const { world } = freshBattle(13579);
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    // commit 1: derived lost critChance, kept the rest.
     expect(wire.units[0].derived).not.toHaveProperty('critChance');
-    // The surviving derived fields still round-trip.
     expect(wire.units[0].derived).toHaveProperty('maxHp');
     expect(wire.units[0].derived).toHaveProperty('moveCooldownTicks');
     expect(wire.units[0].derived).toHaveProperty('attackRange');
+    // commit 2: the serialized ability ids are the renamed ones, never the old.
+    const abilityIds = (wire.units as { abilities: string[] }[]).flatMap((u) => u.abilities);
+    expect(abilityIds).not.toContain('melee_strike');
+    expect(abilityIds).not.toContain('ranged_shot');
 
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.units[0]!.derived.maxHp).toBe(world.units[0]!.derived.maxHp);
 
-    // A snapshot stamped with the PRIOR version (a pre-I6 save) throws.
+    // A snapshot stamped with the PRIOR version (a pre-I6-commit-2 save) throws.
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
     expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,
@@ -614,12 +620,12 @@ function freshBattle(seed: number): {
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'player', { x, y: 2 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike());
+    u.abilities.push(new MeleeStrike('sword'));
   }
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'enemy', { x, y: 9 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike());
+    u.abilities.push(new MeleeStrike('sword'));
   }
 
   return { world, events };

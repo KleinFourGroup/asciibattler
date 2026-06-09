@@ -1,8 +1,11 @@
 {
-  "melee_strike": { "cooldownSeconds": 1.5, "range": 1, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": true, "critable": true },
-  "ranged_shot": { "cooldownSeconds": 2.0, "range": 3, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": true, "critable": true },
-  "gambit_strike": { "cooldownSeconds": 1.2, "range": 1, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": true, "critable": true, "retreatDelaySeconds": 0.25 },
+  "sword": { "cooldownSeconds": 1.5, "range": 1, "might": 5, "accuracy": 0.6, "critBase": 0.05, "evadable": true, "critable": true },
+  "club": { "cooldownSeconds": 1.5, "range": 1, "might": 2, "accuracy": 0.4, "critBase": 0, "evadable": true, "critable": true },
+  "katana": { "cooldownSeconds": 1.5, "range": 1, "might": 4, "accuracy": 0.6, "critBase": 0.2, "evadable": true, "critable": true },
+  "whip": { "cooldownSeconds": 1.5, "range": 1, "might": 3, "accuracy": 0.7, "critBase": 0.05, "evadable": true, "critable": true },
+  "bow": { "cooldownSeconds": 2.0, "range": 3, "might": 4, "accuracy": 0.7, "critBase": 0.05, "evadable": true, "critable": true },
+  "gambit_strike": { "cooldownSeconds": 1.2, "range": 1, "might": 1, "accuracy": 0.85, "critBase": 0.1, "evadable": true, "critable": true, "retreatDelaySeconds": 0.25 },
   "heal_ally": { "cooldownSeconds": 2.0, "range": 3, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": false, "critable": false },
-  "magic_bolt": { "cooldownSeconds": 2.5, "range": 5, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": false, "critable": true, "travelSeconds": 0.35, "aoe": { "radius": 1, "ringMultiplier": 0.5 } },
-  "catapult_shot": { "cooldownSeconds": 3.0, "range": 6, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": false, "critable": true, "travelSeconds": 0.6 }
+  "magic_bolt": { "cooldownSeconds": 2.5, "range": 5, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": false, "critable": false, "travelSeconds": 0.35, "aoe": { "radius": 1, "ringMultiplier": 0.5 } },
+  "catapult_shot": { "cooldownSeconds": 3.0, "range": 6, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": false, "critable": false, "travelSeconds": 0.6 }
 }

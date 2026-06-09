@@ -201,7 +201,7 @@ describe('attackCooldownTicksFor — per-ability attack cadence', () => {
   // layer. These mirror the old deriveStats attack-CD tests but against
   // the new helper, deriving the base seconds from `config/abilities.json`
   // so a cadence re-tune doesn't churn the test.
-  const base = ABILITIES.melee_strike!.cooldownSeconds;
+  const base = ABILITIES.sword!.cooldownSeconds;
 
   it('shrinks with speed via cooldownScale', () => {
     const expectedScale = 1 - 5 * STATS.speedCdPerStat;
@@ -327,7 +327,7 @@ describe('combatRng determinism', () => {
         position: { x: 0, y: 0 },
       });
       attacker.behaviors.push(new AbilityBehavior());
-      attacker.abilities.push(new MeleeStrike());
+      attacker.abilities.push(new MeleeStrike('sword'));
 
       // Target: huge HP so it doesn't die before the trace finishes.
       const targetStats: UnitStats = { ...TEMPLATE, constitution: 99 };
@@ -367,7 +367,7 @@ describe('combatRng determinism', () => {
         stats, derived, position: { x: 0, y: 0 },
       });
       a.behaviors.push(new AbilityBehavior());
-      a.abilities.push(new MeleeStrike());
+      a.abilities.push(new MeleeStrike('sword'));
       const t = new Unit({
         id: 2, team: 'enemy', archetype: 'mercenary', glyph: 'M',
         stats, derived, position: { x: 1, y: 0 },

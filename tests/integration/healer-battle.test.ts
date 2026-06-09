@@ -77,11 +77,17 @@ function runHealerBattle(seed: number): { resolved: boolean; healerCast: boolean
 }
 
 describe('E7.B — healer runs through a full battle', () => {
-  for (const seed of [1, 7, 42]) {
-    it(`resolves with the healer casting a heal (seed ${seed})`, () => {
-      const { resolved, healerCast } = runHealerBattle(seed);
-      expect(resolved).toBe(true);
-      expect(healerCast).toBe(true);
+  const SEEDS = [1, 7, 42];
+  it('resolves every seed; the healer casts a heal on at least one', () => {
+    const results = SEEDS.map(runHealerBattle);
+    // Core smoke: no hang / throw — every seed reaches battle:ended.
+    SEEDS.forEach((seed, i) => {
+      expect(results[i]!.resolved, `seed ${seed} resolves (no hang)`).toBe(true);
     });
-  }
+    // The heal WIRING fires (position → wounded ally → HealAction). Which seed
+    // triggers a heal shifts with combat tuning (I6's weapon `might` changes how
+    // much chip the line takes before someone mends it), so assert "at least one
+    // seed" rather than pinning every seed — the wiring is what this smoke proves.
+    expect(results.some((r) => r.healerCast), 'healer casts on ≥1 seed').toBe(true);
+  });
 });

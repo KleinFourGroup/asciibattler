@@ -370,6 +370,14 @@ the user's, supported by Phase M's floor-gating + the layout auto-editor (M5)).
 
 ### I6 — Per-ability combat profile (might / accuracy / crit)
 
+**✅ DONE (2026-06-09, two commits) — see [HANDOFF.md](HANDOFF.md) for the as-built record.**
+Commit 1 = behavior-neutral plumbing (byte-identical; WorldSnapshot v20→v21 for the
+per-ability crit move — the predicted "no bump" was wrong, `UnitDerived` IS serialized).
+Commit 2 = the weapon rename/split (`melee_strike`→sword/club/katana/whip, `ranged_shot`→`bow`),
+the authored first-pass values (Sword +5/60%/5%, Club +2/40%/0%, Katana +4/60%/20%, Whip
++3/70%/5%, Bow +4/70%/5%, gambit +1/85%/10%), mage/catapult `critable:false`, the recruit-card
+weapon-profile display, and WorldSnapshot v21→v22 (the ability-id rename). **PHASE I COMPLETE.**
+
 The capstone of Phase I's combat-identity work — and the change that makes I5's
 subclass split actually *feel* distinct. Today every attack computes damage, hit
 chance, and crit from the SAME formulas, so a unit's stat block is the only

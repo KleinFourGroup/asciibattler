@@ -149,16 +149,28 @@ function strikePhases(abilityId: string, durationTicks: number): ActionPhase[] {
   ];
 }
 
+/**
+ * I6 — the melee family's basic strike, now PARAMETERIZED by weapon id. The
+ * four melee subclasses share this one behavior class but each carries a
+ * distinct weapon (`sword`/`club`/`katana`/`whip`) whose `config/abilities.json`
+ * profile (might / accuracy / critBase) the propose path reads via `this.id`.
+ * The registry constructs one per id (`new MeleeStrike('sword')`, …).
+ */
 export class MeleeStrike implements Ability {
-  static readonly id = 'melee_strike';
-  readonly id = MeleeStrike.id;
+  readonly id: string;
+  constructor(id: string) {
+    this.id = id;
+  }
   propose(unit: Unit, world: World): ActionProposal | null {
     return proposeBasicStrike(unit, world, this.id);
   }
 }
 
 export class RangedShot implements Ability {
-  static readonly id = 'ranged_shot';
+  // I6 — `ranged_shot` renamed to `bow`. Single ranged weapon today, so the id
+  // stays a static constant (no constructor param, unlike the 4-weapon melee
+  // family); a second bow-type would parameterize this the same way MeleeStrike is.
+  static readonly id = 'bow';
   readonly id = RangedShot.id;
   propose(unit: Unit, world: World): ActionProposal | null {
     return proposeBasicStrike(unit, world, this.id);

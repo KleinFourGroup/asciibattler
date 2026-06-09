@@ -22,7 +22,8 @@ import type { GridCoord } from '../../core/types';
  */
 
 const GAMBIT = abilityConfig('gambit_strike');
-const MELEE = abilityConfig('melee_strike');
+// I6 — `melee_strike` split into per-subclass weapons; `sword` is the mercenary's.
+const MELEE = abilityConfig('sword');
 
 // Representative rogue/melee stat blocks. Cadence expectations derive from the
 // SAME `speed` via `attackCooldownTicksFor`, so the assertions hold regardless
@@ -93,12 +94,12 @@ describe('GambitStrike.propose — F4 phase timeline', () => {
 });
 
 describe('MeleeStrike.propose — stays a basic strike', () => {
-  it('has no windup: [impact 0, recovery D] (no retreatDelaySeconds on melee_strike)', () => {
+  it('has no windup: [impact 0, recovery D] (no retreatDelaySeconds on the sword)', () => {
     expect(MELEE.retreatDelaySeconds).toBeUndefined();
 
     const melee = makeUnit(1, 'player', { x: 5, y: 5 }, { stats: MELEE_STATS });
     const enemy = makeUnit(2, 'enemy', { x: 6, y: 5 });
-    const proposal = new MeleeStrike().propose(melee, world([melee, enemy]));
+    const proposal = new MeleeStrike('sword').propose(melee, world([melee, enemy]));
 
     const durationTicks = attackCooldownTicksFor(MELEE.cooldownSeconds, MELEE_STATS.speed);
     expect(proposal!.phases).toEqual([

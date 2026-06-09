@@ -769,7 +769,7 @@ function scene(specs: DeathSceneUnit[]): {
       if (b === 'movement') u.behaviors.push(new MovementBehavior());
       else if (b === 'attack') {
         u.behaviors.push(new AbilityBehavior());
-        u.abilities.push(new MeleeStrike());
+        u.abilities.push(new MeleeStrike('sword'));
       }
     }
     world.units.push(u);

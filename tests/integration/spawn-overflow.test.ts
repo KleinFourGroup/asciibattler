@@ -182,7 +182,7 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.queueLength('enemy')).toBe(0);
   });
 
-  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v21', () => {
+  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v22', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
@@ -195,7 +195,7 @@ describe('D5.C spawn overflow queue', () => {
     world.units[0]!.outOfLosTicks = 3;
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(21);
+    expect(wire.schemaVersion).toBe(22);
     expect(wire.units[0].targetId).toBe(world.units[1]!.id);
     expect(wire.units[0].outOfLosTicks).toBe(3);
     expect(wire.damageDealt).toEqual([]);
@@ -213,10 +213,10 @@ describe('D5.C spawn overflow queue', () => {
     expect(wire.spawnRegions[0].team).toBe('player');
     expect(wire.spawnRegions[0].region.tiles).toEqual(region.tiles);
 
-    // E2: every melee unit on the wire carries `abilities: ['melee_strike']`.
-    // E3: every unit on the wire carries `level` (1 for these level-1 rolls).
+    // E2: every melee unit on the wire carries its abilities (I6: the mercenary
+    // wields the `sword`). E3: every unit carries `level` (1 for these rolls).
     for (const us of wire.units) {
-      expect(us.abilities).toEqual(['melee_strike']);
+      expect(us.abilities).toEqual(['sword']);
       expect(us.level).toBe(1);
     }
 
@@ -224,9 +224,9 @@ describe('D5.C spawn overflow queue', () => {
     expect(restored.queueLength('player')).toBe(2);
     expect(restored.units[0]!.targetId).toBe(world.units[1]!.id);
     expect(restored.units[0]!.outOfLosTicks).toBe(3);
-    // Each restored unit gets one MeleeStrike ability back.
+    // Each restored unit gets its strike ability back (mercenary → sword).
     for (const u of restored.units) {
-      expect(u.abilities.map((a) => a.id)).toEqual(['melee_strike']);
+      expect(u.abilities.map((a) => a.id)).toEqual(['sword']);
     }
 
     // After restore, killing a unit + ticking continues draining the queue.

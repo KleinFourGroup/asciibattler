@@ -12,6 +12,16 @@ import type { ActionProposal } from '../Action';
 import type { GameEvents } from '../../core/events';
 import { AttackAction } from '../actions/AttackAction';
 import { LEVELING } from '../../config/leveling';
+import { abilityConfig } from '../../config/abilities';
+
+// I6 — a strike deals the weapon's `might` plus the wielder's scaling stat;
+// `scene()` sets that stat to the spec's `attackDamage`, so a fired strike lands
+// `might + attackDamage`. Derive the weapon might from config (the production
+// path reads it) so re-tuning a weapon can't break these wiring assertions — the
+// damage *mechanic* is pinned config-free in AttackAction.test.ts. `scene()`
+// gives mercenary units the `sword`, ranged units the `bow`.
+const SWORD_MIGHT = abilityConfig('sword').might;
+const BOW_MIGHT = abilityConfig('bow').might;
 
 describe('AbilityBehavior', () => {
   it('does not attack when no enemy is in range', () => {
@@ -30,12 +40,12 @@ describe('AbilityBehavior', () => {
       { team: 'enemy', x: 1, y: 0, hp: 30, inert: true },
     ]);
     world.tick();
-    expect(units[1]!.currentHp).toBe(23);
+    expect(units[1]!.currentHp).toBe(30 - (SWORD_MIGHT + 7));
     expect(attacks).toHaveLength(1);
     expect(attacks[0]).toEqual({
       attackerId: units[0]!.id,
       targetId: units[1]!.id,
-      damage: 7,
+      damage: SWORD_MIGHT + 7,
       crit: false,
     });
   });
@@ -90,7 +100,7 @@ describe('AbilityBehavior', () => {
   });
 
   it('abstains when a wall is on the line to a ranged target', () => {
-    // E5: ranged_shot's config range is 3, so the target sits at chebyshev
+    // E5: the bow's config range is 3, so the target sits at chebyshev
     // 3 (in range) with the wall strictly between attacker and target.
     const { world, units, attacks } = scene([
       { team: 'player', x: 0, y: 0, attackRange: 3, attackDamage: 5 },
@@ -109,12 +119,12 @@ describe('AbilityBehavior', () => {
     ]);
     spawnWall(world, { x: 1, y: 2 });
     world.tick();
-    expect(units[1]!.currentHp).toBe(25);
+    expect(units[1]!.currentHp).toBe(30 - (BOW_MIGHT + 5));
     expect(attacks).toHaveLength(1);
   });
 
   it('E5: a strike gates on its ability config range, not the unit engagement range', () => {
-    // `derived.attackRange` is force-set to 5 here, but ranged_shot's
+    // `derived.attackRange` is force-set to 5 here, but the bow's
     // config range is 3 — the strike must consult the ability's OWN range
     // and abstain at chebyshev 4. Pre-E5 this read `derived.attackRange`
     // and would have fired. Pins the per-ability range migration.
@@ -137,7 +147,7 @@ describe('AbilityBehavior', () => {
     spawnWall(world, { x: 2, y: 2 });
     spawnWall(world, { x: 3, y: 1 });
     world.tick();
-    expect(units[1]!.currentHp).toBe(25);
+    expect(units[1]!.currentHp).toBe(30 - (SWORD_MIGHT + 5));
     expect(attacks).toHaveLength(1);
   });
 
@@ -154,7 +164,7 @@ describe('AbilityBehavior', () => {
     // can't break this wiring test — the attenuation *mechanic* (that a
     // multiplier < 1 actually reduces damage) is pinned config-free in
     // AttackAction.test.ts.
-    const expectedDamage = Math.round(5 * LEVELING.halfCoverDamageMult);
+    const expectedDamage = Math.round((BOW_MIGHT + 5) * LEVELING.halfCoverDamageMult);
     expect(units[1]!.currentHp).toBe(30 - expectedDamage);
     expect(attacks).toHaveLength(1);
     expect(attacks[0]!.damage).toBe(expectedDamage);
@@ -179,7 +189,7 @@ describe('AbilityBehavior', () => {
     ]);
     world.tileGrid.setKind({ x: 2, y: 0 }, 'chasm');
     world.tick();
-    expect(units[1]!.currentHp).toBe(25);
+    expect(units[1]!.currentHp).toBe(30 - (BOW_MIGHT + 5));
     expect(attacks).toHaveLength(1);
   });
 
@@ -328,7 +338,7 @@ function scene(specs: SceneUnit[]): {
     if (s.hp !== undefined) u.currentHp = s.hp;
     if (!s.inert) {
       u.behaviors.push(new AbilityBehavior());
-      u.abilities.push(archetype === 'mercenary' ? new MeleeStrike() : new RangedShot());
+      u.abilities.push(archetype === 'mercenary' ? new MeleeStrike('sword') : new RangedShot());
     }
     return u;
   });

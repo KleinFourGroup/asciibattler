@@ -226,12 +226,12 @@ function runBattle(
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'player', { x, y: 2 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike());
+    u.abilities.push(new MeleeStrike('sword'));
   }
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'enemy', { x, y: 9 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike());
+    u.abilities.push(new MeleeStrike('sword'));
   }
 
   for (let i = 0; i < maxTicks && !world.ended; i++) world.tick();

@@ -94,15 +94,22 @@ describe('archetypes / targeting config', () => {
 });
 
 describe('archetypes / I5 melee family', () => {
-  // The four melee subclasses (mercenary = the old `melee` baseline) share the
-  // melee IDENTITY — one `melee_strike` at range 1, damage off `strength` — and
-  // diverge only in stat VALUES (tuned by feel, so deliberately NOT pinned here:
-  // no balance arithmetic, per BALANCE.md). This locks the structural contract.
-  const MELEE_FAMILY = ['mercenary', 'adventurer', 'ronin', 'bandit'] as const;
+  // The four melee subclasses share the melee IDENTITY — a basic strike at
+  // range 1, damage off `strength` — and diverge in stat VALUES (tuned by feel,
+  // NOT pinned here, per BALANCE.md). I6 split the shared `melee_strike` into a
+  // per-subclass WEAPON (sword/club/katana/whip), so each now carries its own
+  // strike id; this locks that structural contract (which weapon → which class).
+  const MELEE_WEAPON = {
+    mercenary: 'sword',
+    adventurer: 'whip',
+    ronin: 'katana',
+    bandit: 'club',
+  } as const;
+  const MELEE_FAMILY = Object.keys(MELEE_WEAPON) as (keyof typeof MELEE_WEAPON)[];
 
-  it('every melee subclass carries melee_strike at range 1 and strikes on strength', () => {
+  it('every melee subclass carries its I6 weapon at range 1 and strikes on strength', () => {
     for (const a of MELEE_FAMILY) {
-      expect(abilityIdsForArchetype(a)).toContain('melee_strike');
+      expect(abilityIdsForArchetype(a)).toContain(MELEE_WEAPON[a]);
       expect(rangeForArchetype(a)).toBe(1);
       const stats = rollUnit(a, new RNG(0)).stats;
       expect(damageStatFor(a, stats)).toBe(stats.strength);

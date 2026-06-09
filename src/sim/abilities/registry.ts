@@ -19,8 +19,12 @@ import { ABILITIES } from '../../config/abilities';
  */
 export type AbilityFactory = () => Ability;
 
+// I6 — the four melee subclasses share the one `MeleeStrike` behavior but each
+// carries a distinct weapon id (its `config/abilities.json` profile differs).
+const MELEE_WEAPON_IDS = ['sword', 'club', 'katana', 'whip'] as const;
+
 const FACTORIES: Record<string, AbilityFactory> = {
-  [MeleeStrike.id]: () => new MeleeStrike(),
+  ...Object.fromEntries(MELEE_WEAPON_IDS.map((id) => [id, () => new MeleeStrike(id)])),
   [RangedShot.id]: () => new RangedShot(),
   [GambitStrike.id]: () => new GambitStrike(),
   [HealAlly.id]: () => new HealAlly(),

@@ -136,8 +136,12 @@ export class RecruitScreen {
  * damage reading, so the card never throws on an unmapped ability.
  */
 const ABILITY_UI: Record<string, { label: string; effect: 'damage' | 'heal' }> = {
-  melee_strike: { label: 'Strike', effect: 'damage' },
-  ranged_shot: { label: 'Shot', effect: 'damage' },
+  // I6 — the per-subclass melee weapons (split from the old `melee_strike`).
+  sword: { label: 'Sword', effect: 'damage' },
+  club: { label: 'Club', effect: 'damage' },
+  katana: { label: 'Katana', effect: 'damage' },
+  whip: { label: 'Whip', effect: 'damage' },
+  bow: { label: 'Bow', effect: 'damage' },
   gambit_strike: { label: 'Gambit', effect: 'damage' },
   heal_ally: { label: 'Heal', effect: 'heal' },
   magic_bolt: { label: 'Bolt', effect: 'damage' },
@@ -156,14 +160,18 @@ function statLine(label: string, value: string): HTMLDivElement {
 }
 
 /**
- * GP3 — one ability row: name, then `N dmg · rng R` (or `N heal · rng R`)
- * with an AoE tag when the ability has a blast, then the calculated cadence
- * in seconds. The damage / heal amount reuses the sim's single-source-of-
- * truth helpers (`damageStatFor`, or the `magic`-scaled heal matching
- * `healAmountFor`) so the card can't disagree with what the unit actually
- * does in battle. Range / cadence / AoE come from `config/abilities.json`
- * via `abilityConfig`. The cadence's driving stat (speed) isn't repeated
- * here — it's in the raw stat block above.
+ * GP3 — one ability row: name, then the weapon profile (`N dmg · rng R · H%
+ * hit · C% crit`, or `N heal · rng R`) with an AoE tag when the ability has a
+ * blast, then the calculated cadence in seconds. The damage / heal amount
+ * reuses the sim's single-source-of-truth helpers — I6: `cfg.might` plus the
+ * scaling stat (`damageStatFor`, or the `magic`-scaled heal matching
+ * `healAmountFor`) — so the card can't disagree with what the unit actually
+ * does in battle. Range / cadence / AoE / the I6 profile (might/accuracy/
+ * critBase + the evadable/critable gates) come from `config/abilities.json` via
+ * `abilityConfig`: a single-target weapon shows its base hit chance (`accuracy`,
+ * vs an equal-evasion foe) and its base crit (`critBase`); an unmissable /
+ * non-critable ability omits the part that doesn't apply. The cadence's driving
+ * stat (speed) isn't repeated here — it's in the raw stat block above.
  */
 function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDivElement {
   const ui = ABILITY_UI[id] ?? { label: id, effect: 'damage' as const };
@@ -179,8 +187,14 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
 
   const detail = document.createElement('div');
   detail.className = 'recruit-ability-detail';
-  const amount = ui.effect === 'heal' ? stats.magic : damageStatFor(archetype, stats);
-  detail.textContent = `${amount} ${ui.effect === 'heal' ? 'heal' : 'dmg'} · rng ${cfg.range}`;
+  const scaling = ui.effect === 'heal' ? stats.magic : damageStatFor(archetype, stats);
+  const amount = cfg.might + scaling;
+  const parts = [`${amount} ${ui.effect === 'heal' ? 'heal' : 'dmg'}`, `rng ${cfg.range}`];
+  // I6 — surface the per-weapon profile: base hit chance for an evadable strike,
+  // base crit for a critable one (terse percentages, e.g. "60% hit").
+  if (cfg.evadable) parts.push(`${Math.round(cfg.accuracy * 100)}% hit`);
+  if (cfg.critable) parts.push(`${Math.round(cfg.critBase * 100)}% crit`);
+  detail.textContent = parts.join(' · ');
   if (cfg.aoe) {
     const side = cfg.aoe.radius * 2 + 1;
     const tag = document.createElement('span');

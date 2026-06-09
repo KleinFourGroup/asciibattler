@@ -1,7 +1,7 @@
 {
   "mercenary": {
     "glyph": "M",
-    "abilities": ["melee_strike"],
+    "abilities": ["sword"],
     "targeting": "nearest",
     "baseStats": {
       "constitution": 22,
@@ -32,7 +32,7 @@
   },
   "adventurer": {
     "glyph": "A",
-    "abilities": ["melee_strike"],
+    "abilities": ["whip"],
     "targeting": "nearest",
     "baseStats": {
       "constitution": 20,
@@ -63,7 +63,7 @@
   },
   "ronin": {
     "glyph": "R",
-    "abilities": ["melee_strike"],
+    "abilities": ["katana"],
     "targeting": "nearest",
     "baseStats": {
       "constitution": 20,
@@ -94,7 +94,7 @@
   },
   "bandit": {
     "glyph": "B",
-    "abilities": ["melee_strike"],
+    "abilities": ["club"],
     "targeting": "nearest",
     "baseStats": {
       "constitution": 22,
@@ -125,7 +125,7 @@
   },
   "ranged": {
     "glyph": "a",
-    "abilities": ["ranged_shot"],
+    "abilities": ["bow"],
     "targeting": "nearest",
     "baseStats": {
       "constitution": 18,

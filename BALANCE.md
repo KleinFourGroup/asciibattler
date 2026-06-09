@@ -585,3 +585,32 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
      holdout. Without it it's still a strong best-achievable read, but on the tuned seed bases.
   - *Also optional, anytime:* the melee↔ranged carry gap (final 102 vs 61) if a playtest bothers.
   Re-baseline tests/fuzz after any config change.
+
+- **I5 ROGUE re-measure — the dodge-tank decision (2026-06-09).** The Phase-I rogue decision (ROADMAP
+  §I5 / §N1): does the dodge system ALONE make the rogue viable, or does Phase N mobility stay? Re-measured
+  the user's editor-tuned dodge-tank block AS-IS (committed `9441f5c`: LCK 12 / EVA 7, growth PRC .45 /
+  EVA .5 / LCK .7; targeting `nearest`) against the live band (budgetFactor 0.625 × swarmMax 1.75), quick
+  tier, `--floors=11`, `samplerSeed=1`. Output gitignored (reproducible).
+  - **Free composition search (default roster):** best-achievable **88%** (test 100% / baselines 0% —
+    skill still required), optimal comp = mercenary + ranged + **catapult**; **rogue INACTIVE** (never
+    recruited) — same as the pre-dodge verdict. (adventurer/ronin/bandit also inactive — the new melee
+    subclasses aren't the bot's optimal line either; the usual lower-bound caveat, NOT a balance verdict
+    on them.)
+  - **Forced-roster A/B (lvl-5, swap one carry → rogue):** 5-carry control **87.5%** (test 100%) → rogue
+    lineup **50%** (test 75%) — a **−25 to −37pt** hit for fielding the rogue.
+  - **Per-deployment telemetry (the honest per-unit read):** rogue **dmg/dep 15.4** vs carries' ~37
+    (mercenary 38.0 / ranged 36.6) — **<½ the carry damage**; rogue **taken/dep 17.0 ≈ mercenary's 19.4**
+    DESPITE far less CON/DEF (16/2 vs 22/4). ⇒ **the dodge tuning WORKED for survivability** (EVA ~9 at
+    lvl-5 → ~52% incoming hit vs the carries' 60%, making the fragile rogue carry-durable per deployment)
+    — **but the rogue is now DAMAGE-STARVED** (a range-1 `gambit_strike` on STR 5 just can't output). The
+    binding constraint flipped from fragility → reach/damage.
+  - **VERDICT (the rogue decision): dodge alone does NOT make the rogue viable → Phase N mobility STAYS
+    (the N1 contingency resolves to "build it").** But the finding REFINES the fix: dodge solved
+    survivability, so N1's gap-closer isn't for *staying alive* — it's for **reach** (close on the squishy
+    backline so the rogue's strike lands where crit/damage matters, flipping it to `weakest` targeting,
+    which BALANCE step 3 disproved for a *range-1* rogue precisely because it couldn't reach). Mobility +
+    `weakest` is the coherent rogue identity; logged for N1. **No config change this pass** (re-measured
+    as-is, per the user); re-confirm post-mobility in N2's sweep.
+  - **Methodology caveat:** forced-roster is a diagnostic (answers "force this comp," not "is the rogue
+    worth a slot"); the free search is a lower bound. Both point the same way here AND the per-deployment
+    signal (½ carry damage) is structural, so the verdict is robust to quick-tier's 8-seed quantization.

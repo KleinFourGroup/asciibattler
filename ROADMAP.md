@@ -718,9 +718,21 @@ backdrop look (M4); the water effect + the floor-gating curve (M6).
 The "end of round" closers. Everything here either **moves the difficulty
 band** (so it must precede the final verify) or **is** the final verify.
 
-### N1 — Rogue mobility (CONTINGENT)
+### N1 — Rogue mobility (CONTINGENT → RESOLVED: BUILD)
 
-**Gated on the I4 rogue re-measure + the J2 pathing seam.** Build the dash /
+**I5 re-measure result (2026-06-09 — [BALANCE.md](BALANCE.md)):** the dodge-tank
+re-measure left the rogue **weak**, so the contingency resolves to **build the
+gap-closer** (pending the user's standing "repurpose to a future class" option).
+The nuance that REFRAMES the ability: dodge *did* fix survivability (the lvl-5
+rogue is carry-durable per deployment — `taken/dep` ≈ mercenary's despite far
+less CON/DEF), so the rogue is no longer fragile — it's **damage-starved**
+(range-1 strike, ~½ the carries' `dmg/dep`, and the free search still won't
+recruit it). So **mobility is for REACH, not survival**: close on the squishy
+backline so the strike's crit/damage lands, then flip to `weakest` targeting
+(disproved for a *range-1* rogue in H7c step 3 precisely because it couldn't
+reach). Reconfirm with the user that the ability stays on the rogue.
+
+**Gated on the J2 pathing seam.** Build the dash /
 leap / gap-closer **only if** Phase I's dodge-tank re-measure leaves the rogue
 weak *and* the user still wants it on the rogue (vs repurposing the ability to
 a future class — the user's standing option). It's a new ability + a

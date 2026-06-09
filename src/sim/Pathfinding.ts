@@ -9,6 +9,25 @@ export type CostFn = (cell: GridCoord) => number;
 const UNIT_COST: CostFn = () => 1;
 
 /**
+ * J2 — a dev/test instrument counting A* searches so the per-tick recompute
+ * budget is assertable (the ROADMAP §J2 "bounded recompute count" guard;
+ * see tests/integration/pathing-perf.test.ts). The counter influences no
+ * path, no RNG, and no sim state — it is pure-output-neutral, so it can't
+ * perturb determinism. The deferred path cache, when it lands, shows up as a
+ * drop in this number against the same scenario, so the guard doubles as the
+ * cache's effectiveness meter. Reset + read in tests.
+ */
+let pathfindingCallCount = 0;
+export const pathfindingStats = {
+  get calls(): number {
+    return pathfindingCallCount;
+  },
+  reset(): void {
+    pathfindingCallCount = 0;
+  },
+};
+
+/**
  * A* on the battle grid. Pure function: same inputs, same path, every time.
  *
  * - 8-directional moves (king's moves; matches DESIGN.md "8-directional
@@ -41,6 +60,7 @@ export function findPath(
   gridH: number,
   costAt: CostFn = UNIT_COST,
 ): GridCoord[] {
+  pathfindingCallCount++; // J2 — recompute-budget instrument (output-neutral).
   if (!inBounds(start, gridW, gridH) || !inBounds(goal, gridW, gridH)) return [];
 
   const startKey = key(start);

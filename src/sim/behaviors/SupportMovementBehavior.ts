@@ -2,11 +2,13 @@ import type { Behavior, Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
 import type { ActionProposal } from '../Action';
-import { MoveAction } from '../actions/MoveAction';
 import { SwapAction } from '../actions/SwapAction';
 import { findTarget, lowestWoundedAlly, currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
 import { SIM } from '../../config/sim';
+// J2 — share the leaf pathing helpers with MovementBehavior (these were
+// duplicated leaf-for-leaf). The healer's bespoke decision logic stays here.
+import { costAt, moveProposal, key, chebyshev } from '../movement';
 
 /**
  * E7.B — the healer's movement, replacing the default `MovementBehavior`
@@ -309,22 +311,6 @@ function occupiedCells(unit: Unit, world: World): Set<string> {
   return occupied;
 }
 
-function moveProposal(
-  from: GridCoord,
-  to: GridCoord,
-  durationTicks: number,
-  score: number,
-): ActionProposal {
-  return {
-    action: new MoveAction(from, to, durationTicks),
-    score,
-    cooldown: durationTicks,
-    // F2 — step applied in `start` (offset 0); unit locked for the
-    // move-cooldown window. Single `impact` phase = the lockout.
-    phases: [{ phase: 'impact', ticks: durationTicks }],
-  };
-}
-
 /**
  * GP5 #5 — the swap proposal: the healer (`from`) trades cells with the boxed
  * ally at `to` (`otherId`). Same timing shape as a move (score 1, single
@@ -483,17 +469,3 @@ function passable(c: GridCoord, world: World, occupied: ReadonlySet<string>): bo
   return true;
 }
 
-function costAt(c: GridCoord, world: World, occupied: ReadonlySet<string>): number {
-  const tileCost = world.tileGrid.costAt(c);
-  if (!isFinite(tileCost)) return tileCost;
-  if (occupied.has(key(c))) return tileCost + SIM.occupiedCellPenalty;
-  return tileCost;
-}
-
-function key(c: GridCoord): string {
-  return `${c.x},${c.y}`;
-}
-
-function chebyshev(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-}

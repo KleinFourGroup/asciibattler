@@ -88,7 +88,8 @@ src/
                              # + toData()/fromData for snapshot rehydration (A2); OrphanPolicy (F2)
     Command.ts               # WorldCommand union — drained at tick boundary (A2); J1: setObjective/clearObjective
     objective.ts             # J1: BattleObjective type (tile | enemy) — the player team's shared steering target
-    Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a)
+    Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a); J2: pathfindingStats recompute counter
+    movement.ts              # J2: shared movement seam — MovementIntent + advance (the dash hook) + routeToward (cache boundary)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest in-range(+LOS) firing cell
     Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5); lowestWoundedAlly (E7.B)
                              # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
@@ -115,7 +116,7 @@ src/
       catapult.ts            # E7.D: CatapultShot — homing, ignores LOS
       registry.ts            # Ability factories; boot-asserts the id-set matches abilities.json (E5)
     behaviors/
-      MovementBehavior.ts    # proposeAction → MoveAction when out of range; boids sidestep (E5.B)
+      MovementBehavior.ts    # J2: thin goal-selector → MovementIntent + advance (movement.ts); boids sidestep (E5.B)
                              # splits neutrals into pathBlockers + losBlockers (D6); LOS-optional abstain (E7.D)
       AbilityBehavior.ts     # E2: walks the unit's Ability[] (replaced AttackBehavior)
       SupportMovementBehavior.ts  # E7.B: healer idle / panic / approach / centroid-trail

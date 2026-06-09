@@ -528,6 +528,20 @@ clears on death; the ranged upper-limit/retaliation gate; determinism.
 
 ### J2 — Pathing overhaul + performance
 
+**✅ DONE (`feat(J2)`) — seam-first, cache DEFERRED (see HANDOFF J2 entry).** The
+decision point ("cache aggressiveness") resolved with the user to **seam-first**:
+build the movement-intent hook + a bounded-recompute guard now, defer the cache
+behind a pure boundary until a profile demands it. `src/sim/movement.ts` factors
+`MovementIntent` + `advance` (the dash hook, `maxCells>1`) + `routeToward` (the
+pure `findPath` wrapper = the cache boundary); `MovementBehavior` is now a thin
+goal-selector and `SupportMovementBehavior` shares the leaf helpers. Byte-identical
+(fuzz:smoke 89 unchanged, no snapshot bump). Worst-case profile (32×32, 60 units,
+objective thrash every tick): **~0.10 ms/tick ≈ 1.8% of a 3× frame** → a cache is
+premature; `pathfindingStats` + [pathing-perf.test.ts](tests/integration/pathing-perf.test.ts)
+guard the per-tick recompute budget so the cache becomes a localized later add
+when the guard trips. N1's gap-closer rides the `maxCells>1` hook (validated by a
+test, not built).
+
 **Shape:** the brief's flagged risk. A shared objective that the player may
 **thrash** (re-set rapidly) means naive per-tick `findPath` per unit is a
 perf hazard — especially stacked with I3's 3× fast-forward. Levers (brief):

@@ -128,8 +128,16 @@ import { STATS } from '../config/stats';
  *       — rehydrating one would crash deriving its abilities/glyph/stats. Reject
  *       outright (no migration; the renamed key has no automatic mapping). v19
  *       throws on load.
+ *  21 — I6 removed `critChance` from `UnitSnapshot.derived` (the `UnitDerived`
+ *       shape is stored verbatim). Crit is now resolved PER-ABILITY at attack
+ *       time (`critChanceFor(ability.critBase, luck)`, gated on
+ *       `ability.critable`), so the per-unit field no longer exists to
+ *       serialize — the same kind of derived-field removal as E5's v12
+ *       (`attackCooldownTicks`). The evadable strike actions also thread a new
+ *       `accuracy` (+ `evadable`) into their serialized `actionData`; a v20
+ *       mid-action snapshot would lack them. Reject v20 outright (no migration).
  */
-const WORLD_SCHEMA_VERSION = 20;
+const WORLD_SCHEMA_VERSION = 21;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -476,20 +484,31 @@ export class World {
    * it (default `false`) and draw nothing here. On a miss: deal 0, emit
    * `unit:missed` (no HP mutation, no `recordDamage`, no `unit:attacked`), and
    * return before mitigation.
+   *
+   * I6 — `opts.accuracy` is the firing ability's per-weapon base hit chance
+   * (from `config/abilities.json`), threaded by the evadable strike actions and
+   * fed to `hitChanceFor` in place of the retired global `hitChanceBase`. It is
+   * only consumed when `evadable` (and a live attacker exists); a missing
+   * accuracy on the evadable degraded path is treated as unmissable, the same
+   * as a missing attacker.
    */
   applyDamage(
     attackerId: number,
     target: Unit,
     rawDamage: number,
-    opts: { crit: boolean; evadable?: boolean },
+    opts: { crit: boolean; evadable?: boolean; accuracy?: number },
   ): void {
-    if (opts.evadable) {
+    if (opts.evadable && opts.accuracy !== undefined) {
       const attacker = this.findUnit(attackerId);
       // A live attacker is the runtime invariant (the strike is cast by it);
       // the guard only covers a degraded path (attacker gone) — treat it as an
       // unmissable hit there rather than drawing combatRng against no precision.
       if (attacker) {
-        const hitChance = hitChanceFor(attacker.stats.precision, target.stats.evasion);
+        const hitChance = hitChanceFor(
+          opts.accuracy,
+          attacker.stats.precision,
+          target.stats.evasion,
+        );
         if (this.combatRng.next() >= hitChance) {
           this.emit('unit:missed', { attackerId, targetId: target.id });
           return;

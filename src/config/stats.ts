@@ -25,20 +25,21 @@
  *   high-defense target never fully negates an attack (chip/AoE always pokes
  *   through). Applied in `World.applyDamage`; environmental fire/chasm damage
  *   is UNMITIGATED and never sees this floor.
- * - `hitChanceBase` / `hitChancePerPrecision` / `dodgeChancePerEvasion` /
- *   `hitChanceFloor` / `hitChanceCap` — I2 dodge to-hit. The single-target
- *   strike roll (`hitChanceFor`, `src/sim/stats.ts`) is Fire-Emblem
- *   subtractive: `clamp(hitChanceBase + precision·hitChancePerPrecision −
+ * - `hitChancePerPrecision` / `dodgeChancePerEvasion` / `hitChanceFloor` /
+ *   `hitChanceCap` — I2 dodge to-hit. The single-target strike roll
+ *   (`hitChanceFor`, `src/sim/stats.ts`) is Fire-Emblem subtractive:
+ *   `clamp(accuracy + precision·hitChancePerPrecision −
  *   evasion·dodgeChancePerEvasion, hitChanceFloor, hitChanceCap)`. Rolled
  *   against `combatRng` at the `World.applyDamage` chokepoint, but ONLY when a
  *   caller opts in via `evadable` — melee/ranged basic strikes + the rogue
  *   gambit do; the mage AoE blast, the catapult shot, and environmental
  *   fire/chasm damage are all UNMISSABLE (area-denial / artillery / hazards
- *   are dodged positionally or not at all). With I1's uniform `precision ==
- *   evasion == 5` the prc/eva terms cancel → every unit sits at `hitChanceBase`
- *   today; I5's subclass spreads are what make evasion builds dodgy. The floor
- *   keeps a low-precision unit from being fully shut out by a high-evasion
- *   target (the `minDamage` analogue for whiffs).
+ *   are dodged positionally or not at all). I6 moved the base hit chance OFF
+ *   this file (it was the global `hitChanceBase`) ONTO each ability as its
+ *   per-weapon `accuracy` (`config/abilities.json`), so a precise bow and a
+ *   wild club land differently before stats. The floor keeps a low-precision
+ *   unit from being fully shut out by a high-evasion target (the `minDamage`
+ *   analogue for whiffs).
  * - `mobilityCdPerStat` / `speedCdPerStat` — per-axis cooldown slope.
  *   GP1 split the single `cdPerStat` so the two cadence stats can diverge
  *   (I1 reverted the attack-axis name `agility → speed`, knobs included):
@@ -64,7 +65,6 @@ const StatsSchema = z.object({
   critCap: z.number().min(0).max(1),
   critMult: z.number().min(1),
   minDamage: z.number().int().nonnegative(),
-  hitChanceBase: z.number().min(0).max(1),
   hitChancePerPrecision: z.number().nonnegative(),
   dodgeChancePerEvasion: z.number().nonnegative(),
   hitChanceFloor: z.number().min(0).max(1),

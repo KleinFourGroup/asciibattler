@@ -3,7 +3,7 @@ import type { World } from '../World';
 import type { ActionProposal } from '../Action';
 import { CatapultShotAction } from '../actions/CatapultShotAction';
 import { currentTarget } from '../Targeting';
-import { catapultShotDamage, attackCooldownTicksFor } from '../stats';
+import { catapultShotDamage, attackCooldownTicksFor, critChanceFor } from '../stats';
 import { secondsToTicks } from '../../config';
 import { abilityConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
@@ -50,7 +50,11 @@ export class CatapultShot implements Ability {
 
     // No LOS gate — the arcing shot ignores walls.
 
-    const baseDamage = catapultShotDamage(unit);
+    // I6 — `might + ranged`; crit per-weapon (`critBase + luck`), zeroed when
+    // the shot is not `critable`. The shot stays unmissable (`cfg.evadable`
+    // false) — counterplay is killing the slow caster mid-charge, not dodging.
+    const baseDamage = catapultShotDamage(unit, cfg.might);
+    const critChance = cfg.critable ? critChanceFor(cfg.critBase, unit.stats.luck) : 0;
     const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
     // F3 — carve the boulder's flight OUT of the wind-up so it travels
     // *during* the charge and lands on the impact tick (the renderer launches
@@ -64,7 +68,7 @@ export class CatapultShot implements Ability {
       action: new CatapultShotAction(
         target,
         baseDamage,
-        unit.derived.critChance,
+        critChance,
         { ...target.position },
       ),
       score: 10,

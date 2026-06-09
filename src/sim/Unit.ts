@@ -92,13 +92,16 @@ export interface UnitStats {
  * archetype context (attackRange is the max over the unit's abilities'
  * ranges, not computed from any stat). Treated as a snapshot — recompute via
  * `deriveStats` when stats change (level-up, future status effects).
- * Crit RNG rolls happen at action-start in AttackAction, NOT here;
- * `critChance` is just the probability that gets fed into that roll.
+ *
+ * I6 — `critChance` left this block: crit is now resolved PER-ABILITY at
+ * attack time (`critChanceFor(ability.critBase, unit.stats.luck)`, gated on
+ * `ability.critable`), so there's no single per-unit crit probability to
+ * derive. Removing the field changed the serialized `UnitSnapshot.derived`
+ * shape → WorldSnapshot v20→v21 (same kind of derived-field removal as E5's
+ * v12 `attackCooldownTicks`).
  */
 export interface UnitDerived {
   readonly maxHp: number;
-  /** Probability in `[0, STATS.critCap]` that a basic strike crits. */
-  readonly critChance: number;
   readonly moveCooldownTicks: number;
   /**
    * E5 — effective engagement range: the MAX attack range over the

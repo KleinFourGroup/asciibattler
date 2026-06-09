@@ -132,6 +132,30 @@ describe('A2 round-trip: World', () => {
     );
   });
 
+  it('I6: a live snapshot\'s `derived` has no `critChance` (per-ability now); a pre-I6 version is rejected', () => {
+    // I6 removed critChance from UnitDerived (crit is resolved per-ability at
+    // attack time now), changing the serialized `UnitSnapshot.derived` shape and
+    // bumping WORLD_SCHEMA_VERSION (20→21) — the same kind of derived-field
+    // removal as E5's v12 (attackCooldownTicks). A v20 save carries a
+    // critChance-bearing derived block and must be rejected outright.
+    const { world } = freshBattle(13579);
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    expect(wire.units[0].derived).not.toHaveProperty('critChance');
+    // The surviving derived fields still round-trip.
+    expect(wire.units[0].derived).toHaveProperty('maxHp');
+    expect(wire.units[0].derived).toHaveProperty('moveCooldownTicks');
+    expect(wire.units[0].derived).toHaveProperty('attackRange');
+
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.units[0]!.derived.maxHp).toBe(world.units[0]!.derived.maxHp);
+
+    // A snapshot stamped with the PRIOR version (a pre-I6 save) throws.
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
   it('continuing a restored World produces the same event trace as the baseline', () => {
     // Snapshot mid-battle, restore, tick both to completion, compare.
     const baseline = freshBattle(54321);

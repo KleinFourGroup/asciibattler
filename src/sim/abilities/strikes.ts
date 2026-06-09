@@ -7,7 +7,7 @@ import { AttackAction } from '../actions/AttackAction';
 import { GambitStrikeAction } from '../actions/GambitStrikeAction';
 import { currentTarget, collectLosBlockers } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
-import { basicAttackDamage, attackCooldownTicksFor } from '../stats';
+import { basicAttackDamage, attackCooldownTicksFor, critChanceFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
 import { abilityConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
@@ -24,13 +24,27 @@ type StrikeActionFactory = (
   baseDamage: number,
   critChance: number,
   damageMultiplier: number,
+  evadable: boolean,
+  accuracy: number,
 ) => Action;
 
-const attackActionFactory: StrikeActionFactory = (target, baseDamage, critChance, damageMultiplier) =>
-  new AttackAction(target, baseDamage, critChance, damageMultiplier);
+const attackActionFactory: StrikeActionFactory = (
+  target,
+  baseDamage,
+  critChance,
+  damageMultiplier,
+  evadable,
+  accuracy,
+) => new AttackAction(target, baseDamage, critChance, damageMultiplier, evadable, accuracy);
 
-const gambitActionFactory: StrikeActionFactory = (target, baseDamage, critChance, damageMultiplier) =>
-  new GambitStrikeAction(target, baseDamage, critChance, damageMultiplier);
+const gambitActionFactory: StrikeActionFactory = (
+  target,
+  baseDamage,
+  critChance,
+  damageMultiplier,
+  evadable,
+  accuracy,
+) => new GambitStrikeAction(target, baseDamage, critChance, damageMultiplier, evadable, accuracy);
 
 /**
  * The pre-E2 `AttackBehavior` propose path, generalized over ability id.
@@ -60,11 +74,11 @@ function proposeBasicStrike(
 ): ActionProposal | null {
   const target = currentTarget(unit, world);
   if (target === null) return null;
+  const cfg = abilityConfig(abilityId);
   // E5: gate on THIS ability's own range (config/abilities.json), not
   // the unit's max engagement range — a multi-ability unit's short-range
   // strike must abstain when only its long-range ability can reach.
-  const range = abilityConfig(abilityId).range;
-  if (chebyshev(unit.position, target.position) > range) return null;
+  if (chebyshev(unit.position, target.position) > cfg.range) return null;
 
   const blockers = collectLosBlockers(world);
   if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {
@@ -81,17 +95,19 @@ function proposeBasicStrike(
     !hasLineOfSight(unit.position, target.position, halfCovers);
   const damageMultiplier = behindCover ? LEVELING.halfCoverDamageMult : 1;
 
-  const baseDamage = basicAttackDamage(unit);
+  // I6 — damage is the weapon's flat `might` plus the archetype's scaling stat;
+  // crit is resolved per-weapon (`critBase + luck`), zeroed when the weapon is
+  // not `critable`; the weapon's `accuracy`/`evadable` thread into the
+  // `applyDamage` to-hit roll.
+  const baseDamage = basicAttackDamage(unit, cfg.might);
+  const critChance = cfg.critable ? critChanceFor(cfg.critBase, unit.stats.luck) : 0;
   // E5 pre-work: cadence is the ability's own `cooldownSeconds` (from
   // `config/abilities.json`), scaled by the unit's `speed` — no longer
   // the single global attack-CD that melee + ranged used to share.
-  const durationTicks = attackCooldownTicksFor(
-    abilityConfig(abilityId).cooldownSeconds,
-    unit.stats.speed,
-  );
+  const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
 
   return {
-    action: makeAction(target, baseDamage, unit.derived.critChance, damageMultiplier),
+    action: makeAction(target, baseDamage, critChance, damageMultiplier, cfg.evadable, cfg.accuracy),
     score: 10,
     cooldown: durationTicks,
     phases: strikePhases(abilityId, durationTicks),

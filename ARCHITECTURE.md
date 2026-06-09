@@ -48,6 +48,7 @@ src/
   config/                    # A4: zod-validated wrappers around config/*.json
     archetypes.ts            #   glyph + baseStats + growthRates (E1/E3); attackRange moved to abilities (E5)
     abilities.ts             #   E2+: per-ability cooldownSeconds/range/aoe/travelSeconds/retreatDelaySeconds
+                             #   I6: + combat profile might/accuracy/critBase + evadable/critable gates
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm) + A/B/C presets
     recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4)
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
@@ -65,11 +66,11 @@ src/
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v20 (bumped E1 through Phase I; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses)
+                             # Serializable; WorldSnapshot v21 (bumped E1 through Phase I; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses; I6 = removed UnitDerived.critChance, crit is per-ability now)
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
                              # GP2: applyDamage() — the single combat-damage chokepoint (HP -= + ledger
                              #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it
-                             # I2: applyDamage(evadable) rolls precision-vs-evasion to-hit off combatRng (crit→miss order);
+                             # I2/I6: applyDamage(evadable, accuracy) rolls accuracy-vs-evasion to-hit off combatRng (crit→miss order);
                              #     a miss emits unit:missed + 0 dmg. Only single-target strikes opt in; AoE/catapult/tile unmissable
     Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab + GP2 defense) + UnitDerived + Team + Behavior
                              # archetype: mercenary|adventurer|ronin|bandit|ranged|rogue|healer|mage|catapult|environment (I5 split melee→the 4-class melee family)
@@ -180,7 +181,7 @@ src/
 
 config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
   archetypes.json            # per-archetype glyph + baseStats + growthRates (E1/E3)
-  abilities.json             # E2+: per-ability cooldownSeconds/range/aoe/travel/retreatDelay
+  abilities.json             # E2+: per-ability cooldownSeconds/range/aoe/travel/retreatDelay; I6: + might/accuracy/critBase/evadable/critable
   difficulty.json            # G4: enemy level-budget knobs + A/B/C presets
   recruitment.json           # starting team + offer size + startingLevel + recruitBonusChance
   leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)

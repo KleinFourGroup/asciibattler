@@ -17,6 +17,12 @@ export interface AttackActionData {
    * `round(base × critMult × 0.5)`.
    */
   damageMultiplier: number;
+  /** I6 — does this strike roll precision-vs-evasion to-hit? From the firing
+   *  weapon's `ability.evadable` (migrates I2's hard-coded `true`). */
+  evadable: boolean;
+  /** I6 — the firing weapon's base hit chance (`ability.accuracy`), fed to
+   *  `hitChanceFor` at the `applyDamage` chokepoint (only when `evadable`). */
+  accuracy: number;
 }
 
 /**
@@ -55,6 +61,12 @@ export class AttackAction implements Action {
     private readonly baseDamage: number,
     private readonly critChance: number,
     private readonly damageMultiplier: number = 1,
+    // I6 — the firing weapon's evadability + base hit chance, threaded from
+    // `ability.evadable`/`ability.accuracy` at propose time. Defaults reproduce
+    // the pre-I6 behaviour (always-evadable, base 0.6) for direct-construction
+    // tests; production always passes the weapon's real values.
+    private readonly evadable: boolean = true,
+    private readonly accuracy: number = 0.6,
   ) {}
 
   start(unit: Unit, world: World): void {
@@ -64,9 +76,14 @@ export class AttackAction implements Action {
     const damage = Math.round(this.baseDamage * critFactor * this.damageMultiplier);
     // GP2 — HP mutation + XP ledger + `unit:attacked` emit funnel through the
     // single `world.applyDamage` chokepoint (where defense mitigation lands).
-    // I2 — a basic melee/ranged strike is single-target, so it's `evadable`:
-    // applyDamage rolls precision-vs-evasion to-hit and may emit `unit:missed`.
-    world.applyDamage(unit.id, this.target, damage, { crit, evadable: true });
+    // I2/I6 — a single-target strike is `evadable`; the chokepoint rolls
+    // precision-vs-evasion against the weapon's `accuracy` and may emit
+    // `unit:missed`.
+    world.applyDamage(unit.id, this.target, damage, {
+      crit,
+      evadable: this.evadable,
+      accuracy: this.accuracy,
+    });
   }
 
   phaseTarget(): { targetId?: number | undefined } {
@@ -79,6 +96,8 @@ export class AttackAction implements Action {
       baseDamage: this.baseDamage,
       critChance: this.critChance,
       damageMultiplier: this.damageMultiplier,
+      evadable: this.evadable,
+      accuracy: this.accuracy,
     };
   }
 
@@ -90,6 +109,11 @@ export class AttackAction implements Action {
       // Default to 1 when an older snapshot omits the field; AttackAction
       // is the only loaded place that reads it.
       data.damageMultiplier ?? 1,
+      // I6 fields — defaults reproduce the pre-I6 evadable strike (the
+      // WorldSnapshot v21 bump rejects stale saves outright, so these are
+      // always present in practice; the `??` mirrors the damageMultiplier guard).
+      data.evadable ?? true,
+      data.accuracy ?? 0.6,
     );
   }
 }

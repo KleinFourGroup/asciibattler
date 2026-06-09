@@ -19,10 +19,27 @@
  * ability's own range; a unit's `derived.attackRange` is the MAX over
  * its abilities (its effective engagement range — see `rangeForArchetype`).
  *
- * Damage still stays hard-coded in `basicAttackDamage` because a single
- * `damageStat` field would misrepresent future abilities that scale on
- * several stats — the expressive damage-formula JSON is a later step,
- * designed when there's a real multi-stat consumer to design against.
+ * I6 — the per-ability combat profile finally lands (the "later step"
+ * the note below anticipated; I5's four melee subclasses sharing one
+ * strike are the multi-consumer it waited for). Each ability now carries
+ * three numeric profile values + two boolean gates:
+ *   - `might` — flat base damage/heal ADDED to the scaling stat
+ *     (`damage = might + scalingStat`). Flat (a weapon constant the
+ *     wielder's stat outgrows), so it's early/mid-game texture.
+ *   - `accuracy` — base hit chance; REPLACES the old global
+ *     `STATS.hitChanceBase` in `hitChanceFor`. Consumed only when `evadable`.
+ *   - `critBase` — base crit chance folded into the luck calc
+ *     (`clamp(critBase + luck·critPerLuck, 0, critCap)`). Consumed only
+ *     when `critable`. Crit is resolved per-ability at attack time now, so
+ *     there is no single `UnitDerived.critChance` anymore.
+ *   - `evadable` — does this attack roll precision-vs-evasion to-hit? Migrates
+ *     I2's hard-coded per-call-site flag into config (single-target strikes
+ *     true; AoE / artillery / heal false).
+ *   - `critable` — can this attack crit at all?
+ * All five are REQUIRED (user call: every ability declares them, so a new
+ * attack can't silently lack one). The damage stat an ability scales on stays
+ * archetype-derived (`damageStatFor`) — scaling-stat-on-the-ability is the
+ * separately-deferred basic-vs-special design.
  *
  * A4 pattern: parse at module load, throw on malformed JSON. The
  * registry ([src/sim/abilities/registry.ts](src/sim/abilities/registry.ts))
@@ -53,6 +70,39 @@ export type AoeConfig = z.infer<typeof AoeSchema>;
 const AbilitySchema = z.object({
   cooldownSeconds: z.number().positive(),
   range: z.number().int().positive(),
+  /**
+   * I6 — flat base damage (for attacks) or heal (for `heal_ally`) ADDED to the
+   * wielder's scaling stat: `damage = might + scalingStat` (pre-defense). Flat
+   * by design — a weapon constant the stat outgrows late-game. `≥ 0`.
+   */
+  might: z.number().nonnegative(),
+  /**
+   * I6 — base hit chance for this attack. REPLACES the old global
+   * `STATS.hitChanceBase` in `hitChanceFor`:
+   * `clamp(accuracy + precision·k − evasion·k, floor, cap)`. Consumed ONLY when
+   * `evadable` (inert otherwise). `0–1`.
+   */
+  accuracy: z.number().min(0).max(1),
+  /**
+   * I6 — base crit chance folded into the luck calc:
+   * `clamp(critBase + luck·critPerLuck, 0, critCap)`. Consumed ONLY when
+   * `critable`. Per-ability now (crit is no longer a single
+   * `UnitDerived.critChance`). `0–1`.
+   */
+  critBase: z.number().min(0).max(1),
+  /**
+   * I6 — does this attack roll precision-vs-evasion to-hit at the
+   * `World.applyDamage` chokepoint? Migrates I2's hard-coded per-call-site
+   * `evadable`: single-target strikes (the melee weapons + bow + gambit) `true`;
+   * the mage AoE blast / catapult shot / heal `false` (dodged positionally or
+   * not at all).
+   */
+  evadable: z.boolean(),
+  /**
+   * I6 — can this attack crit (roll `critBase + luck`)? `false` → never crits
+   * regardless of `critBase`/luck.
+   */
+  critable: z.boolean(),
   /**
    * F3 — the slice of a multi-tick action's wind-up that the projectile
    * spends in flight: the action declares a `travel` phase of this length

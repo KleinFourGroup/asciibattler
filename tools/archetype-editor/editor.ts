@@ -41,6 +41,7 @@ import { STATS } from '../../src/config/stats';
 import { ticksToSeconds } from '../../src/config';
 import {
   attackCooldownTicksFor,
+  critChanceFor,
   damageStatFor,
   deriveStats,
   hitChanceFor,
@@ -80,6 +81,12 @@ let previewLevel = 1;
 let refPrecision = 5;
 let refEvasion = 5;
 let lastValid = true;
+
+// I6 — reference base hit chance for the incoming attacker in the "this unit
+// evades" preview line. Accuracy is per-WEAPON now (no global base), so the
+// dodge calc assumes a generic attacker at this accuracy; a real attacker's
+// weapon may differ. The per-ability rows below show each weapon's own accuracy.
+const REF_ACCURACY = 0.6;
 
 // ---- DOM ----
 const tabsEl = mustQuery<HTMLDivElement>('#tabs');
@@ -328,31 +335,36 @@ function refreshPreview(): void {
     ? Math.max(...a.abilities.map((id) => abilityConfig(id).range))
     : 0;
   const derived = deriveStats(stats, range);
-  const output = damageStatFor(activeKey, stats); // 0 for healer (heals, not strikes)
 
   previewEl.innerHTML = '';
   addPreview('Stats @ Lv ' + previewLevel, STAT_ORDER.map((k) => `${STAT_LABELS[k]} ${stats[k]}`).join('  '));
   addPreview('Max HP', String(derived.maxHp));
-  addPreview('Crit', pct(derived.critChance));
-  if (activeKey === 'healer') {
-    addPreview('Heal power', `${stats.magic} (MAG)`);
-  } else if (output > 0) {
-    addPreview('Attack power', `${output} (${OUTPUT_LABEL[activeKey]}) · crit ×${STATS.critMult}`);
-  }
   addPreview('Range', hasAbilities ? String(range) : '— (no ability)');
   addPreview(
-    `To-hit vs EVA ${refEvasion}`,
-    `${pct(hitChanceFor(stats.precision, refEvasion))} (this unit's strikes land)`,
-  );
-  addPreview(
     `Dodge vs PRC ${refPrecision}`,
-    `${pct(1 - hitChanceFor(refPrecision, stats.evasion))} (this unit evades)`,
+    `${pct(1 - hitChanceFor(REF_ACCURACY, refPrecision, stats.evasion))} (this unit evades a base-${pct(REF_ACCURACY)} attacker)`,
   );
   addPreview('Move cadence', cadence(derived.moveCooldownTicks));
+  // I6 — combat profile is PER-WEAPON now (might / accuracy / critBase + the
+  // evadable/critable gates), so damage, to-hit, and crit are shown per ability
+  // rather than as single unit-wide numbers. Computed by the REAL game helpers.
   for (const id of a.abilities) {
     const cfg = abilityConfig(id);
     const ticks = attackCooldownTicksFor(cfg.cooldownSeconds, stats.speed);
-    addPreview(`Ability · ${id}`, `${cadence(ticks)} · range ${cfg.range}`);
+    const scaling = activeKey === 'healer' ? stats.magic : damageStatFor(activeKey, stats);
+    const out = cfg.might + scaling;
+    const effect = activeKey === 'healer' ? 'heal' : 'dmg';
+    const toHit = cfg.evadable
+      ? `${pct(hitChanceFor(cfg.accuracy, stats.precision, refEvasion))} vs EVA ${refEvasion}`
+      : 'unmissable';
+    const crit = cfg.critable
+      ? `${pct(critChanceFor(cfg.critBase, stats.luck))} (×${STATS.critMult})`
+      : 'no crit';
+    addPreview(
+      `Ability · ${id}`,
+      `${out} ${effect} (${cfg.might} might + ${scaling} ${OUTPUT_LABEL[activeKey]}) · rng ${cfg.range} · ${cadence(ticks)}` +
+        ` · to-hit ${toHit} · crit ${crit}`,
+    );
   }
 }
 

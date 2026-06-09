@@ -81,8 +81,10 @@ describe('HealAlly.propose', () => {
     const ally = makeUnit(2, 'player', { x: 5, y: 6 }, { hp: 10 });
     const proposal = new HealAlly().propose(healer, world([healer, ally]));
     const data = proposal!.action.toData() as ReturnType<HealAction['toData']>;
-    expect(data.amount).toBe(healAmountFor(healer));
-    expect(data.amount).toBe(HEALER_STATS.magic);
+    // I6 — heal amount is the ability's `might` plus the magic stat.
+    const might = abilityConfig('heal_ally').might;
+    expect(data.amount).toBe(healAmountFor(healer, might));
+    expect(data.amount).toBe(might + HEALER_STATS.magic);
   });
 
   it('can target itself (self is in the ally pool)', () => {

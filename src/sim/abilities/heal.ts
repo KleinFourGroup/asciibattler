@@ -26,15 +26,15 @@ export class HealAlly implements Ability {
   readonly id = HealAlly.id;
 
   propose(unit: Unit, world: World): ActionProposal | null {
-    const range = abilityConfig(this.id).range;
-    const target = lowestWoundedAlly(unit, world, range);
+    const cfg = abilityConfig(this.id);
+    const target = lowestWoundedAlly(unit, world, cfg.range);
     if (target === null) return null;
 
-    const amount = healAmountFor(unit);
-    const durationTicks = attackCooldownTicksFor(
-      abilityConfig(this.id).cooldownSeconds,
-      unit.stats.speed,
-    );
+    // I6 — heal amount is `might + magic` (the ability's flat heal base plus the
+    // healer's magic). Heal is non-evadable + non-critable (HealAction doesn't
+    // roll either), so `accuracy`/`critBase` stay inert.
+    const amount = healAmountFor(unit, cfg.might);
+    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
 
     return {
       action: new HealAction(target, amount),

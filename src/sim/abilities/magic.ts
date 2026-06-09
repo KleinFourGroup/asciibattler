@@ -4,7 +4,7 @@ import type { ActionProposal } from '../Action';
 import { MagicBoltAction } from '../actions/MagicBoltAction';
 import { currentTarget, collectLosBlockers } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
-import { magicBoltDamage, attackCooldownTicksFor } from '../stats';
+import { magicBoltDamage, attackCooldownTicksFor, critChanceFor } from '../stats';
 import { secondsToTicks } from '../../config';
 import { abilityConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
@@ -61,7 +61,11 @@ export class MagicBolt implements Ability {
     }
 
     const center: GridCoord = { ...target.position };
-    const baseDamage = magicBoltDamage(unit);
+    // I6 — `might + magic`; crit per-weapon (`critBase + luck`), zeroed when the
+    // bolt is not `critable`. The blast stays unmissable (`cfg.evadable` false),
+    // so no `accuracy` threads in — area denial is dodged positionally.
+    const baseDamage = magicBoltDamage(unit, cfg.might);
+    const critChance = cfg.critable ? critChanceFor(cfg.critBase, unit.stats.luck) : 0;
     const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
     // F3 — carve the bolt's flight OUT of the charge so it travels *during* the
     // wind-up and detonates on the impact tick (the renderer launches it on
@@ -75,7 +79,7 @@ export class MagicBolt implements Ability {
       action: new MagicBoltAction(
         center,
         baseDamage,
-        unit.derived.critChance,
+        critChance,
         cfg.aoe.radius,
         cfg.aoe.ringMultiplier,
       ),

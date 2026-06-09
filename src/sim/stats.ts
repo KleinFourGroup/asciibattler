@@ -1,14 +1,16 @@
 /**
  * E1 — derive per-unit computed values from base stats + archetype
- * context. Pure functions: same inputs → same outputs, no RNG. Crit
- * RNG rolls happen at action-start time inside AttackAction, NOT
- * here — `critChance` is just the probability that gets fed into that
- * roll.
+ * context. Pure functions: same inputs → same outputs, no RNG.
+ *
+ * I6 — crit left `deriveStats`: it is resolved PER-ABILITY at attack time via
+ * `critChanceFor(ability.critBase, unit.stats.luck)` (gated on
+ * `ability.critable`), so there is no per-unit `critChance` to derive. The
+ * RNG crit roll still happens at action start/impact off `world.combatRng`;
+ * only the probability's source moved (unit-derived → per-ability).
  *
  * Formula sources (`config/stats.json`):
  *
  *   maxHp                   = max(1, round(hpPerConstitution * constitution))
- *   critChance              = min(critCap, luck * critPerLuck)
  *   moveCooldown            = max(1, secondsToTicks(baseMoveCD * cooldownScale(mobility, mobilityCdPerStat, mobilityMinCdScale)))
  *   cooldownScale(s, p, m)  = max(m, 1 - s * p)
  *   attackRange             = effective engagement range (max over the unit's
@@ -54,7 +56,6 @@ import type { Unit, UnitArchetype, UnitDerived, UnitStats } from './Unit';
 export function deriveStats(stats: UnitStats, attackRange: number): UnitDerived {
   return {
     maxHp: Math.max(1, Math.round(STATS.hpPerConstitution * stats.constitution)),
-    critChance: Math.min(STATS.critCap, stats.luck * STATS.critPerLuck),
     moveCooldownTicks: Math.max(
       1,
       secondsToTicks(
@@ -92,7 +93,6 @@ export function attackCooldownTicksFor(cooldownSeconds: number, speed: number): 
 export function inertDerived(maxHp: number): UnitDerived {
   return {
     maxHp,
-    critChance: 0,
     moveCooldownTicks: 0,
     attackRange: 0,
   };
@@ -151,44 +151,40 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
 }
 
 /**
- * E1 — basic-strike damage for a live unit. Thin wrapper over
- * `damageStatFor` (see there for the archetype→stat mapping).
+ * E1 — basic-strike damage for a live unit. I6: `might` (the firing weapon's
+ * flat base, from `config/abilities.json`) ADDED to the archetype's scaling
+ * stat (`damageStatFor`), so a club (+2) and a sword (+5) hit differently on
+ * the same strength. Pre-crit, pre-defense.
  */
-export function basicAttackDamage(unit: Unit): number {
-  return damageStatFor(unit.archetype, unit.stats);
+export function basicAttackDamage(unit: Unit, might: number): number {
+  return might + damageStatFor(unit.archetype, unit.stats);
 }
 
 /**
- * E7.B — HP restored by a healer's `heal_ally` cast. Scales on `magic`
- * (raw), mirroring how `basicAttackDamage` reads `strength`/`ranged` raw
- * for strikes. Kept as a named helper (not inlined in the ability) so the
- * heal-scaling stat has a single source of truth, ready for a future
- * expressive heal-formula step alongside the damage one.
+ * E7.B — HP restored by a healer's `heal_ally` cast. Scales on `magic` (raw),
+ * mirroring how `basicAttackDamage` reads `strength`/`ranged` for strikes. I6:
+ * `might` (the ability's flat heal base) adds on top — `might + magic`.
  */
-export function healAmountFor(unit: Unit): number {
-  return unit.stats.magic;
+export function healAmountFor(unit: Unit, might: number): number {
+  return might + unit.stats.magic;
 }
 
 /**
  * E7.C — base damage of a mage's `magic_bolt` (the center-cell hit, before
  * the crit factor and the per-cell AoE ring multiplier). Scales on `magic`
- * (raw), mirroring `basicAttackDamage` (strength/ranged) and `healAmountFor`
- * (magic). Kept as a named helper so the mage's damage-scaling stat has one
- * source of truth, ready for a future expressive damage-formula step.
+ * (raw), mirroring `basicAttackDamage`. I6: `might + magic`.
  */
-export function magicBoltDamage(unit: Unit): number {
-  return unit.stats.magic;
+export function magicBoltDamage(unit: Unit, might: number): number {
+  return might + unit.stats.magic;
 }
 
 /**
  * E7.D — base damage of a catapult's `catapult_shot` (before the crit
- * factor). Scales on `ranged` (raw), mirroring `basicAttackDamage`
- * (strength/ranged) and `magicBoltDamage` (magic). Kept as a named helper so
- * the catapult's damage-scaling stat has one source of truth, ready for a
- * future expressive damage-formula step.
+ * factor). Scales on `ranged` (raw), mirroring `magicBoltDamage`. I6:
+ * `might + ranged`.
  */
-export function catapultShotDamage(unit: Unit): number {
-  return unit.stats.ranged;
+export function catapultShotDamage(unit: Unit, might: number): number {
+  return might + unit.stats.ranged;
 }
 
 /**
@@ -200,18 +196,34 @@ export function catapultShotDamage(unit: Unit): number {
  * blast, the catapult shot, and environmental fire/chasm damage never call it
  * (unmissable).
  *
- * With I1's uniform `precision == evasion` the prc/eva terms cancel and every
- * unit sits at `STATS.hitChanceBase`; the differentiation only emerges once I5
- * gives the melee subclasses divergent precision/evasion. The floor keeps a
+ * I6 — `accuracy` (the firing ability's per-weapon base hit chance, from
+ * `config/abilities.json`) REPLACES the old global `STATS.hitChanceBase`, so a
+ * precise bow and a wild club start from different bases before the
+ * precision/evasion spread. With uniform `precision == evasion` the prc/eva
+ * terms cancel and the unit sits at the ability's `accuracy`. The floor keeps a
  * low-precision attacker from being fully shut out by a high-evasion target
  * (the chip-always-pokes-through analogue of `minDamage`).
  */
-export function hitChanceFor(precision: number, evasion: number): number {
+export function hitChanceFor(accuracy: number, precision: number, evasion: number): number {
   const raw =
-    STATS.hitChanceBase +
+    accuracy +
     precision * STATS.hitChancePerPrecision -
     evasion * STATS.dodgeChancePerEvasion;
   return Math.min(STATS.hitChanceCap, Math.max(STATS.hitChanceFloor, raw));
+}
+
+/**
+ * I6 — crit probability for an attack, resolved per-ability at attack time
+ * (replaces the old per-unit `UnitDerived.critChance`). The firing ability's
+ * `critBase` is the floor; the wielder's `luck` adds `luck·critPerLuck` on top,
+ * capped at `critCap`: `clamp(critBase + luck·critPerLuck, 0, critCap)`. Pure
+ * (no RNG) — the action rolls `combatRng` against this once. Callers pass 0
+ * (skip the call) when the ability is NOT `critable`; with `critBase 0` this
+ * reproduces the pre-I6 `min(critCap, luck·critPerLuck)` exactly.
+ */
+export function critChanceFor(critBase: number, luck: number): number {
+  const raw = critBase + luck * STATS.critPerLuck;
+  return Math.min(STATS.critCap, Math.max(0, raw));
 }
 
 /**

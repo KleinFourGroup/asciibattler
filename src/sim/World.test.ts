@@ -597,7 +597,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
   it('a miss deals 0: no HP mutation, no XP-ledger entry, a unit:missed (not unit:attacked)', () => {
     // Evasion 99 vs precision 0 floors the hit chance; a seed whose first draw
     // clears that floor is a guaranteed miss.
-    const floor = hitChanceFor(0, 99);
+    const floor = hitChanceFor(0.6, 0, 99);
     expect(floor).toBe(STATS.hitChanceFloor);
     const { world, attacker, target, attacks, misses } = evadeDuel({
       attackerPrecision: 0,
@@ -605,7 +605,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
       combatSeed: seedThatMisses(floor),
     });
     const hpBefore = target.currentHp;
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true });
+    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true, accuracy: 0.6 });
     expect(misses).toEqual([{ attackerId: attacker.id, targetId: target.id }]);
     expect(attacks).toHaveLength(0);
     expect(target.currentHp).toBe(hpBefore);
@@ -615,14 +615,14 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
   it('a hit lands normally: precision at the cap always connects regardless of seed', () => {
     // precision 100 vs evasion 0 → hit chance clamps to the cap (1.0); the roll
     // (always < 1) can never reach it, so the strike lands on every seed.
-    expect(hitChanceFor(100, 0)).toBe(STATS.hitChanceCap);
+    expect(hitChanceFor(0.6, 100, 0)).toBe(STATS.hitChanceCap);
     const { world, attacker, target, attacks, misses } = evadeDuel({
       attackerPrecision: 100,
       targetEvasion: 0,
       combatSeed: 7,
     });
     const hpBefore = target.currentHp;
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true });
+    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true, accuracy: 0.6 });
     expect(misses).toHaveLength(0);
     expect(attacks).toHaveLength(1);
     expect(attacks[0]!.damage).toBe(10);
@@ -637,7 +637,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
       combatSeed: 7,
     });
     const before = world.combatRng.toJSON().state;
-    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true });
+    world.applyDamage(attacker.id, target, 10, { crit: false, evadable: true, accuracy: 0.6 });
     const sib = RNG.fromJSON({ state: before });
     sib.next(); // exactly one draw
     expect(world.combatRng.toJSON().state).toBe(sib.toJSON().state);
@@ -650,7 +650,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
     const { world, attacker, target, attacks, misses } = evadeDuel({
       attackerPrecision: 0,
       targetEvasion: 99,
-      combatSeed: seedThatMisses(hitChanceFor(0, 99)),
+      combatSeed: seedThatMisses(hitChanceFor(0.6, 0, 99)),
     });
     const before = world.combatRng.toJSON().state;
     const hpBefore = target.currentHp;
@@ -663,8 +663,8 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
 
   it('is deterministic per seed: the same combatSeed reproduces the same hit/miss', () => {
     const outcome = (seed: number): 'hit' | 'miss' => {
-      const d = evadeDuel({ attackerPrecision: 5, targetEvasion: 5, combatSeed: seed }); // 0.75 band
-      d.world.applyDamage(d.attacker.id, d.target, 10, { crit: false, evadable: true });
+      const d = evadeDuel({ attackerPrecision: 5, targetEvasion: 5, combatSeed: seed }); // 0.6 band
+      d.world.applyDamage(d.attacker.id, d.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
       return d.misses.length ? 'miss' : 'hit';
     };
     for (const seed of [3, 11, 29, 101]) {
@@ -678,7 +678,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
     // the crit threshold AND the second draw is a HIT, so the crit flag is
     // observable and DIFFERS from what a reversed (miss-first) order would give.
     const critChance = 0.4;
-    const hitChance = hitChanceFor(5, 5); // 0.75, mid-band
+    const hitChance = hitChanceFor(0.6, 5, 5); // 0.6, mid-band (AttackAction's default accuracy)
     let seed = -1;
     let expectedCrit = false;
     for (let s = 1; s < 1_000_000; s++) {

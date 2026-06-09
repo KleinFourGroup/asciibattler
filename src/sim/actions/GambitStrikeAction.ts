@@ -11,6 +11,10 @@ export interface GambitStrikeActionData {
   baseDamage: number;
   critChance: number;
   damageMultiplier: number;
+  /** I6 — the gambit's evadability (`ability.evadable`, true) + base hit chance
+   *  (`ability.accuracy`), threaded into the shared `applyDamage` chokepoint. */
+  evadable: boolean;
+  accuracy: number;
   /** F4 — the struck target's cell, captured at cast, that the deferred
    *  reposition retreats AWAY from. Serialized so a snapshot taken mid-windup
    *  (before the `impact` boundary fires `applyEffect`) still knows where to
@@ -64,6 +68,12 @@ export class GambitStrikeAction implements Action {
     private readonly baseDamage: number,
     private readonly critChance: number,
     private readonly damageMultiplier: number = 1,
+    // I6 — the gambit's evadability + base hit chance (from
+    // `gambit_strike`'s `ability.evadable`/`ability.accuracy`), threaded into
+    // `applyDamage`. Defaults reproduce the pre-I6 evadable strike for
+    // direct-construction tests; production passes the real config values.
+    private readonly evadable: boolean = true,
+    private readonly accuracy: number = 0.6,
     // F4 — the cell to retreat AWAY from, captured at cast (defaults to the
     // target's position when constructed at propose time; `fromData` restores
     // the serialized value on snapshot resume). Mirrors E7.D's
@@ -83,9 +93,14 @@ export class GambitStrikeAction implements Action {
     const damage = Math.round(this.baseDamage * critFactor * this.damageMultiplier);
     // GP2 — funnel the strike through the shared `world.applyDamage` chokepoint
     // (HP mutation + XP ledger + `unit:attacked` emit + defense mitigation).
-    // I2 — the rogue gambit is a single-target strike, so it's `evadable`: the
-    // chokepoint rolls precision-vs-evasion to-hit and may emit `unit:missed`.
-    world.applyDamage(unit.id, this.target, damage, { crit, evadable: true });
+    // I2/I6 — the rogue gambit is a single-target strike, so it's `evadable`:
+    // the chokepoint rolls precision-vs-evasion against the weapon's `accuracy`
+    // and may emit `unit:missed`.
+    world.applyDamage(unit.id, this.target, damage, {
+      crit,
+      evadable: this.evadable,
+      accuracy: this.accuracy,
+    });
   }
 
   /**
@@ -138,6 +153,8 @@ export class GambitStrikeAction implements Action {
       baseDamage: this.baseDamage,
       critChance: this.critChance,
       damageMultiplier: this.damageMultiplier,
+      evadable: this.evadable,
+      accuracy: this.accuracy,
       struckFrom: this.struckFrom,
     };
   }
@@ -148,6 +165,9 @@ export class GambitStrikeAction implements Action {
       data.baseDamage,
       data.critChance,
       data.damageMultiplier ?? 1,
+      // I6 — defaults reproduce the pre-I6 evadable strike (v21 rejects stale).
+      data.evadable ?? true,
+      data.accuracy ?? 0.6,
       data.struckFrom,
     );
   }

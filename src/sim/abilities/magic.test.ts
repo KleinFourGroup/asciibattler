@@ -110,8 +110,9 @@ describe('MagicBolt.propose', () => {
     const data = dataOf(proposal!.action);
 
     expect(data.center).toEqual({ x: 6, y: 6 }); // the target's cell, frozen
-    expect(data.baseDamage).toBe(magicBoltDamage(mage));
-    expect(data.baseDamage).toBe(MAGE_STATS.magic);
+    // I6 — baseDamage is the weapon's `might` plus the magic stat.
+    expect(data.baseDamage).toBe(magicBoltDamage(mage, BOLT.might));
+    expect(data.baseDamage).toBe(BOLT.might + MAGE_STATS.magic);
     expect(data.radius).toBe(BOLT.aoe!.radius);
     expect(data.ringMultiplier).toBe(BOLT.aoe!.ringMultiplier);
   });

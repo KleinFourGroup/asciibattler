@@ -116,8 +116,9 @@ describe('CatapultShot.propose', () => {
     const data = dataOf(proposal!.action);
 
     expect(data.targetId).toBe(enemy.id); // homing — locks the unit, not a cell
-    expect(data.baseDamage).toBe(catapultShotDamage(cat));
-    expect(data.baseDamage).toBe(CATAPULT_STATS.ranged);
+    // I6 — baseDamage is the weapon's `might` plus the ranged stat.
+    expect(data.baseDamage).toBe(catapultShotDamage(cat, SHOT.might));
+    expect(data.baseDamage).toBe(SHOT.might + CATAPULT_STATS.ranged);
     // castPosition is captured for the VFX fallback (the target's cell at cast).
     expect(data.castPosition).toEqual({ x: 6, y: 6 });
   });

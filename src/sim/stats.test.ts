@@ -25,6 +25,7 @@ import { MeleeStrike } from './abilities/strikes';
 import {
   ZERO_STATS,
   basicAttackDamage,
+  critChanceFor,
   deriveStats,
   hitChanceFor,
   inertDerived,
@@ -64,29 +65,44 @@ describe('deriveStats — maxHp', () => {
   });
 });
 
-describe('deriveStats — critChance', () => {
-  it('is luck × critPerLuck below the cap', () => {
-    for (const luck of [0, 1, 5, 10, 30]) {
-      const d = deriveStats({ ...TEMPLATE, luck }, 1);
-      expect(d.critChance).toBeCloseTo(luck * STATS.critPerLuck, 10);
+describe('critChanceFor — I6 per-ability crit (balance-proof off config/stats.json)', () => {
+  it('is critBase + luck × critPerLuck below the cap', () => {
+    for (const critBase of [0, 0.05, 0.2]) {
+      for (const luck of [0, 1, 5, 10, 30]) {
+        expect(critChanceFor(critBase, luck)).toBeCloseTo(
+          critBase + luck * STATS.critPerLuck,
+          10,
+        );
+      }
     }
   });
 
-  it('clamps at critCap for high luck (defensive guard, not a base-game knob)', () => {
-    // Pick luck so that luck × critPerLuck exceeds critCap. At default
-    // config that's luck >= 60. Pinning at 99 (zod's STAT_CAP) gives a
-    // wide safety margin.
-    const d = deriveStats({ ...TEMPLATE, luck: 99 }, 1);
-    expect(d.critChance).toBe(STATS.critCap);
+  it('clamps at critCap for a high base + lucky unit (a katana on a Ronin caps sooner)', () => {
+    // critBase 0.2 + luck 99 × 0.01 = 1.19, well past the cap.
+    expect(critChanceFor(0.2, 99)).toBe(STATS.critCap);
+  });
+
+  it('critBase 0 reproduces the pre-I6 luck-only crit exactly (byte-identical canary)', () => {
+    // The old deriveStats value was min(critCap, luck × critPerLuck); with
+    // critBase 0 the new helper must equal it for every luck.
+    for (const luck of [0, 3, 12, 50, 99]) {
+      expect(critChanceFor(0, luck)).toBe(Math.min(STATS.critCap, luck * STATS.critPerLuck));
+    }
   });
 });
 
-describe('hitChanceFor — I2 dodge to-hit (balance-proof off config/stats.json)', () => {
-  it('equal precision and evasion cancel to exactly hitChanceBase', () => {
+describe('hitChanceFor — I2/I6 dodge to-hit (balance-proof off config/stats.json)', () => {
+  // I6 — accuracy is the firing weapon's per-ability base (no global
+  // hitChanceBase anymore). hitChanceFor is a primitive, so these mechanic
+  // tests pass an explicit accuracy literal rather than reading the JSON.
+  const ACC = 0.6;
+
+  it('equal precision and evasion cancel to exactly the weapon accuracy', () => {
     // The keystone of I1's uniform prc==eva==5 default: with the terms
-    // cancelling, every unit sits at the base rate until I5 spreads the stats.
+    // cancelling, every unit sits at the weapon's accuracy until I5 spreads the
+    // stats.
     for (const s of [0, 5, 12, 40]) {
-      expect(hitChanceFor(s, s)).toBeCloseTo(STATS.hitChanceBase, 10);
+      expect(hitChanceFor(ACC, s, s)).toBeCloseTo(ACC, 10);
     }
   });
 
@@ -100,32 +116,34 @@ describe('hitChanceFor — I2 dodge to-hit (balance-proof off config/stats.json)
       [3, 9],
     ] as const) {
       const expected =
-        STATS.hitChanceBase +
-        prc * STATS.hitChancePerPrecision -
-        eva * STATS.dodgeChancePerEvasion;
-      expect(hitChanceFor(prc, eva)).toBeCloseTo(expected, 10);
+        ACC + prc * STATS.hitChancePerPrecision - eva * STATS.dodgeChancePerEvasion;
+      expect(hitChanceFor(ACC, prc, eva)).toBeCloseTo(expected, 10);
     }
   });
 
+  it('a higher weapon accuracy raises the hit chance (the per-weapon base lever)', () => {
+    expect(hitChanceFor(0.85, 5, 5)).toBeGreaterThan(hitChanceFor(0.4, 5, 5));
+  });
+
   it('is monotonic: more precision never lowers, more evasion never raises hit chance', () => {
-    expect(hitChanceFor(20, 5)).toBeGreaterThanOrEqual(hitChanceFor(5, 5));
-    expect(hitChanceFor(5, 20)).toBeLessThanOrEqual(hitChanceFor(5, 5));
+    expect(hitChanceFor(ACC, 20, 5)).toBeGreaterThanOrEqual(hitChanceFor(ACC, 5, 5));
+    expect(hitChanceFor(ACC, 5, 20)).toBeLessThanOrEqual(hitChanceFor(ACC, 5, 5));
   });
 
   it('clamps to the floor when evasion overwhelms precision (chip still pokes through)', () => {
     // A wildly evasive target vs a low-precision attacker bottoms out at the
     // floor, never 0 — the whiff analogue of the minDamage floor.
-    expect(hitChanceFor(0, 99)).toBe(STATS.hitChanceFloor);
+    expect(hitChanceFor(ACC, 0, 99)).toBe(STATS.hitChanceFloor);
   });
 
   it('clamps to the cap when precision overwhelms evasion', () => {
-    expect(hitChanceFor(99, 0)).toBe(STATS.hitChanceCap);
+    expect(hitChanceFor(ACC, 99, 0)).toBe(STATS.hitChanceCap);
   });
 
   it('always returns a probability within [floor, cap]', () => {
     for (const prc of [0, 5, 25, 99]) {
       for (const eva of [0, 5, 25, 99]) {
-        const p = hitChanceFor(prc, eva);
+        const p = hitChanceFor(ACC, prc, eva);
         expect(p).toBeGreaterThanOrEqual(STATS.hitChanceFloor);
         expect(p).toBeLessThanOrEqual(STATS.hitChanceCap);
       }
@@ -250,7 +268,6 @@ describe('inertDerived', () => {
   it('produces a degenerate derived block with the requested maxHp', () => {
     const d = inertDerived(5);
     expect(d.maxHp).toBe(5);
-    expect(d.critChance).toBe(0);
     expect(d.moveCooldownTicks).toBe(0);
     expect(d.attackRange).toBe(0);
   });
@@ -269,19 +286,21 @@ describe('basicAttackDamage', () => {
     });
   }
 
-  it('melee → strength', () => {
+  it('melee → might + strength', () => {
     const u = makeUnit('mercenary', { ...TEMPLATE, strength: 13 });
-    expect(basicAttackDamage(u)).toBe(13);
+    expect(basicAttackDamage(u, 0)).toBe(13); // no might → bare stat
+    expect(basicAttackDamage(u, 5)).toBe(18); // I6: weapon might adds on top
   });
 
-  it('ranged → ranged stat', () => {
+  it('ranged → might + ranged stat', () => {
     const u = makeUnit('ranged', { ...TEMPLATE, ranged: 7 });
-    expect(basicAttackDamage(u)).toBe(7);
+    expect(basicAttackDamage(u, 0)).toBe(7);
+    expect(basicAttackDamage(u, 2)).toBe(9);
   });
 
-  it('environment → 0 (walls never strike)', () => {
+  it('environment → might only (walls never strike, 0 scaling stat)', () => {
     const u = makeUnit('environment', ZERO_STATS);
-    expect(basicAttackDamage(u)).toBe(0);
+    expect(basicAttackDamage(u, 0)).toBe(0);
   });
 });
 

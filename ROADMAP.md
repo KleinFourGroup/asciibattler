@@ -436,9 +436,15 @@ hard-coded per call-site — so tweaking or extending it later is a JSON edit:
    The band moves here (feeds Phase N's re-sweep).
 
 **Cost / blast radius:**
-- **Almost certainly NO snapshot bump** — a config + formula change; `derived`
-  recomputes from stats+abilities at spawn, not persisted (same as E5's cadence move).
-  *Confirm `UnitDerived` isn't serialized before relying on it.*
+- **WorldSnapshot bump v20→v21 (RESOLVED 2026-06-09 — the prediction was wrong).**
+  The guess was "no bump" pending *"confirm `UnitDerived` isn't serialized"* — it IS
+  (`UnitSnapshot.derived` is stored verbatim; E5's **v12** bumped for exactly this kind
+  of derived-field removal). Removing `critChance` from `UnitDerived` (crit is per-ability
+  now) changes the serialized shape → **one WorldSnapshot bump** (reject stale, no
+  migration). **RunSnapshot is NOT bumped** (roster templates carry only `stats`; there's
+  no World between turns — only a mid-*battle* save uses WorldSnapshot). User call: remove
+  + bump (honest schema) over a vestigial field. The evadable strike actions also gained
+  serialized `accuracy`/`evadable` action-data, cleanly covered by the same reject-stale bump.
 - Touches the formulas ([stats.ts](src/sim/stats.ts): `hitChanceFor` takes the ability
   accuracy; the damage helpers `basicAttackDamage`/`magicBoltDamage`/`catapultShotDamage`/
   `healAmountFor` take might; crit resolves per-ability), the actions (thread their

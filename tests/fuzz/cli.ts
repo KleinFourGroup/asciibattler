@@ -36,7 +36,7 @@
  *   # --roster forces the starting roster (evaluate an archetype the search won't
  *   # recruit — read its per-deployment telemetry):
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
- *     --tier=quick --floors=11 --roster=melee,melee,ranged,mage,mage
+ *     --tier=quick --floors=11 --roster=mercenary,mercenary,ranged,mage,mage
  *   # --jobs=N fans each grid point's vector search across N child processes
  *   # (results are byte-identical to single-process — only wall-clock changes):
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.75:2 \

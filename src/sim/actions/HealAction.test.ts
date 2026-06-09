@@ -42,7 +42,7 @@ function scene(): {
   const world = new World(bus, new RNG(1));
   const heals: GameEvents['unit:healed'][] = [];
   bus.on('unit:healed', (p) => heals.push(p));
-  const tmpl: UnitTemplate = { archetype: 'melee', level: 1, stats: STATS_BLOCK, xp: 0 };
+  const tmpl: UnitTemplate = { archetype: 'mercenary', level: 1, stats: STATS_BLOCK, xp: 0 };
   const healer = world.spawnUnit(tmpl, 'player', { x: 0, y: 0 });
   const ally = world.spawnUnit(tmpl, 'player', { x: 1, y: 0 });
   return { world, healer, ally, heals };

@@ -26,7 +26,7 @@ describe('Run', () => {
     it('rolls a starting team of 5 units (3 melee + 2 ranged)', () => {
       const run = new Run(1, new EventBus<GameEvents>());
       expect(run.team).toHaveLength(5);
-      const melee = run.team.filter((t) => t.archetype === 'melee');
+      const melee = run.team.filter((t) => t.archetype === 'mercenary');
       const ranged = run.team.filter((t) => t.archetype === 'ranged');
       expect(melee).toHaveLength(3);
       expect(ranged).toHaveLength(2);
@@ -282,8 +282,8 @@ describe('Run', () => {
       const bus = new EventBus<GameEvents>();
       const run = new Run(1, bus, {
         startingRoster: [
-          { archetype: 'melee', level: 6 },
-          { archetype: 'melee', level: 6 },
+          { archetype: 'mercenary', level: 6 },
+          { archetype: 'mercenary', level: 6 },
           { archetype: 'ranged', level: 6 },
         ],
       });
@@ -1044,9 +1044,9 @@ describe('Run', () => {
 
   describe('card deck (H5)', () => {
     // An oversized roster (> handSize) so draw variance + dilution are live.
-    type RosterSpec = { archetype: 'melee' | 'ranged'; level: number };
+    type RosterSpec = { archetype: 'mercenary' | 'ranged'; level: number };
     const BIG_ROSTER: RosterSpec[] = Array.from({ length: 8 }, (_, i) => ({
-      archetype: i % 2 === 0 ? 'melee' : 'ranged',
+      archetype: i % 2 === 0 ? 'mercenary' : 'ranged',
       level: 1,
     }));
 
@@ -1074,7 +1074,7 @@ describe('Run', () => {
 
     it('a roster smaller than handSize fields everyone (no overdraw)', () => {
       const small = [
-        { archetype: 'melee' as const, level: 1 },
+        { archetype: 'mercenary' as const, level: 1 },
         { archetype: 'ranged' as const, level: 1 },
       ];
       const { run } = enterFirstBattle(small);
@@ -1215,7 +1215,7 @@ describe('Run', () => {
       // arise under G4: a low-avg team levels ON rest, which wouldn't be silent.)
       const cap = LEVELING.levelCap;
       const startingRoster = [
-        { archetype: 'melee' as const, level: cap },
+        { archetype: 'mercenary' as const, level: cap },
         { archetype: 'ranged' as const, level: cap },
       ];
       const vaultAll = (r: Run) =>
@@ -1347,9 +1347,9 @@ function frontierOf(run: Run & { rootId: number }): number {
 /** Canonical level-1 starting roster (3 melee + 2 ranged, matching the default
  *  composition + slot order). */
 const LVL1_ROSTER = [
-  { archetype: 'melee' as const, level: 1 },
-  { archetype: 'melee' as const, level: 1 },
-  { archetype: 'melee' as const, level: 1 },
+  { archetype: 'mercenary' as const, level: 1 },
+  { archetype: 'mercenary' as const, level: 1 },
+  { archetype: 'mercenary' as const, level: 1 },
   { archetype: 'ranged' as const, level: 1 },
   { archetype: 'ranged' as const, level: 1 },
 ];

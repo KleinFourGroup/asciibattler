@@ -35,7 +35,7 @@ function makeUnit(
   pos: { x: number; y: number },
   opts: { archetype?: UnitArchetype; range?: number; hp?: number } = {},
 ): Unit {
-  const archetype = opts.archetype ?? 'melee';
+  const archetype = opts.archetype ?? 'mercenary';
   const stats = archetype === 'healer' ? HEALER_STATS : COMBATANT_STATS;
   const u = new Unit({
     id, team, archetype,
@@ -65,7 +65,7 @@ function world(units: Unit[]): World {
  *  movement code. */
 function makeWall(id: number, pos: { x: number; y: number }): Unit {
   return new Unit({
-    id, team: 'neutral', archetype: 'melee',
+    id, team: 'neutral', archetype: 'mercenary',
     glyph: '#', stats: COMBATANT_STATS,
     derived: deriveStats(COMBATANT_STATS, 1), position: pos,
   });

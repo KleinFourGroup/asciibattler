@@ -87,12 +87,12 @@ function scene(action: Action, phases: readonly ActionPhase[]): {
     log.push({ tick: world.currentTick, phase: p.phase, actionId: p.actionId }),
   );
 
-  const stats = { ...ARCHETYPE_CONFIG.melee.baseStats, constitution: 100, luck: 0 };
+  const stats = { ...ARCHETYPE_CONFIG.mercenary.baseStats, constitution: 100, luck: 0 };
   const derived = { ...deriveStats(stats, 99), moveCooldownTicks: 1 };
   const actor = new Unit({
     id: 1,
     team: 'player',
-    archetype: 'melee',
+    archetype: 'mercenary',
     glyph: 'M',
     stats,
     derived,
@@ -106,7 +106,7 @@ function scene(action: Action, phases: readonly ActionPhase[]): {
   const enemy = new Unit({
     id: 2,
     team: 'enemy',
-    archetype: 'melee',
+    archetype: 'mercenary',
     glyph: 'M',
     stats,
     derived: { ...deriveStats(stats, 1), moveCooldownTicks: 1 },

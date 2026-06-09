@@ -37,8 +37,8 @@ function runRogueBattle(seed: number): {
     theme: 'rock',
     playerTeam: [
       rollUnit('rogue', new RNG(seed)),
-      rollUnit('melee', new RNG(seed + 1)),
-      rollUnit('melee', new RNG(seed + 2)),
+      rollUnit('mercenary', new RNG(seed + 1)),
+      rollUnit('mercenary', new RNG(seed + 2)),
     ],
     enemyTeam: [rollUnit('ranged', new RNG(seed + 10))],
   };

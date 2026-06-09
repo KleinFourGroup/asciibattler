@@ -15,7 +15,7 @@ import type { UnitTemplate } from '../sim/Unit';
 
 /** Build a fake roster at the given per-unit levels (stats = baseStats; only
  *  `level` matters to the budget math). */
-function roster(levels: number[], archetype: 'melee' | 'ranged' = 'melee'): UnitTemplate[] {
+function roster(levels: number[], archetype: 'mercenary' | 'ranged' = 'mercenary'): UnitTemplate[] {
   return levels.map((level) => ({
     archetype,
     level,
@@ -181,7 +181,7 @@ describe('buildEnemyTeam (balance-proof — derives from DIFFICULTY)', () => {
 
   it('keeps the 60/40 melee/ranged split by index', () => {
     const team = buildEnemyTeam(new RNG(9), player);
-    const melee = team.filter((u) => u.archetype === 'melee').length;
+    const melee = team.filter((u) => u.archetype === 'mercenary').length;
     expect(melee).toBe(Math.round(team.length * 0.6));
   });
 

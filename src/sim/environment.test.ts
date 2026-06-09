@@ -37,12 +37,12 @@ describe('environment / spawnWall', () => {
   it('is never picked as a target by findTarget', () => {
     const bus = new EventBus<GameEvents>();
     const w = new World(bus, new RNG(1));
-    const stats = { ...ARCHETYPE_CONFIG.melee.baseStats };
+    const stats = { ...ARCHETYPE_CONFIG.mercenary.baseStats };
     const derived = deriveStats(stats, 1);
     const player = new Unit({
       id: 1,
       team: 'player',
-      archetype: 'melee',
+      archetype: 'mercenary',
       glyph: 'M',
       stats,
       derived,
@@ -53,7 +53,7 @@ describe('environment / spawnWall', () => {
     const enemy = new Unit({
       id: 3,
       team: 'enemy',
-      archetype: 'melee',
+      archetype: 'mercenary',
       glyph: 'M',
       stats,
       derived,

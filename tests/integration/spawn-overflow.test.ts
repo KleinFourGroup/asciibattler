@@ -47,7 +47,7 @@ describe('D5.C spawn overflow queue', () => {
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
     const rng = new RNG(42);
-    const templates = Array.from({ length: 10 }, () => rollUnit('melee', rng));
+    const templates = Array.from({ length: 10 }, () => rollUnit('mercenary', rng));
 
     spawnTeam(world, 'player', templates, region, rng);
 
@@ -85,7 +85,7 @@ describe('D5.C spawn overflow queue', () => {
 
     const region = makePlayerRegion();
     const rng = new RNG(42);
-    const templates = Array.from({ length: 10 }, () => rollUnit('melee', rng));
+    const templates = Array.from({ length: 10 }, () => rollUnit('mercenary', rng));
 
     spawnTeam(world, 'player', templates, region, rng);
 
@@ -117,7 +117,7 @@ describe('D5.C spawn overflow queue', () => {
     spawnTeam(
       world,
       'player',
-      [rollUnit('melee', rng), rollUnit('melee', rng)],
+      [rollUnit('mercenary', rng), rollUnit('mercenary', rng)],
       playerRegion,
       rng,
     );
@@ -126,7 +126,7 @@ describe('D5.C spawn overflow queue', () => {
       tiles: [{ x: 11, y: 11 }],
       availability: 'enemy',
     };
-    spawnTeam(world, 'enemy', [rollUnit('melee', rng)], enemyRegion, rng);
+    spawnTeam(world, 'enemy', [rollUnit('mercenary', rng)], enemyRegion, rng);
 
     expect(world.queueLength('player')).toBe(1);
 
@@ -151,7 +151,7 @@ describe('D5.C spawn overflow queue', () => {
     const size = Math.max(5, Math.ceil((REGION + 1) / DIFFICULTY.swarmMaxMultiplier));
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
-    const player = Array.from({ length: size }, () => rollUnit('melee', new RNG(1), 12));
+    const player = Array.from({ length: size }, () => rollUnit('mercenary', new RNG(1), 12));
 
     // Find a seed whose swarm exceeds the 8-tile region (most do at the
     // default swarmBias; the loop makes the test independent of the knob).
@@ -163,7 +163,7 @@ describe('D5.C spawn overflow queue', () => {
     const queued = enemyTeam.length - 8;
 
     // A lone, far-away player unit keeps the battle from ending while we drain.
-    spawnTeam(world, 'player', [rollUnit('melee', new RNG(2))], {
+    spawnTeam(world, 'player', [rollUnit('mercenary', new RNG(2))], {
       tiles: [{ x: 0, y: 11 }],
       availability: 'player',
     }, new RNG(2));
@@ -187,7 +187,7 @@ describe('D5.C spawn overflow queue', () => {
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
     const rng = new RNG(42);
-    const templates = Array.from({ length: 10 }, () => rollUnit('melee', rng));
+    const templates = Array.from({ length: 10 }, () => rollUnit('mercenary', rng));
     spawnTeam(world, 'player', templates, region, rng);
 
     // E5: pin sticky-target round-trip with non-default values.
@@ -195,7 +195,7 @@ describe('D5.C spawn overflow queue', () => {
     world.units[0]!.outOfLosTicks = 3;
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(19);
+    expect(wire.schemaVersion).toBe(20);
     expect(wire.units[0].targetId).toBe(world.units[1]!.id);
     expect(wire.units[0].outOfLosTicks).toBe(3);
     expect(wire.damageDealt).toEqual([]);

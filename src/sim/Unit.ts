@@ -19,8 +19,24 @@ export type Team = 'player' | 'enemy' | 'neutral';
  * walls + half-cover (neutrals with no abilities) so a single
  * `unit.archetype` lookup answers "which stat drives a basic strike?"
  * without needing the caller to branch on team first.
+ *
+ * I5 — the single `'melee'` archetype (renamed `'mercenary'`) split into a
+ * family of melee subclasses (`mercenary` = the old melee baseline, `adventurer` =
+ * dodge bruiser, `ronin` = crit duelist, `bandit` = low-growth enemy
+ * fodder), now that the I1/I2 dodge stats can differentiate them. All
+ * four carry `melee_strike`; they diverge only in stats. `bandit` is the
+ * default melee *enemy* (the player/enemy-symmetry break the brief wanted).
  */
-export type Archetype = 'melee' | 'ranged' | 'rogue' | 'healer' | 'mage' | 'catapult';
+export type Archetype =
+  | 'mercenary'
+  | 'adventurer'
+  | 'ronin'
+  | 'bandit'
+  | 'ranged'
+  | 'rogue'
+  | 'healer'
+  | 'mage'
+  | 'catapult';
 export type UnitArchetype = Archetype | 'environment';
 
 /**

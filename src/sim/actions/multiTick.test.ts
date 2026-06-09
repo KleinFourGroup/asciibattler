@@ -173,13 +173,13 @@ function scene(opts: ChargeAttackOpts): {
   // 2.5 ratio used constitution=40 here for the same result). Cooldown=1
   // by overriding derived after construction so the speed-based scale
   // doesn't muddy the fixture.
-  const stats = { ...ARCHETYPE_CONFIG.melee.baseStats, constitution: 100, luck: 0 };
+  const stats = { ...ARCHETYPE_CONFIG.mercenary.baseStats, constitution: 100, luck: 0 };
   const derived = { ...deriveStats(stats, 99), moveCooldownTicks: 1 };
 
   const attacker = new Unit({
     id: 1,
     team: 'player',
-    archetype: 'melee',
+    archetype: 'mercenary',
     glyph: 'M',
     stats,
     derived,
@@ -192,7 +192,7 @@ function scene(opts: ChargeAttackOpts): {
   const target = new Unit({
     id: 2,
     team: 'enemy',
-    archetype: 'melee',
+    archetype: 'mercenary',
     glyph: 'M',
     stats,
     derived: targetDerived,

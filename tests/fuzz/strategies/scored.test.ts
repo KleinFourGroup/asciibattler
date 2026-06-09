@@ -42,7 +42,7 @@ function template(archetype: Archetype): UnitTemplate {
 }
 
 function meleeWithPower(power: number): UnitTemplate {
-  return { archetype: 'melee', level: 1, stats: { ...baseStatsForArchetype('melee'), power }, xp: 0 };
+  return { archetype: 'mercenary', level: 1, stats: { ...baseStatsForArchetype('mercenary'), power }, xp: 0 };
 }
 
 function fakeRun(parts: { team?: UnitTemplate[]; nodes?: MapNode[]; edges?: MapEdge[] }): Run {
@@ -123,8 +123,8 @@ describe('scored path policy — full-path backward DP', () => {
 describe('scored recruit policy', () => {
   it('is deterministic + RNG-independent with lowest-index ties', () => {
     const s = scoredStrategy('z', zeroWeights());
-    const offer = [template('melee'), template('ranged'), template('rogue')];
-    const run = fakeRun({ team: [template('melee')] });
+    const offer = [template('mercenary'), template('ranged'), template('rogue')];
+    const run = fakeRun({ team: [template('mercenary')] });
     for (const seed of [1, 2, 3, 99]) {
       expect(s.pickRecruit(offer, run, new RNG(seed))).toBe(0); // all-zero → lowest index
     }
@@ -152,7 +152,7 @@ describe('scored recruit policy', () => {
 
   it('generalizes maximizeStat: a single stat weight ranks the offer by that stat', () => {
     const offer = ALL_ARCHETYPES.map(template);
-    const run = fakeRun({ team: [template('melee')] });
+    const run = fakeRun({ team: [template('mercenary')] });
     for (const stat of STAT_KEYS) {
       // passBias huge → never pass, so the pick is purely the argmax-by-stat.
       const w: ScoredWeights = {
@@ -174,20 +174,20 @@ describe('scored recruit policy', () => {
     const w: ScoredWeights = {
       ...zeroWeights(),
       compWeight: 1,
-      composition: { ...zeroWeights().composition, melee: 0.5, rogue: 0.5 },
+      composition: { ...zeroWeights().composition, mercenary: 0.5, rogue: 0.5 },
       passBias: 1e6,
     };
-    const offer = [template('melee'), template('rogue')];
+    const offer = [template('mercenary'), template('rogue')];
 
     // Roster all melee → rogue is at fraction 0 (under target) → take rogue,
     // a count-0 foothold the rich-get-richer term could never give.
-    const allMelee = fakeRun({ team: [template('melee'), template('melee'), template('melee')] });
+    const allMelee = fakeRun({ team: [template('mercenary'), template('mercenary'), template('mercenary')] });
     expect(scoredStrategy('c', w).pickRecruit(offer, allMelee, ANY_RNG)).toBe(1);
 
     // Roster now over target on rogue (0.75) but under on melee (0.25) → the
     // preference flips: melee is now the under-represented one.
     const heavy = fakeRun({
-      team: [template('rogue'), template('rogue'), template('rogue'), template('melee')],
+      team: [template('rogue'), template('rogue'), template('rogue'), template('mercenary')],
     });
     expect(scoredStrategy('c', w).pickRecruit(offer, heavy, ANY_RNG)).toBe(0);
   });
@@ -201,8 +201,8 @@ describe('scored recruit policy', () => {
       composition: { ...zeroWeights().composition, rogue: 1 },
       passBias: 1e6,
     };
-    const offer = [template('melee'), template('rogue')];
-    const heavyMelee = fakeRun({ team: [template('melee'), template('melee')] });
+    const offer = [template('mercenary'), template('rogue')];
+    const heavyMelee = fakeRun({ team: [template('mercenary'), template('mercenary')] });
     expect(scoredStrategy('c0', w).pickRecruit(offer, heavyMelee, ANY_RNG)).toBe(0);
   });
 });

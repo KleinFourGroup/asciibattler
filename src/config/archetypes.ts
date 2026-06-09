@@ -30,8 +30,8 @@
  * increments by 1 on a single simulated level-up (player recruits, via
  * `simulateLevelUps`), and also the per-level deterministic increment
  * for enemies (via `scaleStats`). A rate of 0 means the stat never grows
- * (useful for archetype-orthogonal stats: melee's ranged stat stays 0
- * forever).
+ * (useful for archetype-orthogonal stats: a melee unit's ranged stat
+ * stays 0 forever).
  *
  * GP1: the per-archetype `baseMoveCooldownSeconds` override is gone.
  * There's one universal `STATS.baseMoveCooldownSeconds`; a slow walking
@@ -128,7 +128,12 @@ export const ArchetypeSchema = z.object({
 });
 
 export const ArchetypesSchema = z.object({
-  melee: ArchetypeSchema,
+  // I5 — the melee family (key order MUST match config/archetypes.json so the
+  // archetype-editor formatter round-trips: it emits in parsed-shape order).
+  mercenary: ArchetypeSchema,
+  adventurer: ArchetypeSchema,
+  ronin: ArchetypeSchema,
+  bandit: ArchetypeSchema,
   ranged: ArchetypeSchema,
   rogue: ArchetypeSchema,
   healer: ArchetypeSchema,

@@ -1,5 +1,5 @@
 {
-  "melee": {
+  "mercenary": {
     "glyph": "M",
     "abilities": ["melee_strike"],
     "targeting": "nearest",
@@ -28,6 +28,99 @@
       "speed": 0.3,
       "mobility": 0.13,
       "power": 0.1
+    }
+  },
+  "adventurer": {
+    "glyph": "A",
+    "abilities": ["melee_strike"],
+    "targeting": "nearest",
+    "baseStats": {
+      "constitution": 20,
+      "strength": 6,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 4,
+      "defense": 2,
+      "precision": 5,
+      "evasion": 11,
+      "speed": 7,
+      "mobility": 3,
+      "power": 1
+    },
+    "growthRates": {
+      "constitution": 0.7,
+      "strength": 0.4,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0.4,
+      "defense": 0.1,
+      "precision": 0.2,
+      "evasion": 0.45,
+      "speed": 0.35,
+      "mobility": 0.13,
+      "power": 0.1
+    }
+  },
+  "ronin": {
+    "glyph": "R",
+    "abilities": ["melee_strike"],
+    "targeting": "nearest",
+    "baseStats": {
+      "constitution": 20,
+      "strength": 7,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 14,
+      "defense": 3,
+      "precision": 6,
+      "evasion": 5,
+      "speed": 6,
+      "mobility": 2,
+      "power": 1
+    },
+    "growthRates": {
+      "constitution": 0.7,
+      "strength": 0.45,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0.8,
+      "defense": 0.15,
+      "precision": 0.25,
+      "evasion": 0.2,
+      "speed": 0.3,
+      "mobility": 0.13,
+      "power": 0.1
+    }
+  },
+  "bandit": {
+    "glyph": "B",
+    "abilities": ["melee_strike"],
+    "targeting": "nearest",
+    "baseStats": {
+      "constitution": 22,
+      "strength": 6,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 3,
+      "defense": 4,
+      "precision": 5,
+      "evasion": 5,
+      "speed": 6,
+      "mobility": 2,
+      "power": 1
+    },
+    "growthRates": {
+      "constitution": 0.4,
+      "strength": 0.2,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0.15,
+      "defense": 0.1,
+      "precision": 0.1,
+      "evasion": 0.1,
+      "speed": 0.15,
+      "mobility": 0.07,
+      "power": 0.05
     }
   },
   "ranged": {

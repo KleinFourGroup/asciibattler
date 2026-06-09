@@ -82,16 +82,16 @@ function runHeadlessBattle(seed: number, scenario: Scenario): { world: World; ti
   // the team composition for the same seed.
   const teamRng = new RNG(seed * 31 + 7);
   const playerTeam = [
-    rollUnit('melee', teamRng),
-    rollUnit('melee', teamRng),
-    rollUnit('melee', teamRng),
+    rollUnit('mercenary', teamRng),
+    rollUnit('mercenary', teamRng),
+    rollUnit('mercenary', teamRng),
     rollUnit('ranged', teamRng),
     rollUnit('ranged', teamRng),
   ];
   const enemyTeam = [
-    rollUnit('melee', teamRng),
-    rollUnit('melee', teamRng),
-    rollUnit('melee', teamRng),
+    rollUnit('mercenary', teamRng),
+    rollUnit('mercenary', teamRng),
+    rollUnit('mercenary', teamRng),
     rollUnit('ranged', teamRng),
     rollUnit('ranged', teamRng),
   ];

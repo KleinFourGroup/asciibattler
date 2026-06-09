@@ -31,7 +31,7 @@ function makeUnit(
   pos: { x: number; y: number },
   opts: { archetype?: UnitArchetype; stats?: UnitStats; range?: number; hp?: number } = {},
 ): Unit {
-  const archetype = opts.archetype ?? 'melee';
+  const archetype = opts.archetype ?? 'mercenary';
   const isNeutral = archetype === 'environment';
   const stats = opts.stats ?? ALLY_STATS;
   const derived = isNeutral ? inertDerived(opts.hp ?? 1) : deriveStats(stats, opts.range ?? 1);

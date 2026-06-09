@@ -21,8 +21,8 @@ import { makeStrategy } from './strategies/registry';
 describe('TelemetryAccumulator', () => {
   it('tallies player-side combat and ignores enemies', () => {
     const acc = new TelemetryAccumulator();
-    acc.registerUnit(1, 'player', 'melee');
-    acc.registerUnit(2, 'enemy', 'melee');
+    acc.registerUnit(1, 'player', 'mercenary');
+    acc.registerUnit(2, 'enemy', 'mercenary');
     acc.registerUnit(3, 'player', 'healer');
 
     acc.recordAttack(1, 7); // player melee
@@ -34,18 +34,18 @@ describe('TelemetryAccumulator', () => {
     acc.recordXp(1, 40);
     acc.recordTurnChip(2, 3, 1);
 
-    const t = acc.finish(['melee'], ['melee', 'healer']);
-    expect(t.perArchetype.melee.damageDealt).toBe(7); // enemy's 99 excluded
-    expect(t.perArchetype.melee.damageTaken).toBe(4); // enemy's 50 excluded
+    const t = acc.finish(['mercenary'], ['mercenary', 'healer']);
+    expect(t.perArchetype.mercenary.damageDealt).toBe(7); // enemy's 99 excluded
+    expect(t.perArchetype.mercenary.damageTaken).toBe(4); // enemy's 50 excluded
     // Deployments count player fieldings only (unit 1 melee, unit 3 healer; the
     // enemy melee unit 2 is excluded).
-    expect(t.perArchetype.melee.deployments).toBe(1);
+    expect(t.perArchetype.mercenary.deployments).toBe(1);
     expect(t.perArchetype.healer.deployments).toBe(1);
     expect(t.perArchetype.healer.healingDone).toBe(5);
-    expect(t.perArchetype.melee.deaths).toBe(1);
-    expect(t.perArchetype.melee.xpEarned).toBe(40);
-    expect(t.perArchetype.melee.recruitPicks).toBe(1);
-    expect(t.perArchetype.melee.finalCount).toBe(1);
+    expect(t.perArchetype.mercenary.deaths).toBe(1);
+    expect(t.perArchetype.mercenary.xpEarned).toBe(40);
+    expect(t.perArchetype.mercenary.recruitPicks).toBe(1);
+    expect(t.perArchetype.mercenary.finalCount).toBe(1);
     expect(t.perArchetype.healer.finalCount).toBe(1);
     expect(t.poolChips).toEqual([{ floor: 2, player: 3, enemy: 1 }]);
   });
@@ -54,7 +54,7 @@ describe('TelemetryAccumulator', () => {
     const acc = new TelemetryAccumulator();
     expect(() => acc.recordAttack(999, 5)).not.toThrow();
     const t = acc.finish([], []);
-    expect(t.perArchetype.melee.damageDealt).toBe(0);
+    expect(t.perArchetype.mercenary.damageDealt).toBe(0);
   });
 });
 
@@ -69,7 +69,7 @@ describe('aggregateTelemetry', () => {
   it('sums run totals and means deaths-per-run + pool chips', () => {
     const mk = (dmg: number, deaths: number, chip: number): RunTelemetry => {
       const acc = new TelemetryAccumulator();
-      acc.registerUnit(1, 'player', 'melee');
+      acc.registerUnit(1, 'player', 'mercenary');
       acc.recordAttack(1, dmg);
       for (let i = 0; i < deaths; i++) acc.recordDeath(1);
       acc.recordTurnChip(1, chip, chip + 1);
@@ -77,10 +77,10 @@ describe('aggregateTelemetry', () => {
     };
     const agg = aggregateTelemetry([mk(10, 1, 2), mk(6, 3, 4)]);
     expect(agg.runs).toBe(2);
-    expect(agg.perArchetype.melee.damageDealt).toBe(16);
-    expect(agg.perArchetype.melee.deployments).toBe(2); // one fielding per run
-    expect(agg.perArchetype.melee.deaths).toBe(4);
-    expect(agg.perArchetype.melee.deathsPerRun).toBe(2); // 4 / 2 runs
+    expect(agg.perArchetype.mercenary.damageDealt).toBe(16);
+    expect(agg.perArchetype.mercenary.deployments).toBe(2); // one fielding per run
+    expect(agg.perArchetype.mercenary.deaths).toBe(4);
+    expect(agg.perArchetype.mercenary.deathsPerRun).toBe(2); // 4 / 2 runs
     // chips: player {2,4} enemy {3,5} over 2 turns → means 3 and 4.
     expect(agg.meanPoolChip).toEqual({ player: 3, enemy: 4, turns: 2 });
   });

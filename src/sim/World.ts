@@ -121,8 +121,15 @@ import { STATS } from '../config/stats';
  *       key, so a v18 snapshot carries an `agility`-keyed, dodge-less stat
  *       block; the version check rejects it outright (no migration — same
  *       stat-shape-contract rationale as GP1/GP2/H1). v18 throws on load.
+ *  20 — I5 split the `melee` archetype into a family, RENAMING the key
+ *       `melee → mercenary` (+ new `adventurer`/`ronin`/`bandit`). Unlike the
+ *       prior bumps this is NOT a stat-shape change: a v19 snapshot carries
+ *       units tagged `archetype: 'melee'`, which no longer resolves to a config
+ *       — rehydrating one would crash deriving its abilities/glyph/stats. Reject
+ *       outright (no migration; the renamed key has no automatic mapping). v19
+ *       throws on load.
  */
-const WORLD_SCHEMA_VERSION = 19;
+const WORLD_SCHEMA_VERSION = 20;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.

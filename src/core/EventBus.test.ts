@@ -129,7 +129,7 @@ describe('EventBus', () => {
       power: 1,
     };
     bus.emit('recruit:offered', {
-      units: [{ archetype: 'melee', level: 1, stats: stubStats, xp: 0 }],
+      units: [{ archetype: 'mercenary', level: 1, stats: stubStats, xp: 0 }],
     });
     bus.emit('recruit:chosen', {
       unitTemplate: { archetype: 'ranged', level: 1, stats: stubStats, xp: 0 },

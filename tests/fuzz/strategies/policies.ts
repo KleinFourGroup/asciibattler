@@ -45,7 +45,7 @@ export type RecruitPolicy = (
  * to `config/archetypes.json` → it gets a `stat:<name>` strategy for free).
  * Order = the config authoring order (deterministic).
  */
-export const STAT_KEYS = Object.keys(baseStatsForArchetype('melee')) as (keyof UnitStats)[];
+export const STAT_KEYS = Object.keys(baseStatsForArchetype('mercenary')) as (keyof UnitStats)[];
 
 /**
  * Node kinds a path strategy can usefully target. `boss` is the forced terminal

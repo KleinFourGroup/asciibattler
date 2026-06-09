@@ -58,7 +58,11 @@ const TARGETING_IDS = knownTargetingIds();
 /** Display hint for which stat drives a unit's strike/heal output. The
  *  authoritative mapping is `damageStatFor` (sim); this only labels it. */
 const OUTPUT_LABEL: Record<ArchetypeKey, string> = {
-  melee: 'STR',
+  // I5 — the melee family all strike on STR.
+  mercenary: 'STR',
+  adventurer: 'STR',
+  ronin: 'STR',
+  bandit: 'STR',
   ranged: 'RNG',
   rogue: 'STR',
   healer: 'MAG (heal)',

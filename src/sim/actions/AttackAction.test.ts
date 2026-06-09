@@ -49,7 +49,7 @@ function twoUnits(): {
   const world = new World(bus, new RNG(1));
   const attacks: GameEvents['unit:attacked'][] = [];
   bus.on('unit:attacked', (p) => attacks.push(p));
-  const tmpl: UnitTemplate = { archetype: 'melee', level: 1, stats: STATS_BLOCK, xp: 0 };
+  const tmpl: UnitTemplate = { archetype: 'mercenary', level: 1, stats: STATS_BLOCK, xp: 0 };
   const attacker = world.spawnUnit(tmpl, 'player', { x: 0, y: 0 });
   const target = world.spawnUnit(tmpl, 'enemy', { x: 1, y: 0 });
   return { world, attacker, target, attacks };

@@ -21,7 +21,7 @@ describe('Unit', () => {
     const u = new Unit({
       id: 7,
       team: 'player',
-      archetype: 'melee',
+      archetype: 'mercenary',
       glyph: 'M',
       stats,
       derived,
@@ -29,7 +29,7 @@ describe('Unit', () => {
     });
     expect(u.id).toBe(7);
     expect(u.team).toBe('player');
-    expect(u.archetype).toBe('melee');
+    expect(u.archetype).toBe('mercenary');
     expect(u.glyph).toBe('M');
     expect(u.currentHp).toBe(derived.maxHp);
     expect(u.position).toEqual({ x: 3, y: 4 });

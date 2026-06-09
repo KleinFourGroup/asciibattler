@@ -41,7 +41,7 @@ function makeUnit(
   pos: GridCoord,
   opts: { archetype?: UnitArchetype; stats?: UnitStats; range?: number } = {},
 ): Unit {
-  const archetype = opts.archetype ?? 'melee';
+  const archetype = opts.archetype ?? 'mercenary';
   const stats = opts.stats ?? MELEE_STATS;
   // melee_strike + gambit_strike both have range 1, so the default is right
   // for every unit this file constructs.

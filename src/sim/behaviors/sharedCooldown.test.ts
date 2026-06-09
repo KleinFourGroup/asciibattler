@@ -80,7 +80,7 @@ describe('shared actionCooldown', () => {
     // through any cadence re-tune.
     const attackCD = attackCooldownTicksFor(
       ABILITIES.melee_strike!.cooldownSeconds,
-      ARCHETYPE_CONFIG.melee.baseStats.speed,
+      ARCHETYPE_CONFIG.mercenary.baseStats.speed,
     );
     const { world, units, moves } = scene([
       {
@@ -143,7 +143,7 @@ function scene(specs: SceneUnit[]): {
     // E1: melee baseline + luck=0 (deterministic crit roll = always
     // false) + `strength` = test-knob attackDamage so the existing
     // exact-damage assertions hold.
-    const baseStats = ARCHETYPE_CONFIG.melee.baseStats;
+    const baseStats = ARCHETYPE_CONFIG.mercenary.baseStats;
     const stats: UnitStats = {
       ...baseStats,
       luck: 0,
@@ -161,7 +161,7 @@ function scene(specs: SceneUnit[]): {
     const u = new Unit({
       id: nextId++,
       team: s.team,
-      archetype: 'melee',
+      archetype: 'mercenary',
       glyph: 'M',
       stats,
       derived,

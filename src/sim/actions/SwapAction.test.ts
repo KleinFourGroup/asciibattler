@@ -19,7 +19,7 @@ const STATS: UnitStats = {
 };
 
 function spawn(w: World, x: number, y: number) {
-  const tmpl: UnitTemplate = { archetype: 'melee', level: 1, stats: STATS, xp: 0 };
+  const tmpl: UnitTemplate = { archetype: 'mercenary', level: 1, stats: STATS, xp: 0 };
   return w.spawnUnit(tmpl, 'player', { x, y });
 }
 

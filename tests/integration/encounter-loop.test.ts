@@ -75,9 +75,9 @@ function firstFrontier(run: Run): number {
 }
 
 const LVL1_ROSTER = [
-  { archetype: 'melee' as const, level: 1 },
-  { archetype: 'melee' as const, level: 1 },
-  { archetype: 'melee' as const, level: 1 },
+  { archetype: 'mercenary' as const, level: 1 },
+  { archetype: 'mercenary' as const, level: 1 },
+  { archetype: 'mercenary' as const, level: 1 },
   { archetype: 'ranged' as const, level: 1 },
   { archetype: 'ranged' as const, level: 1 },
 ];

@@ -98,7 +98,7 @@ describe('node policies', () => {
 
 describe('recruit policies', () => {
   it('randomRecruit reproduces rng.int draws exactly (baseline preserved)', () => {
-    const offer = offerOf('melee', 'ranged', 'rogue');
+    const offer = offerOf('mercenary', 'ranged', 'rogue');
     const got = new RNG(99);
     const ref = new RNG(99);
     for (let i = 0; i < 5; i++) {
@@ -108,15 +108,15 @@ describe('recruit policies', () => {
 
   it('balancedArchetype prefers the lowest current roster count', () => {
     // team has 2 melee + 1 ranged + 0 rogue → rogue (count 0) is the pick.
-    const run = fakeRun({ team: offerOf('melee', 'melee', 'ranged') });
-    const offer = offerOf('melee', 'ranged', 'rogue');
+    const run = fakeRun({ team: offerOf('mercenary', 'mercenary', 'ranged') });
+    const offer = offerOf('mercenary', 'ranged', 'rogue');
     const rogueIdx = offer.findIndex((t) => t.archetype === 'rogue');
     expect(balancedArchetype(offer, run, new RNG(5))).toBe(rogueIdx);
   });
 
   it('preferArchetype takes the target archetype when offered', () => {
     const target: Archetype = 'mage';
-    const offer = offerOf('melee', 'mage', 'ranged');
+    const offer = offerOf('mercenary', 'mage', 'ranged');
     const expected = offer.findIndex((t) => t.archetype === target);
     for (let seed = 0; seed < 10; seed++) {
       expect(preferArchetype(target)(offer, NO_RUN, new RNG(seed))).toBe(expected);
@@ -124,7 +124,7 @@ describe('recruit policies', () => {
   });
 
   it('preferArchetype falls back to a valid in-range index when not offered', () => {
-    const offer = offerOf('melee', 'ranged');
+    const offer = offerOf('mercenary', 'ranged');
     const choice = preferArchetype('catapult')(offer, NO_RUN, new RNG(2));
     expect(choice).toBeGreaterThanOrEqual(0);
     expect(choice).toBeLessThan(offer.length);
@@ -145,9 +145,9 @@ describe('recruit policies', () => {
   // it pins the decline-below-threshold MECHANIC, not a balance number.
   describe('declineBelowPower (pass policy)', () => {
     const withPower = (p: number): UnitTemplate => ({
-      archetype: 'melee',
+      archetype: 'mercenary',
       level: 1,
-      stats: { ...baseStatsForArchetype('melee'), power: p },
+      stats: { ...baseStatsForArchetype('mercenary'), power: p },
       xp: 0,
     });
 

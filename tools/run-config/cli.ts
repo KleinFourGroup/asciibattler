@@ -77,7 +77,7 @@ function printHelp(): void {
       'Flags:',
       '  --seed=N         run seed (default: Date.now())',
       '  --floors=N       total floors incl. root + terminal (>=2 to be playable; 2 = one battle)',
-      '  --roster=LIST    archetype[:level],...  e.g. rogue:3,healer:2,melee',
+      '  --roster=LIST    archetype[:level],...  e.g. rogue:3,healer:2,mercenary',
       '  --layout=ID      force every battle onto a named layout',
       '  --width=N        middle-floor max width',
       '  --strategy=NAME  headless drive strategy from the G5 menu (default: pure-random);',

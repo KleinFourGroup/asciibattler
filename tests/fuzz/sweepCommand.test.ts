@@ -88,13 +88,13 @@ describe('sweepCommand — balance-sweep args', () => {
       knob: 'health.enemyHealthMax',
       range: '8:16:5',
       floors: 11,
-      roster: 'melee,ranged,healer:5',
+      roster: 'mercenary,ranged,healer:5',
       jobs: 8,
       samplerSeed: 1,
       dryRun: true,
     });
     expect(args).toContain('--floors=11');
-    expect(args).toContain('--roster=melee,ranged,healer:5');
+    expect(args).toContain('--roster=mercenary,ranged,healer:5');
     expect(args).toContain('--jobs=8');
     expect(args).toContain('--sampler-seed=1');
     expect(args).toContain('--dry-run');

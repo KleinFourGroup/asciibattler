@@ -42,12 +42,12 @@ function runMageBattle(seed: number): {
     theme: 'rock',
     playerTeam: [
       rollUnit('mage', new RNG(seed)),
-      rollUnit('melee', new RNG(seed + 1)),
-      rollUnit('melee', new RNG(seed + 2)),
+      rollUnit('mercenary', new RNG(seed + 1)),
+      rollUnit('mercenary', new RNG(seed + 2)),
     ],
     enemyTeam: [
-      rollUnit('melee', new RNG(seed + 10)),
-      rollUnit('melee', new RNG(seed + 11)),
+      rollUnit('mercenary', new RNG(seed + 10)),
+      rollUnit('mercenary', new RNG(seed + 11)),
     ],
   };
 

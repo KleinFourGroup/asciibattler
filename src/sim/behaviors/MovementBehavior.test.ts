@@ -345,7 +345,7 @@ function scene(specs: SceneUnit[]): {
     // E1: build stats from the melee archetype baseline (con=20 → maxHp=50,
     // matching the pre-E1 default) with luck=0 so the AttackAction crit
     // roll never fires — keeps exact-value assertions deterministic.
-    const stats: UnitStats = { ...ARCHETYPE_CONFIG.melee.baseStats, luck: 0 };
+    const stats: UnitStats = { ...ARCHETYPE_CONFIG.mercenary.baseStats, luck: 0 };
     const range = s.attackRange ?? 1;
     let derived = isNeutral ? inertDerived(1) : deriveStats(stats, range);
     if (s.moveCooldownTicks !== undefined) {
@@ -354,7 +354,7 @@ function scene(specs: SceneUnit[]): {
     const u = new Unit({
       id: nextId++,
       team: s.team,
-      archetype: isNeutral ? 'environment' : 'melee',
+      archetype: isNeutral ? 'environment' : 'mercenary',
       glyph: isNeutral ? '#' : 'M',
       stats,
       derived,

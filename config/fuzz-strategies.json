@@ -1,7 +1,10 @@
 {
   "path": { "battle": 0, "rest": 0 },
   "archetype": {
-    "melee": 0,
+    "mercenary": 0,
+    "adventurer": 0,
+    "ronin": 0,
+    "bandit": 0,
     "ranged": 0,
     "rogue": 0,
     "healer": 0,
@@ -9,7 +12,10 @@
     "catapult": 0
   },
   "composition": {
-    "melee": 0,
+    "mercenary": 0,
+    "adventurer": 0,
+    "ronin": 0,
+    "bandit": 0,
     "ranged": 0,
     "rogue": 0,
     "healer": 0,

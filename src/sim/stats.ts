@@ -108,7 +108,13 @@ export function inertDerived(maxHp: number): UnitDerived {
  */
 export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): number {
   switch (archetype) {
-    case 'melee':
+    // I5 — the whole melee family strikes on `strength` (mercenary = the old
+    // melee baseline; adventurer/ronin/bandit diverge only in their other
+    // stats, all still swinging on strength via `melee_strike`).
+    case 'mercenary':
+    case 'adventurer':
+    case 'ronin':
+    case 'bandit':
       return stats.strength;
     case 'ranged':
       return stats.ranged;

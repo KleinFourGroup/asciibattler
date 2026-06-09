@@ -43,16 +43,16 @@ function runBattle(seed: number, side: number): { world: World; ticks: number } 
   const world = new World(bus, new RNG(seed), side, side);
   const teamRng = new RNG(seed * 31 + 7);
   const playerTeam = [
-    rollUnit('melee', teamRng),
-    rollUnit('melee', teamRng),
-    rollUnit('melee', teamRng),
+    rollUnit('mercenary', teamRng),
+    rollUnit('mercenary', teamRng),
+    rollUnit('mercenary', teamRng),
     rollUnit('ranged', teamRng),
     rollUnit('ranged', teamRng),
   ];
   const enemyTeam = [
-    rollUnit('melee', teamRng),
-    rollUnit('melee', teamRng),
-    rollUnit('melee', teamRng),
+    rollUnit('mercenary', teamRng),
+    rollUnit('mercenary', teamRng),
+    rollUnit('mercenary', teamRng),
     rollUnit('ranged', teamRng),
     rollUnit('ranged', teamRng),
   ];

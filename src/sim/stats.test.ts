@@ -257,12 +257,12 @@ describe('inertDerived', () => {
 });
 
 describe('basicAttackDamage', () => {
-  function makeUnit(arch: 'melee' | 'ranged' | 'environment', stats: UnitStats): Unit {
+  function makeUnit(arch: 'mercenary' | 'ranged' | 'environment', stats: UnitStats): Unit {
     return new Unit({
       id: 1,
       team: arch === 'environment' ? 'neutral' : 'player',
       archetype: arch,
-      glyph: arch === 'melee' ? 'M' : arch === 'ranged' ? 'a' : '#',
+      glyph: arch === 'mercenary' ? 'M' : arch === 'ranged' ? 'a' : '#',
       stats,
       derived: arch === 'environment' ? inertDerived(1) : deriveStats(stats, 1),
       position: { x: 0, y: 0 },
@@ -270,7 +270,7 @@ describe('basicAttackDamage', () => {
   }
 
   it('melee → strength', () => {
-    const u = makeUnit('melee', { ...TEMPLATE, strength: 13 });
+    const u = makeUnit('mercenary', { ...TEMPLATE, strength: 13 });
     expect(basicAttackDamage(u)).toBe(13);
   });
 
@@ -301,7 +301,7 @@ describe('combatRng determinism', () => {
       const attacker = new Unit({
         id: 1,
         team: 'player',
-        archetype: 'melee',
+        archetype: 'mercenary',
         glyph: 'M',
         stats: attackerStats,
         derived: deriveStats(attackerStats, 1),
@@ -315,7 +315,7 @@ describe('combatRng determinism', () => {
       const target = new Unit({
         id: 2,
         team: 'enemy',
-        archetype: 'melee',
+        archetype: 'mercenary',
         glyph: 'M',
         stats: targetStats,
         derived: deriveStats(targetStats, 1),
@@ -344,13 +344,13 @@ describe('combatRng determinism', () => {
       const stats: UnitStats = { ...TEMPLATE, luck: 30, constitution: 99 };
       const derived = deriveStats(stats, 1);
       const a = new Unit({
-        id: 1, team: 'player', archetype: 'melee', glyph: 'M',
+        id: 1, team: 'player', archetype: 'mercenary', glyph: 'M',
         stats, derived, position: { x: 0, y: 0 },
       });
       a.behaviors.push(new AbilityBehavior());
       a.abilities.push(new MeleeStrike());
       const t = new Unit({
-        id: 2, team: 'enemy', archetype: 'melee', glyph: 'M',
+        id: 2, team: 'enemy', archetype: 'mercenary', glyph: 'M',
         stats, derived, position: { x: 1, y: 0 },
       });
       world.units.push(a, t);

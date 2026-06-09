@@ -12,7 +12,7 @@ import { parseSweepCsv, renderSweepReport, reportFromCsv } from './sweepReport';
 const FULL_CSV =
   [
     'difficulty.budgetFactor,bestTrainWin,bestTestWin,pureRandomWin,greedyWin,gradient,meanChipPlayer,meanChipEnemy,' +
-      'melee_dmg,melee_dmgTaken,melee_deployments,melee_deathsPerRun,melee_heal,melee_xp,melee_final,' +
+      'mercenary_dmg,mercenary_dmgTaken,mercenary_deployments,mercenary_deathsPerRun,mercenary_heal,mercenary_xp,mercenary_final,' +
       'ranged_dmg,ranged_dmgTaken,ranged_deployments,ranged_deathsPerRun,ranged_heal,ranged_xp,ranged_final',
     '0.625,0.6,0.7,0,0,0.6,4.47,0.99,' +
       '60918,43210,100,21.7,0,210529,96,' +
@@ -28,8 +28,8 @@ describe('parseSweepCsv', () => {
     expect(row.knobs['difficulty.budgetFactor']).toBe('0.625');
     expect(row.metrics.bestTrainWin).toBe(0.6);
     expect(row.metrics.gradient).toBe(0.6);
-    expect(row.archetypes.melee.dmg).toBe(60918);
-    expect(row.archetypes.melee.deployments).toBe(100);
+    expect(row.archetypes.mercenary.dmg).toBe(60918);
+    expect(row.archetypes.mercenary.deployments).toBe(100);
     expect(row.archetypes.ranged.final).toBe(60);
   });
 
@@ -45,21 +45,22 @@ describe('renderSweepReport', () => {
     expect(report).toContain('60%'); // best-achievable
     expect(report).toContain('+60pt'); // gradient
     expect(report).toContain('dmg/dep'); // the per-deployment column header
-    expect(report).toContain('609'); // melee dmg/dep = 60918 / 100 deployments
+    expect(report).toContain('609'); // mercenary dmg/dep = 60918 / 100 deployments
     expect(report).toContain('382'); // ranged dmg/dep = 22917 / 60 deployments
-    // rogue/healer/mage/catapult never fielded → folded into the inactive note.
-    expect(report).toContain('inactive: rogue, healer, mage, catapult');
+    // Every archetype absent from the CSV (or fielded 0×) folds into the inactive
+    // note, in ALL_ARCHETYPES order. Only mercenary + ranged have columns here.
+    expect(report).toContain('inactive: adventurer, ronin, bandit, rogue, healer, mage, catapult');
   });
 
   it('renders an older CSV missing columns as "—" rather than throwing', () => {
     const oldCsv =
       [
         'difficulty.budgetFactor,bestTrainWin,bestTestWin,pureRandomWin,greedyWin,gradient,meanChipPlayer,meanChipEnemy,' +
-          'melee_dmg,melee_deathsPerRun,melee_heal,melee_xp,melee_final',
+          'mercenary_dmg,mercenary_deathsPerRun,mercenary_heal,mercenary_xp,mercenary_final',
         '0.625,0.6,0.7,0,0,0.6,4.47,0.99,60918,21.7,0,210529,96',
       ].join('\n') + '\n';
-    const report = reportFromCsv(oldCsv); // no melee_deployments / dmgTaken columns
-    expect(report).toContain('melee'); // final 96 > 0 → still shown
+    const report = reportFromCsv(oldCsv); // no mercenary_deployments / dmgTaken columns
+    expect(report).toContain('mercenary'); // final 96 > 0 → still shown
     expect(report).toContain('96'); // final count parses
     expect(report).toContain('—'); // per-deployment cells absent (no denominator)
   });

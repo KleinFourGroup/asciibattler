@@ -34,7 +34,7 @@ function makeUnit(
   pos: GridCoord,
   opts: { archetype?: UnitArchetype; stats?: UnitStats; range?: number; blocksLos?: boolean } = {},
 ): Unit {
-  const archetype = opts.archetype ?? 'melee';
+  const archetype = opts.archetype ?? 'mercenary';
   const isEnv = archetype === 'environment';
   const stats = opts.stats ?? MAGE_STATS;
   const derived = isEnv ? inertDerived(1) : deriveStats(stats, opts.range ?? 1);

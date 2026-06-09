@@ -51,9 +51,9 @@ describe('E5: corridor flow (target stickiness, no thrash)', () => {
 
         const teamRng = new RNG(seed * 31 + 7);
         const team = () => [
-          rollUnit('melee', teamRng),
-          rollUnit('melee', teamRng),
-          rollUnit('melee', teamRng),
+          rollUnit('mercenary', teamRng),
+          rollUnit('mercenary', teamRng),
+          rollUnit('mercenary', teamRng),
           rollUnit('ranged', teamRng),
           rollUnit('ranged', teamRng),
         ];

@@ -74,8 +74,8 @@ describe('determinism: world tick replay', () => {
 
 describe('determinism: stat rolls', () => {
   it('rollUnit(archetype, rng) with the same rng state produces the same stats', () => {
-    const a = rollUnit('melee', new RNG(7));
-    const b = rollUnit('melee', new RNG(7));
+    const a = rollUnit('mercenary', new RNG(7));
+    const b = rollUnit('mercenary', new RNG(7));
     expect(a).toEqual(b);
   });
 });
@@ -224,12 +224,12 @@ function runBattle(
 
   const COLUMNS = [2, 4, 6, 8, 10];
   for (const x of COLUMNS) {
-    const u = world.spawnUnit(rollUnit('melee', world.rng), 'player', { x, y: 2 });
+    const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'player', { x, y: 2 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
     u.abilities.push(new MeleeStrike());
   }
   for (const x of COLUMNS) {
-    const u = world.spawnUnit(rollUnit('melee', world.rng), 'enemy', { x, y: 9 });
+    const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'enemy', { x, y: 9 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
     u.abilities.push(new MeleeStrike());
   }

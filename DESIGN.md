@@ -103,9 +103,10 @@ The palette is **enforced at art-direction time**, not by the shader. The `COLOR
 
 **Sprites:** ASCII glyphs rendered to a monospace texture atlas at startup, then sampled per-instance on billboarded quads. The shader handles billboarding in the vertex stage. Each unit instance picks its glyph via an instanced attribute.
 
-**Glyphs (MVP):**
-- `M` — melee unit
+**Glyphs:**
+- `M` `A` `R` `B` — the melee family (I5): Mercenary / Adventurer / Ronin / Bandit
 - `a` — ranged unit (lowercase, classic roguelike convention)
+- `r` `h` `m` `c` — rogue / healer / mage / catapult (E7)
 - `@` — reserved for the player-protagonist concept post-MVP
 
 Color + bloomIntensity per instance are instanced attributes so a single draw call covers all units of all teams (B1.1 selective bloom renders sprites twice — once at natural color into the main framebuffer, once at `color × bloomIntensity` into a separate bloom buffer that's blurred and additively mixed back in — but both draws share the same per-instance buffers). `bloomIntensity` (default 1.0) is a bloom-buffer multiplier *decoupled from visible color*: 0 = no halo (sprite still visible at natural color), 1 = natural halo (blooms iff color crosses the high-pass threshold), >1 = forced glow. Used for attack flashes, charge-ups, elite tier, etc. Lerping 0↔1 smoothly fades the halo without changing the sprite's visible color — future systems (B3 HP bars going from full-glow to dim as health drops, C2 mage charge windup ramping the halo as the ability spools up) reach for this channel.

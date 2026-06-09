@@ -28,7 +28,7 @@ const COMBATANT_STATS: UnitStats = {
 };
 
 let nextId = 1;
-function makeUnit(team: Team, pos: GridCoord, archetype: UnitArchetype = 'melee'): Unit {
+function makeUnit(team: Team, pos: GridCoord, archetype: UnitArchetype = 'mercenary'): Unit {
   return new Unit({
     id: nextId++,
     team,

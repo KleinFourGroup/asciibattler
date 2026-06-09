@@ -154,7 +154,7 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
       samplerSeed: 1,
       rosterOverride: [
         { archetype: 'mage', level: 1 },
-        { archetype: 'melee', level: 3 },
+        { archetype: 'mercenary', level: 3 },
       ],
       measurePoint: (coord, cfg) => {
         seen = cfg.rosterOverride;
@@ -163,7 +163,7 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     });
     expect(seen).toEqual([
       { archetype: 'mage', level: 1 },
-      { archetype: 'melee', level: 3 },
+      { archetype: 'mercenary', level: 3 },
     ]);
   });
 

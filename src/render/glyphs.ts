@@ -13,7 +13,7 @@
  * cells in FontAtlas; keep the count under that.
  */
 export const GLYPHS = [
-  'M', 'a', '@',
+  'M', 'a', '@', // 'M' = mercenary (the I5-renamed melee baseline).
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
   '.', ':', '/', '-', '+', '%', '!', '?',
   '#', // C1a: wall obstacle (neutral-team environment entity).
@@ -23,4 +23,9 @@ export const GLYPHS = [
   'h', // E7.B: healer unit glyph.
   'm', // E7.C: mage unit glyph.
   'c', // E7.D: catapult unit glyph.
+  'A', // I5: adventurer (melee subclass — dodge bruiser).
+  'R', // I5: ronin (melee subclass — crit duelist).
+  'B', // I5: bandit (melee subclass — low-growth enemy fodder).
 ] as const;
+// ⚠️ Atlas budget: 31/32 cells used (FontAtlas is COLS×ROWS = 8×4 = 32). One
+// cell remains — the NEXT glyph after this needs a grid resize (gotcha #33).

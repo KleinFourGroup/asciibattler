@@ -134,8 +134,13 @@ export interface BattleEncounter {
  *  I1 reverted `agility → speed` + added `precision`/`evasion`. A v9 save
  *  carries the old `agility`-keyed, dodge-less stat block → reject rather than
  *  rehydrate a roster that would `NaN` on the next level-up (same stat-shape
- *  contract as the World v19 bump). */
-const RUN_SCHEMA_VERSION = 10;
+ *  contract as the World v19 bump).
+ *  I5: bumped 10→11. The roster embeds `archetype` tags, and I5 renamed
+ *  `melee → mercenary` (+ new subclasses). A v10 save carries `'melee'`-tagged
+ *  roster units that no longer resolve to a config → reject rather than
+ *  rehydrate a roster that crashes on the next level-up / re-derive (same
+ *  archetype-identity rationale as the World v20 bump). */
+const RUN_SCHEMA_VERSION = 11;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -1050,7 +1055,7 @@ function shuffleInPlace<T>(arr: T[], rng: RNG): void {
  */
 function rollTeam(rng: RNG): UnitTemplate[] {
   const team: UnitTemplate[] = [];
-  for (let i = 0; i < STARTING_MELEE; i++) team.push(rollUnit('melee', rng, STARTING_LEVEL));
+  for (let i = 0; i < STARTING_MELEE; i++) team.push(rollUnit('mercenary', rng, STARTING_LEVEL));
   for (let i = 0; i < STARTING_RANGED; i++) team.push(rollUnit('ranged', rng, STARTING_LEVEL));
   return team;
 }

@@ -60,8 +60,8 @@ describe('World.spawnUnit', () => {
     const handler = vi.fn();
     bus.on('unit:spawned', handler);
 
-    const a = w.spawnUnit(rollUnit('melee', rng), 'player', { x: 1, y: 2 });
-    const b = w.spawnUnit(rollUnit('melee', rng), 'enemy', { x: 3, y: 4 });
+    const a = w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 1, y: 2 });
+    const b = w.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 3, y: 4 });
 
     expect(w.units).toEqual([a, b]);
     expect(a.id).toBe(1);
@@ -77,7 +77,7 @@ describe('World.spawnUnit', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    const m = w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    const m = w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 });
     const r = w.spawnUnit(rollUnit('ranged', rng), 'player', { x: 1, y: 0 });
     expect(m.glyph).toBe('M');
     expect(r.glyph).toBe('a');
@@ -89,7 +89,7 @@ describe('World.findUnit', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    const a = w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    const a = w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 });
     expect(w.findUnit(a.id)).toBe(a);
     expect(w.findUnit(9999)).toBeUndefined();
   });
@@ -104,7 +104,7 @@ describe('World battle-end detection', () => {
     // playerRosterIds and earns its flat-XP slice; otherwise the
     // bare-spawn path treats it as a non-roster fixture and emits
     // an empty awards list.
-    const survivor = w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 }, 0);
+    const survivor = w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 }, 0);
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
@@ -123,7 +123,7 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    const enemy = w.spawnUnit(rollUnit('melee', rng), 'enemy', { x: 0, y: 0 });
+    const enemy = w.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 0, y: 0 });
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
@@ -144,8 +144,8 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    const player = w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 }, 0);
-    const enemy = w.spawnUnit(rollUnit('melee', rng), 'enemy', { x: 5, y: 5 });
+    const player = w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 }, 0);
+    const enemy = w.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 5, y: 5 });
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
@@ -168,7 +168,7 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 }, 0);
+    w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 }, 0);
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
@@ -183,8 +183,8 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
-    w.spawnUnit(rollUnit('melee', rng), 'enemy', { x: 5, y: 5 });
+    w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 });
+    w.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 5, y: 5 });
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
@@ -201,8 +201,8 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 3, y: 3 });
-    w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 5, y: 5 });
+    w.spawnUnit(rollUnit('mercenary', rng), 'neutral', { x: 3, y: 3 });
+    w.spawnUnit(rollUnit('mercenary', rng), 'neutral', { x: 5, y: 5 });
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
@@ -216,9 +216,9 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 }, 0);
-    w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 5, y: 5 });
-    w.spawnUnit(rollUnit('melee', rng), 'neutral', { x: 7, y: 7 });
+    w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 }, 0);
+    w.spawnUnit(rollUnit('mercenary', rng), 'neutral', { x: 5, y: 5 });
+    w.spawnUnit(rollUnit('mercenary', rng), 'neutral', { x: 7, y: 7 });
     const ends: GameEvents['battle:ended'][] = [];
     bus.on('battle:ended', (p) => ends.push(p));
 
@@ -235,7 +235,7 @@ describe('World battle-end detection', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
     const w = new World(bus, rng);
-    w.spawnUnit(rollUnit('melee', rng), 'player', { x: 0, y: 0 });
+    w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 });
     w.tick(); // ends immediately
     expect(w.ended).toBe(true);
     const tickBefore = w.currentTick;
@@ -462,7 +462,7 @@ describe('World.applyDamage — GP2 defense mitigation', () => {
     bus.on('unit:attacked', (p) => attacks.push(p));
 
     const mkStats = (defense: number): UnitStats => ({
-      ...ARCHETYPE_CONFIG.melee.baseStats,
+      ...ARCHETYPE_CONFIG.mercenary.baseStats,
       defense,
     });
     const mk = (id: number, team: Team, defense: number, x: number): Unit => {
@@ -470,7 +470,7 @@ describe('World.applyDamage — GP2 defense mitigation', () => {
       return new Unit({
         id,
         team,
-        archetype: 'melee',
+        archetype: 'mercenary',
         glyph: 'M',
         stats,
         derived: deriveStats(stats, 1),
@@ -563,7 +563,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
 
     const mk = (id: number, team: Team, precision: number, evasion: number, x: number): Unit => {
       const stats: UnitStats = {
-        ...ARCHETYPE_CONFIG.melee.baseStats,
+        ...ARCHETYPE_CONFIG.mercenary.baseStats,
         defense: 0, // isolate the to-hit roll from GP2 mitigation
         precision,
         evasion,
@@ -571,7 +571,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
       return new Unit({
         id,
         team,
-        archetype: 'melee',
+        archetype: 'mercenary',
         glyph: 'M',
         stats,
         derived: deriveStats(stats, 1),
@@ -745,7 +745,7 @@ function scene(specs: DeathSceneUnit[]): {
     // `attackDamage` knob so tests that one-shot via 999-damage attacks
     // still work. Constitution=20 → maxHp=50 (matches the pre-E1
     // hard-coded default).
-    const baseMelee = ARCHETYPE_CONFIG.melee.baseStats;
+    const baseMelee = ARCHETYPE_CONFIG.mercenary.baseStats;
     const stats: UnitStats = {
       ...baseMelee,
       // Default constitution=20 → derived.maxHp = 50 (round(20*2.5)).
@@ -758,7 +758,7 @@ function scene(specs: DeathSceneUnit[]): {
     const u = new Unit({
       id: nextId++,
       team: s.team,
-      archetype: 'melee',
+      archetype: 'mercenary',
       glyph: 'M',
       stats,
       derived,

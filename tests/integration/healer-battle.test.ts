@@ -38,13 +38,13 @@ function runHealerBattle(seed: number): { resolved: boolean; healerCast: boolean
     theme: 'rock',
     playerTeam: [
       rollUnit('healer', new RNG(seed)),
-      rollUnit('melee', new RNG(seed + 1)),
-      rollUnit('melee', new RNG(seed + 2)),
-      rollUnit('melee', new RNG(seed + 3)),
+      rollUnit('mercenary', new RNG(seed + 1)),
+      rollUnit('mercenary', new RNG(seed + 2)),
+      rollUnit('mercenary', new RNG(seed + 3)),
     ],
     enemyTeam: [
-      rollUnit('melee', new RNG(seed + 10)),
-      rollUnit('melee', new RNG(seed + 11)),
+      rollUnit('mercenary', new RNG(seed + 10)),
+      rollUnit('mercenary', new RNG(seed + 11)),
     ],
   };
 

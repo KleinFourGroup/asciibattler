@@ -22,7 +22,7 @@ function mkWorld(w: number, h: number, walls: GridCoord[] = []): World {
         team: 'neutral',
         archetype: 'environment',
         glyph: '#',
-        stats: { ...ARCHETYPE_CONFIG.melee.baseStats },
+        stats: { ...ARCHETYPE_CONFIG.mercenary.baseStats },
         derived: inertDerived(1),
         position: { x: p.x, y: p.y },
       }),

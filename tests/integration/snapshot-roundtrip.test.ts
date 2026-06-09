@@ -291,9 +291,9 @@ describe('A2 round-trip: World', () => {
     const healer = world.spawnUnit(rollUnit('healer', new RNG(1)), 'player', { x: 5, y: 5 });
     healer.behaviors.push(new SupportMovementBehavior(), new AbilityBehavior());
     healer.abilities.push(new HealAlly());
-    const ally = world.spawnUnit(rollUnit('melee', new RNG(2)), 'player', { x: 5, y: 6 });
+    const ally = world.spawnUnit(rollUnit('mercenary', new RNG(2)), 'player', { x: 5, y: 6 });
     ally.currentHp = 1; // wounded, stays below maxHp after one heal
-    world.spawnUnit(rollUnit('melee', new RNG(3)), 'enemy', { x: 11, y: 11 });
+    world.spawnUnit(rollUnit('mercenary', new RNG(3)), 'enemy', { x: 11, y: 11 });
 
     let cast = false;
     for (let i = 0; i < 200 && !cast; i++) {
@@ -326,7 +326,7 @@ describe('A2 round-trip: World', () => {
     const mage = world.spawnUnit(rollUnit('mage', new RNG(1)), 'player', { x: 5, y: 5 });
     mage.behaviors.push(new MovementBehavior(), new AbilityBehavior());
     mage.abilities.push(new MagicBolt());
-    const enemy = world.spawnUnit(rollUnit('melee', new RNG(2)), 'enemy', { x: 5, y: 7 });
+    const enemy = world.spawnUnit(rollUnit('mercenary', new RNG(2)), 'enemy', { x: 5, y: 7 });
 
     // Advance until the mage is mid-charge (activeAction set, but the bolt
     // hasn't landed yet — currentTick strictly before finishTick).
@@ -372,7 +372,7 @@ describe('A2 round-trip: World', () => {
     const cat = world.spawnUnit(rollUnit('catapult', new RNG(1)), 'player', { x: 5, y: 5 });
     cat.behaviors.push(new MovementBehavior(), new AbilityBehavior());
     cat.abilities.push(new CatapultShot());
-    const enemy = world.spawnUnit(rollUnit('melee', new RNG(2)), 'enemy', { x: 5, y: 9 });
+    const enemy = world.spawnUnit(rollUnit('mercenary', new RNG(2)), 'enemy', { x: 5, y: 9 });
 
     // Advance until the catapult is mid-wind-up (activeAction set, shot not
     // landed yet — currentTick strictly before finishTick).
@@ -567,9 +567,9 @@ describe('A2 round-trip: Run', () => {
 });
 
 /** An 8-card roster (> handSize) for the H5 deck round-trip tests. */
-function bigRoster(): { archetype: 'melee' | 'ranged'; level: number }[] {
+function bigRoster(): { archetype: 'mercenary' | 'ranged'; level: number }[] {
   return Array.from({ length: 8 }, (_, i) => ({
-    archetype: i % 2 === 0 ? 'melee' : 'ranged',
+    archetype: i % 2 === 0 ? 'mercenary' : 'ranged',
     level: 1,
   }));
 }
@@ -588,12 +588,12 @@ function freshBattle(seed: number): {
 
   const COLUMNS = [2, 4, 6, 8, 10];
   for (const x of COLUMNS) {
-    const u = world.spawnUnit(rollUnit('melee', world.rng), 'player', { x, y: 2 });
+    const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'player', { x, y: 2 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
     u.abilities.push(new MeleeStrike());
   }
   for (const x of COLUMNS) {
-    const u = world.spawnUnit(rollUnit('melee', world.rng), 'enemy', { x, y: 9 });
+    const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'enemy', { x, y: 9 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
     u.abilities.push(new MeleeStrike());
   }

@@ -46,7 +46,7 @@ function spawnPositions(team: Team, region: SpawnRegion, seed: number, count: nu
   const bus = new EventBus<GameEvents>();
   const world = new World(bus, new RNG(1));
   const rng = new RNG(seed);
-  const templates = Array.from({ length: count }, () => rollUnit('melee', rng));
+  const templates = Array.from({ length: count }, () => rollUnit('mercenary', rng));
   spawnTeam(world, team, templates, region, rng);
   return world.units.filter((u) => u.team === team).map((u) => ({ ...u.position }));
 }

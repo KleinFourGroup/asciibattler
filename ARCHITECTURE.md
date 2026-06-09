@@ -65,14 +65,14 @@ src/
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v19 (bumped E1 through Phase I; I1 = agility→speed + precision/evasion)
+                             # Serializable; WorldSnapshot v20 (bumped E1 through Phase I; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses)
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
                              # GP2: applyDamage() — the single combat-damage chokepoint (HP -= + ledger
                              #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it
                              # I2: applyDamage(evadable) rolls precision-vs-evasion to-hit off combatRng (crit→miss order);
                              #     a miss emits unit:missed + 0 dmg. Only single-target strikes opt in; AoE/catapult/tile unmissable
     Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab + GP2 defense) + UnitDerived + Team + Behavior
-                             # archetype: melee|ranged|rogue|healer|mage|catapult|environment (E1–E7)
+                             # archetype: mercenary|adventurer|ronin|bandit|ranged|rogue|healer|mage|catapult|environment (I5 split melee→the 4-class melee family)
                              # level (E3) + xp/rosterIndex (E4); actionCooldowns Map + activeAction (A1)
                              # blocksLineOfSight (D6)
     stats.ts                 # deriveStats / inertDerived / ZERO_STATS + damage/heal/range/cadence helpers

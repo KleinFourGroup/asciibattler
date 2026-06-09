@@ -129,7 +129,7 @@ export function rollEnemyWave(
   const meleeCount = Math.round(count * 0.6);
   const team: UnitTemplate[] = [];
   for (let i = 0; i < count; i++) {
-    const archetype: Archetype = i < meleeCount ? 'melee' : 'ranged';
+    const archetype: Archetype = i < meleeCount ? 'mercenary' : 'ranged';
     team.push(scaledUnit(archetype, levels[i]!));
   }
   return team;

@@ -345,6 +345,22 @@ describe('MovementBehavior / tile objective (J1)', () => {
     expect(moves.length).toBe(movesAtArrival); // parked on the cell, no further steps
   });
 
+  it('a wall ON the rally cell does NOT freeze the unit (best-effort: paths as close as it can)', () => {
+    // J3 playtest fix: right-clicking an unpathable tile set a tile objective on
+    // an unreachable cell. A single unreachable goal → findPath [] → no step,
+    // and the objective suppresses the nearest-enemy fallback, so the whole team
+    // idled at spawn. Best-effort routing approaches the wall instead.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 8, y: 0, attackRange: 1, moveCooldownTicks: 1 },
+      { team: 'neutral', x: 0, y: 0, inert: true }, // a wall ON the rally cell
+      farEnemy,
+    ]);
+    setTileObjective(world, { x: 0, y: 0 });
+    for (let i = 0; i < 6; i++) world.tick();
+    expect(moves.length).toBeGreaterThan(0); // moved — did NOT freeze
+    expect(units[0]!.position.x).toBeLessThan(8); // closer to the walled rally cell
+  });
+
   it('an adjacent enemy interrupts tile pursuit (engaged → fights, does not walk on to the tile)', () => {
     // The player is pursuing a far tile but an enemy is in engage range (cheby
     // 1). updateTarget preempts to that enemy; MovementBehavior then abstains

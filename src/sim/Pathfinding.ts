@@ -51,6 +51,15 @@ export const pathfindingStats = {
  *
  * Returns the path as `[start, ..., goal]` (both ends inclusive), or `[]`
  * if no path exists or either endpoint is out of bounds / the goal is blocked.
+ *
+ * **`bestEffort`** (default false): when the goal is unreachable (blocked, or
+ * walled off), instead of returning `[]`, return the path to the CLOSEST
+ * reachable cell to the goal (min Chebyshev-to-goal, then shortest route). This
+ * is the J3 "path as close as you can" rally semantic — a tile objective on a
+ * wall must NOT freeze the team (a single unreachable goal → `[]` → no step is
+ * exactly the retired `pickGoalCellInRange` freeze). Off by default so every
+ * other caller (enemy-chasing, firing cells) is byte-identical and the fuzz
+ * baseline is untouched.
  */
 export function findPath(
   start: GridCoord,
@@ -59,6 +68,7 @@ export function findPath(
   gridW: number,
   gridH: number,
   costAt: CostFn = UNIT_COST,
+  bestEffort = false,
 ): GridCoord[] {
   pathfindingCallCount++; // J2 — recompute-budget instrument (output-neutral).
   if (!inBounds(start, gridW, gridH) || !inBounds(goal, gridW, gridH)) return [];
@@ -72,7 +82,9 @@ export function findPath(
     const k = key(b);
     if (k !== startKey) blocked.add(k);
   }
-  if (blocked.has(goalKey)) return [];
+  // A blocked goal is unreachable. Strict mode gives up; best-effort still
+  // searches toward it and returns the closest reachable cell below.
+  if (blocked.has(goalKey) && !bestEffort) return [];
 
   if (startKey === goalKey) return [start];
 
@@ -81,12 +93,28 @@ export function findPath(
   const cameFrom = new Map<string, string>();
   const open = new Set<string>([startKey]);
 
+  // best-effort: the closest-to-goal cell actually reached (min Chebyshev-to-
+  // goal, ties → shortest approach). Seeded with the start, so a walled-in unit
+  // "routes" to itself (a length-1 path = hold), never `[]` (a freeze).
+  let closestKey = startKey;
+  let closestH = chebyshev(start, goal);
+  let closestG = 0;
+
   while (open.size > 0) {
     const currentKey = popLowestF(open, fScore, goal);
     if (currentKey === goalKey) return reconstruct(cameFrom, currentKey);
 
     const current = fromKey(currentKey);
     const currentG = gScore.get(currentKey)!;
+
+    if (bestEffort) {
+      const h = chebyshev(current, goal);
+      if (h < closestH || (h === closestH && currentG < closestG)) {
+        closestH = h;
+        closestG = currentG;
+        closestKey = currentKey;
+      }
+    }
 
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
@@ -109,7 +137,10 @@ export function findPath(
       }
     }
   }
-  return [];
+  // Goal never reached. Strict → no path; best-effort → the closest cell we got
+  // to (a length-1 [start] if the unit is fully walled in — caller treats that
+  // as "hold", never a freeze).
+  return bestEffort ? reconstruct(cameFrom, closestKey) : [];
 }
 
 function inBounds(c: GridCoord, gridW: number, gridH: number): boolean {

@@ -93,9 +93,19 @@ export function routeToward(
   goal: GridCoord,
   ctx: MovementContext,
   world: World,
+  // J3 — forwarded to `findPath`: an unreachable goal yields a path to the
+  // closest reachable cell instead of `[]` (the tile-objective "as close as you
+  // can" rally — keeps an unpathable rally cell from freezing the team).
+  bestEffort = false,
 ): GridCoord[] {
-  return findPath(from, goal, ctx.pathBlockers, world.gridW, world.gridH, (c) =>
-    costAt(c, world, ctx.otherUnitCells),
+  return findPath(
+    from,
+    goal,
+    ctx.pathBlockers,
+    world.gridW,
+    world.gridH,
+    (c) => costAt(c, world, ctx.otherUnitCells),
+    bestEffort,
   );
 }
 
@@ -131,6 +141,13 @@ export interface MovementIntent {
    * sidestep). N1's gap-closer rides the `> 1` path.
    */
   readonly maxCells: number;
+  /**
+   * J3 — route to the CLOSEST reachable cell when a goal is unreachable, rather
+   * than abstaining. The tile-objective rally sets this (a wall on the rally
+   * cell must not freeze the team); enemy-chasing leaves it off so a genuinely
+   * blocked target still abstains as before. Defaults to false.
+   */
+  readonly bestEffort?: boolean;
   /**
    * Whether a `maxCells: 1` step may sidestep when the forward cell is
    * occupied. Defaults to `true` (MovementBehavior + tile pursuit). A future
@@ -179,7 +196,7 @@ function stepAlongRoute(
   intent: MovementIntent,
   durationTicks: number,
 ): ActionProposal | null {
-  const path = routeToward(from, goal, ctx, world);
+  const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false);
   if (path.length < 2) return null;
 
   if (intent.maxCells <= 1) {

@@ -13,15 +13,6 @@ import type { GridCoord } from '../core/types';
 const CAMERA_PITCH_RAD = Math.PI / 4;
 
 /**
- * J3 — the horizontal plane `pickCell` raycasts against, in world Y. The unit
- * glyphs' centers sit at `SPRITE_CENTER_OFFSET` (0.5) above flat ground, so
- * picking at that height makes "click the glyph you see" land on its cell on the
- * common flat tiles; raised/lowered terrain adds a sub-cell parallax that the
- * 1×1 cell tolerates (rally tiles are forgiving; enemies snap to their cell).
- */
-const PICK_PLANE_Y = 0.5;
-
-/**
  * X/Z padding around the arena AABB and Y headroom for the sprite layer.
  * X/Z scales with `gridW` / `gridH` (set per battle via `fitToBoard`);
  * the constant terms here give the terrain edge a bit of breathing room
@@ -124,12 +115,9 @@ export class Renderer {
   private mouseY: number | null = null;
 
   /** J3 — reusable raycast scratch for `pickCell` (screen → grid cell), kept as
-   *  fields so a per-click pick allocates nothing. The plane sits at
-   *  `PICK_PLANE_Y`; normal·p + constant = 0 ⇒ constant = −PICK_PLANE_Y. */
+   *  fields so a per-click pick allocates nothing. */
   private readonly pickRaycaster = new THREE.Raycaster();
-  private readonly pickPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -PICK_PLANE_Y);
   private readonly pickNdc = new THREE.Vector2();
-  private readonly pickPoint = new THREE.Vector3();
 
   constructor(canvas: HTMLCanvasElement, onFrame: (dtSeconds: number) => void) {
     this.onFrame = onFrame;
@@ -247,13 +235,17 @@ export class Renderer {
 
   /**
    * J3 — screen → grid cell. Raycasts a viewport pixel (a click's
-   * `clientX/clientY`) through the camera onto the `PICK_PLANE_Y` plane, then
-   * inverts `gridToWorld` to the integer cell. Returns null when the ray misses
-   * the plane (parallel/behind) or the hit lands off the current board. The
-   * inversion mirrors `gridToWorld`: worldX = x + 0.5 − boardW/2 and
-   * worldZ = boardH/2 − y − 0.5, so x = ⌊worldX + boardW/2⌋, y = ⌊boardH/2 − worldZ⌋.
+   * `clientX/clientY`) through the camera against the `surface` mesh (the
+   * TERRAIN mesh — every cell has a top face at its real height), then inverts
+   * `gridToWorld` to the integer cell. Hitting the actual surface (not a flat
+   * plane) is what makes the pick exact on raised/lowered tiles — a flat-plane
+   * pick drifts by a tile where the terrain height differs from the plane (the
+   * playtest "off by a tile"). Returns null when the ray misses the surface
+   * (clicked into the void off the board) or the hit lands off-board. The
+   * inversion mirrors `gridToWorld`: worldX = x + 0.5 − boardW/2,
+   * worldZ = boardH/2 − y − 0.5 ⇒ x = ⌊worldX + boardW/2⌋, y = ⌊boardH/2 − worldZ⌋.
    */
-  pickCell(clientX: number, clientY: number): GridCoord | null {
+  pickCell(clientX: number, clientY: number, surface: THREE.Object3D): GridCoord | null {
     const rect = this.webgl.domElement.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return null;
     this.pickNdc.set(
@@ -261,10 +253,11 @@ export class Renderer {
       -((clientY - rect.top) / rect.height) * 2 + 1,
     );
     this.pickRaycaster.setFromCamera(this.pickNdc, this.camera);
-    if (!this.pickRaycaster.ray.intersectPlane(this.pickPlane, this.pickPoint)) return null;
+    const hit = this.pickRaycaster.intersectObject(surface, false)[0];
+    if (!hit) return null;
 
-    const x = Math.floor(this.pickPoint.x + this.boardW / 2);
-    const y = Math.floor(this.boardH / 2 - this.pickPoint.z);
+    const x = Math.floor(hit.point.x + this.boardW / 2);
+    const y = Math.floor(this.boardH / 2 - hit.point.z);
     if (x < 0 || x >= this.boardW || y < 0 || y >= this.boardH) return null;
     return { x, y };
   }

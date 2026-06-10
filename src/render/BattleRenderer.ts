@@ -104,6 +104,9 @@ export class BattleRenderer {
    */
   private objective: BattleObjective | null = null;
   private objectiveMarker: SpriteHandle | null = null;
+  /** J3 — scratch for the camera's world-space up axis (the enemy mark's lift
+   *  direction), recomputed per frame so it tracks a camera pan/mode swap. */
+  private readonly cameraUpScratch = new THREE.Vector3();
   /**
    * The currently-attached battle World. Null when no battle is running (map
    * screen, defeat state). Set by `attach`, cleared by `detach`.
@@ -116,6 +119,10 @@ export class BattleRenderer {
     /** C1c: queried at sprite spawn + move endpoints so units stand on
      *  the tile top instead of floating at a fixed plane. */
     private readonly terrain: TerrainRenderer,
+    /** J3 — used by `updateObjectiveMarker` to lift the enemy mark along the
+     *  camera's up (screen-up) axis so it sits atop the unit without the
+     *  off-axis skew a world-Y lift causes under the pitched perspective. */
+    private readonly camera: THREE.Camera,
     bus: EventBus<GameEvents>,
   ) {
     this.animator = new SpriteAnimator(this.sprites);
@@ -255,7 +262,14 @@ export class BattleRenderer {
       this.sprites.updateSprite(marker, { alpha: 0 });
       return;
     }
-    pos.y += HITSPLAT_Y_OFFSET + OBJECTIVE_MARKER_ENEMY_LIFT;
+    // Lift along the camera's UP axis (= straight up in view space, so straight
+    // up ON SCREEN) instead of world-Y. The sprite shader billboards by
+    // offsetting the quad in view space about the projection of this position,
+    // so a world-Y lift projects off-axis (skewed sideways) for units away from
+    // screen center; camera-up keeps the X directly above the unit. Column 1 of
+    // the camera's world matrix is its up axis (unit-length, orthonormal).
+    const up = this.cameraUpScratch.setFromMatrixColumn(this.camera.matrixWorld, 1);
+    pos.addScaledVector(up, OBJECTIVE_MARKER_ENEMY_LIFT);
     this.sprites.updateSprite(marker, {
       position: pos,
       size: OBJECTIVE_MARKER_ENEMY_SIZE,
@@ -1059,17 +1073,25 @@ const HITSPLAT_Y_OFFSET = 0.5;
  *  - `_COLOR`  amber so it reads as a waypoint, distinct from player-green /
  *              enemy-red, and `_BLOOM` gives it a faint glow so it pops.
  *  - tile vs enemy SIZE: a rally tile draws LARGER (the user's call — a big X on
- *    the ground); an enemy mark rides at normal glyph size atop the target.
- *  - `_ENEMY_LIFT` stacks on HITSPLAT_Y_OFFSET so the X clears the top of the
- *    target's billboard; `_TILE_LIFT` floats it just off the tile surface.
+ *    the ground); an enemy mark rides smaller, just atop the target glyph.
+ *  - `_TILE_LIFT` floats the tile X just off the surface (world-Y; the tile is
+ *    flat, no skew at 0.1). `_ENEMY_LIFT` rides the mark above the unit along the
+ *    CAMERA-UP (screen-up) axis — see `updateObjectiveMarker`.
+ *
+ * J3 playtest fixes (2026-06-09): enemy size 1.0→0.5 (was ~2× too large) and the
+ * enemy lift moved off world-Y onto camera-up (a world-Y offset projects
+ * off-axis under the pitched perspective → the mark skewed sideways for units
+ * away from screen center; the same off-axis drift the I2 hitsplat fix solved).
  */
 const OBJECTIVE_MARKER_GLYPH = 'X'; // registered in glyphs.ts (J3, last atlas cell).
 const OBJECTIVE_MARKER_COLOR = COLORS.TERMINAL_AMBER;
 const OBJECTIVE_MARKER_BLOOM = 0.6;
 const OBJECTIVE_MARKER_TILE_SIZE = 1.6;
-const OBJECTIVE_MARKER_ENEMY_SIZE = 1.0;
+const OBJECTIVE_MARKER_ENEMY_SIZE = 0.5;
 const OBJECTIVE_MARKER_TILE_LIFT = 0.1;
-const OBJECTIVE_MARKER_ENEMY_LIFT = 0.2;
+/** Screen-up (camera-up) distance the enemy mark rides above the unit's center.
+ *  ~0.6 clears the top of a unit-size (1.0) billboard so the X sits just atop it. */
+const OBJECTIVE_MARKER_ENEMY_LIFT = 0.6;
 
 function colorForTeam(team: Team): string {
   if (team === 'player') return COLORS.TERMINAL_GREEN;

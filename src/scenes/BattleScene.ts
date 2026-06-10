@@ -60,13 +60,19 @@ export class BattleScene implements Scene {
       encounter.gridH,
     );
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
-    this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.overlays, ctx.terrain, ctx.bus);
+    this.battleRenderer = new BattleRenderer(
+      ctx.sprites,
+      ctx.overlays,
+      ctx.terrain,
+      ctx.renderer.camera,
+      ctx.bus,
+    );
     this.playback = ctx.playback;
     // J3 — the objective controller needs the World (to enqueue commands + read
     // enemy positions) and the Renderer (canvas listeners + screen→cell pick).
     // Built before the HUD so the HUD's buttons/hotkeys can drive it; the HUD
     // reflects its armed state back via onArmedChange.
-    this.objective = new ObjectiveController(this.world, ctx.renderer);
+    this.objective = new ObjectiveController(this.world, ctx.renderer, ctx.terrain);
     this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings, this.objective);
     this.objective.onArmedChange = (armed) => this.hud?.setObjectiveArmed(armed);
 

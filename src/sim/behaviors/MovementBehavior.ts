@@ -69,10 +69,17 @@ export class MovementBehavior implements Behavior {
       // logic below drives the approach.
       const objective = world.objective;
       if (objective !== null && objective.kind === 'tile' && unit.team === 'player') {
+        // J3 — bestEffort so an UNREACHABLE rally cell (a wall, or a walled-off
+        // region) routes the unit AS CLOSE AS IT CAN rather than abstaining. A
+        // single unreachable goal → findPath [] → no step is exactly the
+        // pickGoalCellInRange freeze; here the whole team would idle (the
+        // objective also suppresses the nearest-enemy fallback). Right-clicking
+        // a wall is the reported trigger.
         return advance(unit, world, {
           goals: [objective.cell],
           approachToward: objective.cell,
           maxCells: 1,
+          bestEffort: true,
         });
       }
       return null;

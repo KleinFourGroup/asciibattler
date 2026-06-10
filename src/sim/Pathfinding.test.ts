@@ -169,6 +169,52 @@ describe('Pathfinding / findPath with per-cell costs', () => {
   });
 });
 
+describe('Pathfinding / findPath best-effort (J3)', () => {
+  it('routes to the closest reachable cell when the goal is a blocker', () => {
+    // Strict gives up on a blocked goal; best-effort lands adjacent to it.
+    expect(findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [{ x: 5, y: 5 }], G, G)).toEqual([]);
+    const path = findPath({ x: 0, y: 0 }, { x: 5, y: 5 }, [{ x: 5, y: 5 }], G, G, undefined, true);
+    expect(path.length).toBeGreaterThan(1);
+    expect(path[0]).toEqual({ x: 0, y: 0 });
+    const end = path[path.length - 1]!;
+    expect(end).not.toEqual({ x: 5, y: 5 }); // never lands ON the blocked goal
+    expect(Math.max(Math.abs(end.x - 5), Math.abs(end.y - 5))).toBe(1); // as close as it can
+    assertContiguous(path);
+  });
+
+  it('approaches a goal walled off behind an unbroken barrier', () => {
+    // A full vertical wall at x=5 splits the grid; (10,5) is unreachable from
+    // (0,5). Strict []; best-effort presses up against the wall (x=4).
+    const blockers: GridCoord[] = [];
+    for (let y = 0; y < G; y++) blockers.push({ x: 5, y });
+    expect(findPath({ x: 0, y: 5 }, { x: 10, y: 5 }, blockers, G, G)).toEqual([]);
+    const path = findPath({ x: 0, y: 5 }, { x: 10, y: 5 }, blockers, G, G, undefined, true);
+    expect(path.length).toBeGreaterThan(1);
+    expect(path[path.length - 1]!.x).toBe(4);
+    assertContiguous(path);
+  });
+
+  it('is identical to strict when the goal IS reachable', () => {
+    const strict = findPath({ x: 0, y: 0 }, { x: 4, y: 3 }, [{ x: 2, y: 1 }], G, G);
+    const effort = findPath({ x: 0, y: 0 }, { x: 4, y: 3 }, [{ x: 2, y: 1 }], G, G, undefined, true);
+    expect(effort).toEqual(strict);
+    expect(effort[effort.length - 1]).toEqual({ x: 4, y: 3 });
+  });
+
+  it('returns [start] (a hold, never []) when fully walled in', () => {
+    const blockers: GridCoord[] = [];
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        if (dx === 0 && dy === 0) continue;
+        blockers.push({ x: 5 + dx, y: 5 + dy });
+      }
+    }
+    expect(findPath({ x: 5, y: 5 }, { x: 0, y: 0 }, blockers, G, G, undefined, true)).toEqual([
+      { x: 5, y: 5 },
+    ]);
+  });
+});
+
 function assertContiguous(path: GridCoord[]): void {
   for (let i = 1; i < path.length; i++) {
     const a = path[i - 1]!;

@@ -18,6 +18,7 @@
 
 import type { World } from '../sim/World';
 import type { Renderer } from '../render/Renderer';
+import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { objectiveAtCell, type EnemyAtCell } from '../sim/objective';
 
 /** The HUD-facing slice: arm set-mode + clear. The HUD buttons/hotkeys call
@@ -38,6 +39,10 @@ export class ObjectiveController implements ObjectiveControls {
   constructor(
     private readonly world: World,
     private readonly renderer: Renderer,
+    /** J3 — the terrain mesh `pickCell` raycasts against, so the pick lands on
+     *  the real tile surface (exact on raised/lowered tiles) rather than a flat
+     *  plane (which drifts by a tile where heights differ). */
+    private readonly terrain: TerrainRenderer,
   ) {
     const canvas = this.renderer.webgl.domElement;
     canvas.addEventListener('contextmenu', this.onContextMenu);
@@ -86,7 +91,7 @@ export class ObjectiveController implements ObjectiveControls {
   /** Pick the cell under the cursor, resolve it, enqueue the set. Returns
    *  whether a command was enqueued (false = clicked off the board). */
   private setFromClient(clientX: number, clientY: number): boolean {
-    const cell = this.renderer.pickCell(clientX, clientY);
+    const cell = this.renderer.pickCell(clientX, clientY, this.terrain.mesh);
     if (!cell) return false;
     const enemies: EnemyAtCell[] = this.world.units
       .filter((u) => u.team === 'enemy' && u.currentHp > 0)

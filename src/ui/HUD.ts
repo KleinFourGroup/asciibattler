@@ -10,6 +10,7 @@ import { isAtLevelCap, xpToNext, displayLevel } from '../sim/xp';
 import { STAT_LABELS } from './statLabels';
 import type { PlaybackSpeed } from './PlaybackSpeed';
 import type { Keybindings } from './Keybindings';
+import type { ObjectiveControls } from './ObjectiveController';
 
 /** H4b — the encounter pool snapshot the HUD renders (from `Run` state). */
 interface EncounterPools {
@@ -29,9 +30,17 @@ export class HUD {
   private readonly speedButton: HTMLButtonElement;
   private readonly playback: PlaybackSpeed;
   /** J3 — the rebindable-hotkey registry. The HUD subscribes its control
-   *  surface (fast-forward today) to it and reads `labelFor` for button
-   *  tooltips so a rebind shows up in the UI. */
+   *  surface (fast-forward + the objective controls) to it and reads `labelFor`
+   *  for button labels so a rebind shows up in the UI. */
   private readonly keybindings: Keybindings;
+  /** J3 — the objective input controller (arm set-mode / clear). Owned by
+   *  BattleScene; the HUD buttons + hotkeys drive it. */
+  private readonly objective: ObjectiveControls;
+  /** J3 — the two objective controls + the live "armed" flag the Set button
+   *  reflects (BattleScene flips it via `setObjectiveArmed`). */
+  private readonly setObjectiveButton: HTMLButtonElement;
+  private readonly clearObjectiveButton: HTMLButtonElement;
+  private objectiveArmed = false;
   /** H4b — the encounter health pools + turn number, populated per battle. */
   private readonly pools: HTMLElement;
   private readonly status: HTMLElement;
@@ -52,9 +61,11 @@ export class HUD {
     bus: EventBus<GameEvents>,
     playback: PlaybackSpeed,
     keybindings: Keybindings,
+    objective: ObjectiveControls,
   ) {
     this.playback = playback;
     this.keybindings = keybindings;
+    this.objective = objective;
     this.root = document.createElement('div');
     // `screen-fade` keeps the panel at opacity:0 until show() flips
     // is-visible; that's also why the HUD doesn't use `hidden` — `display:
@@ -87,6 +98,25 @@ export class HUD {
     this.root.appendChild(this.speedButton);
     this.renderSpeed();
     this.subscriptions.push(keybindings.on('fastForward', () => this.cycleSpeed()));
+
+    // J3 — the objective controls: Set (arm "pick a target" mode → next
+    // left-click sets; right-clicking the board also sets) + Clear. Both are
+    // buttons AND rebindable hotkeys; the button labels show the live binding.
+    const objectiveControls = document.createElement('div');
+    objectiveControls.className = 'hud-objective';
+    this.setObjectiveButton = document.createElement('button');
+    this.setObjectiveButton.type = 'button';
+    this.setObjectiveButton.className = 'hud-objective-set';
+    this.setObjectiveButton.addEventListener('click', () => this.objective.armSet());
+    this.clearObjectiveButton = document.createElement('button');
+    this.clearObjectiveButton.type = 'button';
+    this.clearObjectiveButton.className = 'hud-objective-clear';
+    this.clearObjectiveButton.addEventListener('click', () => this.objective.clear());
+    objectiveControls.append(this.setObjectiveButton, this.clearObjectiveButton);
+    this.root.appendChild(objectiveControls);
+    this.renderObjectiveButtons();
+    this.subscriptions.push(keybindings.on('setObjective', () => this.objective.armSet()));
+    this.subscriptions.push(keybindings.on('clearObjective', () => this.objective.clear()));
 
     // H4b — the two encounter pools (run-wide player pool vs per-encounter enemy
     // pool) + the current turn. Static during a single turn (the pools chip
@@ -184,6 +214,30 @@ export class HUD {
     // J3 — the tooltip shows the live binding so a rebind is reflected here.
     this.speedButton.title = `Fast-forward (${this.keybindings.labelFor('fastForward')})`;
     this.speedButton.setAttribute('aria-pressed', String(speed > 1));
+  }
+
+  /** J3 — BattleScene flips this when the controller arms/disarms (via
+   *  onArmedChange), so the Set button shows the active "click a target" state
+   *  whether arming came from the button or the hotkey. */
+  setObjectiveArmed(armed: boolean): void {
+    this.objectiveArmed = armed;
+    this.renderObjectiveButtons();
+  }
+
+  /** J3 — paint the two objective buttons. Labels carry the live hotkey (so a
+   *  rebind shows up); the Set button switches to its armed prompt + an
+   *  is-armed class while waiting for the target click. */
+  private renderObjectiveButtons(): void {
+    const setKey = this.keybindings.labelFor('setObjective');
+    const clearKey = this.keybindings.labelFor('clearObjective');
+    this.setObjectiveButton.textContent = this.objectiveArmed
+      ? '⌖ Click a target…'
+      : `⌖ Set Objective (${setKey})`;
+    this.setObjectiveButton.title = `Set objective: click here then left-click a target, or right-click the board (${setKey})`;
+    this.setObjectiveButton.setAttribute('aria-pressed', String(this.objectiveArmed));
+    this.setObjectiveButton.classList.toggle('is-armed', this.objectiveArmed);
+    this.clearObjectiveButton.textContent = `✕ Clear (${clearKey})`;
+    this.clearObjectiveButton.title = `Clear objective (${clearKey})`;
   }
 
   private addUnit(unitId: number): void {

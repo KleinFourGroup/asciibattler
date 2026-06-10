@@ -3,6 +3,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import type { World } from '../sim/World';
+import type { BattleObjective } from '../sim/objective';
 import type { Team, Unit } from '../sim/Unit';
 import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
 import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
@@ -95,6 +96,15 @@ export class BattleRenderer {
    *  kept separate from `scratchPos` so the two can't alias mid-frame. */
   private readonly homingScratch = new THREE.Vector3();
   /**
+   * J3 — the active player objective + its marker sprite. The marker is the `X`
+   * glyph billboard; `updateObjectiveMarker` repositions it every frame (a tile
+   * stays put, an enemy mark tracks the target's live, lerped position). State
+   * is driven entirely by `objective:set` / `objective:cleared`, so the marker
+   * is correct however the objective was set (mouse / hotkey / future AI/fuzz).
+   */
+  private objective: BattleObjective | null = null;
+  private objectiveMarker: SpriteHandle | null = null;
+  /**
    * The currently-attached battle World. Null when no battle is running (map
    * screen, defeat state). Set by `attach`, cleared by `detach`.
    */
@@ -150,6 +160,9 @@ export class BattleRenderer {
         }
       }),
     );
+    // J3 — the objective marker. set spawns/repoints the `X`; cleared removes it.
+    this.subscriptions.push(bus.on('objective:set', this.onObjectiveSet));
+    this.subscriptions.push(bus.on('objective:cleared', this.onObjectiveCleared));
   }
 
   /** Per-render-frame tick. Drives sprite lerps + overlay position-follow + progress fill. */
@@ -157,6 +170,9 @@ export class BattleRenderer {
     this.animator.update(dt);
     this.updateExplosions(dt);
     this.updateOverlays(dt);
+    // After overlays so an enemy mark reads the target's already-lerped position
+    // this frame (no one-frame lag behind the unit it's pinned to).
+    this.updateObjectiveMarker();
   }
 
   /**
@@ -180,6 +196,71 @@ export class BattleRenderer {
         this.explosions.splice(i, 1);
       }
     }
+  }
+
+  /** J3 — record the new objective and lazily spawn the marker sprite (one per
+   *  battle, reused across re-sets). `updateObjectiveMarker` positions it. */
+  private onObjectiveSet = ({ objective }: GameEvents['objective:set']): void => {
+    this.objective = objective;
+    if (!this.objectiveMarker) {
+      // Seed at the origin; updateObjectiveMarker (same frame, end of update())
+      // moves it to the real spot before it's ever drawn.
+      this.objectiveMarker = this.sprites.addSprite(
+        OBJECTIVE_MARKER_GLYPH,
+        OBJECTIVE_MARKER_COLOR,
+        this.scratchPos.set(0, 0, 0),
+      );
+      this.sprites.updateSprite(this.objectiveMarker, { bloomIntensity: OBJECTIVE_MARKER_BLOOM });
+    }
+    this.updateObjectiveMarker();
+  };
+
+  /** J3 — objective gone (player cleared it, or an enemy mark auto-cleared on
+   *  the target's death): drop the marker sprite. */
+  private onObjectiveCleared = (): void => {
+    this.objective = null;
+    if (this.objectiveMarker) {
+      this.sprites.removeSprite(this.objectiveMarker);
+      this.objectiveMarker = null;
+    }
+  };
+
+  /**
+   * J3 — position the objective marker for the current frame. A tile objective
+   * sits (larger) on its rally cell; an enemy objective rides atop the target's
+   * billboard, tracking its live position. If the target's sprite is briefly
+   * gone (it died this tick — the enemy objective auto-clears at the next
+   * top-of-tick, a ≤1-frame gap before `objective:cleared` lands), hide the
+   * marker rather than stranding it at a stale spot.
+   */
+  private updateObjectiveMarker(): void {
+    const marker = this.objectiveMarker;
+    const obj = this.objective;
+    if (!marker || !obj || !this.world) return;
+
+    if (obj.kind === 'tile') {
+      const pos = this.tileWorldPos(obj.cell);
+      pos.y += OBJECTIVE_MARKER_TILE_LIFT;
+      this.sprites.updateSprite(marker, {
+        position: pos,
+        size: OBJECTIVE_MARKER_TILE_SIZE,
+        alpha: 1,
+      });
+      return;
+    }
+
+    const handle = this.handles.get(obj.unitId);
+    const pos = handle ? this.sprites.getPosition(handle, this.scratchPos) : null;
+    if (!pos) {
+      this.sprites.updateSprite(marker, { alpha: 0 });
+      return;
+    }
+    pos.y += HITSPLAT_Y_OFFSET + OBJECTIVE_MARKER_ENEMY_LIFT;
+    this.sprites.updateSprite(marker, {
+      position: pos,
+      size: OBJECTIVE_MARKER_ENEMY_SIZE,
+      alpha: 1,
+    });
   }
 
   /**
@@ -225,6 +306,12 @@ export class BattleRenderer {
     this.overlayFades.clear();
     this.overlayFadeIns.clear();
     this.progress.clear();
+    // J3 — drop the objective marker + state so the next battle starts clean.
+    if (this.objectiveMarker) {
+      this.sprites.removeSprite(this.objectiveMarker);
+      this.objectiveMarker = null;
+    }
+    this.objective = null;
     this.world = null;
   }
 
@@ -965,6 +1052,24 @@ const CATAPULT_DUD_BLOOM = 0.3;
  *  sprite rather than its center. The sprite quad is 1×1 centered at
  *  SPRITE_CENTER_OFFSET, so half the quad (0.5) reaches the top edge. */
 const HITSPLAT_Y_OFFSET = 0.5;
+
+/**
+ * J3 — the in-battle objective marker (an `X` glyph billboard). Pure-VFX render
+ * consts (the ROADMAP allows isolated render consts for VFX rather than config):
+ *  - `_COLOR`  amber so it reads as a waypoint, distinct from player-green /
+ *              enemy-red, and `_BLOOM` gives it a faint glow so it pops.
+ *  - tile vs enemy SIZE: a rally tile draws LARGER (the user's call — a big X on
+ *    the ground); an enemy mark rides at normal glyph size atop the target.
+ *  - `_ENEMY_LIFT` stacks on HITSPLAT_Y_OFFSET so the X clears the top of the
+ *    target's billboard; `_TILE_LIFT` floats it just off the tile surface.
+ */
+const OBJECTIVE_MARKER_GLYPH = 'X'; // registered in glyphs.ts (J3, last atlas cell).
+const OBJECTIVE_MARKER_COLOR = COLORS.TERMINAL_AMBER;
+const OBJECTIVE_MARKER_BLOOM = 0.6;
+const OBJECTIVE_MARKER_TILE_SIZE = 1.6;
+const OBJECTIVE_MARKER_ENEMY_SIZE = 1.0;
+const OBJECTIVE_MARKER_TILE_LIFT = 0.1;
+const OBJECTIVE_MARKER_ENEMY_LIFT = 0.2;
 
 function colorForTeam(team: Team): string {
   if (team === 'player') return COLORS.TERMINAL_GREEN;

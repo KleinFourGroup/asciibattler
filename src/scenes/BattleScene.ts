@@ -16,6 +16,7 @@ import { applyTerrain, pickSpawnRegions, setupRngFor, spawnTeam } from '../sim/b
 import { BattleRenderer, gridToWorld } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { HUD } from '../ui/HUD';
+import { ObjectiveController } from '../ui/ObjectiveController';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
 import { TICK_RATE } from '../config';
 import { HEALTH } from '../config/health';
@@ -40,6 +41,10 @@ export class BattleScene implements Scene {
   /** I3 — the page-lifetime fast-forward controller (from ctx). Read live in
    *  `tick` so a mid-battle speed change takes effect next frame. */
   private playback: PlaybackSpeed | null = null;
+  /** J3 — the objective input controller (canvas right-click / armed left-click
+   *  → setObjective/clearObjective commands). Battle-scoped; torn down in
+   *  dispose so its canvas listeners don't outlive the battle. */
+  private objective: ObjectiveController | null = null;
   private readonly subscriptions: Array<() => void> = [];
 
   mount(ctx: SceneContext): void {
@@ -57,7 +62,13 @@ export class BattleScene implements Scene {
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
     this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.overlays, ctx.terrain, ctx.bus);
     this.playback = ctx.playback;
-    this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings);
+    // J3 — the objective controller needs the World (to enqueue commands + read
+    // enemy positions) and the Renderer (canvas listeners + screen→cell pick).
+    // Built before the HUD so the HUD's buttons/hotkeys can drive it; the HUD
+    // reflects its armed state back via onArmedChange.
+    this.objective = new ObjectiveController(this.world, ctx.renderer);
+    this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings, this.objective);
+    this.objective.onArmedChange = (armed) => this.hud?.setObjectiveArmed(armed);
 
     // B6 audio: per-battle subscriptions that need the World to look up
     // the attacker's archetype (attackRange<=1 → melee, else ranged).
@@ -226,6 +237,7 @@ export class BattleScene implements Scene {
   dispose(): void {
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
+    this.objective?.dispose();
     this.battleRenderer?.detach();
     this.battleRenderer?.dispose();
     this.hud?.dispose();
@@ -235,6 +247,7 @@ export class BattleScene implements Scene {
     this.terrain?.clear();
     this.battleRenderer = null;
     this.hud = null;
+    this.objective = null;
     this.world = null;
     this.clock = null;
     this.terrain = null;

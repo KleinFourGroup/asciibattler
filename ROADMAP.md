@@ -566,16 +566,24 @@ at 3× (ties back to I3).
 
 ### J3 — Objective UI + rebindable hotkeys
 
-**Shape:** **right-click** sets the objective; a **Set Objective** button
-(click → then left-click a target) and a **Clear Objective** button. **Both
-buttons hotkeyable, and the hotkeys rebindable** — this needs a small
-**input-binding layer** (no game-side rebindable-keybinding system exists
-yet; build a minimal one, config-backed, *not* tied to Claude Code's own
-keybindings). Render + browser-verified.
+**✅ DONE (2026-06-09, two commits) — see [HANDOFF.md](HANDOFF.md) for the as-built record.**
+Commit 1 = the rebindable-hotkey PLUMBING (`config/keybindings.json` + `src/config/keybindings.ts`
++ the `Keybindings` runtime registry: `codeFor`/`actionFor`/`rebind`/`on`/a DOM-free `handleKeyDown`)
++ folding I3's fast-forward `F` into it. Commit 2 = the objective UI: right-click sets directly,
+a **Set Objective** button/hotkey arms a "pick a target" mode (next left-click sets), a **Clear**
+button/hotkey clears; the capital-`X` marker (the last FontAtlas cell) renders larger on a rally
+tile / atop the target enemy's billboard, driven purely off `objective:set`/`cleared`. No
+sim/snapshot/fuzz change (presentation + input on J1's model). **PHASE J's first playtestable surface.**
 
-**Decision points J3:** the binding-config surface (a `config/keybindings.json`
-+ an in-game rebind affordance vs just a config file for now — recommend
-config-file + defaults this round, an in-game rebind screen later).
+**The middle-ground keybinding call (the J3 decision point, resolved with the user):** build the
+runtime-rebindable registry NOW (so a future in-game rebind screen is a one-line `rebind` caller),
+but seed it from config defaults this round — no rebind SCREEN yet (it stays on the "NOT doing yet"
+list). Defaults `fastForward KeyF` / `setObjective KeyO` / `clearObjective KeyC`.
+
+**Original shape (for reference):** **right-click** sets the objective; a **Set Objective** button
+(click → then left-click a target) and a **Clear Objective** button. **Both buttons hotkeyable, and
+the hotkeys rebindable** — a small **input-binding layer**, config-backed, *not* tied to Claude
+Code's own keybindings. Render + browser-verified.
 
 ### J4 — Fuzz strategy for objectives (arena runs)
 

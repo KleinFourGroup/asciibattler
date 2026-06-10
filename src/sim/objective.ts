@@ -21,3 +21,28 @@ import type { GridCoord } from '../core/types';
 export type BattleObjective =
   | { readonly kind: 'enemy'; readonly unitId: number }
   | { readonly kind: 'tile'; readonly cell: GridCoord };
+
+/** A living enemy's id + cell — the minimal slice `objectiveAtCell` needs. The
+ *  caller (J3's objective-input controller) builds these from the World's living
+ *  enemy units, so this stays free of a render→sim or sim→render import. */
+export interface EnemyAtCell {
+  readonly id: number;
+  readonly cell: GridCoord;
+}
+
+/**
+ * J3 — resolve a clicked grid cell into a `BattleObjective`: an `enemy`
+ * objective when a living enemy occupies the cell, else a `tile` rally
+ * objective. Only enemies count as enemy-objectives — clicking empty ground, a
+ * friendly unit, or a wall all rally the team to that cell (the tile attractor).
+ *
+ * Pure (plain data in, no `World`) so it's node-testable and both input paths —
+ * right-click and the armed left-click — route through the one resolver.
+ */
+export function objectiveAtCell(
+  cell: GridCoord,
+  enemies: readonly EnemyAtCell[],
+): BattleObjective {
+  const hit = enemies.find((e) => e.cell.x === cell.x && e.cell.y === cell.y);
+  return hit ? { kind: 'enemy', unitId: hit.id } : { kind: 'tile', cell };
+}

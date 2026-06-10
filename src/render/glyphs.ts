@@ -26,6 +26,9 @@ export const GLYPHS = [
   'A', // I5: adventurer (melee subclass — dodge bruiser).
   'R', // I5: ronin (melee subclass — crit duelist).
   'B', // I5: bandit (melee subclass — low-growth enemy fodder).
+  'X', // J3: in-battle objective marker (the rally-tile / target-enemy 'X').
 ] as const;
-// ⚠️ Atlas budget: 31/32 cells used (FontAtlas is COLS×ROWS = 8×4 = 32). One
-// cell remains — the NEXT glyph after this needs a grid resize (gotcha #33).
+// ⚠️ Atlas budget: 32/32 cells used — the FontAtlas grid (COLS×ROWS = 8×4 = 32)
+// is now FULL. The J3 'X' marker took the last cell; the NEXT glyph appended
+// here REQUIRES a grid resize first (bump COLS/ROWS in FontAtlas.ts, gotcha #33),
+// or getGlyphUV will index a cell that doesn't exist.

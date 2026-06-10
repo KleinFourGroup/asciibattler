@@ -7,9 +7,19 @@ import { COLORS } from './palette';
 import { createBloomMixPass, createBloomPass, createSatClampedPass } from './PostProcess';
 import { BLOOM_LAYER } from './SpriteRenderer';
 import { GRID_SIZE } from '../config';
+import type { GridCoord } from '../core/types';
 
 /** Camera pitch from horizontal. 45° down matches the diorama framing. */
 const CAMERA_PITCH_RAD = Math.PI / 4;
+
+/**
+ * J3 — the horizontal plane `pickCell` raycasts against, in world Y. The unit
+ * glyphs' centers sit at `SPRITE_CENTER_OFFSET` (0.5) above flat ground, so
+ * picking at that height makes "click the glyph you see" land on its cell on the
+ * common flat tiles; raised/lowered terrain adds a sub-cell parallax that the
+ * 1×1 cell tolerates (rally tiles are forgiving; enemies snap to their cell).
+ */
+const PICK_PLANE_Y = 0.5;
 
 /**
  * X/Z padding around the arena AABB and Y headroom for the sprite layer.
@@ -112,6 +122,14 @@ export class Renderer {
   private readonly keysHeld = new Set<string>();
   private mouseX: number | null = null;
   private mouseY: number | null = null;
+
+  /** J3 — reusable raycast scratch for `pickCell` (screen → grid cell), kept as
+   *  fields so a per-click pick allocates nothing. The plane sits at
+   *  `PICK_PLANE_Y`; normal·p + constant = 0 ⇒ constant = −PICK_PLANE_Y. */
+  private readonly pickRaycaster = new THREE.Raycaster();
+  private readonly pickPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -PICK_PLANE_Y);
+  private readonly pickNdc = new THREE.Vector2();
+  private readonly pickPoint = new THREE.Vector3();
 
   constructor(canvas: HTMLCanvasElement, onFrame: (dtSeconds: number) => void) {
     this.onFrame = onFrame;
@@ -225,6 +243,30 @@ export class Renderer {
     this.cameraTargetX = worldX;
     this.cameraTargetZ = worldZ;
     this.fitCamera();
+  }
+
+  /**
+   * J3 — screen → grid cell. Raycasts a viewport pixel (a click's
+   * `clientX/clientY`) through the camera onto the `PICK_PLANE_Y` plane, then
+   * inverts `gridToWorld` to the integer cell. Returns null when the ray misses
+   * the plane (parallel/behind) or the hit lands off the current board. The
+   * inversion mirrors `gridToWorld`: worldX = x + 0.5 − boardW/2 and
+   * worldZ = boardH/2 − y − 0.5, so x = ⌊worldX + boardW/2⌋, y = ⌊boardH/2 − worldZ⌋.
+   */
+  pickCell(clientX: number, clientY: number): GridCoord | null {
+    const rect = this.webgl.domElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    this.pickNdc.set(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    this.pickRaycaster.setFromCamera(this.pickNdc, this.camera);
+    if (!this.pickRaycaster.ray.intersectPlane(this.pickPlane, this.pickPoint)) return null;
+
+    const x = Math.floor(this.pickPoint.x + this.boardW / 2);
+    const y = Math.floor(this.boardH / 2 - this.pickPoint.z);
+    if (x < 0 || x >= this.boardW || y < 0 || y >= this.boardH) return null;
+    return { x, y };
   }
 
   /**

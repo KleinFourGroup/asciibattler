@@ -18,6 +18,7 @@ import { PreTurnScene } from './scenes/PreTurnScene';
 import { PostTurnScene } from './scenes/PostTurnScene';
 import { AudioPlayer } from './audio/AudioPlayer';
 import { PlaybackSpeed } from './ui/PlaybackSpeed';
+import { Keybindings } from './ui/Keybindings';
 
 /**
  * Top-level orchestrator. Owns the EventBus, Renderer, FontAtlas, persistent
@@ -57,6 +58,15 @@ export class Game implements RunDispatcher {
    * The HUD owns the per-battle button + hotkey that cycle it.
    */
   private readonly playback = new PlaybackSpeed();
+  /**
+   * J3 — the page-lifetime keybinding registry. Owns the single `window`
+   * keydown listener (attached in the constructor); per-battle consumers (the
+   * HUD) subscribe via `keybindings.on(...)` and tear down on dispose, so a
+   * hotkey only does anything during a battle. Persists across scene swaps so a
+   * future in-game rebind sticks — hence page-lifetime, surfaced via
+   * buildContext like `playback`.
+   */
+  private readonly keybindings = new Keybindings();
   /**
    * Active run. Replaced on `resetRun` command, so it's not readonly — but
    * every method should still treat `this.run` as the authoritative source
@@ -149,6 +159,12 @@ export class Game implements RunDispatcher {
     this.bus.on('recruit:offered', () => this.audio.play('recruit'));
     this.bus.on('run:victory', () => this.audio.play('win'));
     this.bus.on('run:defeated', () => this.audio.play('lose'));
+
+    // J3 — one page-lifetime keydown sink for every rebindable hotkey. On
+    // `window` (not the canvas) so a binding fires without the play area being
+    // focused, matching the I3 fast-forward listener it replaces. Dispatch is a
+    // no-op until a scene subscribes a handler, so this can attach once at boot.
+    window.addEventListener('keydown', this.keybindings.handleKeyDown);
 
     // Boot into the map.
     this.swap(new MapScene());
@@ -284,6 +300,7 @@ export class Game implements RunDispatcher {
       run: this.run,
       audio: this.audio,
       playback: this.playback,
+      keybindings: this.keybindings,
     };
   }
 }

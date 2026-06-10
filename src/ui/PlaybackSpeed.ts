@@ -10,6 +10,11 @@
  *
  * The steps come from `config/playback.json` (`PLAYBACK.speeds`), but are
  * injectable so mechanic tests pin explicit literals (never the shipped JSON).
+ *
+ * J3 — the fast-forward HOTKEY no longer lives here: it moved into the unified
+ * `Keybindings` registry (`config/keybindings.json` `fastForward`). The HUD
+ * subscribes the cycle to `keybindings.on('fastForward', …)`; this class is now
+ * purely the speed state.
  */
 
 import { PLAYBACK } from '../config/playback';
@@ -37,12 +42,5 @@ export class PlaybackSpeed {
   /** Compact button label for the current speed, e.g. `"2×"`. */
   get label(): string {
     return `${this.current}×`;
-  }
-
-  /** The `KeyboardEvent.code` that cycles speed (from config). The HUD owns the
-   *  listener; this just keeps the binding co-located with the speed state so
-   *  the HUD depends only on the controller, not the config module. */
-  get hotkey(): string {
-    return PLAYBACK.hotkey;
   }
 }

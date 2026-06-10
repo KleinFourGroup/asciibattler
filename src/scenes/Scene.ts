@@ -29,6 +29,7 @@ import type { Run } from '../run/Run';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
+import type { Keybindings } from '../ui/Keybindings';
 
 export interface SceneContext {
   readonly bus: EventBus<GameEvents>;
@@ -48,6 +49,10 @@ export interface SceneContext {
    *  live each tick to scale `dt`; the HUD button + hotkey cycle it. Persists
    *  across scene swaps (set-and-forget), so it lives here, not on the Scene. */
   readonly playback: PlaybackSpeed;
+  /** J3 — the page-lifetime rebindable-hotkey registry. The HUD subscribes its
+   *  battle-scoped handlers (fast-forward + the objective controls) on mount
+   *  and tears them down on dispose; a rebind persists across scenes. */
+  readonly keybindings: Keybindings;
 }
 
 export interface Scene {

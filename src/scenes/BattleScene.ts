@@ -57,7 +57,7 @@ export class BattleScene implements Scene {
     this.clock = new Clock(TICK_RATE, () => this.world?.tick());
     this.battleRenderer = new BattleRenderer(ctx.sprites, ctx.overlays, ctx.terrain, ctx.bus);
     this.playback = ctx.playback;
-    this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback);
+    this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings);
 
     // B6 audio: per-battle subscriptions that need the World to look up
     // the attacker's archetype (attackRange<=1 → melee, else ranged).

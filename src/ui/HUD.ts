@@ -9,6 +9,7 @@ import { fadeIn, fadeOutAndRemove } from './fade';
 import { isAtLevelCap, xpToNext, displayLevel } from '../sim/xp';
 import { STAT_LABELS } from './statLabels';
 import type { PlaybackSpeed } from './PlaybackSpeed';
+import type { Keybindings } from './Keybindings';
 
 /** H4b — the encounter pool snapshot the HUD renders (from `Run` state). */
 interface EncounterPools {
@@ -27,6 +28,10 @@ export class HUD {
    *  cycle; the underlying speed lives on the page-lifetime `playback`. */
   private readonly speedButton: HTMLButtonElement;
   private readonly playback: PlaybackSpeed;
+  /** J3 — the rebindable-hotkey registry. The HUD subscribes its control
+   *  surface (fast-forward today) to it and reads `labelFor` for button
+   *  tooltips so a rebind shows up in the UI. */
+  private readonly keybindings: Keybindings;
   /** H4b — the encounter health pools + turn number, populated per battle. */
   private readonly pools: HTMLElement;
   private readonly status: HTMLElement;
@@ -42,8 +47,14 @@ export class HUD {
    */
   private readonly subscriptions: Array<() => void> = [];
 
-  constructor(mount: HTMLElement, bus: EventBus<GameEvents>, playback: PlaybackSpeed) {
+  constructor(
+    mount: HTMLElement,
+    bus: EventBus<GameEvents>,
+    playback: PlaybackSpeed,
+    keybindings: Keybindings,
+  ) {
     this.playback = playback;
+    this.keybindings = keybindings;
     this.root = document.createElement('div');
     // `screen-fade` keeps the panel at opacity:0 until show() flips
     // is-visible; that's also why the HUD doesn't use `hidden` — `display:
@@ -63,16 +74,19 @@ export class HUD {
     this.root.appendChild(this.floorLabel);
 
     // I3 — fast-forward control: a button + a hotkey, both cycling 1×/2×/3×.
-    // The button is the in-battle affordance; the hotkey (config-backed code,
-    // default KeyF) is the keyboard shortcut. Both call cycleSpeed(); the
-    // shared `playback` holds the value so it persists into the next battle.
+    // The button is the in-battle affordance; the hotkey (J3: the rebindable
+    // `fastForward` binding, default KeyF) is the keyboard shortcut. Both call
+    // cycleSpeed(); the shared `playback` holds the value so it persists into
+    // the next battle. The hotkey subscription is battle-scoped — pushed onto
+    // `subscriptions` so dispose tears it down (the registry + its window
+    // listener are page-lifetime; only this handler comes and goes per battle).
     this.speedButton = document.createElement('button');
     this.speedButton.type = 'button';
     this.speedButton.className = 'hud-speed';
     this.speedButton.addEventListener('click', () => this.cycleSpeed());
     this.root.appendChild(this.speedButton);
     this.renderSpeed();
-    window.addEventListener('keydown', this.handleHotkey);
+    this.subscriptions.push(keybindings.on('fastForward', () => this.cycleSpeed()));
 
     // H4b — the two encounter pools (run-wide player pool vs per-encounter enemy
     // pool) + the current turn. Static during a single turn (the pools chip
@@ -142,12 +156,12 @@ export class HUD {
    * following Scene's screen-fade can take over cleanly.
    */
   dispose(): void {
+    // J3 — this also drops the `fastForward` keybinding subscription (it was
+    // pushed onto `subscriptions`), so the hotkey stops firing across battles.
+    // The chosen speed itself survives — it lives on the page-lifetime
+    // `playback`; the registry + its window listener are page-lifetime too.
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
-    // I3 — drop the fast-forward hotkey listener so it doesn't accumulate
-    // across battles (the button rides root removal below). The chosen speed
-    // itself survives — it lives on the page-lifetime `playback`.
-    window.removeEventListener('keydown', this.handleHotkey);
     fadeOutAndRemove(this.root);
     fadeOutAndRemove(this.banner);
     this.world = null;
@@ -167,18 +181,10 @@ export class HUD {
     const speed = this.playback.current;
     const chevrons = '▶'.repeat(Math.max(1, Math.round(speed)));
     this.speedButton.textContent = `${chevrons} ${this.playback.label}`;
-    this.speedButton.title = 'Fast-forward (F)';
+    // J3 — the tooltip shows the live binding so a rebind is reflected here.
+    this.speedButton.title = `Fast-forward (${this.keybindings.labelFor('fastForward')})`;
     this.speedButton.setAttribute('aria-pressed', String(speed > 1));
   }
-
-  /** I3 — keyboard shortcut for the speed cycle. Bound property so
-   *  removeEventListener works in dispose. Ignores auto-repeat (holding the
-   *  key) so one press = one step. */
-  private readonly handleHotkey = (e: KeyboardEvent): void => {
-    if (e.code !== this.playback.hotkey || e.repeat) return;
-    e.preventDefault();
-    this.cycleSpeed();
-  };
 
   private addUnit(unitId: number): void {
     if (!this.world) return;

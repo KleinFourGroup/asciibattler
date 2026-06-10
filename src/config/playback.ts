@@ -14,11 +14,11 @@
  *               home). Dropping the trailing `3` is exactly how you cap the
  *               ceiling at 2× if pathing can't keep up at 3× on a big board
  *               (the ROADMAP §I3 perf watch-item — profile before trusting 3×).
- * - `hotkey`  — the `KeyboardEvent.code` that cycles speed (layout-independent).
- *               Config-backed today so Phase J's rebindable-hotkey layer (§J3)
- *               can absorb it by relocating this one field into the unified
- *               keybindings config — no code change here, no abstraction built
- *               speculatively now.
+ *
+ * J3 — the fast-forward `hotkey` field that used to live here RELOCATED to the
+ * unified keybinding config (`config/keybindings.json` `fastForward`,
+ * `src/config/keybindings.ts`), as the I3 note here anticipated. This config is
+ * now just the speed-step list.
  *
  * Source of truth at `config/playback.json`.
  */
@@ -29,7 +29,6 @@ import playbackJson from '../../config/playback.json';
 const PlaybackSchema = z
   .object({
     speeds: z.array(z.number().positive()).nonempty(),
-    hotkey: z.string().min(1),
   })
   // Normal play is the cycle's home — the first step must be 1× so a fresh
   // battle (and the wrap-around) lands on real-time.

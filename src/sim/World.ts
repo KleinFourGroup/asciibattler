@@ -29,6 +29,7 @@ import type { WorldCommand } from './Command';
 import type { BattleObjective } from './objective';
 import type { StatusEffect } from './statusEffects';
 import { cloneEffect } from './statusEffects';
+import { TriggerDispatcher } from './triggers';
 import type { TriggerContextMap, TriggerHandler, TriggerName } from './triggers';
 import { createAction } from './actions/registry';
 import { createBehavior, createMovementBehavior } from './behaviors/registry';
@@ -400,15 +401,14 @@ export class World {
    */
   private _objective: BattleObjective | null = null;
   /**
-   * K1 — registered trigger handlers (combat / lifecycle), keyed by trigger
-   * name. Handlers apply status effects when the World fires a trigger; the
-   * Phase-L daemon system is the production consumer (K1 ships the dispatch +
-   * fire points + tests). NOT snapshotted — handlers are behaviour, re-attached
-   * at construction by their owner (like the behaviour/ability registries); in
-   * K1 production nothing registers for the combat triggers, so a mid-battle
+   * K1 — combat/lifecycle trigger dispatch. Handlers apply status effects when
+   * the World fires a trigger; the Phase-L daemon system is the production
+   * consumer (K1 ships the dispatch + fire points + tests). NOT snapshotted —
+   * handlers are behaviour, re-attached at construction by their owner; in K1
+   * production nothing registers for the combat triggers, so a mid-battle
    * resume has none to re-attach.
    */
-  private readonly triggerHandlers: Map<TriggerName, TriggerHandler<TriggerName>[]> = new Map();
+  private readonly triggers = new TriggerDispatcher<TriggerContextMap, World>();
 
   constructor(
     bus: EventBus<GameEvents>,
@@ -457,27 +457,17 @@ export class World {
    * are not snapshotted.
    */
   registerTrigger<K extends TriggerName>(name: K, handler: TriggerHandler<K>): void {
-    const list = this.triggerHandlers.get(name);
-    // Stored type-erased (the Map can't express the per-key handler type); the
-    // public method signature keeps registration type-safe, and `fireTrigger`
-    // only ever hands a handler its matching context.
-    if (list) list.push(handler as TriggerHandler<TriggerName>);
-    else this.triggerHandlers.set(name, [handler as TriggerHandler<TriggerName>]);
+    this.triggers.register(name, handler);
   }
 
   /**
    * K1 — fire a trigger to its registered handlers (deterministic, in
-   * registration order). Early-returns when nothing is registered, so the
-   * common no-handler path costs a single Map lookup. Handlers run
-   * synchronously inside the sim step that fired them — they mutate unit
-   * effects directly, so the change is visible to subsequent ticks.
+   * registration order). Handlers run synchronously inside the sim step that
+   * fired them — they mutate unit effects directly, so the change is visible to
+   * subsequent ticks.
    */
   private fireTrigger<K extends TriggerName>(name: K, ctx: TriggerContextMap[K]): void {
-    const list = this.triggerHandlers.get(name);
-    if (list === undefined || list.length === 0) return;
-    for (const handler of list) {
-      (handler as TriggerHandler<K>)(ctx, this);
-    }
+    this.triggers.fire(name, ctx, this);
   }
 
   /**
@@ -949,6 +939,9 @@ export class World {
         // pushed onto the queue with (player overflow carries through
         // from encounter.playerTeam; enemy queue templates carry null).
         rosterIndex: template.rosterIndex ?? null,
+        // K1 — overflow spawns carry the same seed effects as their
+        // initial-spawn siblings (the stamped template round-trips them).
+        ...(template.effects ? { effects: template.effects } : {}),
       },
       false,
     );
@@ -1144,6 +1137,9 @@ export class World {
         level: template.level,
         xp: template.xp,
         rosterIndex,
+        // K1 — seed the template's transient effects (fatigue / encounter
+        // buffs from Run.beginTurn) onto the unit at spawn.
+        ...(template.effects ? { effects: template.effects } : {}),
       },
       true,
     );
@@ -1203,6 +1199,7 @@ export class World {
       level?: number;
       xp?: number;
       rosterIndex?: number | null;
+      effects?: readonly StatusEffect[];
     },
     instant: boolean,
   ): Unit {
@@ -1219,6 +1216,8 @@ export class World {
       level: init.level ?? 1,
       xp: init.xp ?? 0,
       rosterIndex: init.rosterIndex ?? null,
+      // K1 — seed transient spawn-time effects (fatigue / encounter buffs).
+      ...(init.effects && init.effects.length > 0 ? { effects: init.effects } : {}),
     });
     this.units.push(unit);
     this.unitsById.set(unit.id, unit);

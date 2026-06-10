@@ -38,7 +38,9 @@ import { generate as generateNodeMap, type NodeMap, type NodeKind } from './Node
 import type { RunConfig } from './RunConfig';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { enemyBudgetFor, rollEnemyWave, avgTeamLevel } from './enemyBudget';
-import { fatigueFactor } from './fatigue';
+import { fatigueEffect } from './fatigue';
+import { cloneEffect, mergeEffectInto, type StatusEffect } from '../sim/statusEffects';
+import { TriggerDispatcher } from '../sim/triggers';
 import type { RunCommand } from './Command';
 import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
@@ -139,8 +141,15 @@ export interface BattleEncounter {
  *  `melee → mercenary` (+ new subclasses). A v10 save carries `'melee'`-tagged
  *  roster units that no longer resolve to a config → reject rather than
  *  rehydrate a roster that crashes on the next level-up / re-derive (same
- *  archetype-identity rationale as the World v20 bump). */
-const RUN_SCHEMA_VERSION = 11;
+ *  archetype-identity rationale as the World v20 bump).
+ *  K1: bumped 11→12. Adds `encounterEffects: StatusEffect[][]` (per-roster-slot
+ *  encounter-scoped status effects, parallel to `team`; the `endOfEncounter`
+ *  store re-seeded each turn at deploy). A v11 save has no store → reject
+ *  rather than rehydrate a Run mid-encounter with a missing buff list. (The
+ *  per-turn fatigue + the World-side battle effects are NOT here — fatigue is
+ *  recomputed each turn from `deploymentCounts`, and live battle effects live
+ *  in the WorldSnapshot.) */
+const RUN_SCHEMA_VERSION = 12;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -156,6 +165,11 @@ export interface RunSnapshot {
   team: UnitTemplate[];
   /** H3: per-roster-slot deployment counter, parallel to `team`. */
   deploymentCounts: number[];
+  /** K1: per-roster-slot encounter-scoped status effects, parallel to `team`.
+   *  The `endOfEncounter` store — set via `addEncounterEffect`, re-seeded onto
+   *  the unit each turn at deploy, reset at encounter start. Empty per slot at
+   *  the default (no daemon adds any), so a default run round-trips `[][]`. */
+  encounterEffects: StatusEffect[][];
   /** H5: the encounter-scoped card deck — `rosterIndex` values in three piles.
    *  `drawPile` is the shuffled draw stack (drawn from the end), `discardPile`
    *  collects fought hands, `hand` is the current turn's drawn cards. Rebuilt
@@ -184,6 +198,21 @@ export interface RunSnapshot {
    *  while `phase === 'promotion'`. Snapshotted so a save mid-promotion
    *  restores to the same screen with the same deltas. */
   pendingPromotions: PromotionInfo[] | null;
+}
+
+/**
+ * K1 — the run-lifecycle trigger vocabulary (the Run-side analogue of the
+ * World combat triggers in `src/sim/triggers.ts`). Handlers — Phase-L daemons —
+ * typically respond by calling `Run.addEncounterEffect`. `turnStart` fires
+ * before the turn's battle is built, so a handler's encounter effect is seeded
+ * that same turn; `deploy` fires after a unit is fielded (its effect lands on
+ * subsequent turns); `encounterStart` fires once per encounter after the
+ * per-encounter reset.
+ */
+export interface RunTriggerContextMap {
+  encounterStart: { floor: number; nodeId: number };
+  turnStart: { turn: number; floor: number };
+  deploy: { rosterIndex: number; template: UnitTemplate };
 }
 
 // Balance constants now live in config/*.json — see src/config/recruitment.ts.
@@ -221,6 +250,23 @@ export class Run {
    * with `team`: a recruit appends a fresh `0`.
    */
   deploymentCounts: number[];
+  /**
+   * K1 — per-roster-slot encounter-scoped status effects (the `endOfEncounter`
+   * store), parallel to `team`. Added via `addEncounterEffect` (the daemon /
+   * empower seam, L/K4), re-seeded onto the fielded unit each turn at deploy as
+   * `endOfTurn` effects, and reset at encounter start. Empty per slot by
+   * default. A recruit appends a fresh `[]` (stays synced with `team`, like
+   * `deploymentCounts`). Round-trips in the Run save (v12).
+   */
+  encounterEffects: StatusEffect[][];
+  /**
+   * K1 — run-lifecycle trigger dispatch (`encounterStart` / `turnStart` /
+   * `deploy`), the Run-side analogue of the World's combat triggers. The
+   * Phase-L daemon system registers handlers here (which typically call
+   * `addEncounterEffect`); K1 ships the dispatch + fire points + tests with no
+   * production handler. NOT snapshotted — re-created on construct / rehydrate.
+   */
+  private runTriggers!: TriggerDispatcher<RunTriggerContextMap, Run>;
   /**
    * H5 — the card deck (draw → hand → discard), holding `rosterIndex` values.
    * Each turn draws up to `DECK.handSize` cards into `hand` (only the hand
@@ -320,6 +366,10 @@ export class Run {
       : rollTeam(teamRng);
     // H3 — one deployment slot per roster unit, all zero at run start.
     this.deploymentCounts = new Array(this.team.length).fill(0);
+    // K1 — one (empty) encounter-effect list per roster unit + the run-trigger
+    // dispatcher (no handler until a daemon registers one in L).
+    this.encounterEffects = this.team.map(() => []);
+    this.runTriggers = new TriggerDispatcher<RunTriggerContextMap, Run>();
     // H5 — the deck is empty until an encounter builds + shuffles it
     // (`beginEncounter`); piles round-trip but mean nothing between encounters.
     this.drawPile = [];
@@ -452,6 +502,11 @@ export class Run {
     // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
     // `beginTurn` records the deployed hand.
     this.resetDeploymentCounts();
+    // K1 — clear the encounter-effect store + fire `encounterStart` so a daemon
+    // can grant fresh encounter buffs for this encounter (no-op at the default,
+    // no handler registered → byte-identical).
+    this.resetEncounterEffects();
+    this.fireTrigger('encounterStart', { floor: this.currentFloor, nodeId: this.currentNodeId });
     this.startNextTurn();
   }
 
@@ -467,6 +522,10 @@ export class Run {
    */
   private startNextTurn(): void {
     this.drawTurnHand();
+    // K1 — `turnStart` fires before the turn's battle is built (on both the
+    // gated + headless paths), so a daemon's encounter effect added here is
+    // seeded onto this turn's hand in `beginTurn`. No-op at the default.
+    this.fireTrigger('turnStart', { turn: this.turnIndex + 1, floor: this.currentFloor });
     if (this.pauseAtTurnGates) {
       this.phase = 'turn-intro';
       this.bus.emit('turn:starting', {
@@ -553,23 +612,34 @@ export class Run {
     // card with its `Run.team` index so `xpAwards` can carry it back at battle
     // end (the stamp is applied at handoff time, never on `this.team`).
     //
-    // H6c — spawn-time fatigue: a unit fielded with `deploymentCounts[idx]`
-    // PRIOR deployments this encounter (read here, BEFORE the recordDeployment
-    // bump below, so a debut unit reads 0 stacks) is baked with a fatigue
-    // factor on its `power`. INERT at the shipped knob (factor 1.0). A fresh
-    // `stats` object so `this.team` keeps its canonical, un-fatigued values.
+    // H6c → K1 — spawn-time fatigue is now a status effect (`fatigueEffect`),
+    // seeded onto the fielded unit alongside any persistent encounter effects
+    // for its slot. The Fatigued stack count is `deploymentCounts[idx]` PRIOR
+    // deployments this encounter (read BEFORE the recordDeployment bump below,
+    // so a debut unit reads 0 stacks → no effect). INERT at the shipped knob
+    // (`fatigueEffect` returns null) — no effect seeded, byte-identical. The
+    // encounter effects are re-seeded each turn as `endOfTurn` (the
+    // `endOfEncounter` store). `this.team`'s canonical templates are never
+    // touched (the stamp is a transient per-turn copy).
     const stampedPlayerTeam = this.hand.map((idx) => {
       const t = this.team[idx]!;
-      const factor = fatigueFactor(this.deploymentCounts[idx]!);
+      const seedEffects: StatusEffect[] = this.encounterEffects[idx]!.map(cloneEffect);
+      const fatigue = fatigueEffect(this.deploymentCounts[idx]!);
+      if (fatigue) seedEffects.push(fatigue);
       return {
         ...t,
         rosterIndex: idx,
-        stats: { ...t.stats, power: Math.round(t.stats.power * factor) },
+        ...(seedEffects.length > 0 ? { effects: seedEffects } : {}),
       };
     });
     // H3 — record this turn's deployment (the drawn hand). The deployment
     // counter finally varies per turn here (pre-H5 it was the whole roster).
     this.recordDeployment(this.hand);
+    // K1 — `deploy` fires once per fielded slot AFTER recordDeployment (a
+    // handler's encounter effect lands on subsequent turns). No-op at default.
+    for (const idx of this.hand) {
+      this.fireTrigger('deploy', { rosterIndex: idx, template: this.team[idx]! });
+    }
     this.currentEncounter = {
       worldSeed,
       terrainSeed,
@@ -889,6 +959,9 @@ export class Run {
     // H3 — keep the deployment counter parallel to the roster. A fresh
     // recruit hasn't been deployed in the current encounter yet.
     this.deploymentCounts.push(0);
+    // K1 — keep the encounter-effect store synced with `team` (fresh slot, no
+    // effects). Parallel to the deploymentCounts append above.
+    this.encounterEffects.push([]);
     this.currentOffer = null;
     this.phase = 'map';
   }
@@ -921,6 +994,16 @@ export class Run {
   }
 
   /**
+   * K1 — clear every slot's encounter-effect store. Called at encounter start
+   * (alongside `resetDeploymentCounts`) so `endOfEncounter` effects don't leak
+   * into the next encounter. A fresh `[]` per slot keeps the array length
+   * synced with `team`.
+   */
+  resetEncounterEffects(): void {
+    for (let i = 0; i < this.encounterEffects.length; i++) this.encounterEffects[i] = [];
+  }
+
+  /**
    * H3 — bump the deployment count for each deployed roster slot. Called
    * once per turn with the slots that were actually deployed (pre-H5 that's
    * the whole roster; H5 passes the drawn hand). Out-of-range indices are
@@ -933,6 +1016,39 @@ export class Run {
         this.deploymentCounts[idx]! += 1;
       }
     }
+  }
+
+  /**
+   * K1 — add an encounter-scoped status effect to a roster slot (the
+   * `endOfEncounter` authoring lifetime). It persists for the rest of the
+   * encounter, re-seeded onto the fielded unit each turn at deploy, merged by
+   * key per its policy. Pass an `endOfTurn`-lifetime effect (the store re-seeds
+   * it per turn). Out-of-range slots are ignored. The daemon / empower seam
+   * (K4 / L); reset at encounter start (`resetEncounterEffects`).
+   */
+  addEncounterEffect(rosterIndex: number, effect: StatusEffect): void {
+    const list = this.encounterEffects[rosterIndex];
+    if (list === undefined) return;
+    mergeEffectInto(list, effect);
+  }
+
+  /**
+   * K1 — register a run-lifecycle trigger handler (`encounterStart` /
+   * `turnStart` / `deploy`). The Phase-L daemon seam; handlers fire in
+   * registration order and are not snapshotted (re-register on rehydrate).
+   */
+  registerTrigger<K extends keyof RunTriggerContextMap>(
+    name: K,
+    handler: (ctx: RunTriggerContextMap[K], run: Run) => void,
+  ): void {
+    this.runTriggers.register(name, handler);
+  }
+
+  private fireTrigger<K extends keyof RunTriggerContextMap>(
+    name: K,
+    ctx: RunTriggerContextMap[K],
+  ): void {
+    this.runTriggers.fire(name, ctx, this);
   }
 
   /**
@@ -967,6 +1083,9 @@ export class Run {
       nodeMap: this.nodeMap,
       team: this.team.slice(),
       deploymentCounts: this.deploymentCounts.slice(),
+      // K1 — deep-copy each slot's effect list (effects are mutated in place on
+      // merge, so the wire image must not share references with the live store).
+      encounterEffects: this.encounterEffects.map((slot) => slot.map(cloneEffect)),
       drawPile: this.drawPile.slice(),
       discardPile: this.discardPile.slice(),
       hand: this.hand.slice(),
@@ -1002,6 +1121,7 @@ export class Run {
       bus: EventBus<GameEvents>;
       subscriptions: Array<() => void>;
       forcedLayoutId: string | null;
+      runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
     };
     const m = run as unknown as Mut;
     m.bus = bus;
@@ -1014,6 +1134,10 @@ export class Run {
     m.nodeMap = snap.nodeMap;
     m.team = snap.team.slice();
     m.deploymentCounts = snap.deploymentCounts.slice();
+    // K1 — restore the encounter-effect store (deep copy) + a fresh dispatcher
+    // (handlers aren't snapshotted; a daemon layer re-registers on rehydrate).
+    m.encounterEffects = snap.encounterEffects.map((slot) => slot.map(cloneEffect));
+    m.runTriggers = new TriggerDispatcher<RunTriggerContextMap, Run>();
     m.drawPile = snap.drawPile.slice();
     m.discardPile = snap.discardPile.slice();
     m.hand = snap.hand.slice();

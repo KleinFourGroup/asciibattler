@@ -52,3 +52,30 @@ export type TriggerHandler<K extends TriggerName> = (
   ctx: TriggerContextMap[K],
   world: World,
 ) => void;
+
+/**
+ * K1 — a generic trigger dispatcher, parameterised by a context map `M` and an
+ * owner `O`. Shared by `World` (combat triggers, owner = World) and `Run`
+ * (lifecycle triggers, owner = Run). Handlers fire in registration order; an
+ * empty trigger costs a single Map lookup, so the no-handler path is free.
+ * Handlers are not snapshotted — the owner re-registers on a fresh/rehydrated
+ * instance (like the behaviour/ability registries).
+ */
+export class TriggerDispatcher<M, O> {
+  private readonly handlers = new Map<keyof M, Array<(ctx: M[keyof M], owner: O) => void>>();
+
+  register<K extends keyof M>(name: K, handler: (ctx: M[K], owner: O) => void): void {
+    const list = this.handlers.get(name);
+    // Stored type-erased (the Map can't express the per-key handler type); the
+    // method signature keeps registration type-safe and `fire` only ever hands
+    // a handler its matching context.
+    if (list) list.push(handler as (ctx: M[keyof M], owner: O) => void);
+    else this.handlers.set(name, [handler as (ctx: M[keyof M], owner: O) => void]);
+  }
+
+  fire<K extends keyof M>(name: K, ctx: M[K], owner: O): void {
+    const list = this.handlers.get(name);
+    if (list === undefined || list.length === 0) return;
+    for (const handler of list) (handler as (ctx: M[K], owner: O) => void)(ctx, owner);
+  }
+}

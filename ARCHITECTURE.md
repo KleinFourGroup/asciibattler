@@ -81,7 +81,7 @@ src/
                              # blocksLineOfSight (D6)
                              # K1: effects[] (status effects) + effectiveStats (cached fold; === stats when empty) + addEffect/expireEffects/refreshDerived
     statusEffects.ts         # K1: generic status-effect system — StatusEffect (per-stat add/mul mods + lifetime + merge policy) + foldEffects + combineMagnitude
-    triggers.ts              # K1: combat/lifecycle trigger vocabulary (TriggerContextMap) — dealHit/takeHit/dealMiss/evade/kill/death/spawn
+    triggers.ts              # K1: TriggerContextMap (combat: dealHit/takeHit/dealMiss/evade/kill/death/spawn) + generic TriggerDispatcher<M,O> (shared by World + Run)
     stats.ts                 # deriveStats / inertDerived / ZERO_STATS + damage/heal/range/cadence helpers
                              # — pure functions; crit RNG rolls happen at AttackAction.start; K1: unit-taking helpers read effectiveStats
     leveling.ts              # E3: simulateLevelUps (player rolls) + scaleStats (enemies, deterministic)
@@ -131,7 +131,10 @@ src/
     Run.ts                   # State machine: map|turn-intro|battle|turn-outcome|promotion|recruit|
                              # defeat|complete (E4.4/H4b). H4 encounter loop (health pools + turns) +
                              # H5 card deck (draw/hand/discard + deckRng). rest/boss resolution (G3);
-                             # XP banking; dispatch(RunCommand) + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 9
+                             # XP banking; dispatch(RunCommand) + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 12
+                             # K1: encounterEffects store (endOfEncounter, re-seeded at deploy) + addEncounterEffect
+                             # + run triggers (encounterStart/turnStart/deploy); beginTurn seeds fatigue + encounter effects
+    fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
                              # + affine budget + swarm count

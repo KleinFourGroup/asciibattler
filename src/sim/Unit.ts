@@ -7,7 +7,7 @@ import type { Ability } from './abilities/Ability';
 // is a type-only cycle at runtime (these are pure functions called lazily from
 // methods, never at module init) — no initialization-order hazard.
 import { deriveStats } from './stats';
-import { foldEffects, combineMagnitude, cloneEffect } from './statusEffects';
+import { foldEffects, cloneEffect, mergeEffectInto } from './statusEffects';
 import type { StatusEffect } from './statusEffects';
 
 /**
@@ -160,6 +160,14 @@ export interface UnitTemplate {
    * null through.
    */
   readonly rosterIndex?: number | null;
+  /**
+   * K1 — TRANSIENT spawn-time status effects to seed onto the unit (fatigue +
+   * encounter buffs). Stamped onto the per-turn template copy in
+   * `Run.beginTurn`, never onto the persistent `Run.team` roster, so it stays
+   * out of the RunSnapshot roster image (the roster carries no battle-side
+   * state — same posture as the rosterIndex/power stamp it replaces).
+   */
+  readonly effects?: readonly StatusEffect[];
 }
 
 /**
@@ -369,18 +377,7 @@ export class Unit {
    * effect is added as a fresh instance. Recomputes `effectiveStats` after.
    */
   addEffect(effect: StatusEffect): void {
-    if (effect.merge !== 'independent') {
-      const existing = this.effects.find((e) => e.key === effect.key);
-      if (existing) {
-        existing.magnitude = combineMagnitude(effect.merge, existing.magnitude, effect.magnitude);
-        existing.lifetime = { ...effect.lifetime };
-        existing.mods = cloneEffect(effect).mods;
-        existing.merge = effect.merge;
-        this.recomputeEffective();
-        return;
-      }
-    }
-    this.effects.push(cloneEffect(effect));
+    mergeEffectInto(this.effects, effect);
     this.recomputeEffective();
   }
 

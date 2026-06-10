@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { Run } from './Run';
-import { fatigueFactor } from './fatigue';
+import { fatigueEffect, FATIGUE_KEY } from './fatigue';
+import { foldEffects, type StatusEffect } from '../sim/statusEffects';
 import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import type { GameEvents } from '../core/events';
@@ -813,7 +814,7 @@ describe('Run', () => {
     });
   });
 
-  describe('spawn-time fatigue (H6c)', () => {
+  describe('spawn-time fatigue (H6c → K1: a Fatigued status effect)', () => {
     // The integration tests flip the shipped (inert) knob; restore it after
     // each so they can't pollute the rest of the suite.
     const originalRate = HEALTH.fatiguePerStack;
@@ -821,36 +822,48 @@ describe('Run', () => {
       HEALTH.fatiguePerStack = originalRate;
     });
 
-    /** Power the run fielded for `rosterIndex` in the current turn's encounter. */
-    const fieldedPower = (run: Run, rosterIndex: number): number =>
-      run.currentEncounter!.playerTeam.find((u) => u.rosterIndex === rosterIndex)!.stats.power;
+    /** The transient template the run fielded for `rosterIndex` this turn. */
+    const fielded = (run: Run, rosterIndex: number) =>
+      run.currentEncounter!.playerTeam.find((u) => u.rosterIndex === rosterIndex)!;
 
-    it('is inert at the shipped knob: fielded power equals the roster base power', () => {
+    /** Effective power of that fielded unit — base `stats.power` folded with the
+     *  seeded `effects` (where the Fatigued debuff now lives, post-K1). */
+    const fieldedPower = (run: Run, rosterIndex: number): number => {
+      const t = fielded(run, rosterIndex);
+      return foldEffects(t.stats, t.effects ?? []).power;
+    };
+
+    it('is inert at the shipped knob: NO effect seeded, fielded power equals base', () => {
       const { run, bus } = freshRunWithBus(1);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      // Turn 1 (0 stacks): every fielded unit carries its canonical power.
+      // Turn 1 (0 stacks): no Fatigued effect, every fielded unit at base power.
       for (const u of run.currentEncounter!.playerTeam) {
-        expect(u.stats.power).toBe(run.team[u.rosterIndex!]!.stats.power);
+        expect(u.effects ?? []).toEqual([]);
+        expect(fieldedPower(run, u.rosterIndex!)).toBe(run.team[u.rosterIndex!]!.stats.power);
       }
-      // Turn 2 (1 prior deployment): still unchanged at the default rate 0.
+      // Turn 2 (1 prior deployment): STILL no effect at the default rate 0.
       chipTurn(bus, { player: 1, enemy: 0 }); // sub-lethal → encounter continues
       for (const u of run.currentEncounter!.playerTeam) {
-        expect(u.stats.power).toBe(run.team[u.rosterIndex!]!.stats.power);
+        expect(u.effects ?? []).toEqual([]);
       }
     });
 
-    it('fields a redeployed unit with reduced power once the knob is positive', () => {
+    it('seeds a Fatigued effect that reduces effective power once the knob is positive', () => {
       // rate > 0.5 so even a power-1 unit rounds strictly down at 1 stack.
       HEALTH.fatiguePerStack = 0.6;
       const { run, bus } = freshRunWithBus(1);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
 
       const baseP = run.team[0]!.stats.power;
-      expect(fieldedPower(run, 0)).toBe(baseP); // turn 1 = 0 stacks → unchanged
+      expect(fielded(run, 0).effects ?? []).toEqual([]); // turn 1 = 0 stacks → no effect
+      expect(fieldedPower(run, 0)).toBe(baseP);
 
       chipTurn(bus, { player: 1, enemy: 0 }); // → turn 2, 1 prior deployment
-      // Derived from the very factor the production seam applies — no literal.
-      expect(fieldedPower(run, 0)).toBe(Math.round(baseP * fatigueFactor(1)));
+      const seeded = fielded(run, 0).effects ?? [];
+      expect(seeded).toHaveLength(1);
+      expect(seeded[0]!.key).toBe(FATIGUE_KEY);
+      // Derived from the very effect the production seam applies — no literal.
+      expect(fieldedPower(run, 0)).toBe(foldEffects(fielded(run, 0).stats, [fatigueEffect(1)!]).power);
       expect(fieldedPower(run, 0)).toBeLessThan(baseP);
     });
 
@@ -860,7 +873,114 @@ describe('Run', () => {
       const baseP = run.team[0]!.stats.power;
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 1, enemy: 0 });
-      expect(run.team[0]!.stats.power).toBe(baseP); // fatigue hit a copy, not the roster
+      // The roster template keeps its canonical power AND carries no effect —
+      // fatigue rode the transient stamped copy.
+      expect(run.team[0]!.stats.power).toBe(baseP);
+      expect((run.team[0] as { effects?: unknown }).effects).toBeUndefined();
+    });
+  });
+
+  describe('encounter-effect store + run triggers (K1)', () => {
+    const empower = (mag = 1): StatusEffect => ({
+      key: 'empowered',
+      magnitude: mag,
+      mods: { strength: { add: 4 } },
+      lifetime: { kind: 'endOfTurn' },
+      merge: 'replace',
+    });
+
+    const fieldedFor = (run: Run, rosterIndex: number) =>
+      run.currentEncounter!.playerTeam.find((u) => u.rosterIndex === rosterIndex);
+
+    it('initializes one empty encounter-effect list per roster slot', () => {
+      const run = new Run(1, new EventBus<GameEvents>());
+      expect(run.encounterEffects).toHaveLength(run.team.length);
+      expect(run.encounterEffects.every((l) => l.length === 0)).toBe(true);
+    });
+
+    it('seeds an encounter effect onto the fielded unit and persists it across turns', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      run.addEncounterEffect(0, empower()); // added after turn 1's seed → from turn 2
+      chipTurn(bus, { player: 1, enemy: 0 }); // → turn 2
+      expect(fieldedFor(run, 0)!.effects).toEqual([empower()]);
+      chipTurn(bus, { player: 1, enemy: 0 }); // → turn 3, still re-seeded
+      expect(fieldedFor(run, 0)!.effects).toEqual([empower()]);
+    });
+
+    it('merges a re-applied encounter effect by key (replace overwrites magnitude)', () => {
+      const run = new Run(1, new EventBus<GameEvents>());
+      run.addEncounterEffect(0, empower(1));
+      run.addEncounterEffect(0, empower(3));
+      expect(run.encounterEffects[0]).toHaveLength(1);
+      expect(run.encounterEffects[0]![0]!.magnitude).toBe(3);
+    });
+
+    it('ignores addEncounterEffect on an out-of-range slot', () => {
+      const run = new Run(1, new EventBus<GameEvents>());
+      run.addEncounterEffect(999, empower());
+      run.addEncounterEffect(-1, empower());
+      expect(run.encounterEffects.every((l) => l.length === 0)).toBe(true);
+    });
+
+    it('clears the store at the next encounter (encounter scope)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const first = frontierOf(run);
+      run.dispatch({ kind: 'enterNode', nodeId: first });
+      run.addEncounterEffect(0, empower());
+      winEncounter(bus);
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+      const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: second });
+      expect(run.encounterEffects.every((l) => l.length === 0)).toBe(true);
+      expect(fieldedFor(run, 0)?.effects ?? []).toEqual([]);
+    });
+
+    it('appends a fresh empty list when a unit is recruited', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      const before = run.team.length;
+      winEncounter(bus);
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+      expect(run.encounterEffects).toHaveLength(before + 1);
+      expect(run.encounterEffects[run.encounterEffects.length - 1]).toEqual([]);
+    });
+
+    it('fires encounterStart / turnStart / deploy with the right context', () => {
+      const { run } = freshRunWithBus(1);
+      const encounterStarts: number[] = [];
+      const turnStarts: number[] = [];
+      const deploys: number[] = [];
+      run.registerTrigger('encounterStart', (ctx) => encounterStarts.push(ctx.nodeId));
+      run.registerTrigger('turnStart', (ctx) => turnStarts.push(ctx.turn));
+      run.registerTrigger('deploy', (ctx) => deploys.push(ctx.rosterIndex));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      expect(encounterStarts).toEqual([run.currentNodeId]);
+      expect(turnStarts).toEqual([1]); // turn 1
+      // deploy fires once per fielded slot (this turn's whole hand).
+      expect(deploys.slice().sort()).toEqual(run.hand.slice().sort());
+    });
+
+    it('a turnStart daemon adds an encounter effect that is seeded that same turn', () => {
+      const { run } = freshRunWithBus(1);
+      // The L daemon flow, in miniature: on turn start, grant slot 0 an empower.
+      run.registerTrigger('turnStart', (_ctx, r) => r.addEncounterEffect(0, empower()));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      expect(fieldedFor(run, 0)!.effects).toEqual([empower()]);
+    });
+
+    it('round-trips the encounter-effect store; a pre-K1 version is rejected', () => {
+      const { run } = freshRunWithBus(1);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      run.addEncounterEffect(0, empower(2));
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      expect(wire.encounterEffects[0]).toHaveLength(1);
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.encounterEffects[0]![0]!.magnitude).toBe(2);
+      const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+      expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+        /unsupported schema version/,
+      );
     });
   });
 

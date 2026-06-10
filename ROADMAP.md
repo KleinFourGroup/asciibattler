@@ -634,6 +634,17 @@ and **Phase L's daemons make their availability data-driven**.
 
 ### K1 — Generic status-effect system (+ fatigue migration)
 
+**✅ DONE (2 commits, both byte-identical at the default) — see [HANDOFF.md](HANDOFF.md) for the as-built record.**
+Commit 1 = the World-side substrate (`StatusEffect` + `foldEffects` + `effectiveStats` + the full
+combat/kill/death/spawn trigger set; WorldSnapshot v23→v24). Commit 2 = the Run-side `encounterEffects`
+store (the `endOfEncounter` lifetime, re-seeded at deploy) + `addEncounterEffect` + the run triggers
+(`encounterStart`/`turnStart`/`deploy`) + the **fatigue migration** (`fatigueFactor` power-bake →
+`fatigueEffect` Fatigued status; RunSnapshot v11→v12). **Design-round resolutions (3 AskUserQuestion
+rounds):** magnitude + merge-policy primitive (`replace`/`add`/`multiply`/`independent`); the linear-in-
+magnitude fold (recovers the exact fatigue curve); live-read stats now + a wired `refreshDerived` seam
+for temp-maxHp/move-speed later (only the currentHp clamp deferred); the FULL trigger set incl. kill+death;
+the encounter-scoped lifetime pulled into K1. **PHASE K's foundation; K2–K4 ride it.**
+
 **DESIGN ROUND NEEDED** — lock the shape against its four known consumers
 before building (the project's anti-speculative-generality rule, now
 satisfiable because the consumers exist).

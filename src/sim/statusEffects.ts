@@ -139,9 +139,31 @@ export function combineMagnitude(policy: MergePolicy, existing: number, incoming
   }
 }
 
+/**
+ * Apply `incoming` to an effect list per its merge policy (the shared merge
+ * used by both `Unit.addEffect`, battle-side, and `Run.addEncounterEffect`,
+ * the encounter store). A non-`independent` effect whose `key` already exists
+ * combines magnitudes (`replace`/`add`/`multiply`), refreshes the lifetime,
+ * and adopts the incoming mods/policy; otherwise a fresh (cloned) instance is
+ * pushed. Mutates `list` in place.
+ */
+export function mergeEffectInto(list: StatusEffect[], incoming: StatusEffect): void {
+  if (incoming.merge !== 'independent') {
+    const existing = list.find((e) => e.key === incoming.key);
+    if (existing) {
+      existing.magnitude = combineMagnitude(incoming.merge, existing.magnitude, incoming.magnitude);
+      existing.mods = cloneEffect(incoming).mods;
+      existing.lifetime = { ...incoming.lifetime };
+      existing.merge = incoming.merge;
+      return;
+    }
+  }
+  list.push(cloneEffect(incoming));
+}
+
 /** Deep copy an effect so a live unit's instance and a snapshot (or a seed
- *  template) never share a mutable `mods` / `lifetime` reference — `addEffect`
- *  mutates instances in place on merge. */
+ *  template) never share a mutable `mods` / `lifetime` reference — merging
+ *  mutates instances in place. */
 export function cloneEffect(effect: StatusEffect): StatusEffect {
   const mods: Partial<Record<StatKey, StatMod>> = {};
   for (const stat of Object.keys(effect.mods) as StatKey[]) {

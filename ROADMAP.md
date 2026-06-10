@@ -587,6 +587,22 @@ Code's own keybindings. Render + browser-verified.
 
 ### J4 — Fuzz strategy for objectives (arena runs)
 
+**✅ DONE (2026-06-10, two commits) — see [HANDOFF.md](HANDOFF.md) for the as-built record.**
+Commit 1 = the objective-strategy primitive ([objectiveStrategy.ts](tests/fuzz/objectiveStrategy.ts): a
+serializable `ObjectiveProclivity` — none | random | stat:hi/lo per `STAT_KEY` | hp:hi/lo — + the
+no-thrash `decideObjectiveCommand`) + the **arena harness** ([arena.ts](tests/fuzz/arena.ts): one
+forced `World`, no `Run`; `runArenaSearch` enumerates the menu → writes `best-objective.json`).
+Commit 2 = the **`--objective=<json|random|none>` flag** on the full run fuzz + `--search` +
+`--balance-sweep` (threaded through the child-process `ShardJob`), default `none` = byte-identical
+baselines. Dev-only tooling, **ZERO src change** (main 780 unchanged; fuzz:smoke 89→114). **PHASE J COMPLETE.**
+
+**The Decision points below are RESOLVED:** the fuzz objective targets **units only** + **refills only
+on kill** (no thrash — falls out of J1's auto-clear); proclivities are **parameterized per stat key**
+(user call); objectives are tuned **in isolation in the arena**, and the arena's saved strategy **feeds
+the run fuzz** via the flag (the user's envisioned workflow — tune in the arena, then hold the objective
+fixed while sweeping the other knobs). The tile-objective auto-clear / ranged-leash decisions were
+already settled in J1; the path-cache aggressiveness in J2.
+
 **Shape:** the brief's testing scheme, so objectives don't paralyze the fuzz
 bots. For fuzz: **objectives may only target units**, and **only after the
 previous objective's target is killed** (no thrashing). Per-archetype

@@ -27,6 +27,8 @@ import { Run } from '../../src/run/Run';
 import type { RunConfig } from '../../src/run/RunConfig';
 import { spawnEncounter } from '../../src/sim/battleSetup';
 import type { FuzzStrategy } from './Strategy';
+import { decideObjectiveCommand } from './objectiveStrategy';
+import type { ObjectiveProclivity } from './objectiveStrategy';
 import { TelemetryAccumulator } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 
@@ -105,6 +107,17 @@ export interface HarnessOptions {
    * determinism + the fuzz baselines are unaffected.
    */
   readonly telemetry?: boolean;
+  /**
+   * J4 — the objective proclivity the bot drives the player team's shared
+   * objective with during each battle (`decideObjectiveCommand`, refill-on-null).
+   * Undefined / `{ kind: 'none' }` (the default) injects NOTHING — no objective
+   * RNG is forked and no command is enqueued — so the run is byte-identical to
+   * the pre-J4 fuzz path (the existing baselines stay intact unless `--objective`
+   * opts in). Tuned in isolation via the arena harness (`arena.ts`); fed here as
+   * a saved JSON / `random` / `none` so the full-run search can hold one
+   * objective strategy fixed while it tunes the difficulty / archetype knobs.
+   */
+  readonly objective?: ObjectiveProclivity;
 }
 
 // 150s of game time. Authored in seconds and converted via the
@@ -133,6 +146,10 @@ export function runOne(
   const maxTicksPerBattle = options.maxTicksPerBattle ?? DEFAULT_MAX_TICKS;
   const maxNodeHops = options.maxNodeHops ?? DEFAULT_MAX_HOPS;
   const strategyRng = new RNG(options.strategySeed ?? seed);
+  // J4 — the objective bot is inert unless an active proclivity is supplied; a
+  // `none`/absent objective forks no RNG + enqueues nothing (byte-identical).
+  const objective = options.objective;
+  const objectiveActive = objective !== undefined && objective.kind !== 'none';
 
   const bus = new EventBus<GameEvents>();
   const battles: BattleResult[] = [];
@@ -144,10 +161,15 @@ export function runOne(
   let currentWorld: World | null = null;
   let currentBattle: PartialBattle | null = null;
   let unitTeams = new Map<number, Team>();
+  // J4 — a per-battle objective RNG stream, forked off the battle's worldSeed so
+  // the bot's `random` draws never perturb the World's sim / combat streams.
+  // Null (and untouched) whenever no objective is active.
+  let currentObjRng: RNG | null = null;
 
   bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
     currentWorld = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
+    currentObjRng = objectiveActive ? new RNG(worldSeed).fork() : null;
     unitTeams = new Map();
     currentBattle = {
       floor: run.currentFloor,
@@ -258,6 +280,13 @@ export function runOne(
         const w = currentWorld;
         let battleTicks = 0;
         while (!w.ended && battleTicks < maxTicksPerBattle) {
+          // J4 — drive the shared objective before the tick drains commands.
+          // `decideObjectiveCommand` is the no-thrash gate (refill only when the
+          // objective is null), so this is at most one enqueue per kill.
+          if (currentObjRng && objective) {
+            const cmd = decideObjectiveCommand(w, objective, currentObjRng);
+            if (cmd) w.enqueueCommand(cmd);
+          }
           w.tick();
           battleTicks++;
         }

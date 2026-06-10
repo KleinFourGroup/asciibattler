@@ -25,16 +25,20 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ScoredWeights } from './strategies/scoredWeights';
 import type { RosterEntry } from '../../src/run/RunConfig';
+import type { ObjectiveProclivity } from './objectiveStrategy';
 
 /** The job handed to one `--eval-shard` child (written as JSON to a temp file).
  *  `knobs` are the grid point's config overrides (empty `{}` means no override);
- *  `floorCount` is the already-resolved run length (tier default or `--floors`). */
+ *  `floorCount` is the already-resolved run length (tier default or `--floors`).
+ *  `objective` (J4) is the fixed objective proclivity the child's runs drive,
+ *  or undefined for none — a plain JSON object, so it round-trips the temp file. */
 export interface ShardJob {
   readonly knobs: Record<string, number>;
   readonly vectors: readonly ScoredWeights[];
   readonly seeds: readonly number[];
   readonly floorCount?: number;
   readonly roster?: readonly RosterEntry[];
+  readonly objective?: ObjectiveProclivity;
 }
 
 /**
@@ -102,6 +106,8 @@ export interface ShardedEvalParams {
   readonly knobs: Record<string, number>;
   readonly floorCount?: number;
   readonly roster?: readonly RosterEntry[];
+  /** J4 — the fixed objective proclivity the children's runs drive (or none). */
+  readonly objective?: ObjectiveProclivity;
   readonly jobs: number;
   /** Scratch dir for the per-chunk job/result JSON; created + removed here. */
   readonly tmpDir: string;
@@ -113,11 +119,11 @@ export interface ShardedEvalParams {
  * Rejects if any child fails (its stderr is surfaced in the error).
  */
 export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise<number[]> {
-  const { vectors, seeds, knobs, floorCount, roster, jobs, tmpDir } = params;
+  const { vectors, seeds, knobs, floorCount, roster, objective, jobs, tmpDir } = params;
   const chunks = chunkVectors(vectors, jobs);
   mkdirSync(tmpDir, { recursive: true });
   try {
-    const base: Omit<ShardJob, 'vectors'> = { knobs, seeds, floorCount, roster };
+    const base: Omit<ShardJob, 'vectors'> = { knobs, seeds, floorCount, roster, objective };
     const perChunk = await Promise.all(
       chunks.map((chunk, i) => runChunk(chunk, i, base, tmpDir)),
     );

@@ -40,6 +40,7 @@ import {
 import { evaluateVectorsSharded } from './searchShard';
 import { aggregateTelemetry, type AggregatedTelemetry } from './telemetry';
 import type { RunTelemetry } from './telemetry';
+import type { ObjectiveProclivity } from './objectiveStrategy';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import type { RosterEntry } from '../../src/run/RunConfig';
 import { DIFFICULTY } from '../../src/config/difficulty';
@@ -204,6 +205,13 @@ export interface BalanceSweepConfig {
    * per-deployment telemetry. Undefined = the normal rolled starting roster.
    */
   readonly rosterOverride?: readonly RosterEntry[];
+  /**
+   * J4 — hold one objective proclivity FIXED across every run at every grid
+   * point (the arena's tuned strategy, `random`, or none). Lets a difficulty
+   * sweep measure the band with objectives active. Undefined / none = no
+   * objectives (byte-identical to the pre-J4 sweep).
+   */
+  readonly objective?: ObjectiveProclivity;
   /** Stop after this many grid points (the `--dry-run` estimate runs 1). */
   readonly maxPoints?: number;
   /**
@@ -243,17 +251,19 @@ function baselineWin(name: string, seeds: readonly number[], opts: HarnessOption
 
 /** Tier's harness options, with optional floor-count + starting-roster overrides
  *  applied — so the search, baselines, and telemetry re-run all share one run
- *  length and roster. */
+ *  length, roster, and (J4) objective proclivity. */
 function harnessOptionsFor(
   preset: SearchPreset,
   floorOverride?: number,
   roster?: readonly RosterEntry[],
+  objective?: ObjectiveProclivity,
 ): HarnessOptions {
   const floorCount = floorOverride ?? preset.floorCount;
   const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
   if (floorCount !== undefined) runConfig.floorCount = floorCount;
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
-  return Object.keys(runConfig).length > 0 ? { runConfig } : {};
+  const opts: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
+  return objective ? { ...opts, objective } : opts;
 }
 
 /**
@@ -268,7 +278,12 @@ async function defaultMeasurePoint(
 ): Promise<SweepPoint> {
   const { preset, samplerSeed } = config;
   const { trainSeeds, testSeeds } = splitSeeds(preset.trainSeeds, preset.testSeeds);
-  const harnessOptions = harnessOptionsFor(preset, config.floorOverride, config.rosterOverride);
+  const harnessOptions = harnessOptionsFor(
+    preset,
+    config.floorOverride,
+    config.rosterOverride,
+    config.objective,
+  );
   const jobs = Math.max(1, Math.floor(config.jobs ?? 1));
 
   let search: SearchResult;
@@ -285,6 +300,7 @@ async function defaultMeasurePoint(
       knobs: coord,
       floorCount: config.floorOverride ?? preset.floorCount,
       roster: config.rosterOverride,
+      objective: config.objective,
       jobs,
       tmpDir: config.tmpDir,
     });

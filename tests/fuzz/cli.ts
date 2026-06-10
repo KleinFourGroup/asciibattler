@@ -53,6 +53,14 @@
  *   npm run fuzz -- --arena --objective=stat:evasion:lowest --layout=junctionAmbush
  *   npm run fuzz -- --arena --objective=output/best-objective.json   # inspect one
  *
+ *   # J4 — drive a FIXED objective strategy through the full run fuzz / --search /
+ *   # --balance-sweep (default none = byte-identical baselines; tune it in --arena
+ *   # first, then feed the saved JSON | random | none):
+ *   npm run fuzz -- --count=50 --objective=output/best-objective.json
+ *   npm run fuzz -- --search --objective=random --jobs=8
+ *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.5:0.75:2 \
+ *     --objective=output/best-objective.json --tier=medium --jobs=8
+ *
  * Strategies come from the shared registry (tests/fuzz/strategies/registry.ts);
  * the default sweep is just the two baselines so a no-flag run stays fast — the
  * full parameterized menu is opt-in via `--strategy=NAME` or `--strategy=all`.
@@ -101,6 +109,7 @@ import {
   objectiveMenu,
   proclivityLabel,
   serializeProclivity,
+  type ObjectiveProclivity,
 } from './objectiveStrategy';
 import { parseRunConfig, type RosterEntry } from '../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
@@ -318,6 +327,10 @@ async function main(): Promise<void> {
     }
     harnessOptions = { runConfig: { forcedLayoutId: args.layout } };
   }
+  // J4 — drive a fixed objective strategy in every battle (default none =
+  // byte-identical to the pre-J4 fuzz path; the baselines stay put).
+  const objective = objectiveFromArgs(args);
+  if (objective) harnessOptions = { ...harnessOptions, objective };
 
   // Fresh failures/ dir so stale traces from prior runs don't lie. Only the
   // failures subdir is wiped (not the whole output dir) so a search's
@@ -439,15 +452,18 @@ async function runSearchCli(args: CliArgs): Promise<void> {
   if (floorCount !== undefined) searchParams.set('floors', String(floorCount));
   if (args.roster) searchParams.set('roster', args.roster);
   const runConfig = parseRunConfig(searchParams);
-  const harnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
+  const objective = objectiveFromArgs(args);
+  const baseHarness: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
+  const harnessOptions: HarnessOptions = objective ? { ...baseHarness, objective } : baseHarness;
 
   const floorNote = floorCount !== undefined ? ` floors=${floorCount}` : ' floors=full';
   const rosterNote = runConfig.startingRoster
     ? ` roster=[${runConfig.startingRoster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
+  const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${jobsNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${objectiveNote}${jobsNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -465,6 +481,7 @@ async function runSearchCli(args: CliArgs): Promise<void> {
       knobs: {},
       floorCount,
       roster: runConfig.startingRoster,
+      objective,
       jobs,
       tmpDir: join(args.outDir, 'shard-tmp'),
     });
@@ -540,6 +557,7 @@ async function runBalanceSweepCli(args: CliArgs): Promise<void> {
   const rosterOverride = args.roster
     ? parseRunConfig(new URLSearchParams({ roster: args.roster })).startingRoster
     : undefined;
+  const objective = objectiveFromArgs(args);
 
   const jobs = args.jobs !== undefined ? Math.max(1, Math.floor(args.jobs)) : 1;
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
@@ -548,8 +566,9 @@ async function runBalanceSweepCli(args: CliArgs): Promise<void> {
     ? ` roster=[${rosterOverride.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
+  const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${jobsNote} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${objectiveNote}${jobsNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -559,6 +578,7 @@ async function runBalanceSweepCli(args: CliArgs): Promise<void> {
     samplerSeed,
     floorOverride: args.floors,
     rosterOverride,
+    objective,
     jobs,
     tmpDir: join(args.outDir, 'shard-tmp'),
     maxPoints: args.dryRun ? 1 : undefined,
@@ -616,8 +636,13 @@ function runEvalShardCli(args: CliArgs): void {
   const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
   if (job.floorCount !== undefined) runConfig.floorCount = job.floorCount;
   if (job.roster && job.roster.length > 0) runConfig.startingRoster = job.roster;
-  const harnessOptions: HarnessOptions =
-    Object.keys(runConfig).length > 0 ? { runConfig } : {};
+  const baseHarness: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
+  // J4 — the child re-applies the parent's fixed objective proclivity (a plain
+  // JSON object that round-tripped the job file), so sharded runs drive the same
+  // objective as single-process.
+  const harnessOptions: HarnessOptions = job.objective
+    ? { ...baseHarness, objective: job.objective }
+    : baseHarness;
 
   const winRates = job.vectors.map(
     (w) =>
@@ -725,6 +750,13 @@ function fmtDuration(ms: number): string {
   if (ms < 1000) return `${ms.toFixed(0)}ms`;
   if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;
   return `${(ms / 60_000).toFixed(1)}m`;
+}
+
+/** J4 — resolve the `--objective` flag into a proclivity, or `undefined` when
+ *  absent (the harness treats undefined as `none` → byte-identical baselines).
+ *  Shared by the standard run, `--search`, and `--balance-sweep`. */
+function objectiveFromArgs(args: CliArgs): ObjectiveProclivity | undefined {
+  return args.objective !== undefined ? parseObjectiveFlag(args.objective) : undefined;
 }
 
 /** Resolve the `--strategy` flag: a `*.json` file path (a scored-strategy weight

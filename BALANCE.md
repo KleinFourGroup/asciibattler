@@ -120,6 +120,11 @@ Independent CPU-bound runs → embarrassingly parallel. Built-ins only:
 - `npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.25:1.5:6 \
     --knob2=difficulty.swarmMaxMultiplier --range2=1.0:3.0:5 --tier=quick [--jobs=N]`
   — the grid sweep (**H7c step 0 — to build**; flag shape is a sketch, finalize when built).
+- `npm run fuzz -- --objective=<file>.json|random|none` (J4) — hold one in-battle
+  objective strategy FIXED across every run of a `--search` or `--balance-sweep`
+  (threaded through the `--jobs` shards too). Default `none` = byte-identical to the
+  pre-J4 sweep. Tune the strategy first in `--arena` (writes `best-objective.json`),
+  then re-sweep with it active — the lever for N2 if objectives move the band.
 
 ---
 
@@ -614,3 +619,13 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   - **Methodology caveat:** forced-roster is a diagnostic (answers "force this comp," not "is the rogue
     worth a slot"); the free search is a lower bound. Both point the same way here AND the per-deployment
     signal (½ carry damage) is structural, so the verdict is robust to quick-tier's 8-seed quantization.
+
+- **J4 objective tooling — the arena + `--objective` sweep lever (2026-06-10).** Phase-J's fuzz step added
+  an **arena harness** (one forced `World`, no `Run`) that tunes an in-battle objective strategy in
+  isolation and an **`--objective=<json|random|none>`** flag that holds it fixed across the full run fuzz /
+  `--search` / `--balance-sweep` (threaded through the `--jobs` shards; default `none` = byte-identical, so
+  no baseline shifted). Dev tooling only, no config change. **Early arena signal** (default lvl-5 carry comp,
+  8 seeds, procedural): `none` 50% → `hp:lowest` (focus-fire the weakest) 75% — objectives are a real skill
+  lever, not noise. **For N2:** when re-sweeping the band against the full post-I–M model, optionally hold a
+  tuned objective fixed (a human will steer objectives, so the bot-with-objective is a tighter lower bound on
+  play). Tune in `--arena` → `--objective=output/best-objective.json` on the sweep.

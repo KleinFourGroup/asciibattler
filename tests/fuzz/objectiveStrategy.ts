@@ -12,10 +12,12 @@
  * `world.objective === null` (`decideObjectiveCommand` below).
  *
  * The proclivity is ONE team-wide policy per run (there is a single shared
- * objective); the brief's "per-archetype proclivities" become a later
- * `scored`-strategy term. The menu is parameterized per stat key (auto-extends
- * off `STAT_KEYS`, like the `stat:<stat>` recruit menu) + current-HP + the
- * `random` / `none` modes.
+ * objective). The menu covers `none`, `random`, highest/lowest of a base stat,
+ * highest/lowest current HP, and **target a given enemy archetype** ("focus the
+ * mage") — parameterized per stat key / per archetype so they auto-extend off
+ * `STAT_KEYS` / `ALL_ARCHETYPES` (like the `stat:<stat>` recruit menu). A
+ * per-unit objective per archetype is NOT this (there's one shared objective);
+ * that would be a later `scored`-strategy term.
  *
  * Dev-only fuzz tooling — never imported by `src/`. Mirrors the A4 config
  * pattern (zod, validate-on-load, throw on malformed) the way `scoredWeights.ts`
@@ -29,6 +31,7 @@ import type { RNG } from '../../src/core/RNG';
 import type { World } from '../../src/sim/World';
 import type { WorldCommand } from '../../src/sim/Command';
 import type { Unit, UnitStats } from '../../src/sim/Unit';
+import { ALL_ARCHETYPES, type Archetype } from '../../src/sim/archetypes';
 import { STAT_KEYS } from './strategies/policies';
 
 export type SelectDirection = 'highest' | 'lowest';
@@ -39,24 +42,29 @@ export type SelectDirection = 'highest' | 'lowest';
  *   - `random` : pick a uniform-random living enemy each time (after each kill).
  *   - `stat`   : the living enemy with the highest / lowest base stat.
  *   - `hp`     : the living enemy with the highest / lowest CURRENT health.
+ *   - `archetype` : a living enemy of a given archetype ("focus the mage"); null
+ *                   when none of that archetype is alive (→ default targeting).
  */
 export type ObjectiveProclivity =
   | { readonly kind: 'none' }
   | { readonly kind: 'random' }
   | { readonly kind: 'stat'; readonly select: SelectDirection; readonly stat: keyof UnitStats }
-  | { readonly kind: 'hp'; readonly select: SelectDirection };
+  | { readonly kind: 'hp'; readonly select: SelectDirection }
+  | { readonly kind: 'archetype'; readonly archetype: Archetype };
 
 const DIRECTION = z.enum(['highest', 'lowest']);
 // Built from the live `STAT_KEYS` so a new base stat auto-extends the schema (a
 // missing/unknown stat throws loudly) — the same vocabulary-tracking trick
 // `scoredWeights.ts` uses for its per-stat weights.
 const STAT_ENUM = z.enum(STAT_KEYS as [string, ...string[]]);
+const ARCHETYPE_ENUM = z.enum(ALL_ARCHETYPES as unknown as [string, ...string[]]);
 
 const ProclivitySchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('none') }),
   z.strictObject({ kind: z.literal('random') }),
   z.strictObject({ kind: z.literal('stat'), select: DIRECTION, stat: STAT_ENUM }),
   z.strictObject({ kind: z.literal('hp'), select: DIRECTION }),
+  z.strictObject({ kind: z.literal('archetype'), archetype: ARCHETYPE_ENUM }),
 ]);
 
 /** Validate an arbitrary parsed-JSON value into an `ObjectiveProclivity`. Throws
@@ -89,6 +97,8 @@ export function proclivityLabel(p: ObjectiveProclivity): string {
       return `hp:${p.select}`;
     case 'stat':
       return `stat:${String(p.stat)}:${p.select}`;
+    case 'archetype':
+      return `archetype:${p.archetype}`;
   }
 }
 
@@ -99,9 +109,12 @@ export interface MenuEntry {
 
 /**
  * The full proclivity menu the arena enumerates: `none`, `random`, highest /
- * lowest current-HP, and highest / lowest of every base stat. Config-derived —
- * the per-stat entries track `STAT_KEYS`, so a new stat auto-joins the menu (no
- * edit here), matching the `stat:<stat>` recruit-menu ethos.
+ * lowest current-HP, highest / lowest of every base stat, and one entry per
+ * enemy archetype. Config-derived — the per-stat entries track `STAT_KEYS` and
+ * the per-archetype entries track `ALL_ARCHETYPES`, so a new stat or archetype
+ * auto-joins the menu (no edit here), matching the `stat:<stat>` recruit-menu
+ * ethos. (Archetypes that never spawn as enemies today — only `bandit`/`ranged`
+ * do — select nothing → behave like `none` until enemy diversity lands.)
  */
 export function objectiveMenu(): MenuEntry[] {
   const out: MenuEntry[] = [
@@ -119,6 +132,9 @@ export function objectiveMenu(): MenuEntry[] {
       label: `stat:${String(stat)}:lowest`,
       proclivity: { kind: 'stat', select: 'lowest', stat },
     });
+  }
+  for (const archetype of ALL_ARCHETYPES) {
+    out.push({ label: `archetype:${archetype}`, proclivity: { kind: 'archetype', archetype } });
   }
   return out;
 }
@@ -143,9 +159,12 @@ export function parseObjectiveFlag(value: string): ObjectiveProclivity {
   if (parts[0] === 'stat' && parts.length === 3) {
     return parseProclivity({ kind: 'stat', stat: parts[1], select: parts[2] });
   }
+  if (parts[0] === 'archetype' && parts.length === 2) {
+    return parseProclivity({ kind: 'archetype', archetype: parts[1] });
+  }
   throw new Error(
-    `Unrecognized --objective value: "${value}" ` +
-      `(expected none | random | <file>.json | stat:<stat>:<dir> | hp:<dir>)`,
+    `Unrecognized --objective value: "${value}" (expected ` +
+      `none | random | <file>.json | stat:<stat>:<dir> | hp:<dir> | archetype:<name>)`,
   );
 }
 
@@ -170,6 +189,13 @@ export function selectObjectiveTarget(
   const enemies = livingEnemies(world);
   if (enemies.length === 0) return null;
   if (proclivity.kind === 'random') return rng.pick(enemies).id;
+  if (proclivity.kind === 'archetype') {
+    const matches = enemies.filter((u) => u.archetype === proclivity.archetype);
+    if (matches.length === 0) return null; // none of that archetype alive → default targeting
+    // Lowest-id deterministic pick (no RNG). A "focus down the wounded one"
+    // refinement — lowest-HP among the archetype — is an easy later change.
+    return matches.reduce((best, u) => (u.id < best.id ? u : best)).id;
+  }
 
   const valueOf = (u: Unit): number =>
     proclivity.kind === 'hp' ? u.currentHp : u.stats[proclivity.stat];

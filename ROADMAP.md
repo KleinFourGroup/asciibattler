@@ -597,8 +597,9 @@ Commit 2 = the **`--objective=<json|random|none>` flag** on the full run fuzz + 
 baselines. Dev-only tooling, **ZERO src change** (main 780 unchanged; fuzz:smoke 89→114). **PHASE J COMPLETE.**
 
 **The Decision points below are RESOLVED:** the fuzz objective targets **units only** + **refills only
-on kill** (no thrash — falls out of J1's auto-clear); proclivities are **parameterized per stat key**
-(user call); objectives are tuned **in isolation in the arena**, and the arena's saved strategy **feeds
+on kill** (no thrash — falls out of J1's auto-clear); proclivities are **parameterized per stat key AND
+per enemy archetype** ("focus the mage" — the user's reading of the brief's "per-archetype"; a follow-up
+commit, live today for `bandit`/`ranged`) (user call); objectives are tuned **in isolation in the arena**, and the arena's saved strategy **feeds
 the run fuzz** via the flag (the user's envisioned workflow — tune in the arena, then hold the objective
 fixed while sweeping the other knobs). The tile-objective auto-clear / ranged-leash decisions were
 already settled in J1; the path-cache aggressiveness in J2.

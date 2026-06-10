@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import { World } from '../../src/sim/World';
-import { scaledUnit } from '../../src/sim/archetypes';
+import { scaledUnit, ALL_ARCHETYPES, type Archetype } from '../../src/sim/archetypes';
 import type { GameEvents } from '../../src/core/events';
 import type { GridCoord } from '../../src/core/types';
 import type { Team, UnitStats, UnitTemplate } from '../../src/sim/Unit';
@@ -43,6 +43,10 @@ function spawn(
     xp: 0,
   };
   return world.spawnUnit(template, team, cell, null);
+}
+
+function spawnArch(world: World, team: Team, cell: GridCoord, archetype: Archetype) {
+  return world.spawnUnit(scaledUnit(archetype, 1), team, cell, null);
 }
 
 describe('selectObjectiveTarget', () => {
@@ -124,6 +128,32 @@ describe('selectObjectiveTarget', () => {
       selectObjectiveTarget(world, { kind: 'stat', select: 'highest', stat: 'strength' }, rng()),
     ).toBe(first.id); // lower id wins the tie
   });
+
+  it('archetype picks a living enemy of that archetype ("focus the X")', () => {
+    const world = makeWorld();
+    spawnArch(world, 'enemy', { x: 1, y: 1 }, 'ranged');
+    const bandit = spawnArch(world, 'enemy', { x: 2, y: 1 }, 'bandit');
+    expect(selectObjectiveTarget(world, { kind: 'archetype', archetype: 'bandit' }, rng())).toBe(
+      bandit.id,
+    );
+  });
+
+  it('archetype returns null when no living enemy matches', () => {
+    const world = makeWorld();
+    spawnArch(world, 'enemy', { x: 1, y: 1 }, 'ranged');
+    expect(
+      selectObjectiveTarget(world, { kind: 'archetype', archetype: 'mage' }, rng()),
+    ).toBeNull();
+  });
+
+  it('archetype breaks ties by ascending unit id', () => {
+    const world = makeWorld();
+    const first = spawnArch(world, 'enemy', { x: 1, y: 1 }, 'bandit');
+    spawnArch(world, 'enemy', { x: 2, y: 1 }, 'bandit');
+    expect(selectObjectiveTarget(world, { kind: 'archetype', archetype: 'bandit' }, rng())).toBe(
+      first.id,
+    );
+  });
 });
 
 describe('decideObjectiveCommand (the no-thrash gate)', () => {
@@ -170,10 +200,12 @@ describe('proclivity JSON + flag parsing', () => {
       select: 'highest',
       stat: 'strength',
     });
+    expect(parseObjectiveFlag('archetype:mage')).toEqual({ kind: 'archetype', archetype: 'mage' });
   });
 
-  it('rejects an unknown stat key (zod)', () => {
+  it('rejects an unknown stat key or archetype (zod)', () => {
     expect(() => parseProclivity({ kind: 'stat', select: 'highest', stat: 'charisma' })).toThrow();
+    expect(() => parseProclivity({ kind: 'archetype', archetype: 'wizard' })).toThrow();
   });
 
   it('rejects a garbage flag value', () => {
@@ -182,9 +214,9 @@ describe('proclivity JSON + flag parsing', () => {
 });
 
 describe('objectiveMenu', () => {
-  it('covers none + random + hp×2 + a highest/lowest entry per stat key', () => {
-    // Config-derived expectation: 4 fixed entries + 2 per base stat.
-    expect(objectiveMenu()).toHaveLength(4 + 2 * STAT_KEYS.length);
+  it('covers none + random + hp×2 + 2 per stat key + one per archetype', () => {
+    // Config-derived expectation: 4 fixed + 2 per base stat + 1 per archetype.
+    expect(objectiveMenu()).toHaveLength(4 + 2 * STAT_KEYS.length + ALL_ARCHETYPES.length);
   });
 
   it('every menu entry validates and its label matches proclivityLabel', () => {

@@ -17,7 +17,7 @@
  */
 
 import type { World } from '../sim/World';
-import type { Renderer } from '../render/Renderer';
+import type { Renderer, PickCandidate } from '../render/Renderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import { objectiveAtCell, type EnemyAtCell } from '../sim/objective';
 
@@ -43,6 +43,10 @@ export class ObjectiveController implements ObjectiveControls {
      *  the real tile surface (exact on raised/lowered tiles) rather than a flat
      *  plane (which drifts by a tile where heights differ). */
     private readonly terrain: TerrainRenderer,
+    /** J3 — living enemy billboards (rendered positions) for the screen-space
+     *  hit-test, supplied by BattleScene off the BattleRenderer so the click
+     *  resolves against the GLYPH the player sees, not the tile behind it. */
+    private readonly enemyBillboards: () => readonly PickCandidate[],
   ) {
     const canvas = this.renderer.webgl.domElement;
     canvas.addEventListener('contextmenu', this.onContextMenu);
@@ -88,9 +92,22 @@ export class ObjectiveController implements ObjectiveControls {
     if (this.setFromClient(e.clientX, e.clientY)) this.disarm();
   };
 
-  /** Pick the cell under the cursor, resolve it, enqueue the set. Returns
-   *  whether a command was enqueued (false = clicked off the board). */
+  /**
+   * Resolve a click into an objective and enqueue it. Returns whether a command
+   * was enqueued (false = clicked into the void off the board).
+   *
+   * Order matters: try the enemy BILLBOARD first (clicking the visible glyph —
+   * accounts for the camera-facing sprite floating above its tile), then fall
+   * back to the terrain CELL (clicking the ground / a unit's feet → that enemy
+   * if one stands there, else a rally tile).
+   */
   private setFromClient(clientX: number, clientY: number): boolean {
+    const enemyId = this.renderer.pickInstance(clientX, clientY, this.enemyBillboards());
+    if (enemyId !== null) {
+      this.world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: enemyId } });
+      return true;
+    }
+
     const cell = this.renderer.pickCell(clientX, clientY, this.terrain.mesh);
     if (!cell) return false;
     const enemies: EnemyAtCell[] = this.world.units

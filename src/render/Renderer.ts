@@ -6,8 +6,11 @@ import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js
 import { COLORS } from './palette';
 import { createBloomMixPass, createBloomPass, createSatClampedPass } from './PostProcess';
 import { BLOOM_LAYER } from './SpriteRenderer';
+import { pickInstanceAtNdc, type PickCandidate } from './pick';
 import { GRID_SIZE } from '../config';
 import type { GridCoord } from '../core/types';
+
+export type { PickCandidate };
 
 /** Camera pitch from horizontal. 45° down matches the diorama framing. */
 const CAMERA_PITCH_RAD = Math.PI / 4;
@@ -260,6 +263,22 @@ export class Renderer {
     const y = Math.floor(this.boardH / 2 - hit.point.z);
     if (x < 0 || x >= this.boardW || y < 0 || y >= this.boardH) return null;
     return { x, y };
+  }
+
+  /**
+   * J3 — screen → sprite. The billboard-aware counterpart to `pickCell`: tests
+   * the cursor against each candidate's camera-facing quad (NOT the terrain), so
+   * clicking a unit's GLYPH selects that unit. A glyph floats ~0.5 above its
+   * tile, so a terrain raycast through it lands on the cell behind — hence the
+   * objective controller tries this first, then falls back to `pickCell`.
+   * Returns the frontmost candidate id under the cursor, or null.
+   */
+  pickInstance(clientX: number, clientY: number, candidates: readonly PickCandidate[]): number | null {
+    const rect = this.webgl.domElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const ndcY = -((clientY - rect.top) / rect.height) * 2 + 1;
+    return pickInstanceAtNdc(candidates, ndcX, ndcY, this.camera);
   }
 
   /**

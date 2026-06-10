@@ -72,7 +72,15 @@ export class BattleScene implements Scene {
     // enemy positions) and the Renderer (canvas listeners + screen→cell pick).
     // Built before the HUD so the HUD's buttons/hotkeys can drive it; the HUD
     // reflects its armed state back via onArmedChange.
-    this.objective = new ObjectiveController(this.world, ctx.renderer, ctx.terrain);
+    // The enemy-billboard provider reads the BattleRenderer's LIVE sprite
+    // positions (created just above), so the click hit-test matches the glyph
+    // on screen. Null-guarded for the brief window before/after a battle.
+    this.objective = new ObjectiveController(
+      this.world,
+      ctx.renderer,
+      ctx.terrain,
+      () => this.battleRenderer?.enemyBillboards() ?? [],
+    );
     this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings, this.objective);
     this.objective.onArmedChange = (armed) => this.hud?.setObjectiveArmed(armed);
 

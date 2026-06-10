@@ -6,6 +6,7 @@ import type { World } from '../sim/World';
 import type { BattleObjective } from '../sim/objective';
 import type { Team, Unit } from '../sim/Unit';
 import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
+import type { PickCandidate } from './pick';
 import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
 import type { TerrainRenderer } from './TerrainRenderer';
 import { COLORS } from './palette';
@@ -275,6 +276,27 @@ export class BattleRenderer {
       size: OBJECTIVE_MARKER_ENEMY_SIZE,
       alpha: 1,
     });
+  }
+
+  /**
+   * J3 — living enemy units as click candidates for the billboard hit-test
+   * (`Renderer.pickInstance`), using each sprite's LIVE rendered position (the
+   * exact billboard the player sees, incl. a mid-move lerp) rather than the
+   * logical cell — so clicking a moving enemy's glyph still selects it. The
+   * objective controller calls this to resolve a right-click / armed-click onto
+   * the unit you actually clicked, before falling back to the terrain cell.
+   */
+  enemyBillboards(): PickCandidate[] {
+    if (!this.world) return [];
+    const out: PickCandidate[] = [];
+    for (const [unitId, handle] of this.handles) {
+      const unit = this.world.findUnit(unitId);
+      if (!unit || unit.team !== 'enemy' || unit.currentHp <= 0) continue;
+      const pos = this.sprites.getPosition(handle, this.scratchPos);
+      if (!pos) continue;
+      out.push({ id: unitId, position: pos.clone(), size: UNIT_PICK_SIZE });
+    }
+    return out;
   }
 
   /**
@@ -1083,6 +1105,11 @@ const HITSPLAT_Y_OFFSET = 0.5;
  * off-axis under the pitched perspective → the mark skewed sideways for units
  * away from screen center; the same off-axis drift the I2 hitsplat fix solved).
  */
+/** J3 — the world-space quad extent of a unit billboard for the click hit-test
+ *  (`enemyBillboards`): uSpriteSize (1) × the unit's instanceSize (1). Units
+ *  always render at the default size — only projectiles/markers override it. */
+const UNIT_PICK_SIZE = 1;
+
 const OBJECTIVE_MARKER_GLYPH = 'X'; // registered in glyphs.ts (J3, last atlas cell).
 const OBJECTIVE_MARKER_COLOR = COLORS.TERMINAL_AMBER;
 const OBJECTIVE_MARKER_BLOOM = 0.6;

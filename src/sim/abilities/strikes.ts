@@ -100,11 +100,13 @@ function proposeBasicStrike(
   // not `critable`; the weapon's `accuracy`/`evadable` thread into the
   // `applyDamage` to-hit roll.
   const baseDamage = basicAttackDamage(unit, cfg.might);
-  const critChance = cfg.critable ? critChanceFor(cfg.critBase, unit.stats.luck) : 0;
+  // K1 — crit + cadence read `effectiveStats` (luck / speed) so a status effect
+  // buffs them; `effectiveStats === stats` when the unit has no effects.
+  const critChance = cfg.critable ? critChanceFor(cfg.critBase, unit.effectiveStats.luck) : 0;
   // E5 pre-work: cadence is the ability's own `cooldownSeconds` (from
   // `config/abilities.json`), scaled by the unit's `speed` — no longer
   // the single global attack-CD that melee + ranged used to share.
-  const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
+  const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.effectiveStats.speed);
 
   return {
     action: makeAction(target, baseDamage, critChance, damageMultiplier, cfg.evadable, cfg.accuracy),

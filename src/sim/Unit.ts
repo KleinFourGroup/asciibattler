@@ -3,6 +3,12 @@ import type { GridCoord } from '../core/types';
 import type { World } from './World';
 import type { ActionProposal, ActiveAction } from './Action';
 import type { Ability } from './abilities/Ability';
+// Value imports: `stats.ts` / `statusEffects.ts` only TYPE-import Unit, so this
+// is a type-only cycle at runtime (these are pure functions called lazily from
+// methods, never at module init) — no initialization-order hazard.
+import { deriveStats } from './stats';
+import { foldEffects, combineMagnitude, cloneEffect } from './statusEffects';
+import type { StatusEffect } from './statusEffects';
 
 /**
  * Combatant alignment. `'neutral'` is for environment entities (walls,
@@ -187,6 +193,10 @@ export interface UnitInit {
   readonly stats: UnitStats;
   readonly derived: UnitDerived;
   readonly position: GridCoord;
+  /** K1: status effects the unit spawns with (the fatigue / encounter-buff
+   *  seed channel, and the snapshot-rehydrate path). Defaults to none, so
+   *  direct-construction fixtures + the no-effect common case are unchanged. */
+  readonly effects?: readonly StatusEffect[];
   /** D6: defaults to `true` so existing combatants + walls keep their
    *  LOS-blocking behavior. Half-cover sets this to `false`. */
   readonly blocksLineOfSight?: boolean;
@@ -214,8 +224,20 @@ export class Unit {
   readonly team: Team;
   readonly archetype: UnitArchetype;
   readonly glyph: string;
+  /**
+   * E1 — the unit's BASE stat block (the leveled-but-unmodified values).
+   * Status effects are layered on top via `effectiveStats`; `stats` itself is
+   * never mutated, so it stays the canonical snapshot/display value.
+   */
   readonly stats: UnitStats;
-  readonly derived: UnitDerived;
+  /**
+   * K1 — derived block is no longer strictly construction-time-final: a status
+   * effect that modifies `constitution` / `mobility` triggers `refreshDerived`,
+   * which recomputes it from `effectiveStats`. (No K1 effect does so, so in
+   * practice it's recomputed to an identical block; the seam is live for the
+   * eventual temp-maxHp / temp-move-speed consumers.)
+   */
+  derived: UnitDerived;
   /**
    * E3 — combatant level. The unit's `stats` already reflect this
    * level (post-`simulateLevelUps` / post-`scaleStats`); the field is
@@ -292,6 +314,19 @@ export class Unit {
    * it, but it's snapshotted uniformly for replay determinism.
    */
   outOfLosTicks = 0;
+  /**
+   * K1 — active status effects. Mutated in place by `addEffect` (merge) /
+   * `expireEffects`; folded into `effectiveStats` (cached) and snapshotted.
+   * Empty for the no-effect common case (then `effectiveStats === stats`).
+   */
+  readonly effects: StatusEffect[] = [];
+  /**
+   * Cached fold of `stats` + `effects`. `null` means "no effects" — the getter
+   * returns the base `stats` object itself (identity-equal), keeping the
+   * no-effect path byte-identical and zero-cost. Recomputed eagerly whenever
+   * the effect set changes.
+   */
+  private _effectiveStats: UnitStats | null = null;
 
   constructor(init: UnitInit) {
     this.id = init.id;
@@ -307,5 +342,79 @@ export class Unit {
     this.level = init.level ?? 1;
     this.xp = init.xp ?? 0;
     this.rosterIndex = init.rosterIndex ?? null;
+    // K1 — seed spawn-time effects (fatigue / encounter buffs / rehydrate).
+    // `currentHp` was just set to the base maxHp above; no K1 effect modifies
+    // `constitution`, so the recompute below leaves maxHp unchanged and that
+    // currentHp stays valid (the maxHp↔currentHp clamp policy is deferred to
+    // the first real temp-HP consumer).
+    if (init.effects && init.effects.length > 0) {
+      for (const effect of init.effects) this.effects.push(cloneEffect(effect));
+      this.recomputeEffective();
+    }
+  }
+
+  /**
+   * K1 — the unit's stats with active effects folded in. Identity-equal to the
+   * base `stats` when there are no effects (the byte-identical fast path).
+   * Every combat/cadence/crit read site consults this, not `stats`.
+   */
+  get effectiveStats(): UnitStats {
+    return this._effectiveStats ?? this.stats;
+  }
+
+  /**
+   * K1 — apply a status effect, honouring its merge policy. A non-`independent`
+   * effect whose `key` is already present combines magnitudes per the policy
+   * (`replace` / `add` / `multiply`) and refreshes the lifetime; otherwise the
+   * effect is added as a fresh instance. Recomputes `effectiveStats` after.
+   */
+  addEffect(effect: StatusEffect): void {
+    if (effect.merge !== 'independent') {
+      const existing = this.effects.find((e) => e.key === effect.key);
+      if (existing) {
+        existing.magnitude = combineMagnitude(effect.merge, existing.magnitude, effect.magnitude);
+        existing.lifetime = { ...effect.lifetime };
+        existing.mods = cloneEffect(effect).mods;
+        existing.merge = effect.merge;
+        this.recomputeEffective();
+        return;
+      }
+    }
+    this.effects.push(cloneEffect(effect));
+    this.recomputeEffective();
+  }
+
+  /**
+   * K1 — drop any `ticks` effect whose `expiresAtTick` has been reached.
+   * `endOfTurn` effects are never removed here (they die with the World).
+   * Recomputes `effectiveStats` only when something actually expired.
+   */
+  expireEffects(currentTick: number): void {
+    let removed = false;
+    for (let i = this.effects.length - 1; i >= 0; i--) {
+      const lifetime = this.effects[i]!.lifetime;
+      if (lifetime.kind === 'ticks' && currentTick >= lifetime.expiresAtTick) {
+        this.effects.splice(i, 1);
+        removed = true;
+      }
+    }
+    if (removed) this.recomputeEffective();
+  }
+
+  /**
+   * K1 — recompute the derived block from `effectiveStats`. A no-op in practice
+   * for every K1 effect (none touch `constitution` / `mobility`, the only
+   * stats that feed `derived`), but the seam is live for future temp-maxHp /
+   * temp-move-speed effects — at which point this gains the currentHp clamp.
+   */
+  refreshDerived(): void {
+    this.derived = deriveStats(this.effectiveStats, this.derived.attackRange);
+  }
+
+  /** Re-fold `stats` + `effects` into the cache and refresh derived. Empty
+   *  effect set → cache cleared to `null` so the getter returns base `stats`. */
+  private recomputeEffective(): void {
+    this._effectiveStats = this.effects.length > 0 ? foldEffects(this.stats, this.effects) : null;
+    this.refreshDerived();
   }
 }

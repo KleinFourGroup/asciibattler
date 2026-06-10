@@ -187,6 +187,44 @@ describe('A2 round-trip: World', () => {
     );
   });
 
+  it('K1: a live snapshot carries per-unit status effects; a pre-K1 version is rejected', () => {
+    // K1 added the per-unit `effects` list to WorldSnapshot (v23→v24). The
+    // effect + its remaining lifetime + the folded effective stat block must
+    // resume identically; a v23 save (no `effects` field) is rejected outright.
+    const { world } = freshBattle(13579);
+    for (let i = 0; i < 5; i++) world.tick();
+    const u = world.units.find((x) => x.team !== 'neutral')!;
+    u.addEffect({
+      key: 'empowered',
+      magnitude: 3,
+      mods: { strength: { add: 1 } },
+      lifetime: { kind: 'ticks', expiresAtTick: world.currentTick + 100 },
+      merge: 'replace',
+    });
+    const buffedStrength = u.effectiveStats.strength;
+    expect(buffedStrength).toBe(u.stats.strength + 3);
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const unitWire = wire.units.find((w: { id: number }) => w.id === u.id);
+    expect(unitWire.effects).toHaveLength(1);
+    expect(unitWire.effects[0].magnitude).toBe(3);
+    expect(unitWire.effects[0].lifetime).toEqual({
+      kind: 'ticks',
+      expiresAtTick: world.currentTick + 100,
+    });
+
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    const ru = restored.units.find((x) => x.id === u.id)!;
+    expect(ru.effects).toHaveLength(1);
+    expect(ru.effectiveStats.strength).toBe(buffedStrength);
+
+    // A snapshot stamped with the prior version (a pre-K1 save) throws.
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
   it('continuing a restored World produces the same event trace as the baseline', () => {
     // Snapshot mid-battle, restore, tick both to completion, compare.
     const baseline = freshBattle(54321);

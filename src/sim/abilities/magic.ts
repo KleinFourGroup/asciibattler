@@ -65,8 +65,10 @@ export class MagicBolt implements Ability {
     // bolt is not `critable`. The blast stays unmissable (`cfg.evadable` false),
     // so no `accuracy` threads in — area denial is dodged positionally.
     const baseDamage = magicBoltDamage(unit, cfg.might);
-    const critChance = cfg.critable ? critChanceFor(cfg.critBase, unit.stats.luck) : 0;
-    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
+    // K1 — crit + cadence read `effectiveStats` (luck / speed); identity-equal
+    // to `stats` when the caster has no effects.
+    const critChance = cfg.critable ? critChanceFor(cfg.critBase, unit.effectiveStats.luck) : 0;
+    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.effectiveStats.speed);
     // F3 — carve the bolt's flight OUT of the charge so it travels *during* the
     // wind-up and detonates on the impact tick (the renderer launches it on
     // `release`). `min(..., durationTicks)` keeps `windupTicks >= 0`;

@@ -54,8 +54,10 @@ export class CatapultShot implements Ability {
     // the shot is not `critable`. The shot stays unmissable (`cfg.evadable`
     // false) — counterplay is killing the slow caster mid-charge, not dodging.
     const baseDamage = catapultShotDamage(unit, cfg.might);
-    const critChance = cfg.critable ? critChanceFor(cfg.critBase, unit.stats.luck) : 0;
-    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
+    // K1 — crit + cadence read `effectiveStats` (luck / speed); identity-equal
+    // to `stats` when the caster has no effects.
+    const critChance = cfg.critable ? critChanceFor(cfg.critBase, unit.effectiveStats.luck) : 0;
+    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.effectiveStats.speed);
     // F3 — carve the boulder's flight OUT of the wind-up so it travels
     // *during* the charge and lands on the impact tick (the renderer launches
     // it on `release`). `min(..., durationTicks)` keeps `windupTicks >= 0`;

@@ -157,7 +157,7 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
  * the same strength. Pre-crit, pre-defense.
  */
 export function basicAttackDamage(unit: Unit, might: number): number {
-  return might + damageStatFor(unit.archetype, unit.stats);
+  return might + damageStatFor(unit.archetype, unit.effectiveStats);
 }
 
 /**
@@ -166,7 +166,7 @@ export function basicAttackDamage(unit: Unit, might: number): number {
  * `might` (the ability's flat heal base) adds on top — `might + magic`.
  */
 export function healAmountFor(unit: Unit, might: number): number {
-  return might + unit.stats.magic;
+  return might + unit.effectiveStats.magic;
 }
 
 /**
@@ -175,7 +175,7 @@ export function healAmountFor(unit: Unit, might: number): number {
  * (raw), mirroring `basicAttackDamage`. I6: `might + magic`.
  */
 export function magicBoltDamage(unit: Unit, might: number): number {
-  return might + unit.stats.magic;
+  return might + unit.effectiveStats.magic;
 }
 
 /**
@@ -184,7 +184,7 @@ export function magicBoltDamage(unit: Unit, might: number): number {
  * `might + ranged`.
  */
 export function catapultShotDamage(unit: Unit, might: number): number {
-  return might + unit.stats.ranged;
+  return might + unit.effectiveStats.ranged;
 }
 
 /**

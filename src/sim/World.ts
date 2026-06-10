@@ -27,6 +27,9 @@ import {
 } from './archetypes';
 import type { WorldCommand } from './Command';
 import type { BattleObjective } from './objective';
+import type { StatusEffect } from './statusEffects';
+import { cloneEffect } from './statusEffects';
+import type { TriggerContextMap, TriggerHandler, TriggerName } from './triggers';
 import { createAction } from './actions/registry';
 import { createBehavior, createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
@@ -153,8 +156,16 @@ import { STATS } from '../config/stats';
  *       behavior change, not a missing-field nicety), reject v22 outright per
  *       the established no-migration contract. RunSnapshot is unaffected — the
  *       objective is World-side + transient per battle.
+ *  24 — K1 added per-unit `effects` (the generic status-effect list) to
+ *       `UnitSnapshot`. A v23 save has no `effects` field; defaulting it to
+ *       `[]` would silently drop a saved buff/debuff (a behavior change), so
+ *       reject v23 outright per the established no-migration contract. The
+ *       fold is name-keyed and the base `stats` block is unchanged, so this is
+ *       a purely additive per-unit field. RunSnapshot is NOT bumped by this
+ *       commit — the World-side effect list is the only new state (the
+ *       Run-side encounter store + fatigue migration land in K1 commit 2).
  */
-const WORLD_SCHEMA_VERSION = 23;
+const WORLD_SCHEMA_VERSION = 24;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -209,6 +220,14 @@ export interface UnitSnapshot {
   abilities: string[];
   actionCooldowns: [string, number][];
   activeAction: ActiveActionSnapshot | null;
+  /**
+   * K1 — active status effects (stat modifiers + lifetime + merge policy). A
+   * mid-battle save must restore them so the effective stat block + the
+   * remaining lifetimes resume identically. Empty for the no-effect common
+   * case. `endOfTurn` effects round-trip too (they're cleared by World
+   * teardown, not the tick loop, so a resumed battle keeps them).
+   */
+  effects: StatusEffect[];
 }
 
 export interface SpawnQueueSnapshot {
@@ -380,6 +399,16 @@ export class World {
    * or cleared. Snapshotted (v23) so a mid-battle restore resumes it.
    */
   private _objective: BattleObjective | null = null;
+  /**
+   * K1 — registered trigger handlers (combat / lifecycle), keyed by trigger
+   * name. Handlers apply status effects when the World fires a trigger; the
+   * Phase-L daemon system is the production consumer (K1 ships the dispatch +
+   * fire points + tests). NOT snapshotted — handlers are behaviour, re-attached
+   * at construction by their owner (like the behaviour/ability registries); in
+   * K1 production nothing registers for the combat triggers, so a mid-battle
+   * resume has none to re-attach.
+   */
+  private readonly triggerHandlers: Map<TriggerName, TriggerHandler<TriggerName>[]> = new Map();
 
   constructor(
     bus: EventBus<GameEvents>,
@@ -419,6 +448,36 @@ export class World {
    */
   emit<K extends keyof GameEvents>(event: K, payload: GameEvents[K]): void {
     this.bus.emit(event, payload);
+  }
+
+  /**
+   * K1 — register a handler for a trigger. Multiple handlers fire in
+   * registration order. The owner (a daemon layer in L; a test fixture in K1)
+   * is responsible for re-registering on a fresh/rehydrated World — handlers
+   * are not snapshotted.
+   */
+  registerTrigger<K extends TriggerName>(name: K, handler: TriggerHandler<K>): void {
+    const list = this.triggerHandlers.get(name);
+    // Stored type-erased (the Map can't express the per-key handler type); the
+    // public method signature keeps registration type-safe, and `fireTrigger`
+    // only ever hands a handler its matching context.
+    if (list) list.push(handler as TriggerHandler<TriggerName>);
+    else this.triggerHandlers.set(name, [handler as TriggerHandler<TriggerName>]);
+  }
+
+  /**
+   * K1 — fire a trigger to its registered handlers (deterministic, in
+   * registration order). Early-returns when nothing is registered, so the
+   * common no-handler path costs a single Map lookup. Handlers run
+   * synchronously inside the sim step that fired them — they mutate unit
+   * effects directly, so the change is visible to subsequent ticks.
+   */
+  private fireTrigger<K extends TriggerName>(name: K, ctx: TriggerContextMap[K]): void {
+    const list = this.triggerHandlers.get(name);
+    if (list === undefined || list.length === 0) return;
+    for (const handler of list) {
+      (handler as TriggerHandler<K>)(ctx, this);
+    }
   }
 
   /**
@@ -535,24 +594,32 @@ export class World {
     rawDamage: number,
     opts: { crit: boolean; evadable?: boolean; accuracy?: number },
   ): void {
+    // K1 — looked up once: a live attacker is the runtime invariant (the strike
+    // is cast by it), and the combat triggers below need the Unit. `findUnit`
+    // is an O(1) `unitsById` hit and draws no RNG, so hoisting it off the
+    // evadable-only path is byte-identical.
+    const attacker = this.findUnit(attackerId);
     if (opts.evadable && opts.accuracy !== undefined) {
-      const attacker = this.findUnit(attackerId);
-      // A live attacker is the runtime invariant (the strike is cast by it);
-      // the guard only covers a degraded path (attacker gone) — treat it as an
+      // The guard only covers a degraded path (attacker gone) — treat it as an
       // unmissable hit there rather than drawing combatRng against no precision.
       if (attacker) {
         const hitChance = hitChanceFor(
           opts.accuracy,
-          attacker.stats.precision,
-          target.stats.evasion,
+          attacker.effectiveStats.precision,
+          target.effectiveStats.evasion,
         );
         if (this.combatRng.next() >= hitChance) {
           this.emit('unit:missed', { attackerId, targetId: target.id });
+          // K1 — the evade pair fires post-resolution (no HP touched). The
+          // attacker side (`dealMiss`) and the target/dodger side (`evade`,
+          // the L dodge-buff hook). Skipped on the degraded no-attacker path.
+          this.fireTrigger('dealMiss', { attacker, target });
+          this.fireTrigger('evade', { target, attacker });
           return;
         }
       }
     }
-    const final = Math.max(STATS.minDamage, rawDamage - target.stats.defense);
+    const final = Math.max(STATS.minDamage, rawDamage - target.effectiveStats.defense);
     target.currentHp -= final;
     this.recordDamage(attackerId, target, final);
     this.emit('unit:attacked', {
@@ -561,6 +628,15 @@ export class World {
       damage: final,
       crit: opts.crit,
     });
+    // K1 — combat triggers fire AFTER the hit resolves, so a handler's stat
+    // changes affect the next action, not this one. `kill` fires when the blow
+    // is lethal (clean attacker attribution here, before the death reap). All
+    // skipped on the degraded no-attacker path.
+    if (attacker) {
+      this.fireTrigger('dealHit', { attacker, target, damage: final, crit: opts.crit });
+      this.fireTrigger('takeHit', { target, attacker, damage: final, crit: opts.crit });
+      if (target.currentHp <= 0) this.fireTrigger('kill', { attacker, victim: target });
+    }
   }
 
   /** Test-only read of the damage ledger. */
@@ -638,6 +714,9 @@ export class World {
     for (const unit of this.units.slice()) {
       // 1. Death.
       if (unit.currentHp <= 0) {
+        // K1 — `death` fires while the unit is still on the grid (before the
+        // splice), so a handler can read its position/team.
+        this.fireTrigger('death', { unit, team: unit.team });
         this.removeUnit(unit.id);
         this.bus.emit('unit:died', { unitId: unit.id, team: unit.team });
         continue;
@@ -647,6 +726,12 @@ export class World {
       for (const [actionId, cd] of unit.actionCooldowns) {
         if (cd > 0) unit.actionCooldowns.set(actionId, cd - 1);
       }
+
+      // 2.5. K1 — expire timed (`ticks`) status effects before the unit acts,
+      // so a just-expired buff can't influence this tick's proposal. A no-op
+      // (no array touch) for the no-effect common case. `endOfTurn` effects
+      // are never removed here — they live for the whole battle.
+      unit.expireEffects(this.tickCount);
 
       // 3. In-flight action. F2 — walk the declared phase timeline: emit an
       // `action:phase` event for every phase that BEGINS at the current
@@ -804,6 +889,8 @@ export class World {
   private reapDead(): void {
     for (const unit of this.units.slice()) {
       if (unit.currentHp <= 0) {
+        // K1 — fire `death` before the splice (mirrors the step-1 death check).
+        this.fireTrigger('death', { unit, team: unit.team });
         this.removeUnit(unit.id);
         this.bus.emit('unit:died', { unitId: unit.id, team: unit.team });
       }
@@ -1012,8 +1099,11 @@ export class World {
     let enemy = 0;
     for (const u of this.units) {
       if (u.currentHp <= 0) continue;
-      if (u.team === 'player') player += u.stats.power;
-      else if (u.team === 'enemy') enemy += u.stats.power;
+      // K1 — pool chip reads `effectiveStats.power` so a power buff/debuff (the
+      // fatigue migration's target) shows up at the turn boundary. Identity-
+      // equal to `stats.power` when the unit has no effects.
+      if (u.team === 'player') player += u.effectiveStats.power;
+      else if (u.team === 'enemy') enemy += u.effectiveStats.power;
     }
     return { player, enemy };
   }
@@ -1140,6 +1230,10 @@ export class World {
       this.playerRosterIds.set(unit.id, unit.rosterIndex);
     }
     this.bus.emit('unit:spawned', { unitId: unit.id, instant });
+    // K1 — `spawn` fires for every unit entering the grid (initial layout +
+    // D5.C overflow; walls included — handlers filter by team). The effect-seed
+    // path that applies fatigue at deploy lands in commit 2.
+    this.fireTrigger('spawn', { unit });
     return unit;
   }
 
@@ -1257,6 +1351,10 @@ export class World {
         level: us.level,
         xp: us.xp,
         rosterIndex: us.rosterIndex,
+        // K1 — restore status effects; the constructor re-folds `effectiveStats`
+        // + `refreshDerived` from them. `us.derived` (also restored) is
+        // idempotent under that recompute.
+        effects: us.effects,
       });
       unit.currentHp = us.currentHp;
       unit.targetId = us.targetId;
@@ -1348,5 +1446,8 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
           phases: unit.activeAction.phases.map((p) => ({ ...p })),
         }
       : null,
+    // K1 — deep-copy so the wire image never shares a mutable instance with the
+    // live unit (merge mutates effects in place).
+    effects: unit.effects.map(cloneEffect),
   };
 }

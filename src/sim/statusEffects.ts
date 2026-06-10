@@ -1,0 +1,157 @@
+/**
+ * K1 — the generic per-unit status-effect system.
+ *
+ * An effect is a per-stat modifier with a lifetime and a stacking/merge
+ * policy. The four consumers that shaped it: empower (a flat buff till
+ * encounter end, K4), daemon buffs (timed, L), the on-evade dodge buff (L),
+ * and fatigue (the proof consumer — the H6c `fatigueFactor` migrates onto
+ * this as a stackable "Fatigued" debuff in K1 commit 2).
+ *
+ * This module is the pure data + math: the effect shape, the fold that turns
+ * a base stat block + a list of effects into the effective block, and the
+ * magnitude-merge arithmetic. The per-unit list management (apply / expire /
+ * the `effectiveStats` cache) lives on `Unit`; the trigger dispatch that
+ * APPLIES effects lives on `World` (see `triggers.ts`).
+ *
+ * Scope (K1, user-locked):
+ * - **Stat modifiers only** — no DoT / stun / behaviour-disabling (no consumer
+ *   asks for it yet).
+ * - The fold covers **all 11 stats uniformly**, but K1 only ever *applies*
+ *   effects touching the 9 live-read stats. The two cached-derived stats
+ *   (`constitution → maxHp`, `mobility → moveCooldown`) are handled by
+ *   `Unit.refreshDerived` so the wiring is live, but no K1 effect modifies
+ *   them — the maxHp↔currentHp clamp policy is the one piece deliberately
+ *   deferred until a real HP/move-speed consumer exists.
+ */
+
+import type { UnitStats } from './Unit';
+
+/** Any key of the stat block — the fold is total over all 11. */
+export type StatKey = keyof UnitStats;
+
+/**
+ * Per-stat modifier, expressed **per one unit of magnitude**. `add` shifts the
+ * stat additively; `mul` is a multiplicative factor whose *delta* scales with
+ * magnitude (see `foldEffects`). Either or both may be present.
+ */
+export interface StatMod {
+  add?: number;
+  mul?: number;
+}
+
+/**
+ * Battle-side lifetime. `ticks` expires mid-battle at `expiresAtTick`;
+ * `endOfTurn` lives for the whole tactical battle (it dies with the World — the
+ * tick loop never removes it). The cross-turn `endOfEncounter` authoring
+ * lifetime is implemented Run-side (a per-slot store re-seeded each turn as an
+ * `endOfTurn` effect), so it never reaches the World as a distinct kind — see
+ * K1 commit 2.
+ */
+export type EffectLifetime =
+  | { kind: 'ticks'; expiresAtTick: number }
+  | { kind: 'endOfTurn' };
+
+/**
+ * How a re-applied effect (same `key`) combines with the existing instance's
+ * magnitude. `independent` skips the merge entirely (a separate instance is
+ * kept). Re-applying always refreshes the lifetime to the incoming one.
+ */
+export type MergePolicy = 'replace' | 'add' | 'multiply' | 'independent';
+
+export interface StatusEffect {
+  /** Identity for merging, e.g. `'fatigued'`, `'empowered'`. */
+  key: string;
+  /** The "empower 3" scalar. Defaults to 1 at the apply sites. */
+  magnitude: number;
+  /** Per-stat modifiers, expressed per one unit of magnitude. */
+  mods: Partial<Record<StatKey, StatMod>>;
+  lifetime: EffectLifetime;
+  merge: MergePolicy;
+}
+
+/** Only `mobility` is signed (0 = baseline, negative = slower); every other
+ *  stat clamps at 0 after the fold. */
+const SIGNED_STATS: ReadonlySet<StatKey> = new Set<StatKey>(['mobility']);
+
+/**
+ * Fold a base stat block with its active effects into the effective block.
+ *
+ * Per stat, across all instances:
+ *   effective = round( (base + Σ add·m) × Π (1 + (mul − 1)·m) )
+ *
+ * `add` scales linearly with magnitude; a `mul` contributes a magnitude-scaled
+ * delta `(mul − 1)·m` *within* an instance, and instances multiply *across*
+ * each other. This linear-in-magnitude convention recovers the exact fatigue
+ * curve: a `{ power: { mul: 1−rate } }` effect at magnitude `stacks` yields
+ * `power × (1 − rate·stacks)`.
+ *
+ * **Identity guarantee:** with no effects this returns `base` itself (same
+ * object), so the no-effect path is byte-identical and zero-cost. Only the
+ * stats a modifier touches are recomputed; the rest keep their base value.
+ */
+export function foldEffects(base: UnitStats, effects: readonly StatusEffect[]): UnitStats {
+  if (effects.length === 0) return base;
+
+  const adds = new Map<StatKey, number>();
+  const muls = new Map<StatKey, number>();
+  for (const effect of effects) {
+    for (const stat of Object.keys(effect.mods) as StatKey[]) {
+      const mod = effect.mods[stat]!;
+      if (mod.add !== undefined) {
+        adds.set(stat, (adds.get(stat) ?? 0) + mod.add * effect.magnitude);
+      }
+      if (mod.mul !== undefined) {
+        muls.set(stat, (muls.get(stat) ?? 1) * (1 + (mod.mul - 1) * effect.magnitude));
+      }
+    }
+  }
+
+  const out: Record<StatKey, number> = { ...base };
+  const touched = new Set<StatKey>([...adds.keys(), ...muls.keys()]);
+  for (const stat of touched) {
+    let value = base[stat];
+    const add = adds.get(stat);
+    if (add !== undefined) value += add;
+    const mul = muls.get(stat);
+    if (mul !== undefined) value *= mul;
+    value = Math.round(value);
+    if (!SIGNED_STATS.has(stat)) value = Math.max(0, value);
+    out[stat] = value;
+  }
+  return out as UnitStats;
+}
+
+/**
+ * Combine an existing instance's magnitude with an incoming one per the merge
+ * policy. `independent` returns the incoming magnitude unchanged (the caller
+ * keeps the instances separate rather than calling this).
+ */
+export function combineMagnitude(policy: MergePolicy, existing: number, incoming: number): number {
+  switch (policy) {
+    case 'replace':
+      return incoming;
+    case 'add':
+      return existing + incoming;
+    case 'multiply':
+      return existing * incoming;
+    case 'independent':
+      return incoming;
+  }
+}
+
+/** Deep copy an effect so a live unit's instance and a snapshot (or a seed
+ *  template) never share a mutable `mods` / `lifetime` reference — `addEffect`
+ *  mutates instances in place on merge. */
+export function cloneEffect(effect: StatusEffect): StatusEffect {
+  const mods: Partial<Record<StatKey, StatMod>> = {};
+  for (const stat of Object.keys(effect.mods) as StatKey[]) {
+    mods[stat] = { ...effect.mods[stat]! };
+  }
+  return {
+    key: effect.key,
+    magnitude: effect.magnitude,
+    mods,
+    lifetime: { ...effect.lifetime },
+    merge: effect.merge,
+  };
+}

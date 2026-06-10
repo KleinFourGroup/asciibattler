@@ -34,7 +34,9 @@ export class HealAlly implements Ability {
     // healer's magic). Heal is non-evadable + non-critable (HealAction doesn't
     // roll either), so `accuracy`/`critBase` stay inert.
     const amount = healAmountFor(unit, cfg.might);
-    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.stats.speed);
+    // K1 — cadence reads `effectiveStats.speed`; identity-equal to `stats`
+    // when the healer has no effects.
+    const durationTicks = attackCooldownTicksFor(cfg.cooldownSeconds, unit.effectiveStats.speed);
 
     return {
       action: new HealAction(target, amount),

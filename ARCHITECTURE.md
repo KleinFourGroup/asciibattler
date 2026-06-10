@@ -66,19 +66,24 @@ src/
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v23 (bumped E1 through Phase J; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses; I6 = removed UnitDerived.critChance, crit is per-ability now; J1 = added the shared objective)
+                             # Serializable; WorldSnapshot v24 (bumped E1 through Phase K; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses; I6 = removed UnitDerived.critChance, crit is per-ability now; J1 = added the shared objective; K1 = added per-unit status effects)
+                             # K1: registerTrigger/fireTrigger — combat/lifecycle trigger dispatch (the L daemon seam; NOT bus events)
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
                              # J1: objective (player-team shared steering, tile|enemy) — set via WorldCommand, auto-clears on enemy death
                              # GP2: applyDamage() — the single combat-damage chokepoint (HP -= + ledger
                              #      + unit:attacked emit + subtractive defense mitigation); tile damage bypasses it
                              # I2/I6: applyDamage(evadable, accuracy) rolls accuracy-vs-evasion to-hit off combatRng (crit→miss order);
                              #     a miss emits unit:missed + 0 dmg. Only single-target strikes opt in; AoE/catapult/tile unmissable
+                             # K1: applyDamage reads effectiveStats (prc/eva/def) + fires dealHit/takeHit/dealMiss/evade/kill triggers (post-resolution)
     Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab + GP2 defense) + UnitDerived + Team + Behavior
                              # archetype: mercenary|adventurer|ronin|bandit|ranged|rogue|healer|mage|catapult|environment (I5 split melee→the 4-class melee family)
                              # level (E3) + xp/rosterIndex (E4); actionCooldowns Map + activeAction (A1)
                              # blocksLineOfSight (D6)
+                             # K1: effects[] (status effects) + effectiveStats (cached fold; === stats when empty) + addEffect/expireEffects/refreshDerived
+    statusEffects.ts         # K1: generic status-effect system — StatusEffect (per-stat add/mul mods + lifetime + merge policy) + foldEffects + combineMagnitude
+    triggers.ts              # K1: combat/lifecycle trigger vocabulary (TriggerContextMap) — dealHit/takeHit/dealMiss/evade/kill/death/spawn
     stats.ts                 # deriveStats / inertDerived / ZERO_STATS + damage/heal/range/cadence helpers
-                             # — pure functions; crit RNG rolls happen at AttackAction.start
+                             # — pure functions; crit RNG rolls happen at AttackAction.start; K1: unit-taking helpers read effectiveStats
     leveling.ts              # E3: simulateLevelUps (player rolls) + scaleStats (enemies, deterministic)
     xp.ts                    # E4: xpToNext curve + computeXpAwards + displayLevel
     TileGrid.ts              # Tile kinds: floor | shallow_water | chasm | fire | healing

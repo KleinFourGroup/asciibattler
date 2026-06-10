@@ -87,8 +87,8 @@ src/
     Action.ts                # Action / ActionProposal / phase-timeline interfaces (A1 → F2)
                              # + toData()/fromData for snapshot rehydration (A2); OrphanPolicy (F2)
     Command.ts               # WorldCommand union — drained at tick boundary (A2); J1: setObjective/clearObjective
-    objective.ts             # J1: BattleObjective type (tile | enemy) — the player team's shared steering target
-    Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a); J2: pathfindingStats recompute counter
+    objective.ts             # J1: BattleObjective (tile | enemy) — shared player steering target; J3: objectiveAtCell (click cell → enemy/tile)
+    Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a); J2: pathfindingStats counter; J3: bestEffort (route to nearest reachable)
     movement.ts              # J2: shared movement seam — MovementIntent + advance (the dash hook) + routeToward (cache boundary)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest in-range(+LOS) firing cell
     Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5); lowestWoundedAlly (E7.B)
@@ -137,6 +137,7 @@ src/
   render/
     Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
                              # + RAF loop + two camera modes (fit / scroll, D4)
+                             # J3: pickCell (terrain raycast → grid cell) + pickInstance (billboard hit-test)
     SpriteRenderer.ts        # InstancedBufferGeometry + dual mesh (layer 0 visible / layer 1
                              # bloom) + per-instance bloomIntensity attr (B1.1) + per-instance
                              # size attr (E6.B). Also hosts transient tracer/projectile sprites
@@ -148,8 +149,10 @@ src/
     BattleRenderer.ts        # Sim/render seam: subscribes to unit:* + action:phase (F3)
                              # tileWorldPos(coord) for per-tile sprite Y (C1c). E6/E7: melee shove,
                              # ranged/lobbed projectiles, explosion/dud/heal-sparkle VFX + hitsplats
+                             # J3: objective X marker (objective:set/cleared; camera-up lift) + enemyBillboards (pick candidates)
+    pick.ts                  # J3: pickInstanceAtNdc — pure screen-space billboard hit-test (replicates billboard.vert.glsl)
     FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture (glyph set from glyphs.ts)
-    glyphs.ts                # E7.A: THREE-free GLYPHS set (FontAtlas.test asserts archetype coverage)
+    glyphs.ts                # E7.A: THREE-free GLYPHS set (FontAtlas.test asserts archetype coverage); J3: 'X' = objective marker (atlas now 32/32 FULL)
     PostProcess.ts           # SatClamp + Bloom + BloomMix factories (B1.1)
                              # Scanlines retained as dormant code; CRT lines now run via CSS (B5)
     shaders/                 # .glsl source files loaded via Vite ?raw imports (A4)
@@ -159,9 +162,10 @@ src/
                              # + onComplete/arcHeight/targetProvider on lerp (E6.B/E7.D/F3)
 
   scenes/                    # A5: Scene system — single-active swap driven from Game
-    Scene.ts                 #   Scene interface + SceneContext bundle (+ I3 playback)
+    Scene.ts                 #   Scene interface + SceneContext bundle (+ I3 playback, J3 keybindings)
     BattleScene.ts           #   World + Clock + BattleRenderer + HUD + per-battle audio
                              #   I3: tick() scales dt by playback.current (fast-forward, batches ticks)
+                             #   J3: owns the ObjectiveController (canvas input + enemy-billboard provider)
     MapScene.ts              #   DOM-only, wraps MapScreen
     RecruitScene.ts          #   DOM-only, wraps RecruitScreen
     PromotionScene.ts        #   E4.4: DOM-only level-up summary, shown before recruit
@@ -171,8 +175,10 @@ src/
     ui.css
     fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
     HUD.ts                   # In-battle HUD: floor, rosters, Lv/XP (E4.5) + DEF·MOB·SPD·POW (GP3/H1; I1 AGI→SPD), banner
-                             # I3: fast-forward button (1×/2×/3×) + F hotkey, both cycling playback
-    PlaybackSpeed.ts         # I3: page-lifetime fast-forward multiplier (current/cycle/label/hotkey)
+                             # I3: fast-forward button (1×/2×/3×); J3: Set/Clear Objective buttons — all hotkeyed via Keybindings
+    PlaybackSpeed.ts         # I3: page-lifetime fast-forward multiplier (current/cycle/label); J3 moved the hotkey to Keybindings
+    Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
+    ObjectiveController.ts   # J3: battle-scoped objective input — right-click / Set-arm-then-click / Clear → World commands
     MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode
     RecruitScreen.ts         # recruit offer cards → dispatch chooseRecruit; raw stat block + ability list (GP3)
     PromotionScreen.ts       # E4.4: per-unit level-up rows
@@ -199,6 +205,9 @@ config/                      # A4: balance JSON source of truth (paired with src
                              #     GP1/I1: mobilityCdPerStat/speedCdPerStat + mobilityMinCdScale/speedMinCdScale;
                              #     GP2: minDamage (subtractive-defense floor)
   sim.json                   # E5: retargetCloserRatio + rangedRetargetLosSeconds + occupiedCellPenalty + healer knobs; GP4: actingCellSearchSlack
+  objective.json             # J1: rangedLeashCells — objective engage-radius cap for long-range units
+  playback.json              # I3: fast-forward speed steps (the hotkey moved to keybindings.json in J3)
+  keybindings.json           # J3: rebindable hotkey defaults — fastForward / setObjective / clearObjective
 
 public/
   audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, magicboom, ...)

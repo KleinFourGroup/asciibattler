@@ -6,9 +6,12 @@
  * auto-advance is gone as of K3 — the redraw decision shouldn't race a timer).
  *
  * K3 — also forwards `turn:handRedrawn` to the screen so a redraw swaps the
- * displayed hand in place. The subscription is scene-scoped (mount → dispose),
- * matching the HUD's battle-scoped hotkey pattern: outside this screen the
- * event has no listener (and the command can't fire anyway — phase-gated).
+ * displayed hand in place. The subscriptions are scene-scoped (mount →
+ * dispose), matching the HUD's battle-scoped hotkey pattern: outside this
+ * screen the events have no listener (and the commands can't fire anyway —
+ * phase-gated).
+ *
+ * K4 — same forwarding for `turn:unitEmpowered` (badge + budget refresh).
  */
 
 import { PreTurnScreen } from '../ui/PreTurnScreen';
@@ -17,23 +20,24 @@ import type { Scene, SceneContext } from './Scene';
 
 export class PreTurnScene implements Scene {
   private screen: PreTurnScreen | null = null;
-  private unsubscribe: (() => void) | null = null;
+  private unsubscribes: Array<() => void> = [];
 
   constructor(private readonly info: GameEvents['turn:starting']) {}
 
   mount(ctx: SceneContext): void {
     this.screen = new PreTurnScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
     this.screen.show(this.info);
-    this.unsubscribe = ctx.bus.on('turn:handRedrawn', (payload) =>
-      this.screen?.updateHand(payload),
-    );
+    this.unsubscribes = [
+      ctx.bus.on('turn:handRedrawn', (payload) => this.screen?.updateHand(payload)),
+      ctx.bus.on('turn:unitEmpowered', (payload) => this.screen?.updateEmpower(payload)),
+    ];
   }
 
   tick(_dt: number): void {}
 
   dispose(): void {
-    this.unsubscribe?.();
-    this.unsubscribe = null;
+    for (const unsubscribe of this.unsubscribes) unsubscribe();
+    this.unsubscribes = [];
     this.screen?.hide();
     this.screen = null;
   }

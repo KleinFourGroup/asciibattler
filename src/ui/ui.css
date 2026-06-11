@@ -1050,6 +1050,27 @@ body {
   color: #664600; /* DARK_TERMINAL_AMBER */
 }
 
+/* K4 — empower: a sibling control row under the redraw one (shares the
+   .preturn-redraw layout + button base), accented FLOURESCENT_BLUE to match
+   the buff badge below. Acts on the single selected card. */
+.preturn-empower-button:not(:disabled) {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: #15f4ee;
+}
+
+.preturn-empower-button:hover:not(:disabled) {
+  background: rgba(21, 244, 238, 0.08);
+}
+
+/* K4 — the empowered-card badge: one ▲ per stack (the slot carries the buff
+   for the rest of the encounter, so it shows on a re-drawn card too). */
+.preturn-card-empower {
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: #15f4ee; /* FLOURESCENT_BLUE */
+}
+
 .preturn-pools,
 .postturn-pools {
   display: flex;

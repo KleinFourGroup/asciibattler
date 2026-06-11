@@ -131,9 +131,11 @@ src/
     Run.ts                   # State machine: map|turn-intro|battle|turn-outcome|promotion|recruit|
                              # defeat|complete (E4.4/H4b). H4 encounter loop (health pools + turns) +
                              # H5 card deck (draw/hand/discard + deckRng). rest/boss resolution (G3);
-                             # XP banking; dispatch(RunCommand) + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 12
+                             # XP banking; dispatch(RunCommand) + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 13
                              # K1: encounterEffects store (endOfEncounter, re-seeded at deploy) + addEncounterEffect
                              # + run triggers (encounterStart/turnStart/deploy); beginTurn seeds fatigue + encounter effects
+                             # K3: pre-turn redraw (handleRedrawCards at the turn-intro gate; per-turn budget, v13)
+    redraw.ts                # K3: pure redraw rules — redrawRejection / redrawAvailability (config injected, both L modes provable)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
@@ -204,6 +206,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
   health.json                # H4: player/enemy health pools + maxTurns/maxTurnSeconds + chipMultiplier
   deck.json                  # H5: handSize (card-drawn hand; also the 2nd half of the playerTeamLevel seam)
+                             # K3: redraw { enabled, redrawsPerTurn, maxCardsPerTurn } — the pre-turn redraw budget
   nodemap.json               # floor count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
@@ -350,6 +353,9 @@ recruit:offered         { units: UnitTemplate[] }
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
 objective:set           { objective: BattleObjective }                             # J1: player set/replaced the shared steering objective
 objective:cleared       { }                                                         # J1: objective cleared (explicit, or enemy-objective target died)
+turn:starting           { turn; floor; player/enemy pools; hand; redraw }           # H4b/H5b/K3: pre-turn gate cue (gated path only); hand + redraw availability
+turn:resolved           { turn; winner; pool chips; result; pools }                 # H4b: post-turn outcome cue (gated path only)
+turn:handRedrawn        { hand: UnitTemplate[]; redraw: RedrawAvailability }        # K3: a redrawCards command landed — full new hand + decremented budget
 ```
 
 `action:phase` (F2): every action declares an ordered phase timeline (`windup → release → travel → impact → recovery`, all optional/zero-length); `World.tick` fires this event at each boundary that begins on a tick (zero-length phases share one), and runs the action's effect (`applyEffect`) at `impact`. It carries no damage — that still rides `unit:attacked` / `unit:healed`. Renderer-only consumer (F3/F4). The "target died mid-flight" handling is a declared per-action `OrphanPolicy` (`commit-at-cast` / `fizzle` / `ground-target` / `re-home`).
@@ -364,7 +370,10 @@ Two channels, both typed unions defined in their respective `Command.ts`:
 RunCommand (synchronous; Run.dispatch / RunDispatcher)
   enterNode               { nodeId: number }
   chooseRecruit           { unitTemplate: UnitTemplate }
+  passRecruit             { }     # H6b: decline the recruit offer
   dismissPromotion        { }     # E4: dismiss the PromotionScene
+  advanceTurn             { }     # H4b: resume from a turn gate (pre/post-turn screen)
+  redrawCards             { handIndices: number[] }   # K3: redraw selected hand positions at the pre-turn gate (budget in config/deck.json)
   resetRun                { }
 
 WorldCommand (queued; drained at top of tick)
@@ -400,4 +409,4 @@ A few things would be over-engineering at the current scope; flagging them so we
 - **No ECS library.** Behaviors-on-units is enough structure for the foreseeable game. If the unit count explodes or behaviors get genuinely many-to-many, we revisit.
 - **No asset loader.** The font atlas is generated at startup synchronously; audio preloads from `public/audio/` via `AudioPlayer`'s constructor.
 - **No save/load UI yet.** A2 lays the JSON serialization plumbing (`World.toJSON` / `Run.toJSON`); UI for choosing a save slot and resuming a run waits until runs are long enough that save matters.
-- **No generic status-effect system.** A1's multi-tick effects can carry one, and D7.B added per-tick tile effects with a targeted hook (fire damage, healing). Resist building a generic status system until a concrete need (beyond these) actually appears.
+- ~~**No generic status-effect system.**~~ The concrete need arrived and K1 built it: `src/sim/statusEffects.ts` (fold-over-base stat mods + merge policies + lifetimes) with the Run-side encounter store; fatigue is the proof consumer. D7.B's per-tick tile effects remain separate (tile chip, not a stat mod).

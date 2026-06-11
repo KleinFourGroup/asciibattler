@@ -1,3 +1,8 @@
 {
-  "handSize": 6
+  "handSize": 6,
+  "redraw": {
+    "enabled": true,
+    "redrawsPerTurn": 1,
+    "maxCardsPerTurn": 6
+  }
 }

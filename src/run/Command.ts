@@ -42,6 +42,16 @@ export type RunCommand =
    * `Run.pauseAtTurnGates` is on (the headless loop has no gates to advance).
    */
   | { readonly kind: 'advanceTurn' }
+  /**
+   * K3 — redraw selected hand cards at the pre-turn gate: send them to the
+   * discard, draw that many fresh (the deck's normal reshuffle cycle applies).
+   * `handIndices` are positions into the current hand (not roster indices).
+   * Only valid in `turn-intro` and within the `DECK.redraw` budget
+   * (`redrawsPerTurn` actions / `maxCardsPerTurn` cards) — anything else is a
+   * silent no-op that consumes no budget. The redrawn hand re-emits via
+   * `turn:handRedrawn`.
+   */
+  | { readonly kind: 'redrawCards'; readonly handIndices: readonly number[] }
   | { readonly kind: 'resetRun' };
 
 export interface RunDispatcher {

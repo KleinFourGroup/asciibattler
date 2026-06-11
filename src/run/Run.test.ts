@@ -768,6 +768,154 @@ describe('Run', () => {
     });
   });
 
+  describe('redraw at the pre-turn gate (K3)', () => {
+    it('discards the selected positions and refills them in place from the draw pile', () => {
+      const { run } = gatedToFirstTurnIntro(1);
+      // K2 default: roster (10) > handSize (6), so the draw pile holds the rest.
+      expect(run.hand).toHaveLength(Math.min(DECK.handSize, run.team.length));
+      const before = run.hand.slice();
+      const pile = run.drawPile.slice();
+      // Deliberately unsorted: positions refill in ASCENDING hand order
+      // whatever the dispatch order, so 1 gets the pile top, 3 the next.
+      run.dispatch({ kind: 'redrawCards', handIndices: [3, 1] });
+      expect(run.hand).toHaveLength(before.length);
+      expect(run.hand[1]).toBe(pile[pile.length - 1]);
+      expect(run.hand[3]).toBe(pile[pile.length - 2]);
+      before.forEach((card, i) => {
+        if (i !== 1 && i !== 3) expect(run.hand[i]).toBe(card);
+      });
+      expect(run.discardPile).toEqual(expect.arrayContaining([before[1]!, before[3]!]));
+    });
+
+    it('consumes the budget; a request past either dial is a silent no-op', () => {
+      const { run } = gatedToFirstTurnIntro(2);
+      // Burn the budget with single-card actions, bounds derived from config.
+      // After min(redrawsPerTurn, maxCardsPerTurn) one-card actions, ONE of the
+      // two dials is exhausted for any further ask — whichever is smaller.
+      const actions = Math.min(DECK.redraw.redrawsPerTurn, DECK.redraw.maxCardsPerTurn);
+      for (let i = 0; i < actions; i++) {
+        run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      }
+      expect(run.redrawsUsedThisTurn).toBe(actions);
+      expect(run.cardsRedrawnThisTurn).toBe(actions);
+      const hand = run.hand.slice();
+      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      expect(run.hand).toEqual(hand);
+      expect(run.redrawsUsedThisTurn).toBe(actions);
+    });
+
+    it('a rejected selection consumes no budget, mutates nothing, emits nothing', () => {
+      const { run, bus } = gatedToFirstTurnIntro(3);
+      let emits = 0;
+      bus.on('turn:handRedrawn', () => emits++);
+      const hand = run.hand.slice();
+      run.dispatch({ kind: 'redrawCards', handIndices: [] }); // empty
+      run.dispatch({ kind: 'redrawCards', handIndices: [0, 0] }); // duplicate
+      run.dispatch({ kind: 'redrawCards', handIndices: [run.hand.length] }); // range
+      expect(run.hand).toEqual(hand);
+      expect(run.redrawsUsedThisTurn).toBe(0);
+      expect(run.cardsRedrawnThisTurn).toBe(0);
+      expect(emits).toBe(0);
+    });
+
+    it('is a no-op outside the pre-turn gate (map phase, headless battle)', () => {
+      const { run } = freshRunWithBus(4);
+      run.dispatch({ kind: 'redrawCards', handIndices: [0] }); // map
+      expect(run.redrawsUsedThisTurn).toBe(0);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // gates off → battle
+      expect(run.phase).toBe('battle');
+      const hand = run.hand.slice();
+      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      expect(run.hand).toEqual(hand);
+      expect(run.redrawsUsedThisTurn).toBe(0);
+    });
+
+    it('the budget resets at the next turn', () => {
+      const { run, bus } = gatedToFirstTurnIntro(5);
+      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      expect(run.redrawsUsedThisTurn).toBe(1);
+      run.dispatch({ kind: 'advanceTurn' }); // → battle
+      chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
+      run.dispatch({ kind: 'advanceTurn' }); // → next turn's gate
+      expect(run.phase).toBe('turn-intro');
+      expect(run.redrawsUsedThisTurn).toBe(0);
+      expect(run.cardsRedrawnThisTurn).toBe(0);
+    });
+
+    it('turn:starting carries the fresh availability; turn:handRedrawn the new hand + decrement', () => {
+      const { run, bus } = freshRunWithBus(6);
+      run.pauseAtTurnGates = true;
+      const startings: GameEvents['turn:starting'][] = [];
+      const redrawns: GameEvents['turn:handRedrawn'][] = [];
+      bus.on('turn:starting', (p) => startings.push(p));
+      bus.on('turn:handRedrawn', (p) => redrawns.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      // Fresh budget straight off the config dials (0/0 if disabled).
+      expect(startings[0]!.redraw).toEqual({
+        redrawsRemaining: DECK.redraw.enabled ? DECK.redraw.redrawsPerTurn : 0,
+        cardsRemaining: DECK.redraw.enabled ? DECK.redraw.maxCardsPerTurn : 0,
+      });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0, 2] });
+      expect(redrawns).toHaveLength(1);
+      expect(redrawns[0]!.hand).toEqual(run.hand.map((idx) => run.team[idx]!));
+      expect(redrawns[0]!.redraw).toEqual(run.redrawAvailability);
+      expect(redrawns[0]!.redraw.cardsRemaining).toBe(DECK.redraw.maxCardsPerTurn - 2);
+    });
+
+    it('a redrawn-away unit accrues no deployment count; its replacement is counted', () => {
+      const { run } = gatedToFirstTurnIntro(7);
+      expect(run.drawPile.length).toBeGreaterThan(0); // replacement ≠ benched below
+      const benched = run.hand[0]!;
+      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      const replacement = run.hand[0]!;
+      expect(replacement).not.toBe(benched);
+      // Still eligible to be drawn — and then counted — on a LATER turn.
+      expect(run.discardPile).toContain(benched);
+      run.dispatch({ kind: 'advanceTurn' }); // beginTurn records the FINAL hand
+      expect(run.deploymentCounts[benched]).toBe(0);
+      expect(run.deploymentCounts[replacement]).toBe(1);
+    });
+
+    it('redrawing past the draw pile recycles the discard: hand size + roster partition hold', () => {
+      const { run } = gatedToFirstTurnIntro(8);
+      const sel = run.hand
+        .map((_, i) => i)
+        .slice(0, Math.min(run.hand.length, DECK.redraw.maxCardsPerTurn));
+      expect(sel.length).toBeGreaterThan(run.drawPile.length); // forces the reshuffle
+      run.dispatch({ kind: 'redrawCards', handIndices: sel });
+      expect(run.hand).toHaveLength(Math.min(DECK.handSize, run.team.length));
+      expect(new Set(run.hand).size).toBe(run.hand.length);
+      // hand + piles still partition the roster exactly.
+      const partition = [...run.hand, ...run.drawPile, ...run.discardPile].sort((a, b) => a - b);
+      expect(partition).toEqual(run.team.map((_, i) => i));
+    });
+
+    it('same seed + same redraw dispatches stay byte-identical', () => {
+      const a = gatedToFirstTurnIntro(9);
+      const b = gatedToFirstTurnIntro(9);
+      for (const { run } of [a, b]) {
+        run.dispatch({ kind: 'redrawCards', handIndices: [4, 0] });
+        run.dispatch({ kind: 'advanceTurn' });
+      }
+      expect(JSON.parse(JSON.stringify(a.run.toJSON()))).toEqual(
+        JSON.parse(JSON.stringify(b.run.toJSON())),
+      );
+    });
+
+    it('round-trips the redraw counters (a save at the gate must not refresh the budget)', () => {
+      const { run } = gatedToFirstTurnIntro(10);
+      run.dispatch({ kind: 'redrawCards', handIndices: [1] });
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.phase).toBe('turn-intro');
+      expect(restored.hand).toEqual(run.hand);
+      expect(restored.redrawsUsedThisTurn).toBe(run.redrawsUsedThisTurn);
+      expect(restored.cardsRedrawnThisTurn).toBe(run.cardsRedrawnThisTurn);
+      expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
+      // (The pre-K3 v12 reject rides the generic `schemaVersion - 1` test.)
+    });
+  });
+
   describe('chooseRecruit command', () => {
     it('adds the chosen unit to the team and returns to map phase', () => {
       const { run, bus } = freshRunWithBus(1);
@@ -1468,6 +1616,15 @@ function freshRunWithBus(seed: number): RunHandle {
 /** The root's first frontier node — the standard "enter the first battle" hop. */
 function frontierOf(run: Run & { rootId: number }): number {
   return run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+}
+
+/** K3 — a gated run paused at its FIRST pre-turn gate (`turn-intro`), the only
+ *  phase where a `redrawCards` command is live. */
+function gatedToFirstTurnIntro(seed: number): RunHandle {
+  const handle = freshRunWithBus(seed);
+  handle.run.pauseAtTurnGates = true;
+  handle.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(handle.run) });
+  return handle;
 }
 
 /** Canonical level-1 starting roster (3 melee + 2 ranged, matching the default

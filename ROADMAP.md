@@ -712,6 +712,21 @@ exact sizes (by feel + the Phase N sweep).
 
 ### K3 — Redraw mechanic
 
+**Commit 1 ✅ (2026-06-11) — the Run-side mechanic (headless).** Design locked
+with the user: **one batch per turn** (`redrawsPerTurn 1`) with a separate
+`maxCardsPerTurn` dial (shipped 6 = `handSize`, i.e. arbitrary selection) so
+Phase L daemons can flip EITHER mode; available every turn (`enabled` is the
+static gate); pre-turn auto-advance to be REMOVED in commit 2. Shipped: the
+`config/deck.json` `redraw` block; pure rules in [redraw.ts](src/run/redraw.ts)
+(config-injected so both modes are provable); the `redrawCards` RunCommand
+(phase-gated to `turn-intro`, positions refill in-place ascending, discard-first
+so the reshuffle cycle preserves hand size); `turn:starting` carries
+`RedrawAvailability` + new `turn:handRedrawn` event; RunSnapshot **v12→v13**
+(the per-turn budget counters). The deployment-counter rule fell out free as
+predicted (redraw resolves before `beginTurn` records the final hand) — pinned
+by test. 842 tests (+20), fuzz:smoke 117 unchanged. **Remaining: commit 2 (the
+PreTurnScreen UI) + commit 3 (fuzz redraw policy + proof).**
+
 **Shape (brief):** at the start of a turn, the player **selects some drawn
 units, sends them to the discard, and draws that many fresh units.** Support
 **arbitrary selection** *and* an **overall cap** on redraws. Configurable

@@ -39,6 +39,11 @@ import type { RunConfig } from './RunConfig';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { enemyBudgetFor, rollEnemyWave, avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
+import {
+  redrawAvailability,
+  redrawRejection,
+  type RedrawAvailability,
+} from './redraw';
 import { cloneEffect, mergeEffectInto, type StatusEffect } from '../sim/statusEffects';
 import { TriggerDispatcher } from '../sim/triggers';
 import type { RunCommand } from './Command';
@@ -148,8 +153,11 @@ export interface BattleEncounter {
  *  rather than rehydrate a Run mid-encounter with a missing buff list. (The
  *  per-turn fatigue + the World-side battle effects are NOT here — fatigue is
  *  recomputed each turn from `deploymentCounts`, and live battle effects live
- *  in the WorldSnapshot.) */
-const RUN_SCHEMA_VERSION = 12;
+ *  in the WorldSnapshot.)
+ *  K3: bumped 12→13. Adds `redrawsUsedThisTurn` / `cardsRedrawnThisTurn` (the
+ *  per-turn redraw budget bookkeeping). A v12 save has neither → reject rather
+ *  than rehydrate a pre-turn gate whose redraw budget silently refreshed. */
+const RUN_SCHEMA_VERSION = 13;
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -177,6 +185,11 @@ export interface RunSnapshot {
   drawPile: number[];
   discardPile: number[];
   hand: number[];
+  /** K3: redraw actions taken this turn (vs `DECK.redraw.redrawsPerTurn`).
+   *  Reset at every turn start; meaningful only at the pre-turn gate. */
+  redrawsUsedThisTurn: number;
+  /** K3: total cards redrawn this turn (vs `DECK.redraw.maxCardsPerTurn`). */
+  cardsRedrawnThisTurn: number;
   /** H4: the run-wide player health pool (persists across the whole run). */
   playerHealth: number;
   /** H4: the active encounter's enemy pool (reset each encounter). */
@@ -281,6 +294,15 @@ export class Run {
   discardPile: number[];
   hand: number[];
   /**
+   * K3 — per-turn redraw bookkeeping: actions taken / cards redrawn this turn,
+   * checked against the `DECK.redraw` budget by `handleRedrawCards`. Both
+   * reset at every turn start (`startNextTurn`, BEFORE `turn:starting` fires
+   * so the payload reads a fresh budget) and round-trip in the Run save (v13)
+   * — a save at the pre-turn gate after a redraw must not refresh the budget.
+   */
+  redrawsUsedThisTurn: number;
+  cardsRedrawnThisTurn: number;
+  /**
    * H4 — the run-wide player health pool. Persists across the WHOLE run (every
    * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
    * lost. Each turn it's chipped by the enemy survivors' Σ`power`. Init +
@@ -375,6 +397,9 @@ export class Run {
     this.drawPile = [];
     this.discardPile = [];
     this.hand = [];
+    // K3 — redraw budget bookkeeping; meaningful only at a pre-turn gate.
+    this.redrawsUsedThisTurn = 0;
+    this.cardsRedrawnThisTurn = 0;
     // H4 — the run-wide player pool starts full; the per-encounter state
     // (enemyHealth/turnIndex/encounterBudget/pendingEncounterXp) is set when an
     // encounter actually begins (`beginEncounter`).
@@ -441,6 +466,9 @@ export class Run {
         break;
       case 'advanceTurn':
         this.handleAdvanceTurn();
+        break;
+      case 'redrawCards':
+        this.handleRedrawCards(command.handIndices);
         break;
       case 'resetRun':
         // No-op at this layer — Game handles reset by disposing this Run
@@ -522,6 +550,10 @@ export class Run {
    */
   private startNextTurn(): void {
     this.drawTurnHand();
+    // K3 — a fresh redraw budget every turn, reset BEFORE the `turn:starting`
+    // emit below so its payload reads full availability.
+    this.redrawsUsedThisTurn = 0;
+    this.cardsRedrawnThisTurn = 0;
     // K1 — `turnStart` fires before the turn's battle is built (on both the
     // gated + headless paths), so a daemon's encounter effect added here is
     // seeded onto this turn's hand in `beginTurn`. No-op at the default.
@@ -536,6 +568,7 @@ export class Run {
         enemyHealth: this.enemyHealth,
         enemyHealthMax: HEALTH.enemyHealthMax,
         hand: this.hand.map((idx) => this.team[idx]!),
+        redraw: this.redrawAvailability,
       });
     } else {
       this.phase = 'battle';
@@ -785,6 +818,56 @@ export class Run {
     } else if (this.phase === 'turn-outcome') {
       this.continueAfterTurn(this.turnResult());
     }
+  }
+
+  /**
+   * K3 — this turn's remaining redraw budget (actions + cards), the shape the
+   * pre-turn screen renders. 0/0 when `DECK.redraw.enabled` is off.
+   */
+  get redrawAvailability(): RedrawAvailability {
+    return redrawAvailability(
+      { redrawsUsed: this.redrawsUsedThisTurn, cardsRedrawn: this.cardsRedrawnThisTurn },
+      DECK.redraw,
+    );
+  }
+
+  /**
+   * K3 — redraw selected hand cards at the pre-turn gate (the `redrawCards`
+   * command): send them to the discard, draw replacements into the SAME hand
+   * positions. Validation (phase aside) lives in the pure `redrawRejection`;
+   * any reject is a silent no-op that consumes no budget (mirrors the other
+   * phase-guarded handlers).
+   *
+   * Order contract: positions are processed in ASCENDING hand order, so the
+   * selection's click/dispatch order never changes the outcome (determinism
+   * for the fuzz redraw policy). The selected cards are discarded BEFORE the
+   * draws, so the piles always hold enough to refill every selected position
+   * (the reshuffle cycle may hand a just-discarded card straight back when
+   * the draw pile runs dry — the deck's normal H5 recycle, accepted) and the
+   * hand size is preserved.
+   *
+   * The deployment-counter rule (a redrawn-away unit accrues NO deployment
+   * count / fatigue stack) needs no code here: `beginTurn` records only the
+   * FINAL fielded hand, and this runs strictly before it.
+   */
+  private handleRedrawCards(handIndices: readonly number[]): void {
+    if (this.phase !== 'turn-intro') return;
+    const rejection = redrawRejection(
+      handIndices,
+      this.hand.length,
+      { redrawsUsed: this.redrawsUsedThisTurn, cardsRedrawn: this.cardsRedrawnThisTurn },
+      DECK.redraw,
+    );
+    if (rejection !== null) return;
+    const positions = [...handIndices].sort((a, b) => a - b);
+    for (const pos of positions) this.discardPile.push(this.hand[pos]!);
+    for (const pos of positions) this.hand[pos] = this.drawCard()!;
+    this.redrawsUsedThisTurn += 1;
+    this.cardsRedrawnThisTurn += positions.length;
+    this.bus.emit('turn:handRedrawn', {
+      hand: this.hand.map((idx) => this.team[idx]!),
+      redraw: this.redrawAvailability,
+    });
   }
 
   /**
@@ -1061,17 +1144,28 @@ export class Run {
   private drawHand(): number[] {
     const hand: number[] = [];
     while (hand.length < DECK.handSize) {
-      if (this.drawPile.length === 0) {
-        if (this.discardPile.length === 0) break; // deck fully dealt this turn
-        // Reshuffle the discard back into the draw pile (the only RNG draw in
-        // the deck cycle, off the isolated `deckRng`).
-        this.drawPile = this.discardPile;
-        this.discardPile = [];
-        shuffleInPlace(this.drawPile, this.deckRng);
-      }
-      hand.push(this.drawPile.pop()!);
+      const card = this.drawCard();
+      if (card === undefined) break; // deck fully dealt this turn
+      hand.push(card);
     }
     return hand;
+  }
+
+  /**
+   * K3 — draw ONE card (factored out of `drawHand`, byte-identical pop +
+   * reshuffle order, so the turn draw is unchanged): pop from `drawPile`,
+   * reshuffling the discard back in when it's empty (the only RNG draw in the
+   * deck cycle, off the isolated `deckRng`). `undefined` only when BOTH piles
+   * are exhausted. Shared by the turn draw and the redraw refill.
+   */
+  private drawCard(): number | undefined {
+    if (this.drawPile.length === 0) {
+      if (this.discardPile.length === 0) return undefined;
+      this.drawPile = this.discardPile;
+      this.discardPile = [];
+      shuffleInPlace(this.drawPile, this.deckRng);
+    }
+    return this.drawPile.pop();
   }
 
   toJSON(): RunSnapshot {
@@ -1089,6 +1183,8 @@ export class Run {
       drawPile: this.drawPile.slice(),
       discardPile: this.discardPile.slice(),
       hand: this.hand.slice(),
+      redrawsUsedThisTurn: this.redrawsUsedThisTurn,
+      cardsRedrawnThisTurn: this.cardsRedrawnThisTurn,
       playerHealth: this.playerHealth,
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
@@ -1141,6 +1237,8 @@ export class Run {
     m.drawPile = snap.drawPile.slice();
     m.discardPile = snap.discardPile.slice();
     m.hand = snap.hand.slice();
+    m.redrawsUsedThisTurn = snap.redrawsUsedThisTurn;
+    m.cardsRedrawnThisTurn = snap.cardsRedrawnThisTurn;
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;

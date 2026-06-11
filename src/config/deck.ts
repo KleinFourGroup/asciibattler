@@ -19,6 +19,22 @@
  * enemy budget tracks the *expected hand* level, not the whole roster — and
  * raising `handSize` (5→6) is what moved the band, not the roster bump.
  *
+ * K3 — `redraw`: the pre-turn redraw knobs. On the pre-turn screen the player
+ * selects drawn cards, sends them to the discard, and draws that many fresh
+ * (`Run.handleRedrawCards`). Two dials, BOTH enforced per turn, so Phase L's
+ * daemons can express either gating mode without new plumbing:
+ *
+ * - `redrawsPerTurn`   — redraw ACTIONS allowed per turn. The shipped default
+ *                        (1) is the "one batch per turn" mode.
+ * - `maxCardsPerTurn`  — total CARDS redrawn per turn across actions. The
+ *                        shipped default (6 = `handSize`, i.e. the whole hand)
+ *                        makes the batch's selection arbitrary; lowering it
+ *                        (with `redrawsPerTurn` raised) is the "N cards per
+ *                        turn" mode.
+ * - `enabled`          — master switch (the static stand-in for L's
+ *                        daemon-driven availability). Off → the command is a
+ *                        no-op and the UI hides the control.
+ *
  * Balance-tuned in H6, decoupled in K2 — a starting point, re-swept in N2.
  * Source of truth at `config/deck.json`.
  */
@@ -28,6 +44,11 @@ import deckJson from '../../config/deck.json';
 
 const DeckSchema = z.object({
   handSize: z.number().int().positive(),
+  redraw: z.object({
+    enabled: z.boolean(),
+    redrawsPerTurn: z.number().int().nonnegative(),
+    maxCardsPerTurn: z.number().int().nonnegative(),
+  }),
 });
 
 export type DeckConfig = z.infer<typeof DeckSchema>;

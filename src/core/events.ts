@@ -17,6 +17,7 @@ import type { Team, UnitStats, UnitTemplate } from '../sim/Unit';
 import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
 import type { BattleObjective } from '../sim/objective';
+import type { RedrawAvailability } from '../run/redraw';
 
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
@@ -247,6 +248,10 @@ export interface GameEvents extends Record<string, unknown> {
    * that will fight, in draw order), so the pre-turn screen shows WHO was
    * drawn. The hand is drawn before this fires (Run.startNextTurn), so it's
    * authoritative — the same templates `beginTurn` then sends to the World.
+   *
+   * K3 — also carries `redraw`: this turn's redraw availability (actions +
+   * cards remaining, 0/0 when the config disables it), so the screen renders
+   * the redraw control without a follow-up Run query.
    */
   'turn:starting': {
     turn: number; // 1-based, within the current encounter
@@ -256,6 +261,20 @@ export interface GameEvents extends Record<string, unknown> {
     enemyHealth: number;
     enemyHealthMax: number;
     hand: UnitTemplate[];
+    redraw: RedrawAvailability;
+  };
+
+  /**
+   * K3 — a `redrawCards` command landed at the pre-turn gate: the selected
+   * cards went to the discard and fresh draws took their hand positions.
+   * Carries the FULL new hand (same draw-order contract as `turn:starting`)
+   * plus the decremented redraw availability, so the pre-turn screen swaps
+   * its card row + control state in place. Only ever fires during
+   * `turn-intro` (the command is phase-gated), i.e. only on the live path.
+   */
+  'turn:handRedrawn': {
+    hand: UnitTemplate[];
+    redraw: RedrawAvailability;
   };
 
   /**

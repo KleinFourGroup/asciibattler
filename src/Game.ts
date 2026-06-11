@@ -231,6 +231,12 @@ export class Game implements RunDispatcher {
         // nothing to swap explicitly here.
         this.run.dispatch(command);
         break;
+      case 'redrawCards':
+        // K3 — redraw at the pre-turn gate. The phase doesn't change (the
+        // pre-turn screen stays up and refreshes in place off the
+        // `turn:handRedrawn` emit), so there's no scene swap here either.
+        this.run.dispatch(command);
+        break;
       case 'resetRun':
         this.resetRun();
         break;

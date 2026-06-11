@@ -731,7 +731,24 @@ screen waits for Fight; post-turn keeps its timer); selectable cards + a
 `Redraw (N)` button + budget hint; re-renders purely off `turn:handRedrawn`
 (scene-scoped subscription). Browser-verified end-to-end by eval (screenshot
 capture blocked by the known throttled-tab limitation). 842 unchanged — UI
-only. **Remaining: commit 3 (fuzz redraw policy + proof).**
+only.
+
+**Commit 3 ✅ (2026-06-11, the dedicated session) — the fuzz redraw policy +
+proof. K3 COMPLETE.** The design round locked four calls (scored objective
+variant now; redraw policy = scored-vs-pool-mean + threshold with discrete
+baselines; map-awareness = measure first; split the fuzz CLI first), landing
+as three dev-only commits (zero `src/`; fuzz:smoke 117→157): the `commands/`
+CLI split (`7db5100`), the scored objective proclivity + arena `--vectors`
+search (`5043468`), and the redraw policy itself (`b32809e`) —
+`none|random:k|level:k|scored` in [redrawPolicy.ts](tests/fuzz/redrawPolicy.ts),
+driven through the H4b turn gates by the harness (the `level:0` gates-on
+control ≡ headless, pinned), with `--redraw` on run/search/sweep + the
+ShardJob. **Proof (BALANCE.md K3c3 entry):** naive-policy lift is small
+(`level:2` best at +6 wins/100; `random:2` loses ~1.2 floors — tossing has
+real cost); the map-signal experiment found a huge comp×map interaction
+(strafingFunnel/spiralFireLife flip to ranged while the rest favor melee) →
+**map-aware scored-policy terms are measurement-justified**, banked as a
+follow-up (the axis is per-layout, not a simple openness scalar).
 
 **Shape (brief):** at the start of a turn, the player **selects some drawn
 units, sends them to the discard, and draws that many fresh units.** Support

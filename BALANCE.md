@@ -674,3 +674,46 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   persistence effect (a stall-prone map repeats all encounter turns instead of re-rolling away); watch in N2.
   **Human data point (same day):** the user completed a FULL run post-K3.5 (the first in ages) and enjoyed
   it - consistent with the easier read. Acceptable while the K player-buffs land; N2 calibrates the band.
+
+- **K3c3 redraw-policy lift + the map-signal experiment (2026-06-11).** The K3-closing measurement pass,
+  taken with the new `--redraw` bot (zero src change; knobs unchanged: `budgetFactor 0.75 × swarmMax 2.0 ×
+  archerRatio 0.3`, `redraw 1 batch × 6 cards`). **(A) Redraw lift — SMALL.** 50 seeds × both baseline
+  strategies per policy (100 full runs each; baseline reproduces the K3.5 read exactly — pure-random 20% /
+  floor 5.94):
+
+  | policy           | pure-random win/floor | greedy win/floor | combined wins/100 |
+  |------------------|----------------------|------------------|-------------------|
+  | none             | 20% / 5.94           | 14% / 5.72       | 17                |
+  | random:2         | 12% / 4.42           | 18% / 4.66       | 15                |
+  | level:2          | 20% / 5.78           | 26% / 5.62       | **23**            |
+  | level:6          | 22% / 5.94           | 18% / 5.48       | 20                |
+  | scored lvl-fisher| 24% / 6.14           | 14% / 5.50       | 19                |
+
+  Conclusions: (1) **no naive policy moves win rate beyond ~1.5σ** (σ≈3.8 wins/100) — redraw as shipped is
+  NOT a band-breaking lever, so deferring the re-tune to N2 stays safe; (2) the most solid signal is
+  **`random:2` losing ~1.2 avg floors on BOTH strategies** (floor variance is tight) — indiscriminate
+  tossing sometimes benches carries, so the resource-free mechanic still carries a real decision (good
+  design news); (3) modest targeted fishing (`level:2`, +6 wins/100 at par floor) is the best read —
+  directionally what the mechanic should reward; (4) an early small-sample "full-mulligan craters" read
+  (75%→25% at 8 floors, 5 seeds) did NOT replicate at 100 runs — withdrawn. Caveat: naive policies on
+  baseline strategies; a TUNED scored policy (weight search ± comp/map terms) may find more.
+  **(B) Map signal — HUGE, and policy-relevant.** Arena isolates (40 seeds, all-lvl-5 rosters, identical
+  waves per seed, objective none): melee-heavy (5× mercenary) vs ranged-heavy (5× ranged) per layout:
+
+  | layout           | melee win | ranged win | gap        |
+  |------------------|-----------|------------|------------|
+  | labyrinth        | 100%      | 13%        | melee +87  |
+  | river            | 93%       | 20%        | melee +73  |
+  | endlessCorridors | 93%       | 65%        | melee +28  |
+  | junctionAmbush   | 90%       | 15%        | melee +75  |
+  | strafingFunnel   | 70%       | 95%        | **ranged +25** |
+  | spiralFireLife   | 55%       | 90%        | **ranged +35** |
+  | procedural       | 93%       | 15%        | melee +78  |
+
+  The comp×map interaction DWARFS every redraw-policy effect measured above — two layouts FLIP the
+  preferred comp by 25–35 points while the rest favor melee by 70–87. So (1) **map-aware terms in the
+  scored policies are justified by measurement** (the design-round "confirm before building" gate passes);
+  note the axis is NOT simply open-vs-narrow — the corridor labyrinth favors melee while the funnel/spiral
+  favor ranged, so per-layout features (spawn distance / lanes / hazard tiles) likely matter more than an
+  openness scalar. (2) A flat **melee-over-ranged dominance** shows on 5/7 boards at this comp/level —
+  an arena-only read (no run context), but worth a telemetry look in N2's archetype pass.

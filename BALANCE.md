@@ -672,3 +672,5 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   against the final model (the whole point of doing K3.5 before N2). Also: **1 hang / 50 seeds** (procedural
   map; trace in gitignored `tests/fuzz/output`) — first hang since the I2 cap bump. Plausibly the same
   persistence effect (a stall-prone map repeats all encounter turns instead of re-rolling away); watch in N2.
+  **Human data point (same day):** the user completed a FULL run post-K3.5 (the first in ages) and enjoyed
+  it - consistent with the easier read. Acceptable while the K player-buffs land; N2 calibrates the band.

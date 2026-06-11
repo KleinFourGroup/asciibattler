@@ -18,6 +18,7 @@ import type { RNG } from '../../../src/core/RNG';
 import type { NodeMap, NodeKind } from '../../../src/run/NodeMap';
 import type { UnitStats, UnitTemplate } from '../../../src/sim/Unit';
 import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
+import { minMax, norm, type MinMax } from '../scoring';
 import { STAT_KEYS } from './policies';
 import type { FuzzStrategy } from '../Strategy';
 import type { ScoredWeights } from './scoredWeights';
@@ -123,26 +124,6 @@ interface Features {
 function featuresOf(stats: UnitStats, level: number): Features {
   const arr = STAT_KEYS.map((k) => stats[k]);
   return { level, stats: arr, total: arr.reduce((a, b) => a + b, 0) };
-}
-
-interface MinMax {
-  readonly mn: number;
-  readonly mx: number;
-}
-
-function minMax(values: readonly number[]): MinMax {
-  let mn = Infinity;
-  let mx = -Infinity;
-  for (const v of values) {
-    if (v < mn) mn = v;
-    if (v > mx) mx = v;
-  }
-  return { mn, mx };
-}
-
-/** Min–max to [0,1]; degenerate (max == min) → 0 so the term simply drops out. */
-function norm(v: number, { mn, mx }: MinMax): number {
-  return mx > mn ? (v - mn) / (mx - mn) : 0;
 }
 
 interface Normalizers {

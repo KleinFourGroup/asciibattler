@@ -7,8 +7,16 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { runArena, runArenaSearch, DEFAULT_ARENA_ROSTER } from './arena';
+import {
+  runArena,
+  runArenaSearch,
+  runArenaVectorSearch,
+  generateObjectiveVectors,
+  DEFAULT_ARENA_ROSTER,
+} from './arena';
 import type { MenuEntry, ObjectiveProclivity } from './objectiveStrategy';
+import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
+import { STAT_KEYS } from './strategies/policies';
 
 const STAT_HI: ObjectiveProclivity = { kind: 'stat', select: 'highest', stat: 'strength' };
 
@@ -53,6 +61,48 @@ describe('runArenaSearch', () => {
   it('is deterministic across repeated searches', () => {
     const a = runArenaSearch(seeds, DEFAULT_ARENA_ROSTER, null, menu);
     const b = runArenaSearch(seeds, DEFAULT_ARENA_ROSTER, null, menu);
+    expect(a.scores).toEqual(b.scores);
+  });
+});
+
+describe('generateObjectiveVectors (K3c3 scored sampler)', () => {
+  it('is reproducible from the sampler seed and covers every weight key in [-1, 1]', () => {
+    const a = generateObjectiveVectors(7, 3);
+    const b = generateObjectiveVectors(7, 3);
+    expect(a).toEqual(b);
+    expect(a).toHaveLength(3);
+    for (const v of a) {
+      expect(Object.keys(v.stats).sort()).toEqual([...STAT_KEYS].map(String).sort());
+      expect(Object.keys(v.archetype).sort()).toEqual([...ALL_ARCHETYPES].map(String).sort());
+      for (const x of [...Object.values(v.stats), v.hp, ...Object.values(v.archetype)]) {
+        expect(x).toBeGreaterThanOrEqual(-1);
+        expect(x).toBeLessThanOrEqual(1);
+      }
+    }
+    expect(generateObjectiveVectors(8, 3)).not.toEqual(a); // a different seed proposes differently
+  });
+});
+
+describe('runArenaVectorSearch (K3c3)', () => {
+  const seeds = [1, 2];
+
+  it('evaluates each sampled vector as a scored proclivity, ranked best-first', () => {
+    const result = runArenaVectorSearch(seeds, DEFAULT_ARENA_ROSTER, null, {
+      samplerSeed: 1,
+      vectors: 2,
+    });
+    expect(result.scores).toHaveLength(2);
+    expect(result.scores.map((s) => s.label).sort()).toEqual(['scored#0', 'scored#1']);
+    const winRates = result.scores.map((s) => s.winRate);
+    expect(winRates).toEqual([...winRates].sort((a, b) => b - a));
+    expect(result.best).toBe(result.scores[0]);
+    expect(result.best.proclivity.kind).toBe('scored');
+  });
+
+  it('is deterministic across repeated searches (same sampler seed)', () => {
+    const opts = { samplerSeed: 5, vectors: 2 };
+    const a = runArenaVectorSearch(seeds, DEFAULT_ARENA_ROSTER, null, opts);
+    const b = runArenaVectorSearch(seeds, DEFAULT_ARENA_ROSTER, null, opts);
     expect(a.scores).toEqual(b.scores);
   });
 });

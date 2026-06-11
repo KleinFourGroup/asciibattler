@@ -19,6 +19,15 @@
  * per-unit objective per archetype is NOT this (there's one shared objective);
  * that would be a later `scored`-strategy term.
  *
+ * K3c3 adds the **`scored` kind** — the H7a linear model applied to target
+ * selection: per-stat + current-HP + per-archetype weights, min–max normalized
+ * over the living enemies, weighted-sum → argmax. It strictly generalizes the
+ * single-axis menu (any `stat`/`hp` entry is a one-hot corner of the weight
+ * space) and can express combos the menu can't ("the wounded mage" = hp:low ×
+ * archetype:mage). Not a menu entry (it isn't enumerable) — the arena searches
+ * it via random weight vectors (`runArenaVectorSearch`), and it reaches the
+ * full-run fuzz the same way every proclivity does: `--objective=<file>.json`.
+ *
  * Dev-only fuzz tooling — never imported by `src/`. Mirrors the A4 config
  * pattern (zod, validate-on-load, throw on malformed) the way `scoredWeights.ts`
  * does: the single-proclivity JSON is BOTH the `--objective=<file>.json` input
@@ -32,9 +41,25 @@ import type { World } from '../../src/sim/World';
 import type { WorldCommand } from '../../src/sim/Command';
 import type { Unit, UnitStats } from '../../src/sim/Unit';
 import { ALL_ARCHETYPES, type Archetype } from '../../src/sim/archetypes';
+import { minMax, norm, numberRecordSchema } from './scoring';
 import { STAT_KEYS } from './strategies/policies';
 
 export type SelectDirection = 'highest' | 'lowest';
+
+/**
+ * The weight vector of the `scored` proclivity. Every feature the menu kinds
+ * can see, as simultaneous linear terms: base stats + current HP are min–max
+ * normalized over the living enemies per decision (so weights are scale-free),
+ * the archetype term is a flat affinity. Keys track `STAT_KEYS` /
+ * `ALL_ARCHETYPES` (archetypes that never spawn as enemies today simply never
+ * score — same caveat as the `archetype` menu entries).
+ */
+export interface ScoredObjectiveWeights {
+  readonly stats: Record<keyof UnitStats, number>;
+  /** Weight on normalized CURRENT hp (negative = prefer the wounded). */
+  readonly hp: number;
+  readonly archetype: Record<Archetype, number>;
+}
 
 /**
  * A serializable objective-selection policy — the saved "objective strategy."
@@ -50,7 +75,8 @@ export type ObjectiveProclivity =
   | { readonly kind: 'random' }
   | { readonly kind: 'stat'; readonly select: SelectDirection; readonly stat: keyof UnitStats }
   | { readonly kind: 'hp'; readonly select: SelectDirection }
-  | { readonly kind: 'archetype'; readonly archetype: Archetype };
+  | { readonly kind: 'archetype'; readonly archetype: Archetype }
+  | { readonly kind: 'scored'; readonly weights: ScoredObjectiveWeights };
 
 const DIRECTION = z.enum(['highest', 'lowest']);
 // Built from the live `STAT_KEYS` so a new base stat auto-extends the schema (a
@@ -59,12 +85,19 @@ const DIRECTION = z.enum(['highest', 'lowest']);
 const STAT_ENUM = z.enum(STAT_KEYS as [string, ...string[]]);
 const ARCHETYPE_ENUM = z.enum(ALL_ARCHETYPES as unknown as [string, ...string[]]);
 
+const ScoredObjectiveWeightsSchema = z.strictObject({
+  stats: numberRecordSchema(STAT_KEYS),
+  hp: z.number(),
+  archetype: numberRecordSchema(ALL_ARCHETYPES),
+});
+
 const ProclivitySchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('none') }),
   z.strictObject({ kind: z.literal('random') }),
   z.strictObject({ kind: z.literal('stat'), select: DIRECTION, stat: STAT_ENUM }),
   z.strictObject({ kind: z.literal('hp'), select: DIRECTION }),
   z.strictObject({ kind: z.literal('archetype'), archetype: ARCHETYPE_ENUM }),
+  z.strictObject({ kind: z.literal('scored'), weights: ScoredObjectiveWeightsSchema }),
 ]);
 
 /** Validate an arbitrary parsed-JSON value into an `ObjectiveProclivity`. Throws
@@ -99,6 +132,8 @@ export function proclivityLabel(p: ObjectiveProclivity): string {
       return `stat:${String(p.stat)}:${p.select}`;
     case 'archetype':
       return `archetype:${p.archetype}`;
+    case 'scored':
+      return 'scored'; // a weight vector has no compact inline form
   }
 }
 
@@ -146,7 +181,9 @@ export function objectiveMenu(): MenuEntry[] {
  *   stat:<stat>:<dir>        → inline, e.g. `stat:strength:highest`
  *   hp:<dir>                 → inline, e.g. `hp:lowest`
  * The inline forms are a dev convenience (the arena search emits / consumes
- * JSON). An absent flag defaults to `none` — handled by the caller.
+ * JSON). A `scored` proclivity is FILE-ONLY — a weight vector has no inline
+ * form; the arena vector search emits it as best-objective.json. An absent
+ * flag defaults to `none` — handled by the caller.
  */
 export function parseObjectiveFlag(value: string): ObjectiveProclivity {
   if (value === 'none') return { kind: 'none' };
@@ -189,6 +226,7 @@ export function selectObjectiveTarget(
   const enemies = livingEnemies(world);
   if (enemies.length === 0) return null;
   if (proclivity.kind === 'random') return rng.pick(enemies).id;
+  if (proclivity.kind === 'scored') return scoredObjectiveTarget(enemies, proclivity.weights);
   if (proclivity.kind === 'archetype') {
     const matches = enemies.filter((u) => u.archetype === proclivity.archetype);
     if (matches.length === 0) return null; // none of that archetype alive → default targeting
@@ -209,6 +247,38 @@ export function selectObjectiveTarget(
       bestValue = v;
     } else if (v === bestValue && u.id < best.id) {
       best = u; // deterministic id tie-break (no RNG)
+    }
+  }
+  return best.id;
+}
+
+/**
+ * The `scored` selector: min–max normalize base stats + current HP over the
+ * living enemies (the H7a offer∪roster trick, candidates-only here), score each
+ * enemy as Σ wᵢ·norm(featureᵢ) + archetypeAffinity, argmax with the ascending-id
+ * tie-break. Deterministic — no RNG draw. Reads BASE stats like the `stat` menu
+ * kinds (the bot targets what the player can see on a card, not buffed values).
+ */
+function scoredObjectiveTarget(
+  enemies: readonly Unit[],
+  weights: ScoredObjectiveWeights,
+): number {
+  const statRanges = STAT_KEYS.map((k) => minMax(enemies.map((u) => u.stats[k])));
+  const hpRange = minMax(enemies.map((u) => u.currentHp));
+  const scoreOf = (u: Unit): number => {
+    let s = weights.hp * norm(u.currentHp, hpRange) + weights.archetype[u.archetype];
+    for (let i = 0; i < STAT_KEYS.length; i++) {
+      s += weights.stats[STAT_KEYS[i]!] * norm(u.stats[STAT_KEYS[i]!], statRanges[i]!);
+    }
+    return s;
+  };
+  let best = enemies[0]!;
+  let bestScore = scoreOf(best);
+  for (const u of enemies) {
+    const s = scoreOf(u);
+    if (s > bestScore || (s === bestScore && u.id < best.id)) {
+      best = u;
+      bestScore = s;
     }
   }
   return best.id;

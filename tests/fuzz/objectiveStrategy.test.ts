@@ -21,8 +21,27 @@ import {
   serializeProclivity,
   objectiveMenu,
   proclivityLabel,
+  type ObjectiveProclivity,
+  type ScoredObjectiveWeights,
 } from './objectiveStrategy';
 import { STAT_KEYS } from './strategies/policies';
+
+/** All-zero weight vector — tests poke individual terms from here. */
+function zeroWeights(): {
+  stats: Record<keyof UnitStats, number>;
+  hp: number;
+  archetype: Record<Archetype, number>;
+} {
+  return {
+    stats: Object.fromEntries(STAT_KEYS.map((k) => [k, 0])) as Record<keyof UnitStats, number>,
+    hp: 0,
+    archetype: Object.fromEntries(ALL_ARCHETYPES.map((a) => [a, 0])) as Record<Archetype, number>,
+  };
+}
+
+function scored(weights: ScoredObjectiveWeights): ObjectiveProclivity {
+  return { kind: 'scored', weights };
+}
 
 function makeWorld(): World {
   return new World(new EventBus<GameEvents>(), new RNG(1), 12, 12);
@@ -156,6 +175,101 @@ describe('selectObjectiveTarget', () => {
   });
 });
 
+describe('selectObjectiveTarget — scored proclivity', () => {
+  const rng = () => new RNG(42);
+
+  it('a one-hot +stat weight reproduces stat:highest (menu-corner equivalence)', () => {
+    const world = makeWorld();
+    spawn(world, 'enemy', { x: 1, y: 1 }, { strength: 2 });
+    spawn(world, 'enemy', { x: 2, y: 1 }, { strength: 9 });
+    spawn(world, 'enemy', { x: 3, y: 1 }, { strength: 5 });
+    const w = zeroWeights();
+    w.stats.strength = 1;
+    expect(selectObjectiveTarget(world, scored(w), rng())).toBe(
+      selectObjectiveTarget(world, { kind: 'stat', select: 'highest', stat: 'strength' }, rng()),
+    );
+  });
+
+  it('a one-hot −stat weight reproduces stat:lowest', () => {
+    const world = makeWorld();
+    spawn(world, 'enemy', { x: 1, y: 1 }, { strength: 7 });
+    spawn(world, 'enemy', { x: 2, y: 1 }, { strength: 1 });
+    spawn(world, 'enemy', { x: 3, y: 1 }, { strength: 4 });
+    const w = zeroWeights();
+    w.stats.strength = -1;
+    expect(selectObjectiveTarget(world, scored(w), rng())).toBe(
+      selectObjectiveTarget(world, { kind: 'stat', select: 'lowest', stat: 'strength' }, rng()),
+    );
+  });
+
+  it('a one-hot ±hp weight reproduces hp:highest / hp:lowest', () => {
+    const world = makeWorld();
+    const hurt = spawn(world, 'enemy', { x: 1, y: 1 });
+    const healthy = spawn(world, 'enemy', { x: 2, y: 1 });
+    hurt.currentHp = 3;
+    healthy.currentHp = 20;
+    const hi = zeroWeights();
+    hi.hp = 1;
+    const lo = zeroWeights();
+    lo.hp = -1;
+    expect(selectObjectiveTarget(world, scored(hi), rng())).toBe(healthy.id);
+    expect(selectObjectiveTarget(world, scored(lo), rng())).toBe(hurt.id);
+  });
+
+  it('archetype affinity steers between otherwise-equal enemies', () => {
+    const world = makeWorld();
+    spawnArch(world, 'enemy', { x: 1, y: 1 }, 'ranged');
+    const bandit = spawnArch(world, 'enemy', { x: 2, y: 1 }, 'bandit');
+    const w = zeroWeights();
+    w.archetype.bandit = 1;
+    expect(selectObjectiveTarget(world, scored(w), rng())).toBe(bandit.id);
+  });
+
+  it('expresses the combo the menu cannot: the WOUNDED MAGE (hp:low × archetype)', () => {
+    const world = makeWorld();
+    const bandit = spawnArch(world, 'enemy', { x: 1, y: 1 }, 'bandit');
+    const woundedMage = spawnArch(world, 'enemy', { x: 2, y: 1 }, 'mage');
+    const healthyMage = spawnArch(world, 'enemy', { x: 3, y: 1 }, 'mage');
+    bandit.currentHp = 1; // the GLOBAL lowest hp — hp:lowest alone would pick it
+    woundedMage.currentHp = 5;
+    healthyMage.currentHp = 10;
+    const w = zeroWeights();
+    w.archetype.mage = 2; // dominate: must be a mage…
+    w.hp = -1; // …then prefer the wounded one
+    expect(selectObjectiveTarget(world, scored(w), rng())).toBe(woundedMage.id);
+  });
+
+  it('all-zero weights fall back to the ascending-id tie-break (deterministic)', () => {
+    const world = makeWorld();
+    const first = spawn(world, 'enemy', { x: 1, y: 1 });
+    spawn(world, 'enemy', { x: 2, y: 1 });
+    expect(selectObjectiveTarget(world, scored(zeroWeights()), rng())).toBe(first.id);
+  });
+
+  it('consumes no RNG (the objective stream advances only for `random`)', () => {
+    const world = makeWorld();
+    spawn(world, 'enemy', { x: 1, y: 1 }, { strength: 2 });
+    spawn(world, 'enemy', { x: 2, y: 1 }, { strength: 9 });
+    const w = zeroWeights();
+    w.stats.strength = 1;
+    const used = new RNG(7);
+    selectObjectiveTarget(world, scored(w), used);
+    expect(used.next()).toBe(new RNG(7).next()); // stream untouched
+  });
+
+  it('feeds the no-thrash gate like any other proclivity', () => {
+    const world = makeWorld();
+    const target = spawn(world, 'enemy', { x: 1, y: 1 }, { strength: 9 });
+    spawn(world, 'enemy', { x: 2, y: 1 }, { strength: 2 });
+    const w = zeroWeights();
+    w.stats.strength = 1;
+    expect(decideObjectiveCommand(world, scored(w), new RNG(1))).toEqual({
+      kind: 'setObjective',
+      objective: { kind: 'enemy', unitId: target.id },
+    });
+  });
+});
+
 describe('decideObjectiveCommand (the no-thrash gate)', () => {
   it('returns null for `none`', () => {
     const world = makeWorld();
@@ -208,6 +322,21 @@ describe('proclivity JSON + flag parsing', () => {
     expect(() => parseProclivity({ kind: 'archetype', archetype: 'wizard' })).toThrow();
   });
 
+  it('round-trips a scored proclivity through serialize → parse', () => {
+    const p = scored(zeroWeights());
+    expect(parseProclivity(JSON.parse(serializeProclivity(p)))).toEqual(p);
+    expect(proclivityLabel(p)).toBe('scored');
+  });
+
+  it('rejects a malformed scored weight vector (missing stat / extra field)', () => {
+    const missing = zeroWeights() as { stats: Record<string, number> };
+    delete missing.stats[String(STAT_KEYS[0])];
+    expect(() => parseProclivity({ kind: 'scored', weights: missing })).toThrow();
+    expect(() =>
+      parseProclivity({ kind: 'scored', weights: { ...zeroWeights(), extra: 1 } }),
+    ).toThrow();
+  });
+
   it('rejects a garbage flag value', () => {
     expect(() => parseObjectiveFlag('biggest-nose')).toThrow();
   });
@@ -226,5 +355,9 @@ describe('objectiveMenu', () => {
       );
       expect(proclivityLabel(entry.proclivity)).toBe(entry.label);
     }
+  });
+
+  it('does NOT include scored (not enumerable — the vector search owns it)', () => {
+    expect(objectiveMenu().every((e) => e.proclivity.kind !== 'scored')).toBe(true);
   });
 });

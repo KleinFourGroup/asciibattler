@@ -51,6 +51,11 @@
  *   npm run fuzz -- --arena --objective=stat:evasion:lowest --layout=junctionAmbush
  *   npm run fuzz -- --arena --objective=output/best-objective.json   # inspect one
  *
+ *   # K3c3 — scored-objective vector search: --vectors=N random-searches the
+ *   # linear weight space (per-stat + hp + per-archetype) instead of the menu;
+ *   # winner lands in the same best-objective.json format:
+ *   npm run fuzz -- --arena --vectors=200 --seeds=40 --sampler-seed=7
+ *
  *   # J4 — drive a FIXED objective strategy through the full run fuzz / --search /
  *   # --balance-sweep (default none = byte-identical baselines; tune it in --arena
  *   # first, then feed the saved JSON | random | none):

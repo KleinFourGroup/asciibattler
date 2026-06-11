@@ -9,11 +9,23 @@
  *   npm run fuzz -- --arena --seeds=40 --roster=mercenary:5,mercenary:5,ranged:5
  *   npm run fuzz -- --arena --objective=stat:evasion:lowest --layout=junctionAmbush
  *   npm run fuzz -- --arena --objective=output/best-objective.json
+ *
+ * K3c3 — `--vectors=N` switches the enumeration to a random search of the
+ * SCORED objective weight space (N sampled vectors, `--sampler-seed` to vary);
+ * the winner lands in the same best-objective.json format:
+ *
+ *   npm run fuzz -- --arena --vectors=200 --seeds=40 --sampler-seed=7
  */
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { runArena, runArenaSearch, DEFAULT_ARENA_ROSTER, type ArenaSearchResult } from '../arena';
+import {
+  runArena,
+  runArenaSearch,
+  runArenaVectorSearch,
+  DEFAULT_ARENA_ROSTER,
+  type ArenaSearchResult,
+} from '../arena';
 import {
   parseObjectiveFlag,
   objectiveMenu,
@@ -24,7 +36,10 @@ import { parseRunConfig } from '../../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../../src/sim/layouts';
 import { bail, range, type CliArgs } from './args';
 
-export type ArenaModeArgs = Pick<CliArgs, 'seeds' | 'roster' | 'layout' | 'objective' | 'outDir'>;
+export type ArenaModeArgs = Pick<
+  CliArgs,
+  'seeds' | 'roster' | 'layout' | 'objective' | 'vectors' | 'samplerSeed' | 'outDir'
+>;
 
 export function runArenaCli(args: ArenaModeArgs): void {
   const seeds = range(1, args.seeds ?? 24);
@@ -61,15 +76,48 @@ export function runArenaCli(args: ArenaModeArgs): void {
     return;
   }
 
+  // K3c3 — `--vectors=N`: random-search the scored-objective weight space
+  // instead of enumerating the menu. A `none` baseline line gives the table a
+  // floor to read the vectors against.
+  if (args.vectors !== undefined) {
+    const samplerSeed = args.samplerSeed ?? 1;
+    process.stdout.write(
+      `Arena scored search: ${args.vectors} vectors × ${seeds.length} seeds, ` +
+        `roster=[${rosterNote}] layout=${layoutId ?? 'procedural'} samplerSeed=${samplerSeed}…\n`,
+    );
+    const result = runArenaVectorSearch(seeds, roster, layoutId, {
+      samplerSeed,
+      vectors: args.vectors,
+    });
+    let baselineWins = 0;
+    for (const s of seeds) {
+      if (runArena(s, { roster, proclivity: { kind: 'none' }, layoutId }).winner === 'player') {
+        baselineWins++;
+      }
+    }
+    process.stdout.write('\n' + renderArenaTable(result, 10) + '\n');
+    process.stdout.write(
+      `  baseline none: win ${((100 * baselineWins) / seeds.length).toFixed(0)}%\n`,
+    );
+    writeBest(args.outDir, result);
+    return;
+  }
+
   process.stdout.write(
     `Arena search: ${objectiveMenu().length} proclivities × ${seeds.length} seeds, ` +
       `roster=[${rosterNote}] layout=${layoutId ?? 'procedural'}…\n`,
   );
   const result = runArenaSearch(seeds, roster, layoutId);
   process.stdout.write('\n' + renderArenaTable(result) + '\n');
+  writeBest(args.outDir, result);
+}
 
-  mkdirSync(args.outDir, { recursive: true });
-  const bestPath = join(args.outDir, 'best-objective.json');
+/** Write the search winner to best-objective.json + print the feed-it hint —
+ *  shared by the menu enumeration and the scored vector search (the file
+ *  format is the same proclivity JSON either way). */
+function writeBest(outDir: string, result: ArenaSearchResult): void {
+  mkdirSync(outDir, { recursive: true });
+  const bestPath = join(outDir, 'best-objective.json');
   writeFileSync(bestPath, serializeProclivity(result.best.proclivity));
   process.stdout.write(
     `\nBest: ${result.best.label} (win ${(100 * result.best.winRate).toFixed(0)}%) → ${bestPath}\n`,
@@ -77,14 +125,19 @@ export function runArenaCli(args: ArenaModeArgs): void {
   process.stdout.write(`  feed it to the run fuzz: npm run fuzz -- --objective=${bestPath}\n`);
 }
 
-/** Compact ranked table of every proclivity's arena score (best-first). */
-function renderArenaTable(result: ArenaSearchResult): string {
+/** Compact ranked table of every proclivity's arena score (best-first);
+ *  `topN` truncates (the vector search samples hundreds — the tail is noise). */
+function renderArenaTable(result: ArenaSearchResult, topN?: number): string {
   const lines = [`  ${'proclivity'.padEnd(26)} win%  avgTicks  hangs`];
-  for (const s of result.scores) {
+  const shown = topN !== undefined ? result.scores.slice(0, topN) : result.scores;
+  for (const s of shown) {
     lines.push(
       `  ${s.label.padEnd(26)} ${(s.winRate * 100).toFixed(0).padStart(4)}  ` +
         `${s.avgTicks.toFixed(0).padStart(8)}  ${String(s.hangs).padStart(5)}`,
     );
+  }
+  if (topN !== undefined && result.scores.length > topN) {
+    lines.push(`  … (${result.scores.length - topN} more)`);
   }
   return lines.join('\n');
 }

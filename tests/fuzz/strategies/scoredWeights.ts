@@ -18,6 +18,7 @@ import { z } from 'zod';
 import defaultWeightsJson from '../../../config/fuzz-strategies.json';
 import type { UnitStats } from '../../../src/sim/Unit';
 import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
+import { numberRecordSchema } from '../scoring';
 import { STAT_KEYS, PATH_KINDS } from './policies';
 
 export interface ScoredWeights {
@@ -48,16 +49,6 @@ export interface ScoredWeights {
   /** OPTIONAL inert seam (H7 `selectByScore`). 0 = argmax. Default 0; not a
    *  search dimension this cycle. */
   readonly temperature?: number;
-}
-
-/** A strict zod object of `number` fields, one per supplied key — built from a
- *  live constant so the schema tracks the vocabulary automatically. */
-function numberRecordSchema<K extends string>(keys: readonly K[]) {
-  const shape = Object.fromEntries(keys.map((k) => [k, z.number()])) as Record<
-    K,
-    z.ZodNumber
-  >;
-  return z.strictObject(shape);
 }
 
 const WeightsSchema = z.strictObject({

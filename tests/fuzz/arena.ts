@@ -28,11 +28,14 @@ import type { BattleEncounter } from '../../src/run/Run';
 import type { RosterEntry } from '../../src/run/RunConfig';
 import { getLayout } from '../../src/sim/layouts';
 import { TERRAIN } from '../../src/config/terrain';
+import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
+import { STAT_KEYS } from './strategies/policies';
 import {
   decideObjectiveCommand,
   objectiveMenu,
   type MenuEntry,
   type ObjectiveProclivity,
+  type ScoredObjectiveWeights,
 } from './objectiveStrategy';
 
 // Mirror the `harness.ts` per-battle cap (150s of game time via the TICK_RATE
@@ -210,4 +213,58 @@ export function runArenaSearch(
     (a, b) => b.winRate - a.winRate || a.avgTicks - b.avgTicks || a.label.localeCompare(b.label),
   );
   return { scores: sorted, best: sorted[0]! };
+}
+
+// ---- the scored-objective vector search (K3c3) ------------------------------
+
+/**
+ * Draw one `ScoredObjectiveWeights` uniformly from [-1, 1] per weight (the
+ * H7b `DEFAULT_BOX` convention). Fixed draw order (stats → hp → archetype) so
+ * the sample sequence is reproducible given `(samplerSeed, vector index)` —
+ * the same contract `search.ts#sampleWeights` keeps for the recruit vectors.
+ */
+export function sampleObjectiveWeights(rng: RNG): ScoredObjectiveWeights {
+  const draw = (): number => -1 + rng.next() * 2;
+  const record = <K extends string>(keys: readonly K[]): Record<K, number> =>
+    Object.fromEntries(keys.map((k) => [k, draw()])) as Record<K, number>;
+  const stats = record(STAT_KEYS);
+  const hp = draw();
+  const archetype = record(ALL_ARCHETYPES);
+  return { stats, hp, archetype };
+}
+
+/** The deterministic proposal step — same role as `search.ts#generateVectors`:
+ *  one seeded RNG, `count` draws, so the whole experiment replays from
+ *  `(samplerSeed, count)`. */
+export function generateObjectiveVectors(
+  samplerSeed: number,
+  count: number,
+): ScoredObjectiveWeights[] {
+  const rng = new RNG(samplerSeed);
+  return Array.from({ length: count }, () => sampleObjectiveWeights(rng));
+}
+
+/**
+ * Random-search the scored-objective weight space in the arena: evaluate each
+ * sampled vector as a `{ kind: 'scored' }` proclivity over `seeds`, rank by
+ * player win rate (the shared `runArenaSearch` ranking — tie-break fewer avg
+ * ticks, then label, all deterministic). The
+ * winner is emitted in the SAME proclivity-JSON format as the menu search, so
+ * `--objective=<file>.json` consumes either interchangeably. No train/test
+ * split (unlike H7b): an arena read is a tuning aid on one fixed
+ * roster+board, not a balance verdict — overfit shows up immediately when the
+ * saved winner is replayed in the full-run fuzz.
+ */
+export function runArenaVectorSearch(
+  seeds: readonly number[],
+  roster: readonly RosterEntry[],
+  layoutId: string | null,
+  opts: { readonly samplerSeed: number; readonly vectors: number },
+): ArenaSearchResult {
+  const sampled = generateObjectiveVectors(opts.samplerSeed, opts.vectors);
+  const menu: MenuEntry[] = sampled.map((weights, i) => ({
+    label: `scored#${i}`,
+    proclivity: { kind: 'scored', weights },
+  }));
+  return runArenaSearch(seeds, roster, layoutId, menu);
 }

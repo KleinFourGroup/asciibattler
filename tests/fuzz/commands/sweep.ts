@@ -24,8 +24,9 @@ import {
 import { reportFromCsv } from '../sweepReport';
 import { proclivityLabel } from '../objectiveStrategy';
 import { redrawPolicyLabel } from '../redrawPolicy';
+import { empowerPolicyLabel } from '../empowerPolicy';
 import { parseRunConfig } from '../../../src/run/RunConfig';
-import { bail, fmtDuration, objectiveFromArgs, redrawFromArgs, type CliArgs } from './args';
+import { bail, empowerFromArgs, fmtDuration, objectiveFromArgs, redrawFromArgs, type CliArgs } from './args';
 
 export type SweepModeArgs = Pick<
   CliArgs,
@@ -39,6 +40,7 @@ export type SweepModeArgs = Pick<
   | 'roster'
   | 'objective'
   | 'redraw'
+  | 'empower'
   | 'jobs'
   | 'dryRun'
   | 'outDir'
@@ -70,6 +72,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     : undefined;
   const objective = objectiveFromArgs(args);
   const redraw = redrawFromArgs(args);
+  const empower = empowerFromArgs(args);
 
   const jobs = args.jobs !== undefined ? Math.max(1, Math.floor(args.jobs)) : 1;
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
@@ -80,8 +83,9 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
   const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
   const redrawNote = redraw ? ` redraw=${redrawPolicyLabel(redraw)}` : '';
+  const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${jobsNote} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${empowerNote}${jobsNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -93,6 +97,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     rosterOverride,
     objective,
     redraw,
+    empower,
     jobs,
     tmpDir: join(args.outDir, 'shard-tmp'),
     maxPoints: args.dryRun ? 1 : undefined,

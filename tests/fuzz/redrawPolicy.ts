@@ -55,7 +55,9 @@ export type RedrawPolicy =
   | { readonly kind: 'level'; readonly cards: number }
   | { readonly kind: 'scored'; readonly weights: ScoredCardWeights; readonly threshold: number };
 
-const ScoredCardWeightsSchema = z.strictObject({
+/** Exported for `empowerPolicy.ts` (K4c3) — its `scored` variant takes the
+ *  same card-feature weight vector. */
+export const ScoredCardWeightsSchema = z.strictObject({
   level: z.number(),
   stats: numberRecordSchema(STAT_KEYS),
   archetype: numberRecordSchema(ALL_ARCHETYPES),

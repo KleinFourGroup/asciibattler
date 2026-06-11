@@ -42,6 +42,7 @@ import { aggregateTelemetry, type AggregatedTelemetry } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 import type { ObjectiveProclivity } from './objectiveStrategy';
 import type { RedrawPolicy } from './redrawPolicy';
+import type { EmpowerPolicy } from './empowerPolicy';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import type { RosterEntry } from '../../src/run/RunConfig';
 import { DIFFICULTY } from '../../src/config/difficulty';
@@ -219,6 +220,11 @@ export interface BalanceSweepConfig {
    * play. Undefined / none = gates off (byte-identical to the pre-K3c3 sweep).
    */
   readonly redraw?: RedrawPolicy;
+  /**
+   * K4c3 — hold one empower policy FIXED across every run at every grid point
+   * (same contract as `redraw`). Undefined / none = byte-identical.
+   */
+  readonly empower?: EmpowerPolicy;
   /** Stop after this many grid points (the `--dry-run` estimate runs 1). */
   readonly maxPoints?: number;
   /**
@@ -258,13 +264,15 @@ function baselineWin(name: string, seeds: readonly number[], opts: HarnessOption
 
 /** Tier's harness options, with optional floor-count + starting-roster overrides
  *  applied — so the search, baselines, and telemetry re-run all share one run
- *  length, roster, (J4) objective proclivity, and (K3c3) redraw policy. */
+ *  length, roster, (J4) objective proclivity, and (K3c3/K4c3) redraw/empower
+ *  policies. */
 function harnessOptionsFor(
   preset: SearchPreset,
   floorOverride?: number,
   roster?: readonly RosterEntry[],
   objective?: ObjectiveProclivity,
   redraw?: RedrawPolicy,
+  empower?: EmpowerPolicy,
 ): HarnessOptions {
   const floorCount = floorOverride ?? preset.floorCount;
   const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
@@ -273,6 +281,7 @@ function harnessOptionsFor(
   let opts: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
   if (objective) opts = { ...opts, objective };
   if (redraw) opts = { ...opts, redraw };
+  if (empower) opts = { ...opts, empower };
   return opts;
 }
 
@@ -294,6 +303,7 @@ async function defaultMeasurePoint(
     config.rosterOverride,
     config.objective,
     config.redraw,
+    config.empower,
   );
   const jobs = Math.max(1, Math.floor(config.jobs ?? 1));
 
@@ -313,6 +323,7 @@ async function defaultMeasurePoint(
       roster: config.rosterOverride,
       objective: config.objective,
       redraw: config.redraw,
+      empower: config.empower,
       jobs,
       tmpDir: config.tmpDir,
     });

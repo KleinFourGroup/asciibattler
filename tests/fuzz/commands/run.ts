@@ -32,7 +32,7 @@ import {
   renderLayoutCsv,
   renderLayoutFloorCsv,
 } from '../reporters';
-import { bail, objectiveFromArgs, redrawFromArgs, range, type CliArgs } from './args';
+import { bail, empowerFromArgs, objectiveFromArgs, redrawFromArgs, range, type CliArgs } from './args';
 
 export type RunModeArgs = Pick<
   CliArgs,
@@ -45,6 +45,7 @@ export type RunModeArgs = Pick<
   | 'layout'
   | 'objective'
   | 'redraw'
+  | 'empower'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -70,6 +71,9 @@ export function runRunCli(args: RunModeArgs): void {
   // gates off, byte-identical).
   const redraw = redrawFromArgs(args);
   if (redraw) harnessOptions = { ...harnessOptions, redraw };
+  // K4c3 — and a fixed empower policy (same contract).
+  const empower = empowerFromArgs(args);
+  if (empower) harnessOptions = { ...harnessOptions, empower };
 
   // Fresh failures/ dir so stale traces from prior runs don't lie. Only the
   // failures subdir is wiped (not the whole output dir) so a search's

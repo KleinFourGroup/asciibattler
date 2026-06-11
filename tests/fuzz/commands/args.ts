@@ -14,6 +14,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseObjectiveFlag, type ObjectiveProclivity } from '../objectiveStrategy';
 import { parseRedrawFlag, type RedrawPolicy } from '../redrawPolicy';
+import { parseEmpowerFlag, type EmpowerPolicy } from '../empowerPolicy';
 
 export interface CliArgs {
   count: number;
@@ -59,6 +60,9 @@ export interface CliArgs {
   // (`--redraw=<none|random:k|level:k|file.json>`; default none = gates off,
   // byte-identical baselines).
   redraw?: string;
+  // K4c3 — the empower policy, same modes + contract
+  // (`--empower=<none|random|level:hi|level:lo|file.json>`; default none).
+  empower?: string;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -164,6 +168,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--redraw':
         args.redraw = v;
         break;
+      case '--empower':
+        args.empower = v;
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
@@ -198,6 +205,12 @@ export function objectiveFromArgs(args: Pick<CliArgs, 'objective'>): ObjectivePr
  *  Shared by the standard run, `--search`, and `--balance-sweep`. */
 export function redrawFromArgs(args: Pick<CliArgs, 'redraw'>): RedrawPolicy | undefined {
   return args.redraw !== undefined ? parseRedrawFlag(args.redraw) : undefined;
+}
+
+/** K4c3 — resolve the `--empower` flag into a policy, or `undefined` when
+ *  absent (same contract as `redrawFromArgs`). */
+export function empowerFromArgs(args: Pick<CliArgs, 'empower'>): EmpowerPolicy | undefined {
+  return args.empower !== undefined ? parseEmpowerFlag(args.empower) : undefined;
 }
 
 export function range(start: number, count: number): number[] {

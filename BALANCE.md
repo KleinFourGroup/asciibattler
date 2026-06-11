@@ -717,3 +717,29 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   favor ranged, so per-layout features (spawn distance / lanes / hazard tiles) likely matter more than an
   openness scalar. (2) A flat **melee-over-ranged dominance** shows on 5/7 boards at this comp/level —
   an arena-only read (no run context), but worth a telemetry look in N2's archetype pass.
+
+- **K4c3 empower-policy lift — LARGE, and targeting-insensitive (2026-06-11).** The K4-closing measurement
+  pass with the new `--empower` bot (zero src change; knobs unchanged: `budgetFactor 0.75 × swarmMax 2.0 ×
+  archerRatio 0.3`, `empower 1/turn × [+4 STR/RNG/MAG, merge add]`). 100 seeds × both baseline strategies
+  per policy (200 full runs each — double the K3c3 sample; the gates-on ≡ headless control from K3c3 still
+  pins the gate path, so the lift below is pure empower effect):
+
+  | policy   | pure-random win/floor | greedy win/floor | combined wins/200 |
+  |----------|----------------------|------------------|-------------------|
+  | none     | 19% / 5.75           | 18% / 5.58       | 37                |
+  | random   | 33% / 7.04           | 31% / 6.94       | **64**            |
+  | level:hi | 30% / 6.88           | 28% / 6.69       | 58                |
+  | level:lo | 34% / 7.11           | 30% / 6.82       | **64**            |
+
+  Conclusions: (1) **empower is a BAND-MOVING lever** — +21…+27 wins/200 (σ≈5.7 at p≈0.2 → ~4σ) and
+  +1.1…+1.4 avg floors on BOTH strategies, an order bigger than redraw's best (+6/100 ≈ 1.5σ). The
+  free-every-turn stacking default (+12 team stats per 3-turn encounter, compounding) is generous —
+  exactly the K-buff shift the K2/K3.5 notes predicted; **N2 re-sweeps against it** (the magnitude /
+  cadence knobs are config-only data: `config/empower.json` mods, `empowersPerTurn`, or L gating it
+  behind a daemon). (2) **WHICH card barely matters at the shipped buff**: random ≡ level:lo (64) ≳
+  level:hi (58, within ~1σ) — the value is the stats themselves, not the targeting, so a tuned scored
+  empower search is NOT justified yet (the scored kind ships for the L-era anyway; `scored{level:1}` ≡
+  `level:hi` is pinned by unit test). Weak evidence that stacking the carry is the WORST naive pick
+  (overkill saturation — the carry already wins its fights); spreading via `lo`/`random` edges it out.
+  (3) The ~1 hang/100 procedural/spiralFireLife/labyrinth tail persists from the K3.5 read at every
+  policy — unchanged by empower; still an N2 watch item.

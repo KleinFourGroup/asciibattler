@@ -31,6 +31,8 @@ import { decideObjectiveCommand } from './objectiveStrategy';
 import type { ObjectiveProclivity } from './objectiveStrategy';
 import { selectRedrawPositions } from './redrawPolicy';
 import type { RedrawPolicy } from './redrawPolicy';
+import { selectEmpowerPosition } from './empowerPolicy';
+import type { EmpowerPolicy } from './empowerPolicy';
 import { TelemetryAccumulator } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 
@@ -131,6 +133,17 @@ export interface HarnessOptions {
    * `level:0` gates-on control test.
    */
   readonly redraw?: RedrawPolicy;
+  /**
+   * K4c3 — the empower policy the bot drives the pre-turn empower with.
+   * Same contract as `redraw`: undefined / `{ kind: 'none' }` (the default)
+   * keeps the turn gates OFF and is byte-identical to the pre-K4c3 path. A
+   * live policy flips `run.pauseAtTurnGates` ON; at each `turn-intro` the bot
+   * empowers AFTER the redraw policy resolves (buff the FINAL hand — the
+   * sensible play order, matching the UI flow), asking the selector until the
+   * budget runs dry (covers an L-era raised budget; with the stacking `add`
+   * merge, repeat picks of the same card stack).
+   */
+  readonly empower?: EmpowerPolicy;
 }
 
 // 150s of game time. Authored in seconds and converted via the
@@ -169,6 +182,19 @@ export function runOne(
   const redraw = options.redraw;
   const redrawActive = redraw !== undefined && redraw.kind !== 'none';
   const redrawRng = redrawActive ? new RNG(seed).fork() : null;
+  // K4c3 — and for the empower bot. Its stream is the SECOND fork off a fresh
+  // seed-RNG so it stays independent of the redraw stream (the first fork —
+  // two `new RNG(seed).fork()` calls would yield the SAME sequence) without
+  // perturbing the K3c3 redraw stream's derivation. Only `random` draws.
+  const empower = options.empower;
+  const empowerActive = empower !== undefined && empower.kind !== 'none';
+  const empowerRng = empowerActive
+    ? (() => {
+        const base = new RNG(seed);
+        base.fork(); // skip the redraw bot's stream
+        return base.fork();
+      })()
+    : null;
 
   const bus = new EventBus<GameEvents>();
   const battles: BattleResult[] = [];
@@ -270,9 +296,10 @@ export function runOne(
   });
 
   const run = new Run(options.runConfig?.seed ?? seed, bus, options.runConfig);
-  // K3c3 — a live redraw policy needs the turn gates: `redrawCards` is only
-  // legal in `turn-intro`, which exists only when `pauseAtTurnGates` is on.
-  if (redrawActive) run.pauseAtTurnGates = true;
+  // K3c3/K4c3 — a live redraw OR empower policy needs the turn gates: the
+  // `redrawCards`/`empowerUnit` commands are only legal in `turn-intro`,
+  // which exists only when `pauseAtTurnGates` is on.
+  if (redrawActive || empowerActive) run.pauseAtTurnGates = true;
 
   let hops = 0;
   let totalTicks = 0;
@@ -316,6 +343,18 @@ export function runOne(
             const before = run.cardsRedrawnThisTurn;
             run.dispatch({ kind: 'redrawCards', handIndices: positions });
             if (run.cardsRedrawnThisTurn === before) break; // rejected — never spin
+          }
+        }
+        // K4c3 — empower AFTER redraw (buff the FINAL hand). Same ask-until-
+        // null loop + no-progress guard shape as the redraw policy above.
+        if (empower && empowerRng) {
+          for (;;) {
+            const hand = run.hand.map((i) => run.team[i]!);
+            const pos = selectEmpowerPosition(hand, run.empowerAvailability, empower, empowerRng);
+            if (pos === null) break;
+            const before = run.empowersUsedThisTurn;
+            run.dispatch({ kind: 'empowerUnit', handIndex: pos });
+            if (run.empowersUsedThisTurn === before) break; // rejected — never spin
           }
         }
         run.dispatch({ kind: 'advanceTurn' });

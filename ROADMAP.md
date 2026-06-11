@@ -807,23 +807,49 @@ planned (the K-mechanic buffs were always going to move it).
 
 ### K4 — Empower mechanic
 
-**Shape (brief):** at the start of a turn, the player **selects a drawn unit
-and empowers it with a buff** — **not hard-coded** (a `config`-defined buff,
-applied via the K1 status system), optional, daemon-gated (static default
-here). The buff "lasts until the end of the battle [encounter]" in the brief's
-example, so it's an encounter-lifetime status effect.
+**✅ DONE (2026-06-11, three commits) → PHASE K COMPLETE — see
+[HANDOFF.md](HANDOFF.md) + [BALANCE.md](BALANCE.md) (K4c3 entry).** Design
+round locked four calls, all on the recommended path: **unit-only pick** (the
+command is `empowerUnit { handIndex }`; the ACTIVE buff comes from config —
+exactly the L-daemon shape, where the daemon supplies the buff), **universal
+offense default** (+4 STR / +4 RNG / +4 MAG in one `empowered` effect — each
+archetype only reads its own damage stat, so no dead picks), **stacking**
+(merge `add`: re-empowering magnitude 2 → +8, the invest-in-a-carry model),
+**full K3c3-mirror fuzz policy**.
 
-**Cost:** a pre-turn input + a `config` buff catalog; rides K1. Fuzz: an
-empower policy (which unit to buff) + proof.
+- **Commit 1 — the Run-side mechanic (headless).** `config/empower.json`
+  (`enabled` / `empowersPerTurn 1` / the buff) + pure rules in
+  [empower.ts](src/run/empower.ts) (config-injected, both budget modes
+  provable); the `empowerUnit` RunCommand at the `turn-intro` gate →
+  `addEncounterEffect` (the K1 store — live the turn it's granted, survives
+  redraw-away/benching); `turn:starting` gains `empower` availability + the
+  `empowerMagnitudes` badge column, new `turn:unitEmpowered` event;
+  **RunSnapshot v14→v15** (the per-turn counter). 867 tests (+19).
+- **Commit 2 — the PreTurnScreen UI.** Empower shares the K3 card selection
+  (exactly-one selected enables **Empower ▲**); per-stack `▲` badge; the hint
+  derives from `EMPOWER.buff.mods` (never hardcoded); events-only refresh.
+  Browser-verified end-to-end (live World unit folded str 9→13).
+- **Commit 3 — the fuzz empower policy + proof.**
+  [empowerPolicy.ts](tests/fuzz/empowerPolicy.ts) `none | random | level:hi |
+  level:lo | scored` (argmax — empower is free, so the only decision is WHICH
+  card; `scored{level:1} ≡ level:hi` pinned by test), `--empower` on
+  run/search/sweep + ShardJob, `none ≡ absent` byte-identical pin, the empower
+  bot runs AFTER the redraw bot at the gate. **Proof (BALANCE.md K4c3):
+  empower is a BAND-MOVING lever** — +21…+27 wins/200 (~4σ) and +1.1…+1.4 avg
+  floors on both strategies, an order beyond redraw — and **targeting-
+  insensitive** (random ≡ level:lo ≳ level:hi; the stats are the value, not
+  the pick; weak evidence carry-stacking saturates). N2 re-sweeps the band
+  against it (magnitude/cadence are config data; L can gate it).
 
-**Headless tests:** empower applies the configured buff to the chosen unit via
-the status system; it persists for the configured lifetime; it's a no-op when
-not available; determinism.
+**Deferred (logged):** the empowered unit should **stand out more in the UI**
+(user playtest call — the card badge is subtle, and the in-battle unit has no
+indicator at all). Natural home: the **L/M status-VFX + presentation pass**
+(L mints more status effects via daemons; a generic "this unit is buffed"
+treatment lands once, there).
 
-**Decision points K3/K4:** the redraw cap + default availability; the empower
-buff catalog (which buffs exist) + default availability; **the fuzz strategies
-for both** (the brief notes it has "no clear ideas yet" — a design point, can
-start minimal: a threshold policy like H6b's `pass:weak`).
+**Decision points K3/K4 (resolved):** redraw = one batch/turn + cap 6 (K3);
+empower = single config buff, 1/turn, every turn (K4); fuzz = scored-vs-pool-
+mean for redraw (K3c3), argmax menu for empower (K4c3).
 
 ---
 

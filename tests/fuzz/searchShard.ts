@@ -27,13 +27,15 @@ import type { ScoredWeights } from './strategies/scoredWeights';
 import type { RosterEntry } from '../../src/run/RunConfig';
 import type { ObjectiveProclivity } from './objectiveStrategy';
 import type { RedrawPolicy } from './redrawPolicy';
+import type { EmpowerPolicy } from './empowerPolicy';
 
 /** The job handed to one `--eval-shard` child (written as JSON to a temp file).
  *  `knobs` are the grid point's config overrides (empty `{}` means no override);
  *  `floorCount` is the already-resolved run length (tier default or `--floors`).
- *  `objective` (J4) / `redraw` (K3c3) are the fixed objective proclivity /
- *  redraw policy the child's runs drive, or undefined for none — plain JSON
- *  objects, so they round-trip the temp file. */
+ *  `objective` (J4) / `redraw` (K3c3) / `empower` (K4c3) are the fixed
+ *  objective proclivity / redraw policy / empower policy the child's runs
+ *  drive, or undefined for none — plain JSON objects, so they round-trip the
+ *  temp file. */
 export interface ShardJob {
   readonly knobs: Record<string, number>;
   readonly vectors: readonly ScoredWeights[];
@@ -42,6 +44,7 @@ export interface ShardJob {
   readonly roster?: readonly RosterEntry[];
   readonly objective?: ObjectiveProclivity;
   readonly redraw?: RedrawPolicy;
+  readonly empower?: EmpowerPolicy;
 }
 
 /**
@@ -113,6 +116,8 @@ export interface ShardedEvalParams {
   readonly objective?: ObjectiveProclivity;
   /** K3c3 — the fixed redraw policy the children's runs drive (or none). */
   readonly redraw?: RedrawPolicy;
+  /** K4c3 — the fixed empower policy the children's runs drive (or none). */
+  readonly empower?: EmpowerPolicy;
   readonly jobs: number;
   /** Scratch dir for the per-chunk job/result JSON; created + removed here. */
   readonly tmpDir: string;
@@ -124,11 +129,11 @@ export interface ShardedEvalParams {
  * Rejects if any child fails (its stderr is surfaced in the error).
  */
 export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise<number[]> {
-  const { vectors, seeds, knobs, floorCount, roster, objective, redraw, jobs, tmpDir } = params;
+  const { vectors, seeds, knobs, floorCount, roster, objective, redraw, empower, jobs, tmpDir } = params;
   const chunks = chunkVectors(vectors, jobs);
   mkdirSync(tmpDir, { recursive: true });
   try {
-    const base: Omit<ShardJob, 'vectors'> = { knobs, seeds, floorCount, roster, objective, redraw };
+    const base: Omit<ShardJob, 'vectors'> = { knobs, seeds, floorCount, roster, objective, redraw, empower };
     const perChunk = await Promise.all(
       chunks.map((chunk, i) => runChunk(chunk, i, base, tmpDir)),
     );

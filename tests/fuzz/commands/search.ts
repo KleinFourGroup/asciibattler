@@ -30,8 +30,9 @@ import {
 import { evaluateVectorsSharded } from '../searchShard';
 import { proclivityLabel } from '../objectiveStrategy';
 import { redrawPolicyLabel } from '../redrawPolicy';
+import { empowerPolicyLabel } from '../empowerPolicy';
 import { parseRunConfig } from '../../../src/run/RunConfig';
-import { bail, objectiveFromArgs, redrawFromArgs, type CliArgs } from './args';
+import { bail, empowerFromArgs, objectiveFromArgs, redrawFromArgs, type CliArgs } from './args';
 
 export type SearchModeArgs = Pick<
   CliArgs,
@@ -44,6 +45,7 @@ export type SearchModeArgs = Pick<
   | 'roster'
   | 'objective'
   | 'redraw'
+  | 'empower'
   | 'outDir'
 >;
 
@@ -75,9 +77,11 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const runConfig = parseRunConfig(searchParams);
   const objective = objectiveFromArgs(args);
   const redraw = redrawFromArgs(args);
+  const empower = empowerFromArgs(args);
   let harnessOptions: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
   if (objective) harnessOptions = { ...harnessOptions, objective };
   if (redraw) harnessOptions = { ...harnessOptions, redraw };
+  if (empower) harnessOptions = { ...harnessOptions, empower };
 
   const floorNote = floorCount !== undefined ? ` floors=${floorCount}` : ' floors=full';
   const rosterNote = runConfig.startingRoster
@@ -86,8 +90,9 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
   const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
   const redrawNote = redraw ? ` redraw=${redrawPolicyLabel(redraw)}` : '';
+  const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${jobsNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${empowerNote}${jobsNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -107,6 +112,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       roster: runConfig.startingRoster,
       objective,
       redraw,
+      empower,
       jobs,
       tmpDir: join(args.outDir, 'shard-tmp'),
     });

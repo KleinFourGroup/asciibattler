@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { Run } from './Run';
 import { fatigueEffect, FATIGUE_KEY } from './fatigue';
-import { foldEffects, type StatusEffect } from '../sim/statusEffects';
+import { foldEffects, combineMagnitude, type StatusEffect } from '../sim/statusEffects';
 import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import type { GameEvents } from '../core/events';
@@ -13,6 +13,7 @@ import { DIFFICULTY } from '../config/difficulty';
 import { RECRUITMENT } from '../config/recruitment';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
+import { EMPOWER } from '../config/empower';
 import { avgTeamLevel, enemyBudgetFor } from './enemyBudget';
 import type { RunConfig } from './RunConfig';
 
@@ -913,6 +914,168 @@ describe('Run', () => {
       expect(restored.cardsRedrawnThisTurn).toBe(run.cardsRedrawnThisTurn);
       expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
       // (The pre-K3 v12 reject rides the generic `schemaVersion - 1` test.)
+    });
+  });
+
+  describe('empower at the pre-turn gate (K4)', () => {
+    it('adds the configured buff to the slot store; the fielded unit carries it that turn', () => {
+      const { run } = gatedToFirstTurnIntro(1);
+      const pos = 2;
+      const slot = run.hand[pos]!;
+      run.dispatch({ kind: 'empowerUnit', handIndex: pos });
+      const stored = run.encounterEffects[slot]!;
+      expect(stored).toHaveLength(1);
+      expect(stored[0]).toEqual({
+        key: EMPOWER.buff.key,
+        magnitude: 1,
+        mods: EMPOWER.buff.mods,
+        lifetime: { kind: 'endOfTurn' },
+        merge: EMPOWER.buff.merge,
+      });
+      run.dispatch({ kind: 'advanceTurn' }); // → battle, beginTurn seeds the buff
+      const fielded = run.currentEncounter!.playerTeam.find((t) => t.rosterIndex === slot)!;
+      const seeded = fielded.effects!.find((e) => e.key === EMPOWER.buff.key)!;
+      expect(seeded.mods).toEqual(EMPOWER.buff.mods);
+      // End-to-end: the fold yields the config buff on every modified stat
+      // (expectation derived from the config mods, not hardcoded numbers).
+      const folded = foldEffects(fielded.stats, fielded.effects!);
+      for (const [stat, mod] of Object.entries(EMPOWER.buff.mods)) {
+        const key = stat as keyof typeof fielded.stats;
+        const expected = Math.round((fielded.stats[key] + (mod.add ?? 0)) * (mod.mul ?? 1));
+        expect(folded[key]).toBe(expected);
+      }
+    });
+
+    it('consumes the budget; a request past the dial is a silent no-op', () => {
+      const { run, bus } = gatedToFirstTurnIntro(2);
+      let emits = 0;
+      bus.on('turn:unitEmpowered', () => emits++);
+      // Burn the budget, bound derived from config.
+      for (let i = 0; i < EMPOWER.empowersPerTurn; i++) {
+        run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      }
+      expect(run.empowersUsedThisTurn).toBe(EMPOWER.empowersPerTurn);
+      expect(emits).toBe(EMPOWER.empowersPerTurn);
+      const stored = run.encounterEffects[run.hand[0]!]!.map((e) => ({ ...e }));
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      expect(run.empowersUsedThisTurn).toBe(EMPOWER.empowersPerTurn);
+      expect(emits).toBe(EMPOWER.empowersPerTurn);
+      expect(run.encounterEffects[run.hand[0]!]).toMatchObject(stored);
+    });
+
+    it('a rejected request consumes no budget, mutates nothing, emits nothing', () => {
+      const { run, bus } = gatedToFirstTurnIntro(3);
+      let emits = 0;
+      bus.on('turn:unitEmpowered', () => emits++);
+      run.dispatch({ kind: 'empowerUnit', handIndex: run.hand.length }); // range
+      run.dispatch({ kind: 'empowerUnit', handIndex: -1 }); // negative
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0.5 }); // non-integer
+      expect(run.empowersUsedThisTurn).toBe(0);
+      expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
+      expect(emits).toBe(0);
+    });
+
+    it('is a no-op outside the pre-turn gate (map phase, headless battle)', () => {
+      const { run } = freshRunWithBus(4);
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0 }); // map
+      expect(run.empowersUsedThisTurn).toBe(0);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // gates off → battle
+      expect(run.phase).toBe('battle');
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      expect(run.empowersUsedThisTurn).toBe(0);
+      expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
+    });
+
+    it('the budget resets next turn; re-empowering the same unit merges per the config policy', () => {
+      // Short roster (≤ handSize) so the SAME unit is in hand every turn —
+      // the stacking path needs a deterministic re-pick across turns.
+      const { run, bus } = freshShortRosterRun(5);
+      run.pauseAtTurnGates = true;
+      const startings: GameEvents['turn:starting'][] = [];
+      bus.on('turn:starting', (p) => startings.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      const slot = run.hand[0]!;
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      run.dispatch({ kind: 'advanceTurn' }); // → battle
+      chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
+      run.dispatch({ kind: 'advanceTurn' }); // → next turn's gate
+      expect(run.phase).toBe('turn-intro');
+      expect(run.empowersUsedThisTurn).toBe(0);
+      // The turn-2 pre-turn payload already badges the carried buff (the
+      // "empowered on an earlier turn, drawn back" pin).
+      const pos2 = run.hand.indexOf(slot);
+      expect(pos2).toBeGreaterThanOrEqual(0); // short roster: always in hand
+      expect(startings[1]!.empowerMagnitudes[pos2]).toBe(1);
+      run.dispatch({ kind: 'empowerUnit', handIndex: pos2 });
+      const stored = run.encounterEffects[slot]!;
+      expect(stored).toHaveLength(1);
+      // Expectation derived from the config merge policy (K1 magnitude math).
+      expect(stored[0]!.magnitude).toBe(combineMagnitude(EMPOWER.buff.merge, 1, 1));
+    });
+
+    it('the buff lives on the SLOT: it survives the card being redrawn away', () => {
+      const { run, bus } = gatedToFirstTurnIntro(6);
+      expect(run.drawPile.length).toBeGreaterThan(0); // replacement ≠ benched below
+      const redrawns: GameEvents['turn:handRedrawn'][] = [];
+      bus.on('turn:handRedrawn', (p) => redrawns.push(p));
+      const benched = run.hand[0]!;
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      expect(run.hand[0]).not.toBe(benched);
+      // The store keeps the buff; the badge column re-derived for the NEW hand.
+      expect(run.encounterEffects[benched]!.some((e) => e.key === EMPOWER.buff.key)).toBe(true);
+      expect(redrawns[0]!.empowerMagnitudes[0]).toBe(0);
+      run.dispatch({ kind: 'advanceTurn' }); // beginTurn fields the FINAL hand
+      expect(run.currentEncounter!.playerTeam.some((t) => t.rosterIndex === benched)).toBe(false);
+      expect(run.encounterEffects[benched]!.some((e) => e.key === EMPOWER.buff.key)).toBe(true);
+    });
+
+    it('turn:starting carries the fresh availability; turn:unitEmpowered the decrement + badge column', () => {
+      const { run, bus } = freshRunWithBus(7);
+      run.pauseAtTurnGates = true;
+      const startings: GameEvents['turn:starting'][] = [];
+      const empowereds: GameEvents['turn:unitEmpowered'][] = [];
+      bus.on('turn:starting', (p) => startings.push(p));
+      bus.on('turn:unitEmpowered', (p) => empowereds.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      // Fresh budget straight off the config dial (0 if disabled).
+      expect(startings[0]!.empower).toEqual({
+        empowersRemaining: EMPOWER.enabled ? EMPOWER.empowersPerTurn : 0,
+      });
+      expect(startings[0]!.empowerMagnitudes).toEqual(run.hand.map(() => 0));
+      run.dispatch({ kind: 'empowerUnit', handIndex: 1 });
+      expect(empowereds).toHaveLength(1);
+      expect(empowereds[0]!.handIndex).toBe(1);
+      expect(empowereds[0]!.empower).toEqual(run.empowerAvailability);
+      expect(empowereds[0]!.empower.empowersRemaining).toBe(EMPOWER.empowersPerTurn - 1);
+      expect(empowereds[0]!.empowerMagnitudes).toEqual(
+        run.hand.map((_, i) => (i === 1 ? 1 : 0)),
+      );
+    });
+
+    it('same seed + same empower dispatches stay byte-identical', () => {
+      const a = gatedToFirstTurnIntro(8);
+      const b = gatedToFirstTurnIntro(8);
+      for (const { run } of [a, b]) {
+        run.dispatch({ kind: 'empowerUnit', handIndex: 3 });
+        run.dispatch({ kind: 'advanceTurn' });
+      }
+      expect(JSON.parse(JSON.stringify(a.run.toJSON()))).toEqual(
+        JSON.parse(JSON.stringify(b.run.toJSON())),
+      );
+    });
+
+    it('round-trips the empower counter (a save at the gate must not refresh the budget)', () => {
+      const { run } = gatedToFirstTurnIntro(9);
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.phase).toBe('turn-intro');
+      expect(restored.empowersUsedThisTurn).toBe(run.empowersUsedThisTurn);
+      expect(restored.empowerAvailability).toEqual(run.empowerAvailability);
+      // The buff itself rides the K1 v12 `encounterEffects` round-trip.
+      expect(restored.encounterEffects).toEqual(run.encounterEffects);
+      // (The pre-K4 v14 reject rides the generic `schemaVersion - 1` test.)
     });
   });
 

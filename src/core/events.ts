@@ -18,6 +18,7 @@ import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
 import type { BattleObjective } from '../sim/objective';
 import type { RedrawAvailability } from '../run/redraw';
+import type { EmpowerAvailability } from '../run/empower';
 import type { Theme } from '../sim/layouts';
 
 export interface GameEvents extends Record<string, unknown> {
@@ -259,6 +260,11 @@ export interface GameEvents extends Record<string, unknown> {
    * is made knowing the field. Inline structural shape rather than the Run
    * `EncounterMap` type to keep core → run imports type-light (the terrain
    * seed is deliberately omitted — presentation needs name/size/theme only).
+   *
+   * K4 — also carries `empower` (this turn's empower availability) +
+   * `empowerMagnitudes` (parallel to `hand`: each card's accumulated empower
+   * stack on its roster slot, 0 = unbuffed), so the screen can badge a card
+   * that was empowered on an EARLIER turn of the encounter and drawn back.
    */
   'turn:starting': {
     turn: number; // 1-based, within the current encounter
@@ -269,6 +275,9 @@ export interface GameEvents extends Record<string, unknown> {
     enemyHealthMax: number;
     hand: UnitTemplate[];
     redraw: RedrawAvailability;
+    empower: EmpowerAvailability;
+    /** K4 — per-hand-position empower stacks (0 = none), see `turn:starting`. */
+    empowerMagnitudes: number[];
     map: {
       layoutId: string | null;
       gridW: number;
@@ -284,10 +293,29 @@ export interface GameEvents extends Record<string, unknown> {
    * plus the decremented redraw availability, so the pre-turn screen swaps
    * its card row + control state in place. Only ever fires during
    * `turn-intro` (the command is phase-gated), i.e. only on the live path.
+   *
+   * K4 — also carries `empowerMagnitudes` (the K4 badge column, parallel to
+   * the NEW hand): a refill can seat an already-empowered card, and the old
+   * positions no longer line up after a redraw.
    */
   'turn:handRedrawn': {
     hand: UnitTemplate[];
     redraw: RedrawAvailability;
+    empowerMagnitudes: number[];
+  };
+
+  /**
+   * K4 — an `empowerUnit` command landed at the pre-turn gate: the selected
+   * card's roster slot gained the configured buff for the rest of the
+   * encounter. Carries the decremented availability + the full per-hand
+   * stack column (`empowerMagnitudes`, parallel to the unchanged hand) so
+   * the pre-turn screen updates its badge + control state in place. Only
+   * ever fires during `turn-intro` (the command is phase-gated).
+   */
+  'turn:unitEmpowered': {
+    handIndex: number;
+    empower: EmpowerAvailability;
+    empowerMagnitudes: number[];
   };
 
   /**

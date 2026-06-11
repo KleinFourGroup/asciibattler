@@ -44,6 +44,12 @@ import {
   redrawRejection,
   type RedrawAvailability,
 } from './redraw';
+import {
+  empowerAvailability,
+  empowerRejection,
+  empowerEffect,
+  type EmpowerAvailability,
+} from './empower';
 import { cloneEffect, mergeEffectInto, type StatusEffect } from '../sim/statusEffects';
 import { TriggerDispatcher } from '../sim/triggers';
 import type { RunCommand } from './Command';
@@ -51,6 +57,7 @@ import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
+import { EMPOWER } from '../config/empower';
 import { LAYOUT_IDS, THEMES, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { xpToNext } from '../sim/xp';
@@ -161,8 +168,13 @@ export interface BattleEncounter {
  *  layout/size/terrain/theme rolled once at encounter start, no longer
  *  re-rolled per turn). It's mid-encounter state that is NOT re-derivable per
  *  turn anymore, so a v13 save → reject rather than rehydrate an encounter
- *  that would re-roll its map. */
-const RUN_SCHEMA_VERSION = 14;
+ *  that would re-roll its map.
+ *  K4: bumped 14→15. Adds `empowersUsedThisTurn` (the per-turn empower budget
+ *  bookkeeping, the redraw-counter analogue). A v14 save has no counter →
+ *  reject rather than rehydrate a pre-turn gate whose empower budget silently
+ *  refreshed. (The buff itself rides the v12 `encounterEffects` store — no
+ *  shape change there.) */
+const RUN_SCHEMA_VERSION = 15;
 
 /**
  * K3.5 — the encounter's battlefield, rolled ONCE in `beginEncounter` (the
@@ -212,6 +224,9 @@ export interface RunSnapshot {
   redrawsUsedThisTurn: number;
   /** K3: total cards redrawn this turn (vs `DECK.redraw.maxCardsPerTurn`). */
   cardsRedrawnThisTurn: number;
+  /** K4: empower actions taken this turn (vs `EMPOWER.empowersPerTurn`).
+   *  Reset at every turn start; meaningful only at the pre-turn gate. */
+  empowersUsedThisTurn: number;
   /** H4: the run-wide player health pool (persists across the whole run). */
   playerHealth: number;
   /** H4: the active encounter's enemy pool (reset each encounter). */
@@ -328,6 +343,13 @@ export class Run {
   redrawsUsedThisTurn: number;
   cardsRedrawnThisTurn: number;
   /**
+   * K4 — per-turn empower bookkeeping: actions taken this turn, checked
+   * against `EMPOWER.empowersPerTurn` by `handleEmpowerUnit`. Same lifecycle
+   * as the K3 redraw counters (reset in `startNextTurn` before the
+   * `turn:starting` emit; round-trips in the Run save, v15).
+   */
+  empowersUsedThisTurn: number;
+  /**
    * H4 — the run-wide player health pool. Persists across the WHOLE run (every
    * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
    * lost. Each turn it's chipped by the enemy survivors' Σ`power`. Init +
@@ -433,6 +455,8 @@ export class Run {
     // K3 — redraw budget bookkeeping; meaningful only at a pre-turn gate.
     this.redrawsUsedThisTurn = 0;
     this.cardsRedrawnThisTurn = 0;
+    // K4 — empower budget bookkeeping; same lifecycle.
+    this.empowersUsedThisTurn = 0;
     // H4 — the run-wide player pool starts full; the per-encounter state
     // (enemyHealth/turnIndex/encounterBudget/pendingEncounterXp) is set when an
     // encounter actually begins (`beginEncounter`).
@@ -503,6 +527,9 @@ export class Run {
         break;
       case 'redrawCards':
         this.handleRedrawCards(command.handIndices);
+        break;
+      case 'empowerUnit':
+        this.handleEmpowerUnit(command.handIndex);
         break;
       case 'resetRun':
         // No-op at this layer — Game handles reset by disposing this Run
@@ -625,9 +652,11 @@ export class Run {
   private startNextTurn(): void {
     this.drawTurnHand();
     // K3 — a fresh redraw budget every turn, reset BEFORE the `turn:starting`
-    // emit below so its payload reads full availability.
+    // emit below so its payload reads full availability. K4's empower budget
+    // resets on the same schedule.
     this.redrawsUsedThisTurn = 0;
     this.cardsRedrawnThisTurn = 0;
+    this.empowersUsedThisTurn = 0;
     // K1 — `turnStart` fires before the turn's battle is built (on both the
     // gated + headless paths), so a daemon's encounter effect added here is
     // seeded onto this turn's hand in `beginTurn`. No-op at the default.
@@ -645,6 +674,8 @@ export class Run {
         enemyHealthMax: HEALTH.enemyHealthMax,
         hand: this.hand.map((idx) => this.team[idx]!),
         redraw: this.redrawAvailability,
+        empower: this.empowerAvailability,
+        empowerMagnitudes: this.empowerMagnitudes(),
         map: { layoutId, gridW, gridH, theme },
       });
     } else {
@@ -923,6 +954,63 @@ export class Run {
     this.bus.emit('turn:handRedrawn', {
       hand: this.hand.map((idx) => this.team[idx]!),
       redraw: this.redrawAvailability,
+      // K4 — the refill may seat an already-empowered card (and the old
+      // positions no longer line up), so the badge column re-derives here.
+      empowerMagnitudes: this.empowerMagnitudes(),
+    });
+  }
+
+  /**
+   * K4 — this turn's remaining empower budget, the shape the pre-turn screen
+   * renders. 0 when `EMPOWER.enabled` is off.
+   */
+  get empowerAvailability(): EmpowerAvailability {
+    return empowerAvailability({ empowersUsed: this.empowersUsedThisTurn }, EMPOWER);
+  }
+
+  /**
+   * K4 — the per-hand-position empower stack column (parallel to `hand`,
+   * 0 = unbuffed): each card's accumulated `EMPOWER.buff.key` magnitude on
+   * its roster slot's encounter store. Derived (never stored) so it stays
+   * correct across redraws and re-draws of an earlier turn's empowered card.
+   */
+  private empowerMagnitudes(): number[] {
+    return this.hand.map((idx) => {
+      const effect = this.encounterEffects[idx]?.find((e) => e.key === EMPOWER.buff.key);
+      return effect?.magnitude ?? 0;
+    });
+  }
+
+  /**
+   * K4 — empower one drawn card at the pre-turn gate (the `empowerUnit`
+   * command): its roster slot gains the configured `EMPOWER.buff` in the K1
+   * encounter-effect store, so the buff lasts the rest of the ENCOUNTER
+   * (re-seeded onto the unit each turn at deploy — `beginTurn` runs after
+   * this gate, so the buff is live on the very turn it's granted). The store
+   * merges by key per the buff's policy: at the shipped `merge: "add"`,
+   * re-empowering the same unit on a later turn STACKS (magnitude 2 → double
+   * the mods). It lands on the SLOT, not the fielded copy, so it survives
+   * the card being redrawn away or benched on later turns.
+   *
+   * Validation (phase aside) lives in the pure `empowerRejection`; any
+   * reject is a silent no-op that consumes no budget (mirrors
+   * `handleRedrawCards`).
+   */
+  private handleEmpowerUnit(handIndex: number): void {
+    if (this.phase !== 'turn-intro') return;
+    const rejection = empowerRejection(
+      handIndex,
+      this.hand.length,
+      { empowersUsed: this.empowersUsedThisTurn },
+      EMPOWER,
+    );
+    if (rejection !== null) return;
+    this.addEncounterEffect(this.hand[handIndex]!, empowerEffect(EMPOWER));
+    this.empowersUsedThisTurn += 1;
+    this.bus.emit('turn:unitEmpowered', {
+      handIndex,
+      empower: this.empowerAvailability,
+      empowerMagnitudes: this.empowerMagnitudes(),
     });
   }
 
@@ -1243,6 +1331,7 @@ export class Run {
       hand: this.hand.slice(),
       redrawsUsedThisTurn: this.redrawsUsedThisTurn,
       cardsRedrawnThisTurn: this.cardsRedrawnThisTurn,
+      empowersUsedThisTurn: this.empowersUsedThisTurn,
       playerHealth: this.playerHealth,
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
@@ -1298,6 +1387,7 @@ export class Run {
     m.hand = snap.hand.slice();
     m.redrawsUsedThisTurn = snap.redrawsUsedThisTurn;
     m.cardsRedrawnThisTurn = snap.cardsRedrawnThisTurn;
+    m.empowersUsedThisTurn = snap.empowersUsedThisTurn;
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;

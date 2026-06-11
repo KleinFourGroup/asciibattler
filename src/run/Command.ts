@@ -52,6 +52,17 @@ export type RunCommand =
    * `turn:handRedrawn`.
    */
   | { readonly kind: 'redrawCards'; readonly handIndices: readonly number[] }
+  /**
+   * K4 — empower one drawn card at the pre-turn gate: its roster slot gains
+   * the configured `EMPOWER.buff` for the rest of the ENCOUNTER (the K1
+   * encounter-effect store — re-seeded onto the unit each turn at deploy, so
+   * it survives being redrawn away or benched). `handIndex` is a position
+   * into the current hand (not a roster index), same contract as
+   * `redrawCards`. Only valid in `turn-intro` within the `empowersPerTurn`
+   * budget — anything else is a silent no-op that consumes no budget. Emits
+   * `turn:unitEmpowered`.
+   */
+  | { readonly kind: 'empowerUnit'; readonly handIndex: number }
   | { readonly kind: 'resetRun' };
 
 export interface RunDispatcher {

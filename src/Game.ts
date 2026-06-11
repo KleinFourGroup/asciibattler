@@ -237,6 +237,11 @@ export class Game implements RunDispatcher {
         // `turn:handRedrawn` emit), so there's no scene swap here either.
         this.run.dispatch(command);
         break;
+      case 'empowerUnit':
+        // K4 — empower at the pre-turn gate. Same in-place pattern as
+        // redrawCards: the screen refreshes off `turn:unitEmpowered`.
+        this.run.dispatch(command);
+        break;
       case 'resetRun':
         this.resetRun();
         break;

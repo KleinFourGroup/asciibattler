@@ -29,12 +29,22 @@ import {
 } from '../search';
 import { evaluateVectorsSharded } from '../searchShard';
 import { proclivityLabel } from '../objectiveStrategy';
+import { redrawPolicyLabel } from '../redrawPolicy';
 import { parseRunConfig } from '../../../src/run/RunConfig';
-import { bail, objectiveFromArgs, type CliArgs } from './args';
+import { bail, objectiveFromArgs, redrawFromArgs, type CliArgs } from './args';
 
 export type SearchModeArgs = Pick<
   CliArgs,
-  'preset' | 'vectors' | 'seeds' | 'samplerSeed' | 'jobs' | 'floors' | 'roster' | 'objective' | 'outDir'
+  | 'preset'
+  | 'vectors'
+  | 'seeds'
+  | 'samplerSeed'
+  | 'jobs'
+  | 'floors'
+  | 'roster'
+  | 'objective'
+  | 'redraw'
+  | 'outDir'
 >;
 
 export async function runSearchCli(args: SearchModeArgs): Promise<void> {
@@ -64,8 +74,10 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   if (args.roster) searchParams.set('roster', args.roster);
   const runConfig = parseRunConfig(searchParams);
   const objective = objectiveFromArgs(args);
-  const baseHarness: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
-  const harnessOptions: HarnessOptions = objective ? { ...baseHarness, objective } : baseHarness;
+  const redraw = redrawFromArgs(args);
+  let harnessOptions: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
+  if (objective) harnessOptions = { ...harnessOptions, objective };
+  if (redraw) harnessOptions = { ...harnessOptions, redraw };
 
   const floorNote = floorCount !== undefined ? ` floors=${floorCount}` : ' floors=full';
   const rosterNote = runConfig.startingRoster
@@ -73,8 +85,9 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
     : '';
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
   const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
+  const redrawNote = redraw ? ` redraw=${redrawPolicyLabel(redraw)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${objectiveNote}${jobsNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${jobsNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -93,6 +106,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       floorCount,
       roster: runConfig.startingRoster,
       objective,
+      redraw,
       jobs,
       tmpDir: join(args.outDir, 'shard-tmp'),
     });

@@ -1,0 +1,31 @@
+{
+  "kind": "scored",
+  "weights": {
+    "level": 1,
+    "stats": {
+      "constitution": 0,
+      "strength": 0,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0,
+      "defense": 0,
+      "precision": 0,
+      "evasion": 0,
+      "speed": 0,
+      "mobility": 0,
+      "power": 0
+    },
+    "archetype": {
+      "mercenary": 0,
+      "adventurer": 0,
+      "ronin": 0,
+      "bandit": 0,
+      "ranged": 0,
+      "rogue": 0,
+      "healer": 0,
+      "mage": 0,
+      "catapult": 0
+    }
+  },
+  "threshold": 0
+}

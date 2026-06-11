@@ -29,6 +29,8 @@ import { spawnEncounter } from '../../src/sim/battleSetup';
 import type { FuzzStrategy } from './Strategy';
 import { decideObjectiveCommand } from './objectiveStrategy';
 import type { ObjectiveProclivity } from './objectiveStrategy';
+import { selectRedrawPositions } from './redrawPolicy';
+import type { RedrawPolicy } from './redrawPolicy';
 import { TelemetryAccumulator } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 
@@ -118,6 +120,17 @@ export interface HarnessOptions {
    * objective strategy fixed while it tunes the difficulty / archetype knobs.
    */
   readonly objective?: ObjectiveProclivity;
+  /**
+   * K3c3 — the redraw policy the bot drives the pre-turn redraw with.
+   * Undefined / `{ kind: 'none' }` (the default) keeps the turn gates OFF —
+   * the run is byte-identical to the pre-K3c3 path (existing baselines stay
+   * intact unless `--redraw` opts in). A live policy flips
+   * `run.pauseAtTurnGates` ON (the `redrawCards` command is only legal at the
+   * `turn-intro` gate) and the harness dispatches `advanceTurn` at both gates;
+   * the gated path is RNG-aligned with the headless one (H4b), pinned by the
+   * `level:0` gates-on control test.
+   */
+  readonly redraw?: RedrawPolicy;
 }
 
 // 150s of game time. Authored in seconds and converted via the
@@ -150,6 +163,12 @@ export function runOne(
   // `none`/absent objective forks no RNG + enqueues nothing (byte-identical).
   const objective = options.objective;
   const objectiveActive = objective !== undefined && objective.kind !== 'none';
+  // K3c3 — same contract for the redraw bot: `none`/absent forks no RNG and
+  // leaves the turn gates off. Only the `random` policy ever draws from this
+  // stream (a dedicated fork, so policy draws never perturb the run streams).
+  const redraw = options.redraw;
+  const redrawActive = redraw !== undefined && redraw.kind !== 'none';
+  const redrawRng = redrawActive ? new RNG(seed).fork() : null;
 
   const bus = new EventBus<GameEvents>();
   const battles: BattleResult[] = [];
@@ -251,6 +270,9 @@ export function runOne(
   });
 
   const run = new Run(options.runConfig?.seed ?? seed, bus, options.runConfig);
+  // K3c3 — a live redraw policy needs the turn gates: `redrawCards` is only
+  // legal in `turn-intro`, which exists only when `pauseAtTurnGates` is on.
+  if (redrawActive) run.pauseAtTurnGates = true;
 
   let hops = 0;
   let totalTicks = 0;
@@ -271,6 +293,38 @@ export function runOne(
         const nodeId = strategy.pickNextNode(frontier, run, strategyRng);
         run.dispatch({ kind: 'enterNode', nodeId });
         hops++;
+        break;
+      }
+      case 'turn-intro': {
+        // K3c3 — the pre-turn gate (only entered with a live redraw policy).
+        // Policy loop: keep deciding while the budget allows and the policy
+        // tosses, so ONE policy covers both the shipped one-batch mode and the
+        // L-era "N actions" mode. The no-progress guard (a silently-rejected
+        // dispatch changes no counter) bounds the loop absolutely.
+        if (redraw && redrawRng) {
+          for (;;) {
+            const hand = run.hand.map((i) => run.team[i]!);
+            const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
+            const positions = selectRedrawPositions(
+              hand,
+              pool,
+              run.redrawAvailability,
+              redraw,
+              redrawRng,
+            );
+            if (positions.length === 0) break;
+            const before = run.cardsRedrawnThisTurn;
+            run.dispatch({ kind: 'redrawCards', handIndices: positions });
+            if (run.cardsRedrawnThisTurn === before) break; // rejected — never spin
+          }
+        }
+        run.dispatch({ kind: 'advanceTurn' });
+        break;
+      }
+      case 'turn-outcome': {
+        // K3c3 — the post-turn gate: nothing to decide, just resume (the live
+        // game's outcome screen has its own timer; the bot doesn't linger).
+        run.dispatch({ kind: 'advanceTurn' });
         break;
       }
       case 'battle': {

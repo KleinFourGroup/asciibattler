@@ -32,11 +32,19 @@ import {
   renderLayoutCsv,
   renderLayoutFloorCsv,
 } from '../reporters';
-import { bail, objectiveFromArgs, range, type CliArgs } from './args';
+import { bail, objectiveFromArgs, redrawFromArgs, range, type CliArgs } from './args';
 
 export type RunModeArgs = Pick<
   CliArgs,
-  'count' | 'seed' | 'strategy' | 'outDir' | 'perFloor' | 'perLayout' | 'layout' | 'objective'
+  | 'count'
+  | 'seed'
+  | 'strategy'
+  | 'outDir'
+  | 'perFloor'
+  | 'perLayout'
+  | 'layout'
+  | 'objective'
+  | 'redraw'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -58,6 +66,10 @@ export function runRunCli(args: RunModeArgs): void {
   // byte-identical to the pre-J4 fuzz path; the baselines stay put).
   const objective = objectiveFromArgs(args);
   if (objective) harnessOptions = { ...harnessOptions, objective };
+  // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =
+  // gates off, byte-identical).
+  const redraw = redrawFromArgs(args);
+  if (redraw) harnessOptions = { ...harnessOptions, redraw };
 
   // Fresh failures/ dir so stale traces from prior runs don't lie. Only the
   // failures subdir is wiped (not the whole output dir) so a search's

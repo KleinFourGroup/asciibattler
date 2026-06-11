@@ -41,6 +41,7 @@ import { evaluateVectorsSharded } from './searchShard';
 import { aggregateTelemetry, type AggregatedTelemetry } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 import type { ObjectiveProclivity } from './objectiveStrategy';
+import type { RedrawPolicy } from './redrawPolicy';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import type { RosterEntry } from '../../src/run/RunConfig';
 import { DIFFICULTY } from '../../src/config/difficulty';
@@ -212,6 +213,12 @@ export interface BalanceSweepConfig {
    * objectives (byte-identical to the pre-J4 sweep).
    */
   readonly objective?: ObjectiveProclivity;
+  /**
+   * K3c3 — hold one redraw policy FIXED across every run at every grid point,
+   * so a difficulty sweep can measure the band with the redraw mechanic in
+   * play. Undefined / none = gates off (byte-identical to the pre-K3c3 sweep).
+   */
+  readonly redraw?: RedrawPolicy;
   /** Stop after this many grid points (the `--dry-run` estimate runs 1). */
   readonly maxPoints?: number;
   /**
@@ -251,19 +258,22 @@ function baselineWin(name: string, seeds: readonly number[], opts: HarnessOption
 
 /** Tier's harness options, with optional floor-count + starting-roster overrides
  *  applied — so the search, baselines, and telemetry re-run all share one run
- *  length, roster, and (J4) objective proclivity. */
+ *  length, roster, (J4) objective proclivity, and (K3c3) redraw policy. */
 function harnessOptionsFor(
   preset: SearchPreset,
   floorOverride?: number,
   roster?: readonly RosterEntry[],
   objective?: ObjectiveProclivity,
+  redraw?: RedrawPolicy,
 ): HarnessOptions {
   const floorCount = floorOverride ?? preset.floorCount;
   const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
   if (floorCount !== undefined) runConfig.floorCount = floorCount;
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
-  const opts: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
-  return objective ? { ...opts, objective } : opts;
+  let opts: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
+  if (objective) opts = { ...opts, objective };
+  if (redraw) opts = { ...opts, redraw };
+  return opts;
 }
 
 /**
@@ -283,6 +293,7 @@ async function defaultMeasurePoint(
     config.floorOverride,
     config.rosterOverride,
     config.objective,
+    config.redraw,
   );
   const jobs = Math.max(1, Math.floor(config.jobs ?? 1));
 
@@ -301,6 +312,7 @@ async function defaultMeasurePoint(
       floorCount: config.floorOverride ?? preset.floorCount,
       roster: config.rosterOverride,
       objective: config.objective,
+      redraw: config.redraw,
       jobs,
       tmpDir: config.tmpDir,
     });

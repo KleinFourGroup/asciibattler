@@ -13,6 +13,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseObjectiveFlag, type ObjectiveProclivity } from '../objectiveStrategy';
+import { parseRedrawFlag, type RedrawPolicy } from '../redrawPolicy';
 
 export interface CliArgs {
   count: number;
@@ -54,6 +55,10 @@ export interface CliArgs {
   // inspect; absent, the arena enumerates the menu and writes best-objective.json.
   arena: boolean;
   objective?: string;
+  // K3c3 — the redraw policy driven through the run / search / sweep modes
+  // (`--redraw=<none|random:k|level:k|file.json>`; default none = gates off,
+  // byte-identical baselines).
+  redraw?: string;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -156,6 +161,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--objective':
         args.objective = v;
         break;
+      case '--redraw':
+        args.redraw = v;
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
@@ -183,6 +191,13 @@ function defaultOutDir(): string {
  *  Shared by the standard run, `--search`, and `--balance-sweep`. */
 export function objectiveFromArgs(args: Pick<CliArgs, 'objective'>): ObjectiveProclivity | undefined {
   return args.objective !== undefined ? parseObjectiveFlag(args.objective) : undefined;
+}
+
+/** K3c3 — resolve the `--redraw` flag into a policy, or `undefined` when absent
+ *  (the harness treats undefined as `none` → gates off, byte-identical).
+ *  Shared by the standard run, `--search`, and `--balance-sweep`. */
+export function redrawFromArgs(args: Pick<CliArgs, 'redraw'>): RedrawPolicy | undefined {
+  return args.redraw !== undefined ? parseRedrawFlag(args.redraw) : undefined;
 }
 
 export function range(start: number, count: number): number[] {

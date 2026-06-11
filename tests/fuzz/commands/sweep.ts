@@ -23,8 +23,9 @@ import {
 } from '../balanceSweep';
 import { reportFromCsv } from '../sweepReport';
 import { proclivityLabel } from '../objectiveStrategy';
+import { redrawPolicyLabel } from '../redrawPolicy';
 import { parseRunConfig } from '../../../src/run/RunConfig';
-import { bail, fmtDuration, objectiveFromArgs, type CliArgs } from './args';
+import { bail, fmtDuration, objectiveFromArgs, redrawFromArgs, type CliArgs } from './args';
 
 export type SweepModeArgs = Pick<
   CliArgs,
@@ -37,6 +38,7 @@ export type SweepModeArgs = Pick<
   | 'floors'
   | 'roster'
   | 'objective'
+  | 'redraw'
   | 'jobs'
   | 'dryRun'
   | 'outDir'
@@ -67,6 +69,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     ? parseRunConfig(new URLSearchParams({ roster: args.roster })).startingRoster
     : undefined;
   const objective = objectiveFromArgs(args);
+  const redraw = redrawFromArgs(args);
 
   const jobs = args.jobs !== undefined ? Math.max(1, Math.floor(args.jobs)) : 1;
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
@@ -76,8 +79,9 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     : '';
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
   const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
+  const redrawNote = redraw ? ` redraw=${redrawPolicyLabel(redraw)}` : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${objectiveNote}${jobsNote} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${jobsNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -88,6 +92,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     floorOverride: args.floors,
     rosterOverride,
     objective,
+    redraw,
     jobs,
     tmpDir: join(args.outDir, 'shard-tmp'),
     maxPoints: args.dryRun ? 1 : undefined,

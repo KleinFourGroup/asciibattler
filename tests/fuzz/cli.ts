@@ -64,6 +64,14 @@
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.5:0.75:2 \
  *     --objective=output/best-objective.json --tier=medium --jobs=8
  *
+ *   # K3c3 — drive a FIXED redraw policy through the same three modes (default
+ *   # none = turn gates stay off, byte-identical baselines). Inline forms
+ *   # random:<k> / level:<k> (toss k random / k lowest-level cards per turn;
+ *   # level:0 = the gates-on control), or a saved scored policy JSON:
+ *   npm run fuzz -- --count=50 --redraw=level:6
+ *   npm run fuzz -- --count=50 --redraw=config/redraw-level-fisher.json
+ *   npm run fuzz -- --search --redraw=level:6 --jobs=8
+ *
  * Strategies come from the shared registry (tests/fuzz/strategies/registry.ts);
  * the default sweep is just the two baselines so a no-flag run stays fast — the
  * full parameterized menu is opt-in via `--strategy=NAME` or `--strategy=all`.

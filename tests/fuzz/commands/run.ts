@@ -1,0 +1,155 @@
+/**
+ * The default fuzz mode (no mode flag): run the selected strategies across a
+ * seed range, print the per-strategy aggregate summary, and write summary.csv +
+ * a markdown failure trace per non-complete run (plus the opt-in `--per-floor`
+ * / `--per-layout` analyses).
+ */
+
+import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { join, basename } from 'node:path';
+import { runOne } from '../harness';
+import type { FuzzStrategy } from '../Strategy';
+import type { RunResult, HarnessOptions } from '../harness';
+import {
+  makeStrategy,
+  makeDefaultStrategies,
+  makeAllStrategies,
+  STRATEGY_NAMES,
+} from '../strategies/registry';
+import { scoredStrategy } from '../strategies/scored';
+import { loadWeightsFile } from '../strategies/scoredWeights';
+import { LAYOUT_IDS } from '../../../src/sim/layouts';
+import {
+  aggregate,
+  renderSummaryCsv,
+  renderFailureTrace,
+  failureFilename,
+  renderPerFloorAnalysis,
+  perFloorStats,
+  perLayoutStats,
+  perLayoutFloorStats,
+  renderLayoutAnalysis,
+  renderLayoutCsv,
+  renderLayoutFloorCsv,
+} from '../reporters';
+import { bail, objectiveFromArgs, range, type CliArgs } from './args';
+
+export type RunModeArgs = Pick<
+  CliArgs,
+  'count' | 'seed' | 'strategy' | 'outDir' | 'perFloor' | 'perLayout' | 'layout' | 'objective'
+>;
+
+export function runRunCli(args: RunModeArgs): void {
+  const strategies = selectStrategies(args.strategy);
+
+  const seeds = args.seed !== undefined ? [args.seed] : range(1, args.count);
+
+  // --layout=<id> forces a single hand-authored layout on EVERY battle — a clean
+  // full-sample isolate for the per-layout / per-floor difficulty read (natural
+  // runs only hit a given layout ~12% of the time). Validated against the library.
+  let harnessOptions: HarnessOptions = {};
+  if (args.layout !== undefined) {
+    if (!LAYOUT_IDS.includes(args.layout)) {
+      bail(`Unknown layout: ${args.layout} (choices: ${LAYOUT_IDS.join(', ')})`);
+    }
+    harnessOptions = { runConfig: { forcedLayoutId: args.layout } };
+  }
+  // J4 — drive a fixed objective strategy in every battle (default none =
+  // byte-identical to the pre-J4 fuzz path; the baselines stay put).
+  const objective = objectiveFromArgs(args);
+  if (objective) harnessOptions = { ...harnessOptions, objective };
+
+  // Fresh failures/ dir so stale traces from prior runs don't lie. Only the
+  // failures subdir is wiped (not the whole output dir) so a search's
+  // best-strategy.json / search-results.csv survive a subsequent sweep — in
+  // particular the round-trip `--strategy=output/best-strategy.json` no longer
+  // deletes the very file it just loaded. summary.csv is overwritten below.
+  const failuresDir = join(args.outDir, 'failures');
+  if (existsSync(failuresDir)) rmSync(failuresDir, { recursive: true, force: true });
+  mkdirSync(failuresDir, { recursive: true });
+
+  const allResults: RunResult[] = [];
+  const layoutNote = args.layout ? ` (layout=${args.layout})` : '';
+  for (const strategy of strategies) {
+    process.stdout.write(`Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}…\n`);
+    for (const s of seeds) allResults.push(runOne(s, strategy, harnessOptions));
+  }
+
+  writeFileSync(join(args.outDir, 'summary.csv'), renderSummaryCsv(allResults));
+
+  if (args.perFloor) {
+    process.stdout.write('\n' + renderPerFloorAnalysis(allResults));
+    const stats = perFloorStats(allResults);
+    const header =
+      'floor,runsReached,runsDied,deathRate,battles,avgPlayerDeaths,playerSize,playerAvgLevel,playerMedianLevel,playerLevelSpread,' +
+      'enemySize,enemyAvgLevel,enemyMedianLevel,enemyLevelSpread';
+    const rows = stats.map((s) =>
+      [
+        s.floor,
+        s.runsReached,
+        s.runsDied,
+        s.deathRate.toFixed(4),
+        s.battles,
+        s.avgPlayerDeaths.toFixed(3),
+        s.playerSize.toFixed(3),
+        s.playerAvgLevel.toFixed(3),
+        s.playerMedianLevel.toFixed(3),
+        s.playerLevelSpread.toFixed(3),
+        s.enemySize.toFixed(3),
+        s.enemyAvgLevel.toFixed(3),
+        s.enemyMedianLevel.toFixed(3),
+        s.enemyLevelSpread.toFixed(3),
+      ].join(','),
+    );
+    writeFileSync(join(args.outDir, 'per-floor.csv'), [header, ...rows].join('\n') + '\n');
+  }
+
+  if (args.perLayout) {
+    process.stdout.write('\n' + renderLayoutAnalysis(allResults));
+    writeFileSync(join(args.outDir, 'per-layout.csv'), renderLayoutCsv(perLayoutStats(allResults)));
+    writeFileSync(
+      join(args.outDir, 'per-layout-floor.csv'),
+      renderLayoutFloorCsv(perLayoutFloorStats(allResults)),
+    );
+  }
+
+  let failuresWritten = 0;
+  for (const r of allResults) {
+    if (r.outcome === 'complete') continue;
+    writeFileSync(join(args.outDir, 'failures', failureFilename(r)), renderFailureTrace(r));
+    failuresWritten++;
+  }
+
+  // Summary table per strategy.
+  process.stdout.write('\n');
+  for (const strategy of strategies) {
+    const subset = allResults.filter((r) => r.strategyName === strategy.name);
+    const stats = aggregate(subset);
+    process.stdout.write(`### ${strategy.name}\n`);
+    process.stdout.write(`  runs:       ${stats.totalRuns}\n`);
+    process.stdout.write(`  win rate:   ${(stats.winRate * 100).toFixed(1)}%\n`);
+    process.stdout.write(`  avg floor:  ${stats.averageFloorReached.toFixed(2)}\n`);
+    process.stdout.write(`  avg ticks:  ${stats.averageTicks.toFixed(0)}\n`);
+    process.stdout.write(`  hangs:      ${stats.hangs}\n`);
+    if (stats.hangs > 0) {
+      process.stdout.write(`  hangs by layout: ${JSON.stringify(stats.hangsByLayout)}\n`);
+    }
+    process.stdout.write(`  by outcome: ${JSON.stringify(stats.byOutcome)}\n\n`);
+  }
+  process.stdout.write(`Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`);
+}
+
+/** Resolve the `--strategy` flag: a `*.json` file path (a scored-strategy weight
+ *  vector — H7a), a registered name, the `all` keyword, or (unset) the default
+ *  baseline sweep. Bails loudly on an unknown name. */
+function selectStrategies(name?: string): FuzzStrategy[] {
+  if (name === undefined) return makeDefaultStrategies();
+  if (name === 'all') return makeAllStrategies();
+  if (name.endsWith('.json')) {
+    return [scoredStrategy(`scored:${basename(name, '.json')}`, loadWeightsFile(name))];
+  }
+  return [
+    makeStrategy(name) ??
+      bail(`Unknown strategy: ${name} (choices: ${STRATEGY_NAMES.join(', ')}, all)`),
+  ];
+}

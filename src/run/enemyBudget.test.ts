@@ -128,7 +128,9 @@ describe('buildEnemyTeam (balance-proof — derives from DIFFICULTY)', () => {
 
   // A mid-run roster: 5 units, summed level 25, highest 6.
   const player = roster([6, 5, 5, 5, 4]);
-  const size = player.length;
+  // Mirror production: the swarm-count basis is the FIELDED hand, min(roster,
+  // handSize). No-op here (5 ≤ handSize) but correct if the fixture ever grows.
+  const size = Math.min(player.length, DECK.handSize);
   const budget = Math.max(
     minBudget,
     Math.round(budgetOffset + budgetFactor * playerTeamLevel(player)),
@@ -179,12 +181,13 @@ describe('buildEnemyTeam (balance-proof — derives from DIFFICULTY)', () => {
     }
   });
 
-  it('keeps the 60/40 split by index, fielding BANDIT (not mercenary) as the enemy melee', () => {
+  it('splits melee/archer by enemyArcherRatio, fielding BANDIT (not mercenary) as the enemy melee', () => {
     // I5: the enemy melee slot is `bandit` (low-growth fodder), distinct from the
-    // player's `mercenary`. The ranged slot stays generic `ranged`.
+    // player's `mercenary`. The ranged slot stays generic `ranged`. K2: the split
+    // is config-driven (`enemyArcherRatio`), no longer a hardcoded 60/40.
     const team = buildEnemyTeam(new RNG(9), player);
     const bandits = team.filter((u) => u.archetype === 'bandit').length;
-    expect(bandits).toBe(Math.round(team.length * 0.6));
+    expect(bandits).toBe(Math.round(team.length * (1 - DIFFICULTY.enemyArcherRatio)));
     // No `mercenary` ever appears on the enemy side post-I5.
     expect(team.some((u) => u.archetype === 'mercenary')).toBe(false);
     expect(team.every((u) => u.archetype === 'bandit' || u.archetype === 'ranged')).toBe(true);

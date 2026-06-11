@@ -49,7 +49,7 @@ src/
     archetypes.ts            #   glyph + baseStats + growthRates (E1/E3); attackRange moved to abilities (E5)
     abilities.ts             #   E2+: per-ability cooldownSeconds/range/aoe/travelSeconds/retreatDelaySeconds
                              #   I6: + combat profile might/accuracy/critBase + evadable/critable gates
-    difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm) + A/B/C presets
+    difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets
     recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4)
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
     nodemap.ts               #   floor count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
@@ -137,7 +137,7 @@ src/
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
-                             # + affine budget + swarm count
+                             # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
     NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3) + dump
     Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1); per-card level (post-G5)

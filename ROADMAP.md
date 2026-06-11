@@ -684,6 +684,16 @@ side) or also need a `Run`-side projection.
 
 ### K2 — Roster / hand-size decoupling
 
+**✅ DONE (2026-06-10, one commit) — see [HANDOFF.md](HANDOFF.md) + [BALANCE.md](BALANCE.md).**
+Starting roster **5 → 10** (6 merc + 4 ranged) and `handSize` **5 → 6** (the user's
+call — bigger than the minimal nudge). The decouple exposed a **latent H5 wave-size
+bug**: `rollEnemyWave` sized the enemy COUNT off the whole roster, not the fielded
+`min(roster, handSize)`, so a 10-roster faced `swarmMax × 10` enemies vs a 6-card hand
+(the "massacre"). Fixed + the band re-swept: `enemyArcherRatio` hoisted to config (0.4
+→ **0.3**), **`budgetFactor 0.625 → 0.75`**, **`swarmMax 1.75 → 2.0`** (best-achievable
+~63%, weak bots ~0%). Coarse + provisional — re-swept in N2. No snapshot bump (existing
+fields). **NEXT = K3 redraw** (now meaningful: you bench 4 of 10 each turn).
+
 **Shape:** redraw is **redundant while `handSize` == starting roster** (you
 always draw your whole roster — nothing to redraw *into*), which the brief
 calls out. Adjust the relationship so a draw is a genuine subset. Recommended:

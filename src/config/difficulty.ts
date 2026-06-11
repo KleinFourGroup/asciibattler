@@ -28,6 +28,13 @@
  * - `swarmMaxMultiplier`— upper bound on enemy count = `this × playerSize`.
  *                        Overflow past the spawn region streams in via the D5
  *                        spawn queue.
+ * - `enemyArcherRatio`  — [0,1] fraction of each wave that fields the ranged
+ *                        archer (the rest field `bandit` melee). Hoisted from a
+ *                        hardcoded 0.4 (the old 60/40 split) when the K2 hand-6
+ *                        diagnostics flagged archer density as a massacre driver.
+ *                        Set to 0.3 (a player-feel call — archers still read as
+ *                        the threat unit, just less dense than 0.4). Re-swept
+ *                        properly in N2 once the K mechanics (redraw/empower) land.
  *
  * ── Calibration presets (G4, all at `recruitment.startingLevel = 5`) ─────────
  * The budget is conserved, so there's a hard tradeoff: spreading it wide
@@ -49,6 +56,20 @@
  * Rebalance is expected once G5 adds smarter strategies and Phase H changes the
  * model — these are starting points, not final answers. Revisit A/C then.
  *
+ * ── K2 re-sweep (roster 10 / hand 6 / enemyArcherRatio 0.3) ──────────────────
+ * K2's hand-6 change exposed a latent H5 wave-size BUG: `rollEnemyWave` sized the
+ * swarm-COUNT off the whole roster (`playerTeam.length`) instead of the fielded
+ * `min(roster, handSize)` — so a 10-unit roster faced `swarmMax × 10` enemies
+ * against a 6-card hand (~18 at swarmMax 1.75, budget-capped). THAT was the
+ * "massacre," not the budget. Fixed in `enemyBudget.ts` (count basis = the hand).
+ * With the bug gone, fewer-but-stronger waves are much EASIER (action economy
+ * dominates), so the band climbs: a `budgetFactor × swarmMax` sweep at 11 floors
+ * (archerRatio 0.3) put the cliff at `swarmMax 2.0→2.25` (best-achievable
+ * 63%→0%), with `budgetFactor` the fine lever at `swarmMax 2.0` (0.5/0.625/0.75 →
+ * weak bots 62%/37%/0%). Landed `factor 0.75 × swarmMax 2.0` — best-achievable
+ * ~63% (the BALANCE.md 2/3 target), weak bots ~0–10% over 20 seeds. COARSE +
+ * provisional — re-swept properly in N2 once the K mechanics (redraw/empower) land.
+ *
  * Source of truth at `config/difficulty.json`.
  */
 
@@ -62,6 +83,7 @@ const DifficultySchema = z.object({
   minBudget: z.number().int().positive(),
   swarmBias: z.number().min(0).max(1),
   swarmMaxMultiplier: z.number().positive(),
+  enemyArcherRatio: z.number().min(0).max(1),
 });
 
 export type DifficultyConfig = z.infer<typeof DifficultySchema>;

@@ -629,3 +629,32 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   lever, not noise. **For N2:** when re-sweeping the band against the full post-I–M model, optionally hold a
   tuned objective fixed (a human will steer objectives, so the bot-with-objective is a tighter lower bound on
   play). Tune in `--arena` → `--objective=output/best-objective.json` on the sweep.
+
+- **K2 roster/hand decouple — a latent wave-size BUG + band re-sweep (2026-06-10).** K2 raised the
+  starting roster **5 → 10** (6 merc + 4 ranged) and `handSize` **5 → 6** (user call), so a draw is a
+  real 6-of-10 subset (redraw becomes meaningful in K3). It read as a **massacre** at first (weak-bot
+  avg floor 1.0 vs the old ~3.1), and the diagnosis is the useful part:
+  - **Stress tests isolated the cause** (all `npm run fuzz`, 20 seeds, gitignored output):
+    (1) **draw variance EXONERATED** — a zero-variance roster-6/hand-6 (whole roster fields every turn)
+    wiped *identically* to roster-10 (floor 1.0, byte-identical ticks); (2) **absolute level EXONERATED**
+    — a level-10 roster was *identical* (floor 1.0): the enemy budget scales with player level, so it's
+    a treadmill, the matchup is RELATIVE; (3) **archers INDICTED** — cutting the enemy archer ratio
+    40%→15% nearly doubled the floor (1.0 → 1.9). So: too many enemies, too many of them archers.
+  - **The real culprit — a latent H5 wave-size bug.** After two coarse band-aids (archers 0.15, swarmMax
+    1.4), the user noticed **waves > 2× the hand**. `rollEnemyWave` sized the enemy COUNT off
+    `playerTeam.length` (the whole 10-roster) instead of the fielded `min(roster, handSize)` — so the wave
+    was `swarmMax × 10` (~18, budget-capped) vs a 6-card hand. The BUDGET hand-capped correctly; the COUNT
+    didn't (pre-K2 roster==hand, so latent). **Fixed** (`size = min(playerTeam.length, DECK.handSize)`).
+    That bug, not the budget, was the massacre.
+  - **Re-sweep against the FIXED count** (2-D `budgetFactor × swarmMaxMultiplier`, quick tier, `--floors=11`,
+    `samplerSeed=1`, `--jobs=16`, `enemyArcherRatio 0.3`): with the bug gone, fewer-but-stronger waves are
+    much EASIER (action economy dominates individual strength), so the band CLIMBS. Sharp cliff at
+    **`swarmMax 2.0 → 2.25`** (best-achievable 63% → 0%); at `swarmMax 2.0`, `budgetFactor` is the fine
+    lever (0.5/0.625/0.75 → weak bots 62%/37%/0%). **Landed `budgetFactor 0.75 × swarmMax 2.0 ×
+    enemyArcherRatio 0.3`** — best-achievable **~63%** (the 2/3 target), weak bots 0% in-sweep / **5–10%
+    over 20 seeds**, avg floor ~4.9. **The cell is cliff-adjacent (fragile); re-sweep in N2** once the K
+    player-buffs (redraw/empower) + daemons land and shift the band again.
+  - **`enemyArcherRatio` is now a config knob** ([difficulty.json](config/difficulty.json), was a hardcoded
+    `0.6` melee split). **Takeaways for N2:** the SIZE/COUNT knobs (`swarmMax`, the hand-capped basis) and
+    archer density move the band far more than `budgetFactor`; absolute level and draw variance don't move
+    it at all. Re-baseline tests/fuzz after the change (done — `npm run fuzz` reproduces the floor ~4.9 read).

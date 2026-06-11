@@ -1,8 +1,9 @@
 {
-  "budgetFactor": 0.625,
+  "budgetFactor": 0.75,
   "budgetOffset": 0,
   "unitLevelDelta": 2,
   "minBudget": 1,
   "swarmBias": 0.7,
-  "swarmMaxMultiplier": 1.75
+  "swarmMaxMultiplier": 2.0,
+  "enemyArcherRatio": 0.3
 }

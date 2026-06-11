@@ -102,9 +102,11 @@ export function buildEnemyTeam(rng: RNG, playerTeam: readonly UnitTemplate[]): U
  * naturally as the player out-levels it (full 2×size swarms appear once the
  * budget can afford them).
  *
- * Archetype split stays 60/40 melee/ranged by index. **I5: the melee slot is
- * now `bandit`** (the default melee ENEMY — see the brief's "one melee class
- * forced player/enemy symmetry"), NOT the player's `mercenary`. Bandit shares
+ * Archetype split is `enemyArcherRatio` archers / the rest melee, by index (K2
+ * hoisted this to config — set to 0.3 archers, down from the hardcoded 0.4, after
+ * the hand-6 diagnostics flagged archer density). **I5: the melee slot is now `bandit`**
+ * (the default melee ENEMY — see the brief's "one melee class forced
+ * player/enemy symmetry"), NOT the player's `mercenary`. Bandit shares
  * Mercenary's level-1 base but scales at ~half growth, so floor-1 enemies are
  * byte-identical to the pre-I5 melee enemy while deep-floor swarms stay "many
  * weak bodies" — which EASES late floors vs the old full-growth melee enemy.
@@ -120,8 +122,13 @@ export function rollEnemyWave(
   playerTeam: readonly UnitTemplate[],
   budget: number,
 ): UnitTemplate[] {
-  const { unitLevelDelta, swarmBias, swarmMaxMultiplier } = DIFFICULTY;
-  const size = Math.max(1, playerTeam.length);
+  const { unitLevelDelta, swarmBias, swarmMaxMultiplier, enemyArcherRatio } = DIFFICULTY;
+  // The swarm-count basis is the FIELDED hand, not the whole roster — `min(roster,
+  // handSize)`, mirroring `playerTeamLevel`'s budget cap. Only `handSize` units
+  // fight each turn, so a 10-unit roster must not field `swarmMax × 10` enemies
+  // against a 6-card hand (the H5 oversight K2 exposed: pre-K2 roster == hand, so
+  // `playerTeam.length` WAS the hand size and the bug stayed latent).
+  const size = Math.max(1, Math.min(playerTeam.length, DECK.handSize));
   const highest = playerTeam.reduce((m, u) => Math.max(m, u.level), 1);
 
   const cap = highest + unitLevelDelta;
@@ -134,7 +141,7 @@ export function rollEnemyWave(
   const count = chooseSwarmCount(rng, minCount, maxCount, swarmBias);
   const levels = distributeBudget(rng, budget, count, cap);
 
-  const meleeCount = Math.round(count * 0.6);
+  const meleeCount = Math.round(count * (1 - enemyArcherRatio));
   const team: UnitTemplate[] = [];
   for (let i = 0; i < count; i++) {
     // I5: the melee slot fields `bandit` (low-growth enemy fodder), not the

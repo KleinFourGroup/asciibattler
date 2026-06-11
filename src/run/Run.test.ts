@@ -24,13 +24,16 @@ describe('Run', () => {
       expect(run.currentNodeId).toBe(run.nodeMap.rootId);
     });
 
-    it('rolls a starting team of 5 units (3 melee + 2 ranged)', () => {
+    it('rolls the configured starting team (mercenary + ranged per RECRUITMENT)', () => {
       const run = new Run(1, new EventBus<GameEvents>());
-      expect(run.team).toHaveLength(5);
+      // Derived from the config dials (K2 raised these to 6 + 4), not hardcoded —
+      // so a future roster-size tune doesn't silently break this.
+      const { startingMelee, startingRanged } = RECRUITMENT;
+      expect(run.team).toHaveLength(startingMelee + startingRanged);
       const melee = run.team.filter((t) => t.archetype === 'mercenary');
       const ranged = run.team.filter((t) => t.archetype === 'ranged');
-      expect(melee).toHaveLength(3);
-      expect(ranged).toHaveLength(2);
+      expect(melee).toHaveLength(startingMelee);
+      expect(ranged).toHaveLength(startingRanged);
     });
 
     it('emits run:started on construction', () => {
@@ -85,9 +88,9 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.currentEncounter).not.toBeNull();
       const hand = run.currentEncounter!.playerTeam;
-      // Starting roster (5) == handSize → the hand is the whole roster, but the
-      // draw order is SHUFFLED, so compare as a set keyed by rosterIndex rather
-      // than position. (The cap/subset case is covered in the deck suite below.)
+      // K2: the starting roster (10) > handSize (6), so the hand is a SHUFFLED
+      // subset — compare as a set keyed by rosterIndex rather than position.
+      // (The cap/subset case is covered in the deck suite below.)
       const handSize = Math.min(run.team.length, DECK.handSize);
       expect(hand).toHaveLength(handSize);
       const indices = hand.map((t) => t.rosterIndex!);
@@ -851,7 +854,7 @@ describe('Run', () => {
     it('seeds a Fatigued effect that reduces effective power once the knob is positive', () => {
       // rate > 0.5 so even a power-1 unit rounds strictly down at 1 stack.
       HEALTH.fatiguePerStack = 0.6;
-      const { run, bus } = freshRunWithBus(1);
+      const { run, bus } = freshShortRosterRun(1); // slot 0 must field every turn (K2)
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
 
       const baseP = run.team[0]!.stats.power;
@@ -899,7 +902,7 @@ describe('Run', () => {
     });
 
     it('seeds an encounter effect onto the fielded unit and persists it across turns', () => {
-      const { run, bus } = freshRunWithBus(1);
+      const { run, bus } = freshShortRosterRun(1); // slot 0 must field every turn (K2)
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       run.addEncounterEffect(0, empower()); // added after turn 1's seed → from turn 2
       chipTurn(bus, { player: 1, enemy: 0 }); // → turn 2
@@ -962,7 +965,7 @@ describe('Run', () => {
     });
 
     it('a turnStart daemon adds an encounter effect that is seeded that same turn', () => {
-      const { run } = freshRunWithBus(1);
+      const { run } = freshShortRosterRun(1); // slot 0 must field this turn (K2)
       // The L daemon flow, in miniature: on turn start, grant slot 0 an empower.
       run.registerTrigger('turnStart', (_ctx, r) => r.addEncounterEffect(0, empower()));
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
@@ -1097,7 +1100,10 @@ describe('Run', () => {
     });
 
     it('records one deployment per roster slot on entering a battle', () => {
-      const { run } = freshRunWithBus(1);
+      // Short roster (≤ handSize) so the WHOLE roster fields → every slot 1. K2's
+      // default roster (10 > handSize 6) only fields a drawn subset; that subset
+      // case is covered by the deck suite below.
+      const { run } = freshShortRosterRun(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.deploymentCounts).toEqual(new Array(run.team.length).fill(1));
@@ -1111,11 +1117,11 @@ describe('Run', () => {
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
-      // H5: a one-turn encounter deploys only the drawn hand, so a grown roster
-      // (6 > handSize 5) reads 1 for the drawn slots and 0 for the undrawn one.
-      // The load-bearing assertion is that NOTHING accumulated to 2 (the reset
-      // worked) and the total deployments equal exactly this encounter's one
-      // hand, not a doubled count.
+      // H5: a one-turn encounter deploys only the drawn hand, so a roster larger
+      // than handSize (K2: 10+ > 6) reads 1 for the drawn slots and 0 for the
+      // undrawn ones. The load-bearing assertion is that NOTHING accumulated to
+      // 2 (the reset worked) and the total deployments equal exactly this
+      // encounter's one hand, not a doubled count.
       expect(run.deploymentCounts.every((c) => c === 0 || c === 1)).toBe(true);
       const handSize = Math.min(run.team.length, DECK.handSize);
       expect(run.deploymentCounts.reduce((a, b) => a + b, 0)).toBe(handSize);
@@ -1480,6 +1486,27 @@ const LVL1_ROSTER = [
 function freshLvl1RunWithBus(seed: number): RunHandle {
   const bus = new EventBus<GameEvents>();
   const run = new Run(seed, bus, { startingRoster: LVL1_ROSTER });
+  return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
+}
+
+/** A 5-unit roster at the configured starting level — small enough to fit in
+ *  one hand (≤ `DECK.handSize`), so the WHOLE roster is fielded every turn. K2
+ *  raised the default roster (10) above `handSize` (6), so a mechanic test that
+ *  pins a specific roster slot (e.g. slot 0's fatigue / encounter effect) or
+ *  expects EVERY slot deployed can no longer use the default roll — only a
+ *  drawn subset fields. These tests force this short roster to keep the pre-K2
+ *  "draw == roster" precondition deterministic (no dependence on which units a
+ *  given seed happens to draw). Level comes from config (not the K2 subject). */
+const SHORT_ROSTER = [
+  { archetype: 'mercenary' as const, level: RECRUITMENT.startingLevel },
+  { archetype: 'mercenary' as const, level: RECRUITMENT.startingLevel },
+  { archetype: 'mercenary' as const, level: RECRUITMENT.startingLevel },
+  { archetype: 'ranged' as const, level: RECRUITMENT.startingLevel },
+  { archetype: 'ranged' as const, level: RECRUITMENT.startingLevel },
+];
+function freshShortRosterRun(seed: number): RunHandle {
+  const bus = new EventBus<GameEvents>();
+  const run = new Run(seed, bus, { startingRoster: SHORT_ROSTER });
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
 }
 

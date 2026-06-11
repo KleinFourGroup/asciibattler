@@ -939,6 +939,15 @@ body {
   color: #664600; /* DARK_TERMINAL_AMBER */
 }
 
+/* K3.5 — the encounter's battlefield line (one map per encounter): brighter
+   than the floor sub-line because it's the input to the redraw decision. */
+.preturn-map {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffb000; /* TERMINAL_AMBER */
+}
+
 /* H5b — the drawn hand: a small label over a row of compact unit cards. */
 .preturn-hand {
   display: flex;

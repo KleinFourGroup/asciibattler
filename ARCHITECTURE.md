@@ -131,10 +131,12 @@ src/
     Run.ts                   # State machine: map|turn-intro|battle|turn-outcome|promotion|recruit|
                              # defeat|complete (E4.4/H4b). H4 encounter loop (health pools + turns) +
                              # H5 card deck (draw/hand/discard + deckRng). rest/boss resolution (G3);
-                             # XP banking; dispatch(RunCommand) + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 13
+                             # XP banking; dispatch(RunCommand) + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 14
                              # K1: encounterEffects store (endOfEncounter, re-seeded at deploy) + addEncounterEffect
                              # + run triggers (encounterStart/turnStart/deploy); beginTurn seeds fatigue + encounter effects
                              # K3: pre-turn redraw (handleRedrawCards at the turn-intro gate; per-turn budget, v13)
+                             # K3.5: ONE map per encounter — rollEncounterMap in beginEncounter → Run.encounterMap (v14);
+                             # beginTurn keeps only worldSeed + the wave re-roll per turn
     redraw.ts                # K3: pure redraw rules — redrawRejection / redrawAvailability (config injected, both L modes provable)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI)
@@ -353,7 +355,7 @@ recruit:offered         { units: UnitTemplate[] }
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
 objective:set           { objective: BattleObjective }                             # J1: player set/replaced the shared steering objective
 objective:cleared       { }                                                         # J1: objective cleared (explicit, or enemy-objective target died)
-turn:starting           { turn; floor; player/enemy pools; hand; redraw }           # H4b/H5b/K3: pre-turn gate cue (gated path only); hand + redraw availability
+turn:starting           { turn; floor; pools; hand; redraw; map }                   # H4b/H5b/K3/K3.5: pre-turn gate cue (gated only); hand + redraw budget + the ENCOUNTER's map
 turn:resolved           { turn; winner; pool chips; result; pools }                 # H4b: post-turn outcome cue (gated path only)
 turn:handRedrawn        { hand: UnitTemplate[]; redraw: RedrawAvailability }        # K3: a redrawCards command landed — full new hand + decremented budget
 ```

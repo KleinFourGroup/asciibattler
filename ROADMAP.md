@@ -759,6 +759,35 @@ draw/reshuffle cycle); the cap is honored; **a redrawn-away unit gets no
 deployment count** (its `deploymentCounts[idx]` is unchanged that turn, while a
 fielded unit's increments); determinism.
 
+### K3.5 — One map per encounter (+ pre-turn map label)
+
+**✅ DONE (2026-06-11, one commit) — an unplanned step from the K3 commit-2
+playtest.** The user's observation: redraw is a **blind guess** when the map is
+rolled after the pre-turn screen — and thematically an encounter should be one
+continuous fight on one field anyway (the eventual encounter-system direction).
+The "easy" fix (just show the layout name) wasn't actually easy: the map roll
+lived in `beginTurn`, AFTER the gate, and peeking ahead would break the
+fork-at-`beginTurn` determinism invariant — so any label needs the roll hoisted
+ahead of the gate, at which point per-encounter is the same work as per-turn.
+**Hoisted now rather than waiting** so N2's balance sweep measures the final
+map model instead of being invalidated later.
+
+**Shipped:** `rollEncounterMap` rolls layout/size/terrainSeed/theme ONCE in
+`beginEncounter` (dedicated `rng` fork; same draw order + always-roll-then-
+override branches as the old `beginTurn` block; `forcedLayoutId` still wins) →
+stored as `Run.encounterMap` (null outside an encounter; **RunSnapshot
+v13→v14** — not re-derivable per turn, so v13 rejects). `beginTurn` keeps only
+the per-turn freshness: `worldSeed` + the enemy wave re-roll. `turn:starting`
+carries `map` (layoutId/dims/theme); the PreTurnScreen shows `⌖ <name> — W×H`
+(authored layout `name`, or "Uncharted ground" for procedural). The scope is
+deliberately MAP IDENTITY ONLY — the real encounter system (enemy roster
+diversity, bosses) stays Phase L+.
+
+**Cost (measured):** the RNG restructure + map persistence shifted the fuzz
+read — see BALANCE.md (K3.5 entry) for the re-measure; the K2 band note now
+reads easier-than-target at the same knobs. Band re-tune deferred to N2 as
+planned (the K-mechanic buffs were always going to move it).
+
 ### K4 — Empower mechanic
 
 **Shape (brief):** at the start of a turn, the player **selects a drawn unit

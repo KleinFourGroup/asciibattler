@@ -156,8 +156,30 @@ export interface BattleEncounter {
  *  in the WorldSnapshot.)
  *  K3: bumped 12→13. Adds `redrawsUsedThisTurn` / `cardsRedrawnThisTurn` (the
  *  per-turn redraw budget bookkeeping). A v12 save has neither → reject rather
- *  than rehydrate a pre-turn gate whose redraw budget silently refreshed. */
-const RUN_SCHEMA_VERSION = 13;
+ *  than rehydrate a pre-turn gate whose redraw budget silently refreshed.
+ *  K3.5: bumped 13→14. Adds `encounterMap` (ONE battlefield per encounter —
+ *  layout/size/terrain/theme rolled once at encounter start, no longer
+ *  re-rolled per turn). It's mid-encounter state that is NOT re-derivable per
+ *  turn anymore, so a v13 save → reject rather than rehydrate an encounter
+ *  that would re-roll its map. */
+const RUN_SCHEMA_VERSION = 14;
+
+/**
+ * K3.5 — the encounter's battlefield, rolled ONCE in `beginEncounter` (the
+ * pre-K3.5 per-turn rolls in `beginTurn` now read from here): one map per
+ * encounter, so the pre-turn redraw decision is informed rather than a blind
+ * guess, and an encounter reads as one continuous fight on one field. The
+ * per-turn variety that remains is the enemy WAVE + the world seed (unit RNG).
+ * `gridW`/`gridH` are stored (not re-derived) because a procedural roll's side
+ * isn't recoverable from `layoutId: null`.
+ */
+export interface EncounterMap {
+  readonly layoutId: string | null;
+  readonly gridW: number;
+  readonly gridH: number;
+  readonly terrainSeed: number;
+  readonly theme: Theme;
+}
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
@@ -199,6 +221,9 @@ export interface RunSnapshot {
   /** H4: the active encounter's fixed enemy level budget (computed once at
    *  encounter start; the wave composition re-rolls per turn against it). */
   encounterBudget: number;
+  /** K3.5: the active encounter's battlefield (rolled once at encounter start,
+   *  every turn fights on it). Null outside an encounter. */
+  encounterMap: EncounterMap | null;
   /** H4: XP awards accrued across the active encounter's turns, banked once at
    *  encounter end. Non-empty only mid-encounter. */
   pendingEncounterXp: XpAward[];
@@ -325,6 +350,14 @@ export class Run {
    *  restore can't drift if the roster changed since. */
   encounterBudget: number;
   /**
+   * K3.5 — the active encounter's battlefield: layout/size/terrain/theme rolled
+   * ONCE in `beginEncounter` (a dedicated `this.rng` fork); every turn's
+   * `beginTurn` fights on it. Null outside an encounter (cleared in
+   * `finishEncounter`; rest nodes never set it). Persisted (v14) — it is NOT
+   * re-derivable per turn, so a mid-encounter restore must carry it.
+   */
+  encounterMap: EncounterMap | null;
+  /**
    * H4 — XP awards accrued across the active encounter's turns (each turn's
    * `battle:ended.xpAwards` appended in order). Banked ONCE at encounter end
    * via `bankXpAwards`, so a single `PromotionScene` pops per encounter, never
@@ -407,6 +440,7 @@ export class Run {
     this.enemyHealth = 0;
     this.turnIndex = 0;
     this.encounterBudget = 0;
+    this.encounterMap = null;
     this.pendingEncounterXp = [];
     this.levelupRng = this.rng.fork();
     // H5 — fork the deck stream LAST (after levelup), consistent with the
@@ -530,12 +564,52 @@ export class Run {
     // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
     // `beginTurn` records the deployed hand.
     this.resetDeploymentCounts();
+    // K3.5 — roll the encounter's ONE battlefield (pre-K3.5 these rolls lived
+    // in `beginTurn`, re-rolled per turn). A dedicated fork keeps the map draw
+    // self-contained, mirroring the per-turn `battleRng` pattern. The roll
+    // order + the always-roll-then-override branches are preserved from the
+    // old `beginTurn` block (gotcha #49's byte-continuity discipline: every
+    // branch consumes the same draws).
+    this.encounterMap = this.rollEncounterMap(this.rng.fork());
+    // Browser-only diagnostic (moved from `beginTurn`): confirm the layout
+    // picker hits the full library across a session. Gated on `typeof window`
+    // so the fuzz harness + vitest don't spam.
+    if (typeof window !== 'undefined') {
+      console.log(
+        '[layout]',
+        this.encounterMap.layoutId ?? 'procedural',
+        `${this.encounterMap.gridW}x${this.encounterMap.gridH}`,
+        `floor ${this.currentFloor}`,
+      );
+    }
     // K1 — clear the encounter-effect store + fire `encounterStart` so a daemon
     // can grant fresh encounter buffs for this encounter (no-op at the default,
-    // no handler registered → byte-identical).
+    // no handler registered → byte-identical). Fired AFTER the map roll so a
+    // future daemon can read `encounterMap`.
     this.resetEncounterEffects();
     this.fireTrigger('encounterStart', { floor: this.currentFloor, nodeId: this.currentNodeId });
     this.startNextTurn();
+  }
+
+  /**
+   * K3.5 — one encounter-map roll. The draws (terrain seed → layout id →
+   * procedural side → theme) ALWAYS all run so the stream advances identically
+   * on every branch (gotcha #49), then a forced layout (G1) overrides the
+   * rolled id, hand-authored layouts pin their own dimensions + theme.
+   */
+  private rollEncounterMap(mapRng: RNG): EncounterMap {
+    const terrainSeed = Math.floor(mapRng.next() * 0x1_0000_0000);
+    const rolledLayoutId = rollLayoutId(mapRng);
+    const layoutId = this.forcedLayoutId ?? rolledLayoutId;
+    const proceduralSide = rollProceduralSide(mapRng);
+    const { gridW, gridH } = layoutId === null
+      ? { gridW: proceduralSide, gridH: proceduralSide }
+      : layoutDimensions(layoutId);
+    const proceduralTheme = rollTheme(mapRng);
+    const theme = layoutId === null
+      ? proceduralTheme
+      : (getLayout(layoutId)?.theme ?? proceduralTheme);
+    return { layoutId, gridW, gridH, terrainSeed, theme };
   }
 
   /**
@@ -560,6 +634,8 @@ export class Run {
     this.fireTrigger('turnStart', { turn: this.turnIndex + 1, floor: this.currentFloor });
     if (this.pauseAtTurnGates) {
       this.phase = 'turn-intro';
+      // K3.5 — `startNextTurn` only runs mid-encounter, so the map is set.
+      const { layoutId, gridW, gridH, theme } = this.encounterMap!;
       this.bus.emit('turn:starting', {
         turn: this.turnIndex + 1,
         floor: this.currentFloor,
@@ -569,6 +645,7 @@ export class Run {
         enemyHealthMax: HEALTH.enemyHealthMax,
         hand: this.hand.map((idx) => this.team[idx]!),
         redraw: this.redrawAvailability,
+        map: { layoutId, gridW, gridH, theme },
       });
     } else {
       this.phase = 'battle';
@@ -606,39 +683,18 @@ export class Run {
   private beginTurn(): void {
     const battleRng = this.rng.fork();
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
-    const terrainSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
-    // G1: always roll (advance the stream — gotcha #49 byte-continuity), then
-    // let a forced layout override the result.
-    const rolledLayoutId = rollLayoutId(battleRng);
-    const layoutId = this.forcedLayoutId ?? rolledLayoutId;
-    // D3: procedural draws ALWAYS run so the RNG stream advances identically
-    // regardless of branch (same invariant as the layoutId roll above).
-    const proceduralSide = rollProceduralSide(battleRng);
-    const { gridW, gridH } = layoutId === null
-      ? { gridW: proceduralSide, gridH: proceduralSide }
-      : layoutDimensions(layoutId);
-    // D8 — the theme roll always runs (byte-continuity invariant, gotcha #49);
-    // hand-authored layouts use `layout.theme`, procedural the rolled value.
-    const proceduralTheme = rollTheme(battleRng);
-    const theme = layoutId === null
-      ? proceduralTheme
-      : (getLayout(layoutId)?.theme ?? proceduralTheme);
+    // K3.5 — the battlefield is the ENCOUNTER's (rolled once in
+    // `beginEncounter`); only the world seed above and the enemy wave below
+    // stay per-turn. The pre-K3.5 per-turn layout/terrain/theme rolls lived
+    // right here — see `rollEncounterMap`.
+    if (this.encounterMap === null) {
+      throw new Error('Run.beginTurn: no encounterMap — beginTurn outside an encounter');
+    }
+    const { layoutId, gridW, gridH, terrainSeed, theme } = this.encounterMap;
     // H4 — fresh enemy composition each turn at the encounter's FIXED budget
     // (G4's `buildEnemyTeam` split into budget + wave). Last consumer of
     // `battleRng`, so its now-variable draw count stays downstream-safe.
     const enemyTeam = rollEnemyWave(battleRng, this.team, this.encounterBudget);
-
-    // Browser-only diagnostic: confirm the layout picker hits the full library
-    // across a session. Gated on `typeof window` so the fuzz harness + vitest
-    // don't spam.
-    if (typeof window !== 'undefined') {
-      console.log(
-        '[layout]',
-        layoutId ?? 'procedural',
-        `${gridW}x${gridH}`,
-        `turn ${this.turnIndex + 1}`,
-      );
-    }
 
     // E4/H5 — the hand was drawn in `startNextTurn` (`drawTurnHand`) so the
     // pre-turn screen could show it; here we just field it. Stamp each drawn
@@ -882,6 +938,8 @@ export class Run {
    * the recruit offer's fork is independent.
    */
   private finishEncounter(outcome: 'win' | 'defeat'): void {
+    // K3.5 — the battlefield is encounter-scoped; drop it with the encounter.
+    this.encounterMap = null;
     if (outcome === 'defeat') {
       this.pendingEncounterXp = [];
       this.phase = 'defeat';
@@ -1189,6 +1247,7 @@ export class Run {
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
       encounterBudget: this.encounterBudget,
+      encounterMap: this.encounterMap,
       pendingEncounterXp: this.pendingEncounterXp.slice(),
       currentNodeId: this.currentNodeId,
       phase: this.phase,
@@ -1243,6 +1302,7 @@ export class Run {
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;
     m.encounterBudget = snap.encounterBudget;
+    m.encounterMap = snap.encounterMap;
     m.pendingEncounterXp = snap.pendingEncounterXp.slice();
     m.currentNodeId = snap.currentNodeId;
     m.phase = snap.phase;

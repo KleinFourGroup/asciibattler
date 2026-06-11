@@ -658,3 +658,17 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     `0.6` melee split). **Takeaways for N2:** the SIZE/COUNT knobs (`swarmMax`, the hand-capped basis) and
     archer density move the band far more than `budgetFactor`; absolute level and draw variance don't move
     it at all. Re-baseline tests/fuzz after the change (done — `npm run fuzz` reproduces the floor ~4.9 read).
+
+- **K3.5 one-map-per-encounter — the fuzz read SHIFTED, band re-tune deferred to N2 (2026-06-11).** Hoisting
+  the map roll to encounter scope (layout/size/terrainSeed/theme rolled once in `beginEncounter`; only the
+  wave + worldSeed stay per-turn) restructures the run RNG stream, so the whole fuzz baseline re-rolls — and
+  the measured read came back EASIER at the unchanged K2 knobs (`budgetFactor 0.75 × swarmMax 2.0 ×
+  archerRatio 0.3`): **pure-random 20% win / avg floor 5.94 over 50 seeds** (30% over the first 20; greedy
+  15% over 20) vs the K2-era **~5–10% / floor ~4.9**. Two candidate mechanisms, not yet separated:
+  (1) pure re-roll — different sampled waves at new stream offsets; (2) **systematic** — a favorable map now
+  COMPOUNDS across an encounter's turns (win turn 1 on a good field → fight turns 2-3 on the same field)
+  where per-turn rolls used to average it out. Weak bots at 20% is ABOVE the "rarely win" target, so the
+  band is loose — **left as-is deliberately**: K4 empower (a player buff) moves it again, and N2 re-sweeps
+  against the final model (the whole point of doing K3.5 before N2). Also: **1 hang / 50 seeds** (procedural
+  map; trace in gitignored `tests/fuzz/output`) — first hang since the I2 cap bump. Plausibly the same
+  persistence effect (a stall-prone map repeats all encounter turns instead of re-rolling away); watch in N2.

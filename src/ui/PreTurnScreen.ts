@@ -23,6 +23,7 @@ import type { RedrawAvailability } from '../run/redraw';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { glyphForArchetype } from '../sim/archetypes';
+import { getLayout } from '../sim/layouts';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
 
@@ -94,6 +95,17 @@ export class PreTurnScreen {
     sub.className = 'preturn-sub';
     sub.textContent = `Floor ${info.floor}`;
     panel.appendChild(sub);
+
+    // K3.5 — the encounter's battlefield (one map per encounter), so the
+    // redraw below is an informed choice. Hand-authored layouts show their
+    // authored display name; a procedural roll shows as uncharted.
+    const map = document.createElement('div');
+    map.className = 'preturn-map';
+    const mapName = info.map.layoutId === null
+      ? 'Uncharted ground'
+      : (getLayout(info.map.layoutId)?.name ?? info.map.layoutId);
+    map.textContent = `⌖ ${mapName} — ${info.map.gridW}×${info.map.gridH}`;
+    panel.appendChild(map);
 
     const pools = document.createElement('div');
     pools.className = 'preturn-pools';

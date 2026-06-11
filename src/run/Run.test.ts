@@ -916,6 +916,109 @@ describe('Run', () => {
     });
   });
 
+  describe('encounter map (K3.5 — one battlefield per encounter)', () => {
+    it('every turn of an encounter fights on the SAME map; the world seed stays per-turn', () => {
+      const { run, bus } = freshRunWithBus(11);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      const map = { ...run.encounterMap! };
+      const turn1 = run.currentEncounter!;
+      chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → rolls into turn 2
+      expect(run.phase).toBe('battle');
+      const turn2 = run.currentEncounter!;
+      for (const enc of [turn1, turn2]) {
+        expect(enc.layoutId).toBe(map.layoutId);
+        expect(enc.terrainSeed).toBe(map.terrainSeed);
+        expect(enc.gridW).toBe(map.gridW);
+        expect(enc.gridH).toBe(map.gridH);
+        expect(enc.theme).toBe(map.theme);
+      }
+      // The per-turn freshness that REMAINS: a new world (units RNG) + wave.
+      expect(turn2.worldSeed).not.toBe(turn1.worldSeed);
+      expect(run.encounterMap).toEqual(map); // untouched by the turn roll
+    });
+
+    it('a NEW encounter rolls a fresh map (per-encounter, not per-run)', () => {
+      // Deterministic across seeds: find one where consecutive encounters land
+      // on different layouts — proving the roll happens per encounter. (A
+      // per-run map would make this loop exhaust without a hit.)
+      let differs = false;
+      for (let seed = 1; seed <= 40 && !differs; seed++) {
+        const { run, bus } = freshRunWithBus(seed);
+        run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+        const first = run.encounterMap!.layoutId;
+        winEncounter(bus);
+        if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
+        if (run.phase !== 'recruit') continue;
+        run.dispatch({ kind: 'passRecruit' });
+        // Widened — dispatch mutates phase, which TS's narrowing can't see.
+        const phaseAfterPass: string = run.phase;
+        if (phaseAfterPass !== 'map') continue;
+        const next = run.nodeMap.edges.find((e) => e.from === run.currentNodeId)?.to;
+        if (next === undefined) continue;
+        run.dispatch({ kind: 'enterNode', nodeId: next });
+        if (run.encounterMap !== null && run.encounterMap.layoutId !== first) differs = true;
+      }
+      expect(differs).toBe(true);
+    });
+
+    it('a forced layout (G1) pins every encounter map', () => {
+      const forced = LAYOUT_IDS[0]!;
+      const bus = new EventBus<GameEvents>();
+      const run = new Run(3, bus, { forcedLayoutId: forced });
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      expect(run.encounterMap!.layoutId).toBe(forced);
+      expect(run.encounterMap!.gridW).toBe(getLayout(forced)!.gridW);
+      expect(run.encounterMap!.gridH).toBe(getLayout(forced)!.gridH);
+      expect(run.currentEncounter!.layoutId).toBe(forced);
+    });
+
+    it('turn:starting carries the map, identical across the encounter\'s gates', () => {
+      const { run, bus } = freshRunWithBus(6);
+      run.pauseAtTurnGates = true;
+      const startings: GameEvents['turn:starting'][] = [];
+      bus.on('turn:starting', (p) => startings.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      expect(startings[0]!.map).toEqual({
+        layoutId: run.encounterMap!.layoutId,
+        gridW: run.encounterMap!.gridW,
+        gridH: run.encounterMap!.gridH,
+        theme: run.encounterMap!.theme,
+      });
+      run.dispatch({ kind: 'advanceTurn' }); // → battle
+      chipTurn(bus, { player: 1, enemy: 1 }); // ongoing → turn-outcome
+      run.dispatch({ kind: 'advanceTurn' }); // → turn 2's gate
+      expect(startings).toHaveLength(2);
+      expect(startings[1]!.map).toEqual(startings[0]!.map);
+    });
+
+    it('the map is encounter-scoped: null before, during the map phase, and after the encounter', () => {
+      const { run, bus } = freshRunWithBus(1);
+      expect(run.encounterMap).toBeNull();
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      expect(run.encounterMap).not.toBeNull();
+      winEncounter(bus);
+      expect(run.encounterMap).toBeNull(); // dropped with the encounter
+      // The defeat path drops it too.
+      const lost = freshRunWithBus(2);
+      lost.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(lost.run) });
+      chipTurn(lost.bus, { player: 0, enemy: HEALTH.playerHealthMax });
+      expect(lost.run.phase).toBe('defeat');
+      expect(lost.run.encounterMap).toBeNull();
+    });
+
+    it('round-trips the encounter map mid-encounter (v14)', () => {
+      const { run, bus } = freshRunWithBus(12);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      chipTurn(bus, { player: 1, enemy: 2 }); // mid-encounter, turn 2 live
+      expect(run.encounterMap).not.toBeNull();
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.encounterMap).toEqual(run.encounterMap);
+      // (The pre-K3.5 v13 reject rides the generic `schemaVersion - 1` test.)
+    });
+  });
+
   describe('chooseRecruit command', () => {
     it('adds the chosen unit to the team and returns to map phase', () => {
       const { run, bus } = freshRunWithBus(1);

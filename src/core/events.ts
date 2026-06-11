@@ -18,6 +18,7 @@ import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
 import type { BattleObjective } from '../sim/objective';
 import type { RedrawAvailability } from '../run/redraw';
+import type { Theme } from '../sim/layouts';
 
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
@@ -252,6 +253,12 @@ export interface GameEvents extends Record<string, unknown> {
    * K3 — also carries `redraw`: this turn's redraw availability (actions +
    * cards remaining, 0/0 when the config disables it), so the screen renders
    * the redraw control without a follow-up Run query.
+   *
+   * K3.5 — also carries `map`: the ENCOUNTER's battlefield (one map per
+   * encounter as of K3.5, rolled at encounter start), so the redraw decision
+   * is made knowing the field. Inline structural shape rather than the Run
+   * `EncounterMap` type to keep core → run imports type-light (the terrain
+   * seed is deliberately omitted — presentation needs name/size/theme only).
    */
   'turn:starting': {
     turn: number; // 1-based, within the current encounter
@@ -262,6 +269,12 @@ export interface GameEvents extends Record<string, unknown> {
     enemyHealthMax: number;
     hand: UnitTemplate[];
     redraw: RedrawAvailability;
+    map: {
+      layoutId: string | null;
+      gridW: number;
+      gridH: number;
+      theme: Theme;
+    };
   };
 
   /**

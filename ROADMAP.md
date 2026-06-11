@@ -724,8 +724,14 @@ so the reshuffle cycle preserves hand size); `turn:starting` carries
 `RedrawAvailability` + new `turn:handRedrawn` event; RunSnapshot **v12→v13**
 (the per-turn budget counters). The deployment-counter rule fell out free as
 predicted (redraw resolves before `beginTurn` records the final hand) — pinned
-by test. 842 tests (+20), fuzz:smoke 117 unchanged. **Remaining: commit 2 (the
-PreTurnScreen UI) + commit 3 (fuzz redraw policy + proof).**
+by test. 842 tests (+20), fuzz:smoke 117 unchanged.
+
+**Commit 2 ✅ (2026-06-11) — the PreTurnScreen UI.** Auto-advance REMOVED (the
+screen waits for Fight; post-turn keeps its timer); selectable cards + a
+`Redraw (N)` button + budget hint; re-renders purely off `turn:handRedrawn`
+(scene-scoped subscription). Browser-verified end-to-end by eval (screenshot
+capture blocked by the known throttled-tab limitation). 842 unchanged — UI
+only. **Remaining: commit 3 (fuzz redraw policy + proof).**
 
 **Shape (brief):** at the start of a turn, the player **selects some drawn
 units, sends them to the discard, and draws that many fresh units.** Support

@@ -986,6 +986,61 @@ body {
   color: #ffb000; /* TERMINAL_AMBER */
 }
 
+/* K3 — redraw: hand cards turn selectable while the turn's budget allows
+   (hover amber, selected = FLOURESCENT_BLUE glow, mirroring the J3 armed
+   treatment), with the Redraw button + budget hint in a row underneath. */
+.preturn-card--selectable {
+  cursor: pointer;
+  transition: border-color 0.1s, box-shadow 0.1s;
+}
+
+.preturn-card--selectable:hover {
+  border-color: #ffb000; /* TERMINAL_AMBER */
+}
+
+.preturn-card.is-selected {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  box-shadow: 0 0 6px rgba(21, 244, 238, 0.5);
+}
+
+.preturn-redraw {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.preturn-redraw-button {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  background: #000;
+  color: #ffb000;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, color 0.1s;
+}
+
+.preturn-redraw-button:hover:not(:disabled) {
+  border-color: #15f4ee;
+  background: rgba(21, 244, 238, 0.08);
+  color: #15f4ee;
+}
+
+.preturn-redraw-button:disabled {
+  border-color: #664600; /* DARK_TERMINAL_AMBER */
+  color: #664600;
+  cursor: default;
+}
+
+.preturn-redraw-hint {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #664600; /* DARK_TERMINAL_AMBER */
+}
+
 .preturn-pools,
 .postturn-pools {
   display: flex;

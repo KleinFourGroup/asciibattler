@@ -43,6 +43,7 @@ import type { RunTelemetry } from './telemetry';
 import type { ObjectiveProclivity } from './objectiveStrategy';
 import type { RedrawPolicy } from './redrawPolicy';
 import type { EmpowerPolicy } from './empowerPolicy';
+import type { DaemonSelection } from './daemonSelection';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import type { RosterEntry } from '../../src/run/RunConfig';
 import { DIFFICULTY } from '../../src/config/difficulty';
@@ -225,6 +226,13 @@ export interface BalanceSweepConfig {
    * (same contract as `redraw`). Undefined / none = byte-identical.
    */
   readonly empower?: EmpowerPolicy;
+  /**
+   * L1c3 — hold one daemon arm FIXED across every run at every grid point
+   * (`none` / a forced idol), so the N2 band re-sweep can measure per-idol or
+   * daemon-less bands. Undefined / `random` = the Run's own roll (the real
+   * game — byte-identical to the flag being absent).
+   */
+  readonly daemon?: DaemonSelection;
   /** Stop after this many grid points (the `--dry-run` estimate runs 1). */
   readonly maxPoints?: number;
   /**
@@ -273,6 +281,7 @@ function harnessOptionsFor(
   objective?: ObjectiveProclivity,
   redraw?: RedrawPolicy,
   empower?: EmpowerPolicy,
+  daemon?: DaemonSelection,
 ): HarnessOptions {
   const floorCount = floorOverride ?? preset.floorCount;
   const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
@@ -282,6 +291,7 @@ function harnessOptionsFor(
   if (objective) opts = { ...opts, objective };
   if (redraw) opts = { ...opts, redraw };
   if (empower) opts = { ...opts, empower };
+  if (daemon) opts = { ...opts, daemon };
   return opts;
 }
 
@@ -304,6 +314,7 @@ async function defaultMeasurePoint(
     config.objective,
     config.redraw,
     config.empower,
+    config.daemon,
   );
   const jobs = Math.max(1, Math.floor(config.jobs ?? 1));
 
@@ -324,6 +335,7 @@ async function defaultMeasurePoint(
       objective: config.objective,
       redraw: config.redraw,
       empower: config.empower,
+      daemon: config.daemon,
       jobs,
       tmpDir: config.tmpDir,
     });

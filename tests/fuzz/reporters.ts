@@ -19,6 +19,7 @@ import type { BattleResult, RunResult } from './harness';
 const CSV_HEADER = [
   'seed',
   'strategy',
+  'daemon',
   'outcome',
   'finalFloor',
   'totalTicks',
@@ -48,6 +49,9 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
       [
         r.seed,
         r.strategyName,
+        // L1c3 — the run's rolled/forced idol; 'none' for a daemon-less run
+        // (explicit rather than empty: every run HAS a daemon disposition).
+        r.daemonId ?? 'none',
         r.outcome,
         r.finalFloorReached,
         r.totalTicks,
@@ -59,6 +63,42 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
         rangedRecruits,
         hangLayout,
       ].join(','),
+    );
+  }
+  return lines.join('\n') + '\n';
+}
+
+/**
+ * L1c3 — per-daemon aggregate buckets, keyed by the rolled/forced idol id
+ * (`'none'` for daemon-less runs), sorted by key for stable output. Under
+ * `--daemon=random` this is the per-idol win/floor read in ONE batch; under a
+ * forced arm it degenerates to a single bucket. The future starting-profiles
+ * round inherits this bucketing as-is (a profile pins the daemon).
+ */
+export function perDaemonStats(
+  results: readonly RunResult[],
+): Array<{ daemon: string; stats: AggregateStats }> {
+  const buckets = new Map<string, RunResult[]>();
+  for (const r of results) {
+    const key = r.daemonId ?? 'none';
+    const list = buckets.get(key);
+    if (list) list.push(r);
+    else buckets.set(key, [r]);
+  }
+  return [...buckets.keys()]
+    .sort()
+    .map((daemon) => ({ daemon, stats: aggregate(buckets.get(daemon)!) }));
+}
+
+/** L1c3 — the compact stdout block for the per-daemon read. */
+export function renderDaemonAnalysis(results: readonly RunResult[]): string {
+  const rows = perDaemonStats(results);
+  const lines = ['### per-daemon'];
+  for (const { daemon, stats } of rows) {
+    lines.push(
+      `  ${daemon.padEnd(10)} runs=${String(stats.totalRuns).padEnd(5)} ` +
+        `win=${(stats.winRate * 100).toFixed(1).padStart(5)}% ` +
+        `avgFloor=${stats.averageFloorReached.toFixed(2)} hangs=${stats.hangs}`,
     );
   }
   return lines.join('\n') + '\n';

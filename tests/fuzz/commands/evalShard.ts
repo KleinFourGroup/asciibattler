@@ -34,14 +34,15 @@ export function runEvalShardCli(args: EvalShardModeArgs): void {
   const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
   if (job.floorCount !== undefined) runConfig.floorCount = job.floorCount;
   if (job.roster && job.roster.length > 0) runConfig.startingRoster = job.roster;
-  // J4 / K3c3 / K4c3 — the child re-applies the parent's fixed objective
-  // proclivity + redraw policy + empower policy (plain JSON objects that
-  // round-tripped the job file), so sharded runs drive the same bots as
-  // single-process.
+  // J4 / K3c3 / K4c3 / L1c3 — the child re-applies the parent's fixed
+  // objective proclivity + redraw policy + empower policy + daemon arm (plain
+  // JSON objects that round-tripped the job file), so sharded runs drive the
+  // same bots as single-process.
   let harnessOptions: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
   if (job.objective) harnessOptions = { ...harnessOptions, objective: job.objective };
   if (job.redraw) harnessOptions = { ...harnessOptions, redraw: job.redraw };
   if (job.empower) harnessOptions = { ...harnessOptions, empower: job.empower };
+  if (job.daemon) harnessOptions = { ...harnessOptions, daemon: job.daemon };
 
   const winRates = job.vectors.map(
     (w) =>

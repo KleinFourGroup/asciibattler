@@ -33,6 +33,8 @@ import { selectRedrawPositions } from './redrawPolicy';
 import type { RedrawPolicy } from './redrawPolicy';
 import { selectEmpowerPosition } from './empowerPolicy';
 import type { EmpowerPolicy } from './empowerPolicy';
+import { daemonConfigFor } from './daemonSelection';
+import type { DaemonSelection } from './daemonSelection';
 import { TelemetryAccumulator } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 
@@ -68,6 +70,9 @@ export interface RecruitChoice {
 export interface RunResult {
   seed: number;
   strategyName: string;
+  /** L1c3 — the run's rolled (or forced) daemon id, `null` for a daemon-less
+   *  run. The per-daemon win/floor bucketing key. */
+  daemonId: string | null;
   outcome: RunOutcome;
   finalFloorReached: number;
   totalTicks: number;
@@ -144,6 +149,18 @@ export interface HarnessOptions {
    * merge, repeat picks of the same card stack).
    */
   readonly empower?: EmpowerPolicy;
+  /**
+   * L1c3 — the daemon arm: `random`/absent leaves the Run's own uniform roll
+   * (the REAL GAME's default — byte-identical to a pre-flag run, pinned);
+   * `none` forces the daemon-less control arm (both pre-turn gates
+   * permanently disabled — what a per-idol lift is measured against);
+   * `fixed` forces one idol on every run. Not a per-turn policy — it resolves
+   * to the `RunConfig.daemon` override once per run, so the roll/skip stays
+   * on the Run's child stream (the G1 determinism contract). The redraw/
+   * empower bots above act on whatever the daemon grants (a denied/absent
+   * gate reads as zero availability and the bot no-ops).
+   */
+  readonly daemon?: DaemonSelection;
 }
 
 // 150s of game time. Authored in seconds and converted via the
@@ -295,7 +312,12 @@ export function runOne(
     currentWorld = null;
   });
 
-  const run = new Run(options.runConfig?.seed ?? seed, bus, options.runConfig);
+  // L1c3 — resolve the daemon arm into the RunConfig override. `random`/absent
+  // resolves to undefined = options.runConfig used untouched (byte-identical).
+  const daemonOverride = options.daemon !== undefined ? daemonConfigFor(options.daemon) : undefined;
+  const runConfig =
+    daemonOverride !== undefined ? { ...options.runConfig, daemon: daemonOverride } : options.runConfig;
+  const run = new Run(runConfig?.seed ?? seed, bus, runConfig);
   // K3c3/K4c3 — a live redraw OR empower policy needs the turn gates: the
   // `redrawCards`/`empowerUnit` commands are only legal in `turn-intro`,
   // which exists only when `pauseAtTurnGates` is on.
@@ -484,6 +506,7 @@ function finalize(
   return {
     seed,
     strategyName,
+    daemonId: run.daemon?.id ?? null,
     outcome,
     finalFloorReached: run.currentFloor,
     totalTicks,

@@ -855,40 +855,64 @@ mean for redraw (K3c3), argmax menu for empower (K4c3).
 
 ## Phase L — Daemons (relics)
 
-The meta-layer that **gates and configures** the Phase K mechanics, plus
-standalone passive effects — "think relics from Slay the Spire" (brief).
+The meta-layer that **gates and configures** the Phase K mechanics — "think
+relics from Slay the Spire" (brief).
 
-**DESIGN ROUND NEEDED** — the daemon catalog is mock-up-and-iterate; lock a
-first handful with the user.
+**L1 ✅ SHIPPED (2026-06-12, 3 commits — DESIGN ROUND LOCKED).** The locked
+calls (the design round, 2026-06-12):
 
-**Shape:**
-- A **daemon** is an item with a **passive effect on the player**, data-driven
-  (`config/daemons.json` + a zod loader). Effects span **out-of-battle**
-  (e.g. "every other turn, enable redraw up to two"; "at the first turn of an
-  encounter, enable empower with [+4 strength until end of encounter]") **and
-  in-battle** (e.g. "on a friendly unit evading an attack, gain +1 speed for
-  ten seconds" — rides K1's status system + I2's evade trigger). The brief is
-  explicit that daemons are **not** limited to out-of-battle effects.
-- **Acquisition (this round):** a **random daemon spawns at the start of a
-  run** (mock a few). A proper daemon economy (shop / rewards / multiple
-  daemons) is later.
-- **Daemons replace Phase K's static enables** — redraw/empower availability
-  becomes "whatever the active daemons grant," with the K defaults as the
-  no-daemon baseline.
+- **DAEMON-ONLY GATES** (the user's deliberate roguelite call, *stronger* than
+  the original "K defaults as the no-daemon baseline" sketch above): the
+  K3/K4 static enables ship **false**; redraw/empower availability is whatever
+  the run's daemon grants, full stop. An idol granting neither tool = a run
+  without them. "Some runs are just going to be bad… the fun comes from
+  adapting your strategy on the fly."
+- **The first catalog = FOUR IDOLS** (Roman-statue flavor inside the terminal
+  frame — the synthwave blend; unix-daemon naming TABLED as too deep a cut for
+  the Windows-only playtesters, revisit with the shop round): **Mars** (+4
+  STR/RNG/MAG empower, 1/turn — the K4 buff verbatim), **Minerva** (+4 DEF
+  empower, 1/turn, key `warded`), **Mercury** (50%/turn coin → the FULL
+  redraw), **Janus** (guaranteed redraw, ≤2 cards/turn — the K3 `maxCards`
+  mode finally shipped live).
+- **Acquisition:** one **uniform roll at run start** (a placeholder — the
+  user's planned **starting profiles** [roster + daemon] replace pure-random
+  later; `RunConfig.daemon` / `?daemon=<id|none>` is that seam).
+- **`chance` is a first-class per-turn gate condition** (the user: "a lot of
+  daemons will have X% chance to trigger knobs") off a dedicated `daemonRng`
+  stream; the current turn's flips persist in the save (**RunSnapshot
+  v15→v16** — daemon stored whole + stream + resolved gates).
 
-**Cost:** new `Run`-side daemon state (snapshot it — **RunSnapshot bump**); an
-effect-dispatch layer hooking the run loop (turn-start, encounter-start) + the
-status system (in-battle triggers). Fuzz: daemon-aware strategies later;
-this phase just needs a daemon present + its effects firing.
+Commits: (1) headless mechanic (`config/daemons.json` + zod, pure
+[daemon.ts](src/run/daemon.ts) `rollDaemon`/`resolveTurnGates` — the K3/K4
+validators consume the resolved gates UNCHANGED); (2) the PreTurnScreen
+surface (idol banner, daemon-derived empower hint/badge via the extended
+`turn:starting` payload, the "idol is silent" chance-denied line — denied ≠
+spent); (3) fuzz `--daemon=<id|random|none>` on run/`--search`/
+`--balance-sweep` (ShardJob-threaded; `random` ≡ absent pinned) + per-daemon
+win/floor buckets (`perDaemonStats`) + the measurement
+([BALANCE.md](BALANCE.md) §L1c3).
 
-**Headless tests:** a daemon's trigger fires at the right boundary; an out-of-
-battle daemon enables redraw/empower per its rule; an in-battle daemon applies
-a status effect on its trigger; a run rolls exactly one starting daemon
-deterministically per seed; round-trips.
-
-**Decision points L:** the first daemon catalog (the design round); the
-trigger vocabulary (must cover the K + I2 hooks the example daemons need); how
-daemon-granted redraw/empower configs compose if multiple apply.
+**Deferred to the daemon-economy round (shop/loot — acquisition first, the
+user's call; the sketches are KEPT):**
+- The **`battleTrigger` effect vocabulary** (config entries → K1 trigger
+  handlers) and the eight banked daemon sketches that exercise it:
+  *watchdogd* (evade → +1 SPD 10s — the brief's literal example), *oom-reaper*
+  (kill → stacking +2 offense eot), *firewalld* (takeHit → stacking +1 DEF
+  eot), *panicd* (friendly death → team +2 POW 15s), *niced* (first
+  deploy/encounter → +2 offense that turn), *healthd* (turnStart → +N health
+  pool — needs the one NEW primitive, pool mutation), *forkd* (2
+  empowers/turn), *bufferd* (redraw as N singles across actions). The K1
+  trigger dispatch already exists and is tested; the daemons.json zod union
+  just grows a variant. Unix names ship with descriptive subtitles so the
+  reference is a bonus, not a prerequisite.
+- **Multi-daemon composition** (one daemon per run can't conflict; per-gate
+  override semantics don't paint us into a corner).
+- **DoT / stun status primitives** (periodic damage + action-denial — the K1
+  system is stat-mods only) when their first consumer lands; **roster
+  removal** (no plumbing today; deck piles hold roster indices, so the
+  between-encounter splice is the cheap seam); the **daemon-LIST HUD** (one
+  daemon needs only the banner; the list folds into the Phase M presentation
+  pass).
 
 ---
 

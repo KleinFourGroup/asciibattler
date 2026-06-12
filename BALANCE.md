@@ -743,3 +743,41 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   (overkill saturation — the carry already wins its fights); spreading via `lo`/`random` edges it out.
   (3) The ~1 hang/100 procedural/spiralFireLife/labyrinth tail persists from the K3.5 read at every
   policy — unchanged by empower; still an N2 watch item.
+
+- **L1c3 per-idol read — MINERVA IS AN EXTREME OUTLIER; the idol roll is now the biggest single lever
+  in the game (2026-06-12).** The L1-closing measurement with the new `--daemon` arm (zero src change;
+  knobs unchanged; **daemon-only gates** now live, so redraw/empower exist only where an idol grants
+  them). 100 seeds × both baseline strategies per arm (200 full runs each), bots fixed at the K-era
+  naive best — `--redraw=level:2 --empower=random` — so each arm measures the idol's value GIVEN a
+  player who uses what's granted (under `none` both bots no-op; the K3c3 gates-on ≡ headless control
+  still pins the gate path):
+
+  | arm (forced)  | pooled win/200 | avg floor | greedy win | pure-random win | hangs |
+  |---------------|---------------|-----------|------------|-----------------|-------|
+  | none (control)| 14.0% (28)    | 5.09      | 15%        | 13%             | 2     |
+  | janus         | 16.5% (33)    | 5.10      | 14%        | 19%             | 1     |
+  | mercury       | 18.5% (37)    | 5.40      | 16%        | 21%             | 0     |
+  | mars          | 31.5% (63)    | 6.62      | 26%        | 37%             | 0     |
+  | **minerva**   | **69.5% (139)**| **9.28** | 67%        | 72%             | 2     |
+  | random (roll) | 34.0% (68)    | ~6.4      | 32%        | 36%             | 0     |
+
+  The `random` arm's per-idol buckets (janus 17.2%/64 runs · mars 33.3%/54 · mercury 20.0%/40 ·
+  minerva 73.8%/42) replicate the forced arms within noise — the `perDaemonStats` bucketing works as
+  a one-batch per-idol read. Conclusions: (1) **daemon-only gates put the baseline back where the
+  pre-K4 model sat** (none 14% ≈ the K4c3 no-empower 18.5%, modulo the daemonRng stream re-roll) and
+  **Mars ≈ the K4c3 always-on empower read** (31.5% vs 32%) — clean cross-validation that the idol
+  IS the old static enable. (2) **Minerva (+4 DEF, stacking, 1/turn) is wildly dominant**: +55.5pp
+  over the control (σ≈2.5pp at this n → off the charts) and +38pp over Mars, nearly QUINTUPLING the
+  win rate. Mechanism (the design-round flag, now confirmed): DEF is GP2's FLAT SUBTRACTIVE
+  mitigation, so against low-might fodder (Bandit club +2) a few stacks push per-hit damage toward
+  the `minDamage` floor — carries go functionally unkillable while `survivorPower` chips the enemy
+  pool every turn. The response is pure config data and the USER'S call (logged, not changed here):
+  lower the add (+2?), switch to a `mul`, cap the stack, or embrace it as the catalog's "god roll"
+  at a rarity cost once the economy lands. (3) **The redraw idols barely move the band** (janus
+  +2.5pp ≈ 1σ, mercury +4.5pp ≈ 1.6σ — not significant) — consistent with K3c3's "naive redraw lift
+  is small"; their value as shipped is texture/agency, not power. (4) **The idol roll is now the
+  dominant variance source** — 14%→70% at fixed bot skill — which is exactly the roguelite spread
+  the user chose with daemon-only gates; the per-daemon buckets make it measurable per arm, and the
+  future starting-profiles round inherits the same bucketing. (5) Hangs stay at the known ~0.5–1%
+  labyrinth/spiralFireLife tail, idol-independent; still N2's watch item. **N2 must re-sweep the
+  band PER-IDOL (or post-Minerva-rebalance)** — a single global band no longer describes the game.

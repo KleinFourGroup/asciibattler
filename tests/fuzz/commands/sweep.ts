@@ -25,8 +25,17 @@ import { reportFromCsv } from '../sweepReport';
 import { proclivityLabel } from '../objectiveStrategy';
 import { redrawPolicyLabel } from '../redrawPolicy';
 import { empowerPolicyLabel } from '../empowerPolicy';
+import { daemonLabel } from '../daemonSelection';
 import { parseRunConfig } from '../../../src/run/RunConfig';
-import { bail, empowerFromArgs, fmtDuration, objectiveFromArgs, redrawFromArgs, type CliArgs } from './args';
+import {
+  bail,
+  daemonFromArgs,
+  empowerFromArgs,
+  fmtDuration,
+  objectiveFromArgs,
+  redrawFromArgs,
+  type CliArgs,
+} from './args';
 
 export type SweepModeArgs = Pick<
   CliArgs,
@@ -41,6 +50,7 @@ export type SweepModeArgs = Pick<
   | 'objective'
   | 'redraw'
   | 'empower'
+  | 'daemon'
   | 'jobs'
   | 'dryRun'
   | 'outDir'
@@ -73,6 +83,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
   const objective = objectiveFromArgs(args);
   const redraw = redrawFromArgs(args);
   const empower = empowerFromArgs(args);
+  const daemon = daemonFromArgs(args);
 
   const jobs = args.jobs !== undefined ? Math.max(1, Math.floor(args.jobs)) : 1;
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
@@ -84,8 +95,9 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
   const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
   const redrawNote = redraw ? ` redraw=${redrawPolicyLabel(redraw)}` : '';
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
+  const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${empowerNote}${jobsNote} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -98,6 +110,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     objective,
     redraw,
     empower,
+    daemon,
     jobs,
     tmpDir: join(args.outDir, 'shard-tmp'),
     maxPoints: args.dryRun ? 1 : undefined,

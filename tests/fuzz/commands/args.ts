@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { parseObjectiveFlag, type ObjectiveProclivity } from '../objectiveStrategy';
 import { parseRedrawFlag, type RedrawPolicy } from '../redrawPolicy';
 import { parseEmpowerFlag, type EmpowerPolicy } from '../empowerPolicy';
+import { parseDaemonFlag, type DaemonSelection } from '../daemonSelection';
 
 export interface CliArgs {
   count: number;
@@ -63,6 +64,10 @@ export interface CliArgs {
   // K4c3 — the empower policy, same modes + contract
   // (`--empower=<none|random|level:hi|level:lo|file.json>`; default none).
   empower?: string;
+  // L1c3 — the daemon arm driven through the run / search / sweep modes
+  // (`--daemon=<random|none|id>`; default random = the Run's own roll, the
+  // real game's behavior — byte-identical to the flag being absent).
+  daemon?: string;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -171,6 +176,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--empower':
         args.empower = v;
         break;
+      case '--daemon':
+        args.daemon = v;
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
@@ -211,6 +219,13 @@ export function redrawFromArgs(args: Pick<CliArgs, 'redraw'>): RedrawPolicy | un
  *  absent (same contract as `redrawFromArgs`). */
 export function empowerFromArgs(args: Pick<CliArgs, 'empower'>): EmpowerPolicy | undefined {
   return args.empower !== undefined ? parseEmpowerFlag(args.empower) : undefined;
+}
+
+/** L1c3 — resolve the `--daemon` flag into a selection, or `undefined` when
+ *  absent (the harness leaves the Run's own roll — byte-identical to
+ *  `random`). Bails loudly on an unknown idol id. */
+export function daemonFromArgs(args: Pick<CliArgs, 'daemon'>): DaemonSelection | undefined {
+  return args.daemon !== undefined ? parseDaemonFlag(args.daemon) : undefined;
 }
 
 export function range(start: number, count: number): number[] {

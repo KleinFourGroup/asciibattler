@@ -31,8 +31,16 @@ import { evaluateVectorsSharded } from '../searchShard';
 import { proclivityLabel } from '../objectiveStrategy';
 import { redrawPolicyLabel } from '../redrawPolicy';
 import { empowerPolicyLabel } from '../empowerPolicy';
+import { daemonLabel } from '../daemonSelection';
 import { parseRunConfig } from '../../../src/run/RunConfig';
-import { bail, empowerFromArgs, objectiveFromArgs, redrawFromArgs, type CliArgs } from './args';
+import {
+  bail,
+  daemonFromArgs,
+  empowerFromArgs,
+  objectiveFromArgs,
+  redrawFromArgs,
+  type CliArgs,
+} from './args';
 
 export type SearchModeArgs = Pick<
   CliArgs,
@@ -46,6 +54,7 @@ export type SearchModeArgs = Pick<
   | 'objective'
   | 'redraw'
   | 'empower'
+  | 'daemon'
   | 'outDir'
 >;
 
@@ -78,10 +87,12 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const objective = objectiveFromArgs(args);
   const redraw = redrawFromArgs(args);
   const empower = empowerFromArgs(args);
+  const daemon = daemonFromArgs(args);
   let harnessOptions: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
   if (objective) harnessOptions = { ...harnessOptions, objective };
   if (redraw) harnessOptions = { ...harnessOptions, redraw };
   if (empower) harnessOptions = { ...harnessOptions, empower };
+  if (daemon) harnessOptions = { ...harnessOptions, daemon };
 
   const floorNote = floorCount !== undefined ? ` floors=${floorCount}` : ' floors=full';
   const rosterNote = runConfig.startingRoster
@@ -91,8 +102,9 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
   const redrawNote = redraw ? ` redraw=${redrawPolicyLabel(redraw)}` : '';
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
+  const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${empowerNote}${jobsNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -113,6 +125,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       objective,
       redraw,
       empower,
+      daemon,
       jobs,
       tmpDir: join(args.outDir, 'shard-tmp'),
     });

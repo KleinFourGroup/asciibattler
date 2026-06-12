@@ -28,14 +28,15 @@ import type { RosterEntry } from '../../src/run/RunConfig';
 import type { ObjectiveProclivity } from './objectiveStrategy';
 import type { RedrawPolicy } from './redrawPolicy';
 import type { EmpowerPolicy } from './empowerPolicy';
+import type { DaemonSelection } from './daemonSelection';
 
 /** The job handed to one `--eval-shard` child (written as JSON to a temp file).
  *  `knobs` are the grid point's config overrides (empty `{}` means no override);
  *  `floorCount` is the already-resolved run length (tier default or `--floors`).
- *  `objective` (J4) / `redraw` (K3c3) / `empower` (K4c3) are the fixed
- *  objective proclivity / redraw policy / empower policy the child's runs
- *  drive, or undefined for none — plain JSON objects, so they round-trip the
- *  temp file. */
+ *  `objective` (J4) / `redraw` (K3c3) / `empower` (K4c3) / `daemon` (L1c3) are
+ *  the fixed objective proclivity / redraw policy / empower policy / daemon
+ *  arm the child's runs drive, or undefined for none — plain JSON objects, so
+ *  they round-trip the temp file. */
 export interface ShardJob {
   readonly knobs: Record<string, number>;
   readonly vectors: readonly ScoredWeights[];
@@ -45,6 +46,7 @@ export interface ShardJob {
   readonly objective?: ObjectiveProclivity;
   readonly redraw?: RedrawPolicy;
   readonly empower?: EmpowerPolicy;
+  readonly daemon?: DaemonSelection;
 }
 
 /**
@@ -118,6 +120,8 @@ export interface ShardedEvalParams {
   readonly redraw?: RedrawPolicy;
   /** K4c3 — the fixed empower policy the children's runs drive (or none). */
   readonly empower?: EmpowerPolicy;
+  /** L1c3 — the fixed daemon arm the children's runs carry (or random). */
+  readonly daemon?: DaemonSelection;
   readonly jobs: number;
   /** Scratch dir for the per-chunk job/result JSON; created + removed here. */
   readonly tmpDir: string;
@@ -129,11 +133,21 @@ export interface ShardedEvalParams {
  * Rejects if any child fails (its stderr is surfaced in the error).
  */
 export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise<number[]> {
-  const { vectors, seeds, knobs, floorCount, roster, objective, redraw, empower, jobs, tmpDir } = params;
+  const { vectors, seeds, knobs, floorCount, roster, objective, redraw, empower, daemon, jobs, tmpDir } =
+    params;
   const chunks = chunkVectors(vectors, jobs);
   mkdirSync(tmpDir, { recursive: true });
   try {
-    const base: Omit<ShardJob, 'vectors'> = { knobs, seeds, floorCount, roster, objective, redraw, empower };
+    const base: Omit<ShardJob, 'vectors'> = {
+      knobs,
+      seeds,
+      floorCount,
+      roster,
+      objective,
+      redraw,
+      empower,
+      daemon,
+    };
     const perChunk = await Promise.all(
       chunks.map((chunk, i) => runChunk(chunk, i, base, tmpDir)),
     );

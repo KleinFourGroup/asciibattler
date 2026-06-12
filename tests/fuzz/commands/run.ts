@@ -25,14 +25,25 @@ import {
   renderFailureTrace,
   failureFilename,
   renderPerFloorAnalysis,
+  renderDaemonAnalysis,
   perFloorStats,
+  perDaemonStats,
   perLayoutStats,
   perLayoutFloorStats,
   renderLayoutAnalysis,
   renderLayoutCsv,
   renderLayoutFloorCsv,
 } from '../reporters';
-import { bail, empowerFromArgs, objectiveFromArgs, redrawFromArgs, range, type CliArgs } from './args';
+import { daemonLabel } from '../daemonSelection';
+import {
+  bail,
+  daemonFromArgs,
+  empowerFromArgs,
+  objectiveFromArgs,
+  redrawFromArgs,
+  range,
+  type CliArgs,
+} from './args';
 
 export type RunModeArgs = Pick<
   CliArgs,
@@ -46,6 +57,7 @@ export type RunModeArgs = Pick<
   | 'objective'
   | 'redraw'
   | 'empower'
+  | 'daemon'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -74,6 +86,10 @@ export function runRunCli(args: RunModeArgs): void {
   // K4c3 — and a fixed empower policy (same contract).
   const empower = empowerFromArgs(args);
   if (empower) harnessOptions = { ...harnessOptions, empower };
+  // L1c3 — the daemon arm (default random = the Run's own roll, byte-identical
+  // to the flag being absent; none = the daemon-less control arm).
+  const daemon = daemonFromArgs(args);
+  if (daemon) harnessOptions = { ...harnessOptions, daemon };
 
   // Fresh failures/ dir so stale traces from prior runs don't lie. Only the
   // failures subdir is wiped (not the whole output dir) so a search's
@@ -86,8 +102,11 @@ export function runRunCli(args: RunModeArgs): void {
 
   const allResults: RunResult[] = [];
   const layoutNote = args.layout ? ` (layout=${args.layout})` : '';
+  const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   for (const strategy of strategies) {
-    process.stdout.write(`Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}…\n`);
+    process.stdout.write(
+      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${daemonNote}…\n`,
+    );
     for (const s of seeds) allResults.push(runOne(s, strategy, harnessOptions));
   }
 
@@ -151,6 +170,12 @@ export function runRunCli(args: RunModeArgs): void {
       process.stdout.write(`  hangs by layout: ${JSON.stringify(stats.hangsByLayout)}\n`);
     }
     process.stdout.write(`  by outcome: ${JSON.stringify(stats.byOutcome)}\n\n`);
+  }
+  // L1c3 — the per-daemon read: printed whenever the batch spans more than one
+  // daemon disposition (a `random` batch buckets per idol in one pass), or when
+  // the arm was explicitly chosen (a forced arm prints its single bucket).
+  if (daemon !== undefined || perDaemonStats(allResults).length > 1) {
+    process.stdout.write(renderDaemonAnalysis(allResults) + '\n');
   }
   process.stdout.write(`Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`);
 }

@@ -199,7 +199,7 @@ src/
     ObjectiveController.ts   # J3: battle-scoped objective input — right-click / Set-arm-then-click / Clear → World commands
     MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode
     RecruitScreen.ts         # recruit offer cards → dispatch chooseRecruit; raw stat block + ability list (GP3)
-    PromotionScreen.ts       # E4.4: per-unit level-up rows
+    PromotionScreen.ts       # E4.4: per-unit level-up cards; M2: staggered cascade reveal (cards pop in, gains tick green old→new + +N chip; click-anywhere skips)
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
     statLabels.ts            # GP3: shared STAT_LABELS map (card + HUD + PromotionScreen)
 

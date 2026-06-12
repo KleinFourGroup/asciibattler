@@ -498,10 +498,13 @@ body {
   opacity: 1;
 }
 
-/* PromotionScreen (E4). Slots between BattleScene and RecruitScene when
-   one or more roster units leveled up post-victory. Heading tells the
-   player WHAT just happened (the count); cards show the per-stat
-   delta so the leveling system feels visible rather than silent. */
+/* PromotionScreen (E4; M2 staggered reveal). Shown at turn boundaries when
+   roster units leveled. Cards pop in staggered (scale-overshoot entrance,
+   gated by .is-landed), each landing in its PRE-level state — all stat rows
+   dim amber. Reveal beats then add .promotion-stat--gain / .is-revealed:
+   the row turns green, the value flips to the new number with a pop, and a
+   +N chip appears. Timing lives in PromotionScreen.ts; this file only
+   defines the two states + the transitions between them. */
 
 .promotion-screen {
   position: absolute;
@@ -541,6 +544,18 @@ body {
   align-items: center;
   gap: 10px;
   font-family: var(--font-mono);
+  /* M2 — cards start hidden; .is-landed pops them in. The back-out cubic
+     overshoots ~5% past scale(1) for the "pop". */
+  opacity: 0;
+  transform: scale(0.85) translateY(10px);
+  transition:
+    opacity 140ms ease-out,
+    transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.promotion-card.is-landed {
+  opacity: 1;
+  transform: none;
 }
 
 .promotion-glyph {
@@ -557,6 +572,17 @@ body {
   opacity: 0.85;
 }
 
+/* M2 — the level value is the card's first reveal beat: flips Lv N → N+1,
+   goes (and stays) gain-green. inline-block so the pop transform applies. */
+.promotion-level-value {
+  display: inline-block;
+}
+
+.promotion-level-value.is-revealed {
+  color: #33ff00; /* TERMINAL_GREEN */
+  animation: promotion-pop 220ms ease-out;
+}
+
 .promotion-stats {
   display: flex;
   flex-direction: column;
@@ -570,11 +596,48 @@ body {
   justify-content: space-between;
   color: #ffb000; /* TERMINAL_AMBER baseline */
   opacity: 0.55;
+  /* M2 — rows reveal at runtime; ease the amber→green flip. */
+  transition: color 150ms ease-out, opacity 150ms ease-out;
 }
 
 .promotion-stat--gain {
   color: #33ff00; /* TERMINAL_GREEN — eyes pulled to the growth */
   opacity: 1;
+}
+
+.promotion-stat-right {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+/* inline-block so the promotion-pop scale transform applies. */
+.promotion-stat-value {
+  display: inline-block;
+}
+
+.promotion-stat-value.is-revealed {
+  animation: promotion-pop 220ms ease-out;
+}
+
+/* M2 — the +N chip appears the moment its stat reveals. */
+.promotion-stat-delta {
+  display: inline-block;
+  font-size: 11px;
+  color: #33ff00;
+  animation: promotion-pop 220ms ease-out;
+}
+
+@keyframes promotion-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.45);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .promotion-continue {

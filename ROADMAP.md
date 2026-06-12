@@ -943,13 +943,28 @@ encounter end); a multi-turn encounter produces multiple promotion
 opportunities; the no-attrition full-HP re-field still holds; determinism;
 snapshot mid-encounter with pending per-turn XP round-trips.
 
-### M2 — Level-up screen redesign (juice + less at once)
+### M2 — Level-up screen redesign (juice + less at once) ✅ (2026-06-12)
 
 **Shape (brief):** the `PromotionScreen` "presents too much information at
 once" and "needs some juice." Redesign for progressive disclosure (reveal
 stat gains with animation/sequencing rather than a wall of deltas) + visual
 polish. Render-only; browser-verified. Pairs with M1 (more frequent, so it
 must feel good) and M3 (it stops auto-advancing).
+
+**Landed (design round locked 4 calls, all recommended):** cards pop in
+staggered (200ms apart, scale-overshoot entrance), each landing in its
+PRE-level state — old level, old stats, all rows dim amber. Each card then
+reveals its own gains while later cards are still landing (**cascading
+pipeline**): the **level value ticks first** (Lv N → N+1, stays green),
+then each grown stat turns green and flips old→new with a **`+N` chip**
+(clean resting state — no `6 → 7` arrow; the animation carries the story),
+one beat per 200ms, a **healtick blip** per beat. **Click anywhere skips**
+to the fully-revealed end state (audio muted on skip); Continue is always
+enabled — with M1's per-turn cadence the player is never trapped. Timing
+constants live in `PromotionScreen.ts`; the two visual states + transitions
+in `ui.css`. Render-only — no sim/run/snapshot/fuzz impact; browser-verified
+(timestamped DOM trace pinned the cascade; skip + end state + zero console
+errors).
 
 ### M3 — Scene polish: kill auto-progression + turn fade-in/out
 

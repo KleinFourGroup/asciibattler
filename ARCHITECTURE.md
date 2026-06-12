@@ -187,6 +187,8 @@ src/
     MapScene.ts              #   DOM-only, wraps MapScreen
     RecruitScene.ts          #   DOM-only, wraps RecruitScreen
     PromotionScene.ts        #   E4.4: DOM-only level-up summary; M1: pops at each turn boundary (mid-encounter, or before recruit on the final turn)
+    PreTurnScene.ts          #   H4b: DOM-only, wraps PreTurnScreen (the turn-intro gate)
+    PostTurnScene.ts         #   H4b: DOM-only, wraps PostTurnScreen (the turn-outcome gate)
     GameOverScene.ts         #   DOM-only, wraps GameOverScreen
 
   ui/
@@ -198,6 +200,8 @@ src/
     Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
     ObjectiveController.ts   # J3: battle-scoped objective input — right-click / Set-arm-then-click / Clear → World commands
     MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode
+    PreTurnScreen.ts         # H4b: turn N + pools + the drawn hand (H5b); K3 redraw + K4 empower selection; K3.5 map label; L1 idol banner
+    PostTurnScreen.ts        # H4b: turn outcome (winner / pool chips / gauges); M3: Continue-only (auto-timer removed)
     RecruitScreen.ts         # recruit offer cards → dispatch chooseRecruit; raw stat block + ability list (GP3)
     PromotionScreen.ts       # E4.4: per-unit level-up cards; M2: two-phase reveal (all cards pop in, then gains tick green card-by-card + +N chip; click-anywhere skips)
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
@@ -223,7 +227,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   nodemap.json               # floor count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
-  spawn.json
+  spawn.json                 # D5.C: overflow spawn-in lockout/fade seconds; M3: turnIntroSeconds (turn-start materialize + sim hold)
   tiles.json
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;
                              #     GP1/I1: mobilityCdPerStat/speedCdPerStat + mobilityMinCdScale/speedMinCdScale;

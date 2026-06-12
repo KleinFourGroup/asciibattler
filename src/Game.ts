@@ -20,6 +20,11 @@ import { AudioPlayer } from './audio/AudioPlayer';
 import { PlaybackSpeed } from './ui/PlaybackSpeed';
 import { Keybindings } from './ui/Keybindings';
 
+/** M3 — the after-turn outro (ms): how long the resolved battle board
+ *  lingers (death fades, hitsplats drain) before the post-turn outcome
+ *  screen replaces it. Tunable by feel during playtest. */
+const TURN_OUTRO_MS = 900;
+
 /**
  * Top-level orchestrator. Owns the EventBus, Renderer, FontAtlas, persistent
  * 3D meshes (TerrainRenderer + SpriteRenderer), and the Run state machine —
@@ -82,6 +87,10 @@ export class Game implements RunDispatcher {
   private readonly runConfig: RunConfig;
   /** The scene currently mounted. Null only briefly during swap(). */
   private activeScene: Scene | null = null;
+  /** M3 — a scheduled deferred swap (the after-turn outro). Any direct
+   *  swap() cancels it, so a scheduled scene can never replace one that
+   *  arrived after it. */
+  private pendingSwapTimer: number | null = null;
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
     this.fontAtlas = fontAtlas;
@@ -147,11 +156,19 @@ export class Game implements RunDispatcher {
     // `turn:starting` opens the pre-turn screen; `turn:resolved` the post-turn
     // outcome screen. Both advance via the `advanceTurn` command, whose
     // continuations (battle:started / the next turn:starting / recruit:offered /
-    // promotion:pending / run:*) drive their own swaps. The turn:resolved swap
-    // fires from inside the ending world.tick() — safe because BattleScene.tick
-    // + the Clock callback null-guard everything dispose() tears down.
+    // promotion:pending / run:*) drive their own swaps.
+    //
+    // M3 — turn:resolved fires from inside the ending world.tick(), but the
+    // PostTurnScene swap is DEFERRED by a brief outro so the final board state
+    // breathes (death fades + hitsplats drain) before the outcome screen
+    // masks it. Safe to linger: World.tick() no-ops once `_ended`, so the
+    // BattleScene's clock spins harmlessly through the outro, and nothing
+    // else can swap until `advanceTurn` (which the outcome screen hasn't
+    // offered yet) — swap() cancels the timer anyway, defensively.
     this.bus.on('turn:starting', (info) => this.swap(new PreTurnScene(info)));
-    this.bus.on('turn:resolved', (info) => this.swap(new PostTurnScene(info)));
+    this.bus.on('turn:resolved', (info) =>
+      this.swapAfter(TURN_OUTRO_MS, () => new PostTurnScene(info)),
+    );
 
     // B6 audio hooks at the page-lifetime layer. Subscriptions tied to
     // World/Scene lifetimes live in BattleScene (see unit:attacked /
@@ -294,9 +311,28 @@ export class Game implements RunDispatcher {
    * resetRun since the last call).
    */
   private swap(next: Scene): void {
+    this.cancelPendingSwap();
     this.activeScene?.dispose();
     this.activeScene = next;
     next.mount(this.buildContext());
+  }
+
+  /** M3 — swap after `ms`, letting the current scene play out (the
+   *  after-turn outro). The factory runs at fire time so the scene mounts
+   *  against the freshest state. Superseded by any direct swap(). */
+  private swapAfter(ms: number, make: () => Scene): void {
+    this.cancelPendingSwap();
+    this.pendingSwapTimer = window.setTimeout(() => {
+      this.pendingSwapTimer = null;
+      this.swap(make());
+    }, ms);
+  }
+
+  private cancelPendingSwap(): void {
+    if (this.pendingSwapTimer !== null) {
+      window.clearTimeout(this.pendingSwapTimer);
+      this.pendingSwapTimer = null;
+    }
   }
 
   private buildContext(): SceneContext {

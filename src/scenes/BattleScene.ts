@@ -20,6 +20,7 @@ import { ObjectiveController } from '../ui/ObjectiveController';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
 import { TICK_RATE } from '../config';
 import { HEALTH } from '../config/health';
+import { SPAWN } from '../config/spawn';
 import { getLayout, type Theme } from '../sim/layouts';
 import type { Scene, SceneContext } from './Scene';
 
@@ -45,6 +46,12 @@ export class BattleScene implements Scene {
    *  → setObjective/clearObjective commands). Battle-scoped; torn down in
    *  dispose so its canvas listeners don't outlive the battle. */
   private objective: ObjectiveController | null = null;
+  /** M3 — the turn-intro hold: seconds the sim clock stays parked while the
+   *  teams fade in (SPAWN.turnIntroSeconds), so a turn opens with a breath
+   *  instead of instant combat. Counted in REAL dt (a fast-forward speed
+   *  doesn't shorten the materialize). Render-only: the world just starts
+   *  ticking later — the tick sequence itself is untouched. */
+  private introRemaining = 0;
   private readonly subscriptions: Array<() => void> = [];
 
   mount(ctx: SceneContext): void {
@@ -228,9 +235,22 @@ export class BattleScene implements Scene {
 
     spawnTeam(this.world, 'player', encounter.playerTeam, playerRegion, setupRng);
     spawnTeam(this.world, 'enemy', encounter.enemyTeam, enemyRegion, setupRng);
+
+    // M3 — park the sim for the turn-intro materialize (the spawns above
+    // started their fade-ins; see `tick`).
+    this.introRemaining = SPAWN.turnIntroSeconds;
   }
 
   tick(dt: number): void {
+    // M3 — during the intro hold only the visuals advance (the spawn fades
+    // need BattleRenderer.update to play), at REAL speed. The leftover dt on
+    // the boundary frame is dropped (≤ one frame, invisible).
+    if (this.introRemaining > 0) {
+      this.introRemaining -= dt;
+      this.battleRenderer?.update(dt);
+      this.terrain?.advanceTime(dt);
+      return;
+    }
     // I3 — fast-forward. Scale the real frame `dt` by the active speed and feed
     // it to EVERYTHING in the battle (sim clock + render animations + terrain
     // shader) so the whole scene stays visually coherent at 2×/3×. Determinism

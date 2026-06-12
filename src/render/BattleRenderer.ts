@@ -373,28 +373,28 @@ export class BattleRenderer {
       return;
     }
 
-    // D5.C — overflow-queue spawn? Lerp sprite alpha 0 → 1 over the
-    // SpawnAction lockout window so the unit fades in rather than
-    // popping. The overlay starts at opacity 0 too and fades in alongside
-    // via the OverlayFadeIn lane in `updateOverlays`.
-    const initialAlpha = instant ? 1 : 0;
-    if (!instant) {
-      this.animator.startFadeIn(handle, SPAWN.durationSeconds);
-    }
+    // Every combatant fades in; only the window differs. D5.C overflow
+    // spawns lerp alpha 0 → 1 over the SpawnAction lockout so the fade and
+    // the lockout line up; M3 — initial placements (`instant: true`) fade
+    // over the turn-intro window (BattleScene holds the sim clock for the
+    // same duration), so a turn opens with the teams materializing instead
+    // of popping. Walls/neutrals returned above and still pop — scenery.
+    // The overlay starts at opacity 0 too and fades in alongside via the
+    // OverlayFadeIn lane in `updateOverlays`.
+    const fadeSeconds = instant ? SPAWN.turnIntroSeconds : SPAWN.durationSeconds;
+    this.animator.startFadeIn(handle, fadeSeconds);
 
-    const overlay = this.overlays.add(unit.team, unit.level, initialAlpha);
+    const overlay = this.overlays.add(unit.team, unit.level, 0);
     const pct = Math.max(0, unit.currentHp) / unit.derived.maxHp;
     this.overlays.updateHp(overlay, pct);
     this.overlays.updatePosition(overlay, spritePos);
     this.overlayHandles.set(unit.id, overlay);
 
-    if (!instant) {
-      this.overlayFadeIns.set(unit.id, {
-        elapsed: 0,
-        duration: SPAWN.durationSeconds,
-        handle: overlay,
-      });
-    }
+    this.overlayFadeIns.set(unit.id, {
+      elapsed: 0,
+      duration: fadeSeconds,
+      handle: overlay,
+    });
   };
 
   private onUnitMoved = ({

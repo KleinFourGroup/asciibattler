@@ -3,7 +3,7 @@
  * `turn:starting`), it names the turn + shows both health pools and the drawn
  * hand, then waits for the player's "Fight ▸" click. (H4b shipped a 2s
  * auto-advance; K3 REMOVED it — the user's call — because the redraw decision
- * below shouldn't race a timer. The post-turn screen keeps its auto-advance.)
+ * below shouldn't race a timer. M3 then removed the post-turn timer too.)
  *
  * H5b — the placeholder hint became the real **drawn hand**: a row of compact
  * cards (glyph + level) for the units the deck dealt this turn (the

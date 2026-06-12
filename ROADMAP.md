@@ -972,7 +972,7 @@ constants live in `PromotionScreen.ts`; the visual states + transitions in
 revision — at most one card ever `.is-revealing`; skip + end state + zero
 console errors).
 
-### M3 — Scene polish: kill auto-progression + turn fade-in/out
+### M3 — Scene polish: kill auto-progression + turn fade-in/out ✅ (2026-06-12)
 
 **Shape (brief):** (a) **remove the auto-progression** between the pre- and
 post-turn (skirmish) scenes — the H4b `PRETURN_AUTO_MS` / `POSTTURN_AUTO_MS`
@@ -982,8 +982,22 @@ add a **unit fade-in at turn start** and a **brief after-turn pause** before
 the scene change (the fade channel exists — the D5.C / `bloomIntensity`
 alpha-fade machinery).
 
-**Cost:** presentation-only — no snapshot/fuzz impact (the headless fuzz path
-keeps `pauseAtTurnGates` OFF and never sees these). Browser-verified.
+**Landed:** (a) the post-turn auto-timer is GONE (`PostTurnScreen` advances
+only on Continue; pre-turn lost its timer in K3 — turn pacing is now fully
+player-driven). (b) **Turn-intro materialize**: initial combatant placements
+ride the D5.C fade channel (walls/neutrals still pop — scenery) over a new
+`turnIntroSeconds` knob in `config/spawn.json` (0.8s), while `BattleScene`
+holds the sim clock for the same window — units fade in, one breath, THEN
+combat starts. The hold counts REAL dt (fast-forward doesn't shorten it) and
+only delays when ticking *starts* — the tick sequence is untouched.
+**After-turn outro**: Game defers the `turn:resolved` → `PostTurnScene` swap
+by `TURN_OUTRO_MS` (900ms, a Game.ts const) so the final board lingers
+(death fades + hitsplats drain — `World.tick()` no-ops once ended, so the
+clock spins harmlessly); any direct swap cancels the deferred one.
+Presentation-only — zero sim/snapshot/fuzz impact; browser-verified
+(driven-tick probe: tick 0 through the hold then ticking, all 13 combatant
+fades running at mount; outro: scene stays BattleScene through the window,
+no auto-advance after 4s, Continue still advances).
 
 ### M4 — Battle backdrop (board not floating in space)
 

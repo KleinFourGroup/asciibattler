@@ -2,8 +2,10 @@
  * H4b — the post-turn outcome screen. Shown after each turn resolves (on
  * `turn:resolved`): the tactical winner, the Σ`power` each side's survivors
  * chipped the opposing pool, both pools after the chip, and the encounter's
- * status. Auto-advances after a beat (a "Continue" click skips ahead); the
- * `advanceTurn` either rolls into the next turn or ends the encounter.
+ * status. Advances ONLY on the Continue click (M3 removed the H4b
+ * auto-timer, matching the K3 pre-turn change — turn pacing is fully
+ * player-driven); `advanceTurn` either rolls into the next turn or ends
+ * the encounter.
  */
 
 import type { GameEvents } from '../core/events';
@@ -12,13 +14,8 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
 
-/** Auto-advance delay (ms) — a touch longer than the pre-turn screen so the
- *  outcome is readable. Tunable by feel during playtest. */
-const POSTTURN_AUTO_MS = 3000;
-
 export class PostTurnScreen {
   private container: HTMLDivElement | null = null;
-  private timer: number | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -32,26 +29,16 @@ export class PostTurnScreen {
     this.container.classList.add('screen-fade');
     this.mount.appendChild(this.container);
     fadeIn(this.container);
-    this.timer = window.setTimeout(() => this.advance(), POSTTURN_AUTO_MS);
   }
 
   hide(): void {
-    this.clearTimer();
     if (this.container) {
       fadeOutAndRemove(this.container);
       this.container = null;
     }
   }
 
-  private clearTimer(): void {
-    if (this.timer !== null) {
-      window.clearTimeout(this.timer);
-      this.timer = null;
-    }
-  }
-
   private advance(): void {
-    this.clearTimer();
     this.dispatcher.dispatch({ kind: 'advanceTurn' });
   }
 

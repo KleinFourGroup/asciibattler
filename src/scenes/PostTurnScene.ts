@@ -1,8 +1,9 @@
 /**
  * PostTurnScene (H4b). DOM-only wrapper around PostTurnScreen, mirroring
  * PromotionScene. Takes the `turn:resolved` payload via constructor. The screen
- * auto-advances (or a click skips) via `advanceTurn`, which rolls into the next
- * turn or ends the encounter (recruit / promotion / defeat).
+ * advances on the Continue click (M3 removed the auto-timer) via `advanceTurn`,
+ * which rolls into the next turn or ends the encounter (recruit / promotion /
+ * defeat).
  */
 
 import { PostTurnScreen } from '../ui/PostTurnScreen';

@@ -870,10 +870,11 @@ calls (the design round, 2026-06-12):
 - **The first catalog = FOUR IDOLS** (Roman-statue flavor inside the terminal
   frame — the synthwave blend; unix-daemon naming TABLED as too deep a cut for
   the Windows-only playtesters, revisit with the shop round): **Mars** (+4
-  STR/RNG/MAG empower, 1/turn — the K4 buff verbatim), **Minerva** (+4 DEF
-  empower, 1/turn, key `warded`), **Mercury** (50%/turn coin → the FULL
-  redraw), **Janus** (guaranteed redraw, ≤2 cards/turn — the K3 `maxCards`
-  mode finally shipped live).
+  STR/RNG/MAG empower, 1/turn — the K4 buff verbatim), **Minerva** (+2 DEF
+  empower, 1/turn, key `warded` — shipped at +4, nerfed same-day after the
+  L1c3 measurement found it at +55pp over the control; see BALANCE.md),
+  **Mercury** (50%/turn coin → the FULL redraw), **Janus** (guaranteed
+  redraw, ≤2 cards/turn — the K3 `maxCards` mode finally shipped live).
 - **Acquisition:** one **uniform roll at run start** (a placeholder — the
   user's planned **starting profiles** [roster + daemon] replace pure-random
   later; `RunConfig.daemon` / `?daemon=<id|none>` is that seam).

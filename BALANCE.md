@@ -781,3 +781,12 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   future starting-profiles round inherits the same bucketing. (5) Hangs stay at the known ~0.5–1%
   labyrinth/spiralFireLife tail, idol-independent; still N2's watch item. **N2 must re-sweep the
   band PER-IDOL (or post-Minerva-rebalance)** — a single global band no longer describes the game.
+  - **Follow-up (same day) — Minerva NERFED +4 → +2 DEF (the user's call) and re-measured.** The
+    forced arm at +2: **34.0% / floor 7.51 over 200 runs, 0 hangs** (was 69.5% / 9.28 at +4) —
+    landing right beside Mars (31.5% / 6.62), so the two empower idols are now PEERS (+17.5–20pp
+    over the 14% control) and the catalog spread compresses **14%→70% ⇒ 14%→34%**. The random arm's
+    minerva bucket replicates the nerf (73.8% → 38.1% at n=42), and its OTHER three buckets came
+    back byte-identical to the pre-nerf batch (same seeds, untouched idols — the determinism
+    contract visible in the data). Residual shape worth remembering: minerva still edges mars on
+    FLOOR (7.5 vs 6.6 — defense keeps even the losing runs alive longer), and both empower idols
+    sit ~2× the redraw idols' lift; whether the redraw idols deserve bigger budgets is N2 material.

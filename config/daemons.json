@@ -21,14 +21,14 @@
     {
       "id": "minerva",
       "name": "Idol of Minerva",
-      "description": "Once per turn, empower a unit: +4 DEF for the encounter.",
+      "description": "Once per turn, empower a unit: +2 DEF for the encounter.",
       "empower": {
         "chance": 1,
         "empowersPerTurn": 1,
         "buff": {
           "key": "warded",
           "mods": {
-            "defense": { "add": 4 }
+            "defense": { "add": 2 }
           },
           "merge": "add"
         }

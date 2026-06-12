@@ -18,10 +18,18 @@
  *
  * K4 — **Empower** shares the same card selection: with EXACTLY ONE card
  * selected, the Empower button buffs it for the rest of the encounter (the
- * `empowerUnit` command; buff + budget in `config/empower.json`). Empowered
- * cards carry a `▲` badge (one per stack — the `empowerMagnitudes` column the
- * events deliver, so a card empowered on an earlier turn and drawn back still
- * badges). Same events-only refresh: `turn:unitEmpowered` → `updateEmpower`.
+ * `empowerUnit` command). Empowered cards carry a `▲` badge (one per stack —
+ * the `empowerMagnitudes` column the events deliver, so a card empowered on
+ * an earlier turn and drawn back still badges). Same events-only refresh:
+ * `turn:unitEmpowered` → `updateEmpower`.
+ *
+ * L1 — the gates are DAEMON-owned now: a banner under the map line names the
+ * run's idol, the empower hint/badge derive from the ACTIVE daemon's buff
+ * (payload-carried — the retired `EMPOWER` singleton ships disabled), and a
+ * chance gate that denied this turn (Mercury's cold coin) renders an inert
+ * "the idol is silent" line where its control would be — distinguishable from
+ * "spent" (no line) because gate-denial is computed ONCE from the fresh
+ * `turn:starting` budget.
  */
 
 import type { GameEvents } from '../core/events';
@@ -30,9 +38,9 @@ import type { RedrawAvailability } from '../run/redraw';
 import type { EmpowerAvailability } from '../run/empower';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
+import type { StatusEffect } from '../sim/statusEffects';
 import { glyphForArchetype } from '../sim/archetypes';
 import { getLayout } from '../sim/layouts';
-import { EMPOWER } from '../config/empower';
 import { STAT_LABELS } from './statLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
@@ -46,6 +54,13 @@ export class PreTurnScreen {
   private redraw: RedrawAvailability = { redrawsRemaining: 0, cardsRemaining: 0 };
   private empower: EmpowerAvailability = { empowersRemaining: 0 };
   private empowerMagnitudes: readonly number[] = [];
+  // L1 — the run's daemon (the banner + the buff the hint/badge spell out) and
+  // the per-turn chance-denial flags. The flags are computed ONCE in `show`
+  // from the FRESH `turn:starting` budget (gate exists but granted nothing →
+  // denied), so a later spent budget never reads as "denied".
+  private daemon: GameEvents['turn:starting']['daemon'] = null;
+  private redrawDenied = false;
+  private empowerDenied = false;
   private readonly selected = new Set<number>();
   private handWrap: HTMLDivElement | null = null;
   private redrawButton: HTMLButtonElement | null = null;
@@ -63,6 +78,11 @@ export class PreTurnScreen {
     this.redraw = info.redraw;
     this.empower = info.empower;
     this.empowerMagnitudes = info.empowerMagnitudes;
+    this.daemon = info.daemon;
+    this.redrawDenied =
+      (info.daemon?.redrawGate ?? false) && info.redraw.redrawsRemaining === 0;
+    this.empowerDenied =
+      (info.daemon?.empowerGate ?? false) && info.empower.empowersRemaining === 0;
     this.selected.clear();
     this.container = this.render(info);
     this.container.classList.add('screen-fade');
@@ -140,6 +160,16 @@ export class PreTurnScreen {
     map.textContent = `⌖ ${mapName} — ${info.map.gridW}×${info.map.gridH}`;
     panel.appendChild(map);
 
+    // L1 — the run's daemon banner: which idol governs the gates below. The
+    // relic layer reads FLOURESCENT_BLUE (the K4 empower accent) against the
+    // amber battlefield line. Daemon-less runs (fuzz control arm) show none.
+    if (info.daemon) {
+      const daemon = document.createElement('div');
+      daemon.className = 'preturn-daemon';
+      daemon.textContent = `◈ ${info.daemon.name} — ${info.daemon.description}`;
+      panel.appendChild(daemon);
+    }
+
     const pools = document.createElement('div');
     pools.className = 'preturn-pools';
     pools.append(
@@ -194,8 +224,9 @@ export class PreTurnScreen {
     const selectable = this.canRedraw || this.canEmpower;
     const cards = document.createElement('div');
     cards.className = 'preturn-hand-cards';
+    const buffSummary = this.buffSummary;
     this.hand.forEach((unit, pos) => {
-      const card = renderHandCard(unit, this.empowerMagnitudes[pos] ?? 0);
+      const card = renderHandCard(unit, this.empowerMagnitudes[pos] ?? 0, buffSummary);
       if (selectable) {
         card.classList.add('preturn-card--selectable');
         if (this.selected.has(pos)) card.classList.add('is-selected');
@@ -205,8 +236,23 @@ export class PreTurnScreen {
     });
     wrap.appendChild(cards);
 
+    // L1 — a control renders only when its gate granted this turn; a chance
+    // gate that denied (e.g. Mercury's cold coin) shows the inert line instead.
     if (this.canRedraw) wrap.appendChild(this.renderRedrawControl());
+    else if (this.redrawDenied) {
+      wrap.appendChild(renderGateDenied('the idol is silent — no redraw this turn'));
+    }
     if (this.canEmpower) wrap.appendChild(this.renderEmpowerControl());
+    else if (this.empowerDenied) {
+      wrap.appendChild(renderGateDenied('the idol is silent — no empower this turn'));
+    }
+  }
+
+  /** L1 — the ACTIVE daemon's buff, spelled out for the hint + badge title
+   *  (null when the daemon grants no empower at all). */
+  private get buffSummary(): string | null {
+    const mods = this.daemon?.empowerBuff;
+    return mods ? buffModsSummary(mods) : null;
   }
 
   /** K3/K4 — toggle a card's selection. The cap is the larger of the two
@@ -260,8 +306,8 @@ export class PreTurnScreen {
 
   /** K4 — the Empower button + buff hint, the redraw control's sibling. Only
    *  rendered while an empower is available this turn. Acts on the single
-   *  selected card; the hint spells out the configured buff (derived from
-   *  `EMPOWER.buff.mods`, never hardcoded) so the choice is informed. */
+   *  selected card; the hint spells out the buff (L1: derived from the ACTIVE
+   *  daemon's `empowerBuff` mods, never hardcoded) so the choice is informed. */
   private renderEmpowerControl(): HTMLDivElement {
     const row = document.createElement('div');
     row.className = 'preturn-redraw preturn-empower';
@@ -283,7 +329,7 @@ export class PreTurnScreen {
     hint.className = 'preturn-redraw-hint';
     const { empowersRemaining } = this.empower;
     hint.textContent =
-      `pick one card: ${empowerBuffSummary()} for this encounter` +
+      `pick one card: ${this.buffSummary ?? 'the daemon buff'} for this encounter` +
       ` — ${empowersRemaining} left`;
 
     row.append(button, hint);
@@ -312,8 +358,12 @@ export class PreTurnScreen {
 /** One drawn card: the archetype glyph over a `Lv N` tag, tinted by archetype
  *  (the `--<archetype>` modifier mirrors the recruit card's team-color hooks).
  *  K4 — an empowered card (its roster slot carries the buff) adds a `▲` badge,
- *  one chevron per stack. */
-function renderHandCard(unit: UnitTemplate, empowerMagnitude: number): HTMLDivElement {
+ *  one chevron per stack; the title spells out the active daemon's buff. */
+function renderHandCard(
+  unit: UnitTemplate,
+  empowerMagnitude: number,
+  buffSummary: string | null,
+): HTMLDivElement {
   const card = document.createElement('div');
   card.className = `preturn-card preturn-card--${unit.archetype}`;
 
@@ -332,20 +382,31 @@ function renderHandCard(unit: UnitTemplate, empowerMagnitude: number): HTMLDivEl
     badge.className = 'preturn-card-empower';
     badge.textContent =
       empowerMagnitude <= 3 ? '▲'.repeat(empowerMagnitude) : `▲×${empowerMagnitude}`;
-    badge.title = `Empowered ×${empowerMagnitude} — ${empowerBuffSummary()}`;
+    badge.title =
+      `Empowered ×${empowerMagnitude}` + (buffSummary ? ` — ${buffSummary}` : '');
     card.appendChild(badge);
   }
 
   return card;
 }
 
-/** K4 — human-readable summary of the configured buff ("+4 STR · +4 RNG ·
- *  +4 MAG"), derived from `EMPOWER.buff.mods` in the canonical stat order so
- *  the hint can never drift from the config. */
-function empowerBuffSummary(): string {
+/** L1 — the inert line a chance-denied gate leaves where its control would be
+ *  (Mercury's cold coin). Distinct from a SPENT gate, which leaves nothing. */
+function renderGateDenied(text: string): HTMLDivElement {
+  const row = document.createElement('div');
+  row.className = 'preturn-gate-denied';
+  row.textContent = `◈ ${text}`;
+  return row;
+}
+
+/** K4 — human-readable summary of a buff's mods ("+4 STR · +4 RNG · +4 MAG")
+ *  in the canonical stat order, so the hint can never drift from the source.
+ *  L1 — parameterized: the mods come from the ACTIVE daemon via the
+ *  `turn:starting` payload (the `EMPOWER` singleton is retired). */
+function buffModsSummary(mods: StatusEffect['mods']): string {
   const parts: string[] = [];
   for (const stat of Object.keys(STAT_LABELS) as (keyof UnitStats)[]) {
-    const mod = EMPOWER.buff.mods[stat];
+    const mod = mods[stat];
     if (!mod) continue;
     if (mod.add !== undefined) {
       parts.push(`${mod.add >= 0 ? '+' : ''}${mod.add} ${STAT_LABELS[stat]}`);

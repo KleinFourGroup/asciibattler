@@ -1207,10 +1207,22 @@ describe('Run', () => {
       expect(grantsOf(mixed!)).toEqual(grantsOf(mixed!)); // per-seed deterministic
     });
 
-    it('turn:starting carries the daemon identity (and null for daemon-less)', () => {
+    it('turn:starting carries the daemon identity + gate shape (and null for daemon-less)', () => {
       const mars = daemonById('mars')!;
       for (const [daemon, expected] of [
-        [mars, { id: mars.id, name: mars.name, description: mars.description }],
+        [
+          mars,
+          {
+            id: mars.id,
+            name: mars.name,
+            description: mars.description,
+            // L1c2 — gate presence + the daemon's OWN buff, derived from the
+            // catalog entry (mars is empower-only).
+            redrawGate: false,
+            empowerGate: true,
+            empowerBuff: mars.empower!.buff.mods,
+          },
+        ],
         [null, null],
       ] as const) {
         const { run, bus } = freshRunWithBus(26, { daemon });

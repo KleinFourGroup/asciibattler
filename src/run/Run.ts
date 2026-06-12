@@ -727,7 +727,14 @@ export class Run {
         empower: this.empowerAvailability,
         empowerMagnitudes: this.empowerMagnitudes(),
         daemon: this.daemon
-          ? { id: this.daemon.id, name: this.daemon.name, description: this.daemon.description }
+          ? {
+              id: this.daemon.id,
+              name: this.daemon.name,
+              description: this.daemon.description,
+              redrawGate: this.daemon.redraw !== undefined,
+              empowerGate: this.daemon.empower !== undefined,
+              empowerBuff: this.daemon.empower?.buff.mods ?? null,
+            }
           : null,
         map: { layoutId, gridW, gridH, theme },
       });

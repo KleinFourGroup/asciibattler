@@ -948,6 +948,26 @@ body {
   color: #ffb000; /* TERMINAL_AMBER */
 }
 
+/* L1 — the run's daemon banner: the relic/meta layer reads FLOURESCENT_BLUE
+   (the K4 empower accent) against the amber battlefield line above it. */
+.preturn-daemon {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #15f4ee; /* FLOURESCENT_BLUE */
+  max-width: 520px;
+}
+
+/* L1 — a chance gate that denied this turn (Mercury's cold coin): an inert
+   dim line standing where the control would be. A SPENT gate leaves nothing —
+   only a denial speaks. */
+.preturn-gate-denied {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #664600; /* DARK_TERMINAL_AMBER */
+}
+
 /* H5b — the drawn hand: a small label over a row of compact unit cards. */
 .preturn-hand {
   display: flex;

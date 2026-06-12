@@ -17,6 +17,7 @@ import type { Team, UnitStats, UnitTemplate } from '../sim/Unit';
 import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
 import type { BattleObjective } from '../sim/objective';
+import type { StatusEffect } from '../sim/statusEffects';
 import type { RedrawAvailability } from '../run/redraw';
 import type { EmpowerAvailability } from '../run/empower';
 import type { Theme } from '../sim/layouts';
@@ -279,11 +280,22 @@ export interface GameEvents extends Record<string, unknown> {
     /** K4 — per-hand-position empower stacks (0 = none), see `turn:starting`. */
     empowerMagnitudes: number[];
     /** L1 — the run's daemon (null = daemon-less), for the pre-turn banner.
-     *  Inline structural shape (the `map` convention): the screen needs
-     *  name/description only. Per-turn grant state is NOT a separate field —
-     *  it's what `redraw`/`empower` availability already say (a denied
-     *  Mercury flip reads as 0/0). */
-    daemon: { id: string; name: string; description: string } | null;
+     *  Inline structural shape (the `map` convention). Per-turn grant state is
+     *  NOT a separate field — it's what `redraw`/`empower` availability
+     *  already say (a denied Mercury flip reads as 0/0); `redrawGate`/
+     *  `empowerGate` say whether the daemon HAS each gate at all, so the
+     *  screen can tell "denied this turn" (gate exists, fresh budget 0) from
+     *  "this idol never grants it". `empowerBuff` is the daemon's OWN buff
+     *  mods for the hint/badge text (payload-carried so a bespoke non-catalog
+     *  daemon renders correctly — the events-only discipline). */
+    daemon: {
+      id: string;
+      name: string;
+      description: string;
+      redrawGate: boolean;
+      empowerGate: boolean;
+      empowerBuff: StatusEffect['mods'] | null;
+    } | null;
     map: {
       layoutId: string | null;
       gridW: number;

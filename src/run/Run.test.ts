@@ -14,8 +14,33 @@ import { RECRUITMENT } from '../config/recruitment';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import { EMPOWER } from '../config/empower';
+import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
 import { avgTeamLevel, enemyBudgetFor } from './enemyBudget';
 import type { RunConfig } from './RunConfig';
+
+/**
+ * L1 — the K3/K4 static defaults reborn as a guaranteed fixture daemon.
+ * Daemon-only gates retired the `DECK.redraw.enabled` / `EMPOWER.enabled`
+ * statics (both now ship false), so the pre-existing K3/K4 gate-mechanic tests
+ * run under this daemon instead: its knobs ARE the config dials (derived, not
+ * hardcoded), which keeps every `DECK.redraw.*` / `EMPOWER.*`-derived
+ * expectation in those blocks literally true.
+ */
+const K_DEFAULT_DAEMON: DaemonConfig = {
+  id: 'test-k-defaults',
+  name: 'Test K Defaults',
+  description: 'the pre-L static gates as a daemon',
+  redraw: {
+    chance: 1,
+    redrawsPerTurn: DECK.redraw.redrawsPerTurn,
+    maxCardsPerTurn: DECK.redraw.maxCardsPerTurn,
+  },
+  empower: {
+    chance: 1,
+    empowersPerTurn: EMPOWER.empowersPerTurn,
+    buff: EMPOWER.buff,
+  },
+};
 
 describe('Run', () => {
   describe('initial state', () => {
@@ -820,7 +845,7 @@ describe('Run', () => {
     });
 
     it('is a no-op outside the pre-turn gate (map phase, headless battle)', () => {
-      const { run } = freshRunWithBus(4);
+      const { run } = freshRunWithBus(4, { daemon: K_DEFAULT_DAEMON });
       run.dispatch({ kind: 'redrawCards', handIndices: [0] }); // map
       expect(run.redrawsUsedThisTurn).toBe(0);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // gates off → battle
@@ -844,17 +869,17 @@ describe('Run', () => {
     });
 
     it('turn:starting carries the fresh availability; turn:handRedrawn the new hand + decrement', () => {
-      const { run, bus } = freshRunWithBus(6);
+      const { run, bus } = freshRunWithBus(6, { daemon: K_DEFAULT_DAEMON });
       run.pauseAtTurnGates = true;
       const startings: GameEvents['turn:starting'][] = [];
       const redrawns: GameEvents['turn:handRedrawn'][] = [];
       bus.on('turn:starting', (p) => startings.push(p));
       bus.on('turn:handRedrawn', (p) => redrawns.push(p));
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      // Fresh budget straight off the config dials (0/0 if disabled).
+      // Fresh budget straight off the fixture daemon's dials (= the config dials).
       expect(startings[0]!.redraw).toEqual({
-        redrawsRemaining: DECK.redraw.enabled ? DECK.redraw.redrawsPerTurn : 0,
-        cardsRemaining: DECK.redraw.enabled ? DECK.redraw.maxCardsPerTurn : 0,
+        redrawsRemaining: DECK.redraw.redrawsPerTurn,
+        cardsRemaining: DECK.redraw.maxCardsPerTurn,
       });
       run.dispatch({ kind: 'redrawCards', handIndices: [0, 2] });
       expect(redrawns).toHaveLength(1);
@@ -976,7 +1001,7 @@ describe('Run', () => {
     });
 
     it('is a no-op outside the pre-turn gate (map phase, headless battle)', () => {
-      const { run } = freshRunWithBus(4);
+      const { run } = freshRunWithBus(4, { daemon: K_DEFAULT_DAEMON });
       run.dispatch({ kind: 'empowerUnit', handIndex: 0 }); // map
       expect(run.empowersUsedThisTurn).toBe(0);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // gates off → battle
@@ -989,7 +1014,7 @@ describe('Run', () => {
     it('the budget resets next turn; re-empowering the same unit merges per the config policy', () => {
       // Short roster (≤ handSize) so the SAME unit is in hand every turn —
       // the stacking path needs a deterministic re-pick across turns.
-      const { run, bus } = freshShortRosterRun(5);
+      const { run, bus } = freshShortRosterRun(5, { daemon: K_DEFAULT_DAEMON });
       run.pauseAtTurnGates = true;
       const startings: GameEvents['turn:starting'][] = [];
       bus.on('turn:starting', (p) => startings.push(p));
@@ -1031,16 +1056,16 @@ describe('Run', () => {
     });
 
     it('turn:starting carries the fresh availability; turn:unitEmpowered the decrement + badge column', () => {
-      const { run, bus } = freshRunWithBus(7);
+      const { run, bus } = freshRunWithBus(7, { daemon: K_DEFAULT_DAEMON });
       run.pauseAtTurnGates = true;
       const startings: GameEvents['turn:starting'][] = [];
       const empowereds: GameEvents['turn:unitEmpowered'][] = [];
       bus.on('turn:starting', (p) => startings.push(p));
       bus.on('turn:unitEmpowered', (p) => empowereds.push(p));
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      // Fresh budget straight off the config dial (0 if disabled).
+      // Fresh budget straight off the fixture daemon's dial (= the config dial).
       expect(startings[0]!.empower).toEqual({
-        empowersRemaining: EMPOWER.enabled ? EMPOWER.empowersPerTurn : 0,
+        empowersRemaining: EMPOWER.empowersPerTurn,
       });
       expect(startings[0]!.empowerMagnitudes).toEqual(run.hand.map(() => 0));
       run.dispatch({ kind: 'empowerUnit', handIndex: 1 });
@@ -1076,6 +1101,161 @@ describe('Run', () => {
       // The buff itself rides the K1 v12 `encounterEffects` round-trip.
       expect(restored.encounterEffects).toEqual(run.encounterEffects);
       // (The pre-K4 v14 reject rides the generic `schemaVersion - 1` test.)
+    });
+  });
+
+  describe('daemons (L1 — daemon-only gates)', () => {
+    it('rolls exactly one daemon at construction, deterministically per seed', () => {
+      const a = freshRunWithBus(21).run;
+      const b = freshRunWithBus(21).run;
+      expect(a.daemon).not.toBeNull();
+      expect(a.daemon!.id).toBe(b.daemon!.id);
+    });
+
+    it('covers the whole catalog over seeds', () => {
+      const seen = new Set<string>();
+      for (let seed = 0; seed < 60; seed++) seen.add(freshRunWithBus(seed).run.daemon!.id);
+      expect([...seen].sort()).toEqual(DAEMONS.map((d) => d.id).sort());
+    });
+
+    it('RunConfig.daemon forces the daemon; null forces daemon-less', () => {
+      expect(freshRunWithBus(1, { daemon: daemonById('mars')! }).run.daemon!.id).toBe('mars');
+      expect(freshRunWithBus(1, { daemon: null }).run.daemon).toBeNull();
+    });
+
+    it('daemon-less: both gates read 0 at the gate and both commands are no-ops', () => {
+      const { run } = gatedToFirstTurnIntro(22, null);
+      expect(run.redrawAvailability).toEqual({ redrawsRemaining: 0, cardsRemaining: 0 });
+      expect(run.empowerAvailability).toEqual({ empowersRemaining: 0 });
+      const hand = run.hand.slice();
+      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      expect(run.hand).toEqual(hand);
+      expect(run.redrawsUsedThisTurn).toBe(0);
+      expect(run.empowersUsedThisTurn).toBe(0);
+      expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
+    });
+
+    it('an empower idol (mars) grants empower per its dials and NO redraw', () => {
+      const mars = daemonById('mars')!;
+      const { run } = gatedToFirstTurnIntro(23, mars);
+      expect(run.empowerAvailability.empowersRemaining).toBe(mars.empower!.empowersPerTurn);
+      expect(run.redrawAvailability).toEqual({ redrawsRemaining: 0, cardsRemaining: 0 });
+      const hand = run.hand.slice();
+      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      expect(run.hand).toEqual(hand); // no redraw under mars
+      const slot = run.hand[1]!;
+      run.dispatch({ kind: 'empowerUnit', handIndex: 1 });
+      const stored = run.encounterEffects[slot]!;
+      expect(stored).toHaveLength(1);
+      expect(stored[0]!.key).toBe(mars.empower!.buff.key);
+      expect(stored[0]!.mods).toEqual(mars.empower!.buff.mods);
+    });
+
+    it("minerva applies HER buff (the daemon's own, not a shared config)", () => {
+      const minerva = daemonById('minerva')!;
+      const { run } = gatedToFirstTurnIntro(24, minerva);
+      const slot = run.hand[0]!;
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      const stored = run.encounterEffects[slot]!;
+      expect(stored[0]!.key).toBe(minerva.empower!.buff.key);
+      expect(stored[0]!.mods).toEqual(minerva.empower!.buff.mods);
+      expect(stored[0]!.key).not.toBe(daemonById('mars')!.empower!.buff.key);
+    });
+
+    it('a redraw idol (janus) grants redraw capped by its dial and NO empower', () => {
+      const janus = daemonById('janus')!;
+      const { run } = gatedToFirstTurnIntro(25, janus);
+      const cap = janus.redraw!.maxCardsPerTurn;
+      expect(run.redrawAvailability).toEqual({
+        redrawsRemaining: janus.redraw!.redrawsPerTurn,
+        cardsRemaining: cap,
+      });
+      expect(run.empowerAvailability.empowersRemaining).toBe(0);
+      const hand = run.hand.slice();
+      // One past the cap → silent no-op; at the cap → lands.
+      run.dispatch({
+        kind: 'redrawCards',
+        handIndices: hand.map((_, i) => i).slice(0, cap + 1),
+      });
+      expect(run.hand).toEqual(hand);
+      run.dispatch({ kind: 'redrawCards', handIndices: hand.map((_, i) => i).slice(0, cap) });
+      expect(run.cardsRedrawnThisTurn).toBe(cap);
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
+    });
+
+    it("mercury's coin flips per turn, deterministically per seed, and lands both ways", () => {
+      const mercury = daemonById('mercury')!;
+      const grantsOf = (seed: number): boolean[] => {
+        const { run, bus } = gatedToFirstTurnIntro(seed, mercury);
+        const grants: boolean[] = [];
+        for (let t = 0; t < 6 && run.phase === 'turn-intro'; t++) {
+          grants.push(run.redrawAvailability.redrawsRemaining > 0);
+          run.dispatch({ kind: 'advanceTurn' }); // → battle
+          chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
+          run.dispatch({ kind: 'advanceTurn' }); // → next turn's gate
+        }
+        return grants;
+      };
+      let mixed: number | null = null;
+      for (let seed = 30; seed < 60 && mixed === null; seed++) {
+        const grants = grantsOf(seed);
+        if (grants.includes(true) && grants.includes(false)) mixed = seed;
+      }
+      expect(mixed).not.toBeNull(); // a 6-turn all-same streak across 30 seeds ≈ impossible
+      expect(grantsOf(mixed!)).toEqual(grantsOf(mixed!)); // per-seed deterministic
+    });
+
+    it('turn:starting carries the daemon identity (and null for daemon-less)', () => {
+      const mars = daemonById('mars')!;
+      for (const [daemon, expected] of [
+        [mars, { id: mars.id, name: mars.name, description: mars.description }],
+        [null, null],
+      ] as const) {
+        const { run, bus } = freshRunWithBus(26, { daemon });
+        run.pauseAtTurnGates = true;
+        const startings: GameEvents['turn:starting'][] = [];
+        bus.on('turn:starting', (p) => startings.push(p));
+        run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+        expect(startings[0]!.daemon).toEqual(expected);
+      }
+    });
+
+    it('v16 round-trips the daemon whole, the stream, and the CURRENT flip', () => {
+      const mercury = daemonById('mercury')!;
+      const { run, bus } = gatedToFirstTurnIntro(27, mercury);
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const busB = new EventBus<GameEvents>();
+      const restored = Run.fromJSON(wire, busB);
+      // `pauseAtTurnGates` is a DRIVER flag (not snapshotted) — re-arm it so
+      // both runs walk the same gated path below.
+      restored.pauseAtTurnGates = true;
+      // The save's gate state is restored, never re-flipped.
+      expect(restored.daemon).toEqual(run.daemon);
+      expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
+      // The daemonRng round-trips: both runs flip the SAME coins forever after.
+      for (const [r, b] of [
+        [run, bus],
+        [restored, busB],
+      ] as const) {
+        r.dispatch({ kind: 'advanceTurn' });
+        chipTurn(b, { player: 1, enemy: 1 });
+        r.dispatch({ kind: 'advanceTurn' });
+      }
+      expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
+      expect(JSON.parse(JSON.stringify(restored.toJSON()))).toEqual(
+        JSON.parse(JSON.stringify(run.toJSON())),
+      );
+    });
+
+    it('a bespoke (non-catalog) daemon round-trips whole', () => {
+      const { run } = gatedToFirstTurnIntro(28); // K_DEFAULT_DAEMON, not in DAEMONS
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.daemon).toEqual(K_DEFAULT_DAEMON);
+      expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
+      expect(restored.empowerAvailability).toEqual(run.empowerAvailability);
     });
   });
 
@@ -1873,9 +2053,9 @@ interface RunHandle {
   bus: EventBus<GameEvents>;
 }
 
-function freshRunWithBus(seed: number): RunHandle {
+function freshRunWithBus(seed: number, config?: RunConfig): RunHandle {
   const bus = new EventBus<GameEvents>();
-  const run = new Run(seed, bus);
+  const run = new Run(seed, bus, config);
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
 }
 
@@ -1885,9 +2065,14 @@ function frontierOf(run: Run & { rootId: number }): number {
 }
 
 /** K3 — a gated run paused at its FIRST pre-turn gate (`turn-intro`), the only
- *  phase where a `redrawCards` command is live. */
-function gatedToFirstTurnIntro(seed: number): RunHandle {
-  const handle = freshRunWithBus(seed);
+ *  phase where a `redrawCards` command is live. L1: gates are daemon-only now,
+ *  so the run carries `K_DEFAULT_DAEMON` (the old static dials) unless a test
+ *  forces a specific daemon (or null = daemon-less). */
+function gatedToFirstTurnIntro(
+  seed: number,
+  daemon: DaemonConfig | null = K_DEFAULT_DAEMON,
+): RunHandle {
+  const handle = freshRunWithBus(seed, { daemon });
   handle.run.pauseAtTurnGates = true;
   handle.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(handle.run) });
   return handle;
@@ -1927,9 +2112,9 @@ const SHORT_ROSTER = [
   { archetype: 'ranged' as const, level: RECRUITMENT.startingLevel },
   { archetype: 'ranged' as const, level: RECRUITMENT.startingLevel },
 ];
-function freshShortRosterRun(seed: number): RunHandle {
+function freshShortRosterRun(seed: number, config?: RunConfig): RunHandle {
   const bus = new EventBus<GameEvents>();
-  const run = new Run(seed, bus, { startingRoster: SHORT_ROSTER });
+  const run = new Run(seed, bus, { startingRoster: SHORT_ROSTER, ...config });
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
 }
 

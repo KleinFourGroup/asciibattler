@@ -19,6 +19,7 @@
 import { ALL_ARCHETYPES, type Archetype } from '../sim/archetypes';
 import { LAYOUT_IDS } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
+import { daemonById, type DaemonConfig } from '../config/daemons';
 
 /** One starting-roster slot: an archetype at a chosen level (>= 1, capped). */
 export interface RosterEntry {
@@ -52,6 +53,17 @@ export interface RunConfig {
    * width by the generator, so a too-small value just pins to the minimum.
    */
   readonly mapMaxWidth?: number;
+  /**
+   * L1 — override the run's daemon: a full `DaemonConfig` (a catalog entry or
+   * a bespoke test/profile daemon), or `null` for a daemon-LESS run (the fuzz
+   * control arm — both pre-turn gates permanently disabled). Unset → a uniform
+   * roll over `DAEMONS` off the run's dedicated daemon stream. The roll/skip
+   * happens on the forked CHILD stream, so the parent alignment is preserved
+   * either way (the G1 determinism contract). URL form: `daemon=mars` (a
+   * catalog id) or `daemon=none`. This is also the future starting-profile
+   * seam (a profile = a `startingRoster` + a `daemon`).
+   */
+  readonly daemon?: DaemonConfig | null;
 }
 
 /**
@@ -64,6 +76,7 @@ export const RUN_CONFIG_PARAMS = {
   roster: 'roster',
   layout: 'layout',
   width: 'width',
+  daemon: 'daemon',
 } as const;
 
 type MutableRunConfig = { -readonly [K in keyof RunConfig]: RunConfig[K] };
@@ -111,6 +124,15 @@ function parseLayout(raw: string | null): string | undefined {
   return LAYOUT_IDS.includes(raw) ? raw : undefined;
 }
 
+/** L1 — `none` → null (daemon-less), a catalog id → that daemon, anything
+ *  else (absent / unknown id) → undefined (the normal roll). */
+function parseDaemon(raw: string | null): DaemonConfig | null | undefined {
+  if (!raw) return undefined;
+  const token = raw.trim().toLowerCase();
+  if (token === 'none') return null;
+  return daemonById(token);
+}
+
 /**
  * Build a RunConfig from `URLSearchParams`. Unset / invalid fields are
  * omitted, so the result carries only explicit overrides. Pure (no DOM
@@ -128,6 +150,8 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (forcedLayoutId !== undefined) config.forcedLayoutId = forcedLayoutId;
   const mapMaxWidth = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.width));
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
+  const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));
+  if (daemon !== undefined) config.daemon = daemon;
   return config;
 }
 
@@ -165,6 +189,11 @@ export function runConfigToQueryString(config: RunConfig): string {
   }
   if (config.mapMaxWidth !== undefined) {
     params.set(RUN_CONFIG_PARAMS.width, String(config.mapMaxWidth));
+  }
+  if (config.daemon !== undefined) {
+    // A bespoke (non-catalog) daemon round-trips by id only if the catalog
+    // resolves it — acceptable: the URL form is a dev/playtest convenience.
+    params.set(RUN_CONFIG_PARAMS.daemon, config.daemon === null ? 'none' : config.daemon.id);
   }
   return params.toString();
 }

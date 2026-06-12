@@ -278,6 +278,12 @@ export interface GameEvents extends Record<string, unknown> {
     empower: EmpowerAvailability;
     /** K4 — per-hand-position empower stacks (0 = none), see `turn:starting`. */
     empowerMagnitudes: number[];
+    /** L1 — the run's daemon (null = daemon-less), for the pre-turn banner.
+     *  Inline structural shape (the `map` convention): the screen needs
+     *  name/description only. Per-turn grant state is NOT a separate field —
+     *  it's what `redraw`/`empower` availability already say (a denied
+     *  Mercury flip reads as 0/0). */
+    daemon: { id: string; name: string; description: string } | null;
     map: {
       layoutId: string | null;
       gridW: number;

@@ -31,9 +31,12 @@
  *                        makes the batch's selection arbitrary; lowering it
  *                        (with `redrawsPerTurn` raised) is the "N cards per
  *                        turn" mode.
- * - `enabled`          — master switch (the static stand-in for L's
- *                        daemon-driven availability). Off → the command is a
- *                        no-op and the UI hides the control.
+ * - `enabled`          — master switch. L1 flipped this OFF for good: daemons
+ *                        own redraw availability now (`Run.turnGates`, resolved
+ *                        per turn from the active daemon's gates), so this
+ *                        config is the daemon-LESS baseline = disabled. The
+ *                        `redraw` block stays as the `RedrawConfig` type anchor
+ *                        the daemon gates resolve into.
  *
  * Balance-tuned in H6, decoupled in K2 — a starting point, re-swept in N2.
  * Source of truth at `config/deck.json`.

@@ -8,10 +8,12 @@
  * `Run.addEncounterEffect`, so it persists for the rest of the ENCOUNTER
  * (re-seeded onto the fielded unit each turn — the K1 store's lifetime).
  *
- * - `enabled`         — master switch (the static stand-in for Phase L's
- *                       daemon-driven availability, like `DECK.redraw.enabled`).
- *                       Off → the command is a no-op and the UI hides the
- *                       control.
+ * - `enabled`         — master switch. L1 flipped this OFF for good: daemons
+ *                       own empower availability now (`Run.turnGates`, resolved
+ *                       per turn from the active daemon's gates), so this
+ *                       config is the daemon-LESS baseline = disabled. The
+ *                       `buff` below stays as the canonical "K4 default
+ *                       empower" shape that tests/fixture daemons derive from.
  * - `empowersPerTurn` — empower ACTIONS allowed per turn (one card each). The
  *                       shipped default (1) makes empower a once-a-turn pick;
  *                       a daemon can raise it without new plumbing.
@@ -58,14 +60,18 @@ const StatModSchema = z.object({
   mul: z.number().optional(),
 });
 
+/** L1 — the buff sub-schema is shared with `config/daemons.ts` (a daemon's
+ *  empower gate carries its own buff in the same shape). */
+export const BuffSchema = z.object({
+  key: z.string().min(1),
+  mods: z.partialRecord(z.enum(STAT_KEYS), StatModSchema),
+  merge: z.enum(['replace', 'add', 'multiply', 'independent']),
+});
+
 const EmpowerSchema = z.object({
   enabled: z.boolean(),
   empowersPerTurn: z.number().int().nonnegative(),
-  buff: z.object({
-    key: z.string().min(1),
-    mods: z.partialRecord(z.enum(STAT_KEYS), StatModSchema),
-    merge: z.enum(['replace', 'add', 'multiply', 'independent']),
-  }),
+  buff: BuffSchema,
 });
 
 /** The buff in canonical `statusEffects` terms (not the zod inference — its
@@ -84,7 +90,7 @@ export interface EmpowerConfig {
 const parsed = EmpowerSchema.parse(empowerJson);
 
 /** Strip zod's explicit-`undefined` optionals into exact `StatMod` objects. */
-function normalizeMods(raw: typeof parsed.buff.mods): StatusEffect['mods'] {
+function normalizeMods(raw: z.infer<typeof BuffSchema>['mods']): StatusEffect['mods'] {
   const mods: Partial<Record<StatKey, StatMod>> = {};
   for (const [stat, mod] of Object.entries(raw)) {
     const out: StatMod = {};
@@ -95,12 +101,17 @@ function normalizeMods(raw: typeof parsed.buff.mods): StatusEffect['mods'] {
   return mods;
 }
 
+/** L1 — parse-result → canonical buff, shared with `config/daemons.ts`. */
+export function normalizeBuff(raw: z.infer<typeof BuffSchema>): EmpowerConfig['buff'] {
+  return {
+    key: raw.key,
+    mods: normalizeMods(raw.mods),
+    merge: raw.merge,
+  };
+}
+
 export const EMPOWER: EmpowerConfig = {
   enabled: parsed.enabled,
   empowersPerTurn: parsed.empowersPerTurn,
-  buff: {
-    key: parsed.buff.key,
-    mods: normalizeMods(parsed.buff.mods),
-    merge: parsed.buff.merge,
-  },
+  buff: normalizeBuff(parsed.buff),
 };

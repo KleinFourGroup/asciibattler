@@ -50,6 +50,12 @@ import {
   empowerEffect,
   type EmpowerAvailability,
 } from './empower';
+import {
+  rollDaemon,
+  resolveTurnGates,
+  disabledTurnGates,
+  type TurnGates,
+} from './daemon';
 import { cloneEffect, mergeEffectInto, type StatusEffect } from '../sim/statusEffects';
 import { TriggerDispatcher } from '../sim/triggers';
 import type { RunCommand } from './Command';
@@ -57,7 +63,7 @@ import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
-import { EMPOWER } from '../config/empower';
+import { DAEMONS, type DaemonConfig } from '../config/daemons';
 import { LAYOUT_IDS, THEMES, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { xpToNext } from '../sim/xp';
@@ -173,8 +179,15 @@ export interface BattleEncounter {
  *  bookkeeping, the redraw-counter analogue). A v14 save has no counter →
  *  reject rather than rehydrate a pre-turn gate whose empower budget silently
  *  refreshed. (The buff itself rides the v12 `encounterEffects` store — no
- *  shape change there.) */
-const RUN_SCHEMA_VERSION = 15;
+ *  shape change there.)
+ *  L1: bumped 15→16. Adds the daemon layer: `daemon` (the run's rolled/forced
+ *  daemon, stored WHOLE so a save survives catalog edits and bespoke test
+ *  daemons round-trip), `daemonRng` (the dedicated roll + chance-flip stream),
+ *  and `turnGates` (the CURRENT turn's resolved gates — a save taken at the
+ *  pre-turn gate must restore the same Mercury flip, never re-roll it). A v15
+ *  save has none of these → reject rather than rehydrate a run that would
+ *  re-roll its daemon. */
+const RUN_SCHEMA_VERSION = 16;
 
 /**
  * K3.5 — the encounter's battlefield, rolled ONCE in `beginEncounter` (the
@@ -203,6 +216,16 @@ export interface RunSnapshot {
   /** H5: dedicated stream for deck shuffles + draws, forked from `rng` at
    *  construction (isolated like `levelupRng`). */
   deckRng: RNGSnapshot;
+  /** L1: dedicated stream for the daemon roll + per-turn gate chance flips,
+   *  forked from `rng` at construction (isolated like `levelupRng`). */
+  daemonRng: RNGSnapshot;
+  /** L1: the run's daemon, stored whole (not by id) — a save survives catalog
+   *  edits, and a bespoke (test / future-profile) daemon round-trips. Null =
+   *  a daemon-less run (both pre-turn gates permanently disabled). */
+  daemon: DaemonConfig | null;
+  /** L1: the current turn's resolved pre-turn gates (`resolveTurnGates`
+   *  output). Persisted so a save at the gate restores the same chance flips. */
+  turnGates: TurnGates;
   nodeMap: NodeMap;
   team: UnitTemplate[];
   /** H3: per-roster-slot deployment counter, parallel to `team`. */
@@ -219,12 +242,12 @@ export interface RunSnapshot {
   drawPile: number[];
   discardPile: number[];
   hand: number[];
-  /** K3: redraw actions taken this turn (vs `DECK.redraw.redrawsPerTurn`).
+  /** K3: redraw actions taken this turn (vs the L1 `turnGates.redraw` budget).
    *  Reset at every turn start; meaningful only at the pre-turn gate. */
   redrawsUsedThisTurn: number;
-  /** K3: total cards redrawn this turn (vs `DECK.redraw.maxCardsPerTurn`). */
+  /** K3: total cards redrawn this turn (vs `turnGates.redraw.maxCardsPerTurn`). */
   cardsRedrawnThisTurn: number;
-  /** K4: empower actions taken this turn (vs `EMPOWER.empowersPerTurn`).
+  /** K4: empower actions taken this turn (vs `turnGates.empower.empowersPerTurn`).
    *  Reset at every turn start; meaningful only at the pre-turn gate. */
   empowersUsedThisTurn: number;
   /** H4: the run-wide player health pool (persists across the whole run). */
@@ -287,6 +310,20 @@ export class Run {
    *  construction (isolated like `levelupRng`), so deck draws don't perturb
    *  the per-turn `battleRng` forks off `this.rng`. */
   readonly deckRng: RNG;
+  /** L1: dedicated stream for the daemon roll + per-turn gate chance flips
+   *  (Mercury's coin). Forked once at construction (isolated like
+   *  `levelupRng`), so a chance-gated daemon doesn't perturb any other stream. */
+  readonly daemonRng: RNG;
+  /** L1: the run's daemon — rolled uniformly over `DAEMONS` at construction,
+   *  or forced via `RunConfig.daemon` (a bespoke config, or null = daemon-less,
+   *  the fuzz control arm). Daemon-only gates: this is the ONLY source of
+   *  redraw/empower availability. */
+  readonly daemon: DaemonConfig | null;
+  /** L1: the current turn's resolved pre-turn gates — re-resolved at every
+   *  turn start (`startNextTurn`, where a chance gate flips its coin), the
+   *  config the K3/K4 validators consume in place of the retired static
+   *  `DECK.redraw` / `EMPOWER` enables. Round-trips in the save (v16). */
+  private turnGates: TurnGates;
   readonly nodeMap: NodeMap;
   team: UnitTemplate[];
   /**
@@ -335,17 +372,18 @@ export class Run {
   hand: number[];
   /**
    * K3 — per-turn redraw bookkeeping: actions taken / cards redrawn this turn,
-   * checked against the `DECK.redraw` budget by `handleRedrawCards`. Both
-   * reset at every turn start (`startNextTurn`, BEFORE `turn:starting` fires
-   * so the payload reads a fresh budget) and round-trip in the Run save (v13)
-   * — a save at the pre-turn gate after a redraw must not refresh the budget.
+   * checked against the L1 `turnGates.redraw` budget by `handleRedrawCards`.
+   * Both reset at every turn start (`startNextTurn`, BEFORE `turn:starting`
+   * fires so the payload reads a fresh budget) and round-trip in the Run save
+   * (v13) — a save at the pre-turn gate after a redraw must not refresh the
+   * budget.
    */
   redrawsUsedThisTurn: number;
   cardsRedrawnThisTurn: number;
   /**
    * K4 — per-turn empower bookkeeping: actions taken this turn, checked
-   * against `EMPOWER.empowersPerTurn` by `handleEmpowerUnit`. Same lifecycle
-   * as the K3 redraw counters (reset in `startNextTurn` before the
+   * against `turnGates.empower.empowersPerTurn` by `handleEmpowerUnit`. Same
+   * lifecycle as the K3 redraw counters (reset in `startNextTurn` before the
    * `turn:starting` emit; round-trips in the Run save, v15).
    */
   empowersUsedThisTurn: number;
@@ -473,6 +511,14 @@ export class Run {
     // H5 re-baselines the fuzz output — acceptable, since the seam swap + the
     // drawn-hand subset already change battle outcomes wholesale.
     this.deckRng = this.rng.fork();
+    // L1 — the daemon stream, appended after deck (same convention, same
+    // fuzz-re-baseline note as H5). The roll/skip happens on the CHILD stream,
+    // so a forced daemon keeps the parent alignment (the G1 contract); gates
+    // stay disabled until the first turn resolves them (`startNextTurn`).
+    this.daemonRng = this.rng.fork();
+    this.daemon =
+      config?.daemon !== undefined ? config.daemon : rollDaemon(DAEMONS, this.daemonRng);
+    this.turnGates = disabledTurnGates();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.currentNodeId = this.nodeMap.rootId;
     this.visitedNodes = new Set<number>();
@@ -657,6 +703,10 @@ export class Run {
     this.redrawsUsedThisTurn = 0;
     this.cardsRedrawnThisTurn = 0;
     this.empowersUsedThisTurn = 0;
+    // L1 — resolve this turn's daemon gates. A chance gate (Mercury) flips its
+    // coin off the isolated `daemonRng` exactly HERE, once per turn, on both
+    // the gated + headless paths (path-independent draw count).
+    this.turnGates = resolveTurnGates(this.daemon, this.daemonRng);
     // K1 — `turnStart` fires before the turn's battle is built (on both the
     // gated + headless paths), so a daemon's encounter effect added here is
     // seeded onto this turn's hand in `beginTurn`. No-op at the default.
@@ -676,6 +726,9 @@ export class Run {
         redraw: this.redrawAvailability,
         empower: this.empowerAvailability,
         empowerMagnitudes: this.empowerMagnitudes(),
+        daemon: this.daemon
+          ? { id: this.daemon.id, name: this.daemon.name, description: this.daemon.description }
+          : null,
         map: { layoutId, gridW, gridH, theme },
       });
     } else {
@@ -909,12 +962,13 @@ export class Run {
 
   /**
    * K3 — this turn's remaining redraw budget (actions + cards), the shape the
-   * pre-turn screen renders. 0/0 when `DECK.redraw.enabled` is off.
+   * pre-turn screen renders. L1: reads this turn's daemon-resolved gate —
+   * 0/0 when the active daemon grants no redraw this turn.
    */
   get redrawAvailability(): RedrawAvailability {
     return redrawAvailability(
       { redrawsUsed: this.redrawsUsedThisTurn, cardsRedrawn: this.cardsRedrawnThisTurn },
-      DECK.redraw,
+      this.turnGates.redraw,
     );
   }
 
@@ -943,7 +997,7 @@ export class Run {
       handIndices,
       this.hand.length,
       { redrawsUsed: this.redrawsUsedThisTurn, cardsRedrawn: this.cardsRedrawnThisTurn },
-      DECK.redraw,
+      this.turnGates.redraw,
     );
     if (rejection !== null) return;
     const positions = [...handIndices].sort((a, b) => a - b);
@@ -962,29 +1016,35 @@ export class Run {
 
   /**
    * K4 — this turn's remaining empower budget, the shape the pre-turn screen
-   * renders. 0 when `EMPOWER.enabled` is off.
+   * renders. L1: reads this turn's daemon-resolved gate — 0 when the active
+   * daemon grants no empower this turn.
    */
   get empowerAvailability(): EmpowerAvailability {
-    return empowerAvailability({ empowersUsed: this.empowersUsedThisTurn }, EMPOWER);
+    return empowerAvailability({ empowersUsed: this.empowersUsedThisTurn }, this.turnGates.empower);
   }
 
   /**
    * K4 — the per-hand-position empower stack column (parallel to `hand`,
-   * 0 = unbuffed): each card's accumulated `EMPOWER.buff.key` magnitude on
-   * its roster slot's encounter store. Derived (never stored) so it stays
-   * correct across redraws and re-draws of an earlier turn's empowered card.
+   * 0 = unbuffed): each card's accumulated empower-buff magnitude on its
+   * roster slot's encounter store. Derived (never stored) so it stays correct
+   * across redraws and re-draws of an earlier turn's empowered card. L1: the
+   * buff key comes from the DAEMON's configured empower gate (not the
+   * resolved turn gate, so a chance-denied turn still badges existing
+   * stacks); no empower daemon → no key → all zeros.
    */
   private empowerMagnitudes(): number[] {
+    const buffKey = this.daemon?.empower?.buff.key;
     return this.hand.map((idx) => {
-      const effect = this.encounterEffects[idx]?.find((e) => e.key === EMPOWER.buff.key);
+      const effect = this.encounterEffects[idx]?.find((e) => e.key === buffKey);
       return effect?.magnitude ?? 0;
     });
   }
 
   /**
    * K4 — empower one drawn card at the pre-turn gate (the `empowerUnit`
-   * command): its roster slot gains the configured `EMPOWER.buff` in the K1
-   * encounter-effect store, so the buff lasts the rest of the ENCOUNTER
+   * command): its roster slot gains the active daemon's buff (L1 — the
+   * resolved `turnGates.empower.buff`) in the K1 encounter-effect store, so
+   * the buff lasts the rest of the ENCOUNTER
    * (re-seeded onto the unit each turn at deploy — `beginTurn` runs after
    * this gate, so the buff is live on the very turn it's granted). The store
    * merges by key per the buff's policy: at the shipped `merge: "add"`,
@@ -1002,10 +1062,10 @@ export class Run {
       handIndex,
       this.hand.length,
       { empowersUsed: this.empowersUsedThisTurn },
-      EMPOWER,
+      this.turnGates.empower,
     );
     if (rejection !== null) return;
-    this.addEncounterEffect(this.hand[handIndex]!, empowerEffect(EMPOWER));
+    this.addEncounterEffect(this.hand[handIndex]!, empowerEffect(this.turnGates.empower));
     this.empowersUsedThisTurn += 1;
     this.bus.emit('turn:unitEmpowered', {
       handIndex,
@@ -1320,6 +1380,13 @@ export class Run {
       rng: this.rng.toJSON(),
       levelupRng: this.levelupRng.toJSON(),
       deckRng: this.deckRng.toJSON(),
+      daemonRng: this.daemonRng.toJSON(),
+      // L1 — stored by reference (the `nodeMap`/`encounterMap` convention):
+      // neither the daemon nor a resolved gate is ever mutated in place
+      // (`turnGates` is reassigned whole each turn; `empowerEffect` deep-copies
+      // the buff mods at apply time).
+      daemon: this.daemon,
+      turnGates: this.turnGates,
       nodeMap: this.nodeMap,
       team: this.team.slice(),
       deploymentCounts: this.deploymentCounts.slice(),
@@ -1366,6 +1433,7 @@ export class Run {
       subscriptions: Array<() => void>;
       forcedLayoutId: string | null;
       runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
+      turnGates: TurnGates;
     };
     const m = run as unknown as Mut;
     m.bus = bus;
@@ -1375,6 +1443,11 @@ export class Run {
     m.rng = RNG.fromJSON(snap.rng);
     m.levelupRng = RNG.fromJSON(snap.levelupRng);
     m.deckRng = RNG.fromJSON(snap.deckRng);
+    m.daemonRng = RNG.fromJSON(snap.daemonRng);
+    // L1 — restore the daemon + the CURRENT turn's resolved gates as-is (a
+    // save at the pre-turn gate keeps its Mercury flip — never re-rolled).
+    m.daemon = snap.daemon;
+    m.turnGates = snap.turnGates;
     m.nodeMap = snap.nodeMap;
     m.team = snap.team.slice();
     m.deploymentCounts = snap.deploymentCounts.slice();

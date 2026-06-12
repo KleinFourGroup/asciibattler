@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "empowersPerTurn": 1,
   "buff": {
     "key": "empowered",

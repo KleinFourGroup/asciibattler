@@ -811,3 +811,15 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   LOSING turn's XP is never banked (defeat is terminal — no level-up screen ahead of the defeat
   screen), so an N3 rate hike won't leak XP into lost runs. The ~1-hang/50 labyrinth tail persists
   pre- and post- (same seed, same layout) — still N2's watch item.
+
+- **M2-session leveling-curve LIVE TUNE (user playtest call, 2026-06-12, UNMEASURED).** Alongside the
+  M2 screen work the user tuned `config/leveling.json` **`baseXp 100→20, exponent 1.25→1.1`** —
+  levels are now MUCH cheaper/faster (xpToNext(1) 100→20; xpToNext(5) ~565→~117), making promotions
+  a frequent per-turn event (the M2 screen's whole reason to feel good). This **pre-empts part of
+  N3's leveling-rate pass** — N3 now starts from this curve rather than the shipped one — and it is
+  a presumptive **band-mover** (H7c lesson: the matchup is RELATIVE since enemy budget scales with
+  player level, but faster leveling also compounds stat growth + per-turn promotion surfacing), so
+  fold it into the N2 re-sweep baseline. NOT stash-measured (user-driven live tune, taken as given).
+  Test fallout: four `Run.test.ts` promotion-phase pins hardcoded `xpGained: 100` (== the OLD
+  `xpToNext(1)`) and broke at the new curve — switched to the file's own `xpToNext(1)` convention
+  (the balance-proof rule: derive from config, never hardcode curve arithmetic).

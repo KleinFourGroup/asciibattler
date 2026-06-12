@@ -1,6 +1,6 @@
 {
-  "baseXp": 100,
-  "exponent": 1.25,
+  "baseXp": 20,
+  "exponent": 1.1,
   "levelCap": 20,
   "xpFlatPerSurvivor": 25,
   "xpFlatPerFallen": 20,

@@ -478,7 +478,7 @@ describe('Run', () => {
         promotions.push(p.map((x) => x.rosterIndex)),
       );
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
-      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }]);
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
       expect(run.phase).toBe('promotion');
       expect(run.pendingPromotions).not.toBeNull();
       expect(run.pendingPromotions).toHaveLength(1);
@@ -498,7 +498,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
-      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }]);
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
       expect(run.phase).toBe('promotion');
       run.dispatch({ kind: 'dismissPromotion' });
       expect(run.phase).toBe('recruit');
@@ -515,7 +515,7 @@ describe('Run', () => {
       let offerCount = 0;
       bus.on('run:victory', () => victoryCount++);
       bus.on('recruit:offered', () => offerCount++);
-      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }]);
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
       expect(run.phase).toBe('promotion');
       run.dispatch({ kind: 'dismissPromotion' });
       expect(run.phase).toBe('complete');
@@ -534,7 +534,7 @@ describe('Run', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100 }]);
+      winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
       expect(restored.phase).toBe('promotion');
       expect(restored.pendingPromotions).toEqual(run.pendingPromotions);

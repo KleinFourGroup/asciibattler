@@ -1,13 +1,15 @@
 /**
- * E4 — promotion modal; M2 — staggered reveal redesign. Shown at turn
- * boundaries (M1) whenever at least one player unit crossed an XP
- * threshold. Each promoted unit's card pops in CARD_STAGGER_MS after the
- * previous one, landing in its PRE-level state (old level, old stats, all
- * rows dim amber). Once a card lands it starts revealing its own gains —
- * level first, then each grown stat turns green and flips to the new
- * value with a `+N` chip — while later cards are still popping in (the
- * cascading-pipeline shape locked in the M2 design round). Each reveal
- * beat plays the healtick blip.
+ * E4 — promotion modal; M2 — staggered reveal redesign (two-phase). Shown
+ * at turn boundaries (M1) whenever at least one player unit crossed an XP
+ * threshold. Phase 1: each card pops in CARD_STAGGER_MS after the previous
+ * one, landing in its PRE-level state (old level, old stats, all rows dim
+ * amber). Phase 2, only after the LAST card lands: cards reveal ONE AT A
+ * TIME — level first, then each grown stat turns green and flips to the
+ * new value with a `+N` chip — so the eye is never drawn to two units at
+ * once (the active card carries .is-revealing, a brightened border). Each
+ * reveal beat plays the healtick blip. (The original cascading-pipeline
+ * shape — cards revealing while later ones were still landing — was
+ * revised to this after playtest: multiple simultaneous motions.)
  *
  * Clicking anywhere except Continue fast-forwards every pending beat to
  * the fully-revealed end state (audio muted — no blip machine-gun).
@@ -32,11 +34,14 @@ import { STAT_LABELS } from './statLabels';
  *  (FADE_MS=180) finish before the first card pops, so the entrance
  *  isn't masked by the container fade. */
 const INTRO_DELAY_MS = 220;
-const CARD_STAGGER_MS = 200;
-/** Gap between a card landing and its first reveal beat — lets the
- *  entrance pop settle so the level tick reads as a separate beat. */
-const LAND_TO_REVEAL_MS = 260;
-const REVEAL_STAGGER_MS = 200;
+const CARD_STAGGER_MS = 400;
+/** Gap between the LAST card landing and the first reveal beat — the
+ *  phase boundary, where the eye settles before stats start ticking. */
+const LAND_TO_REVEAL_MS = 660;
+const REVEAL_STAGGER_MS = 400;
+/** Extra breath between one card finishing its reveals and the next card
+ *  starting (on top of the trailing REVEAL_STAGGER_MS) — the eye-jump cue. */
+const CARD_HANDOFF_MS = 400;
 
 interface Beat {
   at: number;
@@ -83,15 +88,27 @@ export class PromotionScreen {
 
     const cards = document.createElement('div');
     cards.className = 'promotion-cards';
-    promotions.forEach((p, i) => {
-      const { el, reveals } = this.renderCard(p);
+    const rendered = promotions.map((p) => this.renderCard(p));
+    // Phase 1 — entrances. Every card lands before any reveal fires.
+    rendered.forEach(({ el }, i) => {
       cards.appendChild(el);
-      const landAt = INTRO_DELAY_MS + i * CARD_STAGGER_MS;
-      this.scheduleBeat(landAt, () => el.classList.add('is-landed'));
-      reveals.forEach((reveal, k) =>
-        this.scheduleBeat(landAt + LAND_TO_REVEAL_MS + k * REVEAL_STAGGER_MS, reveal),
+      this.scheduleBeat(INTRO_DELAY_MS + i * CARD_STAGGER_MS, () =>
+        el.classList.add('is-landed'),
       );
     });
+    // Phase 2 — reveals, strictly one card at a time. The active card
+    // carries .is-revealing so the single focal point is explicit.
+    let at =
+      INTRO_DELAY_MS + (rendered.length - 1) * CARD_STAGGER_MS + LAND_TO_REVEAL_MS;
+    for (const { el, reveals } of rendered) {
+      this.scheduleBeat(at, () => el.classList.add('is-revealing'));
+      for (const reveal of reveals) {
+        this.scheduleBeat(at, reveal);
+        at += REVEAL_STAGGER_MS;
+      }
+      this.scheduleBeat(at, () => el.classList.remove('is-revealing'));
+      at += CARD_HANDOFF_MS;
+    }
     panel.appendChild(cards);
 
     const button = document.createElement('button');

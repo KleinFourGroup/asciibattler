@@ -951,20 +951,26 @@ stat gains with animation/sequencing rather than a wall of deltas) + visual
 polish. Render-only; browser-verified. Pairs with M1 (more frequent, so it
 must feel good) and M3 (it stops auto-advancing).
 
-**Landed (design round locked 4 calls, all recommended):** cards pop in
-staggered (200ms apart, scale-overshoot entrance), each landing in its
-PRE-level state — old level, old stats, all rows dim amber. Each card then
-reveals its own gains while later cards are still landing (**cascading
-pipeline**): the **level value ticks first** (Lv N → N+1, stays green),
-then each grown stat turns green and flips old→new with a **`+N` chip**
-(clean resting state — no `6 → 7` arrow; the animation carries the story),
-one beat per 200ms, a **healtick blip** per beat. **Click anywhere skips**
-to the fully-revealed end state (audio muted on skip); Continue is always
+**Landed (design round + one playtest revision):** cards pop in staggered
+(scale-overshoot entrance), each landing in its PRE-level state — old
+level, old stats, all rows dim amber. Reveals are **two-phase,
+card-by-card** (the playtest revision — the round originally locked a
+cascading pipeline, but cards revealing while others landed drew the eye
+to multiple units at once): every card lands first, then cards reveal
+**strictly one at a time** — the **level value ticks first** (Lv N → N+1,
+stays green), then each grown stat turns green and flips old→new with a
+**`+N` chip** (clean resting state — no `6 → 7` arrow; the animation
+carries the story), a **healtick blip** per beat; the actively-revealing
+card carries a brightened border (`.is-revealing`) so the focal point is
+explicit, with a breath (`CARD_HANDOFF_MS`) between cards. The user also
+slowed the cadence in playtest (400ms beats). **Click anywhere skips** to
+the fully-revealed end state (audio muted on skip); Continue is always
 enabled — with M1's per-turn cadence the player is never trapped. Timing
-constants live in `PromotionScreen.ts`; the two visual states + transitions
-in `ui.css`. Render-only — no sim/run/snapshot/fuzz impact; browser-verified
-(timestamped DOM trace pinned the cascade; skip + end state + zero console
-errors).
+constants live in `PromotionScreen.ts`; the visual states + transitions in
+`ui.css`. Render-only — no sim/run/snapshot/fuzz impact; browser-verified
+(timestamped DOM traces pinned both the original cascade and the two-phase
+revision — at most one card ever `.is-revealing`; skip + end state + zero
+console errors).
 
 ### M3 — Scene polish: kill auto-progression + turn fade-in/out
 

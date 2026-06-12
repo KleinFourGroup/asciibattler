@@ -550,12 +550,19 @@ body {
   transform: scale(0.85) translateY(10px);
   transition:
     opacity 140ms ease-out,
-    transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 200ms ease-out;
 }
 
 .promotion-card.is-landed {
   opacity: 1;
   transform: none;
+}
+
+/* M2 — the one card currently revealing its gains (phase 2 runs strictly
+   card-by-card); the brightened border marks the single focal point. */
+.promotion-card.is-revealing {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
 }
 
 .promotion-glyph {

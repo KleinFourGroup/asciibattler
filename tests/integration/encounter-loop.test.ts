@@ -50,7 +50,14 @@ function driveEncounter(
 ): TurnRecord[] {
   const turns: TurnRecord[] = [];
   let guard = 0;
-  while (run.phase === 'battle' && run.currentEncounter) {
+  for (;;) {
+    // M1 — a level-up pauses the loop at the turn boundary (mid-encounter OR
+    // on the final turn); dismiss and re-enter, like the fuzz harness does.
+    if (run.phase === 'promotion') {
+      run.dispatch({ kind: 'dismissPromotion' });
+      continue;
+    }
+    if (run.phase !== 'battle' || !run.currentEncounter) break;
     if (++guard > HEALTH.maxTurns + 5) {
       throw new Error(`encounter did not terminate (ran ${guard} turns)`);
     }

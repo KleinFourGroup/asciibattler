@@ -186,7 +186,7 @@ src/
                              #   J3: owns the ObjectiveController (canvas input + enemy-billboard provider)
     MapScene.ts              #   DOM-only, wraps MapScreen
     RecruitScene.ts          #   DOM-only, wraps RecruitScreen
-    PromotionScene.ts        #   E4.4: DOM-only level-up summary, shown before recruit
+    PromotionScene.ts        #   E4.4: DOM-only level-up summary; M1: pops at each turn boundary (mid-encounter, or before recruit on the final turn)
     GameOverScene.ts         #   DOM-only, wraps GameOverScreen
 
   ui/

@@ -571,34 +571,37 @@ describe('A2 round-trip: Run', () => {
     );
   });
 
-  it('H4: a mid-encounter Run save carries the health pools + pending XP; a pre-H4 snapshot is rejected', () => {
+  it('H4/M1: a mid-encounter Run save carries the pools + the per-turn-banked XP; a stale snapshot is rejected', () => {
     // H4 added the encounter-loop state (playerHealth/enemyHealth/turnIndex/
-    // encounterBudget/pendingEncounterXp) to the Run save → RUN_SCHEMA_VERSION
-    // bumped (7→8). A v7 save has no pools → reject.
+    // encounterBudget) to the Run save (7→8). M1 (16→17) REMOVED the
+    // `pendingEncounterXp` sidecar — a turn's XP banks onto the roster slot at
+    // the turn boundary, so the save carries it in `team` like any other XP.
     const bus = new EventBus<GameEvents>();
     const run = new Run(2026, bus);
     const first = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
     run.dispatch({ kind: 'enterNode', nodeId: first });
     // Resolve one turn with a SUB-lethal chip so the encounter is still live
-    // (phase 'battle', a 2nd turn pending) with non-trivial pools + pending XP.
+    // (phase 'battle', a 2nd turn pending) with non-trivial pools. The award
+    // is sub-threshold, so it banks XP without pausing on a promotion.
     bus.emit('battle:ended', {
       winner: 'draw',
       xpAwards: [{ unitId: 1, rosterIndex: 0, damageDealt: 4, xpGained: 7 }],
       survivorPower: { player: 1, enemy: 2 },
     });
     expect(run.phase).toBe('battle'); // mid-encounter
+    expect(run.team[0]!.xp).toBe(7); // banked at the boundary (M1)
 
     const wire = JSON.parse(JSON.stringify(run.toJSON()));
     expect(wire).toHaveProperty('playerHealth');
     expect(wire).toHaveProperty('enemyHealth');
-    expect(wire.pendingEncounterXp).toHaveLength(1);
+    expect(wire).not.toHaveProperty('pendingEncounterXp'); // retired in v17
 
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.playerHealth).toBe(run.playerHealth);
     expect(restored.enemyHealth).toBe(run.enemyHealth);
     expect(restored.turnIndex).toBe(run.turnIndex);
     expect(restored.encounterBudget).toBe(run.encounterBudget);
-    expect(restored.pendingEncounterXp).toEqual(run.pendingEncounterXp);
+    expect(restored.team[0]!.xp).toBe(7);
 
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
     expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(

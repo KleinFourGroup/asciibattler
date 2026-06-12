@@ -85,10 +85,6 @@ export type RunPhase =
   | 'defeat'
   | 'complete';
 
-/** H4: one `battle:ended` XP award entry. Accumulated across an encounter's
- *  turns in `Run.pendingEncounterXp`, then banked once at encounter end. */
-type XpAward = GameEvents['battle:ended']['xpAwards'][number];
-
 export interface BattleEncounter {
   readonly worldSeed: number;
   /**
@@ -186,8 +182,12 @@ export interface BattleEncounter {
  *  and `turnGates` (the CURRENT turn's resolved gates — a save taken at the
  *  pre-turn gate must restore the same Mercury flip, never re-roll it). A v15
  *  save has none of these → reject rather than rehydrate a run that would
- *  re-roll its daemon. */
-const RUN_SCHEMA_VERSION = 16;
+ *  re-roll its daemon.
+ *  M1: bumped 16→17. REMOVES `pendingEncounterXp` — the per-turn promotion
+ *  cadence banks each turn's XP at the turn boundary, so no cross-turn XP
+ *  accrual state exists anymore. A v16 save can carry accrued-but-unbanked
+ *  XP that v17 code would silently drop → reject. */
+const RUN_SCHEMA_VERSION = 17;
 
 /**
  * K3.5 — the encounter's battlefield, rolled ONCE in `beginEncounter` (the
@@ -262,9 +262,6 @@ export interface RunSnapshot {
   /** K3.5: the active encounter's battlefield (rolled once at encounter start,
    *  every turn fights on it). Null outside an encounter. */
   encounterMap: EncounterMap | null;
-  /** H4: XP awards accrued across the active encounter's turns, banked once at
-   *  encounter end. Non-empty only mid-encounter. */
-  pendingEncounterXp: XpAward[];
   currentNodeId: number;
   phase: RunPhase;
   currentEncounter: BattleEncounter | null;
@@ -417,15 +414,6 @@ export class Run {
    * re-derivable per turn, so a mid-encounter restore must carry it.
    */
   encounterMap: EncounterMap | null;
-  /**
-   * H4 — XP awards accrued across the active encounter's turns (each turn's
-   * `battle:ended.xpAwards` appended in order). Banked ONCE at encounter end
-   * via `bankXpAwards`, so a single `PromotionScene` pops per encounter, never
-   * per turn. Order is preserved so the `levelupRng` draw order is identical
-   * with or without a mid-encounter save. Cleared at encounter start + after
-   * banking; discarded (unbanked) on defeat.
-   */
-  pendingEncounterXp: XpAward[];
   currentNodeId: number;
   phase: RunPhase = 'map';
   /**
@@ -443,10 +431,12 @@ export class Run {
   /** Recruit offer presented after victory, cleared on choice. */
   currentOffer: UnitTemplate[] | null = null;
   /**
-   * E4 — level-ups awaiting PromotionScene dismissal. Set inside
-   * `handleBattleEnded` when `bankXpAwards` reports promotions;
-   * cleared when `handleDismissPromotion` rolls the next step
-   * (recruit offer or run:victory).
+   * E4 — level-ups awaiting PromotionScene dismissal. M1: set at the TURN
+   * boundary in `handleTurnEnded` when `bankXpAwards` reports promotions
+   * (gated runs stash it across the `turn-outcome` screen — both fields are
+   * persisted, so a save there still pops the promotion on resume); cleared
+   * when `handleDismissPromotion` re-enters the encounter loop (next turn /
+   * finish) or, for a G3 rest, returns to the map.
    */
   pendingPromotions: PromotionInfo[] | null = null;
   /**
@@ -496,14 +486,13 @@ export class Run {
     // K4 — empower budget bookkeeping; same lifecycle.
     this.empowersUsedThisTurn = 0;
     // H4 — the run-wide player pool starts full; the per-encounter state
-    // (enemyHealth/turnIndex/encounterBudget/pendingEncounterXp) is set when an
-    // encounter actually begins (`beginEncounter`).
+    // (enemyHealth/turnIndex/encounterBudget) is set when an encounter
+    // actually begins (`beginEncounter`).
     this.playerHealth = HEALTH.playerHealthMax;
     this.enemyHealth = 0;
     this.turnIndex = 0;
     this.encounterBudget = 0;
     this.encounterMap = null;
-    this.pendingEncounterXp = [];
     this.levelupRng = this.rng.fork();
     // H5 — fork the deck stream LAST (after levelup), consistent with the
     // append-at-the-end fork convention. This extra construction fork shifts
@@ -616,15 +605,14 @@ export class Run {
 
   /**
    * H4 — start a fresh encounter at the current node. Resets the per-encounter
-   * state (enemy pool full, turn counter zero, no pending XP), fixes the enemy
-   * level budget for the whole encounter, zeroes the H3 deployment counts, then
-   * kicks off the first turn. The run-wide `playerHealth` is deliberately NOT
-   * reset — it persists across encounters.
+   * state (enemy pool full, turn counter zero), fixes the enemy level budget
+   * for the whole encounter, zeroes the H3 deployment counts, then kicks off
+   * the first turn. The run-wide `playerHealth` is deliberately NOT reset — it
+   * persists across encounters.
    */
   private beginEncounter(): void {
     this.enemyHealth = HEALTH.enemyHealthMax;
     this.turnIndex = 0;
-    this.pendingEncounterXp = [];
     // Budget computed once; the wave composition re-rolls per turn against it.
     this.encounterBudget = enemyBudgetFor(this.team);
     // H5 — rebuild + shuffle the draw deck from the CURRENT roster (so a
@@ -870,11 +858,21 @@ export class Run {
     // `survivorPower` is absent only from test fakes that drive the phase
     // machine without a real World; treat as a 0/0 (no-chip) turn.
     const sp = survivorPower ?? { player: 0, enemy: 0 };
-    this.resolveTurn(sp, xpAwards);
+    this.resolveTurn(sp);
     const result = this.turnResult();
+    // M1 — bank THIS turn's XP at the boundary (pre-M1: accrued across the
+    // encounter, banked once at the end), so a mid-encounter level-up fields
+    // a stronger unit on the very next turn. A losing turn skips the bank:
+    // defeat is terminal, so the levels would be dead state, and a level-up
+    // pause in front of the defeat screen would be noise.
+    if (result !== 'lost') {
+      const promotions = this.bankXpAwards(xpAwards);
+      if (promotions.length > 0) this.pendingPromotions = promotions;
+    }
     if (this.pauseAtTurnGates) {
       // Pause on the post-turn outcome screen; the player's `advanceTurn`
-      // resumes into `continueAfterTurn`.
+      // resumes into the promotion pause (if any units leveled) and then
+      // `continueAfterTurn`.
       this.phase = 'turn-outcome';
       this.bus.emit('turn:resolved', {
         turn: this.turnIndex,
@@ -887,6 +885,12 @@ export class Run {
         enemyHealth: this.enemyHealth,
         enemyHealthMax: HEALTH.enemyHealthMax,
       });
+    } else if (this.pendingPromotions) {
+      // M1 headless — the promotion pause interposes between the resolved
+      // turn and the loop continuing (the gated path does the same from
+      // `handleAdvanceTurn`). The harness/test loop dismisses and re-enters.
+      this.phase = 'promotion';
+      this.bus.emit('promotion:pending', { promotions: this.pendingPromotions });
     } else {
       this.continueAfterTurn(result);
     }
@@ -896,21 +900,18 @@ export class Run {
    * H4 — fold one turn's outcome into the pools. Each side's survivors chip the
    * OPPOSING pool by their Σ`power` (× `chipMultiplier`); the per-turn winner is
    * irrelevant to the chip (a draw chips both; a decisive win chips one because
-   * the loser's survivor power is 0). XP accrues for banking at encounter end.
+   * the loser's survivor power is 0). XP banking is the caller's job (M1 — at
+   * the turn boundary, right after this resolves).
    * Decision + continuation are split out (`turnResult`/`continueAfterTurn`) so
    * H4b's post-turn screen can show the result before the loop acts on it.
    */
-  private resolveTurn(
-    survivorPower: { player: number; enemy: number },
-    xpAwards: GameEvents['battle:ended']['xpAwards'],
-  ): void {
+  private resolveTurn(survivorPower: { player: number; enemy: number }): void {
     // Unconditional, at the top: even a 0/0 mutual-wipe turn must advance the
     // counter so the max-turns safety cap can terminate the encounter.
     this.turnIndex += 1;
     const chip = HEALTH.chipMultiplier;
     this.enemyHealth = Math.max(0, this.enemyHealth - survivorPower.player * chip);
     this.playerHealth = Math.max(0, this.playerHealth - survivorPower.enemy * chip);
-    this.pendingEncounterXp.push(...xpAwards);
   }
 
   /**
@@ -963,7 +964,15 @@ export class Run {
       this.phase = 'battle';
       this.beginTurn();
     } else if (this.phase === 'turn-outcome') {
-      this.continueAfterTurn(this.turnResult());
+      if (this.pendingPromotions) {
+        // M1 — surface the turn's level-ups (banked in `handleTurnEnded`)
+        // before the loop continues; `handleDismissPromotion` resumes it.
+        // AFTER the outcome screen, so the result is read first.
+        this.phase = 'promotion';
+        this.bus.emit('promotion:pending', { promotions: this.pendingPromotions });
+      } else {
+        this.continueAfterTurn(this.turnResult());
+      }
     }
   }
 
@@ -1096,22 +1105,14 @@ export class Run {
     // K3.5 — the battlefield is encounter-scoped; drop it with the encounter.
     this.encounterMap = null;
     if (outcome === 'defeat') {
-      this.pendingEncounterXp = [];
       this.phase = 'defeat';
       this.bus.emit('run:defeated', {});
       return;
     }
-    const promotions = this.bankXpAwards(this.pendingEncounterXp);
-    this.pendingEncounterXp = [];
-    if (promotions.length > 0) {
-      // Pause on PromotionScene; the post-promotion step (recruit offer or
-      // run:victory) runs from `handleDismissPromotion`.
-      this.phase = 'promotion';
-      this.pendingPromotions = promotions;
-      this.bus.emit('promotion:pending', { promotions });
-    } else {
-      this.advancePastBattle();
-    }
+    // M1 — nothing left to bank here: each turn's XP (including the winning
+    // turn's) was banked at its own boundary, and any final-turn promotion
+    // already paused before `continueAfterTurn` routed into this win.
+    this.advancePastBattle();
   }
 
   /**
@@ -1177,10 +1178,19 @@ export class Run {
   private handleDismissPromotion(): void {
     if (this.phase !== 'promotion') return;
     this.pendingPromotions = null;
-    // G3 — a promotion can come from a battle/boss win OR a rest node. The
-    // current node's kind is the discriminator (no extra persisted state): a
-    // rest returns to the map (no recruit), a battle/boss takes the normal
-    // post-battle path (recruit or, at the terminal, run:victory).
+    // M1 — a battle-sourced promotion fires at the TURN boundary, while the
+    // encounter is still live (`encounterMap` set — cleared only in
+    // `finishEncounter`, and rest nodes never set it, so it cleanly
+    // discriminates the turn loop from the G3 rest path below). Re-enter the
+    // loop: the recomputed `turnResult` routes to the next turn or into
+    // `finishEncounter` (a won final turn → recruit/victory as before).
+    if (this.encounterMap !== null) {
+      this.continueAfterTurn(this.turnResult());
+      return;
+    }
+    // G3 — a rest-node promotion returns to the map (no recruit). The
+    // `advancePastBattle` leg is unreachable post-M1 (battle promotions are
+    // turn-boundary-only now), kept as the defensive default.
     if (this.kindOf(this.currentNodeId) === 'rest') {
       this.phase = 'map';
     } else {
@@ -1411,7 +1421,6 @@ export class Run {
       turnIndex: this.turnIndex,
       encounterBudget: this.encounterBudget,
       encounterMap: this.encounterMap,
-      pendingEncounterXp: this.pendingEncounterXp.slice(),
       currentNodeId: this.currentNodeId,
       phase: this.phase,
       currentEncounter: this.currentEncounter,
@@ -1473,7 +1482,6 @@ export class Run {
     m.turnIndex = snap.turnIndex;
     m.encounterBudget = snap.encounterBudget;
     m.encounterMap = snap.encounterMap;
-    m.pendingEncounterXp = snap.pendingEncounterXp.slice();
     m.currentNodeId = snap.currentNodeId;
     m.phase = snap.phase;
     m.currentEncounter = snap.currentEncounter;

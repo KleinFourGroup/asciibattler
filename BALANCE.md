@@ -790,3 +790,24 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
     contract visible in the data). Residual shape worth remembering: minerva still edges mars on
     FLOOR (7.5 vs 6.6 — defense keeps even the losing runs alive longer), and both empower idols
     sit ~2× the redraw idols' lift; whether the redraw idols deserve bigger budgets is N2 material.
+
+- **M1 per-turn promotion cadence — stash-compared BAND-NEUTRAL (2026-06-12).** M1 moves XP banking
+  from encounter end to the TURN boundary (promotions pop mid-encounter; a leveled unit fields
+  stronger on the very next turn; `pendingEncounterXp` retired, Run v16→v17). In principle a player
+  buff — `encounterBudget` is fixed at encounter start, so a mid-encounter level is "free" strength
+  inside that encounter — so it was measured before docs/commit. Stash-compare at identical commands
+  (`--count=50 --jobs=4`, knobs unchanged, no bot flags — daemon = the Run's own roll):
+
+  | strategy    | pre-M1 win/floor/hangs | post-M1 win/floor/hangs |
+  |-------------|------------------------|--------------------------|
+  | pure-random | 22.0% / 5.24 / 1       | 22.0% / 5.28 / 1         |
+  | greedy      | 26.0% / 5.24 / 1       | 24.0% / 5.24 / 1         |
+
+  Deltas are within noise (σ≈5.9pp at n=50) — **the cadence alone moves nothing at naive-bot skill**,
+  which is the good outcome: at the shipped leveling rate (start level 5, big `xpToNext`) mid-encounter
+  crossings are rare, so M1 delivers its intent (levels SURFACE more often — the "too rare" feel from
+  the Phase-H feedback) without becoming an accidental band-mover ahead of N2. The leveling RATE stays
+  N3's lever, measured against a stable post-N2 band. One model change worth remembering for N3: a
+  LOSING turn's XP is never banked (defeat is terminal — no level-up screen ahead of the defeat
+  screen), so an N3 rate hike won't leak XP into lost runs. The ~1-hang/50 labyrinth tail persists
+  pre- and post- (same seed, same layout) — still N2's watch item.

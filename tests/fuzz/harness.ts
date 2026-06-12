@@ -430,10 +430,10 @@ export function runOne(
       }
       case 'promotion': {
         // E4: headless run; PromotionScene has no observable side
-        // effects on the sim, just dismiss and continue. Run resolves
-        // dismissal into the same recruit-offer / run:victory branch
-        // a no-promotion battle would take, so the next loop tick
-        // lands in 'recruit' or 'complete' naturally.
+        // effects on the sim, just dismiss and continue. M1: promotions
+        // fire at the TURN boundary, so dismissal usually re-enters the
+        // encounter loop (the next tick lands back in 'battle'); on a won
+        // final turn it lands in 'recruit'/'complete' as before.
         run.dispatch({ kind: 'dismissPromotion' });
         break;
       }

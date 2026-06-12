@@ -445,9 +445,9 @@ describe('Run', () => {
       const { run, bus } = freshLvl1RunWithBus(3);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // H4: a losing turn ends the run (player pool emptied) before any pending
-      // XP is banked. (Whether non-empty awards on a losing turn are discarded
-      // is pinned separately in the encounter-loop suite.)
+      // H4/M1: a losing turn ends the run (player pool emptied) and skips the
+      // turn's XP bank. (Non-empty awards on a losing turn are pinned
+      // separately in the encounter-loop suite.)
       loseEncounter(bus);
       expect(run.phase).toBe('defeat');
       expect(run.team.every((t) => t.xp === 0 && t.level === 1)).toBe(true);
@@ -642,7 +642,7 @@ describe('Run', () => {
       expect(run.phase).toBe('recruit');
     });
 
-    it('banks encounter XP ONCE at the end, not per turn', () => {
+    it('M1 — banks each turn\'s XP at the turn boundary, not at encounter end', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
@@ -657,26 +657,32 @@ describe('Run', () => {
       chipTurn(bus, { player: 1, enemy: 0 }, [
         { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: half1 },
       ]);
+      // Banked IMMEDIATELY at the boundary — sub-threshold, so no promotion
+      // pause and the loop rolls straight into the next turn.
       expect(run.phase).toBe('battle');
-      // NOT banked yet — the roster slot is still pristine mid-encounter.
-      expect(run.team[0]!.xp).toBe(0);
+      expect(run.team[0]!.xp).toBe(half1);
       expect(run.team[0]!.level).toBe(1);
+      expect(promotions).toEqual([]);
 
       chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: 0 }, [
         { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: half2 },
       ]);
-      // Banked once at encounter end → exactly one level-up, one promotion.
+      // The second half crosses → the promotion pauses at the WINNING turn's
+      // boundary, before the encounter resolves into the recruit offer.
       expect(run.phase).toBe('promotion');
       expect(promotions).toEqual([[0]]);
       expect(run.team[0]!.level).toBe(2);
       expect(run.team[0]!.xp).toBe(0);
+      run.dispatch({ kind: 'dismissPromotion' });
+      expect(run.phase).toBe('recruit');
     });
 
-    it('discards pending encounter XP on defeat', () => {
+    it('a losing turn\'s XP is never banked (defeat is terminal)', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // A big award on the LOSING turn must not bank (the run is over).
+      // A big award on the LOSING turn must not bank (M1 skips the bank on a
+      // lost result — no promotion screen in front of the defeat screen).
       chipTurn(bus, { player: 0, enemy: HEALTH.playerHealthMax }, [
         { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) * 5 },
       ]);
@@ -685,7 +691,7 @@ describe('Run', () => {
       expect(run.team[0]!.xp).toBe(0);
     });
 
-    it('round-trips the pools + pending XP mid-encounter', () => {
+    it('round-trips the pools + per-turn-banked XP mid-encounter', () => {
       const { run, bus } = freshLvl1RunWithBus(7);
       const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
@@ -693,12 +699,135 @@ describe('Run', () => {
         { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 5 },
       ]);
       expect(run.phase).toBe('battle'); // mid-encounter
+      // M1: the award is already ON the roster slot (no pending-XP sidecar).
+      expect(run.team[0]!.xp).toBe(5);
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
       expect(restored.playerHealth).toBe(run.playerHealth);
       expect(restored.enemyHealth).toBe(run.enemyHealth);
       expect(restored.turnIndex).toBe(run.turnIndex);
       expect(restored.encounterBudget).toBe(run.encounterBudget);
-      expect(restored.pendingEncounterXp).toEqual(run.pendingEncounterXp);
+      expect(restored.team[0]!.xp).toBe(5);
+    });
+  });
+
+  describe('M1 — per-turn promotion cadence', () => {
+    /** One leveling turn's worth of awards for roster slot 0. */
+    const levelSlot0 = (level: number) => [
+      { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(level) },
+    ];
+
+    it('a mid-encounter level-up pauses on promotion, then dismiss rolls the next turn', () => {
+      const { run, bus } = freshLvl1RunWithBus(1);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      const promotions: number[][] = [];
+      bus.on('promotion:pending', ({ promotions: p }) =>
+        promotions.push(p.map((x) => x.rosterIndex)),
+      );
+      chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(1));
+      // Promoted at the boundary while the encounter is still live.
+      expect(run.phase).toBe('promotion');
+      expect(promotions).toEqual([[0]]);
+      expect(run.team[0]!.level).toBe(2);
+      expect(run.encounterMap).not.toBeNull();
+      run.dispatch({ kind: 'dismissPromotion' });
+      // Headless: dismissal re-enters the encounter loop — next turn is live.
+      expect(run.phase).toBe('battle');
+      expect(run.currentEncounter).not.toBeNull();
+      expect(run.turnIndex).toBe(1);
+    });
+
+    it('a multi-turn encounter produces multiple promotion pauses (one per leveling turn)', () => {
+      const { run, bus } = freshLvl1RunWithBus(2);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      const promotions: number[][] = [];
+      bus.on('promotion:pending', ({ promotions: p }) =>
+        promotions.push(p.map((x) => x.rosterIndex)),
+      );
+      chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(1));
+      run.dispatch({ kind: 'dismissPromotion' });
+      chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(2));
+      run.dispatch({ kind: 'dismissPromotion' });
+      // Two separate pauses, two separate level-ups — the pre-M1 model showed
+      // exactly ONE PromotionScene per encounter regardless of turn count.
+      expect(promotions).toEqual([[0], [0]]);
+      expect(run.team[0]!.level).toBe(3);
+      expect(run.phase).toBe('battle');
+    });
+
+    it('the next turn fields the just-leveled template (full-HP re-field on new stats)', () => {
+      const { run, bus } = freshLvl1RunWithBus(3);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(1));
+      run.dispatch({ kind: 'dismissPromotion' });
+      // The 5-unit LVL1 roster fits one hand (≤ handSize), so slot 0 fields
+      // every turn. The next turn's encounter embeds the LEVELED template —
+      // spawn derives full HP from these stats (the H4 no-attrition re-field).
+      const leveled = run.currentEncounter!.playerTeam.filter((u) => u.level === 2);
+      expect(leveled).toHaveLength(1);
+      expect(leveled[0]!.stats).toEqual(run.team[0]!.stats);
+    });
+
+    it('gated: the promotion interposes between turn-outcome and the next turn-intro', () => {
+      const { run, bus } = freshLvl1RunWithBus(4);
+      run.pauseAtTurnGates = true;
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      const promotionEvents: number[] = [];
+      bus.on('promotion:pending', ({ promotions: p }) => promotionEvents.push(p.length));
+      expect(run.phase).toBe('turn-intro');
+      run.dispatch({ kind: 'advanceTurn' });
+      chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(1));
+      // The outcome screen comes FIRST: the level is already banked, but the
+      // promotion is stashed across the turn-outcome pause, not yet shown.
+      expect(run.phase).toBe('turn-outcome');
+      expect(run.team[0]!.level).toBe(2);
+      expect(promotionEvents).toHaveLength(0);
+      run.dispatch({ kind: 'advanceTurn' });
+      expect(run.phase).toBe('promotion');
+      expect(promotionEvents).toHaveLength(1);
+      run.dispatch({ kind: 'dismissPromotion' });
+      expect(run.phase).toBe('turn-intro'); // the NEXT turn's gate
+    });
+
+    it('a save at turn-outcome keeps the stashed promotion (pops on resume)', () => {
+      const { run, bus } = freshLvl1RunWithBus(5);
+      run.pauseAtTurnGates = true;
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      run.dispatch({ kind: 'advanceTurn' });
+      chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(1));
+      expect(run.phase).toBe('turn-outcome');
+      const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
+      expect(restored.pendingPromotions).toEqual(run.pendingPromotions);
+      // `pauseAtTurnGates` is deliberately not persisted, but the stashed
+      // promotion still pops on the resume's advance — gates or not.
+      restored.dispatch({ kind: 'advanceTurn' });
+      expect(restored.phase).toBe('promotion');
+    });
+
+    it('round-trips a save taken at the mid-encounter promotion pause (v17)', () => {
+      const { run, bus } = freshLvl1RunWithBus(6);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(1));
+      expect(run.phase).toBe('promotion');
+      const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
+      expect(restored.phase).toBe('promotion');
+      expect(restored.pendingPromotions).toEqual(run.pendingPromotions);
+      expect(restored.encounterMap).toEqual(run.encounterMap);
+      restored.dispatch({ kind: 'dismissPromotion' });
+      // The restored dismiss re-enters the encounter loop, not the map.
+      expect(restored.phase).toBe('battle');
+    });
+
+    it('per-turn banking is deterministic (same seed → byte-identical snapshots)', () => {
+      const snapshotFor = (): string => {
+        const { run, bus } = freshLvl1RunWithBus(13);
+        run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+        chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(1));
+        run.dispatch({ kind: 'dismissPromotion' });
+        chipTurn(bus, { player: 1, enemy: 0 }, levelSlot0(2));
+        run.dispatch({ kind: 'dismissPromotion' });
+        return JSON.stringify(run.toJSON());
+      };
+      expect(snapshotFor()).toBe(snapshotFor());
     });
   });
 

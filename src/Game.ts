@@ -126,14 +126,15 @@ export class Game implements RunDispatcher {
     // across the overlays.
     this.overlays = new UnitOverlayLayer(this.renderer.camera, canvas, uiMount);
 
-    // Scene transitions driven by Run lifecycle events. All three of the
-    // post-battle handlers fire from Run.handleBattleEnded *after* Run has
-    // already updated phase + currentOffer, so the new Scene can read
-    // ctx.run consistently.
+    // Scene transitions driven by Run lifecycle events. All of the
+    // post-battle handlers fire *after* Run has already updated phase +
+    // currentOffer, so the new Scene can read ctx.run consistently.
     this.bus.on('battle:started', () => this.swap(new BattleScene()));
     // E4: promotion fires BEFORE recruit:offered when units leveled up.
     // Run rolls the recruit offer only after `dismissPromotion`, so
     // recruit:offered still fires exactly once per non-terminal win.
+    // M1: promotions fire at TURN boundaries, so this swap also lands
+    // mid-encounter (post-turn screen → here → the next pre-turn screen).
     this.bus.on('promotion:pending', ({ promotions }) =>
       this.swap(new PromotionScene(promotions)),
     );
@@ -214,9 +215,10 @@ export class Game implements RunDispatcher {
         }
         break;
       case 'dismissPromotion':
-        // After a battle win, Run resolves dismiss into either recruit:offered
-        // (non-terminal) or run:victory (terminal), both of which fire their
-        // own scene swaps via bus subscription. After a G3 rest-triggered
+        // M1: mid-encounter, Run resolves dismiss back into the turn loop —
+        // the next turn:starting (gated) fires its own swap. On a won final
+        // turn it resolves into recruit:offered (non-terminal) or run:victory
+        // (terminal), likewise self-swapping. After a G3 rest-triggered
         // promotion it instead falls back to 'map' with no event, so swap
         // explicitly (same pattern as chooseRecruit / enterNode above).
         this.run.dispatch(command);

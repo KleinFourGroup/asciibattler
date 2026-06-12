@@ -291,7 +291,6 @@ export class Renderer {
     this.cameraMode = mode;
     this.fitCamera();
     if (typeof window !== 'undefined') {
-      // eslint-disable-next-line no-console
       console.log(`[camera] mode: ${mode}`);
     }
   }

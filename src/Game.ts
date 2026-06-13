@@ -4,6 +4,7 @@ import { SpriteRenderer } from './render/SpriteRenderer';
 import { UnitOverlayLayer } from './render/UnitOverlayLayer';
 import { TerrainRenderer } from './render/TerrainRenderer';
 import { ApronRenderer } from './render/ApronRenderer';
+import { BackdropRenderer } from './render/BackdropRenderer';
 import { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
 import { Run } from './run/Run';
@@ -59,6 +60,8 @@ export class Game implements RunDispatcher {
   /** M4 — the backdrop apron ring. Dev consoles reach it as `__game.apron`
    *  (TS `private` is runtime-accessible) for the dither A/B flip. */
   private readonly apron: ApronRenderer;
+  /** M4 — the mist floor (page-lifetime scenery; only its uTime advances). */
+  private readonly backdrop: BackdropRenderer;
   private readonly uiMount: HTMLElement;
   private readonly audio: AudioPlayer;
   /**
@@ -131,6 +134,13 @@ export class Game implements RunDispatcher {
     // pickCell raycasts terrain.mesh explicitly so the ring is unclickable.
     this.apron = new ApronRenderer(this.terrain);
     this.renderer.scene.add(this.apron.mesh);
+
+    // M4: the mist floor the apron dissolves into. Encounter-independent
+    // (origin-centered, fixed size) so it's added once and never reset;
+    // non-battle scenes mask the canvas with opaque DOM (G2), so it only
+    // shows behind live battles.
+    this.backdrop = new BackdropRenderer();
+    this.renderer.scene.add(this.backdrop.mesh);
 
     this.sprites = new SpriteRenderer(this.fontAtlas);
     // Both meshes live in the same scene; layer membership routes them to
@@ -356,6 +366,7 @@ export class Game implements RunDispatcher {
       overlays: this.overlays,
       terrain: this.terrain,
       apron: this.apron,
+      backdrop: this.backdrop,
       fontAtlas: this.fontAtlas,
       uiMount: this.uiMount,
       dispatcher: this,

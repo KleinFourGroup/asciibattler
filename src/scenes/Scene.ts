@@ -25,6 +25,7 @@ import type { SpriteRenderer } from '../render/SpriteRenderer';
 import type { UnitOverlayLayer } from '../render/UnitOverlayLayer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import type { ApronRenderer } from '../render/ApronRenderer';
+import type { BackdropRenderer } from '../render/BackdropRenderer';
 import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
 import type { RunDispatcher } from '../run/Command';
@@ -45,6 +46,9 @@ export interface SceneContext {
    *  feeds it the same tile grid as `terrain`; non-battle scenes ignore it
    *  (it clears alongside terrain on battle dispose). */
   readonly apron: ApronRenderer;
+  /** M4 — the mist floor the apron dissolves into. Encounter-independent
+   *  scenery; BattleScene only drives its uTime. */
+  readonly backdrop: BackdropRenderer;
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;
   readonly dispatcher: RunDispatcher;

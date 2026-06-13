@@ -166,7 +166,11 @@ src/
                              # for sprite Y. D7.C: per-tile flicker/pulse + chasm sink + theme
     ApronRenderer.ts         # M4: backdrop apron — non-playable fog-faded prism ring around the
                              # board (clamp-to-edge tile sampling; render-only, sim never sees it).
-                             # APRON_TILES is the width knob; setDither flips stipple vs smooth
+                             # APRON_TILES is the width knob; setDither flips smooth (default) vs
+                             # stipple; near-black edge band outlines the playable boundary
+    BackdropRenderer.ts      # M4: the mist floor — large noise-shaded plane at BOTTOM_Y the apron
+                             # dissolves into (shared fogColorAt in shaders/fogcolor.glsl, TS-concat
+                             # prepended to both frags); calms to flat background with distance
     BattleRenderer.ts        # Sim/render seam: subscribes to unit:* + action:phase (F3)
                              # tileWorldPos(coord) for per-tile sprite Y (C1c). E6/E7: melee shove,
                              # ranged/lobbed projectiles, explosion/dud/heal-sparkle VFX + hitsplats

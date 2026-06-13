@@ -6,14 +6,18 @@
 //
 // The fog itself: distance outside the playable rect (rect SDF on world XZ,
 // so corners round off), wobbled by summed sines over uTime so the mist
-// edge slowly creeps, then either smoothstepped (uDither 0) or thresholded
-// against a 4×4 Bayer matrix in screen space (uDither 1) for a
-// terminal-flavored stipple dissolve. uFogColor is the scene background —
-// a fully fogged pixel is indistinguishable from the void, so no
-// transparency is needed and the billboard sprites never alpha-sort
-// against the apron.
-
-precision highp float;
+// edge slowly creeps, then either smoothstepped (uDither 0, the default)
+// or thresholded against a 4×4 Bayer matrix in screen space (uDither 1)
+// for a terminal-flavored stipple dissolve. The fog TARGET color is the
+// BackdropRenderer mist sampled where this fragment's view ray meets the
+// mist plane (`fogColorAt` + the precision statement come from
+// fogcolor.glsl, prepended at material construction) — a fully fogged
+// pixel is pixel-identical to the mist behind it, so the dissolve reads
+// as the ground sinking into fog, no transparency needed, and the
+// billboard sprites never alpha-sort against the apron.
+//
+// M4 playtest additions: the near-black edge band on the ring's innermost
+// sliver (the strong playable-boundary read) and the mist-ray fog target.
 
 uniform vec3 uLightDir;
 uniform float uAmbient;
@@ -22,6 +26,7 @@ uniform vec2 uPlayHalf;
 uniform float uFadeEnd;
 uniform vec3 uFogColor;
 uniform float uDither;
+uniform float uMistY;
 
 varying vec3 vColor;
 varying vec3 vNormalW;
@@ -62,6 +67,17 @@ void main() {
   vec2 outside = max(abs(vWorldPos.xz) - uPlayHalf, 0.0);
   float d = length(outside);
 
+  // M4 playtest — crisp near-black band on the ring's innermost sliver:
+  // the strong playable-edge outline (the board's own grid lines are
+  // thinner and only 0.6-mixed). Applied before the fog, but at d≈0 the
+  // fog is ≈0, so the band renders effectively unfogged. Also catches the
+  // inner-rim side faces (d=0 there), so a sunken apron tile shows a dark
+  // seam wall against the board.
+  const float EDGE_BAND_TILES = 0.12;
+  const float EDGE_BAND_AA = 0.05;
+  float band = 1.0 - smoothstep(EDGE_BAND_TILES - EDGE_BAND_AA, EDGE_BAND_TILES, d);
+  base = mix(base, vec3(0.02), band * 0.85);
+
   // Creep — the mist edge breathes. Amplitudes sum to CREEP_MAX_TILES
   // (ApronRenderer shortens uFadeEnd by the same amount so the outer rim
   // stays fully fogged even at the creep's deepest inhale).
@@ -74,5 +90,14 @@ void main() {
     ? step(bayer4(gl_FragCoord.xy / DITHER_CELL_PX), fog)
     : fog;
 
-  gl_FragColor = vec4(mix(base, uFogColor, fogMix), 1.0);
+  // M4 playtest — fade toward the mist the camera would see behind this
+  // fragment: project the view ray down to the mist plane and sample the
+  // shared fogColorAt there. The ray always points downward at our locked
+  // 45° pitch; the min() guard keeps a degenerate near-horizontal ray
+  // from exploding the projection.
+  vec3 rayDir = normalize(vWorldPos - cameraPosition);
+  float toMist = (uMistY - vWorldPos.y) / min(rayDir.y, -0.05);
+  vec3 fogTarget = fogColorAt(vWorldPos.xz + rayDir.xz * toMist, uTime, uFogColor);
+
+  gl_FragColor = vec4(mix(base, fogTarget, fogMix), 1.0);
 }

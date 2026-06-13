@@ -15,6 +15,7 @@ import {
 } from './TerrainRenderer';
 import VERTEX_SHADER from './shaders/apron.vert.glsl?raw';
 import FRAGMENT_SHADER from './shaders/apron.frag.glsl?raw';
+import FOG_GLSL from './shaders/fogcolor.glsl?raw';
 
 /**
  * M4 — the battle-backdrop apron. A ring of non-playable prism tiles
@@ -39,10 +40,17 @@ import FRAGMENT_SHADER from './shaders/apron.frag.glsl?raw';
  *   grid stamp) and the fade starts at tile one, so the playable edge
  *   stays unambiguous.
  * - **The fog is color math, not transparency** — fully fogged pixels
- *   equal the scene background, so there's nothing to alpha-sort against
- *   the billboard sprites and no extra render pass. Style is
- *   runtime-flippable between Bayer-stipple dissolve and smooth
- *   smoothstep via `setDither` (console: `__game.apron.setDither(false)`).
+ *   equal the BackdropRenderer mist behind them (the fragment shader
+ *   samples the shared `fogColorAt` where the view ray meets the mist
+ *   plane), so there's nothing to alpha-sort against the billboard
+ *   sprites and no extra render pass. Style is runtime-flippable between
+ *   smooth smoothstep (the default — playtest call: nothing else in the
+ *   game dithers yet, so the stipple read as out of place) and the
+ *   Bayer-stipple dissolve via `setDither` (console:
+ *   `__game.apron.setDither(true)`).
+ * - **Edge band** (playtest call): a crisp near-black outline on the
+ *   ring's innermost ~0.12 tiles — the strong playable-boundary read,
+ *   darker and wider than the board's own grid lines.
  *
  * Separate from TerrainRenderer (not a widened board mesh) because:
  * (a) the board's buffer is sized at LAYOUT_MAX_SIDE² and a 32×32 board
@@ -119,18 +127,26 @@ export class ApronRenderer {
 
     this.material = new THREE.ShaderMaterial({
       vertexShader: VERTEX_SHADER,
-      fragmentShader: FRAGMENT_SHADER,
+      // fogcolor.glsl carries the shared fogColorAt (and the file's
+      // precision statement) — same snippet BackdropRenderer prepends, so
+      // the apron's fog target can't drift from the mist it fades into.
+      fragmentShader: FOG_GLSL + FRAGMENT_SHADER,
       uniforms: {
         uLightDir: { value: LIGHT_DIR.clone() },
         uAmbient: { value: AMBIENT },
         uTime: { value: 0 },
         uPlayHalf: { value: new THREE.Vector2(0, 0) },
         uFadeEnd: { value: APRON_TILES - CREEP_MAX_TILES },
-        // Fog color MUST be the scene background (Renderer.sceneBackground,
-        // TERMINAL_BLACK) — fade to #000 instead and a dark ring ghosts
-        // where the apron meets the void.
+        // The fog BASE color MUST be the scene background
+        // (Renderer.sceneBackground, TERMINAL_BLACK) — the mist noise
+        // modulates around it and calms back to it at distance; base it
+        // on #000 instead and a dark ring ghosts where mist meets void.
         uFogColor: { value: new THREE.Color(COLORS.TERMINAL_BLACK) },
-        uDither: { value: 1 },
+        // Playtest call: smooth fade ships as the default — nothing else
+        // in the game dithers yet, so the stipple read as out of place.
+        // setDither(true) re-enables it for A/B.
+        uDither: { value: 0 },
+        uMistY: { value: BOTTOM_Y },
       },
     });
 
@@ -257,9 +273,9 @@ export class ApronRenderer {
     u.value = (u.value as number) + dt;
   }
 
-  /** Flip between the Bayer-stipple dissolve (true, default) and a smooth
-   *  smoothstep fade. Runtime so the look can be A/B'd live from the
-   *  console during a playtest: `__game.apron.setDither(false)`. */
+  /** Flip between the smooth smoothstep fade (false, the default — the
+   *  playtest call) and the Bayer-stipple dissolve. Runtime so the look
+   *  can be A/B'd live from the console: `__game.apron.setDither(true)`. */
   setDither(on: boolean): void {
     this.material.uniforms['uDither']!.value = on ? 1 : 0;
   }

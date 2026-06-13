@@ -16,6 +16,7 @@ import { applyTerrain, pickSpawnRegions, setupRngFor, spawnTeam } from '../sim/b
 import { BattleRenderer, gridToWorld } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
 import type { ApronRenderer } from '../render/ApronRenderer';
+import type { BackdropRenderer } from '../render/BackdropRenderer';
 import { HUD } from '../ui/HUD';
 import { ObjectiveController } from '../ui/ObjectiveController';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
@@ -43,6 +44,9 @@ export class BattleScene implements Scene {
   /** M4 — same holding pattern as `terrain`: page-lifetime renderer, held
    *  so `dispose` can clear the ring and `tick` can drive its fog creep. */
   private apron: ApronRenderer | null = null;
+  /** M4 — the mist floor; battle-time only drives its uTime (no per-
+   *  encounter content, so no clear on dispose). */
+  private backdrop: BackdropRenderer | null = null;
   /** I3 — the page-lifetime fast-forward controller (from ctx). Read live in
    *  `tick` so a mid-battle speed change takes effect next frame. */
   private playback: PlaybackSpeed | null = null;
@@ -212,6 +216,7 @@ export class BattleScene implements Scene {
       encounter.theme,
     );
     this.apron = ctx.apron;
+    this.backdrop = ctx.backdrop;
     // D3 — frame the camera to whatever rectangle this encounter rolled
     // (procedural sizes range up to 20×20; hand-authored up to 32×32).
     ctx.renderer.fitToBoard(this.world.gridW, this.world.gridH);
@@ -264,6 +269,7 @@ export class BattleScene implements Scene {
       this.battleRenderer?.update(dt);
       this.terrain?.advanceTime(dt);
       this.apron?.advanceTime(dt);
+      this.backdrop?.advanceTime(dt);
       return;
     }
     // I3 — fast-forward. Scale the real frame `dt` by the active speed and feed
@@ -282,8 +288,10 @@ export class BattleScene implements Scene {
     // scenes call terrain.clear() and don't need the animation to advance.
     this.terrain?.advanceTime(dtScaled);
     // M4 — the apron's fog creep (and any clamp-extended fire/healing
-    // flicker) rides the same scaled time as the board's tile animation.
+    // flicker) + the mist floor's drift ride the same scaled time as the
+    // board's tile animation.
     this.apron?.advanceTime(dtScaled);
+    this.backdrop?.advanceTime(dtScaled);
   }
 
   dispose(): void {
@@ -305,6 +313,7 @@ export class BattleScene implements Scene {
     this.clock = null;
     this.terrain = null;
     this.apron = null;
+    this.backdrop = null;
     this.playback = null;
   }
 }

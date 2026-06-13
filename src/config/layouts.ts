@@ -288,7 +288,9 @@ const LayoutSchema = z
     }
   });
 
-const LayoutsSchema = z.array(LayoutSchema).min(1);
+/** The whole-file array schema. Exported so the layout editor's formatter
+ *  test (M5) can round-trip its emitted JSON through the real loader schema. */
+export const LayoutsSchema = z.array(LayoutSchema).min(1);
 
 export type LayoutDef = z.infer<typeof LayoutSchema>;
 

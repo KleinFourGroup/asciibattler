@@ -58,6 +58,7 @@ import {
   type SpawnRegion,
   type Theme,
 } from '../../src/config/layouts';
+import { formatLayoutJson } from './format';
 
 type Cell = 'floor' | 'wall' | 'water' | 'halfCover' | 'chasm' | 'fire' | 'healing';
 type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
@@ -834,77 +835,6 @@ function refreshExport(): void {
   if (fires.length > 0) payload.fires = fires;
   if (healings.length > 0) payload.healings = healings;
   exportEl.value = formatLayoutJson(payload);
-}
-
-/**
- * Match the indentation of `config/layouts.json` so a paste keeps the
- * file readable. `JSON.stringify(_, null, 2)` puts every coord on its
- * own line; we collapse coord objects to one line each, and emit each
- * spawn region as a one-line `availability` header followed by its
- * tiles array.
- */
-function formatLayoutJson(layout: LayoutDef): string {
-  const parts: string[] = [];
-  parts.push('{');
-  parts.push(`  "id": ${JSON.stringify(layout.id)},`);
-  parts.push(`  "name": ${JSON.stringify(layout.name)},`);
-  parts.push(`  "description": ${JSON.stringify(layout.description)},`);
-  parts.push(`  "gridW": ${layout.gridW},`);
-  parts.push(`  "gridH": ${layout.gridH},`);
-  // D8 — theme is REQUIRED in the schema (no `?` on LayoutDef.theme).
-  // Emit unconditionally so the export pastes cleanly into layouts.json.
-  parts.push(`  "theme": ${JSON.stringify(layout.theme)},`);
-  parts.push(`  "walls": [`);
-  parts.push(...formatCoords(layout.walls));
-  parts.push(`  ],`);
-  if (layout.water && layout.water.length > 0) {
-    parts.push(`  "water": [`);
-    parts.push(...formatCoords(layout.water));
-    parts.push(`  ],`);
-  }
-  if (layout.halfCovers && layout.halfCovers.length > 0) {
-    parts.push(`  "halfCovers": [`);
-    parts.push(...formatCoords(layout.halfCovers));
-    parts.push(`  ],`);
-  }
-  if (layout.chasms && layout.chasms.length > 0) {
-    parts.push(`  "chasms": [`);
-    parts.push(...formatCoords(layout.chasms));
-    parts.push(`  ],`);
-  }
-  if (layout.fires && layout.fires.length > 0) {
-    parts.push(`  "fires": [`);
-    parts.push(...formatCoords(layout.fires));
-    parts.push(`  ],`);
-  }
-  if (layout.healings && layout.healings.length > 0) {
-    parts.push(`  "healings": [`);
-    parts.push(...formatCoords(layout.healings));
-    parts.push(`  ],`);
-  }
-  parts.push(`  "spawns": [`);
-  layout.spawns.forEach((region, i) => {
-    const sep = i === layout.spawns.length - 1 ? '' : ',';
-    parts.push(`    {`);
-    parts.push(`      "availability": ${JSON.stringify(region.availability)},`);
-    parts.push(`      "tiles": [`);
-    parts.push(...region.tiles.map((c, j) => {
-      const tileSep = j === region.tiles.length - 1 ? '' : ',';
-      return `        { "x": ${c.x}, "y": ${c.y} }${tileSep}`;
-    }));
-    parts.push(`      ]`);
-    parts.push(`    }${sep}`);
-  });
-  parts.push(`  ]`);
-  parts.push('}');
-  return parts.join('\n');
-}
-
-function formatCoords(coords: readonly Coord[]): string[] {
-  return coords.map((c, i) => {
-    const sep = i === coords.length - 1 ? '' : ',';
-    return `    { "x": ${c.x}, "y": ${c.y} }${sep}`;
-  });
 }
 
 function refreshAll(): void {

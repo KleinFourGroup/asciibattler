@@ -1,7 +1,8 @@
 # Layout Editor
 
 A standalone Vite page for painting hand-authored encounter layouts and
-exporting them to `config/layouts.json`.
+saving them straight into `config/layouts.json` (or exporting a snippet to
+paste by hand).
 
 ## Launch
 
@@ -122,21 +123,46 @@ The panel mirrors the same invariants `config/layouts.ts` (zod) and
 - Resize-clip warning: count of cells dropped on the most recent W/H
   change.
 
-## Export
+## Save to config (M5)
 
-The Export panel keeps a live JSON snippet matching the
-`config/layouts.json` schema. **Copy** puts it on the clipboard;
-**Download** saves it as `<id>.json`.
+The **Save to config** button writes the current layout straight into
+`config/layouts.json` via the dev-only `/__save-config` Vite endpoint
+(the same save path the I4 archetype editor uses; the endpoint allowlists
+`layouts.json`). No copy-paste round-trip.
+
+- Save is enabled only when validation has **no errors** and the required
+  metadata (`id` slug, `name`, `description`) is present.
+- A **new `id`** appends a new array entry. An **existing `id`** overwrites
+  that entry **in place** (array order is preserved — `LAYOUT_IDS` order seeds
+  `rng.pick` determinism, so entries are never reordered) behind a one-click
+  confirm.
+- The whole file is re-emitted through the canonical formatter
+  ([format.ts](format.ts)), so a no-edit re-save is a byte-identical no-op
+  diff and an edited save touches only the lines you changed.
+  ([tests/tools/layout-editor.test.ts](../../tests/tools/layout-editor.test.ts)
+  pins that against the committed file.)
+
+Saving rewrites a file the editor imports, so Vite reloads the editor tab. The
+editor **masks** this: it stashes the just-saved layout (`sessionStorage`) and
+the next boot re-loads it into the canvas and re-shows the confirmation — so a
+save feels seamless. An open game tab is a separate HMR client and hot-reloads
+to pick up the new layout.
 
 Workflow:
 
-1. Paint and fill metadata until validation is clean.
-2. Click **Copy JSON** (or **Download**).
-3. Open `config/layouts.json` and append the snippet as a new array
-   entry. Order is preserved as `LAYOUT_IDS`, which seeds `rng.pick`
-   determinism for past seeds — **append only**, never reorder.
-4. Run `npm test` to confirm the new entry passes the
-   `layouts.test.ts` suite.
+1. Paint and fill metadata until validation is clean (Save enables).
+2. Click **Save to config** (confirm if overwriting).
+3. The editor reloads and lands back on the saved layout; an open game tab
+   already shows it. Optionally `npm test` to re-run the `layouts.test.ts`
+   suite.
+
+## Export (offline fallback)
+
+For when Save isn't available (no dev server, or you want the snippet
+elsewhere), the Export panel keeps a live single-entry JSON snippet matching
+the `config/layouts.json` schema. **Copy** puts it on the clipboard;
+**Download** saves it as `<id>.json`. Paste it into `config/layouts.json` as a
+new array entry (**append only**, never reorder), then `npm test`.
 
 ## Punted / future work
 

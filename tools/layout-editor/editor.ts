@@ -50,6 +50,7 @@ import {
   LAYOUTS,
   LAYOUT_MIN_SIDE,
   LAYOUT_MAX_SIDE,
+  LayoutsSchema,
   SPAWN_REGION_TILE_COUNT,
   SPAWN_REGION_MIN_TILES,
   SPAWN_REGION_MAX_TILES,
@@ -58,7 +59,7 @@ import {
   type SpawnRegion,
   type Theme,
 } from '../../src/config/layouts';
-import { formatLayoutJson } from './format';
+import { formatLayoutJson, formatLayoutsJson } from './format';
 
 type Cell = 'floor' | 'wall' | 'water' | 'halfCover' | 'chasm' | 'fire' | 'healing';
 type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
@@ -87,6 +88,14 @@ const REGION_COLOR_COUNT = 4;
 
 const DEFAULT_SIDE = 12;
 
+/** Saving rewrites config/layouts.json, which Vite HMR turns into a full page
+ *  reload (the json → layouts.ts → editor.ts chain has no clean HMR boundary).
+ *  To mask it, a successful Save stashes the saved id + status here; the next
+ *  boot consumes the stash, re-loads that (now-on-disk) layout into the canvas,
+ *  and re-shows the confirmation — so a save feels seamless. Session-scoped so
+ *  it never leaks across browser sessions. */
+const SAVE_STASH_KEY = 'layoutEditor.justSaved';
+
 let gridW = DEFAULT_SIDE;
 let gridH = DEFAULT_SIDE;
 let grid: Cell[][] = makeEmptyGrid(gridW, gridH);
@@ -107,6 +116,15 @@ let activeRegionIdx = 0;
 /** Number of cells dropped on the most recent resize. Surfaced as a
  *  validation warning so the author doesn't lose paint silently. */
 let lastClipCount = 0;
+/** M5 — the merge base for Save: the committed layouts at boot, plus any
+ *  layouts saved this session (overwrite-in-place or append). loadLayout, the
+ *  load-select dropdown, the id-collision validation, and Save all read this,
+ *  so a just-saved layout is immediately loadable + overwritable. */
+let working: LayoutDef[] = LAYOUTS.map(cloneLayout);
+
+function cloneLayout(layout: LayoutDef): LayoutDef {
+  return structuredClone(layout) as LayoutDef;
+}
 
 function makeEmptyGrid(w: number, h: number): Cell[][] {
   const g: Cell[][] = [];
@@ -150,6 +168,8 @@ const availabilityRadioEls = Array.from(
 );
 const addRegionBtn = mustQuery<HTMLButtonElement>('#add-region-btn');
 const deleteRegionBtn = mustQuery<HTMLButtonElement>('#delete-region-btn');
+const saveBtn = mustQuery<HTMLButtonElement>('#save-btn');
+const saveStatusEl = mustQuery<HTMLParagraphElement>('#save-status');
 
 populateSizeSelects();
 buildGrid();
@@ -179,6 +199,7 @@ window.addEventListener('resize', () => {
   });
 });
 refreshAll();
+restoreAfterSave();
 
 function populateSizeSelects(): void {
   for (let s = LAYOUT_MIN_SIDE; s <= LAYOUT_MAX_SIDE; s++) {
@@ -638,11 +659,11 @@ function validate(): ValidationItem[] {
       text: 'id should be a short slug (letters, digits, underscore, hyphen).',
     });
   } else if (
-    LAYOUTS.some((l) => l.id === metaIdEl.value.trim())
+    working.some((l) => l.id === metaIdEl.value.trim())
   ) {
     items.push({
       level: 'warn',
-      text: `id "${metaIdEl.value.trim()}" already exists in config — append-only, pick a new id or overwrite the existing entry manually.`,
+      text: `id "${metaIdEl.value.trim()}" already exists — Save will overwrite that layout in place (after a confirm).`,
     });
   }
 
@@ -758,6 +779,24 @@ function refreshValidation(): void {
     li.textContent = item.text;
     validationEl.appendChild(li);
   }
+  // Save-button enabled state tracks validation — re-evaluated wherever the
+  // panel refreshes (meta input, stroke end, region change, resize, load).
+  saveBtn.disabled = !isSavable();
+}
+
+/**
+ * Save eligibility: no `error`-level validation items (overlaps / severed
+ * regions / bad region counts), and the required metadata (a slug id, a name,
+ * a description) is present. An existing id is NOT a blocker — Save overwrites
+ * it behind a confirm. Mirrors the archetype editor's "disable Save unless the
+ * real schema would accept it" rule, expressed over the editor's own checks.
+ */
+function isSavable(): boolean {
+  if (validate().some((i) => i.level === 'error')) return false;
+  const id = metaIdEl.value.trim();
+  if (!id || !/^[a-z0-9_-]+$/i.test(id)) return false;
+  if (!metaNameEl.value.trim() || !metaDescriptionEl.value.trim()) return false;
+  return true;
 }
 
 /**
@@ -812,7 +851,14 @@ function centroidOf(region: SpawnRegion): Coord {
   };
 }
 
-function refreshExport(): void {
+/**
+ * Assemble a `LayoutDef` from the current canvas + metadata. The single source
+ * the export snippet AND Save both read. Empty id/name/description fall back to
+ * placeholders so the export textarea always shows valid-ish JSON mid-edit;
+ * Save is gated on `isSavable()` (real id/name/description present), so those
+ * fallbacks never reach a written file.
+ */
+function buildCurrentLayout(): LayoutDef {
   const walls = collectCells('wall');
   const water = collectCells('water');
   const halfCovers = collectCells('halfCover');
@@ -834,7 +880,111 @@ function refreshExport(): void {
   if (chasms.length > 0) payload.chasms = chasms;
   if (fires.length > 0) payload.fires = fires;
   if (healings.length > 0) payload.healings = healings;
-  exportEl.value = formatLayoutJson(payload);
+  return payload;
+}
+
+function refreshExport(): void {
+  exportEl.value = formatLayoutJson(buildCurrentLayout());
+}
+
+function setSaveStatus(text: string, cls: 'hint' | 'hint ok' | 'hint err'): void {
+  saveStatusEl.textContent = text;
+  saveStatusEl.className = cls;
+}
+
+/**
+ * M5 — write the current layout straight into `config/layouts.json` via the
+ * dev-only `/__save-config` endpoint (the I4 archetype-editor save path; the
+ * endpoint already allowlists `layouts.json`). A new id appends; an existing id
+ * overwrites that entry IN PLACE behind a confirm (array order is preserved —
+ * `LAYOUT_IDS` order seeds rng.pick determinism, so never reorder). The whole
+ * merged file is POSTed through `formatLayoutsJson` so the diff stays clean.
+ */
+async function save(): Promise<void> {
+  if (!isSavable()) return;
+  const layout = buildCurrentLayout();
+  const existingIdx = working.findIndex((l) => l.id === layout.id);
+  if (existingIdx >= 0) {
+    const prev = working[existingIdx]!;
+    const ok = window.confirm(
+      `Overwrite the existing "${prev.name}" layout (id "${layout.id}") in config/layouts.json?`,
+    );
+    if (!ok) {
+      setSaveStatus('Save cancelled — the existing layout is untouched.', 'hint');
+      return;
+    }
+  }
+  // Merge into a fresh copy: replace in place (existing) or append (new).
+  const merged = working.map(cloneLayout);
+  if (existingIdx >= 0) merged[existingIdx] = layout;
+  else merged.push(layout);
+  // Defense in depth: prove the merged array passes the REAL loader schema
+  // before writing (the editor's hand-rolled validation mirrors it, but this
+  // is the canonical gate — and the only check on the merged whole).
+  const parsed = LayoutsSchema.safeParse(merged);
+  if (!parsed.success) {
+    setSaveStatus(`Save blocked — schema error: ${parsed.error.issues[0]?.message ?? 'invalid'}`, 'hint err');
+    return;
+  }
+  setSaveStatus('Saving…', 'hint');
+  try {
+    const res = await fetch('/__save-config', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ file: 'layouts.json', content: formatLayoutsJson(merged) }),
+    });
+    const data: { ok?: boolean; error?: string } = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+      working = merged;
+      populateLoadSelect(); // surface a newly-added id in the Load dropdown
+      refreshValidation(); // the id-collision note now reflects the saved state
+      const verb = existingIdx >= 0 ? 'Overwrote' : 'Added';
+      const status =
+        `${verb} "${layout.id}" in config/layouts.json at ${new Date().toLocaleTimeString()}. ` +
+        `An open game tab hot-reloads the new layout.`;
+      setSaveStatus(status, 'hint ok');
+      // The write triggers a Vite reload of this tab — stash the result so the
+      // next boot re-loads this layout into the canvas + re-shows the status.
+      try {
+        sessionStorage.setItem(SAVE_STASH_KEY, JSON.stringify({ savedId: layout.id, status }));
+      } catch {
+        // sessionStorage unavailable (private mode / quota) — non-fatal; the
+        // save still succeeded, the reload just won't auto-restore the canvas.
+      }
+    } else {
+      setSaveStatus(`Save failed: ${data.error ?? res.statusText}`, 'hint err');
+    }
+  } catch (err) {
+    setSaveStatus(`Save failed: ${String(err)} — is the dev server running?`, 'hint err');
+  }
+}
+
+/**
+ * Boot-time companion to Save: if the previous page life just saved a layout
+ * (the Vite reload masked below), consume the stash, re-load that now-on-disk
+ * layout into the canvas, and re-show the confirmation. A no-op on a normal
+ * cold boot. Robust to a missing/stale id (e.g. the file was hand-edited
+ * between save and reload) — it just skips.
+ */
+function restoreAfterSave(): void {
+  let stash: string | null = null;
+  try {
+    stash = sessionStorage.getItem(SAVE_STASH_KEY);
+    if (stash) sessionStorage.removeItem(SAVE_STASH_KEY);
+  } catch {
+    return; // sessionStorage unavailable — nothing to restore.
+  }
+  if (!stash) return;
+  try {
+    const { savedId, status } = JSON.parse(stash) as { savedId?: string; status?: string };
+    if (savedId && working.some((l) => l.id === savedId)) {
+      loadSelectEl.value = savedId;
+      loadLayout(savedId);
+      if (status) setSaveStatus(status, 'hint ok');
+    }
+  } catch {
+    // Malformed stash — ignore.
+  }
 }
 
 function refreshAll(): void {
@@ -845,7 +995,10 @@ function refreshAll(): void {
 }
 
 function populateLoadSelect(): void {
-  for (const layout of LAYOUTS) {
+  // Re-runnable: drop everything past the leading "— pick a layout —"
+  // placeholder so a Save that adds an id resurfaces the list cleanly.
+  loadSelectEl.length = 1;
+  for (const layout of working) {
     const opt = document.createElement('option');
     opt.value = layout.id;
     // The id is redundant when the human-readable name carries the
@@ -858,7 +1011,7 @@ function populateLoadSelect(): void {
 }
 
 function loadLayout(id: string): void {
-  const found = LAYOUTS.find((l) => l.id === id);
+  const found = working.find((l) => l.id === id);
   if (!found) return;
   gridW = found.gridW;
   gridH = found.gridH;
@@ -916,6 +1069,7 @@ function attachMetaWatchers(): void {
 function attachToolButtons(): void {
   loadBtn.addEventListener('click', () => loadLayout(loadSelectEl.value));
   clearBtn.addEventListener('click', () => clearGrid());
+  saveBtn.addEventListener('click', () => void save());
   copyBtn.addEventListener('click', () => {
     void navigator.clipboard.writeText(exportEl.value);
     flashButton(copyBtn, 'Copied!');

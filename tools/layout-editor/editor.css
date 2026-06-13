@@ -723,6 +723,26 @@ button.danger:hover {
   color: var(--terminal-black);
 }
 
+/* M5 — the Save primary action: filled green (the "go" state), amber on
+   hover, and a muted disabled state while validation hasn't cleared. */
+button.primary {
+  background: var(--terminal-green);
+  border-color: var(--terminal-green);
+  color: var(--terminal-black);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--terminal-amber);
+  border-color: var(--terminal-amber);
+}
+
+button.primary:disabled {
+  background: transparent;
+  border-color: var(--panel-border);
+  color: var(--terminal-stone);
+  cursor: not-allowed;
+}
+
 .validation {
   list-style: none;
   padding: 0;
@@ -769,4 +789,12 @@ button.danger:hover {
 
 .hint code {
   color: var(--terminal-amber);
+}
+
+.hint.ok {
+  color: var(--terminal-green);
+}
+
+.hint.err {
+  color: var(--neon-red);
 }

@@ -133,15 +133,28 @@
             </ul>
           </section>
           <section class="card">
-            <h2>Export</h2>
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary" disabled>Save to config</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+            <p class="hint">
+              Writes straight into <code>config/layouts.json</code> (dev server only).
+              A new <code>id</code> appends; an existing <code>id</code> overwrites that
+              layout in place after a confirm. An open game tab hot-reloads it.
+            </p>
+          </section>
+          <section class="card">
+            <h2>Export (offline fallback)</h2>
             <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
             <div class="row">
               <button id="copy-btn" type="button">Copy JSON</button>
               <button id="download-btn" type="button">Download .json</button>
             </div>
             <p class="hint">
-              Paste into <code>config/layouts.json</code> as a new array entry,
-              then <code>npm test</code> to validate.
+              A single-entry snippet, for hand-pasting into
+              <code>config/layouts.json</code> when Save isn't available. Then
+              <code>npm test</code> to validate.
             </p>
           </section>
         </aside>

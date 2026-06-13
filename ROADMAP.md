@@ -1044,9 +1044,24 @@ folding at the grazing 45° pitch — benign, kept as-is. Tuning levers if ever
 wanted: `MIST_AMPLITUDE` / calm radii / drift coeffs (fogcolor.glsl),
 `EDGE_BAND_TILES` (apron.frag.glsl), `APRON_TILES`.
 
-### M5 — Layout-editor auto-edit
+### M5 — Layout-editor auto-edit ✅ (2026-06-13)
 
-**Shape (brief):** "copying and pasting JSON layouts is slow and cumbersome —
+**✅ DONE (2026-06-13, three commits `928ad60`+`4496042`+`968f69b`) — see [HANDOFF.md](HANDOFF.md) for the as-built record.**
+The layout editor now writes straight into `config/layouts.json` via the dev-only
+`/__save-config` endpoint I4 built (it already allowlisted `layouts.json` — zero server
+work). Commit 1 = a node-safe [format.ts](tools/layout-editor/format.ts) (whole-array
+`formatLayoutsJson` + the single-entry snippet) + a byte-for-byte/schema-round-trip test
+([tests/tools/layout-editor.test.ts](tests/tools/layout-editor.test.ts)), with `layouts.json`
+normalized to canonical 1-per-line (whitespace-only, data-identical) so one formatter
+reproduces it; `LayoutsSchema` exported for the round-trip. Commit 2 = the **Save to config**
+button — a new id appends, an existing id overwrites IN PLACE behind a `window.confirm`
+(array order preserved); the whole merged file is POSTed through the formatter
+(`LayoutsSchema.safeParse` gates it); the Vite-reload-on-save is masked via a sessionStorage
+restore so a save feels seamless. Commit 3 = square editor cells for non-square grids (cell
+side = `min(width-fit, height-fit)`, user request). Dev-tooling only — no sim/snapshot/fuzz
+impact (one `src/` change: the schema export). Browser-verified e2e; clears the way for M6.
+
+**Shape (brief, for reference):** "copying and pasting JSON layouts is slow and cumbersome —
 I'd like the tool to automatically edit the layouts." Extend
 [tools/layout-editor/](tools/layout-editor/) to **write layouts directly to the
 config** (a dev-only save-to-file path — Vite dev-server backed, same dev-only

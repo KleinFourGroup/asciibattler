@@ -999,12 +999,50 @@ Presentation-only — zero sim/snapshot/fuzz impact; browser-verified
 fades running at mount; outro: scene stays BattleScene through the window,
 no auto-advance after 4s, Continue still advances).
 
-### M4 — Battle backdrop (board not floating in space)
+### M4 — Battle backdrop (board not floating in space) ✅ (2026-06-13)
 
 **Shape (brief):** "the battle layouts just hanging in space doesn't look
 good." Add an environment/backdrop/frame behind the board so it reads as
 *placed*, not floating in the void. Render-only; browser-verified. **DESIGN
 ROUND** on the look (skybox? framed diorama? ground plane extension?).
+
+**Landed (design round → the user's own apron proposal = the ground-plane
+extension branch; commits `24297ab` + the `b86da92` playtest revision):** a
+2-tile non-playable **apron** ring continuing the board outward, fog-faded
+into a **mist floor**. (1) [ApronRenderer.ts](src/render/ApronRenderer.ts) —
+a SEPARATE prism-ring mesh (board buffer + canonical terrain shader
+untouched; `pickCell` raycasts the board mesh only, so the ring is
+unclickable by construction; render-only, the sim never sees these tiles).
+**Clamp-to-edge tile sampling** (the user's call): each ring tile copies the
+nearest playable tile's kind, so the river flows out into the mist and fire
+keeps flickering — walls don't extend (they're entities; a wall *ending*
+looks natural). Heights via the live `TerrainRenderer.heightAt` (the
+fixed-seed simplex continues coherently outside the board) + the exported
+`topColorFor`/lighting consts → canonical-by-construction. `APRON_TILES = 2`
+is THE width knob. (2) The fog is **color math, not transparency** — a
+rect-SDF distance fade in the apron's own shader, with a summed-sine
+**creep** so the mist edge breathes (`uFadeEnd` shortened by the creep
+amplitude so the rim never ghosts); smooth fade is the default (the Bayer
+**dither** read out of place — nothing else dithers yet — so it ships off,
+`setDither(true)` keeps the A/B). (3) A near-black **edge band** on the
+apron's innermost ~0.12 tiles = the strong playable-boundary read. (4)
+[BackdropRenderer.ts](src/render/BackdropRenderer.ts) — a 600-unit noise
+**mist floor** plane at `BOTTOM_Y` (two-octave value noise calming to the
+flat background with distance → no seam at the plane edge or any ultrawide
+horizon); the apron's fog target is the shared `fogColorAt`
+([shaders/fogcolor.glsl](src/render/shaders/fogcolor.glsl), one copy
+TS-concat-prepended to both frags) sampled where the **view ray** meets the
+mist plane, so a fully-fogged apron tile is pixel-identical to the mist
+behind it — the board dissolves INTO the mist. Zero sim/snapshot/fuzz
+impact; pixel-probe verified (screenshots time out under tab-throttle).
+**Playtest follow-up (2026-06-13):** the user spotted an intermittent
+"double edge" at the mist's outer reach — diagnosed (frozen-sim,
+advance-only-`uTime` rim scans) as the **creep** (the only edge that moves;
+no static brightness step at the apron→plane boundary = the plane is aligned
+by construction, the two `uTime`s advance in lockstep and can't drift) seen
+folding at the grazing 45° pitch — benign, kept as-is. Tuning levers if ever
+wanted: `MIST_AMPLITUDE` / calm radii / drift coeffs (fogcolor.glsl),
+`EDGE_BAND_TILES` (apron.frag.glsl), `APRON_TILES`.
 
 ### M5 — Layout-editor auto-edit
 

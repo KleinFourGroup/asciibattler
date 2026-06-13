@@ -714,6 +714,118 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
   });
 });
 
+describe('World.applyDamage — M6 water bog-down (precision penalty)', () => {
+  // The I2 duel shape, but the test can seat either unit on a water tile. The
+  // attacker's precision is pinned to the configured penalty, so its EFFECTIVE
+  // precision while wading is exactly 0 — the assertions hold for any penalty
+  // value, deriving the thresholds from the config (balance-proof).
+  function wadeDuel(opts: {
+    attackerOnWater?: boolean;
+    targetOnWater?: boolean;
+    combatSeed: number;
+  }): {
+    world: World;
+    attacker: Unit;
+    target: Unit;
+    attacks: GameEvents['unit:attacked'][];
+    misses: GameEvents['unit:missed'][];
+  } {
+    const bus = new EventBus<GameEvents>();
+    const world = new World(bus, new RNG(1), 12, 12, undefined, new RNG(opts.combatSeed));
+    const attacks: GameEvents['unit:attacked'][] = [];
+    const misses: GameEvents['unit:missed'][] = [];
+    bus.on('unit:attacked', (p) => attacks.push(p));
+    bus.on('unit:missed', (p) => misses.push(p));
+
+    const mk = (id: number, team: Team, precision: number, x: number): Unit => {
+      const stats: UnitStats = {
+        ...ARCHETYPE_CONFIG.mercenary.baseStats,
+        defense: 0, // isolate the to-hit roll from GP2 mitigation
+        precision,
+        evasion: 0,
+      };
+      return new Unit({
+        id,
+        team,
+        archetype: 'mercenary',
+        glyph: 'M',
+        stats,
+        derived: deriveStats(stats, 1),
+        position: { x, y: 0 },
+      });
+    };
+    // attackerPrecision = penalty → effective precision 0 while wading.
+    const attacker = mk(1, 'player', STATS.waterPrecisionPenalty, 0);
+    const target = mk(2, 'enemy', 0, 1);
+    if (opts.attackerOnWater) world.tileGrid.setKind({ x: 0, y: 0 }, 'shallow_water');
+    if (opts.targetOnWater) world.tileGrid.setKind({ x: 1, y: 0 }, 'shallow_water');
+    world.units.push(attacker, target);
+    return { world, attacker, target, attacks, misses };
+  }
+
+  /** Smallest seed whose FIRST combatRng draw lands in `[lo, hi)` — a draw that
+   *  HITS when the hit chance is `hi` but MISSES when it is `lo`. */
+  function seedInWindow(lo: number, hi: number): number {
+    for (let s = 1; s < 1_000_000; s++) {
+      const d = new RNG(s).next();
+      if (d >= lo && d < hi) return s;
+    }
+    throw new Error(`no seed with first draw in [${lo}, ${hi})`);
+  }
+
+  // Dry-ground hit chance (precision = penalty) vs the wading chance (effective
+  // precision 0). The mechanic is only meaningful when the penalty is positive.
+  const dry = hitChanceFor(0.6, STATS.waterPrecisionPenalty, 0);
+  const wet = hitChanceFor(0.6, 0, 0);
+
+  it('the configured penalty lowers a wader’s to-hit chance', () => {
+    expect(STATS.waterPrecisionPenalty).toBeGreaterThan(0);
+    expect(dry).toBeGreaterThan(wet);
+  });
+
+  it('a strike that lands on dry ground MISSES when the attacker is wading', () => {
+    const seed = seedInWindow(wet, dry);
+
+    const onLand = wadeDuel({ combatSeed: seed });
+    onLand.world.applyDamage(onLand.attacker.id, onLand.target, 10, {
+      crit: false,
+      evadable: true,
+      accuracy: 0.6,
+    });
+    expect(onLand.misses).toHaveLength(0);
+    expect(onLand.attacks).toHaveLength(1);
+
+    const wading = wadeDuel({ attackerOnWater: true, combatSeed: seed });
+    wading.world.applyDamage(wading.attacker.id, wading.target, 10, {
+      crit: false,
+      evadable: true,
+      accuracy: 0.6,
+    });
+    expect(wading.misses).toHaveLength(1);
+    expect(wading.attacks).toHaveLength(0);
+  });
+
+  it('the penalty is occupant-ATTACKER only: a target standing in water is hit no differently', () => {
+    // Same seed/threshold as the land case; only the TARGET wades. The attacker
+    // is dry, so its precision is undocked → identical outcome to dry ground.
+    const seed = seedInWindow(wet, dry);
+    const d = wadeDuel({ targetOnWater: true, combatSeed: seed });
+    d.world.applyDamage(d.attacker.id, d.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
+    expect(d.misses).toHaveLength(0);
+    expect(d.attacks).toHaveLength(1);
+  });
+
+  it('an unmissable strike from water ignores the penalty (no combatRng draw)', () => {
+    const seed = seedInWindow(wet, dry);
+    const d = wadeDuel({ attackerOnWater: true, combatSeed: seed });
+    const before = d.world.combatRng.toJSON().state;
+    d.world.applyDamage(d.attacker.id, d.target, 10, { crit: false, evadable: false });
+    expect(d.world.combatRng.toJSON().state).toBe(before); // no draw
+    expect(d.misses).toHaveLength(0);
+    expect(d.attacks).toHaveLength(1);
+  });
+});
+
 describe('World shared objective (J1)', () => {
   function setup(): { world: World; bus: EventBus<GameEvents>; player: Unit; enemy: Unit } {
     const bus = new EventBus<GameEvents>();

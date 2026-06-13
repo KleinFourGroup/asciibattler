@@ -40,6 +40,16 @@
  *   wild club land differently before stats. The floor keeps a low-precision
  *   unit from being fully shut out by a high-evasion target (the `minDamage`
  *   analogue for whiffs).
+ * - `waterPrecisionPenalty` — M6 "bog-down". A unit attacking while it stands
+ *   on a `shallow_water` tile fights with its `precision` docked by this many
+ *   stat points before `hitChanceFor` (clumsy footing → "miss more"); paired
+ *   with water's existing cost-2 move slow, the two halves of the water tile's
+ *   mechanical effect. Applied live in `World.applyDamage` (occupant-attacker
+ *   only — a unit shooting INTO water from dry land is unaffected), so it only
+ *   bites *evadable* strikes; the unmissable mage AoE / catapult ignore it. The
+ *   `hitChanceFloor` clamp still protects a now-negative effective precision.
+ *   (This is the combat magnitude; WHERE water is placed lives in
+ *   `config/terrain.json`.)
  * - `mobilityCdPerStat` / `speedCdPerStat` — per-axis cooldown slope.
  *   GP1 split the single `cdPerStat` so the two cadence stats can diverge
  *   (I1 reverted the attack-axis name `agility → speed`, knobs included):
@@ -67,6 +77,7 @@ const StatsSchema = z.object({
   minDamage: z.number().int().nonnegative(),
   hitChancePerPrecision: z.number().nonnegative(),
   dodgeChancePerEvasion: z.number().nonnegative(),
+  waterPrecisionPenalty: z.number().nonnegative(),
   hitChanceFloor: z.number().min(0).max(1),
   hitChanceCap: z.number().min(0).max(1),
   mobilityCdPerStat: z.number().nonnegative(),

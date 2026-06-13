@@ -593,9 +593,21 @@ export class World {
       // The guard only covers a degraded path (attacker gone) — treat it as an
       // unmissable hit there rather than drawing combatRng against no precision.
       if (attacker) {
+        // M6 — bog-down: a unit wading in shallow water fights with docked
+        // precision (clumsy footing → "miss more"), the combat half of the
+        // water tile's effect alongside its cost-2 move slow. Live tile read
+        // like the fire/heal pass; occupant-attacker only (shooting INTO water
+        // from dry land is unaffected). Only the to-hit THRESHOLD shifts — the
+        // combatRng draw below is unchanged, so a dry-land strike stays
+        // byte-identical and the `hitChanceFloor` clamp protects a now-negative
+        // effective precision.
+        const wading = this.tileGrid.kindAt(attacker.position) === 'shallow_water';
+        const precision = wading
+          ? attacker.effectiveStats.precision - STATS.waterPrecisionPenalty
+          : attacker.effectiveStats.precision;
         const hitChance = hitChanceFor(
           opts.accuracy,
-          attacker.effectiveStats.precision,
+          precision,
           target.effectiveStats.evasion,
         );
         if (this.combatRng.next() >= hitChance) {

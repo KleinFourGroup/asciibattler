@@ -40,8 +40,9 @@ const VERTS_PER_TILE = 30; // 5 quads × 2 tris × 3 verts (top + 4 sides; botto
  *  units of side visible. Non-chasm tiles' visible sides are still bounded
  *  at the top by their topY, so the deeper bottom only shows up at the
  *  chasm boundary (and at the literal board edge, which the camera
- *  pitch barely sees). */
-const BOTTOM_Y = -1.5;
+ *  pitch barely sees). M4: exported — ApronRenderer's ring prisms share
+ *  the same bottom so the apron/board seam has no visible step. */
+export const BOTTOM_Y = -1.5;
 
 const WATER_TOP_Y = -0.4;
 /** D7.C: chasm top Y. Deep enough (vs water's -0.4) to read as "pit, don't
@@ -53,21 +54,26 @@ const NOISE_FREQ = 0.42;
 /** Fixed seed: the visual character is canonical, not a per-battle roll. */
 const NOISE_SEED = 0xb1c1a1b;
 
-/** Diffuse light direction in world space — view-space `normal · L` is the diffuse term. */
-const LIGHT_DIR = new THREE.Vector3(0.4, 0.85, 0.35).normalize();
+/** Diffuse light direction in world space — view-space `normal · L` is the
+ *  diffuse term. M4: exported (with AMBIENT/SIDE_SHADE below) so
+ *  ApronRenderer lights its ring identically — both materials clone the
+ *  vector, so neither can mutate the other's uniform. */
+export const LIGHT_DIR = new THREE.Vector3(0.4, 0.85, 0.35).normalize();
 /** Ambient floor — sides never go fully black. */
-const AMBIENT = 0.45;
+export const AMBIENT = 0.45;
 /** Side-face color multiplier vs top (darker for face-to-face contrast). */
-const SIDE_SHADE = 0.7;
+export const SIDE_SHADE = 0.7;
 /** Top-face grid-line width as a fraction of cell size. */
 const GRID_LINE_WIDTH = 0.06;
 
 /** D7.C: per-tile animation type encoded into the `aAnim.x` attribute.
  *  The fragment shader switches on these values to apply a sine flicker
- *  (fire) or a slower pulse (healing). 0 = no animation. */
-const ANIM_NONE = 0;
-const ANIM_FIRE = 1;
-const ANIM_HEALING = 2;
+ *  (fire) or a slower pulse (healing). 0 = no animation. M4: exported —
+ *  the apron's clamp-sampled fire/healing tiles keep animating into the
+ *  fog, so its shader branches on the same encoding. */
+export const ANIM_NONE = 0;
+export const ANIM_FIRE = 1;
+export const ANIM_HEALING = 2;
 
 /** Per-renderer-instance vertex capacity. Sized at the largest D3-allowed
  *  grid (32×32) so any per-encounter size fits without reallocating. */
@@ -395,8 +401,10 @@ const _healHigh = new THREE.Color('#15f4ee');
  * shader animation. **D8**: only the floor branch consults `theme` —
  * water / chasm / fire / healing keep their fixed D7 palettes so they
  * read the same regardless of the surrounding board's theming.
+ * **M4**: exported — ApronRenderer colors its ring through this exact
+ * function so the apron is canonical-by-construction, not a lookalike.
  */
-function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THREE.Color): void {
+export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THREE.Color): void {
   if (kind === 'shallow_water') {
     out.copy(_waterColor);
     return;

@@ -24,6 +24,7 @@ import type { Renderer } from '../render/Renderer';
 import type { SpriteRenderer } from '../render/SpriteRenderer';
 import type { UnitOverlayLayer } from '../render/UnitOverlayLayer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
+import type { ApronRenderer } from '../render/ApronRenderer';
 import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
 import type { RunDispatcher } from '../run/Command';
@@ -40,6 +41,10 @@ export interface SceneContext {
   readonly sprites: SpriteRenderer;
   readonly overlays: UnitOverlayLayer;
   readonly terrain: TerrainRenderer;
+  /** M4 — the backdrop apron ring around the playable board. BattleScene
+   *  feeds it the same tile grid as `terrain`; non-battle scenes ignore it
+   *  (it clears alongside terrain on battle dispose). */
+  readonly apron: ApronRenderer;
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;
   readonly dispatcher: RunDispatcher;

@@ -3,6 +3,7 @@ import { FontAtlas } from './render/FontAtlas';
 import { SpriteRenderer } from './render/SpriteRenderer';
 import { UnitOverlayLayer } from './render/UnitOverlayLayer';
 import { TerrainRenderer } from './render/TerrainRenderer';
+import { ApronRenderer } from './render/ApronRenderer';
 import { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
 import { Run } from './run/Run';
@@ -55,6 +56,9 @@ export class Game implements RunDispatcher {
   private readonly sprites: SpriteRenderer;
   private readonly overlays: UnitOverlayLayer;
   private readonly terrain: TerrainRenderer;
+  /** M4 — the backdrop apron ring. Dev consoles reach it as `__game.apron`
+   *  (TS `private` is runtime-accessible) for the dither A/B flip. */
+  private readonly apron: ApronRenderer;
   private readonly uiMount: HTMLElement;
   private readonly audio: AudioPlayer;
   /**
@@ -119,6 +123,14 @@ export class Game implements RunDispatcher {
     // exposes only the active cells.
     this.terrain = new TerrainRenderer();
     this.renderer.scene.add(this.terrain.mesh);
+
+    // M4: the backdrop apron — a fog-faded non-playable ring continuing
+    // the board outward so it doesn't float in the void. Reads heights
+    // through the live TerrainRenderer (same fixed-seed noise field) so
+    // the seam is invisible. Layer 0 only — never in the bloom pass, and
+    // pickCell raycasts terrain.mesh explicitly so the ring is unclickable.
+    this.apron = new ApronRenderer(this.terrain);
+    this.renderer.scene.add(this.apron.mesh);
 
     this.sprites = new SpriteRenderer(this.fontAtlas);
     // Both meshes live in the same scene; layer membership routes them to
@@ -343,6 +355,7 @@ export class Game implements RunDispatcher {
       sprites: this.sprites,
       overlays: this.overlays,
       terrain: this.terrain,
+      apron: this.apron,
       fontAtlas: this.fontAtlas,
       uiMount: this.uiMount,
       dispatcher: this,

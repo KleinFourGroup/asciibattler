@@ -15,6 +15,7 @@ import { World } from '../sim/World';
 import { applyTerrain, pickSpawnRegions, setupRngFor, spawnTeam } from '../sim/battleSetup';
 import { BattleRenderer, gridToWorld } from '../render/BattleRenderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
+import type { ApronRenderer } from '../render/ApronRenderer';
 import { HUD } from '../ui/HUD';
 import { ObjectiveController } from '../ui/ObjectiveController';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
@@ -39,6 +40,9 @@ export class BattleScene implements Scene {
   /** Held only so `dispose` can clear the terrain's per-tile state — the
    *  renderer itself is page-lifetime and owned by Game. */
   private terrain: TerrainRenderer | null = null;
+  /** M4 — same holding pattern as `terrain`: page-lifetime renderer, held
+   *  so `dispose` can clear the ring and `tick` can drive its fog creep. */
+  private apron: ApronRenderer | null = null;
   /** I3 — the page-lifetime fast-forward controller (from ctx). Read live in
    *  `tick` so a mid-battle speed change takes effect next frame. */
   private playback: PlaybackSpeed | null = null;
@@ -198,6 +202,16 @@ export class BattleScene implements Scene {
       encounter.theme,
     );
     this.terrain = ctx.terrain;
+    // M4 — the backdrop apron continues the board outward (clamp-to-edge
+    // tile sampling) and fog-fades it into the void. Same grid + theme as
+    // the board mesh; the sim never sees these tiles.
+    ctx.apron.setTiles(
+      this.world.tileGrid,
+      this.world.gridW,
+      this.world.gridH,
+      encounter.theme,
+    );
+    this.apron = ctx.apron;
     // D3 — frame the camera to whatever rectangle this encounter rolled
     // (procedural sizes range up to 20×20; hand-authored up to 32×32).
     ctx.renderer.fitToBoard(this.world.gridW, this.world.gridH);
@@ -249,6 +263,7 @@ export class BattleScene implements Scene {
       this.introRemaining -= dt;
       this.battleRenderer?.update(dt);
       this.terrain?.advanceTime(dt);
+      this.apron?.advanceTime(dt);
       return;
     }
     // I3 — fast-forward. Scale the real frame `dt` by the active speed and feed
@@ -266,6 +281,9 @@ export class BattleScene implements Scene {
     // BattleScene puts animated tile kinds into the renderer — non-battle
     // scenes call terrain.clear() and don't need the animation to advance.
     this.terrain?.advanceTime(dtScaled);
+    // M4 — the apron's fog creep (and any clamp-extended fire/healing
+    // flicker) rides the same scaled time as the board's tile animation.
+    this.apron?.advanceTime(dtScaled);
   }
 
   dispose(): void {
@@ -279,12 +297,14 @@ export class BattleScene implements Scene {
     // scene (map / recruit / gameover) isn't painting stale terrain under
     // nothing.
     this.terrain?.clear();
+    this.apron?.clear();
     this.battleRenderer = null;
     this.hud = null;
     this.objective = null;
     this.world = null;
     this.clock = null;
     this.terrain = null;
+    this.apron = null;
     this.playback = null;
   }
 }

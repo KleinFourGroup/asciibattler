@@ -164,6 +164,9 @@ src/
                              # transient damage/crit/heal/burn numbers via the same projector
     TerrainRenderer.ts       # C1c: faceted low-poly prism-per-tile, heightAt is canonical
                              # for sprite Y. D7.C: per-tile flicker/pulse + chasm sink + theme
+    ApronRenderer.ts         # M4: backdrop apron — non-playable fog-faded prism ring around the
+                             # board (clamp-to-edge tile sampling; render-only, sim never sees it).
+                             # APRON_TILES is the width knob; setDither flips stipple vs smooth
     BattleRenderer.ts        # Sim/render seam: subscribes to unit:* + action:phase (F3)
                              # tileWorldPos(coord) for per-tile sprite Y (C1c). E6/E7: melee shove,
                              # ranged/lobbed projectiles, explosion/dud/heal-sparkle VFX + hitsplats
@@ -180,7 +183,7 @@ src/
                              # + onComplete/arcHeight/targetProvider on lerp (E6.B/E7.D/F3)
 
   scenes/                    # A5: Scene system — single-active swap driven from Game
-    Scene.ts                 #   Scene interface + SceneContext bundle (+ I3 playback, J3 keybindings)
+    Scene.ts                 #   Scene interface + SceneContext bundle (+ I3 playback, J3 keybindings, M4 apron)
     BattleScene.ts           #   World + Clock + BattleRenderer + HUD + per-battle audio
                              #   I3: tick() scales dt by playback.current (fast-forward, batches ticks)
                              #   J3: owns the ObjectiveController (canvas input + enemy-billboard provider)

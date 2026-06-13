@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Map-Gen Prototype</title>
+    <link rel="stylesheet" href="./mapgen.css" />
+  </head>
+  <body>
+    <main id="root">
+      <header class="bar">
+        <h1>Map-Gen Prototype</h1>
+        <span class="subtitle"
+          >Tune the procedural generator (crossbar + divider + noise blend) ·
+          reroll for variety · dev-only, not wired into the sim yet</span
+        >
+      </header>
+
+      <section class="workspace">
+        <aside class="controls">
+          <section class="group">
+            <h2>Size &amp; seed</h2>
+            <label class="row">Width <input id="width" type="number" min="8" max="32" value="16" /></label>
+            <label class="row">Height <input id="height" type="number" min="8" max="32" value="16" /></label>
+            <label class="row check"><input id="mirror" type="checkbox" checked /> Mirror (fair clash)</label>
+            <div class="row seed">
+              <span>Seed <code id="seed-val">—</code></span>
+              <button id="reroll" type="button" class="primary">Reroll ⟳</button>
+            </div>
+          </section>
+
+          <section class="group">
+            <h2>Crossbars <span class="sub">(the advance chokepoints)</span></h2>
+            <label class="slider">Count <input id="crossbars" type="range" min="0" max="3" step="1" value="1" /><output id="crossbars-o"></output></label>
+            <label class="slider">Gaps / bar <input id="gapsPerBar" type="range" min="1" max="3" step="1" value="1" /><output id="gapsPerBar-o"></output></label>
+            <label class="slider">Gap width <input id="gapWidth" type="range" min="1" max="4" step="1" value="2" /><output id="gapWidth-o"></output></label>
+            <label class="slider">Ford chance <input id="fordChance" type="range" min="0" max="1" step="0.05" value="0.6" /><output id="fordChance-o"></output></label>
+          </section>
+
+          <section class="group">
+            <h2>Dividers <span class="sub">(lateral structure)</span></h2>
+            <label class="slider">Count <input id="dividers" type="range" min="0" max="3" step="1" value="1" /><output id="dividers-o"></output></label>
+          </section>
+
+          <section class="group">
+            <h2>Noise texture</h2>
+            <label class="slider">Cover density <input id="coverDensity" type="range" min="0" max="0.35" step="0.01" value="0.12" /><output id="coverDensity-o"></output></label>
+            <label class="slider">Pool density <input id="poolDensity" type="range" min="0" max="0.35" step="0.01" value="0.08" /><output id="poolDensity-o"></output></label>
+            <label class="slider">Noise scale <input id="noiseScale" type="range" min="2" max="6" step="1" value="3" /><output id="noiseScale-o"></output></label>
+          </section>
+
+          <section class="group">
+            <h2>Budget</h2>
+            <label class="slider">Wall cap <input id="wallCapFraction" type="range" min="0.05" max="0.5" step="0.01" value="0.22" /><output id="wallCapFraction-o"></output></label>
+          </section>
+        </aside>
+
+        <div class="stage">
+          <div class="board-wrap">
+            <canvas id="main-canvas" width="560" height="560"></canvas>
+          </div>
+
+          <div id="stats" class="stats"></div>
+
+          <div class="legend">
+            <span><i class="sw floor"></i> floor</span>
+            <span><i class="sw wall"></i> wall</span>
+            <span><i class="sw water"></i> water</span>
+            <span><i class="sw spawn"></i> spawn</span>
+            <span><i class="sw choke"></i> chokepoint / ford</span>
+          </div>
+
+          <h2 class="strip-title">Variety <span class="sub">(same knobs, next 8 seeds — click to load)</span></h2>
+          <div id="thumbs" class="thumbs"></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./mapgen.ts"></script>
+  </body>
+</html>

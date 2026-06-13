@@ -220,13 +220,12 @@ function populateSizeSelects(): void {
 /**
  * Build (or rebuild) the DOM grid for the current `gridW × gridH`.
  * Replaces all children of `#grid` and rebinds the per-cell mouse
- * handlers. The grid is sized to take roughly half of the viewport
- * horizontally; tall grids squish vertically so the whole grid fits
- * without scrolling. Cells are square in the common case (when the
- * height-fit would let them be), and stretched to a flatter
- * rectangle when the height budget is tight — the alternative was
- * shrinking the whole grid to keep cells square, which made tall
- * layouts unusably tiny on the canvas.
+ * handlers. Cells are kept **square**: the cell side is the smaller of
+ * the width-fit (≈ half the viewport, clamped to the pane) and the
+ * height-fit (the viewport minus page chrome), so the whole grid stays
+ * visible without scrolling whatever the aspect ratio — a tall layout
+ * shrinks to a narrower square-celled column rather than stretching its
+ * cells to flat rectangles, and a wide one shrinks horizontally.
  *
  * **Y-axis convention** — rows are appended in reverse y order so
  * y=0 lands at the BOTTOM of the CSS grid (last-appended →
@@ -245,20 +244,22 @@ function buildGrid(): void {
   gridEl.innerHTML = '';
   gridEl.style.gridTemplateColumns = `repeat(${gridW}, 1fr)`;
   gridEl.style.gridTemplateRows = `repeat(${gridH}, 1fr)`;
-  // Horizontal: 50% of viewport width across the grid, clamped to the
-  // grid-pane column so a narrow window doesn't blow out the layout.
+  // Square cells: fit BOTH budgets and take the smaller side so nothing
+  // scrolls and cells never stretch to rectangles.
+  //   - width budget: ~half the viewport, clamped to the grid-pane column
+  //     so a narrow window doesn't blow out the layout.
+  //   - height budget: the viewport minus page chrome (header, size-row,
+  //     legend, padding).
+  // Minimum 6px so cells stay clickable on extreme tall/wide grids.
   const pane = gridEl.parentElement!;
   const targetGridW = Math.min(window.innerWidth * 0.5, pane.clientWidth);
-  const cellW = Math.max(8, Math.floor(targetGridW / gridW));
-  // Vertical: the viewport minus a budget for the page chrome (header,
-  // size-row, legend, padding). If the natural square height (gridH
-  // × cellW) fits in that budget, keep cells square; otherwise squish
-  // the row height to fit. Minimum 6px so cells stay clickable on
-  // extreme tall grids.
   const availH = Math.max(120, window.innerHeight - 220);
-  const cellH = Math.max(6, Math.min(cellW, Math.floor(availH / gridH)));
-  gridEl.style.width = `${gridW * cellW}px`;
-  gridEl.style.height = `${gridH * cellH}px`;
+  const cell = Math.max(
+    6,
+    Math.min(Math.floor(targetGridW / gridW), Math.floor(availH / gridH)),
+  );
+  gridEl.style.width = `${gridW * cell}px`;
+  gridEl.style.height = `${gridH * cell}px`;
 
   // Pre-allocate cellEls so we can index by [y][x] normally while
   // appending DOM children in reverse y order (see docstring).

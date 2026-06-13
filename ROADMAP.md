@@ -1073,7 +1073,40 @@ treatment in I4, and can share scaffolding with this one.)
 
 ### M6 — Maps: floor-gating + water mechanic
 
-**Shape:**
+**STATUS (2026-06-13 — IN PROGRESS):**
+- **Water mechanic ✅** (2 commits, the DESIGN ROUND resolved to **"slow + miss
+  more"**). `a24f62f` — a **bog-down precision penalty** (`waterPrecisionPenalty`,
+  [config/stats.json](config/stats.json)) docks an attacker's `precision` while it
+  stands on a `shallow_water` tile, in `World.applyDamage` (occupant-attacker only,
+  evadable strikes only; live tile read → no snapshot bump). `a70533d` — the
+  **move-duration slow**: a playtest caught that cost-2 water only weighted A\*
+  route SELECTION, never the move DURATION; `stepDurationTicks` ([movement.ts](src/sim/movement.ts)
+  + the healer's `SupportMovementBehavior`) now scales a step's lockout + render-lerp
+  by the destination tile cost (water 2 → 2× the cooldown). Both signed off; both
+  shift the water-board fuzz baseline → N2.
+- **Floor-gating DEFERRED** (user call): a proper **encounter-system spec** is close
+  and will reshape the per-floor difficulty targets, so depth-weighting `rollLayoutId`
+  now would just be redone. Revisit after the spec lands.
+- **The water *placement* question became a from-scratch PROCEDURAL-MAP REWORK**
+  (user call — "rework procedural maps from the ground up"): the original "puddles on
+  the trunk path" plan can't bite because procedural walls are uniform 6%-scatter with
+  no chokepoints (the connectivity guard only REMOVES walls). Design round (a 4-strategy
+  overview: CA caves / rooms+corridors / noise-elevation / lane-skeleton) **locked a
+  crossbar + divider + noise blend** built around the top/bottom-clash topology:
+  **crossbars** = wavy horizontal walls across the advance axis with fordable gaps (the
+  chokepoint + the M6 ford); **dividers** = vertical lateral structure; **noise** =
+  cover clumps (a share → D6 half-cover) + low-ground water pools; **point/mirror/none
+  symmetry** for fairness. A standalone dev-only **prototype tool** is built +
+  playtest-tuned ([tools/mapgen-prototype/](tools/mapgen-prototype/), `6f6d884`+`8d94b22`)
+  — NOT wired into the sim yet (it nails the LOOK first). **NEXT: deploy it** — port
+  [generator.ts](tools/mapgen-prototype/generator.ts) → `src/sim/proceduralMap.ts`
+  (real `GeneratedTerrain` shape + a test suite), wire into the procedural path of
+  [terrainGen.ts](src/sim/terrainGen.ts), then the **N2 band re-sweep** (terrain
+  structure strongly moves win rates — the K3 comp×map interaction). See
+  [HANDOFF.md](HANDOFF.md) §M6 for the as-built detail.
+
+**Shape (ORIGINAL plan — the water half is done above; floor-gating is deferred; the
+"give water a real effect, place it where exercised" line grew into the rework above):**
 - **Layout floor-gating** (the deferred post-H TODO, now with the brief's
   "random layouts are boring" behind it): `rollLayoutId` picks uniformly
   today, so the hardest open layouts (`junctionAmbush`/`river`/procedural-open

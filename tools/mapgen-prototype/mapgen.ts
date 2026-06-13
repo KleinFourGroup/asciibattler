@@ -23,15 +23,16 @@ const el = <T extends HTMLElement>(id: string): T => {
   return e as T;
 };
 const numVal = (id: string): number => Number((el<HTMLInputElement>(id)).value);
-const checked = (id: string): boolean => (el<HTMLInputElement>(id)).checked;
 
 const SLIDERS = [
   'crossbars',
   'gapsPerBar',
   'gapWidth',
   'fordChance',
+  'crossbarWaver',
   'dividers',
   'coverDensity',
+  'halfCoverFraction',
   'poolDensity',
   'noiseScale',
   'wallCapFraction',
@@ -42,13 +43,15 @@ function readConfig(seed: number): MapGenConfig {
     width: numVal('width'),
     height: numVal('height'),
     seed,
-    symmetry: checked('mirror') ? 'mirror' : 'none',
+    symmetry: (el<HTMLSelectElement>('symmetry')).value as MapGenConfig['symmetry'],
     crossbars: numVal('crossbars'),
     gapsPerBar: numVal('gapsPerBar'),
     gapWidth: numVal('gapWidth'),
     fordChance: numVal('fordChance'),
+    crossbarWaver: numVal('crossbarWaver'),
     dividers: numVal('dividers'),
     coverDensity: numVal('coverDensity'),
+    halfCoverFraction: numVal('halfCoverFraction'),
     poolDensity: numVal('poolDensity'),
     noiseScale: numVal('noiseScale'),
     wallCapFraction: numVal('wallCapFraction'),
@@ -64,6 +67,7 @@ function render(canvas: HTMLCanvasElement, map: GeneratedProtoMap, cell: number,
   canvas.height = H * cell;
 
   const wallSet = new Set(map.walls.map((c) => `${c.x},${c.y}`));
+  const halfSet = new Set(map.halfCovers.map((c) => `${c.x},${c.y}`));
   const spawnSet = new Set(
     [...map.spawnTop, ...map.spawnBottom].map((c) => `${c.x},${c.y}`),
   );
@@ -76,12 +80,19 @@ function render(canvas: HTMLCanvasElement, map: GeneratedProtoMap, cell: number,
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const k = `${x},${y}`;
+      const half = halfSet.has(k);
       let color = PALETTE.floor;
       if (spawnSet.has(k)) color = PALETTE.spawn;
       else if (wallSet.has(k)) color = PALETTE.wall;
-      else if (map.kinds[y]![x] === 'shallow_water') color = PALETTE.water;
+      else if (!half && map.kinds[y]![x] === 'shallow_water') color = PALETTE.water;
       ctx.fillStyle = color;
       ctx.fillRect(x * cell + gap, y * cell + gap, cell - gap, cell - gap);
+      if (half) {
+        // Hollow: floor fill + wall-colour border → "you can shoot over it".
+        ctx.strokeStyle = PALETTE.wall;
+        ctx.lineWidth = Math.max(1, cell * 0.16);
+        ctx.strokeRect(x * cell + gap + 1, y * cell + gap + 1, cell - gap - 2, cell - gap - 2);
+      }
       if (outline && chokeSet.has(k)) {
         ctx.strokeStyle = PALETTE.choke;
         ctx.lineWidth = Math.max(1, cell * 0.12);
@@ -97,7 +108,8 @@ function renderStats(map: GeneratedProtoMap): void {
     `<div class="stat"><span class="lbl">${label}</span><span class="num">${value}</span></div>`;
   el('stats').innerHTML =
     stat('Walls', `${s.walls}`) +
-    stat('Wall %', `${(s.wallFraction * 100).toFixed(1)}%`) +
+    stat('Half-cover', `${s.halfCovers}`) +
+    stat('Obstacle %', `${(s.obstacleFraction * 100).toFixed(1)}%`) +
     stat('Water', `${s.water}`) +
     stat('Chokepoints', `${s.chokepoints}`) +
     stat('Connected', s.connected ? '✓' : '✗') +
@@ -148,7 +160,7 @@ function syncSliderLabels(): void {
 function init(): void {
   syncSliderLabels();
   // Any control change re-renders with the current seed.
-  const ids = ['width', 'height', 'mirror', ...SLIDERS];
+  const ids = ['width', 'height', 'symmetry', ...SLIDERS];
   for (const id of ids) {
     el(id).addEventListener('input', () => {
       syncSliderLabels();

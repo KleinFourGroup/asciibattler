@@ -86,13 +86,17 @@ code {
 .row input[type='number'] {
   width: 64px;
 }
-input[type='number'] {
+input[type='number'],
+select {
   background: var(--panel-2);
   border: 1px solid var(--line);
   color: var(--ink);
   border-radius: 5px;
   padding: 4px 6px;
   font-family: inherit;
+}
+select {
+  margin-left: auto;
 }
 .slider {
   display: grid;
@@ -194,6 +198,11 @@ button.primary {
 }
 .sw.wall {
   background: #ff6ac1;
+}
+.sw.half {
+  background: #1d1838;
+  outline: 2px solid #ff6ac1;
+  outline-offset: -2px;
 }
 .sw.water {
   background: #33c6f4;

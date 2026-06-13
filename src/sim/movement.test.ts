@@ -208,3 +208,71 @@ describe('movement / advance (maxCells > 1, the N1 dash hook)', () => {
     expect(landing(advance(units[0]!, world, intent))).toEqual({ x: 2, y: 0 });
   });
 });
+
+describe('movement / advance — M6 water bog-down (move duration)', () => {
+  /** The duration (ticks) a move proposal locks the unit + lerps the sprite over. */
+  function moveTicks(proposal: { action: unknown } | null): number | null {
+    if (proposal === null) return null;
+    return (proposal.action as MoveAction).toData().durationTicks;
+  }
+
+  // A unit boxed so its ONLY forward cell is (1,0): the diagonals (0,1)/(1,1)
+  // are walled, so A* can't route AROUND a water tile placed there — it must
+  // wade in. (An isolated water tile on open ground is simply detoured, which
+  // is exactly why the cost-2 slow was invisible before M6.)
+  function forcedStep(water: boolean): {
+    land: GridCoord | null;
+    ticks: number | null;
+    base: number;
+  } {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'neutral', x: 0, y: 1, neutral: true },
+      { team: 'neutral', x: 1, y: 1, neutral: true },
+    ]);
+    const u = units[0]!;
+    if (water) world.tileGrid.setKind({ x: 1, y: 0 }, 'shallow_water');
+    const intent: MovementIntent = {
+      goals: [{ x: 2, y: 0 }],
+      approachToward: { x: 2, y: 0 },
+      maxCells: 1,
+    };
+    const p = advance(u, world, intent);
+    return { land: landing(p), ticks: moveTicks(p), base: u.derived.moveCooldownTicks };
+  }
+
+  it('a step onto floor keeps the base move cooldown (byte-identical on dry ground)', () => {
+    const dry = forcedStep(false);
+    expect(dry.land).toEqual({ x: 1, y: 0 });
+    expect(dry.ticks).toBe(dry.base);
+  });
+
+  it('a step that wades into water takes cost-2× as long', () => {
+    const wet = forcedStep(true);
+    expect(wet.land).toEqual({ x: 1, y: 0 }); // still steps in — cost 2 is finite
+    expect(wet.ticks).toBe(wet.base * 2); // shallow_water TILE_COST = 2 → 2× duration
+    expect(wet.ticks).toBeGreaterThan(wet.base);
+  });
+
+  it('the leap (maxCells > 1) keeps base cadence even when forced through water', () => {
+    // 1-wide corridor on y=0 (row y=1 walled) with water on the first cells: the
+    // leap is FORCED through water yet keeps base cadence — wade scaling is a
+    // normal-step property, the dash's terrain interaction is N1's call.
+    const specs: Spec[] = [
+      { team: 'player', x: 0, y: 0 },
+      ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((x): Spec => ({ team: 'neutral', x, y: 1, neutral: true })),
+    ];
+    const { world, units } = scene(specs, 16, 16);
+    const u = units[0]!;
+    world.tileGrid.setKind({ x: 1, y: 0 }, 'shallow_water');
+    world.tileGrid.setKind({ x: 2, y: 0 }, 'shallow_water');
+    const intent: MovementIntent = {
+      goals: [{ x: 8, y: 0 }],
+      approachToward: { x: 8, y: 0 },
+      maxCells: 4,
+    };
+    const p = advance(u, world, intent);
+    expect(landing(p)).toEqual({ x: 4, y: 0 }); // leapt through the water
+    expect(moveTicks(p)).toBe(u.derived.moveCooldownTicks); // base, not scaled
+  });
+});

@@ -8,7 +8,7 @@ import { findPath } from '../Pathfinding';
 import { SIM } from '../../config/sim';
 // J2 — share the leaf pathing helpers with MovementBehavior (these were
 // duplicated leaf-for-leaf). The healer's bespoke decision logic stays here.
-import { costAt, moveProposal, key, chebyshev } from '../movement';
+import { costAt, moveProposal, stepDurationTicks, key, chebyshev } from '../movement';
 
 /**
  * E7.B — the healer's movement, replacing the default `MovementBehavior`
@@ -79,7 +79,8 @@ export class SupportMovementBehavior implements Behavior {
       chebyshev(unit.position, enemy.position) <= SIM.healerPanicRangeCells
     ) {
       const away = stepAwayFrom(unit, enemy.position, world);
-      if (away !== null) return moveProposal(unit.position, away, durationTicks, 5);
+      if (away !== null)
+        return moveProposal(unit.position, away, stepDurationTicks(world, away, durationTicks), 5);
       // Boxed against the enemy with no retreat cell → don't idle ON a
       // chokepoint. Fall through to the yield rule. This is the load-bearing
       // path for the GP4 deadlock: a healer wedged at a 1-wide gap near the
@@ -92,7 +93,7 @@ export class SupportMovementBehavior implements Behavior {
     const wounded = nearestAlly(unit, world, (c) => c.currentHp < c.derived.maxHp);
     if (wounded !== null) {
       const to = stepToward(unit, wounded.position, world);
-      if (to !== null) return moveProposal(unit.position, to, durationTicks, 1);
+      if (to !== null) return moveProposal(unit.position, to, stepDurationTicks(world, to, durationTicks), 1);
       return yieldChokepoint(unit, world, durationTicks);
     }
 
@@ -106,7 +107,7 @@ export class SupportMovementBehavior implements Behavior {
       const anchor = snapToNavigable(rawAnchor, world);
       if (chebyshev(unit.position, anchor) > SIM.healerFollowGapCells) {
         const to = stepToward(unit, anchor, world);
-        if (to !== null) return moveProposal(unit.position, to, durationTicks, 1);
+        if (to !== null) return moveProposal(unit.position, to, stepDurationTicks(world, to, durationTicks), 1);
         // Trail step blocked (an ally in a 1-wide row wants to pass the other
         // way) → fall through to the yield: swap the boxed ally past us rather
         // than idling in its way. With a *swap* (not a forward vacate) this is

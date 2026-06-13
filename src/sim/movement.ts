@@ -165,9 +165,9 @@ export interface MovementIntent {
 export function advance(unit: Unit, world: World, intent: MovementIntent): ActionProposal | null {
   const ctx = buildMovementContext(unit, world, { excludeUnitId: intent.excludeUnitId });
   const from = unit.position;
-  const durationTicks = unit.derived.moveCooldownTicks;
+  const baseTicks = unit.derived.moveCooldownTicks;
   for (const goal of intent.goals) {
-    const move = stepAlongRoute(from, goal, ctx, world, intent, durationTicks);
+    const move = stepAlongRoute(from, goal, ctx, world, intent, baseTicks);
     if (move !== null) return move;
   }
   return null;
@@ -194,7 +194,7 @@ function stepAlongRoute(
   ctx: MovementContext,
   world: World,
   intent: MovementIntent,
-  durationTicks: number,
+  baseTicks: number,
 ): ActionProposal | null {
   const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false);
   if (path.length < 2) return null;
@@ -204,12 +204,17 @@ function stepAlongRoute(
     if (ctx.otherUnitCells.has(key(to))) {
       if (intent.sidestepWhenBlocked === false) return null;
       const side = sidestep(from, intent.approachToward, world, ctx.occupied);
-      return side === null ? null : moveProposal(from, side, durationTicks);
+      return side === null
+        ? null
+        : moveProposal(from, side, stepDurationTicks(world, side, baseTicks));
     }
-    return moveProposal(from, to, durationTicks);
+    return moveProposal(from, to, stepDurationTicks(world, to, baseTicks));
   }
 
   // Dash/leap: furthest unoccupied cell within the step cap along the route.
+  // M6 — the leap keeps base cadence (no per-tile wade scaling): a dash's
+  // terrain interaction is N1's call and `stepDurationTicks` is a normal-step
+  // property (the dash is floor-only today — no shipped ability uses it).
   const limit = Math.min(intent.maxCells, path.length - 1);
   let landing: GridCoord | null = null;
   for (let i = 1; i <= limit; i++) {
@@ -217,7 +222,7 @@ function stepAlongRoute(
     if (ctx.otherUnitCells.has(key(c))) break;
     landing = c;
   }
-  return landing === null ? null : moveProposal(from, landing, durationTicks);
+  return landing === null ? null : moveProposal(from, landing, baseTicks);
 }
 
 /**
@@ -277,6 +282,22 @@ export function moveProposal(
     cooldown: durationTicks,
     phases: [{ phase: 'impact', ticks: durationTicks }],
   };
+}
+
+/**
+ * M6 — water bog-down, the move-DURATION half. Scales a normal step's lockout +
+ * render-lerp window by the TileGrid cost to ENTER `dest` (1 floor, 2 shallow
+ * water), so a unit genuinely WADES at the cost-2 cadence. Until M6 the tile
+ * cost only weighted A* route SELECTION (`costAt` → `findPath`), never how long
+ * the step took — so a unit forced through water still crossed it at full
+ * speed (the gap the playtest caught). Floor cost 1 → `base` unchanged
+ * (byte-identical on water-free boards); water cost 2 → 2× the move cooldown. A
+ * committed step destination is always passable, so the cost is finite. Rounded
+ * to whole ticks. Pairs with the `World.applyDamage` precision penalty (the
+ * "miss more" half) for the full "slow + miss more" water effect.
+ */
+export function stepDurationTicks(world: World, dest: GridCoord, base: number): number {
+  return Math.round(base * world.tileGrid.costAt(dest));
 }
 
 /**

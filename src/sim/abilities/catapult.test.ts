@@ -6,7 +6,7 @@ import { Unit, type Team, type UnitArchetype, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, inertDerived, catapultShotDamage, attackCooldownTicksFor } from '../stats';
-import { abilityConfig } from '../../config/abilities';
+import { attackConfig } from '../../config/abilities';
 import { secondsToTicks } from '../../config';
 import { phasesBeginningAt, totalTicks } from '../Action';
 import { rangeForArchetype } from '../archetypes';
@@ -22,7 +22,7 @@ import type { GridCoord } from '../../core/types';
  * the arcing shot ignores line of sight, unlike the ranged strike / mage.
  */
 
-const SHOT = abilityConfig('catapult_shot');
+const SHOT = attackConfig('catapult_shot');
 const SHOT_RANGE = SHOT.range;
 
 const CATAPULT_STATS: UnitStats = {

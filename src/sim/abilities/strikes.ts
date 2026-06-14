@@ -9,7 +9,7 @@ import { currentTarget, collectLosBlockers } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
 import { basicAttackDamage, attackCooldownTicksFor, critChanceFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
-import { abilityConfig } from '../../config/abilities';
+import { attackConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
 
 /**
@@ -74,7 +74,7 @@ function proposeBasicStrike(
 ): ActionProposal | null {
   const target = currentTarget(unit, world);
   if (target === null) return null;
-  const cfg = abilityConfig(abilityId);
+  const cfg = attackConfig(abilityId);
   // E5: gate on THIS ability's own range (config/abilities.json), not
   // the unit's max engagement range — a multi-ability unit's short-range
   // strike must abstain when only its long-range ability can reach.
@@ -136,7 +136,7 @@ function proposeBasicStrike(
  * is internal-only. `min(..., D)` guards a degenerately short cadence.
  */
 function strikePhases(abilityId: string, durationTicks: number): ActionPhase[] {
-  const retreatSeconds = abilityConfig(abilityId).retreatDelaySeconds;
+  const retreatSeconds = attackConfig(abilityId).retreatDelaySeconds;
   if (retreatSeconds === undefined) {
     return [
       { phase: 'impact', ticks: 0 },

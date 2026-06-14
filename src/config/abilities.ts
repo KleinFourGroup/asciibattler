@@ -21,8 +21,8 @@
  *
  * I6 — the per-ability combat profile finally lands (the "later step"
  * the note below anticipated; I5's four melee subclasses sharing one
- * strike are the multi-consumer it waited for). Each ability now carries
- * three numeric profile values + two boolean gates:
+ * strike are the multi-consumer it waited for). An `attack`-kind ability
+ * carries three numeric profile values + two boolean gates:
  *   - `might` — flat base damage/heal ADDED to the scaling stat
  *     (`damage = might + scalingStat`). Flat (a weapon constant the
  *     wielder's stat outgrows), so it's early/mid-game texture.
@@ -34,12 +34,26 @@
  *     there is no single `UnitDerived.critChance` anymore.
  *   - `evadable` — does this attack roll precision-vs-evasion to-hit? Migrates
  *     I2's hard-coded per-call-site flag into config (single-target strikes
- *     true; AoE / artillery / heal false).
+ *     true; AoE / artillery false).
  *   - `critable` — can this attack crit at all?
- * All five are REQUIRED (user call: every ability declares them, so a new
- * attack can't silently lack one). The damage stat an ability scales on stays
- * archetype-derived (`damageStatFor`) — scaling-stat-on-the-ability is the
- * separately-deferred basic-vs-special design.
+ * All five are REQUIRED on an `attack`-kind ability (N1's discriminated union
+ * scoped them there — the `heal` kind doesn't carry the combat profile, since
+ * a heal never rolls to-hit or crit; see the union below). The damage stat an
+ * ability scales on stays archetype-derived (`damageStatFor`) — scaling-stat-
+ * on-the-ability is the separately-deferred basic-vs-special design.
+ *
+ * N1 — the config becomes a DISCRIMINATED UNION on `kind`. The single combat-
+ * shaped schema forced `heal_ally` to carry dead `accuracy`/`critBase`/
+ * `evadable`/`critable` it never rolls, and left a utility ability (the rogue's
+ * Phase-N dash, a `movement` kind landing in N1 commit 2) with no honest home.
+ * The discriminant fixes both: each `kind` declares exactly the fields it uses,
+ * and the compiler forces every consumer to narrow before reading kind-specific
+ * data (hence the typed `attackConfig`/`healConfig` accessors below). This is a
+ * *data-shape* distinction only — the RUNTIME ability model stays flat (every
+ * ability is a `propose()` returning a scored proposal; `AbilityBehavior` never
+ * branches on `kind`). A new `kind` is warranted only when an ability's
+ * required fields / resolution semantics diverge; optional modifiers (aoe,
+ * travel, retreatDelay) stay INSIDE a kind.
  *
  * A4 pattern: parse at module load, throw on malformed JSON. The
  * registry ([src/sim/abilities/registry.ts](src/sim/abilities/registry.ts))
@@ -67,71 +81,67 @@ const AoeSchema = z.object({
 
 export type AoeConfig = z.infer<typeof AoeSchema>;
 
-const AbilitySchema = z.object({
-  cooldownSeconds: z.number().positive(),
+/**
+ * Fields shared by every ability kind. `range` is the engagement reach
+ * (attack/heal) or the leap distance (a future `movement` ability), in cells;
+ * `cooldownSeconds` is the base recharge interval, scaled by the unit's speed
+ * at propose time (`attackCooldownTicksFor`).
+ */
+const CommonFields = {
   range: z.number().int().positive(),
-  /**
-   * I6 — flat base damage (for attacks) or heal (for `heal_ally`) ADDED to the
-   * wielder's scaling stat: `damage = might + scalingStat` (pre-defense). Flat
-   * by design — a weapon constant the stat outgrows late-game. `≥ 0`.
-   */
+  cooldownSeconds: z.number().positive(),
+};
+
+/**
+ * `attack` — the to-hit/crit damage abilities (the four melee weapons, the bow,
+ * the gambit, the mage bolt, the catapult). Carries the full I6 combat profile
+ * plus the optional `travel` / `aoe` / `retreatDelay` modifiers (see the I6
+ * block above for each field's role).
+ */
+const AttackSchema = z.object({
+  kind: z.literal('attack'),
+  ...CommonFields,
   might: z.number().nonnegative(),
-  /**
-   * I6 — base hit chance for this attack. REPLACES the old global
-   * `STATS.hitChanceBase` in `hitChanceFor`:
-   * `clamp(accuracy + precision·k − evasion·k, floor, cap)`. Consumed ONLY when
-   * `evadable` (inert otherwise). `0–1`.
-   */
   accuracy: z.number().min(0).max(1),
-  /**
-   * I6 — base crit chance folded into the luck calc:
-   * `clamp(critBase + luck·critPerLuck, 0, critCap)`. Consumed ONLY when
-   * `critable`. Per-ability now (crit is no longer a single
-   * `UnitDerived.critChance`). `0–1`.
-   */
   critBase: z.number().min(0).max(1),
-  /**
-   * I6 — does this attack roll precision-vs-evasion to-hit at the
-   * `World.applyDamage` chokepoint? Migrates I2's hard-coded per-call-site
-   * `evadable`: single-target strikes (the melee weapons + bow + gambit) `true`;
-   * the mage AoE blast / catapult shot / heal `false` (dodged positionally or
-   * not at all).
-   */
   evadable: z.boolean(),
-  /**
-   * I6 — can this attack crit (roll `critBase + luck`)? `false` → never crits
-   * regardless of `critBase`/luck.
-   */
   critable: z.boolean(),
   /**
-   * F3 — the slice of a multi-tick action's wind-up that the projectile
-   * spends in flight: the action declares a `travel` phase of this length
-   * (carved OUT of the wind-up, so the total busy window / impact tick /
-   * cooldown are unchanged), and the renderer launches the projectile on the
-   * `release` boundary so it arrives exactly on `impact`. Absent → no travel
-   * phase (the projectile-bearing abilities `magic_bolt` / `catapult_shot`
-   * carry it; every single-tick strike/heal omits it). Tune by feel.
+   * F3 — the slice of a multi-tick action's wind-up the projectile spends in
+   * flight (carved OUT of the wind-up, so total busy window / impact tick /
+   * cooldown are unchanged). Absent → no travel phase. Only `magic_bolt` /
+   * `catapult_shot` carry it.
    */
   travelSeconds: z.number().nonnegative().optional(),
   /**
-   * F4 — the gambit's strike→retreat sequencing knob. When present, the
-   * strike's busy window is split `windup(this) → impact → recovery` instead
-   * of the plain `impact(0) → recovery(D)` of a basic strike: the damage still
-   * lands eagerly in `start` (offset 0), but the rogue's free reposition is
-   * deferred to the `impact` boundary this many seconds later, so on screen the
-   * strike shove plays out BEFORE the retreat lerp (E6.A made the two mutually
-   * exclusive per sprite — a same-tick reposition clobbered the shove). Σ ticks
-   * / cooldown are unchanged (the windup is carved out of recovery), so the
-   * attack cadence holds; only WHEN within the cycle the rogue darts back moves.
-   * Set ≥ the shove duration (~0.2s). Absent → a basic strike (every ability
-   * except `gambit_strike`). Tune by feel.
+   * F4 — the gambit's strike→retreat sequencing knob: defers the rogue's free
+   * reposition to an `impact` boundary this many seconds after the (eager)
+   * strike, so the shove plays before the dart-back. Σ ticks / cooldown
+   * unchanged. Absent → a basic strike (every ability except `gambit_strike`).
    */
   retreatDelaySeconds: z.number().nonnegative().optional(),
   aoe: AoeSchema.optional(),
 });
 
+/**
+ * `heal` — restores HP to an ally, magic-scaled, never rolls to-hit or crit.
+ * Carries only `might` (the flat heal base ADDED to the healer's magic:
+ * `heal = might + magic`) atop the common `range` / `cooldownSeconds`. The
+ * dropped combat fields were dead weight under the old single schema — a heal
+ * has no `accuracy`/`crit` to speak of.
+ */
+const HealSchema = z.object({
+  kind: z.literal('heal'),
+  ...CommonFields,
+  might: z.number().nonnegative(),
+});
+
+const AbilitySchema = z.discriminatedUnion('kind', [AttackSchema, HealSchema]);
+
 const AbilitiesSchema = z.record(z.string(), AbilitySchema);
 
+export type AttackConfig = z.infer<typeof AttackSchema>;
+export type HealConfig = z.infer<typeof HealSchema>;
 export type AbilityConfig = z.infer<typeof AbilitySchema>;
 
 export const ABILITIES: Record<string, AbilityConfig> =
@@ -142,6 +152,10 @@ export const ABILITIES: Record<string, AbilityConfig> =
  * registry boot-check guarantees presence for every registered ability,
  * so a throw here means a caller passed an id that was never registered
  * — a programming error, surfaced loudly rather than silently defaulted.
+ *
+ * Returns the `kind`-discriminated union; callers reading kind-specific fields
+ * (a strike's `accuracy`, a heal's `might`) should use the typed accessors
+ * below so the compiler narrows for them.
  */
 export function abilityConfig(id: string): AbilityConfig {
   const cfg = ABILITIES[id];
@@ -150,3 +164,24 @@ export function abilityConfig(id: string): AbilityConfig {
   }
   return cfg;
 }
+
+/**
+ * N1 — narrowing accessors: fetch an ability's config and assert its `kind`,
+ * throwing on a mismatch. They keep kind-specific call sites (strikes read
+ * `accuracy`/`critBase`, heal reads its `might`) free of inline narrowing while
+ * turning a wrong-kind id into a loud programming error rather than a silent
+ * `undefined` field read.
+ */
+function configOfKind<K extends AbilityConfig['kind']>(
+  id: string,
+  kind: K,
+): Extract<AbilityConfig, { kind: K }> {
+  const cfg = abilityConfig(id);
+  if (cfg.kind !== kind) {
+    throw new Error(`ability '${id}' is kind '${cfg.kind}', expected '${kind}'`);
+  }
+  return cfg as Extract<AbilityConfig, { kind: K }>;
+}
+
+export const attackConfig = (id: string): AttackConfig => configOfKind(id, 'attack');
+export const healConfig = (id: string): HealConfig => configOfKind(id, 'heal');

@@ -6,7 +6,7 @@ import { Unit, type Team, type UnitArchetype, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, inertDerived, magicBoltDamage, attackCooldownTicksFor } from '../stats';
-import { abilityConfig } from '../../config/abilities';
+import { attackConfig } from '../../config/abilities';
 import { secondsToTicks } from '../../config';
 import { phasesBeginningAt, totalTicks } from '../Action';
 import { rangeForArchetype } from '../archetypes';
@@ -21,7 +21,7 @@ import type { GridCoord } from '../../core/types';
  * inputs.
  */
 
-const BOLT = abilityConfig('magic_bolt');
+const BOLT = attackConfig('magic_bolt');
 const BOLT_RANGE = BOLT.range;
 
 const MAGE_STATS: UnitStats = {

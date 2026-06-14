@@ -6,7 +6,7 @@ import { currentTarget, collectLosBlockers } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
 import { magicBoltDamage, attackCooldownTicksFor, critChanceFor } from '../stats';
 import { secondsToTicks } from '../../config';
-import { abilityConfig } from '../../config/abilities';
+import { attackConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
 import type { GridCoord } from '../../core/types';
 
@@ -41,7 +41,7 @@ export class MagicBolt implements Ability {
   readonly id = MagicBolt.id;
 
   propose(unit: Unit, world: World): ActionProposal | null {
-    const cfg = abilityConfig(this.id);
+    const cfg = attackConfig(this.id);
     if (!cfg.aoe) {
       // Config invariant: magic_bolt must declare its blast shape. A loud
       // throw (A4 style) beats a silent default the designer didn't intend.

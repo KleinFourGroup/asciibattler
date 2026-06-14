@@ -187,15 +187,18 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
 
   const detail = document.createElement('div');
   detail.className = 'recruit-ability-detail';
-  const scaling = ui.effect === 'heal' ? stats.magic : damageStatFor(archetype, stats);
+  const scaling = cfg.kind === 'heal' ? stats.magic : damageStatFor(archetype, stats);
   const amount = cfg.might + scaling;
-  const parts = [`${amount} ${ui.effect === 'heal' ? 'heal' : 'dmg'}`, `rng ${cfg.range}`];
+  const parts = [`${amount} ${cfg.kind === 'heal' ? 'heal' : 'dmg'}`, `rng ${cfg.range}`];
   // I6 — surface the per-weapon profile: base hit chance for an evadable strike,
-  // base crit for a critable one (terse percentages, e.g. "60% hit").
-  if (cfg.evadable) parts.push(`${Math.round(cfg.accuracy * 100)}% hit`);
-  if (cfg.critable) parts.push(`${Math.round(cfg.critBase * 100)}% crit`);
+  // base crit for a critable one (terse percentages, e.g. "60% hit"). N1 — only
+  // an `attack`-kind ability carries the to-hit/crit profile to show.
+  if (cfg.kind === 'attack') {
+    if (cfg.evadable) parts.push(`${Math.round(cfg.accuracy * 100)}% hit`);
+    if (cfg.critable) parts.push(`${Math.round(cfg.critBase * 100)}% crit`);
+  }
   detail.textContent = parts.join(' · ');
-  if (cfg.aoe) {
+  if (cfg.kind === 'attack' && cfg.aoe) {
     const side = cfg.aoe.radius * 2 + 1;
     const tag = document.createElement('span');
     tag.className = 'recruit-ability-aoe';

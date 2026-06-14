@@ -4,7 +4,7 @@ import type { ActionProposal } from '../Action';
 import { HealAction } from '../actions/HealAction';
 import { lowestWoundedAlly } from '../Targeting';
 import { healAmountFor, attackCooldownTicksFor } from '../stats';
-import { abilityConfig } from '../../config/abilities';
+import { healConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
 
 /**
@@ -26,7 +26,7 @@ export class HealAlly implements Ability {
   readonly id = HealAlly.id;
 
   propose(unit: Unit, world: World): ActionProposal | null {
-    const cfg = abilityConfig(this.id);
+    const cfg = healConfig(this.id);
     const target = lowestWoundedAlly(unit, world, cfg.range);
     if (target === null) return null;
 

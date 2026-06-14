@@ -354,12 +354,14 @@ function refreshPreview(): void {
     const scaling = activeKey === 'healer' ? stats.magic : damageStatFor(activeKey, stats);
     const out = cfg.might + scaling;
     const effect = activeKey === 'healer' ? 'heal' : 'dmg';
-    const toHit = cfg.evadable
-      ? `${pct(hitChanceFor(cfg.accuracy, stats.precision, refEvasion))} vs EVA ${refEvasion}`
-      : 'unmissable';
-    const crit = cfg.critable
-      ? `${pct(critChanceFor(cfg.critBase, stats.luck))} (×${STATS.critMult})`
-      : 'no crit';
+    const toHit =
+      cfg.kind === 'attack' && cfg.evadable
+        ? `${pct(hitChanceFor(cfg.accuracy, stats.precision, refEvasion))} vs EVA ${refEvasion}`
+        : 'unmissable';
+    const crit =
+      cfg.kind === 'attack' && cfg.critable
+        ? `${pct(critChanceFor(cfg.critBase, stats.luck))} (×${STATS.critMult})`
+        : 'no crit';
     addPreview(
       `Ability · ${id}`,
       `${out} ${effect} (${cfg.might} might + ${scaling} ${OUTPUT_LABEL[activeKey]}) · rng ${cfg.range} · ${cadence(ticks)}` +

@@ -5,7 +5,7 @@ import { CatapultShotAction } from '../actions/CatapultShotAction';
 import { currentTarget } from '../Targeting';
 import { catapultShotDamage, attackCooldownTicksFor, critChanceFor } from '../stats';
 import { secondsToTicks } from '../../config';
-import { abilityConfig } from '../../config/abilities';
+import { attackConfig } from '../../config/abilities';
 import type { Ability } from './Ability';
 import type { GridCoord } from '../../core/types';
 
@@ -42,7 +42,7 @@ export class CatapultShot implements Ability {
   readonly ignoresLineOfSight = true;
 
   propose(unit: Unit, world: World): ActionProposal | null {
-    const cfg = abilityConfig(this.id);
+    const cfg = attackConfig(this.id);
 
     const target = currentTarget(unit, world);
     if (target === null) return null;

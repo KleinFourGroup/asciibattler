@@ -5,7 +5,7 @@ import { Unit, type Team, type UnitArchetype, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, attackCooldownTicksFor } from '../stats';
-import { abilityConfig } from '../../config/abilities';
+import { attackConfig } from '../../config/abilities';
 import { secondsToTicks } from '../../config';
 import { totalTicks } from '../Action';
 import type { GameEvents } from '../../core/events';
@@ -21,9 +21,9 @@ import type { GridCoord } from '../../core/types';
  * while a plain melee strike stays `[impact 0, recovery D]`.
  */
 
-const GAMBIT = abilityConfig('gambit_strike');
+const GAMBIT = attackConfig('gambit_strike');
 // I6 — `melee_strike` split into per-subclass weapons; `sword` is the mercenary's.
-const MELEE = abilityConfig('sword');
+const MELEE = attackConfig('sword');
 
 // Representative rogue/melee stat blocks. Cadence expectations derive from the
 // SAME `speed` via `attackCooldownTicksFor`, so the assertions hold regardless

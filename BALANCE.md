@@ -107,9 +107,21 @@ Independent CPU-bound runs → embarrassingly parallel. Built-ins only:
 - **Recommended — `node:child_process` grid-sharding**: parent splits grid points (or
   the vector list) across N ≈ `os.availableParallelism()` children, each runs the CLI
   on its shard + writes a partial, parent merges. Each process owns its own config
-  object (clean for a config sweep). Cost: ~13s tsx startup × cores, paid in parallel
-  *once* → worth it only for **heavy/overnight**; run quick/medium single-process.
+  object (clean for a config sweep). `--jobs=N` on `--search` / `--balance-sweep`.
   This is also the **H7d VPS wrapper** (same sharded command, more cores).
+  - **N2 amendment (2026-06-14) — default `--jobs` on for any multi-point
+    `--balance-sweep`.** The original "worth it only for heavy/overnight; run
+    quick/medium single-process" rule was written for a *single* `--search` (one grid
+    point → the ~13s tsx startup is paid once, not worth sharding a cheap search). A
+    **multi-point sweep** is different: the heavy high-swarm points dominate wall-clock
+    and shard well, so `--jobs` pays off even at quick/medium tier. Measured: a 30-point
+    quick procedural grid projected ~13m+ single-process; jobs=8 on a 32-core box ≈ half
+    that. **Caveat: tsx startup (~13s) is paid PER grid point**, so the win shrinks on an
+    all-cheap grid and is largest exactly where the band lives (high swarm = heavy
+    points). **Size it to leave headroom** — `--jobs ≈ cores/2` (e.g. `--jobs=8` on 32
+    cores), NOT all cores, especially with a dev server running. A lone `--search` (one
+    point) or a tiny/all-cheap grid stays fine single-process. `jobs=1 ≡ jobs=N`
+    byte-identical (proven), so this is purely wall-clock.
 - *Not recommended*: `node:worker_threads` — lower per-task overhead but real friction
   loading `.ts` under tsx in a worker; not worth it for this workload.
 

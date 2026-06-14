@@ -43,6 +43,9 @@ export interface ShardJob {
   readonly seeds: readonly number[];
   readonly floorCount?: number;
   readonly roster?: readonly RosterEntry[];
+  /** M6/N2 — the forced layout id / `procedural` sentinel the child's runs use
+   *  (plain string, round-trips the job file), or undefined for the normal roll. */
+  readonly forcedLayoutId?: string;
   readonly objective?: ObjectiveProclivity;
   readonly redraw?: RedrawPolicy;
   readonly empower?: EmpowerPolicy;
@@ -114,6 +117,8 @@ export interface ShardedEvalParams {
   readonly knobs: Record<string, number>;
   readonly floorCount?: number;
   readonly roster?: readonly RosterEntry[];
+  /** M6/N2 — the forced layout id / `procedural` sentinel (or none). */
+  readonly forcedLayoutId?: string;
   /** J4 — the fixed objective proclivity the children's runs drive (or none). */
   readonly objective?: ObjectiveProclivity;
   /** K3c3 — the fixed redraw policy the children's runs drive (or none). */
@@ -133,8 +138,20 @@ export interface ShardedEvalParams {
  * Rejects if any child fails (its stderr is surfaced in the error).
  */
 export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise<number[]> {
-  const { vectors, seeds, knobs, floorCount, roster, objective, redraw, empower, daemon, jobs, tmpDir } =
-    params;
+  const {
+    vectors,
+    seeds,
+    knobs,
+    floorCount,
+    roster,
+    forcedLayoutId,
+    objective,
+    redraw,
+    empower,
+    daemon,
+    jobs,
+    tmpDir,
+  } = params;
   const chunks = chunkVectors(vectors, jobs);
   mkdirSync(tmpDir, { recursive: true });
   try {
@@ -143,6 +160,7 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
       seeds,
       floorCount,
       roster,
+      forcedLayoutId,
       objective,
       redraw,
       empower,

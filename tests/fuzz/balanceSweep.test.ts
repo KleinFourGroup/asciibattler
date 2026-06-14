@@ -146,6 +146,21 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     expect(seenFloors).toBe(11);
   });
 
+  it('passes forcedLayoutId through to the measured config (the N2 procedural isolate)', async () => {
+    let seen: string | undefined = 'unset';
+    await runBalanceSweep({
+      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
+      preset: PRESETS.quick,
+      samplerSeed: 1,
+      forcedLayoutId: 'procedural',
+      measurePoint: (coord, cfg) => {
+        seen = cfg.forcedLayoutId;
+        return fakePoint(coord);
+      },
+    });
+    expect(seen).toBe('procedural');
+  });
+
   it('passes rosterOverride through to the measured config', async () => {
     let seen: readonly { archetype: string; level: number }[] | undefined;
     await runBalanceSweep({

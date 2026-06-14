@@ -209,6 +209,14 @@ export interface BalanceSweepConfig {
    */
   readonly rosterOverride?: readonly RosterEntry[];
   /**
+   * M6/N2 — force every battle at every grid point onto one layout: a named
+   * `LAYOUT_IDS` member, or the `FORCE_PROCEDURAL` sentinel for a fresh
+   * procedural map each battle (the N2 isolate — re-find the band against the
+   * new procedural terrain alone, not the ~12%-each hand-authored mix).
+   * Undefined = the normal per-encounter layout roll.
+   */
+  readonly forcedLayoutId?: string;
+  /**
    * J4 — hold one objective proclivity FIXED across every run at every grid
    * point (the arena's tuned strategy, `random`, or none). Lets a difficulty
    * sweep measure the band with objectives active. Undefined / none = no
@@ -282,11 +290,17 @@ function harnessOptionsFor(
   redraw?: RedrawPolicy,
   empower?: EmpowerPolicy,
   daemon?: DaemonSelection,
+  forcedLayoutId?: string,
 ): HarnessOptions {
   const floorCount = floorOverride ?? preset.floorCount;
-  const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
+  const runConfig: {
+    floorCount?: number;
+    startingRoster?: readonly RosterEntry[];
+    forcedLayoutId?: string;
+  } = {};
   if (floorCount !== undefined) runConfig.floorCount = floorCount;
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
+  if (forcedLayoutId !== undefined) runConfig.forcedLayoutId = forcedLayoutId;
   let opts: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
   if (objective) opts = { ...opts, objective };
   if (redraw) opts = { ...opts, redraw };
@@ -315,6 +329,7 @@ async function defaultMeasurePoint(
     config.redraw,
     config.empower,
     config.daemon,
+    config.forcedLayoutId,
   );
   const jobs = Math.max(1, Math.floor(config.jobs ?? 1));
 
@@ -332,6 +347,7 @@ async function defaultMeasurePoint(
       knobs: coord,
       floorCount: config.floorOverride ?? preset.floorCount,
       roster: config.rosterOverride,
+      forcedLayoutId: config.forcedLayoutId,
       objective: config.objective,
       redraw: config.redraw,
       empower: config.empower,

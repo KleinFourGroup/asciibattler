@@ -18,8 +18,6 @@ import {
 } from '../strategies/registry';
 import { scoredStrategy } from '../strategies/scored';
 import { loadWeightsFile } from '../strategies/scoredWeights';
-import { LAYOUT_IDS } from '../../../src/sim/layouts';
-import { FORCE_PROCEDURAL } from '../../../src/run/RunConfig';
 import {
   aggregate,
   renderSummaryCsv,
@@ -40,6 +38,7 @@ import {
   bail,
   daemonFromArgs,
   empowerFromArgs,
+  layoutFromArgs,
   objectiveFromArgs,
   redrawFromArgs,
   range,
@@ -72,11 +71,9 @@ export function runRunCli(args: RunModeArgs): void {
   // a fresh PROCEDURAL map every battle (the M6 isolate). Validated against the
   // library + the sentinel.
   let harnessOptions: HarnessOptions = {};
-  if (args.layout !== undefined) {
-    if (args.layout !== FORCE_PROCEDURAL && !LAYOUT_IDS.includes(args.layout)) {
-      bail(`Unknown layout: ${args.layout} (choices: ${LAYOUT_IDS.join(', ')}, ${FORCE_PROCEDURAL})`);
-    }
-    harnessOptions = { runConfig: { forcedLayoutId: args.layout } };
+  const layout = layoutFromArgs(args);
+  if (layout !== undefined) {
+    harnessOptions = { runConfig: { forcedLayoutId: layout } };
   }
   // J4 — drive a fixed objective strategy in every battle (default none =
   // byte-identical to the pre-J4 fuzz path; the baselines stay put).

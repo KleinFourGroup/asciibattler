@@ -16,6 +16,8 @@ import { parseObjectiveFlag, type ObjectiveProclivity } from '../objectiveStrate
 import { parseRedrawFlag, type RedrawPolicy } from '../redrawPolicy';
 import { parseEmpowerFlag, type EmpowerPolicy } from '../empowerPolicy';
 import { parseDaemonFlag, type DaemonSelection } from '../daemonSelection';
+import { FORCE_PROCEDURAL } from '../../../src/run/RunConfig';
+import { LAYOUT_IDS } from '../../../src/sim/layouts';
 
 export interface CliArgs {
   count: number;
@@ -226,6 +228,20 @@ export function empowerFromArgs(args: Pick<CliArgs, 'empower'>): EmpowerPolicy |
  *  `random`). Bails loudly on an unknown idol id. */
 export function daemonFromArgs(args: Pick<CliArgs, 'daemon'>): DaemonSelection | undefined {
   return args.daemon !== undefined ? parseDaemonFlag(args.daemon) : undefined;
+}
+
+/** M6/N2 — resolve + VALIDATE the `--layout` flag into a `forcedLayoutId` (a
+ *  known `LAYOUT_IDS` member or the `FORCE_PROCEDURAL` sentinel), or `undefined`
+ *  when absent. **Bails loudly on an unknown id** — unlike `parseRunConfig`'s
+ *  silent drop — so a typo fails the run instead of silently sweeping the
+ *  default layout mix. Shared by the run / `--search` / `--balance-sweep` modes
+ *  so the N2 procedural isolate (`--layout=procedural`) reaches every one. */
+export function layoutFromArgs(args: Pick<CliArgs, 'layout'>): string | undefined {
+  if (args.layout === undefined) return undefined;
+  if (args.layout !== FORCE_PROCEDURAL && !LAYOUT_IDS.includes(args.layout)) {
+    bail(`Unknown layout: ${args.layout} (choices: ${LAYOUT_IDS.join(', ')}, ${FORCE_PROCEDURAL})`);
+  }
+  return args.layout;
 }
 
 export function range(start: number, count: number): number[] {

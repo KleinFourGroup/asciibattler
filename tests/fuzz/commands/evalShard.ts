@@ -31,9 +31,14 @@ export function runEvalShardCli(args: EvalShardModeArgs): void {
     knob.obj[knob.key] = value;
   }
 
-  const runConfig: { floorCount?: number; startingRoster?: readonly RosterEntry[] } = {};
+  const runConfig: {
+    floorCount?: number;
+    startingRoster?: readonly RosterEntry[];
+    forcedLayoutId?: string;
+  } = {};
   if (job.floorCount !== undefined) runConfig.floorCount = job.floorCount;
   if (job.roster && job.roster.length > 0) runConfig.startingRoster = job.roster;
+  if (job.forcedLayoutId !== undefined) runConfig.forcedLayoutId = job.forcedLayoutId;
   // J4 / K3c3 / K4c3 / L1c3 — the child re-applies the parent's fixed
   // objective proclivity + redraw policy + empower policy + daemon arm (plain
   // JSON objects that round-tripped the job file), so sharded runs drive the

@@ -37,6 +37,7 @@ import {
   bail,
   daemonFromArgs,
   empowerFromArgs,
+  layoutFromArgs,
   objectiveFromArgs,
   redrawFromArgs,
   type CliArgs,
@@ -51,6 +52,7 @@ export type SearchModeArgs = Pick<
   | 'jobs'
   | 'floors'
   | 'roster'
+  | 'layout'
   | 'objective'
   | 'redraw'
   | 'empower'
@@ -83,6 +85,11 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const floorCount = args.floors ?? preset.floorCount;
   if (floorCount !== undefined) searchParams.set('floors', String(floorCount));
   if (args.roster) searchParams.set('roster', args.roster);
+  // M6/N2 — force one layout (or `procedural`) across the searched runs, so the
+  // overnight verify (stage 5) can hold out on the procedural maps too. Validated
+  // loudly by layoutFromArgs (parseRunConfig would silently drop a typo'd id).
+  const forcedLayoutId = layoutFromArgs(args);
+  if (forcedLayoutId !== undefined) searchParams.set('layout', forcedLayoutId);
   const runConfig = parseRunConfig(searchParams);
   const objective = objectiveFromArgs(args);
   const redraw = redrawFromArgs(args);
@@ -99,12 +106,13 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
     ? ` roster=[${runConfig.startingRoster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
+  const layoutNote = forcedLayoutId ? ` layout=${forcedLayoutId}` : '';
   const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
   const redrawNote = redraw ? ` redraw=${redrawPolicyLabel(redraw)}` : '';
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${layoutNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -122,6 +130,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       knobs: {},
       floorCount,
       roster: runConfig.startingRoster,
+      forcedLayoutId: runConfig.forcedLayoutId,
       objective,
       redraw,
       empower,

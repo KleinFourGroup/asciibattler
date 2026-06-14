@@ -160,6 +160,14 @@ export class BattleScene implements Scene {
         if (amount <= 0) return;
         ctx.audio.play('healtick');
       }),
+      // N1 — the rogue dash whoosh. A dash is the ONLY move that covers more
+      // than one cell (a normal step is always exactly 1), so the >1-cell delta
+      // distinguishes a leap from ordinary walking (which stays silent).
+      // Team-agnostic: anything that leaps whooshes.
+      ctx.bus.on('unit:moved', ({ from, to }) => {
+        const cells = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y));
+        if (cells > 1) ctx.audio.play('dash');
+      }),
     );
 
     // HUD and BattleRenderer must be bound BEFORE any spawn so unit:spawned

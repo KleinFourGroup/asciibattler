@@ -22,6 +22,7 @@
 export type SoundKey =
   | 'burn'
   | 'click'
+  | 'dash'
   | 'death'
   | 'healtick'
   | 'lose'
@@ -34,6 +35,8 @@ export type SoundKey =
 const SOURCES: Record<SoundKey, string> = {
   burn: 'audio/burn.wav',
   click: 'audio/click.wav',
+  // N1 — the rogue's dash-leap whoosh (off a >1-cell `unit:moved`).
+  dash: 'audio/dash.wav',
   death: 'audio/death.wav',
   healtick: 'audio/healtick.wav',
   lose: 'audio/lose.wav',
@@ -56,6 +59,9 @@ const SOURCES: Record<SoundKey, string> = {
 const VOLUMES: Record<SoundKey, number> = {
   burn: 0.6,
   click: 0.7,
+  // N1 — a movement whoosh; just under the 1.0 impact cues so it reads as
+  // motion, not a hit.
+  dash: 0.9,
   death: 1.0,
   healtick: 0.55,
   lose: 0.7,
@@ -87,6 +93,9 @@ const VOLUMES: Record<SoundKey, number> = {
 const PITCH_VARIANCE: Record<SoundKey, number> = {
   burn: 0.12,
   click: 0,
+  // N1 — light jitter so several rogues dashing the same tick don't sound like
+  // one stuttered sample (dashes are rare per-unit at a 10s cooldown).
+  dash: 0.08,
   death: 0.08,
   healtick: 0.08,
   lose: 0,

@@ -22,7 +22,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
       of that pass. Recommended fix kept: deterministic straight-line
       bias rather than RNG-shuffled iteration (RNG-shuffling shifts the
       byte stream every tick a tie fires).
-- [ ] **Terrain generator: bias water placement toward unit paths.** The C1a generator scatters water uniformly across non-spawn rows, but unit paths run nearly straight between spawn bands so the shallow-water movement cost almost never gets exercised in practice — water tiles end up purely decorative. Options to make water meaningful: cluster tiles into patches (so they form actual obstacles rather than isolated singletons), bias placement toward the middle rows where unit traffic concentrates, or seed water specifically along the straight line between spawn columns + spread outward. Probably wants a small "place water in N clusters of size M" pass rather than per-cell Bernoulli. (Lower priority post-D5: spawn regions can be anywhere on the board now, not just the rows water used to dodge. Listed in ROADMAP cleanup.)
+- [x] **Terrain generator: bias water placement toward unit paths.** ✅ SOLVED by the **M6 procedural-map rework** (2026-06-13). The uniform per-cell scatter is gone; the new crossbar+divider+noise generator ([proceduralMap.ts](src/sim/proceduralMap.ts)) places water exactly where traffic concentrates — **fordable gaps in the crossbars** (the chokepoints the armies cross) plus **low-ground noise pools** — so the M6 bog-down/slow water mechanic actually gets exercised. (Original problem: the C1a generator scattered water uniformly across non-spawn rows, but unit paths run nearly straight between spawn bands, so water was purely decorative.)
 - [x] **Renderer capacity audit.** Landed in ROADMAP D1 — `SpriteRenderer`
       default bumped 256 → 1024, `BarRenderer` 256 → 2048 (two bars per unit,
       headroom for D3's larger boards). Error paths already throw with the
@@ -81,6 +81,9 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
       roll** (don't roll the hard open layouts early; ramp them in) — and/or soften specific spawn
       geometries in the layout editor. Deferred here by the user (2026-06-07) as part of the post-H
       rework rather than a one-off junctionAmbush patch. Data: [BALANCE.md](BALANCE.md) "Layout-difficulty telemetry".
+      **STATUS (M6, 2026-06-13):** still OPEN/deferred — M6 shipped the procedural rework + water mechanic but
+      DEFERRED floor-gating behind the coming **encounter-system spec** (which will reshape the per-floor
+      difficulty targets, so depth-weighting `rollLayoutId` now would just be redone). Revisit after the spec.
 - [ ] **Turn-limit / tick-cap resolution — a deeper system.** In the G5
       multi-turn battle model, a *turn* whose tactical battle hits the
       tick-cap resolves as a **draw**: both sides' surviving units chip the

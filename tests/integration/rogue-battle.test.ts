@@ -15,14 +15,26 @@ import type { BattleEncounter } from '../../src/run/Run';
  * path (`abilityIdsForArchetype('rogue')` → `createAbility('gambit_strike')`)
  * engages and the battle resolves without hanging or throwing — the thing a
  * playtest build needs to not crash on `?roster=rogue,...`.
+ *
+ * N1 — the rogue now also carries the `dash` (`createAbility('dash')`), so this
+ * additionally proves the gap-closer fires end-to-end through the selector: a
+ * `unit:moved` covering >1 cell is a leap (a normal step is always 1 cell). The
+ * DashAbility.test.ts pins the propose logic in isolation; here we confirm the
+ * AbilityBehavior actually PICKS the dash (score 5) over a walk (1) when the
+ * rogue is out of strike range at battle start.
  */
 
 const TICK_CAP = 2000;
+
+function chebyshev(a: { x: number; y: number }, b: { x: number; y: number }): number {
+  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
 
 function runRogueBattle(seed: number): {
   resolved: boolean;
   rogueAttacked: boolean;
   rogueMoved: boolean;
+  rogueDashed: boolean;
 } {
   const bus = new EventBus<GameEvents>();
 
@@ -49,15 +61,21 @@ function runRogueBattle(seed: number): {
   const rogue = world.units.find((u) => u.team === 'player' && u.archetype === 'rogue');
   expect(rogue, 'rogue should spawn into the world').toBeDefined();
   const rogueId = rogue!.id;
-  expect(rogue!.abilities.map((a) => a.id)).toContain('gambit_strike');
+  const abilityIds = rogue!.abilities.map((a) => a.id);
+  expect(abilityIds).toContain('gambit_strike');
+  expect(abilityIds).toContain('dash');
 
   let rogueAttacked = false;
   let rogueMoved = false;
+  let rogueDashed = false;
   bus.on('unit:attacked', (p) => {
     if (p.attackerId === rogueId) rogueAttacked = true;
   });
   bus.on('unit:moved', (p) => {
-    if (p.unitId === rogueId) rogueMoved = true;
+    if (p.unitId !== rogueId) return;
+    rogueMoved = true;
+    // A leap covers >1 cell in one move; a normal step is always exactly 1.
+    if (chebyshev(p.from, p.to) > 1) rogueDashed = true;
   });
 
   let resolved = false;
@@ -71,7 +89,7 @@ function runRogueBattle(seed: number): {
     ticks++;
     if (resolved) break;
   }
-  return { resolved, rogueAttacked, rogueMoved };
+  return { resolved, rogueAttacked, rogueMoved, rogueDashed };
 }
 
 describe('E7.A — rogue runs through a full battle', () => {
@@ -92,5 +110,8 @@ describe('E7.A — rogue runs through a full battle', () => {
       'rogue lands a gambit on ≥1 seed',
     ).toBe(true);
     expect(results.some((r) => r.rogueMoved), 'rogue moves on ≥1 seed').toBe(true);
+    // N1 — the gap-closer fires end-to-end: out of strike range at the start,
+    // the selector picks the dash (a >1-cell leap) over a walk on ≥1 seed.
+    expect(results.some((r) => r.rogueDashed), 'rogue dashes on ≥1 seed').toBe(true);
   });
 });

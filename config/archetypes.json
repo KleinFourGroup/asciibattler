@@ -156,7 +156,7 @@
   },
   "rogue": {
     "glyph": "r",
-    "abilities": ["gambit_strike"],
+    "abilities": ["gambit_strike","dash"],
     "targeting": "nearest",
     "baseStats": {
       "constitution": 16,

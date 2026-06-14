@@ -825,6 +825,10 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   Test fallout: four `Run.test.ts` promotion-phase pins hardcoded `xpGained: 100` (== the OLD
   `xpToNext(1)`) and broke at the new curve — switched to the file's own `xpToNext(1)` convention
   (the balance-proof rule: derive from config, never hardcode curve arithmetic).
+  **[SUPERSEDED 2026-06-14 — see the N2-opening entry below: the curve was raised `20→50`
+  (commit `8e37203`) and LOCKED as a playtest-validated feel target. N3 is reframed from a
+  from-scratch re-derivation to a consistency check; the "placeholder to re-derive, not a baseline
+  to defend" framing above no longer holds — 50/1.1 IS the baseline the N2 band is tuned around.]**
 
 - **M6 procedural-map rework DEPLOYED — fuzz baseline SHIFTS (terrain), N2 re-sweep on the hook
   (2026-06-13, UNMEASURED here — left for N2).** The procedural path is no longer a uniform
@@ -832,8 +836,8 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   with **chokepoints + fordable water gaps + half-cover windows in the walls** — i.e. real
   structure where the scatter had none. Terrain structure strongly moves win rates (the **K3
   comp×map interaction**: ranged vs melee FLIP by layout), so this is a presumptive **band-mover**
-  on top of daemons (L1, the biggest lever) + empower (K4) + the still-live testing leveling curve
-  (M2-session). **NOT swept here** — folded into N2 against the final model. Two isolation levers
+  on top of daemons (L1, the biggest lever) + empower (K4) + the playtest-locked leveling curve
+  (50/1.1, N2-opening). **NOT swept here** — folded into N2 against the final model. Two isolation levers
   ready for that sweep: **`--layout=procedural`** forces the new procedural maps every battle (the
   clean full-sample read, mirroring `--layout=<id>`), and `?layout=procedural` does the same in the
   browser. The map *envelope* itself is now config-tunable ([config/terrain.json](config/terrain.json)
@@ -848,9 +852,29 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   cd) — it leaps toward a target beyond `derived.attackRange`, closing the gap the H7c step-3
   `weakest`-targeting eval proved a *range-1* rogue couldn't. This changes rogue trajectories in
   every rogue-bearing run → a presumptive **band-mover** joining daemons (L1, the biggest lever) +
-  empower (K4) + the M6 terrain rework + the still-live testing leveling curve (M2-session). **NOT
+  empower (K4) + the M6 terrain rework + the playtest-locked leveling curve (50/1.1, N2-opening). **NOT
   measured here** — the rogue re-measure (the H7c forced-roster protocol: does dodge+dash finally
   make it recruit-worthy? flip it to `weakest` targeting and re-run) is **N2's job, on the final
   model**. fuzz:smoke stayed byte-identical: the dash only changes rogue-bearing sims, and emitting
   the extra `unit:dashed` event doesn't perturb sim state (positions/RNG), so the determinism guards
   are unaffected.
+
+- **N2 OPENING — leveling curve LOCKED at `baseXp 50 / exp 1.1` + N3 reframed (2026-06-14, commit
+  `8e37203`).** The `baseXp 20` testing knob (M2-session) is retired: the user raised it `20→50`
+  off **playtest feel** (20 still surfaced level-ups too rarely; 50 gives a satisfying cadence) —
+  NOT a balance call, but it makes the curve a **playtest-validated feel target**, not a free
+  variable. **Decision (user, this session): balance the N2 difficulty band AROUND 50/1.1.** The
+  rate and the band can't be cleanly disentangled (the curve governs power accumulation across a
+  run; the difficulty constants govern per-encounter enemy strength; they interact through run
+  length / snowball dynamics) — so rather than tune them as two independent passes:
+  - **N2 = the difficulty-band sweep at a FIXED 50/1.1 curve** (the funnel below, unchanged).
+  - **N3 = reframed from "re-derive the curve from scratch" → a CONSISTENCY CHECK:** use the
+    heavy-stage **levels-by-floor + XP-flow telemetry** to confirm the final N2 constants didn't
+    distort the level-up cadence, and to catch a snowball (units out-scaling enemies on deep floors)
+    or fall-behind. If the telemetry shows distortion, nudge `leveling.json` and re-confirm the band
+    — a short feedback loop with N2, not a separate pass.
+  This SUPERSEDES the M2-session entry's "placeholder to re-derive, not a baseline to defend"
+  framing. Every N2 sweep reading is now taken at the intended curve (50/1.1) — no testing-knob
+  inflation to flag. Pre-commit: typecheck clean, 950/950 main green (the four `Run.test.ts`
+  promotion pins read `xpToNext(1)` from config, so they tracked `20→50` with no edit). **NEXT =
+  stage 1: the broad `budgetFactor × swarmMax` grid (quick tier), isolated to `--layout=procedural`.**

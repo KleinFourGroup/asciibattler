@@ -1194,9 +1194,10 @@ strongly moves win rates — the K3 comp×map interaction)**, and the contingent
 rogue change. The current provisional band (`budgetFactor 0.75 × swarmMax 2.0 ×
 enemyArcherRatio 0.3`, K2/K3.5-era) **will** have moved; re-find it. Isolate the
 new procedural maps with `--layout=procedural`. BALANCE.md's funnel (broad →
-medium → heavy) applies. **NB: the `baseXp 20 / exp 1.1` testing leveling curve
-is still live (N3 re-derives it) — sweep against the intended curve or expect
-inflated win rates.**
+medium → heavy) applies. **NB: the leveling curve is now LOCKED at `baseXp 50 /
+exp 1.1` (commit `8e37203`) — a playtest-validated feel target, the curve the
+band is tuned AROUND. Sweep at 50/1.1; no testing-knob inflation to discount.
+N3 (below) is reframed to a consistency check.**
 
 **Cleanup folded in here — unify the two turn caps.** There are currently
 **two independent** "turn ran too long" caps, both authored at the same value:
@@ -1212,13 +1213,20 @@ which would make the fuzz "hang" metric mean *genuine non-termination* only.
 Natural to land alongside the band re-tune, since the cap is part of the same
 balance surface.
 
-### N3 — Leveling-rate pass
+### N3 — Leveling consistency check (reframed 2026-06-14)
 
-Tune [config/leveling.json](config/leveling.json) (XP, thresholds,
-`xpPerHealing`) using the XP-flow + levels-by-floor telemetry — the brief's
-"leveling is way too rare" at the *rate* level (M1 fixed cadence). The user
-will have been experimenting throughout; this is the disciplined consolidation
-against the now-stable baseline.
+**Reframed from "re-derive the curve from scratch" → a consistency check.** The
+curve is now playtest-locked at `baseXp 50 / exp 1.1` (the user raised it `20→50`
+off playtest feel; N2 tunes the difficulty band AROUND it). N3 uses the
+heavy-stage **XP-flow + levels-by-floor telemetry** to confirm the final N2
+difficulty constants didn't distort the level-up cadence — and to catch any
+snowball (units out-scaling enemies on deep floors) or fall-behind dynamic. If
+the telemetry shows distortion, nudge [config/leveling.json](config/leveling.json)
+(XP, thresholds, `xpPerHealing`) and re-confirm the band holds. The rate and the
+band can't be cleanly disentangled (each affects the other), so this is a short
+feedback loop with N2, not a separate independent pass. (Original framing — the
+brief's "leveling is way too rare" at the *rate* level, M1 fixed the cadence —
+is now satisfied by the playtest-locked curve.)
 
 ### N4 — Overnight verify (+ `--seed-offset`)
 

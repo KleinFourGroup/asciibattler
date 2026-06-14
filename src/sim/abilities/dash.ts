@@ -1,7 +1,7 @@
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { ActionProposal } from '../Action';
-import { MoveAction } from '../actions/MoveAction';
+import { DashAction } from '../actions/DashAction';
 import { currentTarget } from '../Targeting';
 import { leapLanding, chebyshev } from '../movement';
 import { secondsToTicks } from '../../config';
@@ -57,7 +57,7 @@ export class DashAbility implements Ability {
     const durationTicks = Math.max(1, secondsToTicks(cfg.durationSeconds));
     const cooldownTicks = Math.max(1, secondsToTicks(cfg.cooldownSeconds));
     return {
-      action: new MoveAction(unit.position, landing, durationTicks),
+      action: new DashAction(unit.position, landing, durationTicks),
       score: DASH_SCORE,
       cooldown: cooldownTicks,
       // A single `impact` phase IS the in-flight lockout (mirrors `moveProposal`

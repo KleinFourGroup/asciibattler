@@ -107,6 +107,25 @@ export interface GameEvents extends Record<string, unknown> {
     durationTicks: number;
   };
   /**
+   * N1 — a `DashAbility` LEAP (a `DashAction`): the unit blinked from `from` to
+   * `to` over `durationTicks`. A first-class event, mirroring `unit:swapped`'s
+   * rationale — the dash is a movement VARIANT whose cue / VFX / telemetry must
+   * not be inferred from a plain `unit:moved`: a dash that lands adjacent to an
+   * enemy 2 cells away only moves ONE cell, indistinguishable from a normal step
+   * by distance. Unlike a swap (two units, so it CAN'T reuse `unit:moved`), a
+   * dash is one unit moving, so `DashAction` ALSO emits `unit:moved` and the
+   * renderer lerps the slide via its normal one-unit path; THIS event is the
+   * dash-specific signal layered on top. Today BattleScene's audio (the dash
+   * whoosh) is the only consumer; the deferred dash VFX (afterimage/trail) is
+   * the next.
+   */
+  'unit:dashed': {
+    unitId: number;
+    from: GridCoord;
+    to: GridCoord;
+    durationTicks: number;
+  };
+  /**
    * E1: `crit` flags whether AttackAction's start-time crit roll landed.
    * `damage` is the resolved post-crit value (already multiplied by
    * `STATS.critMult` when `crit === true`), so subscribers that only

@@ -17,18 +17,14 @@ import type { BattleEncounter } from '../../src/run/Run';
  * playtest build needs to not crash on `?roster=rogue,...`.
  *
  * N1 — the rogue now also carries the `dash` (`createAbility('dash')`), so this
- * additionally proves the gap-closer fires end-to-end through the selector: a
- * `unit:moved` covering >1 cell is a leap (a normal step is always 1 cell). The
- * DashAbility.test.ts pins the propose logic in isolation; here we confirm the
- * AbilityBehavior actually PICKS the dash (score 5) over a walk (1) when the
- * rogue is out of strike range at battle start.
+ * additionally proves the gap-closer fires end-to-end through the selector via
+ * the first-class `unit:dashed` event (a `DashAction` emits it on the leap). The
+ * DashAbility.test.ts pins the propose logic + DashAction.test.ts the event in
+ * isolation; here we confirm AbilityBehavior actually PICKS the dash (score 5)
+ * over a walk (1) when the rogue is out of strike range at the start.
  */
 
 const TICK_CAP = 2000;
-
-function chebyshev(a: { x: number; y: number }, b: { x: number; y: number }): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-}
 
 function runRogueBattle(seed: number): {
   resolved: boolean;
@@ -72,10 +68,12 @@ function runRogueBattle(seed: number): {
     if (p.attackerId === rogueId) rogueAttacked = true;
   });
   bus.on('unit:moved', (p) => {
-    if (p.unitId !== rogueId) return;
-    rogueMoved = true;
-    // A leap covers >1 cell in one move; a normal step is always exactly 1.
-    if (chebyshev(p.from, p.to) > 1) rogueDashed = true;
+    if (p.unitId === rogueId) rogueMoved = true;
+  });
+  // N1 — the first-class dash signal: catches every leap, including a 1-cell
+  // dash (closing on an enemy 2 cells away) that a move-distance check misses.
+  bus.on('unit:dashed', (p) => {
+    if (p.unitId === rogueId) rogueDashed = true;
   });
 
   let resolved = false;

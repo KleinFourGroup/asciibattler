@@ -13,7 +13,7 @@ import { SpawnRegionSchema } from '../config/layouts';
 import { generateTerrain } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
-import type { TerrainConfig } from '../config/terrain';
+import { TERRAIN, type TerrainConfig } from '../config/terrain';
 
 const BASE: TerrainConfig = {
   wallDensity: 0.06,
@@ -21,6 +21,7 @@ const BASE: TerrainConfig = {
   proceduralMinSize: 10,
   proceduralMaxSize: 20,
   ensureConnectivity: true,
+  procedural: TERRAIN.procedural,
 };
 
 describe('layouts library', () => {

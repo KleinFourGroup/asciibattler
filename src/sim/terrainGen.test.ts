@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { generateTerrain } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
-import type { TerrainConfig } from '../config/terrain';
+import { TERRAIN, type TerrainConfig } from '../config/terrain';
 import { getLayout, type SpawnRegion } from './layouts';
 
 const G = 12;
@@ -13,6 +13,7 @@ const BASE: TerrainConfig = {
   proceduralMinSize: 10,
   proceduralMaxSize: 20,
   ensureConnectivity: true,
+  procedural: TERRAIN.procedural,
 };
 
 describe('generateTerrain (procedural)', () => {
@@ -29,127 +30,92 @@ describe('generateTerrain (procedural)', () => {
     expect(ys).toContain(G - 1);
   });
 
-  it('leaves every spawn-region tile free of walls and water', () => {
-    const { tileGrid, walls, spawnRegions } = generateTerrain(new RNG(42), G, G, BASE);
-    const spawnTiles = collectSpawnTiles(spawnRegions);
-    for (const t of spawnTiles) {
-      expect(tileGrid.kindAt(t)).toBe('floor');
-    }
-    const wallSet = new Set(walls.map((w) => `${w.x},${w.y}`));
-    for (const t of spawnTiles) {
-      expect(wallSet.has(`${t.x},${t.y}`)).toBe(false);
-    }
-  });
-
-  it('places walls and water on disjoint cells', () => {
-    const { tileGrid, walls } = generateTerrain(new RNG(7), G, G, BASE);
-    for (const w of walls) {
-      expect(tileGrid.kindAt(w)).toBe('floor');
+  it('leaves every spawn-region tile free of obstacles and water', () => {
+    for (let seed = 0; seed < 30; seed++) {
+      const { tileGrid, walls, halfCovers, spawnRegions } = generateTerrain(new RNG(seed), G, G, BASE);
+      const spawnTiles = collectSpawnTiles(spawnRegions);
+      const obstacleSet = new Set([...walls, ...halfCovers].map((c) => `${c.x},${c.y}`));
+      for (const t of spawnTiles) {
+        expect(tileGrid.kindAt(t)).toBe('floor');
+        expect(obstacleSet.has(`${t.x},${t.y}`)).toBe(false);
+      }
     }
   });
 
-  it('targets approximately the configured wall + water counts', () => {
-    const cfg: TerrainConfig = { ...BASE, ensureConnectivity: false };
-    const total = G * G;
-    const { tileGrid, walls } = generateTerrain(new RNG(123), G, G, cfg);
+  it('places walls, half-cover, and water on mutually disjoint cells', () => {
+    const { tileGrid, walls, halfCovers } = generateTerrain(new RNG(7), G, G, BASE);
+    const seen = new Set<string>();
+    for (const c of [...walls, ...halfCovers]) {
+      const k = `${c.x},${c.y}`;
+      // Obstacle cells are never watered, and never doubled up.
+      expect(tileGrid.kindAt(c)).toBe('floor');
+      expect(seen.has(k)).toBe(false);
+      seen.add(k);
+    }
+  });
 
-    expect(walls.length).toBe(Math.floor(total * cfg.wallDensity));
-    let water = 0;
-    for (const c of tileGrid.cells()) if (c.kind === 'shallow_water') water++;
-    expect(water).toBe(Math.floor(total * cfg.shallowWaterDensity));
+  it('keeps total obstacles under the configured wall cap', () => {
+    // Derived from the config (balance-proof): the generator trims obstacles
+    // to at most `wallCapFraction` of the board, and the connectivity guard
+    // only ever converts obstacles to water, so the count can't exceed it.
+    const cap = Math.floor(TERRAIN.procedural.wallCapFraction * G * G);
+    for (let seed = 0; seed < 50; seed++) {
+      const { walls, halfCovers } = generateTerrain(new RNG(seed), G, G, BASE);
+      expect(walls.length + halfCovers.length).toBeLessThanOrEqual(cap);
+    }
+  });
+
+  it('always connects the two spawn regions (the connectivity guard fires)', () => {
+    for (let seed = 0; seed < 50; seed++) {
+      const terrain = generateTerrain(new RNG(seed), G, G, BASE);
+      expect(spawnRegionsConnected(terrain, G, G)).toBe(true);
+    }
   });
 
   it('is deterministic for the same seed', () => {
     const a = generateTerrain(new RNG(99), G, G, BASE);
     const b = generateTerrain(new RNG(99), G, G, BASE);
     expect(a.walls).toEqual(b.walls);
+    expect(a.halfCovers).toEqual(b.halfCovers);
     expect(a.tileGrid.toJSON()).toEqual(b.tileGrid.toJSON());
     expect(a.spawnRegions).toEqual(b.spawnRegions);
   });
 
-  it('produces different terrain for different seeds', () => {
-    const a = generateTerrain(new RNG(1), G, G, BASE);
-    const b = generateTerrain(new RNG(2), G, G, BASE);
-    // Not strictly *guaranteed* but vanishingly unlikely with the BASE
-    // densities. If this ever flakes, swap to a stronger inequality on
-    // a specific cell.
-    expect(a.walls).not.toEqual(b.walls);
-  });
-
-  it('returns no walls and no water when both densities are zero', () => {
-    const cfg: TerrainConfig = { ...BASE, wallDensity: 0, shallowWaterDensity: 0 };
-    const { tileGrid, walls } = generateTerrain(new RNG(1), G, G, cfg);
-    expect(walls).toEqual([]);
-    for (const c of tileGrid.cells()) expect(c.kind).toBe('floor');
-  });
-
-  it('ensureConnectivity peels walls until a path exists between spawn regions', () => {
-    // High wall density would normally risk severing the arena. With
-    // ensureConnectivity on, the post-fix guarantees a path between the
-    // first two spawn-region centroids.
-    const cfg: TerrainConfig = {
-      ...BASE,
-      wallDensity: 0.4, // ~58 walls — easily enough to cut the board
-      shallowWaterDensity: 0,
-      ensureConnectivity: true,
-    };
-    const { walls, spawnRegions } = generateTerrain(new RNG(5), G, G, cfg);
-    expect(hasPathBetweenRegions(walls, G, G, spawnRegions[0]!, spawnRegions[1]!)).toBe(true);
-  });
-
-  it('without ensureConnectivity, a pathological seed CAN sever the board', () => {
-    // Smoke check that the guard is doing real work — find a seed where
-    // the unconditional procedural placement severs connectivity, and
-    // confirm the post-fix would have rescued it. Empirically several
-    // seeds qualify at 0.4 density.
-    const cfg: TerrainConfig = {
-      ...BASE,
-      wallDensity: 0.5,
-      shallowWaterDensity: 0,
-      ensureConnectivity: false,
-    };
-    let foundSevered = false;
-    for (let seed = 1; seed <= 20 && !foundSevered; seed++) {
-      const { walls, spawnRegions } = generateTerrain(new RNG(seed), G, G, cfg);
-      if (!hasPathBetweenRegions(walls, G, G, spawnRegions[0]!, spawnRegions[1]!)) {
-        foundSevered = true;
-      }
+  it('produces varied terrain across seeds', () => {
+    const fingerprints = new Set<string>();
+    for (let seed = 0; seed < 16; seed++) {
+      const t = generateTerrain(new RNG(seed), G, G, BASE);
+      fingerprints.add(JSON.stringify([t.walls, t.halfCovers, t.tileGrid.toJSON().kinds]));
     }
-    expect(foundSevered).toBe(true);
+    expect(fingerprints.size).toBeGreaterThan(1);
   });
 
   it('honors rectangular dimensions (D3): gridW != gridH paints in-bounds only', () => {
-    const cfg: TerrainConfig = {
-      ...BASE,
-      wallDensity: 0.1,
-      shallowWaterDensity: 0.1,
-      ensureConnectivity: false,
-    };
     const gridW = 15;
     const gridH = 10;
-    const { tileGrid, walls, spawnRegions } = generateTerrain(new RNG(7), gridW, gridH, cfg);
+    const { tileGrid, walls, halfCovers, spawnRegions } = generateTerrain(new RNG(7), gridW, gridH, BASE);
     expect(tileGrid.width).toBe(gridW);
     expect(tileGrid.height).toBe(gridH);
-    for (const w of walls) {
-      expect(w.x).toBeGreaterThanOrEqual(0);
-      expect(w.x).toBeLessThan(gridW);
-      expect(w.y).toBeGreaterThanOrEqual(0);
-      expect(w.y).toBeLessThan(gridH);
+    for (const c of [...walls, ...halfCovers]) {
+      expect(c.x).toBeGreaterThanOrEqual(0);
+      expect(c.x).toBeLessThan(gridW);
+      expect(c.y).toBeGreaterThanOrEqual(0);
+      expect(c.y).toBeLessThan(gridH);
     }
     const spawnTiles = collectSpawnTiles(spawnRegions);
-    const wallSet = new Set(walls.map((w) => `${w.x},${w.y}`));
+    const obstacleSet = new Set([...walls, ...halfCovers].map((c) => `${c.x},${c.y}`));
     for (const t of spawnTiles) {
-      expect(wallSet.has(`${t.x},${t.y}`)).toBe(false);
+      expect(obstacleSet.has(`${t.x},${t.y}`)).toBe(false);
     }
   });
 
   it('dispatches to the hand-authored library when layoutId is set', () => {
     // `labyrinth` is the canonical 12×12 layout in the library; the test
     // cares about the dispatch path, not the specific layout. Assert the
-    // emitted wall count matches the layout's declared walls — that's a
-    // tight enough fingerprint to distinguish library dispatch from the
-    // procedural path (procedural at BASE densities targets ~9 walls,
-    // labyrinth ships 36).
+    // emitted wall count matches the layout's declared walls — a tight
+    // fingerprint distinguishing library dispatch from the procedural path
+    // (labyrinth ships 36 walls; the structural generator at G=12 won't
+    // coincidentally emit exactly that on this seed).
     const layout = getLayout('labyrinth')!;
     const { walls } = generateTerrain(new RNG(1), G, G, BASE, 'labyrinth');
     expect(walls.length).toBe(layout.walls.length);
@@ -182,18 +148,18 @@ function collectSpawnTiles(regions: readonly SpawnRegion[]): GridCoord[] {
   return out;
 }
 
-function hasPathBetweenRegions(
-  walls: readonly { x: number; y: number }[],
+/** BFS between the first two spawn-region centroids over passable cells (floor +
+ *  water), blocking walls AND half-cover — the generator's own passability. */
+function spawnRegionsConnected(
+  terrain: { walls: readonly GridCoord[]; halfCovers: readonly GridCoord[]; spawnRegions: readonly SpawnRegion[] },
   gridW: number,
   gridH: number,
-  a: SpawnRegion,
-  b: SpawnRegion,
 ): boolean {
-  const start = centroid(a);
-  const goal = centroid(b);
   const blocked = new Set<string>();
-  for (const w of walls) blocked.add(`${w.x},${w.y}`);
-  if (blocked.has(`${goal.x},${goal.y}`)) return false;
+  for (const c of [...terrain.walls, ...terrain.halfCovers]) blocked.add(`${c.x},${c.y}`);
+  const start = centroid(terrain.spawnRegions[0]!);
+  const goal = centroid(terrain.spawnRegions[1]!);
+  if (blocked.has(`${goal.x},${goal.y}`) || blocked.has(`${start.x},${start.y}`)) return false;
 
   const visited = new Set<string>([`${start.x},${start.y}`]);
   const queue: GridCoord[] = [start];

@@ -41,6 +41,7 @@ src/
   core/
     EventBus.ts              # Tiny typed pub/sub; on() returns unsub
     RNG.ts                   # Mulberry32 PRNG; .next/.int/.pick/.fork
+    sampling.ts              # M6: deterministic RNG samplers — weightedPick + sampleRange (triangular bias)
     Clock.ts                 # Fixed-timestep tick loop separated from render loop
     events.ts                # GameEvents catalog (typed event payloads)
     types.ts                 # Shared primitives: Vec2, GridCoord
@@ -101,7 +102,8 @@ src/
     targetingStrategies.ts   # per-archetype target-pick registry (nearest / weakest); Unit.targeting resolved at spawn
     archetypes.ts            # ALL_ARCHETYPES pool (F1), rollUnit, glyphForArchetype, targetingForArchetype
     environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories
-    terrainGen.ts            # Per-encounter procedural tile + wall generator; layout dispatch
+    terrainGen.ts            # Per-encounter terrain dispatch: procedural (proceduralMap.ts) vs layout library
+    proceduralMap.ts         # M6: crossbar+divider+noise map generator + sampleProceduralParams (config→params)
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter
     actions/

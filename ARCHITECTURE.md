@@ -108,6 +108,7 @@ src/
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter
     actions/
       MoveAction.ts          # Logical position update + unit:moved event
+      DashAction.ts          # N1: the rogue dash leap — emits unit:moved (slide) + unit:dashed (cue)
       AttackAction.ts        # E1/E4: crit roll (world.combatRng) + half-cover mult → world.applyDamage (GP2 chokepoint)
       GambitStrikeAction.ts  # E7.A: rogue strike — AttackAction damage + deferred reposition (F4)
       HealAction.ts          # E7.B: HP restore (clamped) + heal-XP ledger (F6) → unit:healed
@@ -121,6 +122,7 @@ src/
       heal.ts                # E7.B: HealAlly — lowest-HP wounded ally in range, no LOS
       magic.ts               # E7.C: MagicBolt — AoE ground-target
       catapult.ts            # E7.D: CatapultShot — homing, ignores LOS
+      dash.ts                # N1: DashAbility — aggressive-close gap-closer (movement-kind)
       registry.ts            # Ability factories; boot-asserts the id-set matches abilities.json (E5)
     behaviors/
       MovementBehavior.ts    # J2: thin goal-selector → MovementIntent + advance (movement.ts); boids sidestep (E5.B)
@@ -364,6 +366,7 @@ battle:started          { worldSeed: number }
 battle:ended            { winner: 'player' | 'enemy'; xpAwards: { unitId; rosterIndex; damageDealt; xpGained }[] }   # E4: per-roster XP
 unit:spawned            { unitId: number; instant: boolean }                       # instant=false → D5.C overflow-queue spawn (fade-in)
 unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }
+unit:dashed             { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }   # N1: a dash LEAP (also emits unit:moved for the slide) — audio/VFX cue, fires even on a 1-cell dash
 unit:attacked           { attackerId: number; targetId: number; damage: number; crit: boolean }   # E1: damage post-crit; GP2: post-defense (via world.applyDamage)
 unit:missed             { attackerId: number; targetId: number }                   # I2: a single-target strike dodged (precision-vs-evasion roll); 0 dmg, no HP/ledger touch
 unit:burned             { unitId: number; damage: number }                         # D7.B: per-tick chip from fire tile (no attacker)

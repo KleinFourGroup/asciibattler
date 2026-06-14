@@ -841,3 +841,16 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   knob, not just a structural given. One smoke read at the M2-session leveling curve (3-seed,
   `--layout=procedural`): pure-random ~85% — INFLATED by the testing curve, NOT a balance signal;
   flagged per the M2-session caveat.
+
+- **N1 rogue dash IMPLEMENTED — fuzz baseline SHIFTS (rogue behavior), N2 absorbs it (2026-06-14,
+  UNMEASURED here — left for N2).** The rogue gained an aggressive-close **dash**
+  ([config/abilities.json](config/abilities.json) `#dash`: movement / range 2 / 0.25s motion / 10s
+  cd) — it leaps toward a target beyond `derived.attackRange`, closing the gap the H7c step-3
+  `weakest`-targeting eval proved a *range-1* rogue couldn't. This changes rogue trajectories in
+  every rogue-bearing run → a presumptive **band-mover** joining daemons (L1, the biggest lever) +
+  empower (K4) + the M6 terrain rework + the still-live testing leveling curve (M2-session). **NOT
+  measured here** — the rogue re-measure (the H7c forced-roster protocol: does dodge+dash finally
+  make it recruit-worthy? flip it to `weakest` targeting and re-run) is **N2's job, on the final
+  model**. fuzz:smoke stayed byte-identical: the dash only changes rogue-bearing sims, and emitting
+  the extra `unit:dashed` event doesn't perturb sim state (positions/RNG), so the determinism guards
+  are unaffected.

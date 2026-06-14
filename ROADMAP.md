@@ -1146,7 +1146,20 @@ backdrop look (M4); the water effect + the floor-gating curve (M6).
 The "end of round" closers. Everything here either **moves the difficulty
 band** (so it must precede the final verify) or **is** the final verify.
 
-### N1 — Rogue mobility (CONTINGENT → RESOLVED: BUILD)
+### N1 — Rogue mobility ✅ DONE (2026-06-14 — the rogue dash)
+
+**✅ SHIPPED (5 commits `c9520e8`→`6cc7484` + SFX `dc12c9f`→`adebfd2`, playtest signed off.)** The
+rogue carries an aggressive-close **dash** — a `movement`-kind ability (the ability config became a
+`kind` discriminated union `attack | heal | movement`; the runtime stays flat propose+score,
+`AbilityBehavior` never sees `kind`). It leaps up to 2 cells (0.25s motion, DECOUPLED from a 10s
+cooldown) toward a target beyond `derived.attackRange`, landing adjacent; rides J2's
+`leapLanding`/`walkAlongPath` seam; `rangeForArchetype` EXCLUDES movement so the dash range can't
+inflate strike reach; the dash is a first-class `unit:dashed` event (a dedicated `DashAction`,
+mirroring `unit:swapped`) so audio + the future VFX hook the leap, not an inferred move distance;
+NO snapshot bump (rides the serialized `actionCooldowns`). All knobs are
+[config/abilities.json](config/abilities.json)-tunable. **DEFERRED to N2: the rogue re-measure** —
+flip it to `weakest` targeting and re-run the H7c forced-roster eval now that the dash makes the
+backline reachable. The contingency context below is kept for the record.
 
 **I5 re-measure result (2026-06-09 — [BALANCE.md](BALANCE.md)):** the dodge-tank
 re-measure left the rogue **weak**, so the contingency resolves to **build the

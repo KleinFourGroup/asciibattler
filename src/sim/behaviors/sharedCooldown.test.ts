@@ -8,7 +8,7 @@ import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, attackCooldownTicksFor } from '../stats';
 import { ARCHETYPE_CONFIG } from '../archetypes';
-import { ABILITIES } from '../../config/abilities';
+import { ABILITIES, attackConfig } from '../../config/abilities';
 import type { GameEvents } from '../../core/events';
 
 /**
@@ -52,7 +52,7 @@ describe('shared actionCooldown', () => {
     // I6 — the sword adds its `might` on top of the scaling stat (set to
     // attackDamage), so the strike lands `might + 5`. Derive from config so a
     // weapon re-tune can't break this cooldown-timing wiring test.
-    expect(units[1]!.currentHp).toBe(50 - (ABILITIES.sword!.might + 5));
+    expect(units[1]!.currentHp).toBe(50 - (attackConfig('sword').might + 5));
   });
 
   it('attacks immediately if already in range on tick 1', () => {

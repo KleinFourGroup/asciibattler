@@ -3,6 +3,7 @@ import { MeleeStrike, RangedShot, GambitStrike } from './strikes';
 import { HealAlly } from './heal';
 import { MagicBolt } from './magic';
 import { CatapultShot } from './catapult';
+import { DashAbility } from './dash';
 import { ABILITIES } from '../../config/abilities';
 
 /**
@@ -30,6 +31,11 @@ const FACTORIES: Record<string, AbilityFactory> = {
   [HealAlly.id]: () => new HealAlly(),
   [MagicBolt.id]: () => new MagicBolt(),
   [CatapultShot.id]: () => new CatapultShot(),
+  // N1 — the rogue's gap-closer. Registered + configured but on NO archetype
+  // yet (commit 3 adds it to the rogue), so it stays byte-identical: the
+  // factory is only ever invoked via `createAbility('dash')`, which no spawn or
+  // snapshot triggers until the rogue carries it.
+  [DashAbility.id]: () => new DashAbility(),
 };
 
 /**

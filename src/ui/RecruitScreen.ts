@@ -187,15 +187,21 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
 
   const detail = document.createElement('div');
   detail.className = 'recruit-ability-detail';
-  const scaling = cfg.kind === 'heal' ? stats.magic : damageStatFor(archetype, stats);
-  const amount = cfg.might + scaling;
-  const parts = [`${amount} ${cfg.kind === 'heal' ? 'heal' : 'dmg'}`, `rng ${cfg.range}`];
-  // I6 — surface the per-weapon profile: base hit chance for an evadable strike,
-  // base crit for a critable one (terse percentages, e.g. "60% hit"). N1 — only
-  // an `attack`-kind ability carries the to-hit/crit profile to show.
-  if (cfg.kind === 'attack') {
-    if (cfg.evadable) parts.push(`${Math.round(cfg.accuracy * 100)}% hit`);
-    if (cfg.critable) parts.push(`${Math.round(cfg.critBase * 100)}% crit`);
+  const parts: string[] = [];
+  if (cfg.kind === 'movement') {
+    // N1 — a utility leap: no damage/heal profile, just the leap distance (its
+    // recharge shows in the cadence column below).
+    parts.push(`dash ${cfg.range}`);
+  } else {
+    const scaling = cfg.kind === 'heal' ? stats.magic : damageStatFor(archetype, stats);
+    const amount = cfg.might + scaling;
+    parts.push(`${amount} ${cfg.kind === 'heal' ? 'heal' : 'dmg'}`, `rng ${cfg.range}`);
+    // I6 — surface the per-weapon profile: base hit chance for an evadable
+    // strike, base crit for a critable one (terse percentages, e.g. "60% hit").
+    if (cfg.kind === 'attack') {
+      if (cfg.evadable) parts.push(`${Math.round(cfg.accuracy * 100)}% hit`);
+      if (cfg.critable) parts.push(`${Math.round(cfg.critBase * 100)}% crit`);
+    }
   }
   detail.textContent = parts.join(' · ');
   if (cfg.kind === 'attack' && cfg.aoe) {
@@ -209,7 +215,12 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
 
   const cadence = document.createElement('div');
   cadence.className = 'recruit-ability-cadence';
-  const seconds = ticksToSeconds(attackCooldownTicksFor(cfg.cooldownSeconds, stats.speed));
+  // N1 — a movement ability's cooldown is flat (not speed-scaled), so show it
+  // directly; attack/heal cadence scales with the unit's speed.
+  const seconds =
+    cfg.kind === 'movement'
+      ? cfg.cooldownSeconds
+      : ticksToSeconds(attackCooldownTicksFor(cfg.cooldownSeconds, stats.speed));
   cadence.textContent = `${seconds.toFixed(2)}s`;
   row.appendChild(cadence);
 

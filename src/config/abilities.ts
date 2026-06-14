@@ -136,12 +136,28 @@ const HealSchema = z.object({
   might: z.number().nonnegative(),
 });
 
-const AbilitySchema = z.discriminatedUnion('kind', [AttackSchema, HealSchema]);
+/**
+ * `movement` — a utility leap (N1's rogue dash). No damage, no target-effect:
+ * the unit just relocates. `range` is the leap distance in cells;
+ * `durationSeconds` is the motion's lerp/lockout window, DECOUPLED from
+ * `cooldownSeconds` (a fast blink on a long cooldown — `moveProposal`'s
+ * `cooldown == duration` invariant doesn't hold here, which is exactly why
+ * `DashAbility` builds its own proposal rather than going through it). Flat, not
+ * speed-scaled: a utility cooldown, not an attack cadence.
+ */
+const MovementSchema = z.object({
+  kind: z.literal('movement'),
+  ...CommonFields,
+  durationSeconds: z.number().positive(),
+});
+
+const AbilitySchema = z.discriminatedUnion('kind', [AttackSchema, HealSchema, MovementSchema]);
 
 const AbilitiesSchema = z.record(z.string(), AbilitySchema);
 
 export type AttackConfig = z.infer<typeof AttackSchema>;
 export type HealConfig = z.infer<typeof HealSchema>;
+export type MovementConfig = z.infer<typeof MovementSchema>;
 export type AbilityConfig = z.infer<typeof AbilitySchema>;
 
 export const ABILITIES: Record<string, AbilityConfig> =
@@ -185,3 +201,4 @@ function configOfKind<K extends AbilityConfig['kind']>(
 
 export const attackConfig = (id: string): AttackConfig => configOfKind(id, 'attack');
 export const healConfig = (id: string): HealConfig => configOfKind(id, 'heal');
+export const movementConfig = (id: string): MovementConfig => configOfKind(id, 'movement');

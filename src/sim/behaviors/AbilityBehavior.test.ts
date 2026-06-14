@@ -12,7 +12,7 @@ import type { ActionProposal } from '../Action';
 import type { GameEvents } from '../../core/events';
 import { AttackAction } from '../actions/AttackAction';
 import { LEVELING } from '../../config/leveling';
-import { abilityConfig } from '../../config/abilities';
+import { attackConfig } from '../../config/abilities';
 
 // I6 — a strike deals the weapon's `might` plus the wielder's scaling stat;
 // `scene()` sets that stat to the spec's `attackDamage`, so a fired strike lands
@@ -20,8 +20,8 @@ import { abilityConfig } from '../../config/abilities';
 // path reads it) so re-tuning a weapon can't break these wiring assertions — the
 // damage *mechanic* is pinned config-free in AttackAction.test.ts. `scene()`
 // gives mercenary units the `sword`, ranged units the `bow`.
-const SWORD_MIGHT = abilityConfig('sword').might;
-const BOW_MIGHT = abilityConfig('bow').might;
+const SWORD_MIGHT = attackConfig('sword').might;
+const BOW_MIGHT = attackConfig('bow').might;
 
 describe('AbilityBehavior', () => {
   it('does not attack when no enemy is in range', () => {

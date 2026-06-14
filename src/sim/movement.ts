@@ -174,6 +174,51 @@ export function advance(unit: Unit, world: World, intent: MovementIntent): Actio
 }
 
 /**
+ * N1 — the landing cell for a multi-cell LEAP (the rogue dash), or null to
+ * abstain. Mirrors `advance`'s goal-preference iteration but returns only the
+ * destination cell, NOT a full proposal: a dash decouples its motion duration
+ * from its (much longer) cooldown, so `DashAbility` builds the proposal itself
+ * rather than routing through `moveProposal` (whose `cooldown == durationTicks`
+ * invariant a dash breaks). Routes toward the first goal that yields a path,
+ * then walks up to `intent.maxCells` cells along it, stopping before the first
+ * cell occupied by another unit — the same conservative rule the `advance` leap
+ * branch uses (the two share `walkAlongPath`). Leave the pursued enemy a
+ * soft-blocker (no `excludeUnitId`) so a dash AT it lands the cell short.
+ */
+export function leapLanding(unit: Unit, world: World, intent: MovementIntent): GridCoord | null {
+  const ctx = buildMovementContext(unit, world, { excludeUnitId: intent.excludeUnitId });
+  const from = unit.position;
+  for (const goal of intent.goals) {
+    const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false);
+    if (path.length < 2) continue;
+    const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells);
+    if (landing !== null) return landing;
+  }
+  return null;
+}
+
+/**
+ * Walk up to `maxCells` cells along an A* `path` (from `path[1]` onward),
+ * stopping before the first cell occupied by another unit; returns the furthest
+ * cell reached, or null when even `path[1]` is occupied. Shared by the `advance`
+ * leap branch and `leapLanding` so the two can't drift.
+ */
+function walkAlongPath(
+  path: readonly GridCoord[],
+  maxCells: number,
+  otherUnitCells: ReadonlySet<string>,
+): GridCoord | null {
+  const limit = Math.min(maxCells, path.length - 1);
+  let landing: GridCoord | null = null;
+  for (let i = 1; i <= limit; i++) {
+    const c = path[i]!;
+    if (otherUnitCells.has(key(c))) break;
+    landing = c;
+  }
+  return landing;
+}
+
+/**
  * One A* route toward `goal`, then commit the step(s) per `intent.maxCells`:
  *
  *   - `maxCells <= 1` (the default step): take `path[1]`. If that cell is
@@ -214,14 +259,10 @@ function stepAlongRoute(
   // Dash/leap: furthest unoccupied cell within the step cap along the route.
   // M6 — the leap keeps base cadence (no per-tile wade scaling): a dash's
   // terrain interaction is N1's call and `stepDurationTicks` is a normal-step
-  // property (the dash is floor-only today — no shipped ability uses it).
-  const limit = Math.min(intent.maxCells, path.length - 1);
-  let landing: GridCoord | null = null;
-  for (let i = 1; i <= limit; i++) {
-    const c = path[i]!;
-    if (ctx.otherUnitCells.has(key(c))) break;
-    landing = c;
-  }
+  // property. N1 — the walk is shared with `leapLanding` via `walkAlongPath`
+  // (DashAbility computes a landing without a full proposal, since a dash's
+  // cooldown is decoupled from its motion duration).
+  const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells);
   return landing === null ? null : moveProposal(from, landing, baseTicks);
 }
 

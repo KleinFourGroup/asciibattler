@@ -6,7 +6,7 @@ import { Unit, type Team, type UnitArchetype, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, inertDerived, healAmountFor, attackCooldownTicksFor } from '../stats';
-import { abilityConfig } from '../../config/abilities';
+import { abilityConfig, healConfig } from '../../config/abilities';
 import type { GameEvents } from '../../core/events';
 
 /**
@@ -82,7 +82,7 @@ describe('HealAlly.propose', () => {
     const proposal = new HealAlly().propose(healer, world([healer, ally]));
     const data = proposal!.action.toData() as ReturnType<HealAction['toData']>;
     // I6 — heal amount is the ability's `might` plus the magic stat.
-    const might = abilityConfig('heal_ally').might;
+    const might = healConfig('heal_ally').might;
     expect(data.amount).toBe(healAmountFor(healer, might));
     expect(data.amount).toBe(might + HEALER_STATS.magic);
   });

@@ -33,7 +33,18 @@ export function glyphForArchetype(archetype: Archetype): string {
  * in `proposeBasicStrike`, not this max.
  */
 export function rangeForArchetype(archetype: Archetype): number {
-  return Math.max(...CONFIGS[archetype].abilities.map((id) => abilityConfig(id).range));
+  // N1 — a `movement` ability's `range` is a LEAP distance, not engagement
+  // reach, so it's excluded from `derived.attackRange` (the in-range-abstain
+  // threshold MovementBehavior reads, and the gate the dash itself uses to ask
+  // "am I out of strike range?"). Without this, the rogue's 2-cell dash would
+  // inflate its firing range to 2 and strand it a cell short whenever the dash
+  // is on cooldown. Falls back to all abilities if a unit somehow carries only
+  // movement abilities. Today only the rogue's dash is `movement`; every other
+  // archetype is unaffected (byte-identical).
+  const ids = CONFIGS[archetype].abilities;
+  const engaging = ids.filter((id) => abilityConfig(id).kind !== 'movement');
+  const reach = engaging.length > 0 ? engaging : ids;
+  return Math.max(...reach.map((id) => abilityConfig(id).range));
 }
 
 /**

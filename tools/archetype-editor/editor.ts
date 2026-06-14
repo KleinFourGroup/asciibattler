@@ -350,6 +350,15 @@ function refreshPreview(): void {
   // rather than as single unit-wide numbers. Computed by the REAL game helpers.
   for (const id of a.abilities) {
     const cfg = abilityConfig(id);
+    if (cfg.kind === 'movement') {
+      // N1 — a utility leap: no damage/to-hit/crit, just leap distance + the
+      // flat (speed-independent) motion + cooldown.
+      addPreview(
+        `Ability · ${id}`,
+        `dash ${cfg.range} · ${cfg.durationSeconds}s motion · cd ${cfg.cooldownSeconds}s`,
+      );
+      continue;
+    }
     const ticks = attackCooldownTicksFor(cfg.cooldownSeconds, stats.speed);
     const scaling = activeKey === 'healer' ? stats.magic : damageStatFor(activeKey, stats);
     const out = cfg.might + scaling;

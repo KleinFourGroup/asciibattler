@@ -99,7 +99,7 @@ const ProceduralSchema = z.object({
   crossbarWaver: RangeSchema,
   dividers: WeightedIntsSchema,
   coverDensity: RangeSchema,
-  halfCoverFraction: RangeSchema,
+  windowChance: RangeSchema,
   poolDensity: RangeSchema,
   noiseScale: RangeSchema,
   wallCapFraction: z.number().min(0).max(1),

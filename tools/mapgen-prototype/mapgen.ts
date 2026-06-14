@@ -47,9 +47,9 @@ const SLIDERS = [
   'gapWidth',
   'fordChance',
   'crossbarWaver',
+  'windowChance',
   'dividers',
   'coverDensity',
-  'halfCoverFraction',
   'poolDensity',
   'noiseScale',
   'wallCapFraction',
@@ -65,7 +65,7 @@ function readParams(): ResolvedMapParams {
     crossbarWaver: numVal('crossbarWaver'),
     dividers: numVal('dividers'),
     coverDensity: numVal('coverDensity'),
-    halfCoverFraction: numVal('halfCoverFraction'),
+    windowChance: numVal('windowChance'),
     poolDensity: numVal('poolDensity'),
     noiseScale: numVal('noiseScale'),
     wallCapFraction: numVal('wallCapFraction'),
@@ -84,9 +84,9 @@ function reflectParams(p: ResolvedMapParams): void {
   setSlider('gapWidth', p.gapWidth);
   setSlider('fordChance', p.fordChance);
   setSlider('crossbarWaver', p.crossbarWaver);
+  setSlider('windowChance', p.windowChance);
   setSlider('dividers', p.dividers);
   setSlider('coverDensity', p.coverDensity);
-  setSlider('halfCoverFraction', p.halfCoverFraction);
   setSlider('poolDensity', p.poolDensity);
   setSlider('noiseScale', p.noiseScale);
   setSlider('wallCapFraction', p.wallCapFraction);

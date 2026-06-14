@@ -6,11 +6,13 @@
  *   - CROSSBARS are wavy horizontal wall lines ACROSS the advance axis, each
  *     with a fordable GAP. They funnel the vertical advance into a chokepoint;
  *     a watered gap is an M6 bog-down ford. A vertical bridge at each waver step
- *     keeps a wavy bar a true barrier (no diagonal leak).
- *   - DIVIDERS are vertical partial walls: lateral structure / alternate routes.
+ *     keeps a wavy bar a true barrier (no diagonal leak). A `windowChance` of
+ *     each wall cell is a half-cover WINDOW — shoot-through, movement-blocking.
+ *   - DIVIDERS are vertical partial walls: lateral structure / alternate routes
+ *     (windowed the same way).
  *   - NOISE (one value-noise field) textures the open ground: high ground →
- *     cover clumps (a `halfCoverFraction` share become D6 half-cover), low
- *     ground → organic water pools.
+ *     SOLID cover clumps (LOS + movement blockers), low ground → organic water
+ *     pools. (Half-cover is structural — it lives only in the walls above.)
  *   - SYMMETRY ('point' = 180° rotation, offsetting the partnered gap so
  *     chokepoints don't stack; 'mirror' = reflect across the midline; 'none' =
  *     free) keeps the clash fair.
@@ -56,10 +58,11 @@ export interface ResolvedMapParams {
   crossbarWaver: number;
   /** Vertical partial walls for lateral structure. */
   dividers: number;
-  /** Fraction of the noise field's HIGH ground that becomes cover. */
+  /** Fraction of the noise field's HIGH ground that becomes (solid) cover. */
   coverDensity: number;
-  /** Of the cover placed, the share that becomes HALF-cover (shoot-over). */
-  halfCoverFraction: number;
+  /** Per structural-wall cell, the chance it's a half-cover WINDOW (a
+   *  shoot-through gap in a crossbar/divider) instead of a solid wall. */
+  windowChance: number;
   /** Fraction of the noise field's LOW ground that becomes water pools. */
   poolDensity: number;
   /** Value-noise lattice resolution. */
@@ -119,7 +122,7 @@ export function sampleProceduralParams(
   const crossbarWaver = range(rng, cfg.crossbarWaver);
   const dividers = Number(weightedPick(rng, cfg.dividers));
   const coverDensity = range(rng, cfg.coverDensity);
-  const halfCoverFraction = range(rng, cfg.halfCoverFraction);
+  const windowChance = range(rng, cfg.windowChance);
   const poolDensity = range(rng, cfg.poolDensity);
   const noiseScale = intRange(rng, cfg.noiseScale);
   return {
@@ -131,7 +134,7 @@ export function sampleProceduralParams(
     crossbarWaver,
     dividers,
     coverDensity,
-    halfCoverFraction,
+    windowChance,
     poolDensity,
     noiseScale,
     wallCapFraction: cfg.wallCapFraction,
@@ -193,7 +196,10 @@ export function generateProceduralMap(
   const wallAt = (x: number, y: number): void => {
     if (y < firstRow || y > lastGenRow) return;
     if (choke.has(keyOf(x, y))) return; // never wall a chokepoint shut
-    set(x, y, 'w');
+    // M6 windows: a structural-wall cell occasionally becomes half-cover — a
+    // shoot-through gap that still blocks movement (the bar/divider stays a
+    // barrier funneling to the fords; ranged units get a firing lane).
+    set(x, y, rng.next() < params.windowChance ? 'h' : 'w');
   };
 
   // --- NOISE FIELD (built first so crossbars can waver off it) ---
@@ -239,7 +245,9 @@ export function generateProceduralMap(
     const len = Math.max(2, Math.round(span * (0.4 + rng.next() * 0.4)));
     const startY = firstRow + rng.int(0, Math.max(0, span - len));
     for (let y = startY; y < startY + len && y <= lastGenRow; y++) {
-      if (grid[y]![dx] === 'f' && !choke.has(keyOf(dx, y))) set(dx, y, 'w');
+      if (grid[y]![dx] === 'f' && !choke.has(keyOf(dx, y))) {
+        set(dx, y, rng.next() < params.windowChance ? 'h' : 'w'); // windows here too
+      }
     }
   }
 
@@ -251,7 +259,9 @@ export function generateProceduralMap(
       if (grid[y]![x] !== 'f') continue; // never overwrite a bar / gap / divider
       if (choke.has(keyOf(x, y))) continue; // never fill a chokepoint
       const n = noise(x, y);
-      if (n > coverCut) set(x, y, rng.next() < params.halfCoverFraction ? 'h' : 'w');
+      // Noise cover is SOLID (rocks/rubble — full LOS + movement blockers).
+      // Half-cover lives only as windows in the structural walls (wallAt above).
+      if (n > coverCut) set(x, y, 'w');
       else if (n < params.poolDensity) set(x, y, 'a');
     }
   }

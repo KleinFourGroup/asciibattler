@@ -69,8 +69,8 @@ describe('sampleProceduralParams', () => {
       expect(p.crossbarWaver).toBeLessThanOrEqual(P.crossbarWaver.max);
       expect(p.coverDensity).toBeGreaterThanOrEqual(P.coverDensity.min);
       expect(p.coverDensity).toBeLessThanOrEqual(P.coverDensity.max);
-      expect(p.halfCoverFraction).toBeGreaterThanOrEqual(P.halfCoverFraction.min);
-      expect(p.halfCoverFraction).toBeLessThanOrEqual(P.halfCoverFraction.max);
+      expect(p.windowChance).toBeGreaterThanOrEqual(P.windowChance.min);
+      expect(p.windowChance).toBeLessThanOrEqual(P.windowChance.max);
       expect(p.poolDensity).toBeGreaterThanOrEqual(P.poolDensity.min);
       expect(p.poolDensity).toBeLessThanOrEqual(P.poolDensity.max);
     }
@@ -105,7 +105,7 @@ const makeParams = (over: Partial<ResolvedMapParams> = {}): ResolvedMapParams =>
   crossbarWaver: 1,
   dividers: 1,
   coverDensity: 0.15,
-  halfCoverFraction: 0.3,
+  windowChance: 0.12,
   poolDensity: 0.08,
   noiseScale: 3,
   wallCapFraction: 0.22,
@@ -229,5 +229,30 @@ describe('generateProceduralMap', () => {
 
   it('produces a mirror-symmetric layout when symmetry = mirror', () => {
     assertSymmetric('mirror');
+  });
+
+  it('windowChance 0 → no half-cover anywhere (windows are the only source)', () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const r = generateProceduralMap(new RNG(seed), W, H, makeParams({ windowChance: 0, crossbars: 3, dividers: 3 }));
+      expect(r.halfCovers.length).toBe(0);
+    }
+  });
+
+  it('a high windowChance with structural walls produces half-cover windows', () => {
+    let total = 0;
+    for (let seed = 0; seed < 20; seed++) {
+      const r = generateProceduralMap(new RNG(seed), W, H, makeParams({ windowChance: 0.5, crossbars: 3, dividers: 2 }));
+      total += r.halfCovers.length;
+    }
+    expect(total).toBeGreaterThan(0);
+  });
+
+  it('every window sits on a structural wall, never on open ground', () => {
+    // With NO crossbars/dividers there are no structural walls, so even a high
+    // windowChance can place no windows (noise cover is solid-only now).
+    for (let seed = 0; seed < 20; seed++) {
+      const r = generateProceduralMap(new RNG(seed), W, H, makeParams({ windowChance: 0.9, crossbars: 0, dividers: 0 }));
+      expect(r.halfCovers.length).toBe(0);
+    }
   });
 });

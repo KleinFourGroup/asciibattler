@@ -15,6 +15,7 @@
  *   npm run fuzz -- --per-floor   # + per-floor team analysis (stdout + per-floor.csv)
  *   npm run fuzz -- --per-layout  # + per-layout & layout×floor win/death breakdown (+ CSVs)
  *   npm run fuzz -- --layout=junctionAmbush --per-floor   # force ONE layout (clean full sample)
+ *   npm run fuzz -- --layout=procedural --per-floor       # force PROCEDURAL maps every battle (M6 isolate)
  *
  *   # H7b — random-search the scored-strategy weights for the best win rate:
  *   npm run fuzz -- --search                       # quick preset (short runs, < ~1 min)

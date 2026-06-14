@@ -19,6 +19,7 @@ import {
 import { scoredStrategy } from '../strategies/scored';
 import { loadWeightsFile } from '../strategies/scoredWeights';
 import { LAYOUT_IDS } from '../../../src/sim/layouts';
+import { FORCE_PROCEDURAL } from '../../../src/run/RunConfig';
 import {
   aggregate,
   renderSummaryCsv,
@@ -67,11 +68,13 @@ export function runRunCli(args: RunModeArgs): void {
 
   // --layout=<id> forces a single hand-authored layout on EVERY battle — a clean
   // full-sample isolate for the per-layout / per-floor difficulty read (natural
-  // runs only hit a given layout ~12% of the time). Validated against the library.
+  // runs only hit a given layout ~12% of the time). `--layout=procedural` forces
+  // a fresh PROCEDURAL map every battle (the M6 isolate). Validated against the
+  // library + the sentinel.
   let harnessOptions: HarnessOptions = {};
   if (args.layout !== undefined) {
-    if (!LAYOUT_IDS.includes(args.layout)) {
-      bail(`Unknown layout: ${args.layout} (choices: ${LAYOUT_IDS.join(', ')})`);
+    if (args.layout !== FORCE_PROCEDURAL && !LAYOUT_IDS.includes(args.layout)) {
+      bail(`Unknown layout: ${args.layout} (choices: ${LAYOUT_IDS.join(', ')}, ${FORCE_PROCEDURAL})`);
     }
     harnessOptions = { runConfig: { forcedLayoutId: args.layout } };
   }

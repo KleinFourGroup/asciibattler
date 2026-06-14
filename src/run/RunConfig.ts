@@ -45,7 +45,9 @@ export interface RunConfig {
    * `roster=rogue:3,healer:2,melee` — `:level` is optional (default 1).
    */
   readonly startingRoster?: readonly RosterEntry[];
-  /** Force every battle onto a named layout (must be a known `LAYOUT_IDS` member). */
+  /** Force every battle onto a named layout (a known `LAYOUT_IDS` member), or the
+   *  `FORCE_PROCEDURAL` sentinel (`'procedural'`) to force every battle onto a
+   *  freshly-rolled PROCEDURAL map. URL form: `layout=river` or `layout=procedural`. */
   readonly forcedLayoutId?: string;
   /**
    * Override the middle-floor max width (default
@@ -118,9 +120,16 @@ function parseRoster(raw: string | null): RosterEntry[] | undefined {
   return entries.length > 0 ? entries : undefined;
 }
 
-/** A known layout id. Undefined if absent or not in `LAYOUT_IDS`. */
+/** Sentinel `forcedLayoutId` value that forces a PROCEDURAL map every battle
+ *  (vs forcing a named hand-authored layout). Distinct from `undefined`
+ *  (absent → normal procedural/layout roll). */
+export const FORCE_PROCEDURAL = 'procedural';
+
+/** A known layout id, or the `procedural` sentinel. Undefined if absent or not
+ *  a recognized value. */
 function parseLayout(raw: string | null): string | undefined {
   if (!raw) return undefined;
+  if (raw.trim().toLowerCase() === FORCE_PROCEDURAL) return FORCE_PROCEDURAL;
   return LAYOUT_IDS.includes(raw) ? raw : undefined;
 }
 

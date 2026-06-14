@@ -3,6 +3,7 @@ import {
   parseRunConfig,
   parseRunConfigFromURL,
   runConfigToQueryString,
+  FORCE_PROCEDURAL,
   type RunConfig,
 } from './RunConfig';
 import { ALL_ARCHETYPES } from '../sim/archetypes';
@@ -84,6 +85,16 @@ describe('RunConfig parsing', () => {
 
   it('drops an unknown layout id', () => {
     expect(cfg('layout=not_a_layout').forcedLayoutId).toBeUndefined();
+  });
+
+  it('parses the `procedural` sentinel (forces procedural maps), case-insensitively', () => {
+    expect(cfg('layout=procedural').forcedLayoutId).toBe(FORCE_PROCEDURAL);
+    expect(cfg('layout=Procedural').forcedLayoutId).toBe(FORCE_PROCEDURAL);
+  });
+
+  it('round-trips the procedural sentinel through the query string', () => {
+    const original = cfg('layout=procedural');
+    expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
   });
 
   it('round-trips through runConfigToQueryString (incl. per-unit levels)', () => {

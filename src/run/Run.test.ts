@@ -16,7 +16,7 @@ import { DECK } from '../config/deck';
 import { EMPOWER } from '../config/empower';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
 import { avgTeamLevel, enemyBudgetFor } from './enemyBudget';
-import type { RunConfig } from './RunConfig';
+import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 
 /**
  * L1 — the K3/K4 static defaults reborn as a guaranteed fixture daemon.
@@ -252,6 +252,24 @@ describe('Run', () => {
       // to catch outright bias, not to assert exact uniformity.
       expect(proceduralCount).toBeGreaterThan(25);
       expect(proceduralCount).toBeLessThan(75);
+    });
+
+    it('forcedLayoutId = FORCE_PROCEDURAL forces a procedural map every battle', () => {
+      // Regardless of what the 25/75 roll would produce, every encounter is
+      // procedural (layoutId null) when the `procedural` sentinel is forced.
+      for (let seed = 1; seed <= 30; seed++) {
+        const { run } = freshRunWithBus(seed, { forcedLayoutId: FORCE_PROCEDURAL });
+        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        run.dispatch({ kind: 'enterNode', nodeId: frontier });
+        expect(run.currentEncounter!.layoutId).toBeNull();
+      }
+    });
+
+    it('forcedLayoutId = a named layout still forces that layout (regression)', () => {
+      const { run } = freshRunWithBus(7, { forcedLayoutId: 'river' });
+      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      expect(run.currentEncounter!.layoutId).toBe('river');
     });
   });
 

@@ -35,7 +35,7 @@ import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, type NodeMap, type NodeKind } from './NodeMap';
-import type { RunConfig } from './RunConfig';
+import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { enemyBudgetFor, rollEnemyWave, avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
@@ -448,9 +448,10 @@ export class Run {
 
   /**
    * G1 — when set (via `RunConfig.forcedLayoutId`), every battle uses this
-   * hand-authored layout instead of `rollLayoutId`. Null = normal procedural
-   * roll. Not persisted (RunConfig is a run input, reconstructable from seed);
-   * a rehydrated Run resets this to null.
+   * hand-authored layout instead of `rollLayoutId`; the `FORCE_PROCEDURAL`
+   * sentinel forces a fresh procedural map every battle instead (M6). Null =
+   * normal procedural/layout roll. Not persisted (RunConfig is a run input,
+   * reconstructable from seed); a rehydrated Run resets this to null.
    */
   private readonly forcedLayoutId: string | null;
 
@@ -661,7 +662,14 @@ export class Run {
   private rollEncounterMap(mapRng: RNG): EncounterMap {
     const terrainSeed = Math.floor(mapRng.next() * 0x1_0000_0000);
     const rolledLayoutId = rollLayoutId(mapRng);
-    const layoutId = this.forcedLayoutId ?? rolledLayoutId;
+    // forcedLayoutId: null = use the roll; FORCE_PROCEDURAL sentinel = force a
+    // procedural map (layoutId null); any other string = that named layout.
+    const layoutId =
+      this.forcedLayoutId === null
+        ? rolledLayoutId
+        : this.forcedLayoutId === FORCE_PROCEDURAL
+          ? null
+          : this.forcedLayoutId;
     const proceduralSide = rollProceduralSide(mapRng);
     const { gridW, gridH } = layoutId === null
       ? { gridW: proceduralSide, gridH: proceduralSide }
@@ -1524,10 +1532,12 @@ function rollTeam(rng: RNG): UnitTemplate[] {
  * G1 — validate a `RunConfig.forcedLayoutId` against the layout library at
  * construction (loud throw, mirroring `layoutDimensions`), so a typo'd layout
  * fails fast at run start rather than silently per-battle. Undefined → null
- * (normal procedural rolls).
+ * (normal procedural/layout roll); the `FORCE_PROCEDURAL` sentinel passes
+ * through (M6 — force a fresh procedural map every battle).
  */
 function resolveForcedLayoutId(id: string | undefined): string | null {
   if (id === undefined) return null;
+  if (id === FORCE_PROCEDURAL) return FORCE_PROCEDURAL;
   if (!LAYOUT_IDS.includes(id)) {
     throw new Error(`Run: unknown forcedLayoutId="${id}" (not in LAYOUT_IDS)`);
   }

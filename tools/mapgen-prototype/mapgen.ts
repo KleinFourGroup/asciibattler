@@ -1,12 +1,28 @@
 /**
- * Map-Gen Prototype tool (M6 follow-up). Wires the control panel to
- * `generateMap` and renders the result to a canvas + a variety strip.
- * Dev-only, eyeball-tuned; visit http://localhost:5173/tools/mapgen-prototype/
- * (or the dev-preview port). See `generator.ts` for the algorithm + the port
- * plan into `src/sim/`.
+ * Map-Gen Prototype tool (M6). Now wired to the PRODUCTION generator in
+ * `src/sim/proceduralMap.ts` (the old standalone `generator.ts` copy was
+ * deleted on the port). Dev-only; visit
+ * http://localhost:5173/tools/mapgen-prototype/ (or the dev-preview port).
+ *
+ * Two modes:
+ *   - MANUAL (default): the sliders drive a `ResolvedMapParams` directly; reroll
+ *     varies the structure at fixed knobs.
+ *   - ROLL FROM CONFIG: each seed samples a `ResolvedMapParams` from the live
+ *     `config/terrain.json#procedural` envelope (exactly as the game does at
+ *     encounter time — one RNG, sample-then-generate), so the Variety strip
+ *     shows the real seed-to-seed spread. The sampled knobs are reflected back
+ *     into the (disabled) sliders so you can see what each map rolled.
  */
 
-import { generateMap, type MapGenConfig, type GeneratedProtoMap } from './generator';
+import { RNG } from '../../src/core/RNG';
+import { TERRAIN } from '../../src/config/terrain';
+import {
+  generateProceduralMap,
+  sampleProceduralParams,
+  type ProceduralMapResult,
+  type ResolvedMapParams,
+  type Symmetry,
+} from '../../src/sim/proceduralMap';
 
 const PALETTE = {
   board: '#0d0a1c',
@@ -24,6 +40,7 @@ const el = <T extends HTMLElement>(id: string): T => {
 };
 const numVal = (id: string): number => Number((el<HTMLInputElement>(id)).value);
 
+// Slider ids that map onto `ResolvedMapParams` (excludes width/height/symmetry).
 const SLIDERS = [
   'crossbars',
   'gapsPerBar',
@@ -38,12 +55,9 @@ const SLIDERS = [
   'wallCapFraction',
 ];
 
-function readConfig(seed: number): MapGenConfig {
+function readParams(): ResolvedMapParams {
   return {
-    width: numVal('width'),
-    height: numVal('height'),
-    seed,
-    symmetry: (el<HTMLSelectElement>('symmetry')).value as MapGenConfig['symmetry'],
+    symmetry: (el<HTMLSelectElement>('symmetry')).value as Symmetry,
     crossbars: numVal('crossbars'),
     gapsPerBar: numVal('gapsPerBar'),
     gapWidth: numVal('gapWidth'),
@@ -58,20 +72,57 @@ function readConfig(seed: number): MapGenConfig {
   };
 }
 
-function render(canvas: HTMLCanvasElement, map: GeneratedProtoMap, cell: number, outline: boolean): void {
+/** Push a sampled param set back into the controls (for the "from config"
+ *  display). */
+function reflectParams(p: ResolvedMapParams): void {
+  (el<HTMLSelectElement>('symmetry')).value = p.symmetry;
+  const setSlider = (id: string, v: number): void => {
+    (el<HTMLInputElement>(id)).value = String(v);
+  };
+  setSlider('crossbars', p.crossbars);
+  setSlider('gapsPerBar', p.gapsPerBar);
+  setSlider('gapWidth', p.gapWidth);
+  setSlider('fordChance', p.fordChance);
+  setSlider('crossbarWaver', p.crossbarWaver);
+  setSlider('dividers', p.dividers);
+  setSlider('coverDensity', p.coverDensity);
+  setSlider('halfCoverFraction', p.halfCoverFraction);
+  setSlider('poolDensity', p.poolDensity);
+  setSlider('noiseScale', p.noiseScale);
+  setSlider('wallCapFraction', p.wallCapFraction);
+  syncSliderLabels();
+}
+
+function fromConfig(): boolean {
+  return (el<HTMLInputElement>('fromConfig')).checked;
+}
+
+/**
+ * Build a map for a given seed, mirroring production: one RNG, sample-then-
+ * generate when in config mode. Returns the result + the params used (so the
+ * main render can reflect them into the controls).
+ */
+function buildMap(seed: number, W: number, H: number): { map: ProceduralMapResult; params: ResolvedMapParams } {
+  const rng = new RNG(seed);
+  const params = fromConfig() ? sampleProceduralParams(rng, TERRAIN.procedural) : readParams();
+  const map = generateProceduralMap(rng, W, H, params);
+  return { map, params };
+}
+
+function render(canvas: HTMLCanvasElement, map: ProceduralMapResult, cell: number, outline: boolean): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  const W = map.width;
-  const H = map.height;
+  const W = map.tileGrid.width;
+  const H = map.tileGrid.height;
   canvas.width = W * cell;
   canvas.height = H * cell;
 
   const wallSet = new Set(map.walls.map((c) => `${c.x},${c.y}`));
   const halfSet = new Set(map.halfCovers.map((c) => `${c.x},${c.y}`));
-  const spawnSet = new Set(
-    [...map.spawnTop, ...map.spawnBottom].map((c) => `${c.x},${c.y}`),
-  );
+  const spawnSet = new Set(map.spawnRegions.flatMap((r) => r.tiles).map((c) => `${c.x},${c.y}`));
   const chokeSet = new Set(map.chokeCells.map((c) => `${c.x},${c.y}`));
+  const waterSet = new Set<string>();
+  for (const c of map.tileGrid.cells()) if (c.kind === 'shallow_water') waterSet.add(`${c.x},${c.y}`);
 
   ctx.fillStyle = PALETTE.board;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -84,7 +135,7 @@ function render(canvas: HTMLCanvasElement, map: GeneratedProtoMap, cell: number,
       let color = PALETTE.floor;
       if (spawnSet.has(k)) color = PALETTE.spawn;
       else if (wallSet.has(k)) color = PALETTE.wall;
-      else if (!half && map.kinds[y]![x] === 'shallow_water') color = PALETTE.water;
+      else if (!half && waterSet.has(k)) color = PALETTE.water;
       ctx.fillStyle = color;
       ctx.fillRect(x * cell + gap, y * cell + gap, cell - gap, cell - gap);
       if (half) {
@@ -102,7 +153,7 @@ function render(canvas: HTMLCanvasElement, map: GeneratedProtoMap, cell: number,
   }
 }
 
-function renderStats(map: GeneratedProtoMap): void {
+function renderStats(map: ProceduralMapResult): void {
   const s = map.stats;
   const stat = (label: string, value: string): string =>
     `<div class="stat"><span class="lbl">${label}</span><span class="num">${value}</span></div>`;
@@ -124,21 +175,23 @@ function mainCellSize(W: number, H: number): number {
 
 function rerenderMain(): void {
   el('seed-val').textContent = String(seed);
-  const cfg = readConfig(seed);
-  const map = generateMap(cfg);
-  render(el<HTMLCanvasElement>('main-canvas'), map, mainCellSize(cfg.width, cfg.height), true);
+  const W = numVal('width');
+  const H = numVal('height');
+  const { map, params } = buildMap(seed, W, H);
+  if (fromConfig()) reflectParams(params); // show what this seed rolled
+  render(el<HTMLCanvasElement>('main-canvas'), map, mainCellSize(W, H), true);
   renderStats(map);
-  renderThumbs(cfg);
+  renderThumbs(W, H);
 }
 
-function renderThumbs(base: MapGenConfig): void {
+function renderThumbs(W: number, H: number): void {
   const host = el('thumbs');
   host.innerHTML = '';
   for (let k = 1; k <= 8; k++) {
     const thumbSeed = (seed + k * 0x9e3779b1) >>> 0;
-    const map = generateMap({ ...base, seed: thumbSeed });
+    const { map } = buildMap(thumbSeed, W, H);
     const canvas = document.createElement('canvas');
-    const cell = Math.max(4, Math.floor(150 / Math.max(map.width, map.height)));
+    const cell = Math.max(4, Math.floor(150 / Math.max(W, H)));
     render(canvas, map, cell, false);
     canvas.className = 'thumb';
     canvas.title = `seed ${thumbSeed} — load`;
@@ -157,9 +210,19 @@ function syncSliderLabels(): void {
   }
 }
 
+/** Disable the knob controls in config mode (they become a read-only readout of
+ *  the sampled values); width/height/seed stay live. */
+function syncControlsEnabled(): void {
+  const disabled = fromConfig();
+  for (const id of [...SLIDERS, 'symmetry']) {
+    (el<HTMLInputElement | HTMLSelectElement>(id)).disabled = disabled;
+  }
+}
+
 function init(): void {
   syncSliderLabels();
-  // Any control change re-renders with the current seed.
+  syncControlsEnabled();
+  // Any knob change re-renders with the current seed (manual mode only).
   const ids = ['width', 'height', 'symmetry', ...SLIDERS];
   for (const id of ids) {
     el(id).addEventListener('input', () => {
@@ -167,6 +230,10 @@ function init(): void {
       rerenderMain();
     });
   }
+  el('fromConfig').addEventListener('change', () => {
+    syncControlsEnabled();
+    rerenderMain();
+  });
   el('reroll').addEventListener('click', () => {
     seed = (seed * 1103515245 + 12345) >>> 0;
     rerenderMain();

@@ -1,16 +1,25 @@
 # Map-Gen Prototype
 
-A dev-only, eyeball-tuned prototype for **reworking procedural map generation**
-(the M6 follow-up — "rework procedural maps from the ground up"). Standalone
-Vite page; visit `http://localhost:5173/tools/mapgen-prototype/` after
-`npm run dev` (or use the `dev-preview` port).
+A dev-only sketchpad for the **reworked procedural map generator** (M6).
+Standalone Vite page; visit `http://localhost:5173/tools/mapgen-prototype/`
+after `npm run dev` (or use the `dev-preview` port).
 
-**Not wired into the sim yet.** The point is to nail the *look and feel* of the
-generator before it replaces the uniform-scatter path in
-[`src/sim/terrainGen.ts`](../../src/sim/terrainGen.ts). When we commit to it,
-[`generator.ts`](./generator.ts) ports to `src/sim/proceduralMap.ts` with the
-real `GeneratedTerrain` shape + a proper test suite. It already uses the
-project `RNG` + `GridCoord`, so the port is mechanical.
+**Now wired to the production generator.** The algorithm ported into
+[`src/sim/proceduralMap.ts`](../../src/sim/proceduralMap.ts) (replacing the
+uniform-scatter path in [`src/sim/terrainGen.ts`](../../src/sim/terrainGen.ts)),
+and this tool imports it directly — so what you see here is exactly what the game
+generates. The old standalone `generator.ts` copy is gone.
+
+Two modes:
+
+- **Manual** (default): the sliders drive a `ResolvedMapParams` directly; reroll
+  varies the structure at fixed knobs.
+- **Roll knobs from config**: each seed samples a `ResolvedMapParams` from the
+  live `config/terrain.json#procedural` envelope (one RNG, sample-then-generate,
+  exactly as the game does at encounter time), so the **Variety** strip shows the
+  real seed-to-seed spread. The sampled knobs are reflected into the (disabled)
+  sliders so you can read what each map rolled. Tune the envelope in
+  `config/terrain.json` and the rolls update on reload.
 
 ## The approach
 

@@ -12,7 +12,7 @@
         <h1>Map-Gen Prototype</h1>
         <span class="subtitle"
           >Tune the procedural generator (crossbar + divider + noise blend) ·
-          reroll for variety · dev-only, not wired into the sim yet</span
+          reroll for variety · dev-only, wired to the live src generator</span
         >
       </header>
 
@@ -34,6 +34,10 @@
               <span>Seed <code id="seed-val">—</code></span>
               <button id="reroll" type="button" class="primary">Reroll ⟳</button>
             </div>
+            <label class="row">
+              <input id="fromConfig" type="checkbox" />
+              Roll knobs from config <span class="sub">(samples the live envelope per seed)</span>
+            </label>
           </section>
 
           <section class="group">

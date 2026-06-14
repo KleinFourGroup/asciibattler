@@ -825,3 +825,19 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   Test fallout: four `Run.test.ts` promotion-phase pins hardcoded `xpGained: 100` (== the OLD
   `xpToNext(1)`) and broke at the new curve — switched to the file's own `xpToNext(1)` convention
   (the balance-proof rule: derive from config, never hardcode curve arithmetic).
+
+- **M6 procedural-map rework DEPLOYED — fuzz baseline SHIFTS (terrain), N2 re-sweep on the hook
+  (2026-06-13, UNMEASURED here — left for N2).** The procedural path is no longer a uniform
+  6%-scatter: it's now a crossbar + divider + noise blend ([proceduralMap.ts](src/sim/proceduralMap.ts)),
+  with **chokepoints + fordable water gaps + half-cover windows in the walls** — i.e. real
+  structure where the scatter had none. Terrain structure strongly moves win rates (the **K3
+  comp×map interaction**: ranged vs melee FLIP by layout), so this is a presumptive **band-mover**
+  on top of daemons (L1, the biggest lever) + empower (K4) + the still-live testing leveling curve
+  (M2-session). **NOT swept here** — folded into N2 against the final model. Two isolation levers
+  ready for that sweep: **`--layout=procedural`** forces the new procedural maps every battle (the
+  clean full-sample read, mirroring `--layout=<id>`), and `?layout=procedural` does the same in the
+  browser. The map *envelope* itself is now config-tunable ([config/terrain.json](config/terrain.json)
+  `procedural`: per-knob ranges/weights + `windowChance`), so N2 can move terrain difficulty as a
+  knob, not just a structural given. One smoke read at the M2-session leveling curve (3-seed,
+  `--layout=procedural`): pure-random ~85% — INFLATED by the testing curve, NOT a balance signal;
+  flagged per the M2-session caveat.

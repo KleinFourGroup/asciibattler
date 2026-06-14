@@ -1073,7 +1073,7 @@ treatment in I4, and can share scaffolding with this one.)
 
 ### M6 — Maps: floor-gating + water mechanic
 
-**STATUS (2026-06-13 — IN PROGRESS):**
+**STATUS (2026-06-13 — water ✅ + procedural rework ✅ DEPLOYED + windows ✅; floor-gating DEFERRED):**
 - **Water mechanic ✅** (2 commits, the DESIGN ROUND resolved to **"slow + miss
   more"**). `a24f62f` — a **bog-down precision penalty** (`waterPrecisionPenalty`,
   [config/stats.json](config/stats.json)) docks an attacker's `precision` while it
@@ -1087,23 +1087,31 @@ treatment in I4, and can share scaffolding with this one.)
 - **Floor-gating DEFERRED** (user call): a proper **encounter-system spec** is close
   and will reshape the per-floor difficulty targets, so depth-weighting `rollLayoutId`
   now would just be redone. Revisit after the spec lands.
-- **The water *placement* question became a from-scratch PROCEDURAL-MAP REWORK**
-  (user call — "rework procedural maps from the ground up"): the original "puddles on
-  the trunk path" plan can't bite because procedural walls are uniform 6%-scatter with
-  no chokepoints (the connectivity guard only REMOVES walls). Design round (a 4-strategy
-  overview: CA caves / rooms+corridors / noise-elevation / lane-skeleton) **locked a
-  crossbar + divider + noise blend** built around the top/bottom-clash topology:
-  **crossbars** = wavy horizontal walls across the advance axis with fordable gaps (the
-  chokepoint + the M6 ford); **dividers** = vertical lateral structure; **noise** =
-  cover clumps (a share → D6 half-cover) + low-ground water pools; **point/mirror/none
-  symmetry** for fairness. A standalone dev-only **prototype tool** is built +
-  playtest-tuned ([tools/mapgen-prototype/](tools/mapgen-prototype/), `6f6d884`+`8d94b22`)
-  — NOT wired into the sim yet (it nails the LOOK first). **NEXT: deploy it** — port
-  [generator.ts](tools/mapgen-prototype/generator.ts) → `src/sim/proceduralMap.ts`
-  (real `GeneratedTerrain` shape + a test suite), wire into the procedural path of
-  [terrainGen.ts](src/sim/terrainGen.ts), then the **N2 band re-sweep** (terrain
-  structure strongly moves win rates — the K3 comp×map interaction). See
-  [HANDOFF.md](HANDOFF.md) §M6 for the as-built detail.
+- **The water *placement* question became a from-scratch PROCEDURAL-MAP REWORK ✅
+  DEPLOYED** (user call — "rework procedural maps from the ground up"; 4 commits
+  `f2add1c`→`3808657`): the original "puddles on the trunk path" plan couldn't bite
+  because procedural walls were a uniform 6%-scatter with no chokepoints. The design
+  round **locked a crossbar + divider + noise blend** built around the top/bottom-clash
+  topology, prototyped in [tools/mapgen-prototype/](tools/mapgen-prototype/), then ported
+  into [proceduralMap.ts](src/sim/proceduralMap.ts) + wired into the procedural path of
+  [terrainGen.ts](src/sim/terrainGen.ts) (the uniform scatter is gone):
+  - **crossbars** = wavy horizontal walls with fordable gaps (the chokepoint + the M6
+    ford); **dividers** = vertical lateral structure; **noise** = SOLID cover clumps +
+    low-ground water pools; **point/mirror/none symmetry** for fairness (guards
+    symmetry-aware).
+  - **Config envelope, not fixed knobs (user design call):** `config/terrain.json#procedural`
+    declares per-knob RANGES (uniform, or `center`+`intensity`-biased via a
+    uniform↔triangular blend) + weighted discrete choices; each encounter samples a
+    `ResolvedMapParams` ([sampling.ts](src/core/sampling.ts) helpers) so maps vary within
+    a designer-set envelope.
+  - **Half-cover = WINDOWS** (playtest revision): half-cover lives only as `windowChance`
+    shoot-through windows in the crossbars/dividers (movement-blocking, LOS-transparent);
+    noise cover is solid-only.
+  - **`?layout=procedural`** (browser) **/ `--layout=procedural`** (fuzz) force a fresh
+    procedural map every battle — the N2 isolate.
+  - **NEXT: the N2 band re-sweep** against the final model (terrain strongly moves win
+    rates — the K3 comp×map interaction). See [HANDOFF.md](HANDOFF.md) §M6 for the
+    as-built detail.
 
 **Shape (ORIGINAL plan — the water half is done above; floor-gating is deferred; the
 "give water a real effect, place it where exercised" line grew into the rework above):**
@@ -1166,10 +1174,16 @@ without it.
 ### N2 — Re-sweep the difficulty band
 
 Re-run the H7 sweep (the GUI + `--jobs` search are ready) against the **full
-post-I–M combat model** — dodge, subclasses, per-turn leveling, status
-effects, redraw/empower, the contingent rogue change. The band
-(`budgetFactor 0.625 × swarmMax 1.75`) **will** have moved; re-find it.
-BALANCE.md's funnel (broad → medium → heavy) applies.
+post-I–M combat model** — dodge, subclasses, per-ability profiles, per-turn
+leveling, status effects, redraw/empower, **daemons (L1 — the idol roll is the
+biggest single lever)**, **the M6 procedural-map rework + windows (terrain
+strongly moves win rates — the K3 comp×map interaction)**, and the contingent
+rogue change. The current provisional band (`budgetFactor 0.75 × swarmMax 2.0 ×
+enemyArcherRatio 0.3`, K2/K3.5-era) **will** have moved; re-find it. Isolate the
+new procedural maps with `--layout=procedural`. BALANCE.md's funnel (broad →
+medium → heavy) applies. **NB: the `baseXp 20 / exp 1.1` testing leveling curve
+is still live (N3 re-derives it) — sweep against the intended curve or expect
+inflated win rates.**
 
 **Cleanup folded in here — unify the two turn caps.** There are currently
 **two independent** "turn ran too long" caps, both authored at the same value:

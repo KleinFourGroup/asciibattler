@@ -1199,19 +1199,23 @@ exp 1.1` (commit `8e37203`) — a playtest-validated feel target, the curve the
 band is tuned AROUND. Sweep at 50/1.1; no testing-knob inflation to discount.
 N3 (below) is reframed to a consistency check.**
 
-**Cleanup folded in here — unify the two turn caps.** There are currently
-**two independent** "turn ran too long" caps, both authored at the same value:
-the **in-game** `maxTurnSeconds` ([config/health.json](config/health.json),
-consumed via `secondsToTicks` → `Run.resolveAsDraw`) and the **fuzz harness**
-`DEFAULT_MAX_TICKS` ([tests/fuzz/harness.ts](tests/fuzz/harness.ts), which drives
-the World directly and labels an un-resolved battle a *hang*). I2 raised **both
-100 → 150s** in lockstep (dodge whiffs lengthen battles), but they're still two
-constants that can silently drift. Collapse them onto **one source** (the
-harness should read the config cap), and decide whether the harness should
-**`resolveAsDraw` at the cap** like the real game rather than calling it a hang —
-which would make the fuzz "hang" metric mean *genuine non-termination* only.
-Natural to land alongside the band re-tune, since the cap is part of the same
-balance surface.
+**Cleanup folded in here — unify the turn caps. ✅ DONE (2026-06-15, commits
+`cf4913a` fuzz half + `9043cd6` live half).** There were **three independent**
+"turn ran too long" caps — the config `maxTurnSeconds` and TWO hardcoded
+`secondsToTicks(150)` copies ([harness.ts](tests/fuzz/harness.ts) +
+[arena.ts](tests/fuzz/arena.ts)) — AND a discrepancy: the ROADMAP claimed the
+in-game cap was "consumed via `Run.resolveAsDraw`," but `resolveAsDraw` had **no
+live caller** (BattleScene never enforced it → a stalled live battle soft-locked).
+The fix collapsed all three onto the SINGLE config source (`HEALTH.maxTurnSeconds`)
+and made the behavior uniform: the harness, the arena, AND the live BattleScene
+now all **`resolveAsDraw` at the cap** (chips both pools, the run continues) instead
+of the harness alone labeling a cap-hit a run-ending *hang*. The fuzz "hang" now
+means **genuine non-termination only** (a World invariant violation; effectively
+never produced), and a new `AggregateStats.cappedDraws` (= `winner === 'draw'`)
+carries the indecisive-turn signal. **Baseline impact:** byte-identical for any run
+that never hits the cap (the common case — hangs were ~0); only formerly-hanging
+seeds change (now a draw-and-continue). Browser-verified the live draw end-to-end
+(PostTurnScene "SKIRMISH DRAWN", both pools chip, CONTINUE → recruit, no errors).
 
 ### N3 — Leveling consistency check (reframed 2026-06-14)
 

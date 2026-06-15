@@ -890,3 +890,52 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   inflation to flag. Pre-commit: typecheck clean, 950/950 main green (the four `Run.test.ts`
   promotion pins read `xpToNext(1)` from config, so they tracked `20→50` with no edit). **NEXT =
   stage 1: the broad `budgetFactor × swarmMax` grid (quick tier), isolated to `--layout=procedural`.**
+
+- **N2 TOOLING — `--layout` threaded through `--balance-sweep` + `--search` (2026-06-14, commit
+  `1bbb57b`, dev-only/zero-src).** Caught before stage 1: `--layout=procedural` was only wired into
+  the plain run fuzz; the sweep + search command `Pick`s omitted `layout`, and an unread global flag
+  is silently ignored — so `--balance-sweep … --layout=procedural` would have swept the DEFAULT
+  layout mix (a wrong-but-plausible band). The harness already supported `runConfig.forcedLayoutId`;
+  only the command layer never plumbed it. Fixed via a shared `layoutFromArgs` (validates + bails
+  loudly on a typo) threaded through sweep/search + the `--jobs` shard path. Verified: typo bails;
+  `--layout=procedural` forces all waves onto procedural; a hard procedural point reads identically
+  at jobs=1 vs jobs=2 (best 75%/grad 13). **Protocol amendment (commit `50cac38`): default `--jobs`
+  on for any multi-point sweep** (heavy high-swarm points dominate wall-clock + shard well; size
+  ~cores/2 for headroom; single `--search`/tiny grids stay single-process).
+
+- **N2 STAGE 1 — broad leverage map (2026-06-14, `output/n2-stage1/`).** Grid `budgetFactor 0.25:1.5:6
+  × swarmMaxMultiplier 1.0:3.0:5` (30 pts), **quick tier, `--layout=procedural`, BARE model** (no
+  empower/redraw policy bots → the default random daemon roll is INERT, since L1 idols only grant
+  redraw/empower gates and nothing drove them). So this is the **agency-free floor + a leverage map**,
+  not the band. best-achievable %:
+
+  | budget\swarm | 1.0 | 1.5 | 2.0 | 2.5 | 3.0 |
+  |---|---|---|---|---|---|
+  | 0.25 | 100 | 100 | 100 | 100 | 100 |
+  | 0.50 | 100 | 100 | 100 | 75 | 50 |
+  | 0.75 | 100 | 100 | 100 | 75 | 13 |
+  | 1.00 | 100 | 100 | 88 | 38 | 13 |
+  | 1.25 | 88 | 100 | 88 | 13 | 0 |
+  | 1.50 | 88 | 50 | 25 | 0 | 0 |
+
+  **Findings:** (1) the band moved WAY up — the old shipped `0.75 × 2.0` is a flat 100%/0-grad
+  foregone conclusion; the ~67% zone is a **diagonal ridge** (`0.5×3.0` → `1.5×1.5`). (2) **swarm is
+  the dominant lever and budget now interacts** (it barely moved the band in K2 — the stacked buffs
+  changed that); they trade off (crank both → 0%). (3) the steepest gradients (+25pt) cluster at
+  **higher budget (1.25–1.5)** not pure swarm — a few stronger enemies reward play more than a weak
+  horde → the region to zoom. (4) **OP read holds:** mercenary + ranged dominate every point (at hard
+  points the optimizer fields ONLY those two); rogue/mage/catapult/healer/ronin/adventurer/bandit
+  barely recruited — the flat **mercenary>ranged** dominance confirmed, and **the dash did NOT make
+  the rogue recruit-worthy** to the free search (its forced-roster re-measure still owed).
+  **Caveats:** quick-tier noise is heavy (8 train seeds = 12.5% quantization; big train/test gaps,
+  e.g. `1.25×2.0` train 88% / held-out 25%) → a region-finder, not the band; and the gradient is
+  SMALL everywhere (≤+25pt) — the foregone conclusion is shifted, not fully broken (the stacked
+  buffs help all strategies ~uniformly; steepening it is stage-3/archetype-pass work).
+  **Decision (user): stage 2 tunes the REALISTIC model** — add `--empower=level:hi` + `--redraw=level:2`
+  policy bots so the random daemon's granted tools get used (ROADMAP §N2's mandate). **Validated the
+  bots fire** (1-pt quick dry-runs at `1.0×2.5`, bare 38%): random-daemon realistic → **50%** (+12pp);
+  forced `--daemon=mars` (guaranteed empower) → **75% / grad +63pt** — a hard point WITH an empower
+  idol breaks the foregone conclusion HARD (best 75% vs baselines ~12%), so agency tools *steepen* the
+  gradient where we want it. The realistic band sits ~½-step harder than bare; its ~67% ridge crosses
+  lower-swarm at high budget (≈ `1.0×2.35` / `1.25×2.2` / `1.5×1.6`). **NEXT = stage 2: medium tier,
+  `--jobs=8`, grid `budgetFactor 1.0:1.5:3 × swarmMaxMultiplier 1.5:2.5:5` (15 pts), realistic bots.**

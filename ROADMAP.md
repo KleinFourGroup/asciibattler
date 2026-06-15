@@ -1230,6 +1230,8 @@ is now satisfied by the playtest-locked curve.)
 
 ### N4 — Overnight verify (+ `--seed-offset`)
 
+> **DEFERRED INDEFINITELY (2026-06-15) — run on a VPS, not locally.** The local box has an environmental `dwm.exe` leak that can fail burst process-spawning over long uptimes ([archive/dwm-leak-diagnosis.md](archive/dwm-leak-diagnosis.md)); we won't risk an unattended overnight run dying partway on a Windows issue we can't control. Hold N4 until a VPS is available.
+
 Land the deferred [TODO.md](TODO.md) **`--seed-offset`** (a true config-overfit
 holdout — fresh seed bases never tuned against), then run the **stage-5
 overnight verify** (`--search --preset=overnight --jobs=<cores>`) on those

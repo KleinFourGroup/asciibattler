@@ -6,9 +6,21 @@
 
 ---
 
+## System / environment
+
+| | |
+|---|---|
+| CPU | Intel Core i9-14900KF (24 physical / 32 logical cores) |
+| RAM | 32 GB |
+| OS | Windows 11 Home, build 26200 |
+| GPU | NVIDIA GeForce RTX 4080 SUPER |
+| GPU driver | 591.74 (2025-12-29) at first observation → updated to 610.47 (2026-05-18); **leak unchanged by the update** |
+| Prior machine | a different box with an **AMD GPU** — same dwm high-RAM behavior (per the owner) |
+| Triggering workload | a Node.js fuzz harness that burst-spawns child processes (`node --import tsx`, `--jobs=N` grid sharding) |
+
 ## Symptom
 
-Heavy multi-point `--balance-sweep --jobs=N` runs die mid-sweep when a child process fails to spawn with `0xC0000142`. Single-process (`--jobs=1`, never spawns a child) runs clean. The failure is **probabilistic under load** (which is why commit `d745836` added `SHARD_ATTEMPTS=3` spawn-retries — they help a fresh session, but can't rescue a fully-degraded one).
+Heavy multi-point `--balance-sweep --jobs=N` runs die mid-sweep when a child process fails to spawn with `0xC0000142`. Single-process (`--jobs=1`, never spawns a child) runs clean. The failure is **intermittent across runs but deterministic within a degraded session** — once the session crosses a threshold it fails on *every* subsequent spawn (see "Why the spawns fail" below). Commit `d745836` added `SHARD_ATTEMPTS=3` spawn-retries, which ride out a marginal session but can't rescue a fully-degraded one.
 
 ## What it actually is (measured 2026-06-15)
 
@@ -42,7 +54,7 @@ Closing apps one at a time while watching the dwm slope:
 - **NOT our code.** Our sweep children are headless `node` console processes; they never open dwm composition surfaces or audio sessions. They are the *trigger* (burst spawning) that exposes an already-degraded session, not the leaker.
 - **NOT the GPU driver.** Updated NVIDIA **591.74 (Dec 2025) → 610.47 (May 2026)** — a ~5-month jump — and rebooted. The reboot reclaimed everything (dwm back to 475 MB / 3.2K handles), but a 10-minute post-reboot monitor showed **handles plateauing (~5,460, apps done loading) while committed memory kept climbing linearly at ~10 MB/min.** The leak survived the driver update intact.
 - **Cross-vendor, cross-machine.** The user reports dwm has had abnormally high RAM since this machine was new, **and on the previous machine, which had an AMD GPU.** A leak spanning AMD → NVIDIA is not a GPU-driver bug.
-- **Leading suspect: Windows/dwm itself, or a persistent piece of the user's environment that hooks the compositor** — most plausibly the **accessibility programs** that have followed the user across machines (they tap dwm/UI composition continuously, and are known here to hook dwm deeply enough that they crash when it restarts). Untested because confirming it means closing those programs (and Claude for Windows, the one accelerated app present in 100% of measurements). Not pursued further — the mitigations make it a non-blocker.
+- **Leading suspects: Windows/dwm itself, or a persistent piece of the user's environment that composites continuously** — e.g. the user's **eye-tracking software** (gaze overlays / continuous screen-region capture composite through dwm constantly, and it has followed the user across both machines; it also hooks dwm deeply enough that it crashes when dwm restarts). NB the user believes the eye-trackers do **not** inject DLLs into other processes — if so, the spawn-failure DLL is a *system* DLL failing on the exhausted resource, not an injected hook (see below). Untested because confirming means closing those programs (and Claude for Windows, the one GPU-accelerated app present in 100% of measurements). Not pursued further — the mitigations make it a non-blocker.
 
 ## Why the spawns fail — a hard threshold, NOT a spawn count
 
@@ -50,12 +62,25 @@ Closing apps one at a time while watching the dwm slope:
 
 The real model is a **hard threshold on a fixed, session-scoped resource** — one *separate* from the 75 GB system commit (which is why ~15 GB free was a red herring). Leading candidate: session paged pool / view space, consumed by dwm's leaked surface objects. Every *new* process needs a slab of that resource to initialize `win32k`/`user32` (and any globally-injected hook DLLs). Once the leak pushes the session past the threshold, that init step fails for the *next* process created — 1st or 7th, alone or in a burst. `--jobs=2` died at point 4 because the session had crossed the line by then (multi-day uptime near the edge + the run's own minutes of ~10 MB/min growth); `J` only changes wall-clock, never *whether* the wall is hit. `--jobs=1` is immune because it never creates a child (the running process is long past its own init). Hand-opening an app still works because a lone lightweight launch fits the last sliver (and closing apps frees some), whereas a heavyweight `node`+`tsx` child-init over the line does not.
 
-**A specific, unproven hypothesis that fits the error code exactly:** an accessibility **hook DLL injected into every new process** whose `DllMain` fails once the compositor/session is degraded — that would make *every* new process die at init with `0xC0000142` while running processes are unaffected, and it explains the cross-machine pattern (the accessibility tools are the constant across both machines). Not pinned: the failures left no Application/System event-log entry (the parent caught each spawn error), so the faulting DLL isn't named. To pin it next time it recurs: Process Monitor on a failing spawn, or check which DLL is injected into an unrelated process (Process Explorer / `tasklist /m`). (Exact resource/DLL not definitively pinned.)
+**Two flavors fit the error code, both unproven:** (a) **session-resource exhaustion** — a *system* DLL (`user32`/`win32k`) can't obtain its slab of the exhausted session resource and fails `DllMain` (needs no injection; the more likely one if the eye-trackers really don't inject); or (b) a **globally-injected hook DLL** whose `DllMain` fails once the session is degraded — this would make *every* new process die at init while running processes are unaffected, and would explain the cross-machine pattern, but only if something *is* injected. Not pinned: the failures left no Application/System event-log entry (the parent caught each spawn error), so the faulting DLL isn't named. To pin it next time it recurs: Process Monitor on a failing spawn, or check which DLLs are injected into an unrelated process (Process Explorer / `tasklist /m`). (Exact resource/DLL not definitively pinned.)
+
+## Ruled out: the fuzz workload itself
+
+To confirm the harness wasn't adding its own leak, we ran 600 sequential full-length sim runs in **one** process and sampled `heapUsed` **after a forced GC** every 50 runs:
+
+```
+start     heapUsed=15.3 MB   rss= 91 MB
+50 runs   heapUsed=16.4 MB   rss=228 MB
+…
+600 runs  heapUsed=16.6 MB   rss=230 MB   (flat the whole way)
+```
+
+`heapUsed` (the live retained set) is **flat at ~16.6 MB across all 600 runs** → no per-run retention; the sim/harness does not leak. The ~230 MB RSS is V8 heap *headroom* — reserved for the heavy short-lived allocation churn of running battles and never returned to the OS — not retained objects. So the headless children are an innocent *trigger* for the dwm threshold, not a memory contributor of their own.
 
 ## Mitigations (the part future-us actually needs)
 
 1. **Reboot reclaims it fully.** A fresh session sits at a few hundred MB. At ~10 MB/min it takes **days** to re-reach the pathological state — so a fresh reboot buys hours of clean headroom.
-2. **Reboot right before any heavy / overnight `--jobs` sweep** (e.g. N4). This is the standing rule.
+2. **Reboot right before any heavy `--jobs` sweep.** (The N2 *overnight* verify, N4, is deferred indefinitely to a VPS — we won't risk an unattended overnight run dying partway on a local Windows issue we can't control.)
 3. **`--jobs=1` is immune by construction** (never spawns a child) — the fallback when you can't/won't reboot, just slower (~40–50 min for a heavy run).
 4. **Watch it:** `(Get-Process dwm).PrivateMemorySize64 / 1GB`. Multiple GB → reboot before a big parallel run.
 5. **Don't restart dwm directly** (`Stop-Process -Name dwm`) on this machine without prep — the accessibility programs don't handle a dwm crash gracefully.
@@ -64,3 +89,12 @@ The real model is a **hard threshold on a fixed, session-scoped resource** — o
 ## Appendix — measurement method
 
 PowerShell sampling of `(Get-Process dwm).Handles` and `.PrivateMemorySize64` every 2–5 s to a CSV, across controlled conditions (idle / per-app-close / bare desktop / post-reboot). The discriminator that distinguished "settling" from "leaking" post-reboot: **handles plateau when app-loading finishes; a leak keeps committed memory climbing linearly past that point.** Driver/uptime confirmed via `Get-CimInstance Win32_VideoController` + `Win32_OperatingSystem.LastBootUpTime`.
+
+## Open questions (outside insight welcome)
+
+Shared in the hope someone recognizes the pattern. Specific unknowns:
+
+1. **Which session-scoped resource actually gates the spawn?** We inferred session paged pool / view space but never pinned it (the failure left no event-log entry). What's the clean way to watch the *binding* resource on Windows 11 in real time (session pool / desktop heap / per-session GDI-USER)?
+2. **What makes `dwm.exe` commit ~24 GB it never touches?** A compositor leaking committed-but-untouched memory on a per-present cadence, scaling with on-screen composition, surviving a GPU-vendor change (AMD→NVIDIA) — is this a known dwm/Windows failure mode? Tied to a particular app/driver/overlay class?
+3. **Can a non-injecting overlay (e.g. eye-tracking gaze software) drive a dwm surface leak** purely through continuous composition, without hooking other processes?
+4. **Best tool to catch the faulting DLL** at the instant of a `0xC0000142` child-spawn failure (Process Monitor boot logging? a specific ETW provider?), so we can name what fails `DllMain`.

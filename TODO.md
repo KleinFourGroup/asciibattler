@@ -17,6 +17,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Post-MVP polish
 
+- [ ] **Object pooling for the hot per-tick allocators (GC-pause reduction, not memory).** The 2026-06-15 fuzz heap probe found each sim run allocates a firehose of short-lived objects — V8 grows ~155 MB of heap *headroom* to absorb the churn though the live set is only ~16 MB (no leak; `heapUsed` flat across 600 runs). The churn costs no *memory*, but pooling the hot allocators — pathfinding scratch arrays, event objects, transient grid vectors — would cut **GC pauses**, which matter more for **rendered-game frame-time smoothness** than for fuzz throughput. **Caveat: this is a *deterministic* sim — a pooled object reused with a stale field is a determinism bug that's brutal to trace, so reset discipline must be airtight (the determinism tests are the guard).** Surfaced at the N2 dwm-leak investigation ([archive/dwm-leak-diagnosis.md](archive/dwm-leak-diagnosis.md)).
 - [x] **Pathfinding directional bias.** Folded into ROADMAP E5.B
       (pathfinding refresh) — the boids-style sidestep step is going to
       overhaul neighbor iteration anyway, so the tie-break lands as part

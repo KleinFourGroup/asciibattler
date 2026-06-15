@@ -122,23 +122,19 @@ Independent CPU-bound runs → embarrassingly parallel. Built-ins only:
     cores), NOT all cores, especially with a dev server running. A lone `--search` (one
     point) or a tiny/all-cheap grid stays fine single-process. `jobs=1 ≡ jobs=N`
     byte-identical (proven), so this is purely wall-clock.
-  - **N2 caveat (2026-06-14) — a SESSION-WIDE HANDLE/KERNEL-POOL leak (not RAM/commit) can
-    kill child-spawning; reboot or go single-process.** Heavy `--jobs` runs died mid-sweep
-    with Windows `0xC0000142` (`STATUS_DLL_INIT_FAILED`) on EVERY child at once — repeatable,
-    not a flake. **First theory (commit-memory exhaustion) was a RED HERRING:** dropping to
-    `--jobs=2` (live-monitored ~15 GB commit headroom holding, children adding only ~1.5 GB)
-    STILL died at point 4 — so commit/RAM was never the binding constraint. **Real cause: a
-    per-session kernel-resource leak.** `dwm.exe` was at **~199K handles and climbing** (a
-    healthy DWM is ~1–5K) over a 3.6-day uptime — draining session desktop-heap / paged-pool,
-    so spawning ANY new process (even a headless node child, which still inits user32) fails
-    at startup regardless of free RAM. `0xC0000142` on process creation = desktop-heap /
-    session-pool / GDI-USER object exhaustion, NOT commit. Corroboration: single-process
-    stage 1 (which never spawns a child) ran clean. **Fixes:** (1) **reboot** (clears the
-    handle leak → `--jobs` works), or (2) **`--jobs=1` single-process** (never spawns → immune,
-    just slower). Watch `(Get-Process dwm).HandleCount` — if it's in the 6-figures, reboot
-    before a big parallel/overnight run. The retry (commit `d745836`) can't help: the leak is
-    sustained, so every attempt fails. **The dwm leak itself wants a permanent fix** (likely
-    GPU-driver or a WebGL/HMR-browser feeder — see HANDOFF "Open threads").
+  - **N2 caveat (2026-06-14, corrected 2026-06-15) — an environmental `dwm.exe` leak can kill
+    burst child-spawning; reboot before heavy `--jobs` runs.** Heavy `--jobs` sweeps intermittently
+    die mid-sweep with Windows `0xC0000142` (`STATUS_DLL_INIT_FAILED`) on child spawn. Root cause is
+    NOT our code, NOT commit/RAM (a red herring — `--jobs=2` died with ~15 GB free), and **NOT the GPU
+    driver** (a 5-month NVIDIA update 591→610 didn't fix it; the leak is cross-machine/cross-vendor —
+    the prior AMD box had it too). It's `dwm.exe` leaking **committed memory** continuously (~3–10
+    MB/min, scaling with on-screen composition), reaching ~24 GB / ~200K handles over multi-day uptime
+    and shrinking the session margin until a spawn burst tips it over (probabilistic → the `d745836`
+    retry helps a fresh session, not a degraded one). **Mitigation: a reboot fully reclaims it (a fresh
+    session = hours of headroom), so reboot before any heavy/overnight `--jobs` run; `--jobs=1` never
+    spawns a child → immune.** Watch `(Get-Process dwm).PrivateMemorySize64/1GB` — multi-GB → reboot
+    first. Leading suspect = Windows/dwm itself or the accessibility hooks; full post-mortem +
+    measurements: **[archive/dwm-leak-diagnosis.md](archive/dwm-leak-diagnosis.md)**.
 - *Not recommended*: `node:worker_threads` — lower per-task overhead but real friction
   loading `.ts` under tsx in a worker; not worth it for this workload.
 

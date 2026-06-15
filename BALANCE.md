@@ -939,3 +939,29 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   gradient where we want it. The realistic band sits ~½-step harder than bare; its ~67% ridge crosses
   lower-swarm at high budget (≈ `1.0×2.35` / `1.25×2.2` / `1.5×1.6`). **NEXT = stage 2: medium tier,
   `--jobs=8`, grid `budgetFactor 1.0:1.5:3 × swarmMaxMultiplier 1.5:2.5:5` (15 pts), realistic bots.**
+
+- **N2 STAGE 2 — narrowed realistic band (2026-06-14, `output/n2-stage2/`).** Grid `budgetFactor
+  1.0:1.5:3 × swarmMaxMultiplier 1.5:2.5:5` (15 pts), **medium tier (16 seeds), `--jobs=8`,
+  `--layout=procedural`, REALISTIC model** (`--empower=level:hi --redraw=level:2` + the random daemon
+  roll). best-achievable % (gradient pt):
+
+  | budget\swarm | 1.5 | 1.75 | 2.0 | 2.25 | 2.5 |
+  |---|---|---|---|---|---|
+  | 1.0 | 100 (0) | 100 (19) | 94 (13) | 56 (25) | 38 (13) |
+  | 1.25 | 100 (13) | **75 (38)** | 56 (0) | 31 (19) | 25 (19) |
+  | 1.5 | **63 (31)** | 19 (0) | 19 (19) | 13 (6) | 13 (13) |
+
+  **Candidate band — two leaders bracket the ~67% target with STEEP gradients:** `1.25 × 1.75` →
+  **75% / +38pt** (rand 38 / greedy 31) and `1.5 × 1.5` → **63% / +31pt** (rand 25 / greedy 31).
+  Band center ≈ `1.35 × 1.6`. **A much healthier result than stage-1 bare:** (a) the gradient is real
+  (best ≈ 2× the baselines, vs bare's ≤25pt — the realistic agency tools STEEPEN it, as the
+  forced-Mars probe foreshadowed); (b) **roster DIVERSITY emerges at the band** — at `1.25×1.75` the
+  optimizer fields mercenary + ranged + adventurer + **rogue (43 deployments, 35.5 dmg/dep)** + mage +
+  healer + catapult (only ronin/bandit benched); `1.5×1.5` similarly fields 8 of 9. So at the
+  concentrated/harder difficulty the specialists become worth fielding — the mercenary>ranged
+  monoculture partly self-corrects WITHOUT archetype edits (re-confirm at heavy). **Caveat:** the
+  medium test-seed split is tiny (~3 test seeds) so held-out win rates are very noisy (e.g. `1.5×1.5`
+  train 63% / test 0%); the **train-based gradient is the reliable read**, heavy's 30 seeds tighten
+  it. **NEXT = stage 3 (launched): 3×3 heavy, FULL 11 floors, `--jobs=8`, `budgetFactor 1.25:1.5:3 ×
+  swarmMaxMultiplier 1.5:1.75:3` centered on the band — precise best%/gradient + the OP-unit read +
+  whether the full-floor band drifts from the 6-floor medium read.**

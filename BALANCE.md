@@ -122,6 +122,20 @@ Independent CPU-bound runs → embarrassingly parallel. Built-ins only:
     cores), NOT all cores, especially with a dev server running. A lone `--search` (one
     point) or a tiny/all-cheap grid stays fine single-process. `jobs=1 ≡ jobs=N`
     byte-identical (proven), so this is purely wall-clock.
+  - **N2 caveat (2026-06-14) — size `--jobs` to COMMIT HEADROOM, not just cores; HEAVY
+    children are commit-hungry.** A heavy `--jobs=6/8` run died mid-sweep with Windows
+    `0xC0000142` (`STATUS_DLL_INIT_FAILED`) on EVERY child at once — not a flake:
+    **commit-memory (virtual-memory) exhaustion**. Each `--eval-shard` child spikes commit
+    at startup (tsx compiles the whole project) + during full-11-floor sims, and a batch of
+    6–8 stacked on an already-stressed baseline blew past the commit limit, so the OS
+    couldn't map DLLs into the next process. The machine was at **79% committed at IDLE**
+    (61/77 GB) — `dwm.exe` alone leaking ~24 GB (a compositor leak; a reboot reclaims it).
+    **Before a big parallel heavy/overnight run: check commit headroom**
+    (`Get-CimInstance Win32_OperatingSystem`: `(Total-Free)VirtualMemorySize`) and reboot if
+    the baseline has leaked. **`--jobs=2` measured safe** here — only ~1.5 GB added, ~15 GB
+    headroom held. Heuristic: `jobs ≲ commit_headroom_GB / ~2` for heavy, AND ≤ cores/2. The
+    shard runner now retries transient spawn failures (commit `d745836`) — but retries can't
+    fix a SUSTAINED commit shortage (every attempt fails), so headroom is the real lever.
 - *Not recommended*: `node:worker_threads` — lower per-task overhead but real friction
   loading `.ts` under tsx in a worker; not worth it for this workload.
 

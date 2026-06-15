@@ -25,10 +25,10 @@ describe('runArena', () => {
     for (const proclivity of [{ kind: 'none' } as const, { kind: 'random' } as const, STAT_HI]) {
       for (const seed of [1, 2]) {
         const r = runArena(seed, { proclivity });
-        expect(['player', 'enemy', 'hang']).toContain(r.winner);
+        expect(['player', 'enemy', 'draw']).toContain(r.winner);
         expect(r.ticks).toBeGreaterThan(0);
-        // A decisive battle ends before the cap; a hang stops exactly at it.
-        if (r.winner !== 'hang') expect(r.ticks).toBeLessThan(3000);
+        // A decisive battle ends before the cap; a capped draw stops exactly at it.
+        if (r.winner !== 'draw') expect(r.ticks).toBeLessThan(3000);
       }
     }
   });

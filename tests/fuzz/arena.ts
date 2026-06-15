@@ -18,6 +18,7 @@
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import { secondsToTicks } from '../../src/config';
+import { HEALTH } from '../../src/config/health';
 import type { GameEvents } from '../../src/core/events';
 import type { Team } from '../../src/sim/Unit';
 import { World } from '../../src/sim/World';
@@ -38,10 +39,11 @@ import {
   type ScoredObjectiveWeights,
 } from './objectiveStrategy';
 
-// Mirror the `harness.ts` per-battle cap (150s of game time via the TICK_RATE
-// contract) so an arena battle reads a "hang" on the same boundary a real fuzz
-// battle would.
-const ARENA_MAX_TICKS = secondsToTicks(150);
+// The per-turn cap — the SAME single source as the run harness + the live game
+// (`config/health.json` maxTurnSeconds via the TICK_RATE contract). N2 — an arena
+// battle that reaches it force-resolves as a DRAW (resolveAsDraw), the same
+// boundary + behavior a real fuzz / live battle has.
+const ARENA_MAX_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 
 /**
  * The default arena lineup when no roster is given: the documented carry comp
@@ -70,8 +72,9 @@ export interface ArenaOptions {
 
 export interface ArenaResult {
   readonly seed: number;
-  /** The battle winner, or `'hang'` if it didn't resolve within `maxTicks`. */
-  readonly winner: Team | 'hang';
+  /** The decisive winner, or `'draw'` when the per-turn cap force-resolved the
+   *  battle (N2 — mirrors the live game + run harness; a draw is a non-win). */
+  readonly winner: Team | 'draw';
   readonly ticks: number;
   readonly playerSurvivors: number;
   readonly enemySurvivors: number;
@@ -128,7 +131,9 @@ export function runArena(seed: number, options: ArenaOptions): ArenaResult {
   const encounter = buildArenaEncounter(seed, roster, layoutId);
 
   const bus = new EventBus<GameEvents>();
-  let winner: Team | 'hang' = 'hang';
+  // Overwritten by every battle:ended (natural win OR the cap's resolveAsDraw
+  // below); the 'draw' init is a never-observed sentinel (a battle always ticks).
+  let winner: Team | 'draw' = 'draw';
   bus.on('battle:ended', (e) => {
     winner = e.winner;
   });
@@ -148,6 +153,10 @@ export function runArena(seed: number, options: ArenaOptions): ArenaResult {
     world.tick();
     ticks++;
   }
+  // N2 — reached the per-turn cap without a decisive end: force-resolve as a DRAW,
+  // mirroring the live game + the run harness (the battle:ended handler sets
+  // `winner = 'draw'`).
+  if (!world.ended) world.resolveAsDraw();
 
   const playerSurvivors = world.units.filter(
     (u) => u.team === 'player' && u.currentHp > 0,
@@ -157,7 +166,9 @@ export function runArena(seed: number, options: ArenaOptions): ArenaResult {
   ).length;
   return {
     seed,
-    winner: world.ended ? winner : 'hang',
+    // resolveAsDraw above guarantees world.ended, so `winner` is always the
+    // decisive team or 'draw' — never an un-resolved sentinel.
+    winner,
     ticks,
     playerSurvivors,
     enemySurvivors,
@@ -169,7 +180,9 @@ export interface ProclivityScore {
   readonly proclivity: ObjectiveProclivity;
   readonly winRate: number;
   readonly avgTicks: number;
-  readonly hangs: number;
+  /** N2 — battles this proclivity left to the per-turn cap (a non-win draw); was
+   *  `hangs` before the cap force-resolved them. */
+  readonly draws: number;
 }
 
 export interface ArenaSearchResult {
@@ -194,11 +207,11 @@ export function runArenaSearch(
   const scores: ProclivityScore[] = menu.map((entry) => {
     let wins = 0;
     let totalTicks = 0;
-    let hangs = 0;
+    let draws = 0;
     for (const seed of seeds) {
       const r = runArena(seed, { roster, proclivity: entry.proclivity, layoutId });
       if (r.winner === 'player') wins++;
-      if (r.winner === 'hang') hangs++;
+      if (r.winner === 'draw') draws++;
       totalTicks += r.ticks;
     }
     return {
@@ -206,7 +219,7 @@ export function runArenaSearch(
       proclivity: entry.proclivity,
       winRate: seeds.length === 0 ? 0 : wins / seeds.length,
       avgTicks: seeds.length === 0 ? 0 : totalTicks / seeds.length,
-      hangs,
+      draws,
     };
   });
   const sorted = [...scores].sort(

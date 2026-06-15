@@ -60,18 +60,18 @@ export function runArenaCli(args: ArenaModeArgs): void {
     const proclivity = parseObjectiveFlag(args.objective);
     let wins = 0;
     let totalTicks = 0;
-    let hangs = 0;
+    let draws = 0;
     for (const s of seeds) {
       const r = runArena(s, { roster, proclivity, layoutId });
       if (r.winner === 'player') wins++;
-      if (r.winner === 'hang') hangs++;
+      if (r.winner === 'draw') draws++;
       totalTicks += r.ticks;
     }
     process.stdout.write(
       `Arena: ${proclivityLabel(proclivity)} × ${seeds.length} seeds ` +
         `roster=[${rosterNote}] layout=${layoutId ?? 'procedural'}\n` +
         `  win ${((100 * wins) / seeds.length).toFixed(0)}%  ` +
-        `avgTicks ${(totalTicks / seeds.length).toFixed(0)}  hangs ${hangs}\n`,
+        `avgTicks ${(totalTicks / seeds.length).toFixed(0)}  draws ${draws}\n`,
     );
     return;
   }
@@ -128,12 +128,12 @@ function writeBest(outDir: string, result: ArenaSearchResult): void {
 /** Compact ranked table of every proclivity's arena score (best-first);
  *  `topN` truncates (the vector search samples hundreds — the tail is noise). */
 function renderArenaTable(result: ArenaSearchResult, topN?: number): string {
-  const lines = [`  ${'proclivity'.padEnd(26)} win%  avgTicks  hangs`];
+  const lines = [`  ${'proclivity'.padEnd(26)} win%  avgTicks  draws`];
   const shown = topN !== undefined ? result.scores.slice(0, topN) : result.scores;
   for (const s of shown) {
     lines.push(
       `  ${s.label.padEnd(26)} ${(s.winRate * 100).toFixed(0).padStart(4)}  ` +
-        `${s.avgTicks.toFixed(0).padStart(8)}  ${String(s.hangs).padStart(5)}`,
+        `${s.avgTicks.toFixed(0).padStart(8)}  ${String(s.draws).padStart(5)}`,
     );
   }
   if (topN !== undefined && result.scores.length > topN) {

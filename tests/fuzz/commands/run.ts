@@ -169,6 +169,11 @@ export function runRunCli(args: RunModeArgs): void {
     if (stats.hangs > 0) {
       process.stdout.write(`  hangs by layout: ${JSON.stringify(stats.hangsByLayout)}\n`);
     }
+    // N2 — capped/indecisive battles (per-turn cap → draw). Printed only when
+    // present so a clean sweep's summary stays terse.
+    if (stats.cappedDraws > 0) {
+      process.stdout.write(`  capped draws: ${stats.cappedDraws}\n`);
+    }
     process.stdout.write(`  by outcome: ${JSON.stringify(stats.byOutcome)}\n\n`);
   }
   // L1c3 — the per-daemon read: printed whenever the batch spans more than one

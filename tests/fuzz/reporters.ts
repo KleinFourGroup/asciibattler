@@ -119,6 +119,14 @@ export interface AggregateStats {
    * Labyrinth signature) or is spread across the library.
    */
   hangsByLayout: Record<string, number>;
+  /**
+   * N2 — total battles across all runs that the per-turn cap force-resolved as a
+   * DRAW (`winner === 'draw'`). This is the "indecisive/slow turn" signal that
+   * replaced the old run-ending 'hang' for cap-hits: a capped draw chips both
+   * pools and the run continues, so it never shows in `byOutcome`. A non-zero
+   * value flags battles the optimal play couldn't decide within `maxTurnSeconds`.
+   */
+  cappedDraws: number;
 }
 
 /**
@@ -134,6 +142,7 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
   let tickSum = 0;
   let wins = 0;
   let hangs = 0;
+  let cappedDraws = 0;
   for (const r of results) {
     byOutcome[r.outcome] = (byOutcome[r.outcome] ?? 0) + 1;
     floorSum += r.finalFloorReached;
@@ -145,6 +154,9 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
       const key = hangBattle ? (hangBattle.layoutId ?? 'procedural') : 'unknown';
       hangsByLayout[key] = (hangsByLayout[key] ?? 0) + 1;
     }
+    // N2 — every harness draw comes from the per-turn cap (checkBattleEnd never
+    // emits 'draw'), so winner === 'draw' counts the capped/indecisive battles.
+    for (const b of r.battles) if (b.winner === 'draw') cappedDraws++;
   }
   const n = results.length;
   return {
@@ -155,6 +167,7 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
     averageTicks: n === 0 ? 0 : tickSum / n,
     hangs,
     hangsByLayout,
+    cappedDraws,
   };
 }
 

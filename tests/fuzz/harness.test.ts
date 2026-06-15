@@ -42,6 +42,22 @@ describe('fuzz harness', () => {
     }
   });
 
+  it('force-resolves a turn that hits the per-turn cap as a DRAW, not a hang', () => {
+    // N2 cap unification — a battle that can't resolve within the cap is no longer a
+    // run-ending 'hang'. maxTicksPerBattle:1 forces EVERY battle to the cap, so each
+    // resolveAsDraw's (winner 'draw', both pools chip) and the run plays on to a
+    // normal terminal outcome (a defeat once the chips zero a pool), never a hang.
+    // The harness-level mirror of the encounter-loop integration test's cap-as-draw.
+    const result = runOne(3, makeStrategy('greedy')!, { maxTicksPerBattle: 1 });
+    expect(result.outcome).not.toBe('hang');
+    expect(result.battles.length).toBeGreaterThan(0);
+    expect(result.battles.every((b) => b.winner === 'draw')).toBe(true);
+    // The aggregate surfaces those capped draws (the signal that replaced 'hang').
+    const stats = aggregate([result]);
+    expect(stats.hangs).toBe(0);
+    expect(stats.cappedDraws).toBe(result.battles.length);
+  });
+
   it('is deterministic per (seed, strategy)', () => {
     const a = runOne(42, makeStrategy('pure-random')!);
     const b = runOne(42, makeStrategy('pure-random')!);

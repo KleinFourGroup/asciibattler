@@ -19,6 +19,7 @@
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import { secondsToTicks } from '../../src/config';
+import { HEALTH } from '../../src/config/health';
 import { World } from '../../src/sim/World';
 import type { GameEvents } from '../../src/core/events';
 import type { Team } from '../../src/sim/Unit';
@@ -48,7 +49,12 @@ export interface BattleResult {
    *  when a future layout's narrow corridors recreate the C1d Labyrinth
    *  deadlock pattern. */
   layoutId: string | null;
-  winner: Team | 'hang';
+  /** Decisive winner, or `'draw'` when the per-turn cap force-resolved the battle
+   *  (N2 — `winner === 'draw'` ⟺ a capped/indecisive turn, the metric that
+   *  replaced the old run-ending `'hang'`). `'hang'` now survives only as the
+   *  genuine non-termination guard (a World invariant violation; see the battle
+   *  loop), so it's effectively never produced. */
+  winner: Team | 'draw' | 'hang';
   ticks: number;
   playerDeaths: number;
   enemyDeaths: number;
@@ -163,17 +169,16 @@ export interface HarnessOptions {
   readonly daemon?: DaemonSelection;
 }
 
-// 150s of game time. Authored in seconds and converted via the
-// TICK_RATE contract so the E3.5 doubling (10 → 20 Hz) didn't silently
-// halve the real cap — which is exactly what made grown-team battles on
-// the 32-long endlessCorridors board read as false "hangs" at the old
-// hardcoded 1000 (= 50s post-E3.5). Kept in lockstep with the in-game turn
-// cap (`config/health.json` maxTurnSeconds) — I2 raised both 100 → 150 so a
-// dodge-era battle (whiffs lengthen fights ~33–66%) gets room to resolve
-// decisively before it reads as a false hang here / a draw in-game. The two
-// caps are still SEPARATE constants (this one + the config one); unifying
-// them onto one source is a Phase-N cleanup (see ROADMAP §Phase N).
-const DEFAULT_MAX_TICKS = secondsToTicks(150);
+// The per-turn tick cap — the SINGLE source is `config/health.json`'s
+// `maxTurnSeconds`, converted via the TICK_RATE contract (so the E3.5 10 → 20 Hz
+// doubling didn't silently halve it — what once made grown-team battles on the
+// 32-long endlessCorridors board read as false "hangs"). N2 UNIFIED this: the
+// live game (BattleScene), this harness, and the arena all read the same config
+// value and all force-resolve a battle that reaches it as a DRAW (resolveAsDraw —
+// chips both pools, the run continues), instead of the old divergence where the
+// harness alone labeled a cap-hit a run-ending 'hang'. 'hang' now means genuine
+// non-termination only (a World invariant violation).
+const DEFAULT_MAX_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 const DEFAULT_MAX_HOPS = 50;
 
 /**
@@ -407,8 +412,20 @@ export function runOne(
         }
         totalTicks += battleTicks;
         if (!w.ended) {
-          // Hang: synthesize a battle record so the report shows it,
-          // then bail with outcome 'hang'.
+          // N2 — the per-turn cap (`config/health.json` maxTurnSeconds) was reached
+          // without a decisive end. Force-resolve as a DRAW exactly like the live
+          // driver: resolveAsDraw chips BOTH pools and emits battle:ended('draw')
+          // (the handler records the battle with winner 'draw' + nulls currentBattle/
+          // World), and the RUN CONTINUES. A long/indecisive turn is no longer a
+          // run-ending 'hang'; capped draws read downstream as winner === 'draw'.
+          w.resolveAsDraw();
+        }
+        if (!w.ended) {
+          // Unreachable in practice — resolveAsDraw is the single idempotent
+          // end-emit, so the battle is always ended above. Kept ONLY as the genuine
+          // non-termination guard (a World invariant violation): synthesize a battle
+          // record + bail with outcome 'hang', which now means EXACTLY that, never
+          // just a slow turn.
           if (currentBattle) {
             battles.push({
               floor: currentBattle.floor,

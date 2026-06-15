@@ -1008,3 +1008,64 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   (the N1 dash didn't make it recruit-worthy; the `weakest`-targeting re-measure is the lever, still
   owed). **NEXT:** optional ~67%-dead-on nudge-sweep (budget ~1.1875 or swarm ~1.5625) if wanted; the
   rogue re-measure; N3 leveling consistency check; N4 overnight (reboot FIRST — the dwm leak persists).
+
+- **N2 ROGUE RE-MEASURE — `weakest`+dash STILL backfires → keep `nearest` (2026-06-15).** The owed
+  H7c/I5 forced-roster A/B at the LOCKED band (`1.25 × 1.5`), `--layout=procedural`, realistic bots
+  (`--empower=level:hi --redraw=level:2`), quick tier, `--floors=11`, samplerSeed=1. The SAME forced
+  lvl-5 rogue lineup (`--roster=rogue:5,mercenary:5,mercenary:5,ranged:5,ranged:5`) run under each
+  rogue targeting (the only difference), reading the rogue's per-deployment telemetry:
+
+  | rogue targeting | dmg/dep | taken/dep | deaths/run | deployed | best% |
+  |---|---|---|---|---|---|
+  | **`nearest`** (shipped) | **19.6** | 21.8 | 13.5 | 125 | 75 |
+  | **`weakest`** (test)    | **2.6**  | 23.6 | 20.8 | 171 | 75 |
+
+  *(carries for reference: mercenary ~40 / ranged ~46–57 dmg/dep.)* **`weakest` COLLAPSES the rogue's
+  per-unit damage ~87%** (19.6→2.6) and RAISES its death rate (13.5→20.8/run) despite MORE deployments
+  (dying more → re-drawn from the pool more often) — even WORSE than H7c's pre-dash 3.1. Decisive over
+  125–171 deployments (structural, not quick-tier's 8-seed quantization); best-achievable stayed 75% both
+  runs (the optimizer never leans on the forced rogue → per-deployment is the honest signal).
+  **Mechanism (H7c's, unchanged): the dash doesn't fix the `weakest` identity problem.** `weakest`
+  commits to the lowest-`maxHp` enemy (the backline) and NEVER retargets (`shouldRetarget=false`); the
+  dash is only 2 cells / 10 s cd, so it closes one leap of a 6+-cell gap, then the rogue WALKS the rest
+  through the live enemy front to reach its committed mark — and even when it deletes a squishy it's a
+  lone fragile unit deep in the formation, surrounded, team a board away → focus-fired and dead. The
+  dash solved "close the last gap to an out-of-range NEAREST target" (its N1 job), not "operate alone in
+  the backline." **VERDICT: keep `nearest` (no config change ships — reverted byte-identical to HEAD,
+  per I5/H7c); the dash STAYS on its own N1 merits.** The free-composition search is moot — the optimizer
+  already benched the *better* (`nearest`) rogue at the band in STAGE 3, so it won't field the
+  strictly-worse `weakest` one. **Implication (flagged, future archetype-balance work):** the rogue's
+  "backline assassin" identity needs more than a short dash — a long blink/teleport, post-strike
+  untargetability/stealth, or one-shot burst (none exist) — so the rogue stays a benched specialist
+  alongside the rest of the non-duopoly roster. **N2 rogue thread CLOSED. NEXT: N3 leveling consistency
+  check** (optional 67%-nudge-sweep skipped, user call); N4 overnight deferred to a VPS.
+
+- **N3 LEVELING CONSISTENCY CHECK — GREEN, no nudge (2026-06-15).** The reframed N3: confirm the locked
+  `baseXp 50 / exp 1.1` curve isn't distorted by the final `1.25 × 1.5` band (snowball / fall-behind).
+  Levels-by-floor telemetry via `--per-floor` at the band, `--layout=procedural`, realistic bots
+  (`--empower=level:hi --redraw=level:2`), full floors — two independent reads (greedy ×20 + scored ×50,
+  the scored line reaching deeper for a solid floor-9/10 sample, Runs 17–18). Both AGREE:
+
+  | floor | P.avgLv | E.avgLv | P−E gap |
+  |---|---|---|---|
+  | 1 | 5.10 | 4.59 | +0.51 |
+  | 3 | 6.26 | 5.51 | +0.75 |
+  | 5 | 7.15 | 6.48 | +0.67 |
+  | 7 | 7.86 | 7.01 | +0.85 |
+  | 9 | 8.42 | 7.34 | +1.08 |
+  | 10 | 8.63 | 7.77 | +0.86 |
+
+  (scored ×50.) **Findings:** (1) **cadence is steady** — player avg level climbs 5.10 → 8.63 over 10
+  floors = **+0.39 level/floor**, units level regularly (the M1/M2 "leveling too rare" concern is fully
+  resolved by 50/1.1 — consistent with the playtest-validated feel); no runaway, no stall. (2) **No
+  snowball, no fall-behind** — the player-over-enemy level gap stays in a TIGHT `+0.5…+1.08` band across
+  ALL 10 floors. It does NOT widen on deep floors (a snowball would blow the gap out to +2/+3 as survivors
+  out-scale enemies — it doesn't) and does NOT collapse (the enemy never catches up — E scales in lockstep
+  4.59 → 7.77). (3) Within-team level spread grows 0.14 → ~1.15 (carries level faster via more
+  deployments/XP) but median tracks mean — no extreme outliers. (4) Funnel healthy: Died% ramps 0 (F1–2)
+  → ~10–19% (mid) → LOW 6% on F9–10 (deep-floor survivors are well-equipped — selection effect). **VERDICT:
+  the locked `50/1.1` curve and the final `1.25 × 1.5` band are MUTUALLY CONSISTENT — N3 satisfied, no
+  `leveling.json` change.** **N3 CLOSED → Phase N near-term work COMPLETE** (rogue re-measure + N3 done;
+  optional nudge-sweep skipped). **Remaining Phase N:** the N2 turn-cap-unification cleanup (fold
+  `maxTurnSeconds`/`DEFAULT_MAX_TICKS` onto one source — non-gating chore) and **N4 overnight verify
+  (deferred INDEFINITELY to a VPS** — the local dwm leak risk).

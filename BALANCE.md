@@ -979,28 +979,32 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   swarmMaxMultiplier 1.5:1.75:3` centered on the band — precise best%/gradient + the OP-unit read +
   whether the full-floor band drifts from the 6-floor medium read.**
 
-- **N2 STAGE 3 — heavy/full-floor, PARTIAL (2026-06-14, blocked by the dwm handle leak — see the
-  Parallelism caveat).** Heavy tier, FULL 11 floors, realistic bots, `--layout=procedural`. Three
-  `--jobs` attempts each died mid-sweep on the `0xC0000142` spawn failure (diagnosed: session
-  kernel-pool exhaustion from the dwm leak, NOT commit). But the points that DID complete are
-  deterministic (samplerSeed=1) and **reproduced byte-for-byte across jobs=6/2** — so the band reads
-  clean even without a finished CSV. **Full-floor best-achievable % (gradient):**
+- **N2 STAGE 3 — heavy/full-floor COMPLETE (2026-06-15, `output/n2-stage3/`).** The dwm blocker was
+  resolved by a reboot (full diagnosis split to [archive/dwm-leak-diagnosis.md](archive/dwm-leak-diagnosis.md);
+  driver update ruled out, cross-vendor → reboot-before-heavy-runs is the standing mitigation). Heavy
+  tier (30 train + held-out test seeds), FULL 11 floors, realistic `--empower=level:hi --redraw=level:2`
+  bots, `--layout=procedural`, grid `budgetFactor 1.125:1.375:3 × swarmMax 1.5:1.75:3` (9 pts),
+  `--jobs=8`, samplerSeed=1. Ran clean and **reproduced the partial reads byte-for-byte.**
+  best-achievable % (held-out test · gradient):
 
-  | budget × swarm | best% | grad | runs confirming |
+  | budget\swarm | 1.5 | 1.625 | 1.75 |
   |---|---|---|---|
-  | `1.125 × 1.5` | 87% | +33 | jobs6, jobs2 ×2 |
-  | `1.125 × 1.625` | **73%** | **+37** | jobs6, jobs2 |
-  | `1.25 × 1.5` | **70%** | **+30** | jobs6, jobs2 |
-  | `1.25 × 1.625` | 47% | +27 | jobs6 |
-  | `1.375 × 1.5` | 47% | +27 | jobs8-era |
+  | 1.125 | 87 (test 70, +33) | 73 (50, +37) | 60 (50, +33) |
+  | 1.25  | **70 (60, +30)** | 47 (30, +27) | 40 (30, +33) |
+  | 1.375 | 47 (20, +27) | 23 (20, +10) | 23 (10, +20) |
 
-  **KEY: full floors read ~20–30pp HARDER than the 6-floor medium tier** (winning all 11 > winning 6
-  — cumulative loss + the medium tier systematically over-reads win rate; factor this into N4's
-  full-floor overnight expectations). **CANDIDATE BAND (pending the user's final pick + an
-  OP-telemetry read):** `1.25 × 1.5` → **70% / +30** or `1.125 × 1.625` → **73% / +37** — both sit
-  right on the ~67% target with strong gradients (best ≈ 2× baselines). Band center ≈ `1.2 × 1.55`;
-  nudging swarm to ~1.5625 or budget to ~1.3 would hit 67% dead-on. **STILL OWED (tomorrow): one
-  COMPLETED heavy run for the OP-unit telemetry** (the crashes wrote no CSV) — via a **reboot** (clears
-  the dwm handle leak → `--jobs` works) or **`--jobs=1` single-process** (immune to the spawn failure).
-  Then: lock the band + the archetype/OP read (does the stage-2 roster diversity hold at full floors?)
-  + the rogue `weakest`-targeting re-measure (owed since N1).
+  **BAND LOCKED → `1.25 × 1.5`** (committed to `config/difficulty.json`, was `0.75 × 2.0`): 70% best /
+  **60% held-out** / +30 gradient (best ≈ 2× both baselines), on the ~67% target with the TIGHTEST
+  train→test gap of the contenders (`1.125 × 1.625`'s steeper +37 came with a 73→50 overfit gap — less
+  trustworthy). Full floors read ~20–30pp HARDER than the 6-floor medium tier (factor into N4).
+  **OP-UNIT READ (the owed telemetry):** at the band it's a **mercenary + ranged DUOPOLY** — at
+  `1.25×1.5`, mercenary 1872 deployments + ranged 1320, everything else ≤17 (the other 7 benched).
+  **Stage-2's "diversity emerges at the band" did NOT survive full floors:** diversity shows up only
+  BELOW the band, at the harder/losing points (`1.25×1.75` 40%: healer 199 / mage 96 / rogue 45) — a
+  symptom of the optimizer *struggling*, not health. Nuance: per-unit, **ranged out-damages mercenary**
+  (~40–44 vs ~35–38 dmg/dep); mercenary leads on volume + tanking (soaks ~2× damage, ~2× deaths) — the
+  meatshield that lets ranged farm safely. The monoculture is NOT self-corrected by the difficulty knob
+  → making the specialists band-worthy is archetype-balance work. **Rogue still inactive at the band**
+  (the N1 dash didn't make it recruit-worthy; the `weakest`-targeting re-measure is the lever, still
+  owed). **NEXT:** optional ~67%-dead-on nudge-sweep (budget ~1.1875 or swarm ~1.5625) if wanted; the
+  rogue re-measure; N3 leveling consistency check; N4 overnight (reboot FIRST — the dwm leak persists).

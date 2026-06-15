@@ -122,20 +122,23 @@ Independent CPU-bound runs → embarrassingly parallel. Built-ins only:
     cores), NOT all cores, especially with a dev server running. A lone `--search` (one
     point) or a tiny/all-cheap grid stays fine single-process. `jobs=1 ≡ jobs=N`
     byte-identical (proven), so this is purely wall-clock.
-  - **N2 caveat (2026-06-14) — size `--jobs` to COMMIT HEADROOM, not just cores; HEAVY
-    children are commit-hungry.** A heavy `--jobs=6/8` run died mid-sweep with Windows
-    `0xC0000142` (`STATUS_DLL_INIT_FAILED`) on EVERY child at once — not a flake:
-    **commit-memory (virtual-memory) exhaustion**. Each `--eval-shard` child spikes commit
-    at startup (tsx compiles the whole project) + during full-11-floor sims, and a batch of
-    6–8 stacked on an already-stressed baseline blew past the commit limit, so the OS
-    couldn't map DLLs into the next process. The machine was at **79% committed at IDLE**
-    (61/77 GB) — `dwm.exe` alone leaking ~24 GB (a compositor leak; a reboot reclaims it).
-    **Before a big parallel heavy/overnight run: check commit headroom**
-    (`Get-CimInstance Win32_OperatingSystem`: `(Total-Free)VirtualMemorySize`) and reboot if
-    the baseline has leaked. **`--jobs=2` measured safe** here — only ~1.5 GB added, ~15 GB
-    headroom held. Heuristic: `jobs ≲ commit_headroom_GB / ~2` for heavy, AND ≤ cores/2. The
-    shard runner now retries transient spawn failures (commit `d745836`) — but retries can't
-    fix a SUSTAINED commit shortage (every attempt fails), so headroom is the real lever.
+  - **N2 caveat (2026-06-14) — a SESSION-WIDE HANDLE/KERNEL-POOL leak (not RAM/commit) can
+    kill child-spawning; reboot or go single-process.** Heavy `--jobs` runs died mid-sweep
+    with Windows `0xC0000142` (`STATUS_DLL_INIT_FAILED`) on EVERY child at once — repeatable,
+    not a flake. **First theory (commit-memory exhaustion) was a RED HERRING:** dropping to
+    `--jobs=2` (live-monitored ~15 GB commit headroom holding, children adding only ~1.5 GB)
+    STILL died at point 4 — so commit/RAM was never the binding constraint. **Real cause: a
+    per-session kernel-resource leak.** `dwm.exe` was at **~199K handles and climbing** (a
+    healthy DWM is ~1–5K) over a 3.6-day uptime — draining session desktop-heap / paged-pool,
+    so spawning ANY new process (even a headless node child, which still inits user32) fails
+    at startup regardless of free RAM. `0xC0000142` on process creation = desktop-heap /
+    session-pool / GDI-USER object exhaustion, NOT commit. Corroboration: single-process
+    stage 1 (which never spawns a child) ran clean. **Fixes:** (1) **reboot** (clears the
+    handle leak → `--jobs` works), or (2) **`--jobs=1` single-process** (never spawns → immune,
+    just slower). Watch `(Get-Process dwm).HandleCount` — if it's in the 6-figures, reboot
+    before a big parallel/overnight run. The retry (commit `d745836`) can't help: the leak is
+    sustained, so every attempt fails. **The dwm leak itself wants a permanent fix** (likely
+    GPU-driver or a WebGL/HMR-browser feeder — see HANDOFF "Open threads").
 - *Not recommended*: `node:worker_threads` — lower per-task overhead but real friction
   loading `.ts` under tsx in a worker; not worth it for this workload.
 
@@ -979,3 +982,29 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   it. **NEXT = stage 3 (launched): 3×3 heavy, FULL 11 floors, `--jobs=8`, `budgetFactor 1.25:1.5:3 ×
   swarmMaxMultiplier 1.5:1.75:3` centered on the band — precise best%/gradient + the OP-unit read +
   whether the full-floor band drifts from the 6-floor medium read.**
+
+- **N2 STAGE 3 — heavy/full-floor, PARTIAL (2026-06-14, blocked by the dwm handle leak — see the
+  Parallelism caveat).** Heavy tier, FULL 11 floors, realistic bots, `--layout=procedural`. Three
+  `--jobs` attempts each died mid-sweep on the `0xC0000142` spawn failure (diagnosed: session
+  kernel-pool exhaustion from the dwm leak, NOT commit). But the points that DID complete are
+  deterministic (samplerSeed=1) and **reproduced byte-for-byte across jobs=6/2** — so the band reads
+  clean even without a finished CSV. **Full-floor best-achievable % (gradient):**
+
+  | budget × swarm | best% | grad | runs confirming |
+  |---|---|---|---|
+  | `1.125 × 1.5` | 87% | +33 | jobs6, jobs2 ×2 |
+  | `1.125 × 1.625` | **73%** | **+37** | jobs6, jobs2 |
+  | `1.25 × 1.5` | **70%** | **+30** | jobs6, jobs2 |
+  | `1.25 × 1.625` | 47% | +27 | jobs6 |
+  | `1.375 × 1.5` | 47% | +27 | jobs8-era |
+
+  **KEY: full floors read ~20–30pp HARDER than the 6-floor medium tier** (winning all 11 > winning 6
+  — cumulative loss + the medium tier systematically over-reads win rate; factor this into N4's
+  full-floor overnight expectations). **CANDIDATE BAND (pending the user's final pick + an
+  OP-telemetry read):** `1.25 × 1.5` → **70% / +30** or `1.125 × 1.625` → **73% / +37** — both sit
+  right on the ~67% target with strong gradients (best ≈ 2× baselines). Band center ≈ `1.2 × 1.55`;
+  nudging swarm to ~1.5625 or budget to ~1.3 would hit 67% dead-on. **STILL OWED (tomorrow): one
+  COMPLETED heavy run for the OP-unit telemetry** (the crashes wrote no CSV) — via a **reboot** (clears
+  the dwm handle leak → `--jobs` works) or **`--jobs=1` single-process** (immune to the spawn failure).
+  Then: lock the band + the archetype/OP read (does the stage-2 roster diversity hold at full floors?)
+  + the rogue `weakest`-targeting re-measure (owed since N1).

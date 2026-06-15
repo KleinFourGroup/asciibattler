@@ -2,6 +2,22 @@
 
 A fresh-session orientation for ASCIIbattler. Read this first; then dive into the docs only where they're called out.
 
+> ## ⏯️ ACTIVE SESSION HANDOFF — N2 balance sweep (2026-06-14 evening → resume next morning)
+>
+> **Where we are:** mid-**N2** (the difficulty-band re-sweep). Funnel stages 1–2 ✅, stage 3 (heavy/full-floor) **BLOCKED by a machine issue, not a code issue** — the band itself is essentially pinned. Full N2 detail + all data is in **[BALANCE.md](BALANCE.md)** (the "N2 …" run-log entries at the bottom). Leveling locked at `baseXp 50/exp 1.1`; N3 reframed to a consistency check.
+>
+> **The candidate band (procedural, realistic empower+redraw bots, FULL 11 floors):** `1.25 × 1.5` → **70% / +30pt** or `1.125 × 1.625` → **73% / +37pt** — both on the ~67% target with a healthy gradient (best ≈ 2× baselines). `difficulty.json` is UNCHANGED so far (still `0.75 × 2.0`); no band committed yet — that's a deliberate user decision for the morning.
+>
+> **The blocker (diagnosed): a `dwm.exe` handle leak**, not our code. Heavy `--jobs` sweeps die on Windows `0xC0000142` (DLL-init-failed) when spawning children — it's **session kernel-pool exhaustion** from dwm sitting at **~199K handles** (healthy ≈ 1–5K) over 3.6-day uptime. Commit/RAM was a red herring (jobs=2 died with 15 GB free). See the BALANCE.md "Parallelism" N2 caveat.
+>
+> **First moves next morning (pick one to unblock):** (a) **reboot** → clears the dwm leak → re-run stage 3 with `--jobs`; or (b) **`--jobs=1` single-process** (never spawns a child → immune, ~40-50 min). Either way the goal is **ONE completed heavy run** to get the OP-unit telemetry the crashes never wrote (the band numbers above are already solid from the stdout logs).
+>
+> **Then (the actual N2 work):** lock the final band (≈`1.25×1.5`, maybe nudge to ~`1.3×1.5` / swarm `1.5625` for 67% dead-on) → the archetype/OP-unit read (does stage-2's roster diversity hold at full floors? mercenary>ranged?) → the rogue `weakest`-targeting re-measure (owed since N1) → N3 leveling consistency check → **N4 overnight (reboot FIRST to clear dwm, or run single-process).**
+>
+> **Open threads (non-blocking):** permanent **dwm-leak fix** — likely a GPU-driver update (RTX 4080 SUPER, ~6-mo-old driver) and/or a WebGL/HMR-browser feeder (toggle Firefox/Discord hardware-accel to isolate); the user wants to tackle this tomorrow too. Quick reset any time without rebooting: `Stop-Process -Name dwm -Force` (auto-restarts, ~1s flicker, no data loss).
+>
+> **Tree state:** all work committed; `difficulty.json` clean (no band change yet). No preview server running. `output/n2-stage1/` + `n2-stage2/` have full CSV/report; `n2-stage3/` has none (every heavy run crashed pre-write).
+
 ## Current state
 
 - **MVP shipped** at CHECKPOINT 7 (Phases 0–5 complete; deployed to GitHub Pages, full loop playable).

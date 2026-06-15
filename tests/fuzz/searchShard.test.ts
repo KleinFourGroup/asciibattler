@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { chunkVectors } from './searchShard';
+import { chunkVectors, retryAsync } from './searchShard';
 
 describe('chunkVectors', () => {
   it('splits into min(jobs, n) contiguous, even-as-possible chunks', () => {
@@ -46,5 +46,58 @@ describe('chunkVectors', () => {
 
   it('treats jobs < 1 as a single chunk', () => {
     expect(chunkVectors([1, 2, 3], 0)).toEqual([[1, 2, 3]]);
+  });
+});
+
+describe('retryAsync — transient shard-spawn resilience', () => {
+  it('returns the first success without retrying', async () => {
+    let calls = 0;
+    let retries = 0;
+    const result = await retryAsync(
+      async () => {
+        calls++;
+        return 'ok';
+      },
+      3,
+      () => {
+        retries++;
+      },
+    );
+    expect(result).toBe('ok');
+    expect(calls).toBe(1);
+    expect(retries).toBe(0);
+  });
+
+  it('retries a transient failure then succeeds (the 0xC0000142 flake)', async () => {
+    let calls = 0;
+    const retryAttempts: number[] = [];
+    const result = await retryAsync(
+      async (attempt) => {
+        calls++;
+        if (attempt < 3) throw new Error('eval-shard 0 exited with code 3221225794');
+        return 42;
+      },
+      3,
+      (attempt) => {
+        retryAttempts.push(attempt);
+      },
+    );
+    expect(result).toBe(42);
+    expect(calls).toBe(3);
+    expect(retryAttempts).toEqual([1, 2]); // onRetry fires AFTER attempts 1 and 2, not after the win
+  });
+
+  it('re-throws the last error after exhausting attempts (a real, deterministic failure)', async () => {
+    let calls = 0;
+    await expect(
+      retryAsync(
+        async () => {
+          calls++;
+          throw new Error(`boom ${calls}`);
+        },
+        3,
+      ),
+    ).rejects.toThrow('boom 3');
+    expect(calls).toBe(3); // tried exactly `attempts` times
   });
 });

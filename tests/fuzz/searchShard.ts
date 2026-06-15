@@ -74,7 +74,41 @@ export function chunkVectors<T>(items: readonly T[], jobs: number): T[][] {
 
 const CLI_PATH = join(dirname(fileURLToPath(import.meta.url)), 'cli.ts');
 
-function runChunk(
+/** How many times to (re)try spawning a shard child before giving up. A
+ *  multi-point heavy/overnight sweep spawns hundreds of children, and Windows
+ *  intermittently fails a fresh spawn under that load with `0xC0000142`
+ *  (STATUS_DLL_INIT_FAILED) — a TRANSIENT, non-deterministic failure that a
+ *  retry clears. Without this, one flaky spawn nukes the whole 40-min run. A
+ *  REAL (deterministic) failure still surfaces after the attempts are spent. */
+const SHARD_ATTEMPTS = 3;
+
+/**
+ * Run `fn` up to `attempts` times, returning the first success. `onRetry` runs
+ * between a failed attempt and the next (e.g. a backoff delay + a log line); it
+ * does NOT run after the final attempt. Re-throws the last error if all attempts
+ * fail. Pure (no timers of its own) so it unit-tests without fake clocks — the
+ * caller owns any delay via `onRetry`.
+ */
+export async function retryAsync<T>(
+  fn: (attempt: number) => Promise<T>,
+  attempts: number,
+  onRetry?: (attempt: number, err: unknown) => void | Promise<void>,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await fn(attempt);
+    } catch (err) {
+      lastErr = err;
+      if (attempt < attempts) await onRetry?.(attempt, err);
+    }
+  }
+  throw lastErr;
+}
+
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+function spawnChunkOnce(
   chunk: readonly ScoredWeights[],
   index: number,
   base: Omit<ShardJob, 'vectors'>,
@@ -109,6 +143,27 @@ function runChunk(
       }
     });
   });
+}
+
+/** Spawn one shard child, retrying TRANSIENT spawn failures (the Windows
+ *  DLL-init flake) up to `SHARD_ATTEMPTS` times with a short backoff. */
+function runChunk(
+  chunk: readonly ScoredWeights[],
+  index: number,
+  base: Omit<ShardJob, 'vectors'>,
+  tmpDir: string,
+): Promise<number[]> {
+  return retryAsync(
+    () => spawnChunkOnce(chunk, index, base, tmpDir),
+    SHARD_ATTEMPTS,
+    async (attempt, err) => {
+      process.stderr.write(
+        `  shard ${index} spawn failed (attempt ${attempt}/${SHARD_ATTEMPTS}), retrying: ` +
+          `${String(err).split('\n')[0]}\n`,
+      );
+      await delay(1000 * attempt);
+    },
+  );
 }
 
 export interface ShardedEvalParams {

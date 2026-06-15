@@ -28,12 +28,15 @@
  * - `maxTurns`        — hard cap on turns per encounter. A run of all-mutual-
  *                       wipe turns chips 0/0 forever; on the cap the encounter
  *                       resolves by remaining pool fraction. Bounds the loop.
- * - `maxTurnSeconds`  — per-turn wall-time budget. A single turn's tactical
- *                       battle that hasn't resolved by this point is force-
- *                       resolved as a DRAW by the driver (the test harness in
- *                       H4a, BattleScene in H4b) via `World.resolveAsDraw`.
- *                       Authored in seconds; convert with `secondsToTicks` at
- *                       the consumer so it tracks `TICK_RATE` (gotcha #6).
+ * - `maxTurnSeconds`  — per-turn wall-time budget, and the SINGLE source for it.
+ *                       A turn's battle that hasn't resolved by this point is
+ *                       force-resolved as a DRAW by the driver via
+ *                       `World.resolveAsDraw` — uniformly across the live game
+ *                       (BattleScene), the fuzz run harness, and the arena (N2
+ *                       wired BattleScene + collapsed their once-hardcoded copies
+ *                       onto this value). Authored in seconds; convert with
+ *                       `secondsToTicks` at the consumer so it tracks `TICK_RATE`
+ *                       (gotcha #6).
  *
  * Source of truth at `config/health.json`.
  */

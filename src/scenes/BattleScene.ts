@@ -20,7 +20,7 @@ import type { BackdropRenderer } from '../render/BackdropRenderer';
 import { HUD } from '../ui/HUD';
 import { ObjectiveController } from '../ui/ObjectiveController';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
-import { TICK_RATE } from '../config';
+import { TICK_RATE, secondsToTicks } from '../config';
 import { HEALTH } from '../config/health';
 import { SPAWN } from '../config/spawn';
 import { getLayout, type Theme } from '../sim/layouts';
@@ -32,6 +32,14 @@ import type { Scene, SceneContext } from './Scene';
 function titleCaseTheme(theme: Theme): string {
   return theme.charAt(0).toUpperCase() + theme.slice(1);
 }
+
+// N2 — the per-turn tick cap, the SAME single source as the fuzz harness + arena
+// (`config/health.json` maxTurnSeconds via the TICK_RATE contract). A live turn
+// that reaches it without a decisive end is force-resolved as a DRAW rather than
+// ticking forever — the driver wiring `World.resolveAsDraw` was always meant to
+// have (the headless harness already did this; the live game never did until now,
+// so a true stall used to soft-lock the battle).
+const MAX_TURN_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 
 export class BattleScene implements Scene {
   private clock: Clock | null = null;
@@ -74,7 +82,16 @@ export class BattleScene implements Scene {
       encounter.gridW,
       encounter.gridH,
     );
-    this.clock = new Clock(TICK_RATE, () => this.world?.tick());
+    this.clock = new Clock(TICK_RATE, () => {
+      const w = this.world;
+      if (!w || w.ended) return;
+      w.tick();
+      // N2 — enforce the per-turn cap: a turn that runs to the budget without a
+      // decisive end force-resolves as a DRAW (chips both pools; the run rolls on
+      // through the post-turn screen) instead of ticking forever. resolveAsDraw is
+      // a no-op once ended, so a tick that races a natural end can't double-resolve.
+      if (!w.ended && w.currentTick >= MAX_TURN_TICKS) w.resolveAsDraw();
+    });
     this.battleRenderer = new BattleRenderer(
       ctx.sprites,
       ctx.overlays,

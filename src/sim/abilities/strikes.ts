@@ -78,7 +78,11 @@ function proposeBasicStrike(
   // E5: gate on THIS ability's own range (config/abilities.json), not
   // the unit's max engagement range — a multi-ability unit's short-range
   // strike must abstain when only its long-range ability can reach.
-  if (chebyshev(unit.position, target.position) > cfg.range) return null;
+  // O4: gate on the ability's BAND [minRange, range] — a target too close
+  // (inside minRange) abstains too (the unit kites out first). `minRange 0`
+  // (the default) leaves this an upper-bound-only check (byte-identical).
+  const dist = chebyshev(unit.position, target.position);
+  if (dist > cfg.range || dist < cfg.minRange) return null;
 
   const blockers = collectLosBlockers(world);
   if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {

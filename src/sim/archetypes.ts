@@ -48,6 +48,36 @@ export function rangeForArchetype(archetype: Archetype): number {
 }
 
 /**
+ * O4 — a unit's engagement FLOOR: the `minRange` of the archetype's longest-range
+ * engaging (non-`movement`) ability — the same ability whose `range` defines
+ * `derived.attackRange`, so `[minRange, attackRange]` is the firing band
+ * `MovementBehavior` kites within. Config-READ (parallels `rangeForArchetype`),
+ * deliberately NOT plumbed into `UnitDerived` — there's no serialized per-unit
+ * copy, so `minRange` needs no WorldSnapshot bump (it's looked up live wherever
+ * `attackRange` is, exactly like `range`/`accuracy`). Every archetype today
+ * carries a single attack ability, so "longest-range engaging" is unambiguous;
+ * the max-by-range tie-break generalizes it to a future multi-weapon unit.
+ * `minRange 0` for every weapon today → byte-identical (no kiting) until the O4
+ * value commit sets bow/mage/catapult floors.
+ *
+ * Accepts the full `UnitArchetype` (like `targetingForArchetype`): environment
+ * entities (walls/half-cover) never seek a firing position, so they map to 0 and
+ * `MovementBehavior` needn't pre-narrow `unit.archetype` (a wall has no behaviors
+ * and never reaches the band logic anyway).
+ */
+export function minRangeForArchetype(archetype: UnitArchetype): number {
+  if (archetype === 'environment') return 0;
+  const ids = CONFIGS[archetype].abilities;
+  const engaging = ids.filter((id) => abilityConfig(id).kind !== 'movement');
+  const reach = engaging.length > 0 ? engaging : ids;
+  let best = reach[0]!;
+  for (const id of reach) {
+    if (abilityConfig(id).range > abilityConfig(best).range) best = id;
+  }
+  return abilityConfig(best).minRange;
+}
+
+/**
  * Per-archetype target-selection strategy id (resolved against the registry
  * in `src/sim/targetingStrategies.ts`). Resolved at spawn and stashed on
  * `Unit.targeting` so the leaf `Targeting.ts` needn't import the config layer.

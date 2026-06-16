@@ -86,10 +86,20 @@ export type AoeConfig = z.infer<typeof AoeSchema>;
  * (attack/heal) or the leap distance (a future `movement` ability), in cells;
  * `cooldownSeconds` is the base recharge interval, scaled by the unit's speed
  * at propose time (`attackCooldownTicksFor`).
+ *
+ * O4 — `minRange` is the engagement FLOOR: a unit whose target sits inside
+ * `minRange` repositions OUT to the `[minRange, range]` band (kiting) and
+ * abstains from firing while the target is closer (`MovementBehavior`'s band
+ * abstain + the propose-gate lower bound). **`minRange 0` (the default — `.default`
+ * fills it when the JSON omits it, so every existing entry stays byte-identical)
+ * = today's behavior exactly** (no floor). Meaningful only for the to-hit/heal
+ * kinds; a `movement` leap carries it harmlessly (always 0, never read — the
+ * engagement-minRange helper excludes movement abilities).
  */
 const CommonFields = {
   range: z.number().int().positive(),
   cooldownSeconds: z.number().positive(),
+  minRange: z.number().int().nonnegative().default(0),
 };
 
 /**

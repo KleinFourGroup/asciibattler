@@ -50,7 +50,10 @@ export class MagicBolt implements Ability {
 
     const target = currentTarget(unit, world);
     if (target === null) return null;
-    if (chebyshev(unit.position, target.position) > cfg.range) return null;
+    // O4 — band gate [minRange, range]: a target inside minRange abstains (the
+    // mage kites out for a clean blast). `minRange 0` (default) = upper-bound only.
+    const dist = chebyshev(unit.position, target.position);
+    if (dist > cfg.range || dist < cfg.minRange) return null;
 
     // LOS gate (mirrors the ranged strike): a wall on the line blocks the
     // cast, so MovementBehavior keeps pathing for a clear shot instead of

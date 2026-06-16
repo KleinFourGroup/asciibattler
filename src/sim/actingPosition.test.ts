@@ -100,4 +100,39 @@ describe('nearestActingCell', () => {
     expect(a).toEqual(b);
     expect(a).not.toBeNull();
   });
+
+  // O4 — the minRange band [minRange, range]. The 7th arg (default 0) makes a
+  // too-close unit search OUTWARD for a standoff cell rather than holding.
+  describe('minRange band (O4)', () => {
+    it('minRange 0 (the default) is range-only — an in-range unit holds (byte-identical)', () => {
+      // Passing minRange 0 explicitly must match the pre-O4 range-only behavior:
+      // `from` is already within range, so it qualifies and the unit holds.
+      const world = mkWorld(12, 12);
+      const from = { x: 4, y: 5 };
+      const target = { x: 5, y: 5 }; // cheby 1, in range 4
+      expect(nearestActingCell(from, target, 4, 2, world, null, 0)).toEqual(from);
+    });
+
+    it('a too-close unit gets a standoff cell OUT at the band (kites away)', () => {
+      const world = mkWorld(12, 12);
+      const from = { x: 3, y: 5 };
+      const target = { x: 5, y: 5 }; // cheby 2 — inside minRange 3
+      const cell = nearestActingCell(from, target, 6, 3, world, null, 3);
+      expect(cell).not.toBeNull();
+      expect(cheb(cell!, target)).toBeGreaterThanOrEqual(3); // honors the floor
+      expect(cheb(cell!, target)).toBeLessThanOrEqual(6); // and the ceiling
+      expect(cheb(cell!, target)).toBeGreaterThan(cheb(from, target)); // moved AWAY
+    });
+
+    it('picks the NEAREST band cell — a minimal one-cell kite, not a full retreat', () => {
+      const world = mkWorld(12, 12);
+      const from = { x: 4, y: 5 };
+      const target = { x: 5, y: 5 }; // cheby 1 — inside minRange 2
+      const cell = nearestActingCell(from, target, 6, 3, world, null, 2);
+      expect(cell).not.toBeNull();
+      // The nearest cell satisfying the floor sits exactly at minRange (2), not
+      // farther — the unit backs out one step, it doesn't flee to max range.
+      expect(cheb(cell!, target)).toBe(2);
+    });
+  });
 });

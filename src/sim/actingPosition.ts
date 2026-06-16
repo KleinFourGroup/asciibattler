@@ -4,8 +4,12 @@ import { hasLineOfSight } from './LineOfSight';
 
 /**
  * GP4 — find the nearest reachable cell from which `from` could ACT on a unit
- * at `target`: a cell `c` with `chebyshev(c, target) <= range` and (when
- * `losBlockers` is non-null) line of sight to the target. The two callers:
+ * at `target`: a cell `c` with `chebyshev(c, target)` in the band
+ * `[minRange, range]` (O4 — `minRange` defaults 0, i.e. range-only, GP4's
+ * original behavior) and (when `losBlockers` is non-null) line of sight to the
+ * target. A non-zero `minRange` makes a too-close unit search for a cell FARTHER
+ * out (the kiting standoff), since its own cell / near cells fail the lower
+ * bound. The two callers:
  *
  *   - archers / mage  — `losBlockers` = the LOS occluders (the shot is gated);
  *   - the catapult    — `losBlockers` = null (it lobs over walls, range only).
@@ -48,6 +52,10 @@ export function nearestActingCell(
   searchSlack: number,
   world: World,
   losBlockers: readonly GridCoord[] | null,
+  // O4 — the engagement FLOOR; cells closer than this to the target are rejected
+  // (the unit kites out). Defaults 0 (range-only) so GP4's other callers and the
+  // pre-O4 firing-cell search stay byte-identical.
+  minRange = 0,
 ): GridCoord | null {
   // Hard blockers for BFS traversal: neutral-team units (walls + half-cover),
   // exactly what `findPath` treats as impassable, so reachability matches.
@@ -63,8 +71,10 @@ export function nearestActingCell(
 
   for (let head = 0; head < queue.length; head++) {
     const { c, depth } = queue[head]!;
+    const d = chebyshev(c, target);
     if (
-      chebyshev(c, target) <= range &&
+      d <= range &&
+      d >= minRange &&
       (losBlockers === null || hasLineOfSight(c, target, losBlockers))
     ) {
       return c;

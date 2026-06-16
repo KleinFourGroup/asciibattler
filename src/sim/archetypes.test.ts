@@ -3,12 +3,14 @@ import {
   rollUnit,
   glyphForArchetype,
   rangeForArchetype,
+  minRangeForArchetype,
   targetingForArchetype,
   abilityIdsForArchetype,
   ARCHETYPE_CONFIG,
   ALL_ARCHETYPES,
 } from './archetypes';
 import { damageStatFor } from './stats';
+import { attackConfig } from '../config/abilities';
 import { knownTargetingIds } from './targetingStrategies';
 import { RNG } from '../core/RNG';
 
@@ -65,6 +67,18 @@ describe('archetypes / lookups', () => {
   it('rangeForArchetype is the max over abilities (melee=1, ranged>1)', () => {
     expect(rangeForArchetype('mercenary')).toBe(1);
     expect(rangeForArchetype('ranged')).toBeGreaterThan(1);
+  });
+
+  it('minRangeForArchetype is the floor of the longest-range attack (O4, config-derived)', () => {
+    // Balance-proof: the engagement floor IS the attack ability's minRange,
+    // whether that's 0 (the O4a plumbing commit) or set (the O4b value commit).
+    expect(minRangeForArchetype('ranged')).toBe(attackConfig('bow').minRange);
+    expect(minRangeForArchetype('mage')).toBe(attackConfig('magic_bolt').minRange);
+    expect(minRangeForArchetype('catapult')).toBe(attackConfig('catapult_shot').minRange);
+    // Melee carries no floor; the rogue's `movement` dash is excluded, so its
+    // floor comes from the gambit strike, not the (longer-range) leap.
+    expect(minRangeForArchetype('mercenary')).toBe(attackConfig('sword').minRange);
+    expect(minRangeForArchetype('rogue')).toBe(attackConfig('gambit_strike').minRange);
   });
 });
 

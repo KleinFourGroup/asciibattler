@@ -6,6 +6,7 @@ import { currentTarget } from '../Targeting';
 import { SIM } from '../../config/sim';
 import { hasLineOfSight } from '../LineOfSight';
 import { nearestActingCell } from '../actingPosition';
+import { minRangeForArchetype } from '../archetypes';
 import { advance, chebyshev, type MovementIntent } from '../movement';
 
 /**
@@ -115,17 +116,26 @@ export class MovementBehavior implements Behavior {
 
     // E7.D — a unit whose engagement ability ignores LOS (the catapult's arcing
     // shot) abstains on range alone: no point creeping forward to clear a wall
-    // it lobs over. LOS-gated units keep the `inRange && hasLOS` abstain so a
+    // it lobs over. LOS-gated units keep the `inBand && hasLOS` abstain so a
     // wall makes them path for a clear shot instead of freezing.
     const ignoresLos = unit.abilities.some((a) => a.ignoresLineOfSight === true);
-    const inRange = chebyshev(unit.position, target.position) <= unit.derived.attackRange;
-    if (inRange && (ignoresLos || hasLineOfSight(unit.position, target.position, losBlockers))) {
+    // O4 — abstain only when the target is in the firing BAND [minRange,
+    // attackRange]. Too FAR → close in (below); too CLOSE (inside minRange) →
+    // DON'T abstain, fall through and KITE out to the band. `minRange 0` (every
+    // weapon pre-O4-values, all melee, heal) → `inBand === inRange`, so this is
+    // byte-identical until the value commit sets a floor.
+    const minRange = minRangeForArchetype(unit.archetype);
+    const dist = chebyshev(unit.position, target.position);
+    const inBand = dist >= minRange && dist <= unit.derived.attackRange;
+    if (inBand && (ignoresLos || hasLineOfSight(unit.position, target.position, losBlockers))) {
       return null;
     }
 
     // Goal preference: firing cell (ranged only, when reachable) then the
     // target's own cell. `advance` tries them in order and falls back to the
-    // target — the anti-freeze guarantee.
+    // target — the anti-freeze guarantee. O4 — the firing cell must sit in the
+    // BAND, so a too-close unit's nearest acting cell is a standoff a step BACK
+    // (the kite), not its current (too-close) cell.
     const goals: GridCoord[] = [];
     if (unit.derived.attackRange > 1) {
       const firingCell = nearestActingCell(
@@ -135,6 +145,7 @@ export class MovementBehavior implements Behavior {
         SIM.actingCellSearchSlack,
         world,
         ignoresLos ? null : losBlockers,
+        minRange,
       );
       if (firingCell !== null) goals.push(firingCell);
     }

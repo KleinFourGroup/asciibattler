@@ -9,7 +9,12 @@ import { fileURLToPath } from 'node:url';
 //      detail (it reached 600+ lines before the 2026-06-07 trim).
 //   2. Doc-tree drift — the source tree in ARCHITECTURE.md listing files that
 //      no longer exist (closes the TODO "catch doc-tree drift" item).
-// Both are forcing functions: when one trips, do the cleanup it points at — or
+//   3. HANDOFF read-limit bloat — even WITHIN the line caps, packing enormous
+//      lines pushes the file past the agent Read-tool token budget (~25k): it
+//      hit ~30k tokens / ~69k chars at only 120 lines on 2026-06-16, unreadable
+//      in one call while passing both line caps. The line metric is blind to
+//      density, so we also cap CHARACTERS (a tokenizer-free proxy for tokens).
+// All are forcing functions: when one trips, do the cleanup it points at — or
 // bump the threshold deliberately if the growth is legitimate.
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -24,6 +29,11 @@ describe('docs hygiene', () => {
   // means completed phases were left verbose.
   const HANDOFF_MAX_LINES = 250;
   const CURRENT_STATE_MAX_LINES = 120;
+  // The Read-tool token budget is ~25k. At the density observed on 2026-06-16
+  // (~69k chars ≈ 30k tokens → ~2.3 chars/token), 48k chars ≈ 21k tokens —
+  // comfortably under the cap, with headroom for growth between cleanups. This
+  // guards the failure mode the line caps miss: few but enormous lines.
+  const HANDOFF_MAX_CHARS = 48_000;
 
   it(`HANDOFF.md stays under ${HANDOFF_MAX_LINES} lines`, () => {
     const n = lineCount(read('HANDOFF.md'));
@@ -44,6 +54,14 @@ describe('docs hygiene', () => {
       len,
       `"## Current state" is ${len} lines. Only the in-progress phase should be verbose — demote completed phases to one line + an archive pointer (AGENTS "Keep HANDOFF lean"), or bump CURRENT_STATE_MAX_LINES deliberately.`,
     ).toBeLessThanOrEqual(CURRENT_STATE_MAX_LINES);
+  });
+
+  it(`HANDOFF.md stays under ${HANDOFF_MAX_CHARS} chars (Read-tool token budget)`, () => {
+    const n = read('HANDOFF.md').length;
+    expect(
+      n,
+      `HANDOFF.md is ${n} chars (~${Math.round(n / 2.3)} tokens) — past the ~25k-token Read-tool limit, so it can't be read in one call even though it may pass the line caps (dense, oversized lines). Demote completed-phase "Current state" detail to one line + an archive pointer (AGENTS "Keep HANDOFF lean"), or bump HANDOFF_MAX_CHARS deliberately.`,
+    ).toBeLessThanOrEqual(HANDOFF_MAX_CHARS);
   });
 
   // ARCHITECTURE.md "Top-level structure" is the single canonical source tree

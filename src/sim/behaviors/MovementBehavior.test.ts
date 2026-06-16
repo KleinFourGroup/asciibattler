@@ -381,6 +381,42 @@ describe('MovementBehavior / tile objective (J1)', () => {
   });
 });
 
+describe('MovementBehavior / hold (O2)', () => {
+  function setHold(world: World): void {
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
+  }
+
+  it('a held unit does NOT pursue an enemy out of reach (acts in place)', () => {
+    // Without hold this unit would step toward the enemy every tick (see the
+    // "steps one cell toward the target" test). Under hold it stays put.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 1, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 5, y: 0, inert: true },
+    ]);
+    setHold(world);
+    for (let i = 0; i < 6; i++) world.tick();
+    expect(moves).toHaveLength(0);
+    expect(units[0]!.position).toEqual({ x: 0, y: 0 });
+  });
+
+  it('a held ranged unit does NOT reposition to clear LOS for a blocked shot (the guard)', () => {
+    // Mirror the "ranged unit steps forward to clear a wall for the shot" test
+    // above — the exact case where hold's MovementBehavior guard is
+    // load-bearing: there the unit MOVES to get LOS; under hold it must hold
+    // position (it shoots only if it already has the shot, never moves to make
+    // one).
+    const { world, units, moves } = scene([
+      { team: 'player', x: 0, y: 0, attackRange: 6, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 4, y: 0, inert: true },
+      { team: 'neutral', x: 2, y: 0, inert: true }, // wall on the LOS line
+    ]);
+    setHold(world);
+    for (let i = 0; i < 6; i++) world.tick();
+    expect(moves).toHaveLength(0);
+    expect(units[0]!.position).toEqual({ x: 0, y: 0 });
+  });
+});
+
 interface SceneUnit {
   team: Team;
   x: number;

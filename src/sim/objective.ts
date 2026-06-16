@@ -11,8 +11,9 @@ import type { GridCoord } from '../core/types';
  *  - `tile`:  a rally cell the team paths toward (an attractor — "as close as
  *    they can").
  *
- * `TeamObjective` — the always-present per-team wrapper. O1 ships two modes; O2
- * adds `hold`, O3 adds `focus` (each extends this union + its behavior branch):
+ * `TeamObjective` — the always-present per-team wrapper. O1 shipped `atWill` +
+ * `engage`; O2 adds `hold`; O3 adds `focus` (each extends this union + its
+ * behavior branch):
  *  - `atWill` (the default): no target — default nearest-enemy targeting +
  *    normal pathing. BEHAVIORALLY IDENTICAL to J1's `objective === null`. A team
  *    reverts here when an `engage`/`focus` enemy target dies (J1's auto-clear,
@@ -20,6 +21,11 @@ import type { GridCoord } from '../core/types';
  *  - `engage`: target = enemy or tile. The RTS attack-move — BEHAVIORALLY
  *    IDENTICAL to J1's set objective (leash-capped engage radius + retaliation;
  *    see `Targeting.updateObjectiveTarget`).
+ *  - `hold` (O2): no target. Units STOP MOVING (`MovementBehavior` proposes no
+ *    intent — no pursuit, no dash) but ACT IN PLACE: they target + attack any
+ *    enemy ALREADY within their attack range (`Targeting.updateTarget`'s hold
+ *    branch picks an in-range enemy or none). A held ranged unit fires at
+ *    anything in reach; a held melee unit only strikes adjacent.
  *
  * Stored per-team on `World` (`objectiveFor(team)`); the ENEMY team is fixed at
  * `atWill` for now (J1's "enemy AI never sets it"), but the storage is real and
@@ -42,7 +48,8 @@ export type ObjectiveTeam = 'player' | 'enemy';
  */
 export type TeamObjective =
   | { readonly mode: 'atWill' }
-  | { readonly mode: 'engage'; readonly target: ObjectiveTarget };
+  | { readonly mode: 'engage'; readonly target: ObjectiveTarget }
+  | { readonly mode: 'hold' };
 
 /**
  * The shared `atWill` default — both teams start here and every revert lands

@@ -355,6 +355,57 @@ describe('Targeting / shared objective (J1)', () => {
   });
 });
 
+describe('Targeting / hold (O2)', () => {
+  // Hold = act in place: target only what's ALREADY within attack range, never
+  // reposition. One tick drains the command + runs updateTarget's hold branch.
+  function setHold(world: World): void {
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
+    world.tick();
+  }
+
+  it('targets an enemy already within strike range', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 }, // melee range 1
+      { id: 2, team: 'enemy', x: 3, y: 2 }, // cheby 1 → in range
+    ]);
+    setHold(world);
+    expect(units[0]!.targetId).toBe(2);
+  });
+
+  it('ignores an enemy out of range → no target (idle, never closes)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 2, team: 'enemy', x: 5, y: 5 }, // cheby 3 > range 1
+    ]);
+    setHold(world);
+    expect(units[0]!.targetId).toBeNull();
+    // currentTarget honors hold — no nearest-enemy fallback to chase.
+    expect(currentTarget(units[0]!, world)).toBeNull();
+  });
+
+  it('a ranged unit fires at its FULL attackRange, not the engage leash', () => {
+    // Contrast the engage leash test above: at cheby 5 (> leash 3, <= range 6)
+    // engage would NOT target (leashed off the objective), but hold attacks
+    // anything in actual reach.
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged', attackRange: 6 },
+      { id: 2, team: 'enemy', x: 5, y: 0 }, // cheby 5 <= range 6
+    ]);
+    setHold(world);
+    expect(units[0]!.targetId).toBe(2);
+  });
+
+  it('re-picks an in-range enemy over a stale out-of-range commitment (in-place switch)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2, targetId: 9 }, // committed to the far one
+      { id: 2, team: 'enemy', x: 3, y: 2 }, // in range (cheby 1)
+      { id: 9, team: 'enemy', x: 10, y: 10 }, // out of range — drop it
+    ]);
+    setHold(world);
+    expect(units[0]!.targetId).toBe(2);
+  });
+});
+
 /**
  * Build a World seeded with hand-placed units. We bypass spawnUnit because
  * Targeting tests want precise ids and HPs without rolling templates.

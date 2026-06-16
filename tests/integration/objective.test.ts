@@ -73,3 +73,34 @@ describe('Objective system (J1) — integration determinism', () => {
     expect(JSON.stringify(restored.toJSON())).toEqual(JSON.stringify(w.toJSON()));
   });
 });
+
+describe('Hold mode (O2) — integration', () => {
+  it('a fully-held board is a static stalemate (no moves, no deaths — the turn cap draws it)', () => {
+    // Both teams hold, spawned far apart (players y=1, enemies y=10): nobody is
+    // in anybody's reach, so nobody moves and nobody attacks. World.tick never
+    // ENDS such a board (no elimination); the harness / BattleScene turn cap
+    // (N2) is what resolves a stalemate as a capped draw. This pins the "no
+    // paralysis / no hang" property at the sim level: the board is a fixed point.
+    const w = battle(909);
+    w.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
+    w.enqueueCommand({ kind: 'setObjective', team: 'enemy', objective: { mode: 'hold' } });
+    const snap = (): unknown =>
+      w.units.map((u) => ({ id: u.id, x: u.position.x, y: u.position.y, hp: u.currentHp }));
+    const before = snap();
+    for (let i = 0; i < 200 && !w.ended; i++) w.tick();
+    expect(snap()).toEqual(before); // nobody moved, nobody took damage
+    expect(w.ended).toBe(false); // no elimination → only the turn cap can end it
+  });
+
+  it('same seed + hold commands → byte-identical battle', () => {
+    // Player holds in place while the (atWill) enemies close + attack — real
+    // combat, so this exercises hold determinism under fire, not just a stalemate.
+    const run = (): string => {
+      const w = battle(555);
+      w.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
+      for (let i = 0; i < 300 && !w.ended; i++) w.tick();
+      return JSON.stringify(w.toJSON());
+    };
+    expect(run()).toEqual(run());
+  });
+});

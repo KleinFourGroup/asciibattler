@@ -196,18 +196,26 @@ The anti-blobbing core (the brief's "first idea"), and the architectural
 keystone of the round. All sim + fuzz, **headless-first**. Lands the round's one
 expected WorldSnapshot bump.
 
-> **STATUS: O1 ✅ COMPLETE (2026-06-16).** The always-an-objective typed model
-> (`TeamObjective` = `atWill` | `engage{target}`; `ObjectiveTarget` = the renamed
-> J1 `BattleObjective`) now lives per-team on `World` (`objectives: { player,
-> enemy }`, accessor `objectiveFor(team)`); the enemy team is fixed at `atWill`
-> but the storage + the revert-on-death scan are symmetric (a future enemy
-> strategy is a data change). `setObjective(team, objective)` / `clearObjective(team)`
-> commands; `objective:set`/`:cleared` events carry the team. **WorldSnapshot
-> v24 → v25** (reject stale). **Byte-identical by construction** — every consumer
-> gates on `mode === 'engage'` / `!== 'atWill'`, so `atWill ≡` old-`null` and
-> `engage ≡` old set-objective (953 main / 191 fuzz:smoke green; the marker render
-> path browser-verified). **NEXT = O2 (hold mode).** O3 (focus) / O4 (ranged
-> minRange) / O5 (fuzz) follow; the balance re-confirmation rides O3/O4.
+> **STATUS: O1 + O2 ✅ COMPLETE (2026-06-16).**
+> **O1** — the always-an-objective typed model (`TeamObjective` = `atWill` |
+> `engage{target}`; `ObjectiveTarget` = the renamed J1 `BattleObjective`) now lives
+> per-team on `World` (`objectives: { player, enemy }`, accessor `objectiveFor(team)`);
+> the enemy team is fixed at `atWill` but the storage + the revert-on-death scan are
+> symmetric (a future enemy strategy is a data change). `setObjective(team, objective)`
+> / `clearObjective(team)` commands; `objective:set`/`:cleared` events carry the team.
+> **WorldSnapshot v24 → v25** (reject stale). Byte-identical by construction (every
+> consumer gates on `mode === 'engage'` / `!== 'atWill'`).
+> **O2** — `hold` mode added to the union: `MovementBehavior` proposes no intent
+> under hold (a one-line guard) and `Targeting.updateTarget` picks only an
+> ALREADY-in-range enemy (`findInRangeEnemy`, full `attackRange`, no leash) or
+> none. Units act in place — a held ranged unit fires what's in reach, a held melee
+> only adjacent; the rogue **dash is suppressed for free** (it gates on
+> `currentTarget`, which hold keeps in-range-or-null). No snapshot bump (rides O1).
+> A fully-held board is a static stalemate the turn cap (N2) draws. Verified:
+> typecheck clean / 962 main / 191 fuzz:smoke; O1's marker path + O2's
+> hold-freezes-real-units (incl. dash) both confirmed live.
+> **NEXT = O3 (focus + the `leashAtNearest` switch — DESIGN-ROUND-locked default).**
+> O4 (ranged minRange) / O5 (fuzz) follow; the balance re-confirmation rides O3/O4.
 
 The brief's "Note on Implementation" is the spine: refactor so there is
 **always** an objective, each with a **type and a data payload**, fed into (or

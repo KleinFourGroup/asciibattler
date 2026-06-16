@@ -70,6 +70,17 @@ export function updateTarget(unit: Unit, world: World): void {
     updateObjectiveTarget(unit, world, objective.target);
     return;
   }
+  if (objective.mode === 'hold') {
+    // O2 — act in place: target the best enemy ALREADY within attack range. The
+    // unit never repositions to close (`MovementBehavior` abstains under hold),
+    // so an out-of-range enemy is simply ignored → null = idle. Re-picked each
+    // tick so an enemy entering range is engaged (the permitted in-place
+    // retaliation switch); the deterministic strategy pick handles tie-breaks.
+    const inRange = findInRangeEnemy(unit, world);
+    unit.targetId = inRange ? inRange.id : null;
+    unit.outOfLosTicks = 0;
+    return;
+  }
 
   const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
   const valid =
@@ -198,6 +209,31 @@ function findEngageableEnemy(unit: Unit, world: World): Unit | null {
     if (candidate.team === 'neutral') continue;
     if (candidate.currentHp <= 0) continue;
     if (!objectiveEngages(unit, candidate)) continue;
+    if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
+      best = candidate;
+    }
+  }
+  return best;
+}
+
+/**
+ * O2 — the best enemy ALREADY within `unit`'s strike reach
+ * (`derived.attackRange`, Chebyshev), ranked by the unit's targeting strategy.
+ * The hold-mode pick: a held unit acts on what's in reach and nothing else (it
+ * never moves to close), so this is `findTarget` with a hard range filter and
+ * no leash/retaliation nuance — pure "in my range or not." Returns null when
+ * no enemy is in reach (→ the held unit idles). Deterministic (the strategy's
+ * tie-break; no RNG).
+ */
+function findInRangeEnemy(unit: Unit, world: World): Unit | null {
+  const strategy = getTargetingStrategy(unit.targeting);
+  const range = unit.derived.attackRange;
+  let best: Unit | null = null;
+  for (const candidate of world.units) {
+    if (candidate.team === unit.team) continue;
+    if (candidate.team === 'neutral') continue;
+    if (candidate.currentHp <= 0) continue;
+    if (chebyshev(unit.position, candidate.position) > range) continue;
     if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
       best = candidate;
     }

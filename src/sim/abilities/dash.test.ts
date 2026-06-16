@@ -71,6 +71,20 @@ describe('DashAbility.propose — the aggressive-close gate', () => {
     expect(new DashAbility().propose(rogue, world([rogue]))).toBeNull();
   });
 
+  it('abstains under a hold objective even with a target beyond strike range (O2: hold = no dash)', () => {
+    // The canonical dash trigger (enemy beyond strike reach → leap to close),
+    // but under hold the rogue holds position: updateTarget's hold branch
+    // commits no out-of-range target, so currentTarget is null and the dash —
+    // gated on currentTarget — never fires. This is why hold needs no
+    // dash-specific guard; suppressing the target suffices.
+    const rogue = makeUnit(1, 'player', { x: 5, y: 5 }, { strikeRange: 1 });
+    const enemy = makeUnit(2, 'enemy', { x: 5 + DASH.range + 2, y: 5 });
+    const w = world([rogue, enemy]);
+    w.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
+    w.tick(); // drain the hold command + run updateTarget (no behaviors → nothing moves)
+    expect(new DashAbility().propose(rogue, w)).toBeNull();
+  });
+
   it('leaps toward a target beyond strike range, covering the full dash range', () => {
     const start: GridCoord = { x: 5, y: 5 };
     const rogue = makeUnit(1, 'player', start, { strikeRange: 1 });

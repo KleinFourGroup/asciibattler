@@ -59,6 +59,14 @@ export class MovementBehavior implements Behavior {
   readonly kind = MovementBehavior.kind;
 
   proposeAction(unit: Unit, world: World): ActionProposal | null {
+    // O2 — under a `hold` objective the unit NEVER repositions: it acts in place
+    // (AbilityBehavior fires at whatever `updateTarget` left in range) but
+    // proposes no movement, even to close distance or clear LOS for a shot. The
+    // dash ability is independently gated off — `updateTarget`'s hold branch
+    // only ever commits an in-range target (or none), so the dash's
+    // "target beyond attackRange" trigger can't fire.
+    if (world.objectiveFor(unit.team).mode === 'hold') return null;
+
     const target = currentTarget(unit, world);
     if (target === null) {
       // J1 — no enemy to engage. A unit under an `engage` TILE objective

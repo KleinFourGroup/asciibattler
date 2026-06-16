@@ -111,7 +111,7 @@ describe('CatapultShot.propose', () => {
 
   it('locks the live enemy target + scales damage on ranged', () => {
     const cat = makeCatapult({ x: 5, y: 5 });
-    const enemy = makeUnit(2, 'enemy', { x: 6, y: 6 });
+    const enemy = makeUnit(2, 'enemy', { x: 9, y: 9 }); // dist 4 — within the O4 firing band
     const proposal = new CatapultShot().propose(cat, world([cat, enemy]));
     const data = dataOf(proposal!.action);
 
@@ -120,7 +120,19 @@ describe('CatapultShot.propose', () => {
     expect(data.baseDamage).toBe(catapultShotDamage(cat, SHOT.might));
     expect(data.baseDamage).toBe(SHOT.might + CATAPULT_STATS.ranged);
     // castPosition is captured for the VFX fallback (the target's cell at cast).
-    expect(data.castPosition).toEqual({ x: 6, y: 6 });
+    expect(data.castPosition).toEqual({ x: 9, y: 9 });
+  });
+
+  it('O4 — abstains while the target is inside minRange, fires at the floor', () => {
+    const floor = SHOT.minRange;
+    expect(floor).toBeGreaterThanOrEqual(1); // O4b gave the catapult a real floor
+    const cat = makeCatapult({ x: 5, y: 5 });
+    // Inside the floor → the catapult can't lob onto a too-close attacker → kites.
+    const tooClose = makeUnit(2, 'enemy', { x: 5 + (floor - 1), y: 5 });
+    expect(new CatapultShot().propose(cat, world([cat, tooClose]))).toBeNull();
+    // Exactly at the floor → in the band [minRange, range] → fires.
+    const atFloor = makeUnit(2, 'enemy', { x: 5 + floor, y: 5 });
+    expect(new CatapultShot().propose(cat, world([cat, atFloor]))).not.toBeNull();
   });
 
   it('FIRES THROUGH a wall — the arcing shot ignores line of sight', () => {

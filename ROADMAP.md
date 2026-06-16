@@ -196,7 +196,7 @@ The anti-blobbing core (the brief's "first idea"), and the architectural
 keystone of the round. All sim + fuzz, **headless-first**. Lands the round's one
 expected WorldSnapshot bump.
 
-> **STATUS: O1 + O2 + O3 ✅ COMPLETE (2026-06-16).**
+> **STATUS: O1 + O2 + O3 + O4 ✅ COMPLETE (2026-06-16).**
 > **O1** — the always-an-objective typed model (`TeamObjective` = `atWill` |
 > `engage{target}`; `ObjectiveTarget` = the renamed J1 `BattleObjective`) now lives
 > per-team on `World` (`objectives: { player, enemy }`, accessor `objectiveFor(team)`);
@@ -225,9 +225,20 @@ expected WorldSnapshot bump.
 > for focus — it carries a target). NO snapshot bump (focus rides O1's v25;
 > serialization is generic over the union). Byte-identical baseline preserved
 > (fuzz:smoke 191 unchanged — focus is unreachable without the Q3 UI / O5 fuzz).
-> Verified: typecheck clean / 984 main / 191 fuzz:smoke.
-> **NEXT = O4 (ranged `minRange`).** O5 (fuzz typed objectives) follows; the
-> balance re-confirmation rides O4 (the first combat-power lever this round).
+> **O4** — ranged `minRange` (kiting). `minRange` on the ability `CommonFields`
+> (zod `.default(0)`); `minRangeForArchetype` (config-READ, NO `UnitDerived` →
+> no snapshot bump). The three attack propose-gates + `MovementBehavior`'s
+> in-range abstain became BAND `[minRange, range]` checks (too-close → kite out
+> via `nearestActingCell`'s new band predicate). Semantics: fire at `d >= minRange`,
+> kite at `d < minRange` (the variant that preserves heal self-target at
+> `minRange 0`, user-confirmed). Shipped in two commits: **O4a** the mechanic at
+> all-floors-0 (byte-identical) → **O4b** the values **bow 2 / mage 2 / catapult 4**
+> (heal + melee 0). ⚠️ catapult 4 on a slow unit may be kept-from-firing by a
+> matched-speed chaser — flagged for the balance re-confirmation. Verified:
+> typecheck clean / 992 main / 191 fuzz:smoke.
+> **NEXT = O5 (fuzz typed objectives + new modes).** The balance re-confirmation
+> (folded into Cleanup) now rides O4 (ranged kiting moved the band) + O5 — a light
+> `--layout=procedural` sweep, retune only if the N2 band moved materially.
 
 The brief's "Note on Implementation" is the spine: refactor so there is
 **always** an objective, each with a **type and a data payload**, fed into (or
@@ -360,7 +371,24 @@ still ship switchable so playtest can A/B. The boid-around-occupied-tile patholo
 the brief describes is precisely why `leashAtNearest` is the default (the other
 two stay available for comparison).
 
-### O4 — Ranged minimum range
+### O4 — Ranged minimum range ✅ DONE (2026-06-16)
+
+**As-built:** the engagement-floor mechanic, two commits. `minRange` on the
+ability `CommonFields` (zod `.default(0)`); `minRangeForArchetype`
+([archetypes.ts](src/sim/archetypes.ts)) is the floor of the longest-range
+engaging ability — **config-READ, deliberately NOT in `UnitDerived`, so no
+snapshot bump**. The three attack propose-gates ([strikes](src/sim/abilities/strikes.ts)/[magic](src/sim/abilities/magic.ts)/[catapult](src/sim/abilities/catapult.ts))
+and `MovementBehavior`'s in-range abstain became BAND `[minRange, range]` checks;
+`nearestActingCell` gained an optional `minRange` so a too-close unit's firing
+cell is a standoff a step back (the kite). **Semantics: fire at `d >= minRange`,
+kite at `d < minRange`** — the user-confirmed variant (it preserves heal
+self-target at `minRange 0`; the "name is a bit misleading" but it's strictly
+more expressive). O4a landed the mechanic at all-floors-0 (byte-identical); O4b
+set **bow 2 / mage 2 / catapult 4** (heal + melee 0). Tests: `nearestActingCell`
+band block + `minRangeForArchetype` (config-derived) + propose-gate band tests
+(mage/catapult) + a `MovementBehavior` kiting block (the scene helper gained an
+`archetype` override). **992 main / 191 fuzz:smoke.** ⚠️ catapult 4 flagged for
+the balance re-confirmation (a slow unit may be pinned-from-firing by a chaser).
 
 From the brief's *Miscellaneous* section, but it's a sim AI/movement change
 thematically aligned with anti-blobbing — it forces ranged units to **fall back**
@@ -394,10 +422,15 @@ out to the band; it fires when the target is in `[minRange, attackRange]`;
 freeze); determinism.
 
 **Decision points O4:** which weapons get `minRange > 0` + the values —
-**RESOLVED (2026-06-16): bow 1, mage bolt 1, catapult 2, heal 0** (user call;
-flag the resulting band shift in the O balance re-confirmation); how `minRange`
-interacts with `hold` (a held ranged unit too close simply can't fire — recommend
-yes, hold never repositions).
+**RESOLVED then REVISED at build (2026-06-16): bow 2, mage bolt 2, catapult 4,
+heal 0.** The roadmap's first pass said `1/1/2`, but with the implemented
+`d < minRange` kite semantics a floor of 1 is a NO-OP (two units are always
+≥ 1 cell apart), so `bow/mage 1` would never kite. The user revised to `2/2/4`
+so archers + mages actually back off an adjacent attacker; **catapult 4 is
+flagged** (a slow unit may be pinned-from-firing by a matched-speed chaser — a
+one-number tweak if the playtest/sweep shows it's too fragile). `hold`
+interaction: a held ranged unit too close simply can't fire (the propose-gate
+floor blocks it; hold never repositions) — as recommended.
 
 ### O5 — Fuzz: typed objectives + the new modes
 

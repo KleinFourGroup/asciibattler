@@ -3,10 +3,10 @@
   "club": { "kind": "attack", "cooldownSeconds": 1.5, "range": 1, "might": 2, "accuracy": 0.4, "critBase": 0, "evadable": true, "critable": true },
   "katana": { "kind": "attack", "cooldownSeconds": 1.5, "range": 1, "might": 4, "accuracy": 0.6, "critBase": 0.2, "evadable": true, "critable": true },
   "whip": { "kind": "attack", "cooldownSeconds": 1.5, "range": 1, "might": 3, "accuracy": 0.7, "critBase": 0.05, "evadable": true, "critable": true },
-  "bow": { "kind": "attack", "cooldownSeconds": 2.0, "range": 3, "might": 4, "accuracy": 0.7, "critBase": 0.05, "evadable": true, "critable": true },
+  "bow": { "kind": "attack", "cooldownSeconds": 2.0, "range": 3, "minRange": 2, "might": 4, "accuracy": 0.7, "critBase": 0.05, "evadable": true, "critable": true },
   "gambit_strike": { "kind": "attack", "cooldownSeconds": 1.2, "range": 1, "might": 1, "accuracy": 0.85, "critBase": 0.1, "evadable": true, "critable": true, "retreatDelaySeconds": 0.25 },
   "heal_ally": { "kind": "heal", "cooldownSeconds": 2.0, "range": 3, "might": 0 },
-  "magic_bolt": { "kind": "attack", "cooldownSeconds": 2.5, "range": 5, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": false, "critable": false, "travelSeconds": 0.35, "aoe": { "radius": 1, "ringMultiplier": 0.5 } },
-  "catapult_shot": { "kind": "attack", "cooldownSeconds": 3.0, "range": 6, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": false, "critable": false, "travelSeconds": 0.6 },
+  "magic_bolt": { "kind": "attack", "cooldownSeconds": 2.5, "range": 5, "minRange": 2, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": false, "critable": false, "travelSeconds": 0.35, "aoe": { "radius": 1, "ringMultiplier": 0.5 } },
+  "catapult_shot": { "kind": "attack", "cooldownSeconds": 3.0, "range": 6, "minRange": 4, "might": 0, "accuracy": 0.6, "critBase": 0, "evadable": false, "critable": false, "travelSeconds": 0.6 },
   "dash": { "kind": "movement", "range": 2, "cooldownSeconds": 10, "durationSeconds": 0.25 }
 }

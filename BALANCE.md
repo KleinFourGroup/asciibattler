@@ -1069,3 +1069,19 @@ _(append per change: what changed → band / gradient / telemetry deltas)_
   optional nudge-sweep skipped). **Remaining Phase N:** the N2 turn-cap-unification cleanup (fold
   `maxTurnSeconds`/`DEFAULT_MAX_TICKS` onto one source — non-gating chore) and **N4 overnight verify
   (deferred INDEFINITELY to a VPS** — the local dwm leak risk).
+
+---
+
+### O4 (2026-06-16) — ranged kiting moved the baseline; re-confirmation PENDING
+
+Phase-O O4 added ranged **`minRange`** (kiting): a ranged unit whose target is inside the floor backs off
+to the `[minRange, attackRange]` band before firing. Shipped values **bow 2 / mage 2 / catapult 4** (melee
++ heal 0). This is a real combat-effectiveness change (ranged units now disengage from melee instead of
+trading point-blank), so it **shifts the fuzz read** — but per the stable-baseline rule the sweep is
+**folded into the Phase-O Cleanup re-confirmation, not run yet**. When it runs: light broad→medium,
+**isolate the procedural maps** (`--layout=procedural`), retune only if the locked `1.25 × 1.5` band moved
+materially. **Two things to watch:** (1) does kiting net-buff or net-nerf ranged at the band (it improves
+positioning but costs shots while repositioning)? (2) **catapult `minRange 4` on a slow unit** — flagged
+as possibly too fragile: a matched-speed chaser inside 4 cells can keep it from ever firing (kite-pinned);
+if telemetry shows catapults cratering, drop the floor (a one-number config tweak). No band change made in
+O4 itself.

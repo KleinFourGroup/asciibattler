@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { MovementBehavior } from './MovementBehavior';
 import { hasLineOfSight } from '../LineOfSight';
 import { World } from '../World';
-import { Unit, type Team, type UnitStats } from '../Unit';
+import { Unit, type Team, type UnitArchetype, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { spawnHalfCover } from '../environment';
 import { deriveStats, inertDerived } from '../stats';
-import { ARCHETYPE_CONFIG } from '../archetypes';
+import { ARCHETYPE_CONFIG, minRangeForArchetype, rangeForArchetype } from '../archetypes';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
 
@@ -454,12 +454,48 @@ describe('MovementBehavior / focus tile (O3, leashAtNearest default)', () => {
   });
 });
 
+describe('MovementBehavior / minRange kiting (O4)', () => {
+  const cheb = (a: GridCoord, b: GridCoord) =>
+    Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+  // Config-derived so these hold at whatever floor the bow ships with.
+  const FLOOR = minRangeForArchetype('ranged');
+  const REACH = rangeForArchetype('ranged');
+
+  it('a ranged unit with an enemy INSIDE minRange kites OUT to the band', () => {
+    // An enemy one cell inside the floor: the unit backs away to re-establish
+    // standoff instead of holding point-blank (the anti-blob fall-back).
+    const { world, units, moves } = scene([
+      { team: 'player', x: 5, y: 5, archetype: 'ranged', attackRange: REACH, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 5 + (FLOOR - 1), y: 5, inert: true },
+    ]);
+    expect(cheb(units[0]!.position, units[1]!.position)).toBe(FLOOR - 1); // starts inside
+    for (let i = 0; i < 5; i++) world.tick();
+    expect(moves.length).toBeGreaterThan(0); // it repositioned
+    expect(cheb(units[0]!.position, units[1]!.position)).toBeGreaterThanOrEqual(FLOOR); // out to the band
+  });
+
+  it('a ranged unit already at the floor holds (in band → abstains, no creep)', () => {
+    const { world, units, moves } = scene([
+      { team: 'player', x: 5, y: 5, archetype: 'ranged', attackRange: REACH, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 5 + FLOOR, y: 5, inert: true }, // exactly at the floor → in band
+    ]);
+    for (let i = 0; i < 5; i++) world.tick();
+    expect(moves).toHaveLength(0);
+    expect(units[0]!.position).toEqual({ x: 5, y: 5 });
+  });
+});
+
 interface SceneUnit {
   team: Team;
   x: number;
   y: number;
   attackRange?: number;
   moveCooldownTicks?: number;
+  /**
+   * O4 — override the archetype (default `mercenary`). `minRangeForArchetype`
+   * reads it, so a `ranged` unit picks up the bow's firing floor and kites.
+   */
+  archetype?: UnitArchetype;
   /** Skip attaching MovementBehavior — for static targets and walls. */
   inert?: boolean;
   /**
@@ -502,7 +538,7 @@ function scene(specs: SceneUnit[]): {
     const u = new Unit({
       id: nextId++,
       team: s.team,
-      archetype: isNeutral ? 'environment' : 'mercenary',
+      archetype: s.archetype ?? (isNeutral ? 'environment' : 'mercenary'),
       glyph: isNeutral ? '#' : 'M',
       stats,
       derived,

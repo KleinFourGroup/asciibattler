@@ -105,16 +105,28 @@ describe('MagicBolt.propose', () => {
 
   it('ground-targets the enemy cell at cast time + scales damage on magic', () => {
     const mage = makeMage({ x: 5, y: 5 });
-    const enemy = makeUnit(2, 'enemy', { x: 6, y: 6 });
+    const enemy = makeUnit(2, 'enemy', { x: 7, y: 7 }); // dist 2 — within the O4 firing band
     const proposal = new MagicBolt().propose(mage, world([mage, enemy]));
     const data = dataOf(proposal!.action);
 
-    expect(data.center).toEqual({ x: 6, y: 6 }); // the target's cell, frozen
+    expect(data.center).toEqual({ x: 7, y: 7 }); // the target's cell, frozen
     // I6 — baseDamage is the weapon's `might` plus the magic stat.
     expect(data.baseDamage).toBe(magicBoltDamage(mage, BOLT.might));
     expect(data.baseDamage).toBe(BOLT.might + MAGE_STATS.magic);
     expect(data.radius).toBe(BOLT.aoe!.radius);
     expect(data.ringMultiplier).toBe(BOLT.aoe!.ringMultiplier);
+  });
+
+  it('O4 — abstains while the target is inside minRange, casts at the floor', () => {
+    const floor = BOLT.minRange;
+    expect(floor).toBeGreaterThanOrEqual(1); // O4b gave the bolt a real floor
+    const mage = makeMage({ x: 5, y: 5 });
+    // One cell inside the floor → the mage kites out instead of casting.
+    const tooClose = makeUnit(2, 'enemy', { x: 5 + (floor - 1), y: 5 });
+    expect(new MagicBolt().propose(mage, world([mage, tooClose]))).toBeNull();
+    // Exactly at the floor → in the band [minRange, range] → casts.
+    const atFloor = makeUnit(2, 'enemy', { x: 5 + floor, y: 5 });
+    expect(new MagicBolt().propose(mage, world([mage, atFloor]))).not.toBeNull();
   });
 
   it('abstains when the only enemy is out of range', () => {

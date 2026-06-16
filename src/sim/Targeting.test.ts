@@ -250,11 +250,19 @@ describe('Targeting / shared objective (J1)', () => {
   // runs the objective branch the same tick. The scene units carry no behaviors,
   // so nothing moves — the post-tick `targetId` is the pure objective decision.
   function applyTileObjective(world: World, cell: GridCoord): void {
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell } });
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'tile', cell } },
+    });
     world.tick();
   }
   function applyEnemyObjective(world: World, unitId: number): void {
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId } });
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId } },
+    });
     world.tick();
   }
 

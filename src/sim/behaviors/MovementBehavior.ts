@@ -61,14 +61,15 @@ export class MovementBehavior implements Behavior {
   proposeAction(unit: Unit, world: World): ActionProposal | null {
     const target = currentTarget(unit, world);
     if (target === null) {
-      // J1 — no enemy to engage. A player unit under a TILE objective advances
-      // toward the rally cell (an attractor — "as close as it can", excluding
-      // nothing so it clusters near an occupied cell); otherwise idle. An
-      // `enemy` objective never reaches here: `updateTarget` commits the unit
+      // J1 — no enemy to engage. A unit under an `engage` TILE objective
+      // advances toward the rally cell (an attractor — "as close as it can",
+      // excluding nothing so it clusters near an occupied cell); otherwise idle.
+      // An `enemy` objective never reaches here: `updateTarget` commits the unit
       // to the objective enemy, so `target` is non-null and the path-to-target
-      // logic below drives the approach.
-      const objective = world.objective;
-      if (objective !== null && objective.kind === 'tile' && unit.team === 'player') {
+      // logic below drives the approach. (O1 reads the acting unit's team
+      // objective; the enemy team is `atWill`, so this stays player-only today.)
+      const objective = world.objectiveFor(unit.team);
+      if (objective.mode === 'engage' && objective.target.kind === 'tile') {
         // J3 — bestEffort so an UNREACHABLE rally cell (a wall, or a walled-off
         // region) routes the unit AS CLOSE AS IT CAN rather than abstaining. A
         // single unreachable goal → findPath [] → no step is exactly the
@@ -76,8 +77,8 @@ export class MovementBehavior implements Behavior {
         // objective also suppresses the nearest-enemy fallback). Right-clicking
         // a wall is the reported trigger.
         return advance(unit, world, {
-          goals: [objective.cell],
-          approachToward: objective.cell,
+          goals: [objective.target.cell],
+          approachToward: objective.target.cell,
           maxCells: 1,
           bestEffort: true,
         });

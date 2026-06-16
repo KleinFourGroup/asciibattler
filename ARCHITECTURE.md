@@ -93,7 +93,7 @@ src/
     Action.ts                # Action / ActionProposal / phase-timeline interfaces (A1 → F2)
                              # + toData()/fromData for snapshot rehydration (A2); OrphanPolicy (F2)
     Command.ts               # WorldCommand union — drained at tick boundary (A2); J1: setObjective/clearObjective
-    objective.ts             # J1: BattleObjective (tile | enemy) — shared player steering target; J3: objectiveAtCell (click cell → enemy/tile)
+    objective.ts             # O1: TeamObjective (atWill | engage{target}) per team + ObjectiveTarget (tile | enemy); J3: objectiveAtCell (click cell → enemy/tile)
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a); J2: pathfindingStats counter; J3: bestEffort (route to nearest reachable)
     movement.ts              # J2: shared movement seam — MovementIntent + advance (the dash hook) + routeToward (cache boundary)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest in-range(+LOS) firing cell
@@ -380,8 +380,8 @@ run:victory             { }
 run:defeated            { }
 recruit:offered         { units: UnitTemplate[] }
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
-objective:set           { objective: BattleObjective }                             # J1: player set/replaced the shared steering objective
-objective:cleared       { }                                                         # J1: objective cleared (explicit, or enemy-objective target died)
+objective:set           { team; objective: TeamObjective }                          # O1: a team set/replaced its steering objective (marker tracks player only)
+objective:cleared       { team }                                                    # O1: a team reverted to atWill (explicit, or engage-target died)
 turn:starting           { turn; floor; pools; hand; redraw; empower; empowerMagnitudes; daemon; map }  # H4b/H5b/K3/K3.5/K4/L1: pre-turn gate cue (gated only); hand + daemon-resolved redraw/empower budgets + per-card empower stacks + the run's daemon {id;name;description;redrawGate;empowerGate;empowerBuff} + the ENCOUNTER's map
 turn:resolved           { turn; winner; pool chips; result; pools }                 # H4b: post-turn outcome cue (gated path only)
 turn:handRedrawn        { hand; redraw; empowerMagnitudes }                         # K3: a redrawCards command landed — full new hand + decremented budget (K4: + re-derived badge column)
@@ -409,8 +409,8 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
 
 WorldCommand (queued; drained at top of tick)
   noop                    { }                                # snapshot-test channel exerciser
-  setObjective            { objective: BattleObjective }     # J1: set/replace the player team's shared steering objective (tile or enemy)
-  clearObjective          { }                                # J1: clear the shared objective
+  setObjective            { team; objective: TeamObjective } # O1: set/replace a team's always-present objective (mode + optional tile/enemy target)
+  clearObjective          { team }                           # O1: revert a team to atWill (alias for setObjective with mode atWill)
 ```
 
 UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.dispatch(cmd)`. The headless harness (A3) and any future replay system call the same entry points, so a saved input stream replays identically. Pending `WorldCommand`s are part of the `WorldSnapshot` — a save mid-battle preserves intent.

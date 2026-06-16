@@ -81,7 +81,11 @@ describe('pathing perf: bounded per-tick recompute under objective thrash', () =
       // across the board), the exact pattern the §J2 risk describes.
       world.enqueueCommand({
         kind: 'setObjective',
-        objective: { kind: 'tile', cell: { x: (t * 7) % gridW, y: (t * 13) % gridH } },
+        team: 'player',
+        objective: {
+          mode: 'engage',
+          target: { kind: 'tile', cell: { x: (t * 7) % gridW, y: (t * 13) % gridH } },
+        },
       });
       pathfindingStats.reset();
       world.tick();
@@ -108,10 +112,11 @@ describe('pathing perf: bounded per-tick recompute under objective thrash', () =
       for (let i = 0; i < 6; i++) world.units.push(combatant(id++, 'player', 2 + i, 2, 1));
       for (let i = 0; i < 6; i++) world.units.push(combatant(id++, 'enemy', 2 + i, 21, 1));
       const cell = { x: 0, y: 0 };
-      world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell } });
+      const objective = { mode: 'engage', target: { kind: 'tile', cell } } as const;
+      world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
       let total = 0;
       for (let t = 0; t < 30; t++) {
-        if (thrash) world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell } });
+        if (thrash) world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
         pathfindingStats.reset();
         world.tick();
         total += pathfindingStats.calls;

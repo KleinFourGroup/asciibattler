@@ -309,7 +309,11 @@ describe('MovementBehavior', () => {
 
 describe('MovementBehavior / tile objective (J1)', () => {
   function setTileObjective(world: World, cell: GridCoord): void {
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell } });
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'tile', cell } },
+    });
   }
 
   // A far, inert enemy parked at (11,11) keeps `checkBattleEnd` from declaring

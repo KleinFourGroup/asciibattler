@@ -162,25 +162,27 @@ describe('A2 round-trip: World', () => {
     );
   });
 
-  it('J1: a live snapshot carries the active objective; a pre-J1 version is rejected', () => {
-    // J1 added the player team's shared `objective` (a tile or enemy unit) to
-    // WorldSnapshot (v22→v23). A v22 save has no objective field; rather than
-    // default it, reject outright (no migration). A `tile` objective is used
-    // here because it persists deterministically (an `enemy` objective would
-    // auto-clear if its target died mid-tick).
+  it('O1: a live snapshot carries both teams\' objectives; a pre-O1 version is rejected', () => {
+    // O1 replaced J1's single nullable `objective` with the per-team
+    // `objectives: { player, enemy }` record (v24→v25). A v24 save lacks the
+    // field; rather than default it, reject outright (no migration). An `engage`
+    // tile objective is used here because it persists deterministically (an
+    // `engage` enemy objective would auto-revert if its target died mid-tick).
     const { world } = freshBattle(24680);
     const cell = { x: 1, y: 1 };
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell } });
+    const objective = { mode: 'engage', target: { kind: 'tile', cell } } as const;
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
     world.tick(); // drains + applies the command at top of tick.
-    expect(world.objective).toEqual({ kind: 'tile', cell });
+    expect(world.objectiveFor('player')).toEqual(objective);
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.objective).toEqual({ kind: 'tile', cell });
+    expect(wire.objectives).toEqual({ player: objective, enemy: { mode: 'atWill' } });
 
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
-    expect(restored.objective).toEqual({ kind: 'tile', cell });
+    expect(restored.objectiveFor('player')).toEqual(objective);
+    expect(restored.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
 
-    // A snapshot stamped with the prior version (a pre-J1 save) throws.
+    // A snapshot stamped with the prior version (a pre-O1 save) throws.
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
     expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,

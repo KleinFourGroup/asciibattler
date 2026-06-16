@@ -196,6 +196,19 @@ The anti-blobbing core (the brief's "first idea"), and the architectural
 keystone of the round. All sim + fuzz, **headless-first**. Lands the round's one
 expected WorldSnapshot bump.
 
+> **STATUS: O1 ✅ COMPLETE (2026-06-16).** The always-an-objective typed model
+> (`TeamObjective` = `atWill` | `engage{target}`; `ObjectiveTarget` = the renamed
+> J1 `BattleObjective`) now lives per-team on `World` (`objectives: { player,
+> enemy }`, accessor `objectiveFor(team)`); the enemy team is fixed at `atWill`
+> but the storage + the revert-on-death scan are symmetric (a future enemy
+> strategy is a data change). `setObjective(team, objective)` / `clearObjective(team)`
+> commands; `objective:set`/`:cleared` events carry the team. **WorldSnapshot
+> v24 → v25** (reject stale). **Byte-identical by construction** — every consumer
+> gates on `mode === 'engage'` / `!== 'atWill'`, so `atWill ≡` old-`null` and
+> `engage ≡` old set-objective (953 main / 191 fuzz:smoke green; the marker render
+> path browser-verified). **NEXT = O2 (hold mode).** O3 (focus) / O4 (ranged
+> minRange) / O5 (fuzz) follow; the balance re-confirmation rides O3/O4.
+
 The brief's "Note on Implementation" is the spine: refactor so there is
 **always** an objective, each with a **type and a data payload**, fed into (or
 readily accessible by) the per-unit behaviors. Today's no-objective becomes the

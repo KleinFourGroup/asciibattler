@@ -3,7 +3,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import type { World } from '../sim/World';
-import type { BattleObjective } from '../sim/objective';
+import type { ObjectiveTarget } from '../sim/objective';
 import type { Team, Unit } from '../sim/Unit';
 import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
 import type { PickCandidate } from './pick';
@@ -97,13 +97,15 @@ export class BattleRenderer {
    *  kept separate from `scratchPos` so the two can't alias mid-frame. */
   private readonly homingScratch = new THREE.Vector3();
   /**
-   * J3 — the active player objective + its marker sprite. The marker is the `X`
-   * glyph billboard; `updateObjectiveMarker` repositions it every frame (a tile
-   * stays put, an enemy mark tracks the target's live, lerped position). State
-   * is driven entirely by `objective:set` / `objective:cleared`, so the marker
-   * is correct however the objective was set (mouse / hotkey / future AI/fuzz).
+   * J3 — the active player objective TARGET + its marker sprite. The marker is
+   * the `X` glyph billboard; `updateObjectiveMarker` repositions it every frame
+   * (a tile stays put, an enemy mark tracks the target's live, lerped position).
+   * State is driven entirely by `objective:set` / `objective:cleared`, so the
+   * marker is correct however the objective was set (mouse / hotkey / AI/fuzz).
+   * O1 — only the PLAYER team's objective draws a marker, and only its `engage`
+   * target (an `atWill`/`hold` objective has no target → null, no marker).
    */
-  private objective: BattleObjective | null = null;
+  private objective: ObjectiveTarget | null = null;
   private objectiveMarker: SpriteHandle | null = null;
   /** J3 — scratch for the camera's world-space up axis (the enemy mark's lift
    *  direction), recomputed per frame so it tracks a camera pan/mode swap. */
@@ -206,10 +208,17 @@ export class BattleRenderer {
     }
   }
 
-  /** J3 — record the new objective and lazily spawn the marker sprite (one per
-   *  battle, reused across re-sets). `updateObjectiveMarker` positions it. */
-  private onObjectiveSet = ({ objective }: GameEvents['objective:set']): void => {
-    this.objective = objective;
+  /** J3 — record the new objective target and lazily spawn the marker sprite
+   *  (one per battle, reused across re-sets). `updateObjectiveMarker` positions
+   *  it. O1 — only the PLAYER team draws a marker; a non-`engage` objective
+   *  (atWill / O2 hold) has no target, so it drops the marker like a clear. */
+  private onObjectiveSet = ({ team, objective }: GameEvents['objective:set']): void => {
+    if (team !== 'player') return;
+    if (objective.mode !== 'engage') {
+      this.dropObjectiveMarker();
+      return;
+    }
+    this.objective = objective.target;
     if (!this.objectiveMarker) {
       // Seed at the origin; updateObjectiveMarker (same frame, end of update())
       // moves it to the real spot before it's ever drawn.
@@ -223,15 +232,22 @@ export class BattleRenderer {
     this.updateObjectiveMarker();
   };
 
-  /** J3 — objective gone (player cleared it, or an enemy mark auto-cleared on
-   *  the target's death): drop the marker sprite. */
-  private onObjectiveCleared = (): void => {
+  /** J3 — objective gone (player reverted it to at-will, or an enemy mark
+   *  auto-reverted on the target's death): drop the marker. Enemy-team objective
+   *  events never draw a marker (O1). */
+  private onObjectiveCleared = ({ team }: GameEvents['objective:cleared']): void => {
+    if (team !== 'player') return;
+    this.dropObjectiveMarker();
+  };
+
+  /** J3/O1 — clear the player objective marker state + sprite. */
+  private dropObjectiveMarker(): void {
     this.objective = null;
     if (this.objectiveMarker) {
       this.sprites.removeSprite(this.objectiveMarker);
       this.objectiveMarker = null;
     }
-  };
+  }
 
   /**
    * J3 — position the objective marker for the current frame. A tile objective
@@ -343,11 +359,7 @@ export class BattleRenderer {
     this.overlayFadeIns.clear();
     this.progress.clear();
     // J3 — drop the objective marker + state so the next battle starts clean.
-    if (this.objectiveMarker) {
-      this.sprites.removeSprite(this.objectiveMarker);
-      this.objectiveMarker = null;
-    }
-    this.objective = null;
+    this.dropObjectiveMarker();
     this.world = null;
   }
 

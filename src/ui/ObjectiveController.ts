@@ -4,8 +4,10 @@
  * `X` marker) lives in `BattleRenderer`, driven independently off the
  * `objective:set` / `objective:cleared` events this controller's commands emit.
  *
- * Two ways to set an objective, both resolving through the pure `objectiveAtCell`
- * (enemy under the cursor → enemy objective, else a rally tile):
+ * Both paths set an `engage` objective on the PLAYER team (O1's per-team model;
+ * the richer Focus/Hold modes arrive with the Q3 objective pane). Two ways to
+ * set one, both resolving the target through the pure `objectiveAtCell` (enemy
+ * under the cursor → enemy target, else a rally tile):
  *   - **right-click** the board → set directly.
  *   - the **Set Objective** button / hotkey → ARM "pick a target" mode, then the
  *     next **left-click** sets (a left-click is otherwise inert in battle, as it
@@ -61,9 +63,9 @@ export class ObjectiveController implements ObjectiveControls {
     this.onArmedChange(true);
   }
 
-  /** Clear the active objective. */
+  /** Clear the active objective (revert the player team to at-will). */
   clear(): void {
-    this.world.enqueueCommand({ kind: 'clearObjective' });
+    this.world.enqueueCommand({ kind: 'clearObjective', team: 'player' });
   }
 
   dispose(): void {
@@ -104,7 +106,11 @@ export class ObjectiveController implements ObjectiveControls {
   private setFromClient(clientX: number, clientY: number): boolean {
     const enemyId = this.renderer.pickInstance(clientX, clientY, this.enemyBillboards());
     if (enemyId !== null) {
-      this.world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: enemyId } });
+      this.world.enqueueCommand({
+        kind: 'setObjective',
+        team: 'player',
+        objective: { mode: 'engage', target: { kind: 'enemy', unitId: enemyId } },
+      });
       return true;
     }
 
@@ -115,7 +121,8 @@ export class ObjectiveController implements ObjectiveControls {
       .map((u) => ({ id: u.id, cell: u.position }));
     this.world.enqueueCommand({
       kind: 'setObjective',
-      objective: objectiveAtCell(cell, enemies),
+      team: 'player',
+      objective: { mode: 'engage', target: objectiveAtCell(cell, enemies) },
     });
     return true;
   }

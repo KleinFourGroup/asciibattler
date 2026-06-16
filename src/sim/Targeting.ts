@@ -1,7 +1,7 @@
 import type { Unit } from './Unit';
 import type { World } from './World';
 import type { GridCoord } from '../core/types';
-import type { BattleObjective } from './objective';
+import type { ObjectiveTarget } from './objective';
 import { hasLineOfSight } from './LineOfSight';
 import { SIM } from '../config/sim';
 import { OBJECTIVE } from '../config/objective';
@@ -60,12 +60,14 @@ export function findTarget(unit: Unit, world: World): Unit | null {
 export function updateTarget(unit: Unit, world: World): void {
   if (unit.team === 'neutral') return;
 
-  // J1 — the player team's shared objective steers ITS units' target choice
-  // (enemy AI is unaffected). Gated on an active objective so the no-objective
-  // path below is byte-identical to pre-J1 (and the fuzz baseline unmoved).
-  const objective = world.objective;
-  if (objective !== null && unit.team === 'player') {
-    updateObjectiveTarget(unit, world, objective);
+  // O1 — the acting team's steering objective drives its units' target choice.
+  // `atWill` (the default + J1's no-objective) falls through to the standard
+  // path below, byte-identical to pre-O1 (the fuzz baseline unmoved); `engage`
+  // routes to the Phase-J preemption logic. The enemy team is fixed at `atWill`,
+  // so enemy AI is unchanged. (O2/O3 add `hold`/`focus` branches here.)
+  const objective = world.objectiveFor(unit.team);
+  if (objective.mode === 'engage') {
+    updateObjectiveTarget(unit, world, objective.target);
     return;
   }
 
@@ -115,8 +117,9 @@ export function updateTarget(unit: Unit, world: World): void {
 }
 
 /**
- * J1 — target selection for a PLAYER unit while a shared objective is active.
- * The Phase-J preemption rules, in priority order:
+ * J1 — target selection for a unit under an `engage` objective (the acting
+ * team's `TeamObjective.target`; O1 generalized this off the player-only
+ * gating). The Phase-J preemption rules, in priority order:
  *
  *   1. ENGAGED → not preempted. A unit with a valid committed target inside its
  *      engage radius keeps fighting; the objective doesn't yank it off. (It may
@@ -133,7 +136,7 @@ export function updateTarget(unit: Unit, world: World): void {
  * Mutates `unit.targetId` / `outOfLosTicks` exactly like the default
  * `updateTarget`, so it stays the once-per-tick authority on the sticky target.
  */
-function updateObjectiveTarget(unit: Unit, world: World, objective: BattleObjective): void {
+function updateObjectiveTarget(unit: Unit, world: World, target: ObjectiveTarget): void {
   const strategy = getTargetingStrategy(unit.targeting);
   const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
   const committedValid =
@@ -167,8 +170,8 @@ function updateObjectiveTarget(unit: Unit, world: World, objective: BattleObject
   }
 
   // 3. Pursue the objective itself.
-  if (objective.kind === 'enemy') {
-    const objEnemy = world.findUnit(objective.unitId);
+  if (target.kind === 'enemy') {
+    const objEnemy = world.findUnit(target.unitId);
     const objValid =
       objEnemy !== undefined && objEnemy.team === 'enemy' && objEnemy.currentHp > 0;
     unit.targetId = objValid ? objEnemy.id : null;
@@ -244,13 +247,13 @@ export function currentTarget(unit: Unit, world: World): Unit | null {
       return t;
     }
   }
-  // J1 — under an active objective, a player unit's null `targetId` is
-  // DELIBERATE (set by `updateObjectiveTarget`: no engageable enemy, so it's
-  // pursuing a tile objective or holding). Suppress the nearest-enemy fallback
-  // here so it doesn't chase the whole map instead of honoring the objective.
-  // The fallback otherwise stays for enemies, the no-objective case, and unit
-  // tests that poll a behavior without a prior `updateTarget`.
-  if (world.objective !== null && unit.team === 'player') return null;
+  // O1 — under a non-`atWill` objective, a unit's null `targetId` is DELIBERATE
+  // (set by `updateObjectiveTarget`: no engageable enemy, so it's pursuing a
+  // tile objective). Suppress the nearest-enemy fallback here so it doesn't
+  // chase the whole map instead of honoring the objective. The fallback
+  // otherwise stays for `atWill` (the default + J1's no-objective case) and for
+  // unit tests that poll a behavior without a prior `updateTarget`.
+  if (world.objectiveFor(unit.team).mode !== 'atWill') return null;
   return findTarget(unit, world);
 }
 

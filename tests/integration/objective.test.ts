@@ -40,7 +40,11 @@ describe('Objective system (J1) — integration determinism', () => {
   it('same seed + same objective commands → byte-identical battle', () => {
     const run = (): string => {
       const w = battle(777);
-      w.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell: { x: 6, y: 11 } } });
+      w.enqueueCommand({
+        kind: 'setObjective',
+        team: 'player',
+        objective: { mode: 'engage', target: { kind: 'tile', cell: { x: 6, y: 11 } } },
+      });
       for (let i = 0; i < 300 && !w.ended; i++) w.tick();
       return JSON.stringify(w.toJSON());
     };
@@ -50,14 +54,19 @@ describe('Objective system (J1) — integration determinism', () => {
   it('a mid-battle snapshot with an active objective restores + finishes identically', () => {
     const w = battle(2024);
     const firstEnemy = w.units.find((u) => u.team === 'enemy')!;
-    w.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: firstEnemy.id } });
+    w.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId: firstEnemy.id } },
+    });
     for (let i = 0; i < 30; i++) w.tick();
 
-    // Snapshot mid-battle (the objective may still be active or have auto-cleared
-    // if its target already died — either way it rides the round-trip).
+    // Snapshot mid-battle (the objective may still be active or have auto-reverted
+    // to atWill if its target already died — either way it rides the round-trip).
     const wire = JSON.parse(JSON.stringify(w.toJSON()));
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
-    expect(restored.objective).toEqual(w.objective);
+    expect(restored.objectiveFor('player')).toEqual(w.objectiveFor('player'));
+    expect(restored.objectiveFor('enemy')).toEqual(w.objectiveFor('enemy'));
 
     for (let i = 0; i < 400 && !w.ended; i++) w.tick();
     for (let i = 0; i < 400 && !restored.ended; i++) restored.tick();

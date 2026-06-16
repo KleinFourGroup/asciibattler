@@ -26,7 +26,8 @@ import {
   targetingForArchetype,
 } from './archetypes';
 import type { WorldCommand } from './Command';
-import type { BattleObjective } from './objective';
+import { AT_WILL } from './objective';
+import type { ObjectiveTeam, TeamObjective } from './objective';
 import type { StatusEffect } from './statusEffects';
 import { cloneEffect } from './statusEffects';
 import { TriggerDispatcher } from './triggers';
@@ -165,8 +166,17 @@ import { STATS } from '../config/stats';
  *       a purely additive per-unit field. RunSnapshot is NOT bumped by this
  *       commit — the World-side effect list is the only new state (the
  *       Run-side encounter store + fatigue migration land in K1 commit 2).
+ *  25 — O1 (Phase O) replaced the single nullable player `objective`
+ *       (v23's `objective: BattleObjective | null`) with a per-team,
+ *       always-present typed objective (`objectives: { player, enemy }`, each a
+ *       `TeamObjective` = mode + optional target; see `src/sim/objective.ts`). A
+ *       v24 save carries the old `objective` field and lacks `objectives`;
+ *       defaulting it would silently drop a saved steering objective (a behavior
+ *       change), so reject v24 outright per the established no-migration
+ *       contract. RunSnapshot is unaffected — the objective is World-side +
+ *       transient per battle.
  */
-const WORLD_SCHEMA_VERSION = 24;
+const WORLD_SCHEMA_VERSION = 25;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -174,6 +184,11 @@ const WORLD_SCHEMA_VERSION = 24;
  * skipping them here is a deliberate scope.
  */
 const QUEUE_TEAMS: readonly Team[] = ['player', 'enemy'];
+
+/** O1 — the teams that carry an objective (neutrals never do). Iterated by the
+ *  per-team revert-on-death scan; narrower than `QUEUE_TEAMS` so it indexes the
+ *  `objectives` record directly. */
+const OBJECTIVE_TEAMS = ['player', 'enemy'] as const;
 
 interface ActiveActionSnapshot {
   actionId: string;
@@ -273,10 +288,11 @@ export interface WorldSnapshot {
    *  total]` pairs alongside `damageDealt` so a mid-battle round-trip
    *  preserves the heal-XP awarded at battle:ended. */
   utilityDone: [number, number][];
-  /** J1: the player team's shared steering objective (a tile or an enemy
-   *  unit), or null when none is set. Restored so a mid-battle save resumes
-   *  the same objective. */
-  objective: BattleObjective | null;
+  /** O1: the per-team, always-present steering objective (replaces J1's single
+   *  nullable `objective`). The enemy team is fixed at `atWill` today; the
+   *  storage is structural for future enemy strategies. Restored so a
+   *  mid-battle save resumes both teams' objectives. */
+  objectives: { player: TeamObjective; enemy: TeamObjective };
 }
 
 /**
@@ -390,16 +406,22 @@ export class World {
    */
   private readonly utilityDone: Map<number, number> = new Map();
   /**
-   * J1: the player team's single shared objective (a tile to rally on or an
-   * enemy to converge on), or null. Set/cleared only through the command
+   * O1: the per-team, always-present steering objective (the Phase-O refactor of
+   * J1's single nullable player objective). Set/cleared only through the command
    * channel (`applyCommand`) so the mutation point is the deterministic
-   * top-of-tick drain; read by `updateTarget` (player units, when unengaged)
-   * + `MovementBehavior` (tile pursuit). Enemy AI never reads it. An `enemy`
-   * objective is auto-cleared the tick its target dies
-   * (`clearObjectiveIfResolved`); a `tile` objective persists until replaced
-   * or cleared. Snapshotted (v23) so a mid-battle restore resumes it.
+   * top-of-tick drain; read by `updateTarget` + `MovementBehavior` (tile
+   * pursuit) via `objectiveFor(team)` — behaviors steer off the ACTING unit's
+   * team objective. The ENEMY team is fixed at `atWill` today (nothing sets it),
+   * so enemy AI is unchanged; the storage is real so a future enemy strategy is
+   * a data change, not a refactor. An `engage` enemy target that dies reverts
+   * its team to `atWill` (`clearResolvedObjectives`); a `tile` target persists
+   * until replaced. Snapshotted (v25). The field reference is fixed; only the
+   * per-team slots are reassigned, so it's `readonly`.
    */
-  private _objective: BattleObjective | null = null;
+  private readonly objectives: { player: TeamObjective; enemy: TeamObjective } = {
+    player: AT_WILL,
+    enemy: AT_WILL,
+  };
   /**
    * K1 — combat/lifecycle trigger dispatch. Handlers apply status effects when
    * the World fires a trigger; the Phase-L daemon system is the production
@@ -437,9 +459,13 @@ export class World {
     return this._ended;
   }
 
-  /** J1: the active shared objective (player-team steering), or null. */
-  get objective(): BattleObjective | null {
-    return this._objective;
+  /**
+   * O1 — the acting team's always-present objective. Neutrals (walls) never
+   * carry one → `atWill` (defensive; they never reach the objective-reading
+   * paths). Behaviors call this with the acting unit's team.
+   */
+  objectiveFor(team: Team): TeamObjective {
+    return team === 'neutral' ? AT_WILL : this.objectives[team];
   }
 
   /**
@@ -706,12 +732,12 @@ export class World {
       for (const cmd of drained) this.applyCommand(cmd);
     }
 
-    // J1 — drop an `enemy` objective whose target died (e.g. last tick), so the
-    // per-unit `updateTarget` below sees the cleared objective and reverts to
-    // default targeting this same tick. Also catches a just-enqueued objective
-    // that points at an already-dead/invalid enemy. Runs after the command
-    // drain so a set-then-resolve in one tick is consistent.
-    this.clearObjectiveIfResolved();
+    // O1 — revert any team whose `engage` enemy target died (e.g. last tick) to
+    // `atWill`, so the per-unit `updateTarget` below sees the reverted objective
+    // and uses default targeting this same tick. Also catches a just-enqueued
+    // objective that points at an already-dead/invalid enemy. Runs after the
+    // command drain so a set-then-resolve in one tick is consistent.
+    this.clearResolvedObjectives();
 
     for (const unit of this.units.slice()) {
       // 1. Death.
@@ -979,48 +1005,59 @@ export class World {
   }
 
   /**
-   * J1 — apply a drained `WorldCommand`. One explicit case per kind (kept here
+   * O1 — apply a drained `WorldCommand`. One explicit case per kind (kept here
    * rather than inlined in `tick` so a new kind is one branch, not a tick
-   * rewrite). The `setObjective` / `clearObjective` kinds drive the player
-   * team's shared steering objective; `noop` is the snapshot-test channel
-   * exerciser. `setObjective` does NOT validate the target here — an `enemy`
-   * objective pointing at a dead/invalid unit is dropped on the next
-   * `clearObjectiveIfResolved` (called right after this drain).
+   * rewrite). The `setObjective` / `clearObjective` kinds drive a team's
+   * always-present steering objective; `noop` is the snapshot-test channel
+   * exerciser. `setObjective` does NOT validate the target here — an `engage`
+   * objective pointing at a dead/invalid unit is reverted on the next
+   * `clearResolvedObjectives` (called right after this drain).
    */
   private applyCommand(command: WorldCommand): void {
     switch (command.kind) {
       case 'noop':
         return;
       case 'setObjective':
-        this._objective = command.objective;
-        this.bus.emit('objective:set', { objective: command.objective });
+        this.objectives[command.team] = command.objective;
+        this.bus.emit('objective:set', { team: command.team, objective: command.objective });
         return;
       case 'clearObjective':
-        this.setObjectiveNull();
+        this.setObjectiveAtWill(command.team);
         return;
     }
   }
 
   /**
-   * J1 — clear an `enemy` objective whose target is no longer a living enemy
-   * (it died, was removed, or the objective was set on an invalid id). A `tile`
-   * objective never auto-clears (persist-until-cleared). Idempotent via
-   * `setObjectiveNull`'s guard.
+   * O1 — revert any team whose `engage` enemy target is no longer a living enemy
+   * (it died, was removed, or the objective was set on an invalid id) back to
+   * `atWill`. A `tile` target never auto-reverts (persist-until-cleared). Both
+   * teams are scanned (the enemy team is inert today but the storage is
+   * structural). Idempotent via `setObjectiveAtWill`'s guard. The "alive enemy"
+   * test is team-relative (the target must be an enemy OF the objective owner),
+   * so it generalizes to a future enemy-team objective; for the player team it's
+   * the J1 `target.team === 'enemy'` check exactly.
    */
-  private clearObjectiveIfResolved(): void {
-    const obj = this._objective;
-    if (obj === null || obj.kind !== 'enemy') return;
-    const target = this.findUnit(obj.unitId);
-    const alive = target !== undefined && target.team === 'enemy' && target.currentHp > 0;
-    if (!alive) this.setObjectiveNull();
+  private clearResolvedObjectives(): void {
+    for (const team of OBJECTIVE_TEAMS) {
+      const obj = this.objectives[team];
+      if (obj.mode !== 'engage' || obj.target.kind !== 'enemy') continue;
+      const target = this.findUnit(obj.target.unitId);
+      const alive =
+        target !== undefined &&
+        target.team !== team &&
+        target.team !== 'neutral' &&
+        target.currentHp > 0;
+      if (!alive) this.setObjectiveAtWill(team);
+    }
   }
 
-  /** J1 — clear the objective + emit `objective:cleared`, but only on a real
-   *  non-null → null transition (so a redundant clear is silent). */
-  private setObjectiveNull(): void {
-    if (this._objective === null) return;
-    this._objective = null;
-    this.bus.emit('objective:cleared', {});
+  /** O1 — revert a team to `atWill` + emit `objective:cleared`, but only on a
+   *  real non-`atWill` → `atWill` transition (a redundant clear is silent — the
+   *  J1 guard, now per team). */
+  private setObjectiveAtWill(team: ObjectiveTeam): void {
+    if (this.objectives[team].mode === 'atWill') return;
+    this.objectives[team] = AT_WILL;
+    this.bus.emit('objective:cleared', { team });
   }
 
   private checkBattleEnd(): void {
@@ -1314,9 +1351,10 @@ export class World {
       damageDealt: Array.from(this.damageDealt.entries()),
       playerRosterIds: Array.from(this.playerRosterIds.entries()),
       utilityDone: Array.from(this.utilityDone.entries()),
-      // J1 — immutable shape (readonly fields, never mutated in place), so a
-      // direct reference is safe; callers JSON-serialize the snapshot anyway.
-      objective: this._objective,
+      // O1 — copy the record (its slots are reassigned on set/revert); the
+      // per-team `TeamObjective` values are immutable, so referencing them is
+      // safe; callers JSON-serialize the snapshot anyway.
+      objectives: { player: this.objectives.player, enemy: this.objectives.enemy },
     };
   }
 
@@ -1421,9 +1459,10 @@ export class World {
       world.utilityDone.set(unitId, total);
     }
 
-    // J1 — restore the active steering objective (the version check above
-    // already rejected any v22 save that lacks the field).
-    world._objective = snap.objective;
+    // O1 — restore both teams' steering objectives (the version check above
+    // already rejected any v24 save that lacks the `objectives` field).
+    world.objectives.player = snap.objectives.player;
+    world.objectives.enemy = snap.objectives.enemy;
 
     return world;
   }

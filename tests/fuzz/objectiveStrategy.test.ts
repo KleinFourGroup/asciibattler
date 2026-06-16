@@ -265,7 +265,8 @@ describe('selectObjectiveTarget — scored proclivity', () => {
     w.stats.strength = 1;
     expect(decideObjectiveCommand(world, scored(w), new RNG(1))).toEqual({
       kind: 'setObjective',
-      objective: { kind: 'enemy', unitId: target.id },
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId: target.id } },
     });
   });
 });
@@ -285,16 +286,24 @@ describe('decideObjectiveCommand (the no-thrash gate)', () => {
       { kind: 'stat', select: 'highest', stat: 'strength' },
       new RNG(1),
     );
-    expect(cmd).toEqual({ kind: 'setObjective', objective: { kind: 'enemy', unitId: target.id } });
+    expect(cmd).toEqual({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId: target.id } },
+    });
   });
 
   it('does not re-set while an objective is already active (no thrash)', () => {
     const world = makeWorld();
     spawn(world, 'player', { x: 1, y: 1 });
     const enemy = spawn(world, 'enemy', { x: 5, y: 5 });
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: enemy.id } });
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId: enemy.id } },
+    });
     world.tick(); // drains the command → objective is now active
-    expect(world.objective).not.toBeNull();
+    expect(world.objectiveFor('player').mode).toBe('engage');
     expect(decideObjectiveCommand(world, { kind: 'random' }, new RNG(1))).toBeNull();
   });
 });

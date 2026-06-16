@@ -16,7 +16,7 @@ import type { GridCoord } from './types';
 import type { Team, UnitStats, UnitTemplate } from '../sim/Unit';
 import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
-import type { BattleObjective } from '../sim/objective';
+import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
 import type { StatusEffect } from '../sim/statusEffects';
 import type { RedrawAvailability } from '../run/redraw';
 import type { EmpowerAvailability } from '../run/empower';
@@ -227,21 +227,22 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
-   * J1 — the player team's shared objective was set (or replaced) on the
-   * battle, via the `setObjective` `WorldCommand`. Carries the new objective
-   * (a tile or an enemy unit) so the J3 UI can render its marker. Sim-side
-   * the objective only steers player units when they're not already engaged
-   * (see `Targeting.ts`).
+   * O1 — a team's steering objective was set (or replaced) on the battle, via
+   * the `setObjective` `WorldCommand`. Carries the team + the new
+   * `TeamObjective` (mode + optional target) so the J3 UI can render its marker
+   * (the marker tracks the PLAYER team's objective only). Sim-side an `engage`
+   * objective only steers a unit when it's not already engaged (see
+   * `Targeting.ts`).
    */
-  'objective:set': { objective: BattleObjective };
+  'objective:set': { team: ObjectiveTeam; objective: TeamObjective };
   /**
-   * J1 — the shared objective was cleared, either explicitly (the
-   * `clearObjective` command) or automatically when an `enemy` objective's
-   * target died (`World.clearObjectiveIfResolved`). A `tile` objective never
-   * auto-clears (persist-until-cleared). Idempotent emit guard on the World
-   * side means this fires only on a real null transition.
+   * O1 — a team's objective reverted to `atWill`, either explicitly (the
+   * `clearObjective` command) or automatically when an `engage` enemy target
+   * died (`World.clearResolvedObjectives`). A `tile` target never auto-reverts
+   * (persist-until-cleared). The idempotent emit guard on the World side means
+   * this fires only on a real non-`atWill` → `atWill` transition.
    */
-  'objective:cleared': Record<string, never>;
+  'objective:cleared': { team: ObjectiveTeam };
 
   'run:started': { seed: number };
   'run:victory': Record<string, never>;

@@ -826,7 +826,7 @@ describe('World.applyDamage — M6 water bog-down (precision penalty)', () => {
   });
 });
 
-describe('World shared objective (J1)', () => {
+describe('World per-team objective (J1 → O1)', () => {
   function setup(): { world: World; bus: EventBus<GameEvents>; player: Unit; enemy: Unit } {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);
@@ -838,65 +838,111 @@ describe('World shared objective (J1)', () => {
     return { world, bus, player, enemy };
   }
 
+  it('both teams default to atWill (the always-present objective)', () => {
+    const { world } = setup();
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
+    expect(world.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
+    // Neutrals never carry one → atWill (defensive).
+    expect(world.objectiveFor('neutral')).toEqual({ mode: 'atWill' });
+  });
+
   it('setObjective is applied at the top-of-tick drain and emits objective:set', () => {
     const { world, bus, enemy } = setup();
     const set = vi.fn();
     bus.on('objective:set', set);
 
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: enemy.id } });
-    expect(world.objective).toBeNull(); // queued, not yet applied
+    const objective = { mode: 'engage', target: { kind: 'enemy', unitId: enemy.id } } as const;
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' }); // queued, not yet applied
     world.tick();
-    expect(world.objective).toEqual({ kind: 'enemy', unitId: enemy.id });
+    expect(world.objectiveFor('player')).toEqual(objective);
     expect(set).toHaveBeenCalledTimes(1);
-    expect(set).toHaveBeenCalledWith({ objective: { kind: 'enemy', unitId: enemy.id } });
+    expect(set).toHaveBeenCalledWith({ team: 'player', objective });
   });
 
-  it('clearObjective clears it + emits objective:cleared, and a redundant clear is silent', () => {
+  it('clearObjective reverts to atWill + emits objective:cleared, and a redundant clear is silent', () => {
     const { world, bus } = setup();
     const cleared = vi.fn();
     bus.on('objective:cleared', cleared);
 
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell: { x: 0, y: 0 } } });
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'tile', cell: { x: 0, y: 0 } } },
+    });
     world.tick();
-    world.enqueueCommand({ kind: 'clearObjective' });
+    world.enqueueCommand({ kind: 'clearObjective', team: 'player' });
     world.tick();
-    expect(world.objective).toBeNull();
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
     expect(cleared).toHaveBeenCalledTimes(1);
+    expect(cleared).toHaveBeenCalledWith({ team: 'player' });
 
-    // Redundant clear: real null→null transition guard means no second emit.
-    world.enqueueCommand({ kind: 'clearObjective' });
+    // Redundant clear: the real atWill→atWill transition guard means no 2nd emit.
+    world.enqueueCommand({ kind: 'clearObjective', team: 'player' });
     world.tick();
     expect(cleared).toHaveBeenCalledTimes(1);
   });
 
-  it('a tile objective persists across ticks (never auto-clears)', () => {
+  it('a tile objective persists across ticks (never auto-reverts)', () => {
     const { world } = setup();
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'tile', cell: { x: 3, y: 3 } } });
+    const objective = { mode: 'engage', target: { kind: 'tile', cell: { x: 3, y: 3 } } } as const;
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
     for (let i = 0; i < 11; i++) world.tick();
-    expect(world.objective).toEqual({ kind: 'tile', cell: { x: 3, y: 3 } });
+    expect(world.objectiveFor('player')).toEqual(objective);
   });
 
-  it('an enemy objective auto-clears the tick its target dies (+ emits objective:cleared)', () => {
+  it('an engage enemy objective reverts to atWill the tick its target dies (+ emits objective:cleared)', () => {
     const { world, bus, enemy } = setup();
     const cleared = vi.fn();
     bus.on('objective:cleared', cleared);
 
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: enemy.id } });
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId: enemy.id } },
+    });
     world.tick();
-    expect(world.objective).not.toBeNull();
+    expect(world.objectiveFor('player').mode).toBe('engage');
 
     enemy.currentHp = 0; // the objective enemy dies
-    world.tick(); // clearObjectiveIfResolved runs at top of tick, before the reap
-    expect(world.objective).toBeNull();
+    world.tick(); // clearResolvedObjectives runs at top of tick, before the reap
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
     expect(cleared).toHaveBeenCalledTimes(1);
   });
 
-  it('an enemy objective set on an already-dead enemy is dropped the same tick', () => {
+  it('an engage enemy objective set on an already-dead enemy reverts the same tick', () => {
     const { world, enemy } = setup();
     enemy.currentHp = 0;
-    world.enqueueCommand({ kind: 'setObjective', objective: { kind: 'enemy', unitId: enemy.id } });
-    world.tick(); // drain sets it; clearObjectiveIfResolved (same tick) drops it
-    expect(world.objective).toBeNull();
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId: enemy.id } },
+    });
+    world.tick(); // drain sets it; clearResolvedObjectives (same tick) reverts it
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
+  });
+
+  it('the enemy-team objective is real, independent storage (the O1 structural seam)', () => {
+    const { world, bus, player } = setup();
+    const set = vi.fn();
+    bus.on('objective:set', set);
+
+    // Set an objective on the ENEMY team targeting the player unit. Nothing in
+    // production does this yet (the enemy stays atWill), but the plumbing is
+    // symmetric — a future enemy strategy is a data change, not a refactor.
+    const objective = { mode: 'engage', target: { kind: 'enemy', unitId: player.id } } as const;
+    world.enqueueCommand({ kind: 'setObjective', team: 'enemy', objective });
+    world.tick();
+    expect(world.objectiveFor('enemy')).toEqual(objective);
+    // Independent of the player slot (still its default).
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
+    expect(set).toHaveBeenCalledWith({ team: 'enemy', objective });
+
+    // The revert-on-death scan covers BOTH teams: when the enemy objective's
+    // target (the player) dies, the enemy team reverts to atWill too.
+    player.currentHp = 0;
+    world.tick();
+    expect(world.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
   });
 });
 

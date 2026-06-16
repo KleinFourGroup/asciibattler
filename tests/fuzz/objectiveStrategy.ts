@@ -6,10 +6,10 @@
  *
  * The brief's testing scheme: fuzz objectives may ONLY target enemy units, and a
  * NEW objective is only chosen once the previous target is killed (no
- * thrashing). The no-thrash rule falls out of J1's auto-clear — an `enemy`
- * objective auto-clears the tick its target dies
- * (`World.clearObjectiveIfResolved`), so the bot simply refills when
- * `world.objective === null` (`decideObjectiveCommand` below).
+ * thrashing). The no-thrash rule falls out of the auto-revert — an `engage`
+ * enemy objective reverts to `atWill` the tick its target dies
+ * (`World.clearResolvedObjectives`), so the bot simply refills when the player
+ * team's objective is `atWill` (`decideObjectiveCommand` below).
  *
  * The proclivity is ONE team-wide policy per run (there is a single shared
  * objective). The menu covers `none`, `random`, highest/lowest of a base stat,
@@ -286,15 +286,15 @@ function scoredObjectiveTarget(
 
 /**
  * The per-tick objective decision — the no-thrash gate. Returns a `setObjective`
- * command ONLY when there is no active objective and the proclivity selects a
- * living enemy; otherwise `null` (an active objective is left untouched — no
- * thrashing). J1 auto-clears an `enemy` objective the tick its target dies, so
- * the next tick the objective is `null` again and this refills it — that IS the
- * brief's "only after the previous target is killed."
+ * command ONLY when the player team is `atWill` (no active objective) and the
+ * proclivity selects a living enemy; otherwise `null` (an active objective is
+ * left untouched — no thrashing). The auto-revert flips an `engage` enemy
+ * objective back to `atWill` the tick its target dies, so the next tick this
+ * refills it — that IS the brief's "only after the previous target is killed."
  *
  * `none` always returns `null`, so a `none` run enqueues nothing and is
- * byte-identical to running with no objectives at all (the default that keeps
- * the existing fuzz baselines intact).
+ * byte-identical to running with no objectives at all (= `atWill`, the default
+ * that keeps the existing fuzz baselines intact).
  */
 export function decideObjectiveCommand(
   world: World,
@@ -302,8 +302,12 @@ export function decideObjectiveCommand(
   rng: RNG,
 ): WorldCommand | null {
   if (proclivity.kind === 'none') return null;
-  if (world.objective !== null) return null; // engaged — leave it (no thrash)
+  if (world.objectiveFor('player').mode !== 'atWill') return null; // engaged — leave it (no thrash)
   const targetId = selectObjectiveTarget(world, proclivity, rng);
   if (targetId === null) return null;
-  return { kind: 'setObjective', objective: { kind: 'enemy', unitId: targetId } };
+  return {
+    kind: 'setObjective',
+    team: 'player',
+    objective: { mode: 'engage', target: { kind: 'enemy', unitId: targetId } },
+  };
 }

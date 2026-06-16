@@ -417,6 +417,43 @@ describe('MovementBehavior / hold (O2)', () => {
   });
 });
 
+describe('MovementBehavior / focus tile (O3, leashAtNearest default)', () => {
+  function setFocusTile(world: World, cell: GridCoord): void {
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'focus', target: { kind: 'tile', cell } },
+    });
+  }
+
+  it('far from the tile: an adjacent enemy is IGNORED — the unit keeps marching (the full-preempt vs engage)', () => {
+    // The mirror of the J1 "an adjacent enemy interrupts tile pursuit" test:
+    // there engage stops to fight the cheby-1 enemy. Under FOCUS while still far
+    // from the tile (cheby 6 > leash) the unit eats the hit and marches on.
+    const { world, units, moves } = scene([
+      { team: 'player', x: 6, y: 6, attackRange: 1, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 7, y: 6, inert: true }, // adjacent → would interrupt under engage
+    ]);
+    setFocusTile(world, { x: 0, y: 0 });
+    for (let i = 0; i < 6; i++) world.tick();
+    expect(units[0]!.targetId).toBeNull(); // ignored the adjacent enemy
+    expect(moves.length).toBeGreaterThan(0); // kept moving toward the rally cell
+    expect(Math.max(units[0]!.position.x, units[0]!.position.y)).toBeLessThan(6);
+  });
+
+  it('once at the tile: engages locally — an adjacent enemy interrupts (acts like engage there)', () => {
+    const { world, units, moves } = scene([
+      { team: 'player', x: 1, y: 1, attackRange: 1, moveCooldownTicks: 1 }, // ON the tile
+      { team: 'enemy', x: 2, y: 1, inert: true }, // adjacent → engageable locally
+    ]);
+    setFocusTile(world, { x: 1, y: 1 });
+    for (let i = 0; i < 6; i++) world.tick();
+    expect(units[0]!.targetId).toBe(units[1]!.id); // engageLocal picked the enemy
+    expect(moves).toHaveLength(0); // in range → fights in place, no march
+    expect(units[0]!.position).toEqual({ x: 1, y: 1 });
+  });
+});
+
 interface SceneUnit {
   team: Team;
   x: number;

@@ -406,6 +406,78 @@ describe('Targeting / hold (O2)', () => {
   });
 });
 
+describe('Targeting / focus (O3)', () => {
+  // Focus COMPLETELY preempts: a unit abandons any fight and ignores every
+  // enemy except the focus (eating hits from non-focused attackers). Command +
+  // one tick = the faithful path (drain → clearResolvedObjectives → updateTarget
+  // the same tick); the scene units carry no behaviors so nothing moves. These
+  // run under the SHIPPED default (leashAtNearest) for the tile cases.
+  function applyFocusEnemy(world: World, unitId: number): void {
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'focus', target: { kind: 'enemy', unitId } },
+    });
+    world.tick();
+  }
+  function applyFocusTile(world: World, cell: GridCoord): void {
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'focus', target: { kind: 'tile', cell } },
+    });
+    world.tick();
+  }
+
+  it('enemy focus: a unit beelines to the focus enemy even when far', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 9, team: 'enemy', x: 10, y: 10 }, // far (beyond any leash), the focus
+    ]);
+    applyFocusEnemy(world, 9);
+    expect(units[0]!.targetId).toBe(9);
+  });
+
+  it('enemy focus: a nearer enemy does NOT preempt the focus (the full-preempt distinction vs engage)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 2, team: 'enemy', x: 3, y: 2 }, // adjacent — would preempt under ENGAGE
+      { id: 9, team: 'enemy', x: 10, y: 10 }, // the focus, far
+    ]);
+    applyFocusEnemy(world, 9);
+    expect(units[0]!.targetId).toBe(9); // ignores the adjacent enemy, marches to the focus
+  });
+
+  it('enemy focus: an already-engaged unit ABANDONS its fight for the focus (mirror of the engage non-preempt test)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 5, y: 5, targetId: 2 }, // committed + adjacent → engaged
+      { id: 2, team: 'enemy', x: 6, y: 5 },
+      { id: 9, team: 'enemy', x: 10, y: 10 }, // the focus
+    ]);
+    applyFocusEnemy(world, 9);
+    expect(units[0]!.targetId).toBe(9); // yanked off the in-range fight
+  });
+
+  it('tile focus (leashAtNearest): far from the tile → pursue, ignoring an adjacent enemy', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 }, // chebyshev 9 from the tile (> leash)
+      { id: 2, team: 'enemy', x: 3, y: 2 }, // adjacent — ignored while travelling
+    ]);
+    applyFocusTile(world, { x: 11, y: 11 });
+    expect(units[0]!.targetId).toBeNull();
+    expect(currentTarget(units[0]!, world)).toBeNull(); // no nearest-enemy fallback under focus
+  });
+
+  it('tile focus (leashAtNearest): once at the tile → engageLocal targets an in-range enemy', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 5, y: 5 }, // ON the tile (chebyshev 0 <= leash)
+      { id: 2, team: 'enemy', x: 6, y: 5 }, // adjacent → engageable locally
+    ]);
+    applyFocusTile(world, { x: 5, y: 5 });
+    expect(units[0]!.targetId).toBe(2);
+  });
+});
+
 /**
  * Build a World seeded with hand-placed units. We bypass spawnUnit because
  * Targeting tests want precise ids and HPs without rolling templates.

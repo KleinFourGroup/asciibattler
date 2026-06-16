@@ -93,11 +93,12 @@ src/
     Action.ts                # Action / ActionProposal / phase-timeline interfaces (A1 → F2)
                              # + toData()/fromData for snapshot rehydration (A2); OrphanPolicy (F2)
     Command.ts               # WorldCommand union — drained at tick boundary (A2); J1: setObjective/clearObjective
-    objective.ts             # O1: TeamObjective (atWill | engage{target}) per team + ObjectiveTarget (tile | enemy); J3: objectiveAtCell (click cell → enemy/tile)
+    objective.ts             # O1/O2/O3: TeamObjective (atWill | engage{target} | hold | focus{target}) per team + ObjectiveTarget (tile | enemy); J3: objectiveAtCell (click cell → enemy/tile)
+    focusTile.ts             # O3: the one keyed focus-TILE resolver (disallow | clearOnArrival | leashAtNearest), config-selected; directive + resolvedByArrival
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a); J2: pathfindingStats counter; J3: bestEffort (route to nearest reachable)
     movement.ts              # J2: shared movement seam — MovementIntent + advance (the dash hook) + routeToward (cache boundary)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest in-range(+LOS) firing cell
-    Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5); lowestWoundedAlly (E7.B)
+    Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5) w/ objective branches (engage/hold/focus + updateTargetDefault); lowestWoundedAlly (E7.B)
                              # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
     targetingStrategies.ts   # per-archetype target-pick registry (nearest / weakest); Unit.targeting resolved at spawn
     archetypes.ts            # ALL_ARCHETYPES pool (F1), rollUnit, glyphForArchetype, targetingForArchetype

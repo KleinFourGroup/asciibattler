@@ -104,3 +104,44 @@ describe('Hold mode (O2) — integration', () => {
     expect(run()).toEqual(run());
   });
 });
+
+describe('Focus mode (O3) — integration', () => {
+  it('same seed + a focus enemy command → byte-identical battle', () => {
+    // All three players focus-fire one enemy (the full preempt drives a real,
+    // behavior-driven battle — beeline + engage), under the shipped default config.
+    const run = (): string => {
+      const w = battle(424);
+      const firstEnemy = w.units.find((u) => u.team === 'enemy')!;
+      w.enqueueCommand({
+        kind: 'setObjective',
+        team: 'player',
+        objective: { mode: 'focus', target: { kind: 'enemy', unitId: firstEnemy.id } },
+      });
+      for (let i = 0; i < 300 && !w.ended; i++) w.tick();
+      return JSON.stringify(w.toJSON());
+    };
+    expect(run()).toEqual(run());
+  });
+
+  it('a mid-battle snapshot with an active focus TILE objective restores + finishes identically', () => {
+    // A tile focus persists (leashAtNearest never reverts), so it's reliably
+    // still active at the snapshot point — the focus rides the round-trip.
+    const w = battle(2025);
+    w.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'focus', target: { kind: 'tile', cell: { x: 6, y: 11 } } },
+    });
+    for (let i = 0; i < 30; i++) w.tick();
+
+    const wire = JSON.parse(JSON.stringify(w.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.objectiveFor('player')).toEqual(w.objectiveFor('player'));
+    expect(restored.objectiveFor('player').mode).toBe('focus'); // still live across the trip
+    expect(restored.objectiveFor('enemy')).toEqual(w.objectiveFor('enemy'));
+
+    for (let i = 0; i < 400 && !w.ended; i++) w.tick();
+    for (let i = 0; i < 400 && !restored.ended; i++) restored.tick();
+    expect(JSON.stringify(restored.toJSON())).toEqual(JSON.stringify(w.toJSON()));
+  });
+});

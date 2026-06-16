@@ -6,6 +6,7 @@ import { hasLineOfSight } from './LineOfSight';
 import { SIM } from '../config/sim';
 import { OBJECTIVE } from '../config/objective';
 import { getTargetingStrategy } from './targetingStrategies';
+import { focusTileDirective } from './focusTile';
 
 /**
  * Pick the best living enemy of `unit` according to its targeting strategy
@@ -81,7 +82,22 @@ export function updateTarget(unit: Unit, world: World): void {
     unit.outOfLosTicks = 0;
     return;
   }
+  if (objective.mode === 'focus') {
+    // O3 — the full-preempt objective (see `updateFocusTarget`).
+    updateFocusTarget(unit, world, objective.target);
+    return;
+  }
 
+  // `atWill` (the default + J1's no-objective): the standard sticky-target path.
+  updateTargetDefault(unit, world);
+}
+
+/**
+ * The default ("at-will") sticky-target selection — E5's stickiness, factored
+ * out of `updateTarget` so the `focus`/`disallow` fallback (O3) can reuse the
+ * exact same logic. Byte-identical to the pre-O3 inline body.
+ */
+function updateTargetDefault(unit: Unit, world: World): void {
   const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
   const valid =
     committed !== undefined &&
@@ -124,6 +140,52 @@ export function updateTarget(unit: Unit, world: World): void {
   ) {
     unit.targetId = candidate.id;
     unit.outOfLosTicks = 0;
+  }
+}
+
+/**
+ * O3 — target selection under a `focus` objective. Focus COMPLETELY PREEMPTS:
+ * the unit abandons any current fight and ignores every enemy except the focus
+ * — it eats hits from non-focused attackers (no retaliation break-off, by
+ * design; that's the point of a force-focus). The two preemption branches
+ * `updateObjectiveTarget` has for `engage` are deliberately SKIPPED here.
+ *
+ *   - ENEMY focus → commit straight to that unit (a beeline; the path-to-target
+ *     logic in MovementBehavior drives the approach, the strike abilities fire
+ *     when in range). Reverted World-side to `atWill` on the target's death.
+ *   - TILE focus → defer to the switchable `focusTileResolution` strategy
+ *     (`focusTile.ts`): `pursue` (targetId null → MovementBehavior beelines to
+ *     the rally cell), `engageLocal` (the unit has arrived near the tile → act
+ *     exactly like `engage{tile}`), or `atWill` (the `disallow` fallback —
+ *     default targeting; the team reverts to atWill at the World boundary the
+ *     same tick regardless).
+ */
+function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): void {
+  if (target.kind === 'enemy') {
+    const objEnemy = world.findUnit(target.unitId);
+    const valid =
+      objEnemy !== undefined &&
+      objEnemy.team !== unit.team &&
+      objEnemy.team !== 'neutral' &&
+      objEnemy.currentHp > 0;
+    unit.targetId = valid ? objEnemy.id : null;
+    unit.outOfLosTicks = 0;
+    return;
+  }
+  switch (focusTileDirective(unit, world, target.cell)) {
+    case 'engageLocal':
+      // Arrived near the tile — engage locally, exactly like `engage{tile}`.
+      updateObjectiveTarget(unit, world, target);
+      return;
+    case 'atWill':
+      updateTargetDefault(unit, world);
+      return;
+    case 'pursue':
+    default:
+      // Beeline to the tile, ignore every enemy en route.
+      unit.targetId = null;
+      unit.outOfLosTicks = 0;
+      return;
   }
 }
 

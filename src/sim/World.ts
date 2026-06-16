@@ -28,6 +28,7 @@ import {
 import type { WorldCommand } from './Command';
 import { AT_WILL } from './objective';
 import type { ObjectiveTeam, TeamObjective } from './objective';
+import { focusTileResolvedByArrival } from './focusTile';
 import type { StatusEffect } from './statusEffects';
 import { cloneEffect } from './statusEffects';
 import { TriggerDispatcher } from './triggers';
@@ -1028,26 +1029,38 @@ export class World {
   }
 
   /**
-   * O1 — revert any team whose `engage` enemy target is no longer a living enemy
-   * (it died, was removed, or the objective was set on an invalid id) back to
-   * `atWill`. A `tile` target never auto-reverts (persist-until-cleared). Both
-   * teams are scanned (the enemy team is inert today but the storage is
-   * structural). Idempotent via `setObjectiveAtWill`'s guard. The "alive enemy"
-   * test is team-relative (the target must be an enemy OF the objective owner),
-   * so it generalizes to a future enemy-team objective; for the player team it's
-   * the J1 `target.team === 'enemy'` check exactly.
+   * O1 — revert any team whose `engage`/`focus` ENEMY target is no longer a
+   * living enemy (it died, was removed, or the objective was set on an invalid
+   * id) back to `atWill`. An `engage` `tile` target never auto-reverts
+   * (persist-until-cleared); a `focus` `tile` target reverts per its switchable
+   * resolution strategy (O3 — `disallow` reverts at once, `clearOnArrival` on
+   * first arrival, `leashAtNearest` never). Both teams are scanned (the enemy
+   * team is inert today but the storage is structural). Idempotent via
+   * `setObjectiveAtWill`'s guard. The "alive enemy" test is team-relative (the
+   * target must be an enemy OF the objective owner), so it generalizes to a
+   * future enemy-team objective; for the player team it's the J1
+   * `target.team === 'enemy'` check exactly.
    */
   private clearResolvedObjectives(): void {
     for (const team of OBJECTIVE_TEAMS) {
       const obj = this.objectives[team];
-      if (obj.mode !== 'engage' || obj.target.kind !== 'enemy') continue;
-      const target = this.findUnit(obj.target.unitId);
-      const alive =
-        target !== undefined &&
-        target.team !== team &&
-        target.team !== 'neutral' &&
-        target.currentHp > 0;
-      if (!alive) this.setObjectiveAtWill(team);
+      // Only the targeted modes can resolve; atWill/hold carry no target.
+      if (obj.mode !== 'engage' && obj.mode !== 'focus') continue;
+      if (obj.target.kind === 'enemy') {
+        const target = this.findUnit(obj.target.unitId);
+        const alive =
+          target !== undefined &&
+          target.team !== team &&
+          target.team !== 'neutral' &&
+          target.currentHp > 0;
+        if (!alive) this.setObjectiveAtWill(team);
+      } else if (obj.mode === 'focus') {
+        // O3 — a focus TILE reverts when its strategy says it's resolved. (An
+        // engage TILE falls through here untouched — it persists, the J1 rule.)
+        if (focusTileResolvedByArrival(team, obj.target.cell, this)) {
+          this.setObjectiveAtWill(team);
+        }
+      }
     }
   }
 

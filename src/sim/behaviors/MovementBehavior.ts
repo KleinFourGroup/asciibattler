@@ -76,8 +76,17 @@ export class MovementBehavior implements Behavior {
       // to the objective enemy, so `target` is non-null and the path-to-target
       // logic below drives the approach. (O1 reads the acting unit's team
       // objective; the enemy team is `atWill`, so this stays player-only today.)
+      //
+      // O3 — a `focus` TILE objective routes here identically when the unit has
+      // no committed target: `pursue` (beelining to the tile) leaves targetId
+      // null, and `engageLocal` with no enemy near the tile also leaves it null
+      // → both walk to the rally cell. The strategy choice lives entirely in
+      // `Targeting.updateFocusTarget` (it sets targetId); movement just reacts.
       const objective = world.objectiveFor(unit.team);
-      if (objective.mode === 'engage' && objective.target.kind === 'tile') {
+      if (
+        (objective.mode === 'engage' || objective.mode === 'focus') &&
+        objective.target.kind === 'tile'
+      ) {
         // J3 — bestEffort so an UNREACHABLE rally cell (a wall, or a walled-off
         // region) routes the unit AS CLOSE AS IT CAN rather than abstaining. A
         // single unreachable goal → findPath [] → no step is exactly the

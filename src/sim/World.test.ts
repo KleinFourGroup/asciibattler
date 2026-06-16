@@ -944,6 +944,30 @@ describe('World per-team objective (J1 → O1)', () => {
     world.tick();
     expect(world.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
   });
+
+  it('a focus enemy objective reverts to atWill the tick its target dies (mirrors engage)', () => {
+    const { world, enemy } = setup();
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'focus', target: { kind: 'enemy', unitId: enemy.id } },
+    });
+    world.tick();
+    expect(world.objectiveFor('player').mode).toBe('focus');
+
+    enemy.currentHp = 0;
+    world.tick(); // clearResolvedObjectives now covers focus enemy targets too
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
+  });
+
+  it('a focus tile objective persists under the shipped default (leashAtNearest never resolves by arrival)', () => {
+    const { world } = setup();
+    const objective = { mode: 'focus', target: { kind: 'tile', cell: { x: 3, y: 3 } } } as const;
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
+    for (let i = 0; i < 11; i++) world.tick();
+    // leashAtNearest = the unit garrisons the tile; the focus is not auto-cleared.
+    expect(world.objectiveFor('player')).toEqual(objective);
+  });
 });
 
 interface DeathSceneUnit {

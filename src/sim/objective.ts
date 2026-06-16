@@ -26,6 +26,14 @@ import type { GridCoord } from '../core/types';
  *    enemy ALREADY within their attack range (`Targeting.updateTarget`'s hold
  *    branch picks an in-range enemy or none). A held ranged unit fires at
  *    anything in reach; a held melee unit only strikes adjacent.
+ *  - `focus` (O3): target = enemy or tile. Like `engage` but COMPLETELY
+ *    PREEMPTS targeting + pathing — a unit ABANDONS its current fight (and eats
+ *    hits from non-focused enemies; no retaliation break-off) to converge on
+ *    the focus. An ENEMY focus = beeline to that unit, ignore everything else
+ *    (`Targeting.updateFocusTarget`). A TILE focus is steered by the switchable
+ *    `focusTileResolution` strategy (`src/sim/focusTile.ts`): disallow /
+ *    clearOnArrival / leashAtNearest. A dead focus enemy reverts to `atWill`
+ *    (mirrors engage); a tile focus reverts per its strategy.
  *
  * Stored per-team on `World` (`objectiveFor(team)`); the ENEMY team is fixed at
  * `atWill` for now (J1's "enemy AI never sets it"), but the storage is real and
@@ -44,12 +52,14 @@ export type ObjectiveTeam = 'player' | 'enemy';
 
 /**
  * A team's always-present steering objective. O1 = `atWill` | `engage`; O2 adds
- * `hold` (no target, act-in-place), O3 adds `focus` (target, preempts pathing).
+ * `hold` (no target, act-in-place), O3 adds `focus` (target, fully preempts
+ * targeting + pathing).
  */
 export type TeamObjective =
   | { readonly mode: 'atWill' }
   | { readonly mode: 'engage'; readonly target: ObjectiveTarget }
-  | { readonly mode: 'hold' };
+  | { readonly mode: 'hold' }
+  | { readonly mode: 'focus'; readonly target: ObjectiveTarget };
 
 /**
  * The shared `atWill` default — both teams start here and every revert lands

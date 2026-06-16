@@ -210,11 +210,12 @@ export class BattleRenderer {
 
   /** J3 — record the new objective target and lazily spawn the marker sprite
    *  (one per battle, reused across re-sets). `updateObjectiveMarker` positions
-   *  it. O1 — only the PLAYER team draws a marker; a non-`engage` objective
-   *  (atWill / O2 hold) has no target, so it drops the marker like a clear. */
+   *  it. O1 — only the PLAYER team draws a marker; a non-targeted objective
+   *  (atWill / O2 hold) has no target, so it drops the marker like a clear. O3 —
+   *  `focus` carries a target too (like `engage`), so it draws the marker. */
   private onObjectiveSet = ({ team, objective }: GameEvents['objective:set']): void => {
     if (team !== 'player') return;
-    if (objective.mode !== 'engage') {
+    if (objective.mode !== 'engage' && objective.mode !== 'focus') {
       this.dropObjectiveMarker();
       return;
     }

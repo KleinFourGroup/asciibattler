@@ -196,7 +196,7 @@ The anti-blobbing core (the brief's "first idea"), and the architectural
 keystone of the round. All sim + fuzz, **headless-first**. Lands the round's one
 expected WorldSnapshot bump.
 
-> **STATUS: O1 + O2 ✅ COMPLETE (2026-06-16).**
+> **STATUS: O1 + O2 + O3 ✅ COMPLETE (2026-06-16).**
 > **O1** — the always-an-objective typed model (`TeamObjective` = `atWill` |
 > `engage{target}`; `ObjectiveTarget` = the renamed J1 `BattleObjective`) now lives
 > per-team on `World` (`objectives: { player, enemy }`, accessor `objectiveFor(team)`);
@@ -211,11 +211,23 @@ expected WorldSnapshot bump.
 > none. Units act in place — a held ranged unit fires what's in reach, a held melee
 > only adjacent; the rogue **dash is suppressed for free** (it gates on
 > `currentTarget`, which hold keeps in-range-or-null). No snapshot bump (rides O1).
-> A fully-held board is a static stalemate the turn cap (N2) draws. Verified:
-> typecheck clean / 962 main / 191 fuzz:smoke; O1's marker path + O2's
-> hold-freezes-real-units (incl. dash) both confirmed live.
-> **NEXT = O3 (focus + the `leashAtNearest` switch — DESIGN-ROUND-locked default).**
-> O4 (ranged minRange) / O5 (fuzz) follow; the balance re-confirmation rides O3/O4.
+> A fully-held board is a static stalemate the turn cap (N2) draws.
+> **O3** — `focus` mode + the switchable tile-resolution. `focus` joins the
+> `TeamObjective` union (target = enemy or tile) and COMPLETELY PREEMPTS
+> targeting + pathing: an enemy focus beelines to that unit ignoring everything
+> (eats hits from non-focused attackers, NO retaliation break-off —
+> user-confirmed); a tile focus is steered by the ONE keyed resolver
+> (`src/sim/focusTile.ts`) selected by `config/objective.json` →
+> `focusTileResolution` (default `leashAtNearest`; `disallow` / `clearOnArrival`
+> also ship switchable). The two hard-coded `engage` seams were extended to
+> `focus`: `World.clearResolvedObjectives` (focus-enemy death + tile
+> arrival-revert per strategy) and `BattleRenderer.onObjectiveSet` (marker shows
+> for focus — it carries a target). NO snapshot bump (focus rides O1's v25;
+> serialization is generic over the union). Byte-identical baseline preserved
+> (fuzz:smoke 191 unchanged — focus is unreachable without the Q3 UI / O5 fuzz).
+> Verified: typecheck clean / 984 main / 191 fuzz:smoke.
+> **NEXT = O4 (ranged `minRange`).** O5 (fuzz typed objectives) follows; the
+> balance re-confirmation rides O4 (the first combat-power lever this round).
 
 The brief's "Note on Implementation" is the spine: refactor so there is
 **always** an objective, each with a **type and a data payload**, fed into (or
@@ -296,11 +308,26 @@ determinism.
 (recommend yes — it *acts*, it just doesn't *move*); face/rotate toward target is
 render-only.
 
-### O3 — Focus mode + switchable tile-resolution
+### O3 — Focus mode + switchable tile-resolution ✅ DONE (2026-06-16)
+
+**As-built:** shipped exactly per the spec below. The design round was
+pre-resolved (default `leashAtNearest`, all three switchable, full preempt); the
+user confirmed the full-preempt reading (a focused unit eats hits from
+non-focused enemies — no retaliation break-off). Lives as: the `focus` union
+member ([objective.ts](src/sim/objective.ts)), the `updateFocusTarget` branch +
+the extracted `updateTargetDefault` ([Targeting.ts](src/sim/Targeting.ts)), the
+one keyed resolver ([focusTile.ts](src/sim/focusTile.ts) +
+`config/objective.json#focusTileResolution`), the MovementBehavior focus-tile
+pursuit, and the two extended `engage` seams (`World.clearResolvedObjectives` +
+`BattleRenderer.onObjectiveSet`). NO snapshot bump (rides O1's v25). Tests:
+`focusTile.test.ts` (per-strategy) + focus blocks in `Targeting` / `Movement` /
+`World` / `tests/integration/objective.test.ts`. **984 main / 191 fuzz:smoke**
+(baseline byte-identical). No player UI yet — that's Q3; verify headless / via
+`__game` until then.
 
 **DESIGN ROUND NEEDED** — the focus-tile behavior has three candidate
 resolutions the brief wants all switchable; confirm the default + the switch
-shape.
+shape. **RESOLVED — see the decision points below.**
 
 **Shape:** `mode: 'focus'` → like engage but **completely preempts targeting and
 pathing** (the brief). Even a unit mid-fight abandons its current target to chase

@@ -1085,3 +1085,10 @@ positioning but costs shots while repositioning)? (2) **catapult `minRange 4` on
 as possibly too fragile: a matched-speed chaser inside 4 cells can keep it from ever firing (kite-pinned);
 if telemetry shows catapults cratering, drop the floor (a one-number config tweak). No band change made in
 O4 itself.
+
+**Playtest data-point (user, 2026-06-16, O4b signed off):** kiting "made a drastic difference" and "broke
+up the blob fights massively" (the anti-blob goal — confirmed). BUT archers now feel **"really slippery."**
+So watch-item (1) leans **net-buff for ranged** — kiting may have over-helped archers (mobile + hard to
+pin). The re-confirmation sweep should specifically check whether the mercenary+ranged duopoly (the N2 OP
+read) got *worse* with kiting, and whether archers want a counter-nudge (e.g. accuracy/cadence trim, or a
+shorter bow `minRange`) — NOT a band-factor change. No retune yet (stable-baseline rule).

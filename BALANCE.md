@@ -1092,3 +1092,42 @@ So watch-item (1) leans **net-buff for ranged** — kiting may have over-helped 
 pin). The re-confirmation sweep should specifically check whether the mercenary+ranged duopoly (the N2 OP
 read) got *worse* with kiting, and whether archers want a counter-nudge (e.g. accuracy/cadence trim, or a
 shorter bow `minRange`) — NOT a band-factor change. No retune yet (stable-baseline rule).
+
+### O5 + Phase-O re-confirmation (2026-06-17) — band HOLDS, duopoly UNCHANGED, NO retune
+
+O5 added the dev-only objective **coverage churn bot** (`tests/fuzz/objectiveCoverage.ts`) — exercises
+every typed-objective mode on both teams for termination/determinism, kept SEPARATE from the measurement
+path (the proclivity stays engage-only so pure-random win rate remains a valid skill-gradient floor). NOT a
+balance instrument; the re-confirmation below uses the normal measurement bots.
+
+**Re-confirmation = the O4 (kiting) + O5 read folded into Cleanup.** Three single-process runs (no `--jobs`
+— dwm-leak-immune), full 11 floors:
+
+- **Two quick baseline sanity reads** (30 seeds, pure-random + greedy):
+  - default layout MIX — rand 0% / greedy 13% · avg floor 4.9/5.1 · **0 hangs · 0 capped draws**
+  - `--layout=procedural` — rand 10% / greedy 3% · avg floor 5.5/5.0 · **0 hangs · 1 capped draw** (in ~700 battles)
+  - Baselines winning ~0–13% over 11 floors is the HEALTHY band read (N2: baselines "NEVER win an 11-floor
+    run in this band; only skilled play does"). The **~0 capped draws is the key O4 signal** — kiting did
+    NOT create the stalemate/kite-pin timeouts the watch-items feared.
+
+- **Telemetry read** (the comparable-to-N2 one): single point at the live band `budgetFactor 1.25 ×
+  swarmMax 1.5`, `--floors=11 --layout=procedural --empower=level:hi --redraw=level:2 --jobs=1`, quick tier
+  (50 vec × 8 train / 4 test), 2.3 min. **best-achievable 75% train · +50 gradient · rand 25% · greedy 13%**
+  (held-out test 25% is 1/4 seeds = the quick-tier small-sample noise N2 flagged — read train + gradient).
+  vs N2 heavy's 70% / +30 → **same ballpark, no material band move.**
+  - **Per-archetype (active only): mercenary 479 (dmg/dep 36.5 · taken/dep 22.5 · deaths/run 35.9) ·
+    ranged 329 (35.9 · 11.0 · 13.5) · ronin 8 · rest benched.** Shares ≈ **merc 59% / ranged 40%** vs N2's
+    `1872/1320` ≈ **58% / 41%** (merc:ranged ratio ~1.45 both). **The duopoly is UNCHANGED — kiting did NOT
+    worsen or flip it.**
+  - **Archers ARE measurably safer post-kiting** (taken/dep 11.0 vs merc 22.5; deaths/run 13.5 vs 35.9 — the
+    "slippery" feel is real in the data) **but NOT dominant** (dmg/dep ≈ merc; fielded LESS, 329 vs 479). So
+    watch-item (1): kiting net-helped archer SURVIVABILITY without converting to deployment/damage dominance
+    → not an over-buff at the band. **No counter-nudge made.**
+  - **catapult `minRange 4` (watch-item 2): unobservable** — catapults are benched at the band regardless
+    (as in N2), so the kite-pin can't manifest. The flag is moot until catapults are viable → folds into the
+    future ARCHETYPE-BALANCE thread, not O4.
+
+**Verdict: `1.25 × 1.5` STANDS (no retune).** Band holds within noise, duopoly unchanged, sim healthy
+(0 hangs / ~0 draws across 180 runs). The archer-slippery / duopoly / catapult observations are all
+archetype-BALANCE questions (the flagged next major thread), NOT band-factor changes — consistent with the
+O4 entry's guidance. Phase-O balance re-confirmation CLOSED.

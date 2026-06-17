@@ -260,10 +260,13 @@ expected WorldSnapshot bump.
 > resolution, full-run harness integration, flag routing. Byte-identical baseline
 > (coverage off → gated code paths never run). **992 main / 205 fuzz:smoke (191 + 14),
 > typecheck + lint clean.** Browser-irrelevant (dev-only tooling).
-> **NEXT = the balance re-confirmation (folded into Cleanup, not a phase).** It rides
-> O4 (ranged kiting moved the band) + O5 — a light `--layout=procedural` sweep vs the
-> N2 `1.25 × 1.5` band, retune only if it moved materially; re-check the catapult-4
-> flag. The coverage bot is NOT used for it (measurement stays `none`/`engage`).
+> **Balance re-confirmation ✅ CLOSED (2026-06-17, BALANCE §O5): band `1.25 × 1.5` STANDS,
+> no retune.** best 75% train / +50 grad / rand 25% / greedy 13% at the band (≈ N2's
+> 70%/+30 — no material move); 0 hangs / ~0 capped draws across ~700 battles (kiting did
+> NOT create stalemate/kite-pin timeouts); duopoly UNCHANGED (merc 59% / ranged 40% vs
+> N2's 58%/41%); archers measurably safer post-kiting but not dominant. The
+> archer/duopoly/catapult-4 observations fold into the future archetype-balance thread,
+> NOT a band change. **NEXT = Phase P (the shared `UnitCard`).**
 
 The brief's "Note on Implementation" is the spine: refactor so there is
 **always** an objective, each with a **type and a data payload**, fed into (or
@@ -786,8 +789,10 @@ Not gated; land any time (several pair naturally with this round's work).
   card slot (top-right of the compact card).
 - **`RNG` stat-label vs `rng` reach ambiguity** ([TODO](TODO.md)) — cosmetic; fold
   into the **Q6 / P** card label work.
-- **Balance re-confirmation after O** (see O5) — light sweep, `--layout=procedural`
-  isolate; retune only if the band moved.
+- **Balance re-confirmation after O** (see O5) — ✅ **DONE (2026-06-17, BALANCE §O5):
+  band `1.25 × 1.5` STANDS, no retune** (best 75% train / +50 grad; 0 hangs / ~0 draws;
+  duopoly unchanged; archers safer-not-dominant). Archetype-balance observations
+  deferred to that thread.
 - **Favicon** ([TODO](TODO.md)) — inline-SVG glyph; stops the per-load 404.
 - **Dedicated catapult SFX (+ the F3 launch/impact split)** ([TODO](TODO.md)).
 - **`.gitattributes`** to normalize line endings (stops CRLF warnings).

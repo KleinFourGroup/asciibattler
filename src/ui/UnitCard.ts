@@ -18,13 +18,13 @@
  * structural change here or in the screens.
  */
 
-import type { UnitTemplate, Archetype, UnitStats } from '../sim/Unit';
+import type { UnitTemplate, Archetype, UnitStats, Unit } from '../sim/Unit';
 import type { PromotionInfo } from '../core/events';
 import { abilityIdsForArchetype, glyphForArchetype } from '../sim/archetypes';
 import { attackCooldownTicksFor, damageStatFor } from '../sim/stats';
 import { abilityConfig } from '../config/abilities';
 import { ticksToSeconds } from '../config';
-import { xpProgress } from '../sim/xp';
+import { xpProgress, displayLevel } from '../sim/xp';
 import { STAT_LABELS } from './statLabels';
 
 /** Future per-unit accent dimension. Only `common` exists today (unstyled =
@@ -36,8 +36,9 @@ export type UnitRarity = 'common';
 export type UnitCardMode = 'compact' | 'full';
 
 /** Render context — selects the theme/layout CSS, the header format, and the
- *  default section visibility. Each screen is one skin. */
-export type UnitCardSkin = 'recruit' | 'promotion' | 'preturn';
+ *  default section visibility. Each screen is one skin. `hud` is the Q4/Q5
+ *  in-battle pane skin (only ever paired with `compact`). */
+export type UnitCardSkin = 'recruit' | 'promotion' | 'preturn' | 'hud';
 
 /** Normalized card input. Adapters build this from a template / Unit /
  *  promotion so the builder never reaches into screen-specific shapes. */
@@ -49,6 +50,10 @@ export interface UnitCardData {
   readonly rarity: UnitRarity;
   /** Banked XP toward the next level (P2 — drives the full variant's XP bar). */
   readonly xp: number;
+  /** Live battle HP (Q4 — drives the `compact` variant's glyph-width HP bar).
+   *  Only the `unitCardFromUnit` adapter populates it; the template/promotion
+   *  adapters leave it undefined (those variants don't show an HP bar). */
+  readonly hp?: { readonly current: number; readonly max: number };
 }
 
 export interface UnitCardOptions {
@@ -79,8 +84,12 @@ export interface UnitCardHandles {
   /** The element holding the level text (the M2 level-reveal target). For
    *  skins without a reveal it's just the header element. */
   readonly levelValue: HTMLElement;
-  /** Per-stat handles in canonical `STAT_LABELS` order. */
+  /** Per-stat handles in canonical `STAT_LABELS` order. Empty for `compact`
+   *  (it has no stat block to reveal). */
   readonly statRows: Map<keyof UnitStats, StatRowHandle>;
+  /** Q4 — the `compact` HP-bar fill, for the in-battle pane to drive on every
+   *  `unit:attacked`/`:burned`/`:healed`. Undefined for the full variants. */
+  readonly hpFill?: HTMLDivElement;
 }
 
 /**
@@ -111,6 +120,26 @@ export function unitCardFromTemplate(template: UnitTemplate): UnitCardData {
     stats: template.stats,
     rarity: 'common',
     xp: template.xp,
+  };
+}
+
+/** Adapter: a live battle `Unit` → card data (Q4 — the in-battle `compact`
+ *  card). Carries HP for the bar; `displayLevel` rounds the combatant level to
+ *  the same value the rest of the UI shows. Power is read off the same `stats`
+ *  block as every other surface, so the card can't disagree with the unit. */
+export function unitCardFromUnit(unit: Unit): UnitCardData {
+  return {
+    // `unit.archetype` is `UnitArchetype` (Archetype | 'environment'); only
+    // real combatants are carded (neutral walls are filtered out before this),
+    // so the `environment` arm is unreachable — the narrow just keeps the
+    // shared `Archetype` field (read by the full variant) honest.
+    archetype: unit.archetype === 'environment' ? 'mercenary' : unit.archetype,
+    glyph: unit.glyph,
+    level: displayLevel(unit.level),
+    stats: unit.stats,
+    rarity: 'common',
+    xp: unit.xp,
+    hp: { current: unit.currentHp, max: unit.derived.maxHp },
   };
 }
 
@@ -148,6 +177,10 @@ function defaultShowXpBar(skin: UnitCardSkin): boolean {
 }
 
 export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHandles {
+  // Q4 — the in-battle pane card is a different shape (glyph + level/power +
+  // HP bar, no stat block), so it branches off before the full layout below.
+  if (opts.mode === 'compact') return buildCompactCard(data, opts);
+
   const card = document.createElement('div');
   card.className = [
     'unit-card',
@@ -182,6 +215,59 @@ export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCa
   }
 
   return { el: card, levelValue, statRows };
+}
+
+/**
+ * Q4 — the `compact` in-battle card (bottom-center player pane; Q5 mirrors it
+ * for enemies). The brief's shape: a large glyph with the level small at the
+ * top-left and power small at the top-right (power tinted with the established
+ * POW meta-blue so the two corners read apart without wide labels), and a
+ * glyph-width HP bar below. The returned `hpFill` lets the pane drive the bar
+ * live; death gray-out is a `.is-dead` class the pane toggles. No stat block,
+ * abilities, or XP bar — those stay on the full variants.
+ */
+function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHandles {
+  const card = document.createElement('div');
+  card.className = [
+    'unit-card',
+    `unit-card--${opts.skin}`,
+    'unit-card--compact',
+    `unit-card--rarity-${data.rarity}`,
+  ].join(' ');
+
+  const top = document.createElement('div');
+  top.className = 'unit-card__compact-top';
+  const level = document.createElement('span');
+  level.className = 'unit-card__compact-level';
+  level.textContent = String(data.level);
+  level.title = `Level ${data.level}`;
+  const power = document.createElement('span');
+  power.className = 'unit-card__compact-power';
+  power.textContent = String(data.stats.power);
+  power.title = `${STAT_LABELS.power} ${data.stats.power} — chips the opposing health pool each turn`;
+  top.append(level, power);
+
+  const glyph = document.createElement('div');
+  glyph.className = 'unit-card__glyph';
+  glyph.textContent = data.glyph;
+
+  const hp = document.createElement('div');
+  hp.className = 'unit-card__compact-hp';
+  const hpFill = document.createElement('div');
+  hpFill.className = 'unit-card__compact-hp-fill';
+  hpFill.style.width = `${hpPercent(data.hp) * 100}%`;
+  hp.appendChild(hpFill);
+
+  card.append(top, glyph, hp);
+  // No reveal/stat block for compact — point `levelValue` at the level span so
+  // the handle is non-null, and hand back an empty `statRows`.
+  return { el: card, levelValue: level, statRows: new Map(), hpFill };
+}
+
+/** Clamp a UnitCardData HP reading to a 0..1 fill fraction (0 when absent). */
+function hpPercent(hp: UnitCardData['hp']): number {
+  if (!hp || hp.max <= 0) return 0;
+  return Math.max(0, Math.min(1, hp.current / hp.max));
 }
 
 /**

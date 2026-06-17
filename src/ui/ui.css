@@ -1009,6 +1009,84 @@ body {
   animation: hud-status-pulse 1.4s ease-in-out infinite;
 }
 
+/* Q4 — player unit pane (bottom-center): a wrapping grid of compact UnitCards
+   for the fielded player units, with the run health-pool gauge beneath. Lives
+   outside the left side-panel so it centers on the viewport; same screen-fade
+   lifecycle. A capped width + wrap keeps a full 6-card hand tidy and the column
+   clear of the bottom-right objective pane. */
+.hud-player-pane {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: min(58vw, 660px);
+}
+
+.hud-player-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Q4 — the compact in-battle card (UnitCard `compact` variant): a glyph-led
+   tile with the level top-left + power top-right (small), and a glyph-width HP
+   bar below. Dim amber chrome so each tile reads as discrete; grays out on
+   death (.is-dead). Q5 reuses it for the enemy team (overriding the team
+   colors), so the glyph/HP greens here are the player defaults. */
+.unit-card--compact {
+  width: 64px;
+  padding: 5px 6px 7px;
+  gap: 5px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER chrome */
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.unit-card--compact .unit-card__glyph {
+  font-size: 34px;
+}
+
+.unit-card__compact-top {
+  align-self: stretch;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.unit-card__compact-level {
+  color: #ffb000; /* TERMINAL_AMBER */
+}
+
+.unit-card__compact-power {
+  color: #15f4ee; /* FLOURESCENT_BLUE — the established POW meta accent */
+  font-weight: bold;
+}
+
+.unit-card__compact-hp {
+  align-self: stretch;
+  height: 5px;
+  border: 1px solid #222;
+  background: #0a0a0a;
+}
+
+.unit-card__compact-hp-fill {
+  height: 100%;
+  background: #33ff00; /* TERMINAL_GREEN — player default; Q5 overrides enemy */
+  transition: width 0.2s ease;
+}
+
+.unit-card--compact.is-dead {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
 .hud-status {
   font-size: 11px;
   color: #664600; /* DARK_TERMINAL_AMBER */

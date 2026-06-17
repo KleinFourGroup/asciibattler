@@ -8,6 +8,8 @@ import type { Unit } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { isAtLevelCap, xpToNext, displayLevel } from '../sim/xp';
 import { STAT_LABELS } from './statLabels';
+import { buildUnitCard, unitCardFromUnit, type UnitCardHandles } from './UnitCard';
+import { renderPoolGauge } from './poolGauge';
 import type { PlaybackSpeed } from './PlaybackSpeed';
 import type { Keybindings } from './Keybindings';
 import type { KeybindAction } from '../config/keybindings';
@@ -96,6 +98,18 @@ export class HUD {
    *  `objective:cleared` so the active button reads "engaged". Starts at the
    *  at-will default (`stop`). */
   private activeObjectiveMode: ObjectiveButtonMode = 'stop';
+  /** Q4 — the player unit pane (bottom-center): a wrapping grid of `compact`
+   *  cards for the fielded player units + the relocated run health-pool gauge
+   *  beneath them. Lives outside the side-panel root (like the other panes) so
+   *  it anchors bottom-center; same screen-fade lifecycle. */
+  private readonly playerCardPane: HTMLElement;
+  /** The wrapping row the compact cards mount into. */
+  private readonly playerCardRow: HTMLElement;
+  /** The run health-pool gauge's slot beneath the cards (repainted in show()). */
+  private readonly playerPoolWrap: HTMLElement;
+  /** unitId → its compact card handles, for O(1) HP refresh + death gray-out.
+   *  Player units only; dead cards stay (grayed) for positional stability. */
+  private readonly cards = new Map<number, UnitCardHandles>();
   /** H4b — the encounter health pools + turn number, populated per battle. */
   private readonly pools: HTMLElement;
   private readonly status: HTMLElement;
@@ -238,6 +252,23 @@ export class HUD {
       }),
     );
 
+    // Q4 — the player unit pane (bottom-center): a wrapping grid of `compact`
+    // UnitCards for the fielded player units, with the run health-pool gauge
+    // (relocated from the old HUD `pools` block — which stays until Q6) beneath
+    // them. Cards are built on `unit:spawned`, their HP bars driven on
+    // attacked/burned/healed, and grayed in place on death (kept, not removed,
+    // so the grid order is positionally stable across the turn). Lives outside
+    // the side-panel root (like the speed/objective panes) so it anchors
+    // bottom-center; same screen-fade lifecycle.
+    this.playerCardPane = document.createElement('div');
+    this.playerCardPane.className = 'hud-player-pane screen-fade';
+    this.playerCardRow = document.createElement('div');
+    this.playerCardRow.className = 'hud-player-cards';
+    this.playerPoolWrap = document.createElement('div');
+    this.playerPoolWrap.className = 'hud-player-pool';
+    this.playerCardPane.append(this.playerCardRow, this.playerPoolWrap);
+    mount.appendChild(this.playerCardPane);
+
     // H4b — the two encounter pools (run-wide player pool vs per-encounter enemy
     // pool) + the current turn. Static during a single turn (the pools chip
     // between turns, surfaced on the post-turn screen); populated from `Run`
@@ -265,6 +296,12 @@ export class HUD {
 
     this.subscriptions.push(bus.on('unit:spawned', ({ unitId }) => this.addUnit(unitId)));
     this.subscriptions.push(bus.on('unit:attacked', ({ targetId }) => this.refreshHp(targetId)));
+    // Q4 — the compact cards' HP bars must track ALL visible HP changes, not
+    // just direct attacks: a fire-tile burn or a healer's heal moves HP too (the
+    // events.ts contract: refresh on attacked/burned/healed). The roster rows
+    // get the same fix for free (they only listened to `attacked` before).
+    this.subscriptions.push(bus.on('unit:burned', ({ unitId }) => this.refreshHp(unitId)));
+    this.subscriptions.push(bus.on('unit:healed', ({ unitId }) => this.refreshHp(unitId)));
     this.subscriptions.push(bus.on('unit:died', ({ unitId }) => this.removeUnit(unitId)));
   }
 
@@ -287,10 +324,16 @@ export class HUD {
     this.playerBody.replaceChildren();
     this.enemyBody.replaceChildren();
     this.rows.clear();
+    // Q4 — reset the player pane: drop last battle's cards, repaint the pool
+    // gauge from this encounter's run health.
+    this.playerCardRow.replaceChildren();
+    this.cards.clear();
+    this.renderPlayerPool(encounter);
     fadeIn(this.root);
     fadeIn(this.banner);
     fadeIn(this.speedPane);
     fadeIn(this.objectivePane);
+    fadeIn(this.playerCardPane);
   }
 
   hide(): void {
@@ -301,6 +344,7 @@ export class HUD {
     this.banner.classList.remove('is-visible');
     this.speedPane.classList.remove('is-visible');
     this.objectivePane.classList.remove('is-visible');
+    this.playerCardPane.classList.remove('is-visible');
     this.world = null;
   }
 
@@ -321,6 +365,7 @@ export class HUD {
     fadeOutAndRemove(this.banner);
     fadeOutAndRemove(this.speedPane);
     fadeOutAndRemove(this.objectivePane);
+    fadeOutAndRemove(this.playerCardPane);
     fadeOutAndRemove(this.countdownEl);
     this.world = null;
   }
@@ -447,21 +492,54 @@ export class HUD {
     const row = this.makeRow(unit);
     this.rows.set(unitId, row);
     (unit.team === 'player' ? this.playerBody : this.enemyBody).appendChild(row);
+    // Q4 — player units also get a compact card in the bottom-center pane.
+    if (unit.team === 'player') this.addPlayerCard(unitId, unit);
+  }
+
+  /** Q4 — build a compact card for a freshly spawned player unit and append it
+   *  to the bottom-center pane. Append order = spawn order (≈ hand-slot order),
+   *  so the grid stays positionally stable across the turn. */
+  private addPlayerCard(unitId: number, unit: Unit): void {
+    const handles = buildUnitCard(unitCardFromUnit(unit), { mode: 'compact', skin: 'hud' });
+    this.cards.set(unitId, handles);
+    this.playerCardRow.appendChild(handles.el);
   }
 
   private refreshHp(unitId: number): void {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
+    if (!unit) return;
     const row = this.rows.get(unitId);
-    if (!unit || !row) return;
-    updateRow(row, unit);
+    if (row) updateRow(row, unit);
+    const card = this.cards.get(unitId);
+    if (card) updateCardHp(card, unit);
   }
 
   private removeUnit(unitId: number): void {
     const row = this.rows.get(unitId);
-    if (!row) return;
-    row.remove();
-    this.rows.delete(unitId);
+    if (row) {
+      row.remove();
+      this.rows.delete(unitId);
+    }
+    // Q4 — the card is NOT removed: it grays in place (death readout) so the
+    // player grid keeps a stable order through the turn. Empty the bar in case
+    // the lethal hit's clamp left it above 0.
+    const card = this.cards.get(unitId);
+    if (card) {
+      card.el.classList.add('is-dead');
+      if (card.hpFill) card.hpFill.style.width = '0%';
+    }
+  }
+
+  /** Q4 — paint the run health-pool gauge beneath the player cards (the brief's
+   *  "player run health-pool bar"). Cleared when no encounter info is supplied
+   *  (e.g. a bare test mount). */
+  private renderPlayerPool(e?: EncounterPools): void {
+    this.playerPoolWrap.replaceChildren();
+    if (!e) return;
+    this.playerPoolWrap.appendChild(
+      renderPoolGauge('player', 'You', e.playerHealth, e.playerHealthMax),
+    );
   }
 
   /** H4b — render the encounter pools + turn into the HUD panel. Cleared when
@@ -551,6 +629,15 @@ function updateRow(row: HTMLElement, unit: Unit): void {
   text.textContent = `${hp}/${unit.derived.maxHp}`;
   if (sub) sub.textContent = formatSub(unit);
   if (stats) stats.textContent = formatStats(unit);
+}
+
+/** Q4 — drive a compact card's HP bar from the live unit. Mirrors updateRow's
+ *  clamp (currentHp can dip negative for ~1 tick before DeathBehavior fires). */
+function updateCardHp(card: UnitCardHandles, unit: Unit): void {
+  if (!card.hpFill) return;
+  const hp = Math.max(0, unit.currentHp);
+  const pct = unit.derived.maxHp > 0 ? hp / unit.derived.maxHp : 0;
+  card.hpFill.style.width = `${Math.max(0, Math.min(1, pct)) * 100}%`;
 }
 
 function poolRow(

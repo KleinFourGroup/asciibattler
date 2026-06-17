@@ -214,10 +214,11 @@ src/
     MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode
     PreTurnScreen.ts         # H4b: turn N + pools + the drawn hand (H5b); K3 redraw + K4 empower selection; K3.5 map label; L1 idol banner
     PostTurnScreen.ts        # H4b: turn outcome (winner / pool chips / gauges); M3: Continue-only (auto-timer removed)
-    RecruitScreen.ts         # recruit offer cards → dispatch chooseRecruit; raw stat block + ability list (GP3)
-    PromotionScreen.ts       # E4.4: per-unit level-up cards; M2: two-phase reveal (all cards pop in, then gains tick green card-by-card + +N chip; click-anywhere skips)
+    RecruitScreen.ts         # recruit offer cards (P1: shared UnitCard, recruit skin) → dispatch chooseRecruit
+    PromotionScreen.ts       # E4.4: per-unit level-up cards (P1: shared UnitCard, promotion skin); M2: two-phase reveal (all cards pop in, then gains tick green card-by-card + +N chip; click-anywhere skips) — the screen owns the timeline, driving the card via UnitCard's levelValue/statRows handles
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
     statLabels.ts            # GP3: shared STAT_LABELS map (card + HUD + PromotionScreen)
+    UnitCard.ts              # P1: shared unit-card builder — one DOM/CSS source for recruit + promotion (+ P3 pre-turn, Q HUD). compact/full modes × recruit/promotion/preturn skins; carries the "card can't disagree with the unit" ability readings (was RecruitScreen); rarity-accent seam (unit-card--rarity-*, default common = today's look)
 
   audio/
     AudioPlayer.ts           # B6: 4-deep clone ring per sound; per-key volume + pitch jitter; + magicboom (E7.C)

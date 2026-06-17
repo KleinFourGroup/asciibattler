@@ -379,100 +379,127 @@ body {
   gap: 20px;
 }
 
-.recruit-card {
-  width: 184px; /* GP3: two-col stat grid + ability rows need more room than 160 */
+/* P1 — the shared unit card (src/ui/UnitCard.ts emits the DOM; this carries
+   the look). Base structure + per-skin theme/layout modifiers reproduce the
+   recruit + promotion cards exactly. `--recruit` = amber, clickable, two-col
+   stats, abilities shown. `--promotion` = dim-blue, the M2 staggered reveal,
+   one-col stats, no abilities. Rarity accents (future) hang off
+   `.unit-card--rarity-*`; only the unstyled default `common` exists today, so
+   default rarity renders as it always has. */
+.unit-card {
   padding: 16px 12px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
   background: #000;
-  color: #ffb000; /* TERMINAL_AMBER */
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  cursor: pointer;
-  transition: border-color 0.1s, background 0.1s;
   font-family: var(--font-mono);
 }
 
-.recruit-card:hover {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  background: rgba(21, 244, 238, 0.08);
-}
-
-.recruit-glyph {
+.unit-card__glyph {
   font-size: 48px;
   line-height: 1;
   color: #33ff00; /* TERMINAL_GREEN — these are player units */
   font-weight: bold;
 }
 
-.recruit-archetype {
+.unit-card__header {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   opacity: 0.7;
 }
 
-/* GP3: the full raw stat block (all 8 UnitStats) laid out two-up so the
-   card stays compact; per-ability damage/reach/cadence live in the
-   Abilities section below. */
-.recruit-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 12px;
-  row-gap: 3px;
-  font-size: 13px;
+/* The raw stat block (all UnitStats). One DOM shape for every skin; the
+   grid-vs-column layout + reveal styling are per-skin below. */
+.unit-card__stats {
   align-self: stretch;
+  font-size: 13px;
 }
 
-.recruit-stat {
+.unit-card__stat {
   display: flex;
   justify-content: space-between;
   gap: 6px;
 }
 
-/* GP3: Section B — the abilities list. Self-documents what the unit does;
-   one .recruit-ability row per ability id (a multi-ability unit just gets
-   more rows). The name leads (green), with the mechanics dimmer beneath. */
-.recruit-abilities {
+.unit-card__stat-right {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+/* inline-block so the unit-card-pop scale transform applies (promotion). */
+.unit-card__stat-value {
+  display: inline-block;
+}
+
+/* GP3: the abilities list. Self-documents what the unit does; one
+   .unit-card__ability row per ability id (a multi-ability unit just gets more
+   rows). The name leads (green), with the mechanics dimmer beneath. */
+.unit-card__abilities {
   align-self: stretch;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.recruit-abilities-heading {
+.unit-card__abilities-heading {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #664600; /* DARK_TERMINAL_AMBER — chrome label */
 }
 
-.recruit-ability {
+.unit-card__ability {
   display: flex;
   flex-direction: column;
   gap: 1px;
   font-size: 12px;
 }
 
-.recruit-ability-name {
+.unit-card__ability-name {
   color: #33ff00; /* TERMINAL_GREEN — names lead the eye */
   letter-spacing: 0.04em;
 }
 
-.recruit-ability-detail {
+.unit-card__ability-detail {
   font-variant-numeric: tabular-nums;
 }
 
-.recruit-ability-cadence {
+.unit-card__ability-cadence {
   font-size: 11px;
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }
 
-.recruit-ability-aoe {
+.unit-card__ability-aoe {
   color: #15f4ee; /* FLOURESCENT_BLUE accent */
   letter-spacing: 0.04em;
+}
+
+/* --- Recruit skin (was .recruit-card*): amber, clickable, two-col stats. --- */
+.unit-card--recruit {
+  width: 184px; /* GP3: two-col stat grid + ability rows need more room than 160 */
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  color: #ffb000; /* TERMINAL_AMBER */
+  transition: border-color 0.1s, background 0.1s;
+}
+
+.unit-card--recruit.unit-card--clickable {
+  cursor: pointer;
+}
+
+.unit-card--recruit.unit-card--clickable:hover {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  background: rgba(21, 244, 238, 0.08);
+}
+
+.unit-card--recruit .unit-card__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+  row-gap: 3px;
 }
 
 /* H6b — decline-the-offer button. Sits below the cards (panel is a centered
@@ -499,12 +526,10 @@ body {
 }
 
 /* PromotionScreen (E4; M2 staggered reveal). Shown at turn boundaries when
-   roster units leveled. Cards pop in staggered (scale-overshoot entrance,
-   gated by .is-landed), each landing in its PRE-level state — all stat rows
-   dim amber. Reveal beats then add .promotion-stat--gain / .is-revealed:
-   the row turns green, the value flips to the new number with a pop, and a
-   +N chip appears. Timing lives in PromotionScreen.ts; this file only
-   defines the two states + the transitions between them. */
+   roster units leveled. The cards themselves are the shared unit card
+   (`.unit-card--promotion`, defined above); this section is just the screen
+   chrome (backdrop, heading, card row, continue button). The reveal states +
+   timing live with the unit card + PromotionScreen.ts. */
 
 .promotion-screen {
   position: absolute;
@@ -533,17 +558,14 @@ body {
   max-width: 90vw;
 }
 
-.promotion-card {
+/* --- Promotion skin (was .promotion-card*): dim-blue, the M2 staggered
+   reveal, one-col stats, no abilities. Stat rows start dim amber and reveal
+   green; the level value flips with a pop. Timing lives in
+   PromotionScreen.ts, driving the card via UnitCard's exposed handles. --- */
+.unit-card--promotion {
   width: 180px;
-  padding: 16px 12px;
   border: 1px solid #0a6a66; /* dim FLOURESCENT_BLUE */
-  background: #000;
   color: #15f4ee;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-mono);
   /* M2 — cards start hidden; .is-landed pops them in. The back-out cubic
      overshoots ~5% past scale(1) for the "pop". */
   opacity: 0;
@@ -554,88 +576,63 @@ body {
     border-color 200ms ease-out;
 }
 
-.promotion-card.is-landed {
+.unit-card--promotion.is-landed {
   opacity: 1;
   transform: none;
 }
 
 /* M2 — the one card currently revealing its gains (phase 2 runs strictly
    card-by-card); the brightened border marks the single focal point. */
-.promotion-card.is-revealing {
+.unit-card--promotion.is-revealing {
   border-color: #15f4ee; /* FLOURESCENT_BLUE */
 }
 
-.promotion-glyph {
-  font-size: 48px;
-  line-height: 1;
-  color: #33ff00; /* TERMINAL_GREEN — player team */
-  font-weight: bold;
-}
-
-.promotion-level {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+.unit-card--promotion .unit-card__header {
   opacity: 0.85;
 }
 
-/* M2 — the level value is the card's first reveal beat: flips Lv N → N+1,
-   goes (and stays) gain-green. inline-block so the pop transform applies. */
-.promotion-level-value {
-  display: inline-block;
-}
-
-.promotion-level-value.is-revealed {
-  color: #33ff00; /* TERMINAL_GREEN */
-  animation: promotion-pop 220ms ease-out;
-}
-
-.promotion-stats {
+.unit-card--promotion .unit-card__stats {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 13px;
-  align-self: stretch;
 }
 
-.promotion-stat {
-  display: flex;
-  justify-content: space-between;
+.unit-card--promotion .unit-card__stat {
   color: #ffb000; /* TERMINAL_AMBER baseline */
   opacity: 0.55;
   /* M2 — rows reveal at runtime; ease the amber→green flip. */
   transition: color 150ms ease-out, opacity 150ms ease-out;
 }
 
-.promotion-stat--gain {
+.unit-card--promotion .unit-card__stat--gain {
   color: #33ff00; /* TERMINAL_GREEN — eyes pulled to the growth */
   opacity: 1;
 }
 
-.promotion-stat-right {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-/* inline-block so the promotion-pop scale transform applies. */
-.promotion-stat-value {
+/* M2 — the level value is the card's first reveal beat: flips Lv N → N+1,
+   goes (and stays) gain-green. inline-block so the pop transform applies. */
+.unit-card__level-value {
   display: inline-block;
 }
 
-.promotion-stat-value.is-revealed {
-  animation: promotion-pop 220ms ease-out;
+.unit-card__level-value.is-revealed {
+  color: #33ff00; /* TERMINAL_GREEN */
+  animation: unit-card-pop 220ms ease-out;
+}
+
+.unit-card__stat-value.is-revealed {
+  animation: unit-card-pop 220ms ease-out;
 }
 
 /* M2 — the +N chip appears the moment its stat reveals. */
-.promotion-stat-delta {
+.unit-card__stat-delta {
   display: inline-block;
   font-size: 11px;
   color: #33ff00;
-  animation: promotion-pop 220ms ease-out;
+  animation: unit-card-pop 220ms ease-out;
 }
 
-@keyframes promotion-pop {
+@keyframes unit-card-pop {
   0% {
     transform: scale(1);
   }

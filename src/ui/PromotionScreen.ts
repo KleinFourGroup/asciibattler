@@ -29,6 +29,7 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { STAT_LABELS } from './statLabels';
+import { buildUnitCard, unitCardFromPromotion } from './UnitCard';
 
 /** Reveal cadence (M2). INTRO_DELAY_MS lets the screen's own fade-in
  *  (FADE_MS=180) finish before the first card pops, so the entrance
@@ -131,32 +132,21 @@ export class PromotionScreen {
   }
 
   /**
-   * Builds one card in its pre-level state and returns the reveal beats
-   * that animate it: [0] the level tick, then one per grown stat, in
-   * canonical stat order. Unchanged rows never reveal — they just print
-   * the (identical) value.
+   * Builds one card in its pre-level state (via the shared `UnitCard` builder,
+   * promotion skin) and returns the reveal beats that animate it: [0] the level
+   * tick, then one per grown stat, in canonical stat order. The card's DOM +
+   * styling live in the component; this screen owns only the M2 timeline,
+   * driving the card through the `levelValue` + `statRows` handles. Unchanged
+   * rows never reveal — they just print the (identical) value.
    */
   private renderCard(p: PromotionInfo): {
     el: HTMLDivElement;
     reveals: ((skipped: boolean) => void)[];
   } {
-    const card = document.createElement('div');
-    card.className = `promotion-card promotion-card--${p.archetype}`;
-
-    const glyph = document.createElement('div');
-    glyph.className = 'promotion-glyph';
-    glyph.textContent = p.glyph;
-    card.appendChild(glyph);
-
-    const levelLine = document.createElement('div');
-    levelLine.className = 'promotion-level';
-    const levelLabel = document.createElement('span');
-    levelLabel.textContent = `${p.archetype.toUpperCase()} • `;
-    const levelValue = document.createElement('span');
-    levelValue.className = 'promotion-level-value';
-    levelValue.textContent = `Lv ${p.oldLevel}`;
-    levelLine.append(levelLabel, levelValue);
-    card.appendChild(levelLine);
+    const { el, levelValue, statRows } = buildUnitCard(unitCardFromPromotion(p), {
+      mode: 'full',
+      skin: 'promotion',
+    });
 
     const reveals: ((skipped: boolean) => void)[] = [];
     reveals.push((skipped) => {
@@ -165,40 +155,25 @@ export class PromotionScreen {
       if (!skipped) this.audio.play('healtick');
     });
 
-    const stats = document.createElement('div');
-    stats.className = 'promotion-stats';
     for (const key of Object.keys(STAT_LABELS) as (keyof UnitStats)[]) {
-      const before = p.oldStats[key];
-      const after = p.newStats[key];
-      const delta = after - before;
-      const row = document.createElement('div');
-      row.className = 'promotion-stat';
-      const label = document.createElement('span');
-      label.textContent = STAT_LABELS[key];
-      const right = document.createElement('span');
-      right.className = 'promotion-stat-right';
-      const value = document.createElement('span');
-      value.className = 'promotion-stat-value';
-      value.textContent = String(before);
-      right.appendChild(value);
-      row.append(label, right);
-      stats.appendChild(row);
-      if (delta > 0) {
-        reveals.push((skipped) => {
-          row.classList.add('promotion-stat--gain');
-          value.textContent = String(after);
-          value.classList.add('is-revealed');
-          const chip = document.createElement('span');
-          chip.className = 'promotion-stat-delta';
-          chip.textContent = `+${delta}`;
-          right.appendChild(chip);
-          if (!skipped) this.audio.play('healtick');
-        });
-      }
+      const delta = p.newStats[key] - p.oldStats[key];
+      if (delta <= 0) continue;
+      const handle = statRows.get(key);
+      if (!handle) continue;
+      const { row, value, right } = handle;
+      reveals.push((skipped) => {
+        row.classList.add('unit-card__stat--gain');
+        value.textContent = String(p.newStats[key]);
+        value.classList.add('is-revealed');
+        const chip = document.createElement('span');
+        chip.className = 'unit-card__stat-delta';
+        chip.textContent = `+${delta}`;
+        right.appendChild(chip);
+        if (!skipped) this.audio.play('healtick');
+      });
     }
-    card.appendChild(stats);
 
-    return { el: card, reveals };
+    return { el, reveals };
   }
 
   private scheduleBeat(at: number, fire: (skipped: boolean) => void): void {

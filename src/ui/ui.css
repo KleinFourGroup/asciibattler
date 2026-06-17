@@ -807,7 +807,12 @@ body {
    interactive. */
 .battle-countdown {
   position: absolute;
-  top: 18%;
+  /* Q5 playtest fix: floor the top so the readout always clears the top enemy
+     pane (a one-row pane bottoms at a FIXED ~189px, but the old bare `18%`
+     drops below that on shorter viewports — 194px on 1080p, 144px on 800px).
+     `max(18%, 230px)` keeps the original 18% placement on tall displays (259px
+     at 1440), and floors it clear of the enemy cards on shorter ones. */
+  top: max(18%, 230px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -1023,7 +1028,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  max-width: min(58vw, 660px);
+  max-width: min(94vw, 1800px);
 }
 
 .hud-player-cards {
@@ -1100,8 +1105,11 @@ body {
 
 /* Q5 — enemy unit pane (top-center, below the banner): the enemy encounter pool
    gauge above an analogous wrapping grid of compact cards. The vertical mirror
-   of the player pane (anchored top, pool above cards). A capped card-row height
-   + scroll keeps a large post-N2 swarm from overrunning the board mid-screen. */
+   of the player pane (anchored top, pool above cards). The max-width is wide
+   (min(94vw, 1800px)) so a realistic swarm (~up to 20 cards) stays on ONE row —
+   a one-row pane clears the countdown readout below it, whereas a tight cap
+   wrapped the swarm into the countdown box (the Q5 playtest fix). The card-row
+   max-height + scroll is the vertical fallback for a pathologically huge swarm. */
 .hud-enemy-pane {
   position: absolute;
   top: 62px; /* clears the 20px-top banner */
@@ -1111,7 +1119,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  max-width: min(58vw, 660px);
+  max-width: min(94vw, 1800px);
 }
 
 .hud-enemy-cards {

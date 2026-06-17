@@ -30,6 +30,7 @@ import { spawnEncounter } from '../../src/sim/battleSetup';
 import type { FuzzStrategy } from './Strategy';
 import { decideObjectiveCommand } from './objectiveStrategy';
 import type { ObjectiveProclivity } from './objectiveStrategy';
+import { CoverageObjectiveDriver, COVERAGE_MAX_TICKS } from './objectiveCoverage';
 import { selectRedrawPositions } from './redrawPolicy';
 import type { RedrawPolicy } from './redrawPolicy';
 import { selectEmpowerPosition } from './empowerPolicy';
@@ -134,6 +135,17 @@ export interface HarnessOptions {
    */
   readonly objective?: ObjectiveProclivity;
   /**
+   * O5 — drive the dev-only objective COVERAGE churn bot instead of a
+   * measurement `objective` proclivity (the two are mutually exclusive; the CLI
+   * maps `--objective=coverage` here and leaves `objective` undefined). It
+   * churns every typed-objective mode on BOTH teams with random 1–20s lifetimes
+   * for termination + determinism coverage — NEVER a balance input (see
+   * `objectiveCoverage.ts`). When set, the default per-battle cap is bumped to
+   * `COVERAGE_MAX_TICKS` (the churn needs headroom to resolve; the bigger cap
+   * still backstops termination). Off by default → byte-identical.
+   */
+  readonly coverageObjectives?: boolean;
+  /**
    * K3c3 — the redraw policy the bot drives the pre-turn redraw with.
    * Undefined / `{ kind: 'none' }` (the default) keeps the turn gates OFF —
    * the run is byte-identical to the pre-K3c3 path (existing baselines stay
@@ -191,11 +203,16 @@ export function runOne(
   strategy: FuzzStrategy,
   options: HarnessOptions = {},
 ): RunResult {
-  const maxTicksPerBattle = options.maxTicksPerBattle ?? DEFAULT_MAX_TICKS;
+  // O5 — coverage churn needs a generous per-battle cap (see COVERAGE_MAX_TICKS);
+  // an explicit `maxTicksPerBattle` still wins.
+  const coverageActive = options.coverageObjectives === true;
+  const maxTicksPerBattle =
+    options.maxTicksPerBattle ?? (coverageActive ? COVERAGE_MAX_TICKS : DEFAULT_MAX_TICKS);
   const maxNodeHops = options.maxNodeHops ?? DEFAULT_MAX_HOPS;
   const strategyRng = new RNG(options.strategySeed ?? seed);
   // J4 — the objective bot is inert unless an active proclivity is supplied; a
   // `none`/absent objective forks no RNG + enqueues nothing (byte-identical).
+  // O5 — `coverage` replaces it (mutually exclusive); the CLI never sets both.
   const objective = options.objective;
   const objectiveActive = objective !== undefined && objective.kind !== 'none';
   // K3c3 — same contract for the redraw bot: `none`/absent forks no RNG and
@@ -232,11 +249,16 @@ export function runOne(
   // the bot's `random` draws never perturb the World's sim / combat streams.
   // Null (and untouched) whenever no objective is active.
   let currentObjRng: RNG | null = null;
+  // O5 — a per-battle coverage churn bot, reset each battle off the same forked
+  // worldSeed stream (mutually exclusive with the objective bot). Null when
+  // coverage is off.
+  let currentCoverage: CoverageObjectiveDriver | null = null;
 
   bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
     currentWorld = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
     currentObjRng = objectiveActive ? new RNG(worldSeed).fork() : null;
+    currentCoverage = coverageActive ? new CoverageObjectiveDriver(new RNG(worldSeed).fork()) : null;
     unitTeams = new Map();
     currentBattle = {
       floor: run.currentFloor,
@@ -406,6 +428,11 @@ export function runOne(
           if (currentObjRng && objective) {
             const cmd = decideObjectiveCommand(w, objective, currentObjRng);
             if (cmd) w.enqueueCommand(cmd);
+          }
+          // O5 — or churn both teams' objectives for coverage (mutually exclusive
+          // with the measurement bot above; the CLI never sets both).
+          if (currentCoverage) {
+            for (const cmd of currentCoverage.decide(w)) w.enqueueCommand(cmd);
           }
           w.tick();
           battleTicks++;

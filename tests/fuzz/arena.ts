@@ -38,6 +38,7 @@ import {
   type ObjectiveProclivity,
   type ScoredObjectiveWeights,
 } from './objectiveStrategy';
+import { CoverageObjectiveDriver, COVERAGE_MAX_TICKS } from './objectiveCoverage';
 
 // The per-turn cap — the SAME single source as the run harness + the live game
 // (`config/health.json` maxTurnSeconds via the TICK_RATE contract). N2 — an arena
@@ -62,12 +63,20 @@ export const DEFAULT_ARENA_ROSTER: readonly RosterEntry[] = [
 export interface ArenaOptions {
   /** Player roster; defaults to `DEFAULT_ARENA_ROSTER`. */
   readonly roster?: readonly RosterEntry[];
-  /** The objective policy the bot drives this battle with. */
-  readonly proclivity: ObjectiveProclivity;
+  /** The objective policy the bot drives this battle with. Optional only when
+   *  `coverage` is set (the coverage driver replaces it); defaults to `none`. */
+  readonly proclivity?: ObjectiveProclivity;
   /** Force a hand-authored layout, or `null` (default) for a procedural board. */
   readonly layoutId?: string | null;
-  /** Per-battle tick cap (default ≈150s). */
+  /** Per-battle tick cap (default ≈150s, or `COVERAGE_MAX_TICKS` under coverage). */
   readonly maxTicks?: number;
+  /**
+   * O5 — drive the dev-only objective COVERAGE churn bot (both teams, every
+   * mode, random 1–20s lifetimes) instead of `proclivity`. Termination +
+   * determinism coverage only — never a win-rate measurement (see
+   * `objectiveCoverage.ts`). Bumps the default cap to `COVERAGE_MAX_TICKS`.
+   */
+  readonly coverage?: boolean;
 }
 
 export interface ArenaResult {
@@ -126,7 +135,9 @@ function buildArenaEncounter(
  */
 export function runArena(seed: number, options: ArenaOptions): ArenaResult {
   const roster = options.roster ?? DEFAULT_ARENA_ROSTER;
-  const maxTicks = options.maxTicks ?? ARENA_MAX_TICKS;
+  const coverage = options.coverage === true;
+  const maxTicks = options.maxTicks ?? (coverage ? COVERAGE_MAX_TICKS : ARENA_MAX_TICKS);
+  const proclivity = options.proclivity ?? { kind: 'none' };
   const layoutId = options.layoutId ?? null;
   const encounter = buildArenaEncounter(seed, roster, layoutId);
 
@@ -144,12 +155,19 @@ export function runArena(seed: number, options: ArenaOptions): ArenaResult {
   // Dedicated objective RNG stream (forked off the seed) so the bot's `random`
   // draws never perturb the World's sim / combat / spawn streams — same-seed
   // arena runs stay byte-identical regardless of the proclivity's draw count.
-  const objRng = new RNG(seed).fork();
+  // O5 — coverage and the measurement proclivity are mutually exclusive, so the
+  // forked stream is reused by whichever is active.
+  const driverRng = new RNG(seed).fork();
+  const coverageDriver = coverage ? new CoverageObjectiveDriver(driverRng) : null;
 
   let ticks = 0;
   while (!world.ended && ticks < maxTicks) {
-    const cmd = decideObjectiveCommand(world, options.proclivity, objRng);
-    if (cmd) world.enqueueCommand(cmd);
+    if (coverageDriver) {
+      for (const cmd of coverageDriver.decide(world)) world.enqueueCommand(cmd);
+    } else {
+      const cmd = decideObjectiveCommand(world, proclivity, driverRng);
+      if (cmd) world.enqueueCommand(cmd);
+    }
     world.tick();
     ticks++;
   }

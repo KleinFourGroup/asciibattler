@@ -36,6 +36,7 @@ import {
 import { daemonLabel } from '../daemonSelection';
 import {
   bail,
+  coverageFromArgs,
   daemonFromArgs,
   empowerFromArgs,
   layoutFromArgs,
@@ -79,6 +80,9 @@ export function runRunCli(args: RunModeArgs): void {
   // byte-identical to the pre-J4 fuzz path; the baselines stay put).
   const objective = objectiveFromArgs(args);
   if (objective) harnessOptions = { ...harnessOptions, objective };
+  // O5 — `--objective=coverage` instead churns every objective mode on both
+  // teams (debug-only termination/determinism coverage; never a balance read).
+  if (coverageFromArgs(args)) harnessOptions = { ...harnessOptions, coverageObjectives: true };
   // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =
   // gates off, byte-identical).
   const redraw = redrawFromArgs(args);

@@ -203,11 +203,26 @@ function defaultOutDir(): string {
   return join(here, '..', 'output');
 }
 
+/** O5 — the reserved `--objective` value that selects the dev-only objective
+ *  COVERAGE driver instead of a measurement proclivity. */
+export const COVERAGE_OBJECTIVE = 'coverage';
+
 /** J4 — resolve the `--objective` flag into a proclivity, or `undefined` when
- *  absent (the harness treats undefined as `none` → byte-identical baselines).
- *  Shared by the standard run, `--search`, and `--balance-sweep`. */
+ *  absent OR when it selects the O5 coverage driver (`--objective=coverage`,
+ *  which `coverageFromArgs` handles separately — the two are mutually
+ *  exclusive). The harness treats undefined as `none` → byte-identical
+ *  baselines. Shared by the standard run, `--search`, and `--balance-sweep`. */
 export function objectiveFromArgs(args: Pick<CliArgs, 'objective'>): ObjectiveProclivity | undefined {
-  return args.objective !== undefined ? parseObjectiveFlag(args.objective) : undefined;
+  if (args.objective === undefined || args.objective === COVERAGE_OBJECTIVE) return undefined;
+  return parseObjectiveFlag(args.objective);
+}
+
+/** O5 — is the dev-only objective coverage driver selected (`--objective=coverage`)?
+ *  Routed separately from the proclivity since it's a both-team stateful churn
+ *  bot, not a target-selection policy. Debug-only — consumed by the plain run +
+ *  `--arena` modes, never by the balance sweep / search. */
+export function coverageFromArgs(args: Pick<CliArgs, 'objective'>): boolean {
+  return args.objective === COVERAGE_OBJECTIVE;
 }
 
 /** K3c3 — resolve the `--redraw` flag into a policy, or `undefined` when absent

@@ -196,7 +196,7 @@ The anti-blobbing core (the brief's "first idea"), and the architectural
 keystone of the round. All sim + fuzz, **headless-first**. Lands the round's one
 expected WorldSnapshot bump.
 
-> **STATUS: O1 + O2 + O3 + O4 ✅ COMPLETE (2026-06-16).**
+> **STATUS: O1 + O2 + O3 + O4 + O5 ✅ COMPLETE (2026-06-16) — Phase O sim/fuzz foundation DONE.**
 > **O1** — the always-an-objective typed model (`TeamObjective` = `atWill` |
 > `engage{target}`; `ObjectiveTarget` = the renamed J1 `BattleObjective`) now lives
 > per-team on `World` (`objectives: { player, enemy }`, accessor `objectiveFor(team)`);
@@ -236,9 +236,34 @@ expected WorldSnapshot bump.
 > (heal + melee 0). ⚠️ catapult 4 on a slow unit may be kept-from-firing by a
 > matched-speed chaser — flagged for the balance re-confirmation. Verified:
 > typecheck clean / 992 main / 191 fuzz:smoke.
-> **NEXT = O5 (fuzz typed objectives + new modes).** The balance re-confirmation
-> (folded into Cleanup) now rides O4 (ranged kiting moved the band) + O5 — a light
-> `--layout=procedural` sweep, retune only if the N2 band moved materially.
+> **O5** — fuzz typed objectives + the new modes. The KEY design call (the user's):
+> the **measurement** path and the **coverage** path are SEPARATE bots, because
+> they have opposite goals. The measurement `ObjectiveProclivity` is left untouched
+> (it only ever emits `engage`-on-an-enemy — the one "always-reasonable steer" — so
+> pure-random win rate stays a valid skill-gradient floor; teaching `random` to
+> `hold`/`focus` would crater it for non-difficulty reasons). The NEW piece is a
+> dev-only **coverage churn bot** (`tests/fuzz/objectiveCoverage.ts` —
+> `CoverageObjectiveDriver`): it churns EVERY mode (`atWill`/`engage`/`hold`/`focus`,
+> enemy + tile targets) on BOTH teams (so O1's inert-but-symmetric enemy plumbing
+> gets its only live exercise), each objective given a random **1–20s lifetime**
+> then re-rolled (covers the set→expire→re-set TRANSITIONS, not just static modes),
+> tile cells uniformly random incl. unreachable/occupied (pathological coverage).
+> Reached via `--objective=coverage` on a plain run / `--arena` (routed SEPARATELY
+> from the proclivity union — it's a stateful both-team driver, not a target
+> policy; `objectiveFromArgs` excludes it, `coverageFromArgs` selects it); NEVER a
+> balance input (the sweep/search never read it). Churn gets a generous
+> `COVERAGE_MAX_TICKS` (6× the live turn cap) so combat resolves across the
+> re-targeting — the user's call (the constant re-targeting else just paths-and-
+> cap-draws; the bigger cap still BACKSTOPS termination, a churn board can't hang).
+> Tests (`objectiveCoverage.test.ts`): variety (all modes/targets/teams), per-seed
+> determinism (driver stream + arena + harness), termination under EACH focus-tile
+> resolution, full-run harness integration, flag routing. Byte-identical baseline
+> (coverage off → gated code paths never run). **992 main / 205 fuzz:smoke (191 + 14),
+> typecheck + lint clean.** Browser-irrelevant (dev-only tooling).
+> **NEXT = the balance re-confirmation (folded into Cleanup, not a phase).** It rides
+> O4 (ranged kiting moved the band) + O5 — a light `--layout=procedural` sweep vs the
+> N2 `1.25 × 1.5` band, retune only if it moved materially; re-check the catapult-4
+> flag. The coverage bot is NOT used for it (measurement stays `none`/`engage`).
 
 The brief's "Note on Implementation" is the spine: refactor so there is
 **always** an objective, each with a **type and a data payload**, fed into (or
@@ -432,9 +457,27 @@ one-number tweak if the playtest/sweep shows it's too fragile). `hold`
 interaction: a held ranged unit too close simply can't fire (the propose-gate
 floor blocks it; hold never repositions) — as recommended.
 
-### O5 — Fuzz: typed objectives + the new modes
+### O5 — Fuzz: typed objectives + the new modes ✅ DONE (2026-06-16)
 
-**Shape:** extend J4's objective fuzz tooling
+**As-built (the design round REVISED the shape):** the original plan was to extend
+the `ObjectiveProclivity` to emit all modes. The user's call instead **split it in
+two** — the measurement proclivity stays engage-enemy-only (so pure-random win rate
+stays a valid skill-gradient floor; `hold`/`focus` would crater it for
+non-difficulty reasons), and a SEPARATE dev-only **coverage churn bot**
+([objectiveCoverage.ts](tests/fuzz/objectiveCoverage.ts) `CoverageObjectiveDriver`)
+exercises every mode on both teams with random **1–20s lifetimes** (churns the
+transitions) + uniform-random (pathological) tile cells. `--objective=coverage`
+routes to it separately (`coverageFromArgs`); it gets a generous `COVERAGE_MAX_TICKS`
+(6× the turn cap, the user's call — the constant re-targeting otherwise just
+paths-and-cap-draws; the bigger cap still backstops termination). NEVER a balance
+input. Tests in [objectiveCoverage.test.ts](tests/fuzz/objectiveCoverage.test.ts)
+(variety / determinism / per-resolver termination / harness integration / flag
+routing). Useful note: the **measurement side needed ZERO change** — O1 already
+migrated `decideObjectiveCommand` to emit the typed `{ mode:'engage', target }`, so
+the existing baselines were already typed-objective-clean. **992 main / 205
+fuzz:smoke, byte-identical baseline (coverage off ≡ pre-O5).**
+
+**Shape (original plan, kept for reference):** extend J4's objective fuzz tooling
 ([objectiveStrategy.ts](tests/fuzz/objectiveStrategy.ts),
 [arena.ts](tests/fuzz/arena.ts)) so the `ObjectiveProclivity` /
 `decideObjectiveCommand` machinery + the arena menu + the `--objective` flag

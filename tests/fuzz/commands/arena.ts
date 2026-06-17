@@ -34,7 +34,7 @@ import {
 } from '../objectiveStrategy';
 import { parseRunConfig } from '../../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../../src/sim/layouts';
-import { bail, range, type CliArgs } from './args';
+import { bail, coverageFromArgs, range, type CliArgs } from './args';
 
 export type ArenaModeArgs = Pick<
   CliArgs,
@@ -54,6 +54,29 @@ export function runArenaCli(args: ArenaModeArgs): void {
   const rosterNote = roster
     .map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype))
     .join(',');
+
+  // O5 — `--objective=coverage`: churn every objective mode on BOTH teams for
+  // termination/determinism coverage (no win-rate meaning — a churn bot is a
+  // near-certain loss; the read that matters is that every seed TERMINATES).
+  if (coverageFromArgs(args)) {
+    let wins = 0;
+    let draws = 0;
+    let totalTicks = 0;
+    for (const s of seeds) {
+      const r = runArena(s, { roster, coverage: true, layoutId });
+      if (r.winner === 'player') wins++;
+      if (r.winner === 'draw') draws++;
+      totalTicks += r.ticks;
+    }
+    process.stdout.write(
+      `Arena: coverage × ${seeds.length} seeds ` +
+        `roster=[${rosterNote}] layout=${layoutId ?? 'procedural'}\n` +
+        `  all terminated (${seeds.length}/${seeds.length})  ` +
+        `win ${((100 * wins) / seeds.length).toFixed(0)}%  ` +
+        `draws ${draws}  avgTicks ${(totalTicks / seeds.length).toFixed(0)}\n`,
+    );
+    return;
+  }
 
   // A single named proclivity (inspect one strategy) vs the full enumeration.
   if (args.objective !== undefined) {

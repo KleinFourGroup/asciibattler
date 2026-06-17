@@ -958,14 +958,19 @@ body {
    O's typed objective model. Engage + Focus ARM a target pick (next left-click,
    or right-click the board → engage); Hold + Stop apply immediately. Lives
    outside the left side-panel so it anchors bottom-right; same screen-fade
-   lifecycle + amber terminal chrome as the speed pane. The team's ACTIVE mode
-   brightens to green (.is-active); an armed target-pick adds a soft pulse
-   (.is-armed) so "click a target" reads as live. */
+   lifecycle + amber terminal chrome as the speed pane. A VERTICAL stack (the
+   labels are far wider than tall, so a row sprawled across the bottom) — it
+   grows up from the corner and stays clear of Q4's bottom-center cards;
+   `align-items: stretch` makes every button the width of the widest so the
+   column + its left-aligned icons line up. The team's ACTIVE mode brightens to
+   green (.is-active); an armed target-pick adds a soft pulse (.is-armed) so
+   "click a target" reads as live. */
 .hud-objective-pane {
   position: absolute;
   bottom: 20px;
   right: 20px;
   display: flex;
+  flex-direction: column;
   gap: 6px;
   align-items: stretch;
 }
@@ -974,6 +979,7 @@ body {
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.08em;
+  text-align: left;
   color: #ffb000; /* TERMINAL_AMBER */
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid #ffb000;

@@ -509,6 +509,22 @@ export class World {
   }
 
   /**
+   * Apply every queued command now, WITHOUT advancing the sim. `tick()` calls
+   * this at its top-of-tick drain; BattleScene also calls it while the sim is
+   * PARKED (Q2: the pre-battle countdown / a mid-battle pause) so a player order
+   * — and its `objective:set` marker — takes effect immediately instead of
+   * waiting for the first tick after resume. Determinism holds: no unit acts
+   * while parked, so applying an objective now vs. at the next tick is
+   * observably identical (the next tick's drain then finds the queue empty).
+   * No-op once ended or when the queue is empty.
+   */
+  drainCommands(): void {
+    if (this._ended || this.commands.length === 0) return;
+    const drained = this.commands.splice(0, this.commands.length);
+    for (const cmd of drained) this.applyCommand(cmd);
+  }
+
+  /**
    * Register the authoritative spawn region for a team. Battle setup
    * calls this once per team after picking regions; the overflow scan
    * uses the stored region to find free tiles. Calling a second time
@@ -728,10 +744,7 @@ export class World {
     this.tickCount++;
     this.bus.emit('tick', { tick: this.tickCount });
 
-    if (this.commands.length > 0) {
-      const drained = this.commands.splice(0, this.commands.length);
-      for (const cmd of drained) this.applyCommand(cmd);
-    }
+    this.drainCommands();
 
     // O1 — revert any team whose `engage` enemy target died (e.g. last tick) to
     // `atWill`, so the per-unit `updateTarget` below sees the reverted objective

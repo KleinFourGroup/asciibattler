@@ -291,6 +291,13 @@ export class BattleScene implements Scene {
   }
 
   tick(dt: number): void {
+    // Q2 — while the sim is PARKED (the pre-battle countdown or a mid-battle
+    // pause) it never reaches the top-of-tick command drain, so apply any queued
+    // player orders here. That's what makes an objective's X marker appear the
+    // moment it's issued instead of only when the sim resumes — no unit acts
+    // while parked, so it's observably identical to draining at the next tick.
+    if (this.countdown?.active || this.playback?.isPaused) this.world?.drainCommands();
+
     // Q2 — the pre-battle countdown. While it holds, the sim is parked and only
     // the visuals advance, at REAL dt (a fast-forward can't shorten the window).
     if (this.countdown?.active) {

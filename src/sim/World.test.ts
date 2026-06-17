@@ -860,6 +860,35 @@ describe('World per-team objective (J1 → O1)', () => {
     expect(set).toHaveBeenCalledWith({ team: 'player', objective });
   });
 
+  it('drainCommands applies a queued objective + emits, WITHOUT advancing the sim (Q2: orders while parked)', () => {
+    const { world, bus, enemy } = setup();
+    const set = vi.fn();
+    bus.on('objective:set', set);
+
+    const objective = { mode: 'engage', target: { kind: 'enemy', unitId: enemy.id } } as const;
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
+    const tickBefore = world.currentTick;
+
+    world.drainCommands();
+    expect(world.objectiveFor('player')).toEqual(objective); // applied — the marker can show
+    expect(set).toHaveBeenCalledTimes(1);
+    expect(world.currentTick).toBe(tickBefore); // the sim did NOT advance
+
+    // The next real tick finds the queue already empty — no double-apply / re-emit.
+    world.tick();
+    expect(set).toHaveBeenCalledTimes(1);
+    expect(world.objectiveFor('player')).toEqual(objective);
+  });
+
+  it('drainCommands on an empty queue is a no-op (no spurious emit)', () => {
+    const { world, bus } = setup();
+    const set = vi.fn();
+    bus.on('objective:set', set);
+    world.drainCommands();
+    expect(set).not.toHaveBeenCalled();
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
+  });
+
   it('clearObjective reverts to atWill + emits objective:cleared, and a redundant clear is silent', () => {
     const { world, bus } = setup();
     const cleared = vi.fn();

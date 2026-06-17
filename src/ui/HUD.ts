@@ -113,6 +113,18 @@ export class HUD {
     // now" once that lands (a countdown is a pause with an auto-unpause timer).
     this.speedPane = document.createElement('div');
     this.speedPane.className = 'hud-speed-pane screen-fade';
+    // Pause leads — it's the slowest (speed 0), so it sits leftmost ahead of the
+    // ascending speed run.
+    if (playback.pauseEnabled) {
+      this.pauseButton = document.createElement('button');
+      this.pauseButton.type = 'button';
+      this.pauseButton.className = 'hud-speed hud-speed--pause';
+      this.pauseButton.addEventListener('click', () => this.togglePause());
+      this.speedPane.appendChild(this.pauseButton);
+      this.subscriptions.push(keybindings.on('togglePause', () => this.togglePause()));
+    } else {
+      this.pauseButton = null;
+    }
     for (const value of playback.steps) {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -125,16 +137,6 @@ export class HUD {
       // through to the browser rather than being silently swallowed.
       const action = SPEED_HOTKEY.get(value);
       if (action) this.subscriptions.push(keybindings.on(action, () => this.selectSpeed(value)));
-    }
-    if (playback.pauseEnabled) {
-      this.pauseButton = document.createElement('button');
-      this.pauseButton.type = 'button';
-      this.pauseButton.className = 'hud-speed hud-speed--pause';
-      this.pauseButton.addEventListener('click', () => this.togglePause());
-      this.speedPane.appendChild(this.pauseButton);
-      this.subscriptions.push(keybindings.on('togglePause', () => this.togglePause()));
-    } else {
-      this.pauseButton = null;
     }
     mount.appendChild(this.speedPane);
     this.renderSpeedPane();

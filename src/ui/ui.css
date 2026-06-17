@@ -872,10 +872,11 @@ body {
   box-shadow: 0 0 6px rgba(51, 255, 0, 0.5);
 }
 
-/* The pause toggle reads as its own control — nudged apart from the speed run,
-   with a fixed width so the ⏸ / ▶ glyph swap doesn't reflow the row. */
+/* The pause toggle leads the pane (slowest = leftmost) and reads as its own
+   control — nudged apart from the speed run to its right, with a fixed width so
+   the ⏸ / ▶ glyph swap doesn't reflow the row. */
 .hud-speed--pause {
-  margin-left: 4px;
+  margin-right: 4px;
   min-width: 32px;
   text-align: center;
 }

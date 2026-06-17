@@ -30,11 +30,14 @@ import { SPAWN } from '../config/spawn';
  * DOM port).
  */
 
-/** Tracks an in-flight action's wall-clock start so the progress bar can fill smoothly between sim ticks. */
+/** Tracks an in-flight action's start so the progress bar fills smoothly between sim ticks. */
 interface ActiveProgress {
   /** `world.tick` at which the current activeAction began. Identity check so we re-anchor when the action changes. */
   startTick: number;
-  /** `performance.now()` ms when this run was first observed by the render loop. */
+  /** `renderClockMs` (Q1: the scaled-dt accumulator, NOT wall-clock) when this
+   *  run was first observed by the render loop. Anchoring on the render clock —
+   *  which advances by the same speed-scaled `dt` the sim sees, and freezes at
+   *  pause — keeps the bar's fill rate locked to game speed. */
   startedAtMs: number;
   /** Total duration in ms, computed from `(finishTick - startTick) / TICK_RATE`. */
   durationMs: number;
@@ -87,6 +90,12 @@ export class BattleRenderer {
   private readonly explosions: ExplosionParticle[] = [];
   /** unitId → in-flight action timing for the progress bar. */
   private readonly progress = new Map<number, ActiveProgress>();
+  /** Q1 — render-time accumulator in ms, advanced by the speed-scaled `dt` each
+   *  frame (the same `dt` BattleScene feeds the sim). The progress bar fills
+   *  against THIS, not `performance.now()`, so it tracks game speed and freezes
+   *  at pause (`dt === 0`). Every other animation here already advances by `dt`;
+   *  the bar was the lone wall-clock holdout. */
+  private renderClockMs = 0;
   /** unitId → ongoing post-death overlay fade. */
   private readonly overlayFades = new Map<number, OverlayFade>();
   /** E3.6: unitId → ongoing overflow-spawn overlay fade-in. */
@@ -177,6 +186,9 @@ export class BattleRenderer {
 
   /** Per-render-frame tick. Drives sprite lerps + overlay position-follow + progress fill. */
   update(dt: number): void {
+    // Q1 — advance the render clock by the speed-scaled `dt` (0 at pause), so
+    // the progress bar that anchors on it tracks game speed like everything else.
+    this.renderClockMs += dt * 1000;
     this.animator.update(dt);
     this.updateExplosions(dt);
     this.updateOverlays(dt);
@@ -359,6 +371,7 @@ export class BattleRenderer {
     this.overlayFades.clear();
     this.overlayFadeIns.clear();
     this.progress.clear();
+    this.renderClockMs = 0;
     // J3 — drop the objective marker + state so the next battle starts clean.
     this.dropObjectiveMarker();
     this.world = null;
@@ -892,17 +905,22 @@ export class BattleRenderer {
    *    SpriteRenderer.getPosition picks up SpriteAnimator lerps for
    *    free, so overlays glide with their unit through a move instead
    *    of teleporting to the destination cell.
-   * 2. Progress bar fill: anchor wall-clock to `activeAction.startTick`
+   * 2. Progress bar fill: anchor the render clock to `activeAction.startTick`
    *    transitions so progress fills smoothly between sim ticks. The
    *    Clock owns sub-tick time and doesn't expose it, but anchoring on
-   *    `performance.now()` at the first frame we observe an activeAction
-   *    gives equivalent smoothness for actions long enough to matter.
+   *    `renderClockMs` (Q1: the scaled-dt accumulator) at the first frame we
+   *    observe an activeAction gives equivalent smoothness for actions long
+   *    enough to matter — AND, because that clock advances at game speed and
+   *    freezes at pause, the fill rate tracks speed (the pre-Q1 wall-clock
+   *    `performance.now()` filled at 1× regardless / kept running while paused).
    *    The progress bar is hidden (null) when no action is in flight.
    * 3. Overlay fade on death / spawn: lerp opacity 0↔1 over FADE_SECONDS
    *    or SPAWN.durationSeconds, then remove the overlay on death.
    */
   private updateOverlays(dt: number): void {
-    const now = performance.now();
+    // Q1 — the progress bar's clock is the scaled-dt render accumulator, not
+    // `performance.now()`; that's what makes it honor speed + pause.
+    const now = this.renderClockMs;
 
     // Drive post-death fades; remove when complete.
     for (const [unitId, fade] of this.overlayFades) {

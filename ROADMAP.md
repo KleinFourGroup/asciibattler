@@ -615,6 +615,13 @@ The target layout (the brief):
 
 ### Q1 — Speed-command pane (top-right) + expanded speed model
 
+> **STATUS: ✅ DONE (2026-06-17)** — `05b570b` (model + pane) + `b084459` (fix: progress
+> bar honors speed/pause + pause-leftmost). `PlaybackSpeed` is set-by-value (0.5×/1×/2×/3×
+> + pause; `current`=0 parks the sim, 0.5× rides the Clock accumulator); `config/playback.json`
+> → `{value,enabled}[]` + `pauseEnabled`; keybindings retired `fastForward` for
+> `speedHalf`/`speed1/2/3`/`togglePause`. Pause sits leftmost (user call). NO snapshot bump
+> (page-lifetime state). The 0.5× accumulator + all-on enabled set resolved as recommended.
+
 **Shape:**
 - **Model:** extend `PlaybackSpeed` from a cycle-through-steps holder into a
   set-by-value model over `0.5× / 1× / 2× / 3×` + **pause** (0×, the sim clock
@@ -642,6 +649,17 @@ recommend); the default enabled set (all on for now; the difficulty system toggl
 them later); button vs segmented-control styling.
 
 ### Q2 — Pre-battle countdown (+ disable the spawn-anim materialize)
+
+> **STATUS: ✅ DONE (2026-06-17)** — `af6c6f9` (countdown) + `b0a7ffc` (fix: parked-order
+> marker). Combatants appear instantly (materialize retired; `turnIntroSeconds` removed);
+> `PreBattleCountdown` (real-dt, default 5s) parks the sim. **The open decision — countdown
+> sim-state vs Q1 pause — resolved AGAINST the roadmap's "distinct phase" recommendation, in
+> favor of the user's "a countdown IS a pause with an auto-unpause timer":** on mount
+> `playback.pause()`, and resuming (Space / ▶ / the Fight-now button / a speed button) is the
+> skip signal — so the unified pause control doubles as Fight-now with no double-fire, and a
+> speed button launches at that speed. The parked-order fix added `World.drainCommands()` so
+> orders set while parked (countdown OR mid-battle pause) apply + show their `X` at once. NO
+> snapshot bump.
 
 **Shape:** the brief's reaction-time fix.
 - **Disable the M3 turn-intro materialize fade** (the brief: "disable the initial

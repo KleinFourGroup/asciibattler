@@ -410,11 +410,16 @@ body {
   opacity: 0.7;
 }
 
-/* The raw stat block (all UnitStats). One DOM shape for every skin; the
-   grid-vs-column layout + reveal styling are per-skin below. */
+/* The raw stat block (all UnitStats). One DOM shape for every skin. Full-detail
+   default is a two-up grid (recruit + pre-turn); promotion overrides to a single
+   column for its card-by-card reveal. */
 .unit-card__stats {
   align-self: stretch;
   font-size: 13px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+  row-gap: 3px;
 }
 
 .unit-card__stat {
@@ -522,13 +527,6 @@ body {
 .unit-card--recruit.unit-card--clickable:hover {
   border-color: #15f4ee; /* FLOURESCENT_BLUE */
   background: rgba(21, 244, 238, 0.08);
-}
-
-.unit-card--recruit .unit-card__stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 12px;
-  row-gap: 3px;
 }
 
 /* H6b — decline-the-offer button. Sits below the cards (panel is a centered
@@ -1020,6 +1018,18 @@ body {
   font-family: var(--font-mono);
 }
 
+/* P3 — the full hand cards make the pre-turn screen tall; let it scroll so a
+   6-card hand never clips the cards or pushes the Fight button off-screen.
+   `safe center` keeps short content vertically centred but switches to
+   top-aligned (no clip) once it overflows, so scrolling reaches everything.
+   border-box keeps the padding inside the inset:0 frame. */
+.preturn-screen {
+  justify-content: safe center;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px 0;
+}
+
 .preturn-heading,
 .postturn-heading {
   font-size: 24px;
@@ -1086,44 +1096,30 @@ body {
   justify-content: center;
 }
 
-.preturn-card {
-  width: 64px;
-  padding: 10px 8px;
+/* --- Pre-turn skin (P3; was .preturn-card*): the player's drawn hand rendered
+   as full cards (all stats + abilities + the XP-to-next bar), so the hand shows
+   the same detail the player drafts on. Reuses the recruit amber theme + the
+   base two-col stats; position: relative anchors the empower-badge overlay. --- */
+.unit-card--preturn {
+  position: relative;
+  width: 184px;
   border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  background: #000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.preturn-card-glyph {
-  font-size: 32px;
-  line-height: 1;
-  font-weight: bold;
-  color: #33ff00; /* TERMINAL_GREEN — these are player units */
-}
-
-.preturn-card-level {
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: #ffb000; /* TERMINAL_AMBER */
 }
 
-/* K3 — redraw: hand cards turn selectable while the turn's budget allows
-   (hover amber, selected = FLOURESCENT_BLUE glow, mirroring the J3 armed
-   treatment), with the Redraw button + budget hint in a row underneath. */
-.preturn-card--selectable {
+/* K3/K4 — a hand card turns selectable while the turn's redraw/empower budget
+   allows (hover amber, selected = FLOURESCENT_BLUE glow, mirroring the J3 armed
+   treatment), with the Redraw + Empower controls in a row underneath. */
+.unit-card--preturn.unit-card--clickable {
   cursor: pointer;
   transition: border-color 0.1s, box-shadow 0.1s;
 }
 
-.preturn-card--selectable:hover {
+.unit-card--preturn.unit-card--clickable:hover {
   border-color: #ffb000; /* TERMINAL_AMBER */
 }
 
-.preturn-card.is-selected {
+.unit-card--preturn.is-selected {
   border-color: #15f4ee; /* FLOURESCENT_BLUE */
   box-shadow: 0 0 6px rgba(21, 244, 238, 0.5);
 }
@@ -1179,9 +1175,14 @@ body {
 }
 
 /* K4 — the empowered-card badge: one ▲ per stack (the slot carries the buff
-   for the rest of the encounter, so it shows on a re-drawn card too). */
+   for the rest of the encounter, so it shows on a re-drawn card too). P3 — a
+   top-right corner overlay on the full card (anchored by .unit-card--preturn's
+   position: relative). */
 .preturn-card-empower {
-  font-size: 11px;
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 13px;
   line-height: 1;
   letter-spacing: 0.08em;
   color: #15f4ee; /* FLOURESCENT_BLUE */

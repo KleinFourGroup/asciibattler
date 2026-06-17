@@ -212,7 +212,7 @@ src/
     Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
     ObjectiveController.ts   # J3: battle-scoped objective input — right-click / Set-arm-then-click / Clear → World commands
     MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode
-    PreTurnScreen.ts         # H4b: turn N + pools + the drawn hand (H5b); K3 redraw + K4 empower selection; K3.5 map label; L1 idol banner
+    PreTurnScreen.ts         # H4b: turn N + pools + the drawn hand (H5b; P3: shared full UnitCard — all stats + abilities + XP bar, screen scrolls); K3 redraw + K4 empower selection + ▲ badge ride on the card; K3.5 map label; L1 idol banner
     PostTurnScreen.ts        # H4b: turn outcome (winner / pool chips / gauges); M3: Continue-only (auto-timer removed)
     RecruitScreen.ts         # recruit offer cards (P1: shared UnitCard, recruit skin) → dispatch chooseRecruit
     PromotionScreen.ts       # E4.4: per-unit level-up cards (P1: shared UnitCard, promotion skin); M2: two-phase reveal (all cards pop in, then gains tick green card-by-card + +N chip; click-anywhere skips) — the screen owns the timeline, driving the card via UnitCard's levelValue/statRows handles

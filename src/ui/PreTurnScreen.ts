@@ -39,11 +39,11 @@ import type { EmpowerAvailability } from '../run/empower';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { StatusEffect } from '../sim/statusEffects';
-import { glyphForArchetype } from '../sim/archetypes';
 import { getLayout } from '../sim/layouts';
 import { STAT_LABELS } from './statLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
+import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 
 export class PreTurnScreen {
   private container: HTMLDivElement | null = null;
@@ -228,7 +228,7 @@ export class PreTurnScreen {
     this.hand.forEach((unit, pos) => {
       const card = renderHandCard(unit, this.empowerMagnitudes[pos] ?? 0, buffSummary);
       if (selectable) {
-        card.classList.add('preturn-card--selectable');
+        card.classList.add('unit-card--clickable');
         if (this.selected.has(pos)) card.classList.add('is-selected');
         card.addEventListener('click', () => this.toggleCard(pos, card));
       }
@@ -355,27 +355,18 @@ export class PreTurnScreen {
   }
 }
 
-/** One drawn card: the archetype glyph over a `Lv N` tag, tinted by archetype
- *  (the `--<archetype>` modifier mirrors the recruit card's team-color hooks).
- *  K4 — an empowered card (its roster slot carries the buff) adds a `▲` badge,
- *  one chevron per stack; the title spells out the active daemon's buff. */
+/** P3 — one drawn card: the shared `full` UnitCard (pre-turn skin), so the hand
+ *  shows the same all-stats + abilities-with-derived-stats + XP-to-next bar the
+ *  player drafts on. K4 — an empowered card (its roster slot carries the buff)
+ *  adds a `▲` badge overlay, one chevron per stack; the title spells out the
+ *  active daemon's buff. The selection (K3 redraw / K4 empower) classes + click
+ *  ride on top, applied by the caller. */
 function renderHandCard(
   unit: UnitTemplate,
   empowerMagnitude: number,
   buffSummary: string | null,
 ): HTMLDivElement {
-  const card = document.createElement('div');
-  card.className = `preturn-card preturn-card--${unit.archetype}`;
-
-  const glyph = document.createElement('div');
-  glyph.className = 'preturn-card-glyph';
-  glyph.textContent = glyphForArchetype(unit.archetype);
-  card.appendChild(glyph);
-
-  const level = document.createElement('div');
-  level.className = 'preturn-card-level';
-  level.textContent = `Lv ${unit.level}`;
-  card.appendChild(level);
+  const { el } = buildUnitCard(unitCardFromTemplate(unit), { mode: 'full', skin: 'preturn' });
 
   if (empowerMagnitude > 0) {
     const badge = document.createElement('div');
@@ -384,10 +375,10 @@ function renderHandCard(
       empowerMagnitude <= 3 ? '▲'.repeat(empowerMagnitude) : `▲×${empowerMagnitude}`;
     badge.title =
       `Empowered ×${empowerMagnitude}` + (buffSummary ? ` — ${buffSummary}` : '');
-    card.appendChild(badge);
+    el.appendChild(badge);
   }
 
-  return card;
+  return el;
 }
 
 /** L1 — the inert line a chance-denied gate leaves where its control would be

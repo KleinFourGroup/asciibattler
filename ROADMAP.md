@@ -266,7 +266,9 @@ expected WorldSnapshot bump.
 > NOT create stalemate/kite-pin timeouts); duopoly UNCHANGED (merc 59% / ranged 40% vs
 > N2's 58%/41%); archers measurably safer post-kiting but not dominant. The
 > archer/duopoly/catapult-4 observations fold into the future archetype-balance thread,
-> NOT a band change. **NEXT = Phase P (the shared `UnitCard`).**
+> NOT a band change. **Phase P ✅ COMPLETE (2026-06-17) — the shared `UnitCard` + XP bar +
+> pre-turn adoption + POW-row rework, UI-only (no snapshot/fuzz change). NEXT = Phase Q
+> (the HUD overhaul + pacing model — consumes the card's `compact` variant).**
 
 The brief's "Note on Implementation" is the spine: refactor so there is
 **always** an objective, each with a **type and a data payload**, fed into (or
@@ -503,6 +505,16 @@ combat-power model is otherwise unchanged this round.
 ---
 
 ## Phase P — The shared unit-card component
+
+> **STATUS: P1 + P2 + P3 ✅ COMPLETE + the POW-display rework (2026-06-17).** One
+> `src/ui/UnitCard.ts` builder backs recruit / promotion / pre-turn; XP-to-next bar
+> on the full variant; pre-turn renders full cards (scrolls for a tall hand); `POW`
+> pulled into its own accented meta row. UI-only — WorldSnapshot v25 / RunSnapshot
+> v17 hold, fuzz baselines untouched. Commits `2f36727` (P1) · `e247900` (P2) ·
+> `12cae25` (P3) · `06c6c77` (hover fix) · `99f214b` (POW). The decision points below
+> resolved as: rarity-accent seam (not per-archetype); M2 reveal stays in
+> PromotionScreen; recruit offers hide the XP bar; pre-turn scrolls rather than
+> shrinking the cards. **NEXT = Phase Q.**
 
 The round's biggest **clean/extensible** lever (the user's goal #1). The brief
 asks for shared card code three times ("the code should probably be shared

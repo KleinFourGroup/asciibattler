@@ -1087,6 +1087,42 @@ body {
   opacity: 0.4;
 }
 
+/* Q5 — enemy team coloring for the compact card. The player greens are the
+   defaults (above); this overrides glyph + HP fill to NEON_RED. The level/power
+   corners stay team-neutral chrome (amber/blue). */
+.unit-card--compact.unit-card--enemy .unit-card__glyph {
+  color: #ff3131; /* NEON_RED */
+}
+
+.unit-card--compact.unit-card--enemy .unit-card__compact-hp-fill {
+  background: #ff3131; /* NEON_RED */
+}
+
+/* Q5 — enemy unit pane (top-center, below the banner): the enemy encounter pool
+   gauge above an analogous wrapping grid of compact cards. The vertical mirror
+   of the player pane (anchored top, pool above cards). A capped card-row height
+   + scroll keeps a large post-N2 swarm from overrunning the board mid-screen. */
+.hud-enemy-pane {
+  position: absolute;
+  top: 62px; /* clears the 20px-top banner */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: min(58vw, 660px);
+}
+
+.hud-enemy-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+
 .hud-status {
   font-size: 11px;
   color: #664600; /* DARK_TERMINAL_AMBER */

@@ -213,6 +213,7 @@ src/
                              # Q2: pre-battle countdown readout (show/hideCountdown) + Fight-now button (the pause toggle reads "Fight now" while held)
                              # Q3: objective-command pane (bottom-right): Engage/Focus/Hold/Stop on O's typed model (per-type arming; right-click quick-Engage)
                              # Q4: player unit pane (bottom-center): wrapping compact UnitCards (live HP on attacked/burned/healed, grayed on death) + the relocated run pool gauge
+                             # Q5: enemy unit pane (top-center, below banner): enemy pool gauge above an analogous red-teamed compact-card grid (same unit:* handlers + one cards map; max-height+scroll caps a large swarm)
     PlaybackSpeed.ts         # I3/Q1: page-lifetime speed+pause model (current/selectedSpeed/setSpeed/togglePause/steps); current=0 while paused; hotkeys via Keybindings
     Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
     ObjectiveController.ts   # J3/Q3: battle-scoped objective input — right-click quick-Engage / arm(engage|focus)-then-click / hold / stop → World commands
@@ -223,7 +224,7 @@ src/
     PromotionScreen.ts       # E4.4: per-unit level-up cards (P1: shared UnitCard, promotion skin); M2: two-phase reveal (all cards pop in, then gains tick green card-by-card + +N chip; click-anywhere skips) — the screen owns the timeline, driving the card via UnitCard's levelValue/statRows handles
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
     statLabels.ts            # GP3: shared STAT_LABELS map (card + HUD + PromotionScreen)
-    UnitCard.ts              # P1: shared unit-card builder — one DOM/CSS source for recruit + promotion (+ P3 pre-turn, Q4 HUD player cards). compact/full modes × recruit/promotion/preturn/hud skins; compact (Q4) = glyph + Lv(TL)/POW(TR) + glyph-width HP bar, via unitCardFromUnit adapter + the hpFill handle; carries the "card can't disagree with the unit" ability readings (was RecruitScreen); rarity-accent seam (unit-card--rarity-*, default common = today's look)
+    UnitCard.ts              # P1: shared unit-card builder — one DOM/CSS source for recruit + promotion (+ P3 pre-turn, Q4/Q5 HUD player+enemy cards). compact/full modes × recruit/promotion/preturn/hud skins; compact (Q4) = glyph + Lv(TL)/POW(TR) + glyph-width HP bar, via unitCardFromUnit adapter + the hpFill handle; Q5 team coloring via the `team` opt → unit-card--enemy (red glyph + HP, vs the green player default); carries the "card can't disagree with the unit" ability readings (was RecruitScreen); rarity-accent seam (unit-card--rarity-*, default common = today's look)
 
   audio/
     AudioPlayer.ts           # B6: 4-deep clone ring per sound; per-key volume + pitch jitter; + magicboom (E7.C)

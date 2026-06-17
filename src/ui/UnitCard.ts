@@ -69,6 +69,10 @@ export interface UnitCardOptions {
    *  owned roster units; recruit hides it, since fresh offers carry no banked
    *  progress; promotion is mid-level-up). */
   readonly showXpBar?: boolean;
+  /** Q5 — team coloring for the `compact` variant: `enemy` → red glyph + HP
+   *  bar; default `player` → the green default. Ignored by the full variants
+   *  (always player-owned). */
+  readonly team?: 'player' | 'enemy';
 }
 
 /** Handles into one stat row's mutable bits, for the M2 reveal. */
@@ -234,6 +238,8 @@ function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHa
     'unit-card--compact',
     `unit-card--rarity-${data.rarity}`,
   ].join(' ');
+  // Q5 — enemy cards recolor glyph + HP to red; player (default) stays green.
+  if (opts.team === 'enemy') card.classList.add('unit-card--enemy');
 
   const top = document.createElement('div');
   top.className = 'unit-card__compact-top';

@@ -107,8 +107,18 @@ export class HUD {
   private readonly playerCardRow: HTMLElement;
   /** The run health-pool gauge's slot beneath the cards (repainted in show()). */
   private readonly playerPoolWrap: HTMLElement;
+  /** Q5 — the enemy unit pane (top-center, below the banner): the enemy
+   *  encounter pool gauge above an analogous wrapping grid of red-teamed
+   *  `compact` cards. The vertical mirror of the player pane. */
+  private readonly enemyCardPane: HTMLElement;
+  /** The wrapping row the enemy compact cards mount into. */
+  private readonly enemyCardRow: HTMLElement;
+  /** The enemy encounter-pool gauge's slot above the cards (repainted in show()). */
+  private readonly enemyPoolWrap: HTMLElement;
   /** unitId → its compact card handles, for O(1) HP refresh + death gray-out.
-   *  Player units only; dead cards stay (grayed) for positional stability. */
+   *  BOTH teams (player + enemy); dead cards stay (grayed) for positional
+   *  stability. The team is fixed at spawn, so one map keyed by id suffices —
+   *  only the append target (which pane's row) differs. */
   private readonly cards = new Map<number, UnitCardHandles>();
   /** H4b — the encounter health pools + turn number, populated per battle. */
   private readonly pools: HTMLElement;
@@ -269,6 +279,24 @@ export class HUD {
     this.playerCardPane.append(this.playerCardRow, this.playerPoolWrap);
     mount.appendChild(this.playerCardPane);
 
+    // Q5 — the enemy unit pane (top-center, below the banner): the enemy
+    // encounter pool gauge ABOVE an analogous wrapping grid of `compact` cards
+    // (red-teamed). The vertical mirror of the player pane — anchored at the top
+    // and growing down, with the pool above the cards (the player pane's cards
+    // sit above its pool). Cards are built/updated/grayed by the SAME unit:*
+    // handlers as the player cards (the `cards` map + the addCard team-switch);
+    // the gauge (relocated from the old HUD `pools` block, which stays until Q6)
+    // repaints in show(). A capped card-row height + scroll keeps a large
+    // post-N2 swarm from overrunning the board.
+    this.enemyCardPane = document.createElement('div');
+    this.enemyCardPane.className = 'hud-enemy-pane screen-fade';
+    this.enemyCardRow = document.createElement('div');
+    this.enemyCardRow.className = 'hud-enemy-cards';
+    this.enemyPoolWrap = document.createElement('div');
+    this.enemyPoolWrap.className = 'hud-enemy-pool';
+    this.enemyCardPane.append(this.enemyPoolWrap, this.enemyCardRow);
+    mount.appendChild(this.enemyCardPane);
+
     // H4b — the two encounter pools (run-wide player pool vs per-encounter enemy
     // pool) + the current turn. Static during a single turn (the pools chip
     // between turns, surfaced on the post-turn screen); populated from `Run`
@@ -324,16 +352,19 @@ export class HUD {
     this.playerBody.replaceChildren();
     this.enemyBody.replaceChildren();
     this.rows.clear();
-    // Q4 — reset the player pane: drop last battle's cards, repaint the pool
-    // gauge from this encounter's run health.
+    // Q4/Q5 — reset both card panes: drop last battle's cards (one map covers
+    // both teams), repaint the pool gauges from this encounter's pools.
     this.playerCardRow.replaceChildren();
+    this.enemyCardRow.replaceChildren();
     this.cards.clear();
     this.renderPlayerPool(encounter);
+    this.renderEnemyPool(encounter);
     fadeIn(this.root);
     fadeIn(this.banner);
     fadeIn(this.speedPane);
     fadeIn(this.objectivePane);
     fadeIn(this.playerCardPane);
+    fadeIn(this.enemyCardPane);
   }
 
   hide(): void {
@@ -345,6 +376,7 @@ export class HUD {
     this.speedPane.classList.remove('is-visible');
     this.objectivePane.classList.remove('is-visible');
     this.playerCardPane.classList.remove('is-visible');
+    this.enemyCardPane.classList.remove('is-visible');
     this.world = null;
   }
 
@@ -366,6 +398,7 @@ export class HUD {
     fadeOutAndRemove(this.speedPane);
     fadeOutAndRemove(this.objectivePane);
     fadeOutAndRemove(this.playerCardPane);
+    fadeOutAndRemove(this.enemyCardPane);
     fadeOutAndRemove(this.countdownEl);
     this.world = null;
   }
@@ -492,17 +525,20 @@ export class HUD {
     const row = this.makeRow(unit);
     this.rows.set(unitId, row);
     (unit.team === 'player' ? this.playerBody : this.enemyBody).appendChild(row);
-    // Q4 — player units also get a compact card in the bottom-center pane.
-    if (unit.team === 'player') this.addPlayerCard(unitId, unit);
+    // Q4/Q5 — both teams get a compact card in their pane (player bottom-center,
+    // enemy top). Neutrals already returned above.
+    this.addCard(unitId, unit);
   }
 
-  /** Q4 — build a compact card for a freshly spawned player unit and append it
-   *  to the bottom-center pane. Append order = spawn order (≈ hand-slot order),
-   *  so the grid stays positionally stable across the turn. */
-  private addPlayerCard(unitId: number, unit: Unit): void {
-    const handles = buildUnitCard(unitCardFromUnit(unit), { mode: 'compact', skin: 'hud' });
+  /** Q4/Q5 — build a compact card for a freshly spawned combatant and append it
+   *  to its team's pane (player bottom-center / enemy top). Append order = spawn
+   *  order (≈ hand-slot order for the player), so each grid stays positionally
+   *  stable across the turn. */
+  private addCard(unitId: number, unit: Unit): void {
+    const team = unit.team === 'enemy' ? 'enemy' : 'player';
+    const handles = buildUnitCard(unitCardFromUnit(unit), { mode: 'compact', skin: 'hud', team });
     this.cards.set(unitId, handles);
-    this.playerCardRow.appendChild(handles.el);
+    (team === 'enemy' ? this.enemyCardRow : this.playerCardRow).appendChild(handles.el);
   }
 
   private refreshHp(unitId: number): void {
@@ -539,6 +575,16 @@ export class HUD {
     if (!e) return;
     this.playerPoolWrap.appendChild(
       renderPoolGauge('player', 'You', e.playerHealth, e.playerHealthMax),
+    );
+  }
+
+  /** Q5 — paint the enemy encounter health-pool gauge above the enemy cards.
+   *  Cleared when no encounter info is supplied (e.g. a bare test mount). */
+  private renderEnemyPool(e?: EncounterPools): void {
+    this.enemyPoolWrap.replaceChildren();
+    if (!e) return;
+    this.enemyPoolWrap.appendChild(
+      renderPoolGauge('enemy', 'Foe', e.enemyHealth, e.enemyHealthMax),
     );
   }
 

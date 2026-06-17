@@ -232,15 +232,21 @@ export class BattleRenderer {
       return;
     }
     this.objective = objective.target;
+    // Q3 — the glyph reads the mode: 'X' for engage, '!' for focus. The single
+    // marker sprite is reused across re-sets, so swap the glyph in place when the
+    // mode flips (engage ⇄ focus) rather than recreating it.
+    const glyph = objective.mode === 'focus' ? OBJECTIVE_MARKER_FOCUS_GLYPH : OBJECTIVE_MARKER_GLYPH;
     if (!this.objectiveMarker) {
       // Seed at the origin; updateObjectiveMarker (same frame, end of update())
       // moves it to the real spot before it's ever drawn.
       this.objectiveMarker = this.sprites.addSprite(
-        OBJECTIVE_MARKER_GLYPH,
+        glyph,
         OBJECTIVE_MARKER_COLOR,
         this.scratchPos.set(0, 0, 0),
       );
       this.sprites.updateSprite(this.objectiveMarker, { bloomIntensity: OBJECTIVE_MARKER_BLOOM });
+    } else {
+      this.sprites.updateSprite(this.objectiveMarker, { glyph });
     }
     this.updateObjectiveMarker();
   };
@@ -1142,6 +1148,10 @@ const HITSPLAT_Y_OFFSET = 0.5;
 const UNIT_PICK_SIZE = 1;
 
 const OBJECTIVE_MARKER_GLYPH = 'X'; // registered in glyphs.ts (J3, last atlas cell).
+/** Q3 — the FOCUS marker glyph (vs engage's 'X'), so the player reads which mode
+ *  a steered objective is. Already in the glyph atlas (a punctuation cell), so no
+ *  grid resize. Hold/Stop carry no target → no marker at all. */
+const OBJECTIVE_MARKER_FOCUS_GLYPH = '!';
 const OBJECTIVE_MARKER_COLOR = COLORS.TERMINAL_AMBER;
 const OBJECTIVE_MARKER_BLOOM = 0.6;
 const OBJECTIVE_MARKER_TILE_SIZE = 1.6;

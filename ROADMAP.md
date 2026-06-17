@@ -690,6 +690,29 @@ the player's selected speed).
 
 ### Q3 — Objective-command pane (bottom-right)
 
+> **STATUS: ✅ DONE (2026-06-17)** — the bottom-right pane: **Engage / Focus /
+> Hold / Stop** on O's typed `TeamObjective` model. `ObjectiveController` was
+> generalized from J3's single Set-arm into **per-type arming** (`arm('engage'|
+> 'focus')` → next left-click sets in that mode) + immediate `hold()` / `stop()`
+> (stop = revert to at-will, the old "clear"); right-click the board still
+> quick-sets **Engage** (the J3 fast path). The pane reflects the team's live
+> mode (`.is-active`, tracked off `objective:set`/`:cleared`) and the armed
+> target-pick (`.is-armed` pulse, which the active highlight yields to). The old
+> HUD Set/Clear buttons were **removed** (user call — the pane subsumes them; Q6
+> now only strips the roster/stat lines). The **marker glyph reads the mode**:
+> engage `X`, **focus `!`** (already in the glyph atlas — no grid resize; the
+> reused marker sprite swaps glyph in place via `updateSprite`). Keybindings
+> reshaped: `setObjective`/`clearObjective` → `engage`/`focus`/`hold`/
+> `stopObjective` (defaults **E / F / H / T**, dodging the WASD camera keys).
+> **UI/input/render only — no sim/snapshot/fuzz** (1007 main / 205 fuzz:smoke,
+> v25/v17 hold). Browser-verified all four modes end-to-end (arm → set → marker
+> glyph + active highlight, hold/stop immediate, hotkeys) via dev-preview. Decision
+> points resolved as: focus marker = `!` glyph (user — expanding the atlas is
+> needed for new archetypes anyway, though `!` happened to already be in it); old
+> buttons removed now; abort bounds = re-arm switches mode, hold/stop cancel the
+> arm, an off-board click stays armed (the J3 retry behavior). **NEXT = Q4** (the
+> player-card pane, bottom-center — first consumer of P's `compact` card variant).
+
 **Shape:** the brief's objective pane, built on O's model + extending J3's
 `ObjectiveController` ([ObjectiveController.ts](src/ui/ObjectiveController.ts)).
 - A **button per objective type**: **Engage**, **Focus**, **Hold**, and the

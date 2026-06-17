@@ -11,7 +11,7 @@ import { STAT_LABELS } from './statLabels';
 import type { PlaybackSpeed } from './PlaybackSpeed';
 import type { Keybindings } from './Keybindings';
 import type { KeybindAction } from '../config/keybindings';
-import type { ObjectiveControls } from './ObjectiveController';
+import type { ObjectiveControls, ObjectiveArmMode } from './ObjectiveController';
 
 /** Q1 — which rebindable action sets each speed, for the pane's per-button
  *  hotkey subscription + tooltip. A config speed outside this set still gets a
@@ -22,6 +22,28 @@ const SPEED_HOTKEY: ReadonlyMap<number, KeybindAction> = new Map([
   [2, 'speed2'],
   [3, 'speed3'],
 ]);
+
+/** Q3 — the four objective-pane commands. `stop` is O's at-will default (to the
+ *  player it reads as "clear other objectives"). `engage`/`focus` ARM a target
+ *  pick; `hold`/`stop` apply on click. */
+type ObjectiveButtonMode = ObjectiveArmMode | 'hold' | 'stop';
+
+interface ObjectiveButtonDef {
+  readonly mode: ObjectiveButtonMode;
+  readonly label: string;
+  /** A small leading glyph — the engage `⌖` / focus `!` echo the board marker. */
+  readonly icon: string;
+  readonly action: KeybindAction;
+  /** engage/focus arm a target pick; hold/stop apply immediately. */
+  readonly arms: boolean;
+}
+
+const OBJECTIVE_BUTTONS: readonly ObjectiveButtonDef[] = [
+  { mode: 'engage', label: 'Engage', icon: '⌖', action: 'engageObjective', arms: true },
+  { mode: 'focus', label: 'Focus', icon: '!', action: 'focusObjective', arms: true },
+  { mode: 'hold', label: 'Hold', icon: '⊓', action: 'holdObjective', arms: false },
+  { mode: 'stop', label: 'Stop', icon: '✕', action: 'stopObjective', arms: false },
+];
 
 /** H4b — the encounter pool snapshot the HUD renders (from `Run` state). */
 interface EncounterPools {
@@ -58,14 +80,22 @@ export class HUD {
    *  surface (fast-forward + the objective controls) to it and reads `labelFor`
    *  for button labels so a rebind shows up in the UI. */
   private readonly keybindings: Keybindings;
-  /** J3 — the objective input controller (arm set-mode / clear). Owned by
-   *  BattleScene; the HUD buttons + hotkeys drive it. */
+  /** J3/Q3 — the objective input controller (arm engage/focus, or hold/stop).
+   *  Owned by BattleScene; the HUD pane buttons + hotkeys drive it. */
   private readonly objective: ObjectiveControls;
-  /** J3 — the two objective controls + the live "armed" flag the Set button
-   *  reflects (BattleScene flips it via `setObjectiveArmed`). */
-  private readonly setObjectiveButton: HTMLButtonElement;
-  private readonly clearObjectiveButton: HTMLButtonElement;
-  private objectiveArmed = false;
+  /** Q3 — the objective-command pane (bottom-right): Engage / Focus / Hold /
+   *  Stop on O's typed model. Lives outside the side-panel root (like the speed
+   *  pane) so it anchors bottom-right; same screen-fade lifecycle. */
+  private readonly objectivePane: HTMLElement;
+  /** Objective mode → its pane button, for the active/armed repaint. */
+  private readonly objectiveButtons = new Map<ObjectiveButtonMode, HTMLButtonElement>();
+  /** The mode currently being target-picked (engage/focus), or null — flipped by
+   *  the controller via `setObjectiveArmed`. */
+  private armedMode: ObjectiveArmMode | null = null;
+  /** The player team's current objective mode, tracked off `objective:set` /
+   *  `objective:cleared` so the active button reads "engaged". Starts at the
+   *  at-will default (`stop`). */
+  private activeObjectiveMode: ObjectiveButtonMode = 'stop';
   /** H4b — the encounter health pools + turn number, populated per battle. */
   private readonly pools: HTMLElement;
   private readonly status: HTMLElement;
@@ -170,24 +200,43 @@ export class HUD {
     this.countdownEl.append(countdownLabel, this.countdownCount, fightNow);
     mount.appendChild(this.countdownEl);
 
-    // J3 — the objective controls: Set (arm "pick a target" mode → next
-    // left-click sets; right-clicking the board also sets) + Clear. Both are
-    // buttons AND rebindable hotkeys; the button labels show the live binding.
-    const objectiveControls = document.createElement('div');
-    objectiveControls.className = 'hud-objective';
-    this.setObjectiveButton = document.createElement('button');
-    this.setObjectiveButton.type = 'button';
-    this.setObjectiveButton.className = 'hud-objective-set';
-    this.setObjectiveButton.addEventListener('click', () => this.objective.armSet());
-    this.clearObjectiveButton = document.createElement('button');
-    this.clearObjectiveButton.type = 'button';
-    this.clearObjectiveButton.className = 'hud-objective-clear';
-    this.clearObjectiveButton.addEventListener('click', () => this.objective.clear());
-    objectiveControls.append(this.setObjectiveButton, this.clearObjectiveButton);
-    this.root.appendChild(objectiveControls);
-    this.renderObjectiveButtons();
-    this.subscriptions.push(keybindings.on('setObjective', () => this.objective.armSet()));
-    this.subscriptions.push(keybindings.on('clearObjective', () => this.objective.clear()));
+    // Q3 — the objective-command pane (bottom-right): Engage / Focus / Hold /
+    // Stop on O's typed objective model. Engage + Focus ARM a target pick (the
+    // next left-click, or right-click the board → engage); Hold + Stop apply
+    // immediately. Lives outside the side-panel root (like the speed pane) so it
+    // anchors bottom-right; same screen-fade lifecycle. Each button is a
+    // rebindable hotkey too; the labels show the live binding so a rebind shows
+    // up. Hotkey subscriptions are battle-scoped (pushed onto `subscriptions`).
+    this.objectivePane = document.createElement('div');
+    this.objectivePane.className = 'hud-objective-pane screen-fade';
+    for (const def of OBJECTIVE_BUTTONS) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'hud-objective-btn';
+      btn.addEventListener('click', () => this.invokeObjective(def));
+      this.objectiveButtons.set(def.mode, btn);
+      this.objectivePane.appendChild(btn);
+      this.subscriptions.push(keybindings.on(def.action, () => this.invokeObjective(def)));
+    }
+    mount.appendChild(this.objectivePane);
+    this.renderObjectivePane();
+    // Track the player team's live objective mode so the active button reads
+    // "engaged" however it was set (pane / hotkey / right-click). A `set` carries
+    // the mode; a `clear` reverts to the at-will default (`stop`).
+    this.subscriptions.push(
+      bus.on('objective:set', ({ team, objective }) => {
+        if (team !== 'player') return;
+        this.activeObjectiveMode = objective.mode === 'atWill' ? 'stop' : objective.mode;
+        this.renderObjectivePane();
+      }),
+    );
+    this.subscriptions.push(
+      bus.on('objective:cleared', ({ team }) => {
+        if (team !== 'player') return;
+        this.activeObjectiveMode = 'stop';
+        this.renderObjectivePane();
+      }),
+    );
 
     // H4b — the two encounter pools (run-wide player pool vs per-encounter enemy
     // pool) + the current turn. Static during a single turn (the pools chip
@@ -241,6 +290,7 @@ export class HUD {
     fadeIn(this.root);
     fadeIn(this.banner);
     fadeIn(this.speedPane);
+    fadeIn(this.objectivePane);
   }
 
   hide(): void {
@@ -250,6 +300,7 @@ export class HUD {
     this.root.classList.remove('is-visible');
     this.banner.classList.remove('is-visible');
     this.speedPane.classList.remove('is-visible');
+    this.objectivePane.classList.remove('is-visible');
     this.world = null;
   }
 
@@ -269,6 +320,7 @@ export class HUD {
     fadeOutAndRemove(this.root);
     fadeOutAndRemove(this.banner);
     fadeOutAndRemove(this.speedPane);
+    fadeOutAndRemove(this.objectivePane);
     fadeOutAndRemove(this.countdownEl);
     this.world = null;
   }
@@ -345,28 +397,44 @@ export class HUD {
     this.renderSpeedPane();
   }
 
-  /** J3 — BattleScene flips this when the controller arms/disarms (via
-   *  onArmedChange), so the Set button shows the active "click a target" state
-   *  whether arming came from the button or the hotkey. */
-  setObjectiveArmed(armed: boolean): void {
-    this.objectiveArmed = armed;
-    this.renderObjectiveButtons();
+  /** Q3 — dispatch an objective-pane button (click or hotkey): engage/focus arm
+   *  a target pick, hold/stop apply immediately. */
+  private invokeObjective(def: ObjectiveButtonDef): void {
+    if (def.mode === 'engage' || def.mode === 'focus') this.objective.arm(def.mode);
+    else if (def.mode === 'hold') this.objective.hold();
+    else this.objective.stop();
   }
 
-  /** J3 — paint the two objective buttons. Labels carry the live hotkey (so a
-   *  rebind shows up); the Set button switches to its armed prompt + an
-   *  is-armed class while waiting for the target click. */
-  private renderObjectiveButtons(): void {
-    const setKey = this.keybindings.labelFor('setObjective');
-    const clearKey = this.keybindings.labelFor('clearObjective');
-    this.setObjectiveButton.textContent = this.objectiveArmed
-      ? '⌖ Click a target…'
-      : `⌖ Set Objective (${setKey})`;
-    this.setObjectiveButton.title = `Set objective: click here then left-click a target, or right-click the board (${setKey})`;
-    this.setObjectiveButton.setAttribute('aria-pressed', String(this.objectiveArmed));
-    this.setObjectiveButton.classList.toggle('is-armed', this.objectiveArmed);
-    this.clearObjectiveButton.textContent = `✕ Clear (${clearKey})`;
-    this.clearObjectiveButton.title = `Clear objective (${clearKey})`;
+  /** Q3 — BattleScene flips this when the controller arms/disarms (via
+   *  onArmedChange), so the armed button shows its "click a target" state
+   *  whether arming came from the pane or the hotkey. */
+  setObjectiveArmed(mode: ObjectiveArmMode | null): void {
+    this.armedMode = mode;
+    this.renderObjectivePane();
+  }
+
+  /** Q3 — paint the objective pane: the team's ACTIVE mode reads "engaged"
+   *  (`.is-active` + `aria-pressed`); the armed target-pick button (engage/focus)
+   *  swaps to a "click a target" prompt + `.is-armed`. Labels carry the live
+   *  hotkey so a rebind shows up. */
+  private renderObjectivePane(): void {
+    for (const def of OBJECTIVE_BUTTONS) {
+      const btn = this.objectiveButtons.get(def.mode);
+      if (!btn) continue;
+      const key = this.keybindings.labelFor(def.action);
+      const armed = def.arms && this.armedMode === def.mode;
+      const active = this.activeObjectiveMode === def.mode;
+      btn.textContent = armed
+        ? `${def.icon} Click a target…`
+        : `${def.icon} ${def.label} (${key})`;
+      btn.title = def.arms
+        ? `${def.label}: click then left-click a target${def.mode === 'engage' ? ', or right-click the board' : ''} (${key})`
+        : `${def.label} (${key})`;
+      // Active highlight yields to the armed prompt so the two greens don't fight.
+      btn.classList.toggle('is-active', active && !armed);
+      btn.classList.toggle('is-armed', armed);
+      btn.setAttribute('aria-pressed', String(active));
+    }
   }
 
   private addUnit(unitId: number): void {

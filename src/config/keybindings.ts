@@ -23,6 +23,12 @@
  * advancing?" state). A digit bound to a step the difficulty system disabled
  * just no-ops at `PlaybackSpeed.setSpeed`.
  *
+ * Q3 — J3's two objective hotkeys (`setObjective` / `clearObjective`) were
+ * replaced by the four objective-pane commands on O's typed model:
+ * `engageObjective` / `focusObjective` (arm a target pick), `holdObjective`
+ * (act in place, no target), `stopObjective` (revert to at-will — the old
+ * "clear"). Defaults dodge the WASD camera keys: E / F / H / T.
+ *
  * Source of truth at `config/keybindings.json`.
  */
 
@@ -37,8 +43,10 @@ export const KEYBIND_ACTIONS = [
   'speed2',
   'speed3',
   'togglePause',
-  'setObjective',
-  'clearObjective',
+  'engageObjective',
+  'focusObjective',
+  'holdObjective',
+  'stopObjective',
 ] as const;
 export type KeybindAction = (typeof KEYBIND_ACTIONS)[number];
 
@@ -53,10 +61,16 @@ const KeybindingsSchema = z.object({
   speed3: z.string().min(1),
   /** Pause / unpause the sim — also the Q2 countdown "Fight now" (Q1). */
   togglePause: z.string().min(1),
-  /** Arm "pick a target" mode; the next left-click sets the objective (J3). */
-  setObjective: z.string().min(1),
-  /** Clear the active objective (J3). */
-  clearObjective: z.string().min(1),
+  /** Arm "pick a target" mode for an ENGAGE objective; the next left-click sets
+   *  it (Q3 — also the right-click-the-board fast path). */
+  engageObjective: z.string().min(1),
+  /** Arm "pick a target" mode for a FOCUS objective; the next left-click sets it
+   *  (Q3). */
+  focusObjective: z.string().min(1),
+  /** Set a HOLD objective — units act in place, no target needed (Q3). */
+  holdObjective: z.string().min(1),
+  /** Stop — revert the team to the at-will default (Q3; the old "clear"). */
+  stopObjective: z.string().min(1),
 });
 
 export type KeybindingsConfig = z.infer<typeof KeybindingsSchema>;

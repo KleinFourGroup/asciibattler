@@ -13,8 +13,10 @@ const DEFAULTS: Record<KeybindAction, string> = {
   speed2: 'Digit2',
   speed3: 'Digit3',
   togglePause: 'Space',
-  setObjective: 'KeyO',
-  clearObjective: 'KeyC',
+  engageObjective: 'KeyE',
+  focusObjective: 'KeyF',
+  holdObjective: 'KeyH',
+  stopObjective: 'KeyT',
 };
 
 /**
@@ -38,13 +40,13 @@ describe('Keybindings', () => {
     const kb = new Keybindings(DEFAULTS);
     expect(kb.codeFor('speed2')).toBe('Digit2');
     expect(kb.codeFor('togglePause')).toBe('Space');
-    expect(kb.codeFor('setObjective')).toBe('KeyO');
-    expect(kb.codeFor('clearObjective')).toBe('KeyC');
+    expect(kb.codeFor('engageObjective')).toBe('KeyE');
+    expect(kb.codeFor('stopObjective')).toBe('KeyT');
   });
 
   it('reverse-maps a code to its action, or null when unbound', () => {
     const kb = new Keybindings(DEFAULTS);
-    expect(kb.actionFor('KeyO')).toBe('setObjective');
+    expect(kb.actionFor('KeyE')).toBe('engageObjective');
     expect(kb.actionFor('KeyZ')).toBeNull();
   });
 
@@ -101,9 +103,9 @@ describe('Keybindings', () => {
     const kb = new Keybindings(DEFAULTS);
     const a = vi.fn();
     const b = vi.fn();
-    kb.on('clearObjective', a);
-    kb.on('clearObjective', b);
-    kb.handleKeyDown(keyEvent('KeyC').event);
+    kb.on('stopObjective', a);
+    kb.on('stopObjective', b);
+    kb.handleKeyDown(keyEvent('KeyT').event);
     expect(a).toHaveBeenCalledTimes(1);
     expect(b).toHaveBeenCalledTimes(1);
   });
@@ -111,11 +113,11 @@ describe('Keybindings', () => {
   it('rebind re-routes the existing subscriber to the new code with no re-subscription', () => {
     const kb = new Keybindings(DEFAULTS);
     const fire = vi.fn();
-    kb.on('setObjective', fire);
+    kb.on('engageObjective', fire);
 
     // The old key no longer triggers it...
-    kb.rebind('setObjective', 'KeyP');
-    const old = keyEvent('KeyO');
+    kb.rebind('engageObjective', 'KeyP');
+    const old = keyEvent('KeyE');
     kb.handleKeyDown(old.event);
     expect(fire).not.toHaveBeenCalled();
     expect(old.preventDefault).not.toHaveBeenCalled();
@@ -123,8 +125,8 @@ describe('Keybindings', () => {
     // ...the new one does.
     kb.handleKeyDown(keyEvent('KeyP').event);
     expect(fire).toHaveBeenCalledTimes(1);
-    expect(kb.codeFor('setObjective')).toBe('KeyP');
-    expect(kb.actionFor('KeyP')).toBe('setObjective');
+    expect(kb.codeFor('engageObjective')).toBe('KeyP');
+    expect(kb.actionFor('KeyP')).toBe('engageObjective');
   });
 
   it('defaults to the shipped config when no overrides are passed', () => {

@@ -4,6 +4,8 @@
   "speed2": "Digit2",
   "speed3": "Digit3",
   "togglePause": "Space",
-  "setObjective": "KeyO",
-  "clearObjective": "KeyC"
+  "engageObjective": "KeyE",
+  "focusObjective": "KeyF",
+  "holdObjective": "KeyH",
+  "stopObjective": "KeyT"
 }

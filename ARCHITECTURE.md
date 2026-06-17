@@ -251,7 +251,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   sim.json                   # E5: retargetCloserRatio + rangedRetargetLosSeconds + occupiedCellPenalty + healer knobs; GP4: actingCellSearchSlack
   objective.json             # J1: rangedLeashCells — objective engage-radius cap for long-range units
   playback.json              # I3/Q1: speed steps {value,enabled}[] (0.5/1/2/3) + pauseEnabled; Q2: countdownSeconds (pre-battle hold)
-  keybindings.json           # J3/Q1: rebindable hotkey defaults — speedHalf/speed1/speed2/speed3/togglePause + setObjective/clearObjective
+  keybindings.json           # J3/Q1/Q3: rebindable hotkey defaults — speedHalf/speed1/speed2/speed3/togglePause + engage/focus/hold/stopObjective (E/F/H/T)
 
 public/
   audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, magicboom, ...)

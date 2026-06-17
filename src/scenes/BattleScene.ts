@@ -116,7 +116,7 @@ export class BattleScene implements Scene {
       () => this.battleRenderer?.enemyBillboards() ?? [],
     );
     this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings, this.objective);
-    this.objective.onArmedChange = (armed) => this.hud?.setObjectiveArmed(armed);
+    this.objective.onArmedChange = (mode) => this.hud?.setObjectiveArmed(mode);
 
     // B6 audio: per-battle subscriptions that need the World to look up
     // the attacker's archetype (attackRange<=1 → melee, else ranged).

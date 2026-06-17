@@ -1115,7 +1115,12 @@ body {
   transition: border-color 0.1s, box-shadow 0.1s;
 }
 
-.unit-card--preturn.unit-card--clickable:hover {
+/* Hover affordance only on a NOT-yet-selected card. Without the :not, this
+   compound-class :hover (0,3,0) outspecifies .unit-card--preturn.is-selected
+   (0,2,0), so the amber hover border masks the blue SELECTED border while the
+   cursor still sits on the just-clicked card (the glow shows, the border
+   doesn't, until you move the mouse). */
+.unit-card--preturn.unit-card--clickable:hover:not(.is-selected) {
   border-color: #ffb000; /* TERMINAL_AMBER */
 }
 

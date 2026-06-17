@@ -24,6 +24,7 @@ import { abilityIdsForArchetype, glyphForArchetype } from '../sim/archetypes';
 import { attackCooldownTicksFor, damageStatFor } from '../sim/stats';
 import { abilityConfig } from '../config/abilities';
 import { ticksToSeconds } from '../config';
+import { xpProgress } from '../sim/xp';
 import { STAT_LABELS } from './statLabels';
 
 /** Future per-unit accent dimension. Only `common` exists today (unstyled =
@@ -46,6 +47,8 @@ export interface UnitCardData {
   readonly level: number;
   readonly stats: UnitStats;
   readonly rarity: UnitRarity;
+  /** Banked XP toward the next level (P2 — drives the full variant's XP bar). */
+  readonly xp: number;
 }
 
 export interface UnitCardOptions {
@@ -57,6 +60,10 @@ export interface UnitCardOptions {
   /** Override the skin's default click affordance (recruit clicks; promotion
    *  doesn't). The click handler itself is wired by the caller. */
   readonly clickable?: boolean;
+  /** Override the skin's default XP-bar visibility (P2 — pre-turn shows it for
+   *  owned roster units; recruit hides it, since fresh offers carry no banked
+   *  progress; promotion is mid-level-up). */
+  readonly showXpBar?: boolean;
 }
 
 /** Handles into one stat row's mutable bits, for the M2 reveal. */
@@ -103,11 +110,13 @@ export function unitCardFromTemplate(template: UnitTemplate): UnitCardData {
     level: template.level,
     stats: template.stats,
     rarity: 'common',
+    xp: template.xp,
   };
 }
 
 /** Adapter: a `PromotionInfo`'s PRE-level state → card data. The reveal flips
- *  it to the new level/stats via the returned handles (driven by the screen). */
+ *  it to the new level/stats via the returned handles (driven by the screen).
+ *  Promotion never shows the XP bar (mid-level-up), so `xp` is irrelevant. */
 export function unitCardFromPromotion(p: PromotionInfo): UnitCardData {
   return {
     archetype: p.archetype,
@@ -115,6 +124,7 @@ export function unitCardFromPromotion(p: PromotionInfo): UnitCardData {
     level: p.oldLevel,
     stats: p.oldStats,
     rarity: 'common',
+    xp: 0,
   };
 }
 
@@ -128,6 +138,13 @@ function defaultShowAbilities(skin: UnitCardSkin): boolean {
  *  display-only). */
 function defaultClickable(skin: UnitCardSkin): boolean {
   return skin === 'recruit';
+}
+
+/** Whether a skin shows the XP-to-next bar by default. Only pre-turn (owned
+ *  roster units with real banked XP) does; recruit offers are fresh (0) and
+ *  promotion is mid-level-up. */
+function defaultShowXpBar(skin: UnitCardSkin): boolean {
+  return skin === 'preturn';
 }
 
 export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHandles {
@@ -155,6 +172,10 @@ export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCa
 
   if (opts.mode === 'full' && (opts.showAbilities ?? defaultShowAbilities(opts.skin))) {
     card.appendChild(buildAbilities(data.archetype, data.stats));
+  }
+
+  if (opts.mode === 'full' && (opts.showXpBar ?? defaultShowXpBar(opts.skin))) {
+    card.appendChild(buildXpBar(data));
   }
 
   return { el: card, levelValue, statRows };
@@ -242,6 +263,33 @@ function buildAbilities(archetype: Archetype, stats: UnitStats): HTMLDivElement 
     abilities.appendChild(abilityRow(id, archetype, stats));
   }
   return abilities;
+}
+
+/**
+ * P2 — the XP-to-next-level bar (full variant; pre-turn skin). A thin track
+ * with a green fill = progress to the next level, labelled `XP n / need` (or
+ * `MAX` at the cap). The math (clamp, MAX-at-cap) is the pure, unit-tested
+ * `xpProgress` in xp.ts; this just paints it.
+ */
+function buildXpBar(data: UnitCardData): HTMLDivElement {
+  const prog = xpProgress(data.xp, data.level);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'unit-card__xp';
+
+  const track = document.createElement('div');
+  track.className = 'unit-card__xp-track';
+  const fill = document.createElement('div');
+  fill.className = 'unit-card__xp-fill';
+  fill.style.width = `${Math.round(prog.fraction * 100)}%`;
+  track.appendChild(fill);
+
+  const label = document.createElement('div');
+  label.className = 'unit-card__xp-label';
+  label.textContent = prog.atCap ? 'MAX' : `XP ${data.xp} / ${prog.need}`;
+
+  wrap.append(track, label);
+  return wrap;
 }
 
 /**

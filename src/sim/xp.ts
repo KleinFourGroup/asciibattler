@@ -42,6 +42,28 @@ export function displayLevel(level: number): number {
   return Math.round(level);
 }
 
+/**
+ * P2 — the XP-to-next-level bar's display model (pure, no DOM, so it's unit-
+ * testable). The UnitCard `full` variant renders `fraction` as the fill width
+ * and `need` in the label. At the cap the bar is full and reads MAX (`need`
+ * 0); below it, `fraction` is `xp / xpToNext(level)` clamped to [0, 1] so
+ * banked-past-the-threshold XP (a pending promotion) never overflows the bar.
+ */
+export interface XpProgress {
+  readonly atCap: boolean;
+  /** XP required to reach the next level (the bar's denominator); 0 at the cap. */
+  readonly need: number;
+  /** Filled fraction, clamped to [0, 1]; 1 at the cap. */
+  readonly fraction: number;
+}
+
+export function xpProgress(xp: number, level: number): XpProgress {
+  if (isAtLevelCap(level)) return { atCap: true, need: 0, fraction: 1 };
+  const need = xpToNext(level);
+  const fraction = need > 0 ? Math.max(0, Math.min(1, xp / need)) : 1;
+  return { atCap: false, need, fraction };
+}
+
 export interface XpAward {
   unitId: number;
   /**

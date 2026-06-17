@@ -478,6 +478,35 @@ body {
   letter-spacing: 0.04em;
 }
 
+/* P2 — XP-to-next-level bar (full variant; shown on the pre-turn skin). A thin
+   track + green fill = progress to the next level; the label reads "XP n /
+   need" or "MAX" at the cap. Green = progression (matches the level-up glyph /
+   promotion-gain accent). */
+.unit-card__xp {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.unit-card__xp-track {
+  height: 6px;
+  background: rgba(51, 255, 0, 0.1); /* dim TERMINAL_GREEN wash */
+  border: 1px solid #1a4d00; /* dim TERMINAL_GREEN */
+}
+
+.unit-card__xp-fill {
+  height: 100%;
+  background: #33ff00; /* TERMINAL_GREEN */
+}
+
+.unit-card__xp-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- Recruit skin (was .recruit-card*): amber, clickable, two-col stats. --- */
 .unit-card--recruit {
   width: 184px; /* GP3: two-col stat grid + ability rows need more room than 160 */

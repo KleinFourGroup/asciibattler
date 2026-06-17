@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { computeXpAwards, displayLevel, isAtLevelCap, xpToNext } from './xp';
+import { computeXpAwards, displayLevel, isAtLevelCap, xpProgress, xpToNext } from './xp';
 import { LEVELING } from '../config/leveling';
 
 describe('xpToNext', () => {
@@ -59,6 +59,31 @@ describe('isAtLevelCap', () => {
   it('is true at and past the cap', () => {
     expect(isAtLevelCap(LEVELING.levelCap)).toBe(true);
     expect(isAtLevelCap(LEVELING.levelCap + 1)).toBe(true);
+  });
+});
+
+describe('xpProgress', () => {
+  // Expectations derive from xpToNext / LEVELING (balance-proof), never the
+  // shipped numbers.
+  it('fraction is xp / xpToNext(level), clamped to [0, 1]', () => {
+    const level = 2;
+    const need = xpToNext(level);
+    expect(xpProgress(0, level)).toEqual({ atCap: false, need, fraction: 0 });
+    expect(xpProgress(need, level).fraction).toBe(1); // exactly full
+    expect(xpProgress(need * 3, level).fraction).toBe(1); // clamps past the threshold
+    const half = Math.floor(need / 2);
+    const partial = xpProgress(half, level);
+    expect(partial.need).toBe(need);
+    expect(partial.fraction).toBeCloseTo(half / need);
+  });
+
+  it('reports MAX (full bar, need 0) at and past the cap', () => {
+    expect(xpProgress(0, LEVELING.levelCap)).toEqual({ atCap: true, need: 0, fraction: 1 });
+    expect(xpProgress(999, LEVELING.levelCap + 3)).toEqual({
+      atCap: true,
+      need: 0,
+      fraction: 1,
+    });
   });
 });
 

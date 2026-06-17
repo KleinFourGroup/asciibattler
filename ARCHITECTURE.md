@@ -195,7 +195,9 @@ src/
     Scene.ts                 #   Scene interface + SceneContext bundle (+ I3 playback, J3 keybindings, M4 apron)
     BattleScene.ts           #   World + Clock + BattleRenderer + HUD + per-battle audio
                              #   I3/Q1: tick() scales dt by playback.current (fast-forward batches ticks; pause = 0 parks the sim)
+                             #   Q2: opens with a PreBattleCountdown (sim parked, board shown) — playback.pause()'d; unpause = Fight now
                              #   J3: owns the ObjectiveController (canvas input + enemy-billboard provider)
+    PreBattleCountdown.ts    #   Q2: the pre-battle countdown timer (real-dt; active/displaySeconds/advance/skip) — unit-testable
     MapScene.ts              #   DOM-only, wraps MapScreen
     RecruitScene.ts          #   DOM-only, wraps RecruitScreen
     PromotionScene.ts        #   E4.4: DOM-only level-up summary; M1: pops at each turn boundary (mid-encounter, or before recruit on the final turn)
@@ -208,6 +210,7 @@ src/
     fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
     HUD.ts                   # In-battle HUD: floor, rosters, Lv/XP (E4.5) + DEF·MOB·SPD·POW (GP3/H1; I1 AGI→SPD), banner
                              # Q1: speed-command pane (top-right): per-speed buttons 0.5/1/2/3 + pause toggle; J3: Set/Clear Objective — all hotkeyed via Keybindings
+                             # Q2: pre-battle countdown readout (show/hideCountdown) + Fight-now button (the pause toggle reads "Fight now" while held)
     PlaybackSpeed.ts         # I3/Q1: page-lifetime speed+pause model (current/selectedSpeed/setSpeed/togglePause/steps); current=0 while paused; hotkeys via Keybindings
     Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
     ObjectiveController.ts   # J3: battle-scoped objective input — right-click / Set-arm-then-click / Clear → World commands
@@ -240,14 +243,14 @@ config/                      # A4: balance JSON source of truth (paired with src
   nodemap.json               # floor count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
-  spawn.json                 # D5.C: overflow spawn-in lockout/fade seconds; M3: turnIntroSeconds (turn-start materialize + sim hold)
+  spawn.json                 # D5.C: overflow (mid-battle reinforcement) spawn-in lockout/fade seconds (Q2 retired M3 turnIntroSeconds)
   tiles.json
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;
                              #     GP1/I1: mobilityCdPerStat/speedCdPerStat + mobilityMinCdScale/speedMinCdScale;
                              #     GP2: minDamage (subtractive-defense floor)
   sim.json                   # E5: retargetCloserRatio + rangedRetargetLosSeconds + occupiedCellPenalty + healer knobs; GP4: actingCellSearchSlack
   objective.json             # J1: rangedLeashCells — objective engage-radius cap for long-range units
-  playback.json              # I3/Q1: speed steps {value,enabled}[] (0.5/1/2/3) + pauseEnabled (the hotkeys live in keybindings.json)
+  playback.json              # I3/Q1: speed steps {value,enabled}[] (0.5/1/2/3) + pauseEnabled; Q2: countdownSeconds (pre-battle hold)
   keybindings.json           # J3/Q1: rebindable hotkey defaults — speedHalf/speed1/speed2/speed3/togglePause + setObjective/clearObjective
 
 public/

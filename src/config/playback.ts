@@ -48,6 +48,10 @@ const PlaybackSchema = z
     speeds: z.array(SpeedStepSchema).nonempty(),
     /** Whether pause (speed 0) is offered. Off = the pane hides the control. */
     pauseEnabled: z.boolean(),
+    /** Q2 — the pre-battle countdown length in seconds: the sim-parked window,
+     *  counted in REAL dt, during which the player reads the board + sets
+     *  orders before the fight starts. `0` disables it (instant start). */
+    countdownSeconds: z.number().nonnegative(),
   })
   // Normal play is the home speed — a fresh battle starts at 1× and pause
   // resumes there by default, so an enabled 1× must always exist.

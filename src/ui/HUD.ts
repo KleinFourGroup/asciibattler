@@ -44,6 +44,15 @@ export class HUD {
   private readonly speedButtons = new Map<number, HTMLButtonElement>();
   /** The pause/play toggle, or null when `pauseEnabled` is off (no control). */
   private readonly pauseButton: HTMLButtonElement | null;
+  /** Q2 — the pre-battle countdown readout (centered): a "Battle begins in N"
+   *  count + a Fight-now button. BattleScene drives it via show/hideCountdown. */
+  private readonly countdownEl: HTMLElement;
+  private readonly countdownCount: HTMLElement;
+  /** Whether the countdown is on-screen — flips the pause toggle's label to
+   *  "Fight now" while it holds. */
+  private inCountdown = false;
+  /** Last whole-second painted into the readout, to skip redundant DOM writes. */
+  private countdownShown = -1;
   private readonly playback: PlaybackSpeed;
   /** J3 — the rebindable-hotkey registry. The HUD subscribes its control
    *  surface (fast-forward + the objective controls) to it and reads `labelFor`
@@ -140,6 +149,26 @@ export class HUD {
     }
     mount.appendChild(this.speedPane);
     this.renderSpeedPane();
+
+    // Q2 — the pre-battle countdown readout (centered, under the banner). Shown
+    // only while the sim is parked at turn start; BattleScene drives it via
+    // show/hideCountdown. The Fight-now button just RESUMES playback — that
+    // unpause is the skip signal BattleScene watches, so the button, the ▶ pause
+    // toggle, and the Space hotkey are one unified "start the fight" control.
+    this.countdownEl = document.createElement('div');
+    this.countdownEl.className = 'battle-countdown screen-fade';
+    const countdownLabel = document.createElement('div');
+    countdownLabel.className = 'battle-countdown__label';
+    countdownLabel.textContent = 'Battle begins in';
+    this.countdownCount = document.createElement('div');
+    this.countdownCount.className = 'battle-countdown__count';
+    const fightNow = document.createElement('button');
+    fightNow.type = 'button';
+    fightNow.className = 'battle-countdown__fight';
+    fightNow.textContent = `▶ Fight now (${keybindings.labelFor('togglePause')})`;
+    fightNow.addEventListener('click', () => this.fightNow());
+    this.countdownEl.append(countdownLabel, this.countdownCount, fightNow);
+    mount.appendChild(this.countdownEl);
 
     // J3 — the objective controls: Set (arm "pick a target" mode → next
     // left-click sets; right-clicking the board also sets) + Clear. Both are
@@ -240,6 +269,7 @@ export class HUD {
     fadeOutAndRemove(this.root);
     fadeOutAndRemove(this.banner);
     fadeOutAndRemove(this.speedPane);
+    fadeOutAndRemove(this.countdownEl);
     this.world = null;
   }
 
@@ -275,10 +305,44 @@ export class HUD {
       this.pauseButton.textContent = paused ? '▶' : '⏸';
       this.pauseButton.classList.toggle('is-active', paused);
       this.pauseButton.setAttribute('aria-pressed', String(paused));
-      const label = paused ? 'Resume' : 'Pause';
+      // Q2 — during the countdown the board is held and ▶ means "start the
+      // fight", so the toggle reads "Fight now" rather than "Resume".
+      const label = this.inCountdown ? 'Fight now' : paused ? 'Resume' : 'Pause';
       this.pauseButton.setAttribute('aria-label', label);
       this.pauseButton.title = `${label} (${this.keybindings.labelFor('togglePause')})`;
     }
+  }
+
+  /** Q2 — show / update the pre-battle countdown readout (BattleScene drives it
+   *  each held frame with the whole seconds remaining). Re-renders the speed
+   *  pane on entry so the pause toggle reads "Fight now" while held. */
+  showCountdown(seconds: number): void {
+    if (!this.inCountdown) {
+      this.inCountdown = true;
+      this.countdownEl.classList.add('is-visible');
+      this.renderSpeedPane();
+    }
+    if (seconds !== this.countdownShown) {
+      this.countdownShown = seconds;
+      this.countdownCount.textContent = String(seconds);
+    }
+  }
+
+  /** Q2 — hide the countdown readout (the fight has started). */
+  hideCountdown(): void {
+    if (!this.inCountdown) return;
+    this.inCountdown = false;
+    this.countdownShown = -1;
+    this.countdownEl.classList.remove('is-visible');
+    this.renderSpeedPane();
+  }
+
+  /** Q2 — the Fight-now control (the readout button): resume playback. That
+   *  unpause is the skip signal BattleScene watches, so this button, the ▶ pause
+   *  toggle, and the Space hotkey all start the fight through one path. */
+  private fightNow(): void {
+    this.playback.resume();
+    this.renderSpeedPane();
   }
 
   /** J3 — BattleScene flips this when the controller arms/disarms (via

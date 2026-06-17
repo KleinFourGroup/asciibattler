@@ -399,28 +399,28 @@ export class BattleRenderer {
       return;
     }
 
-    // Every combatant fades in; only the window differs. D5.C overflow
-    // spawns lerp alpha 0 → 1 over the SpawnAction lockout so the fade and
-    // the lockout line up; M3 — initial placements (`instant: true`) fade
-    // over the turn-intro window (BattleScene holds the sim clock for the
-    // same duration), so a turn opens with the teams materializing instead
-    // of popping. Walls/neutrals returned above and still pop — scenery.
-    // The overlay starts at opacity 0 too and fades in alongside via the
-    // OverlayFadeIn lane in `updateOverlays`.
-    const fadeSeconds = instant ? SPAWN.turnIntroSeconds : SPAWN.durationSeconds;
-    this.animator.startFadeIn(handle, fadeSeconds);
-
-    const overlay = this.overlays.add(unit.team, unit.level, 0);
+    // Q2 — battle-start placements (`instant: true`) appear IMMEDIATELY: the M3
+    // materialize fade "read as loading", and the pre-battle COUNTDOWN now owns
+    // the reaction-time window. Only D5.C mid-battle overflow spawns
+    // (`instant: false`) still fade — they lerp alpha 0 → 1 over the SpawnAction
+    // lockout so the fade and the lockout line up (reinforcements arriving, not
+    // a battle-open materialize). Walls/neutrals returned above and still pop.
+    const overlay = this.overlays.add(unit.team, unit.level, instant ? 1 : 0);
     const pct = Math.max(0, unit.currentHp) / unit.derived.maxHp;
     this.overlays.updateHp(overlay, pct);
     this.overlays.updatePosition(overlay, spritePos);
     this.overlayHandles.set(unit.id, overlay);
 
-    this.overlayFadeIns.set(unit.id, {
-      elapsed: 0,
-      duration: fadeSeconds,
-      handle: overlay,
-    });
+    if (instant) {
+      this.sprites.updateSprite(handle, { alpha: 1 });
+    } else {
+      this.animator.startFadeIn(handle, SPAWN.durationSeconds);
+      this.overlayFadeIns.set(unit.id, {
+        elapsed: 0,
+        duration: SPAWN.durationSeconds,
+        handle: overlay,
+      });
+    }
   };
 
   private onUnitMoved = ({

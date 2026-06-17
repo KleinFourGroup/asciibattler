@@ -799,6 +799,79 @@ body {
   white-space: nowrap;
 }
 
+/* Q2 — pre-battle countdown readout. Centered + prominent: a label, a big
+   second-count (TERMINAL_GREEN, the live tick), and a Fight-now button. Shown
+   only while the sim is held at turn start (screen-fade lifecycle; HUD toggles
+   is-visible). The panel is CLICK-THROUGH so the player can still set board
+   objectives under it during the hold — only the Fight-now button is
+   interactive. */
+.battle-countdown {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 28px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  font-family: var(--font-mono);
+  color: #ffb000;
+  text-align: center;
+}
+
+/* Keep the panel click-through so board objectives can be set under it. Scoped
+   to `#ui >` to win on specificity against the `#ui > *` rule that makes UI
+   children interactive (an ID selector — a plain class can't beat it); only the
+   Fight-now button (below, gated on is-visible) re-enables clicks. */
+#ui > .battle-countdown {
+  pointer-events: none;
+}
+
+.battle-countdown__label {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.battle-countdown__count {
+  font-size: 56px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #33ff00; /* TERMINAL_GREEN */
+  text-shadow: 0 0 12px rgba(51, 255, 0, 0.5);
+}
+
+.battle-countdown__fight {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: #ffb000; /* TERMINAL_AMBER */
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #ffb000;
+  padding: 4px 14px;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+/* The one interactive bit of the click-through panel — and only while the
+   countdown is actually shown, so an invisible button can't eat a board click. */
+.battle-countdown.is-visible .battle-countdown__fight {
+  pointer-events: auto;
+}
+
+.battle-countdown__fight:hover {
+  color: #33ff00; /* TERMINAL_GREEN */
+  border-color: #33ff00;
+  box-shadow: 0 0 6px rgba(51, 255, 0, 0.5);
+}
+
 /* HUD (Step 5.1). Left-side panel mirroring MapScreen on the right. Shown
    during battles, hidden between. Player roster on top, enemy roster below,
    floor + status header. Palette: amber chrome, TERMINAL_GREEN for player

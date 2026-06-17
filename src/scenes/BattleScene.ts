@@ -22,8 +22,9 @@ import { ObjectiveController } from '../ui/ObjectiveController';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
 import { TICK_RATE, secondsToTicks } from '../config';
 import { HEALTH } from '../config/health';
-import { SPAWN } from '../config/spawn';
+import { PLAYBACK } from '../config/playback';
 import { getLayout, type Theme } from '../sim/layouts';
+import { PreBattleCountdown } from './PreBattleCountdown';
 import type { Scene, SceneContext } from './Scene';
 
 /** D8 — banner suffix helper. The theme enum stores lowercase
@@ -62,12 +63,13 @@ export class BattleScene implements Scene {
    *  → setObjective/clearObjective commands). Battle-scoped; torn down in
    *  dispose so its canvas listeners don't outlive the battle. */
   private objective: ObjectiveController | null = null;
-  /** M3 — the turn-intro hold: seconds the sim clock stays parked while the
-   *  teams fade in (SPAWN.turnIntroSeconds), so a turn opens with a breath
-   *  instead of instant combat. Counted in REAL dt (a fast-forward speed
-   *  doesn't shorten the materialize). Render-only: the world just starts
-   *  ticking later — the tick sequence itself is untouched. */
-  private introRemaining = 0;
+  /** Q2 — the pre-battle countdown (replaces the M3 materialize hold): the sim
+   *  clock stays parked while the player reads the board + sets orders, then the
+   *  fight starts. Counted in REAL dt (a fast-forward speed can't shorten it —
+   *  and the sim is paused during it anyway). Render-only: the world just starts
+   *  ticking later — the tick sequence itself is untouched. Null between
+   *  battles; built fresh on mount. */
+  private countdown: PreBattleCountdown | null = null;
   private readonly subscriptions: Array<() => void> = [];
 
   mount(ctx: SceneContext): void {
@@ -279,21 +281,40 @@ export class BattleScene implements Scene {
     spawnTeam(this.world, 'player', encounter.playerTeam, playerRegion, setupRng);
     spawnTeam(this.world, 'enemy', encounter.enemyTeam, enemyRegion, setupRng);
 
-    // M3 — park the sim for the turn-intro materialize (the spawns above
-    // started their fade-ins; see `tick`).
-    this.introRemaining = SPAWN.turnIntroSeconds;
+    // Q2 — open the pre-battle countdown: the combatants are placed (instantly,
+    // no materialize fade now), the board is fully readable, and the sim is
+    // parked while the player sets orders. Pausing `playback` is what makes the
+    // unified pause key double as "Fight now" — resuming (Space / the ▶ button /
+    // a speed button) is the skip signal `tick` watches for. See `tick`.
+    this.countdown = new PreBattleCountdown(PLAYBACK.countdownSeconds);
+    this.playback?.pause();
   }
 
   tick(dt: number): void {
-    // M3 — during the intro hold only the visuals advance (the spawn fades
-    // need BattleRenderer.update to play), at REAL speed. The leftover dt on
-    // the boundary frame is dropped (≤ one frame, invisible).
-    if (this.introRemaining > 0) {
-      this.introRemaining -= dt;
-      this.battleRenderer?.update(dt);
-      this.terrain?.advanceTime(dt);
-      this.apron?.advanceTime(dt);
-      this.backdrop?.advanceTime(dt);
+    // Q2 — the pre-battle countdown. While it holds, the sim is parked and only
+    // the visuals advance, at REAL dt (a fast-forward can't shorten the window).
+    if (this.countdown?.active) {
+      this.countdown.advance(dt);
+      // Fight now: the unified pause control / a speed button resumed playback —
+      // that unpause is the skip signal (no separate hotkey, no double-fire).
+      if (this.playback && this.playback.pauseEnabled && !this.playback.isPaused) {
+        this.countdown.skip();
+      }
+      if (this.countdown.active) {
+        // Still counting: paint the readout + advance visuals only.
+        this.hud?.showCountdown(this.countdown.displaySeconds);
+        this.battleRenderer?.update(dt);
+        this.terrain?.advanceTime(dt);
+        this.apron?.advanceTime(dt);
+        this.backdrop?.advanceTime(dt);
+      } else {
+        // Just ended (expiry or skip): start the sim at the selected speed and
+        // clear the readout. The sim's first tick lands NEXT frame — this
+        // boundary frame's leftover dt is dropped (≤ one frame, invisible), the
+        // same M3 rule that kept the parked-hold determinism-clean.
+        this.playback?.resume();
+        this.hud?.hideCountdown();
+      }
       return;
     }
     // I3 — fast-forward. Scale the real frame `dt` by the active speed and feed
@@ -338,6 +359,11 @@ export class BattleScene implements Scene {
     this.terrain = null;
     this.apron = null;
     this.backdrop = null;
+    // Q2 — never leave the page-lifetime playback stuck paused if the scene
+    // tears down mid-countdown (an abnormal swap; the normal path already
+    // resumed when the countdown ended). No-op when already running.
+    this.playback?.resume();
     this.playback = null;
+    this.countdown = null;
   }
 }

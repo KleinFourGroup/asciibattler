@@ -167,7 +167,10 @@ export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCa
   const { headerEl, levelValue } = buildHeader(data, opts.skin);
   card.appendChild(headerEl);
 
-  const { statsEl, statRows } = buildStats(data.stats);
+  const { statsEl, powerRow, statRows } = buildStats(data.stats);
+  // POW (the meta pool-chip stat) sits in its own accented row right under the
+  // level, above the per-battle combat grid.
+  card.appendChild(powerRow);
   card.appendChild(statsEl);
 
   if (opts.mode === 'full' && (opts.showAbilities ?? defaultShowAbilities(opts.skin))) {
@@ -210,39 +213,68 @@ function buildHeader(
 }
 
 /**
- * The raw stat block — all `UnitStats` in canonical order. One DOM shape for
- * every skin (label + a right-hand value group that the promotion `+N` chip
- * appends into); the grid-vs-column layout + the reveal styling are pure CSS
- * keyed on the skin class.
+ * The raw stat block. The 10 per-battle combat stats render in the grid; POW —
+ * the Phase-H meta-currency that chips the encounter health pools each turn, not
+ * a combat dial — is pulled out as its own accented row ABOVE the grid (returned
+ * separately so `buildUnitCard` can seat it right under the level). POW is
+ * inserted FIRST into `statRows`, so the promotion reveal (which iterates the
+ * map in order) animates it first, matching its card position. One DOM shape per
+ * row (label + a right-hand value group the promotion `+N` chip appends into);
+ * the grid-vs-column layout + reveal styling are pure CSS keyed on the skin.
  */
 function buildStats(stats: UnitStats): {
   statsEl: HTMLDivElement;
+  powerRow: HTMLDivElement;
   statRows: Map<keyof UnitStats, StatRowHandle>;
 } {
   const statsEl = document.createElement('div');
   statsEl.className = 'unit-card__stats';
   const statRows = new Map<keyof UnitStats, StatRowHandle>();
 
+  const power = buildStatRow('power', stats.power, true);
+  statRows.set('power', power.handle);
+
   for (const key of Object.keys(STAT_LABELS) as (keyof UnitStats)[]) {
-    const row = document.createElement('div');
-    row.className = 'unit-card__stat';
-
-    const label = document.createElement('span');
-    label.textContent = STAT_LABELS[key];
-
-    const right = document.createElement('span');
-    right.className = 'unit-card__stat-right';
-    const value = document.createElement('span');
-    value.className = 'unit-card__stat-value';
-    value.textContent = String(stats[key]);
-    right.appendChild(value);
-
-    row.append(label, right);
+    if (key === 'power') continue;
+    const { row, handle } = buildStatRow(key, stats[key], false);
     statsEl.appendChild(row);
-    statRows.set(key, { row, value, right });
+    statRows.set(key, handle);
   }
 
-  return { statsEl, statRows };
+  return { statsEl, powerRow: power.row, statRows };
+}
+
+/** One stat row: `LABEL ········ value`; the right-hand group is where the
+ *  promotion `+N` chip lands. `isPower` adds the meta-stat accent + a `pool`
+ *  clarifier (POW chips the encounter health pools, not a per-battle stat). */
+function buildStatRow(
+  key: keyof UnitStats,
+  value: number,
+  isPower: boolean,
+): { row: HTMLDivElement; handle: StatRowHandle } {
+  const row = document.createElement('div');
+  row.className = isPower ? 'unit-card__stat unit-card__stat--power' : 'unit-card__stat';
+
+  const label = document.createElement('span');
+  label.className = 'unit-card__stat-label';
+  label.textContent = STAT_LABELS[key];
+  if (isPower) {
+    row.title = 'Power — chips the opposing health pool each turn';
+    const hint = document.createElement('span');
+    hint.className = 'unit-card__power-hint';
+    hint.textContent = 'pool';
+    label.append(' ', hint);
+  }
+
+  const right = document.createElement('span');
+  right.className = 'unit-card__stat-right';
+  const valueEl = document.createElement('span');
+  valueEl.className = 'unit-card__stat-value';
+  valueEl.textContent = String(value);
+  right.appendChild(valueEl);
+
+  row.append(label, right);
+  return { row, handle: { row, value: valueEl, right } };
 }
 
 /**

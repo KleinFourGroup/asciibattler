@@ -24,11 +24,9 @@
  */
 
 import type { PromotionInfo } from '../core/events';
-import type { UnitStats } from '../sim/Unit';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
-import { STAT_LABELS } from './statLabels';
 import { buildUnitCard, unitCardFromPromotion } from './UnitCard';
 
 /** Reveal cadence (M2). INTRO_DELAY_MS lets the screen's own fade-in
@@ -155,12 +153,11 @@ export class PromotionScreen {
       if (!skipped) this.audio.play('healtick');
     });
 
-    for (const key of Object.keys(STAT_LABELS) as (keyof UnitStats)[]) {
+    // Iterate the card's stat rows in render order (POW first, then the combat
+    // grid) so the reveal beats fire top-to-bottom matching the card layout.
+    for (const [key, { row, value, right }] of statRows) {
       const delta = p.newStats[key] - p.oldStats[key];
       if (delta <= 0) continue;
-      const handle = statRows.get(key);
-      if (!handle) continue;
-      const { row, value, right } = handle;
       reveals.push((skipped) => {
         row.classList.add('unit-card__stat--gain');
         value.textContent = String(p.newStats[key]);

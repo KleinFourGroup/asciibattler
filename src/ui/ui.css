@@ -439,6 +439,29 @@ body {
   display: inline-block;
 }
 
+/* POW is the Phase-H meta-currency (chips the opposing health pool each turn),
+   not a per-battle combat dial — pulled above the combat grid as its own row,
+   set apart by a divider + a meta-blue label (FLOURESCENT_BLUE = the game's
+   meta/empower accent). The value still follows the skin (incl. the promotion
+   green-on-gain reveal); only the label carries the accent. */
+.unit-card__stat--power {
+  align-self: stretch;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(21, 244, 238, 0.25); /* dim FLOURESCENT_BLUE */
+}
+
+.unit-card__stat--power .unit-card__stat-label {
+  color: #15f4ee; /* FLOURESCENT_BLUE — meta accent */
+  letter-spacing: 0.06em;
+}
+
+.unit-card__power-hint {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
 /* GP3: the abilities list. Self-documents what the unit does; one
    .unit-card__ability row per ability id (a multi-ability unit just gets more
    rows). The name leads (green), with the mechanics dimmer beneath. */

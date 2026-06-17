@@ -1,3 +1,9 @@
 {
-  "speeds": [1, 2, 3]
+  "speeds": [
+    { "value": 0.5, "enabled": true },
+    { "value": 1, "enabled": true },
+    { "value": 2, "enabled": true },
+    { "value": 3, "enabled": true }
+  ],
+  "pauseEnabled": true
 }

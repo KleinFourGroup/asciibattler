@@ -8,7 +8,11 @@ import { KEYBIND_ACTIONS, type KeybindAction } from '../config/keybindings';
 // KEYBIND_ACTIONS so a new action is covered the moment it's added.
 
 const DEFAULTS: Record<KeybindAction, string> = {
-  fastForward: 'KeyF',
+  speedHalf: 'Digit0',
+  speed1: 'Digit1',
+  speed2: 'Digit2',
+  speed3: 'Digit3',
+  togglePause: 'Space',
   setObjective: 'KeyO',
   clearObjective: 'KeyC',
 };
@@ -32,7 +36,8 @@ function keyEvent(
 describe('Keybindings', () => {
   it('resolves the code bound to each action', () => {
     const kb = new Keybindings(DEFAULTS);
-    expect(kb.codeFor('fastForward')).toBe('KeyF');
+    expect(kb.codeFor('speed2')).toBe('Digit2');
+    expect(kb.codeFor('togglePause')).toBe('Space');
     expect(kb.codeFor('setObjective')).toBe('KeyO');
     expect(kb.codeFor('clearObjective')).toBe('KeyC');
   });
@@ -46,9 +51,9 @@ describe('Keybindings', () => {
   it('dispatches a keydown to the subscribed handler and preventDefaults', () => {
     const kb = new Keybindings(DEFAULTS);
     const fire = vi.fn();
-    kb.on('fastForward', fire);
+    kb.on('speed2', fire);
 
-    const { event, preventDefault } = keyEvent('KeyF');
+    const { event, preventDefault } = keyEvent('Digit2');
     kb.handleKeyDown(event);
 
     expect(fire).toHaveBeenCalledTimes(1);
@@ -58,9 +63,9 @@ describe('Keybindings', () => {
   it('ignores auto-repeat and leaves the event for the browser', () => {
     const kb = new Keybindings(DEFAULTS);
     const fire = vi.fn();
-    kb.on('fastForward', fire);
+    kb.on('speed2', fire);
 
-    const { event, preventDefault } = keyEvent('KeyF', /* repeat */ true);
+    const { event, preventDefault } = keyEvent('Digit2', /* repeat */ true);
     kb.handleKeyDown(event);
 
     expect(fire).not.toHaveBeenCalled();
@@ -78,7 +83,7 @@ describe('Keybindings', () => {
     // Out-of-battle: the registry exists but no HUD is subscribed — the press
     // must fall through untouched.
     const kb = new Keybindings(DEFAULTS);
-    const { event, preventDefault } = keyEvent('KeyF');
+    const { event, preventDefault } = keyEvent('Digit2');
     kb.handleKeyDown(event);
     expect(preventDefault).not.toHaveBeenCalled();
   });
@@ -86,9 +91,9 @@ describe('Keybindings', () => {
   it('unsubscribe stops a handler from firing', () => {
     const kb = new Keybindings(DEFAULTS);
     const fire = vi.fn();
-    const off = kb.on('fastForward', fire);
+    const off = kb.on('speed2', fire);
     off();
-    kb.handleKeyDown(keyEvent('KeyF').event);
+    kb.handleKeyDown(keyEvent('Digit2').event);
     expect(fire).not.toHaveBeenCalled();
   });
 

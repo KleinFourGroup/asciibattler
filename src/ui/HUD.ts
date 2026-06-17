@@ -10,7 +10,18 @@ import { isAtLevelCap, xpToNext, displayLevel } from '../sim/xp';
 import { STAT_LABELS } from './statLabels';
 import type { PlaybackSpeed } from './PlaybackSpeed';
 import type { Keybindings } from './Keybindings';
+import type { KeybindAction } from '../config/keybindings';
 import type { ObjectiveControls } from './ObjectiveController';
+
+/** Q1 — which rebindable action sets each speed, for the pane's per-button
+ *  hotkey subscription + tooltip. A config speed outside this set still gets a
+ *  button (no hotkey); a hotkey for a disabled speed is simply not subscribed. */
+const SPEED_HOTKEY: ReadonlyMap<number, KeybindAction> = new Map([
+  [0.5, 'speedHalf'],
+  [1, 'speed1'],
+  [2, 'speed2'],
+  [3, 'speed3'],
+]);
 
 /** H4b — the encounter pool snapshot the HUD renders (from `Run` state). */
 interface EncounterPools {
@@ -25,9 +36,14 @@ export class HUD {
   private readonly root: HTMLElement;
   private readonly banner: HTMLElement;
   private readonly floorLabel: HTMLElement;
-  /** I3 — the fast-forward cycle button (1×/2×/3×). Label re-rendered on each
-   *  cycle; the underlying speed lives on the page-lifetime `playback`. */
-  private readonly speedButton: HTMLButtonElement;
+  /** Q1 — the speed-command pane (top-right): one button per enabled speed
+   *  (ascending) + a pause/play toggle. Repainted on each speed change; the
+   *  underlying speed + paused state live on the page-lifetime `playback`. */
+  private readonly speedPane: HTMLElement;
+  /** Speed value → its pane button, for the active-state repaint. */
+  private readonly speedButtons = new Map<number, HTMLButtonElement>();
+  /** The pause/play toggle, or null when `pauseEnabled` is off (no control). */
+  private readonly pauseButton: HTMLButtonElement | null;
   private readonly playback: PlaybackSpeed;
   /** J3 — the rebindable-hotkey registry. The HUD subscribes its control
    *  surface (fast-forward + the objective controls) to it and reads `labelFor`
@@ -84,20 +100,44 @@ export class HUD {
     this.floorLabel.className = 'hud-floor';
     this.root.appendChild(this.floorLabel);
 
-    // I3 — fast-forward control: a button + a hotkey, both cycling 1×/2×/3×.
-    // The button is the in-battle affordance; the hotkey (J3: the rebindable
-    // `fastForward` binding, default KeyF) is the keyboard shortcut. Both call
-    // cycleSpeed(); the shared `playback` holds the value so it persists into
-    // the next battle. The hotkey subscription is battle-scoped — pushed onto
-    // `subscriptions` so dispose tears it down (the registry + its window
-    // listener are page-lifetime; only this handler comes and goes per battle).
-    this.speedButton = document.createElement('button');
-    this.speedButton.type = 'button';
-    this.speedButton.className = 'hud-speed';
-    this.speedButton.addEventListener('click', () => this.cycleSpeed());
-    this.root.appendChild(this.speedButton);
-    this.renderSpeed();
-    this.subscriptions.push(keybindings.on('fastForward', () => this.cycleSpeed()));
+    // Q1 — speed-command pane (top-right): one button per ENABLED speed
+    // (ascending) + a pause/play toggle. Lives outside the side-panel root (like
+    // the banner) so it can sit top-right; same screen-fade lifecycle. Each
+    // button is the in-battle affordance; the hotkeys (J3 rebindable registry:
+    // `speedHalf`/`speed1`/`speed2`/`speed3`, `togglePause`) mirror them. All
+    // route through the shared `playback`, which holds the speed + paused state
+    // so they persist into the next battle. Hotkey subscriptions are
+    // battle-scoped — pushed onto `subscriptions` so dispose tears them down
+    // (the registry + its window listener are page-lifetime; only these handlers
+    // come and go per battle). Space=pause doubles as the Q2 countdown's "Fight
+    // now" once that lands (a countdown is a pause with an auto-unpause timer).
+    this.speedPane = document.createElement('div');
+    this.speedPane.className = 'hud-speed-pane screen-fade';
+    for (const value of playback.steps) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'hud-speed';
+      btn.textContent = `${value}×`;
+      btn.addEventListener('click', () => this.selectSpeed(value));
+      this.speedButtons.set(value, btn);
+      this.speedPane.appendChild(btn);
+      // Hotkey only for an offered speed — a disabled speed's digit falls
+      // through to the browser rather than being silently swallowed.
+      const action = SPEED_HOTKEY.get(value);
+      if (action) this.subscriptions.push(keybindings.on(action, () => this.selectSpeed(value)));
+    }
+    if (playback.pauseEnabled) {
+      this.pauseButton = document.createElement('button');
+      this.pauseButton.type = 'button';
+      this.pauseButton.className = 'hud-speed hud-speed--pause';
+      this.pauseButton.addEventListener('click', () => this.togglePause());
+      this.speedPane.appendChild(this.pauseButton);
+      this.subscriptions.push(keybindings.on('togglePause', () => this.togglePause()));
+    } else {
+      this.pauseButton = null;
+    }
+    mount.appendChild(this.speedPane);
+    this.renderSpeedPane();
 
     // J3 — the objective controls: Set (arm "pick a target" mode → next
     // left-click sets; right-clicking the board also sets) + Clear. Both are
@@ -169,6 +209,7 @@ export class HUD {
     this.rows.clear();
     fadeIn(this.root);
     fadeIn(this.banner);
+    fadeIn(this.speedPane);
   }
 
   hide(): void {
@@ -177,6 +218,7 @@ export class HUD {
     // show() so the fade-out has something to display.
     this.root.classList.remove('is-visible');
     this.banner.classList.remove('is-visible');
+    this.speedPane.classList.remove('is-visible');
     this.world = null;
   }
 
@@ -186,34 +228,55 @@ export class HUD {
    * following Scene's screen-fade can take over cleanly.
    */
   dispose(): void {
-    // J3 — this also drops the `fastForward` keybinding subscription (it was
-    // pushed onto `subscriptions`), so the hotkey stops firing across battles.
-    // The chosen speed itself survives — it lives on the page-lifetime
-    // `playback`; the registry + its window listener are page-lifetime too.
+    // J3 — this also drops the per-speed + pause keybinding subscriptions (they
+    // were pushed onto `subscriptions`), so the hotkeys stop firing across
+    // battles. The chosen speed + paused state survive — they live on the
+    // page-lifetime `playback`; the registry + its window listener are
+    // page-lifetime too.
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
     fadeOutAndRemove(this.root);
     fadeOutAndRemove(this.banner);
+    fadeOutAndRemove(this.speedPane);
     this.world = null;
   }
 
-  /** I3 — cycle to the next speed and re-render the button. Shared by the
-   *  click handler and the hotkey. */
-  private cycleSpeed(): void {
-    this.playback.cycle();
-    this.renderSpeed();
+  /** Q1 — select a running speed (the click + hotkey handler), then repaint. */
+  private selectSpeed(value: number): void {
+    this.playback.setSpeed(value);
+    this.renderSpeedPane();
   }
 
-  /** I3 — paint the button to the current speed: a chevron run mirroring the
-   *  multiplier (▶ / ▶▶ / ▶▶▶) plus the explicit `N×`. `aria-pressed` flags any
-   *  faster-than-real speed so it reads as "engaged". */
-  private renderSpeed(): void {
-    const speed = this.playback.current;
-    const chevrons = '▶'.repeat(Math.max(1, Math.round(speed)));
-    this.speedButton.textContent = `${chevrons} ${this.playback.label}`;
-    // J3 — the tooltip shows the live binding so a rebind is reflected here.
-    this.speedButton.title = `Fast-forward (${this.keybindings.labelFor('fastForward')})`;
-    this.speedButton.setAttribute('aria-pressed', String(speed > 1));
+  /** Q1 — pause/unpause the sim (the toggle + hotkey handler), then repaint. */
+  private togglePause(): void {
+    this.playback.togglePause();
+    this.renderSpeedPane();
+  }
+
+  /** Q1 — paint the speed pane: the selected running speed reads "engaged"
+   *  (`aria-pressed` + `.is-active`), but only while NOT paused; the pause
+   *  toggle shows ⏸ when running / ▶ when paused and engages while paused.
+   *  Tooltips show the live binding so a rebind is reflected here. */
+  private renderSpeedPane(): void {
+    const paused = this.playback.isPaused;
+    const selected = this.playback.selectedSpeed;
+    for (const [value, btn] of this.speedButtons) {
+      const active = !paused && value === selected;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', String(active));
+      const action = SPEED_HOTKEY.get(value);
+      btn.title = action
+        ? `${value}× speed (${this.keybindings.labelFor(action)})`
+        : `${value}× speed`;
+    }
+    if (this.pauseButton) {
+      this.pauseButton.textContent = paused ? '▶' : '⏸';
+      this.pauseButton.classList.toggle('is-active', paused);
+      this.pauseButton.setAttribute('aria-pressed', String(paused));
+      const label = paused ? 'Resume' : 'Pause';
+      this.pauseButton.setAttribute('aria-label', label);
+      this.pauseButton.title = `${label} (${this.keybindings.labelFor('togglePause')})`;
+    }
   }
 
   /** J3 — BattleScene flips this when the controller arms/disarms (via

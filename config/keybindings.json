@@ -1,5 +1,9 @@
 {
-  "fastForward": "KeyF",
+  "speedHalf": "Digit0",
+  "speed1": "Digit1",
+  "speed2": "Digit2",
+  "speed3": "Digit3",
+  "togglePause": "Space",
   "setObjective": "KeyO",
   "clearObjective": "KeyC"
 }

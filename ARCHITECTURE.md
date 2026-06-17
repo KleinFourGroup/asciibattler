@@ -61,7 +61,7 @@ src/
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
                              #   GP1: per-axis mobility/speed CdPerStat + MinCdScale (I1: agility→speed); GP2: minDamage floor
     sim.ts                   #   E5: targeting + pathfinding knobs (retarget, occupiedCellPenalty, healer*)
-    playback.ts              #   I3: fast-forward speed steps [1,2,3] + cycle hotkey (KeyF); render-only
+    playback.ts              #   I3/Q1: speed steps {value,enabled}[] (0.5/1/2/3) + pauseEnabled; render-only (pause = speed 0)
     schemas.ts               #   shared zod helpers
 
   sim/
@@ -194,7 +194,7 @@ src/
   scenes/                    # A5: Scene system — single-active swap driven from Game
     Scene.ts                 #   Scene interface + SceneContext bundle (+ I3 playback, J3 keybindings, M4 apron)
     BattleScene.ts           #   World + Clock + BattleRenderer + HUD + per-battle audio
-                             #   I3: tick() scales dt by playback.current (fast-forward, batches ticks)
+                             #   I3/Q1: tick() scales dt by playback.current (fast-forward batches ticks; pause = 0 parks the sim)
                              #   J3: owns the ObjectiveController (canvas input + enemy-billboard provider)
     MapScene.ts              #   DOM-only, wraps MapScreen
     RecruitScene.ts          #   DOM-only, wraps RecruitScreen
@@ -207,8 +207,8 @@ src/
     ui.css
     fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
     HUD.ts                   # In-battle HUD: floor, rosters, Lv/XP (E4.5) + DEF·MOB·SPD·POW (GP3/H1; I1 AGI→SPD), banner
-                             # I3: fast-forward button (1×/2×/3×); J3: Set/Clear Objective buttons — all hotkeyed via Keybindings
-    PlaybackSpeed.ts         # I3: page-lifetime fast-forward multiplier (current/cycle/label); J3 moved the hotkey to Keybindings
+                             # Q1: speed-command pane (top-right): per-speed buttons 0.5/1/2/3 + pause toggle; J3: Set/Clear Objective — all hotkeyed via Keybindings
+    PlaybackSpeed.ts         # I3/Q1: page-lifetime speed+pause model (current/selectedSpeed/setSpeed/togglePause/steps); current=0 while paused; hotkeys via Keybindings
     Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
     ObjectiveController.ts   # J3: battle-scoped objective input — right-click / Set-arm-then-click / Clear → World commands
     MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode
@@ -247,8 +247,8 @@ config/                      # A4: balance JSON source of truth (paired with src
                              #     GP2: minDamage (subtractive-defense floor)
   sim.json                   # E5: retargetCloserRatio + rangedRetargetLosSeconds + occupiedCellPenalty + healer knobs; GP4: actingCellSearchSlack
   objective.json             # J1: rangedLeashCells — objective engage-radius cap for long-range units
-  playback.json              # I3: fast-forward speed steps (the hotkey moved to keybindings.json in J3)
-  keybindings.json           # J3: rebindable hotkey defaults — fastForward / setObjective / clearObjective
+  playback.json              # I3/Q1: speed steps {value,enabled}[] (0.5/1/2/3) + pauseEnabled (the hotkeys live in keybindings.json)
+  keybindings.json           # J3/Q1: rebindable hotkey defaults — speedHalf/speed1/speed2/speed3/togglePause + setObjective/clearObjective
 
 public/
   audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, magicboom, ...)
@@ -310,7 +310,7 @@ Drives the simulation at a fixed tick rate (20Hz) decoupled from render framerat
 
 Gameplay code never hardcodes tick counts. Cooldowns, durations, and timers are authored *in seconds* and converted through `secondsToTicks(s)` / `ticksToSeconds(t)` in `src/config.ts`. Changing `TICK_RATE` is a one-line change that re-discretizes the sim without re-tuning balance.
 
-**Fast-forward (I3)** is a *tick-batching multiplier on top of* this loop, not a `TICK_RATE` change. `BattleScene.tick` scales the real frame `dt` by the active `PlaybackSpeed.current` (1×/2×/3×) before feeding it to the `Clock`, the `BattleRenderer`, and the terrain shader — so the whole battle advances faster while the `Clock` still fires *whole* fixed-timestep ticks. The sim is byte-identical (same `world.tick()` sequence + RNG order, just more ticks per rAF frame), so there is **no snapshot or fuzz impact** (the fuzz harness drives `World` directly and never sees `BattleScene`). Knobs in `config/playback.json`; the HUD owns the button + `F` hotkey, the multiplier persists across battles on the page-lifetime `PlaybackSpeed` (in `SceneContext`).
+**Playback (I3 + Q1)** is a *tick-batching multiplier on top of* this loop, not a `TICK_RATE` change. `BattleScene.tick` scales the real frame `dt` by the active `PlaybackSpeed.current` (0.5×/1×/2×/3×, or **0 while paused**) before feeding it to the `Clock`, the `BattleRenderer`, and the terrain shader — so the battle advances faster (or, at 0.5×, slower via the `Clock`'s fractional accumulator) while the `Clock` still fires *whole* fixed-timestep ticks. **Pause is speed 0**: `Clock.advance(0)` fires no ticks and freezes the board visuals too (everything downstream gets `dt × 0`). The sim is byte-identical (same `world.tick()` sequence + RNG order, just more/fewer ticks per rAF frame), so there is **no snapshot or fuzz impact** (the fuzz harness drives `World` directly and never sees `BattleScene`). Knobs in `config/playback.json` (per-step `enabled` flags + `pauseEnabled` are difficulty-system groundwork); the HUD owns the Q1 speed pane + per-speed/pause hotkeys, the speed + paused state persist across battles on the page-lifetime `PlaybackSpeed` (in `SceneContext`).
 
 ### `Unit` and `Behavior`
 

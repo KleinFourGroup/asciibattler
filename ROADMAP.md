@@ -816,6 +816,28 @@ lower-risk.
 
 ### R1 — Roster view (map / recruit / pre-turn)
 
+> **STATUS: ✅ DONE (2026-06-17).** The shared roster modal: a top-right
+> **RosterButton** on the Map / Recruit / pre-turn screens opens a **RosterView**
+> overlay ([src/ui/RosterView.ts](src/ui/RosterView.ts)) — a dimmed, scrollable
+> backdrop of the full roster as `full` UnitCards (a new **`roster` skin** on P's
+> component: all stats + abilities + the XP-to-next bar, display-only). Esc, a
+> backdrop click, or the ✕ all dismiss; `open()` is idempotent. The order rides a
+> **pluggable seam** ([src/ui/rosterOrder.ts](src/ui/rosterOrder.ts) —
+> `orderRoster`: `recruited` [default] / `archetype` / `level`, stable on
+> recruitment order) per the user's call (recruitment order now, switchable
+> later); only `recruited` is wired to the UI. Each scene threads `ctx.run.team`
+> into its screen's `show()`; the button is disposed on `hide()` (which also
+> closes any open overlay + detaches the Esc handler). **UI-only — no
+> snapshot/fuzz change** (v25/v17 hold). **1014 main tests** (1007 + 7 new
+> `rosterOrder` tests); typecheck + lint clean. Browser-verified end-to-end on
+> all three screens via dev-preview (5191): button present, modal lists all 10
+> roster units (distinct from the 6-card hand on pre-turn) with XP bars +
+> abilities, all three dismiss paths work, no console errors. ⚠️ subjective feel
+> (card size / spacing / modal placement) still wants the native browser, per the
+> Q-phase caveat. **NEXT = R2** (draw/discard pile views). Decision points
+> resolved as: modal overlay (user); recruitment order via a switchable seam
+> (user); a dedicated `roster` skin (shows the XP bar for owned units).
+
 **Shape:** a "view the entire player roster" affordance (**top-right button**, the
 brief) on the **Map screen**, the **Recruit screen**, **and** the **pre-turn
 screen** — opening a panel of the full roster as shared cards (P's `full`

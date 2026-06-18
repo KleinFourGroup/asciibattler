@@ -1460,3 +1460,122 @@ body {
   background: #ff3131;
 }
 
+/* R1 — the shared "view roster" affordance + modal (src/ui/RosterView.ts).
+   The button anchors top-right of the Map / Recruit / pre-turn screens
+   (position: fixed so it ignores those screens' own vertical scroll); the modal
+   overlays everything with a dimmed backdrop and a bordered, scrollable grid of
+   full cards. Amber terminal chrome, fluorescent-blue hover — matching the
+   recruit/pre-turn screens it sits on. */
+.roster-button {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 20;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  background: #000;
+  color: #ffb000; /* TERMINAL_AMBER */
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, color 0.1s;
+}
+
+.roster-button:hover {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  background: rgba(21, 244, 238, 0.08);
+  color: #15f4ee;
+}
+
+.roster-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30; /* above the .roster-button + the host screen */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.8); /* dimmed backdrop */
+}
+
+.roster-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: min(92vw, 1100px);
+  max-height: 86vh;
+  min-height: 0; /* lets the grid below scroll within the capped modal */
+  padding: 20px 24px;
+  box-sizing: border-box;
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  background: #000;
+  box-shadow: 0 0 24px rgba(255, 176, 0, 0.25);
+}
+
+.roster-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+
+.roster-modal-title {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffb000; /* TERMINAL_AMBER */
+}
+
+.roster-modal-close {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 10px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  background: #000;
+  color: #ffb000;
+  cursor: pointer;
+  transition: border-color 0.1s, color 0.1s, background 0.1s;
+}
+
+.roster-modal-close:hover {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: #15f4ee;
+  background: rgba(21, 244, 238, 0.08);
+}
+
+.roster-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.roster-empty {
+  color: #664600; /* DARK_TERMINAL_AMBER */
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 24px;
+}
+
+/* --- Roster skin (R1): the full card in the roster modal. Display-only (no
+   click), all stats + abilities + the XP-to-next bar (owned units carry banked
+   XP). Reuses the recruit amber theme + the base two-col stats, like the
+   pre-turn skin. --- */
+.unit-card--roster {
+  width: 184px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  color: #ffb000; /* TERMINAL_AMBER */
+}
+

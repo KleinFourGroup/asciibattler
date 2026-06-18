@@ -13,7 +13,9 @@
 import type { NodeMap, NodeKind } from '../run/NodeMap';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
+import type { UnitTemplate } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
+import { RosterButton } from './RosterView';
 
 /**
  * G3 — node-kind glyphs. The icon IS the route-planning affordance, so it
@@ -37,6 +39,8 @@ export class MapScreen {
   private readonly dispatcher: RunDispatcher;
   private readonly audio: AudioPlayer;
   private container: HTMLDivElement | null = null;
+  // R1 — the shared "view roster" affordance (top-right), disposed on hide.
+  private rosterButton: RosterButton | null = null;
 
   constructor(mount: HTMLElement, dispatcher: RunDispatcher, audio: AudioPlayer) {
     this.mount = mount;
@@ -44,9 +48,14 @@ export class MapScreen {
     this.audio = audio;
   }
 
-  show(map: NodeMap, currentNodeId: number, visited: ReadonlySet<number> = new Set()): void {
+  show(
+    map: NodeMap,
+    currentNodeId: number,
+    visited: ReadonlySet<number> = new Set(),
+    roster: readonly UnitTemplate[] = [],
+  ): void {
     this.hide();
-    this.container = this.render(map, currentNodeId, visited);
+    this.container = this.render(map, currentNodeId, visited, roster);
     this.container.classList.add('screen-fade');
     this.mount.appendChild(this.container);
     // Center the current node in the viewport. Reading offsetTop forces the
@@ -61,6 +70,8 @@ export class MapScreen {
   }
 
   hide(): void {
+    this.rosterButton?.dispose();
+    this.rosterButton = null;
     if (this.container) {
       fadeOutAndRemove(this.container);
       this.container = null;
@@ -71,6 +82,7 @@ export class MapScreen {
     map: NodeMap,
     currentNodeId: number,
     visited: ReadonlySet<number>,
+    roster: readonly UnitTemplate[],
   ): HTMLDivElement {
     const frontier = new Set<number>();
     for (const e of map.edges) {
@@ -93,6 +105,12 @@ export class MapScreen {
 
     const container = document.createElement('div');
     container.className = 'map-screen';
+
+    // R1 — the roster view (top-right, position: fixed so it ignores the
+    // board's vertical scroll). Inside the faded container so it cleans up with
+    // the screen; dispose() also closes the overlay if it's still open.
+    this.rosterButton = new RosterButton(this.mount, this.audio, roster);
+    container.appendChild(this.rosterButton.el);
 
     // The board carries the floor-scaled height; the scroll container
     // (.map-screen) clips it. Edges + nodes lay out against the board, not the

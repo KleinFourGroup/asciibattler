@@ -26,7 +26,7 @@ export class PreTurnScene implements Scene {
 
   mount(ctx: SceneContext): void {
     this.screen = new PreTurnScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
-    this.screen.show(this.info);
+    this.screen.show(this.info, ctx.run.team);
     this.unsubscribes = [
       ctx.bus.on('turn:handRedrawn', (payload) => this.screen?.updateHand(payload)),
       ctx.bus.on('turn:unitEmpowered', (payload) => this.screen?.updateEmpower(payload)),

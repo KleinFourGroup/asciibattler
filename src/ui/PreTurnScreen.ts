@@ -44,6 +44,7 @@ import { STAT_LABELS } from './statLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
+import { RosterButton } from './RosterView';
 
 export class PreTurnScreen {
   private container: HTMLDivElement | null = null;
@@ -51,6 +52,9 @@ export class PreTurnScreen {
   // hand POSITIONS, and the DOM bits `refreshHand` rebuilds in place.
   // K4 — plus the empower budget + per-card stack column (`updateEmpower`).
   private hand: readonly UnitTemplate[] = [];
+  // R1 — the full player roster (for the roster-view modal), distinct from the
+  // turn's drawn `hand`. Set in `show`.
+  private roster: readonly UnitTemplate[] = [];
   private redraw: RedrawAvailability = { redrawsRemaining: 0, cardsRemaining: 0 };
   private empower: EmpowerAvailability = { empowersRemaining: 0 };
   private empowerMagnitudes: readonly number[] = [];
@@ -65,6 +69,8 @@ export class PreTurnScreen {
   private handWrap: HTMLDivElement | null = null;
   private redrawButton: HTMLButtonElement | null = null;
   private empowerButton: HTMLButtonElement | null = null;
+  // R1 — the shared "view roster" affordance (top-right), disposed on hide.
+  private rosterButton: RosterButton | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -72,8 +78,9 @@ export class PreTurnScreen {
     private readonly audio: AudioPlayer,
   ) {}
 
-  show(info: GameEvents['turn:starting']): void {
+  show(info: GameEvents['turn:starting'], roster: readonly UnitTemplate[]): void {
     this.hide();
+    this.roster = roster;
     this.hand = info.hand;
     this.redraw = info.redraw;
     this.empower = info.empower;
@@ -91,6 +98,8 @@ export class PreTurnScreen {
   }
 
   hide(): void {
+    this.rosterButton?.dispose();
+    this.rosterButton = null;
     if (this.container) {
       fadeOutAndRemove(this.container);
       this.container = null;
@@ -138,6 +147,11 @@ export class PreTurnScreen {
   private render(info: GameEvents['turn:starting']): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = 'preturn-screen';
+
+    // R1 — the roster view (top-right, position: fixed so it ignores this
+    // screen's vertical scroll for a tall hand).
+    this.rosterButton = new RosterButton(this.mount, this.audio, this.roster);
+    panel.appendChild(this.rosterButton.el);
 
     const heading = document.createElement('div');
     heading.className = 'preturn-heading';

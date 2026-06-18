@@ -37,8 +37,9 @@ export type UnitCardMode = 'compact' | 'full';
 
 /** Render context — selects the theme/layout CSS, the header format, and the
  *  default section visibility. Each screen is one skin. `hud` is the Q4/Q5
- *  in-battle pane skin (only ever paired with `compact`). */
-export type UnitCardSkin = 'recruit' | 'promotion' | 'preturn' | 'hud';
+ *  in-battle pane skin (only ever paired with `compact`). `roster` is the R1
+ *  roster-view modal skin (display-only full cards, shows the XP bar). */
+export type UnitCardSkin = 'recruit' | 'promotion' | 'preturn' | 'hud' | 'roster';
 
 /** Normalized card input. Adapters build this from a template / Unit /
  *  promotion so the builder never reaches into screen-specific shapes. */
@@ -173,11 +174,11 @@ function defaultClickable(skin: UnitCardSkin): boolean {
   return skin === 'recruit';
 }
 
-/** Whether a skin shows the XP-to-next bar by default. Only pre-turn (owned
- *  roster units with real banked XP) does; recruit offers are fresh (0) and
- *  promotion is mid-level-up. */
+/** Whether a skin shows the XP-to-next bar by default. Pre-turn and the R1
+ *  roster view show it (both render OWNED roster units with real banked XP);
+ *  recruit offers are fresh (0) and promotion is mid-level-up. */
 function defaultShowXpBar(skin: UnitCardSkin): boolean {
-  return skin === 'preturn';
+  return skin === 'preturn' || skin === 'roster';
 }
 
 export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHandles {

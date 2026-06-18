@@ -14,9 +14,13 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
+import { RosterButton } from './RosterView';
 
 export class RecruitScreen {
   private container: HTMLDivElement | null = null;
+  // R1 — the shared "view roster" affordance (top-right). Disposed on hide so
+  // a dismissed screen can't leave an open overlay or a live Esc handler.
+  private rosterButton: RosterButton | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -24,24 +28,33 @@ export class RecruitScreen {
     private readonly audio: AudioPlayer,
   ) {}
 
-  show(offer: readonly UnitTemplate[]): void {
+  show(offer: readonly UnitTemplate[], roster: readonly UnitTemplate[]): void {
     this.hide();
-    this.container = this.render(offer);
+    this.container = this.render(offer, roster);
     this.container.classList.add('screen-fade');
     this.mount.appendChild(this.container);
     fadeIn(this.container);
   }
 
   hide(): void {
+    this.rosterButton?.dispose();
+    this.rosterButton = null;
     if (this.container) {
       fadeOutAndRemove(this.container);
       this.container = null;
     }
   }
 
-  private render(offer: readonly UnitTemplate[]): HTMLDivElement {
+  private render(
+    offer: readonly UnitTemplate[],
+    roster: readonly UnitTemplate[],
+  ): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = 'recruit-screen';
+
+    // R1 — the roster view shows the CURRENT roster (before this pick).
+    this.rosterButton = new RosterButton(this.mount, this.audio, roster);
+    panel.appendChild(this.rosterButton.el);
 
     const heading = document.createElement('div');
     heading.className = 'recruit-heading';

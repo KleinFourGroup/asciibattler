@@ -16,7 +16,7 @@ export class RecruitScene implements Scene {
 
   mount(ctx: SceneContext): void {
     this.screen = new RecruitScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
-    this.screen.show(this.offer);
+    this.screen.show(this.offer, ctx.run.team);
   }
 
   tick(_dt: number): void {}

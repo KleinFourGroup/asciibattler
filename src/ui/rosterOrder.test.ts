@@ -1,6 +1,6 @@
 /**
  * R1 — the pure roster-ordering seam. DOM-free, so it runs under the project's
- * node test env (the DOM `RosterView` itself is browser-verified). Expectations
+ * node test env (the DOM `CardListModal` itself is browser-verified). Expectations
  * derive the archetype order from `ALL_ARCHETYPES` (the canonical source) rather
  * than hardcoding it, so a config reorder can't silently break these.
  */

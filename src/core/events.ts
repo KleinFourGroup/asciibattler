@@ -295,6 +295,12 @@ export interface GameEvents extends Record<string, unknown> {
     enemyHealth: number;
     enemyHealthMax: number;
     hand: UnitTemplate[];
+    /** R2 — the encounter deck's other two piles, resolved to templates for the
+     *  pre-turn pile views. Carried in RECRUITMENT order (not draw order), so
+     *  the views show contents-only without revealing the next-draw sequence.
+     *  `hand` ∪ `drawPile` ∪ `discardPile` is the whole fielded roster. */
+    drawPile: UnitTemplate[];
+    discardPile: UnitTemplate[];
     redraw: RedrawAvailability;
     empower: EmpowerAvailability;
     /** K4 — per-hand-position empower stacks (0 = none), see `turn:starting`. */
@@ -338,6 +344,10 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'turn:handRedrawn': {
     hand: UnitTemplate[];
+    /** R2 — the post-redraw draw/discard piles (recruitment order), so the
+     *  pre-turn pile views reflect the swap. Same contract as `turn:starting`. */
+    drawPile: UnitTemplate[];
+    discardPile: UnitTemplate[];
     redraw: RedrawAvailability;
     empowerMagnitudes: number[];
   };

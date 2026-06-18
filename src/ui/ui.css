@@ -1460,16 +1460,15 @@ body {
   background: #ff3131;
 }
 
-/* R1 — the shared "view roster" affordance + modal (src/ui/RosterView.ts).
-   The button anchors top-right of the Map / Recruit / pre-turn screens
-   (position: fixed so it ignores those screens' own vertical scroll); the modal
-   overlays everything with a dimmed backdrop and a bordered, scrollable grid of
-   full cards. Amber terminal chrome, fluorescent-blue hover — matching the
-   recruit/pre-turn screens it sits on. */
-.roster-button {
+/* R1/R2 — the shared card-list affordance + modal (src/ui/CardListModal.ts).
+   The corner buttons (position: fixed so they ignore the host screens' own
+   vertical scroll) open a modal that overlays everything with a dimmed backdrop
+   and a bordered, scrollable grid of full cards. Amber terminal chrome,
+   fluorescent-blue hover — matching the recruit/pre-turn screens they sit on.
+   R1: the roster button (top-right, on Map / Recruit / pre-turn). R2: the
+   draw-pile (bottom-right) + discard-pile (bottom-left) buttons on pre-turn. */
+.card-list-button {
   position: fixed;
-  top: 16px;
-  right: 16px;
   z-index: 20;
   font-family: var(--font-mono);
   font-size: 18px; /* fix(R1): 1.5× the original 12px — user call */
@@ -1483,10 +1482,25 @@ body {
   transition: border-color 0.1s, background 0.1s, color 0.1s;
 }
 
-.roster-button:hover {
+.card-list-button:hover {
   border-color: #15f4ee; /* FLOURESCENT_BLUE */
   background: rgba(21, 244, 238, 0.08);
   color: #15f4ee;
+}
+
+/* Corner anchors — roster top-right (R1); the piles in the bottom corners (R2),
+   matching the brief's draw-right / discard-left layout. */
+.card-list-button--roster {
+  top: 16px;
+  right: 16px;
+}
+.card-list-button--draw {
+  bottom: 16px;
+  right: 16px;
+}
+.card-list-button--discard {
+  bottom: 16px;
+  left: 16px;
 }
 
 .roster-overlay {
@@ -1569,10 +1583,10 @@ body {
   padding: 24px;
 }
 
-/* --- Roster skin (R1): the full card in the roster modal. Display-only (no
-   click), all stats + abilities + the XP-to-next bar (owned units carry banked
-   XP). Reuses the recruit amber theme + the base two-col stats, like the
-   pre-turn skin. --- */
+/* --- Roster skin (R1/R2): the full card in the shared card-list modal (roster
+   view + draw/discard pile views). Display-only (no click), all stats +
+   abilities + the XP-to-next bar (owned units carry banked XP). Reuses the
+   recruit amber theme + the base two-col stats, like the pre-turn skin. --- */
 .unit-card--roster {
   width: 184px;
   border: 1px solid #664600; /* DARK_TERMINAL_AMBER */

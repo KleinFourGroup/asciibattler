@@ -14,13 +14,13 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
-import { RosterButton } from './RosterView';
+import { CardListButton } from './CardListModal';
 
 export class RecruitScreen {
   private container: HTMLDivElement | null = null;
   // R1 — the shared "view roster" affordance (top-right). Disposed on hide so
   // a dismissed screen can't leave an open overlay or a live Esc handler.
-  private rosterButton: RosterButton | null = null;
+  private rosterButton: CardListButton | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -53,7 +53,13 @@ export class RecruitScreen {
     panel.className = 'recruit-screen';
 
     // R1 — the roster view shows the CURRENT roster (before this pick).
-    this.rosterButton = new RosterButton(this.mount, this.audio, roster);
+    this.rosterButton = new CardListButton(this.mount, this.audio, {
+      text: 'Roster',
+      title: 'Your Roster',
+      position: 'roster',
+      getUnits: () => roster,
+      emptyText: 'No units in your roster.',
+    });
     panel.appendChild(this.rosterButton.el);
 
     const heading = document.createElement('div');

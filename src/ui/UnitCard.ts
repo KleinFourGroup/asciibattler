@@ -37,8 +37,9 @@ export type UnitCardMode = 'compact' | 'full';
 
 /** Render context — selects the theme/layout CSS, the header format, and the
  *  default section visibility. Each screen is one skin. `hud` is the Q4/Q5
- *  in-battle pane skin (only ever paired with `compact`). `roster` is the R1
- *  roster-view modal skin (display-only full cards, shows the XP bar). */
+ *  in-battle pane skin (only ever paired with `compact`). `roster` is the R1/R2
+ *  card-list modal skin (roster view + draw/discard pile views; display-only
+ *  full cards, shows the XP bar). */
 export type UnitCardSkin = 'recruit' | 'promotion' | 'preturn' | 'hud' | 'roster';
 
 /** Normalized card input. Adapters build this from a template / Unit /

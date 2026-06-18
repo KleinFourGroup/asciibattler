@@ -719,6 +719,10 @@ export class Run {
         enemyHealth: this.enemyHealth,
         enemyHealthMax: HEALTH.enemyHealthMax,
         hand: this.hand.map((idx) => this.team[idx]!),
+        // R2 — the other two piles for the pre-turn pile views (recruitment
+        // order; see resolvePileForDisplay).
+        drawPile: this.resolvePileForDisplay(this.drawPile),
+        discardPile: this.resolvePileForDisplay(this.discardPile),
         redraw: this.redrawAvailability,
         empower: this.empowerAvailability,
         empowerMagnitudes: this.empowerMagnitudes(),
@@ -1031,6 +1035,10 @@ export class Run {
     this.cardsRedrawnThisTurn += positions.length;
     this.bus.emit('turn:handRedrawn', {
       hand: this.hand.map((idx) => this.team[idx]!),
+      // R2 — the redraw moved cards between hand/draw/discard; re-send the piles
+      // so the pre-turn pile views reflect the swap.
+      drawPile: this.resolvePileForDisplay(this.drawPile),
+      discardPile: this.resolvePileForDisplay(this.discardPile),
       redraw: this.redrawAvailability,
       // K4 — the refill may seat an already-empowered card (and the old
       // positions no longer line up), so the badge column re-derives here.
@@ -1062,6 +1070,16 @@ export class Run {
       const effect = this.encounterEffects[idx]?.find((e) => e.key === buffKey);
       return effect?.magnitude ?? 0;
     });
+  }
+
+  /**
+   * R2 — resolve a deck pile (`rosterIndex` values) to templates for the
+   * pre-turn pile views, in RECRUITMENT order (ascending index) rather than the
+   * stored draw order, so a view shows the pile's CONTENTS without revealing the
+   * next-draw sequence (the resolved "contents only, unordered" decision).
+   */
+  private resolvePileForDisplay(pile: readonly number[]): UnitTemplate[] {
+    return [...pile].sort((a, b) => a - b).map((idx) => this.team[idx]!);
   }
 
   /**

@@ -218,16 +218,16 @@ src/
     PlaybackSpeed.ts         # I3/Q1: page-lifetime speed+pause model (current/selectedSpeed/setSpeed/togglePause/steps); current=0 while paused; hotkeys via Keybindings
     Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
     ObjectiveController.ts   # J3/Q3: battle-scoped objective input — right-click quick-Engage / arm(engage|focus)-then-click / hold / stop → World commands
-    MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode; R1: top-right RosterButton
-    PreTurnScreen.ts         # H4b: turn N + pools + the drawn hand (H5b; P3: shared full UnitCard — all stats + abilities + XP bar, screen scrolls); K3 redraw + K4 empower selection + ▲ badge ride on the card; K3.5 map label; L1 idol banner; R1: top-right RosterButton
+    MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode; R1: top-right roster CardListButton
+    PreTurnScreen.ts         # H4b: turn N + pools + the drawn hand (H5b; P3: shared full UnitCard — all stats + abilities + XP bar, screen scrolls); K3 redraw + K4 empower selection + ▲ badge ride on the card; K3.5 map label; L1 idol banner; R1/R2: roster (top-right) + draw/discard pile (bottom corners) CardListButtons; the piles ride turn:starting/turn:handRedrawn (recruitment order)
     PostTurnScreen.ts        # H4b: turn outcome (winner / pool chips / gauges); M3: Continue-only (auto-timer removed)
-    RecruitScreen.ts         # recruit offer cards (P1: shared UnitCard, recruit skin) → dispatch chooseRecruit; R1: top-right RosterButton
-    RosterView.ts            # R1: shared roster-view modal (RosterView overlay + RosterButton) — full UnitCards in a dimmed, scrollable overlay (Esc/backdrop/✕ dismiss); reused by Map/Recruit/PreTurn
-    rosterOrder.ts           # R1: pure roster-ordering seam (orderRoster: recruited[default]/archetype/level, stable on recruitment order) — only recruited wired to the UI, others switchable
+    RecruitScreen.ts         # recruit offer cards (P1: shared UnitCard, recruit skin) → dispatch chooseRecruit; R1: top-right roster CardListButton
+    CardListModal.ts         # R1/R2: shared card-list modal (CardListModal overlay + CardListButton) — full UnitCards in a dimmed, scrollable overlay (Esc/backdrop/✕ dismiss); R1 roster view (top-right, Map/Recruit/PreTurn) + R2 draw/discard pile views (PreTurn bottom corners)
+    rosterOrder.ts           # R1: pure card-ordering seam (orderRoster: recruited[default]/archetype/level, stable on recruitment order) — only recruited wired to the UI, others switchable
     PromotionScreen.ts       # E4.4: per-unit level-up cards (P1: shared UnitCard, promotion skin); M2: two-phase reveal (all cards pop in, then gains tick green card-by-card + +N chip; click-anywhere skips) — the screen owns the timeline, driving the card via UnitCard's levelValue/statRows handles
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
     statLabels.ts            # GP3: shared STAT_LABELS map (card + HUD + PromotionScreen)
-    UnitCard.ts              # P1: shared unit-card builder — one DOM/CSS source for recruit + promotion (+ P3 pre-turn, Q4/Q5 HUD player+enemy cards, R1 roster modal). compact/full modes × recruit/promotion/preturn/hud/roster skins; compact (Q4) = glyph + Lv(TL)/POW(TR) + glyph-width HP bar, via unitCardFromUnit adapter + the hpFill handle; Q5 team coloring via the `team` opt → unit-card--enemy (red glyph + HP, vs the green player default); carries the "card can't disagree with the unit" ability readings (was RecruitScreen); rarity-accent seam (unit-card--rarity-*, default common = today's look)
+    UnitCard.ts              # P1: shared unit-card builder — one DOM/CSS source for recruit + promotion (+ P3 pre-turn, Q4/Q5 HUD player+enemy cards, R1/R2 card-list modal). compact/full modes × recruit/promotion/preturn/hud/roster skins; compact (Q4) = glyph + Lv(TL)/POW(TR) + glyph-width HP bar, via unitCardFromUnit adapter + the hpFill handle; Q5 team coloring via the `team` opt → unit-card--enemy (red glyph + HP, vs the green player default); carries the "card can't disagree with the unit" ability readings (was RecruitScreen); rarity-accent seam (unit-card--rarity-*, default common = today's look)
 
   audio/
     AudioPlayer.ts           # B6: 4-deep clone ring per sound; per-key volume + pitch jitter; + magicboom (E7.C)
@@ -393,9 +393,9 @@ recruit:offered         { units: UnitTemplate[] }
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
 objective:set           { team; objective: TeamObjective }                          # O1: a team set/replaced its steering objective (marker tracks player only)
 objective:cleared       { team }                                                    # O1: a team reverted to atWill (explicit, or engage-target died)
-turn:starting           { turn; floor; pools; hand; redraw; empower; empowerMagnitudes; daemon; map }  # H4b/H5b/K3/K3.5/K4/L1: pre-turn gate cue (gated only); hand + daemon-resolved redraw/empower budgets + per-card empower stacks + the run's daemon {id;name;description;redrawGate;empowerGate;empowerBuff} + the ENCOUNTER's map
+turn:starting           { turn; floor; pools; hand; drawPile; discardPile; redraw; empower; empowerMagnitudes; daemon; map }  # H4b/H5b/K3/K3.5/K4/L1/R2: pre-turn gate cue (gated only); hand + the other two piles (R2, recruitment order) + daemon-resolved redraw/empower budgets + per-card empower stacks + the run's daemon {id;name;description;redrawGate;empowerGate;empowerBuff} + the ENCOUNTER's map
 turn:resolved           { turn; winner; pool chips; result; pools }                 # H4b: post-turn outcome cue (gated path only)
-turn:handRedrawn        { hand; redraw; empowerMagnitudes }                         # K3: a redrawCards command landed — full new hand + decremented budget (K4: + re-derived badge column)
+turn:handRedrawn        { hand; drawPile; discardPile; redraw; empowerMagnitudes }  # K3: a redrawCards command landed — full new hand + decremented budget (K4: + re-derived badge column; R2: + refreshed draw/discard piles)
 turn:unitEmpowered      { handIndex; empower; empowerMagnitudes }                   # K4: an empowerUnit command landed — decremented budget + per-card empower stacks
 ```
 

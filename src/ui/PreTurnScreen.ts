@@ -44,7 +44,7 @@ import { STAT_LABELS } from './statLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
-import { RosterButton } from './RosterView';
+import { CardListButton } from './CardListModal';
 
 export class PreTurnScreen {
   private container: HTMLDivElement | null = null;
@@ -55,6 +55,11 @@ export class PreTurnScreen {
   // R1 — the full player roster (for the roster-view modal), distinct from the
   // turn's drawn `hand`. Set in `show`.
   private roster: readonly UnitTemplate[] = [];
+  // R2 — the encounter deck's other two piles (resolved templates, recruitment
+  // order), for the draw/discard pile views. Set in `show`, refreshed by
+  // `updateHand` so a reopened pile view reflects a redraw.
+  private drawPile: readonly UnitTemplate[] = [];
+  private discardPile: readonly UnitTemplate[] = [];
   private redraw: RedrawAvailability = { redrawsRemaining: 0, cardsRemaining: 0 };
   private empower: EmpowerAvailability = { empowersRemaining: 0 };
   private empowerMagnitudes: readonly number[] = [];
@@ -69,8 +74,9 @@ export class PreTurnScreen {
   private handWrap: HTMLDivElement | null = null;
   private redrawButton: HTMLButtonElement | null = null;
   private empowerButton: HTMLButtonElement | null = null;
-  // R1 — the shared "view roster" affordance (top-right), disposed on hide.
-  private rosterButton: RosterButton | null = null;
+  // R1/R2 — the shared card-list affordances: roster (top-right) + draw
+  // (bottom-right) + discard (bottom-left) pile views. All disposed on hide.
+  private cardListButtons: CardListButton[] = [];
 
   constructor(
     private readonly mount: HTMLElement,
@@ -82,6 +88,8 @@ export class PreTurnScreen {
     this.hide();
     this.roster = roster;
     this.hand = info.hand;
+    this.drawPile = info.drawPile;
+    this.discardPile = info.discardPile;
     this.redraw = info.redraw;
     this.empower = info.empower;
     this.empowerMagnitudes = info.empowerMagnitudes;
@@ -98,8 +106,8 @@ export class PreTurnScreen {
   }
 
   hide(): void {
-    this.rosterButton?.dispose();
-    this.rosterButton = null;
+    for (const button of this.cardListButtons) button.dispose();
+    this.cardListButtons = [];
     if (this.container) {
       fadeOutAndRemove(this.container);
       this.container = null;
@@ -119,6 +127,10 @@ export class PreTurnScreen {
    */
   updateHand(payload: GameEvents['turn:handRedrawn']): void {
     this.hand = payload.hand;
+    // R2 — the redraw shuffled cards between piles; refresh the stored copies so
+    // a reopened pile view reflects it (the buttons read these at click time).
+    this.drawPile = payload.drawPile;
+    this.discardPile = payload.discardPile;
     this.redraw = payload.redraw;
     this.empowerMagnitudes = payload.empowerMagnitudes;
     this.selected.clear();
@@ -148,10 +160,34 @@ export class PreTurnScreen {
     const panel = document.createElement('div');
     panel.className = 'preturn-screen';
 
-    // R1 — the roster view (top-right, position: fixed so it ignores this
-    // screen's vertical scroll for a tall hand).
-    this.rosterButton = new RosterButton(this.mount, this.audio, this.roster);
-    panel.appendChild(this.rosterButton.el);
+    // R1/R2 — the card-list affordances (all position: fixed so they ignore
+    // this screen's vertical scroll for a tall hand): the roster view top-right,
+    // and the draw/discard pile views in the bottom corners. The pile buttons
+    // read their stored copies at click time (refreshed by `updateHand`).
+    this.cardListButtons = [
+      new CardListButton(this.mount, this.audio, {
+        text: 'Roster',
+        title: 'Your Roster',
+        position: 'roster',
+        getUnits: () => this.roster,
+        emptyText: 'No units in your roster.',
+      }),
+      new CardListButton(this.mount, this.audio, {
+        text: 'Draw Pile',
+        title: 'Draw Pile',
+        position: 'draw',
+        getUnits: () => this.drawPile,
+        emptyText: 'The draw pile is empty.',
+      }),
+      new CardListButton(this.mount, this.audio, {
+        text: 'Discard Pile',
+        title: 'Discard Pile',
+        position: 'discard',
+        getUnits: () => this.discardPile,
+        emptyText: 'The discard pile is empty.',
+      }),
+    ];
+    for (const button of this.cardListButtons) panel.appendChild(button.el);
 
     const heading = document.createElement('div');
     heading.className = 'preturn-heading';

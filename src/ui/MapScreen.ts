@@ -15,7 +15,7 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { UnitTemplate } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
-import { RosterButton } from './RosterView';
+import { CardListButton } from './CardListModal';
 
 /**
  * G3 — node-kind glyphs. The icon IS the route-planning affordance, so it
@@ -40,7 +40,7 @@ export class MapScreen {
   private readonly audio: AudioPlayer;
   private container: HTMLDivElement | null = null;
   // R1 — the shared "view roster" affordance (top-right), disposed on hide.
-  private rosterButton: RosterButton | null = null;
+  private rosterButton: CardListButton | null = null;
 
   constructor(mount: HTMLElement, dispatcher: RunDispatcher, audio: AudioPlayer) {
     this.mount = mount;
@@ -109,7 +109,13 @@ export class MapScreen {
     // R1 — the roster view (top-right, position: fixed so it ignores the
     // board's vertical scroll). Inside the faded container so it cleans up with
     // the screen; dispose() also closes the overlay if it's still open.
-    this.rosterButton = new RosterButton(this.mount, this.audio, roster);
+    this.rosterButton = new CardListButton(this.mount, this.audio, {
+      text: 'Roster',
+      title: 'Your Roster',
+      position: 'roster',
+      getUnits: () => roster,
+      emptyText: 'No units in your roster.',
+    });
     container.appendChild(this.rosterButton.el);
 
     // The board carries the floor-scaled height; the scroll container

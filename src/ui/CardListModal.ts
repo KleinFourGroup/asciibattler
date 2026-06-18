@@ -1,15 +1,17 @@
 /**
- * R1 — the shared roster-view surface. A modal overlay that lists the player's
- * full roster as shared `full` UnitCards (P's component, the `roster` skin), and
- * a `RosterButton` controller that pairs a top-right "Roster" button with it.
- * The brief asks for one roster affordance reused on the Map / Recruit /
- * pre-turn screens ("These should all probably share code") — this is that one
- * piece; each screen just mounts a `RosterButton`.
+ * R1/R2 — the shared card-list surface. A modal overlay that lists a set of
+ * units as shared `full` UnitCards (P's component, the `roster` skin), and a
+ * `CardListButton` controller that pairs a corner button with it. The brief
+ * asks for one shared card-list affordance across the roster view (R1) and the
+ * draw/discard pile views (R2) — this is that one piece; each consumer just
+ * mounts a `CardListButton` with its own label, position, and source.
  *
  * Presentation = a modal overlay (the user's call): a dimmed backdrop with a
  * bordered, scrollable panel; Esc, a backdrop click, or the ✕ all dismiss it.
  * The card ordering rides the pluggable `rosterOrder` seam (default recruitment
- * order).
+ * order). The PILE consumers (R2) pass contents already canonicalized to
+ * recruitment order by the Run, so the modal never reveals the next-draw
+ * sequence ("contents only, unordered").
  */
 
 import type { UnitTemplate } from '../sim/Unit';
@@ -17,9 +19,11 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { orderRoster, type RosterOrder } from './rosterOrder';
 
-export interface RosterViewOptions {
+export interface CardListModalOptions {
   /** Display order (the pluggable seam). Defaults to recruitment order. */
   readonly order?: RosterOrder;
+  /** Message shown when the list is empty (e.g. "The draw pile is empty."). */
+  readonly emptyText?: string;
 }
 
 /**
@@ -28,7 +32,7 @@ export interface RosterViewOptions {
  * a sibling of the host screen so it overlays at full opacity regardless of the
  * screen's fade/scroll state.
  */
-export class RosterView {
+export class CardListModal {
   private overlay: HTMLDivElement | null = null;
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.key === 'Escape') this.close();
@@ -43,7 +47,9 @@ export class RosterView {
     return this.overlay !== null;
   }
 
-  open(roster: readonly UnitTemplate[], opts?: RosterViewOptions): void {
+  /** Open the modal listing `units`. `title` is the heading prefix ("Your
+   *  Roster" / "Draw Pile" / "Discard Pile"); the count is appended. */
+  open(title: string, units: readonly UnitTemplate[], opts?: CardListModalOptions): void {
     if (this.overlay) return; // already open — idempotent
 
     const overlay = document.createElement('div');
@@ -59,29 +65,29 @@ export class RosterView {
 
     const header = document.createElement('div');
     header.className = 'roster-modal-header';
-    const title = document.createElement('div');
-    title.className = 'roster-modal-title';
-    title.textContent = `Your Roster — ${roster.length} unit${roster.length === 1 ? '' : 's'}`;
+    const titleEl = document.createElement('div');
+    titleEl.className = 'roster-modal-title';
+    titleEl.textContent = `${title} — ${units.length} unit${units.length === 1 ? '' : 's'}`;
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'roster-modal-close';
     close.textContent = '✕';
-    close.setAttribute('aria-label', 'Close roster');
+    close.setAttribute('aria-label', 'Close');
     close.addEventListener('click', () => {
       this.audio.play('click');
       this.close();
     });
-    header.append(title, close);
+    header.append(titleEl, close);
 
     const grid = document.createElement('div');
     grid.className = 'roster-grid';
-    if (roster.length === 0) {
+    if (units.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'roster-empty';
-      empty.textContent = 'No units in your roster.';
+      empty.textContent = opts?.emptyText ?? 'No units.';
       grid.appendChild(empty);
     } else {
-      for (const unit of orderRoster(roster, opts?.order)) {
+      for (const unit of orderRoster(units, opts?.order)) {
         const { el } = buildUnitCard(unitCardFromTemplate(unit), {
           mode: 'full',
           skin: 'roster',
@@ -111,35 +117,52 @@ export class RosterView {
   }
 }
 
-/**
- * The reusable "view roster" affordance: a top-right button wired to a
- * `RosterView`. The roster is snapshotted at construction (it can't change while
- * a screen is up). The caller appends `.el` into its panel and calls `dispose()`
- * on screen `hide()` (which also closes the overlay if it's open).
- */
-export class RosterButton {
-  readonly el: HTMLButtonElement;
-  private readonly view: RosterView;
+/** Where a `CardListButton` anchors → its CSS position modifier. Roster sits
+ *  top-right (R1); the piles sit in the bottom corners (R2). */
+export type CardListButtonPosition = 'roster' | 'draw' | 'discard';
 
-  constructor(
-    mount: HTMLElement,
-    private readonly audio: AudioPlayer,
-    private readonly roster: readonly UnitTemplate[],
-    private readonly opts?: RosterViewOptions,
-  ) {
-    this.view = new RosterView(mount, audio);
+export interface CardListButtonOptions {
+  /** The button face text (e.g. "Roster", "Draw Pile"). */
+  readonly text: string;
+  /** The modal heading prefix (e.g. "Your Roster", "Draw Pile"). */
+  readonly title: string;
+  /** Corner anchor → `.card-list-button--{position}`. */
+  readonly position: CardListButtonPosition;
+  /** Read the units to show, AT CLICK TIME — a thunk so a pile reflects the
+   *  latest contents after a redraw (the host refreshes its stored copy). */
+  readonly getUnits: () => readonly UnitTemplate[];
+  readonly emptyText?: string;
+  readonly order?: RosterOrder;
+}
+
+/**
+ * The reusable corner button wired to a `CardListModal`. The caller appends
+ * `.el` into its panel and calls `dispose()` on screen `hide()` (which also
+ * closes the overlay if it's open).
+ */
+export class CardListButton {
+  readonly el: HTMLButtonElement;
+  private readonly modal: CardListModal;
+
+  constructor(mount: HTMLElement, audio: AudioPlayer, opts: CardListButtonOptions) {
+    this.modal = new CardListModal(mount, audio);
     this.el = document.createElement('button');
     this.el.type = 'button';
-    this.el.className = 'roster-button';
-    this.el.textContent = 'Roster';
+    this.el.className = `card-list-button card-list-button--${opts.position}`;
+    this.el.textContent = opts.text;
     this.el.addEventListener('click', () => {
-      this.audio.play('click');
-      this.view.open(this.roster, this.opts);
+      audio.play('click');
+      // Spread only the present options (exactOptionalPropertyTypes — no
+      // explicit `undefined`s).
+      this.modal.open(opts.title, opts.getUnits(), {
+        ...(opts.order !== undefined ? { order: opts.order } : {}),
+        ...(opts.emptyText !== undefined ? { emptyText: opts.emptyText } : {}),
+      });
     });
   }
 
   dispose(): void {
-    this.view.dispose();
+    this.modal.dispose();
     this.el.remove();
   }
 }

@@ -1035,6 +1035,39 @@ describe('Run', () => {
       expect(redrawns[0]!.redraw.cardsRemaining).toBe(DECK.redraw.maxCardsPerTurn - 2);
     });
 
+    it('turn:starting + turn:handRedrawn carry the draw/discard piles in recruitment order (R2)', () => {
+      const { run, bus } = freshRunWithBus(6, { daemon: K_DEFAULT_DAEMON });
+      run.pauseAtTurnGates = true;
+      const startings: GameEvents['turn:starting'][] = [];
+      const redrawns: GameEvents['turn:handRedrawn'][] = [];
+      bus.on('turn:starting', (p) => startings.push(p));
+      bus.on('turn:handRedrawn', (p) => redrawns.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+
+      // The payload should resolve a pile's rosterIndex values in ascending
+      // (recruitment) order — NOT draw order — so a pile view shows contents
+      // only and never reveals the next-draw sequence.
+      const inRecruitmentOrder = (pile: readonly number[]) =>
+        [...pile].sort((a, b) => a - b).map((i) => run.team[i]);
+
+      expect(startings).toHaveLength(1);
+      expect(startings[0]!.drawPile).toEqual(inRecruitmentOrder(run.drawPile));
+      expect(startings[0]!.discardPile).toEqual(inRecruitmentOrder(run.discardPile));
+      expect(startings[0]!.discardPile).toHaveLength(0); // nothing fought yet on turn 1
+      // hand ∪ draw ∪ discard = the whole fielded roster.
+      const counted =
+        startings[0]!.hand.length +
+        startings[0]!.drawPile.length +
+        startings[0]!.discardPile.length;
+      expect(counted).toBe(run.team.length);
+
+      // A redraw shuffles cards between piles; the event re-sends them, same contract.
+      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      expect(redrawns).toHaveLength(1);
+      expect(redrawns[0]!.drawPile).toEqual(inRecruitmentOrder(run.drawPile));
+      expect(redrawns[0]!.discardPile).toEqual(inRecruitmentOrder(run.discardPile));
+    });
+
     it('a redrawn-away unit accrues no deployment count; its replacement is counted', () => {
       const { run } = gatedToFirstTurnIntro(7);
       expect(run.drawPile.length).toBeGreaterThan(0); // replacement ≠ benched below

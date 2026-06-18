@@ -7,7 +7,7 @@
  * order question was locked.
  *
  * Pure (no DOM) so it's unit-testable under the project's node test env; the
- * DOM-side `RosterView` consumes it.
+ * DOM-side `CardListModal` consumes it.
  */
 
 import type { UnitTemplate } from '../sim/Unit';

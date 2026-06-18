@@ -816,9 +816,10 @@ lower-risk.
 
 ### R1 — Roster view (map / recruit / pre-turn)
 
-> **STATUS: ✅ DONE (2026-06-17).** The shared roster modal: a top-right
-> **RosterButton** on the Map / Recruit / pre-turn screens opens a **RosterView**
-> overlay ([src/ui/RosterView.ts](src/ui/RosterView.ts)) — a dimmed, scrollable
+> **STATUS: ✅ DONE (2026-06-17).** The shared card-list modal: a top-right
+> roster button on the Map / Recruit / pre-turn screens opens a **CardListModal**
+> overlay ([src/ui/CardListModal.ts](src/ui/CardListModal.ts) — generalized from
+> roster-only to roster + piles in R2) — a dimmed, scrollable
 > backdrop of the full roster as `full` UnitCards (a new **`roster` skin** on P's
 > component: all stats + abilities + the XP-to-next bar, display-only). Esc, a
 > backdrop click, or the ✕ all dismiss; `open()` is idempotent. The order rides a
@@ -851,6 +852,29 @@ Browser-verify on each.
 by level? recommend a stable roster order).
 
 ### R2 — Draw-pile / discard-pile view (pre-turn)
+
+> **STATUS: ✅ DONE (2026-06-17).** Two more corner buttons on the pre-turn
+> screen — **Draw Pile** (bottom-right) + **Discard Pile** (bottom-left) — open
+> the same shared modal as R1 (the R1 `RosterView` was **generalized to
+> `CardListModal` + `CardListButton`** so roster + both piles share one
+> component, per the brief's "share code"). Each pile lists its units as `full`
+> cards, **contents only / unordered** (resolved). The piles ride the existing
+> pre-turn event flow: `turn:starting` + `turn:handRedrawn` now carry
+> `drawPile`/`discardPile` resolved to templates **in recruitment order** (a new
+> `Run.resolvePileForDisplay` sorts ascending-index, so the view never reveals
+> the next-draw sequence); the screen stores them and the buttons read the latest
+> copy at click time, so a reopened pile view reflects a redraw. Empty piles show
+> a message ("The discard pile is empty."). **UI + an event-payload extension —
+> no snapshot/fuzz change** (the events fire only on the gated/live path; v25/v17
+> hold). **1015 main tests** (+1 R2 Run test covering both emit paths + the
+> recruitment-order contract); typecheck + lint clean. Browser-verified via
+> dev-preview: all three buttons placed, draw-pile modal lists contents in
+> recruitment order (cross-checked vs the run's pile), discard empty at turn 1,
+> and a redraw moved a card into the discard which the reopened modal reflected
+> ("Discard Pile — 1 unit"); no console errors. ⚠️ subjective placement/feel
+> still wants the native browser. **NEXT = R3** (the Uncharted-Ground/Nowhere
+> label unify + cleanup chores). Decision points resolved as: modal (matches R1);
+> contents-only/unordered enforced at the Run via recruitment-order resolution.
 
 **Shape:** the brief — on the pre-turn screen, a button (**bottom-right**) to view
 the **draw pile** and one (**bottom-left**) for the **discard pile**, each listing

@@ -86,7 +86,7 @@ the authority for; layouts stay relationship-free**:
 |---|---|---|
 | **Layout** (`config/layouts.json`, unchanged) | geometry: grid, walls, water, spawns, theme | sectors, encounters — a layout is a *reusable* battlefield |
 | **Sector** (`config/sectors.json`, new) | title, description, length, theme, **layout pool** (each with an optional hop gate) | encounters — a sector is a *container/board pool*, not a fight list |
-| **Encounter** (`config/encounters.json`, new) | name, health pool, waves, **sector list**, **layout list** (optional), hop gate, boss flag | the node map — an encounter is *eligibility + content*, selected onto a node |
+| **Encounter** (`config/encounters.json`, new) | name, health pool, waves, **sector list**, **layout list** (optional), hop gate, **`kind`** (normal/elite/boss), optional `rewards` seam | the node map — an encounter is *eligibility + content*, selected onto a node |
 
 **Why layouts stay dumb:** a layout is geometry reused across many sectors and
 encounters; folding sector/encounter refs *into* the layout would couple a
@@ -106,7 +106,7 @@ it's an authoring convenience over the sector↔layout edge, which the sector ow
 
 **Selection at a battle node** (resolved against the current sector `S`, hop `D`,
 node kind): **encounter-first, then a compatible layout** —
-1. `candidates = encounters.filter(e ⇒ S ∈ e.sectors ∧ D ≥ e.minHop ∧ e.isBoss === isBossNode)`
+1. `candidates = encounters.filter(e ⇒ S ∈ e.sectors ∧ D ≥ e.minHop ∧ e.kind === encounterKindFor(node))` — the map node's kind maps to the eligible encounter kind (battle→`normal`, boss→`boss`; a future elite map-node → `elite`).
 2. pick one (weighted; see V1),
 3. roll the layout from `S.layouts(hop-gated) ∩ (e.layouts ?? all)`.
 
@@ -145,7 +145,7 @@ clustering**, which the user invited. The deltas from the brief's order:
   **authoring and feeling** real wave grammars — so the editor lands with the
   content authoring (V), not the model (U).
 - **Boss encounters (W)** are tiny once U+V exist — they're a regular encounter
-  with the hop gate dropped and the boss flag set — so they're their own small
+  with the hop gate dropped and `kind: 'boss'` — so they're their own small
   phase after selection works.
 - **Per-encounter telemetry + the band re-derivation (X)** close the round,
   because they can only run once real encounters exist and are selectable.
@@ -460,51 +460,84 @@ from count for symmetry.
 
 ### U2 — The wave-list grammar + the sequencer
 
-**Shape:** a pure `waveForTurn(waveList, turnIndex, rng) → spec` (advancing a
-small cursor). The brief's grammar — each entry is one of:
+**Shape:** a pure `waveForTurn(waveList, cursor, encounterState, rng) → { spec,
+cursor' }` (advancing a small cursor). The grammar — each entry is one of:
 - a **wave spec** (U1),
 - a **weighted random-pick list** of `{ spec, weight }` (roll one when reached),
-- a **loop block** `{ body: entry[], repeat: number | 'forever' }`.
+- a **loop block** `{ body: entry[], repeat: number | 'forever' }`,
+- a **stage block** (the boss-phase construct, **user-added this round**): an
+  ordered list of `{ until?: Condition, body: entry[] }` segments. The sequencer
+  runs the current stage's `body` turn-by-turn and **advances to the next stage
+  when that stage's `until` condition trips**; the final stage omits `until` (it
+  runs to encounter end). The **condition vocabulary** is a small keyed predicate
+  set — extensible exactly like `focusTile.ts`, NOT a hard-coded `if` — opening
+  with `{ enemyPoolAtOrBelow: fraction }` (the classic HP-threshold boss phase),
+  with room for `{ turnAtOrAbove: n }` / `{ enemyUnitsAtOrBelow: n }` later.
+  Conditions read the live `encounterState` (pool fraction, turn index) **at the
+  turn boundary**, so a boss flips to its next stage on the turn *after* its pool
+  crosses the threshold — clean and turn-paced, no mid-turn surprises.
 
-Plus the finite-list terminal policy: when the list is finite (no `forever`) and
-the encounter outlasts it, declare whether **the whole list loops** or **the last
-wave repeats**.
+Plus the finite-list terminal policy (for a list/stage with no `forever` that the
+encounter outlasts): declare whether **the whole list loops** or **the last wave
+repeats**.
 
 Model it as a flat recursive resolver over the cursor — *not* a pre-expanded list
-(a `forever` loop can't be expanded). The sequencer must always yield a wave for
-any `turnIndex` (the encounter pool, not the list, decides when the fight ends).
+(a `forever` loop / open-ended final stage can't be expanded). The sequencer must
+always yield a wave for any turn (the encounter pool, not the list, decides when
+the fight ends).
 
 **Cost:** pure, headless. Determinism: the per-pick roll consumes the per-turn
-`battleRng` exactly where `rollEnemyWave` does today, so the draw site is
-unchanged.
+`battleRng` exactly where `rollEnemyWave` does today; the stage conditions read
+deterministic encounter state (pool, turn), so the whole sequence stays
+reproducible from the seed + the persisted cursor.
 
 **Headless tests:** a flat sequence indexes per turn; a `forever` loop never
 exhausts; a finite `repeat: N` runs N times then falls to the terminal policy;
 whole-list-loop vs last-wave-repeat; a weighted pick is deterministic per seed and
-honors weights over many seeds; nesting (a loop containing a pick) resolves.
+honors weights over many seeds; nesting (a loop containing a pick) resolves; **a
+stage block advances when its `until` trips** (an `enemyPoolAtOrBelow` threshold
+flips the stage on the *next* turn boundary, not before); the final stage runs
+open-ended to encounter end; the stage cursor is deterministic and a mid-encounter
+save resumes the same stage.
 
-**Decision points U2:** the cursor representation — recommend a small persisted
-`{ entryPath, repeatCounts }` cursor over the literal grammar (so a mid-encounter
-save resumes the same wave sequence), vs. re-deriving from `turnIndex` (simpler
-but forbids non-deterministic picks resuming identically). **This is a snapshot
-field** — decide before U3's bump.
+**Decision points U2:** the cursor now spans the loop counters **and the active
+stage index** — recommend a small persisted `{ entryPath, repeatCounts, stage }`
+cursor over the literal grammar (so a mid-encounter save resumes the same stage +
+sequence), vs. re-deriving from turn/pool (simpler but forbids non-deterministic
+picks + makes stage-resume fragile). **This is a snapshot field** — decide before
+U3's bump. Also: the **construct name** — "stage" (used here) deliberately dodges
+the F2 *action*-`phase` collision; confirm (alternatives: act / movement /
+segment). And the **initial condition vocabulary** (ship `enemyPoolAtOrBelow`
+only, or also a turn-based `turnAtOrAbove`?).
 
 ### U3 — The Encounter schema + wiring + the reproduction encounter
 
 **Shape:** a `config/encounters.json` + `src/config/encounters.ts` (zod). An
 encounter:
 - `id`, `name` (the brief — **replaces "Foe"** at [HUD.ts:558](src/ui/HUD.ts)),
+  `description?` (flavor / a boss intro line — cheap, optional),
 - `healthPool` (replaces the global `HEALTH.enemyHealthMax` for this encounter),
 - `sectors` (sector-id list — eligibility), `layouts?` (optional layout constraint),
-  `minHop?` (the hop gate), `isBoss` (W),
-- `waves` (the U2 wave list).
+  `minHop?` (the hop gate),
+- `kind: 'normal' | 'elite' | 'boss'` (default `'normal'`) — **an enum, NOT an
+  `isBoss` boolean** (future-proofing: elites are genre-standard and a boolean is a
+  one-way door; the enum reserves `'elite'` so elite *encounters* author cleanly
+  even though no node *selects* one until elite map-nodes land — deferred, see the
+  NOT-doing list). `boss` is the W kind.
+- `rewards?` — **a reserved, unconsumed seam** (the genre's loot/progression loop
+  hangs here: gold / a guaranteed recruit / a relic on a boss kill). Ships
+  **optional + ignored** this round (today's implicit XP-from-kills + node-level
+  recruit offers stand); reserving the slot avoids a schema migration when the
+  reward/economy round arrives.
+- `waves` (the U2 wave list, incl. stage blocks).
 
 Wire it into `Run`: `beginEncounter` selects/holds the encounter (U3 ships a
 **single** reproduction encounter — selection among many is V), seeds
 `enemyHealth` from `encounter.healthPool`, and resets the wave cursor;
 `beginTurn` replaces `rollEnemyWave(battleRng, team, encounterBudget)` with
-`resolveWave(waveForTurn(encounter.waves, turnIndex, battleRng), context,
-battleRng)`. Retire `encounterBudget` (the budget now lives in the wave spec).
+`resolveWave(waveForTurn(encounter.waves, waveCursor, encounterState, battleRng),
+context, battleRng)`, threading + persisting the advancing wave cursor. Retire
+`encounterBudget` (the budget now lives in the wave spec).
 Surface `encounter.name` in the HUD enemy pane.
 
 The **reproduction encounter** ("the random one"): a `forever` loop of a single
@@ -544,14 +577,15 @@ id is already persisted from U3).
 
 ### V1 — Encounter selection at a battle node
 
-**Shape:** `selectEncounter(catalog, { sectorId, hop, isBoss }, rng)` per *The
+**Shape:** `selectEncounter(catalog, { sectorId, hop, nodeKind }, rng)` per *The
 data model*. **The resolution ORDER is a deliberately pluggable strategy**
 (user call — we don't yet know which feels better, and it should A/B with a config
 flip): build it as **one keyed resolver**, config-selected, exactly like O3's
 `focusTileResolution` switch — **NOT two hard-coded forks**. The two strategies:
 - **`encounterFirst`** (the shipped default, user-chosen): filter by
-  `sector ∈ e.sectors ∧ hop ≥ e.minHop ∧ e.isBoss === kind`, pick one, then
-  roll the layout from `sector.layouts(hop-gated) ∩ (e.layouts ?? all)`. The
+  `sector ∈ e.sectors ∧ hop ≥ e.minHop ∧ e.kind === encounterKindFor(nodeKind)`,
+  pick one, then roll the layout from
+  `sector.layouts(hop-gated) ∩ (e.layouts ?? all)`. The
   encounter is the headline choice; the layout is guaranteed-compatible dressing.
 - **`layoutFirst`** (built switchable, for the playtest A/B): roll the layout from
   `sector.layouts(hop-gated)` first, then pick an encounter additionally
@@ -573,7 +607,7 @@ indirection (cheap — mirrors `focusTile.ts`). Re-baseline the fuzz (more than 
 encounter now appears) — measured at X. The intersection-non-empty guard is the
 new validation surface.
 
-**Headless tests:** filtering honors sector/hop/boss; **both** resolution
+**Headless tests:** filtering honors sector/hop/kind; **both** resolution
 strategies pick a valid (encounter, layout) pair from the same fixtures; an empty
 candidate set throws loudly (caught by the guard, not at runtime); the layout
 intersection is respected under each strategy; uniform selection is deterministic
@@ -611,16 +645,19 @@ the knobs that move budgets)?
 
 **Shape:** the brief — "identical to regular encounters for now, but for the
 terminal boss nodes; drop the hop gate." With U+V in place this is small:
-encounters carry `isBoss`, selection already filters on node kind (V1), so W is
-**authoring a boss encounter per sector** + confirming the boss node selects from the
-`isBoss` pool (and that `minHop` is ignored/omitted for bosses). "The Start" gets
-a boss encounter; the terminal node fights it.
+encounters carry `kind` (U3), selection already maps node→encounter kind (V1), so
+W is **authoring a `kind: 'boss'` encounter per sector** + confirming the boss node
+selects from the boss pool (and that `minHop` is ignored/omitted for bosses). "The
+Start" gets a boss encounter; the terminal node fights it. *(The `'elite'` kind is
+reserved in the U3 enum but unreachable this round — no map-node selects it until
+elite nodes land; deferred, see the NOT-doing list.)*
 
 **Cost:** mostly content + a small selection-filter confirmation. No new schema
-(the `isBoss` flag shipped in U3). Re-baseline absorbs into X.
+(the `kind` enum shipped in U3). Re-baseline absorbs into X.
 
-**Headless tests:** a boss node selects only `isBoss` encounters; a regular node
-never selects a boss encounter; a boss encounter ignores `minHop`; determinism.
+**Headless tests:** a boss node selects only `kind: 'boss'` encounters; a regular
+node never selects a boss encounter; a boss encounter ignores `minHop`;
+determinism.
 
 **Decision points W:** does every sector **require** ≥ 1 boss encounter (recommend
 yes — a boot guard, since the terminal always fights)? Is the boss's
@@ -720,3 +757,20 @@ vs. defer; the hop-difficulty curve shape.
 - **Save/load UI, replay UI, touch controls, in-game keybinding rebind** — all
   still future niceties.
 - **Object-pooling the sim's hot allocators** ([TODO.md](TODO.md)) — parked.
+
+**Seamed this round but deliberately NOT built (the future-proofing pass):**
+- **Elite map-nodes.** The encounter `kind` enum reserves `'elite'` (U3), so elite
+  *encounters* author cleanly now — but the node map still generates only
+  battle/rest/boss, so nothing *selects* one yet. Elite *nodes* (a `NodeMap` +
+  selection change, à la the genre's optional harder fights) are a future round.
+- **Encounter rewards / a loot economy.** U3 ships the optional `rewards?` field as
+  a reserved, ignored seam; the reward-granting + the currency/shop that consume it
+  stay deferred (above).
+- **Player-chosen sector branching.** T2 picks a **random** successor sector; the
+  genre norm is player-navigated region choice. The sector-DAG already supports it
+  — the auto-pick is the single swap point — but the choice UI is deferred.
+- **Encounter `tags`, once-per-run, and prerequisite gating.** Flexible selection
+  classifiers (themed picks, anti-repeat "no two ambushes back-to-back", unlockable
+  minibosses) layer cleanly on V1's filter; deferred.
+- **Ascension-style stacking difficulty tiers.** V1's per-encounter weighting seam
+  + Q1's per-speed-enable flags are partial groundwork; the system itself is future.

@@ -1472,10 +1472,10 @@ body {
   right: 16px;
   z-index: 20;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 18px; /* fix(R1): 1.5× the original 12px — user call */
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 8px 16px;
+  padding: 12px 24px; /* scaled 1.5× with the font so the button isn't cramped */
   border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
   background: #000;
   color: #ffb000; /* TERMINAL_AMBER */

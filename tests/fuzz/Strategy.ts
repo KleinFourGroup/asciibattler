@@ -4,7 +4,7 @@
  *   - which recruit to take from the post-victory offer.
  *
  * Both methods receive a read-only view of the live `Run` so a strategy
- * can inspect team composition, current floor, etc. They must be pure
+ * can inspect team composition, current hop, etc. They must be pure
  * w.r.t. the supplied RNG — that's the determinism contract: same seed
  * + same strategy → same decisions every run. Strategies don't call
  * `run.dispatch`; the harness owns the channel and consumes returned

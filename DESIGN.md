@@ -72,7 +72,7 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
 
 ## Run structure
 
-**Node map:** A directed acyclic graph generated from the seed. Roughly 7–10 nodes per run, arranged in layered "floors" with branching paths between them. Player starts at the single root, advances one layer at a time, and must reach the single terminal node to complete the run.
+**Node map:** A directed acyclic graph generated from the seed. Roughly 7–10 nodes per run, arranged in layered hops (node rows) with branching paths between them. Player starts at the single root, advances one hop at a time, and must reach the single terminal node to complete the run.
 
 For MVP, *every node is a battle node*. Rest, shop, elite, and event nodes are deferred.
 
@@ -136,7 +136,7 @@ Captured here so we can confidently say "not now" during the jam without losing 
 - Shop and economy (gold, buying units, rerolls)
 - Unit synergies and traits
 - Rest, shop, elite, and event node types
-- Boss encounters at floor ends
+- Boss encounters at hop ends
 - Larger units (2×2 or 2×1 footprints)
 - High-level player commands during battle (focus-fire, avoid area, etc.)
 - Audio and SFX

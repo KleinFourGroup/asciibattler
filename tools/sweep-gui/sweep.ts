@@ -54,7 +54,7 @@ const presetSelect = byId<HTMLSelectElement>('preset');
 const vectorsInput = byId<HTMLInputElement>('vectors');
 const seedsInput = byId<HTMLInputElement>('seeds');
 
-const floorsInput = byId<HTMLInputElement>('floors');
+const hopsInput = byId<HTMLInputElement>('hops');
 const rosterInput = byId<HTMLInputElement>('roster');
 const samplerSeedInput = byId<HTMLInputElement>('sampler-seed');
 
@@ -159,7 +159,7 @@ function recompute(): void {
     preset: presetSelect.value,
     vectors: intOrUndef(vectorsInput),
     seeds: intOrUndef(seedsInput),
-    floors: intOrUndef(floorsInput),
+    hops: intOrUndef(hopsInput),
     roster: strOrUndef(rosterInput.value),
     samplerSeed: intOrUndef(samplerSeedInput),
   });
@@ -215,7 +215,7 @@ for (const el of [
   jobsInput,
   vectorsInput,
   seedsInput,
-  floorsInput,
+  hopsInput,
   rosterInput,
   samplerSeedInput,
 ]) {

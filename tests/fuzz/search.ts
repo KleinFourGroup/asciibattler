@@ -89,18 +89,18 @@ export interface SearchPreset {
   readonly vectors: number;
   readonly trainSeeds: number;
   readonly testSeeds: number;
-  /** Short-run floor count for cheap evals; omit for full-length runs. */
-  readonly floorCount?: number;
+  /** Short-run hop count for cheap evals; omit for full-length runs. */
+  readonly hopCount?: number;
 }
 
 export const PRESETS: Record<'quick' | 'medium' | 'heavy' | 'overnight', SearchPreset> = {
   // "Did my change move balance?" — well under a minute (short runs).
-  quick: { vectors: 50, trainSeeds: 8, testSeeds: 4, floorCount: 4 },
+  quick: { vectors: 50, trainSeeds: 8, testSeeds: 4, hopCount: 4 },
   // H7c stage 2 — a narrowed grid homing to the target band. Still short-ish
-  // runs (6 floors) but a wider vector pool + more train seeds than quick, so a
+  // runs (6 hops) but a wider vector pool + more train seeds than quick, so a
   // single-config best-achievable read is tighter (~1–2 min/point).
-  medium: { vectors: 60, trainSeeds: 16, testSeeds: 4, floorCount: 6 },
-  // H7c stage 3 — the few finalists, scored at FULL run length (floorCount
+  medium: { vectors: 60, trainSeeds: 16, testSeeds: 4, hopCount: 6 },
+  // H7c stage 3 — the few finalists, scored at FULL run length (hopCount
   // omitted) so the short-run inflation quick/medium carry is gone. The
   // expensive, decision-grade read (~5–10 min/point single-core).
   heavy: { vectors: 120, trainSeeds: 30, testSeeds: 10 },
@@ -110,7 +110,7 @@ export const PRESETS: Record<'quick' | 'medium' | 'heavy' | 'overnight', SearchP
 };
 
 export function presetHarnessOptions(preset: SearchPreset): HarnessOptions {
-  return preset.floorCount !== undefined ? { runConfig: { floorCount: preset.floorCount } } : {};
+  return preset.hopCount !== undefined ? { runConfig: { hopCount: preset.hopCount } } : {};
 }
 
 // ---- the search -----------------------------------------------------------

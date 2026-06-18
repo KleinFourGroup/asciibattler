@@ -66,7 +66,7 @@ export const randomNode: NodePolicy = (frontier, _run, rng) => rng.pick(frontier
 /**
  * Prefer frontier nodes whose `MapNode.kind` is `kind`; uniform among them if
  * any exist, else uniform over the whole frontier (so the path axis only bites
- * when the run actually offers a choice — most floors are all-battle). The
+ * when the run actually offers a choice — most hops are all-battle). The
  * `boss`/terminal node is forced, so only `battle`/`rest` are useful targets.
  */
 export function maximizeKind(kind: NodeKind): NodePolicy {

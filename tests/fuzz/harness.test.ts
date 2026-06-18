@@ -18,10 +18,10 @@ import {
   renderSummaryCsv,
   renderFailureTrace,
   failureFilename,
-  perFloorStats,
-  renderPerFloorAnalysis,
+  perHopStats,
+  renderPerHopAnalysis,
   perLayoutStats,
-  perLayoutFloorStats,
+  perLayoutHopStats,
   renderLayoutAnalysis,
 } from './reporters';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
@@ -118,7 +118,7 @@ describe('fuzz reporters', () => {
     }
   });
 
-  it('aggregates win rate and floor stats', () => {
+  it('aggregates win rate and hop stats', () => {
     const results = [
       runOne(1, makeStrategy('pure-random')!),
       runOne(2, makeStrategy('pure-random')!),
@@ -128,7 +128,7 @@ describe('fuzz reporters', () => {
     expect(stats.totalRuns).toBe(3);
     expect(stats.winRate).toBeGreaterThanOrEqual(0);
     expect(stats.winRate).toBeLessThanOrEqual(1);
-    expect(stats.averageFloorReached).toBeGreaterThanOrEqual(0);
+    expect(stats.averageHopReached).toBeGreaterThanOrEqual(0);
     expect(Object.keys(stats.byOutcome).length).toBeGreaterThan(0);
     // hangsByLayout is always present; empty when no hangs occurred.
     expect(stats.hangsByLayout).toBeDefined();
@@ -137,8 +137,8 @@ describe('fuzz reporters', () => {
   });
 
   it('every battle carries player/enemy level arrays matching the team sizes', () => {
-    // G4 per-floor telemetry: the level arrays must be present and aligned
-    // with the recorded team sizes, or the per-floor analysis silently lies.
+    // G4 per-hop telemetry: the level arrays must be present and aligned
+    // with the recorded team sizes, or the per-hop analysis silently lies.
     const result = runOne(3, makeStrategy('greedy')!);
     expect(result.battles.length).toBeGreaterThan(0);
     for (const b of result.battles) {
@@ -149,17 +149,17 @@ describe('fuzz reporters', () => {
     }
   });
 
-  it('per-floor stats aggregate by floor with sane bounds', () => {
+  it('per-hop stats aggregate by hop with sane bounds', () => {
     const results = [
       runOne(1, makeStrategy('pure-random')!),
       runOne(2, makeStrategy('greedy')!),
       runOne(3, makeStrategy('greedy')!),
     ];
-    const stats = perFloorStats(results);
+    const stats = perHopStats(results);
     expect(stats.length).toBeGreaterThan(0);
-    // Floors are sorted ascending; battle counts sum to all battles played.
-    const floors = stats.map((s) => s.floor);
-    expect([...floors].sort((a, b) => a - b)).toEqual(floors);
+    // Hops are sorted ascending; battle counts sum to all battles played.
+    const hops = stats.map((s) => s.hop);
+    expect([...hops].sort((a, b) => a - b)).toEqual(hops);
     const totalBattles = results.reduce((acc, r) => acc + r.battles.length, 0);
     expect(stats.reduce((acc, s) => acc + s.battles, 0)).toBe(totalBattles);
     for (const s of stats) {
@@ -169,16 +169,16 @@ describe('fuzz reporters', () => {
       expect(s.enemySize).toBeGreaterThan(0);
       expect(s.playerLevelSpread).toBeGreaterThanOrEqual(0);
     }
-    expect(renderPerFloorAnalysis(results)).toContain('Per-floor team analysis');
+    expect(renderPerHopAnalysis(results)).toContain('Per-hop team analysis');
   });
 
-  it('per-floor run-death stats are run-level, not per-wave (the pool absorbs lost waves)', () => {
+  it('per-hop run-death stats are run-level, not per-wave (the pool absorbs lost waves)', () => {
     // Config-free fixtures pin the RUN-level mechanic across the multi-wave pool
-    // system. Run A: 3 waves on floor 1 (loses 2 of them — pool absorbs it),
-    // survives to floor 2, completes. Run B: dies on floor 1. So floor 1 has 2
+    // system. Run A: 3 waves on hop 1 (loses 2 of them — pool absorbs it),
+    // survives to hop 2, completes. Run B: dies on hop 1. So hop 1 has 2
     // runs reached, 1 died (B) — NOT 3 (the lost waves don't count as run-deaths).
-    const battle = (floor: number, winner: 'player' | 'enemy', playerDeaths: number): BattleResult => ({
-      floor,
+    const battle = (hop: number, winner: 'player' | 'enemy', playerDeaths: number): BattleResult => ({
+      hop,
       worldSeed: 0,
       layoutId: null,
       winner,
@@ -193,49 +193,49 @@ describe('fuzz reporters', () => {
     const run = (
       battles: BattleResult[],
       outcome: 'complete' | 'defeat',
-      finalFloorReached: number,
+      finalHopReached: number,
     ): RunResult => ({
       seed: 0,
       strategyName: 'synthetic',
       outcome,
-      finalFloorReached,
+      finalHopReached,
       totalTicks: 0,
       finalTeamSize: 5,
       battles,
       recruits: [],
     });
-    // Run A: 3 floor-1 waves (2 lost but absorbed), then floor 2, completes.
+    // Run A: 3 hop-1 waves (2 lost but absorbed), then hop 2, completes.
     const runA = run(
       [battle(1, 'enemy', 4), battle(1, 'enemy', 3), battle(1, 'player', 1), battle(2, 'player', 0)],
       'complete',
       2,
     );
-    // Run B: dies on floor 1.
+    // Run B: dies on hop 1.
     const runB = run([battle(1, 'enemy', 5)], 'defeat', 1);
 
-    const stats = perFloorStats([runA, runB]);
-    const f1 = stats.find((s) => s.floor === 1)!;
-    const f2 = stats.find((s) => s.floor === 2)!;
-    expect(f1.runsReached).toBe(2); // both runs reached floor 1
+    const stats = perHopStats([runA, runB]);
+    const f1 = stats.find((s) => s.hop === 1)!;
+    const f2 = stats.find((s) => s.hop === 2)!;
+    expect(f1.runsReached).toBe(2); // both runs reached hop 1
     expect(f1.runsDied).toBe(1); // only run B ENDED here (lost waves ≠ run-death)
     expect(f1.deathRate).toBeCloseTo(0.5);
-    expect(f1.battles).toBe(4); // 4 total waves on floor 1 across the two runs
+    expect(f1.battles).toBe(4); // 4 total waves on hop 1 across the two runs
     expect(f1.avgPlayerDeaths).toBeCloseTo((4 + 3 + 1 + 5) / 4); // per-wave attrition
-    expect(f2.runsReached).toBe(1); // only run A reached floor 2
+    expect(f2.runsReached).toBe(1); // only run A reached hop 2
     expect(f2.runsDied).toBe(0); // run A completed, didn't die
-    // Σ runsDied across floors == total non-completing runs.
+    // Σ runsDied across hops == total non-completing runs.
     expect(stats.reduce((acc, s) => acc + s.runsDied, 0)).toBe(1);
   });
 
   it('per-layout stats group by layout with wave win rate, deaths, and sizes', () => {
     const b = (
       layoutId: string | null,
-      floor: number,
+      hop: number,
       winner: 'player' | 'enemy',
       playerDeaths: number,
       enemyTeamSize: number,
     ): BattleResult => ({
-      floor,
+      hop,
       worldSeed: 0,
       layoutId,
       winner,
@@ -252,7 +252,7 @@ describe('fuzz reporters', () => {
         seed: 0,
         strategyName: 'synthetic',
         outcome: 'complete',
-        finalFloorReached: 2,
+        finalHopReached: 2,
         totalTicks: 0,
         finalTeamSize: 5,
         recruits: [],
@@ -288,12 +288,12 @@ describe('fuzz reporters', () => {
     // Total waves across layouts == total battles.
     expect(stats.reduce((a, s) => a + s.battles, 0)).toBe(9);
 
-    // layout × floor splits junctionAmbush into floor 1 and floor 2.
-    const lf = perLayoutFloorStats(results);
-    expect(lf.filter((s) => s.layout === 'junctionAmbush').map((s) => s.floor)).toEqual([1, 2]);
-    const ja1 = lf.find((s) => s.layout === 'junctionAmbush' && s.floor === 1)!;
+    // layout × hop splits junctionAmbush into hop 1 and hop 2.
+    const lf = perLayoutHopStats(results);
+    expect(lf.filter((s) => s.layout === 'junctionAmbush').map((s) => s.hop)).toEqual([1, 2]);
+    const ja1 = lf.find((s) => s.layout === 'junctionAmbush' && s.hop === 1)!;
     expect(ja1.battles).toBe(2);
-    expect(ja1.playerWinRate).toBeCloseTo(0); // both floor-1 ambush waves lost
+    expect(ja1.playerWinRate).toBeCloseTo(0); // both hop-1 ambush waves lost
 
     expect(renderLayoutAnalysis(results)).toContain('Per-layout difficulty');
   });

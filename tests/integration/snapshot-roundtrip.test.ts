@@ -662,6 +662,27 @@ describe('A2 round-trip: Run', () => {
     expect(b.drawPile).toEqual(a.drawPile);
     expect(b.discardPile).toEqual(a.discardPile);
   });
+
+  it('S1: the persisted node map carries `hop` (not `floor`); a pre-rename (v17) save is rejected', () => {
+    // S1 renamed the node-map progression concept MapNode.floor → MapNode.hop
+    // (and bumped RUN_SCHEMA_VERSION 17→18). The nodeMap round-trips by shape,
+    // so a pre-rename save carries `floor`-keyed nodes; the version check must
+    // reject it outright rather than silently deserialize a hop-less node.
+    const bus = new EventBus<GameEvents>();
+    const run = new Run(2026, bus);
+
+    const wire = JSON.parse(JSON.stringify(run.toJSON()));
+    expect(wire.nodeMap.nodes[0]).toHaveProperty('hop');
+    expect(wire.nodeMap.nodes[0]).not.toHaveProperty('floor');
+
+    const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.currentHop).toBe(run.currentHop);
+
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
 });
 
 /** An 8-card roster (> handSize) for the H5 deck round-trip tests. */

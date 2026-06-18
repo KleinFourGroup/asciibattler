@@ -15,7 +15,7 @@ import { makeStrategy } from './strategies/registry';
 import type { EmpowerPolicy } from './empowerPolicy';
 
 const strat = () => makeStrategy('greedy')!;
-const SHORT = { runConfig: { floorCount: 4 } } as const;
+const SHORT = { runConfig: { hopCount: 4 } } as const;
 const CARRY: EmpowerPolicy = { kind: 'level', dir: 'hi' };
 
 describe('harness empower injection (K4c3)', () => {

@@ -34,11 +34,11 @@ export interface RunConfig {
    */
   readonly seed?: number;
   /**
-   * Total floors including root + terminal (default
-   * `config/nodemap.json#floorCount` = 11). A *playable* run needs >= 2 (root
-   * + a terminal boss fight); `floorCount: 2` is the minimal one-battle run.
+   * Total hops including root + terminal (default
+   * `config/nodemap.json#hopCount` = 11). A *playable* run needs >= 2 (root
+   * + a terminal boss fight); `hopCount: 2` is the minimal one-battle run.
    */
-  readonly floorCount?: number;
+  readonly hopCount?: number;
   /**
    * Replace the rolled starting roster with these archetypes, each at a chosen
    * level (dev / playtest). Supersedes the old `?roster=` override. URL form:
@@ -50,8 +50,8 @@ export interface RunConfig {
    *  freshly-rolled PROCEDURAL map. URL form: `layout=river` or `layout=procedural`. */
   readonly forcedLayoutId?: string;
   /**
-   * Override the middle-floor max width (default
-   * `config/nodemap.json#middleWidthMax`). Clamped up to the floor's minimum
+   * Override the middle-hop max width (default
+   * `config/nodemap.json#middleWidthMax`). Clamped up to the hop's minimum
    * width by the generator, so a too-small value just pins to the minimum.
    */
   readonly mapMaxWidth?: number;
@@ -74,7 +74,7 @@ export interface RunConfig {
  */
 export const RUN_CONFIG_PARAMS = {
   seed: 'seed',
-  floors: 'floors',
+  hops: 'hops',
   roster: 'roster',
   layout: 'layout',
   width: 'width',
@@ -90,7 +90,7 @@ function parseIntStrict(raw: string | null): number | undefined {
   return Number.isInteger(n) ? n : undefined;
 }
 
-/** A strictly-positive integer (floors / widths). Undefined if absent / invalid. */
+/** A strictly-positive integer (hops / widths). Undefined if absent / invalid. */
 function parsePositiveInt(raw: string | null): number | undefined {
   const n = parseIntStrict(raw);
   return n !== undefined && n > 0 ? n : undefined;
@@ -151,8 +151,8 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   const config: MutableRunConfig = {};
   const seed = parseIntStrict(params.get(RUN_CONFIG_PARAMS.seed));
   if (seed !== undefined) config.seed = seed;
-  const floorCount = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.floors));
-  if (floorCount !== undefined) config.floorCount = floorCount;
+  const hopCount = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.hops));
+  if (hopCount !== undefined) config.hopCount = hopCount;
   const startingRoster = parseRoster(params.get(RUN_CONFIG_PARAMS.roster));
   if (startingRoster !== undefined) config.startingRoster = startingRoster;
   const forcedLayoutId = parseLayout(params.get(RUN_CONFIG_PARAMS.layout));
@@ -182,8 +182,8 @@ export function parseRunConfigFromURL(search?: string): RunConfig {
 export function runConfigToQueryString(config: RunConfig): string {
   const params = new URLSearchParams();
   if (config.seed !== undefined) params.set(RUN_CONFIG_PARAMS.seed, String(config.seed));
-  if (config.floorCount !== undefined) {
-    params.set(RUN_CONFIG_PARAMS.floors, String(config.floorCount));
+  if (config.hopCount !== undefined) {
+    params.set(RUN_CONFIG_PARAMS.hops, String(config.hopCount));
   }
   if (config.startingRoster && config.startingRoster.length > 0) {
     params.set(

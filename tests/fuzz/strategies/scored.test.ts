@@ -75,7 +75,7 @@ describe('selectByScore (the inert selection seam)', () => {
 // ---- path policy (full-path backward DP) ----------------------------------
 
 describe('scored path policy — full-path backward DP', () => {
-  // Two root→boss paths, each one node per floor. Node 1 is a battle (good
+  // Two root→boss paths, each one node per hop. Node 1 is a battle (good
   // immediate weight) but its branch then hits a rest; node 2 is a rest (worse
   // immediate) but its branch then hits TWO battles. With battle>rest the
   // full-path optimum is node 2's branch — a greedy "best immediate kind" pick
@@ -83,14 +83,14 @@ describe('scored path policy — full-path backward DP', () => {
   //   0 ┬ 1(battle) ─ 3(rest)   ─ 5(rest)   ┐
   //     └ 2(rest)   ─ 4(battle) ─ 6(battle) ┴ 7(boss)
   const nodes: MapNode[] = [
-    { id: 0, floor: 0, kind: 'battle' },
-    { id: 1, floor: 1, kind: 'battle' },
-    { id: 2, floor: 1, kind: 'rest' },
-    { id: 3, floor: 2, kind: 'rest' },
-    { id: 4, floor: 2, kind: 'battle' },
-    { id: 5, floor: 3, kind: 'rest' },
-    { id: 6, floor: 3, kind: 'battle' },
-    { id: 7, floor: 4, kind: 'boss' },
+    { id: 0, hop: 0, kind: 'battle' },
+    { id: 1, hop: 1, kind: 'battle' },
+    { id: 2, hop: 1, kind: 'rest' },
+    { id: 3, hop: 2, kind: 'rest' },
+    { id: 4, hop: 2, kind: 'battle' },
+    { id: 5, hop: 3, kind: 'rest' },
+    { id: 6, hop: 3, kind: 'battle' },
+    { id: 7, hop: 4, kind: 'boss' },
   ];
   const edges: MapEdge[] = [
     { from: 0, to: 1 },
@@ -131,8 +131,8 @@ describe('scored recruit policy', () => {
     // path side: lowest node id on an all-zero map, regardless of frontier order
     const pathRun = fakeRun({
       nodes: [
-        { id: 1, floor: 1, kind: 'battle' },
-        { id: 2, floor: 1, kind: 'battle' },
+        { id: 1, hop: 1, kind: 'battle' },
+        { id: 2, hop: 1, kind: 'battle' },
       ],
     });
     expect(s.pickNextNode([2, 1], pathRun, new RNG(9))).toBe(1);

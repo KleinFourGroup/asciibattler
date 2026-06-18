@@ -109,8 +109,8 @@
         <section class="card">
           <h2>Run options</h2>
           <label class="inline">
-            <span class="lbl">Floors</span>
-            <input id="floors" type="number" min="2" step="1" placeholder="tier / preset default" />
+            <span class="lbl">Hops</span>
+            <input id="hops" type="number" min="2" step="1" placeholder="tier / preset default" />
           </label>
           <label class="inline">
             <span class="lbl">Roster</span>
@@ -126,7 +126,7 @@
             <input id="jobs" type="number" min="1" step="1" placeholder="1 (single process)" />
           </label>
           <p class="hint">
-            <code>--floors</code> overrides the tier/preset run length (cheap
+            <code>--hops</code> overrides the tier/preset run length (cheap
             full-length reads). <code>--roster</code> forces the starting team
             (evaluate an archetype the search won't recruit).
             <code>--jobs &gt; 1</code> fans the search across child processes

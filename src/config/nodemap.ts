@@ -1,12 +1,12 @@
 /**
- * NodeMap generation parameters. Floor count, per-floor width bands,
+ * NodeMap generation parameters. Hop count, per-hop width bands,
  * total-node target, and out-degree cap drive the DAG shape produced by
  * `src/run/NodeMap.ts`. Source of truth at `config/nodemap.json`.
  *
- * G3 — node-kind scatter: `restChance` is the per-eligible-floor probability
- * of hosting a rest node; `restMinSpacing` is the minimum floor gap between
- * two rests (>= 2 = never on adjacent floors). Eligible floors are the middle
- * band only (never the first battle floor or the boss). The terminal is always
+ * G3 — node-kind scatter: `restChance` is the per-eligible-hop probability
+ * of hosting a rest node; `restMinSpacing` is the minimum hop gap between
+ * two rests (>= 2 = never on adjacent hops). Eligible hops are the middle
+ * band only (never the first battle hop or the boss). The terminal is always
  * the boss; these knobs only govern rest placement.
  */
 
@@ -15,7 +15,7 @@ import nodeMapJson from '../../config/nodemap.json';
 
 const NodeMapSchema = z
   .object({
-    floorCount: z.number().int().positive(),
+    hopCount: z.number().int().positive(),
     middleWidthMin: z.number().int().positive(),
     middleWidthMax: z.number().int().positive(),
     targetTotalMax: z.number().int().positive(),

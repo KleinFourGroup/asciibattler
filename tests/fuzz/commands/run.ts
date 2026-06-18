@@ -1,7 +1,7 @@
 /**
  * The default fuzz mode (no mode flag): run the selected strategies across a
  * seed range, print the per-strategy aggregate summary, and write summary.csv +
- * a markdown failure trace per non-complete run (plus the opt-in `--per-floor`
+ * a markdown failure trace per non-complete run (plus the opt-in `--per-hop`
  * / `--per-layout` analyses).
  */
 
@@ -23,15 +23,15 @@ import {
   renderSummaryCsv,
   renderFailureTrace,
   failureFilename,
-  renderPerFloorAnalysis,
+  renderPerHopAnalysis,
   renderDaemonAnalysis,
-  perFloorStats,
+  perHopStats,
   perDaemonStats,
   perLayoutStats,
-  perLayoutFloorStats,
+  perLayoutHopStats,
   renderLayoutAnalysis,
   renderLayoutCsv,
-  renderLayoutFloorCsv,
+  renderLayoutHopCsv,
 } from '../reporters';
 import { daemonLabel } from '../daemonSelection';
 import {
@@ -52,7 +52,7 @@ export type RunModeArgs = Pick<
   | 'seed'
   | 'strategy'
   | 'outDir'
-  | 'perFloor'
+  | 'perHop'
   | 'perLayout'
   | 'layout'
   | 'objective'
@@ -67,7 +67,7 @@ export function runRunCli(args: RunModeArgs): void {
   const seeds = args.seed !== undefined ? [args.seed] : range(1, args.count);
 
   // --layout=<id> forces a single hand-authored layout on EVERY battle — a clean
-  // full-sample isolate for the per-layout / per-floor difficulty read (natural
+  // full-sample isolate for the per-layout / per-hop difficulty read (natural
   // runs only hit a given layout ~12% of the time). `--layout=procedural` forces
   // a fresh PROCEDURAL map every battle (the M6 isolate). Validated against the
   // library + the sentinel.
@@ -116,15 +116,15 @@ export function runRunCli(args: RunModeArgs): void {
 
   writeFileSync(join(args.outDir, 'summary.csv'), renderSummaryCsv(allResults));
 
-  if (args.perFloor) {
-    process.stdout.write('\n' + renderPerFloorAnalysis(allResults));
-    const stats = perFloorStats(allResults);
+  if (args.perHop) {
+    process.stdout.write('\n' + renderPerHopAnalysis(allResults));
+    const stats = perHopStats(allResults);
     const header =
-      'floor,runsReached,runsDied,deathRate,battles,avgPlayerDeaths,playerSize,playerAvgLevel,playerMedianLevel,playerLevelSpread,' +
+      'hop,runsReached,runsDied,deathRate,battles,avgPlayerDeaths,playerSize,playerAvgLevel,playerMedianLevel,playerLevelSpread,' +
       'enemySize,enemyAvgLevel,enemyMedianLevel,enemyLevelSpread';
     const rows = stats.map((s) =>
       [
-        s.floor,
+        s.hop,
         s.runsReached,
         s.runsDied,
         s.deathRate.toFixed(4),
@@ -140,15 +140,15 @@ export function runRunCli(args: RunModeArgs): void {
         s.enemyLevelSpread.toFixed(3),
       ].join(','),
     );
-    writeFileSync(join(args.outDir, 'per-floor.csv'), [header, ...rows].join('\n') + '\n');
+    writeFileSync(join(args.outDir, 'per-hop.csv'), [header, ...rows].join('\n') + '\n');
   }
 
   if (args.perLayout) {
     process.stdout.write('\n' + renderLayoutAnalysis(allResults));
     writeFileSync(join(args.outDir, 'per-layout.csv'), renderLayoutCsv(perLayoutStats(allResults)));
     writeFileSync(
-      join(args.outDir, 'per-layout-floor.csv'),
-      renderLayoutFloorCsv(perLayoutFloorStats(allResults)),
+      join(args.outDir, 'per-layout-hop.csv'),
+      renderLayoutHopCsv(perLayoutHopStats(allResults)),
     );
   }
 
@@ -167,7 +167,7 @@ export function runRunCli(args: RunModeArgs): void {
     process.stdout.write(`### ${strategy.name}\n`);
     process.stdout.write(`  runs:       ${stats.totalRuns}\n`);
     process.stdout.write(`  win rate:   ${(stats.winRate * 100).toFixed(1)}%\n`);
-    process.stdout.write(`  avg floor:  ${stats.averageFloorReached.toFixed(2)}\n`);
+    process.stdout.write(`  avg hop:    ${stats.averageHopReached.toFixed(2)}\n`);
     process.stdout.write(`  avg ticks:  ${stats.averageTicks.toFixed(0)}\n`);
     process.stdout.write(`  hangs:      ${stats.hangs}\n`);
     if (stats.hangs > 0) {

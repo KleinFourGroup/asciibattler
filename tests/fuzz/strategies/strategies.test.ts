@@ -70,9 +70,9 @@ describe('node policies', () => {
 
   it('maximizeKind enters a matching-kind node when one is on the frontier', () => {
     const nodes: MapNode[] = [
-      { id: 1, floor: 2, kind: 'battle' },
-      { id: 2, floor: 2, kind: 'rest' },
-      { id: 3, floor: 2, kind: 'battle' },
+      { id: 1, hop: 2, kind: 'battle' },
+      { id: 2, hop: 2, kind: 'rest' },
+      { id: 3, hop: 2, kind: 'battle' },
     ];
     const run = fakeRun({ nodes });
     const restPicker = maximizeKind('rest');
@@ -84,8 +84,8 @@ describe('node policies', () => {
 
   it('maximizeKind falls back to a uniform frontier pick when no node matches', () => {
     const nodes: MapNode[] = [
-      { id: 1, floor: 2, kind: 'battle' },
-      { id: 2, floor: 2, kind: 'battle' },
+      { id: 1, hop: 2, kind: 'battle' },
+      { id: 2, hop: 2, kind: 'battle' },
     ];
     const run = fakeRun({ nodes });
     const restPicker = maximizeKind('rest');

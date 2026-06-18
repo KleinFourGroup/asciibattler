@@ -32,7 +32,7 @@ import type { DaemonSelection } from './daemonSelection';
 
 /** The job handed to one `--eval-shard` child (written as JSON to a temp file).
  *  `knobs` are the grid point's config overrides (empty `{}` means no override);
- *  `floorCount` is the already-resolved run length (tier default or `--floors`).
+ *  `hopCount` is the already-resolved run length (tier default or `--hops`).
  *  `objective` (J4) / `redraw` (K3c3) / `empower` (K4c3) / `daemon` (L1c3) are
  *  the fixed objective proclivity / redraw policy / empower policy / daemon
  *  arm the child's runs drive, or undefined for none — plain JSON objects, so
@@ -41,7 +41,7 @@ export interface ShardJob {
   readonly knobs: Record<string, number>;
   readonly vectors: readonly ScoredWeights[];
   readonly seeds: readonly number[];
-  readonly floorCount?: number;
+  readonly hopCount?: number;
   readonly roster?: readonly RosterEntry[];
   /** M6/N2 — the forced layout id / `procedural` sentinel the child's runs use
    *  (plain string, round-trips the job file), or undefined for the normal roll. */
@@ -170,7 +170,7 @@ export interface ShardedEvalParams {
   readonly vectors: readonly ScoredWeights[];
   readonly seeds: readonly number[];
   readonly knobs: Record<string, number>;
-  readonly floorCount?: number;
+  readonly hopCount?: number;
   readonly roster?: readonly RosterEntry[];
   /** M6/N2 — the forced layout id / `procedural` sentinel (or none). */
   readonly forcedLayoutId?: string;
@@ -197,7 +197,7 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
     vectors,
     seeds,
     knobs,
-    floorCount,
+    hopCount,
     roster,
     forcedLayoutId,
     objective,
@@ -213,7 +213,7 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
     const base: Omit<ShardJob, 'vectors'> = {
       knobs,
       seeds,
-      floorCount,
+      hopCount,
       roster,
       forcedLayoutId,
       objective,

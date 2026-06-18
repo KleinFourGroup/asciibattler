@@ -5,9 +5,9 @@ import { generate, dump, type NodeMap, type MapEdge } from './NodeMap';
 
 // Balance-proof: derive every bound from the config the generator actually
 // reads, so a config/nodemap.json tweak is a one-file edit, not test churn.
-const { floorCount, middleWidthMin, middleWidthMax, targetTotalMax, maxOutDegree } = NODE_MAP;
-// A map is root(1) + (floorCount-2) middle floors at ≥ middleWidthMin + terminal(1).
-const MIN_TOTAL = 1 + (floorCount - 2) * middleWidthMin + 1;
+const { hopCount, middleWidthMin, middleWidthMax, targetTotalMax, maxOutDegree } = NODE_MAP;
+// A map is root(1) + (hopCount-2) middle hops at ≥ middleWidthMin + terminal(1).
+const MIN_TOTAL = 1 + (hopCount - 2) * middleWidthMin + 1;
 
 describe('NodeMap.generate', () => {
   describe('shape', () => {
@@ -20,42 +20,42 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('has the configured floor count', () => {
-      expect(generate(new RNG(1)).floors).toHaveLength(floorCount);
+    it('has the configured hop count', () => {
+      expect(generate(new RNG(1)).hops).toHaveLength(hopCount);
     });
 
-    it('has a single root on floor 0', () => {
+    it('has a single root on hop 0', () => {
       const map = generate(new RNG(1));
-      expect(map.floors[0]).toEqual([map.rootId]);
-      expect(nodeById(map, map.rootId).floor).toBe(0);
+      expect(map.hops[0]).toEqual([map.rootId]);
+      expect(nodeById(map, map.rootId).hop).toBe(0);
     });
 
-    it('has a single terminal on the last floor', () => {
+    it('has a single terminal on the last hop', () => {
       const map = generate(new RNG(1));
-      const lastFloor = map.floors[map.floors.length - 1]!;
-      expect(lastFloor).toEqual([map.terminalId]);
-      expect(nodeById(map, map.terminalId).floor).toBe(map.floors.length - 1);
+      const lastHop = map.hops[map.hops.length - 1]!;
+      expect(lastHop).toEqual([map.terminalId]);
+      expect(nodeById(map, map.terminalId).hop).toBe(map.hops.length - 1);
     });
 
-    it('every middle floor width is within [middleWidthMin, middleWidthMax]', () => {
+    it('every middle hop width is within [middleWidthMin, middleWidthMax]', () => {
       for (let s = 0; s < 50; s++) {
         const map = generate(new RNG(s));
-        for (let f = 1; f < map.floors.length - 1; f++) {
-          expect(map.floors[f]!.length).toBeGreaterThanOrEqual(middleWidthMin);
-          expect(map.floors[f]!.length).toBeLessThanOrEqual(middleWidthMax);
+        for (let f = 1; f < map.hops.length - 1; f++) {
+          expect(map.hops[f]!.length).toBeGreaterThanOrEqual(middleWidthMin);
+          expect(map.hops[f]!.length).toBeLessThanOrEqual(middleWidthMax);
         }
       }
     });
 
-    it('root and the first battle floor are always battle nodes', () => {
-      // Root (floor 0) is an inert battle (rendered @); floor 1 is the first
+    it('root and the first battle hop are always battle nodes', () => {
+      // Root (hop 0) is an inert battle (rendered @); hop 1 is the first
       // battle and never rest-eligible — so single-hop-from-root navigation
       // always lands on a battle. Boss/rest land in the `node kinds (G3)`
       // block below.
       for (let s = 0; s < 50; s++) {
         const map = generate(new RNG(s));
         for (const n of map.nodes) {
-          if (n.floor === 0 || n.floor === 1) expect(n.kind).toBe('battle');
+          if (n.hop === 0 || n.hop === 1) expect(n.kind).toBe('battle');
         }
       }
     });
@@ -83,30 +83,30 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('rest nodes only sit on eligible middle floors [2, floorCount-2]', () => {
+    it('rest nodes only sit on eligible middle hops [2, hopCount-2]', () => {
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
-        const lastFloor = map.floors.length - 1;
+        const lastHop = map.hops.length - 1;
         for (const n of map.nodes) {
           if (n.kind === 'rest') {
-            expect(n.floor).toBeGreaterThanOrEqual(2);
-            expect(n.floor).toBeLessThanOrEqual(lastFloor - 1);
+            expect(n.hop).toBeGreaterThanOrEqual(2);
+            expect(n.hop).toBeLessThanOrEqual(lastHop - 1);
           }
         }
       }
     });
 
-    it('at most one rest per floor, and rest floors respect the min spacing', () => {
+    it('at most one rest per hop, and rest hops respect the min spacing', () => {
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
-        const perFloor = new Map<number, number>();
+        const perHop = new Map<number, number>();
         for (const n of map.nodes) {
-          if (n.kind === 'rest') perFloor.set(n.floor, (perFloor.get(n.floor) ?? 0) + 1);
+          if (n.kind === 'rest') perHop.set(n.hop, (perHop.get(n.hop) ?? 0) + 1);
         }
-        for (const count of perFloor.values()) expect(count).toBe(1);
-        const restFloors = [...perFloor.keys()].sort((a, b) => a - b);
-        for (let i = 1; i < restFloors.length; i++) {
-          expect(restFloors[i]! - restFloors[i - 1]!).toBeGreaterThanOrEqual(restMinSpacing);
+        for (const count of perHop.values()) expect(count).toBe(1);
+        const restHops = [...perHop.keys()].sort((a, b) => a - b);
+        for (let i = 1; i < restHops.length; i++) {
+          expect(restHops[i]! - restHops[i - 1]!).toBeGreaterThanOrEqual(restMinSpacing);
         }
       }
     });
@@ -135,10 +135,10 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('floorCount <= 3 produces no rest nodes (empty eligible band)', () => {
+    it('hopCount <= 3 produces no rest nodes (empty eligible band)', () => {
       for (const fc of [1, 2, 3]) {
         for (let s = 0; s < 20; s++) {
-          const map = generate(new RNG(s), { floorCount: fc });
+          const map = generate(new RNG(s), { hopCount: fc });
           expect(map.nodes.some((n) => n.kind === 'rest')).toBe(false);
         }
       }
@@ -146,9 +146,9 @@ describe('NodeMap.generate', () => {
   });
 
   describe('planarity (G2)', () => {
-    it('no two edges cross given the per-floor x-ordering', () => {
-      // The headline G2 guard: with x = index within floors[f], no pair of
-      // edges on the same adjacent floor pair geometrically inverts. This both
+    it('no two edges cross given the per-hop x-ordering', () => {
+      // The headline G2 guard: with x = index within hops[f], no pair of
+      // edges on the same adjacent hop pair geometrically inverts. This both
       // pins the property and documents what "planar" means here.
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
@@ -168,12 +168,12 @@ describe('NodeMap.generate', () => {
   });
 
   describe('connectivity', () => {
-    it('edges only connect adjacent floors', () => {
+    it('edges only connect adjacent hops', () => {
       for (let s = 0; s < 20; s++) {
         const map = generate(new RNG(s));
-        const floorOf = new Map(map.nodes.map((n) => [n.id, n.floor]));
+        const hopOf = new Map(map.nodes.map((n) => [n.id, n.hop]));
         for (const e of map.edges) {
-          expect(floorOf.get(e.to)! - floorOf.get(e.from)!).toBe(1);
+          expect(hopOf.get(e.to)! - hopOf.get(e.from)!).toBe(1);
         }
       }
     });
@@ -240,45 +240,45 @@ describe('NodeMap.generate', () => {
   });
 
   describe('RunConfig overrides (G1)', () => {
-    it('honors floorCount and stays a valid planar DAG at 1 / 2 / 3 floors', () => {
+    it('honors hopCount and stays a valid planar DAG at 1 / 2 / 3 hops', () => {
       for (const fc of [1, 2, 3]) {
         for (let s = 0; s < 10; s++) {
-          const map = generate(new RNG(s), { floorCount: fc });
-          expect(map.floors).toHaveLength(fc);
-          expect(nodeById(map, map.rootId).floor).toBe(0);
-          expect(nodeById(map, map.terminalId).floor).toBe(fc - 1);
+          const map = generate(new RNG(s), { hopCount: fc });
+          expect(map.hops).toHaveLength(fc);
+          expect(nodeById(map, map.rootId).hop).toBe(0);
+          expect(nodeById(map, map.terminalId).hop).toBe(fc - 1);
           // The full invariant set: reachable, co-reachable, planar, capped.
           expect(reachableFrom(map, map.rootId).size).toBe(map.nodes.length);
           expect(coReachableTo(map, map.terminalId).size).toBe(map.nodes.length);
           expect(crossings(map)).toEqual([]);
           expect(maxOutDegreeOf(map)).toBeLessThanOrEqual(maxOutDegree);
-          const floorOf = new Map(map.nodes.map((n) => [n.id, n.floor]));
+          const hopOf = new Map(map.nodes.map((n) => [n.id, n.hop]));
           for (const e of map.edges) {
-            expect(floorOf.get(e.to)! - floorOf.get(e.from)!).toBe(1);
+            expect(hopOf.get(e.to)! - hopOf.get(e.from)!).toBe(1);
           }
         }
       }
     });
 
-    it('floorCount 1 is a single root==terminal node with no edges', () => {
-      const map = generate(new RNG(0), { floorCount: 1 });
+    it('hopCount 1 is a single root==terminal node with no edges', () => {
+      const map = generate(new RNG(0), { hopCount: 1 });
       expect(map.nodes).toHaveLength(1);
       expect(map.rootId).toBe(map.terminalId);
       expect(map.edges).toHaveLength(0);
     });
 
-    it('floorCount 2 is root -> terminal: the minimal one-battle run', () => {
-      const map = generate(new RNG(0), { floorCount: 2 });
+    it('hopCount 2 is root -> terminal: the minimal one-battle run', () => {
+      const map = generate(new RNG(0), { hopCount: 2 });
       expect(map.nodes).toHaveLength(2);
       expect(map.edges).toEqual([{ from: map.rootId, to: map.terminalId }]);
     });
 
-    it('mapMaxWidth caps middle-floor width and stays planar', () => {
+    it('mapMaxWidth caps middle-hop width and stays planar', () => {
       const maxWidth = 4;
       for (let s = 0; s < 20; s++) {
-        const map = generate(new RNG(s), { floorCount: 5, mapMaxWidth: maxWidth });
-        for (let f = 1; f < map.floors.length - 1; f++) {
-          expect(map.floors[f]!.length).toBeLessThanOrEqual(maxWidth);
+        const map = generate(new RNG(s), { hopCount: 5, mapMaxWidth: maxWidth });
+        for (let f = 1; f < map.hops.length - 1; f++) {
+          expect(map.hops[f]!.length).toBeLessThanOrEqual(maxWidth);
         }
         expect(crossings(map)).toEqual([]);
         expect(maxOutDegreeOf(map)).toBeLessThanOrEqual(maxOutDegree);
@@ -307,13 +307,13 @@ describe('NodeMap.generate', () => {
   });
 
   describe('dump', () => {
-    it('renders root, terminal, floors, and edges', () => {
+    it('renders root, terminal, hops, and edges', () => {
       const map = generate(new RNG(1));
       const text = dump(map);
       expect(text).toContain('NodeMap');
       expect(text).toContain('(root)');
       expect(text).toContain('(boss)');
-      expect(text).toContain('Floor 0:');
+      expect(text).toContain('Hop 0:');
       expect(text).toContain('Edges:');
     });
   });
@@ -325,31 +325,31 @@ function nodeById(map: NodeMap, id: number) {
   return n;
 }
 
-/** x-position of every node = its index within its floor's left-to-right array. */
+/** x-position of every node = its index within its hop's left-to-right array. */
 function xOf(map: NodeMap): Map<number, number> {
   const x = new Map<number, number>();
-  for (const floor of map.floors) {
-    for (let i = 0; i < floor.length; i++) x.set(floor[i]!, i);
+  for (const hop of map.hops) {
+    for (let i = 0; i < hop.length; i++) x.set(hop[i]!, i);
   }
   return x;
 }
 
 /**
- * Every pair of edges (on the same adjacent floor pair) that geometrically
- * crosses, given the per-floor x-ordering. Empty array ⇒ planar.
+ * Every pair of edges (on the same adjacent hop pair) that geometrically
+ * crosses, given the per-hop x-ordering. Empty array ⇒ planar.
  */
 function crossings(map: NodeMap): string[] {
   const x = xOf(map);
-  const floorOf = new Map(map.nodes.map((n) => [n.id, n.floor]));
-  const byFloor = new Map<number, MapEdge[]>();
+  const hopOf = new Map(map.nodes.map((n) => [n.id, n.hop]));
+  const byHop = new Map<number, MapEdge[]>();
   for (const e of map.edges) {
-    const f = floorOf.get(e.from)!;
-    const list = byFloor.get(f) ?? [];
+    const f = hopOf.get(e.from)!;
+    const list = byHop.get(f) ?? [];
     list.push(e);
-    byFloor.set(f, list);
+    byHop.set(f, list);
   }
   const out: string[] = [];
-  for (const group of byFloor.values()) {
+  for (const group of byHop.values()) {
     for (let i = 0; i < group.length; i++) {
       for (let j = i + 1; j < group.length; j++) {
         const e1 = group[i]!;

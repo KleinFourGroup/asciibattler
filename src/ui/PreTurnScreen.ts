@@ -196,7 +196,7 @@ export class PreTurnScreen {
 
     const sub = document.createElement('div');
     sub.className = 'preturn-sub';
-    sub.textContent = `Floor ${info.floor}`;
+    sub.textContent = `Hop ${info.hop}`;
     panel.appendChild(sub);
 
     // K3.5 — the encounter's battlefield (one map per encounter), so the

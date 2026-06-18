@@ -1,5 +1,5 @@
 // In-battle HUD: the four card/control panes (Q1 speed · Q3 objective · Q4
-// player cards · Q5 enemy cards) plus the floor/turn chip and the location
+// player cards · Q5 enemy cards) plus the hop/turn chip and the location
 // banner. Q6 dismantled the old monolithic side panel (both team rosters, the
 // per-unit stat lines, and the inline You/Foe pools) now that the card panes
 // own the live HP and the pool gauges. Live-updates from unit:* events.
@@ -59,7 +59,7 @@ interface EncounterPools {
 
 export class HUD {
   private readonly banner: HTMLElement;
-  private readonly floorLabel: HTMLElement;
+  private readonly hopLabel: HTMLElement;
   /** Q1 — the speed-command pane (top-right): one button per enabled speed
    *  (ascending) + a pause/play toggle. Repainted on each speed change; the
    *  underlying speed + paused state live on the page-lifetime `playback`. */
@@ -146,12 +146,12 @@ export class HUD {
     this.banner.className = 'battle-banner screen-fade';
     mount.appendChild(this.banner);
 
-    // Q6 — the floor/turn chip, the one survivor of the dismantled side panel,
+    // Q6 — the hop/turn chip, the one survivor of the dismantled side panel,
     // now a standalone top-left element (mirroring the top-right speed pane),
     // with the banner centered between them. Its own screen-fade lifecycle.
-    this.floorLabel = document.createElement('div');
-    this.floorLabel.className = 'hud-floor screen-fade';
-    mount.appendChild(this.floorLabel);
+    this.hopLabel = document.createElement('div');
+    this.hopLabel.className = 'hud-hop screen-fade';
+    mount.appendChild(this.hopLabel);
 
     // Q1 — speed-command pane (top-right): one button per ENABLED speed
     // (ascending) + a pause/play toggle. Lives outside the side-panel root (like
@@ -306,16 +306,16 @@ export class HUD {
    */
   show(
     world: World,
-    floor: number,
+    hop: number,
     locationName: string,
     encounter?: EncounterPools,
   ): void {
     this.world = world;
-    // Q6 — the floor chip folds in the per-turn counter (the dropped HUD-pool
+    // Q6 — the hop chip folds in the per-turn counter (the dropped HUD-pool
     // "Turn N" line) so no run context is lost with the old panel gone.
-    this.floorLabel.textContent = encounter
-      ? `Floor ${floor} · Turn ${encounter.turn}`
-      : `Floor ${floor}`;
+    this.hopLabel.textContent = encounter
+      ? `Hop ${hop} · Turn ${encounter.turn}`
+      : `Hop ${hop}`;
     this.banner.textContent = locationName;
     // Q4/Q5 — reset both card panes: drop last battle's cards (one map covers
     // both teams), repaint the pool gauges from this encounter's pools.
@@ -324,7 +324,7 @@ export class HUD {
     this.cards.clear();
     this.renderPlayerPool(encounter);
     this.renderEnemyPool(encounter);
-    fadeIn(this.floorLabel);
+    fadeIn(this.hopLabel);
     fadeIn(this.banner);
     fadeIn(this.speedPane);
     fadeIn(this.objectivePane);
@@ -335,7 +335,7 @@ export class HUD {
   hide(): void {
     // Just drop is-visible; the elements stay in the DOM and fade back in on
     // the next battle.
-    this.floorLabel.classList.remove('is-visible');
+    this.hopLabel.classList.remove('is-visible');
     this.banner.classList.remove('is-visible');
     this.speedPane.classList.remove('is-visible');
     this.objectivePane.classList.remove('is-visible');
@@ -357,7 +357,7 @@ export class HUD {
     // page-lifetime too.
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
-    fadeOutAndRemove(this.floorLabel);
+    fadeOutAndRemove(this.hopLabel);
     fadeOutAndRemove(this.banner);
     fadeOutAndRemove(this.speedPane);
     fadeOutAndRemove(this.objectivePane);

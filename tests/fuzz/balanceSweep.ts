@@ -193,18 +193,18 @@ export interface BalanceSweepConfig {
   readonly preset: SearchPreset;
   readonly samplerSeed: number;
   /**
-   * Override the tier's run length (floor count), decoupling "how many floors"
+   * Override the tier's run length (hop count), decoupling "how many hops"
    * from "how big a search." Lets us run a CHEAP full-length read — e.g. quick
-   * tier's small vector/seed budget but full 11-floor runs — to catch the
+   * tier's small vector/seed budget but full 11-hop runs — to catch the
    * length-sensitive archetype effects that short runs hide (the healer
    * mid-length artifact), without paying for the whole heavy tier. Undefined =
-   * use the tier's own floorCount.
+   * use the tier's own hopCount.
    */
-  readonly floorOverride?: number;
+  readonly hopOverride?: number;
   /**
    * Force the starting roster (archetype + level per slot) for every run at every
    * grid point. The way to evaluate an archetype the optimizer rarely RECRUITS:
-   * plant it on the roster so it's fielded from floor 1, then read its
+   * plant it on the roster so it's fielded from hop 1, then read its
    * per-deployment telemetry. Undefined = the normal rolled starting roster.
    */
   readonly rosterOverride?: readonly RosterEntry[];
@@ -278,13 +278,13 @@ function baselineWin(name: string, seeds: readonly number[], opts: HarnessOption
   return aggregate(runMany(seeds, strat, opts)).winRate;
 }
 
-/** Tier's harness options, with optional floor-count + starting-roster overrides
+/** Tier's harness options, with optional hop-count + starting-roster overrides
  *  applied — so the search, baselines, and telemetry re-run all share one run
  *  length, roster, (J4) objective proclivity, and (K3c3/K4c3) redraw/empower
  *  policies. */
 function harnessOptionsFor(
   preset: SearchPreset,
-  floorOverride?: number,
+  hopOverride?: number,
   roster?: readonly RosterEntry[],
   objective?: ObjectiveProclivity,
   redraw?: RedrawPolicy,
@@ -292,13 +292,13 @@ function harnessOptionsFor(
   daemon?: DaemonSelection,
   forcedLayoutId?: string,
 ): HarnessOptions {
-  const floorCount = floorOverride ?? preset.floorCount;
+  const hopCount = hopOverride ?? preset.hopCount;
   const runConfig: {
-    floorCount?: number;
+    hopCount?: number;
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
   } = {};
-  if (floorCount !== undefined) runConfig.floorCount = floorCount;
+  if (hopCount !== undefined) runConfig.hopCount = hopCount;
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
   if (forcedLayoutId !== undefined) runConfig.forcedLayoutId = forcedLayoutId;
   let opts: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
@@ -323,7 +323,7 @@ async function defaultMeasurePoint(
   const { trainSeeds, testSeeds } = splitSeeds(preset.trainSeeds, preset.testSeeds);
   const harnessOptions = harnessOptionsFor(
     preset,
-    config.floorOverride,
+    config.hopOverride,
     config.rosterOverride,
     config.objective,
     config.redraw,
@@ -345,7 +345,7 @@ async function defaultMeasurePoint(
       vectors,
       seeds: trainSeeds,
       knobs: coord,
-      floorCount: config.floorOverride ?? preset.floorCount,
+      hopCount: config.hopOverride ?? preset.hopCount,
       roster: config.rosterOverride,
       forcedLayoutId: config.forcedLayoutId,
       objective: config.objective,

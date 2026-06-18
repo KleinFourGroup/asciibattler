@@ -24,7 +24,7 @@ export interface CliArgs {
   seed?: number;
   strategy?: string;
   outDir: string;
-  perFloor: boolean;
+  perHop: boolean;
   // Per-layout difficulty breakdown (`--per-layout`) + force one layout across
   // every battle (`--layout=<id>`) for a clean full-sample isolate.
   perLayout: boolean;
@@ -42,7 +42,7 @@ export interface CliArgs {
   knob2?: string;
   range2?: string;
   tier?: string;
-  floors?: number;
+  hops?: number;
   roster?: string;
   dryRun: boolean;
   // H7c parallelism — fan the per-point vector search across N child processes.
@@ -76,7 +76,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   const args: CliArgs = {
     count: 20,
     outDir: defaultOutDir(),
-    perFloor: false,
+    perHop: false,
     perLayout: false,
     search: false,
     balanceSweep: false,
@@ -99,8 +99,8 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--out':
         args.outDir = v ?? args.outDir;
         break;
-      case '--per-floor':
-        args.perFloor = true;
+      case '--per-hop':
+        args.perHop = true;
         break;
       case '--per-layout':
         args.perLayout = true;
@@ -141,8 +141,8 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--tier':
         args.tier = v;
         break;
-      case '--floors':
-        args.floors = Number(v);
+      case '--hops':
+        args.hops = Number(v);
         break;
       case '--roster':
         args.roster = v;

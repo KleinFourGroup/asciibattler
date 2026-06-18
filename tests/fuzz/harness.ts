@@ -43,7 +43,7 @@ import type { RunTelemetry } from './telemetry';
 export type RunOutcome = 'complete' | 'defeat' | 'hang' | 'aborted';
 
 export interface BattleResult {
-  floor: number;
+  hop: number;
   worldSeed: number;
   /** Hand-authored layout id, or `null` for procedural terrain. Threaded
    *  through so per-layout hang rates surface in the summary — useful
@@ -62,14 +62,14 @@ export interface BattleResult {
   playerTeamSize: number;
   enemyTeamSize: number;
   /** G4 telemetry — per-unit levels of each team at battle START (from the
-   *  encounter snapshot), for the per-floor level/size analysis. Captured
-   *  before any deaths so it reflects the composition entering the floor. */
+   *  encounter snapshot), for the per-hop level/size analysis. Captured
+   *  before any deaths so it reflects the composition entering the hop. */
   playerLevels: number[];
   enemyLevels: number[];
 }
 
 export interface RecruitChoice {
-  floor: number;
+  hop: number;
   archetype: Archetype;
   teamSizeAfter: number;
 }
@@ -78,10 +78,10 @@ export interface RunResult {
   seed: number;
   strategyName: string;
   /** L1c3 — the run's rolled (or forced) daemon id, `null` for a daemon-less
-   *  run. The per-daemon win/floor bucketing key. */
+   *  run. The per-daemon win/hop bucketing key. */
   daemonId: string | null;
   outcome: RunOutcome;
-  finalFloorReached: number;
+  finalHopReached: number;
   totalTicks: number;
   finalTeamSize: number;
   battles: BattleResult[];
@@ -110,8 +110,8 @@ export interface HarnessOptions {
    */
   readonly strategySeed?: number;
   /**
-   * G1 — optional RunConfig (short floor count, forced layout, leveled
-   * roster, …) so a sweep can target a 1-floor run or a specific layout.
+   * G1 — optional RunConfig (short hop count, forced layout, leveled
+   * roster, …) so a sweep can target a 1-hop run or a specific layout.
    * `runConfig.seed` (if set) overrides the run seed; the `seed` arg still
    * identifies the run (strategy RNG + `RunResult.seed`).
    */
@@ -261,7 +261,7 @@ export function runOne(
     currentCoverage = coverageActive ? new CoverageObjectiveDriver(new RNG(worldSeed).fork()) : null;
     unitTeams = new Map();
     currentBattle = {
-      floor: run.currentFloor,
+      hop: run.currentHop,
       worldSeed,
       layoutId: encounter.layoutId,
       playerTeamSize: encounter.playerTeam.length,
@@ -299,7 +299,7 @@ export function runOne(
 
   // Telemetry-only combat hooks (registered only under the flag so a default
   // run wires no extra subscribers). XP + the per-turn pool chip ride the
-  // existing `battle:ended` handler below (where `currentBattle.floor` is still
+  // existing `battle:ended` handler below (where `currentBattle.hop` is still
   // live), so they're order-safe regardless of subscriber registration order.
   if (telemetry) {
     bus.on('unit:attacked', ({ attackerId, targetId, damage }) => {
@@ -314,16 +314,16 @@ export function runOne(
   bus.on('battle:ended', ({ winner, xpAwards, survivorPower }) => {
     if (!currentBattle || !currentWorld) return;
     // H7c telemetry — recorded here (not in a separate subscriber) so
-    // `currentBattle.floor` is still live: each headless turn is one
+    // `currentBattle.hop` is still live: each headless turn is one
     // battle:started/ended cycle, so `survivorPower` IS this turn's pool chip.
     if (telemetry) {
       for (const a of xpAwards) telemetry.recordXp(a.unitId, a.xpGained);
       if (survivorPower) {
-        telemetry.recordTurnChip(currentBattle.floor, survivorPower.player, survivorPower.enemy);
+        telemetry.recordTurnChip(currentBattle.hop, survivorPower.player, survivorPower.enemy);
       }
     }
     battles.push({
-      floor: currentBattle.floor,
+      hop: currentBattle.hop,
       worldSeed: currentBattle.worldSeed,
       layoutId: currentBattle.layoutId,
       winner,
@@ -455,7 +455,7 @@ export function runOne(
           // just a slow turn.
           if (currentBattle) {
             battles.push({
-              floor: currentBattle.floor,
+              hop: currentBattle.hop,
               worldSeed: currentBattle.worldSeed,
               layoutId: currentBattle.layoutId,
               winner: 'hang',
@@ -493,7 +493,7 @@ export function runOne(
         const pick = offer[idx]!;
         run.dispatch({ kind: 'chooseRecruit', unitTemplate: pick });
         recruits.push({
-          floor: run.currentFloor,
+          hop: run.currentHop,
           archetype: pick.archetype,
           teamSizeAfter: run.team.length,
         });
@@ -517,7 +517,7 @@ export function runOne(
 }
 
 interface PartialBattle {
-  floor: number;
+  hop: number;
   worldSeed: number;
   layoutId: string | null;
   playerTeamSize: number;
@@ -552,7 +552,7 @@ function finalize(
     strategyName,
     daemonId: run.daemon?.id ?? null,
     outcome,
-    finalFloorReached: run.currentFloor,
+    finalHopReached: run.currentHop,
     totalTicks,
     finalTeamSize: run.team.length,
     battles,

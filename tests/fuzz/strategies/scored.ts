@@ -83,7 +83,7 @@ function kindWeight(kind: NodeKind, w: ScoredWeights): number {
 /**
  * Build a memoized `bestScore(nodeId)` = `kindWeight(node) + max over children
  * of bestScore(child)` for the given map + weights. The map is a layered DAG
- * with one node per floor on every root→terminal path, so max-total ==
+ * with one node per hop on every root→terminal path, so max-total ==
  * max-average — picking the frontier child with the highest `bestScore` has no
  * long-path bias.
  */

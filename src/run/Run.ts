@@ -187,7 +187,7 @@ export interface BattleEncounter {
  *  cadence banks each turn's XP at the turn boundary, so no cross-turn XP
  *  accrual state exists anymore. A v16 save can carry accrued-but-unbanked
  *  XP that v17 code would silently drop → reject. */
-const RUN_SCHEMA_VERSION = 17;
+const RUN_SCHEMA_VERSION = 18;
 
 /**
  * K3.5 — the encounter's battlefield, rolled ONCE in `beginEncounter` (the
@@ -283,8 +283,8 @@ export interface RunSnapshot {
  * per-encounter reset.
  */
 export interface RunTriggerContextMap {
-  encounterStart: { floor: number; nodeId: number };
-  turnStart: { turn: number; floor: number };
+  encounterStart: { hop: number; nodeId: number };
+  turnStart: { turn: number; hop: number };
   deploy: { rosterIndex: number; template: UnitTemplate };
 }
 
@@ -641,7 +641,7 @@ export class Run {
         '[layout]',
         this.encounterMap.layoutId ?? 'procedural',
         `${this.encounterMap.gridW}x${this.encounterMap.gridH}`,
-        `floor ${this.currentFloor}`,
+        `hop ${this.currentHop}`,
       );
     }
     // K1 — clear the encounter-effect store + fire `encounterStart` so a daemon
@@ -649,7 +649,7 @@ export class Run {
     // no handler registered → byte-identical). Fired AFTER the map roll so a
     // future daemon can read `encounterMap`.
     this.resetEncounterEffects();
-    this.fireTrigger('encounterStart', { floor: this.currentFloor, nodeId: this.currentNodeId });
+    this.fireTrigger('encounterStart', { hop: this.currentHop, nodeId: this.currentNodeId });
     this.startNextTurn();
   }
 
@@ -706,14 +706,14 @@ export class Run {
     // K1 — `turnStart` fires before the turn's battle is built (on both the
     // gated + headless paths), so a daemon's encounter effect added here is
     // seeded onto this turn's hand in `beginTurn`. No-op at the default.
-    this.fireTrigger('turnStart', { turn: this.turnIndex + 1, floor: this.currentFloor });
+    this.fireTrigger('turnStart', { turn: this.turnIndex + 1, hop: this.currentHop });
     if (this.pauseAtTurnGates) {
       this.phase = 'turn-intro';
       // K3.5 — `startNextTurn` only runs mid-encounter, so the map is set.
       const { layoutId, gridW, gridH, theme } = this.encounterMap!;
       this.bus.emit('turn:starting', {
         turn: this.turnIndex + 1,
-        floor: this.currentFloor,
+        hop: this.currentHop,
         playerHealth: this.playerHealth,
         playerHealthMax: HEALTH.playerHealthMax,
         enemyHealth: this.enemyHealth,
@@ -834,17 +834,17 @@ export class Run {
   }
 
   /**
-   * Floor index of the current node. Public so UI surfaces (HUD) can label
+   * Hop index of the current node. Public so UI surfaces (HUD) can label
    * the active battle's depth without duplicating the node-lookup logic.
    */
-  get currentFloor(): number {
-    return this.floorOf(this.currentNodeId);
+  get currentHop(): number {
+    return this.hopOf(this.currentNodeId);
   }
 
-  private floorOf(nodeId: number): number {
+  private hopOf(nodeId: number): number {
     const node = this.nodeMap.nodes.find((n) => n.id === nodeId);
-    if (!node) throw new Error(`Run.floorOf: no node ${nodeId} in map`);
-    return node.floor;
+    if (!node) throw new Error(`Run.hopOf: no node ${nodeId} in map`);
+    return node.hop;
   }
 
   /** G3 — node kind, for the rest/battle dispatch + the post-promotion route. */
@@ -1153,7 +1153,7 @@ export class Run {
     } else {
       this.phase = 'recruit';
       // G4 — recruit level tracks the TEAM (round avg + geometric bonus), not
-      // the floor, so a fresh draft stays useful on a leveled roster. Post-G5:
+      // the hop, so a fresh draft stays useful on a leveled roster. Post-G5:
       // the geometric bonus is drawn INDEPENDENTLY per card over a shared
       // `round(avgTeamLevel)` base, so a lucky offer shows one over-leveled
       // standout rather than boosting all cards together. Each card's level is
@@ -1567,7 +1567,7 @@ function resolveForcedLayoutId(id: string | undefined): string | null {
  * across `LAYOUT_IDS`. Tilted away from procedural at the C1d follow-up
  * since the layout library is now big enough to carry the bulk of
  * encounters — procedural stays in the mix as a "wildcard" variant.
- * Weighting by floor depth or recent picks is a future tuning lever.
+ * Weighting by hop depth or recent picks is a future tuning lever.
  *
  * The `rng.next()` call always runs, so the parent stream advances
  * identically whether we return null or a layout — changing the

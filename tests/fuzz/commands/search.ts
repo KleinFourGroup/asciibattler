@@ -50,7 +50,7 @@ export type SearchModeArgs = Pick<
   | 'seeds'
   | 'samplerSeed'
   | 'jobs'
-  | 'floors'
+  | 'hops'
   | 'roster'
   | 'layout'
   | 'objective'
@@ -77,13 +77,13 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   }
   const { trainSeeds, testSeeds } = splitSeeds(trainCount, testCount);
 
-  // H7c — --floors / --roster overrides also apply to the search (so we can
+  // H7c — --hops / --roster overrides also apply to the search (so we can
   // run a full-length or roster-SEEDED search, then replay its emitted winner
-  // via --strategy). Both ride RunConfig's validated parser; the floor count
-  // falls back to the preset's when --floors is absent (behaviour-preserving).
+  // via --strategy). Both ride RunConfig's validated parser; the hop count
+  // falls back to the preset's when --hops is absent (behaviour-preserving).
   const searchParams = new URLSearchParams();
-  const floorCount = args.floors ?? preset.floorCount;
-  if (floorCount !== undefined) searchParams.set('floors', String(floorCount));
+  const hopCount = args.hops ?? preset.hopCount;
+  if (hopCount !== undefined) searchParams.set('hops', String(hopCount));
   if (args.roster) searchParams.set('roster', args.roster);
   // M6/N2 — force one layout (or `procedural`) across the searched runs, so the
   // overnight verify (stage 5) can hold out on the procedural maps too. Validated
@@ -101,7 +101,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   if (empower) harnessOptions = { ...harnessOptions, empower };
   if (daemon) harnessOptions = { ...harnessOptions, daemon };
 
-  const floorNote = floorCount !== undefined ? ` floors=${floorCount}` : ' floors=full';
+  const hopNote = hopCount !== undefined ? ` hops=${hopCount}` : ' hops=full';
   const rosterNote = runConfig.startingRoster
     ? ` roster=[${runConfig.startingRoster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
@@ -112,7 +112,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${floorNote}${rosterNote}${layoutNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${hopNote}${rosterNote}${layoutNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -128,7 +128,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       vectors: sampled,
       seeds: trainSeeds,
       knobs: {},
-      floorCount,
+      hopCount,
       roster: runConfig.startingRoster,
       forcedLayoutId: runConfig.forcedLayoutId,
       objective,

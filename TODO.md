@@ -79,20 +79,20 @@ Two issues the user surfaced during the **Q1/Q2** playtests (2026-06-17) — pau
       `weakest` becomes viable and measurable (re-run the same forced-roster eval). Pairs
       with the broader deferred rogue identity work (evasion / stealing — Phase I+ / shop).
       Surfaced 2026-06-07 during the H7c rogue pass; full data in [BALANCE.md](BALANCE.md).
-- [ ] **Post-Phase-H map / difficulty gating (incl. layout-by-floor weighting).** The planned
+- [ ] **Post-Phase-H map / difficulty gating (incl. layout-by-hop weighting).** The planned
       post-H map rework should gate content by depth — and per-layout telemetry (H7c, `npm run fuzz
       -- --per-layout`) gives it a concrete first target: layout difficulty is **pure geometry**.
       Chokepoint layouts (corridors / funnel / labyrinth) sit at ~85% player wave-win; open / multi-
       approach layouts (`junctionAmbush`, `river`, procedural-open) at ~45% — ~2× the loss rate,
       because a 5-unit hand can funnel a ~9-swarm in a corridor but gets surrounded in the open
       (enemy size is swarm-cap-bound ~9.5 regardless of layout). Today `rollLayoutId` picks
-      uniformly (~75% library / ~25% procedural) at every floor, so the hardest open layouts can hit
-      the weakest floor-1 roster with no warning. Lever: **floor-gate / depth-weight the layout
+      uniformly (~75% library / ~25% procedural) at every hop, so the hardest open layouts can hit
+      the weakest hop-1 roster with no warning. Lever: **hop-gate / depth-weight the layout
       roll** (don't roll the hard open layouts early; ramp them in) — and/or soften specific spawn
       geometries in the layout editor. Deferred here by the user (2026-06-07) as part of the post-H
       rework rather than a one-off junctionAmbush patch. Data: [BALANCE.md](BALANCE.md) "Layout-difficulty telemetry".
       **STATUS (M6, 2026-06-13):** still OPEN/deferred — M6 shipped the procedural rework + water mechanic but
-      DEFERRED floor-gating behind the coming **encounter-system spec** (which will reshape the per-floor
+      DEFERRED hop-gating behind the coming **encounter-system spec** (which will reshape the per-hop
       difficulty targets, so depth-weighting `rollLayoutId` now would just be redone). Revisit after the spec.
 - [ ] **Turn-limit / tick-cap resolution — a deeper system.** In the G5
       multi-turn battle model, a *turn* whose tactical battle hits the

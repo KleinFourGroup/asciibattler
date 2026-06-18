@@ -7,11 +7,11 @@
  * by nothing, never bundled into `dist/`.
  *
  * Usage:
- *   npm run run-config -- --floors=2 --seed=42 --roster=rogue:3,healer:2 --layout=endlessCorridors
- *   npm run run-config -- --floors=1 --no-run        # just print the launch URL
+ *   npm run run-config -- --hops=2 --seed=42 --roster=rogue:3,healer:2 --layout=endlessCorridors
+ *   npm run run-config -- --hops=1 --no-run        # just print the launch URL
  *   npm run run-config -- --seed=42 --strategy=greedy # headless drive strategy
  *
- * The run-config flags (--seed / --floors / --roster / --layout / --width)
+ * The run-config flags (--seed / --hops / --roster / --layout / --width)
  * reuse the URL param names AND `parseRunConfig`'s validation, so the CLI and
  * the browser describe runs identically — one source of truth. Invalid values
  * are dropped exactly as the browser drops them. Argument parsing is minimal;
@@ -76,10 +76,10 @@ function printHelp(): void {
       '',
       'Flags:',
       '  --seed=N         run seed (default: Date.now())',
-      '  --floors=N       total floors incl. root + terminal (>=2 to be playable; 2 = one battle)',
+      '  --hops=N         total hops incl. root + terminal (>=2 to be playable; 2 = one battle)',
       '  --roster=LIST    archetype[:level],...  e.g. rogue:3,healer:2,mercenary',
       '  --layout=ID      force every battle onto a named layout',
-      '  --width=N        middle-floor max width',
+      '  --width=N        middle-hop max width',
       '  --strategy=NAME  headless drive strategy from the G5 menu (default: pure-random);',
       '                   e.g. greedy | recruit:mage | stat:constitution | path:rest',
       '  --no-run         print the launch URL only; skip the headless run',
@@ -104,9 +104,9 @@ function main(): void {
   const seed = args.config.seed ?? Date.now();
   const config: RunConfig = { ...args.config, seed };
 
-  if (config.floorCount !== undefined && config.floorCount < 2) {
+  if (config.hopCount !== undefined && config.hopCount < 2) {
     process.stderr.write(
-      `warning: --floors=${config.floorCount} has no battle (a playable run needs >= 2 floors)\n`,
+      `warning: --hops=${config.hopCount} has no battle (a playable run needs >= 2 hops)\n`,
     );
   }
 
@@ -119,7 +119,7 @@ function main(): void {
   process.stdout.write('\nHeadless run:\n');
   process.stdout.write(`  strategy:   ${result.strategyName}\n`);
   process.stdout.write(`  outcome:    ${result.outcome}\n`);
-  process.stdout.write(`  floor:      ${result.finalFloorReached}\n`);
+  process.stdout.write(`  hop:        ${result.finalHopReached}\n`);
   process.stdout.write(`  ticks:      ${result.totalTicks}\n`);
   process.stdout.write(`  team size:  ${result.finalTeamSize}\n`);
   process.stdout.write(`  battles:    ${result.battles.length}\n`);

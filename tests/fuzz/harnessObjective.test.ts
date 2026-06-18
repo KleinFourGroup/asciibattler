@@ -12,7 +12,7 @@ import { makeStrategy } from './strategies/registry';
 import type { ObjectiveProclivity } from './objectiveStrategy';
 
 const strat = () => makeStrategy('greedy')!;
-const SHORT = { runConfig: { floorCount: 4 } } as const;
+const SHORT = { runConfig: { hopCount: 4 } } as const;
 
 describe('harness objective injection (J4)', () => {
   it('a none objective is byte-identical to no objective at all', () => {

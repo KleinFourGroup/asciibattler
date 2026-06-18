@@ -289,7 +289,7 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'turn:starting': {
     turn: number; // 1-based, within the current encounter
-    floor: number;
+    hop: number;
     playerHealth: number;
     playerHealthMax: number;
     enemyHealth: number;

@@ -32,11 +32,11 @@ export function runEvalShardCli(args: EvalShardModeArgs): void {
   }
 
   const runConfig: {
-    floorCount?: number;
+    hopCount?: number;
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
   } = {};
-  if (job.floorCount !== undefined) runConfig.floorCount = job.floorCount;
+  if (job.hopCount !== undefined) runConfig.hopCount = job.hopCount;
   if (job.roster && job.roster.length > 0) runConfig.startingRoster = job.roster;
   if (job.forcedLayoutId !== undefined) runConfig.forcedLayoutId = job.forcedLayoutId;
   // J4 / K3c3 / K4c3 / L1c3 — the child re-applies the parent's fixed

@@ -26,13 +26,13 @@ import { CardListButton } from './CardListModal';
 const KIND_GLYPH: Record<NodeKind, string> = { battle: 'X', rest: 'Z', boss: '!' };
 
 /**
- * Vertical pixels allotted per floor on the scrollable board. The board height
- * is `floorCount * FLOOR_PX`; a tall board (10+ floors) overflows the viewport
+ * Vertical pixels allotted per hop on the scrollable board. The board height
+ * is `hopCount * HOP_PX`; a tall board (10+ hops) overflows the viewport
  * and scrolls, with the current node centered on show. `.map-board`'s
- * `min-height: 100%` keeps a short board (e.g. a floorCount-2 forced run)
+ * `min-height: 100%` keeps a short board (e.g. a hopCount-2 forced run)
  * filling the viewport instead of collapsing to a sliver.
  */
-const FLOOR_PX = 90;
+const HOP_PX = 90;
 
 export class MapScreen {
   private readonly mount: HTMLElement;
@@ -93,10 +93,10 @@ export class MapScreen {
     // pixel sizing — keeping coordinates dimensionless means the same layout
     // logic feeds both the absolute-positioned divs and the SVG viewBox.
     const positions = new Map<number, { x: number; y: number }>();
-    const floorCount = map.floors.length;
-    for (let f = 0; f < floorCount; f++) {
-      const ids = map.floors[f]!;
-      const y = (f + 0.5) / floorCount;
+    const hopCount = map.hops.length;
+    for (let f = 0; f < hopCount; f++) {
+      const ids = map.hops[f]!;
+      const y = (f + 0.5) / hopCount;
       for (let i = 0; i < ids.length; i++) {
         const x = (i + 0.5) / ids.length;
         positions.set(ids[i]!, { x, y });
@@ -118,12 +118,12 @@ export class MapScreen {
     });
     container.appendChild(this.rosterButton.el);
 
-    // The board carries the floor-scaled height; the scroll container
+    // The board carries the hop-scaled height; the scroll container
     // (.map-screen) clips it. Edges + nodes lay out against the board, not the
     // viewport, so a tall board scrolls without distorting the layout.
     const board = document.createElement('div');
     board.className = 'map-board';
-    board.style.height = `${floorCount * FLOOR_PX}px`;
+    board.style.height = `${hopCount * HOP_PX}px`;
     container.appendChild(board);
 
     // SVG edge layer. Sits behind the node divs by virtue of DOM order; CSS

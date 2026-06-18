@@ -77,7 +77,7 @@ export interface SweepFormState {
   readonly vectors?: number | undefined;
   readonly seeds?: number | undefined;
   // ── shared ──
-  readonly floors?: number | undefined;
+  readonly hops?: number | undefined;
   readonly roster?: string | undefined;
   readonly samplerSeed?: number | undefined;
 }
@@ -105,7 +105,7 @@ export function buildFuzzArgs(state: SweepFormState): string[] {
       args.push(`--range2=${state.range2.trim()}`);
     }
     if (isStr(state.tier)) args.push(`--tier=${state.tier.trim()}`);
-    if (isNum(state.floors)) args.push(`--floors=${state.floors}`);
+    if (isNum(state.hops)) args.push(`--hops=${state.hops}`);
     if (isStr(state.roster)) args.push(`--roster=${state.roster.trim()}`);
     if (isNum(state.jobs) && state.jobs > 1) args.push(`--jobs=${state.jobs}`);
     if (isNum(state.samplerSeed)) args.push(`--sampler-seed=${state.samplerSeed}`);
@@ -115,7 +115,7 @@ export function buildFuzzArgs(state: SweepFormState): string[] {
     if (isStr(state.preset)) args.push(`--preset=${state.preset.trim()}`);
     if (isNum(state.vectors)) args.push(`--vectors=${state.vectors}`);
     if (isNum(state.seeds)) args.push(`--seeds=${state.seeds}`);
-    if (isNum(state.floors)) args.push(`--floors=${state.floors}`);
+    if (isNum(state.hops)) args.push(`--hops=${state.hops}`);
     if (isStr(state.roster)) args.push(`--roster=${state.roster.trim()}`);
     if (isNum(state.jobs) && state.jobs > 1) args.push(`--jobs=${state.jobs}`);
     if (isNum(state.samplerSeed)) args.push(`--sampler-seed=${state.samplerSeed}`);

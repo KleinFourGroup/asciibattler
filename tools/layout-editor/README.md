@@ -170,5 +170,5 @@ new array entry (**append only**, never reorder), then `npm test`.
   painted layout into the live game without URL-encoded handoff or
   localStorage shared state. Skipped for now; revisit if it becomes
   load-bearing.
-- **Pick weight / floor-depth gating fields.** Add when there's a
+- **Pick weight / hop-depth gating fields.** Add when there's a
   concrete picker rule to implement.

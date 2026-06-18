@@ -8,7 +8,7 @@ both over the same `RunConfig` (`src/run/RunConfig.ts`):
 
 ## GUI launcher
 
-A dev-only page to pick seed / floors / map width / layout and build a starting
+A dev-only page to pick seed / hops / map width / layout and build a starting
 roster (per-unit archetype + level), emitting a launch URL for the game. The
 browser sibling of the CLI — an eyeball test is a click + paste, not a
 hand-typed query string.
@@ -32,16 +32,16 @@ quick sanity pass.
 
 ```bash
 # Print a launch URL AND drive a headless run:
-npm run run-config -- --floors=2 --seed=42 --roster=rogue:3,healer:2 --layout=endlessCorridors
+npm run run-config -- --hops=2 --seed=42 --roster=rogue:3,healer:2 --layout=endlessCorridors
 
 # Just the launch URL (paste into the browser after `npm run dev`):
-npm run run-config -- --floors=1 --no-run
+npm run run-config -- --hops=1 --no-run
 
 # Pick the headless drive strategy (default pure-random):
 npm run run-config -- --seed=42 --strategy=greedy
 ```
 
-Flags: `--seed`, `--floors`, `--roster` (`archetype[:level],…`), `--layout`,
+Flags: `--seed`, `--hops`, `--roster` (`archetype[:level],…`), `--layout`,
 `--width`, `--strategy` (any G5-menu entry — `pure-random` | `greedy` |
 `recruit:<archetype>` | `stat:<stat>` | `path:battle` | `path:rest`),
 `--no-run`, `--help`. The strategy menu is the shared registry in

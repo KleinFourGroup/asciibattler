@@ -4,7 +4,7 @@
  * production build (no entry in vite.config.ts) — the `tools/` tree is served
  * statically by the dev server and never lands in `dist/`.
  *
- * A GUI over G1's RunConfig: pick seed / floors / map width / layout and build
+ * A GUI over G1's RunConfig: pick seed / hops / map width / layout and build
  * a starting roster (per-unit archetype + level), and the page emits a launch
  * URL for the game. It is the browser sibling of `tools/run-config/cli.ts` — so
  * an eyeball test is a click + paste, not a hand-typed query string.
@@ -34,7 +34,7 @@ function byId<T extends HTMLElement>(id: string): T {
 }
 
 const seedInput = byId<HTMLInputElement>('seed');
-const floorsInput = byId<HTMLInputElement>('floors');
+const hopsInput = byId<HTMLInputElement>('hops');
 const widthInput = byId<HTMLInputElement>('width');
 const layoutSelect = byId<HTMLSelectElement>('layout');
 const rosterRows = byId<HTMLDivElement>('roster-rows');
@@ -53,7 +53,7 @@ function option(value: string, label: string): HTMLOptionElement {
 // ---- static population ----------------------------------------------------
 
 byId('level-cap').textContent = String(LEVELING.levelCap);
-floorsInput.placeholder = `default ${NODE_MAP.floorCount}`;
+hopsInput.placeholder = `default ${NODE_MAP.hopCount}`;
 widthInput.placeholder = `default ${NODE_MAP.middleWidthMax}`;
 seedInput.placeholder = 'blank → game picks one';
 
@@ -120,7 +120,7 @@ function setIf(params: URLSearchParams, key: string, value: string): void {
 function recompute(): void {
   const params = new URLSearchParams();
   setIf(params, RUN_CONFIG_PARAMS.seed, seedInput.value);
-  setIf(params, RUN_CONFIG_PARAMS.floors, floorsInput.value);
+  setIf(params, RUN_CONFIG_PARAMS.hops, hopsInput.value);
   setIf(params, RUN_CONFIG_PARAMS.width, widthInput.value);
   setIf(params, RUN_CONFIG_PARAMS.layout, layoutSelect.value);
   setIf(params, RUN_CONFIG_PARAMS.roster, readRosterParam());
@@ -143,7 +143,7 @@ function renderSummary(config: RunConfig): void {
       : 'default rolled team';
   summary.textContent = [
     `seed:    ${config.seed ?? '(game picks at launch)'}`,
-    `floors:  ${config.floorCount ?? `default (${NODE_MAP.floorCount})`}`,
+    `hops:    ${config.hopCount ?? `default (${NODE_MAP.hopCount})`}`,
     `width:   ${config.mapMaxWidth ?? `default (${NODE_MAP.middleWidthMax})`}`,
     `layout:  ${config.forcedLayoutId ?? 'procedural (random per battle)'}`,
     `roster:  ${roster}`,
@@ -152,7 +152,7 @@ function renderSummary(config: RunConfig): void {
 
 // ---- wiring ---------------------------------------------------------------
 
-for (const el of [seedInput, floorsInput, widthInput]) {
+for (const el of [seedInput, hopsInput, widthInput]) {
   el.addEventListener('input', recompute);
 }
 layoutSelect.addEventListener('change', recompute);

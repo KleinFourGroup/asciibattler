@@ -15,7 +15,7 @@ import { makeStrategy } from './strategies/registry';
 import type { RedrawPolicy } from './redrawPolicy';
 
 const strat = () => makeStrategy('greedy')!;
-const SHORT = { runConfig: { floorCount: 4 } } as const;
+const SHORT = { runConfig: { hopCount: 4 } } as const;
 
 describe('harness redraw injection (K3c3)', () => {
   it('a none policy is byte-identical to no policy at all (gates stay off)', () => {

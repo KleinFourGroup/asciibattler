@@ -1,19 +1,19 @@
 /**
- * Run-level node map: a layered DAG the player traverses one floor at a time.
+ * Run-level node map: a layered DAG the player traverses one hop at a time.
  * Node kinds (G3): the terminal is a `boss` (a regular fight for now, tagged so
- * future mechanics have a hook); `rest` nodes scatter through the middle floors
+ * future mechanics have a hook); `rest` nodes scatter through the middle hops
  * (a non-combat XP grant — see `Run.resolveRest`); everything else is a
  * `battle`. A full event system (shop / elite / etc.) is still future work.
  *
- * Layout (G2): `FLOOR_COUNT` floors total. Floor 0 and the last floor are
- * single nodes (root / terminal). Middle floors are `MIDDLE_WIDTH_MIN`..
+ * Layout (G2): `HOP_COUNT` hops total. Hop 0 and the last hop are
+ * single nodes (root / terminal). Middle hops are `MIDDLE_WIDTH_MIN`..
  * `MIDDLE_WIDTH_MAX` nodes wide, drawn from the supplied RNG and bounded by a
  * total-node budget (`TARGET_TOTAL_MAX`).
  *
- * Planarity (G2): the map is drawn with each floor's nodes in a fixed
- * left-to-right order — that order *is* the `floors[f]` array index, which the
+ * Planarity (G2): the map is drawn with each hop's nodes in a fixed
+ * left-to-right order — that order *is* the `hops[f]` array index, which the
  * renderer reads directly. Edge generation guarantees **no two edges cross**
- * given that ordering: per adjacent floor pair, each parent is assigned a
+ * given that ordering: per adjacent hop pair, each parent is assigned a
  * *contiguous* interval of children, with the intervals monotone
  * non-decreasing and gap-free across parents (sorted by x). That staircase
  * structure is planar by construction, and it simultaneously guarantees full
@@ -22,8 +22,8 @@
  * (interval width ≤ D) with no orphan-backfill pass that could violate it.
  *
  * Centering (G2): each interval's END is biased toward the parent's *diagonal
- * slot* (its proportional column in the child floor) rather than left to run
- * free. That keeps a parent's children near its own column, so per-floor lean
+ * slot* (its proportional column in the child hop) rather than left to run
+ * free. That keeps a parent's children near its own column, so per-hop lean
  * stays gentle and in-degree spreads evenly instead of piling onto one node.
  * A 50/50 per-pair horizontal mirror then cancels the small residual lean so
  * there's no global left/right bias. (An earlier free-running sweep leaned
@@ -31,10 +31,10 @@
  * wanted back.)
  *
  * Seed-stability contract: draws happen **widths → edges → kinds** (G3). The
- * width loop runs first; then per floor pair the parent sweep (each parent
+ * width loop runs first; then per hop pair the parent sweep (each parent
  * **`a` before `b`**) followed by a single **mirror bit** (only when both
- * floors are wider than 1); then the rest-kind scatter pass (one draw per
- * eligible middle floor, plus a node-pick draw only when a rest is placed).
+ * hops are wider than 1); then the rest-kind scatter pass (one draw per
+ * eligible middle hop, plus a node-pick draw only when a rest is placed).
  * The kinds pass runs **after** the full structure is built and appends its
  * draws at the tail, so the width+edge stream — and thus the map *structure*
  * for any seed — is byte-identical to the pre-G3 generator; only which nodes
@@ -57,7 +57,7 @@ export type NodeKind = 'battle' | 'rest' | 'boss';
 
 export interface MapNode {
   readonly id: number;
-  readonly floor: number;
+  readonly hop: number;
   readonly kind: NodeKind;
 }
 
@@ -71,14 +71,14 @@ export interface NodeMap {
   readonly edges: readonly MapEdge[];
   readonly rootId: number;
   readonly terminalId: number;
-  /** Node ids grouped by floor index; `floors[f]` are the ids on floor `f`. */
-  readonly floors: readonly (readonly number[])[];
+  /** Node ids grouped by hop index; `hops[f]` are the ids on hop `f`. */
+  readonly hops: readonly (readonly number[])[];
 }
 
 // Shape parameters live in config/nodemap.json. Bound to locals here so
 // the existing call sites read the same way.
 const {
-  floorCount: FLOOR_COUNT,
+  hopCount: HOP_COUNT,
   middleWidthMin: MIDDLE_WIDTH_MIN,
   middleWidthMax: MIDDLE_WIDTH_MAX,
   targetTotalMax: TARGET_TOTAL_MAX,
@@ -90,31 +90,31 @@ const {
 export function generate(rng: RNG, config?: RunConfig): NodeMap {
   // G1: RunConfig overrides the shape per-run; absent fields fall back to the
   // config/nodemap.json defaults, so a no-config call is byte-identical to
-  // pre-G1. Only `floorCount` + `mapMaxWidth` are tunable here; the min width,
+  // pre-G1. Only `hopCount` + `mapMaxWidth` are tunable here; the min width,
   // total cap, and out-degree stay on the JSON defaults.
-  const floorCount = config?.floorCount ?? FLOOR_COUNT;
+  const hopCount = config?.hopCount ?? HOP_COUNT;
   const maxWidth = config?.mapMaxWidth ?? MIDDLE_WIDTH_MAX;
 
-  const floors: number[][] = [];
+  const hops: number[][] = [];
   const nodes: MapNode[] = [];
   let nextId = 0;
   let placedSoFar = 0;
-  let prevWidth = 1; // floor 0 is the single root node
+  let prevWidth = 1; // hop 0 is the single root node
 
-  for (let f = 0; f < floorCount; f++) {
+  for (let f = 0; f < hopCount; f++) {
     let width: number;
-    if (f === 0 || f === floorCount - 1) {
+    if (f === 0 || f === hopCount - 1) {
       width = 1;
     } else {
-      // Cap so later floors can still hit their minimum width without blowing
-      // past TARGET_TOTAL_MAX (budget term), AND so the *next* floor stays
+      // Cap so later hops can still hit their minimum width without blowing
+      // past TARGET_TOTAL_MAX (budget term), AND so the *next* hop stays
       // coverable under the out-degree cap (`prevWidth * MAX_OUT_DEGREE`): m
       // parents each spanning ≤ D contiguous children can cover at most m·D
       // children, so the edge sweep below needs `n ≤ m·D`. With D=3 this only
-      // ever binds on floor 1 (root width 1 → floor 1 ≤ 3); 2·3 = 6 ≥ maxWidth
+      // ever binds on hop 1 (root width 1 → hop 1 ≤ 3); 2·3 = 6 ≥ maxWidth
       // thereafter.
-      const remainingMiddleFloors = floorCount - 2 - f;
-      const minNodesAfter = remainingMiddleFloors * MIDDLE_WIDTH_MIN + 1;
+      const remainingMiddleHops = hopCount - 2 - f;
+      const minNodesAfter = remainingMiddleHops * MIDDLE_WIDTH_MIN + 1;
       const budget = TARGET_TOTAL_MAX - placedSoFar - minNodesAfter;
       const cap = Math.max(
         MIDDLE_WIDTH_MIN,
@@ -126,17 +126,17 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     for (let i = 0; i < width; i++) {
       const id = nextId++;
       ids.push(id);
-      nodes.push({ id, floor: f, kind: 'battle' });
+      nodes.push({ id, hop: f, kind: 'battle' });
     }
-    floors.push(ids);
+    hops.push(ids);
     placedSoFar += width;
     prevWidth = width;
   }
 
   const edges: MapEdge[] = [];
-  for (let f = 0; f < floorCount - 1; f++) {
-    const parents = floors[f]!;
-    const children = floors[f + 1]!;
+  for (let f = 0; f < hopCount - 1; f++) {
+    const parents = hops[f]!;
+    const children = hops[f + 1]!;
     const m = parents.length;
     const n = children.length;
     const D = MAX_OUT_DEGREE;
@@ -145,7 +145,7 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     // `prevWidth * D` cap guarantees this; assert so a future config change
     // surfaces loudly instead of producing infeasible bounds.
     if (n > m * D) {
-      throw new Error(`NodeMap: floor ${f + 1} (${n} nodes) not coverable by floor ${f} (${m}×${D})`);
+      throw new Error(`NodeMap: hop ${f + 1} (${n} nodes) not coverable by hop ${f} (${m}×${D})`);
     }
 
     // Assign each parent (in x-order) a contiguous child interval [a, b].
@@ -158,7 +158,7 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     let prevB = -1; // sentinel: no interval yet
     for (let p = 0; p < m; p++) {
       const remaining = m - 1 - p; // parents strictly after p
-      // Interval start. Floored at `prevB` (overlap ≤ 1) and the lookahead
+      // Interval start. Hoped at `prevB` (overlap ≤ 1) and the lookahead
       // `n-(remaining+1)*D` (reserve children for the parents after p);
       // capped at `prevB+1` (gap-free coverage). First parent anchors at 0.
       const aMin = Math.max(prevB, n - (remaining + 1) * D);
@@ -173,8 +173,8 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
         b = n - 1; // last parent closes at the rightmost child
       } else {
         // Bias the end toward parent p's diagonal slot (its proportional column
-        // in the child floor) instead of letting it run free, so children stay
-        // near the parent's own column — gentle per-floor lean, in-degree
+        // in the child hop) instead of letting it run free, so children stay
+        // near the parent's own column — gentle per-hop lean, in-degree
         // spread evenly rather than piled onto one node. ±1 jitter keeps
         // variety; the clamp preserves the feasible [bMin,bMax], so every
         // invariant still holds.
@@ -189,8 +189,8 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
     // forced first/last anchors aren't symmetric). Reflection is a symmetry of
     // the layout — it preserves planarity, coverage, and the out-degree cap —
     // so a 50/50 per-pair mirror negates that residual (and flips which side a
-    // floor's in-degree hub lands on) without changing magnitude, cancelling
-    // any global left/right bias. Skipped when either floor is width 1 (a
+    // hop's in-degree hub lands on) without changing magnitude, cancelling
+    // any global left/right bias. Skipped when either hop is width 1 (a
     // no-op). One draw per qualifying pair, after the sweep, to keep the order
     // documented (see the seed-stability contract in the header).
     const flip = m > 1 && n > 1 && rng.int(0, 1) === 1;
@@ -204,26 +204,26 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
 
   // G3 node kinds — a tail pass over the finished structure (see the
   // seed-stability contract above). The terminal is the boss; rests scatter
-  // through the eligible middle floors `[2, floorCount-2]` — never floor 0
-  // (root), floor 1 (so the player always fights before the first rest), or
-  // the boss floor. One `rng.next()` per eligible floor decides whether it
-  // hosts a rest (subject to `REST_MIN_SPACING` between rest floors); when it
-  // does, one node on that floor is picked uniformly, so a wide floor keeps a
-  // battle sibling (taking the rest is a route choice) while a width-1 floor
+  // through the eligible middle hops `[2, hopCount-2]` — never hop 0
+  // (root), hop 1 (so the player always fights before the first rest), or
+  // the boss hop. One `rng.next()` per eligible hop decides whether it
+  // hosts a rest (subject to `REST_MIN_SPACING` between rest hops); when it
+  // does, one node on that hop is picked uniformly, so a wide hop keeps a
+  // battle sibling (taking the rest is a route choice) while a width-1 hop
   // yields a forced rest.
-  const bossId = floors[floorCount - 1]![0]!;
+  const bossId = hops[hopCount - 1]![0]!;
   const restIds = new Set<number>();
-  let lastRestFloor = -Infinity;
-  for (let f = 2; f <= floorCount - 2; f++) {
+  let lastRestHop = -Infinity;
+  for (let f = 2; f <= hopCount - 2; f++) {
     const roll = rng.next();
-    if (roll < REST_CHANCE && f - lastRestFloor >= REST_MIN_SPACING) {
-      const ids = floors[f]!;
+    if (roll < REST_CHANCE && f - lastRestHop >= REST_MIN_SPACING) {
+      const ids = hops[f]!;
       const pick = ids[rng.int(0, ids.length - 1)]!;
       restIds.add(pick);
-      lastRestFloor = f;
+      lastRestHop = f;
     }
   }
-  // floorCount === 1 degenerates to root == terminal: `bossId` is the root.
+  // hopCount === 1 degenerates to root == terminal: `bossId` is the root.
   // Tagging it boss is inert — nothing dispatches on the root's kind and the
   // renderer overrides its glyph with `@` (isRoot). No special-case needed.
   const kindedNodes: MapNode[] = nodes.map((n) =>
@@ -237,14 +237,14 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
   return {
     nodes: kindedNodes,
     edges,
-    rootId: floors[0]![0]!,
-    terminalId: floors[floorCount - 1]![0]!,
-    floors,
+    rootId: hops[0]![0]!,
+    terminalId: hops[hopCount - 1]![0]!,
+    hops,
   };
 }
 
 /**
- * Horizontally mirror a child interval `[a, b]` within a floor of width `n`.
+ * Horizontally mirror a child interval `[a, b]` within a hop of width `n`.
  * Parent `m-1-p`'s interval maps to parent `p`'s slot, so the reflected map is
  * emitted in ascending parent/child order (a clean edge array). Endpoints
  * swap: the left end `a` becomes the right end `n-1-a`, and vice versa.
@@ -256,16 +256,16 @@ function reflect([a, b]: [number, number], n: number): [number, number] {
 /** Human-readable dump for eyeball verification of generated maps. */
 export function dump(map: NodeMap): string {
   const lines: string[] = [];
-  lines.push(`NodeMap (${map.nodes.length} nodes, ${map.floors.length} floors)`);
-  for (let f = 0; f < map.floors.length; f++) {
-    const labeled = map.floors[f]!.map((id) => {
+  lines.push(`NodeMap (${map.nodes.length} nodes, ${map.hops.length} hops)`);
+  for (let f = 0; f < map.hops.length; f++) {
+    const labeled = map.hops[f]!.map((id) => {
       if (id === map.rootId) return `${id}(root)`;
       if (id === map.terminalId) return `${id}(boss)`;
       const node = map.nodes.find((n) => n.id === id);
       if (node?.kind === 'rest') return `${id}(rest)`;
       return String(id);
     });
-    lines.push(`  Floor ${f}: ${labeled.join(', ')}`);
+    lines.push(`  Hop ${f}: ${labeled.join(', ')}`);
   }
   lines.push('Edges:');
   const byFrom = new Map<number, number[]>();

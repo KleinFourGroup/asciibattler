@@ -50,7 +50,7 @@ The knob menu and the emitted command both come from
 | Preset       | `--preset`       | search-mode tier                                   |
 | Vectors      | `--vectors`      | search vectors (blank = preset default)            |
 | Seeds        | `--seeds`        | total, split ~80/20 train/test                     |
-| Floors       | `--floors`       | override the tier/preset run length                |
+| Hops         | `--hops`         | override the tier/preset run length                |
 | Roster       | `--roster`       | `archetype[:level],…` forced starting team         |
 | Sampler seed | `--sampler-seed` | reproducibility (default 1)                        |
 
@@ -70,7 +70,7 @@ npm run fuzz -- --search --preset=overnight --jobs=<cores>
 Children are pure evaluators of an explicit (vector, seeds, config) triple, so
 sharded results are **byte-identical** to single-process — `--jobs` only changes
 wall-clock. The overnight preset is 500 vectors × 200 train / 50 test seeds ×
-full 11-floor runs.
+full 11-hop runs.
 
 > **Held-out-seed caveat (read before trusting the number).** H7b's train/test
 > split holds the *test* seeds (`1_000_000…`) out of the **weight** search. The

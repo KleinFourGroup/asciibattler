@@ -108,13 +108,13 @@ describe('determinism: RunConfig (G1)', () => {
     // *nodeMap* only changes its forked child stream — the parent advances by
     // exactly one fork either way, so the team fork is byte-identical.
     const base = new Run(2026, new EventBus<GameEvents>());
-    const shaped = new Run(2026, new EventBus<GameEvents>(), { floorCount: 2 });
+    const shaped = new Run(2026, new EventBus<GameEvents>(), { hopCount: 2 });
     expect(shaped.nodeMap).not.toEqual(base.nodeMap);
     expect(shaped.team).toEqual(base.team);
   });
 
   it('a forced short run resolves deterministically to completion', () => {
-    const config: RunConfig = { floorCount: 2, forcedLayoutId: LAYOUT_IDS[0]! };
+    const config: RunConfig = { hopCount: 2, forcedLayoutId: LAYOUT_IDS[0]! };
     const first = driveForcedRun(7, config);
     const second = driveForcedRun(7, config);
     expect(first).toEqual(second);
@@ -186,7 +186,7 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
 }
 
 /**
- * G1 — drive a forced short run (floorCount 2 = exactly one battle) through
+ * G1 — drive a forced short run (hopCount 2 = exactly one battle) through
  * its single battle to completion, capturing the encounter (which Run nulls
  * out on battle-end). Used to prove a configured run is reproducible.
  */

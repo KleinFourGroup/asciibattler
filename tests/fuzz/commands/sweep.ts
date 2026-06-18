@@ -46,7 +46,7 @@ export type SweepModeArgs = Pick<
   | 'range2'
   | 'tier'
   | 'samplerSeed'
-  | 'floors'
+  | 'hops'
   | 'roster'
   | 'layout'
   | 'objective'
@@ -92,7 +92,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
 
   const jobs = args.jobs !== undefined ? Math.max(1, Math.floor(args.jobs)) : 1;
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
-  const floorNote = args.floors !== undefined ? ` floors=${args.floors}` : '';
+  const hopNote = args.hops !== undefined ? ` hops=${args.hops}` : '';
   const rosterNote = rosterOverride
     ? ` roster=[${rosterOverride.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
@@ -103,7 +103,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   const layoutNote = forcedLayoutId ? ` layout=${forcedLayoutId}` : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName}${floorNote}${rosterNote}${layoutNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${hopNote}${rosterNote}${layoutNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -111,7 +111,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     knobs,
     preset,
     samplerSeed,
-    floorOverride: args.floors,
+    hopOverride: args.hops,
     rosterOverride,
     forcedLayoutId,
     objective,

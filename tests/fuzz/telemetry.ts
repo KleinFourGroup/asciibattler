@@ -1,6 +1,6 @@
 /**
  * H7c — balance-sweep telemetry. The harness gathers *outcomes* (win/loss,
- * floor, deaths) on every run; the balance sweep needs *mechanism* — the
+ * hop, deaths) on every run; the balance sweep needs *mechanism* — the
  * per-archetype damage/healing/deaths/picks/composition + per-turn pool chips +
  * per-battle XP that diagnose WHICH unit is over/under-powered and whether the
  * no-attrition health pools (not the per-turn difficulty) drive the win rate.
@@ -20,7 +20,7 @@
  * Reading it (per BALANCE.md): the winning-vector archetype *affinities* are the
  * primary OP signal; this telemetry **corroborates independently** —
  * melee-OP ⇒ high damage + low deaths; healer-OP ⇒ high healing + self-leveling
- * via `xpPerHealing`. Pool chips diagnose the pool-ratio confound; XP-by-floor
+ * via `xpPerHealing`. Pool chips diagnose the pool-ratio confound; XP-by-hop
  * drives the leveling pass.
  */
 
@@ -66,7 +66,7 @@ export interface ArchetypeTelemetry {
 /** One turn's pool chip — the Σ`power` each side's survivors dealt the opposing
  *  health pool (`battle:ended.survivorPower`). One entry per turn, in order. */
 export interface PoolChip {
-  floor: number;
+  hop: number;
   player: number;
   enemy: number;
 }
@@ -154,8 +154,8 @@ export class TelemetryAccumulator {
   }
 
   /** One turn resolved — record both sides' pool chip. */
-  recordTurnChip(floor: number, player: number, enemy: number): void {
-    this.poolChips.push({ floor, player, enemy });
+  recordTurnChip(hop: number, player: number, enemy: number): void {
+    this.poolChips.push({ hop, player, enemy });
   }
 
   /**

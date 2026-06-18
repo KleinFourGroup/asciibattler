@@ -213,7 +213,7 @@ export class BattleScene implements Scene {
     // H4b — surface the encounter pools + the turn being fought. `turnIndex`
     // counts RESOLVED turns, so the current turn is +1. Pools are this turn's
     // pre-chip state (they chip on the post-turn screen).
-    this.hud.show(this.world, ctx.run.currentFloor, bannerText, {
+    this.hud.show(this.world, ctx.run.currentHop, bannerText, {
       turn: ctx.run.turnIndex + 1,
       playerHealth: ctx.run.playerHealth,
       playerHealthMax: HEALTH.playerHealthMax,

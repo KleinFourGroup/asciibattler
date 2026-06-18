@@ -135,7 +135,7 @@ describe('Run', () => {
     });
 
     it('G4: enemy levels stay within cap; stats built via the deterministic scaleStats path', () => {
-      // The floor-linear ramp is gone — enemies now share a level budget
+      // The hop-linear ramp is gone — enemies now share a level budget
       // derived from the player roster. The integration assertion here is
       // that every enemy is ≤ the per-unit cap and its stats come from the
       // canonical `scaleStats` build (the budget math itself is unit-tested
@@ -322,8 +322,8 @@ describe('Run', () => {
       expect(run.phase).toBe('map');
     });
 
-    it('G4: recruit level tracks round(avgTeamLevel) + bonus, not the floor', () => {
-      // A leveled starting roster (avg 6) lands at floor 1. Under the old
+    it('G4: recruit level tracks round(avgTeamLevel) + bonus, not the hop', () => {
+      // A leveled starting roster (avg 6) lands at hop 1. Under the old
       // `currentFloor` basis the offer would be level 1; G4 keys it off the
       // team average, so offered cards are ≥ round(avg) (= 6). Empty xpAwards
       // keep the roster levels fixed so the average is exactly the config.
@@ -341,7 +341,7 @@ describe('Run', () => {
 
       const offer = run.currentOffer!;
       expect(offer).not.toBeNull();
-      const avg = Math.round(avgTeamLevel(run.team)); // 6 — well above floor 1
+      const avg = Math.round(avgTeamLevel(run.team)); // 6 — well above hop 1
       for (const u of offer) {
         expect(u.level).toBeGreaterThanOrEqual(avg); // base, before any per-card bonus
         expect(u.level).toBeLessThanOrEqual(LEVELING.levelCap);
@@ -2069,11 +2069,11 @@ describe('Run', () => {
 
   describe('rest nodes (G3)', () => {
     it('banks restXp into every roster slot and starts no battle', () => {
-      // floorCount 4 → a floor-2 rest is the first reachable rest. Clear the
-      // floor-1 battle with no XP so the only XP the team carries into the rest
+      // hopCount 4 → a hop-2 rest is the first reachable rest. Clear the
+      // hop-1 battle with no XP so the only XP the team carries into the rest
       // is the rest grant itself (expected level/xp derive from the actual
       // starting level, so this is robust to the startingLevel dial).
-      const { run, bus, restId } = driveToRestFrontier({ floorCount: 4 }, 2);
+      const { run, bus, restId } = driveToRestFrontier({ hopCount: 4 }, 2);
       const before = run.team.map((t) => ({ level: t.level, xp: t.xp }));
       let battleStarts = 0;
       bus.on('battle:started', () => battleStarts++);
@@ -2092,7 +2092,7 @@ describe('Run', () => {
 
     it('triggers PromotionScene on a level-up and dismissing returns to the map (not recruit)', () => {
       const { run, bus, restId } = driveToRestFrontier(
-        { floorCount: 4, startingRoster: LVL1_ROSTER },
+        { hopCount: 4, startingRoster: LVL1_ROSTER },
         2,
       );
       // Level-1 roster + restXp (>= xpToNext(1)) guarantees promotions.
@@ -2108,7 +2108,7 @@ describe('Run', () => {
       expect(run.phase).toBe('promotion');
       expect(promotions).toHaveLength(1);
       // The 5 level-1 starters all promote on restXp (≥ xpToNext(1)). The
-      // floor-1 recruit comes in at round(avg)+bonus, so it may be level 2 and
+      // hop-1 recruit comes in at round(avg)+bonus, so it may be level 2 and
       // skip promotion — don't require it.
       expect(promotions[0]).toEqual(expect.arrayContaining([0, 1, 2, 3, 4]));
 
@@ -2118,7 +2118,7 @@ describe('Run', () => {
     });
 
     it('returns to the map silently when no unit levels up', () => {
-      // floorCount 5 → a floor-3 rest. G4: recruits arrive at round(avgTeamLevel)
+      // hopCount 5 → a hop-3 rest. G4: recruits arrive at round(avgTeamLevel)
       // + bonus, so with an all-cap starting roster (and vaultAll keeping each
       // recruit at the cap) the whole team sits at the level cap by rest time.
       // Granting restXp then can't level anyone (cap units drain banked xp), so
@@ -2133,7 +2133,7 @@ describe('Run', () => {
       const vaultAll = (r: Run) =>
         r.team.map((_, i) => ({ unitId: i, rosterIndex: i, damageDealt: 0, xpGained: 1e9 }));
       const { run, bus, restId } = driveToRestFrontier(
-        { floorCount: 5, startingRoster },
+        { hopCount: 5, startingRoster },
         3,
         vaultAll,
       );
@@ -2152,10 +2152,10 @@ describe('Run', () => {
     });
 
     it('a boss node builds a normal battle encounter (regression-equivalent to a battle)', () => {
-      // floorCount 2 → root -> terminal; the terminal is the boss, reachable
+      // hopCount 2 → root -> terminal; the terminal is the boss, reachable
       // in one hop.
       const bus = new EventBus<GameEvents>();
-      const run = new Run(1, bus, { floorCount: 2 });
+      const run = new Run(1, bus, { hopCount: 2 });
       const boss = run.nodeMap.terminalId;
       expect(run.nodeMap.nodes.find((n) => n.id === boss)!.kind).toBe('boss');
       let battleStarts = 0;
@@ -2172,7 +2172,7 @@ describe('Run', () => {
     });
 
     it('H6a — heals the run-wide player pool by restHealAmount when wounded', () => {
-      const { run, restId } = driveToRestFrontier({ floorCount: 4 }, 2);
+      const { run, restId } = driveToRestFrontier({ hopCount: 4 }, 2);
       // Wound the pool deep enough that the heal can't hit the cap.
       const before = Math.max(1, HEALTH.playerHealthMax - HEALTH.restHealAmount - 1);
       run.playerHealth = before;
@@ -2186,7 +2186,7 @@ describe('Run', () => {
     });
 
     it('H6a — never heals the pool above playerHealthMax', () => {
-      const { run, restId } = driveToRestFrontier({ floorCount: 4 }, 2);
+      const { run, restId } = driveToRestFrontier({ hopCount: 4 }, 2);
       // Already full: the heal must clamp, never overfill (robust for any knob).
       run.playerHealth = HEALTH.playerHealthMax;
 
@@ -2335,25 +2335,25 @@ function expectedAfterBank(
 }
 
 /**
- * Search seeds for a map (under `config`) with a rest node on floor `floor`,
+ * Search seeds for a map (under `config`) with a rest node on hop `hop`,
  * and return a fresh Run/bus on that seed plus the root→…→rest path (node ids,
  * including the root at index 0 and the rest last). Every hop before the rest
- * is a battle by construction (floor 1 is never rest-eligible and the
- * min-spacing rule keeps the floor below a rest a battle), so the path can be
+ * is a battle by construction (hop 1 is never rest-eligible and the
+ * min-spacing rule keeps the hop below a rest a battle), so the path can be
  * cleared with ordinary battle resolutions.
  */
 function findRestRun(
   config: RunConfig,
-  floor: number,
+  hop: number,
 ): { run: Run; bus: EventBus<GameEvents>; path: number[] } {
   for (let s = 0; s < 800; s++) {
     const bus = new EventBus<GameEvents>();
     const run = new Run(s, bus, config);
-    const rest = run.nodeMap.nodes.find((n) => n.kind === 'rest' && n.floor === floor);
+    const rest = run.nodeMap.nodes.find((n) => n.kind === 'rest' && n.hop === hop);
     if (!rest) continue;
     const path = [rest.id];
     let cur = rest.id;
-    while (run.nodeMap.nodes.find((n) => n.id === cur)!.floor > 0) {
+    while (run.nodeMap.nodes.find((n) => n.id === cur)!.hop > 0) {
       const parent = run.nodeMap.edges.find((e) => e.to === cur)!.from;
       path.unshift(parent);
       cur = parent;
@@ -2362,20 +2362,20 @@ function findRestRun(
     if (intermediate.some((k) => k !== 'battle')) continue;
     return { run, bus, path };
   }
-  throw new Error(`findRestRun: no seed with a rest on floor ${floor}`);
+  throw new Error(`findRestRun: no seed with a rest on hop ${hop}`);
 }
 
 /**
- * Drive a Run up to (but not into) a rest node on floor `floor`: clear every
+ * Drive a Run up to (but not into) a rest node on hop `hop`: clear every
  * intervening battle with `awardsForHop` (default: no XP) and the mandatory
  * recruit, leaving the rest as the current frontier. Returns the rest id.
  */
 function driveToRestFrontier(
   config: RunConfig,
-  floor: number,
+  hop: number,
   awardsForHop: (run: Run, hop: number) => GameEvents['battle:ended']['xpAwards'] = () => [],
 ): { run: Run; bus: EventBus<GameEvents>; restId: number } {
-  const { run, bus, path } = findRestRun(config, floor);
+  const { run, bus, path } = findRestRun(config, hop);
   const restId = path[path.length - 1]!;
   for (let i = 1; i < path.length - 1; i++) {
     run.dispatch({ kind: 'enterNode', nodeId: path[i]! });

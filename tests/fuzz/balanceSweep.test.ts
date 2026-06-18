@@ -131,19 +131,19 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     expect(DIFFICULTY.budgetFactor).toBe(original);
   });
 
-  it('passes floorOverride through to the measured config', async () => {
-    let seenFloors: number | undefined = -1;
+  it('passes hopOverride through to the measured config', async () => {
+    let seenHops: number | undefined = -1;
     await runBalanceSweep({
       knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
-      preset: PRESETS.quick, // its own floorCount is 4
+      preset: PRESETS.quick, // its own hopCount is 4
       samplerSeed: 1,
-      floorOverride: 11,
+      hopOverride: 11,
       measurePoint: (coord, cfg) => {
-        seenFloors = cfg.floorOverride;
+        seenHops = cfg.hopOverride;
         return fakePoint(coord);
       },
     });
-    expect(seenFloors).toBe(11);
+    expect(seenHops).toBe(11);
   });
 
   it('passes forcedLayoutId through to the measured config (the N2 procedural isolate)', async () => {
@@ -197,8 +197,8 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
 
 describe('tiers', () => {
   it('exposes the H7c medium + heavy presets', () => {
-    expect(PRESETS.medium.floorCount).toBe(6);
-    expect(PRESETS.heavy.floorCount).toBeUndefined(); // full-length runs
+    expect(PRESETS.medium.hopCount).toBe(6);
+    expect(PRESETS.heavy.hopCount).toBeUndefined(); // full-length runs
     expect(PRESETS.heavy.vectors).toBeGreaterThan(PRESETS.medium.vectors);
   });
 });

@@ -162,7 +162,7 @@ describe('runSearch reproducibility (real harness, short runs)', () => {
       box: DEFAULT_BOX,
       trainSeeds: [1, 2],
       testSeeds: [TEST_SEED_OFFSET],
-      harnessOptions: { runConfig: { floorCount: 2 } }, // one-battle runs
+      harnessOptions: { runConfig: { hopCount: 2 } }, // one-battle runs
     };
     const a = runSearch(cfg);
     const b = runSearch(cfg);

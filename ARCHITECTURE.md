@@ -53,7 +53,7 @@ src/
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets
     recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4)
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
-    nodemap.ts               #   floor count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
+    nodemap.ts               #   hop count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
     terrain.ts               #   C1a: wall + water density
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
     spawn.ts                 #   D5.C: SpawnAction lockout duration
@@ -208,13 +208,13 @@ src/
   ui/
     ui.css
     fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
-    HUD.ts                   # In-battle HUD: the floor·turn chip (top-left) + location banner (top-center) + the four card/control panes below. unit:* events drive the card panes (addCard/refreshHp/removeUnit over one cards map)
+    HUD.ts                   # In-battle HUD: the hop·turn chip (top-left) + location banner (top-center) + the four card/control panes below. unit:* events drive the card panes (addCard/refreshHp/removeUnit over one cards map)
                              # Q1: speed-command pane (top-right): per-speed buttons 0.5/1/2/3 + pause toggle (hotkeyed via Keybindings)
                              # Q2: pre-battle countdown readout (show/hideCountdown) + Fight-now button (the pause toggle reads "Fight now" while held); positionCountdown() drops it below the enemy pane when the cards wrap
                              # Q3: objective-command pane (bottom-right): Engage/Focus/Hold/Stop on O's typed model (per-type arming; right-click quick-Engage)
                              # Q4: player unit pane (bottom-center): wrapping compact UnitCards (live HP on attacked/burned/healed, grayed on death) + the relocated run pool gauge
                              # Q5: enemy unit pane (top-center, below banner): enemy pool gauge above an analogous red-teamed compact-card grid (max-height+scroll caps a large swarm)
-                             # Q6: dismantled the old monolithic side panel — both team rosters + per-unit stat lines + inline You/Foe pools all removed (HP/pools now live in the Q4/Q5 panes); the floor label relocated to the standalone top-left chip + folds in the per-turn counter
+                             # Q6: dismantled the old monolithic side panel — both team rosters + per-unit stat lines + inline You/Foe pools all removed (HP/pools now live in the Q4/Q5 panes); the hop label relocated to the standalone top-left chip + folds in the per-turn counter
     PlaybackSpeed.ts         # I3/Q1: page-lifetime speed+pause model (current/selectedSpeed/setSpeed/togglePause/steps); current=0 while paused; hotkeys via Keybindings
     Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
     ObjectiveController.ts   # J3/Q3: battle-scoped objective input — right-click quick-Engage / arm(engage|focus)-then-click / hold / stop → World commands
@@ -246,7 +246,7 @@ config/                      # A4: balance JSON source of truth (paired with src
                              # (L1: enabled ships FALSE — daemons carry their own buffs; the buff stays the K4-default shape)
   daemons.json               # L1: the idol catalog — per-daemon redraw/empower gates, each with a per-turn `chance`
                              # (Mars/Minerva empower; Mercury coin-flip full redraw; Janus guaranteed 2-card redraw)
-  nodemap.json               # floor count + width bands + degree cap + rest knobs (G2/G3)
+  nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
   spawn.json                 # D5.C: overflow (mid-battle reinforcement) spawn-in lockout/fade seconds (Q2 retired M3 turnIntroSeconds)
@@ -393,7 +393,7 @@ recruit:offered         { units: UnitTemplate[] }
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
 objective:set           { team; objective: TeamObjective }                          # O1: a team set/replaced its steering objective (marker tracks player only)
 objective:cleared       { team }                                                    # O1: a team reverted to atWill (explicit, or engage-target died)
-turn:starting           { turn; floor; pools; hand; drawPile; discardPile; redraw; empower; empowerMagnitudes; daemon; map }  # H4b/H5b/K3/K3.5/K4/L1/R2: pre-turn gate cue (gated only); hand + the other two piles (R2, recruitment order) + daemon-resolved redraw/empower budgets + per-card empower stacks + the run's daemon {id;name;description;redrawGate;empowerGate;empowerBuff} + the ENCOUNTER's map
+turn:starting           { turn; hop; pools; hand; drawPile; discardPile; redraw; empower; empowerMagnitudes; daemon; map }  # H4b/H5b/K3/K3.5/K4/L1/R2: pre-turn gate cue (gated only); hand + the other two piles (R2, recruitment order) + daemon-resolved redraw/empower budgets + per-card empower stacks + the run's daemon {id;name;description;redrawGate;empowerGate;empowerBuff} + the ENCOUNTER's map
 turn:resolved           { turn; winner; pool chips; result; pools }                 # H4b: post-turn outcome cue (gated path only)
 turn:handRedrawn        { hand; drawPile; discardPile; redraw; empowerMagnitudes }  # K3: a redrawCards command landed — full new hand + decremented budget (K4: + re-derived badge column; R2: + refreshed draw/discard piles)
 turn:unitEmpowered      { handIndex; empower; empowerMagnitudes }                   # K4: an empowerUnit command landed — decremented budget + per-card empower stacks

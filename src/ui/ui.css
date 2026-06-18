@@ -243,7 +243,7 @@ body {
 
 /* MapScreen (G2). Full-viewport, solid-opaque scene that scrolls vertically
    for boards taller than the viewport (current node is centered on show). The
-   inner .map-board carries the floor-count-scaled height; the SVG edge layer
+   inner .map-board carries the hop-count-scaled height; the SVG edge layer
    and percentage-positioned nodes lay out against it. Colors drawn from
    src/render/palette.ts. */
 
@@ -879,12 +879,12 @@ body {
   box-shadow: 0 0 6px rgba(51, 255, 0, 0.5);
 }
 
-/* Q6 — the in-battle floor/turn chip. The monolithic left HUD side panel was
+/* Q6 — the in-battle hop/turn chip. The monolithic left HUD side panel was
    dismantled in Q6 (rosters + per-unit stat lines → the Q4/Q5 card panes; the
    inline You/Foe pools → the panes' gauges); this label is the one survivor,
    relocated to a standalone top-left chip that mirrors the top-right speed pane,
    with the location banner centered between them. Amber terminal chrome. */
-.hud-floor {
+.hud-hop {
   position: absolute;
   top: 20px;
   left: 20px;
@@ -1180,7 +1180,7 @@ body {
 }
 
 /* K3.5 — the encounter's battlefield line (one map per encounter): brighter
-   than the floor sub-line because it's the input to the redraw decision. */
+   than the hop sub-line because it's the input to the redraw decision. */
 .preturn-map {
   font-size: 12px;
   letter-spacing: 0.1em;

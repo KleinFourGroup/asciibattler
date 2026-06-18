@@ -24,10 +24,10 @@ describe('RunConfig parsing', () => {
   });
 
   it('parses every field', () => {
-    const c = cfg(`seed=42&floors=2&roster=${A0},${A1}&layout=${LAYOUT}&width=4`);
+    const c = cfg(`seed=42&hops=2&roster=${A0},${A1}&layout=${LAYOUT}&width=4`);
     expect(c).toEqual({
       seed: 42,
-      floorCount: 2,
+      hopCount: 2,
       startingRoster: [
         { archetype: A0, level: 1 },
         { archetype: A1, level: 1 },
@@ -42,10 +42,10 @@ describe('RunConfig parsing', () => {
     expect(cfg('seed=-5').seed).toBe(-5);
   });
 
-  it('drops non-positive / non-integer floors and width', () => {
-    expect(cfg('floors=0').floorCount).toBeUndefined();
-    expect(cfg('floors=-1').floorCount).toBeUndefined();
-    expect(cfg('floors=2.5').floorCount).toBeUndefined();
+  it('drops non-positive / non-integer hops and width', () => {
+    expect(cfg('hops=0').hopCount).toBeUndefined();
+    expect(cfg('hops=-1').hopCount).toBeUndefined();
+    expect(cfg('hops=2.5').hopCount).toBeUndefined();
     expect(cfg('width=abc').mapMaxWidth).toBeUndefined();
   });
 
@@ -98,12 +98,12 @@ describe('RunConfig parsing', () => {
   });
 
   it('round-trips through runConfigToQueryString (incl. per-unit levels)', () => {
-    const original = cfg(`seed=7&floors=3&roster=${A0}:4,${A1}&layout=${LAYOUT}&width=5`);
+    const original = cfg(`seed=7&hops=3&roster=${A0}:4,${A1}&layout=${LAYOUT}&width=5`);
     const query = runConfigToQueryString(original);
     expect(parseRunConfig(new URLSearchParams(query))).toEqual(original);
   });
 
   it('parseRunConfigFromURL strips a leading "?" (location.search shape)', () => {
-    expect(parseRunConfigFromURL('?floors=2&seed=9')).toEqual({ seed: 9, floorCount: 2 });
+    expect(parseRunConfigFromURL('?hops=2&seed=9')).toEqual({ seed: 9, hopCount: 2 });
   });
 });

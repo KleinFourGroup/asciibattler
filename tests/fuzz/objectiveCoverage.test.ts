@@ -143,7 +143,7 @@ describe('coverage through the full run harness', () => {
   it('terminates a short run without a hang', () => {
     const result = runOne(1, makeStrategy('pure-random')!, {
       coverageObjectives: true,
-      runConfig: { floorCount: 2 },
+      runConfig: { hopCount: 2 },
       maxTicksPerBattle: 3000,
     });
     expect(result.outcome).not.toBe('hang');
@@ -154,7 +154,7 @@ describe('coverage through the full run harness', () => {
   it('is deterministic per seed', () => {
     const opts = {
       coverageObjectives: true,
-      runConfig: { floorCount: 2 },
+      runConfig: { hopCount: 2 },
       maxTicksPerBattle: 3000,
     } as const;
     expect(runOne(11, makeStrategy('pure-random')!, opts)).toEqual(

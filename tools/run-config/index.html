@@ -10,7 +10,7 @@
       <header class="bar">
         <h1>Run Launcher</h1>
         <span class="subtitle">
-          Pick seed / floors / layout / roster &rarr; get a launch link. Dev-only
+          Pick seed / hops / layout / roster &rarr; get a launch link. Dev-only
           GUI over the <code>run-config</code> CLI &amp; <code>RunConfig</code>.
         </span>
       </header>
@@ -24,8 +24,8 @@
             <button id="random-seed" type="button" class="small-btn">Random</button>
           </label>
           <label class="inline">
-            <span class="lbl">Floors</span>
-            <input id="floors" type="number" min="2" autocomplete="off" />
+            <span class="lbl">Hops</span>
+            <input id="hops" type="number" min="2" autocomplete="off" />
           </label>
           <label class="inline">
             <span class="lbl">Map width</span>
@@ -36,7 +36,7 @@
             <select id="layout"></select>
           </label>
           <p class="hint">
-            Floors counts root + terminal (<code>2</code> = one battle). Blank
+            Hops counts root + terminal (<code>2</code> = one battle). Blank
             fields use the game defaults; invalid values are dropped exactly as
             the game drops them.
           </p>

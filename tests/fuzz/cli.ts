@@ -12,10 +12,10 @@
  *   npm run fuzz -- --strategy=all           # the whole G5 menu
  *   npm run fuzz -- --strategy=scored        # the H7a linear scored strategy (default weights)
  *   npm run fuzz -- --strategy=config/fuzz-strategies.json   # a scored-strategy vector from a file
- *   npm run fuzz -- --per-floor   # + per-floor team analysis (stdout + per-floor.csv)
- *   npm run fuzz -- --per-layout  # + per-layout & layout×floor win/death breakdown (+ CSVs)
- *   npm run fuzz -- --layout=junctionAmbush --per-floor   # force ONE layout (clean full sample)
- *   npm run fuzz -- --layout=procedural --per-floor       # force PROCEDURAL maps every battle (M6 isolate)
+ *   npm run fuzz -- --per-hop   # + per-hop team analysis (stdout + per-hop.csv)
+ *   npm run fuzz -- --per-layout  # + per-layout & layout×hop win/death breakdown (+ CSVs)
+ *   npm run fuzz -- --layout=junctionAmbush --per-hop   # force ONE layout (clean full sample)
+ *   npm run fuzz -- --layout=procedural --per-hop       # force PROCEDURAL maps every battle (M6 isolate)
  *
  *   # H7b — random-search the scored-strategy weights for the best win rate:
  *   npm run fuzz -- --search                       # quick preset (short runs, < ~1 min)
@@ -29,13 +29,13 @@
  *     --knob2=difficulty.swarmMaxMultiplier --range2=1.0:3.0:5 --tier=quick
  *   npm run fuzz -- --balance-sweep --knob=health.enemyHealthMax --range=8:16:5 --dry-run
  *   # → writes output/balance-sweep.csv (+ .report.txt); --dry-run times point 1, no write
- *   # --floors=N overrides the tier's run length (cheap FULL-length reads):
+ *   # --hops=N overrides the tier's run length (cheap FULL-length reads):
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
- *     --tier=quick --floors=11
+ *     --tier=quick --hops=11
  *   # --roster forces the starting roster (evaluate an archetype the search won't
  *   # recruit — read its per-deployment telemetry):
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
- *     --tier=quick --floors=11 --roster=mercenary,mercenary,ranged,mage,mage
+ *     --tier=quick --hops=11 --roster=mercenary,mercenary,ranged,mage,mage
  *   # --jobs=N fans each grid point's vector search across N child processes
  *   # (results are byte-identical to single-process — only wall-clock changes):
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.75:2 \

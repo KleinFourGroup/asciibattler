@@ -5,7 +5,7 @@
  *   1. **CSV summary** — one row per run. Cheap to grep, easy to drop
  *      into a spreadsheet for visual sanity checks.
  *   2. **Markdown trace per failure** — one document per loss or hang,
- *      with the recruit history and per-floor battle outcomes. Designed
+ *      with the recruit history and per-hop battle outcomes. Designed
  *      to be the first thing you read when investigating why fuzz
  *      caught a regression.
  *
@@ -21,7 +21,7 @@ const CSV_HEADER = [
   'strategy',
   'daemon',
   'outcome',
-  'finalFloor',
+  'finalHop',
   'totalTicks',
   'finalTeamSize',
   'battlesPlayed',
@@ -53,7 +53,7 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
         // (explicit rather than empty: every run HAS a daemon disposition).
         r.daemonId ?? 'none',
         r.outcome,
-        r.finalFloorReached,
+        r.finalHopReached,
         r.totalTicks,
         r.finalTeamSize,
         r.battles.length,
@@ -71,7 +71,7 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
 /**
  * L1c3 — per-daemon aggregate buckets, keyed by the rolled/forced idol id
  * (`'none'` for daemon-less runs), sorted by key for stable output. Under
- * `--daemon=random` this is the per-idol win/floor read in ONE batch; under a
+ * `--daemon=random` this is the per-idol win/hop read in ONE batch; under a
  * forced arm it degenerates to a single bucket. The future starting-profiles
  * round inherits this bucketing as-is (a profile pins the daemon).
  */
@@ -98,7 +98,7 @@ export function renderDaemonAnalysis(results: readonly RunResult[]): string {
     lines.push(
       `  ${daemon.padEnd(10)} runs=${String(stats.totalRuns).padEnd(5)} ` +
         `win=${(stats.winRate * 100).toFixed(1).padStart(5)}% ` +
-        `avgFloor=${stats.averageFloorReached.toFixed(2)} hangs=${stats.hangs}`,
+        `avgHop=${stats.averageHopReached.toFixed(2)} hangs=${stats.hangs}`,
     );
   }
   return lines.join('\n') + '\n';
@@ -108,7 +108,7 @@ export interface AggregateStats {
   totalRuns: number;
   byOutcome: Record<string, number>;
   winRate: number;
-  averageFloorReached: number;
+  averageHopReached: number;
   averageTicks: number;
   hangs: number;
   /**
@@ -131,21 +131,21 @@ export interface AggregateStats {
 
 /**
  * Aggregate quick-glance stats. Win rate counts only `outcome ==
- * 'complete'` (a defeat at floor 4 is still a loss, not a "partial
- * win"). Average floor and ticks include all runs regardless of outcome,
- * because a defeat-at-floor-3 is still informative depth data.
+ * 'complete'` (a defeat at hop 4 is still a loss, not a "partial
+ * win"). Average hop and ticks include all runs regardless of outcome,
+ * because a defeat-at-hop-3 is still informative depth data.
  */
 export function aggregate(results: readonly RunResult[]): AggregateStats {
   const byOutcome: Record<string, number> = {};
   const hangsByLayout: Record<string, number> = {};
-  let floorSum = 0;
+  let hopSum = 0;
   let tickSum = 0;
   let wins = 0;
   let hangs = 0;
   let cappedDraws = 0;
   for (const r of results) {
     byOutcome[r.outcome] = (byOutcome[r.outcome] ?? 0) + 1;
-    floorSum += r.finalFloorReached;
+    hopSum += r.finalHopReached;
     tickSum += r.totalTicks;
     if (r.outcome === 'complete') wins++;
     if (r.outcome === 'hang') {
@@ -163,7 +163,7 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
     totalRuns: n,
     byOutcome,
     winRate: n === 0 ? 0 : wins / n,
-    averageFloorReached: n === 0 ? 0 : floorSum / n,
+    averageHopReached: n === 0 ? 0 : hopSum / n,
     averageTicks: n === 0 ? 0 : tickSum / n,
     hangs,
     hangsByLayout,
@@ -175,7 +175,7 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
  * One markdown document per failure (defeat / hang / aborted). The
  * trace doesn't include a verbose per-tick log — that would balloon
  * fast and isn't read often. Instead it gives the team progression and
- * per-floor outcome, which is enough to start diagnosing without re-
+ * per-hop outcome, which is enough to start diagnosing without re-
  * running.
  */
 export function renderFailureTrace(result: RunResult): string {
@@ -183,18 +183,18 @@ export function renderFailureTrace(result: RunResult): string {
   lines.push(`# Fuzz failure — seed ${result.seed} (${result.strategyName})`);
   lines.push('');
   lines.push(`- **Outcome:** ${result.outcome}`);
-  lines.push(`- **Final floor reached:** ${result.finalFloorReached}`);
+  lines.push(`- **Final hop reached:** ${result.finalHopReached}`);
   lines.push(`- **Total ticks:** ${result.totalTicks}`);
   lines.push(`- **Final team size:** ${result.finalTeamSize}`);
   lines.push('');
   lines.push('## Battles');
   lines.push('');
-  lines.push('| Floor | Layout | Winner | Ticks | Player deaths | Enemy deaths | Player size | Enemy size |');
-  lines.push('|------:|:-------|:-------|------:|--------------:|-------------:|------------:|-----------:|');
+  lines.push('| Hop | Layout | Winner | Ticks | Player deaths | Enemy deaths | Player size | Enemy size |');
+  lines.push('|----:|:-------|:-------|------:|--------------:|-------------:|------------:|-----------:|');
   for (const b of result.battles) {
     const layout = b.layoutId ?? 'procedural';
     lines.push(
-      `| ${b.floor} | ${layout} | ${b.winner} | ${b.ticks} | ${b.playerDeaths} | ${b.enemyDeaths} | ${b.playerTeamSize} | ${b.enemyTeamSize} |`,
+      `| ${b.hop} | ${layout} | ${b.winner} | ${b.ticks} | ${b.playerDeaths} | ${b.enemyDeaths} | ${b.playerTeamSize} | ${b.enemyTeamSize} |`,
     );
   }
   lines.push('');
@@ -203,10 +203,10 @@ export function renderFailureTrace(result: RunResult): string {
   if (result.recruits.length === 0) {
     lines.push('_(no recruits — defeat before first victory)_');
   } else {
-    lines.push('| After floor | Archetype | Team size after |');
-    lines.push('|------------:|:----------|----------------:|');
+    lines.push('| After hop | Archetype | Team size after |');
+    lines.push('|----------:|:----------|----------------:|');
     for (const r of result.recruits) {
-      lines.push(`| ${r.floor} | ${r.archetype} | ${r.teamSizeAfter} |`);
+      lines.push(`| ${r.hop} | ${r.archetype} | ${r.teamSizeAfter} |`);
     }
   }
   lines.push('');
@@ -218,7 +218,7 @@ export function failureFilename(result: RunResult): string {
   return `${result.strategyName}-seed${result.seed}-${result.outcome}.md`;
 }
 
-// ── Per-floor team analysis (G4 balance telemetry) ───────────────────────────
+// ── Per-hop team analysis (G4 balance telemetry) ─────────────────────────────
 
 function mean(xs: readonly number[]): number {
   return xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length;
@@ -238,24 +238,24 @@ function stddev(xs: readonly number[]): number {
   return Math.sqrt(mean(xs.map((x) => (x - m) ** 2)));
 }
 
-export interface FloorStats {
-  floor: number;
-  /** RUNS that reached this floor (`finalFloorReached >= floor`) — the survival
-   *  funnel denominator. (NOT battle count — floors have multiple waves under the
+export interface HopStats {
+  hop: number;
+  /** RUNS that reached this hop (`finalHopReached >= hop`) — the survival
+   *  funnel denominator. (NOT battle count — hops have multiple waves under the
    *  H4/H5 pool+deck system, so battles ≠ runs.) */
   runsReached: number;
-  /** RUNS that ENDED on this floor (`outcome !== 'complete' && finalFloorReached
-   *  === floor`) — the true loss-floor histogram. Σ over floors = total non-wins.
+  /** RUNS that ENDED on this hop (`outcome !== 'complete' && finalHopReached
+   *  === hop`) — the true loss-hop histogram. Σ over hops = total non-wins.
    *  This is run-level (a lost wave only chips the pool); use it, not wave losses,
    *  to answer "where do runs die." */
   runsDied: number;
   /** `runsDied / runsReached` — the conditional run-death rate GIVEN you reached
-   *  this floor. A high floor-1 value vs later floors = a front-loaded "floor-1
+   *  this hop. A high hop-1 value vs later hops = a front-loaded "hop-1
    *  wall," not a smooth ramp. */
   deathRate: number;
-  /** Battles (waves) fought on this floor across all runs — multiple per floor. */
+  /** Battles (waves) fought on this hop across all runs — multiple per hop. */
   battles: number;
-  /** Mean player-unit deaths per WAVE on this floor — the per-battle attrition
+  /** Mean player-unit deaths per WAVE on this hop — the per-battle attrition
    *  (distinct from run-death: heavy early attrition the pool can still absorb). */
   avgPlayerDeaths: number;
   playerSize: number;
@@ -270,32 +270,32 @@ export interface FloorStats {
 }
 
 /**
- * Pool every battle by floor (across all runs/strategies in `results`) and
- * compute per-floor team composition: mean/median unit level, within-team
+ * Pool every battle by hop (across all runs/strategies in `results`) and
+ * compute per-hop team composition: mean/median unit level, within-team
  * level spread, and mean team size — for both sides. Levels are sampled at
  * battle START (pre-deaths), so this reflects the army that walks onto each
- * floor, not the survivors. Deeper floors are sparse (bots die first) — the
+ * hop, not the survivors. Deeper hops are sparse (bots die first) — the
  * `battles` column is the sample size; weight your read by it.
  */
-export function perFloorStats(results: readonly RunResult[]): FloorStats[] {
-  const byFloor = new Map<number, BattleResult[]>();
+export function perHopStats(results: readonly RunResult[]): HopStats[] {
+  const byHop = new Map<number, BattleResult[]>();
   for (const r of results) {
     for (const b of r.battles) {
-      const arr = byFloor.get(b.floor);
+      const arr = byHop.get(b.hop);
       if (arr) arr.push(b);
-      else byFloor.set(b.floor, [b]);
+      else byHop.set(b.hop, [b]);
     }
   }
-  return [...byFloor.keys()]
+  return [...byHop.keys()]
     .sort((a, b) => a - b)
-    .map((floor) => {
-      const bs = byFloor.get(floor)!;
-      const runsReached = results.filter((r) => r.finalFloorReached >= floor).length;
+    .map((hop) => {
+      const bs = byHop.get(hop)!;
+      const runsReached = results.filter((r) => r.finalHopReached >= hop).length;
       const runsDied = results.filter(
-        (r) => r.outcome !== 'complete' && r.finalFloorReached === floor,
+        (r) => r.outcome !== 'complete' && r.finalHopReached === hop,
       ).length;
       return {
-        floor,
+        hop,
         runsReached,
         runsDied,
         deathRate: runsReached === 0 ? 0 : runsDied / runsReached,
@@ -313,12 +313,12 @@ export function perFloorStats(results: readonly RunResult[]): FloorStats[] {
     });
 }
 
-/** Render `perFloorStats` as a fixed-width terminal table. */
-export function renderPerFloorAnalysis(results: readonly RunResult[]): string {
-  const rows = perFloorStats(results);
+/** Render `perHopStats` as a fixed-width terminal table. */
+export function renderPerHopAnalysis(results: readonly RunResult[]): string {
+  const rows = perHopStats(results);
   const totalBattles = results.reduce((acc, r) => acc + r.battles.length, 0);
   const header = [
-    'Floor',
+    'Hop',
     'Runs',
     'Died',
     'Died%',
@@ -333,8 +333,8 @@ export function renderPerFloorAnalysis(results: readonly RunResult[]): string {
     'E.medLv',
     'E.spread',
   ];
-  const cell = (rs: FloorStats): string[] => [
-    String(rs.floor),
+  const cell = (rs: HopStats): string[] => [
+    String(rs.hop),
     String(rs.runsReached),
     String(rs.runsDied),
     (rs.deathRate * 100).toFixed(0),
@@ -354,10 +354,10 @@ export function renderPerFloorAnalysis(results: readonly RunResult[]): string {
   );
   const fmt = (cells: string[]) => cells.map((c, i) => c.padStart(widths[i]!)).join('  ');
   const lines: string[] = [];
-  lines.push(`### Per-floor team analysis (${totalBattles} battles across ${results.length} runs)`);
-  lines.push('Runs = runs that REACHED this floor · Died = runs that ENDED here (run-level)');
-  lines.push('Died% = Died/Runs (this floor’s conditional run-death rate — the funnel)');
-  lines.push('Waves = battles fought here (multiple/floor) · Dths/wv = mean player deaths per wave');
+  lines.push(`### Per-hop team analysis (${totalBattles} battles across ${results.length} runs)`);
+  lines.push('Runs = runs that REACHED this hop · Died = runs that ENDED here (run-level)');
+  lines.push('Died% = Died/Runs (this hop’s conditional run-death rate — the funnel)');
+  lines.push('Waves = battles fought here (multiple/hop) · Dths/wv = mean player deaths per wave');
   lines.push('P = player, E = enemy · avgLv/medLv = mean/median unit level (pooled)');
   lines.push('spread = mean within-team level stddev · size = mean team size');
   lines.push('');
@@ -377,7 +377,7 @@ export interface LayoutStats {
   battles: number;
   /** Fraction of those waves the PLAYER won tactically (`winner === 'player'`).
    *  The brutality headline. WAVE-level: a lost wave chips the pool but doesn't
-   *  end the run (use the per-floor run-death rate for that). */
+   *  end the run (use the per-hop run-death rate for that). */
   playerWinRate: number;
   /** Fraction the ENEMY won (`winner === 'enemy'`); the remainder up to 1 is
    *  draws (tick-cap) + hangs. */
@@ -391,8 +391,8 @@ export interface LayoutStats {
   enemySize: number;
 }
 
-export interface LayoutFloorStats extends LayoutStats {
-  floor: number;
+export interface LayoutHopStats extends LayoutStats {
+  hop: number;
 }
 
 function layoutKey(b: BattleResult): string {
@@ -400,7 +400,7 @@ function layoutKey(b: BattleResult): string {
 }
 
 /** Shared per-layout reduction over a battle bucket (used by both the
- *  layout-only and the layout×floor groupings). */
+ *  layout-only and the layout×hop groupings). */
 function layoutCore(layout: string, bs: readonly BattleResult[]): LayoutStats {
   const n = bs.length;
   const frac = (pred: (b: BattleResult) => boolean) =>
@@ -443,23 +443,23 @@ export function perLayoutStats(results: readonly RunResult[]): LayoutStats[] {
 }
 
 /**
- * Pool by layout × floor — disentangles "this layout is hard" from "it shows up
- * early with a weak roster." Sorted by layout, then floor.
+ * Pool by layout × hop — disentangles "this layout is hard" from "it shows up
+ * early with a weak roster." Sorted by layout, then hop.
  */
-export function perLayoutFloorStats(results: readonly RunResult[]): LayoutFloorStats[] {
-  const byKey = new Map<string, { layout: string; floor: number; bs: BattleResult[] }>();
+export function perLayoutHopStats(results: readonly RunResult[]): LayoutHopStats[] {
+  const byKey = new Map<string, { layout: string; hop: number; bs: BattleResult[] }>();
   for (const r of results) {
     for (const b of r.battles) {
       const layout = layoutKey(b);
-      const k = `${layout} ${b.floor}`;
+      const k = `${layout} ${b.hop}`;
       const entry = byKey.get(k);
       if (entry) entry.bs.push(b);
-      else byKey.set(k, { layout, floor: b.floor, bs: [b] });
+      else byKey.set(k, { layout, hop: b.hop, bs: [b] });
     }
   }
   return [...byKey.values()]
-    .map(({ layout, floor, bs }) => ({ ...layoutCore(layout, bs), floor }))
-    .sort((a, b) => a.layout.localeCompare(b.layout) || a.floor - b.floor);
+    .map(({ layout, hop, bs }) => ({ ...layoutCore(layout, bs), hop }))
+    .sort((a, b) => a.layout.localeCompare(b.layout) || a.hop - b.hop);
 }
 
 /** Fixed-width table: left-align column 0 (labels), right-align the rest. */
@@ -470,7 +470,7 @@ function renderTable(header: readonly string[], rows: readonly string[][]): stri
   return [fmt(header), ...rows.map(fmt)].join('\n');
 }
 
-/** Render the per-layout + per-layout×floor difficulty tables. */
+/** Render the per-layout + per-layout×hop difficulty tables. */
 export function renderLayoutAnalysis(results: readonly RunResult[]): string {
   const totalBattles = results.reduce((acc, r) => acc + r.battles.length, 0);
   const lines: string[] = [];
@@ -496,14 +496,14 @@ export function renderLayoutAnalysis(results: readonly RunResult[]): string {
     ),
   );
   lines.push('');
-  lines.push('### Per-layout × floor (disentangles layout difficulty from roster strength by depth)');
+  lines.push('### Per-layout × hop (disentangles layout difficulty from roster strength by depth)');
   lines.push('');
   lines.push(
     renderTable(
-      ['Layout', 'Floor', 'Waves', 'PWin%', 'PDth/wv', 'P.size', 'E.size'],
-      perLayoutFloorStats(results).map((s) => [
+      ['Layout', 'Hop', 'Waves', 'PWin%', 'PDth/wv', 'P.size', 'E.size'],
+      perLayoutHopStats(results).map((s) => [
         s.layout,
-        String(s.floor),
+        String(s.hop),
         String(s.battles),
         (s.playerWinRate * 100).toFixed(0),
         s.avgPlayerDeaths.toFixed(1),
@@ -533,14 +533,14 @@ export function renderLayoutCsv(stats: readonly LayoutStats[]): string {
   return [header, ...rows].join('\n') + '\n';
 }
 
-/** CSV of `perLayoutFloorStats` (one row per layout×floor). */
-export function renderLayoutFloorCsv(stats: readonly LayoutFloorStats[]): string {
+/** CSV of `perLayoutHopStats` (one row per layout×hop). */
+export function renderLayoutHopCsv(stats: readonly LayoutHopStats[]): string {
   const header =
-    'layout,floor,waves,playerWinRate,enemyWinRate,avgPlayerDeaths,avgEnemyDeaths,playerSize,enemySize';
+    'layout,hop,waves,playerWinRate,enemyWinRate,avgPlayerDeaths,avgEnemyDeaths,playerSize,enemySize';
   const rows = stats.map((s) =>
     [
       s.layout,
-      s.floor,
+      s.hop,
       s.battles,
       s.playerWinRate.toFixed(4),
       s.enemyWinRate.toFixed(4),

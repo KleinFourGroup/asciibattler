@@ -47,7 +47,7 @@ describe('TelemetryAccumulator', () => {
     expect(t.perArchetype.mercenary.recruitPicks).toBe(1);
     expect(t.perArchetype.mercenary.finalCount).toBe(1);
     expect(t.perArchetype.healer.finalCount).toBe(1);
-    expect(t.poolChips).toEqual([{ floor: 2, player: 3, enemy: 1 }]);
+    expect(t.poolChips).toEqual([{ hop: 2, player: 3, enemy: 1 }]);
   });
 
   it('skips units it never registered (non-fatal)', () => {
@@ -88,7 +88,7 @@ describe('aggregateTelemetry', () => {
 
 describe('telemetry integration (real headless run)', () => {
   const SEED = 1;
-  const opts = { runConfig: { floorCount: 3 } } as const;
+  const opts = { runConfig: { hopCount: 3 } } as const;
 
   it('collects mechanism telemetry that is structurally consistent', () => {
     const res = runOne(SEED, makeStrategy('greedy')!, { ...opts, telemetry: true });
@@ -120,7 +120,7 @@ describe('telemetry integration (real headless run)', () => {
     const on = runOne(SEED, makeStrategy('greedy')!, { ...opts, telemetry: true });
     expect(off.telemetry).toBeUndefined();
     expect(on.outcome).toBe(off.outcome);
-    expect(on.finalFloorReached).toBe(off.finalFloorReached);
+    expect(on.finalHopReached).toBe(off.finalHopReached);
     expect(on.totalTicks).toBe(off.totalTicks);
     expect(on.battles.length).toBe(off.battles.length);
     expect(on.finalTeamSize).toBe(off.finalTeamSize);

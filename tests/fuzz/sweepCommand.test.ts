@@ -87,13 +87,13 @@ describe('sweepCommand — balance-sweep args', () => {
       mode: 'balance-sweep',
       knob: 'health.enemyHealthMax',
       range: '8:16:5',
-      floors: 11,
+      hops: 11,
       roster: 'mercenary,ranged,healer:5',
       jobs: 8,
       samplerSeed: 1,
       dryRun: true,
     });
-    expect(args).toContain('--floors=11');
+    expect(args).toContain('--hops=11');
     expect(args).toContain('--roster=mercenary,ranged,healer:5');
     expect(args).toContain('--jobs=8');
     expect(args).toContain('--sampler-seed=1');
@@ -128,14 +128,14 @@ describe('sweepCommand — search args', () => {
       preset: 'overnight',
       vectors: 500,
       seeds: 250,
-      floors: 11,
+      hops: 11,
       samplerSeed: 7,
     });
     expect(args[0]).toBe('--search');
     expect(args).toContain('--preset=overnight');
     expect(args).toContain('--vectors=500');
     expect(args).toContain('--seeds=250');
-    expect(args).toContain('--floors=11');
+    expect(args).toContain('--hops=11');
     expect(args).toContain('--sampler-seed=7');
   });
 

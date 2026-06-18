@@ -17,7 +17,7 @@ import { DAEMONS } from '../../src/config/daemons';
 import type { RedrawPolicy } from './redrawPolicy';
 
 const strat = () => makeStrategy('greedy')!;
-const SHORT = { runConfig: { floorCount: 4 } } as const;
+const SHORT = { runConfig: { hopCount: 4 } } as const;
 
 describe('harness daemon arm (L1c3)', () => {
   it('random is byte-identical to no daemon option at all (the roll is the default)', () => {

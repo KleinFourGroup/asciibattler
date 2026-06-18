@@ -1,5 +1,7 @@
 # ROADMAP — Post-N
 
+> **✅ COMPLETE (Phases O → R, + the Qb deferred-bug tail) — closed 2026-06-18, user-confirmed.** This round is finished; the next thread is a proper **encounter system** (brief: [phase-R-feedback.md](phase-R-feedback.md)). **First task of the next session = archive this file → `archive/post-n-roadmap.md` and write a fresh ROADMAP.md** synthesizing that brief (the same archive-and-replace ritual this header lists for the prior roadmaps). Kept here verbatim until then for reference.
+
 The build order after **Phase N** (rogue mobility + the balance closure)
 landed and the user's **Phase-N playtest feedback** came in. Companion to
 [DESIGN.md](DESIGN.md), [ARCHITECTURE.md](ARCHITECTURE.md),

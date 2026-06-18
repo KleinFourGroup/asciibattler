@@ -149,7 +149,17 @@ export class MovementBehavior implements Behavior {
       );
       if (firingCell !== null) goals.push(firingCell);
     }
-    goals.push(target.position);
+    // The target's own cell is the APPROACH anti-freeze fallback (too-far →
+    // charge in; the in-range abstain then stops the unit a cell short, the
+    // target being soft-excluded from the collision set so findPath always has a
+    // goal). Qb#3 — when KITING (too close, inside minRange) that fallback is the
+    // opposite of the intent, and with the retreat blocked (a corridor pin: walls
+    // kill the sidestep, an ally fills the back-step) it would walk the kiter
+    // straight ONTO the soft-excluded target's cell — a same-cell overlap. So
+    // omit it when too close: a pinned kiter abstains/queues rather than charging.
+    // (`dist >= minRange` is always true for melee [minRange 0] and the too-far
+    // approach, so this is byte-identical except the blocked-kiter case.)
+    if (dist >= minRange) goals.push(target.position);
 
     const intent: MovementIntent = {
       goals,

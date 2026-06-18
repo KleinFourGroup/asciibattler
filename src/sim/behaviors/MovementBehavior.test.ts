@@ -485,6 +485,57 @@ describe('MovementBehavior / minRange kiting (O4)', () => {
   });
 });
 
+describe('MovementBehavior / corridor kite-pin (Qb #3)', () => {
+  const cheb = (a: GridCoord, b: GridCoord) =>
+    Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+  const FLOOR = minRangeForArchetype('ranged');
+  const REACH = rangeForArchetype('ranged');
+
+  /** Cells shared by more than one non-neutral (combatant) unit. */
+  function overlappingCells(world: World): string[] {
+    const counts = new Map<string, number>();
+    for (const u of world.units) {
+      if (u.team === 'neutral') continue;
+      const k = `${u.position.x},${u.position.y}`;
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    }
+    return [...counts].filter(([, n]) => n > 1).map(([k]) => k);
+  }
+
+  it('an archer pinned in a 1-wide corridor never steps ONTO the hostile (no same-cell overlap)', () => {
+    // The reported Qb #3 repro. Corridor along y=5 (rows 4 and 6 walled). The
+    // archer is sandwiched: a friendly behind sits on the ONLY retreat cell, the
+    // hostile ahead sits one cell in — INSIDE minRange, so the archer can neither
+    // fire (the band gates firing too, strikes.ts) nor hold; it wants to kite OUT
+    // but the walls kill the perpendicular sidestep and the friendly blocks the
+    // back-step. Pre-fix, the target-cell anti-freeze fallback (the target is
+    // soft-EXCLUDED from the step-collision set so findPath always has a goal)
+    // walked the archer straight onto the hostile's cell — a real same-cell overlap.
+    const walls: SceneUnit[] = [];
+    for (let x = 2; x <= 8; x++) {
+      walls.push({ team: 'neutral', x, y: 4, inert: true });
+      walls.push({ team: 'neutral', x, y: 6, inert: true });
+    }
+    const { world, units } = scene([
+      { team: 'player', x: 5, y: 5, archetype: 'ranged', attackRange: REACH, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 5 + (FLOOR - 1), y: 5, inert: true }, // hostile, one cell inside the floor
+      { team: 'player', x: 4, y: 5, inert: true }, // friendly on the only retreat cell
+      ...walls,
+    ]);
+    const archer = units[0]!;
+    const hostile = units[1]!;
+    expect(cheb(archer.position, hostile.position)).toBe(FLOOR - 1); // starts inside the floor
+
+    for (let i = 0; i < 10; i++) {
+      world.tick();
+      // The invariant: no two combatants share a cell at a tick boundary.
+      expect(overlappingCells(world)).toEqual([]);
+    }
+    // And specifically: it never marched onto the hostile (the corridor queues it).
+    expect(archer.position).not.toEqual(hostile.position);
+  });
+});
+
 interface SceneUnit {
   team: Team;
   x: number;

@@ -739,6 +739,14 @@ in the HUD" vs any non-board click).
 
 ### Q4 — Player unit pane (bottom-center)
 
+> **STATUS: ✅ DONE (2026-06-17)** — `68adcad`. Built P's `compact` UnitCard variant
+> for real (P left the seam unconsumed): `buildCompactCard` (glyph + Lv-TL/POW-TR +
+> glyph-width HP bar) via a new `unitCardFromUnit` adapter + `hpFill` handle + `hud`
+> skin. The bottom-center pane lives in HUD.ts; cards built on `unit:spawned`, HP on
+> attacked/burned/healed, grayed-in-place (not removed) on death; the poolGauge
+> relocated beneath. Decision points resolved as recommended (spawn-order ≈ hand-slot,
+> wrap, dead cards stay grayed). UI/render only — no snapshot/fuzz change.
+
 **Shape:** the brief's player pane — a grid of `compact` cards (from P) for the
 player's fielded units: large glyph, level (top-left) + power (top-right) small,
 glyph-width health bar below, **grayed out on death**. Beneath all the cards, the
@@ -755,6 +763,15 @@ stability across turns); wrapping for a 6-card hand; dead cards stay in place
 
 ### Q5 — Enemy unit pane (top)
 
+> **STATUS: ✅ DONE (2026-06-17)** — `5b12893` + fixes `1032b0b` / `f138dd9`. The
+> top-center mirror of Q4: enemy pool gauge above a red-teamed `compact`-card grid
+> (a new `team` option → `unit-card--enemy`; the `cards` map + `unit:*` handlers
+> generalized to both teams). **Swarm-fit resolved** (the open question): a wide
+> pane cap (`min(94vw, 1800px)`) keeps a realistic swarm on one row, a `max-height:
+> 30vh` + scroll is the vertical fallback, and `HUD.positionCountdown()` drops the
+> countdown below the pane when the cards wrap on a narrow/short screen. Enemy
+> content = full parity (resolved 2026-06-16). UI/render only — no snapshot/fuzz.
+
 **Shape:** the brief's expanded top pane — **map layout** at the very top (as
 today), then the **enemy encounter health-pool bar**, then an **analogous enemy
 card grid** (compact variant), cards graying out on death.
@@ -768,6 +785,16 @@ build. Still open: how a large enemy swarm fits (cap / shrink / scroll — the s
 can be sizeable post-N2).
 
 ### Q6 — Dismantle the old monolithic HUD
+
+> **STATUS: ✅ DONE (2026-06-17) — Phase Q COMPLETE.** `5a52962`. Removed the old
+> side panel from HUD.ts: both rosters (`makeRoster`/`makeRow`/`updateRow` + the
+> `rows` map), the per-unit stat lines (`formatSub`/`formatStats` — the
+> stat-crowding + RNG-label chores resolved by deletion), the inline You/Foe pools
+> (`renderPools`/`poolRow`), and the "Battle resolving…" status line. The floor
+> label relocated to a standalone top-left chip (folds in the per-turn counter);
+> the location banner stays centered. The roster-row halves of the `unit:*`
+> handlers went, the card-pane halves stayed (browser-verified all four HP paths).
+> **Net −325 lines.** UI/render only — no snapshot/fuzz. **NEXT = Phase R.**
 
 **Shape:** remove the old combined roster catalog + key-stat lines from
 [HUD.ts](src/ui/HUD.ts) (the brief: it "has gotten cumbersome and overwhelming").

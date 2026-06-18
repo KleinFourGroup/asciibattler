@@ -86,9 +86,28 @@ export class SpriteRenderer {
   // Scratch THREE.Vector3 to avoid allocating per addSprite.
   private static readonly _scratchColor = new THREE.Color();
 
+  // Qb#2 depth-sort scratch — all reused across frames so the per-frame sort
+  // allocates nothing (stays GC-neutral). `_order` holds the live instances'
+  // slot indices, sorted far→near by `_depths`; `_repackScratch` gathers one
+  // attribute at a time during the in-place reorder; `_handleScratch` snapshots
+  // the handle-at-slot map across the overlapping read/write of the rebuild.
+  private readonly _camDir = new THREE.Vector3();
+  private readonly _order: number[] = [];
+  private readonly _depths: Float32Array;
+  private readonly _repackScratch: Float32Array;
+  private readonly _handleScratch: Int32Array;
+  /** Descending by depth: the farthest sprite (largest key) sorts to the lowest
+   *  slot so it draws first, and the nearest sprite ends up last and paints on
+   *  top — the back-to-front order alpha blending needs. */
+  private readonly _depthCompare = (a: number, b: number): number =>
+    this._depths[b]! - this._depths[a]!;
+
   constructor(atlas: FontAtlas, spriteSize = 1, capacity = DEFAULT_CAPACITY) {
     this.atlas = atlas;
     this.capacity = capacity;
+    this._depths = new Float32Array(capacity);
+    this._repackScratch = new Float32Array(capacity * 4); // max stride (glyphUV) is 4
+    this._handleScratch = new Int32Array(capacity);
 
     this.geometry = new THREE.InstancedBufferGeometry();
     this.geometry.setAttribute('position', new THREE.BufferAttribute(QUAD_POSITIONS, 3));
@@ -252,6 +271,100 @@ export class SpriteRenderer {
     if (slot === undefined) return null;
     const arr = this.aPosition.array as Float32Array;
     return out.set(arr[slot * 3]!, arr[slot * 3 + 1]!, arr[slot * 3 + 2]!);
+  }
+
+  /**
+   * Qb#2 — depth-sort the live instances back-to-front for `camera`, so the
+   * painter's-order draw (instances rasterize in slot order, 0→count) matches
+   * camera depth. The glyph billboards are `depthWrite: false` — a transparent
+   * blend can't share the single-value depth buffer (see the material's
+   * comment) — so draw order is the ONLY sprite-vs-sprite occlusion arbiter;
+   * without this a farther sprite in a higher slot paints over a nearer one
+   * (the reported "attacker draws in front of the closer target").
+   *
+   * Reorders all six per-instance attribute buffers + the handle⇄slot maps in
+   * place, using only the preallocated scratch above (no per-frame allocation,
+   * so it stays GC-neutral). Cheap: one along-view depth key per instance (a
+   * dot product), an O(n log n) index sort, and a 13-float-per-instance gather
+   * — negligible at our sprite counts. Game calls it once per frame after all
+   * sprite positions have settled, just before the render.
+   */
+  sortByDepth(camera: THREE.Camera): void {
+    const n = this.activeCount;
+    if (n < 2) return;
+
+    // The camera's world look direction (-Z). `dot(pos, dir)` is the signed
+    // distance ALONG the view axis — larger = farther into the scene. The
+    // camera-position term is constant across instances, so it drops out of the
+    // ordering; only the direction matters. (This planar depth is the correct
+    // painter's key — sorting by radial distance-to-camera mis-orders at frame
+    // edges.) getWorldDirection also refreshes the camera's world matrix, so
+    // the key is correct even though the renderer hasn't rendered yet.
+    camera.getWorldDirection(this._camDir);
+    const dx = this._camDir.x;
+    const dy = this._camDir.y;
+    const dz = this._camDir.z;
+
+    const pos = this.aPosition.array as Float32Array;
+    const depths = this._depths;
+    const order = this._order;
+    order.length = n;
+    for (let i = 0; i < n; i++) {
+      depths[i] = pos[i * 3]! * dx + pos[i * 3 + 1]! * dy + pos[i * 3 + 2]! * dz;
+      order[i] = i;
+    }
+    order.sort(this._depthCompare);
+
+    // Already in order (nothing moved relative to the camera)? Skip the repack
+    // + the six buffer uploads. A stable sort keeps equal-depth runs identity,
+    // so this hits often when the board is static.
+    let changed = false;
+    for (let i = 0; i < n; i++) {
+      if (order[i] !== i) {
+        changed = true;
+        break;
+      }
+    }
+    if (!changed) return;
+
+    this.repackByOrder(this.aPosition, 3, n);
+    this.repackByOrder(this.aGlyphUV, 4, n);
+    this.repackByOrder(this.aColor, 3, n);
+    this.repackByOrder(this.aAlpha, 1, n);
+    this.repackByOrder(this.aBloomIntensity, 1, n);
+    this.repackByOrder(this.aSize, 1, n);
+
+    // Rebuild the handle⇄slot maps to match the new slot order. The read index
+    // (old slot `order[j]`) and write index (new slot `j`) overlap, so snapshot
+    // the handles in the new order first, then write back.
+    const scratch = this._handleScratch;
+    for (let j = 0; j < n; j++) scratch[j] = this.handleAtSlot[order[j]!]!;
+    for (let j = 0; j < n; j++) {
+      const h = scratch[j]!;
+      this.handleAtSlot[j] = h;
+      this.slotByHandle.set(h, j);
+    }
+  }
+
+  /**
+   * Gather one instanced attribute's live range into the `_order` permutation
+   * and write it back in place (via `_repackScratch`). Old data is read from
+   * `attr` and the result overwrites it, so callers must not have mutated
+   * `attr` for this sort yet — each attribute is independent, so the six calls
+   * in `sortByDepth` are safe in any order.
+   */
+  private repackByOrder(attr: THREE.InstancedBufferAttribute, stride: number, n: number): void {
+    const arr = attr.array as Float32Array;
+    const scratch = this._repackScratch;
+    const order = this._order;
+    for (let j = 0; j < n; j++) {
+      const src = order[j]! * stride;
+      const dst = j * stride;
+      for (let k = 0; k < stride; k++) scratch[dst + k] = arr[src + k]!;
+    }
+    const total = n * stride;
+    for (let i = 0; i < total; i++) arr[i] = scratch[i]!;
+    attr.needsUpdate = true;
   }
 
   /** Dispose the GPU resources. Called when the renderer is torn down. */

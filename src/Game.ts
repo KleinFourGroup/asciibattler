@@ -115,8 +115,15 @@ export class Game implements RunDispatcher {
     // because Run emits those from within its own battle:ended handler.
     this.run = this.createRun();
 
-    // Renderer drives the per-frame tick of whatever scene is active.
-    this.renderer = new Renderer(canvas, (dt) => this.activeScene?.tick(dt));
+    // Renderer drives the per-frame tick of whatever scene is active. After the
+    // scene has updated (sprite positions lerped for this frame), Qb#2 depth-
+    // sorts the transparent sprite billboards back-to-front so their paint order
+    // matches camera depth — they're `depthWrite: false`, so draw order is their
+    // only occlusion arbiter. Runs before the render, which follows onFrame.
+    this.renderer = new Renderer(canvas, (dt) => {
+      this.activeScene?.tick(dt);
+      this.sprites.sortByDepth(this.renderer.camera);
+    });
 
     // C1c terrain: faceted low-poly prism-per-tile. Renders floor + water
     // tiles directly (no separate WaterRenderer); BattleScene calls

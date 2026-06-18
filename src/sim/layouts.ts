@@ -36,3 +36,12 @@ export {
   type SpawnAvailability,
   type Theme,
 } from '../config/layouts';
+
+/**
+ * R3 — the single display label for a procedural map (`layoutId === null`). The
+ * pre-turn map line ([PreTurnScreen](../ui/PreTurnScreen.ts)) and the in-battle
+ * banner ([BattleScene](../scenes/BattleScene.ts)) both route through this one
+ * constant so they can't drift again — pre-R3 they read "Uncharted ground" and
+ * "Nowhere" respectively.
+ */
+export const PROCEDURAL_MAP_NAME = 'Uncharted Ground';

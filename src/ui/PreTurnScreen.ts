@@ -39,7 +39,7 @@ import type { EmpowerAvailability } from '../run/empower';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { StatusEffect } from '../sim/statusEffects';
-import { getLayout } from '../sim/layouts';
+import { getLayout, PROCEDURAL_MAP_NAME } from '../sim/layouts';
 import { STAT_LABELS } from './statLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
@@ -201,11 +201,12 @@ export class PreTurnScreen {
 
     // K3.5 — the encounter's battlefield (one map per encounter), so the
     // redraw below is an informed choice. Hand-authored layouts show their
-    // authored display name; a procedural roll shows as uncharted.
+    // authored display name; a procedural roll shows the shared
+    // PROCEDURAL_MAP_NAME (R3 — same constant as the in-battle banner).
     const map = document.createElement('div');
     map.className = 'preturn-map';
     const mapName = info.map.layoutId === null
-      ? 'Uncharted ground'
+      ? PROCEDURAL_MAP_NAME
       : (getLayout(info.map.layoutId)?.name ?? info.map.layoutId);
     map.textContent = `⌖ ${mapName} — ${info.map.gridW}×${info.map.gridH}`;
     panel.appendChild(map);

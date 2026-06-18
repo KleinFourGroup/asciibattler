@@ -23,7 +23,7 @@ import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
 import { TICK_RATE, secondsToTicks } from '../config';
 import { HEALTH } from '../config/health';
 import { PLAYBACK } from '../config/playback';
-import { getLayout, type Theme } from '../sim/layouts';
+import { getLayout, PROCEDURAL_MAP_NAME, type Theme } from '../sim/layouts';
 import { PreBattleCountdown } from './PreBattleCountdown';
 import type { Scene, SceneContext } from './Scene';
 
@@ -195,15 +195,16 @@ export class BattleScene implements Scene {
     // src/sim/terrainGen.ts).
     //
     // C1d follow-up: resolve the encounter's layoutId to a display name for
-    // the top banner. Procedural encounters (layoutId === null) read as
-    // "Nowhere" — no hand-authored location, no name.
+    // the top banner. Procedural encounters (layoutId === null) read as the
+    // shared PROCEDURAL_MAP_NAME (R3: one constant, so the banner + the
+    // pre-turn map line can't drift — was "Nowhere" here).
     // D8: append the theme as a banner suffix (e.g. "Corridor — Volcanic")
     // so the visual reskin reads as deliberate flavor, not a bug. The
     // `default` theme is the canonical look — no suffix added, to keep
     // the banner clean when the palette is the baseline.
     const locationName =
       encounter.layoutId === null
-        ? 'Nowhere'
+        ? PROCEDURAL_MAP_NAME
         : (getLayout(encounter.layoutId)?.name ?? encounter.layoutId);
     const bannerText =
       encounter.theme === 'default'

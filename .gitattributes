@@ -1,0 +1,19 @@
+# R3 — normalize line endings. Store text as LF in the repo and check it out as
+# LF on every platform, so a Windows checkout no longer triggers the
+# "LF will be replaced by CRLF" warnings on every `git add`.
+* text=auto eol=lf
+
+# Binary assets — never touch (git auto-detects most, but be explicit).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.mp3 binary
+*.wav binary
+*.ogg binary

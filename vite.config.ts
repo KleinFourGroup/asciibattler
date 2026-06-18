@@ -87,6 +87,23 @@ export default defineConfig({
   // works under any subpath (GitHub Pages project sites, file://, etc.)
   // without needing a per-deploy `base` value.
   base: './',
+  build: {
+    // R3 — three.js is the bulk of the bundle. Split it into its own vendor
+    // chunk (a long-cached file that app redeploys don't bust) and lift the
+    // warning ceiling above three's minified size, so the build stays quiet
+    // while still flagging genuine future app-code bloat.
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        // Function form (the record form trips Vite's overload typing): route
+        // everything under the `three` package into one vendor chunk.
+        manualChunks(id) {
+          if (id.includes('node_modules/three')) return 'three';
+          return undefined;
+        },
+      },
+    },
+  },
   server: {
     open: false,
   },

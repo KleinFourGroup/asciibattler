@@ -140,7 +140,7 @@ export class HUD {
     this.objective = objective;
 
     // C1d follow-up: top-of-screen banner naming the current battle's
-    // layout ("Corridor" / "Diamond" / "Labyrinth" / "Nowhere" for
+    // layout ("Corridor" / "Diamond" / "Labyrinth" / "Uncharted Ground" for
     // procedural). Centered at the top; same screen-fade lifecycle as the panes.
     this.banner = document.createElement('div');
     this.banner.className = 'battle-banner screen-fade';
@@ -301,8 +301,8 @@ export class HUD {
   /**
    * Bind to a fresh battle world. Must be called *before* the battle starts
    * spawning so unit:spawned events find a world to look up against.
-   * `locationName` populates the top banner — pass "Nowhere" for procedural
-   * encounters (no hand-authored layout).
+   * `locationName` populates the top banner — pass PROCEDURAL_MAP_NAME
+   * ("Uncharted Ground") for procedural encounters (no hand-authored layout).
    */
   show(
     world: World,

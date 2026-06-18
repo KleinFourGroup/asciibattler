@@ -891,6 +891,26 @@ open: modal vs slide-out.
 
 ### R3 — "Uncharted Ground" / "Nowhere" unification + chores
 
+> **STATUS: ✅ DONE (2026-06-17) — Phase R COMPLETE; the Post-N O→R round is
+> closed.** The procedural-map label is unified to **"Uncharted Ground"** via one
+> shared constant (`PROCEDURAL_MAP_NAME` in [src/sim/layouts.ts](src/sim/layouts.ts));
+> both the pre-turn map line ([PreTurnScreen](src/ui/PreTurnScreen.ts)) and the
+> in-battle banner ([BattleScene](src/scenes/BattleScene.ts)) route through it, so
+> they can't drift again (pre-R3: "Uncharted ground" vs "Nowhere"). Cleanup
+> chores landed (user-selected): **`.gitattributes`** (`* text=auto eol=lf` —
+> stops the per-`git add` CRLF warnings; `git add --renormalize` was a no-op, the
+> repo was already LF), an **inline-SVG favicon** (the "@" origin marker, green on
+> black, in [index.html](index.html) — stops the `/favicon.ico` 404 with no extra
+> request), and the **bundle chunk-size** fix ([vite.config.ts](vite.config.ts) —
+> `three` split into its own 525 kB vendor chunk via `manualChunks` + the warning
+> ceiling lifted to 1000 kB; the build is now quiet, app chunk 273 kB). **Catapult
+> SFX deferred** to its own pass (the heaviest chore — an audio asset, not
+> config). **No snapshot/fuzz change** (v25/v17 hold). **1015 main tests**;
+> typecheck + lint + `npm run build` clean. Browser-verified: favicon link is the
+> inline SVG (no 404), and a forced procedural pre-turn map renders "⌖ Uncharted
+> Ground". **Phase R is COMPLETE (R1–R3); NEXT major thread = archetype balance**
+> (READ [BALANCE.md](BALANCE.md) first).
+
 **Shape:** the brief's naming bug — the pre-turn screen says **"Uncharted ground"**
 ([PreTurnScreen.ts](src/ui/PreTurnScreen.ts):158) while the in-battle banner says
 **"Nowhere"** ([BattleScene.ts](src/scenes/BattleScene.ts):204,
@@ -919,11 +939,14 @@ Not gated; land any time (several pair naturally with this round's work).
   band `1.25 × 1.5` STANDS, no retune** (best 75% train / +50 grad; 0 hangs / ~0 draws;
   duopoly unchanged; archers safer-not-dominant). Archetype-balance observations
   deferred to that thread.
-- **Favicon** ([TODO](TODO.md)) — inline-SVG glyph; stops the per-load 404.
-- **Dedicated catapult SFX (+ the F3 launch/impact split)** ([TODO](TODO.md)).
-- **`.gitattributes`** to normalize line endings (stops CRLF warnings).
-- **Bundle chunk-size warning** ([TODO](TODO.md)) — bump the limit or code-split
-  three.js if noisy.
+- **Favicon** — ✅ **DONE (R3)**: inline-SVG "@" glyph in index.html; stops the
+  per-load `/favicon.ico` 404.
+- **Dedicated catapult SFX (+ the F3 launch/impact split)** ([TODO](TODO.md)) —
+  still pending (deferred from R3 as the heaviest chore — an audio asset).
+- **`.gitattributes`** — ✅ **DONE (R3)**: `* text=auto eol=lf` stops the CRLF
+  warnings (renormalize was a no-op; repo was already LF).
+- **Bundle chunk-size warning** — ✅ **DONE (R3)**: `three` split into its own
+  vendor chunk via `manualChunks` + `chunkSizeWarningLimit` lifted to 1000 kB.
 - **N4 — overnight out-of-sample verify** ([HANDOFF.md](HANDOFF.md), the prior
   round's deferred closer) — still **deferred to a VPS** (the local `dwm.exe`
   leak, [archive/dwm-leak-diagnosis.md](archive/dwm-leak-diagnosis.md)). Land

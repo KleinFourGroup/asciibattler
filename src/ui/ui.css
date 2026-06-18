@@ -879,35 +879,23 @@ body {
   box-shadow: 0 0 6px rgba(51, 255, 0, 0.5);
 }
 
-/* HUD (Step 5.1). Left-side panel mirroring MapScreen on the right. Shown
-   during battles, hidden between. Player roster on top, enemy roster below,
-   floor + status header. Palette: amber chrome, TERMINAL_GREEN for player
-   HP fills, NEON_RED for enemy. */
-
-.hud {
+/* Q6 — the in-battle floor/turn chip. The monolithic left HUD side panel was
+   dismantled in Q6 (rosters + per-unit stat lines → the Q4/Q5 card panes; the
+   inline You/Foe pools → the panes' gauges); this label is the one survivor,
+   relocated to a standalone top-left chip that mirrors the top-right speed pane,
+   with the location banner centered between them. Amber terminal chrome. */
+.hud-floor {
   position: absolute;
   top: 20px;
   left: 20px;
-  width: 240px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
   font-family: var(--font-mono);
-  color: #ffb000;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.hud[hidden] {
-  display: none;
-}
-
-.hud-floor {
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #ffb000; /* TERMINAL_AMBER */
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ffb000;
+  padding: 4px 10px;
 }
 
 /* Q1 — speed-command pane (top-right): one button per enabled speed (ascending,
@@ -1133,14 +1121,9 @@ body {
   overflow-y: auto;
 }
 
-.hud-status {
-  font-size: 11px;
-  color: #664600; /* DARK_TERMINAL_AMBER */
-  letter-spacing: 0.05em;
-  /* Subtle pulse so "Battle resolving…" reads as live, not static. */
-  animation: hud-status-pulse 1.4s ease-in-out infinite;
-}
-
+/* The pulse the objective pane's armed-target prompt rides (`.is-armed`). It
+   was introduced for the old `.hud-status` "Battle resolving…" line (removed in
+   Q6 with the rest of the monolithic panel); the keyframe lives on. */
 @keyframes hud-status-pulse {
   0%,
   100% {
@@ -1149,111 +1132,6 @@ body {
   50% {
     opacity: 1;
   }
-}
-
-.hud-rosters {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.hud-roster-heading {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 4px;
-  color: #664600; /* DARK_TERMINAL_AMBER — heading is chrome, rows carry color */
-}
-
-.hud-roster--player .hud-glyph {
-  color: #33ff00; /* TERMINAL_GREEN */
-}
-
-.hud-roster--player .hud-hp-fill {
-  background: #33ff00; /* TERMINAL_GREEN */
-}
-
-.hud-roster--enemy .hud-glyph {
-  color: #ff3131; /* NEON_RED */
-}
-
-.hud-roster--enemy .hud-hp-fill {
-  background: #ff3131; /* NEON_RED */
-}
-
-.hud-roster-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.hud-row {
-  display: grid;
-  grid-template-columns: 16px 1fr 56px;
-  grid-template-areas:
-    "glyph hp text"
-    "sub   sub sub"
-    "stats stats stats";
-  align-items: center;
-  gap: 2px 8px;
-  font-size: 12px;
-}
-
-.hud-glyph {
-  grid-area: glyph;
-  font-weight: bold;
-  font-size: 14px;
-  text-align: center;
-}
-
-.hud-hp {
-  grid-area: hp;
-  height: 8px;
-  background: #1a1a1a;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  overflow: hidden;
-}
-
-.hud-hp-fill {
-  height: 100%;
-  width: 100%;
-  /* Width transition so HP changes read as a visible drain rather than a
-     pop, but short enough that it tracks the simulated tick cadence. */
-  transition: width 0.12s linear;
-}
-
-.hud-hp-text {
-  grid-area: text;
-  text-align: right;
-  color: #ffb000; /* TERMINAL_AMBER */
-  font-variant-numeric: tabular-nums;
-  font-size: 11px;
-}
-
-/* E4: per-row XP + level subline. Lives in its own grid area so the
-   row's existing glyph / HP / HP-text columns are untouched. Dim
-   amber so the eye still leads with HP. */
-.hud-sub {
-  grid-area: sub;
-  font-size: 10px;
-  color: #ffb000;
-  opacity: 0.55;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-  padding-left: 24px; /* aligns under the HP bar, past the glyph */
-}
-
-/* GP3: raw driving-stat line (DEF · MOB · SPD) beneath the Lv/XP sub.
-   Same dim-amber treatment + alignment as .hud-sub so the eye still leads
-   with HP; one notch smaller-feeling via the shared opacity. */
-.hud-stats {
-  grid-area: stats;
-  font-size: 10px;
-  color: #ffb000;
-  opacity: 0.55;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-  padding-left: 24px; /* aligns under the HP bar, past the glyph */
 }
 
 /* ── H4b: turn screens (pre-turn / post-turn) + shared pool gauges ─────────
@@ -1582,37 +1460,3 @@ body {
   background: #ff3131;
 }
 
-/* In-battle HUD pool line: the turn + both pools, compact text in the panel. */
-.hud-pools {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 0;
-  border-top: 1px solid #1a1a1a;
-  border-bottom: 1px solid #1a1a1a;
-}
-
-.hud-pool-turn {
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #15f4ee; /* FLOURESCENT_BLUE */
-}
-
-.hud-pool-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.hud-pool-row--player {
-  color: #33ff00;
-}
-.hud-pool-row--enemy {
-  color: #ff3131;
-}
-
-.hud-pool-label {
-  opacity: 0.85;
-}

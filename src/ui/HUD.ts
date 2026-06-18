@@ -1,13 +1,14 @@
-// In-battle HUD: current floor, both team rosters with HP bars, "battle
-// resolving" status. Step 5.1. Live-updates from unit:* events.
+// In-battle HUD: the four card/control panes (Q1 speed · Q3 objective · Q4
+// player cards · Q5 enemy cards) plus the floor/turn chip and the location
+// banner. Q6 dismantled the old monolithic side panel (both team rosters, the
+// per-unit stat lines, and the inline You/Foe pools) now that the card panes
+// own the live HP and the pool gauges. Live-updates from unit:* events.
 
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
-import { isAtLevelCap, xpToNext, displayLevel } from '../sim/xp';
-import { STAT_LABELS } from './statLabels';
 import { buildUnitCard, unitCardFromUnit, type UnitCardHandles } from './UnitCard';
 import { renderPoolGauge } from './poolGauge';
 import type { PlaybackSpeed } from './PlaybackSpeed';
@@ -57,7 +58,6 @@ interface EncounterPools {
 }
 
 export class HUD {
-  private readonly root: HTMLElement;
   private readonly banner: HTMLElement;
   private readonly floorLabel: HTMLElement;
   /** Q1 — the speed-command pane (top-right): one button per enabled speed
@@ -120,14 +120,7 @@ export class HUD {
    *  stability. The team is fixed at spawn, so one map keyed by id suffices —
    *  only the append target (which pane's row) differs. */
   private readonly cards = new Map<number, UnitCardHandles>();
-  /** H4b — the encounter health pools + turn number, populated per battle. */
-  private readonly pools: HTMLElement;
-  private readonly status: HTMLElement;
-  private readonly playerBody: HTMLElement;
-  private readonly enemyBody: HTMLElement;
   private world: World | null = null;
-  /** unitId → roster row element so updates and removals are O(1). */
-  private readonly rows = new Map<number, HTMLElement>();
   /**
    * Bus unsubscribers. A5 makes HUD a per-battle object (owned by
    * BattleScene), so subscriptions get torn down on dispose to keep them
@@ -145,23 +138,20 @@ export class HUD {
     this.playback = playback;
     this.keybindings = keybindings;
     this.objective = objective;
-    this.root = document.createElement('div');
-    // `screen-fade` keeps the panel at opacity:0 until show() flips
-    // is-visible; that's also why the HUD doesn't use `hidden` — `display:
-    // none` can't transition.
-    this.root.className = 'hud screen-fade';
 
     // C1d follow-up: top-of-screen banner naming the current battle's
     // layout ("Corridor" / "Diamond" / "Labyrinth" / "Nowhere" for
-    // procedural). Lives outside the side-panel root so it can center on
-    // the viewport; same screen-fade lifecycle as the panel.
+    // procedural). Centered at the top; same screen-fade lifecycle as the panes.
     this.banner = document.createElement('div');
     this.banner.className = 'battle-banner screen-fade';
     mount.appendChild(this.banner);
 
+    // Q6 — the floor/turn chip, the one survivor of the dismantled side panel,
+    // now a standalone top-left element (mirroring the top-right speed pane),
+    // with the banner centered between them. Its own screen-fade lifecycle.
     this.floorLabel = document.createElement('div');
-    this.floorLabel.className = 'hud-floor';
-    this.root.appendChild(this.floorLabel);
+    this.floorLabel.className = 'hud-floor screen-fade';
+    mount.appendChild(this.floorLabel);
 
     // Q1 — speed-command pane (top-right): one button per ENABLED speed
     // (ascending) + a pause/play toggle. Lives outside the side-panel root (like
@@ -297,31 +287,6 @@ export class HUD {
     this.enemyCardPane.append(this.enemyPoolWrap, this.enemyCardRow);
     mount.appendChild(this.enemyCardPane);
 
-    // H4b — the two encounter pools (run-wide player pool vs per-encounter enemy
-    // pool) + the current turn. Static during a single turn (the pools chip
-    // between turns, surfaced on the post-turn screen); populated from `Run`
-    // state in show().
-    this.pools = document.createElement('div');
-    this.pools.className = 'hud-pools';
-    this.root.appendChild(this.pools);
-
-    this.status = document.createElement('div');
-    this.status.className = 'hud-status';
-    this.status.textContent = 'Battle resolving…';
-    this.root.appendChild(this.status);
-
-    const rosters = document.createElement('div');
-    rosters.className = 'hud-rosters';
-    const player = this.makeRoster('Player', 'hud-roster--player');
-    const enemy = this.makeRoster('Enemy', 'hud-roster--enemy');
-    this.playerBody = player.body;
-    this.enemyBody = enemy.body;
-    rosters.appendChild(player.root);
-    rosters.appendChild(enemy.root);
-    this.root.appendChild(rosters);
-
-    mount.appendChild(this.root);
-
     this.subscriptions.push(bus.on('unit:spawned', ({ unitId }) => this.addUnit(unitId)));
     this.subscriptions.push(bus.on('unit:attacked', ({ targetId }) => this.refreshHp(targetId)));
     // Q4 — the compact cards' HP bars must track ALL visible HP changes, not
@@ -346,12 +311,12 @@ export class HUD {
     encounter?: EncounterPools,
   ): void {
     this.world = world;
-    this.floorLabel.textContent = `Floor ${floor}`;
+    // Q6 — the floor chip folds in the per-turn counter (the dropped HUD-pool
+    // "Turn N" line) so no run context is lost with the old panel gone.
+    this.floorLabel.textContent = encounter
+      ? `Floor ${floor} · Turn ${encounter.turn}`
+      : `Floor ${floor}`;
     this.banner.textContent = locationName;
-    this.renderPools(encounter);
-    this.playerBody.replaceChildren();
-    this.enemyBody.replaceChildren();
-    this.rows.clear();
     // Q4/Q5 — reset both card panes: drop last battle's cards (one map covers
     // both teams), repaint the pool gauges from this encounter's pools.
     this.playerCardRow.replaceChildren();
@@ -359,7 +324,7 @@ export class HUD {
     this.cards.clear();
     this.renderPlayerPool(encounter);
     this.renderEnemyPool(encounter);
-    fadeIn(this.root);
+    fadeIn(this.floorLabel);
     fadeIn(this.banner);
     fadeIn(this.speedPane);
     fadeIn(this.objectivePane);
@@ -368,10 +333,9 @@ export class HUD {
   }
 
   hide(): void {
-    // Just drop is-visible; the panel stays in the DOM and fades back in on
-    // the next battle. Rows from the dying battle are kept until the next
-    // show() so the fade-out has something to display.
-    this.root.classList.remove('is-visible');
+    // Just drop is-visible; the elements stay in the DOM and fade back in on
+    // the next battle.
+    this.floorLabel.classList.remove('is-visible');
     this.banner.classList.remove('is-visible');
     this.speedPane.classList.remove('is-visible');
     this.objectivePane.classList.remove('is-visible');
@@ -393,7 +357,7 @@ export class HUD {
     // page-lifetime too.
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
-    fadeOutAndRemove(this.root);
+    fadeOutAndRemove(this.floorLabel);
     fadeOutAndRemove(this.banner);
     fadeOutAndRemove(this.speedPane);
     fadeOutAndRemove(this.objectivePane);
@@ -537,14 +501,10 @@ export class HUD {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
     if (!unit) return;
-    // Neutrals (walls, environment) don't appear in either roster — they're
-    // background, not combatants.
+    // Neutrals (walls, environment) are background, not combatants — no card.
     if (unit.team === 'neutral') return;
-    const row = this.makeRow(unit);
-    this.rows.set(unitId, row);
-    (unit.team === 'player' ? this.playerBody : this.enemyBody).appendChild(row);
     // Q4/Q5 — both teams get a compact card in their pane (player bottom-center,
-    // enemy top). Neutrals already returned above.
+    // enemy top).
     this.addCard(unitId, unit);
   }
 
@@ -563,21 +523,14 @@ export class HUD {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
     if (!unit) return;
-    const row = this.rows.get(unitId);
-    if (row) updateRow(row, unit);
     const card = this.cards.get(unitId);
     if (card) updateCardHp(card, unit);
   }
 
   private removeUnit(unitId: number): void {
-    const row = this.rows.get(unitId);
-    if (row) {
-      row.remove();
-      this.rows.delete(unitId);
-    }
     // Q4 — the card is NOT removed: it grays in place (death readout) so the
-    // player grid keeps a stable order through the turn. Empty the bar in case
-    // the lethal hit's clamp left it above 0.
+    // grid keeps a stable order through the turn. Empty the bar in case the
+    // lethal hit's clamp left it above 0.
     const card = this.cards.get(unitId);
     if (card) {
       card.el.classList.add('is-dead');
@@ -606,135 +559,13 @@ export class HUD {
     );
   }
 
-  /** H4b — render the encounter pools + turn into the HUD panel. Cleared when
-   *  no encounter info is supplied (e.g. a bare test mount). */
-  private renderPools(e?: EncounterPools): void {
-    this.pools.replaceChildren();
-    if (!e) return;
-    const turn = document.createElement('div');
-    turn.className = 'hud-pool-turn';
-    turn.textContent = `Turn ${e.turn}`;
-    this.pools.append(
-      turn,
-      poolRow('player', 'You', e.playerHealth, e.playerHealthMax),
-      poolRow('enemy', 'Foe', e.enemyHealth, e.enemyHealthMax),
-    );
-  }
-
-  private makeRoster(label: string, modifier: string): { root: HTMLElement; body: HTMLElement } {
-    const root = document.createElement('div');
-    root.className = `hud-roster ${modifier}`;
-    const heading = document.createElement('div');
-    heading.className = 'hud-roster-heading';
-    heading.textContent = label;
-    const body = document.createElement('div');
-    body.className = 'hud-roster-body';
-    root.appendChild(heading);
-    root.appendChild(body);
-    return { root, body };
-  }
-
-  private makeRow(unit: Unit): HTMLElement {
-    const row = document.createElement('div');
-    row.className = 'hud-row';
-
-    const glyph = document.createElement('span');
-    glyph.className = 'hud-glyph';
-    glyph.textContent = unit.glyph;
-
-    const bar = document.createElement('div');
-    bar.className = 'hud-hp';
-    const fill = document.createElement('div');
-    fill.className = 'hud-hp-fill';
-    bar.appendChild(fill);
-
-    const text = document.createElement('span');
-    text.className = 'hud-hp-text';
-
-    row.appendChild(glyph);
-    row.appendChild(bar);
-    row.appendChild(text);
-
-    // E4: secondary line beneath the HP for the persistent unit
-    // metadata. Player rows show `Lv N · XP/Next` so the leveling
-    // progress is visible across the run; enemy rows just show
-    // `Lv N` (their XP is meaningless — they don't level via XP).
-    // Neutrals already get filtered out in addUnit, so they never
-    // reach makeRow.
-    const sub = document.createElement('div');
-    sub.className = 'hud-sub';
-    row.appendChild(sub);
-
-    // GP3: a second sub-line with the raw driving stats (DEF · MOB · SPD)
-    // so the live tracker surfaces what GP1/GP2 added — a light touch on
-    // the 240px panel. Reads `unit.stats` directly (no deriveStats); the
-    // full ability detail stays on the recruit card. Shown for both teams.
-    const stats = document.createElement('div');
-    stats.className = 'hud-stats';
-    row.appendChild(stats);
-
-    updateRow(row, unit);
-    return row;
-  }
 }
 
-function updateRow(row: HTMLElement, unit: Unit): void {
-  const fill = row.querySelector<HTMLElement>('.hud-hp-fill');
-  const text = row.querySelector<HTMLElement>('.hud-hp-text');
-  const sub = row.querySelector<HTMLElement>('.hud-sub');
-  const stats = row.querySelector<HTMLElement>('.hud-stats');
-  if (!fill || !text) return;
-  // Clamp displayed HP: currentHp can briefly dip negative between the lethal
-  // unit:attacked and DeathBehavior firing in the next tick (~100ms). Show 0
-  // so the player never sees an "M-10/48" flash.
-  const hp = Math.max(0, unit.currentHp);
-  const pct = hp / unit.derived.maxHp;
-  fill.style.width = `${pct * 100}%`;
-  text.textContent = `${hp}/${unit.derived.maxHp}`;
-  if (sub) sub.textContent = formatSub(unit);
-  if (stats) stats.textContent = formatStats(unit);
-}
-
-/** Q4 — drive a compact card's HP bar from the live unit. Mirrors updateRow's
- *  clamp (currentHp can dip negative for ~1 tick before DeathBehavior fires). */
+/** Q4 — drive a compact card's HP bar from the live unit. Clamps like the sim:
+ *  currentHp can dip negative for ~1 tick before DeathBehavior fires. */
 function updateCardHp(card: UnitCardHandles, unit: Unit): void {
   if (!card.hpFill) return;
   const hp = Math.max(0, unit.currentHp);
   const pct = unit.derived.maxHp > 0 ? hp / unit.derived.maxHp : 0;
   card.hpFill.style.width = `${Math.max(0, Math.min(1, pct)) * 100}%`;
-}
-
-function poolRow(
-  side: 'player' | 'enemy',
-  label: string,
-  current: number,
-  max: number,
-): HTMLElement {
-  const row = document.createElement('div');
-  row.className = `hud-pool-row hud-pool-row--${side}`;
-  const name = document.createElement('span');
-  name.className = 'hud-pool-label';
-  name.textContent = label;
-  const value = document.createElement('span');
-  value.className = 'hud-pool-value';
-  value.textContent = `${Math.max(0, current)}/${max}`;
-  row.append(name, value);
-  return row;
-}
-
-function formatSub(unit: Unit): string {
-  const lv = displayLevel(unit.level);
-  if (unit.team !== 'player') return `Lv ${lv}`;
-  if (isAtLevelCap(unit.level)) return `Lv ${lv} · MAX`;
-  return `Lv ${lv} · ${unit.xp}/${xpToNext(unit.level)} XP`;
-}
-
-// GP3: the raw driving-stat line beneath the Lv/XP sub. The three stats the
-// player tunes around in combat (defense + the two cadence dials), plus H1's
-// `power` — the Phase-H meta-currency (survivors chip the opposing health pool
-// by Σ`power`), surfaced here from day one though it's inert until H4. Uses the
-// shared STAT_LABELS so HUD / card / promotion read identically.
-function formatStats(unit: Unit): string {
-  const s = unit.stats;
-  return `${STAT_LABELS.defense} ${s.defense} · ${STAT_LABELS.mobility} ${s.mobility} · ${STAT_LABELS.speed} ${s.speed} · ${STAT_LABELS.power} ${s.power}`;
 }

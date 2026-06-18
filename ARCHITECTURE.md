@@ -208,12 +208,13 @@ src/
   ui/
     ui.css
     fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
-    HUD.ts                   # In-battle HUD: floor, rosters, Lv/XP (E4.5) + DEF·MOB·SPD·POW (GP3/H1; I1 AGI→SPD), banner
+    HUD.ts                   # In-battle HUD: the floor·turn chip (top-left) + location banner (top-center) + the four card/control panes below. unit:* events drive the card panes (addCard/refreshHp/removeUnit over one cards map)
                              # Q1: speed-command pane (top-right): per-speed buttons 0.5/1/2/3 + pause toggle (hotkeyed via Keybindings)
-                             # Q2: pre-battle countdown readout (show/hideCountdown) + Fight-now button (the pause toggle reads "Fight now" while held)
+                             # Q2: pre-battle countdown readout (show/hideCountdown) + Fight-now button (the pause toggle reads "Fight now" while held); positionCountdown() drops it below the enemy pane when the cards wrap
                              # Q3: objective-command pane (bottom-right): Engage/Focus/Hold/Stop on O's typed model (per-type arming; right-click quick-Engage)
                              # Q4: player unit pane (bottom-center): wrapping compact UnitCards (live HP on attacked/burned/healed, grayed on death) + the relocated run pool gauge
-                             # Q5: enemy unit pane (top-center, below banner): enemy pool gauge above an analogous red-teamed compact-card grid (same unit:* handlers + one cards map; max-height+scroll caps a large swarm)
+                             # Q5: enemy unit pane (top-center, below banner): enemy pool gauge above an analogous red-teamed compact-card grid (max-height+scroll caps a large swarm)
+                             # Q6: dismantled the old monolithic side panel — both team rosters + per-unit stat lines + inline You/Foe pools all removed (HP/pools now live in the Q4/Q5 panes); the floor label relocated to the standalone top-left chip + folds in the per-turn counter
     PlaybackSpeed.ts         # I3/Q1: page-lifetime speed+pause model (current/selectedSpeed/setSpeed/togglePause/steps); current=0 while paused; hotkeys via Keybindings
     Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
     ObjectiveController.ts   # J3/Q3: battle-scoped objective input — right-click quick-Engage / arm(engage|focus)-then-click / hold / stop → World commands

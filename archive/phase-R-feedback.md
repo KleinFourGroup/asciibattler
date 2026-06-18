@@ -64,8 +64,19 @@ The wave list obeys the following grammar:
 
 Initially, we just want a dirt simple encounter duplicating as closely as possible the current random ones.
 
-## Dev Tooling
+#### Dev Tooling
 
 * Again, we'll definitely want a dev tool to assist in writing these.
 * We're going to want to update our fuzz/balance telemetry to report on per-specific-encounter data.
+
+### Boss Encounters
+
+Really, this is just going to be identical to regular encounters for now.  Same specification, but for the terminal boss nodes.  (Obviously, we can drop the floor gate from the spec.)
+
+### Miscellaneous Notes
+
+* We're once again deferring a full event system for non-combat nodes, along with currency and shop nodes.
+* We're deferring the occasionally mentioned starting profiles as well.
+* We're deferring the rarity system again too.
+* There's a lot of interlinked data in these schemas--i.e. the various valid combinations of zones, layouts, and encounters.  Where this data actually lives is a judgment call: valid layouts as I wrote it lives in the zone specification, but we could easily have added zone to the layout specification.  If you think it would make more sense to move things around, or even to redundantly include the same information in multiple places, feel free to suggest so.
 

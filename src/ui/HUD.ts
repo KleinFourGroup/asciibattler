@@ -450,12 +450,30 @@ export class HUD {
     if (!this.inCountdown) {
       this.inCountdown = true;
       this.countdownEl.classList.add('is-visible');
+      this.positionCountdown();
       this.renderSpeedPane();
     }
     if (seconds !== this.countdownShown) {
       this.countdownShown = seconds;
       this.countdownCount.textContent = String(seconds);
     }
+  }
+
+  /**
+   * Q5 fix — keep the countdown readout clear of the top enemy pane. The CSS
+   * default (`max(18%, 230px)`) clears a ONE-row pane on any viewport, but on a
+   * narrow/short screen the enemy cards wrap to 2–3 rows and the pane bottom
+   * grows past any static value — so measure it and push the readout below the
+   * pane's actual bottom when needed. Only ever moves it DOWN from the CSS
+   * default (never above the aesthetic 18%/230 placement the one-row case uses).
+   * Measured on countdown entry; the pane is static while the sim is parked, and
+   * the enemy cards are spawned before the first held frame drives this.
+   */
+  private positionCountdown(): void {
+    const enemyBottom = this.enemyCardPane.getBoundingClientRect().bottom;
+    const cssDefault = Math.max(window.innerHeight * 0.18, 230);
+    const top = Math.max(cssDefault, enemyBottom + 24);
+    this.countdownEl.style.top = `${Math.round(top)}px`;
   }
 
   /** Q2 — hide the countdown readout (the fight has started). */

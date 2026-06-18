@@ -807,11 +807,13 @@ body {
    interactive. */
 .battle-countdown {
   position: absolute;
-  /* Q5 playtest fix: floor the top so the readout always clears the top enemy
-     pane (a one-row pane bottoms at a FIXED ~189px, but the old bare `18%`
-     drops below that on shorter viewports — 194px on 1080p, 144px on 800px).
-     `max(18%, 230px)` keeps the original 18% placement on tall displays (259px
-     at 1440), and floors it clear of the enemy cards on shorter ones. */
+  /* Q5 playtest fix: keep the readout clear of the top enemy pane. This is the
+     STATIC default for the common ONE-row pane (bottom ~189px, fixed): the bare
+     `18%` drops below it on shorter viewports (194px at 1080p, 144px at 800px),
+     so `max(18%, 230px)` floors it. When the enemy cards WRAP to 2–3 rows on a
+     narrow/short screen the pane grows past any static value, so
+     HUD.positionCountdown() measures the pane on countdown entry and pushes this
+     further DOWN as needed (it only overrides downward). */
   top: max(18%, 230px);
   left: 50%;
   transform: translateX(-50%);

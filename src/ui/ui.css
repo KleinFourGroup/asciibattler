@@ -253,12 +253,40 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   background: #000; /* opaque — no battle-canvas bleed */
+  /* T2 — clear the fixed top-center sector banner so hop 0 (the root, near the
+     board top at the pre-root start) doesn't tuck under it. The fixed banner +
+     roster button are viewport-anchored, so this just pads the scrollable board. */
+  padding-top: 56px;
+  box-sizing: border-box;
 }
 
 .map-board {
   position: relative;
   width: 100%;
   min-height: 100%; /* short maps still fill the viewport */
+}
+
+/* T2 — the sector-name banner: top-center label naming the sector the run is
+   traversing. Mirrors the in-battle .battle-banner chrome (amber terminal),
+   but position: fixed so it stays pinned while a tall board scrolls under it
+   (the .map-screen is the scroll container). Sits between the top-left roster
+   button and... nothing on the right, so it's free to center. */
+.map-banner {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 6px 20px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  color: #ffb000;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .map-edges {

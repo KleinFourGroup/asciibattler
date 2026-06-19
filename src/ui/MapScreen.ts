@@ -53,9 +53,10 @@ export class MapScreen {
     currentNodeId: number,
     visited: ReadonlySet<number> = new Set(),
     roster: readonly UnitTemplate[] = [],
+    sectorTitle = '',
   ): void {
     this.hide();
-    this.container = this.render(map, currentNodeId, visited, roster);
+    this.container = this.render(map, currentNodeId, visited, roster, sectorTitle);
     this.container.classList.add('screen-fade');
     this.mount.appendChild(this.container);
     // Center the current node in the viewport. Reading offsetTop forces the
@@ -83,6 +84,7 @@ export class MapScreen {
     currentNodeId: number,
     visited: ReadonlySet<number>,
     roster: readonly UnitTemplate[],
+    sectorTitle: string,
   ): HTMLDivElement {
     const frontier = new Set<number>();
     if (currentNodeId === PRE_ROOT_NODE_ID) {
@@ -123,6 +125,17 @@ export class MapScreen {
       emptyText: 'No units in your roster.',
     });
     container.appendChild(this.rosterButton.el);
+
+    // T2 — the sector-name banner (top-center, position: fixed so it ignores the
+    // board's vertical scroll, like the roster button). Names the sector the run
+    // is currently traversing; mirrors the in-battle .battle-banner chrome. An
+    // empty title (a bare show()) renders no banner.
+    if (sectorTitle) {
+      const banner = document.createElement('div');
+      banner.className = 'map-banner';
+      banner.textContent = sectorTitle;
+      container.appendChild(banner);
+    }
 
     // The board carries the hop-scaled height; the scroll container
     // (.map-screen) clips it. Edges + nodes lay out against the board, not the

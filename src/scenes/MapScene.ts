@@ -17,7 +17,13 @@ export class MapScene implements Scene {
 
   mount(ctx: SceneContext): void {
     this.screen = new MapScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
-    this.screen.show(ctx.run.nodeMap, ctx.run.currentNodeId, ctx.run.visitedNodes, ctx.run.team);
+    this.screen.show(
+      ctx.run.nodeMap,
+      ctx.run.currentNodeId,
+      ctx.run.visitedNodes,
+      ctx.run.team,
+      ctx.run.currentSectorTitle,
+    );
   }
 
   tick(_dt: number): void {}

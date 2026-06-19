@@ -717,6 +717,15 @@ export class Run {
   }
 
   /**
+   * T2 — the active sector's display title (for the map-scene banner). Always
+   * available, including at the pre-root start (a run always has a current
+   * sector), unlike `currentHop` which has no node entered yet.
+   */
+  get currentSectorTitle(): string {
+    return this.currentSector().title;
+  }
+
+  /**
    * K3.5 / T2 — one encounter-map roll. The board now comes from the **current
    * sector's hop-gated layout pool** (T2) instead of the global `rollLayoutId`,
    * and the procedural theme is the **sector's** theme (no per-battle theme

@@ -1935,6 +1935,13 @@ describe('Run', () => {
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
     });
 
+    it('exposes the current sector title (for the map banner), even at pre-root', () => {
+      const { run } = freshRunWithBus(1);
+      // Available before any node is entered — derived from config, not hardcoded.
+      expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
+      expect(run.currentSectorTitle).toBe(getSector('the-start')!.title);
+    });
+
     it('the shipped single-node DAG (source == sink) completes at the terminal', () => {
       const { run, bus } = freshRunWithBus(1);
       run.currentNodeId = run.nodeMap.terminalId;

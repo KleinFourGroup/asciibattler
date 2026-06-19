@@ -159,16 +159,14 @@ export class MapScreen {
       div.className = 'map-node';
       div.style.left = `${pos.x * 100}%`;
       div.style.top = `${pos.y * 100}%`;
-      // Root reads as the run's origin marker (roguelike "@"); every other
-      // node shows its kind glyph (G3): X battle, Z rest, ! boss. The glyph is
-      // the route-planning affordance. A `.{kind}` class rides alongside the
-      // state classes (.current/.frontier/…) so CSS can color rest/boss
-      // distinctly without touching this dispatch logic.
-      const isRoot = node.id === map.rootId;
-      div.textContent = isRoot ? '@' : KIND_GLYPH[node.kind];
+      // Every node shows its kind glyph (G3): X battle, Z rest, ! boss — the
+      // route-planning affordance. (S2: the root lost its `@` origin marker —
+      // it's a normal selectable node now, so it reads like any other.) A
+      // `.{kind}` class rides alongside the state classes (.current/.frontier/…)
+      // so CSS can color rest/boss distinctly without touching this dispatch.
+      div.textContent = KIND_GLYPH[node.kind];
       div.dataset.nodeId = String(node.id);
       div.classList.add(node.kind);
-      if (isRoot) div.classList.add('root');
 
       if (node.id === currentNodeId) {
         div.classList.add('current');

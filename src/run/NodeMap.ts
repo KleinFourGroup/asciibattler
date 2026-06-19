@@ -231,9 +231,10 @@ export function generate(rng: RNG, config?: RunConfig): NodeMap {
       lastRestHop = f;
     }
   }
-  // hopCount === 1 degenerates to root == terminal: `bossId` is the root.
-  // Tagging it boss is inert — nothing dispatches on the root's kind and the
-  // renderer overrides its glyph with `@` (isRoot). No special-case needed.
+  // hopCount === 1 degenerates to root == terminal: `bossId` is the root, so
+  // the single node is tagged `boss` — the player's one fight IS the boss, and
+  // the map renderer shows its `!` kind glyph (S2 dropped the root `@`-override,
+  // so the glyph just follows the kind). No special-case needed.
   const kindedNodes: MapNode[] = nodes.map((n) =>
     n.id === bossId
       ? { ...n, kind: 'boss' }

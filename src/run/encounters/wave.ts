@@ -44,7 +44,10 @@ import { scaledUnit, type Archetype } from '../../sim/archetypes';
 
 /** Total level budget a wave may spend across all its units. `fixed` is an
  *  absolute total; `mean`/`median` scale the player roster's mean/median level
- *  by `factor` (so the wave tracks the roster's strength, like today's budget). */
+ *  by `factor` AND the fielded hand size — i.e. `factor × centralLevel ×
+ *  handSize = factor × playerTeamLevel`, the established difficulty basis (so the
+ *  wave tracks the fielded team's TOTAL level, like today's enemy budget — a
+ *  per-average-unit budget would shrink to nothing for a hand-sized wave). */
 export type LevelBudgetSpec =
   | { readonly kind: 'fixed'; readonly value: number }
   | { readonly kind: 'mean'; readonly factor: number }
@@ -157,12 +160,14 @@ function resolveCounts(units: readonly WaveUnitSpec[], totalCount: number): numb
   return counts;
 }
 
-/** Total level budget `L ≥ 0`, rounded. `mean`/`median` scale the roster's
- *  central level (empty roster → basis 1, like `avgTeamLevel`). */
+/** Total level budget `L ≥ 0`, rounded. `mean`/`median` = `factor × centralLevel
+ *  × handSize` (= `factor × playerTeamLevel`): the budget scales with the fielded
+ *  hand, matching `enemyBudgetFor`'s basis (empty roster → central basis 1, like
+ *  `avgTeamLevel`). */
 function resolveLevelBudget(spec: LevelBudgetSpec, ctx: WaveContext): number {
   if (spec.kind === 'fixed') return Math.max(0, Math.round(spec.value));
-  const basis = spec.kind === 'mean' ? rosterMeanLevel(ctx.roster) : rosterMedianLevel(ctx.roster);
-  return Math.max(0, Math.round(spec.factor * basis));
+  const central = spec.kind === 'mean' ? rosterMeanLevel(ctx.roster) : rosterMedianLevel(ctx.roster);
+  return Math.max(0, Math.round(spec.factor * central * ctx.handSize));
 }
 
 function rosterMeanLevel(roster: readonly UnitTemplate[]): number {

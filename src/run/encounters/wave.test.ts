@@ -177,17 +177,20 @@ describe('resolveWave — level distribution', () => {
     expect(team.map((u) => u.level)).toEqual([1, 1, 1, 1, 1, 1]);
   });
 
-  it('levelBudget mean/median read the roster correctly', () => {
+  it('levelBudget mean/median = factor × centralLevel × handSize (= factor × playerTeamLevel)', () => {
     const oneEach = (lb: WaveSpec['levelBudget']): WaveSpec => ({
       levelBudget: lb,
       count: { kind: 'fixed', value: 1 },
       units: [{ archetype: 'bandit', count: { kind: 'fixed', value: 1 }, level: { kind: 'weight', weight: 1 } }],
     });
     const r = roster([2, 4, 4, 10]); // mean 5, median 4
-    const mean = resolveWave(oneEach({ kind: 'mean', factor: 2 }), ctx({ roster: r, levelCap: 99 }), new RNG(1));
-    const median = resolveWave(oneEach({ kind: 'median', factor: 2 }), ctx({ roster: r, levelCap: 99 }), new RNG(1));
-    expect(mean[0]!.level).toBe(10); // 2 × mean 5
-    expect(median[0]!.level).toBe(8); // 2 × median 4
+    // handSize 3 → the single unit absorbs the whole budget = factor × central × 3.
+    const c = ctx({ roster: r, handSize: 3, levelCap: 999 });
+    expect(resolveWave(oneEach({ kind: 'mean', factor: 2 }), c, new RNG(1))[0]!.level).toBe(30); // 2 × 5 × 3
+    expect(resolveWave(oneEach({ kind: 'median', factor: 2 }), c, new RNG(1))[0]!.level).toBe(24); // 2 × 4 × 3
+    // Doubling the fielded hand doubles the budget (the playerTeamLevel scaling).
+    const c6 = ctx({ roster: r, handSize: 6, levelCap: 999 });
+    expect(resolveWave(oneEach({ kind: 'mean', factor: 2 }), c6, new RNG(1))[0]!.level).toBe(60); // 2 × 5 × 6
   });
 
   it('builds via the deterministic scaledUnit path (stats == scaleStats)', () => {

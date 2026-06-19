@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Dev Tools</title>
+    <style>
+      :root {
+        --bg: #0e1116;
+        --panel: #161b22;
+        --panel-2: #1c2330;
+        --border: #2a3140;
+        --text: #d6deeb;
+        --muted: #8b97ab;
+        --accent: #33ff00;
+        --accent-dim: #1f7a12;
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 13px;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+      .bar {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        flex-wrap: wrap;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .bar h1 {
+        font-size: 20px;
+        margin: 0;
+        color: var(--accent);
+      }
+      .bar .subtitle {
+        color: var(--muted);
+      }
+      .bar a.home {
+        margin-left: auto;
+        color: var(--muted);
+        text-decoration: none;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 5px 11px;
+      }
+      .bar a.home:hover {
+        border-color: var(--accent-dim);
+        color: var(--text);
+      }
+      h2.group {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin: 28px 0 10px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 12px;
+      }
+      a.tool {
+        display: block;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        text-decoration: none;
+        color: var(--text);
+        transition: border-color 0.12s ease;
+      }
+      a.tool:hover {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px var(--accent) inset;
+      }
+      a.tool .name {
+        font-size: 15px;
+        color: var(--accent);
+        margin: 0 0 6px;
+      }
+      a.tool .desc {
+        color: var(--text);
+        margin: 0 0 8px;
+        line-height: 1.45;
+      }
+      a.tool .path {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      a.tool code {
+        background: var(--panel-2);
+        padding: 1px 5px;
+        border-radius: 4px;
+        color: #aaccff;
+      }
+      footer {
+        margin-top: 32px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="bar">
+        <h1>ASCIIbattler Dev Tools</h1>
+        <span class="subtitle">dev-only · served by <code>npm run dev</code> · none ship in <code>dist/</code></span>
+        <a class="home" href="/">← Game</a>
+      </header>
+
+      <h2 class="group">Config editors <span style="text-transform: none; letter-spacing: 0">— author & save to <code>config/*.json</code></span></h2>
+      <div class="grid">
+        <a class="tool" href="/tools/sector-editor/">
+          <p class="name">Sector Editor</p>
+          <p class="desc">Run containers — each sector's layout pool (weighted, hop-gated), theme, and length. Live weighted-pool preview.</p>
+          <p class="path"><code>config/sectors.json</code></p>
+        </a>
+        <a class="tool" href="/tools/layout-editor/">
+          <p class="name">Layout Editor</p>
+          <p class="desc">Paint battlefields — walls, water, half-cover, fire/healing tiles, spawn regions, theme — with a live grid canvas.</p>
+          <p class="path"><code>config/layouts.json</code></p>
+        </a>
+        <a class="tool" href="/tools/archetype-editor/">
+          <p class="name">Archetype Editor</p>
+          <p class="desc">Tune unit stats, abilities, targeting, and growth rates with a live derived-stat / to-hit / cadence preview.</p>
+          <p class="path"><code>config/archetypes.json</code></p>
+        </a>
+      </div>
+
+      <h2 class="group">Run &amp; balance harnesses</h2>
+      <div class="grid">
+        <a class="tool" href="/tools/run-config/">
+          <p class="name">Run Launcher</p>
+          <p class="desc">Launch the game with a specific run config — short runs, a forced layout, a leveled or hand-picked starting roster, a chosen daemon.</p>
+          <p class="path">drives <code>RunConfig</code> · opens the game with a query string</p>
+        </a>
+        <a class="tool" href="/tools/sweep-gui/">
+          <p class="name">Balance Sweep</p>
+          <p class="desc">The GUI front-end for the headless fuzz harness — run difficulty sweeps and read the per-archetype / pool / hop telemetry.</p>
+          <p class="path">front-end for <code>npm run fuzz</code></p>
+        </a>
+      </div>
+
+      <h2 class="group">Prototypes</h2>
+      <div class="grid">
+        <a class="tool" href="/tools/mapgen-prototype/">
+          <p class="name">Map-Gen Prototype</p>
+          <p class="desc">A standalone sandbox for the procedural node-map generator — visualize the layered DAG shapes a seed produces.</p>
+          <p class="path">node-map <code>generate()</code> sandbox</p>
+        </a>
+      </div>
+
+      <footer>
+        Each tool is a standalone Vite page with no <code>rollupOptions.input</code> entry, so it
+        is served only by the dev server and never bundled into a production build. The three config
+        editors save straight to disk through the dev-only <code>/__save-config</code> endpoint
+        (<code>vite.config.ts</code>); an open game tab hot-reloads the new values.
+      </footer>
+    </main>
+  </body>
+</html>

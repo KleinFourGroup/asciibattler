@@ -159,6 +159,9 @@ function addSector(): void {
     length: 5,
     theme: 'default',
     layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
+    // The fight pool starts empty — populated once V's encounter catalog exists
+    // (this editor owns layouts; the encounter editor is V2). Preserved on save.
+    encounters: [],
   });
   selectSector(working.length - 1);
 }

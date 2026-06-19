@@ -56,9 +56,9 @@ src/
     nodemap.ts               #   hop count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
     terrain.ts               #   C1a: wall + water density
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
-    sectors.ts               #   T1: the Sector schema — run container (id/title/desc/length/theme/hop-gated layout pool); procedural = reserved sentinel
+    sectors.ts               #   T1: the Sector schema — run container (id/title/desc/length/theme/hop-gated layout pool); V0: + hop-gated ENCOUNTER pool (sector-owns-both); procedural = reserved sentinel
     sectorMap.ts             #   T2: the sector-selection meta-DAG schema (nodes hold sector lists; sources/sinks; acyclic, non-sink-has-outgoing guards)
-    encounters.ts            #   U3: the Encounter schema (id/name/healthPool/sectors/layouts?/minHop?/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); catalog ships EMPTY (V populates)
+    encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement (sectors/hop gate) moved to the sector pool; catalog ships EMPTY (V populates)
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;

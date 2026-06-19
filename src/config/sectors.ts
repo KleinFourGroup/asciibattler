@@ -17,6 +17,15 @@
  *     reserved seam — uniform selection ships now (T1 decision: sentinel +
  *     uniform), `weight` lets a future tuning pass bias the pool without a
  *     schema migration.
+ *   - `encounters` — the sector's fight POOL: a list of `{ encounterId, minHop?,
+ *     weight? }`, the *placement/pacing* half of the encounter model (the
+ *     **sector-owns-both** data-model decision, pre-V). Mirrors `layouts` exactly
+ *     — each entry references a catalog encounter, optionally hop-gated + weighted
+ *     — so a sector is the single authority for "what's here" (both boards and
+ *     fights). Ships `[]` (the catalog is empty until Phase V); V1 selects from
+ *     this pool (filtered by node kind + the encounter's layout fit). An
+ *     encounter no longer carries a `sectors`/`minHop` field — placement is a
+ *     region concern. `.default([])` means an absent key still parses.
  *
  * **Procedural is a reserved `layoutId` sentinel** (`PROCEDURAL_LAYOUT_ID`)
  * sitting in the pool alongside real layout ids — no special-casing in the pool
@@ -40,6 +49,7 @@
 import { z } from 'zod';
 import sectorsJson from '../../config/sectors.json';
 import { LAYOUT_IDS, ThemeSchema } from './layouts';
+import { ENCOUNTER_IDS } from './encounters';
 
 /**
  * The reserved pool sentinel that means "roll a procedural battlefield" — the
@@ -65,6 +75,23 @@ const SectorLayoutEntrySchema = z.object({
 
 export type SectorLayoutEntry = z.infer<typeof SectorLayoutEntrySchema>;
 
+/** The sector's encounter-pool entry — the placement half of the encounter model,
+ *  mirroring `SectorLayoutEntrySchema` (same `{ id, minHop?, weight? }` shape,
+ *  keyed by `encounterId`). */
+const SectorEncounterEntrySchema = z.object({
+  /** A catalog encounter id (resolved against ENCOUNTER_IDS below; binds once V
+   *  populates `config/encounters.json`). */
+  encounterId: z.string().min(1),
+  /** Hop gate: this encounter is eligible only at `hop >= minHop`. Omitted = 0. */
+  minHop: z.number().int().nonnegative().optional(),
+  /** Reserved seam — relative selection weight within the eligible pool. Unread
+   *  this round (V1 selects uniform first); positive when present so a future
+   *  weighted pick never divides by zero. */
+  weight: z.number().positive().optional(),
+});
+
+export type SectorEncounterEntry = z.infer<typeof SectorEncounterEntrySchema>;
+
 const SectorSchema = z
   .object({
     id: z.string().min(1),
@@ -75,6 +102,9 @@ const SectorSchema = z
     /** Procedural-side theme for this sector (reuses the layout Theme union). */
     theme: ThemeSchema,
     layouts: z.array(SectorLayoutEntrySchema).min(1),
+    /** The sector's fight pool (placement). Empty until V authors the catalog;
+     *  `.default([])` so an absent key (older JSON, the editor) parses. */
+    encounters: z.array(SectorEncounterEntrySchema).default([]),
   })
   .superRefine((sector, ctx) => {
     // Guard 1 — every pool entry references a real layout or the procedural
@@ -106,6 +136,21 @@ const SectorSchema = z
         });
       }
     }
+
+    // Guard 3 — every encounter-pool entry references a real catalog encounter
+    // (mirrors Guard 1 for layouts). The kind-aware "every reachable hop has an
+    // eligible encounter of the needed kind" guard lands with selection in V1;
+    // this round only resolves refs. The catalog ships empty, so the pool is `[]`
+    // and this binds vacuously until V authors content.
+    sector.encounters.forEach((entry, idx) => {
+      if (!ENCOUNTER_IDS.includes(entry.encounterId)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['encounters', idx, 'encounterId'],
+          message: `sector "${sector.id}": unknown encounterId "${entry.encounterId}" (no such encounter in the catalog)`,
+        });
+      }
+    });
   });
 
 /** The whole-file array schema. Exported so the T3 sector editor's formatter can
@@ -142,4 +187,14 @@ export function getSector(id: string): SectorDef | undefined {
  */
 export function layoutPoolAtHop(sector: SectorDef, hop: number): readonly SectorLayoutEntry[] {
   return sector.layouts.filter((e) => (e.minHop ?? 0) <= hop);
+}
+
+/**
+ * The sector's hop-gated encounter pool at a given hop: the entries eligible at
+ * `hop` (gate `minHop ?? 0 <= hop`), mirroring `layoutPoolAtHop`. V1 selection
+ * draws from this, then filters by node kind + the encounter's layout fit. Empty
+ * until V populates the catalog + the sector pools.
+ */
+export function encounterPoolAtHop(sector: SectorDef, hop: number): readonly SectorEncounterEntry[] {
+  return sector.encounters.filter((e) => (e.minHop ?? 0) <= hop);
 }

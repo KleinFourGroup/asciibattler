@@ -6,18 +6,31 @@
  * it can be unit-tested against the committed file (tests/tools/sector-editor.test.ts).
  *
  * Mirrors `config/sectors.json` exactly: 2-space indent, the
- * `id / title / description / length / theme / layouts` key order, and each
- * layout-pool entry inline on one line as `{ "layoutId": …[, "minHop": …][,
- * "weight": …] }` — `minHop` / `weight` emitted only when present (they're
- * optional in the schema, so an absent one stays absent rather than serializing a
- * default).
+ * `id / title / description / length / theme / layouts / encounters` key order,
+ * and each pool entry inline on one line as `{ "layoutId": …[, "minHop": …][,
+ * "weight": …] }` (or `"encounterId"` for the fight pool) — `minHop` / `weight`
+ * emitted only when present (they're optional in the schema, so an absent one
+ * stays absent rather than serializing a default). The `encounters` pool always
+ * emits (as `[]` when empty), since it's a first-class slot, not an optional.
  */
 
-import type { SectorDef, SectorLayoutEntry } from '../../src/config/sectors';
+import type {
+  SectorDef,
+  SectorLayoutEntry,
+  SectorEncounterEntry,
+} from '../../src/config/sectors';
 
-/** One pool entry on a single line; optional fields appear only when set. */
+/** One layout-pool entry on a single line; optional fields appear only when set. */
 function formatEntry(entry: SectorLayoutEntry): string {
   const parts = [`"layoutId": ${JSON.stringify(entry.layoutId)}`];
+  if (entry.minHop !== undefined) parts.push(`"minHop": ${JSON.stringify(entry.minHop)}`);
+  if (entry.weight !== undefined) parts.push(`"weight": ${JSON.stringify(entry.weight)}`);
+  return `{ ${parts.join(', ')} }`;
+}
+
+/** One encounter-pool entry on a single line; mirrors `formatEntry`. */
+function formatEncounterEntry(entry: SectorEncounterEntry): string {
+  const parts = [`"encounterId": ${JSON.stringify(entry.encounterId)}`];
   if (entry.minHop !== undefined) parts.push(`"minHop": ${JSON.stringify(entry.minHop)}`);
   if (entry.weight !== undefined) parts.push(`"weight": ${JSON.stringify(entry.weight)}`);
   return `{ ${parts.join(', ')} }`;
@@ -43,7 +56,17 @@ export function formatSectorsJson(sectors: readonly SectorDef[]): string {
       const etail = ei === sector.layouts.length - 1 ? '' : ',';
       lines.push(`      ${formatEntry(entry)}${etail}`);
     });
-    lines.push('    ]');
+    lines.push('    ],');
+    if (sector.encounters.length === 0) {
+      lines.push('    "encounters": []');
+    } else {
+      lines.push('    "encounters": [');
+      sector.encounters.forEach((entry, ei) => {
+        const etail = ei === sector.encounters.length - 1 ? '' : ',';
+        lines.push(`      ${formatEncounterEntry(entry)}${etail}`);
+      });
+      lines.push('    ]');
+    }
     lines.push(`  }${tail}`);
   });
   lines.push(']');

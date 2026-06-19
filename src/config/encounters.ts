@@ -22,18 +22,26 @@
  * type-only-imports them and mirrors their shape as zod (so config validates
  * into exactly the type the sequencer consumes — no runtime config→run edge).
  *
- * Eligibility fields (`sectors`/`layouts?`/`minHop?`/`kind`) are unused for
- * SELECTION this round (U3 holds a single encounter; selection among many is V),
- * but validated now so the schema is born complete. `rewards?` is a reserved,
- * unconsumed seam (the loot/economy round hangs here). `kind` is an ENUM (not an
- * `isBoss` bool) reserving `'elite'` for future elite map-nodes.
+ * Eligibility split (the pre-V data-model decision — sector-owns-both): the
+ * **sector** owns *placement* — which encounters appear in it, with the per-entry
+ * hop gate + roll weight — via its `encounters` POOL (mirroring its `layouts`
+ * pool; see sectors.ts). An encounter owns only its *intrinsic* eligibility:
+ * `kind` (which node kind it fits) and an optional `layouts?` FIT-FILTER (which
+ * battlefields the fight makes sense on, intersected against the sector's layout
+ * pool at selection — V). There is deliberately **no `sectors` or `minHop` field
+ * on the encounter**: placement/pacing is a region concern, not a fight concern,
+ * so it lives on the sector pool entry. (This reverses the config dependency —
+ * `sectors.ts` now imports `ENCOUNTER_IDS`; `encounters.ts` no longer imports
+ * `sectors.ts`, so there's no cycle.) Selection among many encounters is V.
+ * `rewards?` is a reserved, unconsumed seam (the loot/economy round hangs here).
+ * `kind` is an ENUM (not an `isBoss` bool) reserving `'elite'` for future elite
+ * map-nodes.
  */
 
 import { z } from 'zod';
 import encountersJson from '../../config/encounters.json';
 import { ARCHETYPES } from './archetypes';
 import { LAYOUT_IDS } from './layouts';
-import { SECTOR_IDS } from './sectors';
 import type { Archetype } from '../sim/Unit';
 import type {
   WaveSpec,
@@ -145,12 +153,11 @@ export interface Encounter {
   /** The encounter's enemy health pool (replaces the global HEALTH.enemyHealthMax
    *  for this fight). Fixed, not player-relative (pools aren't a roster scaling). */
   readonly healthPool: number;
-  /** Eligibility: which sectors this encounter can appear in (selection — V). */
-  readonly sectors: readonly string[];
-  /** Optional eligibility: which battlefields this fight fits (∩ sector pool). */
+  /** Intrinsic fit-filter: which battlefields this fight makes sense on,
+   *  intersected against the current sector's layout pool at selection (V).
+   *  Omitted = no constraint (the common case). Placement (which sectors, hop
+   *  gate, weight) lives on the sector's encounter pool, not here. */
   readonly layouts?: readonly string[];
-  /** Optional hop gate (eligible at `hop >= minHop`). */
-  readonly minHop?: number;
   readonly kind: EncounterKind;
   /** Reserved, unconsumed seam — the loot/economy round (gold / recruit / relic). */
   readonly rewards?: unknown;
@@ -162,9 +169,7 @@ const EncounterSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1).optional(),
   healthPool: z.number().int().positive(),
-  sectors: z.array(z.string().min(1)).min(1),
   layouts: z.array(z.string().min(1)).optional(),
-  minHop: z.number().int().nonnegative().optional(),
   kind: z.enum(ENCOUNTER_KINDS).default('normal'),
   rewards: z.unknown().optional(),
   waves: WaveListSchema,
@@ -182,13 +187,10 @@ for (const encounter of ENCOUNTERS_LIST) {
     throw new Error(`encounters.json: duplicate encounter id "${encounter.id}"`);
   }
   seenIds.add(encounter.id);
-  // Eligibility refs must resolve (mirrors the sector schema's layout guard). The
-  // catalog ships empty this round, so these bind once V authors content.
-  for (const sectorId of encounter.sectors) {
-    if (!SECTOR_IDS.includes(sectorId)) {
-      throw new Error(`encounters.json: encounter "${encounter.id}" references unknown sector "${sectorId}"`);
-    }
-  }
+  // The optional layout fit-filter must reference real layouts. (Placement refs —
+  // which sectors this encounter is pooled in — are validated on the SECTOR side
+  // now; see sectors.ts.) The catalog ships empty this round, so this binds once
+  // V authors content.
   for (const layoutId of encounter.layouts ?? []) {
     if (!LAYOUT_IDS.includes(layoutId)) {
       throw new Error(`encounters.json: encounter "${encounter.id}" references unknown layout "${layoutId}"`);

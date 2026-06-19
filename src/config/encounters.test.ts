@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { ENCOUNTERS, EncountersSchema, ENCOUNTER_KINDS } from './encounters';
-import { SECTOR_IDS } from './sectors';
 
 // A deeply-nested grammar fixture exercising the recursive `waves` zod:
 // stages → loop(forever) → pick → wave, plus a final open-ended stage.
@@ -51,11 +50,13 @@ const nestedWaves = [
   },
 ];
 
+// No `sectors`/`minHop` here: an encounter owns only its intrinsic eligibility
+// (kind + an optional layout fit-filter). Placement (which sectors it's pooled
+// in, hop gate, weight) lives on the SECTOR's encounter pool (see sectors.ts).
 const base = {
   id: 'fixture',
   name: 'Fixture',
   healthPool: 8,
-  sectors: [SECTOR_IDS[0]!],
   waves: nestedWaves,
 };
 
@@ -75,6 +76,19 @@ describe('encounters schema', () => {
     for (const kind of ENCOUNTER_KINDS) {
       expect(EncountersSchema.parse([{ ...base, kind }])[0]!.kind).toBe(kind);
     }
+  });
+
+  it('is intrinsic-only: an optional layout fit-filter, no placement fields', () => {
+    // The fit-filter (which boards the fight makes sense on) is intrinsic + stays
+    // on the encounter; placement (sectors/hop gate) is the sector's job now.
+    const parsed = EncountersSchema.parse([{ ...base, layouts: ['river'] }])[0]!;
+    expect(parsed.layouts).toEqual(['river']);
+    // Placement fields are gone from the schema — a stray one is stripped, not stored.
+    const withStray = EncountersSchema.parse([
+      { ...base, sectors: ['the-start'], minHop: 3 } as unknown as typeof base,
+    ])[0]! as unknown as Record<string, unknown>;
+    expect(withStray.sectors).toBeUndefined();
+    expect(withStray.minHop).toBeUndefined();
   });
 
   it('rejects an unknown archetype in a wave unit', () => {

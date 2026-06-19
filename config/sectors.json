@@ -13,6 +13,7 @@
       { "layoutId": "junctionAmbush" },
       { "layoutId": "strafingFunnel" },
       { "layoutId": "spiralFireLife" }
-    ]
+    ],
+    "encounters": []
   }
 ]

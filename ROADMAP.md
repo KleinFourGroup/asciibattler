@@ -78,15 +78,29 @@ second meaning):
 ## The data model — where the interlinked data lives (the brief's open judgment call)
 
 The brief flags that sectors, layouts, and encounters reference each other and
-asks where each relationship should live. The recommended shape, optimized for
-*clean + extensible* (goal #1) — **each object owns only the relationships it is
-the authority for; layouts stay relationship-free**:
+asks where each relationship should live. The shape, optimized for *clean +
+extensible* (goal #1) — **the sector is the container that owns its pools; layouts
+and encounters are reusable definitions it references; layouts stay
+relationship-free**:
 
 | Object | Owns | Does **not** know about |
 |---|---|---|
 | **Layout** (`config/layouts.json`, unchanged) | geometry: grid, walls, water, spawns, theme | sectors, encounters — a layout is a *reusable* battlefield |
-| **Sector** (`config/sectors.json`, new) | title, description, length, theme, **layout pool** (each with an optional hop gate) | encounters — a sector is a *container/board pool*, not a fight list |
-| **Encounter** (`config/encounters.json`, new) | name, health pool, waves, **sector list**, **layout list** (optional), hop gate, **`kind`** (normal/elite/boss), optional `rewards` seam | the node map — an encounter is *eligibility + content*, selected onto a node |
+| **Sector** (`config/sectors.json`, new) | title, description, length, theme, **layout pool** + **encounter pool** (each pool entry an id with an optional hop gate + weight) | nothing downstream — a sector is the single authority for *what's here*, both boards and fights |
+| **Encounter** (`config/encounters.json`, new) | name, health pool, waves, optional **layout fit-filter**, **`kind`** (normal/elite/boss), optional `rewards` seam | sectors, hop gates, the node map — an encounter is *intrinsic content*; the **sector** decides where (and how often) it appears |
+
+> **Data-model revision (V0, pre-V — `sector-owns-both`).** The brief's first cut
+> had the **encounter** own its `sectors` list + hop gate (content declares its
+> placement). Revised before V1 to **the sector owning a hop-gated/weighted
+> encounter pool**, mirroring its layout pool. Rationale: (1) the per-sector,
+> hop-ramped **selection-weight seam** the roadmap already wants lands naturally on
+> a pool entry but fights a single global weight on the encounter; (2) it matches
+> the genre convention (a region owns its enemy/elite/boss pools); (3) selection +
+> the V1 guards become local sector traversals, not catalog scans; (4) both editor
+> "add to sector" toggles then write the sector file. The principle is *intrinsic
+> fight properties* (`kind`, layout fit) on the encounter, *placement/pacing* (which
+> sectors, hop gate, weight) on the sector. Shipped as a schema-only commit while
+> the catalog is empty + selection unwired (zero snapshot churn).
 
 **Why layouts stay dumb:** a layout is geometry reused across many sectors and
 encounters; folding sector/encounter refs *into* the layout would couple a
@@ -94,6 +108,8 @@ battlefield to the content that happens to use it (the wrong direction — you'd
 edit `river.json` to add a new encounter). The *editor toggle* the brief asks for
 ("add this layout to sectors") writes to the **sector** file, not the layout file —
 it's an authoring convenience over the sector↔layout edge, which the sector owns.
+(The future "add this encounter to a sector" toggle writes the sector file too —
+same edge ownership.)
 
 **The two layout references are deliberate, not redundant:**
 - **Sector.layouts** answers *"which battlefields exist in this sector?"* — a
@@ -106,8 +122,8 @@ it's an authoring convenience over the sector↔layout edge, which the sector ow
 
 **Selection at a battle node** (resolved against the current sector `S`, hop `D`,
 node kind): **encounter-first, then a compatible layout** —
-1. `candidates = encounters.filter(e ⇒ S ∈ e.sectors ∧ D ≥ e.minHop ∧ e.kind === encounterKindFor(node))` — the map node's kind maps to the eligible encounter kind (battle→`normal`, boss→`boss`; a future elite map-node → `elite`).
-2. pick one (weighted; see V1),
+1. `candidates = encounterPoolAtHop(S, D).map(resolve).filter(e ⇒ e.kind === encounterKindFor(node))` — draw from the **sector's** hop-gated fight pool, then keep the entries whose kind matches the node (battle→`normal`, boss→`boss`; a future elite map-node → `elite`).
+2. pick one (the per-entry pool `weight` rides selection; see V1),
 3. roll the layout from `S.layouts(hop-gated) ∩ (e.layouts ?? all)`.
 
 This guarantees the rolled layout is always one the encounter supports (the
@@ -582,14 +598,15 @@ data model*. **The resolution ORDER is a deliberately pluggable strategy**
 (user call — we don't yet know which feels better, and it should A/B with a config
 flip): build it as **one keyed resolver**, config-selected, exactly like O3's
 `focusTileResolution` switch — **NOT two hard-coded forks**. The two strategies:
-- **`encounterFirst`** (the shipped default, user-chosen): filter by
-  `sector ∈ e.sectors ∧ hop ≥ e.minHop ∧ e.kind === encounterKindFor(nodeKind)`,
-  pick one, then roll the layout from
-  `sector.layouts(hop-gated) ∩ (e.layouts ?? all)`. The
+- **`encounterFirst`** (the shipped default, user-chosen): draw from the sector's
+  hop-gated fight pool — `encounterPoolAtHop(sector, hop).map(resolve)` — filter by
+  `e.kind === encounterKindFor(nodeKind)`, pick one (weighted by the pool entry),
+  then roll the layout from `sector.layouts(hop-gated) ∩ (e.layouts ?? all)`. The
   encounter is the headline choice; the layout is guaranteed-compatible dressing.
 - **`layoutFirst`** (built switchable, for the playtest A/B): roll the layout from
-  `sector.layouts(hop-gated)` first, then pick an encounter additionally
-  filtered by `layout ∈ (e.layouts ?? all)`. Geometry-led.
+  `sector.layouts(hop-gated)` first, then pick an encounter (from the same sector
+  pool, kind-filtered) additionally filtered by `layout ∈ (e.layouts ?? all)`.
+  Geometry-led.
 
 Replaces U3's hold-the-single-encounter with a real pick in `beginEncounter`. A
 boot-time + editor guard ensures every (sector, reachable hop, kind) has ≥ 1
@@ -622,12 +639,17 @@ confirm the field name + that uniform ships first.
 ### V2 — The encounter editor
 
 **Shape:** `tools/encounter-editor/` (modeled on the archetype editor) — author an
-encounter's name / pool / sectors / layouts / hop gate / **wave list** with live
-zod validation + a **resolution preview** (given a sample roster + hand size,
-show the resolved teams for the first N turns, so the wave grammar is *feelable* —
-the user's point #2 made concrete). Save via `/__save-config` (`encounters.json`
-added to the allowlist). Ship a **small authored catalog** beyond the reproduction
-encounter (a few hand-built encounters exercising sequences / picks / loops).
+encounter's name / health pool / kind / optional layout fit-filter / **wave list**
+with live zod validation + a **resolution preview** (given a sample roster + hand
+size, show the resolved teams for the first N turns, so the wave grammar is
+*feelable* — the user's point #2 made concrete). **Placement** (which sectors an
+encounter is pooled in, its per-sector hop gate + weight) is authored on the
+**sector** side now (sector-owns-both — the sector editor grows an encounter-pool
+section, OR an "add this encounter to a sector" toggle writing the sector file,
+mirroring the layout toggle). Save via `/__save-config` (`encounters.json` added to
+the allowlist). Ship a **small authored catalog** beyond the reproduction encounter
+(a few hand-built encounters exercising sequences / picks / loops), and pool them
+into "The Start" so V1 selection has real choices.
 
 **Cost:** dev-only UI + a one-line allowlist add. The **resolution preview** is the
 piece that makes wave grammars tunable without a full playtest — the editor *is*

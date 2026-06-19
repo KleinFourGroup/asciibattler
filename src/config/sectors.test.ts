@@ -6,6 +6,7 @@ import {
   PROCEDURAL_LAYOUT_ID,
   getSector,
   layoutPoolAtHop,
+  encounterPoolAtHop,
   type SectorDef,
 } from './sectors';
 import { LAYOUT_IDS } from './layouts';
@@ -49,6 +50,8 @@ describe('sectors config — the shipped catalog', () => {
     expect(start!.layouts.every((e) => e.minHop === undefined)).toBe(true);
     // length feeds NodeMap.generate's hopCount — positive, matching today's map.
     expect(start!.length).toBeGreaterThan(0);
+    // The fight pool is empty until V authors the encounter catalog.
+    expect(start!.encounters).toEqual([]);
   });
 
   it('getSector returns undefined for an unknown id', () => {
@@ -110,6 +113,24 @@ describe('sectors schema — validation guards', () => {
   it('rejects a non-positive length', () => {
     expect(() => SectorsSchema.parse([makeSector({ length: 0 })])).toThrow();
   });
+
+  it('defaults the encounter pool to [] when the key is absent', () => {
+    // makeSector() omits `encounters`; `.default([])` fills it so downstream code
+    // can always treat it as an array.
+    expect(SectorsSchema.parse([makeSector()])[0]!.encounters).toEqual([]);
+  });
+
+  it('accepts an explicit empty encounter pool', () => {
+    expect(() => SectorsSchema.parse([makeSector({ encounters: [] })])).not.toThrow();
+  });
+
+  it('rejects an encounter-pool entry referencing an unknown encounter', () => {
+    // The catalog ships empty, so any id is unknown — the ref guard binds once V
+    // authors content; the rejection path is exercisable now.
+    expect(() =>
+      SectorsSchema.parse([makeSector({ encounters: [{ encounterId: 'no-such-encounter' }] })]),
+    ).toThrow(/unknown encounterId/);
+  });
 });
 
 describe('layoutPoolAtHop — the hop-gated pool query', () => {
@@ -143,5 +164,35 @@ describe('layoutPoolAtHop — the hop-gated pool query', () => {
     for (let hop = 0; hop < sector.length; hop++) {
       expect(layoutPoolAtHop(sector, hop).length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('encounterPoolAtHop — the hop-gated fight-pool query', () => {
+  // A pure filter over `sector.encounters`. Exercised with literal entries (the
+  // catalog is empty, so real encounter ids don't exist yet) — this pins the gate
+  // logic, not ref resolution, hence a cast rather than a schema parse.
+  const sector = {
+    id: 'fixture',
+    title: 'F',
+    description: 'd',
+    length: 4,
+    theme: 'default',
+    layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
+    encounters: [{ encounterId: 'a' }, { encounterId: 'b', minHop: 2 }],
+  } as unknown as SectorDef;
+
+  it('returns only ungated entries below the gate', () => {
+    expect(encounterPoolAtHop(sector, 0).map((e) => e.encounterId)).toEqual(['a']);
+    expect(encounterPoolAtHop(sector, 1).map((e) => e.encounterId)).toEqual(['a']);
+  });
+
+  it('includes a gated entry at and above its minHop', () => {
+    expect(encounterPoolAtHop(sector, 2).map((e) => e.encounterId)).toEqual(['a', 'b']);
+    expect(encounterPoolAtHop(sector, 3).map((e) => e.encounterId)).toEqual(['a', 'b']);
+  });
+
+  it('is empty for a sector with no fight pool', () => {
+    const empty = { ...sector, encounters: [] } as SectorDef;
+    expect(encounterPoolAtHop(empty, 0)).toEqual([]);
   });
 });

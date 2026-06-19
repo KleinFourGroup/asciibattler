@@ -28,7 +28,6 @@
 
 import { DIFFICULTY } from '../../config/difficulty';
 import { HEALTH } from '../../config/health';
-import { SECTOR_IDS } from '../../config/sectors';
 import type { Encounter } from '../../config/encounters';
 import type { WaveSpec } from './wave';
 
@@ -65,7 +64,6 @@ export function reproductionEncounter(): Encounter {
     name: 'Brigands',
     description: 'A roving band of brigands — the everyday hostiles of the road.',
     healthPool: HEALTH.enemyHealthMax,
-    sectors: [...SECTOR_IDS],
     kind: 'normal',
     waves: [{ kind: 'loop', body: [{ kind: 'wave', spec: wave }], repeat: 'forever' }],
   };

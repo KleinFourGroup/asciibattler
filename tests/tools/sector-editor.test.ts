@@ -52,10 +52,33 @@ describe('formatSectorsJson', () => {
           { layoutId: 'labyrinth', minHop: 2 },
           { layoutId: 'river' },
         ],
+        encounters: [],
       },
     ]);
     expect(formatted).toContain('{ "layoutId": "procedural", "weight": 2 }');
     expect(formatted).toContain('{ "layoutId": "labyrinth", "minHop": 2 }');
     expect(formatted).toContain('{ "layoutId": "river" }');
+    // The fight pool is a first-class slot — always emitted, `[]` when empty.
+    expect(formatted).toContain('"encounters": []');
+  });
+
+  it('emits a populated encounter pool inline, mirroring the layout pool', () => {
+    const formatted = formatSectorsJson([
+      {
+        id: 's',
+        title: 'S',
+        description: 'd',
+        length: 3,
+        theme: 'default',
+        layouts: [{ layoutId: 'procedural' }],
+        encounters: [
+          { encounterId: 'brigands' },
+          { encounterId: 'ambush', minHop: 1, weight: 2 },
+        ],
+      },
+    ]);
+    expect(formatted).toContain('"encounters": [');
+    expect(formatted).toContain('{ "encounterId": "brigands" }');
+    expect(formatted).toContain('{ "encounterId": "ambush", "minHop": 1, "weight": 2 }');
   });
 });

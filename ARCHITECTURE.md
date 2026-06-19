@@ -158,6 +158,9 @@ src/
     encounters/
       wave.ts                # U1: pure resolveWave(spec, ctx, rng) → UnitTemplate[] — budget/count/weight;
                              # distributeWeightedLevels generalizes distributeBudget (uniform weights → even split)
+      sequencer.ts           # U2: pure waveForTurn(list, cursor, state, rng) — the wave-list GRAMMAR
+                             # (wave | pick | loop{N|forever} | stages{until: enemyPoolAtOrBelow}) + a
+                             # recursive plain-JSON cursor (resumable); terminal policy = last-wave-repeats
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
     NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3) + dump; T2: per-sector length override
     sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks

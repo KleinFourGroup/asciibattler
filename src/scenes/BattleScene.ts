@@ -218,7 +218,10 @@ export class BattleScene implements Scene {
       playerHealth: ctx.run.playerHealth,
       playerHealthMax: HEALTH.playerHealthMax,
       enemyHealth: ctx.run.enemyHealth,
-      enemyHealthMax: HEALTH.enemyHealthMax,
+      // U3 — per-encounter pool max + name (replaces the global enemyHealthMax /
+      // the hardcoded "Foe").
+      enemyHealthMax: ctx.run.enemyHealthPoolMax,
+      ...(ctx.run.currentEncounterName ? { enemyName: ctx.run.currentEncounterName } : {}),
     });
     this.battleRenderer.attach(this.world);
     const spawnRegions = applyTerrain(this.world, encounter);

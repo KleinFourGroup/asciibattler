@@ -47,7 +47,7 @@ import { getSector, layoutPoolAtHop, PROCEDURAL_LAYOUT_ID, type SectorDef } from
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
 import { pickStartSector, pickNextSector, isSectorSink, pickWeighted } from './sectorWalk';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
-import { enemyBudgetFor, rollEnemyWave, avgTeamLevel } from './enemyBudget';
+import { avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
 import {
   redrawAvailability,
@@ -73,6 +73,11 @@ import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
+import { DIFFICULTY } from '../config/difficulty';
+import { getEncounter, type Encounter } from '../config/encounters';
+import { resolveWave, type WaveContext } from './encounters/wave';
+import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
+import { reproductionEncounter, REPRODUCTION_ENCOUNTER_ID } from './encounters/reproduction';
 import { DAEMONS, type DaemonConfig } from '../config/daemons';
 import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
@@ -200,8 +205,24 @@ export interface BattleEncounter {
  *  sector — drives the node-map length, theme, + hop-gated layout pool) and
  *  `currentSectorNodeId` (the run's position on the sector-selection DAG, needed
  *  to pick the next sector on clearing a terminal). A v19 save predates the
- *  sector model → reject rather than rehydrate a run with no sector. */
-const RUN_SCHEMA_VERSION = 20;
+ *  sector model → reject rather than rehydrate a run with no sector.
+ *  U3: bumped 20→21. The encounter-model swap: retires `encounterBudget` (the
+ *  per-encounter budget now lives in the authored wave spec) and adds
+ *  `selectedEncounterId` + `waveCursor` (the selected encounter + the wave-list
+ *  grammar position). A v20 save has a budget but no encounter/cursor → reject. */
+const RUN_SCHEMA_VERSION = 21;
+
+/**
+ * U3 — re-resolve a persisted `selectedEncounterId` to its `Encounter`. The
+ * reproduction encounter is code-built (reads live config, never stored);
+ * catalog encounters come from `config/encounters.json`. A null id (no active
+ * encounter) → null; an unknown id (a retired catalog entry) → null too.
+ */
+function resolveSelectedEncounter(id: string | null): Encounter | null {
+  if (id === null) return null;
+  if (id === REPRODUCTION_ENCOUNTER_ID) return reproductionEncounter();
+  return getEncounter(id) ?? null;
+}
 
 /**
  * K3.5 — the encounter's battlefield, rolled ONCE in `beginEncounter` (the
@@ -277,9 +298,13 @@ export interface RunSnapshot {
   enemyHealth: number;
   /** H4: turns elapsed in the active encounter (drives the max-turns cap). */
   turnIndex: number;
-  /** H4: the active encounter's fixed enemy level budget (computed once at
-   *  encounter start; the wave composition re-rolls per turn against it). */
-  encounterBudget: number;
+  /** U3: the active encounter's id (`reproduction` or a catalog id), or null
+   *  outside an encounter. `fromJSON` re-resolves the Encounter from it. */
+  selectedEncounterId: string | null;
+  /** U3: the wave-list sequencer cursor (the U2 grammar position), or null
+   *  before the encounter's first turn. Plain JSON; persisted so a mid-encounter
+   *  resume continues the exact wave sequence/stage. */
+  waveCursor: WaveCursor | null;
   /** K3.5: the active encounter's battlefield (rolled once at encounter start,
    *  every turn fights on it). Null outside an encounter. */
   encounterMap: EncounterMap | null;
@@ -433,11 +458,19 @@ export class Run {
   /** H4 — turns elapsed in the active encounter. Incremented once per resolved
    *  turn; drives the `HEALTH.maxTurns` safety cap. Reset at encounter start. */
   turnIndex: number;
-  /** H4 — the active encounter's enemy level budget, computed ONCE at encounter
-   *  start via `enemyBudgetFor`. The wave composition re-rolls per turn against
-   *  this fixed budget; persisted (not recomputed on resume) so a mid-encounter
-   *  restore can't drift if the roster changed since. */
-  encounterBudget: number;
+  /**
+   * U3 — the active encounter (the authored fight selected onto this node).
+   * Held for the whole encounter: `beginTurn` resolves each turn's wave from its
+   * `waves` grammar, and the pool max comes from its `healthPool`. Null outside
+   * an encounter (cleared in `finishEncounter`). NOT serialized directly — the
+   * snapshot persists `selectedEncounterId` and `fromJSON` re-resolves it (the
+   * reproduction encounter is code-built; catalog encounters come from config).
+   */
+  selectedEncounter: Encounter | null = null;
+  /** U3 — the wave-list sequencer cursor (U2). Null before the first turn; the
+   *  sequencer returns a fresh cursor each turn. Persisted for mid-encounter
+   *  resume. */
+  waveCursor: WaveCursor | null = null;
   /**
    * K3.5 — the active encounter's battlefield: layout/size/terrain/theme rolled
    * ONCE in `beginEncounter` (a dedicated `this.rng` fork); every turn's
@@ -530,12 +563,11 @@ export class Run {
     // K4 — empower budget bookkeeping; same lifecycle.
     this.empowersUsedThisTurn = 0;
     // H4 — the run-wide player pool starts full; the per-encounter state
-    // (enemyHealth/turnIndex/encounterBudget) is set when an encounter
+    // (enemyHealth/turnIndex/selectedEncounter) is set when an encounter
     // actually begins (`beginEncounter`).
     this.playerHealth = HEALTH.playerHealthMax;
     this.enemyHealth = 0;
     this.turnIndex = 0;
-    this.encounterBudget = 0;
     this.encounterMap = null;
     this.levelupRng = this.rng.fork();
     // H5 — fork the deck stream LAST (after levelup), consistent with the
@@ -659,10 +691,13 @@ export class Run {
    * persists across encounters.
    */
   private beginEncounter(): void {
-    this.enemyHealth = HEALTH.enemyHealthMax;
+    // U3 — select the authored encounter for this node. U3 ships ONE: the
+    // code-built reproduction (selection among a catalog is V). It seeds the
+    // per-encounter pool + owns the wave grammar; the wave cursor starts fresh.
+    this.selectedEncounter = reproductionEncounter();
+    this.waveCursor = null;
+    this.enemyHealth = this.selectedEncounter.healthPool;
     this.turnIndex = 0;
-    // Budget computed once; the wave composition re-rolls per turn against it.
-    this.encounterBudget = enemyBudgetFor(this.team);
     // H5 — rebuild + shuffle the draw deck from the CURRENT roster (so a
     // freshly recruited card is in the deck); hand + discard start empty. The
     // deck is per-encounter — last encounter's pile state is discarded here.
@@ -723,6 +758,24 @@ export class Run {
    */
   get currentSectorTitle(): string {
     return this.currentSector().title;
+  }
+
+  /**
+   * U3 — the active encounter's enemy health-pool MAXIMUM. Per-encounter now
+   * (`encounter.healthPool`), replacing the global `HEALTH.enemyHealthMax`; falls
+   * back to the global outside an encounter (defensive — readers only consult it
+   * mid-battle). The basis for the pool-fraction gauge + the stage conditions.
+   */
+  get enemyHealthPoolMax(): number {
+    return this.selectedEncounter?.healthPool ?? HEALTH.enemyHealthMax;
+  }
+
+  /**
+   * U3 — the active encounter's display name (the HUD enemy pane, replacing
+   * "Foe"). Null outside an encounter.
+   */
+  get currentEncounterName(): string | null {
+    return this.selectedEncounter?.name ?? null;
   }
 
   /**
@@ -805,7 +858,7 @@ export class Run {
         playerHealth: this.playerHealth,
         playerHealthMax: HEALTH.playerHealthMax,
         enemyHealth: this.enemyHealth,
-        enemyHealthMax: HEALTH.enemyHealthMax,
+        enemyHealthMax: this.enemyHealthPoolMax,
         hand: this.hand.map((idx) => this.team[idx]!),
         // R2 — the other two piles for the pre-turn pile views (recruitment
         // order; see resolvePileForDisplay).
@@ -870,10 +923,31 @@ export class Run {
       throw new Error('Run.beginTurn: no encounterMap — beginTurn outside an encounter');
     }
     const { layoutId, gridW, gridH, terrainSeed, theme } = this.encounterMap;
-    // H4 — fresh enemy composition each turn at the encounter's FIXED budget
-    // (G4's `buildEnemyTeam` split into budget + wave). Last consumer of
-    // `battleRng`, so its now-variable draw count stays downstream-safe.
-    const enemyTeam = rollEnemyWave(battleRng, this.team, this.encounterBudget);
+    // U3 — the per-turn enemy team now comes from the selected ENCOUNTER, not the
+    // random `rollEnemyWave`: advance the wave-list grammar one turn (`waveForTurn`,
+    // U2) to get this turn's spec + cursor, then resolve it to a team (`resolveWave`,
+    // U1). Both draw `battleRng` — the last consumer, so their variable draw count
+    // stays downstream-safe (as `rollEnemyWave` was). The stage condition reads the
+    // live pool fraction at this turn boundary.
+    const encounter = this.selectedEncounter;
+    if (encounter === null) {
+      throw new Error('Run.beginTurn: no selected encounter — beginTurn outside an encounter');
+    }
+    const encounterState: EncounterState = {
+      poolFraction: encounter.healthPool > 0 ? this.enemyHealth / encounter.healthPool : 0,
+      turn: this.turnIndex + 1,
+    };
+    const { spec, cursor } = waveForTurn(encounter.waves, this.waveCursor, encounterState, battleRng);
+    this.waveCursor = cursor;
+    const waveContext: WaveContext = {
+      roster: this.team,
+      // The count/budget basis is the FIELDED hand (min(roster, handSize)), as
+      // `rollEnemyWave`/`playerTeamLevel` used.
+      handSize: Math.min(this.team.length, DECK.handSize),
+      // The per-instance level ceiling, mirroring `rollEnemyWave`'s `cap`.
+      levelCap: Math.max(1, ...this.team.map((u) => u.level)) + DIFFICULTY.unitLevelDelta,
+    };
+    const enemyTeam = resolveWave(spec, waveContext, battleRng);
 
     // E4/H5 — the hand was drawn in `startNextTurn` (`drawTurnHand`) so the
     // pre-turn screen could show it; here we just field it. Stamp each drawn
@@ -983,7 +1057,7 @@ export class Run {
         playerHealth: this.playerHealth,
         playerHealthMax: HEALTH.playerHealthMax,
         enemyHealth: this.enemyHealth,
-        enemyHealthMax: HEALTH.enemyHealthMax,
+        enemyHealthMax: this.enemyHealthPoolMax,
       });
     } else if (this.pendingPromotions) {
       // M1 headless — the promotion pause interposes between the resolved
@@ -1032,7 +1106,7 @@ export class Run {
     if (this.enemyHealth <= 0) return 'won';
     if (this.turnIndex >= HEALTH.maxTurns) {
       const playerFrac = this.playerHealth / HEALTH.playerHealthMax;
-      const enemyFrac = this.enemyHealth / HEALTH.enemyHealthMax;
+      const enemyFrac = this.enemyHealth / this.enemyHealthPoolMax;
       return playerFrac > enemyFrac ? 'won' : 'lost';
     }
     return 'ongoing';
@@ -1218,6 +1292,9 @@ export class Run {
   private finishEncounter(outcome: 'win' | 'defeat'): void {
     // K3.5 — the battlefield is encounter-scoped; drop it with the encounter.
     this.encounterMap = null;
+    // U3 — the selected encounter + its wave cursor are encounter-scoped too.
+    this.selectedEncounter = null;
+    this.waveCursor = null;
     if (outcome === 'defeat') {
       this.phase = 'defeat';
       this.bus.emit('run:defeated', {});
@@ -1573,7 +1650,8 @@ export class Run {
       playerHealth: this.playerHealth,
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
-      encounterBudget: this.encounterBudget,
+      selectedEncounterId: this.selectedEncounter?.id ?? null,
+      waveCursor: this.waveCursor,
       encounterMap: this.encounterMap,
       currentNodeId: this.currentNodeId,
       phase: this.phase,
@@ -1641,7 +1719,11 @@ export class Run {
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;
-    m.encounterBudget = snap.encounterBudget;
+    // U3 — re-resolve the held Encounter from its persisted id (the reproduction
+    // is code-built; catalog encounters come from config), and restore the wave
+    // cursor as-is (plain JSON, never mutated in place).
+    m.selectedEncounter = resolveSelectedEncounter(snap.selectedEncounterId);
+    m.waveCursor = snap.waveCursor;
     m.encounterMap = snap.encounterMap;
     m.currentNodeId = snap.currentNodeId;
     m.phase = snap.phase;

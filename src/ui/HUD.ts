@@ -55,6 +55,9 @@ interface EncounterPools {
   playerHealthMax: number;
   enemyHealth: number;
   enemyHealthMax: number;
+  /** U3 — the encounter's display name, labelling the enemy pool gauge (replaces
+   *  the old hardcoded "Foe"). Falls back to "Foe" when absent. */
+  enemyName?: string;
 }
 
 export class HUD {
@@ -555,7 +558,7 @@ export class HUD {
     this.enemyPoolWrap.replaceChildren();
     if (!e) return;
     this.enemyPoolWrap.appendChild(
-      renderPoolGauge('enemy', 'Foe', e.enemyHealth, e.enemyHealthMax),
+      renderPoolGauge('enemy', e.enemyName ?? 'Foe', e.enemyHealth, e.enemyHealthMax),
     );
   }
 

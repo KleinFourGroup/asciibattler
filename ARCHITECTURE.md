@@ -148,6 +148,10 @@ src/
                              # K4: pre-turn empower (handleEmpowerUnit → addEncounterEffect; per-turn budget, v15)
                              # L1: the daemon — rolled at construction off the dedicated daemonRng (or RunConfig-forced);
                              # turnGates re-resolved each startNextTurn = THE redraw/empower availability (daemon-only gates, v16)
+                             # U3: beginEncounter SELECTS an Encounter (selectedEncounter, U3=reproductionEncounter) +
+                             # seeds enemyHealth from its healthPool + resets waveCursor; beginTurn resolves the per-turn
+                             # enemy team from the encounter's wave grammar (waveForTurn→resolveWave) NOT rollEnemyWave;
+                             # encounterBudget retired; encounter.name → HUD enemy pane. RUN_SCHEMA_VERSION 21
     redraw.ts                # K3: pure redraw rules — redrawRejection / redrawAvailability (config injected, both L modes provable)
     empower.ts               # K4: pure empower rules — empowerRejection / empowerAvailability / empowerEffect (config injected)
     daemon.ts                # L1: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGates

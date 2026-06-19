@@ -604,7 +604,9 @@ describe('A2 round-trip: Run', () => {
     expect(restored.playerHealth).toBe(run.playerHealth);
     expect(restored.enemyHealth).toBe(run.enemyHealth);
     expect(restored.turnIndex).toBe(run.turnIndex);
-    expect(restored.encounterBudget).toBe(run.encounterBudget);
+    // U3 — the selected encounter + wave cursor round-trip (replaced encounterBudget).
+    expect(restored.currentEncounterName).toBe(run.currentEncounterName);
+    expect(restored.waveCursor).toEqual(run.waveCursor);
     expect(restored.team[0]!.xp).toBe(7);
 
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };

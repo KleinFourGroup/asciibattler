@@ -18,7 +18,7 @@ import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import { EMPOWER } from '../config/empower';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
-import { avgTeamLevel, enemyBudgetFor } from './enemyBudget';
+import { avgTeamLevel } from './enemyBudget';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 
 /**
@@ -601,13 +601,16 @@ describe('Run', () => {
       expect(run.turnIndex).toBe(0);
     });
 
-    it('beginEncounter fills the enemy pool + fixes the budget; playerHealth untouched', () => {
+    it('beginEncounter selects the encounter + fills its pool; playerHealth untouched', () => {
       const { run } = freshRunWithBus(1);
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
+      // U3 — the pool now comes from the selected encounter (the reproduction's
+      // healthPool == the old global HEALTH.enemyHealthMax, so the value holds).
       expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax);
+      expect(run.enemyHealthPoolMax).toBe(HEALTH.enemyHealthMax);
+      expect(run.currentEncounterName).toBe('Brigands');
       expect(run.turnIndex).toBe(0); // no turn resolved yet
-      expect(run.encounterBudget).toBe(enemyBudgetFor(run.team));
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
     });
 
@@ -757,7 +760,9 @@ describe('Run', () => {
       expect(restored.playerHealth).toBe(run.playerHealth);
       expect(restored.enemyHealth).toBe(run.enemyHealth);
       expect(restored.turnIndex).toBe(run.turnIndex);
-      expect(restored.encounterBudget).toBe(run.encounterBudget);
+      // U3 — the selected encounter + wave cursor round-trip (replaces the budget).
+      expect(restored.currentEncounterName).toBe(run.currentEncounterName);
+      expect(restored.waveCursor).toEqual(run.waveCursor);
       expect(restored.team[0]!.xp).toBe(5);
     });
   });

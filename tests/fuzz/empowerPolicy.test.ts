@@ -126,8 +126,8 @@ describe('selectEmpowerPosition', () => {
   });
 
   it('scored archetype affinity steers the pick', () => {
-    const weights = zeroWeights();
-    weights.archetype = { ...weights.archetype, ranged: 1 };
+    const base = zeroWeights();
+    const weights = { ...base, archetype: { ...base.archetype, ranged: 1 } };
     const policy: EmpowerPolicy = { kind: 'scored', weights };
     expect(selectEmpowerPosition(HAND, AVAIL, policy, rng())).toBe(1); // the lone archer
   });

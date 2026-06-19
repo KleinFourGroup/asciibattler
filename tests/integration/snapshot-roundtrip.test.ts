@@ -336,6 +336,7 @@ describe('A2 round-trip: World', () => {
       layoutId: null,
       gridW: world.gridW,
       gridH: world.gridH,
+      theme: 'default', // cosmetic only — not part of the serialized snapshot
       playerTeam: [],
       enemyTeam: [],
     });
@@ -749,7 +750,7 @@ type RecordedEvent =
   | { kind: 'unit:moved'; unitId: number; fx: number; fy: number; tx: number; ty: number }
   | { kind: 'unit:attacked'; attackerId: number; targetId: number; damage: number }
   | { kind: 'unit:died'; unitId: number }
-  | { kind: 'battle:ended'; winner: Team };
+  | { kind: 'battle:ended'; winner: Team | 'draw' }; // N2 — a capped turn resolves as 'draw'
 
 function recordEvents(bus: EventBus<GameEvents>): RecordedEvent[] {
   const out: RecordedEvent[] = [];

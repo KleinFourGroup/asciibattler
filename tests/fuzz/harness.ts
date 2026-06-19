@@ -417,10 +417,18 @@ export function runOne(
         break;
       }
       case 'battle': {
+        // `currentWorld`/`currentCoverage`/`currentBattle` are assigned ONLY
+        // inside bus-event closures, so TS's control-flow analysis (it only
+        // tracks the linear body) pins their flow-type to the `null` initializer;
+        // a truthy/null guard then narrows that to `never`. The runtime guards
+        // below are real — the `battle:started` handler always sets these before
+        // this phase runs — and the `as` casts just restore the type the closure
+        // assignment actually gives them. Same caveat at the coverage + hang
+        // guards further down.
         if (!currentWorld) {
           throw new Error('harness: battle phase but no active World — bus wiring bug');
         }
-        const w = currentWorld;
+        const w = currentWorld as World;
         let battleTicks = 0;
         while (!w.ended && battleTicks < maxTicksPerBattle) {
           // J4 — drive the shared objective before the tick drains commands.
@@ -432,8 +440,9 @@ export function runOne(
           }
           // O5 — or churn both teams' objectives for coverage (mutually exclusive
           // with the measurement bot above; the CLI never sets both).
-          if (currentCoverage) {
-            for (const cmd of currentCoverage.decide(w)) w.enqueueCommand(cmd);
+          const coverage = currentCoverage as CoverageObjectiveDriver | null;
+          if (coverage) {
+            for (const cmd of coverage.decide(w)) w.enqueueCommand(cmd);
           }
           w.tick();
           battleTicks++;
@@ -454,19 +463,21 @@ export function runOne(
           // non-termination guard (a World invariant violation): synthesize a battle
           // record + bail with outcome 'hang', which now means EXACTLY that, never
           // just a slow turn.
-          if (currentBattle) {
+          // Same closure-assignment caveat as `currentWorld` above.
+          const cb = currentBattle as PartialBattle | null;
+          if (cb) {
             battles.push({
-              hop: currentBattle.hop,
-              worldSeed: currentBattle.worldSeed,
-              layoutId: currentBattle.layoutId,
+              hop: cb.hop,
+              worldSeed: cb.worldSeed,
+              layoutId: cb.layoutId,
               winner: 'hang',
               ticks: battleTicks,
-              playerDeaths: currentBattle.playerDeaths,
-              enemyDeaths: currentBattle.enemyDeaths,
-              playerTeamSize: currentBattle.playerTeamSize,
-              enemyTeamSize: currentBattle.enemyTeamSize,
-              playerLevels: currentBattle.playerLevels,
-              enemyLevels: currentBattle.enemyLevels,
+              playerDeaths: cb.playerDeaths,
+              enemyDeaths: cb.enemyDeaths,
+              playerTeamSize: cb.playerTeamSize,
+              enemyTeamSize: cb.enemyTeamSize,
+              playerLevels: cb.playerLevels,
+              enemyLevels: cb.enemyLevels,
             });
           }
           return finalize(seed, strategy.name, 'hang', run, battles, recruits, totalTicks, telemetry);
@@ -551,6 +562,14 @@ function finalize(
   totalTicks: number,
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
+  // Fold in the recruit log + final roster composition (player-side, already
+  // tracked) and emit the immutable telemetry. Absent when the flag is off — and
+  // under `exactOptionalPropertyTypes` an absent value must OMIT the key, not set
+  // it to `undefined`, so spread it conditionally.
+  const finishedTelemetry = telemetry?.finish(
+    recruits.map((r) => r.archetype),
+    run.team.map((u) => u.archetype),
+  );
   return {
     seed,
     strategyName,
@@ -561,13 +580,7 @@ function finalize(
     finalTeamSize: run.team.length,
     battles,
     recruits,
-    // Fold in the recruit log + final roster composition (player-side, already
-    // tracked) and emit the immutable telemetry. Absent when the flag is off.
-    telemetry:
-      telemetry?.finish(
-        recruits.map((r) => r.archetype),
-        run.team.map((u) => u.archetype),
-      ) ?? undefined,
+    ...(finishedTelemetry !== undefined ? { telemetry: finishedTelemetry } : {}),
   };
 }
 

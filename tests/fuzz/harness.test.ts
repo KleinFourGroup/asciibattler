@@ -197,6 +197,7 @@ describe('fuzz reporters', () => {
     ): RunResult => ({
       seed: 0,
       strategyName: 'synthetic',
+      daemonId: null,
       outcome,
       finalHopReached,
       totalTicks: 0,
@@ -251,6 +252,7 @@ describe('fuzz reporters', () => {
       {
         seed: 0,
         strategyName: 'synthetic',
+        daemonId: null,
         outcome: 'complete',
         finalHopReached: 2,
         totalTicks: 0,

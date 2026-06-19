@@ -94,7 +94,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         args.seed = Number(v);
         break;
       case '--strategy':
-        args.strategy = v;
+        if (v !== undefined) args.strategy = v;
         break;
       case '--out':
         args.outDir = v ?? args.outDir;
@@ -106,13 +106,13 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         args.perLayout = true;
         break;
       case '--layout':
-        args.layout = v;
+        if (v !== undefined) args.layout = v;
         break;
       case '--search':
         args.search = true;
         break;
       case '--preset':
-        args.preset = v;
+        if (v !== undefined) args.preset = v;
         break;
       case '--vectors':
         args.vectors = Number(v);
@@ -127,25 +127,25 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         args.balanceSweep = true;
         break;
       case '--knob':
-        args.knob = v;
+        if (v !== undefined) args.knob = v;
         break;
       case '--range':
-        args.range = v;
+        if (v !== undefined) args.range = v;
         break;
       case '--knob2':
-        args.knob2 = v;
+        if (v !== undefined) args.knob2 = v;
         break;
       case '--range2':
-        args.range2 = v;
+        if (v !== undefined) args.range2 = v;
         break;
       case '--tier':
-        args.tier = v;
+        if (v !== undefined) args.tier = v;
         break;
       case '--hops':
         args.hops = Number(v);
         break;
       case '--roster':
-        args.roster = v;
+        if (v !== undefined) args.roster = v;
         break;
       case '--jobs':
         args.jobs = Number(v);
@@ -154,10 +154,10 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         args.evalShard = true;
         break;
       case '--job':
-        args.job = v;
+        if (v !== undefined) args.job = v;
         break;
       case '--out-file':
-        args.outFile = v;
+        if (v !== undefined) args.outFile = v;
         break;
       case '--dry-run':
         args.dryRun = true;
@@ -170,16 +170,16 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         args.arena = true;
         break;
       case '--objective':
-        args.objective = v;
+        if (v !== undefined) args.objective = v;
         break;
       case '--redraw':
-        args.redraw = v;
+        if (v !== undefined) args.redraw = v;
         break;
       case '--empower':
-        args.empower = v;
+        if (v !== undefined) args.empower = v;
         break;
       case '--daemon':
-        args.daemon = v;
+        if (v !== undefined) args.daemon = v;
         break;
       default:
         if (raw.startsWith('--')) {

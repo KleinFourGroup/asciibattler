@@ -62,6 +62,7 @@ function runBattle(seed: number, side: number): { world: World; ticks: number } 
     layoutId: null,
     gridW: side,
     gridH: side,
+    theme: 'default', // cosmetic only — no sim effect on the size test
     playerTeam,
     enemyTeam,
   };

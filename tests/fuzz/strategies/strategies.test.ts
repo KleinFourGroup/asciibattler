@@ -137,7 +137,8 @@ describe('recruit policies', () => {
     for (const stat of STAT_KEYS) {
       const max = Math.max(...offer.map((t) => t.stats[stat]));
       const idx = maximizeStat(stat)(offer, NO_RUN, new RNG(11));
-      expect(offer[idx]!.stats[stat]).toBe(max);
+      expect(idx).not.toBeNull(); // maximizeStat always picks for a non-empty offer
+      expect(offer[idx!]!.stats[stat]).toBe(max);
     }
   });
 

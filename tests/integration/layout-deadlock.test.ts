@@ -101,6 +101,7 @@ function runHeadlessBattle(seed: number, scenario: Scenario): { world: World; ti
     layoutId: scenario.layoutId,
     gridW: scenario.gridW,
     gridH: scenario.gridH,
+    theme: 'default', // cosmetic only — no sim effect on the deadlock check
     playerTeam,
     enemyTeam,
   };

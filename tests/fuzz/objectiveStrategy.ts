@@ -266,7 +266,12 @@ function scoredObjectiveTarget(
   const statRanges = STAT_KEYS.map((k) => minMax(enemies.map((u) => u.stats[k])));
   const hpRange = minMax(enemies.map((u) => u.currentHp));
   const scoreOf = (u: Unit): number => {
-    let s = weights.hp * norm(u.currentHp, hpRange) + weights.archetype[u.archetype];
+    // `enemies` are combatants, so `u.archetype` is never 'environment' at
+    // runtime — but the static type `UnitArchetype` includes it, and the
+    // affinity table is keyed only by combatant `Archetype`. Guard it (→ 0
+    // affinity) so the index type narrows to `Archetype`. Behavior-identical.
+    const affinity = u.archetype === 'environment' ? 0 : weights.archetype[u.archetype];
+    let s = weights.hp * norm(u.currentHp, hpRange) + affinity;
     for (let i = 0; i < STAT_KEYS.length; i++) {
       s += weights.stats[STAT_KEYS[i]!] * norm(u.stats[STAT_KEYS[i]!], statRanges[i]!);
     }

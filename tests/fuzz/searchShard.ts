@@ -41,15 +41,19 @@ export interface ShardJob {
   readonly knobs: Record<string, number>;
   readonly vectors: readonly ScoredWeights[];
   readonly seeds: readonly number[];
-  readonly hopCount?: number;
-  readonly roster?: readonly RosterEntry[];
+  // These optionals carry `undefined` to mean "none" (built by destructuring
+  // ShardedEvalParams' own optionals), so they're declared `?: T | undefined` —
+  // under exactOptionalPropertyTypes that permits both absent AND explicit
+  // undefined, which is what the literal at `evaluateVectorsSharded` provides.
+  readonly hopCount?: number | undefined;
+  readonly roster?: readonly RosterEntry[] | undefined;
   /** M6/N2 — the forced layout id / `procedural` sentinel the child's runs use
    *  (plain string, round-trips the job file), or undefined for the normal roll. */
-  readonly forcedLayoutId?: string;
-  readonly objective?: ObjectiveProclivity;
-  readonly redraw?: RedrawPolicy;
-  readonly empower?: EmpowerPolicy;
-  readonly daemon?: DaemonSelection;
+  readonly forcedLayoutId?: string | undefined;
+  readonly objective?: ObjectiveProclivity | undefined;
+  readonly redraw?: RedrawPolicy | undefined;
+  readonly empower?: EmpowerPolicy | undefined;
+  readonly daemon?: DaemonSelection | undefined;
 }
 
 /**
@@ -170,18 +174,21 @@ export interface ShardedEvalParams {
   readonly vectors: readonly ScoredWeights[];
   readonly seeds: readonly number[];
   readonly knobs: Record<string, number>;
-  readonly hopCount?: number;
-  readonly roster?: readonly RosterEntry[];
+  // `?: T | undefined` (not bare `?: T`) — these optionals are passed an explicit
+  // `undefined` for "none" by the sweep/search callers, which exactOptional
+  // forbids on a bare optional. Mirrors ShardJob above.
+  readonly hopCount?: number | undefined;
+  readonly roster?: readonly RosterEntry[] | undefined;
   /** M6/N2 — the forced layout id / `procedural` sentinel (or none). */
-  readonly forcedLayoutId?: string;
+  readonly forcedLayoutId?: string | undefined;
   /** J4 — the fixed objective proclivity the children's runs drive (or none). */
-  readonly objective?: ObjectiveProclivity;
+  readonly objective?: ObjectiveProclivity | undefined;
   /** K3c3 — the fixed redraw policy the children's runs drive (or none). */
-  readonly redraw?: RedrawPolicy;
+  readonly redraw?: RedrawPolicy | undefined;
   /** K4c3 — the fixed empower policy the children's runs drive (or none). */
-  readonly empower?: EmpowerPolicy;
+  readonly empower?: EmpowerPolicy | undefined;
   /** L1c3 — the fixed daemon arm the children's runs carry (or random). */
-  readonly daemon?: DaemonSelection;
+  readonly daemon?: DaemonSelection | undefined;
   readonly jobs: number;
   /** Scratch dir for the per-chunk job/result JSON; created + removed here. */
   readonly tmpDir: string;

@@ -66,6 +66,9 @@ describe('harness daemon arm (L1c3)', () => {
     expect(differs).toBe(true);
   });
 
+  // 12 full (4-hop) runs in one test — the heaviest case in this file. On a
+  // slow machine it brushes the 5s default per-test timeout, so give it generous
+  // explicit headroom (it's I/O-free CPU work; 30s is never legitimately hit).
   it('perDaemonStats buckets a random batch by rolled idol, sorted', () => {
     const results = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((s) => runOne(s, strat(), SHORT));
     const buckets = perDaemonStats(results);
@@ -75,5 +78,5 @@ describe('harness daemon arm (L1c3)', () => {
     for (const k of keys) expect(DAEMONS.some((d) => d.id === k)).toBe(true);
     const total = buckets.reduce((acc, b) => acc + b.stats.totalRuns, 0);
     expect(total).toBe(results.length);
-  });
+  }, 30_000);
 });

@@ -200,14 +200,14 @@ export interface BalanceSweepConfig {
    * mid-length artifact), without paying for the whole heavy tier. Undefined =
    * use the tier's own hopCount.
    */
-  readonly hopOverride?: number;
+  readonly hopOverride?: number | undefined;
   /**
    * Force the starting roster (archetype + level per slot) for every run at every
    * grid point. The way to evaluate an archetype the optimizer rarely RECRUITS:
    * plant it on the roster so it's fielded from hop 1, then read its
    * per-deployment telemetry. Undefined = the normal rolled starting roster.
    */
-  readonly rosterOverride?: readonly RosterEntry[];
+  readonly rosterOverride?: readonly RosterEntry[] | undefined;
   /**
    * M6/N2 — force every battle at every grid point onto one layout: a named
    * `LAYOUT_IDS` member, or the `FORCE_PROCEDURAL` sentinel for a fresh
@@ -215,34 +215,34 @@ export interface BalanceSweepConfig {
    * new procedural terrain alone, not the ~12%-each hand-authored mix).
    * Undefined = the normal per-encounter layout roll.
    */
-  readonly forcedLayoutId?: string;
+  readonly forcedLayoutId?: string | undefined;
   /**
    * J4 — hold one objective proclivity FIXED across every run at every grid
    * point (the arena's tuned strategy, `random`, or none). Lets a difficulty
    * sweep measure the band with objectives active. Undefined / none = no
    * objectives (byte-identical to the pre-J4 sweep).
    */
-  readonly objective?: ObjectiveProclivity;
+  readonly objective?: ObjectiveProclivity | undefined;
   /**
    * K3c3 — hold one redraw policy FIXED across every run at every grid point,
    * so a difficulty sweep can measure the band with the redraw mechanic in
    * play. Undefined / none = gates off (byte-identical to the pre-K3c3 sweep).
    */
-  readonly redraw?: RedrawPolicy;
+  readonly redraw?: RedrawPolicy | undefined;
   /**
    * K4c3 — hold one empower policy FIXED across every run at every grid point
    * (same contract as `redraw`). Undefined / none = byte-identical.
    */
-  readonly empower?: EmpowerPolicy;
+  readonly empower?: EmpowerPolicy | undefined;
   /**
    * L1c3 — hold one daemon arm FIXED across every run at every grid point
    * (`none` / a forced idol), so the N2 band re-sweep can measure per-idol or
    * daemon-less bands. Undefined / `random` = the Run's own roll (the real
    * game — byte-identical to the flag being absent).
    */
-  readonly daemon?: DaemonSelection;
+  readonly daemon?: DaemonSelection | undefined;
   /** Stop after this many grid points (the `--dry-run` estimate runs 1). */
-  readonly maxPoints?: number;
+  readonly maxPoints?: number | undefined;
   /**
    * Parallelism for the per-point weight search: fan the vector evaluations out
    * across this many child processes (`--jobs`). Default 1 = single-process (the

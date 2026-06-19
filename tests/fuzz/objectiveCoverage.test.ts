@@ -172,7 +172,8 @@ describe('--objective=coverage flag routing', () => {
   it('leaves the measurement proclivity path intact', () => {
     expect(coverageFromArgs({ objective: 'random' })).toBe(false);
     expect(objectiveFromArgs({ objective: 'random' })).toEqual({ kind: 'random' });
-    expect(coverageFromArgs({ objective: undefined })).toBe(false);
-    expect(objectiveFromArgs({ objective: undefined })).toBeUndefined();
+    // No `--objective` flag at all (the key absent — exactOptional's "unset").
+    expect(coverageFromArgs({})).toBe(false);
+    expect(objectiveFromArgs({})).toBeUndefined();
   });
 });

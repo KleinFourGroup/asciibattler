@@ -155,6 +155,9 @@ src/
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
                              # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))
+    encounters/
+      wave.ts                # U1: pure resolveWave(spec, ctx, rng) → UnitTemplate[] — budget/count/weight;
+                             # distributeWeightedLevels generalizes distributeBudget (uniform weights → even split)
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
     NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3) + dump; T2: per-sector length override
     sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks

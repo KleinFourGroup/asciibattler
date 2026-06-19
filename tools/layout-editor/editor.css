@@ -695,6 +695,20 @@ body {
   align-items: center;
 }
 
+/* T3 — "add to sector pool" checkboxes. */
+.sector-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 10px;
+}
+
+.sector-checks label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 button {
   background: var(--dark-terminal-green);
   color: var(--terminal-green);

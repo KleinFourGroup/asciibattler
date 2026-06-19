@@ -145,6 +145,27 @@
             </p>
           </section>
           <section class="card">
+            <h2>Add to sector pool</h2>
+            <div id="sector-checks" class="sector-checks">
+              <p class="hint">Loading sectors…</p>
+            </div>
+            <div class="row">
+              <label class="inline">
+                Hop gate
+                <input id="sector-minhop" type="number" min="0" step="1" placeholder="from 0" />
+              </label>
+              <button id="add-to-sectors-btn" type="button">Add this layout</button>
+            </div>
+            <p id="sector-add-status" class="hint"></p>
+            <p class="hint">
+              Adds the current (saved) layout to the checked sectors' pools in
+              <code>config/sectors.json</code> — the sector owns the edge, so this writes the
+              <em>sector</em> file. Save the layout first (its id must be known); a pool that
+              already has it is skipped. Edit pools finely in the
+              <a href="/tools/sector-editor/">sector editor</a>.
+            </p>
+          </section>
+          <section class="card">
             <h2>Export (offline fallback)</h2>
             <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
             <div class="row">

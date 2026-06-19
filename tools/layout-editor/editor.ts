@@ -60,6 +60,14 @@ import {
   type Theme,
 } from '../../src/config/layouts';
 import { formatLayoutJson, formatLayoutsJson } from './format';
+// T3 — the "add to sector" toggle. The sector FILE is fetched live (not
+// imported) so the layout editor never gains a runtime dependency on
+// sectors.json — a sector-pool write therefore doesn't trigger a Vite reload of
+// this page. `formatSectorsJson`'s sectors import is type-only (erased), so it
+// stays dependency-free too.
+import { formatSectorsJson } from '../sector-editor/format';
+import { addLayoutToSectorPools } from '../sector-editor/poolEdit';
+import type { SectorDef } from '../../src/config/sectors';
 
 type Cell = 'floor' | 'wall' | 'water' | 'halfCover' | 'chasm' | 'fire' | 'healing';
 type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
@@ -170,6 +178,11 @@ const addRegionBtn = mustQuery<HTMLButtonElement>('#add-region-btn');
 const deleteRegionBtn = mustQuery<HTMLButtonElement>('#delete-region-btn');
 const saveBtn = mustQuery<HTMLButtonElement>('#save-btn');
 const saveStatusEl = mustQuery<HTMLParagraphElement>('#save-status');
+// T3 — "add to sector" controls.
+const sectorChecksEl = mustQuery<HTMLDivElement>('#sector-checks');
+const sectorMinHopEl = mustQuery<HTMLInputElement>('#sector-minhop');
+const addToSectorsBtn = mustQuery<HTMLButtonElement>('#add-to-sectors-btn');
+const sectorAddStatusEl = mustQuery<HTMLParagraphElement>('#sector-add-status');
 
 populateSizeSelects();
 buildGrid();
@@ -893,6 +906,97 @@ function setSaveStatus(text: string, cls: 'hint' | 'hint ok' | 'hint err'): void
   saveStatusEl.className = cls;
 }
 
+/** Fetch + JSON-parse the live config/sectors.json (the dev server serves it
+ *  statically; fetching rather than importing keeps this page off sectors.json's
+ *  HMR graph, so a sector-pool write never reloads the layout canvas). */
+async function fetchSectors(): Promise<SectorDef[]> {
+  const res = await fetch('/config/sectors.json');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as SectorDef[];
+}
+
+/** T3 — render one checkbox per sector for the "add to sector pool" control. */
+async function loadSectorChecks(): Promise<void> {
+  try {
+    const sectors = await fetchSectors();
+    sectorChecksEl.innerHTML = '';
+    if (sectors.length === 0) {
+      sectorChecksEl.innerHTML = '<p class="hint">No sectors defined.</p>';
+      return;
+    }
+    for (const s of sectors) {
+      const label = document.createElement('label');
+      label.className = 'inline';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = s.id;
+      label.appendChild(cb);
+      label.append(` ${s.title || s.id}`);
+      sectorChecksEl.appendChild(label);
+    }
+  } catch (err) {
+    sectorChecksEl.innerHTML = `<p class="hint err">Could not load sectors: ${String(err)}</p>`;
+  }
+}
+
+/**
+ * T3 — append the current layout to each checked sector's pool and write the
+ * SECTOR file (the sector owns the sector↔layout edge — see the data model). The
+ * layout must be a KNOWN id (saved to layouts.json) so the sector schema can
+ * reference it; a pool already listing the layout is skipped (idempotent).
+ */
+async function addCurrentLayoutToSectors(): Promise<void> {
+  const id = buildCurrentLayout().id;
+  if (!LAYOUT_IDS.includes(id)) {
+    setSectorAddStatus(
+      `Save the layout to config first — "${id}" isn't a known layout id yet, so a sector can't reference it.`,
+      'hint err',
+    );
+    return;
+  }
+  const chosen = Array.from(
+    sectorChecksEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked'),
+  ).map((cb) => cb.value);
+  if (chosen.length === 0) {
+    setSectorAddStatus('Pick at least one sector.', 'hint err');
+    return;
+  }
+  const raw = sectorMinHopEl.value.trim();
+  const minHop = raw === '' ? undefined : Number.parseInt(raw, 10);
+  if (minHop !== undefined && (!Number.isInteger(minHop) || minHop < 0)) {
+    setSectorAddStatus('Hop gate must be a non-negative whole number (or blank).', 'hint err');
+    return;
+  }
+  setSectorAddStatus('Saving…', 'hint');
+  try {
+    const sectors = await fetchSectors();
+    const { added, skipped } = addLayoutToSectorPools(sectors, id, chosen, minHop);
+    if (added.length === 0) {
+      setSectorAddStatus(`Already in: ${skipped.join(', ')}. Nothing to write.`, 'hint');
+      return;
+    }
+    const res = await fetch('/__save-config', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ file: 'sectors.json', content: formatSectorsJson(sectors) }),
+    });
+    const data: { ok?: boolean; error?: string } = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+      const skipNote = skipped.length > 0 ? ` (skipped, already present: ${skipped.join(', ')})` : '';
+      setSectorAddStatus(`Added "${id}" to ${added.join(', ')}${skipNote}.`, 'hint ok');
+    } else {
+      setSectorAddStatus(`Save failed: ${data.error ?? res.statusText}`, 'hint err');
+    }
+  } catch (err) {
+    setSectorAddStatus(`Save failed: ${String(err)} — is the dev server running?`, 'hint err');
+  }
+}
+
+function setSectorAddStatus(text: string, cls: 'hint' | 'hint ok' | 'hint err'): void {
+  sectorAddStatusEl.textContent = text;
+  sectorAddStatusEl.className = cls;
+}
+
 /**
  * M5 — write the current layout straight into `config/layouts.json` via the
  * dev-only `/__save-config` endpoint (the I4 archetype-editor save path; the
@@ -1071,6 +1175,8 @@ function attachToolButtons(): void {
   loadBtn.addEventListener('click', () => loadLayout(loadSelectEl.value));
   clearBtn.addEventListener('click', () => clearGrid());
   saveBtn.addEventListener('click', () => void save());
+  addToSectorsBtn.addEventListener('click', () => void addCurrentLayoutToSectors());
+  void loadSectorChecks();
   copyBtn.addEventListener('click', () => {
     void navigator.clipboard.writeText(exportEl.value);
     flashButton(copyBtn, 'Copied!');

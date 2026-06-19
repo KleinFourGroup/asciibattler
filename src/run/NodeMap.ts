@@ -55,6 +55,14 @@ import type { RunConfig } from './RunConfig';
 
 export type NodeKind = 'battle' | 'rest' | 'boss';
 
+/**
+ * S2 — the "pre-root" start position. A run begins here (no node entered yet),
+ * with the root as its only frontier, so the root is a *selectable* first
+ * encounter rather than an inert starting cell. No real node ever carries this
+ * id (ids start at 0), so it's an unambiguous sentinel for `Run.currentNodeId`.
+ */
+export const PRE_ROOT_NODE_ID = -1;
+
 export interface MapNode {
   readonly id: number;
   readonly hop: number;

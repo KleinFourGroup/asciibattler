@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { Run } from './Run';
+import { PRE_ROOT_NODE_ID } from './NodeMap';
 import { fatigueEffect, FATIGUE_KEY } from './fatigue';
 import { foldEffects, combineMagnitude, type StatusEffect } from '../sim/statusEffects';
 import { EventBus } from '../core/EventBus';
@@ -44,10 +45,12 @@ const K_DEFAULT_DAEMON: DaemonConfig = {
 
 describe('Run', () => {
   describe('initial state', () => {
-    it('starts in map phase at the nodeMap root', () => {
+    it('starts in map phase at the pre-root position (root is the first frontier)', () => {
       const run = new Run(1, new EventBus<GameEvents>());
       expect(run.phase).toBe('map');
-      expect(run.currentNodeId).toBe(run.nodeMap.rootId);
+      // S2 — the run begins at the virtual pre-root; the root is selected as the
+      // first encounter rather than being the inert starting cell.
+      expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
     });
 
     it('rolls the configured starting team (mercenary + ranged per RECRUITMENT)', () => {
@@ -71,6 +74,29 @@ describe('Run', () => {
     });
   });
 
+  describe('S2 — selectable root node', () => {
+    it('the root is the sole initial frontier (a root child is not yet selectable)', () => {
+      const { run } = freshRunWithBus(1);
+      const rootChild = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+      // A root child is one hop too far from the pre-root start — ignored.
+      run.dispatch({ kind: 'enterNode', nodeId: rootChild });
+      expect(run.phase).toBe('map');
+      expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
+      // The root itself IS selectable and starts its battle.
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      expect(run.phase).toBe('battle');
+      expect(run.currentNodeId).toBe(run.nodeMap.rootId);
+      expect(run.currentEncounter).not.toBeNull();
+    });
+
+    it('the root is a normal battle node at hop 0 (not a boss) on a multi-hop map', () => {
+      const { run } = freshRunWithBus(1);
+      const rootNode = run.nodeMap.nodes.find((n) => n.id === run.nodeMap.rootId)!;
+      expect(rootNode.kind).toBe('battle');
+      expect(rootNode.hop).toBe(0);
+    });
+  });
+
   describe('determinism', () => {
     it('same seed → same nodeMap and same starting team', () => {
       const a = new Run(42, new EventBus<GameEvents>());
@@ -82,7 +108,7 @@ describe('Run', () => {
     it('same seed → same first encounter (worldSeed + teams)', () => {
       const a = freshRunWithBus(42);
       const b = freshRunWithBus(42);
-      const frontier = a.run.nodeMap.edges.find((e) => e.from === a.run.rootId)!.to;
+      const frontier = frontierOf(a.run);
       a.run.dispatch({ kind: 'enterNode', nodeId: frontier });
       b.run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(a.run.currentEncounter).toEqual(b.run.currentEncounter);
@@ -92,7 +118,7 @@ describe('Run', () => {
   describe('enterNode command', () => {
     it('transitions to battle phase on a frontier hop', () => {
       const { run } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.phase).toBe('battle');
       expect(run.currentNodeId).toBe(frontier);
@@ -100,7 +126,7 @@ describe('Run', () => {
 
     it('emits battle:started with the encounter worldSeed', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       const seeds: number[] = [];
       bus.on('battle:started', ({ worldSeed }) => seeds.push(worldSeed));
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
@@ -110,7 +136,7 @@ describe('Run', () => {
 
     it('builds an encounter snapshot whose hand is drawn from the roster (H5)', () => {
       const { run } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.currentEncounter).not.toBeNull();
       const hand = run.currentEncounter!.playerTeam;
@@ -141,7 +167,7 @@ describe('Run', () => {
       // canonical `scaleStats` build (the budget math itself is unit-tested
       // in enemyBudget.test.ts). Cap + stats derive from live config.
       const { run } = freshRunWithBus(1);
-      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const highest = Math.max(1, ...run.team.map((t) => t.level));
       const cap = highest + DIFFICULTY.unitLevelDelta;
@@ -158,13 +184,13 @@ describe('Run', () => {
       const unreachable = farthestNodeId(run);
       run.dispatch({ kind: 'enterNode', nodeId: unreachable });
       expect(run.phase).toBe('map');
-      expect(run.currentNodeId).toBe(run.rootId);
+      expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
       expect(run.currentEncounter).toBeNull();
     });
 
     it('ignores enterNode when not in map phase', () => {
       const { run } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Now in battle phase. A second dispatch should not retransition.
       const nextFrontier = run.nodeMap.edges.find((e) => e.from === frontier)?.to;
@@ -181,7 +207,7 @@ describe('Run', () => {
       // valid Theme values.
       for (let seed = 1; seed <= 60; seed++) {
         const { run } = freshRunWithBus(seed);
-        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        const frontier = frontierOf(run);
         run.dispatch({ kind: 'enterNode', nodeId: frontier });
         expect(THEMES).toContain(run.currentEncounter!.theme);
       }
@@ -194,7 +220,7 @@ describe('Run', () => {
       let layoutHits = 0;
       for (let seed = 1; seed <= 60; seed++) {
         const { run } = freshRunWithBus(seed);
-        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        const frontier = frontierOf(run);
         run.dispatch({ kind: 'enterNode', nodeId: frontier });
         const enc = run.currentEncounter!;
         if (enc.layoutId === null) continue;
@@ -212,7 +238,7 @@ describe('Run', () => {
       const seen = new Set<string>();
       for (let seed = 1; seed <= 400; seed++) {
         const { run } = freshRunWithBus(seed);
-        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        const frontier = frontierOf(run);
         run.dispatch({ kind: 'enterNode', nodeId: frontier });
         const enc = run.currentEncounter!;
         if (enc.layoutId === null) seen.add(enc.theme);
@@ -229,7 +255,7 @@ describe('Run', () => {
       const layoutCounts = new Map<string, number>();
       for (let seed = 1; seed <= 200; seed++) {
         const { run } = freshRunWithBus(seed);
-        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        const frontier = frontierOf(run);
         run.dispatch({ kind: 'enterNode', nodeId: frontier });
         const id = run.currentEncounter!.layoutId;
         if (id === null) {
@@ -259,7 +285,7 @@ describe('Run', () => {
       // procedural (layoutId null) when the `procedural` sentinel is forced.
       for (let seed = 1; seed <= 30; seed++) {
         const { run } = freshRunWithBus(seed, { forcedLayoutId: FORCE_PROCEDURAL });
-        const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+        const frontier = frontierOf(run);
         run.dispatch({ kind: 'enterNode', nodeId: frontier });
         expect(run.currentEncounter!.layoutId).toBeNull();
       }
@@ -267,7 +293,7 @@ describe('Run', () => {
 
     it('forcedLayoutId = a named layout still forces that layout (regression)', () => {
       const { run } = freshRunWithBus(7, { forcedLayoutId: 'river' });
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.currentEncounter!.layoutId).toBe('river');
     });
@@ -276,7 +302,7 @@ describe('Run', () => {
   describe('handleBattleEnded', () => {
     it('player win → recruit phase with an offer', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus);
       expect(run.phase).toBe('recruit');
@@ -287,7 +313,7 @@ describe('Run', () => {
 
     it('emits recruit:offered with the rolled units on victory', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
@@ -298,7 +324,7 @@ describe('Run', () => {
 
     it('enemy win → defeat phase (no recruit)', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       loseEncounter(bus);
       expect(run.phase).toBe('defeat');
@@ -307,7 +333,7 @@ describe('Run', () => {
 
     it('emits run:defeated on enemy win', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       let defeatedCount = 0;
       bus.on('run:defeated', () => defeatedCount++);
@@ -335,7 +361,7 @@ describe('Run', () => {
           { archetype: 'ranged', level: 6 },
         ],
       });
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus);
 
@@ -381,7 +407,7 @@ describe('Run', () => {
 
     it('banks xpGained into the right roster slot via rosterIndex', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Award 5 XP to roster index 2 (a melee unit); it shouldn't be
       // enough to level (xpToNext(1) = LEVELING.baseXp, far more than 5
@@ -396,7 +422,7 @@ describe('Run', () => {
 
     it('triggers a level-up when banked xp crosses xpToNext(level)', () => {
       const { run, bus } = freshLvl1RunWithBus(7);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Award exactly the level-1→2 threshold from the curve so the test
       // stays pinned regardless of `baseXp` / `exponent` tuning.
@@ -407,7 +433,7 @@ describe('Run', () => {
 
     it('cascades multiple level-ups in one award if banked xp covers them', () => {
       const { run, bus } = freshLvl1RunWithBus(11);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Compute the exact threshold from the curve so the test stays
       // pinned regardless of `baseXp` / `exponent` tuning.
@@ -421,7 +447,7 @@ describe('Run', () => {
 
     it('drains banked xp at the level cap (no infinite-grind overflow)', () => {
       const { run, bus } = freshRunWithBus(99);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Surgically promote slot 0 to one short of cap with massive
       // pending XP — checks the cap-drain branch, not the curve.
@@ -433,7 +459,7 @@ describe('Run', () => {
 
     it('skips awards whose rosterIndex is null (test-fixture safety net)', () => {
       const { run, bus } = freshRunWithBus(2);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const xpBefore = run.team.map((t) => t.xp);
       winEncounter(bus, [{ unitId: 1, rosterIndex: null, damageDealt: 50, xpGained: 60 }]);
@@ -446,7 +472,7 @@ describe('Run', () => {
       // slot. The xpFlatPerFallen slice is the participation reward;
       // the per-damage share is paid regardless.
       const { run, bus } = freshRunWithBus(4);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus, [
         // Slot 0 fell but still earned XP. `xpGained` here is an arbitrary
@@ -461,7 +487,7 @@ describe('Run', () => {
 
     it('does not mutate the roster when the run is lost', () => {
       const { run, bus } = freshLvl1RunWithBus(3);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // H4/M1: a losing turn ends the run (player pool emptied) and skips the
       // turn's XP bank. (Non-empty awards on a losing turn are pinned
@@ -475,7 +501,7 @@ describe('Run', () => {
   describe('E4 — promotion phase', () => {
     it('skips promotion when no unit leveled (sub-threshold awards)', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const promotions: number[] = [];
       bus.on('promotion:pending', ({ promotions: p }) => promotions.push(p.length));
@@ -488,7 +514,7 @@ describe('Run', () => {
 
     it('enters promotion phase + emits promotion:pending when a unit levels', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const promotions: number[][] = [];
       const offers: number[] = [];
@@ -512,7 +538,7 @@ describe('Run', () => {
 
     it('dismissPromotion routes to recruit phase + emits recruit:offered', () => {
       const { run, bus } = freshLvl1RunWithBus(2);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
@@ -550,7 +576,7 @@ describe('Run', () => {
 
     it('round-trips pendingPromotions through snapshot', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
@@ -569,7 +595,7 @@ describe('Run', () => {
 
     it('beginEncounter fills the enemy pool + fixes the budget; playerHealth untouched', () => {
       const { run } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax);
       expect(run.turnIndex).toBe(0); // no turn resolved yet
@@ -581,7 +607,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1);
       const starts: number[] = [];
       bus.on('battle:started', ({ worldSeed }) => starts.push(worldSeed));
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(starts).toHaveLength(1); // turn 1 spun up
 
@@ -602,7 +628,7 @@ describe('Run', () => {
 
     it('the player pool persists across encounters; the enemy pool resets', () => {
       const { run, bus } = freshRunWithBus(1);
-      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       // Take 5 to the player pool on a sub-lethal enemy chip (encounter continues).
       chipTurn(bus, { player: 0, enemy: 5 });
@@ -619,7 +645,7 @@ describe('Run', () => {
 
     it('loses the run when the player pool empties', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       let defeated = 0;
       bus.on('run:defeated', () => defeated++);
@@ -631,7 +657,7 @@ describe('Run', () => {
 
     it('a turn that zeroes BOTH pools is a defeat (run-loss precedence)', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: HEALTH.playerHealthMax });
       expect(run.phase).toBe('defeat');
@@ -639,7 +665,7 @@ describe('Run', () => {
 
     it('the max-turns cap terminates an all-mutual-wipe encounter (pristine tie → defeat)', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Every turn chips 0/0; without the cap this would loop forever.
       for (let i = 0; i < HEALTH.maxTurns; i++) chipTurn(bus, { player: 0, enemy: 0 });
@@ -650,7 +676,7 @@ describe('Run', () => {
 
     it('the max-turns cap awards the win when the player pool fraction leads', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // Knock the enemy pool down (but not out), then stalemate to the cap.
       chipTurn(bus, { player: HEALTH.enemyHealthMax - 1, enemy: 0 });
@@ -662,7 +688,7 @@ describe('Run', () => {
 
     it('M1 — banks each turn\'s XP at the turn boundary, not at encounter end', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const promotions: number[][] = [];
       bus.on('promotion:pending', ({ promotions: p }) =>
@@ -697,7 +723,7 @@ describe('Run', () => {
 
     it('a losing turn\'s XP is never banked (defeat is terminal)', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       // A big award on the LOSING turn must not bank (M1 skips the bank on a
       // lost result — no promotion screen in front of the defeat screen).
@@ -711,7 +737,7 @@ describe('Run', () => {
 
     it('round-trips the pools + per-turn-banked XP mid-encounter', () => {
       const { run, bus } = freshLvl1RunWithBus(7);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       chipTurn(bus, { player: 1, enemy: 2 }, [
         { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 5 },
@@ -1500,7 +1526,7 @@ describe('Run', () => {
       const forced = LAYOUT_IDS[0]!;
       const bus = new EventBus<GameEvents>();
       const run = new Run(3, bus, { forcedLayoutId: forced });
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.encounterMap!.layoutId).toBe(forced);
       expect(run.encounterMap!.gridW).toBe(getLayout(forced)!.gridW);
@@ -1787,7 +1813,7 @@ describe('Run', () => {
   describe('dispose', () => {
     it('detaches the battle:ended subscription so a disposed Run ignores future battles', () => {
       const { run, bus } = freshRunWithBus(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.phase).toBe('battle');
       run.dispose();
@@ -1799,15 +1825,13 @@ describe('Run', () => {
     it('two Runs sharing a bus do not double-handle once the old one is disposed', () => {
       const bus = new EventBus<GameEvents>();
       const oldRun = new Run(1, bus);
-      const oldFrontier = oldRun.nodeMap.edges.find((e) => e.from === oldRun.nodeMap.rootId)!.to;
+      const oldFrontier = frontierOf(oldRun);
       oldRun.dispatch({ kind: 'enterNode', nodeId: oldFrontier });
       // Both runs are now in battle phase (well, oldRun is). Dispose it.
       oldRun.dispose();
 
       const newRun = new Run(2, bus);
-      const newFrontier = newRun.nodeMap.edges.find(
-        (e) => e.from === newRun.nodeMap.rootId,
-      )!.to;
+      const newFrontier = frontierOf(newRun);
       newRun.dispatch({ kind: 'enterNode', nodeId: newFrontier });
       expect(newRun.phase).toBe('battle');
 
@@ -1820,32 +1844,33 @@ describe('Run', () => {
   });
 
   describe('visitedNodes', () => {
-    it('starts empty (root is the player\'s starting cell, not a cleared battle)', () => {
+    it('starts empty (no encounter cleared yet at the pre-root start)', () => {
       const { run } = freshRunWithBus(1);
       expect(run.visitedNodes.size).toBe(0);
     });
 
-    it('records the previous node after a second hop', () => {
+    it('records the root once the player clears it and hops onward (S2)', () => {
       const { run, bus } = freshRunWithBus(1);
-      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
-      run.dispatch({ kind: 'enterNode', nodeId: first });
-      // After leaving root → first, root is NOT visited (it's the start).
-      expect(run.visitedNodes.has(run.rootId)).toBe(false);
-      expect(run.visitedNodes.has(first)).toBe(false);
+      // The root is a normal battle node now — enter it from the pre-root start.
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      // Still current (not yet left), so not marked cleared.
+      expect(run.visitedNodes.has(run.nodeMap.rootId)).toBe(false);
 
-      // Now complete the battle, pick a recruit, and hop to the next node.
+      // Clear the root battle, recruit, then hop to a child node.
       winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
-      const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
+      const second = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
-      expect(run.visitedNodes.has(first)).toBe(true);
+      // Leaving the root marks it cleared — unlike pre-S2, where it was inert.
+      expect(run.visitedNodes.has(run.nodeMap.rootId)).toBe(true);
+      expect(run.currentNodeId).toBe(second);
     });
   });
 
   describe('round-trip serialization', () => {
     it('toJSON → fromJSON preserves phase, position, team, and visited set', () => {
       const { run, bus } = freshRunWithBus(7);
-      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
@@ -1865,7 +1890,7 @@ describe('Run', () => {
       // make the same enterNode call on both — they should agree on the
       // resulting encounter.
       const { run, bus } = freshRunWithBus(7);
-      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
@@ -1890,14 +1915,14 @@ describe('Run', () => {
       // default roster (10 > handSize 6) only fields a drawn subset; that subset
       // case is covered by the deck suite below.
       const { run } = freshShortRosterRun(1);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.deploymentCounts).toEqual(new Array(run.team.length).fill(1));
     });
 
     it('resets at the start of each encounter (a second battle never reads 2)', () => {
       const { run, bus } = freshRunWithBus(1);
-      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
@@ -1915,7 +1940,7 @@ describe('Run', () => {
 
     it('appends a fresh zero count when a unit is recruited', () => {
       const { run, bus } = freshRunWithBus(1);
-      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const before = run.team.length;
       winEncounter(bus);
@@ -1947,7 +1972,7 @@ describe('Run', () => {
 
     it('round-trips the deployment counts through toJSON → fromJSON', () => {
       const { run } = freshRunWithBus(7);
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
       expect(restored.deploymentCounts).toEqual(run.deploymentCounts);
@@ -1966,7 +1991,7 @@ describe('Run', () => {
     function enterFirstBattle(roster: RosterSpec[], seed = 1): { run: Run; bus: EventBus<GameEvents> } {
       const bus = new EventBus<GameEvents>();
       const run = new Run(seed, bus, { startingRoster: roster });
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       return { run, bus };
     }
@@ -2021,7 +2046,7 @@ describe('Run', () => {
 
     it('rebuilds the deck for each encounter, including a freshly recruited card', () => {
       const { run, bus } = freshRunWithBus(1);
-      const first = run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+      const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const sizeBefore = run.team.length;
       winEncounter(bus);
@@ -2053,7 +2078,7 @@ describe('Run', () => {
       run.pauseAtTurnGates = true; // the live/interactive path
       const starting: GameEvents['turn:starting'][] = [];
       bus.on('turn:starting', (p) => starting.push(p));
-      const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+      const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
 
       // The hand is drawn at the turn gate (before the battle spins up), so the
@@ -2152,8 +2177,8 @@ describe('Run', () => {
     });
 
     it('a boss node builds a normal battle encounter (regression-equivalent to a battle)', () => {
-      // hopCount 2 → root -> terminal; the terminal is the boss, reachable
-      // in one hop.
+      // hopCount 2 → root (hop 0, a normal battle) -> terminal boss (hop 1).
+      // S2: clear the root battle first, then the boss is the frontier.
       const bus = new EventBus<GameEvents>();
       const run = new Run(1, bus, { hopCount: 2 });
       const boss = run.nodeMap.terminalId;
@@ -2161,9 +2186,14 @@ describe('Run', () => {
       let battleStarts = 0;
       bus.on('battle:started', () => battleStarts++);
 
+      // Clear the root battle + its recruit so the boss becomes the frontier.
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      winEncounter(bus);
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+
       run.dispatch({ kind: 'enterNode', nodeId: boss });
       expect(run.phase).toBe('battle');
-      expect(battleStarts).toBe(1);
+      expect(battleStarts).toBe(2); // root + boss
       expect(run.currentEncounter).not.toBeNull();
 
       // And a win at the boss completes the run (existing terminal path).
@@ -2235,7 +2265,7 @@ function chipTurn(
 }
 
 function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
-  const frontier = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+  const frontier = frontierOf(run);
   run.dispatch({ kind: 'enterNode', nodeId: frontier });
   winEncounter(bus);
 }
@@ -2251,9 +2281,12 @@ function freshRunWithBus(seed: number, config?: RunConfig): RunHandle {
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
 }
 
-/** The root's first frontier node — the standard "enter the first battle" hop. */
-function frontierOf(run: Run & { rootId: number }): number {
-  return run.nodeMap.edges.find((e) => e.from === run.rootId)!.to;
+/** The next selectable node from wherever the run currently sits — the root at
+ *  the pre-root start (S2), else the current node's first outgoing edge. The
+ *  standard "enter the next battle" hop. */
+function frontierOf(run: Run): number {
+  if (run.currentNodeId === PRE_ROOT_NODE_ID) return run.nodeMap.rootId;
+  return run.nodeMap.edges.find((e) => e.from === run.currentNodeId)!.to;
 }
 
 /** K3 — a gated run paused at its FIRST pre-turn gate (`turn-intro`), the only
@@ -2377,7 +2410,9 @@ function driveToRestFrontier(
 ): { run: Run; bus: EventBus<GameEvents>; restId: number } {
   const { run, bus, path } = findRestRun(config, hop);
   const restId = path[path.length - 1]!;
-  for (let i = 1; i < path.length - 1; i++) {
+  // S2 — the player enters the ROOT first (it's a normal battle now), so the
+  // walk starts at path[0]; the rest (path[last]) is left as the frontier.
+  for (let i = 0; i < path.length - 1; i++) {
     run.dispatch({ kind: 'enterNode', nodeId: path[i]! });
     winEncounter(bus, awardsForHop(run, i));
     // A battle whose awards level a unit pauses on promotion first; clear it

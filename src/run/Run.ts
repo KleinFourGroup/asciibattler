@@ -34,7 +34,7 @@ import { glyphForArchetype } from '../sim/archetypes';
 import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
-import { generate as generateNodeMap, type NodeMap, type NodeKind } from './NodeMap';
+import { generate as generateNodeMap, PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from './NodeMap';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { enemyBudgetFor, rollEnemyWave, avgTeamLevel } from './enemyBudget';
@@ -187,7 +187,7 @@ export interface BattleEncounter {
  *  cadence banks each turn's XP at the turn boundary, so no cross-turn XP
  *  accrual state exists anymore. A v16 save can carry accrued-but-unbanked
  *  XP that v17 code would silently drop → reject. */
-const RUN_SCHEMA_VERSION = 18;
+const RUN_SCHEMA_VERSION = 19;
 
 /**
  * K3.5 — the encounter's battlefield, rolled ONCE in `beginEncounter` (the
@@ -510,7 +510,10 @@ export class Run {
       config?.daemon !== undefined ? config.daemon : rollDaemon(DAEMONS, this.daemonRng);
     this.turnGates = disabledTurnGates();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
-    this.currentNodeId = this.nodeMap.rootId;
+    // S2 — the run begins at the virtual pre-root position (no node entered
+    // yet); the root is the sole frontier, so it's selected as the first
+    // encounter like any other node.
+    this.currentNodeId = PRE_ROOT_NODE_ID;
     this.visitedNodes = new Set<number>();
     this.subscribe();
     bus.emit('run:started', { seed });
@@ -584,9 +587,10 @@ export class Run {
     if (this.phase !== 'map') return;
     if (!this.isFrontier(nodeId)) return;
 
-    // The departing node counts as cleared — except the very first hop,
-    // where we're leaving the root and root isn't a battle node.
-    if (this.currentNodeId !== this.nodeMap.rootId) {
+    // The departing node counts as cleared. At the pre-root start there's no
+    // node to mark (the sentinel); the root is a normal battle node now (S2),
+    // so it IS marked once the player leaves it.
+    if (this.currentNodeId !== PRE_ROOT_NODE_ID) {
       this.visitedNodes.add(this.currentNodeId);
     }
     this.currentNodeId = nodeId;
@@ -1310,6 +1314,9 @@ export class Run {
   }
 
   private isFrontier(nodeId: number): boolean {
+    // S2 — at the pre-root start the root is the sole frontier; thereafter the
+    // frontier is the current node's outgoing edges.
+    if (this.currentNodeId === PRE_ROOT_NODE_ID) return nodeId === this.nodeMap.rootId;
     for (const e of this.nodeMap.edges) {
       if (e.from === this.currentNodeId && e.to === nodeId) return true;
     }

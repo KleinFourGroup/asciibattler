@@ -114,7 +114,7 @@ describe('determinism: RunConfig (G1)', () => {
   });
 
   it('a forced short run resolves deterministically to completion', () => {
-    const config: RunConfig = { hopCount: 2, forcedLayoutId: LAYOUT_IDS[0]! };
+    const config: RunConfig = { hopCount: 1, forcedLayoutId: LAYOUT_IDS[0]! };
     const first = driveForcedRun(7, config);
     const second = driveForcedRun(7, config);
     expect(first).toEqual(second);
@@ -155,8 +155,8 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
   const run = new Run(seed, bus);
   const encounters: BattleEncounter[] = [];
 
-  const first = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)?.to;
-  if (first === undefined) throw new Error('test setup: root has no outgoing edge');
+  // S2 — the root is the first selectable encounter (the run starts pre-root).
+  const first = run.nodeMap.rootId;
   run.dispatch({ kind: 'enterNode', nodeId: first });
   encounters.push(run.currentEncounter!);
   // H4: the encounter loop ends a node when the enemy pool empties, so chip it
@@ -186,9 +186,10 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
 }
 
 /**
- * G1 — drive a forced short run (hopCount 2 = exactly one battle) through
- * its single battle to completion, capturing the encounter (which Run nulls
- * out on battle-end). Used to prove a configured run is reproducible.
+ * G1 — drive a forced short run (hopCount 1 = the root IS the terminal boss,
+ * so a single battle) through its battle to completion, capturing the
+ * encounter (which Run nulls out on battle-end). Used to prove a configured
+ * run is reproducible.
  */
 function driveForcedRun(
   seed: number,
@@ -196,9 +197,8 @@ function driveForcedRun(
 ): { phase: RunPhase; encounter: BattleEncounter } {
   const bus = new EventBus<GameEvents>();
   const run = new Run(seed, bus, config);
-  const next = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)?.to;
-  if (next === undefined) throw new Error('test setup: root has no outgoing edge');
-  run.dispatch({ kind: 'enterNode', nodeId: next });
+  // S2 — enter the root; for hopCount 1 the root IS the terminal boss.
+  run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
   const encounter = run.currentEncounter!;
   // H4: the encounter loop ends a node when the enemy pool empties, so chip it
   // out in one turn (player survivors >= the pool max).

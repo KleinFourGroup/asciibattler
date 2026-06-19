@@ -78,7 +78,8 @@ function driveEncounter(
 }
 
 function firstFrontier(run: Run): number {
-  return run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+  // S2 — the root is the first selectable encounter (the run starts pre-root).
+  return run.nodeMap.rootId;
 }
 
 const LVL1_ROSTER = [

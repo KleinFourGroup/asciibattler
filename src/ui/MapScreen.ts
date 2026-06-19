@@ -10,7 +10,7 @@
  *   - **locked** — everything else. Dimmed, non-clickable.
  */
 
-import type { NodeMap, NodeKind } from '../run/NodeMap';
+import { PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from '../run/NodeMap';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { UnitTemplate } from '../sim/Unit';
@@ -85,8 +85,14 @@ export class MapScreen {
     roster: readonly UnitTemplate[],
   ): HTMLDivElement {
     const frontier = new Set<number>();
-    for (const e of map.edges) {
-      if (e.from === currentNodeId) frontier.add(e.to);
+    if (currentNodeId === PRE_ROOT_NODE_ID) {
+      // S2 — pre-root start: the root is the sole selectable frontier (no node
+      // is "current" yet, so nothing gets the current-highlight either).
+      frontier.add(map.rootId);
+    } else {
+      for (const e of map.edges) {
+        if (e.from === currentNodeId) frontier.add(e.to);
+      }
     }
 
     // Fractional [0, 1] positions within the panel. The CSS does the actual

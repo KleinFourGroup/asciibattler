@@ -29,6 +29,7 @@ import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import type { GameEvents } from '../../src/core/events';
 import { Run } from '../../src/run/Run';
+import { PRE_ROOT_NODE_ID } from '../../src/run/NodeMap';
 
 describe('A2 round-trip: World', () => {
   it('toJSON → fromJSON preserves tickCount, RNG state, and per-unit state', () => {
@@ -505,7 +506,7 @@ describe('A2 round-trip: World', () => {
 describe('A2 round-trip: Run', () => {
   it('JSON wire format preserves enough state to continue the run identically', () => {
     const a = new Run(2026, new EventBus<GameEvents>());
-    const first = a.nodeMap.edges.find((e) => e.from === a.nodeMap.rootId)!.to;
+    const first = a.nodeMap.rootId;
     a.dispatch({ kind: 'enterNode', nodeId: first });
     // Encounter A.
     const encounterA = a.currentEncounter!;
@@ -580,7 +581,7 @@ describe('A2 round-trip: Run', () => {
     // the turn boundary, so the save carries it in `team` like any other XP.
     const bus = new EventBus<GameEvents>();
     const run = new Run(2026, bus);
-    const first = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+    const first = run.nodeMap.rootId;
     run.dispatch({ kind: 'enterNode', nodeId: first });
     // Resolve one turn with a SUB-lethal chip so the encounter is still live
     // (phase 'battle', a 2nd turn pending) with non-trivial pools. The award
@@ -617,7 +618,7 @@ describe('A2 round-trip: Run', () => {
     // draw pile mid-turn, so the round-trip exercises real deck state.
     const bus = new EventBus<GameEvents>();
     const run = new Run(2026, bus, { startingRoster: bigRoster() });
-    const first = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
+    const first = run.nodeMap.rootId;
     run.dispatch({ kind: 'enterNode', nodeId: first });
     expect(run.hand.length).toBeGreaterThan(0);
     expect(run.drawPile.length).toBeGreaterThan(0);
@@ -645,7 +646,7 @@ describe('A2 round-trip: Run', () => {
     // must reproduce the exact future draws, not just the current hand.
     const busA = new EventBus<GameEvents>();
     const a = new Run(2026, busA, { startingRoster: bigRoster() });
-    const first = a.nodeMap.edges.find((e) => e.from === a.nodeMap.rootId)!.to;
+    const first = a.nodeMap.rootId;
     a.dispatch({ kind: 'enterNode', nodeId: first });
 
     const busB = new EventBus<GameEvents>();
@@ -676,7 +677,29 @@ describe('A2 round-trip: Run', () => {
     expect(wire.nodeMap.nodes[0]).not.toHaveProperty('floor');
 
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
-    expect(restored.currentHop).toBe(run.currentHop);
+    // S2 — a fresh run sits at the pre-root sentinel; assert the position
+    // round-trips (reading currentHop here would throw — no node entered yet).
+    expect(restored.currentNodeId).toBe(run.currentNodeId);
+
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
+  it('S2: a fresh run persists the pre-root start position; a pre-S2 (v18) save is rejected', () => {
+    // S2 made the root a normal selectable node: a run begins at the virtual
+    // pre-root sentinel (not on the root), and bumped RUN_SCHEMA_VERSION 18→19.
+    // A v18 save's start state would mis-restore (root looks pre-entered), so
+    // the version check must reject it outright.
+    const bus = new EventBus<GameEvents>();
+    const run = new Run(2026, bus);
+    expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
+    expect(run.visitedNodes.size).toBe(0);
+
+    const wire = JSON.parse(JSON.stringify(run.toJSON()));
+    const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.currentNodeId).toBe(PRE_ROOT_NODE_ID);
 
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
     expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(

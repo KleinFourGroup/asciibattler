@@ -25,6 +25,7 @@ import type { GameEvents } from '../../src/core/events';
 import type { Team } from '../../src/sim/Unit';
 import type { Archetype } from '../../src/sim/archetypes';
 import { Run } from '../../src/run/Run';
+import { PRE_ROOT_NODE_ID } from '../../src/run/NodeMap';
 import type { RunConfig } from '../../src/run/RunConfig';
 import { spawnEncounter } from '../../src/sim/battleSetup';
 import type { FuzzStrategy } from './Strategy';
@@ -530,6 +531,9 @@ interface PartialBattle {
 }
 
 function computeFrontier(run: Run): number[] {
+  // S2 — at the pre-root start the root is the sole frontier; thereafter the
+  // frontier is the current node's outgoing edges.
+  if (run.currentNodeId === PRE_ROOT_NODE_ID) return [run.nodeMap.rootId];
   const out: number[] = [];
   for (const e of run.nodeMap.edges) {
     if (e.from === run.currentNodeId) out.push(e.to);

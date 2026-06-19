@@ -48,6 +48,7 @@
 import './editor.css';
 import {
   LAYOUTS,
+  LAYOUT_IDS,
   LAYOUT_MIN_SIDE,
   LAYOUT_MAX_SIDE,
   LayoutsSchema,
@@ -62,9 +63,11 @@ import {
 import { formatLayoutJson, formatLayoutsJson } from './format';
 // T3 — the "add to sector" toggle. The sector FILE is fetched live (not
 // imported) so the layout editor never gains a runtime dependency on
-// sectors.json — a sector-pool write therefore doesn't trigger a Vite reload of
-// this page. `formatSectorsJson`'s sectors import is type-only (erased), so it
-// stays dependency-free too.
+// sectors.json and stays off its rebuild chain. (NB: this does NOT prevent a
+// reload — Vite broadcasts a full-reload to every dev client when sectors.json
+// changes, so a write reloads this tab anyway; SECTOR_ADD_STASH_KEY masks that.)
+// `formatSectorsJson`'s sectors import is type-only (erased), so it stays
+// dependency-free too.
 import { formatSectorsJson } from '../sector-editor/format';
 import { addLayoutToSectorPools } from '../sector-editor/poolEdit';
 import type { SectorDef } from '../../src/config/sectors';
@@ -103,6 +106,15 @@ const DEFAULT_SIDE = 12;
  *  and re-shows the confirmation — so a save feels seamless. Session-scoped so
  *  it never leaks across browser sessions. */
 const SAVE_STASH_KEY = 'layoutEditor.justSaved';
+
+/** A successful "add to sector" write ALSO reloads this page: sectors.json is
+ *  imported by src/config/sectors.ts with no HMR boundary, so Vite broadcasts a
+ *  full-reload to every connected dev client — including this one, even though it
+ *  only fetches the file (the import-vs-fetch choice keeps editor.ts off the
+ *  rebuild CHAIN, but Vite's global reload broadcast still hits it). Mirror the
+ *  Save stash so the "Added…" confirmation survives the reload instead of
+ *  vanishing the instant it appears. Session-scoped, same as above. */
+const SECTOR_ADD_STASH_KEY = 'layoutEditor.sectorAdded';
 
 let gridW = DEFAULT_SIDE;
 let gridH = DEFAULT_SIDE;
@@ -213,6 +225,7 @@ window.addEventListener('resize', () => {
 });
 refreshAll();
 restoreAfterSave();
+restoreAfterSectorAdd();
 
 function populateSizeSelects(): void {
   for (let s = LAYOUT_MIN_SIDE; s <= LAYOUT_MAX_SIDE; s++) {
@@ -907,8 +920,9 @@ function setSaveStatus(text: string, cls: 'hint' | 'hint ok' | 'hint err'): void
 }
 
 /** Fetch + JSON-parse the live config/sectors.json (the dev server serves it
- *  statically; fetching rather than importing keeps this page off sectors.json's
- *  HMR graph, so a sector-pool write never reloads the layout canvas). */
+ *  statically). Fetching rather than importing keeps this page off sectors.json's
+ *  rebuild chain — though Vite still broadcasts a full-reload on a write (see
+ *  SECTOR_ADD_STASH_KEY), so the fetch buys decoupling, not a reload-free write. */
 async function fetchSectors(): Promise<SectorDef[]> {
   const res = await fetch('/config/sectors.json');
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -983,7 +997,17 @@ async function addCurrentLayoutToSectors(): Promise<void> {
     const data: { ok?: boolean; error?: string } = await res.json().catch(() => ({}));
     if (res.ok && data.ok) {
       const skipNote = skipped.length > 0 ? ` (skipped, already present: ${skipped.join(', ')})` : '';
-      setSectorAddStatus(`Added "${id}" to ${added.join(', ')}${skipNote}.`, 'hint ok');
+      const status = `Added "${id}" to ${added.join(', ')}${skipNote}.`;
+      setSectorAddStatus(status, 'hint ok');
+      // The write triggers a Vite reload of this tab (see SECTOR_ADD_STASH_KEY) —
+      // stash the confirmation so the next boot re-shows it instead of a blank
+      // status that reads as "nothing happened".
+      try {
+        sessionStorage.setItem(SECTOR_ADD_STASH_KEY, JSON.stringify({ status }));
+      } catch {
+        // sessionStorage unavailable (private mode / quota) — non-fatal; the
+        // write still succeeded, the reload just won't auto-restore the status.
+      }
     } else {
       setSectorAddStatus(`Save failed: ${data.error ?? res.statusText}`, 'hint err');
     }
@@ -1087,6 +1111,28 @@ function restoreAfterSave(): void {
       loadLayout(savedId);
       if (status) setSaveStatus(status, 'hint ok');
     }
+  } catch {
+    // Malformed stash — ignore.
+  }
+}
+
+/**
+ * Boot-time companion to the "add to sector" toggle: a successful pool write
+ * reloads this tab (see SECTOR_ADD_STASH_KEY), so re-show the stashed
+ * confirmation in the sector-add status line. A no-op on a normal cold boot.
+ */
+function restoreAfterSectorAdd(): void {
+  let stash: string | null = null;
+  try {
+    stash = sessionStorage.getItem(SECTOR_ADD_STASH_KEY);
+    if (stash) sessionStorage.removeItem(SECTOR_ADD_STASH_KEY);
+  } catch {
+    return; // sessionStorage unavailable — nothing to restore.
+  }
+  if (!stash) return;
+  try {
+    const { status } = JSON.parse(stash) as { status?: string };
+    if (status) setSectorAddStatus(status, 'hint ok');
   } catch {
     // Malformed stash — ignore.
   }

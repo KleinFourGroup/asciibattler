@@ -57,6 +57,7 @@ src/
     terrain.ts               #   C1a: wall + water density
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
     sectors.ts               #   T1: the Sector schema — run container (id/title/desc/length/theme/hop-gated layout pool); procedural = reserved sentinel
+    sectorMap.ts             #   T2: the sector-selection meta-DAG schema (nodes hold sector lists; sources/sinks; acyclic, non-sink-has-outgoing guards)
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
@@ -155,7 +156,8 @@ src/
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
                              # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
-    NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3) + dump
+    NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3) + dump; T2: per-sector length override
+    sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks
     Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1); per-card level (post-G5)
 
   render/
@@ -251,6 +253,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   terrain.json
   layouts.json
   sectors.json               # T1: sector catalog — ships one ("The Start": all layouts + procedural, ungated, length 11)
+  sector-map.json            # T2: the sector-selection DAG — ships a one-node graph (source == sink == "start", holding "the-start")
   spawn.json                 # D5.C: overflow (mid-battle reinforcement) spawn-in lockout/fade seconds (Q2 retired M3 turnIntroSeconds)
   tiles.json
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;

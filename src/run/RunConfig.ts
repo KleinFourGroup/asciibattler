@@ -20,6 +20,7 @@ import { ALL_ARCHETYPES, type Archetype } from '../sim/archetypes';
 import { LAYOUT_IDS } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { daemonById, type DaemonConfig } from '../config/daemons';
+import type { SectorMap } from '../config/sectorMap';
 
 /** One starting-roster slot: an archetype at a chosen level (>= 1, capped). */
 export interface RosterEntry {
@@ -66,6 +67,15 @@ export interface RunConfig {
    * seam (a profile = a `startingRoster` + a `daemon`).
    */
   readonly daemon?: DaemonConfig | null;
+  /**
+   * T2 — override the sector-selection meta-DAG (default: the shipped
+   * `SECTOR_MAP`). Programmatic-only (a full graph object — no URL form), the
+   * seam for headless multi-sector tests + a future fuzz force-select. Like the
+   * other overrides it is NOT persisted; a rehydrated run falls back to the
+   * shipped map (the shipped DAG is a single sink, so a save never mid-walks a
+   * multi-node graph).
+   */
+  readonly sectorMap?: SectorMap;
 }
 
 /**

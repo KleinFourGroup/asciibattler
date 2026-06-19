@@ -95,12 +95,17 @@ const {
   restMinSpacing: REST_MIN_SPACING,
 } = NODE_MAP;
 
-export function generate(rng: RNG, config?: RunConfig): NodeMap {
+export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number): NodeMap {
   // G1: RunConfig overrides the shape per-run; absent fields fall back to the
   // config/nodemap.json defaults, so a no-config call is byte-identical to
   // pre-G1. Only `hopCount` + `mapMaxWidth` are tunable here; the min width,
   // total cap, and out-degree stay on the JSON defaults.
-  const hopCount = config?.hopCount ?? HOP_COUNT;
+  // T2: `lengthOverride` is the current SECTOR's `length` — the per-sector hop
+  // count that replaces the single global default once a run is a *sequence* of
+  // sectors. Precedence `config.hopCount > sector.length > JSON default` keeps
+  // the dev `?hops=N` flag authoritative; "The Start" (length 11 == HOP_COUNT)
+  // leaves the default path byte-identical.
+  const hopCount = config?.hopCount ?? lengthOverride ?? HOP_COUNT;
   const maxWidth = config?.mapMaxWidth ?? MIDDLE_WIDTH_MAX;
 
   const hops: number[][] = [];

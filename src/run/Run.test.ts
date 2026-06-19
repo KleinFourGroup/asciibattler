@@ -5,6 +5,8 @@ import { fatigueEffect, FATIGUE_KEY } from './fatigue';
 import { foldEffects, combineMagnitude, type StatusEffect } from '../sim/statusEffects';
 import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
+import { getSector } from '../config/sectors';
+import { SectorMapSchema } from '../config/sectorMap';
 import type { GameEvents } from '../core/events';
 import { ARCHETYPE_CONFIG } from '../sim/archetypes';
 import { scaleStats } from '../sim/leveling';
@@ -202,8 +204,8 @@ describe('Run', () => {
     });
 
     it('D8: encounter.theme is always a registered theme', () => {
-      // Sample many seeds — procedural rolls land random theme, hand-
-      // authored layouts pin to layout.theme. Both paths must produce
+      // Sample many seeds — T2: procedural boards inherit the sector theme,
+      // hand-authored layouts pin to layout.theme. Both paths must produce
       // valid Theme values.
       for (let seed = 1; seed <= 60; seed++) {
         const { run } = freshRunWithBus(seed);
@@ -216,7 +218,7 @@ describe('Run', () => {
     it('D8: hand-authored encounters use the layout-declared theme', () => {
       // For every seed that lands on a layout (rather than procedural),
       // run.currentEncounter.theme must equal the layout's declared theme
-      // — the rolled procedural theme is discarded on the layout branch.
+      // — a hand-authored board keeps its own theme regardless of the sector.
       let layoutHits = 0;
       for (let seed = 1; seed <= 60; seed++) {
         const { run } = freshRunWithBus(seed);
@@ -231,26 +233,29 @@ describe('Run', () => {
       expect(layoutHits).toBeGreaterThan(0);
     });
 
-    it('D8: procedural encounters cover all themes across enough seeds', () => {
-      // Across a wide sample, every theme in THEMES should fire on the
-      // procedural branch at least once — confirms `rollTheme` is uniform
-      // and the picker pool plumbs through cleanly.
-      const seen = new Set<string>();
-      for (let seed = 1; seed <= 400; seed++) {
+    it('T2: procedural encounters inherit the current sector theme', () => {
+      // T2 replaced the per-battle theme roll with the SECTOR's theme: every
+      // procedural board in "The Start" paints that sector's theme. Derive the
+      // expected value from config (never hardcode the authored theme).
+      const sectorTheme = getSector('the-start')!.theme;
+      let proceduralHits = 0;
+      for (let seed = 1; seed <= 200; seed++) {
         const { run } = freshRunWithBus(seed);
         const frontier = frontierOf(run);
         run.dispatch({ kind: 'enterNode', nodeId: frontier });
         const enc = run.currentEncounter!;
-        if (enc.layoutId === null) seen.add(enc.theme);
+        if (enc.layoutId === null) {
+          proceduralHits++;
+          expect(enc.theme).toBe(sectorTheme);
+        }
       }
-      for (const t of THEMES) {
-        expect(seen.has(t)).toBe(true);
-      }
+      expect(proceduralHits).toBeGreaterThan(0); // sanity: procedural branch fired
     });
 
-    it('encounter layoutId is null OR a registered library id (C1d 25/75 mix)', () => {
-      // Sample many seeds to confirm both branches of the 25/75 roll are
-      // reachable AND that the picked ids always come from LAYOUT_IDS.
+    it('encounter layoutId is null OR a sector-pool layout (T2 uniform pool)', () => {
+      // T2: the board is a UNIFORM pick over the current sector's pool — the
+      // procedural sentinel + every hand-authored layout, each 1/|pool|. Confirm
+      // both the procedural and named branches fire and stay in LAYOUT_IDS.
       let proceduralCount = 0;
       const layoutCounts = new Map<string, number>();
       for (let seed = 1; seed <= 200; seed++) {
@@ -272,12 +277,12 @@ describe('Run', () => {
       for (const id of LAYOUT_IDS) {
         expect(layoutCounts.get(id) ?? 0).toBeGreaterThan(0);
       }
-      // Rough sanity on the split — leave wide tolerance so we don't fight
-      // the PRNG. Expected ~50 procedural out of 200 (binomial p=0.25,
-      // sd ≈ 6.1); ±25 window is well beyond ±3σ either way. The point is
+      // "The Start" pool = procedural sentinel + LAYOUT_IDS, uniform → procedural
+      // ≈ 1/(1+|LAYOUT_IDS|) of 200. Wide window (well beyond ±3σ) — the point is
       // to catch outright bias, not to assert exact uniformity.
-      expect(proceduralCount).toBeGreaterThan(25);
-      expect(proceduralCount).toBeLessThan(75);
+      const expectedProcedural = 200 / (1 + LAYOUT_IDS.length);
+      expect(proceduralCount).toBeGreaterThan(expectedProcedural - 18);
+      expect(proceduralCount).toBeLessThan(expectedProcedural + 18);
     });
 
     it('forcedLayoutId = FORCE_PROCEDURAL forces a procedural map every battle', () => {
@@ -1883,6 +1888,9 @@ describe('Run', () => {
       expect(Array.from(restored.visitedNodes)).toEqual(Array.from(run.visitedNodes));
       expect(restored.currentOffer).toBeNull();
       expect(restored.nodeMap).toEqual(run.nodeMap);
+      // T2 — the sector cursor round-trips.
+      expect(restored.currentSectorId).toBe(run.currentSectorId);
+      expect(restored.currentSectorNodeId).toBe(run.currentSectorNodeId);
     });
 
     it('a restored Run produces the same next encounter as the original', () => {
@@ -1900,6 +1908,88 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: second });
       restored.dispatch({ kind: 'enterNode', nodeId: second });
       expect(restored.currentEncounter).toEqual(run.currentEncounter);
+    });
+  });
+
+  describe('T2 — sectors', () => {
+    // A 2-node fixture DAG (a → b; a is the source, b the sink). Both nodes
+    // hold the only shipped sector, so the walk's NODE advances a→b while the
+    // sector id stays "the-start" — enough to exercise the advance mechanics.
+    const TWO_SECTOR_MAP = SectorMapSchema.parse({
+      nodes: [
+        { id: 'a', sectors: ['the-start'] },
+        { id: 'b', sectors: ['the-start'] },
+      ],
+      edges: [{ from: 'a', to: 'b' }],
+      sources: ['a'],
+      sinks: ['b'],
+    });
+
+    it('opens on a source DAG node + the shipped sector', () => {
+      const { run } = freshRunWithBus(1);
+      expect(run.currentSectorId).toBe('the-start');
+      expect(run.currentSectorNodeId).toBe('start'); // the shipped one-node DAG
+      expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
+    });
+
+    it('the shipped single-node DAG (source == sink) completes at the terminal', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      let victories = 0;
+      bus.on('run:victory', () => victories++);
+      winEncounter(bus);
+      expect(run.phase).toBe('complete');
+      expect(victories).toBe(1);
+      expect(run.currentSectorNodeId).toBe('start'); // never advanced
+    });
+
+    it('clearing a non-sink terminal advances to the successor sector, carrying roster + pool', () => {
+      const { run, bus } = freshRunWithBus(1, { sectorMap: TWO_SECTOR_MAP });
+      expect(run.currentSectorNodeId).toBe('a');
+      const teamBefore = run.team;
+      run.playerHealth = 33; // a sentinel to prove the pool carries across
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      let victories = 0;
+      bus.on('run:victory', () => victories++);
+      winEncounter(bus);
+      // Advanced — NOT won — onto a fresh map at the pre-root start.
+      expect(victories).toBe(0);
+      expect(run.currentSectorNodeId).toBe('b');
+      expect(run.phase).toBe('map');
+      expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
+      expect(run.visitedNodes.size).toBe(0);
+      expect(run.nodeMap.terminalId).toBeGreaterThanOrEqual(0);
+      // Carry-across: same roster reference + the run-wide pool survive.
+      expect(run.team).toBe(teamBefore);
+      expect(run.playerHealth).toBe(33);
+    });
+
+    it('clearing the final sector terminal (a sink) completes the run', () => {
+      const { run, bus } = freshRunWithBus(1, { sectorMap: TWO_SECTOR_MAP });
+      // Advance through sector a → b.
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      winEncounter(bus);
+      expect(run.currentSectorNodeId).toBe('b');
+      // Now clear b's terminal — b is a sink → victory.
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      let victories = 0;
+      bus.on('run:victory', () => victories++);
+      winEncounter(bus);
+      expect(run.phase).toBe('complete');
+      expect(victories).toBe(1);
+    });
+
+    it('rejects a pre-T2 (v19) snapshot', () => {
+      const { run } = freshRunWithBus(1);
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const stale = { ...wire, schemaVersion: 19 };
+      expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+        /unsupported schema version/,
+      );
     });
   });
 

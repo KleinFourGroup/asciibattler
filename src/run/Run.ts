@@ -6,10 +6,17 @@
  * Phases:
  *
  *   map ── enterNode (frontier) ──▶ battle
- *   battle ── battle:ended (player win, non-terminal) ──▶ recruit
- *   battle ── battle:ended (player win, terminal)     ──▶ complete
- *   battle ── battle:ended (enemy win)                ──▶ defeat
+ *   battle ── battle:ended (player win, non-terminal)        ──▶ recruit
+ *   battle ── battle:ended (player win, terminal @ DAG sink) ──▶ complete
+ *   battle ── battle:ended (player win, terminal, non-sink)  ──▶ map (next sector)
+ *   battle ── battle:ended (enemy win)                       ──▶ defeat
  *   recruit ── chooseRecruit ──▶ map
+ *
+ * T2 — the run is a *sequence of sectors* (a sector = one node-map + its layout
+ * pool/theme/length, selected off the sector-selection DAG in `sectorWalk.ts`).
+ * Clearing a sector's terminal advances to a successor sector unless that DAG
+ * node is a sink (→ run complete). Only "The Start" ships (source == sink), so
+ * today every run is a single sector ending in run:victory.
  *
  * Run does NOT construct the World. Instead it builds an Encounter snapshot
  * (worldSeed + rolled teams) and fires `battle:started`; Game owns the World
@@ -36,6 +43,9 @@ import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from './NodeMap';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
+import { getSector, layoutPoolAtHop, PROCEDURAL_LAYOUT_ID, type SectorDef } from '../config/sectors';
+import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
+import { pickStartSector, pickNextSector, isSectorSink, pickOne } from './sectorWalk';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { enemyBudgetFor, rollEnemyWave, avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
@@ -64,7 +74,7 @@ import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import { DAEMONS, type DaemonConfig } from '../config/daemons';
-import { LAYOUT_IDS, THEMES, getLayout, type Theme } from '../sim/layouts';
+import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { xpToNext } from '../sim/xp';
 import { simulateLevelUps } from '../sim/leveling';
@@ -113,11 +123,8 @@ export interface BattleEncounter {
   /**
    * D8 — visual theme for this encounter's terrain palette. Cosmetic only;
    * no sim effects. Hand-authored layouts pull from `LayoutDef.theme`;
-   * procedural encounters roll uniformly off `battleRng` (see
-   * `rollTheme` below). The roll always runs even on hand-authored
-   * encounters so the RNG stream advances identically across branches
-   * (same byte-continuity invariant as `rollLayoutId` /
-   * `rollProceduralSide` — gotcha #49).
+   * T2 — procedural encounters now inherit the **current sector's** theme
+   * (no per-battle theme roll), so a sector reads as one consistent place.
    */
   readonly theme: Theme;
   readonly playerTeam: readonly UnitTemplate[];
@@ -186,8 +193,15 @@ export interface BattleEncounter {
  *  M1: bumped 16→17. REMOVES `pendingEncounterXp` — the per-turn promotion
  *  cadence banks each turn's XP at the turn boundary, so no cross-turn XP
  *  accrual state exists anymore. A v16 save can carry accrued-but-unbanked
- *  XP that v17 code would silently drop → reject. */
-const RUN_SCHEMA_VERSION = 19;
+ *  XP that v17 code would silently drop → reject.
+ *  S1: bumped 17→18 (Floor→Hop field rename on the persisted MapNode).
+ *  S2: bumped 18→19 (the selectable root via the pre-root sentinel flow).
+ *  T2: bumped 19→20. Adds the sector state: `currentSectorId` (the chosen
+ *  sector — drives the node-map length, theme, + hop-gated layout pool) and
+ *  `currentSectorNodeId` (the run's position on the sector-selection DAG, needed
+ *  to pick the next sector on clearing a terminal). A v19 save predates the
+ *  sector model → reject rather than rehydrate a run with no sector. */
+const RUN_SCHEMA_VERSION = 20;
 
 /**
  * K3.5 — the encounter's battlefield, rolled ONCE in `beginEncounter` (the
@@ -226,6 +240,13 @@ export interface RunSnapshot {
   /** L1: the current turn's resolved pre-turn gates (`resolveTurnGates`
    *  output). Persisted so a save at the gate restores the same chance flips. */
   turnGates: TurnGates;
+  /** T2 — the run's position on the sector-selection DAG: the chosen sector
+   *  (`currentSectorId` — its length/theme/layout-pool drive the active map) and
+   *  the DAG node it was chosen at (`currentSectorNodeId` — the cursor the walk
+   *  advances from on clearing a sector terminal). The `SectorMap` itself isn't
+   *  persisted (a RunConfig input; a rehydrate falls back to the shipped map). */
+  currentSectorId: string;
+  currentSectorNodeId: string;
   nodeMap: NodeMap;
   team: UnitTemplate[];
   /** H3: per-roster-slot deployment counter, parallel to `team`. */
@@ -321,7 +342,18 @@ export class Run {
    *  config the K3/K4 validators consume in place of the retired static
    *  `DECK.redraw` / `EMPOWER` enables. Round-trips in the save (v16). */
   private turnGates: TurnGates;
-  readonly nodeMap: NodeMap;
+  /** T2 — the sector-selection meta-DAG the run walks (default: the shipped
+   *  `SECTOR_MAP`; a `RunConfig.sectorMap` overrides it for tests). Not
+   *  persisted — a RunConfig input, reconstructable; a rehydrate resets it to
+   *  the shipped map (the shipped DAG is a single sink, never mid-walked). */
+  private sectorMap: SectorMap;
+  /** T2 — the active sector (drives the node-map length, theme, + layout pool)
+   *  and the DAG node it was chosen at (the walk cursor). Both persist; both
+   *  change only when a sector terminal is cleared (`advanceSector`). */
+  currentSectorId: string;
+  currentSectorNodeId: string;
+  /** T2 — regenerated per sector (was readonly + one-shot at construction). */
+  nodeMap: NodeMap;
   team: UnitTemplate[];
   /**
    * H3 — per-unit deployment counter (the fatigue hook). One slot per
@@ -448,9 +480,9 @@ export class Run {
 
   /**
    * G1 — when set (via `RunConfig.forcedLayoutId`), every battle uses this
-   * hand-authored layout instead of `rollLayoutId`; the `FORCE_PROCEDURAL`
+   * hand-authored layout instead of the sector-pool roll; the `FORCE_PROCEDURAL`
    * sentinel forces a fresh procedural map every battle instead (M6). Null =
-   * normal procedural/layout roll. Not persisted (RunConfig is a run input,
+   * normal sector-pool roll. Not persisted (RunConfig is a run input,
    * reconstructable from seed); a rehydrated Run resets this to null.
    */
   private readonly forcedLayoutId: string | null;
@@ -461,11 +493,22 @@ export class Run {
   constructor(seed: number, bus: EventBus<GameEvents>, config?: RunConfig) {
     this.bus = bus;
     this.rng = new RNG(seed);
-    // Fork order is the determinism invariant (nodeMap → team → levelup). Each
-    // override only changes a forked *child* stream's content, never how many
-    // times the parent is forked — so the default path stays byte-identical
+    // Fork order is the determinism invariant (sector+nodeMap → team → levelup).
+    // Each override only changes a forked *child* stream's content, never how
+    // many times the parent is forked — so the default path stays byte-identical
     // and a configured run keeps the same parent alignment. (G1)
-    this.nodeMap = generateNodeMap(this.rng.fork(), config);
+    // T2 — the first fork now picks the run's opening sector off the
+    // sector-selection DAG, THEN generates that sector's node-map on the SAME
+    // forked stream. `pickStartSector` consumes zero draws when the source +
+    // sector lists are singletons (the shipped one-node DAG), so the node-map
+    // generation begins at the identical stream position as the pre-T2 run —
+    // and "The Start" (length 11 == HOP_COUNT) reproduces the same map.
+    this.sectorMap = config?.sectorMap ?? SECTOR_MAP;
+    const sectorRng = this.rng.fork();
+    const start = pickStartSector(this.sectorMap, sectorRng);
+    this.currentSectorNodeId = start.sectorNodeId;
+    this.currentSectorId = start.sectorId;
+    this.nodeMap = generateNodeMap(sectorRng, config, this.currentSectorLength());
     const teamRng = this.rng.fork();
     this.team = config?.startingRoster
       ? config.startingRoster.map((e) => rollUnit(e.archetype, teamRng, e.level))
@@ -658,16 +701,44 @@ export class Run {
   }
 
   /**
-   * K3.5 — one encounter-map roll. The draws (terrain seed → layout id →
-   * procedural side → theme) ALWAYS all run so the stream advances identically
-   * on every branch (gotcha #49), then a forced layout (G1) overrides the
-   * rolled id, hand-authored layouts pin their own dimensions + theme.
+   * T2 — the active sector definition. Throws if the id ever dangles; the
+   * sector-map's load-time guard rejects an unknown sector reference, so this
+   * guards against future drift rather than a runtime branch.
+   */
+  private currentSector(): SectorDef {
+    const sector = getSector(this.currentSectorId);
+    if (!sector) throw new Error(`Run: active sector "${this.currentSectorId}" not found`);
+    return sector;
+  }
+
+  /** T2 — the active sector's node-map hop count (NodeMap.generate length). */
+  private currentSectorLength(): number {
+    return this.currentSector().length;
+  }
+
+  /**
+   * K3.5 / T2 — one encounter-map roll. The board now comes from the **current
+   * sector's hop-gated layout pool** (T2) instead of the global `rollLayoutId`,
+   * and the procedural theme is the **sector's** theme (no per-battle theme
+   * roll). The draws (terrain seed → pool pick → procedural side) ALWAYS run so
+   * the stream advances identically on every branch (gotcha #49): the pool pick
+   * is made even when a forced layout (G1) overrides its result. The pool is
+   * non-empty at every reachable hop (sector-schema guard), and a uniform pick
+   * over it (T1 decision: sentinel + uniform) treats the procedural sentinel as
+   * one ordinary pool entry.
    */
   private rollEncounterMap(mapRng: RNG): EncounterMap {
+    const sector = this.currentSector();
     const terrainSeed = Math.floor(mapRng.next() * 0x1_0000_0000);
-    const rolledLayoutId = rollLayoutId(mapRng);
-    // forcedLayoutId: null = use the roll; FORCE_PROCEDURAL sentinel = force a
-    // procedural map (layoutId null); any other string = that named layout.
+    // Roll one board from the sector's pool eligible at this hop; map the
+    // procedural sentinel to the encounter map's `null` layout id.
+    const pool = layoutPoolAtHop(sector, this.currentHop);
+    const rolledEntry = pickOne(pool, mapRng);
+    const rolledLayoutId =
+      rolledEntry.layoutId === PROCEDURAL_LAYOUT_ID ? null : rolledEntry.layoutId;
+    // forcedLayoutId (G1): null = use the roll; FORCE_PROCEDURAL sentinel = force
+    // a procedural map (layoutId null); any other string = that named layout
+    // (bypassing the sector pool — a dev/test override).
     const layoutId =
       this.forcedLayoutId === null
         ? rolledLayoutId
@@ -678,10 +749,11 @@ export class Run {
     const { gridW, gridH } = layoutId === null
       ? { gridW: proceduralSide, gridH: proceduralSide }
       : layoutDimensions(layoutId);
-    const proceduralTheme = rollTheme(mapRng);
+    // Theme: a procedural board inherits the SECTOR's theme; a hand-authored
+    // layout keeps its own (falling back to the sector theme if somehow unset).
     const theme = layoutId === null
-      ? proceduralTheme
-      : (getLayout(layoutId)?.theme ?? proceduralTheme);
+      ? sector.theme
+      : (getLayout(layoutId)?.theme ?? sector.theme);
     return { layoutId, gridW, gridH, terrainSeed, theme };
   }
 
@@ -1152,8 +1224,17 @@ export class Run {
    */
   private advancePastBattle(): void {
     if (this.currentNodeId === this.nodeMap.terminalId) {
-      this.phase = 'complete';
-      this.bus.emit('run:victory', {});
+      // T2 — a sector terminal was cleared. At a sector-DAG sink the run is WON;
+      // otherwise advance to a successor sector (carrying the player pool +
+      // roster — a sector is a chapter of one run, not a fresh run). Only "The
+      // Start" ships (its DAG node is both source and sink), so the non-sink
+      // branch is built + headless-tested but never reached in shipped play.
+      if (isSectorSink(this.sectorMap, this.currentSectorNodeId)) {
+        this.phase = 'complete';
+        this.bus.emit('run:victory', {});
+      } else {
+        this.advanceSector();
+      }
     } else {
       this.phase = 'recruit';
       // G4 — recruit level tracks the TEAM (round avg + geometric bonus), not
@@ -1169,6 +1250,32 @@ export class Run {
       );
       this.bus.emit('recruit:offered', { units: this.currentOffer });
     }
+  }
+
+  /**
+   * T2 — advance to the next sector after clearing a (non-sink) sector terminal.
+   * Picks a successor DAG node + a sector there, regenerates the node-map for
+   * the new sector, and returns the run to the pre-root start so the new sector's
+   * root is the next pick. The player pool + roster + deck carry across
+   * unchanged (the carry-across decision); only the map + sector cursor reset.
+   *
+   * Built for the future N-sector content — the SHIPPED single-sector run never
+   * reaches here (its terminal is a sink → run:victory). The live scene refresh
+   * for a mid-run sector swap (a between-sector banner, the map re-render) is
+   * deferred with the multi-sector content; headlessly this is a clean
+   * battle→map transition onto a fresh map.
+   */
+  private advanceSector(): void {
+    const sectorRng = this.rng.fork();
+    const next = pickNextSector(this.sectorMap, this.currentSectorNodeId, sectorRng);
+    this.currentSectorNodeId = next.sectorNodeId;
+    this.currentSectorId = next.sectorId;
+    this.nodeMap = generateNodeMap(sectorRng, undefined, this.currentSectorLength());
+    // Back to the pre-root start: the new sector's root is selected like any
+    // first encounter. visitedNodes are node ids from the OLD map — clear them.
+    this.currentNodeId = PRE_ROOT_NODE_ID;
+    this.visitedNodes.clear();
+    this.phase = 'map';
   }
 
   /**
@@ -1437,6 +1544,8 @@ export class Run {
       // the buff mods at apply time).
       daemon: this.daemon,
       turnGates: this.turnGates,
+      currentSectorId: this.currentSectorId,
+      currentSectorNodeId: this.currentSectorNodeId,
       nodeMap: this.nodeMap,
       team: this.team.slice(),
       deploymentCounts: this.deploymentCounts.slice(),
@@ -1483,6 +1592,7 @@ export class Run {
       forcedLayoutId: string | null;
       runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
       turnGates: TurnGates;
+      sectorMap: SectorMap;
     };
     const m = run as unknown as Mut;
     m.bus = bus;
@@ -1497,6 +1607,12 @@ export class Run {
     // save at the pre-turn gate keeps its Mercury flip — never re-rolled).
     m.daemon = snap.daemon;
     m.turnGates = snap.turnGates;
+    // T2 — RunConfig (incl. a sectorMap override) isn't persisted; a restored
+    // run walks the shipped DAG. The shipped DAG is a single sink, so a save is
+    // never taken mid-walk of a multi-node graph — the fallback is exact.
+    m.sectorMap = SECTOR_MAP;
+    m.currentSectorId = snap.currentSectorId;
+    m.currentSectorNodeId = snap.currentSectorNodeId;
     m.nodeMap = snap.nodeMap;
     m.team = snap.team.slice();
     m.deploymentCounts = snap.deploymentCounts.slice();
@@ -1570,49 +1686,15 @@ function resolveForcedLayoutId(id: string | undefined): string | null {
 }
 
 /**
- * 25% procedural (`null`) / 75% hand-authored layout, chosen uniformly
- * across `LAYOUT_IDS`. Tilted away from procedural at the C1d follow-up
- * since the layout library is now big enough to carry the bulk of
- * encounters — procedural stays in the mix as a "wildcard" variant.
- * Weighting by hop depth or recent picks is a future tuning lever.
- *
- * The `rng.next()` call always runs, so the parent stream advances
- * identically whether we return null or a layout — changing the
- * threshold doesn't shift downstream draws (enemy team, etc.) for
- * existing seeds.
- */
-function rollLayoutId(rng: RNG): string | null {
-  if (rng.next() < 0.25) return null;
-  return rng.pick(LAYOUT_IDS);
-}
-
-/**
  * D3: pick the procedural arena's side length, uniformly in
  * `[TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize]`. Always
  * consumes one RNG step — including on layout encounters that ignore
  * the result — so the stream advances identically regardless of
- * branch. That mirrors the invariant `rollLayoutId` already maintains
- * for the layoutId roll.
+ * branch. That mirrors the gotcha #49 byte-continuity invariant the
+ * sector-pool roll maintains for the layout pick.
  */
 function rollProceduralSide(rng: RNG): number {
   return rng.int(TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize);
-}
-
-/**
- * D8: pick a visual theme for the procedural side of the encounter. Uniform
- * across `THEMES`. ALWAYS consumes one RNG step — even on hand-authored
- * encounters where the rolled value is discarded for `layout.theme` —
- * so the stream advances identically regardless of branch. Same invariant
- * the layout + size rolls already maintain (gotcha #49).
- *
- * Multi-map runs (C6) will eventually push theme up a level (the node
- * map carries a theme; procedural encounters inherit it). At that point
- * this function moves out of `Run.handleEnterNode` into nodeMap
- * construction; the byte-continuity dance can simplify too. For now,
- * theme rolls per battle.
- */
-function rollTheme(rng: RNG): Theme {
-  return rng.pick(THEMES);
 }
 
 function layoutDimensions(layoutId: string): { gridW: number; gridH: number } {

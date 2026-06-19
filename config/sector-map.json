@@ -1,0 +1,6 @@
+{
+  "nodes": [{ "id": "start", "sectors": ["the-start"] }],
+  "edges": [],
+  "sources": ["start"],
+  "sinks": ["start"]
+}

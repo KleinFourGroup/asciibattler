@@ -50,8 +50,12 @@ describe('sectors config — the shipped catalog', () => {
     expect(start!.layouts.every((e) => e.minHop === undefined)).toBe(true);
     // length feeds NodeMap.generate's hopCount — positive, matching today's map.
     expect(start!.length).toBeGreaterThan(0);
-    // The fight pool is empty until V authors the encounter catalog.
-    expect(start!.encounters).toEqual([]);
+    // V1 pooled the launch catalog into The Start's fight pool.
+    expect(start!.encounters.map((e) => e.encounterId)).toEqual([
+      'brigands',
+      'highwaymen',
+      'deserters',
+    ]);
   });
 
   it('getSector returns undefined for an unknown id', () => {

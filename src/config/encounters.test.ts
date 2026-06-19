@@ -1,5 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { ENCOUNTERS, EncountersSchema, ENCOUNTER_KINDS } from './encounters';
+import {
+  ENCOUNTERS,
+  ENCOUNTER_IDS,
+  EncountersSchema,
+  ENCOUNTER_KINDS,
+  getEncounter,
+  type Encounter,
+} from './encounters';
+
+/** The authored unit archetypes of an encounter's single looped wave (the V1
+ *  catalog shape: loop → wave). */
+function waveArchetypes(e: Encounter): string[] {
+  const loop = e.waves[0]!;
+  if (loop.kind !== 'loop') throw new Error('expected a loop');
+  const wave = loop.body[0]!;
+  if (wave.kind !== 'wave') throw new Error('expected a wave');
+  return wave.spec.units.map((u) => u.archetype);
+}
 
 // A deeply-nested grammar fixture exercising the recursive `waves` zod:
 // stages → loop(forever) → pick → wave, plus a final open-ended stage.
@@ -61,8 +78,16 @@ const base = {
 };
 
 describe('encounters schema', () => {
-  it('the shipped catalog is empty (V populates it; the reproduction is code-built)', () => {
-    expect(ENCOUNTERS).toEqual([]);
+  it('ships the V1 launch catalog (Brigands + two variants, all normal)', () => {
+    expect(ENCOUNTER_IDS).toEqual(['brigands', 'highwaymen', 'deserters']);
+    for (const e of ENCOUNTERS) expect(e.kind).toBe('normal');
+  });
+
+  it('the variants differ as authored: highwaymen pure-bandit, deserters add a healer', () => {
+    expect(waveArchetypes(getEncounter('highwaymen')!)).toEqual(['bandit']);
+    const deserters = waveArchetypes(getEncounter('deserters')!);
+    expect(deserters).toContain('bandit');
+    expect(deserters).toContain('healer');
   });
 
   it('parses a deeply-nested wave grammar (stages → loop → pick → wave)', () => {

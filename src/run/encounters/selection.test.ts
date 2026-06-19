@@ -3,10 +3,11 @@ import { RNG } from '../../core/RNG';
 import {
   getSelectionStrategy,
   encounterKindFor,
+  assertSelectionCoverage,
   type EncounterResolver,
 } from './selection';
-import { PROCEDURAL_LAYOUT_ID, type SectorDef } from '../../config/sectors';
-import type { Encounter, EncounterKind } from '../../config/encounters';
+import { SECTORS, PROCEDURAL_LAYOUT_ID, type SectorDef } from '../../config/sectors';
+import { getEncounter, type Encounter, type EncounterKind } from '../../config/encounters';
 
 /**
  * V1 — the encounter-selection resolver. Mechanic tests with hand-built fixtures
@@ -165,5 +166,22 @@ describe('selectEncounter — layoutFirst', () => {
   it('is deterministic per seed', () => {
     const s = sector([{ layoutId: 'river' }, { layoutId: 'labyrinth' }], [{ encounterId: 'a' }]);
     expect(pick(s, battle, new RNG(9), resolve)).toEqual(pick(s, battle, new RNG(9), resolve));
+  });
+});
+
+describe('assertSelectionCoverage', () => {
+  it('passes over the shipped config (every battle node is fillable)', () => {
+    expect(() => assertSelectionCoverage(SECTORS, getEncounter)).not.toThrow();
+  });
+
+  it('throws when a reachable hop has no eligible encounter', () => {
+    const s = sector([{ layoutId: 'river' }], []); // empty fight pool
+    expect(() => assertSelectionCoverage([s], resolve)).toThrow(/no selectable encounter/);
+  });
+
+  it('throws when the only eligible encounter has no compatible layout', () => {
+    // 'b' fits only river; the sector offers only labyrinth → unfillable.
+    const s = sector([{ layoutId: 'labyrinth' }], [{ encounterId: 'b' }]);
+    expect(() => assertSelectionCoverage([s], resolve)).toThrow(/no selectable encounter/);
   });
 });

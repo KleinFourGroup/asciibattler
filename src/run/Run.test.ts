@@ -605,11 +605,13 @@ describe('Run', () => {
       const { run } = freshRunWithBus(1);
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // U3 — the pool now comes from the selected encounter (the reproduction's
-      // healthPool == the old global HEALTH.enemyHealthMax, so the value holds).
+      // V1 — the pool comes from the SELECTED encounter (each launch-catalog
+      // fight is pooled at the old global HEALTH.enemyHealthMax, so the value holds).
       expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax);
       expect(run.enemyHealthPoolMax).toBe(HEALTH.enemyHealthMax);
-      expect(run.currentEncounterName).toBe('Brigands');
+      // Selection picks one of "The Start"'s pooled encounters (Brigands/Highwaymen/
+      // Deserters) — which one is seed-dependent; assert it's a real catalog pick.
+      expect(['Brigands', 'Highwaymen', 'Deserters']).toContain(run.currentEncounterName);
       expect(run.turnIndex).toBe(0); // no turn resolved yet
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
     });

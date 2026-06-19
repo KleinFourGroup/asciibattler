@@ -19,13 +19,15 @@
  */
 
 import type { RNG } from '../../core/RNG';
-import type { Encounter, EncounterKind } from '../../config/encounters';
+import { getEncounter, type Encounter, type EncounterKind } from '../../config/encounters';
 import type { NodeKind } from '../NodeMap';
 import {
+  SECTORS,
   PROCEDURAL_LAYOUT_ID,
   layoutPoolAtHop,
   encounterPoolAtHop,
   type SectorDef,
+  type SectorLayoutEntry,
   type SectorEncounterEntry,
 } from '../../config/sectors';
 import { SELECTION, type SelectionStrategyKey } from '../../config/selection';
@@ -86,12 +88,18 @@ function eligibleEncounters(
     .filter((x): x is EligibleEntry => x.encounter !== undefined && x.encounter.kind === kind);
 }
 
-/** Roll a layout from the sector's hop-gated pool ∩ the encounter's fit-filter.
- *  Returns the resolved layout id (`null` = procedural). Throws if the
- *  intersection is empty (the guard should preclude this in shipped content). */
-function rollLayoutFor(sector: SectorDef, hop: number, encounter: Encounter, rng: RNG): string | null {
+/** The sector's hop-gated layout pool ∩ the encounter's fit-filter (an omitted
+ *  fit-filter admits everything, incl. the procedural sentinel). */
+function compatibleLayouts(sector: SectorDef, hop: number, encounter: Encounter): readonly SectorLayoutEntry[] {
   const fit = encounter.layouts;
-  const pool = layoutPoolAtHop(sector, hop).filter((e) => fit === undefined || fit.includes(e.layoutId));
+  return layoutPoolAtHop(sector, hop).filter((e) => fit === undefined || fit.includes(e.layoutId));
+}
+
+/** Roll a layout from `compatibleLayouts`. Returns the resolved layout id (`null`
+ *  = procedural). Throws if the intersection is empty (the coverage guard should
+ *  preclude this in shipped content). */
+function rollLayoutFor(sector: SectorDef, hop: number, encounter: Encounter, rng: RNG): string | null {
+  const pool = compatibleLayouts(sector, hop, encounter);
   if (pool.length === 0) {
     throw new Error(
       `selectEncounter: encounter "${encounter.id}" has no compatible layout in sector "${sector.id}" at hop ${hop}`,
@@ -158,3 +166,38 @@ export function selectEncounter(
 ): SelectedEncounter {
   return STRATEGIES[SELECTION.strategy](sector, ctx, rng, resolve);
 }
+
+/** Map-node kinds that select an encounter (rest nodes never fight). */
+const FIGHTING_NODE_KINDS: readonly NodeKind[] = ['battle', 'boss'];
+
+/**
+ * Boot/editor guard (the A4 loud-failure pattern): every (sector, reachable hop,
+ * fighting node kind) must have ≥ 1 eligible encounter with a non-empty layout
+ * intersection — so `selectEncounter` never throws mid-run. Called at module load
+ * over the shipped config (below); also exercisable on fixtures in tests. (It is
+ * resolution-order-agnostic: feasibility of the eligible set + a compatible layout
+ * is necessary for either strategy.)
+ */
+export function assertSelectionCoverage(
+  sectors: readonly SectorDef[],
+  resolve: EncounterResolver,
+): void {
+  for (const sector of sectors) {
+    for (let hop = 0; hop < sector.length; hop++) {
+      for (const nodeKind of FIGHTING_NODE_KINDS) {
+        const kind = encounterKindFor(nodeKind);
+        const eligible = eligibleEncounters(sector, hop, kind, resolve);
+        const selectable = eligible.some((x) => compatibleLayouts(sector, hop, x.encounter).length > 0);
+        if (!selectable) {
+          throw new Error(
+            `selection coverage: sector "${sector.id}" hop ${hop} kind '${kind}' has no selectable encounter with a compatible layout`,
+          );
+        }
+      }
+    }
+  }
+}
+
+// Boot guard: fail loudly at load if the shipped catalog can't fill every battle
+// node (mis-authored content shouldn't surface as a mid-run throw).
+assertSelectionCoverage(SECTORS, getEncounter);

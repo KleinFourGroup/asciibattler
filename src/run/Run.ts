@@ -43,9 +43,9 @@ import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from './NodeMap';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
-import { getSector, layoutPoolAtHop, PROCEDURAL_LAYOUT_ID, type SectorDef } from '../config/sectors';
+import { getSector, type SectorDef } from '../config/sectors';
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
-import { pickStartSector, pickNextSector, isSectorSink, pickWeighted } from './sectorWalk';
+import { pickStartSector, pickNextSector, isSectorSink } from './sectorWalk';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
@@ -77,7 +77,7 @@ import { DIFFICULTY } from '../config/difficulty';
 import { getEncounter, type Encounter } from '../config/encounters';
 import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
-import { reproductionEncounter, REPRODUCTION_ENCOUNTER_ID } from './encounters/reproduction';
+import { selectEncounter } from './encounters/selection';
 import { DAEMONS, type DaemonConfig } from '../config/daemons';
 import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
@@ -209,18 +209,22 @@ export interface BattleEncounter {
  *  U3: bumped 20→21. The encounter-model swap: retires `encounterBudget` (the
  *  per-encounter budget now lives in the authored wave spec) and adds
  *  `selectedEncounterId` + `waveCursor` (the selected encounter + the wave-list
- *  grammar position). A v20 save has a budget but no encounter/cursor → reject. */
-const RUN_SCHEMA_VERSION = 21;
+ *  grammar position). A v20 save has a budget but no encounter/cursor → reject.
+ *  V1: bumped 21→22. Encounter SELECTION + the catalog: the code-built
+ *  reproduction (`selectedEncounterId: 'reproduction'`) was retired — encounters
+ *  are now selected from `config/encounters.json` (ids `brigands`/`highwaymen`/
+ *  `deserters`). A v21 save holding `'reproduction'` would resolve to no encounter
+ *  → reject rather than rehydrate a broken run. */
+const RUN_SCHEMA_VERSION = 22;
 
 /**
- * U3 — re-resolve a persisted `selectedEncounterId` to its `Encounter`. The
- * reproduction encounter is code-built (reads live config, never stored);
- * catalog encounters come from `config/encounters.json`. A null id (no active
- * encounter) → null; an unknown id (a retired catalog entry) → null too.
+ * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
+ * authored catalog. A null id (no active encounter) → null; an unknown id (a
+ * retired catalog entry) → null too. (U3's code-built reproduction was retired
+ * in V1: every encounter, Brigands included, is now `config/encounters.json`.)
  */
 function resolveSelectedEncounter(id: string | null): Encounter | null {
   if (id === null) return null;
-  if (id === REPRODUCTION_ENCOUNTER_ID) return reproductionEncounter();
   return getEncounter(id) ?? null;
 }
 
@@ -298,7 +302,7 @@ export interface RunSnapshot {
   enemyHealth: number;
   /** H4: turns elapsed in the active encounter (drives the max-turns cap). */
   turnIndex: number;
-  /** U3: the active encounter's id (`reproduction` or a catalog id), or null
+  /** V1: the active encounter's id (a catalog id, e.g. `brigands`), or null
    *  outside an encounter. `fromJSON` re-resolves the Encounter from it. */
   selectedEncounterId: string | null;
   /** U3: the wave-list sequencer cursor (the U2 grammar position), or null
@@ -463,8 +467,8 @@ export class Run {
    * Held for the whole encounter: `beginTurn` resolves each turn's wave from its
    * `waves` grammar, and the pool max comes from its `healthPool`. Null outside
    * an encounter (cleared in `finishEncounter`). NOT serialized directly — the
-   * snapshot persists `selectedEncounterId` and `fromJSON` re-resolves it (the
-   * reproduction encounter is code-built; catalog encounters come from config).
+   * snapshot persists `selectedEncounterId` and `fromJSON` re-resolves it from
+   * the authored catalog (`config/encounters.json`).
    */
   selectedEncounter: Encounter | null = null;
   /** U3 — the wave-list sequencer cursor (U2). Null before the first turn; the
@@ -691,10 +695,20 @@ export class Run {
    * persists across encounters.
    */
   private beginEncounter(): void {
-    // U3 — select the authored encounter for this node. U3 ships ONE: the
-    // code-built reproduction (selection among a catalog is V). It seeds the
-    // per-encounter pool + owns the wave grammar; the wave cursor starts fresh.
-    this.selectedEncounter = reproductionEncounter();
+    // V1 — select this node's encounter + its battlefield from the current
+    // sector's pools via the keyed `selectEncounter` resolver (replaces U3's
+    // hold-the-single-reproduction). ONE `mapRng` fork drives BOTH the selection
+    // draws (encounter + layout pick) and the map build below — so the parent
+    // stream is forked once per encounter, as before. The selected encounter
+    // seeds the per-encounter pool + owns the wave grammar; the cursor starts fresh.
+    const mapRng = this.rng.fork();
+    const selection = selectEncounter(
+      this.currentSector(),
+      { hop: this.currentHop, nodeKind: this.kindOf(this.currentNodeId) },
+      mapRng,
+      getEncounter,
+    );
+    this.selectedEncounter = selection.encounter;
     this.waveCursor = null;
     this.enemyHealth = this.selectedEncounter.healthPool;
     this.turnIndex = 0;
@@ -708,13 +722,13 @@ export class Run {
     // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
     // `beginTurn` records the deployed hand.
     this.resetDeploymentCounts();
-    // K3.5 — roll the encounter's ONE battlefield (pre-K3.5 these rolls lived
-    // in `beginTurn`, re-rolled per turn). A dedicated fork keeps the map draw
-    // self-contained, mirroring the per-turn `battleRng` pattern. The roll
-    // order + the always-roll-then-override branches are preserved from the
-    // old `beginTurn` block (gotcha #49's byte-continuity discipline: every
-    // branch consumes the same draws).
-    this.encounterMap = this.rollEncounterMap(this.rng.fork());
+    // K3.5 / V1 — build the encounter's ONE battlefield for the layout chosen by
+    // selection above (pre-K3.5 these rolls lived per-turn in `beginTurn`). The
+    // terrain-seed + procedural-side draws ride the SAME `mapRng` as selection,
+    // contiguous after the encounter/layout picks. Gotcha #49's always-draw
+    // discipline (the G1 forced-layout override still consumes the same draws) is
+    // preserved in `buildEncounterMap`.
+    this.encounterMap = this.buildEncounterMap(selection.layoutId, mapRng);
     // Browser-only diagnostic (moved from `beginTurn`): confirm the layout
     // picker hits the full library across a session. Gated on `typeof window`
     // so the fuzz harness + vitest don't spam.
@@ -779,34 +793,24 @@ export class Run {
   }
 
   /**
-   * K3.5 / T2 — one encounter-map roll. The board now comes from the **current
-   * sector's hop-gated layout pool** (T2) instead of the global `rollLayoutId`,
-   * and the procedural theme is the **sector's** theme (no per-battle theme
-   * roll). The draws (terrain seed → pool pick → procedural side) ALWAYS run so
-   * the stream advances identically on every branch (gotcha #49): the pool pick
-   * is made even when a forced layout (G1) overrides its result. The pool is
-   * non-empty at every reachable hop (sector-schema guard). The pick is
-   * **weighted** by each entry's `weight ?? 1` (T1's reserved seam, now
-   * deployed — e.g. "The Start" weights the procedural sentinel up so procedural
-   * boards appear more often than a flat 1/|pool|); the sentinel is otherwise
-   * one ordinary pool entry.
+   * K3.5 / T2 / V1 — build the encounter's ONE battlefield for `selectedLayoutId`
+   * (chosen by `selectEncounter` from the sector's hop-gated layout pool ∩ the
+   * encounter's fit-filter; `null` = procedural). The layout PICK moved into
+   * selection (V1) — this just realizes the chosen id into a map. The terrain-seed
+   * + procedural-side draws ALWAYS run on `mapRng` so the stream advances
+   * identically on every branch (gotcha #49): the G1 forced-layout override
+   * (`forcedLayoutId`) swaps the id WITHOUT skipping a draw. A procedural board
+   * inherits the **sector's** theme; a hand-authored layout keeps its own.
    */
-  private rollEncounterMap(mapRng: RNG): EncounterMap {
+  private buildEncounterMap(selectedLayoutId: string | null, mapRng: RNG): EncounterMap {
     const sector = this.currentSector();
     const terrainSeed = Math.floor(mapRng.next() * 0x1_0000_0000);
-    // Roll one board from the sector's pool eligible at this hop (weighted by
-    // entry.weight ?? 1); map the procedural sentinel to the encounter map's
-    // `null` layout id.
-    const pool = layoutPoolAtHop(sector, this.currentHop);
-    const rolledEntry = pickWeighted(pool, (e) => e.weight ?? 1, mapRng);
-    const rolledLayoutId =
-      rolledEntry.layoutId === PROCEDURAL_LAYOUT_ID ? null : rolledEntry.layoutId;
-    // forcedLayoutId (G1): null = use the roll; FORCE_PROCEDURAL sentinel = force
-    // a procedural map (layoutId null); any other string = that named layout
-    // (bypassing the sector pool — a dev/test override).
+    // forcedLayoutId (G1): null = use the selection; FORCE_PROCEDURAL sentinel =
+    // force a procedural map (layoutId null); any other string = that named layout
+    // (bypassing selection — a dev/test override).
     const layoutId =
       this.forcedLayoutId === null
-        ? rolledLayoutId
+        ? selectedLayoutId
         : this.forcedLayoutId === FORCE_PROCEDURAL
           ? null
           : this.forcedLayoutId;
@@ -814,8 +818,6 @@ export class Run {
     const { gridW, gridH } = layoutId === null
       ? { gridW: proceduralSide, gridH: proceduralSide }
       : layoutDimensions(layoutId);
-    // Theme: a procedural board inherits the SECTOR's theme; a hand-authored
-    // layout keeps its own (falling back to the sector theme if somehow unset).
     const theme = layoutId === null
       ? sector.theme
       : (getLayout(layoutId)?.theme ?? sector.theme);
@@ -1719,9 +1721,8 @@ export class Run {
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;
-    // U3 — re-resolve the held Encounter from its persisted id (the reproduction
-    // is code-built; catalog encounters come from config), and restore the wave
-    // cursor as-is (plain JSON, never mutated in place).
+    // V1 — re-resolve the held Encounter from its persisted id (the authored
+    // catalog), and restore the wave cursor as-is (plain JSON, never mutated).
     m.selectedEncounter = resolveSelectedEncounter(snap.selectedEncounterId);
     m.waveCursor = snap.waveCursor;
     m.encounterMap = snap.encounterMap;

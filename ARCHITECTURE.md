@@ -58,7 +58,8 @@ src/
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
     sectors.ts               #   T1: the Sector schema — run container (id/title/desc/length/theme/hop-gated layout pool); V0: + hop-gated ENCOUNTER pool (sector-owns-both); procedural = reserved sentinel
     sectorMap.ts             #   T2: the sector-selection meta-DAG schema (nodes hold sector lists; sources/sinks; acyclic, non-sink-has-outgoing guards)
-    encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement (sectors/hop gate) moved to the sector pool; catalog ships EMPTY (V populates)
+    encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement moved to the sector pool; V1: catalog ships Brigands/Highwaymen/Deserters
+    selection.ts             #   V1: the SELECTION policy (strategy: encounterFirst|layoutFirst) — config/selection.json
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
@@ -166,8 +167,9 @@ src/
       sequencer.ts           # U2: pure waveForTurn(list, cursor, state, rng) — the wave-list GRAMMAR
                              # (wave | pick | loop{N|forever} | stages{until: enemyPoolAtOrBelow}) + a
                              # recursive plain-JSON cursor (resumable); terminal policy = last-wave-repeats
-      reproduction.ts        # U3: reproductionEncounter() — the code-built faithful bridge encounter
-                             # ("Brigands"), reads LIVE DIFFICULTY/HEALTH/DECK (tracks the band through X)
+      selection.ts           # V1: selectEncounter(sector, ctx, rng, resolve) — the keyed (encounterFirst|
+                             # layoutFirst) resolver picking an (encounter, layout) from the sector pools +
+                             # assertSelectionCoverage boot guard (Brigands now authored in encounters.json)
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
     NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3) + dump; T2: per-sector length override
     sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks

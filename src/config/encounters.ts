@@ -1,19 +1,18 @@
 /**
- * U3 (Post-R "Encounter System" round): the **Encounter** schema — an authored
+ * U3/V1 (Post-R "Encounter System" round): the **Encounter** schema — an authored
  * fight definition that REPLACES the random `rollEnemyWave`. An encounter is
- * *eligibility + content* selected onto a battle node: it owns its name, its
- * enemy health pool, the sectors/hops/kinds it's eligible for, and a **wave
+ * *content + intrinsic eligibility* selected onto a battle node: it owns its name,
+ * its enemy health pool, its `kind` + optional layout fit-filter, and a **wave
  * list** (the U2 grammar) describing the enemy team turn-by-turn.
  *
- * Source of truth at `config/encounters.json` — the **authored catalog**, which
- * ships EMPTY this round (V populates it via the encounter editor). The U3
- * "reproduction encounter" (the faithful bridge that re-creates today's swarm)
- * is **code-built** from live `DIFFICULTY`/`HEALTH`/`DECK`
- * ([../run/encounters/reproduction.ts](../run/encounters/reproduction.ts)), NOT
- * authored here — so it tracks the live balance config through Phase X's sweeps
- * rather than freezing a snapshot of it. The schema below validates BOTH shapes
- * (the catalog at load; the reproduction is the same `Encounter` type, built in
- * code).
+ * Source of truth at `config/encounters.json` — the **authored catalog**. V1
+ * populates the launch set: **Brigands** (the faithful anchor that re-creates the
+ * pre-V swarm — see [../run/encounters/brigands.test.ts](../run/encounters/brigands.test.ts)
+ * for the balance-proof) plus the variants **Highwaymen** (pure bandit) and
+ * **Deserters** (bandit + a healer). (U3 built Brigands in code reading live
+ * config; V1 hoisted it to JSON with literal constants — the code reproduction was
+ * retired. Per-encounter knobs are the tuning surface at Phase X.) `Run` selects
+ * among the catalog via [../run/encounters/selection.ts](../run/encounters/selection.ts).
  *
  * The `waves` grammar (`WaveList`) is the U2 type, validated here recursively
  * (`z.lazy`): a tree of wave / pick / loop / stages entries, nesting to any
@@ -143,8 +142,8 @@ export const ENCOUNTER_KINDS = ['normal', 'elite', 'boss'] as const;
 export type EncounterKind = (typeof ENCOUNTER_KINDS)[number];
 
 /**
- * An authored fight. `waves` is the U2 grammar; the reproduction encounter and
- * the V catalog both produce this shape.
+ * An authored fight. `waves` is the U2 grammar; every catalog encounter produces
+ * this shape.
  */
 export interface Encounter {
   readonly id: string;

@@ -5,7 +5,7 @@ import { fatigueEffect, FATIGUE_KEY } from './fatigue';
 import { foldEffects, combineMagnitude, type StatusEffect } from '../sim/statusEffects';
 import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
-import { getSector } from '../config/sectors';
+import { getSector, PROCEDURAL_LAYOUT_ID } from '../config/sectors';
 import { SectorMapSchema } from '../config/sectorMap';
 import type { GameEvents } from '../core/events';
 import { ARCHETYPE_CONFIG } from '../sim/archetypes';
@@ -252,10 +252,10 @@ describe('Run', () => {
       expect(proceduralHits).toBeGreaterThan(0); // sanity: procedural branch fired
     });
 
-    it('encounter layoutId is null OR a sector-pool layout (T2 uniform pool)', () => {
-      // T2: the board is a UNIFORM pick over the current sector's pool — the
-      // procedural sentinel + every hand-authored layout, each 1/|pool|. Confirm
-      // both the procedural and named branches fire and stay in LAYOUT_IDS.
+    it('encounter layoutId is null OR a sector-pool layout (T2 weighted pool)', () => {
+      // T2: the board is a WEIGHTED pick over the current sector's pool — the
+      // procedural sentinel + every hand-authored layout, each `weight ?? 1`.
+      // Confirm both the procedural and named branches fire and stay in LAYOUT_IDS.
       let proceduralCount = 0;
       const layoutCounts = new Map<string, number>();
       for (let seed = 1; seed <= 200; seed++) {
@@ -277,10 +277,13 @@ describe('Run', () => {
       for (const id of LAYOUT_IDS) {
         expect(layoutCounts.get(id) ?? 0).toBeGreaterThan(0);
       }
-      // "The Start" pool = procedural sentinel + LAYOUT_IDS, uniform → procedural
-      // ≈ 1/(1+|LAYOUT_IDS|) of 200. Wide window (well beyond ±3σ) — the point is
-      // to catch outright bias, not to assert exact uniformity.
-      const expectedProcedural = 200 / (1 + LAYOUT_IDS.length);
+      // Expected procedural share = its pool weight / total pool weight (derived
+      // from config — never hardcode the authored weights). Wide ±18 window (well
+      // beyond ±3σ for N=200) — the point is to catch outright bias, not the ratio.
+      const pool = getSector('the-start')!.layouts;
+      const totalWeight = pool.reduce((sum, e) => sum + (e.weight ?? 1), 0);
+      const procWeight = pool.find((e) => e.layoutId === PROCEDURAL_LAYOUT_ID)!.weight ?? 1;
+      const expectedProcedural = 200 * (procWeight / totalWeight);
       expect(proceduralCount).toBeGreaterThan(expectedProcedural - 18);
       expect(proceduralCount).toBeLessThan(expectedProcedural + 18);
     });

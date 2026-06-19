@@ -6,7 +6,7 @@
     "length": 11,
     "theme": "default",
     "layouts": [
-      { "layoutId": "procedural" },
+      { "layoutId": "procedural", "weight": 2 },
       { "layoutId": "labyrinth" },
       { "layoutId": "river" },
       { "layoutId": "endlessCorridors" },

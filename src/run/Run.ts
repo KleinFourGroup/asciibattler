@@ -45,7 +45,7 @@ import { generate as generateNodeMap, PRE_ROOT_NODE_ID, type NodeMap, type NodeK
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 import { getSector, layoutPoolAtHop, PROCEDURAL_LAYOUT_ID, type SectorDef } from '../config/sectors';
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
-import { pickStartSector, pickNextSector, isSectorSink, pickOne } from './sectorWalk';
+import { pickStartSector, pickNextSector, isSectorSink, pickWeighted } from './sectorWalk';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { enemyBudgetFor, rollEnemyWave, avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
@@ -723,17 +723,20 @@ export class Run {
    * roll). The draws (terrain seed → pool pick → procedural side) ALWAYS run so
    * the stream advances identically on every branch (gotcha #49): the pool pick
    * is made even when a forced layout (G1) overrides its result. The pool is
-   * non-empty at every reachable hop (sector-schema guard), and a uniform pick
-   * over it (T1 decision: sentinel + uniform) treats the procedural sentinel as
+   * non-empty at every reachable hop (sector-schema guard). The pick is
+   * **weighted** by each entry's `weight ?? 1` (T1's reserved seam, now
+   * deployed — e.g. "The Start" weights the procedural sentinel up so procedural
+   * boards appear more often than a flat 1/|pool|); the sentinel is otherwise
    * one ordinary pool entry.
    */
   private rollEncounterMap(mapRng: RNG): EncounterMap {
     const sector = this.currentSector();
     const terrainSeed = Math.floor(mapRng.next() * 0x1_0000_0000);
-    // Roll one board from the sector's pool eligible at this hop; map the
-    // procedural sentinel to the encounter map's `null` layout id.
+    // Roll one board from the sector's pool eligible at this hop (weighted by
+    // entry.weight ?? 1); map the procedural sentinel to the encounter map's
+    // `null` layout id.
     const pool = layoutPoolAtHop(sector, this.currentHop);
-    const rolledEntry = pickOne(pool, mapRng);
+    const rolledEntry = pickWeighted(pool, (e) => e.weight ?? 1, mapRng);
     const rolledLayoutId =
       rolledEntry.layoutId === PROCEDURAL_LAYOUT_ID ? null : rolledEntry.layoutId;
     // forcedLayoutId (G1): null = use the roll; FORCE_PROCEDURAL sentinel = force

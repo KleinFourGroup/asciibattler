@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
 import { SectorMapSchema, type SectorMap } from '../config/sectorMap';
 import { SECTOR_IDS } from '../config/sectors';
-import { pickOne, pickStartSector, pickNextSector, isSectorSink } from './sectorWalk';
+import { pickOne, pickWeighted, pickStartSector, pickNextSector, isSectorSink } from './sectorWalk';
 
 /**
  * T2 — the sector-DAG walk. Pure RNG-driven traversal over fixture DAGs (the
@@ -48,6 +48,49 @@ describe('pickOne — zero draws on a singleton', () => {
     const before = rng.toJSON().state;
     pickOne(['a', 'b', 'c'], rng);
     expect(rng.toJSON().state).not.toBe(before);
+  });
+});
+
+describe('pickWeighted', () => {
+  it('returns the sole element without drawing on a singleton', () => {
+    const rng = new RNG(5);
+    const before = rng.toJSON().state;
+    expect(pickWeighted(['only'], () => 1, rng)).toBe('only');
+    expect(rng.toJSON().state).toBe(before);
+  });
+
+  it('consumes exactly one rng.next() for a real choice (stream parity)', () => {
+    // Same draw count as pickOne/rng.pick, so a downstream draw stays put.
+    const a = new RNG(1);
+    pickWeighted(['x', 'y'], () => 1, a);
+    const b = new RNG(1);
+    b.next();
+    expect(a.toJSON().state).toBe(b.toJSON().state);
+  });
+
+  it('is deterministic per seed', () => {
+    const items = [
+      { id: 'a', w: 1 },
+      { id: 'b', w: 3 },
+    ];
+    const wOf = (e: { w: number }): number => e.w;
+    expect(pickWeighted(items, wOf, new RNG(9)).id).toBe(pickWeighted(items, wOf, new RNG(9)).id);
+  });
+
+  it('picks proportionally to weight over many seeds', () => {
+    // 'heavy' weight 3 vs 'light' weight 1 → ~75% / ~25%. Wide window — catch
+    // outright bias, not the exact ratio.
+    const items = [
+      { id: 'light', w: 1 },
+      { id: 'heavy', w: 3 },
+    ];
+    const N = 400;
+    let heavy = 0;
+    for (let seed = 0; seed < N; seed++) {
+      if (pickWeighted(items, (e) => e.w, new RNG(seed)).id === 'heavy') heavy++;
+    }
+    expect(heavy).toBeGreaterThan(N * 0.6);
+    expect(heavy).toBeLessThan(N * 0.9);
   });
 });
 

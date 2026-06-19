@@ -28,6 +28,29 @@ export function pickOne<T>(arr: readonly T[], rng: RNG): T {
   return arr.length === 1 ? arr[0]! : rng.pick(arr);
 }
 
+/**
+ * Weighted pick: choose one item with probability proportional to `weightOf`.
+ * Consumes exactly ONE `rng.next()` for a real choice (same draw count as
+ * `pickOne`'s `rng.pick`, so swapping uniform→weighted doesn't shift the
+ * surrounding stream) and ZERO on a singleton (same no-choice-no-entropy
+ * property — GOTCHAS #111). Used by the sector layout-pool roll, where each
+ * `{ layoutId, weight? }` entry's `weight ?? 1` biases the pick (T1's reserved
+ * seam, deployed: e.g. "The Start" weights procedural up so it appears more
+ * often than a flat 1/|pool|). Weights are positive (zod-validated), so the
+ * total is always > 0; the trailing return is float-rounding safety.
+ */
+export function pickWeighted<T>(arr: readonly T[], weightOf: (item: T) => number, rng: RNG): T {
+  if (arr.length === 1) return arr[0]!;
+  const weights = arr.map(weightOf);
+  const total = weights.reduce((sum, w) => sum + w, 0);
+  let roll = rng.next() * total;
+  for (let i = 0; i < arr.length; i++) {
+    roll -= weights[i]!;
+    if (roll < 0) return arr[i]!;
+  }
+  return arr[arr.length - 1]!;
+}
+
 function nodeSectors(map: SectorMap, nodeId: string): readonly string[] {
   const node = map.nodes.find((n) => n.id === nodeId);
   if (!node) throw new Error(`sectorWalk: no node "${nodeId}" in sector-map`);

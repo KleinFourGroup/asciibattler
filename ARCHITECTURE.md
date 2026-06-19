@@ -56,6 +56,7 @@ src/
     nodemap.ts               #   hop count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
     terrain.ts               #   C1a: wall + water density
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
+    sectors.ts               #   T1: the Sector schema — run container (id/title/desc/length/theme/hop-gated layout pool); procedural = reserved sentinel
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
@@ -249,6 +250,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
+  sectors.json               # T1: sector catalog — ships one ("The Start": all layouts + procedural, ungated, length 11)
   spawn.json                 # D5.C: overflow (mid-battle reinforcement) spawn-in lockout/fade seconds (Q2 retired M3 turnIntroSeconds)
   tiles.json
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;

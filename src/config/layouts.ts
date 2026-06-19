@@ -77,7 +77,7 @@ export type SpawnAvailability = z.infer<typeof SpawnAvailabilitySchema>;
  * `TerrainRenderer.topColorFor`. The editor + procedural picker both
  * read from this enum, so a new theme automatically appears in both.
  */
-const ThemeSchema = z.enum(['default', 'rock', 'volcanic']);
+export const ThemeSchema = z.enum(['default', 'rock', 'volcanic']);
 export type Theme = z.infer<typeof ThemeSchema>;
 /** Picker pool for the procedural roll + the editor dropdown. */
 export const THEMES: readonly Theme[] = ['default', 'rock', 'volcanic'];

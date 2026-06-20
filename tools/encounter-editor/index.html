@@ -117,6 +117,28 @@
           </section>
 
           <section class="card">
+            <h2>Add to sector pool</h2>
+            <div id="sector-checks" class="sector-checks">
+              <p class="hint">Loading sectors…</p>
+            </div>
+            <div class="row">
+              <label class="inline">
+                Hop gate
+                <input id="sector-minhop" type="number" min="0" step="1" placeholder="from 0" />
+              </label>
+              <button id="add-to-sectors-btn" type="button">Add this encounter</button>
+            </div>
+            <p id="sector-add-status" class="hint"></p>
+            <p class="hint">
+              Pools the current (saved) encounter into the checked sectors in
+              <code>config/sectors.json</code> — the sector owns its fight pool (sector-owns-both),
+              so this writes the <em>sector</em> file. Save the encounter first (its id must be
+              committed); a pool that already lists it is skipped. Tune pools finely in the
+              <a href="/tools/sector-editor/">sector editor</a>.
+            </p>
+          </section>
+
+          <section class="card">
             <h2>Export <span class="sub">(whole file)</span></h2>
             <textarea id="export" rows="8" spellcheck="false" readonly></textarea>
             <div class="row">

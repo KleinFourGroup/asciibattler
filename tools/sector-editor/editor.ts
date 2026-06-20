@@ -32,10 +32,13 @@ import {
   SectorsSchema,
   PROCEDURAL_LAYOUT_ID,
   layoutPoolAtHop,
+  encounterPoolAtHop,
   type SectorDef,
   type SectorLayoutEntry,
+  type SectorEncounterEntry,
 } from '../../src/config/sectors';
 import { LAYOUT_IDS, THEMES, type Theme } from '../../src/sim/layouts';
+import { ENCOUNTER_IDS } from '../../src/config/encounters';
 import { formatSectorsJson } from './format';
 
 // ---- State ----
@@ -61,7 +64,10 @@ const lengthEl = mustQuery<HTMLInputElement>('#length');
 const themeEl = mustQuery<HTMLSelectElement>('#theme');
 const poolEl = mustQuery<HTMLDivElement>('#pool');
 const addLayoutBtn = mustQuery<HTMLButtonElement>('#add-layout-btn');
+const encountersEl = mustQuery<HTMLDivElement>('#encounters');
+const addEncounterBtn = mustQuery<HTMLButtonElement>('#add-encounter-btn');
 const previewEl = mustQuery<HTMLDListElement>('#preview');
+const encounterPreviewEl = mustQuery<HTMLDListElement>('#encounter-preview');
 const previewHopEl = mustQuery<HTMLInputElement>('#preview-hop');
 const validationEl = mustQuery<HTMLUListElement>('#validation');
 const exportEl = mustQuery<HTMLTextAreaElement>('#export');
@@ -125,6 +131,12 @@ function attachPreviewControls(): void {
 function attachButtons(): void {
   newBtn.addEventListener('click', addSector);
   addLayoutBtn.addEventListener('click', addLayoutEntry);
+  addEncounterBtn.addEventListener('click', addEncounterEntry);
+  // No catalog → nothing to pool; the schema would reject an empty encounterId.
+  if (ENCOUNTER_IDS.length === 0) {
+    addEncounterBtn.disabled = true;
+    addEncounterBtn.title = 'No encounters in the catalog yet — author one in the encounter editor first.';
+  }
   saveBtn.addEventListener('click', () => void save());
   revertBtn.addEventListener('click', revert);
   copyBtn.addEventListener('click', () => {
@@ -178,10 +190,31 @@ function removeLayoutEntry(index: number): void {
   refreshDerived();
 }
 
+function addEncounterEntry(): void {
+  const first = ENCOUNTER_IDS[0];
+  if (first === undefined) return; // empty catalog — button is disabled, defensive guard
+  sector().encounters.push({ encounterId: first });
+  buildEncounterPool();
+  refreshDerived();
+}
+
+function removeEncounterEntry(index: number): void {
+  // The encounter pool may be empty (unlike layouts, which the schema floors at
+  // ≥1), so there's no minimum to defend here.
+  sector().encounters.splice(index, 1);
+  buildEncounterPool();
+  refreshDerived();
+}
+
 // ---- Build the per-sector pool rows ----
 function buildPool(): void {
   poolEl.innerHTML = '';
   sector().layouts.forEach((entry, i) => poolEl.appendChild(makePoolRow(entry, i)));
+}
+
+function buildEncounterPool(): void {
+  encountersEl.innerHTML = '';
+  sector().encounters.forEach((entry, i) => encountersEl.appendChild(makeEncounterPoolRow(entry, i)));
 }
 
 function makePoolRow(entry: SectorLayoutEntry, index: number): HTMLDivElement {
@@ -224,6 +257,49 @@ function makePoolRow(entry: SectorLayoutEntry, index: number): HTMLDivElement {
   return row;
 }
 
+/** One encounter-pool row — the fight-pool twin of `makePoolRow`. Same shape
+ *  (a wide id select + optional minHop/weight + remove), keyed by `encounterId`
+ *  with options drawn from the live catalog `ENCOUNTER_IDS`. */
+function makeEncounterPoolRow(entry: SectorEncounterEntry, index: number): HTMLDivElement {
+  const row = document.createElement('div');
+  row.className = 'pool-row';
+
+  const select = document.createElement('select');
+  select.className = 'pool-layout';
+  for (const id of ENCOUNTER_IDS) {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = id;
+    select.appendChild(opt);
+  }
+  select.value = entry.encounterId;
+  select.addEventListener('change', () => {
+    entry.encounterId = select.value;
+    refreshDerived();
+  });
+
+  const minHop = makeOptionalNumber('minHop', entry.minHop, (v) => {
+    if (v === undefined) delete entry.minHop;
+    else entry.minHop = v;
+    refreshDerived();
+  });
+  const weight = makeOptionalNumber('weight', entry.weight, (v) => {
+    if (v === undefined) delete entry.weight;
+    else entry.weight = v;
+    refreshDerived();
+  });
+
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'pool-remove';
+  remove.textContent = '✕';
+  remove.title = 'Remove this encounter from the pool';
+  remove.addEventListener('click', () => removeEncounterEntry(index));
+
+  row.append(select, minHop, weight, remove);
+  return row;
+}
+
 /** An optional numeric field (blank = the field is omitted from the entry). */
 function makeOptionalNumber(
   label: string,
@@ -258,6 +334,7 @@ function selectSector(index: number): void {
   activeIndex = index;
   syncForm();
   buildPool();
+  buildEncounterPool();
   refreshTabs();
   refreshDerived();
 }
@@ -313,22 +390,42 @@ function refreshExport(): void {
 
 function refreshPreview(): void {
   const s = sector();
+
+  // Layout pool — eligible boards at the previewed hop, each with its weighted
+  // roll chance, then the gated-out entries (why a board isn't in the mix yet).
   previewEl.innerHTML = '';
-  // Eligible pool at the previewed hop, with each entry's weighted roll chance.
-  const eligible = layoutPoolAtHop(s, previewHop);
-  const total = eligible.reduce((sum, e) => sum + (e.weight ?? 1), 0);
-  if (eligible.length === 0 || total <= 0) {
-    addPreview('(empty pool)', `no eligible board at hop ${previewHop}`);
+  const layouts = layoutPoolAtHop(s, previewHop);
+  const layoutTotal = layouts.reduce((sum, e) => sum + (e.weight ?? 1), 0);
+  if (layouts.length === 0 || layoutTotal <= 0) {
+    addPreview(previewEl, '(empty pool)', `no eligible board at hop ${previewHop}`);
   } else {
-    for (const e of eligible) {
+    for (const e of layouts) {
       const w = e.weight ?? 1;
-      addPreview(e.layoutId, `${pct(w / total)}  (weight ${w})`);
+      addPreview(previewEl, e.layoutId, `${pct(w / layoutTotal)}  (weight ${w})`);
     }
   }
-  // Gated-out entries, for context (why a board isn't in the mix yet).
   for (const e of s.layouts) {
     if ((e.minHop ?? 0) > previewHop) {
-      addPreview(e.layoutId, `— gated (minHop ${e.minHop})`, true);
+      addPreview(previewEl, e.layoutId, `— gated (minHop ${e.minHop})`, true);
+    }
+  }
+
+  // Encounter pool — the fight-pool twin, same weighted-roll math
+  // (`encounterPoolAtHop` mirrors `layoutPoolAtHop`).
+  encounterPreviewEl.innerHTML = '';
+  const fights = encounterPoolAtHop(s, previewHop);
+  const fightTotal = fights.reduce((sum, e) => sum + (e.weight ?? 1), 0);
+  if (fights.length === 0 || fightTotal <= 0) {
+    addPreview(encounterPreviewEl, '(empty pool)', `no eligible encounter at hop ${previewHop}`);
+  } else {
+    for (const e of fights) {
+      const w = e.weight ?? 1;
+      addPreview(encounterPreviewEl, e.encounterId, `${pct(w / fightTotal)}  (weight ${w})`);
+    }
+  }
+  for (const e of s.encounters) {
+    if ((e.minHop ?? 0) > previewHop) {
+      addPreview(encounterPreviewEl, e.encounterId, `— gated (minHop ${e.minHop})`, true);
     }
   }
 }
@@ -368,15 +465,15 @@ function revert(): void {
 }
 
 // ---- Small helpers ----
-function addPreview(term: string, value: string, muted = false): void {
+function addPreview(dl: HTMLDListElement, term: string, value: string, muted = false): void {
   const dt = document.createElement('dt');
   dt.textContent = term;
   if (muted) dt.classList.add('muted');
   const dd = document.createElement('dd');
   dd.textContent = value;
   if (muted) dd.classList.add('muted');
-  previewEl.appendChild(dt);
-  previewEl.appendChild(dd);
+  dl.appendChild(dt);
+  dl.appendChild(dd);
 }
 
 function addValidation(level: 'ok' | 'error', text: string): void {

@@ -64,6 +64,23 @@
               (<code>procedural</code>) is one ordinary pool entry.
             </p>
           </section>
+          <section class="card">
+            <h2>
+              Encounter pool
+              <span class="sub">(one fight per row; weighted; optional hop gate)</span>
+            </h2>
+            <div id="encounters" class="pool"></div>
+            <div class="row">
+              <button id="add-encounter-btn" type="button">+ Add encounter</button>
+            </div>
+            <p class="hint">
+              The sector's fights (sector-owns-both). Each <code>encounterId</code> is a catalog
+              entry (author them in the
+              <a href="/tools/encounter-editor/">encounter editor</a>); <code>weight</code> /
+              <code>minHop</code> work as above. A battle node needs at least one eligible
+              encounter — an empty pool boots only if the sector has no battles.
+            </p>
+          </section>
         </div>
         <aside class="side-pane">
           <section class="card preview-card">
@@ -71,11 +88,14 @@
             <div class="preview-controls">
               <label class="inline">At hop <input id="preview-hop" type="number" min="0" value="0" /></label>
             </div>
+            <h3 class="preview-sub">Layouts</h3>
             <dl id="preview" class="preview"></dl>
+            <h3 class="preview-sub">Encounters</h3>
+            <dl id="encounter-preview" class="preview"></dl>
             <p class="hint">
-              The eligible pool at this hop and each board's roll chance
-              (<code>weight / total</code>) — the same weighted pick
-              <code>rollEncounterMap</code> makes. <code>X</code> = the gated hop.
+              The eligible pool at this hop and each entry's roll chance
+              (<code>weight / total</code>) — the same weighted pick selection makes. A muted row
+              is gated above this hop (<code>minHop</code>).
             </p>
           </section>
           <section class="card">

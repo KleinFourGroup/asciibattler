@@ -38,10 +38,20 @@ import {
   ENCOUNTERS,
   EncountersSchema,
   ENCOUNTER_KINDS,
+  ENCOUNTER_IDS,
   type Encounter,
   type EncounterKind,
 } from '../../src/config/encounters';
 import { LAYOUT_IDS } from '../../src/config/layouts';
+// V2 placement — the "add to sector" toggle. The sector FILE is fetched live (not
+// imported) so the encounter editor never gains a runtime dependency on
+// sectors.json and stays off its rebuild chain. (A write still triggers a Vite
+// full-reload of every dev client; SECTOR_ADD_STASH_KEY masks that here too.)
+// `formatSectorsJson` / `addEncounterToSectorPools` import sectors type-only
+// (erased), so they stay dependency-free.
+import { formatSectorsJson } from '../sector-editor/format';
+import { addEncounterToSectorPools } from '../sector-editor/poolEdit';
+import type { SectorDef } from '../../src/config/sectors';
 import { DECK } from '../../src/config/deck';
 import { DIFFICULTY } from '../../src/config/difficulty';
 import { RNG } from '../../src/core/RNG';
@@ -97,6 +107,14 @@ let wavesParseOk = true;
  *  preview / validation / formatter / save read one source of truth either way. */
 let viewMode: 'visual' | 'json' = 'visual';
 let uidCounter = 0;
+
+/** A successful "add to sector" write reloads this page: sectors.json is imported
+ *  by src/config/sectors.ts with no HMR boundary, so Vite broadcasts a full-reload
+ *  to every connected dev client — including this one (the fetch-not-import choice
+ *  keeps editor.ts off the rebuild CHAIN, but the global reload broadcast still
+ *  hits it). Stash the "Added…" confirmation so it survives the reload instead of
+ *  vanishing the instant it appears. Session-scoped (mirrors the layout editor). */
+const SECTOR_ADD_STASH_KEY = 'encounterEditor.sectorAdded';
 
 const ARCHETYPE_IDS = Object.keys(ARCHETYPES) as Archetype[];
 const ENTRY_KINDS = ['wave', 'pick', 'loop', 'stages'] as const;
@@ -180,6 +198,11 @@ const revertBtn = mustQuery<HTMLButtonElement>('#revert-btn');
 const saveStatusEl = mustQuery<HTMLParagraphElement>('#save-status');
 const copyBtn = mustQuery<HTMLButtonElement>('#copy-btn');
 const downloadBtn = mustQuery<HTMLButtonElement>('#download-btn');
+// V2 placement — "add to sector" controls.
+const sectorChecksEl = mustQuery<HTMLDivElement>('#sector-checks');
+const sectorMinHopEl = mustQuery<HTMLInputElement>('#sector-minhop');
+const addToSectorsBtn = mustQuery<HTMLButtonElement>('#add-to-sectors-btn');
+const sectorAddStatusEl = mustQuery<HTMLParagraphElement>('#sector-add-status');
 
 const kindRadios = new Map<EncounterKind, HTMLInputElement>();
 const layoutChecks = new Map<string, HTMLInputElement>();
@@ -197,6 +220,8 @@ levelCapEl.value = String(levelCap);
 handSizeEl.value = String(handSize);
 rosterLevelsEl.value = rosterLevels.join(', ');
 selectEncounter(activeIndex);
+void loadSectorChecks();
+restoreAfterSectorAdd();
 
 function buildKindRadios(): void {
   kindEl.innerHTML = '';
@@ -341,6 +366,7 @@ function attachButtons(): void {
   newBtn.addEventListener('click', addEncounter);
   deleteBtn.addEventListener('click', deleteEncounter);
   saveBtn.addEventListener('click', () => void save());
+  addToSectorsBtn.addEventListener('click', () => void addCurrentEncounterToSectors());
   revertBtn.addEventListener('click', revert);
   copyBtn.addEventListener('click', () => {
     void navigator.clipboard.writeText(exportEl.value);
@@ -1067,6 +1093,134 @@ function option(value: string, label = value): HTMLOptionElement {
   o.value = value;
   o.textContent = label;
   return o;
+}
+
+// ---- Add to sector (V2 placement) ----
+// The sector owns its encounter pool (sector-owns-both), so this writes the
+// SECTOR file — the mirror of the layout editor's "add to sector" toggle.
+
+/** Fetch + JSON-parse the live config/sectors.json (the dev server serves it
+ *  statically). Fetching rather than importing keeps this page off sectors.json's
+ *  rebuild chain — though Vite still broadcasts a full-reload on a write (see
+ *  SECTOR_ADD_STASH_KEY), so the fetch buys decoupling, not a reload-free write. */
+async function fetchSectors(): Promise<SectorDef[]> {
+  const res = await fetch('/config/sectors.json');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as SectorDef[];
+}
+
+/** Render one checkbox per sector for the "add to sector pool" control. */
+async function loadSectorChecks(): Promise<void> {
+  try {
+    const sectors = await fetchSectors();
+    sectorChecksEl.innerHTML = '';
+    if (sectors.length === 0) {
+      sectorChecksEl.innerHTML = '<p class="hint">No sectors defined.</p>';
+      return;
+    }
+    for (const s of sectors) {
+      const label = document.createElement('label');
+      label.className = 'inline';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = s.id;
+      label.appendChild(cb);
+      label.append(` ${s.title || s.id}`);
+      sectorChecksEl.appendChild(label);
+    }
+  } catch (err) {
+    sectorChecksEl.innerHTML = `<p class="hint err">Could not load sectors: ${String(err)}</p>`;
+  }
+}
+
+/**
+ * Append the current encounter to each checked sector's pool and write the SECTOR
+ * file. The encounter must be a KNOWN id (saved to encounters.json) so the sector
+ * schema's encounter-ref guard accepts it — Save the encounter first; a pool
+ * already listing it is skipped (idempotent).
+ */
+async function addCurrentEncounterToSectors(): Promise<void> {
+  const id = encounter().id;
+  if (!ENCOUNTER_IDS.includes(id)) {
+    setSectorAddStatus(
+      `Save the encounter to config first — "${id}" isn't a committed encounter id yet, so a sector can't reference it.`,
+      'err',
+    );
+    return;
+  }
+  const chosen = Array.from(
+    sectorChecksEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked'),
+  ).map((cb) => cb.value);
+  if (chosen.length === 0) {
+    setSectorAddStatus('Pick at least one sector.', 'err');
+    return;
+  }
+  const raw = sectorMinHopEl.value.trim();
+  const minHop = raw === '' ? undefined : Number.parseInt(raw, 10);
+  if (minHop !== undefined && (!Number.isInteger(minHop) || minHop < 0)) {
+    setSectorAddStatus('Hop gate must be a non-negative whole number (or blank).', 'err');
+    return;
+  }
+  setSectorAddStatus('Saving…', 'hint');
+  try {
+    const sectors = await fetchSectors();
+    const { added, skipped } = addEncounterToSectorPools(sectors, id, chosen, minHop);
+    if (added.length === 0) {
+      setSectorAddStatus(`Already in: ${skipped.join(', ')}. Nothing to write.`, 'hint');
+      return;
+    }
+    const res = await fetch('/__save-config', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ file: 'sectors.json', content: formatSectorsJson(sectors) }),
+    });
+    const data: { ok?: boolean; error?: string } = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+      const skipNote = skipped.length > 0 ? ` (skipped, already present: ${skipped.join(', ')})` : '';
+      const status = `Added "${id}" to ${added.join(', ')}${skipNote}.`;
+      setSectorAddStatus(status, 'ok');
+      // The write triggers a Vite reload of this tab (see SECTOR_ADD_STASH_KEY) —
+      // stash the confirmation so the next boot re-shows it instead of a blank
+      // status that reads as "nothing happened".
+      try {
+        sessionStorage.setItem(SECTOR_ADD_STASH_KEY, JSON.stringify({ status }));
+      } catch {
+        // sessionStorage unavailable (private mode / quota) — non-fatal; the write
+        // still succeeded, the reload just won't auto-restore the status.
+      }
+    } else {
+      setSectorAddStatus(`Save failed: ${data.error ?? res.statusText}`, 'err');
+    }
+  } catch (err) {
+    setSectorAddStatus(`Save failed: ${String(err)} — is the dev server running?`, 'err');
+  }
+}
+
+function setSectorAddStatus(text: string, cls: 'hint' | 'ok' | 'err'): void {
+  sectorAddStatusEl.textContent = text;
+  sectorAddStatusEl.className = cls === 'hint' ? 'hint' : `hint ${cls}`;
+}
+
+/**
+ * Boot-time companion to the "add to sector" toggle: a successful pool write
+ * reloads this tab (see SECTOR_ADD_STASH_KEY), so re-show the stashed confirmation
+ * in the sector-add status line. A no-op on a normal cold boot.
+ */
+function restoreAfterSectorAdd(): void {
+  let stash: string | null = null;
+  try {
+    stash = sessionStorage.getItem(SECTOR_ADD_STASH_KEY);
+    if (stash) sessionStorage.removeItem(SECTOR_ADD_STASH_KEY);
+  } catch {
+    return; // sessionStorage unavailable — nothing to restore.
+  }
+  if (!stash) return;
+  try {
+    const { status } = JSON.parse(stash) as { status?: string };
+    if (status) setSectorAddStatus(status, 'ok');
+  } catch {
+    // Malformed stash — ignore.
+  }
 }
 
 // ---- Save / revert ----

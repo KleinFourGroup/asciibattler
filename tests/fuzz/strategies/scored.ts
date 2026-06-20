@@ -75,6 +75,8 @@ function kindWeight(kind: NodeKind, w: ScoredWeights): number {
       return w.path.battle;
     case 'rest':
       return w.path.rest;
+    case 'elite':
+      return w.path.elite; // W2 — the optional harder detour's route weight
     case 'boss':
       return 0; // forced terminal — no weight
   }

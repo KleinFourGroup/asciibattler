@@ -51,8 +51,8 @@ describe('sectors config — the shipped catalog', () => {
     // length feeds NodeMap.generate's hopCount — positive, matching today's map.
     expect(start!.length).toBeGreaterThan(0);
     // V1 pooled the launch catalog into The Start's fight pool; V2 commit C added
-    // the grammar-demo encounters; W pooled the boss (all ungated, uniform — the
-    // boss is filtered to the terminal boss node by kind, not by hop gate).
+    // the grammar-demo encounters; W1 pooled the boss, W2 the two elites (all
+    // ungated, uniform — each is filtered to its node kind, not by hop gate).
     expect(start!.encounters.map((e) => e.encounterId)).toEqual([
       'brigands',
       'highwaymen',
@@ -61,6 +61,8 @@ describe('sectors config — the shipped catalog', () => {
       'ronin-vs-mages',
       'adventurer-with-guards',
       'bandit-king',
+      'brigand-champions',
+      'warband-vanguard',
     ]);
   });
 

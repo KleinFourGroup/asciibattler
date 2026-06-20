@@ -49,13 +49,13 @@ export const STAT_KEYS = Object.keys(baseStatsForArchetype('mercenary')) as (key
 
 /**
  * Node kinds a path strategy can usefully target. `boss` is the forced terminal
- * (never a frontier choice), so it isn't a target. The single source of truth
- * for both the `path:<kind>` menu (`registry.ts`) and the scored strategy's path
- * weights (`scoredWeights.ts`). `as const` preserves the literal
- * `'battle' | 'rest'` element type, so a `Record` over it doesn't demand a
- * `boss` key.
+ * (never a frontier choice), so it isn't a target; `battle` / `rest` / `elite`
+ * (W2 — the optional harder detour) are the real route choices. The single
+ * source of truth for both the `path:<kind>` menu (`registry.ts`) and the scored
+ * strategy's path weights (`scoredWeights.ts`). `as const` preserves the literal
+ * element type, so a `Record` over it doesn't demand a `boss` key.
  */
-export const PATH_KINDS = ['battle', 'rest'] as const satisfies readonly NodeKind[];
+export const PATH_KINDS = ['battle', 'rest', 'elite'] as const satisfies readonly NodeKind[];
 
 // ---- node policies --------------------------------------------------------
 

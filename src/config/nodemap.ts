@@ -8,6 +8,12 @@
  * two rests (>= 2 = never on adjacent hops). Eligible hops are the middle
  * band only (never the first battle hop or the boss). The terminal is always
  * the boss; these knobs only govern rest placement.
+ *
+ * W2 — elite scatter: `eliteChance` / `eliteMinSpacing` mirror the rest knobs
+ * for the (optional, harder) elite node. Elites scatter over the same middle
+ * band, in a pass AFTER the rest scatter (so rest placement is unchanged), and
+ * never overwrite a rest. Middle hops are always >= 2 wide, so an elite always
+ * leaves a non-elite sibling — taking the elite is a route choice.
  */
 
 import { z } from 'zod';
@@ -22,6 +28,8 @@ const NodeMapSchema = z
     maxOutDegree: z.number().int().positive(),
     restChance: z.number().min(0).max(1),
     restMinSpacing: z.number().int().positive(),
+    eliteChance: z.number().min(0).max(1),
+    eliteMinSpacing: z.number().int().positive(),
   })
   .refine((c) => c.middleWidthMin <= c.middleWidthMax, {
     message: 'middleWidthMin must be <= middleWidthMax',

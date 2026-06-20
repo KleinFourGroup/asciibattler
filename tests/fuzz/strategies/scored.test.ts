@@ -26,7 +26,7 @@ import {
 
 function zeroWeights(): ScoredWeights {
   return {
-    path: { battle: 0, rest: 0 },
+    path: { battle: 0, rest: 0, elite: 0 },
     archetype: Object.fromEntries(ALL_ARCHETYPES.map((a) => [a, 0])) as Record<Archetype, number>,
     composition: Object.fromEntries(ALL_ARCHETYPES.map((a) => [a, 0])) as Record<Archetype, number>,
     compWeight: 0,
@@ -106,14 +106,14 @@ describe('scored path policy — full-path backward DP', () => {
 
   it('picks the frontier child leading to the max-total path, not the local max', () => {
     // battle=1, rest=0:  via 1 = b+r+r = 1 ; via 2 = r+b+b = 2  → node 2 wins.
-    const w: ScoredWeights = { ...zeroWeights(), path: { battle: 1, rest: 0 } };
+    const w: ScoredWeights = { ...zeroWeights(), path: { battle: 1, rest: 0, elite: 0 } };
     expect(scoredStrategy('dp', w).pickNextNode([1, 2], run, ANY_RNG)).toBe(2);
   });
 
   it('follows the weights: flip the sign and the other branch wins', () => {
     // rest=5, battle=0:  via 1 = r+b+b... rest@1? no — via 1 kinds are
     // battle,rest,rest = 0+5+5 = 10 ; via 2 = rest,battle,battle = 5+0+0 = 5.
-    const w: ScoredWeights = { ...zeroWeights(), path: { battle: 0, rest: 5 } };
+    const w: ScoredWeights = { ...zeroWeights(), path: { battle: 0, rest: 5, elite: 0 } };
     expect(scoredStrategy('dp', w).pickNextNode([1, 2], run, ANY_RNG)).toBe(1);
   });
 });

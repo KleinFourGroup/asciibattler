@@ -74,11 +74,11 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('every node kind is battle | rest | boss', () => {
+    it('every node kind is battle | rest | boss | elite', () => {
       for (let s = 0; s < 50; s++) {
         const map = generate(new RNG(s));
         for (const n of map.nodes) {
-          expect(['battle', 'rest', 'boss']).toContain(n.kind);
+          expect(['battle', 'rest', 'boss', 'elite']).toContain(n.kind);
         }
       }
     });
@@ -140,6 +140,84 @@ describe('NodeMap.generate', () => {
         for (let s = 0; s < 20; s++) {
           const map = generate(new RNG(s), { hopCount: fc });
           expect(map.nodes.some((n) => n.kind === 'rest')).toBe(false);
+        }
+      }
+    });
+  });
+
+  describe('node kinds (W2 — elite)', () => {
+    // Balance-proof: the spacing bound comes from the config the generator reads.
+    const { eliteMinSpacing } = NODE_MAP;
+
+    it('elite nodes only sit on eligible middle hops [2, hopCount-2]', () => {
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const lastHop = map.hops.length - 1;
+        for (const n of map.nodes) {
+          if (n.kind === 'elite') {
+            expect(n.hop).toBeGreaterThanOrEqual(2);
+            expect(n.hop).toBeLessThanOrEqual(lastHop - 1);
+          }
+        }
+      }
+    });
+
+    it('at most one elite per hop, and elite hops respect the min spacing', () => {
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const perHop = new Map<number, number>();
+        for (const n of map.nodes) {
+          if (n.kind === 'elite') perHop.set(n.hop, (perHop.get(n.hop) ?? 0) + 1);
+        }
+        for (const count of perHop.values()) expect(count).toBe(1);
+        const eliteHops = [...perHop.keys()].sort((a, b) => a - b);
+        for (let i = 1; i < eliteHops.length; i++) {
+          expect(eliteHops[i]! - eliteHops[i - 1]!).toBeGreaterThanOrEqual(eliteMinSpacing);
+        }
+      }
+    });
+
+    it('elite scatter is reachable: some seeds produce at least one elite', () => {
+      let withElite = 0;
+      for (let s = 0; s < 100; s++) {
+        if (generate(new RNG(s)).nodes.some((n) => n.kind === 'elite')) withElite++;
+      }
+      expect(withElite).toBeGreaterThan(0);
+    });
+
+    it('an elite always leaves a non-elite sibling on its hop (an optional detour)', () => {
+      // Middle hops are >= MIDDLE_WIDTH_MIN (>= 2) wide and host at most one
+      // elite, so there is always a non-elite node to route to instead — the
+      // elite is never forced. (Also implies an elite never sat on a width-1 hop.)
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        for (const n of map.nodes) {
+          if (n.kind !== 'elite') continue;
+          const siblings = map.hops[n.hop]!.map((id) => nodeById(map, id));
+          expect(siblings.some((sib) => sib.kind !== 'elite')).toBe(true);
+        }
+      }
+    });
+
+    it('elite nodes stay root-reachable and co-reachable to the boss', () => {
+      for (let s = 0; s < 50; s++) {
+        const map = generate(new RNG(s));
+        const fromRoot = reachableFrom(map, map.rootId);
+        const toBoss = coReachableTo(map, map.terminalId);
+        for (const n of map.nodes) {
+          if (n.kind === 'elite') {
+            expect(fromRoot.has(n.id)).toBe(true);
+            expect(toBoss.has(n.id)).toBe(true);
+          }
+        }
+      }
+    });
+
+    it('hopCount <= 3 produces no elite nodes (empty eligible band)', () => {
+      for (const fc of [1, 2, 3]) {
+        for (let s = 0; s < 20; s++) {
+          const map = generate(new RNG(s), { hopCount: fc });
+          expect(map.nodes.some((n) => n.kind === 'elite')).toBe(false);
         }
       }
     });

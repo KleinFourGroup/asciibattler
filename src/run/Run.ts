@@ -214,8 +214,13 @@ export interface BattleEncounter {
  *  reproduction (`selectedEncounterId: 'reproduction'`) was retired — encounters
  *  are now selected from `config/encounters.json` (ids `brigands`/`highwaymen`/
  *  `deserters`). A v21 save holding `'reproduction'` would resolve to no encounter
- *  → reject rather than rehydrate a broken run. */
-const RUN_SCHEMA_VERSION = 22;
+ *  → reject rather than rehydrate a broken run.
+ *  W2: bumped 22→23. Elite map-nodes: `NodeMap.generate` now scatters `elite`
+ *  nodes through the middle hops (a new RNG pass), so the persisted `nodeMap`
+ *  for a given seed differs from a v22 map, and a node can now carry the new
+ *  `elite` kind. A v22 save's map predates the elite scatter → reject rather
+ *  than rehydrate a run whose map disagrees with the current generator. */
+const RUN_SCHEMA_VERSION = 23;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the

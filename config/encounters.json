@@ -258,5 +258,58 @@
         ]
       }
     ]
+  },
+  {
+    "id": "brigand-champions",
+    "name": "Brigand Champions",
+    "description": "The road's hardened best — fewer blades than a raid, but every one a veteran, with a ronin at their head. A tougher fight for the bold who take the detour.",
+    "healthPool": 12,
+    "kind": "elite",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.35 },
+              "count": { "kind": "hand", "factor": 1.25 },
+              "units": [
+                { "archetype": "bandit", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "ronin", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "warband-vanguard",
+    "name": "Warband Vanguard",
+    "description": "A combined-arms strike team — seasoned mercenaries screening their archers, a battle-mage lobbing fire from the rear. The detour that earns its keep.",
+    "healthPool": 12,
+    "kind": "elite",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.35 },
+              "count": { "kind": "hand", "factor": 1.25 },
+              "units": [
+                { "archetype": "mercenary", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "mage", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -379,6 +379,14 @@ body {
   text-shadow: 0 0 4px #33ff00, 0 0 9px #33ff00;
 }
 
+/* W2 — elite nodes: an optional, harder fight. NEON_PURPLE (the palette's
+   long-reserved rare/elite hue) so the `*` reads as "dangerous detour" against
+   the green rests + red boss during route planning. */
+.map-node.elite {
+  color: #9d00ff; /* NEON_PURPLE */
+  text-shadow: 0 0 4px #9d00ff, 0 0 9px #9d00ff;
+}
+
 /* RecruitScreen (Step 4.4). Full-overlay modal that appears between
    victory and the next map screen. Cards are clickable; clicking emits
    recruit:chosen and Game swaps back to MapScreen. */

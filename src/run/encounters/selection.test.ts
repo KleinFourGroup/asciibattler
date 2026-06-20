@@ -60,19 +60,21 @@ const CATALOG: Record<string, Encounter> = {
   a: enc('a', 'normal'),
   b: enc('b', 'normal', ['river']),
   boss1: enc('boss1', 'boss'),
+  elite1: enc('elite1', 'elite'),
 };
 const resolve: EncounterResolver = (id) => CATALOG[id];
 
 const battle = { hop: 0, nodeKind: 'battle' as const };
 
 describe('encounterKindFor', () => {
-  it('maps battle → normal and boss → boss (W)', () => {
+  it('maps battle → normal, boss → boss (W1), elite → elite (W2)', () => {
     expect(encounterKindFor('battle')).toBe('normal');
     expect(encounterKindFor('boss')).toBe('boss');
+    expect(encounterKindFor('elite')).toBe('elite');
   });
 });
 
-describe('selectEncounter — boss nodes (W)', () => {
+describe('selectEncounter — boss nodes (W1)', () => {
   const pick = getSelectionStrategy('encounterFirst');
   const bossNode = { hop: 4, nodeKind: 'boss' as const };
 
@@ -86,6 +88,26 @@ describe('selectEncounter — boss nodes (W)', () => {
   it('throws when the boss node has no boss encounter in the pool', () => {
     const s = sector([{ layoutId: 'river' }], [{ encounterId: 'a' }]);
     expect(() => pick(s, bossNode, new RNG(1), resolve)).toThrow(/no 'boss' encounter/);
+  });
+});
+
+describe('selectEncounter — elite nodes (W2)', () => {
+  const pick = getSelectionStrategy('encounterFirst');
+  const eliteNode = { hop: 4, nodeKind: 'elite' as const };
+
+  it('selects only an elite-kind encounter at an elite node (normal + boss filtered out)', () => {
+    const s = sector(
+      [{ layoutId: 'river' }],
+      [{ encounterId: 'a' }, { encounterId: 'boss1' }, { encounterId: 'elite1' }],
+    );
+    for (let seed = 0; seed < 25; seed++) {
+      expect(pick(s, eliteNode, new RNG(seed), resolve).encounter.id).toBe('elite1');
+    }
+  });
+
+  it('throws when the elite node has no elite encounter in the pool', () => {
+    const s = sector([{ layoutId: 'river' }], [{ encounterId: 'a' }, { encounterId: 'boss1' }]);
+    expect(() => pick(s, eliteNode, new RNG(1), resolve)).toThrow(/no 'elite' encounter/);
   });
 });
 

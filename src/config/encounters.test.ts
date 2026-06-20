@@ -78,7 +78,7 @@ const base = {
 };
 
 describe('encounters schema', () => {
-  it('ships the catalog: the V1 anchors, the V2 grammar demos, and the W boss', () => {
+  it('ships the catalog: the V1 anchors, the V2 grammar demos, the W1 boss, the W2 elites', () => {
     expect(ENCOUNTER_IDS).toEqual([
       // V1 anchors (loop → wave).
       'brigands',
@@ -88,13 +88,22 @@ describe('encounters schema', () => {
       'artillery',
       'ronin-vs-mages',
       'adventurer-with-guards',
-      // W — the boss (the stages grammar).
+      // W1 — the boss (the stages grammar).
       'bandit-king',
+      // W2 — the elite detours (harder optional fights).
+      'brigand-champions',
+      'warband-vanguard',
     ]);
-    // The road fights are `normal`; the W boss is the lone `boss`-kind encounter.
-    // (No `elite` ships yet — elite map-nodes are deferred.)
+    // Every `kind` value is now exercised by shipped content: the road fights are
+    // `normal`, the lone `boss` is the terminal fight, the `elite` detours are
+    // the optional harder fights.
+    const expectedKind: Record<string, string> = {
+      'bandit-king': 'boss',
+      'brigand-champions': 'elite',
+      'warband-vanguard': 'elite',
+    };
     for (const e of ENCOUNTERS) {
-      expect(e.kind).toBe(e.id === 'bandit-king' ? 'boss' : 'normal');
+      expect(e.kind).toBe(expectedKind[e.id] ?? 'normal');
     }
   });
 

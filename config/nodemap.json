@@ -5,5 +5,7 @@
   "targetTotalMax": 50,
   "maxOutDegree": 3,
   "restChance": 0.35,
-  "restMinSpacing": 2
+  "restMinSpacing": 2,
+  "eliteChance": 0.25,
+  "eliteMinSpacing": 2
 }

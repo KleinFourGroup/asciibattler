@@ -23,7 +23,7 @@ import { CardListButton } from './CardListModal';
  * rendered as `@` separately (the run's origin marker), so it's not keyed
  * here. `Record<NodeKind, …>` keeps this exhaustive if the union grows.
  */
-const KIND_GLYPH: Record<NodeKind, string> = { battle: 'X', rest: 'Z', boss: '!' };
+const KIND_GLYPH: Record<NodeKind, string> = { battle: 'X', rest: 'Z', boss: '!', elite: '*' };
 
 /**
  * Vertical pixels allotted per hop on the scrollable board. The board height

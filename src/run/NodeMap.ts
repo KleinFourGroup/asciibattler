@@ -1,9 +1,10 @@
 /**
  * Run-level node map: a layered DAG the player traverses one hop at a time.
- * Node kinds (G3): the terminal is a `boss` (a regular fight for now, tagged so
- * future mechanics have a hook); `rest` nodes scatter through the middle hops
- * (a non-combat XP grant — see `Run.resolveRest`); everything else is a
- * `battle`. A full event system (shop / elite / etc.) is still future work.
+ * Node kinds: the terminal is a `boss` (G3); `rest` nodes scatter through the
+ * middle hops (a non-combat XP grant — see `Run.resolveRest`, G3); `elite` nodes
+ * also scatter the middle hops (W2 — an optional, harder fight, selected from
+ * the sector's elite encounter pool); everything else is a `battle`. A full
+ * event system (shop / etc.) is still future work.
  *
  * Layout (G2): `HOP_COUNT` hops total. Hop 0 and the last hop are
  * single nodes (root / terminal). Middle hops are `MIDDLE_WIDTH_MIN`..
@@ -30,18 +31,21 @@
  * systematically rightward; see git history if the funkier look is ever
  * wanted back.)
  *
- * Seed-stability contract: draws happen **widths → edges → kinds** (G3). The
+ * Seed-stability contract: draws happen **widths → edges → kinds**. The
  * width loop runs first; then per hop pair the parent sweep (each parent
  * **`a` before `b`**) followed by a single **mirror bit** (only when both
  * hops are wider than 1); then the rest-kind scatter pass (one draw per
- * eligible middle hop, plus a node-pick draw only when a rest is placed).
- * The kinds pass runs **after** the full structure is built and appends its
+ * eligible middle hop, plus a node-pick draw only when a rest is placed);
+ * then **W2** the elite-kind scatter pass (same shape, appended AFTER rest).
+ * The kinds passes run **after** the full structure is built and append their
  * draws at the tail, so the width+edge stream — and thus the map *structure*
- * for any seed — is byte-identical to the pre-G3 generator; only which nodes
- * carry the `rest`/`boss` kind is new. (Gameplay still shifts, since rests
- * replace battles on some paths → expected fuzz/determinism baseline reset.)
- * The number and order of RNG draws *is* the seed→map mapping; reordering
- * them silently remaps every seed.
+ * for any seed — is byte-identical to the pre-G3 generator. The elite pass
+ * comes strictly after the rest pass, so rest placement is byte-identical to
+ * pre-W2 too; only which nodes carry the `elite` kind is new. (Gameplay still
+ * shifts, since rests/elites replace battles on some paths → expected
+ * fuzz/determinism baseline reset, folded into Phase X.) The number and order
+ * of RNG draws *is* the seed→map mapping; reordering them silently remaps
+ * every seed.
  *
  * NB: no max-*in*-degree is assumed. Boundary children may collect several
  * parents (the merges/diamonds that give the map variety). Adding an in-degree
@@ -53,7 +57,7 @@ import { RNG } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
 import type { RunConfig } from './RunConfig';
 
-export type NodeKind = 'battle' | 'rest' | 'boss';
+export type NodeKind = 'battle' | 'rest' | 'boss' | 'elite';
 
 /**
  * S2 — the "pre-root" start position. A run begins here (no node entered yet),
@@ -93,6 +97,8 @@ const {
   maxOutDegree: MAX_OUT_DEGREE,
   restChance: REST_CHANCE,
   restMinSpacing: REST_MIN_SPACING,
+  eliteChance: ELITE_CHANCE,
+  eliteMinSpacing: ELITE_MIN_SPACING,
 } = NODE_MAP;
 
 export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number): NodeMap {
@@ -236,6 +242,27 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
       lastRestHop = f;
     }
   }
+  // W2 elite kinds — a SECOND tail pass, AFTER the rest scatter, so the rest
+  // draws (and thus rest placement) are byte-identical to pre-W2; only the elite
+  // draws are new, appended at the tail. Same eligible band + per-hop roll +
+  // min-spacing as rest, but the candidate set EXCLUDES the hop's rest node, so
+  // an elite never overwrites a rest. Middle hops are >= MIDDLE_WIDTH_MIN (>= 2)
+  // wide, so picking one node always leaves a non-elite sibling — the elite is
+  // an OPTIONAL harder fight, routable around (genre-standard). A hop with no
+  // non-rest candidate places no elite (and leaves `lastEliteHop` unmoved).
+  const eliteIds = new Set<number>();
+  let lastEliteHop = -Infinity;
+  for (let f = 2; f <= hopCount - 2; f++) {
+    const roll = rng.next();
+    if (roll < ELITE_CHANCE && f - lastEliteHop >= ELITE_MIN_SPACING) {
+      const ids = hops[f]!.filter((id) => !restIds.has(id));
+      if (ids.length > 0) {
+        const pick = ids[rng.int(0, ids.length - 1)]!;
+        eliteIds.add(pick);
+        lastEliteHop = f;
+      }
+    }
+  }
   // hopCount === 1 degenerates to root == terminal: `bossId` is the root, so
   // the single node is tagged `boss` — the player's one fight IS the boss, and
   // the map renderer shows its `!` kind glyph (S2 dropped the root `@`-override,
@@ -245,7 +272,9 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
       ? { ...n, kind: 'boss' }
       : restIds.has(n.id)
         ? { ...n, kind: 'rest' }
-        : n,
+        : eliteIds.has(n.id)
+          ? { ...n, kind: 'elite' }
+          : n,
   );
 
   return {
@@ -277,6 +306,7 @@ export function dump(map: NodeMap): string {
       if (id === map.terminalId) return `${id}(boss)`;
       const node = map.nodes.find((n) => n.id === id);
       if (node?.kind === 'rest') return `${id}(rest)`;
+      if (node?.kind === 'elite') return `${id}(elite)`;
       return String(id);
     });
     lines.push(`  Hop ${f}: ${labeled.join(', ')}`);

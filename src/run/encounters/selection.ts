@@ -57,14 +57,15 @@ type SelectionStrategy = (
 
 /**
  * Which encounter kind a map node fights. A `battle` node fights a `normal`
- * encounter; a `boss` node (the sector terminal) fights a `boss` encounter (W —
- * the catalog now ships one, so the boss node draws only from the sector's boss
- * pool). (`elite` map-nodes → `'elite'` is deferred until elite nodes land.)
- * `rest` nodes never fight, so they never reach selection.
+ * encounter; a `boss` node (the sector terminal) fights a `boss` encounter (W1);
+ * an `elite` node (a scattered, optional middle-hop fight) draws from the
+ * sector's `elite` pool (W2). `rest` nodes never fight, so they never reach
+ * selection.
  */
 const KIND_BY_NODE: Record<NodeKind, EncounterKind> = {
   battle: 'normal',
-  boss: 'boss', // W: the terminal boss node selects from the boss pool
+  boss: 'boss', // W1: the terminal boss node selects from the boss pool
+  elite: 'elite', // W2: an elite node selects from the elite pool
   rest: 'normal', // rest nodes never fight; defensive default
 };
 
@@ -168,8 +169,10 @@ export function selectEncounter(
   return STRATEGIES[SELECTION.strategy](sector, ctx, rng, resolve);
 }
 
-/** Map-node kinds that select an encounter (rest nodes never fight). */
-const FIGHTING_NODE_KINDS: readonly NodeKind[] = ['battle', 'boss'];
+/** Map-node kinds that select an encounter (rest nodes never fight). The
+ *  coverage guard requires every sector to fill all of these at every hop —
+ *  so a sector must pool ≥ 1 normal, boss, AND elite encounter (W2). */
+const FIGHTING_NODE_KINDS: readonly NodeKind[] = ['battle', 'boss', 'elite'];
 
 /**
  * Boot/editor guard (the A4 loud-failure pattern): every (sector, reachable hop,

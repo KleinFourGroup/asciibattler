@@ -702,6 +702,66 @@ single-node/`@`-style treatment from G3 preserved (recommend yes — unchanged).
 
 ---
 
+## Phase Wb — QoL + the per-kind sector pool (a pre-X polish interstitial)
+
+A small quality-of-life + authoring-clarity interstitial between W and X — four
+user-requested items landed **before** the Phase-X band re-derivation, so the
+sector authoring schema is settled before any tuning starts. The lettered-`b`
+convention follows **Phase Qb** (the deferred-bug interstitial after Q). **No
+`RunSnapshot` bump** for the whole phase: Wb1 adds a presentation-event field, and
+Wb4 reshapes *config*, not persisted run state.
+
+### Wb1 — the encounter name on the pre-turn screen
+
+**Shape:** the pre-turn screen names the turn + hop + battlefield but NOT the
+encounter, so the player must guess the fight on turn 1. The HUD already surfaces
+`encounter.name` ([HUD.ts](src/ui/HUD.ts)); the pre-turn screen doesn't. Add an
+`encounter: { name, kind }` field to the `turn:starting` payload
+([events.ts](src/core/events.ts)), populated from `Run.selectedEncounter` at the
+`startNextTurn` emit ([Run.ts](src/run/Run.ts)), and render a styled name line in
+[PreTurnScreen.ts](src/ui/PreTurnScreen.ts) (above the Hop line; elite/boss badged
+so the stakes read). **Render-observable → browser-verify.** No snapshot bump
+(presentation event only).
+
+### Wb2 — the encounter editor's add-to-sector reload restores the active tab
+
+**Shape:** saving an encounter into a sector triggers a Vite full-reload (the
+`sectors.json` import has no HMR boundary), which reboots the editor to the first
+tab (`activeIndex 0`) — losing the encounter you were editing. The "Save to config"
+path already solves this: it stashes `{ savedId, status }` and `restoreAfterSave()`
+re-selects the tab. The "add to sector" path stashes only `{ status }`. Fix: stash
+the active id too + re-select it on boot, mirroring the save path exactly
+([editor.ts](tools/encounter-editor/editor.ts)). Dev-tool only.
+
+### Wb3 — the "← Tools" link on every dev tool
+
+**Shape:** only the encounter editor carries the `← Tools` home link back to the
+tools index; the other six tools (sector / layout / archetype editors, run-config,
+sweep-gui, mapgen-prototype) have none. Add the same
+`<a class="home" href="/tools/">← Tools</a>` to each header, matching the existing
+markup + CSS. Dev-tool only, cosmetic.
+
+### Wb4 — split the sector encounter pool by kind
+
+**Shape (USER-LOCKED — keyed object):** today a sector owns ONE mixed `encounters`
+array, kind-filtered at selection time ([selection.ts](src/run/encounters/selection.ts)).
+Split it into a keyed object `encounters: { normal: [...], elite: [...], boss:
+[...] }`, typed as an exhaustive `Record<EncounterKind, SectorEncounterEntry[]>`
+(a future kind is then compiler-forced, à la the node-glyph Record). The placement
+intent reads at a glance and per-kind weighting becomes intuitive (the user's
+rationale). Touches: the schema + guards ([sectors.ts](src/config/sectors.ts) — the
+encounter-ref guard, a **new kind-consistency guard** [an entry under `boss` must
+reference a `kind:'boss'` encounter], and the coverage guard now reads the per-kind
+list directly), `encounterPoolAtHop(sector, hop, kind)`, `selection.ts`
+(`eligibleEncounters` draws the kind's list — the kind filter becomes structural),
+[config/sectors.json](config/sectors.json) (split "The Start"'s encounters into the
+three lists), the sector editor's pool section + roll-% preview, the encounter
+editor's add-to-sector toggle ([poolEdit.ts](tools/sector-editor/poolEdit.ts) routes
+by the encounter's kind), the format emitters, and the headless tests. **Config,
+not run state → no snapshot bump.** Headless-first.
+
+---
+
 ## Phase X — Balance re-derivation + per-encounter telemetry
 
 The closer. The authored model replaced the random generator, so the band is

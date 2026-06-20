@@ -702,7 +702,19 @@ single-node/`@`-style treatment from G3 preserved (recommend yes — unchanged).
 
 ---
 
-## Phase Wb — QoL + the per-kind sector pool (a pre-X polish interstitial)
+## Phase Wb — QoL + the per-kind sector pool ✅ COMPLETE (`9ea338e` Wb1 · `427d57d` Wb2 · `51fd160` Wb3 · `c99ab3f` Wb4)
+
+> **DONE (2026-06-20).** Four user-requested QoL + authoring-clarity items, landed
+> before Phase X. **Wb1** the encounter NAME on the pre-turn screen (a `turn:starting`
+> `encounter:{name,kind}` field → a styled headline line, elite/boss badged) —
+> ✅ user-confirmed. **Wb2** the encounter editor's add-to-sector reload restores
+> the active tab (stash the active id, mirror the Save path). **Wb3** the `← Tools`
+> home link on every dev tool (palette-matched per tool). **Wb4** split the sector
+> fight pool into a per-kind `encounters: { normal, elite, boss }` object (exhaustive
+> `Record<EncounterKind, …>`; new kind-consistency guard; `encounterPoolAtHop` takes
+> a kind; both editors reworked). **No `RunSnapshot` bump** (Wb1 = a presentation
+> field; Wb4 = config shape). 1182 main + 205 fuzz:smoke green. The original plan
+> follows.
 
 A small quality-of-life + authoring-clarity interstitial between W and X — four
 user-requested items landed **before** the Phase-X band re-derivation, so the

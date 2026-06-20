@@ -122,8 +122,10 @@ const SAVE_STASH_KEY = 'encounterEditor.justSaved';
  *  by src/config/sectors.ts with no HMR boundary, so Vite broadcasts a full-reload
  *  to every connected dev client — including this one (the fetch-not-import choice
  *  keeps editor.ts off the rebuild CHAIN, but the global reload broadcast still
- *  hits it). Stash the "Added…" confirmation so it survives the reload instead of
- *  vanishing the instant it appears. Session-scoped (mirrors the layout editor). */
+ *  hits it). Stash the "Added…" confirmation AND the active encounter id so both
+ *  survive the reload — the status instead of vanishing the instant it appears,
+ *  the tab instead of snapping back to encounter #0. Session-scoped (mirrors the
+ *  layout editor). */
 const SECTOR_ADD_STASH_KEY = 'encounterEditor.sectorAdded';
 
 const ARCHETYPE_IDS = Object.keys(ARCHETYPES) as Archetype[];
@@ -1191,10 +1193,11 @@ async function addCurrentEncounterToSectors(): Promise<void> {
       const status = `Added "${id}" to ${added.join(', ')}${skipNote}.`;
       setSectorAddStatus(status, 'ok');
       // The write triggers a Vite reload of this tab (see SECTOR_ADD_STASH_KEY) —
-      // stash the confirmation so the next boot re-shows it instead of a blank
-      // status that reads as "nothing happened".
+      // stash the confirmation AND the active encounter id so the next boot
+      // re-shows the status and re-selects the tab we were editing (otherwise the
+      // reload reboots to encounter #0, losing it — mirrors the Save path).
       try {
-        sessionStorage.setItem(SECTOR_ADD_STASH_KEY, JSON.stringify({ status }));
+        sessionStorage.setItem(SECTOR_ADD_STASH_KEY, JSON.stringify({ status, activeId: id }));
       } catch {
         // sessionStorage unavailable (private mode / quota) — non-fatal; the write
         // still succeeded, the reload just won't auto-restore the status.
@@ -1255,7 +1258,15 @@ function restoreAfterSectorAdd(): void {
   }
   if (!stash) return;
   try {
-    const { status } = JSON.parse(stash) as { status?: string };
+    const { status, activeId } = JSON.parse(stash) as { status?: string; activeId?: string };
+    // Wb2 — re-select the tab we were editing (the Vite full-reload otherwise
+    // reboots to encounter #0, losing it). Robust to a missing/stale id (the
+    // file could have been hand-edited between write and reload) — mirrors
+    // restoreAfterSave.
+    if (activeId) {
+      const idx = working.findIndex((e) => e.id === activeId);
+      if (idx >= 0) selectEncounter(idx);
+    }
     if (status) setSectorAddStatus(status, 'ok');
   } catch {
     // Malformed stash — ignore.

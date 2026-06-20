@@ -249,6 +249,24 @@ textarea:focus {
   padding: 6px 8px;
 }
 
+/* Wb4 — one per-kind sub-section in the encounter pools (normal / elite / boss):
+   a label, its rows, and its own "+ Add" button. */
+.pool-kind {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pool-kind-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pool-kind-add {
+  align-self: flex-start;
+}
+
 .pool-layout {
   min-width: 12rem;
 }
@@ -316,6 +334,20 @@ textarea:focus {
 .preview dd.muted {
   color: var(--muted);
   opacity: 0.6;
+}
+
+/* Wb4 — a full-width kind sub-header inside the encounter preview grid. */
+.preview dt.preview-kind {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.preview dt.preview-kind:first-child {
+  margin-top: 0;
 }
 
 /* ---- Validation ---- */

@@ -78,14 +78,16 @@ interface EligibleEntry {
   readonly encounter: Encounter;
 }
 
-/** The sector's hop-gated fight pool, resolved + kept to encounters of `kind`. */
+/** The sector's hop-gated fight pool OF `kind` (Wb4 — the pool is now per-kind),
+ *  resolved; the `=== kind` check stays as a defensive guard against a hand-edited
+ *  bucket the schema's kind-consistency guard would otherwise have rejected. */
 function eligibleEncounters(
   sector: SectorDef,
   hop: number,
   kind: EncounterKind,
   resolve: EncounterResolver,
 ): EligibleEntry[] {
-  return encounterPoolAtHop(sector, hop)
+  return encounterPoolAtHop(sector, hop, kind)
     .map((entry) => ({ entry, encounter: resolve(entry.encounterId) }))
     .filter((x): x is EligibleEntry => x.encounter !== undefined && x.encounter.kind === kind);
 }

@@ -11,6 +11,7 @@
  */
 
 import type { SectorDef } from '../../src/config/sectors';
+import type { EncounterKind } from '../../src/config/encounters';
 
 export interface PoolAddResult {
   /** Labels (title, falling back to id) of sectors the item was appended to. */
@@ -51,15 +52,18 @@ export function addLayoutToSectorPools(
  * Append `encounterId` (with an optional `minHop` gate) to each named sector's
  * ENCOUNTER pool, **mutating the passed `sectors` in place** — the V2 placement
  * mirror of `addLayoutToSectorPools` (same append / skip / hop-gate semantics on
- * the fight pool). A pool that already lists the encounter is skipped (idempotent
- * — never a duplicate entry); an unknown sector id is ignored. Returns which
- * sectors were added-to vs skipped, by label. The caller must ensure
- * `encounterId` is a committed `ENCOUNTER_IDS` member before writing — the sector
- * schema's encounter-ref guard rejects an unknown id at boot.
+ * the fight pool). Wb4 made the fight pool per-kind, so the entry is routed into
+ * the `kind` bucket (the encounter's own kind — the caller passes it). A bucket
+ * that already lists the encounter is skipped (idempotent — never a duplicate
+ * entry); an unknown sector id is ignored. Returns which sectors were added-to vs
+ * skipped, by label. The caller must ensure `encounterId` is a committed
+ * `ENCOUNTER_IDS` member of kind `kind` before writing — the sector schema's
+ * encounter-ref + kind-consistency guards reject a bad id/kind at boot.
  */
 export function addEncounterToSectorPools(
   sectors: SectorDef[],
   encounterId: string,
+  kind: EncounterKind,
   sectorIds: readonly string[],
   minHop?: number,
 ): PoolAddResult {
@@ -69,11 +73,12 @@ export function addEncounterToSectorPools(
     const sector = sectors.find((s) => s.id === sectorId);
     if (!sector) continue;
     const label = sector.title || sector.id;
-    if (sector.encounters.some((e) => e.encounterId === encounterId)) {
+    const pool = sector.encounters[kind];
+    if (pool.some((e) => e.encounterId === encounterId)) {
       skipped.push(label);
       continue;
     }
-    sector.encounters.push(minHop === undefined ? { encounterId } : { encounterId, minHop });
+    pool.push(minHop === undefined ? { encounterId } : { encounterId, minHop });
     added.push(label);
   }
   return { added, skipped };

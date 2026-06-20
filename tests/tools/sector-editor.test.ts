@@ -52,14 +52,18 @@ describe('formatSectorsJson', () => {
           { layoutId: 'labyrinth', minHop: 2 },
           { layoutId: 'river' },
         ],
-        encounters: [],
+        encounters: { normal: [], elite: [], boss: [] },
       },
     ]);
     expect(formatted).toContain('{ "layoutId": "procedural", "weight": 2 }');
     expect(formatted).toContain('{ "layoutId": "labyrinth", "minHop": 2 }');
     expect(formatted).toContain('{ "layoutId": "river" }');
-    // The fight pool is a first-class slot — always emitted, `[]` when empty.
-    expect(formatted).toContain('"encounters": []');
+    // The fight pool is a first-class per-kind object — every kind list always
+    // emits, `[]` when empty (Wb4).
+    expect(formatted).toContain('"encounters": {');
+    expect(formatted).toContain('"normal": []');
+    expect(formatted).toContain('"elite": []');
+    expect(formatted).toContain('"boss": []');
   });
 
   it('emits a populated encounter pool inline, mirroring the layout pool', () => {
@@ -71,14 +75,17 @@ describe('formatSectorsJson', () => {
         length: 3,
         theme: 'default',
         layouts: [{ layoutId: 'procedural' }],
-        encounters: [
-          { encounterId: 'brigands' },
-          { encounterId: 'ambush', minHop: 1, weight: 2 },
-        ],
+        encounters: {
+          normal: [{ encounterId: 'brigands' }],
+          elite: [{ encounterId: 'ambush', minHop: 1, weight: 2 }],
+          boss: [],
+        },
       },
     ]);
-    expect(formatted).toContain('"encounters": [');
+    expect(formatted).toContain('"normal": [');
     expect(formatted).toContain('{ "encounterId": "brigands" }');
+    expect(formatted).toContain('"elite": [');
     expect(formatted).toContain('{ "encounterId": "ambush", "minHop": 1, "weight": 2 }');
+    expect(formatted).toContain('"boss": []');
   });
 });

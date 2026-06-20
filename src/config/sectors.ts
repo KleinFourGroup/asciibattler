@@ -17,15 +17,17 @@
  *     reserved seam — uniform selection ships now (T1 decision: sentinel +
  *     uniform), `weight` lets a future tuning pass bias the pool without a
  *     schema migration.
- *   - `encounters` — the sector's fight POOL: a list of `{ encounterId, minHop?,
- *     weight? }`, the *placement/pacing* half of the encounter model (the
- *     **sector-owns-both** data-model decision, pre-V). Mirrors `layouts` exactly
- *     — each entry references a catalog encounter, optionally hop-gated + weighted
- *     — so a sector is the single authority for "what's here" (both boards and
- *     fights). Ships `[]` (the catalog is empty until Phase V); V1 selects from
- *     this pool (filtered by node kind + the encounter's layout fit). An
- *     encounter no longer carries a `sectors`/`minHop` field — placement is a
- *     region concern. `.default([])` means an absent key still parses.
+ *   - `encounters` — the sector's fight POOL, the *placement/pacing* half of the
+ *     encounter model (the **sector-owns-both** data-model decision, pre-V).
+ *     Split **by kind** (Wb4): `{ normal, elite, boss }`, each a list of
+ *     `{ encounterId, minHop?, weight? }` — so a boss/elite pool is visibly its
+ *     own list and per-kind weighting reads at a glance, rather than one mixed
+ *     array kind-filtered at selection time. Each entry references a catalog
+ *     encounter, optionally hop-gated + weighted; selection draws the bucket
+ *     matching the node's kind (`encounterKindFor(nodeKind)`), then filters by the
+ *     encounter's layout fit. An encounter no longer carries a `sectors`/`minHop`
+ *     field — placement is a region concern. An absent `encounters` key (or a
+ *     missing kind bucket) defaults to empty, so older/partial JSON still parses.
  *
  * **Procedural is a reserved `layoutId` sentinel** (`PROCEDURAL_LAYOUT_ID`)
  * sitting in the pool alongside real layout ids — no special-casing in the pool
@@ -49,7 +51,7 @@
 import { z } from 'zod';
 import sectorsJson from '../../config/sectors.json';
 import { LAYOUT_IDS, ThemeSchema } from './layouts';
-import { ENCOUNTER_IDS } from './encounters';
+import { ENCOUNTER_KINDS, getEncounter, type EncounterKind } from './encounters';
 
 /**
  * The reserved pool sentinel that means "roll a procedural battlefield" — the
@@ -92,6 +94,33 @@ const SectorEncounterEntrySchema = z.object({
 
 export type SectorEncounterEntry = z.infer<typeof SectorEncounterEntrySchema>;
 
+/** Fresh, all-empty per-kind fight pools — the default when a sector omits
+ *  `encounters` entirely. An exhaustive literal: a new `EncounterKind` is
+ *  compiler-forced to add its bucket here. */
+function emptyEncounterPools(): Record<EncounterKind, SectorEncounterEntry[]> {
+  return { normal: [], elite: [], boss: [] };
+}
+
+/**
+ * The sector's fight pool, split **by kind** (Wb4): one `{ encounterId, minHop?,
+ * weight? }[]` list per `EncounterKind`, so per-kind authoring + weighting reads
+ * at a glance (a boss/elite pool is visibly its own list, not mixed in with the
+ * normal fights). Built from `ENCOUNTER_KINDS` so the object is an exhaustive
+ * `Record<EncounterKind, …>` — a future kind is compiler-forced to add its bucket
+ * (mirrors the node-glyph Record). Each list `.default([])` (a partial object
+ * fills the missing kinds); the whole object defaults to all-empty so an absent
+ * `encounters` key still parses.
+ */
+const SectorEncounterPoolsSchema = z
+  .object(
+    Object.fromEntries(
+      ENCOUNTER_KINDS.map((k) => [k, z.array(SectorEncounterEntrySchema).default([])]),
+    ) as Record<EncounterKind, z.ZodDefault<z.ZodArray<typeof SectorEncounterEntrySchema>>>,
+  )
+  .default(() => emptyEncounterPools());
+
+export type SectorEncounterPools = z.infer<typeof SectorEncounterPoolsSchema>;
+
 const SectorSchema = z
   .object({
     id: z.string().min(1),
@@ -102,9 +131,9 @@ const SectorSchema = z
     /** Procedural-side theme for this sector (reuses the layout Theme union). */
     theme: ThemeSchema,
     layouts: z.array(SectorLayoutEntrySchema).min(1),
-    /** The sector's fight pool (placement). Empty until V authors the catalog;
-     *  `.default([])` so an absent key (older JSON, the editor) parses. */
-    encounters: z.array(SectorEncounterEntrySchema).default([]),
+    /** The sector's fight pool, split by kind (Wb4) — `{ normal, elite, boss }`,
+     *  each an entry list. Defaults to all-empty so an absent key parses. */
+    encounters: SectorEncounterPoolsSchema,
   })
   .superRefine((sector, ctx) => {
     // Guard 1 — every pool entry references a real layout or the procedural
@@ -137,20 +166,30 @@ const SectorSchema = z
       }
     }
 
-    // Guard 3 — every encounter-pool entry references a real catalog encounter
-    // (mirrors Guard 1 for layouts). The kind-aware "every reachable hop has an
-    // eligible encounter of the needed kind" guard lands with selection in V1;
-    // this round only resolves refs. The catalog ships empty, so the pool is `[]`
-    // and this binds vacuously until V authors content.
-    sector.encounters.forEach((entry, idx) => {
-      if (!ENCOUNTER_IDS.includes(entry.encounterId)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['encounters', idx, 'encounterId'],
-          message: `sector "${sector.id}": unknown encounterId "${entry.encounterId}" (no such encounter in the catalog)`,
-        });
-      }
-    });
+    // Guards 3 + 4 — every encounter-pool entry references a real catalog
+    // encounter (ref) AND sits in the bucket matching its kind (consistency,
+    // Wb4 — a `bandit-king` boss can't be pooled under `normal`). The kind-aware
+    // "every reachable hop has an eligible encounter of the needed kind" coverage
+    // guard lives in selection (`assertSelectionCoverage`); this resolves refs +
+    // kinds. Iterates per kind so the issue path points at the right bucket.
+    for (const kind of ENCOUNTER_KINDS) {
+      sector.encounters[kind].forEach((entry, idx) => {
+        const enc = getEncounter(entry.encounterId);
+        if (!enc) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['encounters', kind, idx, 'encounterId'],
+            message: `sector "${sector.id}": unknown encounterId "${entry.encounterId}" (no such encounter in the catalog)`,
+          });
+        } else if (enc.kind !== kind) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['encounters', kind, idx, 'encounterId'],
+            message: `sector "${sector.id}": encounter "${entry.encounterId}" is kind '${enc.kind}', pooled under '${kind}'`,
+          });
+        }
+      });
+    }
   });
 
 /** The whole-file array schema. Exported so the T3 sector editor's formatter can
@@ -190,11 +229,16 @@ export function layoutPoolAtHop(sector: SectorDef, hop: number): readonly Sector
 }
 
 /**
- * The sector's hop-gated encounter pool at a given hop: the entries eligible at
- * `hop` (gate `minHop ?? 0 <= hop`), mirroring `layoutPoolAtHop`. V1 selection
- * draws from this, then filters by node kind + the encounter's layout fit. Empty
- * until V populates the catalog + the sector pools.
+ * The sector's hop-gated encounter pool of a given `kind` at a given hop: the
+ * entries in `sector.encounters[kind]` eligible at `hop` (gate
+ * `minHop ?? 0 <= hop`), mirroring `layoutPoolAtHop`. Wb4 made the fight pool
+ * per-kind, so the kind is now a parameter rather than a post-filter — selection
+ * passes the node's kind (`encounterKindFor(nodeKind)`).
  */
-export function encounterPoolAtHop(sector: SectorDef, hop: number): readonly SectorEncounterEntry[] {
-  return sector.encounters.filter((e) => (e.minHop ?? 0) <= hop);
+export function encounterPoolAtHop(
+  sector: SectorDef,
+  hop: number,
+  kind: EncounterKind,
+): readonly SectorEncounterEntry[] {
+  return sector.encounters[kind].filter((e) => (e.minHop ?? 0) <= hop);
 }

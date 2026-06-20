@@ -67,19 +67,17 @@
           </section>
           <section class="card">
             <h2>
-              Encounter pool
-              <span class="sub">(one fight per row; weighted; optional hop gate)</span>
+              Encounter pools
+              <span class="sub">(by kind — normal / elite / boss; weighted; optional hop gate)</span>
             </h2>
             <div id="encounters" class="pool"></div>
-            <div class="row">
-              <button id="add-encounter-btn" type="button">+ Add encounter</button>
-            </div>
             <p class="hint">
-              The sector's fights (sector-owns-both). Each <code>encounterId</code> is a catalog
-              entry (author them in the
-              <a href="/tools/encounter-editor/">encounter editor</a>); <code>weight</code> /
-              <code>minHop</code> work as above. A battle node needs at least one eligible
-              encounter — an empty pool boots only if the sector has no battles.
+              The sector's fights (sector-owns-both), split by kind so each pool's mix + weighting
+              reads on its own. Each <code>encounterId</code> is a catalog entry of that kind (author
+              them in the <a href="/tools/encounter-editor/">encounter editor</a>);
+              <code>weight</code> / <code>minHop</code> work as above. A battle node draws the normal
+              pool, an elite node the elite pool, the terminal the boss pool — so every kind a sector
+              hosts needs at least one eligible encounter.
             </p>
           </section>
         </div>

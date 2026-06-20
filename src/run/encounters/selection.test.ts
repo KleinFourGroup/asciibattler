@@ -44,7 +44,13 @@ interface EncounterEntry {
   weight?: number;
 }
 
+// Wb4 — the sector fight pool is per-kind. Tests still pass a flat encounter list
+// for readability; this buckets each entry by its catalog kind (an unresolved id,
+// e.g. 'ghost', lands in `normal` — the resolver skips it downstream), mirroring
+// what the schema's kind-consistency guard would enforce on real content.
 function sector(layouts: LayoutEntry[], encounters: EncounterEntry[]): SectorDef {
+  const byKind: Record<EncounterKind, EncounterEntry[]> = { normal: [], elite: [], boss: [] };
+  for (const e of encounters) byKind[CATALOG[e.encounterId]?.kind ?? 'normal'].push(e);
   return {
     id: 'fix',
     title: 'Fixture',
@@ -52,7 +58,7 @@ function sector(layouts: LayoutEntry[], encounters: EncounterEntry[]): SectorDef
     length: 5,
     theme: 'default',
     layouts,
-    encounters,
+    encounters: byKind,
   } as unknown as SectorDef;
 }
 

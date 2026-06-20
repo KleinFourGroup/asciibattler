@@ -14,16 +14,22 @@
       { "layoutId": "strafingFunnel" },
       { "layoutId": "spiralFireLife" }
     ],
-    "encounters": [
-      { "encounterId": "brigands" },
-      { "encounterId": "highwaymen" },
-      { "encounterId": "deserters" },
-      { "encounterId": "artillery" },
-      { "encounterId": "ronin-vs-mages" },
-      { "encounterId": "adventurer-with-guards" },
-      { "encounterId": "bandit-king" },
-      { "encounterId": "brigand-champions" },
-      { "encounterId": "warband-vanguard" }
-    ]
+    "encounters": {
+      "normal": [
+        { "encounterId": "brigands" },
+        { "encounterId": "highwaymen" },
+        { "encounterId": "deserters" },
+        { "encounterId": "artillery" },
+        { "encounterId": "ronin-vs-mages" },
+        { "encounterId": "adventurer-with-guards" }
+      ],
+      "elite": [
+        { "encounterId": "brigand-champions" },
+        { "encounterId": "warband-vanguard" }
+      ],
+      "boss": [
+        { "encounterId": "bandit-king" }
+      ]
+    }
   }
 ]

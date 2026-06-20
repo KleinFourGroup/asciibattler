@@ -2,16 +2,18 @@
  * Pure formatter for `config/sectors.json` — the sector editor's Save / Copy /
  * Download AND the layout-editor "add to sector" toggle all emit through here, so
  * a written file is byte-for-byte the shape a hand-edit would produce (no noisy
- * whitespace diffs). Extracted from the editor UI and node-safe (types only) so
- * it can be unit-tested against the committed file (tests/tools/sector-editor.test.ts).
+ * whitespace diffs). Extracted from the editor UI and node-safe (the only runtime
+ * import is `ENCOUNTER_KINDS`, the fight-pool key order) so it can be unit-tested
+ * against the committed file (tests/tools/sector-editor.test.ts).
  *
  * Mirrors `config/sectors.json` exactly: 2-space indent, the
  * `id / title / description / length / theme / layouts / encounters` key order,
  * and each pool entry inline on one line as `{ "layoutId": …[, "minHop": …][,
  * "weight": …] }` (or `"encounterId"` for the fight pool) — `minHop` / `weight`
  * emitted only when present (they're optional in the schema, so an absent one
- * stays absent rather than serializing a default). The `encounters` pool always
- * emits (as `[]` when empty), since it's a first-class slot, not an optional.
+ * stays absent rather than serializing a default). The `encounters` pool is a
+ * per-kind object (Wb4): `{ normal, elite, boss }` in `ENCOUNTER_KINDS` order,
+ * each list always emitted (`[]` when empty), since it's a first-class slot.
  */
 
 import type {
@@ -19,6 +21,7 @@ import type {
   SectorLayoutEntry,
   SectorEncounterEntry,
 } from '../../src/config/sectors';
+import { ENCOUNTER_KINDS } from '../../src/config/encounters';
 
 /** One layout-pool entry on a single line; optional fields appear only when set. */
 function formatEntry(entry: SectorLayoutEntry): string {
@@ -57,16 +60,24 @@ export function formatSectorsJson(sectors: readonly SectorDef[]): string {
       lines.push(`      ${formatEntry(entry)}${etail}`);
     });
     lines.push('    ],');
-    if (sector.encounters.length === 0) {
-      lines.push('    "encounters": []');
-    } else {
-      lines.push('    "encounters": [');
-      sector.encounters.forEach((entry, ei) => {
-        const etail = ei === sector.encounters.length - 1 ? '' : ',';
-        lines.push(`      ${formatEncounterEntry(entry)}${etail}`);
-      });
-      lines.push('    ]');
-    }
+    // The fight pool is a per-kind object (Wb4): `{ normal, elite, boss }`, each
+    // an entry list (`[]` when empty). Keys emit in `ENCOUNTER_KINDS` order.
+    lines.push('    "encounters": {');
+    ENCOUNTER_KINDS.forEach((kind, ki) => {
+      const ktail = ki === ENCOUNTER_KINDS.length - 1 ? '' : ',';
+      const list = sector.encounters[kind];
+      if (list.length === 0) {
+        lines.push(`      "${kind}": []${ktail}`);
+      } else {
+        lines.push(`      "${kind}": [`);
+        list.forEach((entry, ei) => {
+          const etail = ei === list.length - 1 ? '' : ',';
+          lines.push(`        ${formatEncounterEntry(entry)}${etail}`);
+        });
+        lines.push(`      ]${ktail}`);
+      }
+    });
+    lines.push('    }');
     lines.push(`  }${tail}`);
   });
   lines.push(']');

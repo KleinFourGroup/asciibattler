@@ -1153,7 +1153,7 @@ async function loadSectorChecks(): Promise<void> {
  * already listing it is skipped (idempotent).
  */
 async function addCurrentEncounterToSectors(): Promise<void> {
-  const id = encounter().id;
+  const { id, kind } = encounter();
   if (!ENCOUNTER_IDS.includes(id)) {
     setSectorAddStatus(
       `Save the encounter to config first — "${id}" isn't a committed encounter id yet, so a sector can't reference it.`,
@@ -1177,7 +1177,8 @@ async function addCurrentEncounterToSectors(): Promise<void> {
   setSectorAddStatus('Saving…', 'hint');
   try {
     const sectors = await fetchSectors();
-    const { added, skipped } = addEncounterToSectorPools(sectors, id, chosen, minHop);
+    // Wb4 — the fight pool is per-kind; route the encounter into its kind bucket.
+    const { added, skipped } = addEncounterToSectorPools(sectors, id, kind, chosen, minHop);
     if (added.length === 0) {
       setSectorAddStatus(`Already in: ${skipped.join(', ')}. Nothing to write.`, 'hint');
       return;

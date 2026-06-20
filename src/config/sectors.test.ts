@@ -51,19 +51,21 @@ describe('sectors config — the shipped catalog', () => {
     // length feeds NodeMap.generate's hopCount — positive, matching today's map.
     expect(start!.length).toBeGreaterThan(0);
     // V1 pooled the launch catalog into The Start's fight pool; V2 commit C added
-    // the grammar-demo encounters; W1 pooled the boss, W2 the two elites (all
-    // ungated, uniform — each is filtered to its node kind, not by hop gate).
-    expect(start!.encounters.map((e) => e.encounterId)).toEqual([
+    // the grammar-demo encounters; W1 pooled the boss, W2 the two elites. Wb4 split
+    // the pool by kind — each list ungated/uniform (filtered by node kind, not hop).
+    expect(start!.encounters.normal.map((e) => e.encounterId)).toEqual([
       'brigands',
       'highwaymen',
       'deserters',
       'artillery',
       'ronin-vs-mages',
       'adventurer-with-guards',
-      'bandit-king',
+    ]);
+    expect(start!.encounters.elite.map((e) => e.encounterId)).toEqual([
       'brigand-champions',
       'warband-vanguard',
     ]);
+    expect(start!.encounters.boss.map((e) => e.encounterId)).toEqual(['bandit-king']);
   });
 
   it('getSector returns undefined for an unknown id', () => {
@@ -126,22 +128,44 @@ describe('sectors schema — validation guards', () => {
     expect(() => SectorsSchema.parse([makeSector({ length: 0 })])).toThrow();
   });
 
-  it('defaults the encounter pool to [] when the key is absent', () => {
-    // makeSector() omits `encounters`; `.default([])` fills it so downstream code
-    // can always treat it as an array.
-    expect(SectorsSchema.parse([makeSector()])[0]!.encounters).toEqual([]);
+  it('defaults the encounter pool to all-empty kind buckets when the key is absent', () => {
+    // makeSector() omits `encounters`; the object default fills every kind with []
+    // so downstream code can always index any kind bucket (Wb4).
+    expect(SectorsSchema.parse([makeSector()])[0]!.encounters).toEqual({
+      normal: [],
+      elite: [],
+      boss: [],
+    });
   });
 
-  it('accepts an explicit empty encounter pool', () => {
-    expect(() => SectorsSchema.parse([makeSector({ encounters: [] })])).not.toThrow();
+  it('fills missing kind buckets when only some are given', () => {
+    // A partial `encounters` object — each absent kind list `.default([])`s.
+    const parsed = SectorsSchema.parse([makeSector({ encounters: { normal: [] } as never })])[0]!;
+    expect(parsed.encounters).toEqual({ normal: [], elite: [], boss: [] });
+  });
+
+  it('accepts an explicit all-empty encounter pool', () => {
+    expect(() =>
+      SectorsSchema.parse([makeSector({ encounters: { normal: [], elite: [], boss: [] } })]),
+    ).not.toThrow();
   });
 
   it('rejects an encounter-pool entry referencing an unknown encounter', () => {
-    // The catalog ships empty, so any id is unknown — the ref guard binds once V
-    // authors content; the rejection path is exercisable now.
     expect(() =>
-      SectorsSchema.parse([makeSector({ encounters: [{ encounterId: 'no-such-encounter' }] })]),
+      SectorsSchema.parse([
+        makeSector({ encounters: { normal: [{ encounterId: 'no-such-encounter' }], elite: [], boss: [] } }),
+      ]),
     ).toThrow(/unknown encounterId/);
+  });
+
+  it('rejects an encounter pooled under the wrong kind (Wb4 kind-consistency guard)', () => {
+    // 'brigands' is a real catalog encounter of kind normal — pooling it under
+    // `boss` references a real id but violates the per-bucket kind contract.
+    expect(() =>
+      SectorsSchema.parse([
+        makeSector({ encounters: { normal: [], elite: [], boss: [{ encounterId: 'brigands' }] } }),
+      ]),
+    ).toThrow(/is kind 'normal', pooled under 'boss'/);
   });
 });
 
@@ -180,9 +204,9 @@ describe('layoutPoolAtHop — the hop-gated pool query', () => {
 });
 
 describe('encounterPoolAtHop — the hop-gated fight-pool query', () => {
-  // A pure filter over `sector.encounters`. Exercised with literal entries (the
-  // catalog is empty, so real encounter ids don't exist yet) — this pins the gate
-  // logic, not ref resolution, hence a cast rather than a schema parse.
+  // A pure filter over `sector.encounters[kind]`. Exercised with literal entries
+  // in the `normal` bucket — this pins the gate logic, not ref resolution, hence a
+  // cast rather than a schema parse.
   const sector = {
     id: 'fixture',
     title: 'F',
@@ -190,21 +214,28 @@ describe('encounterPoolAtHop — the hop-gated fight-pool query', () => {
     length: 4,
     theme: 'default',
     layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
-    encounters: [{ encounterId: 'a' }, { encounterId: 'b', minHop: 2 }],
+    encounters: { normal: [{ encounterId: 'a' }, { encounterId: 'b', minHop: 2 }], elite: [], boss: [] },
   } as unknown as SectorDef;
 
   it('returns only ungated entries below the gate', () => {
-    expect(encounterPoolAtHop(sector, 0).map((e) => e.encounterId)).toEqual(['a']);
-    expect(encounterPoolAtHop(sector, 1).map((e) => e.encounterId)).toEqual(['a']);
+    expect(encounterPoolAtHop(sector, 0, 'normal').map((e) => e.encounterId)).toEqual(['a']);
+    expect(encounterPoolAtHop(sector, 1, 'normal').map((e) => e.encounterId)).toEqual(['a']);
   });
 
   it('includes a gated entry at and above its minHop', () => {
-    expect(encounterPoolAtHop(sector, 2).map((e) => e.encounterId)).toEqual(['a', 'b']);
-    expect(encounterPoolAtHop(sector, 3).map((e) => e.encounterId)).toEqual(['a', 'b']);
+    expect(encounterPoolAtHop(sector, 2, 'normal').map((e) => e.encounterId)).toEqual(['a', 'b']);
+    expect(encounterPoolAtHop(sector, 3, 'normal').map((e) => e.encounterId)).toEqual(['a', 'b']);
+  });
+
+  it('queries only the asked-for kind bucket', () => {
+    // The elite/boss buckets are empty, so a non-normal query is empty even at a
+    // hop where the normal bucket is full.
+    expect(encounterPoolAtHop(sector, 3, 'elite')).toEqual([]);
+    expect(encounterPoolAtHop(sector, 3, 'boss')).toEqual([]);
   });
 
   it('is empty for a sector with no fight pool', () => {
-    const empty = { ...sector, encounters: [] } as SectorDef;
-    expect(encounterPoolAtHop(empty, 0)).toEqual([]);
+    const empty = { ...sector, encounters: { normal: [], elite: [], boss: [] } } as SectorDef;
+    expect(encounterPoolAtHop(empty, 0, 'normal')).toEqual([]);
   });
 });

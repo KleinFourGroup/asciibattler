@@ -38,8 +38,33 @@ import {
   type SectorEncounterEntry,
 } from '../../src/config/sectors';
 import { LAYOUT_IDS, THEMES, type Theme } from '../../src/sim/layouts';
-import { ENCOUNTER_IDS } from '../../src/config/encounters';
+import {
+  ENCOUNTER_IDS,
+  ENCOUNTER_KINDS,
+  getEncounter,
+  type EncounterKind,
+} from '../../src/config/encounters';
 import { formatSectorsJson } from './format';
+
+/** Wb4 — the fight pool is per-kind; these drive the three pool sub-sections. */
+const KIND_LABELS: Record<EncounterKind, string> = {
+  normal: 'Normal',
+  elite: 'Elite',
+  boss: 'Boss',
+};
+
+/** Catalog encounter ids grouped by kind — each kind's dropdown only offers
+ *  encounters OF that kind (so the editor can't author a kind-mismatched entry
+ *  the schema's consistency guard would reject). */
+const ENCOUNTER_IDS_BY_KIND: Record<EncounterKind, string[]> = buildEncounterIdsByKind();
+function buildEncounterIdsByKind(): Record<EncounterKind, string[]> {
+  const out = { normal: [], elite: [], boss: [] } as Record<EncounterKind, string[]>;
+  for (const id of ENCOUNTER_IDS) {
+    const enc = getEncounter(id);
+    if (enc) out[enc.kind].push(id);
+  }
+  return out;
+}
 
 // ---- State ----
 // `working` is a deep, mutable clone of the committed config; the form mutates
@@ -65,7 +90,6 @@ const themeEl = mustQuery<HTMLSelectElement>('#theme');
 const poolEl = mustQuery<HTMLDivElement>('#pool');
 const addLayoutBtn = mustQuery<HTMLButtonElement>('#add-layout-btn');
 const encountersEl = mustQuery<HTMLDivElement>('#encounters');
-const addEncounterBtn = mustQuery<HTMLButtonElement>('#add-encounter-btn');
 const previewEl = mustQuery<HTMLDListElement>('#preview');
 const encounterPreviewEl = mustQuery<HTMLDListElement>('#encounter-preview');
 const previewHopEl = mustQuery<HTMLInputElement>('#preview-hop');
@@ -131,12 +155,8 @@ function attachPreviewControls(): void {
 function attachButtons(): void {
   newBtn.addEventListener('click', addSector);
   addLayoutBtn.addEventListener('click', addLayoutEntry);
-  addEncounterBtn.addEventListener('click', addEncounterEntry);
-  // No catalog → nothing to pool; the schema would reject an empty encounterId.
-  if (ENCOUNTER_IDS.length === 0) {
-    addEncounterBtn.disabled = true;
-    addEncounterBtn.title = 'No encounters in the catalog yet — author one in the encounter editor first.';
-  }
+  // The encounter pool's per-kind "+ add" buttons are rendered in
+  // `buildEncounterPool` (each disabled when its kind has no catalog content).
   saveBtn.addEventListener('click', () => void save());
   revertBtn.addEventListener('click', revert);
   copyBtn.addEventListener('click', () => {
@@ -171,9 +191,8 @@ function addSector(): void {
     length: 5,
     theme: 'default',
     layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
-    // The fight pool starts empty — populated once V's encounter catalog exists
-    // (this editor owns layouts; the encounter editor is V2). Preserved on save.
-    encounters: [],
+    // The fight pool starts empty in every kind bucket (Wb4 — per-kind pools).
+    encounters: { normal: [], elite: [], boss: [] },
   });
   selectSector(working.length - 1);
 }
@@ -190,18 +209,18 @@ function removeLayoutEntry(index: number): void {
   refreshDerived();
 }
 
-function addEncounterEntry(): void {
-  const first = ENCOUNTER_IDS[0];
-  if (first === undefined) return; // empty catalog — button is disabled, defensive guard
-  sector().encounters.push({ encounterId: first });
+function addEncounterEntry(kind: EncounterKind): void {
+  const first = ENCOUNTER_IDS_BY_KIND[kind][0];
+  if (first === undefined) return; // no catalog content for this kind — button disabled
+  sector().encounters[kind].push({ encounterId: first });
   buildEncounterPool();
   refreshDerived();
 }
 
-function removeEncounterEntry(index: number): void {
-  // The encounter pool may be empty (unlike layouts, which the schema floors at
-  // ≥1), so there's no minimum to defend here.
-  sector().encounters.splice(index, 1);
+function removeEncounterEntry(kind: EncounterKind, index: number): void {
+  // Any kind's pool may be empty (unlike layouts, which the schema floors at ≥1),
+  // so there's no minimum to defend here.
+  sector().encounters[kind].splice(index, 1);
   buildEncounterPool();
   refreshDerived();
 }
@@ -214,7 +233,38 @@ function buildPool(): void {
 
 function buildEncounterPool(): void {
   encountersEl.innerHTML = '';
-  sector().encounters.forEach((entry, i) => encountersEl.appendChild(makeEncounterPoolRow(entry, i)));
+  for (const kind of ENCOUNTER_KINDS) {
+    encountersEl.appendChild(makeEncounterKindGroup(kind));
+  }
+}
+
+/** One per-kind sub-section: a label, the kind's pool rows, and an "add" button
+ *  that's disabled when the catalog has no encounter of that kind yet. */
+function makeEncounterKindGroup(kind: EncounterKind): HTMLDivElement {
+  const group = document.createElement('div');
+  group.className = 'pool-kind';
+
+  const label = document.createElement('div');
+  label.className = 'pool-kind-label';
+  label.textContent = KIND_LABELS[kind];
+  group.appendChild(label);
+
+  sector().encounters[kind].forEach((entry, i) =>
+    group.appendChild(makeEncounterPoolRow(kind, entry, i)),
+  );
+
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.className = 'pool-kind-add';
+  add.textContent = `+ Add ${kind}`;
+  if (ENCOUNTER_IDS_BY_KIND[kind].length === 0) {
+    add.disabled = true;
+    add.title = `No ${kind} encounters in the catalog yet — author one in the encounter editor first.`;
+  } else {
+    add.addEventListener('click', () => addEncounterEntry(kind));
+  }
+  group.appendChild(add);
+  return group;
 }
 
 function makePoolRow(entry: SectorLayoutEntry, index: number): HTMLDivElement {
@@ -259,14 +309,18 @@ function makePoolRow(entry: SectorLayoutEntry, index: number): HTMLDivElement {
 
 /** One encounter-pool row — the fight-pool twin of `makePoolRow`. Same shape
  *  (a wide id select + optional minHop/weight + remove), keyed by `encounterId`
- *  with options drawn from the live catalog `ENCOUNTER_IDS`. */
-function makeEncounterPoolRow(entry: SectorEncounterEntry, index: number): HTMLDivElement {
+ *  with options drawn from the catalog encounters OF THIS KIND (Wb4). */
+function makeEncounterPoolRow(
+  kind: EncounterKind,
+  entry: SectorEncounterEntry,
+  index: number,
+): HTMLDivElement {
   const row = document.createElement('div');
   row.className = 'pool-row';
 
   const select = document.createElement('select');
   select.className = 'pool-layout';
-  for (const id of ENCOUNTER_IDS) {
+  for (const id of ENCOUNTER_IDS_BY_KIND[kind]) {
     const opt = document.createElement('option');
     opt.value = id;
     opt.textContent = id;
@@ -294,7 +348,7 @@ function makeEncounterPoolRow(entry: SectorEncounterEntry, index: number): HTMLD
   remove.className = 'pool-remove';
   remove.textContent = '✕';
   remove.title = 'Remove this encounter from the pool';
-  remove.addEventListener('click', () => removeEncounterEntry(index));
+  remove.addEventListener('click', () => removeEncounterEntry(kind, index));
 
   row.append(select, minHop, weight, remove);
   return row;
@@ -411,21 +465,26 @@ function refreshPreview(): void {
   }
 
   // Encounter pool — the fight-pool twin, same weighted-roll math
-  // (`encounterPoolAtHop` mirrors `layoutPoolAtHop`).
+  // (`encounterPoolAtHop` mirrors `layoutPoolAtHop`), now grouped BY KIND (Wb4):
+  // a node of each kind rolls only within its own bucket, so each kind shows its
+  // own eligible mix + roll chances.
   encounterPreviewEl.innerHTML = '';
-  const fights = encounterPoolAtHop(s, previewHop);
-  const fightTotal = fights.reduce((sum, e) => sum + (e.weight ?? 1), 0);
-  if (fights.length === 0 || fightTotal <= 0) {
-    addPreview(encounterPreviewEl, '(empty pool)', `no eligible encounter at hop ${previewHop}`);
-  } else {
-    for (const e of fights) {
-      const w = e.weight ?? 1;
-      addPreview(encounterPreviewEl, e.encounterId, `${pct(w / fightTotal)}  (weight ${w})`);
+  for (const kind of ENCOUNTER_KINDS) {
+    addPreviewHeader(encounterPreviewEl, KIND_LABELS[kind]);
+    const fights = encounterPoolAtHop(s, previewHop, kind);
+    const fightTotal = fights.reduce((sum, e) => sum + (e.weight ?? 1), 0);
+    if (fights.length === 0 || fightTotal <= 0) {
+      addPreview(encounterPreviewEl, '(empty)', `no eligible ${kind} at hop ${previewHop}`, true);
+    } else {
+      for (const e of fights) {
+        const w = e.weight ?? 1;
+        addPreview(encounterPreviewEl, e.encounterId, `${pct(w / fightTotal)}  (weight ${w})`);
+      }
     }
-  }
-  for (const e of s.encounters) {
-    if ((e.minHop ?? 0) > previewHop) {
-      addPreview(encounterPreviewEl, e.encounterId, `— gated (minHop ${e.minHop})`, true);
+    for (const e of s.encounters[kind]) {
+      if ((e.minHop ?? 0) > previewHop) {
+        addPreview(encounterPreviewEl, e.encounterId, `— gated (minHop ${e.minHop})`, true);
+      }
     }
   }
 }
@@ -465,6 +524,15 @@ function revert(): void {
 }
 
 // ---- Small helpers ----
+/** A full-width sub-header row inside a preview `<dl>` (Wb4 — labels each
+ *  encounter-kind group). Spans both grid columns via `.preview-kind`. */
+function addPreviewHeader(dl: HTMLDListElement, text: string): void {
+  const dt = document.createElement('dt');
+  dt.className = 'preview-kind';
+  dt.textContent = text;
+  dl.appendChild(dt);
+}
+
 function addPreview(dl: HTMLDListElement, term: string, value: string, muted = false): void {
   const dt = document.createElement('dt');
   dt.textContent = term;

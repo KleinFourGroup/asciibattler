@@ -613,7 +613,9 @@ describe('Run', () => {
       // Selection picks one of "The Start"'s pooled encounters — which one is
       // seed-dependent; assert it's a real catalog pick, derived from the live
       // pool (not a frozen name list) so new catalog content can't stale this.
-      const pooledNames = getSector('the-start')!.encounters.map(
+      // Wb4 — the fight pool is per-kind; flatten all kinds for the name check.
+      const pool = getSector('the-start')!.encounters;
+      const pooledNames = [...pool.normal, ...pool.elite, ...pool.boss].map(
         (e) => getEncounter(e.encounterId)!.name,
       );
       expect(pooledNames).toContain(run.currentEncounterName);

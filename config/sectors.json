@@ -20,7 +20,8 @@
       { "encounterId": "deserters" },
       { "encounterId": "artillery" },
       { "encounterId": "ronin-vs-mages" },
-      { "encounterId": "adventurer-with-guards" }
+      { "encounterId": "adventurer-with-guards" },
+      { "encounterId": "bandit-king" }
     ]
   }
 ]

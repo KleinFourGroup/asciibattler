@@ -66,9 +66,26 @@ const resolve: EncounterResolver = (id) => CATALOG[id];
 const battle = { hop: 0, nodeKind: 'battle' as const };
 
 describe('encounterKindFor', () => {
-  it('maps battle (and boss, until W) to normal', () => {
+  it('maps battle → normal and boss → boss (W)', () => {
     expect(encounterKindFor('battle')).toBe('normal');
-    expect(encounterKindFor('boss')).toBe('normal');
+    expect(encounterKindFor('boss')).toBe('boss');
+  });
+});
+
+describe('selectEncounter — boss nodes (W)', () => {
+  const pick = getSelectionStrategy('encounterFirst');
+  const bossNode = { hop: 4, nodeKind: 'boss' as const };
+
+  it('selects only a boss-kind encounter at a boss node (normal encounters filtered out)', () => {
+    const s = sector([{ layoutId: 'river' }], [{ encounterId: 'a' }, { encounterId: 'boss1' }]);
+    for (let seed = 0; seed < 25; seed++) {
+      expect(pick(s, bossNode, new RNG(seed), resolve).encounter.id).toBe('boss1');
+    }
+  });
+
+  it('throws when the boss node has no boss encounter in the pool', () => {
+    const s = sector([{ layoutId: 'river' }], [{ encounterId: 'a' }]);
+    expect(() => pick(s, bossNode, new RNG(1), resolve)).toThrow(/no 'boss' encounter/);
   });
 });
 

@@ -56,14 +56,15 @@ type SelectionStrategy = (
 ) => SelectedEncounter;
 
 /**
- * Which encounter kind a map node fights. V1: every fighting node selects a
- * `normal` encounter — there are no boss encounters until W, which re-maps
- * `boss` → `'boss'`. (`elite` map-nodes → `'elite'` is deferred.) `rest` nodes
- * never fight, so they never reach selection.
+ * Which encounter kind a map node fights. A `battle` node fights a `normal`
+ * encounter; a `boss` node (the sector terminal) fights a `boss` encounter (W —
+ * the catalog now ships one, so the boss node draws only from the sector's boss
+ * pool). (`elite` map-nodes → `'elite'` is deferred until elite nodes land.)
+ * `rest` nodes never fight, so they never reach selection.
  */
 const KIND_BY_NODE: Record<NodeKind, EncounterKind> = {
   battle: 'normal',
-  boss: 'normal', // TODO(W): 'boss' once boss encounters are authored
+  boss: 'boss', // W: the terminal boss node selects from the boss pool
   rest: 'normal', // rest nodes never fight; defensive default
 };
 

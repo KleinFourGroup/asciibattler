@@ -2288,7 +2288,7 @@ describe('Run', () => {
       expect(run.team.every((t) => t.level === cap)).toBe(true);
     });
 
-    it('a boss node builds a normal battle encounter (regression-equivalent to a battle)', () => {
+    it('a boss node selects a boss-kind encounter (W) and a win completes the run', () => {
       // hopCount 2 → root (hop 0, a normal battle) -> terminal boss (hop 1).
       // S2: clear the root battle first, then the boss is the frontier.
       const bus = new EventBus<GameEvents>();
@@ -2300,6 +2300,8 @@ describe('Run', () => {
 
       // Clear the root battle + its recruit so the boss becomes the frontier.
       run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      // The root is a normal battle node → a normal encounter.
+      expect(run.selectedEncounter!.kind).toBe('normal');
       winEncounter(bus);
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
@@ -2307,9 +2309,12 @@ describe('Run', () => {
       expect(run.phase).toBe('battle');
       expect(battleStarts).toBe(2); // root + boss
       expect(run.currentEncounter).not.toBeNull();
+      // W — the boss node draws from the sector's boss pool, not the normal pool.
+      expect(run.selectedEncounter!.kind).toBe('boss');
 
-      // And a win at the boss completes the run (existing terminal path).
-      winEncounter(bus);
+      // And a win at the boss completes the run (existing terminal path). The
+      // boss pool is deeper than the default, so chip its actual pool to drain it.
+      winEncounter(bus, [], run.enemyHealthPoolMax);
       expect(run.phase).toBe('complete');
     });
 
@@ -2343,16 +2348,19 @@ describe('Run', () => {
  * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
  * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn
  * (the common "resolve this node now" case the pre-H4 tests assumed). Any
- * `xpAwards` bank at encounter end as usual.
+ * `xpAwards` bank at encounter end as usual. W: a deeper-pooled encounter (the
+ * boss) needs a bigger chip — pass `poolMax` (`run.enemyHealthPoolMax`) to drain
+ * it in one turn regardless of size.
  */
 function winEncounter(
   bus: EventBus<GameEvents>,
   xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
+  poolMax: number = HEALTH.enemyHealthMax,
 ): void {
   bus.emit('battle:ended', {
     winner: 'player',
     xpAwards,
-    survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
+    survivorPower: { player: poolMax, enemy: 0 },
   });
 }
 

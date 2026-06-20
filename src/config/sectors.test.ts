@@ -51,7 +51,8 @@ describe('sectors config — the shipped catalog', () => {
     // length feeds NodeMap.generate's hopCount — positive, matching today's map.
     expect(start!.length).toBeGreaterThan(0);
     // V1 pooled the launch catalog into The Start's fight pool; V2 commit C added
-    // the grammar-demo encounters (all ungated, uniform — the placement editors).
+    // the grammar-demo encounters; W pooled the boss (all ungated, uniform — the
+    // boss is filtered to the terminal boss node by kind, not by hop gate).
     expect(start!.encounters.map((e) => e.encounterId)).toEqual([
       'brigands',
       'highwaymen',
@@ -59,6 +60,7 @@ describe('sectors config — the shipped catalog', () => {
       'artillery',
       'ronin-vs-mages',
       'adventurer-with-guards',
+      'bandit-king',
     ]);
   });
 

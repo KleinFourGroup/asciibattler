@@ -78,7 +78,7 @@ const base = {
 };
 
 describe('encounters schema', () => {
-  it('ships the V2 catalog: the V1 anchors + the commit-C grammar demos, all normal', () => {
+  it('ships the catalog: the V1 anchors, the V2 grammar demos, and the W boss', () => {
     expect(ENCOUNTER_IDS).toEqual([
       // V1 anchors (loop → wave).
       'brigands',
@@ -88,10 +88,14 @@ describe('encounters schema', () => {
       'artillery',
       'ronin-vs-mages',
       'adventurer-with-guards',
+      // W — the boss (the stages grammar).
+      'bandit-king',
     ]);
-    // Every shipped encounter is `normal` until W introduces elites/bosses (the
-    // first non-normal `kind` flips this assertion — a deliberate W touchpoint).
-    for (const e of ENCOUNTERS) expect(e.kind).toBe('normal');
+    // The road fights are `normal`; the W boss is the lone `boss`-kind encounter.
+    // (No `elite` ships yet — elite map-nodes are deferred.)
+    for (const e of ENCOUNTERS) {
+      expect(e.kind).toBe(e.id === 'bandit-king' ? 'boss' : 'normal');
+    }
   });
 
   it('the V1 variants differ as authored: highwaymen pure-bandit, deserters add a healer', () => {

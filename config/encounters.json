@@ -195,5 +195,68 @@
         }
       }
     ]
+  },
+  {
+    "id": "bandit-king",
+    "name": "The Bandit King",
+    "description": "The warlord every road-bandit answers to. He throws his disciplined honour guard first, looses his berserkers as they fall, then makes his own last stand — the fight escalates as you wear his host down.",
+    "healthPool": 20,
+    "kind": "boss",
+    "waves": [
+      {
+        "kind": "stages",
+        "stages": [
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.66 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.25 },
+                  "count": { "kind": "hand", "factor": 1.5 },
+                  "units": [
+                    { "archetype": "mercenary", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.33 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.25 },
+                  "count": { "kind": "hand", "factor": 1.5 },
+                  "units": [
+                    { "archetype": "bandit", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "rogue", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "ronin", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.5 },
+                  "count": { "kind": "hand", "factor": 1.25 },
+                  "units": [
+                    { "archetype": "adventurer", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
+                    { "archetype": "catapult", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "mage", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

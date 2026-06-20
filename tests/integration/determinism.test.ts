@@ -201,11 +201,13 @@ function driveForcedRun(
   run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
   const encounter = run.currentEncounter!;
   // H4: the encounter loop ends a node when the enemy pool empties, so chip it
-  // out in one turn (player survivors >= the pool max).
+  // out in one turn (player survivors >= the pool max). W: hopCount 1 makes the
+  // single node the boss, whose pool is deeper than the global default — chip the
+  // ACTUAL selected pool so this drains any encounter in one turn.
   bus.emit('battle:ended', {
     winner: 'player',
     xpAwards: [],
-    survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
+    survivorPower: { player: run.enemyHealthPoolMax, enemy: 0 },
   });
   return { phase: run.phase, encounter };
 }

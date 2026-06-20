@@ -21,6 +21,7 @@ import type { StatusEffect } from '../sim/statusEffects';
 import type { RedrawAvailability } from '../run/redraw';
 import type { EmpowerAvailability } from '../run/empower';
 import type { Theme } from '../sim/layouts';
+import type { EncounterKind } from '../config/encounters';
 
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
@@ -322,6 +323,13 @@ export interface GameEvents extends Record<string, unknown> {
       empowerGate: boolean;
       empowerBuff: StatusEffect['mods'] | null;
     } | null;
+    /** Wb1 — the active encounter's identity, so the pre-turn screen can NAME
+     *  the fight (otherwise the player guesses turn 1). `name` mirrors the HUD
+     *  enemy-pane title; `kind` lets the screen badge an elite/boss. */
+    encounter: {
+      name: string;
+      kind: EncounterKind;
+    };
     map: {
       layoutId: string | null;
       gridW: number;

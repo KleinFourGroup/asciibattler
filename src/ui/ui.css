@@ -1215,6 +1215,36 @@ body {
   color: #664600; /* DARK_TERMINAL_AMBER */
 }
 
+/* Wb1 — the encounter NAME: the fight's headline, the second-most prominent
+   line after "Turn N". Brighter + larger than the hop/map sub-lines below it
+   (the dark-amber hop line separates it from the amber map line). An elite/boss
+   carries a bordered kind badge in its accent hue. */
+.preturn-encounter {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 17px;
+  letter-spacing: 0.08em;
+  color: #ffb000; /* TERMINAL_AMBER */
+}
+.preturn-encounter-name {
+  text-transform: uppercase;
+}
+.preturn-encounter-kind {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+}
+.preturn-encounter-kind--elite {
+  color: #9d00ff; /* NEON_PURPLE — the elite `*` map-glyph hue */
+}
+.preturn-encounter-kind--boss {
+  color: #ff3030; /* a boss red */
+}
+
 /* K3.5 — the encounter's battlefield line (one map per encounter): brighter
    than the hop sub-line because it's the input to the redraw decision. */
 .preturn-map {

@@ -194,6 +194,23 @@ export class PreTurnScreen {
     heading.textContent = `Turn ${info.turn}`;
     panel.appendChild(heading);
 
+    // Wb1 — the encounter's NAME (the fight's headline), so the player reads
+    // the stakes before turn 1 instead of guessing. An elite/boss fight rides a
+    // kind badge (the elite uses the `*` map-glyph hue).
+    const encounter = document.createElement('div');
+    encounter.className = 'preturn-encounter';
+    const encName = document.createElement('span');
+    encName.className = 'preturn-encounter-name';
+    encName.textContent = info.encounter.name;
+    encounter.appendChild(encName);
+    if (info.encounter.kind !== 'normal') {
+      const badge = document.createElement('span');
+      badge.className = `preturn-encounter-kind preturn-encounter-kind--${info.encounter.kind}`;
+      badge.textContent = info.encounter.kind;
+      encounter.appendChild(badge);
+    }
+    panel.appendChild(encounter);
+
     const sub = document.createElement('div');
     sub.className = 'preturn-sub';
     sub.textContent = `Hop ${info.hop}`;

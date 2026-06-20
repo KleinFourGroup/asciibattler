@@ -1573,6 +1573,19 @@ describe('Run', () => {
       expect(startings[1]!.map).toEqual(startings[0]!.map);
     });
 
+    it('turn:starting carries the selected encounter name + kind (Wb1)', () => {
+      const { run, bus } = freshRunWithBus(6);
+      run.pauseAtTurnGates = true;
+      const startings: GameEvents['turn:starting'][] = [];
+      bus.on('turn:starting', (p) => startings.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      // Mirrors the held encounter the pre-turn screen names — never hardcoded.
+      expect(startings[0]!.encounter).toEqual({
+        name: run.selectedEncounter!.name,
+        kind: run.selectedEncounter!.kind,
+      });
+    });
+
     it('the map is encounter-scoped: null before, during the map phase, and after the encounter', () => {
       const { run, bus } = freshRunWithBus(1);
       expect(run.encounterMap).toBeNull();

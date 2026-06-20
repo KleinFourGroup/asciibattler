@@ -859,6 +859,9 @@ export class Run {
       this.phase = 'turn-intro';
       // K3.5 — `startNextTurn` only runs mid-encounter, so the map is set.
       const { layoutId, gridW, gridH, theme } = this.encounterMap!;
+      // Wb1 — the selected encounter is held for the whole encounter, so it's
+      // always set here (mid-encounter, same as the map above).
+      const encounter = this.selectedEncounter!;
       this.bus.emit('turn:starting', {
         turn: this.turnIndex + 1,
         hop: this.currentHop,
@@ -884,6 +887,7 @@ export class Run {
               empowerBuff: this.daemon.empower?.buff.mods ?? null,
             }
           : null,
+        encounter: { name: encounter.name, kind: encounter.kind },
         map: { layoutId, gridW, gridH, theme },
       });
     } else {

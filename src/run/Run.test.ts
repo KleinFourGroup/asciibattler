@@ -6,6 +6,7 @@ import { foldEffects, combineMagnitude, type StatusEffect } from '../sim/statusE
 import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import { getSector, PROCEDURAL_LAYOUT_ID } from '../config/sectors';
+import { getEncounter } from '../config/encounters';
 import { SectorMapSchema } from '../config/sectorMap';
 import type { GameEvents } from '../core/events';
 import { ARCHETYPE_CONFIG } from '../sim/archetypes';
@@ -609,9 +610,13 @@ describe('Run', () => {
       // fight is pooled at the old global HEALTH.enemyHealthMax, so the value holds).
       expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax);
       expect(run.enemyHealthPoolMax).toBe(HEALTH.enemyHealthMax);
-      // Selection picks one of "The Start"'s pooled encounters (Brigands/Highwaymen/
-      // Deserters) — which one is seed-dependent; assert it's a real catalog pick.
-      expect(['Brigands', 'Highwaymen', 'Deserters']).toContain(run.currentEncounterName);
+      // Selection picks one of "The Start"'s pooled encounters — which one is
+      // seed-dependent; assert it's a real catalog pick, derived from the live
+      // pool (not a frozen name list) so new catalog content can't stale this.
+      const pooledNames = getSector('the-start')!.encounters.map(
+        (e) => getEncounter(e.encounterId)!.name,
+      );
+      expect(pooledNames).toContain(run.currentEncounterName);
       expect(run.turnIndex).toBe(0); // no turn resolved yet
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
     });

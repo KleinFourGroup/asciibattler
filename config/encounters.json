@@ -75,5 +75,125 @@
         ]
       }
     ]
+  },
+  {
+    "id": "artillery",
+    "name": "Artillery Company",
+    "description": "A rogue company of artillerymen who alternate between waves of skirmishers and catapults",
+    "healthPool": 8,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "bandit", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "mercenary", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          },
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.25 },
+              "units": [
+                { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "catapult", "count": { "kind": "fixed", "value": 3 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ronin-vs-mages",
+    "name": "The Ronin and the Mages",
+    "description": "A chaotic battle between a ronin and a troop of mages, all of whom now want you gone!",
+    "healthPool": 8,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "pick",
+            "options": [
+              {
+                "entry": {
+                  "kind": "wave",
+                  "spec": {
+                    "levelBudget": { "kind": "mean", "factor": 1.25 },
+                    "count": { "kind": "hand", "factor": 0.75 },
+                    "units": [
+                      { "archetype": "mage", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                    ]
+                  }
+                },
+                "weight": 2.5
+              },
+              {
+                "entry": {
+                  "kind": "wave",
+                  "spec": {
+                    "levelBudget": { "kind": "mean", "factor": 1.25 },
+                    "count": { "kind": "fixed", "value": 1 },
+                    "units": [
+                      { "archetype": "ronin", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                    ]
+                  }
+                },
+                "weight": 1
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "adventurer-with-guards",
+    "name": "Guarded Adventurer",
+    "description": "A wandering adventurer and his bodyguards--wait, aren't adventurers supposed to help people?",
+    "healthPool": 8,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": 3,
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1 },
+              "units": [
+                { "archetype": "mercenary", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "rogue", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "wave",
+        "spec": {
+          "levelBudget": { "kind": "mean", "factor": 1.25 },
+          "count": { "kind": "fixed", "value": 1 },
+          "units": [
+            { "archetype": "adventurer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+          ]
+        }
+      }
+    ]
   }
 ]

@@ -11,8 +11,13 @@
  * for the balance-proof) plus the variants **Highwaymen** (pure bandit) and
  * **Deserters** (bandit + a healer). (U3 built Brigands in code reading live
  * config; V1 hoisted it to JSON with literal constants — the code reproduction was
- * retired. Per-encounter knobs are the tuning surface at Phase X.) `Run` selects
- * among the catalog via [../run/encounters/selection.ts](../run/encounters/selection.ts).
+ * retired. Per-encounter knobs are the tuning surface at Phase X.) V2 commit C
+ * adds the grammar-demo encounters — **Artillery Company** (a looped 2-wave
+ * sequence), **The Ronin and the Mages** (a per-turn weighted `pick`), and
+ * **Guarded Adventurer** (a flat sequence: a finite `loop` of guards then a lone
+ * boss wave) — exercising the U2 grammar's sequence / pick / finite-loop forms
+ * (a `stages` boss demo waits for W). `Run` selects among the catalog via
+ * [../run/encounters/selection.ts](../run/encounters/selection.ts).
  *
  * The `waves` grammar (`WaveList`) is the U2 type, validated here recursively
  * (`z.lazy`): a tree of wave / pick / loop / stages entries, nesting to any

@@ -78,16 +78,48 @@ const base = {
 };
 
 describe('encounters schema', () => {
-  it('ships the V1 launch catalog (Brigands + two variants, all normal)', () => {
-    expect(ENCOUNTER_IDS).toEqual(['brigands', 'highwaymen', 'deserters']);
+  it('ships the V2 catalog: the V1 anchors + the commit-C grammar demos, all normal', () => {
+    expect(ENCOUNTER_IDS).toEqual([
+      // V1 anchors (loop → wave).
+      'brigands',
+      'highwaymen',
+      'deserters',
+      // V2 commit-C grammar demos.
+      'artillery',
+      'ronin-vs-mages',
+      'adventurer-with-guards',
+    ]);
+    // Every shipped encounter is `normal` until W introduces elites/bosses (the
+    // first non-normal `kind` flips this assertion — a deliberate W touchpoint).
     for (const e of ENCOUNTERS) expect(e.kind).toBe('normal');
   });
 
-  it('the variants differ as authored: highwaymen pure-bandit, deserters add a healer', () => {
+  it('the V1 variants differ as authored: highwaymen pure-bandit, deserters add a healer', () => {
     expect(waveArchetypes(getEncounter('highwaymen')!)).toEqual(['bandit']);
     const deserters = waveArchetypes(getEncounter('deserters')!);
     expect(deserters).toContain('bandit');
     expect(deserters).toContain('healer');
+  });
+
+  it('the commit-C demos carry their grammar features (sequence / pick / finite-loop)', () => {
+    // artillery — a forever loop whose body is a 2-wave sequence (skirmishers,
+    // then catapults), alternating turn to turn.
+    const artillery = getEncounter('artillery')!.waves[0]!;
+    expect(artillery.kind).toBe('loop');
+    if (artillery.kind === 'loop') expect(artillery.body.length).toBe(2);
+
+    // ronin-vs-mages — a forever loop whose body is a weighted `pick`; because the
+    // pick is the whole body, each iteration re-enters and re-rolls it (the
+    // "chaotic" per-turn coin-flip, distinct from a roll-once-per-encounter pick).
+    const ronin = getEncounter('ronin-vs-mages')!.waves[0]!;
+    expect(ronin.kind).toBe('loop');
+    if (ronin.kind === 'loop') expect(ronin.body[0]!.kind).toBe('pick');
+
+    // adventurer-with-guards — a top-level FLAT sequence: a finite `loop {repeat:3}`
+    // of guards, then a lone boss wave that the last-wave-repeats policy holds.
+    const advWaves = getEncounter('adventurer-with-guards')!.waves;
+    expect(advWaves.map((w) => w.kind)).toEqual(['loop', 'wave']);
+    if (advWaves[0]!.kind === 'loop') expect(advWaves[0]!.repeat).toBe(3);
   });
 
   it('parses a deeply-nested wave grammar (stages → loop → pick → wave)', () => {

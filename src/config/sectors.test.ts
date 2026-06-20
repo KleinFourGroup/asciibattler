@@ -50,11 +50,15 @@ describe('sectors config — the shipped catalog', () => {
     expect(start!.layouts.every((e) => e.minHop === undefined)).toBe(true);
     // length feeds NodeMap.generate's hopCount — positive, matching today's map.
     expect(start!.length).toBeGreaterThan(0);
-    // V1 pooled the launch catalog into The Start's fight pool.
+    // V1 pooled the launch catalog into The Start's fight pool; V2 commit C added
+    // the grammar-demo encounters (all ungated, uniform — the placement editors).
     expect(start!.encounters.map((e) => e.encounterId)).toEqual([
       'brigands',
       'highwaymen',
       'deserters',
+      'artillery',
+      'ronin-vs-mages',
+      'adventurer-with-guards',
     ]);
   });
 

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Encounter Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Encounter Editor</h1>
+        <span class="subtitle"
+          >Author <code>config/encounters.json</code> · schema-validated · live turn-by-turn
+          resolution preview · save straight to disk</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+      <section class="workspace">
+        <div class="edit-pane">
+          <div class="tabs-row">
+            <div id="tabs" class="tabs" role="tablist" aria-label="Encounter"></div>
+            <button id="new-btn" type="button" class="tab new-tab" title="Add a new encounter">+ New</button>
+            <button id="delete-btn" type="button" class="tab new-tab" title="Delete this encounter">✕ Delete</button>
+          </div>
+
+          <section class="card">
+            <h2>Identity</h2>
+            <div class="field-row">
+              <label class="inline stack">
+                <span class="field-label">Id</span>
+                <input id="id" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+              <label class="inline stack">
+                <span class="field-label">Name</span>
+                <input id="name" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+              <label class="inline stack">
+                <span class="field-label">Health pool</span>
+                <input id="health-pool" type="number" min="1" step="1" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label class="inline grow stack">
+                <span class="field-label">Description <span class="sub">(optional)</span></span>
+                <textarea id="description" rows="2" spellcheck="false"></textarea>
+              </label>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Kind</span>
+              <div id="kind" class="radio-row" role="radiogroup" aria-label="Kind"></div>
+            </div>
+            <div class="field-row">
+              <span class="field-label"
+                >Layout fit-filter <span class="sub">(none = fits every battlefield)</span></span
+              >
+              <div id="layouts" class="checkbox-row"></div>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2>Wave list <span class="sub">(the U2 grammar — wave / pick / loop / stages)</span></h2>
+            <div class="waves-toolbar">
+              <span class="label">Insert skeleton:</span>
+              <button type="button" class="snippet" data-snippet="wave">wave</button>
+              <button type="button" class="snippet" data-snippet="pick">pick</button>
+              <button type="button" class="snippet" data-snippet="loop">loop</button>
+              <button type="button" class="snippet" data-snippet="stages">stages</button>
+              <button type="button" class="snippet" id="format-waves-btn" title="Re-indent the JSON">⤺ tidy</button>
+            </div>
+            <textarea id="waves" spellcheck="false" autocomplete="off"></textarea>
+            <p id="waves-error" class="hint"></p>
+          </section>
+        </div>
+
+        <aside class="side-pane">
+          <section class="card preview-card">
+            <h2>Resolution preview <span class="sub">(the first N turns, via the real resolvers)</span></h2>
+            <div class="preview-controls">
+              <label
+                >Roster levels
+                <input id="roster-levels" type="text" value="2, 2, 3, 3, 4" spellcheck="false" style="width: 9rem" />
+              </label>
+              <label>Hand size <input id="hand-size" type="number" min="1" step="1" /></label>
+              <label>Level cap <input id="level-cap" type="number" min="1" step="1" /></label>
+              <label>Pool % <input id="pool-fraction" type="number" min="0" max="100" step="5" value="100" /></label>
+              <label>Turns <input id="turns" type="number" min="1" max="20" step="1" value="6" /></label>
+              <label>Seed <input id="seed" type="number" step="1" value="1" /></label>
+            </div>
+            <div id="turns-out" class="turns"></div>
+            <p class="preview-note">
+              Each turn walks the real <code>waveForTurn</code> → <code>resolveWave</code> modules — the
+              same code the game runs. Budget = <code>factor × centralLevel × handSize</code>; level cap
+              clamps the per-instance spread. Pool % feeds <code>stages</code> conditions (drag it down to
+              see a boss flip phases).
+            </p>
+          </section>
+
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation"></ul>
+          </section>
+
+          <section class="card">
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary">Save to config</button>
+              <button id="revert-btn" type="button" class="danger-outline">Revert all</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+          </section>
+
+          <section class="card">
+            <h2>Export <span class="sub">(whole file)</span></h2>
+            <textarea id="export" rows="8" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

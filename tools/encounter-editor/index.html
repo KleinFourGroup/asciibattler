@@ -59,16 +59,23 @@
 
           <section class="card">
             <h2>Wave list <span class="sub">(the U2 grammar — wave / pick / loop / stages)</span></h2>
-            <div class="waves-toolbar">
-              <span class="label">Insert skeleton:</span>
-              <button type="button" class="snippet" data-snippet="wave">wave</button>
-              <button type="button" class="snippet" data-snippet="pick">pick</button>
-              <button type="button" class="snippet" data-snippet="loop">loop</button>
-              <button type="button" class="snippet" data-snippet="stages">stages</button>
-              <button type="button" class="snippet" id="format-waves-btn" title="Re-indent the JSON">⤺ tidy</button>
+            <div class="view-toggle" role="tablist" aria-label="Wave editor view">
+              <button id="view-visual" type="button" class="tab seg active">▦ Visual</button>
+              <button id="view-json" type="button" class="tab seg">{ } JSON</button>
             </div>
-            <textarea id="waves" spellcheck="false" autocomplete="off"></textarea>
-            <p id="waves-error" class="hint"></p>
+            <div id="waves-visual" class="waves-visual"></div>
+            <div id="waves-json" hidden>
+              <div class="waves-toolbar">
+                <span class="label">Insert skeleton:</span>
+                <button type="button" class="snippet" data-snippet="wave">wave</button>
+                <button type="button" class="snippet" data-snippet="pick">pick</button>
+                <button type="button" class="snippet" data-snippet="loop">loop</button>
+                <button type="button" class="snippet" data-snippet="stages">stages</button>
+                <button type="button" class="snippet" id="format-waves-btn" title="Re-indent the JSON">⤺ tidy</button>
+              </div>
+              <textarea id="waves" spellcheck="false" autocomplete="off"></textarea>
+              <p id="waves-error" class="hint"></p>
+            </div>
           </section>
         </div>
 

@@ -45,14 +45,22 @@ import { LAYOUT_IDS } from '../../src/config/layouts';
 import { DECK } from '../../src/config/deck';
 import { DIFFICULTY } from '../../src/config/difficulty';
 import { RNG } from '../../src/core/RNG';
-import { resolveWave, type WaveContext } from '../../src/run/encounters/wave';
+import {
+  resolveWave,
+  type WaveContext,
+  type WaveSpec,
+  type WaveUnitSpec,
+} from '../../src/run/encounters/wave';
 import {
   waveForTurn,
   type WaveCursor,
   type EncounterState,
   type WaveEntry,
+  type PickOption,
+  type Stage,
 } from '../../src/run/encounters/sequencer';
-import { scaledUnit, glyphForArchetype } from '../../src/sim/archetypes';
+import { scaledUnit, glyphForArchetype, type Archetype } from '../../src/sim/archetypes';
+import { ARCHETYPES } from '../../src/config/archetypes';
 import type { UnitTemplate } from '../../src/sim/Unit';
 import { formatEncountersJson } from './format';
 
@@ -70,6 +78,10 @@ type DeepMutable<T> = T extends readonly (infer U)[]
     : T;
 type WorkingEncounter = DeepMutable<Encounter>;
 type WorkingEntry = DeepMutable<WaveEntry>;
+type WSpec = DeepMutable<WaveSpec>;
+type WUnit = DeepMutable<WaveUnitSpec>;
+type WOption = DeepMutable<PickOption>;
+type WStage = DeepMutable<Stage>;
 
 // `working` is a deep, mutable clone of the committed catalog; the form mutates
 // it, the schema validates it, the formatter emits it. ENCOUNTERS stays the
@@ -80,6 +92,53 @@ let schemaOk = true;
 /** False while the waves textarea holds non-JSON text (kept separate from schema
  *  validity so the parse error sits next to the box, not in the issue list). */
 let wavesParseOk = true;
+/** The wave editor's surface: the recursive visual builder (default) or the raw
+ *  JSON box. Both funnel into the same `working[active].waves` model, so the
+ *  preview / validation / formatter / save read one source of truth either way. */
+let viewMode: 'visual' | 'json' = 'visual';
+let uidCounter = 0;
+
+const ARCHETYPE_IDS = Object.keys(ARCHETYPES) as Archetype[];
+const ENTRY_KINDS = ['wave', 'pick', 'loop', 'stages'] as const;
+
+// Per-kind numeric-field config for the `kindNumberControl` (a `<select>` of
+// kinds + one number input bound to that kind's numeric field). Converting kind
+// carries the number across when the field name matches (factor↔factor), else
+// resets to the new kind's default.
+type NumKey = 'value' | 'factor' | 'weight';
+interface KindNumObj {
+  kind: string;
+  value?: number;
+  factor?: number;
+  weight?: number;
+}
+interface KindNumOption {
+  readonly numKey: NumKey;
+  readonly label: string;
+  readonly def: number;
+  readonly step: number;
+  readonly min: number;
+  readonly int: boolean;
+}
+type KindNumCfg = Record<string, KindNumOption>;
+
+const LEVEL_BUDGET_CFG: KindNumCfg = {
+  fixed: { numKey: 'value', label: '=', def: 4, step: 1, min: 0, int: true },
+  mean: { numKey: 'factor', label: '×', def: 1.25, step: 0.05, min: 0, int: false },
+  median: { numKey: 'factor', label: '×', def: 1.25, step: 0.05, min: 0, int: false },
+};
+const COUNT_CFG: KindNumCfg = {
+  fixed: { numKey: 'value', label: '=', def: 3, step: 1, min: 0, int: true },
+  hand: { numKey: 'factor', label: '×', def: 1.5, step: 0.05, min: 0, int: false },
+};
+const UNIT_COUNT_CFG: KindNumCfg = {
+  fixed: { numKey: 'value', label: '=', def: 1, step: 1, min: 0, int: true },
+  weight: { numKey: 'weight', label: 'w', def: 1, step: 0.1, min: 0, int: false },
+};
+const UNIT_LEVEL_CFG: KindNumCfg = {
+  fixed: { numKey: 'value', label: 'Lv', def: 1, step: 1, min: 1, int: true },
+  weight: { numKey: 'weight', label: 'w', def: 1, step: 0.1, min: 0, int: false },
+};
 
 // Preview controls (configurable per the V2 decision — mean/median level + hand
 // size are what move budgets/counts).
@@ -100,6 +159,10 @@ const descEl = mustQuery<HTMLTextAreaElement>('#description');
 const healthPoolEl = mustQuery<HTMLInputElement>('#health-pool');
 const kindEl = mustQuery<HTMLDivElement>('#kind');
 const layoutsEl = mustQuery<HTMLDivElement>('#layouts');
+const viewVisualBtn = mustQuery<HTMLButtonElement>('#view-visual');
+const viewJsonBtn = mustQuery<HTMLButtonElement>('#view-json');
+const wavesVisualEl = mustQuery<HTMLDivElement>('#waves-visual');
+const wavesJsonEl = mustQuery<HTMLDivElement>('#waves-json');
 const wavesEl = mustQuery<HTMLTextAreaElement>('#waves');
 const wavesErrorEl = mustQuery<HTMLParagraphElement>('#waves-error');
 const formatWavesBtn = mustQuery<HTMLButtonElement>('#format-waves-btn');
@@ -126,6 +189,7 @@ buildKindRadios();
 buildLayoutChecks();
 attachIdentity();
 attachWaves();
+attachViewToggle();
 attachPreviewControls();
 attachButtons();
 levelCap = defaultLevelCap();
@@ -341,6 +405,7 @@ function syncForm(): void {
   for (const [id, cb] of layoutChecks) cb.checked = fit.includes(id);
   syncWavesTextarea();
   wavesParseOk = true;
+  renderVisual();
 }
 
 function syncWavesTextarea(): void {
@@ -558,6 +623,450 @@ function addTurnNote(text: string): void {
  *  `DIFFICULTY.unitLevelDelta` (mirrors `rollEnemyWave`'s `cap`). */
 function defaultLevelCap(): number {
   return Math.max(1, ...rosterLevels) + DIFFICULTY.unitLevelDelta;
+}
+
+// ---- Visual wave builder ----
+// A recursive form over the wave grammar. Field edits mutate the model in place
+// (no re-render, so a number input keeps focus while you type); structural edits
+// (add / remove / reorder / kind-convert) mutate the model and re-render the
+// whole tree (simpler + safe for the small trees authored here). Every edit ends
+// in `refreshDerived()` so the preview / validation / export track live.
+
+function attachViewToggle(): void {
+  viewVisualBtn.addEventListener('click', () => setView('visual'));
+  viewJsonBtn.addEventListener('click', () => setView('json'));
+}
+
+function setView(mode: 'visual' | 'json'): void {
+  if (mode === 'visual') {
+    // Commit any pending JSON edits before leaving the JSON box; refuse to switch
+    // on unparseable JSON so edits aren't silently dropped.
+    if (viewMode === 'json') {
+      const parsed = tryParseWaves(wavesEl.value);
+      if (parsed === undefined) {
+        wavesParseOk = false;
+        refreshValidation();
+        wavesErrorEl.textContent = 'Fix the JSON before switching to Visual.';
+        wavesErrorEl.className = 'hint err';
+        return;
+      }
+      encounter().waves = parsed as WorkingEntry[];
+      wavesParseOk = true;
+    }
+    viewMode = 'visual';
+    wavesVisualEl.hidden = false;
+    wavesJsonEl.hidden = true;
+    viewVisualBtn.classList.add('active');
+    viewJsonBtn.classList.remove('active');
+    renderVisual();
+  } else {
+    viewMode = 'json';
+    syncWavesTextarea();
+    wavesParseOk = true;
+    wavesVisualEl.hidden = true;
+    wavesJsonEl.hidden = false;
+    viewJsonBtn.classList.add('active');
+    viewVisualBtn.classList.remove('active');
+  }
+  refreshDerived();
+}
+
+/** Re-render the whole visual tree from the active encounter's wave list. A no-op
+ *  in JSON mode (the textarea is the live surface there). */
+function renderVisual(): void {
+  if (viewMode !== 'visual') return;
+  wavesVisualEl.innerHTML = '';
+  const list = encounter().waves;
+  const head = el('div', 'sub-head');
+  head.append(el('span', 'sub-title', 'waves'), addBar(list));
+  wavesVisualEl.appendChild(head);
+  const inner = el('div', 'sub-list root-list');
+  list.forEach((_, i) => renderEntry(list, i, inner));
+  wavesVisualEl.appendChild(inner);
+}
+
+/** Render `list[i]` as an array member — it gets remove / reorder controls and a
+ *  kind-convert select that replaces it in `list`. */
+function renderEntry(list: WorkingEntry[], i: number, parent: HTMLElement): void {
+  renderEntryNode(
+    list[i]!,
+    (k) => {
+      list[i] = skeletonEntry(k);
+    },
+    nodeControls(list, i),
+    parent,
+  );
+}
+
+/** Render one grammar node. `onConvert` replaces the entry with a fresh skeleton
+ *  of the chosen kind; `controls` is the array-member control cluster (null for a
+ *  pick option's single entry, which the option row already controls). */
+function renderEntryNode(
+  entry: WorkingEntry,
+  onConvert: (kind: string) => void,
+  controls: HTMLElement | null,
+  parent: HTMLElement,
+): void {
+  const node = el('div', `node node--${entry.kind}`);
+  const head = el('div', 'node-head');
+  const kindSel = el('select', 'node-kind');
+  for (const k of ENTRY_KINDS) kindSel.appendChild(option(k));
+  kindSel.value = entry.kind;
+  kindSel.addEventListener('change', () => {
+    onConvert(kindSel.value);
+    renderVisual();
+    refreshDerived();
+  });
+  head.appendChild(kindSel);
+  if (controls) head.appendChild(controls);
+  node.appendChild(head);
+
+  const body = el('div', 'node-body');
+  switch (entry.kind) {
+    case 'wave':
+      renderSpec(entry.spec, body);
+      break;
+    case 'loop':
+      renderLoop(entry, body);
+      break;
+    case 'pick':
+      renderOptions(entry.options, body);
+      break;
+    case 'stages':
+      renderStages(entry.stages, body);
+      break;
+  }
+  node.appendChild(body);
+  parent.appendChild(node);
+}
+
+function renderSpec(spec: WSpec, parent: HTMLElement): void {
+  const grid = el('div', 'spec-grid');
+  grid.append(el('span', 'field-label', 'budget'), kindNumberControl(spec.levelBudget, LEVEL_BUDGET_CFG, (o) => {
+    spec.levelBudget = o as WSpec['levelBudget'];
+  }));
+  grid.append(el('span', 'field-label', 'count'), kindNumberControl(spec.count, COUNT_CFG, (o) => {
+    spec.count = o as WSpec['count'];
+  }));
+  parent.appendChild(grid);
+
+  const uHead = el('div', 'sub-head');
+  const addU = el('button', 'add-btn', '+ unit');
+  addU.type = 'button';
+  addU.addEventListener('click', () => {
+    spec.units.push(newUnit());
+    renderVisual();
+    refreshDerived();
+  });
+  uHead.append(el('span', 'sub-title', 'units'), addU);
+  parent.appendChild(uHead);
+
+  const uWrap = el('div', 'units');
+  spec.units.forEach((_, i) => uWrap.appendChild(renderUnitRow(spec.units, i)));
+  parent.appendChild(uWrap);
+}
+
+function renderUnitRow(units: WUnit[], i: number): HTMLElement {
+  const u = units[i]!;
+  const row = el('div', 'unit-row');
+  const arche = el('select', 'arche-sel');
+  for (const id of ARCHETYPE_IDS) arche.appendChild(option(id, `${glyphForArchetype(id)} ${id}`));
+  arche.value = u.archetype;
+  arche.addEventListener('change', () => {
+    u.archetype = arche.value as Archetype;
+    refreshDerived();
+  });
+  row.append(arche);
+  row.append(el('span', 'field-label', 'cnt'), kindNumberControl(u.count, UNIT_COUNT_CFG, (o) => {
+    u.count = o as WUnit['count'];
+  }));
+  row.append(el('span', 'field-label', 'lvl'), kindNumberControl(u.level, UNIT_LEVEL_CFG, (o) => {
+    u.level = o as WUnit['level'];
+  }));
+  row.append(nodeControls(units, i));
+  return row;
+}
+
+function renderLoop(entry: Extract<WorkingEntry, { kind: 'loop' }>, parent: HTMLElement): void {
+  const row = el('div', 'loop-row');
+  row.append(el('span', 'field-label', 'repeat'));
+  const name = `repeat-${uidCounter++}`;
+  const forever = entry.repeat === 'forever';
+
+  const fLbl = el('label', 'inline');
+  const fr = el('input');
+  fr.type = 'radio';
+  fr.name = name;
+  fr.checked = forever;
+  fLbl.append(fr, document.createTextNode(' forever'));
+
+  const nLbl = el('label', 'inline');
+  const nr = el('input');
+  nr.type = 'radio';
+  nr.name = name;
+  nr.checked = !forever;
+  const nNum = el('input', 'kn-num');
+  nNum.type = 'number';
+  nNum.min = '1';
+  nNum.step = '1';
+  nNum.value = String(typeof entry.repeat === 'number' ? entry.repeat : 2);
+  nNum.disabled = forever;
+  nLbl.append(nr, document.createTextNode(' × '), nNum);
+
+  fr.addEventListener('change', () => {
+    if (!fr.checked) return;
+    entry.repeat = 'forever';
+    renderVisual();
+    refreshDerived();
+  });
+  nr.addEventListener('change', () => {
+    if (!nr.checked) return;
+    const v = Number.parseInt(nNum.value, 10);
+    entry.repeat = Number.isFinite(v) && v >= 1 ? v : 2;
+    renderVisual();
+    refreshDerived();
+  });
+  nNum.addEventListener('input', () => {
+    const v = Number.parseInt(nNum.value, 10);
+    entry.repeat = Number.isFinite(v) && v >= 1 ? v : 1;
+    refreshDerived();
+  });
+
+  row.append(fLbl, nLbl);
+  parent.append(row, subgroup('body', entry.body));
+}
+
+function renderOptions(options: WOption[], parent: HTMLElement): void {
+  const box = el('div', 'subgroup');
+  const head = el('div', 'sub-head');
+  const add = el('button', 'add-btn', '+ option');
+  add.type = 'button';
+  add.addEventListener('click', () => {
+    options.push({ entry: skeletonEntry('wave'), weight: 1 });
+    renderVisual();
+    refreshDerived();
+  });
+  head.append(el('span', 'sub-title', 'options'), add);
+  box.appendChild(head);
+
+  const inner = el('div', 'sub-list');
+  options.forEach((opt, i) => {
+    const optBox = el('div', 'option');
+    const oh = el('div', 'option-head');
+    const w = el('input', 'kn-num');
+    w.type = 'number';
+    w.min = '0';
+    w.step = '0.1';
+    w.value = String(opt.weight);
+    w.addEventListener('input', () => {
+      const v = Number.parseFloat(w.value);
+      opt.weight = Number.isFinite(v) ? v : 0;
+      refreshDerived();
+    });
+    oh.append(el('span', 'field-label', 'weight'), w, nodeControls(options, i));
+    optBox.appendChild(oh);
+    renderEntryNode(
+      opt.entry,
+      (k) => {
+        opt.entry = skeletonEntry(k);
+      },
+      null,
+      optBox,
+    );
+    inner.appendChild(optBox);
+  });
+  box.appendChild(inner);
+  parent.appendChild(box);
+}
+
+function renderStages(stages: WStage[], parent: HTMLElement): void {
+  const box = el('div', 'subgroup');
+  const head = el('div', 'sub-head');
+  const add = el('button', 'add-btn', '+ stage');
+  add.type = 'button';
+  add.addEventListener('click', () => {
+    stages.push({ body: [skeletonEntry('wave')] });
+    renderVisual();
+    refreshDerived();
+  });
+  head.append(el('span', 'sub-title', 'stages'), add);
+  box.appendChild(head);
+
+  const inner = el('div', 'sub-list');
+  stages.forEach((st, i) => {
+    const sb = el('div', 'node node--stages');
+    const sh = el('div', 'node-head');
+    sh.appendChild(el('span', 'stage-label', `stage ${i + 1}`));
+
+    const untilLbl = el('label', 'inline');
+    const cb = el('input');
+    cb.type = 'checkbox';
+    cb.checked = st.until !== undefined;
+    cb.addEventListener('change', () => {
+      if (cb.checked) st.until = { kind: 'enemyPoolAtOrBelow', fraction: 0.5 };
+      else delete st.until;
+      renderVisual();
+      refreshDerived();
+    });
+    untilLbl.append(cb, document.createTextNode(' advance when pool ≤'));
+    sh.appendChild(untilLbl);
+
+    if (st.until) {
+      const f = el('input', 'kn-num');
+      f.type = 'number';
+      f.min = '0';
+      f.max = '1';
+      f.step = '0.05';
+      f.value = String(st.until.fraction);
+      f.addEventListener('input', () => {
+        const v = Number.parseFloat(f.value);
+        if (st.until) st.until.fraction = Number.isFinite(v) ? v : 0;
+        refreshDerived();
+      });
+      sh.appendChild(f);
+    }
+    sh.appendChild(nodeControls(stages, i));
+    sb.appendChild(sh);
+
+    const body = el('div', 'node-body');
+    body.appendChild(subgroup('body', st.body));
+    sb.appendChild(body);
+    inner.appendChild(sb);
+  });
+  box.appendChild(inner);
+  parent.appendChild(box);
+}
+
+/** A `kind` select + a single number input bound to that kind's numeric field
+ *  (the shared shape of levelBudget / count / unit-count / unit-level). */
+function kindNumberControl(obj: KindNumObj, cfg: KindNumCfg, setObj: (o: KindNumObj) => void): HTMLElement {
+  const wrap = el('span', 'kn');
+  const sel = el('select', 'kn-kind');
+  for (const k of Object.keys(cfg)) sel.appendChild(option(k));
+  sel.value = obj.kind;
+  sel.addEventListener('change', () => {
+    const oldCfg = cfg[obj.kind]!;
+    const newCfg = cfg[sel.value]!;
+    const carried = oldCfg.numKey === newCfg.numKey ? (obj[oldCfg.numKey] ?? newCfg.def) : newCfg.def;
+    setObj({ kind: sel.value, [newCfg.numKey]: carried });
+    renderVisual();
+    refreshDerived();
+  });
+
+  const c = cfg[obj.kind]!;
+  const num = el('input', 'kn-num');
+  num.type = 'number';
+  num.step = String(c.step);
+  num.min = String(c.min);
+  num.value = String(obj[c.numKey] ?? c.def);
+  num.addEventListener('input', () => {
+    const raw = num.value.trim();
+    const v = c.int ? Number.parseInt(raw, 10) : Number.parseFloat(raw);
+    obj[c.numKey] = Number.isFinite(v) ? v : 0;
+    refreshDerived();
+  });
+
+  wrap.append(sel, el('span', 'kn-x', c.label), num);
+  return wrap;
+}
+
+/** A nested-list block (a loop/stage `body`) with an add bar + its entries. */
+function subgroup(title: string, list: WorkingEntry[]): HTMLElement {
+  const box = el('div', 'subgroup');
+  const head = el('div', 'sub-head');
+  head.append(el('span', 'sub-title', title), addBar(list));
+  box.appendChild(head);
+  const inner = el('div', 'sub-list');
+  list.forEach((_, i) => renderEntry(list, i, inner));
+  box.appendChild(inner);
+  return box;
+}
+
+/** The "+ wave / pick / loop / stages" add bar for a wave list. */
+function addBar(list: WorkingEntry[]): HTMLElement {
+  const bar = el('span', 'add-bar');
+  for (const k of ENTRY_KINDS) {
+    const b = el('button', 'add-btn', `+ ${k}`);
+    b.type = 'button';
+    b.addEventListener('click', () => {
+      list.push(skeletonEntry(k));
+      renderVisual();
+      refreshDerived();
+    });
+    bar.appendChild(b);
+  }
+  return bar;
+}
+
+/** Remove / reorder controls for an array member. `minOne` disables remove when
+ *  the array is at its schema minimum (waves / units / options / stages need ≥1). */
+function nodeControls<T>(arr: T[], i: number, minOne = true): HTMLElement {
+  const wrap = el('span', 'node-ctl');
+  wrap.append(
+    ctlBtn('↑', i === 0, () => {
+      swap(arr, i, i - 1);
+      renderVisual();
+      refreshDerived();
+    }),
+    ctlBtn('↓', i === arr.length - 1, () => {
+      swap(arr, i, i + 1);
+      renderVisual();
+      refreshDerived();
+    }),
+    ctlBtn(
+      '✕',
+      minOne && arr.length <= 1,
+      () => {
+        arr.splice(i, 1);
+        renderVisual();
+        refreshDerived();
+      },
+      'rm',
+    ),
+  );
+  return wrap;
+}
+
+function ctlBtn(label: string, disabled: boolean, onClick: () => void, extraCls = ''): HTMLButtonElement {
+  const b = el('button', `ctl-btn${extraCls ? ` ${extraCls}` : ''}`, label);
+  b.type = 'button';
+  b.disabled = disabled;
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+function newUnit(): WUnit {
+  return {
+    archetype: ARCHETYPE_IDS[0]!,
+    count: { kind: 'weight', weight: 1 },
+    level: { kind: 'weight', weight: 1 },
+  };
+}
+
+function swap<T>(arr: T[], i: number, j: number): void {
+  if (j < 0 || j >= arr.length) return;
+  const tmp = arr[i]!;
+  arr[i] = arr[j]!;
+  arr[j] = tmp;
+}
+
+/** Typed `document.createElement` + class/text in one call. */
+function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  cls?: string,
+  text?: string,
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+function option(value: string, label = value): HTMLOptionElement {
+  const o = el('option');
+  o.value = value;
+  o.textContent = label;
+  return o;
 }
 
 // ---- Save / revert ----

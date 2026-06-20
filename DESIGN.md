@@ -74,7 +74,7 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
 
 **Node map:** A directed acyclic graph generated from the seed. Roughly 7–10 nodes per run, arranged in layered hops (node rows) with branching paths between them. The player begins before the map and **selects the root as their first encounter** (it's a normal battle node), then advances one hop at a time, and must reach the single terminal node to complete the run.
 
-For MVP, *every node is a battle node*. Rest, shop, elite, and event nodes are deferred.
+For MVP, *every node was a battle node*. Since then: **rest** nodes (G3, a non-combat heal/XP), the terminal **boss** node (G3; W1 gave it an authored `kind:'boss'` encounter with the `stages` grammar), and scattered **elite** nodes (W2 — an optional, harder, routable detour, `kind:'elite'`). **Shop** and **event** nodes remain deferred.
 
 **Recruitment:** After each victory, the player is offered a choice between 3 randomly generated units (within the existing archetypes). Each offer is guaranteed to contain at least one melee and at least one ranged option, so the choice is never "stat reroll only." The player picks one to add to their team. Skipping is not an option in MVP.
 
@@ -97,7 +97,7 @@ For MVP, *every node is a battle node*. Rest, shop, elite, and event nodes are d
 | `DARK_FLOURESCENT_BLUE` | Cooldown indicators, dimmed FX |
 | `NEON_RED` | Enemy units, damage indicators |
 | `DARK_NEON_RED` | Low-HP enemy states, defeated states |
-| `NEON_PURPLE` | Reserved for rare/elite content post-MVP |
+| `NEON_PURPLE` | Elite map-nodes (the `*` glyph, W2); rare/elite content |
 
 The palette is **enforced at art-direction time**, not by the shader. The `COLORS` table is the canonical color vocabulary code reaches for (`team === 'enemy' ? NEON_RED : TERMINAL_GREEN`); rendering doesn't post-quantize. The MVP shipped a strict palette-quant pass; B1 swapped it for a vibrancy-clamp + bloom chain after side-by-side testing — it gave smooth glow gradients (which the strict quant fought) without losing the terminal-palette identity.
 
@@ -135,8 +135,8 @@ Captured here so we can confidently say "not now" during the jam without losing 
 
 - Shop and economy (gold, buying units, rerolls)
 - Unit synergies and traits
-- Rest, shop, elite, and event node types
-- Boss encounters at hop ends
+- ~~Rest, elite node types~~ ✅ BUILT (rest G3; elite W2). **Shop + event** node types still deferred.
+- ~~Boss encounters at hop ends~~ ✅ BUILT (the terminal boss node, G3; W1 gave it an authored `stages`-grammar encounter)
 - Larger units (2×2 or 2×1 footprints)
 - High-level player commands during battle (focus-fire, avoid area, etc.)
 - Audio and SFX

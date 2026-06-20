@@ -663,16 +663,31 @@ the knobs that move budgets)?
 
 ---
 
-## Phase W — Boss encounters
+## Phase W — Boss + elite encounters ✅ COMPLETE (`5046960` boss + `d08a696` elites)
+
+> **DONE (2026-06-20), scope EXPANDED to include elite map-nodes** (pulled forward
+> from the "NOT doing" list at the user's request — the seams made it cheap). **W1
+> boss:** `encounterKindFor('boss')`→`'boss'`; **"The Bandit King"** (`kind:'boss'`,
+> `healthPool 20`) exercises the deferred condition-gated **`stages`** grammar (a
+> 3-phase escalation flipping at pool ≤0.66/≤0.33); pooled in "The Start". **W2
+> elite:** a new `'elite'` `NodeKind` + a scatter pass in `NodeMap.generate` (after
+> the rest scatter → structure+rest byte-identical; `eliteChance 0.25`/
+> `eliteMinSpacing 2`; always a non-elite sibling = an OPTIONAL detour); the `*`
+> glyph in NEON_PURPLE; two elites (Brigand Champions / Warband Vanguard, pool 12)
+> pooled in "The Start"; **payoff = more-XP-only** (the `rewards?`/loot seam stays
+> deferred). **RunSnapshot v22→v23.** Difficulty numbers (boss/elite pools +
+> budgets, `eliteChance`) are deliberately UNTUNED — Phase X targets. Full as-built
+> record in [HANDOFF.md](HANDOFF.md) (the ACTIVE block) + git. The original plan
+> follows.
 
 **Shape:** the brief — "identical to regular encounters for now, but for the
 terminal boss nodes; drop the hop gate." With U+V in place this is small:
 encounters carry `kind` (U3), selection already maps node→encounter kind (V1), so
 W is **authoring a `kind: 'boss'` encounter per sector** + confirming the boss node
 selects from the boss pool (and that `minHop` is ignored/omitted for bosses). "The
-Start" gets a boss encounter; the terminal node fights it. *(The `'elite'` kind is
-reserved in the U3 enum but unreachable this round — no map-node selects it until
-elite nodes land; deferred, see the NOT-doing list.)*
+Start" gets a boss encounter; the terminal node fights it. *(The W2 scope
+expansion then ALSO built the `'elite'` tier — see the COMPLETE banner above; the
+NOT-doing "Elite map-nodes" entry is retired.)*
 
 **Cost:** mostly content + a small selection-filter confirmation. No new schema
 (the `kind` enum shipped in U3). Re-baseline absorbs into X.
@@ -781,10 +796,12 @@ vs. defer; the hop-difficulty curve shape.
 - **Object-pooling the sim's hot allocators** ([TODO.md](TODO.md)) — parked.
 
 **Seamed this round but deliberately NOT built (the future-proofing pass):**
-- **Elite map-nodes.** The encounter `kind` enum reserves `'elite'` (U3), so elite
-  *encounters* author cleanly now — but the node map still generates only
-  battle/rest/boss, so nothing *selects* one yet. Elite *nodes* (a `NodeMap` +
-  selection change, à la the genre's optional harder fights) are a future round.
+- **~~Elite map-nodes.~~ ✅ BUILT in W2** (`d08a696`) — pulled forward from this
+  deferral list. A new `'elite'` `NodeKind` + a `NodeMap.generate` scatter pass; the
+  node→encounter kind map + coverage guard route elite nodes to the sector's elite
+  pool; two elite encounters ship in "The Start". Payoff is more-XP-only (the loot
+  economy below is still deferred — an elite is a harder *optional* fight, not yet a
+  reward-bearing one).
 - **Encounter rewards / a loot economy.** U3 ships the optional `rewards?` field as
   a reserved, ignored seam; the reward-granting + the currency/shop that consume it
   stay deferred (above).

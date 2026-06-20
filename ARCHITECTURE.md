@@ -171,7 +171,7 @@ src/
                              # layoutFirst) resolver picking an (encounter, layout) from the sector pools +
                              # assertSelectionCoverage boot guard (Brigands now authored in encounters.json)
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
-    NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3) + dump; T2: per-sector length override
+    NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3)|elite (W2 scatter) + dump; T2: per-sector length override
     sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks
     Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1); per-card level (post-G5)
 

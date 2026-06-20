@@ -35,6 +35,23 @@ body {
   font-weight: 600;
   color: var(--accent);
 }
+
+/* Wb3 — "← Tools" home link back to the dev-tools index (mirrors the encounter
+   editor), pushed to the right of the row bar. */
+.bar a.home {
+  margin-left: auto;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.bar a.home:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
 .subtitle {
   color: var(--muted);
 }

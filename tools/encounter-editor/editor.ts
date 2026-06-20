@@ -108,6 +108,16 @@ let wavesParseOk = true;
 let viewMode: 'visual' | 'json' = 'visual';
 let uidCounter = 0;
 
+/** Saving rewrites config/encounters.json, which Vite HMR turns into a full page
+ *  reload (the json → encounters.ts → editor.ts chain has no clean HMR boundary).
+ *  Without a stash the editor reboots at the first tab (activeIndex 0), so a save
+ *  from any other tab snaps you back to encounter #0 and the "Saved…" confirmation
+ *  vanishes. A successful Save stashes the saved encounter id + status here; the
+ *  next boot consumes it, re-selects that (now-on-disk) encounter's tab, and
+ *  re-shows the confirmation — so a save feels seamless. Session-scoped so it
+ *  never leaks across browser sessions (mirrors the layout editor's SAVE_STASH_KEY). */
+const SAVE_STASH_KEY = 'encounterEditor.justSaved';
+
 /** A successful "add to sector" write reloads this page: sectors.json is imported
  *  by src/config/sectors.ts with no HMR boundary, so Vite broadcasts a full-reload
  *  to every connected dev client — including this one (the fetch-not-import choice
@@ -220,6 +230,7 @@ levelCapEl.value = String(levelCap);
 handSizeEl.value = String(handSize);
 rosterLevelsEl.value = rosterLevels.join(', ');
 selectEncounter(activeIndex);
+restoreAfterSave();
 void loadSectorChecks();
 restoreAfterSectorAdd();
 
@@ -1202,6 +1213,34 @@ function setSectorAddStatus(text: string, cls: 'hint' | 'ok' | 'err'): void {
 }
 
 /**
+ * Boot-time companion to Save: if the previous page life just saved the catalog
+ * (the Vite reload masked below), consume the stash, re-select that now-on-disk
+ * encounter's tab, and re-show the confirmation. A no-op on a normal cold boot.
+ * Robust to a missing/stale id (e.g. the file was hand-edited between save and
+ * reload) — it just skips the tab re-select and still shows the status.
+ */
+function restoreAfterSave(): void {
+  let stash: string | null = null;
+  try {
+    stash = sessionStorage.getItem(SAVE_STASH_KEY);
+    if (stash) sessionStorage.removeItem(SAVE_STASH_KEY);
+  } catch {
+    return; // sessionStorage unavailable — nothing to restore.
+  }
+  if (!stash) return;
+  try {
+    const { savedId, status } = JSON.parse(stash) as { savedId?: string; status?: string };
+    if (savedId) {
+      const idx = working.findIndex((e) => e.id === savedId);
+      if (idx >= 0) selectEncounter(idx);
+    }
+    if (status) setSaveStatus(status, 'ok');
+  } catch {
+    // Malformed stash — ignore.
+  }
+}
+
+/**
  * Boot-time companion to the "add to sector" toggle: a successful pool write
  * reloads this tab (see SECTOR_ADD_STASH_KEY), so re-show the stashed confirmation
  * in the sector-add status line. A no-op on a normal cold boot.
@@ -1235,11 +1274,20 @@ async function save(): Promise<void> {
     });
     const data: { ok?: boolean; error?: string } = await res.json().catch(() => ({}));
     if (res.ok && data.ok) {
-      setSaveStatus(
+      const savedId = encounter().id;
+      const status =
         `Saved to config/encounters.json at ${new Date().toLocaleTimeString()}. ` +
-          `An open game tab hot-reloads the new catalog.`,
-        'ok',
-      );
+        `An open game tab hot-reloads the new catalog.`;
+      setSaveStatus(status, 'ok');
+      // The write triggers a Vite reload of this tab (see SAVE_STASH_KEY) — stash
+      // the active tab + status so the next boot re-selects this encounter and
+      // re-shows the confirmation instead of snapping back to the first tab.
+      try {
+        sessionStorage.setItem(SAVE_STASH_KEY, JSON.stringify({ savedId, status }));
+      } catch {
+        // sessionStorage unavailable (private mode / quota) — non-fatal; the save
+        // still succeeded, the reload just won't auto-restore the tab.
+      }
     } else {
       setSaveStatus(`Save failed: ${data.error ?? res.statusText}`, 'err');
     }

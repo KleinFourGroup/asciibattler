@@ -880,19 +880,21 @@ isolation (no per-encounter field, per the X1 revision). (4) **`--seed-offset=N`
 shifts the eval-seed base past the tuned range (the config-overfit holdout for the
 X3 verify — the long-missing H7d prereq), in `splitSeeds` + run/search/sweep.
 
-**Boss/elite isolation** pairs `--encounter=<id>` with `--balance-sweep`'s
-`--hops`/`--roster` (every run a boss fight — the sweep honors them; plain run mode
-does not, so a `--per-encounter` full run samples the boss only where it appears =
-the in-situ read). A run-mode `--hops`/`--roster` enhancement is an optional X3
-follow-up.
+**Boss/elite isolation** pairs `--encounter=<id>` with `--hops`/`--roster` (every
+run a boss fight). **X2d** extended `--hops`/`--roster` to the plain run mode too
+(was `--search`/`--balance-sweep`-only), so `--encounter=bandit-king --hops=2
+--roster=<leveled> --per-encounter` is a standalone boss isolation read (12 boss
+instances vs 1 in a full run); a `--per-encounter` *full* run still samples the boss
+once at the terminal = the in-situ read.
 
 **Cost:** dev-only tooling + the one-line `RunConfig.forcedEncounterId` seam.
 
 **Tests (as shipped):** +3 per-encounter rollup (per-instance/per-wave math,
 telemetry-off fallback, real-run id resolution), +5 selection force (kind
 match/mismatch/fit-filter/unknown/no-layout), +2 Run wiring (pins / loud throw),
-+1 `--encounter` plumbing, +1 `splitSeeds` holdout-disjoint. 1206 main / 210
-fuzz:smoke / typecheck / lint green.
++1 `--encounter` plumbing, +1 `splitSeeds` holdout-disjoint (X2d run-mode
+`--hops`/`--roster` verified end-to-end — boss instances jump 1→12 at `--hops=2`).
+1206 main / 210 fuzz:smoke / typecheck / lint green.
 
 ### X3 — Re-derive the band + tune the launch content (the sweep)
 

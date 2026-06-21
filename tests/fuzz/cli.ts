@@ -16,6 +16,10 @@
  *   npm run fuzz -- --per-layout  # + per-layout & layout×hop win/death breakdown (+ CSVs)
  *   npm run fuzz -- --per-encounter  # + per-encounter pool-damage breakdown (telemetry on; + per-encounter.csv)
  *   npm run fuzz -- --encounter=brigands --per-encounter  # force ONE encounter (clean sample, X2)
+ *   # X2d — --hops / --roster apply to a plain run too (boss/elite isolation: every
+ *   # run is that fight). The boss fields only at its node kind, so --hops=2 puts the
+ *   # terminal boss node one step in:
+ *   npm run fuzz -- --encounter=bandit-king --hops=2 --roster=mercenary:6,ranged:6,mage:6 --per-encounter
  *   npm run fuzz -- --layout=junctionAmbush --per-hop   # force ONE layout (clean full sample)
  *   npm run fuzz -- --layout=procedural --per-hop       # force PROCEDURAL maps every battle (M6 isolate)
  *

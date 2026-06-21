@@ -10,6 +10,7 @@ import { join, basename } from 'node:path';
 import { runOne } from '../harness';
 import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
+import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
 import {
   makeStrategy,
   makeDefaultStrategies,
@@ -62,6 +63,8 @@ export type RunModeArgs = Pick<
   | 'perEncounter'
   | 'layout'
   | 'encounter'
+  | 'hops'
+  | 'roster'
   | 'objective'
   | 'redraw'
   | 'empower'
@@ -82,15 +85,29 @@ export function runRunCli(args: RunModeArgs): void {
   // library + the sentinel.
   // --encounter=<id> (X2) forces ONE authored encounter at every matching-kind
   // node — the clean per-encounter isolation sample. Combinable with --layout.
+  // X2d — --hops / --roster also apply to a plain run (they already did for
+  // --search / --balance-sweep), so a boss/elite isolation read works standalone:
+  // `--encounter=<boss> --hops=2 --roster=<leveled> --per-encounter` makes every
+  // run that fight (the boss only fields at its node kind, so a full-length run
+  // samples it once at the terminal — the in-situ read). --roster reuses
+  // RunConfig's validated parser (invalid tokens dropped, :level optional/clamped).
   let harnessOptions: HarnessOptions = {};
   const layout = layoutFromArgs(args);
   const encounter = encounterFromArgs(args);
-  if (layout !== undefined || encounter !== undefined) {
-    const runConfig: { forcedLayoutId?: string; forcedEncounterId?: string } = {};
-    if (layout !== undefined) runConfig.forcedLayoutId = layout;
-    if (encounter !== undefined) runConfig.forcedEncounterId = encounter;
-    harnessOptions = { runConfig };
-  }
+  const roster = args.roster
+    ? parseRunConfig(new URLSearchParams({ roster: args.roster })).startingRoster
+    : undefined;
+  const runConfig: {
+    hopCount?: number;
+    startingRoster?: readonly RosterEntry[];
+    forcedLayoutId?: string;
+    forcedEncounterId?: string;
+  } = {};
+  if (args.hops !== undefined) runConfig.hopCount = args.hops;
+  if (roster && roster.length > 0) runConfig.startingRoster = roster;
+  if (layout !== undefined) runConfig.forcedLayoutId = layout;
+  if (encounter !== undefined) runConfig.forcedEncounterId = encounter;
+  if (Object.keys(runConfig).length > 0) harnessOptions = { runConfig };
   // J4 — drive a fixed objective strategy in every battle (default none =
   // byte-identical to the pre-J4 fuzz path; the baselines stay put).
   const objective = objectiveFromArgs(args);
@@ -126,10 +143,14 @@ export function runRunCli(args: RunModeArgs): void {
   const allResults: RunResult[] = [];
   const layoutNote = args.layout ? ` (layout=${args.layout})` : '';
   const encounterNote = encounter ? ` (encounter=${encounter})` : '';
+  const hopsNote = args.hops !== undefined ? ` (hops=${args.hops})` : '';
+  const rosterNote = roster
+    ? ` (roster=[${roster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}])`
+    : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   for (const strategy of strategies) {
     process.stdout.write(
-      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${encounterNote}${daemonNote}…\n`,
+      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}…\n`,
     );
     for (const s of seeds) allResults.push(runOne(s, strategy, harnessOptions));
   }

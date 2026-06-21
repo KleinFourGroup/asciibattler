@@ -277,4 +277,7 @@ deltas. The pre-X H7c→O log lives at
   `warband-vanguard` ~12 and the boss `bandit-king` ~24 lead per-instance pool
   damage; normals span `adventurer-with-guards` ~11 down to `highwaymen` ~0. NOT a
   tuning pass — just the harness's first sanity read; the X3 5-step sweep is next.
+  **X2d** extended `--hops`/`--roster` to the plain run mode (was sweep/search-only),
+  so a boss/elite isolation telemetry read works standalone (`--encounter=bandit-king
+  --hops=2 --roster=<leveled> --per-encounter` → 12 boss instances vs 1 in a full run).
 - *(Phase X3 sweep readings — to come.)*

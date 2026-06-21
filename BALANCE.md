@@ -219,21 +219,24 @@ re-time mid-sweep).
 
 ## Commands
 
-> The per-encounter flags below are **X1/X2 — to build.** Shapes are sketches;
-> finalize when built.
+> The per-encounter flags below are **X2 — BUILT** (X2a–X2c, 2026-06-21).
 
 - `npm run fuzz -- --search [--preset=quick|medium|heavy|overnight] [--jobs=N]` —
   best-achievable + gradient. *(built)*
-- `npm run fuzz -- --encounter=<id> …` — force one encounter across every node
-  (per-kind-bucket aware, per Wb4); the clean per-encounter sample. *(X2)*
-- `npm run fuzz -- --balance-sweep --knob=waveSize --range=0.5:2.0:N \`
-  `--knob2=levelBudget --range2=0.5:2.0:N --encounter=<id> --tier=… [--jobs=N]`
-  — the difficulty-multiplier grid (mutates the in-memory GLOBAL lever under
-  `--encounter` isolation). *(X2)*
+- `npm run fuzz -- --encounter=<id> …` — force one encounter at every node of its
+  KIND (per-kind-bucket aware, Wb4); the clean per-encounter sample. Loud-validated
+  against the catalog. *(built — X2b)*
+- `npm run fuzz -- --balance-sweep --knob=difficulty.waveSizeMultiplier --range=0.5:2.0:N \`
+  `--knob2=difficulty.levelBudgetMultiplier --range2=0.5:2.0:N --encounter=<id> --tier=… [--jobs=N]`
+  — the difficulty-multiplier grid (the GLOBAL `DIFFICULTY` lever under `--encounter`
+  isolation; the knobs are X1's live `difficulty.json` keys, so the existing sweep
+  engine drives them — no per-encounter field). For a boss/elite, add `--hops=2
+  --roster=<leveled>` so every run is that fight. *(built — X2a/X1)*
 - `npm run fuzz -- --per-encounter | --per-layout | --per-hop` — pool-damage +
-  outcome rollups (`--per-encounter` = X2; the other two built).
+  outcome rollups (`--per-encounter` = X2a: player pool damage TAKEN per instance +
+  per wave, keyed by encounter id; the other two pre-built).
 - `--seed-offset=N` — base the eval seeds past the tuned range (the config-overfit
-  holdout). *(X1/X2)*
+  holdout); run / search / sweep. *(built — X2c)*
 
 ---
 
@@ -262,4 +265,16 @@ deltas. The pre-X H7c→O log lives at
   encounter's authored budget its single source of truth — so X1 touches no encounter
   schema. Proven **1.0 ≡ pre-X1 byte-identical** (fuzz:smoke 205); the encounter
   editor gains a preview-only difficulty slider. Sweep readings still to come (X2/X3).
-- *(Phase X sweep readings — to come.)*
+- **2026-06-21 — X2 shipped: the per-encounter balance harness** (X2a `99acbf7`
+  per-encounter pool-damage telemetry + `--per-encounter`; X2b `3a0f66c`
+  `--encounter=<id>` force-select, per-kind aware, via a `RunConfig.forcedEncounterId`
+  seam; X2c `cce21f4` `--seed-offset=N` held-out holdout). The metric is **player
+  pool damage taken** (the chip's `enemy` field × `HEALTH.chipMultiplier`), reported
+  per instance + per wave. **The multiplier sweep needed no new build** — X1 made
+  `waveSize`/`levelBudget` live `DIFFICULTY` keys, so `--balance-sweep
+  --knob=difficulty.waveSizeMultiplier --encounter=<id>` already works. First read
+  (greedy, 8 seeds, natural full runs, UNTUNED): elites `brigand-champions` ~16 /
+  `warband-vanguard` ~12 and the boss `bandit-king` ~24 lead per-instance pool
+  damage; normals span `adventurer-with-guards` ~11 down to `highwaymen` ~0. NOT a
+  tuning pass — just the harness's first sanity read; the X3 5-step sweep is next.
+- *(Phase X3 sweep readings — to come.)*

@@ -851,24 +851,48 @@ proves a `RunConfig` override threads through to the resolved enemy team.
 engine primitive, not harness-only; **the source is per-run (`RunConfig`) defaulting
 from `difficulty.json` — NOT a per-encounter field** (the revision above).
 
-### X2 — The per-encounter balance harness
+### X2 — The per-encounter balance harness ✅ COMPLETE (2026-06-21)
 
-**Shape:** the measurement layer (dev-only, `tests/fuzz/` + `tools/`): (1)
-**per-encounter telemetry** keyed by encounter id — **pool damage** (the metric),
-turns, per-wave chips, deaths, archetype mix; (2) **`--encounter=<id>`** force-select
-across every node (per-kind-bucket aware, per Wb4) for clean samples, mirroring
-`--layout=<id>`; (3) the **per-encounter multiplier sweep** — mutating the in-memory
-encounter's `waveSize`/`levelBudget` field per grid point (the first-class field
-makes this clean — the frozen-JSON mechanism fix); (4) **`--seed-offset`** to base
-the eval seeds past the tuned range (the config-overfit holdout for the X3 verify —
-the long-missing H7d prereq).
+> **DONE** (X2a `99acbf7` + X2b `3a0f66c` + X2c `cce21f4`). Smaller than first
+> scoped: the multiplier sweep (point 3) was **already working** post-X1 — X1 put
+> `waveSizeMultiplier`/`levelBudgetMultiplier` as live numeric keys on `DIFFICULTY`,
+> so the existing `--balance-sweep --knob=difficulty.waveSizeMultiplier
+> --knob2=difficulty.levelBudgetMultiplier` grid drives them in-memory (the
+> per-encounter-FIELD mechanism in the original plan below was revised away by X1).
+> What X2 actually built: the **isolation** the sweep runs under (`--encounter`),
+> the **per-encounter readout**, and the **held-out seeds**. Dev-only except a tiny
+> `RunConfig.forcedEncounterId` seam (mirrors `forcedLayoutId`).
 
-**Cost:** dev-only tooling, like every prior telemetry add. Extends `reporters.ts`,
-the sweep flag parsing, and `splitSeeds` (for `--seed-offset`).
+**Shape (as shipped):** the measurement layer (dev-only, `tests/fuzz/`): (1)
+**per-encounter telemetry** keyed by `Encounter.id` — **player pool damage taken**
+(the metric = the chip's `enemy` field × `HEALTH.chipMultiplier`, in pool-HP units;
+per INSTANCE = node visit, the per-kind-band unit, AND per WAVE = turn) + wave
+win/deaths/sizes + the encounter's kind; surfaced via `--per-encounter` (enables
+telemetry, prints the table, writes `per-encounter.csv`). (2) **`--encounter=<id>`**
+force-select (per-kind aware, Wb4): a `RunConfig.forcedEncounterId` honored in
+`selectEncounter` BEFORE strategy dispatch — fields the encounter at every node of
+ITS kind (bypassing the sector pool + hop gate), rolling its layout from the
+sector pool ∩ fit-filter; a kind mismatch falls back to normal selection (boss/elite
+nodes still draw their bucket). Wired through run / `--search` / `--balance-sweep`
++ the `--jobs` shard path; loud-validated against `ENCOUNTER_IDS`. (3) the multiplier
+sweep — **already in place** via the global `DIFFICULTY` lever under `--encounter`
+isolation (no per-encounter field, per the X1 revision). (4) **`--seed-offset=N`**
+shifts the eval-seed base past the tuned range (the config-overfit holdout for the
+X3 verify — the long-missing H7d prereq), in `splitSeeds` + run/search/sweep.
 
-**Tests:** the per-encounter rollup aggregates correctly; `--encounter` forces
-selection + draws the right kind bucket; `--seed-offset` makes the holdout disjoint;
-determinism unchanged (telemetry is observation-only).
+**Boss/elite isolation** pairs `--encounter=<id>` with `--balance-sweep`'s
+`--hops`/`--roster` (every run a boss fight — the sweep honors them; plain run mode
+does not, so a `--per-encounter` full run samples the boss only where it appears =
+the in-situ read). A run-mode `--hops`/`--roster` enhancement is an optional X3
+follow-up.
+
+**Cost:** dev-only tooling + the one-line `RunConfig.forcedEncounterId` seam.
+
+**Tests (as shipped):** +3 per-encounter rollup (per-instance/per-wave math,
+telemetry-off fallback, real-run id resolution), +5 selection force (kind
+match/mismatch/fit-filter/unknown/no-layout), +2 Run wiring (pins / loud throw),
++1 `--encounter` plumbing, +1 `splitSeeds` holdout-disjoint. 1206 main / 210
+fuzz:smoke / typecheck / lint green.
 
 ### X3 — Re-derive the band + tune the launch content (the sweep)
 

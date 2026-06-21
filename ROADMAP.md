@@ -778,8 +778,19 @@ not run state → no snapshot bump.** Headless-first.
 
 The closer. The authored model replaced the random generator, so the band is
 **re-derived from scratch** (not re-confirmed). **READ [BALANCE.md](BALANCE.md)
-first** — the re-derivation follows the same broad→medium→heavy funnel, but the
-*content itself* (the authored encounters) is now part of what's being tuned.
+first** — the protocol was *overhauled* for the authored-encounter world (the pre-X
+H7c→O global-knob log is archived at
+[archive/balance-h7c-O-log.md](archive/balance-h7c-O-log.md)).
+
+**The shift (why X is bigger than a re-sweep).** Pre-X the sweep tuned 2–3 global
+`difficulty.json` constants by mutating the live `DIFFICULTY` object. The authored
+encounters are **frozen JSON**, so that mechanism no longer reaches the content
+being tuned. X therefore **builds, then sweeps**: the lever becomes per-encounter
+difficulty **multipliers as first-class engine primitives** (X1), measured by a
+**per-encounter harness** (X2), then driven through the **5-step sweep** (X3, the
+protocol in BALANCE.md). The difficulty **metric is pool damage**; the **health
+metric is the skill gradient** (not win rate); "too hard/easy" means off-band **or**
+wrong-gradient.
 
 **Shipped (X groundwork) — the per-wave `levelCap`** (`97fe0ab` model + migration,
 `d120606` editor). The per-instance enemy level cap moved from a global
@@ -788,44 +799,73 @@ first** — the re-derivation follows the same broad→medium→heavy funnel, bu
 deriving COUNT from it (`ceil(budget/cap)`); the encounter model authors count, so
 the cap's only remaining job — the per-instance ceiling — became per-wave + opt-in.
 The migration is byte-identical (stamped `{roster, delta:2}` only on the 5 waves
-where the old cap binds; `levelCapMigration.test.ts` proves it). The *balance use* —
-**uncapping** the spike encounters (Ronin-and-Mages, the boss) so "few strong units"
-field at their authored budget — is a deliberate, measured X2 edit, not done here.
+where the old cap binds; `levelCapMigration.test.ts` proves it). Its *balance use* —
+**uncapping** the spike encounters so the strength axis can bite — pairs with X1.
 
-### X1 — Per-encounter fuzz/balance telemetry
+### X1 — Difficulty multipliers as first-class engine primitives
 
-**Shape:** extend the `tests/fuzz/` reporters (the `--per-layout` / `--per-floor`
-model) with **per-encounter** rollups — win rate, turns, per-wave pool chips,
-deaths, archetype mix — keyed by encounter id. Add `--encounter=<id>` (force-select
-one encounter across every node, mirroring `--layout=<id>`) for clean per-encounter
-samples. **Zero `src/` footprint** (all `tests/fuzz/` + `tools/`).
+**Shape:** add `waveSize` + `levelBudget` multipliers (default **1.0**, sweep range
+**0.5–2.0**) to the **Encounter**, applied to **all** its waves at resolve time.
+They map cleanly onto the resolver's two steps in
+[wave.ts](src/run/encounters/wave.ts) — `waveSize` scales `resolveTotalCount`'s `C`
+(the **action-economy / count** axis), `levelBudget` scales `resolveLevelBudget`'s
+`L` (the **individual-strength** axis) — the K2 "count vs strength are different
+levers" decomposition. Threaded via `WaveContext`; the **static per-encounter field
+is the source now**, a dynamic difficulty system (hop-ramp / ascension) is the
+*seamed* future source (same application point). **Pairs with uncapping the spike
+encounters** (Ronin-and-Mages, the boss): `levelBudget` **saturates** against a
+`levelCap` (a capped wave clamps to `n·cap`), so the strength axis only bites on
+uncapped waves. Unlike X's other steps this is **`src/` work** (schema + resolver +
+`Run.beginTurn` wiring + the encounter-editor control).
 
-**Cost:** dev-only tooling, like every prior telemetry add. Extends `reporters.ts`
-+ the sweep flag parsing.
+**Cost:** small, contained engine change; the multipliers are config on the
+encounter → **no RunSnapshot bump** (re-read on rehydrate).
 
-**Headless tests:** the per-encounter rollup aggregates correctly; `--encounter`
-forces selection; determinism unchanged (telemetry is observation-only).
+**Tests:** the resolver scales count/budget by the multipliers; **1.0 ≡ pre-X
+(byte-identical** — prove it on `fuzz:smoke`); `levelBudget` saturates at `levelCap`
+(the uncap motivation); the editor round-trips the control.
 
-### X2 — Re-derive the band + tune the launch content
+**Decisions X1 (LOCKED with user):** range 0.5–2.0; per-encounter scope applied to
+all waves; first-class engine primitive, not harness-only (it's the difficulty-system
+groundwork).
 
-**Shape:** with the reproduction encounter as the **anchor** (it should land near
-today's band — a sanity check that the model is faithful), re-run the difficulty
-funnel against the authored catalog. Tune via the encounter knobs the model now
-exposes (per-wave budget/count, the wave sequence, the per-encounter pool) **and**
-the global `difficulty.json` levers — but the encounter authoring is now the finer
-instrument. Re-confirm the skill-gradient health metric (best-achievable vs
-baselines). Fold in the long-open **archetype-balance** thread (the mercenary +
-ranged duopoly) and the **hop-gated layout** difficulty curve, both of which the
-encounter/sector model now makes tunable. Re-baseline the test + fuzz suites.
+### X2 — The per-encounter balance harness
+
+**Shape:** the measurement layer (dev-only, `tests/fuzz/` + `tools/`): (1)
+**per-encounter telemetry** keyed by encounter id — **pool damage** (the metric),
+turns, per-wave chips, deaths, archetype mix; (2) **`--encounter=<id>`** force-select
+across every node (per-kind-bucket aware, per Wb4) for clean samples, mirroring
+`--layout=<id>`; (3) the **per-encounter multiplier sweep** — mutating the in-memory
+encounter's `waveSize`/`levelBudget` field per grid point (the first-class field
+makes this clean — the frozen-JSON mechanism fix); (4) **`--seed-offset`** to base
+the eval seeds past the tuned range (the config-overfit holdout for the X3 verify —
+the long-missing H7d prereq).
+
+**Cost:** dev-only tooling, like every prior telemetry add. Extends `reporters.ts`,
+the sweep flag parsing, and `splitSeeds` (for `--seed-offset`).
+
+**Tests:** the per-encounter rollup aggregates correctly; `--encounter` forces
+selection + draws the right kind bucket; `--seed-offset` makes the holdout disjoint;
+determinism unchanged (telemetry is observation-only).
+
+### X3 — Re-derive the band + tune the launch content (the sweep)
+
+**Shape:** run the BALANCE.md **5-step loop** — (1) `--search` the optimal run-level
+strategy; (2) fix it, gather per-encounter pool-damage telemetry (**forced + in-situ
+both**); (3) ID off-band / wrong-gradient encounters; (4) mutate their multipliers
+toward the per-kind target, turning off resistant encounter×layout combos (the
+`layouts` fit-filter) or hop gates (`minHop`); (5) **verify on held-out seeds**. A
+reproduction-class **anchor** sanity-checks the model lands near today's band. Fold
+in the long-open **archetype-balance** thread (the mercenary+ranged duopoly) + the
+**hop-gated layout** difficulty curve. Re-baseline the test + fuzz suites.
 
 **Cost:** the heavy compute pass (`--jobs`, mind the `dwm.exe` leak — reboot before
-heavy runs; `--jobs=1` immune). Decisions locked **with the user** per the BALANCE
-protocol.
+heavy runs; `--jobs=1` immune). Decisions locked **with the user** per BALANCE.
 
-**Decision points X2:** the band target (re-confirm the "winnable-but-losable"
-~2/3 with a steep gradient, or re-aim now that encounters can be *designed* to be
-easy/hard rather than uniformly random?); how much archetype rebalancing to fold in
-vs. defer; the hop-difficulty curve shape.
+**Decision points X3:** the **per-kind target bands** — **data-first** (gather
+pool-damage baselines, THEN set; tentative **elite ≈ 2× / boss ≈ 4×** normal,
+speculative); **uniform ~2/3 vs an authored difficulty *curve*** (hop-ramped); how
+much archetype rebalancing to fold in vs. defer.
 
 ---
 
@@ -844,8 +884,8 @@ vs. defer; the hop-difficulty curve shape.
 - **`RNG` stat-label vs `rng` reach ambiguity** ([TODO.md](TODO.md)) — cosmetic,
   unrelated.
 - **N4 overnight out-of-sample verify** — still **deferred to a VPS** (the
-  `dwm.exe` leak); the X2 re-derivation is the natural time to finally run it (add
-  `--seed-offset` for the config-overfit holdout).
+  `dwm.exe` leak); the X3 sweep verify is the natural time to finally run it
+  (`--seed-offset`, the config-overfit holdout, lands in X2).
 
 ---
 

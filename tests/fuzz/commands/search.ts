@@ -50,6 +50,7 @@ export type SearchModeArgs = Pick<
   | 'vectors'
   | 'seeds'
   | 'samplerSeed'
+  | 'seedOffset'
   | 'jobs'
   | 'hops'
   | 'roster'
@@ -77,7 +78,8 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
     trainCount = Math.max(1, Math.round(args.seeds * 0.8));
     testCount = Math.max(1, args.seeds - trainCount);
   }
-  const { trainSeeds, testSeeds } = splitSeeds(trainCount, testCount);
+  // X2 — --seed-offset shifts the eval-seed base for the held-out X3 verify.
+  const { trainSeeds, testSeeds } = splitSeeds(trainCount, testCount, args.seedOffset ?? 0);
 
   // H7c — --hops / --roster overrides also apply to the search (so we can
   // run a full-length or roster-SEEDED search, then replay its emitted winner
@@ -113,6 +115,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
     ? ` roster=[${runConfig.startingRoster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
+  const seedNote = args.seedOffset ? ` seedOffset=${args.seedOffset}` : '';
   const layoutNote = forcedLayoutId ? ` layout=${forcedLayoutId}` : '';
   const encounterNote = forcedEncounterId ? ` encounter=${forcedEncounterId}` : '';
   const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
@@ -120,7 +123,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${seedNote}${jobsNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 

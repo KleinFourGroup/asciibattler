@@ -193,6 +193,12 @@ export interface BalanceSweepConfig {
   readonly preset: SearchPreset;
   readonly samplerSeed: number;
   /**
+   * X2 — shift the eval-seed base up by this much (`--seed-offset`), so the X3
+   * verify pass reads a held-out seed range the tuning passes (offset 0) never
+   * touched (the config-overfit holdout). Default 0 = the tuned range.
+   */
+  readonly seedOffset?: number | undefined;
+  /**
    * Override the tier's run length (hop count), decoupling "how many hops"
    * from "how big a search." Lets us run a CHEAP full-length read — e.g. quick
    * tier's small vector/seed budget but full 11-hop runs — to catch the
@@ -330,7 +336,11 @@ async function defaultMeasurePoint(
   config: BalanceSweepConfig,
 ): Promise<SweepPoint> {
   const { preset, samplerSeed } = config;
-  const { trainSeeds, testSeeds } = splitSeeds(preset.trainSeeds, preset.testSeeds);
+  const { trainSeeds, testSeeds } = splitSeeds(
+    preset.trainSeeds,
+    preset.testSeeds,
+    config.seedOffset ?? 0,
+  );
   const harnessOptions = harnessOptionsFor(
     preset,
     config.hopOverride,

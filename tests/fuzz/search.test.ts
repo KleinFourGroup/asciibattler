@@ -137,6 +137,19 @@ describe('runSearch train/test split', () => {
     expect(testSeeds.every((s) => s >= TEST_SEED_OFFSET)).toBe(true);
   });
 
+  it('seedOffset (X2) shifts both bases → a holdout disjoint from the tuned range', () => {
+    const tuned = splitSeeds(8, 4); // offset 0 (the tuning pass)
+    const verify = splitSeeds(8, 4, 1000); // offset 1000 (the X3 verify)
+    // Train shifts by the offset; test by the same offset off TEST_SEED_OFFSET.
+    expect(verify.trainSeeds[0]).toBe(1001);
+    expect(verify.testSeeds[0]).toBe(TEST_SEED_OFFSET + 1000);
+    // The verify train seeds never overlap the tuned train OR test seeds.
+    const tunedAll = new Set([...tuned.trainSeeds, ...tuned.testSeeds]);
+    expect(verify.trainSeeds.some((s) => tunedAll.has(s))).toBe(false);
+    // The split stays internally disjoint at the offset.
+    expect(verify.trainSeeds.filter((s) => verify.testSeeds.includes(s))).toEqual([]);
+  });
+
   it('evaluates the winner on the held-out test seeds, not the train seeds', () => {
     const { trainSeeds, testSeeds } = splitSeeds(8, 4);
     // evaluate returns 1 on the test set, 0 on the train set — so a winner whose

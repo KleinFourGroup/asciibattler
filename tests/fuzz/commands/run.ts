@@ -54,6 +54,7 @@ export type RunModeArgs = Pick<
   CliArgs,
   | 'count'
   | 'seed'
+  | 'seedOffset'
   | 'strategy'
   | 'outDir'
   | 'perHop'
@@ -70,7 +71,9 @@ export type RunModeArgs = Pick<
 export function runRunCli(args: RunModeArgs): void {
   const strategies = selectStrategies(args.strategy);
 
-  const seeds = args.seed !== undefined ? [args.seed] : range(1, args.count);
+  // X2 — --seed-offset shifts the seed base past the tuned range (a held-out
+  // telemetry read); an explicit --seed pins a single seed and ignores it.
+  const seeds = args.seed !== undefined ? [args.seed] : range(1 + (args.seedOffset ?? 0), args.count);
 
   // --layout=<id> forces a single hand-authored layout on EVERY battle — a clean
   // full-sample isolate for the per-layout / per-hop difficulty read (natural

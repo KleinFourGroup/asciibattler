@@ -24,6 +24,9 @@
  *   npm run fuzz -- --search --preset=overnight    # the real sweep (full runs, hours)
  *   npm run fuzz -- --search --vectors=200 --seeds=40 --sampler-seed=7
  *   # → writes output/best-strategy.json (re-runnable via --strategy=…json) + search-results.csv
+ *   # X2 — --seed-offset=N bases the eval seeds past the tuned range (the
+ *   # config-overfit holdout for the X3 verify; applies to run / search / sweep):
+ *   npm run fuzz -- --search --preset=overnight --seed-offset=2000   # held-out verify
  *
  *   # H7c — balance-sweep a config knob (or a 2-knob grid): best-achievable win
  *   # rate + skill gradient + per-archetype telemetry at each grid point:

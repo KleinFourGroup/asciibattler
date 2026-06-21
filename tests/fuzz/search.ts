@@ -74,13 +74,26 @@ export function sampleWeights(box: SearchBox, rng: RNG): ScoredWeights {
  *  disjoint by construction. */
 export const TEST_SEED_OFFSET = 1_000_000;
 
+/**
+ * Build the train + test seed ranges. `seedOffset` (X2 — `--seed-offset=N`) shifts
+ * BOTH bases up by `N`, so the X3-verify (step 5) can run on a held-out seed range
+ * that the tuning passes (`seedOffset 0`) never touched — the config→seeds
+ * overfitting holdout (the long-missing H7d prereq). A large enough `N` (past the
+ * tuned train count) makes the verify seeds disjoint from every tuned seed; the
+ * train/test split stays internally disjoint at any offset (TEST_SEED_OFFSET ≫
+ * any realistic train count + offset).
+ */
 export function splitSeeds(
   trainCount: number,
   testCount: number,
+  seedOffset = 0,
 ): { trainSeeds: number[]; testSeeds: number[] } {
   const span = (start: number, count: number): number[] =>
     Array.from({ length: count }, (_v, i) => start + i);
-  return { trainSeeds: span(1, trainCount), testSeeds: span(TEST_SEED_OFFSET, testCount) };
+  return {
+    trainSeeds: span(1 + seedOffset, trainCount),
+    testSeeds: span(TEST_SEED_OFFSET + seedOffset, testCount),
+  };
 }
 
 // ---- presets --------------------------------------------------------------

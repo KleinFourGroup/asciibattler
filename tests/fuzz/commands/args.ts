@@ -42,6 +42,9 @@ export interface CliArgs {
   vectors?: number;
   seeds?: number;
   samplerSeed?: number;
+  // X2 — shift the eval-seed base past the tuned range (the config-overfit
+  // holdout for the X3 verify; H7d prereq). Applies to run / search / sweep.
+  seedOffset?: number;
   // H7c — balance-sweep mode (`--balance-sweep`).
   balanceSweep: boolean;
   knob?: string;
@@ -136,6 +139,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--sampler-seed':
         args.samplerSeed = Number(v);
+        break;
+      case '--seed-offset':
+        args.seedOffset = Number(v);
         break;
       case '--balance-sweep':
         args.balanceSweep = true;

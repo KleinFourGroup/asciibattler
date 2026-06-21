@@ -169,6 +169,16 @@ const UNIT_LEVEL_CFG: KindNumCfg = {
   weight: { numKey: 'weight', label: 'w', def: 1, step: 0.1, min: 0, int: false },
 };
 
+// The optional per-wave level cap is a TRI-state — `none` (absent = uncapped),
+// `roster` (highestRosterLevel + delta), `fixed` (an absolute ceiling) — so it
+// gets its own control (the kindNumberControl above assumes an always-present
+// field). `none` deletes `spec.levelCap`; the other two carry an integer.
+const LEVEL_CAP_KINDS = ['none', 'roster', 'fixed'] as const;
+const LEVEL_CAP_CFG: Record<'roster' | 'fixed', { label: string; def: number; min: number }> = {
+  roster: { label: '+', def: 2, min: 0 },
+  fixed: { label: '≤', def: 10, min: 1 },
+};
+
 // Preview controls (configurable per the V2 decision — mean/median level + hand
 // size are what move budgets/counts). The per-instance level cap is no longer a
 // preview control: it's authored per wave (`spec.levelCap`) and resolved against
@@ -773,6 +783,7 @@ function renderSpec(spec: WSpec, parent: HTMLElement): void {
   grid.append(el('span', 'field-label', 'count'), kindNumberControl(spec.count, COUNT_CFG, (o) => {
     spec.count = o as WSpec['count'];
   }));
+  grid.append(el('span', 'field-label', 'cap'), levelCapControl(spec));
   parent.appendChild(grid);
 
   const uHead = el('div', 'sub-head');
@@ -992,6 +1003,44 @@ function kindNumberControl(obj: KindNumObj, cfg: KindNumCfg, setObj: (o: KindNum
   });
 
   wrap.append(sel, el('span', 'kn-x', c.label), num);
+  return wrap;
+}
+
+/** The optional per-wave level cap control: a kind select (uncapped / roster /
+ *  fixed) + a number when capped. `none` deletes the field (absent = uncapped),
+ *  so a new/uncapped wave stays uncapped; switching to roster/fixed seeds the
+ *  kind's default. Mutates `spec.levelCap` in place; the number edits live, a kind
+ *  change re-renders to show/hide the number (mirrors `kindNumberControl`). */
+function levelCapControl(spec: WSpec): HTMLElement {
+  const wrap = el('span', 'kn');
+  const sel = el('select', 'kn-kind');
+  for (const k of LEVEL_CAP_KINDS) sel.appendChild(option(k, k === 'none' ? 'uncapped' : k));
+  sel.value = spec.levelCap?.kind ?? 'none';
+  sel.addEventListener('change', () => {
+    if (sel.value === 'roster') spec.levelCap = { kind: 'roster', delta: LEVEL_CAP_CFG.roster.def };
+    else if (sel.value === 'fixed') spec.levelCap = { kind: 'fixed', value: LEVEL_CAP_CFG.fixed.def };
+    else delete spec.levelCap;
+    renderVisual();
+    refreshDerived();
+  });
+  wrap.append(sel);
+
+  const cap = spec.levelCap;
+  if (cap !== undefined) {
+    const cfg = LEVEL_CAP_CFG[cap.kind];
+    const num = el('input', 'kn-num');
+    num.type = 'number';
+    num.step = '1';
+    num.min = String(cfg.min);
+    num.value = String(cap.kind === 'roster' ? cap.delta : cap.value);
+    num.addEventListener('input', () => {
+      const v = Number.parseInt(num.value, 10);
+      const n = Number.isFinite(v) ? v : cfg.def;
+      spec.levelCap = cap.kind === 'roster' ? { kind: 'roster', delta: n } : { kind: 'fixed', value: n };
+      refreshDerived();
+    });
+    wrap.append(el('span', 'kn-x', cfg.label), num);
+  }
   return wrap;
 }
 

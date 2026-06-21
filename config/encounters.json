@@ -133,6 +133,7 @@
                   "spec": {
                     "levelBudget": { "kind": "mean", "factor": 1.25 },
                     "count": { "kind": "hand", "factor": 0.75 },
+                    "levelCap": { "kind": "roster", "delta": 2 },
                     "units": [
                       { "archetype": "mage", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
                     ]
@@ -146,6 +147,7 @@
                   "spec": {
                     "levelBudget": { "kind": "mean", "factor": 1.25 },
                     "count": { "kind": "fixed", "value": 1 },
+                    "levelCap": { "kind": "roster", "delta": 2 },
                     "units": [
                       { "archetype": "ronin", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
                     ]
@@ -175,6 +177,7 @@
             "spec": {
               "levelBudget": { "kind": "mean", "factor": 1.25 },
               "count": { "kind": "hand", "factor": 1 },
+              "levelCap": { "kind": "roster", "delta": 2 },
               "units": [
                 { "archetype": "mercenary", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
@@ -189,6 +192,7 @@
         "spec": {
           "levelBudget": { "kind": "mean", "factor": 1.25 },
           "count": { "kind": "fixed", "value": 1 },
+          "levelCap": { "kind": "roster", "delta": 2 },
           "units": [
             { "archetype": "adventurer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
           ]
@@ -246,6 +250,7 @@
                 "spec": {
                   "levelBudget": { "kind": "mean", "factor": 1.5 },
                   "count": { "kind": "hand", "factor": 1.25 },
+                  "levelCap": { "kind": "roster", "delta": 2 },
                   "units": [
                     { "archetype": "adventurer", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
                     { "archetype": "catapult", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } },

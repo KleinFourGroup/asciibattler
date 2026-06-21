@@ -20,10 +20,11 @@ function roster(levels: number[], archetype: Archetype = 'mercenary'): UnitTempl
   }));
 }
 
-/** A context with an explicit cap + hand size; roster defaults to one level-5
- *  unit so `mean`/`median` budgets have a basis when a test doesn't care. */
+/** A context with a hand size; roster defaults to one level-5 unit so
+ *  `mean`/`median` budgets (and a `roster` cap) have a basis when a test doesn't
+ *  care. The per-instance cap now lives on the spec (`levelCap?`), not here. */
 function ctx(over: Partial<WaveContext> = {}): WaveContext {
-  return { roster: roster([5]), handSize: 6, levelCap: 99, ...over };
+  return { roster: roster([5]), handSize: 6, ...over };
 }
 
 const counts = (team: UnitTemplate[]) => {
@@ -113,7 +114,7 @@ describe('resolveWave — level distribution', () => {
       units: [{ archetype: 'bandit', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } }],
     };
     for (let s = 0; s < 30; s++) {
-      const team = resolveWave(spec, ctx({ levelCap: 10 }), new RNG(s));
+      const team = resolveWave(spec, ctx(), new RNG(s));
       expect(team).toHaveLength(6);
       expect(team.reduce((a, u) => a + u.level, 0)).toBe(24);
       expect(Math.min(...team.map((u) => u.level))).toBeGreaterThanOrEqual(1);
@@ -127,7 +128,7 @@ describe('resolveWave — level distribution', () => {
       units: [{ archetype: 'bandit', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } }],
     };
     for (let s = 0; s < 30; s++) {
-      const lv = resolveWave(spec, ctx({ levelCap: 10 }), new RNG(s)).map((u) => u.level);
+      const lv = resolveWave(spec, ctx(), new RNG(s)).map((u) => u.level);
       expect(Math.max(...lv) - Math.min(...lv)).toBeLessThanOrEqual(1);
     }
   });
@@ -142,23 +143,24 @@ describe('resolveWave — level distribution', () => {
         { archetype: 'ranged', count: { kind: 'fixed', value: 2 }, level: { kind: 'weight', weight: 4 } },
       ],
     };
-    const team = resolveWave(spec, ctx({ levelCap: 20 }), new RNG(3));
+    const team = resolveWave(spec, ctx(), new RNG(3));
     const archerLv = team.filter((u) => u.archetype === 'ranged').map((u) => u.level);
     const banditLv = team.filter((u) => u.archetype === 'bandit').map((u) => u.level);
     expect(Math.min(...archerLv)).toBeGreaterThan(Math.max(...banditLv));
     expect(team.reduce((a, u) => a + u.level, 0)).toBe(30);
   });
 
-  it('fixed levels pin their instances (honoured ABOVE the cap — authored elite)', () => {
+  it('fixed levels pin their instances (honoured ABOVE a present cap — authored elite)', () => {
     const spec: WaveSpec = {
       levelBudget: { kind: 'fixed', value: 100 },
       count: { kind: 'fixed', value: 3 },
+      levelCap: { kind: 'fixed', value: 5 },
       units: [
         { archetype: 'catapult', count: { kind: 'fixed', value: 1 }, level: { kind: 'fixed', value: 15 } },
         { archetype: 'bandit', count: { kind: 'fixed', value: 2 }, level: { kind: 'weight', weight: 1 } },
       ],
     };
-    const team = resolveWave(spec, ctx({ levelCap: 5 }), new RNG(1));
+    const team = resolveWave(spec, ctx(), new RNG(1));
     const boss = team.find((u) => u.archetype === 'catapult')!;
     expect(boss.level).toBe(15); // pinned, NOT clamped to cap 5
     // The 2 bandits split the remaining 85, each clamped to cap 5.
@@ -173,7 +175,7 @@ describe('resolveWave — level distribution', () => {
       count: { kind: 'fixed', value: 6 },
       units: [{ archetype: 'bandit', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } }],
     };
-    const team = resolveWave(spec, ctx({ levelCap: 10 }), new RNG(1));
+    const team = resolveWave(spec, ctx(), new RNG(1));
     expect(team.map((u) => u.level)).toEqual([1, 1, 1, 1, 1, 1]);
   });
 
@@ -184,12 +186,13 @@ describe('resolveWave — level distribution', () => {
       units: [{ archetype: 'bandit', count: { kind: 'fixed', value: 1 }, level: { kind: 'weight', weight: 1 } }],
     });
     const r = roster([2, 4, 4, 10]); // mean 5, median 4
-    // handSize 3 → the single unit absorbs the whole budget = factor × central × 3.
-    const c = ctx({ roster: r, handSize: 3, levelCap: 999 });
+    // handSize 3 → the single unit absorbs the whole budget = factor × central × 3
+    // (no levelCap on the spec → the spread is uncapped, so it reaches the budget).
+    const c = ctx({ roster: r, handSize: 3 });
     expect(resolveWave(oneEach({ kind: 'mean', factor: 2 }), c, new RNG(1))[0]!.level).toBe(30); // 2 × 5 × 3
     expect(resolveWave(oneEach({ kind: 'median', factor: 2 }), c, new RNG(1))[0]!.level).toBe(24); // 2 × 4 × 3
     // Doubling the fielded hand doubles the budget (the playerTeamLevel scaling).
-    const c6 = ctx({ roster: r, handSize: 6, levelCap: 999 });
+    const c6 = ctx({ roster: r, handSize: 6 });
     expect(resolveWave(oneEach({ kind: 'mean', factor: 2 }), c6, new RNG(1))[0]!.level).toBe(60); // 2 × 5 × 6
   });
 
@@ -199,10 +202,46 @@ describe('resolveWave — level distribution', () => {
       count: { kind: 'fixed', value: 4 },
       units: [{ archetype: 'bandit', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } }],
     };
-    for (const u of resolveWave(spec, ctx({ levelCap: 9 }), new RNG(2))) {
+    for (const u of resolveWave(spec, ctx(), new RNG(2))) {
       const cfg = ARCHETYPE_CONFIG[u.archetype];
       expect(u.stats).toEqual(scaleStats(cfg.baseStats, cfg.growthRates, u.level - 1));
     }
+  });
+});
+
+describe('resolveWave — levelCap (the optional per-wave ceiling)', () => {
+  // One weighted unit eating a large budget: with no cap it reaches the full
+  // level; a `roster`/`fixed` cap clamps the weighted spread.
+  const lone = (cap?: WaveSpec['levelCap']): WaveSpec => ({
+    levelBudget: { kind: 'fixed', value: 40 },
+    count: { kind: 'fixed', value: 1 },
+    ...(cap ? { levelCap: cap } : {}),
+    units: [{ archetype: 'bandit', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } }],
+  });
+
+  it('absent → UNCAPPED: the weighted spread spends the full budget', () => {
+    // roster [5] → a `roster` cap would pin this to 7; absent leaves it at 40.
+    expect(resolveWave(lone(), ctx(), new RNG(1))[0]!.level).toBe(40);
+  });
+
+  it("'roster' cap = highestRosterLevel + delta (the retired global cap, now per-wave)", () => {
+    const team = resolveWave(lone({ kind: 'roster', delta: 2 }), ctx({ roster: roster([5, 8]) }), new RNG(1));
+    expect(team[0]!.level).toBe(10); // max(5,8) + 2
+  });
+
+  it('roster cap uses max(1, …) for an empty roster', () => {
+    const team = resolveWave(lone({ kind: 'roster', delta: 3 }), ctx({ roster: [] }), new RNG(1));
+    expect(team[0]!.level).toBe(4); // max(1) + 3
+  });
+
+  it("'fixed' cap clamps the weighted spread to an absolute ceiling", () => {
+    const spec: WaveSpec = {
+      levelBudget: { kind: 'fixed', value: 40 },
+      count: { kind: 'fixed', value: 4 },
+      levelCap: { kind: 'fixed', value: 6 },
+      units: [{ archetype: 'bandit', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } }],
+    };
+    for (const u of resolveWave(spec, ctx(), new RNG(1))) expect(u.level).toBeLessThanOrEqual(6);
   });
 });
 

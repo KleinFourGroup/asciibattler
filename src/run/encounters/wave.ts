@@ -25,7 +25,8 @@
  *     remaining budget `L − Σ(fixed levels)` is spread across the **weight-level
  *     instances** in proportion to weight, **per instance** (the user-locked
  *     semantics: a type's level-weight makes ITS individuals spikier), each
- *     clamped to `[1, cap]`. This is `distributeWeightedLevels` — a strict
+ *     clamped to `[1, cap]` where `cap` is the wave's optional `levelCap`
+ *     (absent = unbounded — `Infinity`). This is `distributeWeightedLevels` — a strict
  *     generalization of `distributeBudget`: with uniform weights it reduces to
  *     the same tight even split (spread ≤ 1, RNG-chosen remainder), so the
  *     reproduction encounter stays faithful to today's fights.
@@ -59,6 +60,27 @@ export type CountSpec =
   | { readonly kind: 'fixed'; readonly value: number }
   | { readonly kind: 'hand'; readonly factor: number };
 
+/**
+ * Optional per-wave ceiling on the WEIGHTED level spread (fixed-level instances
+ * bypass it — an authored elite is intentional). **Absent = no cap**: the wave
+ * spends its full budget and individual levels are unbounded — what you author is
+ * what you field. When present, the same `[1, cap]` clamp the old random generator
+ * applied globally now applies to THIS wave only:
+ * - `roster` — `highestRosterLevel + delta`, the retired global cap
+ *   (`DIFFICULTY.unitLevelDelta` was the global `delta`), now opt-in per wave so a
+ *   "many weak bodies" fight can keep its ceiling while a "few elevated casters"
+ *   fight can author past it.
+ * - `fixed` — an absolute ceiling, independent of the roster.
+ *
+ * Pre-X the cap was a global, roster-derived constant applied to every wave (an
+ * artifact of the generator deriving COUNT from it via `ceil(budget/cap)`). The
+ * encounter model authors count explicitly, so the cap's only remaining job is
+ * the per-instance ceiling — moved here, made optional, defaulting to off.
+ */
+export type LevelCapSpec =
+  | { readonly kind: 'roster'; readonly delta: number }
+  | { readonly kind: 'fixed'; readonly value: number };
+
 /** How a unit type claims COUNT within the wave: a `fixed` headcount, or a
  *  `weight` share of the leftover count after the fixed units are placed. */
 export type UnitCountSpec =
@@ -79,10 +101,12 @@ export interface WaveUnitSpec {
   readonly level: UnitLevelSpec;
 }
 
-/** A single wave: a level budget, a total count, and the unit types that fill it. */
+/** A single wave: a level budget, a total count, and the unit types that fill it.
+ *  `levelCap` is optional — absent means the weighted spread is uncapped. */
 export interface WaveSpec {
   readonly levelBudget: LevelBudgetSpec;
   readonly count: CountSpec;
+  readonly levelCap?: LevelCapSpec;
   readonly units: readonly WaveUnitSpec[];
 }
 
@@ -90,17 +114,18 @@ export interface WaveSpec {
  * The run-side inputs a wave resolves against. Supplied by the caller
  * (`Run.beginTurn` in U3) so the resolver stays pure + headless-testable with
  * explicit literals:
- * - `roster` — the player roster, for `mean`/`median` level budgets.
+ * - `roster` — the player roster, for `mean`/`median` level budgets AND the
+ *   `roster`-relative level cap (its `highestRosterLevel` basis).
  * - `handSize` — the FIELDED hand size (`min(roster, DECK.handSize)`), for
  *   `hand`-relative counts (mirrors `rollEnemyWave`'s `size`).
- * - `levelCap` — the per-instance level ceiling for the weighted spread
- *   (production: `highestRosterLevel + DIFFICULTY.unitLevelDelta`, like
- *   `rollEnemyWave`'s `cap`). Fixed authored levels bypass it.
+ *
+ * The per-instance level cap is no longer supplied here — it's authored on the
+ * `WaveSpec` (`levelCap?`) and resolved against this `roster`, so the production
+ * caller (`Run.beginTurn`) no longer computes it.
  */
 export interface WaveContext {
   readonly roster: readonly UnitTemplate[];
   readonly handSize: number;
-  readonly levelCap: number;
 }
 
 /**
@@ -120,9 +145,24 @@ export function resolveWave(spec: WaveSpec, context: WaveContext, rng: RNG): Uni
   });
 
   const totalBudget = resolveLevelBudget(spec.levelBudget, context);
-  const levels = resolveLevels(instances, totalBudget, context.levelCap, rng);
+  const cap = resolveLevelCap(spec.levelCap, context.roster);
+  const levels = resolveLevels(instances, totalBudget, cap, rng);
 
   return instances.map((inst, i) => scaledUnit(inst.archetype, levels[i]!));
+}
+
+/**
+ * The per-instance level ceiling for this wave's weighted spread. Absent →
+ * `Infinity` (no cap: the spread flows through `distributeWeightedLevels`
+ * unclamped, spending the full budget). `roster` → `highestRosterLevel + delta`
+ * (the retired global cap, `max(1, …)` like `rollEnemyWave`/`Run.beginTurn`).
+ * `fixed` → the authored absolute ceiling (≥ 1).
+ */
+function resolveLevelCap(spec: LevelCapSpec | undefined, roster: readonly UnitTemplate[]): number {
+  if (spec === undefined) return Infinity;
+  if (spec.kind === 'fixed') return Math.max(1, Math.round(spec.value));
+  const highest = roster.reduce((m, u) => Math.max(m, u.level), 1);
+  return highest + Math.round(spec.delta);
 }
 
 /** Total wave count `C ≥ 0`, rounded to an integer. */

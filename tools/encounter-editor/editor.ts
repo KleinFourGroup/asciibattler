@@ -53,7 +53,6 @@ import { formatSectorsJson } from '../sector-editor/format';
 import { addEncounterToSectorPools } from '../sector-editor/poolEdit';
 import type { SectorDef } from '../../src/config/sectors';
 import { DECK } from '../../src/config/deck';
-import { DIFFICULTY } from '../../src/config/difficulty';
 import { RNG } from '../../src/core/RNG';
 import {
   resolveWave,
@@ -171,10 +170,11 @@ const UNIT_LEVEL_CFG: KindNumCfg = {
 };
 
 // Preview controls (configurable per the V2 decision — mean/median level + hand
-// size are what move budgets/counts).
+// size are what move budgets/counts). The per-instance level cap is no longer a
+// preview control: it's authored per wave (`spec.levelCap`) and resolved against
+// the preview roster, so the resolver derives it (absent = uncapped).
 let rosterLevels: number[] = [2, 2, 3, 3, 4];
 let handSize = DECK.handSize;
-let levelCap = 0; // seeded from the roster on first sync
 let poolFraction = 1;
 let previewTurns = 6;
 let previewSeed = 1;
@@ -198,7 +198,6 @@ const wavesErrorEl = mustQuery<HTMLParagraphElement>('#waves-error');
 const formatWavesBtn = mustQuery<HTMLButtonElement>('#format-waves-btn');
 const rosterLevelsEl = mustQuery<HTMLInputElement>('#roster-levels');
 const handSizeEl = mustQuery<HTMLInputElement>('#hand-size');
-const levelCapEl = mustQuery<HTMLInputElement>('#level-cap');
 const poolFractionEl = mustQuery<HTMLInputElement>('#pool-fraction');
 const turnsEl = mustQuery<HTMLInputElement>('#turns');
 const seedEl = mustQuery<HTMLInputElement>('#seed');
@@ -227,8 +226,6 @@ attachWaves();
 attachViewToggle();
 attachPreviewControls();
 attachButtons();
-levelCap = defaultLevelCap();
-levelCapEl.value = String(levelCap);
 handSizeEl.value = String(handSize);
 rosterLevelsEl.value = rosterLevels.join(', ');
 selectEncounter(activeIndex);
@@ -351,11 +348,6 @@ function attachPreviewControls(): void {
   handSizeEl.addEventListener('input', () => {
     const n = Number.parseInt(handSizeEl.value, 10);
     handSize = Number.isFinite(n) && n >= 0 ? n : 0;
-    refreshPreview();
-  });
-  levelCapEl.addEventListener('input', () => {
-    const n = Number.parseInt(levelCapEl.value, 10);
-    levelCap = Number.isFinite(n) && n >= 1 ? n : 1;
     refreshPreview();
   });
   poolFractionEl.addEventListener('input', () => {
@@ -564,7 +556,7 @@ function refreshPreview(): void {
   const roster: UnitTemplate[] = rosterLevels.length
     ? rosterLevels.map((lv) => scaledUnit('mercenary', lv))
     : [scaledUnit('mercenary', 1)];
-  const ctx: WaveContext = { roster, handSize, levelCap: Math.max(1, levelCap) };
+  const ctx: WaveContext = { roster, handSize };
 
   // Mirror production: a master stream forks a fresh battle RNG each turn (both
   // `waveForTurn`'s pick roll and `resolveWave`'s level remainder draw from it).
@@ -656,12 +648,6 @@ function addTurnNote(text: string): void {
   note.className = 'turn-empty';
   note.textContent = text;
   turnsOutEl.appendChild(note);
-}
-
-/** The production per-instance level ceiling: highest roster level +
- *  `DIFFICULTY.unitLevelDelta` (mirrors `rollEnemyWave`'s `cap`). */
-function defaultLevelCap(): number {
-  return Math.max(1, ...rosterLevels) + DIFFICULTY.unitLevelDelta;
 }
 
 // ---- Visual wave builder ----

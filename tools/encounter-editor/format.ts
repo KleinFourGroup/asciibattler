@@ -58,15 +58,18 @@ function inlineUnit(u: WaveUnitSpec): string {
   return `{ "archetype": ${JSON.stringify(u.archetype)}, "count": ${inlineObj(u.count)}, "level": ${inlineObj(u.level)} }`;
 }
 
-/** A `WaveSpec` block (`levelBudget` / `count` inline, `units` expanded). */
+/** A `WaveSpec` block (`levelBudget` / `count` / optional `levelCap` inline,
+ *  `units` expanded). `levelCap` is emitted only when present (absent = uncapped). */
 function specBlock(pad: string, spec: WaveSpec): string {
   const childPad = pad + IND;
   const unitElems = spec.units.map((u) => childPad + IND + inlineUnit(u));
-  return objBlock(pad, [
+  const lines = [
     `${childPad}"levelBudget": ${inlineObj(spec.levelBudget)}`,
     `${childPad}"count": ${inlineObj(spec.count)}`,
-    `${childPad}"units": ${arrBlock(childPad, unitElems)}`,
-  ]);
+  ];
+  if (spec.levelCap !== undefined) lines.push(`${childPad}"levelCap": ${inlineObj(spec.levelCap)}`);
+  lines.push(`${childPad}"units": ${arrBlock(childPad, unitElems)}`);
+  return objBlock(pad, lines);
 }
 
 /** A wave-list (the top-level `waves`, and every loop/stage body): an array of

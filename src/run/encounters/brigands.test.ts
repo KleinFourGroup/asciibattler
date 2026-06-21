@@ -26,12 +26,13 @@ function roster(levels: number[], archetype: Archetype = 'mercenary'): UnitTempl
   return levels.map((level) => ({ archetype, level, stats: { ...ARCHETYPE_CONFIG[archetype].baseStats }, xp: 0 }));
 }
 
-/** The production WaveContext for a roster (mirrors what Run.beginTurn builds). */
+/** The production WaveContext for a roster (mirrors what Run.beginTurn builds).
+ *  Brigands authors no `levelCap` (its 1.25/1.5 budget never reaches the old
+ *  global cap, so the cap was inert) — the resolver leaves the spread uncapped. */
 function contextFor(team: UnitTemplate[]): WaveContext {
   return {
     roster: team,
     handSize: Math.min(team.length, DECK.handSize),
-    levelCap: Math.max(1, ...team.map((u) => u.level)) + DIFFICULTY.unitLevelDelta,
   };
 }
 

@@ -73,7 +73,6 @@ import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
-import { DIFFICULTY } from '../config/difficulty';
 import { getEncounter, type Encounter } from '../config/encounters';
 import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
@@ -953,10 +952,10 @@ export class Run {
     const waveContext: WaveContext = {
       roster: this.team,
       // The count/budget basis is the FIELDED hand (min(roster, handSize)), as
-      // `rollEnemyWave`/`playerTeamLevel` used.
+      // `rollEnemyWave`/`playerTeamLevel` used. The per-instance level cap is now
+      // authored per wave (`spec.levelCap`) and resolved against `roster`, so it's
+      // no longer computed here.
       handSize: Math.min(this.team.length, DECK.handSize),
-      // The per-instance level ceiling, mirroring `rollEnemyWave`'s `cap`.
-      levelCap: Math.max(1, ...this.team.map((u) => u.level)) + DIFFICULTY.unitLevelDelta,
     };
     const enemyTeam = resolveWave(spec, waveContext, battleRng);
 

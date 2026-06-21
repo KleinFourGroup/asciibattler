@@ -51,6 +51,7 @@ import type {
   WaveSpec,
   LevelBudgetSpec,
   CountSpec,
+  LevelCapSpec,
   WaveUnitSpec,
 } from '../run/encounters/wave';
 import type {
@@ -81,6 +82,14 @@ const CountSchema: z.ZodType<CountSpec> = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('hand'), factor: z.number().nonnegative() }),
 ]);
 
+// Optional per-wave level ceiling (absent = uncapped — the honest default; what
+// you author is what you field). `roster` = highestRosterLevel + delta (the
+// retired global cap, now opt-in); `fixed` = an absolute ceiling.
+const LevelCapSchema: z.ZodType<LevelCapSpec> = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('roster'), delta: z.number().int().nonnegative() }),
+  z.object({ kind: z.literal('fixed'), value: z.number().int().positive() }),
+]);
+
 const UnitCountSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('fixed'), value: z.number().int().nonnegative() }),
   z.object({ kind: z.literal('weight'), weight: z.number().nonnegative() }),
@@ -97,11 +106,15 @@ const WaveUnitSchema: z.ZodType<WaveUnitSpec> = z.object({
   level: UnitLevelSchema,
 });
 
-const WaveSpecSchema: z.ZodType<WaveSpec> = z.object({
+// Cast at the zod boundary (see StageSchema below): `.optional()` emits `T |
+// undefined`, which `exactOptionalPropertyTypes` won't accept against the
+// exact-optional `levelCap?` field. Runtime validation is identical.
+const WaveSpecSchema = z.object({
   levelBudget: LevelBudgetSchema,
   count: CountSchema,
+  levelCap: LevelCapSchema.optional(),
   units: z.array(WaveUnitSchema).min(1),
-});
+}) as z.ZodType<WaveSpec>;
 
 // --- wave-list grammar (U2), recursive via z.lazy --------------------------
 

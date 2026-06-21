@@ -46,6 +46,10 @@ export type RunOutcome = 'complete' | 'defeat' | 'hang' | 'aborted';
 export interface BattleResult {
   hop: number;
   worldSeed: number;
+  /** X2 — the authored encounter selected onto this node (`Encounter.id`). One
+   *  encounter spans multiple turns/waves, so every wave (BattleResult) of the
+   *  same node visit shares this id; it's the per-encounter telemetry key. */
+  encounterId: string;
   /** Hand-authored layout id, or `null` for procedural terrain. Threaded
    *  through so per-layout hang rates surface in the summary — useful
    *  when a future layout's narrow corridors recreate the C1d Labyrinth
@@ -264,6 +268,9 @@ export function runOne(
     currentBattle = {
       hop: run.currentHop,
       worldSeed,
+      // X2 — the authored encounter id (set in `beginEncounter` before this
+      // fires); the per-encounter telemetry key. Always present mid-encounter.
+      encounterId: run.selectedEncounter!.id,
       layoutId: encounter.layoutId,
       playerTeamSize: encounter.playerTeam.length,
       enemyTeamSize: encounter.enemyTeam.length,
@@ -320,12 +327,18 @@ export function runOne(
     if (telemetry) {
       for (const a of xpAwards) telemetry.recordXp(a.unitId, a.xpGained);
       if (survivorPower) {
-        telemetry.recordTurnChip(currentBattle.hop, survivorPower.player, survivorPower.enemy);
+        telemetry.recordTurnChip(
+          currentBattle.hop,
+          currentBattle.encounterId,
+          survivorPower.player,
+          survivorPower.enemy,
+        );
       }
     }
     battles.push({
       hop: currentBattle.hop,
       worldSeed: currentBattle.worldSeed,
+      encounterId: currentBattle.encounterId,
       layoutId: currentBattle.layoutId,
       winner,
       ticks: currentWorld.currentTick,
@@ -469,6 +482,7 @@ export function runOne(
             battles.push({
               hop: cb.hop,
               worldSeed: cb.worldSeed,
+              encounterId: cb.encounterId,
               layoutId: cb.layoutId,
               winner: 'hang',
               ticks: battleTicks,
@@ -531,6 +545,7 @@ export function runOne(
 interface PartialBattle {
   hop: number;
   worldSeed: number;
+  encounterId: string;
   layoutId: string | null;
   playerTeamSize: number;
   enemyTeamSize: number;

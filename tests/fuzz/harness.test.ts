@@ -23,8 +23,13 @@ import {
   perLayoutStats,
   perLayoutHopStats,
   renderLayoutAnalysis,
+  perEncounterStats,
+  renderEncounterAnalysis,
 } from './reporters';
+import { TelemetryAccumulator } from './telemetry';
+import type { RunTelemetry } from './telemetry';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
+import { HEALTH } from '../../src/config/health';
 
 describe('fuzz harness', () => {
   it('completes a single run without throwing', () => {
@@ -180,6 +185,7 @@ describe('fuzz reporters', () => {
     const battle = (hop: number, winner: 'player' | 'enemy', playerDeaths: number): BattleResult => ({
       hop,
       worldSeed: 0,
+      encounterId: 'fixture',
       layoutId: null,
       winner,
       ticks: 1,
@@ -238,6 +244,7 @@ describe('fuzz reporters', () => {
     ): BattleResult => ({
       hop,
       worldSeed: 0,
+      encounterId: 'fixture',
       layoutId,
       winner,
       ticks: 1,
@@ -298,6 +305,131 @@ describe('fuzz reporters', () => {
     expect(ja1.playerWinRate).toBeCloseTo(0); // both hop-1 ambush waves lost
 
     expect(renderLayoutAnalysis(results)).toContain('Per-layout difficulty');
+  });
+
+  it('per-encounter stats key pool damage by encounter id (X2)', () => {
+    // Player pool damage TAKEN = the chip's `enemy` field (enemy survivors chip
+    // the player pool) × the chip multiplier; per INSTANCE (a node visit = one
+    // hop within a run) and per WAVE (a turn).
+    const m = HEALTH.chipMultiplier;
+    const eb = (hop: number, encounterId: string, winner: 'player' | 'enemy'): BattleResult => ({
+      hop,
+      worldSeed: 0,
+      encounterId,
+      layoutId: null,
+      winner,
+      ticks: 1,
+      playerDeaths: 0,
+      enemyDeaths: 0,
+      playerTeamSize: 5,
+      enemyTeamSize: 8,
+      playerLevels: [],
+      enemyLevels: [],
+    });
+    const tel = (
+      chips: ReadonlyArray<{ hop: number; encounterId: string; player: number; enemy: number }>,
+    ): RunTelemetry => {
+      const acc = new TelemetryAccumulator();
+      for (const c of chips) acc.recordTurnChip(c.hop, c.encounterId, c.player, c.enemy);
+      return acc.finish([], []);
+    };
+    const results: RunResult[] = [
+      {
+        seed: 0,
+        strategyName: 'syn',
+        daemonId: null,
+        outcome: 'complete',
+        finalHopReached: 2,
+        totalTicks: 0,
+        finalTeamSize: 5,
+        battles: [eb(1, 'enc1', 'player'), eb(1, 'enc1', 'enemy'), eb(2, 'enc2', 'player')],
+        recruits: [],
+        telemetry: tel([
+          { hop: 1, encounterId: 'enc1', player: 2, enemy: 3 },
+          { hop: 1, encounterId: 'enc1', player: 4, enemy: 5 },
+          { hop: 2, encounterId: 'enc2', player: 10, enemy: 1 },
+        ]),
+      },
+      {
+        seed: 1,
+        strategyName: 'syn',
+        daemonId: null,
+        outcome: 'complete',
+        finalHopReached: 1,
+        totalTicks: 0,
+        finalTeamSize: 5,
+        battles: [eb(1, 'enc1', 'player')],
+        recruits: [],
+        telemetry: tel([{ hop: 1, encounterId: 'enc1', player: 1, enemy: 7 }]),
+      },
+    ];
+    const stats = perEncounterStats(results);
+    const enc1 = stats.find((s) => s.encounter === 'enc1')!;
+    const enc2 = stats.find((s) => s.encounter === 'enc2')!;
+    // enc1: 3 waves (2 + 1 battles), 2 instances (one hop-1 group per run).
+    expect(enc1.waves).toBe(3);
+    expect(enc1.instances).toBe(2);
+    expect(enc1.playerWinRate).toBeCloseTo(2 / 3);
+    expect(enc1.enemyWinRate).toBeCloseTo(1 / 3);
+    expect(enc1.kind).toBe('unknown'); // synthetic id doesn't resolve in the catalog
+    // instance taken: run0 (3+5)=8m, run1 7m → mean 7.5m; per wave (3+5+7)/3 = 5m.
+    expect(enc1.poolDmgTaken).toBeCloseTo(7.5 * m);
+    expect(enc1.poolDmgTakenPerWave).toBeCloseTo(5 * m);
+    // dealt = the `player` chip: run0 (2+4)=6m, run1 1m → mean 3.5m.
+    expect(enc1.poolDmgDealt).toBeCloseTo(3.5 * m);
+    expect(enc1.hasPoolData).toBe(true);
+    // enc2 instance taken = 1m (low) → enc1 sorts first (most-costly-first).
+    expect(enc2.poolDmgTaken).toBeCloseTo(1 * m);
+    expect(stats[0]!.encounter).toBe('enc1');
+    expect(renderEncounterAnalysis(results)).toContain('Per-encounter difficulty');
+  });
+
+  it('per-encounter degrades gracefully with telemetry off (outcome cols only)', () => {
+    const eb = (encounterId: string): BattleResult => ({
+      hop: 1,
+      worldSeed: 0,
+      encounterId,
+      layoutId: null,
+      winner: 'player',
+      ticks: 1,
+      playerDeaths: 0,
+      enemyDeaths: 0,
+      playerTeamSize: 5,
+      enemyTeamSize: 8,
+      playerLevels: [],
+      enemyLevels: [],
+    });
+    const results: RunResult[] = [
+      {
+        seed: 0,
+        strategyName: 'syn',
+        daemonId: null,
+        outcome: 'complete',
+        finalHopReached: 1,
+        totalTicks: 0,
+        finalTeamSize: 5,
+        battles: [eb('enc1')],
+        recruits: [],
+      },
+    ];
+    const stats = perEncounterStats(results);
+    expect(stats[0]!.hasPoolData).toBe(false);
+    expect(stats[0]!.instances).toBe(0);
+    expect(stats[0]!.poolDmgTaken).toBe(0);
+    expect(stats[0]!.waves).toBe(1); // outcome columns still populate
+    expect(renderEncounterAnalysis(results)).toContain('no pool data');
+  });
+
+  it('a real run threads a resolvable encounter id into every battle (X2)', () => {
+    const result = runOne(3, makeStrategy('greedy')!, { telemetry: true });
+    expect(result.battles.length).toBeGreaterThan(0);
+    for (const b of result.battles) expect(b.encounterId.length).toBeGreaterThan(0);
+    const stats = perEncounterStats([result]);
+    // Real catalog ids resolve to a real kind (never 'unknown'); pool data present.
+    for (const s of stats) {
+      expect(s.kind).not.toBe('unknown');
+      expect(s.hasPoolData).toBe(true);
+    }
   });
 
   it('--layout forces a single layout on every battle (the forced-layout plumbing)', () => {

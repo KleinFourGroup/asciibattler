@@ -64,9 +64,15 @@ export interface ArchetypeTelemetry {
 }
 
 /** One turn's pool chip — the Σ`power` each side's survivors dealt the opposing
- *  health pool (`battle:ended.survivorPower`). One entry per turn, in order. */
+ *  health pool (`battle:ended.survivorPower`). One entry per turn, in order.
+ *  `player` chips the ENEMY pool (player survivors' damage dealt); `enemy` chips
+ *  the PLAYER pool (the X balance metric — player pool damage TAKEN). See
+ *  `resolveTurn` in Run.ts. */
 export interface PoolChip {
   hop: number;
+  /** X2 — the authored encounter this turn belongs to (`Encounter.id`); the
+   *  per-encounter pool-damage rollup key. */
+  encounterId: string;
   player: number;
   enemy: number;
 }
@@ -153,9 +159,10 @@ export class TelemetryAccumulator {
     if (m?.team === 'player') this.perArchetype[m.archetype].xpEarned += xpGained;
   }
 
-  /** One turn resolved — record both sides' pool chip. */
-  recordTurnChip(hop: number, player: number, enemy: number): void {
-    this.poolChips.push({ hop, player, enemy });
+  /** One turn resolved — record both sides' pool chip, tagged with the turn's
+   *  hop + encounter id (the per-encounter rollup key). */
+  recordTurnChip(hop: number, encounterId: string, player: number, enemy: number): void {
+    this.poolChips.push({ hop, encounterId, player, enemy });
   }
 
   /**

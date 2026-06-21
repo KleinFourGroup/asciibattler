@@ -29,6 +29,9 @@ export interface CliArgs {
   // every battle (`--layout=<id>`) for a clean full-sample isolate.
   perLayout: boolean;
   layout?: string;
+  // X2 — per-encounter pool-damage breakdown (`--per-encounter`); implies
+  // telemetry-on so the pool-damage metric is populated.
+  perEncounter: boolean;
   // H7b — random-search mode (`--search`).
   search: boolean;
   preset?: string;
@@ -78,6 +81,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     outDir: defaultOutDir(),
     perHop: false,
     perLayout: false,
+    perEncounter: false,
     search: false,
     balanceSweep: false,
     dryRun: false,
@@ -104,6 +108,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--per-layout':
         args.perLayout = true;
+        break;
+      case '--per-encounter':
+        args.perEncounter = true;
         break;
       case '--layout':
         if (v !== undefined) args.layout = v;

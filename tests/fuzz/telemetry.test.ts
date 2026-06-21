@@ -32,7 +32,7 @@ describe('TelemetryAccumulator', () => {
     acc.recordHeal(3, 5); // player healer
     acc.recordDeath(1);
     acc.recordXp(1, 40);
-    acc.recordTurnChip(2, 3, 1);
+    acc.recordTurnChip(2, 'brigands', 3, 1);
 
     const t = acc.finish(['mercenary'], ['mercenary', 'healer']);
     expect(t.perArchetype.mercenary.damageDealt).toBe(7); // enemy's 99 excluded
@@ -47,7 +47,7 @@ describe('TelemetryAccumulator', () => {
     expect(t.perArchetype.mercenary.recruitPicks).toBe(1);
     expect(t.perArchetype.mercenary.finalCount).toBe(1);
     expect(t.perArchetype.healer.finalCount).toBe(1);
-    expect(t.poolChips).toEqual([{ hop: 2, player: 3, enemy: 1 }]);
+    expect(t.poolChips).toEqual([{ hop: 2, encounterId: 'brigands', player: 3, enemy: 1 }]);
   });
 
   it('skips units it never registered (non-fatal)', () => {
@@ -72,7 +72,7 @@ describe('aggregateTelemetry', () => {
       acc.registerUnit(1, 'player', 'mercenary');
       acc.recordAttack(1, dmg);
       for (let i = 0; i < deaths; i++) acc.recordDeath(1);
-      acc.recordTurnChip(1, chip, chip + 1);
+      acc.recordTurnChip(1, 'enc', chip, chip + 1);
       return acc.finish([], []);
     };
     const agg = aggregateTelemetry([mk(10, 1, 2), mk(6, 3, 4)]);

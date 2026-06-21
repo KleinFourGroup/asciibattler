@@ -14,6 +14,8 @@
  *   npm run fuzz -- --strategy=config/fuzz-strategies.json   # a scored-strategy vector from a file
  *   npm run fuzz -- --per-hop   # + per-hop team analysis (stdout + per-hop.csv)
  *   npm run fuzz -- --per-layout  # + per-layout & layout×hop win/death breakdown (+ CSVs)
+ *   npm run fuzz -- --per-encounter  # + per-encounter pool-damage breakdown (telemetry on; + per-encounter.csv)
+ *   npm run fuzz -- --encounter=brigands --per-encounter  # force ONE encounter (clean sample, X2)
  *   npm run fuzz -- --layout=junctionAmbush --per-hop   # force ONE layout (clean full sample)
  *   npm run fuzz -- --layout=procedural --per-hop       # force PROCEDURAL maps every battle (M6 isolate)
  *

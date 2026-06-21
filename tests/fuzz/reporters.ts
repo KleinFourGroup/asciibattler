@@ -15,6 +15,8 @@
  */
 
 import type { BattleResult, RunResult } from './harness';
+import { HEALTH } from '../../src/config/health';
+import { getEncounter, type EncounterKind } from '../../src/config/encounters';
 
 const CSV_HEADER = [
   'seed',
@@ -548,6 +550,223 @@ export function renderLayoutHopCsv(stats: readonly LayoutHopStats[]): string {
       s.avgEnemyDeaths.toFixed(3),
       s.playerSize.toFixed(3),
       s.enemySize.toFixed(3),
+    ].join(','),
+  );
+  return [header, ...rows].join('\n') + '\n';
+}
+
+// ── Per-encounter difficulty analysis (X2) ────────────────────────────────────
+
+/**
+ * The X balance metric, keyed by `Encounter.id`. The TUNING signal is
+ * **player pool damage TAKEN** — the HP chipped off the player's encounter
+ * health pool. A turn's pool chip (`battle:ended.survivorPower`, captured in the
+ * opt-in telemetry's `poolChips`) carries it as the `enemy` field: enemy
+ * survivors chip the PLAYER pool (`resolveTurn` in Run.ts), scaled by
+ * `HEALTH.chipMultiplier` to land in pool-HP units (comparable to `healthPool`).
+ *
+ * Two units, deliberately distinct (BALANCE.md): **per instance** (a whole node
+ * visit — the encounter's cost, the unit the per-kind bands compare: a multi-wave
+ * boss accrues across all its turns) and **per wave** (one turn — the finer read).
+ * An encounter instance = one node visit; within a run a hop is visited once, so
+ * a run's `poolChips` group into instances by hop.
+ *
+ * Pool columns need telemetry on (`--per-encounter` enables it); without it the
+ * outcome columns (from `battles`, always present) still populate and the pool
+ * columns read blank (`hasPoolData` false).
+ */
+export interface EncounterStats {
+  /** `Encounter.id`. */
+  encounter: string;
+  /** The encounter's authored `kind` (`normal`/`elite`/`boss`) — the per-kind
+   *  band axis; `'unknown'` if the id no longer resolves in the catalog. */
+  kind: EncounterKind | 'unknown';
+  /** Distinct encounter INSTANCES (node visits) with pool data — the per-instance
+   *  denominator. 0 when telemetry is off. */
+  instances: number;
+  /** Turns (waves) fought for this encounter across all runs — the SAMPLE SIZE.
+   *  A natural run hits a given encounter rarely (many encounters dilute it), so
+   *  force one with `--encounter=<id>` for a clean sample. */
+  waves: number;
+  /** Fraction of waves the PLAYER won tactically (`winner === 'player'`); WAVE
+   *  level (a lost wave chips the pool, doesn't end the run). */
+  playerWinRate: number;
+  enemyWinRate: number;
+  /** Mean player/enemy deaths per wave. */
+  avgPlayerDeaths: number;
+  avgEnemyDeaths: number;
+  playerSize: number;
+  enemySize: number;
+  /** Mean PLAYER pool damage TAKEN per encounter INSTANCE (HP) — the X tuning
+   *  metric. 0 when `hasPoolData` is false. */
+  poolDmgTaken: number;
+  /** Mean player pool damage taken per WAVE (turn) — the finer read. */
+  poolDmgTakenPerWave: number;
+  /** Mean ENEMY pool damage DEALT per instance (HP) — the secondary read (how
+   *  fast you grind the encounter down). */
+  poolDmgDealt: number;
+  /** Whether any pool-chip telemetry was present for this encounter. */
+  hasPoolData: boolean;
+}
+
+function encounterKindOf(id: string): EncounterKind | 'unknown' {
+  return getEncounter(id)?.kind ?? 'unknown';
+}
+
+interface EncounterAccum {
+  battles: BattleResult[];
+  /** Per-instance player pool damage taken / enemy pool damage dealt (HP). */
+  instancesTaken: number[];
+  instancesDealt: number[];
+  /** Per-wave running sums (turns with pool data). */
+  poolWaves: number;
+  takenWaveSum: number;
+  dealtWaveSum: number;
+}
+
+/**
+ * Pool every battle + pool chip by encounter id (across all runs). Sorted
+ * most-costly-first (highest per-instance pool damage taken), ties to the bigger
+ * sample then id. Answers "which encounter costs the player the most pool" — the
+ * step-3 off-band read.
+ */
+export function perEncounterStats(results: readonly RunResult[]): EncounterStats[] {
+  const chipMult = HEALTH.chipMultiplier;
+  const byEnc = new Map<string, EncounterAccum>();
+  const ensure = (id: string): EncounterAccum => {
+    let e = byEnc.get(id);
+    if (!e) {
+      e = { battles: [], instancesTaken: [], instancesDealt: [], poolWaves: 0, takenWaveSum: 0, dealtWaveSum: 0 };
+      byEnc.set(id, e);
+    }
+    return e;
+  };
+
+  for (const r of results) {
+    for (const b of r.battles) ensure(b.encounterId).battles.push(b);
+    // Pool instances: group THIS run's chips by hop (one node visit = one hop =
+    // one instance); the encounter id is constant within a hop group.
+    const chips = r.telemetry?.poolChips ?? [];
+    const byHop = new Map<number, { encounterId: string; taken: number; dealt: number }>();
+    for (const c of chips) {
+      const taken = c.enemy * chipMult; // enemy survivors chip the PLAYER pool
+      const dealt = c.player * chipMult; // player survivors chip the ENEMY pool
+      const g = byHop.get(c.hop);
+      if (g) {
+        g.taken += taken;
+        g.dealt += dealt;
+      } else {
+        byHop.set(c.hop, { encounterId: c.encounterId, taken, dealt });
+      }
+      const e = ensure(c.encounterId);
+      e.poolWaves += 1;
+      e.takenWaveSum += taken;
+      e.dealtWaveSum += dealt;
+    }
+    for (const g of byHop.values()) {
+      const e = ensure(g.encounterId);
+      e.instancesTaken.push(g.taken);
+      e.instancesDealt.push(g.dealt);
+    }
+  }
+
+  return [...byEnc.entries()]
+    .map(([encounter, e]): EncounterStats => {
+      const n = e.battles.length;
+      const frac = (pred: (b: BattleResult) => boolean): number =>
+        n === 0 ? 0 : e.battles.filter(pred).length / n;
+      return {
+        encounter,
+        kind: encounterKindOf(encounter),
+        instances: e.instancesTaken.length,
+        waves: n,
+        playerWinRate: frac((b) => b.winner === 'player'),
+        enemyWinRate: frac((b) => b.winner === 'enemy'),
+        avgPlayerDeaths: mean(e.battles.map((b) => b.playerDeaths)),
+        avgEnemyDeaths: mean(e.battles.map((b) => b.enemyDeaths)),
+        playerSize: mean(e.battles.map((b) => b.playerTeamSize)),
+        enemySize: mean(e.battles.map((b) => b.enemyTeamSize)),
+        poolDmgTaken: mean(e.instancesTaken),
+        poolDmgTakenPerWave: e.poolWaves === 0 ? 0 : e.takenWaveSum / e.poolWaves,
+        poolDmgDealt: mean(e.instancesDealt),
+        hasPoolData: e.instancesTaken.length > 0,
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.poolDmgTaken - a.poolDmgTaken ||
+        b.waves - a.waves ||
+        a.encounter.localeCompare(b.encounter),
+    );
+}
+
+/** Render the per-encounter difficulty table (the X step-3 read). */
+export function renderEncounterAnalysis(results: readonly RunResult[]): string {
+  const rows = perEncounterStats(results);
+  const totalWaves = results.reduce((acc, r) => acc + r.battles.length, 0);
+  const anyPool = rows.some((r) => r.hasPoolData);
+  const lines: string[] = [];
+  lines.push(`### Per-encounter difficulty (${totalWaves} waves across ${results.length} runs)`);
+  lines.push('Inst = encounter instances (node visits w/ pool data) · Waves = turns (SAMPLE SIZE —');
+  lines.push('  force one with --encounter=<id> for a full sample). PWin%/EWin% = player/enemy WAVE win.');
+  lines.push('PDmgTaken = mean PLAYER pool damage TAKEN per instance (HP — the X tuning metric); /wv = per wave.');
+  lines.push('EDmgDlt = mean enemy-pool damage dealt per instance. Sorted most-costly-first (PDmgTaken).');
+  if (!anyPool) {
+    lines.push('(no pool data — telemetry was off; --per-encounter enables it. Pool columns blank.)');
+  }
+  lines.push('');
+  const header = [
+    'Encounter',
+    'Kind',
+    'Inst',
+    'Waves',
+    'PWin%',
+    'EWin%',
+    'PDth/wv',
+    'PDmgTaken',
+    '/wv',
+    'EDmgDlt',
+    'P.size',
+    'E.size',
+  ];
+  const cell = (s: EncounterStats): string[] => [
+    s.encounter,
+    s.kind,
+    String(s.instances),
+    String(s.waves),
+    (s.playerWinRate * 100).toFixed(0),
+    (s.enemyWinRate * 100).toFixed(0),
+    s.avgPlayerDeaths.toFixed(1),
+    s.hasPoolData ? s.poolDmgTaken.toFixed(1) : '—',
+    s.hasPoolData ? s.poolDmgTakenPerWave.toFixed(1) : '—',
+    s.hasPoolData ? s.poolDmgDealt.toFixed(1) : '—',
+    s.playerSize.toFixed(1),
+    s.enemySize.toFixed(1),
+  ];
+  lines.push(renderTable(header, rows.map(cell)));
+  return lines.join('\n') + '\n';
+}
+
+/** CSV of `perEncounterStats` (one row per encounter) for spreadsheet analysis. */
+export function renderEncounterCsv(stats: readonly EncounterStats[]): string {
+  const header =
+    'encounter,kind,instances,waves,playerWinRate,enemyWinRate,avgPlayerDeaths,avgEnemyDeaths,' +
+    'playerSize,enemySize,poolDmgTaken,poolDmgTakenPerWave,poolDmgDealt';
+  const rows = stats.map((s) =>
+    [
+      s.encounter,
+      s.kind,
+      s.instances,
+      s.waves,
+      s.playerWinRate.toFixed(4),
+      s.enemyWinRate.toFixed(4),
+      s.avgPlayerDeaths.toFixed(3),
+      s.avgEnemyDeaths.toFixed(3),
+      s.playerSize.toFixed(3),
+      s.enemySize.toFixed(3),
+      s.poolDmgTaken.toFixed(3),
+      s.poolDmgTakenPerWave.toFixed(3),
+      s.poolDmgDealt.toFixed(3),
     ].join(','),
   );
   return [header, ...rows].join('\n') + '\n';

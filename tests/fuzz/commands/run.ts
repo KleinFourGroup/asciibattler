@@ -32,6 +32,9 @@ import {
   renderLayoutAnalysis,
   renderLayoutCsv,
   renderLayoutHopCsv,
+  perEncounterStats,
+  renderEncounterAnalysis,
+  renderEncounterCsv,
 } from '../reporters';
 import { daemonLabel } from '../daemonSelection';
 import {
@@ -54,6 +57,7 @@ export type RunModeArgs = Pick<
   | 'outDir'
   | 'perHop'
   | 'perLayout'
+  | 'perEncounter'
   | 'layout'
   | 'objective'
   | 'redraw'
@@ -94,6 +98,10 @@ export function runRunCli(args: RunModeArgs): void {
   // to the flag being absent; none = the daemon-less control arm).
   const daemon = daemonFromArgs(args);
   if (daemon) harnessOptions = { ...harnessOptions, daemon };
+  // X2 — `--per-encounter` needs the opt-in mechanism telemetry on (pool chips)
+  // so the per-encounter pool-damage metric is populated. Pure observation —
+  // doesn't perturb determinism or the summary.csv / failure-trace output.
+  if (args.perEncounter) harnessOptions = { ...harnessOptions, telemetry: true };
 
   // Fresh failures/ dir so stale traces from prior runs don't lie. Only the
   // failures subdir is wiped (not the whole output dir) so a search's
@@ -149,6 +157,14 @@ export function runRunCli(args: RunModeArgs): void {
     writeFileSync(
       join(args.outDir, 'per-layout-hop.csv'),
       renderLayoutHopCsv(perLayoutHopStats(allResults)),
+    );
+  }
+
+  if (args.perEncounter) {
+    process.stdout.write('\n' + renderEncounterAnalysis(allResults));
+    writeFileSync(
+      join(args.outDir, 'per-encounter.csv'),
+      renderEncounterCsv(perEncounterStats(allResults)),
     );
   }
 

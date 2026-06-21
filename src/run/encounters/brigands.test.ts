@@ -2,33 +2,31 @@ import { describe, it, expect } from 'vitest';
 import { RNG } from '../../core/RNG';
 import { resolveWave, type WaveContext } from './wave';
 import { waveForTurn } from './sequencer';
-import { enemyBudgetFor } from '../enemyBudget';
 import { getEncounter } from '../../config/encounters';
-import { DIFFICULTY } from '../../config/difficulty';
-import { HEALTH } from '../../config/health';
 import { DECK } from '../../config/deck';
 import { ARCHETYPE_CONFIG } from '../../sim/archetypes';
 import type { Archetype, UnitTemplate } from '../../sim/Unit';
 
 /**
- * V1 — "Brigands" is the authored ANCHOR encounter: the faithful baseline that
- * re-creates the pre-V random swarm (`rollEnemyWave`). U3 built it in code
- * (reading live config); V1 hoisted it into `config/encounters.json` with literal
- * constants. This test pins that faithfulness: at TODAY's config, Brigands still
- * resolves to `enemyBudgetFor`'s budget + the `enemyArcherRatio` split — deriving
- * the expectation from the config modules (never hardcoded), so it flags the day
- * Brigands and `difficulty.json` diverge (the conscious retune point at X). The
- * variants (Highwaymen / Deserters) carry NO faithfulness test — only the anchor
- * is held to the old generator.
+ * "Brigands" is the catalog's everyday-fight reference encounter. It WAS pinned
+ * faithful to the pre-V random `rollEnemyWave` budget (U3/V1 built it to
+ * reproduce the old single-wave swarm); **Phase X3 — the conscious retune point
+ * the original test named** — re-derived the band against the multi-wave authored
+ * model (the old per-wave budget × ~3 grind-down waves ran far over the 20-pool),
+ * so brigands now carries its own tuned wave-spec, decoupled from `difficulty.json`.
+ *
+ * This test no longer holds brigands to the old generator; it pins the structural
+ * identity + that the resolver fields the encounter's OWN authored count /
+ * composition / level budget (expectations read live from the spec, never
+ * hardcoded — per the balance-proof-test discipline), so it flags a drift between
+ * the catalog and `resolveWave` rather than a deliberate retune.
  */
 
 function roster(levels: number[], archetype: Archetype = 'mercenary'): UnitTemplate[] {
   return levels.map((level) => ({ archetype, level, stats: { ...ARCHETYPE_CONFIG[archetype].baseStats }, xp: 0 }));
 }
 
-/** The production WaveContext for a roster (mirrors what Run.beginTurn builds).
- *  Brigands authors no `levelCap` (its 1.25/1.5 budget never reaches the old
- *  global cap, so the cap was inert) — the resolver leaves the spread uncapped. */
+/** The production WaveContext for a roster (mirrors what Run.beginTurn builds). */
 function contextFor(team: UnitTemplate[]): WaveContext {
   return {
     roster: team,
@@ -38,12 +36,12 @@ function contextFor(team: UnitTemplate[]): WaveContext {
 
 const brigands = getEncounter('brigands');
 
-describe('brigands — the anchor encounter (identity)', () => {
-  it('exists in the catalog as a normal fight pooled at the launch enemy health', () => {
+describe('brigands — the everyday-fight reference (identity)', () => {
+  it('exists in the catalog as a normal fight with a positive health pool', () => {
     expect(brigands).toBeDefined();
     expect(brigands!.name).toBe('Brigands');
     expect(brigands!.kind).toBe('normal');
-    expect(brigands!.healthPool).toBe(HEALTH.enemyHealthMax);
+    expect(brigands!.healthPool).toBeGreaterThan(0);
   });
 
   it('is a forever loop of one wave (re-rolls every turn)', () => {
@@ -52,29 +50,37 @@ describe('brigands — the anchor encounter (identity)', () => {
   });
 });
 
-describe('brigands — balance-proof faithfulness to rollEnemyWave', () => {
+describe('brigands — resolves to its own authored wave-spec', () => {
   // A mid-run roster small enough that the budget affords ≥ 1 level per unit, so
-  // the team's TOTAL level lands exactly on enemyBudgetFor (both derive from
-  // DIFFICULTY — never a hardcoded roster). Mean 5, size 5 ≤ handSize.
+  // the team's TOTAL level lands exactly on the authored budget. Mean 5, size 5 ≤
+  // handSize. Expectations are derived from the resolved spec (read live), not
+  // from hardcoded constants or difficulty.json.
   const team = roster([5, 5, 5, 5, 5]);
+  const handSize = Math.min(team.length, DECK.handSize);
   const { spec } = waveForTurn(brigands!.waves, null, { poolFraction: 1, turn: 1 }, new RNG(1));
 
-  it('fields hand × swarmMax bodies, split bandit/ranged by enemyArcherRatio', () => {
-    const expectedCount = Math.round(DIFFICULTY.swarmMaxMultiplier * Math.min(team.length, DECK.handSize));
+  it('fields count.factor × hand bodies of the authored archetypes', () => {
+    const expectedCount =
+      spec.count.kind === 'hand' ? Math.round(spec.count.factor * handSize) : spec.count.value;
+    const authored = new Set(spec.units.map((u) => u.archetype));
     for (let s = 0; s < 30; s++) {
       const wave = resolveWave(spec, contextFor(team), new RNG(s));
       expect(wave).toHaveLength(expectedCount);
-      expect(wave.every((u) => u.archetype === 'bandit' || u.archetype === 'ranged')).toBe(true);
-      expect(wave.filter((u) => u.archetype === 'bandit').length).toBe(
-        Math.round(expectedCount * (1 - DIFFICULTY.enemyArcherRatio)),
-      );
+      expect(wave.every((u) => authored.has(u.archetype))).toBe(true);
     }
   });
 
-  it('the wave total level equals enemyBudgetFor(roster) (budget-affording case)', () => {
+  it('spends the authored level budget (uncapped, budget-affording case)', () => {
+    const meanLevel = team.reduce((a, u) => a + u.level, 0) / team.length;
+    // brigands authors a `mean` budget and no levelCap, so the wave spends the
+    // full factor × meanLevel × handSize budget across its bodies.
+    const expectedBudget =
+      spec.levelBudget.kind === 'fixed'
+        ? spec.levelBudget.value
+        : Math.round(spec.levelBudget.factor * meanLevel * handSize);
     for (let s = 0; s < 30; s++) {
       const wave = resolveWave(spec, contextFor(team), new RNG(s));
-      expect(wave.reduce((a, u) => a + u.level, 0)).toBe(enemyBudgetFor(team));
+      expect(wave.reduce((a, u) => a + u.level, 0)).toBe(expectedBudget);
     }
   });
 });

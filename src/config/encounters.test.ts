@@ -128,11 +128,13 @@ describe('encounters schema', () => {
     expect(ronin.kind).toBe('loop');
     if (ronin.kind === 'loop') expect(ronin.body[0]!.kind).toBe('pick');
 
-    // adventurer-with-guards — a top-level FLAT sequence: a finite `loop {repeat:3}`
-    // of guards, then a lone boss wave that the last-wave-repeats policy holds.
+    // adventurer-with-guards — a top-level FLAT sequence: a finite `loop` of
+    // guards, then a lone boss wave that the last-wave-repeats policy holds. The
+    // grammar feature is the FINITE repeat (a number, not 'forever'); the exact
+    // count is a Phase-X tuning value, so assert the feature, not the number.
     const advWaves = getEncounter('adventurer-with-guards')!.waves;
     expect(advWaves.map((w) => w.kind)).toEqual(['loop', 'wave']);
-    if (advWaves[0]!.kind === 'loop') expect(advWaves[0]!.repeat).toBe(3);
+    if (advWaves[0]!.kind === 'loop') expect(typeof advWaves[0]!.repeat).toBe('number');
   });
 
   it('parses a deeply-nested wave grammar (stages → loop → pick → wave)', () => {

@@ -280,4 +280,40 @@ deltas. The pre-X H7c→O log lives at
   **X2d** extended `--hops`/`--roster` to the plain run mode (was sweep/search-only),
   so a boss/elite isolation telemetry read works standalone (`--encounter=bandit-king
   --hops=2 --roster=<leveled> --per-encounter` → 12 boss instances vs 1 in a full run).
-- *(Phase X3 sweep readings — to come.)*
+- **2026-06-21 — X3 the band RE-DERIVATION (the 5-step sweep).** The pre-X band was
+  **invalidated, not perturbed** — the heavy full-length `--search` of the authored
+  catalog won **0.0% held-out / 6.7% train**: near-unwinnable end-to-end, the gradient
+  flat AT THE FLOOR. Root cause: the old `1.25 × 1.5` band was tuned for SINGLE random
+  waves, but authored encounters `loop` over their `healthPool` (~3 waves each), so the
+  same per-wave budget × N waves ran far over the 20-pool. Per-kind bands set
+  **data-first WITH the user** (player pool 20, ~2–3 rests × 5, ~8–10 fights/run):
+  **normal ≈ 3 · elite ≈ 6 (2×) · boss ≈ 10 (~3×)** pool-damage-taken/instance; scope
+  = **content only** (bake into wave-spec budgets + `healthPool`; the pool/rest economy
+  held fixed); the easy normals **brought up** into band.
+  - **Method:** coarse knockdown vs a fixed reference → **re-derive** the optimal on the
+    rebalanced content (`--search` heavy, jobs=8) → fine-tune vs the true gradient →
+    **held-out verify** (`--seed-offset=5000`). The lever is the per-encounter
+    `count.factor`/`levelBudget.factor`/`healthPool`; **pool damage is super-linear** in
+    the per-wave budget (winning the wave craters it), so spikes need aggressive cuts.
+  - **Result (optimal in-situ):** win rate **0% → 36.9%** (greedy 13.1%) — a **+24pt
+    skill gradient** where there was none; smooth funnel (hops 0–9 ≤9% death) with the
+    boss as the climactic wall (hop 10 ≈ 43–55%). Per-encounter, baseline → final
+    pool-damage: warband 20.2→~7, boss 19.0→**8.5**, adventurer-with-guards 11.3→2.8,
+    brigand-champions 9.7→~6–8, brigands 7.0→2.5; the easy normals raised
+    highwaymen 0.3→2.2 / deserters 0.9→2.9 / ronin-vs-mages 1.6→1.4. **Held-out verify
+    (offset 5000): bands HOLD out-of-sample** — normals 2.2–3.4, boss 10.8; best-
+    achievable ~37% train. Config is NOT seed-overfit.
+  - **Two planned items the data RETIRED:** the deferred **"uncap the spikes"** — the
+    boss/ronin-vs-mages were *over* budget, not under, so uncapping (which RAISES
+    difficulty) was exactly wrong; **no uncaps applied** (ronin re-capped after an
+    overshoot to 7.7). And the **brigands anchor** (pinned faithful to `rollEnemyWave`)
+    was retuned — X is "the conscious retune point" the anchor test itself named — and
+    `brigands.test.ts` re-baselined to assert its own authored spec (derived from config,
+    not the old generator).
+  - **Elites stay under-sampled in-situ** (the optimal skips the optional detours);
+    forced isolation (greedy, leveled roster) put both ≈ 2.4× a normal — leaning slightly
+    hard, acceptable for optional detours (`warband` is mage-driven by design). Their
+    final feel is a playtest call. **Test fix:** post-X3 some normals pool deeper than
+    `HEALTH.enemyHealthMax` (highwaymen 10 / deserters 9), so the `winEncounter` test
+    helper's one-chip default (8) no longer cleared them → defaulted to clear any pool
+    (`resolveTurn` floors `enemyHealth` at 0, so over-chipping is safe).

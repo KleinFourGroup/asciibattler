@@ -2409,7 +2409,13 @@ describe('Run', () => {
 function winEncounter(
   bus: EventBus<GameEvents>,
   xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
-  poolMax: number = HEALTH.enemyHealthMax,
+  // A decisive win must clear the enemy pool in ONE chip. Post-X3 encounters pool
+  // at their authored `healthPool` — some normals deeper than HEALTH.enemyHealthMax
+  // (highwaymen/deserters), bosses deeper still — so the default over-chips by a
+  // wide margin; resolveTurn floors enemyHealth at 0, so the excess is harmless and
+  // the encounter resolves as a win regardless of pool depth. Pass an explicit
+  // poolMax only for partial-chip / multi-turn cases (those use chipTurn anyway).
+  poolMax: number = 1_000,
 ): void {
   bus.emit('battle:ended', {
     winner: 'player',
@@ -2588,7 +2594,10 @@ function driveToRestFrontier(
   // walk starts at path[0]; the rest (path[last]) is left as the frontier.
   for (let i = 0; i < path.length - 1; i++) {
     run.dispatch({ kind: 'enterNode', nodeId: path[i]! });
-    winEncounter(bus, awardsForHop(run, i));
+    // Clear the FULL encounter pool in one win-chip — post-X3 some normals pool
+    // deeper than HEALTH.enemyHealthMax (highwaymen/deserters), so chip by the
+    // selected encounter's actual healthPool rather than the default 8.
+    winEncounter(bus, awardsForHop(run, i), run.enemyHealthPoolMax);
     // A battle whose awards level a unit pauses on promotion first; clear it
     // so we land in the recruit phase (the mandatory post-battle recruit).
     if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });

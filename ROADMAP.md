@@ -896,7 +896,18 @@ match/mismatch/fit-filter/unknown/no-layout), +2 Run wiring (pins / loud throw),
 `--hops`/`--roster` verified end-to-end — boss instances jump 1→12 at `--hops=2`).
 1206 main / 210 fuzz:smoke / typecheck / lint green.
 
-### X3 — Re-derive the band + tune the launch content (the sweep)
+### X3 — Re-derive the band + tune the launch content (the sweep) ✅ COMPLETE (2026-06-21)
+
+**As-built (detail in [BALANCE.md](BALANCE.md) run log + git):** the pre-X band was
+*invalidated* — the heavy full-length search won **0% held-out** (near-unwinnable; the
+multi-wave `healthPool` model multiplied the old single-wave budget). Per-kind bands set
+data-first WITH the user (**normal ≈ 3 · elite ≈ 6 · boss ≈ 10** pool-damage/instance;
+content-only). Ran the 5-step loop (knockdown → re-derive → fine-tune → held-out verify);
+result **win rate 0% → ~37% optimal with a +24pt skill gradient**, bands holding
+out-of-sample (`--seed-offset=5000`). The deferred **uncaps were retired** (the spikes
+were *over* budget, not under); the **brigands anchor was retuned** (X = its named
+"conscious retune point") and its faithfulness test re-baselined. Elites lean slightly
+hard (optional detours, under-sampled in-situ) → a playtest call.
 
 **Shape:** run the BALANCE.md **5-step loop** — (1) `--search` the optimal run-level
 strategy; (2) fix it, gather per-encounter pool-damage telemetry (**forced + in-situ

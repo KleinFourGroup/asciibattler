@@ -3,7 +3,7 @@
     "id": "brigands",
     "name": "Brigands",
     "description": "A roving band of brigands — the everyday hostiles of the road.",
-    "healthPool": 8,
+    "healthPool": 7,
     "kind": "normal",
     "waves": [
       {
@@ -13,8 +13,8 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
-              "count": { "kind": "hand", "factor": 1.5 },
+              "levelBudget": { "kind": "mean", "factor": 1.2 },
+              "count": { "kind": "hand", "factor": 1.3 },
               "units": [
                 { "archetype": "bandit", "count": { "kind": "weight", "weight": 0.7 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "ranged", "count": { "kind": "weight", "weight": 0.3 }, "level": { "kind": "weight", "weight": 1 } }
@@ -29,7 +29,7 @@
     "id": "highwaymen",
     "name": "Highwaymen",
     "description": "Masked roadmen who close the distance fast — no ranged support, all blades.",
-    "healthPool": 8,
+    "healthPool": 10,
     "kind": "normal",
     "waves": [
       {
@@ -39,8 +39,8 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
-              "count": { "kind": "hand", "factor": 1.5 },
+              "levelBudget": { "kind": "mean", "factor": 1.55 },
+              "count": { "kind": "hand", "factor": 2 },
               "units": [
                 { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
@@ -54,7 +54,7 @@
     "id": "deserters",
     "name": "Deserters",
     "description": "Fled soldiers who keep a field medic in the ranks — one healer mends the line while the rest swarm.",
-    "healthPool": 8,
+    "healthPool": 9,
     "kind": "normal",
     "waves": [
       {
@@ -64,8 +64,8 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
-              "count": { "kind": "hand", "factor": 1.5 },
+              "levelBudget": { "kind": "mean", "factor": 1.5 },
+              "count": { "kind": "hand", "factor": 2 },
               "units": [
                 { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "healer", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
@@ -132,7 +132,7 @@
                   "kind": "wave",
                   "spec": {
                     "levelBudget": { "kind": "mean", "factor": 1.25 },
-                    "count": { "kind": "hand", "factor": 0.75 },
+                    "count": { "kind": "hand", "factor": 0.9 },
                     "levelCap": { "kind": "roster", "delta": 2 },
                     "units": [
                       { "archetype": "mage", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
@@ -170,18 +170,18 @@
     "waves": [
       {
         "kind": "loop",
-        "repeat": 3,
+        "repeat": 2,
         "body": [
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
-              "count": { "kind": "hand", "factor": 1 },
+              "levelBudget": { "kind": "mean", "factor": 1 },
+              "count": { "kind": "hand", "factor": 0.7 },
               "levelCap": { "kind": "roster", "delta": 2 },
               "units": [
                 { "archetype": "mercenary", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "rogue", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } }
+                { "archetype": "rogue", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }
           }
@@ -204,7 +204,7 @@
     "id": "bandit-king",
     "name": "The Bandit King",
     "description": "The warlord every road-bandit answers to. He throws his disciplined honour guard first, looses his berserkers as they fall, then makes his own last stand — the fight escalates as you wear his host down.",
-    "healthPool": 20,
+    "healthPool": 11,
     "kind": "boss",
     "waves": [
       {
@@ -216,8 +216,8 @@
               {
                 "kind": "wave",
                 "spec": {
-                  "levelBudget": { "kind": "mean", "factor": 1.25 },
-                  "count": { "kind": "hand", "factor": 1.5 },
+                  "levelBudget": { "kind": "mean", "factor": 1 },
+                  "count": { "kind": "hand", "factor": 1.1 },
                   "units": [
                     { "archetype": "mercenary", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
                     { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
@@ -232,8 +232,8 @@
               {
                 "kind": "wave",
                 "spec": {
-                  "levelBudget": { "kind": "mean", "factor": 1.25 },
-                  "count": { "kind": "hand", "factor": 1.5 },
+                  "levelBudget": { "kind": "mean", "factor": 1 },
+                  "count": { "kind": "hand", "factor": 1.1 },
                   "units": [
                     { "archetype": "bandit", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
                     { "archetype": "rogue", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
@@ -248,8 +248,8 @@
               {
                 "kind": "wave",
                 "spec": {
-                  "levelBudget": { "kind": "mean", "factor": 1.5 },
-                  "count": { "kind": "hand", "factor": 1.25 },
+                  "levelBudget": { "kind": "mean", "factor": 1.1 },
+                  "count": { "kind": "hand", "factor": 1 },
                   "levelCap": { "kind": "roster", "delta": 2 },
                   "units": [
                     { "archetype": "adventurer", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
@@ -268,7 +268,7 @@
     "id": "brigand-champions",
     "name": "Brigand Champions",
     "description": "The road's hardened best — fewer blades than a raid, but every one a veteran, with a ronin at their head. A tougher fight for the bold who take the detour.",
-    "healthPool": 12,
+    "healthPool": 11,
     "kind": "elite",
     "waves": [
       {
@@ -278,8 +278,8 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.35 },
-              "count": { "kind": "hand", "factor": 1.25 },
+              "levelBudget": { "kind": "mean", "factor": 1.2 },
+              "count": { "kind": "hand", "factor": 1.05 },
               "units": [
                 { "archetype": "bandit", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "ronin", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
@@ -294,7 +294,7 @@
     "id": "warband-vanguard",
     "name": "Warband Vanguard",
     "description": "A combined-arms strike team — seasoned mercenaries screening their archers, a battle-mage lobbing fire from the rear. The detour that earns its keep.",
-    "healthPool": 12,
+    "healthPool": 8,
     "kind": "elite",
     "waves": [
       {
@@ -304,8 +304,8 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.35 },
-              "count": { "kind": "hand", "factor": 1.25 },
+              "levelBudget": { "kind": "mean", "factor": 0.9 },
+              "count": { "kind": "hand", "factor": 0.8 },
               "units": [
                 { "archetype": "mercenary", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },

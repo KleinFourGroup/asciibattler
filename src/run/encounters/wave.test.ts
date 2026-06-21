@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { RNG } from '../../core/RNG';
-import { resolveWave, distributeWeightedLevels, type WaveSpec, type WaveContext } from './wave';
+import {
+  resolveWave,
+  distributeWeightedLevels,
+  type WaveSpec,
+  type WaveUnitSpec,
+  type WaveContext,
+} from './wave';
 import { ARCHETYPE_CONFIG } from '../../sim/archetypes';
 import { scaleStats } from '../../sim/leveling';
 import type { Archetype, UnitTemplate } from '../../sim/Unit';
@@ -242,6 +248,73 @@ describe('resolveWave — levelCap (the optional per-wave ceiling)', () => {
       units: [{ archetype: 'bandit', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } }],
     };
     for (const u of resolveWave(spec, ctx(), new RNG(1))) expect(u.level).toBeLessThanOrEqual(6);
+  });
+});
+
+describe('resolveWave — X1 difficulty multipliers (the per-run lever)', () => {
+  const oneWeighted: WaveUnitSpec = {
+    archetype: 'bandit',
+    count: { kind: 'weight', weight: 1 },
+    level: { kind: 'weight', weight: 1 },
+  };
+
+  it('waveSizeMultiplier scales the resolved COUNT (fixed + hand), applied pre-round', () => {
+    const fixed: WaveSpec = {
+      levelBudget: { kind: 'fixed', value: 200 },
+      count: { kind: 'fixed', value: 10 },
+      units: [oneWeighted],
+    };
+    expect(resolveWave(fixed, ctx({ waveSizeMultiplier: 2 }), new RNG(1))).toHaveLength(20);
+    expect(resolveWave(fixed, ctx({ waveSizeMultiplier: 0.5 }), new RNG(1))).toHaveLength(5);
+
+    const hand: WaveSpec = { ...fixed, count: { kind: 'hand', factor: 1.5 } };
+    // raw = 1.5 × 6 = 9; × 2 BEFORE the round → round(18) = 18.
+    expect(resolveWave(hand, ctx({ handSize: 6, waveSizeMultiplier: 2 }), new RNG(1))).toHaveLength(18);
+  });
+
+  it('levelBudgetMultiplier scales the resolved BUDGET L (fixed + roster-relative)', () => {
+    const lone: WaveSpec = {
+      levelBudget: { kind: 'fixed', value: 20 },
+      count: { kind: 'fixed', value: 1 },
+      units: [oneWeighted],
+    };
+    // One uncapped weighted instance absorbs the whole scaled budget.
+    expect(resolveWave(lone, ctx({ levelBudgetMultiplier: 1.5 }), new RNG(1))[0]!.level).toBe(30);
+    expect(resolveWave(lone, ctx({ levelBudgetMultiplier: 0.5 }), new RNG(1))[0]!.level).toBe(10);
+
+    const mean: WaveSpec = { ...lone, levelBudget: { kind: 'mean', factor: 2 } };
+    // roster mean 5 × handSize 3 × factor 2 = 30; × 1.5 → 45.
+    const c = ctx({ roster: roster([2, 4, 4, 10]), handSize: 3, levelBudgetMultiplier: 1.5 });
+    expect(resolveWave(mean, c, new RNG(1))[0]!.level).toBe(45);
+  });
+
+  it('levelBudgetMultiplier SATURATES against levelCap (only bites uncapped waves)', () => {
+    const lone = (cap?: WaveSpec['levelCap']): WaveSpec => ({
+      levelBudget: { kind: 'fixed', value: 10 },
+      count: { kind: 'fixed', value: 1 },
+      ...(cap ? { levelCap: cap } : {}),
+      units: [oneWeighted],
+    });
+    // Uncapped: ×2 raises the lone level 10 → 20.
+    expect(resolveWave(lone(), ctx({ levelBudgetMultiplier: 2 }), new RNG(1))[0]!.level).toBe(20);
+    // Capped at 12: ×1 sits at 10 (under cap); ×2 would be 20 but clamps to 12.
+    const capped = lone({ kind: 'fixed', value: 12 });
+    expect(resolveWave(capped, ctx({ levelBudgetMultiplier: 1 }), new RNG(1))[0]!.level).toBe(10);
+    expect(resolveWave(capped, ctx({ levelBudgetMultiplier: 2 }), new RNG(1))[0]!.level).toBe(12);
+  });
+
+  it('absent multipliers ≡ explicit 1.0 (the default path resolves byte-identically)', () => {
+    const spec: WaveSpec = {
+      levelBudget: { kind: 'mean', factor: 1.5 },
+      count: { kind: 'hand', factor: 1.75 },
+      units: [
+        { archetype: 'bandit', count: { kind: 'weight', weight: 7 }, level: { kind: 'weight', weight: 1 } },
+        { archetype: 'ranged', count: { kind: 'weight', weight: 3 }, level: { kind: 'weight', weight: 1 } },
+      ],
+    };
+    expect(resolveWave(spec, ctx(), new RNG(42))).toEqual(
+      resolveWave(spec, ctx({ waveSizeMultiplier: 1, levelBudgetMultiplier: 1 }), new RNG(42)),
+    );
   });
 });
 

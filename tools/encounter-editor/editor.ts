@@ -188,6 +188,13 @@ let handSize = DECK.handSize;
 let poolFraction = 1;
 let previewTurns = 6;
 let previewSeed = 1;
+// X1 — preview-only knobs mirroring the GLOBAL per-run difficulty lever
+// (config/difficulty.json / a future difficulty system), NOT encounter content:
+// they scale every wave's resolved count / level budget so an author can feel how
+// the encounter sits under difficulty scaling before baking the budget. Default 1
+// (no scaling). Threaded into the preview WaveContext only — never saved.
+let waveSizePreview = 1;
+let levelBudgetPreview = 1;
 
 // ---- DOM ----
 const tabsEl = mustQuery<HTMLDivElement>('#tabs');
@@ -211,6 +218,8 @@ const handSizeEl = mustQuery<HTMLInputElement>('#hand-size');
 const poolFractionEl = mustQuery<HTMLInputElement>('#pool-fraction');
 const turnsEl = mustQuery<HTMLInputElement>('#turns');
 const seedEl = mustQuery<HTMLInputElement>('#seed');
+const multWaveSizeEl = mustQuery<HTMLInputElement>('#mult-wave-size');
+const multLevelBudgetEl = mustQuery<HTMLInputElement>('#mult-level-budget');
 const turnsOutEl = mustQuery<HTMLDivElement>('#turns-out');
 const validationEl = mustQuery<HTMLUListElement>('#validation');
 const exportEl = mustQuery<HTMLTextAreaElement>('#export');
@@ -373,6 +382,16 @@ function attachPreviewControls(): void {
   seedEl.addEventListener('input', () => {
     const n = Number.parseInt(seedEl.value, 10);
     previewSeed = Number.isFinite(n) ? n : 0;
+    refreshPreview();
+  });
+  multWaveSizeEl.addEventListener('input', () => {
+    const n = Number.parseFloat(multWaveSizeEl.value);
+    waveSizePreview = Number.isFinite(n) && n > 0 ? n : 1;
+    refreshPreview();
+  });
+  multLevelBudgetEl.addEventListener('input', () => {
+    const n = Number.parseFloat(multLevelBudgetEl.value);
+    levelBudgetPreview = Number.isFinite(n) && n > 0 ? n : 1;
     refreshPreview();
   });
 }
@@ -566,7 +585,13 @@ function refreshPreview(): void {
   const roster: UnitTemplate[] = rosterLevels.length
     ? rosterLevels.map((lv) => scaledUnit('mercenary', lv))
     : [scaledUnit('mercenary', 1)];
-  const ctx: WaveContext = { roster, handSize };
+  const ctx: WaveContext = {
+    roster,
+    handSize,
+    // X1 — the global difficulty lever (preview-only; default 1 = no scaling).
+    waveSizeMultiplier: waveSizePreview,
+    levelBudgetMultiplier: levelBudgetPreview,
+  };
 
   // Mirror production: a master stream forks a fresh battle RNG each turn (both
   // `waveForTurn`'s pick roll and `resolveWave`'s level remainder draw from it).

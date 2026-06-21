@@ -118,6 +118,29 @@ describe('Run', () => {
     });
   });
 
+  describe('X1 — per-run difficulty multipliers (RunConfig seam → wave resolver)', () => {
+    function firstEnemyTeam(seed: number, config?: RunConfig) {
+      const { run } = freshRunWithBus(seed, config);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      return run.currentEncounter!.enemyTeam;
+    }
+
+    it('a waveSizeMultiplier override flows through to the resolved enemy COUNT', () => {
+      // Same seed → identical encounter + map; only the lever differs. A 6× span
+      // is robustly strictly-greater whatever encounter the root rolls.
+      const small = firstEnemyTeam(7, { waveSizeMultiplier: 0.5 });
+      const large = firstEnemyTeam(7, { waveSizeMultiplier: 3 });
+      expect(large.length).toBeGreaterThan(small.length);
+    });
+
+    it('an explicit 1.0 override ≡ no override (the difficulty.json default fallback)', () => {
+      // Proves the resolve fallback AND that both fields thread cleanly at 1.0.
+      expect(firstEnemyTeam(7, { waveSizeMultiplier: 1, levelBudgetMultiplier: 1 })).toEqual(
+        firstEnemyTeam(7),
+      );
+    });
+  });
+
   describe('enterNode command', () => {
     it('transitions to battle phase on a frontier hop', () => {
       const { run } = freshRunWithBus(1);

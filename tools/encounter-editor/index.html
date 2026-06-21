@@ -91,6 +91,16 @@
               <label>Pool % <input id="pool-fraction" type="number" min="0" max="100" step="5" value="100" /></label>
               <label>Turns <input id="turns" type="number" min="1" max="20" step="1" value="6" /></label>
               <label>Seed <input id="seed" type="number" step="1" value="1" /></label>
+              <label
+                title="Preview-only: the global per-run difficulty lever (config/difficulty.json / a future difficulty system) — NOT saved on the encounter. Scales every wave's resolved count."
+                >Difficulty: count ×
+                <input id="mult-wave-size" type="number" min="0.1" step="0.05" value="1" style="width: 4rem" />
+              </label>
+              <label
+                title="Preview-only: the global per-run level-budget lever — NOT saved on the encounter. Scales every wave's resolved level budget; saturates against a wave's levelCap."
+                >budget ×
+                <input id="mult-level-budget" type="number" min="0.1" step="0.05" value="1" style="width: 4rem" />
+              </label>
             </div>
             <div id="turns-out" class="turns"></div>
             <p class="preview-note">

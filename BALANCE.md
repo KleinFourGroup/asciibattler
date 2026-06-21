@@ -17,10 +17,15 @@ object in-process between grid points. Phase V replaced the random wave generato
 with **authored encounters** (a frozen JSON catalog). So three things move:
 
 - **Unit of balance** = the **encounter** (in a layout, at a hop), not the run.
-- **Lever** = per-encounter, not a global constant.
-- **Mechanism** = the old mutate-`DIFFICULTY` trick no longer reaches authored
-  encounters (their constants are frozen JSON) → the lever became a **first-class
-  multiplier field** the harness mutates in-memory (see [The lever](#the-lever--per-encounter-difficulty-multipliers)).
+- **Lever** = a global/per-run multiplier the wave resolver reads, driven in
+  ISOLATION per encounter (then baked into that encounter's budget) — so the
+  encounter stays the unit of balance even though the lever itself is global.
+- **Mechanism** = a **global/per-run difficulty multiplier** (`config/difficulty.json`
+  default + a `RunConfig` per-run override — the future difficulty-system seam), NOT a
+  field on the frozen encounter JSON. The sweep mutates this in-memory global while
+  forcing one encounter (`--encounter`), so a global lever yields a clean
+  per-encounter read; the tuned value is then **baked into that encounter's authored
+  wave-spec budget** (see [The lever](#the-lever--the-per-run-difficulty-multipliers)).
 
 **Keep the bones, swap the lever.** The signal, funnel, tiers, train/test split,
 tune-against-a-stable-baseline, and the bot-is-a-lower-bound caveat all still apply.
@@ -67,8 +72,10 @@ The method the user converged on (2026-06-21):
    (`--encounter=<id>`) for sample size — a natural run hits a given encounter far
    below uniform, and there are now many encounters diluting it.
 3. **ID off-band / wrong-gradient encounters** (pool damage + gradient).
-4. **Mutate the per-encounter multipliers** (`waveSize` / `levelBudget`) to pull
-   each toward its per-kind target.
+4. **Drive the per-run multipliers in isolation** (`waveSize` / `levelBudget`, under
+   `--encounter`) to find each encounter's in-band value, then **bake it into that
+   encounter's wave-spec budget** (the lever returns to 1.0 — it's an experiment knob
+   + the future difficulty source, not persisted per-encounter content).
    1. Encounter×layout combos that *resist* tuning → **turn off the combo** (the
       encounter `layouts` fit-filter).
    2. Hop gates that resist → adjust the sector pool `minHop`.
@@ -89,20 +96,27 @@ Step-4 multiplier changes shift the optimum, so the step-1 strategy goes stale
 *within* a pass. Fine **if** step 5 re-derives — don't iterate step 4 many times
 against a frozen strategy.
 
-## The lever — per-encounter difficulty multipliers
+## The lever — the per-run difficulty multipliers
 
-First-class **engine primitives** (X1), NOT harness-only — they're the groundwork
-for the future difficulty system:
+First-class **engine primitives** (X1 — shipped), NOT harness-only — the groundwork
+for the future difficulty system. They live on the **run**, not the encounter:
 
 - **`waveSize`** — scales the resolved wave **count** `C` (`resolveTotalCount` in
   [wave.ts](src/run/encounters/wave.ts)). The **action-economy** axis (more bodies).
 - **`levelBudget`** — scales the resolved **level budget** `L`
   (`resolveLevelBudget`). The **individual-strength** axis (more total levels).
-- Each defaults to **1.0**, sweep range **0.5–2.0**, applied to **all waves** in the
-  encounter (a boss applies it across all `stages`).
-- Applied at resolve time via `WaveContext`. The **static per-encounter field is the
-  Phase-X source**; a dynamic difficulty system (hop-ramp / ascension) is the
-  *seamed* future source — same application point.
+- Each defaults to **1.0**, sweep range **0.5–2.0**, applied to **every wave** the
+  encounter fields (a boss applies it across all `stages`).
+- **Source = the run, not the encounter.** The global default lives in
+  `config/difficulty.json` (`waveSizeMultiplier` / `levelBudgetMultiplier`); a per-run
+  override lives on `RunConfig` (the seam a future difficulty level / hop-ramp /
+  ascension sets). `resolveDifficultyMultipliers` resolves `override ?? default`;
+  `Run` threads the result into `WaveContext` at resolve time. There is deliberately
+  **no per-encounter multiplier field** — the encounter's authored wave-spec budget
+  stays its single source of truth.
+- **Tuning bakes, it doesn't persist a multiplier.** The sweep drives the lever in
+  isolation to find an in-band value, then that value is **baked into the encounter's
+  wave-spec `factor`/`value`** and the lever returns to 1.0.
 
 These are the two independent axes the resolver already separates (the K2 lesson:
 count and strength are different levers, and **count hits the early game hardest**).
@@ -161,11 +175,14 @@ re-time mid-sweep).
 
 ## Mechanics
 
-- **The override mechanism (the X fix):** the sweep mutates the **in-memory
-  encounter's `waveSize` / `levelBudget` field** per grid point — NOT the frozen
-  JSON, NOT (only) the global `DIFFICULTY`. Making the multipliers first-class
-  (rather than harness-local) is what makes this clean *and* doubles as the future
-  difficulty system's groundwork.
+- **The override mechanism (the X fix):** the sweep mutates the **in-memory global
+  difficulty multiplier** (`DIFFICULTY.waveSizeMultiplier` / `levelBudgetMultiplier`,
+  or the `RunConfig` per-run override) per grid point, while forcing a single
+  encounter (`--encounter`) — so a global lever yields a clean per-encounter read.
+  This REVIVES the old mutate-`DIFFICULTY` trick (the frozen encounter JSON is never
+  touched); making the multipliers first-class engine primitives is what keeps it
+  clean *and* doubles as the future difficulty system's groundwork. The tuned value is
+  then hand-baked into the encounter's wave-spec budget.
 - **Determinism:** seeded sampler → `(samplerSeed, grid, tier)` reproduces.
 - **Two levels of overfitting:** (1) *weights→seeds* — train/test split (select on
   train, score the winner on held-out test); (2) *config→seeds* — reserve a **fresh
@@ -209,9 +226,10 @@ re-time mid-sweep).
   best-achievable + gradient. *(built)*
 - `npm run fuzz -- --encounter=<id> …` — force one encounter across every node
   (per-kind-bucket aware, per Wb4); the clean per-encounter sample. *(X2)*
-- `npm run fuzz -- --balance-sweep --knob=<id>.waveSize --range=0.5:2.0:N \`
-  `--knob2=<id>.levelBudget --range2=0.5:2.0:N --encounter=<id> --tier=… [--jobs=N]`
-  — the per-encounter multiplier grid (mutates the in-memory encounter field). *(X2)*
+- `npm run fuzz -- --balance-sweep --knob=waveSize --range=0.5:2.0:N \`
+  `--knob2=levelBudget --range2=0.5:2.0:N --encounter=<id> --tier=… [--jobs=N]`
+  — the difficulty-multiplier grid (mutates the in-memory GLOBAL lever under
+  `--encounter` isolation). *(X2)*
 - `npm run fuzz -- --per-encounter | --per-layout | --per-hop` — pool-damage +
   outcome rollups (`--per-encounter` = X2; the other two built).
 - `--seed-offset=N` — base the eval seeds past the tuned range (the config-overfit
@@ -233,4 +251,15 @@ deltas. The pre-X H7c→O log lives at
   win rate; metric = pool damage; multiplier range 0.5–2.0 applied per-encounter to
   all waves; per-kind bands data-first (tentative elite 2× / boss 4×); build
   `--seed-offset` for the held-out verify.
+- **2026-06-21 — X1 shipped: the lever as a per-run seam, not a per-encounter field.**
+  `waveSizeMultiplier` / `levelBudgetMultiplier` added to `config/difficulty.json`
+  (default 1.0) + a `RunConfig` per-run override (the future difficulty-system seam);
+  `resolveDifficultyMultipliers` resolves `override ?? default`, `Run` threads it into
+  `WaveContext`, the resolver scales `C` (`resolveTotalCount`) and `L`
+  (`resolveLevelBudget`, saturating against `levelCap`). **Model revised from the
+  overhaul's first cut** (a per-encounter multiplier field on the Encounter schema):
+  the lever is global/per-run and tuning BAKES into the wave-spec budget, keeping the
+  encounter's authored budget its single source of truth — so X1 touches no encounter
+  schema. Proven **1.0 ≡ pre-X1 byte-identical** (fuzz:smoke 205); the encounter
+  editor gains a preview-only difficulty slider. Sweep readings still to come (X2/X3).
 - *(Phase X sweep readings — to come.)*

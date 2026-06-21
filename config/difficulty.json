@@ -5,5 +5,7 @@
   "minBudget": 1,
   "swarmBias": 0.7,
   "swarmMaxMultiplier": 1.5,
-  "enemyArcherRatio": 0.3
+  "enemyArcherRatio": 0.3,
+  "waveSizeMultiplier": 1,
+  "levelBudgetMultiplier": 1
 }

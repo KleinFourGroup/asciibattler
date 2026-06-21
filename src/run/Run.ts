@@ -73,6 +73,7 @@ import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
+import { resolveDifficultyMultipliers, type DifficultyMultipliers } from '../config/difficulty';
 import { getEncounter, type Encounter } from '../config/encounters';
 import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
@@ -528,6 +529,16 @@ export class Run {
    */
   private readonly forcedLayoutId: string | null;
 
+  /**
+   * X1 — the per-run difficulty multipliers (the future difficulty-system seam),
+   * resolved ONCE at construction from the `RunConfig` overrides falling back to
+   * the global `difficulty.json` defaults (1.0 = no scaling). Applied to every
+   * authored-encounter wave at resolve time via `WaveContext` (`beginTurn`). Not
+   * persisted (a RunConfig input, reconstructable); a rehydrated run re-resolves
+   * to the shipped defaults.
+   */
+  private readonly difficultyMultipliers: DifficultyMultipliers;
+
   private readonly bus: EventBus<GameEvents>;
   private subscriptions: Array<() => void> = [];
 
@@ -593,6 +604,12 @@ export class Run {
       config?.daemon !== undefined ? config.daemon : rollDaemon(DAEMONS, this.daemonRng);
     this.turnGates = disabledTurnGates();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
+    // X1 — resolve the per-run difficulty lever (override ?? difficulty.json
+    // default). Pure of RNG, so it doesn't perturb the fork alignment.
+    this.difficultyMultipliers = resolveDifficultyMultipliers({
+      waveSize: config?.waveSizeMultiplier,
+      levelBudget: config?.levelBudgetMultiplier,
+    });
     // S2 — the run begins at the virtual pre-root position (no node entered
     // yet); the root is the sole frontier, so it's selected as the first
     // encounter like any other node.
@@ -956,6 +973,9 @@ export class Run {
       // authored per wave (`spec.levelCap`) and resolved against `roster`, so it's
       // no longer computed here.
       handSize: Math.min(this.team.length, DECK.handSize),
+      // X1 — the per-run difficulty lever, applied to every wave at resolve time.
+      waveSizeMultiplier: this.difficultyMultipliers.waveSize,
+      levelBudgetMultiplier: this.difficultyMultipliers.levelBudget,
     };
     const enemyTeam = resolveWave(spec, waveContext, battleRng);
 
@@ -1690,6 +1710,7 @@ export class Run {
       bus: EventBus<GameEvents>;
       subscriptions: Array<() => void>;
       forcedLayoutId: string | null;
+      difficultyMultipliers: DifficultyMultipliers;
       runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
       turnGates: TurnGates;
       sectorMap: SectorMap;
@@ -1699,6 +1720,10 @@ export class Run {
     m.subscriptions = [];
     // RunConfig isn't persisted; a restored run uses normal procedural rolls.
     m.forcedLayoutId = null;
+    // X1 — RunConfig isn't persisted either, so re-resolve the difficulty lever
+    // to the shipped difficulty.json defaults (an overridden run can't be saved
+    // mid-flight today; a future difficulty system would persist its own source).
+    m.difficultyMultipliers = resolveDifficultyMultipliers();
     m.rng = RNG.fromJSON(snap.rng);
     m.levelupRng = RNG.fromJSON(snap.levelupRng);
     m.deckRng = RNG.fromJSON(snap.deckRng);

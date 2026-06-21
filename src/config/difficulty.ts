@@ -36,6 +36,24 @@
  *                        the threat unit, just less dense than 0.4). Re-swept
  *                        properly in N2 once the K mechanics (redraw/empower) land.
  *
+ * The above feed the RANDOM `rollEnemyWave` lineage (the fuzz arena +
+ * spawn-overflow). The two below are the X1 lever for the AUTHORED encounter
+ * resolver — the per-run difficulty multipliers, default 1.0 (a no-op). They are
+ * the *placeholder source* the per-run seam (`RunConfig.waveSizeMultiplier` /
+ * `levelBudgetMultiplier`) falls back to; a future difficulty system (a chosen
+ * difficulty level, hop-ramp, or ascension) sets the per-run override instead:
+ * - `waveSizeMultiplier`   — scales every wave's resolved COUNT `C`
+ *                            (`resolveTotalCount`) — the action-economy axis.
+ * - `levelBudgetMultiplier`— scales every wave's resolved level BUDGET `L`
+ *                            (`resolveLevelBudget`) — the individual-strength
+ *                            axis. SATURATES against a wave's optional `levelCap`
+ *                            (a capped wave clamps to `n·cap`), so the strength
+ *                            axis only bites uncapped waves. The balance sweep
+ *                            (X2) drives these in isolation to find an in-band
+ *                            value, then the result is BAKED into the encounter's
+ *                            authored wave-spec budget (the multiplier is a lever,
+ *                            not persisted content). See BALANCE.md.
+ *
  * ── Calibration presets (G4, all at `recruitment.startingLevel = 5`) ─────────
  * The budget is conserved, so there's a hard tradeoff: spreading it wide
  * (swarm) makes each enemy weak fodder; concentrating it (even counts) makes
@@ -84,8 +102,42 @@ const DifficultySchema = z.object({
   swarmBias: z.number().min(0).max(1),
   swarmMaxMultiplier: z.number().positive(),
   enemyArcherRatio: z.number().min(0).max(1),
+  // X1 — the authored-encounter difficulty lever (default 1.0). Positive so a
+  // multiplier never zeros a wave; the sweep mutates this in-memory in isolation.
+  waveSizeMultiplier: z.number().positive(),
+  levelBudgetMultiplier: z.number().positive(),
 });
 
 export type DifficultyConfig = z.infer<typeof DifficultySchema>;
 
 export const DIFFICULTY: DifficultyConfig = DifficultySchema.parse(difficultyJson);
+
+/**
+ * X1 — the per-run difficulty multipliers applied to every authored-encounter
+ * wave at resolve time (the K2 count-vs-strength split): `waveSize` scales the
+ * resolved count, `levelBudget` the resolved level budget. Threaded through
+ * `WaveContext`; absent → 1 (no scaling, byte-identical to pre-X1).
+ */
+export interface DifficultyMultipliers {
+  readonly waveSize: number;
+  readonly levelBudget: number;
+}
+
+/**
+ * Resolve the effective per-run difficulty multipliers: the optional per-run
+ * overrides (the future difficulty-system seam — `RunConfig`) falling back to the
+ * global `difficulty.json` defaults. The APPLICATION point (the wave resolver,
+ * via `WaveContext`) is fixed; this is where the SOURCE plugs in. X1 ships the
+ * static config source; a dynamic difficulty system (chosen difficulty level /
+ * hop-ramp / ascension) replaces the override values without touching the
+ * resolver. Pure (reads only the parsed config) so it's headless-testable.
+ */
+export function resolveDifficultyMultipliers(overrides?: {
+  readonly waveSize?: number | undefined;
+  readonly levelBudget?: number | undefined;
+}): DifficultyMultipliers {
+  return {
+    waveSize: overrides?.waveSize ?? DIFFICULTY.waveSizeMultiplier,
+    levelBudget: overrides?.levelBudget ?? DIFFICULTY.levelBudgetMultiplier,
+  };
+}

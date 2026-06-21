@@ -76,6 +76,20 @@ export interface RunConfig {
    * multi-node graph).
    */
   readonly sectorMap?: SectorMap;
+  /**
+   * X1 — the per-run difficulty multipliers (the future difficulty-system seam),
+   * applied to EVERY authored-encounter wave at resolve time: `waveSize` scales
+   * the resolved count (action-economy axis), `levelBudget` the resolved level
+   * budget (individual-strength axis, saturating against a wave's `levelCap`).
+   * Programmatic-only (no URL form yet — the X2 balance sweep sets them per run);
+   * unset → the global `config/difficulty.json` defaults (1.0 = no scaling), so
+   * the default path stays byte-identical (the G1 determinism contract). NOT
+   * persisted (a RunConfig input, reconstructable). A future difficulty level /
+   * hop-ramp / ascension sets these per run; `resolveDifficultyMultipliers`
+   * (config/difficulty.ts) is the resolution seam.
+   */
+  readonly waveSizeMultiplier?: number;
+  readonly levelBudgetMultiplier?: number;
 }
 
 /**

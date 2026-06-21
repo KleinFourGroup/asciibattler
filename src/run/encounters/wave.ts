@@ -122,10 +122,20 @@ export interface WaveSpec {
  * The per-instance level cap is no longer supplied here — it's authored on the
  * `WaveSpec` (`levelCap?`) and resolved against this `roster`, so the production
  * caller (`Run.beginTurn`) no longer computes it.
+ *
+ * X1 — `waveSizeMultiplier` / `levelBudgetMultiplier` are the per-run difficulty
+ * lever (the future difficulty-system seam; `Run` sources them from the
+ * `RunConfig` override or the `difficulty.json` default). `waveSize` scales the
+ * resolved COUNT `C` (action-economy), `levelBudget` the resolved level BUDGET
+ * `L` (individual-strength, saturating against `levelCap`). **Absent → 1** (no
+ * scaling), so a pre-X1 context — and every mechanic test built with explicit
+ * literals — resolves byte-identically.
  */
 export interface WaveContext {
   readonly roster: readonly UnitTemplate[];
   readonly handSize: number;
+  readonly waveSizeMultiplier?: number;
+  readonly levelBudgetMultiplier?: number;
 }
 
 /**
@@ -165,10 +175,12 @@ function resolveLevelCap(spec: LevelCapSpec | undefined, roster: readonly UnitTe
   return highest + Math.round(spec.delta);
 }
 
-/** Total wave count `C ≥ 0`, rounded to an integer. */
+/** Total wave count `C ≥ 0`, rounded to an integer. The X1 `waveSizeMultiplier`
+ *  (absent → 1, exact: `raw * 1 === raw`) scales it pre-round, so the default
+ *  path stays byte-identical. */
 function resolveTotalCount(spec: CountSpec, ctx: WaveContext): number {
   const raw = spec.kind === 'fixed' ? spec.value : spec.factor * ctx.handSize;
-  return Math.max(0, Math.round(raw));
+  return Math.max(0, Math.round(raw * (ctx.waveSizeMultiplier ?? 1)));
 }
 
 /**
@@ -205,9 +217,14 @@ function resolveCounts(units: readonly WaveUnitSpec[], totalCount: number): numb
  *  hand, matching `enemyBudgetFor`'s basis (empty roster → central basis 1, like
  *  `avgTeamLevel`). */
 function resolveLevelBudget(spec: LevelBudgetSpec, ctx: WaveContext): number {
-  if (spec.kind === 'fixed') return Math.max(0, Math.round(spec.value));
+  // X1 — the difficulty lever scales the TOTAL budget `L` uniformly (fixed and
+  // roster-relative alike), pre-round. Absent → 1 (exact), so the default path
+  // is byte-identical; a capped wave saturates downstream (distributeWeightedLevels
+  // clamps the spread to `n·cap`), so this only bites uncapped waves.
+  const mult = ctx.levelBudgetMultiplier ?? 1;
+  if (spec.kind === 'fixed') return Math.max(0, Math.round(spec.value * mult));
   const central = spec.kind === 'mean' ? rosterMeanLevel(ctx.roster) : rosterMedianLevel(ctx.roster);
-  return Math.max(0, Math.round(spec.factor * central * ctx.handSize));
+  return Math.max(0, Math.round(spec.factor * central * ctx.handSize * mult));
 }
 
 function rosterMeanLevel(roster: readonly UnitTemplate[]): number {

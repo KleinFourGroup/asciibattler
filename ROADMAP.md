@@ -802,32 +802,54 @@ The migration is byte-identical (stamped `{roster, delta:2}` only on the 5 waves
 where the old cap binds; `levelCapMigration.test.ts` proves it). Its *balance use* —
 **uncapping** the spike encounters so the strength axis can bite — pairs with X1.
 
-### X1 — Difficulty multipliers as first-class engine primitives
+### X1 — Difficulty multipliers as first-class engine primitives ✅ COMPLETE (2026-06-21)
 
-**Shape:** add `waveSize` + `levelBudget` multipliers (default **1.0**, sweep range
-**0.5–2.0**) to the **Encounter**, applied to **all** its waves at resolve time.
-They map cleanly onto the resolver's two steps in
-[wave.ts](src/run/encounters/wave.ts) — `waveSize` scales `resolveTotalCount`'s `C`
-(the **action-economy / count** axis), `levelBudget` scales `resolveLevelBudget`'s
-`L` (the **individual-strength** axis) — the K2 "count vs strength are different
-levers" decomposition. Threaded via `WaveContext`; the **static per-encounter field
-is the source now**, a dynamic difficulty system (hop-ramp / ascension) is the
-*seamed* future source (same application point). **Pairs with uncapping the spike
-encounters** (Ronin-and-Mages, the boss): `levelBudget` **saturates** against a
-`levelCap` (a capped wave clamps to `n·cap`), so the strength axis only bites on
-uncapped waves. Unlike X's other steps this is **`src/` work** (schema + resolver +
-`Run.beginTurn` wiring + the encounter-editor control).
+> **DONE.** Shipped as a **per-run seam**, NOT a per-encounter field (revised with
+> the user from the protocol's first cut — see the callout below).
+> `waveSizeMultiplier` / `levelBudgetMultiplier` added to `config/difficulty.json`
+> (default 1.0) + an optional `RunConfig` per-run override (the future
+> difficulty-system seam); `resolveDifficultyMultipliers` resolves
+> `override ?? default`; `Run` threads the pair into `WaveContext`; the resolver
+> scales `C` (`resolveTotalCount`) and `L` (`resolveLevelBudget`, saturating against
+> `levelCap`). **No encounter schema touch, no RunSnapshot bump**; proven **1.0 ≡
+> pre-X1 byte-identical** (fuzz:smoke 205); the encounter editor gained a
+> preview-only difficulty slider. The original plan follows, with the revision noted.
 
-**Cost:** small, contained engine change; the multipliers are config on the
-encounter → **no RunSnapshot bump** (re-read on rehydrate).
+**Shape (as shipped — per-run seam).** Two multipliers (default **1.0**, sweep range
+**0.5–2.0**) read by the wave resolver and applied to **every** wave at resolve time:
+`waveSize` scales `resolveTotalCount`'s `C` (the **action-economy / count** axis),
+`levelBudget` scales `resolveLevelBudget`'s `L` (the **individual-strength** axis) —
+the K2 "count vs strength are different levers" decomposition. **The source is the
+RUN, not the encounter**: the global default lives in `config/difficulty.json`, a
+per-run override on `RunConfig` is the seam a future difficulty level / hop-ramp /
+ascension sets (`resolveDifficultyMultipliers` = `override ?? default`). `levelBudget`
+**saturates** against a wave's `levelCap` (a capped wave clamps to `n·cap`), so the
+strength axis only bites uncapped waves — which is why **uncapping the spike
+encounters** (Ronin-and-Mages, the boss) is the natural pair, deferred to the X3
+measured edit. This is **`src/` work** (difficulty config + resolver + `Run` wiring +
+the editor preview).
+
+> **Why per-run, not per-encounter (the user's call).** The protocol's first cut put
+> a `waveSize`/`levelBudget` field on the Encounter schema. Revised before building:
+> the multiplier is a **global/per-run lever** (the future difficulty system's actual
+> shape — "+10% level budget for all encounters on Hard"), and the balance sweep
+> drives it in ISOLATION (`--encounter`) to find an in-band value, which is then
+> **baked into the encounter's authored wave-spec budget**. The encounter's budget
+> stays its single source of truth — no second per-encounter knob layered over the
+> wave shape, and no encounter schema migration. See [BALANCE.md](BALANCE.md).
+
+**Cost:** small, contained engine change; the lever is run config → **no RunSnapshot
+bump** (`fromJSON` re-resolves to the `difficulty.json` defaults, since `RunConfig`
+isn't persisted).
 
 **Tests:** the resolver scales count/budget by the multipliers; **1.0 ≡ pre-X
-(byte-identical** — prove it on `fuzz:smoke`); `levelBudget` saturates at `levelCap`
-(the uncap motivation); the editor round-trips the control.
+(byte-identical** — proven on `fuzz:smoke`); `levelBudget` saturates at `levelCap`;
+`resolveDifficultyMultipliers` honours `override ?? default`; an end-to-end `Run` test
+proves a `RunConfig` override threads through to the resolved enemy team.
 
-**Decisions X1 (LOCKED with user):** range 0.5–2.0; per-encounter scope applied to
-all waves; first-class engine primitive, not harness-only (it's the difficulty-system
-groundwork).
+**Decisions X1 (LOCKED with user):** range 0.5–2.0; applied to all waves; first-class
+engine primitive, not harness-only; **the source is per-run (`RunConfig`) defaulting
+from `difficulty.json` — NOT a per-encounter field** (the revision above).
 
 ### X2 — The per-encounter balance harness
 

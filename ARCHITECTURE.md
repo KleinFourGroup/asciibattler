@@ -163,6 +163,7 @@ src/
                              # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))
     encounters/
       wave.ts                # U1: pure resolveWave(spec, ctx, rng) → UnitTemplate[] — budget/count/weight;
+                             # optional per-wave levelCap (X: roster+Δ | fixed | absent=uncapped, resolved vs roster);
                              # distributeWeightedLevels generalizes distributeBudget (uniform weights → even split)
       sequencer.ts           # U2: pure waveForTurn(list, cursor, state, rng) — the wave-list GRAMMAR
                              # (wave | pick | loop{N|forever} | stages{until: enemyPoolAtOrBelow}) + a

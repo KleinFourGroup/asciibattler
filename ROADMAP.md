@@ -781,6 +781,17 @@ The closer. The authored model replaced the random generator, so the band is
 first** — the re-derivation follows the same broad→medium→heavy funnel, but the
 *content itself* (the authored encounters) is now part of what's being tuned.
 
+**Shipped (X groundwork) — the per-wave `levelCap`** (`97fe0ab` model + migration,
+`d120606` editor). The per-instance enemy level cap moved from a global
+`difficulty.json` constant onto an optional `WaveSpec.levelCap` (`roster`{delta} |
+`fixed`{value}; **absent = uncapped**). It was an artifact of the random generator
+deriving COUNT from it (`ceil(budget/cap)`); the encounter model authors count, so
+the cap's only remaining job — the per-instance ceiling — became per-wave + opt-in.
+The migration is byte-identical (stamped `{roster, delta:2}` only on the 5 waves
+where the old cap binds; `levelCapMigration.test.ts` proves it). The *balance use* —
+**uncapping** the spike encounters (Ronin-and-Mages, the boss) so "few strong units"
+field at their authored budget — is a deliberate, measured X2 edit, not done here.
+
 ### X1 — Per-encounter fuzz/balance telemetry
 
 **Shape:** extend the `tests/fuzz/` reporters (the `--per-layout` / `--per-floor`

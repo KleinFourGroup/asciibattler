@@ -35,10 +35,12 @@ export function runEvalShardCli(args: EvalShardModeArgs): void {
     hopCount?: number;
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
+    forcedEncounterId?: string;
   } = {};
   if (job.hopCount !== undefined) runConfig.hopCount = job.hopCount;
   if (job.roster && job.roster.length > 0) runConfig.startingRoster = job.roster;
   if (job.forcedLayoutId !== undefined) runConfig.forcedLayoutId = job.forcedLayoutId;
+  if (job.forcedEncounterId !== undefined) runConfig.forcedEncounterId = job.forcedEncounterId;
   // J4 / K3c3 / K4c3 / L1c3 — the child re-applies the parent's fixed
   // objective proclivity + redraw policy + empower policy + daemon arm (plain
   // JSON objects that round-tripped the job file), so sharded runs drive the

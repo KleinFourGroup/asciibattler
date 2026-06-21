@@ -530,6 +530,15 @@ export class Run {
   private readonly forcedLayoutId: string | null;
 
   /**
+   * X2 — when set (via `RunConfig.forcedEncounterId`), the authored encounter
+   * forced at every node whose kind matches it (`selectEncounter`'s force-select),
+   * for the `--encounter=<id>` balance-isolation sample. Null = normal sector-pool
+   * selection. Not persisted (RunConfig is a run input); a rehydrated Run resets
+   * this to null.
+   */
+  private readonly forcedEncounterId: string | null;
+
+  /**
    * X1 — the per-run difficulty multipliers (the future difficulty-system seam),
    * resolved ONCE at construction from the `RunConfig` overrides falling back to
    * the global `difficulty.json` defaults (1.0 = no scaling). Applied to every
@@ -604,6 +613,7 @@ export class Run {
       config?.daemon !== undefined ? config.daemon : rollDaemon(DAEMONS, this.daemonRng);
     this.turnGates = disabledTurnGates();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
+    this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
     // X1 — resolve the per-run difficulty lever (override ?? difficulty.json
     // default). Pure of RNG, so it doesn't perturb the fork alignment.
     this.difficultyMultipliers = resolveDifficultyMultipliers({
@@ -728,6 +738,7 @@ export class Run {
       { hop: this.currentHop, nodeKind: this.kindOf(this.currentNodeId) },
       mapRng,
       getEncounter,
+      this.forcedEncounterId ?? undefined,
     );
     this.selectedEncounter = selection.encounter;
     this.waveCursor = null;
@@ -1710,6 +1721,7 @@ export class Run {
       bus: EventBus<GameEvents>;
       subscriptions: Array<() => void>;
       forcedLayoutId: string | null;
+      forcedEncounterId: string | null;
       difficultyMultipliers: DifficultyMultipliers;
       runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
       turnGates: TurnGates;
@@ -1720,6 +1732,8 @@ export class Run {
     m.subscriptions = [];
     // RunConfig isn't persisted; a restored run uses normal procedural rolls.
     m.forcedLayoutId = null;
+    // X2 — same: a rehydrated run drops the forced-encounter isolation.
+    m.forcedEncounterId = null;
     // X1 — RunConfig isn't persisted either, so re-resolve the difficulty lever
     // to the shipped difficulty.json defaults (an overridden run can't be saved
     // mid-flight today; a future difficulty system would persist its own source).
@@ -1809,6 +1823,21 @@ function resolveForcedLayoutId(id: string | undefined): string | null {
   if (id === FORCE_PROCEDURAL) return FORCE_PROCEDURAL;
   if (!LAYOUT_IDS.includes(id)) {
     throw new Error(`Run: unknown forcedLayoutId="${id}" (not in LAYOUT_IDS)`);
+  }
+  return id;
+}
+
+/**
+ * X2 — validate a `RunConfig.forcedEncounterId` against the authored catalog at
+ * construction (loud throw, mirroring `resolveForcedLayoutId`), so a typo'd id
+ * fails fast at run start rather than mid-run inside selection. Undefined → null
+ * (normal sector-pool selection). The balance harness (`--encounter=<id>`) sets
+ * it to force one encounter at every matching-kind node.
+ */
+function resolveForcedEncounterId(id: string | undefined): string | null {
+  if (id === undefined) return null;
+  if (getEncounter(id) === undefined) {
+    throw new Error(`Run: unknown forcedEncounterId="${id}" (not in the encounter catalog)`);
   }
   return id;
 }

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { RNG } from '../../core/RNG';
 import {
   getSelectionStrategy,
+  selectEncounter,
   encounterKindFor,
   assertSelectionCoverage,
   type EncounterResolver,
@@ -211,6 +212,58 @@ describe('selectEncounter — layoutFirst', () => {
   it('is deterministic per seed', () => {
     const s = sector([{ layoutId: 'river' }, { layoutId: 'labyrinth' }], [{ encounterId: 'a' }]);
     expect(pick(s, battle, new RNG(9), resolve)).toEqual(pick(s, battle, new RNG(9), resolve));
+  });
+});
+
+describe('selectEncounter — forced (--encounter, X2)', () => {
+  const battleNode = { hop: 0, nodeKind: 'battle' as const };
+  const bossNode = { hop: 4, nodeKind: 'boss' as const };
+
+  it('forces a kind-matching encounter, bypassing the sector pool + hop gate', () => {
+    // The pool has NO normal encounter — normal selection would throw — yet
+    // forcing 'a' (normal) at a battle node still fields it (pool bypassed), and
+    // rolls a compatible layout from the sector pool.
+    const s = sector([{ layoutId: 'river' }], [{ encounterId: 'boss1' }]);
+    for (let seed = 0; seed < 10; seed++) {
+      const r = selectEncounter(s, battleNode, new RNG(seed), resolve, 'a');
+      expect(r.encounter.id).toBe('a');
+      expect(r.layoutId).toBe('river');
+    }
+  });
+
+  it("rolls the forced encounter's layout from the sector pool ∩ its fit-filter", () => {
+    // 'b' fits only river; sector offers river + labyrinth → forced to river.
+    const s = sector([{ layoutId: 'river' }, { layoutId: 'labyrinth' }], [{ encounterId: 'a' }]);
+    for (let seed = 0; seed < 25; seed++) {
+      expect(selectEncounter(s, battleNode, new RNG(seed), resolve, 'b').layoutId).toBe('river');
+    }
+  });
+
+  it('ignores the force at a node of a different kind (per-kind aware) — normal selection runs', () => {
+    const s = sector([{ layoutId: 'river' }], [{ encounterId: 'a' }, { encounterId: 'boss1' }]);
+    // Forcing 'a' (normal) at a BOSS node: kind mismatch → the boss pick stands.
+    for (let seed = 0; seed < 10; seed++) {
+      expect(selectEncounter(s, bossNode, new RNG(seed), resolve, 'a').encounter.id).toBe('boss1');
+    }
+    // Forcing the boss at a battle node likewise falls back to the normal pick.
+    for (let seed = 0; seed < 10; seed++) {
+      expect(selectEncounter(s, battleNode, new RNG(seed), resolve, 'boss1').encounter.id).toBe('a');
+    }
+  });
+
+  it('throws on an unknown forced encounter id', () => {
+    const s = sector([{ layoutId: 'river' }], [{ encounterId: 'a' }]);
+    expect(() => selectEncounter(s, battleNode, new RNG(1), resolve, 'ghost')).toThrow(
+      /forced encounter "ghost" not found/,
+    );
+  });
+
+  it('throws when the forced encounter has no compatible layout at the hop', () => {
+    // 'b' fits only river; the sector offers only labyrinth.
+    const s = sector([{ layoutId: 'labyrinth' }], [{ encounterId: 'a' }]);
+    expect(() => selectEncounter(s, battleNode, new RNG(1), resolve, 'b')).toThrow(
+      /no compatible layout/,
+    );
   });
 });
 

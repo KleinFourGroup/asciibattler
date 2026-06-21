@@ -217,6 +217,13 @@ export interface BalanceSweepConfig {
    */
   readonly forcedLayoutId?: string | undefined;
   /**
+   * X2 — force ONE authored encounter at every matching-kind node across every
+   * run at every grid point (`--encounter=<id>`), so the difficulty-multiplier
+   * sweep reads a single encounter in ISOLATION (the clean per-encounter tuning
+   * sample). Undefined = the normal sector-pool selection.
+   */
+  readonly forcedEncounterId?: string | undefined;
+  /**
    * J4 — hold one objective proclivity FIXED across every run at every grid
    * point (the arena's tuned strategy, `random`, or none). Lets a difficulty
    * sweep measure the band with objectives active. Undefined / none = no
@@ -291,16 +298,19 @@ function harnessOptionsFor(
   empower?: EmpowerPolicy,
   daemon?: DaemonSelection,
   forcedLayoutId?: string,
+  forcedEncounterId?: string,
 ): HarnessOptions {
   const hopCount = hopOverride ?? preset.hopCount;
   const runConfig: {
     hopCount?: number;
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
+    forcedEncounterId?: string;
   } = {};
   if (hopCount !== undefined) runConfig.hopCount = hopCount;
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
   if (forcedLayoutId !== undefined) runConfig.forcedLayoutId = forcedLayoutId;
+  if (forcedEncounterId !== undefined) runConfig.forcedEncounterId = forcedEncounterId;
   let opts: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
   if (objective) opts = { ...opts, objective };
   if (redraw) opts = { ...opts, redraw };
@@ -330,6 +340,7 @@ async function defaultMeasurePoint(
     config.empower,
     config.daemon,
     config.forcedLayoutId,
+    config.forcedEncounterId,
   );
   const jobs = Math.max(1, Math.floor(config.jobs ?? 1));
 
@@ -348,6 +359,7 @@ async function defaultMeasurePoint(
       hopCount: config.hopOverride ?? preset.hopCount,
       roster: config.rosterOverride,
       forcedLayoutId: config.forcedLayoutId,
+      forcedEncounterId: config.forcedEncounterId,
       objective: config.objective,
       redraw: config.redraw,
       empower: config.empower,

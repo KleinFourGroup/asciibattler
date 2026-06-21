@@ -30,6 +30,7 @@ import { TelemetryAccumulator } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
 import { HEALTH } from '../../src/config/health';
+import { ENCOUNTERS, getEncounter } from '../../src/config/encounters';
 
 describe('fuzz harness', () => {
   it('completes a single run without throwing', () => {
@@ -441,6 +442,25 @@ describe('fuzz reporters', () => {
     for (const battle of result.battles) {
       expect(battle.layoutId).toBe('junctionAmbush');
     }
+  });
+
+  it('--encounter forces one encounter at every matching-kind battle (X2)', () => {
+    const forced = ENCOUNTERS.find((e) => e.kind === 'normal')!.id;
+    const result = runOne(7, makeStrategy('greedy')!, {
+      telemetry: true,
+      runConfig: { forcedEncounterId: forced },
+    });
+    expect(result.battles.length).toBeGreaterThan(0);
+    // Per-kind aware (Wb4): every NORMAL-kind battle fields the forced encounter;
+    // any non-normal battle (boss/elite, if reached) draws its own bucket.
+    for (const b of result.battles) {
+      if (getEncounter(b.encounterId)?.kind === 'normal') {
+        expect(b.encounterId).toBe(forced);
+      }
+    }
+    // And the forced encounter was actually fielded (a battle node is a normal
+    // node by default, so a greedy run hits it immediately).
+    expect(result.battles.some((b) => b.encounterId === forced)).toBe(true);
   });
 
   it('renders a failure trace for a non-complete result', () => {

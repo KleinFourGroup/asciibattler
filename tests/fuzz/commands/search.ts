@@ -37,6 +37,7 @@ import {
   bail,
   daemonFromArgs,
   empowerFromArgs,
+  encounterFromArgs,
   layoutFromArgs,
   objectiveFromArgs,
   redrawFromArgs,
@@ -53,6 +54,7 @@ export type SearchModeArgs = Pick<
   | 'hops'
   | 'roster'
   | 'layout'
+  | 'encounter'
   | 'objective'
   | 'redraw'
   | 'empower'
@@ -90,7 +92,12 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   // loudly by layoutFromArgs (parseRunConfig would silently drop a typo'd id).
   const forcedLayoutId = layoutFromArgs(args);
   if (forcedLayoutId !== undefined) searchParams.set('layout', forcedLayoutId);
-  const runConfig = parseRunConfig(searchParams);
+  // X2 — force ONE encounter across the searched runs (the isolation sample).
+  // No URL form (programmatic-only), so set it on the parsed config directly.
+  const forcedEncounterId = encounterFromArgs(args);
+  const parsedConfig = parseRunConfig(searchParams);
+  const runConfig =
+    forcedEncounterId !== undefined ? { ...parsedConfig, forcedEncounterId } : parsedConfig;
   const objective = objectiveFromArgs(args);
   const redraw = redrawFromArgs(args);
   const empower = empowerFromArgs(args);
@@ -107,12 +114,13 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
     : '';
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
   const layoutNote = forcedLayoutId ? ` layout=${forcedLayoutId}` : '';
+  const encounterNote = forcedEncounterId ? ` encounter=${forcedEncounterId}` : '';
   const objectiveNote = objective ? ` objective=${proclivityLabel(objective)}` : '';
   const redrawNote = redraw ? ` redraw=${redrawPolicyLabel(redraw)}` : '';
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${hopNote}${rosterNote}${layoutNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -131,6 +139,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       hopCount,
       roster: runConfig.startingRoster,
       forcedLayoutId: runConfig.forcedLayoutId,
+      forcedEncounterId: runConfig.forcedEncounterId,
       objective,
       redraw,
       empower,

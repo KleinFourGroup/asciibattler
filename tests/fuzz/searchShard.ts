@@ -50,6 +50,8 @@ export interface ShardJob {
   /** M6/N2 — the forced layout id / `procedural` sentinel the child's runs use
    *  (plain string, round-trips the job file), or undefined for the normal roll. */
   readonly forcedLayoutId?: string | undefined;
+  /** X2 — the forced encounter id the child's runs use (or undefined). */
+  readonly forcedEncounterId?: string | undefined;
   readonly objective?: ObjectiveProclivity | undefined;
   readonly redraw?: RedrawPolicy | undefined;
   readonly empower?: EmpowerPolicy | undefined;
@@ -181,6 +183,8 @@ export interface ShardedEvalParams {
   readonly roster?: readonly RosterEntry[] | undefined;
   /** M6/N2 — the forced layout id / `procedural` sentinel (or none). */
   readonly forcedLayoutId?: string | undefined;
+  /** X2 — the forced encounter id the children's runs use (or none). */
+  readonly forcedEncounterId?: string | undefined;
   /** J4 — the fixed objective proclivity the children's runs drive (or none). */
   readonly objective?: ObjectiveProclivity | undefined;
   /** K3c3 — the fixed redraw policy the children's runs drive (or none). */
@@ -207,6 +211,7 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
     hopCount,
     roster,
     forcedLayoutId,
+    forcedEncounterId,
     objective,
     redraw,
     empower,
@@ -223,6 +228,7 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
       hopCount,
       roster,
       forcedLayoutId,
+      forcedEncounterId,
       objective,
       redraw,
       empower,

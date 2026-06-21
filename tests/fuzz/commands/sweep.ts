@@ -31,6 +31,7 @@ import {
   bail,
   daemonFromArgs,
   empowerFromArgs,
+  encounterFromArgs,
   fmtDuration,
   layoutFromArgs,
   objectiveFromArgs,
@@ -49,6 +50,7 @@ export type SweepModeArgs = Pick<
   | 'hops'
   | 'roster'
   | 'layout'
+  | 'encounter'
   | 'objective'
   | 'redraw'
   | 'empower'
@@ -89,6 +91,10 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
   // M6/N2 — force one layout (or `procedural`) across every battle at every grid
   // point, so the band can be re-found ISOLATED to the new procedural maps.
   const forcedLayoutId = layoutFromArgs(args);
+  // X2 — force ONE authored encounter at every matching-kind node across the whole
+  // grid, so the multiplier sweep reads that encounter in isolation (the clean
+  // per-encounter tuning sample BALANCE.md step 4 drives).
+  const forcedEncounterId = encounterFromArgs(args);
 
   const jobs = args.jobs !== undefined ? Math.max(1, Math.floor(args.jobs)) : 1;
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
@@ -102,8 +108,9 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   const layoutNote = forcedLayoutId ? ` layout=${forcedLayoutId}` : '';
+  const encounterNote = forcedEncounterId ? ` encounter=${forcedEncounterId}` : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName}${hopNote}${rosterNote}${layoutNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${jobsNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -114,6 +121,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     hopOverride: args.hops,
     rosterOverride,
     forcedLayoutId,
+    forcedEncounterId,
     objective,
     redraw,
     empower,

@@ -31,6 +31,11 @@
  *     --knob2=difficulty.swarmMaxMultiplier --range2=1.0:3.0:5 --tier=quick
  *   npm run fuzz -- --balance-sweep --knob=health.enemyHealthMax --range=8:16:5 --dry-run
  *   # → writes output/balance-sweep.csv (+ .report.txt); --dry-run times point 1, no write
+ *   # X2 — the per-encounter difficulty-multiplier sweep: drive the GLOBAL lever
+ *   # (waveSize × levelBudget) in ISOLATION on ONE forced encounter:
+ *   npm run fuzz -- --balance-sweep --encounter=the-bandit-king \
+ *     --knob=difficulty.waveSizeMultiplier --range=0.5:2.0:4 \
+ *     --knob2=difficulty.levelBudgetMultiplier --range2=0.5:2.0:4 --tier=medium
  *   # --hops=N overrides the tier's run length (cheap FULL-length reads):
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.625:0.625:1 \
  *     --tier=quick --hops=11

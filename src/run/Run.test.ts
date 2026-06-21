@@ -6,7 +6,7 @@ import { foldEffects, combineMagnitude, type StatusEffect } from '../sim/statusE
 import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
 import { getSector, PROCEDURAL_LAYOUT_ID } from '../config/sectors';
-import { getEncounter } from '../config/encounters';
+import { getEncounter, ENCOUNTERS } from '../config/encounters';
 import { SectorMapSchema } from '../config/sectorMap';
 import type { GameEvents } from '../core/events';
 import { ARCHETYPE_CONFIG } from '../sim/archetypes';
@@ -1577,6 +1577,22 @@ describe('Run', () => {
       expect(run.encounterMap!.gridW).toBe(getLayout(forced)!.gridW);
       expect(run.encounterMap!.gridH).toBe(getLayout(forced)!.gridH);
       expect(run.currentEncounter!.layoutId).toBe(forced);
+    });
+
+    it('a forced encounter (X2 --encounter) pins the selected encounter at a battle node', () => {
+      // Derive a real normal-kind id from the catalog (no hardcoded id to drift).
+      const normalId = ENCOUNTERS.find((e) => e.kind === 'normal')!.id;
+      const bus = new EventBus<GameEvents>();
+      const run = new Run(3, bus, { forcedEncounterId: normalId });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      expect(run.selectedEncounter!.id).toBe(normalId);
+    });
+
+    it('an unknown forced encounter id throws loudly at construction', () => {
+      const bus = new EventBus<GameEvents>();
+      expect(() => new Run(3, bus, { forcedEncounterId: 'no-such-encounter' })).toThrow(
+        /unknown forcedEncounterId/,
+      );
     });
 
     it('turn:starting carries the map, identical across the encounter\'s gates', () => {

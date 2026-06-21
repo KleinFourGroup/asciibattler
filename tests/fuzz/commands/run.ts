@@ -42,6 +42,7 @@ import {
   coverageFromArgs,
   daemonFromArgs,
   empowerFromArgs,
+  encounterFromArgs,
   layoutFromArgs,
   objectiveFromArgs,
   redrawFromArgs,
@@ -59,6 +60,7 @@ export type RunModeArgs = Pick<
   | 'perLayout'
   | 'perEncounter'
   | 'layout'
+  | 'encounter'
   | 'objective'
   | 'redraw'
   | 'empower'
@@ -75,10 +77,16 @@ export function runRunCli(args: RunModeArgs): void {
   // runs only hit a given layout ~12% of the time). `--layout=procedural` forces
   // a fresh PROCEDURAL map every battle (the M6 isolate). Validated against the
   // library + the sentinel.
+  // --encounter=<id> (X2) forces ONE authored encounter at every matching-kind
+  // node — the clean per-encounter isolation sample. Combinable with --layout.
   let harnessOptions: HarnessOptions = {};
   const layout = layoutFromArgs(args);
-  if (layout !== undefined) {
-    harnessOptions = { runConfig: { forcedLayoutId: layout } };
+  const encounter = encounterFromArgs(args);
+  if (layout !== undefined || encounter !== undefined) {
+    const runConfig: { forcedLayoutId?: string; forcedEncounterId?: string } = {};
+    if (layout !== undefined) runConfig.forcedLayoutId = layout;
+    if (encounter !== undefined) runConfig.forcedEncounterId = encounter;
+    harnessOptions = { runConfig };
   }
   // J4 — drive a fixed objective strategy in every battle (default none =
   // byte-identical to the pre-J4 fuzz path; the baselines stay put).
@@ -114,10 +122,11 @@ export function runRunCli(args: RunModeArgs): void {
 
   const allResults: RunResult[] = [];
   const layoutNote = args.layout ? ` (layout=${args.layout})` : '';
+  const encounterNote = encounter ? ` (encounter=${encounter})` : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   for (const strategy of strategies) {
     process.stdout.write(
-      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${daemonNote}…\n`,
+      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${encounterNote}${daemonNote}…\n`,
     );
     for (const s of seeds) allResults.push(runOne(s, strategy, harnessOptions));
   }

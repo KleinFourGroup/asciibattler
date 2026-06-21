@@ -150,6 +150,34 @@ const STRATEGIES: Record<SelectionStrategyKey, SelectionStrategy> = {
   layoutFirst,
 };
 
+/**
+ * X2 — a dev-only force-select (the fuzz harness's `--encounter=<id>`): when set
+ * AND the forced encounter's `kind` matches THIS node's kind, short-circuit to it
+ * — bypassing the sector pool + hop gate so the encounter is fielded at EVERY
+ * matching-kind node, for a clean per-encounter pool-damage sample (a natural run
+ * hits a given encounter far below uniform). Its layout still rolls from the
+ * sector's hop-gated pool ∩ its fit-filter (so it lands on a compatible board).
+ *
+ * **Per-kind aware** (Wb4): a kind MISMATCH (e.g. forcing a `normal` encounter at
+ * a boss node) returns null → normal selection runs for that node, so boss/elite
+ * nodes still draw their own bucket. Unknown id throws loudly (a typo should fail
+ * the run, like `rollLayoutFor`); the harness also validates the id up front.
+ */
+function applyForcedEncounter(
+  sector: SectorDef,
+  ctx: SelectionContext,
+  rng: RNG,
+  resolve: EncounterResolver,
+  forcedEncounterId: string,
+): SelectedEncounter | null {
+  const encounter = resolve(forcedEncounterId);
+  if (!encounter) {
+    throw new Error(`selectEncounter: forced encounter "${forcedEncounterId}" not found`);
+  }
+  if (encounter.kind !== encounterKindFor(ctx.nodeKind)) return null;
+  return { encounter, layoutId: rollLayoutFor(sector, ctx.hop, encounter, rng) };
+}
+
 /** The strategy for `key` (mirrors `getFocusTileResolution`) — lets tests
  *  exercise a strategy directly without mutating the shipped config. */
 export function getSelectionStrategy(key: SelectionStrategyKey): SelectionStrategy {
@@ -161,13 +189,23 @@ export function getSelectionStrategy(key: SelectionStrategyKey): SelectionStrate
  * (`SELECTION.strategy`, read each call so a hot-reloaded `config/selection.json`
  * applies). `resolve` maps a pool `encounterId` to its definition (`Run` passes
  * `getEncounter`).
+ *
+ * `forcedEncounterId` (X2 — the `--encounter=<id>` isolation flag) overrides the
+ * strategy for nodes whose kind matches the forced encounter; see
+ * `applyForcedEncounter`. Strategy-agnostic (applied before dispatch), so the A/B
+ * `encounterFirst`/`layoutFirst` switch doesn't change a forced sample.
  */
 export function selectEncounter(
   sector: SectorDef,
   ctx: SelectionContext,
   rng: RNG,
   resolve: EncounterResolver,
+  forcedEncounterId?: string,
 ): SelectedEncounter {
+  if (forcedEncounterId !== undefined) {
+    const forced = applyForcedEncounter(sector, ctx, rng, resolve, forcedEncounterId);
+    if (forced) return forced;
+  }
   return STRATEGIES[SELECTION.strategy](sector, ctx, rng, resolve);
 }
 

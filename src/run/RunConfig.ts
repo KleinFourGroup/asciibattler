@@ -51,6 +51,16 @@ export interface RunConfig {
    *  freshly-rolled PROCEDURAL map. URL form: `layout=river` or `layout=procedural`. */
   readonly forcedLayoutId?: string;
   /**
+   * X2 — force the authored ENCOUNTER (a catalog `Encounter.id`) at every node
+   * whose kind matches the encounter's kind (`selectEncounter`'s force-select),
+   * bypassing the sector pool + hop gate for a clean per-encounter balance sample
+   * (the `--encounter=<id>` isolation). A kind mismatch leaves that node's normal
+   * selection (boss/elite nodes still draw their bucket). Programmatic-only (no
+   * URL form — the balance harness sets it); validated loud at construction. NOT
+   * persisted (a RunConfig input); a rehydrated run resets to normal selection.
+   */
+  readonly forcedEncounterId?: string;
+  /**
    * Override the middle-hop max width (default
    * `config/nodemap.json#middleWidthMax`). Clamped up to the hop's minimum
    * width by the generator, so a too-small value just pins to the minimum.

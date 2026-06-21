@@ -18,6 +18,7 @@ import { parseEmpowerFlag, type EmpowerPolicy } from '../empowerPolicy';
 import { parseDaemonFlag, type DaemonSelection } from '../daemonSelection';
 import { FORCE_PROCEDURAL } from '../../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../../src/sim/layouts';
+import { ENCOUNTER_IDS } from '../../../src/config/encounters';
 
 export interface CliArgs {
   count: number;
@@ -32,6 +33,9 @@ export interface CliArgs {
   // X2 — per-encounter pool-damage breakdown (`--per-encounter`); implies
   // telemetry-on so the pool-damage metric is populated.
   perEncounter: boolean;
+  // X2 — force ONE authored encounter across every matching-kind node
+  // (`--encounter=<id>`) for a clean per-encounter isolation sample.
+  encounter?: string;
   // H7b — random-search mode (`--search`).
   search: boolean;
   preset?: string;
@@ -114,6 +118,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--layout':
         if (v !== undefined) args.layout = v;
+        break;
+      case '--encounter':
+        if (v !== undefined) args.encounter = v;
         break;
       case '--search':
         args.search = true;
@@ -264,6 +271,19 @@ export function layoutFromArgs(args: Pick<CliArgs, 'layout'>): string | undefine
     bail(`Unknown layout: ${args.layout} (choices: ${LAYOUT_IDS.join(', ')}, ${FORCE_PROCEDURAL})`);
   }
   return args.layout;
+}
+
+/** X2 — resolve + VALIDATE the `--encounter` flag into a `forcedEncounterId` (a
+ *  known `ENCOUNTER_IDS` member), or `undefined` when absent. **Bails loudly on an
+ *  unknown id** (like `layoutFromArgs`) so a typo fails the run rather than
+ *  silently sampling the default encounter mix. Shared by the run / `--search` /
+ *  `--balance-sweep` modes so the isolation sweep reaches every one. */
+export function encounterFromArgs(args: Pick<CliArgs, 'encounter'>): string | undefined {
+  if (args.encounter === undefined) return undefined;
+  if (!ENCOUNTER_IDS.includes(args.encounter)) {
+    bail(`Unknown encounter: ${args.encounter} (choices: ${ENCOUNTER_IDS.join(', ')})`);
+  }
+  return args.encounter;
 }
 
 export function range(start: number, count: number): number[] {

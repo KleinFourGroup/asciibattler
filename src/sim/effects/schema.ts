@@ -1,0 +1,293 @@
+/**
+ * Phase Y1 — the data-driven attack/effect vocabulary (the Cluster-1 keystone).
+ *
+ * Every combat verb in the game — the six attack classes plus the rogue dash —
+ * decomposes into three orthogonal axes (the design brief,
+ * `archive/cluster-one-feedback.md`):
+ *
+ *   1. Targeting   — `TargetSelector`: WHO/what the verb resolves to.
+ *   2. Timeline    — the F2 phase schedule (windup→release→travel→impact→
+ *                    recovery) + the per-verb `OrphanPolicy`. Authored in
+ *                    SECONDS (canonical, TICK_RATE-independent) and converted to
+ *                    ticks at resolve time (see `timeline.ts`).
+ *   3. Effect-ops  — `EffectOp`: an ordered list of small typed operations
+ *                    slotted onto phases (`effects:[{phase, op}]`).
+ *
+ * New mechanics are new OPS in the closed, zod-validated discriminated union —
+ * never new `Action` classes, never a scripting language. The interpreter
+ * (Phase Y2, `EffectAction`) is one `switch` over `op.kind`; this module is the
+ * pure DATA + validation, no behavior.
+ *
+ * SCOPE (Y1): the `damage` / `heal` / `move` ops + the `self` / `enemyInRange` /
+ * `aoe` / `lowestHpAlly` selectors are enough to express the existing verbs. The
+ * union also DECLARES the reserved seams that later phases build:
+ *   - `move` modes `knockback` / `pull` — target-moving, deferred to Cluster 2's
+ *     hardened occupancy core (this round ships only caster-reposition).
+ *   - the `applyStatus` op — status-on-hit, wired to the §27 status registry in
+ *     §29 (its `statusId` is a plain string ref here, boot-validated then).
+ * `summon` / `chain` are ADDITIVE variants the closed union grows into in §29 —
+ * declared then, not now (they need `SummonSpec` / recursion).
+ *
+ * Reconciliation with the brief's type sketch (the brief is authoritative for
+ * SHAPE; byte-identity dictates the fields it elided):
+ *   - the `damage` op carries `accuracy` + `critBase` (every current attack
+ *     does — they feed the to-hit / crit rolls); the brief dropped them.
+ *   - the `aoe` selector carries `ringMultiplier` (the mage's 0.5 ring); the
+ *     brief dropped it.
+ *   - `scaling` lives on the op (each verb's id maps to exactly one
+ *     `damageStatFor` stat, so op-authored scaling stays byte-identical) — and
+ *     `damageStatFor` survives for the display surfaces (HUD/recruit "ATK").
+ *
+ * The new config home is `config/abilityDefs.json` (`src/config/abilityDefs.ts`)
+ * during the migration; it inherits `config/abilities.json` at Phase Y5 when the
+ * legacy hand-coded ability config retires. See `src/config/abilityDefs.ts`.
+ */
+
+import { z } from 'zod';
+import type { ActionPhaseName, OrphanPolicy } from '../Action';
+
+/* -------------------------------------------------------------------------- */
+/* Phase + orphan enums — mirrored from Action.ts, drift-guarded.             */
+/* -------------------------------------------------------------------------- */
+
+// `satisfies` keeps the zod enums in lockstep with Action.ts's source unions: a
+// typo'd / stray literal here is a compile error. (Purely a type guard — no
+// runtime emission. The reverse direction — a NEW Action.ts phase without a
+// mirror — surfaces when a def references it and the enum rejects it.)
+const PHASE_NAMES = [
+  'windup',
+  'release',
+  'travel',
+  'impact',
+  'recovery',
+] as const satisfies readonly ActionPhaseName[];
+const ORPHAN_POLICIES = [
+  'commit-at-cast',
+  'fizzle',
+  'ground-target',
+  're-home',
+] as const satisfies readonly OrphanPolicy[];
+
+export const PhaseSchema = z.enum(PHASE_NAMES);
+export const OrphanPolicySchema = z.enum(ORPHAN_POLICIES);
+
+/* -------------------------------------------------------------------------- */
+/* Effect ops — the typed operations a verb performs on its resolved targets.  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Which caster stat is ADDED to an op's flat `might` to get its base output.
+ * `none` = flat `might` only (a future environmental tick). Each existing verb
+ * maps to exactly one stat (sword/club/katana/whip/gambit → strength, bow →
+ * ranged, magic_bolt → magic, catapult_shot → ranged), so authoring `scaling`
+ * on the op reproduces `damageStatFor` byte-for-byte.
+ */
+const DamageScalingSchema = z.enum(['strength', 'ranged', 'magic', 'none']);
+const HealScalingSchema = z.enum(['magic', 'none']);
+
+/**
+ * `damage` — routes through `World.applyDamage` (the single chokepoint). The
+ * interpreter computes `round(base × critFactor × damageMultiplier)` where
+ * `base = might + scalingStat`, draws the crit off `combatRng`, then hands the
+ * to-hit roll to `applyDamage` (when `evadable`). `accuracy` / `critBase` are
+ * read only when `evadable` / `critable`. `bypassDefense` skips mitigation
+ * (DoTs in §27; FALSE for every migrated strike — they keep defense).
+ */
+const DamageOpSchema = z.object({
+  kind: z.literal('damage'),
+  scaling: DamageScalingSchema,
+  might: z.number().nonnegative(),
+  accuracy: z.number().min(0).max(1),
+  critBase: z.number().min(0).max(1),
+  critable: z.boolean(),
+  evadable: z.boolean(),
+  bypassDefense: z.boolean(),
+});
+
+/**
+ * `heal` — adds HP to a resolved ally, clamped at maxHp. `might` flat + the
+ * `scaling` stat (`magic` | `none`). Never rolls to-hit or crit (mirrors
+ * `HealAction` / `healAmountFor`).
+ */
+const HealOpSchema = z.object({
+  kind: z.literal('heal'),
+  scaling: HealScalingSchema,
+  might: z.number().nonnegative(),
+});
+
+/**
+ * `move` — repositioning. This round ships only the CASTER-reposition modes:
+ *   - `advance` — leap toward the action's target (the rogue dash, N1).
+ *   - `retreat` — step away from the action's target (the rogue gambit, F4).
+ * `knockback` / `pull` move the TARGET; they are a RESERVED seam — declared so
+ * the union is closed + future-complete, but boot-/interpreter-rejected until
+ * Cluster 2 hardens the occupancy core (the same "declared, no consumer"
+ * pattern as F2's `re-home` OrphanPolicy). `cells` = max cells to move.
+ */
+const MoveOpSchema = z.object({
+  kind: z.literal('move'),
+  mode: z.enum(['advance', 'retreat', 'knockback', 'pull']),
+  cells: z.number().int().positive(),
+});
+
+/**
+ * `applyStatus` — RESERVED for §29 (status-on-hit). Declared here so the union
+ * is closed and the editor (§30) sees the shape; `statusId` is a plain string
+ * ref boot-validated once the §27 status registry exists, and the interpreter
+ * rejects this op until §29 wires it.
+ */
+const ApplyStatusOpSchema = z.object({
+  kind: z.literal('applyStatus'),
+  statusId: z.string().min(1),
+  magnitude: z.number().optional(),
+  durationSeconds: z.number().positive().optional(),
+});
+
+export const EffectOpSchema = z.discriminatedUnion('kind', [
+  DamageOpSchema,
+  HealOpSchema,
+  MoveOpSchema,
+  ApplyStatusOpSchema,
+]);
+
+/* -------------------------------------------------------------------------- */
+/* Target selectors — WHO/what a verb resolves to.                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Friendly-fire filter for an `aoe`, relative to the caster:
+ *   - `enemies` — any unit NOT on the caster's team (enemy + neutral; so AoE
+ *     chews destructible terrain for free once Cluster 2 gives neutrals HP).
+ *   - `allies`  — the caster's team.
+ *   - `all`     — both (also the forced filter for a §28 confused caster).
+ */
+const AffectsSchema = z.enum(['enemies', 'allies', 'all']);
+
+const SelfSelectorSchema = z.object({ kind: z.literal('self') });
+
+/** Single enemy target (the committed `currentTarget`). Affects enemies implicitly. */
+const EnemyInRangeSelectorSchema = z.object({ kind: z.literal('enemyInRange') });
+
+/**
+ * Area over cells. Only `square` is exercised today (the mage bolt: square
+ * radius 1, anchored on the target cell); `line` / `cross` are reserved shapes.
+ * `ringMultiplier` is the damage factor on non-center cells (mage 0.5; 1 =
+ * uniform). The interpreter resolves cells → units via the `unitsInCells`
+ * helper (the Cluster-2 footprint seam, single-cell today).
+ */
+const AoeSelectorSchema = z.object({
+  kind: z.literal('aoe'),
+  shape: z.enum(['square', 'line', 'cross']),
+  radius: z.number().int().nonnegative(),
+  anchor: z.enum(['caster', 'targetCell']),
+  affects: AffectsSchema,
+  ringMultiplier: z.number().min(0).max(1).default(1),
+});
+
+/** Lowest-HP ally within `rangeCells` (the healer). Affects allies implicitly. */
+const LowestHpAllySelectorSchema = z.object({
+  kind: z.literal('lowestHpAlly'),
+  rangeCells: z.number().int().positive(),
+});
+
+export const TargetSelectorSchema = z.discriminatedUnion('kind', [
+  SelfSelectorSchema,
+  EnemyInRangeSelectorSchema,
+  AoeSelectorSchema,
+  LowestHpAllySelectorSchema,
+]);
+
+/* -------------------------------------------------------------------------- */
+/* The ability definition.                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One phase of the busy-window timeline. `seconds` is the phase's authored
+ * duration (converted via `secondsToTicks` at resolve), OR the sentinel `'fill'`
+ * for the single ELASTIC phase that absorbs the remainder of the (speed-scaled)
+ * cadence window — the strike's `recovery`, the charged spell's `windup`. At
+ * most one `'fill'` per timeline (refined below). See `resolvePhases`.
+ */
+const TimelinePhaseSchema = z.object({
+  phase: PhaseSchema,
+  seconds: z.union([z.number().nonnegative(), z.literal('fill')]),
+});
+
+const EffectEntrySchema = z.object({
+  phase: PhaseSchema,
+  op: EffectOpSchema,
+});
+
+/** Opaque renderer keys per phase (§Z). Inert in Y — declared for the shape. */
+const FxSchema = z
+  .object({
+    windup: z.string(),
+    release: z.string(),
+    travel: z.string(),
+    impact: z.string(),
+    recovery: z.string(),
+  })
+  .partial();
+
+export const AbilityDefSchema = z
+  .object({
+    id: z.string().min(1),
+    /** Base re-proposal interval, in seconds. */
+    cooldownSeconds: z.number().positive(),
+    /**
+     * Does the cadence (and the `'fill'` phase) scale with the caster's `speed`?
+     * `true` = attack cadence (`attackCooldownTicksFor`); `false` = a flat
+     * utility cooldown decoupled from the busy window (the dash: ~10 s cooldown,
+     * ~0.25 s motion).
+     */
+    speedScaled: z.boolean().default(true),
+    rangeCells: z.number().int().nonnegative(),
+    /** Engagement floor (O4 kiting); 0 = no floor (the default). */
+    minRangeCells: z.number().int().nonnegative().default(0),
+    target: TargetSelectorSchema,
+    timeline: z.array(TimelinePhaseSchema).min(1),
+    orphanPolicy: OrphanPolicySchema,
+    /**
+     * The proposal score the action selector ranks on (10 for the strikes /
+     * heal, 5 for the dash). Named `priority` per the brief; the §29 selector
+     * reads it, equal scores tie-broken by registration order as today.
+     */
+    priority: z.number(),
+    effects: z.array(EffectEntrySchema),
+    fx: FxSchema.optional(),
+  })
+  .refine((def) => def.timeline.filter((p) => p.seconds === 'fill').length <= 1, {
+    message: "a timeline may declare at most one 'fill' phase",
+    path: ['timeline'],
+  })
+  .refine(
+    (def) => {
+      const phases = new Set(def.timeline.map((p) => p.phase));
+      return def.effects.every((e) => phases.has(e.phase));
+    },
+    {
+      message: 'every effect must fire on a phase present in the timeline',
+      path: ['effects'],
+    },
+  );
+
+/* -------------------------------------------------------------------------- */
+/* Inferred types.                                                             */
+/* -------------------------------------------------------------------------- */
+
+export type DamageScaling = z.infer<typeof DamageScalingSchema>;
+export type Affects = z.infer<typeof AffectsSchema>;
+export type EffectOp = z.infer<typeof EffectOpSchema>;
+export type DamageOp = z.infer<typeof DamageOpSchema>;
+export type HealOp = z.infer<typeof HealOpSchema>;
+export type MoveOp = z.infer<typeof MoveOpSchema>;
+export type ApplyStatusOp = z.infer<typeof ApplyStatusOpSchema>;
+export type TargetSelector = z.infer<typeof TargetSelectorSchema>;
+export type TimelinePhase = z.infer<typeof TimelinePhaseSchema>;
+export type EffectEntry = z.infer<typeof EffectEntrySchema>;
+export type AbilityDef = z.infer<typeof AbilityDefSchema>;
+
+/** Parse one ability definition, throwing on a malformed shape (A4 style). */
+export function parseAbilityDef(raw: unknown): AbilityDef {
+  return AbilityDefSchema.parse(raw);
+}

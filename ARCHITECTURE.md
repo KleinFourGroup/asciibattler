@@ -50,6 +50,7 @@ src/
     archetypes.ts            #   glyph + baseStats + growthRates (E1/E3); attackRange moved to abilities (E5)
     abilities.ts             #   E2+: per-ability cooldownSeconds/range/aoe/travelSeconds/retreatDelaySeconds
                              #   I6: + combat profile might/accuracy/critBase + evadable/critable gates
+    abilityDefs.ts           #   Y1: loads config/abilityDefs.json into the AbilityDef vocabulary (src/sim/effects); the data-driven successor to abilities.ts → inherits abilities.ts at Y5
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets
     recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4)
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
@@ -135,6 +136,9 @@ src/
       AbilityBehavior.ts     # E2: walks the unit's Ability[] (replaced AttackBehavior)
       SupportMovementBehavior.ts  # E7.B: healer idle / panic / approach / centroid-trail
       registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
+    effects/                 # Y1: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
+      schema.ts              #   EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types
+      timeline.ts            #   seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase
 
   run/
     Run.ts                   # State machine: map|turn-intro|battle|turn-outcome|promotion|recruit|
@@ -254,6 +258,7 @@ src/
 config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
   archetypes.json            # per-archetype glyph + baseStats + growthRates (E1/E3)
   abilities.json             # E2+: per-ability cooldownSeconds/range/aoe/travel/retreatDelay; I6: + might/accuracy/critBase/evadable/critable
+  abilityDefs.json           # Y1: data-driven AbilityDef catalog (empty in Y; fills per-verb during the Y3/Y4 migration) → abilities.json at Y5
   difficulty.json            # G4: enemy level-budget knobs + A/B/C presets
   recruitment.json           # starting team + offer size + startingLevel + recruitBonusChance
   leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)

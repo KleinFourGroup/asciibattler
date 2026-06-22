@@ -16,3 +16,7 @@ output/
 
 # Scratch / experimental work (FE reference data scrape, etc.)
 scratch/
+
+# Devlog — local authoring workspace (changelogs, post drafts, shot lists).
+# Outward-facing scratchpad; devs cloning the repo don't need it.
+devlog/

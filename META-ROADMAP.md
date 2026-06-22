@@ -12,6 +12,11 @@ is shaped*; `ROADMAP.md` is the *current* in-flight roadmap; this file is the
 The encounter-system round (Phases S→X) is content-complete; this plans everything
 between here and feature-complete.
 
+> **Cluster 1 — Combat Depth is now EXPANDED into [ROADMAP.md](ROADMAP.md)** (Phases
+> **Y → 31**), synthesized 2026-06-22 from the design model at
+> [archive/cluster-one-feedback.md](archive/cluster-one-feedback.md). The remaining
+> clusters (2–6) below stay as the meta-order until their turn comes.
+
 ---
 
 ## How to read this
@@ -79,7 +84,7 @@ right once beats retrofitting later.
 
 ---
 
-## Cluster 1 — Combat Depth
+## Cluster 1 — Combat Depth  ✅ EXPANDED → [ROADMAP.md](ROADMAP.md) (Phases Y→31)
 
 **Charter:** make attacks and effects **composed data**, not hand-coded classes,
 and build the depth (status effects, richer attack mechanics) on top of that model.

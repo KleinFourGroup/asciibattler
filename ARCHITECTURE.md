@@ -136,9 +136,13 @@ src/
       AbilityBehavior.ts     # E2: walks the unit's Ability[] (replaced AttackBehavior)
       SupportMovementBehavior.ts  # E7.B: healer idle / panic / approach / centroid-trail
       registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
-    effects/                 # Y1: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
-      schema.ts              #   EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types
-      timeline.ts            #   seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase
+    effects/                 # Y1/Y2: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
+      schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types
+      timeline.ts            #   Y1: seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase
+      targeting.ts           #   Y2: unitsInCells (the Cluster-2 footprint seam) + aoe victim resolution + the affects filter
+      reposition.ts          #   Y2: retreatCell — the caster-reposition primitive (shared with the legacy GambitStrikeAction)
+      interpreter.ts         #   Y2: executeOp — the switch over op.kind (damage/heal/move; reserved arms throw)
+      EffectAction.ts        #   Y2: the single generic Action that fires a def's effects over the F2 timeline (start/applyEffect)
 
   run/
     Run.ts                   # State machine: map|turn-intro|battle|turn-outcome|promotion|recruit|

@@ -3,11 +3,6 @@ import type { World } from '../World';
 import { MOVE_ACTION_ID, MoveAction, type MoveActionData } from './MoveAction';
 import { ATTACK_ACTION_ID, AttackAction, type AttackActionData } from './AttackAction';
 import { SPAWN_ACTION_ID, SpawnAction } from './SpawnAction';
-import {
-  GAMBIT_STRIKE_ACTION_ID,
-  GambitStrikeAction,
-  type GambitStrikeActionData,
-} from './GambitStrikeAction';
 import { HEAL_ACTION_ID, HealAction, type HealActionData } from './HealAction';
 import {
   MAGIC_BOLT_ACTION_ID,
@@ -20,7 +15,6 @@ import {
   type CatapultShotActionData,
 } from './CatapultShotAction';
 import { SWAP_ACTION_ID, SwapAction, type SwapActionData } from './SwapAction';
-import { DASH_ACTION_ID, DashAction, type DashActionData } from './DashAction';
 import { EffectAction, type EffectActionData } from '../effects/EffectAction';
 import { abilityDef } from '../../config/abilityDefs';
 
@@ -40,14 +34,11 @@ const FACTORIES: Record<string, ActionFactory> = {
   [MOVE_ACTION_ID]: (data) => MoveAction.fromData(data as MoveActionData),
   [ATTACK_ACTION_ID]: (data, world) => AttackAction.fromData(data as AttackActionData, world),
   [SPAWN_ACTION_ID]: () => SpawnAction.fromData(),
-  [GAMBIT_STRIKE_ACTION_ID]: (data, world) =>
-    GambitStrikeAction.fromData(data as GambitStrikeActionData, world),
   [HEAL_ACTION_ID]: (data, world) => HealAction.fromData(data as HealActionData, world),
   [MAGIC_BOLT_ACTION_ID]: (data) => MagicBoltAction.fromData(data as MagicBoltActionData),
   [CATAPULT_SHOT_ACTION_ID]: (data, world) =>
     CatapultShotAction.fromData(data as CatapultShotActionData, world),
   [SWAP_ACTION_ID]: (data) => SwapAction.fromData(data as SwapActionData),
-  [DASH_ACTION_ID]: (data) => DashAction.fromData(data as DashActionData),
 };
 
 export function createAction(id: string, data: unknown, world: World): Action {
@@ -57,5 +48,12 @@ export function createAction(id: string, data: unknown, world: World): Action {
   // is its `AbilityDef` id (e.g. 'sword'), not one of the per-class ids above.
   // Re-resolve the def and rehydrate the captured cast-time context. `abilityDef`
   // throws on a genuinely unknown id, so a corrupt snapshot still fails loudly.
+  //
+  // ⚠️ A migrated verb whose `AbilityDef` id EQUALS a legacy action id
+  // (`gambit_strike`, `dash` — and `magic_bolt`/`catapult_shot` once Y4 migrates
+  // them) MUST NOT be registered above, or that legacy factory would shadow this
+  // fallback and mis-decode the `EffectActionData`. The legacy class stays alive
+  // for the determinism oracle (registered NOWHERE), deleted at Y5. Verbs whose
+  // ids DON'T collide (`attack`/`heal`) keep their factory entry until Y5.
   return EffectAction.fromData(data as EffectActionData, world, abilityDef(id));
 }

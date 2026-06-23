@@ -6,8 +6,7 @@ import { RNG } from '../../core/RNG';
 import { deriveStats } from '../stats';
 import { STATS } from '../../config/stats';
 import type { GameEvents } from '../../core/events';
-import { GambitStrikeAction, GAMBIT_STRIKE_ACTION_ID } from './GambitStrikeAction';
-import { createAction } from './registry';
+import { GambitStrikeAction } from './GambitStrikeAction';
 
 /**
  * E7.A — GambitStrikeAction MECHANIC tests. Explicit literals (no
@@ -234,14 +233,16 @@ describe('GambitStrikeAction — serialization', () => {
     target.currentHp = 100;
     world.units.push(rogue, target);
 
-    const data = new GambitStrikeAction(target, 7, 0, 1).toData() as {
-      struckFrom?: { x: number; y: number };
-    };
+    const data = new GambitStrikeAction(target, 7, 0, 1).toData();
     // struckFrom is captured at cast (the target's cell) and serialized so a
     // snapshot taken mid-windup still knows where to dart back from.
-    expect(data.struckFrom).toEqual({ x: 6, y: 5 });
+    expect((data as { struckFrom?: { x: number; y: number } }).struckFrom).toEqual({ x: 6, y: 5 });
 
-    const rehydrated = createAction(GAMBIT_STRIKE_ACTION_ID, data, world);
+    // Y4 — the legacy GambitStrikeAction is registered NOWHERE in the action
+    // factory now (its def id collides with the migrated EffectAction's id), so
+    // a round-trip goes through its own fromData, not the registry — mirrors
+    // DashAction.test.ts.
+    const rehydrated = GambitStrikeAction.fromData(data, world);
     rehydrated.start(rogue, world);
     expect(target.currentHp).toBe(93);
     // The reposition survives the round-trip (struckFrom drives applyEffect).

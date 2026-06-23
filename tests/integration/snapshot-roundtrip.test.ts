@@ -23,6 +23,8 @@ import { MeleeStrike } from '../../src/sim/abilities/strikes';
 import { HealAlly } from '../../src/sim/abilities/heal';
 import { MagicBolt } from '../../src/sim/abilities/magic';
 import { CatapultShot } from '../../src/sim/abilities/catapult';
+import { createAbility } from '../../src/sim/abilities/registry';
+import { EffectAction } from '../../src/sim/effects/EffectAction';
 import { rollUnit } from '../../src/sim/archetypes';
 import { applyTerrain } from '../../src/sim/battleSetup';
 import { EventBus } from '../../src/core/EventBus';
@@ -501,6 +503,64 @@ describe('A2 round-trip: World', () => {
     const finishTick = restoredCat.activeAction!.finishTick;
     while (restored.currentTick < finishTick && !restored.ended) restored.tick();
     expect(restored.findUnit(enemy.id)!.currentHp).toBeLessThan(enemyHpAtSnapshot);
+  });
+
+  it('Y4: a migrated gambit/dash mid-action round-trips via the EffectAction fallback (not the legacy factory)', () => {
+    // Y3 migrated gambit_strike + dash to EffectAbility, but their AbilityDef ids
+    // EQUAL the legacy GAMBIT_STRIKE_ACTION_ID / DASH_ACTION_ID. Until Y4 dropped
+    // those colliding action-factory entries, a mid-action snapshot rehydrated the
+    // EffectAction's data through GambitStrikeAction/DashAction.fromData and
+    // mis-decoded it (the data shapes differ entirely). Prove the round-trip now
+    // routes to the generic EffectAction and the restored world continues
+    // event-for-event identically. (Magic/catapult get the same guarantee from
+    // the E7.C/E7.D cases once Y4a/b switch them to the production createAbility path.)
+    const bus = new EventBus<GameEvents>();
+    const events = recordEvents(bus);
+    const world = new World(bus, new RNG(31415));
+    for (const [team, y] of [['player', 5], ['enemy', 9]] as const) {
+      const r = world.spawnUnit(rollUnit('rogue', new RNG(y)), team, { x: 5, y });
+      r.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+      r.abilities.push(createAbility('gambit_strike'), createAbility('dash'));
+    }
+
+    // Advance until a rogue is mid-gambit or mid-dash — an in-flight EffectAction
+    // whose id collides with a legacy action id. (Caught on the seating tick:
+    // currentTick is strictly below finishTick the moment the action seats.)
+    let snapshotAt = -1;
+    for (let i = 0; i < 200 && snapshotAt < 0; i++) {
+      world.tick();
+      const colliding = world.units.find((u) => {
+        const id = u.activeAction?.action.id;
+        return (
+          (id === 'gambit_strike' || id === 'dash') &&
+          world.currentTick < u.activeAction!.finishTick
+        );
+      });
+      if (colliding) {
+        // The fix: the in-flight action is the generic EffectAction, not a legacy class.
+        expect(colliding.activeAction!.action).toBeInstanceOf(EffectAction);
+        snapshotAt = events.length;
+      }
+    }
+    expect(snapshotAt, 'a rogue should be mid-gambit/dash within the window').toBeGreaterThan(0);
+
+    // Snapshot mid-action, restore on a fresh bus, continue both to completion,
+    // and compare the post-snapshot event slices.
+    const restoredBus = new EventBus<GameEvents>();
+    const restoredEvents = recordEvents(restoredBus);
+    const restored = World.fromJSON(JSON.parse(JSON.stringify(world.toJSON())), restoredBus);
+    for (const u of restored.units) {
+      const id = u.activeAction?.action.id;
+      if (id === 'gambit_strike' || id === 'dash') {
+        expect(u.activeAction!.action).toBeInstanceOf(EffectAction);
+      }
+    }
+
+    for (let i = 0; i < 500 && !restored.ended; i++) restored.tick();
+    for (let i = 0; i < 500 && !world.ended; i++) world.tick();
+    expect(restoredEvents).toEqual(events.slice(snapshotAt));
+    expect(restored.ended).toBe(world.ended);
+    expect(restored.currentTick).toBe(world.currentTick);
   });
 });
 

@@ -32,6 +32,7 @@ import { SupportMovementBehavior } from '../../src/sim/behaviors/SupportMovement
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
 import { MeleeStrike, RangedShot, GambitStrike } from '../../src/sim/abilities/strikes';
 import { HealAlly } from '../../src/sim/abilities/heal';
+import { DashAbility } from '../../src/sim/abilities/dash';
 import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAbility } from '../../src/sim/effects/EffectAbility';
 import { abilityDef } from '../../src/config/abilityDefs';
@@ -277,6 +278,18 @@ describe('Phase Y3 — effect-migration oracle', () => {
       symmetricSpawn('rogue', () => [new GambitStrike()]),
       symmetricSpawn('rogue', () => [new EffectAbility(abilityDef('gambit_strike'))]),
       'unit:attacked',
+    );
+  });
+
+  it('dash → EffectAbility is byte-identical to DashAbility', () => {
+    // The pure caster-reposition (`self` + move-advance). Rogues carry [dash,
+    // sword] (the sword is the already-migrated EffectAbility on BOTH runs, so
+    // only the dash varies): they leap to close, then strike — exercising the
+    // leap landing + the unit:moved/unit:dashed emits.
+    assertEquivalent(
+      symmetricSpawn('rogue', () => [new DashAbility(), createAbility('sword')]),
+      symmetricSpawn('rogue', () => [new EffectAbility(abilityDef('dash')), createAbility('sword')]),
+      'unit:dashed',
     );
   });
 });

@@ -1,7 +1,6 @@
 import type { Ability } from './Ability';
 import { MagicBolt } from './magic';
 import { CatapultShot } from './catapult';
-import { DashAbility } from './dash';
 import { ABILITIES } from '../../config/abilities';
 import { EffectAbility } from '../effects/EffectAbility';
 import { abilityDef } from '../../config/abilityDefs';
@@ -30,7 +29,15 @@ const MELEE_WEAPON_IDS = ['sword', 'club', 'katana', 'whip'] as const;
 // oracle). `createAbility(id)` routes these to `new EffectAbility(abilityDef(id))`
 // instead of the legacy class; the now-unreferenced classes stay registered-
 // nowhere until Y5 deletes the lot. Grows one verb per commit (melee first).
-const MIGRATED_ABILITY_IDS = [...MELEE_WEAPON_IDS, 'bow', 'heal_ally', 'gambit_strike'] as const;
+// N1 — `dash` is configured + registered but on NO archetype yet, so migrating it
+// is doubly inert (no spawn or snapshot constructs it until the rogue carries it).
+const MIGRATED_ABILITY_IDS = [
+  ...MELEE_WEAPON_IDS,
+  'bow',
+  'heal_ally',
+  'gambit_strike',
+  'dash',
+] as const;
 
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(
@@ -38,11 +45,6 @@ const FACTORIES: Record<string, AbilityFactory> = {
   ),
   [MagicBolt.id]: () => new MagicBolt(),
   [CatapultShot.id]: () => new CatapultShot(),
-  // N1 — the rogue's gap-closer. Registered + configured but on NO archetype
-  // yet (commit 3 adds it to the rogue), so it stays byte-identical: the
-  // factory is only ever invoked via `createAbility('dash')`, which no spawn or
-  // snapshot triggers until the rogue carries it.
-  [DashAbility.id]: () => new DashAbility(),
 };
 
 /**

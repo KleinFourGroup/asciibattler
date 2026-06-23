@@ -29,6 +29,7 @@ import {
   lowestWoundedAlly,
 } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
+import { leapLanding } from '../movement';
 import { critChanceFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
 import type { GridCoord } from '../../core/types';
@@ -75,8 +76,9 @@ export function proposeEffectAbility(
       return proposeSingleTargetAttack(def, unit, world);
     case 'lowestHpAlly':
       return proposeHeal(def, def.target.rangeCells, unit, world);
-    // `aoe` (magic), `self` (dash) migrate in later Y3/Y4 commits; the legacy
-    // class stays authoritative until then.
+    case 'self':
+      return proposeSelfMove(def, unit, world);
+    // `aoe` (magic) migrates in Y4; the legacy class stays authoritative until then.
     default:
       throw new Error(
         `EffectAbility '${def.id}': target selector '${def.target.kind}' not yet migrated`,
@@ -159,6 +161,43 @@ function proposeHeal(
   };
 }
 
+/**
+ * A pure caster-reposition (the `self` selector — the rogue dash). A line-for-line
+ * port of `DashAbility.propose`: resolve an enemy to leap at (only to compute the
+ * landing — the EFFECT subjects the caster), abstain when already in strike reach,
+ * and capture the `leapLanding` into the `advance` op. The leap distance is the
+ * def's `rangeCells` (the movement-ability range); cadence is the FLAT cooldown
+ * (`speedScaled:false`), decoupled from the short motion window.
+ */
+function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
+  const target = currentTarget(unit, world);
+  if (target === null) return null;
+  // Already within strike reach → abstain so the strike (higher score) preempts.
+  if (chebyshev(unit.position, target.position) <= unit.derived.attackRange) return null;
+
+  const landing = leapLanding(unit, world, {
+    goals: [target.position],
+    approachToward: target.position,
+    maxCells: def.rangeCells,
+  });
+  if (landing === null) return null;
+
+  const speed = unit.effectiveStats.speed;
+  // No single-target unit (the leap subjects the caster); the enemy was only a
+  // landing reference, so targetId is -1 and phaseTarget surfaces nothing.
+  const ops = def.effects.map((e) =>
+    resolveOp(e.op, { unit, damageMultiplier: 1, advanceLanding: landing }),
+  );
+
+  return {
+    action: new EffectAction(def, { targetId: -1, targetCell: undefined, ops }),
+    score: def.priority,
+    cooldown: resolveCadenceTicks(def, speed),
+    phases: resolvePhases(def, speed),
+    cooldownKey: def.id,
+  };
+}
+
 /** Per-op cast-time inputs an `EffectOp` may need, assembled by the caller. */
 interface OpResolveContext {
   unit: Unit;
@@ -167,6 +206,8 @@ interface OpResolveContext {
   /** `move` retreat (the gambit): the cell to dart AWAY from (the struck target's
    *  position at cast — `struckFrom`). */
   retreatAnchor?: GridCoord;
+  /** `move` advance (the dash): the captured leap landing. */
+  advanceLanding?: GridCoord;
 }
 
 /**
@@ -191,11 +232,16 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
     case 'move': {
       // retreat (the gambit dart-back): the anchor is the struck cell, captured
       // at cast (`GambitStrikeAction.struckFrom`); the interpreter steps AWAY
-      // from it via `retreatCell`. `advance` (the dash) lands in the next commit.
+      // from it via `retreatCell`. advance (the dash): the captured leap landing,
+      // which the interpreter relocates the caster onto.
       if (op.mode === 'retreat') {
         return c.retreatAnchor ? { moveDest: { ...c.retreatAnchor } } : {};
       }
-      throw new Error(`EffectAbility: move mode '${op.mode}' not yet resolvable at propose time`);
+      if (op.mode === 'advance') {
+        return c.advanceLanding ? { moveDest: { ...c.advanceLanding } } : {};
+      }
+      // knockback / pull are the reserved Cluster-2 seam (never authored here).
+      throw new Error(`EffectAbility: move mode '${op.mode}' is reserved`);
     }
     // `applyStatus` is reserved until Phase 29 (status-on-hit).
     default:

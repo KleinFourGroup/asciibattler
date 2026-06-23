@@ -184,5 +184,21 @@
         "op": { "kind": "move", "mode": "retreat", "cells": 1 }
       }
     ]
+  },
+  "dash": {
+    "id": "dash",
+    "cooldownSeconds": 10,
+    "speedScaled": false,
+    "rangeCells": 2,
+    "target": { "kind": "self" },
+    "timeline": [{ "phase": "impact", "seconds": 0.25 }],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 5,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": { "kind": "move", "mode": "advance", "cells": 2 }
+      }
+    ]
   }
 }

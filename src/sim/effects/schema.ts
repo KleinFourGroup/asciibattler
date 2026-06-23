@@ -244,6 +244,14 @@ export const AbilityDefSchema = z
     rangeCells: z.number().int().nonnegative(),
     /** Engagement floor (O4 kiting); 0 = no floor (the default). */
     minRangeCells: z.number().int().nonnegative().default(0),
+    /**
+     * E7.D — an arcing shot that lobs OVER walls (the catapult): the propose-time
+     * LOS gate is skipped, and `MovementBehavior`'s in-range abstain reads the
+     * same flag off the ability (via `EffectAbility.ignoresLineOfSight`) so it
+     * doesn't creep forward to clear a wall it doesn't need cleared. Absent/false
+     * on every LOS-gated verb (the strikes / bow / magic bolt).
+     */
+    ignoresLineOfSight: z.boolean().optional(),
     target: TargetSelectorSchema,
     timeline: z.array(TimelinePhaseSchema).min(1),
     orphanPolicy: OrphanPolicySchema,

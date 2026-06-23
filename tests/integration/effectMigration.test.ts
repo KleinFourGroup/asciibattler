@@ -34,6 +34,7 @@ import { MeleeStrike, RangedShot, GambitStrike } from '../../src/sim/abilities/s
 import { HealAlly } from '../../src/sim/abilities/heal';
 import { DashAbility } from '../../src/sim/abilities/dash';
 import { MagicBolt } from '../../src/sim/abilities/magic';
+import { CatapultShot } from '../../src/sim/abilities/catapult';
 import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAbility } from '../../src/sim/effects/EffectAbility';
 import { abilityDef } from '../../src/config/abilityDefs';
@@ -302,6 +303,24 @@ describe('Phase Y3/Y4 — effect-migration oracle', () => {
     assertEquivalent(
       symmetricSpawn('mage', () => [new MagicBolt()]),
       symmetricSpawn('mage', () => [new EffectAbility(abilityDef('magic_bolt'))]),
+      'unit:attacked',
+    );
+  });
+
+  it('catapult shot → EffectAbility is byte-identical to CatapultShot', () => {
+    // Y4b — the `fizzle` artillery. The migrated catapult must ALSO surface
+    // ignoresLineOfSight so MovementBehavior's in-range abstain reads it; the
+    // open-field oracle below has no walls (so it can't exercise the LOS skip),
+    // hence the direct flag-parity assertion — MovementBehavior.test.ts pins the
+    // abstain itself.
+    expect(new EffectAbility(abilityDef('catapult_shot')).ignoresLineOfSight).toBe(true);
+    expect(new CatapultShot().ignoresLineOfSight).toBe(true);
+    // A catapult-vs-catapult kite exercises the homing single-target shot (the
+    // fizzle no-draw on a dead target + the per-shot unit:attacked + the cast-cell
+    // fallback). Full-trace + combatRng-stream equality proves identical shots.
+    assertEquivalent(
+      symmetricSpawn('catapult', () => [new CatapultShot()]),
+      symmetricSpawn('catapult', () => [new EffectAbility(abilityDef('catapult_shot'))]),
       'unit:attacked',
     );
   });

@@ -102,13 +102,21 @@ function proposeSingleTargetAttack(
   const dist = chebyshev(unit.position, target.position);
   if (dist > def.rangeCells || dist < def.minRangeCells) return null;
 
-  const blockers = collectLosBlockers(world);
-  if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {
-    return null;
+  // LOS gate — skipped for an arcing shot that lobs OVER walls (the catapult,
+  // `ignoresLineOfSight`; `catapult.ts` has no `hasLineOfSight` check).
+  // `MovementBehavior`'s in-range abstain reads the same flag off the ability, so
+  // the gate and the movement stay consistent.
+  if (!def.ignoresLineOfSight) {
+    const blockers = collectLosBlockers(world);
+    if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {
+      return null;
+    }
   }
 
   // E4 half-cover: a neutral non-LOS-blocker on the Bresenham line halves the
-  // damage (the same invert-the-LOS-check trick `proposeBasicStrike` uses).
+  // damage (the same invert-the-LOS-check trick `proposeBasicStrike` uses). A
+  // `fizzle` artillery shot ignores the multiplier in the interpreter, so it's
+  // inert there — harmless to compute (and 0 in the open field anyway).
   const halfCovers = collectHalfCoverPositions(world);
   const behindCover =
     halfCovers.length > 0 && !hasLineOfSight(unit.position, target.position, halfCovers);
@@ -121,8 +129,14 @@ function proposeSingleTargetAttack(
     resolveOp(e.op, { unit, damageMultiplier, retreatAnchor: target.position }),
   );
 
+  // Fizzle (the catapult): capture the cast cell as the dud-VFX impact fallback
+  // (mirrors `CatapultShotAction.castPosition`) — the interpreter's fizzle branch
+  // + the homing `phaseTarget` read it when the locked target died mid-flight. The
+  // commit-at-cast strikes carry no cell.
+  const targetCell = def.orphanPolicy === 'fizzle' ? { ...target.position } : undefined;
+
   return {
-    action: new EffectAction(def, { targetId: target.id, targetCell: undefined, ops }),
+    action: new EffectAction(def, { targetId: target.id, targetCell, ops }),
     score: def.priority,
     cooldown: resolveCadenceTicks(def, speed),
     phases: resolvePhases(def, speed),

@@ -20,9 +20,19 @@ import { proposeEffectAbility } from './propose';
 
 export class EffectAbility implements Ability {
   readonly id: string;
+  /**
+   * Surfaced from the def so `MovementBehavior`'s in-range abstain reads it off
+   * the migrated ability exactly as it did off the legacy `CatapultShot` (E7.D —
+   * lobs over walls). Absent on every LOS-gated verb.
+   */
+  readonly ignoresLineOfSight?: boolean;
 
   constructor(private readonly def: AbilityDef) {
     this.id = def.id;
+    // Only set when the def opts in (the catapult); the legacy abilities simply
+    // omit the field, and `exactOptionalPropertyTypes` forbids assigning
+    // `undefined` to an optional boolean — so guard rather than assign through.
+    if (def.ignoresLineOfSight) this.ignoresLineOfSight = def.ignoresLineOfSight;
   }
 
   propose(unit: Unit, world: World): ActionProposal | null {

@@ -1,5 +1,4 @@
 import type { Ability } from './Ability';
-import { CatapultShot } from './catapult';
 import { ABILITIES } from '../../config/abilities';
 import { EffectAbility } from '../effects/EffectAbility';
 import { abilityDef } from '../../config/abilityDefs';
@@ -36,17 +35,19 @@ const MIGRATED_ABILITY_IDS = [
   'heal_ally',
   'gambit_strike',
   'dash',
-  // Y4a — the mage's charged area blast (the `aoe` selector). Its def id collides
-  // with the legacy MAGIC_BOLT_ACTION_ID, so that action-factory entry was dropped
-  // in the same commit (see actions/registry.ts) to let the EffectAction fallback own it.
-  'magic_bolt',
+  // Y4 — the two FX-cue attacks. Each def id collides with its legacy action id
+  // (MAGIC_BOLT_ACTION_ID / CATAPULT_SHOT_ACTION_ID), so that action-factory entry
+  // was dropped in the same commit (see actions/registry.ts) to let the
+  // EffectAction fallback own the snapshot rehydrate. With these, EVERY combat
+  // verb is data-driven — no hand-coded ability class is registered any more.
+  'magic_bolt', // Y4a — the mage's charged area blast (the `aoe` selector).
+  'catapult_shot', // Y4b — the catapult's homing artillery (`fizzle` + ignoresLineOfSight).
 ] as const;
 
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(
     MIGRATED_ABILITY_IDS.map((id) => [id, () => new EffectAbility(abilityDef(id))]),
   ),
-  [CatapultShot.id]: () => new CatapultShot(),
 };
 
 /**

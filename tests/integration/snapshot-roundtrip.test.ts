@@ -21,7 +21,6 @@ import { SupportMovementBehavior } from '../../src/sim/behaviors/SupportMovement
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
 import { MeleeStrike } from '../../src/sim/abilities/strikes';
 import { HealAlly } from '../../src/sim/abilities/heal';
-import { CatapultShot } from '../../src/sim/abilities/catapult';
 import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAction } from '../../src/sim/effects/EffectAction';
 import { rollUnit } from '../../src/sim/archetypes';
@@ -474,7 +473,10 @@ describe('A2 round-trip: World', () => {
     const world = new World(bus, new RNG(1357));
     const cat = world.spawnUnit(rollUnit('catapult', new RNG(1)), 'player', { x: 5, y: 5 });
     cat.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    cat.abilities.push(new CatapultShot());
+    // Y4b — production createAbility path (EffectAbility): the in-flight
+    // EffectAction id 'catapult_shot' round-trips through the EffectAction
+    // fallback now that its legacy action-factory entry is gone.
+    cat.abilities.push(createAbility('catapult_shot'));
     const enemy = world.spawnUnit(rollUnit('mercenary', new RNG(2)), 'enemy', { x: 5, y: 9 });
 
     // Advance until the catapult is mid-wind-up (activeAction set, shot not

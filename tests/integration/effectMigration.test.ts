@@ -29,7 +29,7 @@ import type { Unit } from '../../src/sim/Unit';
 import type { Ability } from '../../src/sim/abilities/Ability';
 import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
-import { MeleeStrike } from '../../src/sim/abilities/strikes';
+import { MeleeStrike, RangedShot } from '../../src/sim/abilities/strikes';
 import { EffectAbility } from '../../src/sim/effects/EffectAbility';
 import { abilityDef } from '../../src/config/abilityDefs';
 import { rollUnit } from '../../src/sim/archetypes';
@@ -227,5 +227,13 @@ describe('Phase Y3 — effect-migration oracle', () => {
         );
       });
     }
+  });
+
+  it('ranged shot (bow) → EffectAbility is byte-identical to RangedShot', () => {
+    assertVerbMigration(
+      'ranged',
+      () => new RangedShot(),
+      () => new EffectAbility(abilityDef('bow')),
+    );
   });
 });

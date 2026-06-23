@@ -106,5 +106,33 @@
         }
       }
     ]
+  },
+  "bow": {
+    "id": "bow",
+    "cooldownSeconds": 2.0,
+    "rangeCells": 3,
+    "minRangeCells": 2,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "ranged",
+          "might": 4,
+          "accuracy": 0.7,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ]
   }
 }

@@ -176,8 +176,19 @@ import { STATS } from '../config/stats';
  *       change), so reject v24 outright per the established no-migration
  *       contract. RunSnapshot is unaffected — the objective is World-side +
  *       transient per battle.
+ *  26 — Y5 (the data-driven attack/effect migration) retired the per-verb action
+ *       classes: a combat verb's in-flight `activeAction` now serializes as the
+ *       generic `EffectActionData` (def id + cast-time ctx) instead of the legacy
+ *       per-class payloads (`AttackActionData` / `MagicBoltActionData` / …), and
+ *       the colliding `attack`/`heal` action-factory entries are gone. A v25 save
+ *       with an in-flight melee/heal/magic/catapult/gambit/dash carries the OLD
+ *       payload under the OLD action id; rehydrating it now would mis-decode (an
+ *       `attack`/`heal` id throws in `abilityDef`, and gambit/dash/magic/catapult
+ *       route to `EffectAction.fromData` expecting the new shape). Reject v25
+ *       outright per the no-migration contract. RunSnapshot is unaffected —
+ *       roster abilities are ids re-resolved at spawn, not serialized actions.
  */
-const WORLD_SCHEMA_VERSION = 25;
+const WORLD_SCHEMA_VERSION = 26;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.

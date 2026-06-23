@@ -40,7 +40,7 @@ import type { GridCoord } from '../core/types';
  * the behaviors read the ACTING unit's team objective, so a future enemy
  * strategy is a data change, not a refactor. Set/cleared via the `setObjective`
  * / `clearObjective` `WorldCommand`s (the deterministic top-of-tick drain);
- * snapshotted (WorldSnapshot v25).
+ * snapshotted (part of the WorldSnapshot).
  */
 export type ObjectiveTarget =
   | { readonly kind: 'enemy'; readonly unitId: number }

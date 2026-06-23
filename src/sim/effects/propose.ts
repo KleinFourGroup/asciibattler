@@ -78,11 +78,8 @@ export function proposeEffectAbility(
       return proposeHeal(def, def.target.rangeCells, unit, world);
     case 'self':
       return proposeSelfMove(def, unit, world);
-    // `aoe` (magic) migrates in Y4; the legacy class stays authoritative until then.
-    default:
-      throw new Error(
-        `EffectAbility '${def.id}': target selector '${def.target.kind}' not yet migrated`,
-      );
+    case 'aoe':
+      return proposeAreaBlast(def, unit, world);
   }
 }
 
@@ -191,6 +188,43 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
 
   return {
     action: new EffectAction(def, { targetId: -1, targetCell: undefined, ops }),
+    score: def.priority,
+    cooldown: resolveCadenceTicks(def, speed),
+    phases: resolvePhases(def, speed),
+    cooldownKey: def.id,
+  };
+}
+
+/**
+ * The charged, ground-targeted area blast (the `aoe` selector — the mage bolt).
+ * A line-for-line port of `MagicBolt.propose`: the same `currentTarget` pick, the
+ * same `[minRange, range]` band gate, and the same LOS gate (a bolt can't be
+ * lobbed through stone). It captures the target's CURRENT cell as the blast
+ * CENTRE (`anchor:targetCell`) and carries it on the action; `targetId` is −1 —
+ * the blast subjects whoever stands in the cells at impact, not a locked unit —
+ * so `phaseTarget` surfaces only the cell. The interpreter's `executeDamage` aoe
+ * branch (one crit roll, the ring multiplier, `magic:detonated`) does the rest.
+ */
+function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
+  const target = currentTarget(unit, world);
+  if (target === null) return null;
+
+  const dist = chebyshev(unit.position, target.position);
+  if (dist > def.rangeCells || dist < def.minRangeCells) return null;
+
+  const blockers = collectLosBlockers(world);
+  if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {
+    return null;
+  }
+
+  const speed = unit.effectiveStats.speed;
+  // No single-target unit + no half-cover: an area detonation is dodged by
+  // leaving the blast, not by a per-cell roll (the interpreter's aoe branch
+  // ignores `damageMultiplier`). The blast centre is captured at cast time.
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit, damageMultiplier: 1 }));
+
+  return {
+    action: new EffectAction(def, { targetId: -1, targetCell: { ...target.position }, ops }),
     score: def.priority,
     cooldown: resolveCadenceTicks(def, speed),
     phases: resolvePhases(def, speed),

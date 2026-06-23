@@ -200,5 +200,42 @@
         "op": { "kind": "move", "mode": "advance", "cells": 2 }
       }
     ]
+  },
+  "magic_bolt": {
+    "id": "magic_bolt",
+    "cooldownSeconds": 2.5,
+    "rangeCells": 5,
+    "minRangeCells": 2,
+    "target": {
+      "kind": "aoe",
+      "shape": "square",
+      "radius": 1,
+      "anchor": "targetCell",
+      "affects": "enemies",
+      "ringMultiplier": 0.5
+    },
+    "timeline": [
+      { "phase": "windup", "seconds": "fill" },
+      { "phase": "release", "seconds": 0 },
+      { "phase": "travel", "seconds": 0.35 },
+      { "phase": "impact", "seconds": 0 }
+    ],
+    "orphanPolicy": "ground-target",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "magic",
+          "might": 0,
+          "accuracy": 0.6,
+          "critBase": 0,
+          "critable": false,
+          "evadable": false,
+          "bypassDefense": false
+        }
+      }
+    ]
   }
 }

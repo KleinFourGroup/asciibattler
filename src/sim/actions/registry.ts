@@ -5,11 +5,6 @@ import { ATTACK_ACTION_ID, AttackAction, type AttackActionData } from './AttackA
 import { SPAWN_ACTION_ID, SpawnAction } from './SpawnAction';
 import { HEAL_ACTION_ID, HealAction, type HealActionData } from './HealAction';
 import {
-  MAGIC_BOLT_ACTION_ID,
-  MagicBoltAction,
-  type MagicBoltActionData,
-} from './MagicBoltAction';
-import {
   CATAPULT_SHOT_ACTION_ID,
   CatapultShotAction,
   type CatapultShotActionData,
@@ -35,7 +30,6 @@ const FACTORIES: Record<string, ActionFactory> = {
   [ATTACK_ACTION_ID]: (data, world) => AttackAction.fromData(data as AttackActionData, world),
   [SPAWN_ACTION_ID]: () => SpawnAction.fromData(),
   [HEAL_ACTION_ID]: (data, world) => HealAction.fromData(data as HealActionData, world),
-  [MAGIC_BOLT_ACTION_ID]: (data) => MagicBoltAction.fromData(data as MagicBoltActionData),
   [CATAPULT_SHOT_ACTION_ID]: (data, world) =>
     CatapultShotAction.fromData(data as CatapultShotActionData, world),
   [SWAP_ACTION_ID]: (data) => SwapAction.fromData(data as SwapActionData),
@@ -50,10 +44,10 @@ export function createAction(id: string, data: unknown, world: World): Action {
   // throws on a genuinely unknown id, so a corrupt snapshot still fails loudly.
   //
   // ⚠️ A migrated verb whose `AbilityDef` id EQUALS a legacy action id
-  // (`gambit_strike`, `dash` — and `magic_bolt`/`catapult_shot` once Y4 migrates
-  // them) MUST NOT be registered above, or that legacy factory would shadow this
-  // fallback and mis-decode the `EffectActionData`. The legacy class stays alive
-  // for the determinism oracle (registered NOWHERE), deleted at Y5. Verbs whose
-  // ids DON'T collide (`attack`/`heal`) keep their factory entry until Y5.
+  // (`gambit_strike`, `dash`, `magic_bolt` — and `catapult_shot` once Y4b
+  // migrates it) MUST NOT be registered above, or that legacy factory would
+  // shadow this fallback and mis-decode the `EffectActionData`. The legacy class
+  // stays alive for the determinism oracle (registered NOWHERE), deleted at Y5.
+  // Verbs whose ids DON'T collide (`attack`/`heal`) keep their factory entry until Y5.
   return EffectAction.fromData(data as EffectActionData, world, abilityDef(id));
 }

@@ -21,7 +21,6 @@ import { SupportMovementBehavior } from '../../src/sim/behaviors/SupportMovement
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
 import { MeleeStrike } from '../../src/sim/abilities/strikes';
 import { HealAlly } from '../../src/sim/abilities/heal';
-import { MagicBolt } from '../../src/sim/abilities/magic';
 import { CatapultShot } from '../../src/sim/abilities/catapult';
 import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAction } from '../../src/sim/effects/EffectAction';
@@ -424,7 +423,12 @@ describe('A2 round-trip: World', () => {
     const world = new World(bus, new RNG(2468));
     const mage = world.spawnUnit(rollUnit('mage', new RNG(1)), 'player', { x: 5, y: 5 });
     mage.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    mage.abilities.push(new MagicBolt());
+    // Y4a — build via the production createAbility path (EffectAbility), not the
+    // legacy `new MagicBolt()`: the in-flight EffectAction's id 'magic_bolt' now
+    // round-trips through the EffectAction fallback (its legacy action-factory
+    // entry was dropped). Mirrors the build-pattern note (hand-built legacy
+    // classes diverge on the serialized in-flight shape).
+    mage.abilities.push(createAbility('magic_bolt'));
     const enemy = world.spawnUnit(rollUnit('mercenary', new RNG(2)), 'enemy', { x: 5, y: 7 });
 
     // Advance until the mage is mid-charge (activeAction set, but the bolt

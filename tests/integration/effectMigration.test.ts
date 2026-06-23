@@ -33,6 +33,7 @@ import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
 import { MeleeStrike, RangedShot, GambitStrike } from '../../src/sim/abilities/strikes';
 import { HealAlly } from '../../src/sim/abilities/heal';
 import { DashAbility } from '../../src/sim/abilities/dash';
+import { MagicBolt } from '../../src/sim/abilities/magic';
 import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAbility } from '../../src/sim/effects/EffectAbility';
 import { abilityDef } from '../../src/config/abilityDefs';
@@ -241,7 +242,7 @@ function assertEquivalent(
 /* The migrated verbs.                                                        */
 /* -------------------------------------------------------------------------- */
 
-describe('Phase Y3 — effect-migration oracle', () => {
+describe('Phase Y3/Y4 — effect-migration oracle', () => {
   describe('melee strike → EffectAbility is byte-identical to MeleeStrike', () => {
     for (const weapon of ['sword', 'club', 'katana', 'whip'] as const) {
       it(`${weapon}`, () => {
@@ -290,6 +291,18 @@ describe('Phase Y3 — effect-migration oracle', () => {
       symmetricSpawn('rogue', () => [new DashAbility(), createAbility('sword')]),
       symmetricSpawn('rogue', () => [new EffectAbility(abilityDef('dash')), createAbility('sword')]),
       'unit:dashed',
+    );
+  });
+
+  it('magic bolt → EffectAbility is byte-identical to MagicBolt', () => {
+    // Y4a — the `aoe` selector: a mage-vs-mage cluster blasts each other, so the
+    // ground-target detonation (one crit roll, the 0.5 ring, the per-victim
+    // unit:attacked stream) is exercised. Full-trace + combatRng-stream equality
+    // proves the blast hit the same cells for the same damage in the same order.
+    assertEquivalent(
+      symmetricSpawn('mage', () => [new MagicBolt()]),
+      symmetricSpawn('mage', () => [new EffectAbility(abilityDef('magic_bolt'))]),
+      'unit:attacked',
     );
   });
 });

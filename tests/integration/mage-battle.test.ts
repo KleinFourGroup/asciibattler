@@ -9,8 +9,8 @@ import type { BattleEncounter } from '../../src/run/Run';
 
 /**
  * E7.C — integration smoke for the mage in a FULL tick loop (selector →
- * MovementBehavior / AbilityBehavior → MagicBoltAction charge → applyEffect
- * detonation → World events). The unit-level tests pin the blast mechanic +
+ * MovementBehavior / AbilityBehavior → the magic-bolt EffectAction charge →
+ * applyEffect detonation → World events). The unit-level tests pin the blast mechanic +
  * propose path in isolation; this proves a mage spawned through the real
  * wiring (`abilityIdsForArchetype('mage')` → `createAbility('magic_bolt')`,
  * plus the charging `MovementBehavior` in the shared spawn path) approaches,

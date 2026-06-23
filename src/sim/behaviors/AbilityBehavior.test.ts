@@ -8,9 +8,8 @@ import { spawnHalfCover, spawnWall } from '../environment';
 import { ARCHETYPE_CONFIG } from '../archetypes';
 import { createAbility } from '../abilities/registry';
 import type { Ability } from '../abilities/Ability';
-import type { ActionProposal } from '../Action';
+import type { Action, ActionProposal } from '../Action';
 import type { GameEvents } from '../../core/events';
-import { AttackAction } from '../actions/AttackAction';
 import { LEVELING } from '../../config/leveling';
 import { attackConfig } from '../../config/abilities';
 
@@ -215,7 +214,7 @@ describe('AbilityBehavior', () => {
   it('E2: picks the higher-scoring ability when both fire on the same tick', () => {
     // Synthetic unit with two abilities: a low-score one and a high-score
     // one, both proposing on every tick. AbilityBehavior should always
-    // pick the high-score ability. Wraps AttackAction so the existing
+    // pick the high-score ability. Wraps a damage action so the existing
     // damage path lights up — the test reads damage to verify which
     // ability fired (low: 3 damage, high: 9).
     const { world, units, attacks } = sceneWithAbilities(
@@ -257,7 +256,7 @@ describe('AbilityBehavior', () => {
     // Tick 1: slow fires (its cd -> 10, duration 1 so unit is free
     // immediately next tick). Tick 2: slow's cd filter blocks it, fast
     // wins by default. Without per-ability cooldown isolation (both
-    // keyed off AttackAction.id), tick 2 would skip fast too — pinning
+    // keyed off the shared action id), tick 2 would skip fast too — pinning
     // the contract.
     const { world, attacks } = sceneWithAbilities(
       [
@@ -368,6 +367,28 @@ function sceneWithAbilities(
   return result;
 }
 
+/**
+ * A minimal damage-dealing action standing in for the deleted AttackAction
+ * (Y5c). The synthetic abilities below only need an observable hit to verify
+ * which ability fired, so this applies fixed, unmissable damage (no crit/evade
+ * draw) through the World.applyDamage chokepoint. The scene's defense-0 target
+ * means the `unit:attacked` event carries exactly `damage`.
+ */
+class TestStrike implements Action {
+  readonly id = 'test-strike';
+  constructor(
+    private readonly target: Unit,
+    private readonly damage: number,
+  ) {}
+  start(unit: Unit, world: World): void {
+    if (this.target.currentHp <= 0) return;
+    world.applyDamage(unit.id, this.target, this.damage, { crit: false, evadable: false });
+  }
+  toData(): { targetId: number; damage: number } {
+    return { targetId: this.target.id, damage: this.damage };
+  }
+}
+
 /** A synthetic ability that always proposes against any in-range enemy. */
 class ConfigurableStrike implements Ability {
   readonly id: string;
@@ -396,7 +417,7 @@ class ConfigurableStrike implements Ability {
     const target = world.units.find((u) => u.team !== unit.team && u.team !== 'neutral');
     if (!target) return null;
     return {
-      action: new AttackAction(target, this.damage, 0),
+      action: new TestStrike(target, this.damage),
       score: this.score,
       cooldown: this.cooldown,
       // F2 — single-tick strike: impact at offset 0, recovery fills the

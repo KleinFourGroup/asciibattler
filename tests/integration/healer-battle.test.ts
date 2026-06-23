@@ -9,8 +9,8 @@ import type { BattleEncounter } from '../../src/run/Run';
 
 /**
  * E7.B — integration smoke for the healer in a FULL tick loop (selector →
- * SupportMovementBehavior / AbilityBehavior → HealAction → World events).
- * The unit-level tests pin the heal mechanic + propose + movement ladder in
+ * SupportMovementBehavior / AbilityBehavior → the heal EffectAction → World
+ * events). The unit-level tests pin the heal mechanic + propose + movement ladder in
  * isolation; this proves a healer spawned through the real wiring
  * (`abilityIdsForArchetype('healer')` → `createAbility('heal_ally')`, plus
  * the archetype-aware `SupportMovementBehavior` in `spawnUnit`) positions,
@@ -85,7 +85,7 @@ describe('E7.B — healer runs through a full battle', () => {
     SEEDS.forEach((seed, i) => {
       expect(results[i]!.resolved, `seed ${seed} resolves (no hang)`).toBe(true);
     });
-    // The heal WIRING fires (position → wounded ally → HealAction). Which seed
+    // The heal WIRING fires (position → wounded ally → the heal EffectAction). Which seed
     // triggers a heal shifts with combat tuning (I6's weapon `might` changes how
     // much chip the line takes before someone mends it), so assert "at least one
     // seed" rather than pinning every seed — the wiring is what this smoke proves.

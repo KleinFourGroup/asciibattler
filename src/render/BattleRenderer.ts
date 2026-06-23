@@ -14,9 +14,13 @@ import { SpriteAnimator } from './animation/SpriteAnimator';
 import { TICK_RATE, ticksToSeconds } from '../config';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
 import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
-import { MAGIC_BOLT_ACTION_ID } from '../sim/actions/MagicBoltAction';
-import { CATAPULT_SHOT_ACTION_ID } from '../sim/actions/CatapultShotAction';
 import { SPAWN } from '../config/spawn';
+
+// Y5c — the legacy MagicBolt/CatapultShot action classes are gone; their
+// `action:phase` events now carry the AbilityDef id (== the old action id by the
+// migration's construction). The release-FX dispatch matches those def ids.
+const MAGIC_BOLT_DEF_ID = 'magic_bolt';
+const CATAPULT_SHOT_DEF_ID = 'catapult_shot';
 
 /**
  * The simulation/render seam. Subscribes to sim events and turns them into
@@ -673,7 +677,7 @@ export class BattleRenderer {
     targetCell,
   }: GameEvents['action:phase']): void => {
     if (phase !== 'release') return;
-    if (actionId !== MAGIC_BOLT_ACTION_ID && actionId !== CATAPULT_SHOT_ACTION_ID) return;
+    if (actionId !== MAGIC_BOLT_DEF_ID && actionId !== CATAPULT_SHOT_DEF_ID) return;
     if (!this.world) return;
     const caster = this.world.findUnit(unitId);
     if (!caster) return;
@@ -688,7 +692,7 @@ export class BattleRenderer {
       this.tileWorldPos(caster.position)
     ).clone();
 
-    if (actionId === MAGIC_BOLT_ACTION_ID) {
+    if (actionId === MAGIC_BOLT_DEF_ID) {
       // Ground-targeted: fly straight to the captured blast cell. The explosion
       // detonates there on `magic:detonated` (impact), so no onArrive VFX here.
       if (!targetCell) return;

@@ -9,7 +9,7 @@ import type { BattleEncounter } from '../../src/run/Run';
 
 /**
  * E7.D — integration smoke for the catapult in a FULL tick loop (selector →
- * MovementBehavior / AbilityBehavior → CatapultShotAction wind-up →
+ * MovementBehavior / AbilityBehavior → the catapult-shot EffectAction wind-up →
  * applyEffect impact → World events). The unit-level tests pin the single-hit
  * mechanic + propose path in isolation; this proves a catapult spawned
  * through the real wiring (`abilityIdsForArchetype('catapult')` →

@@ -357,9 +357,9 @@ describe('A2 round-trip: World', () => {
   });
 
   it('F6: round-trips the utility-contribution (healing) ledger', () => {
-    // The ledger is action-fed (HealAction → recordHealing); here we credit
-    // it directly to exercise the *serialization* in isolation (HealAction's
-    // own crediting is pinned in HealAction.test.ts). Without round-tripping
+    // The ledger is action-fed (the heal op → recordHealing); here we credit
+    // it directly to exercise the *serialization* in isolation (the heal op's
+    // own crediting is pinned in effects/interpreter.test.ts). Without round-tripping
     // this, a mid-battle restore would award the healer less heal-XP than the
     // un-roundtripped baseline — same contract that v9 added for damageDealt.
     const { world } = freshBattle(54321);
@@ -515,8 +515,8 @@ describe('A2 round-trip: World', () => {
     // Y3 migrated gambit_strike + dash to EffectAbility, but their AbilityDef ids
     // EQUAL the legacy GAMBIT_STRIKE_ACTION_ID / DASH_ACTION_ID. Until Y4 dropped
     // those colliding action-factory entries, a mid-action snapshot rehydrated the
-    // EffectAction's data through GambitStrikeAction/DashAction.fromData and
-    // mis-decoded it (the data shapes differ entirely). Prove the round-trip now
+    // EffectAction's data through the legacy GambitStrikeAction/DashAction.fromData
+    // (deleted in Y5c) and mis-decoded it (the data shapes differ entirely). Prove the round-trip now
     // routes to the generic EffectAction and the restored world continues
     // event-for-event identically. (Magic/catapult get the same guarantee from
     // the E7.C/E7.D cases once Y4a/b switch them to the production createAbility path.)

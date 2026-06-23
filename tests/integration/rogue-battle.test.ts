@@ -9,19 +9,19 @@ import type { BattleEncounter } from '../../src/run/Run';
 
 /**
  * E7.A — integration smoke for the rogue in a FULL tick loop (selector →
- * AbilityBehavior → GambitStrikeAction → World events). The unit-level
- * GambitStrikeAction.test.ts pins the strike + reposition mechanic in
- * isolation; this proves a rogue spawned through the real ability-wiring
- * path (`abilityIdsForArchetype('rogue')` → `createAbility('gambit_strike')`)
+ * AbilityBehavior → the gambit EffectAction → World events). The data-driven
+ * effects/EffectAction.test.ts pins the strike + reposition firing in isolation;
+ * this proves a rogue spawned through the real ability-wiring path
+ * (`abilityIdsForArchetype('rogue')` → `createAbility('gambit_strike')`)
  * engages and the battle resolves without hanging or throwing — the thing a
  * playtest build needs to not crash on `?roster=rogue,...`.
  *
  * N1 — the rogue now also carries the `dash` (`createAbility('dash')`), so this
  * additionally proves the gap-closer fires end-to-end through the selector via
- * the first-class `unit:dashed` event (a `DashAction` emits it on the leap). The
- * DashAbility.test.ts pins the propose logic + DashAction.test.ts the event in
- * isolation; here we confirm AbilityBehavior actually PICKS the dash (score 5)
- * over a walk (1) when the rogue is out of strike range at the start.
+ * the first-class `unit:dashed` event (the move op emits it on the leap). The
+ * propose-bridge gates (effects/propose.test.ts) + EffectAction firing pin the
+ * dash in isolation; here we confirm AbilityBehavior actually PICKS the dash
+ * (score 5) over a walk (1) when the rogue is out of strike range at the start.
  */
 
 const TICK_CAP = 2000;

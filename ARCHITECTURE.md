@@ -112,16 +112,11 @@ src/
     proceduralMap.ts         # M6: crossbar+divider+noise map generator + sampleProceduralParams (config→params)
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter
-    actions/
+    actions/                 # Non-verb actions only — every combat verb is now the data-driven effects/EffectAction (Y5c retired the hand-coded AttackAction/Heal/MagicBolt/Catapult/Gambit/Dash classes)
       MoveAction.ts          # Logical position update + unit:moved event
-      DashAction.ts          # N1: the rogue dash leap — emits unit:moved (slide) + unit:dashed (cue)
-      AttackAction.ts        # E1/E4: crit roll (world.combatRng) + half-cover mult → world.applyDamage (GP2 chokepoint)
-      GambitStrikeAction.ts  # E7.A: rogue strike — AttackAction damage + deferred reposition (F4)
-      HealAction.ts          # E7.B: HP restore (clamped) + heal-XP ledger (F6) → unit:healed
-      MagicBoltAction.ts     # E7.C: multi-tick ground-target 3x3 AoE
-      CatapultShotAction.ts  # E7.D: multi-tick homing heavy hit (lobs over walls)
       SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns
-      registry.ts            # Action factories keyed by Action.id (A2)
+      SwapAction.ts          # GP5: healer chokepoint yield — two units trade cells
+      registry.ts            # Action factories keyed by Action.id (move/spawn/swap); every other id falls through to EffectAction.fromData (A2/Y5c)
     abilities/               # E2: generic Ability layer (retired AttackBehavior)
       Ability.ts             # Ability interface + propose() + ignoresLineOfSight flag (E7.D)
       registry.ts            # Ability factories; routes every id to EffectAbility (Y3–Y4 migration complete; the hand-coded classes retired in Y5)
@@ -135,7 +130,7 @@ src/
       schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types
       timeline.ts            #   Y1: seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase
       targeting.ts           #   Y2: unitsInCells (the Cluster-2 footprint seam) + aoe victim resolution + the affects filter
-      reposition.ts          #   Y2: retreatCell — the caster-reposition primitive (shared with the legacy GambitStrikeAction)
+      reposition.ts          #   Y2: retreatCell — the caster-reposition primitive (the gambit's move-retreat op, via interpreter executeMove)
       interpreter.ts         #   Y2: executeOp — the switch over op.kind (damage/heal/move; reserved arms throw)
       EffectAction.ts        #   Y2: the single generic Action that fires a def's effects over the F2 timeline (start/applyEffect)
       propose.ts             #   Y3: the propose-time bridge — AbilityDef + caster → EffectAction + ActionProposal (cast-time scalar capture)

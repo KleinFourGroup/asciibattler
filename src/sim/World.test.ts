@@ -4,7 +4,10 @@ import { Unit, type Team, type UnitStats } from './Unit';
 import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { createAbility } from './abilities/registry';
-import { AttackAction } from './actions/AttackAction';
+import { EffectAction } from './effects/EffectAction';
+import { parseAbilityDef } from './effects/schema';
+import { resolvePhases } from './effects/timeline';
+import { totalTicks } from './Action';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { rollUnit } from './archetypes';
@@ -673,12 +676,13 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
   });
 
   it('rolls crit BEFORE the to-hit miss (combatRng order: crit → miss)', () => {
-    // The crit is drawn in AttackAction.start, the miss in applyDamage — so the
-    // stream order is crit, then miss. Find a seed where the two draws straddle
-    // the crit threshold AND the second draw is a HIT, so the crit flag is
-    // observable and DIFFERS from what a reversed (miss-first) order would give.
+    // The crit is drawn by the strike's damage op (EffectAction → executeDamage),
+    // the miss in applyDamage — so the stream order is crit, then miss. Find a
+    // seed where the two draws straddle the crit threshold AND the second draw is
+    // a HIT, so the crit flag is observable and DIFFERS from what a reversed
+    // (miss-first) order would give.
     const critChance = 0.4;
-    const hitChance = hitChanceFor(0.6, 5, 5); // 0.6, mid-band (AttackAction's default accuracy)
+    const hitChance = hitChanceFor(0.6, 5, 5); // 0.6, mid-band (the strike op's accuracy)
     let seed = -1;
     let expectedCrit = false;
     for (let s = 1; s < 1_000_000; s++) {
@@ -699,7 +703,19 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
       combatSeed: seed,
     });
     const before = world.combatRng.toJSON().state;
-    new AttackAction(target, 10, critChance).start(attacker, world);
+    // Y5c — the migrated strike: a single-target damage op (evadable, accuracy
+    // 0.6) fires in EffectAction.start → executeDamage, which draws crit then
+    // calls applyDamage (the miss roll) — the crit→miss order AttackAction had.
+    const strikeDef = parseAbilityDef({
+      id: 'sword', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
+      timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
+      orphanPolicy: 'commit-at-cast', priority: 10,
+      effects: [{ phase: 'impact', op: { kind: 'damage', scaling: 'strength', might: 0, accuracy: 0.6, critBase: 0, critable: true, evadable: true, bypassDefense: false } }],
+    });
+    const strike = new EffectAction(strikeDef, { targetId: target.id, ops: [{ baseDamage: 10, critChance }] });
+    const strikePhases = resolvePhases(strikeDef, 0);
+    attacker.activeAction = { action: strike, startTick: 0, finishTick: totalTicks(strikePhases), phases: strikePhases };
+    strike.start(attacker, world);
 
     // Exactly two draws consumed (crit + miss), in that order.
     const sib = RNG.fromJSON({ state: before });

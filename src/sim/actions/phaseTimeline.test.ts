@@ -7,13 +7,6 @@ import { RNG } from '../../core/RNG';
 import { deriveStats } from '../stats';
 import { ARCHETYPE_CONFIG } from '../archetypes';
 import type { GameEvents } from '../../core/events';
-import { AttackAction } from './AttackAction';
-import { GambitStrikeAction } from './GambitStrikeAction';
-import { HealAction } from './HealAction';
-import { MagicBoltAction } from './MagicBoltAction';
-import { CatapultShotAction } from './CatapultShotAction';
-import { MoveAction } from './MoveAction';
-import { SpawnAction } from './SpawnAction';
 
 /**
  * F2 — the action phase-timeline machinery (the NEW behavior the
@@ -210,28 +203,8 @@ describe('F2 action phase timeline', () => {
   });
 });
 
-describe('F2 orphan policy declarations', () => {
-  it('each action class declares its intrinsic orphan policy', () => {
-    expect(new AttackAction(undefined, 0, 0).orphanPolicy).toBe('commit-at-cast');
-    expect(new GambitStrikeAction(undefined, 0, 0).orphanPolicy).toBe('commit-at-cast');
-    expect(new HealAction(undefined, 0).orphanPolicy).toBe('commit-at-cast');
-    expect(new MagicBoltAction({ x: 0, y: 0 }, 0, 0, 1, 0.5).orphanPolicy).toBe('ground-target');
-    expect(new CatapultShotAction(undefined, 0, 0, { x: 0, y: 0 }).orphanPolicy).toBe('fizzle');
-    // Move / spawn have no target to orphan — no declared policy. Typed as
-    // `Action` to read the optional member the concrete classes don't declare.
-    const move: Action = new MoveAction({ x: 0, y: 0 }, { x: 1, y: 0 }, 1);
-    const spawn: Action = new SpawnAction();
-    expect(move.orphanPolicy).toBeUndefined();
-    expect(spawn.orphanPolicy).toBeUndefined();
-  });
-
-  it('phaseTarget surfaces the right target info per action', () => {
-    // The ground-target mage surfaces its blast cell; move surfaces nothing
-    // (no `phaseTarget` method at all).
-    expect(new MagicBoltAction({ x: 3, y: 4 }, 0, 0, 1, 0.5).phaseTarget()).toEqual({
-      targetCell: { x: 3, y: 4 },
-    });
-    const move: Action = new MoveAction({ x: 0, y: 0 }, { x: 1, y: 0 }, 1);
-    expect(move.phaseTarget).toBeUndefined();
-  });
-});
+// Y5c — the per-verb `orphanPolicy` + `phaseTarget` declarations moved off the
+// deleted legacy action classes: orphanPolicy now lives on each AbilityDef
+// (config) and is surfaced by EffectAction; phaseTarget per verb-shape is pinned
+// in effects/EffectAction.test.ts ("EffectAction.phaseTarget — per-verb renderer
+// info"). The class-agnostic phase-SCHEDULE machinery above is what this file owns.

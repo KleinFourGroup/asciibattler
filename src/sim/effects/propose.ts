@@ -116,7 +116,11 @@ function proposeSingleTargetAttack(
   const damageMultiplier = behindCover ? LEVELING.halfCoverDamageMult : 1;
 
   const speed = unit.effectiveStats.speed;
-  const ops = def.effects.map((e) => resolveOp(e.op, unit, damageMultiplier));
+  // `retreatAnchor` = the struck cell, for a gambit's `move`-retreat op (the
+  // strike effects ignore it). A copy is taken inside `resolveOp`.
+  const ops = def.effects.map((e) =>
+    resolveOp(e.op, { unit, damageMultiplier, retreatAnchor: target.position }),
+  );
 
   return {
     action: new EffectAction(def, { targetId: target.id, targetCell: undefined, ops }),
@@ -144,7 +148,7 @@ function proposeHeal(
 
   const speed = unit.effectiveStats.speed;
   // A heal has no half-cover multiplier; pass 1 (the heal op ignores it anyway).
-  const ops = def.effects.map((e) => resolveOp(e.op, unit, 1));
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit, damageMultiplier: 1 }));
 
   return {
     action: new EffectAction(def, { targetId: target.id, targetCell: undefined, ops }),
@@ -155,26 +159,45 @@ function proposeHeal(
   };
 }
 
+/** Per-op cast-time inputs an `EffectOp` may need, assembled by the caller. */
+interface OpResolveContext {
+  unit: Unit;
+  /** single-target half-cover damage multiplier (default 1). */
+  damageMultiplier: number;
+  /** `move` retreat (the gambit): the cell to dart AWAY from (the struck target's
+   *  position at cast — `struckFrom`). */
+  retreatAnchor?: GridCoord;
+}
+
 /**
- * Compute one op's cast-time scalars. The `damageMultiplier` (half-cover) is a
- * single-target concern threaded in by the caller; the heal / aoe paths pass 1.
+ * Compute one op's cast-time scalars — the values the legacy actions resolved at
+ * propose time and carried inertly to impact.
  */
-function resolveOp(op: EffectOp, unit: Unit, damageMultiplier: number): OpResolution {
+function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
   switch (op.kind) {
     case 'damage': {
-      const baseDamage = op.might + scalingStatValue(op.scaling, unit.effectiveStats);
+      const baseDamage = op.might + scalingStatValue(op.scaling, c.unit.effectiveStats);
       const critChance = op.critable
-        ? critChanceFor(op.critBase, unit.effectiveStats.luck)
+        ? critChanceFor(op.critBase, c.unit.effectiveStats.luck)
         : 0;
-      return { baseDamage, critChance, damageMultiplier };
+      return { baseDamage, critChance, damageMultiplier: c.damageMultiplier };
     }
     case 'heal': {
       // I6 — heal amount is `might + magic` (mirrors `healAmountFor`). `none`
       // scaling = flat `might`; the heal op never rolls to-hit or crit.
-      const healAmount = op.might + scalingStatValue(op.scaling, unit.effectiveStats);
+      const healAmount = op.might + scalingStatValue(op.scaling, c.unit.effectiveStats);
       return { healAmount };
     }
-    // `move` resolutions land with the gambit / dash in later commits.
+    case 'move': {
+      // retreat (the gambit dart-back): the anchor is the struck cell, captured
+      // at cast (`GambitStrikeAction.struckFrom`); the interpreter steps AWAY
+      // from it via `retreatCell`. `advance` (the dash) lands in the next commit.
+      if (op.mode === 'retreat') {
+        return c.retreatAnchor ? { moveDest: { ...c.retreatAnchor } } : {};
+      }
+      throw new Error(`EffectAbility: move mode '${op.mode}' not yet resolvable at propose time`);
+    }
+    // `applyStatus` is reserved until Phase 29 (status-on-hit).
     default:
       throw new Error(`EffectAbility: op '${op.kind}' not yet resolvable at propose time`);
   }

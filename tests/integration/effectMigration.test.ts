@@ -30,7 +30,7 @@ import type { Ability } from '../../src/sim/abilities/Ability';
 import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
 import { SupportMovementBehavior } from '../../src/sim/behaviors/SupportMovementBehavior';
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
-import { MeleeStrike, RangedShot } from '../../src/sim/abilities/strikes';
+import { MeleeStrike, RangedShot, GambitStrike } from '../../src/sim/abilities/strikes';
 import { HealAlly } from '../../src/sim/abilities/heal';
 import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAbility } from '../../src/sim/effects/EffectAbility';
@@ -266,6 +266,17 @@ describe('Phase Y3 — effect-migration oracle', () => {
       healSpawn(() => new HealAlly()),
       healSpawn(() => new EffectAbility(abilityDef('heal_ally'))),
       'unit:healed',
+    );
+  });
+
+  it('gambit strike → EffectAbility is byte-identical to GambitStrike', () => {
+    // The multi-phase verb: damage@windup + retreat@impact. A rogue-vs-rogue
+    // kite exercises both the strike and the deferred dart-back; full-trace
+    // equality proves the retreat lands identically.
+    assertEquivalent(
+      symmetricSpawn('rogue', () => [new GambitStrike()]),
+      symmetricSpawn('rogue', () => [new EffectAbility(abilityDef('gambit_strike'))]),
+      'unit:attacked',
     );
   });
 });

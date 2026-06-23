@@ -152,5 +152,37 @@
         "op": { "kind": "heal", "scaling": "magic", "might": 0 }
       }
     ]
+  },
+  "gambit_strike": {
+    "id": "gambit_strike",
+    "cooldownSeconds": 1.2,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "windup", "seconds": 0.25 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "windup",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 1,
+          "accuracy": 0.85,
+          "critBase": 0.1,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "move", "mode": "retreat", "cells": 1 }
+      }
+    ]
   }
 }

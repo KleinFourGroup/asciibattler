@@ -326,7 +326,16 @@ arm with no consumer, exactly like F2's `re-home`), **implementation deferred to
 Cluster 2** so the occupancy/collision core is touched once, in the round built to
 harden it. No `move` work lands in §29.
 
-### Y3 — Migrate the FX-natural attacks (the oracle proof)
+### Y3 — Migrate the FX-natural attacks (the oracle proof) ✅ DONE
+
+> **Shipped** (`affe68d`→`9ba9588`): MeleeStrike (sword/club/katana/whip) →
+> RangedShot (bow) → HealAlly → GambitStrike → Dash, each its own commit,
+> oracle-proven byte-identical. The propose bridge ([propose.ts](src/sim/effects/propose.ts)),
+> the generic [EffectAbility](src/sim/effects/EffectAbility.ts), and the
+> equivalence oracle ([effectMigration.test.ts](tests/integration/effectMigration.test.ts))
+> all landed here. The gambit confirmed `damage@windup` + `move-retreat@impact`;
+> the dash's selector settled as `self`. No snapshot bump (Y5). 1276 main green.
+> **NEXT = Y4.**
 
 **Shape:** express **MeleeStrike** as an `AttackDef` (`effects:[{impact,
 damage(bypassDefense:false)}]`) and let the determinism test be the equivalence

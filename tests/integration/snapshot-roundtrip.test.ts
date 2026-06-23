@@ -19,8 +19,6 @@ import { Unit, type Team } from '../../src/sim/Unit';
 import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
 import { SupportMovementBehavior } from '../../src/sim/behaviors/SupportMovementBehavior';
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
-import { MeleeStrike } from '../../src/sim/abilities/strikes';
-import { HealAlly } from '../../src/sim/abilities/heal';
 import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAction } from '../../src/sim/effects/EffectAction';
 import { rollUnit } from '../../src/sim/archetypes';
@@ -387,7 +385,9 @@ describe('A2 round-trip: World', () => {
     const world = new World(bus, new RNG(777));
     const healer = world.spawnUnit(rollUnit('healer', new RNG(1)), 'player', { x: 5, y: 5 });
     healer.behaviors.push(new SupportMovementBehavior(), new AbilityBehavior());
-    healer.abilities.push(new HealAlly());
+    // Y5 — production createAbility path (EffectAbility); the in-flight action is
+    // now the EffectAction id 'heal_ally', not the legacy HealAction id 'heal'.
+    healer.abilities.push(createAbility('heal_ally'));
     const ally = world.spawnUnit(rollUnit('mercenary', new RNG(2)), 'player', { x: 5, y: 6 });
     ally.currentHp = 1; // wounded, stays below maxHp after one heal
     world.spawnUnit(rollUnit('mercenary', new RNG(3)), 'enemy', { x: 11, y: 11 });
@@ -395,7 +395,7 @@ describe('A2 round-trip: World', () => {
     let cast = false;
     for (let i = 0; i < 200 && !cast; i++) {
       world.tick();
-      if (world.findUnit(healer.id)?.activeAction?.action.id === 'heal') cast = true;
+      if (world.findUnit(healer.id)?.activeAction?.action.id === 'heal_ally') cast = true;
     }
     expect(cast, 'healer should cast a heal within the window').toBe(true);
 
@@ -406,7 +406,7 @@ describe('A2 round-trip: World', () => {
 
     expect(restoredHealer.behaviors.map((b) => b.kind)).toEqual(['support_movement', 'ability']);
     expect(restoredHealer.abilities.map((a) => a.id)).toEqual(['heal_ally']);
-    expect(restoredHealer.activeAction?.action.id).toBe('heal');
+    expect(restoredHealer.activeAction?.action.id).toBe('heal_ally');
     expect(restoredHealer.activeAction?.startTick).toBe(live.activeAction?.startTick);
     expect(restoredHealer.activeAction?.finishTick).toBe(live.activeAction?.finishTick);
   });
@@ -801,12 +801,12 @@ function freshBattle(seed: number): {
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'player', { x, y: 2 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike('sword'));
+    u.abilities.push(createAbility('sword'));
   }
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'enemy', { x, y: 9 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike('sword'));
+    u.abilities.push(createAbility('sword'));
   }
 
   return { world, events };

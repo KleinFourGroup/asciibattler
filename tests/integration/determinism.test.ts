@@ -18,7 +18,7 @@ import { World } from '../../src/sim/World';
 import { Unit, type Team, type UnitStats } from '../../src/sim/Unit';
 import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
-import { MeleeStrike } from '../../src/sim/abilities/strikes';
+import { createAbility } from '../../src/sim/abilities/registry';
 import { rollUnit } from '../../src/sim/archetypes';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
@@ -228,12 +228,12 @@ function runBattle(
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'player', { x, y: 2 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike('sword'));
+    u.abilities.push(createAbility('sword'));
   }
   for (const x of COLUMNS) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'enemy', { x, y: 9 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike('sword'));
+    u.abilities.push(createAbility('sword'));
   }
 
   for (let i = 0; i < maxTicks && !world.ended; i++) world.tick();

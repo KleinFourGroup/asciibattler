@@ -3,7 +3,7 @@ import { World } from './World';
 import { Unit, type Team, type UnitStats } from './Unit';
 import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
-import { MeleeStrike } from './abilities/strikes';
+import { createAbility } from './abilities/registry';
 import { AttackAction } from './actions/AttackAction';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
@@ -1054,7 +1054,7 @@ function scene(specs: DeathSceneUnit[]): {
       if (b === 'movement') u.behaviors.push(new MovementBehavior());
       else if (b === 'attack') {
         u.behaviors.push(new AbilityBehavior());
-        u.abilities.push(new MeleeStrike('sword'));
+        u.abilities.push(createAbility('sword'));
       }
     }
     world.units.push(u);

@@ -6,7 +6,7 @@ import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { spawnHalfCover, spawnWall } from '../environment';
 import { ARCHETYPE_CONFIG } from '../archetypes';
-import { MeleeStrike, RangedShot } from '../abilities/strikes';
+import { createAbility } from '../abilities/registry';
 import type { Ability } from '../abilities/Ability';
 import type { ActionProposal } from '../Action';
 import type { GameEvents } from '../../core/events';
@@ -338,7 +338,7 @@ function scene(specs: SceneUnit[]): {
     if (s.hp !== undefined) u.currentHp = s.hp;
     if (!s.inert) {
       u.behaviors.push(new AbilityBehavior());
-      u.abilities.push(archetype === 'mercenary' ? new MeleeStrike('sword') : new RangedShot());
+      u.abilities.push(archetype === 'mercenary' ? createAbility('sword') : createAbility('bow'));
     }
     return u;
   });

@@ -3,7 +3,7 @@ import { World } from '../World';
 import { Unit, type Team, type UnitStats } from '../Unit';
 import { MovementBehavior } from './MovementBehavior';
 import { AbilityBehavior } from './AbilityBehavior';
-import { MeleeStrike } from '../abilities/strikes';
+import { createAbility } from '../abilities/registry';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, attackCooldownTicksFor } from '../stats';
@@ -172,7 +172,7 @@ function scene(specs: SceneUnit[]): {
     if (s.hp !== undefined) u.currentHp = s.hp;
     if (s.behaviors === 'all') {
       u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-      u.abilities.push(new MeleeStrike('sword'));
+      u.abilities.push(createAbility('sword'));
     }
     world.units.push(u);
     return u;

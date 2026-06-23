@@ -124,12 +124,7 @@ src/
       registry.ts            # Action factories keyed by Action.id (A2)
     abilities/               # E2: generic Ability layer (retired AttackBehavior)
       Ability.ts             # Ability interface + propose() + ignoresLineOfSight flag (E7.D)
-      strikes.ts             # MeleeStrike / RangedShot / gambit via shared proposeBasicStrike
-      heal.ts                # E7.B: HealAlly — lowest-HP wounded ally in range, no LOS
-      magic.ts               # E7.C: MagicBolt — AoE ground-target
-      catapult.ts            # E7.D: CatapultShot — homing, ignores LOS
-      dash.ts                # N1: DashAbility — aggressive-close gap-closer (movement-kind)
-      registry.ts            # Ability factories; boot-asserts the id-set matches abilities.json (E5)
+      registry.ts            # Ability factories; routes every id to EffectAbility (Y3–Y4 migration complete; the hand-coded classes retired in Y5)
     behaviors/
       MovementBehavior.ts    # J2: thin goal-selector → MovementIntent + advance (movement.ts); boids sidestep (E5.B)
                              # splits neutrals into pathBlockers + losBlockers (D6); LOS-optional abstain (E7.D)

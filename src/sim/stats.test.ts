@@ -21,7 +21,7 @@ import { EventBus } from '../core/EventBus';
 import { World } from './World';
 import { Unit, type UnitStats } from './Unit';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
-import { MeleeStrike } from './abilities/strikes';
+import { createAbility } from './abilities/registry';
 import {
   ZERO_STATS,
   basicAttackDamage,
@@ -327,7 +327,7 @@ describe('combatRng determinism', () => {
         position: { x: 0, y: 0 },
       });
       attacker.behaviors.push(new AbilityBehavior());
-      attacker.abilities.push(new MeleeStrike('sword'));
+      attacker.abilities.push(createAbility('sword'));
 
       // Target: huge HP so it doesn't die before the trace finishes.
       const targetStats: UnitStats = { ...TEMPLATE, constitution: 99 };
@@ -367,7 +367,7 @@ describe('combatRng determinism', () => {
         stats, derived, position: { x: 0, y: 0 },
       });
       a.behaviors.push(new AbilityBehavior());
-      a.abilities.push(new MeleeStrike('sword'));
+      a.abilities.push(createAbility('sword'));
       const t = new Unit({
         id: 2, team: 'enemy', archetype: 'mercenary', glyph: 'M',
         stats, derived, position: { x: 1, y: 0 },

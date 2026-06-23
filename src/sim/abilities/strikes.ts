@@ -5,7 +5,7 @@ import type { ActionPhase, ActionProposal, Action } from '../Action';
 import { secondsToTicks } from '../../config';
 import { AttackAction } from '../actions/AttackAction';
 import { GambitStrikeAction } from '../actions/GambitStrikeAction';
-import { currentTarget, collectLosBlockers } from '../Targeting';
+import { currentTarget, collectLosBlockers, collectHalfCoverPositions } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
 import { basicAttackDamage, attackCooldownTicksFor, critChanceFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
@@ -189,19 +189,6 @@ export class GambitStrike implements Ability {
   propose(unit: Unit, world: World): ActionProposal | null {
     return proposeBasicStrike(unit, world, this.id, gambitActionFactory);
   }
-}
-
-/**
- * E4 — half-cover positions: neutral units whose `blocksLineOfSight` is
- * `false`. Symmetric to `collectLosBlockers` but for the OTHER half of
- * the neutral-team population.
- */
-function collectHalfCoverPositions(world: World): GridCoord[] {
-  const out: GridCoord[] = [];
-  for (const u of world.units) {
-    if (u.team === 'neutral' && !u.blocksLineOfSight) out.push(u.position);
-  }
-  return out;
 }
 
 function chebyshev(a: GridCoord, b: GridCoord): number {

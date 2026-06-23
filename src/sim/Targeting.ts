@@ -399,6 +399,21 @@ export function collectLosBlockers(world: World): GridCoord[] {
   return blockers;
 }
 
+/**
+ * E4 — half-cover positions: neutral units whose `blocksLineOfSight` is `false`.
+ * Symmetric to `collectLosBlockers` but for the OTHER half of the neutral-team
+ * population. A shot that crosses one lands at `LEVELING.halfCoverDamageMult`.
+ * Lives here (the LOS-collector home) so both the legacy strike propose path and
+ * the Phase-Y3 `EffectAbility` propose bridge share one definition.
+ */
+export function collectHalfCoverPositions(world: World): GridCoord[] {
+  const out: GridCoord[] = [];
+  for (const u of world.units) {
+    if (u.team === 'neutral' && !u.blocksLineOfSight) out.push(u.position);
+  }
+  return out;
+}
+
 function chebyshev(a: GridCoord, b: GridCoord): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }

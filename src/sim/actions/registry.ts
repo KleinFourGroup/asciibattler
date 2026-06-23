@@ -21,6 +21,8 @@ import {
 } from './CatapultShotAction';
 import { SWAP_ACTION_ID, SwapAction, type SwapActionData } from './SwapAction';
 import { DASH_ACTION_ID, DashAction, type DashActionData } from './DashAction';
+import { EffectAction, type EffectActionData } from '../effects/EffectAction';
+import { abilityDef } from '../../config/abilityDefs';
 
 /**
  * Action factories keyed by `Action.id`. `World.fromJSON` uses these to
@@ -50,8 +52,10 @@ const FACTORIES: Record<string, ActionFactory> = {
 
 export function createAction(id: string, data: unknown, world: World): Action {
   const factory = FACTORIES[id];
-  if (!factory) {
-    throw new Error(`createAction: no factory registered for action id '${id}'`);
-  }
-  return factory(data, world);
+  if (factory) return factory(data, world);
+  // Phase Y3 — a non-legacy id is a migrated `EffectAction`, whose `Action.id`
+  // is its `AbilityDef` id (e.g. 'sword'), not one of the per-class ids above.
+  // Re-resolve the def and rehydrate the captured cast-time context. `abilityDef`
+  // throws on a genuinely unknown id, so a corrupt snapshot still fails loudly.
+  return EffectAction.fromData(data as EffectActionData, world, abilityDef(id));
 }

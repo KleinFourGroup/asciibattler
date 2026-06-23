@@ -13,25 +13,31 @@ import { describe, it, expect } from 'vitest';
 import { World } from '../../src/sim/World';
 import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
-import { MeleeStrike } from '../../src/sim/abilities/strikes';
+import { createAbility } from '../../src/sim/abilities/registry';
 import { rollUnit } from '../../src/sim/archetypes';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import type { GameEvents } from '../../src/core/events';
 
-/** A small symmetric melee battle: 3 player units at y=1, 3 enemies at y=10. */
+/**
+ * A small symmetric melee battle: 3 player units at y=1, 3 enemies at y=10.
+ * Abilities are built via the production registry (`createAbility`) — the same
+ * path `World.fromJSON` rehydrates through — so the mid-battle snapshot tests
+ * compare one implementation against itself (Phase Y3: 'sword' resolves to the
+ * data-driven `EffectAbility`, not the legacy `MeleeStrike`).
+ */
 function battle(seed: number): World {
   const world = new World(new EventBus<GameEvents>(), new RNG(seed));
   const cols = [2, 4, 6];
   for (const x of cols) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'player', { x, y: 1 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike('sword'));
+    u.abilities.push(createAbility('sword'));
   }
   for (const x of cols) {
     const u = world.spawnUnit(rollUnit('mercenary', world.rng), 'enemy', { x, y: 10 });
     u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(new MeleeStrike('sword'));
+    u.abilities.push(createAbility('sword'));
   }
   return world;
 }

@@ -1,1 +1,110 @@
-{}
+{
+  "sword": {
+    "id": "sword",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 5,
+          "accuracy": 0.6,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ]
+  },
+  "club": {
+    "id": "club",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 2,
+          "accuracy": 0.4,
+          "critBase": 0,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ]
+  },
+  "katana": {
+    "id": "katana",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 4,
+          "accuracy": 0.6,
+          "critBase": 0.2,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ]
+  },
+  "whip": {
+    "id": "whip",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 3,
+          "accuracy": 0.7,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ]
+  }
+}

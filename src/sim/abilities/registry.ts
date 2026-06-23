@@ -1,10 +1,12 @@
 import type { Ability } from './Ability';
-import { MeleeStrike, RangedShot, GambitStrike } from './strikes';
+import { RangedShot, GambitStrike } from './strikes';
 import { HealAlly } from './heal';
 import { MagicBolt } from './magic';
 import { CatapultShot } from './catapult';
 import { DashAbility } from './dash';
 import { ABILITIES } from '../../config/abilities';
+import { EffectAbility } from '../effects/EffectAbility';
+import { abilityDef } from '../../config/abilityDefs';
 
 /**
  * Ability factories keyed by `Ability.id`. `World.fromJSON` uses these
@@ -20,12 +22,22 @@ import { ABILITIES } from '../../config/abilities';
  */
 export type AbilityFactory = () => Ability;
 
-// I6 — the four melee subclasses share the one `MeleeStrike` behavior but each
-// carries a distinct weapon id (its `config/abilities.json` profile differs).
+// I6 — the four melee subclasses each carry a distinct weapon id (their
+// `config/abilities.json` profile differs).
 const MELEE_WEAPON_IDS = ['sword', 'club', 'katana', 'whip'] as const;
 
+// Phase Y3 — ids whose hand-coded ability class has been strangler-migrated to
+// the data-driven `EffectAbility` (its `AbilityDef` lives in
+// `config/abilityDefs.json`, proven byte-identical against the determinism
+// oracle). `createAbility(id)` routes these to `new EffectAbility(abilityDef(id))`
+// instead of the legacy class; the now-unreferenced classes stay registered-
+// nowhere until Y5 deletes the lot. Grows one verb per commit (melee first).
+const MIGRATED_ABILITY_IDS = [...MELEE_WEAPON_IDS] as const;
+
 const FACTORIES: Record<string, AbilityFactory> = {
-  ...Object.fromEntries(MELEE_WEAPON_IDS.map((id) => [id, () => new MeleeStrike(id)])),
+  ...Object.fromEntries(
+    MIGRATED_ABILITY_IDS.map((id) => [id, () => new EffectAbility(abilityDef(id))]),
+  ),
   [RangedShot.id]: () => new RangedShot(),
   [GambitStrike.id]: () => new GambitStrike(),
   [HealAlly.id]: () => new HealAlly(),
@@ -62,6 +74,10 @@ const FACTORIES: Record<string, AbilityFactory> = {
       `config/abilities.json: entry for unregistered ability id ${orphanConfig.join(', ')}`,
     );
   }
+  // Phase Y3 — every migrated id must resolve an `AbilityDef` in
+  // config/abilityDefs.json. `abilityDef` throws if absent, so a verb added to
+  // `MIGRATED_ABILITY_IDS` without its def fails at boot, not at the first spawn.
+  for (const id of MIGRATED_ABILITY_IDS) abilityDef(id);
 })();
 
 export function createAbility(id: string): Ability {

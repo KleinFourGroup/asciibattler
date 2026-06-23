@@ -22,7 +22,12 @@
 import type { Unit, UnitStats } from '../Unit';
 import type { World } from '../World';
 import type { ActionProposal } from '../Action';
-import { collectLosBlockers, collectHalfCoverPositions, currentTarget } from '../Targeting';
+import {
+  collectLosBlockers,
+  collectHalfCoverPositions,
+  currentTarget,
+  lowestWoundedAlly,
+} from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
 import { critChanceFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
@@ -68,8 +73,10 @@ export function proposeEffectAbility(
   switch (def.target.kind) {
     case 'enemyInRange':
       return proposeSingleTargetAttack(def, unit, world);
-    // `lowestHpAlly` (heal), `aoe` (magic), `self` (dash) migrate in later
-    // Y3/Y4 commits; the legacy class stays authoritative until then.
+    case 'lowestHpAlly':
+      return proposeHeal(def, def.target.rangeCells, unit, world);
+    // `aoe` (magic), `self` (dash) migrate in later Y3/Y4 commits; the legacy
+    // class stays authoritative until then.
     default:
       throw new Error(
         `EffectAbility '${def.id}': target selector '${def.target.kind}' not yet migrated`,
@@ -121,8 +128,36 @@ function proposeSingleTargetAttack(
 }
 
 /**
+ * The healer's pick (the `lowestHpAlly` selector). A line-for-line port of
+ * `HealAlly.propose`: the lowest-HP wounded ally within `rangeCells` (self
+ * included), the heal amount captured at cast, and the strike-shaped proposal
+ * (score, speed-scaled cadence). No LOS / half-cover gate — a heal isn't a shot.
+ */
+function proposeHeal(
+  def: AbilityDef,
+  rangeCells: number,
+  unit: Unit,
+  world: World,
+): ActionProposal | null {
+  const target = lowestWoundedAlly(unit, world, rangeCells);
+  if (target === null) return null;
+
+  const speed = unit.effectiveStats.speed;
+  // A heal has no half-cover multiplier; pass 1 (the heal op ignores it anyway).
+  const ops = def.effects.map((e) => resolveOp(e.op, unit, 1));
+
+  return {
+    action: new EffectAction(def, { targetId: target.id, targetCell: undefined, ops }),
+    score: def.priority,
+    cooldown: resolveCadenceTicks(def, speed),
+    phases: resolvePhases(def, speed),
+    cooldownKey: def.id,
+  };
+}
+
+/**
  * Compute one op's cast-time scalars. The `damageMultiplier` (half-cover) is a
- * single-target concern threaded in by the caller; an aoe path will pass 1.
+ * single-target concern threaded in by the caller; the heal / aoe paths pass 1.
  */
 function resolveOp(op: EffectOp, unit: Unit, damageMultiplier: number): OpResolution {
   switch (op.kind) {
@@ -133,7 +168,13 @@ function resolveOp(op: EffectOp, unit: Unit, damageMultiplier: number): OpResolu
         : 0;
       return { baseDamage, critChance, damageMultiplier };
     }
-    // `heal` / `move` resolutions land with their verbs in later commits.
+    case 'heal': {
+      // I6 — heal amount is `might + magic` (mirrors `healAmountFor`). `none`
+      // scaling = flat `might`; the heal op never rolls to-hit or crit.
+      const healAmount = op.might + scalingStatValue(op.scaling, unit.effectiveStats);
+      return { healAmount };
+    }
+    // `move` resolutions land with the gambit / dash in later commits.
     default:
       throw new Error(`EffectAbility: op '${op.kind}' not yet resolvable at propose time`);
   }

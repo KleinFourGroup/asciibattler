@@ -67,7 +67,10 @@ const catapultDef: AbilityDef = parseAbilityDef({
 });
 
 const dashDef: AbilityDef = parseAbilityDef({
-  id: 'dash', cooldownSeconds: 10, speedScaled: false, rangeCells: 2, target: { kind: 'enemyInRange' },
+  // `self` — a pure caster-reposition: the leap targets the CASTER (the enemy is
+  // only a propose-time reference for the landing), so phaseTarget surfaces
+  // nothing, mirroring DashAction's absent phaseTarget.
+  id: 'dash', cooldownSeconds: 10, speedScaled: false, rangeCells: 2, target: { kind: 'self' },
   timeline: [{ phase: 'impact', seconds: 0.25 }],
   orphanPolicy: 'commit-at-cast', priority: 5,
   effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance', cells: 2 } }],

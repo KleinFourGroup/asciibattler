@@ -1,6 +1,5 @@
 import type { Ability } from './Ability';
 import { GambitStrike } from './strikes';
-import { HealAlly } from './heal';
 import { MagicBolt } from './magic';
 import { CatapultShot } from './catapult';
 import { DashAbility } from './dash';
@@ -32,14 +31,13 @@ const MELEE_WEAPON_IDS = ['sword', 'club', 'katana', 'whip'] as const;
 // oracle). `createAbility(id)` routes these to `new EffectAbility(abilityDef(id))`
 // instead of the legacy class; the now-unreferenced classes stay registered-
 // nowhere until Y5 deletes the lot. Grows one verb per commit (melee first).
-const MIGRATED_ABILITY_IDS = [...MELEE_WEAPON_IDS, 'bow'] as const;
+const MIGRATED_ABILITY_IDS = [...MELEE_WEAPON_IDS, 'bow', 'heal_ally'] as const;
 
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(
     MIGRATED_ABILITY_IDS.map((id) => [id, () => new EffectAbility(abilityDef(id))]),
   ),
   [GambitStrike.id]: () => new GambitStrike(),
-  [HealAlly.id]: () => new HealAlly(),
   [MagicBolt.id]: () => new MagicBolt(),
   [CatapultShot.id]: () => new CatapultShot(),
   // N1 — the rogue's gap-closer. Registered + configured but on NO archetype

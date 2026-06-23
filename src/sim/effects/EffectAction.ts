@@ -90,11 +90,16 @@ export class EffectAction implements Action {
 
   phaseTarget(): { targetId?: number | undefined; targetCell?: GridCoord | undefined } {
     const sel = this.def.target;
+    // aoe (the mage bolt) surfaces its blast cell; `self` (a pure caster-
+    // reposition — the dash) surfaces nothing, mirroring DashAction's absent
+    // phaseTarget. The discriminant is the SELECTOR, not the op: a heal has no
+    // damage op yet still surfaces its ally (like HealAction).
     if (sel.kind === 'aoe') {
       return { targetCell: this.ctx.targetCell ? { ...this.ctx.targetCell } : undefined };
     }
-    const hasDamage = this.def.effects.some((e) => e.op.kind === 'damage');
-    if (!hasDamage) return {}; // a pure-move verb (the dash) surfaces no target
+    if (sel.kind === 'self') return {};
+    // A single-target selector (enemyInRange strike / lowestHpAlly heal) surfaces
+    // its resolved unit, mirroring AttackAction / HealAction.
     const targetId = this.ctx.targetId >= 0 ? this.ctx.targetId : undefined;
     if (this.def.orphanPolicy === 'fizzle') {
       // The homing artillery shot also surfaces its cast cell as the VFX fallback.

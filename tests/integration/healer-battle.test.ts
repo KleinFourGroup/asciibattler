@@ -17,9 +17,10 @@ import type { BattleEncounter } from '../../src/run/Run';
  * casts a heal on a wounded ally, and the battle resolves without hanging or
  * throwing — what a `?roster=healer,...` playtest build must not crash on.
  *
- * Heal attribution is via the healer's own `activeAction` (id 'heal'), which
- * is tile-independent — a healing tile would also emit `unit:healed`, but it
- * can't put a HealAction on the healer's action slot.
+ * Heal attribution is via the healer's own `activeAction` (id 'heal_ally' — the
+ * Phase-Y3 data-driven EffectAction; was 'heal' under the legacy HealAction),
+ * which is tile-independent — a healing tile would also emit `unit:healed`, but
+ * it can't put a heal action on the healer's action slot.
  */
 
 const TICK_CAP = 2000;
@@ -70,7 +71,7 @@ function runHealerBattle(seed: number): { resolved: boolean; healerCast: boolean
   while (ticks < TICK_CAP) {
     world.tick();
     ticks++;
-    if (world.findUnit(healerId)?.activeAction?.action.id === 'heal') healerCast = true;
+    if (world.findUnit(healerId)?.activeAction?.action.id === 'heal_ally') healerCast = true;
     if (resolved) break;
   }
   return { resolved, healerCast };

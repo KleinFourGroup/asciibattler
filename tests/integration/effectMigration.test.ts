@@ -28,8 +28,11 @@ import { World } from '../../src/sim/World';
 import type { Unit } from '../../src/sim/Unit';
 import type { Ability } from '../../src/sim/abilities/Ability';
 import { MovementBehavior } from '../../src/sim/behaviors/MovementBehavior';
+import { SupportMovementBehavior } from '../../src/sim/behaviors/SupportMovementBehavior';
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
 import { MeleeStrike, RangedShot } from '../../src/sim/abilities/strikes';
+import { HealAlly } from '../../src/sim/abilities/heal';
+import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAbility } from '../../src/sim/effects/EffectAbility';
 import { abilityDef } from '../../src/config/abilityDefs';
 import { rollUnit } from '../../src/sim/archetypes';
@@ -38,8 +41,6 @@ import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import type { GameEvents } from '../../src/core/events';
 import type { GridCoord } from '../../src/core/types';
-
-type AbilityFactory = () => Ability;
 
 /* -------------------------------------------------------------------------- */
 /* Recorded trace + final-state shapes.                                       */
@@ -162,52 +163,75 @@ function snapshotFinal(world: World): FinalState {
   };
 }
 
-/**
- * Two equal teams of `archetype`, each unit carrying a fresh `makeAbility()`,
- * walked into each other and run for `maxTicks`. Same seed → same stat rolls,
- * same layout — the ONLY variable is the ability instance.
- */
-function runFixture(
-  archetype: Archetype,
-  makeAbility: AbilityFactory,
-  seed: number,
-  maxTicks: number,
-): FixtureResult {
+/** Populate a world's units (behaviors + abilities) for a fixture battle. */
+type Spawn = (world: World) => void;
+
+/** Build a world, tap its events, spawn via `spawn`, run, snapshot. */
+function runWorld(spawn: Spawn, seed: number, maxTicks: number): FixtureResult {
   const bus = new EventBus<GameEvents>();
   const world = new World(bus, new RNG(seed));
   const events = recordEvents(bus);
-
-  const COLUMNS = [2, 4, 6, 8, 10];
-  for (const x of COLUMNS) {
-    const u = world.spawnUnit(rollUnit(archetype, world.rng), 'player', { x, y: 2 });
-    u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(makeAbility());
-  }
-  for (const x of COLUMNS) {
-    const u = world.spawnUnit(rollUnit(archetype, world.rng), 'enemy', { x, y: 9 });
-    u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
-    u.abilities.push(makeAbility());
-  }
-
+  spawn(world);
   for (let i = 0; i < maxTicks && !world.ended; i++) world.tick();
-
   return { events, final: snapshotFinal(world) };
 }
 
 /**
- * The oracle assertion for one verb: legacy and migrated, same fixture, must be
- * byte-identical. `expect(b).toEqual(a)` covers the whole trace + final state.
+ * Two equal teams of `archetype` (5 a side), each unit carrying `makeAbilities()`,
+ * walked into each other. The ONLY variable between a legacy and migrated run is
+ * the ability instance(s).
  */
-function assertVerbMigration(
-  archetype: Archetype,
-  legacy: AbilityFactory,
-  migrated: AbilityFactory,
+function symmetricSpawn(archetype: Archetype, makeAbilities: () => Ability[]): Spawn {
+  return (world) => {
+    const COLUMNS = [2, 4, 6, 8, 10];
+    for (const team of ['player', 'enemy'] as const) {
+      const y = team === 'player' ? 2 : 9;
+      for (const x of COLUMNS) {
+        const u = world.spawnUnit(rollUnit(archetype, world.rng), team, { x, y });
+        u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+        for (const ability of makeAbilities()) u.abilities.push(ability);
+      }
+    }
+  };
+}
+
+/**
+ * A healer + a melee ally under fire from two enemies, so the healer casts
+ * repeatedly across the battle. The ally's + enemies' swords are the already-
+ * migrated EffectAbility on BOTH runs — only the heal under test varies.
+ */
+function healSpawn(makeHeal: () => Ability): Spawn {
+  return (world) => {
+    const healer = world.spawnUnit(rollUnit('healer', world.rng), 'player', { x: 5, y: 4 });
+    healer.behaviors.push(new SupportMovementBehavior(), new AbilityBehavior());
+    healer.abilities.push(makeHeal());
+    const ally = world.spawnUnit(rollUnit('mercenary', world.rng), 'player', { x: 5, y: 5 });
+    ally.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+    ally.abilities.push(createAbility('sword'));
+    for (const x of [4, 6]) {
+      const e = world.spawnUnit(rollUnit('mercenary', world.rng), 'enemy', { x, y: 6 });
+      e.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+      e.abilities.push(createAbility('sword'));
+    }
+  };
+}
+
+/**
+ * The oracle for one verb: the legacy and migrated spawns over the same seed
+ * must be byte-identical — event trace + final state. `requireEvent` asserts the
+ * verb actually FIRED (so a green run can't pass by silently not exercising it).
+ */
+function assertEquivalent(
+  legacy: Spawn,
+  migrated: Spawn,
+  requireEvent: RecordedEvent['kind'],
   { seed = 54321, maxTicks = 500 }: { seed?: number; maxTicks?: number } = {},
 ): void {
-  const a = runFixture(archetype, legacy, seed, maxTicks);
-  const b = runFixture(archetype, migrated, seed, maxTicks);
-  // Sanity: a substantial battle, so equality isn't trivially true.
+  const a = runWorld(legacy, seed, maxTicks);
+  const b = runWorld(migrated, seed, maxTicks);
+  // Sanity: a substantial battle that actually exercised the verb.
   expect(a.events.length).toBeGreaterThan(20);
+  expect(a.events.some((e) => e.kind === requireEvent)).toBe(true);
   expect(b.events).toEqual(a.events);
   expect(b.final).toEqual(a.final);
 }
@@ -220,20 +244,28 @@ describe('Phase Y3 — effect-migration oracle', () => {
   describe('melee strike → EffectAbility is byte-identical to MeleeStrike', () => {
     for (const weapon of ['sword', 'club', 'katana', 'whip'] as const) {
       it(`${weapon}`, () => {
-        assertVerbMigration(
-          'mercenary',
-          () => new MeleeStrike(weapon),
-          () => new EffectAbility(abilityDef(weapon)),
+        assertEquivalent(
+          symmetricSpawn('mercenary', () => [new MeleeStrike(weapon)]),
+          symmetricSpawn('mercenary', () => [new EffectAbility(abilityDef(weapon))]),
+          'unit:attacked',
         );
       });
     }
   });
 
   it('ranged shot (bow) → EffectAbility is byte-identical to RangedShot', () => {
-    assertVerbMigration(
-      'ranged',
-      () => new RangedShot(),
-      () => new EffectAbility(abilityDef('bow')),
+    assertEquivalent(
+      symmetricSpawn('ranged', () => [new RangedShot()]),
+      symmetricSpawn('ranged', () => [new EffectAbility(abilityDef('bow'))]),
+      'unit:attacked',
+    );
+  });
+
+  it('heal ally → EffectAbility is byte-identical to HealAlly', () => {
+    assertEquivalent(
+      healSpawn(() => new HealAlly()),
+      healSpawn(() => new EffectAbility(abilityDef('heal_ally'))),
+      'unit:healed',
     );
   });
 });

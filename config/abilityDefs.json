@@ -134,5 +134,23 @@
         }
       }
     ]
+  },
+  "heal_ally": {
+    "id": "heal_ally",
+    "cooldownSeconds": 2.0,
+    "rangeCells": 3,
+    "target": { "kind": "lowestHpAlly", "rangeCells": 3 },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": { "kind": "heal", "scaling": "magic", "might": 0 }
+      }
+    ]
   }
 }

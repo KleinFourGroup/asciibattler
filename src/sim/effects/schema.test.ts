@@ -10,9 +10,9 @@ import {
 /**
  * Phase Y1 — the vocabulary's parse/reject/round-trip contract. These pin the
  * SHAPE of the closed discriminated unions with explicit literals (never the
- * shipped `config/abilityDefs.json`, which is empty in Y anyway): a valid def
- * parses, malformed ops/selectors are rejected, defaults fill, and a def
- * round-trips through JSON unchanged.
+ * shipped `config/abilities.json` catalog): a valid def parses, malformed
+ * ops/selectors are rejected, defaults fill, and a def round-trips through JSON
+ * unchanged.
  */
 
 /** A complete, valid melee-strike-shaped def (the migration's reference shape). */

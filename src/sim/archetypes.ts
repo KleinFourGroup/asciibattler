@@ -1,7 +1,7 @@
 import type { RNG } from '../core/RNG';
 import type { Archetype, UnitArchetype, UnitTemplate } from './Unit';
 import { ARCHETYPES, type ArchetypeConfig } from '../config/archetypes';
-import { abilityConfig } from '../config/abilities';
+import { abilityDef } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
 
 // E7.A — `Archetype` is now defined once in `./Unit` (the canonical closed
@@ -33,30 +33,31 @@ export function glyphForArchetype(archetype: Archetype): string {
  * in `proposeBasicStrike`, not this max.
  */
 export function rangeForArchetype(archetype: Archetype): number {
-  // N1 — a `movement` ability's `range` is a LEAP distance, not engagement
-  // reach, so it's excluded from `derived.attackRange` (the in-range-abstain
-  // threshold MovementBehavior reads, and the gate the dash itself uses to ask
-  // "am I out of strike range?"). Without this, the rogue's 2-cell dash would
-  // inflate its firing range to 2 and strand it a cell short whenever the dash
-  // is on cooldown. Falls back to all abilities if a unit somehow carries only
-  // movement abilities. Today only the rogue's dash is `movement`; every other
-  // archetype is unaffected (byte-identical).
+  // N1 — a pure-reposition (`self`-target) leap's `rangeCells` is a LEAP distance,
+  // not engagement reach, so it's excluded from `derived.attackRange` (the
+  // in-range-abstain threshold MovementBehavior reads, and the gate the dash
+  // itself uses to ask "am I out of strike range?"). Without this, the rogue's
+  // 2-cell dash would inflate its firing range to 2 and strand it a cell short
+  // whenever the dash is on cooldown. Falls back to all abilities if a unit
+  // somehow carries only `self` abilities. Today only the rogue's dash targets
+  // `self`; every other archetype is unaffected (byte-identical).
   const ids = CONFIGS[archetype].abilities;
-  const engaging = ids.filter((id) => abilityConfig(id).kind !== 'movement');
+  const engaging = ids.filter((id) => abilityDef(id).target.kind !== 'self');
   const reach = engaging.length > 0 ? engaging : ids;
-  return Math.max(...reach.map((id) => abilityConfig(id).range));
+  return Math.max(...reach.map((id) => abilityDef(id).rangeCells));
 }
 
 /**
- * O4 — a unit's engagement FLOOR: the `minRange` of the archetype's longest-range
- * engaging (non-`movement`) ability — the same ability whose `range` defines
- * `derived.attackRange`, so `[minRange, attackRange]` is the firing band
- * `MovementBehavior` kites within. Config-READ (parallels `rangeForArchetype`),
- * deliberately NOT plumbed into `UnitDerived` — there's no serialized per-unit
- * copy, so `minRange` needs no WorldSnapshot bump (it's looked up live wherever
- * `attackRange` is, exactly like `range`/`accuracy`). Every archetype today
- * carries a single attack ability, so "longest-range engaging" is unambiguous;
- * the max-by-range tie-break generalizes it to a future multi-weapon unit.
+ * O4 — a unit's engagement FLOOR: the `minRangeCells` of the archetype's
+ * longest-range engaging (non-`self`-target) ability — the same ability whose
+ * `rangeCells` defines `derived.attackRange`, so `[minRange, attackRange]` is the
+ * firing band `MovementBehavior` kites within. Config-READ (parallels
+ * `rangeForArchetype`), deliberately NOT plumbed into `UnitDerived` — there's no
+ * serialized per-unit copy, so `minRange` needs no WorldSnapshot bump (it's looked
+ * up live wherever `attackRange` is, exactly like `rangeCells`/the damage profile).
+ * Every archetype today carries a single attack ability, so "longest-range
+ * engaging" is unambiguous; the max-by-range tie-break generalizes it to a future
+ * multi-weapon unit.
  * `minRange 0` for every weapon today → byte-identical (no kiting) until the O4
  * value commit sets bow/mage/catapult floors.
  *
@@ -68,13 +69,13 @@ export function rangeForArchetype(archetype: Archetype): number {
 export function minRangeForArchetype(archetype: UnitArchetype): number {
   if (archetype === 'environment') return 0;
   const ids = CONFIGS[archetype].abilities;
-  const engaging = ids.filter((id) => abilityConfig(id).kind !== 'movement');
+  const engaging = ids.filter((id) => abilityDef(id).target.kind !== 'self');
   const reach = engaging.length > 0 ? engaging : ids;
   let best = reach[0]!;
   for (const id of reach) {
-    if (abilityConfig(id).range > abilityConfig(best).range) best = id;
+    if (abilityDef(id).rangeCells > abilityDef(best).rangeCells) best = id;
   }
-  return abilityConfig(best).minRange;
+  return abilityDef(best).minRangeCells;
 }
 
 /**

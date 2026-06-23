@@ -48,9 +48,7 @@ src/
 
   config/                    # A4: zod-validated wrappers around config/*.json
     archetypes.ts            #   glyph + baseStats + growthRates (E1/E3); attackRange moved to abilities (E5)
-    abilities.ts             #   E2+: per-ability cooldownSeconds/range/aoe/travelSeconds/retreatDelaySeconds
-                             #   I6: + combat profile might/accuracy/critBase + evadable/critable gates
-    abilityDefs.ts           #   Y1: loads config/abilityDefs.json into the AbilityDef vocabulary (src/sim/effects); the data-driven successor to abilities.ts → inherits abilities.ts at Y5
+    abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets
     recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4)
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
@@ -253,8 +251,7 @@ src/
 
 config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
   archetypes.json            # per-archetype glyph + baseStats + growthRates (E1/E3)
-  abilities.json             # E2+: per-ability cooldownSeconds/range/aoe/travel/retreatDelay; I6: + might/accuracy/critBase/evadable/critable
-  abilityDefs.json           # Y1: data-driven AbilityDef catalog (empty in Y; fills per-verb during the Y3/Y4 migration) → abilities.json at Y5
+  abilities.json             # The AbilityDef catalog — one entry per combat verb (targeting / timeline / effect-ops / damage-heal profile). Y5e consolidated this (was abilityDefs.json) atop the retired legacy AbilityConfig json
   difficulty.json            # G4: enemy level-budget knobs + A/B/C presets
   recruitment.json           # starting team + offer size + startingLevel + recruitBonusChance
   leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)

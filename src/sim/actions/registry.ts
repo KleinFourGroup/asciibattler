@@ -4,7 +4,7 @@ import { MOVE_ACTION_ID, MoveAction, type MoveActionData } from './MoveAction';
 import { SPAWN_ACTION_ID, SpawnAction } from './SpawnAction';
 import { SWAP_ACTION_ID, SwapAction, type SwapActionData } from './SwapAction';
 import { EffectAction, type EffectActionData } from '../effects/EffectAction';
-import { abilityDef } from '../../config/abilityDefs';
+import { abilityDef } from '../../config/abilities';
 
 /**
  * Action factories keyed by `Action.id`. `World.fromJSON` uses these to

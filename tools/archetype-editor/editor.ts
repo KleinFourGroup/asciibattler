@@ -36,7 +36,7 @@ import type { UnitStats } from '../../src/sim/Unit';
 import { STAT_LABELS } from '../../src/ui/statLabels';
 import { knownAbilityIds } from '../../src/sim/abilities/registry';
 import { knownTargetingIds } from '../../src/sim/targetingStrategies';
-import { abilityConfig } from '../../src/config/abilities';
+import { abilityDef, damageOpOf, healOpOf } from '../../src/config/abilities';
 import { STATS } from '../../src/config/stats';
 import { ticksToSeconds } from '../../src/config';
 import {
@@ -332,7 +332,7 @@ function refreshPreview(): void {
     previewLevel <= 1 ? { ...base } : scaleStats(base, a.growthRates, previewLevel - 1);
   const hasAbilities = a.abilities.length > 0;
   const range = hasAbilities
-    ? Math.max(...a.abilities.map((id) => abilityConfig(id).range))
+    ? Math.max(...a.abilities.map((id) => abilityDef(id).rangeCells))
     : 0;
   const derived = deriveStats(stats, range);
 
@@ -349,31 +349,37 @@ function refreshPreview(): void {
   // evadable/critable gates), so damage, to-hit, and crit are shown per ability
   // rather than as single unit-wide numbers. Computed by the REAL game helpers.
   for (const id of a.abilities) {
-    const cfg = abilityConfig(id);
-    if (cfg.kind === 'movement') {
-      // N1 — a utility leap: no damage/to-hit/crit, just leap distance + the
-      // flat (speed-independent) motion + cooldown.
+    const def = abilityDef(id);
+    if (def.target.kind === 'self') {
+      // N1 — a pure-reposition leap (the dash): no damage/to-hit/crit, just leap
+      // distance + the flat (speed-independent) motion + cooldown. The motion
+      // window is the timeline's authored seconds (the dash's single impact phase).
+      const motionSeconds = def.timeline.reduce(
+        (s, p) => s + (p.seconds === 'fill' ? 0 : p.seconds),
+        0,
+      );
       addPreview(
         `Ability · ${id}`,
-        `dash ${cfg.range} · ${cfg.durationSeconds}s motion · cd ${cfg.cooldownSeconds}s`,
+        `dash ${def.rangeCells} · ${motionSeconds}s motion · cd ${def.cooldownSeconds}s`,
       );
       continue;
     }
-    const ticks = attackCooldownTicksFor(cfg.cooldownSeconds, stats.speed);
+    const ticks = attackCooldownTicksFor(def.cooldownSeconds, stats.speed);
     const scaling = activeKey === 'healer' ? stats.magic : damageStatFor(activeKey, stats);
-    const out = cfg.might + scaling;
+    // The flat base output is on the verb's damage OR heal op (both carry `might`).
+    const damageOp = damageOpOf(id);
+    const might = (damageOp ?? healOpOf(id))?.might ?? 0;
+    const out = might + scaling;
     const effect = activeKey === 'healer' ? 'heal' : 'dmg';
-    const toHit =
-      cfg.kind === 'attack' && cfg.evadable
-        ? `${pct(hitChanceFor(cfg.accuracy, stats.precision, refEvasion))} vs EVA ${refEvasion}`
-        : 'unmissable';
-    const crit =
-      cfg.kind === 'attack' && cfg.critable
-        ? `${pct(critChanceFor(cfg.critBase, stats.luck))} (×${STATS.critMult})`
-        : 'no crit';
+    const toHit = damageOp?.evadable
+      ? `${pct(hitChanceFor(damageOp.accuracy, stats.precision, refEvasion))} vs EVA ${refEvasion}`
+      : 'unmissable';
+    const crit = damageOp?.critable
+      ? `${pct(critChanceFor(damageOp.critBase, stats.luck))} (×${STATS.critMult})`
+      : 'no crit';
     addPreview(
       `Ability · ${id}`,
-      `${out} ${effect} (${cfg.might} might + ${scaling} ${OUTPUT_LABEL[activeKey]}) · rng ${cfg.range} · ${cadence(ticks)}` +
+      `${out} ${effect} (${might} might + ${scaling} ${OUTPUT_LABEL[activeKey]}) · rng ${def.rangeCells} · ${cadence(ticks)}` +
         ` · to-hit ${toHit} · crit ${crit}`,
     );
   }

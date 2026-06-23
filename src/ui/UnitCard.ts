@@ -22,7 +22,7 @@ import type { UnitTemplate, Archetype, UnitStats, Unit } from '../sim/Unit';
 import type { PromotionInfo } from '../core/events';
 import { abilityIdsForArchetype, glyphForArchetype } from '../sim/archetypes';
 import { attackCooldownTicksFor, damageStatFor } from '../sim/stats';
-import { abilityConfig } from '../config/abilities';
+import { abilityDef, damageOpOf, healOpOf } from '../config/abilities';
 import { ticksToSeconds } from '../config';
 import { xpProgress, displayLevel } from '../sim/xp';
 import { STAT_LABELS } from './statLabels';
@@ -421,13 +421,14 @@ function buildXpBar(data: UnitCardData): HTMLDivElement {
 /**
  * One ability row: name, then the weapon profile (`N dmg · rng R · H% hit · C%
  * crit`, or `N heal · rng R`) with an AoE tag, then the cadence in seconds.
- * The damage/heal amount reuses the sim's single-source-of-truth helpers (I6:
- * `cfg.might` + the scaling stat) so the card can't disagree with battle.
- * Range / cadence / AoE / the I6 profile come from `config/abilities.json`.
+ * The damage/heal amount reuses the sim's single-source-of-truth helpers (the
+ * op's `might` + the scaling stat) so the card can't disagree with battle.
+ * Range / cadence / AoE / the I6 profile come from `config/abilities.json`
+ * (the `AbilityDef`: `rangeCells`, the damage/heal op, the `aoe` selector).
  */
 function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDivElement {
   const ui = ABILITY_UI[id] ?? { label: id, effect: 'damage' as const };
-  const cfg = abilityConfig(id);
+  const def = abilityDef(id);
 
   const row = document.createElement('div');
   row.className = 'unit-card__ability';
@@ -440,24 +441,26 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
   const detail = document.createElement('div');
   detail.className = 'unit-card__ability-detail';
   const parts: string[] = [];
-  if (cfg.kind === 'movement') {
-    // N1 — a utility leap: no damage/heal profile, just the leap distance (its
-    // recharge shows in the cadence column below).
-    parts.push(`dash ${cfg.range}`);
+  if (def.target.kind === 'self') {
+    // N1 — a pure-reposition leap (the dash): no damage/heal profile, just the
+    // leap distance (its recharge shows in the cadence column below).
+    parts.push(`dash ${def.rangeCells}`);
   } else {
-    const scaling = cfg.kind === 'heal' ? stats.magic : damageStatFor(archetype, stats);
-    const amount = cfg.might + scaling;
-    parts.push(`${amount} ${cfg.kind === 'heal' ? 'heal' : 'dmg'}`, `rng ${cfg.range}`);
-    // I6 — surface the per-weapon profile: base hit chance for an evadable
-    // strike, base crit for a critable one (terse percentages, e.g. "60% hit").
-    if (cfg.kind === 'attack') {
-      if (cfg.evadable) parts.push(`${Math.round(cfg.accuracy * 100)}% hit`);
-      if (cfg.critable) parts.push(`${Math.round(cfg.critBase * 100)}% crit`);
+    const healOp = healOpOf(id);
+    const damageOp = damageOpOf(id);
+    if (healOp) {
+      parts.push(`${healOp.might + stats.magic} heal`, `rng ${def.rangeCells}`);
+    } else if (damageOp) {
+      parts.push(`${damageOp.might + damageStatFor(archetype, stats)} dmg`, `rng ${def.rangeCells}`);
+      // I6 — surface the per-weapon profile: base hit chance for an evadable
+      // strike, base crit for a critable one (terse percentages, e.g. "60% hit").
+      if (damageOp.evadable) parts.push(`${Math.round(damageOp.accuracy * 100)}% hit`);
+      if (damageOp.critable) parts.push(`${Math.round(damageOp.critBase * 100)}% crit`);
     }
   }
   detail.textContent = parts.join(' · ');
-  if (cfg.kind === 'attack' && cfg.aoe) {
-    const side = cfg.aoe.radius * 2 + 1;
+  if (def.target.kind === 'aoe') {
+    const side = def.target.radius * 2 + 1;
     const tag = document.createElement('span');
     tag.className = 'unit-card__ability-aoe';
     tag.textContent = `AoE ${side}×${side}`;
@@ -467,12 +470,11 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
 
   const cadence = document.createElement('div');
   cadence.className = 'unit-card__ability-cadence';
-  // N1 — a movement ability's cooldown is flat (not speed-scaled); attack/heal
+  // N1 — a non-speed-scaled ability's cooldown is flat (the dash); attack/heal
   // cadence scales with the unit's speed.
-  const seconds =
-    cfg.kind === 'movement'
-      ? cfg.cooldownSeconds
-      : ticksToSeconds(attackCooldownTicksFor(cfg.cooldownSeconds, stats.speed));
+  const seconds = def.speedScaled
+    ? ticksToSeconds(attackCooldownTicksFor(def.cooldownSeconds, stats.speed))
+    : def.cooldownSeconds;
   cadence.textContent = `${seconds.toFixed(2)}s`;
   row.appendChild(cadence);
 

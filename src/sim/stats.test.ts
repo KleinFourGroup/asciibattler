@@ -31,7 +31,7 @@ import {
   inertDerived,
   attackCooldownTicksFor,
 } from './stats';
-import { ABILITIES } from '../config/abilities';
+import { abilityDef } from '../config/abilities';
 import { STATS } from '../config/stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { secondsToTicks, ticksToSeconds } from '../config';
@@ -201,7 +201,7 @@ describe('attackCooldownTicksFor — per-ability attack cadence', () => {
   // layer. These mirror the old deriveStats attack-CD tests but against
   // the new helper, deriving the base seconds from `config/abilities.json`
   // so a cadence re-tune doesn't churn the test.
-  const base = ABILITIES.sword!.cooldownSeconds;
+  const base = abilityDef('sword').cooldownSeconds;
 
   it('shrinks with speed via cooldownScale', () => {
     const expectedScale = 1 - 5 * STATS.speedCdPerStat;

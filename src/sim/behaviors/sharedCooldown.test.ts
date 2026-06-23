@@ -8,7 +8,7 @@ import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, attackCooldownTicksFor } from '../stats';
 import { ARCHETYPE_CONFIG } from '../archetypes';
-import { ABILITIES, attackConfig } from '../../config/abilities';
+import { abilityDef, damageOpOf } from '../../config/abilities';
 import type { GameEvents } from '../../core/events';
 
 /**
@@ -52,7 +52,7 @@ describe('shared actionCooldown', () => {
     // I6 — the sword adds its `might` on top of the scaling stat (set to
     // attackDamage), so the strike lands `might + 5`. Derive from config so a
     // weapon re-tune can't break this cooldown-timing wiring test.
-    expect(units[1]!.currentHp).toBe(50 - (attackConfig('sword').might + 5));
+    expect(units[1]!.currentHp).toBe(50 - (damageOpOf('sword')!.might + 5));
   });
 
   it('attacks immediately if already in range on tick 1', () => {
@@ -78,10 +78,10 @@ describe('shared actionCooldown', () => {
     // could otherwise step toward a different target, the shared CD locks
     // movement out until the attack cooldown elapses. attackCD is the
     // real sword cadence (config-derived) — the scene builds a mercenary at
-    // the archetype's base speed, so this matches what MeleeStrike actually
-    // proposes; deriving it keeps the test pinned through any cadence re-tune.
+    // the archetype's base speed, so this matches what the sword EffectAbility
+    // actually proposes; deriving it keeps the test pinned through any re-tune.
     const attackCD = attackCooldownTicksFor(
-      ABILITIES.sword!.cooldownSeconds,
+      abilityDef('sword').cooldownSeconds,
       ARCHETYPE_CONFIG.mercenary.baseStats.speed,
     );
     const { world, units, moves } = scene([

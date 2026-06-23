@@ -1,93 +1,99 @@
 import { describe, it, expect } from 'vitest';
-import { ABILITIES, abilityConfig, attackConfig } from './abilities';
+import { ABILITY_DEFS, abilityDef, damageOpOf, healOpOf } from './abilities';
 
 /**
- * I6 — the per-ability combat profile + the evadable/critable DESIGNATION
- * system. N1 — these now also pin the `kind` discriminant: the combat profile
- * lives ONLY on `attack`-kind abilities, and `heal` is its own kind with no
- * to-hit/crit fields at all (the dead weight the old single schema forced on
- * it). They pin STRUCTURAL facts — which abilities are attacks, which roll
- * to-hit, which can crit, and that the I6 weapon split/rename landed — NOT the
- * by-feel might/accuracy/critBase VALUES (those are tuned in the editor and
- * re-swept in Phase N, so per BALANCE.md they're deliberately not pinned). The
- * numeric damage/hit/crit FORMULAS are mechanic-pinned with explicit literals
- * in `src/sim/stats.test.ts`.
+ * The ability-definition catalog loader + the catalog-level structural pins.
+ *
+ * Loader contract: the shipped `config/abilities.json` parses, every entry is
+ * keyed by its own id, and the accessor throws loudly on an unknown id.
+ *
+ * Structural pins (ported from the retired legacy `abilities.ts` test at Y5e,
+ * re-expressed on the `AbilityDef` shape): WHICH verbs roll to-hit, WHICH can
+ * crit, that the heal carries no combat profile, and that the I6 weapon
+ * split/rename landed. They pin STRUCTURE — not the by-feel might/accuracy/
+ * critBase VALUES (tuned in the editor + re-swept in Phase N; per BALANCE.md
+ * deliberately not pinned). The numeric formulas are mechanic-pinned with
+ * explicit literals in `src/sim/stats.test.ts`.
  */
 
-// kind `attack`, single-target: roll to-hit + can crit. The four melee weapons
-// (sword/club/katana/whip, split from the old `melee_strike`), the `bow`
-// (renamed `ranged_shot`), and the rogue's `gambit_strike`.
+// Single-target damage verbs: roll precision-vs-evasion to-hit + can crit. The
+// four melee weapons (sword/club/katana/whip, split from the old `melee_strike`),
+// the `bow` (renamed `ranged_shot`), and the rogue's `gambit_strike`.
 const BASIC_STRIKES = ['sword', 'club', 'katana', 'whip', 'bow', 'gambit_strike'];
-// kind `attack`, but unmissable + non-critable: the AoE blast + the artillery shot.
+// Damage verbs that are unmissable + non-critable: the AoE blast + the artillery shot.
 const UNMISSABLE_ATTACKS = ['magic_bolt', 'catapult_shot'];
-// kind `heal`: carries no combat profile at all.
+// The heal verb: a heal op, no combat profile.
 const HEAL_ABILITIES = ['heal_ally'];
 
-describe('abilities config — I6 combat profile + N1 kind discriminant', () => {
-  const ids = Object.keys(ABILITIES);
+describe('abilities loader', () => {
+  it('parses the shipped config without throwing', () => {
+    expect(ABILITY_DEFS).toBeTypeOf('object');
+  });
 
-  it('every ability declares positive range + cooldown (the common fields)', () => {
-    for (const id of ids) {
-      const a = abilityConfig(id);
-      expect(a.range, `${id}.range`).toBeGreaterThan(0);
-      expect(a.cooldownSeconds, `${id}.cooldownSeconds`).toBeGreaterThan(0);
+  it('keys every entry by its own id (the loader invariant)', () => {
+    for (const [key, def] of Object.entries(ABILITY_DEFS)) {
+      expect(def.id).toBe(key);
     }
   });
 
-  it('every attack ability declares the full combat profile within range', () => {
+  it('throws on an unknown ability id', () => {
+    expect(() => abilityDef('nonexistent')).toThrow(/no definition/);
+  });
+
+  it('every ability declares a positive cooldown', () => {
+    for (const id of Object.keys(ABILITY_DEFS)) {
+      expect(abilityDef(id).cooldownSeconds, `${id}.cooldownSeconds`).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('abilities catalog — combat profile + verb shapes', () => {
+  it('the migrated melee verbs resolve as enemyInRange damage defs', () => {
+    for (const id of ['sword', 'club', 'katana', 'whip']) {
+      expect(abilityDef(id).target.kind).toBe('enemyInRange');
+      expect(damageOpOf(id), `${id} has a damage op`).toBeDefined();
+    }
+  });
+
+  it('every damage verb declares the full combat profile in range', () => {
     for (const id of [...BASIC_STRIKES, ...UNMISSABLE_ATTACKS]) {
-      const a = attackConfig(id);
-      expect(a.might, `${id}.might`).toBeGreaterThanOrEqual(0);
-      expect(a.accuracy, `${id}.accuracy ≥ 0`).toBeGreaterThanOrEqual(0);
-      expect(a.accuracy, `${id}.accuracy ≤ 1`).toBeLessThanOrEqual(1);
-      expect(a.critBase, `${id}.critBase ≥ 0`).toBeGreaterThanOrEqual(0);
-      expect(a.critBase, `${id}.critBase ≤ 1`).toBeLessThanOrEqual(1);
-      expect(typeof a.evadable, `${id}.evadable`).toBe('boolean');
-      expect(typeof a.critable, `${id}.critable`).toBe('boolean');
+      const op = damageOpOf(id);
+      expect(op, `${id} has a damage op`).toBeDefined();
+      expect(op!.might, `${id}.might`).toBeGreaterThanOrEqual(0);
+      expect(op!.accuracy, `${id}.accuracy ≥ 0`).toBeGreaterThanOrEqual(0);
+      expect(op!.accuracy, `${id}.accuracy ≤ 1`).toBeLessThanOrEqual(1);
+      expect(op!.critBase, `${id}.critBase ≥ 0`).toBeGreaterThanOrEqual(0);
+      expect(op!.critBase, `${id}.critBase ≤ 1`).toBeLessThanOrEqual(1);
+      expect(typeof op!.evadable, `${id}.evadable`).toBe('boolean');
+      expect(typeof op!.critable, `${id}.critable`).toBe('boolean');
     }
   });
 
-  it('N1 — heal is its own kind, carrying no combat profile', () => {
+  it('the heal verb carries a heal op + no damage profile', () => {
     for (const id of HEAL_ABILITIES) {
-      const a = abilityConfig(id);
-      expect(a.kind, `${id}.kind`).toBe('heal');
-      // The dead to-hit/crit fields were dropped from the heal schema (zod
-      // strips them even if re-added to the JSON), so a heal can't accidentally
-      // grow a combat profile it never rolls.
-      expect('evadable' in a, `${id} has no evadable`).toBe(false);
-      expect('critable' in a, `${id} has no critable`).toBe(false);
-      expect('accuracy' in a, `${id} has no accuracy`).toBe(false);
-      expect('critBase' in a, `${id} has no critBase`).toBe(false);
+      expect(abilityDef(id).target.kind).toBe('lowestHpAlly');
+      expect(healOpOf(id), `${id} has a heal op`).toBeDefined();
+      // A heal never rolls to-hit/crit: it has no damage op at all (so no
+      // accuracy/critBase/evadable/critable to accidentally grow).
+      expect(damageOpOf(id), `${id} has no damage op`).toBeUndefined();
     }
   });
 
-  it('every attack ability declares kind "attack"', () => {
-    for (const id of [...BASIC_STRIKES, ...UNMISSABLE_ATTACKS]) {
-      expect(abilityConfig(id).kind, id).toBe('attack');
-    }
+  it('evadable gate = the single-target strikes (the I2 carve-out, in data)', () => {
+    for (const id of BASIC_STRIKES) expect(damageOpOf(id)!.evadable, id).toBe(true);
+    // The AoE blast / artillery shot are unmissable (dodged positionally or not at all).
+    for (const id of UNMISSABLE_ATTACKS) expect(damageOpOf(id)!.evadable, id).toBe(false);
   });
 
-  it('I6 commit 2 split/renamed the basic-strike ids', () => {
-    // The shared `melee_strike` became four per-subclass weapons and
-    // `ranged_shot` became `bow`; the old ids no longer exist.
+  it('critable gate: the strikes crit; the mage bolt & catapult do NOT', () => {
+    for (const id of BASIC_STRIKES) expect(damageOpOf(id)!.critable, id).toBe(true);
+    for (const id of UNMISSABLE_ATTACKS) expect(damageOpOf(id)!.critable, id).toBe(false);
+  });
+
+  it('I6 split/renamed the basic-strike ids', () => {
+    const ids = Object.keys(ABILITY_DEFS);
     expect(ids).not.toContain('melee_strike');
     expect(ids).not.toContain('ranged_shot');
     for (const id of BASIC_STRIKES) expect(ids, `${id} registered`).toContain(id);
-  });
-
-  it('evadable gate = the single-target strikes (migrated from I2 call sites)', () => {
-    // Single-target strikes roll precision-vs-evasion to-hit...
-    for (const id of BASIC_STRIKES) expect(attackConfig(id).evadable, id).toBe(true);
-    // ...the AoE blast / artillery shot are unmissable (dodged positionally or
-    // not at all — the I2 carve-out, now in config). A heal isn't an attack kind
-    // at all, so it has no evadable flag to roll (asserted above).
-    for (const id of UNMISSABLE_ATTACKS) expect(attackConfig(id).evadable, id).toBe(false);
-  });
-
-  it('critable gate: the strikes crit; (I6 commit 2) the mage bolt & catapult do NOT', () => {
-    for (const id of BASIC_STRIKES) expect(attackConfig(id).critable, id).toBe(true);
-    // I6 commit 2 (user call): area-denial / artillery no longer crit, even
-    // though pre-I6 they rolled a luck-based crit.
-    for (const id of UNMISSABLE_ATTACKS) expect(attackConfig(id).critable, id).toBe(false);
   });
 });

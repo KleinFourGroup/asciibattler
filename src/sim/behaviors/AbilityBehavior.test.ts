@@ -11,16 +11,16 @@ import type { Ability } from '../abilities/Ability';
 import type { Action, ActionProposal } from '../Action';
 import type { GameEvents } from '../../core/events';
 import { LEVELING } from '../../config/leveling';
-import { attackConfig } from '../../config/abilities';
+import { damageOpOf } from '../../config/abilities';
 
 // I6 — a strike deals the weapon's `might` plus the wielder's scaling stat;
 // `scene()` sets that stat to the spec's `attackDamage`, so a fired strike lands
-// `might + attackDamage`. Derive the weapon might from config (the production
-// path reads it) so re-tuning a weapon can't break these wiring assertions — the
-// damage *mechanic* is pinned config-free in AttackAction.test.ts. `scene()`
-// gives mercenary units the `sword`, ranged units the `bow`.
-const SWORD_MIGHT = attackConfig('sword').might;
-const BOW_MIGHT = attackConfig('bow').might;
+// `might + attackDamage`. Derive the weapon might from the verb's damage op (the
+// production path reads it) so re-tuning a weapon can't break these wiring
+// assertions — the damage *mechanic* is pinned config-free in stats.test.ts.
+// `scene()` gives mercenary units the `sword`, ranged units the `bow`.
+const SWORD_MIGHT = damageOpOf('sword')!.might;
+const BOW_MIGHT = damageOpOf('bow')!.might;
 
 describe('AbilityBehavior', () => {
   it('does not attack when no enemy is in range', () => {

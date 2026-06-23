@@ -6,7 +6,7 @@ import { RNG } from '../../core/RNG';
 import { deriveStats, inertDerived } from '../stats';
 import { chebyshev } from '../movement';
 import { LEVELING } from '../../config/leveling';
-import { abilityDef } from '../../config/abilityDefs';
+import { abilityDef } from '../../config/abilities';
 import { EffectAbility } from './EffectAbility';
 import type { EffectActionData } from './EffectAction';
 import type { GameEvents } from '../../core/events';

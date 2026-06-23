@@ -38,9 +38,9 @@
  *     `damageStatFor` stat, so op-authored scaling stays byte-identical) — and
  *     `damageStatFor` survives for the display surfaces (HUD/recruit "ATK").
  *
- * The new config home is `config/abilityDefs.json` (`src/config/abilityDefs.ts`)
- * during the migration; it inherits `config/abilities.json` at Phase Y5 when the
- * legacy hand-coded ability config retires. See `src/config/abilityDefs.ts`.
+ * The config home is `config/abilities.json` (`src/config/abilities.ts`) — the
+ * single ability catalog after Y5e retired the legacy hand-coded ability config.
+ * See `src/config/abilities.ts`.
  */
 
 import { z } from 'zod';

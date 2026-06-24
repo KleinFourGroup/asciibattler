@@ -453,6 +453,20 @@ parameter (authored per key), not a sim concern.
 
 ## Phase 27 — Status effects: the periodic axis + visualization + tile unification
 
+> **IN PROGRESS — 27a + 27b ✅ DONE & green (headless, not yet playtested).**
+> **27a** (`98b29b4`): the `StatusDef` schema ([statusSchema.ts](src/sim/effects/statusSchema.ts))
+> + registry ([config/statuses.ts](src/config/statuses.ts), catalog EMPTY) +
+> the `applyStatus` ref boot-check. **27b** (`940d55e`): the periodic engine —
+> **def-resolved by key** (the effect carries only `nextTickAt` + `sourceUnitId`;
+> op/interval/duration live on the def, so §28 behavior adds no serialized state →
+> no §28 bump), the extracted `dealDamage` chokepoint + `applyDamage.bypassDefense`,
+> `applyStatusEffect` / `applyPeriodicEffects`, the `status:applied/ticked/expired`
+> events (⭐ `status:ticked` also carries `amount`), **WorldSnapshot v26→v27**.
+> 1249 main + 210 fuzz green. **NEXT = 27c** (author the four statuses), then pair
+> **27d** (tile unification) + **27e** (status viz) into one observable commit —
+> deleting the D7.B pass without the `status:ticked` viz would leave fire damage
+> with no feedback — and PAUSE for the user's playtest.
+
 Extend K1 along the **periodic** axis (DoT/HoT) and land the status lifecycle
 that *is* the in-battle display. **`WorldSnapshot` bump** (the StatusDef-shaped
 fields on `effects[]`).

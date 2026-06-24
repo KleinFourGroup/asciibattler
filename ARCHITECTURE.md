@@ -86,6 +86,7 @@ src/
                              # blocksLineOfSight (D6)
                              # K1: effects[] (status effects) + effectiveStats (cached fold; === stats when empty) + addEffect/expireEffects/refreshDerived
     statusEffects.ts         # K1: generic status-effect system — StatusEffect (per-stat add/mul mods + lifetime + merge policy) + foldEffects + combineMagnitude
+    statusBehavior.ts        # 28: behaviorFlags — the def-resolve fold turning a unit's effects[] into merged AI overrides (frozen/blind/panic/confusion) the selector/movement/targeting consumers read
     triggers.ts              # K1: TriggerContextMap (combat: dealHit/takeHit/dealMiss/evade/kill/death/spawn) + generic TriggerDispatcher<M,O> (shared by World + Run)
     stats.ts                 # deriveStats / inertDerived / ZERO_STATS + damage/heal/range/cadence helpers
                              # — pure functions; crit RNG rolls happen at AttackAction.start; K1: unit-taking helpers read effectiveStats
@@ -127,7 +128,7 @@ src/
       registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
     effects/                 # Y1–Y3: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
       schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types; 27a: PeriodicOp (damage|heal subset for status ticks)
-      statusSchema.ts        #   27a: StatusDef vocabulary (zod) — durationSeconds/merge/periodic{everySeconds,op}/fx; the periodic (DoT/HoT) axis of the K1 status system
+      statusSchema.ts        #   27a: StatusDef vocabulary (zod) — durationSeconds/merge/periodic{everySeconds,op}/fx; 28: behavior{preventsAttack/preventsMove/movement/targeting/acquisitionRange/affects} (the AI decision-hook axis)
       statusRuntime.ts       #   27b: StatusDef → runtime StatusEffect bridge (buildStatusEffect + statusMergeToPolicy: brief merge vocab → K1 MergePolicy)
       timeline.ts            #   Y1: seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase
       targeting.ts           #   Y2: unitsInCells (the Cluster-2 footprint seam) + aoe victim resolution + the affects filter

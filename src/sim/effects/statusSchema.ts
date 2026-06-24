@@ -14,19 +14,20 @@
  *                         mapped onto K1's `MergePolicy` at apply time, 27b).
  *   - `periodic?`       — the DoT/HoT: `op` (damage|heal) × the effect's
  *                         magnitude, every `everySeconds`. The §27 headline.
+ *   - `behavior?`       — the §28 BEHAVIOR axis: AI decision-overrides
+ *                         (frozen/blind/panic/confusion) the existing consumers
+ *                         READ. Def-resolved by `key` (see `statusBehavior.ts`),
+ *                         so it adds no serialized state (no snapshot bump).
  *   - `fx?`             — opaque renderer keys (the §Z registry), inert in the
  *                         sim — resolved by the renderer over the `status:*`
- *                         lifecycle events (27e).
+ *                         lifecycle events (27e) + the held `active` overlay (28).
  *
- * SCOPE (27, periodic only). Two axes the overall cluster vocabulary lists are
- * deferred to their CONSUMING phase — config is never serialized, so adding
- * either later costs NO snapshot bump:
+ * SCOPE (27 periodic + 28 behavior). One axis the cluster vocabulary lists is
+ * still deferred to its CONSUMING phase — config is never serialized, so adding
+ * it later costs NO snapshot bump:
  *   - `statMods?` (the K1 stat-mod axis — a slow, a defense debuff) → arrives
- *     with its first consumer (§28 behavior-adjacent / §31 content). The runtime
- *     `StatusEffect.mods` already exists; this is only the authoring surface.
- *   - `behavior?` (frozen/blind/confusion/panic as decision-hooks) → §28. The
- *     consumers (selector/targeting/movement) resolve it from the def by the
- *     effect's `key`, so it adds no serialized state either.
+ *     with its first consumer (§31 content). The runtime `StatusEffect.mods`
+ *     already exists; this is only the authoring surface.
  *
  * Authored in SECONDS (canonical, TICK_RATE-independent), converted at apply —
  * the existing convention. Config home: `config/statuses.json`
@@ -62,6 +63,43 @@ const PeriodicSchema = z.object({
 });
 
 /**
+ * §28 — the BEHAVIOR axis: the AI decision-overrides a held status imposes on
+ * its host. The status system holds NO logic — these are flags the existing
+ * consumers READ at their own decision points (the brief's "decision-hooks, not
+ * reach-in"): the action-selector, `MovementBehavior`, `Targeting`. Like
+ * `periodic`, the block lives on the DEF and is resolved by the effect's `key`
+ * (`statusBehavior.ts` `behaviorFlags`), so it adds no serialized state.
+ *
+ * The four §28 statuses and the flags each authors:
+ *   - frozen    `{preventsAttack, preventsMove}`         — skips its turn entirely
+ *   - panic     `{preventsAttack, movement:'flee'}`      — can't attack, flees
+ *   - blind     `{movement:'wander', acquisitionRange:1}`— wanders, hits only adjacent
+ *   - confusion `{targeting:'random', affects:'all'}`    — random-team, friendly-fire
+ *
+ * All fields optional (`.partial()`) — a status authors only the flags it needs.
+ */
+const BehaviorSchema = z
+  .object({
+    /** The action-selector skips this unit's ATTACK proposals (frozen, panic). */
+    preventsAttack: z.boolean(),
+    /** `MovementBehavior` proposes no step at all (frozen). Trumps `movement`. */
+    preventsMove: z.boolean(),
+    /** Overrides the movement GOAL — `flee` the nearest enemy / `wander` to a
+     *  random free neighbor. Ignored under `preventsMove`. */
+    movement: z.enum(['flee', 'wander']),
+    /** Forces target SELECTION to a random unit across ALL teams within
+     *  acquisition range — the confusion override (`Targeting` reads it). */
+    targeting: z.literal('random'),
+    /** Caps the target-ACQUISITION reach in cells (Chebyshev) — blind only
+     *  acquires an adjacent enemy (`1`). Unset = the unit's normal acquisition. */
+    acquisitionRange: z.number().int().nonnegative(),
+    /** Forces this unit's attacks to a friendly-fire `affects` override
+     *  (confusion → `all`), regardless of the ability def's authored `affects`. */
+    affects: z.literal('all'),
+  })
+  .partial();
+
+/**
  * Opaque renderer keys per status-lifecycle moment (§Z registry; resolved by
  * the renderer over `status:applied` / `status:ticked` / `status:expired`, with
  * `active` the persistent overlay/tint while the status is held). Inert in the
@@ -85,11 +123,13 @@ export const StatusDefSchema = z.object({
   durationSeconds: z.number().positive(),
   merge: StatusMergeSchema,
   periodic: PeriodicSchema.optional(),
+  behavior: BehaviorSchema.optional(),
   fx: StatusFxSchema.optional(),
 });
 
 export type StatusMerge = z.infer<typeof StatusMergeSchema>;
 export type StatusPeriodic = z.infer<typeof PeriodicSchema>;
+export type StatusBehavior = z.infer<typeof BehaviorSchema>;
 export type StatusDef = z.infer<typeof StatusDefSchema>;
 
 /** Parse one status definition, throwing on a malformed shape (the A4 pattern). */

@@ -13,9 +13,18 @@ import { parseStatusDef, type StatusDef } from '../sim/effects/statusSchema';
  * still build literal fixtures (they probe the check, not the catalog).
  */
 
-describe('STATUS_DEFS registry (27c content)', () => {
-  it('ships the four periodic statuses', () => {
-    expect(Object.keys(STATUS_DEFS).sort()).toEqual(['bleed', 'burn', 'poison', 'rejuvenate']);
+describe('STATUS_DEFS registry (27c periodic + 28 behavior content)', () => {
+  it('ships the four periodic + four behavior statuses', () => {
+    expect(Object.keys(STATUS_DEFS).sort()).toEqual([
+      'bleed',
+      'blind',
+      'burn',
+      'confusion',
+      'frozen',
+      'panic',
+      'poison',
+      'rejuvenate',
+    ]);
   });
 
   it('every entry declares an id matching its registry key', () => {
@@ -67,6 +76,31 @@ describe('27c — DoT / HoT content shape', () => {
     expect(statusDef('rejuvenate').merge).toBe('refresh');
     expect(statusDef('bleed').merge).toBe('add');
     expect(statusDef('poison').merge).toBe('add');
+  });
+});
+
+describe('28 — behavior-status content shape', () => {
+  it('the four behavior statuses author behavior (not periodic) blocks', () => {
+    for (const id of ['frozen', 'panic', 'blind', 'confusion']) {
+      expect(statusDef(id).behavior, `${id} must author a behavior block`).toBeDefined();
+      expect(statusDef(id).periodic, `${id} is pure behavior (no DoT)`).toBeUndefined();
+    }
+  });
+
+  it('frozen prevents both attack and movement', () => {
+    expect(statusDef('frozen').behavior).toEqual({ preventsAttack: true, preventsMove: true });
+  });
+
+  it('panic prevents attack and flees', () => {
+    expect(statusDef('panic').behavior).toEqual({ preventsAttack: true, movement: 'flee' });
+  });
+
+  it('blind wanders and acquires only adjacent (range 1)', () => {
+    expect(statusDef('blind').behavior).toEqual({ movement: 'wander', acquisitionRange: 1 });
+  });
+
+  it('confusion picks a random-team target and friendly-fires', () => {
+    expect(statusDef('confusion').behavior).toEqual({ targeting: 'random', affects: 'all' });
   });
 });
 

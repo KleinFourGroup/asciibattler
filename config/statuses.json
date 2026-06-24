@@ -73,5 +73,33 @@
       }
     },
     "fx": { "ticked": "rejuvenate_tick" }
+  },
+  "frozen": {
+    "id": "frozen",
+    "name": "Frozen",
+    "durationSeconds": 2,
+    "merge": "refresh",
+    "behavior": { "preventsAttack": true, "preventsMove": true }
+  },
+  "panic": {
+    "id": "panic",
+    "name": "Panic",
+    "durationSeconds": 3,
+    "merge": "refresh",
+    "behavior": { "preventsAttack": true, "movement": "flee" }
+  },
+  "blind": {
+    "id": "blind",
+    "name": "Blind",
+    "durationSeconds": 4,
+    "merge": "refresh",
+    "behavior": { "movement": "wander", "acquisitionRange": 1 }
+  },
+  "confusion": {
+    "id": "confusion",
+    "name": "Confusion",
+    "durationSeconds": 4,
+    "merge": "refresh",
+    "behavior": { "targeting": "random", "affects": "all" }
   }
 }

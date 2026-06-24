@@ -126,9 +126,94 @@ describe('StatusDef schema — rejects malformed shapes', () => {
   });
 });
 
+describe('StatusDef schema — the §28 behavior axis', () => {
+  it('parses each of the four behavior shapes', () => {
+    const frozen = parseStatusDef({
+      id: 'frozen',
+      name: 'Frozen',
+      durationSeconds: 2,
+      merge: 'refresh',
+      behavior: { preventsAttack: true, preventsMove: true },
+    });
+    expect(frozen.behavior).toEqual({ preventsAttack: true, preventsMove: true });
+
+    const blind = parseStatusDef({
+      id: 'blind',
+      name: 'Blind',
+      durationSeconds: 4,
+      merge: 'refresh',
+      behavior: { movement: 'wander', acquisitionRange: 1 },
+    });
+    expect(blind.behavior?.movement).toBe('wander');
+    expect(blind.behavior?.acquisitionRange).toBe(1);
+
+    const confusion = parseStatusDef({
+      id: 'confusion',
+      name: 'Confusion',
+      durationSeconds: 4,
+      merge: 'refresh',
+      behavior: { targeting: 'random', affects: 'all' },
+    });
+    expect(confusion.behavior?.targeting).toBe('random');
+    expect(confusion.behavior?.affects).toBe('all');
+  });
+
+  it('a status may carry behavior with no periodic block', () => {
+    const def = parseStatusDef({
+      id: 'panic',
+      name: 'Panic',
+      durationSeconds: 3,
+      merge: 'refresh',
+      behavior: { preventsAttack: true, movement: 'flee' },
+    });
+    expect(def.periodic).toBeUndefined();
+    expect(def.behavior?.movement).toBe('flee');
+  });
+
+  it('rejects an unknown movement mode', () => {
+    expect(() =>
+      parseStatusDef({
+        ...(validBurnDef() as object),
+        behavior: { movement: 'charge' },
+      }),
+    ).toThrow();
+  });
+
+  it('rejects a non-"all" affects override (the only authored value)', () => {
+    expect(() =>
+      parseStatusDef({
+        ...(validBurnDef() as object),
+        behavior: { affects: 'enemies' },
+      }),
+    ).toThrow();
+  });
+
+  it('rejects a non-integer acquisition range', () => {
+    expect(() =>
+      parseStatusDef({
+        ...(validBurnDef() as object),
+        behavior: { acquisitionRange: 1.5 },
+      }),
+    ).toThrow();
+  });
+});
+
 describe('StatusDef schema — round-trips through JSON', () => {
   it('parse → serialize → parse is stable', () => {
     const once: StatusDef = StatusDefSchema.parse(validBurnDef());
+    const twice: StatusDef = StatusDefSchema.parse(JSON.parse(JSON.stringify(once)));
+    expect(twice).toEqual(once);
+  });
+
+  it('a behavior def round-trips unchanged', () => {
+    const def = {
+      id: 'blind',
+      name: 'Blind',
+      durationSeconds: 4,
+      merge: 'refresh' as const,
+      behavior: { movement: 'wander' as const, acquisitionRange: 1 },
+    };
+    const once: StatusDef = StatusDefSchema.parse(def);
     const twice: StatusDef = StatusDefSchema.parse(JSON.parse(JSON.stringify(once)));
     expect(twice).toEqual(once);
   });

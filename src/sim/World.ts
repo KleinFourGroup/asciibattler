@@ -2,7 +2,7 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { GridCoord } from '../core/types';
-import { GRID_SIZE } from '../config';
+import { GRID_SIZE, secondsToTicks } from '../config';
 import {
   Unit,
   type Team,
@@ -31,6 +31,9 @@ import type { ObjectiveTeam, TeamObjective } from './objective';
 import { focusTileResolvedByArrival } from './focusTile';
 import type { StatusEffect } from './statusEffects';
 import { cloneEffect } from './statusEffects';
+import { STATUS_DEFS } from '../config/statuses';
+import type { StatusDef } from './effects/statusSchema';
+import { buildStatusEffect } from './effects/statusRuntime';
 import { TriggerDispatcher } from './triggers';
 import type { TriggerContextMap, TriggerHandler, TriggerName } from './triggers';
 import { createAction } from './actions/registry';
@@ -187,8 +190,15 @@ import { STATS } from '../config/stats';
  *       route to `EffectAction.fromData` expecting the new shape). Reject v25
  *       outright per the no-migration contract. RunSnapshot is unaffected —
  *       roster abilities are ids re-resolved at spawn, not serialized actions.
+ *  27 — Phase 27 (statuses, periodic axis) added the per-unit periodic runtime
+ *       state to `StatusEffect`: `nextTickAt` (the DoT/HoT tick cursor) +
+ *       `sourceUnitId` (attribution). A v26 save's `effects[]` carry neither, so
+ *       a mid-tick burn/bleed/poison/rejuvenate would resume with no cursor and
+ *       silently stop ticking. Reject v26 outright per the no-migration contract
+ *       (a pre-27 save has no periodic statuses anyway — the feature didn't
+ *       exist). RunSnapshot is unaffected — statuses are World-side + transient.
  */
-const WORLD_SCHEMA_VERSION = 26;
+const WORLD_SCHEMA_VERSION = 27;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -632,11 +642,37 @@ export class World {
    * accuracy on the evadable degraded path is treated as unmissable, the same
    * as a missing attacker.
    */
+  /**
+   * 27 — the shared damage CORE: subtractive `defense` mitigation (skipped when
+   * `bypassDefense`, the DoT path), the HP deduction, and the XP-ledger credit.
+   * Returns the final damage dealt. This is the single mitigation chokepoint —
+   * every HP-reducing source routes through it (the combat `applyDamage` wrapper
+   * below, and `applyPeriodicEffects`' DoT ticks), so future shields/resistances
+   * slot in ONE place. Event emission + the to-hit roll + the combat triggers
+   * stay with the callers (a strike emits `unit:attacked` + dealHit/takeHit/kill;
+   * a DoT tick emits `status:ticked`), so the per-source semantics don't leak in
+   * here. `attacker` is the resolved Unit (or undefined: a degraded combat hit or
+   * an environmental DoT) — no `recordDamage` credit without one.
+   */
+  private dealDamage(
+    attacker: Unit | undefined,
+    target: Unit,
+    rawDamage: number,
+    opts: { bypassDefense: boolean },
+  ): number {
+    const final = opts.bypassDefense
+      ? rawDamage
+      : Math.max(STATS.minDamage, rawDamage - target.effectiveStats.defense);
+    target.currentHp -= final;
+    if (attacker) this.recordDamage(attacker.id, target, final);
+    return final;
+  }
+
   applyDamage(
     attackerId: number,
     target: Unit,
     rawDamage: number,
-    opts: { crit: boolean; evadable?: boolean; accuracy?: number },
+    opts: { crit: boolean; evadable?: boolean; accuracy?: number; bypassDefense?: boolean },
   ): void {
     // K1 — looked up once: a live attacker is the runtime invariant (the strike
     // is cast by it), and the combat triggers below need the Unit. `findUnit`
@@ -675,9 +711,9 @@ export class World {
         }
       }
     }
-    const final = Math.max(STATS.minDamage, rawDamage - target.effectiveStats.defense);
-    target.currentHp -= final;
-    this.recordDamage(attackerId, target, final);
+    const final = this.dealDamage(attacker, target, rawDamage, {
+      bypassDefense: opts.bypassDefense ?? false,
+    });
     this.emit('unit:attacked', {
       attackerId,
       targetId: target.id,
@@ -784,7 +820,17 @@ export class World {
       // so a just-expired buff can't influence this tick's proposal. A no-op
       // (no array touch) for the no-effect common case. `endOfTurn` effects
       // are never removed here — they live for the whole battle.
-      unit.expireEffects(this.tickCount);
+      // 27 — fire `status:expired` for each removed status-DEF effect (the viz
+      // lifecycle); plain K1 stat effects (not in STATUS_DEFS) stay silent.
+      for (const e of unit.expireEffects(this.tickCount)) {
+        if (e.key in STATUS_DEFS) {
+          this.bus.emit('status:expired', {
+            unitId: unit.id,
+            statusId: e.key,
+            sourceUnitId: e.sourceUnitId ?? null,
+          });
+        }
+      }
 
       // 3. In-flight action. F2 — walk the declared phase timeline: emit an
       // `action:phase` event for every phase that BEGINS at the current
@@ -863,12 +909,17 @@ export class World {
     // queue gets a chance to reinforce before victory triggers.
     this.runOverflowScan();
 
+    // 27 — per-unit periodic status ticks (DoT/HoT). Runs alongside the tile
+    // pass; the shared `reapDead()` below also reaps a DoT-kill on the SAME tick.
+    this.applyPeriodicEffects();
+
     // D7.B — per-tile chip damage/heal. Runs AFTER the overflow scan
     // so freshly-spawned units take immediate effect if they land on
     // a fire/healing tile during a cadence tick. Followed by a reap
     // pass so a unit killed by fire dies on the SAME tick (matches
     // combat-kill ordering — without the reap, a fire-kill would
-    // linger one tick before checkBattleEnd notices).
+    // linger one tick before checkBattleEnd notices). (27d retires this pass —
+    // fire/healing tiles will apply burn/rejuvenate statuses instead.)
     this.applyTileEffects();
     this.reapDead();
 
@@ -890,6 +941,96 @@ export class World {
       targetId,
       targetCell,
     });
+  }
+
+  /**
+   * 27 — apply a status to `target` from its `StatusDef` (the single apply
+   * chokepoint for status-DEF effects). Builds the runtime `StatusEffect`
+   * (merge-mapped, periodic cursor seeded), merges it onto the unit honouring
+   * the merge policy, and fires `status:applied`. `sourceUnitId` = the applier
+   * (the §29 caster) or `null` (environmental, the §27d fire tile). `magnitude`
+   * scales the periodic output + stacks under the `add` policy (default 1).
+   * Callers land in §27d (tiles) and §29 (the `applyStatus` op); 27b ships the
+   * mechanism (the empty catalog means nothing applies in production yet).
+   */
+  applyStatusEffect(
+    target: Unit,
+    def: StatusDef,
+    sourceUnitId: number | null,
+    magnitude = 1,
+  ): void {
+    target.addEffect(buildStatusEffect(def, this.tickCount, magnitude, sourceUnitId));
+    this.bus.emit('status:applied', { unitId: target.id, statusId: def.id, sourceUnitId });
+  }
+
+  /**
+   * 27 — the flat base of a periodic op: `might` + the scaling stat. §27 content
+   * is all `scaling:'none'` (flat `might`); the live-source scaling branch is a
+   * forward seam (a poison scaling off its applier's stat), contributing 0 when
+   * the op is flat or the source is gone/dead.
+   */
+  private periodicOpBase(
+    op: { might: number; scaling: 'strength' | 'ranged' | 'magic' | 'none' },
+    sourceUnitId: number | null | undefined,
+  ): number {
+    if (op.scaling === 'none') return op.might;
+    const source = sourceUnitId != null ? this.findUnit(sourceUnitId) : undefined;
+    return op.might + (source ? source.effectiveStats[op.scaling] : 0);
+  }
+
+  /**
+   * 27 — per-unit PERIODIC status pass (DoT/HoT). Each tick, for every live
+   * unit's effects whose def carries a `periodic` block, fire its op when the
+   * per-unit `nextTickAt` cursor comes due, then advance the cursor by one
+   * interval (a fixed cadence anchored at first apply — reapply tops up duration
+   * without shifting the tick phase). A DoT routes its damage through the shared
+   * `dealDamage` chokepoint (honouring `bypassDefense`); a HoT clamps at maxHp.
+   * Both emit `status:ticked` (the single viz event, carrying the HP delta) —
+   * NOT `unit:attacked` / `unit:healed`, so there's no double-cue. A unit killed
+   * by a DoT stops ticking its remaining effects (and is reaped by `reapDead`).
+   *
+   * Iteration order is `this.units` insertion order then effect-array order —
+   * deterministic, replay-stable for fuzz (mirrors `applyTileEffects`). Empty
+   * `STATUS_DEFS` (pre-27c) → every lookup misses → a cheap no-op, so 27b adds
+   * no production status source and the fuzz baseline is unperturbed.
+   */
+  private applyPeriodicEffects(): void {
+    for (const unit of this.units) {
+      if (unit.currentHp <= 0) continue;
+      for (const effect of unit.effects) {
+        const def = STATUS_DEFS[effect.key];
+        if (!def?.periodic) continue;
+        if (effect.nextTickAt === undefined || this.tickCount < effect.nextTickAt) continue;
+
+        const op = def.periodic.op;
+        const base = this.periodicOpBase(op, effect.sourceUnitId);
+        const magnitude = Math.round(base * effect.magnitude);
+        let amount = 0;
+        if (op.kind === 'damage') {
+          if (magnitude > 0) {
+            const source =
+              effect.sourceUnitId != null ? this.findUnit(effect.sourceUnitId) : undefined;
+            amount = this.dealDamage(source, unit, magnitude, { bypassDefense: op.bypassDefense });
+          }
+        } else {
+          // HoT — clamp at maxHp; credit the ledger only for a real source.
+          const before = unit.currentHp;
+          unit.currentHp = Math.min(unit.derived.maxHp, before + magnitude);
+          amount = unit.currentHp - before;
+          if (amount > 0 && effect.sourceUnitId != null) {
+            this.recordHealing(effect.sourceUnitId, amount);
+          }
+        }
+        this.bus.emit('status:ticked', {
+          unitId: unit.id,
+          statusId: def.id,
+          sourceUnitId: effect.sourceUnitId ?? null,
+          amount,
+        });
+        effect.nextTickAt += Math.max(1, secondsToTicks(def.periodic.everySeconds));
+        if (unit.currentHp <= 0) break; // dead — don't tick its remaining effects
+      }
+    }
   }
 
   /**

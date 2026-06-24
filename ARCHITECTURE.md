@@ -128,6 +128,7 @@ src/
     effects/                 # Y1–Y3: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
       schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types; 27a: PeriodicOp (damage|heal subset for status ticks)
       statusSchema.ts        #   27a: StatusDef vocabulary (zod) — durationSeconds/merge/periodic{everySeconds,op}/fx; the periodic (DoT/HoT) axis of the K1 status system
+      statusRuntime.ts       #   27b: StatusDef → runtime StatusEffect bridge (buildStatusEffect + statusMergeToPolicy: brief merge vocab → K1 MergePolicy)
       timeline.ts            #   Y1: seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase
       targeting.ts           #   Y2: unitsInCells (the Cluster-2 footprint seam) + aoe victim resolution + the affects filter
       reposition.ts          #   Y2: retreatCell — the caster-reposition primitive (the gambit's move-retreat op, via interpreter executeMove)
@@ -409,6 +410,9 @@ unit:missed             { attackerId: number; targetId: number }                
 unit:burned             { unitId: number; damage: number }                         # D7.B: per-tick chip from fire tile (no attacker)
 unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (D7.B tile chip, amount=0 at maxHp)
 unit:died               { unitId: number; team: Team }                             # team carried because the unit is already spliced out (C1b)
+status:applied          { unitId; statusId; sourceUnitId: number | null }          # 27: a status-def effect applied (sourceUnitId null = environmental); the viz lifecycle, only status-def effects emit
+status:ticked           { unitId; statusId; sourceUnitId: number | null; amount }   # 27: a periodic DoT/HoT fired — amount = post-mitigation HP delta (no unit:attacked/healed double-cue)
+status:expired          { unitId; statusId; sourceUnitId: number | null }          # 27: a status-def effect dropped off (expireEffects)
 action:phase            { unitId; actionId; phase; targetId?; targetCell? }         # F2: phase-boundary signal; §Z FX driver resolves actionId→def.fx[phase]→FX_REGISTRY (retired magic:detonated/catapult:fired)
 run:started             { seed: number }
 run:victory             { }

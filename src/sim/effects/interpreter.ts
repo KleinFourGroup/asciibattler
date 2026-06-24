@@ -106,6 +106,7 @@ function executeDamage(
         crit,
         evadable: op.evadable,
         accuracy: op.accuracy,
+        bypassDefense: op.bypassDefense,
       });
     }
     return;
@@ -124,6 +125,7 @@ function executeDamage(
       crit,
       evadable: op.evadable,
       accuracy: op.accuracy,
+      bypassDefense: op.bypassDefense,
     });
     return;
   }
@@ -137,6 +139,7 @@ function executeDamage(
     crit,
     evadable: op.evadable,
     accuracy: op.accuracy,
+    bypassDefense: op.bypassDefense,
   });
 }
 

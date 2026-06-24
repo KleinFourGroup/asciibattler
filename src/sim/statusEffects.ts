@@ -54,12 +54,16 @@ export type EffectLifetime =
 /**
  * How a re-applied effect (same `key`) combines with the existing instance's
  * magnitude. `independent` skips the merge entirely (a separate instance is
- * kept). Re-applying always refreshes the lifetime to the incoming one.
+ * kept). `ignore` (Phase 27) is a no-op if a same-`key` instance already exists
+ * (don't refresh, don't stack) — RESERVED, no §27 consumer; ships so the
+ * `StatusDef` merge vocabulary is closed. Every other policy refreshes the
+ * lifetime to the incoming one on re-apply.
  */
-export type MergePolicy = 'replace' | 'add' | 'multiply' | 'independent';
+export type MergePolicy = 'replace' | 'add' | 'multiply' | 'independent' | 'ignore';
 
 export interface StatusEffect {
-  /** Identity for merging, e.g. `'fatigued'`, `'empowered'`. */
+  /** Identity for merging, e.g. `'fatigued'`, `'empowered'`, `'burn'`. For a
+   *  status-def effect this is the `StatusDef.id` (the def-resolve link). */
   key: string;
   /** The "empower 3" scalar. Defaults to 1 at the apply sites. */
   magnitude: number;
@@ -67,6 +71,21 @@ export interface StatusEffect {
   mods: Partial<Record<StatKey, StatMod>>;
   lifetime: EffectLifetime;
   merge: MergePolicy;
+  /**
+   * Phase 27 — the per-unit PERIODIC tick cursor (the tick at which this
+   * effect's next DoT/HoT fires). Present only for status-def effects whose def
+   * carries a `periodic` block; absent for plain K1 stat effects. The op /
+   * interval / duration themselves are def-resolved by `key` (not serialized) —
+   * this cursor is the only periodic runtime state. Re-application preserves it
+   * (the cadence keeps running on its original anchor; see `mergeEffectInto`).
+   */
+  nextTickAt?: number;
+  /**
+   * Phase 27 — attribution for periodic damage/heal: the applying unit's id, or
+   * `null` for environmental (a fire-tile burn). Feeds the XP / kill ledger and
+   * the `status:*` events. Absent on plain K1 stat effects.
+   */
+  sourceUnitId?: number | null;
 }
 
 /** Only `mobility` is signed (0 = baseline, negative = slower); every other
@@ -136,6 +155,10 @@ export function combineMagnitude(policy: MergePolicy, existing: number, incoming
       return existing * incoming;
     case 'independent':
       return incoming;
+    case 'ignore':
+      // Unreachable: `mergeEffectInto` short-circuits `ignore` before combining.
+      // Present for switch exhaustiveness over the widened `MergePolicy`.
+      return existing;
   }
 }
 
@@ -148,6 +171,13 @@ export function combineMagnitude(policy: MergePolicy, existing: number, incoming
  * pushed. Mutates `list` in place.
  */
 export function mergeEffectInto(list: StatusEffect[], incoming: StatusEffect): void {
+  // 27 — `ignore`: if a same-key instance is already present, do nothing (no
+  // refresh, no stack). Otherwise it falls through to a fresh push below.
+  if (incoming.merge === 'ignore') {
+    if (list.some((e) => e.key === incoming.key)) return;
+    list.push(cloneEffect(incoming));
+    return;
+  }
   if (incoming.merge !== 'independent') {
     const existing = list.find((e) => e.key === incoming.key);
     if (existing) {
@@ -155,6 +185,11 @@ export function mergeEffectInto(list: StatusEffect[], incoming: StatusEffect): v
       existing.mods = cloneEffect(incoming).mods;
       existing.lifetime = { ...incoming.lifetime };
       existing.merge = incoming.merge;
+      // 27 — `nextTickAt` + `sourceUnitId` are deliberately NOT overwritten from
+      // `incoming`: a re-applied DoT/HoT (a `refresh` burn re-stamped each tick a
+      // unit stands in fire, an `add` bleed re-hit) keeps its periodic cadence
+      // running on the ORIGINAL anchor (so reapply tops up DURATION without ever
+      // pushing the next tick away) and the FIRST applier keeps kill/XP credit.
       return;
     }
   }
@@ -175,5 +210,9 @@ export function cloneEffect(effect: StatusEffect): StatusEffect {
     mods,
     lifetime: { ...effect.lifetime },
     merge: effect.merge,
+    // 27 — carry the periodic runtime state (omitted on plain stat effects, so
+    // the no-periodic common case stays a clean object without the keys).
+    ...(effect.nextTickAt !== undefined ? { nextTickAt: effect.nextTickAt } : {}),
+    ...(effect.sourceUnitId !== undefined ? { sourceUnitId: effect.sourceUnitId } : {}),
   };
 }

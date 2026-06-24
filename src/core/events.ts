@@ -181,6 +181,32 @@ export interface GameEvents extends Record<string, unknown> {
   'unit:died': { unitId: number; team: Team };
 
   /**
+   * Phase 27 — the status-effect lifecycle. A status (burn/bleed/poison/
+   * rejuvenate, …) was applied to / ticked on / expired off a unit. These are
+   * the in-battle status DISPLAY signal: the renderer (27e) resolves the status
+   * def's `fx` keys through the §Z registry to drive the apply flash / per-tick
+   * cue / expire fade / persistent overlay. `sourceUnitId` is the applier for
+   * attribution (`null` = environmental, e.g. a fire-tile burn — mirroring
+   * `unit:healed`'s `healerId: null`). Only status-DEF effects emit these; plain
+   * K1 stat effects (empower / fatigue / dodge-buff) do not.
+   *
+   * `status:ticked` carries the per-tick `amount` (the DoT damage / HoT heal HP
+   * delta, post-mitigation) so the renderer floats the number + flavor off this
+   * ONE event — the periodic tick does NOT also emit `unit:attacked` /
+   * `unit:healed` (no double-cue, no null-attacker dance). A refinement over the
+   * roadmap's lean `{unitId, statusId, sourceUnitId}` sketch: the viz needs the
+   * number, and threading it here keeps `status:ticked` the single tick signal.
+   */
+  'status:applied': { unitId: number; statusId: string; sourceUnitId: number | null };
+  'status:ticked': {
+    unitId: number;
+    statusId: string;
+    sourceUnitId: number | null;
+    amount: number;
+  };
+  'status:expired': { unitId: number; statusId: string; sourceUnitId: number | null };
+
+  /**
    * §Z — the ad-hoc `magic:detonated` / `catapult:fired` FX events (the Y4
    * strangler artifacts) were RETIRED here. Their VFX + SFX now resolve through
    * the renderer's FX registry (`src/render/fxRegistry.ts`), keyed off the

@@ -10,6 +10,10 @@ import { deriveStats } from './stats';
 import { foldEffects, cloneEffect, mergeEffectInto } from './statusEffects';
 import type { StatusEffect } from './statusEffects';
 
+/** Shared empty return for `expireEffects` when nothing expired (27) — keeps the
+ *  no-effect common path zero-allocation. */
+const NO_EFFECTS: readonly StatusEffect[] = [];
+
 /**
  * Combatant alignment. `'neutral'` is for environment entities (walls,
  * future healing shrines, hazards) — Targeting ignores neutrals when
@@ -385,17 +389,22 @@ export class Unit {
    * K1 — drop any `ticks` effect whose `expiresAtTick` has been reached.
    * `endOfTurn` effects are never removed here (they die with the World).
    * Recomputes `effectiveStats` only when something actually expired.
+   *
+   * 27 — returns the removed effects so the caller (`World.tick`) can fire
+   * `status:expired` for the status-def ones. The no-removal common case returns
+   * a shared empty array (no per-tick allocation).
    */
-  expireEffects(currentTick: number): void {
-    let removed = false;
+  expireEffects(currentTick: number): readonly StatusEffect[] {
+    let removed: StatusEffect[] | null = null;
     for (let i = this.effects.length - 1; i >= 0; i--) {
       const lifetime = this.effects[i]!.lifetime;
       if (lifetime.kind === 'ticks' && currentTick >= lifetime.expiresAtTick) {
+        (removed ??= []).push(this.effects[i]!);
         this.effects.splice(i, 1);
-        removed = true;
       }
     }
     if (removed) this.recomputeEffective();
+    return removed ?? NO_EFFECTS;
   }
 
   /**

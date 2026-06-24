@@ -150,26 +150,17 @@ export interface GameEvents extends Record<string, unknown> {
    * Only the evadable single-target actions emit it; the mage AoE, the catapult,
    * and environmental fire/chasm damage are unmissable and never do. */
   'unit:missed': { attackerId: number; targetId: number };
-  /**
-   * D7.B: per-tick chip damage from standing on a `fire` tile. Separate
-   * event from `unit:attacked` so consumers can branch cleanly without
-   * an `attackerId: null` / sentinel dance — fire damage has no
-   * attacker. Subscribers that need to refresh visible HP state should
-   * subscribe to all three of `unit:attacked` / `unit:burned` /
-   * `unit:healed`. Emits AFTER currentHp is updated and BEFORE
-   * `unit:died` if the damage kills.
-   */
-  'unit:burned': { unitId: number; damage: number };
-  /** D7.B: per-tick chip heal from standing on a `healing` tile. Emits
-   *  AFTER currentHp is updated; healing is clamped at maxHp, so the
-   *  emitted `amount` is the actual HP delta (0 when the unit is
-   *  already full — we still emit so subscribers can debounce / log).
-   *  F5: `healerId` tags the SOURCE — the casting unit's id for an
-   *  ability heal (HealAction), or `null` for an environment chip-heal
-   *  (a healing tile). Render-only metadata (not serialized): the F5
-   *  heal-sparkle fires only for ability heals so the per-tick tile chip
-   *  stays just its `+N`. A future healer→target beam / heal-XP ledger
-   *  is the other consumer this anticipates. */
+  /** Heal applied to a unit (an ability heal — `HealAction`). Emits AFTER
+   *  currentHp is updated; healing is clamped at maxHp, so the emitted `amount`
+   *  is the actual HP delta (0 when the unit is already full — we still emit so
+   *  subscribers can debounce / log).
+   *  F5: `healerId` tags the SOURCE — the casting unit's id for an ability heal,
+   *  or `null` for a (currently hypothetical) environmental heal. Render-only
+   *  metadata (not serialized): the F5 heal-sparkle fires only for ability heals.
+   *  27d — the per-tick HEALING-TILE chip-heal moved off this event: a healing
+   *  tile now sustains the `rejuvenate` HoT, which surfaces as `status:ticked`
+   *  (the regen number + cue resolve from the status's `fx`), so `unit:healed`
+   *  is the ability-heal cue only. */
   'unit:healed': { unitId: number; amount: number; healerId: number | null };
   /**
    * Fires once per unit removal from the world. `team` is included so

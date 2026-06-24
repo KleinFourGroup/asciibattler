@@ -95,7 +95,7 @@ export interface UnitCardHandles {
    *  (it has no stat block to reveal). */
   readonly statRows: Map<keyof UnitStats, StatRowHandle>;
   /** Q4 — the `compact` HP-bar fill, for the in-battle pane to drive on every
-   *  `unit:attacked`/`:burned`/`:healed`. Undefined for the full variants. */
+   *  `unit:attacked`/`status:ticked`/`:healed`. Undefined for the full variants. */
   readonly hpFill?: HTMLDivElement;
 }
 

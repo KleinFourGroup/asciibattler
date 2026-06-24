@@ -31,7 +31,7 @@ import type { ObjectiveTeam, TeamObjective } from './objective';
 import { focusTileResolvedByArrival } from './focusTile';
 import type { StatusEffect } from './statusEffects';
 import { cloneEffect } from './statusEffects';
-import { STATUS_DEFS } from '../config/statuses';
+import { STATUS_DEFS, statusDef } from '../config/statuses';
 import type { StatusDef } from './effects/statusSchema';
 import { buildStatusEffect } from './effects/statusRuntime';
 import { TriggerDispatcher } from './triggers';
@@ -44,7 +44,17 @@ import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { SpawnAction } from './actions/SpawnAction';
 import { SPAWN } from '../config/spawn';
-import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
+/**
+ * 27d — the tile→status map. A unit standing on a `fire` tile sustains `burn`;
+ * a `healing` tile sustains `rejuvenate`. Resolved ONCE at module load via
+ * `statusDef` (which throws loudly if 27c's catalog ever loses one), so a missing
+ * tile status fails at boot rather than at the first fire-tile step. The actual
+ * HP change is the status's periodic tick (`applyPeriodicEffects`), so all damage
+ * now flows through the single `dealDamage`/`applyDamage` chokepoint — the D7.B
+ * per-tile chip pass (with its own `currentHp -=` + `unit:burned`) is retired.
+ */
+const FIRE_STATUS = statusDef('burn');
+const HEALING_STATUS = statusDef('rejuvenate');
 import type { SpawnRegion } from './layouts';
 import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
@@ -422,7 +432,9 @@ export class World {
    * adds here so it rides the same `xpPerHealing` slice + snapshot field
    * without another schema bump. Deliberately NOT fed by the per-tick
    * regen-tile chip-heal (that's the tile's output, not a unit's
-   * contribution) — see `applyTileEffects`. Read once at `battle:ended`
+   * contribution) — the 27d `rejuvenate` HoT a healing tile applies carries
+   * `sourceUnitId: null`, which `applyPeriodicEffects` skips for the ledger.
+   * Read once at `battle:ended`
    * alongside `damageDealt`; snapshotted so a mid-battle round-trip
    * preserves the heal-XP awarded on win.
    */
@@ -614,9 +626,11 @@ export class World {
    * hit). `opts.crit` is the already-rolled flag, forwarded to the event for
    * E6.C's red hitsplats.
    *
-   * Environmental damage (fire chip in `applyTileEffects`) deliberately does
-   * NOT route through here — it keeps its own `currentHp -=` + `unit:burned`
-   * emit, so the GP2 `defense` mitigation never touches it.
+   * Environmental DoTs (the `burn` a fire tile applies, 27d) don't route through
+   * THIS to-hit wrapper — the periodic tick calls `dealDamage` directly with
+   * `bypassDefense: true`, so they stay unmissable and the GP2 `defense`
+   * mitigation never touches them, while still flowing through the one HP/ledger
+   * core (no bespoke `currentHp -=` anymore).
    *
    * GP2.2 — subtractive `defense` mitigation lands on the single `final` line:
    * a confirmed hit deals `max(STATS.minDamage, rawDamage − target.defense)`,
@@ -909,18 +923,19 @@ export class World {
     // queue gets a chance to reinforce before victory triggers.
     this.runOverflowScan();
 
-    // 27 — per-unit periodic status ticks (DoT/HoT). Runs alongside the tile
-    // pass; the shared `reapDead()` below also reaps a DoT-kill on the SAME tick.
+    // 27 — per-unit periodic status ticks (DoT/HoT). The fire/healing tiles
+    // feed this via `applyTileStatuses` below (a unit standing on fire carries
+    // `burn`, on healing carries `rejuvenate`), so this is the single HP-over-
+    // time pass; the shared `reapDead()` reaps a DoT-kill on the SAME tick.
     this.applyPeriodicEffects();
 
-    // D7.B — per-tile chip damage/heal. Runs AFTER the overflow scan
-    // so freshly-spawned units take immediate effect if they land on
-    // a fire/healing tile during a cadence tick. Followed by a reap
-    // pass so a unit killed by fire dies on the SAME tick (matches
-    // combat-kill ordering — without the reap, a fire-kill would
-    // linger one tick before checkBattleEnd notices). (27d retires this pass —
-    // fire/healing tiles will apply burn/rejuvenate statuses instead.)
-    this.applyTileEffects();
+    // 27d — refresh the tile-sourced statuses AFTER the overflow scan so a
+    // freshly-spawned unit that lands on a fire/healing tile is afflicted the
+    // same tick. Replaces the D7.B per-tile chip pass: the HP change is now the
+    // status's periodic tick (above), routed through `dealDamage`/the HoT clamp,
+    // not an ad-hoc `currentHp -=` here. A `reapDead()` sweep follows so a unit
+    // killed by a burn tick dies on the SAME tick (combat-kill ordering).
+    this.applyTileStatuses();
     this.reapDead();
 
     this.checkBattleEnd();
@@ -990,9 +1005,9 @@ export class World {
    * by a DoT stops ticking its remaining effects (and is reaped by `reapDead`).
    *
    * Iteration order is `this.units` insertion order then effect-array order —
-   * deterministic, replay-stable for fuzz (mirrors `applyTileEffects`). Empty
-   * `STATUS_DEFS` (pre-27c) → every lookup misses → a cheap no-op, so 27b adds
-   * no production status source and the fuzz baseline is unperturbed.
+   * deterministic, replay-stable for fuzz (mirrors `applyTileStatuses`). A unit
+   * with no periodic effect is a cheap per-effect no-op; the fire/healing tiles
+   * (27d) are the first in-battle source that seeds one.
    */
   private applyPeriodicEffects(): void {
     for (const unit of this.units) {
@@ -1034,51 +1049,61 @@ export class World {
   }
 
   /**
-   * D7.B — global-cadence tile-effect pass. Every `FIRE_TICKS_PER_DAMAGE`
-   * ticks (5 @ 2 HP/sec, TICK_RATE=10), iterate live combatant units
-   * and apply 1 HP fire damage to any standing on a `fire` tile.
-   * Symmetric for `HEALING_TICKS_PER_HEAL` (10 @ 1 HP/sec). The
-   * cadences are independent — a fire-tick and a heal-tick can coincide
-   * (every 10 ticks for the default rates).
+   * 27d — the tile-effect pass (replaces the D7.B per-tile chip). Each tick,
+   * every live combatant standing on a `fire` tile sustains `burn`, on a
+   * `healing` tile sustains `rejuvenate` — environmental, so `sourceUnitId` is
+   * `null` (the §27 default, mirroring the old chip's `healerId: null`). The
+   * actual HP change is the status's periodic tick (`applyPeriodicEffects`), so
+   * fire/healing now route through the same `dealDamage` / HoT-clamp path as
+   * every other source — no bespoke `currentHp -=` here.
    *
-   * Neutrals (walls, half-cover) are skipped per the D7 "combatants
-   * only" decision. Already-dead units (currentHp <= 0, awaiting reap)
-   * also skipped so a fire pass doesn't double-burn a corpse.
-   *
-   * Iteration order is `this.units` insertion order (deterministic by
-   * spawn sequence), so the event stream is replay-stable for fuzz.
+   * Runs every tick (not on a cadence) so a unit catches fire the instant it
+   * steps in; the burn DoT's own `everySeconds` paces the damage. Neutrals
+   * (walls, half-cover) are skipped per the D7 "combatants only" rule; dead
+   * units (awaiting reap) too. Iteration is `this.units` insertion order —
+   * deterministic, so the `status:applied` stream is replay-stable for fuzz.
    */
-  private applyTileEffects(): void {
-    const fireTick = this.tickCount % FIRE_TICKS_PER_DAMAGE === 0;
-    const healTick = this.tickCount % HEALING_TICKS_PER_HEAL === 0;
-    if (!fireTick && !healTick) return;
-
+  private applyTileStatuses(): void {
     for (const unit of this.units) {
       if (unit.team === 'neutral') continue;
       if (unit.currentHp <= 0) continue;
       const kind = this.tileGrid.kindAt(unit.position);
-      if (kind === 'fire' && fireTick) {
-        const damage = 1;
-        unit.currentHp -= damage;
-        this.bus.emit('unit:burned', { unitId: unit.id, damage });
-      } else if (kind === 'healing' && healTick) {
-        const before = unit.currentHp;
-        unit.currentHp = Math.min(unit.derived.maxHp, before + 1);
-        const amount = unit.currentHp - before;
-        // F5: `healerId: null` marks this as an environment chip-heal (no
-        // casting unit) so the renderer keeps it to just the `+N` hitsplat.
-        this.bus.emit('unit:healed', { unitId: unit.id, amount, healerId: null });
-      }
+      if (kind === 'fire') this.sustainTileStatus(unit, FIRE_STATUS);
+      else if (kind === 'healing') this.sustainTileStatus(unit, HEALING_STATUS);
     }
   }
 
   /**
-   * D7.B — reap any unit whose currentHp has dropped to 0 (or below)
-   * after the tile-effect pass. Combat kills are already reaped inside
-   * the per-unit loop's step-1 death check, so in practice this pass
-   * only matches fire-kills. Kept as an unconditional sweep because
-   * O(N) on a small N is cheaper than auditing every damage source
-   * for an inline reap.
+   * 27d — sustain a tile's status on a standing unit. On ENTER (the status not
+   * yet present) it routes through `applyStatusEffect`, which fires
+   * `status:applied` once (→ the renderer's apply flash). On every subsequent
+   * tick it tops up the duration DIRECTLY (no event), so a standing unit never
+   * re-flashes yet the `refresh` status never lapses — and, critically, the
+   * periodic `nextTickAt` cursor is left untouched, so the DoT cadence keeps
+   * running on its original anchor (a per-tick `applyStatusEffect` re-apply
+   * would also preserve the cursor, but would spam `status:applied`). Stepping
+   * off stops the top-up, so the status lingers its remaining `durationSeconds`
+   * then expires — the "lingers after stepping off" feel.
+   */
+  private sustainTileStatus(unit: Unit, def: StatusDef): void {
+    const existing = unit.effects.find((e) => e.key === def.id);
+    if (existing) {
+      existing.lifetime = {
+        kind: 'ticks',
+        expiresAtTick: this.tickCount + Math.max(1, secondsToTicks(def.durationSeconds)),
+      };
+    } else {
+      this.applyStatusEffect(unit, def, null);
+    }
+  }
+
+  /**
+   * D7.B / 27 — reap any unit whose currentHp dropped to 0 (or below) during the
+   * end-of-tick passes. Combat kills are already reaped inside the per-unit
+   * loop's step-1 death check, so in practice this matches PERIODIC-status kills
+   * (a `burn`/`bleed`/`poison` DoT tick, including the fire-tile burn). Kept as
+   * an unconditional sweep because O(N) on a small N is cheaper than auditing
+   * every damage source for an inline reap.
    */
   private reapDead(): void {
     for (const unit of this.units.slice()) {

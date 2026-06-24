@@ -407,11 +407,10 @@ unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durati
 unit:dashed             { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }   # N1: a dash LEAP (also emits unit:moved for the slide) — audio/VFX cue, fires even on a 1-cell dash
 unit:attacked           { attackerId: number; targetId: number; damage: number; crit: boolean }   # E1: damage post-crit; GP2: post-defense (via world.applyDamage)
 unit:missed             { attackerId: number; targetId: number }                   # I2: a single-target strike dodged (precision-vs-evasion roll); 0 dmg, no HP/ledger touch
-unit:burned             { unitId: number; damage: number }                         # D7.B: per-tick chip from fire tile (no attacker)
-unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (D7.B tile chip, amount=0 at maxHp)
+unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (hypothetical env heal); 27d: the healing-TILE chip moved to the rejuvenate status
 unit:died               { unitId: number; team: Team }                             # team carried because the unit is already spliced out (C1b)
-status:applied          { unitId; statusId; sourceUnitId: number | null }          # 27: a status-def effect applied (sourceUnitId null = environmental); the viz lifecycle, only status-def effects emit
-status:ticked           { unitId; statusId; sourceUnitId: number | null; amount }   # 27: a periodic DoT/HoT fired — amount = post-mitigation HP delta (no unit:attacked/healed double-cue)
+status:applied          { unitId; statusId; sourceUnitId: number | null }          # 27: a status-def effect applied (sourceUnitId null = environmental, e.g. a fire/healing tile, 27d); the viz lifecycle, only status-def effects emit
+status:ticked           { unitId; statusId; sourceUnitId: number | null; amount }   # 27: a periodic DoT/HoT fired (the fire→burn / healing→rejuvenate chip, 27d) — amount = post-mitigation HP delta (no unit:attacked/healed double-cue)
 status:expired          { unitId; statusId; sourceUnitId: number | null }          # 27: a status-def effect dropped off (expireEffects)
 action:phase            { unitId; actionId; phase; targetId?; targetCell? }         # F2: phase-boundary signal; §Z FX driver resolves actionId→def.fx[phase]→FX_REGISTRY (retired magic:detonated/catapult:fired)
 run:started             { seed: number }

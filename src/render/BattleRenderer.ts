@@ -15,6 +15,7 @@ import { COLORS } from './palette';
 import { SpriteAnimator } from './animation/SpriteAnimator';
 import {
   assertFxKeysResolve,
+  assertStatusFxKeysResolve,
   fxDescriptor,
   type FxBurst,
   type FxProjectile,
@@ -23,6 +24,7 @@ import {
 } from './fxRegistry';
 import { TICK_RATE, ticksToSeconds } from '../config';
 import { ABILITY_DEFS } from '../config/abilities';
+import { STATUS_DEFS } from '../config/statuses';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
 import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
 import { SPAWN } from '../config/spawn';
@@ -151,9 +153,11 @@ export class BattleRenderer {
     private readonly audio: AudioPlayer,
     bus: EventBus<GameEvents>,
   ) {
-    // §Z boot assert: every `fx` key the ability catalog references must resolve
-    // in the registry, so a typo fails here (battle start) not silently on screen.
+    // §Z / 27e boot assert: every `fx` key the ability AND status catalogs
+    // reference must resolve in the registry, so a typo fails here (battle start)
+    // not silently on screen.
     assertFxKeysResolve(ABILITY_DEFS);
+    assertStatusFxKeysResolve(STATUS_DEFS);
     this.animator = new SpriteAnimator(this.sprites);
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
@@ -172,24 +176,26 @@ export class BattleRenderer {
     // strangler artifacts) — the impact burst now rides `action:phase{impact}`,
     // same tick, same pre-hitsplat ordering.
     this.subscriptions.push(bus.on('action:phase', this.onActionPhase));
-    // D7.B: keep HP bars in sync with tile-effect chip damage / heal. E6.C
-    // also floats a hitsplat for each: burn damage in amber, heal in cyan.
-    // The healing tile emits a no-op heal every cadence tick on a full unit
-    // (gotcha #80), so skip amount <= 0 to avoid "+0" spam.
-    this.subscriptions.push(
-      bus.on('unit:burned', ({ unitId, damage }) => {
-        this.refreshHpBar(unitId);
-        this.spawnHitsplat(unitId, String(damage), 'burn');
-      }),
-    );
+    // 27e — the status-effect viz, resolved through the §Z FX registry exactly
+    // like `action:phase` (status def's `fx[moment]` → key → descriptor →
+    // channels). `applied` flashes a recolored mote puff; `ticked` puffs again +
+    // floats the DoT/HoT amount hitsplat + plays the re-homed tile cue (burn /
+    // healtick) and keeps the HP bar in sync. (`expired` has no cue yet; a
+    // persistent `active` overlay is a future polish.)
+    this.subscriptions.push(bus.on('status:applied', this.onStatusApplied));
+    this.subscriptions.push(bus.on('status:ticked', this.onStatusTicked));
+    // D7.B: keep HP bars in sync with ability-heal chip. E6.C floats a cyan `+N`.
+    // A heal onto a full unit emits a no-op (gotcha #80), so skip amount <= 0.
     this.subscriptions.push(
       bus.on('unit:healed', ({ unitId, amount, healerId }) => {
         this.refreshHpBar(unitId);
         if (amount > 0) {
           this.spawnHitsplat(unitId, `+${amount}`, 'heal');
-          // F5: the cyan twinkle is for ABILITY heals only (healerId set);
-          // a `null` source is a regen-tile chip-heal and keeps just the `+N`.
-          if (healerId !== null) this.spawnHealSparkle(unitId);
+          // F5: the cyan twinkle is for ABILITY heals only (healerId set). The
+          // regen-TILE heal is now the `rejuvenate` status (27d) and gets its own
+          // cyan sparkle via the status-fx driver; a `null`-source `unit:healed`
+          // (hypothetical env heal) keeps just the `+N`.
+          if (healerId !== null) this.spawnSparkle(unitId, COLORS.FLOURESCENT_BLUE);
         }
       }),
     );
@@ -702,6 +708,47 @@ export class BattleRenderer {
   };
 
   /**
+   * 27e — the status-lifecycle FX driver (the `onActionPhase` sibling). Resolves
+   * the status def's `fx[moment]` → registry descriptor, then drives the named
+   * channels off the LIVE unit: the unified sound (one key = visual + SFX), a
+   * recolored sparkle on the body, and — on a tick — the DoT/HoT amount hitsplat
+   * + an HP-bar refresh. The apply moment carries no amount (no number); the tick
+   * supplies it. No-op when the status/moment authors no key.
+   */
+  private driveStatusFx(
+    statusId: string,
+    moment: 'applied' | 'ticked',
+    unitId: number,
+    amount?: number,
+  ): void {
+    const key = STATUS_DEFS[statusId]?.fx?.[moment];
+    if (!key) return;
+    const fx = fxDescriptor(key);
+    if (!fx) return;
+    if (fx.sound) this.audio.play(fx.sound);
+    if (fx.sparkle) this.spawnSparkle(unitId, fx.sparkle.color);
+    if (fx.hitsplat && amount !== undefined && amount > 0) {
+      const text = fx.hitsplat.kind === 'heal' ? `+${amount}` : String(amount);
+      this.spawnHitsplat(unitId, text, fx.hitsplat.kind);
+      this.refreshHpBar(unitId);
+    }
+  }
+
+  private onStatusApplied = ({ unitId, statusId }: GameEvents['status:applied']): void => {
+    this.driveStatusFx(statusId, 'applied', unitId);
+  };
+
+  /**
+   * A no-op tick (a HoT onto a full-HP unit, amount 0) drives nothing — no
+   * sound, sparkle, or `+0` (the gotcha #80 "no zero-effect spam" rule the old
+   * tile chip-heal followed). DoT ticks are always ≥ 1, so only HoTs short here.
+   */
+  private onStatusTicked = ({ unitId, statusId, amount }: GameEvents['status:ticked']): void => {
+    if (amount === 0) return;
+    this.driveStatusFx(statusId, 'ticked', unitId, amount);
+  };
+
+  /**
    * §Z (was F3's `onActionPhase` body) — fly a caster's projectile from its live
    * sprite toward the target, timed to ARRIVE on the impact tick. The flight
    * duration is read from the caster's live `travel` phase length (one source of
@@ -850,35 +897,36 @@ export class BattleRenderer {
   }
 
   /**
-   * F5 — a brief cyan twinkle on a unit that just received an ABILITY heal.
-   * Reads the unit's LIVE sprite position like `spawnHitsplat` (so it tracks a
-   * mid-lerp sprite), but anchors on the BODY (`HEAL_SPARKLE_Y_OFFSET`) rather
-   * than the top edge where the `+N` floats — in a crowd that keeps the cloud
-   * reading as on THIS unit, not the one behind it. A handful of `*` motes rise
-   * + fan out and fade, reusing the explosion-particle lane (swept by `detach`).
-   * Gated to ability heals in the `unit:healed` handler so the per-tick regen-
-   * tile chip stays just its `+N`.
+   * F5 / 27e — a brief recolored mote burst ON a unit. One shape serves both the
+   * F5 ability-heal twinkle (cyan, gated to ability heals in the `unit:healed`
+   * handler) and the 27e status cues (amber burn embers, green poison, red
+   * bleed, cyan rejuvenate), parameterized by `color`. Reads the unit's LIVE
+   * sprite position like `spawnHitsplat` (so it tracks a mid-lerp sprite), but
+   * anchors on the BODY (`SPARKLE_Y_OFFSET`) rather than the top edge where the
+   * number floats — in a crowd that keeps the cloud reading as on THIS unit, not
+   * the one behind it. A handful of `*` motes rise + fan out and fade, reusing
+   * the explosion-particle lane (swept by `detach`).
    */
-  private spawnHealSparkle(unitId: number): void {
+  private spawnSparkle(unitId: number, color: string): void {
     const handle = this.handles.get(unitId);
     if (!handle) return;
     const center = this.sprites.getPosition(handle, this.scratchPos);
     if (!center) return;
-    center.y += HEAL_SPARKLE_Y_OFFSET;
-    for (const [dx, dz] of HEAL_SPARKLE_DIRS) {
+    center.y += SPARKLE_Y_OFFSET;
+    for (const [dx, dz] of SPARKLE_DIRS) {
       const dest = center.clone();
-      dest.x += dx * HEAL_SPARKLE_SPREAD;
-      dest.z += dz * HEAL_SPARKLE_SPREAD;
-      dest.y += HEAL_SPARKLE_RISE;
+      dest.x += dx * SPARKLE_SPREAD;
+      dest.z += dz * SPARKLE_SPREAD;
+      dest.y += SPARKLE_RISE;
       this.addExplosionParticle(
         center,
         dest,
-        HEAL_SPARKLE_GLYPH,
-        HEAL_SPARKLE_COLOR,
-        HEAL_SPARKLE_SIZE,
-        HEAL_SPARKLE_SIZE,
-        HEAL_SPARKLE_SECONDS,
-        HEAL_SPARKLE_BLOOM,
+        SPARKLE_GLYPH,
+        color,
+        SPARKLE_SIZE,
+        SPARKLE_SIZE,
+        SPARKLE_SECONDS,
+        SPARKLE_BLOOM,
       );
     }
   }
@@ -1111,32 +1159,29 @@ const EXPLOSION_RING_DIRS: ReadonlyArray<readonly [number, number]> = [
 ];
 
 /**
- * F5 — heal-sparkle tuning. A wounded ally that receives an ABILITY heal
- * gets a small cyan twinkle ON the unit (on top of the existing `+N`
- * hitsplat) so the heal reads as presence, not just a floating number.
- * Reuses the explosion-particle lane: a few `*` motes that rise + fan out
- * gently and fade. Cyan matches the `+N` (FLOURESCENT_BLUE); the burst is
- * smaller/dimmer than the mage explosion (this is a soothe, not a boom).
- * Tile chip-heals are intentionally excluded (see the `unit:healed`
- * handler). All eyeball-tunable — bump freely.
+ * F5 / 27e — sparkle tuning (a small mote burst ON a unit). One shape, recolored
+ * per caller: the F5 ability-heal twinkle (cyan) and the 27e status cues (burn
+ * amber, bleed red, poison green, rejuvenate cyan). Reuses the explosion-particle
+ * lane: a few `*` motes that rise + fan out gently and fade; smaller/dimmer than
+ * the mage explosion (a soothe / affliction pulse, not a boom). The COLOR is
+ * passed by the caller (`spawnSparkle`). All eyeball-tunable — bump freely.
  */
-const HEAL_SPARKLE_GLYPH = PROJECTILE_GLYPH; // already in the FontAtlas
-const HEAL_SPARKLE_COLOR = COLORS.FLOURESCENT_BLUE;
-const HEAL_SPARKLE_SIZE = 0.4;
-const HEAL_SPARKLE_SPREAD = 0.45; // lateral fan, world units
-const HEAL_SPARKLE_RISE = 0.35; // upward drift from the anchor, world units (the "lift")
-const HEAL_SPARKLE_SECONDS = 0.45;
-const HEAL_SPARKLE_BLOOM = 1.6;
+const SPARKLE_GLYPH = PROJECTILE_GLYPH; // already in the FontAtlas
+const SPARKLE_SIZE = 0.4;
+const SPARKLE_SPREAD = 0.45; // lateral fan, world units
+const SPARKLE_RISE = 0.35; // upward drift from the anchor, world units (the "lift")
+const SPARKLE_SECONDS = 0.45;
+const SPARKLE_BLOOM = 1.6;
 /** World-Y of the sparkle's anchor, from the sprite CENTER (getPosition).
  *  Deliberately decoupled from the hitsplat's HITSPLAT_Y_OFFSET (0.5 = the top
- *  edge, where the `+N` floats): the sparkle hugs the unit's BODY so in a crowd
+ *  edge, where the number floats): the sparkle hugs the unit's BODY so in a crowd
  *  it reads as on THIS unit, not the one standing behind it. 0 = center; with
- *  HEAL_SPARKLE_RISE the cloud peaks at +0.35, still within the sprite's own
+ *  SPARKLE_RISE the cloud peaks at +0.35, still within the sprite's own
  *  height (below the +0.5 top), so it never floats over a unit's head. */
-const HEAL_SPARKLE_Y_OFFSET = 0.0;
+const SPARKLE_Y_OFFSET = 0.0;
 /** Center mote + 4 orthogonal fan directions (XZ plane); every mote also
- *  rises by HEAL_SPARKLE_RISE so the burst lifts off the unit. */
-const HEAL_SPARKLE_DIRS: ReadonlyArray<readonly [number, number]> = [
+ *  rises by SPARKLE_RISE so the burst lifts off the unit. */
+const SPARKLE_DIRS: ReadonlyArray<readonly [number, number]> = [
   [0, 0],
   [1, 0],
   [-1, 0],

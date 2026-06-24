@@ -141,17 +141,13 @@ export class BattleScene implements Scene {
         if (team === 'neutral') return;
         ctx.audio.play('death');
       }),
-      // D7.C — fire chip damage. The sim emits unit:burned regardless of
-      // whether the unit died from the same tick's damage; ordering is
-      // fine because the audio fires before the death's `unit:died`
-      // sound, so both land in the same tick like a "burn → death cry"
-      // sequence.
-      ctx.bus.on('unit:burned', () => {
-        ctx.audio.play('burn');
-      }),
-      // D7.C — healing tile chip heal. Skip when amount === 0 (the sim
-      // emits a no-op heal each cadence tick on a maxHp unit per gotcha
-      // #80; playing a sound for a zero-effect event would feel buggy).
+      // 27d/27e — the fire-tile burn SFX re-homed off the retired `unit:burned`
+      // onto the `burn` status's tick fx (one FxKey = visual + sound, the §Z
+      // model); BattleRenderer's status-fx driver plays it. Likewise the
+      // healing-tile chip-heal sound now rides the `rejuvenate` tick fx.
+      // D7.C — the ABILITY-heal cue stays here on `unit:healed` (the heal
+      // mechanic's own event). Skip amount === 0 (a heal onto a full unit emits
+      // a no-op per gotcha #80; a sound on a zero-effect event would feel buggy).
       ctx.bus.on('unit:healed', ({ amount }) => {
         if (amount <= 0) return;
         ctx.audio.play('healtick');

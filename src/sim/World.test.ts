@@ -12,7 +12,8 @@ import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { rollUnit } from './archetypes';
 import { spawnWall } from './environment';
-import { FIRE_TICKS_PER_DAMAGE, HEALING_TICKS_PER_HEAL } from '../config/tiles';
+import { secondsToTicks } from '../config';
+import { statusDef } from '../config/statuses';
 import { ZERO_STATS, deriveStats, hitChanceFor } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { STATS } from '../config/stats';
@@ -304,84 +305,129 @@ describe('World inline death handling', () => {
   });
 });
 
-describe('World D7.B tile effects', () => {
-  // Spec helper: an inert enemy stationed far away keeps checkBattleEnd
-  // happy so the tile-effect tests can tick freely without the battle
-  // ending. The inert team has no behaviors and never moves.
+describe('World 27d tile statuses (fire→burn, healing→rejuvenate)', () => {
+  // An inert enemy stationed far away keeps checkBattleEnd happy so the tile
+  // tests can tick freely without the battle ending. No behaviors → never moves.
   const KEEP_BATTLE_ALIVE: DeathSceneUnit = { team: 'enemy', x: 11, y: 11, hp: 50 };
 
-  it('fire deals 1 HP damage to combatants every FIRE_TICKS_PER_DAMAGE ticks', () => {
+  // Drive the integration off the SHIPPED status defs (the per-second rate is
+  // the §27c balance-proof; here we read interval/might/duration so the timing
+  // tracks config, never a hardcoded tick count). `op.might` is common to the
+  // damage|heal union, so no narrowing needed.
+  const BURN = statusDef('burn');
+  const REJUV = statusDef('rejuvenate');
+  const E = secondsToTicks(BURN.periodic!.everySeconds); // ticks per DoT interval
+  const burnMight = BURN.periodic!.op.might; // flat `might` (scaling:'none')
+  const rejuvMight = REJUV.periodic!.op.might;
+  const busOf = (world: World) => (world as unknown as { bus: EventBus<GameEvents> }).bus;
+
+  it('applies burn ONCE on entering fire, then chips via the DoT one interval later', () => {
     const { world, units } = scene([
       { team: 'player', x: 3, y: 3, hp: 50 },
       KEEP_BATTLE_ALIVE,
     ]);
     world.tileGrid.setKind({ x: 3, y: 3 }, 'fire');
-    const burns: GameEvents['unit:burned'][] = [];
-    (world as unknown as { bus: EventBus<GameEvents> }).bus.on('unit:burned', (p) => burns.push(p));
+    const applied: GameEvents['status:applied'][] = [];
+    const ticked: GameEvents['status:ticked'][] = [];
+    busOf(world).on('status:applied', (p) => applied.push(p));
+    busOf(world).on('status:ticked', (p) => ticked.push(p));
 
-    // Off-cadence ticks: no damage.
-    for (let t = 1; t < FIRE_TICKS_PER_DAMAGE; t++) world.tick();
-    expect(units[0]!.currentHp).toBe(50);
-    expect(burns).toHaveLength(0);
-
-    // Cadence tick: 1 damage lands.
+    // Tick 1: burn lands (status:applied fires once) but no damage yet — the
+    // first DoT tick is one interval after apply.
     world.tick();
-    expect(units[0]!.currentHp).toBe(49);
-    expect(burns).toHaveLength(1);
-    expect(burns[0]).toEqual({ unitId: units[0]!.id, damage: 1 });
+    expect(applied).toEqual([{ unitId: units[0]!.id, statusId: 'burn', sourceUnitId: null }]);
+    expect(ticked).toHaveLength(0);
+    expect(units[0]!.currentHp).toBe(50);
 
-    // Another full cycle.
-    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE; t++) world.tick();
-    expect(units[0]!.currentHp).toBe(48);
-    expect(burns).toHaveLength(2);
+    // Standing on does NOT re-apply (the sustain tops up duration silently).
+    world.tick();
+    expect(applied).toHaveLength(1);
+
+    // One interval after apply → the first DoT tick (burnMight HP, defense-bypass).
+    while (world.currentTick < 1 + E) world.tick();
+    expect(ticked).toEqual([
+      { unitId: units[0]!.id, statusId: 'burn', sourceUnitId: null, amount: burnMight },
+    ]);
+    expect(units[0]!.currentHp).toBe(50 - burnMight);
+
+    // Next interval → second tick (a steady DoT cadence).
+    while (world.currentTick < 1 + 2 * E) world.tick();
+    expect(ticked).toHaveLength(2);
+    expect(units[0]!.currentHp).toBe(50 - 2 * burnMight);
   });
 
-  it('GP2: fire damage is UNMITIGATED by defense (still exactly 1)', () => {
-    // The shared scene spawns melee units, which carry the archetype's
-    // defense — so this pins that environmental fire bypasses the
-    // World.applyDamage mitigation chokepoint entirely (raw 1 HP, no floor).
+  it('burn bypasses defense — the fire chip stays unmitigated (now via the DoT)', () => {
+    // The mercenary scene unit carries the archetype's defense; the burn DoT
+    // authors bypassDefense:true, so it deals full `might` despite that armor.
     const { world, units } = scene([
       { team: 'player', x: 3, y: 3, hp: 50 },
       KEEP_BATTLE_ALIVE,
     ]);
     expect(units[0]!.stats.defense).toBeGreaterThan(0);
     world.tileGrid.setKind({ x: 3, y: 3 }, 'fire');
-    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE; t++) world.tick();
-    expect(units[0]!.currentHp).toBe(49); // exactly 1 lost despite defense > 0
+    while (world.currentTick < 1 + E) world.tick(); // through the first DoT tick
+    expect(units[0]!.currentHp).toBe(50 - burnMight); // full might, defense ignored
   });
 
-  it('healing restores 1 HP every HEALING_TICKS_PER_HEAL ticks and clamps at maxHp', () => {
+  it('healing applies rejuvenate — a HoT that regens and clamps at maxHp', () => {
     const { world, units } = scene([
       { team: 'player', x: 3, y: 3, hp: 10 },
       KEEP_BATTLE_ALIVE,
     ]);
     world.tileGrid.setKind({ x: 3, y: 3 }, 'healing');
-    const heals: GameEvents['unit:healed'][] = [];
-    (world as unknown as { bus: EventBus<GameEvents> }).bus.on('unit:healed', (p) => heals.push(p));
+    const ticked: GameEvents['status:ticked'][] = [];
+    busOf(world).on('status:ticked', (p) => ticked.push(p));
 
-    // One cadence tick: +1 HP.
-    for (let t = 0; t < HEALING_TICKS_PER_HEAL; t++) world.tick();
-    expect(units[0]!.currentHp).toBe(11);
-    expect(heals).toHaveLength(1);
-    // F5: a tile chip-heal has no casting unit → healerId is null, so the
-    // renderer keeps it to just the `+N` (no ability heal-sparkle).
-    expect(heals[0]).toEqual({ unitId: units[0]!.id, amount: 1, healerId: null });
+    while (world.currentTick < 1 + E) world.tick(); // first HoT tick
+    expect(units[0]!.currentHp).toBe(10 + rejuvMight);
+    expect(ticked[0]).toEqual({
+      unitId: units[0]!.id,
+      statusId: 'rejuvenate',
+      sourceUnitId: null,
+      amount: rejuvMight,
+    });
 
-    // Force currentHp to maxHp; next heal-tick clamps and emits
-    // amount=0 (subscribers can debounce; the sim still fires for
-    // observability).
+    // Clamp at maxHp: fill up, the next tick heals 0 but still emits (amount 0,
+    // the gotcha #80 no-op the renderer drops as "no +0 spam").
     units[0]!.currentHp = units[0]!.derived.maxHp;
-    for (let t = 0; t < HEALING_TICKS_PER_HEAL; t++) world.tick();
+    while (world.currentTick < 1 + 2 * E) world.tick();
     expect(units[0]!.currentHp).toBe(units[0]!.derived.maxHp);
-    expect(heals[heals.length - 1]).toEqual({ unitId: units[0]!.id, amount: 0, healerId: null });
+    expect(ticked[ticked.length - 1]!.amount).toBe(0);
 
-    // F6: the per-tick regen-tile chip-heal is the *tile's* output, not a
-    // unit's contribution, so it must NOT feed the utility-XP ledger (only
-    // ability heals do). The unit gained HP above, yet earns no heal-XP.
+    // F6: an environmental (null-source) HoT does NOT feed the utility-XP
+    // ledger — only ability heals do. The unit gained HP yet earns no heal-XP.
     expect(world.utilityDoneBy(units[0]!.id)).toBe(0);
   });
 
-  it('neutrals on fire/healing tiles are skipped (combatants-only policy)', () => {
+  it('burn lingers after the unit steps off the fire tile, then expires', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 3, y: 3, hp: 50 },
+      KEEP_BATTLE_ALIVE,
+    ]);
+    world.tileGrid.setKind({ x: 3, y: 3 }, 'fire');
+    const ticked: GameEvents['status:ticked'][] = [];
+    const expired: GameEvents['status:expired'][] = [];
+    busOf(world).on('status:ticked', (p) => ticked.push(p));
+    busOf(world).on('status:expired', (p) => expired.push(p));
+
+    world.tick(); // burn applied at tick 1
+    units[0]!.position = { x: 0, y: 0 }; // step off the fire tile (an inert unit)
+
+    // Burn keeps ticking after stepping off — it lingers for its `durationSeconds`.
+    while (world.currentTick < 1 + E) world.tick();
+    expect(ticked.length).toBeGreaterThanOrEqual(1); // a tick landed AFTER leaving
+    expect(units[0]!.currentHp).toBeLessThan(50);
+
+    // Past the duration → it expires and stops ticking.
+    const durationTicks = secondsToTicks(BURN.durationSeconds);
+    while (world.currentTick < 1 + durationTicks + 1) world.tick();
+    expect(expired).toEqual([{ unitId: units[0]!.id, statusId: 'burn', sourceUnitId: null }]);
+    const finalCount = ticked.length;
+    for (let t = 0; t < 2 * E; t++) world.tick();
+    expect(ticked).toHaveLength(finalCount); // no more ticks after expiry
+  });
+
+  it('neutrals on fire/healing tiles are not afflicted (combatants-only policy)', () => {
     const { world } = scene([
       { team: 'player', x: 0, y: 0, hp: 50 },
       KEEP_BATTLE_ALIVE,
@@ -389,61 +435,43 @@ describe('World D7.B tile effects', () => {
     const wall = spawnWall(world, { x: 5, y: 5 });
     world.tileGrid.setKind({ x: 5, y: 5 }, 'fire');
     const startHp = wall.currentHp;
-    const burns: GameEvents['unit:burned'][] = [];
-    (world as unknown as { bus: EventBus<GameEvents> }).bus.on('unit:burned', (p) => burns.push(p));
+    const applied: GameEvents['status:applied'][] = [];
+    busOf(world).on('status:applied', (p) => applied.push(p));
 
-    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE * 3; t++) world.tick();
+    for (let t = 0; t < 3 * E; t++) world.tick();
     expect(wall.currentHp).toBe(startHp);
-    expect(burns).toHaveLength(0);
+    expect(applied).toHaveLength(0);
+    expect(wall.effects).toHaveLength(0);
   });
 
-  it('a fire-kill emits unit:burned + unit:died and ends the battle on the same tick', () => {
-    // Player adjacent unit on healing (so the battle has both teams),
-    // enemy on a fire tile with 1 HP. Fire-kill should remove the
-    // enemy and end the battle this tick.
+  it('a burn DoT kill removes the unit and ends the battle on the same tick', () => {
     const { world, units } = scene([
       { team: 'player', x: 0, y: 0, hp: 50 },
-      { team: 'enemy', x: 5, y: 5, hp: 1 },
+      { team: 'enemy', x: 5, y: 5, hp: burnMight }, // exactly lethal on the first DoT tick
     ]);
     world.tileGrid.setKind({ x: 5, y: 5 }, 'fire');
-    const burns: GameEvents['unit:burned'][] = [];
     const deaths: GameEvents['unit:died'][] = [];
     const ends: GameEvents['battle:ended'][] = [];
-    const bus = (world as unknown as { bus: EventBus<GameEvents> }).bus;
-    bus.on('unit:burned', (p) => burns.push(p));
-    bus.on('unit:died', (p) => deaths.push(p));
-    bus.on('battle:ended', (p) => ends.push(p));
+    busOf(world).on('unit:died', (p) => deaths.push(p));
+    busOf(world).on('battle:ended', (p) => ends.push(p));
 
-    // Tick until the fire cadence fires.
-    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE; t++) world.tick();
-    expect(burns).toHaveLength(1);
-    expect(burns[0]!.unitId).toBe(units[1]!.id);
+    while (world.currentTick < 1 + E) world.tick(); // through the first burn tick
     expect(deaths.some((d) => d.unitId === units[1]!.id)).toBe(true);
     expect(ends).toHaveLength(1);
     expect(ends[0]!.winner).toBe('player');
-    // E4 follow-up: the fire-kill scene helper spawns via the bare
-    // path without rosterIndex, so the player unit doesn't land in
-    // playerRosterIds and earns no XP — the scene file separately
-    // pins the *award* behavior in its own roster-aware tests.
-    expect(ends[0]!.xpAwards).toHaveLength(0);
   });
 
-  it('does not apply effects to already-dead units waiting for reap', () => {
-    // Force a unit's HP to 0 and ensure a fire cadence tick doesn't
-    // re-burn the corpse (which would double-emit unit:burned for an
-    // already-reaped id).
+  it('a corpse on a fire tile is not afflicted (reaped before the tile pass)', () => {
     const { world, units } = scene([
-      { team: 'player', x: 3, y: 3, hp: 0 },
+      { team: 'player', x: 3, y: 3, hp: 0 }, // already dead at battle start
       KEEP_BATTLE_ALIVE,
     ]);
     world.tileGrid.setKind({ x: 3, y: 3 }, 'fire');
-    const burns: GameEvents['unit:burned'][] = [];
-    (world as unknown as { bus: EventBus<GameEvents> }).bus.on('unit:burned', (p) => burns.push(p));
+    const applied: GameEvents['status:applied'][] = [];
+    busOf(world).on('status:applied', (p) => applied.push(p));
 
-    for (let t = 0; t < FIRE_TICKS_PER_DAMAGE * 2; t++) world.tick();
-    // The unit gets reaped at the start of tick 1 (per-unit death
-    // pass). No burn emit expected at all.
-    expect(burns).toHaveLength(0);
+    for (let t = 0; t < 2 * E; t++) world.tick();
+    expect(applied).toHaveLength(0); // reaped at tick 1's death check, never afflicted
     expect(world.findUnit(units[0]!.id)).toBeUndefined();
   });
 });

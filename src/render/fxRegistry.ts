@@ -26,6 +26,8 @@
 
 import type { SoundKey } from '../audio/AudioPlayer';
 import type { AbilityDef } from '../sim/effects/schema';
+import type { StatusDef } from '../sim/effects/statusSchema';
+import { COLORS } from './palette';
 
 /** A projectile cosmetic, launched on the action's `release` boundary. */
 export interface FxProjectile {
@@ -83,6 +85,26 @@ export interface FxTracer {
 }
 
 /**
+ * A floating hitsplat number (27e — the status tick's HP delta). `kind` picks
+ * the existing hitsplat style: `burn` an amber damage number (DoTs), `heal` a
+ * cyan `+N` (HoTs). The driver supplies the amount off the `status:ticked`
+ * event; an amount of 0 (a HoT onto a full unit) draws nothing.
+ */
+export interface FxHitsplat {
+  kind: 'burn' | 'heal';
+}
+
+/**
+ * A small mote burst ON the unit (27e — the status apply flash / per-tick
+ * pulse). Reuses the F5 heal-sparkle particle lane, recolored per status so a
+ * burning unit puffs amber embers, a poisoned one green, etc. The driver reads
+ * the unit's live sprite position; `color` is a palette hex.
+ */
+export interface FxSparkle {
+  color: string;
+}
+
+/**
  * The closed set of channels an `FxKey` resolves to. Every field optional: a
  * key lights up only the channels it names (the mage `release` key is a bare
  * projectile; its `impact` key is a burst + a sound). New mechanics add new
@@ -102,6 +124,10 @@ export interface FxDescriptor {
   shove?: FxShove;
   /** Fly a tracer bolt from caster to target (Z3 — the ranged shot). */
   tracer?: FxTracer;
+  /** Float a hitsplat number on a status tick (27e — the DoT/HoT amount). */
+  hitsplat?: FxHitsplat;
+  /** Puff a recolored mote burst on the unit (27e — the status apply/tick cue). */
+  sparkle?: FxSparkle;
 }
 
 /**
@@ -134,6 +160,27 @@ export const FX_REGISTRY = {
   // where it deals damage); the bow flies a straight tracer.
   melee_swing: { shove: {}, sound: 'melee' },
   ranged_shot: { tracer: {}, sound: 'shoot' },
+
+  // 27e — the periodic statuses. Each status authors an `_apply` key (the flash
+  // when it lands → a recolored mote puff) and a `_tick` key (the per-second
+  // pulse → the same puff + the damage/heal hitsplat). Only `burn`/`rejuvenate`
+  // carry a `sound`: they re-home the retired fire/heal tile-chip cues (the §Z
+  // "one key = visual + SFX" model); bleed/poison get their SFX at §31. Sparkle
+  // colors: burn amber embers, bleed blood-red, poison toxic-green, rejuvenate
+  // heal-cyan. (Status DoT/HoT damage numbers all use the `burn`/`heal` hitsplat
+  // styles — the sparkle color is what distinguishes them.)
+  burn_apply: { sparkle: { color: COLORS.TERMINAL_AMBER } },
+  burn_tick: { sparkle: { color: COLORS.TERMINAL_AMBER }, hitsplat: { kind: 'burn' }, sound: 'burn' },
+  bleed_apply: { sparkle: { color: COLORS.NEON_RED } },
+  bleed_tick: { sparkle: { color: COLORS.NEON_RED }, hitsplat: { kind: 'burn' } },
+  poison_apply: { sparkle: { color: COLORS.TERMINAL_GREEN } },
+  poison_tick: { sparkle: { color: COLORS.TERMINAL_GREEN }, hitsplat: { kind: 'burn' } },
+  rejuvenate_apply: { sparkle: { color: COLORS.FLOURESCENT_BLUE } },
+  rejuvenate_tick: {
+    sparkle: { color: COLORS.FLOURESCENT_BLUE },
+    hitsplat: { kind: 'heal' },
+    sound: 'healtick',
+  },
 } satisfies Record<string, FxDescriptor>;
 
 /** The closed set of authored keys — the §30 editor's option list. */
@@ -158,6 +205,27 @@ export function assertFxKeysResolve(defs: Record<string, AbilityDef>): void {
       if (!(key in FX_REGISTRY)) {
         throw new Error(
           `fx registry: ability '${def.id}' phase '${phase}' references unknown FxKey '${key}'`,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Boot assert (27e) — the status-lifecycle sibling of `assertFxKeysResolve`:
+ * every `fx` key a shipped `StatusDef` references (per lifecycle moment —
+ * `applied`/`ticked`/`expired`/`active`) must resolve in the registry, so a
+ * typo'd status cue fails at battle start, not silently on screen. Called
+ * alongside the ability check when the renderer is constructed.
+ */
+export function assertStatusFxKeysResolve(defs: Record<string, StatusDef>): void {
+  for (const def of Object.values(defs)) {
+    if (!def.fx) continue;
+    for (const [moment, key] of Object.entries(def.fx)) {
+      if (!key) continue;
+      if (!(key in FX_REGISTRY)) {
+        throw new Error(
+          `fx registry: status '${def.id}' moment '${moment}' references unknown FxKey '${key}'`,
         );
       }
     }

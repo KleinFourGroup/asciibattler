@@ -259,7 +259,7 @@ export class HUD {
     // UnitCards for the fielded player units, with the run health-pool gauge
     // (relocated from the old HUD `pools` block — which stays until Q6) beneath
     // them. Cards are built on `unit:spawned`, their HP bars driven on
-    // attacked/burned/healed, and grayed in place on death (kept, not removed,
+    // attacked/status-ticked/healed, and grayed in place on death (kept, not removed,
     // so the grid order is positionally stable across the turn). Lives outside
     // the side-panel root (like the speed/objective panes) so it anchors
     // bottom-center; same screen-fade lifecycle.
@@ -293,10 +293,10 @@ export class HUD {
     this.subscriptions.push(bus.on('unit:spawned', ({ unitId }) => this.addUnit(unitId)));
     this.subscriptions.push(bus.on('unit:attacked', ({ targetId }) => this.refreshHp(targetId)));
     // Q4 — the compact cards' HP bars must track ALL visible HP changes, not
-    // just direct attacks: a fire-tile burn or a healer's heal moves HP too (the
-    // events.ts contract: refresh on attacked/burned/healed). The roster rows
-    // get the same fix for free (they only listened to `attacked` before).
-    this.subscriptions.push(bus.on('unit:burned', ({ unitId }) => this.refreshHp(unitId)));
+    // just direct attacks: a periodic status tick (the 27d fire-tile burn /
+    // healing-tile rejuvenate, a §29 bleed/poison) or a healer's heal moves HP
+    // too. The roster rows get the same refresh for free.
+    this.subscriptions.push(bus.on('status:ticked', ({ unitId }) => this.refreshHp(unitId)));
     this.subscriptions.push(bus.on('unit:healed', ({ unitId }) => this.refreshHp(unitId)));
     this.subscriptions.push(bus.on('unit:died', ({ unitId }) => this.removeUnit(unitId)));
   }

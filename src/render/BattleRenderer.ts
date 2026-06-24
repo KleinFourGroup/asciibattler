@@ -9,6 +9,7 @@ import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
 import type { PickCandidate } from './pick';
 import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
 import type { TerrainRenderer } from './TerrainRenderer';
+import type { Renderer } from './Renderer';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { COLORS } from './palette';
 import { SpriteAnimator } from './animation/SpriteAnimator';
@@ -132,10 +133,11 @@ export class BattleRenderer {
     /** C1c: queried at sprite spawn + move endpoints so units stand on
      *  the tile top instead of floating at a fixed plane. */
     private readonly terrain: TerrainRenderer,
-    /** J3 — used by `updateObjectiveMarker` to lift the enemy mark along the
-     *  camera's up (screen-up) axis so it sits atop the unit without the
-     *  off-axis skew a world-Y lift causes under the pitched perspective. */
-    private readonly camera: THREE.Camera,
+    /** §Z + J3 — the render host. The FX driver triggers `shakeCamera` (Z2's
+     *  non-sprite channel); `updateObjectiveMarker` reads `renderer.camera` to
+     *  lift the enemy mark along the camera's up (screen-up) axis so it sits atop
+     *  the unit without the off-axis skew a world-Y lift causes under pitch. */
+    private readonly renderer: Renderer,
     /** §Z — the FX driver plays a cue's unified sound (one FxKey → visual +
      *  SFX). The renderer is the sole owner of every keyed combat cue; BattleScene
      *  keeps only the non-keyed sounds (death, fanfares, tile chips). */
@@ -309,7 +311,7 @@ export class BattleRenderer {
     // so a world-Y lift projects off-axis (skewed sideways) for units away from
     // screen center; camera-up keeps the X directly above the unit. Column 1 of
     // the camera's world matrix is its up axis (unit-length, orthonormal).
-    const up = this.cameraUpScratch.setFromMatrixColumn(this.camera.matrixWorld, 1);
+    const up = this.cameraUpScratch.setFromMatrixColumn(this.renderer.camera.matrixWorld, 1);
     pos.addScaledVector(up, OBJECTIVE_MARKER_ENEMY_LIFT);
     this.sprites.updateSprite(marker, {
       position: pos,
@@ -684,6 +686,9 @@ export class BattleRenderer {
     if (fx.sound) this.audio.play(fx.sound);
     if (fx.projectile) this.launchProjectileFx(fx.projectile, unitId, targetId, targetCell);
     if (fx.burst) this.spawnBurstFx(fx.burst, unitId, targetId, targetCell);
+    // Z2 — the camera shake is a Renderer-owned channel (it owns the camera +
+    // render loop), so the driver just kicks it; the registry authors the magnitude.
+    if (fx.shake) this.renderer.shakeCamera(fx.shake.intensity, fx.shake.durationSeconds);
   };
 
   /**

@@ -10,10 +10,21 @@ import { ABILITY_DEFS } from '../config/abilities';
 describe('fxRegistry — resolution', () => {
   it('resolves a known key to its channel set; unknown keys are undefined', () => {
     expect(fxDescriptor('magic_bolt_launch')).toEqual({ projectile: { style: 'straight' } });
-    expect(fxDescriptor('magic_bolt_burst')).toEqual({ burst: { style: 'explosion' }, sound: 'magicboom' });
+    expect(fxDescriptor('magic_bolt_burst')).toMatchObject({ burst: { style: 'explosion' }, sound: 'magicboom' });
     expect(fxDescriptor('catapult_launch')).toEqual({ projectile: { style: 'arc' } });
-    expect(fxDescriptor('catapult_burst')).toEqual({ burst: { style: 'dud' }, sound: 'shoot' });
+    expect(fxDescriptor('catapult_burst')).toMatchObject({ burst: { style: 'dud' }, sound: 'shoot' });
     expect(fxDescriptor('no_such_key')).toBeUndefined();
+  });
+});
+
+describe('fxRegistry — Z2 camera shake', () => {
+  it('the impact burst keys carry an authored shake, catapult heavier than the bolt', () => {
+    const mage = fxDescriptor('magic_bolt_burst');
+    const cat = fxDescriptor('catapult_burst');
+    expect(mage?.shake?.intensity).toBeGreaterThan(0);
+    expect(cat?.shake?.intensity).toBeGreaterThan(0);
+    expect(cat!.shake!.intensity).toBeGreaterThan(mage!.shake!.intensity);
+    expect(cat!.shake!.durationSeconds).toBeGreaterThan(0);
   });
 });
 

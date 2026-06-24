@@ -122,6 +122,20 @@ export class Renderer {
   private readonly pickRaycaster = new THREE.Raycaster();
   private readonly pickNdc = new THREE.Vector2();
 
+  /**
+   * §Z camera shake — a transient screen-aligned jitter applied to the camera
+   * around the render pass (never persisted into the base position), triggered
+   * by an FX cue via `shakeCamera`. Decays linearly to zero over its duration.
+   * Runs on the loop's WALL-CLOCK dt: it's a viewport effect, not a world event,
+   * so it deliberately doesn't scale with playback speed (a sub-second wobble).
+   */
+  private shakeIntensity = 0;
+  private shakeDurationSec = 0;
+  private shakeElapsedSec = 0;
+  private readonly shakeOffset = new THREE.Vector3();
+  private readonly shakeRight = new THREE.Vector3();
+  private readonly shakeUp = new THREE.Vector3();
+
   constructor(canvas: HTMLCanvasElement, onFrame: (dtSeconds: number) => void) {
     this.onFrame = onFrame;
     this.webgl = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -202,7 +216,12 @@ export class Renderer {
 
       if (this.cameraMode === 'scroll') this.updateScrollFromInput(dt);
       this.onFrame(dt);
+      // §Z — add the shake offset just before render and strip it right after,
+      // so the jitter is visible this frame but never corrupts the base position
+      // the camera modes manage.
+      this.applyCameraShake(dt);
       this.renderTwoPass();
+      this.clearCameraShake();
     };
     loop();
   }
@@ -482,6 +501,47 @@ export class Renderer {
     this.cameraTargetX += dx * step;
     this.cameraTargetZ += dz * step;
     this.fitCamera();
+  }
+
+  /**
+   * §Z — kick a camera shake: a screen-aligned jitter that decays linearly to
+   * zero over `durationSeconds`. Authored per FX key (the registry's `shake`
+   * channel), so a heavy lob shakes harder than a bolt. `intensity` is the
+   * offset amplitude in world units. A fresh trigger restarts the decay (a new
+   * impact wins rather than stacking), keeping the wobble bounded.
+   */
+  shakeCamera(intensity: number, durationSeconds: number): void {
+    if (intensity <= 0 || durationSeconds <= 0) return;
+    this.shakeIntensity = intensity;
+    this.shakeDurationSec = durationSeconds;
+    this.shakeElapsedSec = 0;
+  }
+
+  /**
+   * §Z — add this frame's decaying shake offset to the camera, just before the
+   * render pass. Jitters along the camera's right (matrix col 0) + up (col 1)
+   * axes so the wobble reads as on-screen shake regardless of pitch / mode.
+   * `clearCameraShake` strips it after render, so the base position the camera
+   * modes own is never touched.
+   */
+  private applyCameraShake(dt: number): void {
+    this.shakeOffset.set(0, 0, 0);
+    if (this.shakeElapsedSec >= this.shakeDurationSec || this.shakeIntensity <= 0) return;
+    this.shakeElapsedSec += dt;
+    const mag = this.shakeIntensity * Math.max(0, 1 - this.shakeElapsedSec / this.shakeDurationSec);
+    if (mag <= 0) return;
+    this.camera.updateMatrixWorld();
+    const right = this.shakeRight.setFromMatrixColumn(this.camera.matrixWorld, 0);
+    const up = this.shakeUp.setFromMatrixColumn(this.camera.matrixWorld, 1);
+    const jx = (Math.random() * 2 - 1) * mag;
+    const jy = (Math.random() * 2 - 1) * mag;
+    this.shakeOffset.copy(right).multiplyScalar(jx).addScaledVector(up, jy);
+    this.camera.position.add(this.shakeOffset);
+  }
+
+  /** §Z — restore the base camera position after render (shake never persists). */
+  private clearCameraShake(): void {
+    this.camera.position.sub(this.shakeOffset);
   }
 
   private handleKeyDown = (e: KeyboardEvent): void => {

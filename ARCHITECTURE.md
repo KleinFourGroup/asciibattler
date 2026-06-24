@@ -178,6 +178,7 @@ src/
     Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
                              # + RAF loop + two camera modes (fit / scroll, D4)
                              # J3: pickCell (terrain raycast → grid cell) + pickInstance (billboard hit-test)
+                             # §Z: shakeCamera(intensity,dur) — transient screen-aligned jitter applied/cleared around render
     SpriteRenderer.ts        # InstancedBufferGeometry + dual mesh (layer 0 visible / layer 1
                              # bloom) + per-instance bloomIntensity attr (B1.1) + per-instance
                              # size attr (E6.B). Also hosts transient tracer/projectile sprites
@@ -196,9 +197,9 @@ src/
     BattleRenderer.ts        # Sim/render seam: subscribes to unit:* + action:phase (F3)
                              # tileWorldPos(coord) for per-tile sprite Y (C1c). E6/E7: melee shove,
                              # ranged/lobbed projectiles, explosion/dud/heal-sparkle VFX + hitsplats
-                             # §Z: the FX driver (holds AudioPlayer) — onActionPhase resolves def.fx via fxRegistry → projectile/burst/sound
+                             # §Z: the FX driver (holds Renderer + AudioPlayer) — onActionPhase resolves def.fx via fxRegistry → projectile/burst/sound/shake
                              # J3: objective X marker (objective:set/cleared; camera-up lift) + enemyBillboards (pick candidates)
-    fxRegistry.ts            # §Z: pure-data FxKey→FxDescriptor map (sound/projectile/burst) + assertFxKeysResolve boot check (headless-testable)
+    fxRegistry.ts            # §Z: pure-data FxKey→FxDescriptor map (sound/projectile/burst/shake) + assertFxKeysResolve boot check (headless-testable)
     pick.ts                  # J3: pickInstanceAtNdc — pure screen-space billboard hit-test (replicates billboard.vert.glsl)
     FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture (glyph set from glyphs.ts)
     glyphs.ts                # E7.A: THREE-free GLYPHS set (FontAtlas.test asserts archetype coverage); J3: 'X' = objective marker (atlas now 32/32 FULL)

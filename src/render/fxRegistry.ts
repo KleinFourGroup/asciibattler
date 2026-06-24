@@ -47,6 +47,18 @@ export interface FxBurst {
 }
 
 /**
+ * A camera shake (§Z, the first non-sprite channel — the proof the registry can
+ * carry more than sprites). `intensity` is the screen-aligned offset amplitude
+ * in world units; the wobble decays to zero over `durationSeconds`. Authored
+ * per key (the locked decision: shake magnitude is an fx-registry parameter, not
+ * a sim concern), so a heavy lob shakes harder than a bolt.
+ */
+export interface FxShake {
+  intensity: number;
+  durationSeconds: number;
+}
+
+/**
  * The closed set of channels an `FxKey` resolves to. Every field optional: a
  * key lights up only the channels it names (the mage `release` key is a bare
  * projectile; its `impact` key is a burst + a sound). New mechanics add new
@@ -60,6 +72,8 @@ export interface FxDescriptor {
   projectile?: FxProjectile;
   /** Spawn an impact burst (on the `impact` phase the key is authored on). */
   burst?: FxBurst;
+  /** Shake the camera (Z2 — heavy impacts; the registry's first non-sprite channel). */
+  shake?: FxShake;
 }
 
 /**
@@ -69,13 +83,22 @@ export interface FxDescriptor {
  */
 export const FX_REGISTRY = {
   // The mage bolt (`magic_bolt`): a straight tracer carved out of the wind-up,
-  // then a team-colored detonation + boom on impact.
+  // then a team-colored detonation + boom + a light shake on impact.
   magic_bolt_launch: { projectile: { style: 'straight' } },
-  magic_bolt_burst: { burst: { style: 'explosion' }, sound: 'magicboom' },
-  // The catapult lob (`catapult_shot`): a homing arc, then a dust dud + thunk on
-  // impact. `shoot` is a placeholder until §31's dedicated catapult SFX.
+  magic_bolt_burst: {
+    burst: { style: 'explosion' },
+    sound: 'magicboom',
+    shake: { intensity: 0.06, durationSeconds: 0.22 },
+  },
+  // The catapult lob (`catapult_shot`): a homing arc, then a dust dud + thunk +
+  // a heavier shake on impact (a landing boulder hits hard). `shoot` is a
+  // placeholder until §31's dedicated catapult SFX.
   catapult_launch: { projectile: { style: 'arc' } },
-  catapult_burst: { burst: { style: 'dud' }, sound: 'shoot' },
+  catapult_burst: {
+    burst: { style: 'dud' },
+    sound: 'shoot',
+    shake: { intensity: 0.16, durationSeconds: 0.35 },
+  },
 } satisfies Record<string, FxDescriptor>;
 
 /** The closed set of authored keys — the §30 editor's option list. */

@@ -98,7 +98,7 @@ export class BattleScene implements Scene {
       ctx.sprites,
       ctx.overlays,
       ctx.terrain,
-      ctx.renderer.camera,
+      ctx.renderer,
       ctx.audio,
       ctx.bus,
     );

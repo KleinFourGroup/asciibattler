@@ -1,5 +1,6 @@
 import type { Ability } from './Ability';
 import { ABILITY_DEFS, abilityDef } from '../../config/abilities';
+import { STATUS_DEFS, assertStatusRefsResolve } from '../../config/statuses';
 import { EffectAbility } from '../effects/EffectAbility';
 
 /**
@@ -66,6 +67,9 @@ const FACTORIES: Record<string, AbilityFactory> = {
       `config/abilities.json: entry for unregistered ability id ${orphanConfig.join(', ')}`,
     );
   }
+  // Phase 27 — every `applyStatus` op (§29) must reference a real status id.
+  // Rides this guaranteed-at-boot IIFE so a typo fails at startup, not at cast.
+  assertStatusRefsResolve(ABILITY_DEFS, STATUS_DEFS);
 })();
 
 export function createAbility(id: string): Ability {

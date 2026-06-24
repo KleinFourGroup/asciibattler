@@ -49,6 +49,7 @@ src/
   config/                    # A4: zod-validated wrappers around config/*.json
     archetypes.ts            #   glyph + baseStats + growthRates (E1/E3); attackRange moved to abilities (E5)
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
+    statuses.ts              #   27a: loads config/statuses.json into the StatusDef catalog; statusDef(id) + assertStatusRefsResolve (boot-checks every applyStatus statusId, wired into abilities/registry.ts)
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets
     recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4)
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
@@ -125,7 +126,8 @@ src/
       SupportMovementBehavior.ts  # E7.B: healer idle / panic / approach / centroid-trail
       registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
     effects/                 # Y1–Y3: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
-      schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types
+      schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types; 27a: PeriodicOp (damage|heal subset for status ticks)
+      statusSchema.ts        #   27a: StatusDef vocabulary (zod) — durationSeconds/merge/periodic{everySeconds,op}/fx; the periodic (DoT/HoT) axis of the K1 status system
       timeline.ts            #   Y1: seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase
       targeting.ts           #   Y2: unitsInCells (the Cluster-2 footprint seam) + aoe victim resolution + the affects filter
       reposition.ts          #   Y2: retreatCell — the caster-reposition primitive (the gambit's move-retreat op, via interpreter executeMove)
@@ -256,6 +258,7 @@ src/
 config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
   archetypes.json            # per-archetype glyph + baseStats + growthRates (E1/E3)
   abilities.json             # The AbilityDef catalog — one entry per combat verb (targeting / timeline / effect-ops / damage-heal profile). Y5e consolidated this (was abilityDefs.json) atop the retired legacy AbilityConfig json
+  statuses.json              # 27a: the StatusDef catalog (burn/bleed/poison/rejuvenate) — empty until 27c authors content
   difficulty.json            # G4: enemy level-budget knobs + A/B/C presets
   recruitment.json           # starting team + offer size + startingLevel + recruitBonusChance
   leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)

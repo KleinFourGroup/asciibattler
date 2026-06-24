@@ -150,6 +150,17 @@ export const EffectOpSchema = z.discriminatedUnion('kind', [
   ApplyStatusOpSchema,
 ]);
 
+/**
+ * Phase 27 — the subset of ops valid as a status's PERIODIC tick
+ * (`StatusDef.periodic.op`, `statusSchema.ts`): a DoT (`damage`) or HoT
+ * (`heal`). `move` / `applyStatus` are meaningless fired every interval, so the
+ * periodic union excludes them — the full `EffectOp` union still carries them
+ * for the attack timeline. A periodic DoT authors `scaling:'none'` flat `might`
+ * with `bypassDefense:true` / `evadable:false` (the burn default); the
+ * interpreter scales its output by the effect's magnitude (27b).
+ */
+export const PeriodicOpSchema = z.discriminatedUnion('kind', [DamageOpSchema, HealOpSchema]);
+
 /* -------------------------------------------------------------------------- */
 /* Target selectors — WHO/what a verb resolves to.                            */
 /* -------------------------------------------------------------------------- */
@@ -310,6 +321,7 @@ export const AbilityDefSchema = z
 export type DamageScaling = z.infer<typeof DamageScalingSchema>;
 export type Affects = z.infer<typeof AffectsSchema>;
 export type EffectOp = z.infer<typeof EffectOpSchema>;
+export type PeriodicOp = z.infer<typeof PeriodicOpSchema>;
 export type DamageOp = z.infer<typeof DamageOpSchema>;
 export type HealOp = z.infer<typeof HealOpSchema>;
 export type MoveOp = z.infer<typeof MoveOpSchema>;

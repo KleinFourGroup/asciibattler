@@ -13,12 +13,30 @@
  * of authored seconds — it needs the `'fill'` sentinel. The dash is the outlier:
  * a FLAT cooldown (`speedScaled:false`) decoupled from its short motion window
  * (no `'fill'` phase → busy window = Σ fixed phases, independent of cooldown).
+ *
+ * Phase Yb adds a third option per phase: a FIXED phase may set `scalesWithSpeed`
+ * to shrink with the caster's `speed` (the same curve the cadence rides) instead
+ * of staying constant. This lets a charged spell author a short, snappy windup
+ * tell that still tracks the cadence across the full speed range — without it, a
+ * constant windup clamps a floor under the cadence and wastes most of the speed
+ * headroom. See `fixedPhaseTicks` / `speedScaledSeconds`.
  */
 
 import type { ActionPhase } from '../Action';
 import { secondsToTicks } from '../../config';
-import { attackCooldownTicksFor } from '../stats';
+import { attackCooldownTicksFor, speedScaledSeconds } from '../stats';
 import type { AbilityDef } from './schema';
+
+/**
+ * Phase Yb — a fixed (numeric) phase's duration in ticks. When the phase opts in
+ * via `scalesWithSpeed`, its seconds first ride the cadence curve
+ * (`speedScaledSeconds`) so it shrinks with the caster's `speed`; otherwise it's a
+ * flat conversion. The `'fill'` sentinel never reaches here — callers branch on it
+ * first.
+ */
+function fixedPhaseTicks(seconds: number, scalesWithSpeed: boolean, speed: number): number {
+  return secondsToTicks(scalesWithSpeed ? speedScaledSeconds(seconds, speed) : seconds);
+}
 
 /**
  * The re-proposal cooldown in ticks (also the total busy window for any def with
@@ -50,17 +68,19 @@ export function resolvePhases(def: AbilityDef, speed: number): ActionPhase[] {
     // their sum, decoupled from the cadence cooldown (the dash).
     return def.timeline.map((p) => ({
       phase: p.phase,
-      ticks: p.seconds === 'fill' ? 0 : secondsToTicks(p.seconds),
+      ticks: p.seconds === 'fill' ? 0 : fixedPhaseTicks(p.seconds, p.scalesWithSpeed, speed),
     }));
   }
 
   const cadenceTicks = resolveCadenceTicks(def, speed);
-  // First pass: clamp the fixed phases greedily against the cadence budget.
+  // First pass: clamp the fixed phases greedily against the cadence budget. A
+  // `scalesWithSpeed` phase (Yb) shrinks alongside the cadence, so the elastic
+  // `'fill'` phase keeps a stable share instead of being squeezed toward 0.
   let remaining = cadenceTicks;
   const fixedTicks = new Map<number, number>();
   def.timeline.forEach((p, i) => {
     if (p.seconds === 'fill') return;
-    const ticks = Math.min(secondsToTicks(p.seconds), remaining);
+    const ticks = Math.min(fixedPhaseTicks(p.seconds, p.scalesWithSpeed, speed), remaining);
     fixedTicks.set(i, ticks);
     remaining -= ticks;
   });

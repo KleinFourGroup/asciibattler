@@ -38,14 +38,14 @@ function world(): World {
 const DMG = { kind: 'damage', scaling: 'strength', might: 0, accuracy: 0.6, critBase: 0, critable: false, evadable: false, bypassDefense: false } as const;
 
 const strikeDef: AbilityDef = parseAbilityDef({
-  id: 'sword', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
+  id: 'sword', name: 'Sword', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
   timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
   orphanPolicy: 'commit-at-cast', priority: 10,
   effects: [{ phase: 'impact', op: DMG }],
 });
 
 const magicDef: AbilityDef = parseAbilityDef({
-  id: 'magic_bolt', cooldownSeconds: 2.5, rangeCells: 5,
+  id: 'magic_bolt', name: 'Bolt', cooldownSeconds: 2.5, rangeCells: 5,
   target: { kind: 'aoe', shape: 'square', radius: 1, anchor: 'targetCell', affects: 'enemies', ringMultiplier: 0.5 },
   timeline: [{ phase: 'windup', seconds: 'fill' }, { phase: 'release', seconds: 0 }, { phase: 'travel', seconds: 0.35 }, { phase: 'impact', seconds: 0 }],
   orphanPolicy: 'ground-target', priority: 10,
@@ -53,14 +53,14 @@ const magicDef: AbilityDef = parseAbilityDef({
 });
 
 const gambitDef: AbilityDef = parseAbilityDef({
-  id: 'gambit_strike', cooldownSeconds: 1.2, rangeCells: 1, target: { kind: 'enemyInRange' },
+  id: 'gambit_strike', name: 'Gambit', cooldownSeconds: 1.2, rangeCells: 1, target: { kind: 'enemyInRange' },
   timeline: [{ phase: 'windup', seconds: 0.25 }, { phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
   orphanPolicy: 'commit-at-cast', priority: 10,
   effects: [{ phase: 'windup', op: DMG }, { phase: 'impact', op: { kind: 'move', mode: 'retreat', cells: 1 } }],
 });
 
 const catapultDef: AbilityDef = parseAbilityDef({
-  id: 'catapult_shot', cooldownSeconds: 3, rangeCells: 6, minRangeCells: 4, target: { kind: 'enemyInRange' },
+  id: 'catapult_shot', name: 'Lob', cooldownSeconds: 3, rangeCells: 6, minRangeCells: 4, target: { kind: 'enemyInRange' },
   timeline: [{ phase: 'windup', seconds: 'fill' }, { phase: 'release', seconds: 0 }, { phase: 'travel', seconds: 0.6 }, { phase: 'impact', seconds: 0 }],
   orphanPolicy: 'fizzle', priority: 10,
   effects: [{ phase: 'impact', op: DMG }],
@@ -70,7 +70,7 @@ const dashDef: AbilityDef = parseAbilityDef({
   // `self` — a pure caster-reposition: the leap targets the CASTER (the enemy is
   // only a propose-time reference for the landing), so phaseTarget surfaces
   // nothing, mirroring DashAction's absent phaseTarget.
-  id: 'dash', cooldownSeconds: 10, speedScaled: false, rangeCells: 2, target: { kind: 'self' },
+  id: 'dash', name: 'Dash', cooldownSeconds: 10, speedScaled: false, rangeCells: 2, target: { kind: 'self' },
   timeline: [{ phase: 'impact', seconds: 0.25 }],
   orphanPolicy: 'commit-at-cast', priority: 5,
   effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance', cells: 2 } }],

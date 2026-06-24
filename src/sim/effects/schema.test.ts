@@ -19,6 +19,7 @@ import {
 function validStrikeDef(): unknown {
   return {
     id: 'sword',
+    name: 'Sword',
     cooldownSeconds: 1.5,
     rangeCells: 1,
     target: { kind: 'enemyInRange' },
@@ -50,9 +51,33 @@ describe('AbilityDef schema — valid shapes', () => {
   it('parses a complete strike def and fills the optional defaults', () => {
     const def = parseAbilityDef(validStrikeDef());
     expect(def.id).toBe('sword');
+    // Yb — the display name is a first-class required field, decoupled from id.
+    expect(def.name).toBe('Sword');
     // .default()s applied:
     expect(def.speedScaled).toBe(true);
     expect(def.minRangeCells).toBe(0);
+  });
+
+  it('Yb — requires a non-empty display name (no id fallback)', () => {
+    const noName = validStrikeDef() as Record<string, unknown>;
+    delete noName.name;
+    expect(() => parseAbilityDef(noName)).toThrow();
+    const emptyName = { ...(validStrikeDef() as Record<string, unknown>), name: '' };
+    expect(() => parseAbilityDef(emptyName)).toThrow();
+  });
+
+  it('Yb — timeline phases default scalesWithSpeed=false and accept true', () => {
+    const def = parseAbilityDef(validStrikeDef());
+    expect(def.timeline.every((p) => p.scalesWithSpeed === false)).toBe(true);
+    const scaled = validStrikeDef() as {
+      timeline: { phase: string; seconds: unknown; scalesWithSpeed?: boolean }[];
+    };
+    scaled.timeline = [
+      { phase: 'windup', seconds: 1.5, scalesWithSpeed: true },
+      { phase: 'impact', seconds: 0 },
+      { phase: 'recovery', seconds: 'fill' },
+    ];
+    expect(parseAbilityDef(scaled).timeline[0].scalesWithSpeed).toBe(true);
   });
 
   it('fills the aoe ringMultiplier default (1 = uniform)', () => {
@@ -120,6 +145,17 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
       { phase: 'recovery', seconds: 'fill' },
     ];
     expect(() => parseAbilityDef(bad)).toThrow(/at most one 'fill'/);
+  });
+
+  it('Yb — rejects scalesWithSpeed on a fill phase (a no-op footgun)', () => {
+    const bad = validStrikeDef() as {
+      timeline: { phase: string; seconds: unknown; scalesWithSpeed?: boolean }[];
+    };
+    bad.timeline = [
+      { phase: 'impact', seconds: 0 },
+      { phase: 'recovery', seconds: 'fill', scalesWithSpeed: true },
+    ];
+    expect(() => parseAbilityDef(bad)).toThrow(/scalesWithSpeed/);
   });
 
   it('rejects an effect on a phase absent from the timeline', () => {

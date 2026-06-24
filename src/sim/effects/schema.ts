@@ -207,11 +207,28 @@ export const TargetSelectorSchema = z.discriminatedUnion('kind', [
  * for the single ELASTIC phase that absorbs the remainder of the (speed-scaled)
  * cadence window — the strike's `recovery`, the charged spell's `windup`. At
  * most one `'fill'` per timeline (refined below). See `resolvePhases`.
+ *
+ * Phase Yb — `scalesWithSpeed` makes a FIXED (numeric) phase shrink with the
+ * caster's `speed`, via the SAME curve the cadence uses (`speedScaledSeconds`):
+ * a charged spell's windup then speeds up ALONGSIDE the cadence instead of
+ * pinning a constant floor under it (which would waste most of the speed range —
+ * e.g. a fixed 1.85 s of phases caps a 2.5 s→1.0 s cadence at 1.85 s, only 26% of
+ * the 60% the curve allows). Default `false` = a flat conversion (a projectile's
+ * physical travel, an impact boundary). Meaningless on a `'fill'` phase — that
+ * already tracks the speed-scaled cadence — so the combo is rejected (refined
+ * below) rather than silently ignored.
  */
-const TimelinePhaseSchema = z.object({
-  phase: PhaseSchema,
-  seconds: z.union([z.number().nonnegative(), z.literal('fill')]),
-});
+const TimelinePhaseSchema = z
+  .object({
+    phase: PhaseSchema,
+    seconds: z.union([z.number().nonnegative(), z.literal('fill')]),
+    scalesWithSpeed: z.boolean().default(false),
+  })
+  .refine((p) => !(p.seconds === 'fill' && p.scalesWithSpeed), {
+    message:
+      "a 'fill' phase already scales with the cadence — `scalesWithSpeed` is only meaningful on a fixed (numeric) phase",
+    path: ['scalesWithSpeed'],
+  });
 
 const EffectEntrySchema = z.object({
   phase: PhaseSchema,
@@ -232,6 +249,13 @@ const FxSchema = z
 export const AbilityDefSchema = z
   .object({
     id: z.string().min(1),
+    /**
+     * Player-facing display name (the UnitCard ability row, the archetype
+     * editor's ability list). Yb QoL: decoupled from `id` so the surfaces read
+     * one source of truth instead of hardcoding labels (the retired `ABILITY_UI`
+     * map) or humanizing the raw id. Required — every ability names itself.
+     */
+    name: z.string().min(1),
     /** Base re-proposal interval, in seconds. */
     cooldownSeconds: z.number().positive(),
     /**

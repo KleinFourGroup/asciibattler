@@ -183,7 +183,10 @@ function buildAbilityChecks(): void {
     cb.value = id;
     cb.addEventListener('change', onAbilityChange);
     label.appendChild(cb);
-    label.append(` ${id}`);
+    // Yb QoL: show the config display name; keep the raw id as the hover title
+    // for disambiguation (mirrors the stat rows' `name.title = key`).
+    label.append(` ${abilityDef(id).name}`);
+    label.title = id;
     abilitiesEl.appendChild(label);
     abilityChecks.set(id, cb);
   }

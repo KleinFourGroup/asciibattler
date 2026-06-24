@@ -87,6 +87,21 @@ export function attackCooldownTicksFor(cooldownSeconds: number, speed: number): 
 }
 
 /**
+ * Phase Yb — scale a timeline phase's authored duration (seconds) by the caster's
+ * `speed`, through the SAME curve + knobs as the attack cadence
+ * (`attackCooldownTicksFor`). Lets a FIXED phase — a charged spell's windup —
+ * shrink with speed instead of staying constant, so speeding the cadence speeds
+ * the whole cast (not just the elastic `recovery` tail) and the cast keeps the
+ * full speed range rather than a fixed phase clamping a floor under it. Pure
+ * seconds→seconds; the caller floors via `secondsToTicks`. Unscaled phases (a
+ * projectile's physical travel) simply skip this. Unlike the cadence, NOT floored
+ * at 1 tick — a phase may legitimately resolve to 0 (an instant boundary).
+ */
+export function speedScaledSeconds(seconds: number, speed: number): number {
+  return seconds * cooldownScale(speed, STATS.speedCdPerStat, STATS.speedMinCdScale);
+}
+
+/**
  * Environment entity derived values. Caller passes the desired maxHp;
  * the rest are zero/no-op. Walls + half-cover go through this path.
  */

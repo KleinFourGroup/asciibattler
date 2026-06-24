@@ -707,7 +707,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
     // 0.6) fires in EffectAction.start → executeDamage, which draws crit then
     // calls applyDamage (the miss roll) — the crit→miss order AttackAction had.
     const strikeDef = parseAbilityDef({
-      id: 'sword', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
+      id: 'sword', name: 'Sword', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
       timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
       orphanPolicy: 'commit-at-cast', priority: 10,
       effects: [{ phase: 'impact', op: { kind: 'damage', scaling: 'strength', might: 0, accuracy: 0.6, critBase: 0, critable: true, evadable: true, bypassDefense: false } }],

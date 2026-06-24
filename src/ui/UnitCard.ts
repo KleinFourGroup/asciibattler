@@ -98,25 +98,6 @@ export interface UnitCardHandles {
   readonly hpFill?: HTMLDivElement;
 }
 
-/**
- * Render-only ability descriptor map (was RecruitScreen's `ABILITY_UI`).
- * Display labels + whether the ability heals or damages live HERE (UI), NOT in
- * `config/abilities.json` (mechanics-only). An unmapped ability falls back to
- * its raw id + a damage reading, so the card never throws.
- */
-const ABILITY_UI: Record<string, { label: string; effect: 'damage' | 'heal' }> = {
-  // I6 — the per-subclass melee weapons (split from the old `melee_strike`).
-  sword: { label: 'Sword', effect: 'damage' },
-  club: { label: 'Club', effect: 'damage' },
-  katana: { label: 'Katana', effect: 'damage' },
-  whip: { label: 'Whip', effect: 'damage' },
-  bow: { label: 'Bow', effect: 'damage' },
-  gambit_strike: { label: 'Gambit', effect: 'damage' },
-  heal_ally: { label: 'Heal', effect: 'heal' },
-  magic_bolt: { label: 'Bolt', effect: 'damage' },
-  catapult_shot: { label: 'Lob', effect: 'damage' },
-};
-
 /** Adapter: a roster/offer template → card data (recruit + P3 pre-turn). */
 export function unitCardFromTemplate(template: UnitTemplate): UnitCardData {
   return {
@@ -427,7 +408,6 @@ function buildXpBar(data: UnitCardData): HTMLDivElement {
  * (the `AbilityDef`: `rangeCells`, the damage/heal op, the `aoe` selector).
  */
 function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDivElement {
-  const ui = ABILITY_UI[id] ?? { label: id, effect: 'damage' as const };
   const def = abilityDef(id);
 
   const row = document.createElement('div');
@@ -435,7 +415,9 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
 
   const name = document.createElement('div');
   name.className = 'unit-card__ability-name';
-  name.textContent = ui.label;
+  // Yb QoL: the display name is config now (`AbilityDef.name`), not a hardcoded
+  // UI label map. Damage-vs-heal is read straight from the op below.
+  name.textContent = def.name;
   row.appendChild(name);
 
   const detail = document.createElement('div');

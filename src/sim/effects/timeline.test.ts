@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { secondsToTicks } from '../../config';
-import { attackCooldownTicksFor } from '../stats';
+import { attackCooldownTicksFor, speedScaledSeconds } from '../stats';
 import { resolveCadenceTicks, resolvePhases } from './timeline';
 import { AbilityDefSchema, type AbilityDef } from './schema';
-import type { ActionPhase } from '../Action';
+import { totalTicks, type ActionPhase } from '../Action';
 
 /**
  * Phase Y1 — the seconds→ticks timeline conversion reproduces every existing
@@ -17,9 +17,9 @@ import type { ActionPhase } from '../Action';
 
 const SPEEDS = [0, 4, 12, -3];
 
-/** A def with `id` injected + defaults filled, from a partial literal. */
+/** A def with `id` + `name` injected + defaults filled, from a partial literal. */
 function def(partial: Record<string, unknown>): AbilityDef {
-  return AbilityDefSchema.parse({ id: 'x', ...partial });
+  return AbilityDefSchema.parse({ id: 'x', name: 'X', ...partial });
 }
 
 const damageOp = (scaling: string) => ({
@@ -151,6 +151,84 @@ describe('resolvePhases — reproduces the migrated verbs byte-for-byte', () => 
     // The re-proposal cooldown floors at 1 and ignores speed (mirrors DashAbility).
     expect(resolveCadenceTicks(dash, 0)).toBe(Math.max(1, secondsToTicks(10)));
     expect(resolveCadenceTicks(dash, 99)).toBe(Math.max(1, secondsToTicks(10)));
+  });
+});
+
+describe('resolvePhases — Yb: a speed-scaled fixed phase', () => {
+  // magic_bolt's Yb shape: a snappy windup that SCALES with speed (so it doesn't
+  // clamp a constant floor under the cadence) + a `recovery` fill that absorbs the
+  // remainder. Expectation derived from the same primitives `resolvePhases` uses.
+  const scaledCharged = def({
+    cooldownSeconds: 2.5,
+    rangeCells: 5,
+    minRangeCells: 2,
+    target: {
+      kind: 'aoe',
+      shape: 'square',
+      radius: 1,
+      anchor: 'targetCell',
+      affects: 'enemies',
+      ringMultiplier: 0.5,
+    },
+    timeline: [
+      { phase: 'windup', seconds: 1.5, scalesWithSpeed: true },
+      { phase: 'release', seconds: 0 },
+      { phase: 'travel', seconds: 0.35 },
+      { phase: 'impact', seconds: 0 },
+      { phase: 'recovery', seconds: 'fill' },
+    ],
+    orphanPolicy: 'ground-target',
+    priority: 10,
+    effects: [{ phase: 'impact', op: damageOp('magic') }],
+  });
+
+  /** Mirrors `resolvePhases`' greedy clamp with the windup scaled by speed. */
+  function scaledChargedShape(
+    cooldownSeconds: number,
+    windupSeconds: number,
+    travelSeconds: number,
+    speed: number,
+  ): ActionPhase[] {
+    const cadence = attackCooldownTicksFor(cooldownSeconds, speed);
+    const windup = Math.min(secondsToTicks(speedScaledSeconds(windupSeconds, speed)), cadence);
+    const travel = Math.min(secondsToTicks(travelSeconds), cadence - windup);
+    return [
+      { phase: 'windup', ticks: windup },
+      { phase: 'release', ticks: 0 },
+      { phase: 'travel', ticks: travel },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: cadence - windup - travel },
+    ];
+  }
+
+  for (const speed of SPEEDS) {
+    it(`windup scales, busy window stays == cadence @ speed ${speed}`, () => {
+      const phases = resolvePhases(scaledCharged, speed);
+      expect(phases).toEqual(scaledChargedShape(2.5, 1.5, 0.35, speed));
+      // The whole busy window tracks the cadence — the full speed range is
+      // preserved (the point of Yb), not clamped by a constant fixed windup.
+      expect(totalTicks(phases)).toBe(attackCooldownTicksFor(2.5, speed));
+      // The windup genuinely moves with speed (it isn't the constant 1.5 s).
+      const windupTicks = phases[0].ticks;
+      expect(windupTicks).toBe(secondsToTicks(speedScaledSeconds(1.5, speed)));
+    });
+  }
+
+  it('an un-flagged fixed phase stays constant across speed (default false)', () => {
+    // The dash's motion phase has no fill + no scaling: invariant under speed.
+    const dash = def({
+      cooldownSeconds: 10,
+      speedScaled: false,
+      rangeCells: 2,
+      target: { kind: 'enemyInRange' },
+      timeline: [{ phase: 'impact', seconds: 0.25 }],
+      orphanPolicy: 'commit-at-cast',
+      priority: 5,
+      effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance', cells: 2 } }],
+    });
+    for (const speed of SPEEDS) {
+      expect(resolvePhases(dash, speed)).toEqual([{ phase: 'impact', ticks: secondsToTicks(0.25) }]);
+    }
   });
 });
 

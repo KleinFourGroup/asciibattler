@@ -1,6 +1,7 @@
 {
   "sword": {
     "id": "sword",
+    "name": "Sword",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -28,6 +29,7 @@
   },
   "club": {
     "id": "club",
+    "name": "Club",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -55,6 +57,7 @@
   },
   "katana": {
     "id": "katana",
+    "name": "Katana",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -82,6 +85,7 @@
   },
   "whip": {
     "id": "whip",
+    "name": "Whip",
     "cooldownSeconds": 1.5,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -109,6 +113,7 @@
   },
   "bow": {
     "id": "bow",
+    "name": "Bow",
     "cooldownSeconds": 2.0,
     "rangeCells": 3,
     "minRangeCells": 2,
@@ -137,6 +142,7 @@
   },
   "heal_ally": {
     "id": "heal_ally",
+    "name": "Heal",
     "cooldownSeconds": 2.0,
     "rangeCells": 3,
     "target": { "kind": "lowestHpAlly", "rangeCells": 3 },
@@ -155,6 +161,7 @@
   },
   "gambit_strike": {
     "id": "gambit_strike",
+    "name": "Gambit",
     "cooldownSeconds": 1.2,
     "rangeCells": 1,
     "target": { "kind": "enemyInRange" },
@@ -187,6 +194,7 @@
   },
   "dash": {
     "id": "dash",
+    "name": "Dash",
     "cooldownSeconds": 10,
     "speedScaled": false,
     "rangeCells": 2,
@@ -203,6 +211,7 @@
   },
   "magic_bolt": {
     "id": "magic_bolt",
+    "name": "Bolt",
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
@@ -215,10 +224,11 @@
       "ringMultiplier": 0.5
     },
     "timeline": [
-      { "phase": "windup", "seconds": "fill" },
+      { "phase": "windup", "seconds": 1.5, "scalesWithSpeed": true },
       { "phase": "release", "seconds": 0 },
       { "phase": "travel", "seconds": 0.35 },
-      { "phase": "impact", "seconds": 0 }
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
     ],
     "orphanPolicy": "ground-target",
     "priority": 10,
@@ -240,16 +250,18 @@
   },
   "catapult_shot": {
     "id": "catapult_shot",
+    "name": "Lob",
     "cooldownSeconds": 3,
     "rangeCells": 6,
     "minRangeCells": 4,
     "ignoresLineOfSight": true,
     "target": { "kind": "enemyInRange" },
     "timeline": [
-      { "phase": "windup", "seconds": "fill" },
+      { "phase": "windup", "seconds": 2, "scalesWithSpeed": true },
       { "phase": "release", "seconds": 0 },
       { "phase": "travel", "seconds": 0.6 },
-      { "phase": "impact", "seconds": 0 }
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
     ],
     "orphanPolicy": "fizzle",
     "priority": 10,

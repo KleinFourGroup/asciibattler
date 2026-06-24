@@ -217,7 +217,8 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
  * CENTRE (`anchor:targetCell`) and carries it on the action; `targetId` is −1 —
  * the blast subjects whoever stands in the cells at impact, not a locked unit —
  * so `phaseTarget` surfaces only the cell. The interpreter's `executeDamage` aoe
- * branch (one crit roll, the ring multiplier, `magic:detonated`) does the rest.
+ * branch (one crit roll, the ring multiplier) does the rest; the detonation FX
+ * now rides the §Z registry off `action:phase{impact}`, not a sim event.
  */
 function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
   const target = currentTarget(unit, world);

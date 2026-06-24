@@ -196,7 +196,9 @@ src/
     BattleRenderer.ts        # Sim/render seam: subscribes to unit:* + action:phase (F3)
                              # tileWorldPos(coord) for per-tile sprite Y (C1c). E6/E7: melee shove,
                              # ranged/lobbed projectiles, explosion/dud/heal-sparkle VFX + hitsplats
+                             # §Z: the FX driver (holds AudioPlayer) — onActionPhase resolves def.fx via fxRegistry → projectile/burst/sound
                              # J3: objective X marker (objective:set/cleared; camera-up lift) + enemyBillboards (pick candidates)
+    fxRegistry.ts            # §Z: pure-data FxKey→FxDescriptor map (sound/projectile/burst) + assertFxKeysResolve boot check (headless-testable)
     pick.ts                  # J3: pickInstanceAtNdc — pure screen-space billboard hit-test (replicates billboard.vert.glsl)
     FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture (glyph set from glyphs.ts)
     glyphs.ts                # E7.A: THREE-free GLYPHS set (FontAtlas.test asserts archetype coverage); J3: 'X' = objective marker (atlas now 32/32 FULL)
@@ -402,9 +404,7 @@ unit:missed             { attackerId: number; targetId: number }                
 unit:burned             { unitId: number; damage: number }                         # D7.B: per-tick chip from fire tile (no attacker)
 unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (D7.B tile chip, amount=0 at maxHp)
 unit:died               { unitId: number; team: Team }                             # team carried because the unit is already spliced out (C1b)
-magic:detonated         { casterId: number; center: GridCoord }                     # E7.C: once per mage cast (whiff incl.) — drives one boom VFX
-catapult:fired          { casterId: number; impact: GridCoord; hit: boolean }       # E7.D: once per shot (abort incl.) — drives the lobbed projectile
-action:phase            { unitId; actionId; phase; targetId?; targetCell? }         # F2: phase-boundary signal; renderer schedules VFX against it
+action:phase            { unitId; actionId; phase; targetId?; targetCell? }         # F2: phase-boundary signal; §Z FX driver resolves actionId→def.fx[phase]→FX_REGISTRY (retired magic:detonated/catapult:fired)
 run:started             { seed: number }
 run:victory             { }
 run:defeated            { }

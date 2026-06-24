@@ -181,31 +181,14 @@ export interface GameEvents extends Record<string, unknown> {
   'unit:died': { unitId: number; team: Team };
 
   /**
-   * E7.C — a mage's `magic_bolt` detonated at `center` (the ground-targeted
-   * blast cell). Fires exactly ONCE per cast from `MagicBoltAction.applyEffect`,
-   * regardless of how many units the blast hit — including zero (a whiff) —
-   * carrying the caster + center so the render + audio layers can play a
-   * single impact (one projectile → explosion + one cast sound) instead of
-   * keying off the per-target `unit:attacked` stream, which fires once per
-   * victim (reads as multishot) and not at all on a miss. The damage itself
-   * still rides `unit:attacked` per hit, so hitsplats / HP bars / the XP
-   * ledger are unchanged.
+   * §Z — the ad-hoc `magic:detonated` / `catapult:fired` FX events (the Y4
+   * strangler artifacts) were RETIRED here. Their VFX + SFX now resolve through
+   * the renderer's FX registry (`src/render/fxRegistry.ts`), keyed off the
+   * ability def's `fx` and driven by `BattleRenderer` on the action's phase
+   * boundaries (the projectile on `release`, the burst + sound on `impact`).
+   * The damage still rides `unit:attacked` per hit, so hitsplats / HP bars /
+   * the XP ledger are unchanged.
    */
-  'magic:detonated': { casterId: number; center: GridCoord };
-
-  /**
-   * E7.D — a catapult's `catapult_shot` completed its wind-up. Fires exactly
-   * ONCE per shot from `CatapultShotAction.applyEffect`, ALWAYS — including
-   * when the locked target died mid-charge (`hit: false`, an aborted shot).
-   * `impact` is the cell the lobbed boulder lands on (the live target's cell
-   * on a hit; its last-known cell — or the cast cell after a snapshot that
-   * dropped the target — on an abort). The render + audio layers drive the
-   * single arcing projectile off this (so an aborted shot still shows a
-   * lobbed dud instead of nothing), mirroring `magic:detonated`. The damage
-   * itself still rides `unit:attacked` on a hit, so hitsplats / HP bars / the
-   * XP ledger are unchanged.
-   */
-  'catapult:fired': { casterId: number; impact: GridCoord; hit: boolean };
 
   /**
    * F2 — transient phase-boundary signal. Fires once per phase that BEGINS

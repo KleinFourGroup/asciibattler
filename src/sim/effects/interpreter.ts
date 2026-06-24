@@ -91,9 +91,6 @@ function executeDamage(
   if (ctx.selector.kind === 'aoe') {
     const center = ctx.targetCell;
     if (center === undefined) return;
-    // Strangler FX artifact (retired in §Z): announce the detonation ONCE,
-    // before the damage, even on a whiff.
-    world.emit('magic:detonated', { casterId: caster.id, center: { ...center } });
     const crit = world.combatRng.next() < critChance;
     const critFactor = crit ? STATS.critMult : 1;
     const victims = resolveAreaVictims(world, caster, center, {
@@ -119,9 +116,6 @@ function executeDamage(
   // --- Single-target, fizzle (CatapultShot): abort with no draw if dead. ---
   if (ctx.orphanPolicy === 'fizzle') {
     const hit = !!target && target.currentHp > 0;
-    const impact = (target ? target.position : ctx.targetCell) ?? caster.position;
-    // Strangler FX artifact (retired in §Z): announce the shot ONCE, always.
-    world.emit('catapult:fired', { casterId: caster.id, impact: { ...impact }, hit });
     if (!hit) return; // no crit draw on the abort path
     const crit = world.combatRng.next() < critChance;
     const damage = Math.round(baseDamage * (crit ? STATS.critMult : 1));

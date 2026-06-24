@@ -40,7 +40,8 @@ const SOURCES: Record<SoundKey, string> = {
   death: 'audio/death.wav',
   healtick: 'audio/healtick.wav',
   lose: 'audio/lose.wav',
-  // E7.C — the mage bolt's detonation. One per cast (off `magic:detonated`).
+  // E7.C — the mage bolt's detonation. One per cast (§Z: played via the FX
+  // registry's `magic_bolt_burst` cue on `action:phase{impact}`).
   magicboom: 'audio/magicboom.wav',
   melee: 'audio/melee.wav',
   recruit: 'audio/recruit.wav',

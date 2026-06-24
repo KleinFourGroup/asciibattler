@@ -99,6 +99,7 @@ export class BattleScene implements Scene {
       ctx.overlays,
       ctx.terrain,
       ctx.renderer.camera,
+      ctx.audio,
       ctx.bus,
     );
     this.playback = ctx.playback;
@@ -149,17 +150,10 @@ export class BattleScene implements Scene {
         if (attacker.archetype === 'mage' || attacker.archetype === 'catapult') return;
         ctx.audio.play(attacker.derived.attackRange <= 1 ? 'melee' : 'shoot');
       }),
-      // E7.C — one sound per mage bolt cast (fires even on a whiff), matching
-      // the single projectile + explosion visual.
-      ctx.bus.on('magic:detonated', () => {
-        ctx.audio.play('magicboom');
-      }),
-      // E7.D — one sound per catapult shot, fired on hit AND abort (so a
-      // fizzle still thunks), matching the single arcing-projectile visual.
-      // Reuses `shoot` for now — a dedicated catapult SFX is a later polish.
-      ctx.bus.on('catapult:fired', () => {
-        ctx.audio.play('shoot');
-      }),
+      // §Z — the mage bolt's `magicboom` + the catapult's `shoot` now ride the
+      // FX registry (one FxKey → visual + sound), driven by BattleRenderer off
+      // `action:phase{impact}`. They left this per-event audio block when the
+      // ad-hoc `magic:detonated` / `catapult:fired` events were retired.
       ctx.bus.on('unit:died', ({ team }) => {
         if (team === 'neutral') return;
         ctx.audio.play('death');

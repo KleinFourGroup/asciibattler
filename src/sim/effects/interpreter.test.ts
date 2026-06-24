@@ -33,7 +33,7 @@ function makeUnit(team: Team, pos: GridCoord, stats: Partial<UnitStats> = {}): U
 function setup() {
   const events: { name: keyof GameEvents; payload: unknown }[] = [];
   const bus = new EventBus<GameEvents>();
-  for (const name of ['unit:attacked', 'unit:missed', 'unit:healed', 'unit:moved', 'unit:dashed', 'magic:detonated', 'catapult:fired'] as const) {
+  for (const name of ['unit:attacked', 'unit:missed', 'unit:healed', 'unit:moved', 'unit:dashed'] as const) {
     bus.on(name, (p) => events.push({ name, payload: p }));
   }
   const world = new World(bus, new RNG(1));
@@ -114,7 +114,7 @@ describe('executeOp — damage (single-target)', () => {
 });
 
 describe('executeOp — damage (fizzle / catapult)', () => {
-  it('fizzle: a dead target announces catapult:fired{hit:false} and deals nothing (no draw)', () => {
+  it('fizzle: a dead target deals nothing and draws nothing (no event)', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 3, y: 0 });
@@ -124,11 +124,13 @@ describe('executeOp — damage (fizzle / catapult)', () => {
       dmgOp(),
       ctx({ caster, world, target, orphanPolicy: 'fizzle', targetCell: { x: 3, y: 0 }, resolution: { baseDamage: 10, critChance: 1 } }),
     );
-    expect(events).toEqual([{ name: 'catapult:fired', payload: { casterId: caster.id, impact: { x: 3, y: 0 }, hit: false } }]);
+    // §Z: the FX-cue `catapult:fired` is retired, so an aborted shot is silent at
+    // the sim layer (the renderer drives the dud off `action:phase{impact}`).
+    expect(events).toHaveLength(0);
     expect(target.currentHp).toBe(0);
   });
 
-  it('fizzle: a live target announces hit:true then applies damage', () => {
+  it('fizzle: a live target applies damage (emits unit:attacked)', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 3, y: 0 });
@@ -137,8 +139,7 @@ describe('executeOp — damage (fizzle / catapult)', () => {
       dmgOp(),
       ctx({ caster, world, target, orphanPolicy: 'fizzle', resolution: { baseDamage: 10, critChance: 0 } }),
     );
-    expect(events.map((e) => e.name)).toEqual(['catapult:fired', 'unit:attacked']);
-    expect((events[0]!.payload as { hit: boolean }).hit).toBe(true);
+    expect(events.map((e) => e.name)).toEqual(['unit:attacked']);
     expect(target.currentHp).toBe(target.derived.maxHp - 10);
   });
 });
@@ -146,7 +147,7 @@ describe('executeOp — damage (fizzle / catapult)', () => {
 describe('executeOp — damage (aoe / magic)', () => {
   const aoe: TargetSelector = { kind: 'aoe', shape: 'square', radius: 1, anchor: 'targetCell', affects: 'enemies', ringMultiplier: 0.5 };
 
-  it('detonates once, hits center full + ring scaled, one crit for the blast', () => {
+  it('hits center full + ring scaled, one crit for the blast', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const center = makeUnit('enemy', { x: 5, y: 5 });
@@ -156,12 +157,14 @@ describe('executeOp — damage (aoe / magic)', () => {
       dmgOp({ evadable: false }),
       ctx({ caster, world, selector: aoe, orphanPolicy: 'ground-target', targetCell: { x: 5, y: 5 }, resolution: { baseDamage: 10, critChance: 0 } }),
     );
-    expect(events[0]).toEqual({ name: 'magic:detonated', payload: { casterId: caster.id, center: { x: 5, y: 5 } } });
+    // §Z: the FX-cue `magic:detonated` is retired; only the per-victim damage
+    // remains (the renderer drives the explosion off `action:phase{impact}`).
+    expect(events.map((e) => e.name)).toEqual(['unit:attacked', 'unit:attacked']);
     expect(center.currentHp).toBe(center.derived.maxHp - 10);
     expect(ring.currentHp).toBe(ring.derived.maxHp - 5); // round(10 × 0.5)
   });
 
-  it('detonates even on a whiff (no victims)', () => {
+  it('a whiff (no victims) deals no damage and emits nothing', () => {
     const { world, events } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     world.units.push(caster);
@@ -169,7 +172,8 @@ describe('executeOp — damage (aoe / magic)', () => {
       dmgOp(),
       ctx({ caster, world, selector: aoe, orphanPolicy: 'ground-target', targetCell: { x: 5, y: 5 }, resolution: { baseDamage: 10, critChance: 0 } }),
     );
-    expect(events).toEqual([{ name: 'magic:detonated', payload: { casterId: caster.id, center: { x: 5, y: 5 } } }]);
+    // §Z: with `magic:detonated` retired, a whiff is silent at the sim layer.
+    expect(events).toHaveLength(0);
   });
 });
 

@@ -246,7 +246,8 @@
           "bypassDefense": false
         }
       }
-    ]
+    ],
+    "fx": { "release": "magic_bolt_launch", "impact": "magic_bolt_burst" }
   },
   "catapult_shot": {
     "id": "catapult_shot",
@@ -279,6 +280,7 @@
           "bypassDefense": false
         }
       }
-    ]
+    ],
+    "fx": { "release": "catapult_launch", "impact": "catapult_burst" }
   }
 }

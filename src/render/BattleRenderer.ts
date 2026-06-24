@@ -9,18 +9,15 @@ import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
 import type { PickCandidate } from './pick';
 import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
 import type { TerrainRenderer } from './TerrainRenderer';
+import type { AudioPlayer } from '../audio/AudioPlayer';
 import { COLORS } from './palette';
 import { SpriteAnimator } from './animation/SpriteAnimator';
+import { assertFxKeysResolve, fxDescriptor, type FxBurst, type FxProjectile } from './fxRegistry';
 import { TICK_RATE, ticksToSeconds } from '../config';
+import { ABILITY_DEFS } from '../config/abilities';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
 import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
 import { SPAWN } from '../config/spawn';
-
-// Y5c — the legacy MagicBolt/CatapultShot action classes are gone; their
-// `action:phase` events now carry the AbilityDef id (== the old action id by the
-// migration's construction). The release-FX dispatch matches those def ids.
-const MAGIC_BOLT_DEF_ID = 'magic_bolt';
-const CATAPULT_SHOT_DEF_ID = 'catapult_shot';
 
 /**
  * The simulation/render seam. Subscribes to sim events and turns them into
@@ -139,8 +136,15 @@ export class BattleRenderer {
      *  camera's up (screen-up) axis so it sits atop the unit without the
      *  off-axis skew a world-Y lift causes under the pitched perspective. */
     private readonly camera: THREE.Camera,
+    /** §Z — the FX driver plays a cue's unified sound (one FxKey → visual +
+     *  SFX). The renderer is the sole owner of every keyed combat cue; BattleScene
+     *  keeps only the non-keyed sounds (death, fanfares, tile chips). */
+    private readonly audio: AudioPlayer,
     bus: EventBus<GameEvents>,
   ) {
+    // §Z boot assert: every `fx` key the ability catalog references must resolve
+    // in the registry, so a typo fails here (battle start) not silently on screen.
+    assertFxKeysResolve(ABILITY_DEFS);
     this.animator = new SpriteAnimator(this.sprites);
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
@@ -150,17 +154,14 @@ export class BattleRenderer {
     // triggerAttackVisual lunge/tracer), but a "Miss" floats instead of damage.
     this.subscriptions.push(bus.on('unit:missed', this.onUnitMissed));
     this.subscriptions.push(bus.on('unit:died', this.onUnitDied));
-    // E7.C: the mage's bolt detonation drives ONE projectile + explosion,
-    // replacing the per-hit tracers `unit:attacked` would otherwise spawn.
-    this.subscriptions.push(bus.on('magic:detonated', this.onMagicDetonated));
-    // E7.D: the catapult's shot drives ONE arcing projectile — and a dud puff
-    // when the shot aborts (target died mid-charge), so a fizzle isn't silent.
-    this.subscriptions.push(bus.on('catapult:fired', this.onCatapultFired));
-    // F3: the mage bolt / catapult lob launch their projectile on the action's
-    // `release` boundary (carved out of the wind-up), so it travels DURING the
-    // charge and arrives on the impact tick — instead of launching at impact
-    // and flying after the damage. The impact-side VFX (explosion/dud) stay on
-    // the events above, which fire at impact.
+    // §Z — the FX driver. Every keyed combat cue resolves off the action's phase
+    // boundaries: `actionId → AbilityDef.fx[phase] → FX_REGISTRY → descriptor`,
+    // then drives the named channels + sound. The mage bolt / catapult lob launch
+    // their projectile on `release` (carved out of the wind-up, so it travels
+    // DURING the charge and arrives on the impact tick) and detonate on `impact`.
+    // This retired the ad-hoc `magic:detonated` / `catapult:fired` events (the Y4
+    // strangler artifacts) — the impact burst now rides `action:phase{impact}`,
+    // same tick, same pre-hitsplat ordering.
     this.subscriptions.push(bus.on('action:phase', this.onActionPhase));
     // D7.B: keep HP bars in sync with tile-effect chip damage / heal. E6.C
     // also floats a hitsplat for each: burn damage in amber, heal in cyan.
@@ -574,13 +575,12 @@ export class BattleRenderer {
     const attackerHandle = this.handles.get(attackerId);
     if (!attackerHandle) return;
 
-    // E7.C/E7.D — the mage's bolt (`magic:detonated`) and the catapult's shot
-    // (`catapult:fired`) each drive their OWN single projectile off a dedicated
-    // event, so skip the per-hit tracer here. For the mage it'd read as
-    // multishot (one `unit:attacked` per AoE victim); for the catapult the
-    // event also fires on an aborted shot (target died mid-charge) where there
-    // is no `unit:attacked` at all. The per-victim hitsplat + HP-bar refresh in
-    // `onUnitAttacked` still fire for both — those correctly show the damage.
+    // E7.C/E7.D — the mage's bolt + the catapult's shot each drive their OWN
+    // single projectile + impact burst via the §Z FX registry (off the action's
+    // phase boundaries), so skip the per-hit `unit:attacked` tracer here: for the
+    // mage it'd read as multishot (one `unit:attacked` per AoE victim); the
+    // catapult's lob is the registry's job, not a straight tracer. The per-victim
+    // hitsplat + HP-bar refresh in `onUnitAttacked` still fire — those show damage.
     if (attacker.archetype === 'mage' || attacker.archetype === 'catapult') return;
 
     if (attacker.derived.attackRange <= 1) {
@@ -660,14 +660,13 @@ export class BattleRenderer {
   }
 
   /**
-   * F3 — launch a caster's projectile on the action's `release` boundary,
-   * timed to ARRIVE on the impact tick. Only the mage bolt + catapult lob
-   * declare `release`; everything else is ignored here. The flight duration is
-   * read from the caster's live `activeAction.phases` `travel` length — a
-   * single source of truth with the sim, so there's no duplicated render const
-   * and no rounding drift. The impact-side VFX (explosion / dud) + audio stay
-   * on `magic:detonated` / `catapult:fired`, which fire at the impact tick, so
-   * they land WITH the projectile's arrival.
+   * §Z — the FX driver. Resolves the action's per-phase cue
+   * (`actionId → AbilityDef.fx[phase] → FX_REGISTRY`) and drives its channels:
+   * the unified sound, a `release`-boundary projectile, an `impact` burst. The
+   * def-resolve path (the renderer reads the key off the def, not the event)
+   * keeps the lean `action:phase` payload authoritative on the def. Any phase /
+   * action with no `fx` key (every melee/bow/heal verb in Z1) falls straight
+   * through — its FX still rides `unit:attacked` / `unit:healed`.
    */
   private onActionPhase = ({
     unitId,
@@ -676,34 +675,54 @@ export class BattleRenderer {
     targetId,
     targetCell,
   }: GameEvents['action:phase']): void => {
-    if (phase !== 'release') return;
-    if (actionId !== MAGIC_BOLT_DEF_ID && actionId !== CATAPULT_SHOT_DEF_ID) return;
+    const key = ABILITY_DEFS[actionId]?.fx?.[phase];
+    if (!key) return;
+    const fx = fxDescriptor(key);
+    if (!fx || !this.world) return;
+
+    // Unified cue (the Z VFX+SFX decision): the sound fires WITH the visual.
+    if (fx.sound) this.audio.play(fx.sound);
+    if (fx.projectile) this.launchProjectileFx(fx.projectile, unitId, targetId, targetCell);
+    if (fx.burst) this.spawnBurstFx(fx.burst, unitId, targetId, targetCell);
+  };
+
+  /**
+   * §Z (was F3's `onActionPhase` body) — fly a caster's projectile from its live
+   * sprite toward the target, timed to ARRIVE on the impact tick. The flight
+   * duration is read from the caster's live `travel` phase length (one source of
+   * truth with the sim — no duplicated render const, no rounding drift).
+   * `straight` flies level to the captured blast cell (mage); `arc` lobs a homing
+   * parabola that re-reads the locked target's sprite each frame so the boulder
+   * reaches it even after a wind-up step (catapult), falling back to the cast
+   * cell if the sprite is gone. The impact burst lands separately on the `impact`
+   * phase, so no onArrive VFX here.
+   */
+  private launchProjectileFx(
+    spec: FxProjectile,
+    casterId: number,
+    targetId: number | undefined,
+    targetCell: GridCoord | undefined,
+  ): void {
     if (!this.world) return;
-    const caster = this.world.findUnit(unitId);
+    const caster = this.world.findUnit(casterId);
     if (!caster) return;
 
     const travelTicks =
       caster.activeAction?.phases.find((p) => p.phase === 'travel')?.ticks ?? 0;
     const flightSeconds = travelTicks > 0 ? ticksToSeconds(travelTicks) : PROJECTILE_SECONDS;
     const color = colorForTeam(caster.team);
-    const casterHandle = this.handles.get(unitId);
+    const casterHandle = this.handles.get(casterId);
     const from = (
       (casterHandle && this.sprites.getPosition(casterHandle, this.scratchPos)) ??
       this.tileWorldPos(caster.position)
     ).clone();
 
-    if (actionId === MAGIC_BOLT_DEF_ID) {
-      // Ground-targeted: fly straight to the captured blast cell. The explosion
-      // detonates there on `magic:detonated` (impact), so no onArrive VFX here.
+    if (spec.style === 'straight') {
       if (!targetCell) return;
       this.spawnProjectile(from, this.tileWorldPos(targetCell), color, undefined, 0, flightSeconds);
       return;
     }
 
-    // Catapult: a homing arc. Re-read the locked target's sprite each frame so
-    // the boulder reaches the unit even after it walked during the wind-up;
-    // fall back to the cast cell if the target sprite is gone. The dud (on an
-    // abort) fires on `catapult:fired` (impact), so no onArrive VFX here.
     const targetHandle = targetId !== undefined ? this.handles.get(targetId) : undefined;
     const to = (
       (targetHandle && this.sprites.getPosition(targetHandle, this.scratchPos)) ??
@@ -713,22 +732,39 @@ export class BattleRenderer {
       ? (): THREE.Vector3 | null => this.sprites.getPosition(targetHandle, this.homingScratch)
       : undefined;
     this.spawnProjectile(from, to, color, undefined, CATAPULT_ARC_HEIGHT, flightSeconds, provider);
-  };
+  }
 
   /**
-   * E7.C/F3 — the mage's bolt landed (the impact tick). Detonate the flash +
-   * spark-ring explosion at the blast center. Fires once per cast (off
-   * `magic:detonated`) regardless of how many units the blast hit, so it reads
-   * as a single burst and a whiff still shows the impact. F3 moved the bolt's
-   * flight to the earlier `release` boundary (see `onActionPhase`); this
-   * handler now only owns the detonation, which lands WITH the damage + boom.
+   * §Z (was `onMagicDetonated` / `onCatapultFired`) — the impact burst. An
+   * `explosion` detonates a team-colored flash + spark ring at the captured
+   * blast cell (mage); a `dud` kicks a neutral dust puff at the boulder's impact
+   * cell — the live target sprite, falling back to the cast cell (catapult).
+   * Z1 note: the dud now fires on EVERY landing (a boulder craters whether or
+   * not it connected) — retiring the `hit`-carrying `catapult:fired` event
+   * dropped the hit/abort distinction, and an always-on crater reads cleanly.
    */
-  private onMagicDetonated = ({ casterId, center }: GameEvents['magic:detonated']): void => {
+  private spawnBurstFx(
+    spec: FxBurst,
+    casterId: number,
+    targetId: number | undefined,
+    targetCell: GridCoord | undefined,
+  ): void {
     if (!this.world) return;
-    const caster = this.world.findUnit(casterId);
-    const color = caster ? colorForTeam(caster.team) : COLORS.TERMINAL_STONE;
-    this.spawnExplosion(this.tileWorldPos(center), color);
-  };
+    if (spec.style === 'explosion') {
+      if (!targetCell) return;
+      const caster = this.world.findUnit(casterId);
+      const color = caster ? colorForTeam(caster.team) : COLORS.TERMINAL_STONE;
+      this.spawnExplosion(this.tileWorldPos(targetCell), color);
+      return;
+    }
+
+    // dud — at the live target sprite, else the cast cell.
+    const targetHandle = targetId !== undefined ? this.handles.get(targetId) : undefined;
+    const at =
+      (targetHandle ? this.sprites.getPosition(targetHandle, this.scratchPos)?.clone() : undefined) ??
+      (targetCell ? this.tileWorldPos(targetCell) : undefined);
+    if (at) this.spawnDud(at);
+  }
 
   /**
    * E7.C — flash + spark-ring burst at `center`. One central flash glyph
@@ -765,21 +801,7 @@ export class BattleRenderer {
   }
 
   /**
-   * E7.D/F3 — the catapult's shot landed or aborted (the impact tick). On an
-   * abort (`hit` false — the locked target died mid-charge) kick up a gray dust
-   * DUD at the impact cell so the fizzle reads as "thunk, no hit" rather than
-   * nothing; on a hit, the `unit:attacked` hitsplat already floats the damage,
-   * so nothing extra is shown here. F3 moved the lobbed projectile's flight to
-   * the earlier `release` boundary (see `onActionPhase`) — its arc reaches the
-   * impact cell as this handler fires, so the dud lands WITH the boulder.
-   */
-  private onCatapultFired = ({ impact, hit }: GameEvents['catapult:fired']): void => {
-    if (!this.world) return;
-    if (!hit) this.spawnDud(this.tileWorldPos(impact));
-  };
-
-  /**
-   * E7.D — a small gray dust puff for an ABORTED catapult shot: a central
+   * E7.D — a small gray dust puff for a catapult-shot landing: a central
    * glyph that grows + fades plus a few short low-glow sparks, all in the
    * neutral stone color so it reads as "thud, no hit" rather than a team-
    * colored impact. Reuses the explosion-particle lane (swept by `detach`).

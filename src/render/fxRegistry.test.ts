@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { assertFxKeysResolve, fxDescriptor, FX_REGISTRY } from './fxRegistry';
+import { assertFxKeysResolve, assertStatusFxKeysResolve, fxDescriptor, FX_REGISTRY } from './fxRegistry';
 import { ABILITY_DEFS } from '../config/abilities';
+import { STATUS_DEFS } from '../config/statuses';
 
 /**
  * Phase Z — the FX registry is pure data (no three.js), so its resolution + the
@@ -35,6 +36,28 @@ describe('fxRegistry — Z2 camera shake', () => {
     expect(cat?.shake?.intensity).toBeGreaterThan(0);
     expect(cat!.shake!.intensity).toBeGreaterThan(mage!.shake!.intensity);
     expect(cat!.shake!.durationSeconds).toBeGreaterThan(0);
+  });
+});
+
+describe('fxRegistry — 28 behavior-status overlays', () => {
+  it('each behavior status authors a persistent overlay tint that resolves', () => {
+    for (const id of ['frozen', 'panic', 'blind', 'confusion']) {
+      const key = STATUS_DEFS[id]!.fx?.active;
+      expect(key, `${id} must author an fx.active key`).toBeDefined();
+      const fx = fxDescriptor(key!);
+      expect(fx?.overlay?.tint, `${id}'s active key carries an overlay tint`).toMatch(/^#/);
+    }
+  });
+
+  it('the four overlay tints are distinct (each status reads differently)', () => {
+    const tints = ['frozen', 'panic', 'blind', 'confusion'].map(
+      (id) => fxDescriptor(STATUS_DEFS[id]!.fx!.active!)!.overlay!.tint,
+    );
+    expect(new Set(tints).size).toBe(4);
+  });
+
+  it('the shipped status catalog passes the status fx boot assert', () => {
+    expect(() => assertStatusFxKeysResolve(STATUS_DEFS)).not.toThrow();
   });
 });
 

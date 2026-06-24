@@ -105,6 +105,19 @@ export interface FxSparkle {
 }
 
 /**
+ * A PERSISTENT body-tint overlay (28 — the held behavior statuses' `active`
+ * moment). Unlike every fire-once channel above, this one is ON for the whole
+ * lifetime: the driver recolors the unit's glyph to `tint` on `status:applied`
+ * and restores its team color on `status:expired`. The behavior statuses
+ * (frozen/blind/panic/confusion) have no per-tick pulse, so this held recolor IS
+ * their visibility — a frozen unit glows ice, a confused one chaos-purple. A
+ * palette hex.
+ */
+export interface FxOverlay {
+  tint: string;
+}
+
+/**
  * The closed set of channels an `FxKey` resolves to. Every field optional: a
  * key lights up only the channels it names (the mage `release` key is a bare
  * projectile; its `impact` key is a burst + a sound). New mechanics add new
@@ -128,6 +141,8 @@ export interface FxDescriptor {
   hitsplat?: FxHitsplat;
   /** Puff a recolored mote burst on the unit (27e — the status apply/tick cue). */
   sparkle?: FxSparkle;
+  /** Hold a persistent body tint while a status is active (28 — the `active` moment). */
+  overlay?: FxOverlay;
 }
 
 /**
@@ -178,6 +193,16 @@ export const FX_REGISTRY = {
     hitsplat: { kind: 'heal' },
     sound: 'healtick',
   },
+
+  // 28 — the behavior statuses' held-state body tint (the `active` moment). No
+  // per-tick pulse exists for these, so the persistent recolor IS the
+  // visibility: frozen ice-cyan, panic fear-amber, blind blinded-grey, confusion
+  // chaos-purple. The driver swaps the unit's glyph color on apply and restores
+  // the team color on expire.
+  frozen_active: { overlay: { tint: COLORS.FLOURESCENT_BLUE } },
+  panic_active: { overlay: { tint: COLORS.TERMINAL_AMBER } },
+  blind_active: { overlay: { tint: COLORS.TERMINAL_STONE } },
+  confusion_active: { overlay: { tint: COLORS.NEON_PURPLE } },
 } satisfies Record<string, FxDescriptor>;
 
 /** The closed set of authored keys — the §30 editor's option list. */

@@ -79,27 +79,31 @@
     "name": "Frozen",
     "durationSeconds": 2,
     "merge": "refresh",
-    "behavior": { "preventsAttack": true, "preventsMove": true }
+    "behavior": { "preventsAttack": true, "preventsMove": true },
+    "fx": { "active": "frozen_active" }
   },
   "panic": {
     "id": "panic",
     "name": "Panic",
     "durationSeconds": 3,
     "merge": "refresh",
-    "behavior": { "preventsAttack": true, "movement": "flee" }
+    "behavior": { "preventsAttack": true, "movement": "flee" },
+    "fx": { "active": "panic_active" }
   },
   "blind": {
     "id": "blind",
     "name": "Blind",
     "durationSeconds": 4,
     "merge": "refresh",
-    "behavior": { "movement": "wander", "acquisitionRange": 1 }
+    "behavior": { "movement": "wander", "acquisitionRange": 1 },
+    "fx": { "active": "blind_active" }
   },
   "confusion": {
     "id": "confusion",
     "name": "Confusion",
     "durationSeconds": 4,
     "merge": "refresh",
-    "behavior": { "targeting": "random", "affects": "all", "acquisitionRange": 5 }
+    "behavior": { "targeting": "random", "affects": "all", "acquisitionRange": 5 },
+    "fx": { "active": "confusion_active" }
   }
 }

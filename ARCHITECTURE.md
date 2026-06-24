@@ -32,7 +32,7 @@ No frameworks beyond that. UI is plain HTML/CSS overlaid on the canvas via absol
 
 ```
 src/
-  main.ts                    # Entry point: bootstraps Game, mounts canvas, kicks off run
+  main.ts                    # Entry point: bootstraps Game, mounts canvas, kicks off run; DEV: window.__game + 28's __game.applyStatus(id, team|unitId) dev hook
   Game.ts                    # Top-level orchestrator: owns Renderer/Bus/Run; scene swapper (A5)
                              # builds Run from parseRunConfigFromURL() (G1)
   config.ts                  # Engine constants: TICK_RATE=20, GRID_SIZE=12, secondsToTicks
@@ -203,8 +203,9 @@ src/
                              # ranged/lobbed projectiles, explosion/dud/heal-sparkle VFX + hitsplats
                              # §Z: the FX driver (holds Renderer + AudioPlayer) — onActionPhase resolves def.fx via fxRegistry → projectile/burst/sound/shake/shove/tracer
                              # Z3: the melee shove + bow tracer + their whoosh ride action:phase (fire on hit AND miss); unit:attacked/missed keep only the hitsplat+HP
+                             # 27e/28: status-fx driver — status:ticked → tick cue; 28: status:applied/expired hold the `active` body-tint overlay (statusOverlays, restore team color on expiry)
                              # J3: objective X marker (objective:set/cleared; camera-up lift) + enemyBillboards (pick candidates)
-    fxRegistry.ts            # §Z: pure-data FxKey→FxDescriptor map (sound/projectile/burst/shake/shove/tracer) + assertFxKeysResolve boot check (headless-testable)
+    fxRegistry.ts            # §Z: pure-data FxKey→FxDescriptor map (sound/projectile/burst/shake/shove/tracer; 27e sparkle/hitsplat; 28 overlay) + assertFxKeysResolve / assertStatusFxKeysResolve boot checks (headless-testable)
     pick.ts                  # J3: pickInstanceAtNdc — pure screen-space billboard hit-test (replicates billboard.vert.glsl)
     FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture (glyph set from glyphs.ts)
     glyphs.ts                # E7.A: THREE-free GLYPHS set (FontAtlas.test asserts archetype coverage); J3: 'X' = objective marker (atlas now 32/32 FULL)

@@ -89,6 +89,14 @@ interface ExplosionParticle {
 export class BattleRenderer {
   private readonly handles = new Map<number, SpriteHandle>();
   private readonly overlayHandles = new Map<number, UnitOverlayHandle>();
+  /**
+   * 28 — per-unit held status-overlay tints, keyed `unitId → (statusId → tint
+   * hex)`. A behavior status's `fx.active` overlay recolors the unit's glyph for
+   * its whole lifetime (apply→expire); the inner Map's INSERTION ORDER resolves
+   * which tint shows when several stack (last-applied wins), and restoring the
+   * team color on the last expiry. Cleared on death + `reset`.
+   */
+  private readonly statusOverlays = new Map<number, Map<string, string>>();
   private readonly subscriptions: Array<() => void> = [];
   private readonly animator: SpriteAnimator;
   /** E6.B: in-flight ranged projectile sprite handles. They live in the
@@ -188,6 +196,11 @@ export class BattleRenderer {
     // first cue now. The `applied`/`expired`/`active` fx slots stay in the schema
     // for §28/§29 to drive (e.g. a frozen `active` tint, an on-hit apply flash).
     this.subscriptions.push(bus.on('status:ticked', this.onStatusTicked));
+    // 28 — the held `active` overlay: a behavior status recolors the unit's glyph
+    // for its whole lifetime (the ONLY cue for frozen/blind/panic/confusion — they
+    // have no per-tick pulse). Apply tints; expire restores the team color.
+    this.subscriptions.push(bus.on('status:applied', this.onStatusApplied));
+    this.subscriptions.push(bus.on('status:expired', this.onStatusExpired));
     // D7.B: keep HP bars in sync with ability-heal chip. E6.C floats a cyan `+N`.
     // A heal onto a full unit emits a no-op (gotcha #80), so skip amount <= 0.
     this.subscriptions.push(
@@ -400,6 +413,7 @@ export class BattleRenderer {
     this.overlayHandles.clear();
     this.overlayFades.clear();
     this.overlayFadeIns.clear();
+    this.statusOverlays.clear();
     this.progress.clear();
     this.renderClockMs = 0;
     // J3 — drop the objective marker + state so the next battle starts clean.
@@ -751,6 +765,57 @@ export class BattleRenderer {
   };
 
   /**
+   * 28 — a behavior status with an `fx.active` overlay starts tinting the unit's
+   * glyph. Tracked per-unit so a re-apply is idempotent (delete + re-set keeps
+   * the last-applied-wins order) and an expiry restores the correct color.
+   * Statuses with no `active` overlay (the DoTs, which cue on their ticks) no-op.
+   */
+  private onStatusApplied = ({ unitId, statusId }: GameEvents['status:applied']): void => {
+    const key = STATUS_DEFS[statusId]?.fx?.active;
+    const tint = key ? fxDescriptor(key)?.overlay?.tint : undefined;
+    if (!tint) return;
+    let tints = this.statusOverlays.get(unitId);
+    if (!tints) {
+      tints = new Map();
+      this.statusOverlays.set(unitId, tints);
+    }
+    tints.delete(statusId); // re-insert at the end → most-recently-applied wins.
+    tints.set(statusId, tint);
+    this.refreshOverlayTint(unitId);
+  };
+
+  /**
+   * 28 — a behavior status expired: drop its tint and recolor the unit to the
+   * next-most-recent held overlay, or back to its team color when none remain.
+   */
+  private onStatusExpired = ({ unitId, statusId }: GameEvents['status:expired']): void => {
+    const tints = this.statusOverlays.get(unitId);
+    if (!tints || !tints.delete(statusId)) return;
+    if (tints.size === 0) this.statusOverlays.delete(unitId);
+    this.refreshOverlayTint(unitId);
+  };
+
+  /**
+   * 28 — write the unit's current glyph color: the last-applied held overlay
+   * tint, or its team color when no overlay remains. No-op when the unit's sprite
+   * is gone (dead / detached). Reused on apply, expiry, and overlay cleanup.
+   */
+  private refreshOverlayTint(unitId: number): void {
+    const handle = this.handles.get(unitId);
+    if (!handle) return;
+    const tints = this.statusOverlays.get(unitId);
+    let color: string | undefined;
+    if (tints && tints.size > 0) {
+      // Map iteration is insertion-ordered; the last entry is the newest tint.
+      for (const tint of tints.values()) color = tint;
+    } else {
+      const unit = this.world?.findUnit(unitId);
+      if (unit) color = colorForTeam(unit.team);
+    }
+    if (color !== undefined) this.sprites.updateSprite(handle, { color });
+  }
+
+  /**
    * §Z (was F3's `onActionPhase` body) — fly a caster's projectile from its live
    * sprite toward the target, timed to ARRIVE on the impact tick. The flight
    * duration is read from the caster's live `travel` phase length (one source of
@@ -979,6 +1044,9 @@ export class BattleRenderer {
     if (!handle) return;
     this.animator.cancel(handle);
     this.progress.delete(unitId);
+    // 28 — drop any held status-overlay tints (the unit fades out in its last
+    // tint; the map entry would otherwise leak until reset).
+    this.statusOverlays.delete(unitId);
     // D5.C — if the unit died mid-spawn-in fade (rare but possible if
     // checkBattleEnd or AoE wipes a freshly-queued unit), drop the
     // overlay fade-in so it doesn't fight the fade-out below.

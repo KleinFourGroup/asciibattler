@@ -8,7 +8,7 @@ import { MovementBehavior } from './behaviors/MovementBehavior';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { updateTarget } from './Targeting';
 import type { StatusEffect } from './statusEffects';
-import type { Unit, UnitArchetype, Team } from './Unit';
+import type { Unit, Archetype, Team } from './Unit';
 import type { GameEvents } from '../core/events';
 
 /**
@@ -31,7 +31,7 @@ function status(key: string): StatusEffect {
 }
 
 interface Spec {
-  archetype: UnitArchetype;
+  archetype: Archetype;
   team: Team;
   x: number;
   y: number;

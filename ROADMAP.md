@@ -534,6 +534,38 @@ default; revisit at playtest). Does the tile→status apply credit a `sourceUnit
 
 ## Phase 28 — Status effects: the behavior axis (decision-hooks)
 
+> **28a–28c ✅ ALL SHIPPED & green (1296 main + 210 fuzz). ⏸ pending the user's playtest.**
+> **No snapshot bump — WorldSnapshot stays v27** (behavior is DEF-RESOLVED by key,
+> exactly like 27's periodic axis — the serialized `StatusEffect` gains no field).
+> **28a** (`9dfd7b4`): the `StatusDef.behavior` block ([statusSchema.ts](src/sim/effects/statusSchema.ts))
+> + the pure `behaviorFlags` def-resolve fold ([statusBehavior.ts](src/sim/statusBehavior.ts),
+> the §27-periodic-resolve analog — OR the prevents/targeting/affects flags, flee>wander
+> for movement, MIN for acquisitionRange, a shared frozen NEUTRAL when nothing applies)
+> + the four statuses authored in [config/statuses.json](config/statuses.json)
+> (durations are §31 placeholders). **28b** (`24c4915`): the consumer decision-hooks
+> — `AbilityBehavior` skips attacks under `preventsAttack`; `MovementBehavior` roots
+> on `preventsMove` / flees via the gambit's `retreatCell` on `movement:'flee'` /
+> wanders a random free neighbor (combatRng) on `movement:'wander'`, all checked
+> BEFORE the objective/pursuit logic; `Targeting` picks a random any-team mark within
+> the confusion radius (`currentTarget` honors a confused ally mark + never falls back
+> to the normal enemy pick → the single-target friendly-fire) and caps the blind enemy
+> pick to adjacent; the interpreter forces a confused caster's AoE to `affects:'all'`
+> (read LIVE at fire time → no serialized state). Confusion gained a bounded
+> `acquisitionRange: 5` (a §31 dial) so it isn't omniscient. **28c** (`de0b497`): the
+> observable surface — a persistent `overlay{tint}` FX channel + the four `_active`
+> keys ([fxRegistry.ts](src/render/fxRegistry.ts), frozen ice-cyan / panic fear-amber
+> / blind blinded-grey / confusion chaos-purple), the renderer holding the held tint
+> off `status:applied`/`status:expired` ([BattleRenderer.ts](src/render/BattleRenderer.ts)
+> `statusOverlays`, restore team color on expiry, clear on death/reset), + a DEV-only
+> `__game.applyStatus(id, team|unitId)` console hook ([main.ts](src/main.ts)) routing
+> through the real `applyStatusEffect` so the lifecycle drives the overlay. **Browser-
+> verified** via the sprite color buffer: four distinct tints apply, expiry restores
+> the team color, per-status durations elapse correctly. **Playtest it:** open the
+> console in a battle and run e.g. `__game.applyStatus('confusion')` (all enemies) or
+> `__game.applyStatus('frozen', 'player')`. **NEXT = §29** (status-on-hit / chain /
+> summon — the `applyStatus` op is the production applier these statuses were waiting
+> for).
+
 The riskier axis — **behavior/AI overrides** threaded through the existing
 consumers as **decision-hooks, not reach-in**. The status system stays logic-free;
 the action-selector / targeting / movement code *reads* the flags. Likely **no

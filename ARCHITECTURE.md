@@ -103,7 +103,7 @@ src/
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a); J2: pathfindingStats counter; J3: bestEffort (route to nearest reachable)
     movement.ts              # J2: shared movement seam — MovementIntent + advance (the dash hook) + routeToward (cache boundary)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest firing cell in [minRange,range](+LOS) (O4 band)
-    Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5) w/ objective branches (engage/hold/focus + updateTargetDefault); lowestWoundedAlly (E7.B)
+    Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5) w/ objective branches (engage/hold/focus + updateTargetDefault); lowestWoundedAlly (E7.B); 28: behavior preempt — confusion random-team pick / blind capped acquisition
                              # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
     targetingStrategies.ts   # per-archetype target-pick registry (nearest / weakest); Unit.targeting resolved at spawn
     archetypes.ts            # ALL_ARCHETYPES pool (F1), rollUnit, glyphForArchetype, targetingForArchetype, range/minRangeForArchetype (O4)
@@ -121,9 +121,9 @@ src/
       Ability.ts             # Ability interface + propose() + ignoresLineOfSight flag (E7.D)
       registry.ts            # Ability factories; routes every id to EffectAbility (Y3–Y4 migration complete; the hand-coded classes retired in Y5)
     behaviors/
-      MovementBehavior.ts    # J2: thin goal-selector → MovementIntent + advance (movement.ts); boids sidestep (E5.B)
+      MovementBehavior.ts    # J2: thin goal-selector → MovementIntent + advance (movement.ts); boids sidestep (E5.B); 28: behavior override — frozen root / panic flee (retreatCell) / blind wander
                              # splits neutrals into pathBlockers + losBlockers (D6); LOS-optional abstain (E7.D)
-      AbilityBehavior.ts     # E2: walks the unit's Ability[] (replaced AttackBehavior)
+      AbilityBehavior.ts     # E2: walks the unit's Ability[] (replaced AttackBehavior); 28: skips attack proposals when a status sets preventsAttack (frozen/panic)
       SupportMovementBehavior.ts  # E7.B: healer idle / panic / approach / centroid-trail
       registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
     effects/                 # Y1–Y3: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
@@ -133,7 +133,7 @@ src/
       timeline.ts            #   Y1: seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase
       targeting.ts           #   Y2: unitsInCells (the Cluster-2 footprint seam) + aoe victim resolution + the affects filter
       reposition.ts          #   Y2: retreatCell — the caster-reposition primitive (the gambit's move-retreat op, via interpreter executeMove)
-      interpreter.ts         #   Y2: executeOp — the switch over op.kind (damage/heal/move; reserved arms throw)
+      interpreter.ts         #   Y2: executeOp — the switch over op.kind (damage/heal/move; reserved arms throw); 28: a confused caster's aoe forces affects:'all' (live read)
       EffectAction.ts        #   Y2: the single generic Action that fires a def's effects over the F2 timeline (start/applyEffect)
       propose.ts             #   Y3: the propose-time bridge — AbilityDef + caster → EffectAction + ActionProposal (cast-time scalar capture)
       EffectAbility.ts       #   Y3: the single generic Ability wrapping an AbilityDef (replaces MeleeStrike/…; one class + data)

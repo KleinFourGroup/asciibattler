@@ -1,6 +1,7 @@
 import type { Behavior, Unit } from '../Unit';
 import type { World } from '../World';
 import type { ActionProposal } from '../Action';
+import { behaviorFlags } from '../statusBehavior';
 
 /**
  * E2 — replaces the pre-E2 `AttackBehavior`. Polls every entry in
@@ -34,6 +35,11 @@ export class AbilityBehavior implements Behavior {
   readonly kind = AbilityBehavior.kind;
 
   proposeAction(unit: Unit, world: World): ActionProposal | null {
+    // 28 — frozen / panic: the action-selector skips this unit's attacks
+    // entirely (a decision-hook off its effects; blind does NOT set this, so a
+    // blinded unit still strikes whatever adjacent foe `Targeting` left it).
+    if (behaviorFlags(unit.effects).preventsAttack) return null;
+
     let best: ActionProposal | null = null;
     for (const ability of unit.abilities) {
       const proposal = ability.propose(unit, world);

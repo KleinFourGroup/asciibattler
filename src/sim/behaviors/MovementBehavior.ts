@@ -7,7 +7,16 @@ import { SIM } from '../../config/sim';
 import { hasLineOfSight } from '../LineOfSight';
 import { nearestActingCell } from '../actingPosition';
 import { minRangeForArchetype } from '../archetypes';
-import { advance, chebyshev, type MovementIntent } from '../movement';
+import { advance, chebyshev, moveProposal, stepDurationTicks, key, type MovementIntent } from '../movement';
+import { retreatCell } from '../effects/reposition';
+import { behaviorFlags } from '../statusBehavior';
+
+/** The 8 grid neighbors, in a fixed order for deterministic wander selection. */
+const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
+  [-1, -1], [0, -1], [1, -1],
+  [-1, 0], [1, 0],
+  [-1, 1], [0, 1], [1, 1],
+];
 
 /**
  * Proposes a one-cell step toward the unit's current (E5-sticky) target when
@@ -60,6 +69,14 @@ export class MovementBehavior implements Behavior {
   readonly kind = MovementBehavior.kind;
 
   proposeAction(unit: Unit, world: World): ActionProposal | null {
+    // 28 — a BEHAVIOR status overrides locomotion before any objective / pursuit
+    // logic (a frozen/panicking/blinded unit ignores orders). Resolved off the
+    // unit's effects (def-resolve), so no serialized state.
+    const behavior = behaviorFlags(unit.effects);
+    if (behavior.preventsMove) return null; // frozen — rooted.
+    if (behavior.movement === 'flee') return proposeFlee(unit, world); // panic.
+    if (behavior.movement === 'wander') return proposeWander(unit, world); // blind.
+
     // O2 — under a `hold` objective the unit NEVER repositions: it acts in place
     // (AbilityBehavior fires at whatever `updateTarget` left in range) but
     // proposes no movement, even to close distance or clear LOS for a shot. The
@@ -169,4 +186,74 @@ export class MovementBehavior implements Behavior {
     };
     return advance(unit, world, intent);
   }
+}
+
+/**
+ * 28 — panic FLEE: a one-cell step that STRICTLY increases distance from the
+ * nearest enemy, reusing the gambit's `retreatCell` primitive (away-from-anchor,
+ * tie-broken toward open space). Abstains when no enemy exists or the unit is
+ * boxed in (`retreatCell` null → cower in place). Score 1, like every move.
+ */
+function proposeFlee(unit: Unit, world: World): ActionProposal | null {
+  const threat = nearestEnemy(unit, world);
+  if (threat === null) return null;
+  const dest = retreatCell(unit, threat.position, world);
+  if (dest === null) return null;
+  return moveProposal(
+    unit.position,
+    dest,
+    stepDurationTicks(world, dest, unit.derived.moveCooldownTicks),
+  );
+}
+
+/**
+ * 28 — blind WANDER: a one-cell step to a uniformly random passable, unoccupied
+ * neighbor (rolled on `combatRng`, where movement / targeting rolls live).
+ * Abstains when every neighbor is blocked. The selector still prefers an attack
+ * (score 10) over this wander (score 1), so a blinded unit adjacent to a foe
+ * strikes it and only wanders when it has nothing in reach.
+ */
+function proposeWander(unit: Unit, world: World): ActionProposal | null {
+  const occupied = new Set<string>();
+  for (const u of world.units) {
+    if (u.id !== unit.id) occupied.add(key(u.position));
+  }
+  const free: GridCoord[] = [];
+  for (const [dx, dy] of NEIGHBORS) {
+    const c: GridCoord = { x: unit.position.x + dx, y: unit.position.y + dy };
+    if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) continue;
+    if (!isFinite(world.tileGrid.costAt(c))) continue;
+    if (occupied.has(key(c))) continue;
+    free.push(c);
+  }
+  if (free.length === 0) return null;
+  const dest = free[Math.floor(world.combatRng.next() * free.length)]!;
+  return moveProposal(
+    unit.position,
+    dest,
+    stepDurationTicks(world, dest, unit.derived.moveCooldownTicks),
+  );
+}
+
+/**
+ * The nearest living enemy (opposing, non-neutral) by Chebyshev — the panic-flee
+ * anchor. Ties resolve to the first in `world.units` order (stable id order), so
+ * the pick is deterministic. Distinct from `Targeting.findTarget` (which honors
+ * the unit's strategy): a panicking unit flees the CLOSEST threat, not the one
+ * its strategy would mark.
+ */
+function nearestEnemy(unit: Unit, world: World): Unit | null {
+  let best: Unit | null = null;
+  let bestDist = Infinity;
+  for (const candidate of world.units) {
+    if (candidate.team === unit.team) continue;
+    if (candidate.team === 'neutral') continue;
+    if (candidate.currentHp <= 0) continue;
+    const d = chebyshev(unit.position, candidate.position);
+    if (d < bestDist) {
+      best = candidate;
+      bestDist = d;
+    }
+  }
+  return best;
 }

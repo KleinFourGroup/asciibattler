@@ -7,6 +7,7 @@ import { SIM } from '../config/sim';
 import { OBJECTIVE } from '../config/objective';
 import { getTargetingStrategy } from './targetingStrategies';
 import { focusTileDirective } from './focusTile';
+import { behaviorFlags } from './statusBehavior';
 
 /**
  * Pick the best living enemy of `unit` according to its targeting strategy
@@ -60,6 +61,23 @@ export function findTarget(unit: Unit, world: World): Unit | null {
  */
 export function updateTarget(unit: Unit, world: World): void {
   if (unit.team === 'neutral') return;
+
+  // 28 — a BEHAVIOR status hijacks target acquisition, preempting the team
+  // objective entirely (a confused / blinded unit's AI is overridden — it no
+  // longer follows orders). Resolved off the unit's effects (def-resolve), so it
+  // adds no serialized state. Checked before the objective branches below.
+  const behavior = behaviorFlags(unit.effects);
+  if (behavior.targeting === 'random') {
+    updateConfusedTarget(unit, world, behavior.acquisitionRange);
+    return;
+  }
+  if (behavior.acquisitionRange !== null) {
+    // blind — acquire only the nearest enemy inside the capped reach (else idle).
+    const inRange = findInRangeEnemy(unit, world, behavior.acquisitionRange);
+    unit.targetId = inRange ? inRange.id : null;
+    unit.outOfLosTicks = 0;
+    return;
+  }
 
   // O1 — the acting team's steering objective drives its units' target choice.
   // `atWill` (the default + J1's no-objective) falls through to the standard
@@ -279,17 +297,22 @@ function findEngageableEnemy(unit: Unit, world: World): Unit | null {
 }
 
 /**
- * O2 — the best enemy ALREADY within `unit`'s strike reach
- * (`derived.attackRange`, Chebyshev), ranked by the unit's targeting strategy.
- * The hold-mode pick: a held unit acts on what's in reach and nothing else (it
- * never moves to close), so this is `findTarget` with a hard range filter and
- * no leash/retaliation nuance — pure "in my range or not." Returns null when
- * no enemy is in reach (→ the held unit idles). Deterministic (the strategy's
- * tie-break; no RNG).
+ * O2 — the best enemy within a Chebyshev `range` of `unit`, ranked by the unit's
+ * targeting strategy. `findTarget` with a hard range filter and no leash /
+ * retaliation nuance — pure "in reach or not." Two callers:
+ *   - O2 hold-mode (default `range = derived.attackRange`): a held unit acts on
+ *     what's in strike reach and never moves to close.
+ *   - 28 blind (`range = acquisitionRange`): a blinded unit only acquires a foe
+ *     inside its crippled sight, else idles.
+ * Returns null when nothing is in reach. Deterministic (the strategy tie-break;
+ * no RNG).
  */
-function findInRangeEnemy(unit: Unit, world: World): Unit | null {
+function findInRangeEnemy(
+  unit: Unit,
+  world: World,
+  range: number = unit.derived.attackRange,
+): Unit | null {
   const strategy = getTargetingStrategy(unit.targeting);
-  const range = unit.derived.attackRange;
   let best: Unit | null = null;
   for (const candidate of world.units) {
     if (candidate.team === unit.team) continue;
@@ -301,6 +324,35 @@ function findInRangeEnemy(unit: Unit, world: World): Unit | null {
     }
   }
   return best;
+}
+
+/**
+ * 28 — target selection under CONFUSION (`targeting:'random'`). Picks a uniformly
+ * random LIVING, non-neutral unit — of ANY team, INCLUDING the unit's own — within
+ * the confusion acquisition `radius` (Chebyshev; bounded so confusion isn't
+ * omniscient), excluding the unit itself. The any-team pick is the friendly-fire:
+ * `currentTarget` honors an ally mark under confusion, and single-target damage
+ * has no team check, so the confused unit simply strikes whatever it rolled. A
+ * confused AoE additionally forces `affects:'all'` at fire time (see the
+ * interpreter). Rolls on `combatRng` (where targeting rolls live); null = no
+ * candidate in radius → idle. Candidates iterate in `world.units` order, so the
+ * roll is deterministic given the seed.
+ */
+function updateConfusedTarget(unit: Unit, world: World, radius: number | null): void {
+  const r = radius ?? Infinity;
+  const candidates: Unit[] = [];
+  for (const candidate of world.units) {
+    if (candidate.id === unit.id) continue;
+    if (candidate.team === 'neutral') continue;
+    if (candidate.currentHp <= 0) continue;
+    if (chebyshev(unit.position, candidate.position) > r) continue;
+    candidates.push(candidate);
+  }
+  unit.targetId =
+    candidates.length === 0
+      ? null
+      : candidates[Math.floor(world.combatRng.next() * candidates.length)]!.id;
+  unit.outOfLosTicks = 0;
 }
 
 /**
@@ -339,12 +391,23 @@ function objectiveEngages(unit: Unit, enemy: Unit): boolean {
  * abstaining on a null commitment.
  */
 export function currentTarget(unit: Unit, world: World): Unit | null {
+  // 28 — a CONFUSED unit's mark may be an ALLY (`updateConfusedTarget` picks any
+  // team). Honor any living non-neutral commitment, and NEVER fall back to the
+  // normal enemy pick (that would silently "cure" the confusion); its mark is
+  // re-rolled each tick, so a null here is a deliberate "no candidate → idle."
+  const confused = behaviorFlags(unit.effects).targeting === 'random';
   if (unit.targetId !== null) {
     const t = world.findUnit(unit.targetId);
-    if (t !== undefined && t.team !== unit.team && t.team !== 'neutral' && t.currentHp > 0) {
+    if (
+      t !== undefined &&
+      t.currentHp > 0 &&
+      t.team !== 'neutral' &&
+      (confused || t.team !== unit.team)
+    ) {
       return t;
     }
   }
+  if (confused) return null;
   // O1 — under a non-`atWill` objective, a unit's null `targetId` is DELIBERATE
   // (set by `updateObjectiveTarget`: no engageable enemy, so it's pursuing a
   // tile objective). Suppress the nearest-enemy fallback here so it doesn't

@@ -25,6 +25,7 @@ import { STATS } from '../../config/stats';
 import type { EffectOp, TargetSelector } from './schema';
 import { resolveAreaVictims } from './targeting';
 import { retreatCell } from './reposition';
+import { behaviorFlags } from '../statusBehavior';
 
 /** Cast-time-resolved values for one op, captured at propose time. */
 export interface OpResolution {
@@ -93,11 +94,17 @@ function executeDamage(
     if (center === undefined) return;
     const crit = world.combatRng.next() < critChance;
     const critFactor = crit ? STATS.critMult : 1;
+    // 28 — a CONFUSED caster's blast friendly-fires: its `affects:'all'` flag
+    // overrides the def's authored filter, hitting allies in the radius too. Read
+    // LIVE off the caster's effects at fire time (consistent with `affects` being
+    // a structural, source-of-truth param) → no captured/serialized state, no
+    // snapshot bump. The confused random target pick set the blast CENTRE.
+    const affects = behaviorFlags(caster.effects).affects ?? ctx.selector.affects;
     const victims = resolveAreaVictims(world, caster, center, {
       shape: ctx.selector.shape,
       radius: ctx.selector.radius,
       ringMultiplier: ctx.selector.ringMultiplier,
-      affects: ctx.selector.affects,
+      affects,
     });
     for (const { unit: victim, mult } of victims) {
       const damage = Math.round(baseDamage * critFactor * mult);

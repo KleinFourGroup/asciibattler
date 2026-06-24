@@ -99,8 +99,12 @@ describe('28 — behavior-status content shape', () => {
     expect(statusDef('blind').behavior).toEqual({ movement: 'wander', acquisitionRange: 1 });
   });
 
-  it('confusion picks a random-team target and friendly-fires', () => {
-    expect(statusDef('confusion').behavior).toEqual({ targeting: 'random', affects: 'all' });
+  it('confusion picks a random-team target, friendly-fires, and is bounded', () => {
+    expect(statusDef('confusion').behavior).toEqual({
+      targeting: 'random',
+      affects: 'all',
+      acquisitionRange: 5,
+    });
   });
 });
 

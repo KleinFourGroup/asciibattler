@@ -4,7 +4,8 @@
  * a card, so RecruitScreen / PromotionScreen / (P3) PreTurnScreen / (Q) the HUD
  * can't drift on layout, the stat block, or the "card can't disagree with the
  * unit" ability readings. Replaces RecruitScreen's `renderCard`/`abilityRow`/
- * `statLine` + `ABILITY_UI` and PromotionScreen's card markup.
+ * `statLine` (+ its `ABILITY_UI` label map, since retired in Yb for the
+ * config-owned `AbilityDef.name`) and PromotionScreen's card markup.
  *
  * The visual differences between the screens are PRESERVED (P1 is a parity
  * extraction, not a redesign): they're expressed as `skin` CSS classes + per-

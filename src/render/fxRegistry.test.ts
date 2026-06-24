@@ -17,6 +17,16 @@ describe('fxRegistry — resolution', () => {
   });
 });
 
+describe('fxRegistry — Z3 strike cues', () => {
+  it('the melee swing key carries a shove + the melee whoosh', () => {
+    expect(fxDescriptor('melee_swing')).toMatchObject({ shove: {}, sound: 'melee' });
+  });
+
+  it('the ranged shot key carries a tracer + the shoot whoosh', () => {
+    expect(fxDescriptor('ranged_shot')).toMatchObject({ tracer: {}, sound: 'shoot' });
+  });
+});
+
 describe('fxRegistry — Z2 camera shake', () => {
   it('the impact burst keys carry an authored shake, catapult heavier than the bolt', () => {
     const mage = fxDescriptor('magic_bolt_burst');
@@ -60,6 +70,33 @@ describe('fxRegistry — the Z1 re-home (config-derived)', () => {
     });
     for (const key of Object.values(ABILITY_DEFS.magic_bolt!.fx ?? {})) {
       expect(key !== undefined && key in FX_REGISTRY).toBe(true);
+    }
+  });
+});
+
+describe('fxRegistry — the Z3 re-home (config-derived)', () => {
+  // The four melee weapons + the rogue gambit all swing; the gambit authors it
+  // on `windup` (where it deals damage) instead of `impact`. Deriving the
+  // expectations from the def keeps the test honest if a weapon is retuned.
+  it('every melee weapon strikes with the shared melee_swing key on impact', () => {
+    for (const id of ['sword', 'club', 'katana', 'whip']) {
+      expect(ABILITY_DEFS[id]!.fx).toEqual({ impact: 'melee_swing' });
+    }
+  });
+
+  it('the gambit swings on windup (where it deals its damage)', () => {
+    expect(ABILITY_DEFS.gambit_strike!.fx).toEqual({ windup: 'melee_swing' });
+  });
+
+  it('the bow flies the ranged_shot tracer on impact', () => {
+    expect(ABILITY_DEFS.bow!.fx).toEqual({ impact: 'ranged_shot' });
+  });
+
+  it('every strike-cue key the defs reference resolves in the registry', () => {
+    for (const id of ['sword', 'club', 'katana', 'whip', 'gambit_strike', 'bow']) {
+      for (const key of Object.values(ABILITY_DEFS[id]!.fx ?? {})) {
+        expect(key !== undefined && key in FX_REGISTRY).toBe(true);
+      }
     }
   });
 });

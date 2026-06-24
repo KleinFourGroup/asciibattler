@@ -13,7 +13,14 @@ import type { Renderer } from './Renderer';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { COLORS } from './palette';
 import { SpriteAnimator } from './animation/SpriteAnimator';
-import { assertFxKeysResolve, fxDescriptor, type FxBurst, type FxProjectile } from './fxRegistry';
+import {
+  assertFxKeysResolve,
+  fxDescriptor,
+  type FxBurst,
+  type FxProjectile,
+  type FxShove,
+  type FxTracer,
+} from './fxRegistry';
 import { TICK_RATE, ticksToSeconds } from '../config';
 import { ABILITY_DEFS } from '../config/abilities';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
@@ -505,34 +512,33 @@ export class BattleRenderer {
   }
 
   /**
-   * E6 — physicalize the swing (shove or projectile via triggerAttackVisual)
-   * and float a damage hitsplat over the target: neon-red for a crit (the
-   * E1 `crit` flag), white otherwise. The pre-E6 attacker/target color
-   * flash is gone — the shove + projectile show who's acting and the
-   * hitsplat shows the impact, so the flash is redundant. Also refreshes
+   * E6 — float a damage hitsplat over the target: neon-red for a crit (the E1
+   * `crit` flag), white otherwise. The pre-E6 attacker/target color flash is
+   * gone — the §Z3 shove/tracer (driven off `action:phase`) shows who's acting
+   * and the hitsplat shows the impact, so the flash is redundant. Also refreshes
    * the target's HP bar (the sim has applied damage by the time this fires).
+   *
+   * Z3 — the swing CUE left this handler: it now rides `action:phase` via the
+   * fx registry (so it plays on a MISS too, off the same phase event). This
+   * handler keeps only the DAMAGE-coupled visuals (the hitsplat + HP bar), which
+   * need the resolved `damage` / `crit` that `action:phase` doesn't carry.
    */
   private onUnitAttacked = ({
-    attackerId,
     targetId,
     damage,
     crit,
   }: GameEvents['unit:attacked']): void => {
-    this.triggerAttackVisual(attackerId, targetId);
     this.spawnHitsplat(targetId, String(damage), crit ? 'crit' : 'normal');
     this.refreshHpBar(targetId);
   };
 
   /**
-   * I2 — a single-target strike was dodged. The attacker still committed the
-   * swing/shot, so play the SAME lunge/tracer as a hit (triggerAttackVisual),
-   * then float a desaturated "Miss" over the target instead of a damage number.
-   * No HP-bar refresh: a miss mutates no HP. Only single-target strikes
-   * (melee/ranged basic + rogue gambit) can emit this — the mage AoE and the
-   * catapult are unmissable, so this never reads as multishot for them.
+   * I2 — a single-target strike was dodged: float a desaturated "Miss" over the
+   * target instead of a damage number. No HP-bar refresh: a miss mutates no HP.
+   * Z3 — the swing itself now rides `action:phase` (which fires on hit AND miss),
+   * so this handler no longer triggers the lunge/tracer; it floats only the splat.
    */
-  private onUnitMissed = ({ attackerId, targetId }: GameEvents['unit:missed']): void => {
-    this.triggerAttackVisual(attackerId, targetId);
+  private onUnitMissed = ({ targetId }: GameEvents['unit:missed']): void => {
     this.spawnHitsplat(targetId, 'Miss', 'miss');
   };
 
@@ -560,66 +566,63 @@ export class BattleRenderer {
   }
 
   /**
-   * E6.A/B — physicalize the swing. Melee attackers lunge toward the
-   * target and snap back (a shove); ranged attackers fire a projectile
-   * (E6.B). The melee/ranged split mirrors the audio cue in BattleScene
-   * (`derived.attackRange <= 1` → melee), so the visual and the sound
-   * agree on what kind of attack just happened. For E7's multi-ability
-   * units (a melee + a ranged on one unit) the engagement-range max can
-   * misclassify a point-blank bolt as a shove; revisit by threading the
-   * firing ability's kind through the `unit:attacked` event then.
+   * E6.A / Z3 — the melee lunge. The caster shoves toward its target and snaps
+   * back. Driven off `action:phase` via the `melee_swing` fx key (the four
+   * weapons author it on `impact`, the rogue gambit on `windup`), so it fires on
+   * a MISS too — the phase boundary doesn't care whether the strike connected.
+   * Direction comes from the cell centers (stable even while the sprite is
+   * mid-lerp); `startShove` captures the sprite's live position as the origin.
+   * No archetype keying: only defs that author the key reach here, so the mage's
+   * AoE / catapult's lob (their own projectile+burst keys) never lunge.
    */
-  private triggerAttackVisual(attackerId: number, targetId: number): void {
-    if (!this.world) return;
-    const attacker = this.world.findUnit(attackerId);
+  private triggerShoveFx(spec: FxShove, casterId: number, targetId: number | undefined): void {
+    if (!this.world || targetId === undefined) return;
+    const attacker = this.world.findUnit(casterId);
     const target = this.world.findUnit(targetId);
     if (!attacker || !target) return;
-    const attackerHandle = this.handles.get(attackerId);
+    const attackerHandle = this.handles.get(casterId);
     if (!attackerHandle) return;
+    const from = this.tileWorldPos(attacker.position);
+    const to = this.tileWorldPos(target.position);
+    const dx = to.x - from.x;
+    const dz = to.z - from.z;
+    const len = Math.hypot(dx, dz) || 1;
+    this.animator.startShove(
+      attackerHandle,
+      dx / len,
+      dz / len,
+      spec.distance ?? SHOVE_DISTANCE,
+      SHOVE_OUT_SECONDS,
+      SHOVE_BACK_SECONDS,
+    );
+  }
 
-    // E7.C/E7.D — the mage's bolt + the catapult's shot each drive their OWN
-    // single projectile + impact burst via the §Z FX registry (off the action's
-    // phase boundaries), so skip the per-hit `unit:attacked` tracer here: for the
-    // mage it'd read as multishot (one `unit:attacked` per AoE victim); the
-    // catapult's lob is the registry's job, not a straight tracer. The per-victim
-    // hitsplat + HP-bar refresh in `onUnitAttacked` still fire — those show damage.
-    if (attacker.archetype === 'mage' || attacker.archetype === 'catapult') return;
-
-    if (attacker.derived.attackRange <= 1) {
-      // Melee: lunge toward the target's cell. Direction comes from cell
-      // centers (stable even while the sprite is mid-lerp); startShove
-      // captures the sprite's live position as the shove origin.
-      const from = this.tileWorldPos(attacker.position);
-      const to = this.tileWorldPos(target.position);
-      const dx = to.x - from.x;
-      const dz = to.z - from.z;
-      const len = Math.hypot(dx, dz) || 1;
-      this.animator.startShove(
-        attackerHandle,
-        dx / len,
-        dz / len,
-        SHOVE_DISTANCE,
-        SHOVE_OUT_SECONDS,
-        SHOVE_BACK_SECONDS,
-      );
-      return;
-    }
-
-    // Ranged: fly a tracer glyph from the attacker's sprite to the target's.
-    // Damage already landed this tick (the sim is instantaneous); the
-    // projectile is a cosmetic that despawns on arrival. Spawn from the live
-    // sprite positions so the bolt emanates from / lands on what the player
-    // actually sees, falling back to cell centers if a handle is mid-teardown.
+  /**
+   * E6.B / Z3 — the ranged tracer. Fly a `*` glyph in a straight line from the
+   * caster's sprite to the target's and despawn on arrival. Driven off
+   * `action:phase` via the `ranged_shot` fx key (the bow, on `impact`), so it
+   * fires on a MISS too. Damage already landed this tick (the sim is
+   * instantaneous); the bolt is a cosmetic. Spawn from the live sprite positions
+   * so it emanates from / lands on what the player sees, falling back to cell
+   * centers if a handle is mid-teardown.
+   */
+  private triggerTracerFx(spec: FxTracer, casterId: number, targetId: number | undefined): void {
+    if (!this.world || targetId === undefined) return;
+    const attacker = this.world.findUnit(casterId);
+    if (!attacker) return;
+    const attackerHandle = this.handles.get(casterId);
+    if (!attackerHandle) return;
     const from = (
       this.sprites.getPosition(attackerHandle, this.scratchPos) ??
       this.tileWorldPos(attacker.position)
     ).clone();
     const targetHandle = this.handles.get(targetId);
+    const target = this.world.findUnit(targetId);
     const to = (
       (targetHandle && this.sprites.getPosition(targetHandle, this.scratchPos)) ??
-      this.tileWorldPos(target.position)
+      (target ? this.tileWorldPos(target.position) : from)
     ).clone();
-    this.spawnProjectile(from, to, colorForTeam(attacker.team));
+    this.spawnProjectile(from, to, colorForTeam(attacker.team), undefined, 0, PROJECTILE_SECONDS, undefined, spec.size);
   }
 
   /**
@@ -632,7 +635,8 @@ export class BattleRenderer {
    * drops the lerp WITHOUT firing `onArrive` (gotcha #108), so a battle that
    * ends mid-flight spawns no orphan callback. `targetProvider` (F3) makes the
    * lerp HOME on a moving target sprite (the catapult lob); absent → a fixed
-   * destination (ranged tracer, mage ground-target bolt).
+   * destination (ranged tracer, mage ground-target bolt). `size` (Z3) overrides
+   * the tracer glyph scale so an fx key can author it (defaults to PROJECTILE_SIZE).
    */
   private spawnProjectile(
     from: THREE.Vector3,
@@ -642,9 +646,10 @@ export class BattleRenderer {
     arcHeight = 0,
     durationSeconds = PROJECTILE_SECONDS,
     targetProvider?: () => THREE.Vector3 | null,
+    size = PROJECTILE_SIZE,
   ): void {
     const proj = this.sprites.addSprite(PROJECTILE_GLYPH, color, from);
-    this.sprites.updateSprite(proj, { bloomIntensity: PROJECTILE_BLOOM, size: PROJECTILE_SIZE });
+    this.sprites.updateSprite(proj, { bloomIntensity: PROJECTILE_BLOOM, size });
     this.projectiles.add(proj);
     this.animator.startLerp(
       proj,
@@ -689,6 +694,11 @@ export class BattleRenderer {
     // Z2 — the camera shake is a Renderer-owned channel (it owns the camera +
     // render loop), so the driver just kicks it; the registry authors the magnitude.
     if (fx.shake) this.renderer.shakeCamera(fx.shake.intensity, fx.shake.durationSeconds);
+    // Z3 — the single-target strike cues. They fire on the phase boundary the key
+    // is authored on (impact for the weapons / bow, windup for the gambit), so a
+    // MISS plays them for free: `action:phase` fires on hit AND miss alike.
+    if (fx.shove) this.triggerShoveFx(fx.shove, unitId, targetId);
+    if (fx.tracer) this.triggerTracerFx(fx.tracer, unitId, targetId);
   };
 
   /**

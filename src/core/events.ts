@@ -144,11 +144,11 @@ export interface GameEvents extends Record<string, unknown> {
    * to-hit at the `World.applyDamage` chokepoint and MISSED — the target's
    * `evasion` beat the attacker's `precision`. Distinct from a 0-damage
    * `unit:attacked` so consumers branch cleanly (no HP was touched, no
-   * `recordDamage` entry, no crit). The attacker still swung/shot, so the
-   * render layer plays the same `triggerAttackVisual` lunge/tracer it does for
-   * a hit, then floats a "Miss" hitsplat instead of a damage number. Only the
-   * evadable single-target actions emit it; the mage AoE, the catapult, and
-   * environmental fire/chasm damage are unmissable and never do. */
+   * `recordDamage` entry, no crit). The attacker still swung/shot — but as of
+   * Z3 that lunge/tracer + whoosh ride `action:phase` (which fires on hit AND
+   * miss), so the render layer keys ONLY the "Miss" hitsplat off this event.
+   * Only the evadable single-target actions emit it; the mage AoE, the catapult,
+   * and environmental fire/chasm damage are unmissable and never do. */
   'unit:missed': { attackerId: number; targetId: number };
   /**
    * D7.B: per-tick chip damage from standing on a `fire` tile. Separate
@@ -193,14 +193,17 @@ export interface GameEvents extends Record<string, unknown> {
   /**
    * F2 — transient phase-boundary signal. Fires once per phase that BEGINS
    * on a tick, in declared order, for every in-flight action (zero-length
-   * phases included — they share a boundary tick). Renderer-only consumer
-   * (F3 launches projectiles on `release` + moves impact VFX to `impact`;
-   * F4 sequences the rogue gambit). Carries NO damage — that still rides
-   * `unit:attacked` / `unit:healed`. `targetId` is set for homing actions
-   * (strikes, catapult), `targetCell` for ground-target / fixed-cell actions
-   * (mage); both omitted for self / no-target actions (heal-self, move,
-   * spawn). No sim/run subscriber exists in F2, so emitting it cannot perturb
-   * the deterministic sim or the fuzz baseline.
+   * phases included — they share a boundary tick). Renderer-only consumer:
+   * BattleRenderer's FX driver resolves the action's per-phase fx key through
+   * the registry (Z1 the mage/catapult projectile@`release` + burst@`impact`;
+   * Z2 the camera shake; Z3 the melee shove + bow tracer + their whoosh — on
+   * `impact`, or `windup` for the gambit). Driving the strike cue off THIS event
+   * is what plays it on a miss for free (the phase fires on hit AND miss).
+   * Carries NO damage — that still rides `unit:attacked` / `unit:healed`.
+   * `targetId` is set for homing actions (strikes, catapult), `targetCell` for
+   * ground-target / fixed-cell actions (mage); both omitted for self / no-target
+   * actions (dash, move, spawn). No sim/run subscriber exists, so emitting it
+   * cannot perturb the deterministic sim or the fuzz baseline.
    */
   'action:phase': {
     unitId: number;

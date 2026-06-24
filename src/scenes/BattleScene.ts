@@ -119,41 +119,24 @@ export class BattleScene implements Scene {
     this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings, this.objective);
     this.objective.onArmedChange = (mode) => this.hud?.setObjectiveArmed(mode);
 
-    // B6 audio: per-battle subscriptions that need the World to look up
-    // the attacker's archetype (attackRange<=1 → melee, else ranged).
+    // B6 audio: per-battle subscriptions for the non-keyed combat sounds.
     // Lives here rather than Game so it tears down with the world.
+    //
+    // §Z — every KEYED attack cue (one FxKey → visual + sound) now rides the FX
+    // registry, driven by BattleRenderer off `action:phase`: the mage bolt's
+    // `magicboom` + the catapult's `shoot` (Z1), and — as of Z3 — the melee
+    // swing's `melee` + the bow's `shoot` whoosh. Driving the whoosh off the
+    // phase event means a MISS plays it for free (the phase fires on hit AND
+    // miss), so the old `unit:attacked` / `unit:missed` audio handlers (which
+    // inferred melee-vs-ranged from the attacker's range) are gone. What stays
+    // here is the per-event sounds with no fx key: death, fire/heal tile chips,
+    // and the dash leap.
     //
     // C1b: skip neutral-team deaths — walls have HP plumbed but the
     // generic combat death cry would read as a unit dying rather than a
     // wall crumbling. When C2's AoE damage actually lands wall hits, swap
     // this for a dedicated `wall_destroyed` sample.
     this.subscriptions.push(
-      ctx.bus.on('unit:attacked', ({ attackerId }) => {
-        const attacker = this.world?.findUnit(attackerId);
-        if (!attacker) return;
-        // E7.C/E7.D — the mage's bolt and the catapult's shot each play one
-        // sound off their own dedicated event (below), not the per-hit
-        // `unit:attacked`. For the mage that avoids multishot audio (one event
-        // per AoE victim); for the catapult the event also fires on an aborted
-        // shot where no `unit:attacked` exists.
-        if (attacker.archetype === 'mage' || attacker.archetype === 'catapult') return;
-        ctx.audio.play(attacker.derived.attackRange <= 1 ? 'melee' : 'shoot');
-      }),
-      // I2 — a dodged strike still played its swing/shot, so it makes the SAME
-      // sound as a connecting one (the "whoosh" is the attack, not the impact).
-      // Only single-target strikes emit `unit:missed` (mage/catapult are
-      // unmissable), so the same melee/ranged branch applies; the archetype
-      // guard mirrors the hit path defensively.
-      ctx.bus.on('unit:missed', ({ attackerId }) => {
-        const attacker = this.world?.findUnit(attackerId);
-        if (!attacker) return;
-        if (attacker.archetype === 'mage' || attacker.archetype === 'catapult') return;
-        ctx.audio.play(attacker.derived.attackRange <= 1 ? 'melee' : 'shoot');
-      }),
-      // §Z — the mage bolt's `magicboom` + the catapult's `shoot` now ride the
-      // FX registry (one FxKey → visual + sound), driven by BattleRenderer off
-      // `action:phase{impact}`. They left this per-event audio block when the
-      // ad-hoc `magic:detonated` / `catapult:fired` events were retired.
       ctx.bus.on('unit:died', ({ team }) => {
         if (team === 'neutral') return;
         ctx.audio.play('death');

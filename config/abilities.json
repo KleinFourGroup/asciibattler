@@ -25,7 +25,8 @@
           "bypassDefense": false
         }
       }
-    ]
+    ],
+    "fx": { "impact": "melee_swing" }
   },
   "club": {
     "id": "club",
@@ -53,7 +54,8 @@
           "bypassDefense": false
         }
       }
-    ]
+    ],
+    "fx": { "impact": "melee_swing" }
   },
   "katana": {
     "id": "katana",
@@ -81,7 +83,8 @@
           "bypassDefense": false
         }
       }
-    ]
+    ],
+    "fx": { "impact": "melee_swing" }
   },
   "whip": {
     "id": "whip",
@@ -109,7 +112,8 @@
           "bypassDefense": false
         }
       }
-    ]
+    ],
+    "fx": { "impact": "melee_swing" }
   },
   "bow": {
     "id": "bow",
@@ -138,7 +142,8 @@
           "bypassDefense": false
         }
       }
-    ]
+    ],
+    "fx": { "impact": "ranged_shot" }
   },
   "heal_ally": {
     "id": "heal_ally",
@@ -190,7 +195,8 @@
         "phase": "impact",
         "op": { "kind": "move", "mode": "retreat", "cells": 1 }
       }
-    ]
+    ],
+    "fx": { "windup": "melee_swing" }
   },
   "dash": {
     "id": "dash",

@@ -15,11 +15,13 @@
  * later status / mechanic authors a single key and gets the whole cue. Hence
  * `sound` lives on the descriptor alongside the visual channels.
  *
- * SCOPE (Z1): the channels needed to re-home the mage bolt + the catapult lob —
- * `projectile` (the `release`-boundary launch) and `burst` (the `impact`
- * detonation / dust) + `sound`. Camera `shake` lands in Z2; the melee shove /
- * ranged tracer / heal sparkle channels land in Z3 as those verbs migrate off
- * their `unit:attacked` / `unit:healed` dispatch.
+ * SCOPE: Z1 added `projectile` (the `release`-boundary launch) + `burst` (the
+ * `impact` detonation / dust) + `sound` (mage bolt / catapult lob); Z2 added the
+ * camera `shake`; Z3 adds the melee `shove` + the ranged `tracer` as the
+ * single-target strikes migrate off their `unit:attacked` / `unit:missed`
+ * dispatch (the swing now rides `action:phase`, which fires on hit AND miss). The
+ * heal sparkle stays on `unit:healed` — its data event already carries the healed
+ * unit's id + the ability-vs-tile distinction the sparkle gate needs.
  */
 
 import type { SoundKey } from '../audio/AudioPlayer';
@@ -59,6 +61,28 @@ export interface FxShake {
 }
 
 /**
+ * A melee lunge (§Z3 — the sword/club/katana/whip swing, and the rogue gambit).
+ * The caster shoves toward its target and snaps back; the driver reads the
+ * direction off the live cells and needs `action:phase.targetId` to know which
+ * way. The lunge geometry (distance, in/out timing) is fixed render tuning in
+ * `BattleRenderer`; `distance` optionally overrides the default reach (world
+ * units) so a heavier weapon can hit harder without a new channel.
+ */
+export interface FxShove {
+  distance?: number;
+}
+
+/**
+ * A ranged tracer (§Z3 — the bow shot). A `*` bolt flies straight from the
+ * caster's live sprite to the target's; the driver needs `action:phase.targetId`
+ * to locate the destination. `size` optionally overrides the tracer glyph's
+ * per-sprite scale (1 = full unit-glyph size).
+ */
+export interface FxTracer {
+  size?: number;
+}
+
+/**
  * The closed set of channels an `FxKey` resolves to. Every field optional: a
  * key lights up only the channels it names (the mage `release` key is a bare
  * projectile; its `impact` key is a burst + a sound). New mechanics add new
@@ -74,6 +98,10 @@ export interface FxDescriptor {
   burst?: FxBurst;
   /** Shake the camera (Z2 — heavy impacts; the registry's first non-sprite channel). */
   shake?: FxShake;
+  /** Lunge the caster toward its target (Z3 — the melee swing). */
+  shove?: FxShove;
+  /** Fly a tracer bolt from caster to target (Z3 — the ranged shot). */
+  tracer?: FxTracer;
 }
 
 /**
@@ -99,6 +127,13 @@ export const FX_REGISTRY = {
     sound: 'shoot',
     shake: { intensity: 0.16, durationSeconds: 0.35 },
   },
+  // Z3 — the single-target strikes. One key carries the swing + its whoosh
+  // (the Z VFX+SFX decision); both ride `action:phase`, so a MISS plays them
+  // for free (the phase fires on hit and miss alike). The melee swing is shared
+  // by the four weapons + the rogue gambit (authored on the gambit's `windup`,
+  // where it deals damage); the bow flies a straight tracer.
+  melee_swing: { shove: {}, sound: 'melee' },
+  ranged_shot: { tracer: {}, sound: 'shoot' },
 } satisfies Record<string, FxDescriptor>;
 
 /** The closed set of authored keys — the §30 editor's option list. */

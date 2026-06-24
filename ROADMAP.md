@@ -453,19 +453,29 @@ parameter (authored per key), not a sim concern.
 
 ## Phase 27 — Status effects: the periodic axis + visualization + tile unification
 
-> **IN PROGRESS — 27a + 27b ✅ DONE & green (headless, not yet playtested).**
+> **IN PROGRESS — 27a + 27b + 27c ✅ DONE & green (all headless, not yet playtested).**
 > **27a** (`98b29b4`): the `StatusDef` schema ([statusSchema.ts](src/sim/effects/statusSchema.ts))
-> + registry ([config/statuses.ts](src/config/statuses.ts), catalog EMPTY) +
-> the `applyStatus` ref boot-check. **27b** (`940d55e`): the periodic engine —
+> + registry ([config/statuses.ts](src/config/statuses.ts)) + the `applyStatus`
+> ref boot-check. **27b** (`940d55e`): the periodic engine —
 > **def-resolved by key** (the effect carries only `nextTickAt` + `sourceUnitId`;
 > op/interval/duration live on the def, so §28 behavior adds no serialized state →
 > no §28 bump), the extracted `dealDamage` chokepoint + `applyDamage.bypassDefense`,
 > `applyStatusEffect` / `applyPeriodicEffects`, the `status:applied/ticked/expired`
 > events (⭐ `status:ticked` also carries `amount`), **WorldSnapshot v26→v27**.
-> 1249 main + 210 fuzz green. **NEXT = 27c** (author the four statuses), then pair
-> **27d** (tile unification) + **27e** (status viz) into one observable commit —
-> deleting the D7.B pass without the `status:ticked` viz would leave fire damage
-> with no feedback — and PAUSE for the user's playtest.
+> **27c** (this commit): authored the four periodic statuses in
+> [config/statuses.json](config/statuses.json) — **burn** (`refresh`, 4 s, 2 dmg/s,
+> `bypassDefense`), **bleed** (`add`, 4 s, 2/s), **poison** (`add`, 6 s, 1/s),
+> **rejuvenate** (`refresh` HoT, 4 s, 1/s); DoT ops author the locked default
+> (`scaling:'none'`, `bypassDefense:true`, `evadable:false`), magnitudes/durations
+> are PLACEHOLDERS → §31; balance-proof derives burn/rejuvenate rates from
+> `tiles.json`. No `fx` yet (→ 27e). Headless/inert (nothing applies a status until
+> 27d/§29) so fuzz stays byte-identical. 1257 main + 210 fuzz green.
+> **NEXT = the 27d+27e PAIR** — **27d** (tile unification: fire→burn, healing→
+> rejuvenate; DELETE the D7.B `applyTileEffects` pass, KEEP `reapDead`, retire
+> `unit:burned`) + **27e** (status viz: the renderer subscribes `status:*` → the §Z
+> FX registry). Pair them into ONE observable commit (deleting the tile pass
+> without the `status:ticked` viz would leave fire damage with no feedback) — then
+> PAUSE for the user's native-browser playtest.
 
 Extend K1 along the **periodic** axis (DoT/HoT) and land the status lifecycle
 that *is* the in-battle display. **`WorldSnapshot` bump** (the StatusDef-shaped

@@ -9,9 +9,10 @@ import {
 /**
  * Phase 27a — the StatusDef vocabulary's parse/reject/round-trip contract.
  * These pin the SHAPE with explicit literals (never the shipped
- * `config/statuses.json`, which is empty until 27c): a valid def parses, the
- * periodic op is restricted to damage|heal, malformed shapes are rejected, and a
- * def round-trips through JSON unchanged.
+ * `config/statuses.json` — the catalog's CONTENT is proven in
+ * `src/config/statuses.test.ts`): a valid def parses, the periodic op is
+ * restricted to damage|heal, malformed shapes are rejected, and a def round-trips
+ * through JSON unchanged.
  */
 
 /** A burn-shaped DoT def (the §27 reference shape). */

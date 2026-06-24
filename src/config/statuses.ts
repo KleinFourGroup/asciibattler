@@ -7,9 +7,12 @@
  * re-declares its `id` (self-contained for the §30 editor + boot checks), and a
  * key/id mismatch is a loud boot failure.
  *
- * Ships EMPTY in 27a — Phase 27c authors burn / bleed / poison / rejuvenate. An
- * empty catalog still validates (no `applyStatus` ref exists to dangle, since
- * that op is reserved until §29), so `assertStatusRefsResolve` passes vacuously.
+ * 27c authored the four periodic statuses — burn / bleed / poison / rejuvenate
+ * (the DoT/HoT axis). Nothing in production APPLIES them yet (tiles → §27d,
+ * status-on-hit → §29), so the catalog is inert until a consumer lands: no
+ * ability authors an `applyStatus` ref (reserved until §29), so
+ * `assertStatusRefsResolve` still passes vacuously, and the periodic engine only
+ * ticks a status once it sits on a unit's `effects[]`.
  */
 
 import { z } from 'zod';

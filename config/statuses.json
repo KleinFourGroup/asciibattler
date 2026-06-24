@@ -1,1 +1,73 @@
-{}
+{
+  "burn": {
+    "id": "burn",
+    "name": "Burn",
+    "durationSeconds": 4,
+    "merge": "refresh",
+    "periodic": {
+      "everySeconds": 1,
+      "op": {
+        "kind": "damage",
+        "scaling": "none",
+        "might": 2,
+        "accuracy": 1,
+        "critBase": 0,
+        "critable": false,
+        "evadable": false,
+        "bypassDefense": true
+      }
+    }
+  },
+  "bleed": {
+    "id": "bleed",
+    "name": "Bleed",
+    "durationSeconds": 4,
+    "merge": "add",
+    "periodic": {
+      "everySeconds": 1,
+      "op": {
+        "kind": "damage",
+        "scaling": "none",
+        "might": 2,
+        "accuracy": 1,
+        "critBase": 0,
+        "critable": false,
+        "evadable": false,
+        "bypassDefense": true
+      }
+    }
+  },
+  "poison": {
+    "id": "poison",
+    "name": "Poison",
+    "durationSeconds": 6,
+    "merge": "add",
+    "periodic": {
+      "everySeconds": 1,
+      "op": {
+        "kind": "damage",
+        "scaling": "none",
+        "might": 1,
+        "accuracy": 1,
+        "critBase": 0,
+        "critable": false,
+        "evadable": false,
+        "bypassDefense": true
+      }
+    }
+  },
+  "rejuvenate": {
+    "id": "rejuvenate",
+    "name": "Rejuvenate",
+    "durationSeconds": 4,
+    "merge": "refresh",
+    "periodic": {
+      "everySeconds": 1,
+      "op": {
+        "kind": "heal",
+        "scaling": "none",
+        "might": 1
+      }
+    }
+  }
+}

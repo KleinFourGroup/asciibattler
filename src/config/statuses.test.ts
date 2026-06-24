@@ -1,22 +1,90 @@
 import { describe, it, expect } from 'vitest';
 import { STATUS_DEFS, statusDef, assertStatusRefsResolve } from './statuses';
+import { TILES_CONFIG } from './tiles';
 import { parseAbilityDef, type AbilityDef } from '../sim/effects/schema';
 import { parseStatusDef, type StatusDef } from '../sim/effects/statusSchema';
 
 /**
- * Phase 27a — the status registry + the `applyStatus` ref boot-check. The
- * catalog ships EMPTY (27c authors content), so the registry tests assert the
- * empty-but-valid state; the boot-check tests build literal fixtures (an ability
- * that authors an `applyStatus` op) rather than reading the shipped catalog.
+ * Phase 27c — the four periodic statuses (burn / bleed / poison / rejuvenate)
+ * authored in `config/statuses.json`. These tests read the SHIPPED catalog (the
+ * content is now real) and balance-proof the tile-unification rates from the
+ * `tiles.json` config module (never hardcode the authored numbers — gotcha-class
+ * balance-proof discipline). The `assertStatusRefsResolve` boot-check tests below
+ * still build literal fixtures (they probe the check, not the catalog).
  */
 
-describe('STATUS_DEFS registry', () => {
-  it('ships an empty catalog in 27a (content lands in 27c)', () => {
-    expect(Object.keys(STATUS_DEFS)).toHaveLength(0);
+describe('STATUS_DEFS registry (27c content)', () => {
+  it('ships the four periodic statuses', () => {
+    expect(Object.keys(STATUS_DEFS).sort()).toEqual(['bleed', 'burn', 'poison', 'rejuvenate']);
   });
 
-  it('statusDef throws loudly on an unknown id', () => {
-    expect(() => statusDef('burn')).toThrow(/no definition for status id 'burn'/);
+  it('every entry declares an id matching its registry key', () => {
+    for (const [key, def] of Object.entries(STATUS_DEFS)) {
+      expect(def.id).toBe(key);
+    }
+  });
+
+  it('statusDef resolves a known id and throws loudly on an unknown one', () => {
+    expect(statusDef('burn').name).toBe('Burn');
+    expect(() => statusDef('nonexistent')).toThrow(/no definition for status id 'nonexistent'/);
+  });
+});
+
+/** A `damage`-op narrowing helper — every DoT's periodic op must be a damage op. */
+function periodicDamageOf(id: string) {
+  const periodic = statusDef(id).periodic;
+  expect(periodic, `${id} must be periodic`).toBeDefined();
+  const op = periodic!.op;
+  expect(op.kind, `${id} must be a DoT`).toBe('damage');
+  if (op.kind !== 'damage') throw new Error('unreachable');
+  return { everySeconds: periodic!.everySeconds, op };
+}
+
+describe('27c — DoT / HoT content shape', () => {
+  it.each(['burn', 'bleed', 'poison'])(
+    '%s is a defense-bypassing, non-evadable, flat-might DoT (the locked default)',
+    (id) => {
+      const { op } = periodicDamageOf(id);
+      expect(op.scaling).toBe('none'); // flat `might`, no caster-stat scaling
+      expect(op.bypassDefense).toBe(true);
+      expect(op.evadable).toBe(false);
+      expect(op.critable).toBe(false);
+      expect(op.accuracy).toBe(1);
+      expect(op.critBase).toBe(0);
+    },
+  );
+
+  it('rejuvenate is a flat-might HoT', () => {
+    const periodic = statusDef('rejuvenate').periodic;
+    expect(periodic).toBeDefined();
+    expect(periodic!.op.kind).toBe('heal');
+    if (periodic!.op.kind !== 'heal') throw new Error('unreachable');
+    expect(periodic!.op.scaling).toBe('none');
+  });
+
+  it('merge policies: burn/rejuvenate refresh (linger), bleed/poison add (stack)', () => {
+    expect(statusDef('burn').merge).toBe('refresh');
+    expect(statusDef('rejuvenate').merge).toBe('refresh');
+    expect(statusDef('bleed').merge).toBe('add');
+    expect(statusDef('poison').merge).toBe('add');
+  });
+});
+
+describe('27c — balance-proof: tile-unification rates derive from tiles.json', () => {
+  // The §27d tile pass applies these at the default magnitude (1), so the
+  // per-second rate a standing unit feels is `op.might / everySeconds`. Deriving
+  // from TILES_CONFIG keeps the proof honest: change either number in config and
+  // this fails until they agree (never a hardcoded constant on either side).
+  it('burn matches the fire tile damage rate', () => {
+    const { everySeconds, op } = periodicDamageOf('burn');
+    expect(op.might / everySeconds).toBe(TILES_CONFIG.fire.damagePerSec);
+  });
+
+  it('rejuvenate matches the healing tile heal rate', () => {
+    const periodic = statusDef('rejuvenate').periodic!;
+    expect(periodic.op.kind).toBe('heal');
+    if (periodic.op.kind !== 'heal') throw new Error('unreachable');
+    expect(periodic.op.might / periodic.everySeconds).toBe(TILES_CONFIG.healing.amountPerSec);
   });
 });
 

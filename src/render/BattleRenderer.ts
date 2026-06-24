@@ -178,11 +178,15 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('action:phase', this.onActionPhase));
     // 27e — the status-effect viz, resolved through the §Z FX registry exactly
     // like `action:phase` (status def's `fx[moment]` → key → descriptor →
-    // channels). `applied` flashes a recolored mote puff; `ticked` puffs again +
-    // floats the DoT/HoT amount hitsplat + plays the re-homed tile cue (burn /
-    // healtick) and keeps the HP bar in sync. (`expired` has no cue yet; a
-    // persistent `active` overlay is a future polish.)
-    this.subscriptions.push(bus.on('status:applied', this.onStatusApplied));
+    // channels). Only the `ticked` moment is wired: the per-tick pulse puffs a
+    // recolored mote burst + floats the DoT/HoT amount hitsplat + plays the
+    // re-homed tile cue (burn / healtick) + keeps the HP bar in sync. The
+    // `applied` flash was DROPPED after the first playtest — a unit's logical
+    // position snaps onto a tile at move-START (`MoveAction`), so an apply cue
+    // fired while the sprite was still lerping in (reading as "burning before
+    // arrival"); the first tick — one interval later, sprite settled — is the
+    // first cue now. The `applied`/`expired`/`active` fx slots stay in the schema
+    // for §28/§29 to drive (e.g. a frozen `active` tint, an on-hit apply flash).
     this.subscriptions.push(bus.on('status:ticked', this.onStatusTicked));
     // D7.B: keep HP bars in sync with ability-heal chip. E6.C floats a cyan `+N`.
     // A heal onto a full unit emits a no-op (gotcha #80), so skip amount <= 0.
@@ -711,13 +715,15 @@ export class BattleRenderer {
    * 27e — the status-lifecycle FX driver (the `onActionPhase` sibling). Resolves
    * the status def's `fx[moment]` → registry descriptor, then drives the named
    * channels off the LIVE unit: the unified sound (one key = visual + SFX), a
-   * recolored sparkle on the body, and — on a tick — the DoT/HoT amount hitsplat
-   * + an HP-bar refresh. The apply moment carries no amount (no number); the tick
-   * supplies it. No-op when the status/moment authors no key.
+   * recolored sparkle on the body, and the DoT/HoT amount hitsplat + an HP-bar
+   * refresh (when an `amount` is supplied). General over `moment`, but today only
+   * `ticked` is wired (the apply flash was dropped post-playtest — see the
+   * `status:ticked` subscription); §28/§29 can drive other moments. No-op when
+   * the status/moment authors no key.
    */
   private driveStatusFx(
     statusId: string,
-    moment: 'applied' | 'ticked',
+    moment: 'applied' | 'ticked' | 'expired' | 'active',
     unitId: number,
     amount?: number,
   ): void {
@@ -733,10 +739,6 @@ export class BattleRenderer {
       this.refreshHpBar(unitId);
     }
   }
-
-  private onStatusApplied = ({ unitId, statusId }: GameEvents['status:applied']): void => {
-    this.driveStatusFx(statusId, 'applied', unitId);
-  };
 
   /**
    * A no-op tick (a HoT onto a full-HP unit, amount 0) drives nothing — no

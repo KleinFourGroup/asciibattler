@@ -161,21 +161,18 @@ export const FX_REGISTRY = {
   melee_swing: { shove: {}, sound: 'melee' },
   ranged_shot: { tracer: {}, sound: 'shoot' },
 
-  // 27e — the periodic statuses. Each status authors an `_apply` key (the flash
-  // when it lands → a recolored mote puff) and a `_tick` key (the per-second
-  // pulse → the same puff + the damage/heal hitsplat). Only `burn`/`rejuvenate`
-  // carry a `sound`: they re-home the retired fire/heal tile-chip cues (the §Z
-  // "one key = visual + SFX" model); bleed/poison get their SFX at §31. Sparkle
-  // colors: burn amber embers, bleed blood-red, poison toxic-green, rejuvenate
-  // heal-cyan. (Status DoT/HoT damage numbers all use the `burn`/`heal` hitsplat
-  // styles — the sparkle color is what distinguishes them.)
-  burn_apply: { sparkle: { color: COLORS.TERMINAL_AMBER } },
+  // 27e — the periodic statuses. Each status authors a `_tick` key: the
+  // per-second pulse → a recolored mote puff + the damage/heal hitsplat number.
+  // Only `burn`/`rejuvenate` carry a `sound` — they re-home the retired fire/heal
+  // tile-chip cues (the §Z "one key = visual + SFX" model); bleed/poison get
+  // their SFX at §31. Sparkle colors: burn amber embers, bleed blood-red, poison
+  // toxic-green, rejuvenate heal-cyan (the DoT/HoT numbers all reuse the
+  // `burn`/`heal` hitsplat styles — the sparkle color distinguishes them). The
+  // apply-flash (`_apply`) keys were dropped post-playtest (the cue fired
+  // mid-lerp onto a tile); a status now signals only on its ticks.
   burn_tick: { sparkle: { color: COLORS.TERMINAL_AMBER }, hitsplat: { kind: 'burn' }, sound: 'burn' },
-  bleed_apply: { sparkle: { color: COLORS.NEON_RED } },
   bleed_tick: { sparkle: { color: COLORS.NEON_RED }, hitsplat: { kind: 'burn' } },
-  poison_apply: { sparkle: { color: COLORS.TERMINAL_GREEN } },
   poison_tick: { sparkle: { color: COLORS.TERMINAL_GREEN }, hitsplat: { kind: 'burn' } },
-  rejuvenate_apply: { sparkle: { color: COLORS.FLOURESCENT_BLUE } },
   rejuvenate_tick: {
     sparkle: { color: COLORS.FLOURESCENT_BLUE },
     hitsplat: { kind: 'heal' },

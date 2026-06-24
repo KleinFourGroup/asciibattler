@@ -17,7 +17,7 @@
         "bypassDefense": true
       }
     },
-    "fx": { "applied": "burn_apply", "ticked": "burn_tick" }
+    "fx": { "ticked": "burn_tick" }
   },
   "bleed": {
     "id": "bleed",
@@ -37,7 +37,7 @@
         "bypassDefense": true
       }
     },
-    "fx": { "applied": "bleed_apply", "ticked": "bleed_tick" }
+    "fx": { "ticked": "bleed_tick" }
   },
   "poison": {
     "id": "poison",
@@ -57,7 +57,7 @@
         "bypassDefense": true
       }
     },
-    "fx": { "applied": "poison_apply", "ticked": "poison_tick" }
+    "fx": { "ticked": "poison_tick" }
   },
   "rejuvenate": {
     "id": "rejuvenate",
@@ -72,6 +72,6 @@
         "might": 1
       }
     },
-    "fx": { "applied": "rejuvenate_apply", "ticked": "rejuvenate_tick" }
+    "fx": { "ticked": "rejuvenate_tick" }
   }
 }

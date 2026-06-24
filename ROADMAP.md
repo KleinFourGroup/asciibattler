@@ -453,7 +453,7 @@ parameter (authored per key), not a sim concern.
 
 ## Phase 27 — Status effects: the periodic axis + visualization + tile unification
 
-> **27a–27e ✅ ALL SHIPPED & green (1258 main + 210 fuzz). ⏸ PENDING the user's native-browser playtest.**
+> **27a–27e ✅ ALL SHIPPED & green (1258 main + 210 fuzz). ✅ USER-PLAYTESTED & LOVED** (one tweak applied — the apply flash dropped, below).
 > **27a** (`98b29b4`): the `StatusDef` schema + registry + the `applyStatus` ref
 > boot-check. **27b** (`940d55e`): the periodic engine — **def-resolved by key**
 > (the effect carries only `nextTickAt` + `sourceUnitId`; op/interval/duration live
@@ -471,13 +471,15 @@ parameter (authored per key), not a sim concern.
 > that sustains `burn` (fire) / `rejuvenate` (healing) — apply-on-enter then a
 > silent per-tick duration top-up (lingers after stepping off), HP change now the
 > periodic tick through `dealDamage`/the HoT clamp; **`unit:burned` retired**, all
-> consumers re-homed. **27e** the renderer status-fx driver
-> (`onStatusApplied`/`onStatusTicked` → `driveStatusFx`) resolves `StatusDef.fx` →
-> the §Z registry (new `hitsplat` + `sparkle` channels + 8 keys + a boot-check;
-> burn/rejuvenate re-home the retired tile SFX). Agent-verified the pipeline
-> end-to-end (apply→tick→HP-drop→sparkle, no errors). A persistent `active` overlay
-> + an `expired` cue are DEFERRED. **NEXT after the playtest = §28** (the behavior
-> axis).
+> consumers re-homed. **27e** the renderer status-fx driver (`onStatusTicked` →
+> `driveStatusFx`) resolves `StatusDef.fx.ticked` → the §Z registry (new `hitsplat`
+> + `sparkle` channels + 4 `_tick` keys + a boot-check; burn/rejuvenate re-home the
+> retired tile SFX). **Playtest tweak:** the apply flash was DROPPED — it fired
+> mid-lerp onto a tile (`MoveAction` snaps the logical position on at move-start),
+> reading as "burning before arrival"; a status now cues only on its ticks (the
+> `applied`/`expired`/`active` fx slots remain in the schema for §28/§29). A
+> persistent `active` overlay + an `expired` cue stay DEFERRED (sparkle-height +
+> settle-on-arrival apply cue → TODO.md). **NEXT = §28** (the behavior axis).
 
 Extend K1 along the **periodic** axis (DoT/HoT) and land the status lifecycle
 that *is* the in-battle display. **`WorldSnapshot` bump** (the StatusDef-shaped

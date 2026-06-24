@@ -534,7 +534,7 @@ default; revisit at playtest). Does the tile→status apply credit a `sourceUnit
 
 ## Phase 28 — Status effects: the behavior axis (decision-hooks)
 
-> **28a–28c ✅ ALL SHIPPED & green (1296 main + 210 fuzz). ⏸ pending the user's playtest.**
+> **28a–28c ✅ ALL SHIPPED & green (1296 main + 210 fuzz). ✅ USER-PLAYTESTED & LOVED.**
 > **No snapshot bump — WorldSnapshot stays v27** (behavior is DEF-RESOLVED by key,
 > exactly like 27's periodic axis — the serialized `StatusEffect` gains no field).
 > **28a** (`9dfd7b4`): the `StatusDef.behavior` block ([statusSchema.ts](src/sim/effects/statusSchema.ts))

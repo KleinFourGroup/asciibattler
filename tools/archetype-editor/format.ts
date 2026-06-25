@@ -41,6 +41,11 @@ export function formatArchetypesJson(config: ArchetypesConfig): string {
     parts.push(`    "glyph": ${JSON.stringify(a.glyph)},`);
     parts.push(`    "abilities": ${JSON.stringify(a.abilities)},`);
     parts.push(`    "targeting": ${JSON.stringify(a.targeting)},`);
+    // §29-close: `draftable` defaults to true and is emitted ONLY when false (the
+    // enemy disruptors + the summon-only minion), so the player-draftable
+    // archetypes keep their original lines and the file diff is exactly the
+    // exclusions. A re-parse fills the absent default back to true.
+    if (a.draftable === false) parts.push(`    "draftable": false,`);
     parts.push(`    "baseStats": {`);
     parts.push(...statLines(a.baseStats));
     parts.push(`    },`);

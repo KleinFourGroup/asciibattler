@@ -344,6 +344,7 @@
     "glyph": "I",
     "abilities": ["ice_storm"],
     "targeting": "nearest",
+    "draftable": false,
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -375,6 +376,7 @@
     "glyph": "W",
     "abilities": ["hex"],
     "targeting": "nearest",
+    "draftable": false,
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -406,6 +408,7 @@
     "glyph": "L",
     "abilities": ["light_ray"],
     "targeting": "nearest",
+    "draftable": false,
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -437,6 +440,7 @@
     "glyph": "b",
     "abilities": ["wail"],
     "targeting": "nearest",
+    "draftable": false,
     "baseStats": {
       "constitution": 18,
       "strength": 0,
@@ -530,6 +534,7 @@
     "glyph": "g",
     "abilities": ["ghoul_claw"],
     "targeting": "nearest",
+    "draftable": false,
     "baseStats": {
       "constitution": 11,
       "strength": 3,

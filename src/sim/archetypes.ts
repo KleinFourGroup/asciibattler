@@ -173,3 +173,19 @@ export const ARCHETYPE_CONFIG: Record<Archetype, ArchetypeConfig> = CONFIGS;
  * layer on top in Phase G (recruitment refactor).
  */
 export const ALL_ARCHETYPES: readonly Archetype[] = Object.keys(CONFIGS) as Archetype[];
+
+/**
+ * §29-close — the player DRAFT pool: the subset of `ALL_ARCHETYPES` whose config
+ * `draftable` flag is true. `rollOffer` samples post-victory recruit offers from
+ * THIS list, not the full catalog, so the §29 enemy disruptors
+ * (frozen/confusion/blind/panic afflicters) and the summon-only Ghoul — which
+ * exist on the board (cast by enemies / summoned) but are never the player's to
+ * draft — stay out of the offer. Derived from the per-archetype flag (default
+ * true), so a new *player* archetype joins automatically and a new enemy/minion
+ * archetype is excluded with one `"draftable": false` line. `ALL_ARCHETYPES`
+ * remains the canonical full list everywhere else (telemetry / fuzz / roster
+ * ordering — every defined archetype, draftable or not).
+ */
+export const DRAFTABLE_ARCHETYPES: readonly Archetype[] = ALL_ARCHETYPES.filter(
+  (a) => CONFIGS[a].draftable,
+);

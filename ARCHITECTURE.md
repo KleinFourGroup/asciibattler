@@ -106,7 +106,7 @@ src/
     Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5) w/ objective branches (engage/hold/focus + updateTargetDefault); lowestWoundedAlly (E7.B); 28: behavior preempt — confusion random-team pick / blind capped acquisition
                              # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
     targetingStrategies.ts   # per-archetype target-pick registry (nearest / weakest); Unit.targeting resolved at spawn
-    archetypes.ts            # ALL_ARCHETYPES pool (F1), rollUnit, glyphForArchetype, targetingForArchetype, range/minRangeForArchetype (O4)
+    archetypes.ts            # ALL_ARCHETYPES (full catalog) + DRAFTABLE_ARCHETYPES (§29-close draft pool, draftable-flag filtered), rollUnit, glyphForArchetype, targetingForArchetype, range/minRangeForArchetype (O4)
     environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories
     terrainGen.ts            # Per-encounter terrain dispatch: procedural (proceduralMap.ts) vs layout library
     proceduralMap.ts         # M6: crossbar+divider+noise map generator + sampleProceduralParams (config→params)

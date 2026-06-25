@@ -2,10 +2,13 @@
  * Post-victory unit-offer generation.
  *
  * F1 (draft-pool pull-forward): each offer is a set of DISTINCT
- * archetypes sampled uniformly from the full pool (`ALL_ARCHETYPES` —
- * all six: melee, ranged, rogue, healer, mage, catapult), so the four
- * E7 archetypes are draftable for playtest balancing instead of being
- * dev-only `?roster=` units. Distinctness replaces the old "guarantee
+ * archetypes sampled uniformly from the draft pool (`DRAFTABLE_ARCHETYPES`),
+ * so the four E7 archetypes are draftable for playtest balancing instead of
+ * being dev-only `?roster=` units. The §29-close cleanup narrowed the pool from
+ * the full catalog (`ALL_ARCHETYPES`) to its draftable subset — the enemy
+ * disruptors (frozen/confusion/blind/panic afflicters) and the summon-only Ghoul
+ * carry `draftable:false` and never appear in an offer (they reach the board only
+ * as enemy casters / summoned minions). Distinctness replaces the old "guarantee
  * >=1 melee + >=1 ranged" reservation: with six archetypes an all-same
  * offer can't happen anyway, and three *different* choices is the point.
  * The sample is capped at the pool size (can't draw more distinct than
@@ -32,7 +35,7 @@
 
 import type { RNG } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
-import { rollUnit, ALL_ARCHETYPES, type Archetype } from './../sim/archetypes';
+import { rollUnit, DRAFTABLE_ARCHETYPES, type Archetype } from './../sim/archetypes';
 import { RECRUITMENT } from '../config/recruitment';
 import { LEVELING } from '../config/leveling';
 
@@ -66,13 +69,14 @@ export function recruitLevelBonus(rng: RNG, chance: number): number {
 }
 
 /**
- * Sample up to `count` distinct archetypes uniformly from `ALL_ARCHETYPES`
- * via a partial Fisher–Yates shuffle: swap each of the first `n` slots
- * with a uniformly-random later-or-equal slot. Capped at the pool size.
+ * Sample up to `count` distinct archetypes uniformly from `DRAFTABLE_ARCHETYPES`
+ * (the §29-close draft pool — `ALL_ARCHETYPES` minus the enemy disruptors + the
+ * summon-only Ghoul) via a partial Fisher–Yates shuffle: swap each of the first
+ * `n` slots with a uniformly-random later-or-equal slot. Capped at the pool size.
  * Works on a fresh copy — never mutates the shared pool.
  */
 function sampleDistinctArchetypes(rng: RNG, count: number): Archetype[] {
-  const pool = [...ALL_ARCHETYPES];
+  const pool = [...DRAFTABLE_ARCHETYPES];
   const n = Math.min(count, pool.length);
   for (let i = 0; i < n; i++) {
     const j = rng.int(i, pool.length - 1);

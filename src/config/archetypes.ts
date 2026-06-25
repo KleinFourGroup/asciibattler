@@ -126,6 +126,16 @@ export const ArchetypeSchema = z.object({
   // Required — every archetype declares its targeting policy explicitly
   // (default `nearest`); a future archetype that omits it fails at load.
   targeting: TargetingIdSchema,
+  // §29-close — whether this archetype appears in the player's post-victory
+  // recruit offer (`rollOffer` samples `DRAFTABLE_ARCHETYPES`, the draftable
+  // subset of `ALL_ARCHETYPES`). Defaults TRUE so a newly-added archetype joins
+  // the draft pool automatically (the F1 intent); the §29 enemy disruptors
+  // (frozen/confusion/blind/panic afflicters) + the summon-only Ghoul set it
+  // FALSE — they exist on the board (cast by enemies / summoned) but are never
+  // the player's to draft. Optional in the JSON (absent ⇒ draftable); the editor
+  // formatter emits the line only when false, keeping the file diff to the
+  // exclusions.
+  draftable: z.boolean().default(true),
 });
 
 export const ArchetypesSchema = z.object({

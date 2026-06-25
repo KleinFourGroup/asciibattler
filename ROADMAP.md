@@ -666,9 +666,14 @@ isn't omniscient)? The behavior-override **durations** are content dials → §3
 > (the minion fade is the cue; the summon-pop SFX is §31). Browser-verified: a live
 > Shaman summons Ghouls capped at 3, both glyphs render. ⚠️ `ALL_ARCHETYPES` auto-makes
 > every archetype player-draftable; the user chose to KEEP all §29 archetypes draftable
-> through §29's end (for testing), so the enemy-disruptor recruit-pool exclusion (now
-> also the summon-only Ghoul) is the **§29-close cleanup**. **§29 is now CONTENT-COMPLETE**
-> — NEXT = the §29-close pool cleanup, then §30 (the attack + archetype editors).
+> through §29's end (for testing), so the enemy-disruptor + summon-only-Ghoul
+> recruit-pool exclusion was the **§29-close cleanup — ✅ DONE:** a per-archetype
+> `draftable` config flag (default true; `false` on ice_mage/warlock/luminant/banshee +
+> ghoul) feeds a derived **`DRAFTABLE_ARCHETYPES`** ([src/sim/archetypes.ts](src/sim/archetypes.ts))
+> that `rollOffer` ([Recruitment.ts](src/run/Recruitment.ts)) samples instead of the full
+> catalog; `ALL_ARCHETYPES` stays the canonical full list (telemetry/fuzz/roster). The
+> archetype-editor formatter emits the line only when false (minimal file diff). **§29 is
+> now COMPLETE** — NEXT = §30 (the attack + archetype editors).
 >
 > **29c heads-up (chain):** the recursive `chain{maxJumps, rangeCells, falloff,
 > ops}` arm needs cast-time scalar capture for its NESTED `ops`. Today's

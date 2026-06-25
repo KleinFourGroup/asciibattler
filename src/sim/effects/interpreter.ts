@@ -18,7 +18,7 @@
  */
 
 import type { GridCoord } from '../../core/types';
-import type { Unit } from '../Unit';
+import type { Archetype, Unit } from '../Unit';
 import type { World } from '../World';
 import type { OrphanPolicy } from '../Action';
 import { STATS } from '../../config/stats';
@@ -26,6 +26,7 @@ import { statusDef } from '../../config/statuses';
 import { secondsToTicks } from '../../config';
 import type { ChainInnerOp, ChainOp, EffectOp, TargetSelector } from './schema';
 import { nearestChainTarget, resolveAreaVictims } from './targeting';
+import { nearestFreeCells } from '../actingPosition';
 import { retreatCell } from './reposition';
 import { behaviorFlags } from '../statusBehavior';
 
@@ -110,6 +111,9 @@ export function executeOp(op: EffectOp, ctx: OpFireContext): void {
       return;
     case 'chain':
       executeChain(op, ctx);
+      return;
+    case 'summon':
+      executeSummon(op, ctx);
       return;
     default: {
       const _exhaustive: never = op;
@@ -280,6 +284,59 @@ function resolveStatusTargets(ctx: OpFireContext): Unit[] {
   if (sel.kind === 'self') return [ctx.caster];
   // enemyInRange / lowestHpAlly — the captured live single target.
   return ctx.target ? [ctx.target] : [];
+}
+
+/* -------------------------------------------------------------------------- */
+/* §29d summon — caster-anchored minion placement.                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * §29d — summon: place `op.summon.count` minions onto the caster's team, into the
+ * nearest free cells to the resolved `at` anchor (bounded by `radiusCells`). The
+ * per-caster `maxLive` cap is honoured LIVE — propose already abstains at the
+ * ceiling, but it's clamped here too (defence against a stale propose), so the cap
+ * is never exceeded. No free cell in range → the cast fizzles (nothing spawned).
+ * Deterministic: the placement is the BFS, the minion stats the RNG-free
+ * `scaledUnit` path (`World.spawnSummon`). Each minion fades in (`unit:spawned`
+ * `instant:false`) under a `SpawnAction` lockout, joining next tick — the safe
+ * mid-`tick` add (the per-unit loop iterates a `units.slice()`, so a unit pushed
+ * at impact isn't part of this tick's pass), exactly like a D5.C overflow spawn.
+ */
+function executeSummon(op: Extract<EffectOp, { kind: 'summon' }>, ctx: OpFireContext): void {
+  const anchor = resolveSummonAnchor(op.at, ctx);
+  if (anchor === undefined) return; // no anchor (a dead/absent target) → fizzle
+  const room = op.summon.maxLive - ctx.world.liveSummonCount(ctx.caster.id);
+  if (room <= 0) return; // at the cap (defensive — propose already gated)
+  const want = Math.min(op.summon.count, room);
+  const cells = nearestFreeCells(anchor, want, op.summon.radiusCells, ctx.world);
+  for (const cell of cells) {
+    ctx.world.spawnSummon(
+      op.summon.archetype as Archetype,
+      op.summon.level,
+      ctx.caster.team,
+      cell,
+      ctx.caster.id,
+    );
+  }
+}
+
+/**
+ * Resolve a summon's `at` anchor to a cell, mirroring `resolveStatusTargets`'s
+ * selector axis: `self` → the caster's cell (the default — adjacent-to-me summon);
+ * `aoe` → the captured blast cell; a single-target selector → the live target's
+ * cell (a flank summon). `undefined` (a dead / never-captured target) fizzles the
+ * cast.
+ */
+function resolveSummonAnchor(at: TargetSelector, ctx: OpFireContext): GridCoord | undefined {
+  switch (at.kind) {
+    case 'self':
+      return ctx.caster.position;
+    case 'aoe':
+      return ctx.targetCell;
+    case 'enemyInRange':
+    case 'lowestHpAlly':
+      return ctx.target?.position;
+  }
 }
 
 /* -------------------------------------------------------------------------- */

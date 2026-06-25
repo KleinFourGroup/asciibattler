@@ -494,5 +494,67 @@
       "mobility": 0.1,
       "power": 0.1
     }
+  },
+  "shaman": {
+    "glyph": "s",
+    "abilities": ["raise_dead"],
+    "targeting": "nearest",
+    "baseStats": {
+      "constitution": 20,
+      "strength": 0,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 2,
+      "defense": 5,
+      "precision": 5,
+      "evasion": 5,
+      "speed": 4,
+      "mobility": -7,
+      "power": 1
+    },
+    "growthRates": {
+      "constitution": 0.5,
+      "strength": 0,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0.2,
+      "defense": 0.2,
+      "precision": 0.2,
+      "evasion": 0.2,
+      "speed": 0.2,
+      "mobility": 0.07,
+      "power": 0.1
+    }
+  },
+  "ghoul": {
+    "glyph": "g",
+    "abilities": ["ghoul_claw"],
+    "targeting": "nearest",
+    "baseStats": {
+      "constitution": 11,
+      "strength": 3,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 2,
+      "defense": 2,
+      "precision": 5,
+      "evasion": 5,
+      "speed": 6,
+      "mobility": 2,
+      "power": 0
+    },
+    "growthRates": {
+      "constitution": 0.4,
+      "strength": 0.2,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0.15,
+      "defense": 0.1,
+      "precision": 0.1,
+      "evasion": 0.1,
+      "speed": 0.15,
+      "mobility": 0.07,
+      "power": 0.05
+    }
   }
 }

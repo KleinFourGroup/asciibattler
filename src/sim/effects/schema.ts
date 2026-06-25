@@ -184,13 +184,10 @@ const ChainOpSchema = z.object({
   ops: z.array(ChainInnerOpSchema).min(1),
 });
 
-export const EffectOpSchema = z.discriminatedUnion('kind', [
-  DamageOpSchema,
-  HealOpSchema,
-  MoveOpSchema,
-  ApplyStatusOpSchema,
-  ChainOpSchema,
-]);
+// `EffectOpSchema` (the full op union, incl. §29d `summon`) is declared AFTER the
+// target selectors below — `summon`'s `at` anchor IS a `TargetSelector`, so the
+// union can't close until the selectors exist. `PeriodicOpSchema` (damage/heal
+// only) needs no selector, so it stays here.
 
 /**
  * Phase 27 — the subset of ops valid as a status's PERIODIC tick
@@ -248,6 +245,63 @@ export const TargetSelectorSchema = z.discriminatedUnion('kind', [
   EnemyInRangeSelectorSchema,
   AoeSelectorSchema,
   LowestHpAllySelectorSchema,
+]);
+
+/* -------------------------------------------------------------------------- */
+/* §29d summon — spawn minions onto the caster's team, caster-anchored.         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * §29d — what a `summon` op spawns. The minion is its OWN archetype (a
+ * data-driven stat block in `config/archetypes.json` — the Ghoul ≈ half a bandit),
+ * referenced by id (`archetype`); a typo'd id is boot-rejected by
+ * `assertSummonRefsResolve` (`src/config/archetypes.ts`), the `applyStatus`
+ * `statusId` precedent. `level` is the (fixed) minion level — summoned via the
+ * deterministic `scaledUnit` path, so the geometry AND the stats are RNG-free; a
+ * future "scale with the caster's level" is a §31 dial. `count` minions land per
+ * cast; `maxLive` caps how many of THIS caster's summons may be alive at once
+ * (single digits — bounding the live unit count is what keeps object-pooling
+ * parked). The cap is enforced at propose (the caster abstains at the ceiling,
+ * re-summoning as minions die) AND defensively at fire. `radiusCells` bounds how
+ * far from the `at` anchor a summon may land (the nearest-free-cell BFS); no free
+ * cell in radius → the cast fizzles (cooldown spent, retry next opportunity).
+ */
+const SummonSpecSchema = z.object({
+  archetype: z.string().min(1),
+  level: z.number().int().positive().default(1),
+  count: z.number().int().positive().default(1),
+  maxLive: z.number().int().positive(),
+  radiusCells: z.number().int().positive().default(2),
+});
+
+/**
+ * `summon` — place `summon.count` minions onto the caster's team, into the nearest
+ * free cells to the `at` anchor (the reused `actingPosition` BFS), bounded by
+ * `summon.radiusCells`. Caster-ANCHORED, not the team spawn region: `at:self` (the
+ * default) = adjacent to the caster, a target / aoe anchor = a flank / area summon
+ * (ONE resolver — anchor → nearest free cells → take `count`). The geometry is
+ * deterministic; only future RNG-rolled minion stats would draw (the Ghoul's are
+ * deterministic). NOT a valid chain-inner / periodic op (a summon every tick / per
+ * hop is nonsensical) — it lives only in the top-level `EffectOp` union.
+ */
+const SummonOpSchema = z.object({
+  kind: z.literal('summon'),
+  summon: SummonSpecSchema,
+  at: TargetSelectorSchema.default({ kind: 'self' }),
+});
+
+/**
+ * The closed op union — every typed operation a verb performs on its resolved
+ * targets. Declared HERE (after the selectors) because `summon`'s `at` anchor is a
+ * `TargetSelector`. New mechanics are new VARIANTS here, never new action classes.
+ */
+export const EffectOpSchema = z.discriminatedUnion('kind', [
+  DamageOpSchema,
+  HealOpSchema,
+  MoveOpSchema,
+  ApplyStatusOpSchema,
+  ChainOpSchema,
+  SummonOpSchema,
 ]);
 
 /* -------------------------------------------------------------------------- */
@@ -370,6 +424,8 @@ export type MoveOp = z.infer<typeof MoveOpSchema>;
 export type ApplyStatusOp = z.infer<typeof ApplyStatusOpSchema>;
 export type ChainOp = z.infer<typeof ChainOpSchema>;
 export type ChainInnerOp = z.infer<typeof ChainInnerOpSchema>;
+export type SummonOp = z.infer<typeof SummonOpSchema>;
+export type SummonSpec = z.infer<typeof SummonSpecSchema>;
 export type TargetSelector = z.infer<typeof TargetSelectorSchema>;
 export type TimelinePhase = z.infer<typeof TimelinePhaseSchema>;
 export type EffectEntry = z.infer<typeof EffectEntrySchema>;

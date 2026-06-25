@@ -101,3 +101,62 @@ export function nearestActingCell(
 function chebyshev(a: GridCoord, b: GridCoord): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
+
+/**
+ * §29d — the summon-placement query: up to `count` of the nearest UNOCCUPIED,
+ * passable cells within `radiusCells` (BFS depth) of `anchor`. The sibling of
+ * `nearestActingCell` — same bounded outward BFS over the same hard-blocker graph
+ * (`findPath`'s: in-bounds + finite `tileGrid.costAt`) and the same deterministic
+ * `dx,dy = -1..1` expansion + FIFO order, so the first free cells win
+ * reproducibly. Two deliberate differences from the firing-cell search:
+ *
+ *   - it RETURNS cells (not a firing position), so a `summon` op drops a minion
+ *     onto each — caster-anchored placement (`at:self` = adjacent to the caster).
+ *   - a cell is a CANDIDATE only when UNOCCUPIED (no living unit stands on it) —
+ *     a unit can't materialise onto an occupied cell — though the BFS still
+ *     EXPANDS THROUGH an occupied (but passable) cell, so a summon can land on the
+ *     far side of an ally. Walls / chasms (infinite cost) block both candidacy and
+ *     traversal, exactly as for movement.
+ *
+ * Returns fewer than `count` (or `[]`) when the radius can't yield enough free
+ * cells — the caller fizzles the cast (no free cell → no summon).
+ */
+export function nearestFreeCells(
+  anchor: GridCoord,
+  count: number,
+  radiusCells: number,
+  world: World,
+): GridCoord[] {
+  // Every unit's cell (combatants + neutral walls/half-cover) is occupied —
+  // ineligible as a landing, but still traversable when passable (below).
+  const occupied = new Set<string>();
+  for (const u of world.units) occupied.add(`${u.position.x},${u.position.y}`);
+
+  const found: GridCoord[] = [];
+  const startKey = `${anchor.x},${anchor.y}`;
+  const visited = new Set<string>([startKey]);
+  const queue: { c: GridCoord; depth: number }[] = [{ c: anchor, depth: 0 }];
+
+  for (let head = 0; head < queue.length; head++) {
+    const { c, depth } = queue[head]!;
+    if (!occupied.has(`${c.x},${c.y}`)) {
+      found.push(c);
+      if (found.length >= count) return found;
+    }
+    if (depth >= radiusCells) continue;
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = c.x + dx;
+        const ny = c.y + dy;
+        const nKey = `${nx},${ny}`;
+        if (visited.has(nKey)) continue;
+        visited.add(nKey);
+        if (nx < 0 || ny < 0 || nx >= world.gridW || ny >= world.gridH) continue;
+        if (!isFinite(world.tileGrid.costAt({ x: nx, y: ny }))) continue;
+        queue.push({ c: { x: nx, y: ny }, depth: depth + 1 });
+      }
+    }
+  }
+  return found;
+}

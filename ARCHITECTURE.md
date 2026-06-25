@@ -47,7 +47,7 @@ src/
     types.ts                 # Shared primitives: Vec2, GridCoord
 
   config/                    # A4: zod-validated wrappers around config/*.json
-    archetypes.ts            #   glyph + baseStats + growthRates (E1/E3); attackRange moved to abilities (E5)
+    archetypes.ts            #   glyph + baseStats + growthRates (E1/E3); attackRange moved to abilities (E5); 29d: assertSummonRefsResolve boot-checks every summon op's archetype id
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
     statuses.ts              #   27a: loads config/statuses.json into the StatusDef catalog; statusDef(id) + assertStatusRefsResolve (boot-checks every applyStatus statusId, wired into abilities/registry.ts)
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets

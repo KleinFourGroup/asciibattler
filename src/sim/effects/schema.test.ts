@@ -131,6 +131,29 @@ describe('AbilityDef schema — valid shapes', () => {
     // §29c follow-up — hopDelaySeconds defaults to 0.1s (the per-hop stagger).
     if (chain.kind === 'chain') expect(chain.hopDelaySeconds).toBe(0.1);
   });
+
+  it('§29d — accepts a summon op and fills its spec + anchor defaults', () => {
+    const op = EffectOpSchema.parse({
+      kind: 'summon',
+      summon: { archetype: 'ghoul', maxLive: 3 },
+    });
+    expect(op.kind).toBe('summon');
+    if (op.kind === 'summon') {
+      // SummonSpec defaults: level 1, count 1, radiusCells 2.
+      expect(op.summon).toEqual({ archetype: 'ghoul', level: 1, count: 1, maxLive: 3, radiusCells: 2 });
+      // `at` defaults to the caster (adjacent-to-me summon).
+      expect(op.at).toEqual({ kind: 'self' });
+    }
+  });
+
+  it('§29d — accepts an explicit non-self anchor (a flank summon)', () => {
+    const op = EffectOpSchema.parse({
+      kind: 'summon',
+      summon: { archetype: 'ghoul', count: 2, maxLive: 4 },
+      at: { kind: 'enemyInRange' },
+    });
+    if (op.kind === 'summon') expect(op.at).toEqual({ kind: 'enemyInRange' });
+  });
 });
 
 describe('AbilityDef schema — rejects malformed shapes', () => {
@@ -229,6 +252,23 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
         ...base,
         falloff: 1.5,
         ops: [{ kind: 'applyStatus', statusId: 'frozen' }],
+      }),
+    ).toThrow();
+  });
+
+  it('§29d — rejects a summon op missing the required maxLive cap', () => {
+    expect(() => EffectOpSchema.parse({ kind: 'summon', summon: { archetype: 'ghoul' } })).toThrow();
+  });
+
+  it('§29d — rejects a summon as a chain-inner op (top-level op only)', () => {
+    // ChainInnerOp = damage | applyStatus; a summon-per-hop is excluded by construction.
+    expect(() =>
+      EffectOpSchema.parse({
+        kind: 'chain',
+        maxJumps: 2,
+        rangeCells: 3,
+        falloff: 0.5,
+        ops: [{ kind: 'summon', summon: { archetype: 'ghoul', maxLive: 1 } }],
       }),
     ).toThrow();
   });

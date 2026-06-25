@@ -34,9 +34,10 @@ export const GLYPHS = [
   'L', // §29b: luminant (blind light-ray).
   'b', // §29b: banshee (panic wail).
   'z', // §29c: stormcaller (chain lightning).
+  's', // §29d: shaman (raises Ghouls — the summon consumer).
+  'g', // §29d: ghoul (the summoned minion).
 ] as const;
-// ⚠️ Atlas budget: 39/48 cells used — §29 grew the FontAtlas grid to 8×6 = 48
-// (was 8×4 = 32, full at the J3 'X'). The remaining §29 demo-roster glyphs
-// (shaman/ghoul) append here, one per archetype commit, well within
-// budget. Keep appending (gotcha #33, append-only) until 48; the next overflow
-// needs another FontAtlas.ts resize.
+// ⚠️ Atlas budget: 41/48 cells used — §29 grew the FontAtlas grid to 8×6 = 48
+// (was 8×4 = 32, full at the J3 'X'). The §29 demo roster is now complete
+// (shaman/ghoul were the last two). Keep appending (gotcha #33, append-only)
+// until 48; the next overflow needs another FontAtlas.ts resize.

@@ -183,6 +183,14 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
     case 'ice_mage': // frozen ice-storm (ranged stats)
     case 'luminant': // blind light-ray (ranged stats)
       return stats.ranged;
+    // §29d — the Shaman has no basic strike (its only ability is the `raise_dead`
+    // summon, which deals no damage), so the 0 keeps the switch exhaustive + gives
+    // a sane display "ATK" (it carries no offensive stat). The Ghoul minion is a
+    // strength melee (`ghoul_claw`), so its "ATK" reads `strength` like the rest.
+    case 'shaman':
+      return 0;
+    case 'ghoul':
+      return stats.strength;
     case 'environment':
       return 0;
   }

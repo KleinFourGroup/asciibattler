@@ -5,6 +5,7 @@ import type { GridCoord } from '../core/types';
 import { GRID_SIZE, secondsToTicks } from '../config';
 import {
   Unit,
+  type Archetype,
   type Team,
   type UnitArchetype,
   type UnitDerived,
@@ -24,6 +25,7 @@ import {
   rangeForArchetype,
   glyphForArchetype,
   targetingForArchetype,
+  scaledUnit,
 } from './archetypes';
 import type { WorldCommand } from './Command';
 import { AT_WILL } from './objective';
@@ -215,8 +217,15 @@ import { STATS } from '../config/stats';
  *       contract — a pre-28 chain resolved all-at-once, so a v27 save never has a
  *       hop in flight. RunSnapshot is unaffected (the queue is World-side +
  *       transient).
+ *  29 — §29d (summon) added `summonedBy` to every unit (the id of the caster whose
+ *       `summon` op spawned it, or `null`). A v28 save's units carry no such field,
+ *       so a restored summoned minion couldn't be attributed to its summoner and
+ *       the per-caster `maxLive` cap would mis-count (re-summon past the ceiling).
+ *       Reject v28 outright per the no-migration contract — a pre-29 save has no
+ *       summons anyway (the op didn't exist). RunSnapshot is unaffected (summons
+ *       are World-side combatants, never on the roster).
  */
-const WORLD_SCHEMA_VERSION = 28;
+const WORLD_SCHEMA_VERSION = 29;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -256,6 +265,8 @@ export interface UnitSnapshot {
   xp: number;
   /** E4 — index into Run.team for player units; null otherwise. */
   rosterIndex: number | null;
+  /** §29d — the summoning caster's id (null = not a summon). v29. */
+  summonedBy: number | null;
   stats: UnitStats;
   derived: UnitDerived;
   position: GridCoord;
@@ -1448,6 +1459,69 @@ export class World {
   }
 
   /**
+   * §29d — spawn a SUMMONED minion (the `summon` op): one `archetype` unit at
+   * `level`, on `team`, at `position`, attributed to `summonerId` (so
+   * `liveSummonCount` can enforce the caster's `maxLive` cap). Mirrors
+   * `spawnFromQueue` — the deterministic `scaledUnit` stats (no RNG draw, so a
+   * summon never perturbs the combat / spawn streams), the shared
+   * `createMovementBehavior` + `AbilityBehavior` + archetype abilities, and the
+   * `SpawnAction` lockout + `unit:spawned{instant:false}` fade (the minion appears
+   * mid-battle and joins next tick, like a D5.C overflow spawn).
+   */
+  spawnSummon(
+    archetype: Archetype,
+    level: number,
+    team: Team,
+    position: GridCoord,
+    summonerId: number,
+  ): Unit {
+    const template = scaledUnit(archetype, level);
+    const attackRange = rangeForArchetype(archetype);
+    const derived = deriveStats(template.stats, attackRange);
+    const unit = this.addUnit(
+      {
+        team,
+        archetype,
+        glyph: glyphForArchetype(archetype),
+        stats: template.stats,
+        derived,
+        position,
+        level: template.level,
+        xp: 0,
+        rosterIndex: null,
+        summonedBy: summonerId,
+      },
+      false,
+    );
+    unit.behaviors.push(createMovementBehavior(archetype), new AbilityBehavior());
+    for (const id of abilityIdsForArchetype(archetype)) {
+      unit.abilities.push(createAbility(id));
+    }
+    unit.activeAction = {
+      action: new SpawnAction(),
+      startTick: this.tickCount,
+      finishTick: this.tickCount + SPAWN.durationTicks,
+      phases: [{ phase: 'impact', ticks: SPAWN.durationTicks }],
+    };
+    return unit;
+  }
+
+  /**
+   * §29d — how many of `summonerId`'s summoned minions are currently ALIVE. The
+   * `summon` op's `maxLive` gate reads this (at propose, to abstain at the ceiling;
+   * at fire, to clamp), so a summoner holds ≤ `maxLive` minions and re-summons only
+   * as they die. Dead minions leave `units` via `reapDead`, so the count drops
+   * automatically — no ledger to maintain.
+   */
+  liveSummonCount(summonerId: number): number {
+    let n = 0;
+    for (const u of this.units) {
+      if (u.summonedBy === summonerId && u.currentHp > 0) n++;
+    }
+    return n;
+  }
+
+  /**
    * Spawn an environment entity — a wall, future shrine, hazard, anything
    * that lives on the grid as a unit but isn't a combatant. Defaults to
    * the `'neutral'` team (Targeting skips, HUD ignores, checkBattleEnd
@@ -1501,6 +1575,7 @@ export class World {
       level?: number;
       xp?: number;
       rosterIndex?: number | null;
+      summonedBy?: number | null;
       effects?: readonly StatusEffect[];
     },
     instant: boolean,
@@ -1518,6 +1593,7 @@ export class World {
       level: init.level ?? 1,
       xp: init.xp ?? 0,
       rosterIndex: init.rosterIndex ?? null,
+      summonedBy: init.summonedBy ?? null,
       // K1 — seed transient spawn-time effects (fatigue / encounter buffs).
       ...(init.effects && init.effects.length > 0 ? { effects: init.effects } : {}),
     });
@@ -1661,6 +1737,10 @@ export class World {
         level: us.level,
         xp: us.xp,
         rosterIndex: us.rosterIndex,
+        // §29d — restore the summon attribution so the `maxLive` cap re-counts
+        // a resumed summoner's live minions (v28 saves rejected above, so a v29
+        // unit always carries the field).
+        summonedBy: us.summonedBy,
         // K1 — restore status effects; the constructor re-folds `effectiveStats`
         // + `refreshDerived` from them. `us.derived` (also restored) is
         // idempotent under that recompute.
@@ -1744,6 +1824,7 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
     level: unit.level,
     xp: unit.xp,
     rosterIndex: unit.rosterIndex,
+    summonedBy: unit.summonedBy,
     stats: unit.stats,
     derived: unit.derived,
     position: unit.position,

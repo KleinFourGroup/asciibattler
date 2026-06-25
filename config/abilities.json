@@ -508,5 +508,59 @@
         }
       }
     ]
+  },
+  "raise_dead": {
+    "id": "raise_dead",
+    "name": "Raise Dead",
+    "cooldownSeconds": 3,
+    "rangeCells": 6,
+    "ignoresLineOfSight": true,
+    "target": { "kind": "self" },
+    "timeline": [
+      { "phase": "windup", "seconds": 1.0 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "summon",
+          "summon": { "archetype": "ghoul", "level": 1, "count": 1, "maxLive": 3, "radiusCells": 2 },
+          "at": { "kind": "self" }
+        }
+      }
+    ]
+  },
+  "ghoul_claw": {
+    "id": "ghoul_claw",
+    "name": "Claw",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 2,
+          "accuracy": 0.6,
+          "critBase": 0,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
   }
 }

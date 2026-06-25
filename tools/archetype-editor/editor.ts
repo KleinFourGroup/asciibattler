@@ -77,6 +77,9 @@ const OUTPUT_LABEL: Record<ArchetypeKey, string> = {
   luminant: 'RNG', // 29b (blind)
   banshee: 'MAG', // 29b (panic)
   stormcaller: 'MAG', // 29c (chain)
+  // §29d — the summon consumers.
+  shaman: '—', // no strike (the raise_dead summon deals no damage)
+  ghoul: 'STR', // the summoned minion's basic claw
 };
 
 // ---- State ----

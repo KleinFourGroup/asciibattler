@@ -33,7 +33,7 @@ import { leapLanding } from '../movement';
 import { critChanceFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
 import type { GridCoord } from '../../core/types';
-import type { AbilityDef, DamageScaling, EffectOp } from './schema';
+import type { AbilityDef, DamageScaling, EffectOp, SummonOp } from './schema';
 import { EffectAction } from './EffectAction';
 import type { OpResolution } from './interpreter';
 import { resolveCadenceTicks, resolvePhases } from './timeline';
@@ -77,7 +77,7 @@ export function proposeEffectAbility(
     case 'lowestHpAlly':
       return proposeHeal(def, def.target.rangeCells, unit, world);
     case 'self':
-      return proposeSelfMove(def, unit, world);
+      return proposeSelfAbility(def, unit, world);
     case 'aoe':
       return proposeAreaBlast(def, unit, world);
   }
@@ -210,6 +210,56 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
 }
 
 /**
+ * A `self`-target ability splits two ways by its op: a `summon` op (the Shaman —
+ * caster-anchored minion placement) vs a caster-reposition `move` (the rogue dash).
+ * Both target `self` (they subject the caster / its surroundings, not an enemy), so
+ * they share the propose dispatch but diverge in their gate + capture.
+ */
+function proposeSelfAbility(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
+  const summon = def.effects.find((e) => e.op.kind === 'summon');
+  if (summon && summon.op.kind === 'summon') return proposeSummon(def, summon.op, unit, world);
+  return proposeSelfMove(def, unit, world);
+}
+
+/**
+ * The summoner's cast (the Shaman — a `self`-target ability whose op is `summon`).
+ * Gated ONLY on the per-caster `maxLive` cap: abstain at the ceiling so the unit
+ * does something else (move) and re-proposes the instant a minion dies. No enemy /
+ * range gate — a summoner raises its pack whenever it has room (the placement is
+ * caster-anchored, so it needn't be near a foe). For a non-`self` `at` anchor (a
+ * flank / area summon) the committed target's cell is captured so the interpreter
+ * can resolve the anchor at fire; `at:self` needs no capture (`targetId -1`).
+ */
+function proposeSummon(
+  def: AbilityDef,
+  op: SummonOp,
+  unit: Unit,
+  world: World,
+): ActionProposal | null {
+  if (world.liveSummonCount(unit.id) >= op.summon.maxLive) return null; // at the cap
+
+  let targetId = -1;
+  let targetCell: GridCoord | undefined;
+  if (op.at.kind !== 'self') {
+    // A flank / area summon anchors on the committed target; abstain with none.
+    const anchor = currentTarget(unit, world);
+    if (anchor === null) return null;
+    targetId = anchor.id;
+    targetCell = { ...anchor.position };
+  }
+
+  const speed = unit.effectiveStats.speed;
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit, damageMultiplier: 1 }));
+  return {
+    action: new EffectAction(def, { targetId, targetCell, ops }),
+    score: def.priority,
+    cooldown: resolveCadenceTicks(def, speed),
+    phases: resolvePhases(def, speed),
+    cooldownKey: def.id,
+  };
+}
+
+/**
  * The charged, ground-targeted area blast (the `aoe` selector — the mage bolt).
  * A line-for-line port of `MagicBolt.propose`: the same `currentTarget` pick, the
  * same `[minRange, range]` band gate, and the same LOS gate (a bolt can't be
@@ -307,5 +357,11 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
       // The inner ops can't themselves be chains (ChainInnerOp = damage |
       // applyStatus), so this recursion is one level deep.
       return { chainOps: op.ops.map((inner) => resolveOp(inner, c)) };
+    case 'summon':
+      // §29d — a summon carries no cast-time scalar: the spec (archetype / level /
+      // count / cap / radius) is static on the op and read LIVE by the interpreter
+      // at fire (the registry-of-truth pattern the `applyStatus` op set). The empty
+      // resolution keeps the per-op alignment with `def.effects`.
+      return {};
   }
 }

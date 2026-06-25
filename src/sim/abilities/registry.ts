@@ -51,6 +51,9 @@ const DEMO_ABILITY_IDS = [
   'light_ray', // blind
   'wail', // panic
   'chain_lightning', // 29c — chain (arcs to N nearest, falloff per hop)
+  // 29d — the summon consumers.
+  'raise_dead', // the Shaman's caster-anchored summon
+  'ghoul_claw', // the summoned Ghoul's basic melee
 ] as const;
 
 const FACTORIES: Record<string, AbilityFactory> = {

@@ -56,7 +56,10 @@ export type Archetype =
   | 'luminant' // blind light-ray (single-target ranged)
   | 'banshee' // panic wail (3×3 AoE, pure applier)
   // 29c — the chain consumer.
-  | 'stormcaller'; // chain lightning (arcs to N nearest, falloff per hop)
+  | 'stormcaller' // chain lightning (arcs to N nearest, falloff per hop)
+  // 29d — the summon consumers: a summoner + its minion.
+  | 'shaman' // raises Ghouls (caster-anchored summon, catapult-ish stats)
+  | 'ghoul'; // the summoned minion (≈ half a bandit)
 export type UnitArchetype = Archetype | 'environment';
 
 /**
@@ -239,6 +242,10 @@ export interface UnitInit {
    *  `xpAwards` so Run can bank XP into the right roster slot without
    *  reverse-mapping unit ids. */
   readonly rosterIndex?: number | null;
+  /** §29d: defaults to `null`. Set for a SUMMONED unit — the id of the caster
+   *  whose `summon` op spawned it, so the caster's `maxLive` cap counts its own
+   *  live minions (re-summoning as they die). Serialized (WorldSnapshot v29). */
+  readonly summonedBy?: number | null;
 }
 
 export class Unit {
@@ -281,6 +288,14 @@ export class Unit {
    * maintaining its own unitId-to-rosterIndex map.
    */
   readonly rosterIndex: number | null;
+  /**
+   * §29d — the id of the caster whose `summon` op spawned this unit, or `null`
+   * (the common case: every non-summoned unit). Read by `World.liveSummonCount`
+   * to enforce the summoner's per-caster `maxLive` cap. Snapshotted (v29); a dead
+   * summoner's orphaned minions just live out their lifetimes (the count query
+   * filters by living units, and a dead caster never proposes another summon).
+   */
+  readonly summonedBy: number | null;
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
@@ -364,6 +379,7 @@ export class Unit {
     this.level = init.level ?? 1;
     this.xp = init.xp ?? 0;
     this.rosterIndex = init.rosterIndex ?? null;
+    this.summonedBy = init.summonedBy ?? null;
     // K1 — seed spawn-time effects (fatigue / encounter buffs / rehydrate).
     // `currentHp` was just set to the base maxHp above; no K1 effect modifies
     // `constitution`, so the recompute below leaves maxHp unchanged and that

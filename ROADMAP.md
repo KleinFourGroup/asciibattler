@@ -644,13 +644,31 @@ isn't omniscient)? The behavior-override **durations** are content dials → §3
 > the §27 periodic engine), firing one hop every `hopDelaySeconds` (new `ChainOp`
 > field, default 0.1s → 2 ticks; `0` = the original all-at-once). Each hop re-resolves
 > its target LIVE, so its arc + damage number + HP drop coincide on that tick. New
-> `unit:chained` per-hop event → the renderer's `onUnitChained` flies a `chain_arc`
+ `unit:chained` per-hop event → the renderer's `onUnitChained` flies a `chain_arc`
 > tracer per arc (the def `fx.impact` retired). v28 round-trips a chain mid-arc.
-> **NEXT = 29d** (summon op + Shaman + Ghoul). **Another snapshot bump at 29d** (v28→v29)
-> (summon `maxLive` per-unit attribution → WorldSnapshot v28). ⚠️ `ALL_ARCHETYPES`
-> auto-makes every archetype player-draftable; the user chose to KEEP all §29
-> archetypes draftable through §29's end (for testing), so the enemy-disruptor
-> recruit-pool exclusion is a §29-close cleanup.
+> **✅ 29d SHIPPED (pending playtest) — the `summon` op + Shaman + Ghoul; `WorldSnapshot
+> v28→v29`:** the last reserved §29 verb. `SummonOp{summon:SummonSpec, at:TargetSelector}`
+> placed in the `EffectOp` union AFTER the selectors (its `at` anchor IS a selector).
+> `executeSummon` resolves the `at` anchor (default `self`), takes the `count` nearest
+> free cells via a new `nearestFreeCells` BFS (the `actingPosition` sibling — same graph,
+> but candidates must be UNOCCUPIED, expands THROUGH occupied-but-passable cells; fizzle
+> if none in `radiusCells`), and spawns each minion via `World.spawnSummon` (the
+> `spawnFromQueue` twin: deterministic `scaledUnit` stats, the shared behaviors/abilities,
+> a `SpawnAction` lockout + `unit:spawned{instant:false}` fade — the safe mid-`tick` add,
+> since the per-unit loop iterates a `units.slice()`). **The cap = a serialized
+> `Unit.summonedBy` (the v29 bump):** `World.liveSummonCount` counts a caster's living
+> minions; `proposeSummon` abstains at `maxLive` (re-summoning as they die), the
+> interpreter clamps defensively. Reaping drops the count automatically — no ledger.
+> A new `assertSummonRefsResolve` (config/archetypes.ts, the `assertStatusRefsResolve`
+> sibling) boot-rejects a typo'd `summon.archetype`. Content: **Shaman** (glyph `s`,
+> catapult-ish stats, `raise_dead` self-anchored summon, holds at range 6 / no attack)
+> raises up to 3 **Ghoul** minions (glyph `g`, `ghoul_claw`, ≈ half a bandit). No FX/SFX
+> (the minion fade is the cue; the summon-pop SFX is §31). Browser-verified: a live
+> Shaman summons Ghouls capped at 3, both glyphs render. ⚠️ `ALL_ARCHETYPES` auto-makes
+> every archetype player-draftable; the user chose to KEEP all §29 archetypes draftable
+> through §29's end (for testing), so the enemy-disruptor recruit-pool exclusion (now
+> also the summon-only Ghoul) is the **§29-close cleanup**. **§29 is now CONTENT-COMPLETE**
+> — NEXT = the §29-close pool cleanup, then §30 (the attack + archetype editors).
 >
 > **29c heads-up (chain):** the recursive `chain{maxJumps, rangeCells, falloff,
 > ops}` arm needs cast-time scalar capture for its NESTED `ops`. Today's

@@ -58,6 +58,7 @@ import { z } from 'zod';
 import archetypesJson from '../../config/archetypes.json';
 import { knownAbilityIds } from '../sim/abilities/registry';
 import { knownTargetingIds } from '../sim/targetingStrategies';
+import { ABILITY_DEFS } from './abilities';
 
 /** Defensive cap to catch a designer typo (e.g. 500 instead of 5). */
 const STAT_CAP = 99;
@@ -147,6 +148,9 @@ export const ArchetypesSchema = z.object({
   luminant: ArchetypeSchema, // 29b (blind)
   banshee: ArchetypeSchema, // 29b (panic)
   stormcaller: ArchetypeSchema, // 29c (chain)
+  // 29d — the summon consumers: a summoner + its minion.
+  shaman: ArchetypeSchema, // raises Ghouls (caster-anchored summon)
+  ghoul: ArchetypeSchema, // the summoned minion (≈ half a bandit)
 });
 
 export type ArchetypeConfig = z.infer<typeof ArchetypeSchema>;
@@ -154,3 +158,28 @@ export type ArchetypesConfig = z.infer<typeof ArchetypesSchema>;
 export type GrowthRates = z.infer<typeof GrowthRatesSchema>;
 
 export const ARCHETYPES: ArchetypesConfig = ArchetypesSchema.parse(archetypesJson);
+
+/**
+ * §29d boot check (the `assertStatusRefsResolve` sibling): every `summon` op
+ * referenced in the ability catalog must name an archetype that EXISTS in this
+ * catalog — a typo'd / dangling `summon.archetype` fails at startup, not silently
+ * at cast. Lives HERE (the archetype catalog owns the valid-id set) rather than in
+ * the ability registry's boot IIFE, which runs before this module's `ARCHETYPES`
+ * is built (and importing `ARCHETYPES` there would cycle through `knownAbilityIds`).
+ * Walks `ABILITY_DEFS` directly — config/abilities is already loaded (the
+ * `knownAbilityIds` import above pulled it in) and never imports back here, so the
+ * dependency stays one-way. `summon` is a top-level op only (never a chain-inner /
+ * periodic op), so no recursion is needed.
+ */
+(function assertSummonRefsResolve(): void {
+  const archetypeIds = new Set(Object.keys(ARCHETYPES));
+  for (const def of Object.values(ABILITY_DEFS)) {
+    for (const entry of def.effects) {
+      if (entry.op.kind !== 'summon') continue;
+      const archetype = entry.op.summon.archetype;
+      if (!archetypeIds.has(archetype)) {
+        throw new Error(`ability '${def.id}': summon references unknown archetype '${archetype}'`);
+      }
+    }
+  }
+})();

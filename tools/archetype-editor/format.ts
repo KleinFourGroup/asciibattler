@@ -13,7 +13,7 @@
  * future stat addition flows through the formatter with no edit here.
  */
 
-import type { ArchetypesConfig } from '../../src/config/archetypes';
+import type { ArchetypeConfig } from '../../src/config/archetypes';
 import { STAT_LABELS } from '../../src/ui/statLabels';
 
 const STAT_ORDER = Object.keys(STAT_LABELS) as (keyof typeof STAT_LABELS)[];
@@ -30,9 +30,14 @@ function statLines(block: Readonly<Record<string, number>>): string[] {
  * Format a full archetypes config (the whole file, all archetypes) to a JSON
  * string matching `config/archetypes.json`'s layout. No trailing newline — the
  * save endpoint appends one (matching every other editor's emit convention).
+ *
+ * Typed as `Record<string, ArchetypeConfig>` (not the fixed-key `ArchetypesConfig`)
+ * so §30d's editor can emit a working set that includes a NOT-YET-WIRED new
+ * archetype key — the formatter only iterates keys + reads each entry's fields,
+ * so it's agnostic to which keys exist.
  */
-export function formatArchetypesJson(config: ArchetypesConfig): string {
-  const keys = Object.keys(config) as (keyof ArchetypesConfig)[];
+export function formatArchetypesJson(config: Record<string, ArchetypeConfig>): string {
+  const keys = Object.keys(config);
   const parts: string[] = ['{'];
   keys.forEach((name, i) => {
     const a = config[name];

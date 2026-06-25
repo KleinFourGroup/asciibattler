@@ -136,6 +136,18 @@ code {
   box-shadow: 0 0 0 1px var(--accent) inset;
 }
 
+/* §30d — the create / delete toolbar under the tabs. */
+.tab-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tab-actions button {
+  padding: 4px 11px;
+  font-size: 12px;
+}
+
 /* ---- Fields ---- */
 .field-row {
   display: flex;
@@ -289,6 +301,42 @@ input:focus {
   color: var(--err);
 }
 
+/* §30d — the wire-up panel: the code edits a created / deleted archetype needs. */
+.wireup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wire-block {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+  padding: 8px 10px;
+}
+
+.wire-block h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.wire-block ol {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wire-block li,
+.wire-block p {
+  font-size: 12px;
+  color: var(--text);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 /* ---- Buttons ---- */
 .row {
   display: flex;
@@ -309,6 +357,11 @@ button {
 
 button:hover {
   border-color: var(--accent-dim);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 button.primary {

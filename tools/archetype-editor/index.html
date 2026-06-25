@@ -18,6 +18,10 @@
       <section class="workspace">
         <div class="edit-pane">
           <div id="tabs" class="tabs" role="tablist" aria-label="Archetype"></div>
+          <div class="tab-actions">
+            <button id="new-btn" type="button">+ New archetype</button>
+            <button id="delete-btn" type="button" class="danger-outline">Delete</button>
+          </div>
           <section class="card">
             <h2>Identity</h2>
             <div class="field-row">
@@ -25,9 +29,11 @@
                 Glyph
                 <input id="glyph" type="text" maxlength="1" autocomplete="off" spellcheck="false" />
               </label>
+              <label class="inline"><input id="draftable" type="checkbox" /> Draftable</label>
               <span class="hint"
                 >Single character. A genuinely new 3D glyph also needs a
-                <code>glyphs.ts</code> atlas entry to render in-game.</span
+                <code>glyphs.ts</code> atlas entry to render in-game. Draftable =
+                appears in the player's post-victory recruit offer.</span
               >
             </div>
             <div class="field-row">
@@ -67,6 +73,10 @@
           <section class="card">
             <h2>Validation</h2>
             <ul id="validation" class="validation"></ul>
+          </section>
+          <section class="card">
+            <h2>Wire-up <span class="sub">(code edits for create / delete)</span></h2>
+            <div id="wireup" class="wireup"></div>
           </section>
           <section class="card">
             <h2>Save</h2>

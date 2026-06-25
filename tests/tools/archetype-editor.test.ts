@@ -17,7 +17,12 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { ARCHETYPES, ArchetypesSchema } from '../../src/config/archetypes';
+import {
+  ARCHETYPES,
+  ArchetypeSchema,
+  ArchetypesSchema,
+  type ArchetypeConfig,
+} from '../../src/config/archetypes';
 import { formatArchetypesJson } from '../../tools/archetype-editor/format';
 
 /** Normalize line endings + trailing blank space so the assertion isn't
@@ -38,5 +43,21 @@ describe('formatArchetypesJson', () => {
   it('round-trips through the game schema to a deep-equal config', () => {
     const reparsed = ArchetypesSchema.parse(JSON.parse(formatArchetypesJson(ARCHETYPES)));
     expect(reparsed).toEqual(ARCHETYPES);
+  });
+
+  // §30d — the editor can author a created (not-yet-wired) archetype. The
+  // formatter must emit the new key and EVERY entry must re-parse through the
+  // per-entry `ArchetypeSchema` (the validation the editor runs), including the
+  // new entry's `draftable: false`.
+  it('emits and per-entry round-trips a created archetype', () => {
+    const created: Record<string, ArchetypeConfig> = structuredClone(ARCHETYPES);
+    created.necromancer = { ...structuredClone(ARCHETYPES.mage), glyph: 'N', draftable: false };
+    const parsed = JSON.parse(formatArchetypesJson(created)) as Record<string, unknown>;
+
+    expect(Object.keys(parsed)).toContain('necromancer');
+    for (const [key, entry] of Object.entries(parsed)) {
+      expect(ArchetypeSchema.safeParse(entry).success, key).toBe(true);
+    }
+    expect(ArchetypeSchema.parse(parsed.necromancer).draftable).toBe(false);
   });
 });

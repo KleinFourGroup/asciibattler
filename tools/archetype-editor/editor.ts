@@ -1,37 +1,45 @@
 /**
- * Archetype editor (I4). Standalone Vite page — visit
+ * Archetype editor (I4 · §30d). Standalone Vite page — visit
  * http://localhost:5173/tools/archetype-editor/ after `npm run dev`. Not in
  * the production build (no rollupOptions.input entry).
  *
- * Edits the six archetype entries of `config/archetypes.json` — glyph,
- * abilities, targeting policy, the 11-stat `baseStats` block, and the parallel
- * `growthRates` — with three things the copy-paste loop didn't give us:
+ * Edits the archetype entries of `config/archetypes.json` — glyph, abilities,
+ * targeting policy, the `draftable` flag, the 11-stat `baseStats` block, and the
+ * parallel `growthRates` — with the things the copy-paste loop didn't give us:
  *
- *  1. **Live schema validation.** Every edit re-runs the SAME `ArchetypesSchema`
- *     the game boots on (imported from `src/config/archetypes.ts`), so "is this
- *     valid?" can't drift from the game's load-time parse. Save is disabled
- *     while invalid.
+ *  1. **Live schema validation.** Every edit re-runs the SAME per-entry
+ *     `ArchetypeSchema` the game boots on (imported from `src/config/archetypes.ts`),
+ *     so "is this valid?" can't drift from the game's load-time parse. Save is
+ *     disabled while invalid. (§30d validates PER ENTRY rather than the whole-config
+ *     `z.object` — the object would silently strip a new, not-yet-wired key.)
  *  2. **Live derived-stat preview.** maxHp / crit / move + attack cadence /
  *     to-hit / dodge are computed by the REAL game functions (`deriveStats`,
- *     `hitChanceFor`, `attackCooldownTicksFor`, `scaleStats`) — never
- *     reimplemented here — so the numbers match combat exactly. A level dial
- *     previews where growth rates land a unit deeper into a run; the to-hit /
- *     dodge rows take a reference opponent precision/evasion so the I5 dodge
- *     identities are tunable by feel.
- *  3. **Save to disk.** Posts the formatted whole-file JSON to the dev-only
- *     `/__save-config` endpoint (see vite.config.ts), closing the copy-paste
- *     loop. Copy / Download stay as offline fallbacks.
+ *     `hitChanceFor`, `attackCooldownTicksFor`, `scaleStats`, `scalingStatValue`) —
+ *     never reimplemented here. Per-ability output reads the op's `scaling` (the
+ *     post-Y source of truth), so the numbers are correct for ANY archetype,
+ *     including a freshly-created one.
+ *  3. **Save to disk** via the dev-only `/__save-config` endpoint. Copy / Download
+ *     stay as offline fallbacks.
  *
- * Schema-driven where it counts: the stat fields enumerate from `STAT_LABELS`
- * (the same source the recruit/promotion cards use) and the ability/targeting
- * choices from the live registries, so a future stat or ability surfaces here
- * with no edit. Adding a brand-new *archetype* still needs code (the closed
- * `Archetype` union + a glyph + ability factories) — once those land, the new
- * key shows up here automatically for tuning.
+ *  §30d — CREATE / DELETE + the guided WIRE-UP. The editor authors a new
+ *  archetype's DATA, but archetypes are a CLOSED typed vocabulary: making one
+ *  actually spawn + render needs three code edits the tool can't perform (the
+ *  `Archetype` union in `Unit.ts`, the `ArchetypesSchema` key in
+ *  `config/archetypes.ts`, a `glyphs.ts` glyph). So "+ New" / "Delete" scaffold
+ *  the data and the **Wire-up** panel emits the exact code edits to paste — honest
+ *  about the data/code split, keeping the union closed (goal #1).
+ *
+ * Schema-driven where it counts: the stat fields enumerate from `STAT_LABELS` and
+ * the ability/targeting choices from the live registries, so a future stat or
+ * ability surfaces here with no edit.
  */
 
 import './editor.css';
-import { ARCHETYPES, ArchetypesSchema, type ArchetypesConfig } from '../../src/config/archetypes';
+import {
+  ARCHETYPES,
+  ArchetypeSchema,
+  type ArchetypeConfig,
+} from '../../src/config/archetypes';
 import type { UnitStats } from '../../src/sim/Unit';
 import { STAT_LABELS } from '../../src/ui/statLabels';
 import { knownAbilityIds } from '../../src/sim/abilities/registry';
@@ -42,52 +50,45 @@ import { ticksToSeconds } from '../../src/config';
 import {
   attackCooldownTicksFor,
   critChanceFor,
-  damageStatFor,
   deriveStats,
   hitChanceFor,
 } from '../../src/sim/stats';
+import { scalingStatValue } from '../../src/sim/effects/resolveScalars';
 import { scaleStats } from '../../src/sim/leveling';
+import { GLYPHS } from '../../src/render/glyphs';
 import { formatArchetypesJson } from './format';
 
-type ArchetypeKey = keyof ArchetypesConfig;
+// §30d — keys are open (a new archetype can be created), so the working set is a
+// plain record keyed by string, validated per-entry against `ArchetypeSchema`.
+type ArchetypeKey = string;
 type StatKind = 'base' | 'growth';
+
+/** The atlas cell budget (`FontAtlas` grid; glyphs.ts caps the count). */
+const ATLAS_BUDGET = 48;
+/** A new archetype's key must be a clean snake_case identifier (matches every
+ *  existing key + a valid `Archetype` union member). */
+const KEY_PATTERN = /^[a-z][a-z0-9_]*$/;
 
 const STAT_ORDER = Object.keys(STAT_LABELS) as (keyof UnitStats)[];
 const ABILITY_IDS = knownAbilityIds();
 const TARGETING_IDS = knownTargetingIds();
 
-/** Display hint for which stat drives a unit's strike/heal output. The
- *  authoritative mapping is `damageStatFor` (sim); this only labels it. */
-const OUTPUT_LABEL: Record<ArchetypeKey, string> = {
-  // I5 — the melee family all strike on STR.
-  mercenary: 'STR',
-  adventurer: 'STR',
-  ronin: 'STR',
-  bandit: 'STR',
+/** Short label for a damage/heal op's scaling stat (the per-ability output hint —
+ *  derived from the op, not a per-archetype map, so a new archetype Just Works). */
+const SCALING_LABEL: Record<string, string> = {
+  strength: 'STR',
   ranged: 'RNG',
-  rogue: 'STR',
-  healer: 'MAG (heal)',
-  mage: 'MAG',
-  catapult: 'RNG',
-  // §29 demo roster.
-  reaver: 'STR', // 29a (bleed)
-  corrupter: 'MAG', // 29b (poison)
-  ice_mage: 'RNG', // 29b (frozen)
-  warlock: 'MAG', // 29b (confusion)
-  luminant: 'RNG', // 29b (blind)
-  banshee: 'MAG', // 29b (panic)
-  stormcaller: 'MAG', // 29c (chain)
-  // §29d — the summon consumers.
-  shaman: '—', // no strike (the raise_dead summon deals no damage)
-  ghoul: 'STR', // the summoned minion's basic claw
+  magic: 'MAG',
+  none: 'flat',
 };
 
 // ---- State ----
 // `working` is a deep, mutable clone of the committed config; the form mutates
 // it, the schema validates it, the formatter emits it. ARCHETYPES stays the
-// pristine baseline that "Revert all" restores from.
-let working: ArchetypesConfig = structuredClone(ARCHETYPES);
-let activeKey: ArchetypeKey = (Object.keys(working) as ArchetypeKey[])[0]!;
+// pristine baseline that "Revert all" restores from. §30d: keys are open (create /
+// delete), so it's a string-keyed record.
+let working: Record<string, ArchetypeConfig> = structuredClone(ARCHETYPES);
+let activeKey: ArchetypeKey = Object.keys(working)[0]!;
 let previewLevel = 1;
 let refPrecision = 5;
 let refEvasion = 5;
@@ -101,12 +102,16 @@ const REF_ACCURACY = 0.6;
 
 // ---- DOM ----
 const tabsEl = mustQuery<HTMLDivElement>('#tabs');
+const newBtn = mustQuery<HTMLButtonElement>('#new-btn');
+const deleteBtn = mustQuery<HTMLButtonElement>('#delete-btn');
 const glyphEl = mustQuery<HTMLInputElement>('#glyph');
+const draftableEl = mustQuery<HTMLInputElement>('#draftable');
 const abilitiesEl = mustQuery<HTMLDivElement>('#abilities');
 const targetingEl = mustQuery<HTMLDivElement>('#targeting');
 const baseStatsEl = mustQuery<HTMLDivElement>('#base-stats');
 const growthRatesEl = mustQuery<HTMLDivElement>('#growth-rates');
 const previewEl = mustQuery<HTMLDListElement>('#preview');
+const wireupEl = mustQuery<HTMLDivElement>('#wireup');
 const validationEl = mustQuery<HTMLUListElement>('#validation');
 const exportEl = mustQuery<HTMLTextAreaElement>('#export');
 const previewLevelEl = mustQuery<HTMLInputElement>('#preview-level');
@@ -128,7 +133,7 @@ buildTabs();
 buildStatInputs();
 buildAbilityChecks();
 buildTargetingRadios();
-attachGlyph();
+attachIdentity();
 attachPreviewControls();
 attachButtons();
 selectArchetype(activeKey);
@@ -224,10 +229,14 @@ function buildTargetingRadios(): void {
   }
 }
 
-function attachGlyph(): void {
+function attachIdentity(): void {
   glyphEl.addEventListener('input', () => {
     working[activeKey].glyph = glyphEl.value;
     refreshTabs();
+    refreshDerived();
+  });
+  draftableEl.addEventListener('change', () => {
+    working[activeKey].draftable = draftableEl.checked;
     refreshDerived();
   });
 }
@@ -251,6 +260,8 @@ function attachPreviewControls(): void {
 }
 
 function attachButtons(): void {
+  newBtn.addEventListener('click', createArchetype);
+  deleteBtn.addEventListener('click', deleteArchetype);
   saveBtn.addEventListener('click', () => void save());
   revertBtn.addEventListener('click', revert);
   copyBtn.addEventListener('click', () => {
@@ -297,6 +308,7 @@ function selectArchetype(key: ArchetypeKey): void {
 function syncForm(): void {
   const a = working[activeKey];
   glyphEl.value = a.glyph;
+  draftableEl.checked = a.draftable;
   for (const key of STAT_ORDER) {
     baseInputs.get(key)!.value = String(a.baseStats[key]);
     growthInputs.get(key)!.value = String(a.growthRates[key]);
@@ -311,27 +323,38 @@ function refreshTabs(): void {
     btn.textContent = `${working[key].glyph}  ${key}`;
     btn.classList.toggle('active', key === activeKey);
   }
+  deleteBtn.disabled = Object.keys(working).length <= 1; // never delete the last
 }
 
 function refreshDerived(): void {
   refreshValidation();
   refreshExport();
   refreshPreview();
+  refreshWireup();
 }
 
 function refreshValidation(): void {
-  const result = ArchetypesSchema.safeParse(working);
+  // §30d — validate PER ENTRY against `ArchetypeSchema`. The whole-config
+  // `ArchetypesSchema` is a fixed-key `z.object` that would silently STRIP a new
+  // archetype key (zod default), reporting "valid" while dropping the very entry
+  // being authored — so we parse each entry and path the issues by key, plus
+  // guard the key naming the formatter / Save will write verbatim.
   validationEl.innerHTML = '';
-  if (result.success) {
-    lastValid = true;
-    addValidation('ok', 'Valid — matches the game schema. Safe to save.');
-  } else {
-    lastValid = false;
-    for (const issue of result.error.issues) {
-      const path = issue.path.join('.') || '(root)';
-      addValidation('error', `${path}: ${issue.message}`);
+  const issues: string[] = [];
+  for (const [key, a] of Object.entries(working)) {
+    if (!KEY_PATTERN.test(key)) {
+      issues.push(`${key}: key must be snake_case (a–z, 0–9, _, starting with a letter)`);
+    }
+    const result = ArchetypeSchema.safeParse(a);
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        issues.push(`${key}.${issue.path.join('.') || '(root)'}: ${issue.message}`);
+      }
     }
   }
+  lastValid = issues.length === 0;
+  if (lastValid) addValidation('ok', 'Valid — matches the game schema. Safe to save.');
+  else for (const i of issues) addValidation('error', i);
   saveBtn.disabled = !lastValid;
 }
 
@@ -359,44 +382,53 @@ function refreshPreview(): void {
     `${pct(1 - hitChanceFor(REF_ACCURACY, refPrecision, stats.evasion))} (this unit evades a base-${pct(REF_ACCURACY)} attacker)`,
   );
   addPreview('Move cadence', cadence(derived.moveCooldownTicks));
-  // I6 — combat profile is PER-WEAPON now (might / accuracy / critBase + the
-  // evadable/critable gates), so damage, to-hit, and crit are shown per ability
-  // rather than as single unit-wide numbers. Computed by the REAL game helpers.
-  for (const id of a.abilities) {
-    const def = abilityDef(id);
-    if (def.target.kind === 'self') {
-      // N1 — a pure-reposition leap (the dash): no damage/to-hit/crit, just leap
-      // distance + the flat (speed-independent) motion + cooldown. The motion
-      // window is the timeline's authored seconds (the dash's single impact phase).
-      const motionSeconds = def.timeline.reduce(
-        (s, p) => s + (p.seconds === 'fill' ? 0 : p.seconds),
-        0,
-      );
-      addPreview(
-        `Ability · ${id}`,
-        `dash ${def.rangeCells} · ${motionSeconds}s motion · cd ${def.cooldownSeconds}s`,
-      );
-      continue;
-    }
-    const ticks = attackCooldownTicksFor(def.cooldownSeconds, stats.speed);
-    const scaling = activeKey === 'healer' ? stats.magic : damageStatFor(activeKey, stats);
-    // The flat base output is on the verb's damage OR heal op (both carry `might`).
-    const damageOp = damageOpOf(id);
-    const might = (damageOp ?? healOpOf(id))?.might ?? 0;
-    const out = might + scaling;
-    const effect = activeKey === 'healer' ? 'heal' : 'dmg';
-    const toHit = damageOp?.evadable
-      ? `${pct(hitChanceFor(damageOp.accuracy, stats.precision, refEvasion))} vs EVA ${refEvasion}`
-      : 'unmissable';
-    const crit = damageOp?.critable
-      ? `${pct(critChanceFor(damageOp.critBase, stats.luck))} (×${STATS.critMult})`
-      : 'no crit';
-    addPreview(
-      `Ability · ${id}`,
-      `${out} ${effect} (${might} might + ${scaling} ${OUTPUT_LABEL[activeKey]}) · rng ${def.rangeCells} · ${cadence(ticks)}` +
-        ` · to-hit ${toHit} · crit ${crit}`,
-    );
+  // I6 — combat profile is PER-ABILITY (might / accuracy / critBase + the
+  // evadable/critable gates), computed by the REAL game helpers. §30d reads the
+  // output stat off the op's `scaling` (the post-Y source of truth) instead of a
+  // per-archetype switch, so the numbers are correct for any archetype, new ones
+  // included.
+  for (const id of a.abilities) addPreview(`Ability · ${id}`, abilityOutputLine(id, stats));
+}
+
+/** The per-ability preview line: the resolved output (damage/heal via the op's
+ *  own scaling), to-hit / crit, and any status rider — robust for any archetype. */
+function abilityOutputLine(id: string, stats: UnitStats): string {
+  const def = abilityDef(id);
+  const kinds = def.effects.map((e) => e.op.kind);
+
+  // A self-target reposition (the dash): no damage/to-hit; flat motion + cooldown
+  // (the motion window is the timeline's authored seconds).
+  if (def.target.kind === 'self' && kinds.includes('move')) {
+    const motionSeconds = def.timeline.reduce((s, p) => s + (p.seconds === 'fill' ? 0 : p.seconds), 0);
+    return `leap ${def.rangeCells} · ${motionSeconds}s motion · cd ${def.cooldownSeconds}s`;
   }
+
+  const ticks = attackCooldownTicksFor(def.cooldownSeconds, stats.speed);
+  const damageOp = damageOpOf(id);
+  const op = damageOp ?? healOpOf(id);
+
+  let head: string;
+  if (op) {
+    const scaleVal = scalingStatValue(op.scaling, stats);
+    const effect = damageOp ? 'dmg' : 'heal';
+    head = `${op.might + scaleVal} ${effect} (${op.might} + ${scaleVal} ${SCALING_LABEL[op.scaling] ?? op.scaling})`;
+  } else {
+    // No top-level damage/heal (chain / summon / pure applyStatus): name the verb.
+    head = kinds.includes('chain') ? 'chain' : kinds.includes('summon') ? 'summon' : kinds.join('+');
+  }
+
+  const statusIds = def.effects.flatMap((e) => (e.op.kind === 'applyStatus' ? [e.op.statusId] : []));
+  const parts = [`${head} · rng ${def.rangeCells} · ${cadence(ticks)}`];
+  if (damageOp) {
+    parts.push(
+      damageOp.evadable
+        ? `to-hit ${pct(hitChanceFor(damageOp.accuracy, stats.precision, refEvasion))} vs EVA ${refEvasion}`
+        : 'unmissable',
+    );
+    if (damageOp.critable) parts.push(`crit ${pct(critChanceFor(damageOp.critBase, stats.luck))} (×${STATS.critMult})`);
+  }
+  if (statusIds.length) parts.push(`applies ${statusIds.join('/')}`);
+  return parts.join(' · ');
 }
 
 // ---- Save / revert ----
@@ -428,9 +460,98 @@ async function save(): Promise<void> {
 
 function revert(): void {
   working = structuredClone(ARCHETYPES);
-  selectArchetype(activeKey); // same keys, so activeKey stays valid
+  // The key set may have changed (a created / deleted archetype) — rebuild the
+  // tabs and re-anchor `activeKey` if it no longer exists.
+  if (!(activeKey in working)) activeKey = Object.keys(working)[0]!;
+  buildTabs();
+  selectArchetype(activeKey);
   saveStatusEl.textContent = 'Reverted to the committed config (not yet saved).';
   saveStatusEl.className = 'hint';
+}
+
+// ---- Create / delete (§30d) ----
+function createArchetype(): void {
+  const key = window.prompt('New archetype id (snake_case, e.g. "necromancer"):')?.trim();
+  if (!key) return;
+  if (key in working) {
+    window.alert(`"${key}" already exists.`);
+    return;
+  }
+  if (!KEY_PATTERN.test(key)) {
+    window.alert('Id must be snake_case: a–z, 0–9, _, starting with a letter.');
+    return;
+  }
+  // Seed from the active archetype — a convenient starting point to tweak (its
+  // glyph duplicates until the user changes it; the Wire-up panel flags it).
+  working[key] = structuredClone(working[activeKey]);
+  buildTabs();
+  selectArchetype(key);
+  saveStatusEl.textContent =
+    `Created "${key}" (cloned from "${activeKey}"). Edit its glyph + stats, then see Wire-up for the code edits.`;
+  saveStatusEl.className = 'hint';
+}
+
+function deleteArchetype(): void {
+  if (Object.keys(working).length <= 1) return; // never delete the last
+  if (!window.confirm(`Delete archetype "${activeKey}" from the editor? (Nothing is written until you Save.)`)) {
+    return;
+  }
+  const deleted = activeKey;
+  delete working[activeKey];
+  activeKey = Object.keys(working)[0]!;
+  buildTabs();
+  selectArchetype(activeKey);
+  saveStatusEl.textContent = `Deleted "${deleted}" in the editor. Save writes the file; see Wire-up for the code removal.`;
+  saveStatusEl.className = 'hint';
+}
+
+// ---- Wire-up panel (§30d): the code edits a created / deleted archetype needs ----
+function refreshWireup(): void {
+  const committed = new Set(Object.keys(ARCHETYPES));
+  const current = Object.keys(working);
+  const added = current.filter((k) => !committed.has(k));
+  const removed = [...committed].filter((k) => !current.includes(k));
+  wireupEl.innerHTML = '';
+
+  if (added.length === 0 && removed.length === 0) {
+    wireupEl.appendChild(
+      elp('hint', 'No structural changes — every archetype is already wired in code. Edits Save straight to config.'),
+    );
+    return;
+  }
+
+  wireupEl.appendChild(
+    elp('hint', 'A created / deleted archetype needs these code edits too — the JSON Save and the edits land together to make it spawn + render:'),
+  );
+
+  for (const key of added) {
+    const a = working[key];
+    const block = elTag('div', 'wire-block', '');
+    block.appendChild(elTag('h3', '', `+ ${key}  (glyph "${a.glyph}")`));
+    const ol = document.createElement('ol');
+    ol.appendChild(elTag('li', '', `src/sim/Unit.ts — add  | '${key}'  to the Archetype union`));
+    ol.appendChild(elTag('li', '', `src/config/archetypes.ts — add  ${key}: ArchetypeSchema,  to ArchetypesSchema`));
+    ol.appendChild(elTag('li', '', `src/render/glyphs.ts — append  '${a.glyph}',  to GLYPHS (append-only, gotcha #33)`));
+    block.appendChild(ol);
+    wireupEl.appendChild(block);
+  }
+  for (const key of removed) {
+    const block = elTag('div', 'wire-block', '');
+    block.appendChild(elTag('h3', '', `− ${key}`));
+    block.appendChild(
+      elp('', `Remove '${key}' from the Archetype union (Unit.ts), ArchetypesSchema (archetypes.ts), and its glyph in glyphs.ts.`),
+    );
+    wireupEl.appendChild(block);
+  }
+
+  // Atlas-budget projection: each distinct new glyph not already registered.
+  const registered = GLYPHS as readonly string[];
+  const newGlyphs = new Set(added.map((k) => working[k].glyph).filter((g) => !registered.includes(g)));
+  const projected = GLYPHS.length + newGlyphs.size;
+  const over = projected > ATLAS_BUDGET;
+  wireupEl.appendChild(
+    elp(over ? 'hint err' : 'hint', `Font atlas: ${projected}/${ATLAS_BUDGET} cells${over ? ' — over budget; FontAtlas.ts needs a grid resize' : ''}.`),
+  );
 }
 
 // ---- Small helpers ----
@@ -448,6 +569,21 @@ function addValidation(level: 'ok' | 'error', text: string): void {
   li.className = level;
   li.textContent = text;
   validationEl.appendChild(li);
+}
+
+function elTag<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  cls: string,
+  text: string,
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text) node.textContent = text;
+  return node;
+}
+
+function elp(cls: string, text: string): HTMLParagraphElement {
+  return elTag('p', cls, text);
 }
 
 function pct(v: number): string {

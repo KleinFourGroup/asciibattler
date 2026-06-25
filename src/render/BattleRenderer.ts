@@ -677,8 +677,10 @@ export class BattleRenderer {
       this.tileWorldPos(to)
     ).clone();
     this.spawnProjectile(fromPos, toPos, color, undefined, 0, CHAIN_ARC_SECONDS, undefined, PROJECTILE_SIZE);
-    // The gentle electric jolt per zap (the registry authors the magnitude).
+    // The per-hop zap + the gentle electric jolt (the registry authors both; the
+    // unified one-key = visual + SFX model, like onActionPhase).
     const fx = fxDescriptor('chain_arc');
+    if (fx?.sound) this.audio.play(fx.sound);
     if (fx?.shake) this.renderer.shakeCamera(fx.shake.intensity, fx.shake.durationSeconds);
   };
 

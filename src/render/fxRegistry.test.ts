@@ -28,6 +28,23 @@ describe('fxRegistry — Z3 strike cues', () => {
   });
 });
 
+describe('fxRegistry — §29c chain arc', () => {
+  // The chain arc is EVENT-driven (`unit:chained`, per hop), not def-driven — so
+  // `chain_lightning` carries no `fx` block and the ability boot-assert never sees
+  // this key. Pin it directly: a tracer + the `chain` zap + a subtle per-hop jolt.
+  it('chain_arc carries a tracer, the chain zap, and a gentle shake', () => {
+    const arc = fxDescriptor('chain_arc');
+    expect(arc).toMatchObject({ tracer: {}, sound: 'chain' });
+    expect(arc?.shake?.intensity).toBeGreaterThan(0);
+    // Gentler than the bolt's own impact shake — it fires once PER HOP.
+    expect(arc!.shake!.intensity).toBeLessThan(fxDescriptor('magic_bolt_burst')!.shake!.intensity);
+  });
+
+  it('chain_lightning drives its arcs off the event, not a def fx block', () => {
+    expect(ABILITY_DEFS.chain_lightning!.fx).toBeUndefined();
+  });
+});
+
 describe('fxRegistry — Z2 camera shake', () => {
   it('the impact burst keys carry an authored shake, catapult heavier than the bolt', () => {
     const mage = fxDescriptor('magic_bolt_burst');

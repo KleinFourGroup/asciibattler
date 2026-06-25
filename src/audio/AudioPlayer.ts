@@ -21,6 +21,7 @@
 
 export type SoundKey =
   | 'burn'
+  | 'chain'
   | 'click'
   | 'dash'
   | 'death'
@@ -34,6 +35,9 @@ export type SoundKey =
 
 const SOURCES: Record<SoundKey, string> = {
   burn: 'audio/burn.wav',
+  // §29c — the stormcaller's chain-lightning arc. Plays per HOP (off the
+  // `chain_arc` fx key on `unit:chained`), so a 3-jump cast crackles zap-zap-zap.
+  chain: 'audio/chain.wav',
   click: 'audio/click.wav',
   // N1 — the rogue's dash-leap whoosh (off a >1-cell `unit:moved`).
   dash: 'audio/dash.wav',
@@ -59,6 +63,9 @@ const SOURCES: Record<SoundKey, string> = {
  */
 const VOLUMES: Record<SoundKey, number> = {
   burn: 0.6,
+  // §29c — fires per hop (up to 3 rapid plays per cast), so kept just under the
+  // mage's signature `magicboom` (0.9) to keep a multi-hop crackle from dominating.
+  chain: 0.8,
   click: 0.7,
   // N1 — a movement whoosh; just under the 1.0 impact cues so it reads as
   // motion, not a hit.
@@ -93,6 +100,9 @@ const VOLUMES: Record<SoundKey, number> = {
  */
 const PITCH_VARIANCE: Record<SoundKey, number> = {
   burn: 0.12,
+  // §29c — the hops of one cast fire ~0.1s apart, so push the jitter up (±12%)
+  // to break the rapid repeat into a crackle rather than a stuttered single tone.
+  chain: 0.12,
   click: 0,
   // N1 — light jitter so several rogues dashing the same tick don't sound like
   // one stuttered sample (dashes are rare per-unit at a 10s cooldown).

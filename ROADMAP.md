@@ -631,6 +631,19 @@ isn't omniscient)? The behavior-override **durations** are content dials → §3
 > auto-makes every archetype player-draftable; the user chose to KEEP all §29
 > archetypes draftable through §29's end (for testing), so the enemy-disruptor
 > recruit-pool exclusion is a §29-close cleanup.
+>
+> **29c heads-up (chain):** the recursive `chain{maxJumps, rangeCells, falloff,
+> ops}` arm needs cast-time scalar capture for its NESTED `ops`. Today's
+> `OpResolution` model is **per-top-level-`def.effects`-op** (the `propose.ts`
+> `resolveOp` runs once per entry, aligned by index) — a chain's inner damage op
+> has no resolution slot. So the chain arm must either resolve its inner ops'
+> `baseDamage`/`critChance` at cast (and carry them, applying cumulative `falloff`
+> per jump) or resolve them live per-jump off the caster's stats. Decide that with
+> the determinism/snapshot contract in mind (in-flight chain state must round-trip
+> — confirm against `EffectActionData`). The jump geometry (nearest valid target
+> within `rangeCells`, no repeats) is deterministic; reuse the targeting helpers.
+> Stormcaller = mage stats, glyph `z`; needs a chain-arc FX key (reuse the `tracer`
+> channel). Headless-first, as always.
 
 The net-new ops — pure composition + recursion on the now-stable model. No
 migration source; these are *additions* to the closed vocabulary. (`move`'s

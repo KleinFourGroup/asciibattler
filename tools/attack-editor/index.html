@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Attack Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Attack Editor</h1>
+        <span class="subtitle"
+          >Author <code>config/abilities.json</code> · schema-validated · save straight to disk</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+      <section class="workspace">
+        <div class="edit-pane">
+          <div id="tabs" class="tabs" role="tablist" aria-label="Ability"></div>
+          <section class="card">
+            <h2>Identity</h2>
+            <div class="field-grid">
+              <label class="inline">Id <input id="id" type="text" readonly /></label>
+              <label class="inline">Name <input id="name" type="text" /></label>
+              <label class="inline">Cooldown (s) <input id="cooldownSeconds" type="number" min="0" step="0.1" /></label>
+              <label class="inline">Priority <input id="priority" type="number" step="1" /></label>
+              <label class="inline">Range (cells) <input id="rangeCells" type="number" min="0" step="1" /></label>
+              <label class="inline">Min range <input id="minRangeCells" type="number" min="0" step="1" /></label>
+              <label class="inline">Orphan policy <select id="orphanPolicy"></select></label>
+              <label class="inline"><input id="speedScaled" type="checkbox" /> Speed-scaled cadence</label>
+              <label class="inline"><input id="ignoresLineOfSight" type="checkbox" /> Ignores line of sight</label>
+            </div>
+            <p class="hint">
+              Id is the catalog key (rename / create lands in a later step). A genuinely new
+              ability still needs a registry entry to be spawnable in-game.
+            </p>
+          </section>
+          <section class="card">
+            <h2>Target</h2>
+            <div class="field-row">
+              <span class="field-label">Selector</span>
+              <select id="target-kind"></select>
+            </div>
+            <div id="target-fields" class="field-grid"></div>
+          </section>
+          <section class="card">
+            <h2>Timeline &amp; effects <span class="sub">(read-only — the op-tree + timeline builders land in 30b/30c)</span></h2>
+            <pre id="effects-json" class="json-view"></pre>
+          </section>
+        </div>
+        <aside class="side-pane">
+          <section class="card">
+            <h2>Structure <span class="sub">(resolved numbers land in 30c)</span></h2>
+            <dl id="preview" class="preview"></dl>
+          </section>
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation"></ul>
+          </section>
+          <section class="card">
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary">Save to config</button>
+              <button id="revert-btn" type="button" class="danger-outline">Revert all</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+          </section>
+          <section class="card">
+            <h2>Export <span class="sub">(whole file)</span></h2>
+            <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

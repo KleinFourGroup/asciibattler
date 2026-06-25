@@ -118,7 +118,7 @@
   "bow": {
     "id": "bow",
     "name": "Bow",
-    "cooldownSeconds": 2.0,
+    "cooldownSeconds": 2,
     "rangeCells": 3,
     "minRangeCells": 2,
     "target": { "kind": "enemyInRange" },
@@ -148,7 +148,7 @@
   "heal_ally": {
     "id": "heal_ally",
     "name": "Heal",
-    "cooldownSeconds": 2.0,
+    "cooldownSeconds": 2,
     "rangeCells": 3,
     "target": { "kind": "lowestHpAlly", "rangeCells": 3 },
     "timeline": [
@@ -205,7 +205,9 @@
     "speedScaled": false,
     "rangeCells": 2,
     "target": { "kind": "self" },
-    "timeline": [{ "phase": "impact", "seconds": 0.25 }],
+    "timeline": [
+      { "phase": "impact", "seconds": 0.25 }
+    ],
     "orphanPolicy": "commit-at-cast",
     "priority": 5,
     "effects": [
@@ -221,14 +223,7 @@
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
-    "target": {
-      "kind": "aoe",
-      "shape": "square",
-      "radius": 1,
-      "anchor": "targetCell",
-      "affects": "enemies",
-      "ringMultiplier": 0.5
-    },
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 0.5 },
     "timeline": [
       { "phase": "windup", "seconds": 1.5, "scalesWithSpeed": true },
       { "phase": "release", "seconds": 0 },
@@ -328,7 +323,7 @@
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
-    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 1 },
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
     "timeline": [
       { "phase": "release", "seconds": 0 },
       { "phase": "travel", "seconds": 0.5 },
@@ -364,7 +359,7 @@
     "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
-    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 1 },
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
     "timeline": [
       { "phase": "impact", "seconds": 0 },
       { "phase": "recovery", "seconds": "fill" }
@@ -398,7 +393,7 @@
     "cooldownSeconds": 3,
     "rangeCells": 5,
     "minRangeCells": 2,
-    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 1 },
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
     "timeline": [
       { "phase": "windup", "seconds": 0.4 },
       { "phase": "impact", "seconds": 0 },
@@ -417,7 +412,7 @@
   "light_ray": {
     "id": "light_ray",
     "name": "Light Ray",
-    "cooldownSeconds": 2.0,
+    "cooldownSeconds": 2,
     "rangeCells": 3,
     "minRangeCells": 2,
     "target": { "kind": "enemyInRange" },
@@ -453,8 +448,7 @@
     "name": "Wail",
     "cooldownSeconds": 4,
     "rangeCells": 4,
-    "minRangeCells": 0,
-    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 1 },
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
     "timeline": [
       { "phase": "windup", "seconds": 0.5 },
       { "phase": "impact", "seconds": 0 },
@@ -478,7 +472,7 @@
     "minRangeCells": 2,
     "target": { "kind": "enemyInRange" },
     "timeline": [
-      { "phase": "windup", "seconds": 1.0, "scalesWithSpeed": true },
+      { "phase": "windup", "seconds": 1, "scalesWithSpeed": true },
       { "phase": "impact", "seconds": 0 },
       { "phase": "recovery", "seconds": "fill" }
     ],
@@ -492,7 +486,6 @@
           "maxJumps": 3,
           "rangeCells": 3,
           "falloff": 0.6,
-          "hopDelaySeconds": 0.1,
           "ops": [
             {
               "kind": "damage",
@@ -517,7 +510,7 @@
     "ignoresLineOfSight": true,
     "target": { "kind": "self" },
     "timeline": [
-      { "phase": "windup", "seconds": 1.0 },
+      { "phase": "windup", "seconds": 1 },
       { "phase": "impact", "seconds": 0 },
       { "phase": "recovery", "seconds": "fill" }
     ],
@@ -526,11 +519,7 @@
     "effects": [
       {
         "phase": "impact",
-        "op": {
-          "kind": "summon",
-          "summon": { "archetype": "ghoul", "level": 1, "count": 1, "maxLive": 3, "radiusCells": 2 },
-          "at": { "kind": "self" }
-        }
+        "op": { "kind": "summon", "summon": { "archetype": "ghoul", "maxLive": 3 } }
       }
     ]
   },

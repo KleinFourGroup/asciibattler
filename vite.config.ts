@@ -19,7 +19,13 @@ import { defineConfig, type Plugin } from 'vite';
  * schema client-side and disables Save when invalid); the server only guards the
  * destination + JSON-parseability.
  */
-const SAVABLE_CONFIG_FILES = new Set(['archetypes.json', 'layouts.json', 'sectors.json', 'encounters.json']);
+const SAVABLE_CONFIG_FILES = new Set([
+  'archetypes.json',
+  'layouts.json',
+  'sectors.json',
+  'encounters.json',
+  'abilities.json',
+]);
 
 function configSavePlugin(): Plugin {
   return {

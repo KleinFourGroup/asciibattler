@@ -24,9 +24,14 @@ is a no-op diff.
   applyStatus) nesting, and status-id / summon-archetype dropdowns from the live
   registries. The reusable target-selector widget also drives a summon's `at`
   anchor.
-- **30c** — the timeline editor + a live **resolution-outline** preview that
-  shares the real interpreter (resolved damage/heal numbers vs a sample caster).
-  The timeline stays read-only until then.
+- **30c ✅** — the **timeline editor** (editable phases: name · seconds-or-`fill` ·
+  `scalesWithSpeed`, add / remove, with the live schema refines — one `fill`, no
+  `fill`+speed-scale) + a live **resolution-outline** preview that shares the real
+  resolvers: `resolvePhases` / `resolveCadenceTicks` lay out the timeline in ticks,
+  and the extracted [`resolveScalars`](../../src/sim/effects/resolveScalars.ts)
+  kernel (also consumed by `propose.ts` — one source of truth) resolves the
+  damage / heal / crit / chain-falloff numbers against an editable **sample
+  caster** with archetype-base-stat presets.
 
 ## Notes
 

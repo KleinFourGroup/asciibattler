@@ -15,14 +15,22 @@
  *    edited, all six op kinds (damage / heal / move / applyStatus / chain /
  *    summon), with `chain`'s per-hop ops (damage | applyStatus) nesting and
  *    status-id / summon-archetype dropdowns from the live registries.
- *  - §30c: the timeline editor + a live resolution-outline preview (resolved
- *    numbers via the shared interpreter). Timeline stays read-only until then.
+ *  - §30c: the TIMELINE editor (editable phases — name / seconds-or-`fill` /
+ *    `scalesWithSpeed`, add / remove) + a live RESOLUTION-OUTLINE preview that
+ *    shares the real resolvers (`resolvePhases` / `resolveCadenceTicks` for the
+ *    tick layout, `resolveScalars` for the cast-time damage / heal / crit numbers
+ *    — never re-implemented here) against an editable sample caster with
+ *    archetype-base-stat presets.
  */
 
 import './editor.css';
 import { ABILITY_DEFS } from '../../src/config/abilities';
 import { STATUS_DEFS } from '../../src/config/statuses';
+import { ARCHETYPES } from '../../src/config/archetypes';
+import { STATS } from '../../src/config/stats';
+import { TICK_SECONDS } from '../../src/config';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
+import type { UnitStats } from '../../src/sim/Unit';
 import {
   AbilityDefSchema,
   type AbilityDef,
@@ -30,11 +38,14 @@ import {
   type ChainInnerOp,
   type TargetSelector,
 } from '../../src/sim/effects/schema';
+import { resolveCadenceTicks, resolvePhases } from '../../src/sim/effects/timeline';
+import { resolveDamageScalars, resolveHealAmount } from '../../src/sim/effects/resolveScalars';
 import { formatAbilitiesJson } from './format';
 
 // Small enum mirrors of the schema unions (the schema doesn't export the raw
 // arrays). A drift from the schema is caught by the live validation below —
 // these only populate the <select> choices.
+const PHASE_NAMES = ['windup', 'release', 'travel', 'impact', 'recovery'] as const;
 const ORPHAN_POLICIES = ['commit-at-cast', 'fizzle', 'ground-target', 're-home'] as const;
 const TARGET_KINDS = ['self', 'enemyInRange', 'aoe', 'lowestHpAlly'] as const;
 const AOE_SHAPES = ['square', 'line', 'cross'] as const;
@@ -53,6 +64,14 @@ const ARCHETYPE_IDS = [...ALL_ARCHETYPES] as string[];
 
 type TargetKind = (typeof TARGET_KINDS)[number];
 type OpKind = (typeof TOP_OP_KINDS)[number];
+
+// The five caster stats the resolution preview reads: `speed` drives the tick
+// timeline (`resolvePhases`); the scaling stats + `luck` drive the damage / heal /
+// crit scalars (`resolveScalars`). The other six `UnitStats` fields never enter
+// cast-time resolution, so the sample caster only knobs these.
+const SAMPLE_STATS = ['speed', 'strength', 'ranged', 'magic', 'luck'] as const;
+type SampleStat = (typeof SAMPLE_STATS)[number];
+type SampleCaster = Record<SampleStat, number>;
 
 function defaultTarget(kind: TargetKind): TargetSelector {
   switch (kind) {
@@ -88,6 +107,9 @@ function defaultOp(kind: OpKind): EffectOp {
 let working: Record<string, AbilityDef> = structuredClone(ABILITY_DEFS);
 let activeId: string = Object.keys(working)[0]!;
 let lastValid = true;
+// A neutral, non-zero sample caster (so every scaling kind shows a real base);
+// the archetype presets overwrite it with realistic stats on demand.
+const sample: SampleCaster = { speed: 5, strength: 5, ranged: 5, magic: 5, luck: 5 };
 
 // ---- DOM ----
 const tabsEl = mustQuery<HTMLDivElement>('#tabs');
@@ -101,9 +123,18 @@ const orphanEl = mustQuery<HTMLSelectElement>('#orphanPolicy');
 const speedScaledEl = mustQuery<HTMLInputElement>('#speedScaled');
 const ignoresLosEl = mustQuery<HTMLInputElement>('#ignoresLineOfSight');
 const targetHostEl = mustQuery<HTMLDivElement>('#target-host');
-const timelineViewEl = mustQuery<HTMLDivElement>('#timeline-view');
+const timelineHostEl = mustQuery<HTMLDivElement>('#timeline-host');
+const addPhaseBtn = mustQuery<HTMLButtonElement>('#add-phase');
 const effectsHostEl = mustQuery<HTMLDivElement>('#effects-host');
 const addEffectBtn = mustQuery<HTMLButtonElement>('#add-effect');
+const presetEl = mustQuery<HTMLSelectElement>('#sample-preset');
+const sampleEls: Record<SampleStat, HTMLInputElement> = {
+  speed: mustQuery<HTMLInputElement>('#s-speed'),
+  strength: mustQuery<HTMLInputElement>('#s-strength'),
+  ranged: mustQuery<HTMLInputElement>('#s-ranged'),
+  magic: mustQuery<HTMLInputElement>('#s-magic'),
+  luck: mustQuery<HTMLInputElement>('#s-luck'),
+};
 const previewEl = mustQuery<HTMLDListElement>('#preview');
 const validationEl = mustQuery<HTMLUListElement>('#validation');
 const exportEl = mustQuery<HTMLTextAreaElement>('#export');
@@ -118,6 +149,7 @@ buildTabs();
 fillSelect(orphanEl, ORPHAN_POLICIES);
 attachIdentity();
 attachButtons();
+buildSampleCaster();
 selectAbility(activeId);
 
 function buildTabs(): void {
@@ -173,6 +205,10 @@ function attachButtons(): void {
     def().effects.push({ phase: timelinePhases()[0] ?? 'impact', op: defaultOp('damage') });
     structuralChange();
   });
+  addPhaseBtn.addEventListener('click', () => {
+    def().timeline.push({ phase: nextUnusedPhase(), seconds: 0, scalesWithSpeed: false });
+    timelineChange();
+  });
   saveBtn.addEventListener('click', () => void save());
   revertBtn.addEventListener('click', revert);
   copyBtn.addEventListener('click', () => {
@@ -213,8 +249,17 @@ function syncForm(): void {
   speedScaledEl.checked = d.speedScaled;
   ignoresLosEl.checked = d.ignoresLineOfSight === true;
   renderTargetSelector(targetHostEl, () => def().target, (t) => (def().target = t));
-  renderTimelineView();
+  renderTimelineEditor();
   renderEffects();
+}
+
+/** A timeline structural change (add / remove a phase, or rename one): rebuild the
+ *  timeline rows AND the effect tree (its per-effect phase dropdown reads the
+ *  timeline's phases), then refresh the export / validation / preview. */
+function timelineChange(): void {
+  renderTimelineEditor();
+  renderEffects();
+  refreshDerived();
 }
 
 /** A structural mutation already applied to `working`: rebuild the effect tree
@@ -263,22 +308,88 @@ function renderTargetSelector(
   }
 }
 
-// ---- Timeline (read-only until §30c) ----
-function renderTimelineView(): void {
-  timelineViewEl.innerHTML = '';
-  for (const p of def().timeline) {
-    const chip = el('span', 'phase-chip');
-    chip.append(`${p.phase} `);
-    chip.appendChild(el('span', 'secs', `${p.seconds === 'fill' ? 'fill' : `${p.seconds}s`}${p.scalesWithSpeed ? ' ⚡' : ''}`));
-    timelineViewEl.appendChild(chip);
-  }
+// ---- Timeline editor ----
+type Phase = AbilityDef['timeline'][number]['phase'];
+
+function renderTimelineEditor(): void {
+  timelineHostEl.innerHTML = '';
+  const timeline = def().timeline;
+  timeline.forEach((p, i) => {
+    const row = el('div', 'phase-row');
+
+    const psel = selectEl(PHASE_NAMES, p.phase);
+    psel.addEventListener('change', () => {
+      p.phase = psel.value as Phase;
+      timelineChange(); // the effect tree's phase options follow the timeline
+    });
+    row.appendChild(labelWrap('Phase', psel));
+
+    const isFill = p.seconds === 'fill';
+    const secInput = document.createElement('input');
+    secInput.type = 'number';
+    secInput.min = '0';
+    secInput.step = '0.05';
+    secInput.value = isFill ? '' : String(p.seconds);
+    secInput.disabled = isFill;
+    secInput.addEventListener('input', () => {
+      p.seconds = numOr(secInput.value, 0, true);
+      refreshDerived();
+    });
+    row.appendChild(labelWrap('Seconds', secInput));
+
+    // `fill` ⇄ a fixed numeric duration. Switching to fill clears the
+    // `scalesWithSpeed` flag (the schema rejects the combo) and disables both
+    // the seconds + scales controls; the re-render reflects it.
+    const fillWrap = el('label', 'inline');
+    const fillCb = document.createElement('input');
+    fillCb.type = 'checkbox';
+    fillCb.checked = isFill;
+    fillCb.addEventListener('change', () => {
+      if (fillCb.checked) {
+        p.seconds = 'fill';
+        p.scalesWithSpeed = false;
+      } else {
+        p.seconds = 0;
+      }
+      timelineChange();
+    });
+    fillWrap.append(fillCb, ' fill');
+    row.appendChild(fillWrap);
+
+    const scalesWrap = el('label', 'inline');
+    const scalesCb = document.createElement('input');
+    scalesCb.type = 'checkbox';
+    scalesCb.checked = p.scalesWithSpeed;
+    scalesCb.disabled = isFill;
+    scalesCb.addEventListener('change', () => {
+      p.scalesWithSpeed = scalesCb.checked;
+      refreshDerived();
+    });
+    scalesWrap.append(scalesCb, ' ⚡ speed');
+    row.appendChild(scalesWrap);
+
+    row.append(el('span', 'spacer'));
+    // The schema requires ≥ 1 phase — never let the last one be removed.
+    if (timeline.length > 1) {
+      row.appendChild(miniBtn('Remove phase', 'del', () => {
+        timeline.splice(i, 1);
+        timelineChange();
+      }));
+    }
+    timelineHostEl.appendChild(row);
+  });
 }
 
-type Phase = AbilityDef['timeline'][number]['phase'];
 function timelinePhases(): Phase[] {
   const out: Phase[] = [];
   for (const p of def().timeline) if (!out.includes(p.phase)) out.push(p.phase);
   return out;
+}
+
+/** The first phase name not already in the timeline (for + phase), else `impact`. */
+function nextUnusedPhase(): Phase {
+  const used = new Set(def().timeline.map((p) => p.phase));
+  return PHASE_NAMES.find((p) => !used.has(p)) ?? 'impact';
 }
 
 // ---- The effect-op tree ----
@@ -445,15 +556,162 @@ function refreshExport(): void {
   exportEl.value = formatAbilitiesJson(working);
 }
 
+// ---- Resolution-outline preview (shares the real resolvers) ----
 function refreshPreview(): void {
   const d = def();
   previewEl.innerHTML = '';
+  const stats = sampleStats();
+  const speed = sample.speed;
+
   addPreview('Target', describeTarget(d.target));
-  addPreview('Cadence', `${d.cooldownSeconds}s${d.speedScaled ? ' (speed-scaled)' : ' (flat)'} · priority ${d.priority}`);
-  addPreview('Range', d.minRangeCells > 0 ? `${d.minRangeCells}–${d.rangeCells}` : String(d.rangeCells));
-  addPreview('Timeline', d.timeline.map((p) => `${p.phase} ${p.seconds === 'fill' ? 'fill' : `${p.seconds}s`}${p.scalesWithSpeed ? '*' : ''}`).join(' · '));
-  for (const e of d.effects) addPreview(`@ ${e.phase}`, describeOp(e.op));
+  addPreview('Range', d.minRangeCells > 0 ? `${d.minRangeCells}–${d.rangeCells} cells` : `${d.rangeCells} cells`);
+
+  // Cadence + the phase timeline resolved to TICKS at the sample speed — through
+  // the same `resolveCadenceTicks` / `resolvePhases` the sim uses (never re-derived).
+  const cadence = resolveCadenceTicks(d, speed);
+  addPreview('Cadence', `${cadence}t · ${secs(cadence)}s${d.speedScaled ? ' speed-scaled' : ' flat'} · prio ${d.priority}`);
+  const phases = resolvePhases(d, speed);
+  addPreview('Timeline', phases.map((p) => `${p.phase} ${p.ticks}t (${secs(p.ticks)}s)`).join(' · '));
+
+  // Each effect resolved against the sample caster (the cast-time scalars).
+  for (const e of d.effects) addPreview(`@ ${e.phase}`, outlineOp(e.op, stats));
   if (d.effects.length === 0) addPreview('Effects', '— none');
+}
+
+/** Build a full `UnitStats` from the five sample knobs (the other six fields never
+ *  enter cast-time resolution, so they stay 0). */
+function sampleStats(): UnitStats {
+  return {
+    constitution: 0,
+    strength: sample.strength,
+    ranged: sample.ranged,
+    magic: sample.magic,
+    luck: sample.luck,
+    defense: 0,
+    precision: 0,
+    evasion: 0,
+    speed: sample.speed,
+    mobility: 0,
+    power: 0,
+  };
+}
+
+/** One effect op's resolved outline against the sample caster. */
+function outlineOp(op: EffectOp, stats: UnitStats): string {
+  switch (op.kind) {
+    case 'damage':
+      return outlineDamage(op, stats, 1);
+    case 'heal':
+      return `heal ${resolveHealAmount(op, stats)} (${op.might}+${op.scaling})`;
+    case 'move':
+      return `move ${op.mode} ${op.cells} cell${op.cells === 1 ? '' : 's'}`;
+    case 'applyStatus':
+      return outlineApplyStatus(op);
+    case 'chain':
+      return outlineChain(op, stats);
+    case 'summon': {
+      const s = op.summon;
+      return `summon ${s.count}× ${s.archetype} (lvl ${s.level}, max ${s.maxLive}) @ ${op.at.kind}`;
+    }
+  }
+}
+
+/** A damage op resolved to its hit / crit numbers (`falloff` applies the chain
+ *  cumulative reduction; 1 for a top-level op). Mirrors the interpreter's
+ *  round-once arithmetic (`round(base × critFactor)`). */
+function outlineDamage(
+  op: Extract<EffectOp, { kind: 'damage' }>,
+  stats: UnitStats,
+  falloff: number,
+): string {
+  const { baseDamage, critChance } = resolveDamageScalars(op, stats);
+  const hit = Math.round(baseDamage * falloff);
+  const flags: string[] = [];
+  if (op.bypassDefense) flags.push('bypass def');
+  flags.push(op.evadable ? `acc ${pct(op.accuracy)}` : 'unmissable');
+  let out = `${hit} dmg`;
+  if (op.critable && critChance > 0) {
+    out += ` · crit ${pct(critChance)} → ${Math.round(baseDamage * falloff * STATS.critMult)}`;
+  }
+  return `${out} · ${flags.join(', ')}`;
+}
+
+/** An applyStatus op resolved to its status name / magnitude / duration (the
+ *  duration falls back to the status def's base when not overridden). */
+function outlineApplyStatus(op: Extract<EffectOp | ChainInnerOp, { kind: 'applyStatus' }>): string {
+  const sd = STATUS_DEFS[op.statusId as keyof typeof STATUS_DEFS];
+  const name = sd?.name ?? op.statusId;
+  const dur = op.durationSeconds ?? sd?.durationSeconds;
+  const bits = [`apply ${name}`];
+  if ((op.magnitude ?? 1) !== 1) bits.push(`×${op.magnitude}`);
+  if (dur !== undefined) bits.push(`${secsNum(dur)}s`);
+  return bits.join(' · ');
+}
+
+/** A chain op resolved across its jumps: the per-hop damage falloff sequence + any
+ *  status riders. Uses `resolveDamageScalars` per inner op (the real resolver). */
+function outlineChain(op: Extract<EffectOp, { kind: 'chain' }>, stats: UnitStats): string {
+  const parts = op.ops.map((io) => {
+    if (io.kind === 'damage') {
+      const { baseDamage, critChance } = resolveDamageScalars(io, stats);
+      const seq = Array.from({ length: op.maxJumps }, (_, j) =>
+        Math.round(baseDamage * Math.pow(op.falloff, j)),
+      );
+      const crit = io.critable && critChance > 0 ? ` (crit ${pct(critChance)})` : '';
+      return `dmg ${seq.join('→')}${crit}`;
+    }
+    return `+${outlineApplyStatus(io)}`;
+  });
+  const delay = op.hopDelaySeconds > 0 ? `${secsNum(op.hopDelaySeconds)}s/hop` : 'instant';
+  return `chain ×${op.maxJumps} r${op.rangeCells} (${delay}) · ${parts.join(' · ')}`;
+}
+
+// ---- Sample caster (preview knobs + archetype presets) ----
+function buildSampleCaster(): void {
+  presetEl.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '— custom —';
+  presetEl.appendChild(placeholder);
+  for (const id of ARCHETYPE_IDS) {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = id;
+    presetEl.appendChild(opt);
+  }
+  presetEl.addEventListener('change', () => {
+    const id = presetEl.value;
+    if (!id || !(id in ARCHETYPES)) return;
+    const base = ARCHETYPES[id as keyof typeof ARCHETYPES].baseStats;
+    for (const k of SAMPLE_STATS) sample[k] = base[k];
+    syncSampleInputs();
+    refreshPreview();
+  });
+  for (const k of SAMPLE_STATS) {
+    sampleEls[k].addEventListener('input', () => {
+      sample[k] = intOr(sampleEls[k].value, 0);
+      presetEl.value = ''; // a manual edit diverges from any preset
+      refreshPreview();
+    });
+  }
+  syncSampleInputs();
+}
+
+function syncSampleInputs(): void {
+  for (const k of SAMPLE_STATS) sampleEls[k].value = String(sample[k]);
+}
+
+function secs(ticks: number): string {
+  return trimNum(ticks * TICK_SECONDS);
+}
+function secsNum(seconds: number): string {
+  return trimNum(seconds);
+}
+function trimNum(n: number): string {
+  return Number(n.toFixed(2)).toString();
+}
+function pct(x: number): string {
+  return `${Math.round(x * 100)}%`;
 }
 
 // ---- Save / revert ----
@@ -501,23 +759,6 @@ function describeTarget(t: TargetSelector): string {
       return `aoe ${t.shape} r${t.radius} @${t.anchor} → ${t.affects}${t.ringMultiplier !== 1 ? ` (ring ×${t.ringMultiplier})` : ''}`;
     case 'lowestHpAlly':
       return `lowest-HP ally within ${t.rangeCells}`;
-  }
-}
-
-function describeOp(op: EffectOp): string {
-  switch (op.kind) {
-    case 'damage':
-      return `damage ${op.might}+${op.scaling}${op.bypassDefense ? ' (bypass)' : ''}${op.evadable ? '' : ' · unmissable'}`;
-    case 'heal':
-      return `heal ${op.might}+${op.scaling}`;
-    case 'move':
-      return `move ${op.mode} ${op.cells}`;
-    case 'applyStatus':
-      return `applyStatus ${op.statusId}`;
-    case 'chain':
-      return `chain ×${op.maxJumps} r${op.rangeCells} falloff ${op.falloff} → [${op.ops.map(describeOp).join(', ')}]`;
-    case 'summon':
-      return `summon ${op.summon.count}× ${op.summon.archetype} (max ${op.summon.maxLive})`;
   }
 }
 

@@ -40,8 +40,14 @@
             <div id="target-host"></div>
           </section>
           <section class="card">
-            <h2>Timeline <span class="sub">(read-only — the timeline editor lands in 30c)</span></h2>
-            <div id="timeline-view" class="timeline-view"></div>
+            <h2>Timeline</h2>
+            <div id="timeline-host" class="timeline-host"></div>
+            <div class="row"><button id="add-phase" type="button">+ phase</button></div>
+            <p class="hint">
+              Phases fire in order. One phase may be <code>fill</code> — the elastic
+              remainder of the (speed-scaled) cadence window. <code>⚡ speed</code>
+              shrinks a fixed phase with the caster's speed (invalid on a fill phase).
+            </p>
           </section>
           <section class="card">
             <h2>Effects <span class="sub">(the effect-op tree)</span></h2>
@@ -55,7 +61,17 @@
         </div>
         <aside class="side-pane">
           <section class="card">
-            <h2>Structure <span class="sub">(resolved numbers land in 30c)</span></h2>
+            <h2>Preview <span class="sub">(resolved vs a sample caster)</span></h2>
+            <div class="sample-caster">
+              <label class="inline"
+                >Preset <select id="sample-preset" title="Fill the stats from an archetype"></select
+              ></label>
+              <label class="inline">Speed <input id="s-speed" type="number" min="0" step="1" /></label>
+              <label class="inline">Str <input id="s-strength" type="number" min="0" step="1" /></label>
+              <label class="inline">Rng <input id="s-ranged" type="number" min="0" step="1" /></label>
+              <label class="inline">Mag <input id="s-magic" type="number" min="0" step="1" /></label>
+              <label class="inline">Luck <input id="s-luck" type="number" min="0" step="1" /></label>
+            </div>
             <dl id="preview" class="preview"></dl>
           </section>
           <section class="card">

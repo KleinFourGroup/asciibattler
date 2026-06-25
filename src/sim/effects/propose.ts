@@ -19,7 +19,7 @@
  * legacy class authoritative for everything still un-migrated.
  */
 
-import type { Unit, UnitStats } from '../Unit';
+import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { ActionProposal } from '../Action';
 import {
@@ -30,32 +30,13 @@ import {
 } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
 import { leapLanding } from '../movement';
-import { critChanceFor } from '../stats';
 import { LEVELING } from '../../config/leveling';
 import type { GridCoord } from '../../core/types';
-import type { AbilityDef, DamageScaling, EffectOp, SummonOp } from './schema';
+import type { AbilityDef, EffectOp, SummonOp } from './schema';
 import { EffectAction } from './EffectAction';
 import type { OpResolution } from './interpreter';
+import { resolveDamageScalars, resolveHealAmount } from './resolveScalars';
 import { resolveCadenceTicks, resolvePhases } from './timeline';
-
-/**
- * The caster stat an op's `scaling` names, ADDED to its flat `might`. Mirrors
- * `damageStatFor` for the migrated verbs (sword/club/katana/whip → `strength`),
- * but resolved off the op rather than the archetype — byte-identical because each
- * verb maps to exactly one stat (see `schema.ts`). `none` = flat `might` only.
- */
-function scalingStatValue(scaling: DamageScaling, stats: UnitStats): number {
-  switch (scaling) {
-    case 'strength':
-      return stats.strength;
-    case 'ranged':
-      return stats.ranged;
-    case 'magic':
-      return stats.magic;
-    case 'none':
-      return 0;
-  }
-}
 
 function chebyshev(a: GridCoord, b: GridCoord): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
@@ -316,16 +297,17 @@ interface OpResolveContext {
 function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
   switch (op.kind) {
     case 'damage': {
-      const baseDamage = op.might + scalingStatValue(op.scaling, c.unit.effectiveStats);
-      const critChance = op.critable
-        ? critChanceFor(op.critBase, c.unit.effectiveStats.luck)
-        : 0;
+      // §30c — the cast-time damage scalars (`might + scalingStat`, the crit
+      // probability) come from the shared `resolveScalars` kernel the attack
+      // editor's preview also consumes; only the half-cover multiplier is
+      // context (single-target LOS).
+      const { baseDamage, critChance } = resolveDamageScalars(op, c.unit.effectiveStats);
       return { baseDamage, critChance, damageMultiplier: c.damageMultiplier };
     }
     case 'heal': {
-      // I6 — heal amount is `might + magic` (mirrors `healAmountFor`). `none`
-      // scaling = flat `might`; the heal op never rolls to-hit or crit.
-      const healAmount = op.might + scalingStatValue(op.scaling, c.unit.effectiveStats);
+      // I6 — heal amount is `might + magic` (mirrors `healAmountFor`); via the
+      // shared kernel. `none` scaling = flat `might`; never rolls to-hit or crit.
+      const healAmount = resolveHealAmount(op, c.unit.effectiveStats);
       return { healAmount };
     }
     case 'move': {

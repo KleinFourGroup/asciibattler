@@ -209,24 +209,45 @@ select:focus {
   border-color: var(--accent);
 }
 
-/* ---- Timeline read-only view ---- */
-.timeline-view {
+/* ---- Timeline editor ---- */
+.timeline-host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.phase-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+  padding: 6px 10px;
+}
+
+.phase-row .spacer {
+  margin-left: auto;
+}
+
+.phase-row input[type='number'] {
+  width: 4.5rem;
+}
+
+/* ---- Sample caster (preview knobs) ---- */
+.sample-caster {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
 }
 
-.timeline-view .phase-chip {
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 3px 8px;
-  font-size: 12px;
-  color: var(--text);
-}
-
-.timeline-view .phase-chip .secs {
-  color: var(--muted);
+.sample-caster input[type='number'] {
+  width: 4rem;
 }
 
 /* ---- Effect-op tree ---- */
@@ -304,6 +325,7 @@ select:focus {
 .preview dd {
   margin: 0;
   color: var(--text);
+  overflow-wrap: anywhere;
 }
 
 /* ---- Validation ---- */

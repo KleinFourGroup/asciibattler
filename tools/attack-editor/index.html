@@ -37,15 +37,20 @@
           </section>
           <section class="card">
             <h2>Target</h2>
-            <div class="field-row">
-              <span class="field-label">Selector</span>
-              <select id="target-kind"></select>
-            </div>
-            <div id="target-fields" class="field-grid"></div>
+            <div id="target-host"></div>
           </section>
           <section class="card">
-            <h2>Timeline &amp; effects <span class="sub">(read-only — the op-tree + timeline builders land in 30b/30c)</span></h2>
-            <pre id="effects-json" class="json-view"></pre>
+            <h2>Timeline <span class="sub">(read-only — the timeline editor lands in 30c)</span></h2>
+            <div id="timeline-view" class="timeline-view"></div>
+          </section>
+          <section class="card">
+            <h2>Effects <span class="sub">(the effect-op tree)</span></h2>
+            <div id="effects-host" class="effects-host"></div>
+            <div class="row"><button id="add-effect" type="button">+ effect</button></div>
+            <p class="hint">
+              Each effect fires its op at a timeline phase. Order matters within a
+              phase (e.g. damage before applyStatus so the status gates on the hit).
+            </p>
           </section>
         </div>
         <aside class="side-pane">

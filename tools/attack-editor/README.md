@@ -13,15 +13,20 @@ is a no-op diff.
 
 ## Scope (Cluster 1, Phase 30)
 
-- **30a (this commit)** — the scaffold: ability picker, the scalar/identity
-  fields (name · cooldown · priority · range · min-range · orphan policy ·
-  speed-scaled · ignores-LOS), the **target selector** form (self / enemyInRange
-  / aoe / lowestHpAlly), live validation, save, and a structure preview. The
-  **timeline** and the recursive **effect-op tree** are shown read-only.
-- **30b** — the recursive effect-op tree builder (all six ops; `chain`'s inner
-  ops recurse; status-id + summon-archetype dropdowns).
+- **30a ✅** — the scaffold: ability picker, the scalar/identity fields (name ·
+  cooldown · priority · range · min-range · orphan policy · speed-scaled ·
+  ignores-LOS), the **target selector** form (self / enemyInRange / aoe /
+  lowestHpAlly), live validation, save, and a structure preview.
+- **30b ✅** — the recursive **effect-op tree**: every effect's `{phase, op}` is
+  form-edited (phase ← timeline phases; add / remove / reorder-by-delete), all
+  six op kinds (damage / heal / move / applyStatus / chain / summon) with a kind
+  switch that swaps in a fresh default, `chain`'s per-hop ops (damage |
+  applyStatus) nesting, and status-id / summon-archetype dropdowns from the live
+  registries. The reusable target-selector widget also drives a summon's `at`
+  anchor.
 - **30c** — the timeline editor + a live **resolution-outline** preview that
   shares the real interpreter (resolved damage/heal numbers vs a sample caster).
+  The timeline stays read-only until then.
 
 ## Notes
 

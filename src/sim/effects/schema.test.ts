@@ -128,6 +128,8 @@ describe('AbilityDef schema — valid shapes', () => {
       ],
     });
     expect(chain.kind).toBe('chain');
+    // §29c follow-up — hopDelaySeconds defaults to 0.1s (the per-hop stagger).
+    if (chain.kind === 'chain') expect(chain.hopDelaySeconds).toBe(0.1);
   });
 });
 

@@ -10,23 +10,28 @@ import type { BattleEncounter } from '../../src/run/Run';
 /**
  * §29c — integration smoke for the stormcaller's CHAIN in a FULL tick loop
  * (selector → MovementBehavior / AbilityBehavior → the chain_lightning charge →
- * applyEffect → the interpreter's `executeChain` → World events). The unit-level
- * tests pin the chain geometry / falloff / propose-capture in isolation; this
- * proves a stormcaller spawned through the REAL wiring
- * (`abilityIdsForArchetype('stormcaller')` → `createAbility('chain_lightning')`)
- * approaches, charges, and detonates a chain that ARCS — i.e. damages MORE THAN
- * ONE enemy from a single cast (the hops fire in one tick at the impact boundary),
- * and the battle resolves without hanging or throwing. A `?roster=stormcaller,...`
- * playtest build must not crash on it.
+ * applyEffect → the interpreter's `executeChain` → the deferred `pendingChainHops`
+ * → World events). The unit-level tests pin the chain geometry / falloff / propose
+ * capture / deferred timing in isolation; this proves a stormcaller spawned through
+ * the REAL wiring (`abilityIdsForArchetype('stormcaller')` →
+ * `createAbility('chain_lightning')`) approaches, charges, and detonates a chain
+ * that ARCS — and, with `hopDelaySeconds > 0`, that the hops genuinely TRAVEL over
+ * successive ticks (the §29c per-hop delay) rather than all landing at once. A
+ * `?roster=stormcaller,...` playtest build must not crash on it.
  */
 
 const TICK_CAP = 3000;
+
+interface ChainHopLog {
+  tick: number;
+  jumpIndex: number;
+}
 
 function runStormcallerBattle(seed: number): {
   resolved: boolean;
   charged: boolean;
   chargeSpannedTicks: boolean;
-  maxVictimsInOneCast: number;
+  hops: ChainHopLog[];
 } {
   const bus = new EventBus<GameEvents>();
 
@@ -63,20 +68,12 @@ function runStormcallerBattle(seed: number): {
   expect(caster!.abilities.map((a) => a.id)).toContain('chain_lightning');
   expect(caster!.behaviors.map((b) => b.kind)).toEqual(['movement', 'ability']);
 
-  // Bucket the stormcaller's hits by the tick they fired on: a chain's hops all
-  // land in ONE tick (the impact boundary), so the max distinct victims seen in a
-  // single tick is the longest arc the caster pulled off across the battle.
-  let maxVictimsInOneCast = 0;
-  let bucketTick = -1;
-  let victimsThisTick = new Set<number>();
-  bus.on('unit:attacked', (p) => {
-    if (p.attackerId !== casterId) return;
-    if (world.currentTick !== bucketTick) {
-      bucketTick = world.currentTick;
-      victimsThisTick = new Set<number>();
-    }
-    victimsThisTick.add(p.targetId);
-    maxVictimsInOneCast = Math.max(maxVictimsInOneCast, victimsThisTick.size);
+  // Each chain ARC fires a `unit:chained`; log its tick + jumpIndex. A multi-hop
+  // cast is a 0,1,2 run — the jumpIndex proves the arc, the ticks prove the delay.
+  const hops: ChainHopLog[] = [];
+  bus.on('unit:chained', (p) => {
+    if (p.casterId !== casterId) return;
+    hops.push({ tick: world.currentTick, jumpIndex: p.jumpIndex });
   });
 
   let resolved = false;
@@ -101,10 +98,10 @@ function runStormcallerBattle(seed: number): {
     }
     if (resolved) break;
   }
-  return { resolved, charged, chargeSpannedTicks, maxVictimsInOneCast };
+  return { resolved, charged, chargeSpannedTicks, hops };
 }
 
-describe('§29c — stormcaller runs a full battle and its chain arcs', () => {
+describe('§29c — stormcaller runs a full battle and its chain arcs hop by hop', () => {
   const seeds = [1, 7, 42];
   const results = seeds.map((s) => ({ seed: s, ...runStormcallerBattle(s) }));
 
@@ -116,11 +113,21 @@ describe('§29c — stormcaller runs a full battle and its chain arcs', () => {
     });
   }
 
-  it('the chain demonstrably ARCS — a single cast hits more than one enemy', () => {
-    // Across the sampled battles, at least one cast landed on ≥2 distinct enemies
-    // in one tick (the multi-hop chain). A non-chaining single-target attacker
-    // could never put two victims in the same tick bucket.
-    const best = Math.max(...results.map((r) => r.maxVictimsInOneCast));
-    expect(best).toBeGreaterThanOrEqual(2);
+  it('the chain demonstrably ARCS — at least one cast jumps past the primary', () => {
+    const maxJump = Math.max(0, ...results.flatMap((r) => r.hops.map((h) => h.jumpIndex)));
+    expect(maxJump).toBeGreaterThanOrEqual(1); // a jumpIndex >= 1 means it hopped
+  });
+
+  it('the hops TRAVEL over successive ticks (the per-hop delay, not all at once)', () => {
+    // In some cast, a jumpIndex-0 arc is immediately followed by a jumpIndex-1 arc
+    // on a STRICTLY LATER tick — the deferred per-hop delay. An instant chain would
+    // put both on the same tick.
+    const staggered = results.some((r) =>
+      r.hops.some((h, i) => {
+        const next = r.hops[i + 1];
+        return next !== undefined && h.jumpIndex === 0 && next.jumpIndex === 1 && next.tick > h.tick;
+      }),
+    );
+    expect(staggered).toBe(true);
   });
 });

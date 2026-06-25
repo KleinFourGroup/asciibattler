@@ -492,6 +492,7 @@
           "maxJumps": 3,
           "rangeCells": 3,
           "falloff": 0.6,
+          "hopDelaySeconds": 0.1,
           "ops": [
             {
               "kind": "damage",
@@ -506,7 +507,6 @@
           ]
         }
       }
-    ],
-    "fx": { "impact": "chain_arc" }
+    ]
   }
 }

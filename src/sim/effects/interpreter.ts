@@ -23,7 +23,8 @@ import type { World } from '../World';
 import type { OrphanPolicy } from '../Action';
 import { STATS } from '../../config/stats';
 import { statusDef } from '../../config/statuses';
-import type { ChainInnerOp, EffectOp, TargetSelector } from './schema';
+import { secondsToTicks } from '../../config';
+import type { ChainInnerOp, ChainOp, EffectOp, TargetSelector } from './schema';
 import { nearestChainTarget, resolveAreaVictims } from './targeting';
 import { retreatCell } from './reposition';
 import { behaviorFlags } from '../statusBehavior';
@@ -281,12 +282,25 @@ function resolveStatusTargets(ctx: OpFireContext): Unit[] {
   return ctx.target ? [ctx.target] : [];
 }
 
+/* -------------------------------------------------------------------------- */
+/* 29c chain — the per-hop arc, optionally staggered over real sim ticks.      */
+/* -------------------------------------------------------------------------- */
+
 /**
  * 29c — chain: arc the op's `ops` across up to `maxJumps` targets. Jump 0 is the
  * committed primary (`ctx.target`); each later jump hops to the nearest fresh
  * enemy within `rangeCells` of the previous victim (`nearestChainTarget`), never
  * repeating a target, ending early if none remains. Each victim takes the inner
  * `ops` with `falloff^jump` applied to their captured damage (the primary full).
+ *
+ * Timing (the 29c follow-up): with `hopDelaySeconds > 0` only jump 0 lands NOW
+ * (the impact tick); the remaining jumps ride `World.pendingChainHops`, firing one
+ * every `hopDelaySeconds` so the bolt visibly travels (each hop's damage number /
+ * HP drop / arc coincide on that hop's tick). `0` keeps the original synchronous
+ * resolve (every hop on the impact tick). Either way the geometry is the same — a
+ * deferred hop just re-resolves its next target LIVE at fire time, so a target that
+ * moved or died between hops is handled deterministically (and the chain breaks if
+ * the caster itself died mid-arc).
  *
  * The inner ops fire through the SAME `executeOp` (the recursion), under a
  * synthesized single-target context: selector `enemyInRange`, `commit-at-cast`,
@@ -297,35 +311,149 @@ function resolveStatusTargets(ctx: OpFireContext): Unit[] {
  */
 const CHAIN_INNER_SELECTOR: TargetSelector = { kind: 'enemyInRange' };
 
-function executeChain(op: Extract<EffectOp, { kind: 'chain' }>, ctx: OpFireContext): void {
-  const resolutions = ctx.resolution.chainOps ?? [];
+/**
+ * A chain jump waiting to fire on a future tick (`World.pendingChainHops`). Holds
+ * the chain op + the cast-time `resolution` (so the inner scalars + falloff are
+ * authoritative), the running `hitIds` (no repeats) and the arc origin `fromPos`
+ * (the previous victim's cell), and which `jumpIndex` this is (its `falloff^jump`).
+ * Plain data — round-trips in the WorldSnapshot (v28); `op`/`resolution` are
+ * immutable by convention, the mutable per-hop bits (`fromPos`/`hitIds`) get copied.
+ */
+export interface PendingChainHop {
+  fireAtTick: number;
+  casterId: number;
+  op: ChainOp;
+  resolution: OpResolution;
+  fromPos: GridCoord;
+  hitIds: number[];
+  jumpIndex: number;
+}
+
+function executeChain(op: ChainOp, ctx: OpFireContext): void {
+  const victim0 = ctx.target && ctx.target.currentHp > 0 ? ctx.target : undefined;
+  if (!victim0) return; // dead/committed primary → the whole chain fizzles
+
   const hit = new Set<number>();
-  let from: GridCoord | undefined;
-  let victim: Unit | undefined =
-    ctx.target && ctx.target.currentHp > 0 ? ctx.target : undefined;
+  fireChainHopOps(ctx.world, ctx.caster, op, ctx.resolution, victim0, 0, ctx.caster.position);
+  hit.add(victim0.id);
+  if (op.maxJumps <= 1) return;
 
-  for (let jump = 0; jump < op.maxJumps; jump++) {
-    if (jump > 0) {
-      victim = from ? nearestChainTarget(ctx.world, ctx.caster, from, op.rangeCells, hit) : undefined;
+  const delayTicks = secondsToTicks(op.hopDelaySeconds);
+  let from: GridCoord = { ...victim0.position };
+
+  if (delayTicks <= 0) {
+    // Synchronous: every remaining hop lands on the impact tick (the original
+    // all-at-once resolve, kept for `hopDelaySeconds: 0`).
+    for (let jump = 1; jump < op.maxJumps; jump++) {
+      const victim = nearestChainTarget(ctx.world, ctx.caster.team, from, op.rangeCells, hit);
+      if (!victim) break;
+      fireChainHopOps(ctx.world, ctx.caster, op, ctx.resolution, victim, jump, from);
+      hit.add(victim.id);
+      from = { ...victim.position };
     }
-    if (!victim) break;
-    hit.add(victim.id);
-    from = { ...victim.position };
+    return;
+  }
 
-    const falloff = Math.pow(op.falloff, jump);
-    const jumpScratch = newFireScratch();
-    op.ops.forEach((inner: ChainInnerOp, i) => {
-      executeOp(inner, {
-        ...ctx,
-        selector: CHAIN_INNER_SELECTOR,
-        orphanPolicy: 'commit-at-cast',
-        target: victim,
-        targetCell: undefined,
-        resolution: scaleChainResolution(resolutions[i] ?? {}, falloff),
-        fireScratch: jumpScratch,
-      });
+  // Staggered: queue jump 1, which cascades the rest one hop per `delayTicks`.
+  ctx.world.scheduleChainHop({
+    fireAtTick: ctx.world.currentTick + delayTicks,
+    casterId: ctx.caster.id,
+    op,
+    resolution: ctx.resolution,
+    fromPos: from,
+    hitIds: [...hit],
+    jumpIndex: 1,
+  });
+}
+
+/**
+ * Apply one hop's inner ops to `victim` (with the jump's cumulative `falloff`) and
+ * emit the `unit:chained` arc event. Shared by the immediate jump 0, the
+ * synchronous tail, and the deferred per-tick hops — so the firing is identical
+ * however the hop is scheduled. `fromPos` is the arc's source cell (the caster for
+ * jump 0, else the previous victim).
+ */
+function fireChainHopOps(
+  world: World,
+  caster: Unit,
+  op: ChainOp,
+  resolution: OpResolution,
+  victim: Unit,
+  jumpIndex: number,
+  fromPos: GridCoord,
+): void {
+  const falloff = Math.pow(op.falloff, jumpIndex);
+  const chainResolutions = resolution.chainOps ?? [];
+  const scratch = newFireScratch();
+  op.ops.forEach((inner: ChainInnerOp, i) => {
+    executeOp(inner, {
+      caster,
+      world,
+      orphanPolicy: 'commit-at-cast',
+      selector: CHAIN_INNER_SELECTOR,
+      target: victim,
+      targetCell: undefined,
+      resolution: scaleChainResolution(chainResolutions[i] ?? {}, falloff),
+      phaseTicks: 0,
+      remainingTicks: 0,
+      fireScratch: scratch,
+    });
+  });
+  world.emit('unit:chained', {
+    casterId: caster.id,
+    targetId: victim.id,
+    from: { ...fromPos },
+    to: { ...victim.position },
+    jumpIndex,
+  });
+}
+
+/**
+ * Fire one DEFERRED chain hop (called by `processChainHops` when it comes due):
+ * re-resolve the next target LIVE off the stored origin, fire its ops, then queue
+ * the following hop if any jumps remain. Breaks the chain (fires nothing further)
+ * if the caster died mid-arc or no fresh target sits in range.
+ */
+function advanceChainHop(world: World, hop: PendingChainHop): void {
+  const caster = world.findUnit(hop.casterId);
+  if (!caster || caster.currentHp <= 0) return; // caster gone → the arc dies with it
+  const hit = new Set<number>(hop.hitIds);
+  const victim = nearestChainTarget(world, caster.team, hop.fromPos, hop.op.rangeCells, hit);
+  if (!victim) return; // no fresh target in range → chain ends
+
+  fireChainHopOps(world, caster, hop.op, hop.resolution, victim, hop.jumpIndex, hop.fromPos);
+  hit.add(victim.id);
+
+  const nextJump = hop.jumpIndex + 1;
+  if (nextJump < hop.op.maxJumps) {
+    world.scheduleChainHop({
+      fireAtTick: world.currentTick + secondsToTicks(hop.op.hopDelaySeconds),
+      casterId: hop.casterId,
+      op: hop.op,
+      resolution: hop.resolution,
+      fromPos: { ...victim.position },
+      hitIds: [...hit],
+      jumpIndex: nextJump,
     });
   }
+}
+
+/**
+ * Process every pending chain hop that has come due this tick (`fireAtTick <=
+ * currentTick`), in queue order, leaving the rest. Driven once per `World.tick`
+ * alongside the periodic-status pass — the shared `reapDead` that follows reaps a
+ * hop-kill on the same tick (combat-kill ordering). A hop that fires may enqueue
+ * its successor (a strictly-later `fireAtTick`), so the not-yet-due remainder is
+ * recomputed before firing to avoid re-running a freshly-scheduled hop this tick.
+ */
+export function processChainHops(world: World): void {
+  const queue = world.pendingChainHops;
+  if (queue.length === 0) return;
+  const now = world.currentTick;
+  const due = queue.filter((h) => h.fireAtTick <= now);
+  if (due.length === 0) return;
+  world.pendingChainHops = queue.filter((h) => h.fireAtTick > now);
+  for (const hop of due) advanceChainHop(world, hop);
 }
 
 /**

@@ -21,6 +21,7 @@ import { SupportMovementBehavior } from '../../src/sim/behaviors/SupportMovement
 import { AbilityBehavior } from '../../src/sim/behaviors/AbilityBehavior';
 import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAction } from '../../src/sim/effects/EffectAction';
+import type { PendingChainHop } from '../../src/sim/effects/interpreter';
 import { rollUnit } from '../../src/sim/archetypes';
 import { applyTerrain } from '../../src/sim/battleSetup';
 import { EventBus } from '../../src/core/EventBus';
@@ -220,6 +221,48 @@ describe('A2 round-trip: World', () => {
     expect(ru.effectiveStats.strength).toBe(buffedStrength);
 
     // A snapshot stamped with the prior version (a pre-K1 save) throws.
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
+  it('§29c: a live snapshot carries pendingChainHops; a pre-§29c (v27) save is rejected', () => {
+    // §29c follow-up added the deferred chain-hop queue to WorldSnapshot (v27→v28).
+    // A chain caught mid-arc by a save must resume its remaining hops; a v27 save
+    // (no `pendingChainHops` field) is rejected outright (no migration — a pre-28
+    // chain resolved all-at-once, never mid-flight). Scheduled DIRECTLY here to
+    // exercise the serialization in isolation (the firing/timing is pinned in
+    // effects/interpreter.test.ts + stormcaller-battle.test.ts).
+    const { world } = freshBattle(54321);
+    // The TERMINAL jump (jumpIndex == maxJumps − 1), so it fires once without
+    // rescheduling — a clean drain assertion regardless of what's in range.
+    const hop: PendingChainHop = {
+      fireAtTick: world.currentTick + 2,
+      casterId: world.units[0]!.id,
+      op: {
+        kind: 'chain', maxJumps: 3, rangeCells: 3, falloff: 0.6, hopDelaySeconds: 0.1,
+        ops: [
+          { kind: 'damage', scaling: 'magic', might: 0, accuracy: 0.6, critBase: 0, critable: false, evadable: false, bypassDefense: false },
+        ],
+      },
+      resolution: { chainOps: [{ baseDamage: 12, critChance: 0 }] },
+      fromPos: { x: 5, y: 5 },
+      hitIds: [world.units[0]!.id, world.units[1]!.id],
+      jumpIndex: 2,
+    };
+    world.scheduleChainHop(hop);
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    expect(wire.pendingChainHops).toHaveLength(1);
+    expect(wire.pendingChainHops[0].jumpIndex).toBe(2);
+
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.pendingChainHops).toEqual(world.pendingChainHops);
+    // The restored queue is live: the tick loop drains the terminal hop when due.
+    for (let i = 0; i < 4; i++) restored.tick();
+    expect(restored.pendingChainHops).toHaveLength(0);
+
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
     expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,

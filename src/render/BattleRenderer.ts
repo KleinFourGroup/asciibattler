@@ -184,6 +184,11 @@ export class BattleRenderer {
     // strangler artifacts) — the impact burst now rides `action:phase{impact}`,
     // same tick, same pre-hitsplat ordering.
     this.subscriptions.push(bus.on('action:phase', this.onActionPhase));
+    // 29c — the chain-lightning arc, drawn PER HOP off `unit:chained` (the §29c
+    // per-hop delay): each event fires on the tick its hop's damage lands, so the
+    // tracer travels jump by jump (the hitsplat rides the normal `unit:attacked`
+    // each hop's inner damage op emits — this draws only the connecting arc).
+    this.subscriptions.push(bus.on('unit:chained', this.onUnitChained));
     // 27e — the status-effect viz, resolved through the §Z FX registry exactly
     // like `action:phase` (status def's `fx[moment]` → key → descriptor →
     // channels). Only the `ticked` moment is wired: the per-tick pulse puffs a
@@ -648,6 +653,34 @@ export class BattleRenderer {
     ).clone();
     this.spawnProjectile(from, to, colorForTeam(attacker.team), undefined, 0, PROJECTILE_SECONDS, undefined, spec.size);
   }
+
+  /**
+   * §29c — one ARC of a chain attack. Fires per hop (`unit:chained`), on the tick
+   * that hop's damage lands, so with `hopDelaySeconds > 0` the bolt visibly travels
+   * jump by jump. Flies a fast `*` tracer from the arc's source cell (`from` — the
+   * caster for jump 0, else the previous victim) to the live target sprite (falling
+   * back to the recorded `to` cell), team-coloured by the caster, plus the gentle
+   * per-hop jolt the `chain_arc` registry entry authors. The DAMAGE feedback (the
+   * hitsplat + HP) rides the normal `unit:attacked` each hop emits — this is the
+   * connecting arc only. The arc is a cosmetic, like the bow tracer: damage already
+   * landed this hop's tick, the bolt just shows the path.
+   */
+  private onUnitChained = ({ casterId, targetId, from, to }: GameEvents['unit:chained']): void => {
+    if (!this.world) return;
+    const caster = this.world.findUnit(casterId);
+    const color = caster ? colorForTeam(caster.team) : COLORS.FLOURESCENT_BLUE;
+    const fromPos = this.tileWorldPos(from).clone();
+    // Prefer the live target sprite (smooth even mid-lerp); fall back to the cell.
+    const targetHandle = this.handles.get(targetId);
+    const toPos = (
+      (targetHandle && this.sprites.getPosition(targetHandle, this.scratchPos)) ??
+      this.tileWorldPos(to)
+    ).clone();
+    this.spawnProjectile(fromPos, toPos, color, undefined, 0, CHAIN_ARC_SECONDS, undefined, PROJECTILE_SIZE);
+    // The gentle electric jolt per zap (the registry authors the magnitude).
+    const fx = fxDescriptor('chain_arc');
+    if (fx?.shake) this.renderer.shakeCamera(fx.shake.intensity, fx.shake.durationSeconds);
+  };
 
   /**
    * E6.B/E7.C — fly a `*` tracer in a straight line `from → to` over
@@ -1194,6 +1227,9 @@ const SHOVE_BACK_SECONDS = 0.13;
  */
 const PROJECTILE_GLYPH = '*';
 const PROJECTILE_SECONDS = 0.18;
+// §29c — the chain arc flies faster than a bow bolt so each zap arrives within its
+// hop's delay window (`hopDelaySeconds` ≈ 0.1s), reading as a snappy "zap…zap…zap".
+const CHAIN_ARC_SECONDS = 0.08;
 const PROJECTILE_BLOOM = 1.2;
 /** Per-sprite size multiplier for the tracer (1 = full unit-glyph size).
  *  Shrinks the `*` so it reads as a bolt rather than a flying letter. */

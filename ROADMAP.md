@@ -636,9 +636,17 @@ isn't omniscient)? The behavior-override **durations** are content dials → §3
 > `cloneResolution`) → round-trips, **no snapshot bump**. `ChainInnerOp` is a RESTRICTED
 > union (`damage | applyStatus`, no nested chain / `z.lazy`, like `PeriodicOpSchema`);
 > the recursion is in the interpreter (`executeChain` → `executeOp` per inner op, fresh
-> per-hop scratch). `assertStatusRefsResolve` recurses into `chain.ops`. FX `chain_arc`
-> reuses the `tracer` channel (one arc caster→primary; per-hop arcs deferred pending
-> playtest). **NEXT = 29d** (summon op + Shaman + Ghoul). **Snapshot bump expected only at 29d**
+> per-hop scratch). `assertStatusRefsResolve` recurses into `chain.ops`.
+> **PER-HOP DELAY follow-up SHIPPED (the chain TRAVELS tick-by-tick; `WorldSnapshot
+> v27→v28`):** the user chose real per-hop timing over a render-only stagger. The
+> chain resolves hop 0 at impact, then the rest ride a **`World.pendingChainHops`
+> deferred queue** (`scheduleChainHop` + `processChainHops` driven per `tick`, beside
+> the §27 periodic engine), firing one hop every `hopDelaySeconds` (new `ChainOp`
+> field, default 0.1s → 2 ticks; `0` = the original all-at-once). Each hop re-resolves
+> its target LIVE, so its arc + damage number + HP drop coincide on that tick. New
+> `unit:chained` per-hop event → the renderer's `onUnitChained` flies a `chain_arc`
+> tracer per arc (the def `fx.impact` retired). v28 round-trips a chain mid-arc.
+> **NEXT = 29d** (summon op + Shaman + Ghoul). **Another snapshot bump at 29d** (v28→v29)
 > (summon `maxLive` per-unit attribution → WorldSnapshot v28). ⚠️ `ALL_ARCHETYPES`
 > auto-makes every archetype player-draftable; the user chose to KEEP all §29
 > archetypes draftable through §29's end (for testing), so the enemy-disruptor

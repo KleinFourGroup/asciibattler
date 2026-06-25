@@ -93,16 +93,20 @@ export function isCombatTargetable(u: Unit): boolean {
 }
 
 /**
- * §29c — the chain op's hop geometry: the nearest combat-targetable enemy (not the
- * caster's team) within `rangeCells` (Chebyshev) of `from`, skipping any id in
+ * §29c — the chain op's hop geometry: the nearest combat-targetable enemy (not on
+ * `casterTeam`) within `rangeCells` (Chebyshev) of `from`, skipping any id in
  * `exclude` (the already-hit set, so the arc never repeats a target). Deterministic
  * — `world.units` order tie-breaks an equal-distance pick (strict `<`, so the first
  * occupant wins), the same order `unitsInCells` preserves for the blast. Returns
  * `undefined` when no fresh target remains in range → the chain ends early.
+ *
+ * Takes the caster's TEAM (not the caster unit) so a deferred hop — resolved a few
+ * ticks after the cast — needn't deref a caster that may have died mid-chain (the
+ * caller bails on a dead caster separately; this stays a pure geometry query).
  */
 export function nearestChainTarget(
   world: World,
-  caster: Unit,
+  casterTeam: Team,
   from: GridCoord,
   rangeCells: number,
   exclude: Set<number>,
@@ -111,7 +115,7 @@ export function nearestChainTarget(
   let bestDist = Infinity;
   for (const u of world.units) {
     if (exclude.has(u.id)) continue;
-    if (u.team === caster.team) continue;
+    if (u.team === casterTeam) continue;
     if (!isCombatTargetable(u)) continue;
     const d = chebyshev(u.position, from);
     if (d > rangeCells) continue;

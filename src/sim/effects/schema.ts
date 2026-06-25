@@ -166,12 +166,21 @@ export const ChainInnerOpSchema = z.discriminatedUnion('kind', [DamageOpSchema, 
  * once at propose time into `OpResolution.chainOps` (aligned with `ops`) and
  * scaled by `falloff` live per jump — so a charged chain uses its CAST-time
  * stats, exactly like every other op.
+ *
+ * `hopDelaySeconds` (§29c follow-up) staggers the arc over real sim ticks: each
+ * jump lands `hopDelaySeconds` after the previous, so the bolt visibly TRAVELS
+ * (the damage number, HP drop, and arc for each hop all coincide on that hop's
+ * tick). `0` = the original all-at-once resolve (every hop on the impact tick).
+ * Deferred hops ride `World.pendingChainHops` (serialized → WorldSnapshot v28),
+ * re-resolving their next target live at fire time, so a target that moved or
+ * died between hops is handled deterministically.
  */
 const ChainOpSchema = z.object({
   kind: z.literal('chain'),
   maxJumps: z.number().int().positive(),
   rangeCells: z.number().int().positive(),
   falloff: z.number().min(0).max(1),
+  hopDelaySeconds: z.number().nonnegative().default(0.1),
   ops: z.array(ChainInnerOpSchema).min(1),
 });
 

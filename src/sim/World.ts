@@ -37,6 +37,7 @@ import { buildStatusEffect } from './effects/statusRuntime';
 import { TriggerDispatcher } from './triggers';
 import type { TriggerContextMap, TriggerHandler, TriggerName } from './triggers';
 import { createAction } from './actions/registry';
+import { processChainHops, type PendingChainHop } from './effects/interpreter';
 import { createBehavior, createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
 import { updateTarget } from './Targeting';
@@ -207,8 +208,15 @@ import { STATS } from '../config/stats';
  *       silently stop ticking. Reject v26 outright per the no-migration contract
  *       (a pre-27 save has no periodic statuses anyway — the feature didn't
  *       exist). RunSnapshot is unaffected — statuses are World-side + transient.
+ *  28 — §29c follow-up (the chain per-hop delay) added `pendingChainHops`: the
+ *       queue of chain jumps waiting to fire on a future tick. A v27 save has no
+ *       such field, so a mid-arc chain would resume with its remaining hops lost
+ *       (the lightning stops halfway). Reject v27 outright per the no-migration
+ *       contract — a pre-28 chain resolved all-at-once, so a v27 save never has a
+ *       hop in flight. RunSnapshot is unaffected (the queue is World-side +
+ *       transient).
  */
-const WORLD_SCHEMA_VERSION = 27;
+const WORLD_SCHEMA_VERSION = 28;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -325,6 +333,10 @@ export interface WorldSnapshot {
    *  storage is structural for future enemy strategies. Restored so a
    *  mid-battle save resumes both teams' objectives. */
   objectives: { player: TeamObjective; enemy: TeamObjective };
+  /** §29c: chain jumps waiting to fire on a future tick (the per-hop delay). A
+   *  chain caught mid-arc by a save resumes its remaining hops from here. Empty
+   *  for every non-chain battle and for an instant (`hopDelaySeconds: 0`) chain. */
+  pendingChainHops: PendingChainHop[];
 }
 
 /**
@@ -374,6 +386,16 @@ export class World {
    * setup calls `applyTerrain` to populate it from the encounter seed.
    */
   readonly tileGrid: TileGrid;
+
+  /**
+   * §29c — chain jumps waiting to fire on a future tick (the per-hop delay). A
+   * staggered chain enqueues its next hop here; `processChainHops` (driven once per
+   * `tick`, alongside the periodic-status pass) fires the due ones. Reassigned in
+   * place by the processor (drops the fired hops, keeps the not-yet-due tail), so
+   * it's mutable, not `readonly`. Serialized in the WorldSnapshot (v28) so a chain
+   * caught mid-arc by a save resumes its remaining hops.
+   */
+  pendingChainHops: PendingChainHop[] = [];
 
   private readonly bus: EventBus<GameEvents>;
   private tickCount = 0;
@@ -930,6 +952,12 @@ export class World {
     // queue gets a chance to reinforce before victory triggers.
     this.runOverflowScan();
 
+    // 29c — fire any chain hops that came due this tick (the per-hop delay). Sits
+    // beside the periodic pass — both are scheduled over-time HP changes routed
+    // through `dealDamage`, and the shared `reapDead()` below reaps a hop-kill on
+    // the SAME tick (combat-kill ordering).
+    processChainHops(this);
+
     // 27 — per-unit periodic status ticks (DoT/HoT). The fire/healing tiles
     // feed this via `applyTileStatuses` below (a unit standing on fire carries
     // `burn`, on healing carries `rejuvenate`), so this is the single HP-over-
@@ -1021,6 +1049,16 @@ export class World {
    * with no periodic effect is a cheap per-effect no-op; the fire/healing tiles
    * (27d) are the first in-battle source that seeds one.
    */
+  /**
+   * §29c — enqueue a chain jump to fire on a future tick (the per-hop delay). The
+   * interpreter's `executeChain` / `advanceChainHop` push here; `processChainHops`
+   * (driven in `tick`) fires the due ones. Thin by design — the queue is plain data
+   * the snapshot round-trips, and all the firing logic stays in the interpreter.
+   */
+  scheduleChainHop(hop: PendingChainHop): void {
+    this.pendingChainHops.push(hop);
+  }
+
   private applyPeriodicEffects(): void {
     for (const unit of this.units) {
       if (unit.currentHp <= 0) continue;
@@ -1570,6 +1608,14 @@ export class World {
       // per-team `TeamObjective` values are immutable, so referencing them is
       // safe; callers JSON-serialize the snapshot anyway.
       objectives: { player: this.objectives.player, enemy: this.objectives.enemy },
+      // 29c — copy each pending hop's MUTABLE per-hop state (`fromPos`/`hitIds`);
+      // `op`/`resolution` are immutable cast-time data, safe to reference (the
+      // caller JSON-serializes the snapshot anyway).
+      pendingChainHops: this.pendingChainHops.map((h) => ({
+        ...h,
+        fromPos: { ...h.fromPos },
+        hitIds: h.hitIds.slice(),
+      })),
     };
   }
 
@@ -1678,6 +1724,12 @@ export class World {
     // already rejected any v24 save that lacks the `objectives` field).
     world.objectives.player = snap.objectives.player;
     world.objectives.enemy = snap.objectives.enemy;
+
+    // 29c — restore the pending chain hops (copy the mutable per-hop bits; the
+    // version check above rejected any v27 save that lacks the field).
+    for (const h of snap.pendingChainHops) {
+      world.pendingChainHops.push({ ...h, fromPos: { ...h.fromPos }, hitIds: h.hitIds.slice() });
+    }
 
     return world;
   }

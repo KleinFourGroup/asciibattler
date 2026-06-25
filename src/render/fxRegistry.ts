@@ -190,12 +190,12 @@ export const FX_REGISTRY = {
   light_ray: { tracer: {} }, // an archer-style beam (blind on the landed hit)
   wail_burst: { burst: { style: 'explosion' }, shake: { intensity: 0.1, durationSeconds: 0.3 } }, // the fear scream
 
-  // 29c — the stormcaller's chain lightning. The tracer fires once off
-  // `action:phase{impact}` (caster → the PRIMARY target); the per-hop arcs aren't
-  // drawn yet (that needs a per-jump event), but the chain's damage lands with a
-  // floating hitsplat on every arced unit. SFX deferred to §31 (the afflicter
-  // precedent — no `sound` field). A small light shake gives the strike weight.
-  chain_arc: { tracer: {}, shake: { intensity: 0.06, durationSeconds: 0.2 } },
+  // 29c — the stormcaller's chain lightning. Driven per HOP off `unit:chained`
+  // (not `action:phase`), so the bolt visibly travels jump by jump: each arc flies
+  // from the previous victim to the next with a subtle electric jolt. Fires once
+  // per hop, so the shake is gentle (it stacks across a 2–3 hop arc). SFX deferred
+  // to §31 (the afflicter precedent — no `sound` field).
+  chain_arc: { tracer: {}, shake: { intensity: 0.04, durationSeconds: 0.12 } },
 
   // 27e — the periodic statuses. Each status authors a `_tick` key: the
   // per-second pulse → a recolored mote puff + the damage/heal hitsplat number.

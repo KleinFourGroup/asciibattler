@@ -163,6 +163,22 @@ export interface GameEvents extends Record<string, unknown> {
    *  is the ability-heal cue only. */
   'unit:healed': { unitId: number; amount: number; healerId: number | null };
   /**
+   * §29c — one ARC of a chain attack reached a target. Fires per hop (the §29c
+   * chain op), on the tick that hop's damage lands — so with `hopDelaySeconds > 0`
+   * the events stagger and the renderer draws the lightning travelling jump by
+   * jump. `from`/`to` are the arc's grid endpoints (`from` = the caster for
+   * `jumpIndex 0`, else the previous victim's cell); `targetId` is the unit this
+   * hop struck (the live destination sprite). `casterId` tags the source (team
+   * colour). Render-only — the damage itself rides the normal `unit:attacked`
+   * each hop's inner damage op emits; this event carries only the arc geometry. */
+  'unit:chained': {
+    casterId: number;
+    targetId: number;
+    from: GridCoord;
+    to: GridCoord;
+    jumpIndex: number;
+  };
+  /**
    * Fires once per unit removal from the world. `team` is included so
    * subscribers can branch on combatant vs neutral (wall / environment)
    * deaths without re-querying the world — by the time this event fires

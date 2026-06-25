@@ -356,8 +356,11 @@ describe('executeOp — chain (§29c)', () => {
     kind: 'damage', scaling: 'magic', might: 0, accuracy: 0.6, critBase: 0,
     critable: false, evadable: false, bypassDefense: false,
   };
+  // `hopDelaySeconds: 0` = the synchronous resolve (every hop on the call tick),
+  // so these geometry/falloff assertions read the full chain right after executeOp.
+  // The staggered (deferred) path has its own describe block below.
   const chainOp = (o: Partial<Extract<EffectOp, { kind: 'chain' }>> = {}): EffectOp => ({
-    kind: 'chain', maxJumps: 3, rangeCells: 2, falloff: 0.5, ops: [innerDmg], ...o,
+    kind: 'chain', maxJumps: 3, rangeCells: 2, falloff: 0.5, hopDelaySeconds: 0, ops: [innerDmg], ...o,
   });
   const hp = (u: Unit) => u.derived.maxHp - u.currentHp;
 
@@ -477,5 +480,75 @@ describe('executeOp — chain (§29c)', () => {
     } finally {
       delete STATUS_DEFS.t_chain;
     }
+  });
+});
+
+describe('executeOp — chain (deferred per-hop timing, §29c follow-up)', () => {
+  const innerDmg: EffectOp = {
+    kind: 'damage', scaling: 'magic', might: 0, accuracy: 0.6, critBase: 0,
+    critable: false, evadable: false, bypassDefense: false,
+  };
+  const hp = (u: Unit) => u.derived.maxHp - u.currentHp;
+  // hopDelaySeconds 0.1 → secondsToTicks(0.1) ticks of stagger between hops.
+  const DELAY_TICKS = secondsToTicks(0.1);
+  const stagChain: EffectOp = {
+    kind: 'chain', maxJumps: 3, rangeCells: 2, falloff: 0.5, hopDelaySeconds: 0.1, ops: [innerDmg],
+  };
+
+  function lineOfThree() {
+    const { world, events } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const primary = makeUnit('enemy', { x: 5, y: 5 });
+    const near = makeUnit('enemy', { x: 6, y: 5 }); // dist 1 from primary
+    const far = makeUnit('enemy', { x: 7, y: 5 }); // dist 1 from `near`
+    world.units.push(caster, primary, near, far);
+    return { world, events, caster, primary, near, far };
+  }
+
+  it('lands ONLY hop 0 immediately and queues the rest', () => {
+    const { world, primary, near, far } = lineOfThree();
+    executeOp(stagChain, ctx({ caster: world.units[0]!, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }));
+    expect(hp(primary)).toBe(20); // hop 0 fired now
+    expect(hp(near)).toBe(0); // hop 1 is deferred
+    expect(hp(far)).toBe(0);
+    expect(world.pendingChainHops).toHaveLength(1); // jump 1 queued
+    expect(world.pendingChainHops[0]!.jumpIndex).toBe(1);
+  });
+
+  it('fires one hop per DELAY_TICKS as the queue comes due (the bolt travels)', () => {
+    const { world, primary, near, far } = lineOfThree();
+    executeOp(stagChain, ctx({ caster: world.units[0]!, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }));
+    // Advance to just before hop 1 is due → still un-fired.
+    for (let i = 0; i < DELAY_TICKS - 1; i++) world.tick();
+    expect(hp(near)).toBe(0);
+    world.tick(); // hop 1 comes due
+    expect(hp(near)).toBe(10); // falloff^1
+    expect(hp(far)).toBe(0); // hop 2 now queued, not yet due
+    expect(world.pendingChainHops).toHaveLength(1);
+    for (let i = 0; i < DELAY_TICKS; i++) world.tick();
+    expect(hp(far)).toBe(5); // falloff^2 — the chain finished
+    expect(world.pendingChainHops).toHaveLength(0);
+  });
+
+  it('a hopless instant chain (hopDelaySeconds 0) resolves every hop in the call', () => {
+    const { world, primary, near, far } = lineOfThree();
+    executeOp(
+      { ...stagChain, hopDelaySeconds: 0 },
+      ctx({ caster: world.units[0]!, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
+    );
+    expect([hp(primary), hp(near), hp(far)]).toEqual([20, 10, 5]); // all at once
+    expect(world.pendingChainHops).toHaveLength(0); // nothing deferred
+  });
+
+  it('breaks the chain mid-arc if the caster dies before the next hop', () => {
+    const { world, caster, primary, near } = lineOfThree();
+    // A surviving teammate keeps the battle (and the tick loop) alive after the
+    // caster falls, so the deferred hop actually comes due to a dead caster.
+    world.units.push(makeUnit('player', { x: 0, y: 2 }));
+    executeOp(stagChain, ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }));
+    caster.currentHp = 0; // the stormcaller is slain before hop 1 lands
+    for (let i = 0; i < DELAY_TICKS + 1; i++) world.tick();
+    expect(hp(near)).toBe(0); // the arc died with its caster
+    expect(world.pendingChainHops).toHaveLength(0); // the due hop was dropped, not rescheduled
   });
 });

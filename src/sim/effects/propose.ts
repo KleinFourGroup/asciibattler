@@ -292,8 +292,11 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
       // knockback / pull are the reserved Cluster-2 seam (never authored here).
       throw new Error(`EffectAbility: move mode '${op.mode}' is reserved`);
     }
-    // `applyStatus` is reserved until Phase 29 (status-on-hit).
-    default:
-      throw new Error(`EffectAbility: op '${op.kind}' not yet resolvable at propose time`);
+    case 'applyStatus':
+      // 29 — status-on-hit carries no cast-time scalars: the statusId / magnitude /
+      // duration are static on the op and read LIVE by the interpreter at fire
+      // time (the status registry is the source of truth). No resolution to
+      // capture — the empty object keeps the per-op alignment with `def.effects`.
+      return {};
   }
 }

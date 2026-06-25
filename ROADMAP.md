@@ -608,6 +608,26 @@ isn't omniscient)? The behavior-override **durations** are content dials → §3
 
 ## Phase 29 — New attack mechanics: chain / status-on-hit / summon
 
+> **▶ IN PROGRESS — the user chose "full demo archetypes now,"** so §29 absorbs
+> §30's content floor: the 3 new ops PLUS a 9-archetype demo roster (user-speced
+> stats), built across ~6 commits, each op landing with its first consumer. The
+> roster: PLAYER afflicters **Reaver** (bleed/`cleaver`, adventurer stats) ·
+> **Corrupter** (poison "Vial", no-windup 3×3 AoE, mage stats) · **Stormcaller**
+> (chain, mage stats) · **Shaman** (summon, catapult stats) + **Ghoul** minion
+> (½ bandit stats); ENEMY disruptors **Ice mage** (frozen "Ice Storm", instant 3×3
+> AoE, ranged stats) · **Warlock** (confusion, mage stats) · **Luminant** (blind
+> "Light Ray", archer-style, ranged stats) · **Banshee** (panic AoE, mage stats).
+> **✅ 29a SHIPPED (status-on-hit + Reaver), pending playtest:** the reserved
+> `applyStatus` op wired end-to-end ([interpreter.ts](src/sim/effects/interpreter.ts)
+> resolves targets off the def selector, gated on a LANDED hit via the per-fire
+> `missed` scratch; `applyDamage` now returns hit/miss; `applyStatusEffect` gained a
+> duration override) + Reaver/`cleaver` (bleed-on-hit melee) + the FontAtlas resize
+> 8×4→8×6. No snapshot bump. **NEXT = 29b** (Corrupter/Ice mage/Warlock/Luminant/
+> Banshee — pure content). **Snapshot bump expected only at 29d** (summon `maxLive`
+> per-unit attribution → WorldSnapshot v28). ⚠️ `ALL_ARCHETYPES` auto-makes every
+> archetype player-draftable — the enemy disruptors need explicit recruit-pool
+> exclusion when they land.
+
 The net-new ops — pure composition + recursion on the now-stable model. No
 migration source; these are *additions* to the closed vocabulary. (`move`'s
 knockback/pull is **not** here — it's the reserved §Y seam, deferred to Cluster 2;

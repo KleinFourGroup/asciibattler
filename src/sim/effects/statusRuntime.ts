@@ -46,8 +46,14 @@ export function buildStatusEffect(
   atTick: number,
   magnitude: number,
   sourceUnitId: number | null,
+  // 29 — the `applyStatus` op's optional per-application duration override (in
+  // seconds); falls back to the def's base duration when absent.
+  durationSecondsOverride?: number,
 ): StatusEffect {
-  const durationTicks = Math.max(1, secondsToTicks(def.durationSeconds));
+  const durationTicks = Math.max(
+    1,
+    secondsToTicks(durationSecondsOverride ?? def.durationSeconds),
+  );
   const effect: StatusEffect = {
     key: def.id,
     magnitude,

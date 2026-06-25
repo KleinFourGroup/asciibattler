@@ -655,6 +655,12 @@ export class World {
    * only consumed when `evadable` (and a live attacker exists); a missing
    * accuracy on the evadable degraded path is treated as unmissable, the same
    * as a missing attacker.
+   *
+   * 29 — RETURNS whether the blow LANDED: `true` on a confirmed hit (incl. the
+   * unmissable / degraded paths), `false` only on an evade miss. The status-on-hit
+   * `applyStatus` op reads this so a status rides a landed hit and skips a missed
+   * swing (the interpreter records the miss into the per-fire scratch). Callers
+   * that don't care (the legacy damage paths) ignore the value — byte-identical.
    */
   /**
    * 27 — the shared damage CORE: subtractive `defense` mitigation (skipped when
@@ -687,7 +693,7 @@ export class World {
     target: Unit,
     rawDamage: number,
     opts: { crit: boolean; evadable?: boolean; accuracy?: number; bypassDefense?: boolean },
-  ): void {
+  ): boolean {
     // K1 — looked up once: a live attacker is the runtime invariant (the strike
     // is cast by it), and the combat triggers below need the Unit. `findUnit`
     // is an O(1) `unitsById` hit and draws no RNG, so hoisting it off the
@@ -721,7 +727,7 @@ export class World {
           // the L dodge-buff hook). Skipped on the degraded no-attacker path.
           this.fireTrigger('dealMiss', { attacker, target });
           this.fireTrigger('evade', { target, attacker });
-          return;
+          return false; // 29 — the miss the status-on-hit gate reads.
         }
       }
     }
@@ -743,6 +749,7 @@ export class World {
       this.fireTrigger('takeHit', { target, attacker, damage: final, crit: opts.crit });
       if (target.currentHp <= 0) this.fireTrigger('kill', { attacker, victim: target });
     }
+    return true; // 29 — landed (incl. the unmissable / degraded paths).
   }
 
   /** Test-only read of the damage ledger. */
@@ -964,17 +971,22 @@ export class World {
    * (merge-mapped, periodic cursor seeded), merges it onto the unit honouring
    * the merge policy, and fires `status:applied`. `sourceUnitId` = the applier
    * (the §29 caster) or `null` (environmental, the §27d fire tile). `magnitude`
-   * scales the periodic output + stacks under the `add` policy (default 1).
-   * Callers land in §27d (tiles) and §29 (the `applyStatus` op); 27b ships the
-   * mechanism (the empty catalog means nothing applies in production yet).
+   * scales the periodic output + stacks under the `add` policy (default 1);
+   * `durationSecondsOverride` (29) lets an `applyStatus` op override the def's
+   * base duration. Callers: §27d (fire/healing tiles) and §29 (the `applyStatus`
+   * op — the status-on-hit production applier).
    */
   applyStatusEffect(
     target: Unit,
     def: StatusDef,
     sourceUnitId: number | null,
     magnitude = 1,
+    // 29 — the `applyStatus` op's optional per-application duration override.
+    durationSecondsOverride?: number,
   ): void {
-    target.addEffect(buildStatusEffect(def, this.tickCount, magnitude, sourceUnitId));
+    target.addEffect(
+      buildStatusEffect(def, this.tickCount, magnitude, sourceUnitId, durationSecondsOverride),
+    );
     this.bus.emit('status:applied', { unitId: target.id, statusId: def.id, sourceUnitId });
   }
 

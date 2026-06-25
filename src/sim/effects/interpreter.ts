@@ -22,10 +22,34 @@ import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { OrphanPolicy } from '../Action';
 import { STATS } from '../../config/stats';
+import { statusDef } from '../../config/statuses';
 import type { EffectOp, TargetSelector } from './schema';
 import { resolveAreaVictims } from './targeting';
 import { retreatCell } from './reposition';
 import { behaviorFlags } from '../statusBehavior';
+
+/**
+ * 29 — per-FIRE scratch, shared across every op that fires in one phase pass
+ * (`EffectAction.fireOpsAt` builds one and threads it into each op's context).
+ * It carries the status-on-hit gate: which single-target evade MISSES happened
+ * this pass, so an `applyStatus` op slotted on the same phase as its paired
+ * `damage` op skips the targets the strike whiffed on.
+ *
+ * Why track misses, not hits: non-evadable damage (every AoE) and a 0-damage
+ * ring cell never call into the evade roll, so they're never "missed" — an area
+ * status still lands on everyone the blast covered, while an evaded single-target
+ * swing (the only thing that populates this set) drops its rider. A dead/fizzled
+ * target is filtered separately by `applyStatus`'s own alive check.
+ */
+export interface FireScratch {
+  /** Unit ids a damage op this pass explicitly MISSED (evade). */
+  missed: Set<number>;
+}
+
+/** A fresh, empty per-fire scratch. */
+export function newFireScratch(): FireScratch {
+  return { missed: new Set<number>() };
+}
 
 /** Cast-time-resolved values for one op, captured at propose time. */
 export interface OpResolution {
@@ -56,6 +80,8 @@ export interface OpFireContext {
   phaseTicks: number;
   /** finishTick − currentTick (the `retreat` move's lerp window). */
   remainingTicks: number;
+  /** 29 — the per-fire scratch shared by every op on this phase (status-on-hit). */
+  fireScratch: FireScratch;
 }
 
 export function executeOp(op: EffectOp, ctx: OpFireContext): void {
@@ -70,9 +96,8 @@ export function executeOp(op: EffectOp, ctx: OpFireContext): void {
       executeMove(op, ctx);
       return;
     case 'applyStatus':
-      throw new Error(
-        "effect op 'applyStatus' is reserved — not built until Phase 29 (status-on-hit)",
-      );
+      executeApplyStatus(op, ctx);
+      return;
     default: {
       const _exhaustive: never = op;
       throw new Error(`unknown effect op: ${JSON.stringify(_exhaustive)}`);
@@ -109,12 +134,13 @@ function executeDamage(
     for (const { unit: victim, mult } of victims) {
       const damage = Math.round(baseDamage * critFactor * mult);
       if (damage <= 0) continue; // a ring cell that rounds to nothing
-      world.applyDamage(caster.id, victim, damage, {
+      const landed = world.applyDamage(caster.id, victim, damage, {
         crit,
         evadable: op.evadable,
         accuracy: op.accuracy,
         bypassDefense: op.bypassDefense,
       });
+      if (!landed) ctx.fireScratch.missed.add(victim.id); // 29 — status-on-hit gate
     }
     return;
   }
@@ -128,12 +154,13 @@ function executeDamage(
     const crit = world.combatRng.next() < critChance;
     const damage = Math.round(baseDamage * (crit ? STATS.critMult : 1));
     if (damage <= 0) return;
-    world.applyDamage(caster.id, target!, damage, {
+    const landed = world.applyDamage(caster.id, target!, damage, {
       crit,
       evadable: op.evadable,
       accuracy: op.accuracy,
       bypassDefense: op.bypassDefense,
     });
+    if (!landed) ctx.fireScratch.missed.add(target!.id); // 29 — status-on-hit gate
     return;
   }
 
@@ -142,12 +169,13 @@ function executeDamage(
   const crit = world.combatRng.next() < critChance;
   const damageMultiplier = ctx.resolution.damageMultiplier ?? 1;
   const damage = Math.round(baseDamage * (crit ? STATS.critMult : 1) * damageMultiplier);
-  world.applyDamage(caster.id, target, damage, {
+  const landed = world.applyDamage(caster.id, target, damage, {
     crit,
     evadable: op.evadable,
     accuracy: op.accuracy,
     bypassDefense: op.bypassDefense,
   });
+  if (!landed) ctx.fireScratch.missed.add(target.id); // 29 — status-on-hit gate
 }
 
 function executeHeal(_op: Extract<EffectOp, { kind: 'heal' }>, ctx: OpFireContext): void {
@@ -188,4 +216,55 @@ function executeMove(op: Extract<EffectOp, { kind: 'move' }>, ctx: OpFireContext
   const moveTicks = caster.derived.moveCooldownTicks;
   const durationTicks = Math.max(1, Math.min(moveTicks, ctx.remainingTicks));
   world.emit('unit:moved', { unitId: caster.id, from, to: dest, durationTicks });
+}
+
+/**
+ * 29 — status-on-hit: apply a configured status to the op's resolved targets.
+ * Targets resolve off the def's SELECTOR (the same axis the paired damage op
+ * uses); the status-on-hit gate then drops any the strike MISSED this pass and
+ * any already dead (a corpse / fizzled shot). A PURE applier (no paired damage,
+ * e.g. an AoE control cloud) leaves the miss set empty, so it lands on every
+ * resolved target. `magnitude` (default 1) scales the status's periodic output
+ * and stacks under the `add` merge; `durationSeconds`, when authored, overrides
+ * the def's base duration.
+ *
+ * ORDER MATTERS: this must be authored AFTER its paired `damage` op on the same
+ * phase so the miss is recorded before the gate reads it (`fireOpsAt` walks
+ * `def.effects` in order). The §30 attack editor enforces it; the interpreter
+ * relies on it.
+ */
+function executeApplyStatus(
+  op: Extract<EffectOp, { kind: 'applyStatus' }>,
+  ctx: OpFireContext,
+): void {
+  const def = statusDef(op.statusId);
+  for (const t of resolveStatusTargets(ctx)) {
+    if (t.currentHp <= 0) continue; // never status a corpse / fizzled target
+    if (ctx.fireScratch.missed.has(t.id)) continue; // the missed-swing gate
+    ctx.world.applyStatusEffect(t, def, ctx.caster.id, op.magnitude ?? 1, op.durationSeconds);
+  }
+}
+
+/**
+ * The units an op resolves to under the def's selector at fire time — the
+ * targeting axis, shared with the damage path. `aoe` resolves its live occupants
+ * (honouring a confused caster's forced `affects:'all'`, like `executeDamage`);
+ * `self` is the caster; a single-target selector is the captured live target.
+ */
+function resolveStatusTargets(ctx: OpFireContext): Unit[] {
+  const sel = ctx.selector;
+  if (sel.kind === 'aoe') {
+    const center = ctx.targetCell;
+    if (center === undefined) return [];
+    const affects = behaviorFlags(ctx.caster.effects).affects ?? sel.affects;
+    return resolveAreaVictims(ctx.world, ctx.caster, center, {
+      shape: sel.shape,
+      radius: sel.radius,
+      ringMultiplier: sel.ringMultiplier,
+      affects,
+    }).map((v) => v.unit);
+  }
+  if (sel.kind === 'self') return [ctx.caster];
+  // enemyInRange / lowestHpAlly — the captured live single target.
+  return ctx.target ? [ctx.target] : [];
 }

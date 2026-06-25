@@ -160,6 +160,11 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
     // `ranged`. The case also keeps the switch exhaustive.
     case 'catapult':
       return stats.ranged;
+    // §29 — the reaver is a strength melee (the bleed-on-hit `cleaver`); the DoT
+    // it stacks is its identity, but the strike itself scales on STR like the
+    // rest of the melee family, so the display "ATK" reads `strength`.
+    case 'reaver':
+      return stats.strength;
     case 'environment':
       return 0;
   }

@@ -9,7 +9,8 @@
     "rogue": 0,
     "healer": 0,
     "mage": 0,
-    "catapult": 0
+    "catapult": 0,
+    "reaver": 0
   },
   "composition": {
     "mercenary": 0,
@@ -20,7 +21,8 @@
     "rogue": 0,
     "healer": 0,
     "mage": 0,
-    "catapult": 0
+    "catapult": 0,
+    "reaver": 0
   },
   "compWeight": 0,
   "level": 0,

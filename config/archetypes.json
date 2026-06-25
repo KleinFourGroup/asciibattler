@@ -277,5 +277,36 @@
       "mobility": 0.07,
       "power": 0.1
     }
+  },
+  "reaver": {
+    "glyph": "V",
+    "abilities": ["cleaver"],
+    "targeting": "nearest",
+    "baseStats": {
+      "constitution": 20,
+      "strength": 6,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 4,
+      "defense": 2,
+      "precision": 5,
+      "evasion": 11,
+      "speed": 7,
+      "mobility": 3,
+      "power": 1
+    },
+    "growthRates": {
+      "constitution": 0.7,
+      "strength": 0.4,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0.4,
+      "defense": 0.1,
+      "precision": 0.2,
+      "evasion": 0.45,
+      "speed": 0.35,
+      "mobility": 0.13,
+      "power": 0.1
+    }
   }
 }

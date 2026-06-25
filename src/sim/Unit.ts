@@ -46,7 +46,9 @@ export type Archetype =
   | 'rogue'
   | 'healer'
   | 'mage'
-  | 'catapult';
+  | 'catapult'
+  // §29 demo roster (Cluster 1) — the status-on-hit / chain / summon consumers.
+  | 'reaver';
 export type UnitArchetype = Archetype | 'environment';
 
 /**

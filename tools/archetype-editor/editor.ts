@@ -69,6 +69,8 @@ const OUTPUT_LABEL: Record<ArchetypeKey, string> = {
   healer: 'MAG (heal)',
   mage: 'MAG',
   catapult: 'RNG',
+  // §29 demo roster.
+  reaver: 'STR',
 };
 
 // ---- State ----

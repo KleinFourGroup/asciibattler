@@ -27,8 +27,10 @@ export const GLYPHS = [
   'R', // I5: ronin (melee subclass — crit duelist).
   'B', // I5: bandit (melee subclass — low-growth enemy fodder).
   'X', // J3: in-battle objective marker (the rally-tile / target-enemy 'X').
+  'V', // §29: reaver unit glyph (bleed-on-hit melee, the status-on-hit demo).
 ] as const;
-// ⚠️ Atlas budget: 32/32 cells used — the FontAtlas grid (COLS×ROWS = 8×4 = 32)
-// is now FULL. The J3 'X' marker took the last cell; the NEXT glyph appended
-// here REQUIRES a grid resize first (bump COLS/ROWS in FontAtlas.ts, gotcha #33),
-// or getGlyphUV will index a cell that doesn't exist.
+// ⚠️ Atlas budget: 33/48 cells used — §29 grew the FontAtlas grid to 8×6 = 48
+// (was 8×4 = 32, full at the J3 'X'). The remaining §29 demo-roster glyphs
+// (corrupter/ice mage/warlock/luminant/banshee/stormcaller/shaman/ghoul) append
+// here, one per archetype commit, well within budget. Keep appending (gotcha #33,
+// append-only) until 48; the next overflow needs another FontAtlas.ts resize.

@@ -38,9 +38,18 @@ const MIGRATED_ABILITY_IDS = [
   'catapult_shot',
 ] as const;
 
+// §29 — the new demo-roster verbs (status-on-hit / chain / summon). NET-NEW
+// data-driven abilities (not Phase-Y migrations), but the SAME generic
+// `EffectAbility` factory — each is just an `AbilityDef` in config/abilities.json.
+// Append one per archetype commit as the roster lands.
+const DEMO_ABILITY_IDS = ['cleaver'] as const;
+
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(
-    MIGRATED_ABILITY_IDS.map((id) => [id, () => new EffectAbility(abilityDef(id))]),
+    [...MIGRATED_ABILITY_IDS, ...DEMO_ABILITY_IDS].map((id) => [
+      id,
+      () => new EffectAbility(abilityDef(id)),
+    ]),
   ),
 };
 

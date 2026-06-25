@@ -139,6 +139,8 @@ export const ArchetypesSchema = z.object({
   healer: ArchetypeSchema,
   mage: ArchetypeSchema,
   catapult: ArchetypeSchema,
+  // §29 demo roster (Cluster 1) — status-on-hit / chain / summon consumers.
+  reaver: ArchetypeSchema,
 });
 
 export type ArchetypeConfig = z.infer<typeof ArchetypeSchema>;

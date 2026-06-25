@@ -288,5 +288,38 @@
       }
     ],
     "fx": { "release": "catapult_launch", "impact": "catapult_burst" }
+  },
+  "cleaver": {
+    "id": "cleaver",
+    "name": "Cleaver",
+    "cooldownSeconds": 1.5,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 4,
+          "accuracy": 0.65,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "applyStatus", "statusId": "bleed" }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
   }
 }

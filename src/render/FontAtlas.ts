@@ -30,9 +30,12 @@ const CELL_PX = 64;
 const FONT_PX = 56;
 
 const COLS = 8;
-const ROWS = 4;
+// §29 (gotcha #33) — bumped 4 → 6 to seat the new demo roster's glyphs. The
+// J3 'X' filled the old 8×4 = 32; the status-on-hit/chain/summon archetypes
+// (reaver/corrupter/…) overflow it, so the grid grew to 8×6 = 48 (16 free).
+const ROWS = 6;
 const ATLAS_W = COLS * CELL_PX; // 512
-const ATLAS_H = ROWS * CELL_PX; // 256
+const ATLAS_H = ROWS * CELL_PX; // 384
 
 // The registered glyph set moved to ./glyphs (a THREE-free module) so the
 // headless suite can import it without pulling in the renderer — see

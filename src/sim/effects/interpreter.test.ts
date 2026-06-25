@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { World } from '../World';
 import { Unit, type Team, type UnitArchetype, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
@@ -8,7 +8,10 @@ import { STATS } from '../../config/stats';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
 import type { EffectOp, TargetSelector } from './schema';
-import { executeOp, type OpFireContext } from './interpreter';
+import { executeOp, newFireScratch, type OpFireContext } from './interpreter';
+import { STATUS_DEFS } from '../../config/statuses';
+import { parseStatusDef } from './statusSchema';
+import { secondsToTicks } from '../../config';
 
 /**
  * Phase Y2 — the op interpreter in isolation. Explicit-input mechanic tests: each
@@ -49,6 +52,7 @@ function ctx(over: Partial<OpFireContext> & Pick<OpFireContext, 'caster' | 'worl
     resolution: {},
     phaseTicks: 0,
     remainingTicks: 0,
+    fireScratch: newFireScratch(),
     ...over,
   };
 }
@@ -249,17 +253,98 @@ describe('executeOp — move', () => {
   });
 });
 
-describe('executeOp — reserved ops throw', () => {
-  it('applyStatus throws (reserved until §29)', () => {
-    const { world } = setup();
-    const caster = makeUnit('player', { x: 0, y: 0 });
-    expect(() => executeOp({ kind: 'applyStatus', statusId: 'burn' }, ctx({ caster, world }))).toThrow(/reserved/);
-  });
-
+describe('executeOp — move reserved modes throw', () => {
   it('move knockback/pull throw (reserved until Cluster 2)', () => {
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     expect(() => executeOp({ kind: 'move', mode: 'knockback', cells: 1 }, ctx({ caster, world, resolution: { moveDest: { x: 1, y: 1 } } }))).toThrow(/reserved/);
     expect(() => executeOp({ kind: 'move', mode: 'pull', cells: 1 }, ctx({ caster, world, resolution: { moveDest: { x: 1, y: 1 } } }))).toThrow(/reserved/);
+  });
+});
+
+describe('executeOp — applyStatus (status-on-hit, §29)', () => {
+  // A fixture status injected into the (file-isolated) registry, so these mechanic
+  // tests never depend on the shipped catalog (the balance-proof discipline).
+  const TS = { id: 't_onhit', name: 't_onhit', durationSeconds: 4, merge: 'refresh' } as const;
+  beforeAll(() => {
+    STATUS_DEFS.t_onhit = parseStatusDef(TS);
+  });
+  afterAll(() => {
+    delete STATUS_DEFS.t_onhit;
+  });
+
+  const statusOp = (o: Partial<Extract<EffectOp, { kind: 'applyStatus' }>> = {}): EffectOp => ({
+    kind: 'applyStatus', statusId: 't_onhit', ...o,
+  });
+  const has = (u: Unit) => u.effects.some((e) => e.key === 't_onhit');
+
+  it('applies the status to a live single target (pure applier, no paired damage)', () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const target = makeUnit('enemy', { x: 1, y: 0 });
+    world.units.push(caster, target);
+    executeOp(statusOp(), ctx({ caster, world, target }));
+    expect(has(target)).toBe(true);
+  });
+
+  it('skips a dead target (never status a corpse / fizzled shot)', () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const target = makeUnit('enemy', { x: 1, y: 0 });
+    target.currentHp = 0;
+    world.units.push(caster, target);
+    executeOp(statusOp(), ctx({ caster, world, target }));
+    expect(has(target)).toBe(false);
+  });
+
+  it('the gate skips a target the same-fire damage op MISSED (shared scratch)', () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const target = makeUnit('enemy', { x: 1, y: 0 }, { evasion: 1000 });
+    world.units.push(caster, target);
+    world.combatRng.next = () => 0.99; // crit roll fails, then the miss roll whiffs
+    const shared = ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 0 } });
+    executeOp(dmgOp({ evadable: true, accuracy: 0.6 }), shared);
+    expect(shared.fireScratch.missed.has(target.id)).toBe(true); // the damage op recorded the miss
+    executeOp(statusOp(), shared); // same scratch → gated out
+    expect(has(target)).toBe(false);
+    expect(target.currentHp).toBe(target.derived.maxHp); // untouched + unstatused
+  });
+
+  it('the gate applies when the same-fire damage op LANDS (shared scratch)', () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const target = makeUnit('enemy', { x: 1, y: 0 });
+    world.units.push(caster, target);
+    world.combatRng.next = () => 0; // no crit; the hit lands
+    const shared = ctx({ caster, world, target, resolution: { baseDamage: 5, critChance: 0 } });
+    executeOp(dmgOp({ evadable: true, accuracy: 0.6 }), shared);
+    expect(shared.fireScratch.missed.size).toBe(0);
+    executeOp(statusOp(), shared);
+    expect(has(target)).toBe(true);
+  });
+
+  it('an aoe applier lands on every victim in the blast (non-evadable → no miss)', () => {
+    const aoe: TargetSelector = { kind: 'aoe', shape: 'square', radius: 1, anchor: 'targetCell', affects: 'enemies', ringMultiplier: 0.5 };
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const a = makeUnit('enemy', { x: 5, y: 5 });
+    const b = makeUnit('enemy', { x: 6, y: 5 });
+    world.units.push(caster, a, b);
+    executeOp(statusOp(), ctx({ caster, world, selector: aoe, orphanPolicy: 'ground-target', targetCell: { x: 5, y: 5 } }));
+    expect(has(a)).toBe(true);
+    expect(has(b)).toBe(true);
+  });
+
+  it('passes magnitude through and honours a duration override', () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const target = makeUnit('enemy', { x: 1, y: 0 });
+    world.units.push(caster, target);
+    executeOp(statusOp({ magnitude: 3, durationSeconds: 2 }), ctx({ caster, world, target }));
+    const eff = target.effects.find((e) => e.key === 't_onhit')!;
+    expect(eff.magnitude).toBe(3);
+    // fresh world → tick 0; override 2s wins over the def's 4s base.
+    expect(eff.lifetime).toEqual({ kind: 'ticks', expiresAtTick: Math.max(1, secondsToTicks(2)) });
   });
 });

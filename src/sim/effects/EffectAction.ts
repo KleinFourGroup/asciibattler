@@ -38,7 +38,7 @@ import type { GridCoord } from '../../core/types';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { AbilityDef } from './schema';
-import { executeOp, type OpResolution } from './interpreter';
+import { executeOp, newFireScratch, type OpResolution } from './interpreter';
 
 /** The cast-time-resolved context an `EffectAction` carries (serialized form). */
 export interface EffectActionData {
@@ -140,6 +140,11 @@ export class EffectAction implements Action {
       ? unit.activeAction.finishTick - world.currentTick
       : unit.derived.moveCooldownTicks;
     const target = world.findUnit(this.ctx.targetId);
+    // 29 — ONE scratch per phase pass, shared across every op firing here, so an
+    // `applyStatus` op can read the misses its paired `damage` op recorded
+    // (status-on-hit). Each phase boundary starts fresh — a status rides only the
+    // hits from its OWN phase, never a prior phase's.
+    const fireScratch = newFireScratch();
     this.def.effects.forEach((effect, i) => {
       if (!beginning.has(effect.phase)) return;
       executeOp(effect.op, {
@@ -152,6 +157,7 @@ export class EffectAction implements Action {
         resolution: this.ctx.ops[i] ?? {},
         phaseTicks: ticksOfPhase(phases, effect.phase),
         remainingTicks,
+        fireScratch,
       });
     });
   }

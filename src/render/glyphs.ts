@@ -27,10 +27,15 @@ export const GLYPHS = [
   'R', // I5: ronin (melee subclass — crit duelist).
   'B', // I5: bandit (melee subclass — low-growth enemy fodder).
   'X', // J3: in-battle objective marker (the rally-tile / target-enemy 'X').
-  'V', // §29: reaver unit glyph (bleed-on-hit melee, the status-on-hit demo).
+  'V', // §29a: reaver unit glyph (bleed-on-hit melee, the status-on-hit demo).
+  'C', // §29b: corrupter (poison vial).
+  'I', // §29b: ice mage (frozen ice-storm).
+  'W', // §29b: warlock (confusion hex).
+  'L', // §29b: luminant (blind light-ray).
+  'b', // §29b: banshee (panic wail).
 ] as const;
-// ⚠️ Atlas budget: 33/48 cells used — §29 grew the FontAtlas grid to 8×6 = 48
+// ⚠️ Atlas budget: 38/48 cells used — §29 grew the FontAtlas grid to 8×6 = 48
 // (was 8×4 = 32, full at the J3 'X'). The remaining §29 demo-roster glyphs
-// (corrupter/ice mage/warlock/luminant/banshee/stormcaller/shaman/ghoul) append
-// here, one per archetype commit, well within budget. Keep appending (gotcha #33,
-// append-only) until 48; the next overflow needs another FontAtlas.ts resize.
+// (stormcaller/shaman/ghoul) append here, one per archetype commit, well within
+// budget. Keep appending (gotcha #33, append-only) until 48; the next overflow
+// needs another FontAtlas.ts resize.

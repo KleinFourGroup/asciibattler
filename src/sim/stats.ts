@@ -165,6 +165,18 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
     // rest of the melee family, so the display "ATK" reads `strength`.
     case 'reaver':
       return stats.strength;
+    // §29b — the afflicter disruptors. Their value is the STATUS they apply, not
+    // raw damage (the AoE/ray hits do minimal-or-no direct damage); the display
+    // "ATK" reads the stat their archetype is built around (mage-stat casters →
+    // magic, ranged-stat casters → ranged). The sim never calls `basicAttackDamage`
+    // on them (they carry no basic strike) — these keep the switch exhaustive.
+    case 'corrupter': // poison vial (mage stats)
+    case 'warlock': // confusion hex (mage stats)
+    case 'banshee': // panic wail (mage stats)
+      return stats.magic;
+    case 'ice_mage': // frozen ice-storm (ranged stats)
+    case 'luminant': // blind light-ray (ranged stats)
+      return stats.ranged;
     case 'environment':
       return 0;
   }

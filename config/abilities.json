@@ -321,5 +321,153 @@
       }
     ],
     "fx": { "impact": "melee_swing" }
+  },
+  "vial": {
+    "id": "vial",
+    "name": "Vial",
+    "cooldownSeconds": 2.5,
+    "rangeCells": 5,
+    "minRangeCells": 2,
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 1 },
+    "timeline": [
+      { "phase": "release", "seconds": 0 },
+      { "phase": "travel", "seconds": 0.5 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "ground-target",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "none",
+          "might": 2,
+          "accuracy": 0.6,
+          "critBase": 0,
+          "critable": false,
+          "evadable": false,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "applyStatus", "statusId": "poison" }
+      }
+    ],
+    "fx": { "release": "vial_throw", "impact": "vial_burst" }
+  },
+  "ice_storm": {
+    "id": "ice_storm",
+    "name": "Ice Storm",
+    "cooldownSeconds": 2.5,
+    "rangeCells": 5,
+    "minRangeCells": 2,
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 1 },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "ground-target",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "none",
+          "might": 2,
+          "accuracy": 0.6,
+          "critBase": 0,
+          "critable": false,
+          "evadable": false,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "applyStatus", "statusId": "frozen" }
+      }
+    ],
+    "fx": { "impact": "ice_storm_burst" }
+  },
+  "hex": {
+    "id": "hex",
+    "name": "Hex",
+    "cooldownSeconds": 3,
+    "rangeCells": 5,
+    "minRangeCells": 2,
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 1 },
+    "timeline": [
+      { "phase": "windup", "seconds": 0.4 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "ground-target",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": { "kind": "applyStatus", "statusId": "confusion" }
+      }
+    ],
+    "fx": { "impact": "hex_burst" }
+  },
+  "light_ray": {
+    "id": "light_ray",
+    "name": "Light Ray",
+    "cooldownSeconds": 2.0,
+    "rangeCells": 3,
+    "minRangeCells": 2,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "ranged",
+          "might": 3,
+          "accuracy": 0.7,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "applyStatus", "statusId": "blind" }
+      }
+    ],
+    "fx": { "impact": "light_ray" }
+  },
+  "wail": {
+    "id": "wail",
+    "name": "Wail",
+    "cooldownSeconds": 4,
+    "rangeCells": 4,
+    "minRangeCells": 0,
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 1 },
+    "timeline": [
+      { "phase": "windup", "seconds": 0.5 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "ground-target",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": { "kind": "applyStatus", "statusId": "panic" }
+      }
+    ],
+    "fx": { "impact": "wail_burst" }
   }
 }

@@ -140,7 +140,12 @@ export const ArchetypesSchema = z.object({
   mage: ArchetypeSchema,
   catapult: ArchetypeSchema,
   // §29 demo roster (Cluster 1) — status-on-hit / chain / summon consumers.
-  reaver: ArchetypeSchema,
+  reaver: ArchetypeSchema, // 29a (bleed)
+  corrupter: ArchetypeSchema, // 29b (poison)
+  ice_mage: ArchetypeSchema, // 29b (frozen)
+  warlock: ArchetypeSchema, // 29b (confusion)
+  luminant: ArchetypeSchema, // 29b (blind)
+  banshee: ArchetypeSchema, // 29b (panic)
 });
 
 export type ArchetypeConfig = z.infer<typeof ArchetypeSchema>;

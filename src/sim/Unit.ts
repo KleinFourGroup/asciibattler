@@ -48,7 +48,13 @@ export type Archetype =
   | 'mage'
   | 'catapult'
   // §29 demo roster (Cluster 1) — the status-on-hit / chain / summon consumers.
-  | 'reaver';
+  | 'reaver' // 29a — bleed-on-hit melee
+  // 29b — the afflicter disruptors (status-on-hit AoE / ranged).
+  | 'corrupter' // poison vial (3×3 AoE)
+  | 'ice_mage' // frozen ice-storm (3×3 AoE)
+  | 'warlock' // confusion hex (3×3 AoE, pure applier)
+  | 'luminant' // blind light-ray (single-target ranged)
+  | 'banshee'; // panic wail (3×3 AoE, pure applier)
 export type UnitArchetype = Archetype | 'environment';
 
 /**

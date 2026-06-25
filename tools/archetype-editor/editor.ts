@@ -70,7 +70,12 @@ const OUTPUT_LABEL: Record<ArchetypeKey, string> = {
   mage: 'MAG',
   catapult: 'RNG',
   // §29 demo roster.
-  reaver: 'STR',
+  reaver: 'STR', // 29a (bleed)
+  corrupter: 'MAG', // 29b (poison)
+  ice_mage: 'RNG', // 29b (frozen)
+  warlock: 'MAG', // 29b (confusion)
+  luminant: 'RNG', // 29b (blind)
+  banshee: 'MAG', // 29b (panic)
 };
 
 // ---- State ----

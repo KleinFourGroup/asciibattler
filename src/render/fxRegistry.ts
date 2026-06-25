@@ -176,6 +176,20 @@ export const FX_REGISTRY = {
   melee_swing: { shove: {}, sound: 'melee' },
   ranged_shot: { tracer: {}, sound: 'shoot' },
 
+  // 29b — the afflicter disruptors (status-on-hit). Each ability's own cast/impact
+  // cue; the STATUS feedback (the §27 tick sparkle / the §28 held `_active` tint on
+  // the afflicted unit) carries the rest. Dedicated SFX is deferred to §31 (no
+  // `sound` field yet — the bleed/poison-tick precedent), so a heavy AoE leans on
+  // the camera shake for physicality. The burst is team-colored (the driver picks
+  // it off the live event), so a frost storm flashes the caster's team hue + the
+  // frozen victims glow ice-cyan from their `_active` overlay.
+  vial_throw: { projectile: { style: 'straight' } }, // the lobbed poison flask
+  vial_burst: { burst: { style: 'explosion' } }, // the splash (poison_tick sparkle does the green)
+  ice_storm_burst: { burst: { style: 'explosion' }, shake: { intensity: 0.08, durationSeconds: 0.25 } },
+  hex_burst: { burst: { style: 'explosion' } }, // a confusion flash (no damage — pure applier)
+  light_ray: { tracer: {} }, // an archer-style beam (blind on the landed hit)
+  wail_burst: { burst: { style: 'explosion' }, shake: { intensity: 0.1, durationSeconds: 0.3 } }, // the fear scream
+
   // 27e — the periodic statuses. Each status authors a `_tick` key: the
   // per-second pulse → a recolored mote puff + the damage/heal hitsplat number.
   // Only `burn`/`rejuvenate` carry a `sound` — they re-home the retired fire/heal

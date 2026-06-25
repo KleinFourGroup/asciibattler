@@ -617,16 +617,20 @@ isn't omniscient)? The behavior-override **durations** are content dials → §3
 > (½ bandit stats); ENEMY disruptors **Ice mage** (frozen "Ice Storm", instant 3×3
 > AoE, ranged stats) · **Warlock** (confusion, mage stats) · **Luminant** (blind
 > "Light Ray", archer-style, ranged stats) · **Banshee** (panic AoE, mage stats).
-> **✅ 29a SHIPPED (status-on-hit + Reaver), pending playtest:** the reserved
+> **✅ 29a + 29b SHIPPED, pending playtest.** **29a status-on-hit:** the reserved
 > `applyStatus` op wired end-to-end ([interpreter.ts](src/sim/effects/interpreter.ts)
 > resolves targets off the def selector, gated on a LANDED hit via the per-fire
 > `missed` scratch; `applyDamage` now returns hit/miss; `applyStatusEffect` gained a
-> duration override) + Reaver/`cleaver` (bleed-on-hit melee) + the FontAtlas resize
-> 8×4→8×6. No snapshot bump. **NEXT = 29b** (Corrupter/Ice mage/Warlock/Luminant/
-> Banshee — pure content). **Snapshot bump expected only at 29d** (summon `maxLive`
-> per-unit attribution → WorldSnapshot v28). ⚠️ `ALL_ARCHETYPES` auto-makes every
-> archetype player-draftable — the enemy disruptors need explicit recruit-pool
-> exclusion when they land.
+> duration override) + Reaver/`cleaver` + the FontAtlas resize 8×4→8×6. **29b the 5
+> afflicters** — pure CONTENT on the proven op: Corrupter (poison "Vial" 3×3 AoE) ·
+> Ice mage (frozen "Ice Storm" instant 3×3 AoE) · Warlock (confusion "Hex" AoE
+> pure-applier) · Luminant (blind "Light Ray" single-target) · Banshee (panic "Wail"
+> AoE pure-applier); 6 FX keys reuse existing channels (SFX → §31). No snapshot bump.
+> **NEXT = 29c** (chain op + Stormcaller). **Snapshot bump expected only at 29d**
+> (summon `maxLive` per-unit attribution → WorldSnapshot v28). ⚠️ `ALL_ARCHETYPES`
+> auto-makes every archetype player-draftable; the user chose to KEEP all §29
+> archetypes draftable through §29's end (for testing), so the enemy-disruptor
+> recruit-pool exclusion is a §29-close cleanup.
 
 The net-new ops — pure composition + recursion on the now-stable model. No
 migration source; these are *additions* to the closed vocabulary. (`move`'s

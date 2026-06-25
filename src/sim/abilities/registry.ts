@@ -42,7 +42,15 @@ const MIGRATED_ABILITY_IDS = [
 // data-driven abilities (not Phase-Y migrations), but the SAME generic
 // `EffectAbility` factory — each is just an `AbilityDef` in config/abilities.json.
 // Append one per archetype commit as the roster lands.
-const DEMO_ABILITY_IDS = ['cleaver'] as const;
+const DEMO_ABILITY_IDS = [
+  'cleaver', // 29a — bleed-on-hit melee
+  // 29b — the afflicter disruptors (status-on-hit AoE / ranged).
+  'vial', // poison
+  'ice_storm', // frozen
+  'hex', // confusion
+  'light_ray', // blind
+  'wail', // panic
+] as const;
 
 const FACTORIES: Record<string, AbilityFactory> = {
   ...Object.fromEntries(

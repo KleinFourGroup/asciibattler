@@ -10,7 +10,12 @@
     "healer": 0,
     "mage": 0,
     "catapult": 0,
-    "reaver": 0
+    "reaver": 0,
+    "corrupter": 0,
+    "ice_mage": 0,
+    "warlock": 0,
+    "luminant": 0,
+    "banshee": 0
   },
   "composition": {
     "mercenary": 0,
@@ -22,7 +27,12 @@
     "healer": 0,
     "mage": 0,
     "catapult": 0,
-    "reaver": 0
+    "reaver": 0,
+    "corrupter": 0,
+    "ice_mage": 0,
+    "warlock": 0,
+    "luminant": 0,
+    "banshee": 0
   },
   "compWeight": 0,
   "level": 0,

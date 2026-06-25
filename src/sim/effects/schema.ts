@@ -143,11 +143,44 @@ const ApplyStatusOpSchema = z.object({
   durationSeconds: z.number().positive().optional(),
 });
 
+/**
+ * §29c — the ops valid as a `chain`'s per-jump payload. A chain arcs to N nearest
+ * targets and applies these to each — so `damage` (the bolt) + `applyStatus` (a
+ * rider, e.g. a stun-on-each-hop) are the meaningful ones. `move` / `heal` are
+ * nonsensical fired at an enemy jump target, and a NESTED `chain` is excluded
+ * deliberately: it would need `z.lazy` recursion + raise thorny falloff/geometry
+ * semantics no consumer wants. So the inner payload is its own restricted union
+ * (the same discipline `PeriodicOpSchema` holds for status ticks) — the chain op
+ * stays in the closed `EffectOp` union without making that union self-referential.
+ */
+export const ChainInnerOpSchema = z.discriminatedUnion('kind', [DamageOpSchema, ApplyStatusOpSchema]);
+
+/**
+ * `chain` — arc to up to `maxJumps` targets: start at the committed primary, then
+ * hop to the nearest not-yet-hit enemy within `rangeCells` (Chebyshev) of the
+ * previous victim, applying `ops` at each with a cumulative `falloff` on damage
+ * (`baseDamage × falloff^jumpIndex`; the primary is `falloff^0` = full). The
+ * geometry is deterministic (`world.units` order tie-breaks); only the `ops`'
+ * own rolls draw RNG. The interpreter recurses over `ops` per jump (the closed
+ * vocab's one op that contains other ops). Per-op cast-time scalars are captured
+ * once at propose time into `OpResolution.chainOps` (aligned with `ops`) and
+ * scaled by `falloff` live per jump — so a charged chain uses its CAST-time
+ * stats, exactly like every other op.
+ */
+const ChainOpSchema = z.object({
+  kind: z.literal('chain'),
+  maxJumps: z.number().int().positive(),
+  rangeCells: z.number().int().positive(),
+  falloff: z.number().min(0).max(1),
+  ops: z.array(ChainInnerOpSchema).min(1),
+});
+
 export const EffectOpSchema = z.discriminatedUnion('kind', [
   DamageOpSchema,
   HealOpSchema,
   MoveOpSchema,
   ApplyStatusOpSchema,
+  ChainOpSchema,
 ]);
 
 /**
@@ -326,6 +359,8 @@ export type DamageOp = z.infer<typeof DamageOpSchema>;
 export type HealOp = z.infer<typeof HealOpSchema>;
 export type MoveOp = z.infer<typeof MoveOpSchema>;
 export type ApplyStatusOp = z.infer<typeof ApplyStatusOpSchema>;
+export type ChainOp = z.infer<typeof ChainOpSchema>;
+export type ChainInnerOp = z.infer<typeof ChainInnerOpSchema>;
 export type TargetSelector = z.infer<typeof TargetSelectorSchema>;
 export type TimelinePhase = z.infer<typeof TimelinePhaseSchema>;
 export type EffectEntry = z.infer<typeof EffectEntrySchema>;

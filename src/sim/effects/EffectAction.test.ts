@@ -66,6 +66,15 @@ const catapultDef: AbilityDef = parseAbilityDef({
   effects: [{ phase: 'impact', op: DMG }],
 });
 
+const chainDef: AbilityDef = parseAbilityDef({
+  // §29c — a charged chain: the impact-phase op arcs to `maxJumps` targets, each
+  // inner op's cast-time scalars captured into `OpResolution.chainOps`.
+  id: 'chain_lightning', name: 'Chain', cooldownSeconds: 2.5, rangeCells: 5, minRangeCells: 2, target: { kind: 'enemyInRange' },
+  timeline: [{ phase: 'windup', seconds: 1 }, { phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
+  orphanPolicy: 'commit-at-cast', priority: 10,
+  effects: [{ phase: 'impact', op: { kind: 'chain', maxJumps: 3, rangeCells: 3, falloff: 0.6, ops: [DMG] } }],
+});
+
 const dashDef: AbilityDef = parseAbilityDef({
   // `self` — a pure caster-reposition: the leap targets the CASTER (the enemy is
   // only a propose-time reference for the landing), so phaseTarget surfaces
@@ -166,6 +175,23 @@ describe('EffectAction serialization', () => {
     const data = JSON.parse(JSON.stringify(original.toData()));
     const restored = EffectAction.fromData(data, w, gambitDef);
     expect(restored.toData()).toEqual(original.toData());
+  });
+
+  it('§29c — round-trips a chain op\'s nested chainOps resolutions (deep clone)', () => {
+    const w = world();
+    const original = new EffectAction(chainDef, {
+      targetId: 7,
+      ops: [{ chainOps: [{ baseDamage: 14, critChance: 0.1, damageMultiplier: 1 }] }],
+    });
+    const data = JSON.parse(JSON.stringify(original.toData()));
+    const restored = EffectAction.fromData(data, w, chainDef);
+    expect(restored.toData()).toEqual(original.toData());
+    // deep clone: the nested array is not shared between two toData() snapshots.
+    const d1 = original.toData();
+    const d2 = original.toData();
+    expect(d1.ops[0].chainOps).not.toBe(d2.ops[0].chainOps);
+    expect(d1.ops[0].chainOps![0]).not.toBe(d2.ops[0].chainOps![0]);
+    expect(d1.ops[0].chainOps).toEqual(d2.ops[0].chainOps);
   });
 
   it('toData copies nested cells (no shared references)', () => {

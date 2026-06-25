@@ -60,12 +60,23 @@ export function assertStatusRefsResolve(
   abilityDefs: Record<string, AbilityDef>,
   statusDefs: Record<string, StatusDef>,
 ): void {
+  const check = (statusId: string, defId: string): void => {
+    if (!(statusId in statusDefs)) {
+      throw new Error(
+        `ability '${defId}': applyStatus references unknown status id '${statusId}'`,
+      );
+    }
+  };
   for (const def of Object.values(abilityDefs)) {
     for (const entry of def.effects) {
-      if (entry.op.kind === 'applyStatus' && !(entry.op.statusId in statusDefs)) {
-        throw new Error(
-          `ability '${def.id}': applyStatus references unknown status id '${entry.op.statusId}'`,
-        );
+      if (entry.op.kind === 'applyStatus') check(entry.op.statusId, def.id);
+      // §29c — a chain op carries its own inner `applyStatus` ops (a stun-per-hop
+      // rider); recurse one level so a chained status ref is boot-validated too
+      // (ChainInnerOp can't itself be a chain, so the inner loop is the full depth).
+      if (entry.op.kind === 'chain') {
+        for (const inner of entry.op.ops) {
+          if (inner.kind === 'applyStatus') check(inner.statusId, def.id);
+        }
       }
     }
   }

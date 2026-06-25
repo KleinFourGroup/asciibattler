@@ -463,5 +463,36 @@
       "mobility": 0.1,
       "power": 0.1
     }
+  },
+  "stormcaller": {
+    "glyph": "z",
+    "abilities": ["chain_lightning"],
+    "targeting": "nearest",
+    "baseStats": {
+      "constitution": 18,
+      "strength": 0,
+      "ranged": 0,
+      "magic": 10,
+      "luck": 3,
+      "defense": 0,
+      "precision": 5,
+      "evasion": 5,
+      "speed": 4,
+      "mobility": 1,
+      "power": 1
+    },
+    "growthRates": {
+      "constitution": 0.5,
+      "strength": 0,
+      "ranged": 0,
+      "magic": 0.35,
+      "luck": 0.3,
+      "defense": 0.3,
+      "precision": 0.2,
+      "evasion": 0.2,
+      "speed": 0.3,
+      "mobility": 0.1,
+      "power": 0.1
+    }
   }
 }

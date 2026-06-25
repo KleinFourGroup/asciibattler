@@ -626,7 +626,19 @@ isn't omniscient)? The behavior-override **durations** are content dials → §3
 > Ice mage (frozen "Ice Storm" instant 3×3 AoE) · Warlock (confusion "Hex" AoE
 > pure-applier) · Luminant (blind "Light Ray" single-target) · Banshee (panic "Wail"
 > AoE pure-applier); 6 FX keys reuse existing channels (SFX → §31). No snapshot bump.
-> **NEXT = 29c** (chain op + Stormcaller). **Snapshot bump expected only at 29d**
+> **✅ 29c SHIPPED (pending playtest):** the recursive **`chain` op** + **Stormcaller**
+> (chain_lightning, mage stats, glyph `z`). The op arcs to up to `maxJumps` targets —
+> primary = the committed `currentTarget`, then nearest fresh enemy within `rangeCells`
+> of the previous victim (no repeats, deterministic `world.units` tie-break) — applying
+> its inner `ops` with cumulative `falloff^jump` on damage. The **cast-time-capture
+> decision** (the heads-up below) resolved to: capture each nested op's scalars ONCE at
+> propose time into a new optional `OpResolution.chainOps[]` (deep-cloned by
+> `cloneResolution`) → round-trips, **no snapshot bump**. `ChainInnerOp` is a RESTRICTED
+> union (`damage | applyStatus`, no nested chain / `z.lazy`, like `PeriodicOpSchema`);
+> the recursion is in the interpreter (`executeChain` → `executeOp` per inner op, fresh
+> per-hop scratch). `assertStatusRefsResolve` recurses into `chain.ops`. FX `chain_arc`
+> reuses the `tracer` channel (one arc caster→primary; per-hop arcs deferred pending
+> playtest). **NEXT = 29d** (summon op + Shaman + Ghoul). **Snapshot bump expected only at 29d**
 > (summon `maxLive` per-unit attribution → WorldSnapshot v28). ⚠️ `ALL_ARCHETYPES`
 > auto-makes every archetype player-draftable; the user chose to KEEP all §29
 > archetypes draftable through §29's end (for testing), so the enemy-disruptor

@@ -54,7 +54,9 @@ export type Archetype =
   | 'ice_mage' // frozen ice-storm (3×3 AoE)
   | 'warlock' // confusion hex (3×3 AoE, pure applier)
   | 'luminant' // blind light-ray (single-target ranged)
-  | 'banshee'; // panic wail (3×3 AoE, pure applier)
+  | 'banshee' // panic wail (3×3 AoE, pure applier)
+  // 29c — the chain consumer.
+  | 'stormcaller'; // chain lightning (arcs to N nearest, falloff per hop)
 export type UnitArchetype = Archetype | 'environment';
 
 /**

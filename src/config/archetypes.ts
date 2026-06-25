@@ -146,6 +146,7 @@ export const ArchetypesSchema = z.object({
   warlock: ArchetypeSchema, // 29b (confusion)
   luminant: ArchetypeSchema, // 29b (blind)
   banshee: ArchetypeSchema, // 29b (panic)
+  stormcaller: ArchetypeSchema, // 29c (chain)
 });
 
 export type ArchetypeConfig = z.infer<typeof ArchetypeSchema>;

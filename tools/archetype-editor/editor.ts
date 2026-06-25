@@ -76,6 +76,7 @@ const OUTPUT_LABEL: Record<ArchetypeKey, string> = {
   warlock: 'MAG', // 29b (confusion)
   luminant: 'RNG', // 29b (blind)
   banshee: 'MAG', // 29b (panic)
+  stormcaller: 'MAG', // 29c (chain)
 };
 
 // ---- State ----

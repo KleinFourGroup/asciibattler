@@ -15,7 +15,8 @@
     "ice_mage": 0,
     "warlock": 0,
     "luminant": 0,
-    "banshee": 0
+    "banshee": 0,
+    "stormcaller": 0
   },
   "composition": {
     "mercenary": 0,
@@ -32,7 +33,8 @@
     "ice_mage": 0,
     "warlock": 0,
     "luminant": 0,
-    "banshee": 0
+    "banshee": 0,
+    "stormcaller": 0
   },
   "compWeight": 0,
   "level": 0,

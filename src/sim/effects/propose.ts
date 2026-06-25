@@ -298,5 +298,14 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
       // time (the status registry is the source of truth). No resolution to
       // capture — the empty object keeps the per-op alignment with `def.effects`.
       return {};
+    case 'chain':
+      // 29c — capture each inner op's cast-time scalars NOW (off the caster's
+      // current stats), aligned with `op.ops`; the interpreter scales the damage
+      // by `falloff` per hop at fire time. Recurses through the same `resolveOp`,
+      // so a chained `damage` captures `baseDamage`/`critChance` exactly as a
+      // top-level one would (cast-time-stat capture, the charged-spell contract).
+      // The inner ops can't themselves be chains (ChainInnerOp = damage |
+      // applyStatus), so this recursion is one level deep.
+      return { chainOps: op.ops.map((inner) => resolveOp(inner, c)) };
   }
 }

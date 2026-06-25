@@ -174,6 +174,12 @@ export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): numbe
     case 'warlock': // confusion hex (mage stats)
     case 'banshee': // panic wail (mage stats)
       return stats.magic;
+    // §29c — the stormcaller's chain lightning scales on `magic` (its inner bolt
+    // is a magic-scaling damage op); the display "ATK" reads `magic` like the
+    // other mage-stat casters. The sim never calls `basicAttackDamage` on it (the
+    // chain is its only ability) — this keeps the switch exhaustive.
+    case 'stormcaller':
+      return stats.magic;
     case 'ice_mage': // frozen ice-storm (ranged stats)
     case 'luminant': // blind light-ray (ranged stats)
       return stats.ranged;

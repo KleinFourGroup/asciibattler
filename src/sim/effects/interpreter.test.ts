@@ -348,3 +348,134 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     expect(eff.lifetime).toEqual({ kind: 'ticks', expiresAtTick: Math.max(1, secondsToTicks(2)) });
   });
 });
+
+describe('executeOp — chain (§29c)', () => {
+  // A pure-magic, non-evadable inner bolt (no crit, no defense interaction at
+  // defense 0) so the per-hop damage is exactly baseDamage × falloff^jump.
+  const innerDmg: EffectOp = {
+    kind: 'damage', scaling: 'magic', might: 0, accuracy: 0.6, critBase: 0,
+    critable: false, evadable: false, bypassDefense: false,
+  };
+  const chainOp = (o: Partial<Extract<EffectOp, { kind: 'chain' }>> = {}): EffectOp => ({
+    kind: 'chain', maxJumps: 3, rangeCells: 2, falloff: 0.5, ops: [innerDmg], ...o,
+  });
+  const hp = (u: Unit) => u.derived.maxHp - u.currentHp;
+
+  it('arcs the primary + the two nearest fresh targets, falloff per hop', () => {
+    const { world, events } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const primary = makeUnit('enemy', { x: 5, y: 5 });
+    const near = makeUnit('enemy', { x: 6, y: 5 }); // dist 1 from primary
+    const far = makeUnit('enemy', { x: 7, y: 5 }); // dist 1 from `near`, 2 from primary
+    world.units.push(caster, primary, near, far);
+    executeOp(
+      chainOp(),
+      ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
+    );
+    expect(hp(primary)).toBe(20); // falloff^0
+    expect(hp(near)).toBe(10); // falloff^1
+    expect(hp(far)).toBe(5); // falloff^2
+    // one unit:attacked per landed hop, in jump order.
+    expect(events.map((e) => e.name)).toEqual(['unit:attacked', 'unit:attacked', 'unit:attacked']);
+  });
+
+  it('hops to the NEAREST fresh target from the previous victim (not the caster)', () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const primary = makeUnit('enemy', { x: 5, y: 5 });
+    // Two candidates for jump 1: `b` is closer to the primary than `a`.
+    const a = makeUnit('enemy', { x: 7, y: 5 }); // dist 2 from primary
+    const b = makeUnit('enemy', { x: 6, y: 5 }); // dist 1 from primary
+    world.units.push(caster, primary, a, b);
+    executeOp(
+      chainOp({ maxJumps: 2 }),
+      ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
+    );
+    expect(hp(primary)).toBe(20);
+    expect(hp(b)).toBe(10); // the nearer one was chosen for jump 1
+    expect(hp(a)).toBe(0); // out of a 2-jump chain
+  });
+
+  it('never repeats a target and ends early when no fresh target remains', () => {
+    const { world, events } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const primary = makeUnit('enemy', { x: 5, y: 5 });
+    const other = makeUnit('enemy', { x: 6, y: 5 });
+    world.units.push(caster, primary, other);
+    // maxJumps 5 but only 2 enemies → 2 distinct hits, no re-hit of either.
+    executeOp(
+      chainOp({ maxJumps: 5 }),
+      ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
+    );
+    expect(hp(primary)).toBe(20);
+    expect(hp(other)).toBe(10);
+    expect(events).toHaveLength(2); // no third/fourth/fifth hop
+  });
+
+  it('does not arc to an out-of-range island (gap > rangeCells stops the chain)', () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const primary = makeUnit('enemy', { x: 5, y: 5 });
+    const island = makeUnit('enemy', { x: 5, y: 12 }); // 7 cells away — beyond rangeCells 2
+    world.units.push(caster, primary, island);
+    executeOp(
+      chainOp(),
+      ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
+    );
+    expect(hp(primary)).toBe(20);
+    expect(hp(island)).toBe(0); // unreachable
+  });
+
+  it('never arcs to an ally (only the caster\'s enemies)', () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const primary = makeUnit('enemy', { x: 5, y: 5 });
+    const ally = makeUnit('player', { x: 6, y: 5 }); // adjacent friendly — must be skipped
+    world.units.push(caster, primary, ally);
+    executeOp(
+      chainOp(),
+      ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
+    );
+    expect(hp(primary)).toBe(20);
+    expect(hp(ally)).toBe(0); // untouched
+  });
+
+  it('fizzles entirely when the committed primary is dead (commit-at-cast onto a corpse)', () => {
+    const { world, events } = setup();
+    const caster = makeUnit('player', { x: 0, y: 0 });
+    const primary = makeUnit('enemy', { x: 5, y: 5 });
+    primary.currentHp = 0;
+    const other = makeUnit('enemy', { x: 6, y: 5 });
+    world.units.push(caster, primary, other);
+    executeOp(
+      chainOp(),
+      ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }] } }),
+    );
+    expect(events).toHaveLength(0); // no jump-0 victim → no hops
+    expect(hp(other)).toBe(0);
+  });
+
+  it('applies an applyStatus rider to every landed hop (chain composes with status-on-hit)', () => {
+    const TS = { id: 't_chain', name: 't_chain', durationSeconds: 4, merge: 'refresh' } as const;
+    STATUS_DEFS.t_chain = parseStatusDef(TS);
+    try {
+      const { world } = setup();
+      const caster = makeUnit('player', { x: 0, y: 0 });
+      const primary = makeUnit('enemy', { x: 5, y: 5 });
+      const near = makeUnit('enemy', { x: 6, y: 5 });
+      world.units.push(caster, primary, near);
+      const statusInner: EffectOp = { kind: 'applyStatus', statusId: 't_chain' };
+      executeOp(
+        chainOp({ maxJumps: 2, ops: [innerDmg, statusInner] }),
+        // chainOps aligns with ops: [damage resolution, applyStatus → {}].
+        ctx({ caster, world, target: primary, resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }, {}] } }),
+      );
+      const has = (u: Unit) => u.effects.some((e) => e.key === 't_chain');
+      expect(has(primary)).toBe(true);
+      expect(has(near)).toBe(true);
+      expect(hp(near)).toBe(10); // damage still falls off alongside the rider
+    } finally {
+      delete STATUS_DEFS.t_chain;
+    }
+  });
+});

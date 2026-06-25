@@ -92,6 +92,37 @@ export function isCombatTargetable(u: Unit): boolean {
   return u.currentHp > 0 && u.team !== 'neutral';
 }
 
+/**
+ * §29c — the chain op's hop geometry: the nearest combat-targetable enemy (not the
+ * caster's team) within `rangeCells` (Chebyshev) of `from`, skipping any id in
+ * `exclude` (the already-hit set, so the arc never repeats a target). Deterministic
+ * — `world.units` order tie-breaks an equal-distance pick (strict `<`, so the first
+ * occupant wins), the same order `unitsInCells` preserves for the blast. Returns
+ * `undefined` when no fresh target remains in range → the chain ends early.
+ */
+export function nearestChainTarget(
+  world: World,
+  caster: Unit,
+  from: GridCoord,
+  rangeCells: number,
+  exclude: Set<number>,
+): Unit | undefined {
+  let best: Unit | undefined;
+  let bestDist = Infinity;
+  for (const u of world.units) {
+    if (exclude.has(u.id)) continue;
+    if (u.team === caster.team) continue;
+    if (!isCombatTargetable(u)) continue;
+    const d = chebyshev(u.position, from);
+    if (d > rangeCells) continue;
+    if (d < bestDist) {
+      best = u;
+      bestDist = d;
+    }
+  }
+  return best;
+}
+
 /** A resolved area victim + its per-cell damage multiplier (center 1, ring `ringMultiplier`). */
 export interface AreaVictim {
   unit: Unit;

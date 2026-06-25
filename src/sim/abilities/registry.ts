@@ -50,6 +50,7 @@ const DEMO_ABILITY_IDS = [
   'hex', // confusion
   'light_ray', // blind
   'wail', // panic
+  'chain_lightning', // 29c — chain (arcs to N nearest, falloff per hop)
 ] as const;
 
 const FACTORIES: Record<string, AbilityFactory> = {

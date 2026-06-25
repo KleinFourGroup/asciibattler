@@ -106,6 +106,29 @@ describe('AbilityDef schema — valid shapes', () => {
       EffectOpSchema.parse({ kind: 'applyStatus', statusId: 'burn', magnitude: 3 }),
     ).not.toThrow();
   });
+
+  it('§29c — accepts a chain op carrying damage + applyStatus inner ops', () => {
+    const chain = EffectOpSchema.parse({
+      kind: 'chain',
+      maxJumps: 3,
+      rangeCells: 3,
+      falloff: 0.6,
+      ops: [
+        {
+          kind: 'damage',
+          scaling: 'magic',
+          might: 0,
+          accuracy: 0.6,
+          critBase: 0,
+          critable: false,
+          evadable: false,
+          bypassDefense: false,
+        },
+        { kind: 'applyStatus', statusId: 'frozen' },
+      ],
+    });
+    expect(chain.kind).toBe('chain');
+  });
 });
 
 describe('AbilityDef schema — rejects malformed shapes', () => {
@@ -168,6 +191,44 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
     const bad = validStrikeDef() as { timeline: unknown[] };
     bad.timeline = [];
     expect(() => parseAbilityDef(bad)).toThrow();
+  });
+
+  it('§29c — rejects a chain whose inner op is itself a chain (no nesting)', () => {
+    // ChainInnerOp = damage | applyStatus only; a nested chain is excluded by
+    // construction (no z.lazy recursion, no nested-falloff footgun).
+    expect(() =>
+      EffectOpSchema.parse({
+        kind: 'chain',
+        maxJumps: 2,
+        rangeCells: 3,
+        falloff: 0.5,
+        ops: [{ kind: 'chain', maxJumps: 2, rangeCells: 3, falloff: 0.5, ops: [] }],
+      }),
+    ).toThrow();
+  });
+
+  it('§29c — rejects a chain carrying a move/heal inner op', () => {
+    expect(() =>
+      EffectOpSchema.parse({
+        kind: 'chain',
+        maxJumps: 2,
+        rangeCells: 3,
+        falloff: 0.5,
+        ops: [{ kind: 'move', mode: 'advance', cells: 1 }],
+      }),
+    ).toThrow();
+  });
+
+  it('§29c — rejects an empty chain ops list and a falloff above 1', () => {
+    const base = { kind: 'chain', maxJumps: 2, rangeCells: 3, falloff: 0.5 };
+    expect(() => EffectOpSchema.parse({ ...base, ops: [] })).toThrow();
+    expect(() =>
+      EffectOpSchema.parse({
+        ...base,
+        falloff: 1.5,
+        ops: [{ kind: 'applyStatus', statusId: 'frozen' }],
+      }),
+    ).toThrow();
   });
 });
 

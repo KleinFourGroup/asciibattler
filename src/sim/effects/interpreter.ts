@@ -23,8 +23,8 @@ import type { World } from '../World';
 import type { OrphanPolicy } from '../Action';
 import { STATS } from '../../config/stats';
 import { statusDef } from '../../config/statuses';
-import type { EffectOp, TargetSelector } from './schema';
-import { resolveAreaVictims } from './targeting';
+import type { ChainInnerOp, EffectOp, TargetSelector } from './schema';
+import { nearestChainTarget, resolveAreaVictims } from './targeting';
 import { retreatCell } from './reposition';
 import { behaviorFlags } from '../statusBehavior';
 
@@ -63,6 +63,15 @@ export interface OpResolution {
   healAmount?: number;
   /** move: the `advance` landing cell, or the `retreat` anchor (struckFrom). */
   moveDest?: GridCoord;
+  /**
+   * 29c chain: the cast-time resolutions of the chain's inner `ops`, aligned by
+   * index with `op.ops`. Captured once at propose time (`resolveOp`) and scaled
+   * by `falloff^jump` live per hop, so a charged chain's damage uses its CAST-time
+   * stats — the same contract every other op holds. Round-trips via the recursive
+   * `cloneResolution` (EffectAction), so an in-flight chain carries no new
+   * serialized SHAPE beyond `OpResolution` gaining this optional nested array.
+   */
+  chainOps?: OpResolution[];
 }
 
 /** Everything the interpreter needs to fire one op, assembled by `EffectAction`. */
@@ -97,6 +106,9 @@ export function executeOp(op: EffectOp, ctx: OpFireContext): void {
       return;
     case 'applyStatus':
       executeApplyStatus(op, ctx);
+      return;
+    case 'chain':
+      executeChain(op, ctx);
       return;
     default: {
       const _exhaustive: never = op;
@@ -267,4 +279,62 @@ function resolveStatusTargets(ctx: OpFireContext): Unit[] {
   if (sel.kind === 'self') return [ctx.caster];
   // enemyInRange / lowestHpAlly — the captured live single target.
   return ctx.target ? [ctx.target] : [];
+}
+
+/**
+ * 29c — chain: arc the op's `ops` across up to `maxJumps` targets. Jump 0 is the
+ * committed primary (`ctx.target`); each later jump hops to the nearest fresh
+ * enemy within `rangeCells` of the previous victim (`nearestChainTarget`), never
+ * repeating a target, ending early if none remains. Each victim takes the inner
+ * `ops` with `falloff^jump` applied to their captured damage (the primary full).
+ *
+ * The inner ops fire through the SAME `executeOp` (the recursion), under a
+ * synthesized single-target context: selector `enemyInRange`, `commit-at-cast`,
+ * the jump victim as `target`, and a FRESH per-jump scratch — so an `applyStatus`
+ * rider reads only its own hop's hit/miss, never a prior hop's. A dead primary
+ * (it died during a charged windup) yields no jump-0 victim → the whole chain
+ * fizzles, mirroring a `commit-at-cast` strike onto a corpse.
+ */
+const CHAIN_INNER_SELECTOR: TargetSelector = { kind: 'enemyInRange' };
+
+function executeChain(op: Extract<EffectOp, { kind: 'chain' }>, ctx: OpFireContext): void {
+  const resolutions = ctx.resolution.chainOps ?? [];
+  const hit = new Set<number>();
+  let from: GridCoord | undefined;
+  let victim: Unit | undefined =
+    ctx.target && ctx.target.currentHp > 0 ? ctx.target : undefined;
+
+  for (let jump = 0; jump < op.maxJumps; jump++) {
+    if (jump > 0) {
+      victim = from ? nearestChainTarget(ctx.world, ctx.caster, from, op.rangeCells, hit) : undefined;
+    }
+    if (!victim) break;
+    hit.add(victim.id);
+    from = { ...victim.position };
+
+    const falloff = Math.pow(op.falloff, jump);
+    const jumpScratch = newFireScratch();
+    op.ops.forEach((inner: ChainInnerOp, i) => {
+      executeOp(inner, {
+        ...ctx,
+        selector: CHAIN_INNER_SELECTOR,
+        orphanPolicy: 'commit-at-cast',
+        target: victim,
+        targetCell: undefined,
+        resolution: scaleChainResolution(resolutions[i] ?? {}, falloff),
+        fireScratch: jumpScratch,
+      });
+    });
+  }
+}
+
+/**
+ * Apply a jump's cumulative `falloff` to one inner op's captured resolution.
+ * Only `baseDamage` falls off (the magnitude reduction per hop); a crit chance /
+ * an `applyStatus`'s empty resolution pass through untouched. Returns the input
+ * as-is when there's nothing to scale, so the no-damage ops keep their identity.
+ */
+function scaleChainResolution(r: OpResolution, factor: number): OpResolution {
+  if (r.baseDamage === undefined) return r;
+  return { ...r, baseDamage: r.baseDamage * factor };
 }

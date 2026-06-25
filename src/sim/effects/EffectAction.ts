@@ -56,6 +56,10 @@ type EffectContext = Omit<EffectActionData, 'defId'>;
 function cloneResolution(r: OpResolution): OpResolution {
   const c: OpResolution = { ...r };
   if (r.moveDest) c.moveDest = { ...r.moveDest };
+  // 29c — a chain op's nested per-jump resolutions deep-clone recursively, so the
+  // captured inner scalars round-trip through toData/fromData like every other
+  // OpResolution field (no new serialized shape, no snapshot bump).
+  if (r.chainOps) c.chainOps = r.chainOps.map(cloneResolution);
   return c;
 }
 

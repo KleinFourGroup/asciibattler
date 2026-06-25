@@ -180,6 +180,34 @@ describe('proposeEffectAbility — aoe (magic_bolt)', () => {
   });
 });
 
+describe('proposeEffectAbility — chain (chain_lightning, §29c)', () => {
+  it('commits the primary + captures each inner op\'s cast-time scalars into chainOps', () => {
+    const u = caster('chain_lightning', { x: 5, y: 5 });
+    const enemy = makeUnit('enemy', { x: 8, y: 5 }); // dist 3, inside [2, 5] band
+    const p = ability('chain_lightning').propose(u, world([u, enemy]));
+    expect(p).not.toBeNull();
+    expect(p!.cooldownKey).toBe('chain_lightning');
+    const d = dataOf(p!.action);
+    expect(d.targetId).toBe(enemy.id); // the chain locks the primary like a strike
+    // The cast-time-capture contract: the inner bolt's baseDamage is the caster's
+    // CAST-time magic (might 0 + magic), captured once into chainOps — the
+    // interpreter scales it by falloff per hop, but capture happens here.
+    const chainOps = d.ops[0]!.chainOps!;
+    expect(chainOps).toHaveLength(1);
+    expect(chainOps[0]!.baseDamage).toBe(u.effectiveStats.magic);
+  });
+
+  it('abstains inside the minRange floor, casts at the floor', () => {
+    const floor = abilityDef('chain_lightning').minRangeCells;
+    expect(floor).toBeGreaterThanOrEqual(1);
+    const u = caster('chain_lightning', { x: 5, y: 5 });
+    const tooClose = makeUnit('enemy', { x: 5 + (floor - 1), y: 5 });
+    expect(ability('chain_lightning').propose(u, world([u, tooClose]))).toBeNull();
+    const atFloor = makeUnit('enemy', { x: 5 + floor, y: 5 });
+    expect(ability('chain_lightning').propose(u, world([u, atFloor]))).not.toBeNull();
+  });
+});
+
 describe('proposeEffectAbility — fizzle artillery (catapult_shot)', () => {
   it('locks the live enemy + captures the cast cell as the fizzle fallback', () => {
     const u = caster('catapult_shot', { x: 5, y: 5 });

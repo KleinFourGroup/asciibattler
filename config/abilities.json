@@ -469,5 +469,44 @@
       }
     ],
     "fx": { "impact": "wail_burst" }
+  },
+  "chain_lightning": {
+    "id": "chain_lightning",
+    "name": "Chain",
+    "cooldownSeconds": 2.5,
+    "rangeCells": 5,
+    "minRangeCells": 2,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "windup", "seconds": 1.0, "scalesWithSpeed": true },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "chain",
+          "maxJumps": 3,
+          "rangeCells": 3,
+          "falloff": 0.6,
+          "ops": [
+            {
+              "kind": "damage",
+              "scaling": "magic",
+              "might": 0,
+              "accuracy": 0.6,
+              "critBase": 0,
+              "critable": false,
+              "evadable": false,
+              "bypassDefense": false
+            }
+          ]
+        }
+      }
+    ],
+    "fx": { "impact": "chain_arc" }
   }
 }

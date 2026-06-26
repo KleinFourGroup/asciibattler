@@ -116,12 +116,22 @@ Z.  Renderer communication: FX registry + FxKeys + shake    ┤  data model firs
 29. New attack mechanics — chain / status-on-hit / summon   ┤  now-stable model)
                                                             │
 30. Dev tools + new content (attack + archetype editors)   ─┤ (authoring + feel)
-31. SFX + the closing balance pass                         ─┘ (polish rides + closer)
+31. Effect scaling — stat/level-driven magnitude/dur/level ─┤ (the spec hole, filled)
+32. FX · SFX · the status-viz / UI design round            ─┤ (polish rides its feature)
+33. The closing balance pass                               ─┘ (cluster closer)
 ```
 
 Phase lettering continues the A→X sequence: **Y, Z, then numbers — Phase 27, 28,
 …** (Z is the 26th letter; we count on past it). Recommended path **Y → Z → 27 →
-28 → 29 → 30 → 31**, with a **playtest pause between commits** as usual.
+28 → 29 → 30 → 31 → 32 → 33**, with a **playtest pause between commits** as usual.
+
+> **31/32/33 split (2026-06-26 design session).** What was a single "SFX +
+> balance" §31 became **three** phases once playtest feedback surfaced a real
+> design hole: the new effects (statuses, summon) had **no way to scale with a
+> caster stat** the way normal attacks do. §31 fills that (a `ScaledValue`
+> descriptor); §32 absorbs the SFX pass and **expands** it into a broader FX +
+> status-visualization / UI design round (the cue shape is still open — a design
+> round gates it); §33 is the balance closer, now also tuning §31's scaling dials.
 
 ### Sequencing rationale
 
@@ -145,16 +155,30 @@ Phase lettering continues the A→X sequence: **Y, Z, then numbers — Phase 27,
 - **30 (tools + content).** The attack editor + archetype-editor "create" land
   *with* the content authoring (the feel surface), not before — exactly the
   encounter round's V phase.
-- **31 (SFX + balance).** The migration is balance-neutral *by construction*
-  (byte-identical); only the **new** content moves balance, so the closing pass is
-  scoped to it, not a full re-derivation.
+- **31 (effect scaling).** The schema hole the §30 playtest surfaced — statuses
+  and summons can't scale with a caster stat the way `damage`/`heal` do. A small,
+  *systematic* gap (one descriptor, three consumers), so it's its own phase rather
+  than smuggled into balance: it's a **schema-contract change** (a `WorldSnapshot`
+  bump), and the schema is the cluster's whole point — get the scaling shape right
+  once, like the rest of the vocabulary.
+- **32 (FX · SFX · viz/UI).** The original §31 SFX, **expanded**: the playtest also
+  hinted statuses need richer *visual* cues (stacks, timers, magnitude legibility)
+  beyond the §27/§28 tick-fx + held tint. The cue shape is genuinely open, so the
+  phase opens with a **design round** (this session's sibling) before any build —
+  "an effect you can't see is unverifiable," and a *scaled* effect you can't read
+  is unverifiable twice over.
+- **33 (balance).** The migration is balance-neutral *by construction*
+  (byte-identical); only the **new** content + §31's scaling dials move balance, so
+  the closing pass is scoped to those, not a full re-derivation.
 
 ### Hard ordering constraints
 
 Y before everything (the model). Z before 27 (status visualization rides the FX
 registry). 27 before 28 (behavior statuses extend the StatusDef serialized in 27)
 and before 29 (`applyStatus` needs statuses). 29 before 30's new-mechanic content.
-31 last (balance needs the final content).
+**31 before 32** (the viz/UI round wants to surface the scaled magnitudes/durations
+§31 produces) **before 33** (balance tunes the final content *and* §31's scaling
+coefficients). 33 last (balance needs the final content + the scaling dials).
 
 ## Conventions (unchanged — they still hold)
 
@@ -186,10 +210,15 @@ and before 29 (`applyStatus` needs statuses). 29 before 30's new-mechanic conten
   `StatusDef`-shaped periodic/behavior fields on the per-unit `effects[]`). 28's
   behavior statuses reuse 27's serialized shape (no bump if 27 reserves it); 29's
   ops are config (defs are referenced by id, not serialized) and `summon` produces
-  ordinary units — **no bump expected** unless an in-flight `chain`/`summon`
-  carries new serialized state Y's `toData` didn't anticipate. **No `RunSnapshot`
-  bump** is expected — this is all World-side combat. Reject stale, no migration
-  (the established rule). The **snapshot-roundtrip + determinism tests are the
+  ordinary units. **29 bumped twice as built** — v27→v28 (the chain per-hop
+  `pendingChainHops` queue) and v28→v29 (the summon `Unit.summonedBy` cap). **31
+  bumps once** — the cast-time-captured scaling scalars ride a new optional slot on
+  the in-flight `OpResolution` (`statusMagnitude` / `statusDurationSeconds` /
+  `summonLevel`), and an in-flight `applyStatus`/`summon` action *can* exist in a
+  v29 save, so reject-stale per the no-migration rule (v29→v30, landing with 31b and
+  reserving all three fields so 31c reuses the shape — the "27 reserves 28" pattern).
+  **No `RunSnapshot` bump** is expected — this is all World-side combat. Reject
+  stale, no migration (the established rule). The **snapshot-roundtrip + determinism tests are the
   guard** — and in Y, the determinism trace is the *equivalence oracle*.
 
 ## Architectural decisions (locked in the brief — the cleanliness guarantees)
@@ -464,7 +493,7 @@ parameter (authored per key), not a sim concern.
 > **27c**: the four periodic statuses in [config/statuses.json](config/statuses.json)
 > — burn (`refresh`, 4 s, 2 dmg/s, `bypassDefense`), bleed (`add`, 4 s, 2/s),
 > poison (`add`, 6 s, 1/s), rejuvenate (`refresh` HoT, 4 s, 1/s); DoT ops author
-> the locked default; magnitudes/durations are PLACEHOLDERS → §31; balance-proof
+> the locked default; magnitudes/durations are PLACEHOLDERS → §33 (balance); balance-proof
 > derives the burn/rejuvenate rates from `tiles.json`.
 > **27d+27e** (this commit — the FIRST observable surface, paired so fire damage
 > never shows without feedback): **27d** deleted `applyTileEffects` → a tile pass
@@ -525,7 +554,7 @@ healing tile; DoT routes through `applyDamage` (defense bypass honored); snapsho
 round-trips an active burn mid-tick.
 
 **Decision points 27:** the bleed/poison **durations + magnitudes** are content
-dials — author placeholder values now, **tune in §31**. Confirm DoTs stay
+dials — author placeholder values now, **tune in §33** (balance). Confirm DoTs stay
 `bypassDefense:true` + `evadable:false` for the first pass (the brief's locked
 default; revisit at playtest). Does the tile→status apply credit a `sourceUnitId`
 (recommend `null` — environmental, like today's `healerId:null`)?
@@ -542,7 +571,7 @@ default; revisit at playtest). Does the tile→status apply credit a `sourceUnit
 > the §27-periodic-resolve analog — OR the prevents/targeting/affects flags, flee>wander
 > for movement, MIN for acquisitionRange, a shared frozen NEUTRAL when nothing applies)
 > + the four statuses authored in [config/statuses.json](config/statuses.json)
-> (durations are §31 placeholders). **28b** (`24c4915`): the consumer decision-hooks
+> (durations are §33-balance placeholders). **28b** (`24c4915`): the consumer decision-hooks
 > — `AbilityBehavior` skips attacks under `preventsAttack`; `MovementBehavior` roots
 > on `preventsMove` / flees via the gambit's `retreatCell` on `movement:'flee'` /
 > wanders a random free neighbor (combatRng) on `movement:'wander'`, all checked
@@ -551,7 +580,7 @@ default; revisit at playtest). Does the tile→status apply credit a `sourceUnit
 > to the normal enemy pick → the single-target friendly-fire) and caps the blind enemy
 > pick to adjacent; the interpreter forces a confused caster's AoE to `affects:'all'`
 > (read LIVE at fire time → no serialized state). Confusion gained a bounded
-> `acquisitionRange: 5` (a §31 dial) so it isn't omniscient. **28c** (`de0b497`): the
+> `acquisitionRange: 5` (a §33-balance dial) so it isn't omniscient. **28c** (`de0b497`): the
 > observable surface — a persistent `overlay{tint}` FX channel + the four `_active`
 > keys ([fxRegistry.ts](src/render/fxRegistry.ts), frozen ice-cyan / panic fear-amber
 > / blind blinded-grey / confusion chaos-purple), the renderer holding the held tint
@@ -602,7 +631,7 @@ off the seeded RNG; the friend/foe filter survives blind.
 `combatRng` vs a dedicated draw — recommend `combatRng`, where targeting rolls
 live). Where does the random-team pick read its candidate set (all units in
 acquisition range vs all on the board — recommend acquisition range, so confusion
-isn't omniscient)? The behavior-override **durations** are content dials → §31.
+isn't omniscient)? The behavior-override **durations** are content dials → §33 (balance).
 
 ---
 
@@ -625,7 +654,7 @@ isn't omniscient)? The behavior-override **durations** are content dials → §3
 > afflicters** — pure CONTENT on the proven op: Corrupter (poison "Vial" 3×3 AoE) ·
 > Ice mage (frozen "Ice Storm" instant 3×3 AoE) · Warlock (confusion "Hex" AoE
 > pure-applier) · Luminant (blind "Light Ray" single-target) · Banshee (panic "Wail"
-> AoE pure-applier); 6 FX keys reuse existing channels (SFX → §31). No snapshot bump.
+> AoE pure-applier); 6 FX keys reuse existing channels (SFX → §32). No snapshot bump.
 > **✅ 29c SHIPPED (pending playtest):** the recursive **`chain` op** + **Stormcaller**
 > (chain_lightning, mage stats, glyph `z`). The op arcs to up to `maxJumps` targets —
 > primary = the committed `currentTarget`, then nearest fresh enemy within `rangeCells`
@@ -663,7 +692,7 @@ isn't omniscient)? The behavior-override **durations** are content dials → §3
 > sibling) boot-rejects a typo'd `summon.archetype`. Content: **Shaman** (glyph `s`,
 > catapult-ish stats, `raise_dead` self-anchored summon, holds at range 6 / no attack)
 > raises up to 3 **Ghoul** minions (glyph `g`, `ghoul_claw`, ≈ half a bandit). No FX/SFX
-> (the minion fade is the cue; the summon-pop SFX is §31). Browser-verified: a live
+> (the minion fade is the cue; the summon-pop SFX is §32). Browser-verified: a live
 > Shaman summons Ghouls capped at 3, both glyphs render. ⚠️ `ALL_ARCHETYPES` auto-makes
 > every archetype player-draftable; the user chose to KEEP all §29 archetypes draftable
 > through §29's end (for testing), so the enemy-disruptor + summon-only-Ghoul
@@ -774,8 +803,9 @@ minion dies), multi-summon fills the `count` nearest free cells; each determinis
 > guided **Wire-up panel** — since archetypes are a CLOSED typed union, create/
 > delete emit the exact 3 code edits the tool can't perform (the `Archetype`
 > union / `ArchetypesSchema` / a `glyphs.ts` glyph + the n/48 atlas budget). Both
-> editors no-snapshot-bump, dev-only. **NEXT = §31** (SFX + the closing balance
-> pass — READ BALANCE.md FIRST).
+> editors no-snapshot-bump, dev-only. **NEXT = §31** (effect scaling — stat/level-
+> driven magnitude / duration / summon level; design LOCKED 2026-06-26, ready to
+> build). §32 (FX·SFX·viz/UI) + §33 (balance) follow.
 
 The authoring + feel surface — the editors land *with* the content, not before
 (the encounter round's V lesson). **Dev-only `tools/` UIs + config + content; no
@@ -796,7 +826,7 @@ snapshot bump.**
   and "new attacks" — you need new units to carry the new mechanics). Plus the
   `← Tools` home link convention.
 - **New content — the demo-consumer set.** Every new mechanic needs ≥ 1 content
-  consumer so the editor proves out and §31's balance pass has something to tune.
+  consumer so the editor proves out and §33's balance pass has something to tune.
   The migration + tile-unification already cover several, which keeps the roster
   small (exact archetype design is **deferred to spec time** — these are the slots,
   not the final stat blocks):
@@ -813,7 +843,7 @@ snapshot bump.**
 
   Notes: **spread demos across both teams** — player-draftable afflicters (bleed/
   poison = your tools) + enemy-pooled disruptors (freeze/confuse/panic = the threats
-  you feel), so §31 balances each status as both wielded and suffered. A **confused
+  you feel), so §33 balances each status as both wielded and suffered. A **confused
   AoE caster** friendly-fires (forced `affects:'all'`) — confusion × AoE demos itself,
   free. **Every new unit glyph hits the FULL FontAtlas (32/32)** → one **grid resize**
   accommodates the whole roster (the FontAtlas.test guard + the `glyphs.ts` append
@@ -840,39 +870,280 @@ call, and how many "disruptor" archetypes carry the blind/confusion/panic trio
 
 ---
 
-## Phase 31 — SFX + the closing balance pass
+## Phase 31 — Effect scaling: stat/level-driven magnitude, duration & summon level
 
-Polish that rides the feature + the cluster's balance closer. **Config / render +
-the BALANCE.md loop; no snapshot bump.**
+> **▶ NEXT. DESIGN LOCKED (2026-06-26 session) — ready to build.** The §30 playtest
+> surfaced a hole in the spec: normal attacks scale with a stat (`damage`/`heal` =
+> `might + scalingStat`, cast-time captured), but the **new** effects mostly don't.
+> Audit of where scaling already reaches: **chain** ✅ already scales (its inner
+> `damage` op runs the shared `resolveScalars` kernel); **statuses** ⚠️ have a
+> dormant *live-source* seam (`periodicOpBase` reads `source.effectiveStats[scaling]`,
+> but every status is authored `scaling:'none'`); **summon** ❌ uses a fixed `level`.
+> Three player-facing asks fall out of that: scale **DoT magnitude** (burn/poison/
+> bleed), scale **status duration** (panic/blind/confusion — and, per a playtester,
+> the DoTs too), and scale **summon level** with the summoner. All three already
+> have the *carrier field* + the *runtime plumbing*; what's missing is uniformly the
+> **cast-time capture point** + a **scaling descriptor**. This phase fills both.
 
-**Shape:**
-- **SFX** for the new effects/mechanics (burn tick, freeze, chain zap, summon
-  pop) — new keys in the §Z FX registry + `public/audio/` + AudioPlayer, plus the
-  long-deferred **catapult SFX** ([TODO.md](TODO.md)) folded in.
-- **The closing balance pass** via the BALANCE.md **5-step loop**. **Scope: the new
-  content only.** The migration (Y) is balance-neutral *by construction* (byte-
-  identical), so this is **not** a band re-derivation — it's tuning the new statuses
-  / mechanics / archetypes into the existing per-kind bands (normal ≈ 3 / elite ≈ 6
-  / boss ≈ 10 pool-damage). DoT magnitudes, status durations, chain falloff, summon
-  budgets, the new archetypes' `might`/cadence — driven by the per-encounter harness
-  the encounter round already built (`--per-encounter`, `--encounter=<id>`,
-  `--seed-offset`).
-- Optionally fold in the **long-open archetype-balance thread** (the mercenary+ranged
-  duopoly) now that new archetypes diversify the pool.
+The schema hole, filled **systematically** — one descriptor, three consumers, the
+same wiring three times. **`WorldSnapshot` bump** (the captured scalars ride the
+in-flight `OpResolution`).
 
-**Cost:** the SFX is light (registry + assets); the balance pass is a measured
-sweep but bounded (new content, not the whole catalog). **READ
-[BALANCE.md](BALANCE.md) first.** Mind the `dwm.exe` leak on heavy `--jobs` runs
-(reboot first; `--jobs=1` immune).
+### The design (locked)
+
+**Commensurate vs scaled.** `damage`/`heal` get `base + stat` (coefficient
+implicitly 1) because base and stat are the *same unit* (HP points). The three new
+axes are **not** commensurate — magnitude is a multiplier (~1–3), duration is
+seconds (~2–6), summon level is an integer (~1–8) — so a raw stat add is nonsense
+(+8 s of stun). They need the one thing damage/heal don't: **a coefficient**. The
+general form, of which `might + scalingStat` is the `perPoint = 1` special case:
+
+```
+value = base + perPoint × stat(caster)        // captured at cast (frozen)
+```
+
+**The shared descriptor** (`src/sim/effects/` — the `resolveScalars` sibling):
+
+```ts
+// `level` is the meta-property (summon); the rest are combat stats off
+// effectiveStats. No 'none' sentinel — absence of scaling = author a plain number.
+const ScalingStatSchema = z.enum(['strength', 'ranged', 'magic', 'luck', 'level']);
+
+const ScaledValueSchema = z.object({
+  base: z.number(),            // the floor (required — see decision 4)
+  stat: ScalingStatSchema,
+  perPoint: z.number(),        // contribution per stat point
+  max: z.number().optional(),  // optional ceiling (the stun-duration guard)
+});
+
+// Opt-in + non-breaking: every existing `magnitude: 2` / `level: 1` still parses.
+const ScalarOrScaledSchema = z.union([z.number(), ScaledValueSchema]);
+```
+
+**The five locked decisions (2026-06-26):**
+1. **Frozen, not live** — captured at cast off the caster's stats (a strong
+   Corrupter's burn stays strong even if she dies). The periodic op's existing
+   *live-source* `scaling` enum stays a separate, enemy-flavored tool.
+2. **`max` clamp included** — duration scaling without a ceiling is a real footgun.
+3. **Stat domain `{strength, ranged, magic, luck, level}`** — `speed` excluded
+   (it already drives cadence/phase duration, a wholly separate axis we do **not**
+   touch here); `none` subsumed by the bare-number arm.
+4. **`base` required** on the scaled form — it's all editor-generated (§31d), so no
+   excuse for a missing value; the bare-number arm still falls back to the def base.
+5. **Summon scales the minion's `level`**, not its individual stats — routes through
+   the deterministic `scaledUnit(level)`, reusing the level curve.
+
+⚠️ **Balance caveat (→ §33):** scaling summon level off the caster's *overall level*
+may be OP — dial `perPoint` back or switch the stat to `magic` if §33 shows it. The
+descriptor makes either a one-line config change.
+
+### 31a — The `ScaledValue` schema + the cast-time evaluator
+
+**Shape:** the `ScalingStatSchema` / `ScaledValueSchema` / `ScalarOrScaledSchema`
+unions above + the pure evaluator (the `resolveScalars` sibling, the one genuinely
+new logic):
+
+```ts
+function evalScaled(v: number | ScaledValue | undefined, caster: Unit): number | undefined {
+  if (v === undefined) return undefined;
+  if (typeof v === 'number') return v;
+  const stat = v.stat === 'level' ? caster.level : caster.effectiveStats[v.stat];
+  const raw = v.base + v.perPoint * stat;
+  return v.max !== undefined ? Math.min(raw, v.max) : raw;
+}
+```
+
+**Cost:** types + the pure kernel only, no consumer, no snapshot touch. Headless.
+
+**Headless tests:** the union parses a bare number AND a scaled object, rejects a
+malformed descriptor; `evalScaled` computes `base + perPoint × stat`, honors `max`,
+reads `level` off the unit and the rest off `effectiveStats`, passes a bare number
+through untouched, returns `undefined` for `undefined`.
+
+### 31b — Status magnitude + duration scaling (the `applyStatus` op)
+
+**Shape:** flip the `applyStatus` op's `magnitude` + `durationSeconds` from
+`z.number()` to `ScalarOrScaledSchema`; capture both at cast in `propose.ts`
+`resolveOp` (today's `applyStatus` arm returns `{}`) into **three new optional
+`OpResolution` slots reserved here** — `statusMagnitude`, `statusDurationSeconds`,
+**and** `summonLevel` (so 31c reuses the shape, no second bump); consume them in
+`executeApplyStatus` (read `ctx.resolution.statusMagnitude ?? 1` /
+`statusDurationSeconds` instead of `op.magnitude` / `op.durationSeconds`). Magnitude
+and duration stay **float** — the `× magnitude` round + `secondsToTicks` floor are
+already downstream. Because `chain` recurses through `resolveOp`, a chained
+`applyStatus` inherits this for free. **The `WorldSnapshot` bump lands here**
+(v29→v30, reject pre-scaling in-flight saves).
+
+Covers both playtest asks at once: magnitude is the burn/poison/bleed lever;
+duration is status-type-agnostic, so the *same* field scales the control statuses
+(frozen/panic/blind/confusion — which carry no periodic block) **and** the DoTs' own
+lifetime, no extra work.
+
+**Cost:** the schema flip + the capture/consume wiring + the bump. Headless for the
+math/capture/round-trip; browser sanity-check a scaled burn/panic reads right.
+**Playtest pause.**
+
+**Headless tests:** a scaled `magnitude` produces `round(periodicBase × evalScaled)`
+per tick; a scaled `durationSeconds` sets `expiresAtTick` off the captured value
+(and clamps at `max`); a bare-number magnitude/duration is byte-identical to today;
+the captured scalars round-trip through the v30 snapshot mid-windup; a chained
+`applyStatus` carries its captured magnitude/duration per hop; a v29 in-flight save
+is reject-stale.
+
+**Decision points 31b — RESOLVED (2026-06-26):** frozen-capture (not live); `max`
+clamp in; `base` required. The live-source periodic `scaling` enum is left intact as
+the orthogonal enemy-flavored seam.
+
+### 31c — Summon-level scaling (the `summon` op)
+
+**Shape:** flip `SummonSpec.level` to `ScalarOrScaledSchema`; capture in
+`resolveOp`'s `summon` arm (today `{}`) into the **already-reserved** `summonLevel`
+slot — **int-rounded at capture** (`Math.max(1, Math.round(evalScaled(...)))`, since
+`scaledUnit` needs an int level); consume in `executeSummon` (`spawnSummon(archetype,
+ctx.resolution.summonLevel, …)` instead of `op.summon.level`). **No second bump** —
+the slot was reserved in 31b's v30.
+
+**Cost:** the schema flip + one capture/consume pair. Headless for the rounding +
+the deterministic spawn; browser-verify a Shaman's ghouls scale with her level.
+**Playtest pause** — and **watch the OP caveat** (the §33 dial).
+
+**Headless tests:** a `{stat:'level', perPoint:1}` summon spawns minions at the
+caster's level; rounding floors correctly and clamps ≥ 1; a bare-number `level` is
+byte-identical to today; the spawn stays deterministic (geometry + `scaledUnit`).
+
+### 31d — Editor support for `ScaledValue` (the authoring surface)
+
+**Shape:** the attack editor (§30) authors all three fields, so its op forms grow a
+**scalar-or-scaled widget** — a toggle between "plain number" and the `{base, stat,
+perPoint, max?}` form — on the `applyStatus` magnitude/duration inputs and the
+`summon` level input. Byte-faithful round-trip through `formatAbilitiesJson` (a bare
+number emits as a number, a scaled value as the object — the parse→emit discipline
+§30 already holds). The resolution-outline preview (§30c, sharing the real
+resolvers) extends to show the *scaled* number against the sample caster — so a
+designer sees "burn 6/tick at magic 8" live.
+
+**Cost:** dev-only UI; the widget + the formatter arm + the preview extension.
+Browser-verify the round-trip (author scaled → Save → reload → persisted) and the
+live preview number. Authoring works for the bare-number case from 31b onward (the
+union default), so this is the authoring *polish*, landing last.
+
+**Decision points 31d:** does the preview show the scaled value inline next to the
+op, or only in the resolution outline (recommend inline — it's the whole point of
+the scaling form)? Confirm the widget defaults to "plain number" (the non-breaking
+default) with an explicit opt-in to the scaled form.
+
+---
+
+## Phase 32 — FX · SFX · the status-visualization / UI design round
+
+> **DESIGN ROUND NEEDED (32a) before the build.** This is the original §31 SFX pass,
+> **expanded**: the §30 playtest hinted statuses want richer *visual* cues than the
+> §27/§28 surface (tick-fx + the held `active` tint) provides — stacks, remaining
+> duration, magnitude legibility, the now-*scaled* numbers from §31. The user
+> flagged "I have no idea what the shape will be yet," so the phase **opens with a
+> design session** (this round's sibling) to lock the cue vocabulary, then builds.
+
+Polish that rides its feature. **Config / render / UI; no snapshot bump** (FX keys +
+audio assets + UI are not serialized).
+
+### 32a — DESIGN ROUND: the status-visualization / UI cue vocabulary
+
+**Shape:** a collaborative design session (no code) to lock *how statuses read* in
+battle. The open questions: per-unit **status icons** (which, where — on the sprite,
+on the UnitCard, both?); **stack count** (escalating bleed/poison) + **remaining
+duration** indicators; surfacing a **scaled** magnitude/duration so the §31 numbers
+are legible; whether the deferred §27 cues (a persistent overlay beyond the tint, an
+`expired` cue, sparkle-height, the settle-on-arrival apply cue — all parked in
+[TODO.md](TODO.md)) fold in here. **Output: a locked spec** that scopes 32c.
+
+**Cost:** none (design). Surfaces tradeoffs; ends at a locked cue vocabulary.
+
+**Decision points 32a:** sprite-anchored vs card-anchored cues (or both); how much
+HUD real-estate statuses earn; whether duration/stack indicators are per-status or a
+unified badge; what "legible scaled magnitude" looks like (a tooltip, a number, a
+color ramp).
+
+### 32b — SFX for the new mechanics
+
+**Shape:** new sound keys in the §Z FX registry + `public/audio/` + AudioPlayer for
+the §27/§28/§29 effects that shipped silent (SFX deferred to here by design): **burn
+tick**, **freeze**, the **afflicter casts** (poison/confusion/blind/panic apply),
+**summon pop**, + the long-deferred **catapult SFX** ([TODO.md](TODO.md)) folded in.
+(Chain already has its `chain.wav` per-hop zap from §29c.) One `FxKey` = visual +
+SFX (the §Z lock), so each rides the existing fx-resolution path.
+
+**Cost:** light — registry keys + assets + the AudioPlayer wiring. Browser-verify
+(audio) each cue fires on its phase/tick. Independent of 32a, so it can land first.
+
+**Headless tests:** the boot assert (`assertFxKeysResolve` / `assertStatusFxKeysResolve`)
+covers every new key; SFX *audibility* is eyeball/ear-verified (render+audio layer).
+
+### 32c — The status-visualization / UI build
+
+**Shape:** implement whatever 32a locks — the icons / stacks / duration indicators /
+scaled-magnitude legibility, wired off the existing `status:applied/ticked/expired`
+lifecycle + the held-status read. Gated on 32a's spec.
+
+**Cost:** render + UI; scope set by 32a. Browser-verify each cue against a live
+battle (the "not testable without seeing it" surface — §point 2).
+
+**Headless tests:** the data feeding the cues is unit-testable (active statuses +
+their remaining duration + stack count off a unit's `effects[]`); the *appearance*
+is eyeball-verified.
+
+### 32d — The deferred FX-feel tail (optional)
+
+**Shape:** the §27 parked feel items, if 32a pulls them in — sparkle-height, the
+settle-on-arrival apply cue, the persistent overlay / `expired` cue
+([TODO.md](TODO.md)). Optional, cosmetic; lands only if the design round wants it.
+
+**Cost:** small render polish. Browser-verify.
+
+---
+
+## Phase 33 — The closing balance pass
+
+The cluster's balance closer. **Scope: the new content + §31's scaling dials only**
+— the migration (Y) is balance-neutral *by construction* (byte-identical), so this
+is **not** a band re-derivation. **Config + tests via the BALANCE.md loop; no
+snapshot bump. READ [BALANCE.md](BALANCE.md) FIRST.**
+
+### 33a — Baseline + instrumentation
+
+**Shape:** re-read [BALANCE.md](BALANCE.md); establish the current per-encounter
+pool-damage baseline with all §29 content + §31 scaling live, via the harness the
+encounter round already built (`--per-encounter`, `--encounter=<id>`,
+`--seed-offset`). Confirm the new afflicter/summoner/chain archetypes are exercised.
+Identify which dials are in play.
+
+**Cost:** a measured baseline run, bounded (new content, not the whole catalog).
+Mind the `dwm.exe` leak on heavy `--jobs` runs (reboot first; `--jobs=1` immune).
+
+### 33b — Tune the new content into band
+
+**Shape:** tune into the existing per-kind bands (normal ≈ 3 / elite ≈ 6 / boss ≈ 10
+pool-damage/instance): DoT magnitudes/durations, **the §31 scaling coefficients
+(`perPoint` / `max`)**, chain falloff, summon budgets (`maxLive` / `count` / the
+level-scaling — **the OP caveat from §31c**), and the new archetypes' `might`/cadence.
+All config (A4 — hoisted to `config/*.json`).
+
+**Cost:** the measured sweep, driven by the per-encounter harness.
 
 **Headless tests:** balance-proof tests for the new statuses/mechanics derive their
-expectations from the config modules; the band-holding verification runs on held-out
-seeds (`--seed-offset`).
+expectations from the config modules (never hardcode the authored numbers).
 
-**Decision points 31:** how much archetype rebalancing to fold in vs. defer
-(recommend: tune the *new* content into band; fold the duopoly thread only if the
-new archetypes shift it materially). Uniform DoT tuning vs. per-status curves — a
-playtest call.
+### 33c — Hold-out verification + the duopoly fold-in
+
+**Shape:** verify the bands hold on **held-out seeds** (`--seed-offset`); decide the
+long-open **mercenary+ranged duopoly** thread — fold it in only if the new
+archetypes shift it materially (recommend: tune the *new* content into band first;
+touch the duopoly only if measurably moved).
+
+**Cost:** the out-of-sample verification run.
+
+**Decision points 33:** how much archetype rebalancing to fold in vs. defer; uniform
+DoT tuning vs. per-status curves (a playtest call); whether the summon-level scaling
+needs the `perPoint`/`magic`-switch dial-back the §31c caveat flagged.
 
 ---
 
@@ -882,7 +1153,7 @@ playtest call.
   §29 (summon raises the live unit count), but the **per-caster `maxLive` cap keeps
   it parked** (a bounded unit count needs no pool). Revisit only if swarm-scale
   summoning ever enters scope.
-- **Dedicated catapult SFX** ([TODO.md](TODO.md)) — folded into §31's SFX pass.
+- **Dedicated catapult SFX** ([TODO.md](TODO.md)) — folded into §32's SFX pass (32b).
 - **Archetype display-label + ability display-name/description pass**
   ([TODO.md](TODO.md)) — the attack editor surfaces attack + status names; a natural
   moment to fold in the display-metadata layer. Optional, cosmetic.
@@ -933,8 +1204,22 @@ phase (each is also embedded as a per-phase "Decision points").
 - **Demo consumers** = the §30 floor (summoner + minion · chain caster · bleed/
   poison + behavior-trio afflicters); actual stat blocks designed at spec time. ✅
 
+**Resolved with the user (2026-06-26 — the effect-scaling design session):**
+- **The "SFX + balance" §31 splits into three** — §31 effect scaling · §32 FX·SFX·
+  the viz/UI design round (SFX *expanded*) · §33 the balance closer. ✅
+- **Effect scaling = one `ScaledValue` descriptor** (`base + perPoint × stat`,
+  cast-time **frozen**), three consumers (DoT magnitude · status duration · summon
+  level), opt-in via a `number | ScaledValue` union. **`max` clamp in; `base`
+  required; stat domain `{strength, ranged, magic, luck, level}`** (speed excluded —
+  it's the separate cadence axis); **summon scales `level`, not stats**;
+  `WorldSnapshot` bump (v29→v30). ✅
+- **§32 opens with a DESIGN ROUND (32a)** — the status-viz/UI cue shape is still
+  open (the user: "no idea what the shape will be yet"). ✅
+
 **Still open (resolve at the relevant phase):**
-- **27:** the bleed/poison/behavior **content dials** (durations/magnitudes) —
-  placeholder now, tune at §31; the DoT defense-bypass default.
 - **30:** how much exemplar content ships now vs the anticipated content bottleneck.
-- **31:** archetype-rebalance fold-in scope.
+- **31:** the per-axis `perPoint`/`max` starting values (placeholders → tuned at §33).
+- **32:** the status-viz/UI cue vocabulary (the 32a design round) — sprite- vs
+  card-anchored cues, stack/duration indicators, scaled-magnitude legibility.
+- **33:** archetype-rebalance fold-in scope; whether summon-level scaling needs the
+  §31c OP dial-back (`perPoint` down or switch to `magic`).

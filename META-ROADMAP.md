@@ -13,7 +13,7 @@ The encounter-system round (Phases S→X) is content-complete; this plans everyt
 between here and feature-complete.
 
 > **Cluster 1 — Combat Depth is now EXPANDED into [ROADMAP.md](ROADMAP.md)** (Phases
-> **Y → 31**), synthesized 2026-06-22 from the design model at
+> **Y → 33**), synthesized 2026-06-22 from the design model at
 > [archive/cluster-one-feedback.md](archive/cluster-one-feedback.md). The remaining
 > clusters (2–6) below stay as the meta-order until their turn comes.
 
@@ -84,7 +84,7 @@ right once beats retrofitting later.
 
 ---
 
-## Cluster 1 — Combat Depth  ✅ EXPANDED → [ROADMAP.md](ROADMAP.md) (Phases Y→31)
+## Cluster 1 — Combat Depth  ✅ EXPANDED → [ROADMAP.md](ROADMAP.md) (Phases Y→33)
 
 **Charter:** make attacks and effects **composed data**, not hand-coded classes,
 and build the depth (status effects, richer attack mechanics) on top of that model.

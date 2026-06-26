@@ -803,9 +803,9 @@ minion dies), multi-summon fills the `count` nearest free cells; each determinis
 > guided **Wire-up panel** — since archetypes are a CLOSED typed union, create/
 > delete emit the exact 3 code edits the tool can't perform (the `Archetype`
 > union / `ArchetypesSchema` / a `glyphs.ts` glyph + the n/48 atlas budget). Both
-> editors no-snapshot-bump, dev-only. **NEXT = §31** (effect scaling — stat/level-
-> driven magnitude / duration / summon level; design LOCKED 2026-06-26, ready to
-> build). §32 (FX·SFX·viz/UI) + §33 (balance) follow.
+> editors no-snapshot-bump, dev-only. **§31 (effect scaling) ✅ COMPLETE &
+> user-confirmed (31a–31d, WorldSnapshot v29→v30); NEXT = §32** (FX·SFX·viz/UI —
+> opens with the 32a DESIGN ROUND). §33 (balance) follows.
 
 The authoring + feel surface — the editors land *with* the content, not before
 (the encounter round's V lesson). **Dev-only `tools/` UIs + config + content; no
@@ -872,7 +872,24 @@ call, and how many "disruptor" archetypes carry the blind/confusion/panic trio
 
 ## Phase 31 — Effect scaling: stat/level-driven magnitude, duration & summon level
 
-> **▶ NEXT. DESIGN LOCKED (2026-06-26 session) — ready to build.** The §30 playtest
+> **✅ COMPLETE (31a–31d SHIPPED & user-confirmed, 2026-06-26).** All four steps
+> green + browser-verified; the summoner's level-scaling played especially well.
+> Commits: 31a `5ec62ec` (the `ScaledValue` schema + the pure `evalScaled` kernel,
+> taking a structural `ScalingSource` so the editor preview shares it) · 31b
+> `e6e9edf` (status magnitude + duration on the `applyStatus` op, captured frozen;
+> **WorldSnapshot v29→v30** reserving all 3 `OpResolution` slots; the chained
+> applyStatus inherits the capture free; the status rider passes through
+> `scaleChainResolution` unscaled) · 31c `eb2e73e` (summon minion level, int-rounded
+> ≥1 at capture, reusing the v30 slot — no second bump) · 31d `c871f66` (the
+> attack-editor `scaledValueField` toggle widget + the inline-resolved `= N vs
+> sample` + the resolution-outline preview resolving scaled mag/dur/level via the
+> real `evalScaled`, plus a `level` sample knob). Shipped content stays byte-
+> identical (all bare numbers); the magnitudes are placeholders → §33. **⚠️ §33
+> caveat:** scaling summon level off the caster's *overall level* may be OP — a
+> one-line `perPoint`/`stat` dial-back if the balance pass shows it. **▶ NEXT = §32
+> (opens with the 32a design round).** Below is the as-built design.
+
+> **DESIGN LOCKED (2026-06-26 session).** The §30 playtest
 > surfaced a hole in the spec: normal attacks scale with a stat (`damage`/`heal` =
 > `might + scalingStat`, cast-time captured), but the **new** effects mostly don't.
 > Audit of where scaling already reaches: **chain** ✅ already scales (its inner
@@ -1036,7 +1053,7 @@ default) with an explicit opt-in to the scaled form.
 
 ## Phase 32 — FX · SFX · the status-visualization / UI design round
 
-> **DESIGN ROUND NEEDED (32a) before the build.** This is the original §31 SFX pass,
+> **▶ NEXT. DESIGN ROUND NEEDED (32a) before the build.** This is the original §31 SFX pass,
 > **expanded**: the §30 playtest hinted statuses want richer *visual* cues than the
 > §27/§28 surface (tick-fx + the held `active` tint) provides — stacks, remaining
 > duration, magnitude legibility, the now-*scaled* numbers from §31. The user

@@ -33,6 +33,7 @@ import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import type { UnitStats } from '../../src/sim/Unit';
 import {
   AbilityDefSchema,
+  ScalingStatSchema,
   type AbilityDef,
   type EffectOp,
   type ChainInnerOp,
@@ -40,7 +41,12 @@ import {
   type TargetSelector,
 } from '../../src/sim/effects/schema';
 import { resolveCadenceTicks, resolvePhases } from '../../src/sim/effects/timeline';
-import { resolveDamageScalars, resolveHealAmount } from '../../src/sim/effects/resolveScalars';
+import {
+  evalScaled,
+  resolveDamageScalars,
+  resolveHealAmount,
+  type ScalingSource,
+} from '../../src/sim/effects/resolveScalars';
 import { formatAbilitiesJson } from './format';
 
 // Small enum mirrors of the schema unions (the schema doesn't export the raw
@@ -72,7 +78,10 @@ type OpKind = (typeof TOP_OP_KINDS)[number];
 // cast-time resolution, so the sample caster only knobs these.
 const SAMPLE_STATS = ['speed', 'strength', 'ranged', 'magic', 'luck'] as const;
 type SampleStat = (typeof SAMPLE_STATS)[number];
-type SampleCaster = Record<SampleStat, number>;
+// `level` rides alongside the stat knobs (it's NOT a `UnitStats` field): the §31
+// `ScaledValue` evaluator reads it for `stat:'level'` scaling (summon level), so the
+// preview needs a sample level to resolve those.
+type SampleCaster = Record<SampleStat, number> & { level: number };
 
 function defaultTarget(kind: TargetKind): TargetSelector {
   switch (kind) {
@@ -110,7 +119,7 @@ let activeId: string = Object.keys(working)[0]!;
 let lastValid = true;
 // A neutral, non-zero sample caster (so every scaling kind shows a real base);
 // the archetype presets overwrite it with realistic stats on demand.
-const sample: SampleCaster = { speed: 5, strength: 5, ranged: 5, magic: 5, luck: 5 };
+const sample: SampleCaster = { speed: 5, strength: 5, ranged: 5, magic: 5, luck: 5, level: 5 };
 
 // ---- DOM ----
 const tabsEl = mustQuery<HTMLDivElement>('#tabs');
@@ -136,6 +145,7 @@ const sampleEls: Record<SampleStat, HTMLInputElement> = {
   magic: mustQuery<HTMLInputElement>('#s-magic'),
   luck: mustQuery<HTMLInputElement>('#s-luck'),
 };
+const sampleLevelEl = mustQuery<HTMLInputElement>('#s-level');
 const previewEl = mustQuery<HTMLDListElement>('#preview');
 const validationEl = mustQuery<HTMLUListElement>('#validation');
 const exportEl = mustQuery<HTMLTextAreaElement>('#export');
@@ -466,13 +476,13 @@ function renderOp(host: HTMLElement, op: EffectOp, ctx: OpCtx): void {
       break;
     case 'applyStatus':
       selectField(body, 'Status', STATUS_IDS, op.statusId, (v) => (op.statusId = v));
-      // §31: magnitude/duration are `ScalarOrScaled`. The toggle widget lands in
-      // §31d; until then edit the bare-number arm; a JSON-authored scaled value
-      // shows a read-only hint and round-trips untouched through the formatter.
-      scaledOrNumberField(body, 'Magnitude', op.magnitude, (v) =>
+      // §31d: magnitude/duration are `ScalarOrScaled` — the toggle widget edits both
+      // arms (plain number ↔ scaled), defaulting to plain. Both optional → empty
+      // clears to undefined (the status def's magnitude 1 / base duration governs).
+      scaledValueField(body, 'Magnitude', op.magnitude, { optional: true }, (v) =>
         v === undefined ? delete op.magnitude : (op.magnitude = v),
       );
-      scaledOrNumberField(body, 'Duration (s)', op.durationSeconds, (v) =>
+      scaledValueField(body, 'Duration (s)', op.durationSeconds, { optional: true }, (v) =>
         v === undefined ? delete op.durationSeconds : (op.durationSeconds = v),
       );
       break;
@@ -510,13 +520,11 @@ function renderOp(host: HTMLElement, op: EffectOp, ctx: OpCtx): void {
     case 'summon': {
       const spec = op.summon;
       selectField(body, 'Archetype', ARCHETYPE_IDS, spec.archetype, (v) => (spec.archetype = v));
-      // §31c: level is `ScalarOrScaled`. Edit the bare-number arm; a scaled value
-      // (JSON-authored) shows a read-only hint until the §31d toggle widget lands.
-      if (typeof spec.level === 'number') {
-        numberField(body, 'Level', spec.level, 1, (v) => (spec.level = v));
-      } else {
-        body.appendChild(labelWrap('Level', el('span', 'hint', `scaled: ${displayScaledValue(spec.level)} — edit in JSON (§31d)`)));
-      }
+      // §31d: level is `ScalarOrScaled` — the toggle edits plain ↔ scaled (required,
+      // int-rounded ≥1 like the sim). Default 1 is omitted by the formatter.
+      scaledValueField(body, 'Level', spec.level, { optional: false, round: true }, (v) => {
+        if (v !== undefined) spec.level = v;
+      });
       numberField(body, 'Count', spec.count, 1, (v) => (spec.count = v));
       numberField(body, 'Max live', spec.maxLive, 1, (v) => (spec.maxLive = v));
       numberField(body, 'Radius', spec.radiusCells, 1, (v) => (spec.radiusCells = v));
@@ -574,7 +582,7 @@ function refreshExport(): void {
 function refreshPreview(): void {
   const d = def();
   previewEl.innerHTML = '';
-  const stats = sampleStats();
+  const source = sampleSource();
   const speed = sample.speed;
 
   addPreview('Target', describeTarget(d.target));
@@ -588,7 +596,7 @@ function refreshPreview(): void {
   addPreview('Timeline', phases.map((p) => `${p.phase} ${p.ticks}t (${secs(p.ticks)}s)`).join(' · '));
 
   // Each effect resolved against the sample caster (the cast-time scalars).
-  for (const e of d.effects) addPreview(`@ ${e.phase}`, outlineOp(e.op, stats));
+  for (const e of d.effects) addPreview(`@ ${e.phase}`, outlineOp(e.op, source));
   if (d.effects.length === 0) addPreview('Effects', '— none');
 }
 
@@ -610,8 +618,10 @@ function sampleStats(): UnitStats {
   };
 }
 
-/** One effect op's resolved outline against the sample caster. */
-function outlineOp(op: EffectOp, stats: UnitStats): string {
+/** One effect op's resolved outline against the sample caster (cast-time scalars +
+ *  any §31 scaled magnitude / duration / level). */
+function outlineOp(op: EffectOp, source: ScalingSource): string {
+  const stats = source.effectiveStats;
   switch (op.kind) {
     case 'damage':
       return outlineDamage(op, stats, 1);
@@ -620,12 +630,14 @@ function outlineOp(op: EffectOp, stats: UnitStats): string {
     case 'move':
       return `move ${op.mode} ${op.cells} cell${op.cells === 1 ? '' : 's'}`;
     case 'applyStatus':
-      return outlineApplyStatus(op);
+      return outlineApplyStatus(op, source);
     case 'chain':
-      return outlineChain(op, stats);
+      return outlineChain(op, source);
     case 'summon': {
       const s = op.summon;
-      const lvl = typeof s.level === 'number' ? s.level : displayScaledValue(s.level);
+      // Mirror the sim's int-round-≥1 capture so the preview level matches the spawn.
+      const lvlN = Math.max(1, Math.round(evalScaled(s.level, source) ?? 1));
+      const lvl = typeof s.level === 'number' ? `${lvlN}` : `${lvlN} (${displayScaledValue(s.level)})`;
       return `summon ${s.count}× ${s.archetype} (lvl ${lvl}, max ${s.maxLive}) @ ${op.at.kind}`;
     }
   }
@@ -651,27 +663,36 @@ function outlineDamage(
   return `${out} · ${flags.join(', ')}`;
 }
 
-/** An applyStatus op resolved to its status name / magnitude / duration (the
+/** An applyStatus op resolved to its status name + the §31 resolved magnitude /
+ *  duration vs the sample caster (a scaled value also shows its formula; the
  *  duration falls back to the status def's base when not overridden). */
-function outlineApplyStatus(op: Extract<EffectOp | ChainInnerOp, { kind: 'applyStatus' }>): string {
+function outlineApplyStatus(
+  op: Extract<EffectOp | ChainInnerOp, { kind: 'applyStatus' }>,
+  source: ScalingSource,
+): string {
   const sd = STATUS_DEFS[op.statusId as keyof typeof STATUS_DEFS];
   const name = sd?.name ?? op.statusId;
   const bits = [`apply ${name}`];
-  // §31: magnitude/duration may be scaled. The §31d preview resolves them against
-  // the sample caster; for now show the bare number, or the scaling formula.
   if (op.magnitude !== undefined && !(typeof op.magnitude === 'number' && op.magnitude === 1)) {
-    bits.push(`×${typeof op.magnitude === 'number' ? op.magnitude : displayScaledValue(op.magnitude)}`);
+    const m = evalScaled(op.magnitude, source) ?? 1;
+    const suffix = typeof op.magnitude === 'number' ? '' : ` (${displayScaledValue(op.magnitude)})`;
+    bits.push(`×${trimNum(m)}${suffix}`);
   }
-  const dur = op.durationSeconds ?? sd?.durationSeconds;
+  const dur = op.durationSeconds !== undefined ? evalScaled(op.durationSeconds, source) : sd?.durationSeconds;
   if (dur !== undefined) {
-    bits.push(typeof dur === 'number' ? `${secsNum(dur)}s` : `${displayScaledValue(dur)}s`);
+    const suffix =
+      op.durationSeconds !== undefined && typeof op.durationSeconds !== 'number'
+        ? ` (${displayScaledValue(op.durationSeconds)})`
+        : '';
+    bits.push(`${secsNum(dur)}s${suffix}`);
   }
   return bits.join(' · ');
 }
 
 /** A chain op resolved across its jumps: the per-hop damage falloff sequence + any
  *  status riders. Uses `resolveDamageScalars` per inner op (the real resolver). */
-function outlineChain(op: Extract<EffectOp, { kind: 'chain' }>, stats: UnitStats): string {
+function outlineChain(op: Extract<EffectOp, { kind: 'chain' }>, source: ScalingSource): string {
+  const stats = source.effectiveStats;
   const parts = op.ops.map((io) => {
     if (io.kind === 'damage') {
       const { baseDamage, critChance } = resolveDamageScalars(io, stats);
@@ -681,7 +702,7 @@ function outlineChain(op: Extract<EffectOp, { kind: 'chain' }>, stats: UnitStats
       const crit = io.critable && critChance > 0 ? ` (crit ${pct(critChance)})` : '';
       return `dmg ${seq.join('→')}${crit}`;
     }
-    return `+${outlineApplyStatus(io)}`;
+    return `+${outlineApplyStatus(io, source)}`;
   });
   const delay = op.hopDelaySeconds > 0 ? `${secsNum(op.hopDelaySeconds)}s/hop` : 'instant';
   return `chain ×${op.maxJumps} r${op.rangeCells} (${delay}) · ${parts.join(' · ')}`;
@@ -715,11 +736,25 @@ function buildSampleCaster(): void {
       refreshPreview();
     });
   }
+  // `level` isn't an archetype base stat, so presets leave it alone — but it's
+  // knobbable for `stat:'level'` (summon-level) scaling previews. Floor at 1.
+  sampleLevelEl.addEventListener('input', () => {
+    sample.level = intOr(sampleLevelEl.value, 1);
+    presetEl.value = '';
+    refreshPreview();
+  });
   syncSampleInputs();
 }
 
 function syncSampleInputs(): void {
   for (const k of SAMPLE_STATS) sampleEls[k].value = String(sample[k]);
+  sampleLevelEl.value = String(sample.level);
+}
+
+/** §31d — the sample caster as a `ScalingSource` (level + effectiveStats), so the
+ *  preview resolves a `ScaledValue` through the same `evalScaled` the sim uses. */
+function sampleSource(): ScalingSource {
+  return { level: sample.level, effectiveStats: sampleStats() };
 }
 
 function secs(ticks: number): string {
@@ -828,49 +863,128 @@ function numberField(
   parent.appendChild(labelWrap(label, input));
 }
 
-function optionalNumberField(
+const SCALING_STATS = ScalingStatSchema.options;
+
+/**
+ * §31d — edit a `ScalarOrScaled`: a "scaled" checkbox toggles between a plain
+ * number (the non-breaking default) and the {base, stat, perPoint, max?} form.
+ * Sub-field edits mutate IN PLACE + refresh the preview (no op re-render, so focus
+ * is kept); toggling re-renders the op (number↔object is a structural change). A
+ * live "= N vs sample" resolves the scaled form through the real `evalScaled`
+ * inline, so the author sees the cast-time number while editing.
+ *
+ * `optional` lets the plain-number arm clear to undefined (applyStatus magnitude /
+ * duration → the consumer default governs); a required field (summon level) keeps a
+ * number. `round` shows the int-rounded resolution (summon level mirrors the sim).
+ */
+function scaledValueField(
   parent: HTMLElement,
   label: string,
-  value: number | undefined,
-  onChange: (v: number | undefined) => void,
-  float = false,
+  value: number | ScaledValue | undefined,
+  opts: { optional: boolean; round?: boolean },
+  onChange: (v: number | ScaledValue | undefined) => void,
 ): void {
+  const scaled = value !== undefined && typeof value !== 'number' ? value : undefined;
+  const row = el('div', 'scaled-field');
+
+  const toggle = document.createElement('label');
+  toggle.className = 'inline scaled-toggle';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = scaled !== undefined;
+  cb.addEventListener('change', () => {
+    if (cb.checked) onChange({ base: typeof value === 'number' ? value : 0, stat: 'magic', perPoint: 1 });
+    else onChange(scaled ? scaled.base : undefined);
+    structuralChange(); // number↔object re-renders the op form
+  });
+  toggle.append(cb, document.createTextNode(' scaled'));
+
+  if (scaled === undefined) {
+    // Plain-number arm.
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.step = '0.05';
+    if (opts.optional) input.placeholder = 'default';
+    input.value = value === undefined ? '' : String(value);
+    input.addEventListener('input', () => {
+      const raw = input.value.trim();
+      if (raw === '' && opts.optional) onChange(undefined);
+      else {
+        const num = Number.parseFloat(raw);
+        onChange(Number.isFinite(num) ? num : opts.optional ? undefined : 0);
+      }
+      refreshDerived();
+    });
+    row.append(labelWrap(label, input), toggle);
+    parent.appendChild(row);
+    return;
+  }
+
+  // Scaled arm: base / stat / perPoint / max + the live resolution.
+  const sv = scaled;
+  const resolvedEl = el('span', 'scaled-resolved', '');
+  const recompute = (): void => {
+    const n = evalScaled(sv, sampleSource());
+    const shown = n === undefined ? '—' : opts.round ? String(Math.max(1, Math.round(n))) : trimNum(n);
+    resolvedEl.textContent = `= ${shown} vs sample`;
+  };
+  const commit = (): void => {
+    onChange(sv);
+    recompute();
+    refreshDerived();
+  };
+  const grid = el('div', 'scaled-grid');
+  numKnob(grid, 'Base', sv.base, (n) => (sv.base = n), commit);
+  const statSel = selectEl(SCALING_STATS, sv.stat);
+  statSel.addEventListener('change', () => {
+    sv.stat = statSel.value as ScaledValue['stat'];
+    commit();
+  });
+  grid.appendChild(labelWrap('Stat', statSel));
+  numKnob(grid, '/point', sv.perPoint, (n) => (sv.perPoint = n), commit);
+  const maxInput = document.createElement('input');
+  maxInput.type = 'number';
+  maxInput.step = '0.05';
+  maxInput.placeholder = 'no max';
+  maxInput.value = sv.max === undefined ? '' : String(sv.max);
+  maxInput.addEventListener('input', () => {
+    const raw = maxInput.value.trim();
+    if (raw === '') delete sv.max;
+    else {
+      const num = Number.parseFloat(raw);
+      if (Number.isFinite(num)) sv.max = num;
+    }
+    commit();
+  });
+  grid.appendChild(labelWrap('Max', maxInput));
+
+  const head = el('div', 'scaled-head');
+  head.append(el('span', 'scaled-label', label), toggle, resolvedEl);
+  row.append(head, grid);
+  recompute();
+  parent.appendChild(row);
+}
+
+/** A float sub-input for the scaled-value grid (`set` mutates the field, `commit`
+ *  re-resolves the inline number + refreshes the preview). */
+function numKnob(parent: HTMLElement, label: string, value: number, set: (n: number) => void, commit: () => void): void {
   const input = document.createElement('input');
   input.type = 'number';
-  input.min = '0';
-  input.step = float ? '0.05' : '1';
-  input.placeholder = 'default';
-  input.value = value === undefined ? '' : String(value);
+  input.step = '0.05';
+  input.value = String(value);
   input.addEventListener('input', () => {
-    const raw = input.value.trim();
-    if (raw === '') onChange(undefined);
-    else {
-      const num = float ? Number.parseFloat(raw) : Number.parseInt(raw, 10);
-      onChange(Number.isFinite(num) ? num : undefined);
+    const num = Number.parseFloat(input.value);
+    if (Number.isFinite(num)) {
+      set(num);
+      commit();
     }
-    refreshDerived();
   });
   parent.appendChild(labelWrap(label, input));
 }
 
-/** §31b interim — edit only the bare-number arm of a `ScalarOrScaled`. A scaled
- *  value (authored in JSON) shows a read-only formula and round-trips untouched
- *  through the formatter; the §31d toggle widget replaces this with full editing. */
-function scaledOrNumberField(
-  parent: HTMLElement,
-  label: string,
-  value: number | ScaledValue | undefined,
-  onChange: (v: number | undefined) => void,
-): void {
-  if (value !== undefined && typeof value !== 'number') {
-    parent.appendChild(labelWrap(label, el('span', 'hint', `scaled: ${displayScaledValue(value)} — edit in JSON (§31d)`)));
-    return;
-  }
-  optionalNumberField(parent, label, value, onChange, true);
-}
-
 /** §31 — a `ScaledValue` as a compact `base + perPoint×stat` formula (+ the max
- *  clamp when set), for the editor's read-only displays. */
+ *  clamp when set), the preview's scaled-form suffix. */
 function displayScaledValue(v: ScaledValue): string {
   const max = v.max !== undefined ? ` (max ${v.max})` : '';
   return `${v.base} + ${v.perPoint}×${v.stat}${max}`;

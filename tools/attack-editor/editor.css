@@ -412,3 +412,42 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- §31d ScaledValue widget ---- */
+.scaled-field {
+  margin-bottom: 8px;
+}
+
+.scaled-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.scaled-label {
+  color: var(--muted);
+  min-width: 72px;
+}
+
+.scaled-toggle {
+  font-size: 12px;
+}
+
+.scaled-resolved {
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.scaled-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--accent-dim);
+}
+
+.scaled-grid input[type='number'] {
+  width: 4rem;
+}

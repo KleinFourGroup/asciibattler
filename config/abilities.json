@@ -505,7 +505,7 @@
   "raise_dead": {
     "id": "raise_dead",
     "name": "Raise Dead",
-    "cooldownSeconds": 3,
+    "cooldownSeconds": 2,
     "rangeCells": 6,
     "ignoresLineOfSight": true,
     "target": { "kind": "self" },
@@ -519,7 +519,7 @@
     "effects": [
       {
         "phase": "impact",
-        "op": { "kind": "summon", "summon": { "archetype": "ghoul", "maxLive": 3 } }
+        "op": { "kind": "summon", "summon": { "archetype": "ghoul", "level": { "base": 1, "stat": "magic", "perPoint": 1 }, "maxLive": 3 } }
       }
     ]
   },

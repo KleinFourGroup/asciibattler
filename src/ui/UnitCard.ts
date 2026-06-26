@@ -21,11 +21,13 @@
 
 import type { UnitTemplate, Archetype, UnitStats, Unit } from '../sim/Unit';
 import type { PromotionInfo } from '../core/events';
+import type { StatusReadout } from '../sim/statusReadout';
 import { abilityIdsForArchetype, glyphForArchetype } from '../sim/archetypes';
 import { attackCooldownTicksFor, damageStatFor } from '../sim/stats';
 import { abilityDef, damageOpOf, healOpOf } from '../config/abilities';
 import { ticksToSeconds } from '../config';
 import { xpProgress, displayLevel } from '../sim/xp';
+import { statusColor } from '../render/statusDisplay';
 import { STAT_LABELS } from './statLabels';
 
 /** Future per-unit accent dimension. Only `common` exists today (unstyled =
@@ -97,6 +99,10 @@ export interface UnitCardHandles {
   /** Q4 — the `compact` HP-bar fill, for the in-battle pane to drive on every
    *  `unit:attacked`/`status:ticked`/`:healed`. Undefined for the full variants. */
   readonly hpFill?: HTMLDivElement;
+  /** §32c — the `compact` status row container; `updateCardStatusRow` reconciles
+   *  its per-status chips (the numeric readout — `Name ×N · P/s · Ns`, the §31
+   *  scaled potency made literal). Undefined for the full variants. */
+  readonly statusRow?: HTMLDivElement;
 }
 
 /** Adapter: a roster/offer template → card data (recruit + P3 pre-turn). */
@@ -248,16 +254,100 @@ function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHa
   hpFill.style.width = `${hpPercent(data.hp) * 100}%`;
   hp.appendChild(hpFill);
 
-  card.append(top, glyph, hp);
+  // §32c — the status row (below the HP bar). Empty + hidden until the unit
+  // carries a status; `updateCardStatusRow` (driven by the HUD on the per-tick
+  // gate) reconciles its chips.
+  const statusRow = document.createElement('div');
+  statusRow.className = 'unit-card__statuses';
+  statusRow.hidden = true;
+
+  card.append(top, glyph, hp, statusRow);
   // No reveal/stat block for compact — point `levelValue` at the level span so
   // the handle is non-null, and hand back an empty `statRows`.
-  return { el: card, levelValue: level, statRows: new Map(), hpFill };
+  return { el: card, levelValue: level, statRows: new Map(), hpFill, statusRow };
 }
 
 /** Clamp a UnitCardData HP reading to a 0..1 fill fraction (0 when absent). */
 function hpPercent(hp: UnitCardData['hp']): number {
   if (!hp || hp.max <= 0) return 0;
   return Math.max(0, Math.min(1, hp.current / hp.max));
+}
+
+/**
+ * §32c — reconcile a compact card's status row against a unit's active status
+ * readouts (the numeric counterpart to the board pip-strip). One chip per status
+ * in stable canonical order: a color swatch (matching the board pip) + the name +
+ * the live `×stacks · ±potency/s · Ns` numbers — where the §31 scaled potency
+ * finally reads as a literal. Hidden when the unit carries no statuses (no empty
+ * row, respecting the compact card's tight budget).
+ *
+ * Cheap by construction: the HUD gates the call on the sim tick advancing, and
+ * per-chip writes are dataset-cached so an unchanged field skips its DOM write.
+ * A no-op when the handles carry no status row (the full variants).
+ */
+export function updateCardStatusRow(
+  handles: UnitCardHandles,
+  readouts: readonly StatusReadout[],
+): void {
+  const row = handles.statusRow;
+  if (!row) return;
+  if (readouts.length === 0) {
+    if (!row.hidden) {
+      row.hidden = true;
+      row.replaceChildren();
+    }
+    return;
+  }
+  if (row.hidden) row.hidden = false;
+  while (row.childElementCount < readouts.length) row.appendChild(makeStatusChip());
+  while (row.childElementCount > readouts.length) row.lastElementChild!.remove();
+  for (let i = 0; i < readouts.length; i++) {
+    applyStatusChip(row.children[i] as HTMLDivElement, readouts[i]!);
+  }
+}
+
+/** Build one empty status chip: `[swatch] name  meta`. */
+function makeStatusChip(): HTMLDivElement {
+  const chip = document.createElement('div');
+  chip.className = 'unit-card__status';
+  const swatch = document.createElement('span');
+  swatch.className = 'unit-card__status-swatch';
+  const name = document.createElement('span');
+  name.className = 'unit-card__status-name';
+  const meta = document.createElement('span');
+  meta.className = 'unit-card__status-meta';
+  chip.append(swatch, name, meta);
+  return chip;
+}
+
+/** Paint a chip from a readout, skipping unchanged DOM writes via a cache. */
+function applyStatusChip(chip: HTMLDivElement, r: StatusReadout): void {
+  const [swatch, name, meta] = chip.children as unknown as HTMLSpanElement[];
+  if (chip.dataset.sid !== r.statusId) {
+    chip.dataset.sid = r.statusId;
+    swatch!.style.background = statusColor(r.statusId);
+    name!.textContent = r.name;
+  }
+  const metaText = statusChipMeta(r);
+  if (meta!.dataset.t !== metaText) {
+    meta!.dataset.t = metaText;
+    meta!.textContent = metaText;
+  }
+}
+
+/** The chip's numeric tail: `×stacks · ±potency/s · Ns`, omitting the parts that
+ *  don't apply (no ×N unless an `add` status has stacked; no potency for a
+ *  behavior status). Heal potency reads `+N/s`, damage `N/s`. */
+function statusChipMeta(r: StatusReadout): string {
+  const parts: string[] = [];
+  if (r.merge === 'add' && r.stacks > 1) parts.push(`×${r.stacks}`);
+  if (r.potencyPerSec !== null) {
+    const v = Math.abs(r.potencyPerSec);
+    const num = Number.isInteger(v) ? String(v) : v.toFixed(1);
+    parts.push(r.kind === 'heal' ? `+${num}/s` : `${num}/s`);
+  }
+  if (r.remainingSeconds !== null) parts.push(`${r.remainingSeconds.toFixed(1)}s`);
+  return parts.join(' · ');
 }
 
 /**

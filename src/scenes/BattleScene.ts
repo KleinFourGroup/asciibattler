@@ -311,6 +311,9 @@ export class BattleScene implements Scene {
     const dtScaled = dt * (this.playback?.current ?? 1);
     this.clock?.advance(dtScaled);
     this.battleRenderer?.update(dtScaled);
+    // §32c — refresh the compact cards' status rows (gated on the sim tick
+    // inside the HUD; the readout is constant between ticks).
+    this.hud?.refreshStatuses();
     // D7.C: drive the terrain shader's `uTime` for per-tile fire flicker
     // and healing pulse. Lives on tick (not the rAF loop) because only
     // BattleScene puts animated tile kinds into the renderer — non-battle

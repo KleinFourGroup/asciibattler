@@ -1129,18 +1129,28 @@ covers every new key; SFX *audibility* is eyeball/ear-verified (render+audio lay
 
 ### 32c — The status-visualization / UI build (scope LOCKED by 32a)
 
-> **▶ IN PROGRESS.** ✅ **The pure selector + the board pip-strip SHIPPED** (pending
-> the user's native-browser playtest): [statusReadout.ts](src/sim/statusReadout.ts)
-> `readUnitStatuses` (9 headless tests — `op.might × magnitude` reads BOTH stacks and
-> §31 scaling through one formula) + [statusDisplay.ts](src/render/statusDisplay.ts)
-> (the render-side color map; behavior statuses reuse their 28c tints) + the pip-strip
-> on [UnitOverlayLayer.ts](src/render/UnitOverlayLayer.ts) `updateStatuses` (a DOM row
-> above the HP bar — no Three.js/atlas; width = duration, opacity = stacks), driven by
-> a per-tick gate in [BattleRenderer.ts](src/render/BattleRenderer.ts) (the readout is
-> constant between ticks; CSS smooths the depletion). Browser-verified via the DEV
-> `__game.applyStatus` hook: all 8 statuses render distinct correct colors, the
-> stack-brightness ramp reads (poison ×1 = 0.7 vs bleed ×3 = 1.0), no console errors.
-> **NEXT = the card status row** (the numeric §31-scaled potency) **+ the sparkle tune.**
+> **▶ IN PROGRESS.** ✅ **The selector + board pip-strip + card status row SHIPPED**
+> (pending the user's native-browser playtest):
+> - **The selector** — [statusReadout.ts](src/sim/statusReadout.ts) `readUnitStatuses`
+>   (9 headless tests — `op.might × magnitude` reads BOTH stacks and §31 scaling
+>   through one formula).
+> - **The board pip-strip** — [statusDisplay.ts](src/render/statusDisplay.ts) (the
+>   render-side color map; behavior statuses reuse their 28c tints) + `updateStatuses`
+>   on [UnitOverlayLayer.ts](src/render/UnitOverlayLayer.ts) (a DOM row above the HP
+>   bar — no Three.js/atlas; width = duration, opacity = stacks), driven by a per-tick
+>   gate in [BattleRenderer.ts](src/render/BattleRenderer.ts). Browser-verified: all 8
+>   statuses distinct colors, stack-brightness ramp reads (poison ×1 = 0.7 vs bleed
+>   ×3 = 1.0).
+> - **The card status row** — `updateCardStatusRow` on [UnitCard.ts](src/ui/UnitCard.ts)
+>   (a chip per status on the compact card: swatch + name + `×stacks · ±N/s · Ns`),
+>   driven by [HUD.ts](src/ui/HUD.ts) `refreshStatuses` (BattleScene-called, per-tick
+>   gated). Browser-verified: stacks (Bleed ×3 → 6/s), heal `+1/s`, behavior
+>   duration-only, live countdown decrements (4.0→3.0s), swatches match the pips, no
+>   console errors.
+>
+> **NEXT = the sparkle height/spread tune** (the last 32d fold-in — a small render-const
+> tweak in [BattleRenderer.ts](src/render/BattleRenderer.ts); subjective, so eyeball with
+> the user).
 
 **Shape:** build the two surfaces 32a locked, both fed off `unit.effects[]` + the
 `status:applied/ticked/expired` lifecycle:

@@ -9,7 +9,8 @@ import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
-import { buildUnitCard, unitCardFromUnit, type UnitCardHandles } from './UnitCard';
+import { buildUnitCard, unitCardFromUnit, updateCardStatusRow, type UnitCardHandles } from './UnitCard';
+import { readUnitStatuses } from '../sim/statusReadout';
 import { renderPoolGauge } from './poolGauge';
 import type { PlaybackSpeed } from './PlaybackSpeed';
 import type { Keybindings } from './Keybindings';
@@ -124,6 +125,10 @@ export class HUD {
    *  only the append target (which pane's row) differs. */
   private readonly cards = new Map<number, UnitCardHandles>();
   private world: World | null = null;
+  /** §32c — the sim tick the card status rows last reconciled at. The readout is
+   *  identical between sim ticks, so `refreshStatuses` recomputes ≤ once per tick
+   *  (BattleScene calls it every frame). `-1` forces a first update. */
+  private statusTick = -1;
   /**
    * Bus unsubscribers. A5 makes HUD a per-battle object (owned by
    * BattleScene), so subscriptions get torn down on dispose to keep them
@@ -560,6 +565,23 @@ export class HUD {
     this.enemyPoolWrap.appendChild(
       renderPoolGauge('enemy', e.enemyName ?? 'Foe', e.enemyHealth, e.enemyHealthMax),
     );
+  }
+
+  /**
+   * §32c — refresh every compact card's status row. Called each frame by
+   * BattleScene but gated on the sim tick advancing: the readout is constant
+   * between ticks (it's derived from `currentTick`), so this recomputes at most
+   * once per tick. A reaped unit (`findUnit` → null) clears its row, so a dead
+   * card doesn't keep stale chips while it sits grayed in the pane.
+   */
+  refreshStatuses(): void {
+    const world = this.world;
+    if (!world || world.currentTick === this.statusTick) return;
+    this.statusTick = world.currentTick;
+    for (const [unitId, card] of this.cards) {
+      const unit = world.findUnit(unitId);
+      updateCardStatusRow(card, unit ? readUnitStatuses(unit.effects, world.currentTick) : []);
+    }
   }
 
 }

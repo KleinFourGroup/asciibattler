@@ -86,7 +86,10 @@ function fmtFx(fx: NonNullable<AbilityDef['fx']>): string {
 
 function fmtSummonSpec(spec: SummonSpec): string {
   const pairs = [`"archetype": ${s(spec.archetype)}`];
-  if (spec.level !== 1) pairs.push(`"level": ${n(spec.level)}`);
+  // §31c: omit `level` only at the bare-number default 1; a scaled value always emits.
+  if (!(typeof spec.level === 'number' && spec.level === 1)) {
+    pairs.push(`"level": ${fmtScalarOrScaled(spec.level)}`);
+  }
   if (spec.count !== 1) pairs.push(`"count": ${n(spec.count)}`);
   pairs.push(`"maxLive": ${n(spec.maxLive)}`);
   if (spec.radiusCells !== 2) pairs.push(`"radiusCells": ${n(spec.radiusCells)}`);

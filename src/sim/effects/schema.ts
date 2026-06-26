@@ -302,9 +302,10 @@ export const TargetSelectorSchema = z.discriminatedUnion('kind', [
  * data-driven stat block in `config/archetypes.json` — the Ghoul ≈ half a bandit),
  * referenced by id (`archetype`); a typo'd id is boot-rejected by
  * `assertSummonRefsResolve` (`src/config/archetypes.ts`), the `applyStatus`
- * `statusId` precedent. `level` is the (fixed) minion level — summoned via the
- * deterministic `scaledUnit` path, so the geometry AND the stats are RNG-free; a
- * future "scale with the caster's level" is a §31 dial. `count` minions land per
+ * `statusId` precedent. `level` is the minion level — a `ScalarOrScaled` (§31c): a
+ * bare number (fixed) OR scaled off the summoner at cast (`evalScaled`, int-rounded
+ * ≥1 at capture, since `scaledUnit` needs an int). Summoned via the deterministic
+ * `scaledUnit` path, so the geometry AND the stats stay RNG-free. `count` minions land per
  * cast; `maxLive` caps how many of THIS caster's summons may be alive at once
  * (single digits — bounding the live unit count is what keeps object-pooling
  * parked). The cap is enforced at propose (the caster abstains at the ceiling,
@@ -314,7 +315,9 @@ export const TargetSelectorSchema = z.discriminatedUnion('kind', [
  */
 const SummonSpecSchema = z.object({
   archetype: z.string().min(1),
-  level: z.number().int().positive().default(1),
+  // §31c — opt-in stat/level scaling (captured + int-rounded at cast in propose.ts).
+  // Default 1 keeps every existing summon (level absent / a bare int) byte-identical.
+  level: ScalarOrScaledSchema.default(1),
   count: z.number().int().positive().default(1),
   maxLive: z.number().int().positive(),
   radiusCells: z.number().int().positive().default(2),

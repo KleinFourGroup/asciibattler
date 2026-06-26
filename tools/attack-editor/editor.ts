@@ -510,7 +510,13 @@ function renderOp(host: HTMLElement, op: EffectOp, ctx: OpCtx): void {
     case 'summon': {
       const spec = op.summon;
       selectField(body, 'Archetype', ARCHETYPE_IDS, spec.archetype, (v) => (spec.archetype = v));
-      numberField(body, 'Level', spec.level, 1, (v) => (spec.level = v));
+      // §31c: level is `ScalarOrScaled`. Edit the bare-number arm; a scaled value
+      // (JSON-authored) shows a read-only hint until the §31d toggle widget lands.
+      if (typeof spec.level === 'number') {
+        numberField(body, 'Level', spec.level, 1, (v) => (spec.level = v));
+      } else {
+        body.appendChild(labelWrap('Level', el('span', 'hint', `scaled: ${displayScaledValue(spec.level)} — edit in JSON (§31d)`)));
+      }
       numberField(body, 'Count', spec.count, 1, (v) => (spec.count = v));
       numberField(body, 'Max live', spec.maxLive, 1, (v) => (spec.maxLive = v));
       numberField(body, 'Radius', spec.radiusCells, 1, (v) => (spec.radiusCells = v));
@@ -619,7 +625,8 @@ function outlineOp(op: EffectOp, stats: UnitStats): string {
       return outlineChain(op, stats);
     case 'summon': {
       const s = op.summon;
-      return `summon ${s.count}× ${s.archetype} (lvl ${s.level}, max ${s.maxLive}) @ ${op.at.kind}`;
+      const lvl = typeof s.level === 'number' ? s.level : displayScaledValue(s.level);
+      return `summon ${s.count}× ${s.archetype} (lvl ${lvl}, max ${s.maxLive}) @ ${op.at.kind}`;
     }
   }
 }

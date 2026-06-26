@@ -334,14 +334,11 @@ function executeSummon(op: Extract<EffectOp, { kind: 'summon' }>, ctx: OpFireCon
   if (room <= 0) return; // at the cap (defensive — propose already gated)
   const want = Math.min(op.summon.count, room);
   const cells = nearestFreeCells(anchor, want, op.summon.radiusCells, ctx.world);
+  // §31c — the minion level is the cast-time-captured (optionally scaled) value off
+  // the resolution, not the live op; `?? 1` is defensive (propose always captures).
+  const level = ctx.resolution.summonLevel ?? 1;
   for (const cell of cells) {
-    ctx.world.spawnSummon(
-      op.summon.archetype as Archetype,
-      op.summon.level,
-      ctx.caster.team,
-      cell,
-      ctx.caster.id,
-    );
+    ctx.world.spawnSummon(op.summon.archetype as Archetype, level, ctx.caster.team, cell, ctx.caster.id);
   }
 }
 

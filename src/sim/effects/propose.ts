@@ -348,11 +348,15 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
       // The inner ops can't themselves be chains (ChainInnerOp = damage |
       // applyStatus), so this recursion is one level deep.
       return { chainOps: op.ops.map((inner) => resolveOp(inner, c)) };
-    case 'summon':
-      // §29d — a summon carries no cast-time scalar: the spec (archetype / level /
-      // count / cap / radius) is static on the op and read LIVE by the interpreter
-      // at fire (the registry-of-truth pattern the `applyStatus` op set). The empty
-      // resolution keeps the per-op alignment with `def.effects`.
-      return {};
+    case 'summon': {
+      // §31c — capture the minion level NOW (frozen), int-rounded ≥1 since
+      // `scaledUnit` needs an int. A bare number passes through `evalScaled`
+      // unchanged (byte-identical); a `ScaledValue` scales off the summoner at cast.
+      // ⚠️ §33 OP caveat: scaling off the caster's overall `level` can be strong — a
+      // one-line `perPoint`/`stat` dial-back. (count / cap / radius stay live on the
+      // op — registry-of-truth, like `applyStatus`'s `statusId`.)
+      const level = evalScaled(op.summon.level, c.unit) ?? 1;
+      return { summonLevel: Math.max(1, Math.round(level)) };
+    }
   }
 }

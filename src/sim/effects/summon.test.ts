@@ -5,9 +5,10 @@ import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
-import type { EffectOp, SummonSpec, TargetSelector } from './schema';
+import type { AbilityDef, EffectOp, ScaledValue, SummonSpec, TargetSelector } from './schema';
 import { parseAbilityDef } from './schema';
 import { executeOp, newFireScratch, type OpFireContext } from './interpreter';
+import type { EffectActionData } from './EffectAction';
 import { proposeEffectAbility } from './propose';
 import { nearestFreeCells } from '../actingPosition';
 
@@ -261,6 +262,63 @@ describe('summon — propose-time cap gate', () => {
     world.spawnSummon('bandit', 1, 'player', { x: 6, y: 5 }, caster.id);
     expect(world.liveSummonCount(caster.id)).toBe(2);
     expect(proposeEffectAbility(def, caster, world)).toBeNull(); // at the cap → abstain
+  });
+});
+
+describe('summon — level scaling (§31c)', () => {
+  function summonDef(level: number | ScaledValue): AbilityDef {
+    return parseAbilityDef({
+      id: 'test_summon', name: 'Test Summon', cooldownSeconds: 3, rangeCells: 6,
+      target: { kind: 'self' },
+      timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
+      orphanPolicy: 'commit-at-cast', priority: 10,
+      effects: [{ phase: 'impact', op: { kind: 'summon', summon: { archetype: 'bandit', level, maxLive: 3 }, at: { kind: 'self' } } }],
+    });
+  }
+  function casterAtLevel(world: World, level: number): Unit {
+    return world.spawnUnit({ archetype: 'mercenary', level, stats: BASE, xp: 0 }, 'player', { x: 5, y: 5 });
+  }
+  /** The summon level captured at propose (the def's effects are [summon] → ops[0]). */
+  function capturedLevel(world: World, caster: Unit, level: number | ScaledValue): number | undefined {
+    const p = proposeEffectAbility(summonDef(level), caster, world);
+    expect(p).not.toBeNull();
+    return (p!.action.toData() as EffectActionData).ops[0]!.summonLevel;
+  }
+
+  it('captures a bare-number level verbatim (byte-identical to today)', () => {
+    const { world } = setup();
+    expect(capturedLevel(world, casterAtLevel(world, 1), 3)).toBe(3);
+  });
+
+  it('scales the minion level off the summoner at cast ({stat:level, perPoint:1})', () => {
+    const { world } = setup();
+    expect(capturedLevel(world, casterAtLevel(world, 5), { base: 0, stat: 'level', perPoint: 1 })).toBe(5);
+  });
+
+  it('int-rounds a fractional scaled level at capture (Math.round, not truncate)', () => {
+    const { world } = setup();
+    // 0.6 + 1×5 = 5.6 → round → 6 (a floor would give 5)
+    expect(capturedLevel(world, casterAtLevel(world, 5), { base: 0.6, stat: 'level', perPoint: 1 })).toBe(6);
+  });
+
+  it('clamps the captured level to ≥ 1', () => {
+    const { world } = setup();
+    // 0 + 0×level = 0 → max(1, round(0)) = 1
+    expect(capturedLevel(world, casterAtLevel(world, 1), { base: 0, stat: 'level', perPoint: 0 })).toBe(1);
+  });
+
+  it('executeSummon spawns the minion at the captured level (consumes the resolution)', () => {
+    const { world } = setup();
+    const caster = spawnAt(world, 'player', { x: 5, y: 5 });
+    executeOp(summonOp(), ctx({ caster, world, resolution: { summonLevel: 4 } }));
+    expect(minionsOf(world, caster.id)[0]!.level).toBe(4);
+  });
+
+  it('defaults to level 1 when the resolution lacks summonLevel (defensive)', () => {
+    const { world } = setup();
+    const caster = spawnAt(world, 'player', { x: 5, y: 5 });
+    executeOp(summonOp(), ctx({ caster, world })); // resolution {} → `?? 1`
+    expect(minionsOf(world, caster.id)[0]!.level).toBe(1);
   });
 });
 

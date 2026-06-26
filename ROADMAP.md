@@ -757,6 +757,26 @@ minion dies), multi-summon fills the `count` nearest free cells; each determinis
 
 ## Phase 30 — Dev tools + new content
 
+> **✅ COMPLETE (30a–30d, pending the user's playtest).** §29 already shipped the
+> content floor (the 9-archetype roster + the FontAtlas 8×4→8×6 resize), so §30
+> was the **two editors** only — no new content/snapshot. **30a/30b** the
+> attack-editor scaffold + the recursive effect-op tree (`tools/attack-editor/`,
+> byte-faithful `formatAbilitiesJson`, `abilities.json`→`/__save-config`).
+> **30c** (`be6311d`) the timeline editor + a live resolution-outline preview
+> SHARING the real resolvers — `resolvePhases`/`resolveCadenceTicks` for the tick
+> layout + the EXTRACTED pure `src/sim/effects/resolveScalars.ts` kernel (also
+> consumed by `propose.ts`, one source of truth) for the damage/heal/crit/chain
+> numbers — vs an editable sample caster with archetype-base-stat presets.
+> **30d** (`3204d98`) the archetype-editor "create": + New/Delete (clone-seeded),
+> the `draftable` toggle, PER-ENTRY `ArchetypeSchema` validation (the whole-config
+> `z.object` would silently strip a new key), an op-scaling per-ability preview
+> (correct for any archetype; retired `damageStatFor`/`OUTPUT_LABEL`), and the
+> guided **Wire-up panel** — since archetypes are a CLOSED typed union, create/
+> delete emit the exact 3 code edits the tool can't perform (the `Archetype`
+> union / `ArchetypesSchema` / a `glyphs.ts` glyph + the n/48 atlas budget). Both
+> editors no-snapshot-bump, dev-only. **NEXT = §31** (SFX + the closing balance
+> pass — READ BALANCE.md FIRST).
+
 The authoring + feel surface — the editors land *with* the content, not before
 (the encounter round's V lesson). **Dev-only `tools/` UIs + config + content; no
 snapshot bump.**

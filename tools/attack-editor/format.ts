@@ -28,6 +28,7 @@ import type {
   EffectOp,
   ChainOp,
   DamageOp,
+  ScaledValue,
   SummonSpec,
   TargetSelector,
   TimelinePhase,
@@ -36,6 +37,16 @@ import type {
 /** A finite number as JSON text (`2.0` → `2`, `0.5` → `0.5`). */
 const n = (x: number): string => String(x);
 const s = (x: string): string => JSON.stringify(x);
+
+/** §31 — a `ScalarOrScaled`: a bare number stays a number; a `ScaledValue` emits
+ *  as a compact inline object in the canonical field order (base/stat/perPoint/
+ *  max), `max` only when present. Byte-faithful for both authoring arms. */
+function fmtScalarOrScaled(v: number | ScaledValue): string {
+  if (typeof v === 'number') return n(v);
+  const pairs = [`"base": ${n(v.base)}`, `"stat": ${s(v.stat)}`, `"perPoint": ${n(v.perPoint)}`];
+  if (v.max !== undefined) pairs.push(`"max": ${n(v.max)}`);
+  return `{ ${pairs.join(', ')} }`;
+}
 
 /** Order `fx` keys by the timeline phase order (the file's convention). */
 const FX_KEYS = ['windup', 'release', 'travel', 'impact', 'recovery'] as const;
@@ -124,8 +135,10 @@ function fmtOp(op: EffectOp, indent: string): string {
       return `{ "kind": "move", "mode": ${s(op.mode)}, "cells": ${n(op.cells)} }`;
     case 'applyStatus': {
       const pairs = [`"kind": "applyStatus"`, `"statusId": ${s(op.statusId)}`];
-      if (op.magnitude !== undefined) pairs.push(`"magnitude": ${n(op.magnitude)}`);
-      if (op.durationSeconds !== undefined) pairs.push(`"durationSeconds": ${n(op.durationSeconds)}`);
+      if (op.magnitude !== undefined) pairs.push(`"magnitude": ${fmtScalarOrScaled(op.magnitude)}`);
+      if (op.durationSeconds !== undefined) {
+        pairs.push(`"durationSeconds": ${fmtScalarOrScaled(op.durationSeconds)}`);
+      }
       return `{ ${pairs.join(', ')} }`;
     }
     case 'summon': {

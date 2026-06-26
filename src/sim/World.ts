@@ -224,8 +224,18 @@ import { STATS } from '../config/stats';
  *       Reject v28 outright per the no-migration contract — a pre-29 save has no
  *       summons anyway (the op didn't exist). RunSnapshot is unaffected (summons
  *       are World-side combatants, never on the roster).
+ *  30 — §31b (effect scaling) routes the `applyStatus` op's magnitude + duration
+ *       through cast-time-captured `OpResolution` slots (`statusMagnitude` /
+ *       `statusDurationSeconds`, + the reserved `summonLevel` 31c fills), instead
+ *       of the interpreter reading the live op fields. A v29 save with an in-flight
+ *       applyStatus (a mid-windup afflicter, or a queued chain hop carrying an
+ *       applyStatus inner op) serialized its resolution as `{}` — so under v30 the
+ *       status would resume at default magnitude 1 / def-duration, silently
+ *       dropping even a bare-number-authored magnitude. Reject v29 outright per the
+ *       no-migration contract. RunSnapshot is unaffected (the captured scalars are
+ *       World-side + transient on the in-flight action).
  */
-const WORLD_SCHEMA_VERSION = 29;
+const WORLD_SCHEMA_VERSION = 30;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.

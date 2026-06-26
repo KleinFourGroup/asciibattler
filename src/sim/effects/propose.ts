@@ -35,7 +35,7 @@ import type { GridCoord } from '../../core/types';
 import type { AbilityDef, EffectOp, SummonOp } from './schema';
 import { EffectAction } from './EffectAction';
 import type { OpResolution } from './interpreter';
-import { resolveDamageScalars, resolveHealAmount } from './resolveScalars';
+import { evalScaled, resolveDamageScalars, resolveHealAmount } from './resolveScalars';
 import { resolveCadenceTicks, resolvePhases } from './timeline';
 
 function chebyshev(a: GridCoord, b: GridCoord): number {
@@ -324,12 +324,21 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
       // knockback / pull are the reserved Cluster-2 seam (never authored here).
       throw new Error(`EffectAbility: move mode '${op.mode}' is reserved`);
     }
-    case 'applyStatus':
-      // 29 — status-on-hit carries no cast-time scalars: the statusId / magnitude /
-      // duration are static on the op and read LIVE by the interpreter at fire
-      // time (the status registry is the source of truth). No resolution to
-      // capture — the empty object keeps the per-op alignment with `def.effects`.
-      return {};
+    case 'applyStatus': {
+      // §31 — capture the (optionally scaled) magnitude + duration NOW, off the
+      // caster's stats (frozen), the same cast-time-capture contract `damage`
+      // holds. A bare number passes straight through `evalScaled`; an unauthored
+      // field stays undefined → the KEY is OMITTED (exactOptionalPropertyTypes),
+      // so the interpreter's `?? 1` / def-duration default governs. (The
+      // `statusId` is still read live at fire — the registry owns the op/behavior;
+      // only the SCALARS freeze here.)
+      const res: OpResolution = {};
+      const magnitude = evalScaled(op.magnitude, c.unit);
+      if (magnitude !== undefined) res.statusMagnitude = magnitude;
+      const durationSeconds = evalScaled(op.durationSeconds, c.unit);
+      if (durationSeconds !== undefined) res.statusDurationSeconds = durationSeconds;
+      return res;
+    }
     case 'chain':
       // 29c — capture each inner op's cast-time scalars NOW (off the caster's
       // current stats), aligned with `op.ops`; the interpreter scales the damage

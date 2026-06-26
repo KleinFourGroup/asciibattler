@@ -180,8 +180,13 @@ const MoveOpSchema = z.object({
 const ApplyStatusOpSchema = z.object({
   kind: z.literal('applyStatus'),
   statusId: z.string().min(1),
-  magnitude: z.number().optional(),
-  durationSeconds: z.number().positive().optional(),
+  // §31 — opt-in stat/level scaling: a bare number (today's authoring) OR a
+  // `ScaledValue` captured at cast (`propose.ts` → `evalScaled`). `durationSeconds`
+  // sheds its old `.positive()` floor: the scaled arm can't be statically checked
+  // (it depends on the caster's live stats) and the editor (§31d) generates these,
+  // so a degenerate value is an authoring concern, not a parse-time one.
+  magnitude: ScalarOrScaledSchema.optional(),
+  durationSeconds: ScalarOrScaledSchema.optional(),
 });
 
 /**

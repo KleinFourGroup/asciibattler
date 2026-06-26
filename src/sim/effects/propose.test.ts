@@ -8,6 +8,7 @@ import { chebyshev } from '../movement';
 import { LEVELING } from '../../config/leveling';
 import { abilityDef } from '../../config/abilities';
 import { EffectAbility } from './EffectAbility';
+import { parseAbilityDef, type AbilityDef, type ScaledValue } from './schema';
 import type { EffectActionData } from './EffectAction';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
@@ -289,5 +290,62 @@ describe('proposeEffectAbility — self caster-reposition (dash)', () => {
     const land = d.ops[0]!.moveDest!;
     expect(chebyshev(land, start)).toBe(abilityDef('dash').rangeCells); // covers the full leap
     expect(chebyshev(land, enemy.position)).toBeLessThan(chebyshev(start, enemy.position));
+  });
+});
+
+describe('proposeEffectAbility — applyStatus scaling capture (§31)', () => {
+  // Clone the shipped `cleaver` (a Reaver bleed-on-hit: effects [damage, applyStatus]
+  // on impact) and inject scaled magnitude/duration onto its applyStatus op, so the
+  // propose-time capture runs against a real multi-op def. Re-parsed through the
+  // schema, so the ScaledValue authoring is validated — not merely type-asserted.
+  function cleaverWithStatus(over: {
+    magnitude?: number | ScaledValue;
+    durationSeconds?: number | ScaledValue;
+  }): AbilityDef {
+    const raw = structuredClone(abilityDef('cleaver'));
+    const entry = raw.effects.find((e) => e.op.kind === 'applyStatus')!;
+    if (entry.op.kind === 'applyStatus') {
+      if (over.magnitude !== undefined) entry.op.magnitude = over.magnitude;
+      if (over.durationSeconds !== undefined) entry.op.durationSeconds = over.durationSeconds;
+    }
+    return parseAbilityDef(raw);
+  }
+
+  // cleaver's effects are [damage, applyStatus] → ops[1] is the status resolution.
+  const STATUS = 1;
+  function proposeCleaver(def: AbilityDef): EffectActionData {
+    const u = caster('cleaver', { x: 5, y: 5 }); // STATS.strength = 8
+    const enemy = makeUnit('enemy', { x: 6, y: 5 }); // dist 1 == reach
+    const p = new EffectAbility(def).propose(u, world([u, enemy]));
+    expect(p).not.toBeNull();
+    return dataOf(p!.action);
+  }
+
+  it('an unauthored magnitude/duration captures as undefined (the consumer default governs)', () => {
+    const res = proposeCleaver(cleaverWithStatus({})).ops[STATUS]!;
+    expect(res.statusMagnitude).toBeUndefined(); // executeApplyStatus `?? 1`
+    expect(res.statusDurationSeconds).toBeUndefined(); // def-duration base
+  });
+
+  it('a bare-number magnitude/duration is captured verbatim (frozen, byte-identical to today)', () => {
+    const res = proposeCleaver(cleaverWithStatus({ magnitude: 2, durationSeconds: 3 })).ops[STATUS]!;
+    expect(res.statusMagnitude).toBe(2);
+    expect(res.statusDurationSeconds).toBe(3);
+  });
+
+  it('a scaled magnitude is captured off the caster at cast (base + perPoint × stat)', () => {
+    // strength 8 → 1 + 0.5 × 8 = 5
+    const res = proposeCleaver(
+      cleaverWithStatus({ magnitude: { base: 1, stat: 'strength', perPoint: 0.5 } }),
+    ).ops[STATUS]!;
+    expect(res.statusMagnitude).toBe(5);
+  });
+
+  it('a scaled duration honors its max clamp', () => {
+    // strength 8 → 2 + 1 × 8 = 10, clamped to 5
+    const res = proposeCleaver(
+      cleaverWithStatus({ durationSeconds: { base: 2, stat: 'strength', perPoint: 1, max: 5 } }),
+    ).ops[STATUS]!;
+    expect(res.statusDurationSeconds).toBe(5);
   });
 });

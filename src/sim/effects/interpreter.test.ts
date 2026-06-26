@@ -336,12 +336,17 @@ describe('executeOp — applyStatus (status-on-hit, §29)', () => {
     expect(has(b)).toBe(true);
   });
 
-  it('passes magnitude through and honours a duration override', () => {
+  it('reads the cast-time-captured magnitude + duration off the resolution (§31)', () => {
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
     world.units.push(caster, target);
-    executeOp(statusOp({ magnitude: 3, durationSeconds: 2 }), ctx({ caster, world, target }));
+    // §31: the interpreter consumes the captured scalars, NOT the op fields (which
+    // are frozen at propose). magnitude 3, a 2s duration override on the resolution.
+    executeOp(
+      statusOp(),
+      ctx({ caster, world, target, resolution: { statusMagnitude: 3, statusDurationSeconds: 2 } }),
+    );
     const eff = target.effects.find((e) => e.key === 't_onhit')!;
     expect(eff.magnitude).toBe(3);
     // fresh world → tick 0; override 2s wins over the def's 4s base.
@@ -477,6 +482,34 @@ describe('executeOp — chain (§29c)', () => {
       expect(has(primary)).toBe(true);
       expect(has(near)).toBe(true);
       expect(hp(near)).toBe(10); // damage still falls off alongside the rider
+    } finally {
+      delete STATUS_DEFS.t_chain;
+    }
+  });
+
+  it('§31 — the chained applyStatus rider carries its captured magnitude, unscaled per hop', () => {
+    const TS = { id: 't_chain', name: 't_chain', durationSeconds: 4, merge: 'refresh' } as const;
+    STATUS_DEFS.t_chain = parseStatusDef(TS);
+    try {
+      const { world } = setup();
+      const caster = makeUnit('player', { x: 0, y: 0 });
+      const primary = makeUnit('enemy', { x: 5, y: 5 });
+      const near = makeUnit('enemy', { x: 6, y: 5 });
+      world.units.push(caster, primary, near);
+      const statusInner: EffectOp = { kind: 'applyStatus', statusId: 't_chain' };
+      executeOp(
+        chainOp({ maxJumps: 2, ops: [innerDmg, statusInner] }),
+        // the rider's captured magnitude (3) rides chainOps[1]; the bolt falls off,
+        // the status rider does NOT (scaleChainResolution touches only baseDamage).
+        ctx({
+          caster, world, target: primary,
+          resolution: { chainOps: [{ baseDamage: 20, critChance: 0 }, { statusMagnitude: 3 }] },
+        }),
+      );
+      const mag = (u: Unit) => u.effects.find((e) => e.key === 't_chain')!.magnitude;
+      expect(mag(primary)).toBe(3); // hop 0
+      expect(mag(near)).toBe(3); // hop 1 — same magnitude on every hop
+      expect(hp(near)).toBe(10); // the damage still falls off
     } finally {
       delete STATUS_DEFS.t_chain;
     }

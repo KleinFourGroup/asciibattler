@@ -85,6 +85,15 @@ const dashDef: AbilityDef = parseAbilityDef({
   effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance', cells: 2 } }],
 });
 
+const afflictDef: AbilityDef = parseAbilityDef({
+  // §31 — a bleed-on-hit (damage THEN applyStatus on impact), the shape whose
+  // applyStatus resolution carries the cast-time-captured status magnitude/duration.
+  id: 'cleaver', name: 'Cleaver', cooldownSeconds: 1.5, rangeCells: 1, target: { kind: 'enemyInRange' },
+  timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
+  orphanPolicy: 'commit-at-cast', priority: 10,
+  effects: [{ phase: 'impact', op: DMG }, { phase: 'impact', op: { kind: 'applyStatus', statusId: 'bleed' } }],
+});
+
 /** Seat an action as a unit's in-flight activeAction with resolved phases. */
 function activate(unit: Unit, action: EffectAction, phases: ActionPhase[]): void {
   unit.activeAction = { action, startTick: 0, finishTick: totalTicks(phases), phases };
@@ -200,5 +209,27 @@ describe('EffectAction serialization', () => {
     const d2 = a.toData();
     expect(d1.targetCell).not.toBe(d2.targetCell);
     expect(d1.targetCell).toEqual(d2.targetCell);
+  });
+
+  it('§31 — round-trips an applyStatus op\'s captured status magnitude + duration', () => {
+    const w = world();
+    const original = new EffectAction(afflictDef, {
+      targetId: 7,
+      ops: [{ baseDamage: 6, critChance: 0 }, { statusMagnitude: 5, statusDurationSeconds: 3 }],
+    });
+    const data = JSON.parse(JSON.stringify(original.toData()));
+    const restored = EffectAction.fromData(data, w, afflictDef);
+    expect(restored.toData()).toEqual(original.toData());
+    // The new number slots survive the spread-clone like every other scalar.
+    expect(restored.toData().ops[1]).toEqual({ statusMagnitude: 5, statusDurationSeconds: 3 });
+  });
+});
+
+describe('WorldSnapshot v30 — the §31 effect-scaling bump', () => {
+  it('rejects a v29 in-flight save (no migration; a captured status scalar would be dropped)', () => {
+    const w = world();
+    w.units.push(makeUnit('player', { x: 0, y: 0 }));
+    const stale = { ...w.toJSON(), schemaVersion: 29 } as unknown as Parameters<typeof World.fromJSON>[0];
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(/schema version/);
   });
 });

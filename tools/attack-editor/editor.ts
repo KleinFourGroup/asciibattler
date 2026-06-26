@@ -36,6 +36,7 @@ import {
   type AbilityDef,
   type EffectOp,
   type ChainInnerOp,
+  type ScaledValue,
   type TargetSelector,
 } from '../../src/sim/effects/schema';
 import { resolveCadenceTicks, resolvePhases } from '../../src/sim/effects/timeline';
@@ -465,8 +466,15 @@ function renderOp(host: HTMLElement, op: EffectOp, ctx: OpCtx): void {
       break;
     case 'applyStatus':
       selectField(body, 'Status', STATUS_IDS, op.statusId, (v) => (op.statusId = v));
-      optionalNumberField(body, 'Magnitude', op.magnitude, (v) => (v === undefined ? delete op.magnitude : (op.magnitude = v)), true);
-      optionalNumberField(body, 'Duration (s)', op.durationSeconds, (v) => (v === undefined ? delete op.durationSeconds : (op.durationSeconds = v)), true);
+      // §31: magnitude/duration are `ScalarOrScaled`. The toggle widget lands in
+      // §31d; until then edit the bare-number arm; a JSON-authored scaled value
+      // shows a read-only hint and round-trips untouched through the formatter.
+      scaledOrNumberField(body, 'Magnitude', op.magnitude, (v) =>
+        v === undefined ? delete op.magnitude : (op.magnitude = v),
+      );
+      scaledOrNumberField(body, 'Duration (s)', op.durationSeconds, (v) =>
+        v === undefined ? delete op.durationSeconds : (op.durationSeconds = v),
+      );
       break;
     case 'chain': {
       numberField(body, 'Max jumps', op.maxJumps, 1, (v) => (op.maxJumps = v));
@@ -641,10 +649,16 @@ function outlineDamage(
 function outlineApplyStatus(op: Extract<EffectOp | ChainInnerOp, { kind: 'applyStatus' }>): string {
   const sd = STATUS_DEFS[op.statusId as keyof typeof STATUS_DEFS];
   const name = sd?.name ?? op.statusId;
-  const dur = op.durationSeconds ?? sd?.durationSeconds;
   const bits = [`apply ${name}`];
-  if ((op.magnitude ?? 1) !== 1) bits.push(`×${op.magnitude}`);
-  if (dur !== undefined) bits.push(`${secsNum(dur)}s`);
+  // §31: magnitude/duration may be scaled. The §31d preview resolves them against
+  // the sample caster; for now show the bare number, or the scaling formula.
+  if (op.magnitude !== undefined && !(typeof op.magnitude === 'number' && op.magnitude === 1)) {
+    bits.push(`×${typeof op.magnitude === 'number' ? op.magnitude : displayScaledValue(op.magnitude)}`);
+  }
+  const dur = op.durationSeconds ?? sd?.durationSeconds;
+  if (dur !== undefined) {
+    bits.push(typeof dur === 'number' ? `${secsNum(dur)}s` : `${displayScaledValue(dur)}s`);
+  }
   return bits.join(' · ');
 }
 
@@ -830,6 +844,29 @@ function optionalNumberField(
     refreshDerived();
   });
   parent.appendChild(labelWrap(label, input));
+}
+
+/** §31b interim — edit only the bare-number arm of a `ScalarOrScaled`. A scaled
+ *  value (authored in JSON) shows a read-only formula and round-trips untouched
+ *  through the formatter; the §31d toggle widget replaces this with full editing. */
+function scaledOrNumberField(
+  parent: HTMLElement,
+  label: string,
+  value: number | ScaledValue | undefined,
+  onChange: (v: number | undefined) => void,
+): void {
+  if (value !== undefined && typeof value !== 'number') {
+    parent.appendChild(labelWrap(label, el('span', 'hint', `scaled: ${displayScaledValue(value)} — edit in JSON (§31d)`)));
+    return;
+  }
+  optionalNumberField(parent, label, value, onChange, true);
+}
+
+/** §31 — a `ScaledValue` as a compact `base + perPoint×stat` formula (+ the max
+ *  clamp when set), for the editor's read-only displays. */
+function displayScaledValue(v: ScaledValue): string {
+  const max = v.max !== undefined ? ` (max ${v.max})` : '';
+  return `${v.base} + ${v.perPoint}×${v.stat}${max}`;
 }
 
 function selectField(

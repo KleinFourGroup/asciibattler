@@ -74,6 +74,22 @@ export interface OpResolution {
    * serialized SHAPE beyond `OpResolution` gaining this optional nested array.
    */
   chainOps?: OpResolution[];
+  /**
+   * §31 applyStatus: the cast-time-captured (optionally scaled) status magnitude
+   * + duration override — `evalScaled(op.magnitude | op.durationSeconds, caster)`
+   * at propose, frozen. Both float; the `× magnitude` round + the `secondsToTicks`
+   * floor live downstream (World.applyStatusEffect / statusRuntime). Undefined when
+   * the op authored neither (the consumer's `?? 1` / def-duration default governs)
+   * or for a non-status op. Round-trips via cloneResolution's `{ ...r }` spread.
+   */
+  statusMagnitude?: number;
+  statusDurationSeconds?: number;
+  /**
+   * §31c summon: the cast-time-captured minion level (int-rounded ≥1 at capture —
+   * `scaledUnit` needs an int). Slot RESERVED here in 31b so 31c reuses the v30
+   * shape with no second bump (the "27 reserves 28" pattern).
+   */
+  summonLevel?: number;
 }
 
 /** Everything the interpreter needs to fire one op, assembled by `EffectAction`. */
@@ -258,7 +274,16 @@ function executeApplyStatus(
   for (const t of resolveStatusTargets(ctx)) {
     if (t.currentHp <= 0) continue; // never status a corpse / fizzled target
     if (ctx.fireScratch.missed.has(t.id)) continue; // the missed-swing gate
-    ctx.world.applyStatusEffect(t, def, ctx.caster.id, op.magnitude ?? 1, op.durationSeconds);
+    // §31 — magnitude + duration are the CAST-TIME-captured (optionally scaled)
+    // scalars off the resolution, not the live op fields. A bare-number author
+    // is byte-identical (propose froze the same number); the scaled form rides in.
+    ctx.world.applyStatusEffect(
+      t,
+      def,
+      ctx.caster.id,
+      ctx.resolution.statusMagnitude ?? 1,
+      ctx.resolution.statusDurationSeconds,
+    );
   }
 }
 
@@ -515,9 +540,11 @@ export function processChainHops(world: World): void {
 
 /**
  * Apply a jump's cumulative `falloff` to one inner op's captured resolution.
- * Only `baseDamage` falls off (the magnitude reduction per hop); a crit chance /
- * an `applyStatus`'s empty resolution pass through untouched. Returns the input
- * as-is when there's nothing to scale, so the no-damage ops keep their identity.
+ * Only `baseDamage` falls off (the per-hop magnitude reduction); a crit chance, or
+ * an `applyStatus`'s captured status magnitude/duration (§31), pass through
+ * untouched — the status rider is identical on every hop, only the bolt weakens.
+ * Returns the input as-is when there's nothing to scale, so the no-damage ops
+ * keep their identity.
  */
 function scaleChainResolution(r: OpResolution, factor: number): OpResolution {
   if (r.baseDamage === undefined) return r;

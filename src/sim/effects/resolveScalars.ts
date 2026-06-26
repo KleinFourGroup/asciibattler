@@ -16,7 +16,7 @@
 
 import type { UnitStats } from '../Unit';
 import { critChanceFor } from '../stats';
-import type { DamageOp, DamageScaling, HealOp } from './schema';
+import type { DamageOp, DamageScaling, HealOp, ScaledValue } from './schema';
 
 /**
  * The caster stat an op's `scaling` names, ADDED to its flat `might`. Mirrors
@@ -54,4 +54,40 @@ export function resolveDamageScalars(
  *  mirrors `healAmountFor`). */
 export function resolveHealAmount(op: HealOp, stats: UnitStats): number {
   return op.might + scalingStatValue(op.scaling, stats);
+}
+
+/**
+ * §31 — what a `ScaledValue` reads off the caster: its combatant `level` + its
+ * `effectiveStats`. A STRUCTURAL subset of `Unit` (not the class) so the §31d
+ * editor preview can pass a synthetic sample caster — `{ level, effectiveStats }`
+ * — without constructing a real unit, exactly as the `UnitStats`-only damage/heal
+ * kernels above let it preview those. A full `Unit` satisfies it for free.
+ */
+export interface ScalingSource {
+  level: number;
+  effectiveStats: UnitStats;
+}
+
+/**
+ * §31 — evaluate a `ScalarOrScaled` against a caster at CAST time (frozen). The
+ * one genuinely new bit of cast-time math the phase adds; the `resolveScalars`
+ * sibling so the editor preview (§31d) and the propose-time capture (`propose.ts`
+ * `resolveOp`) share one source of truth, as §30c established for damage/heal.
+ *
+ * A bare number passes through untouched (the non-breaking arm — today's
+ * authoring). A `ScaledValue` resolves `base + perPoint × stat(caster)`, reading
+ * `level` off the unit and every other stat off `effectiveStats`, then clamps to
+ * `max` when present. `undefined` in → `undefined` out, so an unauthored optional
+ * (a magnitude/duration the def omits) stays unset and the consumer's `?? default`
+ * still governs.
+ */
+export function evalScaled(
+  v: number | ScaledValue | undefined,
+  caster: ScalingSource,
+): number | undefined {
+  if (v === undefined) return undefined;
+  if (typeof v === 'number') return v;
+  const stat = v.stat === 'level' ? caster.level : caster.effectiveStats[v.stat];
+  const raw = v.base + v.perPoint * stat;
+  return v.max !== undefined ? Math.min(raw, v.max) : raw;
 }

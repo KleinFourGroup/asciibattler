@@ -85,6 +85,47 @@ export const OrphanPolicySchema = z.enum(ORPHAN_POLICIES);
 const DamageScalingSchema = z.enum(['strength', 'ranged', 'magic', 'none']);
 const HealScalingSchema = z.enum(['magic', 'none']);
 
+/* -------------------------------------------------------------------------- */
+/* Scaled values — §31 stat/level-driven magnitudes (the `damage`/`heal`       */
+/* `base + stat` generalized with a coefficient, for non-commensurate axes).   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Which caster property a `ScaledValue` scales off. The combat stats are read
+ * off `effectiveStats`; `level` is the unit's combatant level (the meta-property
+ * a summon scales its minions by). `speed` is deliberately EXCLUDED — it already
+ * drives the cadence/phase axis (a separate timeline concern, §Yb), so scaling a
+ * magnitude off it would double-dip. No `none` sentinel: the absence of scaling
+ * is expressed by authoring a bare number (the other arm of `ScalarOrScaled`).
+ */
+export const ScalingStatSchema = z.enum(['strength', 'ranged', 'magic', 'luck', 'level']);
+
+/**
+ * §31 — a cast-time-FROZEN scaling descriptor: `base + perPoint × stat(caster)`,
+ * evaluated by `evalScaled` (`resolveScalars.ts`) at PROPOSE time and carried
+ * inert to fire, exactly as `damage`/`heal` capture `might + scalingStat`. It is
+ * the general form of which `might + stat` is the `perPoint = 1` special case;
+ * the three non-commensurate axes (status magnitude ~1–3, status duration ~2–6 s,
+ * summon level ~1–8) need the coefficient a bare stat-add can't express. `max`
+ * caps the result (the stun-duration footgun guard); `base` is REQUIRED (the
+ * scaled form is editor-generated in §31d — the def-base fallback belongs to the
+ * bare-number arm, not here).
+ */
+export const ScaledValueSchema = z.object({
+  base: z.number(),
+  stat: ScalingStatSchema,
+  perPoint: z.number(),
+  max: z.number().optional(),
+});
+
+/**
+ * The opt-in, non-breaking union an authorable magnitude / duration / level uses:
+ * a bare number (today's authoring, the def base read live) OR a `ScaledValue`
+ * (the cast-time-captured scaled form). Every existing `magnitude: 2` / `level: 1`
+ * still parses unchanged — the bare-number arm IS the pre-§31 behavior.
+ */
+export const ScalarOrScaledSchema = z.union([z.number(), ScaledValueSchema]);
+
 /**
  * `damage` — routes through `World.applyDamage` (the single chokepoint). The
  * interpreter computes `round(base × critFactor × damageMultiplier)` where
@@ -415,6 +456,9 @@ export const AbilityDefSchema = z
 /* -------------------------------------------------------------------------- */
 
 export type DamageScaling = z.infer<typeof DamageScalingSchema>;
+export type ScalingStat = z.infer<typeof ScalingStatSchema>;
+export type ScaledValue = z.infer<typeof ScaledValueSchema>;
+export type ScalarOrScaled = z.infer<typeof ScalarOrScaledSchema>;
 export type Affects = z.infer<typeof AffectsSchema>;
 export type EffectOp = z.infer<typeof EffectOpSchema>;
 export type PeriodicOp = z.infer<typeof PeriodicOpSchema>;

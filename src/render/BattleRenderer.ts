@@ -1293,10 +1293,12 @@ const SPARKLE_BLOOM = 1.6;
 /** World-Y of the sparkle's anchor, from the sprite CENTER (getPosition).
  *  Deliberately decoupled from the hitsplat's HITSPLAT_Y_OFFSET (0.5 = the top
  *  edge, where the number floats): the sparkle hugs the unit's BODY so in a crowd
- *  it reads as on THIS unit, not the one standing behind it. 0 = center; with
- *  SPARKLE_RISE the cloud peaks at +0.35, still within the sprite's own
- *  height (below the +0.5 top), so it never floats over a unit's head. */
-const SPARKLE_Y_OFFSET = 0.0;
+ *  it reads as on THIS unit, not the one standing behind it. §32c (32d fold-in) —
+ *  dropped from center (0) to -0.175 so the puff sits a touch LOWER on the body;
+ *  with SPARKLE_RISE (0.35) the cloud now peaks at +0.175 — exactly HALF its
+ *  former +0.35 lift, well clear of the +0.5 number. Eyeball-tunable: toward 0
+ *  raises it, more-negative lowers it further. */
+const SPARKLE_Y_OFFSET = -0.175;
 /** Center mote + 4 orthogonal fan directions (XZ plane); every mote also
  *  rises by SPARKLE_RISE so the burst lifts off the unit. */
 const SPARKLE_DIRS: ReadonlyArray<readonly [number, number]> = [

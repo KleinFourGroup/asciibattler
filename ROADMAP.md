@@ -1148,9 +1148,13 @@ covers every new key; SFX *audibility* is eyeball/ear-verified (render+audio lay
 >   duration-only, live countdown decrements (4.0→3.0s), swatches match the pips, no
 >   console errors.
 >
-> **NEXT = the sparkle height/spread tune** (the last 32d fold-in — a small render-const
-> tweak in [BattleRenderer.ts](src/render/BattleRenderer.ts); subjective, so eyeball with
-> the user).
+> - **The sparkle tune** (the 32d fold-in) — user chose LOWER: `SPARKLE_Y_OFFSET`
+>   0.0 → -0.175 in [BattleRenderer.ts](src/render/BattleRenderer.ts) (the puff sits
+>   lower on the body and peaks at +0.175, exactly half its former +0.35 lift; spread
+>   unchanged). Eyeball-tunable; pending the user's native-browser look.
+>
+> **32c COMPLETE** (pending the user's playtest). **§32 remaining: 32b** (SFX — wiring
+> the user's audio assets as they land; the only blocker is the sound files) → then §33.
 
 **Shape:** build the two surfaces 32a locked, both fed off `unit.effects[]` + the
 `status:applied/ticked/expired` lifecycle:

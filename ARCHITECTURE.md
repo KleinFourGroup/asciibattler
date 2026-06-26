@@ -87,6 +87,7 @@ src/
                              # K1: effects[] (status effects) + effectiveStats (cached fold; === stats when empty) + addEffect/expireEffects/refreshDerived
     statusEffects.ts         # K1: generic status-effect system — StatusEffect (per-stat add/mul mods + lifetime + merge policy) + foldEffects + combineMagnitude
     statusBehavior.ts        # 28: behaviorFlags — the def-resolve fold turning a unit's effects[] into merged AI overrides (frozen/blind/panic/confusion) the selector/movement/targeting consumers read
+    statusReadout.ts         # §32c: readUnitStatuses — pure projection of effects[] → per-status display facts (name/kind/stacks/remaining/durationFraction/potencyPerSec); feeds the board pip-strip + card row (sim truth only; color lives render-side)
     triggers.ts              # K1: TriggerContextMap (combat: dealHit/takeHit/dealMiss/evade/kill/death/spawn) + generic TriggerDispatcher<M,O> (shared by World + Run)
     stats.ts                 # deriveStats / inertDerived / ZERO_STATS + damage/heal/range/cadence helpers
                              # — pure functions; crit RNG rolls happen at AttackAction.start; K1: unit-taking helpers read effectiveStats
@@ -190,6 +191,7 @@ src/
     UnitOverlayLayer.ts      # E3.6: DOM per-unit overlays (HP bar + action progress + level
                              # badge), positioned via projectToCss. E6.C: spawnHitsplat floats
                              # transient damage/crit/heal/burn numbers via the same projector
+                             # §32c: updateStatuses reconciles the status pip-strip (above the HP bar) — one depleting pip per active status (width=duration, opacity=stacks)
     TerrainRenderer.ts       # C1c: faceted low-poly prism-per-tile, heightAt is canonical
                              # for sprite Y. D7.C: per-tile flicker/pulse + chasm sink + theme
     ApronRenderer.ts         # M4: backdrop apron — non-playable fog-faded prism ring around the
@@ -207,6 +209,7 @@ src/
                              # 27e/28: status-fx driver — status:ticked → tick cue; 28: status:applied/expired hold the `active` body-tint overlay (statusOverlays, restore team color on expiry)
                              # J3: objective X marker (objective:set/cleared; camera-up lift) + enemyBillboards (pick candidates)
     fxRegistry.ts            # §Z: pure-data FxKey→FxDescriptor map (sound/projectile/burst/shake/shove/tracer; 27e sparkle/hitsplat; 28 overlay) + assertFxKeysResolve / assertStatusFxKeysResolve boot checks (headless-testable)
+    statusDisplay.ts         # §32c: render-side status→display-color map (presentation only; behavior statuses reuse their 28c tints, DoTs get distinct hues) — the palette half of readUnitStatuses
     pick.ts                  # J3: pickInstanceAtNdc — pure screen-space billboard hit-test (replicates billboard.vert.glsl)
     FontAtlas.ts             # canvas2d glyph atlas → THREE.CanvasTexture (glyph set from glyphs.ts)
     glyphs.ts                # E7.A: THREE-free GLYPHS set (FontAtlas.test asserts archetype coverage); J3: 'X' = objective marker (atlas now 32/32 FULL)

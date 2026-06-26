@@ -1053,32 +1053,64 @@ default) with an explicit opt-in to the scaled form.
 
 ## Phase 32 — FX · SFX · the status-visualization / UI design round
 
-> **▶ NEXT. DESIGN ROUND NEEDED (32a) before the build.** This is the original §31 SFX pass,
-> **expanded**: the §30 playtest hinted statuses want richer *visual* cues than the
-> §27/§28 surface (tick-fx + the held `active` tint) provides — stacks, remaining
-> duration, magnitude legibility, the now-*scaled* numbers from §31. The user
-> flagged "I have no idea what the shape will be yet," so the phase **opens with a
-> design session** (this round's sibling) to lock the cue vocabulary, then builds.
+> **▶ ACTIVE. ✅ 32a DESIGN ROUND COMPLETE & user-locked (2026-06-26) — see the
+> RESOLVED block below.** This is the original §31 SFX pass, **expanded**: the §30
+> playtest hinted statuses want richer *visual* cues than the §27/§28 surface
+> (tick-fx + the held `active` tint) provides — stacks, remaining duration,
+> magnitude legibility, the now-*scaled* numbers from §31. The cue shape was open,
+> so the phase opened with a design session; the locked vocabulary is **both
+> (board-primary)** — a per-unit board **pip-strip** (graphical, covers everyone) +
+> a **card status row** (numeric, where §31's scaled potency reads literally).
+> **▶ NEXT = 32c** (the viz build — fully in-hand, headless-first + browser-verify)
+> and **32b** (SFX — gated on the user supplying audio assets, the `chain.wav`
+> precedent).
 
 Polish that rides its feature. **Config / render / UI; no snapshot bump** (FX keys +
 audio assets + UI are not serialized).
 
-### 32a — DESIGN ROUND: the status-visualization / UI cue vocabulary
+### 32a — DESIGN ROUND ✅ COMPLETE & user-locked (2026-06-26)
 
-**Shape:** a collaborative design session (no code) to lock *how statuses read* in
-battle. The open questions: per-unit **status icons** (which, where — on the sprite,
-on the UnitCard, both?); **stack count** (escalating bleed/poison) + **remaining
-duration** indicators; surfacing a **scaled** magnitude/duration so the §31 numbers
-are legible; whether the deferred §27 cues (a persistent overlay beyond the tint, an
-`expired` cue, sparkle-height, the settle-on-arrival apply cue — all parked in
-[TODO.md](TODO.md)) fold in here. **Output: a locked spec** that scopes 32c.
+**The session.** A collaborative design round (no code) locked *how statuses read*
+in battle. Grounding: today only the 4 **behavior** statuses get a held body-tint
+(28c); the DoTs (burn/bleed/poison/rejuvenate) **vanish between ticks** — and
+nothing anywhere shows **stack count**, **remaining duration**, or the **§31 scaled
+potency**. All four legibility axes are already readable off `unit.effects[]` (key →
+def; `magnitude` = stack count under `add` merge; `lifetime.expiresAtTick` =
+remaining; `def.periodic.op.might × magnitude` = scaled per-tick), so 32a was purely
+a *presentation* decision.
 
-**Cost:** none (design). Surfaces tradeoffs; ends at a locked cue vocabulary.
+**LOCKED vocabulary — both surfaces, board-primary:**
 
-**Decision points 32a:** sprite-anchored vs card-anchored cues (or both); how much
-HUD real-estate statuses earn; whether duration/stack indicators are per-status or a
-unified badge; what "legible scaled magnitude" looks like (a tooltip, a number, a
-color ramp).
+1. **Board pip-strip (the held cue, covers EVERY unit).** A thin row of **instanced
+   colored cells above each unit's HP bar**, one cell per active status — built on
+   the existing `BarRenderer` instancing so it needs **no new FontAtlas glyphs** (the
+   atlas is full). This IS the folded-in "held DoT cue": burn/bleed/poison no longer
+   disappear between ticks, and because it's board-anchored it covers **summoned
+   Ghouls + enemies** (no hand-card needed).
+   - **Graphical encoding** (user pick): duration = depleting cell width; stacks =
+     brightness (or stacked segments).
+   - Shows **all** statuses for one unified readout; behavior statuses **keep their
+     body-tint on top** (tint = "controlled" emphasis, pip = the inventory).
+   - **Stable canonical ordering** (a status always occupies the same relative slot →
+     recognizable); each status carries a **display color** (behavior statuses reuse
+     their 28c tints; DoTs get distinct hues — burn ember-orange / bleed crimson /
+     poison toxic-green / rejuvenate heal-green, **exact hues eyeball-tuned in 32c**).
+2. **Card status row (the precise numbers).** On the in-battle compact UnitCards
+   (Q's player-bottom / enemy-top): per status `icon · ×stacks · duration · potency`,
+   **numeric** (user pick) — and this is where **§31's scaled potency reads as a
+   literal** (`Burn 5/s` from `periodic.might × magnitude ÷ everySeconds`). The row
+   renders **only when the unit has ≥1 status** (respects the "HUD getting crowded"
+   TODO); duration ticks live on a throttled refresh.
+3. **Scaled potency = a number on the card** (user pick) — not a board color-ramp,
+   not stacks-as-proxy (which would hide the scaling on the non-stacking `refresh`
+   statuses like burn).
+
+**Parked-polish fold-in (→ 32d), user-chosen:** the **held DoT cue** (now core to
+32c, above) + **sparkle height/spread tuning** (eyeball-tune during 32c). **Dropped:**
+the settle-on-arrival apply cue and the `expired` cue stay parked in
+[TODO.md](TODO.md).
+
+**Output:** this locked spec scopes 32c (and confirms 32b/32d). **Cost:** none (design).
 
 ### 32b — SFX for the new mechanics
 
@@ -1095,26 +1127,56 @@ SFX (the §Z lock), so each rides the existing fx-resolution path.
 **Headless tests:** the boot assert (`assertFxKeysResolve` / `assertStatusFxKeysResolve`)
 covers every new key; SFX *audibility* is eyeball/ear-verified (render+audio layer).
 
-### 32c — The status-visualization / UI build
+### 32c — The status-visualization / UI build (scope LOCKED by 32a)
 
-**Shape:** implement whatever 32a locks — the icons / stacks / duration indicators /
-scaled-magnitude legibility, wired off the existing `status:applied/ticked/expired`
-lifecycle + the held-status read. Gated on 32a's spec.
+> **▶ IN PROGRESS.** ✅ **The pure selector + the board pip-strip SHIPPED** (pending
+> the user's native-browser playtest): [statusReadout.ts](src/sim/statusReadout.ts)
+> `readUnitStatuses` (9 headless tests — `op.might × magnitude` reads BOTH stacks and
+> §31 scaling through one formula) + [statusDisplay.ts](src/render/statusDisplay.ts)
+> (the render-side color map; behavior statuses reuse their 28c tints) + the pip-strip
+> on [UnitOverlayLayer.ts](src/render/UnitOverlayLayer.ts) `updateStatuses` (a DOM row
+> above the HP bar — no Three.js/atlas; width = duration, opacity = stacks), driven by
+> a per-tick gate in [BattleRenderer.ts](src/render/BattleRenderer.ts) (the readout is
+> constant between ticks; CSS smooths the depletion). Browser-verified via the DEV
+> `__game.applyStatus` hook: all 8 statuses render distinct correct colors, the
+> stack-brightness ramp reads (poison ×1 = 0.7 vs bleed ×3 = 1.0), no console errors.
+> **NEXT = the card status row** (the numeric §31-scaled potency) **+ the sparkle tune.**
 
-**Cost:** render + UI; scope set by 32a. Browser-verify each cue against a live
-battle (the "not testable without seeing it" surface — §point 2).
+**Shape:** build the two surfaces 32a locked, both fed off `unit.effects[]` + the
+`status:applied/ticked/expired` lifecycle:
+- **The board pip-strip** — a new instanced cell-row above the HP bar (extend /
+  mirror [BarRenderer](src/render/BarRenderer.ts)'s instancing; no new atlas glyph),
+  one cell per active status in stable canonical order, status-colored, width =
+  remaining duration, brightness/segments = stacks. Held (not transient) — it
+  follows the unit. The 28c body-tint stays on top for behavior statuses.
+- **The card status row** — render `icon · ×stacks · duration · potency` per status
+  on the in-battle [UnitCard](src/ui/UnitCard.ts) compact variant, only when ≥1
+  status is active; potency = `def.periodic.op.might × effect.magnitude ÷ everySeconds`
+  (the §31 scaled number made literal); throttled live duration refresh.
+- A render-side **status→display-color** map (behavior statuses reuse the 28c tint
+  colors; the four DoT/HoT hues from 32a) + the **sparkle height/spread eyeball-tune**
+  folded in here.
+
+**Cost:** render + UI; the *data* (active statuses + remaining duration + stacks +
+scaled potency off `effects[]`) is a pure, headless-testable selector — build it
+first. Browser-verify each cue against a live battle (the "not testable without
+seeing it" surface — §point 2).
 
 **Headless tests:** the data feeding the cues is unit-testable (active statuses +
 their remaining duration + stack count off a unit's `effects[]`); the *appearance*
 is eyeball-verified.
 
-### 32d — The deferred FX-feel tail (optional)
+### 32d — The deferred FX-feel tail (scoped by 32a)
 
-**Shape:** the §27 parked feel items, if 32a pulls them in — sparkle-height, the
-settle-on-arrival apply cue, the persistent overlay / `expired` cue
-([TODO.md](TODO.md)). Optional, cosmetic; lands only if the design round wants it.
+**Shape:** 32a pulled **two** of the parked §27 feel items in (the rest stay parked):
+**(1)** the held DoT cue — absorbed into 32c's board pip-strip (no longer a separate
+item); **(2)** the **sparkle height/spread eyeball-tune** ([TODO.md](TODO.md), the
+27e `SPARKLE_Y_OFFSET`/`SPARKLE_RISE` consts) — done alongside 32c. **DROPPED by the
+design round:** the settle-on-arrival apply cue and the `expired` cue stay parked in
+[TODO.md](TODO.md) (revisit later if wanted; the `applied`/`expired` fx slots remain
+in the StatusDef schema + `driveStatusFx`).
 
-**Cost:** small render polish. Browser-verify.
+**Cost:** small render polish, folded into 32c. Browser-verify.
 
 ---
 

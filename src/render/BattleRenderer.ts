@@ -27,6 +27,7 @@ import { ABILITY_DEFS } from '../config/abilities';
 import { STATUS_DEFS } from '../config/statuses';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
 import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
+import { readUnitStatuses } from '../sim/statusReadout';
 import { SPAWN } from '../config/spawn';
 
 /**
@@ -1145,17 +1146,26 @@ export class BattleRenderer {
       if (t >= 1) this.overlayFadeIns.delete(unitId);
     }
 
-    if (!this.world) return;
+    const world = this.world;
+    if (!world) return;
 
     for (const [unitId, overlay] of this.overlayHandles) {
       const handle = this.handles.get(unitId);
-      const unit = this.world.findUnit(unitId);
+      const unit = world.findUnit(unitId);
       if (!handle || !unit) continue;
       const spritePos = this.sprites.getPosition(handle, this.scratchPos);
       if (!spritePos) continue;
 
       this.overlays.updatePosition(overlay, spritePos);
       this.updateProgressFill(unitId, unit, overlay, now);
+
+      // §32c — refresh the status pip-strip only when the sim tick advanced
+      // (the readout is identical between ticks; CSS smooths the depletion),
+      // so this recomputes at most once per tick per unit, not every frame.
+      if (overlay.statusTick !== world.currentTick) {
+        overlay.statusTick = world.currentTick;
+        this.overlays.updateStatuses(overlay, readUnitStatuses(unit.effects, world.currentTick));
+      }
     }
   }
 

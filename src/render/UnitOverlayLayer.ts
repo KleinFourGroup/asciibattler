@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import type { Team } from '../sim/Unit';
+import type { StatusReadout } from '../sim/statusReadout';
 import { displayLevel } from '../sim/xp';
+import { statusColor } from './statusDisplay';
 
 /**
  * E3.6 — DOM-based per-unit overlay (HP bar + action progress bar + level
@@ -28,6 +30,9 @@ export interface UnitOverlayHandle {
   readonly progressEl: HTMLDivElement;
   readonly progressFill: HTMLDivElement;
   readonly levelBadge: HTMLDivElement;
+  /** §32c — the status pip-strip container (above the HP bar). Its child
+   *  `.status-pip`s are reconciled by `updateStatuses`. */
+  readonly statusStrip: HTMLDivElement;
   team: Team;
   /** Last applied opacity. Skips DOM writes when unchanged. */
   alpha: number;
@@ -37,6 +42,11 @@ export interface UnitOverlayHandle {
   progressPct: number | null;
   /** Last applied level. */
   level: number;
+  /** §32c — the sim tick the status strip last reconciled at. The status
+   *  readout is identical between sim ticks (it's derived from `currentTick`),
+   *  so BattleRenderer gates the per-frame recompute on this changing. `-1`
+   *  forces a first-frame update. */
+  statusTick: number;
 }
 
 export class UnitOverlayLayer {
@@ -91,6 +101,12 @@ export class UnitOverlayLayer {
     levelBadge.className = 'level-badge';
     levelBadge.textContent = `Lv ${displayLevel(level)}`;
 
+    // §32c — the status pip-strip, just ABOVE the HP bar (below the level
+    // badge). Hidden until the unit carries at least one status.
+    const statusStrip = document.createElement('div');
+    statusStrip.className = 'status-strip';
+    statusStrip.hidden = true;
+
     const hpBar = document.createElement('div');
     hpBar.className = 'hp-bar';
     const hpFill = document.createElement('div');
@@ -105,6 +121,7 @@ export class UnitOverlayLayer {
     progressEl.appendChild(progressFill);
 
     stack.appendChild(levelBadge);
+    stack.appendChild(statusStrip);
     stack.appendChild(hpBar);
     stack.appendChild(progressEl);
     root.appendChild(stack);
@@ -117,11 +134,13 @@ export class UnitOverlayLayer {
       progressEl,
       progressFill,
       levelBadge,
+      statusStrip,
       team,
       alpha,
       hpPct: 1,
       progressPct: null,
       level,
+      statusTick: -1,
     };
     this.overlays.set(id, handle);
     this.applyHp(handle, 1);
@@ -258,6 +277,54 @@ export class UnitOverlayLayer {
     handle.levelBadge.textContent = `Lv ${displayLevel(level)}`;
   }
 
+  /**
+   * §32c — reconcile the board pip-strip against a unit's active status
+   * readouts (one pip per status, in the readout's stable canonical order). Each
+   * pip is a depleting bar: its fill WIDTH = `durationFraction`, its fill OPACITY
+   * brightens with stack count (an `add` status escalates), its color is the
+   * status's display hue. Hidden when there are no statuses (no empty row).
+   *
+   * Cheap by construction: BattleRenderer gates the call on the sim tick
+   * advancing (the readout is identical between ticks), and per-pip writes are
+   * dataset-cached so an unchanged pip skips its DOM mutations.
+   */
+  updateStatuses(handle: UnitOverlayHandle, readouts: readonly StatusReadout[]): void {
+    const strip = handle.statusStrip;
+    if (readouts.length === 0) {
+      if (!strip.hidden) {
+        strip.hidden = true;
+        strip.replaceChildren();
+      }
+      return;
+    }
+    if (strip.hidden) strip.hidden = false;
+    // Match the pip count to the readout count, reusing existing pips.
+    while (strip.childElementCount < readouts.length) strip.appendChild(makePip());
+    while (strip.childElementCount > readouts.length) strip.lastElementChild!.remove();
+    for (let i = 0; i < readouts.length; i++) {
+      const r = readouts[i]!;
+      const pip = strip.children[i] as HTMLDivElement;
+      const fill = pip.firstElementChild as HTMLDivElement;
+      // Recolor + retitle only when this slot's status identity changes (the
+      // common per-tick path keeps the same status here and skips these writes).
+      if (pip.dataset.sid !== r.statusId) {
+        pip.dataset.sid = r.statusId;
+        pip.title = r.name; // a hover nicety; the card row carries the live numbers
+        fill.style.background = statusColor(r.statusId);
+      }
+      const opacity = pipBrightness(r).toFixed(2);
+      if (fill.dataset.op !== opacity) {
+        fill.dataset.op = opacity;
+        fill.style.opacity = opacity;
+      }
+      const width = `${Math.round(r.durationFraction * 100)}%`;
+      if (fill.dataset.w !== width) {
+        fill.dataset.w = width;
+        fill.style.width = width;
+      }
+    }
+  }
+
   setAlpha(handle: UnitOverlayHandle, alpha: number): void {
     const clamped = Math.max(0, Math.min(1, alpha));
     if (clamped === handle.alpha) return;
@@ -298,6 +365,27 @@ export class UnitOverlayLayer {
 /** E6.C — vertical stagger (CSS px) between concurrent hitsplats on the
  *  same unit so clustered hits read as a stack rather than overlapping. */
 const HITSPLAT_STACK_PX = 14;
+
+/** §32c — build one empty pip (a dark track + a colored depleting fill). */
+function makePip(): HTMLDivElement {
+  const pip = document.createElement('div');
+  pip.className = 'status-pip';
+  const fill = document.createElement('div');
+  fill.className = 'status-pip-fill';
+  pip.appendChild(fill);
+  return pip;
+}
+
+/**
+ * §32c — pip fill opacity by stack count. An `add` status (bleed/poison) brightens
+ * as it escalates (1 stack ≈ 0.7 → caps at 1.0); every other merge sits at full
+ * (its magnitude is a potency scalar, not a count, so brightness wouldn't read as
+ * "more"). The card row carries the exact stack number.
+ */
+function pipBrightness(r: StatusReadout): number {
+  if (r.merge !== 'add') return 1;
+  return Math.min(1, 0.55 + 0.15 * r.stacks);
+}
 
 /**
  * HP gradient: green at full → amber at half → red at zero. Mirrors the

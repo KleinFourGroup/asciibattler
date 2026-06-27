@@ -2,7 +2,7 @@
   "retargetCloserRatio": 1.5,
   "rangedRetargetLosSeconds": 0.5,
   "occupiedCellPenalty": 4,
-  "healerPanicRangeCells": 2,
+  "healerPanicRangeCells": 1,
   "healerFollowGapCells": 1,
   "actingCellSearchSlack": 2
 }

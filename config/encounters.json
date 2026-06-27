@@ -322,7 +322,7 @@
     "name": "Dark Magic Posse",
     "description": "Who are these people, and what unholy horrors do they have in store for you?",
     "healthPool": 8,
-    "kind": "normal",
+    "kind": "elite",
     "waves": [
       {
         "kind": "loop",

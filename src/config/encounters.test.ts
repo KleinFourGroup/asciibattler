@@ -107,6 +107,7 @@ describe('encounters schema', () => {
       'banditQueen': 'boss',
       'brigand-champions': 'elite',
       'warband-vanguard': 'elite',
+      'darkMagicPosse': 'elite',
     };
     for (const e of ENCOUNTERS) {
       expect(e.kind).toBe(expectedKind[e.id] ?? 'normal');

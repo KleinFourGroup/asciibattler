@@ -61,13 +61,14 @@ describe('sectors config — the shipped catalog', () => {
       'ronin-vs-mages',
       'adventurer-with-guards',
       // §33 — the §29-archetype showcase normals (hop-gated to the back half).
-      'darkMagicPosse',
       'elementalTrio',
       'plagueDoctors',
     ]);
     expect(start!.encounters.elite.map((e) => e.encounterId)).toEqual([
       'brigand-champions',
       'warband-vanguard',
+      // §33 — darkMagicPosse reclassified normal→elite (its ~6.1 fits the elite band).
+      'darkMagicPosse',
     ]);
     expect(start!.encounters.boss.map((e) => e.encounterId)).toEqual(['bandit-king', 'banditQueen']);
   });

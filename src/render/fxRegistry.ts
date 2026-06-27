@@ -159,13 +159,13 @@ export const FX_REGISTRY = {
     sound: 'magicboom',
     shake: { intensity: 0.06, durationSeconds: 0.22 },
   },
-  // The catapult lob (`catapult_shot`): a homing arc, then a dust dud + thunk +
-  // a heavier shake on impact (a landing boulder hits hard). `shoot` is a
-  // placeholder until §31's dedicated catapult SFX.
+  // The catapult lob (`catapult_shot`): a homing arc, then a dust dud + a heavy
+  // `thud` crash + a big shake on impact (a landing boulder hits hard). §32b gave
+  // it the dedicated siege crash; it used to borrow the archer's `shoot`.
   catapult_launch: { projectile: { style: 'arc' } },
   catapult_burst: {
     burst: { style: 'dud' },
-    sound: 'shoot',
+    sound: 'thud',
     shake: { intensity: 0.16, durationSeconds: 0.35 },
   },
   // Z3 — the single-target strikes. One key carries the swing + its whoosh
@@ -176,19 +176,18 @@ export const FX_REGISTRY = {
   melee_swing: { shove: {}, sound: 'melee' },
   ranged_shot: { tracer: {}, sound: 'shoot' },
 
-  // 29b — the afflicter disruptors (status-on-hit). Each ability's own cast/impact
-  // cue; the STATUS feedback (the §27 tick sparkle / the §28 held `_active` tint on
-  // the afflicted unit) carries the rest. Dedicated SFX is deferred to §31 (no
-  // `sound` field yet — the bleed/poison-tick precedent), so a heavy AoE leans on
-  // the camera shake for physicality. The burst is team-colored (the driver picks
-  // it off the live event), so a frost storm flashes the caster's team hue + the
-  // frozen victims glow ice-cyan from their `_active` overlay.
+  // 29b — the afflicter disruptors (status-on-hit). Each ability's cast/impact
+  // cue + (§32b) a dedicated cast SFX, fired ONCE per cast (on the burst/impact
+  // phase, NOT per victim — so an AoE doesn't stack the sound across its targets).
+  // The STATUS feedback (the §27 tick sparkle / the §28 held `_active` tint) carries
+  // the rest. The burst is team-colored (the driver picks it off the live event),
+  // so a frost storm flashes the caster's team hue + the frozen victims glow cyan.
   vial_throw: { projectile: { style: 'straight' } }, // the lobbed poison flask
-  vial_burst: { burst: { style: 'explosion' } }, // the splash (poison_tick sparkle does the green)
-  ice_storm_burst: { burst: { style: 'explosion' }, shake: { intensity: 0.08, durationSeconds: 0.25 } },
-  hex_burst: { burst: { style: 'explosion' } }, // a confusion flash (no damage — pure applier)
-  light_ray: { tracer: {} }, // an archer-style beam (blind on the landed hit)
-  wail_burst: { burst: { style: 'explosion' }, shake: { intensity: 0.1, durationSeconds: 0.3 } }, // the fear scream
+  vial_burst: { burst: { style: 'explosion' }, sound: 'vial' }, // glass shatter + splash
+  ice_storm_burst: { burst: { style: 'explosion' }, sound: 'freeze', shake: { intensity: 0.08, durationSeconds: 0.25 } },
+  hex_burst: { burst: { style: 'explosion' }, sound: 'hex' }, // a confusion warble (no damage — pure applier)
+  light_ray: { tracer: {}, sound: 'lightray' }, // an archer-style beam (blind on the landed hit)
+  wail_burst: { burst: { style: 'explosion' }, sound: 'wail', shake: { intensity: 0.1, durationSeconds: 0.3 } }, // the fear scream
 
   // 29c — the stormcaller's chain lightning. Driven per HOP off `unit:chained`
   // (not `action:phase`), so the bolt visibly travels jump by jump: each arc flies
@@ -198,18 +197,23 @@ export const FX_REGISTRY = {
   // crackle.
   chain_arc: { tracer: {}, sound: 'chain', shake: { intensity: 0.04, durationSeconds: 0.12 } },
 
+  // 29d / §32b — the shaman's raise. 29d shipped no FX (the minion's spawn fade
+  // was the cue); §32b adds the summon-pop SFX, fired once per cast on raise_dead's
+  // impact phase. Sound-only — the fade still carries the visual.
+  summon_raise: { sound: 'summon' },
+
   // 27e — the periodic statuses. Each status authors a `_tick` key: the
   // per-second pulse → a recolored mote puff + the damage/heal hitsplat number.
-  // Only `burn`/`rejuvenate` carry a `sound` — they re-home the retired fire/heal
-  // tile-chip cues (the §Z "one key = visual + SFX" model); bleed/poison get
-  // their SFX at §31. Sparkle colors: burn amber embers, bleed blood-red, poison
-  // toxic-green, rejuvenate heal-cyan (the DoT/HoT numbers all reuse the
-  // `burn`/`heal` hitsplat styles — the sparkle color distinguishes them). The
-  // apply-flash (`_apply`) keys were dropped post-playtest (the cue fired
-  // mid-lerp onto a tile); a status now signals only on its ticks.
+  // §32b — ALL four now carry a `sound` (burn/rejuvenate re-homed the retired
+  // fire/heal tile-chip cues in 27e; bleed/poison got their generated ticks here,
+  // the §Z "one key = visual + SFX" model). Sparkle colors: burn amber embers,
+  // bleed blood-red, poison toxic-green, rejuvenate heal-cyan (the DoT/HoT numbers
+  // all reuse the `burn`/`heal` hitsplat styles — the sparkle color distinguishes
+  // them). The apply-flash (`_apply`) keys were dropped post-playtest (the cue
+  // fired mid-lerp onto a tile); a status now signals only on its ticks.
   burn_tick: { sparkle: { color: COLORS.TERMINAL_AMBER }, hitsplat: { kind: 'burn' }, sound: 'burn' },
-  bleed_tick: { sparkle: { color: COLORS.NEON_RED }, hitsplat: { kind: 'burn' } },
-  poison_tick: { sparkle: { color: COLORS.TERMINAL_GREEN }, hitsplat: { kind: 'burn' } },
+  bleed_tick: { sparkle: { color: COLORS.NEON_RED }, hitsplat: { kind: 'burn' }, sound: 'bleed' },
+  poison_tick: { sparkle: { color: COLORS.TERMINAL_GREEN }, hitsplat: { kind: 'burn' }, sound: 'poison' },
   rejuvenate_tick: {
     sparkle: { color: COLORS.FLOURESCENT_BLUE },
     hitsplat: { kind: 'heal' },

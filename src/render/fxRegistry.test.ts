@@ -13,7 +13,7 @@ describe('fxRegistry — resolution', () => {
     expect(fxDescriptor('magic_bolt_launch')).toEqual({ projectile: { style: 'straight' } });
     expect(fxDescriptor('magic_bolt_burst')).toMatchObject({ burst: { style: 'explosion' }, sound: 'magicboom' });
     expect(fxDescriptor('catapult_launch')).toEqual({ projectile: { style: 'arc' } });
-    expect(fxDescriptor('catapult_burst')).toMatchObject({ burst: { style: 'dud' }, sound: 'shoot' });
+    expect(fxDescriptor('catapult_burst')).toMatchObject({ burst: { style: 'dud' }, sound: 'thud' });
     expect(fxDescriptor('no_such_key')).toBeUndefined();
   });
 });

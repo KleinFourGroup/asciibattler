@@ -20,17 +20,26 @@
  */
 
 export type SoundKey =
+  | 'bleed'
   | 'burn'
   | 'chain'
   | 'click'
   | 'dash'
   | 'death'
+  | 'freeze'
   | 'healtick'
+  | 'hex'
+  | 'lightray'
   | 'lose'
   | 'magicboom'
   | 'melee'
+  | 'poison'
   | 'recruit'
   | 'shoot'
+  | 'summon'
+  | 'thud'
+  | 'vial'
+  | 'wail'
   | 'win';
 
 const SOURCES: Record<SoundKey, string> = {
@@ -51,6 +60,19 @@ const SOURCES: Record<SoundKey, string> = {
   recruit: 'audio/recruit.wav',
   shoot: 'audio/shoot.wav',
   win: 'audio/win.wav',
+  // §32b — the status / afflicter / summon cues. Eight are procedurally
+  // generated (scripts/gen-sfx.mjs → `npm run gen:sfx`, deterministic); `thud`
+  // is the hand-made catapult crash. bleed/poison are DoT-tick cues; the five
+  // afflicter casts fire once per cast; summon on the raise; thud on the lob.
+  bleed: 'audio/bleed.wav',
+  poison: 'audio/poison.wav',
+  vial: 'audio/vial.wav',
+  freeze: 'audio/freeze.wav',
+  hex: 'audio/hex.wav',
+  lightray: 'audio/lightray.wav',
+  wail: 'audio/wail.wav',
+  summon: 'audio/summon.wav',
+  thud: 'audio/thud.wav',
 };
 
 /**
@@ -80,6 +102,17 @@ const VOLUMES: Record<SoundKey, number> = {
   recruit: 0.8,
   shoot: 1.0,
   win: 0.7,
+  // §32b — DoT ticks are quiet (they fire on a cadence, like burn 0.6); the
+  // afflicter casts + summon sit mid; the catapult `thud` is a heavy crash.
+  bleed: 0.6,
+  poison: 0.55,
+  vial: 0.75,
+  freeze: 0.8,
+  hex: 0.7,
+  lightray: 0.75,
+  wail: 0.75,
+  summon: 0.8,
+  thud: 0.85,
 };
 
 /**
@@ -117,6 +150,18 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
   recruit: 0,
   shoot: 0.1,
   win: 0,
+  // §32b — DoT ticks jitter hard (±12%, like burn) so a board-wide tick reads
+  // as a crackle; the characterful casts/wail keep low jitter (too much reads as
+  // a broken sample); thud gets a touch for a less-repetitive siege crash.
+  bleed: 0.12,
+  poison: 0.12,
+  vial: 0.07,
+  freeze: 0.06,
+  hex: 0.07,
+  lightray: 0.08,
+  wail: 0.05,
+  summon: 0.05,
+  thud: 0.08,
 };
 
 const POOL_SIZE = 4;

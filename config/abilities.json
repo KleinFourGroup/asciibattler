@@ -521,7 +521,8 @@
         "phase": "impact",
         "op": { "kind": "summon", "summon": { "archetype": "ghoul", "level": { "base": 1, "stat": "magic", "perPoint": 1 }, "maxLive": 3 } }
       }
-    ]
+    ],
+    "fx": { "impact": "summon_raise" }
   },
   "ghoul_claw": {
     "id": "ghoul_claw",

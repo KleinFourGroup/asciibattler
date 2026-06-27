@@ -1114,6 +1114,21 @@ the settle-on-arrival apply cue and the `expired` cue stay parked in
 
 ### 32b — SFX for the new mechanics
 
+> **✅ SHIPPED** (pending the user's ear-verification). Nine new `SoundKey`s wired
+> through [AudioPlayer.ts](src/audio/AudioPlayer.ts) (SOURCES/VOLUMES/PITCH_VARIANCE)
+> + the §Z [fxRegistry.ts](src/render/fxRegistry.ts): **bleed/poison** ticks (on
+> `bleed_tick`/`poison_tick`), the five **afflicter casts** (`vial`/`freeze`/`hex`/
+> `lightray`/`wail` on the cast/impact keys, once per cast — not per victim), the
+> **summon** pop (a new `summon_raise` key wired onto `raise_dead`'s `fx.impact`), and
+> the **catapult** crash (the user's hand-made `thud.wav` replacing the placeholder
+> `shoot` on `catapult_burst`). Eight of the nine are **procedurally generated** by a
+> new deterministic, dependency-free Node synth — [scripts/gen-sfx.mjs](scripts/gen-sfx.mjs)
+> (`npm run gen:sfx`) — the "chiptone-offload" (the user supplied the catapult thud).
+> Browser-verified: all nine files serve 200, the boot asserts resolve every key,
+> every `play()` fires without error, no console errors; **audibility/quality is the
+> user's ear-verification**. The F3 catapult launch/impact split (a `release`-phase
+> creak) stays the optional [TODO.md](TODO.md) tail.
+
 **Shape:** new sound keys in the §Z FX registry + `public/audio/` + AudioPlayer for
 the §27/§28/§29 effects that shipped silent (SFX deferred to here by design): **burn
 tick**, **freeze**, the **afflicter casts** (poison/confusion/blind/panic apply),

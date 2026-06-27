@@ -1255,6 +1255,51 @@ needs the `perPoint`/`magic`-switch dial-back the §31c caveat flagged.
 
 ---
 
+## Phase 34 — Polish (post-§33-playtest bugs)
+
+Two bugs surfaced in the §33 full-run playtest (2026-06-27). Both are **deferred
+to here by the user** — they don't block the 33c verification, which lands first.
+No snapshot bump expected.
+
+### 34a — Double-KO soft-lock
+
+**Symptom:** when the player's last unit and the enemy's last unit die on the
+**same tick**, the battle doesn't resolve — the player stares at a static board
+until the per-turn tick cap fires `resolveAsDraw` (a minute+).
+
+**Cause:** `checkBattleEnd` ([World.ts](src/sim/World.ts), ~L1375-1383)
+*deliberately* does NOT synthesize a result on mutual annihilation
+(`!playerAlive && !enemyAlive` → silent return), leaving the draw to the driver's
+tick-cap `resolveAsDraw` "a few ticks later." That early-return exists to protect
+the **pre-spawn / walls-only** invariant (units.length 0 before combat, or a
+board of just neutrals) from tripping a false draw.
+
+**Shape:** distinguish a GENUINE mutual wipe (both teams HAD living combatants and
+both are now empty) from the pre-spawn/walls-only case — e.g. a one-way
+`_combatBegan` latch set the first tick both teams are alive — and on a genuine
+mutual wipe emit `'draw'` IMMEDIATELY rather than waiting for the cap. Keep the
+walls-only / pre-spawn early-return intact (the `World.test` invariant pins it).
+
+### 34b — Blank ability-detail rows for the §29 archetypes
+
+**Symptom:** some UnitCard ability rows for the new archetypes render the ability
+name but a blank detail line.
+
+**Cause:** `abilityRow` ([UnitCard.ts](src/ui/UnitCard.ts), ~L514-534) only builds
+a `detail` for `heal` / `damage` ops. An ability whose top-level op is
+`applyStatus` (pure afflicters — Warlock `hex`, Banshee `wail`), `summon` (Shaman
+`raise_dead`), or `chain` (Stormcaller `chain_lightning`, whose damage is nested in
+the chain's inner ops) falls through with empty `parts`, so the detail line is
+empty.
+
+**Shape:** extend `abilityRow` to render a terse detail for those op kinds — e.g.
+an applier shows its status + `rng`; a summon shows `summons N×<archetype>`; a
+chain shows its inner damage + jumps/falloff. Pure presentation — read off the
+`AbilityDef` ops, no sim change. Browser-verify the new rows (RecruitScreen /
+PreTurnScreen / HUD).
+
+---
+
 ## Cleanup / chores (land any time; several pair with this round)
 
 - **Object-pooling the sim's hot allocators** ([TODO.md](TODO.md)) — surfaces at

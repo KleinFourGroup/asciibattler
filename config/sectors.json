@@ -21,14 +21,18 @@
         { "encounterId": "deserters" },
         { "encounterId": "artillery" },
         { "encounterId": "ronin-vs-mages" },
-        { "encounterId": "adventurer-with-guards" }
+        { "encounterId": "adventurer-with-guards" },
+        { "encounterId": "darkMagicPosse", "minHop": 4 },
+        { "encounterId": "elementalTrio", "minHop": 4 },
+        { "encounterId": "plagueDoctors", "minHop": 4 }
       ],
       "elite": [
         { "encounterId": "brigand-champions" },
         { "encounterId": "warband-vanguard" }
       ],
       "boss": [
-        { "encounterId": "bandit-king" }
+        { "encounterId": "bandit-king" },
+        { "encounterId": "banditQueen", "minHop": 0 }
       ]
     }
   }

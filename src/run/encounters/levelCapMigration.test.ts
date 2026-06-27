@@ -44,7 +44,27 @@ function collectSpecs(entry: WaveEntry): WaveSpec[] {
   }
 }
 
-const ALL_SPECS: { encounterId: string; spec: WaveSpec }[] = ENCOUNTERS.flatMap((e) =>
+// The migration proof covers the PRE-migration catalog only — the encounters that
+// existed when X moved the cap onto the wave spec. Content authored after X (§33's
+// §29-archetype showcase) is NOT bound by the retired global cap: whether those
+// waves cap at roster+delta is a deliberate balance choice (BALANCE.md's "uncap the
+// spikes" lever), not a migration invariant. Scoping here keeps this a historical
+// completeness check, not a forward cap-discipline rule on all future content.
+const PRE_MIGRATION_IDS = new Set([
+  'brigands',
+  'highwaymen',
+  'deserters',
+  'artillery',
+  'ronin-vs-mages',
+  'adventurer-with-guards',
+  'bandit-king',
+  'brigand-champions',
+  'warband-vanguard',
+]);
+
+const ALL_SPECS: { encounterId: string; spec: WaveSpec }[] = ENCOUNTERS.filter((e) =>
+  PRE_MIGRATION_IDS.has(e.id),
+).flatMap((e) =>
   e.waves.flatMap((entry) => collectSpecs(entry).map((spec) => ({ encounterId: e.id, spec }))),
 );
 

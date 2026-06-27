@@ -2,7 +2,7 @@
   {
     "id": "brigands",
     "name": "Brigands",
-    "description": "A roving band of brigands — the everyday hostiles of the road.",
+    "description": "A roving band of brigands.  Not much more to say here.",
     "healthPool": 7,
     "kind": "normal",
     "waves": [
@@ -310,6 +310,182 @@
                 { "archetype": "mercenary", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "mage", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "darkMagicPosse",
+    "name": "Dark Magic Posse",
+    "description": "Who are these people, and what unholy horrors do they have in store for you?",
+    "healthPool": 8,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "shaman", "count": { "kind": "fixed", "value": 5 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "warlock", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          },
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "shaman", "count": { "kind": "fixed", "value": 3 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "elementalTrio",
+    "name": "Elemental Trio",
+    "description": "Three mages who draw upon the power of nature -- and their band of cultists!",
+    "healthPool": 8,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "stormcaller", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          },
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "luminant", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "rogue", "count": { "kind": "weight", "weight": 1.5 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          },
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "ice_mage", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "catapult", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "banditQueen",
+    "name": "The Bandit Queen?",
+    "description": "This woman doesn't look all that much like a bandit...",
+    "healthPool": 8,
+    "kind": "boss",
+    "waves": [
+      {
+        "kind": "stages",
+        "stages": [
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.66 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.25 },
+                  "count": { "kind": "hand", "factor": 1.5 },
+                  "units": [
+                    { "archetype": "banshee", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
+                    { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.33 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.25 },
+                  "count": { "kind": "hand", "factor": 1.5 },
+                  "units": [
+                    { "archetype": "banshee", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
+                    { "archetype": "rogue", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.25 },
+                  "count": { "kind": "hand", "factor": 1.5 },
+                  "units": [
+                    { "archetype": "banshee", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
+                    { "archetype": "reaver", "count": { "kind": "fixed", "value": 3 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "mage", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "plagueDoctors",
+    "name": "Plague Doctors",
+    "description": "Aren't plague doctors supposed to cure plagues?",
+    "healthPool": 8,
+    "kind": "normal",
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "ghoul", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }
           }

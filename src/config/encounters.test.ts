@@ -93,12 +93,18 @@ describe('encounters schema', () => {
       // W2 — the elite detours (harder optional fights).
       'brigand-champions',
       'warband-vanguard',
+      // §33 — the §29-archetype showcase content (afflicters / summoners / chain).
+      'darkMagicPosse',
+      'elementalTrio',
+      'banditQueen',
+      'plagueDoctors',
     ]);
     // Every `kind` value is now exercised by shipped content: the road fights are
     // `normal`, the lone `boss` is the terminal fight, the `elite` detours are
     // the optional harder fights.
     const expectedKind: Record<string, string> = {
       'bandit-king': 'boss',
+      'banditQueen': 'boss',
       'brigand-champions': 'elite',
       'warband-vanguard': 'elite',
     };

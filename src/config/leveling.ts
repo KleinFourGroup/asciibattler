@@ -63,9 +63,9 @@
  * directly) would earn only the flat participation slice and barely level. The
  * share scales the summoner's progression with how well its minions perform: 0
  * disables the credit entirely (summons give the summoner nothing), 1 gives the
- * summoner full credit for every minion's hit. Defaults to 0.5 (the summoner
- * shares in its minions' work without earning the full multiplied value of the
- * extra bodies) — a §33 playtest dial.
+ * summoner full credit for every minion's hit. Defaults to 0.75 (the summoner
+ * shares in most of its minions' work; playtested up from 0.5 — a summon-only
+ * Shaman now levels at a satisfying pace) — a §33 playtest dial.
  *
  * A4 pattern: parse at module load, throw on malformed JSON.
  */

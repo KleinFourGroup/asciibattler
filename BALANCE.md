@@ -317,3 +317,28 @@ deltas. The pre-X H7c→O log lives at
     `HEALTH.enemyHealthMax` (highwaymen 10 / deserters 9), so the `winEncounter` test
     helper's one-chip default (8) no longer cleared them → defaulted to clear any pool
     (`resolveTurn` floors `enemyHealth` at 0, so over-chipping is safe).
+- **2026-06-27 — §33 the Cluster-1 balance closer: the §29-archetype showcase
+  content tuned into band.** Four draft encounters built on the §29 afflicter/
+  summoner/chain roster were stabilized (`ce45ca5` — banditQueen's reversed stage
+  thresholds fixed 0.33↔0.66 so its middle stage actually runs; catalog-enumeration
+  tests updated; the levelCapMigration proof scoped to the 9 pre-migration ids) then
+  tuned **encounter-local only** (the user chose NOT to touch the global §31c summon
+  scaling — Shaman's math is untouched). Forced-isolation reads (greedy, leveled
+  rosters, `--jobs=1`), baseline → final pool-damage/instance:
+  - **darkMagicPosse** (normal, shaman flood): **25 → ~6.1**. The dominant lever was
+    the fixed shaman counts (count.factor is INERT on an all-`fixed` wave — only
+    `weight` units draw from `C`); cut shaman 5→1 / 3→1, corrupter 2→1, `levelBudget`
+    1.25→1. At its minimal-content floor it still reads ~2× band — the summon-flood +
+    confusion/poison disruption hard-counters the bot's mercenary+ranged duopoly (the
+    "hard-for-the-duopoly ≠ hard-by-design" caveat; greedy is a lower bound, so ~6 by
+    the bot ≈ ~3–4 by diverse human play). Left as the deliberately-hard "scary" road
+    fight — **final feel is a playtest call.**
+  - **elementalTrio** (normal): **8.3 → ~2.5**. `count.factor` 1.5→1 all waves +
+    catapult 2→1; `levelBudget` 1.25→1 on waves 1–2, kept 1.25 on the ice_mage/catapult
+    climax (beefier casters over more bodies, on-theme).
+  - **plagueDoctors** (normal): **1.5 → ~3.8** (brought UP) — corrupter 2→3,
+    `count.factor` 1.5 (more ghoul fillers).
+  - **banditQueen** (boss): **4.5 → ~11.1** (brought UP) — `healthPool` 8→20, matching
+    `bandit-king`; reads a touch under king's ~14.4 at the same boss roster, fitting an
+    alternate boss. Config + tests only, no snapshot bump; 1403 main + 210 fuzz:smoke
+    green. **Pending: the user's playtest + the 33c held-out (`--seed-offset`) verify.**

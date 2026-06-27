@@ -331,10 +331,10 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "levelBudget": { "kind": "mean", "factor": 1 },
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
-                { "archetype": "shaman", "count": { "kind": "fixed", "value": 5 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "shaman", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "warlock", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }
@@ -342,11 +342,11 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "levelBudget": { "kind": "mean", "factor": 1 },
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
-                { "archetype": "shaman", "count": { "kind": "fixed", "value": 3 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } }
+                { "archetype": "shaman", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }
           }
@@ -368,8 +368,8 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
-              "count": { "kind": "hand", "factor": 1.5 },
+              "levelBudget": { "kind": "mean", "factor": 1 },
+              "count": { "kind": "hand", "factor": 1 },
               "units": [
                 { "archetype": "stormcaller", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
@@ -379,8 +379,8 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
-              "count": { "kind": "hand", "factor": 1.5 },
+              "levelBudget": { "kind": "mean", "factor": 1 },
+              "count": { "kind": "hand", "factor": 1 },
               "units": [
                 { "archetype": "luminant", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "rogue", "count": { "kind": "weight", "weight": 1.5 }, "level": { "kind": "weight", "weight": 1 } },
@@ -392,10 +392,10 @@
             "kind": "wave",
             "spec": {
               "levelBudget": { "kind": "mean", "factor": 1.25 },
-              "count": { "kind": "hand", "factor": 1.5 },
+              "count": { "kind": "hand", "factor": 1 },
               "units": [
                 { "archetype": "ice_mage", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "catapult", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "catapult", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }
@@ -408,7 +408,7 @@
     "id": "banditQueen",
     "name": "The Bandit Queen?",
     "description": "This woman doesn't look all that much like a bandit...",
-    "healthPool": 8,
+    "healthPool": 20,
     "kind": "boss",
     "waves": [
       {
@@ -484,7 +484,7 @@
               "levelBudget": { "kind": "mean", "factor": 1.25 },
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
-                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 3 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "ghoul", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }

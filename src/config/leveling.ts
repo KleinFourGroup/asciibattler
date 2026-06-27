@@ -56,6 +56,17 @@
  * owns rest *placement*) since it's a leveling reward. Lower it if rests
  * out-pace battle XP.
  *
+ * `summonDamageXpShare` (§33) is the fraction of a SUMMONED unit's damage that
+ * credits its SUMMONER's XP ledger (`World.recordDamage` redirects summon damage
+ * to `summonedBy × share`). A summon has no roster slot, so without this its
+ * damage banks to nobody — a summon-only caster (the Shaman, which never strikes
+ * directly) would earn only the flat participation slice and barely level. The
+ * share scales the summoner's progression with how well its minions perform: 0
+ * disables the credit entirely (summons give the summoner nothing), 1 gives the
+ * summoner full credit for every minion's hit. Defaults to 0.5 (the summoner
+ * shares in its minions' work without earning the full multiplied value of the
+ * extra bodies) — a §33 playtest dial.
+ *
  * A4 pattern: parse at module load, throw on malformed JSON.
  */
 
@@ -70,6 +81,7 @@ const LevelingSchema = z.object({
   xpFlatPerFallen: z.number().nonnegative(),
   xpPerDamage: z.number().nonnegative(),
   xpPerHealing: z.number().nonnegative(),
+  summonDamageXpShare: z.number().min(0).max(1),
   halfCoverDamageMult: z.number().min(0).max(1),
   restXp: z.number().nonnegative(),
 });

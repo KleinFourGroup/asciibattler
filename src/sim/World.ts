@@ -62,6 +62,7 @@ import type { SpawnRegion } from './layouts';
 import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
 import { STATS } from '../config/stats';
+import { LEVELING } from '../config/leveling';
 
 /**
  * Schema history:
@@ -654,6 +655,23 @@ export class World {
     const attacker = this.findUnit(attackerId);
     if (!attacker) return;
     if (attacker.team === target.team) return;
+    // §33 — a SUMMONED unit has no roster slot, so its own ledger entry is never
+    // banked at battle end (only `playerRosterIds` get paid). Redirect its damage
+    // to the SUMMONER's tally, scaled by `summonDamageXpShare`, so a summon-only
+    // caster levels with its minions' performance. The summoner keeps the credit
+    // even after the minion (or the summoner itself) dies — `playerRosterIds`
+    // persists the dead. `share = 0` disables the credit (summon damage banks
+    // nowhere, the pre-§33 behaviour).
+    if (attacker.summonedBy != null) {
+      const credited = Math.round(damage * LEVELING.summonDamageXpShare);
+      if (credited > 0) {
+        this.damageDealt.set(
+          attacker.summonedBy,
+          (this.damageDealt.get(attacker.summonedBy) ?? 0) + credited,
+        );
+      }
+      return;
+    }
     this.damageDealt.set(attackerId, (this.damageDealt.get(attackerId) ?? 0) + damage);
   }
 

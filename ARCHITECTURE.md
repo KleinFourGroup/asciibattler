@@ -103,7 +103,8 @@ src/
     focusTile.ts             # O3: the one keyed focus-TILE resolver (disallow | clearOnArrival | leashAtNearest), config-selected; directive + resolvedByArrival
     Pathfinding.ts           # A* king's-move, Chebyshev heuristic, optional CostFn (C1a); J2: pathfindingStats counter; J3: bestEffort (route to nearest reachable)
     movement.ts              # J2: shared movement seam — MovementIntent + advance (the dash hook) + routeToward (cache boundary)
-    actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest firing cell in [minRange,range](+LOS) (O4 band)
+    actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest firing cell in [minRange,range](+LOS) (O4 band); §29d nearestFreeCells (summon placement)
+    occupancy.ts             # §35: the occupancy chokepoint — cellsOccupiedBy (footprint seam) / isFree·unitAt / occupiedCells / footprintFits / distanceBetween; OccupancyPlane (plane seam, ground-only)
     Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5) w/ objective branches (engage/hold/focus + updateTargetDefault); lowestWoundedAlly (E7.B); 28: behavior preempt — confusion random-team pick / blind capped acquisition
                              # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
     targetingStrategies.ts   # per-archetype target-pick registry (nearest / weakest); Unit.targeting resolved at spawn

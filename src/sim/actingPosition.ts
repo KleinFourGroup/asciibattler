@@ -1,6 +1,7 @@
 import type { GridCoord } from '../core/types';
 import type { World } from './World';
 import { hasLineOfSight } from './LineOfSight';
+import { cellKey, distanceBetween, occupiedCells } from './occupancy';
 
 /**
  * GP4 — find the nearest reachable cell from which `from` could ACT on a unit
@@ -71,7 +72,7 @@ export function nearestActingCell(
 
   for (let head = 0; head < queue.length; head++) {
     const { c, depth } = queue[head]!;
-    const d = chebyshev(c, target);
+    const d = distanceBetween(c, target);
     if (
       d <= range &&
       d >= minRange &&
@@ -96,10 +97,6 @@ export function nearestActingCell(
     }
   }
   return null;
-}
-
-function chebyshev(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
 /**
@@ -128,9 +125,10 @@ export function nearestFreeCells(
   world: World,
 ): GridCoord[] {
   // Every unit's cell (combatants + neutral walls/half-cover) is occupied —
-  // ineligible as a landing, but still traversable when passable (below).
-  const occupied = new Set<string>();
-  for (const u of world.units) occupied.add(`${u.position.x},${u.position.y}`);
+  // ineligible as a landing, but still traversable when passable (below). §35 —
+  // the occupancy chokepoint owns "what occupies a cell" (one cell per unit
+  // today; the §39 footprint block for free).
+  const occupied = occupiedCells(world);
 
   const found: GridCoord[] = [];
   const startKey = `${anchor.x},${anchor.y}`;
@@ -139,7 +137,7 @@ export function nearestFreeCells(
 
   for (let head = 0; head < queue.length; head++) {
     const { c, depth } = queue[head]!;
-    if (!occupied.has(`${c.x},${c.y}`)) {
+    if (!occupied.has(cellKey(c))) {
       found.push(c);
       if (found.length >= count) return found;
     }

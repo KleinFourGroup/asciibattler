@@ -18,6 +18,7 @@
 import type { GridCoord } from '../../core/types';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
+import { GROUND, cellKey, distanceBetween, occupiedCells } from '../occupancy';
 
 const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
   [-1, -1], [0, -1], [1, -1],
@@ -26,20 +27,18 @@ const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
 ];
 
 export function retreatCell(unit: Unit, anchor: GridCoord, world: World): GridCoord | null {
-  const occupied = new Set<string>();
-  for (const u of world.units) {
-    if (u.id === unit.id) continue;
-    occupied.add(key(u.position));
-  }
+  // §35 — the occupancy chokepoint owns the "every OTHER unit" set (one cell per
+  // unit today; the §39 footprint block for free).
+  const occupied = occupiedCells(world, GROUND, { excludeId: unit.id });
 
-  const currentDist = chebyshev(unit.position, anchor);
+  const currentDist = distanceBetween(unit.position, anchor);
   let best: GridCoord | null = null;
   let bestDist = -1;
   let bestOpenness = -1;
   for (const [dx, dy] of NEIGHBORS) {
     const c: GridCoord = { x: unit.position.x + dx, y: unit.position.y + dy };
     if (!passable(c, world, occupied)) continue;
-    const dist = chebyshev(c, anchor);
+    const dist = distanceBetween(c, anchor);
     if (dist <= currentDist) continue;
     const openness = countOpenNeighbors(c, world, occupied);
     if (dist > bestDist || (dist === bestDist && openness > bestOpenness)) {
@@ -62,14 +61,6 @@ function countOpenNeighbors(c: GridCoord, world: World, occupied: ReadonlySet<st
 function passable(c: GridCoord, world: World, occupied: ReadonlySet<string>): boolean {
   if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) return false;
   if (!isFinite(world.tileGrid.costAt(c))) return false;
-  if (occupied.has(key(c))) return false;
+  if (occupied.has(cellKey(c))) return false;
   return true;
-}
-
-function key(c: GridCoord): string {
-  return `${c.x},${c.y}`;
-}
-
-function chebyshev(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }

@@ -43,6 +43,7 @@ import { processChainHops, type PendingChainHop } from './effects/interpreter';
 import { createBehavior, createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
 import { updateTarget } from './Targeting';
+import { unitAt } from './occupancy';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { SpawnAction } from './actions/SpawnAction';
@@ -1244,10 +1245,9 @@ export class World {
   }
 
   private isOccupied(coord: GridCoord): boolean {
-    for (const u of this.units) {
-      if (u.position.x === coord.x && u.position.y === coord.y) return true;
-    }
-    return false;
+    // §35 — the overflow scan routes through the occupancy chokepoint. Byte-
+    // identical to the old inline scan at one plane / single-cell footprints.
+    return unitAt(this, coord) !== undefined;
   }
 
   private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {

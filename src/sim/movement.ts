@@ -4,6 +4,7 @@ import type { World } from './World';
 import type { ActionProposal } from './Action';
 import { MoveAction } from './actions/MoveAction';
 import { findPath } from './Pathfinding';
+import { cellKey, cellsOccupiedBy, distanceBetween } from './occupancy';
 import { SIM } from '../config/sim';
 
 /**
@@ -67,13 +68,18 @@ export function buildMovementContext(
   const occupied = new Set<string>();
   for (const u of world.units) {
     if (u.id === unit.id) continue;
-    occupied.add(key(u.position));
-    if (u.team === 'neutral') {
-      pathBlockers.push(u.position);
-      continue;
+    // §35 — route each unit's cell touch through the occupancy footprint seam
+    // (`cellsOccupiedBy`: one cell today, the N×N block once §39 fills it), so the
+    // sidestep occupancy set + neutral path-blockers cover a multi-tile body for
+    // free. Byte-identical at single-cell: each set gets exactly `u.position`.
+    for (const c of cellsOccupiedBy(u)) {
+      occupied.add(cellKey(c));
+      if (u.team === 'neutral') {
+        pathBlockers.push(c);
+      } else if (u.id !== excludeUnitId) {
+        otherUnitCells.add(cellKey(c));
+      }
     }
-    if (u.id === excludeUnitId) continue;
-    otherUnitCells.add(key(u.position));
   }
   return { pathBlockers, otherUnitCells, occupied };
 }
@@ -358,10 +364,9 @@ export function costAt(c: GridCoord, world: World, occupied: ReadonlySet<string>
   return tileCost;
 }
 
-export function key(c: GridCoord): string {
-  return `${c.x},${c.y}`;
-}
-
-export function chebyshev(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-}
+// §35 — `key`/`chebyshev` now live in the occupancy core (`cellKey`/
+// `distanceBetween`); re-exported here so the movement consumers
+// (MovementBehavior, SupportMovementBehavior, the propose tests) keep their
+// existing imports while the single definition lives in one place.
+export const key = cellKey;
+export const chebyshev = distanceBetween;

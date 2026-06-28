@@ -342,3 +342,41 @@ deltas. The pre-X H7c→O log lives at
     `bandit-king`; reads a touch under king's ~14.4 at the same boss roster, fitting an
     alternate boss. Config + tests only, no snapshot bump; 1403 main + 210 fuzz:smoke
     green. **Pending: the user's playtest + the 33c held-out (`--seed-offset`) verify.**
+- **2026-06-27 — §33c the STRATEGY RE-DERIVATION + drift fold-in (the closer's verify;
+  `e059574`). User playtested & LOVED.** The §29 draft pool grew **9→18 archetype
+  dimensions** since X3 (reaver/corrupter/stormcaller/shaman are `draftable`), so the
+  X3-derived optimum was **structurally stale** — its per-archetype strategy vector
+  couldn't even express a preference over the new picks (the recruitable-content thread
+  the user flagged). Re-derived the optimum (heavy `--search`, jobs=8) on the current
+  content:
+  - **Run health (in-situ, 120 seeds):** optimum **25.0%** / greedy **10.0%** →
+    **+15pt gradient**; smooth funnel (hops 0–9 ≤10% death), boss wall hop 10 **51.6%**
+    (X3's 43–55% target). shaman/corrupter/reaver are FAVORED picks; the optimum shifted
+    OFF the merc+ranged duopoly to a magic/constitution caster-summoner comp — **none OP**
+    (win didn't run away; §31c's summon-OP fear unrealized). **The duopoly DISSOLVED
+    rather than re-monocultured** → 33c's "duopoly fold-in" is resolved by the new content;
+    no separate tuning.
+  - **Drift fold-in (forced-isolation tuning calibrated to the RE-DERIVED optimum —
+    greedy-isolation mis-rated elementalTrio 2.5 vs the optimum's 0.5):** isolation
+    PDmg/instance baseline → final — elementalTrio 0.5→**2.7**, brigand-champions
+    2.1→**6.6** (OLD elite softened by the new optimum), bandit-king 6.4→**10.0** (OLD boss
+    softened), banditQueen 11.6→**10.7**, plagueDoctors **3.8** + darkMagicPosse **6.7**
+    (the two intentionally-spicy §29 showcases, left slightly hot). Levers: `healthPool` /
+    `levelBudget` / `count.factor` (the §33b lesson — `count.factor` inert on all-`fixed`
+    waves).
+  - **⭐ Isolation vs in-situ (the round that taught the lesson):** optional-detour elites
+    + climactic bosses read HOTTER in-situ than isolation (depth-compounding premium,
+    X3-consistent — X3's own "elites leaning slightly hard, acceptable"). An in-situ trim
+    round chased **small-sample NOISE** (elites appear ~16–31× in-situ vs 60–71× in
+    isolation; trims moved nothing reliably) and was **reverted** — tune to the stable
+    isolation read, accept the in-situ premium.
+  - **Held-out verify (`--seed-offset=5000`):** win **24.2%** + bands hold out-of-sample
+    (bosses banditQueen 12.4 / bandit-king 9.2; normals cluster ~2–4), **not seed-overfit.**
+  - **The win-rate cost:** optimum win dropped **32.5%→~25%** — the honest consequence of
+    folding the soft content UP into band. The bands are correct by construction; a softer
+    overall run is the **global difficulty multiplier** (`waveSize`/`levelBudget`) /
+    pool-rest economy — a run-level knob OUT of §33's content scope. **User playtested the
+    rebalanced content & LOVED it** → no ease applied.
+  Config-only (16 value swaps in `encounters.json`, no structural change); no snapshot
+  bump. 1406 main + 210 fuzz:smoke green, typecheck clean. **§33 (33a→33b→33c) COMPLETE &
+  user-confirmed; ▶ §34 Polish next** (34a double-KO soft-lock / 34b blank ability rows).

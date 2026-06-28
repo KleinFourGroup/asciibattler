@@ -216,6 +216,58 @@ describe('World battle-end detection', () => {
     expect(w.ended).toBe(false);
   });
 
+  it('34a — a genuine mutual wipe (empty board, no walls) ends immediately as a draw', () => {
+    // Both teams' last units die on the same tick with nothing left on the
+    // board. Pre-34a this fell through `checkBattleEnd`'s empty-board guard and
+    // soft-locked until the driver's tick cap. The `_combatBegan` latch (set
+    // the first tick both teams were alive) now resolves it as a DRAW at once.
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    const player = w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 }, 0);
+    const enemy = w.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 5, y: 5 });
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    w.tick(); // far apart — both alive, latch sets, no end
+    expect(w.ended).toBe(false);
+
+    // Simulate the same-tick double-KO: both fall to 0 hp, the next tick's
+    // death sweep reaps both → empty board.
+    player.currentHp = 0;
+    enemy.currentHp = 0;
+    w.tick();
+
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('draw');
+    expect(w.ended).toBe(true);
+  });
+
+  it('34a — a genuine mutual wipe with walls left standing ends immediately as a draw', () => {
+    // The other wipe path: a neutral wall survives, so the board is non-empty
+    // and the empty-board guard is skipped. Pre-34a the `!playerAlive &&
+    // !enemyAlive` branch returned silently; the latch now draws at once.
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    const player = w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 }, 0);
+    const enemy = w.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 5, y: 5 });
+    w.spawnUnit(rollUnit('mercenary', rng), 'neutral', { x: 9, y: 9 });
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+
+    w.tick(); // both teams alive — latch sets
+    expect(w.ended).toBe(false);
+
+    player.currentHp = 0;
+    enemy.currentHp = 0;
+    w.tick(); // both reaped; the neutral wall remains on the board
+
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('draw');
+    expect(w.ended).toBe(true);
+  });
+
   it('ignores neutrals when scoring the win condition (player + walls = player wins)', () => {
     const bus = new EventBus<GameEvents>();
     const rng = new RNG(1);

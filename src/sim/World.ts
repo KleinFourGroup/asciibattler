@@ -424,6 +424,16 @@ export class World {
   private nextUnitId = 1;
   private _ended = false;
   /**
+   * 34a — one-way latch, set the first tick BOTH teams field a living combatant
+   * (or a queued spawn). It tells a GENUINE mutual wipe (both teams had units
+   * and both are now gone → resolve as a draw immediately) apart from the
+   * pre-spawn / walls-only board (never had both teams → stay silent). NOT
+   * serialized: it re-latches on the first post-restore tick that sees both
+   * teams alive — which necessarily precedes any mutual wipe — so a snapshot
+   * round-trip is unaffected and no version bump is needed.
+   */
+  private _combatBegan = false;
+  /**
    * Commands waiting to be applied at the next tick boundary. UI and the
    * headless harness push via `enqueueCommand`; `tick()` drains the queue
    * before per-unit step so the apply-point is deterministic for replay.
@@ -1354,9 +1364,14 @@ export class World {
 
   private checkBattleEnd(): void {
     // Empty world isn't "battle over" — it's "no battle yet." Guards the
-    // pre-spawn ticks and the (currently impossible, but theoretical)
-    // mutual-annihilation case where both teams hit 0 in the same tick.
-    if (this.units.length === 0 && this.spawnQueues.size === 0) return;
+    // pre-spawn ticks. 34a: once combat has BEGUN, an empty board IS a battle
+    // over — a genuine mutual wipe where both teams' last units died together
+    // with no walls left behind — so resolve it as a DRAW now rather than
+    // leaving it to the driver's tick cap (a minute+ static wait).
+    if (this.units.length === 0 && this.spawnQueues.size === 0) {
+      if (this._combatBegan) this.emitBattleEnded('draw');
+      return;
+    }
     let playerAlive = false;
     let enemyAlive = false;
     for (const u of this.units) {
@@ -1364,22 +1379,30 @@ export class World {
       else if (u.team === 'enemy') enemyAlive = true;
       // Neutrals (walls, environment entities) don't count toward either
       // side — a battlefield of just walls + corpses isn't a victory.
-      if (playerAlive && enemyAlive) return;
+      if (playerAlive && enemyAlive) {
+        this._combatBegan = true; // 34a — both teams fielded a combatant.
+        return;
+      }
     }
     // D5.C — a team with units still in queue isn't wiped; the overflow
     // scan will reinforce as tiles vacate. Treat them as alive so the
     // battle doesn't end prematurely.
     if ((this.spawnQueues.get('player')?.length ?? 0) > 0) playerAlive = true;
     if ((this.spawnQueues.get('enemy')?.length ?? 0) > 0) enemyAlive = true;
-    if (playerAlive && enemyAlive) return;
+    if (playerAlive && enemyAlive) {
+      this._combatBegan = true; // 34a — both teams present (queued spawns count).
+      return;
+    }
     // No combatants left = mutual annihilation OR walls-only / pre-spawn.
-    // Don't synthesize a winner here — a "walls + nothing else" setup tick
-    // must not trip the condition. H4: a GENUINE mutual wipe (both teams had
-    // units and both died) is instead resolved as a DRAW by the driver's
-    // per-turn tick cap (`resolveAsDraw`) a few ticks later, so the encounter
-    // loop still advances. Keeping the early-return preserves the pre-spawn
-    // invariant the walls-only test pins.
-    if (!playerAlive && !enemyAlive) return;
+    // 34a: a GENUINE mutual wipe (combat began, both teams now gone but walls
+    // remain so the board is non-empty) resolves as a DRAW immediately. A
+    // walls-only / pre-spawn board (combat never began) must NOT trip the
+    // condition — the `_combatBegan` latch tells them apart, replacing the old
+    // "leave it to the per-turn tick cap" silent return.
+    if (!playerAlive && !enemyAlive) {
+      if (this._combatBegan) this.emitBattleEnded('draw');
+      return;
+    }
     this.emitBattleEnded(playerAlive ? 'player' : 'enemy');
   }
 
@@ -1387,8 +1410,10 @@ export class World {
    * H4 — the DRIVER (Run's per-turn tick budget, via BattleScene or the
    * headless test harness) force-resolves a battle that hasn't reached a
    * decisive end as a DRAW: both sides' surviving units chip the opposing
-   * health pool by their Σ`power`. Also the terminator for a mutual wipe
-   * (which `checkBattleEnd` leaves un-ended on purpose). No-op once `_ended`.
+   * health pool by their Σ`power`. (34a moved the mutual-wipe draw INTO
+   * `checkBattleEnd` — a genuine double-KO now ends immediately, so this is
+   * the generic timeout terminator, no longer the only mutual-wipe path.)
+   * No-op once `_ended`.
    */
   resolveAsDraw(): void {
     this.emitBattleEnded('draw');

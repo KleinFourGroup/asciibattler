@@ -12,10 +12,13 @@ is shaped*; `ROADMAP.md` is the *current* in-flight roadmap; this file is the
 The encounter-system round (Phases S→X) is content-complete; this plans everything
 between here and feature-complete.
 
-> **Cluster 1 — Combat Depth is now EXPANDED into [ROADMAP.md](ROADMAP.md)** (Phases
-> **Y → 33**), synthesized 2026-06-22 from the design model at
-> [archive/cluster-one-feedback.md](archive/cluster-one-feedback.md). The remaining
-> clusters (2–6) below stay as the meta-order until their turn comes.
+> **Cluster 1 — Combat Depth is COMPLETE** (Phases **Y → 34**, archived at
+> [archive/post-x-roadmap.md](archive/post-x-roadmap.md)). **Cluster 2 — Spatial &
+> Movement is now EXPANDED into [ROADMAP.md](ROADMAP.md)** (Phases **35 → 41**),
+> synthesized 2026-06-28 from [archive/cluster-two-spec.md](archive/cluster-two-spec.md)
+> + the design discussion that locked flight (deferred build) and the full
+> data-driven unit overhaul. The remaining clusters (3–6) below stay as the
+> meta-order until their turn comes.
 
 ---
 
@@ -136,7 +139,7 @@ Map Content.
 
 ---
 
-## Cluster 2 — Spatial & Movement
+## Cluster 2 — Spatial & Movement  ✅ EXPANDED → [ROADMAP.md](ROADMAP.md) (Phases 35→41)
 
 **Charter:** harden the movement/pathfinding/occupancy core (it bit us once with
 the kiting bug), extend it with terrain depth and flight, and **lay the footprint

@@ -23,8 +23,9 @@ import type { UnitTemplate, Archetype, UnitStats, Unit } from '../sim/Unit';
 import type { PromotionInfo } from '../core/events';
 import type { StatusReadout } from '../sim/statusReadout';
 import { abilityIdsForArchetype, glyphForArchetype } from '../sim/archetypes';
-import { attackCooldownTicksFor, damageStatFor } from '../sim/stats';
-import { abilityDef, damageOpOf, healOpOf } from '../config/abilities';
+import { attackCooldownTicksFor } from '../sim/stats';
+import { abilityDef } from '../config/abilities';
+import { abilityDetailParts } from './abilityDetail';
 import { ticksToSeconds } from '../config';
 import { xpProgress, displayLevel } from '../sim/xp';
 import { statusColor } from '../render/statusDisplay';
@@ -513,25 +514,9 @@ function abilityRow(id: string, archetype: Archetype, stats: UnitStats): HTMLDiv
 
   const detail = document.createElement('div');
   detail.className = 'unit-card__ability-detail';
-  const parts: string[] = [];
-  if (def.target.kind === 'self') {
-    // N1 — a pure-reposition leap (the dash): no damage/heal profile, just the
-    // leap distance (its recharge shows in the cadence column below).
-    parts.push(`dash ${def.rangeCells}`);
-  } else {
-    const healOp = healOpOf(id);
-    const damageOp = damageOpOf(id);
-    if (healOp) {
-      parts.push(`${healOp.might + stats.magic} heal`, `rng ${def.rangeCells}`);
-    } else if (damageOp) {
-      parts.push(`${damageOp.might + damageStatFor(archetype, stats)} dmg`, `rng ${def.rangeCells}`);
-      // I6 — surface the per-weapon profile: base hit chance for an evadable
-      // strike, base crit for a critable one (terse percentages, e.g. "60% hit").
-      if (damageOp.evadable) parts.push(`${Math.round(damageOp.accuracy * 100)}% hit`);
-      if (damageOp.critable) parts.push(`${Math.round(damageOp.critBase * 100)}% crit`);
-    }
-  }
-  detail.textContent = parts.join(' · ');
+  // 34b — the detail wording is the pure `abilityDetailParts` (headless-tested);
+  // this row owns only the DOM (the styled AoE tag below + the cadence column).
+  detail.textContent = abilityDetailParts(id, archetype, stats).join(' · ');
   if (def.target.kind === 'aoe') {
     const side = def.target.radius * 2 + 1;
     const tag = document.createElement('span');

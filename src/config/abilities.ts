@@ -20,6 +20,7 @@ import {
   type AbilityDef,
   type DamageOp,
   type HealOp,
+  type EffectOp,
 } from '../sim/effects/schema';
 
 const AbilityDefsFileSchema = z.record(z.string(), AbilityDefSchema);
@@ -66,4 +67,18 @@ export function damageOpOf(id: string): DamageOp | undefined {
 export function healOpOf(id: string): HealOp | undefined {
   const entry = abilityDef(id).effects.find((e) => e.op.kind === 'heal');
   return entry && entry.op.kind === 'heal' ? entry.op : undefined;
+}
+
+/**
+ * 34b — the first op of `kind` on an ability, kind-narrowed (the generic sibling
+ * of `damageOpOf`/`healOpOf`). The §29 display surfaces (UnitCard, the editor)
+ * read the `applyStatus` / `summon` / `chain` ops through this to render a detail
+ * line. Pure — reads off the parsed def, no sim state.
+ */
+export function firstOpOf<K extends EffectOp['kind']>(
+  id: string,
+  kind: K,
+): Extract<EffectOp, { kind: K }> | undefined {
+  const entry = abilityDef(id).effects.find((e) => e.op.kind === kind);
+  return entry ? (entry.op as Extract<EffectOp, { kind: K }>) : undefined;
 }

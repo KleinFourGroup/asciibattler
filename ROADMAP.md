@@ -361,6 +361,51 @@ flight builds). Whether `distanceBetween` lands here (single-tile = `chebyshev`)
 with §39 where multi-tile makes it non-trivial (recommend here as a behavior-identical
 seam, so adjacency/acting-position route through it early).
 
+### Sub-steps (35a–35d) — the cut (resolved with the user 2026-06-28)
+
+**Resolved decisions:** module home **`src/sim/occupancy.ts`**; plane **closed
+`OccupancyPlane = 'ground'`**; `distanceBetween` lands **here** (the chebyshev seam,
+so adjacency/acting-position route through it early); abort = **cooldown not
+consumed**, retry next tick; the **abort is a full `unit:moveAborted` event** (the
+sibling of `unit:moved`), NOT a silent internal no-op — inert on the instant model,
+load-bearing for §36's renderer settle-back (the renderer must *see* an abort to
+animate it; planting the event now makes §36 a subscribe, not a retrofit); the fuzz
+invariant is an **opt-in harness flag** (off by default like telemetry, so the
+`--search` hot-path pays nothing; a dedicated fuzz test turns it on across the smoke
+corpus). **Scope note:** 35a centralizes the **one-unit-per-cell occupancy** predicate
+only — the neutral-only *path-blocker* sets (`buildMovementContext.pathBlockers`,
+`nearestActingCell`'s wall set) stay put (a path-blocking concern §38 folds into the
+unit catalog, orthogonal to occupancy). The **footprint seam** is planted by routing
+every per-unit cell touch through `cellsOccupiedBy(unit)` + `cellKey` (→ `[position]`
+today), so §39's N×N fill is automatic, not a scattered retrofit.
+
+- **35a — the occupancy abstraction (the chokepoint + seams).** New
+  `src/sim/occupancy.ts`: `cellsOccupiedBy(unit)` (→ `[unit.position]`), `isFree(world,
+  cell, plane)` / `unitAt(world, cell, plane)`, `footprintFits(world, cells, plane)`,
+  `distanceBetween(a, b)` (chebyshev), `cellKey(cell)` — each plane-parameterized
+  (`'ground'`). Route the scattered occupancy point/set queries through it:
+  `World.isOccupied` (the overflow scan), `buildMovementContext`'s `occupied` set,
+  `nearestFreeCells` candidacy. Byte-identical at single-cell/one-plane. *Test:*
+  equivalence vs the old checks; existing snapshot + fuzz baselines unchanged. No bump.
+- **35b — proactive destination check + abort (the `unit:moveAborted` event).** A move
+  re-validates its destination is free *at execution* (catching a stale proposal whose
+  cell an earlier-processed unit took this tick); an occupied/untraversable destination
+  becomes a clean no-op + emits `unit:moveAborted {unitId, from, to}` (cooldown not
+  consumed → retry next tick). Mostly inert on the instant model; built + event-seamed
+  now so §36's non-instant settle-back is a renderer subscribe. ARCHITECTURE event
+  catalog updated in-commit. *Test:* a stale proposal onto a now-filled cell aborts,
+  fires the event, leaves the unit at `from` with cooldown intact.
+- **35c — shove (the co-location backstop).** A deterministic relocate of a co-located
+  unit to the nearest free cell, wrapping the §29 `nearestFreeCells` BFS — the safety
+  net for a spawn/summon/knockback landing on an occupied cell, and the primitive a
+  future `knockback` op wraps (a knockback = a directional shove). *Test:* a co-located
+  unit relocates deterministically to the nearest free cell.
+- **35d — the fuzz occupancy invariant (opt-in).** A per-tick "no two units share a
+  cell (per plane)" assertion, off by default (an opt-in harness flag, like telemetry),
+  turned on by a dedicated fuzz test across the smoke corpus — generalizing the Qb#3
+  same-cell fixture to the whole run. *Test:* the invariant holds across the corpus;
+  the Qb#3 corridor fixtures still pass. Baseline may shift (re-derived §41).
+
 ---
 
 ## Phase 36 — Non-instant moves (the claim system)

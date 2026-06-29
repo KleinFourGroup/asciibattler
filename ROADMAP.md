@@ -417,7 +417,7 @@ today), so §39's N×N fill is automatic, not a scattered retrofit.
 
 ## Phase 36 — Non-instant moves (the claim system)
 
-> **▶ IN PROGRESS — 36a + 36b SHIPPED.** **36a** the claim registry + the
+> **▶ IN PROGRESS — 36a + 36b + 36c SHIPPED.** **36a** the claim registry + the
 > occupied-OR-claimed pathing rule (`WorldSnapshot` v30→v31, inert). **36b** the
 > non-instant logical position flip: `MoveAction` defers `position = to` to the
 > 50% mark (`SIM.moveFlipFraction`, via a `travel`→`impact`→`recovery` phase
@@ -426,8 +426,16 @@ today), so §39's N×N fill is automatic, not a scattered retrofit.
 > occupancy invariant exposed that the PLACEMENT paths (`nearestFreeCells` for
 > shove/summon, `runOverflowScan` reinforcement, the gambit `retreatCell`) also
 > had to exclude claimed cells, else a unit materialises where a deferred mover is
-> arriving. No new serialized state / no second bump. **NEXT = 36c** (the smooth
-> mid-flight abort + the renderer settle-back) **+ 36d** (the fuzz re-baseline).
+> arriving. No new serialized state / no second bump. **36c** the smooth mid-flight
+> abort: a per-tick in-flight re-validation in `World.tick`'s active-action step
+> re-checks a deferred move's destination while the claim is still held (the
+> pre-flip signal); if `dest` went occupied/untraversable it aborts via
+> `unit:moveAborted` (release claim, reset move cooldown, hold at `from`). Render
+> decision LOCKED = **settle-back**: `BattleRenderer` eases the sprite from its
+> live mid-slide position back to `from` over `SETTLE_BACK_SECONDS` (0.22s). INERT
+> until §37/§40 supplies a trigger, so pinned by a synthetic headless test +
+> functional browser proof; no snapshot bump / no fuzz shift. **NEXT = 36d** (the
+> fuzz re-baseline).
 
 The feel fix: a unit's logical tile changes **partway through** its move, not at
 move-start — so a slow unit attacked at melee range reads as still mostly on its
@@ -505,14 +513,26 @@ claim is the only persistent piece.
   position is `from` before the 50% mark and `to` after; targeting / adjacency resolve
   against the logical position; two units → one claims, the other re-routes (no
   collision); the claim releases on arrival; a snapshot round-trips a mid-move claim.
-- **36c — the smooth abort (§35b goes load-bearing) + the renderer settle-back.** A
-  move whose destination becomes invalid mid-flight aborts via the §35b
+- **36c — the smooth abort (§35b goes load-bearing) + the renderer settle-back. ✅
+  SHIPPED.** A move whose destination becomes invalid mid-flight aborts via the §35b
   `unit:moveAborted` path — the claim guarantees *other pathers* never cause it (only
-  dynamic terrain or a non-pathed knockback onto `to` can); the renderer subscribes and
-  animates a settle-back, kept from visually colliding with the melee-hit anim. *Test
-  (headless):* an aborted mid-flight move leaves the unit at `from`, claim released,
-  cooldown intact; *(browser):* the settle-back reads cleanly, no clash with the hit
-  anim.
+  dynamic terrain or a non-pathed knockback onto `to` can). Mechanism = a per-tick
+  in-flight re-validation in `World.tick`'s active-action step: while the move still
+  HOLDS its destination claim (the exact pre-flip signal — `applyEffect` releases it at
+  the 50% flip), re-run `destinationBlocked` (which already excludes the mover's own
+  claim/occupancy); on a block, release the claim, reset the move cooldown (retry next
+  tick), clear `activeAction`, emit `unit:moveAborted`. Render decision LOCKED =
+  **settle-back** (not snap): `BattleRenderer` subscribes and eases the sprite from its
+  LIVE mid-slide position back to `from` over `SETTLE_BACK_SECONDS` (0.22s, a render
+  const; overrides the in-flight slide via the single-lerp-per-handle contract), kept
+  short so it clears before a concurrent melee-hit anim; a §35b selection-time abort
+  settles in place (no-op). The TRIGGER is inert today (the claim blocks peer
+  convergence; dynamic terrain/knockback land in §37/§40), so the mechanism is pinned
+  by a SYNTHETIC headless test (`moveAbortInflight.test.ts` — force `to`→chasm or shove
+  an occupant onto `to` mid-flight; covers the pre-flip tick, the flip tick, and a
+  no-spurious-abort control) + a functional browser proof (a real slide→abort cycle
+  driven through the bus reversed the sprite from mid-slide back EXACTLY onto `from`).
+  No snapshot bump / no fuzz shift (provably inert).
 - **36d — the fuzz re-baseline under claims.** Re-run the corpus with non-instant moves
   on; confirm §35d's occupancy invariant still holds across the open claim window;
   record the win-rate shift (a likely melee/ranged move, carried to §41). *Test:* the

@@ -135,7 +135,9 @@ export interface GameEvents extends Record<string, unknown> {
    * — inert on today's instant moves (propose == execute atomically), but
    * load-bearing in §36: once the logical position flips partway through a move,
    * a mid-flight abort animates as a settle-back, and the renderer must SEE the
-   * abort to reverse the lerp. No consumer yet (the settle-back lands with §36).
+   * abort to reverse the lerp. §36c CONSUMER: BattleRenderer eases the sprite from
+   * its live mid-slide position back to `from` (the unit never left logically). A
+   * §35b selection-time abort (sprite still on `from`) settles in place — a no-op.
    */
   'unit:moveAborted': {
     unitId: number;

@@ -965,6 +965,31 @@ export class World {
       if (unit.activeAction !== null) {
         const aa = unit.activeAction;
         const offset = this.tickCount - aa.startTick;
+
+        // §36c — in-flight re-validation of a deferred move. A move holds a claim
+        // on its destination until the logical flip (MoveAction.applyEffect, at
+        // the `impact` boundary); while the claim is still held the unit is
+        // PRE-FLIP (logically on `from`). Re-check the destination here, before
+        // walking the phase timeline: if it went occupied / untraversable since
+        // move-start — dynamic terrain or a non-pathed knockback onto `to`; a peer
+        // pather can NEVER cause it, the claim blocks convergence — abort via the
+        // §35b path instead of sliding (or flipping) onto a bad cell. The unit
+        // settles back to `from` (it never left), the claim releases, the move
+        // cooldown resets so it retries next tick, and `unit:moveAborted` drives
+        // the renderer's settle-back. The still-held claim is the exact pre-flip
+        // signal — `applyEffect` releases it at the flip, so an arrived unit is
+        // never re-validated; `destinationBlocked` already excludes the mover's
+        // own claim/occupancy. INERT today (no §37/§40 trigger exists yet), so no
+        // fuzz/play shift; exercised synthetically in moveAbortInflight.test.ts.
+        const dest = aa.action.destinationCell?.();
+        if (dest !== undefined && claimantOf(this, dest) === unit.id && this.destinationBlocked(unit, dest)) {
+          this.releaseClaim(dest);
+          unit.actionCooldowns.set(aa.action.id, 0);
+          unit.activeAction = null;
+          this.bus.emit('unit:moveAborted', { unitId: unit.id, from: unit.position, to: dest });
+          continue;
+        }
+
         for (const phase of phasesBeginningAt(aa.phases, offset)) {
           this.emitActionPhase(unit, aa.action, phase);
           if (phase === 'impact' && aa.action.applyEffect) {

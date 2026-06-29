@@ -170,6 +170,7 @@ export class BattleRenderer {
     this.animator = new SpriteAnimator(this.sprites);
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
+    this.subscriptions.push(bus.on('unit:moveAborted', this.onUnitMoveAborted));
     this.subscriptions.push(bus.on('unit:swapped', this.onUnitSwapped));
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
     // I2: a dodged single-target strike. The attacker still swung/shot (same
@@ -480,6 +481,26 @@ export class BattleRenderer {
     durationTicks,
   }: GameEvents['unit:moved']): void => {
     this.animateStep(unitId, from, to, durationTicks);
+  };
+
+  /**
+   * §36c — the settle-back. A deferred move aborted mid-flight (its destination
+   * went invalid while the sprite was sliding toward it). Ease the sprite from
+   * wherever it reached back to `from` — its logical cell, since a pre-flip unit
+   * never left it. Lerps from the sprite's LIVE position (like animateStep), so
+   * the reversal is continuous from the slide's current point and overrides the
+   * in-flight move lerp (single lerp per handle). A short, fixed duration keeps
+   * the recoil from lingering into a concurrent melee-hit anim (the spec's
+   * worry). A §35b selection-time abort never started a slide, so the sprite is
+   * already on `from` and this lerps in place — a clean no-op. Inert in real play
+   * until §37/§40 can invalidate a claimed destination.
+   */
+  private onUnitMoveAborted = ({ unitId, from }: GameEvents['unit:moveAborted']): void => {
+    if (!this.world) return;
+    const handle = this.handles.get(unitId);
+    if (!handle) return;
+    const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? this.tileWorldPos(from)).clone();
+    this.animator.startLerp(handle, origin, this.tileWorldPos(from), SETTLE_BACK_SECONDS);
   };
 
   /**
@@ -1227,6 +1248,15 @@ const FADE_SECONDS = 0.3;
 const SHOVE_DISTANCE = 0.35;
 const SHOVE_OUT_SECONDS = 0.07;
 const SHOVE_BACK_SECONDS = 0.13;
+
+/**
+ * §36c — settle-back recoil. When a deferred move aborts mid-flight, the sprite
+ * eases from wherever the slide reached back to its `from` cell over this window.
+ * Short (a touch above the shove's ~0.2s out+back) so it reads as a quick "pulled
+ * back" recoil and clears before any concurrent melee-hit anim — but long enough
+ * to register as motion rather than a teleport (the snap the design call rejected).
+ */
+const SETTLE_BACK_SECONDS = 0.22;
 
 /**
  * E6.B — ranged projectile tracer. The glyph flies a straight line from

@@ -380,3 +380,26 @@ deltas. The pre-X H7c→O log lives at
   Config-only (16 value swaps in `encounters.json`, no structural change); no snapshot
   bump. 1406 main + 210 fuzz:smoke green, typecheck clean. **§33 (33a→33b→33c) COMPLETE &
   user-confirmed; ▶ §34 Polish next** (34a double-KO soft-lock / 34b blank ability rows).
+- **2026-06-29 — §36d the fuzz re-baseline under non-instant moves (the claim system).**
+  Cluster-2 Phase 36 made moves NON-INSTANT (36b: the logical position flips at the 50%
+  mark; a unit holds a *claim* on its destination across the open window) — a real
+  combat-timing change (when melee connects / when targeting re-reads the still-arriving
+  target), so the win-rate baseline gets re-read. **No config touched** since §33c, so this
+  is a pure ENGINE delta against §33c's recorded greedy 10.0% (seeds 1–120). Method =
+  hold the strategy FIXED (the reproducible `greedy`/`pure-random` baselines; the §33c
+  *searched* optimum vector wasn't saved), change only the engine, measure.
+  - **Occupancy invariant (§35d) HOLDS across the open claim window** — `assertOccupancy`
+    on (no two units share a cell per plane after any tick) across the 12+12-seed committed
+    smoke AND a broader 40+40-seed temp corpus (greedy + pure-random, non-instant moves +
+    claims live; ~80 full runs, hundreds of thousands of ticks). The load-bearing safety
+    property the claim/flip timing could have reopened is clean.
+  - **Win rate — NO DETECTABLE SHIFT.** greedy **7.5%** / pure-random **15.8%** (in-sample,
+    seeds 1–120) vs greedy **14.2%** / pure-random **11.7%** (held-out, `--seed-offset=5000`),
+    **0 hangs** in all four 120-seed runs. The two greedy samples (7.5% / 14.2%) **bracket**
+    §33c's 10.0%: a 6.7pt swing between two n=120 samples ⇒ greedy seed-variance is ±~3.5pt
+    here, which swamps the in-sample −2.5pt. So the non-instant-move timing produced no
+    win-rate move the bot can see (consistent with 36c being provably inert + 36b's flip
+    being a subtle timing nudge). **Carried to §41:** the precise melee/ranged
+    characterization + any rebalance, which gets the full `--search` re-derivation budget
+    (re-saving the optimum vector this round retired). No config change, no snapshot bump;
+    1458 main + 212 fuzz:smoke green. **▶ Phase 36 (36a→36d) COMPLETE; §37 Terrain next.**

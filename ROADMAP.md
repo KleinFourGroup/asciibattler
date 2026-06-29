@@ -417,7 +417,7 @@ today), so §39's N×N fill is automatic, not a scattered retrofit.
 
 ## Phase 36 — Non-instant moves (the claim system)
 
-> **▶ IN PROGRESS — 36a + 36b + 36c SHIPPED.** **36a** the claim registry + the
+> **✅ COMPLETE — 36a→36d SHIPPED.** **36a** the claim registry + the
 > occupied-OR-claimed pathing rule (`WorldSnapshot` v30→v31, inert). **36b** the
 > non-instant logical position flip: `MoveAction` defers `position = to` to the
 > 50% mark (`SIM.moveFlipFraction`, via a `travel`→`impact`→`recovery` phase
@@ -434,8 +434,13 @@ today), so §39's N×N fill is automatic, not a scattered retrofit.
 > decision LOCKED = **settle-back**: `BattleRenderer` eases the sprite from its
 > live mid-slide position back to `from` over `SETTLE_BACK_SECONDS` (0.22s). INERT
 > until §37/§40 supplies a trigger, so pinned by a synthetic headless test +
-> functional browser proof; no snapshot bump / no fuzz shift. **NEXT = 36d** (the
-> fuzz re-baseline).
+> functional browser proof; no snapshot bump / no fuzz shift. **36d** the fuzz
+> re-baseline: §35d's occupancy invariant HOLDS across the open claim window
+> (`assertOccupancy` on, 12+12 smoke + a broad 40+40 corpus), and NO detectable
+> win-rate shift — greedy 7.5% (seeds 1–120) / 14.2% (held-out offset 5000)
+> bracket §33c's 10.0% (n=120 seed-variance ±~3.5pt swamps it); precise
+> melee/ranged characterization carried to §41 (BALANCE.md). **▶ Phase 36 CLOSED;
+> §37 Terrain next.**
 
 The feel fix: a unit's logical tile changes **partway through** its move, not at
 move-start — so a slow unit attacked at melee range reads as still mostly on its
@@ -533,11 +538,16 @@ claim is the only persistent piece.
   no-spurious-abort control) + a functional browser proof (a real slide→abort cycle
   driven through the bus reversed the sprite from mid-slide back EXACTLY onto `from`).
   No snapshot bump / no fuzz shift (provably inert).
-- **36d — the fuzz re-baseline under claims.** Re-run the corpus with non-instant moves
-  on; confirm §35d's occupancy invariant still holds across the open claim window;
-  record the win-rate shift (a likely melee/ranged move, carried to §41). *Test:* the
-  invariant holds across the corpus with claims + non-instant moves on; the new
-  baseline is recorded.
+- **36d — the fuzz re-baseline under claims. ✅ SHIPPED.** Re-ran the corpus with
+  non-instant moves on (no config touched since §33c, so a pure ENGINE delta; strategy
+  held fixed to the reproducible greedy/pure-random baselines — §33c's searched optimum
+  vector wasn't saved). §35d's occupancy invariant HOLDS across the open claim window
+  (`assertOccupancy` on, 12+12 smoke + a broad 40+40 temp corpus, ~80 full runs). **No
+  detectable win-rate shift:** greedy 7.5% / pure-random 15.8% (seeds 1–120) vs greedy
+  14.2% / pure-random 11.7% (held-out `--seed-offset=5000`), 0 hangs — the two greedy
+  samples BRACKET §33c's 10.0% (n=120 seed-variance ±~3.5pt swamps the in-sample −2.5pt).
+  Precise melee/ranged characterization + any rebalance carried to §41 (full `--search`
+  budget). Recorded in BALANCE.md; no config change, no snapshot bump.
 
 ---
 

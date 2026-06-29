@@ -541,6 +541,58 @@ describe('MovementBehavior / corridor kite-pin (Qb #3)', () => {
   });
 });
 
+describe('MovementBehavior / §36b: a pursuer holds for a target arriving into its band', () => {
+  it('a melee unit abstains when its target CLAIMS a cell in its firing band (no kite-pin sidestep)', () => {
+    // M targets E. E is mid-move toward M: logically still out of melee range, but
+    // its destination CLAIM sits on the cell ADJACENT to M. Pre-fix M read itself
+    // out of range and tried to advance — the forward step (E's claimed cell) was
+    // blocked, firing the sidestep/detour. Now M reads the claim as "my target is
+    // arriving adjacent" and holds; it strikes when E lands (the §36b locomotion
+    // dual of the claim's pathing-block). Driven at the behavior level: inject the
+    // claim directly, so the abstain is pinned independent of E's move timing.
+    const { world, units } = scene([
+      { team: 'player', x: 5, y: 5, attackRange: 1, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 7, y: 5, inert: true }, // logical pos 2 cells off → out of melee
+    ]);
+    const [m, e] = units as [Unit, Unit];
+    m.targetId = e.id; // committed pursuit
+    const mover = new MovementBehavior();
+
+    // No claim yet → out of range → M proposes a step toward E (the control).
+    expect(mover.proposeAction(m, world)).not.toBeNull();
+
+    // E claims the cell ADJACENT to M (its in-flight destination) → M HOLDS.
+    world.claimCell({ x: 6, y: 5 }, e.id);
+    expect(mover.proposeAction(m, world)).toBeNull();
+
+    // Releasing the claim (e.g. the move aborted) resumes pursuit.
+    world.releaseClaim({ x: 6, y: 5 });
+    expect(mover.proposeAction(m, world)).not.toBeNull();
+  });
+
+  it('does NOT over-fire: a claim INSIDE a ranged unit’s minRange still kites (band-respecting)', () => {
+    // The hold only triggers for a claim in the firing BAND [minRange, attackRange].
+    // A ranged unit whose target is arriving INSIDE its minRange must still kite out,
+    // not freeze — a claim short of the floor must NOT abstain (the `inFiringBand`
+    // floor check is what guarantees it).
+    const FLOOR = minRangeForArchetype('ranged');
+    const REACH = rangeForArchetype('ranged');
+    expect(FLOOR).toBeGreaterThan(1); // the test needs a floor for "inside minRange" to exist
+    const { world, units } = scene([
+      { team: 'player', x: 5, y: 5, archetype: 'ranged', attackRange: REACH, moveCooldownTicks: 1 },
+      { team: 'enemy', x: 6, y: 5, inert: true }, // adjacent → inside minRange → M wants to kite
+    ]);
+    const [m, e] = units as [Unit, Unit];
+    m.targetId = e.id;
+    const mover = new MovementBehavior();
+
+    // Claim another adjacent cell — also inside minRange (dist 1 < floor). It is NOT
+    // in band, so it must not suppress the kite: M still proposes a move.
+    world.claimCell({ x: 6, y: 6 }, e.id);
+    expect(mover.proposeAction(m, world)).not.toBeNull();
+  });
+});
+
 interface SceneUnit {
   team: Team;
   x: number;

@@ -199,6 +199,26 @@ export function isClaimed(world: World, cell: GridCoord, plane: OccupancyPlane =
 }
 
 /**
+ * The cell `unitId` has CLAIMED (its in-flight move destination), or undefined —
+ * the INVERSE of `claimantOf` (unit→cell, not cell→unit). A mover holds at most
+ * one claim, live only between move-start and the §36b flip, so this is the cell
+ * the unit is ARRIVING at right now. §36b consumer: a melee/ranged pursuer reads
+ * its TARGET's claim to recognise "my target is arriving into my firing band" and
+ * hold for it, rather than sidestepping around the reservation (the locomotion
+ * dual of the claim's pathing-block). O(claims) scan — claims are few.
+ */
+export function claimedDestinationOf(
+  world: World,
+  unitId: number,
+  plane: OccupancyPlane = GROUND,
+): GridCoord | undefined {
+  for (const claim of world.claims.values()) {
+    if (claim.unitId === unitId && claim.plane === plane) return claim.cell;
+  }
+  return undefined;
+}
+
+/**
  * Every CLAIMED cell on `plane`, as a key set — the claim sibling of
  * `occupiedCells`. `buildMovementContext` merges it into the soft-block set so a
  * pather routes around (and never sidesteps onto) a peer's claimed destination.

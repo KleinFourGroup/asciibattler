@@ -6,6 +6,7 @@ import { currentTarget } from '../Targeting';
 import { SIM } from '../../config/sim';
 import { hasLineOfSight } from '../LineOfSight';
 import { nearestActingCell } from '../actingPosition';
+import { claimedDestinationOf } from '../occupancy';
 import { minRangeForArchetype } from '../archetypes';
 import { advance, chebyshev, moveProposal, stepDurationTicks, key, type MovementIntent } from '../movement';
 import { retreatCell } from '../effects/reposition';
@@ -143,8 +144,21 @@ export class MovementBehavior implements Behavior {
     // byte-identical until the value commit sets a floor.
     const minRange = minRangeForArchetype(unit.archetype);
     const dist = chebyshev(unit.position, target.position);
-    const inBand = dist >= minRange && dist <= unit.derived.attackRange;
-    if (inBand && (ignoresLos || hasLineOfSight(unit.position, target.position, losBlockers))) {
+    // The firing-band + LOS test, reusable against any candidate target cell.
+    const inFiringBand = (at: GridCoord): boolean => {
+      const d = chebyshev(unit.position, at);
+      if (d < minRange || d > unit.derived.attackRange) return false;
+      return ignoresLos || hasLineOfSight(unit.position, at, losBlockers);
+    };
+    // §36b — abstain (hold + let AbilityBehavior fire) when in the band against
+    // the target's logical position (strike it NOW) OR its in-flight CLAIMED
+    // destination (the target is ARRIVING into the band — hold for it rather than
+    // sidestepping around its reservation, the corridor kite-pin the claim would
+    // otherwise trip). The attack itself still lands only once the target's
+    // LOGICAL position is in range (the §36 lock); this is a locomotion-only
+    // "wait for the arrival" so the pursuer doesn't thrash a cell short.
+    const targetClaim = claimedDestinationOf(world, target.id);
+    if (inFiringBand(target.position) || (targetClaim !== undefined && inFiringBand(targetClaim))) {
       return null;
     }
 

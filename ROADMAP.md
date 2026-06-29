@@ -421,8 +421,8 @@ The feel fix: a unit's logical tile changes **partway through** its move, not at
 move-start — so a slow unit attacked at melee range reads as still mostly on its
 prior tile (the spec's persistent quibble; the same gap tile-initiated statuses hit).
 The enabling mechanism is the **claim system**, which also closes the same-tick
-collision window the timing change opens. **WorldSnapshot bump** (claims + the
-in-flight deferred-position state); fuzz re-baseline (timing shifts outcomes).
+collision window the timing change opens. **WorldSnapshot bump** (the claim registry —
+landed in 36a); fuzz re-baseline (timing shifts outcomes).
 
 **Shape:**
 - **Claims** — on move-start a unit claims its destination cell; the §35 occupancy
@@ -431,42 +431,47 @@ in-flight deferred-position state); fuzz re-baseline (timing shifts outcomes).
   the second sees the claim and re-routes (the spec's design, which "neatly resolves
   aborts caused by other units' pathing").
 - **Non-instant logical position** — `MoveAction`'s `unit.position = to` moves from
-  `start` to a mid-move tick (default ~50%, a config dial). Before the flip the unit
+  `start` to a mid-move tick (**LOCKED 50%**, a config dial). Before the flip the unit
   logically occupies `from` and holds the claim on `to`; after, it occupies `to` and
-  releases the claim. The renderer's existing `unit:moved{durationTicks}` lerp already
-  spans the window.
+  releases the claim. **Targeting / adjacency / pathing read the *logical* position**
+  (LOCKED). The renderer's existing `unit:moved{durationTicks}` lerp already spans the
+  window.
 - **Smooth abort (the §35 path goes load-bearing)** — a move whose destination becomes
   invalid mid-flight (dynamic terrain, a non-pathed knockback onto `to`) aborts; the
   claim guarantees *other pathers* never cause this. Animate as a settle-back (a render
   design call — keep it from visually colliding with the melee hit anim, the spec's
   worry).
-- **Serialize** the claim registry + the in-flight deferred-position state → the bump,
-  reject-stale.
+- **Serialize** the claim registry → the bump, reject-stale (**landed in 36a**; 36b
+  adds no new serialized state — the flip tick derives from the activeAction + the 50%
+  fraction, so the serialized claim is the only persistent piece).
 
 **Cost:** the claim registry + the position-flip timing + the abort animation.
 WorldSnapshot bump. Fuzz re-baseline (a melee unit now connects against a still-
 arriving target differently — a likely melee/ranged shift, noted for §41).
 
 **Headless tests:** a claimed cell blocks a second pather; the claim releases on
-arrival; the logical position flips at the configured fraction (the unit is at `from`
-before, `to` after); two units proposing the same vacant cell → one claims, the other
-re-routes (no collision); an aborted move leaves the unit at `from` with the claim
-released; snapshot round-trips a mid-move claim.
+arrival; the logical position flips at the locked 50% fraction (the unit is at `from`
+before, `to` after); targeting / adjacency resolve against the logical position; two
+units proposing the same vacant cell → one claims, the other re-routes (no collision);
+an aborted move leaves the unit at `from` with the claim released; snapshot round-trips
+a mid-move claim.
 
-**Decision points 36:** the position-flip fraction (recommend 50%, a config dial).
-Whether melee/adjacency reads the *logical* position (recommend **yes** — the whole
-point is the attacker sees the still-arriving target on its old tile until the flip).
-The abort animation shape (a render design call — settle-back vs snap). Whether a
-claim can be *stolen* by a higher-priority mover (recommend no — first-claim wins,
-deterministic).
+**Decision points 36:** ✅ **LOCKED (this session):** the position-flip fraction =
+**50%** (a config dial); **targeting / adjacency / pathing read the *logical* position**
+(the attacker sees the still-arriving target on its old tile until the flip). **Still
+open:** the abort animation shape (a render design call — settle-back vs snap; resolves
+at 36c); whether a claim can be *stolen* by a higher-priority mover (recommend no —
+first-claim wins, deterministic, as 36a's last-writer-wins registry already implies).
 
 ### Sub-steps (36a–36d) — the proposed cut
 
-**Decisions still open** (locked when the phase is reached — see *Decision points 36*
-above): the position-flip fraction, whether melee reads the *logical* position, the
-abort-animation shape, the claim-steal policy. The cut below holds whichever way they
-land; the serialized state of 36a + 36b lands as **one** `WorldSnapshot` increment
-(claims + the in-flight deferred-position), reject-stale.
+**Decisions LOCKED (this session):** the position-flip fraction = **50%**; **targeting /
+adjacency / pathing read the *logical* position**. **Still open:** the abort-animation
+shape (36c) and the claim-steal policy (see *Decision points 36*). **The phase's single
+`WorldSnapshot` bump landed in 36a** (the claim registry) — **36b adds no new serialized
+state**: the deferred position is `unit.position` held at `from` until the flip, and the
+flip tick derives from the activeAction + the 50% fraction, so the already-serialized
+claim is the only persistent piece.
 
 - **36a — the claim registry + the occupied-OR-claimed pathing rule.** Add a `Claim`
   (an in-flight cell reservation) registry to the World and extend the §35 occupancy
@@ -476,15 +481,18 @@ land; the serialized state of 36a + 36b lands as **one** `WorldSnapshot` increme
   independent of 36b's timing change. *Test:* a manually-claimed cell blocks a second
   pather's route; releasing it frees the cell; the registry round-trips a snapshot.
 - **36b — the non-instant logical position flip.** `MoveAction` defers `unit.position =
-  to` from `start` to a mid-move tick (the config fraction, default ~50%): before the
+  to` from `start` to a mid-move tick — the config fraction, **LOCKED 50%**: before the
   flip the unit logically occupies `from` and holds the claim on `to`; after, it
-  occupies `to` and releases. Melee/adjacency read the *logical* position (the existing
-  `unit:moved{durationTicks}` lerp already spans the window). The deferred-position
-  in-flight state serialized (the same bump as 36a). Now claims go load-bearing: two
-  units proposing the same vacant cell → one claims, the other re-routes. *Test:* the
-  logical position is `from` before the fraction and `to` after; two units → one
-  claims, the other re-routes (no collision); the claim releases on arrival; a snapshot
-  round-trips a mid-move claim + deferred position.
+  occupies `to` and releases (+ release on reap, via 36a's `releaseClaimsBy`).
+  **Targeting / adjacency / pathing read the *logical* position** (LOCKED — the attacker
+  sees the still-arriving target on its old tile until the flip; the existing
+  `unit:moved{durationTicks}` lerp already spans the window). **No new serialized state
+  / no second bump** — the flip tick derives from the activeAction + the 50% fraction,
+  and the claim is already serialized (36a's v31). Now claims go load-bearing: two units
+  proposing the same vacant cell → one claims, the other re-routes. *Test:* the logical
+  position is `from` before the 50% mark and `to` after; targeting / adjacency resolve
+  against the logical position; two units → one claims, the other re-routes (no
+  collision); the claim releases on arrival; a snapshot round-trips a mid-move claim.
 - **36c — the smooth abort (§35b goes load-bearing) + the renderer settle-back.** A
   move whose destination becomes invalid mid-flight aborts via the §35b
   `unit:moveAborted` path — the claim guarantees *other pathers* never cause it (only
@@ -1012,7 +1020,8 @@ the design discussion (this session):**
 **Still open (resolve at the relevant phase):**
 - **35:** occupancy module home; abort cooldown policy; whether `distanceBetween`
   lands here or with §39.
-- **36:** the position-flip fraction; the abort animation shape; claim-steal policy.
+- **36:** the abort animation shape; the claim-steal policy. *(LOCKED this session:
+  flip fraction = 50%; targeting / adjacency / pathing read the logical position.)*
 - **37:** the theme-rename migration scope (RunSnapshot?); the ice cost-floor; the
   mud-poison flag default; the waterwalk seam (declare-inert vs omit).
 - **38:** **the archetype-literal audit result (gates the phase)**; catalog home; one

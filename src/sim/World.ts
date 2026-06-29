@@ -971,6 +971,20 @@ export class World {
       }
       if (best === null) continue;
 
+      // §35b — proactive destination check + abort. A relocation whose
+      // destination is occupied (by another unit) or untraversable AT EXECUTION
+      // is aborted: a clean no-op that does NOT consume the cooldown (the unit
+      // retries next tick, still at `from`) and emits `unit:moveAborted` so the
+      // renderer can react. Inert on today's instant model — a unit's propose and
+      // execute are atomic, and behaviors already route around occupied cells —
+      // but built + event-seamed here so §36's deferred position flip (which opens
+      // a real same-tick collision window) inherits a tested abort path.
+      const dest = best.action.destinationCell?.();
+      if (dest !== undefined && this.destinationBlocked(unit, dest)) {
+        this.bus.emit('unit:moveAborted', { unitId: unit.id, from: unit.position, to: dest });
+        continue;
+      }
+
       const cdKey = best.cooldownKey ?? best.action.id;
       unit.actionCooldowns.set(cdKey, best.cooldown);
       const activeAction = {
@@ -1248,6 +1262,19 @@ export class World {
     // §35 — the overflow scan routes through the occupancy chokepoint. Byte-
     // identical to the old inline scan at one plane / single-cell footprints.
     return unitAt(this, coord) !== undefined;
+  }
+
+  /**
+   * §35b — whether a relocation's destination is invalid at execution: occupied
+   * by ANOTHER unit, or untraversable (an infinite-cost tile — dynamic terrain
+   * is a §37/§40 concern, so always traversable today). The mover itself is
+   * never on `dest` yet (it's still at `from`), but the id guard is defensive.
+   * Routes occupancy through the §35a chokepoint.
+   */
+  private destinationBlocked(unit: Unit, dest: GridCoord): boolean {
+    if (!isFinite(this.tileGrid.costAt(dest))) return true;
+    const occupant = unitAt(this, dest);
+    return occupant !== undefined && occupant.id !== unit.id;
   }
 
   private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {

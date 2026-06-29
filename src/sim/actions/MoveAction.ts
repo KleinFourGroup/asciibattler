@@ -39,6 +39,15 @@ export class MoveAction implements Action {
     });
   }
 
+  /**
+   * §35b — a move relocates onto `to`, which must be free. World re-validates it
+   * at execution and aborts the move (clean no-op + `unit:moveAborted`) if an
+   * earlier-processed unit took the cell this tick.
+   */
+  destinationCell(): GridCoord {
+    return this.to;
+  }
+
   toData(): MoveActionData {
     return { from: this.from, to: this.to, durationTicks: this.durationTicks };
   }

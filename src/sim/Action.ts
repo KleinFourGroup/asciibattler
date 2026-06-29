@@ -89,6 +89,19 @@ export interface Action {
   readonly orphanPolicy?: OrphanPolicy;
   start(unit: Unit, world: World): void;
   /**
+   * §35b — the cell this action relocates the unit ONTO, which must be free at
+   * execution; or undefined for actions that don't relocate onto an
+   * expected-empty cell (attacks, heals, and SwapAction — whose `to` is
+   * intentionally occupied by the swap partner). `World` re-validates this cell
+   * the instant before `start` runs: if it's occupied by another unit or
+   * untraversable, the action ABORTS (a clean no-op + `unit:moveAborted`,
+   * cooldown not consumed) instead of writing the unit onto a filled cell. The
+   * proactive-destination seam — inert on today's instant moves (a unit's
+   * propose and execute are atomic), load-bearing once §36 defers the flip and
+   * the claim system makes the collision window real.
+   */
+  destinationCell?(): GridCoord | undefined;
+  /**
    * Fired at the `impact` phase boundary (the only phase carrying an effect
    * in F2). `tickOffset` is ticks-from-start; `phase` is the boundary that
    * fired it (always `'impact'` today — passed for forward-compat with

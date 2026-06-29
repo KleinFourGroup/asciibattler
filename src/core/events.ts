@@ -127,6 +127,22 @@ export interface GameEvents extends Record<string, unknown> {
     durationTicks: number;
   };
   /**
+   * §35b — a relocation ABORTED at execution: the unit's selected move was a
+   * clean no-op because its destination (`to`) was occupied or untraversable by
+   * the time it ran (a stale proposal — an earlier-processed unit took the cell
+   * this tick). The cooldown is NOT consumed; the unit retries next tick, still
+   * at `from`. A first-class event (not a silent skip) so the renderer can react
+   * — inert on today's instant moves (propose == execute atomically), but
+   * load-bearing in §36: once the logical position flips partway through a move,
+   * a mid-flight abort animates as a settle-back, and the renderer must SEE the
+   * abort to reverse the lerp. No consumer yet (the settle-back lands with §36).
+   */
+  'unit:moveAborted': {
+    unitId: number;
+    from: GridCoord;
+    to: GridCoord;
+  };
+  /**
    * E1: `crit` flags whether AttackAction's start-time crit roll landed.
    * `damage` is the resolved post-crit value (already multiplied by
    * `STATS.critMult` when `crit === true`), so subscribers that only

@@ -460,6 +460,45 @@ The abort animation shape (a render design call — settle-back vs snap). Whethe
 claim can be *stolen* by a higher-priority mover (recommend no — first-claim wins,
 deterministic).
 
+### Sub-steps (36a–36d) — the proposed cut
+
+**Decisions still open** (locked when the phase is reached — see *Decision points 36*
+above): the position-flip fraction, whether melee reads the *logical* position, the
+abort-animation shape, the claim-steal policy. The cut below holds whichever way they
+land; the serialized state of 36a + 36b lands as **one** `WorldSnapshot` increment
+(claims + the in-flight deferred-position), reject-stale.
+
+- **36a — the claim registry + the occupied-OR-claimed pathing rule.** Add a `Claim`
+  (an in-flight cell reservation) registry to the World and extend the §35 occupancy
+  abstraction so a cell is blocked-for-pathing if **occupied OR claimed** (the one new
+  predicate; `isFree`/`footprintFits` consult it). Serialized → the `WorldSnapshot`
+  bump. The *mechanism* is testable on the instant model with explicit literal claims,
+  independent of 36b's timing change. *Test:* a manually-claimed cell blocks a second
+  pather's route; releasing it frees the cell; the registry round-trips a snapshot.
+- **36b — the non-instant logical position flip.** `MoveAction` defers `unit.position =
+  to` from `start` to a mid-move tick (the config fraction, default ~50%): before the
+  flip the unit logically occupies `from` and holds the claim on `to`; after, it
+  occupies `to` and releases. Melee/adjacency read the *logical* position (the existing
+  `unit:moved{durationTicks}` lerp already spans the window). The deferred-position
+  in-flight state serialized (the same bump as 36a). Now claims go load-bearing: two
+  units proposing the same vacant cell → one claims, the other re-routes. *Test:* the
+  logical position is `from` before the fraction and `to` after; two units → one
+  claims, the other re-routes (no collision); the claim releases on arrival; a snapshot
+  round-trips a mid-move claim + deferred position.
+- **36c — the smooth abort (§35b goes load-bearing) + the renderer settle-back.** A
+  move whose destination becomes invalid mid-flight aborts via the §35b
+  `unit:moveAborted` path — the claim guarantees *other pathers* never cause it (only
+  dynamic terrain or a non-pathed knockback onto `to` can); the renderer subscribes and
+  animates a settle-back, kept from visually colliding with the melee-hit anim. *Test
+  (headless):* an aborted mid-flight move leaves the unit at `from`, claim released,
+  cooldown intact; *(browser):* the settle-back reads cleanly, no clash with the hit
+  anim.
+- **36d — the fuzz re-baseline under claims.** Re-run the corpus with non-instant moves
+  on; confirm §35d's occupancy invariant still holds across the open claim window;
+  record the win-rate shift (a likely melee/ranged move, carried to §41). *Test:* the
+  invariant holds across the corpus with claims + non-instant moves on; the new
+  baseline is recorded.
+
 ---
 
 ## Phase 37 — Terrain, palettes & new tiles
@@ -516,6 +555,46 @@ state)? The ice cost-floor (confirm "faster" = cost 1 + speed from elsewhere, vs
 relaxing the heuristic). Mud-poison flag default (recommend **on** for the trial —
 easy to flip). The marine/waterwalk `traversal` capability — declare-inert (recommend,
 like the knockback seam) or fully omit.
+
+### Sub-steps (37a–37f) — the proposed cut
+
+**Decisions still open** (see *Decision points 37*): the theme-rename migration scope
+(a `RunSnapshot` touch?), the ice cost-floor, the mud-poison flag default, the
+waterwalk seam (declare-inert vs omit). 37a is a byte-identical seam; 37b–37f fill it.
+Independent of the unit model, so this whole phase floats free of §38.
+
+- **37a — the `TileDef` table (the seam).** Generalize `TileGrid`'s `TILE_COSTS` into a
+  per-`TileKind` `TileDef` table `{cost, passable, evasionMod?, accuracyMod?,
+  statusOnEnter?, statusRemovedOnEnter?}` (keyed by kind, not serialized). Existing
+  kinds get a `TileDef` with today's cost + no mods — byte-identical. No bump. *Test:*
+  every existing tile's cost + passability resolves identically via the table.
+- **37b — the five new tiles (cost + passability + render).** Add `deep_water`
+  (impassable, cost `∞` like chasm), `hills` (high cost + evasion bonus; renders 3–6
+  low-poly hills), `ice` (cost-1 + severe accuracy penalty — mind the A* ≥1 floor,
+  GOTCHAS #34), `sand` (slower + evasion penalty), `mud` (severe mobility + accuracy
+  penalty), each as a `TileDef` (37a) + a palette-conformant mesh. The deep-water
+  `traversal`/waterwalk capability (doubled for a future marine) is a declared-inert
+  seam. *Test:* each tile's cost + passability (deep_water short-circuits pathing like
+  chasm; ice stays ≥1); a new `TileKind` round-trips a `TileGrid` snapshot.
+- **37c — tile combat modifiers (the to-hit fold).** Extend `applyDamage`'s
+  precision-vs-evasion roll to fold the attacker's tile `accuracyMod` + the defender's
+  tile `evasionMod` from the `TileDef` table (generalizing M6's water precision
+  penalty). The combat-touching part → §41. *Test (balance-proof, derived from the
+  `TileDef` table):* the to-hit roll folds tile accuracy + evasion.
+- **37d — tile→status hooks (both directions).** A tile may **apply** a status on enter
+  (mud → poison, behind a config flag) and **remove** one on enter (water + deep_water
+  → remove burn) — generalizing the Cluster-1 fire → burn to add the inverse. (No
+  near-duplicate "mire" tile — trial poison-on-mud via the flag.) *Test:* mud applies
+  poison on enter (flag on); water removes burn on enter.
+- **37e — palettes (themes) + the rename.** Add tundra / desert / swamp; rename
+  `rock → barren` and `default → grassland` (barren, not "mountain" — avoids the Hills
+  collision). Audit whether `theme` is serialized (the possible `RunSnapshot` touch;
+  reject-stale if so). Render + procedural-gen + theme tables + `layouts.json`.
+  Browser-verify the palettes. *Test:* theme tables resolve; the rename migration if
+  `theme` is serialized.
+- **37f — the layout editor.** Paint the new tiles + pick the new palettes + preview
+  the theme coloring (the "dev tools ship with their feature" convention). Browser-
+  verify. *Test (browser):* paint each new tile + preview each theme.
 
 ---
 
@@ -582,6 +661,50 @@ so existing combatants are unchanged; neutrals opt into the few they allow). Whe
 the migration ports archetype-by-archetype (oracle per kind, the Y3/Y4 cadence) or
 all-at-once (recommend per-kind, each a playtest-pausable commit).
 
+### Sub-steps (38a–38e) — the proposed cut (38a GATES the rest)
+
+**Decisions still open** (see *Decision points 38*): the catalog home, one-vs-two
+catalog files, the `statusSusceptibility` default, per-kind vs all-at-once migration —
+**all gated on 38a's audit.** A byte-identical migration (the Y determinism-oracle
+pattern) → **no `WorldSnapshot` bump expected** (the new fields are def-resolved by
+archetype id at spawn). The oracle is the equivalence proof for 38c + 38d.
+
+- **38a — the archetype-literal audit (DESIGN ROUND NEEDED — gates 38b+).** Grep
+  sim/run/render for archetype-*literal* branches (`switch (archetype)`, `=== 'healer'`)
+  vs archetype-*config* lookups (already data: `glyphForArchetype`,
+  `targetingForArchetype`, range/growth, the draft pool). Known literal:
+  `createMovementBehavior`'s healer → `SupportMovementBehavior` special-case. Produce
+  the migration map + the per-kind-vs-all-at-once call. Few literal branches → a clean
+  38b–38e; pervasive → re-scope with the user. *Output:* the literal-branch inventory +
+  the locked migration cadence.
+- **38b — the `UnitDef` catalog scaffold (the strangler's new path).** `config/units.json`
+  + `src/config/units.ts` (zod, mirroring `abilities.ts`/`statuses.ts`): per-kind glyph,
+  base stats, growth, ability ids, targeting, the **movement-behavior selector** (the
+  literal special-case becomes a field), `draftable`, plus the optional blocks —
+  `footprint` (default 1), `layer` (default `ground`), `ignoresTerrain` (default false),
+  `statusSusceptibility` (default: all), a flat-HP block — populated for every existing
+  archetype but **not yet wired** (built beside the old path). A boot-assert validates
+  every referenced id. *Test:* every archetype id resolves in the catalog; each optional
+  field defaults to a behavior-identical value.
+- **38c — relax `Archetype` → a catalog id + route the data-driven lookups through the
+  catalog.** The closed TS union becomes a catalog-validated string id; glyph /
+  targeting / range / growth / the movement-behavior selector resolve from the catalog.
+  The determinism oracle proves byte-identical; per-kind cadence if 38a said so. *Test:*
+  a full multi-kind battle is byte-identical to pre-migration (the oracle).
+- **38d — fold neutrals into the catalog.** Walls + half-cover become `UnitDef` entries;
+  `spawnEnvironment` becomes "spawn a neutral `UnitDef`" (folds the
+  `ZERO_STATS`/`inertDerived` path in); `statusSusceptibility` is consulted by the
+  `applyStatus` op. The team-based neutral filters (Targeting / HUD / `checkBattleEnd`)
+  stay. *Test:* a catalog-spawned wall/half-cover is identical to the old
+  `spawnEnvironment` path; susceptibility filters an `applyStatus` (a wall takes burn,
+  ignores poison).
+- **38e — the editor rework + delete the old path.** The archetype editor's closed-union
+  "create" wire-up panel **disappears**; it now creates/edits `UnitDef` entries as pure
+  data (neutrals included); `units.json` joins `SAVABLE_CONFIG_FILES`. Delete the now-
+  dead closed-union code (the attack editor is untouched — abilities are referenced by
+  id). Browser-verify. *Test (browser):* create a brand-new unit kind via the editor
+  with **no** code edit; it spawns + fights.
+
 ---
 
 ## Phase 39 — Multi-tile footprints (the fill)
@@ -636,6 +759,42 @@ corner for the logic). Whether any §38 archetype goes multi-tile now or footpri
 stay inert until §40's rubble (recommend inert until §40 — keep the fuzz baseline
 stable through §39).
 
+### Sub-steps (39a–39e) — the proposed cut
+
+**Decisions still open** (see *Decision points 39*): the passability rule, the render
+anchor, whether the A* heuristic needs adjusting for wide bodies, and whether any §38
+archetype goes multi-tile now (recommend inert until §40's rubble — keep the fuzz
+baseline stable through §39). No bump expected (footprint def-resolved; `position`
+stays the canonical corner).
+
+- **39a — the footprint geometry fill.** `cellsOccupiedBy(unit)` returns
+  `corner..corner+N` (reading §38's `footprint` field); `footprintFits(cells, plane)`
+  checks all N cells; `distanceBetween(a, b)` becomes footprint-aware (min cell-to-cell
+  Chebyshev; single-tile stays `chebyshev(pos, pos)`). Because §35 already routes the
+  registry, claims, shove, targeting-adjacency, and acting-position through these,
+  there's **no scattered retrofit.** *Test:* `cellsOccupiedBy` returns the N×N block
+  from the corner; `footprintFits` rejects a block overlapping a unit/wall/edge;
+  `distanceBetween` is footprint-aware (a 2×2 + an adjacent unit at distance 1).
+- **39b — footprint-passability pathfinding.** A multi-tile unit's step validates the
+  *whole* destination footprint is free (a wider body needs wider corridors); A* moves
+  the canonical corner, passability checks the block; confirm Chebyshev-on-corner stays
+  admissible. *Test:* a 2×2 paths through a 2-wide gap, not a 1-wide.
+- **39c — the spawn anchoring policy.** `anchorFootprint(spawnTile, size, policy, grid,
+  occupancy) → cells | null`; ship `corner` (in-bounds-biased — the spawn tile is *a*
+  corner, pick the diagonal keeping the block on-grid, so an edge tile still fits); a
+  null fit → the caller tries the next candidate tile (reuses the overflow scan's "walk
+  candidates, skip if it doesn't fit" loop — **not** a new spawn class).
+  `random-intersect` deferred to camps. *Test:* corner anchoring keeps an edge-tile
+  spawn on-grid; the fit-check skips a too-tight tile.
+- **39d — multi-tile rendering.** Scale the glyph quad to the footprint (the
+  SpriteRenderer per-instance `size` attr, E6.B); the sprite anchor reads the footprint
+  center, the logic stays on the corner. Browser-verify. *Test (browser):* a 2×2 unit
+  renders at footprint scale, centered.
+- **39e — the layout editor (multi-tile validation + placement).** Multi-tile
+  spawn-room validation (does an N×N spawn fit?) + placing multi-tile entities. *Test:*
+  spawn-room fit validation rejects a too-small room; a multi-tile entity places + reads
+  back.
+
 ---
 
 ## Phase 40 — Destructible terrain
@@ -684,6 +843,37 @@ future fill). Wall/cover destructibility default (recommend **off** — today's
 indestructible 1-HP, opt-in per layout). Whether rubble blocks LOS (recommend yes by
 default, a per-def `blocksLineOfSight` like walls; low rubble could set false).
 
+### Sub-steps (40a–40d) — the proposed cut
+
+**Decisions still open** (see *Decision points 40*): the auto-target priority rule,
+all-at-once vs incremental collapse (recommend all-at-once), the wall-destructibility
+default (recommend off), whether rubble blocks LOS. No `WorldSnapshot` bump expected
+(HP already serialized; the layout schema gains destructible HP fields as config). This
+phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
+
+- **40a — the rubble `UnitDef`(s) + glyph (the first real multi-tile entity).** A
+  neutral `UnitDef`: no abilities, a flat HP pool, a footprint (1..3), a glyph (`▓` —
+  needs a `glyphs.ts` entry + the §30-resized atlas budget; FontAtlas.test guards).
+  Burnable/freezable but **not** poisonable (`statusSusceptibility`, §38). Proves the
+  §39 fill end-to-end; the 0-HP reap → `unit:died{neutral}` lifecycle already works
+  (BattleRenderer fades, audio skips). *Test:* rubble spawns + occupies its whole
+  footprint until destroyed; AoE + DoT apply per susceptibility (burn yes, poison no);
+  a 0-HP rubble reaps + fires `unit:died{neutral}`. Browser-verify the glyph + crumble.
+- **40b — the targeting-neutrals auto-target hook (the one new mechanic).** Add an
+  opt-in, lower-priority path: rubble is **auto-targeted below all reachable hostiles**
+  (a unit with no reachable hostile, or an explicit order, may chip a blocking
+  destructible — the "deny access until destroyed" loop). Walls + half-cover are **not**
+  auto-targeted (manual/AoE only; AoE already hits neutral cells for free). *Test:*
+  auto-targeting picks a reachable hostile over a destructible; a destructible only when
+  no hostile is reachable; walls/cover are never auto-targeted.
+- **40c — optional wall/cover destructibility.** A per-instance HP in the layout schema
+  (default = today's indestructible 1-HP; a higher value = destructible) — the lifecycle
+  already runs end-to-end. *Test:* a destructible wall falls to focused fire; the
+  default stays indestructible.
+- **40d — the layout editor.** Paint rubble (size + HP) + toggle wall/cover
+  destructibility. Browser-verify. *Test (browser):* paint rubble + toggle
+  destructibility; both read back.
+
 ---
 
 ## Phase 41 — The closing balance pass
@@ -704,6 +894,27 @@ metric, gradient over win-rate, isolation + in-situ).
 magnitudes, rubble HP/placement) vs. left it; whether §36's non-instant timing
 materially shifted melee-vs-ranged (the likely spot); the uniform-vs-curve terrain-
 density question (a content call deferred from earlier — decide on the data).
+
+### Sub-steps (41a–41c) — the proposed cut
+
+**READ BALANCE.md first.** Content/config only, no bump. The §X harness
+(`--per-encounter` / `--encounter` / `--seed-offset`) already exists — this is the
+sweep + verify, scoped to what actually moved (not a full re-derivation).
+
+- **41a — the re-measure (re-baseline the win-rate).** Re-run the fuzz win-rate across
+  every shift (§35 proactive checks/shove, §36 timing, §37 terrain, §39 footprints, §40
+  destructibles); diagnose what actually moved via the per-encounter / per-hop harness +
+  the pool-damage metric. *Output:* the new baseline + the gradient + a flagged list of
+  dials that moved balance.
+- **41b — the adjustments (scoped to 41a).** Turn only the dials 41a flagged — tile
+  cost/mod magnitudes, rubble HP/placement, any §36 non-instant melee-vs-ranged
+  correction — per the BALANCE.md loop (isolation + in-situ, gradient over win-rate).
+  Confirm the new tiles/destructibles don't break the §33 caster-summoner equilibrium.
+  *Test (balance-proof, derived from config):* the re-tuned dials hold the band.
+- **41c — the hold-out verify + the deferred content call.** Out-of-sample verify
+  (`--seed-offset`) that the re-tune generalizes; decide the uniform-vs-curve
+  terrain-density question on the data. *Output:* the out-of-sample confirmation + the
+  terrain-density call.
 
 ---
 

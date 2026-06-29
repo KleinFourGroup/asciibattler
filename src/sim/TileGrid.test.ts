@@ -5,7 +5,8 @@ describe('TileDef table (§37a — the seam)', () => {
   // The byte-identical guarantee: the generalized table must reproduce the
   // exact pre-37a costs. Listed literally (NOT read from the table under test)
   // so a typo in TILE_DEFS is caught rather than tautologically passed.
-  const EXISTING_COSTS: Record<TileKind, number> = {
+  type ExistingKind = 'floor' | 'shallow_water' | 'chasm' | 'fire' | 'healing';
+  const EXISTING_COSTS: Record<ExistingKind, number> = {
     floor: 1,
     shallow_water: 2,
     chasm: Infinity,
@@ -14,7 +15,7 @@ describe('TileDef table (§37a — the seam)', () => {
   };
 
   it('resolves every existing kind to its pre-37a cost', () => {
-    for (const kind of Object.keys(EXISTING_COSTS) as TileKind[]) {
+    for (const kind of Object.keys(EXISTING_COSTS) as ExistingKind[]) {
       expect(tileDef(kind).cost).toBe(EXISTING_COSTS[kind]);
       expect(TILE_DEFS[kind].cost).toBe(EXISTING_COSTS[kind]);
     }
@@ -27,7 +28,7 @@ describe('TileDef table (§37a — the seam)', () => {
   });
 
   it('carries no combat mods or status hooks on the existing kinds (byte-identical)', () => {
-    for (const kind of Object.keys(EXISTING_COSTS) as TileKind[]) {
+    for (const kind of Object.keys(EXISTING_COSTS) as ExistingKind[]) {
       const def = TILE_DEFS[kind];
       expect(def.evasionMod).toBeUndefined();
       expect(def.accuracyMod).toBeUndefined();
@@ -42,6 +43,62 @@ describe('TileDef table (§37a — the seam)', () => {
     expect(g.defAt({ x: 0, y: 0 })).toBe(TILE_DEFS.floor);
     expect(g.defAt({ x: 1, y: 0 })).toBe(TILE_DEFS.chasm);
     expect(() => g.defAt({ x: -1, y: 0 })).toThrow();
+  });
+
+  it('every finite-cost tile stays >= 1 (the admissible A* floor — GOTCHAS #34)', () => {
+    for (const kind of Object.keys(TILE_DEFS) as TileKind[]) {
+      const { cost } = TILE_DEFS[kind];
+      if (isFinite(cost)) expect(cost).toBeGreaterThanOrEqual(1);
+    }
+  });
+});
+
+describe('§37b — the new terrain tiles', () => {
+  it('deep_water is impassable like chasm (cost ∞, not passable)', () => {
+    expect(TILE_DEFS.deep_water.cost).toBe(Infinity);
+    expect(TILE_DEFS.deep_water.passable).toBe(false);
+    const g = new TileGrid(2, 2);
+    g.setKind({ x: 0, y: 0 }, 'deep_water');
+    expect(g.kindAt({ x: 0, y: 0 })).toBe('deep_water');
+    expect(g.costAt({ x: 0, y: 0 })).toBe(Infinity); // pathfinding short-circuits
+  });
+
+  it('ice sits at the cost-1 floor ("faster" = floor cost, never < 1)', () => {
+    expect(TILE_DEFS.ice.cost).toBe(TILE_DEFS.floor.cost);
+    expect(TILE_DEFS.ice.passable).toBe(true);
+  });
+
+  it('hills / sand / mud are slower than floor (high move cost)', () => {
+    expect(TILE_DEFS.hills.cost).toBeGreaterThan(TILE_DEFS.floor.cost);
+    expect(TILE_DEFS.sand.cost).toBeGreaterThan(TILE_DEFS.floor.cost);
+    expect(TILE_DEFS.mud.cost).toBeGreaterThan(TILE_DEFS.floor.cost);
+    // mud is the most severe passable mobility penalty (deep_water on foot).
+    expect(TILE_DEFS.mud.cost).toBeGreaterThanOrEqual(TILE_DEFS.sand.cost);
+    expect(TILE_DEFS.mud.cost).toBeGreaterThanOrEqual(TILE_DEFS.hills.cost);
+  });
+
+  it('the new passable tiles are all enterable', () => {
+    for (const kind of ['hills', 'ice', 'sand', 'mud'] as TileKind[]) {
+      expect(TILE_DEFS[kind].passable).toBe(true);
+      expect(isFinite(TILE_DEFS[kind].cost)).toBe(true);
+    }
+  });
+
+  it('round-trips the new kinds through toJSON / fromJSON', () => {
+    const g = new TileGrid(3, 2);
+    g.setKind({ x: 0, y: 0 }, 'deep_water');
+    g.setKind({ x: 1, y: 0 }, 'hills');
+    g.setKind({ x: 2, y: 0 }, 'ice');
+    g.setKind({ x: 0, y: 1 }, 'sand');
+    g.setKind({ x: 1, y: 1 }, 'mud');
+    const r = TileGrid.fromJSON(g.toJSON());
+    expect(r.kindAt({ x: 0, y: 0 })).toBe('deep_water');
+    expect(r.kindAt({ x: 1, y: 0 })).toBe('hills');
+    expect(r.kindAt({ x: 2, y: 0 })).toBe('ice');
+    expect(r.kindAt({ x: 0, y: 1 })).toBe('sand');
+    expect(r.kindAt({ x: 1, y: 1 })).toBe('mud');
+    expect(r.costAt({ x: 0, y: 0 })).toBe(Infinity);
+    expect(r.costAt({ x: 2, y: 0 })).toBe(1); // ice at the floor
   });
 });
 

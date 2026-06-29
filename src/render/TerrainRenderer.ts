@@ -50,6 +50,17 @@ const WATER_TOP_Y = -0.4;
 const CHASM_TOP_Y = -1.2;
 const FLOOR_RANGE_LO = -0.3;
 const FLOOR_RANGE_HI = 0.0;
+/** §37b — deep water sits below shallow water's recess (−0.4) but above the
+ *  chasm void (−1.2): "too deep to wade" without reading as a bottomless pit. */
+const DEEP_WATER_TOP_Y = -0.8;
+/** §37b — mud is a shallow depression just under the floor band — a bogged-down
+ *  read. Fixed (not noise-varied) so a mud flat looks uniformly waterlogged. */
+const MUD_TOP_Y = -0.25;
+/** §37b — hills rise above the floor band. The same simplex field drives the
+ *  rise, so adjacent hill tiles undulate into a ridge instead of a flat
+ *  plateau; HILL_BASE_Y is the trough, HILL_BASE_Y+HILL_AMP the crest. */
+const HILL_BASE_Y = 0.2;
+const HILL_AMP = 0.4;
 const NOISE_FREQ = 0.42;
 /** Fixed seed: the visual character is canonical, not a per-battle roll. */
 const NOISE_SEED = 0xb1c1a1b;
@@ -173,12 +184,16 @@ export class TerrainRenderer {
    */
   heightAt(cx: number, cy: number, kind: TileKind): number {
     if (kind === 'shallow_water') return WATER_TOP_Y;
+    if (kind === 'deep_water') return DEEP_WATER_TOP_Y; // §37b
     if (kind === 'chasm') return CHASM_TOP_Y;
+    if (kind === 'mud') return MUD_TOP_Y; // §37b — fixed sunken plane
     // D7.C: fire + healing live on the same noise field as floor — they're
-    // surface effects, not elevation changes. Sprites standing on a fire
-    // tile still want a tile top to plant on.
+    // surface effects, not elevation changes. §37b: ice + sand are flat-ground
+    // variants, so they share the floor band too; only `hills` rides a raised
+    // band. Sprites standing on any of these still want a tile top to plant on.
     const n = this.noise2D(cx * NOISE_FREQ, cy * NOISE_FREQ); // [-1, 1]
     const t = (n + 1) * 0.5;
+    if (kind === 'hills') return HILL_BASE_Y + HILL_AMP * t; // §37b
     return FLOOR_RANGE_LO + (FLOOR_RANGE_HI - FLOOR_RANGE_LO) * t;
   }
 
@@ -391,6 +406,24 @@ const _fireHigh = new THREE.Color('#ffaa00');
  *  sprite bloom shader. */
 const _healLow = new THREE.Color('#0d4d4a');
 const _healHigh = new THREE.Color('#15f4ee');
+/** §37b — deep water: a darker, colder navy than shallow water (`#1F5B7A`).
+ *  The deeper recess (DEEP_WATER_TOP_Y) carries the "impassable, don't wade"
+ *  read; the color just confirms it (flat, like shallow water + chasm). */
+const _deepWaterColor = new THREE.Color('#0e3047');
+/** §37b — mud: flat wet brown. The slight sink (MUD_TOP_Y) + dark earth read
+ *  as a bog. Fixed-height tile, so every mud cell shares this one color. */
+const _mudColor = new THREE.Color('#46361f');
+/** §37b — hills: grassy ridge lerped lighter toward the crest (by hill height,
+ *  not the floor band) so a cluster reads as lit, rolling high ground. */
+const _hillLow = new THREE.Color('#3f5a2c');
+const _hillHigh = new THREE.Color('#7a9a48');
+/** §37b — ice: pale blue-white, slick + cold; flat (floor band). Bright, but
+ *  terrain renders on layer 0 only (no sprite bloom), like the healing cyan. */
+const _iceLow = new THREE.Color('#9fd0e0');
+const _iceHigh = new THREE.Color('#d8f2f8');
+/** §37b — sand: warm tan dune; flat (floor band). */
+const _sandLow = new THREE.Color('#b09a5e');
+const _sandHigh = new THREE.Color('#d8c488');
 
 /**
  * Top-face color. Water gets a flat blue (the recess reads through depth,
@@ -409,8 +442,23 @@ export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THR
     out.copy(_waterColor);
     return;
   }
+  if (kind === 'deep_water') {
+    out.copy(_deepWaterColor); // §37b — flat, depth does the read
+    return;
+  }
   if (kind === 'chasm') {
     out.copy(_chasmColor);
+    return;
+  }
+  if (kind === 'mud') {
+    out.copy(_mudColor); // §37b — flat (fixed-height tile)
+    return;
+  }
+  if (kind === 'hills') {
+    // §37b — lerp by the hill's own height band (the floor-band `t` below
+    // would clamp to 1 for every raised hill tile, flattening the variance).
+    const ht = Math.max(0, Math.min(1, (topY - HILL_BASE_Y) / HILL_AMP));
+    out.copy(_hillLow).lerp(_hillHigh, ht);
     return;
   }
   const t = Math.max(0, Math.min(1, (topY - FLOOR_RANGE_LO) / (FLOOR_RANGE_HI - FLOOR_RANGE_LO)));
@@ -420,6 +468,14 @@ export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THR
   }
   if (kind === 'healing') {
     out.copy(_healLow).lerp(_healHigh, t);
+    return;
+  }
+  if (kind === 'ice') {
+    out.copy(_iceLow).lerp(_iceHigh, t); // §37b
+    return;
+  }
+  if (kind === 'sand') {
+    out.copy(_sandLow).lerp(_sandHigh, t); // §37b
     return;
   }
   const palette = FLOOR_PALETTE[theme];

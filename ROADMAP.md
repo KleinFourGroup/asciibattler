@@ -621,14 +621,20 @@ Independent of the unit model, so this whole phase floats free of §38.
   fuzz:smoke green, no fuzz shift; typecheck clean). No bump. *Test:* every existing
   tile's cost + passability resolves identically via the table (`TileGrid.test.ts`
   "TileDef table" block).
-- **37b — the five new tiles (cost + passability + render).** Add `deep_water`
-  (impassable, cost `∞` like chasm), `hills` (high cost + evasion bonus; renders 3–6
-  low-poly hills), `ice` (cost-1 + severe accuracy penalty — mind the A* ≥1 floor,
-  GOTCHAS #34), `sand` (slower + evasion penalty), `mud` (severe mobility + accuracy
-  penalty), each as a `TileDef` (37a) + a palette-conformant mesh. The deep-water
-  `traversal`/waterwalk capability (doubled for a future marine) is a declared-inert
-  seam. *Test:* each tile's cost + passability (deep_water short-circuits pathing like
-  chasm; ice stays ≥1); a new `TileKind` round-trips a `TileGrid` snapshot.
+- **✅ 37b — the five new tiles (cost + passability + render).** Added `deep_water`
+  (impassable, cost `∞` like chasm), `hills` (cost 3 + raised undulating ridge mesh),
+  `ice` (cost-1 floor — GOTCHAS #34 — + pale slick mesh), `sand` (cost 2 + tan flat),
+  `mud` (cost 4, the worst passable mobility + sunken bog mesh), each a `TileDef` (37a)
+  entry + a `TerrainRenderer` `heightAt`/`topColorFor` branch (distinct height + fixed
+  identity color, theme-independent like water/chasm — combat mods are 37c, status
+  hooks 37d). Costs are STARTING values (§41 tunes); only the relative ordering + the
+  ≥1 A* floor are load-bearing. Waterwalk = NOT YET a field (declared-inert deferred to
+  a real consumer). Verified: 1469 main + 212 fuzz:smoke green, typecheck + lint clean;
+  **browser readback** confirms each kind's mesh branch fires with distinct
+  height + color (deep_water −0.8, hills +0.29, mud −0.25, ice/sand flat). *Test:* each
+  tile's cost + passability (`TileGrid.test.ts` §37b block; deep_water short-circuits
+  pathing like chasm in `Pathfinding.test.ts`; ice stays ≥1); the new kinds round-trip a
+  `TileGrid` snapshot.
 - **37c — tile combat modifiers (the to-hit fold).** Extend `applyDamage`'s
   precision-vs-evasion roll to fold the attacker's tile `accuracyMod` + the defender's
   tile `evasionMod` from the `TileDef` table (generalizing M6's water precision

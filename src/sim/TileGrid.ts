@@ -21,7 +21,19 @@
 import { GRID_SIZE } from '../config';
 import type { GridCoord } from '../core/types';
 
-export type TileKind = 'floor' | 'shallow_water' | 'chasm' | 'fire' | 'healing';
+export type TileKind =
+  | 'floor'
+  | 'shallow_water'
+  | 'chasm'
+  | 'fire'
+  | 'healing'
+  // §37b — terrain-depth tiles. Cost + passability here; the combat to-hit
+  // mods land in 37c (`evasionMod`/`accuracyMod`), the status hooks in 37d.
+  | 'deep_water'
+  | 'hills'
+  | 'ice'
+  | 'sand'
+  | 'mud';
 
 /**
  * §37a — the per-`TileKind` surface-property table, generalizing the old flat
@@ -101,6 +113,22 @@ export const TILE_DEFS: Record<TileKind, TileDef> = {
   chasm: { cost: Infinity, passable: false },
   fire: { cost: 1, passable: true },
   healing: { cost: 1, passable: true },
+  // §37b — the new terrain. Costs are STARTING values (§41 tunes them); only
+  // the relative ordering + the floor invariant are load-bearing here:
+  //   - deep_water — impassable like chasm (cost ∞); the future marine/waterwalk
+  //     traversal that crosses it is a declared-inert seam (no field yet).
+  //   - hills — slow (climb); pairs with an evasion BONUS in 37c.
+  //   - ice — the cost-1 floor ("faster" = floor cost, never < 1, GOTCHAS #34 —
+  //     keeps the Chebyshev A* heuristic admissible); pairs with a severe
+  //     accuracy penalty in 37c.
+  //   - sand — slow; pairs with an evasion PENALTY in 37c.
+  //   - mud — the most severe mobility penalty (deep_water's on-foot effect);
+  //     pairs with an accuracy penalty (37c) + mud→poison on enter (37d).
+  deep_water: { cost: Infinity, passable: false },
+  hills: { cost: 3, passable: true },
+  ice: { cost: 1, passable: true },
+  sand: { cost: 2, passable: true },
+  mud: { cost: 4, passable: true },
 };
 
 /** The `TileDef` governing a kind. Keyed lookup — total over `TileKind`. */

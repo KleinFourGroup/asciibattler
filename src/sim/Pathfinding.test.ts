@@ -167,6 +167,21 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     // The path must detour off y=5 at least once (straight line is chasm-walled).
     expect(path.some((c) => c.y !== 5)).toBe(true);
   });
+
+  it('§37b: deep_water tiles block paths and route around (like chasm)', () => {
+    // Same end-to-end glue check as chasm — deep_water is the §37b impassable
+    // (cost ∞), so a straight line through it must detour.
+    const grid = new TileGrid(G, G);
+    for (let y = 3; y <= 7; y++) grid.setKind({ x: 5, y }, 'deep_water');
+    const costAt: CostFn = (c) => grid.costAt(c);
+
+    const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, [], G, G, costAt);
+    expect(path.length).toBeGreaterThan(0);
+    for (const c of path) {
+      expect(grid.kindAt(c)).not.toBe('deep_water');
+    }
+    expect(path.some((c) => c.y !== 5)).toBe(true);
+  });
 });
 
 describe('Pathfinding / findPath best-effort (J3)', () => {

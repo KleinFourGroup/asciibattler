@@ -21,6 +21,7 @@ import { RNG } from '../../src/core/RNG';
 import { secondsToTicks } from '../../src/config';
 import { HEALTH } from '../../src/config/health';
 import { World } from '../../src/sim/World';
+import { findOverlappingCells } from '../../src/sim/occupancy';
 import type { GameEvents } from '../../src/core/events';
 import type { Team } from '../../src/sim/Unit';
 import type { Archetype } from '../../src/sim/archetypes';
@@ -184,6 +185,17 @@ export interface HarnessOptions {
    * gate reads as zero availability and the bot no-ops).
    */
   readonly daemon?: DaemonSelection;
+  /**
+   * §35d — assert the occupancy invariant (no two units share a cell, per plane)
+   * after every battle tick, across the whole run. OFF by default so the
+   * `--search` / sweep hot-path pays nothing (the per-tick scan is test-only,
+   * like `telemetry`); the dedicated `occupancyInvariant.test.ts` flips it ON
+   * across a seed corpus. A violation throws immediately with the seed + tick +
+   * offending cell(s) — the corpus-wide generalization of the Qb#3 same-cell
+   * fixture. Byte-identical to a flag-off run (pure observation — no enqueue, no
+   * RNG draw), so the existing baselines are untouched.
+   */
+  readonly assertOccupancy?: boolean;
 }
 
 // The per-turn tick cap — the SINGLE source is `config/health.json`'s
@@ -214,6 +226,8 @@ export function runOne(
   const maxTicksPerBattle =
     options.maxTicksPerBattle ?? (coverageActive ? COVERAGE_MAX_TICKS : DEFAULT_MAX_TICKS);
   const maxNodeHops = options.maxNodeHops ?? DEFAULT_MAX_HOPS;
+  // §35d — opt-in per-tick occupancy assertion (off by default; test-only).
+  const assertOccupancy = options.assertOccupancy === true;
   const strategyRng = new RNG(options.strategySeed ?? seed);
   // J4 — the objective bot is inert unless an active proclivity is supplied; a
   // `none`/absent objective forks no RNG + enqueues nothing (byte-identical).
@@ -459,6 +473,19 @@ export function runOne(
           }
           w.tick();
           battleTicks++;
+          // §35d — assert the one-unit-per-cell-per-plane invariant after every
+          // tick (opt-in). Throws on the first breach with the seed + tick +
+          // cell, so the corpus run pinpoints any regression instead of silently
+          // tolerating an overlap.
+          if (assertOccupancy) {
+            const overlaps = findOverlappingCells(w);
+            if (overlaps.length > 0) {
+              throw new Error(
+                `§35 occupancy invariant violated (seed ${seed}, tick ${w.currentTick}): ` +
+                  `cell(s) ${overlaps.join(', ')} hold >1 unit`,
+              );
+            }
+          }
         }
         totalTicks += battleTicks;
         if (!w.ended) {

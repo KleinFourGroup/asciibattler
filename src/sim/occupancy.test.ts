@@ -10,6 +10,7 @@ import {
   cellKey,
   cellsOccupiedBy,
   distanceBetween,
+  findOverlappingCells,
   footprintFits,
   isFree,
   occupiedCells,
@@ -143,5 +144,22 @@ describe('footprintFits — the occupancy half of the fit check', () => {
     spawnAt(world, 'player', { x: 4, y: 4 });
     expect(footprintFits(world, [{ x: 4, y: 4 }])).toBe(isFree(world, { x: 4, y: 4 }));
     expect(footprintFits(world, [{ x: 7, y: 7 }])).toBe(isFree(world, { x: 7, y: 7 }));
+  });
+});
+
+describe('findOverlappingCells — the §35d invariant detector', () => {
+  it('is empty when every unit has its own cell', () => {
+    const world = setup();
+    spawnAt(world, 'player', { x: 2, y: 2 });
+    spawnAt(world, 'enemy', { x: 5, y: 5 });
+    wallAt(world, { x: 3, y: 3 });
+    expect(findOverlappingCells(world)).toEqual([]);
+  });
+
+  it('flags a cell two units share (combatant or neutral, any team)', () => {
+    const world = setup();
+    spawnAt(world, 'player', { x: 3, y: 3 });
+    spawnAt(world, 'enemy', { x: 3, y: 3 }); // forced co-location
+    expect(findOverlappingCells(world)).toEqual(['3,3']);
   });
 });

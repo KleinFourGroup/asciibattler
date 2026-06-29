@@ -127,3 +127,27 @@ export function footprintFits(
 export function distanceBetween(a: GridCoord, b: GridCoord): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
+
+/**
+ * §35d — the occupancy INVARIANT detector: the cell keys held by MORE THAN ONE
+ * unit on `plane` — a breach of the one-unit-per-cell-per-plane invariant §35
+ * hardens. Empty ⇒ the invariant holds. Footprint- and plane-aware via
+ * `cellsOccupiedBy`/`planeOf` (one cell / one plane today; the §39 N×N block for
+ * free). The fuzz harness runs this every tick under an opt-in flag — the
+ * corpus-wide generalization of the Qb#3 same-cell fixture. Counts ALL units
+ * (combatants AND neutral walls): the invariant is "the grid never double-books
+ * a cell," whoever the occupant.
+ */
+export function findOverlappingCells(world: World, plane: OccupancyPlane = GROUND): string[] {
+  const counts = new Map<string, number>();
+  for (const u of world.units) {
+    if (planeOf(u) !== plane) continue;
+    for (const c of cellsOccupiedBy(u)) {
+      const k = cellKey(c);
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    }
+  }
+  const out: string[] = [];
+  for (const [k, n] of counts) if (n > 1) out.push(k);
+  return out;
+}

@@ -313,6 +313,13 @@ model) — placed at #3 for the de-risking ramp.
 
 ## Phase 35 — Harden the occupancy core (the abstraction + seams + shove + fuzz)
 
+> **✅ COMPLETE (35a–35d), 2026-06-28.** `src/sim/occupancy.ts` is the chokepoint;
+> 35b the proactive check + abort (`unit:moveAborted`); 35c `World.shove`
+> (`unit:shoved`, the future-knockback primitive); 35d the opt-in
+> `HarnessOptions.assertOccupancy` fuzz invariant (holds across the corpus). All
+> byte-identical / inert on the instant model — no snapshot bump, fuzz baseline
+> unchanged. As-built: git + HANDOFF.
+
 The dependency root (the Y of this round). Build the single occupancy abstraction
 every spatial query routes through, plant the **footprint** (single-cell) and
 **plane** (ground-only) seams, and pay down the same-tile-overlap debt from several

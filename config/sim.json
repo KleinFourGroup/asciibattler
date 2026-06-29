@@ -4,5 +4,6 @@
   "occupiedCellPenalty": 4,
   "healerPanicRangeCells": 1,
   "healerFollowGapCells": 1,
-  "actingCellSearchSlack": 2
+  "actingCellSearchSlack": 2,
+  "shoveSearchRadiusCells": 3
 }

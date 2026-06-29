@@ -143,6 +143,23 @@ export interface GameEvents extends Record<string, unknown> {
     to: GridCoord;
   };
   /**
+   * §35c — a unit was SHOVED off a cell it co-occupied: the occupancy backstop
+   * relocated it from `from` to the nearest free cell `to` (deterministically),
+   * lerped over `durationTicks`. Distinct from `unit:moved` because a shove is
+   * FORCED, not chosen — it's the de-overlap safety net for a knockback / summon
+   * / spawn landing on an occupied cell, and the primitive a future directional
+   * `knockback` op wraps. First-classed (like swap / dash / moveAborted) so that
+   * future cue / VFX / telemetry has a clean hook; no consumer yet (co-location
+   * doesn't arise on today's instant model — the renderer lerps the slide via
+   * its normal `to`/`durationTicks` path once a breach source exists).
+   */
+  'unit:shoved': {
+    unitId: number;
+    from: GridCoord;
+    to: GridCoord;
+    durationTicks: number;
+  };
+  /**
    * E1: `crit` flags whether AttackAction's start-time crit roll landed.
    * `damage` is the resolved post-crit value (already multiplied by
    * `STATS.critMult` when `crit === true`), so subscribers that only

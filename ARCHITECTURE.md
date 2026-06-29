@@ -416,6 +416,7 @@ unit:spawned            { unitId: number; instant: boolean }                    
 unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }
 unit:dashed             { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }   # N1: a dash LEAP (also emits unit:moved for the slide) — audio/VFX cue, fires even on a 1-cell dash
 unit:moveAborted        { unitId: number; from: GridCoord; to: GridCoord }            # §35b: a relocation aborted at execution (dest occupied/untraversable) — clean no-op, cooldown not consumed; inert on instant moves, §36's settle-back hook
+unit:shoved             { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }   # §35c: the de-overlap backstop relocated a co-located unit to the nearest free cell (also emits unit:moved for the slide); the future-knockback primitive
 unit:attacked           { attackerId: number; targetId: number; damage: number; crit: boolean }   # E1: damage post-crit; GP2: post-defense (via world.applyDamage)
 unit:missed             { attackerId: number; targetId: number }                   # I2: a single-target strike dodged (precision-vs-evasion roll); 0 dmg, no HP/ledger touch
 unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (hypothetical env heal); 27d: the healing-TILE chip moved to the rejuvenate status

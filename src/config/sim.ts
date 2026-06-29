@@ -47,6 +47,13 @@
  *     or take a one-cell sidestep. A distance, not a timing — passed through
  *     verbatim like `occupiedCellPenalty`. 0 = only cells already in range
  *     qualify; higher → searches wider (more work) for a standoff cell.
+ *   shoveSearchRadiusCells — §35c: the BFS depth the de-overlap SHOVE searches
+ *     for the nearest free cell when relocating a co-located unit (the
+ *     occupancy backstop / the future-knockback primitive). Co-location is
+ *     local — a free cell is almost always adjacent — so a small radius keeps
+ *     the shove minimal-disruption + bounded; if nothing is free within it the
+ *     shove no-ops (returns false) rather than teleporting across the board. A
+ *     distance, not a timing — passed through verbatim.
  */
 
 import { z } from 'zod';
@@ -60,6 +67,7 @@ const SimSchema = z.object({
   healerPanicRangeCells: z.number().int().nonnegative(),
   healerFollowGapCells: z.number().int().nonnegative(),
   actingCellSearchSlack: z.number().int().nonnegative(),
+  shoveSearchRadiusCells: z.number().int().positive(),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -71,4 +79,5 @@ export const SIM = {
   healerPanicRangeCells: parsed.healerPanicRangeCells,
   healerFollowGapCells: parsed.healerFollowGapCells,
   actingCellSearchSlack: parsed.actingCellSearchSlack,
+  shoveSearchRadiusCells: parsed.shoveSearchRadiusCells,
 };

@@ -44,6 +44,8 @@ import { createBehavior, createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
 import { updateTarget } from './Targeting';
 import { unitAt } from './occupancy';
+import { nearestFreeCells } from './actingPosition';
+import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { SpawnAction } from './actions/SpawnAction';
@@ -1275,6 +1277,31 @@ export class World {
     if (!isFinite(this.tileGrid.costAt(dest))) return true;
     const occupant = unitAt(this, dest);
     return occupant !== undefined && occupant.id !== unit.id;
+  }
+
+  /**
+   * §35c — the occupancy backstop: relocate `unit` off its current cell to the
+   * nearest free cell (deterministic — the §29 `nearestFreeCells` BFS over the
+   * §35a occupancy chokepoint), reusing the `unit:moved` lerp for the visual
+   * slide (like a dash) plus a distinct `unit:shoved` signal. The de-overlap
+   * safety net for any path that lands a unit on an occupied cell (a future
+   * knockback / a summon or spawn breach / an invariant violation), and the
+   * primitive a directional `knockback` op wraps (a knockback = a directional
+   * shove). Returns false (a no-op) when no free cell is within
+   * `SIM.shoveSearchRadiusCells` — an absurdly packed board — rather than
+   * teleporting the unit across the map. Inert today (nothing co-locates on the
+   * instant model), built + tested so a breach source (or §40's knockback)
+   * inherits a proven primitive.
+   */
+  shove(unit: Unit): boolean {
+    const [dest] = nearestFreeCells(unit.position, 1, SIM.shoveSearchRadiusCells, this);
+    if (dest === undefined) return false;
+    const from = unit.position;
+    const durationTicks = unit.derived.moveCooldownTicks;
+    unit.position = dest;
+    this.bus.emit('unit:moved', { unitId: unit.id, from, to: dest, durationTicks });
+    this.bus.emit('unit:shoved', { unitId: unit.id, from, to: dest, durationTicks });
+    return true;
   }
 
   private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {

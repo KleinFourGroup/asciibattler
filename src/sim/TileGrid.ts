@@ -24,28 +24,89 @@ import type { GridCoord } from '../core/types';
 export type TileKind = 'floor' | 'shallow_water' | 'chasm' | 'fire' | 'healing';
 
 /**
- * Movement cost to ENTER a tile of this kind. Pathfinding weights
- * neighbour edges by the destination cell's cost. Chebyshev (the A*
- * heuristic) is a lower bound on min-cost path length only when every
- * cost is >= 1 — don't add free tiles or the heuristic stops being
- * admissible.
+ * §37a — the per-`TileKind` surface-property table, generalizing the old flat
+ * `TILE_COSTS` map. ONE keyed table that every tile mechanic reads:
+ *   - movement **cost** + **passability** (pathfinding) — today's behaviour;
+ *   - combat to-hit **mods** (§37c folds `accuracyMod`/`evasionMod` into
+ *     `applyDamage`'s precision-vs-evasion roll, generalizing M6's wading
+ *     penalty);
+ *   - tile→status **hooks on enter** (§37d — mud→poison / water→remove burn).
  *
- * D7.A: `chasm` is `Infinity` — pathfinding short-circuits via the
- * `!isFinite(stepCost)` guard in `Pathfinding.findPath`. LOS is a
- * unit-blocker check (see `LineOfSight.ts`), so chasm is automatically
- * LOS-transparent — tiles never enter the LOS pipeline.
- *
- * D7.B: `fire` and `healing` are surface effects, not obstacles —
- * normal floor cost (1). Per-tick chip damage / heal is applied by
- * `World.tick`'s tile-effect pass, not by pathfinding.
+ * Keyed by kind, **never serialized** (the grid serializes only the `TileKind`
+ * string, see `TileGridSnapshot`), so adding a kind or tuning a mod never bumps
+ * a snapshot.
  */
-const TILE_COSTS: Record<TileKind, number> = {
-  floor: 1,
-  shallow_water: 2,
-  chasm: Infinity,
-  fire: 1,
-  healing: 1,
+export interface TileDef {
+  /**
+   * Movement cost to ENTER. Pathfinding weights neighbour edges by the
+   * destination cell's cost; `Infinity` is the data-driven block (the
+   * `!isFinite(stepCost)` short-circuit in `Pathfinding.findPath`).
+   *
+   * Chebyshev (the A* heuristic) is a lower bound on min-cost path length only
+   * when every FINITE cost is >= 1 — keep it >= 1 (GOTCHAS #34: "faster" comes
+   * from cost 1, never < 1) or the heuristic stops being admissible.
+   */
+  cost: number;
+  /**
+   * Whether a unit may occupy / path onto this tile. Today this is redundant
+   * with `isFinite(cost)` (the cost short-circuit is the live gate in
+   * pathfinding), but it's carried explicitly so an impassable-but-finite or
+   * passable-but-costly tile stays expressible, and so consumers can ask the
+   * intent directly rather than inferring it from a magic Infinity.
+   */
+  passable: boolean;
+  /**
+   * §37c — added to the **defender's** evasion when it is struck while standing
+   * on this tile (positive = harder to hit; e.g. hills bonus, sand penalty).
+   * Absent = 0.
+   */
+  evasionMod?: number;
+  /**
+   * §37c — added to the **attacker's** precision when it attacks FROM this tile
+   * (negative = clumsier footing; generalizes M6's `shallow_water` wading
+   * penalty, and ice's severe accuracy hit). Absent = 0.
+   */
+  accuracyMod?: number;
+  /**
+   * §37d — status id APPLIED to a unit on ENTER (e.g. `mud` → `poison`, behind
+   * a config flag). A plain status id resolved via `statusDef` at the use site;
+   * a boot-assert validates the reference (mirroring the ability `statusId`
+   * pattern). Absent = none.
+   */
+  statusOnEnter?: string;
+  /**
+   * §37d — status id REMOVED from a unit on ENTER (e.g. `shallow_water` /
+   * `deep_water` → remove `burn` — the inverse of the Cluster-1 fire→burn
+   * sustain). Absent = none.
+   */
+  statusRemovedOnEnter?: string;
+}
+
+/**
+ * The shipped tile table. Existing kinds carry today's cost + no mods (§37a is
+ * byte-identical); §37b–d fill in the new tiles and the mod/status fields.
+ *
+ * D7.A: `chasm` is `Infinity`/impassable — pathfinding short-circuits via the
+ * `!isFinite(stepCost)` guard. LOS is a unit-blocker check (`LineOfSight.ts`),
+ * so chasm is automatically LOS-transparent — tiles never enter the LOS
+ * pipeline.
+ *
+ * D7.B: `fire` and `healing` are surface effects, not obstacles — normal floor
+ * cost (1). Their per-tick chip is applied by `World.tick`'s tile-effect pass
+ * (`applyTileStatuses`), not by pathfinding.
+ */
+export const TILE_DEFS: Record<TileKind, TileDef> = {
+  floor: { cost: 1, passable: true },
+  shallow_water: { cost: 2, passable: true },
+  chasm: { cost: Infinity, passable: false },
+  fire: { cost: 1, passable: true },
+  healing: { cost: 1, passable: true },
 };
+
+/** The `TileDef` governing a kind. Keyed lookup — total over `TileKind`. */
+export function tileDef(kind: TileKind): TileDef {
+  return TILE_DEFS[kind];
+}
 
 export interface TileGridSnapshot {
   width: number;
@@ -80,7 +141,17 @@ export class TileGrid {
    *  pathfinding can short-circuit without a separate bounds check. */
   costAt(c: GridCoord): number {
     if (!this.inBounds(c)) return Infinity;
-    return TILE_COSTS[this.kinds[this.index(c.x, c.y)]!];
+    return TILE_DEFS[this.kinds[this.index(c.x, c.y)]!].cost;
+  }
+
+  /**
+   * §37 — the full `TileDef` governing a cell (cost / passability / combat mods
+   * / status hooks). Throws out-of-bounds like `kindAt`: combat + status reads
+   * key off a live unit's in-bounds position, so an OOB read is a bug, not a
+   * "treat as impassable" case (that's `costAt`'s job for pathfinding).
+   */
+  defAt(c: GridCoord): TileDef {
+    return TILE_DEFS[this.kindAt(c)];
   }
 
   setKind(c: GridCoord, kind: TileKind): void {

@@ -1,5 +1,49 @@
 import { describe, it, expect } from 'vitest';
-import { TileGrid } from './TileGrid';
+import { TileGrid, TILE_DEFS, tileDef, type TileKind } from './TileGrid';
+
+describe('TileDef table (§37a — the seam)', () => {
+  // The byte-identical guarantee: the generalized table must reproduce the
+  // exact pre-37a costs. Listed literally (NOT read from the table under test)
+  // so a typo in TILE_DEFS is caught rather than tautologically passed.
+  const EXISTING_COSTS: Record<TileKind, number> = {
+    floor: 1,
+    shallow_water: 2,
+    chasm: Infinity,
+    fire: 1,
+    healing: 1,
+  };
+
+  it('resolves every existing kind to its pre-37a cost', () => {
+    for (const kind of Object.keys(EXISTING_COSTS) as TileKind[]) {
+      expect(tileDef(kind).cost).toBe(EXISTING_COSTS[kind]);
+      expect(TILE_DEFS[kind].cost).toBe(EXISTING_COSTS[kind]);
+    }
+  });
+
+  it('passability is consistent with cost (finite cost ⇒ passable)', () => {
+    for (const kind of Object.keys(TILE_DEFS) as TileKind[]) {
+      expect(TILE_DEFS[kind].passable).toBe(isFinite(TILE_DEFS[kind].cost));
+    }
+  });
+
+  it('carries no combat mods or status hooks on the existing kinds (byte-identical)', () => {
+    for (const kind of Object.keys(EXISTING_COSTS) as TileKind[]) {
+      const def = TILE_DEFS[kind];
+      expect(def.evasionMod).toBeUndefined();
+      expect(def.accuracyMod).toBeUndefined();
+      expect(def.statusOnEnter).toBeUndefined();
+      expect(def.statusRemovedOnEnter).toBeUndefined();
+    }
+  });
+
+  it('defAt resolves a cell to its TileDef and throws out of bounds', () => {
+    const g = new TileGrid(2, 2);
+    g.setKind({ x: 1, y: 0 }, 'chasm');
+    expect(g.defAt({ x: 0, y: 0 })).toBe(TILE_DEFS.floor);
+    expect(g.defAt({ x: 1, y: 0 })).toBe(TILE_DEFS.chasm);
+    expect(() => g.defAt({ x: -1, y: 0 })).toThrow();
+  });
+});
 
 describe('TileGrid', () => {
   it('defaults every cell to floor', () => {

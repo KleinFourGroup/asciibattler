@@ -613,11 +613,14 @@ like the knockback seam) or fully omit.
 waterwalk seam (declare-inert vs omit). 37a is a byte-identical seam; 37b–37f fill it.
 Independent of the unit model, so this whole phase floats free of §38.
 
-- **37a — the `TileDef` table (the seam).** Generalize `TileGrid`'s `TILE_COSTS` into a
+- **✅ 37a — the `TileDef` table (the seam).** Generalized `TileGrid`'s `TILE_COSTS` into a
   per-`TileKind` `TileDef` table `{cost, passable, evasionMod?, accuracyMod?,
-  statusOnEnter?, statusRemovedOnEnter?}` (keyed by kind, not serialized). Existing
-  kinds get a `TileDef` with today's cost + no mods — byte-identical. No bump. *Test:*
-  every existing tile's cost + passability resolves identically via the table.
+  statusOnEnter?, statusRemovedOnEnter?}` (keyed by kind, not serialized) +
+  `tileDef(kind)` / `TileGrid.defAt(coord)` accessors; `costAt` reads `TILE_DEFS[…].cost`.
+  Existing kinds carry today's cost + no mods — **byte-identical** (1462 main + 212
+  fuzz:smoke green, no fuzz shift; typecheck clean). No bump. *Test:* every existing
+  tile's cost + passability resolves identically via the table (`TileGrid.test.ts`
+  "TileDef table" block).
 - **37b — the five new tiles (cost + passability + render).** Add `deep_water`
   (impassable, cost `∞` like chasm), `hills` (high cost + evasion bonus; renders 3–6
   low-poly hills), `ice` (cost-1 + severe accuracy penalty — mind the A* ≥1 floor,

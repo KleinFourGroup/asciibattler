@@ -54,6 +54,16 @@
  *     the shove minimal-disruption + bounded; if nothing is free within it the
  *     shove no-ops (returns false) rather than teleporting across the board. A
  *     distance, not a timing — passed through verbatim.
+ *   moveFlipFraction — §36b: the fraction of a single-step move's busy window
+ *     at which the unit's LOGICAL position flips from `from` to `to` (and the
+ *     destination claim releases). Locked at 0.5 — the unit logically occupies
+ *     `from` for the first half of the slide and `to` for the second, so a slow
+ *     unit attacked at melee range reads as still mostly on its prior tile. The
+ *     flip tick is `startTick + floor(durationTicks * this)`, carried by the
+ *     move proposal's phase timeline (`travel` then a 0-length `impact`
+ *     boundary), NOT a new serialized field. A ratio in [0,1]: 0 = instant
+ *     (today's pre-§36b model), 1 = flip only on arrival. `floor` keeps a
+ *     1-tick move (the lowest move cooldown) instant + byte-identical.
  */
 
 import { z } from 'zod';
@@ -68,6 +78,7 @@ const SimSchema = z.object({
   healerFollowGapCells: z.number().int().nonnegative(),
   actingCellSearchSlack: z.number().int().nonnegative(),
   shoveSearchRadiusCells: z.number().int().positive(),
+  moveFlipFraction: z.number().min(0).max(1),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -80,4 +91,5 @@ export const SIM = {
   healerFollowGapCells: parsed.healerFollowGapCells,
   actingCellSearchSlack: parsed.actingCellSearchSlack,
   shoveSearchRadiusCells: parsed.shoveSearchRadiusCells,
+  moveFlipFraction: parsed.moveFlipFraction,
 };

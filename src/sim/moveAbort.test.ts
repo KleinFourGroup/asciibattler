@@ -89,6 +89,9 @@ describe('§35b — move abort at execution', () => {
   it('executes a move onto a free cell normally (control)', () => {
     const { world, bus } = setup();
     const mover = spawnAt(world, 'player', { x: 2, y: 2 });
+    // A far inert enemy keeps the battle ongoing past the deferred-flip tick (a
+    // lone player team wins outright on tick 1, freezing the world mid-move).
+    onlyBehavior(spawnAt(world, 'enemy', { x: 10, y: 10 }));
     onlyBehavior(mover, new StubMoveBehavior({ x: 2, y: 2 }, { x: 3, y: 2 }));
 
     const aborts: GameEvents['unit:moveAborted'][] = [];
@@ -98,11 +101,18 @@ describe('§35b — move abort at execution', () => {
 
     world.tick();
 
-    expect(mover.position).toEqual({ x: 3, y: 2 }); // moved
+    // §36b — the move COMMITS at start (locked for the busy window, cooldown
+    // consumed, `unit:moved` fired for the lerp, no abort) but the logical
+    // position is DEFERRED: the unit holds `from` until the 50% flip. The
+    // deferred-flip timing itself is pinned in moveDeferred.test.ts.
     expect(mover.activeAction).not.toBeNull(); // locked for the busy window
     expect(mover.actionCooldowns.get('move')).toBe(MOVE_TICKS); // cooldown consumed
     expect(aborts).toEqual([]);
     expect(moved).toHaveLength(1);
+    expect(mover.position).toEqual({ x: 2, y: 2 }); // still on `from` (flip is non-instant)
+
+    for (let i = 0; i < MOVE_TICKS; i++) world.tick(); // run the move out
+    expect(mover.position).toEqual({ x: 3, y: 2 }); // arrived
   });
 
   it('aborts a move onto an untraversable (chasm) cell', () => {
@@ -138,7 +148,8 @@ describe('§35b — move abort at execution', () => {
     expect(mover.position).toEqual({ x: 2, y: 2 });
 
     world.removeUnit(blocker.id); // the cell frees
-    world.tick(); // now the move lands
+    world.tick(); // the move now COMMITS (claim); §36b defers the logical flip
+    for (let i = 0; i < MOVE_TICKS; i++) world.tick(); // run it out past the 50% flip
 
     expect(mover.position).toEqual({ x: 3, y: 2 });
     expect(aborts).toHaveLength(1); // no further abort

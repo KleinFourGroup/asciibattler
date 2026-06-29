@@ -321,11 +321,18 @@ export function sidestep(
 }
 
 /**
- * Build the standard single-step move proposal: the step is applied in
- * `MoveAction.start` (offset 0) and the unit is then locked for the
- * move-cooldown window — a single `impact` phase IS the lockout (F2). Score
- * defaults to 1 (movement is the lowest-priority proposal); callers that need
- * a higher movement priority (the healer's panic-retreat at 5) pass it.
+ * Build the standard single-step move proposal. §36b — the move is NON-INSTANT:
+ * `MoveAction.start` (offset 0) claims the destination + emits `unit:moved`, but
+ * the unit's LOGICAL position holds at `from` until the flip. The phase timeline
+ * is `travel` (the in-transit window) → a 0-length `impact` boundary (where
+ * `MoveAction.applyEffect` flips `position` to `to` and releases the claim) →
+ * `recovery` (the post-flip lockout tail). The flip lands at offset `floor(
+ * durationTicks * SIM.moveFlipFraction)` — 50%, so a slow unit reads as still
+ * mostly on its prior tile for the first half. `floor` keeps a 1-tick move
+ * instant (impact at offset 0) + byte-identical to the pre-§36b model. The unit
+ * stays busy for the full `durationTicks` either way (Σ phase ticks). Score
+ * defaults to 1 (movement is the lowest-priority proposal); callers that need a
+ * higher movement priority (the healer's panic-retreat at 5) pass it.
  */
 export function moveProposal(
   from: GridCoord,
@@ -333,11 +340,16 @@ export function moveProposal(
   durationTicks: number,
   score = 1,
 ): ActionProposal {
+  const flipOffset = Math.floor(durationTicks * SIM.moveFlipFraction);
   return {
     action: new MoveAction(from, to, durationTicks),
     score,
     cooldown: durationTicks,
-    phases: [{ phase: 'impact', ticks: durationTicks }],
+    phases: [
+      { phase: 'travel', ticks: flipOffset },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: durationTicks - flipOffset },
+    ],
   };
 }
 

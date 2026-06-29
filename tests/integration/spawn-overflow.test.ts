@@ -177,12 +177,25 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.units.filter((u) => u.team === 'enemy')).toHaveLength(REGION);
     expect(world.queueLength('enemy')).toBe(queued);
 
+    // §36b — isolate the overflow-DRAIN mechanism from movement. With non-instant
+    // moves, a unit holds a CLAIM on its destination across the deferred-flip
+    // window, and `runOverflowScan` (correctly) won't reinforce onto a claimed
+    // tile — so a moving swarm makes the drain cadence movement-sensitive. This
+    // test exercises the queue→region drain, not pathing, so freeze every unit
+    // (re-freezing each tick to neutralize a just-spawned reinforcement). The
+    // claim-aware reinforcement itself is covered by the §35d fuzz invariant.
+    const freeze = () => {
+      for (const u of world.units) u.behaviors.length = 0;
+    };
+    freeze();
+
     // Free one enemy tile per tick; runOverflowScan pulls one queued unit each
     // time. `queued` frees drain the queue completely.
     for (let i = 0; i < queued; i++) {
       const victim = world.units.find((u) => u.team === 'enemy')!;
       victim.currentHp = 0;
       world.tick();
+      freeze();
     }
     expect(world.queueLength('enemy')).toBe(0);
   });

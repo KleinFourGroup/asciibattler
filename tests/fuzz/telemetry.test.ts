@@ -124,5 +124,8 @@ describe('telemetry integration (real headless run)', () => {
     expect(on.totalTicks).toBe(off.totalTicks);
     expect(on.battles.length).toBe(off.battles.length);
     expect(on.finalTeamSize).toBe(off.finalTeamSize);
-  });
+    // Two full 3-hop runs in one case; §36b's deferred-move timing lengthens
+    // battles modestly, so under full-suite parallel CPU contention the default
+    // 5s case timeout is tight. Match the heavy-fuzz-test convention.
+  }, 30000);
 });

@@ -40,7 +40,8 @@ describe('MovementBehavior', () => {
 
     world.tick();
 
-    expect(units[0]!.position).toEqual({ x: 1, y: 0 });
+    // §36b — `unit:moved` fires at start (the renderer lerp spans the window),
+    // but the logical step is deferred to the 50% flip (floor(4*0.5)=2 ticks in).
     expect(moves).toHaveLength(1);
     expect(moves[0]).toEqual({
       unitId: units[0]!.id,
@@ -48,6 +49,10 @@ describe('MovementBehavior', () => {
       to: { x: 1, y: 0 },
       durationTicks: 4,
     });
+    expect(units[0]!.position).toEqual({ x: 0, y: 0 }); // not yet flipped
+    world.tick();
+    world.tick(); // offset 2 → the flip
+    expect(units[0]!.position).toEqual({ x: 1, y: 0 });
   });
 
   it('waits exactly moveCooldownTicks between consecutive moves', () => {

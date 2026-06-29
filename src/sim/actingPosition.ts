@@ -1,7 +1,7 @@
 import type { GridCoord } from '../core/types';
 import type { World } from './World';
 import { hasLineOfSight } from './LineOfSight';
-import { cellKey, distanceBetween, occupiedCells } from './occupancy';
+import { cellKey, claimedCells, distanceBetween, occupiedCells } from './occupancy';
 
 /**
  * GP4 — find the nearest reachable cell from which `from` could ACT on a unit
@@ -129,6 +129,13 @@ export function nearestFreeCells(
   // the occupancy chokepoint owns "what occupies a cell" (one cell per unit
   // today; the §39 footprint block for free).
   const occupied = occupiedCells(world);
+  // §36b — a CLAIMED cell is reserved by an in-flight mover whose deferred flip
+  // will land it there; materialising a unit on it (a summon drop, a shove
+  // relocation) would collide the instant the claimant arrives. Treat claimed
+  // cells as ineligible landings too — the placement-side of "occupied OR
+  // claimed" (the BFS still EXPANDS through them, like an occupied-but-passable
+  // cell, since the claimant isn't physically there yet).
+  for (const k of claimedCells(world)) occupied.add(k);
 
   const found: GridCoord[] = [];
   const startKey = `${anchor.x},${anchor.y}`;

@@ -115,7 +115,7 @@ src/
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter
     actions/                 # Non-verb actions only — every combat verb is now the data-driven effects/EffectAction (Y5c retired the hand-coded AttackAction/Heal/MagicBolt/Catapult/Gambit/Dash classes)
-      MoveAction.ts          # Logical position update + unit:moved event
+      MoveAction.ts          # §36b NON-INSTANT: start() claims `to` + emits unit:moved; applyEffect() flips position + releases the claim at the 50% mark (SIM.moveFlipFraction)
       SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns
       SwapAction.ts          # GP5: healer chokepoint yield — two units trade cells
       registry.ts            # Action factories keyed by Action.id (move/spawn/swap); every other id falls through to EffectAction.fromData (A2/Y5c)

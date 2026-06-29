@@ -119,7 +119,11 @@ describe('28 — panic', () => {
     p.addEffect(status('panic'));
     const startDist = cheb(p.position, e.position); // 1
 
-    for (let i = 0; i < 6; i++) world.tick();
+    // §36b — `addEffect` recomputes `derived`, clobbering the `moveCd: 1`
+    // override, so the flee uses the unit's real (~14-tick) move duration whose
+    // logical flip lands at the 50% mark. Tick well past one full move cycle so
+    // at least one flee step has flipped (the old instant model fled on tick 1).
+    for (let i = 0; i < 20; i++) world.tick();
 
     expect(attacks).toHaveLength(0); // preventsAttack
     expect(e.currentHp).toBe(100);

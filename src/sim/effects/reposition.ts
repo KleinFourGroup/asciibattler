@@ -18,7 +18,7 @@
 import type { GridCoord } from '../../core/types';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
-import { GROUND, cellKey, distanceBetween, occupiedCells } from '../occupancy';
+import { GROUND, cellKey, claimedCells, distanceBetween, occupiedCells } from '../occupancy';
 
 const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
   [-1, -1], [0, -1], [1, -1],
@@ -30,6 +30,11 @@ export function retreatCell(unit: Unit, anchor: GridCoord, world: World): GridCo
   // §35 — the occupancy chokepoint owns the "every OTHER unit" set (one cell per
   // unit today; the §39 footprint block for free).
   const occupied = occupiedCells(world, GROUND, { excludeId: unit.id });
+  // §36b — a cell another unit has CLAIMED (its in-flight move destination) is
+  // off-limits to the gambit dart-back too: this reposition writes `position`
+  // instantly, so darting onto a claimed cell collides when the claimant's
+  // deferred flip arrives. The unit's own claim (if mid-move) is excluded.
+  for (const k of claimedCells(world, GROUND, { excludeId: unit.id })) occupied.add(k);
 
   const currentDist = distanceBetween(unit.position, anchor);
   let best: GridCoord | null = null;

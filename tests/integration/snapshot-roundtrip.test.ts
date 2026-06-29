@@ -23,6 +23,7 @@ import { createAbility } from '../../src/sim/abilities/registry';
 import { EffectAction } from '../../src/sim/effects/EffectAction';
 import type { PendingChainHop } from '../../src/sim/effects/interpreter';
 import { rollUnit } from '../../src/sim/archetypes';
+import { claimantOf, isClaimed } from '../../src/sim/occupancy';
 import { applyTerrain } from '../../src/sim/battleSetup';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
@@ -288,6 +289,70 @@ describe('A2 round-trip: World', () => {
     expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,
     );
+  });
+
+  it('§36b: round-trips a unit MID-MOVE — deferred position + held claim — and flips post-restore', () => {
+    // §36b defers a move's logical position flip to its 50% mark, holding a
+    // destination claim across the window. The natural state §36a's injected
+    // claim stands in for: snapshot WHILE a real move is in flight (activeAction
+    // 'move', the unit still logically on `from`, its `to` claimed), restore on a
+    // fresh bus, and prove the restored world resumes the SAME deferred flip — no
+    // new serialized state beyond the v31 claim + the activeAction phase timeline.
+    const bus = new EventBus<GameEvents>();
+    const world = new World(bus, new RNG(1357));
+    const mover = world.spawnUnit(rollUnit('mercenary', new RNG(1)), 'player', { x: 1, y: 1 });
+    mover.behaviors.push(new MovementBehavior());
+    // Inert far enemy: gives the mover something to pursue (so it steps) without
+    // ending the battle or closing to melee within the window.
+    world.spawnUnit(rollUnit('mercenary', new RNG(2)), 'enemy', { x: 10, y: 1 });
+
+    // Advance until the mover is mid-move and PRE-FLIP: activeAction is a move
+    // whose destination it still claims (the claim releases at the flip).
+    let midMove = false;
+    let fromCell = mover.position;
+    let toCell = mover.position;
+    for (let i = 0; i < 200 && !midMove; i++) {
+      world.tick();
+      const live = world.findUnit(mover.id);
+      const a = live?.activeAction;
+      const to = a?.action.id === 'move' ? a.action.destinationCell?.() : undefined;
+      if (to && claimantOf(world, to) === mover.id) {
+        midMove = true;
+        fromCell = { ...live!.position };
+        toCell = { ...to };
+      }
+    }
+    expect(midMove, 'mover should be mid-move (pre-flip) within the window').toBe(true);
+    expect(fromCell).not.toEqual(toCell); // genuinely in transit
+
+    const live = world.findUnit(mover.id)!;
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    const restoredMover = restored.findUnit(mover.id)!;
+
+    // The deferred state round-trips: still on `from`, still claiming `to`, the
+    // move's phase timeline (the flip-tick derivation) intact.
+    expect(restoredMover.position).toEqual(fromCell);
+    expect(claimantOf(restored, toCell)).toBe(mover.id);
+    expect(restoredMover.activeAction?.action.id).toBe('move');
+    expect(restoredMover.activeAction?.startTick).toBe(live.activeAction?.startTick);
+    expect(restoredMover.activeAction?.finishTick).toBe(live.activeAction?.finishTick);
+    expect(restoredMover.activeAction?.phases).toEqual(live.activeAction?.phases);
+
+    // Resume: the restored move flips to `to` and releases the claim at the
+    // derived 50% tick (the first logical position change).
+    for (
+      let i = 0;
+      i < 50 &&
+      restoredMover.position.x === fromCell.x &&
+      restoredMover.position.y === fromCell.y &&
+      !restored.ended;
+      i++
+    ) {
+      restored.tick();
+    }
+    expect(restoredMover.position).toEqual(toCell); // flipped on arrival
+    expect(isClaimed(restored, toCell)).toBe(false); // claim released
   });
 
   it('continuing a restored World produces the same event trace as the baseline', () => {

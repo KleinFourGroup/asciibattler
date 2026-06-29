@@ -35,8 +35,11 @@ describe('shared actionCooldown', () => {
       { team: 'enemy', x: 2, y: 0, hp: 50, behaviors: 'none' },
     ]);
 
-    world.tick(); // tick 1: move (now adjacent), attack blocked by shared CD
-    expect(units[0]!.position).toEqual({ x: 1, y: 0 });
+    world.tick(); // tick 1: move STARTS (heading adjacent), attack blocked by shared CD
+    // §36b — the move commits + emits at tick 1 but the logical step is deferred
+    // to the 50% flip; the unit is still on `from` here. It flips to (1,0) by the
+    // time the shared cooldown elapses, so the attack below still lands in range.
+    expect(units[0]!.position).toEqual({ x: 0, y: 0 });
     expect(moves).toHaveLength(1);
     expect(attacks).toHaveLength(0);
 

@@ -417,6 +417,18 @@ today), so §39's N×N fill is automatic, not a scattered retrofit.
 
 ## Phase 36 — Non-instant moves (the claim system)
 
+> **▶ IN PROGRESS — 36a + 36b SHIPPED.** **36a** the claim registry + the
+> occupied-OR-claimed pathing rule (`WorldSnapshot` v30→v31, inert). **36b** the
+> non-instant logical position flip: `MoveAction` defers `position = to` to the
+> 50% mark (`SIM.moveFlipFraction`, via a `travel`→`impact`→`recovery` phase
+> timeline) + the claim/release lifecycle (claim on start, release on flip + on
+> reap via `removeUnit`→`releaseClaimsBy`). The claim went load-bearing: the §35d
+> occupancy invariant exposed that the PLACEMENT paths (`nearestFreeCells` for
+> shove/summon, `runOverflowScan` reinforcement, the gambit `retreatCell`) also
+> had to exclude claimed cells, else a unit materialises where a deferred mover is
+> arriving. No new serialized state / no second bump. **NEXT = 36c** (the smooth
+> mid-flight abort + the renderer settle-back) **+ 36d** (the fuzz re-baseline).
+
 The feel fix: a unit's logical tile changes **partway through** its move, not at
 move-start — so a slow unit attacked at melee range reads as still mostly on its
 prior tile (the spec's persistent quibble; the same gap tile-initiated statuses hit).

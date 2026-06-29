@@ -1281,7 +1281,11 @@ export class World {
 
       for (const tile of region.tiles) {
         if (queue.length === 0) break;
-        if (this.isOccupied(tile)) continue;
+        // §36b — skip a tile that's occupied OR claimed: a reinforcement that
+        // materialises on an in-flight mover's reserved destination would collide
+        // when that mover's deferred flip lands. (The instant model never held a
+        // claim across ticks, so this is inert pre-§36b.)
+        if (this.isOccupied(tile) || claimantOf(this, tile) !== undefined) continue;
         const template = queue.shift()!;
         this.spawnFromQueue(template, team, tile);
       }
@@ -1588,6 +1592,11 @@ export class World {
     const i = this.units.findIndex((u) => u.id === id);
     if (i >= 0) this.units.splice(i, 1);
     this.unitsById.delete(id);
+    // §36b — a removed unit can't hold an in-flight destination reservation:
+    // drop every claim it owns (the "release on reap" half of the claim
+    // lifecycle) so a unit that died mid-move never leaves a phantom block on
+    // its half-reached `to`. No-op for the common case (most units hold none).
+    this.releaseClaimsBy(id);
   }
 
   /**

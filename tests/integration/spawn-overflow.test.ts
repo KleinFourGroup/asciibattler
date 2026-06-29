@@ -187,7 +187,7 @@ describe('D5.C spawn overflow queue', () => {
     expect(world.queueLength('enemy')).toBe(0);
   });
 
-  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v30', () => {
+  it('round-trips queue + regions + abilities + level + damage ledger + xp + roster ids + sticky target through WorldSnapshot v31', () => {
     const bus = new EventBus<GameEvents>();
     const world = new World(bus, new RNG(1));
     const region = makePlayerRegion();
@@ -200,10 +200,13 @@ describe('D5.C spawn overflow queue', () => {
     world.units[0]!.outOfLosTicks = 3;
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(30); // 30 — §31b captured status magnitude/duration scalars
+    expect(wire.schemaVersion).toBe(31); // 31 — §36a added the in-flight claim registry
     expect(wire.units[0].targetId).toBe(world.units[1]!.id);
     expect(wire.units[0].outOfLosTicks).toBe(3);
     expect(wire.damageDealt).toEqual([]);
+    // §36a: the claim registry serializes (empty on a fresh spawn — the instant
+    // move model holds no claim).
+    expect(wire.claims).toEqual([]);
     expect(wire.playerRosterIds).toEqual([]);
     // F6: utility-contribution ledger serializes (empty on a fresh spawn).
     expect(wire.utilityDone).toEqual([]);

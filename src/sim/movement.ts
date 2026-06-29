@@ -4,7 +4,7 @@ import type { World } from './World';
 import type { ActionProposal } from './Action';
 import { MoveAction } from './actions/MoveAction';
 import { findPath } from './Pathfinding';
-import { cellKey, cellsOccupiedBy, distanceBetween } from './occupancy';
+import { GROUND, cellKey, cellsOccupiedBy, claimedCells, distanceBetween } from './occupancy';
 import { SIM } from '../config/sim';
 
 /**
@@ -80,6 +80,16 @@ export function buildMovementContext(
         otherUnitCells.add(cellKey(c));
       }
     }
+  }
+  // §36a — a cell CLAIMED by another in-flight mover is blocked-for-pathing just
+  // like an occupied cell (occupied OR claimed): fold it into BOTH the soft-cost
+  // set (so A* routes around it) and the sidestep occupancy set (so a sidestep
+  // never lands on it). Skip the building unit's own claims — it may step into
+  // what it reserved. Inert today (no persistent claims on the instant model);
+  // load-bearing once §36b defers the position flip and a claim outlives its tick.
+  for (const key of claimedCells(world, GROUND, { excludeId: unit.id })) {
+    occupied.add(key);
+    otherUnitCells.add(key);
   }
   return { pathBlockers, otherUnitCells, occupied };
 }

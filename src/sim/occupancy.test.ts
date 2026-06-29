@@ -9,9 +9,12 @@ import {
   GROUND,
   cellKey,
   cellsOccupiedBy,
+  claimantOf,
+  claimedCells,
   distanceBetween,
   findOverlappingCells,
   footprintFits,
+  isClaimed,
   isFree,
   occupiedCells,
   planeOf,
@@ -161,5 +164,57 @@ describe('findOverlappingCells — the §35d invariant detector', () => {
     spawnAt(world, 'player', { x: 3, y: 3 });
     spawnAt(world, 'enemy', { x: 3, y: 3 }); // forced co-location
     expect(findOverlappingCells(world)).toEqual(['3,3']);
+  });
+});
+
+describe('§36a — the claim registry queries', () => {
+  it('claimCell makes a cell claimed; releaseClaim frees it', () => {
+    const world = setup();
+    const u = spawnAt(world, 'player', { x: 2, y: 2 });
+    const cell = { x: 4, y: 4 };
+    expect(isClaimed(world, cell)).toBe(false);
+    expect(claimantOf(world, cell)).toBeUndefined();
+
+    world.claimCell(cell, u.id);
+    expect(isClaimed(world, cell)).toBe(true);
+    expect(claimantOf(world, cell)).toBe(u.id);
+
+    world.releaseClaim(cell);
+    expect(isClaimed(world, cell)).toBe(false);
+    expect(claimantOf(world, cell)).toBeUndefined();
+  });
+
+  it("claimedCells lists claimed cells and drops the building unit's own", () => {
+    const world = setup();
+    const a = spawnAt(world, 'player', { x: 0, y: 0 });
+    const b = spawnAt(world, 'enemy', { x: 9, y: 9 });
+    world.claimCell({ x: 3, y: 3 }, a.id);
+    world.claimCell({ x: 5, y: 5 }, b.id);
+
+    expect(claimedCells(world)).toEqual(new Set(['3,3', '5,5']));
+    // The mover's own claim is excluded — it may step into what it reserved.
+    expect(claimedCells(world, GROUND, { excludeId: a.id })).toEqual(new Set(['5,5']));
+  });
+
+  it('releaseClaimsBy drops every claim a unit holds', () => {
+    const world = setup();
+    const a = spawnAt(world, 'player', { x: 0, y: 0 });
+    const b = spawnAt(world, 'enemy', { x: 9, y: 9 });
+    world.claimCell({ x: 3, y: 3 }, a.id);
+    world.claimCell({ x: 4, y: 4 }, a.id);
+    world.claimCell({ x: 5, y: 5 }, b.id);
+
+    world.releaseClaimsBy(a.id);
+    expect(claimedCells(world)).toEqual(new Set(['5,5']));
+  });
+
+  it('claimCell is idempotent per cell (last writer wins)', () => {
+    const world = setup();
+    const a = spawnAt(world, 'player', { x: 0, y: 0 });
+    const b = spawnAt(world, 'enemy', { x: 9, y: 9 });
+    world.claimCell({ x: 6, y: 6 }, a.id);
+    world.claimCell({ x: 6, y: 6 }, b.id); // re-claim the same cell
+    expect(claimantOf(world, { x: 6, y: 6 })).toBe(b.id);
+    expect(world.claims.size).toBe(1);
   });
 });

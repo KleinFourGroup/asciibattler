@@ -43,7 +43,7 @@ import { processChainHops, type PendingChainHop } from './effects/interpreter';
 import { createBehavior, createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
 import { updateTarget } from './Targeting';
-import { unitAt } from './occupancy';
+import { GROUND, cellKey, claimantOf, unitAt, type Claim, type OccupancyPlane } from './occupancy';
 import { nearestFreeCells } from './actingPosition';
 import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
@@ -238,8 +238,18 @@ import { LEVELING } from '../config/leveling';
  *       dropping even a bare-number-authored magnitude. Reject v29 outright per the
  *       no-migration contract. RunSnapshot is unaffected (the captured scalars are
  *       World-side + transient on the in-flight action).
+ *  31 — §36a (the claim system, registry leg) added the in-flight cell-CLAIM
+ *       registry (`claims: Claim[]`) — reservations a moving unit holds on its
+ *       destination so a second pather routes around it (blocked-for-pathing =
+ *       occupied OR claimed). A v30 save has no `claims` field; defaulting it to
+ *       `[]` is harmless TODAY (the registry is empty on the instant move model —
+ *       §36a is inert, nothing holds a claim across ticks), but reject v30 outright
+ *       per the established no-migration contract so the shape change is honest and
+ *       §36b's non-instant moves (which DO leave a claim mid-flight) can never load
+ *       under a stale reader. RunSnapshot is unaffected (claims are World-side +
+ *       transient per battle).
  */
-const WORLD_SCHEMA_VERSION = 30;
+const WORLD_SCHEMA_VERSION = 31;
 
 /**
  * Deterministic team iteration order for the post-death overflow scan.
@@ -362,6 +372,12 @@ export interface WorldSnapshot {
    *  chain caught mid-arc by a save resumes its remaining hops from here. Empty
    *  for every non-chain battle and for an instant (`hopDelaySeconds: 0`) chain. */
   pendingChainHops: PendingChainHop[];
+  /** §36a: the in-flight cell-claim registry — reservations a moving unit holds on
+   *  its destination so a second pather routes around it (blocked-for-pathing =
+   *  occupied OR claimed). Empty on the instant move model (§36a is inert; §36b
+   *  wires the claim/release lifecycle), serialized so a save caught mid-move
+   *  (post-§36b) resumes the reservations. */
+  claims: Claim[];
 }
 
 /**
@@ -421,6 +437,18 @@ export class World {
    * caught mid-arc by a save resumes its remaining hops.
    */
   pendingChainHops: PendingChainHop[] = [];
+
+  /**
+   * §36a — the in-flight cell-CLAIM registry, keyed by `cellKey(cell)`. A moving
+   * unit reserves its destination here (the claim system); the pathing predicate
+   * treats a cell as blocked if occupied OR claimed, so two units never converge
+   * on one vacant cell. Mutated only via `claimCell` / `releaseClaim` /
+   * `releaseClaimsBy`; read through the `occupancy.ts` claim queries. Empty in
+   * real play today — the instant move model holds no claim across ticks, so §36a
+   * is byte-identical; §36b's deferred position flip is the first caller.
+   * Serialized in the WorldSnapshot (v31).
+   */
+  readonly claims: Map<string, Claim> = new Map();
 
   private readonly bus: EventBus<GameEvents>;
   private tickCount = 0;
@@ -1276,7 +1304,42 @@ export class World {
   private destinationBlocked(unit: Unit, dest: GridCoord): boolean {
     if (!isFinite(this.tileGrid.costAt(dest))) return true;
     const occupant = unitAt(this, dest);
-    return occupant !== undefined && occupant.id !== unit.id;
+    if (occupant !== undefined && occupant.id !== unit.id) return true;
+    // §36a — a destination CLAIMED by another in-flight mover is blocked too
+    // (blocked-for-pathing = occupied OR claimed): a stale proposal whose cell a
+    // peer just reserved aborts. Inert today (no persistent claims); load-bearing
+    // once §36b leaves a claim across the deferred-move window.
+    const claimant = claimantOf(this, dest);
+    return claimant !== undefined && claimant !== unit.id;
+  }
+
+  /**
+   * §36a — reserve `cell` as an in-flight move destination for `unitId` (the claim
+   * system). Until released (on logical arrival, or an abort), the pathing
+   * predicate treats `cell` as blocked-for-pathing for every OTHER unit, so two
+   * units never converge on one vacant cell — the second sees the claim and
+   * re-routes. Idempotent per cell (last writer wins). Inert today: §36b's deferred
+   * position flip is the only production caller; nothing holds a claim across ticks
+   * on the instant move model, so the registry stays empty in real play.
+   */
+  claimCell(cell: GridCoord, unitId: number, plane: OccupancyPlane = GROUND): void {
+    this.claims.set(cellKey(cell), { cell: { x: cell.x, y: cell.y }, unitId, plane });
+  }
+
+  /** §36a — release the claim on `cell` (logical arrival or abort). No-op if unclaimed. */
+  releaseClaim(cell: GridCoord): void {
+    this.claims.delete(cellKey(cell));
+  }
+
+  /**
+   * §36a — release EVERY claim held by `unitId` (the mover died / was removed
+   * mid-move, or clears all its reservations). §36b calls this on reap so a dead
+   * mover never leaves a phantom block on its half-reached destination.
+   */
+  releaseClaimsBy(unitId: number): void {
+    for (const [key, claim] of this.claims) {
+      if (claim.unitId === unitId) this.claims.delete(key);
+    }
   }
 
   /**
@@ -1799,6 +1862,15 @@ export class World {
         fromPos: { ...h.fromPos },
         hitIds: h.hitIds.slice(),
       })),
+      // §36a — the in-flight claim registry as a flat list (the map key is
+      // derivable from `cell`). Deep-copy each cell so a post-snapshot mutation
+      // doesn't bleed into the wire image. Empty today (the instant move model
+      // holds no claim); non-empty once §36b defers the position flip.
+      claims: Array.from(this.claims.values()).map((c) => ({
+        cell: { x: c.cell.x, y: c.cell.y },
+        unitId: c.unitId,
+        plane: c.plane,
+      })),
     };
   }
 
@@ -1916,6 +1988,13 @@ export class World {
     // version check above rejected any v27 save that lacks the field).
     for (const h of snap.pendingChainHops) {
       world.pendingChainHops.push({ ...h, fromPos: { ...h.fromPos }, hitIds: h.hitIds.slice() });
+    }
+
+    // §36a — restore the in-flight claim registry, re-keying by cell (the version
+    // check above rejected any v30 save that lacks the field). Empty for any
+    // pre-§36b save — the instant move model never leaves a claim across ticks.
+    for (const c of snap.claims) {
+      world.claims.set(cellKey(c.cell), { cell: { x: c.cell.x, y: c.cell.y }, unitId: c.unitId, plane: c.plane });
     }
 
     return world;

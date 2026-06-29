@@ -269,6 +269,27 @@ describe('A2 round-trip: World', () => {
     );
   });
 
+  it('§36a: a live snapshot round-trips the claim registry; a pre-§36a (v30) save is rejected', () => {
+    // §36a added the in-flight cell-claim registry to WorldSnapshot (v30→v31). The
+    // instant move model creates no persistent claim, so inject one DIRECTLY to
+    // exercise the serialization in isolation (§36b wires the move lifecycle). A
+    // v30 save (no `claims` field) is rejected outright per the no-migration contract.
+    const { world } = freshBattle(54321);
+    const u = world.units[0]!;
+    world.claimCell({ x: 7, y: 7 }, u.id);
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    expect(wire.claims).toEqual([{ cell: { x: 7, y: 7 }, unitId: u.id, plane: 'ground' }]);
+
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.claims.get('7,7')).toEqual({ cell: { x: 7, y: 7 }, unitId: u.id, plane: 'ground' });
+
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
   it('continuing a restored World produces the same event trace as the baseline', () => {
     // Snapshot mid-battle, restore, tick both to completion, compare.
     const baseline = freshBattle(54321);

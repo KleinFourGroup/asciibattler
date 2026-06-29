@@ -71,7 +71,7 @@ src/
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v24 (bumped E1 through Phase K; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses; I6 = removed UnitDerived.critChance, crit is per-ability now; J1 = added the shared objective; K1 = added per-unit status effects)
+                             # Serializable; WorldSnapshot v31 (bumped E1 → §36a; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses; I6 = removed UnitDerived.critChance, crit is per-ability now; J1 = added the shared objective; K1 = per-unit status effects; §31 = effect-scaling op-resolution slots; §36a = the in-flight claim registry)
                              # K1: registerTrigger/fireTrigger — combat/lifecycle trigger dispatch (the L daemon seam; NOT bus events)
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
                              # J1: objective (player-team shared steering, tile|enemy) — set via WorldCommand, auto-clears on enemy death

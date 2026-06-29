@@ -151,3 +151,71 @@ export function findOverlappingCells(world: World, plane: OccupancyPlane = GROUN
   for (const [k, n] of counts) if (n > 1) out.push(k);
   return out;
 }
+
+/**
+ * §36a — an in-flight CELL CLAIM: a cell a moving unit has reserved as its move
+ * destination. The claim system closes the same-tick collision window a
+ * non-instant move opens (§36b): a unit claims `to` on move-start, the pathing
+ * predicate treats a cell as blocked-for-pathing if **occupied OR claimed**, and
+ * the claim releases on logical arrival — so two units never converge on one
+ * vacant cell (the second sees the claim and re-routes).
+ *
+ * §36a ships the registry + these queries + serialization **inert**: nothing
+ * creates a persistent claim on the instant move model (a move's claim+release
+ * would be atomic), so the registry is empty in real play and behavior is
+ * byte-identical. §36b wires the claim/release lifecycle onto the deferred
+ * position flip, making it load-bearing.
+ *
+ * Plane-aware (the §35 seam): a claim carries the claiming unit's plane and the
+ * queries filter by it. Ground-only today; the registry keys by cell, so a second
+ * plane revisits the key the way `cellsOccupiedBy` revisits the footprint.
+ */
+export interface Claim {
+  /** The reserved cell (the mover's destination). */
+  readonly cell: GridCoord;
+  /** The unit holding the reservation. */
+  readonly unitId: number;
+  /** The plane the reservation is on (the claiming unit's plane). */
+  readonly plane: OccupancyPlane;
+}
+
+/**
+ * The unit id holding a claim on `cell` on `plane`, or undefined — the claim
+ * POINT query. `destinationBlocked` (§35b) consults it so a stale move proposal
+ * whose destination a peer just claimed aborts. Inert today (no persistent claims).
+ */
+export function claimantOf(
+  world: World,
+  cell: GridCoord,
+  plane: OccupancyPlane = GROUND,
+): number | undefined {
+  const claim = world.claims.get(cellKey(cell));
+  return claim !== undefined && claim.plane === plane ? claim.unitId : undefined;
+}
+
+/** Whether `cell` is claimed by any unit on `plane`. The boolean form of `claimantOf`. */
+export function isClaimed(world: World, cell: GridCoord, plane: OccupancyPlane = GROUND): boolean {
+  return claimantOf(world, cell, plane) !== undefined;
+}
+
+/**
+ * Every CLAIMED cell on `plane`, as a key set — the claim sibling of
+ * `occupiedCells`. `buildMovementContext` merges it into the soft-block set so a
+ * pather routes around (and never sidesteps onto) a peer's claimed destination.
+ * `excludeId` drops the building unit's own claims (it may move into what it
+ * reserved). Inert today (the set is empty with no persistent claims).
+ */
+export function claimedCells(
+  world: World,
+  plane: OccupancyPlane = GROUND,
+  opts?: { excludeId?: number },
+): Set<string> {
+  const excludeId = opts?.excludeId;
+  const set = new Set<string>();
+  for (const claim of world.claims.values()) {
+    if (claim.unitId === excludeId) continue;
+    if (claim.plane !== plane) continue;
+    set.add(cellKey(claim.cell));
+  }
+  return set;
+}

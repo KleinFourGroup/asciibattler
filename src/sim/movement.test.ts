@@ -116,6 +116,43 @@ describe('movement / routeToward', () => {
   });
 });
 
+describe('§36a — claims block pathing (occupied OR claimed)', () => {
+  it("a peer's claimed cell joins the soft-block set; the unit's own claim does not", () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 }, // the mover
+      { team: 'enemy', x: 5, y: 5 }, // the claimant
+    ]);
+    const [mover, claimant] = units;
+    world.claimCell({ x: 2, y: 2 }, claimant!.id);
+
+    const ctx = buildMovementContext(mover!, world);
+    expect(ctx.occupied.has('2,2')).toBe(true);
+    expect(ctx.otherUnitCells.has('2,2')).toBe(true);
+
+    // The mover's OWN claim never blocks itself (it may step into what it reserved).
+    world.claimCell({ x: 1, y: 1 }, mover!.id);
+    const ctx2 = buildMovementContext(mover!, world);
+    expect(ctx2.occupied.has('1,1')).toBe(false);
+    expect(ctx2.otherUnitCells.has('1,1')).toBe(false);
+  });
+
+  it('a pather routes AROUND a claimed cell (the second-mover re-route)', () => {
+    // The straight line 0,0 → 4,0 would pass through (2,0); claiming it makes the
+    // router detour (a claimed cell is soft-cost, like an occupied one).
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'enemy', x: 4, y: 0 },
+    ]);
+    const [mover, claimant] = units;
+    world.claimCell({ x: 2, y: 0 }, claimant!.id);
+
+    const ctx = buildMovementContext(mover!, world);
+    const path = routeToward({ x: 0, y: 0 }, { x: 4, y: 0 }, ctx, world);
+    expect(path.length).toBeGreaterThan(0);
+    expect(path.some((c) => c.x === 2 && c.y === 0)).toBe(false);
+  });
+});
+
 describe('movement / advance (maxCells = 1, the byte-identical step)', () => {
   it('steps one cell toward the goal on open ground', () => {
     const { world, units } = scene([{ team: 'player', x: 0, y: 0 }]);

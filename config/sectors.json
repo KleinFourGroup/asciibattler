@@ -12,7 +12,11 @@
       { "layoutId": "endlessCorridors" },
       { "layoutId": "junctionAmbush" },
       { "layoutId": "strafingFunnel" },
-      { "layoutId": "spiralFireLife" }
+      { "layoutId": "spiralFireLife" },
+      { "layoutId": "isthmus" },
+      { "layoutId": "icebergs" },
+      { "layoutId": "desertFortress" },
+      { "layoutId": "fetidPond" }
     ],
     "encounters": {
       "normal": [

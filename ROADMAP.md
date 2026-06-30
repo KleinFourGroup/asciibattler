@@ -794,28 +794,47 @@ all-at-once (recommend per-kind, each a playtest-pausable commit).
 
 ### Sub-steps (38a–38e) — the proposed cut (38a GATES the rest)
 
-**Decisions still open** (see *Decision points 38*): the catalog home, one-vs-two
-catalog files, the `statusSusceptibility` default, per-kind vs all-at-once migration —
-**all gated on 38a's audit.** A byte-identical migration (the Y determinism-oracle
-pattern) → **no `WorldSnapshot` bump expected** (the new fields are def-resolved by
-archetype id at spawn). The oracle is the equivalence proof for 38c + 38d.
+**Decisions LOCKED (38a, 2026-06-30):** catalog home = **rename `config/archetypes.json`
+→ `config/units.json`** (+ `src/config/archetypes.ts` → `src/config/units.ts`; the
+existing file already IS the catalog, so this evolves it rather than building a parallel
+one); **one** unified catalog (neutrals fold in at 38d); `statusSusceptibility` default
+= **allow-all**; migration cadence = **field-by-field, all archetypes at once** (the data
+is already centralized in one config record, so a per-archetype oracle cadence would be
+artificial — each commit kills one literal branch, the oracle proving it byte-identical).
+**Naming scope:** rename the config-layer symbols to UnitDef vocab (`ArchetypeConfig` →
+`UnitDef`, `ARCHETYPES` → `UNIT_DEFS`, `ArchetypesSchema` → `UnitDefsSchema`) but **keep
+`archetype` as the per-unit-kind id field/type name** (it appears at 100+ `unit.archetype`
+sites; the change is relaxing it from a closed union to a validated string id in 38c, not
+a field rename). A byte-identical migration (the Y determinism-oracle pattern) → **no
+`WorldSnapshot` bump expected** (the new fields are def-resolved by id at spawn). The
+oracle is the equivalence proof for 38c + 38d.
 
-- **38a — the archetype-literal audit (DESIGN ROUND NEEDED — gates 38b+).** Grep
-  sim/run/render for archetype-*literal* branches (`switch (archetype)`, `=== 'healer'`)
-  vs archetype-*config* lookups (already data: `glyphForArchetype`,
-  `targetingForArchetype`, range/growth, the draft pool). Known literal:
-  `createMovementBehavior`'s healer → `SupportMovementBehavior` special-case. Produce
-  the migration map + the per-kind-vs-all-at-once call. Few literal branches → a clean
-  38b–38e; pervasive → re-scope with the user. *Output:* the literal-branch inventory +
-  the locked migration cadence.
-- **38b — the `UnitDef` catalog scaffold (the strangler's new path).** `config/units.json`
-  + `src/config/units.ts` (zod, mirroring `abilities.ts`/`statuses.ts`): per-kind glyph,
-  base stats, growth, ability ids, targeting, the **movement-behavior selector** (the
-  literal special-case becomes a field), `draftable`, plus the optional blocks —
-  `footprint` (default 1), `layer` (default `ground`), `ignoresTerrain` (default false),
-  `statusSusceptibility` (default: all), a flat-HP block — populated for every existing
-  archetype but **not yet wired** (built beside the old path). A boot-assert validates
-  every referenced id. *Test:* every archetype id resolves in the catalog; each optional
+- **✅ 38a — the archetype-literal audit (DESIGN ROUND, COMPLETE 2026-06-30).** Swept
+  sim/run/render. **Already config-driven** (via `ARCHETYPES` + `archetypes.ts`
+  accessors): glyph, targeting, range/minRange, growth, baseStats, abilities, draftable;
+  the **render layer has ZERO archetype branches** (glyph from config, FX key-driven).
+  **Genuine literal branches — only 3 + the `environment` sentinel:** (1) `stats.ts`
+  `damageStatFor`'s 18-case `switch(archetype)` → a `damageStat?` config field
+  (load-bearing for melee/ranged strikers; display-only for casters; absent ⇒
+  non-striker/0); (2) `behaviors/registry.ts` `createMovementBehavior`'s `=== 'healer'`
+  → a `movementBehavior` selector field; (3) `Targeting.ts:139`'s `=== 'ranged'`
+  LOS-retarget → a `retargetOnLosLoss` capability flag. The `'environment'` sentinel
+  (`UnitArchetype = Archetype | 'environment'`, branched in archetypes.ts ×2 / stats.ts /
+  UnitCard.ts) is the §38d neutral-fold. **Literal CONSTRUCTIONS** (not branches — ids
+  that just must stay valid once the union relaxes): `Run.ts` `'mercenary'` (start team),
+  `enemyBudget.ts` `'bandit'`/`'ranged'` (default enemy comp). **Verdict: clean/small —
+  no re-scope** (matches the "few literal branches → clean 38b–38e" expectation). Locked
+  decisions ↑.
+- **38b — rename `archetypes.json` → `units.json` + plant the inert UnitDef fields.**
+  Mechanical, byte-identical: `git mv config/archetypes.json config/units.json` +
+  `src/config/archetypes.ts` → `src/config/units.ts` (the 3 source importers +
+  `SAVABLE_CONFIG_FILES` + the archetype-editor's path strings + tests follow the
+  compiler; config-layer symbols → UnitDef vocab per the naming scope above). Extend the
+  zod schema with the optional blocks at **behavior-identical defaults, not yet wired**:
+  `footprint` (1), `layer` (`ground`), `ignoresTerrain` (false), `statusSusceptibility`
+  (all), a flat-HP/neutral block, plus the three audit branch-killer fields populated but
+  inert (`damageStat`, `movementBehavior`, `retargetOnLosLoss` — consumed in 38c). A
+  boot-assert validates every referenced id. *Test:* every id resolves; each optional
   field defaults to a behavior-identical value.
 - **38c — relax `Archetype` → a catalog id + route the data-driven lookups through the
   catalog.** The closed TS union becomes a catalog-validated string id; glyph /

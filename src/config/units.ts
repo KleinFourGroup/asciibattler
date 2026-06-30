@@ -1,6 +1,7 @@
 /**
- * Validated archetype-config accessor. The JSON source of truth lives at
- * `config/archetypes.json`; this module imports it via Vite's native
+ * Validated unit-def catalog accessor (the §38 keystone's `UnitDef` catalog;
+ * renamed from `archetypes.json`/`archetypes.ts` in 38b). The JSON source of
+ * truth lives at `config/units.json`; this module imports it via Vite's native
  * JSON support, validates it through zod, and re-exports the parsed
  * value with the strict TS types the rest of the codebase expects.
  *
@@ -47,15 +48,15 @@
  *
  * Adding a new archetype:
  *   1. Add its key + abilities + baseStats + growthRates to
- *      `config/archetypes.json` (use low/negative `mobility` if it needs
+ *      `config/units.json` (use low/negative `mobility` if it needs
  *      a slow walking pace — there's no per-archetype move-CD override)
  *   2. Extend the `Archetype` union in `src/sim/archetypes.ts`
- *   3. Extend the `Archetypes` zod object below
+ *   3. Extend the `UnitDefs` zod object below
  *   4. The compiler will surface remaining sites that need a case.
  */
 
 import { z } from 'zod';
-import archetypesJson from '../../config/archetypes.json';
+import unitsJson from '../../config/units.json';
 import { knownAbilityIds } from '../sim/abilities/registry';
 import { knownTargetingIds } from '../sim/targetingStrategies';
 import { ABILITY_DEFS } from './abilities';
@@ -118,7 +119,7 @@ const TargetingIdSchema = z.string().refine((id) => TARGETING_IDS.includes(id), 
 // validates an edited config against the SAME schema the game boots on — so the
 // editor's "is this valid?" can never drift from the game's load-time parse.
 // Dev-tool consumption only; no sim/snapshot/fuzz behavior reads these exports.
-export const ArchetypeSchema = z.object({
+export const UnitDefSchema = z.object({
   glyph: z.string().length(1),
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,
@@ -127,8 +128,8 @@ export const ArchetypeSchema = z.object({
   // (default `nearest`); a future archetype that omits it fails at load.
   targeting: TargetingIdSchema,
   // §29-close — whether this archetype appears in the player's post-victory
-  // recruit offer (`rollOffer` samples `DRAFTABLE_ARCHETYPES`, the draftable
-  // subset of `ALL_ARCHETYPES`). Defaults TRUE so a newly-added archetype joins
+  // recruit offer (`rollOffer` samples `DRAFTABLE_UNIT_DEFS`, the draftable
+  // subset of `ALL_UNIT_DEFS`). Defaults TRUE so a newly-added archetype joins
   // the draft pool automatically (the F1 intent); the §29 enemy disruptors
   // (frozen/confusion/blind/panic afflicters) + the summon-only Ghoul set it
   // FALSE — they exist on the board (cast by enemies / summoned) but are never
@@ -136,53 +137,85 @@ export const ArchetypeSchema = z.object({
   // formatter emits the line only when false, keeping the file diff to the
   // exclusions.
   draftable: z.boolean().default(true),
+
+  // ── §38 fields (planted INERT by 38b) ──────────────────────────────────────
+  // All def-resolved by id at spawn (like glyph/targeting), so no WorldSnapshot
+  // bump. 38b adds them to the SCHEMA only — every existing entry omits them
+  // (the formatter doesn't emit them, so the file stays byte-identical) and the
+  // consuming code still runs its old archetype switches. 38c+ populate + wire.
+  //
+  // §39 footprint — an axis-aligned N×N body (N ∈ 1..4); `position` stays the
+  // canonical corner. Default 1 (single-cell). Inert until §39 fills
+  // `cellsOccupiedBy`.
+  footprint: z.number().int().min(1).max(4).default(1),
+  // Flight (deferred build) — the occupancy plane the unit lives on. `ground`
+  // today; `air` is the flight fill. Inert until flight builds.
+  layer: z.enum(['ground', 'air']).default('ground'),
+  // Flight (deferred build) — a flyer skips the §37 tile cost/effect pass. Inert
+  // until flight builds.
+  ignoresTerrain: z.boolean().default(false),
+  // §38d — the status allow-filter the `applyStatus` op will consult: the status
+  // ids this unit can receive. Absent ⇒ susceptible to ALL (the behavior-
+  // identical default for every combatant); a wall/rubble opts into the few it
+  // allows (burn/frozen, not poison/bleed). Inert until 38d wires `applyStatus`.
+  statusSusceptibility: z.array(z.string()).optional(),
+  // 38a branch-killers — planted optional (absent today; the old switches still
+  // run), populated + consumed in 38c. `damageStat`: the stat a basic strike /
+  // the display "ATK" reads (absent ⇒ non-striker/0; → `stats.ts` damageStatFor).
+  // `movementBehavior`: the movement-behavior selector (absent ⇒ standard;
+  // `support` = the healer; → `behaviors/registry.ts`). `retargetOnLosLoss`: drop
+  // a too-long-unseen target (the ranged special-case; absent ⇒ false; →
+  // `Targeting.ts`).
+  damageStat: z.enum(['strength', 'ranged', 'magic']).optional(),
+  movementBehavior: z.enum(['standard', 'support']).optional(),
+  retargetOnLosLoss: z.boolean().optional(),
 });
 
-export const ArchetypesSchema = z.object({
-  // I5 — the melee family (key order MUST match config/archetypes.json so the
+export const UnitDefsSchema = z.object({
+  // I5 — the melee family (key order MUST match config/units.json so the
   // archetype-editor formatter round-trips: it emits in parsed-shape order).
-  mercenary: ArchetypeSchema,
-  adventurer: ArchetypeSchema,
-  ronin: ArchetypeSchema,
-  bandit: ArchetypeSchema,
-  ranged: ArchetypeSchema,
-  rogue: ArchetypeSchema,
-  healer: ArchetypeSchema,
-  mage: ArchetypeSchema,
-  catapult: ArchetypeSchema,
+  mercenary: UnitDefSchema,
+  adventurer: UnitDefSchema,
+  ronin: UnitDefSchema,
+  bandit: UnitDefSchema,
+  ranged: UnitDefSchema,
+  rogue: UnitDefSchema,
+  healer: UnitDefSchema,
+  mage: UnitDefSchema,
+  catapult: UnitDefSchema,
   // §29 demo roster (Cluster 1) — status-on-hit / chain / summon consumers.
-  reaver: ArchetypeSchema, // 29a (bleed)
-  corrupter: ArchetypeSchema, // 29b (poison)
-  ice_mage: ArchetypeSchema, // 29b (frozen)
-  warlock: ArchetypeSchema, // 29b (confusion)
-  luminant: ArchetypeSchema, // 29b (blind)
-  banshee: ArchetypeSchema, // 29b (panic)
-  stormcaller: ArchetypeSchema, // 29c (chain)
+  reaver: UnitDefSchema, // 29a (bleed)
+  corrupter: UnitDefSchema, // 29b (poison)
+  ice_mage: UnitDefSchema, // 29b (frozen)
+  warlock: UnitDefSchema, // 29b (confusion)
+  luminant: UnitDefSchema, // 29b (blind)
+  banshee: UnitDefSchema, // 29b (panic)
+  stormcaller: UnitDefSchema, // 29c (chain)
   // 29d — the summon consumers: a summoner + its minion.
-  shaman: ArchetypeSchema, // raises Ghouls (caster-anchored summon)
-  ghoul: ArchetypeSchema, // the summoned minion (≈ half a bandit)
+  shaman: UnitDefSchema, // raises Ghouls (caster-anchored summon)
+  ghoul: UnitDefSchema, // the summoned minion (≈ half a bandit)
 });
 
-export type ArchetypeConfig = z.infer<typeof ArchetypeSchema>;
-export type ArchetypesConfig = z.infer<typeof ArchetypesSchema>;
+export type UnitDef = z.infer<typeof UnitDefSchema>;
+export type UnitDefsConfig = z.infer<typeof UnitDefsSchema>;
 export type GrowthRates = z.infer<typeof GrowthRatesSchema>;
 
-export const ARCHETYPES: ArchetypesConfig = ArchetypesSchema.parse(archetypesJson);
+export const UNIT_DEFS: UnitDefsConfig = UnitDefsSchema.parse(unitsJson);
 
 /**
  * §29d boot check (the `assertStatusRefsResolve` sibling): every `summon` op
  * referenced in the ability catalog must name an archetype that EXISTS in this
  * catalog — a typo'd / dangling `summon.archetype` fails at startup, not silently
  * at cast. Lives HERE (the archetype catalog owns the valid-id set) rather than in
- * the ability registry's boot IIFE, which runs before this module's `ARCHETYPES`
- * is built (and importing `ARCHETYPES` there would cycle through `knownAbilityIds`).
+ * the ability registry's boot IIFE, which runs before this module's `UNIT_DEFS`
+ * is built (and importing `UNIT_DEFS` there would cycle through `knownAbilityIds`).
  * Walks `ABILITY_DEFS` directly — config/abilities is already loaded (the
  * `knownAbilityIds` import above pulled it in) and never imports back here, so the
  * dependency stays one-way. `summon` is a top-level op only (never a chain-inner /
  * periodic op), so no recursion is needed.
  */
 (function assertSummonRefsResolve(): void {
-  const archetypeIds = new Set(Object.keys(ARCHETYPES));
+  const archetypeIds = new Set(Object.keys(UNIT_DEFS));
   for (const def of Object.values(ABILITY_DEFS)) {
     for (const entry of def.effects) {
       if (entry.op.kind !== 'summon') continue;

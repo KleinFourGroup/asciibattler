@@ -80,7 +80,7 @@ Two issues the user surfaced during the **Q1/Q2** playtests (2026-06-17) — pau
 ## Design explorations (post-Phase-G)
 
 - [x] **Movement abilities (dash / gap-closer) — the real rogue fix.** ✅ **DONE (N1, 2026-06-14):** the rogue dash shipped — an aggressive-close gap-closer (range 2 / 0.25s motion / 10s cd), the ability config promoted to a `kind` discriminated union (`attack|heal|movement`, runtime stays flat), a first-class `unit:dashed` event ([DashAction](src/sim/actions/DashAction.ts)). **Still N2's:** flip the rogue to `weakest` targeting + re-run this forced-roster eval now that the backline is reachable. The original disproof that motivated mobility is kept: H7c added a
-      general per-archetype **targeting strategy** field ([config/archetypes.json](config/archetypes.json) +
+      general per-archetype **targeting strategy** field ([config/units.json](config/units.json) +
       [src/sim/targetingStrategies.ts](src/sim/targetingStrategies.ts): `nearest` / `weakest`). The plan was to
       make the rogue target the **weakest** (squishiest) enemy = "backline assassin." A
       forced-roster eval **disproved it for our rogue**: `weakest` *halved* the rogue's

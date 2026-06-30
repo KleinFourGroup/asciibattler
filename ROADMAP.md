@@ -825,15 +825,16 @@ oracle is the equivalence proof for 38c + 38d.
   `enemyBudget.ts` `'bandit'`/`'ranged'` (default enemy comp). **Verdict: clean/small —
   no re-scope** (matches the "few literal branches → clean 38b–38e" expectation). Locked
   decisions ↑.
-- **38b — rename `archetypes.json` → `units.json` + plant the inert UnitDef fields.**
+- **✅ 38b — rename `archetypes.json` → `units.json` + plant the inert UnitDef fields (COMPLETE 2026-06-30).**
   Mechanical, byte-identical: `git mv config/archetypes.json config/units.json` +
   `src/config/archetypes.ts` → `src/config/units.ts` (the 3 source importers +
   `SAVABLE_CONFIG_FILES` + the archetype-editor's path strings + tests follow the
   compiler; config-layer symbols → UnitDef vocab per the naming scope above). Extend the
   zod schema with the optional blocks at **behavior-identical defaults, not yet wired**:
   `footprint` (1), `layer` (`ground`), `ignoresTerrain` (false), `statusSusceptibility`
-  (all), a flat-HP/neutral block, plus the three audit branch-killer fields populated but
-  inert (`damageStat`, `movementBehavior`, `retargetOnLosLoss` — consumed in 38c). A
+  (all), plus the three branch-killer fields planted OPTIONAL — absent in JSON, populated +
+  wired in 38c (`damageStat`, `movementBehavior`, `retargetOnLosLoss`); the flat-HP/neutral
+  block lands in 38d with the fold. A
   boot-assert validates every referenced id. *Test:* every id resolves; each optional
   field defaults to a behavior-identical value.
 - **38c — relax `Archetype` → a catalog id + route the data-driven lookups through the

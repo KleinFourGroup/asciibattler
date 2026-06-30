@@ -3,12 +3,12 @@
  * http://localhost:5173/tools/archetype-editor/ after `npm run dev`. Not in
  * the production build (no rollupOptions.input entry).
  *
- * Edits the archetype entries of `config/archetypes.json` — glyph, abilities,
+ * Edits the archetype entries of `config/units.json` — glyph, abilities,
  * targeting policy, the `draftable` flag, the 11-stat `baseStats` block, and the
  * parallel `growthRates` — with the things the copy-paste loop didn't give us:
  *
  *  1. **Live schema validation.** Every edit re-runs the SAME per-entry
- *     `ArchetypeSchema` the game boots on (imported from `src/config/archetypes.ts`),
+ *     `UnitDefSchema` the game boots on (imported from `src/config/units.ts`),
  *     so "is this valid?" can't drift from the game's load-time parse. Save is
  *     disabled while invalid. (§30d validates PER ENTRY rather than the whole-config
  *     `z.object` — the object would silently strip a new, not-yet-wired key.)
@@ -24,8 +24,8 @@
  *  §30d — CREATE / DELETE + the guided WIRE-UP. The editor authors a new
  *  archetype's DATA, but archetypes are a CLOSED typed vocabulary: making one
  *  actually spawn + render needs three code edits the tool can't perform (the
- *  `Archetype` union in `Unit.ts`, the `ArchetypesSchema` key in
- *  `config/archetypes.ts`, a `glyphs.ts` glyph). So "+ New" / "Delete" scaffold
+ *  `Archetype` union in `Unit.ts`, the `UnitDefsSchema` key in
+ *  `config/units.ts`, a `glyphs.ts` glyph). So "+ New" / "Delete" scaffold
  *  the data and the **Wire-up** panel emits the exact code edits to paste — honest
  *  about the data/code split, keeping the union closed (goal #1).
  *
@@ -36,10 +36,10 @@
 
 import './editor.css';
 import {
-  ARCHETYPES,
-  ArchetypeSchema,
-  type ArchetypeConfig,
-} from '../../src/config/archetypes';
+  UNIT_DEFS,
+  UnitDefSchema,
+  type UnitDef,
+} from '../../src/config/units';
 import type { UnitStats } from '../../src/sim/Unit';
 import { STAT_LABELS } from '../../src/ui/statLabels';
 import { knownAbilityIds } from '../../src/sim/abilities/registry';
@@ -59,7 +59,7 @@ import { GLYPHS } from '../../src/render/glyphs';
 import { formatArchetypesJson } from './format';
 
 // §30d — keys are open (a new archetype can be created), so the working set is a
-// plain record keyed by string, validated per-entry against `ArchetypeSchema`.
+// plain record keyed by string, validated per-entry against `UnitDefSchema`.
 type ArchetypeKey = string;
 type StatKind = 'base' | 'growth';
 
@@ -84,10 +84,10 @@ const SCALING_LABEL: Record<string, string> = {
 
 // ---- State ----
 // `working` is a deep, mutable clone of the committed config; the form mutates
-// it, the schema validates it, the formatter emits it. ARCHETYPES stays the
+// it, the schema validates it, the formatter emits it. UNIT_DEFS stays the
 // pristine baseline that "Revert all" restores from. §30d: keys are open (create /
 // delete), so it's a string-keyed record.
-let working: Record<string, ArchetypeConfig> = structuredClone(ARCHETYPES);
+let working: Record<string, UnitDef> = structuredClone(UNIT_DEFS);
 let activeKey: ArchetypeKey = Object.keys(working)[0]!;
 let previewLevel = 1;
 let refPrecision = 5;
@@ -273,7 +273,7 @@ function attachButtons(): void {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'archetypes.json';
+    a.download = 'units.json';
     a.click();
     URL.revokeObjectURL(url);
   });
@@ -334,8 +334,8 @@ function refreshDerived(): void {
 }
 
 function refreshValidation(): void {
-  // §30d — validate PER ENTRY against `ArchetypeSchema`. The whole-config
-  // `ArchetypesSchema` is a fixed-key `z.object` that would silently STRIP a new
+  // §30d — validate PER ENTRY against `UnitDefSchema`. The whole-config
+  // `UnitDefsSchema` is a fixed-key `z.object` that would silently STRIP a new
   // archetype key (zod default), reporting "valid" while dropping the very entry
   // being authored — so we parse each entry and path the issues by key, plus
   // guard the key naming the formatter / Save will write verbatim.
@@ -345,7 +345,7 @@ function refreshValidation(): void {
     if (!KEY_PATTERN.test(key)) {
       issues.push(`${key}: key must be snake_case (a–z, 0–9, _, starting with a letter)`);
     }
-    const result = ArchetypeSchema.safeParse(a);
+    const result = UnitDefSchema.safeParse(a);
     if (!result.success) {
       for (const issue of result.error.issues) {
         issues.push(`${key}.${issue.path.join('.') || '(root)'}: ${issue.message}`);
@@ -440,12 +440,12 @@ async function save(): Promise<void> {
     const res = await fetch('/__save-config', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ file: 'archetypes.json', content: exportEl.value }),
+      body: JSON.stringify({ file: 'units.json', content: exportEl.value }),
     });
     const data: { ok?: boolean; error?: string } = await res.json().catch(() => ({}));
     if (res.ok && data.ok) {
       saveStatusEl.textContent =
-        `Saved to config/archetypes.json at ${new Date().toLocaleTimeString()}. ` +
+        `Saved to config/units.json at ${new Date().toLocaleTimeString()}. ` +
         `An open game tab hot-reloads the new values.`;
       saveStatusEl.className = 'hint ok';
     } else {
@@ -459,7 +459,7 @@ async function save(): Promise<void> {
 }
 
 function revert(): void {
-  working = structuredClone(ARCHETYPES);
+  working = structuredClone(UNIT_DEFS);
   // The key set may have changed (a created / deleted archetype) — rebuild the
   // tabs and re-anchor `activeKey` if it no longer exists.
   if (!(activeKey in working)) activeKey = Object.keys(working)[0]!;
@@ -507,7 +507,7 @@ function deleteArchetype(): void {
 
 // ---- Wire-up panel (§30d): the code edits a created / deleted archetype needs ----
 function refreshWireup(): void {
-  const committed = new Set(Object.keys(ARCHETYPES));
+  const committed = new Set(Object.keys(UNIT_DEFS));
   const current = Object.keys(working);
   const added = current.filter((k) => !committed.has(k));
   const removed = [...committed].filter((k) => !current.includes(k));
@@ -530,7 +530,7 @@ function refreshWireup(): void {
     block.appendChild(elTag('h3', '', `+ ${key}  (glyph "${a.glyph}")`));
     const ol = document.createElement('ol');
     ol.appendChild(elTag('li', '', `src/sim/Unit.ts — add  | '${key}'  to the Archetype union`));
-    ol.appendChild(elTag('li', '', `src/config/archetypes.ts — add  ${key}: ArchetypeSchema,  to ArchetypesSchema`));
+    ol.appendChild(elTag('li', '', `src/config/units.ts — add  ${key}: UnitDefSchema,  to UnitDefsSchema`));
     ol.appendChild(elTag('li', '', `src/render/glyphs.ts — append  '${a.glyph}',  to GLYPHS (append-only, gotcha #33)`));
     block.appendChild(ol);
     wireupEl.appendChild(block);
@@ -539,7 +539,7 @@ function refreshWireup(): void {
     const block = elTag('div', 'wire-block', '');
     block.appendChild(elTag('h3', '', `− ${key}`));
     block.appendChild(
-      elp('', `Remove '${key}' from the Archetype union (Unit.ts), ArchetypesSchema (archetypes.ts), and its glyph in glyphs.ts.`),
+      elp('', `Remove '${key}' from the Archetype union (Unit.ts), UnitDefsSchema (units.ts), and its glyph in glyphs.ts.`),
     );
     wireupEl.appendChild(block);
   }

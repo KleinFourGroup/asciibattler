@@ -299,9 +299,9 @@ export const TargetSelectorSchema = z.discriminatedUnion('kind', [
 
 /**
  * §29d — what a `summon` op spawns. The minion is its OWN archetype (a
- * data-driven stat block in `config/archetypes.json` — the Ghoul ≈ half a bandit),
+ * data-driven stat block in `config/units.json` — the Ghoul ≈ half a bandit),
  * referenced by id (`archetype`); a typo'd id is boot-rejected by
- * `assertSummonRefsResolve` (`src/config/archetypes.ts`), the `applyStatus`
+ * `assertSummonRefsResolve` (`src/config/units.ts`), the `applyStatus`
  * `statusId` precedent. `level` is the minion level — a `ScalarOrScaled` (§31c): a
  * bare number (fixed) OR scaled off the summoner at cast (`evalScaled`, int-rounded
  * ≥1 at capture, since `scaledUnit` needs an int). Summoned via the deterministic

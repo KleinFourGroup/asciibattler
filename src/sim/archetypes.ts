@@ -1,6 +1,6 @@
 import type { RNG } from '../core/RNG';
 import type { Archetype, UnitArchetype, UnitTemplate } from './Unit';
-import { ARCHETYPES, type ArchetypeConfig } from '../config/archetypes';
+import { UNIT_DEFS, type UnitDef } from '../config/units';
 import { abilityDef } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
 
@@ -11,12 +11,12 @@ import { scaleStats, simulateLevelUps } from './leveling';
 export type { Archetype };
 
 /**
- * Per-archetype config, sourced from `config/archetypes.json` and
- * validated by [src/config/archetypes.ts](src/config/archetypes.ts).
+ * Per-archetype config, sourced from `config/units.json` and
+ * validated by [src/config/units.ts](src/config/units.ts).
  * Re-exported as `ARCHETYPE_CONFIG` for tests that want to assert
  * baseStats / glyph without re-importing from config.
  */
-const CONFIGS: Record<Archetype, ArchetypeConfig> = ARCHETYPES;
+const CONFIGS: Record<Archetype, UnitDef> = UNIT_DEFS;
 
 export function glyphForArchetype(archetype: Archetype): string {
   return CONFIGS[archetype].glyph;
@@ -160,11 +160,11 @@ export function scaledUnit(archetype: Archetype, level: number): UnitTemplate {
 
 // Re-exported for tests / fuzz harness diagnostic that want to peek
 // at the parsed config without reaching into the config module.
-export const ARCHETYPE_CONFIG: Record<Archetype, ArchetypeConfig> = CONFIGS;
+export const ARCHETYPE_CONFIG: Record<Archetype, UnitDef> = CONFIGS;
 
 /**
  * F1 — the draft / recruit pool: every defined archetype, in
- * `config/archetypes.json` key order (melee, ranged, rogue, healer,
+ * `config/units.json` key order (melee, ranged, rogue, healer,
  * mage, catapult). Derived from the config so a newly-added archetype
  * joins the pool automatically; the stable key order keeps the byte
  * stream deterministic for whoever samples from it. `rollOffer` draws

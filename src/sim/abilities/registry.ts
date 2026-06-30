@@ -6,7 +6,7 @@ import { EffectAbility } from '../effects/EffectAbility';
 /**
  * Ability factories keyed by `Ability.id`. `World.fromJSON` uses these
  * to rehydrate each unit's `abilities` list from a snapshot; the
- * archetype-config schema (`src/config/archetypes.ts`) validates that
+ * archetype-config schema (`src/config/units.ts`) validates that
  * every ability id declared on an archetype resolves here at boot.
  *
  * Pattern mirrors `behaviors/registry.ts` — abilities are stateless in
@@ -71,7 +71,7 @@ const FACTORIES: Record<string, AbilityFactory> = {
  * ability with no def (or a def for an ability that was never registered) is a
  * wiring mistake — fail loudly at module load rather than at the first propose
  * tick or, worse, with a silent default the user explicitly didn't want. Mirrors
- * the archetype-abilities check in `src/config/archetypes.ts`.
+ * the archetype-abilities check in `src/config/units.ts`.
  */
 (function assertAbilityDefCoverage(): void {
   const factoryIds = Object.keys(FACTORIES);

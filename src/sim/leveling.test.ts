@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
 import { scaleStats, simulateLevelUps } from './leveling';
 import type { UnitStats } from './Unit';
-import type { GrowthRates } from '../config/archetypes';
+import type { GrowthRates } from '../config/units';
 import { ARCHETYPE_CONFIG, ALL_ARCHETYPES } from './archetypes';
 
 const BASE: UnitStats = {

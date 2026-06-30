@@ -4,8 +4,8 @@ import { SIM } from '../config/sim';
 
 /**
  * Per-archetype target-SELECTION policy. Each archetype declares a strategy
- * id in `config/archetypes.json`, validated against this registry at load
- * (mirrors `AbilityIdSchema` in `src/config/archetypes.ts`). The id is
+ * id in `config/units.json`, validated against this registry at load
+ * (mirrors `AbilityIdSchema` in `src/config/units.ts`). The id is
  * resolved to a strategy at spawn and stashed on `Unit.targeting` — the same
  * resolve-at-spawn convention as `glyph` / `attackRange` / `abilities`, which
  * keeps the leaf `Targeting.ts` free of the archetype-config layer (no

@@ -42,7 +42,7 @@ export type RecruitPolicy = (
 /**
  * The base-stat keys, derived from a real archetype's `baseStats` block so the
  * per-stat strategy menu tracks the stat vocabulary automatically (add a stat
- * to `config/archetypes.json` → it gets a `stat:<name>` strategy for free).
+ * to `config/units.json` → it gets a `stat:<name>` strategy for free).
  * Order = the config authoring order (deterministic).
  */
 export const STAT_KEYS = Object.keys(baseStatsForArchetype('mercenary')) as (keyof UnitStats)[];

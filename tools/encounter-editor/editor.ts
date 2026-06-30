@@ -69,7 +69,7 @@ import {
   type Stage,
 } from '../../src/run/encounters/sequencer';
 import { scaledUnit, glyphForArchetype, type Archetype } from '../../src/sim/archetypes';
-import { ARCHETYPES } from '../../src/config/archetypes';
+import { UNIT_DEFS } from '../../src/config/units';
 import type { UnitTemplate } from '../../src/sim/Unit';
 import { formatEncountersJson } from './format';
 
@@ -127,7 +127,7 @@ const SAVE_STASH_KEY = 'encounterEditor.justSaved';
  *  layout editor). */
 const SECTOR_ADD_STASH_KEY = 'encounterEditor.sectorAdded';
 
-const ARCHETYPE_IDS = Object.keys(ARCHETYPES) as Archetype[];
+const ARCHETYPE_IDS = Object.keys(UNIT_DEFS) as Archetype[];
 const ENTRY_KINDS = ['wave', 'pick', 'loop', 'stages'] as const;
 
 // Per-kind numeric-field config for the `kindNumberControl` (a `<select>` of

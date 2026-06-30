@@ -44,7 +44,7 @@
 
 import { z } from 'zod';
 import encountersJson from '../../config/encounters.json';
-import { ARCHETYPES } from './archetypes';
+import { UNIT_DEFS } from './units';
 import { LAYOUT_IDS } from './layouts';
 import type { Archetype } from '../sim/Unit';
 import type {
@@ -63,7 +63,7 @@ import type {
 } from '../run/encounters/sequencer';
 
 // --- archetype id validation (config→config; the Archetype TYPE is type-only) ---
-const ARCHETYPE_IDS = new Set(Object.keys(ARCHETYPES));
+const ARCHETYPE_IDS = new Set(Object.keys(UNIT_DEFS));
 const ArchetypeSchema = z.custom<Archetype>(
   (v) => typeof v === 'string' && ARCHETYPE_IDS.has(v),
   { message: 'unknown archetype' },

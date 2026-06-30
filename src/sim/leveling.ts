@@ -23,7 +23,7 @@
 
 import type { RNG } from '../core/RNG';
 import type { UnitStats } from './Unit';
-import type { GrowthRates } from '../config/archetypes';
+import type { GrowthRates } from '../config/units';
 
 // I1: the canonical stat order — `CON · STR · RNG · MAG · LCK · DEF · PRC ·
 // EVA · SPD · MOB · POW` (combat → dodge → cadence → meta). This is BOTH the

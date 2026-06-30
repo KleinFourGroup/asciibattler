@@ -20,7 +20,7 @@ import { defineConfig, type Plugin } from 'vite';
  * destination + JSON-parseability.
  */
 const SAVABLE_CONFIG_FILES = new Set([
-  'archetypes.json',
+  'units.json',
   'layouts.json',
   'sectors.json',
   'encounters.json',

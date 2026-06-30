@@ -26,7 +26,7 @@
 import './editor.css';
 import { ABILITY_DEFS } from '../../src/config/abilities';
 import { STATUS_DEFS } from '../../src/config/statuses';
-import { ARCHETYPES } from '../../src/config/archetypes';
+import { UNIT_DEFS } from '../../src/config/units';
 import { STATS } from '../../src/config/stats';
 import { TICK_SECONDS } from '../../src/config';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
@@ -723,8 +723,8 @@ function buildSampleCaster(): void {
   }
   presetEl.addEventListener('change', () => {
     const id = presetEl.value;
-    if (!id || !(id in ARCHETYPES)) return;
-    const base = ARCHETYPES[id as keyof typeof ARCHETYPES].baseStats;
+    if (!id || !(id in UNIT_DEFS)) return;
+    const base = UNIT_DEFS[id as keyof typeof UNIT_DEFS].baseStats;
     for (const k of SAMPLE_STATS) sample[k] = base[k];
     syncSampleInputs();
     refreshPreview();

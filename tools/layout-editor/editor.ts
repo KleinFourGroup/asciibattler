@@ -801,28 +801,25 @@ function validate(): ValidationItem[] {
   // Mirrors `src/config/layouts.ts` — flagged as errors here so the
   // author sees them while painting, before the JSON paste at boot
   // would catch them.
-  const blockedSet = new Set<string>();
-  for (const w of walls) blockedSet.add(`${w.x},${w.y}`);
-  for (const w of water) blockedSet.add(`${w.x},${w.y}`);
-  for (const hc of halfCovers) blockedSet.add(`${hc.x},${hc.y}`);
-  for (const ch of chasms) blockedSet.add(`${ch.x},${ch.y}`);
-  for (const f of fires) blockedSet.add(`${f.x},${f.y}`);
-  for (const hl of healings) blockedSet.add(`${hl.x},${hl.y}`);
-  for (const t of deepWater) blockedSet.add(`${t.x},${t.y}`);
-  for (const t of hills) blockedSet.add(`${t.x},${t.y}`);
-  for (const t of ice) blockedSet.add(`${t.x},${t.y}`);
-  for (const t of sand) blockedSet.add(`${t.x},${t.y}`);
-  for (const t of mud) blockedSet.add(`${t.x},${t.y}`);
+  // §37g — spawns may sit on any PASSABLE tile (water / fire / healing / hills /
+  // ice / sand / mud); reject only cells a unit can't occupy — impassable tiles
+  // (chasm, deep water) and neutral-unit cells (wall, half-cover). Mirrors the
+  // canonical `spawnBlocked` set in src/config/layouts.ts.
+  const spawnBlockedSet = new Set<string>();
+  for (const w of walls) spawnBlockedSet.add(`${w.x},${w.y}`);
+  for (const hc of halfCovers) spawnBlockedSet.add(`${hc.x},${hc.y}`);
+  for (const ch of chasms) spawnBlockedSet.add(`${ch.x},${ch.y}`);
+  for (const t of deepWater) spawnBlockedSet.add(`${t.x},${t.y}`);
   let spawnOverlap = 0;
   for (const region of spawns) {
     for (const t of region.tiles) {
-      if (blockedSet.has(`${t.x},${t.y}`)) spawnOverlap++;
+      if (spawnBlockedSet.has(`${t.x},${t.y}`)) spawnOverlap++;
     }
   }
   if (spawnOverlap > 0) {
     items.push({
       level: 'error',
-      text: `${spawnOverlap} spawn tile(s) overlap walls / water / half-cover / chasm / fire / healing — paint to move them.`,
+      text: `${spawnOverlap} spawn tile(s) sit on impassable / occupied cells (wall, half-cover, chasm, or deep water) — paint to move them.`,
     });
   }
 
@@ -870,14 +867,15 @@ function validate(): ValidationItem[] {
     });
   }
 
-  // Connectivity treats half-cover and chasm as path blockers — D6 walls
-  // off through half-cover (pathfinding rejects), D7.A makes chasm
-  // Infinity-cost (A* skips). Mirrors the BFS in layouts.test.ts that
-  // pins this at module-load time. The LOS-transparency of half-cover +
-  // chasm only affects ranged-attack visibility, not movement
-  // reachability. Fire + healing pass freely (cost 1) — they're surface
-  // effects, not obstacles.
-  if (!isConnected([...walls, ...halfCovers, ...chasms])) {
+  // Connectivity treats half-cover, chasm, and deep water as path blockers —
+  // D6 walls off through half-cover (pathfinding rejects), D7.A makes chasm
+  // Infinity-cost (A* skips), and §37b deep water is Infinity-cost too (the
+  // 37g fix — it was missing here, so a deep-water-severed map validated as
+  // connected). Mirrors the BFS in layouts.test.ts. The LOS-transparency of
+  // half-cover + chasm only affects ranged-attack visibility, not movement
+  // reachability. Fire + healing + the passable §37 tiles (hills/ice/sand/mud)
+  // pass freely — they're costly surface effects, not obstacles.
+  if (!isConnected([...walls, ...halfCovers, ...chasms, ...deepWater])) {
     items.push({
       level: 'error',
       text: 'Spawn regions are severed — no path between the first two spawn regions.',

@@ -9,7 +9,7 @@ import {
   type LayoutDef,
   type SpawnRegion,
 } from './layouts';
-import { SpawnRegionSchema, ThemeSchema } from '../config/layouts';
+import { LayoutsSchema, SpawnRegionSchema, ThemeSchema } from '../config/layouts';
 import { generateTerrain } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
@@ -100,14 +100,17 @@ describe('layouts library', () => {
       it('leaves at least one path between the first two spawn regions', () => {
         // Mirror of terrainGen's connectivity check: hand-authored layouts
         // that sever the board are bugs, not seeds to be rescued. Walls,
-        // half-covers, and chasms block movement (chasm = Infinity cost).
-        // Fire + healing don't block — they're normal-cost surface effects
-        // — so they're not added to the blocker pool.
+        // half-covers, chasms, and deep water block movement (chasm + deep
+        // water = Infinity cost; §37g added deep water here — it was missing,
+        // so a deep-water-severed map would have validated as connected).
+        // Fire + healing + the passable §37 tiles (hills/ice/sand/mud) don't
+        // block — they're cost-bearing surface effects, not obstacles.
         const [a, b] = layout.spawns;
         const blockers = [
           ...layout.walls,
           ...(layout.halfCovers ?? []),
           ...(layout.chasms ?? []),
+          ...(layout.deepWater ?? []),
         ];
         expect(
           hasPathBetween(blockers, layout.gridW, layout.gridH, a!, b!),
@@ -141,14 +144,16 @@ describe('layouts library', () => {
         }
       });
 
-      it('spawn tiles never overlap walls, water, half-covers, chasms, fires, or healings', () => {
+      it('spawn tiles never sit on impassable or occupied cells (walls, half-covers, chasms, deep water)', () => {
+        // §37g — spawns ARE allowed on passable terrain (water / fire / healing
+        // / hills / ice / sand / mud); only impassable cells (chasm, deep water)
+        // and neutral-occupied cells (wall, half-cover) are off-limits. This
+        // pins that the shipped layouts respect the relaxed rule.
         const blocked = new Set<string>();
         for (const w of layout.walls) blocked.add(`${w.x},${w.y}`);
-        for (const w of layout.water ?? []) blocked.add(`${w.x},${w.y}`);
         for (const hc of layout.halfCovers ?? []) blocked.add(`${hc.x},${hc.y}`);
         for (const c of layout.chasms ?? []) blocked.add(`${c.x},${c.y}`);
-        for (const f of layout.fires ?? []) blocked.add(`${f.x},${f.y}`);
-        for (const h of layout.healings ?? []) blocked.add(`${h.x},${h.y}`);
+        for (const d of layout.deepWater ?? []) blocked.add(`${d.x},${d.y}`);
         for (const region of layout.spawns) {
           for (const t of region.tiles) {
             expect(blocked.has(`${t.x},${t.y}`)).toBe(false);
@@ -213,6 +218,44 @@ describe('§37e — theme palette rename + the three new themes', () => {
       ['barren', 'desert', 'grassland', 'swamp', 'tundra', 'volcanic'].sort(),
     );
   });
+});
+
+describe('§37g — a spawn region may sit on passable terrain, not impassable/occupied cells', () => {
+  // One terrain cell placed at (0,0) — a player-spawn tile in the base — then run
+  // through the REAL loader schema. Passable kinds must be ACCEPTED (a unit can
+  // stand + fight there, its terrain mods applying live); impassable / neutral-
+  // occupied kinds must be REJECTED (it physically can't occupy the cell).
+  const bandRow = (y: number): GridCoord[] =>
+    Array.from({ length: 8 }, (_, x) => ({ x, y }));
+  const base = (field: keyof LayoutDef): LayoutDef => {
+    const layout: LayoutDef = {
+      id: 'spawn-on-terrain',
+      name: 'Spawn On Terrain',
+      description: '§37g fixture — a spawn tile coincident with one terrain cell.',
+      gridW: 8,
+      gridH: 8,
+      theme: 'grassland',
+      walls: [],
+      spawns: [
+        { availability: 'player', tiles: bandRow(0) },
+        { availability: 'enemy', tiles: bandRow(7) },
+      ],
+    };
+    (layout as Record<string, unknown>)[field] = [{ x: 0, y: 0 }];
+    return layout;
+  };
+
+  for (const field of ['water', 'fires', 'healings', 'hills', 'ice', 'sand', 'mud'] as const) {
+    it(`accepts a spawn tile on passable terrain (${field})`, () => {
+      expect(LayoutsSchema.safeParse([base(field)]).success).toBe(true);
+    });
+  }
+
+  for (const field of ['walls', 'halfCovers', 'chasms', 'deepWater'] as const) {
+    it(`rejects a spawn tile on an impassable / occupied cell (${field})`, () => {
+      expect(LayoutsSchema.safeParse([base(field)]).success).toBe(false);
+    });
+  }
 });
 
 describe('SpawnRegion schema tile-count range (H2)', () => {

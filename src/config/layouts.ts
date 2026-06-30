@@ -283,6 +283,19 @@ const LayoutSchema = z
     checkTileEffect(layout.sand, 'sand', 'sand');
     checkTileEffect(layout.mud, 'mud', 'mud');
 
+    // §37g — a spawn region may sit on any PASSABLE tile (water / fire / healing
+    // / hills / ice / sand / mud): a unit can stand and fight there, and its
+    // terrain combat mods + wading cost apply live (read off `defAt(position)`),
+    // so authors can deliberately seat a team on tactically-flavored ground.
+    // Reject only cells a unit can't physically occupy — impassable tiles
+    // (chasm, deep water) and neutral-unit cells (wall, half-cover). This is the
+    // SAME impassable/occupied set the connectivity guard treats as blockers.
+    const spawnBlocked = new Set<string>();
+    for (const w of layout.walls) spawnBlocked.add(`${w.x},${w.y}`);
+    for (const hc of layout.halfCovers ?? []) spawnBlocked.add(`${hc.x},${hc.y}`);
+    for (const ch of layout.chasms ?? []) spawnBlocked.add(`${ch.x},${ch.y}`);
+    for (const dw of layout.deepWater ?? []) spawnBlocked.add(`${dw.x},${dw.y}`);
+
     layout.spawns.forEach((region, regionIdx) => {
       region.tiles.forEach((t, tileIdx) => {
         if (t.x < 0 || t.x >= layout.gridW || t.y < 0 || t.y >= layout.gridH) {
@@ -292,11 +305,11 @@ const LayoutSchema = z
             message: `tile (${t.x},${t.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
           });
         }
-        if (blocked.has(`${t.x},${t.y}`)) {
+        if (spawnBlocked.has(`${t.x},${t.y}`)) {
           ctx.addIssue({
             code: 'custom',
             path: ['spawns', regionIdx, 'tiles', tileIdx],
-            message: `spawn tile (${t.x},${t.y}) overlaps a wall, water, half-cover, chasm, fire, or healing tile`,
+            message: `spawn tile (${t.x},${t.y}) sits on an impassable or occupied cell (wall, half-cover, chasm, or deep water)`,
           });
         }
       });

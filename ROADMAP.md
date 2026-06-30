@@ -639,11 +639,19 @@ Independent of the unit model, so this whole phase floats free of §38.
   *Test:* each tile's cost + passability (`TileGrid.test.ts` §37b block; deep_water
   short-circuits pathing like chasm in `Pathfinding.test.ts`; ice stays ≥1); the new
   kinds round-trip a `TileGrid` snapshot.
-- **37c — tile combat modifiers (the to-hit fold).** Extend `applyDamage`'s
-  precision-vs-evasion roll to fold the attacker's tile `accuracyMod` + the defender's
-  tile `evasionMod` from the `TileDef` table (generalizing M6's water precision
-  penalty). The combat-touching part → §41. *Test (balance-proof, derived from the
-  `TileDef` table):* the to-hit roll folds tile accuracy + evasion.
+- **✅ 37c — tile combat modifiers (the to-hit fold).** `applyDamage`'s
+  precision-vs-evasion roll now folds the ATTACKER's tile `accuracyMod` + the DEFENDER's
+  tile `evasionMod`, both LIVE reads via `TileGrid.defAt` (occupant-keyed, like the
+  fire/heal pass). The M6 `STATS.waterPrecisionPenalty` knob is **RETIRED** — every tile
+  combat mod now lives in the `TileDef` table as the single source
+  (`shallow_water.accuracyMod: -10` reproduces M6 byte-identically). Shipped magnitudes
+  (USER-LOCKED starting values, §41 tunes; 1 pt = 2% to-hit): ice/mud `accuracyMod -12`
+  (−24%), hills `evasionMod +8` (+16% harder to hit), sand `evasionMod -6` (−12%
+  easier), deep_water none. Verified: 1476 main + 212 fuzz:smoke green (byte-identical —
+  live battles only place `shallow_water`, unchanged), typecheck + lint clean. *Test
+  (balance-proof, derived from the table):* `World.test.ts`'s §37c fold block flips a
+  hit↔miss for an ice attacker / hills + sand defender from the table's own mod values;
+  `TileGrid.test.ts` asserts the mod signs + the water fold.
 - **37d — tile→status hooks (both directions).** A tile may **apply** a status on enter
   (mud → poison, behind a config flag) and **remove** one on enter (water + deep_water
   → remove burn) — generalizing the Cluster-1 fire → burn to add the inverse. (No

@@ -17,6 +17,7 @@ import { statusDef } from '../config/statuses';
 import { ZERO_STATS, deriveStats, hitChanceFor } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { STATS } from '../config/stats';
+import { TILE_DEFS, type TileKind } from './TileGrid';
 import type { GameEvents } from '../core/events';
 
 describe('World (Step 3.1 skeleton)', () => {
@@ -810,11 +811,16 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
   });
 });
 
-describe('World.applyDamage — M6 water bog-down (precision penalty)', () => {
+describe('World.applyDamage — §37c tile to-hit fold (generalizes M6 water bog-down)', () => {
+  // §37c: the M6 water penalty now lives in the TileDef table as
+  // `shallow_water.accuracyMod`. WATER_PENALTY is its magnitude, derived from
+  // the table (balance-proof — never hardcoded), so the assertions track the
+  // shipped value automatically.
+  const WATER_PENALTY = -(TILE_DEFS.shallow_water.accuracyMod ?? 0);
   // The I2 duel shape, but the test can seat either unit on a water tile. The
-  // attacker's precision is pinned to the configured penalty, so its EFFECTIVE
-  // precision while wading is exactly 0 — the assertions hold for any penalty
-  // value, deriving the thresholds from the config (balance-proof).
+  // attacker's precision is pinned to WATER_PENALTY, so its EFFECTIVE precision
+  // while wading is exactly 0 — the assertions hold for any penalty value,
+  // deriving the thresholds from the table (balance-proof).
   function wadeDuel(opts: {
     attackerOnWater?: boolean;
     targetOnWater?: boolean;
@@ -851,7 +857,7 @@ describe('World.applyDamage — M6 water bog-down (precision penalty)', () => {
       });
     };
     // attackerPrecision = penalty → effective precision 0 while wading.
-    const attacker = mk(1, 'player', STATS.waterPrecisionPenalty, 0);
+    const attacker = mk(1, 'player', WATER_PENALTY, 0);
     const target = mk(2, 'enemy', 0, 1);
     if (opts.attackerOnWater) world.tileGrid.setKind({ x: 0, y: 0 }, 'shallow_water');
     if (opts.targetOnWater) world.tileGrid.setKind({ x: 1, y: 0 }, 'shallow_water');
@@ -871,11 +877,11 @@ describe('World.applyDamage — M6 water bog-down (precision penalty)', () => {
 
   // Dry-ground hit chance (precision = penalty) vs the wading chance (effective
   // precision 0). The mechanic is only meaningful when the penalty is positive.
-  const dry = hitChanceFor(0.6, STATS.waterPrecisionPenalty, 0);
+  const dry = hitChanceFor(0.6, WATER_PENALTY, 0);
   const wet = hitChanceFor(0.6, 0, 0);
 
   it('the configured penalty lowers a wader’s to-hit chance', () => {
-    expect(STATS.waterPrecisionPenalty).toBeGreaterThan(0);
+    expect(WATER_PENALTY).toBeGreaterThan(0);
     expect(dry).toBeGreaterThan(wet);
   });
 
@@ -919,6 +925,97 @@ describe('World.applyDamage — M6 water bog-down (precision penalty)', () => {
     expect(d.world.combatRng.toJSON().state).toBe(before); // no draw
     expect(d.misses).toHaveLength(0);
     expect(d.attacks).toHaveLength(1);
+  });
+
+  // §37c — the general fold: ATTACKER's tile `accuracyMod` + DEFENDER's tile
+  // `evasionMod`, both read from the table. Each test pins the seed to the
+  // window between the floor-ground and on-tile hit chances (derived from the
+  // table mod), so it asserts the fold flips a HIT into a MISS (or vice-versa).
+  function tileDuel(opts: {
+    attackerTile?: TileKind;
+    targetTile?: TileKind;
+    attackerPrecision: number;
+    targetEvasion: number;
+    combatSeed: number;
+  }): {
+    world: World;
+    attacker: Unit;
+    target: Unit;
+    attacks: GameEvents['unit:attacked'][];
+    misses: GameEvents['unit:missed'][];
+  } {
+    const bus = new EventBus<GameEvents>();
+    const world = new World(bus, new RNG(1), 12, 12, undefined, new RNG(opts.combatSeed));
+    const attacks: GameEvents['unit:attacked'][] = [];
+    const misses: GameEvents['unit:missed'][] = [];
+    bus.on('unit:attacked', (p) => attacks.push(p));
+    bus.on('unit:missed', (p) => misses.push(p));
+    const mk = (id: number, team: Team, precision: number, evasion: number, x: number): Unit =>
+      new Unit({
+        id, team, archetype: 'mercenary', glyph: 'M',
+        stats: { ...ARCHETYPE_CONFIG.mercenary.baseStats, defense: 0, precision, evasion },
+        derived: deriveStats({ ...ARCHETYPE_CONFIG.mercenary.baseStats, defense: 0, precision, evasion }, 1),
+        position: { x, y: 0 },
+      });
+    const attacker = mk(1, 'player', opts.attackerPrecision, 0, 0);
+    const target = mk(2, 'enemy', 0, opts.targetEvasion, 1);
+    if (opts.attackerTile) world.tileGrid.setKind({ x: 0, y: 0 }, opts.attackerTile);
+    if (opts.targetTile) world.tileGrid.setKind({ x: 1, y: 0 }, opts.targetTile);
+    world.units.push(attacker, target);
+    return { world, attacker, target, attacks, misses };
+  }
+
+  it('ICE docks the ATTACKER’s accuracy (a dry-ground hit MISSES from ice)', () => {
+    const penalty = -(TILE_DEFS.ice.accuracyMod ?? 0);
+    expect(penalty).toBeGreaterThan(0);
+    // Pin precision = penalty so effective precision on ice is exactly 0.
+    const onGround = hitChanceFor(0.6, penalty, 0);
+    const onIce = hitChanceFor(0.6, 0, 0);
+    const seed = seedInWindow(onIce, onGround);
+
+    const dry = tileDuel({ attackerPrecision: penalty, targetEvasion: 0, combatSeed: seed });
+    dry.world.applyDamage(dry.attacker.id, dry.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
+    expect(dry.attacks).toHaveLength(1);
+
+    const slip = tileDuel({ attackerTile: 'ice', attackerPrecision: penalty, targetEvasion: 0, combatSeed: seed });
+    slip.world.applyDamage(slip.attacker.id, slip.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
+    expect(slip.misses).toHaveLength(1);
+    expect(slip.attacks).toHaveLength(0);
+  });
+
+  it('HILLS raise the DEFENDER’s evasion (a ground hit MISSES the high-ground target)', () => {
+    const bonus = TILE_DEFS.hills.evasionMod ?? 0;
+    expect(bonus).toBeGreaterThan(0);
+    const onGround = hitChanceFor(0.6, 0, 0);
+    const onHills = hitChanceFor(0.6, 0, bonus);
+    const seed = seedInWindow(onHills, onGround); // hits at onGround, misses at onHills
+
+    const ground = tileDuel({ attackerPrecision: 0, targetEvasion: 0, combatSeed: seed });
+    ground.world.applyDamage(ground.attacker.id, ground.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
+    expect(ground.attacks).toHaveLength(1);
+
+    const high = tileDuel({ targetTile: 'hills', attackerPrecision: 0, targetEvasion: 0, combatSeed: seed });
+    high.world.applyDamage(high.attacker.id, high.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
+    expect(high.misses).toHaveLength(1);
+    expect(high.attacks).toHaveLength(0);
+  });
+
+  it('SAND lowers the DEFENDER’s evasion (a ground miss HITS the exposed target)', () => {
+    const penalty = -(TILE_DEFS.sand.evasionMod ?? 0);
+    expect(penalty).toBeGreaterThan(0);
+    // Target carries `penalty` base evasion, so on sand its effective evasion is 0.
+    const onGround = hitChanceFor(0.6, 0, penalty);
+    const onSand = hitChanceFor(0.6, 0, 0);
+    const seed = seedInWindow(onGround, onSand); // misses at onGround, hits at onSand
+
+    const ground = tileDuel({ attackerPrecision: 0, targetEvasion: penalty, combatSeed: seed });
+    ground.world.applyDamage(ground.attacker.id, ground.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
+    expect(ground.misses).toHaveLength(1);
+
+    const exposed = tileDuel({ targetTile: 'sand', attackerPrecision: 0, targetEvasion: penalty, combatSeed: seed });
+    exposed.world.applyDamage(exposed.attacker.id, exposed.target, 10, { crit: false, evadable: true, accuracy: 0.6 });
+    expect(exposed.attacks).toHaveLength(1);
+    expect(exposed.misses).toHaveLength(0);
   });
 });
 

@@ -109,26 +109,33 @@ export interface TileDef {
  */
 export const TILE_DEFS: Record<TileKind, TileDef> = {
   floor: { cost: 1, passable: true },
-  shallow_water: { cost: 2, passable: true },
+  // §37c — `shallow_water`'s `accuracyMod: -10` is the M6 "bog-down" wading
+  // penalty, now OWNED by this table (the source for every tile combat mod) and
+  // read by `World.applyDamage`'s to-hit fold. -10 precision × 0.02 = -20% to
+  // hit while wading — byte-identical to the retired `STATS.waterPrecisionPenalty`.
+  shallow_water: { cost: 2, passable: true, accuracyMod: -10 },
   chasm: { cost: Infinity, passable: false },
   fire: { cost: 1, passable: true },
   healing: { cost: 1, passable: true },
-  // §37b — the new terrain. Costs are STARTING values (§41 tunes them); only
-  // the relative ordering + the floor invariant are load-bearing here:
+  // §37b cost/passability + §37c combat mods. All STARTING values (§41 tunes);
+  // for costs only the relative ordering + the ≥1 floor are load-bearing. Mods
+  // fold into the to-hit roll at 0.02/pt: `accuracyMod` docks the ATTACKER's
+  // precision (it's standing here), `evasionMod` shifts the DEFENDER's evasion.
   //   - deep_water — impassable like chasm (cost ∞); the future marine/waterwalk
-  //     traversal that crosses it is a declared-inert seam (no field yet).
-  //   - hills — slow (climb); pairs with an evasion BONUS in 37c.
+  //     traversal that crosses it is a declared-inert seam (no field yet). No
+  //     combat mod — nothing stands on it.
+  //   - hills — slow (climb) + evasion BONUS (+8 → +16% harder to hit: high ground).
   //   - ice — the cost-1 floor ("faster" = floor cost, never < 1, GOTCHAS #34 —
-  //     keeps the Chebyshev A* heuristic admissible); pairs with a severe
-  //     accuracy penalty in 37c.
-  //   - sand — slow; pairs with an evasion PENALTY in 37c.
-  //   - mud — the most severe mobility penalty (deep_water's on-foot effect);
-  //     pairs with an accuracy penalty (37c) + mud→poison on enter (37d).
+  //     keeps the Chebyshev A* heuristic admissible) + a severe accuracy penalty
+  //     (-12 → -24% to hit: slick footing).
+  //   - sand — slow + evasion PENALTY (-6 → -12% easier to hit: exposed footing).
+  //   - mud — the worst passable mobility (deep_water on foot) + a severe accuracy
+  //     penalty (-12) + mud→poison on enter (37d).
   deep_water: { cost: Infinity, passable: false },
-  hills: { cost: 3, passable: true },
-  ice: { cost: 1, passable: true },
-  sand: { cost: 2, passable: true },
-  mud: { cost: 4, passable: true },
+  hills: { cost: 3, passable: true, evasionMod: 8 },
+  ice: { cost: 1, passable: true, accuracyMod: -12 },
+  sand: { cost: 2, passable: true, evasionMod: -6 },
+  mud: { cost: 4, passable: true, accuracyMod: -12 },
 };
 
 /** The `TileDef` governing a kind. Keyed lookup — total over `TileKind`. */

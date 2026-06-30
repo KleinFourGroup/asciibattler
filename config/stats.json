@@ -7,7 +7,6 @@
   "minDamage": 1,
   "hitChancePerPrecision": 0.02,
   "dodgeChancePerEvasion": 0.02,
-  "waterPrecisionPenalty": 10,
   "hitChanceFloor": 0.1,
   "hitChanceCap": 1.0,
   "mobilityCdPerStat": 0.15,

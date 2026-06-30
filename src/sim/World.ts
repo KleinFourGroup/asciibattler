@@ -805,23 +805,24 @@ export class World {
       // The guard only covers a degraded path (attacker gone) — treat it as an
       // unmissable hit there rather than drawing combatRng against no precision.
       if (attacker) {
-        // M6 — bog-down: a unit wading in shallow water fights with docked
-        // precision (clumsy footing → "miss more"), the combat half of the
-        // water tile's effect alongside its cost-2 move slow. Live tile read
-        // like the fire/heal pass; occupant-attacker only (shooting INTO water
-        // from dry land is unaffected). Only the to-hit THRESHOLD shifts — the
-        // combatRng draw below is unchanged, so a dry-land strike stays
-        // byte-identical and the `hitChanceFloor` clamp protects a now-negative
-        // effective precision.
-        const wading = this.tileGrid.kindAt(attacker.position) === 'shallow_water';
-        const precision = wading
-          ? attacker.effectiveStats.precision - STATS.waterPrecisionPenalty
-          : attacker.effectiveStats.precision;
-        const hitChance = hitChanceFor(
-          opts.accuracy,
-          precision,
-          target.effectiveStats.evasion,
-        );
+        // §37c — the tile combat fold (generalizes M6's shallow-water bog-down).
+        // Two LIVE tile reads, like the fire/heal pass: the ATTACKER's tile
+        // `accuracyMod` docks its precision (clumsy footing on ice / mud / water
+        // → "miss more"), the DEFENDER's tile `evasionMod` shifts its evasion
+        // (hills high-ground harder to hit, sand exposed easier). Occupant-keyed:
+        // shooting INTO a tile from elsewhere is unaffected; only where each unit
+        // STANDS counts. Existing battles only ever place `shallow_water`, whose
+        // -10 accuracyMod reproduces the M6 penalty exactly — byte-identical.
+        // Only the to-hit THRESHOLD shifts (the combatRng draw below is
+        // unchanged), and the `hitChanceFloor`/cap clamp protects a now-negative
+        // effective precision or a stacked evasion bonus.
+        const precision =
+          attacker.effectiveStats.precision +
+          (this.tileGrid.defAt(attacker.position).accuracyMod ?? 0);
+        const evasion =
+          target.effectiveStats.evasion +
+          (this.tileGrid.defAt(target.position).evasionMod ?? 0);
+        const hitChance = hitChanceFor(opts.accuracy, precision, evasion);
         if (this.combatRng.next() >= hitChance) {
           this.emit('unit:missed', { attackerId, targetId: target.id });
           // K1 — the evade pair fires post-resolution (no HP touched). The

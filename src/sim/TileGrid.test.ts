@@ -27,14 +27,24 @@ describe('TileDef table (§37a — the seam)', () => {
     }
   });
 
-  it('carries no combat mods or status hooks on the existing kinds (byte-identical)', () => {
-    for (const kind of Object.keys(EXISTING_COSTS) as ExistingKind[]) {
+  it('carries no spurious mods on the bare existing kinds (floor/chasm/fire/healing)', () => {
+    // shallow_water is excluded: §37c deliberately folded the M6 wading penalty
+    // into it as `accuracyMod` (asserted separately below).
+    for (const kind of ['floor', 'chasm', 'fire', 'healing'] as ExistingKind[]) {
       const def = TILE_DEFS[kind];
       expect(def.evasionMod).toBeUndefined();
       expect(def.accuracyMod).toBeUndefined();
       expect(def.statusOnEnter).toBeUndefined();
       expect(def.statusRemovedOnEnter).toBeUndefined();
     }
+  });
+
+  it('shallow_water carries the M6 wading accuracy penalty and nothing else (§37c)', () => {
+    const def = TILE_DEFS.shallow_water;
+    expect(def.accuracyMod).toBe(-10); // -10 prec × 0.02 = -20% to hit while wading
+    expect(def.evasionMod).toBeUndefined();
+    expect(def.statusOnEnter).toBeUndefined();
+    expect(def.statusRemovedOnEnter).toBeUndefined();
   });
 
   it('defAt resolves a cell to its TileDef and throws out of bounds', () => {
@@ -99,6 +109,28 @@ describe('§37b — the new terrain tiles', () => {
     expect(r.kindAt({ x: 1, y: 1 })).toBe('mud');
     expect(r.costAt({ x: 0, y: 0 })).toBe(Infinity);
     expect(r.costAt({ x: 2, y: 0 })).toBe(1); // ice at the floor
+  });
+});
+
+describe('§37c — tile combat mods (the to-hit fold values)', () => {
+  it('ice + mud dock the attacker (negative accuracyMod), and nothing else', () => {
+    for (const kind of ['ice', 'mud'] as TileKind[]) {
+      expect(TILE_DEFS[kind].accuracyMod).toBeLessThan(0);
+      expect(TILE_DEFS[kind].evasionMod).toBeUndefined();
+    }
+  });
+
+  it('hills BUFF the defender (positive evasionMod), sand DEBUFFS it (negative)', () => {
+    expect(TILE_DEFS.hills.evasionMod).toBeGreaterThan(0);
+    expect(TILE_DEFS.sand.evasionMod).toBeLessThan(0);
+    // ...and neither touches accuracy (defender-tile mods only).
+    expect(TILE_DEFS.hills.accuracyMod).toBeUndefined();
+    expect(TILE_DEFS.sand.accuracyMod).toBeUndefined();
+  });
+
+  it('deep_water carries no combat mod (impassable — nothing stands on it)', () => {
+    expect(TILE_DEFS.deep_water.accuracyMod).toBeUndefined();
+    expect(TILE_DEFS.deep_water.evasionMod).toBeUndefined();
   });
 });
 

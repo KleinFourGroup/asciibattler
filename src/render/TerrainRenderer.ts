@@ -50,17 +50,30 @@ const WATER_TOP_Y = -0.4;
 const CHASM_TOP_Y = -1.2;
 const FLOOR_RANGE_LO = -0.3;
 const FLOOR_RANGE_HI = 0.0;
-/** §37b — deep water sits below shallow water's recess (−0.4) but above the
- *  chasm void (−1.2): "too deep to wade" without reading as a bottomless pit. */
-const DEEP_WATER_TOP_Y = -0.8;
 /** §37b — mud is a shallow depression just under the floor band — a bogged-down
  *  read. Fixed (not noise-varied) so a mud flat looks uniformly waterlogged. */
 const MUD_TOP_Y = -0.25;
-/** §37b — hills rise above the floor band. The same simplex field drives the
- *  rise, so adjacent hill tiles undulate into a ridge instead of a flat
- *  plateau; HILL_BASE_Y is the trough, HILL_BASE_Y+HILL_AMP the crest. */
-const HILL_BASE_Y = 0.2;
-const HILL_AMP = 0.4;
+/** §37b — hill bumps. The `hills` BASE tile stays flat ground (the floor band);
+ *  the relief comes from a deterministic scatter of low-poly mounds overlaid
+ *  per tile (the `bumpsMesh` child), not from raising the tile. Placement +
+ *  size are sampled from the fixed noise field, so the look is canonical, not
+ *  a per-battle roll. Each mound is a 4-sided pyramid (open base, never seen
+ *  from the locked camera pitch). QUAD_OFFSETS must have BUMPS_PER_HILL_TILE
+ *  entries (one base position per mound). */
+const BUMPS_PER_HILL_TILE = 4;
+const VERTS_PER_BUMP = 12; // 4 pyramid side-tris × 3 verts
+const VERTS_PER_HILL_TILE = BUMPS_PER_HILL_TILE * VERTS_PER_BUMP;
+const HILL_BUMP_MIN_H = 0.12;
+const HILL_BUMP_MAX_H = 0.34;
+const HILL_BUMP_MIN_R = 0.15;
+const HILL_BUMP_MAX_R = 0.26;
+/** Per-mound base position within a cell (cell-local, the cell spans 1 unit). */
+const QUAD_OFFSETS: ReadonlyArray<readonly [number, number]> = [
+  [-0.22, -0.22],
+  [0.22, -0.22],
+  [0.22, 0.22],
+  [-0.22, 0.22],
+];
 const NOISE_FREQ = 0.42;
 /** Fixed seed: the visual character is canonical, not a per-battle roll. */
 const NOISE_SEED = 0xb1c1a1b;
@@ -100,6 +113,14 @@ export class TerrainRenderer {
   private theme: Theme = 'default';
   private readonly geometry: THREE.BufferGeometry;
   private readonly material: THREE.ShaderMaterial;
+  /** §37b — hill-bump overlay (a child of `mesh`): low-poly mounds scattered on
+   *  `hills` tiles. Its own geometry, sized per `setTiles` to the hills count,
+   *  drawn with a DoubleSide clone of the terrain material (mounds don't
+   *  animate, so the clone's frozen `uTime` is harmless; DoubleSide spares us
+   *  per-face winding bookkeeping). */
+  private readonly bumpsGeometry: THREE.BufferGeometry;
+  private readonly bumpsMaterial: THREE.ShaderMaterial;
+  private readonly bumpsMesh: THREE.Mesh;
   private readonly positions: Float32Array;
   private readonly normals: Float32Array;
   private readonly colors: Float32Array;
@@ -174,6 +195,18 @@ export class TerrainRenderer {
     });
 
     this.mesh = new THREE.Mesh(this.geometry, this.material);
+
+    // §37b — the hill-bump child. Empty until `setTiles` populates it; rides
+    // the parent's transform so it lands in the scene wherever `mesh` does, and
+    // its raycast is a no-op so cell-picking (which raycasts `mesh`) ignores it.
+    this.bumpsGeometry = new THREE.BufferGeometry();
+    this.bumpsGeometry.setDrawRange(0, 0);
+    this.bumpsMaterial = this.material.clone();
+    this.bumpsMaterial.side = THREE.DoubleSide;
+    this.bumpsMesh = new THREE.Mesh(this.bumpsGeometry, this.bumpsMaterial);
+    this.bumpsMesh.frustumCulled = false; // small geometry, always in frame
+    this.bumpsMesh.raycast = () => {}; // unclickable — picking hits the base tile
+    this.mesh.add(this.bumpsMesh);
   }
 
   /**
@@ -183,17 +216,18 @@ export class TerrainRenderer {
    * second source of truth.
    */
   heightAt(cx: number, cy: number, kind: TileKind): number {
-    if (kind === 'shallow_water') return WATER_TOP_Y;
-    if (kind === 'deep_water') return DEEP_WATER_TOP_Y; // §37b
+    // §37b: deep water is COPLANAR with shallow water — its greater depth reads
+    // through the darker color, not a sunken surface (which looked wrong butted
+    // up against regular water).
+    if (kind === 'shallow_water' || kind === 'deep_water') return WATER_TOP_Y;
     if (kind === 'chasm') return CHASM_TOP_Y;
     if (kind === 'mud') return MUD_TOP_Y; // §37b — fixed sunken plane
     // D7.C: fire + healing live on the same noise field as floor — they're
-    // surface effects, not elevation changes. §37b: ice + sand are flat-ground
-    // variants, so they share the floor band too; only `hills` rides a raised
-    // band. Sprites standing on any of these still want a tile top to plant on.
+    // surface effects, not elevation changes. §37b: ice / sand / hills are
+    // flat-ground variants too (hills' relief is the overlaid bump mesh, not a
+    // raised tile). Sprites standing on any of these want a tile top to plant on.
     const n = this.noise2D(cx * NOISE_FREQ, cy * NOISE_FREQ); // [-1, 1]
     const t = (n + 1) * 0.5;
-    if (kind === 'hills') return HILL_BASE_Y + HILL_AMP * t; // §37b
     return FLOOR_RANGE_LO + (FLOOR_RANGE_HI - FLOOR_RANGE_LO) * t;
   }
 
@@ -224,19 +258,24 @@ export class TerrainRenderer {
     this.gridW = gridW;
     this.gridH = gridH;
     this.theme = theme;
-    this.fillFromKindFn((x, y) => tileGrid.kindAt({ x, y }));
+    const kindAt = (x: number, y: number): TileKind => tileGrid.kindAt({ x, y });
+    this.fillFromKindFn(kindAt);
     this.geometry.setDrawRange(0, gridW * gridH * VERTS_PER_TILE);
+    this.fillHillBumps(kindAt, gridW, gridH); // §37b
   }
 
   clear(): void {
     this.gridW = 0;
     this.gridH = 0;
     this.geometry.setDrawRange(0, 0);
+    this.bumpsGeometry.setDrawRange(0, 0); // §37b
   }
 
   dispose(): void {
     this.geometry.dispose();
     this.material.dispose();
+    this.bumpsGeometry.dispose(); // §37b
+    this.bumpsMaterial.dispose();
   }
 
   /** Walks every cell, computes height + color, writes 30 verts per cell. */
@@ -349,6 +388,112 @@ export class TerrainRenderer {
     this.topUVAttr.needsUpdate = true;
     this.animAttr.needsUpdate = true;
   }
+
+  /**
+   * §37b — populate the hill-bump child: a deterministic scatter of low-poly
+   * mounds on every `hills` tile (the base tile itself stays flat ground). The
+   * buffers are sized to the EXACT hills count each call — `setTiles` runs once
+   * per encounter, so the per-call allocation is cheap and avoids reserving a
+   * max-grid's worth of bump verts for boards with few or no hills. Each mound
+   * is a 4-sided pyramid; the per-face normals give the faceted low-poly shade,
+   * and `aTopUV` is pinned to cell-interior (0.5, 0.5) so the grid-line stamp
+   * never paints onto a mound.
+   */
+  private fillHillBumps(
+    kindAt: (x: number, y: number) => TileKind,
+    w: number,
+    h: number,
+  ): void {
+    let hillCount = 0;
+    for (let cy = 0; cy < h; cy++) {
+      for (let cx = 0; cx < w; cx++) {
+        if (kindAt(cx, cy) === 'hills') hillCount++;
+      }
+    }
+
+    const totalVerts = hillCount * VERTS_PER_HILL_TILE;
+    const pos = new Float32Array(totalVerts * 3);
+    const norm = new Float32Array(totalVerts * 3);
+    const col = new Float32Array(totalVerts * 3);
+    const uv = new Float32Array(totalVerts * 2);
+    const anim = new Float32Array(totalVerts * 2);
+    let vi = 0;
+    const tmp = new THREE.Color();
+
+    const writeVert = (
+      px: number, py: number, pz: number,
+      nx: number, ny: number, nz: number,
+      c: THREE.Color,
+    ): void => {
+      const pi = vi * 3;
+      const ti = vi * 2;
+      pos[pi] = px; pos[pi + 1] = py; pos[pi + 2] = pz;
+      norm[pi] = nx; norm[pi + 1] = ny; norm[pi + 2] = nz;
+      col[pi] = c.r; col[pi + 1] = c.g; col[pi + 2] = c.b;
+      uv[ti] = 0.5; uv[ti + 1] = 0.5; // interior → no grid-line stamp
+      anim[ti] = ANIM_NONE; anim[ti + 1] = 0;
+      vi++;
+    };
+
+    // One pyramid mound: 4 side triangles (apex over a square base). The open
+    // base is never visible from the locked camera pitch, so it's omitted.
+    const emitMound = (wx: number, wz: number, baseY: number, r: number, hgt: number): void => {
+      const apexY = baseY + hgt;
+      const cs: ReadonlyArray<readonly [number, number]> = [
+        [wx - r, wz - r], [wx + r, wz - r], [wx + r, wz + r], [wx - r, wz + r],
+      ];
+      const ht = Math.max(0, Math.min(1, (hgt - HILL_BUMP_MIN_H) / (HILL_BUMP_MAX_H - HILL_BUMP_MIN_H)));
+      tmp.copy(_hillLow).lerp(_hillHigh, ht); // taller mounds catch more light
+      for (let s = 0; s < 4; s++) {
+        const a = cs[s]!;
+        const b = cs[(s + 1) % 4]!;
+        // Face normal from the two base→apex edges; flipped up so the lit side
+        // faces the camera (DoubleSide makes winding irrelevant for visibility).
+        const e1x = b[0] - a[0], e1z = b[1] - a[1];
+        const e2x = wx - a[0], e2y = apexY - baseY, e2z = wz - a[1];
+        let nx = -e1z * e2y;
+        let ny = e1z * e2x - e1x * e2z;
+        let nz = e1x * e2y;
+        const len = Math.hypot(nx, ny, nz) || 1;
+        nx /= len; ny /= len; nz /= len;
+        if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
+        writeVert(a[0], baseY, a[1], nx, ny, nz, tmp);
+        writeVert(b[0], baseY, b[1], nx, ny, nz, tmp);
+        writeVert(wx, apexY, wz, nx, ny, nz, tmp);
+      }
+    };
+
+    const halfX = w / 2;
+    const halfZ = h / 2;
+    for (let cy = 0; cy < h; cy++) {
+      for (let cx = 0; cx < w; cx++) {
+        if (kindAt(cx, cy) !== 'hills') continue;
+        const ccx = cx - halfX + 0.5; // cell center, matching fillFromKindFn axes
+        const ccz = halfZ - cy - 0.5;
+        const baseY = this.heightAt(cx, cy, 'hills');
+        for (let m = 0; m < BUMPS_PER_HILL_TILE; m++) {
+          const q = QUAD_OFFSETS[m]!;
+          // Deterministic jitter + size from the fixed noise field.
+          const jx = this.noise2D((cx * 2 + m * 1.7 + 11) * NOISE_FREQ, (cy * 2 + 5) * NOISE_FREQ);
+          const jz = this.noise2D((cx * 2 + 3) * NOISE_FREQ, (cy * 2 + m * 1.7 + 19) * NOISE_FREQ);
+          const sh = this.noise2D((cx * 3 + m * 0.9 + 2) * NOISE_FREQ, (cy * 3 + m * 0.9 + 7) * NOISE_FREQ);
+          const sr = this.noise2D((cx * 3 + 13) * NOISE_FREQ, (cy * 3 + m * 0.9 + 1) * NOISE_FREQ);
+          const wx = ccx + q[0] + jx * 0.1;
+          const wz = ccz + q[1] + jz * 0.1;
+          const hgt = HILL_BUMP_MIN_H + (sh * 0.5 + 0.5) * (HILL_BUMP_MAX_H - HILL_BUMP_MIN_H);
+          const r = HILL_BUMP_MIN_R + (sr * 0.5 + 0.5) * (HILL_BUMP_MAX_R - HILL_BUMP_MIN_R);
+          emitMound(wx, wz, baseY, r, hgt);
+        }
+      }
+    }
+
+    this.bumpsGeometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.bumpsGeometry.setAttribute('normal', new THREE.BufferAttribute(norm, 3));
+    this.bumpsGeometry.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    this.bumpsGeometry.setAttribute('aTopUV', new THREE.BufferAttribute(uv, 2));
+    this.bumpsGeometry.setAttribute('aAnim', new THREE.BufferAttribute(anim, 2));
+    this.bumpsGeometry.setDrawRange(0, totalVerts);
+  }
 }
 
 /**
@@ -454,13 +599,6 @@ export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THR
     out.copy(_mudColor); // §37b — flat (fixed-height tile)
     return;
   }
-  if (kind === 'hills') {
-    // §37b — lerp by the hill's own height band (the floor-band `t` below
-    // would clamp to 1 for every raised hill tile, flattening the variance).
-    const ht = Math.max(0, Math.min(1, (topY - HILL_BASE_Y) / HILL_AMP));
-    out.copy(_hillLow).lerp(_hillHigh, ht);
-    return;
-  }
   const t = Math.max(0, Math.min(1, (topY - FLOOR_RANGE_LO) / (FLOOR_RANGE_HI - FLOOR_RANGE_LO)));
   if (kind === 'fire') {
     out.copy(_fireLow).lerp(_fireHigh, t);
@@ -476,6 +614,11 @@ export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THR
   }
   if (kind === 'sand') {
     out.copy(_sandLow).lerp(_sandHigh, t); // §37b
+    return;
+  }
+  if (kind === 'hills') {
+    // §37b — flat grassy base; the overlaid mound mesh carries the relief.
+    out.copy(_hillLow).lerp(_hillHigh, t);
     return;
   }
   const palette = FLOOR_PALETTE[theme];

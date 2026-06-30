@@ -622,19 +622,23 @@ Independent of the unit model, so this whole phase floats free of §38.
   tile's cost + passability resolves identically via the table (`TileGrid.test.ts`
   "TileDef table" block).
 - **✅ 37b — the five new tiles (cost + passability + render).** Added `deep_water`
-  (impassable, cost `∞` like chasm), `hills` (cost 3 + raised undulating ridge mesh),
-  `ice` (cost-1 floor — GOTCHAS #34 — + pale slick mesh), `sand` (cost 2 + tan flat),
-  `mud` (cost 4, the worst passable mobility + sunken bog mesh), each a `TileDef` (37a)
-  entry + a `TerrainRenderer` `heightAt`/`topColorFor` branch (distinct height + fixed
-  identity color, theme-independent like water/chasm — combat mods are 37c, status
-  hooks 37d). Costs are STARTING values (§41 tunes); only the relative ordering + the
-  ≥1 A* floor are load-bearing. Waterwalk = NOT YET a field (declared-inert deferred to
-  a real consumer). Verified: 1469 main + 212 fuzz:smoke green, typecheck + lint clean;
-  **browser readback** confirms each kind's mesh branch fires with distinct
-  height + color (deep_water −0.8, hills +0.29, mud −0.25, ice/sand flat). *Test:* each
-  tile's cost + passability (`TileGrid.test.ts` §37b block; deep_water short-circuits
-  pathing like chasm in `Pathfinding.test.ts`; ice stays ≥1); the new kinds round-trip a
-  `TileGrid` snapshot.
+  (impassable, cost `∞` like chasm), `hills` (cost 3), `ice` (cost-1 floor — GOTCHAS #34),
+  `sand` (cost 2), `mud` (cost 4, the worst passable mobility + sunken bog mesh), each a
+  `TileDef` (37a) entry + a `TerrainRenderer` `heightAt`/`topColorFor` branch (distinct
+  height + fixed identity color, theme-independent like water/chasm — combat mods are
+  37c, status hooks 37d). Costs are STARTING values (§41 tunes); only the relative
+  ordering + the ≥1 A* floor are load-bearing. Waterwalk = NOT YET a field (declared-inert
+  deferred to a real consumer). **Playtest follow-up (same commit-pair):** deep_water is
+  now COPLANAR with shallow water (depth reads via the darker color, not a sunken
+  surface — the recess looked wrong butted up against regular water); `hills` no longer
+  just rises — the base tile is flat ground + a child `bumpsMesh` scatters 4 low-poly
+  pyramid mounds/tile (deterministic from the noise field, faceted shading, raycast-off
+  so picking is unaffected), the "3–6 low-poly hills" look. Verified: 1469 main + 212
+  fuzz:smoke green, typecheck + lint clean; **browser readback** confirms coplanar
+  water + 48 mound-verts/hills-tile rising from ground (−0.27) to varied crests (+0.24).
+  *Test:* each tile's cost + passability (`TileGrid.test.ts` §37b block; deep_water
+  short-circuits pathing like chasm in `Pathfinding.test.ts`; ice stays ≥1); the new
+  kinds round-trip a `TileGrid` snapshot.
 - **37c — tile combat modifiers (the to-hit fold).** Extend `applyDamage`'s
   precision-vs-evasion roll to fold the attacker's tile `accuracyMod` + the defender's
   tile `evasionMod` from the `TileDef` table (generalizing M6's water precision

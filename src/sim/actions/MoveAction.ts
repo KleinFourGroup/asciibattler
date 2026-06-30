@@ -58,10 +58,15 @@ export class MoveAction implements Action {
    * `from` (targeting / adjacency / pathing all read `unit.position`), after it
    * reads as arrived. A move whose unit died before the flip never reaches here
    * (the reap clears its claim via `releaseClaimsBy`).
+   *
+   * §37d — this flip IS the logical "enter" of `to`, so the tile→status ENTER
+   * hook fires here (after `position` is set, so it reads the destination def):
+   * mud → poison, water/deep_water → strip burn.
    */
   applyEffect(unit: Unit, world: World, _tickOffset: number, _phase?: ActionPhaseName): void {
     unit.position = this.to;
     world.releaseClaim(this.to);
+    world.applyTileEnterEffects(unit);
   }
 
   /**

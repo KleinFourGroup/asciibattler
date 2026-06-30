@@ -19,6 +19,7 @@
  */
 
 import { GRID_SIZE } from '../config';
+import { statusDef } from '../config/statuses';
 import type { GridCoord } from '../core/types';
 
 export type TileKind =
@@ -113,7 +114,9 @@ export const TILE_DEFS: Record<TileKind, TileDef> = {
   // penalty, now OWNED by this table (the source for every tile combat mod) and
   // read by `World.applyDamage`'s to-hit fold. -10 precision × 0.02 = -20% to
   // hit while wading — byte-identical to the retired `STATS.waterPrecisionPenalty`.
-  shallow_water: { cost: 2, passable: true, accuracyMod: -10 },
+  // §37d — `statusRemovedOnEnter: 'burn'`: wading douses fire (the inverse of the
+  // fire→burn sustain). Always on (not gated by `applyStatusOnEnter`).
+  shallow_water: { cost: 2, passable: true, accuracyMod: -10, statusRemovedOnEnter: 'burn' },
   chasm: { cost: Infinity, passable: false },
   fire: { cost: 1, passable: true },
   healing: { cost: 1, passable: true },
@@ -130,18 +133,34 @@ export const TILE_DEFS: Record<TileKind, TileDef> = {
   //     (-12 → -24% to hit: slick footing).
   //   - sand — slow + evasion PENALTY (-6 → -12% easier to hit: exposed footing).
   //   - mud — the worst passable mobility (deep_water on foot) + a severe accuracy
-  //     penalty (-12) + mud→poison on enter (37d).
-  deep_water: { cost: Infinity, passable: false },
+  //     penalty (-12) + mud→poison on enter (37d, gated by `applyStatusOnEnter`).
+  // §37d status hooks: deep_water douses burn like shallow water (`statusRemovedOnEnter`,
+  // always on); mud applies poison on enter (`statusOnEnter`, the flag-gated trial).
+  deep_water: { cost: Infinity, passable: false, statusRemovedOnEnter: 'burn' },
   hills: { cost: 3, passable: true, evasionMod: 8 },
   ice: { cost: 1, passable: true, accuracyMod: -12 },
   sand: { cost: 2, passable: true, evasionMod: -6 },
-  mud: { cost: 4, passable: true, accuracyMod: -12 },
+  mud: { cost: 4, passable: true, accuracyMod: -12, statusOnEnter: 'poison' },
 };
 
 /** The `TileDef` governing a kind. Keyed lookup — total over `TileKind`. */
 export function tileDef(kind: TileKind): TileDef {
   return TILE_DEFS[kind];
 }
+
+/**
+ * §37d boot check (the `assertStatusRefsResolve` / `assertSummonRefsResolve`
+ * sibling): every `statusOnEnter` / `statusRemovedOnEnter` in the tile table must
+ * reference a real status id, so a typo fails at module load rather than at the
+ * moment a unit steps on the tile. `statusDef` throws loudly on a miss — calling
+ * it here IS the assertion. Rides this guaranteed-at-import IIFE.
+ */
+(function assertTileStatusRefsResolve(): void {
+  for (const def of Object.values(TILE_DEFS)) {
+    if (def.statusOnEnter) statusDef(def.statusOnEnter);
+    if (def.statusRemovedOnEnter) statusDef(def.statusRemovedOnEnter);
+  }
+})();
 
 export interface TileGridSnapshot {
   width: number;

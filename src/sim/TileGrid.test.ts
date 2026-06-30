@@ -39,12 +39,12 @@ describe('TileDef table (§37a — the seam)', () => {
     }
   });
 
-  it('shallow_water carries the M6 wading accuracy penalty and nothing else (§37c)', () => {
+  it('shallow_water carries the M6 wading accuracy penalty + the §37d burn cleanse', () => {
     const def = TILE_DEFS.shallow_water;
     expect(def.accuracyMod).toBe(-10); // -10 prec × 0.02 = -20% to hit while wading
     expect(def.evasionMod).toBeUndefined();
-    expect(def.statusOnEnter).toBeUndefined();
-    expect(def.statusRemovedOnEnter).toBeUndefined();
+    expect(def.statusOnEnter).toBeUndefined(); // water afflicts nothing on enter
+    expect(def.statusRemovedOnEnter).toBe('burn'); // §37d — wading douses fire
   });
 
   it('defAt resolves a cell to its TileDef and throws out of bounds', () => {
@@ -131,6 +131,34 @@ describe('§37c — tile combat mods (the to-hit fold values)', () => {
   it('deep_water carries no combat mod (impassable — nothing stands on it)', () => {
     expect(TILE_DEFS.deep_water.accuracyMod).toBeUndefined();
     expect(TILE_DEFS.deep_water.evasionMod).toBeUndefined();
+  });
+});
+
+describe('§37d — tile→status enter hooks (the table fields)', () => {
+  it('mud applies poison on enter; both water kinds strip burn', () => {
+    expect(TILE_DEFS.mud.statusOnEnter).toBe('poison'); // the flag-gated trial
+    expect(TILE_DEFS.shallow_water.statusRemovedOnEnter).toBe('burn');
+    expect(TILE_DEFS.deep_water.statusRemovedOnEnter).toBe('burn');
+  });
+
+  it('the cleanse and the affliction are distinct, opposite-direction hooks', () => {
+    // mud only afflicts (no cleanse); water only cleanses (no affliction) — the
+    // two directions never collide on one tile.
+    expect(TILE_DEFS.mud.statusRemovedOnEnter).toBeUndefined();
+    expect(TILE_DEFS.shallow_water.statusOnEnter).toBeUndefined();
+    expect(TILE_DEFS.deep_water.statusOnEnter).toBeUndefined();
+  });
+
+  it('every referenced status id is a real status (the boot-assert held at import)', () => {
+    // `TileGrid.ts`'s module-load `assertTileStatusRefsResolve` IIFE throws on a
+    // bad ref; reaching this test at all means the table imported clean. Re-pin
+    // the contract explicitly so a future hook can't reference a typo'd status.
+    const ids = new Set<string>();
+    for (const def of Object.values(TILE_DEFS)) {
+      if (def.statusOnEnter) ids.add(def.statusOnEnter);
+      if (def.statusRemovedOnEnter) ids.add(def.statusRemovedOnEnter);
+    }
+    expect([...ids].sort()).toEqual(['burn', 'poison']);
   });
 });
 

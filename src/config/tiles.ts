@@ -11,6 +11,13 @@
  * is retired; the only consumer left is the §27c balance-proof, which asserts
  * `burn`'s per-second damage == `fire.damagePerSec` and `rejuvenate`'s ==
  * `healing.amountPerSec` (derived from config, never hardcoded).
+ *
+ * §37d — `applyStatusOnEnter` gates the tile→status APPLY direction (the
+ * `TileDef.statusOnEnter` hook, fired by `World.applyTileEnterEffects` on a
+ * move's logical commit). Today its only subject is the mud→poison trial
+ * (USER-LOCKED default ON, easy to flip if a playtest dislikes it). The REMOVE
+ * direction (water/deep_water → strip `burn`, `statusRemovedOnEnter`) is the
+ * clearly-good inverse of fire→burn and is NOT gated — it's always on.
  */
 
 import { z } from 'zod';
@@ -25,6 +32,11 @@ const TilesSchema = z.object({
     /** HP/sec a unit standing on a healing tile regains (→ the `rejuvenate` HoT rate). */
     amountPerSec: z.number().positive(),
   }),
+  /**
+   * §37d — whether a tile's `statusOnEnter` (the mud→poison trial) is honoured
+   * on enter. Gates only the APPLY direction; `statusRemovedOnEnter` is unaffected.
+   */
+  applyStatusOnEnter: z.boolean(),
 });
 
 /** Authored rates exposed for the balance-proof / debug overlays. */

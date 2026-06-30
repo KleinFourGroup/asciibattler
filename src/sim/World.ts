@@ -34,6 +34,7 @@ import { focusTileResolvedByArrival } from './focusTile';
 import type { StatusEffect } from './statusEffects';
 import { cloneEffect } from './statusEffects';
 import { STATUS_DEFS, statusDef } from '../config/statuses';
+import { TILES_CONFIG } from '../config/tiles';
 import type { StatusDef } from './effects/statusSchema';
 import { buildStatusEffect } from './effects/statusRuntime';
 import { TriggerDispatcher } from './triggers';
@@ -1136,6 +1137,48 @@ export class World {
       buildStatusEffect(def, this.tickCount, magnitude, sourceUnitId, durationSecondsOverride),
     );
     this.bus.emit('status:applied', { unitId: target.id, statusId: def.id, sourceUnitId });
+  }
+
+  /**
+   * §37d — forcibly strip a status from a unit (the apply chokepoint's mirror).
+   * No-op if the unit doesn't carry it. Fires `status:expired` for a status-DEF
+   * effect (the same viz event the lifetime-expiry path emits, so the renderer
+   * restores the unit's team colour / clears the burn tint), staying silent for
+   * a plain K1 stat effect. Caller: the tile→status REMOVE hook (water → burn).
+   */
+  removeStatusEffect(target: Unit, statusId: string): void {
+    const removed = target.removeEffect(statusId);
+    if (removed && statusId in STATUS_DEFS) {
+      this.bus.emit('status:expired', {
+        unitId: target.id,
+        statusId,
+        sourceUnitId: removed.sourceUnitId ?? null,
+      });
+    }
+  }
+
+  /**
+   * §37d — the tile→status ENTER hook, fired by `MoveAction.applyEffect` at the
+   * §36b 50% logical flip (the moment the unit commits to `to`). Reads the
+   * destination tile's `TileDef` and, in one pass, REMOVES a status (water /
+   * deep_water → strip `burn`, the inverse of the fire→burn sustain — always on)
+   * and APPLIES one (mud → `poison`, environmental so `sourceUnitId` is `null`,
+   * gated by the `applyStatusOnEnter` trial flag).
+   *
+   * Distinct from the per-tick `applyTileStatuses` standing-on sustain: this
+   * fires ONCE per cell entry, so poison is a one-shot affliction per step onto
+   * mud (it isn't re-stamped while the unit stands there) and the cleanse only
+   * triggers on the move that lands in water. Scoped to a real `MoveAction`
+   * commit — spawn / shove / summon placement aren't tile "enters".
+   */
+  applyTileEnterEffects(unit: Unit): void {
+    const def = this.tileGrid.defAt(unit.position);
+    if (def.statusRemovedOnEnter) {
+      this.removeStatusEffect(unit, def.statusRemovedOnEnter);
+    }
+    if (def.statusOnEnter && TILES_CONFIG.applyStatusOnEnter) {
+      this.applyStatusEffect(unit, statusDef(def.statusOnEnter), null);
+    }
   }
 
   /**

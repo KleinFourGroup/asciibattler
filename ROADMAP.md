@@ -652,11 +652,26 @@ Independent of the unit model, so this whole phase floats free of §38.
   (balance-proof, derived from the table):* `World.test.ts`'s §37c fold block flips a
   hit↔miss for an ice attacker / hills + sand defender from the table's own mod values;
   `TileGrid.test.ts` asserts the mod signs + the water fold.
-- **37d — tile→status hooks (both directions).** A tile may **apply** a status on enter
-  (mud → poison, behind a config flag) and **remove** one on enter (water + deep_water
-  → remove burn) — generalizing the Cluster-1 fire → burn to add the inverse. (No
-  near-duplicate "mire" tile — trial poison-on-mud via the flag.) *Test:* mud applies
-  poison on enter (flag on); water removes burn on enter.
+- **✅ 37d — tile→status hooks (both directions).** A tile may **apply** a status on enter
+  (mud → poison, gated by `tiles.json` `applyStatusOnEnter`, USER-LOCKED default ON) and
+  **remove** one on enter (shallow_water + deep_water → strip `burn`, always on) —
+  generalizing the Cluster-1 fire → burn to add the inverse. Wired at the §36b 50% logical
+  flip (`MoveAction.applyEffect` → `World.applyTileEnterEffects`): the flip IS the "enter,"
+  so it reads the destination `TileDef` after `position` is set. ONE pass — remove
+  (`World.removeStatusEffect` → `Unit.removeEffect`, fires the existing `status:expired`
+  so the renderer clears the burn tint) then apply (`applyStatusEffect`, environmental
+  `sourceUnitId: null`). Distinct from the per-tick `applyTileStatuses` standing-on
+  sustain: fires ONCE per cell entry (poison isn't re-stamped while standing; the cleanse
+  only triggers on the move that lands in water). Scoped to a real `MoveAction` commit —
+  spawn/shove/summon placement aren't "enters." The `statusOnEnter`/`statusRemovedOnEnter`
+  ids are boot-asserted at `TileGrid.ts` module load (`assertTileStatusRefsResolve`, the
+  `assertStatusRefsResolve` sibling). **No snapshot bump.** Verified: 1485 main (+9: the
+  6-case `tileEnterStatus.test.ts` + 3 `TileGrid.test.ts` §37d cases, balance-proof from
+  the table) + 212 fuzz:smoke green, typecheck + lint clean. **Not byte-identical** (unlike
+  37c): `shallow_water` IS placed live, so water→strip-burn is a real new interaction (a
+  burning unit wading loses burn) — rare, win-rate delta carried to §41. *Test:* mud
+  applies poison on enter (flag on); water + deep_water strip burn on enter; the hook
+  fires at the flip, not at move-start (the integration proof).
 - **37e — palettes (themes) + the rename.** Add tundra / desert / swamp; rename
   `rock → barren` and `default → grassland` (barren, not "mountain" — avoids the Hills
   collision). Audit whether `theme` is serialized (the possible `RunSnapshot` touch;

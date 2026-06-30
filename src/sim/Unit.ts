@@ -412,6 +412,21 @@ export class Unit {
   }
 
   /**
+   * §37d — forcibly remove the first effect matching `key`, returning it (or
+   * `undefined` if none was present). The counterpart to `addEffect` for a
+   * NON-lifetime removal — a tile cleanse (water → strip `burn`) or any future
+   * dispel. Recomputes `effectiveStats` only when something was removed. The
+   * caller (`World.removeStatusEffect`) fires the `status:expired` viz event.
+   */
+  removeEffect(key: string): StatusEffect | undefined {
+    const i = this.effects.findIndex((e) => e.key === key);
+    if (i === -1) return undefined;
+    const [removed] = this.effects.splice(i, 1);
+    this.recomputeEffective();
+    return removed;
+  }
+
+  /**
    * K1 — drop any `ticks` effect whose `expiresAtTick` has been reached.
    * `endOfTurn` effects are never removed here (they die with the World).
    * Recomputes `effectiveStats` only when something actually expired.

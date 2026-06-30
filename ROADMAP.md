@@ -696,7 +696,7 @@ Independent of the unit model, so this whole phase floats free of §38.
   ones weren't). Browser-verified: all 5 tiles paint + export their arrays; the 6 themes
   preview. *Test:* a layout with all 5 new tiles + a new theme round-trips through the
   editor formatter → the real schema; a mutex overlap is rejected.
-- **▶ 37g — editor playtest feedback + polish (RESERVED, awaiting the user).** A held-open
+- **▶ 37g — editor playtest feedback + polish (OPEN; round 1 landed 2026-06-30).** A held-open
   step for whatever the user surfaces while authoring real maps with the full tile + theme
   set in the layout editor (UX, glyph/color tweaks, validation gaps, save/load edge cases,
   missing affordances). Scope is defined by the feedback, not pre-specified. Closes Phase 37;
@@ -704,6 +704,28 @@ Independent of the unit model, so this whole phase floats free of §38.
   any new paintable kind must be added to BOTH paint switches (`applyStrokeTo` router +
   `applyTerrainStroke` mapper); consider hardening the router with an exhaustiveness check
   while in here.
+  - **✅ Round 1 (3 feedback items from the Isthmus/full-tile playtest):**
+    - **Spawns on passable terrain (LANDED).** Relaxed the spawn rule in BOTH validators (the
+      canonical `LayoutSchema.superRefine` + the editor's live `validate()`): a spawn region may
+      now sit on any PASSABLE tile (water/fire/healing/hills/ice/sand/mud) — the unit stands +
+      fights there with its terrain combat mods + wading cost live. Reject only cells it can't
+      occupy: impassable (chasm, deep water) + neutral-occupied (wall, half-cover). +11 schema
+      accept/reject tests; the shipped-layout spawn-overlap invariant updated to the new rule.
+    - **Deep-water connectivity gap (LANDED, latent 37f bug).** Deep water is Infinity-cost
+      (impassable) like chasm but was never in the connectivity blocker sets (`layouts.test.ts`
+      + the editor's `isConnected`), so a deep-water-severed map validated as connected. Closed
+      both. Validation-only, no snapshot bump.
+    - **Isthmus pathing quirk (TODO'd, map left as-is per user).** Units "charge at the deep
+      water and get stuck near it" — diagnosed as congestion at the Isthmus's 2-wide shallow
+      neck (hourglass map; deep water nearly severs the halves), NOT a pathing bug (A* routes
+      around deep water correctly; the sidestep can't escape because the flanking cells are
+      deep water → abstain). Left the map; opened a TODO to probe whether the choke reveals a
+      generalizable clumping/pathing quirk worth softening. See TODO.md "Polish / pre-launch".
+    - **Walls/cover on non-default terrain (DEFERRED → §40).** Today's walls/half-cover are
+      hard blockers nothing stands on, so terrain-under is gameplay-inert (cosmetic-only). It
+      becomes load-bearing with §40 destructibles (terrain revealed when rubble/cover breaks),
+      and should be built once against the final §38 `UnitDef` + §39 footprint model, not
+      today's closed wall/halfCover one. Scoped into §40 (see that phase).
 
 ---
 
@@ -931,7 +953,16 @@ implications → §41.
   (default today's indestructible 1-HP; a higher value = destructible). The lifecycle
   already works end-to-end (a neutral at 0 HP reaps + fires `unit:died{neutral}`;
   BattleRenderer fades, audio skips — all noted "ready" in `environment.ts`).
-- **Layout editor** — paint rubble (size + HP) + toggle wall/cover destructibility.
+- **Layout editor** — paint rubble (size + HP) + toggle wall/cover destructibility. **Also
+  here (deferred from 37g): walls/cover ON non-default terrain.** Today the editor's per-cell
+  model is mutex (`Cell[][]`, one kind/cell) + the schema rejects a wall/cover coord that
+  overlaps a terrain tile — so a wall can't sit on sand. Gameplay-inert for indestructible
+  walls (nothing stands on them), but once a destructible breaks, the unit that walks onto the
+  freed cell stands on the terrain underneath, so it MATTERS here. Build it now: split the
+  editor into a terrain layer + a separate neutral overlay (so a cell carries a tile kind AND
+  an optional neutral), and relax the schema overlap rule so a neutral coord may coincide with
+  a terrain tile. Built against the final §38 `UnitDef` + §39 footprint model (the reason it
+  waited — doing it at 37g would have been against the soon-replaced closed wall/halfCover one).
 
 **Cost:** content (rubble UnitDefs + glyph) + the targeting-neutrals priority hook +
 the layout HP schema + the editor. No WorldSnapshot bump expected. Browser-verify

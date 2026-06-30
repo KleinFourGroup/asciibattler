@@ -42,7 +42,7 @@ function runRogueBattle(seed: number): {
     layoutId: null,
     gridW: 12,
     gridH: 12,
-    theme: 'rock',
+    theme: 'barren',
     playerTeam: [
       rollUnit('rogue', new RNG(seed)),
       rollUnit('mercenary', new RNG(seed + 1)),

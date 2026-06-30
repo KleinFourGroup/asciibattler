@@ -672,15 +672,38 @@ Independent of the unit model, so this whole phase floats free of §38.
   burning unit wading loses burn) — rare, win-rate delta carried to §41. *Test:* mud
   applies poison on enter (flag on); water + deep_water strip burn on enter; the hook
   fires at the flip, not at move-start (the integration proof).
-- **37e — palettes (themes) + the rename.** Add tundra / desert / swamp; rename
-  `rock → barren` and `default → grassland` (barren, not "mountain" — avoids the Hills
-  collision). Audit whether `theme` is serialized (the possible `RunSnapshot` touch;
-  reject-stale if so). Render + procedural-gen + theme tables + `layouts.json`.
-  Browser-verify the palettes. *Test:* theme tables resolve; the rename migration if
-  `theme` is serialized.
-- **37f — the layout editor.** Paint the new tiles + pick the new palettes + preview
-  the theme coloring (the "dev tools ship with their feature" convention). Browser-
-  verify. *Test (browser):* paint each new tile + preview each theme.
+- **✅ 37e — palettes (themes) + the rename (the lone snapshot bump).** Added tundra /
+  desert / swamp (`TerrainRenderer.FLOOR_PALETTE` fixed-identity low→high hex) + renamed
+  `rock → barren` / `default → grassland` (barren avoids the Hills collision). **AUDIT
+  CONFIRMED `theme` IS serialized** (RunSnapshot `encounterMap`), so the rename forced
+  **`RUN_SCHEMA_VERSION` 23 → 24**, reject-stale (no transform — the existing relative
+  `schemaVersion - 1` tests auto-track it). The closed `Theme` union made typecheck the
+  exhaustive catch — every theme reference (incl. `Theme = 'default'` defaults + the
+  `BattleScene` banner `=== 'grassland'`) was flagged. **Browser-verified all 6 palettes
+  render** (run → encounter → `TerrainRenderer`). *Test:* `ThemeSchema` rejects the old
+  names + resolves the 6 new ones; the version bump rides the reject-stale tests.
+- **✅ 37f — the layout editor (schema + sim + editor).** Painting the 5 §37b tiles
+  spanned three layers: **schema** — 5 optional coord arrays (`deepWater`/`hills`/`ice`/
+  `sand`/`mud`) in `LayoutSchema` + `checkTileEffect` overlap validation; **sim** —
+  `terrainGen` applies them via `setKind`; **editor** — the 5 tiles woven through
+  `Cell`/`TerrainKind`/both paint switches/`refreshCell`/`validate`/export/load + 5 tile
+  radios + legend + CSS (cell colors/glyphs, the `data-theme` floor preview rename+3-new,
+  swatches) + `format.ts` emits the new arrays + the theme dropdown rename+3-new.
+  **GOTCHAS — the paint path has TWO switches:** `applyStrokeTo` ROUTES a stroke to
+  `applyTerrainStroke`, which then maps it to a `Cell`. A new tile must be added to BOTH;
+  the router has no exhaustiveness check, so a missing case silently no-ops (this bit us:
+  new tiles painted nothing while old tiles worked — chasm was in the router list, the new
+  ones weren't). Browser-verified: all 5 tiles paint + export their arrays; the 6 themes
+  preview. *Test:* a layout with all 5 new tiles + a new theme round-trips through the
+  editor formatter → the real schema; a mutex overlap is rejected.
+- **▶ 37g — editor playtest feedback + polish (RESERVED, awaiting the user).** A held-open
+  step for whatever the user surfaces while authoring real maps with the full tile + theme
+  set in the layout editor (UX, glyph/color tweaks, validation gaps, save/load edge cases,
+  missing affordances). Scope is defined by the feedback, not pre-specified. Closes Phase 37;
+  Phase 38 opens only after 37g lands (or the user waives it). **Watch the §37f gotcha** —
+  any new paintable kind must be added to BOTH paint switches (`applyStrokeTo` router +
+  `applyTerrainStroke` mapper); consider hardening the router with an exhaustiveness check
+  while in here.
 
 ---
 

@@ -173,14 +173,14 @@ export class BattleScene implements Scene {
     // pre-turn map line can't drift — was "Nowhere" here).
     // D8: append the theme as a banner suffix (e.g. "Corridor — Volcanic")
     // so the visual reskin reads as deliberate flavor, not a bug. The
-    // `default` theme is the canonical look — no suffix added, to keep
-    // the banner clean when the palette is the baseline.
+    // `grassland` theme is the canonical look — no suffix added, to keep
+    // the banner clean when the palette is the baseline (§37e rename).
     const locationName =
       encounter.layoutId === null
         ? PROCEDURAL_MAP_NAME
         : (getLayout(encounter.layoutId)?.name ?? encounter.layoutId);
     const bannerText =
-      encounter.theme === 'default'
+      encounter.theme === 'grassland'
         ? locationName
         : `${locationName} — ${titleCaseTheme(encounter.theme)}`;
     // H4b — surface the encounter pools + the turn being fought. `turnIndex`

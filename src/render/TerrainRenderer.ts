@@ -110,7 +110,7 @@ export class TerrainRenderer {
   private gridH: number;
   /** D8: current encounter's theme, captured at `setTiles` time. Drives
    *  the floor-tile palette branch in `topColorFor`. */
-  private theme: Theme = 'default';
+  private theme: Theme = 'grassland';
   private readonly geometry: THREE.BufferGeometry;
   private readonly material: THREE.ShaderMaterial;
   /** §37b — hill-bump overlay (a child of `mesh`): low-poly mounds scattered on
@@ -249,7 +249,7 @@ export class TerrainRenderer {
    * encounter so non-square (or smaller-than-max) boards render
    * correctly without zero-area junk geometry from unused slots.
    */
-  setTiles(tileGrid: TileGrid, gridW: number, gridH: number, theme: Theme = 'default'): void {
+  setTiles(tileGrid: TileGrid, gridW: number, gridH: number, theme: Theme = 'grassland'): void {
     if (gridW * gridH > MAX_TILES) {
       throw new Error(
         `TerrainRenderer.setTiles: ${gridW}x${gridH} exceeds capacity ${MAX_TILES}`,
@@ -505,33 +505,50 @@ export class TerrainRenderer {
  * glance, so re-tinting them per theme would risk parsing-load (per the
  * D8 scope decision).
  *
- * - `default`: the canonical DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER lerp.
- * - `rock`: gray tones. Low end DARK_STONE, high end TERMINAL_STONE — same
- *   neutral-stone family the wall sprite already uses, so a rock-theme
+ * - `grassland`: the canonical DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER lerp.
+ * - `barren`: gray tones. Low end a stone-dark companion, high end TERMINAL_STONE
+ *   — same neutral-stone family the wall sprite already uses, so a barren
  *   board reads as "stone arena."
  * - `volcanic`: dark red base climbing into amber. The high end shares
- *   DARK_TERMINAL_AMBER with the default palette so fire tiles (D7) blend
+ *   DARK_TERMINAL_AMBER with the grassland palette so fire tiles (D7) blend
  *   organically into a volcanic floor instead of jumping out as alien.
+ * - `tundra`: cold slate → pale ice-white (snow). · `desert`: shadowed tan →
+ *   warm sand. · `swamp`: dark bog → murky olive. (§37e — fixed identity hex.)
  *
  * Adding a theme: extend `ThemeSchema` in `src/config/layouts.ts`,
  * append an entry here, and the editor + procedural picker pick it up
  * automatically (THEMES is the source of truth).
  */
 const FLOOR_PALETTE: Record<Theme, { low: THREE.Color; high: THREE.Color }> = {
-  default: {
+  grassland: {
     low: new THREE.Color(COLORS.DARK_TERMINAL_GREEN),
     high: new THREE.Color(COLORS.DARK_TERMINAL_AMBER),
   },
-  rock: {
+  barren: {
     // Low end is a stone-dark companion to TERMINAL_STONE (same hue family,
     // ~50% value). High end is TERMINAL_STONE itself — the same color the
-    // wall sprite uses, so a rock arena reads as "stone everywhere."
+    // wall sprite uses, so a barren arena reads as "stone everywhere."
     low: new THREE.Color('#3a342f'),
     high: new THREE.Color(COLORS.TERMINAL_STONE),
   },
   volcanic: {
     low: new THREE.Color('#3a0a04'),
     high: new THREE.Color(COLORS.DARK_TERMINAL_AMBER),
+  },
+  // §37e — three new fixed-identity palettes (theme-independent hex, like
+  // volcanic). low = shadowed/recessed floor, high = lit crest (the noise lerp
+  // in `topColorFor` walks low→high by the per-cell height field).
+  tundra: {
+    low: new THREE.Color('#2c3a47'), // cold dark slate
+    high: new THREE.Color('#c4d4e0'), // pale ice-white snow
+  },
+  desert: {
+    low: new THREE.Color('#6b5836'), // shadowed tan
+    high: new THREE.Color('#d8c188'), // warm sunlit sand
+  },
+  swamp: {
+    low: new THREE.Color('#28301d'), // dark bog
+    high: new THREE.Color('#5e6b39'), // murky olive
   },
 };
 const _waterColor = new THREE.Color('#1F5B7A');

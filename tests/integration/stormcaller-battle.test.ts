@@ -41,7 +41,7 @@ function runStormcallerBattle(seed: number): {
     layoutId: null,
     gridW: 14,
     gridH: 14,
-    theme: 'rock',
+    theme: 'barren',
     // Melee bodyguards keep the stormcaller alive long enough to cast; a dense
     // enemy melee blob gives the chain adjacent targets to arc between.
     playerTeam: [

@@ -189,7 +189,7 @@ function addSector(): void {
     title: 'New Sector',
     description: 'A new sector.',
     length: 5,
-    theme: 'default',
+    theme: 'grassland',
     layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
     // The fight pool starts empty in every kind bucket (Wb4 — per-kind pools).
     encounters: { normal: [], elite: [], boss: [] },

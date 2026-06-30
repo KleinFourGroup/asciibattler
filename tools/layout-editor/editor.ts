@@ -72,7 +72,20 @@ import { formatSectorsJson } from '../sector-editor/format';
 import { addLayoutToSectorPools } from '../sector-editor/poolEdit';
 import type { SectorDef } from '../../src/config/sectors';
 
-type Cell = 'floor' | 'wall' | 'water' | 'halfCover' | 'chasm' | 'fire' | 'healing';
+type Cell =
+  | 'floor'
+  | 'wall'
+  | 'water'
+  | 'halfCover'
+  | 'chasm'
+  | 'fire'
+  | 'healing'
+  // §37f — the five §37b terrain tiles (camelCase cell value == schema field name).
+  | 'deepWater'
+  | 'hills'
+  | 'ice'
+  | 'sand'
+  | 'mud';
 type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
 /** D6: sub-tool within the neutral-units layer. The layer radio picks
  *  the layer; this radio picks which kind of neutral entity that
@@ -82,7 +95,17 @@ type NeutralKind = 'wall' | 'halfCover';
  *  pattern — same shape, same mid-stroke commit rule. Tile-kind stays
  *  mutex per cell (paint-chasm over a water cell wins; the layer system
  *  is a UX overlay, not a multi-layer per-cell data model). */
-type TerrainKind = 'water' | 'chasm' | 'fire' | 'healing';
+type TerrainKind =
+  | 'water'
+  | 'chasm'
+  | 'fire'
+  | 'healing'
+  // §37f — the five §37b terrain tiles as paintable sub-tools.
+  | 'deepWater'
+  | 'hills'
+  | 'ice'
+  | 'sand'
+  | 'mud';
 
 interface Coord {
   readonly x: number;
@@ -126,7 +149,7 @@ let activeTerrainKind: TerrainKind = 'water';
 /** D8 — currently-edited layout's visual theme. Drives both the JSON
  *  export's `theme` field and a `data-theme` attribute on the grid for
  *  the live floor-color preview. */
-let activeTheme: Theme = 'default';
+let activeTheme: Theme = 'grassland';
 /** Spawn regions for export. D5.D.A: initialized + reset to the
  *  procedural default (two top/bottom 'both' bands); loaded layouts
  *  populate from their JSON. D5.D.B: painting + add/delete + the
@@ -398,6 +421,17 @@ type StrokeKind =
   | 'erase-chasm'
   | 'erase-fire'
   | 'erase-healing'
+  // §37f — the five new terrain tiles.
+  | 'paint-deepWater'
+  | 'paint-hills'
+  | 'paint-ice'
+  | 'paint-sand'
+  | 'paint-mud'
+  | 'erase-deepWater'
+  | 'erase-hills'
+  | 'erase-ice'
+  | 'erase-sand'
+  | 'erase-mud'
   | 'paint-region'
   | 'erase-region'
   | 'noop';
@@ -452,6 +486,11 @@ function strokeFromMouseEvent(e: MouseEvent): StrokeKind {
         case 'chasm': return erasing ? 'erase-chasm' : 'paint-chasm';
         case 'fire': return erasing ? 'erase-fire' : 'paint-fire';
         case 'healing': return erasing ? 'erase-healing' : 'paint-healing';
+        case 'deepWater': return erasing ? 'erase-deepWater' : 'paint-deepWater';
+        case 'hills': return erasing ? 'erase-hills' : 'paint-hills';
+        case 'ice': return erasing ? 'erase-ice' : 'paint-ice';
+        case 'sand': return erasing ? 'erase-sand' : 'paint-sand';
+        case 'mud': return erasing ? 'erase-mud' : 'paint-mud';
       }
       // Unreachable — TerrainKind is exhaustive. Fall through for
       // safety; equivalent to "no-op" semantics.
@@ -483,12 +522,22 @@ function applyStrokeTo(c: Coord): void {
     case 'paint-chasm':
     case 'paint-fire':
     case 'paint-healing':
+    case 'paint-deepWater':
+    case 'paint-hills':
+    case 'paint-ice':
+    case 'paint-sand':
+    case 'paint-mud':
     case 'erase-water':
     case 'erase-wall':
     case 'erase-halfCover':
     case 'erase-chasm':
     case 'erase-fire':
     case 'erase-healing':
+    case 'erase-deepWater':
+    case 'erase-hills':
+    case 'erase-ice':
+    case 'erase-sand':
+    case 'erase-mud':
       applyTerrainStroke(c);
       return;
     case 'paint-region':
@@ -528,6 +577,21 @@ function applyTerrainStroke(c: Coord): void {
     case 'paint-healing':
       next = 'healing';
       break;
+    case 'paint-deepWater':
+      next = 'deepWater';
+      break;
+    case 'paint-hills':
+      next = 'hills';
+      break;
+    case 'paint-ice':
+      next = 'ice';
+      break;
+    case 'paint-sand':
+      next = 'sand';
+      break;
+    case 'paint-mud':
+      next = 'mud';
+      break;
     case 'erase-water':
       if (current === 'water') next = 'floor';
       break;
@@ -545,6 +609,21 @@ function applyTerrainStroke(c: Coord): void {
       break;
     case 'erase-healing':
       if (current === 'healing') next = 'floor';
+      break;
+    case 'erase-deepWater':
+      if (current === 'deepWater') next = 'floor';
+      break;
+    case 'erase-hills':
+      if (current === 'hills') next = 'floor';
+      break;
+    case 'erase-ice':
+      if (current === 'ice') next = 'floor';
+      break;
+    case 'erase-sand':
+      if (current === 'sand') next = 'floor';
+      break;
+    case 'erase-mud':
+      if (current === 'mud') next = 'floor';
       break;
   }
   if (next === null || next === current) return;
@@ -598,6 +677,11 @@ function refreshCell(c: Coord): void {
     'chasm',
     'fire',
     'healing',
+    'deepWater',
+    'hills',
+    'ice',
+    'sand',
+    'mud',
     'invalid',
     'active-region-0',
     'active-region-1',
@@ -610,6 +694,11 @@ function refreshCell(c: Coord): void {
   if (value === 'chasm') el.classList.add('chasm');
   if (value === 'fire') el.classList.add('fire');
   if (value === 'healing') el.classList.add('healing');
+  if (value === 'deepWater') el.classList.add('deepWater');
+  if (value === 'hills') el.classList.add('hills');
+  if (value === 'ice') el.classList.add('ice');
+  if (value === 'sand') el.classList.add('sand');
+  if (value === 'mud') el.classList.add('mud');
 
   // Tear down any prior region tags + outline. Rebuilt below based
   // on current spawns membership.
@@ -663,10 +752,17 @@ function validate(): ValidationItem[] {
   const chasms = collectCells('chasm');
   const fires = collectCells('fire');
   const healings = collectCells('healing');
+  const deepWater = collectCells('deepWater');
+  const hills = collectCells('hills');
+  const ice = collectCells('ice');
+  const sand = collectCells('sand');
+  const mud = collectCells('mud');
 
   if (
     walls.length === 0 && water.length === 0 && halfCovers.length === 0 &&
-    chasms.length === 0 && fires.length === 0 && healings.length === 0
+    chasms.length === 0 && fires.length === 0 && healings.length === 0 &&
+    deepWater.length === 0 && hills.length === 0 && ice.length === 0 &&
+    sand.length === 0 && mud.length === 0
   ) {
     items.push({ level: 'ok', text: 'Empty grid — paint something.' });
   }
@@ -712,6 +808,11 @@ function validate(): ValidationItem[] {
   for (const ch of chasms) blockedSet.add(`${ch.x},${ch.y}`);
   for (const f of fires) blockedSet.add(`${f.x},${f.y}`);
   for (const hl of healings) blockedSet.add(`${hl.x},${hl.y}`);
+  for (const t of deepWater) blockedSet.add(`${t.x},${t.y}`);
+  for (const t of hills) blockedSet.add(`${t.x},${t.y}`);
+  for (const t of ice) blockedSet.add(`${t.x},${t.y}`);
+  for (const t of sand) blockedSet.add(`${t.x},${t.y}`);
+  for (const t of mud) blockedSet.add(`${t.x},${t.y}`);
   let spawnOverlap = 0;
   for (const region of spawns) {
     for (const t of region.tiles) {
@@ -892,6 +993,11 @@ function buildCurrentLayout(): LayoutDef {
   const chasms = collectCells('chasm');
   const fires = collectCells('fire');
   const healings = collectCells('healing');
+  const deepWater = collectCells('deepWater');
+  const hills = collectCells('hills');
+  const ice = collectCells('ice');
+  const sand = collectCells('sand');
+  const mud = collectCells('mud');
   const payload: LayoutDef = {
     id: metaIdEl.value.trim() || 'unnamed',
     name: metaNameEl.value.trim() || 'Unnamed',
@@ -907,6 +1013,13 @@ function buildCurrentLayout(): LayoutDef {
   if (chasms.length > 0) payload.chasms = chasms;
   if (fires.length > 0) payload.fires = fires;
   if (healings.length > 0) payload.healings = healings;
+  // §37f — the five new terrain tiles, emitted only when painted (matching the
+  // optional-array convention so an unused tile never bloats the layout JSON).
+  if (deepWater.length > 0) payload.deepWater = deepWater;
+  if (hills.length > 0) payload.hills = hills;
+  if (ice.length > 0) payload.ice = ice;
+  if (sand.length > 0) payload.sand = sand;
+  if (mud.length > 0) payload.mud = mud;
   return payload;
 }
 
@@ -1173,6 +1286,11 @@ function loadLayout(id: string): void {
   if (found.chasms) for (const c of found.chasms) grid[c.y]![c.x] = 'chasm';
   if (found.fires) for (const c of found.fires) grid[c.y]![c.x] = 'fire';
   if (found.healings) for (const c of found.healings) grid[c.y]![c.x] = 'healing';
+  if (found.deepWater) for (const c of found.deepWater) grid[c.y]![c.x] = 'deepWater';
+  if (found.hills) for (const c of found.hills) grid[c.y]![c.x] = 'hills';
+  if (found.ice) for (const c of found.ice) grid[c.y]![c.x] = 'ice';
+  if (found.sand) for (const c of found.sand) grid[c.y]![c.x] = 'sand';
+  if (found.mud) for (const c of found.mud) grid[c.y]![c.x] = 'mud';
   // Deep-copy spawns so live editing can't mutate the canonical
   // LAYOUTS array.
   spawns = found.spawns.map((r) => ({

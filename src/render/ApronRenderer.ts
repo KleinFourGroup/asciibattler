@@ -159,7 +159,7 @@ export class ApronRenderer {
    * coordinates simply continue the grid outward into negative/overflow
    * cells — which the height noise and the anim-phase hash both accept.
    */
-  setTiles(tileGrid: TileGrid, gridW: number, gridH: number, theme: Theme = 'default'): void {
+  setTiles(tileGrid: TileGrid, gridW: number, gridH: number, theme: Theme = 'grassland'): void {
     const a = APRON_TILES;
     const halfX = gridW / 2;
     const halfZ = gridH / 2;

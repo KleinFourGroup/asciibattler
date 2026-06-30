@@ -118,7 +118,7 @@ function buildArenaEncounter(
     const side = rng.int(TERRAIN.proceduralMinSize, TERRAIN.proceduralMaxSize);
     gridW = side;
     gridH = side;
-    theme = 'default';
+    theme = 'grassland';
   }
 
   // Last consumer of `rng` (mirrors `Run.beginTurn`'s ordering: seeds → board →

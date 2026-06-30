@@ -4,7 +4,7 @@
     "title": "The Start",
     "description": "Where every run begins. A full spread of battlefields, ungated — the uniform pool the run has always drawn from, now expressed as a sector.",
     "length": 11,
-    "theme": "default",
+    "theme": "grassland",
     "layouts": [
       { "layoutId": "procedural", "weight": 2 },
       { "layoutId": "labyrinth" },

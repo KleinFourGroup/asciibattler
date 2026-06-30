@@ -46,7 +46,7 @@ describe('formatSectorsJson', () => {
         title: 'S',
         description: 'd',
         length: 3,
-        theme: 'default',
+        theme: 'grassland',
         layouts: [
           { layoutId: 'procedural', weight: 2 },
           { layoutId: 'labyrinth', minHop: 2 },
@@ -73,7 +73,7 @@ describe('formatSectorsJson', () => {
         title: 'S',
         description: 'd',
         length: 3,
-        theme: 'default',
+        theme: 'grassland',
         layouts: [{ layoutId: 'procedural' }],
         encounters: {
           normal: [{ encounterId: 'brigands' }],

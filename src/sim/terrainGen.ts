@@ -122,6 +122,23 @@ function generateFromLayout(
   if (layout.healings) {
     for (const h of layout.healings) tileGrid.setKind(h, 'healing');
   }
+  // §37f — the five §37b terrain tiles (each an optional hand-authored array,
+  // mapped to its TileKind). Mirrors the water/chasm/fire/healing loops above.
+  if (layout.deepWater) {
+    for (const c of layout.deepWater) tileGrid.setKind(c, 'deep_water');
+  }
+  if (layout.hills) {
+    for (const c of layout.hills) tileGrid.setKind(c, 'hills');
+  }
+  if (layout.ice) {
+    for (const c of layout.ice) tileGrid.setKind(c, 'ice');
+  }
+  if (layout.sand) {
+    for (const c of layout.sand) tileGrid.setKind(c, 'sand');
+  }
+  if (layout.mud) {
+    for (const c of layout.mud) tileGrid.setKind(c, 'mud');
+  }
   return {
     tileGrid,
     walls: layout.walls.slice(),

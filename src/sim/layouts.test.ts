@@ -9,7 +9,7 @@ import {
   type LayoutDef,
   type SpawnRegion,
 } from './layouts';
-import { SpawnRegionSchema } from '../config/layouts';
+import { SpawnRegionSchema, ThemeSchema } from '../config/layouts';
 import { generateTerrain } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
@@ -189,6 +189,29 @@ describe('layouts library', () => {
     expect(() =>
       generateTerrain(new RNG(1), layout.gridW, layout.gridH + 1, BASE, layout.id),
     ).toThrow(/requires gridW/);
+  });
+});
+
+describe('§37e — theme palette rename + the three new themes', () => {
+  it('the renamed names resolve; the pre-37e names no longer do', () => {
+    // The rename is the reason RunSnapshot bumped v23→v24 (theme is serialized);
+    // the old strings must HARD-fail so a stale save can't smuggle one past zod.
+    expect(ThemeSchema.safeParse('grassland').success).toBe(true);
+    expect(ThemeSchema.safeParse('barren').success).toBe(true);
+    expect(ThemeSchema.safeParse('default').success).toBe(false); // was → grassland
+    expect(ThemeSchema.safeParse('rock').success).toBe(false); // was → barren
+  });
+
+  it('the three new themes resolve, and THEMES carries the full set', () => {
+    for (const t of ['tundra', 'desert', 'swamp'] as const) {
+      expect(ThemeSchema.safeParse(t).success).toBe(true);
+      expect(THEMES).toContain(t);
+    }
+    // THEMES (the picker pool) and the schema enum agree — adding a theme to one
+    // without the other would silently shrink the procedural/editor pool.
+    expect([...THEMES].sort()).toEqual(
+      ['barren', 'desert', 'grassland', 'swamp', 'tundra', 'volcanic'].sort(),
+    );
   });
 });
 

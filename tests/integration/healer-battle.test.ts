@@ -36,7 +36,7 @@ function runHealerBattle(seed: number): { resolved: boolean; healerCast: boolean
     layoutId: null,
     gridW: 12,
     gridH: 12,
-    theme: 'rock',
+    theme: 'barren',
     playerTeam: [
       rollUnit('healer', new RNG(seed)),
       rollUnit('mercenary', new RNG(seed + 1)),

@@ -57,7 +57,7 @@ function sector(layouts: LayoutEntry[], encounters: EncounterEntry[]): SectorDef
     title: 'Fixture',
     description: 'd',
     length: 5,
-    theme: 'default',
+    theme: 'grassland',
     layouts,
     encounters: byKind,
   } as unknown as SectorDef;

@@ -21,7 +21,7 @@ function makeSectors(): SectorDef[] {
       title: 'Alpha',
       description: 'd',
       length: 3,
-      theme: 'default',
+      theme: 'grassland',
       layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
     },
     {
@@ -29,7 +29,7 @@ function makeSectors(): SectorDef[] {
       title: 'Beta',
       description: 'd',
       length: 3,
-      theme: 'default',
+      theme: 'grassland',
       layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }, { layoutId: REAL }],
     },
   ]);

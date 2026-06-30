@@ -20,7 +20,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { LAYOUTS, LayoutsSchema } from '../../src/config/layouts';
+import { LAYOUTS, LayoutsSchema, type LayoutDef } from '../../src/config/layouts';
 import { formatLayoutsJson } from '../../tools/layout-editor/format';
 
 /** Normalize line endings + trailing blank space so the assertion isn't
@@ -41,5 +41,43 @@ describe('formatLayoutsJson', () => {
   it('round-trips through the game schema to a deep-equal config', () => {
     const reparsed = LayoutsSchema.parse(JSON.parse(formatLayoutsJson(LAYOUTS)));
     expect(reparsed).toEqual([...LAYOUTS]);
+  });
+});
+
+describe('§37f — the five new terrain tiles + a new theme', () => {
+  // A hand-built layout exercising every §37b tile array (deep water / hills /
+  // ice / sand / mud, each on a distinct cell) plus a §37e theme. Round-tripping
+  // it through the editor formatter → the REAL game schema proves the formatter
+  // emits the new keys AND the schema accepts them — the editor's Save path
+  // end-to-end for the new tiles.
+  const band = (y: number): { x: number; y: number }[] =>
+    Array.from({ length: 8 }, (_, x) => ({ x, y }));
+  const withNewTiles: LayoutDef = {
+    id: 'tile-roundtrip',
+    name: 'Tile Roundtrip',
+    description: 'fixture exercising the §37 terrain tiles + a new theme.',
+    gridW: 8,
+    gridH: 8,
+    theme: 'tundra', // a §37e new theme — proves it survives the round-trip too
+    walls: [],
+    deepWater: [{ x: 0, y: 0 }],
+    hills: [{ x: 1, y: 0 }],
+    ice: [{ x: 2, y: 0 }],
+    sand: [{ x: 3, y: 0 }],
+    mud: [{ x: 4, y: 0 }],
+    spawns: [
+      { availability: 'player', tiles: band(6) },
+      { availability: 'enemy', tiles: band(7) },
+    ],
+  };
+
+  it('formats + re-parses to a deep-equal layout', () => {
+    const reparsed = LayoutsSchema.parse(JSON.parse(formatLayoutsJson([withNewTiles])));
+    expect(reparsed).toEqual([withNewTiles]);
+  });
+
+  it('rejects a new-tile cell that overlaps another reservation (mutex per cell)', () => {
+    const overlapping: LayoutDef = { ...withNewTiles, mud: [{ x: 0, y: 0 }] }; // mud on deep water
+    expect(LayoutsSchema.safeParse([overlapping]).success).toBe(false);
   });
 });

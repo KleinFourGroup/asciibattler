@@ -219,8 +219,13 @@ export interface BattleEncounter {
  *  nodes through the middle hops (a new RNG pass), so the persisted `nodeMap`
  *  for a given seed differs from a v22 map, and a node can now carry the new
  *  `elite` kind. A v22 save's map predates the elite scatter → reject rather
- *  than rehydrate a run whose map disagrees with the current generator. */
-const RUN_SCHEMA_VERSION = 23;
+ *  than rehydrate a run whose map disagrees with the current generator.
+ *  v24 — §37e renamed the terrain themes (`default → grassland`, `rock →
+ *  barren`). `theme` is serialized (this `RunSnapshot`'s `encounterMap` +
+ *  `currentEncounter`, both `ThemeSchema`-typed), so a v23 save carries the
+ *  old strings, which now fail `ThemeSchema`. Reject-stale (no transform) —
+ *  the version gate rejects the v23 save before the theme would be parsed. */
+const RUN_SCHEMA_VERSION = 24;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the

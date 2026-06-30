@@ -463,7 +463,7 @@ describe('A2 round-trip: World', () => {
       layoutId: null,
       gridW: world.gridW,
       gridH: world.gridH,
-      theme: 'default', // cosmetic only — not part of the serialized snapshot
+      theme: 'grassland', // cosmetic only — not part of the serialized snapshot
       playerTeam: [],
       enemyTeam: [],
     });

@@ -5,7 +5,7 @@
     "description": "Both armies must walk through a small labyrinth towards each other, forcing them into a very small corridor / choke-point fight.",
     "gridW": 12,
     "gridH": 12,
-    "theme": "rock",
+    "theme": "barren",
     "walls": [
       { "x": 1, "y": 3 },
       { "x": 2, "y": 3 },
@@ -79,7 +79,7 @@
     "description": "A small river runs through the middle of the map, forcing units to wade through water.",
     "gridW": 12,
     "gridH": 12,
-    "theme": "default",
+    "theme": "grassland",
     "walls": [
     ],
     "water": [
@@ -147,7 +147,7 @@
     "description": "A really long map funneling units into four corridors.",
     "gridW": 12,
     "gridH": 32,
-    "theme": "rock",
+    "theme": "barren",
     "walls": [
       { "x": 2, "y": 3 },
       { "x": 5, "y": 3 },
@@ -357,7 +357,7 @@
     "description": "The player is surrounded by enemies in a small junction of tunnels.",
     "gridW": 11,
     "gridH": 11,
-    "theme": "rock",
+    "theme": "barren",
     "walls": [
       { "x": 0, "y": 0 },
       { "x": 1, "y": 0 },

@@ -63,7 +63,7 @@ describe('E5: corridor flow (target stickiness, no thrash)', () => {
           layoutId,
           gridW: layout.gridW,
           gridH: layout.gridH,
-          theme: 'default', // cosmetic only — no sim effect on this flow test
+          theme: 'grassland', // cosmetic only — no sim effect on this flow test
           playerTeam: team(),
           enemyTeam: team(),
         };

@@ -48,8 +48,13 @@
               <label class="inline"><input type="radio" name="terrain-kind" value="chasm" /> chasm (.)</label>
               <label class="inline"><input type="radio" name="terrain-kind" value="fire" /> fire (^)</label>
               <label class="inline"><input type="radio" name="terrain-kind" value="healing" /> healing (+)</label>
+              <label class="inline"><input type="radio" name="terrain-kind" value="deepWater" /> deep water (&#x2248;)</label>
+              <label class="inline"><input type="radio" name="terrain-kind" value="hills" /> hills (&#x25B2;)</label>
+              <label class="inline"><input type="radio" name="terrain-kind" value="ice" /> ice (*)</label>
+              <label class="inline"><input type="radio" name="terrain-kind" value="sand" /> sand (&#x2234;)</label>
+              <label class="inline"><input type="radio" name="terrain-kind" value="mud" /> mud (%)</label>
             </div>
-            <span class="hint">Water slows pathing. Chasm is impassable (Infinity cost). Fire chips HP per tick; healing heals per tick.</span>
+            <span class="hint">Water/sand slow pathing; mud is worst + poisons on enter; hills slow but boost evasion; ice is fast but slippery (−accuracy); deep water + chasm are impassable. Fire chips HP; healing heals; water/deep water douse burn.</span>
           </div>
           <div id="neutral-row" class="neutral-row" hidden>
             <span class="neutral-label">Kind</span>
@@ -82,6 +87,11 @@
             <li><span class="swatch chasm"></span> Chasm (.) — impassable</li>
             <li><span class="swatch fire"></span> Fire (^) — chip damage per tick</li>
             <li><span class="swatch healing"></span> Healing (+) — chip heal per tick</li>
+            <li><span class="swatch deepWater"></span> Deep water (&#x2248;) — impassable</li>
+            <li><span class="swatch hills"></span> Hills (&#x25B2;) — cost 3, +evasion</li>
+            <li><span class="swatch ice"></span> Ice (*) — cost 1, &minus;accuracy</li>
+            <li><span class="swatch sand"></span> Sand (&#x2234;) — cost 2, &minus;evasion</li>
+            <li><span class="swatch mud"></span> Mud (%) — cost 4, &minus;accuracy, poison</li>
             <li><span class="swatch wall"></span> Wall (#) — blocks pathing + LOS</li>
             <li><span class="swatch halfCover"></span> Half-cover (&#x2565;) — pathing blocker, LOS-transparent</li>
             <li><span class="swatch erase"></span> Right-click — erases active layer at the cell</li>
@@ -106,9 +116,12 @@
             <label class="inline">
               Theme
               <select id="meta-theme">
-                <option value="default">default</option>
-                <option value="rock">rock</option>
+                <option value="grassland">grassland</option>
+                <option value="barren">barren</option>
                 <option value="volcanic">volcanic</option>
+                <option value="tundra">tundra</option>
+                <option value="desert">desert</option>
+                <option value="swamp">swamp</option>
               </select>
             </label>
           </section>

@@ -364,17 +364,30 @@ body {
    shader, so it can't show the per-tile lerp the game renders; we pick
    ONE flat color per theme (the "high" endpoint of FLOOR_PALETTE in
    TerrainRenderer.ts) as a representative preview. Keep these in lockstep
-   when tuning a palette. Implemented as a CSS variable so the wall /
-   water / halfCover / chasm / fire / healing rules below still override
-   per-cell — only the floor (no kind class) reads --floor-bg. */
+   when tuning a palette. Implemented as a CSS variable so the per-kind
+   tile rules below (wall / water / halfCover / chasm / fire / healing /
+   deepWater / hills / ice / sand / mud) still override per-cell — only the
+   floor (no kind class) reads --floor-bg.
+   §37e: the base `.grid` color IS the `grassland` theme (the renamed
+   `default`); `rock` was renamed to `barren`; tundra / desert / swamp are the
+   three new palettes (their FLOOR_PALETTE "high" endpoint). */
 .grid {
   --floor-bg: var(--dark-terminal-green);
 }
-.grid[data-theme='rock'] {
+.grid[data-theme='barren'] {
   --floor-bg: var(--terminal-stone);
 }
 .grid[data-theme='volcanic'] {
   --floor-bg: #3a0a04;
+}
+.grid[data-theme='tundra'] {
+  --floor-bg: #c4d4e0;
+}
+.grid[data-theme='desert'] {
+  --floor-bg: #d8c188;
+}
+.grid[data-theme='swamp'] {
+  --floor-bg: #5e6b39;
 }
 
 .cell {
@@ -493,6 +506,95 @@ body {
   pointer-events: none;
 }
 
+/* §37f — the five §37b terrain tiles. Distinct dim background families + a
+   representative glyph, mirroring the chasm / fire / healing convention so a
+   glance at the editor maps onto the in-game terrain. Theme-independent (these
+   are fixed-identity tiles in TerrainRenderer too):
+   - deep water: deeper navy than water, ≈ glyph (impassable, like chasm).
+   - hills: earthy green, ▲ mound glyph.
+   - ice: pale slate-blue, * frost glyph.
+   - sand: dark tan, ∴ grain glyph.
+   - mud: dark brown, % sticky glyph. */
+.cell.deepWater {
+  background: #011f2b;
+}
+
+.cell.deepWater::after {
+  content: '\2248';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #2f9fc0;
+  font-weight: 700;
+  font-size: 22px;
+  pointer-events: none;
+}
+
+.cell.hills {
+  background: #2b3a1a;
+}
+
+.cell.hills::after {
+  content: '\25B2';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #9bbf6a;
+  font-weight: 700;
+  font-size: 20px;
+  pointer-events: none;
+}
+
+.cell.ice {
+  background: #1c3038;
+}
+
+.cell.ice::after {
+  content: '*';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #cfe6f0;
+  font-weight: 700;
+  font-size: 22px;
+  pointer-events: none;
+}
+
+.cell.sand {
+  background: #3a3018;
+}
+
+.cell.sand::after {
+  content: '\2234';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #d8c188;
+  font-weight: 700;
+  font-size: 22px;
+  pointer-events: none;
+}
+
+.cell.mud {
+  background: #2a2012;
+}
+
+.cell.mud::after {
+  content: '%';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #9a7b46;
+  font-weight: 700;
+  font-size: 22px;
+  pointer-events: none;
+}
+
 .cell.invalid {
   outline: 2px solid var(--neon-red);
   outline-offset: -2px;
@@ -513,10 +615,20 @@ body {
 .grid[data-active-layer='neutral-units'] .cell.chasm,
 .grid[data-active-layer='neutral-units'] .cell.fire,
 .grid[data-active-layer='neutral-units'] .cell.healing,
+.grid[data-active-layer='neutral-units'] .cell.deepWater,
+.grid[data-active-layer='neutral-units'] .cell.hills,
+.grid[data-active-layer='neutral-units'] .cell.ice,
+.grid[data-active-layer='neutral-units'] .cell.sand,
+.grid[data-active-layer='neutral-units'] .cell.mud,
 .grid[data-active-layer='spawn-regions'] .cell.water,
 .grid[data-active-layer='spawn-regions'] .cell.chasm,
 .grid[data-active-layer='spawn-regions'] .cell.fire,
-.grid[data-active-layer='spawn-regions'] .cell.healing {
+.grid[data-active-layer='spawn-regions'] .cell.healing,
+.grid[data-active-layer='spawn-regions'] .cell.deepWater,
+.grid[data-active-layer='spawn-regions'] .cell.hills,
+.grid[data-active-layer='spawn-regions'] .cell.ice,
+.grid[data-active-layer='spawn-regions'] .cell.sand,
+.grid[data-active-layer='spawn-regions'] .cell.mud {
   opacity: 0.3;
 }
 
@@ -626,6 +738,26 @@ body {
 
 .swatch.healing {
   background: #07332f;
+}
+
+.swatch.deepWater {
+  background: #011f2b;
+}
+
+.swatch.hills {
+  background: #2b3a1a;
+}
+
+.swatch.ice {
+  background: #1c3038;
+}
+
+.swatch.sand {
+  background: #3a3018;
+}
+
+.swatch.mud {
+  background: #2a2012;
 }
 
 .swatch.erase {

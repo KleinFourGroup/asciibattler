@@ -8,7 +8,8 @@
  *
  * Canonical shape (mirrors the committed file post-M5 normalization): 2-space
  * indent, the `id / name / description / gridW / gridH / theme / walls /
- * [water] / [halfCovers] / [chasms] / [fires] / [healings] / spawns` key order,
+ * [water] / [halfCovers] / [chasms] / [fires] / [healings] / [deepWater] /
+ * [hills] / [ice] / [sand] / [mud] / spawns` key order,
  * `walls` always present (empty → an open+close bracket pair), the optional
  * terrain arrays emitted only when non-empty, and **every coord on its own
  * line** (the editor's long-standing emit — the 4-per-line packing some
@@ -64,6 +65,14 @@ export function formatLayoutLines(layout: LayoutDef, indent = 0): string[] {
   if (layout.fires && layout.fires.length > 0) parts.push(...coordArrayBlock('fires', layout.fires, pad));
   if (layout.healings && layout.healings.length > 0)
     parts.push(...coordArrayBlock('healings', layout.healings, pad));
+  // §37f — the five §37b terrain tiles, same optional-when-non-empty convention.
+  if (layout.deepWater && layout.deepWater.length > 0)
+    parts.push(...coordArrayBlock('deepWater', layout.deepWater, pad));
+  if (layout.hills && layout.hills.length > 0)
+    parts.push(...coordArrayBlock('hills', layout.hills, pad));
+  if (layout.ice && layout.ice.length > 0) parts.push(...coordArrayBlock('ice', layout.ice, pad));
+  if (layout.sand && layout.sand.length > 0) parts.push(...coordArrayBlock('sand', layout.sand, pad));
+  if (layout.mud && layout.mud.length > 0) parts.push(...coordArrayBlock('mud', layout.mud, pad));
   parts.push(`${pad}  "spawns": [`);
   layout.spawns.forEach((region, i) => {
     const sep = i === layout.spawns.length - 1 ? '' : ',';

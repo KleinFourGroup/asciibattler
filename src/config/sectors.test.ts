@@ -28,7 +28,7 @@ function makeSector(overrides: Partial<SectorDef> = {}): unknown {
     title: 'Fixture',
     description: 'A test sector.',
     length: 3,
-    theme: 'default',
+    theme: 'grassland',
     layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
     ...overrides,
   };
@@ -217,7 +217,7 @@ describe('encounterPoolAtHop — the hop-gated fight-pool query', () => {
     title: 'F',
     description: 'd',
     length: 4,
-    theme: 'default',
+    theme: 'grassland',
     layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
     encounters: { normal: [{ encounterId: 'a' }, { encounterId: 'b', minHop: 2 }], elite: [], boss: [] },
   } as unknown as SectorDef;

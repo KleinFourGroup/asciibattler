@@ -68,19 +68,40 @@ export type SpawnAvailability = z.infer<typeof SpawnAvailabilitySchema>;
  * effects. Closed union so the procedural-side roll in `Run.handleEnterNode`
  * and the editor dropdown can't drift onto a name that has no palette.
  *
- * - `default`: the canonical DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER lerp.
- * - `rock`: gray tones (variants of TERMINAL_STONE).
+ * - `grassland`: the canonical DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER lerp.
+ * - `barren`: gray tones (variants of TERMINAL_STONE).
  * - `volcanic`: dark red base with amber accents; pairs naturally with
  *   D7 fire tiles.
+ * - `tundra`: blue-white snow. · `desert`: warm sand. · `swamp`: murky
+ *   brown-greens. (§37e — fixed identity palettes in `TerrainRenderer`.)
+ *
+ * §37e renamed `default → grassland` and `rock → barren` (the latter so the
+ * palette name doesn't collide with the §37b Hills tile that renders
+ * mini-mountains). `theme` is serialized in the RunSnapshot, so the rename
+ * forced a RunSnapshot v23→v24 reject-stale bump (see `Run.ts`).
  *
  * Adding a theme: extend `ThemeSchema` and add a palette entry in
  * `TerrainRenderer.topColorFor`. The editor + procedural picker both
  * read from this enum, so a new theme automatically appears in both.
  */
-export const ThemeSchema = z.enum(['default', 'rock', 'volcanic']);
+export const ThemeSchema = z.enum([
+  'grassland',
+  'barren',
+  'volcanic',
+  'tundra',
+  'desert',
+  'swamp',
+]);
 export type Theme = z.infer<typeof ThemeSchema>;
 /** Picker pool for the procedural roll + the editor dropdown. */
-export const THEMES: readonly Theme[] = ['default', 'rock', 'volcanic'];
+export const THEMES: readonly Theme[] = [
+  'grassland',
+  'barren',
+  'volcanic',
+  'tundra',
+  'desert',
+  'swamp',
+];
 
 export const SpawnRegionSchema = z
   .object({
@@ -132,6 +153,16 @@ const LayoutSchema = z
      *  to standing combatants, clamped at maxHp). Hand-authored-only.
      *  Same overlap rules as fires. */
     healings: z.array(CoordSchema).optional(),
+    /** §37f — the five §37b terrain tiles, each an optional hand-authored
+     *  coord array (tile-kind is mutex per cell, validated by `checkTileEffect`
+     *  like fire/healing). `deepWater` is impassable like chasm (Infinity cost);
+     *  `hills`/`ice`/`sand`/`mud` are passable cost/combat-mod tiles. Applied to
+     *  the TileGrid by `terrainGen` → `setKind`. */
+    deepWater: z.array(CoordSchema).optional(),
+    hills: z.array(CoordSchema).optional(),
+    ice: z.array(CoordSchema).optional(),
+    sand: z.array(CoordSchema).optional(),
+    mud: z.array(CoordSchema).optional(),
     spawns: z.array(SpawnRegionSchema).min(2),
     /** D8 — visual theme. Required: every layout (including retrofitted
      *  ones) declares its palette explicitly so the loader never has to
@@ -211,7 +242,7 @@ const LayoutSchema = z
     // region overlap too.
     const checkTileEffect = (
       coords: ReadonlyArray<{ x: number; y: number }> | undefined,
-      pathKey: 'fires' | 'healings',
+      pathKey: 'fires' | 'healings' | 'deepWater' | 'hills' | 'ice' | 'sand' | 'mud',
       label: string,
     ): void => {
       if (!coords) return;
@@ -245,6 +276,12 @@ const LayoutSchema = z
     };
     checkTileEffect(layout.fires, 'fires', 'fire');
     checkTileEffect(layout.healings, 'healings', 'healing');
+    // §37f — the five new terrain tiles, same mutex-per-cell overlap rule.
+    checkTileEffect(layout.deepWater, 'deepWater', 'deep water');
+    checkTileEffect(layout.hills, 'hills', 'hills');
+    checkTileEffect(layout.ice, 'ice', 'ice');
+    checkTileEffect(layout.sand, 'sand', 'sand');
+    checkTileEffect(layout.mud, 'mud', 'mud');
 
     layout.spawns.forEach((region, regionIdx) => {
       region.tiles.forEach((t, tileIdx) => {

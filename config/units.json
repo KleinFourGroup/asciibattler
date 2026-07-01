@@ -592,18 +592,18 @@
     "statusSusceptibility": ["burn","frozen"]
   },
   "rubble_1x1": {
-    "glyph": "▓",
+    "glyph": "%",
     "hp": 25,
     "statusSusceptibility": ["burn","frozen"]
   },
   "rubble_2x2": {
-    "glyph": "▓",
+    "glyph": "%",
     "hp": 60,
     "footprint": 2,
     "statusSusceptibility": ["burn","frozen"]
   },
   "rubble_3x3": {
-    "glyph": "▓",
+    "glyph": "%",
     "hp": 110,
     "footprint": 3,
     "statusSusceptibility": ["burn","frozen"]

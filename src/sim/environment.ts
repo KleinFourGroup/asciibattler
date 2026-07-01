@@ -96,12 +96,22 @@ export function spawnHalfCover(world: World, position: GridCoord, maxHp?: number
 }
 
 /**
- * §40a — the rubble neutral glyph. `▓` (U+2593 DARK SHADE): a dense debris/
- * masonry fill, distinct from the wall `#`. Catalog-derived into the font atlas
- * (all three rubble sizes share it — one atlas cell). Mirrors the rubble catalog
- * entries' glyph (asserted in environment.test).
+ * §40a — the rubble neutral glyph. `%` — an OPEN, normal-height glyph reading as
+ * scattered debris. A user-approved STOPGAP: the first pass used `▓` (U+2593 DARK
+ * SHADE), a FULL-EM block that stood taller than the wall `#` and occluded sprites
+ * behind it. `%` is open (not a solid slab) + ~wall-height, so it neither towers
+ * nor occludes. Catalog-derived into the atlas (all three rubble sizes share it —
+ * one cell). Mirrors the rubble catalog entries' glyph (asserted in environment.test).
+ *
+ * TODO (next session — see TODO.md): a true HALF-height rubble look. `▄` (U+2584
+ * LOWER HALF BLOCK) is the ideal glyph. This session's REMOTE render-verify (WebGL
+ * screenshots + atlas pixel-sampling) was UNRELIABLE and wrongly read the block
+ * range as tofu — the user confirmed `▓` renders fine (a tall block) in their
+ * NATIVE browser, so `▄` likely renders there too. Verify `▄` natively; if it's a
+ * real lower-half block, adopt it — else squash the rubble sprite vertically
+ * (render-side, glyph-agnostic).
  */
-export const RUBBLE_GLYPH = '▓';
+export const RUBBLE_GLYPH = '%';
 
 /**
  * §40a — the rubble neutral `UnitDef` ids, keyed by footprint side (1..3, the

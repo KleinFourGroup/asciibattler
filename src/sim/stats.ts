@@ -51,6 +51,7 @@
 
 import { secondsToTicks } from '../config';
 import { STATS } from '../config/stats';
+import { UNIT_DEFS } from '../config/units';
 import type { Unit, UnitArchetype, UnitDerived, UnitStats } from './Unit';
 
 export function deriveStats(stats: UnitStats, attackRange: number): UnitDerived {
@@ -117,83 +118,23 @@ export function inertDerived(maxHp: number): UnitDerived {
  * E1 — which base stat drives a unit's basic strike, given its archetype +
  * stat block. The SINGLE source of truth for the archetype→damage-stat
  * mapping, shared by the sim (`basicAttackDamage`) and the display surfaces
- * (HUD + RecruitScreen "ATK" rows) so they can never disagree. Melee + rogue
- * strike on `strength`; ranged on `ranged`. Environment entities don't
- * strike — the 0 is type-completeness + a guard if a future path asks.
+ * (HUD + RecruitScreen "ATK" rows) so they can never disagree.
+ *
+ * §38c — the archetype→stat mapping moved OUT of an 18-case `switch` into the
+ * `UnitDef.damageStat` catalog field (`config/units.json`), read straight off
+ * `UNIT_DEFS` here. A striker declares its scaling stat as pure data; an absent
+ * field (non-strikers healer/shaman) resolves to 0 — the same value the switch's
+ * explicit `return 0` cases produced, so this is byte-identical. Environment
+ * entities never strike and carry no catalog entry, so they short-circuit to 0
+ * (mirrors `targetingForArchetype`'s guard). Reads `UNIT_DEFS` at CALL time, not
+ * module-eval — stats.ts sits inside the `config/units ⇄ sim` import cycle, so a
+ * module-eval read of the not-yet-initialized catalog would throw (the pattern
+ * every config-reading sim module follows).
  */
 export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): number {
-  switch (archetype) {
-    // I5 — the whole melee family strikes on `strength` (mercenary = the old
-    // melee baseline; adventurer/ronin/bandit diverge only in their other
-    // stats, all still swinging on strength via `melee_strike`).
-    case 'mercenary':
-    case 'adventurer':
-    case 'ronin':
-    case 'bandit':
-      return stats.strength;
-    case 'ranged':
-      return stats.ranged;
-    // E7.A — rogue is a melee striker: its gambit damage scales on
-    // strength, with the payoff coming from its high luck (crit) rather
-    // than raw strength. Its identity is mobility + crit, not big hits.
-    case 'rogue':
-      return stats.strength;
-    // E7.B — the healer has no basic strike at all (its only ability is
-    // `heal_ally`, which restores HP via `healAmountFor`, not damage). The
-    // 0 keeps the switch exhaustive; nothing calls `basicAttackDamage` on a
-    // healer because it carries no strike ability.
-    case 'healer':
-      return 0;
-    // E7.C — the mage's damage is its `magic_bolt` (resolved via
-    // `magicBoltDamage` below), but the display surfaces (HUD / RecruitScreen
-    // "ATK" row) read this single source of truth, so a mage's shown attack
-    // stat is its `magic`. The sim never calls `basicAttackDamage` on a mage
-    // (it carries no basic strike) — the case keeps the switch exhaustive AND
-    // gives the display the right stat.
-    case 'mage':
-      return stats.magic;
-    // E7.D — the catapult is a heavy RANGED unit: its `catapult_shot` damage
-    // scales on `ranged` (resolved via `catapultShotDamage` below). The sim
-    // never calls `basicAttackDamage` on a catapult (it carries no basic
-    // strike), but the display surfaces (HUD / RecruitScreen "ATK" row) read
-    // this single source of truth — so a catapult's shown attack stat is its
-    // `ranged`. The case also keeps the switch exhaustive.
-    case 'catapult':
-      return stats.ranged;
-    // §29 — the reaver is a strength melee (the bleed-on-hit `cleaver`); the DoT
-    // it stacks is its identity, but the strike itself scales on STR like the
-    // rest of the melee family, so the display "ATK" reads `strength`.
-    case 'reaver':
-      return stats.strength;
-    // §29b — the afflicter disruptors. Their value is the STATUS they apply, not
-    // raw damage (the AoE/ray hits do minimal-or-no direct damage); the display
-    // "ATK" reads the stat their archetype is built around (mage-stat casters →
-    // magic, ranged-stat casters → ranged). The sim never calls `basicAttackDamage`
-    // on them (they carry no basic strike) — these keep the switch exhaustive.
-    case 'corrupter': // poison vial (mage stats)
-    case 'warlock': // confusion hex (mage stats)
-    case 'banshee': // panic wail (mage stats)
-      return stats.magic;
-    // §29c — the stormcaller's chain lightning scales on `magic` (its inner bolt
-    // is a magic-scaling damage op); the display "ATK" reads `magic` like the
-    // other mage-stat casters. The sim never calls `basicAttackDamage` on it (the
-    // chain is its only ability) — this keeps the switch exhaustive.
-    case 'stormcaller':
-      return stats.magic;
-    case 'ice_mage': // frozen ice-storm (ranged stats)
-    case 'luminant': // blind light-ray (ranged stats)
-      return stats.ranged;
-    // §29d — the Shaman has no basic strike (its only ability is the `raise_dead`
-    // summon, which deals no damage), so the 0 keeps the switch exhaustive + gives
-    // a sane display "ATK" (it carries no offensive stat). The Ghoul minion is a
-    // strength melee (`ghoul_claw`), so its "ATK" reads `strength` like the rest.
-    case 'shaman':
-      return 0;
-    case 'ghoul':
-      return stats.strength;
-    case 'environment':
-      return 0;
-  }
+  if (archetype === 'environment') return 0;
+  const key = UNIT_DEFS[archetype].damageStat;
+  return key ? stats[key] : 0;
 }
 
 /**

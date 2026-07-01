@@ -51,6 +51,11 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
     // archetypes keep their original lines and the file diff is exactly the
     // exclusions. A re-parse fills the absent default back to true.
     if (a.draftable === false) parts.push(`    "draftable": false,`);
+    // §38c — the branch-killer capability fields, emitted only when present (a
+    // striker's `damageStat`; absent ⇒ non-striker/0). Optional with no schema
+    // default, so an absent field re-parses to absent — the file diff stays
+    // exactly the archetypes that declare one.
+    if (a.damageStat !== undefined) parts.push(`    "damageStat": ${JSON.stringify(a.damageStat)},`);
     parts.push(`    "baseStats": {`);
     parts.push(...statLines(a.baseStats));
     parts.push(`    },`);

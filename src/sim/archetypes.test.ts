@@ -137,6 +137,34 @@ describe('archetypes / I5 melee family', () => {
   });
 });
 
+describe('archetypes / §38c damageStat (catalog-driven, byte-identical)', () => {
+  // Balance-proof: `damageStatFor` now resolves the scaling stat from the
+  // `UnitDef.damageStat` catalog field instead of an 18-case switch. Derive the
+  // expectation from the SAME catalog the sim reads — so this pins the wiring
+  // (function ⇄ config), never a hand-copied number.
+  it('resolves each archetype to its configured damageStat (absent ⇒ 0)', () => {
+    for (const a of ALL_ARCHETYPES) {
+      const stats = rollUnit(a, new RNG(0)).stats;
+      const key = ARCHETYPE_CONFIG[a].damageStat;
+      expect(damageStatFor(a, stats)).toBe(key ? stats[key] : 0);
+    }
+  });
+
+  // The two non-strikers carry no `damageStat` (heal / summon only) → 0, exactly
+  // the old switch's explicit `return 0` cases. Documents intent, not arithmetic.
+  it('non-strikers (healer, shaman) resolve to 0', () => {
+    for (const a of ['healer', 'shaman'] as const) {
+      expect(ARCHETYPE_CONFIG[a].damageStat).toBeUndefined();
+      expect(damageStatFor(a, rollUnit(a, new RNG(0)).stats)).toBe(0);
+    }
+  });
+
+  it('environment entities never strike (→ 0, no catalog entry needed)', () => {
+    // Any stat block — the environment guard short-circuits before the lookup.
+    expect(damageStatFor('environment', rollUnit('mercenary', new RNG(0)).stats)).toBe(0);
+  });
+});
+
 describe('archetypes / config round-trip (every archetype)', () => {
   it('rollUnit returns the configured baseStats verbatim for all archetypes', () => {
     // Generalizes the mercenary/ranged cases above across the whole roster —

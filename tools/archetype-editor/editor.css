@@ -301,40 +301,21 @@ input:focus {
   color: var(--err);
 }
 
-/* §30d — the wire-up panel: the code edits a created / deleted archetype needs. */
-.wireup {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* §38e — kind-scoped sections. The editor toggles `.kind-combatant` /
+   `.kind-neutral` on `#editor-root`; combatant fields (stats / abilities /
+   targeting) and neutral fields (hp / LOS / susceptibility) show only for their
+   kind. The susceptibility checkbox row hides further unless "Restrict statuses"
+   is on (`.sus-restricted`). */
+#editor-root.kind-neutral .combatant-only {
+  display: none;
 }
 
-.wire-block {
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--panel-2);
-  padding: 8px 10px;
+#editor-root.kind-combatant .neutral-only {
+  display: none;
 }
 
-.wire-block h3 {
-  margin: 0 0 6px;
-  font-size: 12px;
-  color: var(--accent);
-}
-
-.wire-block ol {
-  margin: 0;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.wire-block li,
-.wire-block p {
-  font-size: 12px;
-  color: var(--text);
-  margin: 0;
-  overflow-wrap: anywhere;
+#editor-root:not(.sus-restricted) .sus-row {
+  display: none;
 }
 
 /* ---- Buttons ---- */

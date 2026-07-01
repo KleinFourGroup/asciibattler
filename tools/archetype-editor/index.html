@@ -17,39 +17,58 @@
       </header>
       <section class="workspace">
         <div class="edit-pane">
-          <div id="tabs" class="tabs" role="tablist" aria-label="Archetype"></div>
+          <div id="tabs" class="tabs" role="tablist" aria-label="Unit"></div>
           <div class="tab-actions">
-            <button id="new-btn" type="button">+ New archetype</button>
+            <button id="new-btn" type="button">+ New unit</button>
             <button id="delete-btn" type="button" class="danger-outline">Delete</button>
           </div>
           <section class="card">
-            <h2>Identity</h2>
+            <h2>Identity <span class="sub" id="kind-badge"></span></h2>
             <div class="field-row">
               <label class="inline">
                 Glyph
                 <input id="glyph" type="text" maxlength="1" autocomplete="off" spellcheck="false" />
               </label>
-              <label class="inline"><input id="draftable" type="checkbox" /> Draftable</label>
-              <span class="hint"
-                >Single character. A genuinely new 3D glyph also needs a
-                <code>glyphs.ts</code> atlas entry to render in-game. Draftable =
-                appears in the player's post-victory recruit offer.</span
-              >
+              <label class="inline combatant-only"><input id="draftable" type="checkbox" /> Draftable</label>
             </div>
-            <div class="field-row">
+            <p class="hint">
+              Single character. Unit glyphs auto-register in the font atlas &mdash; no code
+              edit (watch the Font-atlas budget on the right).
+              <span class="combatant-only"
+                >Draftable = appears in the player's post-victory recruit offer.</span
+              >
+            </p>
+            <!-- Combatant-only -->
+            <div class="field-row combatant-only">
               <span class="field-label">Abilities</span>
               <div id="abilities" class="checkbox-row"></div>
             </div>
-            <div class="field-row">
+            <div class="field-row combatant-only">
               <span class="field-label">Targeting</span>
               <div id="targeting" class="radio-row" role="radiogroup" aria-label="Targeting"></div>
             </div>
+            <!-- Neutral-only (walls / cover / rubble) -->
+            <div class="field-row neutral-only">
+              <label class="inline">HP <input id="neutral-hp" type="number" min="1" max="999" /></label>
+              <label class="inline"><input id="neutral-los" type="checkbox" /> Blocks line of sight</label>
+            </div>
+            <div class="field-row neutral-only">
+              <label class="inline"><input id="restrict-sus" type="checkbox" /> Restrict statuses</label>
+              <span class="hint"
+                >Off = susceptible to all. On = only the ticked statuses (the allow-filter
+                &sect;40 will consult when damage lands on neutrals).</span
+              >
+            </div>
+            <div class="field-row neutral-only sus-row">
+              <span class="field-label">Susceptible to</span>
+              <div id="susceptibility" class="checkbox-row"></div>
+            </div>
           </section>
-          <section class="card">
+          <section class="card combatant-only">
             <h2>Base stats <span class="sub">(level 1)</span></h2>
             <div id="base-stats" class="stat-grid"></div>
           </section>
-          <section class="card">
+          <section class="card combatant-only">
             <h2>Growth rates <span class="sub">(per-level increment chance, 0&ndash;1)</span></h2>
             <div id="growth-rates" class="stat-grid"></div>
           </section>
@@ -75,8 +94,8 @@
             <ul id="validation" class="validation"></ul>
           </section>
           <section class="card">
-            <h2>Wire-up <span class="sub">(code edits for create / delete)</span></h2>
-            <div id="wireup" class="wireup"></div>
+            <h2>Font atlas <span class="sub">(glyph budget)</span></h2>
+            <p id="atlas" class="hint"></p>
           </section>
           <section class="card">
             <h2>Save</h2>

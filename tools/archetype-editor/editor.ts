@@ -1,51 +1,59 @@
 /**
- * Archetype editor (I4 · §30d). Standalone Vite page — visit
+ * Unit editor (I4 · §30d · §38e). Standalone Vite page — visit
  * http://localhost:5173/tools/archetype-editor/ after `npm run dev`. Not in
  * the production build (no rollupOptions.input entry).
  *
- * Edits the archetype entries of `config/units.json` — glyph, abilities,
- * targeting policy, the `draftable` flag, the 11-stat `baseStats` block, and the
- * parallel `growthRates` — with the things the copy-paste loop didn't give us:
+ * Edits `config/units.json` — the whole §38 `UnitDef` catalog: the COMBATANT
+ * archetypes (glyph, abilities, targeting, `draftable`, the 11-stat `baseStats`,
+ * the parallel `growthRates`) AND the NEUTRAL entries (walls / half-cover /
+ * future rubble — a glyph, a flat `hp` pool, `blocksLineOfSight`, and the
+ * `statusSusceptibility` allow-filter). The tool gives us what the copy-paste
+ * loop didn't:
  *
  *  1. **Live schema validation.** Every edit re-runs the SAME per-entry
- *     `UnitDefSchema` the game boots on (imported from `src/config/units.ts`),
- *     so "is this valid?" can't drift from the game's load-time parse. Save is
- *     disabled while invalid. (§30d validates PER ENTRY rather than the whole-config
- *     `z.object` — the object would silently strip a new, not-yet-wired key.)
- *  2. **Live derived-stat preview.** maxHp / crit / move + attack cadence /
- *     to-hit / dodge are computed by the REAL game functions (`deriveStats`,
- *     `hitChanceFor`, `attackCooldownTicksFor`, `scaleStats`, `scalingStatValue`) —
- *     never reimplemented here. Per-ability output reads the op's `scaling` (the
- *     post-Y source of truth), so the numbers are correct for ANY archetype,
+ *     `UnitDefSchema` the game boots on (imported from `src/config/units.ts`) —
+ *     a `z.union` of the combatant + neutral shapes — so "is this valid?" can't
+ *     drift from the game's load-time parse. Save is disabled while invalid.
+ *     (Validates PER ENTRY rather than the whole-config `z.record`, which would
+ *     silently strip a new, not-yet-referenced key.)
+ *  2. **Live derived-stat preview** (combatants) via the REAL game functions
+ *     (`deriveStats`, `hitChanceFor`, `attackCooldownTicksFor`, `scaleStats`,
+ *     `scalingStatValue`), so the numbers are correct for ANY archetype,
  *     including a freshly-created one.
  *  3. **Save to disk** via the dev-only `/__save-config` endpoint. Copy / Download
  *     stay as offline fallbacks.
  *
- *  §30d — CREATE / DELETE + the guided WIRE-UP. The editor authors a new
- *  archetype's DATA, but archetypes are a CLOSED typed vocabulary: making one
- *  actually spawn + render needs three code edits the tool can't perform (the
- *  `Archetype` union in `Unit.ts`, the `UnitDefsSchema` key in
- *  `config/units.ts`, a `glyphs.ts` glyph). So "+ New" / "Delete" scaffold
- *  the data and the **Wire-up** panel emits the exact code edits to paste — honest
- *  about the data/code split, keeping the union closed (goal #1).
+ *  §38e — the KEYSTONE payoff. Pre-§38 an archetype was a CLOSED typed vocabulary,
+ *  so creating one needed code edits the tool couldn't perform (the `Archetype`
+ *  union, the `UnitDefsSchema` key, a `glyphs.ts` glyph) — the old "Wire-up" panel
+ *  emitted those edits to paste. §38c relaxed the union to an open catalog id and
+ *  §38e-1 made unit glyphs catalog-derived, so creating a unit is now **pure
+ *  DATA, no code edit**: the Wire-up panel is GONE, replaced by a Font-atlas
+ *  budget indicator (the one real limit left — the atlas grid caps the glyph
+ *  count). "+ New" clones the active entry (combatant or neutral); Save writes the
+ *  file; a reload spawns + renders it.
  *
- * Schema-driven where it counts: the stat fields enumerate from `STAT_LABELS` and
- * the ability/targeting choices from the live registries, so a future stat or
- * ability surfaces here with no edit.
+ * Schema-driven where it counts: the stat fields enumerate from `STAT_LABELS`,
+ * the ability/targeting choices from the live registries, and the
+ * status-susceptibility choices from `STATUS_DEFS`, so a future stat / ability /
+ * status surfaces here with no edit.
  */
 
 import './editor.css';
 import {
-  UNIT_DEFS,
-  NEUTRAL_DEFS,
+  ALL_UNIT_DEFS,
   UnitDefSchema,
+  isNeutralUnitDef,
   type CombatantUnitDef,
+  type NeutralUnitDef,
+  type UnitDef,
 } from '../../src/config/units';
 import type { UnitStats } from '../../src/sim/Unit';
 import { STAT_LABELS } from '../../src/ui/statLabels';
 import { knownAbilityIds } from '../../src/sim/abilities/registry';
 import { knownTargetingIds } from '../../src/sim/targetingStrategies';
 import { abilityDef, damageOpOf, healOpOf } from '../../src/config/abilities';
+import { STATUS_DEFS } from '../../src/config/statuses';
 import { STATS } from '../../src/config/stats';
 import { ticksToSeconds } from '../../src/config';
 import {
@@ -56,23 +64,24 @@ import {
 } from '../../src/sim/stats';
 import { scalingStatValue } from '../../src/sim/effects/resolveScalars';
 import { scaleStats } from '../../src/sim/leveling';
-import { GLYPHS } from '../../src/render/glyphs';
+import { atlasCellsFor, ATLAS_CELL_BUDGET } from '../../src/render/glyphs';
 import { formatArchetypesJson } from './format';
 
-// §30d — keys are open (a new archetype can be created), so the working set is a
-// plain record keyed by string, validated per-entry against `UnitDefSchema`.
+// Keys are open (a new unit can be created), so the working set is a plain record
+// keyed by string, validated per-entry against `UnitDefSchema` (the union).
 type ArchetypeKey = string;
 type StatKind = 'base' | 'growth';
 
-/** The atlas cell budget (`FontAtlas` grid; glyphs.ts caps the count). */
-const ATLAS_BUDGET = 48;
-/** A new archetype's key must be a clean snake_case identifier (matches every
- *  existing key + a valid `Archetype` union member). */
+/** A new unit's key must be a clean snake_case identifier (matches every existing
+ *  key + a valid catalog id). */
 const KEY_PATTERN = /^[a-z][a-z0-9_]*$/;
 
 const STAT_ORDER = Object.keys(STAT_LABELS) as (keyof UnitStats)[];
 const ABILITY_IDS = knownAbilityIds();
 const TARGETING_IDS = knownTargetingIds();
+// §38e — the statuses a neutral can opt into for its `statusSusceptibility`
+// allow-filter, straight off the live registry so a new status surfaces here.
+const STATUS_IDS = Object.keys(STATUS_DEFS);
 
 /** Short label for a damage/heal op's scaling stat (the per-ability output hint —
  *  derived from the op, not a per-archetype map, so a new archetype Just Works). */
@@ -84,15 +93,13 @@ const SCALING_LABEL: Record<string, string> = {
 };
 
 // ---- State ----
-// `working` is a deep, mutable clone of the committed config; the form mutates
-// it, the schema validates it, the formatter emits it. UNIT_DEFS stays the
-// pristine baseline that "Revert all" restores from. §30d: keys are open (create /
-// delete), so it's a string-keyed record.
-// §38d — the editor operates on the COMBATANT catalog (`UNIT_DEFS`); NEUTRAL
-// entries (walls / half-cover) aren't editable here until §38e's rework, but are
-// preserved verbatim on Save (see `updateExport`). So `working` is combatant-typed
-// and its field-access code is unchanged from 38c.
-let working: Record<string, CombatantUnitDef> = structuredClone(UNIT_DEFS);
+// `working` is a deep, mutable clone of the committed catalog; the form mutates
+// it, the schema validates it, the formatter emits it. ALL_UNIT_DEFS stays the
+// pristine baseline that "Revert all" restores from. §38e: the working set is the
+// FULL catalog (combatants + neutrals), keyed by string, so neutrals are editable
+// too — the old combatant-only `UNIT_DEFS` clone + verbatim NEUTRAL_DEFS re-attach
+// on Save is gone.
+let working: Record<string, UnitDef> = structuredClone(ALL_UNIT_DEFS);
 let activeKey: ArchetypeKey = Object.keys(working)[0]!;
 let previewLevel = 1;
 let refPrecision = 5;
@@ -106,17 +113,24 @@ let lastValid = true;
 const REF_ACCURACY = 0.6;
 
 // ---- DOM ----
+const editorRoot = mustQuery<HTMLElement>('#editor-root');
 const tabsEl = mustQuery<HTMLDivElement>('#tabs');
 const newBtn = mustQuery<HTMLButtonElement>('#new-btn');
 const deleteBtn = mustQuery<HTMLButtonElement>('#delete-btn');
+const kindBadgeEl = mustQuery<HTMLSpanElement>('#kind-badge');
 const glyphEl = mustQuery<HTMLInputElement>('#glyph');
 const draftableEl = mustQuery<HTMLInputElement>('#draftable');
 const abilitiesEl = mustQuery<HTMLDivElement>('#abilities');
 const targetingEl = mustQuery<HTMLDivElement>('#targeting');
+// §38e — neutral-only controls.
+const neutralHpEl = mustQuery<HTMLInputElement>('#neutral-hp');
+const neutralLosEl = mustQuery<HTMLInputElement>('#neutral-los');
+const restrictSusEl = mustQuery<HTMLInputElement>('#restrict-sus');
+const susceptibilityEl = mustQuery<HTMLDivElement>('#susceptibility');
 const baseStatsEl = mustQuery<HTMLDivElement>('#base-stats');
 const growthRatesEl = mustQuery<HTMLDivElement>('#growth-rates');
 const previewEl = mustQuery<HTMLDListElement>('#preview');
-const wireupEl = mustQuery<HTMLDivElement>('#wireup');
+const atlasEl = mustQuery<HTMLParagraphElement>('#atlas');
 const validationEl = mustQuery<HTMLUListElement>('#validation');
 const exportEl = mustQuery<HTMLTextAreaElement>('#export');
 const previewLevelEl = mustQuery<HTMLInputElement>('#preview-level');
@@ -132,12 +146,29 @@ const baseInputs = new Map<keyof UnitStats, HTMLInputElement>();
 const growthInputs = new Map<keyof UnitStats, HTMLInputElement>();
 const abilityChecks = new Map<string, HTMLInputElement>();
 const targetingRadios = new Map<string, HTMLInputElement>();
+const susChecks = new Map<string, HTMLInputElement>();
 
-// ---- Build (structure is constant; values sync per archetype) ----
+// ---- Narrowing helpers ----
+// The combatant-only handlers are wired to controls only shown in combatant mode
+// (and the neutral ones vice versa), so in practice these never throw — they're
+// the TS narrow over the `UnitDef` union.
+function activeCombatant(): CombatantUnitDef {
+  const a = working[activeKey];
+  if (isNeutralUnitDef(a)) throw new Error(`archetype-editor: "${activeKey}" is neutral`);
+  return a;
+}
+function activeNeutral(): NeutralUnitDef {
+  const a = working[activeKey];
+  if (!isNeutralUnitDef(a)) throw new Error(`archetype-editor: "${activeKey}" is a combatant`);
+  return a;
+}
+
+// ---- Build (structure is constant; values sync per unit) ----
 buildTabs();
 buildStatInputs();
 buildAbilityChecks();
 buildTargetingRadios();
+buildSusceptibilityChecks();
 attachIdentity();
 attachPreviewControls();
 attachButtons();
@@ -224,7 +255,7 @@ function buildTargetingRadios(): void {
     radio.value = id;
     radio.addEventListener('change', () => {
       if (!radio.checked) return;
-      working[activeKey].targeting = id;
+      activeCombatant().targeting = id;
       refreshDerived();
     });
     label.appendChild(radio);
@@ -234,14 +265,51 @@ function buildTargetingRadios(): void {
   }
 }
 
+// §38e — the neutral `statusSusceptibility` allow-filter: one checkbox per known
+// status id. Only consulted when the "Restrict statuses" toggle is on (absent ⇒
+// susceptible to all — the schema default a combatant relies on).
+function buildSusceptibilityChecks(): void {
+  susceptibilityEl.innerHTML = '';
+  for (const id of STATUS_IDS) {
+    const label = document.createElement('label');
+    label.className = 'inline';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = id;
+    cb.addEventListener('change', onSusceptibilityChange);
+    label.appendChild(cb);
+    label.append(` ${id}`);
+    susceptibilityEl.appendChild(label);
+    susChecks.set(id, cb);
+  }
+}
+
 function attachIdentity(): void {
+  // Glyph is shared by both shapes (a common union field), so no narrow needed.
   glyphEl.addEventListener('input', () => {
     working[activeKey].glyph = glyphEl.value;
     refreshTabs();
     refreshDerived();
   });
   draftableEl.addEventListener('change', () => {
-    working[activeKey].draftable = draftableEl.checked;
+    activeCombatant().draftable = draftableEl.checked;
+    refreshDerived();
+  });
+  // ── Neutral fields ──────────────────────────────────────────────────────────
+  neutralHpEl.addEventListener('input', () => {
+    const n = Number.parseInt(neutralHpEl.value, 10);
+    activeNeutral().hp = Number.isFinite(n) && n >= 1 ? n : 1;
+    refreshDerived();
+  });
+  neutralLosEl.addEventListener('change', () => {
+    activeNeutral().blocksLineOfSight = neutralLosEl.checked;
+    refreshDerived();
+  });
+  restrictSusEl.addEventListener('change', () => {
+    const a = activeNeutral();
+    if (restrictSusEl.checked) a.statusSusceptibility = currentCheckedSusceptibility();
+    else delete a.statusSusceptibility;
+    editorRoot.classList.toggle('sus-restricted', restrictSusEl.checked);
     refreshDerived();
   });
 }
@@ -289,16 +357,30 @@ function onStatInput(key: keyof UnitStats, kind: StatKind, input: HTMLInputEleme
   const raw = input.value.trim();
   const num = kind === 'base' ? Number.parseInt(raw, 10) : Number.parseFloat(raw);
   const value = Number.isFinite(num) ? num : 0;
-  if (kind === 'base') working[activeKey].baseStats[key] = value;
-  else working[activeKey].growthRates[key] = value;
+  const a = activeCombatant();
+  if (kind === 'base') a.baseStats[key] = value;
+  else a.growthRates[key] = value;
   refreshDerived();
 }
 
 function onAbilityChange(): void {
   // Rebuild in registry order — deterministic. Order only matters for
   // multi-ability proposer ties (none ship today), so registry order is fine.
-  working[activeKey].abilities = ABILITY_IDS.filter((id) => abilityChecks.get(id)!.checked);
+  activeCombatant().abilities = ABILITY_IDS.filter((id) => abilityChecks.get(id)!.checked);
   refreshDerived();
+}
+
+function onSusceptibilityChange(): void {
+  // Only meaningful while restricting (the checkboxes are hidden otherwise). Store
+  // in registry order — deterministic + matches the hand-authored file.
+  if (!restrictSusEl.checked) return;
+  activeNeutral().statusSusceptibility = currentCheckedSusceptibility();
+  refreshDerived();
+}
+
+/** The ticked susceptibility ids, in `STATUS_DEFS` order. */
+function currentCheckedSusceptibility(): string[] {
+  return STATUS_IDS.filter((id) => susChecks.get(id)!.checked);
 }
 
 // ---- Refresh ----
@@ -309,10 +391,27 @@ function selectArchetype(key: ArchetypeKey): void {
   refreshDerived();
 }
 
-/** Push `working[activeKey]` into every form control. */
+/** Push `working[activeKey]` into every form control + toggle the kind-scoped
+ *  sections (combatant stats/abilities vs neutral hp/LOS/susceptibility). */
 function syncForm(): void {
   const a = working[activeKey];
   glyphEl.value = a.glyph;
+  const neutral = isNeutralUnitDef(a);
+  editorRoot.classList.toggle('kind-neutral', neutral);
+  editorRoot.classList.toggle('kind-combatant', !neutral);
+  kindBadgeEl.textContent = neutral ? '(neutral)' : '(combatant)';
+
+  if (neutral) {
+    neutralHpEl.value = String(a.hp);
+    neutralLosEl.checked = a.blocksLineOfSight;
+    const restrict = a.statusSusceptibility !== undefined;
+    restrictSusEl.checked = restrict;
+    editorRoot.classList.toggle('sus-restricted', restrict);
+    for (const [id, cb] of susChecks) cb.checked = restrict && a.statusSusceptibility!.includes(id);
+    return;
+  }
+
+  editorRoot.classList.remove('sus-restricted');
   draftableEl.checked = a.draftable;
   for (const key of STAT_ORDER) {
     baseInputs.get(key)!.value = String(a.baseStats[key]);
@@ -333,17 +432,16 @@ function refreshTabs(): void {
 
 function refreshDerived(): void {
   refreshValidation();
+  refreshAtlas();
   refreshExport();
   refreshPreview();
-  refreshWireup();
 }
 
 function refreshValidation(): void {
-  // §30d — validate PER ENTRY against `UnitDefSchema`. The whole-config
-  // `UnitDefsSchema` is a fixed-key `z.object` that would silently STRIP a new
-  // archetype key (zod default), reporting "valid" while dropping the very entry
-  // being authored — so we parse each entry and path the issues by key, plus
-  // guard the key naming the formatter / Save will write verbatim.
+  // Validate PER ENTRY against `UnitDefSchema` (the combatant|neutral union). The
+  // whole-config `UnitDefsSchema` is a `z.record` that would silently STRIP an
+  // entry that fails structural checks, so we parse each entry and path the issues
+  // by key, plus guard the key naming the formatter / Save will write verbatim.
   validationEl.innerHTML = '';
   const issues: string[] = [];
   for (const [key, a] of Object.entries(working)) {
@@ -357,21 +455,68 @@ function refreshValidation(): void {
       }
     }
   }
+  // §38e — an over-budget atlas would crash the FontAtlas build on the next
+  // reload (unit glyphs are catalog-derived now), so it BLOCKS Save.
+  const cells = atlasCellsFor(Object.values(working).map((d) => d.glyph));
+  if (cells > ATLAS_CELL_BUDGET) {
+    issues.push(
+      `font atlas: ${cells}/${ATLAS_CELL_BUDGET} cells — over budget; reuse a glyph or grow the FontAtlas grid before saving.`,
+    );
+  }
   lastValid = issues.length === 0;
   if (lastValid) addValidation('ok', 'Valid — matches the game schema. Safe to save.');
   else for (const i of issues) addValidation('error', i);
   saveBtn.disabled = !lastValid;
 }
 
+/** §38e — the Font-atlas budget indicator that replaced the closed-union wire-up
+ *  panel: how many atlas cells the working catalog's glyphs occupy, plus a
+ *  duplicate-glyph nudge (two units sharing a glyph render identically). */
+function refreshAtlas(): void {
+  const glyphs = Object.values(working).map((d) => d.glyph);
+  const cells = atlasCellsFor(glyphs);
+  const over = cells > ATLAS_CELL_BUDGET;
+
+  const activeGlyph = working[activeKey].glyph;
+  const sharedBy = Object.entries(working)
+    .filter(([, d]) => d.glyph === activeGlyph)
+    .map(([k]) => k);
+  const dup = sharedBy.length > 1 ? ` · glyph "${activeGlyph}" shared by ${sharedBy.join(', ')}` : '';
+
+  atlasEl.textContent =
+    `${cells} / ${ATLAS_CELL_BUDGET} atlas cells used` +
+    (over ? ' — OVER budget; Save blocked until a glyph is freed.' : '') +
+    (over ? '' : dup);
+  atlasEl.className = over ? 'hint err' : 'hint';
+}
+
 function refreshExport(): void {
-  // §38d — re-attach the NEUTRAL entries (walls / half-cover) verbatim after the
-  // edited combatants, so a Save reproduces the whole `units.json` (combatant then
-  // neutral key order matches the file) rather than dropping the neutral fold.
-  exportEl.value = formatArchetypesJson({ ...working, ...NEUTRAL_DEFS });
+  // §38e — `working` is the FULL catalog now (combatants + neutrals in file key
+  // order), so the formatter emits the whole `units.json` directly — no verbatim
+  // NEUTRAL_DEFS re-attach.
+  exportEl.value = formatArchetypesJson(working);
 }
 
 function refreshPreview(): void {
   const a = working[activeKey];
+  previewEl.innerHTML = '';
+
+  // §38e — a NEUTRAL has no stats/abilities to derive; show its intrinsic fields.
+  if (isNeutralUnitDef(a)) {
+    addPreview('Kind', 'neutral (wall / cover / rubble)');
+    addPreview('HP', String(a.hp));
+    addPreview('Blocks line of sight', a.blocksLineOfSight ? 'yes' : 'no');
+    addPreview(
+      'Susceptible to',
+      a.statusSusceptibility === undefined
+        ? 'all statuses (no restriction)'
+        : a.statusSusceptibility.length
+          ? a.statusSusceptibility.join(', ')
+          : 'nothing (immune)',
+    );
+    return;
+  }
+
   const base = a.baseStats as UnitStats;
   const stats: UnitStats =
     previewLevel <= 1 ? { ...base } : scaleStats(base, a.growthRates, previewLevel - 1);
@@ -381,7 +526,6 @@ function refreshPreview(): void {
     : 0;
   const derived = deriveStats(stats, range);
 
-  previewEl.innerHTML = '';
   addPreview('Stats @ Lv ' + previewLevel, STAT_ORDER.map((k) => `${STAT_LABELS[k]} ${stats[k]}`).join('  '));
   addPreview('Max HP', String(derived.maxHp));
   addPreview('Range', hasAbilities ? String(range) : '— (no ability)');
@@ -391,7 +535,7 @@ function refreshPreview(): void {
   );
   addPreview('Move cadence', cadence(derived.moveCooldownTicks));
   // I6 — combat profile is PER-ABILITY (might / accuracy / critBase + the
-  // evadable/critable gates), computed by the REAL game helpers. §30d reads the
+  // evadable/critable gates), computed by the REAL game helpers. Reads the
   // output stat off the op's `scaling` (the post-Y source of truth) instead of a
   // per-archetype switch, so the numbers are correct for any archetype, new ones
   // included.
@@ -467,9 +611,9 @@ async function save(): Promise<void> {
 }
 
 function revert(): void {
-  working = structuredClone(UNIT_DEFS);
-  // The key set may have changed (a created / deleted archetype) — rebuild the
-  // tabs and re-anchor `activeKey` if it no longer exists.
+  working = structuredClone(ALL_UNIT_DEFS);
+  // The key set may have changed (a created / deleted unit) — rebuild the tabs
+  // and re-anchor `activeKey` if it no longer exists.
   if (!(activeKey in working)) activeKey = Object.keys(working)[0]!;
   buildTabs();
   selectArchetype(activeKey);
@@ -477,9 +621,9 @@ function revert(): void {
   saveStatusEl.className = 'hint';
 }
 
-// ---- Create / delete (§30d) ----
+// ---- Create / delete ----
 function createArchetype(): void {
-  const key = window.prompt('New archetype id (snake_case, e.g. "necromancer"):')?.trim();
+  const key = window.prompt('New unit id (snake_case, e.g. "necromancer" or "boulder"):')?.trim();
   if (!key) return;
   if (key in working) {
     window.alert(`"${key}" already exists.`);
@@ -489,19 +633,21 @@ function createArchetype(): void {
     window.alert('Id must be snake_case: a–z, 0–9, _, starting with a letter.');
     return;
   }
-  // Seed from the active archetype — a convenient starting point to tweak (its
-  // glyph duplicates until the user changes it; the Wire-up panel flags it).
+  // Seed from the active entry — a convenient starting point to tweak, and it
+  // inherits the active entry's KIND (clone a combatant tab for a new archetype,
+  // a wall tab for a new neutral). Its glyph duplicates until changed (the atlas
+  // indicator flags the collision).
   working[key] = structuredClone(working[activeKey]);
   buildTabs();
   selectArchetype(key);
   saveStatusEl.textContent =
-    `Created "${key}" (cloned from "${activeKey}"). Edit its glyph + stats, then see Wire-up for the code edits.`;
+    `Created "${key}" (cloned from "${activeKey}"). Edit its glyph + fields, then Save — no code edit needed.`;
   saveStatusEl.className = 'hint';
 }
 
 function deleteArchetype(): void {
   if (Object.keys(working).length <= 1) return; // never delete the last
-  if (!window.confirm(`Delete archetype "${activeKey}" from the editor? (Nothing is written until you Save.)`)) {
+  if (!window.confirm(`Delete "${activeKey}" from the editor? (Nothing is written until you Save.)`)) {
     return;
   }
   const deleted = activeKey;
@@ -509,57 +655,8 @@ function deleteArchetype(): void {
   activeKey = Object.keys(working)[0]!;
   buildTabs();
   selectArchetype(activeKey);
-  saveStatusEl.textContent = `Deleted "${deleted}" in the editor. Save writes the file; see Wire-up for the code removal.`;
+  saveStatusEl.textContent = `Deleted "${deleted}" in the editor. Save writes the file.`;
   saveStatusEl.className = 'hint';
-}
-
-// ---- Wire-up panel (§30d): the code edits a created / deleted archetype needs ----
-function refreshWireup(): void {
-  const committed = new Set(Object.keys(UNIT_DEFS));
-  const current = Object.keys(working);
-  const added = current.filter((k) => !committed.has(k));
-  const removed = [...committed].filter((k) => !current.includes(k));
-  wireupEl.innerHTML = '';
-
-  if (added.length === 0 && removed.length === 0) {
-    wireupEl.appendChild(
-      elp('hint', 'No structural changes — every archetype is already wired in code. Edits Save straight to config.'),
-    );
-    return;
-  }
-
-  wireupEl.appendChild(
-    elp('hint', 'A created / deleted archetype needs these code edits too — the JSON Save and the edits land together to make it spawn + render:'),
-  );
-
-  for (const key of added) {
-    const a = working[key];
-    const block = elTag('div', 'wire-block', '');
-    block.appendChild(elTag('h3', '', `+ ${key}  (glyph "${a.glyph}")`));
-    const ol = document.createElement('ol');
-    ol.appendChild(elTag('li', '', `src/sim/Unit.ts — add  | '${key}'  to the Archetype union`));
-    ol.appendChild(elTag('li', '', `src/config/units.ts — add  ${key}: UnitDefSchema,  to UnitDefsSchema`));
-    ol.appendChild(elTag('li', '', `src/render/glyphs.ts — append  '${a.glyph}',  to GLYPHS (append-only, gotcha #33)`));
-    block.appendChild(ol);
-    wireupEl.appendChild(block);
-  }
-  for (const key of removed) {
-    const block = elTag('div', 'wire-block', '');
-    block.appendChild(elTag('h3', '', `− ${key}`));
-    block.appendChild(
-      elp('', `Remove '${key}' from the Archetype union (Unit.ts), UnitDefsSchema (units.ts), and its glyph in glyphs.ts.`),
-    );
-    wireupEl.appendChild(block);
-  }
-
-  // Atlas-budget projection: each distinct new glyph not already registered.
-  const registered = GLYPHS as readonly string[];
-  const newGlyphs = new Set(added.map((k) => working[k].glyph).filter((g) => !registered.includes(g)));
-  const projected = GLYPHS.length + newGlyphs.size;
-  const over = projected > ATLAS_BUDGET;
-  wireupEl.appendChild(
-    elp(over ? 'hint err' : 'hint', `Font atlas: ${projected}/${ATLAS_BUDGET} cells${over ? ' — over budget; FontAtlas.ts needs a grid resize' : ''}.`),
-  );
 }
 
 // ---- Small helpers ----
@@ -577,21 +674,6 @@ function addValidation(level: 'ok' | 'error', text: string): void {
   li.className = level;
   li.textContent = text;
   validationEl.appendChild(li);
-}
-
-function elTag<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  cls: string,
-  text: string,
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (cls) node.className = cls;
-  if (text) node.textContent = text;
-  return node;
-}
-
-function elp(cls: string, text: string): HTMLParagraphElement {
-  return elTag('p', cls, text);
 }
 
 function pct(v: number): string {

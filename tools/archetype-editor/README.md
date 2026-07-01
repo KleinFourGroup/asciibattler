@@ -1,10 +1,13 @@
-# Archetype editor
+# Unit editor
 
-Dev-only tool for authoring [`config/units.json`](../../config/units.json) —
-the per-archetype glyph, abilities, targeting policy, `draftable` flag,
-`baseStats`, and `growthRates`. Built for Phase I5's by-feel subclass tuning
-(Mercenary / Adventurer / Ronin / Bandit); §30d added **create / delete** + the
-guided wire-up.
+Dev-only tool for authoring [`config/units.json`](../../config/units.json) — the
+whole §38 `UnitDef` catalog. For a **combatant** archetype that's the glyph,
+abilities, targeting policy, `draftable` flag, `baseStats`, and `growthRates`;
+for a **neutral** (wall / half-cover / future rubble) it's the glyph, a flat
+`hp` pool, `blocksLineOfSight`, and the `statusSusceptibility` allow-filter.
+Built for Phase I5's by-feel subclass tuning (Mercenary / Adventurer / Ronin /
+Bandit); §30d added **create / delete**, and §38e made creating a unit **pure
+data — no code edit** (the closed-union wire-up panel is gone).
 
 ## Run
 
@@ -19,10 +22,11 @@ the [layout editor](../layout-editor/).
 ## What it gives you over editing the JSON by hand
 
 - **Live schema validation.** Every edit re-runs the same per-entry
-  `UnitDefSchema` the game boots on (imported from `src/config/units.ts`),
-  so the editor's "valid?" can never drift from the game's load-time parse. Save
-  is disabled while anything is invalid. (§30d validates **per entry** — the
-  whole-config `z.object` would silently strip a new, not-yet-wired key.)
+  `UnitDefSchema` the game boots on (imported from `src/config/units.ts`) — a
+  `z.union` of the combatant + neutral shapes — so the editor's "valid?" can
+  never drift from the game's load-time parse. Save is disabled while anything is
+  invalid. (Validates **per entry** — the whole-config `z.record` would silently
+  strip an entry that fails structural checks.)
 - **Live derived-stat preview.** maxHp, crit, move + per-ability attack cadence,
   to-hit, dodge, and attack/heal power — all computed by the **real** game
   functions (`deriveStats`, `hitChanceFor`, `attackCooldownTicksFor`,
@@ -42,24 +46,23 @@ the [layout editor](../layout-editor/).
   byte-identical to a hand edit (pinned by
   [`tests/tools/archetype-editor.test.ts`](../../tests/tools/archetype-editor.test.ts)).
 
-## Create / delete (§30d)
+## Create / delete — pure data (§38e)
 
-**+ New archetype** clones the active one as a seed (edit its glyph, abilities,
-stats); **Delete** removes it (never the last). Because the roster is a **closed
-typed vocabulary**, the editor authors the DATA but can't make a new archetype
-spawn + render on its own — that needs three code edits. So the **Wire-up** panel
-emits them verbatim for any created / deleted archetype:
+**+ New unit** clones the active tab as a seed and inherits its **kind** (clone a
+combatant tab for a new archetype, a wall/half-cover tab for a new neutral), so
+edit its glyph + fields and go; **Delete** removes it (never the last).
 
-1. `src/sim/Unit.ts` — add / remove the key in the `Archetype` union.
-2. `src/config/units.ts` — add / remove the key in `UnitDefsSchema`.
-3. `src/render/glyphs.ts` — append / remove its glyph in `GLYPHS` (append-only,
-   gotcha #33; the panel tracks the `n/48` atlas budget and flags a needed
-   `FontAtlas.ts` resize).
+§38 turned the closed `Archetype` union into an open catalog id (§38c) and made
+unit glyphs **catalog-derived** (§38e-1), so a created unit needs **no code
+edit** — Save writes `config/units.json`, an open game tab hot-reloads, and it
+spawns + renders. The old **Wire-up** panel (which emitted `Archetype`-union /
+`UnitDefsSchema` / `glyphs.ts` edits to paste) is therefore **gone**, replaced by
+a **Font-atlas** budget indicator: the one real limit left is the atlas grid,
+which caps the total glyph count (`n / 48` cells). Reusing a glyph or growing the
+`FontAtlas.ts` grid is the only escape hatch if a Save would overflow it — and an
+over-budget catalog **blocks Save** (it would crash the atlas build on reload).
 
-The JSON Save and those edits land together. This keeps the union closed and
-type-safe (every exhaustive `switch(archetype)` still checks) while removing the
-multi-file tedium.
-
-The stat fields enumerate from `STAT_LABELS` and the ability/targeting choices
-from the live registries, so a future stat or ability surfaces here with no edit
-to this tool.
+The stat fields enumerate from `STAT_LABELS`, the ability/targeting choices from
+the live registries, and the neutral status-susceptibility choices from
+`STATUS_DEFS`, so a future stat / ability / status surfaces here with no edit to
+this tool.

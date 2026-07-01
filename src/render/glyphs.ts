@@ -66,3 +66,17 @@ export const GLYPHS: readonly string[] = ((): readonly string[] => {
   for (const def of Object.values(ALL_UNIT_DEFS)) push(def.glyph);
   return out;
 })();
+
+/**
+ * §38e — the atlas cell count a catalog with these unit glyphs would occupy: the
+ * static non-unit glyphs plus the distinct unit glyphs. The archetype editor
+ * calls this on its working set to warn (and block Save) before an authored unit
+ * would grow the atlas past `ATLAS_CELL_BUDGET` — a check that used to live in the
+ * editor's now-deleted closed-union "wire-up" panel, but now that unit glyphs are
+ * catalog-derived it's the real budget guard.
+ */
+export function atlasCellsFor(unitGlyphs: Iterable<string>): number {
+  const set = new Set<string>(NON_UNIT_GLYPHS);
+  for (const g of unitGlyphs) set.add(g);
+  return set.size;
+}

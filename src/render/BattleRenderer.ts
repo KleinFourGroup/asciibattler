@@ -27,6 +27,7 @@ import { ABILITY_DEFS } from '../config/abilities';
 import { STATUS_DEFS } from '../config/statuses';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
 import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
+import { footprintOf } from '../sim/occupancy';
 import { readUnitStatuses } from '../sim/statusReadout';
 import { SPAWN } from '../config/spawn';
 
@@ -437,9 +438,14 @@ export class BattleRenderer {
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
     if (!unit) return;
-    const spritePos = this.tileWorldPos(unit.position);
+    const footprint = footprintOf(unit);
+    const spritePos = this.unitSpritePos(unit.position, footprint);
     const handle = this.sprites.addSprite(unit.glyph, colorForTeam(unit.team), spritePos);
     this.handles.set(unit.id, handle);
+    // §39d — a multi-tile body renders as one glyph scaled to its footprint
+    // (the SpriteRenderer per-instance `size`, E6.B). Single-cell units keep the
+    // default size, so the shipped roster's render is untouched.
+    if (footprint !== 1) this.sprites.updateSprite(handle, { size: footprint });
 
     // Neutrals (walls, environment) are inert background — suppress the
     // halo and skip the overlay entirely. C1a walls are indestructible
@@ -499,8 +505,10 @@ export class BattleRenderer {
     if (!this.world) return;
     const handle = this.handles.get(unitId);
     if (!handle) return;
-    const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? this.tileWorldPos(from)).clone();
-    this.animator.startLerp(handle, origin, this.tileWorldPos(from), SETTLE_BACK_SECONDS);
+    const footprint = this.footprintFor(unitId);
+    const restPos = this.unitSpritePos(from, footprint);
+    const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? restPos).clone();
+    this.animator.startLerp(handle, origin, restPos, SETTLE_BACK_SECONDS);
   };
 
   /**
@@ -539,11 +547,14 @@ export class BattleRenderer {
     if (!this.world) return;
     const handle = this.handles.get(unitId);
     if (!handle) return;
-    const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? this.tileWorldPos(from)).clone();
+    // §39d — lerp between FOOTPRINT-centered anchors so a multi-tile mover stays
+    // centered over its block through the slide (n=1 → tileWorldPos, identical).
+    const footprint = this.footprintFor(unitId);
+    const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? this.unitSpritePos(from, footprint)).clone();
     this.animator.startLerp(
       handle,
       origin,
-      this.tileWorldPos(to),
+      this.unitSpritePos(to, footprint),
       ticksToSeconds(durationTicks),
     );
   }
@@ -560,6 +571,35 @@ export class BattleRenderer {
     const kind = this.world.tileGrid.kindAt(coord);
     pos.y = this.terrain.heightAt(coord.x, coord.y, kind) + SPRITE_CENTER_OFFSET;
     return pos;
+  }
+
+  /**
+   * §39d — the anchor for a unit's BODY sprite, footprint-aware. `corner` is the
+   * canonical `unit.position` (the min-XY cell); the N×N block extends +x/+y
+   * (see `footprintCells`). We render one scaled glyph (`instanceSize = n`, set
+   * in `onUnitSpawned`) centered over the block, so the anchor shifts from the
+   * corner tile's center to the FOOTPRINT center: +½ per extra cell in x, −½ in z
+   * (grid +y is world −z). The vertex shader scales the quad symmetrically about
+   * the anchor, so the taller glyph's base would sink into the terrain — we raise
+   * Y by `SPRITE_CENTER_OFFSET·(n−1)` to keep it flush on the tile. `n === 1`
+   * returns `tileWorldPos(corner)` unchanged, so the shipped (all single-cell)
+   * roster is byte-identical. Y reads the corner tile's height (fine while
+   * footprints are inert / on flat rubble ground — §40 revisits if needed).
+   */
+  private unitSpritePos(corner: GridCoord, footprint: number): THREE.Vector3 {
+    const pos = this.tileWorldPos(corner);
+    if (footprint === 1) return pos;
+    const shift = (footprint - 1) / 2;
+    pos.x += shift;
+    pos.z -= shift;
+    pos.y += SPRITE_CENTER_OFFSET * (footprint - 1);
+    return pos;
+  }
+
+  /** Footprint (N) of a live unit by id; 1 if it's gone or single-cell. */
+  private footprintFor(unitId: number): number {
+    const unit = this.world?.findUnit(unitId);
+    return unit ? footprintOf(unit) : 1;
   }
 
   /**

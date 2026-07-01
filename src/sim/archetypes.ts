@@ -4,10 +4,11 @@ import { UNIT_DEFS, type CombatantUnitDef } from '../config/units';
 import { abilityDef } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
 
-// E7.A — `Archetype` is now defined once in `./Unit` (the canonical closed
-// set) and re-exported here so the many `import { Archetype } from
-// './archetypes'` sites keep working. Adding an archetype is a one-line edit
-// to the union in Unit.ts, not two definitions that can drift apart.
+// E7.A — `Archetype` is defined once in `./Unit` and re-exported here so the many
+// `import { Archetype } from './archetypes'` sites keep working. §38c relaxed it
+// from a closed union to an OPEN catalog id (`= string`, validated structurally
+// against `config/units.json` at load), so adding an archetype is a JSON entry —
+// no code edit (the §38e editor authors it as pure data).
 export type { Archetype };
 
 /**

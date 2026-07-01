@@ -877,12 +877,24 @@ oracle is the equivalence proof for 38c + 38d.
   a catalog wall/half-cover matches the old `spawnEnvironment` shape (+ a glyph-drift guard);
   susceptibility filters an `applyStatus` (wall takes burn, ignores poison; no `status:applied`
   for a filtered apply); a combatant still takes any status.
-- **38e — the editor rework + delete the old path.** The archetype editor's closed-union
-  "create" wire-up panel **disappears**; it now creates/edits `UnitDef` entries as pure
-  data (neutrals included); `units.json` joins `SAVABLE_CONFIG_FILES`. Delete the now-
-  dead closed-union code (the attack editor is untouched — abilities are referenced by
-  id). Browser-verify. *Test (browser):* create a brand-new unit kind via the editor
-  with **no** code edit; it spawns + fights.
+- **✅ 38e — the editor rework + delete the old path (COMPLETE 2026-07-01; 2 commits).**
+  The keystone's payoff — authoring a unit is now **pure data, no code edit**. **38e-1**
+  made the font atlas **catalog-derived**: `GLYPHS` (`src/render/glyphs.ts`) derives the
+  UNIT glyphs from `ALL_UNIT_DEFS` (config key order, deduped) and keeps only the NON-unit
+  glyphs (root `@`, HUD digits/punctuation, projectile `*`, objective `X`) as a static
+  list — so a new unit's glyph auto-registers (the LAST code-edit dependency, removed). A
+  `FontAtlas` build-time guard + `atlasCellsFor`/`ATLAS_CELL_BUDGET` (48 = the 8×6 grid)
+  cap the count. **38e-2** reworked the editor: `working` is the full `Combatant|Neutral`
+  catalog (neutrals — walls/half-cover — now editable via a kind-scoped form: glyph, flat
+  `hp`, `blocksLineOfSight`, `statusSusceptibility` behind a "Restrict statuses" toggle),
+  the closed-union **"Wire-up" panel is DELETED** (its `Archetype`-union / `UnitDefsSchema`
+  / `glyphs.ts` edits were dead after 38c + 38e-1), replaced by a Font-atlas budget
+  indicator that **blocks Save** when over budget. `units.json` was already in
+  `SAVABLE_CONFIG_FILES` (38b). The attack editor is untouched (abilities referenced by id).
+  1563 main green; typecheck + lint clean. **Browser-verified end to end:** authored a
+  brand-new `vanguard` (glyph `N`) in the editor with NO code edit, Saved, reloaded — the
+  catalog + atlas auto-picked it up (`getGlyphUV('N')` resolves, 42/48 cells), and a spawned
+  vanguard rendered its `N`, pathed to the enemy, and landed an attack.
 
 ---
 

@@ -8,6 +8,7 @@ import { WALL_GLYPH, HALF_COVER_GLYPH, spawnWall, spawnHalfCover } from './envir
 import { deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { NEUTRAL_DEFS } from '../config/units';
+import { statusDef } from '../config/statuses';
 import type { GameEvents } from '../core/events';
 
 describe('environment / spawnWall', () => {
@@ -131,5 +132,69 @@ describe('environment / spawnWall', () => {
 
     expect(w.findUnit(wall.id)).toBeUndefined();
     expect(deaths).toEqual([{ unitId: wall.id, team: 'neutral' }]);
+  });
+});
+
+/**
+ * §38d-3 — the statusSusceptibility gate at `World.applyStatusEffect` (the single
+ * status-apply chokepoint). A neutral's `UnitDef.statusSusceptibility` is an
+ * allow-list: walls opt into burn/frozen, out of poison/bleed. Combatants omit
+ * the field ⇒ susceptible to all (byte-identical). Balance-proof: the allow-list
+ * is read from `NEUTRAL_DEFS`, never hardcoded.
+ */
+describe('§38d-3 — statusSusceptibility gate', () => {
+  const wallAllows = NEUTRAL_DEFS.wall!.statusSusceptibility!; // ['burn','frozen']
+
+  it("a wall takes a status it's susceptible to, ignores one it isn't", () => {
+    const bus = new EventBus<GameEvents>();
+    const w = new World(bus, new RNG(1));
+    const wall = spawnWall(w, { x: 5, y: 5 });
+
+    // Derive the allowed/denied ids from the catalog, not literals.
+    const allowed = wallAllows[0]!; // 'burn'
+    const denied = ['poison', 'bleed'].find((s) => !wallAllows.includes(s))!; // 'poison'
+
+    w.applyStatusEffect(wall, statusDef(denied), null);
+    expect(wall.effects.some((e) => e.key === denied), `${denied} filtered`).toBe(false);
+
+    w.applyStatusEffect(wall, statusDef(allowed), null);
+    expect(wall.effects.some((e) => e.key === allowed), `${allowed} allowed`).toBe(true);
+  });
+
+  it('a filtered status is a silent no-op (no status:applied emitted)', () => {
+    const bus = new EventBus<GameEvents>();
+    const w = new World(bus, new RNG(1));
+    const applied: GameEvents['status:applied'][] = [];
+    bus.on('status:applied', (p) => applied.push(p));
+    const wall = spawnWall(w, { x: 1, y: 1 });
+
+    const denied = ['poison', 'bleed'].find((s) => !wallAllows.includes(s))!;
+    w.applyStatusEffect(wall, statusDef(denied), null);
+    expect(applied).toEqual([]); // no event for the filtered application
+
+    const allowed = wallAllows[0]!;
+    w.applyStatusEffect(wall, statusDef(allowed), null);
+    expect(applied).toEqual([{ unitId: wall.id, statusId: allowed, sourceUnitId: null }]);
+  });
+
+  it('a combatant (no susceptibility list) still takes any status — allow-all', () => {
+    const bus = new EventBus<GameEvents>();
+    const w = new World(bus, new RNG(1));
+    const stats = { ...ARCHETYPE_CONFIG.mercenary.baseStats };
+    const merc = new Unit({
+      id: 99,
+      team: 'player',
+      archetype: 'mercenary',
+      glyph: 'M',
+      stats,
+      derived: deriveStats(stats, 1),
+      position: { x: 0, y: 0 },
+    });
+    w.units.push(merc);
+
+    // The same id a wall filters out — a combatant (list absent) accepts it.
+    const anyId = ['poison', 'bleed'].find((s) => !wallAllows.includes(s))!;
+    w.applyStatusEffect(merc, statusDef(anyId), null);
+    expect(merc.effects.some((e) => e.key === anyId)).toBe(true);
   });
 });

@@ -67,7 +67,7 @@ import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
 import { STATS } from '../config/stats';
 import { LEVELING } from '../config/leveling';
-import { NEUTRAL_DEFS } from '../config/units';
+import { NEUTRAL_DEFS, ALL_UNIT_DEFS } from '../config/units';
 
 /**
  * Schema history:
@@ -1125,6 +1125,15 @@ export class World {
    * `durationSecondsOverride` (29) lets an `applyStatus` op override the def's
    * base duration. Callers: §27d (fire/healing tiles) and §29 (the `applyStatus`
    * op — the status-on-hit production applier).
+   *
+   * §38d-3 — the SUSCEPTIBILITY gate. A unit's `UnitDef.statusSusceptibility` may
+   * declare an allow-list of status ids it can receive (a wall opts into
+   * burn/frozen, out of poison/bleed — the burnable-not-poisonable wall). Gating
+   * HERE, at the single apply chokepoint, covers every source (the `applyStatus`
+   * op AND the tile enter/sustain hooks). Absent ⇒ susceptible to all, so every
+   * combatant today is unchanged (byte-identical); a filtered-out status is a
+   * silent no-op — nothing added, no `status:applied` emitted. Reads `ALL_UNIT_DEFS`
+   * at CALL time (the config/units ⇄ sim cycle — GOTCHAS #114).
    */
   applyStatusEffect(
     target: Unit,
@@ -1134,6 +1143,8 @@ export class World {
     // 29 — the `applyStatus` op's optional per-application duration override.
     durationSecondsOverride?: number,
   ): void {
+    const allow = ALL_UNIT_DEFS[target.archetype]?.statusSusceptibility;
+    if (allow && !allow.includes(def.id)) return;
     target.addEffect(
       buildStatusEffect(def, this.tickCount, magnitude, sourceUnitId, durationSecondsOverride),
     );

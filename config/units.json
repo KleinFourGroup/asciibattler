@@ -195,6 +195,7 @@
     "glyph": "h",
     "abilities": ["heal_ally"],
     "targeting": "nearest",
+    "movementBehavior": "support",
     "baseStats": {
       "constitution": 16,
       "strength": 0,

@@ -34,18 +34,23 @@ describe('§38b — UnitDef catalog scaffold', () => {
   });
 
   // §38c wires the branch-killers field-by-field: 38c-1 populates `damageStat`
-  // (every striker; absent only for the non-strikers healer/shaman);
-  // `movementBehavior`/`retargetOnLosLoss` stay 38b-inert until 38c-2/3. The
-  // damageStat↔stat contract is balance-proofed in archetypes.test.ts — here we
-  // only pin the wiring cadence (a value is present, of the right shape).
-  it('wires damageStat (38c-1); leaves movementBehavior/retargetOnLosLoss unpopulated (38c-2/3)', () => {
-    const populated = Object.values(UNIT_DEFS).filter((d) => d.damageStat !== undefined);
-    expect(populated.length).toBeGreaterThan(0); // 38c-1 populated the strikers
+  // (every striker; absent for the non-strikers healer/shaman), 38c-2 populates
+  // `movementBehavior` (`support` for the healer alone); `retargetOnLosLoss`
+  // stays 38b-inert until 38c-3. The field↔behavior contracts are balance-proofed
+  // in archetypes.test / registry.test — here we only pin the wiring cadence (a
+  // value is present, of the right shape).
+  it('wires damageStat + movementBehavior (38c-1/2); leaves retargetOnLosLoss unpopulated (38c-3)', () => {
+    const withDamage = Object.values(UNIT_DEFS).filter((d) => d.damageStat !== undefined);
+    const withMove = Object.values(UNIT_DEFS).filter((d) => d.movementBehavior !== undefined);
+    expect(withDamage.length).toBeGreaterThan(0); // 38c-1 populated the strikers
+    expect(withMove.length).toBeGreaterThan(0); // 38c-2 populated the healer
     for (const [id, def] of Object.entries(UNIT_DEFS)) {
       if (def.damageStat !== undefined) {
         expect(['strength', 'ranged', 'magic'], `${id}.damageStat`).toContain(def.damageStat);
       }
-      expect(def.movementBehavior, `${id}.movementBehavior`).toBeUndefined();
+      if (def.movementBehavior !== undefined) {
+        expect(['standard', 'support'], `${id}.movementBehavior`).toContain(def.movementBehavior);
+      }
       expect(def.retargetOnLosLoss, `${id}.retargetOnLosLoss`).toBeUndefined();
     }
   });

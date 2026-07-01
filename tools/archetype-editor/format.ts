@@ -56,6 +56,8 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
     // default, so an absent field re-parses to absent — the file diff stays
     // exactly the archetypes that declare one.
     if (a.damageStat !== undefined) parts.push(`    "damageStat": ${JSON.stringify(a.damageStat)},`);
+    if (a.movementBehavior !== undefined)
+      parts.push(`    "movementBehavior": ${JSON.stringify(a.movementBehavior)},`);
     parts.push(`    "baseStats": {`);
     parts.push(...statLines(a.baseStats));
     parts.push(`    },`);

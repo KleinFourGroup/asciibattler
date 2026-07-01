@@ -1,4 +1,5 @@
 import type { Archetype, Behavior } from '../Unit';
+import { UNIT_DEFS } from '../../config/units';
 import { MovementBehavior } from './MovementBehavior';
 import { SupportMovementBehavior } from './SupportMovementBehavior';
 import { AbilityBehavior } from './AbilityBehavior';
@@ -31,14 +32,22 @@ export function createBehavior(kind: string): Behavior {
 }
 
 /**
- * E7.B — the movement behavior an archetype spawns with. The healer
- * positions defensively (`SupportMovementBehavior` — keep allies in heal
- * range, flee when threatened); every other archetype charges the nearest
- * enemy (`MovementBehavior`). Shared by both spawn paths — `battleSetup`'s
- * initial team spawn and `World.spawnFromQueue`'s D5.C overflow spawn — so
- * the two can't drift. The chosen behavior's `kind` is snapshotted and
- * rehydrated via `createBehavior`, so this only runs at fresh spawn time.
+ * E7.B — the movement behavior an archetype spawns with. A `support` unit
+ * positions defensively (`SupportMovementBehavior` — keep allies in heal range,
+ * flee when threatened); every other archetype charges the nearest enemy
+ * (`MovementBehavior`). Shared by both spawn paths — `battleSetup`'s initial
+ * team spawn and `World.spawnFromQueue`'s D5.C overflow spawn — so the two can't
+ * drift. The chosen behavior's `kind` is snapshotted and rehydrated via
+ * `createBehavior`, so this only runs at fresh spawn time.
+ *
+ * §38c — the healer's `=== 'healer'` special-case became the `UnitDef`
+ * `movementBehavior` selector (`config/units.json`): `support` → the defensive
+ * behavior, absent/`standard` → the charger. A future support unit declares it
+ * as pure data. Read at CALL time (not module-eval) — spawn always post-dates
+ * the config load, and the call-time read stays cycle-safe.
  */
 export function createMovementBehavior(archetype: Archetype): Behavior {
-  return archetype === 'healer' ? new SupportMovementBehavior() : new MovementBehavior();
+  return UNIT_DEFS[archetype].movementBehavior === 'support'
+    ? new SupportMovementBehavior()
+    : new MovementBehavior();
 }

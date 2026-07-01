@@ -6,20 +6,26 @@
  * the gambit `retreatCell` set — each re-deriving it inline. Centralizing now is
  * what makes the two Cluster-2 fills cheap LATER:
  *
- *   - **The footprint seam (`cellsOccupiedBy`).** Single-cell today (returns
- *     `[unit.position]`); §39 fills it to the N×N block. Because every consumer
- *     touches a unit's cells THROUGH this, the multi-tile fill is automatic — no
- *     scattered `key(position)` to hunt down.
+ *   - **The footprint seam (`cellsOccupiedBy`).** §39 FILLED — reads the §38
+ *     `footprint` field off the unit's catalog def and returns the axis-aligned
+ *     N×N block anchored at the canonical corner `unit.position` (single-cell
+ *     units keep the exact `[unit.position]` fast path). Because every occupancy
+ *     / pathing / targeting consumer touches a unit's cells THROUGH this, the
+ *     multi-tile fill needed no scattered `key(position)` retrofit.
  *   - **The plane seam (`OccupancyPlane`).** `'ground'` today; `'air'` is the
  *     flight fill. One unit per cell PER PLANE. Every query takes a plane and
  *     filters by `planeOf`, so the costly part of adding flight (finding the
  *     single-layer assumptions) is already paid.
  *
- * Behavior is byte-identical today: there is exactly one plane and every footprint
- * is one cell, so `planeOf` never excludes and `cellsOccupiedBy` yields one cell.
+ * Behavior stays byte-identical for the SHIPPED roster: there is exactly one
+ * plane and every shipped def is `footprint: 1` (multi-tile stays inert until
+ * §40's rubble), so `planeOf` never excludes and `cellsOccupiedBy` yields the one
+ * anchor cell. The N×N geometry is exercised only by §39's tests until a
+ * multi-tile entity ships.
  */
 
 import type { GridCoord } from '../core/types';
+import { ALL_UNIT_DEFS } from '../config/units';
 import type { Unit } from './Unit';
 import type { World } from './World';
 
@@ -34,13 +40,46 @@ export type OccupancyPlane = 'ground';
 export const GROUND: OccupancyPlane = 'ground';
 
 /**
- * The cells a unit's body occupies. **The footprint seam** — single-cell today
- * (`[unit.position]`); §39 returns the N×N block anchored at the canonical corner
- * `unit.position`. Every occupancy / pathing / targeting consumer routes its
- * per-unit cell touch through here, so the multi-tile fill needs no retrofit.
+ * A unit's footprint edge length N (an axis-aligned N×N body; N ∈ 1..4). Reads
+ * the §38 `footprint` field off the unit's catalog def at CALL time (gotcha #114
+ * — never at module-eval, and imported straight from `config/units`), defaulting
+ * to 1 for any id absent from the catalog. This is the single place the geometry
+ * seams below learn how big a body is.
+ */
+export function footprintOf(unit: Unit): number {
+  return ALL_UNIT_DEFS[unit.archetype]?.footprint ?? 1;
+}
+
+/**
+ * The axis-aligned N×N block whose min corner is `corner`, cells extending toward
+ * +x/+y. The pure geometry core of the footprint seam — `cellsOccupiedBy` maps a
+ * unit onto it, and §39c's `anchorFootprint` reuses it to test whether a
+ * candidate corner's block fits. `n === 1` yields a single-cell copy of `corner`.
+ */
+export function footprintCells(corner: GridCoord, n: number): GridCoord[] {
+  const cells: GridCoord[] = [];
+  for (let dy = 0; dy < n; dy++) {
+    for (let dx = 0; dx < n; dx++) {
+      cells.push({ x: corner.x + dx, y: corner.y + dy });
+    }
+  }
+  return cells;
+}
+
+/**
+ * The cells a unit's body occupies. **The footprint seam** (§39 FILLED) — the
+ * axis-aligned N×N block whose min corner is the canonical `unit.position`, cells
+ * extending toward +x/+y (the anchoring policy in §39c is what makes an edge-tile
+ * spawn choose which corner `position` represents; the geometry here is always
+ * corner..corner+N). Single-cell units take the `[unit.position]` fast path
+ * (reference-identical to the pre-§39 return) so the shipped roster is byte-
+ * identical. Every occupancy / pathing / targeting consumer routes its per-unit
+ * cell touch through here, so the multi-tile fill needs no retrofit.
  */
 export function cellsOccupiedBy(unit: Unit): GridCoord[] {
-  return [unit.position];
+  const n = footprintOf(unit);
+  if (n === 1) return [unit.position];
+  return footprintCells(unit.position, n);
 }
 
 /**
@@ -119,13 +158,37 @@ export function footprintFits(
 
 /**
  * Grid distance between two cells — Chebyshev (8-connected movement, a diagonal
- * costs one step). **The distance seam** — single-tile today; §39 adds a
- * footprint-aware unit-to-unit variant (the min cell-to-cell Chebyshev over the
- * two bodies). Adjacency / acting-position route through here so that fill lands
- * in one place.
+ * costs one step). The coord-to-coord PRIMITIVE; `unitDistance` (below) is the
+ * footprint-aware body-to-body seam built on top of it. Untouched by §39 so every
+ * existing coord caller (the A* heuristic, the leash checks) stays byte-identical.
  */
 export function distanceBetween(a: GridCoord, b: GridCoord): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
+
+/**
+ * Distance between two units' BODIES — the min cell-to-cell Chebyshev over the
+ * two footprint blocks (§39). **The distance seam.** For two single-cell units
+ * this is exactly `distanceBetween(a.position, b.position)` (the fast path), so
+ * adjacency stays byte-identical for the shipped roster; a multi-tile body
+ * measures from its nearest occupied cell, so a 2×2 and a unit hugging its edge
+ * are at distance 1 (and two overlapping bodies at 0). Adjacency / acting-
+ * position consult this once a multi-tile entity exists (§40).
+ */
+export function unitDistance(a: Unit, b: Unit): number {
+  const aCells = cellsOccupiedBy(a);
+  const bCells = cellsOccupiedBy(b);
+  if (aCells.length === 1 && bCells.length === 1) {
+    return distanceBetween(aCells[0], bCells[0]);
+  }
+  let min = Infinity;
+  for (const ca of aCells) {
+    for (const cb of bCells) {
+      const d = distanceBetween(ca, cb);
+      if (d < min) min = d;
+    }
+  }
+  return min;
 }
 
 /**

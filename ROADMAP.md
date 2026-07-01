@@ -958,14 +958,20 @@ archetype goes multi-tile now (recommend inert until §40's rubble — keep the 
 baseline stable through §39). No bump expected (footprint def-resolved; `position`
 stays the canonical corner).
 
-- **39a — the footprint geometry fill.** `cellsOccupiedBy(unit)` returns
-  `corner..corner+N` (reading §38's `footprint` field); `footprintFits(cells, plane)`
-  checks all N cells; `distanceBetween(a, b)` becomes footprint-aware (min cell-to-cell
-  Chebyshev; single-tile stays `chebyshev(pos, pos)`). Because §35 already routes the
-  registry, claims, shove, targeting-adjacency, and acting-position through these,
-  there's **no scattered retrofit.** *Test:* `cellsOccupiedBy` returns the N×N block
-  from the corner; `footprintFits` rejects a block overlapping a unit/wall/edge;
-  `distanceBetween` is footprint-aware (a 2×2 + an adjacent unit at distance 1).
+- **✅ 39a — the footprint geometry fill.** `cellsOccupiedBy(unit)` returns
+  `corner..corner+N` (reading §38's `footprint` field via a call-time `footprintOf`,
+  gotcha #114); a pure `footprintCells(corner, n)` is the N×N geometry core (39c's
+  `anchorFootprint` reuses it); `footprintFits(cells, plane)` already checks all N cells;
+  the footprint-aware distance shipped as a NEW `unitDistance(a, b)` seam (min cell-to-
+  cell Chebyshev) — `distanceBetween(coord, coord)` stayed the untouched coord PRIMITIVE
+  so every existing caller (the A* heuristic, leash checks) is byte-identical. Single-cell
+  units keep the reference-identical `[position]` fast path; footprints stay INERT (no
+  multi-tile def ships until §40), so the N×N path is exercised by tests only. **No bump;
+  fuzz 212 held (byte-identical shipped roster).** *Tests (+13, occupancy.test.ts 21→31):*
+  `footprintCells` N∈1..4; `cellsOccupiedBy` returns the N×N block from the corner (via a
+  temp catalog id); `footprintFits` rejects a block overlapping a combatant/wall;
+  `unitDistance` footprint-aware (a 2×2 + an adjacent unit at distance 1, overlap at 0,
+  single-cell reduces to `distanceBetween`).
 - **39b — footprint-passability pathfinding.** A multi-tile unit's step validates the
   *whole* destination footprint is free (a wider body needs wider corridors); A* moves
   the canonical corner, passability checks the block; confirm Chebyshev-on-corner stays

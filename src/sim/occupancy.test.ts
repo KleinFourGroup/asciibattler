@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { World } from './World';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
+import { ALL_UNIT_DEFS } from '../config/units';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
-import type { Team, UnitStats } from './Unit';
+import type { Team, Unit, UnitStats } from './Unit';
 import {
   GROUND,
   cellKey,
@@ -13,12 +14,15 @@ import {
   claimedCells,
   distanceBetween,
   findOverlappingCells,
+  footprintCells,
   footprintFits,
+  footprintOf,
   isClaimed,
   isFree,
   occupiedCells,
   planeOf,
   unitAt,
+  unitDistance,
 } from './occupancy';
 
 /**
@@ -216,5 +220,128 @@ describe('§36a — the claim registry queries', () => {
     world.claimCell({ x: 6, y: 6 }, b.id); // re-claim the same cell
     expect(claimantOf(world, { x: 6, y: 6 })).toBe(b.id);
     expect(world.claims.size).toBe(1);
+  });
+});
+
+/**
+ * §39a — the footprint geometry fill. `cellsOccupiedBy` returns the N×N block;
+ * `unitDistance` is the body-to-body (min cell-to-cell) distance seam. §39 keeps
+ * footprints INERT for the shipped roster (no multi-tile def ships until §40's
+ * rubble), so the multi-tile path is exercised only here — via temp catalog ids
+ * registered/removed around the block, plus `Unit`-shaped stubs (the geometry
+ * only reads `.archetype` + `.position`). The single-cell path is the shipped
+ * roster's, and stays byte-identical.
+ */
+describe('§39a — the footprint geometry seams', () => {
+  const G2 = '__test_giant2'; // a 2×2 footprint
+  const G3 = '__test_giant3'; // a 3×3 footprint
+
+  beforeAll(() => {
+    (ALL_UNIT_DEFS as Record<string, { footprint: number }>)[G2] = { footprint: 2 };
+    (ALL_UNIT_DEFS as Record<string, { footprint: number }>)[G3] = { footprint: 3 };
+  });
+  afterAll(() => {
+    delete (ALL_UNIT_DEFS as Record<string, unknown>)[G2];
+    delete (ALL_UNIT_DEFS as Record<string, unknown>)[G3];
+  });
+
+  const stub = (archetype: string, pos: GridCoord): Unit =>
+    ({ archetype, position: pos }) as unknown as Unit;
+
+  describe('footprintCells — the pure N×N geometry core', () => {
+    it('n=1 is a single copy of the corner', () => {
+      expect(footprintCells({ x: 2, y: 3 }, 1)).toEqual([{ x: 2, y: 3 }]);
+    });
+
+    it('n=2 is the 4-cell block extending toward +x/+y from the corner', () => {
+      expect(footprintCells({ x: 0, y: 0 }, 2)).toEqual([
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+      ]);
+    });
+
+    it('n=3 / n=4 fill the whole square (N² cells, min corner at the anchor)', () => {
+      const three = footprintCells({ x: 5, y: 7 }, 3);
+      expect(three).toHaveLength(9);
+      expect(three).toContainEqual({ x: 5, y: 7 }); // the min corner
+      expect(three).toContainEqual({ x: 7, y: 9 }); // the far corner
+      expect(footprintCells({ x: 0, y: 0 }, 4)).toHaveLength(16);
+    });
+  });
+
+  describe('footprintOf — the call-time catalog read', () => {
+    it('reads the §38 footprint field off the catalog def', () => {
+      expect(footprintOf(stub(G2, { x: 0, y: 0 }))).toBe(2);
+      expect(footprintOf(stub(G3, { x: 0, y: 0 }))).toBe(3);
+    });
+
+    it('defaults to 1 for the shipped (single-cell) roster', () => {
+      const world = setup();
+      const merc = spawnAt(world, 'player', { x: 1, y: 1 });
+      expect(footprintOf(merc)).toBe(1);
+    });
+  });
+
+  describe('cellsOccupiedBy — the N×N block from the corner', () => {
+    it('returns the whole 2×2 block anchored at the canonical corner', () => {
+      expect(cellsOccupiedBy(stub(G2, { x: 4, y: 4 }))).toEqual([
+        { x: 4, y: 4 },
+        { x: 5, y: 4 },
+        { x: 4, y: 5 },
+        { x: 5, y: 5 },
+      ]);
+    });
+
+    it('single-cell units keep the reference-identical [position] fast path', () => {
+      const world = setup();
+      const merc = spawnAt(world, 'player', { x: 3, y: 6 });
+      const cells = cellsOccupiedBy(merc);
+      expect(cells).toEqual([{ x: 3, y: 6 }]);
+      expect(cells[0]).toBe(merc.position); // same object — byte-identical to pre-§39
+    });
+  });
+
+  describe('footprintFits — rejects a block overlapping any occupant', () => {
+    it('rejects a block overlapping a combatant', () => {
+      const world = setup();
+      spawnAt(world, 'player', { x: 4, y: 4 });
+      expect(footprintFits(world, footprintCells({ x: 3, y: 3 }, 2))).toBe(false); // covers (4,4)
+      expect(footprintFits(world, footprintCells({ x: 6, y: 6 }, 2))).toBe(true); // clear
+    });
+
+    it('rejects a block overlapping a neutral wall', () => {
+      const world = setup();
+      wallAt(world, { x: 5, y: 5 });
+      expect(footprintFits(world, footprintCells({ x: 4, y: 4 }, 2))).toBe(false); // covers (5,5)
+    });
+  });
+
+  describe('unitDistance — the footprint-aware body-to-body distance', () => {
+    it('a 2×2 and a unit hugging its edge are at distance 1', () => {
+      const giant = stub(G2, { x: 0, y: 0 }); // occupies (0,0),(1,0),(0,1),(1,1)
+      const adjacent = stub('mercenary', { x: 2, y: 0 }); // one cell past the +x edge
+      expect(unitDistance(giant, adjacent)).toBe(1);
+    });
+
+    it('overlapping bodies are at distance 0', () => {
+      const giant = stub(G2, { x: 0, y: 0 });
+      const inside = stub('mercenary', { x: 1, y: 1 }); // a cell the giant occupies
+      expect(unitDistance(giant, inside)).toBe(0);
+    });
+
+    it('two single-cell units reduce to distanceBetween (byte-identical adjacency)', () => {
+      const a = stub('mercenary', { x: 2, y: 2 });
+      const b = stub('mercenary', { x: 5, y: 4 });
+      expect(unitDistance(a, b)).toBe(distanceBetween({ x: 2, y: 2 }, { x: 5, y: 4 }));
+    });
+
+    it('measures from the nearest cell of each body (2×2 to a distant 3×3)', () => {
+      const g2 = stub(G2, { x: 0, y: 0 }); // far edge at x=1
+      const g3 = stub(G3, { x: 5, y: 0 }); // near edge at x=5
+      // nearest cells (1,0)→(5,0): Chebyshev 4.
+      expect(unitDistance(g2, g3)).toBe(4);
+    });
   });
 });

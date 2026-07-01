@@ -853,13 +853,30 @@ oracle is the equivalence proof for 38c + 38d.
   1570 tests + 212 fuzz:smoke green, typecheck + lint clean. *Test:* archetypes.test /
   registry.test balance-proof each field ⇄ catalog; units.test pins the wiring cadence +
   the open-catalog (new id validates, malformed rejected, key order preserved).
-- **38d — fold neutrals into the catalog.** Walls + half-cover become `UnitDef` entries;
-  `spawnEnvironment` becomes "spawn a neutral `UnitDef`" (folds the
-  `ZERO_STATS`/`inertDerived` path in); `statusSusceptibility` is consulted by the
-  `applyStatus` op. The team-based neutral filters (Targeting / HUD / `checkBattleEnd`)
-  stay. *Test:* a catalog-spawned wall/half-cover is identical to the old
-  `spawnEnvironment` path; susceptibility filters an `applyStatus` (a wall takes burn,
-  ignores poison).
+- **✅ 38d — fold neutrals into the catalog (COMPLETE 2026-07-01; 3 commits).** Walls +
+  half-cover are now NEUTRAL `UnitDef` entries. **Schema:** a discriminated
+  `Combatant | Neutral` union (`z.union`) — a neutral is a glyph + a flat `hp` pool, no
+  abilities/stat blocks, discriminated structurally on the `hp` key (`isNeutralUnitDef`);
+  the 18 combatant entries stay byte-identical. **Runtime SPLIT by kind** (not one
+  union-typed record): `UNIT_DEFS` stays the COMBATANT catalog (walls were the
+  `environment` sentinel, never in it — so every pre-38d consumer keeps its exact types +
+  behavior, no union to narrow), with `NEUTRAL_DEFS` + `ALL_UNIT_DEFS` as sibling views
+  over the one `units.json` parse. **Spawn fold (38d-2):** `spawnEnvironment` takes a
+  neutral archetype id and resolves glyph / flat HP / LOS-blocking from
+  `NEUTRAL_DEFS[archetype]` (the old `ZERO_STATS`/`inertDerived` path made data). **The
+  `'environment'` sentinel is RETIRED** — `UnitArchetype` collapses to `Archetype`, the
+  four `=== 'environment'` guards + the UnitCard narrow become an optional chain on the
+  combatant catalog (a neutral/unknown id → the guard's old default). A wall's `archetype`
+  is now `'wall'` — **the FIRST non-byte-identical §38 step** (snapshot archetype string
+  changed; NO schema bump — WorldSnapshot v31/RunSnapshot v24 hold). **Susceptibility
+  (38d-3):** `applyStatusEffect` (the single apply chokepoint — covers the op AND the tile
+  enter/sustain hooks) consults `UnitDef.statusSusceptibility`; absent ⇒ all (combatants
+  unchanged), walls declare `['burn','frozen']` (inert until §40 lands damage on neutrals).
+  The team-based neutral filters (Targeting / HUD / `checkBattleEnd`) stay. Browser-verified
+  a live catalog-spawned wall/half-cover renders (sprite handles + `#`/`╥` glyphs). *Tests:*
+  a catalog wall/half-cover matches the old `spawnEnvironment` shape (+ a glyph-drift guard);
+  susceptibility filters an `applyStatus` (wall takes burn, ignores poison; no `status:applied`
+  for a filtered apply); a combatant still takes any status.
 - **38e — the editor rework + delete the old path.** The archetype editor's closed-union
   "create" wire-up panel **disappears**; it now creates/edits `UnitDef` entries as pure
   data (neutrals included); `units.json` joins `SAVABLE_CONFIG_FILES`. Delete the now-

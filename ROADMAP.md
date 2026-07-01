@@ -837,11 +837,22 @@ oracle is the equivalence proof for 38c + 38d.
   block lands in 38d with the fold. A
   boot-assert validates every referenced id. *Test:* every id resolves; each optional
   field defaults to a behavior-identical value.
-- **38c — relax `Archetype` → a catalog id + route the data-driven lookups through the
-  catalog.** The closed TS union becomes a catalog-validated string id; glyph /
-  targeting / range / growth / the movement-behavior selector resolve from the catalog.
-  The determinism oracle proves byte-identical; per-kind cadence if 38a said so. *Test:*
-  a full multi-kind battle is byte-identical to pre-migration (the oracle).
+- **✅ 38c — relax `Archetype` → a catalog id + route the data-driven lookups through the
+  catalog (COMPLETE 2026-07-01; byte-identical, no snapshot bump).** Shipped as four
+  field-by-field commits, each fuzz-oracle-proven (same seeds → same outcomes):
+  **38c-1** killed `stats.ts` `damageStatFor`'s 18-case `switch(archetype)` → the
+  `UnitDef.damageStat` catalog field (strikers only; healer/shaman absent ⇒ 0);
+  **38c-2** killed `behaviors/registry.ts` `createMovementBehavior`'s `=== 'healer'` →
+  the `movementBehavior` selector (`support` for the healer alone); **38c-3** killed
+  `Targeting.ts`'s `=== 'ranged'` LOS-retarget → the `retargetOnLosLoss` flag (`ranged`
+  alone); **38c-4** relaxed the closed `Archetype` union → `string` (`Unit.ts`) +
+  `UnitDefsSchema` `z.object`→`z.record` (open catalog, structural validation) + a
+  `REQUIRED_UNIT_IDS` boot-assert for the start-team/enemy-comp literals. **Each catalog
+  read is CALL-time off `UNIT_DEFS` (not the `archetypes.ts` accessor) — the
+  `config/units ⇄ sim` cycle makes an eval-time read a TDZ crash (GOTCHAS #114).** Final:
+  1570 tests + 212 fuzz:smoke green, typecheck + lint clean. *Test:* archetypes.test /
+  registry.test balance-proof each field ⇄ catalog; units.test pins the wiring cadence +
+  the open-catalog (new id validates, malformed rejected, key order preserved).
 - **38d — fold neutrals into the catalog.** Walls + half-cover become `UnitDef` entries;
   `spawnEnvironment` becomes "spawn a neutral `UnitDef`" (folds the
   `ZERO_STATS`/`inertDerived` path in); `statusSusceptibility` is consulted by the

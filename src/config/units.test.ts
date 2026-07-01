@@ -116,16 +116,23 @@ describe('§38b — UnitDef catalog scaffold', () => {
  * the sim tests (environment.test / World.test).
  */
 describe('§38d — neutral catalog entries', () => {
-  it('ships wall + half_cover as neutral defs (flat hp, no abilities/stats)', () => {
-    expect(NEUTRAL_ENTRIES.map(([id]) => id)).toEqual(['wall', 'half_cover']);
+  it('ships the neutral defs (wall / half_cover / §40 rubble): flat hp, no abilities/stats', () => {
+    const ids = NEUTRAL_ENTRIES.map(([id]) => id);
+    expect(ids).toContain('wall'); // the §38d fold entries
+    expect(ids).toContain('half_cover');
     for (const [id, def] of NEUTRAL_ENTRIES) {
       expect(isNeutralUnitDef(def), `${id} is neutral`).toBe(true);
       expect(def.glyph.length, `${id}.glyph`).toBe(1);
       expect(def.hp, `${id}.hp`).toBeGreaterThan(0);
-      expect(def.footprint, `${id}.footprint`).toBe(1); // §39 seam, inert
+      expect(def.footprint, `${id}.footprint in 1..4`).toBeGreaterThanOrEqual(1);
+      expect(def.footprint, `${id}.footprint in 1..4`).toBeLessThanOrEqual(4);
       expect('abilities' in def, `${id} has no abilities`).toBe(false);
       expect('baseStats' in def, `${id} has no baseStats`).toBe(false);
     }
+    // The §38d fold entries stay single-cell (the §39 seam is inert for them);
+    // §40's rubble is the multi-tile consumer (proven in environment.test).
+    expect(NEUTRAL_DEFS.wall!.footprint).toBe(1);
+    expect(NEUTRAL_DEFS.half_cover!.footprint).toBe(1);
   });
 
   it('carries the D6 LOS contract on the def (wall opaque, half-cover transparent)', () => {

@@ -94,3 +94,47 @@ export function spawnHalfCover(world: World, position: GridCoord, maxHp?: number
     ...(maxHp !== undefined ? { maxHp } : {}),
   });
 }
+
+/**
+ * §40a — the rubble neutral glyph. `▓` (U+2593 DARK SHADE): a dense debris/
+ * masonry fill, distinct from the wall `#`. Catalog-derived into the font atlas
+ * (all three rubble sizes share it — one atlas cell). Mirrors the rubble catalog
+ * entries' glyph (asserted in environment.test).
+ */
+export const RUBBLE_GLYPH = '▓';
+
+/**
+ * §40a — the rubble neutral `UnitDef` ids, keyed by footprint side (1..3, the
+ * §39-LOCKED range). Rubble is the FIRST real multi-tile entity — footprint is
+ * def-resolved (`footprintOf` reads the catalog by archetype), so there's one id
+ * per size. `spawnRubble` + the §40d layout editor's size picker resolve through
+ * here (the single binding of a size to its catalog id).
+ */
+export const RUBBLE_ARCHETYPE_BY_SIZE: Readonly<Record<1 | 2 | 3, string>> = {
+  1: 'rubble_1x1',
+  2: 'rubble_2x2',
+  3: 'rubble_3x3',
+};
+
+/**
+ * §40a — spawn a rubble obstacle (a destructible neutral) at `position` (its
+ * canonical footprint CORNER, per §39). `size` picks the N×N footprint (1..3);
+ * `maxHp` overrides the catalog default (the §40d layout schema's per-placement
+ * "configurable HP" — mirrors `spawnWall`'s override). Rubble is burnable/
+ * freezable but not poisonable (the `statusSusceptibility` allow-list on the
+ * def) and blocks LOS by default. The 0-HP reap → `unit:died{neutral}` lifecycle
+ * already runs end-to-end (see `spawnWall`). ⚠️ Nothing DAMAGES rubble until §40b
+ * lifts the `isCombatTargetable` neutral guard (AoE) + adds the auto-target hook.
+ */
+export function spawnRubble(
+  world: World,
+  position: GridCoord,
+  size: 1 | 2 | 3 = 1,
+  maxHp?: number,
+): Unit {
+  return world.spawnEnvironment({
+    archetype: RUBBLE_ARCHETYPE_BY_SIZE[size],
+    position,
+    ...(maxHp !== undefined ? { maxHp } : {}),
+  });
+}

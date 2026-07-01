@@ -4,12 +4,22 @@ import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { findTarget } from './Targeting';
 import { Unit } from './Unit';
-import { WALL_GLYPH, HALF_COVER_GLYPH, spawnWall, spawnHalfCover } from './environment';
+import {
+  WALL_GLYPH,
+  HALF_COVER_GLYPH,
+  RUBBLE_GLYPH,
+  RUBBLE_ARCHETYPE_BY_SIZE,
+  spawnWall,
+  spawnHalfCover,
+  spawnRubble,
+} from './environment';
+import { cellsOccupiedBy } from './occupancy';
 import { deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { NEUTRAL_DEFS } from '../config/units';
 import { statusDef } from '../config/statuses';
 import type { GameEvents } from '../core/events';
+import type { GridCoord } from '../core/types';
 
 describe('environment / spawnWall', () => {
   it('spawns as a neutral-team unit with the wall glyph', () => {
@@ -196,5 +206,84 @@ describe('§38d-3 — statusSusceptibility gate', () => {
     const anyId = ['poison', 'bleed'].find((s) => !wallAllows.includes(s))!;
     w.applyStatusEffect(merc, statusDef(anyId), null);
     expect(merc.effects.some((e) => e.key === anyId)).toBe(true);
+  });
+});
+
+/**
+ * §40a — rubble, the FIRST real multi-tile entity: a destructible neutral
+ * `UnitDef` (flat HP + a footprint + the burnable-not-poisonable allow-list).
+ * These prove the §39 footprint fill live (a rubble occupies its whole N×N
+ * block), the flat-HP reap lifecycle on a neutral, and the susceptibility gate —
+ * all balance-proof (derived from `NEUTRAL_DEFS`, never hardcoded). ⚠️ Nothing
+ * DAMAGES rubble in play until §40b lifts the `isCombatTargetable` neutral guard
+ * (AoE) + adds the auto-target hook; here we drive HP / status directly.
+ */
+describe('§40a — rubble (the first real multi-tile neutral)', () => {
+  it('spawns as a neutral with the rubble glyph, catalog HP, and blocks LOS', () => {
+    const w = new World(new EventBus<GameEvents>(), new RNG(1));
+    const def = NEUTRAL_DEFS[RUBBLE_ARCHETYPE_BY_SIZE[2]]!;
+    const rubble = spawnRubble(w, { x: 5, y: 5 }, 2);
+
+    expect(rubble.team).toBe('neutral');
+    expect(rubble.archetype).toBe(RUBBLE_ARCHETYPE_BY_SIZE[2]);
+    expect(rubble.glyph).toBe(RUBBLE_GLYPH);
+    expect(rubble.glyph).toBe(def.glyph); // the constant mustn't drift from the catalog
+    expect(rubble.blocksLineOfSight).toBe(true); // §40 decision — rubble blocks LOS
+    expect(rubble.derived.maxHp).toBe(def.hp); // flat HP from the def
+    expect(rubble.behaviors).toEqual([]); // inert — no abilities
+    expect(rubble.activeAction).toBeNull();
+  });
+
+  it('occupies its whole N×N footprint from the canonical corner (the §39 fill, live)', () => {
+    const w = new World(new EventBus<GameEvents>(), new RNG(1));
+    const corners: Record<1 | 2 | 3, GridCoord> = {
+      1: { x: 1, y: 1 },
+      2: { x: 4, y: 4 },
+      3: { x: 8, y: 8 },
+    };
+    for (const size of [1, 2, 3] as const) {
+      const rubble = spawnRubble(w, corners[size], size);
+      // Balance-proof: the block count is the catalog footprint², never hardcoded.
+      const n = NEUTRAL_DEFS[RUBBLE_ARCHETYPE_BY_SIZE[size]]!.footprint;
+      expect(n, `catalog footprint for size ${size}`).toBe(size);
+      const cells = cellsOccupiedBy(rubble);
+      expect(cells, `size ${size} occupies ${n}×${n}`).toHaveLength(n * n);
+      expect(cells).toContainEqual(corners[size]); // position stays the canonical corner
+    }
+  });
+
+  it('takes an overridden maxHp (the §40d per-placement configurable HP)', () => {
+    const w = new World(new EventBus<GameEvents>(), new RNG(1));
+    const rubble = spawnRubble(w, { x: 1, y: 1 }, 1, 7);
+    expect(rubble.derived.maxHp).toBe(7);
+    expect(rubble.currentHp).toBe(7);
+  });
+
+  it('reaps at 0 HP and emits unit:died with team neutral (the crumble lifecycle)', () => {
+    const bus = new EventBus<GameEvents>();
+    const w = new World(bus, new RNG(1));
+    const deaths: GameEvents['unit:died'][] = [];
+    bus.on('unit:died', (p) => deaths.push(p));
+
+    const rubble = spawnRubble(w, { x: 3, y: 3 }, 2, 5);
+    rubble.currentHp = 0;
+    w.tick();
+
+    expect(w.findUnit(rubble.id)).toBeUndefined();
+    expect(deaths).toEqual([{ unitId: rubble.id, team: 'neutral' }]);
+  });
+
+  it('is burnable/freezable but not poisonable (statusSusceptibility, catalog-derived)', () => {
+    const w = new World(new EventBus<GameEvents>(), new RNG(1));
+    const rubble = spawnRubble(w, { x: 5, y: 5 }, 1);
+    const allows = NEUTRAL_DEFS[RUBBLE_ARCHETYPE_BY_SIZE[1]]!.statusSusceptibility!;
+    const allowed = allows[0]!; // 'burn'
+    const denied = ['poison', 'bleed'].find((s) => !allows.includes(s))!; // 'poison'
+
+    w.applyStatusEffect(rubble, statusDef(denied), null);
+    expect(rubble.effects.some((e) => e.key === denied), `${denied} filtered`).toBe(false);
+
+    w.applyStatusEffect(rubble, statusDef(allowed), null);
+    expect(rubble.effects.some((e) => e.key === allowed), `${allowed} allowed`).toBe(true);
   });
 });

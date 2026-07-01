@@ -55,6 +55,11 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
         `    "hp": ${JSON.stringify(a.hp)}`,
       ];
       if (a.blocksLineOfSight === false) fields.push(`    "blocksLineOfSight": false`);
+      // §40a — a multi-tile rubble neutral declares its footprint (N∈2..4). The
+      // default 1 (walls / half-cover / 1×1 rubble) stays omitted so their file
+      // diff is untouched and a re-parse fills it back. Canonical order: after
+      // blocksLineOfSight, before statusSusceptibility (the schema field order).
+      if ((a.footprint ?? 1) !== 1) fields.push(`    "footprint": ${JSON.stringify(a.footprint)}`);
       if (a.statusSusceptibility !== undefined)
         fields.push(`    "statusSusceptibility": ${JSON.stringify(a.statusSusceptibility)}`);
       parts.push(fields.join(',\n'));

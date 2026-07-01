@@ -60,6 +60,15 @@ export const pathfindingStats = {
  * exactly the retired `pickGoalCellInRange` freeze). Off by default so every
  * other caller (enemy-chasing, firing cells) is byte-identical and the fuzz
  * baseline is untouched.
+ *
+ * **`footprint`** (default 1): §39b — the mover's axis-aligned N×N body edge. A*
+ * still moves the single canonical corner; a wider body just needs a wider
+ * corridor, so PASSABILITY checks the whole N×N block (`corner..corner+N` toward
+ * +x/+y) rather than the one corner cell. `footprint === 1` collapses to the
+ * single-cell check — byte-identical to every pre-§39b caller, which is why this
+ * is a trailing default rather than a required arg. Pathfinding stays a pure grid
+ * algorithm: the footprint is a plain number, so this module needs no knowledge
+ * of units or the catalog.
  */
 export function findPath(
   start: GridCoord,
@@ -69,6 +78,7 @@ export function findPath(
   gridH: number,
   costAt: CostFn = UNIT_COST,
   bestEffort = false,
+  footprint = 1,
 ): GridCoord[] {
   pathfindingCallCount++; // J2 — recompute-budget instrument (output-neutral).
   if (!inBounds(start, gridW, gridH) || !inBounds(goal, gridW, gridH)) return [];
@@ -82,9 +92,30 @@ export function findPath(
     const k = key(b);
     if (k !== startKey) blocked.add(k);
   }
-  // A blocked goal is unreachable. Strict mode gives up; best-effort still
-  // searches toward it and returns the closest reachable cell below.
-  if (blocked.has(goalKey) && !bestEffort) return [];
+
+  // §39b — a candidate corner is a valid A* node iff its WHOLE footprint block is
+  // on-grid, unblocked, and finite-cost (a body stands on passable terrain across
+  // every cell it covers). `footprint === 1` iterates exactly the corner cell, so
+  // this is the pre-§39b `in-bounds && !blocked && finite-cost` test verbatim. The
+  // step COST charged (below) is still the corner's entry cost, so Chebyshev-on-
+  // corner stays admissible (gotcha #34) — only the passable/impassable decision
+  // widens, never the metric.
+  const blockFits = (corner: GridCoord): boolean => {
+    for (let dy = 0; dy < footprint; dy++) {
+      for (let dx = 0; dx < footprint; dx++) {
+        const x = corner.x + dx;
+        const y = corner.y + dy;
+        if (x < 0 || y < 0 || x >= gridW || y >= gridH) return false;
+        if (blocked.has(`${x},${y}`)) return false;
+        if (!isFinite(costAt({ x, y }))) return false;
+      }
+    }
+    return true;
+  };
+
+  // A goal whose block doesn't fit is unreachable. Strict mode gives up;
+  // best-effort still searches toward it and returns the closest reachable corner.
+  if (!blockFits(goal) && !bestEffort) return [];
 
   if (startKey === goalKey) return [start];
 
@@ -121,12 +152,13 @@ export function findPath(
         if (dx === 0 && dy === 0) continue;
         const nx = current.x + dx;
         const ny = current.y + dy;
-        if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
+        const corner = { x: nx, y: ny };
+        // §39b — the whole footprint block must fit (bounds + blockers + finite
+        // cost across the N×N cells; the single corner when footprint === 1).
+        if (!blockFits(corner)) continue;
         const nKey = `${nx},${ny}`;
-        if (blocked.has(nKey)) continue;
 
-        const stepCost = costAt({ x: nx, y: ny });
-        if (!isFinite(stepCost)) continue; // Infinity cost = data-driven block.
+        const stepCost = costAt(corner); // corner entry cost (finite per blockFits).
         const tentativeG = currentG + stepCost;
         if (tentativeG < (gScore.get(nKey) ?? Infinity)) {
           cameFrom.set(nKey, currentKey);

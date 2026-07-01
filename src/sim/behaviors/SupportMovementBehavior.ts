@@ -5,6 +5,7 @@ import type { ActionProposal } from '../Action';
 import { SwapAction } from '../actions/SwapAction';
 import { findTarget, lowestWoundedAlly, currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
+import { footprintOf } from '../occupancy';
 import { SIM } from '../../config/sim';
 // J2 — share the leaf pathing helpers with MovementBehavior (these were
 // duplicated leaf-for-leaf). The healer's bespoke decision logic stays here.
@@ -410,6 +411,8 @@ function stepToward(unit: Unit, goalPos: GridCoord, world: World): GridCoord | n
     world.gridW,
     world.gridH,
     (c) => costAt(c, world, otherUnitCells),
+    false,
+    footprintOf(unit), // §39b — the support mover honors its body width too.
   );
   if (path.length < 2) return null;
   const to = path[1]!;

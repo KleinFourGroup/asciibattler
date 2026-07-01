@@ -4,7 +4,14 @@ import type { World } from './World';
 import type { ActionProposal } from './Action';
 import { MoveAction } from './actions/MoveAction';
 import { findPath } from './Pathfinding';
-import { GROUND, cellKey, cellsOccupiedBy, claimedCells, distanceBetween } from './occupancy';
+import {
+  GROUND,
+  cellKey,
+  cellsOccupiedBy,
+  claimedCells,
+  distanceBetween,
+  footprintOf,
+} from './occupancy';
 import { SIM } from '../config/sim';
 
 /**
@@ -113,6 +120,10 @@ export function routeToward(
   // closest reachable cell instead of `[]` (the tile-objective "as close as you
   // can" rally — keeps an unpathable rally cell from freezing the team).
   bestEffort = false,
+  // §39b — the mover's footprint edge (N of its N×N body). Default 1 keeps every
+  // single-cell mover byte-identical; a wider body needs the whole destination
+  // block passable, so it paths through wide corridors but not narrow ones.
+  footprint = 1,
 ): GridCoord[] {
   return findPath(
     from,
@@ -122,6 +133,7 @@ export function routeToward(
     world.gridH,
     (c) => costAt(c, world, ctx.otherUnitCells),
     bestEffort,
+    footprint,
   );
 }
 
@@ -182,8 +194,9 @@ export function advance(unit: Unit, world: World, intent: MovementIntent): Actio
   const ctx = buildMovementContext(unit, world, { excludeUnitId: intent.excludeUnitId });
   const from = unit.position;
   const baseTicks = unit.derived.moveCooldownTicks;
+  const footprint = footprintOf(unit); // §39b — path a wider body through wider gaps.
   for (const goal of intent.goals) {
-    const move = stepAlongRoute(from, goal, ctx, world, intent, baseTicks);
+    const move = stepAlongRoute(from, goal, ctx, world, intent, baseTicks, footprint);
     if (move !== null) return move;
   }
   return null;
@@ -204,8 +217,9 @@ export function advance(unit: Unit, world: World, intent: MovementIntent): Actio
 export function leapLanding(unit: Unit, world: World, intent: MovementIntent): GridCoord | null {
   const ctx = buildMovementContext(unit, world, { excludeUnitId: intent.excludeUnitId });
   const from = unit.position;
+  const footprint = footprintOf(unit); // §39b — leap route respects the body's width.
   for (const goal of intent.goals) {
-    const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false);
+    const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
     if (path.length < 2) continue;
     const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells);
     if (landing !== null) return landing;
@@ -256,8 +270,13 @@ function stepAlongRoute(
   world: World,
   intent: MovementIntent,
   baseTicks: number,
+  // §39b — the mover's footprint edge, forwarded to the A* passability check. The
+  // step-COMMIT collision + sidestep below stay single-cell (`to`/`side`): a
+  // multi-tile MOVER doesn't exist yet (§40's rubble is static), so widening the
+  // commit-time occupancy check rides the same seam whenever one ships.
+  footprint = 1,
 ): ActionProposal | null {
-  const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false);
+  const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
   if (path.length < 2) return null;
 
   if (intent.maxCells <= 1) {

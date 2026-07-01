@@ -972,10 +972,20 @@ stays the canonical corner).
   temp catalog id); `footprintFits` rejects a block overlapping a combatant/wall;
   `unitDistance` footprint-aware (a 2×2 + an adjacent unit at distance 1, overlap at 0,
   single-cell reduces to `distanceBetween`).
-- **39b — footprint-passability pathfinding.** A multi-tile unit's step validates the
-  *whole* destination footprint is free (a wider body needs wider corridors); A* moves
-  the canonical corner, passability checks the block; confirm Chebyshev-on-corner stays
-  admissible. *Test:* a 2×2 paths through a 2-wide gap, not a 1-wide.
+- **✅ 39b — footprint-passability pathfinding.** `findPath` gained a trailing
+  `footprint = 1` param: a candidate corner is a valid A* node iff its WHOLE N×N block is
+  on-grid + unblocked + finite-cost (a `blockFits` closure; `footprint === 1` iterates
+  exactly the corner cell = the pre-§39b test verbatim, which is why it's a trailing
+  default — every existing caller stays byte-identical). A* still moves the single corner
+  and charges the CORNER's entry cost, so Chebyshev-on-corner stays admissible (confirmed
+  by a test: a fitting 2×2's path length equals the single-cell optimum). Pathfinding
+  stays a pure grid algorithm (footprint is a plain number — no unit/catalog knowledge).
+  Threaded the mover's `footprintOf(unit)` through `advance`/`leapLanding`→`routeToward`
+  and `SupportMovementBehavior`; the step-COMMIT collision + sidestep stay single-cell (a
+  multi-tile MOVER is post-§40 — §40's rubble is static). **No bump; fuzz 212 held.**
+  *Tests (+6, Pathfinding.test.ts):* a 2×2 paths a 2-wide gap but NOT a 1-wide (a 1×1 does,
+  proving footprint is the cause); footprint=1 byte-identical to default; admissibility
+  (fitting 2×2 path is minimal); a goal block overflowing the grid edge is rejected.
 - **39c — the spawn anchoring policy.** `anchorFootprint(spawnTile, size, policy, grid,
   occupancy) → cells | null`; ship `corner` (in-bounds-biased — the spawn tile is *a*
   corner, pick the diagonal keeping the block on-grid, so an edge tile still fits); a

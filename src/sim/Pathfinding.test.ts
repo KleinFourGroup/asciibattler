@@ -230,6 +230,63 @@ describe('Pathfinding / findPath best-effort (J3)', () => {
   });
 });
 
+describe('Pathfinding / findPath with a multi-tile footprint (§39b)', () => {
+  // A full-height wall along x=5 with a gap of `gapCells` rows starting at y=5.
+  // The only way across is through the gap — the wall touches both edges.
+  function wallWithGap(gapCells: number): GridCoord[] {
+    const openRows = new Set<number>();
+    for (let i = 0; i < gapCells; i++) openRows.add(5 + i);
+    const wall: GridCoord[] = [];
+    for (let y = 0; y < G; y++) if (!openRows.has(y)) wall.push({ x: 5, y });
+    return wall;
+  }
+
+  const START = { x: 0, y: 5 };
+  const GOAL = { x: 9, y: 5 };
+
+  it('a 2×2 body paths through a 2-wide gap', () => {
+    const path = findPath(START, GOAL, wallWithGap(2), G, G, undefined, false, 2);
+    expect(path.length).toBeGreaterThan(0);
+    expect(path[0]).toEqual(START);
+    expect(path[path.length - 1]).toEqual(GOAL);
+    assertContiguous(path); // A* still moves the single canonical corner.
+  });
+
+  it('the SAME 2×2 body cannot squeeze through a 1-wide gap', () => {
+    expect(findPath(START, GOAL, wallWithGap(1), G, G, undefined, false, 2)).toEqual([]);
+  });
+
+  it('a single-cell body DOES cross the 1-wide gap (footprint is the cause)', () => {
+    const path = findPath(START, GOAL, wallWithGap(1), G, G, undefined, false, 1);
+    expect(path.length).toBeGreaterThan(0);
+    expect(path[path.length - 1]).toEqual(GOAL);
+  });
+
+  it('footprint=1 is byte-identical to the default single-cell path', () => {
+    const wall = wallWithGap(1);
+    const explicit = findPath(START, GOAL, wall, G, G, undefined, false, 1);
+    const dflt = findPath(START, GOAL, wall, G, G);
+    expect(explicit).toEqual(dflt);
+  });
+
+  it('keeps Chebyshev-on-corner admissible: a fitting 2×2 path is still minimal', () => {
+    // Empty grid — the 2×2 fits everywhere, so its path length must match the
+    // single-cell optimum (Chebyshev distance + 1 cell), never a longer detour.
+    const wide = findPath({ x: 0, y: 0 }, { x: 3, y: 3 }, [], G, G, undefined, false, 2);
+    const single = findPath({ x: 0, y: 0 }, { x: 3, y: 3 }, [], G, G);
+    expect(wide.length).toBe(single.length);
+    expect(wide.length).toBe(4);
+  });
+
+  it('rejects a goal whose block would overflow the grid edge', () => {
+    // Corner (11,11) on a 12×12 grid → the 2×2 block spills to x=12/y=12.
+    expect(findPath({ x: 0, y: 0 }, { x: 11, y: 11 }, [], G, G, undefined, false, 2)).toEqual([]);
+    // …and the far corner that DOES fit (10,10 → block ≤ 11) is reachable.
+    const ok = findPath({ x: 0, y: 0 }, { x: 10, y: 10 }, [], G, G, undefined, false, 2);
+    expect(ok.length).toBeGreaterThan(0);
+  });
+});
+
 function assertContiguous(path: GridCoord[]): void {
   for (let i = 1; i < path.length; i++) {
     const a = path[i - 1]!;

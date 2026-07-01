@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLYPHS } from './glyphs';
+import { GLYPHS, ATLAS_CELL_BUDGET } from './glyphs';
 
 /**
  * Generates a monospace glyph atlas at startup. Each glyph occupies a fixed-
@@ -32,7 +32,9 @@ const FONT_PX = 56;
 const COLS = 8;
 // §29 (gotcha #33) — bumped 4 → 6 to seat the new demo roster's glyphs. The
 // J3 'X' filled the old 8×4 = 32; the status-on-hit/chain/summon archetypes
-// (reaver/corrupter/…) overflow it, so the grid grew to 8×6 = 48 (16 free).
+// (reaver/corrupter/…) overflow it, so the grid grew to 8×6 = 48. §38e now
+// derives the unit glyphs from the catalog, so the count grows whenever a unit
+// is authored — `COLS * ROWS` must stay `=== ATLAS_CELL_BUDGET` (glyphs.ts).
 const ROWS = 6;
 const ATLAS_W = COLS * CELL_PX; // 512
 const ATLAS_H = ROWS * CELL_PX; // 384
@@ -72,6 +74,16 @@ export class FontAtlas {
   }
 
   static async create(): Promise<FontAtlas> {
+    // §38e — the unit glyphs are catalog-derived, so the set grows as units are
+    // authored. Guard the grid capacity loudly: an over-budget count would
+    // otherwise place glyphs off-canvas (row ≥ ROWS) and silently render blanks.
+    if (GLYPHS.length > COLS * ROWS) {
+      throw new Error(
+        `FontAtlas: ${GLYPHS.length} glyphs exceed the ${COLS * ROWS}-cell atlas grid ` +
+          `(ATLAS_CELL_BUDGET=${ATLAS_CELL_BUDGET}). Grow COLS/ROWS here + the budget in glyphs.ts, ` +
+          `or trim the unit catalog.`,
+      );
+    }
     // Force the JetBrains Mono fetch (the `@font-face` from
     // `@fontsource/jetbrains-mono`, imported in main.ts) BEFORE rasterizing, so
     // the atlas never bakes the serif fallback. `load` matches the same
@@ -135,7 +147,8 @@ export class FontAtlas {
     const uv = this.uvByGlyph.get(glyph);
     if (!uv) {
       throw new Error(
-        `FontAtlas: no UV for glyph "${glyph}". Add it to the GLYPHS set in FontAtlas.ts.`,
+        `FontAtlas: no UV for glyph "${glyph}". A UNIT glyph comes from config/units.json ` +
+          `(catalog-derived in glyphs.ts); a non-unit glyph must be added to NON_UNIT_GLYPHS there.`,
       );
     }
     return uv;

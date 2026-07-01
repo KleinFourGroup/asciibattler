@@ -1,31 +1,46 @@
 import { describe, it, expect } from 'vitest';
-import { GLYPHS } from './glyphs';
-import { ARCHETYPE_CONFIG, glyphForArchetype, type Archetype } from '../sim/archetypes';
+import { GLYPHS, ATLAS_CELL_BUDGET } from './glyphs';
+import { ALL_UNIT_DEFS } from '../config/units';
 
 /**
- * E7.A guard. The render layer isn't unit-tested (canvas/WebGL needs a
- * browser), so a new archetype whose glyph isn't in the FontAtlas set
- * sails through the whole headless suite and only blows up live, at
- * battle-sprite creation, with `FontAtlas: no UV for glyph "x"` — which
- * is exactly how the rogue's `r` got shipped missing. This pins the one
- * piece of the contract that IS checkable headlessly: every archetype's
- * glyph is registered. It's data-driven off `ARCHETYPE_CONFIG`, so each
- * future archetype (E7.B `h`, E7.C `m`, E7.D `c`) is covered the moment
- * it's added to the config — no test edit needed.
+ * §38e — the render layer isn't unit-tested (canvas/WebGL needs a browser), so
+ * the one piece of the FontAtlas contract that IS checkable headlessly is that
+ * every glyph the renderer will ask for is registered. Pre-38e a new archetype
+ * whose glyph wasn't hand-added to `GLYPHS` sailed through the whole suite and
+ * only blew up live (`FontAtlas: no UV for glyph "x"` — how the rogue's `r` got
+ * shipped missing). §38e made the UNIT glyphs CATALOG-DERIVED, so per-unit
+ * coverage is now STRUCTURAL — a `config/units.json` entry's glyph is in the set
+ * by construction and can't drift. What still needs guarding: the derived set
+ * must fit the atlas grid, and the static non-unit glyphs must survive.
  */
 describe('FontAtlas glyph coverage', () => {
   const registered = new Set<string>(GLYPHS);
-  const archetypes = Object.keys(ARCHETYPE_CONFIG) as Archetype[];
 
-  it('has at least the known archetypes to check', () => {
-    expect(archetypes.length).toBeGreaterThan(0);
+  it('registers a glyph for every unit in the catalog (combatants + neutrals)', () => {
+    for (const [id, def] of Object.entries(ALL_UNIT_DEFS)) {
+      expect(
+        registered.has(def.glyph),
+        `glyph "${def.glyph}" for unit "${id}" is missing from GLYPHS — the catalog derivation in glyphs.ts is broken.`,
+      ).toBe(true);
+    }
   });
 
-  it.each(archetypes)('registers a FontAtlas glyph for the "%s" archetype', (archetype) => {
-    const glyph = glyphForArchetype(archetype);
-    expect(
-      registered.has(glyph),
-      `glyph "${glyph}" for archetype "${archetype}" is missing from GLYPHS (src/render/glyphs.ts) — append it (gotcha #33).`,
-    ).toBe(true);
+  it('keeps the non-unit glyphs (root / HUD digits / projectile / objective) registered', () => {
+    // A representative sample of the static NON_UNIT_GLYPHS set — the glyphs the
+    // renderer draws directly (not via the catalog), which a botched refactor of
+    // glyphs.ts could drop.
+    for (const glyph of ['@', '0', '9', '*', 'X']) {
+      expect(registered.has(glyph), `non-unit glyph "${glyph}" dropped from GLYPHS`).toBe(true);
+    }
+  });
+
+  it('fits the FontAtlas cell budget', () => {
+    // Over budget silently pushes glyphs off-canvas (row ≥ ROWS) — FontAtlas
+    // throws at build time, but this catches it headlessly at pre-commit.
+    expect(GLYPHS.length).toBeLessThanOrEqual(ATLAS_CELL_BUDGET);
+  });
+
+  it('has no duplicate glyph slots', () => {
+    expect(new Set(GLYPHS).size).toBe(GLYPHS.length);
   });
 });

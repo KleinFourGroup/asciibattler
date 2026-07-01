@@ -4,40 +4,65 @@
  * by both `FontAtlas.ts` (which builds the canvas atlas) and headless
  * vitest tests (which can't touch canvas/WebGL).
  *
- * Order is stable: APPEND new glyphs to the end (gotcha #33) so existing
- * UV lookups stay valid. EVERY glyph the renderer asks for must appear
- * here or `FontAtlas.getGlyphUV` throws at render time — in particular
- * every archetype glyph (`glyphForArchetype`). `FontAtlas.test.ts` pins
- * that archetype coverage so a new unit (E7.B `h`, E7.C `m`, E7.D `c`)
- * can't ship without its glyph. The grid is `COLS × ROWS` (8 × 4 = 32)
- * cells in FontAtlas; keep the count under that.
+ * §38e — the KEYSTONE payoff: the **unit** glyphs are now DERIVED from the
+ * `config/units.json` catalog (`ALL_UNIT_DEFS`) rather than hand-listed here, so
+ * authoring a brand-new unit in the archetype editor renders with **no code
+ * edit** — the last code-edit dependency the unit-data keystone set out to
+ * remove. Only the NON-unit glyphs (the root marker, the numeric HUD
+ * digits/punctuation, the projectile tracer, the objective marker) stay a static
+ * list, since nothing in the catalog owns them.
+ *
+ * EVERY glyph the renderer asks for must appear in the exported `GLYPHS` or
+ * `FontAtlas.getGlyphUV` throws at render time. Unit-glyph coverage is now
+ * STRUCTURAL (a catalog entry's glyph is in the set by construction — it can't
+ * drift), so `FontAtlas.test.ts` only has to guard the two things left: the
+ * derived set fits the atlas grid, and the static non-unit glyphs are present.
+ *
+ * The atlas is rebuilt from this list every boot and UVs are addressed by the
+ * glyph char (not by index), so ordering is free — but the count must stay under
+ * `ATLAS_CELL_BUDGET` (the `COLS × ROWS` grid in FontAtlas).
  */
-export const GLYPHS = [
-  'M', 'a', '@', // 'M' = mercenary (the I5-renamed melee baseline).
+
+import { ALL_UNIT_DEFS } from '../config/units';
+
+/**
+ * The FontAtlas grid capacity (`COLS × ROWS` = 8 × 6). Kept here as the single
+ * budget the headless test asserts against; FontAtlas owns the actual grid dims
+ * and re-checks this at build time. §29 grew the grid 8×4 = 32 → 8×6 = 48; the
+ * next overflow needs another FontAtlas.ts resize (and this constant bumped).
+ */
+export const ATLAS_CELL_BUDGET = 48;
+
+/**
+ * Glyphs the renderer needs that AREN'T owned by any unit in the catalog: the
+ * player root/base marker, the numeric HUD digits + punctuation, the projectile
+ * tracer, and the in-battle objective marker. These stay hand-listed because no
+ * `config/units.json` entry declares them. Append new NON-unit glyphs here; a new
+ * UNIT glyph needs no edit at all (it flows in from the catalog below).
+ */
+const NON_UNIT_GLYPHS: readonly string[] = [
+  '@', // player root / base marker (Phase A).
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  '.', ':', '/', '-', '+', '%', '!', '?',
-  '#', // C1a: wall obstacle (neutral-team environment entity).
-  '╥', // D6: half-cover (LOS-transparent neutral obstacle). U+2565.
+  '.', ':', '/', '-', '+', '%', '!', '?', // numeric HUD punctuation.
   '*', // E6.B: ranged projectile tracer glyph.
-  'r', // E7.A: rogue unit glyph.
-  'h', // E7.B: healer unit glyph.
-  'm', // E7.C: mage unit glyph.
-  'c', // E7.D: catapult unit glyph.
-  'A', // I5: adventurer (melee subclass — dodge bruiser).
-  'R', // I5: ronin (melee subclass — crit duelist).
-  'B', // I5: bandit (melee subclass — low-growth enemy fodder).
   'X', // J3: in-battle objective marker (the rally-tile / target-enemy 'X').
-  'V', // §29a: reaver unit glyph (bleed-on-hit melee, the status-on-hit demo).
-  'C', // §29b: corrupter (poison vial).
-  'I', // §29b: ice mage (frozen ice-storm).
-  'W', // §29b: warlock (confusion hex).
-  'L', // §29b: luminant (blind light-ray).
-  'b', // §29b: banshee (panic wail).
-  'z', // §29c: stormcaller (chain lightning).
-  's', // §29d: shaman (raises Ghouls — the summon consumer).
-  'g', // §29d: ghoul (the summoned minion).
-] as const;
-// ⚠️ Atlas budget: 41/48 cells used — §29 grew the FontAtlas grid to 8×6 = 48
-// (was 8×4 = 32, full at the J3 'X'). The §29 demo roster is now complete
-// (shaman/ghoul were the last two). Keep appending (gotcha #33, append-only)
-// until 48; the next overflow needs another FontAtlas.ts resize.
+];
+
+/**
+ * The registered atlas glyph set: the static non-unit glyphs followed by every
+ * distinct glyph the unit catalog declares (combatants + neutrals, in
+ * `config/units.json` key order), deduped. FontAtlas rasterizes these into the
+ * `ATLAS_CELL_BUDGET`-cell grid; a count over budget throws at build time.
+ */
+export const GLYPHS: readonly string[] = ((): readonly string[] => {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const push = (g: string): void => {
+    if (seen.has(g)) return;
+    seen.add(g);
+    out.push(g);
+  };
+  for (const g of NON_UNIT_GLYPHS) push(g);
+  for (const def of Object.values(ALL_UNIT_DEFS)) push(def.glyph);
+  return out;
+})();

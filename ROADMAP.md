@@ -825,7 +825,7 @@ oracle is the equivalence proof for 38c + 38d.
   `enemyBudget.ts` `'bandit'`/`'ranged'` (default enemy comp). **Verdict: clean/small —
   no re-scope** (matches the "few literal branches → clean 38b–38e" expectation). Locked
   decisions ↑.
-- **✅ 38b — rename `archetypes.json` → `units.json` + plant the inert UnitDef fields (COMPLETE 2026-06-30).**
+- **✅ 38b — rename `archetypes.json` → `units.json` + plant the inert UnitDef fields (COMPLETE + user-confirmed 2026-06-30).**
   Mechanical, byte-identical: `git mv config/archetypes.json config/units.json` +
   `src/config/archetypes.ts` → `src/config/units.ts` (the 3 source importers +
   `SAVABLE_CONFIG_FILES` + the archetype-editor's path strings + tests follow the

@@ -8,6 +8,7 @@ import type { GridCoord } from '../core/types';
 import type { Team, Unit, UnitStats } from './Unit';
 import {
   GROUND,
+  anchorFootprint,
   cellKey,
   cellsOccupiedBy,
   claimantOf,
@@ -343,5 +344,75 @@ describe('§39a — the footprint geometry seams', () => {
       // nearest cells (1,0)→(5,0): Chebyshev 4.
       expect(unitDistance(g2, g3)).toBe(4);
     });
+  });
+});
+
+/**
+ * §39c — the spawn anchoring policy (`anchorFootprint`, the `corner` policy).
+ * Pure + World-free: a grid-dims record + an `isFreeCell` predicate built from a
+ * key set. Inert until §40 spawns the first multi-tile body.
+ */
+describe('§39c — anchorFootprint (the corner spawn policy)', () => {
+  const GRID = { gridW: 12, gridH: 12 };
+  const freeExcept = (occupied: string[]): ((c: GridCoord) => boolean) => {
+    const occ = new Set(occupied);
+    return (c) => !occ.has(cellKey(c));
+  };
+  const allFree = () => true;
+
+  it('extends +x/+y from a center tile (the default orientation)', () => {
+    expect(anchorFootprint({ x: 2, y: 2 }, 2, GRID, allFree)).toEqual([
+      { x: 2, y: 2 },
+      { x: 3, y: 2 },
+      { x: 2, y: 3 },
+      { x: 3, y: 3 },
+    ]);
+  });
+
+  it('keeps an edge-tile spawn on-grid by extending inward', () => {
+    // Right-edge tile: the default +x block would spill to x=12, so it flips.
+    const cells = anchorFootprint({ x: 11, y: 5 }, 2, GRID, allFree);
+    expect(cells).not.toBeNull();
+    for (const c of cells!) {
+      expect(c.x).toBeGreaterThanOrEqual(0);
+      expect(c.x).toBeLessThan(GRID.gridW);
+      expect(c.y).toBeGreaterThanOrEqual(0);
+      expect(c.y).toBeLessThan(GRID.gridH);
+    }
+    expect(cells).toContainEqual({ x: 11, y: 5 }); // the spawn tile is a corner
+  });
+
+  it('anchors a bottom-right corner tile with both flips', () => {
+    expect(anchorFootprint({ x: 11, y: 11 }, 2, GRID, allFree)).toEqual([
+      { x: 10, y: 10 },
+      { x: 11, y: 10 },
+      { x: 10, y: 11 },
+      { x: 11, y: 11 },
+    ]);
+  });
+
+  it('size 1 collapses to the single-tile spawn check', () => {
+    expect(anchorFootprint({ x: 3, y: 3 }, 1, GRID, allFree)).toEqual([{ x: 3, y: 3 }]);
+    expect(anchorFootprint({ x: 3, y: 3 }, 1, GRID, freeExcept(['3,3']))).toBeNull();
+  });
+
+  it('falls through to an orientation that clears an occupied cell', () => {
+    // (6,5) blocks the default +x block; the −x flip (4,5)-corner is clear.
+    const cells = anchorFootprint({ x: 5, y: 5 }, 2, GRID, freeExcept(['6,5']));
+    expect(cells).toEqual([
+      { x: 4, y: 5 },
+      { x: 5, y: 5 },
+      { x: 4, y: 6 },
+      { x: 5, y: 6 },
+    ]);
+  });
+
+  it('returns null when no orientation fits — the spawn tile itself is occupied', () => {
+    // Every orientation includes the spawn tile, so occupying it rules all out.
+    expect(anchorFootprint({ x: 5, y: 5 }, 2, GRID, freeExcept(['5,5']))).toBeNull();
+  });
+
+  it('returns null when the body is too big for the grid', () => {
+    expect(anchorFootprint({ x: 0, y: 0 }, 4, { gridW: 3, gridH: 3 }, allFree)).toBeNull();
   });
 });

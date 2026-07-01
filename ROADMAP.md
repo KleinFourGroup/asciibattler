@@ -986,13 +986,21 @@ stays the canonical corner).
   *Tests (+6, Pathfinding.test.ts):* a 2×2 paths a 2-wide gap but NOT a 1-wide (a 1×1 does,
   proving footprint is the cause); footprint=1 byte-identical to default; admissibility
   (fitting 2×2 path is minimal); a goal block overflowing the grid edge is rejected.
-- **39c — the spawn anchoring policy.** `anchorFootprint(spawnTile, size, policy, grid,
-  occupancy) → cells | null`; ship `corner` (in-bounds-biased — the spawn tile is *a*
-  corner, pick the diagonal keeping the block on-grid, so an edge tile still fits); a
-  null fit → the caller tries the next candidate tile (reuses the overflow scan's "walk
-  candidates, skip if it doesn't fit" loop — **not** a new spawn class).
-  `random-intersect` deferred to camps. *Test:* corner anchoring keeps an edge-tile
-  spawn on-grid; the fit-check skips a too-tight tile.
+- **✅ 39c — the spawn anchoring policy.** `anchorFootprint(spawnTile, size, grid,
+  isFreeCell, policy='corner') → cells | null` in [occupancy.ts](src/sim/occupancy.ts).
+  The `corner` policy is in-bounds-biased: the spawn tile is *a* corner, so it tries the
+  four diagonal orientations (spawn tile as TL/TR/BL/BR, preferring +x/+y) and returns the
+  first whose whole block is on-grid AND `isFreeCell` — an EDGE tile fits by extending
+  inward. `size === 1` collapses to "is the spawn tile free & on-grid" (the single-tile
+  check). PURE + World-free (a grid-dims record + an `isFreeCell` predicate) so the caller
+  decides what "free" means; a `null` return is the cue to walk to the next candidate tile
+  (the overflow scan's skip-if-doesn't-fit loop generalized — NOT a new spawn class).
+  `random-intersect` deferred to camps (Cluster 5). **INERT — not yet wired into a spawn
+  path** (nothing multi-tile spawns until §40's rubble); shipped tested + ready. No bump;
+  fuzz 212 held. *Tests (+7, occupancy.test.ts 31→38):* default +x/+y orientation; an
+  edge/corner tile stays on-grid with the spawn tile as a corner; size 1 == single-cell;
+  falls through to a flip that clears an occupied cell; null when the spawn tile is
+  occupied (every orientation includes it) or the body is too big for the grid.
 - **39d — multi-tile rendering.** Scale the glyph quad to the footprint (the
   SpriteRenderer per-instance `size` attr, E6.B); the sprite anchor reads the footprint
   center, the logic stays on the corner. Browser-verify. *Test (browser):* a 2×2 unit

@@ -157,6 +157,57 @@ export function footprintFits(
 }
 
 /**
+ * §39c — the spawn ANCHORING policy. `corner` is the one policy that ships:
+ * `random-intersect` (organic scatter) is deferred to camps (Cluster 5).
+ */
+export type AnchorPolicy = 'corner';
+
+/**
+ * §39c — resolve where an N×N body ANCHORS when its spawn tile is `spawnTile`, or
+ * `null` when it can't fit there. **The `corner` policy is in-bounds-biased:** the
+ * spawn tile is *a* corner of the block, and we try the four diagonal orientations
+ * (spawn tile as the block's top-left / top-right / bottom-left / bottom-right),
+ * preferring the +x/+y extension, and return the first whose whole block is
+ * on-grid AND passes `isFreeCell`. So an EDGE tile still fits — the block just
+ * extends inward instead of off the grid. A `null` return is the caller's cue to
+ * walk to the next candidate tile (the overflow scan's "skip if it doesn't fit"
+ * loop generalized to N×N — NOT a new spawn class). `size === 1` collapses to "is
+ * `spawnTile` free & on-grid" — the single-tile spawn check, reused verbatim.
+ *
+ * Pure + World-free (takes a grid-dims record + an `isFreeCell` predicate) so it's
+ * unit-testable and the caller decides what "free" means (occupancy, passable
+ * terrain, or both). Inert until §40 spawns the first multi-tile body (rubble).
+ */
+export function anchorFootprint(
+  spawnTile: GridCoord,
+  size: number,
+  grid: { gridW: number; gridH: number },
+  isFreeCell: (cell: GridCoord) => boolean,
+  _policy: AnchorPolicy = 'corner',
+): GridCoord[] | null {
+  const { x, y } = spawnTile;
+  const d = size - 1;
+  // Min-corner candidates in deterministic preference order: extend +x/+y first
+  // (spawn tile = the min corner), then flip x, then y, then both, so the block
+  // stays on-grid near an edge. All four keep the spawn tile as a corner of the
+  // block. (d === 0 makes these identical — the single-cell case.)
+  const minCorners: GridCoord[] = [
+    { x, y },
+    { x: x - d, y },
+    { x, y: y - d },
+    { x: x - d, y: y - d },
+  ];
+  for (const corner of minCorners) {
+    const cells = footprintCells(corner, size);
+    const fits = cells.every(
+      (c) => c.x >= 0 && c.y >= 0 && c.x < grid.gridW && c.y < grid.gridH && isFreeCell(c),
+    );
+    if (fits) return cells;
+  }
+  return null;
+}
+
+/**
  * Grid distance between two cells — Chebyshev (8-connected movement, a diagonal
  * costs one step). The coord-to-coord PRIMITIVE; `unitDistance` (below) is the
  * footprint-aware body-to-body seam built on top of it. Untouched by §39 so every

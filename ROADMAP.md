@@ -1065,13 +1065,21 @@ over a destructible (priority), a destructible only when no hostile is reachable
 walls/cover are not auto-targeted (manual/AoE only); a 0-HP destructible reaps + fires
 `unit:died{neutral}`; a multi-tile rubble occupies its whole footprint until destroyed.
 
-**Decision points 40:** the auto-target priority rule (recommend destructibles below
-all reachable hostiles; an idle unit blocked from its hostile may chip the blocking
-destructible). Multi-tile rubble collapse — incremental (partial damage frees cells)
-or all-at-once at 0 HP (recommend **all-at-once** — one entity; partial-collapse is a
-future fill). Wall/cover destructibility default (recommend **off** — today's
-indestructible 1-HP, opt-in per layout). Whether rubble blocks LOS (recommend yes by
-default, a per-def `blocksLineOfSight` like walls; low rubble could set false).
+**Decision points 40 — ALL LOCKED (user, 2026-07-01):**
+- **How "destructible" is expressed → HP-PRESENCE** (not a `destructible` flag). `hp`
+  becomes OPTIONAL on the neutral def; present ⇒ destructible/combat-targetable, absent ⇒
+  indestructible. Cleaner than a flag (removes a concept rather than adding one; makes
+  indestructibility semantically honest — no HP pool = can't be destroyed; retires the
+  awkward nominal `hp:1` on walls) and matches the 40c "HP = destructible" framing. This
+  is the signal `isCombatTargetable` keys off in 40b.
+- **Auto-target priority → destructibles below all reachable hostiles** (an idle unit
+  blocked from its hostile may chip the blocking destructible).
+- **Multi-tile rubble collapse → all-at-once at 0 HP** (one entity; partial-collapse is a
+  future fill).
+- **Wall/cover destructibility default → OFF** (hp-less = indestructible; opt in by giving
+  a wall an `hp` per layout — §40c).
+- **Rubble blocks LOS → yes** (a per-def `blocksLineOfSight`, default true like walls; low
+  rubble could set false).
 
 ### Sub-steps (40a–40d) — the proposed cut
 
@@ -1081,25 +1089,46 @@ default (recommend off), whether rubble blocks LOS. No `WorldSnapshot` bump expe
 (HP already serialized; the layout schema gains destructible HP fields as config). This
 phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
 
-- **40a — the rubble `UnitDef`(s) + glyph (the first real multi-tile entity).** A
-  neutral `UnitDef`: no abilities, a flat HP pool, a footprint (1..3), a glyph (`▓` —
-  needs a `glyphs.ts` entry + the §30-resized atlas budget; FontAtlas.test guards).
-  Burnable/freezable but **not** poisonable (`statusSusceptibility`, §38). Proves the
-  §39 fill end-to-end; the 0-HP reap → `unit:died{neutral}` lifecycle already works
-  (BattleRenderer fades, audio skips). *Test:* rubble spawns + occupies its whole
-  footprint until destroyed; AoE + DoT apply per susceptibility (burn yes, poison no);
-  a 0-HP rubble reaps + fires `unit:died{neutral}`. Browser-verify the glyph + crumble.
-- **40b — the targeting-neutrals auto-target hook (the one new mechanic).** Add an
-  opt-in, lower-priority path: rubble is **auto-targeted below all reachable hostiles**
-  (a unit with no reachable hostile, or an explicit order, may chip a blocking
-  destructible — the "deny access until destroyed" loop). Walls + half-cover are **not**
-  auto-targeted (manual/AoE only; AoE already hits neutral cells for free). *Test:*
-  auto-targeting picks a reachable hostile over a destructible; a destructible only when
-  no hostile is reachable; walls/cover are never auto-targeted.
-- **40c — optional wall/cover destructibility.** A per-instance HP in the layout schema
-  (default = today's indestructible 1-HP; a higher value = destructible) — the lifecycle
-  already runs end-to-end. *Test:* a destructible wall falls to focused fire; the
-  default stays indestructible.
+- **✅ 40a — the rubble `UnitDef`(s) + glyph (the first real multi-tile entity; COMPLETE
+  2026-07-01).** Three neutral `UnitDef`s `rubble_1x1`/`2x2`/`3x3` (`config/units.json`):
+  no abilities, a flat `hp` (25/60/110 UNTUNED §41), a footprint (1/2/3),
+  burnable/freezable not poisonable (`statusSusceptibility ["burn","frozen"]`), LOS-
+  blocking. **NO schema change** — 38d planted every neutral field. `spawnRubble` +
+  `RUBBLE_ARCHETYPE_BY_SIZE` (environment.ts); the neutral formatter now emits `footprint`.
+  Proves the §39 fill LIVE (a rubble occupies its whole N×N block + renders scaled via
+  39d) + the 0-HP reap → `unit:died{neutral}` + susceptibility gate (balance-proof tests,
+  1594 + fuzz 212 green). **Glyph = `%` (STOPGAP):** the first-pass `▓` (U+2593) is a
+  FULL-EM block that towered over the wall `#` + occluded sprites; `%` is open + ~wall-
+  height. A true HALF-height look (`▄` U+2584, or a render-side vertical squash) is a
+  **TODO — next session, NATIVE-browser verify** (this session's remote render-verify was
+  unreliable + wrongly read the block range as tofu; the user sees `▓` render fine
+  natively — see TODO.md §Polish).
+- **40b — targeting-neutrals: LIFT the neutral guard + the auto-target hook.** The prep
+  the roadmap assumed ("AoE already hits neutral cells for free") is **wrong** —
+  `isCombatTargetable` (effects/targeting.ts:91) blanket-excludes `team === 'neutral'`,
+  so nothing (not even AoE) can damage rubble yet. **① Lift it → DESTRUCTIBILITY = HP-
+  PRESENCE (LOCKED 2026-07-01, user call — see §"Decision points 40").** Make `hp`
+  OPTIONAL on `NeutralUnitDefSchema`; `hp` present ⇒ destructible (combat-targetable),
+  absent ⇒ indestructible. `isCombatTargetable` allows a neutral iff its def has `hp`.
+  *Migration:* drop `hp` from `wall`/`half_cover` in units.json (they become genuinely
+  hp-less = indestructible, retiring the awkward nominal `hp:1` the 38d comment flags);
+  `spawnEnvironment`/`inertDerived` take a nominal maxHp fallback for hp-less neutrals
+  (cosmetic — never targeted); the formatter emits `hp` only when present; the couple of
+  `wall.derived.maxHp === NEUTRAL_DEFS.wall.hp` tests update. **② The auto-target hook**
+  (the new mechanic): rubble is **auto-targeted below all reachable hostiles** (a unit
+  with no reachable hostile, or an explicit order, may chip a blocking destructible — the
+  "deny access until destroyed" loop). Walls/half-cover stay NOT auto-targeted (manual /
+  AoE only — now AoE reaches them because it's hp-present that decides, and they're hp-
+  less unless §40c opts in). *Test:* a destructible rubble takes AoE + DoT (per
+  susceptibility); an indestructible (hp-less) wall does NOT; auto-targeting picks a
+  reachable hostile over rubble, rubble only when no hostile is reachable; walls/cover are
+  never auto-targeted.
+- **40c — optional wall/cover destructibility.** Under HP-presence (40b), a destructible
+  wall/cover = one that **carries an `hp`** (a per-instance HP in the layout schema, or a
+  destructible-wall def); default = **no `hp` = indestructible** (the locked "wall-
+  destructibility OFF" default). The 0-HP reap lifecycle already runs end-to-end. *Test:*
+  a wall given an HP pool falls to focused fire; the default (hp-less) stays
+  indestructible.
 - **40d — the layout editor (absorbs §39e).** Paint rubble (size + HP) + toggle
   wall/cover destructibility + **the multi-tile spawn-room fit validation folded from
   §39e** — does an N×N deploy fit at a spawn region? A thin wrapper over §39c's

@@ -46,13 +46,15 @@
  * unit's effective engagement range is the MAX over its abilities (see
  * `rangeForArchetype` in `src/sim/archetypes.ts`).
  *
- * Adding a new archetype:
- *   1. Add its key + abilities + baseStats + growthRates to
- *      `config/units.json` (use low/negative `mobility` if it needs
- *      a slow walking pace — there's no per-archetype move-CD override)
- *   2. Extend the `Archetype` union in `src/sim/archetypes.ts`
- *   3. Extend the `UnitDefs` zod object below
- *   4. The compiler will surface remaining sites that need a case.
+ * Adding a new archetype (§38c — now pure DATA, no code edit):
+ *   1. Add its key + abilities + baseStats + growthRates (+ any capability
+ *      fields: damageStat / movementBehavior / retargetOnLosLoss) to
+ *      `config/units.json` (use low/negative `mobility` for a slow walking
+ *      pace — there's no per-archetype move-CD override).
+ *   2. That's it — the open `z.record` catalog validates it structurally and
+ *      the string `Archetype` id resolves everywhere. (Only add a boot-assert to
+ *      `REQUIRED_UNIT_IDS` if run/enemy-comp code references the new id by
+ *      literal; §38e's editor authors all of this without touching code.)
  */
 
 import { z } from 'zod';
@@ -171,36 +173,44 @@ export const UnitDefSchema = z.object({
   retargetOnLosLoss: z.boolean().optional(),
 });
 
-export const UnitDefsSchema = z.object({
-  // I5 — the melee family (key order MUST match config/units.json so the
-  // archetype-editor formatter round-trips: it emits in parsed-shape order).
-  mercenary: UnitDefSchema,
-  adventurer: UnitDefSchema,
-  ronin: UnitDefSchema,
-  bandit: UnitDefSchema,
-  ranged: UnitDefSchema,
-  rogue: UnitDefSchema,
-  healer: UnitDefSchema,
-  mage: UnitDefSchema,
-  catapult: UnitDefSchema,
-  // §29 demo roster (Cluster 1) — status-on-hit / chain / summon consumers.
-  reaver: UnitDefSchema, // 29a (bleed)
-  corrupter: UnitDefSchema, // 29b (poison)
-  ice_mage: UnitDefSchema, // 29b (frozen)
-  warlock: UnitDefSchema, // 29b (confusion)
-  luminant: UnitDefSchema, // 29b (blind)
-  banshee: UnitDefSchema, // 29b (panic)
-  stormcaller: UnitDefSchema, // 29c (chain)
-  // 29d — the summon consumers: a summoner + its minion.
-  shaman: UnitDefSchema, // raises Ghouls (caster-anchored summon)
-  ghoul: UnitDefSchema, // the summoned minion (≈ half a bandit)
-});
+// §38c — the KEYSTONE relax: an OPEN `string → UnitDef` record, not a fixed
+// 18-key object. The closed `Archetype` union is gone (`src/sim/Unit.ts`), so
+// the catalog is now the single source of which unit kinds exist — validated
+// STRUCTURALLY (every entry is a well-formed `UnitDef`) rather than by an
+// enumerated key list. This is what lets §38e's editor author a brand-new unit
+// kind as pure data. The ids the game constructs by LITERAL (start team /
+// default enemy comp / summon targets) lost their compile-time guarantee with
+// the union, so `assertRequiredUnitsPresent` + `assertSummonRefsResolve` (below)
+// boot-assert they resolve — a rename/removal fails at load, not at spawn.
+// `z.record` preserves JSON key order, so the archetype-editor formatter still
+// round-trips (it emits in parsed-shape order).
+export const UnitDefsSchema = z.record(z.string(), UnitDefSchema);
 
 export type UnitDef = z.infer<typeof UnitDefSchema>;
-export type UnitDefsConfig = z.infer<typeof UnitDefsSchema>;
+export type UnitDefsConfig = Record<string, UnitDef>;
 export type GrowthRates = z.infer<typeof GrowthRatesSchema>;
 
 export const UNIT_DEFS: UnitDefsConfig = UnitDefsSchema.parse(unitsJson);
+
+/**
+ * §38c boot-assert — the ids the game hard-references by string LITERAL must
+ * exist in the catalog. The closed `Archetype` union used to guarantee this at
+ * compile time; with the union relaxed to an open string id, a typo/rename/removal
+ * would otherwise surface only at spawn. Keep this list in sync with the literal
+ * constructions the 38a audit found: `Run.ts` start team (`mercenary`) +
+ * `enemyBudget.ts` default enemy comp (`bandit`/`ranged`). Summon targets get
+ * their own resolve check in `assertSummonRefsResolve`.
+ */
+const REQUIRED_UNIT_IDS = ['mercenary', 'bandit', 'ranged'] as const;
+(function assertRequiredUnitsPresent(): void {
+  for (const id of REQUIRED_UNIT_IDS) {
+    if (!(id in UNIT_DEFS)) {
+      throw new Error(
+        `config/units.json is missing required unit '${id}' (hard-referenced by run/enemy-comp code)`,
+      );
+    }
+  }
+})();
 
 /**
  * §29d boot check (the `assertStatusRefsResolve` sibling): every `summon` op

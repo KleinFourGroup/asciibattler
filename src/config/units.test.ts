@@ -90,3 +90,39 @@ describe('§38b — UnitDef catalog scaffold', () => {
     expect(UnitDefSchema.safeParse({ ...seed, footprint: 5 }).success).toBe(false);
   });
 });
+
+/**
+ * §38c-4 — the keystone relax. `UnitDefsSchema` became an OPEN `z.record`
+ * (string → UnitDef) and the closed `Archetype` union became `string`, so the
+ * catalog is now the single source of which unit kinds exist — validated
+ * structurally, not by an enumerated key list. This is the §38e enabler (author
+ * a unit as pure data). The compile-time key guarantee is replaced by the
+ * `REQUIRED_UNIT_IDS` boot-assert for the ids code constructs by literal.
+ */
+describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
+  it('validates a brand-new unit id with no code edit (the §38e enabler)', () => {
+    const catalog = { ...structuredClone(UNIT_DEFS), gremlin: structuredClone(UNIT_DEFS.mercenary) };
+    const parsed = UnitDefsSchema.parse(catalog);
+    expect(Object.keys(parsed)).toContain('gremlin');
+    expect(parsed.gremlin).toEqual(UNIT_DEFS.mercenary);
+  });
+
+  it('still validates every entry structurally (a malformed unit is rejected)', () => {
+    const bad = { ...structuredClone(UNIT_DEFS), broken: { glyph: 'X' } }; // missing required blocks
+    expect(UnitDefsSchema.safeParse(bad).success).toBe(false);
+  });
+
+  it('preserves JSON key order (the formatter round-trips in parsed-shape order)', () => {
+    // z.record must not reorder keys, or the archetype-editor byte-round-trip breaks.
+    const raw = Object.keys(UnitDefsSchema.parse(structuredClone(UNIT_DEFS)));
+    expect(raw).toEqual(Object.keys(UNIT_DEFS));
+  });
+
+  it('carries the ids the game hard-references by literal (boot-assert contract)', () => {
+    // Mirrors REQUIRED_UNIT_IDS — start team + default enemy comp. If the module
+    // imported at all, the boot-assert already passed; this documents the set.
+    for (const id of ['mercenary', 'bandit', 'ranged']) {
+      expect(UNIT_DEFS[id], id).toBeDefined();
+    }
+  });
+});

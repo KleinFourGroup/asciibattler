@@ -37,29 +37,26 @@ export type Team = 'player' | 'enemy' | 'neutral';
  * four carry `melee_strike`; they diverge only in stats. `bandit` is the
  * default melee *enemy* (the player/enemy-symmetry break the brief wanted).
  */
-export type Archetype =
-  | 'mercenary'
-  | 'adventurer'
-  | 'ronin'
-  | 'bandit'
-  | 'ranged'
-  | 'rogue'
-  | 'healer'
-  | 'mage'
-  | 'catapult'
-  // §29 demo roster (Cluster 1) — the status-on-hit / chain / summon consumers.
-  | 'reaver' // 29a — bleed-on-hit melee
-  // 29b — the afflicter disruptors (status-on-hit AoE / ranged).
-  | 'corrupter' // poison vial (3×3 AoE)
-  | 'ice_mage' // frozen ice-storm (3×3 AoE)
-  | 'warlock' // confusion hex (3×3 AoE, pure applier)
-  | 'luminant' // blind light-ray (single-target ranged)
-  | 'banshee' // panic wail (3×3 AoE, pure applier)
-  // 29c — the chain consumer.
-  | 'stormcaller' // chain lightning (arcs to N nearest, falloff per hop)
-  // 29d — the summon consumers: a summoner + its minion.
-  | 'shaman' // raises Ghouls (caster-anchored summon, catapult-ish stats)
-  | 'ghoul'; // the summoned minion (≈ half a bandit)
+// §38c — the KEYSTONE relax: the closed 18-member literal union became a
+// catalog-validated string id. An `Archetype` is now any id present in the
+// `UnitDef` catalog (`config/units.json`), validated at load by the open
+// `z.record` schema + boot-asserts on the ids the game hard-references (see
+// `src/config/units.ts`). This is what lets §38e's editor author a brand-new
+// unit kind as pure DATA — no code edit, no union member to add. The 18 literal
+// branches that used to switch on this union were all killed in 38c-1/2/3
+// (damageStat / movementBehavior / retargetOnLosLoss → catalog fields), so the
+// type no longer needs to be closed to stay exhaustive.
+//
+// The shipped roster (for reference — no longer enforced by the type):
+//   melee family:  mercenary · adventurer · ronin · bandit
+//   ranged/rogue:  ranged · rogue · catapult
+//   caster/support: healer · mage
+//   §29 demo roster: reaver · corrupter · ice_mage · warlock · luminant ·
+//                    banshee · stormcaller · shaman · ghoul
+export type Archetype = string;
+// `'environment'` is the neutral sentinel (walls / half-cover — no catalog entry
+// until §38d folds them in). Kept as a distinct alias for intent even though it
+// now widens to `string`; the runtime `=== 'environment'` guards still narrow.
 export type UnitArchetype = Archetype | 'environment';
 
 /**

@@ -132,6 +132,7 @@
     "abilities": ["bow"],
     "targeting": "nearest",
     "damageStat": "ranged",
+    "retargetOnLosLoss": true,
     "baseStats": {
       "constitution": 18,
       "strength": 0,

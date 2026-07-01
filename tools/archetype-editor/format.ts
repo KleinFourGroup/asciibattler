@@ -58,6 +58,8 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
     if (a.damageStat !== undefined) parts.push(`    "damageStat": ${JSON.stringify(a.damageStat)},`);
     if (a.movementBehavior !== undefined)
       parts.push(`    "movementBehavior": ${JSON.stringify(a.movementBehavior)},`);
+    if (a.retargetOnLosLoss !== undefined)
+      parts.push(`    "retargetOnLosLoss": ${JSON.stringify(a.retargetOnLosLoss)},`);
     parts.push(`    "baseStats": {`);
     parts.push(...statLines(a.baseStats));
     parts.push(`    },`);

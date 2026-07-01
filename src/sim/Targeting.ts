@@ -4,6 +4,7 @@ import type { GridCoord } from '../core/types';
 import type { ObjectiveTarget } from './objective';
 import { hasLineOfSight } from './LineOfSight';
 import { SIM } from '../config/sim';
+import { UNIT_DEFS } from '../config/units';
 import { OBJECTIVE } from '../config/objective';
 import { getTargetingStrategy } from './targetingStrategies';
 import { focusTileDirective } from './focusTile';
@@ -135,8 +136,11 @@ function updateTargetDefault(unit: Unit, world: World): void {
   const strategy = getTargetingStrategy(unit.targeting);
   const candidate = findTarget(unit, world);
 
-  // (c) ranged: drop a target we've been unable to see for too long.
-  if (unit.archetype === 'ranged') {
+  // (c) drop a target we've been unable to see for too long — §38c: the ranged
+  // `=== 'ranged'` special-case became the `UnitDef.retargetOnLosLoss` capability
+  // flag (read at call time off the catalog). Environment entities never seek a
+  // target and carry no catalog entry, so they short-circuit false.
+  if (unit.archetype !== 'environment' && UNIT_DEFS[unit.archetype].retargetOnLosLoss) {
     const visible = hasLineOfSight(unit.position, current.position, collectLosBlockers(world));
     if (visible) {
       unit.outOfLosTicks = 0;

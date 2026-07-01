@@ -65,7 +65,7 @@ describe('World.shove — the §35c de-overlap backstop', () => {
     const { world } = setup();
     spawnAt(world, 'player', { x: 5, y: 5 });
     const b = spawnAt(world, 'player', { x: 5, y: 5 });
-    world.spawnEnvironment({ glyph: '#', position: { x: 4, y: 4 } }); // block the first choice
+    world.spawnEnvironment({ archetype: 'wall', position: { x: 4, y: 4 } }); // block the first choice
 
     world.shove(b);
 

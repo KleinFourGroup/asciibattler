@@ -102,7 +102,12 @@ describe('archetypes / targeting config', () => {
     }
   });
 
-  it('environment entities fall back to nearest', () => {
+  it('neutral / unknown archetypes fall back to nearest', () => {
+    // §38d — walls / half-cover (neutrals, absent from the COMBATANT catalog) get
+    // the harmless default, as does any id not in the catalog (the removed
+    // `=== 'environment'` sentinel guard's behavior, now via optional chaining).
+    expect(targetingForArchetype('wall')).toBe('nearest');
+    expect(targetingForArchetype('half_cover')).toBe('nearest');
     expect(targetingForArchetype('environment')).toBe('nearest');
   });
 });
@@ -159,9 +164,13 @@ describe('archetypes / §38c damageStat (catalog-driven, byte-identical)', () =>
     }
   });
 
-  it('environment entities never strike (→ 0, no catalog entry needed)', () => {
-    // Any stat block — the environment guard short-circuits before the lookup.
-    expect(damageStatFor('environment', rollUnit('mercenary', new RNG(0)).stats)).toBe(0);
+  it('neutrals never strike (→ 0 via the combatant-catalog optional chain)', () => {
+    // §38d — a neutral (wall / half-cover) is absent from the COMBATANT catalog,
+    // so `damageStatFor` resolves to 0 for any stat block (the removed
+    // `=== 'environment'` sentinel guard's behavior).
+    const stats = rollUnit('mercenary', new RNG(0)).stats;
+    expect(damageStatFor('wall', stats)).toBe(0);
+    expect(damageStatFor('half_cover', stats)).toBe(0);
   });
 });
 

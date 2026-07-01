@@ -24,11 +24,11 @@ const NO_EFFECTS: readonly StatusEffect[] = [];
 export type Team = 'player' | 'enemy' | 'neutral';
 
 /**
- * E1 — combatant archetype tag, the same closed set the UnitTemplate
- * + archetype config carry. The extra `'environment'` variant covers
- * walls + half-cover (neutrals with no abilities) so a single
- * `unit.archetype` lookup answers "which stat drives a basic strike?"
- * without needing the caller to branch on team first.
+ * E1 — the archetype tag the UnitTemplate + archetype config carry. §38d folded
+ * neutrals (walls / half-cover) into the same catalog, so a neutral unit carries
+ * its own catalog id (`'wall'` / `'half_cover'`) here rather than a shared
+ * sentinel — a single `unit.archetype` lookup still answers config questions for
+ * every unit, combatant or neutral.
  *
  * I5 — the single `'melee'` archetype (renamed `'mercenary'`) split into a
  * family of melee subclasses (`mercenary` = the old melee baseline, `adventurer` =
@@ -54,10 +54,14 @@ export type Team = 'player' | 'enemy' | 'neutral';
 //   §29 demo roster: reaver · corrupter · ice_mage · warlock · luminant ·
 //                    banshee · stormcaller · shaman · ghoul
 export type Archetype = string;
-// `'environment'` is the neutral sentinel (walls / half-cover — no catalog entry
-// until §38d folds them in). Kept as a distinct alias for intent even though it
-// now widens to `string`; the runtime `=== 'environment'` guards still narrow.
-export type UnitArchetype = Archetype | 'environment';
+// §38d — the `'environment'` sentinel is RETIRED. Walls / half-cover are now
+// NEUTRAL `UnitDef` entries in the catalog (`config/units.json` → `NEUTRAL_DEFS`),
+// so a wall's `unit.archetype` is its catalog id (`'wall'` / `'half_cover'`) like
+// any other unit — no special string. `UnitArchetype` remains as the name for
+// "the archetype tag stored on a Unit / UnitSnapshot" (an alias for `Archetype`);
+// the archetype accessors treat any id absent from the COMBATANT catalog as a
+// non-combatant, returning the neutral default (targeting `nearest`, 0 damage).
+export type UnitArchetype = Archetype;
 
 /**
  * E1 — per-unit base stat block. Replaces the MVP `{maxHp, attackDamage,

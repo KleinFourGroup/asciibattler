@@ -138,9 +138,10 @@ function updateTargetDefault(unit: Unit, world: World): void {
 
   // (c) drop a target we've been unable to see for too long — §38c: the ranged
   // `=== 'ranged'` special-case became the `UnitDef.retargetOnLosLoss` capability
-  // flag (read at call time off the catalog). Environment entities never seek a
-  // target and carry no catalog entry, so they short-circuit false.
-  if (unit.archetype !== 'environment' && UNIT_DEFS[unit.archetype].retargetOnLosLoss) {
+  // flag (read at call time off the catalog). §38d — a NEUTRAL unit (wall /
+  // half-cover) never seeks a target and is absent from the COMBATANT catalog, so
+  // the optional chain short-circuits false (the removed sentinel guard's value).
+  if (UNIT_DEFS[unit.archetype]?.retargetOnLosLoss) {
     const visible = hasLineOfSight(unit.position, current.position, collectLosBlockers(world));
     if (visible) {
       unit.outOfLosTicks = 0;

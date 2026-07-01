@@ -46,7 +46,7 @@ function spawnAt(world: World, team: Team, pos: GridCoord) {
 }
 
 function wallAt(world: World, pos: GridCoord) {
-  return world.spawnEnvironment({ glyph: '#', position: pos });
+  return world.spawnEnvironment({ archetype: 'wall', position: pos });
 }
 
 describe('cellKey / cellsOccupiedBy / planeOf — the seams', () => {

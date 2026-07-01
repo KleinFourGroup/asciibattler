@@ -124,11 +124,10 @@ export function unitCardFromTemplate(template: UnitTemplate): UnitCardData {
  *  block as every other surface, so the card can't disagree with the unit. */
 export function unitCardFromUnit(unit: Unit): UnitCardData {
   return {
-    // `unit.archetype` is `UnitArchetype` (Archetype | 'environment'); only
-    // real combatants are carded (neutral walls are filtered out before this),
-    // so the `environment` arm is unreachable — the narrow just keeps the
-    // shared `Archetype` field (read by the full variant) honest.
-    archetype: unit.archetype === 'environment' ? 'mercenary' : unit.archetype,
+    // §38d — only real combatants are carded (neutral walls / half-cover are
+    // filtered out by team before this), so `unit.archetype` is a combatant
+    // catalog id here; it feeds the shared `Archetype` field the full variant reads.
+    archetype: unit.archetype,
     glyph: unit.glyph,
     level: displayLevel(unit.level),
     stats: unit.stats,

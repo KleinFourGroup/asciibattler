@@ -124,16 +124,16 @@ export function inertDerived(maxHp: number): UnitDerived {
  * `UnitDef.damageStat` catalog field (`config/units.json`), read straight off
  * `UNIT_DEFS` here. A striker declares its scaling stat as pure data; an absent
  * field (non-strikers healer/shaman) resolves to 0 — the same value the switch's
- * explicit `return 0` cases produced, so this is byte-identical. Environment
- * entities never strike and carry no catalog entry, so they short-circuit to 0
- * (mirrors `targetingForArchetype`'s guard). Reads `UNIT_DEFS` at CALL time, not
+ * explicit `return 0` cases produced, so this is byte-identical. §38d — a NEUTRAL
+ * unit (wall / half-cover) never strikes and is absent from the COMBATANT catalog
+ * (`UNIT_DEFS`), so the optional chain resolves to 0 — the same value the removed
+ * `=== 'environment'` sentinel guard produced. Reads `UNIT_DEFS` at CALL time, not
  * module-eval — stats.ts sits inside the `config/units ⇄ sim` import cycle, so a
  * module-eval read of the not-yet-initialized catalog would throw (the pattern
  * every config-reading sim module follows).
  */
 export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): number {
-  if (archetype === 'environment') return 0;
-  const key = UNIT_DEFS[archetype].damageStat;
+  const key = UNIT_DEFS[archetype]?.damageStat;
   return key ? stats[key] : 0;
 }
 

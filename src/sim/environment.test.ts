@@ -4,9 +4,10 @@ import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import { findTarget } from './Targeting';
 import { Unit } from './Unit';
-import { WALL_GLYPH, spawnWall } from './environment';
+import { WALL_GLYPH, HALF_COVER_GLYPH, spawnWall, spawnHalfCover } from './environment';
 import { deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
+import { NEUTRAL_DEFS } from '../config/units';
 import type { GameEvents } from '../core/events';
 
 describe('environment / spawnWall', () => {
@@ -16,11 +17,35 @@ describe('environment / spawnWall', () => {
     const wall = spawnWall(w, { x: 5, y: 5 });
 
     expect(wall.team).toBe('neutral');
-    expect(wall.archetype).toBe('environment');
+    // §38d — walls now carry the `wall` catalog id, not the retired `environment`
+    // sentinel; the fold resolves glyph / flat HP / LOS-blocking from NEUTRAL_DEFS.
+    expect(wall.archetype).toBe('wall');
     expect(wall.glyph).toBe(WALL_GLYPH);
+    expect(wall.blocksLineOfSight).toBe(true);
     expect(wall.position).toEqual({ x: 5, y: 5 });
     expect(wall.behaviors).toEqual([]);
     expect(wall.activeAction).toBeNull();
+  });
+
+  it('§38d — a catalog-spawned wall/half-cover matches the old spawnEnvironment shape', () => {
+    const bus = new EventBus<GameEvents>();
+    const w = new World(bus, new RNG(1));
+
+    const wall = spawnWall(w, { x: 1, y: 1 });
+    expect(wall.archetype).toBe('wall');
+    expect(wall.glyph).toBe(WALL_GLYPH);
+    expect(wall.blocksLineOfSight).toBe(true); // wall semantics (default)
+    expect(wall.derived.maxHp).toBe(NEUTRAL_DEFS.wall!.hp); // flat HP from the def
+
+    const cover = spawnHalfCover(w, { x: 2, y: 2 });
+    expect(cover.archetype).toBe('half_cover');
+    expect(cover.glyph).toBe(HALF_COVER_GLYPH);
+    expect(cover.blocksLineOfSight).toBe(false); // the D6 LOS contract, on the def
+    expect(cover.behaviors).toEqual([]);
+
+    // The glyph constants must not drift from the catalog entries the fold reads.
+    expect(NEUTRAL_DEFS.wall!.glyph).toBe(WALL_GLYPH);
+    expect(NEUTRAL_DEFS.half_cover!.glyph).toBe(HALF_COVER_GLYPH);
   });
 
   it('emits unit:spawned just like a combatant', () => {
@@ -75,7 +100,7 @@ describe('environment / spawnWall', () => {
 
     expect(restored.units).toHaveLength(2);
     expect(restored.units[0]!.team).toBe('neutral');
-    expect(restored.units[0]!.archetype).toBe('environment');
+    expect(restored.units[0]!.archetype).toBe('wall');
     expect(restored.units[0]!.glyph).toBe(WALL_GLYPH);
     expect(restored.units[0]!.position).toEqual({ x: 2, y: 3 });
     expect(restored.units[1]!.position).toEqual({ x: 4, y: 5 });

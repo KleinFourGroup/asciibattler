@@ -407,13 +407,10 @@ describe('A2 round-trip: World', () => {
 
   it('D6: round-trips per-unit blocksLineOfSight (walls true, half-cover false)', () => {
     const { world } = freshBattle(99999);
-    // Walls default true; spawnHalfCover sets false.
-    const wall = world.spawnEnvironment({ glyph: '#', position: { x: 0, y: 6 } });
-    const halfCover = world.spawnEnvironment({
-      glyph: '╥',
-      position: { x: 1, y: 6 },
-      blocksLineOfSight: false,
-    });
+    // §38d — blocksLineOfSight is intrinsic to the neutral kind (wall true,
+    // half_cover false), resolved from the catalog by archetype.
+    const wall = world.spawnEnvironment({ archetype: 'wall', position: { x: 0, y: 6 } });
+    const halfCover = world.spawnEnvironment({ archetype: 'half_cover', position: { x: 1, y: 6 } });
     expect(wall.blocksLineOfSight).toBe(true);
     expect(halfCover.blocksLineOfSight).toBe(false);
 

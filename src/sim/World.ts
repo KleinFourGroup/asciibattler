@@ -67,6 +67,7 @@ import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
 import { STATS } from '../config/stats';
 import { LEVELING } from '../config/leveling';
+import { NEUTRAL_DEFS } from '../config/units';
 
 /**
  * Schema history:
@@ -1770,34 +1771,40 @@ export class World {
   }
 
   /**
-   * Spawn an environment entity — a wall, future shrine, hazard, anything
-   * that lives on the grid as a unit but isn't a combatant. Defaults to
-   * the `'neutral'` team (Targeting skips, HUD ignores, checkBattleEnd
-   * doesn't count) and a single-HP degenerate stat block. Has no
-   * `behaviors`, so the selector never fires for it. Renderer-side
+   * Spawn an environment entity — a wall, half-cover, future rubble: anything
+   * that lives on the grid as a unit but isn't a combatant. Defaults to the
+   * `'neutral'` team (Targeting skips, HUD ignores, checkBattleEnd doesn't
+   * count). Has no `behaviors`, so the selector never fires for it. Renderer-side
    * suppresses bloom + bars for the neutral team.
    *
-   * For destructible variants (future C1b+), pass a non-trivial `maxHp`;
-   * Targeting still ignores neutrals by team, so destructibility would
-   * need a separate "damage walls" hook (out of scope for C1a).
+   * §38d — the fold: `archetype` names a NEUTRAL `UnitDef` (`config/units.json`
+   * → `NEUTRAL_DEFS`), and the glyph / flat HP / LOS-blocking come from that def
+   * rather than being passed in. This is the old `ZERO_STATS` / `inertDerived`
+   * path made data-driven (the keystone). `maxHp` still overrides the def's flat
+   * HP for tests / future destructible variants; Targeting ignores neutrals by
+   * team, so destructibility stays a separate hook (§40).
    */
   spawnEnvironment(opts: {
-    glyph: string;
+    archetype: string;
     position: GridCoord;
     maxHp?: number;
     team?: Team;
-    /** D6: defaults to `true` (wall semantics). Half-cover passes `false`. */
-    blocksLineOfSight?: boolean;
   }): Unit {
+    const def = NEUTRAL_DEFS[opts.archetype];
+    if (!def) {
+      throw new Error(
+        `spawnEnvironment: '${opts.archetype}' is not a neutral UnitDef (config/units.json)`,
+      );
+    }
     return this.addUnit(
       {
         team: opts.team ?? 'neutral',
-        archetype: 'environment',
-        glyph: opts.glyph,
+        archetype: opts.archetype,
+        glyph: def.glyph,
         stats: ZERO_STATS,
-        derived: inertDerived(opts.maxHp ?? 1),
+        derived: inertDerived(opts.maxHp ?? def.hp),
         position: opts.position,
-        blocksLineOfSight: opts.blocksLineOfSight ?? true,
+        blocksLineOfSight: def.blocksLineOfSight,
       },
       true,
     );

@@ -22,15 +22,25 @@ import type { GridCoord } from '../core/types';
 import type { Unit } from './Unit';
 import type { World } from './World';
 
-/** Glyph rendered for impassable wall obstacles. Roguelike convention. */
+/** Glyph rendered for impassable wall obstacles. Roguelike convention. Mirrors
+ *  the `wall` catalog entry's glyph (asserted in environment.test). */
 export const WALL_GLYPH = '#';
 
 /**
  * D6 — half-cover glyph. Box-drawing `╥` (U+2565): a horizontal rail
  * with two short vertical posts, reading as a low fence. JetBrains Mono
- * supports it (verified at FontAtlas build).
+ * supports it (verified at FontAtlas build). Mirrors the `half_cover` catalog
+ * entry's glyph.
  */
 export const HALF_COVER_GLYPH = '╥';
+
+/**
+ * §38d — the NEUTRAL catalog ids walls / half-cover spawn as. `spawnEnvironment`
+ * resolves the glyph / flat HP / LOS-blocking from `NEUTRAL_DEFS[archetype]`, so
+ * these are the single source binding a spawn wrapper to its catalog entry.
+ */
+export const WALL_ARCHETYPE = 'wall';
+export const HALF_COVER_ARCHETYPE = 'half_cover';
 
 /**
  * Spawn a wall at the given cell.
@@ -51,8 +61,14 @@ export const HALF_COVER_GLYPH = '╥';
  * Default `blocksLineOfSight: true` — ranged units can't shoot through
  * walls (the C1b LOS contract).
  */
-export function spawnWall(world: World, position: GridCoord, maxHp = 1): Unit {
-  return world.spawnEnvironment({ glyph: WALL_GLYPH, position, maxHp });
+export function spawnWall(world: World, position: GridCoord, maxHp?: number): Unit {
+  // §38d — glyph + the flat HP default now come from the `wall` catalog entry;
+  // `maxHp` still overrides (tests / future destructible variants).
+  return world.spawnEnvironment({
+    archetype: WALL_ARCHETYPE,
+    position,
+    ...(maxHp !== undefined ? { maxHp } : {}),
+  });
 }
 
 /**
@@ -69,11 +85,12 @@ export function spawnWall(world: World, position: GridCoord, maxHp = 1): Unit {
  * hook ("ranged defense bonus for shooting from behind half-cover")
  * is explicitly C2-era and stays unbuilt in D6.
  */
-export function spawnHalfCover(world: World, position: GridCoord, maxHp = 1): Unit {
+export function spawnHalfCover(world: World, position: GridCoord, maxHp?: number): Unit {
+  // §38d — glyph + `blocksLineOfSight: false` (the D6 LOS contract) now live on
+  // the `half_cover` catalog entry; `maxHp` still overrides the flat HP default.
   return world.spawnEnvironment({
-    glyph: HALF_COVER_GLYPH,
+    archetype: HALF_COVER_ARCHETYPE,
     position,
-    maxHp,
-    blocksLineOfSight: false,
+    ...(maxHp !== undefined ? { maxHp } : {}),
   });
 }

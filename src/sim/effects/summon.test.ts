@@ -42,7 +42,7 @@ function spawnAt(world: World, team: Team, pos: GridCoord): Unit {
 
 /** Occupy a cell with a neutral obstacle (a wall), to fence off the BFS. */
 function block(world: World, pos: GridCoord): void {
-  world.spawnEnvironment({ glyph: '#', position: pos });
+  world.spawnEnvironment({ archetype: 'wall', position: pos });
 }
 
 function ctx(over: Partial<OpFireContext> & Pick<OpFireContext, 'caster' | 'world'>): OpFireContext {

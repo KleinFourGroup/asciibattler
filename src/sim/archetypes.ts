@@ -68,14 +68,15 @@ export function rangeForArchetype(archetype: Archetype): number {
  * `minRange 0` for every weapon today → byte-identical (no kiting) until the O4
  * value commit sets bow/mage/catapult floors.
  *
- * Accepts the full `UnitArchetype` (like `targetingForArchetype`): environment
- * entities (walls/half-cover) never seek a firing position, so they map to 0 and
- * `MovementBehavior` needn't pre-narrow `unit.archetype` (a wall has no behaviors
- * and never reaches the band logic anyway).
+ * §38d — a NEUTRAL unit (walls / half-cover) never seeks a firing position and is
+ * absent from the COMBATANT catalog, so the optional chain maps it to 0 (the value
+ * the removed `=== 'environment'` guard produced); `MovementBehavior` needn't
+ * pre-narrow `unit.archetype` (a wall has no behaviors and never reaches the band
+ * logic anyway).
  */
 export function minRangeForArchetype(archetype: UnitArchetype): number {
-  if (archetype === 'environment') return 0;
-  const ids = CONFIGS[archetype].abilities;
+  const ids = CONFIGS[archetype]?.abilities;
+  if (!ids) return 0;
   const engaging = ids.filter((id) => abilityDef(id).target.kind !== 'self');
   const reach = engaging.length > 0 ? engaging : ids;
   let best = reach[0]!;
@@ -89,13 +90,13 @@ export function minRangeForArchetype(archetype: UnitArchetype): number {
  * Per-archetype target-selection strategy id (resolved against the registry
  * in `src/sim/targetingStrategies.ts`). Resolved at spawn and stashed on
  * `Unit.targeting` so the leaf `Targeting.ts` needn't import the config layer.
- * Accepts the full `UnitArchetype`: environment entities (walls/half-cover)
- * never seek a target, so they get the harmless `nearest` default and callers
- * needn't branch on team/neutral first.
+ * §38d — a NEUTRAL unit (walls / half-cover) never seeks a target and is absent
+ * from the COMBATANT catalog, so the optional chain gives it the harmless
+ * `nearest` default (the value the removed `=== 'environment'` guard produced);
+ * callers needn't branch on team/neutral first.
  */
 export function targetingForArchetype(archetype: UnitArchetype): string {
-  if (archetype === 'environment') return 'nearest';
-  return CONFIGS[archetype].targeting;
+  return CONFIGS[archetype]?.targeting ?? 'nearest';
 }
 
 /**

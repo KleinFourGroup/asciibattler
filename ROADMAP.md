@@ -1005,10 +1005,14 @@ stays the canonical corner).
   SpriteRenderer per-instance `size` attr, E6.B); the sprite anchor reads the footprint
   center, the logic stays on the corner. Browser-verify. *Test (browser):* a 2×2 unit
   renders at footprint scale, centered.
-- **39e — the layout editor (multi-tile validation + placement).** Multi-tile
-  spawn-room validation (does an N×N spawn fit?) + placing multi-tile entities. *Test:*
-  spawn-room fit validation rejects a too-small room; a multi-tile entity places + reads
-  back.
+- **39e — FOLDED INTO §40 (2026-07-01).** Both halves were forward-looking with no
+  §39 consumer: no footprint-bearing entity exists until §40's rubble, and §40 already
+  owns the layout editor + its schema (`40d`). Building placement in §39 would have
+  invented throwaway schema §40 redefines, so — per the "inert until §40's rubble"
+  recommendation — the multi-tile spawn-room fit validation (does an N×N deploy fit? —
+  a thin wrapper over 39c's `anchorFootprint`) + multi-tile entity placement ride
+  §40's `40d`. **Phase 39 closes at 39d** (geometry + pathing + anchoring + render, all
+  byte-identical, fuzz 212 held).
 
 ---
 
@@ -1019,7 +1023,9 @@ rubble/debris (1×1–3×3, configurable HP), plus finally enabling **optional**
 destructibility for walls + half-cover. Authored as neutral `UnitDef`s (§38) with real
 HP + footprints (§39) + susceptibility. **No WorldSnapshot bump expected** (HP already
 serialized); the layout schema gains destructible HP fields (config). Balance
-implications → §41.
+implications → §41. **Absorbs §39e** (folded 2026-07-01) — the multi-tile spawn-room
+fit validation + editor placement land here, where the first footprint-bearing entity
+(rubble) is actually born (see `40d`).
 
 **Shape:**
 - **The rubble `UnitDef`(s)** — neutral, no abilities, a flat HP pool, a footprint
@@ -1094,9 +1100,13 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
   (default = today's indestructible 1-HP; a higher value = destructible) — the lifecycle
   already runs end-to-end. *Test:* a destructible wall falls to focused fire; the
   default stays indestructible.
-- **40d — the layout editor.** Paint rubble (size + HP) + toggle wall/cover
-  destructibility. Browser-verify. *Test (browser):* paint rubble + toggle
-  destructibility; both read back.
+- **40d — the layout editor (absorbs §39e).** Paint rubble (size + HP) + toggle
+  wall/cover destructibility + **the multi-tile spawn-room fit validation folded from
+  §39e** — does an N×N deploy fit at a spawn region? A thin wrapper over §39c's
+  `anchorFootprint` (`region.tiles.some(t => anchorFootprint(t, size, …) !== null)`),
+  surfaced as an author warning for a too-cramped region. Browser-verify. *Test:* paint
+  rubble + toggle destructibility, both read back; spawn-room fit validation rejects a
+  too-small room.
 
 ---
 

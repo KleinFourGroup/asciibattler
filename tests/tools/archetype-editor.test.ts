@@ -19,8 +19,10 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   UNIT_DEFS,
+  ALL_UNIT_DEFS,
   UnitDefSchema,
   UnitDefsSchema,
+  CombatantUnitDefSchema,
   type UnitDef,
 } from '../../src/config/units';
 import { formatArchetypesJson } from '../../tools/archetype-editor/format';
@@ -37,12 +39,14 @@ describe('formatArchetypesJson', () => {
       fileURLToPath(new URL('../../config/units.json', import.meta.url)),
       'utf8',
     );
-    expect(norm(formatArchetypesJson(UNIT_DEFS))).toBe(norm(onDisk));
+    // §38d — format the FULL catalog (combatants + the neutral fold `wall` /
+    // `half_cover`); `UNIT_DEFS` is now the combatant-only split view.
+    expect(norm(formatArchetypesJson(ALL_UNIT_DEFS))).toBe(norm(onDisk));
   });
 
   it('round-trips through the game schema to a deep-equal config', () => {
-    const reparsed = UnitDefsSchema.parse(JSON.parse(formatArchetypesJson(UNIT_DEFS)));
-    expect(reparsed).toEqual(UNIT_DEFS);
+    const reparsed = UnitDefsSchema.parse(JSON.parse(formatArchetypesJson(ALL_UNIT_DEFS)));
+    expect(reparsed).toEqual(ALL_UNIT_DEFS);
   });
 
   // §30d — the editor can author a created (not-yet-wired) archetype. The
@@ -50,7 +54,9 @@ describe('formatArchetypesJson', () => {
   // per-entry `UnitDefSchema` (the validation the editor runs), including the
   // new entry's `draftable: false`.
   it('emits and per-entry round-trips a created archetype', () => {
-    const created: Record<string, UnitDef> = structuredClone(UNIT_DEFS);
+    // Seed from the full catalog so the per-entry round-trip also covers the
+    // neutral fold (`wall` / `half_cover`) through the formatter + schema.
+    const created: Record<string, UnitDef> = structuredClone(ALL_UNIT_DEFS);
     created.necromancer = { ...structuredClone(UNIT_DEFS.mage), glyph: 'N', draftable: false };
     const parsed = JSON.parse(formatArchetypesJson(created)) as Record<string, unknown>;
 
@@ -58,6 +64,6 @@ describe('formatArchetypesJson', () => {
     for (const [key, entry] of Object.entries(parsed)) {
       expect(UnitDefSchema.safeParse(entry).success, key).toBe(true);
     }
-    expect(UnitDefSchema.parse(parsed.necromancer).draftable).toBe(false);
+    expect(CombatantUnitDefSchema.parse(parsed.necromancer).draftable).toBe(false);
   });
 });

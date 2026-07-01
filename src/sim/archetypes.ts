@@ -1,6 +1,6 @@
 import type { RNG } from '../core/RNG';
 import type { Archetype, UnitArchetype, UnitTemplate } from './Unit';
-import { UNIT_DEFS, type UnitDef } from '../config/units';
+import { UNIT_DEFS, type CombatantUnitDef } from '../config/units';
 import { abilityDef } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
 
@@ -15,8 +15,15 @@ export type { Archetype };
  * validated by [src/config/units.ts](src/config/units.ts).
  * Re-exported as `ARCHETYPE_CONFIG` for tests that want to assert
  * baseStats / glyph without re-importing from config.
+ *
+ * §38d — the §38d neutral fold added `NEUTRAL_DEFS` (walls / half-cover / future
+ * rubble) as a SIBLING record; `UNIT_DEFS` stays the COMBATANT catalog (its
+ * de-facto pre-38d meaning), so every accessor here + the draft/telemetry/roster
+ * consumers of `ALL_ARCHETYPES` keep their exact combatant types with no union to
+ * narrow. Neutral defs are fetched off `NEUTRAL_DEFS` by the spawn + status-
+ * filter paths (`World` / `environment.ts`).
  */
-const CONFIGS: Record<Archetype, UnitDef> = UNIT_DEFS;
+const CONFIGS: Record<Archetype, CombatantUnitDef> = UNIT_DEFS;
 
 export function glyphForArchetype(archetype: Archetype): string {
   return CONFIGS[archetype].glyph;
@@ -160,7 +167,7 @@ export function scaledUnit(archetype: Archetype, level: number): UnitTemplate {
 
 // Re-exported for tests / fuzz harness diagnostic that want to peek
 // at the parsed config without reaching into the config module.
-export const ARCHETYPE_CONFIG: Record<Archetype, UnitDef> = CONFIGS;
+export const ARCHETYPE_CONFIG: Record<Archetype, CombatantUnitDef> = CONFIGS;
 
 /**
  * F1 — the draft / recruit pool: every defined archetype, in

@@ -121,7 +121,17 @@ const TargetingIdSchema = z.string().refine((id) => TARGETING_IDS.includes(id), 
 // validates an edited config against the SAME schema the game boots on — so the
 // editor's "is this valid?" can never drift from the game's load-time parse.
 // Dev-tool consumption only; no sim/snapshot/fuzz behavior reads these exports.
-export const UnitDefSchema = z.object({
+//
+// §38d — the per-entry schema became a UNION of two shapes: a COMBATANT (this
+// full ability-bearing archetype, unchanged from 38c) and a NEUTRAL (a wall /
+// half-cover / future §40 rubble — no abilities, a flat HP pool). They
+// discriminate STRUCTURALLY on required fields (a combatant has `abilities` +
+// `baseStats`; a neutral has `hp`), so no discriminant key had to be stamped
+// onto the 18 existing entries — they stay byte-identical. `isNeutralUnitDef`
+// (below) is the runtime narrow the fold's spawn path + the §38d-3 status filter
+// read; the `Combatant`-typed catalog view lives in `archetypes.ts` (`CONFIGS`),
+// which is why the combatant-side readers/tests never see the union.
+export const CombatantUnitDefSchema = z.object({
   glyph: z.string().length(1),
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,
@@ -173,6 +183,36 @@ export const UnitDefSchema = z.object({
   retargetOnLosLoss: z.boolean().optional(),
 });
 
+/**
+ * §38d — a NEUTRAL catalog entry: a wall / half-cover / (future §40) rubble.
+ * No abilities, no growth, no stat block — just a glyph + a flat `hp` pool. This
+ * folds `spawnEnvironment`'s hardcoded `ZERO_STATS` / `inertDerived(maxHp)` path
+ * into the one unified catalog (the keystone's whole point). `blocksLineOfSight`
+ * is intrinsic to the KIND (wall opaque, half-cover transparent — the D6 LOS
+ * contract), so it moved off the spawn call onto the def; `footprint` rides along
+ * for §40's multi-tile rubble; `statusSusceptibility` is the burnable-not-
+ * poisonable allow-filter (38d-3 consults it in `applyStatusEffect`).
+ */
+export const NeutralUnitDefSchema = z.object({
+  glyph: z.string().length(1),
+  // Flat HP pool (walls / half-cover = 1 ⇒ practically indestructible until §40
+  // lands damage on neutral cells). The cap is a typo guard, not a design knob.
+  hp: z.number().int().positive().max(999),
+  // D6 LOS contract: walls block ranged sight (default true), half-cover doesn't.
+  blocksLineOfSight: z.boolean().default(true),
+  // §39 seam — an axis-aligned N×N body; inert (single-cell) until §40's rubble.
+  footprint: z.number().int().min(1).max(4).default(1),
+  // §38d-3 — the status allow-filter (`applyStatusEffect` consults it). Absent ⇒
+  // susceptible to all; a wall opts into burn/frozen, out of poison/bleed.
+  statusSusceptibility: z.array(z.string()).optional(),
+});
+
+// The per-entry schema the record validates + the editor checks against: a
+// COMBATANT or a NEUTRAL. `z.union` tries the combatant arm first; a neutral
+// entry (no `abilities`/`baseStats`) fails it and falls through to the neutral
+// arm — a clean structural discriminant, no discriminant key needed.
+export const UnitDefSchema = z.union([CombatantUnitDefSchema, NeutralUnitDefSchema]);
+
 // §38c — the KEYSTONE relax: an OPEN `string → UnitDef` record, not a fixed
 // 18-key object. The closed `Archetype` union is gone (`src/sim/Unit.ts`), so
 // the catalog is now the single source of which unit kinds exist — validated
@@ -186,11 +226,48 @@ export const UnitDefSchema = z.object({
 // round-trips (it emits in parsed-shape order).
 export const UnitDefsSchema = z.record(z.string(), UnitDefSchema);
 
+export type CombatantUnitDef = z.infer<typeof CombatantUnitDefSchema>;
+export type NeutralUnitDef = z.infer<typeof NeutralUnitDefSchema>;
 export type UnitDef = z.infer<typeof UnitDefSchema>;
 export type UnitDefsConfig = Record<string, UnitDef>;
 export type GrowthRates = z.infer<typeof GrowthRatesSchema>;
 
-export const UNIT_DEFS: UnitDefsConfig = UnitDefsSchema.parse(unitsJson);
+/**
+ * §38d — the runtime narrow the union needs. A neutral entry (wall / half-cover
+ * / rubble) carries a flat `hp` pool + no abilities; a combatant never has `hp`,
+ * so membership of the `hp` key is a sound discriminant. Splits the parsed
+ * catalog into `UNIT_DEFS` / `NEUTRAL_DEFS` (below) and is re-exported for the
+ * spawn path + the status-susceptibility filter.
+ */
+export function isNeutralUnitDef(def: UnitDef): def is NeutralUnitDef {
+  return 'hp' in def;
+}
+
+/**
+ * The FULL parsed catalog — combatants + neutrals, in `config/units.json` key
+ * order — validated once at load. The byte-faithful mirror of the file, iterated
+ * by the archetype-editor formatter + the whole-catalog round-trip tests.
+ */
+export const ALL_UNIT_DEFS: UnitDefsConfig = UnitDefsSchema.parse(unitsJson);
+
+/**
+ * §38d — the catalog is SPLIT by kind at runtime. Every pre-38d consumer reads
+ * the COMBATANT archetypes (baseStats / abilities / growthRates), and walls were
+ * the `environment` sentinel — NEVER in this record — so `UNIT_DEFS` stays the
+ * combatant catalog and every existing call site keeps its exact pre-38d types +
+ * behavior (no union to narrow). NEUTRAL entries (walls / half-cover / future
+ * rubble) live in `NEUTRAL_DEFS`, read by the fold's spawn path + the §38d-3
+ * status filter. Both are views over the one `ALL_UNIT_DEFS` parse of the one
+ * `units.json` — the unification is the file + schema, not a second record.
+ */
+export const UNIT_DEFS: Record<string, CombatantUnitDef> = Object.fromEntries(
+  Object.entries(ALL_UNIT_DEFS).filter(
+    (e): e is [string, CombatantUnitDef] => !isNeutralUnitDef(e[1]),
+  ),
+);
+export const NEUTRAL_DEFS: Record<string, NeutralUnitDef> = Object.fromEntries(
+  Object.entries(ALL_UNIT_DEFS).filter((e): e is [string, NeutralUnitDef] => isNeutralUnitDef(e[1])),
+);
 
 /**
  * §38c boot-assert — the ids the game hard-references by string LITERAL must

@@ -37,8 +37,9 @@
 import './editor.css';
 import {
   UNIT_DEFS,
+  NEUTRAL_DEFS,
   UnitDefSchema,
-  type UnitDef,
+  type CombatantUnitDef,
 } from '../../src/config/units';
 import type { UnitStats } from '../../src/sim/Unit';
 import { STAT_LABELS } from '../../src/ui/statLabels';
@@ -87,7 +88,11 @@ const SCALING_LABEL: Record<string, string> = {
 // it, the schema validates it, the formatter emits it. UNIT_DEFS stays the
 // pristine baseline that "Revert all" restores from. §30d: keys are open (create /
 // delete), so it's a string-keyed record.
-let working: Record<string, UnitDef> = structuredClone(UNIT_DEFS);
+// §38d — the editor operates on the COMBATANT catalog (`UNIT_DEFS`); NEUTRAL
+// entries (walls / half-cover) aren't editable here until §38e's rework, but are
+// preserved verbatim on Save (see `updateExport`). So `working` is combatant-typed
+// and its field-access code is unchanged from 38c.
+let working: Record<string, CombatantUnitDef> = structuredClone(UNIT_DEFS);
 let activeKey: ArchetypeKey = Object.keys(working)[0]!;
 let previewLevel = 1;
 let refPrecision = 5;
@@ -359,7 +364,10 @@ function refreshValidation(): void {
 }
 
 function refreshExport(): void {
-  exportEl.value = formatArchetypesJson(working);
+  // §38d — re-attach the NEUTRAL entries (walls / half-cover) verbatim after the
+  // edited combatants, so a Save reproduces the whole `units.json` (combatant then
+  // neutral key order matches the file) rather than dropping the neutral fold.
+  exportEl.value = formatArchetypesJson({ ...working, ...NEUTRAL_DEFS });
 }
 
 function refreshPreview(): void {

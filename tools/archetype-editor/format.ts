@@ -43,6 +43,24 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
     const a = config[name];
     const tail = i === keys.length - 1 ? '' : ',';
     parts.push(`  ${JSON.stringify(name)}: {`);
+    // §38d — a NEUTRAL entry (wall / half-cover / rubble) is a glyph + flat `hp`,
+    // no abilities/stat blocks. Discriminate on the `hp` key (structural, matching
+    // `isNeutralUnitDef`) so the formatter stays a types-only node-safe module.
+    // Fields in canonical order; only the non-default `blocksLineOfSight: false`
+    // (half-cover) + a present `statusSusceptibility` are emitted, so the file
+    // diff stays minimal and a re-parse fills the omitted defaults back.
+    if ('hp' in a) {
+      const fields = [
+        `    "glyph": ${JSON.stringify(a.glyph)}`,
+        `    "hp": ${JSON.stringify(a.hp)}`,
+      ];
+      if (a.blocksLineOfSight === false) fields.push(`    "blocksLineOfSight": false`);
+      if (a.statusSusceptibility !== undefined)
+        fields.push(`    "statusSusceptibility": ${JSON.stringify(a.statusSusceptibility)}`);
+      parts.push(fields.join(',\n'));
+      parts.push(`  }${tail}`);
+      return;
+    }
     parts.push(`    "glyph": ${JSON.stringify(a.glyph)},`);
     parts.push(`    "abilities": ${JSON.stringify(a.abilities)},`);
     parts.push(`    "targeting": ${JSON.stringify(a.targeting)},`);

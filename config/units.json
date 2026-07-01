@@ -579,5 +579,16 @@
       "mobility": 0.07,
       "power": 0.05
     }
+  },
+  "wall": {
+    "glyph": "#",
+    "hp": 1,
+    "statusSusceptibility": ["burn","frozen"]
+  },
+  "half_cover": {
+    "glyph": "╥",
+    "hp": 1,
+    "blocksLineOfSight": false,
+    "statusSusceptibility": ["burn","frozen"]
   }
 }

@@ -6,7 +6,13 @@ import { RNG } from '../../core/RNG';
 import { deriveStats } from '../stats';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
-import { unitsInCells, squareCells, resolveAreaVictims, affectsMatch } from './targeting';
+import {
+  unitsInCells,
+  squareCells,
+  resolveAreaVictims,
+  affectsMatch,
+  isCombatTargetable,
+} from './targeting';
 
 /**
  * Phase Y2 — the area/targeting resolution primitives. Explicit-input mechanic
@@ -91,10 +97,10 @@ describe('resolveAreaVictims — reproduces the MagicBolt blast set', () => {
     ]);
   });
 
-  it('spares the caster team, neutrals, the dead, and out-of-radius units', () => {
+  it('spares the caster team, INDESTRUCTIBLE (hp-less) neutrals, the dead, and out-of-radius units', () => {
     const caster = makeUnit('player', { x: 5, y: 5 }, 'mage'); // dead-center, same team
     const ally = makeUnit('player', { x: 5, y: 6 });
-    const wall = makeUnit('neutral', { x: 6, y: 5 }, 'environment');
+    const wall = makeUnit('neutral', { x: 6, y: 5 }, 'wall'); // hp-less = indestructible
     const corpse = makeUnit('enemy', { x: 4, y: 5 });
     corpse.currentHp = 0;
     const outside = makeUnit('enemy', { x: 5, y: 7 }); // chebyshev 2
@@ -102,5 +108,45 @@ describe('resolveAreaVictims — reproduces the MagicBolt blast set', () => {
     const w = world([caster, ally, wall, corpse, outside, enemy]);
     const victims = resolveAreaVictims(w, caster, { x: 5, y: 5 }, params);
     expect(victims.map((v) => v.unit)).toEqual([enemy]); // only the live enemy in radius
+  });
+
+  it('§40b — a DESTRUCTIBLE neutral (rubble) IS caught by an affects:enemies blast', () => {
+    const caster = makeUnit('player', { x: 0, y: 0 }, 'mage');
+    const enemy = makeUnit('enemy', { x: 5, y: 5 }); // center
+    const rubble = makeUnit('neutral', { x: 6, y: 5 }, 'rubble_1x1'); // ring, hp-present
+    const wall = makeUnit('neutral', { x: 4, y: 5 }, 'wall'); // ring, hp-less = spared
+    const w = world([caster, enemy, rubble, wall]);
+    const victims = resolveAreaVictims(w, caster, { x: 5, y: 5 }, params);
+    // The blast chews the enemy AND the destructible rubble; the indestructible
+    // wall is untouched (HP-presence decides). world.units order preserved.
+    expect(victims).toEqual([
+      { unit: enemy, mult: 1 },
+      { unit: rubble, mult: 0.5 },
+    ]);
+  });
+});
+
+describe('isCombatTargetable — HP-presence (§40b)', () => {
+  it('a living combatant is targetable; a corpse is not', () => {
+    const alive = makeUnit('enemy', { x: 0, y: 0 });
+    const dead = makeUnit('enemy', { x: 1, y: 1 });
+    dead.currentHp = 0;
+    expect(isCombatTargetable(alive)).toBe(true);
+    expect(isCombatTargetable(dead)).toBe(false);
+  });
+
+  it('a DESTRUCTIBLE neutral (rubble, hp-present) is targetable; hp-less wall/cover are not', () => {
+    const rubble = makeUnit('neutral', { x: 0, y: 0 }, 'rubble_1x1');
+    const wall = makeUnit('neutral', { x: 1, y: 1 }, 'wall');
+    const cover = makeUnit('neutral', { x: 2, y: 2 }, 'half_cover');
+    expect(isCombatTargetable(rubble)).toBe(true);
+    expect(isCombatTargetable(wall)).toBe(false);
+    expect(isCombatTargetable(cover)).toBe(false);
+  });
+
+  it('a destructible neutral at 0 HP is not targetable (already reaped)', () => {
+    const rubble = makeUnit('neutral', { x: 0, y: 0 }, 'rubble_1x1');
+    rubble.currentHp = 0;
+    expect(isCombatTargetable(rubble)).toBe(false);
   });
 });

@@ -582,12 +582,10 @@
   },
   "wall": {
     "glyph": "#",
-    "hp": 1,
     "statusSusceptibility": ["burn","frozen"]
   },
   "half_cover": {
     "glyph": "╥",
-    "hp": 1,
     "blocksLineOfSight": false,
     "statusSusceptibility": ["burn","frozen"]
   },

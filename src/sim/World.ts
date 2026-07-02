@@ -253,6 +253,12 @@ import { NEUTRAL_DEFS, ALL_UNIT_DEFS } from '../config/units';
  */
 const WORLD_SCHEMA_VERSION = 31;
 
+/** §40b — filler maxHp for an hp-less (indestructible) neutral so its Unit is
+ *  "alive" enough to block pathing / LOS. Never a damage target — `isCombatTargetable`
+ *  keys off the def's HP-PRESENCE, not this value. `1` matches the pre-§40b nominal
+ *  `hp:1` walls exactly (byte-identical). */
+const NOMINAL_NEUTRAL_MAXHP = 1;
+
 /**
  * Deterministic team iteration order for the post-death overflow scan.
  * Neutrals never appear in the queue (walls don't have templates), so
@@ -1813,7 +1819,12 @@ export class World {
         archetype: opts.archetype,
         glyph: def.glyph,
         stats: ZERO_STATS,
-        derived: inertDerived(opts.maxHp ?? def.hp),
+        // §40b — an hp-less neutral (indestructible wall / half-cover) has no `hp`
+        // on its def, so fall back to a nominal maxHp so the Unit is still "alive"
+        // (blocks pathing / LOS). Cosmetic — `isCombatTargetable` keys off the
+        // def's HP-PRESENCE, so this filler HP is never a damage target. Matches
+        // the pre-§40b `hp:1` walls exactly (byte-identical).
+        derived: inertDerived(opts.maxHp ?? def.hp ?? NOMINAL_NEUTRAL_MAXHP),
         position: opts.position,
         blocksLineOfSight: def.blocksLineOfSight,
       },

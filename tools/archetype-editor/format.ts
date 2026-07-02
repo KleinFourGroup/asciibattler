@@ -43,17 +43,20 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
     const a = config[name];
     const tail = i === keys.length - 1 ? '' : ',';
     parts.push(`  ${JSON.stringify(name)}: {`);
-    // §38d — a NEUTRAL entry (wall / half-cover / rubble) is a glyph + flat `hp`,
-    // no abilities/stat blocks. Discriminate on the `hp` key (structural, matching
-    // `isNeutralUnitDef`) so the formatter stays a types-only node-safe module.
-    // Fields in canonical order; only the non-default `blocksLineOfSight: false`
-    // (half-cover) + a present `statusSusceptibility` are emitted, so the file
-    // diff stays minimal and a re-parse fills the omitted defaults back.
-    if ('hp' in a) {
-      const fields = [
-        `    "glyph": ${JSON.stringify(a.glyph)}`,
-        `    "hp": ${JSON.stringify(a.hp)}`,
-      ];
+    // §38d — a NEUTRAL entry (wall / half-cover / rubble) is a glyph + optional
+    // `hp`, no abilities/stat blocks. §40b: discriminate on `baseStats` (a
+    // combatant-only key), NOT `hp` — `hp` became OPTIONAL (HP-presence =
+    // destructibility), so an hp-less wall must still route here. Matches
+    // `isNeutralUnitDef`; stays a types-only node-safe module. Fields in canonical
+    // order; only a present `hp` (destructible rubble), the non-default
+    // `blocksLineOfSight: false` (half-cover), a non-default `footprint`, and a
+    // present `statusSusceptibility` are emitted, so the file diff stays minimal and
+    // a re-parse fills the omitted defaults back.
+    if (!('baseStats' in a)) {
+      const fields = [`    "glyph": ${JSON.stringify(a.glyph)}`];
+      // §40b — emit `hp` only when the neutral carries one (destructible rubble);
+      // an hp-less wall / half-cover is indestructible and omits it.
+      if (a.hp !== undefined) fields.push(`    "hp": ${JSON.stringify(a.hp)}`);
       if (a.blocksLineOfSight === false) fields.push(`    "blocksLineOfSight": false`);
       // §40a — a multi-tile rubble neutral declares its footprint (N∈2..4). The
       // default 1 (walls / half-cover / 1×1 rubble) stays omitted so their file

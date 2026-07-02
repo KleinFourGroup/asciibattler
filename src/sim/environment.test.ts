@@ -46,7 +46,11 @@ describe('environment / spawnWall', () => {
     expect(wall.archetype).toBe('wall');
     expect(wall.glyph).toBe(WALL_GLYPH);
     expect(wall.blocksLineOfSight).toBe(true); // wall semantics (default)
-    expect(wall.derived.maxHp).toBe(NEUTRAL_DEFS.wall!.hp); // flat HP from the def
+    // §40b — a wall is hp-LESS (indestructible); `spawnEnvironment` falls back to
+    // the nominal filler maxHp (1, `NOMINAL_NEUTRAL_MAXHP` — byte-identical to the
+    // pre-§40b `hp:1`), which is never a damage target.
+    expect(NEUTRAL_DEFS.wall!.hp).toBeUndefined();
+    expect(wall.derived.maxHp).toBe(1);
 
     const cover = spawnHalfCover(w, { x: 2, y: 2 });
     expect(cover.archetype).toBe('half_cover');

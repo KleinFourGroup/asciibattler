@@ -8,6 +8,7 @@ import {
   CombatantUnitDefSchema,
   NeutralUnitDefSchema,
   isNeutralUnitDef,
+  isDestructibleNeutral,
 } from './units';
 
 // §38d — the catalog is SPLIT by kind at runtime: `UNIT_DEFS` = the combatant
@@ -110,20 +111,23 @@ describe('§38b — UnitDef catalog scaffold', () => {
 
 /**
  * §38d — the neutral fold. Walls + half-cover became NEUTRAL `UnitDef` entries in
- * the one unified catalog (no abilities / stat blocks — a glyph + a flat `hp`
- * pool). These pin the neutral schema arm + the two shipped entries; the spawn
- * fold (`spawnEnvironment` → catalog) + the susceptibility filter are proven in
- * the sim tests (environment.test / World.test).
+ * the one unified catalog (no abilities / stat blocks — a glyph + an OPTIONAL `hp`
+ * pool; §40b made `hp` the HP-presence destructibility signal). These pin the
+ * neutral schema arm + the two shipped entries; the spawn fold (`spawnEnvironment`
+ * → catalog) + the susceptibility filter are proven in the sim tests
+ * (environment.test / World.test).
  */
 describe('§38d — neutral catalog entries', () => {
-  it('ships the neutral defs (wall / half_cover / §40 rubble): flat hp, no abilities/stats', () => {
+  it('ships the neutral defs (wall / half_cover / §40 rubble): optional hp, no abilities/stats', () => {
     const ids = NEUTRAL_ENTRIES.map(([id]) => id);
     expect(ids).toContain('wall'); // the §38d fold entries
     expect(ids).toContain('half_cover');
     for (const [id, def] of NEUTRAL_ENTRIES) {
       expect(isNeutralUnitDef(def), `${id} is neutral`).toBe(true);
       expect(def.glyph.length, `${id}.glyph`).toBe(1);
-      expect(def.hp, `${id}.hp`).toBeGreaterThan(0);
+      // §40b — `hp` is OPTIONAL (HP-presence = destructibility); when present it's a
+      // real pool. Its presence/absence per entry is pinned in the §40b test below.
+      if (def.hp !== undefined) expect(def.hp, `${id}.hp`).toBeGreaterThan(0);
       expect(def.footprint, `${id}.footprint in 1..4`).toBeGreaterThanOrEqual(1);
       expect(def.footprint, `${id}.footprint in 1..4`).toBeLessThanOrEqual(4);
       expect('abilities' in def, `${id} has no abilities`).toBe(false);
@@ -146,13 +150,31 @@ describe('§38d — neutral catalog entries', () => {
     }
   });
 
+  it('§40b — HP-PRESENCE = destructibility (rubble has hp; wall/half_cover do not)', () => {
+    // Walls / half-cover are indestructible (no hp pool); rubble carries one. This
+    // is the signal `isCombatTargetable` keys off (proven end-to-end in the sim
+    // targeting tests) — pinned here at the catalog layer.
+    expect(NEUTRAL_DEFS.wall!.hp).toBeUndefined();
+    expect(NEUTRAL_DEFS.half_cover!.hp).toBeUndefined();
+    expect(NEUTRAL_DEFS.rubble_1x1!.hp).toBeGreaterThan(0);
+    expect(isDestructibleNeutral('wall')).toBe(false);
+    expect(isDestructibleNeutral('half_cover')).toBe(false);
+    expect(isDestructibleNeutral('rubble_1x1')).toBe(true);
+    // An unknown id (the retired 'environment' sentinel / a combatant) has no
+    // neutral def ⇒ no hp ⇒ indestructible.
+    expect(isDestructibleNeutral('environment')).toBe(false);
+    expect(isDestructibleNeutral('mercenary')).toBe(false);
+  });
+
   it('the union routes each entry to the right arm', () => {
-    // A neutral (no abilities) must FAIL the combatant arm and a combatant (no
-    // hp) must FAIL the neutral arm — the structural discriminant the union relies
-    // on. A bare glyph matches neither.
+    // A neutral (no abilities/baseStats) must FAIL the combatant arm and a combatant
+    // (extra baseStats/abilities keys) must FAIL the STRICT neutral arm — the
+    // structural discriminant the union relies on. §40b: `hp` is now OPTIONAL, so a
+    // bare glyph is a VALID (indestructible) neutral, not "matches neither" — the
+    // strict arm is what keeps a combatant from leaking through it.
     expect(CombatantUnitDefSchema.safeParse(NEUTRAL_DEFS.wall).success).toBe(false);
     expect(NeutralUnitDefSchema.safeParse(UNIT_DEFS.mercenary).success).toBe(false);
-    expect(UnitDefSchema.safeParse({ glyph: '#' }).success).toBe(false);
+    expect(UnitDefSchema.safeParse({ glyph: '#' }).success).toBe(true); // hp-less = indestructible neutral
     expect(UnitDefSchema.safeParse(NEUTRAL_DEFS.wall).success).toBe(true);
     expect(UnitDefSchema.safeParse(UNIT_DEFS.mercenary).success).toBe(true);
   });
@@ -175,7 +197,10 @@ describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
   });
 
   it('still validates every entry structurally (a malformed unit is rejected)', () => {
-    const bad = { ...structuredClone(ALL_UNIT_DEFS), broken: { glyph: 'X' } }; // matches neither arm
+    // §40b — a BARE glyph is now a valid (indestructible) neutral, so "malformed"
+    // must genuinely fail both arms: a 2-char glyph breaks `glyph.length(1)` on the
+    // combatant AND neutral arm.
+    const bad = { ...structuredClone(ALL_UNIT_DEFS), broken: { glyph: 'XY' } };
     expect(UnitDefsSchema.safeParse(bad).success).toBe(false);
   });
 

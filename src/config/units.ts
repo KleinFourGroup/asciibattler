@@ -193,19 +193,29 @@ export const CombatantUnitDefSchema = z.object({
  * for §40's multi-tile rubble; `statusSusceptibility` is the burnable-not-
  * poisonable allow-filter (38d-3 consults it in `applyStatusEffect`).
  */
-export const NeutralUnitDefSchema = z.object({
-  glyph: z.string().length(1),
-  // Flat HP pool (walls / half-cover = 1 ⇒ practically indestructible until §40
-  // lands damage on neutral cells). The cap is a typo guard, not a design knob.
-  hp: z.number().int().positive().max(999),
-  // D6 LOS contract: walls block ranged sight (default true), half-cover doesn't.
-  blocksLineOfSight: z.boolean().default(true),
-  // §39 seam — an axis-aligned N×N body; inert (single-cell) until §40's rubble.
-  footprint: z.number().int().min(1).max(4).default(1),
-  // §38d-3 — the status allow-filter (`applyStatusEffect` consults it). Absent ⇒
-  // susceptible to all; a wall opts into burn/frozen, out of poison/bleed.
-  statusSusceptibility: z.array(z.string()).optional(),
-});
+export const NeutralUnitDefSchema = z
+  .object({
+    glyph: z.string().length(1),
+    // §40b — HP-PRESENCE = DESTRUCTIBILITY (the locked decision). OPTIONAL: a
+    // neutral WITH an `hp` pool is destructible / combat-targetable (rubble); one
+    // WITHOUT is indestructible (wall / half-cover — no HP means nothing to
+    // destroy, retiring the awkward nominal `hp:1`). `isCombatTargetable` keys off
+    // this presence; `spawnEnvironment` supplies a nominal maxHp for the hp-less
+    // case (cosmetic — never targeted). The cap is a typo guard, not a design knob.
+    hp: z.number().int().positive().max(999).optional(),
+    // D6 LOS contract: walls block ranged sight (default true), half-cover doesn't.
+    blocksLineOfSight: z.boolean().default(true),
+    // §39 seam — an axis-aligned N×N body; inert (single-cell) until §40's rubble.
+    footprint: z.number().int().min(1).max(4).default(1),
+    // §38d-3 — the status allow-filter (`applyStatusEffect` consults it). Absent ⇒
+    // susceptible to all; a wall opts into burn/frozen, out of poison/bleed.
+    statusSusceptibility: z.array(z.string()).optional(),
+  })
+  // §40b — STRICT now that `hp` is optional: without it, a combatant (with its
+  // extra `abilities`/`baseStats` keys stripped) would spuriously satisfy this
+  // arm. Strict makes the union's structural discriminant real (combatant fields
+  // are rejected here), not merely dependent on the arm-try order.
+  .strict();
 
 // The per-entry schema the record validates + the editor checks against: a
 // COMBATANT or a NEUTRAL. `z.union` tries the combatant arm first; a neutral
@@ -233,14 +243,18 @@ export type UnitDefsConfig = Record<string, UnitDef>;
 export type GrowthRates = z.infer<typeof GrowthRatesSchema>;
 
 /**
- * §38d — the runtime narrow the union needs. A neutral entry (wall / half-cover
- * / rubble) carries a flat `hp` pool + no abilities; a combatant never has `hp`,
- * so membership of the `hp` key is a sound discriminant. Splits the parsed
- * catalog into `UNIT_DEFS` / `NEUTRAL_DEFS` (below) and is re-exported for the
- * spawn path + the status-susceptibility filter.
+ * §38d — the runtime narrow the union needs. Splits the parsed catalog into
+ * `UNIT_DEFS` / `NEUTRAL_DEFS` (below) and is re-exported for the spawn path + the
+ * status-susceptibility filter.
+ *
+ * §40b — discriminate on `baseStats` (a combatant-only key), NOT `hp`: `hp` became
+ * OPTIONAL on the neutral arm (HP-presence = destructibility), so an hp-less wall
+ * would mis-narrow under the old `'hp' in def` test. Every combatant carries a
+ * `baseStats` block and no neutral ever does, so its presence is the sound
+ * discriminant.
  */
 export function isNeutralUnitDef(def: UnitDef): def is NeutralUnitDef {
-  return 'hp' in def;
+  return !('baseStats' in def);
 }
 
 /**
@@ -268,6 +282,21 @@ export const UNIT_DEFS: Record<string, CombatantUnitDef> = Object.fromEntries(
 export const NEUTRAL_DEFS: Record<string, NeutralUnitDef> = Object.fromEntries(
   Object.entries(ALL_UNIT_DEFS).filter((e): e is [string, NeutralUnitDef] => isNeutralUnitDef(e[1])),
 );
+
+/**
+ * §40b — destructibility = HP-PRESENCE (the locked decision). A neutral is a valid
+ * combat-damage target iff its def carries an `hp` pool (present ⇒ destructible,
+ * absent ⇒ indestructible — no HP means nothing to destroy). Combatants are never
+ * neutral, so `isCombatTargetable` gates on `team === 'neutral'` before consulting
+ * this. Keyed off the archetype id (which IS serialized), so targetability
+ * re-derives on snapshot rehydrate with NO new serialized state — the same
+ * resolve-from-archetype convention as `targetingForArchetype`. An unknown id (e.g.
+ * the retired `'environment'` sentinel a legacy fixture might pass) has no def ⇒ no
+ * hp ⇒ indestructible.
+ */
+export function isDestructibleNeutral(archetype: string): boolean {
+  return NEUTRAL_DEFS[archetype]?.hp !== undefined;
+}
 
 /**
  * §38c boot-assert — the ids the game hard-references by string LITERAL must

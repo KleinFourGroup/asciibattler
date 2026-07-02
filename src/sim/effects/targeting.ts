@@ -17,6 +17,7 @@
 import type { GridCoord } from '../../core/types';
 import type { World } from '../World';
 import { type Unit, type Team } from '../Unit';
+import { isDestructibleNeutral } from '../../config/units';
 import type { Affects } from './schema';
 
 function cellKey(c: GridCoord): string {
@@ -84,12 +85,18 @@ export function affectsMatch(affects: Affects, unitTeam: Team, casterTeam: Team)
 }
 
 /**
- * Is a unit a valid combat-damage target TODAY? Alive, and not a neutral
- * wall/half-cover (destructibility is deferred to Cluster 2 — when neutrals gain
- * HP, this guard drops and `affects:'enemies'` chews them automatically).
+ * Is a unit a valid combat-damage target? Alive, AND either a combatant or a
+ * DESTRUCTIBLE neutral. §40b lifted the blanket `team !== 'neutral'` exclusion →
+ * destructibility = HP-PRESENCE: a neutral with an `hp` pool (rubble) is targetable;
+ * an hp-less neutral (wall / half-cover) is not. This is what lets an
+ * `affects:'enemies'` AoE chew rubble automatically — `resolveAreaVictims` filters
+ * through here — while indestructible walls stay untouched. The `team === 'neutral'`
+ * short-circuit keeps the combatant path (the overwhelming common case) a single
+ * cheap check, consulting the catalog only for the rare neutral.
  */
 export function isCombatTargetable(u: Unit): boolean {
-  return u.currentHp > 0 && u.team !== 'neutral';
+  if (u.currentHp <= 0) return false;
+  return u.team !== 'neutral' || isDestructibleNeutral(u.archetype);
 }
 
 /**

@@ -4,7 +4,7 @@ import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
-import type { Team, Unit } from '../sim/Unit';
+import type { Unit } from '../sim/Unit';
 import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
 import type { PickCandidate } from './pick';
 import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
@@ -12,6 +12,7 @@ import type { TerrainRenderer } from './TerrainRenderer';
 import type { Renderer } from './Renderer';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { COLORS } from './palette';
+import { colorForTeam, spriteColorForUnit } from './spriteColor';
 import { SpriteAnimator } from './animation/SpriteAnimator';
 import {
   assertFxKeysResolve,
@@ -440,7 +441,9 @@ export class BattleRenderer {
     if (!unit) return;
     const footprint = footprintOf(unit);
     const spritePos = this.unitSpritePos(unit.position, footprint);
-    const handle = this.sprites.addSprite(unit.glyph, colorForTeam(unit.team), spritePos);
+    // §40c — a destructible wall/cover renders in the CRACKED_STONE tint (its
+    // tell); every other unit reads its team/stone color via the same helper.
+    const handle = this.sprites.addSprite(unit.glyph, spriteColorForUnit(unit), spritePos);
     this.handles.set(unit.id, handle);
     // §39d — a multi-tile body renders as one glyph scaled to its footprint
     // (the SpriteRenderer per-instance `size`, E6.B). Single-cell units keep the
@@ -907,7 +910,10 @@ export class BattleRenderer {
       for (const tint of tints.values()) color = tint;
     } else {
       const unit = this.world?.findUnit(unitId);
-      if (unit) color = colorForTeam(unit.team);
+      // §40c — restore to the unit's BASE color, which for a destructible wall/cover
+      // is the cracked tint (not the plain stone), so an expiring burn/frozen tint
+      // doesn't repaint it as an indestructible wall.
+      if (unit) color = spriteColorForUnit(unit);
     }
     if (color !== undefined) this.sprites.updateSprite(handle, { color });
   }
@@ -1436,12 +1442,6 @@ const OBJECTIVE_MARKER_TILE_LIFT = 0.1;
 /** Screen-up (camera-up) distance the enemy mark rides above the unit's center.
  *  ~0.6 clears the top of a unit-size (1.0) billboard so the X sits just atop it. */
 const OBJECTIVE_MARKER_ENEMY_LIFT = 0.6;
-
-function colorForTeam(team: Team): string {
-  if (team === 'player') return COLORS.TERMINAL_GREEN;
-  if (team === 'enemy') return COLORS.NEON_RED;
-  return COLORS.TERMINAL_STONE;
-}
 
 /**
  * Sprite center height above the tile top. The 1×1 sprite quad is centered

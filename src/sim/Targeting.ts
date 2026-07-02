@@ -4,11 +4,13 @@ import type { GridCoord } from '../core/types';
 import type { ObjectiveTarget } from './objective';
 import { hasLineOfSight } from './LineOfSight';
 import { SIM } from '../config/sim';
-import { UNIT_DEFS } from '../config/units';
+import { UNIT_DEFS, isDestructibleNeutral, isAutoTargetNeutral } from '../config/units';
 import { OBJECTIVE } from '../config/objective';
 import { getTargetingStrategy } from './targetingStrategies';
 import { focusTileDirective } from './focusTile';
 import { behaviorFlags } from './statusBehavior';
+import { buildMovementContext, routeToward } from './movement';
+import { footprintOf, unitDistance, cellsOccupiedBy, distanceBetween } from './occupancy';
 
 /**
  * Pick the best living enemy of `unit` according to its targeting strategy
@@ -112,11 +114,22 @@ export function updateTarget(unit: Unit, world: World): void {
 }
 
 /**
- * The default ("at-will") sticky-target selection — E5's stickiness, factored
- * out of `updateTarget` so the `focus`/`disallow` fallback (O3) can reuse the
- * exact same logic. Byte-identical to the pre-O3 inline body.
+ * The default ("at-will") target update: the E5 STICKY hostile pick, then the
+ * §40b rubble auto-target OVERLAY. Factored out of `updateTarget` so the
+ * `focus`/`disallow` fallback (O3) reuses the exact same logic.
  */
 function updateTargetDefault(unit: Unit, world: World): void {
+  updateStickyTarget(unit, world);
+  applyRubbleAutoTarget(unit, world);
+}
+
+/**
+ * E5's sticky hostile pick — byte-identical to the pre-§40b inline body (the O3
+ * fallback used it directly). Sets `unit.targetId` to the strategy's committed
+ * enemy (or null); the §40b overlay may then redirect a WALLED-OFF unit onto a
+ * blocking rubble.
+ */
+function updateStickyTarget(unit: Unit, world: World): void {
   const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
   const valid =
     committed !== undefined &&
@@ -164,6 +177,129 @@ function updateTargetDefault(unit: Unit, world: World): void {
     unit.targetId = candidate.id;
     unit.outOfLosTicks = 0;
   }
+}
+
+/**
+ * §40b — the rubble AUTO-TARGET overlay, applied after the sticky hostile pick. A
+ * unit whose committed hostile it CANNOT REACH (walled off by rubble) redirects:
+ * first to any hostile it CAN reach (a reachable hostile always outranks rubble —
+ * the locked priority), else to the nearest approachable auto-target rubble — the
+ * "deny access until destroyed" loop. Leaves the sticky pick untouched when the
+ * target is reachable (the common case) or nothing chippable is in reach.
+ *
+ * GATED on the board actually holding an auto-target rubble: absent (every shipped
+ * map + all fuzz layouts), this is a no-op → byte-identical (the fuzz baseline
+ * holds). The reachability probes (`findPath`) then run only for a unit that can't
+ * reach its committed target AND has rubble on the board — a rare, bounded subset —
+ * so a normal tick pays only the cheap presence scan. (A per-tick flood-fill would
+ * amortize the probes if a heavy rubble map ever needs it — a §41 perf note.)
+ */
+function applyRubbleAutoTarget(unit: Unit, world: World): void {
+  if (!worldHasAutoTargetRubble(world)) return;
+  const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
+  // Committed to a hostile it can reach → keep the sticky pick (the common case).
+  if (committed !== undefined && committed.team !== 'neutral' && canReach(unit, world, committed)) {
+    return;
+  }
+  // Unreachable hostile (or none) → a reachable hostile always outranks rubble.
+  const reachable = nearestReachableHostile(unit, world);
+  if (reachable !== null) {
+    if (unit.targetId !== reachable.id) {
+      unit.targetId = reachable.id;
+      unit.outOfLosTicks = 0;
+    }
+    return;
+  }
+  // No hostile reachable at all → chip the nearest approachable rubble.
+  const rubble = nearestApproachableRubble(unit, world);
+  if (rubble !== null && unit.targetId !== rubble.id) {
+    unit.targetId = rubble.id;
+    unit.outOfLosTicks = 0;
+  }
+  // else: nothing reachable, nothing chippable → leave the sticky pick (idle).
+}
+
+/** §40b — does the board hold a living auto-target rubble? The cheap gate every
+ *  tick pays before any reachability probe; false on every shipped map + fuzz
+ *  layout (→ the overlay is a no-op, byte-identical). */
+function worldHasAutoTargetRubble(world: World): boolean {
+  for (const u of world.units) {
+    if (u.team === 'neutral' && u.currentHp > 0 && isAutoTargetNeutral(u.archetype)) return true;
+  }
+  return false;
+}
+
+/**
+ * §40b — can `unit` get within attack range of `target`? True when already in range,
+ * else when `findPath` finds a route toward it (the target soft-excluded so the path
+ * may end on its cell, exactly as the MovementBehavior approach does). Reuses the
+ * real pathing (same blockers/costs) so "reachable" never diverges from how the unit
+ * actually moves.
+ */
+function canReach(unit: Unit, world: World, target: Unit): boolean {
+  if (unitDistance(unit, target) <= unit.derived.attackRange) return true;
+  const ctx = buildMovementContext(unit, world, { excludeUnitId: target.id });
+  return routeToward(unit.position, target.position, ctx, world, false, footprintOf(unit)).length > 0;
+}
+
+/**
+ * §40b — the strategy-best hostile `unit` can actually REACH (path to within attack
+ * range), or null when it's walled off from every hostile. Ranked by the unit's own
+ * targeting strategy so `weakest` still prefers the squishiest among the reachable.
+ */
+function nearestReachableHostile(unit: Unit, world: World): Unit | null {
+  const strategy = getTargetingStrategy(unit.targeting);
+  let best: Unit | null = null;
+  for (const c of world.units) {
+    if (c.team === unit.team || c.team === 'neutral' || c.currentHp <= 0) continue;
+    if (!canReach(unit, world, c)) continue;
+    if (best === null || strategy.compare(c, best, unit, world) < 0) best = c;
+  }
+  return best;
+}
+
+/**
+ * §40b — the nearest (body-to-body) auto-target rubble `unit` can APPROACH: reach a
+ * cell within attack range of its footprint. Rubble is a HARD path-blocker, so
+ * approachability is a bestEffort route toward its corner whose closest-reachable end
+ * lands within strike range of the body (the J3 rally-approach shape). Nearest-first,
+ * with a distance guard so the (expensive) approach probe runs only on improving
+ * candidates.
+ */
+function nearestApproachableRubble(unit: Unit, world: World): Unit | null {
+  let best: Unit | null = null;
+  let bestDist = Infinity;
+  for (const r of world.units) {
+    if (r.team !== 'neutral' || r.currentHp <= 0 || !isAutoTargetNeutral(r.archetype)) continue;
+    const d = unitDistance(unit, r);
+    if (d >= bestDist) continue;
+    if (!canApproach(unit, world, r)) continue;
+    best = r;
+    bestDist = d;
+  }
+  return best;
+}
+
+/** §40b — can `unit` reach a cell within attack range of the hard-blocker `rubble`'s
+ *  body? Already-adjacent short-circuits; else a bestEffort route toward the corner
+ *  whose reachable end is body-adjacent. */
+function canApproach(unit: Unit, world: World, rubble: Unit): boolean {
+  if (unitDistance(unit, rubble) <= unit.derived.attackRange) return true;
+  const ctx = buildMovementContext(unit, world);
+  const path = routeToward(unit.position, rubble.position, ctx, world, true, footprintOf(unit));
+  if (path.length === 0) return false;
+  return minCellToBody(path[path.length - 1]!, rubble) <= unit.derived.attackRange;
+}
+
+/** §40b — min Chebyshev from a bare cell to any cell of `body`'s footprint (the
+ *  cell-vs-multi-tile-body counterpart of `unitDistance`). */
+function minCellToBody(cell: GridCoord, body: Unit): number {
+  let min = Infinity;
+  for (const c of cellsOccupiedBy(body)) {
+    const d = distanceBetween(cell, c);
+    if (d < min) min = d;
+  }
+  return min;
 }
 
 /**
@@ -403,13 +539,17 @@ export function currentTarget(unit: Unit, world: World): Unit | null {
   const confused = behaviorFlags(unit.effects).targeting === 'random';
   if (unit.targetId !== null) {
     const t = world.findUnit(unit.targetId);
-    if (
-      t !== undefined &&
-      t.currentHp > 0 &&
-      t.team !== 'neutral' &&
-      (confused || t.team !== unit.team)
-    ) {
-      return t;
+    if (t !== undefined && t.currentHp > 0) {
+      // §40b — a committed DESTRUCTIBLE neutral (the rubble the auto-target hook
+      // chose to chip) is honored so the strike + movement act on it; an
+      // indestructible wall/half-cover never is. Otherwise the historical rule: a
+      // living enemy (or, under confusion, any-team mark). A confused unit never
+      // chips rubble — its mark is re-rolled among non-neutral units each tick.
+      if (t.team === 'neutral') {
+        if (!confused && isDestructibleNeutral(t.archetype)) return t;
+      } else if (confused || t.team !== unit.team) {
+        return t;
+      }
     }
   }
   if (confused) return null;

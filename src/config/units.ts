@@ -207,6 +207,14 @@ export const NeutralUnitDefSchema = z
     blocksLineOfSight: z.boolean().default(true),
     // §39 seam — an axis-aligned N×N body; inert (single-cell) until §40's rubble.
     footprint: z.number().int().min(1).max(4).default(1),
+    // §40b — AUTO-TARGET eligibility (the second targeting axis, orthogonal to
+    // HP-presence). A destructible neutral with `autoTarget:true` (rubble) is
+    // auto-fired-at BELOW all reachable hostiles — the "chip the blocking debris"
+    // loop. Default FALSE: walls / half-cover — and a future destructible wall
+    // (§40c, `hp` but no `autoTarget`) — stay manual/AoE-only. DATA-DRIVEN (a new
+    // editor-authored debris kind opts in with one line, no code edit — upholding
+    // the §38 keystone), replacing the brittle hardcoded rubble-id set.
+    autoTarget: z.boolean().default(false),
     // §38d-3 — the status allow-filter (`applyStatusEffect` consults it). Absent ⇒
     // susceptible to all; a wall opts into burn/frozen, out of poison/bleed.
     statusSusceptibility: z.array(z.string()).optional(),
@@ -296,6 +304,20 @@ export const NEUTRAL_DEFS: Record<string, NeutralUnitDef> = Object.fromEntries(
  */
 export function isDestructibleNeutral(archetype: string): boolean {
   return NEUTRAL_DEFS[archetype]?.hp !== undefined;
+}
+
+/**
+ * §40b — AUTO-TARGET eligibility (orthogonal to `isDestructibleNeutral`). A neutral
+ * whose def carries `autoTarget:true` (rubble) is auto-fired-at below all reachable
+ * hostiles — the "chip the blocking debris" loop. Walls / half-cover — and a future
+ * destructible wall (`hp` without `autoTarget`) — return false, so they're never
+ * auto-targeted (manual / AoE only). Keyed off the archetype id (serialized), so it
+ * needs no snapshot state — the same resolve-from-archetype convention as
+ * `targetingForArchetype`. DATA-DRIVEN: a new debris kind opts in with one JSON line
+ * (no hardcoded id set), upholding the §38 keystone.
+ */
+export function isAutoTargetNeutral(archetype: string): boolean {
+  return NEUTRAL_DEFS[archetype]?.autoTarget === true;
 }
 
 /**

@@ -592,18 +592,21 @@
   "rubble_1x1": {
     "glyph": "%",
     "hp": 25,
+    "autoTarget": true,
     "statusSusceptibility": ["burn","frozen"]
   },
   "rubble_2x2": {
     "glyph": "%",
     "hp": 60,
     "footprint": 2,
+    "autoTarget": true,
     "statusSusceptibility": ["burn","frozen"]
   },
   "rubble_3x3": {
     "glyph": "%",
     "hp": 110,
     "footprint": 3,
+    "autoTarget": true,
     "statusSusceptibility": ["burn","frozen"]
   }
 }

@@ -162,6 +162,21 @@ export class MovementBehavior implements Behavior {
       return null;
     }
 
+    // §40b — a committed rubble (destructible neutral) is a HARD path-blocker:
+    // `excludeUnitId` softens only NON-neutral cells, so the unit can't route ONTO
+    // the rubble's corner. Route AS CLOSE AS POSSIBLE (bestEffort) toward it — the
+    // J3 tile-rally shape — and the in-range abstain above fires the strike the
+    // moment the unit is body-adjacent. Reached only when the auto-target hook
+    // committed to rubble (target selection prefers a reachable hostile).
+    if (target.team === 'neutral') {
+      return advance(unit, world, {
+        goals: [target.position],
+        approachToward: target.position,
+        maxCells: 1,
+        bestEffort: true,
+      });
+    }
+
     // Goal preference: firing cell (ranged only, when reachable) then the
     // target's own cell. `advance` tries them in order and falls back to the
     // target — the anti-freeze guarantee. O4 — the firing cell must sit in the

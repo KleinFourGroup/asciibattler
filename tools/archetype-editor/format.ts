@@ -63,6 +63,9 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
       // diff is untouched and a re-parse fills it back. Canonical order: after
       // blocksLineOfSight, before statusSusceptibility (the schema field order).
       if ((a.footprint ?? 1) !== 1) fields.push(`    "footprint": ${JSON.stringify(a.footprint)}`);
+      // §40b — auto-target eligibility (rubble). Default false (walls / cover) stays
+      // omitted so their file diff is untouched; a re-parse fills it back.
+      if (a.autoTarget === true) fields.push(`    "autoTarget": true`);
       if (a.statusSusceptibility !== undefined)
         fields.push(`    "statusSusceptibility": ${JSON.stringify(a.statusSusceptibility)}`);
       parts.push(fields.join(',\n'));

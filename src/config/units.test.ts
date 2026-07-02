@@ -9,6 +9,7 @@ import {
   NeutralUnitDefSchema,
   isNeutralUnitDef,
   isDestructibleNeutral,
+  isAutoTargetNeutral,
 } from './units';
 
 // §38d — the catalog is SPLIT by kind at runtime: `UNIT_DEFS` = the combatant
@@ -164,6 +165,21 @@ describe('§38d — neutral catalog entries', () => {
     // neutral def ⇒ no hp ⇒ indestructible.
     expect(isDestructibleNeutral('environment')).toBe(false);
     expect(isDestructibleNeutral('mercenary')).toBe(false);
+  });
+
+  it('§40b — AUTO-TARGET eligibility is a separate data-driven axis (rubble opts in)', () => {
+    // Rubble is auto-fired-at below hostiles; walls / half-cover are not (and a
+    // future destructible wall — hp WITHOUT autoTarget — still wouldn't be). The
+    // field is DATA (a new debris kind opts in with one JSON line, no code edit).
+    expect(NEUTRAL_DEFS.rubble_1x1!.autoTarget).toBe(true);
+    expect(NEUTRAL_DEFS.rubble_2x2!.autoTarget).toBe(true);
+    expect(NEUTRAL_DEFS.rubble_3x3!.autoTarget).toBe(true);
+    expect(NEUTRAL_DEFS.wall!.autoTarget).toBe(false); // schema default
+    expect(NEUTRAL_DEFS.half_cover!.autoTarget).toBe(false);
+    expect(isAutoTargetNeutral('rubble_2x2')).toBe(true);
+    expect(isAutoTargetNeutral('wall')).toBe(false);
+    expect(isAutoTargetNeutral('half_cover')).toBe(false);
+    expect(isAutoTargetNeutral('mercenary')).toBe(false); // not even a neutral
   });
 
   it('the union routes each entry to the right arm', () => {

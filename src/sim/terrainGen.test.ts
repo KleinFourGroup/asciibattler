@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { generateTerrain } from './terrainGen';
+import { generateTerrain, generateFromLayout } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
 import { TERRAIN, type TerrainConfig } from '../config/terrain';
-import { getLayout, type SpawnRegion } from './layouts';
+import { getLayout, type LayoutDef, type SpawnRegion } from './layouts';
 
 const G = 12;
 
@@ -15,6 +15,32 @@ const BASE: TerrainConfig = {
   ensureConnectivity: true,
   procedural: TERRAIN.procedural,
 };
+
+describe('§40d — rubble surfaces through generateFromLayout', () => {
+  const fixture: LayoutDef = {
+    id: 'rubble-fixture',
+    name: 'Rubble Fixture',
+    description: '§40d — a hand-built layout with rubble for the mapping test.',
+    gridW: 10,
+    gridH: 10,
+    theme: 'grassland',
+    walls: [],
+    rubble: [{ x: 1, y: 1, size: 2, hp: 99 }, { x: 5, y: 5 }],
+    spawns: [
+      { availability: 'player', tiles: [{ x: 0, y: 0 }] },
+      { availability: 'enemy', tiles: [{ x: 9, y: 9 }] },
+    ],
+  };
+
+  it('carries each rubble placement (size + hp) into GeneratedTerrain, verbatim', () => {
+    const { rubble } = generateFromLayout(fixture, 10, 10);
+    expect(rubble).toEqual([{ x: 1, y: 1, size: 2, hp: 99 }, { x: 5, y: 5 }]);
+  });
+
+  it('procedural terrain surfaces no rubble (hand-authored-only)', () => {
+    expect(generateTerrain(new RNG(1), G, G, BASE).rubble).toEqual([]);
+  });
+});
 
 describe('generateTerrain (procedural)', () => {
   it('emits two `both` spawn regions on the literal top + bottom edges', () => {

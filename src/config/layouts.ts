@@ -46,6 +46,27 @@ const NeutralCoordSchema = CoordSchema.extend({
   hp: z.number().int().positive().max(999).optional(),
 });
 
+/** §40d — the rubble footprint side range (mirrors §39's 1..3 footprint range +
+ *  the three `rubble_1x1/2x2/3x3` catalog defs). A typo guard, not a design knob. */
+export const RUBBLE_MIN_SIZE = 1;
+export const RUBBLE_MAX_SIZE = 3;
+
+/**
+ * §40d — a destructible rubble placement: its canonical footprint CORNER `{x,y}`
+ * (the min corner, block extending +x/+y per §39) plus an optional `size` (1..3,
+ * default 1 — picks the `rubble_1x1/2x2/3x3` catalog def) and an optional
+ * per-instance `hp` OVERRIDE. Unlike a wall (where `hp`-PRESENCE is what makes it
+ * destructible — see `NeutralCoordSchema`), rubble is ALWAYS destructible (its def
+ * carries an `hp` pool), so `hp` here only TUNES that pool; absent ⇒ the catalog
+ * default for the size (25/60/110, UNTUNED §41). `hp` shares `NeutralCoordSchema`'s
+ * cap. Footprint-aware validation (the whole N×N block in-bounds + non-overlapping)
+ * lives in `LayoutSchema.superRefine`.
+ */
+const RubbleCoordSchema = CoordSchema.extend({
+  size: z.number().int().min(RUBBLE_MIN_SIZE).max(RUBBLE_MAX_SIZE).optional(),
+  hp: z.number().int().positive().max(999).optional(),
+});
+
 /** Hand-authored layouts pick their own grid size in this range. */
 export const LAYOUT_MIN_SIDE = 8;
 export const LAYOUT_MAX_SIDE = 32;
@@ -154,6 +175,13 @@ const LayoutSchema = z
      *  rejects overlap with walls, water, spawn regions, or self.
      *  §40c: an optional per-coord `hp` makes that cover destructible. */
     halfCovers: z.array(NeutralCoordSchema).optional(),
+    /** §40d: optional destructible rubble obstacles (neutral `UnitDef`s, §40a).
+     *  Each carries a footprint `size` (1..3, default 1) anchored at `{x,y}` as
+     *  its min corner + an optional per-instance `hp` override. Footprint-aware
+     *  overlap/bounds validation in `superRefine` (the whole N×N block must fit +
+     *  not collide); the block's cells also block spawns (a unit can't stand on
+     *  rubble). Spawned via `spawnRubble` in `battleSetup.applyTerrain`. */
+    rubble: z.array(RubbleCoordSchema).optional(),
     /** D7.A: optional impassable tile (Infinity pathfinding cost, LOS-
      *  transparent — LOS never inspects tiles). Hand-authored-only in
      *  D7 like half-cover (no procedural density knob). Validation
@@ -299,18 +327,64 @@ const LayoutSchema = z
     checkTileEffect(layout.sand, 'sand', 'sand');
     checkTileEffect(layout.mud, 'mud', 'mud');
 
+    // §40d — rubble footprints. Each rubble is an N×N block (size 1..3, default 1)
+    // anchored at {x,y} as its MIN corner, cells extending toward +x/+y (the §39
+    // footprint convention). Unlike a wall, rubble is always destructible (the
+    // neutral def carries `hp`); its optional `hp` only tunes the pool. The WHOLE
+    // block must be in-bounds and clear of every earlier reservation (walls /
+    // water / half-cover / chasm / terrain tiles) and any other rubble. Each
+    // reserved cell then blocks spawns below (a unit can't stand on rubble).
+    (layout.rubble ?? []).forEach((r, idx) => {
+      const size = r.size ?? 1;
+      if (
+        r.x < 0 ||
+        r.y < 0 ||
+        r.x + size - 1 >= layout.gridW ||
+        r.y + size - 1 >= layout.gridH
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['rubble', idx],
+          message: `rubble (${r.x},${r.y}) size ${size} extends out of bounds for ${layout.gridW}x${layout.gridH}`,
+        });
+        return; // an out-of-bounds block reserves nothing (its cells are off-grid)
+      }
+      for (let dy = 0; dy < size; dy++) {
+        for (let dx = 0; dx < size; dx++) {
+          const cx = r.x + dx;
+          const cy = r.y + dy;
+          const k = `${cx},${cy}`;
+          if (blocked.has(k)) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['rubble', idx],
+              message: `rubble (${r.x},${r.y}) size ${size} overlaps an earlier reservation at (${cx},${cy})`,
+            });
+          }
+          blocked.add(k);
+        }
+      }
+    });
+
     // §37g — a spawn region may sit on any PASSABLE tile (water / fire / healing
     // / hills / ice / sand / mud): a unit can stand and fight there, and its
     // terrain combat mods + wading cost apply live (read off `defAt(position)`),
     // so authors can deliberately seat a team on tactically-flavored ground.
     // Reject only cells a unit can't physically occupy — impassable tiles
-    // (chasm, deep water) and neutral-unit cells (wall, half-cover). This is the
-    // SAME impassable/occupied set the connectivity guard treats as blockers.
+    // (chasm, deep water) and neutral-unit cells (wall, half-cover, rubble). This
+    // is the SAME impassable/occupied set the connectivity guard treats as blockers.
     const spawnBlocked = new Set<string>();
     for (const w of layout.walls) spawnBlocked.add(`${w.x},${w.y}`);
     for (const hc of layout.halfCovers ?? []) spawnBlocked.add(`${hc.x},${hc.y}`);
     for (const ch of layout.chasms ?? []) spawnBlocked.add(`${ch.x},${ch.y}`);
     for (const dw of layout.deepWater ?? []) spawnBlocked.add(`${dw.x},${dw.y}`);
+    // §40d — a rubble block occupies its whole N×N footprint; spawns can't sit on it.
+    for (const r of layout.rubble ?? []) {
+      const size = r.size ?? 1;
+      for (let dy = 0; dy < size; dy++) {
+        for (let dx = 0; dx < size; dx++) spawnBlocked.add(`${r.x + dx},${r.y + dy}`);
+      }
+    }
 
     layout.spawns.forEach((region, regionIdx) => {
       region.tiles.forEach((t, tileIdx) => {
@@ -325,7 +399,7 @@ const LayoutSchema = z
           ctx.addIssue({
             code: 'custom',
             path: ['spawns', regionIdx, 'tiles', tileIdx],
-            message: `spawn tile (${t.x},${t.y}) sits on an impassable or occupied cell (wall, half-cover, chasm, or deep water)`,
+            message: `spawn tile (${t.x},${t.y}) sits on an impassable or occupied cell (wall, half-cover, chasm, deep water, or rubble)`,
           });
         }
       });

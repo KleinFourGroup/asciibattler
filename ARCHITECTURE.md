@@ -55,7 +55,7 @@ src/
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
     nodemap.ts               #   hop count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
     terrain.ts               #   C1a: wall + water density
-    layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, theme)
+    layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, §40d rubble, theme)
     sectors.ts               #   T1: the Sector schema — run container (id/title/desc/length/theme/hop-gated layout pool); V0: + hop-gated ENCOUNTER pool (sector-owns-both); procedural = reserved sentinel
     sectorMap.ts             #   T2: the sector-selection meta-DAG schema (nodes hold sector lists; sources/sinks; acyclic, non-sink-has-outgoing guards)
     encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement moved to the sector pool; V1: catalog ships Brigands/Highwaymen/Deserters
@@ -113,7 +113,7 @@ src/
     terrainGen.ts            # Per-encounter terrain dispatch: procedural (proceduralMap.ts) vs layout library
     proceduralMap.ts         # M6: crossbar+divider+noise map generator + sampleProceduralParams (config→params)
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
-    battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter
+    battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter (+ §40d spawnLayoutNeutrals — walls/cover/rubble from a GeneratedTerrain)
     actions/                 # Non-verb actions only — every combat verb is now the data-driven effects/EffectAction (Y5c retired the hand-coded AttackAction/Heal/MagicBolt/Catapult/Gambit/Dash classes)
       MoveAction.ts          # §36b NON-INSTANT: start() claims `to` + emits unit:moved; applyEffect() flips position + releases the claim at the 50% mark (SIM.moveFlipFraction)
       SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns

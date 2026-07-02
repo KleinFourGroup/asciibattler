@@ -111,6 +111,17 @@ describe('layouts library', () => {
           ...(layout.halfCovers ?? []),
           ...(layout.chasms ?? []),
           ...(layout.deepWater ?? []),
+          // §40d — rubble blocks paths through its whole N×N footprint. Inert for
+          // the shipped roster (no layout carries rubble yet) but keeps this guard
+          // correct the moment one does.
+          ...(layout.rubble ?? []).flatMap((r) => {
+            const size = r.size ?? 1;
+            const cells: GridCoord[] = [];
+            for (let dy = 0; dy < size; dy++) {
+              for (let dx = 0; dx < size; dx++) cells.push({ x: r.x + dx, y: r.y + dy });
+            }
+            return cells;
+          }),
         ];
         expect(
           hasPathBetween(blockers, layout.gridW, layout.gridH, a!, b!),
@@ -295,6 +306,82 @@ describe('§40c — optional per-instance wall/cover HP (destructibility)', () =
     expect(
       LayoutsSchema.safeParse([layoutWith({ walls: [{ x: 3, y: 3, hp: -5 }] })]).success,
     ).toBe(false);
+  });
+});
+
+describe('§40d — rubble in layouts (destructible multi-tile neutrals)', () => {
+  // A minimal valid 8×8 layout; callers drop in the rubble (and any walls) under
+  // test. Single-tile spawns at opposite corners keep the valid-pair rule happy.
+  const layoutWith = (patch: Record<string, unknown>): Record<string, unknown> => ({
+    id: 'rubble-layout',
+    name: 'Rubble Layout',
+    description: '§40d fixture — a layout carrying destructible rubble.',
+    gridW: 8,
+    gridH: 8,
+    theme: 'grassland',
+    walls: [],
+    spawns: [
+      { availability: 'player', tiles: [{ x: 0, y: 0 }] },
+      { availability: 'enemy', tiles: [{ x: 7, y: 7 }] },
+    ],
+    ...patch,
+  });
+
+  it('accepts + preserves rubble size + hp; a bare rubble omits both (defaults)', () => {
+    const parsed = LayoutsSchema.parse([
+      layoutWith({ rubble: [{ x: 3, y: 3, size: 2, hp: 99 }, { x: 6, y: 1 }] }),
+    ]);
+    expect(parsed[0]!.rubble?.[0]).toEqual({ x: 3, y: 3, size: 2, hp: 99 });
+    // A bare coord parses unchanged — no injected size/hp defaults (they resolve
+    // at spawn time: size→1×1, hp→the catalog default).
+    expect(parsed[0]!.rubble?.[1]).toEqual({ x: 6, y: 1 });
+  });
+
+  it('rejects a rubble footprint that runs off the grid', () => {
+    // size 3 at (6,1) → cells x = 6,7,8; x=8 is off an 8-wide grid.
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ rubble: [{ x: 6, y: 1, size: 3 }] })]).success,
+    ).toBe(false);
+  });
+
+  it('rejects rubble whose footprint overlaps a wall', () => {
+    // 2×2 at (3,3) covers (4,4), where a wall sits.
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({ walls: [{ x: 4, y: 4 }], rubble: [{ x: 3, y: 3, size: 2 }] }),
+      ]).success,
+    ).toBe(false);
+  });
+
+  it('rejects two rubble blocks that overlap', () => {
+    // (4,4) is a cell of the 2×2 anchored at (3,3).
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({ rubble: [{ x: 3, y: 3, size: 2 }, { x: 4, y: 4 }] }),
+      ]).success,
+    ).toBe(false);
+  });
+
+  it('rejects a spawn tile sitting on a rubble footprint cell', () => {
+    // rubble on the enemy spawn (7,7).
+    expect(LayoutsSchema.safeParse([layoutWith({ rubble: [{ x: 7, y: 7 }] })]).success).toBe(false);
+  });
+
+  it('rejects a rubble size outside 1..3 (the typo guard)', () => {
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ rubble: [{ x: 2, y: 2, size: 4 }] })]).success,
+    ).toBe(false);
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ rubble: [{ x: 2, y: 2, size: 0 }] })]).success,
+    ).toBe(false);
+  });
+
+  it('accepts a valid multi-tile rubble that fits clear of everything', () => {
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({ rubble: [{ x: 3, y: 3, size: 2 }, { x: 6, y: 1 }] }),
+      ]).success,
+    ).toBe(true);
   });
 });
 

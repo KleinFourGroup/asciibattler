@@ -31,8 +31,8 @@ import { abilityIdsForArchetype } from './archetypes';
 import type { Team, UnitTemplate } from './Unit';
 import type { BattleEncounter } from '../run/Run';
 import { TERRAIN } from '../config/terrain';
-import { generateTerrain } from './terrainGen';
-import { spawnHalfCover, spawnWall } from './environment';
+import { generateTerrain, type GeneratedTerrain } from './terrainGen';
+import { spawnHalfCover, spawnRubble, spawnWall } from './environment';
 import type { SpawnRegion } from './layouts';
 
 export interface PickedSpawnRegions {
@@ -139,29 +139,52 @@ export function applyTerrain(
   world: World,
   encounter: BattleEncounter,
 ): readonly SpawnRegion[] {
-  const { tileGrid, walls, halfCovers, spawnRegions } = generateTerrain(
+  const terrain = generateTerrain(
     new RNG(encounter.terrainSeed),
     world.gridW,
     world.gridH,
     TERRAIN,
     encounter.layoutId,
   );
-  for (const cell of tileGrid.cells()) {
+  for (const cell of terrain.tileGrid.cells()) {
     world.tileGrid.setKind({ x: cell.x, y: cell.y }, cell.kind);
   }
-  for (const coord of walls) {
+  spawnLayoutNeutrals(world, terrain);
+  return terrain.spawnRegions;
+}
+
+/**
+ * Spawn a `GeneratedTerrain`'s neutral obstacles (walls, half-cover, §40d rubble)
+ * into `world`. Extracted from `applyTerrain` (§40d) so the layout→board wiring is
+ * unit-testable off a `generateFromLayout` fixture without registering it in the
+ * global `LAYOUTS` catalog.
+ *
+ * Spawn order — walls, then half-cover, then rubble — is stable so any future
+ * "stack on the same cell" diagnostic sees a deterministic sequence (schema
+ * validation forbids the overlap today, but a fixed order keeps failure modes
+ * predictable). D6 fixed the wall→half-cover order for that reason.
+ */
+export function spawnLayoutNeutrals(
+  world: World,
+  terrain: Pick<GeneratedTerrain, 'walls' | 'halfCovers' | 'rubble'>,
+): void {
+  // A neutral coord may carry extra keys (§40c wall `hp`, §40d rubble `size`/`hp`);
+  // pass a CLEAN `{x,y}` as the position so those knobs don't leak onto `unit.position`
+  // (which flows into snapshots + every occupancy query).
+  for (const coord of terrain.walls) {
     // §40c — a wall coord carrying an `hp` spawns DESTRUCTIBLE; a bare coord
     // (every shipped layout + all procedural) spawns the indestructible default.
-    spawnWall(world, coord, coord.hp);
+    spawnWall(world, { x: coord.x, y: coord.y }, coord.hp);
   }
-  // D6: half-cover spawns after walls so any future "stack on same
-  // cell" diagnostic sees walls first (today schema validation
-  // prevents the overlap, but keeping the order stable means future
-  // failure modes are predictable).
-  for (const coord of halfCovers) {
-    spawnHalfCover(world, coord, coord.hp);
+  for (const coord of terrain.halfCovers) {
+    spawnHalfCover(world, { x: coord.x, y: coord.y }, coord.hp);
   }
-  return spawnRegions;
+  // §40d — rubble is the first multi-tile neutral: `size` picks the N×N footprint
+  // def (default 1×1); `hp` overrides the catalog pool. Absent `size` narrows to 1.
+  for (const coord of terrain.rubble) {
+    const size = coord.size === 2 ? 2 : coord.size === 3 ? 3 : 1;
+    spawnRubble(world, { x: coord.x, y: coord.y }, size, coord.hp);
+  }
 }
 
 /**

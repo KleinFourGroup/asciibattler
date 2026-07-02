@@ -54,6 +54,18 @@ import { sampleProceduralParams, generateProceduralMap } from './proceduralMap';
  */
 export type NeutralCoord = GridCoord & { readonly hp?: number | undefined };
 
+/**
+ * §40d — a rubble placement: a footprint CORNER plus an optional `size` (1..3,
+ * default 1 — picks the `rubble_1x1/2x2/3x3` def) and an optional per-instance `hp`
+ * override. Unlike a wall (`hp`-presence ⇒ destructible), rubble is always
+ * destructible; `hp` only tunes the pool. `battleSetup.applyTerrain` spawns each
+ * via `spawnRubble`. Hand-authored-only (procedural emits none).
+ */
+export type RubbleCoord = GridCoord & {
+  readonly size?: number | undefined;
+  readonly hp?: number | undefined;
+};
+
 export interface GeneratedTerrain {
   readonly tileGrid: TileGrid;
   readonly walls: readonly NeutralCoord[];
@@ -77,6 +89,10 @@ export interface GeneratedTerrain {
    *  Stored on `tileGrid` as `kind === 'healing'`; parallel readout
    *  same pattern as chasm. Empty for procedural. */
   readonly healings: readonly GridCoord[];
+  /** §40d: destructible rubble obstacles (neutral `UnitDef`s with a footprint +
+   *  HP). Each is spawned as a multi-tile neutral by `battleSetup.applyTerrain`.
+   *  Empty for procedural — hand-authored-only, like chasm/fire/healing. */
+  readonly rubble: readonly RubbleCoord[];
   readonly spawnRegions: readonly SpawnRegion[];
 }
 
@@ -107,8 +123,12 @@ export function generateTerrain(
  * D5 — wall/water overlap with spawn tiles is enforced by zod at
  * module-load time (see `src/config/layouts.ts`); the generator no
  * longer re-checks it.
+ *
+ * Exported (§40d) so tests can resolve a hand-built `LayoutDef` fixture
+ * straight to a `GeneratedTerrain` without registering it in the global
+ * `LAYOUTS` catalog — the layout-resolution seam `generateTerrain` dispatches to.
  */
-function generateFromLayout(
+export function generateFromLayout(
   layout: LayoutDef,
   gridW: number,
   gridH: number,
@@ -156,6 +176,7 @@ function generateFromLayout(
     chasms: layout.chasms ? layout.chasms.slice() : [],
     fires: layout.fires ? layout.fires.slice() : [],
     healings: layout.healings ? layout.healings.slice() : [],
+    rubble: layout.rubble ? layout.rubble.slice() : [],
     spawnRegions: layout.spawns,
   };
 }
@@ -194,6 +215,7 @@ function generateProcedural(
     chasms: [],
     fires: [],
     healings: [],
+    rubble: [],
     spawnRegions,
   };
 }

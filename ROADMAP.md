@@ -1123,12 +1123,26 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
   susceptibility); an indestructible (hp-less) wall does NOT; auto-targeting picks a
   reachable hostile over rubble, rubble only when no hostile is reachable; walls/cover are
   never auto-targeted.
-- **40c — optional wall/cover destructibility.** Under HP-presence (40b), a destructible
-  wall/cover = one that **carries an `hp`** (a per-instance HP in the layout schema, or a
-  destructible-wall def); default = **no `hp` = indestructible** (the locked "wall-
-  destructibility OFF" default). The 0-HP reap lifecycle already runs end-to-end. *Test:*
-  a wall given an HP pool falls to focused fire; the default (hp-less) stays
-  indestructible.
+- **✅ 40c — optional wall/cover destructibility (COMPLETE 2026-07-02).** Under HP-presence
+  (40b), a destructible wall/cover = one that **carries an `hp`**; default = **no `hp` =
+  indestructible** (the locked "wall-destructibility OFF" default). *As built:* a per-instance
+  `hp` on a layout wall/cover coord (`NeutralCoordSchema`, backward-compatible with bare
+  `{x,y}`) routes that placement to a NEW hp-bearing neutral def — `wall_destructible`
+  (hp 40) / `half_cover_destructible` (hp 25, LOS-transparent), both burnable/freezable,
+  **no `autoTarget`** (⇒ combat-targetable per 40b, but never auto-chipped like rubble —
+  manual / AoE / focused fire only). `spawnWall`/`spawnHalfCover` pick the archetype off `hp`
+  presence and pass it as the maxHp override; the 0-HP crumble reap already runs end-to-end
+  (40a). Reuses the `#`/`╥` glyphs (zero atlas growth); **no WorldSnapshot bump, fuzz 212
+  held** (no shipped content carries wall `hp` yet). **VISUAL TELL (user call — 'add a tell
+  now'):** a destructible wall/cover shares its indestructible sibling's glyph, so it renders
+  in a weathered ochre `CRACKED_STONE #B5843C` (vs the gray `TERMINAL_STONE`) — a pure,
+  headless-tested `spriteColorForUnit` (THREE-free, extracted from BattleRenderer; keyed off
+  `isDestructibleNeutral && !isAutoTargetNeutral` so it's data-driven + excludes rubble, which
+  is already distinct by its `▄` glyph). User-confirmed native ("reads as wood/weaker");
+  browser buffer-readback exact (`#` → `#B5843C` for destructible, `#7A7066` for solid).
+  +11 tests. *Test:* a wall given an HP pool falls to focused fire; the default (hp-less)
+  stays indestructible; a destructible wall is NOT auto-targeted; the tint keys off the
+  destructible-obstacle predicate.
 - **40d — the layout editor (absorbs §39e).** Paint rubble (size + HP) + toggle
   wall/cover destructibility + **the multi-tile spawn-room fit validation folded from
   §39e** — does an N×N deploy fit at a spawn region? A thin wrapper over §39c's

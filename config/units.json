@@ -584,8 +584,19 @@
     "glyph": "#",
     "statusSusceptibility": ["burn","frozen"]
   },
+  "wall_destructible": {
+    "glyph": "#",
+    "hp": 40,
+    "statusSusceptibility": ["burn","frozen"]
+  },
   "half_cover": {
     "glyph": "╥",
+    "blocksLineOfSight": false,
+    "statusSusceptibility": ["burn","frozen"]
+  },
+  "half_cover_destructible": {
+    "glyph": "╥",
+    "hp": 25,
     "blocksLineOfSight": false,
     "statusSusceptibility": ["burn","frozen"]
   },

@@ -150,14 +150,16 @@ export function applyTerrain(
     world.tileGrid.setKind({ x: cell.x, y: cell.y }, cell.kind);
   }
   for (const coord of walls) {
-    spawnWall(world, coord);
+    // §40c — a wall coord carrying an `hp` spawns DESTRUCTIBLE; a bare coord
+    // (every shipped layout + all procedural) spawns the indestructible default.
+    spawnWall(world, coord, coord.hp);
   }
   // D6: half-cover spawns after walls so any future "stack on same
   // cell" diagnostic sees walls first (today schema validation
   // prevents the overlap, but keeping the order stable means future
   // failure modes are predictable).
   for (const coord of halfCovers) {
-    spawnHalfCover(world, coord);
+    spawnHalfCover(world, coord, coord.hp);
   }
   return spawnRegions;
 }

@@ -258,6 +258,46 @@ describe('§37g — a spawn region may sit on passable terrain, not impassable/o
   }
 });
 
+describe('§40c — optional per-instance wall/cover HP (destructibility)', () => {
+  // A minimal valid layout; callers drop in the wall / half-cover set under test.
+  const layoutWith = (patch: Record<string, unknown>): Record<string, unknown> => ({
+    id: 'destructible-wall',
+    name: 'Destructible Wall',
+    description: '§40c fixture — a wall carrying a per-instance HP pool.',
+    gridW: 8,
+    gridH: 8,
+    theme: 'grassland',
+    walls: [],
+    spawns: [
+      { availability: 'player', tiles: [{ x: 0, y: 0 }] },
+      { availability: 'enemy', tiles: [{ x: 7, y: 7 }] },
+    ],
+    ...patch,
+  });
+
+  it('accepts + preserves an optional wall `hp`; a bare wall stays hp-less', () => {
+    const parsed = LayoutsSchema.parse([
+      layoutWith({ walls: [{ x: 3, y: 3, hp: 40 }, { x: 4, y: 4 }] }),
+    ]);
+    expect(parsed[0]!.walls[0]!.hp).toBe(40); // the destructible placement
+    expect(parsed[0]!.walls[1]!.hp).toBeUndefined(); // the indestructible default
+  });
+
+  it('accepts an optional half-cover `hp` too', () => {
+    const parsed = LayoutsSchema.parse([layoutWith({ halfCovers: [{ x: 2, y: 2, hp: 25 }] })]);
+    expect(parsed[0]!.halfCovers?.[0]?.hp).toBe(25);
+  });
+
+  it('rejects a non-positive wall `hp` (the typo guard)', () => {
+    expect(LayoutsSchema.safeParse([layoutWith({ walls: [{ x: 3, y: 3, hp: 0 }] })]).success).toBe(
+      false,
+    );
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ walls: [{ x: 3, y: 3, hp: -5 }] })]).success,
+    ).toBe(false);
+  });
+});
+
 describe('SpawnRegion schema tile-count range (H2)', () => {
   // Distinct, in-bounds tiles so only the count is under test (the
   // duplicate-coord refine is exercised separately below).

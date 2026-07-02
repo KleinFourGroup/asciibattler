@@ -182,6 +182,24 @@ describe('§38d — neutral catalog entries', () => {
     expect(isAutoTargetNeutral('mercenary')).toBe(false); // not even a neutral
   });
 
+  it('§40c — the destructible wall/cover defs: hp-present (destructible) but NOT auto-targeted', () => {
+    // §40c gives walls/cover OPTIONAL destructibility via a SEPARATE hp-bearing neutral
+    // def; a layout's per-instance `hp` routes a placement to it. HP-presence ⇒ combat-
+    // targetable (AoE / manual / focused fire), matching §40b; the ABSENT `autoTarget`
+    // ⇒ never auto-chipped like rubble (the "walls stay manual/AoE-only" rule). Both
+    // derived from the catalog — never hardcoded.
+    for (const id of ['wall_destructible', 'half_cover_destructible']) {
+      const def = NEUTRAL_DEFS[id]!;
+      expect(def.hp, `${id}.hp`).toBeGreaterThan(0); // a real HP pool ⇒ destructible
+      expect(isDestructibleNeutral(id), `${id} destructible`).toBe(true);
+      expect(def.autoTarget, `${id}.autoTarget`).toBe(false); // schema default (no field)
+      expect(isAutoTargetNeutral(id), `${id} not auto-targeted`).toBe(false);
+    }
+    // LOS mirrors the indestructible siblings: wall opaque, cover transparent.
+    expect(NEUTRAL_DEFS.wall_destructible!.blocksLineOfSight).toBe(true);
+    expect(NEUTRAL_DEFS.half_cover_destructible!.blocksLineOfSight).toBe(false);
+  });
+
   it('the union routes each entry to the right arm', () => {
     // A neutral (no abilities/baseStats) must FAIL the combatant arm and a combatant
     // (extra baseStats/abilities keys) must FAIL the STRICT neutral arm — the

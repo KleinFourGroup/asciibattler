@@ -33,6 +33,19 @@ const CoordSchema = z.object({
   y: z.number().int().nonnegative(),
 });
 
+/**
+ * §40c — a wall / half-cover coord that may carry an optional per-instance `hp`,
+ * making THAT placement destructible (spawned as the `wall_destructible` /
+ * `half_cover_destructible` neutral def, whose HP-presence is the §40b signal that
+ * makes it combat-targetable). Absent `hp` ⇒ the indestructible `wall` / `half_cover`
+ * def — the locked "wall-destructibility OFF by default" rule. Backward-compatible:
+ * a bare `{x,y}` coord (every shipped layout today) parses unchanged. The cap mirrors
+ * the neutral-def `hp` cap (a typo guard, not a design knob); §41 tunes the pools.
+ */
+const NeutralCoordSchema = CoordSchema.extend({
+  hp: z.number().int().positive().max(999).optional(),
+});
+
 /** Hand-authored layouts pick their own grid size in this range. */
 export const LAYOUT_MIN_SIDE = 8;
 export const LAYOUT_MAX_SIDE = 32;
@@ -132,12 +145,15 @@ const LayoutSchema = z
     description: z.string().min(1),
     gridW: SideSchema,
     gridH: SideSchema,
-    walls: z.array(CoordSchema),
+    /** §40c: each wall coord may carry an optional `hp` (→ destructible; see
+     *  `NeutralCoordSchema`). A bare `{x,y}` (the default) is an indestructible wall. */
+    walls: z.array(NeutralCoordSchema),
     water: z.array(CoordSchema).optional(),
     /** D6: optional neutral-team half-cover entities. Pathfinding blocks
      *  through them like walls; ranged LOS shoots OVER them. Validation
-     *  rejects overlap with walls, water, spawn regions, or self. */
-    halfCovers: z.array(CoordSchema).optional(),
+     *  rejects overlap with walls, water, spawn regions, or self.
+     *  §40c: an optional per-coord `hp` makes that cover destructible. */
+    halfCovers: z.array(NeutralCoordSchema).optional(),
     /** D7.A: optional impassable tile (Infinity pathfinding cost, LOS-
      *  transparent — LOS never inspects tiles). Hand-authored-only in
      *  D7 like half-cover (no procedural density knob). Validation

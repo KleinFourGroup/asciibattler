@@ -43,31 +43,49 @@ export const WALL_ARCHETYPE = 'wall';
 export const HALF_COVER_ARCHETYPE = 'half_cover';
 
 /**
+ * §40c — the DESTRUCTIBLE wall / half-cover catalog ids. Under §40b's HP-presence
+ * rule, destructibility IS `hp`-presence on the def, so a destructible wall is a
+ * SEPARATE neutral `UnitDef` carrying an `hp` pool (present ⇒ `isCombatTargetable`)
+ * but no `autoTarget` (⇒ never auto-chipped like rubble — manual / AoE / focused
+ * fire only). They share the indestructible siblings' glyph (`#` / `╥`) so a
+ * destructible wall reads identically until it crumbles (a visual "tell" is a
+ * deferred polish call, not part of the mechanic). `spawnWall` / `spawnHalfCover`
+ * route here when handed a per-instance `hp` (the §40c layout-schema knob); the
+ * def's own `hp` is the default pool a hp-less-override spawn (or the §40d editor's
+ * default fill) gets. UNTUNED — §41 balances the pools.
+ */
+export const WALL_DESTRUCTIBLE_ARCHETYPE = 'wall_destructible';
+export const HALF_COVER_DESTRUCTIBLE_ARCHETYPE = 'half_cover_destructible';
+
+/**
  * Spawn a wall at the given cell.
  *
- * `maxHp` defaults to 1, which makes the wall functionally indestructible
- * because nothing currently *targets* walls — Targeting filters neutrals
- * out of the candidate pool. The argument is plumbed (C1b) so the
- * destructibility path is exercisable in tests, and ready for C2's AoE
- * archetypes which will introduce damage that lands on neutral cells
- * regardless of Targeting's enemy-only filter.
+ * §40c — passing an `hp` makes the wall DESTRUCTIBLE: it spawns as the
+ * `wall_destructible` neutral def (whose def-level `hp` presence is the §40b
+ * signal `isCombatTargetable` keys off) with `hp` as the per-instance maxHp
+ * override — the layout-schema "give a wall an HP pool" knob. With no `hp`
+ * (the default + every shipped layout today) it spawns as the plain `wall`
+ * def, which is hp-LESS ⇒ indestructible (Targeting never picks it; AoE
+ * skips it; nothing damages it). So a wall is breakable iff its layout entry
+ * carries an `hp` — the locked "wall-destructibility OFF by default" rule.
  *
- * Lifecycle when a wall does take fatal damage: `World.tick`'s death
+ * Lifecycle when a destructible wall takes fatal damage: `World.tick`'s death
  * short-circuit picks it up the next tick, splices it from `world.units`,
  * emits `unit:died` with `team: 'neutral'`. BattleRenderer fades the
  * sprite; BattleScene's audio handler skips neutrals so the standard
- * combat death sound doesn't play for crumbling masonry.
+ * combat death sound doesn't play for crumbling masonry. (Same path §40a's
+ * rubble crumble already exercises end-to-end.)
  *
  * Default `blocksLineOfSight: true` — ranged units can't shoot through
- * walls (the C1b LOS contract).
+ * walls (the C1b LOS contract). Both wall defs share it.
  */
-export function spawnWall(world: World, position: GridCoord, maxHp?: number): Unit {
-  // §38d — glyph + the flat HP default now come from the `wall` catalog entry;
-  // `maxHp` still overrides (tests / future destructible variants).
+export function spawnWall(world: World, position: GridCoord, hp?: number): Unit {
+  // §38d — glyph + LOS-blocking come from the catalog entry. §40c — `hp` present
+  // routes to the destructible def (targetable) with `hp` as the maxHp override.
   return world.spawnEnvironment({
-    archetype: WALL_ARCHETYPE,
+    archetype: hp !== undefined ? WALL_DESTRUCTIBLE_ARCHETYPE : WALL_ARCHETYPE,
     position,
-    ...(maxHp !== undefined ? { maxHp } : {}),
+    ...(hp !== undefined ? { maxHp: hp } : {}),
   });
 }
 
@@ -79,19 +97,21 @@ export function spawnWall(world: World, position: GridCoord, maxHp?: number): Un
  * removes it from the wall pool `AttackBehavior` builds for the
  * Bresenham LOS check.
  *
- * Damage / destructibility: same plumbing as walls — `maxHp` defaults
- * to 1, no behavior targets neutrals today, so practically
- * indestructible until C2's AoE archetypes land. The combat-modifier
- * hook ("ranged defense bonus for shooting from behind half-cover")
- * is explicitly C2-era and stays unbuilt in D6.
+ * §40c — destructibility mirrors walls: passing an `hp` spawns the
+ * `half_cover_destructible` def (targetable, `hp` = per-instance maxHp);
+ * with no `hp` it's the hp-less `half_cover` def = indestructible. Neither
+ * is ever auto-targeted (no `autoTarget` on either def) — manual / AoE /
+ * focused fire only. The combat-modifier hook ("ranged defense bonus for
+ * shooting from behind half-cover") is still C2-era and stays unbuilt.
  */
-export function spawnHalfCover(world: World, position: GridCoord, maxHp?: number): Unit {
-  // §38d — glyph + `blocksLineOfSight: false` (the D6 LOS contract) now live on
-  // the `half_cover` catalog entry; `maxHp` still overrides the flat HP default.
+export function spawnHalfCover(world: World, position: GridCoord, hp?: number): Unit {
+  // §38d — glyph + `blocksLineOfSight: false` (the D6 LOS contract) live on the
+  // catalog entry. §40c — `hp` present routes to the destructible def (targetable)
+  // with `hp` as the maxHp override.
   return world.spawnEnvironment({
-    archetype: HALF_COVER_ARCHETYPE,
+    archetype: hp !== undefined ? HALF_COVER_DESTRUCTIBLE_ARCHETYPE : HALF_COVER_ARCHETYPE,
     position,
-    ...(maxHp !== undefined ? { maxHp } : {}),
+    ...(hp !== undefined ? { maxHp: hp } : {}),
   });
 }
 

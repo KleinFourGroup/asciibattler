@@ -99,6 +99,21 @@ describe('§40b — rubble auto-target: selection', () => {
     expect(player.targetId).toBe(enemy.id);
   });
 
+  it('§40c — a DESTRUCTIBLE wall sealing the corridor is still never auto-targeted', () => {
+    // A §40c destructible wall is combat-targetable (AoE / manual / focused fire) but
+    // carries NO `autoTarget`, so — unlike rubble — a walled-off unit does NOT auto-
+    // commit to chipping it. It keeps the (now unreachable) hostile, exactly like the
+    // indestructible-wall case above. `autoTarget` (not mere HP-presence) gates the hook.
+    const w = world(5, 1);
+    const player = place(w, 100, 'player', 0, 0);
+    spawnWall(w, { x: 2, y: 0 }, 40); // DESTRUCTIBLE (hp present) but NOT an auto-target
+    const enemy = place(w, 101, 'enemy', 4, 0);
+
+    updateTarget(player, w);
+
+    expect(player.targetId).toBe(enemy.id); // the classic pick stands; the wall isn't chipped
+  });
+
   it('prefers a reachable farther hostile over the rubble when the nearest is walled off', () => {
     // A 1-wide corridor sealed by rubble to the RIGHT (enemy A unreachable); the
     // grid opens to a second row on the LEFT where enemy B sits (reachable).

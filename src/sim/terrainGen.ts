@@ -45,14 +45,24 @@ import {
 } from './layouts';
 import { sampleProceduralParams, generateProceduralMap } from './proceduralMap';
 
+/**
+ * §40c — a wall / half-cover placement carrying an OPTIONAL per-instance `hp`.
+ * Present ⇒ destructible (spawned as the `wall_destructible` / `half_cover_destructible`
+ * neutral def); absent ⇒ the indestructible default. A bare `GridCoord` (the procedural
+ * path emits only these) is assignable — `hp` is optional — so procedural obstacles stay
+ * indestructible with no code change.
+ */
+export type NeutralCoord = GridCoord & { readonly hp?: number | undefined };
+
 export interface GeneratedTerrain {
   readonly tileGrid: TileGrid;
-  readonly walls: readonly GridCoord[];
+  readonly walls: readonly NeutralCoord[];
   /** D6: neutral-team LOS-transparent obstacles. Procedural emits these
    *  as the noise field's half-cover share (M6); hand-authored layouts
    *  may declare any count. Pathfinding blocks through them;
-   *  AttackBehavior shoots over. */
-  readonly halfCovers: readonly GridCoord[];
+   *  AttackBehavior shoots over. §40c: a hand-authored coord may carry `hp`
+   *  (destructible cover); procedural emits bare coords (indestructible). */
+  readonly halfCovers: readonly NeutralCoord[];
   /** D7.A: impassable tile (Infinity pathfinding cost, LOS-transparent).
    *  Stored on `tileGrid` itself as `kind === 'chasm'`; this array is a
    *  parallel readout so callers (renderer, editor, tests) can iterate

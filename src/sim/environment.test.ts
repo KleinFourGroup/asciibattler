@@ -9,10 +9,15 @@ import {
   HALF_COVER_GLYPH,
   RUBBLE_GLYPH,
   RUBBLE_ARCHETYPE_BY_SIZE,
+  WALL_ARCHETYPE,
+  HALF_COVER_ARCHETYPE,
+  WALL_DESTRUCTIBLE_ARCHETYPE,
+  HALF_COVER_DESTRUCTIBLE_ARCHETYPE,
   spawnWall,
   spawnHalfCover,
   spawnRubble,
 } from './environment';
+import { isCombatTargetable } from './effects/targeting';
 import { cellsOccupiedBy } from './occupancy';
 import { deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
@@ -121,19 +126,23 @@ describe('environment / spawnWall', () => {
     expect(restored.units[1]!.position).toEqual({ x: 4, y: 5 });
   });
 
-  it('spawns with the requested maxHp (E1: lives on derived, not stats)', () => {
+  it('spawns with the requested maxHp on derived, not stats (§40c: hp ⇒ destructible def)', () => {
+    // §40c — passing an `hp` now routes to the `wall_destructible` def (the maxHp still
+    // lives on `derived`, the E1 contract this test guards); it is the layout's per-
+    // instance HP knob. The destructible-vs-indestructible routing is pinned in the
+    // §40c block below.
     const bus = new EventBus<GameEvents>();
     const w = new World(bus, new RNG(1));
     const wall = spawnWall(w, { x: 1, y: 1 }, 5);
+    expect(wall.archetype).toBe(WALL_DESTRUCTIBLE_ARCHETYPE);
     expect(wall.derived.maxHp).toBe(5);
     expect(wall.currentHp).toBe(5);
   });
 
   it('removes a wall when its HP drops to 0 and emits unit:died with team neutral', () => {
-    // Nothing in the current codebase targets walls (Targeting filters
-    // neutrals), so this test exercises the path E2's AoE damage will
-    // light up: drop wall HP from outside, advance a tick, expect the
-    // wall to be cleaned up just like any other dying Unit.
+    // §40c — a wall handed an `hp` is a real destructible; drop its HP from outside,
+    // advance a tick, expect the same crumble-reap §40a's rubble already exercises:
+    // spliced from `world.units`, `unit:died{ team: 'neutral' }` emitted.
     const bus = new EventBus<GameEvents>();
     const w = new World(bus, new RNG(1));
     const deaths: GameEvents['unit:died'][] = [];
@@ -146,6 +155,49 @@ describe('environment / spawnWall', () => {
 
     expect(w.findUnit(wall.id)).toBeUndefined();
     expect(deaths).toEqual([{ unitId: wall.id, team: 'neutral' }]);
+  });
+});
+
+/**
+ * §40c — OPTIONAL wall/cover destructibility. A wall/cover placement carrying a
+ * per-instance `hp` (the layout-schema knob) spawns as a SEPARATE hp-bearing neutral
+ * def (`wall_destructible` / `half_cover_destructible`); HP-presence is the §40b signal
+ * that makes it combat-targetable (AoE / manual / focused fire), while the absent
+ * `autoTarget` keeps it off the rubble auto-chip path (proven in rubbleAutoTarget.test).
+ * No `hp` ⇒ the indestructible default — the locked "wall-destructibility OFF by
+ * default" rule. Balance-proof: nothing here hardcodes the pool (only the routing).
+ */
+describe('§40c — destructible walls / cover', () => {
+  it('a wall given an HP pool spawns DESTRUCTIBLE (combat-targetable) at that maxHp', () => {
+    const w = new World(new EventBus<GameEvents>(), new RNG(1));
+    const wall = spawnWall(w, { x: 2, y: 2 }, 40);
+    expect(wall.archetype).toBe(WALL_DESTRUCTIBLE_ARCHETYPE);
+    expect(wall.glyph).toBe(WALL_GLYPH); // reads as a wall until it crumbles (shared glyph)
+    expect(wall.blocksLineOfSight).toBe(true); // the LOS contract is unchanged
+    expect(wall.derived.maxHp).toBe(40); // the per-instance layout HP became maxHp
+    expect(wall.currentHp).toBe(40);
+    expect(isCombatTargetable(wall)).toBe(true); // §40b HP-presence ⇒ AoE / focused fire hits it
+  });
+
+  it('a wall with NO hp stays the indestructible default (OFF by default)', () => {
+    const w = new World(new EventBus<GameEvents>(), new RNG(1));
+    const wall = spawnWall(w, { x: 2, y: 2 });
+    expect(wall.archetype).toBe(WALL_ARCHETYPE);
+    expect(isCombatTargetable(wall)).toBe(false); // hp-less ⇒ nothing damages it
+  });
+
+  it('half-cover mirrors walls: hp ⇒ destructible (LOS-transparent), none ⇒ indestructible', () => {
+    const w = new World(new EventBus<GameEvents>(), new RNG(1));
+    const destructible = spawnHalfCover(w, { x: 1, y: 1 }, 25);
+    expect(destructible.archetype).toBe(HALF_COVER_DESTRUCTIBLE_ARCHETYPE);
+    expect(destructible.glyph).toBe(HALF_COVER_GLYPH);
+    expect(destructible.blocksLineOfSight).toBe(false); // the D6 LOS contract holds
+    expect(destructible.derived.maxHp).toBe(25);
+    expect(isCombatTargetable(destructible)).toBe(true);
+
+    const indestructible = spawnHalfCover(w, { x: 2, y: 2 });
+    expect(indestructible.archetype).toBe(HALF_COVER_ARCHETYPE);
+    expect(isCombatTargetable(indestructible)).toBe(false);
   });
 });
 

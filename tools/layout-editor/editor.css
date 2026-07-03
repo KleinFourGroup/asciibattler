@@ -397,20 +397,27 @@ body {
   cursor: crosshair;
 }
 
-.cell.wall {
-  background: var(--terminal-stone);
-}
-
-.cell.wall::after {
-  content: '#';
+/* §40g — walls + half-cover are a NEUTRAL OVERLAY now (a cell can be `sand wall`),
+   so they render as an inset badge via ::before (z-index above the terrain ::after
+   glyph) instead of filling the cell. The terrain color frames the badge, so the
+   author sees the tile beneath a destructible wall; on plain floor the thin frame
+   still reads as a near-solid wall. */
+.cell.wall::before,
+.cell.halfCover::before {
   position: absolute;
-  inset: 0;
+  inset: 12%;
   display: grid;
   place-items: center;
-  color: var(--terminal-black);
   font-weight: 700;
-  font-size: 22px;
+  font-size: 20px;
   pointer-events: none;
+  z-index: 2;
+}
+
+.cell.wall::before {
+  content: '#';
+  background: var(--terminal-stone);
+  color: var(--terminal-black);
 }
 
 .cell.water {
@@ -429,24 +436,13 @@ body {
   pointer-events: none;
 }
 
-/* D6 — half-cover cell. Same dark-stone background family as walls
-   so the neutral-units layer reads as one visual group, but with
-   the ╥ glyph and a dimmer fill so the LOS-transparent semantic is
-   visually distinct from a solid wall. */
-.cell.halfCover {
-  background: var(--dark-stone);
-}
-
-.cell.halfCover::after {
+/* D6 — half-cover uses the dark-stone family (a dimmer fill than a solid wall)
+   with the ╥ glyph so its LOS-transparent semantic stays visually distinct. §40g
+   renders it as the same inset ::before badge as the wall (shared rule above). */
+.cell.halfCover::before {
   content: '\2565';
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
+  background: var(--dark-stone);
   color: var(--terminal-stone);
-  font-weight: 700;
-  font-size: 22px;
-  pointer-events: none;
 }
 
 /* D7.C — chasm / fire / healing cells. Each tile kind has a distinct
@@ -609,33 +605,19 @@ body {
    D6: half-cover dims with the rest of the neutral-units layer (it's
    in the same layer as walls — the wall/half-cover sub-tool is a
    per-stroke pick, not a separate layer). */
-/* D7.C — chasm / fire / healing dim alongside water on non-terrain
-   layers (they're all "terrain" content from the dim-others perspective). */
-.grid[data-active-layer='neutral-units'] .cell.water,
-.grid[data-active-layer='neutral-units'] .cell.chasm,
-.grid[data-active-layer='neutral-units'] .cell.fire,
-.grid[data-active-layer='neutral-units'] .cell.healing,
-.grid[data-active-layer='neutral-units'] .cell.deepWater,
-.grid[data-active-layer='neutral-units'] .cell.hills,
-.grid[data-active-layer='neutral-units'] .cell.ice,
-.grid[data-active-layer='neutral-units'] .cell.sand,
-.grid[data-active-layer='neutral-units'] .cell.mud,
-.grid[data-active-layer='spawn-regions'] .cell.water,
-.grid[data-active-layer='spawn-regions'] .cell.chasm,
-.grid[data-active-layer='spawn-regions'] .cell.fire,
-.grid[data-active-layer='spawn-regions'] .cell.healing,
-.grid[data-active-layer='spawn-regions'] .cell.deepWater,
-.grid[data-active-layer='spawn-regions'] .cell.hills,
-.grid[data-active-layer='spawn-regions'] .cell.ice,
-.grid[data-active-layer='spawn-regions'] .cell.sand,
-.grid[data-active-layer='spawn-regions'] .cell.mud {
+/* §40g — inactive-layer dimming now targets the layer's PSEUDO-ELEMENT, not the
+   whole cell, because a cell can carry BOTH layers (a `sand wall`). Terrain glyphs
+   live on ::after, the neutral badge on ::before; each dims when its layer isn't
+   active, so a composite cell shows the active layer bright and the other faded.
+   (The subtle terrain BACKGROUND tint stays — it reads as quiet context under the
+   badge.) A cell with no glyph on a side simply has no pseudo to dim. */
+.grid[data-active-layer='neutral-units'] .cell::after,
+.grid[data-active-layer='spawn-regions'] .cell::after {
   opacity: 0.3;
 }
 
-.grid[data-active-layer='terrain'] .cell.wall,
-.grid[data-active-layer='terrain'] .cell.halfCover,
-.grid[data-active-layer='spawn-regions'] .cell.wall,
-.grid[data-active-layer='spawn-regions'] .cell.halfCover {
+.grid[data-active-layer='terrain'] .cell::before,
+.grid[data-active-layer='spawn-regions'] .cell::before {
   opacity: 0.3;
 }
 

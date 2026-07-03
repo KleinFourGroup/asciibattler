@@ -72,11 +72,12 @@ import { formatSectorsJson } from '../sector-editor/format';
 import { addLayoutToSectorPools } from '../sector-editor/poolEdit';
 import type { SectorDef } from '../../src/config/sectors';
 
+/** §40g — a cell's TERRAIN kind. Walls + half-cover are no longer cell kinds:
+ *  they moved to the `neutrals` overlay so a neutral can sit ON a terrain tile
+ *  (a destructible wall on sand). Terrain stays mutex per cell. */
 type Cell =
   | 'floor'
-  | 'wall'
   | 'water'
-  | 'halfCover'
   | 'chasm'
   | 'fire'
   | 'healing'
@@ -89,7 +90,8 @@ type Cell =
 type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
 /** D6: sub-tool within the neutral-units layer. The layer radio picks
  *  the layer; this radio picks which kind of neutral entity that
- *  layer paints. */
+ *  layer paints. §40g — also the value stored in the `neutrals` overlay
+ *  grid (one neutral per cell, mutex among wall/half-cover). */
 type NeutralKind = 'wall' | 'halfCover';
 /** D7.C: sub-tool within the terrain layer. Mirrors the D6 neutral-row
  *  pattern — same shape, same mid-stroke commit rule. Tile-kind stays
@@ -142,6 +144,10 @@ const SECTOR_ADD_STASH_KEY = 'layoutEditor.sectorAdded';
 let gridW = DEFAULT_SIDE;
 let gridH = DEFAULT_SIDE;
 let grid: Cell[][] = makeEmptyGrid(gridW, gridH);
+/** §40g — the neutral OVERLAY, parallel to `grid`. `null` = no obstacle; a
+ *  `NeutralKind` = a wall/half-cover sitting ON whatever terrain `grid` holds at
+ *  that cell. Kept separate from the terrain grid so the two layers coexist. */
+let neutrals: (NeutralKind | null)[][] = makeEmptyNeutrals(gridW, gridH);
 let cellEls: HTMLDivElement[][] = [];
 let activeLayer: Layer = 'terrain';
 let activeNeutralKind: NeutralKind = 'wall';
@@ -174,6 +180,17 @@ function makeEmptyGrid(w: number, h: number): Cell[][] {
   for (let y = 0; y < h; y++) {
     const row: Cell[] = [];
     for (let x = 0; x < w; x++) row.push('floor');
+    g.push(row);
+  }
+  return g;
+}
+
+/** §40g — the empty neutral overlay (all `null`), same dimensions as `grid`. */
+function makeEmptyNeutrals(w: number, h: number): (NeutralKind | null)[][] {
+  const g: (NeutralKind | null)[][] = [];
+  for (let y = 0; y < h; y++) {
+    const row: (NeutralKind | null)[] = [];
+    for (let x = 0; x < w; x++) row.push(null);
     g.push(row);
   }
   return g;
@@ -348,14 +365,27 @@ function resizeGridData(newW: number, newH: number): number {
     }
     next.push(row);
   }
-  // Count any non-floor cell that USED to exist but is now outside the
-  // new bounds.
+  // §40g — resize the neutral overlay in lockstep with the terrain grid.
+  const nextNeutrals: (NeutralKind | null)[][] = [];
+  for (let y = 0; y < newH; y++) {
+    const row: (NeutralKind | null)[] = [];
+    for (let x = 0; x < newW; x++) {
+      const existing = y < neutrals.length && x < neutrals[y]!.length ? neutrals[y]![x]! : null;
+      row.push(existing);
+    }
+    nextNeutrals.push(row);
+  }
+  // Count any non-empty cell (terrain OR neutral) that USED to exist but is now
+  // outside the new bounds, so the resize clip warning covers both layers.
   for (let y = 0; y < grid.length; y++) {
     for (let x = 0; x < grid[y]!.length; x++) {
-      if ((y >= newH || x >= newW) && grid[y]![x] !== 'floor') clipped++;
+      if (y >= newH || x >= newW) {
+        if (grid[y]![x] !== 'floor' || neutrals[y]![x] !== null) clipped++;
+      }
     }
   }
   grid = next;
+  neutrals = nextNeutrals;
   gridW = newW;
   gridH = newH;
   // Spawn regions are tied to specific tiles + the arena's dimensions;
@@ -516,9 +546,16 @@ function applyStrokeTo(c: Coord): void {
   strokeAppliedCells.add(key);
 
   switch (activeStroke) {
-    case 'paint-water':
+    // §40g — wall/half-cover strokes write the NEUTRAL overlay; every other
+    // paint/erase writes the terrain grid. The two layers are independent, so a
+    // wall stroke no longer wipes the terrain under it (and vice versa).
     case 'paint-wall':
     case 'paint-halfCover':
+    case 'erase-wall':
+    case 'erase-halfCover':
+      applyNeutralStroke(c);
+      return;
+    case 'paint-water':
     case 'paint-chasm':
     case 'paint-fire':
     case 'paint-healing':
@@ -528,8 +565,6 @@ function applyStrokeTo(c: Coord): void {
     case 'paint-sand':
     case 'paint-mud':
     case 'erase-water':
-    case 'erase-wall':
-    case 'erase-halfCover':
     case 'erase-chasm':
     case 'erase-fire':
     case 'erase-healing':
@@ -551,22 +586,14 @@ function applyStrokeTo(c: Coord): void {
 
 function applyTerrainStroke(c: Coord): void {
   const current = grid[c.y]![c.x]!;
-  // Each stroke kind only touches its layer's content: erase-water
-  // leaves walls alone, paint-wall over a water cell wins (cell kinds
-  // are still mutex — the layer system is a UX overlay, not a multi-
-  // layer per-cell data model in D5.D). D6 extends the same rule to
-  // half-cover. D7.C extends the same rule again to chasm / fire /
-  // healing — each erase-X only clears its own kind.
+  // Terrain kind stays mutex per cell (paint-chasm over a water cell wins);
+  // each erase-X only clears its OWN kind (erase-fire leaves water/chasm/healing
+  // alone). §40g — walls/half-cover moved to `applyNeutralStroke`, so a terrain
+  // stroke no longer touches the neutral overlay at all.
   let next: Cell | null = null;
   switch (activeStroke) {
     case 'paint-water':
       next = 'water';
-      break;
-    case 'paint-wall':
-      next = 'wall';
-      break;
-    case 'paint-halfCover':
-      next = 'halfCover';
       break;
     case 'paint-chasm':
       next = 'chasm';
@@ -595,12 +622,6 @@ function applyTerrainStroke(c: Coord): void {
     case 'erase-water':
       if (current === 'water') next = 'floor';
       break;
-    case 'erase-wall':
-      if (current === 'wall') next = 'floor';
-      break;
-    case 'erase-halfCover':
-      if (current === 'halfCover') next = 'floor';
-      break;
     case 'erase-chasm':
       if (current === 'chasm') next = 'floor';
       break;
@@ -628,6 +649,36 @@ function applyTerrainStroke(c: Coord): void {
   }
   if (next === null || next === current) return;
   grid[c.y]![c.x] = next;
+  strokeDirty = true;
+  refreshCell(c);
+}
+
+/**
+ * §40g — a neutral (wall / half-cover) stroke writes the `neutrals` OVERLAY, not
+ * the terrain grid. One neutral per cell (mutex among wall/half-cover — paint-wall
+ * over a half-cover cell wins), independent of the terrain beneath it. Each
+ * erase-X only clears its own kind (erase-halfCover leaves a wall alone), mirroring
+ * the per-sub-tool erase rule terrain uses.
+ */
+function applyNeutralStroke(c: Coord): void {
+  const current = neutrals[c.y]![c.x]!;
+  let next: NeutralKind | null | undefined;
+  switch (activeStroke) {
+    case 'paint-wall':
+      next = 'wall';
+      break;
+    case 'paint-halfCover':
+      next = 'halfCover';
+      break;
+    case 'erase-wall':
+      if (current === 'wall') next = null;
+      break;
+    case 'erase-halfCover':
+      if (current === 'halfCover') next = null;
+      break;
+  }
+  if (next === undefined || next === current) return;
+  neutrals[c.y]![c.x] = next;
   strokeDirty = true;
   refreshCell(c);
 }
@@ -688,9 +739,11 @@ function refreshCell(c: Coord): void {
     'active-region-2',
     'active-region-3',
   );
-  if (value === 'wall') el.classList.add('wall');
+  // §40g — terrain kind (from `grid`) and the neutral overlay (from `neutrals`)
+  // are painted as INDEPENDENT classes, so a `sand wall` cell carries both. The
+  // CSS renders the terrain as the cell background + glyph and the neutral as an
+  // inset badge on top, so the author sees the tile beneath the obstacle.
   if (value === 'water') el.classList.add('water');
-  if (value === 'halfCover') el.classList.add('halfCover');
   if (value === 'chasm') el.classList.add('chasm');
   if (value === 'fire') el.classList.add('fire');
   if (value === 'healing') el.classList.add('healing');
@@ -699,6 +752,9 @@ function refreshCell(c: Coord): void {
   if (value === 'ice') el.classList.add('ice');
   if (value === 'sand') el.classList.add('sand');
   if (value === 'mud') el.classList.add('mud');
+  const neutral = neutrals[c.y]![c.x]!;
+  if (neutral === 'wall') el.classList.add('wall');
+  if (neutral === 'halfCover') el.classList.add('halfCover');
 
   // Tear down any prior region tags + outline. Rebuilt below based
   // on current spawns membership.
@@ -739,6 +795,18 @@ function collectCells(kind: Exclude<Cell, 'floor'>): Coord[] {
   return out;
 }
 
+/** §40g — collect the neutral OVERLAY cells of a given kind (wall / half-cover),
+ *  the neutral-layer counterpart to `collectCells` (which now scans terrain only). */
+function collectNeutrals(kind: NeutralKind): Coord[] {
+  const out: Coord[] = [];
+  for (let y = 0; y < gridH; y++) {
+    for (let x = 0; x < gridW; x++) {
+      if (neutrals[y]![x] === kind) out.push({ x, y });
+    }
+  }
+  return out;
+}
+
 interface ValidationItem {
   readonly level: 'ok' | 'warn' | 'error';
   readonly text: string;
@@ -746,9 +814,9 @@ interface ValidationItem {
 
 function validate(): ValidationItem[] {
   const items: ValidationItem[] = [];
-  const walls = collectCells('wall');
+  const walls = collectNeutrals('wall');
   const water = collectCells('water');
-  const halfCovers = collectCells('halfCover');
+  const halfCovers = collectNeutrals('halfCover');
   const chasms = collectCells('chasm');
   const fires = collectCells('fire');
   const healings = collectCells('healing');
@@ -985,9 +1053,9 @@ function centroidOf(region: SpawnRegion): Coord {
  * fallbacks never reach a written file.
  */
 function buildCurrentLayout(): LayoutDef {
-  const walls = collectCells('wall');
+  const walls = collectNeutrals('wall');
   const water = collectCells('water');
-  const halfCovers = collectCells('halfCover');
+  const halfCovers = collectNeutrals('halfCover');
   const chasms = collectCells('chasm');
   const fires = collectCells('fire');
   const healings = collectCells('healing');
@@ -1278,9 +1346,12 @@ function loadLayout(id: string): void {
   gridW = found.gridW;
   gridH = found.gridH;
   grid = makeEmptyGrid(gridW, gridH);
-  for (const w of found.walls) grid[w.y]![w.x] = 'wall';
+  // §40g — walls/half-cover load into the neutral OVERLAY; terrain into `grid`.
+  // A neutral coord may now coincide with a terrain tile (both are applied).
+  neutrals = makeEmptyNeutrals(gridW, gridH);
+  for (const w of found.walls) neutrals[w.y]![w.x] = 'wall';
   if (found.water) for (const w of found.water) grid[w.y]![w.x] = 'water';
-  if (found.halfCovers) for (const c of found.halfCovers) grid[c.y]![c.x] = 'halfCover';
+  if (found.halfCovers) for (const c of found.halfCovers) neutrals[c.y]![c.x] = 'halfCover';
   if (found.chasms) for (const c of found.chasms) grid[c.y]![c.x] = 'chasm';
   if (found.fires) for (const c of found.fires) grid[c.y]![c.x] = 'fire';
   if (found.healings) for (const c of found.healings) grid[c.y]![c.x] = 'healing';
@@ -1311,6 +1382,7 @@ function loadLayout(id: string): void {
 
 function clearGrid(): void {
   grid = makeEmptyGrid(gridW, gridH);
+  neutrals = makeEmptyNeutrals(gridW, gridH);
   spawns = defaultSpawns(gridW, gridH);
   activeRegionIdx = 0;
   lastClipCount = 0;

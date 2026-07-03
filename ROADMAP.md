@@ -1181,7 +1181,7 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
   verified end to end + browser-smoke-confirmed** (forced `?layout=rubbleQuarry`: the
   `!` focus marker renders on rubble, all 6 players converge + chip a 3×3 rubble 150→85 HP
   over 120 ticks; the raw DOM-click couldn't be exercised via the preview MCP's backgrounded
-  0×0 canvas — the live click-order awaits the user's native playtest). *Test:* clicking
+  0×0 canvas; the live click-order was USER-CONFIRMED native 2026-07-03). *Test:* clicking
   rubble sets a focus objective + units path to and attack it; an indestructible wall stays
   unclickable + reverts a stray order to atWill.
   **Clickbox follow-up (2026-07-03):** the playtest found the pick quad reached ~1 cell above

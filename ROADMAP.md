@@ -1007,11 +1007,11 @@ stays the canonical corner).
   renders at footprint scale, centered.
 - **39e — FOLDED INTO §40 (2026-07-01).** Both halves were forward-looking with no
   §39 consumer: no footprint-bearing entity exists until §40's rubble, and §40 already
-  owns the layout editor + its schema (`40d`). Building placement in §39 would have
-  invented throwaway schema §40 redefines, so — per the "inert until §40's rubble"
-  recommendation — the multi-tile spawn-room fit validation (does an N×N deploy fit? —
-  a thin wrapper over 39c's `anchorFootprint`) + multi-tile entity placement ride
-  §40's `40d`. **Phase 39 closes at 39d** (geometry + pathing + anchoring + render, all
+  owns the layout editor (`40g`) + the rubble schema (`40d`). Building placement in §39
+  would have invented throwaway schema §40 redefines, so — per the "inert until §40's
+  rubble" recommendation — the multi-tile spawn-room fit validation (does an N×N deploy
+  fit? — a thin wrapper over 39c's `anchorFootprint`) + multi-tile entity placement ride
+  §40's editor (`40g`). **Phase 39 closes at 39d** (geometry + pathing + anchoring + render, all
   byte-identical, fuzz 212 held).
 
 ---
@@ -1024,8 +1024,8 @@ destructibility for walls + half-cover. Authored as neutral `UnitDef`s (§38) wi
 HP + footprints (§39) + susceptibility. **No WorldSnapshot bump expected** (HP already
 serialized); the layout schema gains destructible HP fields (config). Balance
 implications → §41. **Absorbs §39e** (folded 2026-07-01) — the multi-tile spawn-room
-fit validation + editor placement land here, where the first footprint-bearing entity
-(rubble) is actually born (see `40d`).
+fit validation + editor placement land in the editor (`40g`); the first footprint-bearing
+entity (rubble) is born into layouts in `40d`.
 
 **Shape:**
 - **The rubble `UnitDef`(s)** — neutral, no abilities, a flat HP pool, a footprint
@@ -1081,7 +1081,7 @@ walls/cover are not auto-targeted (manual/AoE only); a 0-HP destructible reaps +
 - **Rubble blocks LOS → yes** (a per-def `blocksLineOfSight`, default true like walls; low
   rubble could set false).
 
-### Sub-steps (40a–40d) — the proposed cut
+### Sub-steps (40a–40g) — the proposed cut
 
 **Decisions still open** (see *Decision points 40*): the auto-target priority rule,
 all-at-once vs incremental collapse (recommend all-at-once), the wall-destructibility
@@ -1143,11 +1143,55 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
   +11 tests. *Test:* a wall given an HP pool falls to focused fire; the default (hp-less)
   stays indestructible; a destructible wall is NOT auto-targeted; the tint keys off the
   destructible-obstacle predicate.
-- **40d — the layout editor (absorbs §39e).** Paint rubble (size + HP) + toggle
-  wall/cover destructibility + **the multi-tile spawn-room fit validation folded from
-  §39e** — does an N×N deploy fit at a spawn region? A thin wrapper over §39c's
+- **✅ 40d — rubble in layouts (COMPLETE 2026-07-02).** The headless foundation for
+  authoring rubble into a layout + a demo to playtest it. **40d-1** = a footprint-aware
+  `RubbleCoordSchema` (`{x,y,size?,hp?}`) + a `rubble?` field on `LayoutSchema` (N×N
+  bounds / overlap / spawn-block validation) → `GeneratedTerrain.rubble` + the exported
+  `generateFromLayout` seam → a new exported `spawnLayoutNeutrals` (`battleSetup`) that
+  spawns rubble via 40a's `spawnRubble`. Fixed a latent leak — a neutral coord's extra
+  keys (40c `hp`, rubble `size`/`hp`) reached `unit.position`; now a clean `{x,y}` is
+  passed. Byte-identical for every shipped layout. **40d-1b** = a `rubbleQuarry` DEMO
+  layout (14×12 barren, mixed 1×1/2×2/3×3 + custom/default HP + two `#` pillars for scale
+  contrast) + taught the layout formatter to emit `rubble` (the verbatim round-trip test)
+  + added it to "The Start" pool (that sector ships every layout). Browser-verified:
+  forcing `?layout=rubbleQuarry` spawns all rubble at the authored pos/size/HP. 1645 main
+  + 212 fuzz green. **A playtest surfaced two gaps → 40e + 40f, which land BEFORE the
+  editor** (40g).
+- **40e — rubble manually targetable (clickable as an objective).** The playtest gap:
+  you can't click rubble to `focus`/`engage` it, so the "deny access until destroyed"
+  loop only fires via 40b's AUTO-target (a unit fully walled off from all hostiles) —
+  never by deliberate player order. **Seam:** `ObjectiveController`
+  ([src/ui](src/ui/ObjectiveController.ts)) picks only `enemyBillboards()`
+  (`renderer.pickInstance(...)`) and resolves via `objectiveAtCell(cell, enemies)`; the
+  objective target kind is `{kind:'enemy',unitId}`. The SIM already admits a
+  destructible-neutral commit in `currentTarget` (40b), so the gap is UI-side: add
+  destructible neutrals (`isDestructibleNeutral`) to the pickable billboard set + admit a
+  neutral-under-cursor in `objectiveAtCell` + a target kind (or widen `enemy`) for a
+  destructible neutral, so a manual `focus`/`engage` routes an attack order onto rubble.
+  *Decisions:* which neutrals are clickable (rubble only, or all destructibles incl. 40c
+  walls/cover); whether a manual focus OVERRIDES the reachable-hostile priority (recommend
+  yes — it's an explicit order). *Test:* clicking rubble sets a focus objective + units
+  path to and attack it; an indestructible wall stays unclickable.
+- **40f — destructible-neutral HP bar.** The playtest gap: rubble shows no HP, so you
+  can't see it being chipped down. **Seam:** `BattleRenderer.onUnitSpawned` short-circuits
+  the DOM overlay for `team === 'neutral'` (`return` after suppressing bloom) — the comment
+  there ALREADY anticipates this step: *"destructible variants later can opt back in."*
+  `UnitOverlayLayer` owns the `hp-bar` / `hp-bar-fill` DOM + `updateHp`. So: for
+  `isDestructibleNeutral`, create the overlay + HP bar, shown **at least when damaged**
+  (`currentHp < maxHp`); the multi-tile anchor reuses 39d's footprint-center `spritePos`.
+  *Decisions:* only-when-damaged vs always; the bar WIDTH for a 2×2/3×3 (scale to footprint
+  vs fixed); scope (rubble only, or 40c destructible walls/cover too — recommend all
+  destructibles, keyed off the same `isDestructibleNeutral` predicate). *Test:* a damaged
+  rubble shows an HP bar at the right fill; an indestructible wall never shows one.
+- **40g — the layout editor (absorbs §39e; renumbered from 40d).** Paint rubble (size +
+  HP) + toggle wall/cover destructibility + **the multi-tile spawn-room fit validation
+  folded from §39e** — does an N×N deploy fit at a spawn region? A thin wrapper over §39c's
   `anchorFootprint` (`region.tiles.some(t => anchorFootprint(t, size, …) !== null)`),
-  surfaced as an author warning for a too-cramped region. Browser-verify. *Test:* paint
+  surfaced as an author warning for a too-cramped region. **Also here (deferred from 37g):
+  walls/cover ON non-default terrain** — split the editor's mutex `Cell[][]` into a terrain
+  layer + a neutral overlay (a cell carries a tile kind AND an optional neutral) + relax
+  the schema neutral-on-terrain overlap rule. The layout formatter already emits `rubble`
+  (built in 40d-1b); it still needs wall/cover `hp` emission. Browser-verify. *Test:* paint
   rubble + toggle destructibility, both read back; spawn-room fit validation rejects a
   too-small room.
 

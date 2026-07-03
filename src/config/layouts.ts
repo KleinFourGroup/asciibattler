@@ -214,44 +214,21 @@ const LayoutSchema = z
     theme: ThemeSchema,
   })
   .superRefine((layout, ctx) => {
-    const blocked = new Set<string>();
-    for (const w of layout.walls) blocked.add(`${w.x},${w.y}`);
-    for (const w of layout.water ?? []) blocked.add(`${w.x},${w.y}`);
+    // §40g — LAYERED overlap. A terrain tile and a neutral obstacle (wall /
+    // half-cover / rubble) MAY share a cell: a destructible wall on sand reveals
+    // the sand when it breaks. The game already supports this — `terrainGen` sets
+    // the TileGrid kind and `battleSetup` spawns the wall/rubble as a neutral UNIT
+    // that stands on that tile — so this only lifts the AUTHORING guard. Overlap
+    // is therefore checked WITHIN each layer, not across: `terrainBlocked` keeps
+    // terrain kinds mutex (one tile per cell), `neutralBlocked` keeps obstacles
+    // mutex (one wall/half-cover/rubble per cell), but the two never cross-check.
+    const terrainBlocked = new Set<string>(); // water / chasm / fire / healing / §37 tiles
+    const neutralBlocked = new Set<string>(); // walls / half-covers / rubble
+    for (const w of layout.walls) neutralBlocked.add(`${w.x},${w.y}`);
+    for (const w of layout.water ?? []) terrainBlocked.add(`${w.x},${w.y}`);
 
-    // D6 — half-cover overlap checks. Half-covers can't sit on walls or
-    // water (the cell would be doubly-claimed); after this check they
-    // also reserve their cells against spawn regions.
-    const seenHalfCovers = new Set<string>();
-    (layout.halfCovers ?? []).forEach((hc, idx) => {
-      const k = `${hc.x},${hc.y}`;
-      if (hc.x < 0 || hc.x >= layout.gridW || hc.y < 0 || hc.y >= layout.gridH) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['halfCovers', idx],
-          message: `half-cover (${hc.x},${hc.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
-        });
-      }
-      if (blocked.has(k)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['halfCovers', idx],
-          message: `half-cover (${hc.x},${hc.y}) overlaps a wall or water`,
-        });
-      }
-      if (seenHalfCovers.has(k)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['halfCovers', idx],
-          message: `duplicate half-cover (${hc.x},${hc.y})`,
-        });
-      }
-      seenHalfCovers.add(k);
-      blocked.add(k);
-    });
-
-    // D7.A — chasm overlap checks. Mirrors the half-cover pattern;
-    // chasms reserve their cells against subsequent spawn-region
-    // overlap.
+    // D7.A — chasm is impassable TERRAIN; mutex with other terrain tiles (it may
+    // now sit under a neutral). Also reserves its cells against spawn regions below.
     const seenChasms = new Set<string>();
     (layout.chasms ?? []).forEach((ch, idx) => {
       const k = `${ch.x},${ch.y}`;
@@ -262,11 +239,11 @@ const LayoutSchema = z
           message: `chasm (${ch.x},${ch.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
         });
       }
-      if (blocked.has(k)) {
+      if (terrainBlocked.has(k)) {
         ctx.addIssue({
           code: 'custom',
           path: ['chasms', idx],
-          message: `chasm (${ch.x},${ch.y}) overlaps a wall, water, or half-cover`,
+          message: `chasm (${ch.x},${ch.y}) overlaps another terrain tile`,
         });
       }
       if (seenChasms.has(k)) {
@@ -277,7 +254,7 @@ const LayoutSchema = z
         });
       }
       seenChasms.add(k);
-      blocked.add(k);
+      terrainBlocked.add(k);
     });
 
     // D7.B — fire + healing overlap checks. Tile-kind is mutex per cell,
@@ -300,11 +277,11 @@ const LayoutSchema = z
             message: `${label} (${t.x},${t.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
           });
         }
-        if (blocked.has(k)) {
+        if (terrainBlocked.has(k)) {
           ctx.addIssue({
             code: 'custom',
             path: [pathKey, idx],
-            message: `${label} (${t.x},${t.y}) overlaps an earlier reservation`,
+            message: `${label} (${t.x},${t.y}) overlaps another terrain tile`,
           });
         }
         if (seen.has(k)) {
@@ -315,7 +292,7 @@ const LayoutSchema = z
           });
         }
         seen.add(k);
-        blocked.add(k);
+        terrainBlocked.add(k);
       });
     };
     checkTileEffect(layout.fires, 'fires', 'fire');
@@ -327,13 +304,44 @@ const LayoutSchema = z
     checkTileEffect(layout.sand, 'sand', 'sand');
     checkTileEffect(layout.mud, 'mud', 'mud');
 
+    // D6 — half-cover is a NEUTRAL obstacle: mutex with walls + other half-covers
+    // (the cell would be doubly-claimed by two obstacles), but §40g lets it sit on
+    // any terrain tile. It reserves its cell against spawn regions below.
+    const seenHalfCovers = new Set<string>();
+    (layout.halfCovers ?? []).forEach((hc, idx) => {
+      const k = `${hc.x},${hc.y}`;
+      if (hc.x < 0 || hc.x >= layout.gridW || hc.y < 0 || hc.y >= layout.gridH) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['halfCovers', idx],
+          message: `half-cover (${hc.x},${hc.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
+        });
+      }
+      if (neutralBlocked.has(k)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['halfCovers', idx],
+          message: `half-cover (${hc.x},${hc.y}) overlaps a wall or another half-cover`,
+        });
+      }
+      if (seenHalfCovers.has(k)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['halfCovers', idx],
+          message: `duplicate half-cover (${hc.x},${hc.y})`,
+        });
+      }
+      seenHalfCovers.add(k);
+      neutralBlocked.add(k);
+    });
+
     // §40d — rubble footprints. Each rubble is an N×N block (size 1..3, default 1)
     // anchored at {x,y} as its MIN corner, cells extending toward +x/+y (the §39
     // footprint convention). Unlike a wall, rubble is always destructible (the
     // neutral def carries `hp`); its optional `hp` only tunes the pool. The WHOLE
-    // block must be in-bounds and clear of every earlier reservation (walls /
-    // water / half-cover / chasm / terrain tiles) and any other rubble. Each
-    // reserved cell then blocks spawns below (a unit can't stand on rubble).
+    // block must be in-bounds and clear of every other NEUTRAL (walls / half-cover
+    // / other rubble); §40g lets it sit on terrain. Each reserved cell then blocks
+    // spawns below (a unit can't stand on rubble).
     (layout.rubble ?? []).forEach((r, idx) => {
       const size = r.size ?? 1;
       if (
@@ -354,14 +362,14 @@ const LayoutSchema = z
           const cx = r.x + dx;
           const cy = r.y + dy;
           const k = `${cx},${cy}`;
-          if (blocked.has(k)) {
+          if (neutralBlocked.has(k)) {
             ctx.addIssue({
               code: 'custom',
               path: ['rubble', idx],
-              message: `rubble (${r.x},${r.y}) size ${size} overlaps an earlier reservation at (${cx},${cy})`,
+              message: `rubble (${r.x},${r.y}) size ${size} overlaps a wall, half-cover, or other rubble at (${cx},${cy})`,
             });
           }
-          blocked.add(k);
+          neutralBlocked.add(k);
         }
       }
     });

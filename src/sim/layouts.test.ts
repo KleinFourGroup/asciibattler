@@ -385,6 +385,93 @@ describe('§40d — rubble in layouts (destructible multi-tile neutrals)', () =>
   });
 });
 
+describe('§40g — layered overlap (a neutral may sit on a terrain tile)', () => {
+  // A minimal valid 8×8 layout; callers drop in the terrain/neutral sets under
+  // test. Single-tile spawns at opposite corners keep the valid-pair rule happy
+  // and stay clear of the (3,3)-region the overlap fixtures use.
+  const layoutWith = (patch: Record<string, unknown>): Record<string, unknown> => ({
+    id: 'layered-overlap',
+    name: 'Layered Overlap',
+    description: '§40g fixture — a neutral obstacle sharing a cell with terrain.',
+    gridW: 8,
+    gridH: 8,
+    theme: 'grassland',
+    walls: [],
+    spawns: [
+      { availability: 'player', tiles: [{ x: 0, y: 0 }] },
+      { availability: 'enemy', tiles: [{ x: 7, y: 7 }] },
+    ],
+    ...patch,
+  });
+
+  // The relaxation: a wall / half-cover / rubble may now coincide with a terrain
+  // tile (the obstacle breaks → the tile beneath is revealed). Both passable
+  // (sand/water) and impassable (chasm/deepWater) terrain are allowed under it.
+  it('accepts a wall on sand (passable terrain)', () => {
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ walls: [{ x: 3, y: 3 }], sand: [{ x: 3, y: 3 }] })])
+        .success,
+    ).toBe(true);
+  });
+
+  it('accepts a half-cover on water', () => {
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ halfCovers: [{ x: 3, y: 3 }], water: [{ x: 3, y: 3 }] })])
+        .success,
+    ).toBe(true);
+  });
+
+  it('accepts rubble on mud (the whole footprint over terrain)', () => {
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({ rubble: [{ x: 2, y: 2, size: 2 }], mud: [{ x: 2, y: 2 }, { x: 3, y: 3 }] }),
+      ]).success,
+    ).toBe(true);
+  });
+
+  it('accepts a wall on impassable terrain (chasm / deep water)', () => {
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ walls: [{ x: 3, y: 3 }], chasms: [{ x: 3, y: 3 }] })])
+        .success,
+    ).toBe(true);
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({ walls: [{ x: 3, y: 3 }], deepWater: [{ x: 3, y: 3 }] }),
+      ]).success,
+    ).toBe(true);
+  });
+
+  // The mutex rules that STAY: two obstacles can't share a cell, and two terrain
+  // kinds can't share a cell.
+  it('still rejects two neutrals on the same cell (wall + half-cover)', () => {
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({ walls: [{ x: 3, y: 3 }], halfCovers: [{ x: 3, y: 3 }] }),
+      ]).success,
+    ).toBe(false);
+  });
+
+  it('still rejects two terrain kinds on the same cell (sand + water)', () => {
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ sand: [{ x: 3, y: 3 }], water: [{ x: 3, y: 3 }] })])
+        .success,
+    ).toBe(false);
+  });
+
+  // A neutral still blocks spawns even when it sits on passable terrain — it's
+  // the OBSTACLE the unit can't stand on, regardless of the tile beneath it.
+  it('still blocks a spawn tile that sits on a wall-on-sand cell', () => {
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({
+          walls: [{ x: 0, y: 0 }],
+          sand: [{ x: 0, y: 0 }],
+        }),
+      ]).success,
+    ).toBe(false); // the player spawn at (0,0) now sits on a wall
+  });
+});
+
 describe('SpawnRegion schema tile-count range (H2)', () => {
   // Distinct, in-bounds tiles so only the count is under test (the
   // duplicate-coord refine is exercised separately below).

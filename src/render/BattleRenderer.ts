@@ -13,6 +13,7 @@ import type { Renderer } from './Renderer';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { COLORS } from './palette';
 import { colorForTeam, spriteColorForUnit } from './spriteColor';
+import { glyphInk } from './glyphs';
 import { SpriteAnimator } from './animation/SpriteAnimator';
 import {
   assertFxKeysResolve,
@@ -376,7 +377,7 @@ export class BattleRenderer {
       if (!unit || unit.team !== 'enemy' || unit.currentHp <= 0) continue;
       const pos = this.sprites.getPosition(handle, this.scratchPos);
       if (!pos) continue;
-      out.push({ id: unitId, position: pos.clone(), size: UNIT_PICK_SIZE });
+      out.push({ id: unitId, position: pos.clone(), size: UNIT_PICK_SIZE, ink: glyphInk(unit.glyph) });
     }
     return out;
   }
@@ -400,7 +401,12 @@ export class BattleRenderer {
       if (!isDestructibleNeutral(unit.archetype)) continue;
       const pos = this.sprites.getPosition(handle, this.scratchPos);
       if (!pos) continue;
-      out.push({ id: unitId, position: pos.clone(), size: UNIT_PICK_SIZE * footprintOf(unit) });
+      out.push({
+        id: unitId,
+        position: pos.clone(),
+        size: UNIT_PICK_SIZE * footprintOf(unit),
+        ink: glyphInk(unit.glyph),
+      });
     }
     return out;
   }

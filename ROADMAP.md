@@ -1184,6 +1184,15 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
   0×0 canvas — the live click-order awaits the user's native playtest). *Test:* clicking
   rubble sets a focus objective + units path to and attack it; an indestructible wall stays
   unclickable + reverts a stray order to atWill.
+  **Clickbox follow-up (2026-07-03):** the playtest found the pick quad reached ~1 cell above
+  the visible rubble slab (worse for big rubble — the quad scales with the footprint, and `▄`
+  inks only its lower-center). Fix = a general **per-glyph normalized ink-rect** (`glyphInk`
+  in [glyphs.ts](src/render/glyphs.ts), THREE-free) that `pickInstanceAtNdc` tests instead of
+  the full quad; `PickCandidate.ink?` defaults to the full cell (byte-identical), both
+  billboard builders stamp `glyphInk(unit.glyph)`. `▄`'s rect `{0.17,0,0.83,0.53}` is MEASURED
+  (rasterized as FontAtlas does + alpha-bbox read), not guessed. The containment test is a
+  clean SEAM for a future pixel-perfect alpha mask (the ink-rect becomes its bbox pre-reject);
+  the mask's per-glyph COVERAGE data would live in the same table. +4 pick tests.
 - **40f — destructible-neutral HP bar.** The playtest gap: rubble shows no HP, so you
   can't see it being chipped down. **Seam:** `BattleRenderer.onUnitSpawned` short-circuits
   the DOM overlay for `team === 'neutral'` (`return` after suppressing bloom) — the comment

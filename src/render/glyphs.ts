@@ -80,3 +80,53 @@ export function atlasCellsFor(unitGlyphs: Iterable<string>): number {
   for (const g of unitGlyphs) set.add(g);
   return set.size;
 }
+
+/**
+ * A glyph's normalized INK rectangle within its atlas cell — which, since
+ * `FontAtlas.getGlyphUV` maps the FULL cell onto the billboard quad, is also the
+ * fraction of the QUAD the visible ink actually fills. Coordinates are in [0,1]
+ * with the ORIGIN at the bottom-left and y pointing UP (the quad / view-space
+ * convention), so a half-height glyph that inks the bottom of its cell has a low
+ * `y1`.
+ *
+ * The click hit-test (`pickInstanceAtNdc`) derives its box from this instead of
+ * the whole quad, so the clickbox HUGS the glyph rather than the empty corners /
+ * top. The default is the full cell (`FULL_GLYPH_INK`), so every normal full-cell
+ * glyph is unchanged — only glyphs that declare a tighter rect below get a
+ * trimmed box.
+ *
+ * FORWARD NOTE: for a glyph where a rectangle over-selects (an irregular shape —
+ * a future giant, say) this same per-glyph table is where a pixel-perfect alpha
+ * COVERAGE mask would live; the ink-rect then becomes that mask's cheap
+ * bounding-box pre-reject — a stepping stone, not a throwaway.
+ */
+export interface GlyphInk {
+  readonly x0: number; // left   (0 = cell left)
+  readonly y0: number; // bottom (0 = cell bottom; y is UP)
+  readonly x1: number; // right  (1 = cell right)
+  readonly y1: number; // top    (1 = cell top)
+}
+
+/** The whole cell — the default for any glyph without an override (→ the pick box
+ *  stays the symmetric full quad, byte-identical to the pre-ink hit-test). */
+export const FULL_GLYPH_INK: GlyphInk = { x0: 0, y0: 0, x1: 1, y1: 1 };
+
+/**
+ * Per-glyph ink overrides. MEASURED, not guessed: each value is the alpha
+ * bounding box from rasterizing the glyph exactly as `FontAtlas` does (JetBrains
+ * Mono, `FONT_PX` 56 centered in a `CELL_PX` 64 cell, `textBaseline:'middle'`),
+ * normalized to the cell + flipped to y-up. Anything absent = `FULL_GLYPH_INK`.
+ */
+const GLYPH_INK: Readonly<Record<string, GlyphInk>> = {
+  // `▄` (U+2584 LOWER HALF BLOCK) = the rubble slab (`RUBBLE_GLYPH`): the ink
+  // fills the central ~66% width and the bottom ~53% height, so its full-quad
+  // clickbox otherwise reached ~1 cell above the visible slab (worse the larger
+  // the rubble, since the pick quad scales with the footprint).
+  '▄': { x0: 0.17, y0: 0, x1: 0.83, y1: 0.53 },
+};
+
+/** The ink rectangle for `glyph` — its measured override, or the full cell. Used
+ *  by the billboard builders to stamp each pick candidate's hit-box. */
+export function glyphInk(glyph: string): GlyphInk {
+  return GLYPH_INK[glyph] ?? FULL_GLYPH_INK;
+}

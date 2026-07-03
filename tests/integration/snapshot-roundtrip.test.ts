@@ -25,6 +25,7 @@ import type { PendingChainHop } from '../../src/sim/effects/interpreter';
 import { rollUnit } from '../../src/sim/archetypes';
 import { claimantOf, isClaimed } from '../../src/sim/occupancy';
 import { applyTerrain } from '../../src/sim/battleSetup';
+import { spawnRubble } from '../../src/sim/environment';
 import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import type { GameEvents } from '../../src/core/events';
@@ -184,6 +185,33 @@ describe('A2 round-trip: World', () => {
     expect(restored.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
 
     // A snapshot stamped with the prior version (a pre-O1 save) throws.
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+
+  it('§40e: a `neutral` objective (a manually-ordered rubble) round-trips; a pre-40e version is rejected', () => {
+    // §40e added a `{kind:'neutral',unitId}` variant to ObjectiveTarget so a
+    // player can focus/engage a destructible neutral. The team objective is
+    // serialized, so a mid-battle save with an active rubble focus must resume it
+    // — hence the WorldSnapshot v31→v32 bump (a v31 reader has no neutral branch).
+    const { world } = freshBattle(24681);
+    // A live rubble is required — clearResolvedObjectives reverts the neutral
+    // objective the same tick if its target isn't a living destructible neutral.
+    const rubble = spawnRubble(world, { x: 0, y: 0 }, 1);
+    const objective = { mode: 'focus', target: { kind: 'neutral', unitId: rubble.id } } as const;
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
+    world.tick(); // drains + applies; the far-corner rubble survives one tick.
+    expect(world.objectiveFor('player')).toEqual(objective);
+
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    expect(wire.objectives.player).toEqual(objective);
+
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.objectiveFor('player')).toEqual(objective);
+
+    // A snapshot stamped with the prior version (a pre-40e save) throws.
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
     expect(() => World.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version/,

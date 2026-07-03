@@ -67,7 +67,7 @@ import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
 import { STATS } from '../config/stats';
 import { LEVELING } from '../config/leveling';
-import { NEUTRAL_DEFS, ALL_UNIT_DEFS } from '../config/units';
+import { NEUTRAL_DEFS, ALL_UNIT_DEFS, isDestructibleNeutral } from '../config/units';
 
 /**
  * Schema history:
@@ -250,8 +250,18 @@ import { NEUTRAL_DEFS, ALL_UNIT_DEFS } from '../config/units';
  *       §36b's non-instant moves (which DO leave a claim mid-flight) can never load
  *       under a stale reader. RunSnapshot is unaffected (claims are World-side +
  *       transient per battle).
+ *  32 — §40e (rubble clickable) added a `neutral` variant to `ObjectiveTarget`
+ *       (`{kind:'neutral',unitId}`) so a player can manually `focus`/`engage` a
+ *       DESTRUCTIBLE neutral (rubble / a destructible wall). A team objective is
+ *       serialized (`objectives.{player,enemy}`), so a mid-battle save with an
+ *       active rubble focus now carries the new kind. A v31 reader has no neutral
+ *       branch in `updateFocusTarget` / `clearResolvedObjectives`, so it would
+ *       mis-decode `target.cell` (undefined on a neutral) — reject v31 outright
+ *       per the no-migration contract. A pre-§40e save can't hold a neutral
+ *       objective (no way to set one), so nothing is lost. RunSnapshot is
+ *       unaffected — the objective is World-side + transient per battle.
  */
-const WORLD_SCHEMA_VERSION = 31;
+const WORLD_SCHEMA_VERSION = 32;
 
 /** §40b — filler maxHp for an hp-less (indestructible) neutral so its Unit is
  *  "alive" enough to block pathing / LOS. Never a damage target — `isCombatTargetable`
@@ -1528,7 +1538,9 @@ export class World {
   /**
    * O1 — revert any team whose `engage`/`focus` ENEMY target is no longer a
    * living enemy (it died, was removed, or the objective was set on an invalid
-   * id) back to `atWill`. An `engage` `tile` target never auto-reverts
+   * id) back to `atWill`. §40e — a `neutral` target (a manually-ordered rubble /
+   * destructible wall) reverts the same way once it's destroyed/reaped. An
+   * `engage` `tile` target never auto-reverts
    * (persist-until-cleared); a `focus` `tile` target reverts per its switchable
    * resolution strategy (O3 — `disallow` reverts at once, `clearOnArrival` on
    * first arrival, `leashAtNearest` never). Both teams are scanned (the enemy
@@ -1550,6 +1562,18 @@ export class World {
           target.team !== team &&
           target.team !== 'neutral' &&
           target.currentHp > 0;
+        if (!alive) this.setObjectiveAtWill(team);
+      } else if (obj.target.kind === 'neutral') {
+        // §40e — a manual `focus`/`engage` on a DESTRUCTIBLE neutral (rubble / a
+        // destructible wall) reverts to atWill once that neutral is gone —
+        // destroyed (0 HP, reaped) or, defensively, no longer a destructible
+        // neutral. Symmetric to the enemy branch: the "order is done" trigger.
+        const target = this.findUnit(obj.target.unitId);
+        const alive =
+          target !== undefined &&
+          target.team === 'neutral' &&
+          target.currentHp > 0 &&
+          isDestructibleNeutral(target.archetype);
         if (!alive) this.setObjectiveAtWill(team);
       } else if (obj.mode === 'focus') {
         // O3 — a focus TILE reverts when its strategy says it's resolved. (An

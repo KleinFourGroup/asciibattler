@@ -478,6 +478,81 @@ describe('Targeting / focus (O3)', () => {
   });
 });
 
+// §40e — a manual `focus`/`engage` objective can target a DESTRUCTIBLE neutral
+// (rubble / a destructible wall), the "demolish this obstacle" order. Command +
+// one tick = the faithful path (drain → clearResolvedObjectives → updateTarget
+// the same tick). `rubble_1x1` is a destructible neutral (has `hp`); `wall` is
+// hp-less → indestructible → never a valid target.
+describe('Targeting / destructible-neutral objective (§40e)', () => {
+  function applyObjective(world: World, mode: 'focus' | 'engage', unitId: number): void {
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode, target: { kind: 'neutral', unitId } },
+    });
+    world.tick();
+  }
+
+  it('focus on rubble: commits to the rubble, OVERRIDING a nearer hostile', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 2, team: 'enemy', x: 3, y: 2 }, // adjacent — the atWill / engage pick
+      { id: 20, team: 'neutral', x: 8, y: 8, archetype: 'rubble_1x1' }, // the ordered rubble
+    ]);
+    applyObjective(world, 'focus', 20);
+    expect(units[0]!.targetId).toBe(20); // ignores the adjacent hostile (focus = full preempt)
+    expect(currentTarget(units[0]!, world)).toBe(units[2]!); // the strike acts on the rubble
+  });
+
+  it('focus on an INDESTRUCTIBLE wall is not a valid target → reverts to atWill', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 2, team: 'enemy', x: 9, y: 9 },
+      { id: 30, team: 'neutral', x: 5, y: 5, archetype: 'wall' }, // hp-less → indestructible
+    ]);
+    applyObjective(world, 'focus', 30);
+    // The World reverts the bad order the same tick; the unit falls back to
+    // at-will targeting (the lone enemy), never committing to the wall.
+    expect(world.objectiveFor('player').mode).toBe('atWill');
+    expect(units[0]!.targetId).toBe(2);
+  });
+
+  it('focus on rubble reverts to atWill once the rubble is destroyed', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 2, team: 'enemy', x: 11, y: 11 }, // far (in-bounds) — keeps the battle alive across both ticks
+      { id: 20, team: 'neutral', x: 8, y: 8, archetype: 'rubble_1x1' },
+    ]);
+    applyObjective(world, 'focus', 20);
+    expect(world.objectiveFor('player').mode).toBe('focus');
+    expect(units[0]!.targetId).toBe(20); // focus overrides the far enemy
+    // Demolished: 0 HP → the next tick's clearResolvedObjectives reverts (whether
+    // or not the reap has removed it — the alive check gates on currentHp > 0).
+    units[2]!.currentHp = 0;
+    world.tick();
+    expect(world.objectiveFor('player').mode).toBe('atWill');
+  });
+
+  it('engage on rubble: commits to the rubble when no hostile is engageable', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 20, team: 'neutral', x: 8, y: 8, archetype: 'rubble_1x1' },
+    ]);
+    applyObjective(world, 'engage', 20);
+    expect(units[0]!.targetId).toBe(20);
+  });
+
+  it('engage on rubble: an engageable hostile PREEMPTS the rubble (engage ≠ focus)', () => {
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 2, y: 2 },
+      { id: 2, team: 'enemy', x: 3, y: 2 }, // adjacent → engageable, preempts the order
+      { id: 20, team: 'neutral', x: 8, y: 8, archetype: 'rubble_1x1' },
+    ]);
+    applyObjective(world, 'engage', 20);
+    expect(units[0]!.targetId).toBe(2);
+  });
+});
+
 /**
  * Build a World seeded with hand-placed units. We bypass spawnUnit because
  * Targeting tests want precise ids and HPs without rolling templates.

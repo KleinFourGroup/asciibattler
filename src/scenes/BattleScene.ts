@@ -115,6 +115,9 @@ export class BattleScene implements Scene {
       ctx.renderer,
       ctx.terrain,
       () => this.battleRenderer?.enemyBillboards() ?? [],
+      // §40e — destructible neutrals (rubble / a destructible wall) as click
+      // candidates too, so a manual focus/engage can order an attack on one.
+      () => this.battleRenderer?.destructibleBillboards() ?? [],
     );
     this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings, this.objective);
     this.objective.onArmedChange = (mode) => this.hud?.setObjectiveArmed(mode);

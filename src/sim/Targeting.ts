@@ -303,6 +303,25 @@ function minCellToBody(cell: GridCoord, body: Unit): number {
 }
 
 /**
+ * §40e — resolve a `neutral`-kind objective target's unitId to a committable
+ * `targetId`: the id when it's still a LIVING DESTRUCTIBLE neutral (rubble / a
+ * destructible wall or cover), else null. Shared by the focus + engage pursue
+ * branches so a manual "demolish this" order is admitted identically. Mirrors the
+ * `enemy`-target validity check, but for the neutral team + the §40b HP-presence
+ * destructibility gate — an indestructible (hp-less) wall is never a valid
+ * target, so a stray click on one reverts to atWill rather than pinning the team.
+ */
+function validDestructibleNeutralTarget(world: World, unitId: number): number | null {
+  const t = world.findUnit(unitId);
+  return t !== undefined &&
+    t.team === 'neutral' &&
+    t.currentHp > 0 &&
+    isDestructibleNeutral(t.archetype)
+    ? t.id
+    : null;
+}
+
+/**
  * O3 — target selection under a `focus` objective. Focus COMPLETELY PREEMPTS:
  * the unit abandons any current fight and ignores every enemy except the focus
  * — it eats hits from non-focused attackers (no retaliation break-off, by
@@ -312,6 +331,11 @@ function minCellToBody(cell: GridCoord, body: Unit): number {
  *   - ENEMY focus → commit straight to that unit (a beeline; the path-to-target
  *     logic in MovementBehavior drives the approach, the strike abilities fire
  *     when in range). Reverted World-side to `atWill` on the target's death.
+ *   - NEUTRAL focus (§40e) → commit straight to a DESTRUCTIBLE neutral (rubble /
+ *     a destructible wall or cover) — the manual "demolish this obstacle" order,
+ *     which by design OVERRIDES the reachable-hostile priority (that's what focus
+ *     is for). Same beeline shape as an enemy focus; reverted World-side to
+ *     `atWill` when the neutral is destroyed/reaped.
  *   - TILE focus → defer to the switchable `focusTileResolution` strategy
  *     (`focusTile.ts`): `pursue` (targetId null → MovementBehavior beelines to
  *     the rally cell), `engageLocal` (the unit has arrived near the tile → act
@@ -328,6 +352,18 @@ function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): v
       objEnemy.team !== 'neutral' &&
       objEnemy.currentHp > 0;
     unit.targetId = valid ? objEnemy.id : null;
+    unit.outOfLosTicks = 0;
+    return;
+  }
+  if (target.kind === 'neutral') {
+    // §40e — a manual focus on a DESTRUCTIBLE neutral (rubble / a destructible
+    // wall or cover) commits straight to it, exactly like an enemy focus: the
+    // unit abandons its fight and beelines to demolish it. `currentTarget` honors
+    // the committed destructible neutral (§40b) so the strike fires, and
+    // MovementBehavior's neutral branch drives the bestEffort approach around the
+    // hard blocker. An indestructible or dead neutral → null (World reverts the
+    // objective to atWill the same tick).
+    unit.targetId = validDestructibleNeutralTarget(world, target.unitId);
     unit.outOfLosTicks = 0;
     return;
   }
@@ -407,6 +443,11 @@ function updateObjectiveTarget(unit: Unit, world: World, target: ObjectiveTarget
     const objValid =
       objEnemy !== undefined && objEnemy.team === 'enemy' && objEnemy.currentHp > 0;
     unit.targetId = objValid ? objEnemy.id : null;
+  } else if (target.kind === 'neutral') {
+    // §40e — pursue a DESTRUCTIBLE neutral (rubble / a destructible wall). Unlike
+    // focus, engage still let an engageable hostile preempt above (steps 1–2);
+    // with none engageable, the unit commits to demolishing the obstacle.
+    unit.targetId = validDestructibleNeutralTarget(world, target.unitId);
   } else {
     // Tile objective: no enemy target; MovementBehavior paths toward the cell.
     unit.targetId = null;

@@ -213,7 +213,7 @@ describe('D5.C spawn overflow queue', () => {
     world.units[0]!.outOfLosTicks = 3;
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(31); // 31 — §36a added the in-flight claim registry
+    expect(wire.schemaVersion).toBe(32); // 32 — §40e added the `neutral` ObjectiveTarget kind
     expect(wire.units[0].targetId).toBe(world.units[1]!.id);
     expect(wire.units[0].outOfLosTicks).toBe(3);
     expect(wire.damageDealt).toEqual([]);

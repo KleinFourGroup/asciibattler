@@ -29,6 +29,7 @@ import { STATUS_DEFS } from '../config/statuses';
 import { MOVE_ACTION_ID } from '../sim/actions/MoveAction';
 import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
 import { footprintOf } from '../sim/occupancy';
+import { isDestructibleNeutral } from '../config/units';
 import { readUnitStatuses } from '../sim/statusReadout';
 import { SPAWN } from '../config/spawn';
 
@@ -376,6 +377,30 @@ export class BattleRenderer {
       const pos = this.sprites.getPosition(handle, this.scratchPos);
       if (!pos) continue;
       out.push({ id: unitId, position: pos.clone(), size: UNIT_PICK_SIZE });
+    }
+    return out;
+  }
+
+  /**
+   * §40e — living DESTRUCTIBLE neutrals (rubble / a destructible wall or cover)
+   * as click candidates for the objective billboard hit-test, symmetric to
+   * `enemyBillboards`: the player can manually order an attack on one (a
+   * `focus` / `engage`, the "demolish this obstacle" order). The pick quad scales
+   * with the footprint — a 2×2/3×3 rubble renders ONE glyph at `size = N` (§39d),
+   * so the visible glyph stays clickable at any size (the cell-fallback in the
+   * ObjectiveController covers footprint tiles the single glyph doesn't overlap).
+   * Indestructible walls (hp-less) are excluded — they stay unclickable.
+   */
+  destructibleBillboards(): PickCandidate[] {
+    if (!this.world) return [];
+    const out: PickCandidate[] = [];
+    for (const [unitId, handle] of this.handles) {
+      const unit = this.world.findUnit(unitId);
+      if (!unit || unit.team !== 'neutral' || unit.currentHp <= 0) continue;
+      if (!isDestructibleNeutral(unit.archetype)) continue;
+      const pos = this.sprites.getPosition(handle, this.scratchPos);
+      if (!pos) continue;
+      out.push({ id: unitId, position: pos.clone(), size: UNIT_PICK_SIZE * footprintOf(unit) });
     }
     return out;
   }

@@ -5,9 +5,14 @@ import type { GridCoord } from '../core/types';
  * player objective into a per-team, ALWAYS-PRESENT typed objective, separating
  * the MODE (what the team is doing) from the TARGET (where / who).
  *
- * `ObjectiveTarget` — the inner where/who (the old J1 `BattleObjective`,
- * unchanged in shape):
+ * `ObjectiveTarget` — the inner where/who (the old J1 `BattleObjective`):
  *  - `enemy`: a specific enemy unit to converge on + kill.
+ *  - `neutral` (§40e): a specific DESTRUCTIBLE neutral (rubble / a destructible
+ *    wall or cover) to converge on + demolish. Kept DISTINCT from `enemy` so the
+ *    targeting resolvers stay honest — "attack a hostile" vs "demolish an
+ *    obstacle" (a neutral is never an `enemy`, and every targeting scan already
+ *    branches on `team === 'neutral'`). Manual only: the player clicks it; §40b's
+ *    AUTO-target sets `targetId` directly, never through an objective.
  *  - `tile`:  a rally cell the team paths toward (an attractor — "as close as
  *    they can").
  *
@@ -44,6 +49,7 @@ import type { GridCoord } from '../core/types';
  */
 export type ObjectiveTarget =
   | { readonly kind: 'enemy'; readonly unitId: number }
+  | { readonly kind: 'neutral'; readonly unitId: number }
   | { readonly kind: 'tile'; readonly cell: GridCoord };
 
 /** The teams that carry an objective. Neutrals (walls / environment entities)
@@ -76,12 +82,24 @@ export interface EnemyAtCell {
   readonly cell: GridCoord;
 }
 
+/** §40e — a living DESTRUCTIBLE neutral's id + its footprint cells. A multi-tile
+ *  rubble (2×2/3×3) occupies several cells, so a click on ANY of them targets it;
+ *  hence the cell LIST (vs `EnemyAtCell`'s single cell — the shipped combatants
+ *  are all 1×1). Built by the objective-input controller from the World's
+ *  destructible neutrals, so this too stays import-free (mirrors `EnemyAtCell`). */
+export interface NeutralAtCell {
+  readonly id: number;
+  readonly cells: readonly GridCoord[];
+}
+
 /**
- * J3 — resolve a clicked grid cell into an `ObjectiveTarget`: an `enemy` target
- * when a living enemy occupies the cell, else a `tile` rally target. Only
- * enemies count as enemy-targets — clicking empty ground, a friendly unit, or a
- * wall all rally the team to that cell (the tile attractor). The caller wraps
- * the result in a `TeamObjective` mode (the J3 controller uses `engage`).
+ * J3 — resolve a clicked grid cell into an `ObjectiveTarget`, in priority order:
+ * a living `enemy` occupying the cell → a `neutral` DESTRUCTIBLE body whose
+ * footprint covers the cell (§40e) → else a `tile` rally target. A hostile
+ * standing in front of rubble still wins (enemy-first); clicking empty ground, a
+ * friendly, or an INDESTRUCTIBLE wall (absent from `neutrals`) all rally the team
+ * to that cell (the tile attractor). The caller wraps the result in a
+ * `TeamObjective` mode (right-click → `engage`, the armed pick → its mode).
  *
  * Pure (plain data in, no `World`) so it's node-testable and both input paths —
  * right-click and the armed left-click — route through the one resolver.
@@ -89,7 +107,13 @@ export interface EnemyAtCell {
 export function objectiveAtCell(
   cell: GridCoord,
   enemies: readonly EnemyAtCell[],
+  neutrals: readonly NeutralAtCell[] = [],
 ): ObjectiveTarget {
-  const hit = enemies.find((e) => e.cell.x === cell.x && e.cell.y === cell.y);
-  return hit ? { kind: 'enemy', unitId: hit.id } : { kind: 'tile', cell };
+  const enemy = enemies.find((e) => e.cell.x === cell.x && e.cell.y === cell.y);
+  if (enemy) return { kind: 'enemy', unitId: enemy.id };
+  const neutral = neutrals.find((n) =>
+    n.cells.some((c) => c.x === cell.x && c.y === cell.y),
+  );
+  if (neutral) return { kind: 'neutral', unitId: neutral.id };
+  return { kind: 'tile', cell };
 }

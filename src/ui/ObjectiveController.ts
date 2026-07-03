@@ -23,7 +23,9 @@
 import type { World } from '../sim/World';
 import type { Renderer, PickCandidate } from '../render/Renderer';
 import type { TerrainRenderer } from '../render/TerrainRenderer';
-import { objectiveAtCell, type EnemyAtCell } from '../sim/objective';
+import { objectiveAtCell, type EnemyAtCell, type NeutralAtCell, type ObjectiveTarget } from '../sim/objective';
+import { cellsOccupiedBy } from '../sim/occupancy';
+import { isDestructibleNeutral } from '../config/units';
 
 /** The two target-requiring modes the pane ARMS (Q3) — `hold`/`stop` apply
  *  immediately and are never armed. */
@@ -60,6 +62,10 @@ export class ObjectiveController implements ObjectiveControls {
      *  hit-test, supplied by BattleScene off the BattleRenderer so the click
      *  resolves against the GLYPH the player sees, not the tile behind it. */
     private readonly enemyBillboards: () => readonly PickCandidate[],
+    /** §40e — living DESTRUCTIBLE-neutral billboards (rubble / a destructible
+     *  wall or cover), supplied the same way, so a manual focus/engage can order
+     *  an attack on one. Ranked after enemies in the hit-test. */
+    private readonly destructibleBillboards: () => readonly PickCandidate[],
   ) {
     const canvas = this.renderer.webgl.domElement;
     canvas.addEventListener('contextmenu', this.onContextMenu);
@@ -125,19 +131,26 @@ export class ObjectiveController implements ObjectiveControls {
    * Resolve a click into an objective of `mode` and enqueue it. Returns whether
    * a command was enqueued (false = clicked into the void off the board).
    *
-   * Order matters: try the enemy BILLBOARD first (clicking the visible glyph —
-   * accounts for the camera-facing sprite floating above its tile), then fall
-   * back to the terrain CELL (clicking the ground / a unit's feet → that enemy
-   * if one stands there, else a rally tile).
+   * Priority — enemy > destructible neutral > terrain cell:
+   *   1. the enemy BILLBOARD (clicking the visible glyph — accounts for the
+   *      camera-facing sprite floating above its tile);
+   *   2. §40e — the destructible-NEUTRAL billboard (rubble / a destructible wall):
+   *      order an attack on it. A hostile in front still wins (checked first);
+   *   3. the terrain CELL fallback — an enemy at that cell, else a destructible
+   *      neutral whose FOOTPRINT covers it (so a click on any tile of a multi-tile
+   *      rubble resolves, even where the single centered glyph doesn't overlap),
+   *      else a rally tile.
    */
   private setFromClient(clientX: number, clientY: number, mode: ObjectiveArmMode): boolean {
     const enemyId = this.renderer.pickInstance(clientX, clientY, this.enemyBillboards());
     if (enemyId !== null) {
-      this.world.enqueueCommand({
-        kind: 'setObjective',
-        team: 'player',
-        objective: { mode, target: { kind: 'enemy', unitId: enemyId } },
-      });
+      this.enqueueObjective(mode, { kind: 'enemy', unitId: enemyId });
+      return true;
+    }
+
+    const neutralId = this.renderer.pickInstance(clientX, clientY, this.destructibleBillboards());
+    if (neutralId !== null) {
+      this.enqueueObjective(mode, { kind: 'neutral', unitId: neutralId });
       return true;
     }
 
@@ -146,11 +159,17 @@ export class ObjectiveController implements ObjectiveControls {
     const enemies: EnemyAtCell[] = this.world.units
       .filter((u) => u.team === 'enemy' && u.currentHp > 0)
       .map((u) => ({ id: u.id, cell: u.position }));
-    this.world.enqueueCommand({
-      kind: 'setObjective',
-      team: 'player',
-      objective: { mode, target: objectiveAtCell(cell, enemies) },
-    });
+    const neutrals: NeutralAtCell[] = this.world.units
+      .filter((u) => u.team === 'neutral' && u.currentHp > 0 && isDestructibleNeutral(u.archetype))
+      .map((u) => ({ id: u.id, cells: cellsOccupiedBy(u) }));
+    this.enqueueObjective(mode, objectiveAtCell(cell, enemies, neutrals));
     return true;
+  }
+
+  /** Enqueue a player `setObjective` command in `mode` at the deterministic
+   *  top-of-tick drain — the single mutation point shared by all three resolve
+   *  paths (enemy billboard, §40e neutral billboard, terrain cell). */
+  private enqueueObjective(mode: ObjectiveArmMode, target: ObjectiveTarget): void {
+    this.world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode, target } });
   }
 }

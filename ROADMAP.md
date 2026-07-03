@@ -1021,8 +1021,9 @@ stays the canonical corner).
 The §38 + §39 payoff: HP-bearing neutral obstacles that deny area until destroyed —
 rubble/debris (1×1–3×3, configurable HP), plus finally enabling **optional**
 destructibility for walls + half-cover. Authored as neutral `UnitDef`s (§38) with real
-HP + footprints (§39) + susceptibility. **No WorldSnapshot bump expected** (HP already
-serialized); the layout schema gains destructible HP fields (config). Balance
+HP + footprints (§39) + susceptibility. **WorldSnapshot: 40a–40d byte-identical** (HP
+already serialized); **40e bumped v31→v32** (a `neutral` ObjectiveTarget kind — rubble is
+manually targetable). The layout schema gains destructible HP fields (config). Balance
 implications → §41. **Absorbs §39e** (folded 2026-07-01) — the multi-tile spawn-room
 fit validation + editor placement land in the editor (`40g`); the first footprint-bearing
 entity (rubble) is born into layouts in `40d`.
@@ -1157,21 +1158,32 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
   forcing `?layout=rubbleQuarry` spawns all rubble at the authored pos/size/HP. 1645 main
   + 212 fuzz green. **A playtest surfaced two gaps → 40e + 40f, which land BEFORE the
   editor** (40g).
-- **40e — rubble manually targetable (clickable as an objective).** The playtest gap:
-  you can't click rubble to `focus`/`engage` it, so the "deny access until destroyed"
-  loop only fires via 40b's AUTO-target (a unit fully walled off from all hostiles) —
-  never by deliberate player order. **Seam:** `ObjectiveController`
-  ([src/ui](src/ui/ObjectiveController.ts)) picks only `enemyBillboards()`
-  (`renderer.pickInstance(...)`) and resolves via `objectiveAtCell(cell, enemies)`; the
-  objective target kind is `{kind:'enemy',unitId}`. The SIM already admits a
-  destructible-neutral commit in `currentTarget` (40b), so the gap is UI-side: add
-  destructible neutrals (`isDestructibleNeutral`) to the pickable billboard set + admit a
-  neutral-under-cursor in `objectiveAtCell` + a target kind (or widen `enemy`) for a
-  destructible neutral, so a manual `focus`/`engage` routes an attack order onto rubble.
-  *Decisions:* which neutrals are clickable (rubble only, or all destructibles incl. 40c
-  walls/cover); whether a manual focus OVERRIDES the reachable-hostile priority (recommend
-  yes — it's an explicit order). *Test:* clicking rubble sets a focus objective + units
-  path to and attack it; an indestructible wall stays unclickable.
+- **✅ 40e — rubble manually targetable (clickable as an objective; COMPLETE 2026-07-03).**
+  Closed the playtest gap: you can now `focus`/`engage` a destructible neutral by clicking
+  it, so the "deny access until destroyed" loop fires by deliberate order, not only via
+  40b's AUTO-target. **Decisions (user, 2026-07-03):** a NEW `{kind:'neutral',unitId}`
+  `ObjectiveTarget` variant (NOT widening `enemy` — keeps the targeting resolvers honest;
+  every scan already branches on `team === 'neutral'`) → **WorldSnapshot v31→v32**
+  (reject-stale; a team objective is serialized, so a mid-battle rubble focus must resume);
+  **ALL destructibles clickable** (`isDestructibleNeutral` — rubble + 40c destructible
+  walls/cover; an indestructible hp-less wall stays unclickable); a manual **focus
+  OVERRIDES** the reachable-hostile priority (the full-preempt beeline — it's an explicit
+  order). **As-built:** `objectiveAtCell` gained a `neutrals: NeutralAtCell[]` param
+  (footprint-cell list → a click on ANY tile of a multi-tile rubble resolves it; ranks
+  enemy > neutral > tile); `updateFocusTarget` + `updateObjectiveTarget` pursue a valid
+  destructible neutral (shared `validDestructibleNeutralTarget`); `clearResolvedObjectives`
+  reverts to atWill on the neutral's destruction/reap (symmetric to the enemy branch);
+  `BattleRenderer.destructibleBillboards()` (footprint-scaled pick quads) + a second
+  `pickInstance` pass in `ObjectiveController.setFromClient`. The whole downstream
+  (`currentTarget` honoring the neutral, MovementBehavior's bestEffort approach, the strike,
+  the reap) is 40b's — the manual path just SETS `targetId`. The objective marker reuses the
+  existing unitId lookup (no render change). +17 tests (1656 main + 212 fuzz). **Headless-
+  verified end to end + browser-smoke-confirmed** (forced `?layout=rubbleQuarry`: the
+  `!` focus marker renders on rubble, all 6 players converge + chip a 3×3 rubble 150→85 HP
+  over 120 ticks; the raw DOM-click couldn't be exercised via the preview MCP's backgrounded
+  0×0 canvas — the live click-order awaits the user's native playtest). *Test:* clicking
+  rubble sets a focus objective + units path to and attack it; an indestructible wall stays
+  unclickable + reverts a stray order to atWill.
 - **40f — destructible-neutral HP bar.** The playtest gap: rubble shows no HP, so you
   can't see it being chipped down. **Seam:** `BattleRenderer.onUnitSpawned` short-circuits
   the DOM overlay for `team === 'neutral'` (`return` after suppressing bloom) — the comment

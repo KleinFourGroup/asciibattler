@@ -1193,17 +1193,30 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
   (rasterized as FontAtlas does + alpha-bbox read), not guessed. The containment test is a
   clean SEAM for a future pixel-perfect alpha mask (the ink-rect becomes its bbox pre-reject);
   the mask's per-glyph COVERAGE data would live in the same table. +4 pick tests.
-- **40f — destructible-neutral HP bar.** The playtest gap: rubble shows no HP, so you
-  can't see it being chipped down. **Seam:** `BattleRenderer.onUnitSpawned` short-circuits
-  the DOM overlay for `team === 'neutral'` (`return` after suppressing bloom) — the comment
-  there ALREADY anticipates this step: *"destructible variants later can opt back in."*
-  `UnitOverlayLayer` owns the `hp-bar` / `hp-bar-fill` DOM + `updateHp`. So: for
-  `isDestructibleNeutral`, create the overlay + HP bar, shown **at least when damaged**
-  (`currentHp < maxHp`); the multi-tile anchor reuses 39d's footprint-center `spritePos`.
-  *Decisions:* only-when-damaged vs always; the bar WIDTH for a 2×2/3×3 (scale to footprint
-  vs fixed); scope (rubble only, or 40c destructible walls/cover too — recommend all
-  destructibles, keyed off the same `isDestructibleNeutral` predicate). *Test:* a damaged
-  rubble shows an HP bar at the right fill; an indestructible wall never shows one.
+- **✅ 40f — destructible-neutral HP bar (COMPLETE & user-confirmed native 2026-07-03).**
+  Closed the playtest gap (rubble showed no HP, so you couldn't see it chipped down).
+  **As built:** `BattleRenderer.onUnitSpawned` no longer blanket-returns for neutrals — an
+  `isDestructibleNeutral` unit now gets an overlay registered in `overlayHandles`, so the
+  EXISTING `unit:attacked → refreshHpBar` path fills it and the per-frame loop
+  position-follows it (zero new plumbing; indestructible walls still return bare). A new
+  `UnitOverlayLayer.addDestructible(footprint)` reuses the combatant-overlay machinery but:
+  drops the level badge (rubble has no level); **hides the HP bar until damaged**
+  (`destructible` flag → `applyHp` reveals it once `hpPct < 1`) so a rubble-heavy board
+  isn't a wall of full bars; and **scales to the footprint** via two CSS vars on
+  `.unit-overlay-stack` (`--fp-scale` widens the bar 56·N px, `--fp-lift` raises it to clear
+  the taller center-anchored glyph). *Decisions (all LOCKED, user 2026-07-03):*
+  **only-when-damaged** (not always); **scale to footprint** (not fixed); scope = **all
+  destructibles** (rubble + 40c walls/cover, keyed off `isDestructibleNeutral`). The lift is
+  a per-footprint TABLE `[0,0,22,33,39]`, not a linear `(N−1)·k` — `▄` is short + ground-
+  flush so its ink top rises sub-linearly (user-tuned: 2×2 perfect at 22, 3×3 dropped 44→33).
+  The `--fp-*` vars default to `1`/`0px` ⇒ combatant bars byte-identical. No snapshot bump
+  (render/CSS only; 1660 main green). **Eval-verified** (`?layout=rubbleQuarry`): at full HP
+  the 2 indestructible walls get no overlay + all rubble bars hidden; on damage the bar shows
+  at the right fill (3×3 168px/lift 33, 2×2 112px/lift 22, 1×1 56px/default), gradient color
+  per pct, no level badge. **User-confirmed native** ("we nailed this"). *Test (as built):*
+  the render layer has no unit-test harness (browser-verified per the render-change norm) —
+  the destructibility predicate `isDestructibleNeutral` that gates it is covered in
+  `units.test.ts`.
 - **40g — the layout editor (absorbs §39e; renumbered from 40d).** Paint rubble (size +
   HP) + toggle wall/cover destructibility + **the multi-tile spawn-room fit validation
   folded from §39e** — does an N×N deploy fit at a spawn region? A thin wrapper over §39c's

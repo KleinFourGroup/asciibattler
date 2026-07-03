@@ -62,9 +62,12 @@ body {
      float well above it so the sprite glyph stays unobscured. The
      vertical offset is the world-space HP_BAR_Y_OFFSET in B3 terms,
      baked here as a fixed CSS offset. Reads correctly across both
-     fit and scroll camera modes at the default board sizes. */
-  transform: translate(-50%, -260%);
-  width: 56px;
+     fit and scroll camera modes at the default board sizes.
+     §40f: --fp-scale / --fp-lift default to 1 / 0px (byte-identical for
+     combatants); a footprint-scaled destructible overlay widens the bar and
+     lifts it to clear its taller glyph via UnitOverlayLayer.applyFootprintScale. */
+  transform: translate(-50%, calc(-260% - var(--fp-lift, 0px)));
+  width: calc(56px * var(--fp-scale, 1));
   display: flex;
   flex-direction: column;
   gap: 2px;

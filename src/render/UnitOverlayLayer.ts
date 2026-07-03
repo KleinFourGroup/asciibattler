@@ -26,6 +26,9 @@ import { statusColor } from './statusDisplay';
 export interface UnitOverlayHandle {
   readonly id: number;
   readonly root: HTMLDivElement;
+  /** §40f — the HP-bar CONTAINER (not just its fill), so a destructible-neutral
+   *  overlay can hide the whole bar (track included) until the unit is damaged. */
+  readonly hpBar: HTMLDivElement;
   readonly hpFill: HTMLDivElement;
   readonly progressEl: HTMLDivElement;
   readonly progressFill: HTMLDivElement;
@@ -47,6 +50,10 @@ export interface UnitOverlayHandle {
    *  so BattleRenderer gates the per-frame recompute on this changing. `-1`
    *  forces a first-frame update. */
   statusTick: number;
+  /** §40f — a destructible neutral (rubble / breakable wall/cover): its HP bar
+   *  is shown ONLY while damaged (`hpPct < 1`), so a rubble-heavy board stays
+   *  uncluttered. `false` for combatants (their bar is always shown). */
+  destructible: boolean;
 }
 
 export class UnitOverlayLayer {
@@ -130,6 +137,7 @@ export class UnitOverlayLayer {
     const handle: UnitOverlayHandle = {
       id,
       root,
+      hpBar,
       hpFill,
       progressEl,
       progressFill,
@@ -141,10 +149,49 @@ export class UnitOverlayLayer {
       progressPct: null,
       level,
       statusTick: -1,
+      destructible: false,
     };
     this.overlays.set(id, handle);
     this.applyHp(handle, 1);
     return handle;
+  }
+
+  /**
+   * §40f — an overlay for a DESTRUCTIBLE NEUTRAL (rubble / breakable wall/cover).
+   * Reuses the combatant overlay machinery, so the existing
+   * `unit:attacked → refreshHpBar` path fills it and the per-frame loop
+   * position-follows it for free — but with three differences:
+   *   • no level badge (rubble has no level);
+   *   • the HP bar is HIDDEN until damaged (`destructible` → `applyHp` reveals
+   *     it once `hpPct < 1`), so a rubble-heavy board isn't a wall of full bars;
+   *   • the bar is SCALED to the unit's footprint (a 3×3 body gets a 3×-wide
+   *     bar, lifted to clear its taller scaled glyph) so it reads as belonging
+   *     to the big body — see the `--fp-scale` / `--fp-lift` CSS vars.
+   * The caller seeds HP + position on the same tick (as with `add`).
+   */
+  addDestructible(footprint: number): UnitOverlayHandle {
+    const handle = this.add('neutral', 1, 1);
+    handle.destructible = true;
+    handle.levelBadge.hidden = true; // neutrals have no meaningful level
+    handle.hpBar.hidden = true; // shown once damaged (only-when-damaged)
+    this.applyFootprintScale(handle, footprint);
+    return handle;
+  }
+
+  /**
+   * §40f — scale a destructible overlay to its footprint. `1×1` keeps the CSS
+   * defaults (`--fp-scale:1` / `--fp-lift:0px` ⇒ byte-identical to a combatant
+   * bar). A larger body widens the bar linearly and lifts it by half a tile
+   * (screen px) per extra cell so it sits above the taller center-anchored glyph
+   * instead of on top of it. Both are fixed-CSS-px approximations tuned for the
+   * default board zoom — the same tradeoff the base overlay already makes.
+   */
+  private applyFootprintScale(handle: UnitOverlayHandle, footprint: number): void {
+    if (footprint <= 1) return;
+    const stack = handle.root.firstElementChild as HTMLElement;
+    const lift = FOOTPRINT_LIFT_PX[footprint] ?? FOOTPRINT_LIFT_PX[FOOTPRINT_LIFT_PX.length - 1]!;
+    stack.style.setProperty('--fp-scale', String(footprint));
+    stack.style.setProperty('--fp-lift', `${lift}px`);
   }
 
   remove(handle: UnitOverlayHandle): void {
@@ -359,8 +406,22 @@ export class UnitOverlayLayer {
     handle.hpPct = pct;
     handle.hpFill.style.width = `${(pct * 100).toFixed(2)}%`;
     handle.hpFill.style.background = hpFillColor(pct);
+    // §40f — a destructible neutral shows its bar only while damaged; a full-HP
+    // (or reap-healed) rubble hides the whole bar so the board stays clean.
+    if (handle.destructible) {
+      const hidden = pct >= 1;
+      if (handle.hpBar.hidden !== hidden) handle.hpBar.hidden = hidden;
+    }
   }
 }
+
+/** §40f — HP-bar vertical lift (CSS px) BY FOOTPRINT, so a multi-tile
+ *  destructible's bar clears its taller scaled glyph. `▄` is short + ground-flush,
+ *  so the ink top rises SUB-linearly with size — a straight `(n−1)×k` overshoots
+ *  (user-tuned: 2×2 sits perfectly at 22, but a linear 44 is too high for 3×3).
+ *  Hence a table, not a formula: each larger step adds a shrinking increment.
+ *  Indexed by footprint (1×1 needs none); clamps to the last entry beyond 4×4. */
+const FOOTPRINT_LIFT_PX = [0, 0, 22, 33, 39];
 
 /** E6.C — vertical stagger (CSS px) between concurrent hitsplats on the
  *  same unit so clustered hits read as a stack rather than overlapping. */

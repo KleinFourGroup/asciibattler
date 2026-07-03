@@ -481,12 +481,22 @@ export class BattleRenderer {
     // default size, so the shipped roster's render is untouched.
     if (footprint !== 1) this.sprites.updateSprite(handle, { size: footprint });
 
-    // Neutrals (walls, environment) are inert background — suppress the
-    // halo and skip the overlay entirely. C1a walls are indestructible
-    // so an HP bar would be visual noise; destructible variants later can
-    // opt back in.
+    // Neutrals (walls, environment) are inert background — suppress the halo.
+    // An INDESTRUCTIBLE wall still skips the overlay (an HP bar it could never
+    // move would be visual noise). §40f — a DESTRUCTIBLE neutral (rubble /
+    // breakable wall/cover) opts back in: it gets an overlay so you can watch it
+    // chipped down. The bar hides until damaged + scales to the footprint (both
+    // owned by UnitOverlayLayer.addDestructible); registering it in
+    // overlayHandles means the existing unit:attacked → refreshHpBar path fills
+    // it and the per-frame loop position-follows it, no new plumbing.
     if (unit.team === 'neutral') {
       this.sprites.updateSprite(handle, { bloomIntensity: 0 });
+      if (isDestructibleNeutral(unit.archetype)) {
+        const overlay = this.overlays.addDestructible(footprint);
+        this.overlays.updateHp(overlay, Math.max(0, unit.currentHp) / unit.derived.maxHp);
+        this.overlays.updatePosition(overlay, spritePos);
+        this.overlayHandles.set(unit.id, overlay);
+      }
       return;
     }
 

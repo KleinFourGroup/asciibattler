@@ -60,10 +60,11 @@ import {
   type SpawnRegion,
   type Theme,
 } from '../../src/config/layouts';
-// §40g-2 — footprint geometry (39a), reused for rubble placement fit + render.
-// Pure + World-free, so the editor imports it straight (no sim-world runtime dep).
-// §40g-2b adds `anchorFootprint` here for the spawn-room deploy-fit warning.
-import { footprintCells } from '../../src/sim/occupancy';
+// §40g-2 — footprint geometry (39a/39c), pure + World-free so the editor imports
+// them straight (no sim-world runtime dep). `footprintCells` drives rubble
+// placement fit + render; `anchorFootprint` drives the §39e spawn-room deploy-fit
+// warning (does an N×N body anchor at some region tile?).
+import { footprintCells, anchorFootprint } from '../../src/sim/occupancy';
 import { formatLayoutJson, formatLayoutsJson } from './format';
 // T3 — the "add to sector" toggle. The sector FILE is fetched live (not
 // imported) so the layout editor never gains a runtime dependency on
@@ -139,6 +140,12 @@ const MIN_SPAWN_REGIONS = 2;
 /** Per-region color palette index. Multi-region overlap renders by
  *  region position MOD this count; layouts in practice have ≤4. */
 const REGION_COLOR_COUNT = 4;
+
+/** §39e (§40g) — the deploy footprint the spawn-room fit check probes each region
+ *  for. 2 = the smallest multi-tile body; a region that can't seat even a 2×2
+ *  earns a soft author warning. A knob, not a design constant (no multi-tile
+ *  deployable unit ships yet — footprints go to 4, rubble to 3). */
+const DEPLOY_FIT_SIZE = 2;
 
 const DEFAULT_SIDE = 12;
 
@@ -1017,6 +1024,30 @@ function validate(): ValidationItem[] {
     items.push({
       level: 'error',
       text: `${spawnOverlap} spawn tile(s) sit on impassable / occupied cells (wall, half-cover, chasm, deep water, or rubble) — paint to move them.`,
+    });
+  }
+
+  // §39e (folded into §40g) — the multi-tile spawn-ROOM fit check. Does an N×N
+  // body have room to DEPLOY in each region? A thin wrapper over §39c's
+  // `anchorFootprint` (the same in-bounds-biased corner policy the spawn path
+  // uses): some region tile must anchor a fully in-bounds, obstacle-clear block.
+  // "Free" = a stand-able cell (not in `spawnBlockedSet` — passable terrain is
+  // fine). Forward-looking (no multi-tile DEPLOYABLE unit ships yet — rubble is
+  // author-placed), so a soft WARN, not a Save-blocking error.
+  const isStandable = (cell: Coord): boolean => !spawnBlockedSet.has(`${cell.x},${cell.y}`);
+  const cramped: number[] = [];
+  spawns.forEach((region, idx) => {
+    // An empty region is already flagged as an error below; don't double-report.
+    if (region.tiles.length === 0) return;
+    const fits = region.tiles.some(
+      (t) => anchorFootprint(t, DEPLOY_FIT_SIZE, { gridW, gridH }, isStandable) !== null,
+    );
+    if (!fits) cramped.push(idx);
+  });
+  if (cramped.length > 0) {
+    items.push({
+      level: 'warn',
+      text: `Spawn region(s) ${cramped.join(', ')} can't fit a ${DEPLOY_FIT_SIZE}×${DEPLOY_FIT_SIZE} deploy — too cramped for a future multi-tile unit.`,
     });
   }
 

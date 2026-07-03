@@ -16,7 +16,8 @@
       { "layoutId": "isthmus" },
       { "layoutId": "icebergs" },
       { "layoutId": "desertFortress" },
-      { "layoutId": "fetidPond" }
+      { "layoutId": "fetidPond" },
+      { "layoutId": "rubbleQuarry" }
     ],
     "encounters": {
       "normal": [

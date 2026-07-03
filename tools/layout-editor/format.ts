@@ -8,8 +8,8 @@
  *
  * Canonical shape (mirrors the committed file post-M5 normalization): 2-space
  * indent, the `id / name / description / gridW / gridH / theme / walls /
- * [water] / [halfCovers] / [chasms] / [fires] / [healings] / [deepWater] /
- * [hills] / [ice] / [sand] / [mud] / spawns` key order,
+ * [water] / [halfCovers] / [rubble] / [chasms] / [fires] / [healings] /
+ * [deepWater] / [hills] / [ice] / [sand] / [mud] / spawns` key order,
  * `walls` always present (empty → an open+close bracket pair), the optional
  * terrain arrays emitted only when non-empty, and **every coord on its own
  * line** (the editor's long-standing emit — the 4-per-line packing some
@@ -38,6 +38,24 @@ function coordArrayBlock(key: string, coords: readonly Coord[], pad: string): st
 }
 
 /**
+ * §40d — one rubble coord per line, emitting `size` / `hp` only when present so a
+ * bare 1×1 default reads as a plain `{ "x": N, "y": M }` (matching the optional-
+ * field convention). Key order within a coord: x, y, size, hp.
+ */
+function formatRubbleCoords(
+  coords: readonly { x: number; y: number; size?: number | undefined; hp?: number | undefined }[],
+  pad: string,
+): string[] {
+  return coords.map((c, i) => {
+    const sep = i === coords.length - 1 ? '' : ',';
+    let body = `"x": ${c.x}, "y": ${c.y}`;
+    if (c.size !== undefined) body += `, "size": ${c.size}`;
+    if (c.hp !== undefined) body += `, "hp": ${c.hp}`;
+    return `${pad}    { ${body} }${sep}`;
+  });
+}
+
+/**
  * Format one layout object's lines at a given base indent (the indent of the
  * opening `{`). Used both standalone (indent 0 — the editor's export snippet)
  * and as an array element (indent 2 — the whole-file save). The closing `}`
@@ -61,6 +79,9 @@ export function formatLayoutLines(layout: LayoutDef, indent = 0): string[] {
   if (layout.water && layout.water.length > 0) parts.push(...coordArrayBlock('water', layout.water, pad));
   if (layout.halfCovers && layout.halfCovers.length > 0)
     parts.push(...coordArrayBlock('halfCovers', layout.halfCovers, pad));
+  // §40d — rubble, grouped with the other neutral obstacles (after half-cover).
+  if (layout.rubble && layout.rubble.length > 0)
+    parts.push(`${pad}  "rubble": [`, ...formatRubbleCoords(layout.rubble, pad), `${pad}  ],`);
   if (layout.chasms && layout.chasms.length > 0) parts.push(...coordArrayBlock('chasms', layout.chasms, pad));
   if (layout.fires && layout.fires.length > 0) parts.push(...coordArrayBlock('fires', layout.fires, pad));
   if (layout.healings && layout.healings.length > 0)

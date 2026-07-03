@@ -1647,5 +1647,52 @@
         ]
       }
     ]
+  },
+  {
+    "id": "rubbleQuarry",
+    "name": "Rubble Quarry",
+    "description": "A collapsed quarry strewn with shattered stone. Rubble of every size blocks sight and passage — and unlike the standing walls, it can be broken apart.",
+    "gridW": 14,
+    "gridH": 12,
+    "theme": "barren",
+    "walls": [
+      { "x": 1, "y": 6 },
+      { "x": 12, "y": 6 }
+    ],
+    "rubble": [
+      { "x": 2, "y": 5, "size": 3, "hp": 150 },
+      { "x": 5, "y": 5, "hp": 12 },
+      { "x": 8, "y": 5, "size": 2 },
+      { "x": 10, "y": 6, "hp": 80 },
+      { "x": 12, "y": 8 }
+    ],
+    "spawns": [
+      {
+        "availability": "both",
+        "tiles": [
+          { "x": 3, "y": 0 },
+          { "x": 4, "y": 0 },
+          { "x": 5, "y": 0 },
+          { "x": 6, "y": 0 },
+          { "x": 7, "y": 0 },
+          { "x": 8, "y": 0 },
+          { "x": 9, "y": 0 },
+          { "x": 10, "y": 0 }
+        ]
+      },
+      {
+        "availability": "both",
+        "tiles": [
+          { "x": 3, "y": 11 },
+          { "x": 4, "y": 11 },
+          { "x": 5, "y": 11 },
+          { "x": 6, "y": 11 },
+          { "x": 7, "y": 11 },
+          { "x": 8, "y": 11 },
+          { "x": 9, "y": 11 },
+          { "x": 10, "y": 11 }
+        ]
+      }
+    ]
   }
 ]

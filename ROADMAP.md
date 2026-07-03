@@ -1217,17 +1217,42 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
   the render layer has no unit-test harness (browser-verified per the render-change norm) —
   the destructibility predicate `isDestructibleNeutral` that gates it is covered in
   `units.test.ts`.
-- **40g — the layout editor (absorbs §39e; renumbered from 40d).** Paint rubble (size +
-  HP) + toggle wall/cover destructibility + **the multi-tile spawn-room fit validation
-  folded from §39e** — does an N×N deploy fit at a spawn region? A thin wrapper over §39c's
-  `anchorFootprint` (`region.tiles.some(t => anchorFootprint(t, size, …) !== null)`),
-  surfaced as an author warning for a too-cramped region. **Also here (deferred from 37g):
-  walls/cover ON non-default terrain** — split the editor's mutex `Cell[][]` into a terrain
-  layer + a neutral overlay (a cell carries a tile kind AND an optional neutral) + relax
-  the schema neutral-on-terrain overlap rule. The layout formatter already emits `rubble`
-  (built in 40d-1b); it still needs wall/cover `hp` emission. Browser-verify. *Test:* paint
-  rubble + toggle destructibility, both read back; spawn-room fit validation rejects a
-  too-small room.
+- **40g — the layout editor (absorbs §39e; renumbered from 40d). CUT INTO 40g-1/2/3.**
+  - **✅ 40g-1 — the layered editor model (COMPLETE & user-confirmed native 2026-07-03).**
+    The 37g-deferred "walls/cover ON non-default terrain" rewrite. **40g-1a** (`809dd48`):
+    `LayoutSchema.superRefine` split its single accumulating `blocked` set into a TERRAIN
+    layer (water/chasm/fire/healing/§37 tiles, mutex among themselves) + a NEUTRAL layer
+    (walls/half-cover/rubble, mutex among themselves) that no longer cross-check — so a
+    neutral may sit on ANY terrain tile (a destructible wall on sand reveals sand when it
+    breaks). The game already supported it (`terrainGen` sets the TileGrid kind, `battleSetup`
+    spawns the obstacle as a neutral UNIT standing on that tile) — only the authoring guard
+    lifted; every existing layout stays valid; +7 tests. **40g-1b** (`c0ed65d`): split the
+    editor's mutex `Cell[][]` into a terrain grid + a parallel `neutrals` overlay; wall/
+    half-cover strokes write the overlay; composite render = terrain bg+glyph (::after) plus
+    an inset ::before badge (z-index above), so the terrain frames the obstacle; dimming
+    retargets to the per-layer pseudo-element; load/resize/export/erase handle both layers.
+  - **✅ 40g-2 — the rubble brush + §39e (COMPLETE & user-confirmed native 2026-07-03).**
+    **40g-2a** (`609e0ea`): a rubble neutral sub-tool (size 1/2/3 + optional HP) placing into
+    a `rubble` LIST (footprinted, not a per-cell overlay). WYSIWYG click-to-place min-corner
+    (extends +x/+y); places only if the whole footprint is in-bounds + clear of every other
+    neutral (won't paint an overlap the schema rejects); terrain underneath is fine; drag
+    places one block per click; right-click erases the whole block; walls won't overwrite a
+    rubble cell. Render = a debris-brown ▄ ::before badge; the cell title carries size+HP.
+    Byte-faithful emit (`size` only when > 1, `hp` only when set ⇒ a 1×1 default block →
+    bare `{x,y}`); validate() folds rubble footprints into spawn-block + connectivity + the
+    summary. rubbleQuarry loads + round-trips (5 blocks / 16 cells). **40g-2b** (`cb3be68`):
+    the §39e spawn-room deploy-fit WARN — a thin `anchorFootprint` wrapper (some region tile
+    must anchor a fully in-bounds, obstacle-clear `DEPLOY_FIT_SIZE` 2×2 block; "free" = a
+    stand-able cell) surfaced as a soft author warning for a too-cramped region (forward-
+    looking — no multi-tile DEPLOYABLE unit ships yet, so a warn, not a Save-blocker).
+  - **▶ 40g-3 — the wall/cover DESTRUCTIBILITY toggle (the LAST §40 step).** A per-instance
+    HP control on painted walls/cover (→ the 40c `wall_destructible`/`half_cover_destructible`
+    path). NB: the editor's `neutrals` overlay currently stores only `'wall'|'halfCover'`, so
+    40g-3 adds the per-cell HP (a parallel map or a richer overlay value) + the size/HP-style
+    control UI. Then teach [format.ts](tools/layout-editor/format.ts) to emit wall/cover `hp`
+    (rubble emit already done in 40d-1b; walls/cover round-trip their `hp` via
+    `NeutralCoordSchema`). Browser-verify. **Completing 40g-3 CLOSES Phase 40.** *Test:* paint
+    a wall, give it HP, read it back in the export; a bare wall stays hp-less.
 
 ---
 

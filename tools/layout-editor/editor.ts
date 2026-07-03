@@ -60,6 +60,10 @@ import {
   type SpawnRegion,
   type Theme,
 } from '../../src/config/layouts';
+// §40g-2 — footprint geometry (39a), reused for rubble placement fit + render.
+// Pure + World-free, so the editor imports it straight (no sim-world runtime dep).
+// §40g-2b adds `anchorFootprint` here for the spawn-room deploy-fit warning.
+import { footprintCells } from '../../src/sim/occupancy';
 import { formatLayoutJson, formatLayoutsJson } from './format';
 // T3 — the "add to sector" toggle. The sector FILE is fetched live (not
 // imported) so the layout editor never gains a runtime dependency on
@@ -88,11 +92,25 @@ type Cell =
   | 'sand'
   | 'mud';
 type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
-/** D6: sub-tool within the neutral-units layer. The layer radio picks
- *  the layer; this radio picks which kind of neutral entity that
- *  layer paints. §40g — also the value stored in the `neutrals` overlay
- *  grid (one neutral per cell, mutex among wall/half-cover). */
+/** §40g — the value stored in the `neutrals` OVERLAY grid: one 1×1 neutral per
+ *  cell (mutex among wall/half-cover). Rubble is NOT here — it's a multi-tile
+ *  list (`rubble`), so its sub-tool lives in `NeutralTool` but not this grid. */
 type NeutralKind = 'wall' | 'halfCover';
+/** D6 + §40g-2 — the sub-tool within the neutral-units layer. The layer radio
+ *  picks the layer; this radio picks which neutral it paints: a 1×1 wall/
+ *  half-cover (into the overlay grid) or a footprinted `rubble` block (into the
+ *  `rubble` list). */
+type NeutralTool = 'wall' | 'halfCover' | 'rubble';
+/** §40g-2 — a destructible rubble placement authored in the editor: its footprint
+ *  MIN corner `{x,y}` + `size` (1..3). `hp` is the optional per-instance pool
+ *  override (absent ⇒ the catalog default for the size). Mirrors
+ *  `RubbleCoordSchema`; emitted to the layout's `rubble` array. */
+interface RubblePlacement {
+  x: number;
+  y: number;
+  size: number;
+  hp?: number;
+}
 /** D7.C: sub-tool within the terrain layer. Mirrors the D6 neutral-row
  *  pattern — same shape, same mid-stroke commit rule. Tile-kind stays
  *  mutex per cell (paint-chasm over a water cell wins; the layer system
@@ -150,8 +168,16 @@ let grid: Cell[][] = makeEmptyGrid(gridW, gridH);
 let neutrals: (NeutralKind | null)[][] = makeEmptyNeutrals(gridW, gridH);
 let cellEls: HTMLDivElement[][] = [];
 let activeLayer: Layer = 'terrain';
-let activeNeutralKind: NeutralKind = 'wall';
+let activeNeutralKind: NeutralTool = 'wall';
 let activeTerrainKind: TerrainKind = 'water';
+/** §40g-2 — authored rubble blocks (a list, not a per-cell overlay — each is a
+ *  footprinted entity). Placement / erase / render / export / load / resize all
+ *  keep this in sync alongside `grid` + `neutrals`. */
+let rubble: RubblePlacement[] = [];
+/** §40g-2 — the active rubble brush size (1..3) + optional HP override (null =
+ *  the size's catalog default). Driven by the rubble sub-tool controls. */
+let activeRubbleSize = 1;
+let activeRubbleHp: number | null = null;
 /** D8 — currently-edited layout's visual theme. Drives both the JSON
  *  export's `theme` field and a `data-theme` attribute on the grid for
  *  the live floor-color preview. */
@@ -217,6 +243,11 @@ const neutralRowEl = mustQuery<HTMLDivElement>('#neutral-row');
 const neutralKindRadioEls = Array.from(
   document.querySelectorAll<HTMLInputElement>('input[name="neutral-kind"]'),
 );
+// §40g-2 — the rubble sub-tool controls (size + HP), shown only while `rubble` is
+// the active neutral kind.
+const rubbleControlsEl = mustQuery<HTMLDivElement>('#rubble-controls');
+const rubbleSizeSelectEl = mustQuery<HTMLSelectElement>('#rubble-size');
+const rubbleHpInputEl = mustQuery<HTMLInputElement>('#rubble-hp');
 const terrainRowEl = mustQuery<HTMLDivElement>('#terrain-row');
 const terrainKindRadioEls = Array.from(
   document.querySelectorAll<HTMLInputElement>('input[name="terrain-kind"]'),
@@ -248,6 +279,7 @@ attachSizeWatchers();
 attachLayerWatchers();
 attachTerrainKindWatchers();
 attachNeutralKindWatchers();
+attachRubbleControls();
 attachRegionControls();
 window.addEventListener('mouseup', endStroke);
 // Re-fit the grid when the viewport changes so cells keep filling the
@@ -388,6 +420,13 @@ function resizeGridData(newW: number, newH: number): number {
   neutrals = nextNeutrals;
   gridW = newW;
   gridH = newH;
+  // §40g-2 — drop any rubble whose footprint no longer fits inside the new bounds
+  // (folded into the same clip warning as the terrain/neutral layers).
+  const keptRubble = rubble.filter(
+    (r) => r.x >= 0 && r.y >= 0 && r.x + r.size - 1 < newW && r.y + r.size - 1 < newH,
+  );
+  clipped += rubble.length - keptRubble.length;
+  rubble = keptRubble;
   // Spawn regions are tied to specific tiles + the arena's dimensions;
   // resizing may push them out of bounds. Reset to the procedural
   // default so the export stays valid. (Possible refinement later:
@@ -462,6 +501,9 @@ type StrokeKind =
   | 'erase-ice'
   | 'erase-sand'
   | 'erase-mud'
+  // §40g-2 — rubble is a footprinted list entity, placed/removed one per click.
+  | 'paint-rubble'
+  | 'erase-rubble'
   | 'paint-region'
   | 'erase-region'
   | 'noop';
@@ -526,6 +568,9 @@ function strokeFromMouseEvent(e: MouseEvent): StrokeKind {
       // safety; equivalent to "no-op" semantics.
       return 'noop';
     case 'neutral-units':
+      if (activeNeutralKind === 'rubble') {
+        return erasing ? 'erase-rubble' : 'paint-rubble';
+      }
       if (activeNeutralKind === 'halfCover') {
         return erasing ? 'erase-halfCover' : 'paint-halfCover';
       }
@@ -554,6 +599,10 @@ function applyStrokeTo(c: Coord): void {
     case 'erase-wall':
     case 'erase-halfCover':
       applyNeutralStroke(c);
+      return;
+    case 'paint-rubble':
+    case 'erase-rubble':
+      applyRubbleStroke(c);
       return;
     case 'paint-water':
     case 'paint-chasm':
@@ -678,9 +727,73 @@ function applyNeutralStroke(c: Coord): void {
       break;
   }
   if (next === undefined || next === current) return;
+  // §40g-2 — don't paint a 1×1 neutral onto a rubble footprint cell (neutrals are
+  // mutex; the schema would reject the overlap). Erasing (next === null) is fine.
+  if (next !== null && rubbleIndexAt(c.x, c.y) >= 0) return;
   neutrals[c.y]![c.x] = next;
   strokeDirty = true;
   refreshCell(c);
+}
+
+/**
+ * §40g-2 — the index of the rubble whose N×N footprint covers `(x,y)`, or −1.
+ * The rubble list is small, so a linear scan per query is fine at editor scale.
+ */
+function rubbleIndexAt(x: number, y: number): number {
+  return rubble.findIndex(
+    (r) => x >= r.x && x < r.x + r.size && y >= r.y && y < r.y + r.size,
+  );
+}
+
+/** §40g-2 — true if any NEUTRAL (a 1×1 wall/half-cover OR a rubble footprint)
+ *  already occupies `(x,y)`. The mutex a rubble placement must clear. */
+function cellHasNeutral(x: number, y: number): boolean {
+  return neutrals[y]![x] !== null || rubbleIndexAt(x, y) >= 0;
+}
+
+/**
+ * §40g-2 — a rubble stroke places (or erases) ONE block per click. Unlike the
+ * per-cell paints, a drag doesn't stamp a block per entered cell — it'd spam
+ * overlapping placements — so we act only on the stroke's first cell (the
+ * mousedown cell, when `strokeAppliedCells` still holds just it).
+ */
+function applyRubbleStroke(c: Coord): void {
+  if (strokeAppliedCells.size !== 1) return;
+  if (activeStroke === 'paint-rubble') placeRubble(c);
+  else eraseRubbleAt(c);
+}
+
+/**
+ * §40g-2 — place a rubble block with `c` as its MIN corner (extending +x/+y, the
+ * §39 footprint convention — WYSIWYG: the clicked cell is the block's top-left).
+ * Placed only if the WHOLE footprint is in-bounds and clear of every other neutral
+ * (wall / half-cover / other rubble); otherwise a no-op (the brush won't paint
+ * where the schema would reject). Terrain underneath is fine (§40g).
+ */
+function placeRubble(c: Coord): void {
+  const size = activeRubbleSize;
+  const cells = footprintCells(c, size);
+  const fits = cells.every(
+    (f) => f.x >= 0 && f.y >= 0 && f.x < gridW && f.y < gridH && !cellHasNeutral(f.x, f.y),
+  );
+  if (!fits) return;
+  const placement: RubblePlacement = { x: c.x, y: c.y, size };
+  if (activeRubbleHp !== null) placement.hp = activeRubbleHp;
+  rubble.push(placement);
+  strokeDirty = true;
+  for (const f of cells) refreshCell(f);
+}
+
+/** §40g-2 — remove the rubble block covering `c` (any of its footprint cells), and
+ *  repaint the freed cells. No-op if the cell holds no rubble. */
+function eraseRubbleAt(c: Coord): void {
+  const idx = rubbleIndexAt(c.x, c.y);
+  if (idx < 0) return;
+  const removed = rubble[idx]!;
+  const cells = footprintCells({ x: removed.x, y: removed.y }, removed.size);
+  rubble.splice(idx, 1);
+  strokeDirty = true;
+  for (const f of cells) refreshCell(f);
 }
 
 function applyPaintRegion(c: Coord): void {
@@ -733,12 +846,14 @@ function refreshCell(c: Coord): void {
     'ice',
     'sand',
     'mud',
+    'rubble',
     'invalid',
     'active-region-0',
     'active-region-1',
     'active-region-2',
     'active-region-3',
   );
+  el.title = '';
   // §40g — terrain kind (from `grid`) and the neutral overlay (from `neutrals`)
   // are painted as INDEPENDENT classes, so a `sand wall` cell carries both. The
   // CSS renders the terrain as the cell background + glyph and the neutral as an
@@ -755,6 +870,15 @@ function refreshCell(c: Coord): void {
   const neutral = neutrals[c.y]![c.x]!;
   if (neutral === 'wall') el.classList.add('wall');
   if (neutral === 'halfCover') el.classList.add('halfCover');
+  // §40g-2 — a cell inside a rubble footprint gets the rubble badge (mutually
+  // exclusive with wall/half-cover). The title carries its size + HP so the
+  // author can hover any cell of the block to read its stats.
+  const rIdx = rubbleIndexAt(c.x, c.y);
+  if (rIdx >= 0) {
+    const r = rubble[rIdx]!;
+    el.classList.add('rubble');
+    el.title = `rubble ${r.size}×${r.size}${r.hp != null ? `, hp ${r.hp}` : ' (default hp)'}`;
+  }
 
   // Tear down any prior region tags + outline. Rebuilt below based
   // on current spawns membership.
@@ -825,12 +949,15 @@ function validate(): ValidationItem[] {
   const ice = collectCells('ice');
   const sand = collectCells('sand');
   const mud = collectCells('mud');
+  // §40g-2 — every cell covered by a rubble footprint (a unit can't stand there,
+  // so these block spawns + pathing, like walls).
+  const rubbleCells = rubble.flatMap((r) => footprintCells({ x: r.x, y: r.y }, r.size));
 
   if (
     walls.length === 0 && water.length === 0 && halfCovers.length === 0 &&
     chasms.length === 0 && fires.length === 0 && healings.length === 0 &&
     deepWater.length === 0 && hills.length === 0 && ice.length === 0 &&
-    sand.length === 0 && mud.length === 0
+    sand.length === 0 && mud.length === 0 && rubble.length === 0
   ) {
     items.push({ level: 'ok', text: 'Empty grid — paint something.' });
   }
@@ -878,6 +1005,8 @@ function validate(): ValidationItem[] {
   for (const hc of halfCovers) spawnBlockedSet.add(`${hc.x},${hc.y}`);
   for (const ch of chasms) spawnBlockedSet.add(`${ch.x},${ch.y}`);
   for (const t of deepWater) spawnBlockedSet.add(`${t.x},${t.y}`);
+  // §40g-2 — a rubble block occupies its whole footprint; spawns can't sit on it.
+  for (const c of rubbleCells) spawnBlockedSet.add(`${c.x},${c.y}`);
   let spawnOverlap = 0;
   for (const region of spawns) {
     for (const t of region.tiles) {
@@ -887,7 +1016,7 @@ function validate(): ValidationItem[] {
   if (spawnOverlap > 0) {
     items.push({
       level: 'error',
-      text: `${spawnOverlap} spawn tile(s) sit on impassable / occupied cells (wall, half-cover, chasm, or deep water) — paint to move them.`,
+      text: `${spawnOverlap} spawn tile(s) sit on impassable / occupied cells (wall, half-cover, chasm, deep water, or rubble) — paint to move them.`,
     });
   }
 
@@ -943,7 +1072,9 @@ function validate(): ValidationItem[] {
   // half-cover + chasm only affects ranged-attack visibility, not movement
   // reachability. Fire + healing + the passable §37 tiles (hills/ice/sand/mud)
   // pass freely — they're costly surface effects, not obstacles.
-  if (!isConnected([...walls, ...halfCovers, ...chasms, ...deepWater])) {
+  // §40g-2 — rubble blocks pathing too (a unit can't walk through a rubble block),
+  // so it counts as a connectivity blocker alongside walls/half-cover/chasm/deep water.
+  if (!isConnected([...walls, ...halfCovers, ...chasms, ...deepWater, ...rubbleCells])) {
     items.push({
       level: 'error',
       text: 'Spawn regions are severed — no path between the first two spawn regions.',
@@ -955,6 +1086,7 @@ function validate(): ValidationItem[] {
     if (chasms.length > 0) extras.push(`${chasms.length} chasm`);
     if (fires.length > 0) extras.push(`${fires.length} fire`);
     if (healings.length > 0) extras.push(`${healings.length} healing`);
+    if (rubble.length > 0) extras.push(`${rubble.length} rubble`);
     const extrasText = extras.length > 0 ? `, ${extras.join(', ')}` : '';
     items.push({
       level: 'ok',
@@ -1086,6 +1218,17 @@ function buildCurrentLayout(): LayoutDef {
   if (ice.length > 0) payload.ice = ice;
   if (sand.length > 0) payload.sand = sand;
   if (mud.length > 0) payload.mud = mud;
+  // §40g-2 — rubble blocks. Emit `size` only when > 1 and `hp` only when set, so a
+  // 1×1 default-HP block round-trips to a bare `{x,y}` (matching the schema default
+  // + the formatter's "only when present" rule).
+  if (rubble.length > 0) {
+    payload.rubble = rubble.map((r) => ({
+      x: r.x,
+      y: r.y,
+      ...(r.size > 1 ? { size: r.size } : {}),
+      ...(r.hp != null ? { hp: r.hp } : {}),
+    }));
+  }
   return payload;
 }
 
@@ -1360,6 +1503,15 @@ function loadLayout(id: string): void {
   if (found.ice) for (const c of found.ice) grid[c.y]![c.x] = 'ice';
   if (found.sand) for (const c of found.sand) grid[c.y]![c.x] = 'sand';
   if (found.mud) for (const c of found.mud) grid[c.y]![c.x] = 'mud';
+  // §40g-2 — rubble loads into its own list (deep-copied). `size` defaults to 1;
+  // `hp` stays optional (absent ⇒ the size's catalog default), so a bare block
+  // re-exports bare.
+  rubble = (found.rubble ?? []).map((r) => ({
+    x: r.x,
+    y: r.y,
+    size: r.size ?? 1,
+    ...(r.hp != null ? { hp: r.hp } : {}),
+  }));
   // Deep-copy spawns so live editing can't mutate the canonical
   // LAYOUTS array.
   spawns = found.spawns.map((r) => ({
@@ -1383,6 +1535,7 @@ function loadLayout(id: string): void {
 function clearGrid(): void {
   grid = makeEmptyGrid(gridW, gridH);
   neutrals = makeEmptyNeutrals(gridW, gridH);
+  rubble = [];
   spawns = defaultSpawns(gridW, gridH);
   activeRegionIdx = 0;
   lastClipCount = 0;
@@ -1449,6 +1602,8 @@ function attachLayerWatchers(): void {
       // D6 — show the wall/half-cover sub-tool only while the
       // neutral-units layer is active.
       neutralRowEl.hidden = value !== 'neutral-units';
+      // §40g-2 — and the rubble size/HP controls only when rubble is picked there.
+      syncRubbleControls();
       // D7.C — show the water/chasm/fire/healing sub-tool only while the
       // terrain layer is active. Matches the neutral-row pattern.
       terrainRowEl.hidden = value !== 'terrain';
@@ -1464,14 +1619,34 @@ function attachNeutralKindWatchers(): void {
   for (const radio of neutralKindRadioEls) {
     radio.addEventListener('change', () => {
       if (!radio.checked) return;
-      const value = radio.value as NeutralKind;
+      const value = radio.value as NeutralTool;
       if (value === activeNeutralKind) return;
       // Same mid-stroke rule as layer-switch: synchronously commit
       // before swapping the active sub-tool.
       if (activeStroke !== null) endStroke();
       activeNeutralKind = value;
+      // §40g-2 — reveal the size/HP controls only while rubble is the sub-tool.
+      syncRubbleControls();
     });
   }
+}
+
+/** §40g-2 — the rubble size + HP controls show only while the neutral layer is
+ *  active AND rubble is the chosen sub-tool. Called on layer + sub-tool changes. */
+function syncRubbleControls(): void {
+  rubbleControlsEl.hidden = activeLayer !== 'neutral-units' || activeNeutralKind !== 'rubble';
+}
+
+/** §40g-2 — read the rubble size selector + HP input into the active brush state.
+ *  A blank / non-positive HP means "use the size's catalog default" (null). */
+function attachRubbleControls(): void {
+  rubbleSizeSelectEl.addEventListener('change', () => {
+    activeRubbleSize = Number(rubbleSizeSelectEl.value);
+  });
+  rubbleHpInputEl.addEventListener('input', () => {
+    const v = Number(rubbleHpInputEl.value);
+    activeRubbleHp = rubbleHpInputEl.value.trim() !== '' && Number.isFinite(v) && v > 0 ? Math.floor(v) : null;
+  });
 }
 
 function attachTerrainKindWatchers(): void {

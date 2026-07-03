@@ -61,8 +61,23 @@
             <div class="neutral-kind-radios" role="radiogroup" aria-label="Active neutral unit kind">
               <label class="inline"><input type="radio" name="neutral-kind" value="wall" checked /> wall (#)</label>
               <label class="inline"><input type="radio" name="neutral-kind" value="halfCover" /> half-cover (&#x2565;)</label>
+              <label class="inline"><input type="radio" name="neutral-kind" value="rubble" /> rubble (&#x2584;)</label>
             </div>
-            <span class="hint">Walls block pathing + LOS. Half-cover blocks pathing but ranged shots pass over.</span>
+            <div id="rubble-controls" class="rubble-controls" hidden>
+              <label class="inline">
+                Size
+                <select id="rubble-size">
+                  <option value="1">1&times;1</option>
+                  <option value="2">2&times;2</option>
+                  <option value="3">3&times;3</option>
+                </select>
+              </label>
+              <label class="inline">
+                HP
+                <input id="rubble-hp" type="number" min="1" step="1" placeholder="default" />
+              </label>
+            </div>
+            <span class="hint">Walls block pathing + LOS. Half-cover blocks pathing but ranged shots pass over. Rubble is a destructible N&times;N block (click places its top-left corner, extending right/down); HP blank uses the size&rsquo;s default. May sit on terrain.</span>
           </div>
           <div id="region-row" class="region-row" hidden>
             <div class="region-row-line">
@@ -94,6 +109,7 @@
             <li><span class="swatch mud"></span> Mud (%) — cost 4, &minus;accuracy, poison</li>
             <li><span class="swatch wall"></span> Wall (#) — blocks pathing + LOS</li>
             <li><span class="swatch halfCover"></span> Half-cover (&#x2565;) — pathing blocker, LOS-transparent</li>
+            <li><span class="swatch rubble"></span> Rubble (&#x2584;) — destructible N&times;N block</li>
             <li><span class="swatch erase"></span> Right-click — erases active layer at the cell</li>
             <li><span class="swatch region-0"></span> Spawn regions — color-coded by index</li>
           </ul>

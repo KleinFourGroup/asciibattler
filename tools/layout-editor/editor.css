@@ -234,6 +234,40 @@ body {
   background: var(--terminal-green);
 }
 
+/* §40g-2 — the rubble size/HP controls, shown only while the rubble sub-tool is
+   active (toggled via [hidden]). display:flex would override the [hidden] UA rule,
+   so the hidden state is re-declared explicitly. */
+.rubble-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--terminal-amber);
+}
+
+.rubble-controls[hidden] {
+  display: none;
+}
+
+.rubble-controls label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rubble-controls select,
+.rubble-controls input {
+  background: var(--terminal-black);
+  color: var(--terminal-amber);
+  border: 1px solid var(--panel-border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.rubble-controls input[type='number'] {
+  width: 64px;
+}
+
 /* D5.D.B region picker. Only visible while the spawn-regions layer
    is active (toggled via the [hidden] attribute on #region-row). */
 .region-row {
@@ -403,7 +437,8 @@ body {
    author sees the tile beneath a destructible wall; on plain floor the thin frame
    still reads as a near-solid wall. */
 .cell.wall::before,
-.cell.halfCover::before {
+.cell.halfCover::before,
+.cell.rubble::before {
   position: absolute;
   inset: 12%;
   display: grid;
@@ -418,6 +453,16 @@ body {
   content: '#';
   background: var(--terminal-stone);
   color: var(--terminal-black);
+}
+
+/* §40g-2 — rubble: the ▄ half-block glyph (matching the in-game render) on an
+   earthy debris-brown badge, distinct from the gray wall/half-cover stone. A
+   multi-tile block shows as a contiguous run of these; the cell title carries
+   its size + HP. */
+.cell.rubble::before {
+  content: '\2584';
+  background: #4a3f2c;
+  color: #c2a878;
 }
 
 .cell.water {
@@ -708,6 +753,10 @@ body {
 
 .swatch.halfCover {
   background: var(--dark-stone);
+}
+
+.swatch.rubble {
+  background: #4a3f2c;
 }
 
 .swatch.chasm {

@@ -65,6 +65,11 @@ import {
 // placement fit + render; `anchorFootprint` drives the §39e spawn-room deploy-fit
 // warning (does an N×N body anchor at some region tile?).
 import { footprintCells, anchorFootprint } from '../../src/sim/occupancy';
+// §40 follow-up — the shared, auto-target-aware connectivity classifier (the single
+// source of truth the shipped-layout test guard also uses). Rubble is passable (the
+// AI auto-breaks it), a destructible wall/cover is a soft blocker (manual-break only),
+// an indestructible obstacle hard-severs.
+import { classifyConnectivity } from '../../src/sim/layoutConnectivity';
 import { formatLayoutJson, formatLayoutsJson } from './format';
 // T3 — the "add to sector" toggle. The sector FILE is fetched live (not
 // imported) so the layout editor never gains a runtime dependency on
@@ -1170,20 +1175,35 @@ function validate(): ValidationItem[] {
     });
   }
 
-  // Connectivity treats half-cover, chasm, and deep water as path blockers —
-  // D6 walls off through half-cover (pathfinding rejects), D7.A makes chasm
-  // Infinity-cost (A* skips), and §37b deep water is Infinity-cost too (the
-  // 37g fix — it was missing here, so a deep-water-severed map validated as
-  // connected). Mirrors the BFS in layouts.test.ts. The LOS-transparency of
-  // half-cover + chasm only affects ranged-attack visibility, not movement
-  // reachability. Fire + healing + the passable §37 tiles (hills/ice/sand/mud)
-  // pass freely — they're costly surface effects, not obstacles.
-  // §40g-2 — rubble blocks pathing too (a unit can't walk through a rubble block),
-  // so it counts as a connectivity blocker alongside walls/half-cover/chasm/deep water.
-  if (!isConnected([...walls, ...halfCovers, ...chasms, ...deepWater, ...rubbleCells])) {
+  // §40 follow-up — AUTO-TARGET-AWARE connectivity (see layoutConnectivity.ts).
+  // Blockers split by what the default AI can get through:
+  //   · HARD (a true sever): INDESTRUCTIBLE walls/half-cover (no hp), chasm, deep water.
+  //   · a DESTRUCTIBLE wall/half-cover (hp, no autoTarget): the AI never auto-breaks it,
+  //     but a player can manually order it (§40e) — so a cut that opens only by breaking
+  //     one is a WARN, not a hard sever.
+  //   · RUBBLE (autoTarget:true): PASSABLE — a walled-off unit auto-chips through it
+  //     (applyRubbleAutoTarget), so it's in NEITHER set (a rubble-only cut is fine).
+  // Fire/healing + the passable §37 tiles never block (costly surface effects).
+  const hardBlockers = [
+    ...walls.filter((w) => w.hp == null),
+    ...halfCovers.filter((hc) => hc.hp == null),
+    ...chasms,
+    ...deepWater,
+  ];
+  const destructibleBlockers = [
+    ...walls.filter((w) => w.hp != null),
+    ...halfCovers.filter((hc) => hc.hp != null),
+  ];
+  const tier = classifyConnectivity({ gridW, gridH, spawns, hardBlockers, destructibleBlockers });
+  if (tier === 'severed') {
     items.push({
       level: 'error',
-      text: 'Spawn regions are severed — no path between the first two spawn regions.',
+      text: 'Spawn regions are severed by indestructible obstacles — no path between the first two, even if every destructible is broken.',
+    });
+  } else if (tier === 'destructible-dependent') {
+    items.push({
+      level: 'warn',
+      text: 'The only path between the first two spawn regions runs through a destructible wall/cover — playable only if a player manually orders it destroyed (the AI auto-breaks rubble, but not walls/cover).',
     });
   }
 
@@ -1229,58 +1249,6 @@ function isSavable(): boolean {
   if (!id || !/^[a-z0-9_-]+$/i.test(id)) return false;
   if (!metaNameEl.value.trim() || !metaDescriptionEl.value.trim()) return false;
   return true;
-}
-
-/**
- * BFS reachability between the first two spawn regions' centroids.
- * Mirrors `openCutsUntilConnected` in `src/sim/terrainGen.ts` — same
- * king's-move neighborhood as Pathfinding, walls as the only blockers
- * (water is passable, just slow). Returns true when there are fewer
- * than two regions; the schema requires ≥2, so that branch only fires
- * on a transient editor state, never on exported JSON.
- */
-function isConnected(walls: readonly Coord[]): boolean {
-  if (spawns.length < 2) return true;
-  const start = centroidOf(spawns[0]!);
-  const goal = centroidOf(spawns[1]!);
-
-  const blocked = new Set<string>();
-  for (const w of walls) blocked.add(`${w.x},${w.y}`);
-  if (blocked.has(`${goal.x},${goal.y}`)) return false;
-  if (blocked.has(`${start.x},${start.y}`)) return false;
-
-  const visited = new Set<string>([`${start.x},${start.y}`]);
-  const queue: Coord[] = [start];
-  while (queue.length > 0) {
-    const c = queue.shift()!;
-    if (c.x === goal.x && c.y === goal.y) return true;
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        if (dx === 0 && dy === 0) continue;
-        const nx = c.x + dx;
-        const ny = c.y + dy;
-        if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
-        const key = `${nx},${ny}`;
-        if (visited.has(key) || blocked.has(key)) continue;
-        visited.add(key);
-        queue.push({ x: nx, y: ny });
-      }
-    }
-  }
-  return false;
-}
-
-function centroidOf(region: SpawnRegion): Coord {
-  let sx = 0;
-  let sy = 0;
-  for (const t of region.tiles) {
-    sx += t.x;
-    sy += t.y;
-  }
-  return {
-    x: Math.round(sx / region.tiles.length),
-    y: Math.round(sy / region.tiles.length),
-  };
 }
 
 /**

@@ -7,10 +7,10 @@ import {
   SPAWN_REGION_MAX_TILES,
   THEMES,
   type LayoutDef,
-  type SpawnRegion,
 } from './layouts';
 import { LayoutsSchema, SpawnRegionSchema, ThemeSchema } from '../config/layouts';
 import { generateTerrain } from './terrainGen';
+import { classifyConnectivity } from './layoutConnectivity';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
 import { TERRAIN, type TerrainConfig } from '../config/terrain';
@@ -97,35 +97,35 @@ describe('layouts library', () => {
         }
       });
 
-      it('leaves at least one path between the first two spawn regions', () => {
-        // Mirror of terrainGen's connectivity check: hand-authored layouts
-        // that sever the board are bugs, not seeds to be rescued. Walls,
-        // half-covers, chasms, and deep water block movement (chasm + deep
-        // water = Infinity cost; §37g added deep water here — it was missing,
-        // so a deep-water-severed map would have validated as connected).
-        // Fire + healing + the passable §37 tiles (hills/ice/sand/mud) don't
-        // block — they're cost-bearing surface effects, not obstacles.
-        const [a, b] = layout.spawns;
-        const blockers = [
-          ...layout.walls,
-          ...(layout.halfCovers ?? []),
+      it('is not severed by indestructible obstacles (auto-target-aware, §40 follow-up)', () => {
+        // Hand-authored layouts that HARD-sever the board are bugs, not seeds to be
+        // rescued. §40 follow-up: connectivity is now auto-target-aware — rubble is
+        // passable (the AI auto-breaks it) and a destructible wall/cover is only a
+        // SOFT blocker (a player can manually break it), so a shipped map must merely
+        // not be `severed` (a `destructible-dependent` map is a legit author choice,
+        // caught behaviorally by layout-deadlock.test.ts if it stalemates). Only
+        // INDESTRUCTIBLE walls/half-cover (no hp) + chasm + deep water hard-block; fire
+        // / healing / the passable §37 tiles are cost-bearing surface effects, not
+        // obstacles.
+        const hardBlockers = [
+          ...layout.walls.filter((w) => w.hp == null),
+          ...(layout.halfCovers ?? []).filter((hc) => hc.hp == null),
           ...(layout.chasms ?? []),
           ...(layout.deepWater ?? []),
-          // §40d — rubble blocks paths through its whole N×N footprint. Inert for
-          // the shipped roster (no layout carries rubble yet) but keeps this guard
-          // correct the moment one does.
-          ...(layout.rubble ?? []).flatMap((r) => {
-            const size = r.size ?? 1;
-            const cells: GridCoord[] = [];
-            for (let dy = 0; dy < size; dy++) {
-              for (let dx = 0; dx < size; dx++) cells.push({ x: r.x + dx, y: r.y + dy });
-            }
-            return cells;
-          }),
+        ];
+        const destructibleBlockers = [
+          ...layout.walls.filter((w) => w.hp != null),
+          ...(layout.halfCovers ?? []).filter((hc) => hc.hp != null),
         ];
         expect(
-          hasPathBetween(blockers, layout.gridW, layout.gridH, a!, b!),
-        ).toBe(true);
+          classifyConnectivity({
+            gridW: layout.gridW,
+            gridH: layout.gridH,
+            spawns: layout.spawns,
+            hardBlockers,
+            destructibleBlockers,
+          }),
+        ).not.toBe('severed');
       });
 
       it('resolves through generateTerrain at the layout\'s own dimensions', () => {
@@ -502,46 +502,6 @@ describe('SpawnRegion schema tile-count range (H2)', () => {
   });
 });
 
-function hasPathBetween(
-  walls: readonly { x: number; y: number }[],
-  gridW: number,
-  gridH: number,
-  a: SpawnRegion,
-  b: SpawnRegion,
-): boolean {
-  const start = centroid(a);
-  const goal = centroid(b);
-  const blocked = new Set<string>();
-  for (const w of walls) blocked.add(`${w.x},${w.y}`);
-  if (blocked.has(`${goal.x},${goal.y}`)) return false;
-
-  const visited = new Set<string>([`${start.x},${start.y}`]);
-  const queue: GridCoord[] = [start];
-  while (queue.length > 0) {
-    const c = queue.shift()!;
-    if (c.x === goal.x && c.y === goal.y) return true;
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        if (dx === 0 && dy === 0) continue;
-        const nx = c.x + dx;
-        const ny = c.y + dy;
-        if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
-        const k = `${nx},${ny}`;
-        if (visited.has(k) || blocked.has(k)) continue;
-        visited.add(k);
-        queue.push({ x: nx, y: ny });
-      }
-    }
-  }
-  return false;
-}
-
-function centroid(region: SpawnRegion): GridCoord {
-  let sx = 0;
-  let sy = 0;
-  for (const t of region.tiles) {
-    sx += t.x;
-    sy += t.y;
-  }
-  return { x: Math.round(sx / region.tiles.length), y: Math.round(sy / region.tiles.length) };
-}
+// §40 follow-up — the local king-move BFS + centroid helpers were retired: the
+// shipped-layout connectivity guard now imports the shared `classifyConnectivity`
+// (src/sim/layoutConnectivity.ts), unit-tested in layoutConnectivity.test.ts.

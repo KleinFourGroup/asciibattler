@@ -115,6 +115,9 @@ describe('H4: encounter loop over real battles', () => {
     });
   }
 
+  // Drives a full run TWICE (fresh + restored) across REAL battles, so it needs a
+  // longer budget than the 5s default: larger hand-authored maps (e.g. labyrinth at
+  // 15×15) make a single double-sim take ~5s, and parallel/CI load adds margin.
   it('a restored run reproduces the encounter turn-for-turn (resume determinism)', () => {
     const busA = new EventBus<GameEvents>();
     const a = new Run(7, busA);
@@ -135,7 +138,7 @@ describe('H4: encounter loop over real battles', () => {
     expect(b.phase).toBe(a.phase);
     expect(b.playerHealth).toBe(a.playerHealth);
     expect(b.enemyHealth).toBe(a.enemyHealth);
-  });
+  }, 20_000);
 
   it('a per-turn tick cap resolves as a draw that chips BOTH pools', () => {
     const bus = new EventBus<GameEvents>();

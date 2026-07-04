@@ -136,28 +136,28 @@ describe('generateTerrain (procedural)', () => {
   });
 
   it('dispatches to the hand-authored library when layoutId is set', () => {
-    // `labyrinth` is the canonical 12×12 layout in the library; the test
-    // cares about the dispatch path, not the specific layout. Assert the
-    // emitted wall count matches the layout's declared walls — a tight
-    // fingerprint distinguishing library dispatch from the procedural path
-    // (labyrinth ships 36 walls; the structural generator at G=12 won't
-    // coincidentally emit exactly that on this seed).
+    // The test cares about the dispatch PATH, not labyrinth's specific size — read
+    // the layout's OWN dimensions (never a hardcoded G) so resizing the shipped
+    // layout doesn't break this (generateTerrain hard-requires the layout's dims).
+    // Assert the emitted wall count matches the layout's declared walls — a tight
+    // fingerprint distinguishing library dispatch from the procedural path.
     const layout = getLayout('labyrinth')!;
-    const { walls } = generateTerrain(new RNG(1), G, G, BASE, 'labyrinth');
+    const { walls } = generateTerrain(new RNG(1), layout.gridW, layout.gridH, BASE, 'labyrinth');
     expect(walls.length).toBe(layout.walls.length);
   });
 
   it('layout dispatch returns the layout-declared spawn regions verbatim', () => {
-    const { spawnRegions } = generateTerrain(new RNG(1), G, G, BASE, 'labyrinth');
-    expect(spawnRegions.length).toBeGreaterThanOrEqual(2);
-    for (const region of spawnRegions) {
-      expect(region.tiles.length).toBe(8);
-    }
+    const layout = getLayout('labyrinth')!;
+    const { spawnRegions } = generateTerrain(new RNG(1), layout.gridW, layout.gridH, BASE, 'labyrinth');
+    // "Verbatim" — the dispatch hands back the layout's own spawn regions unchanged;
+    // compare against the declaration itself rather than a hardcoded tile count.
+    expect(spawnRegions).toEqual(layout.spawns);
   });
 
   it('layout dispatch ignores the RNG (same layoutId → same walls regardless of seed)', () => {
-    const a = generateTerrain(new RNG(1), G, G, BASE, 'labyrinth');
-    const b = generateTerrain(new RNG(999), G, G, BASE, 'labyrinth');
+    const layout = getLayout('labyrinth')!;
+    const a = generateTerrain(new RNG(1), layout.gridW, layout.gridH, BASE, 'labyrinth');
+    const b = generateTerrain(new RNG(999), layout.gridW, layout.gridH, BASE, 'labyrinth');
     expect(a.walls).toEqual(b.walls);
   });
 

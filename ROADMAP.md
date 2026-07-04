@@ -1245,14 +1245,26 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
     must anchor a fully in-bounds, obstacle-clear `DEPLOY_FIT_SIZE` 2×2 block; "free" = a
     stand-able cell) surfaced as a soft author warning for a too-cramped region (forward-
     looking — no multi-tile DEPLOYABLE unit ships yet, so a warn, not a Save-blocker).
-  - **▶ 40g-3 — the wall/cover DESTRUCTIBILITY toggle (the LAST §40 step).** A per-instance
-    HP control on painted walls/cover (→ the 40c `wall_destructible`/`half_cover_destructible`
-    path). NB: the editor's `neutrals` overlay currently stores only `'wall'|'halfCover'`, so
-    40g-3 adds the per-cell HP (a parallel map or a richer overlay value) + the size/HP-style
-    control UI. Then teach [format.ts](tools/layout-editor/format.ts) to emit wall/cover `hp`
-    (rubble emit already done in 40d-1b; walls/cover round-trip their `hp` via
-    `NeutralCoordSchema`). Browser-verify. **Completing 40g-3 CLOSES Phase 40.** *Test:* paint
-    a wall, give it HP, read it back in the export; a bare wall stays hp-less.
+  - **✅ 40g-3 — the wall/cover DESTRUCTIBILITY toggle (the LAST §40 step; shipped
+    2026-07-03, browser-verified, awaiting the user's native confirm).** A per-instance HP
+    control on painted walls/cover (→ the 40c `wall_destructible`/`half_cover_destructible`
+    path). **As built:** a `neutralHp: (number|null)[][]` overlay parallel to `neutrals`
+    (the "parallel map" option; `null` ⇒ indestructible, the locked default) + a single
+    `activeNeutralHp` brush read from a new `#wall-hp` input (shown for the wall/half-cover
+    sub-tools, mutually exclusive with the rubble size/HP controls via the renamed
+    `syncNeutralSubToolControls`). `applyNeutralStroke` stamps the HP alongside the kind and
+    re-applies when EITHER the kind OR the HP changes (so re-painting the same wall with a new
+    HP takes effect); erase clears both. `collectNeutrals` carries the HP through (emitting
+    `{x,y,hp}` only when set); `loadLayout`/`resizeGridData`/`clearGrid` keep the overlay in
+    lockstep. [format.ts](tools/layout-editor/format.ts) gained `formatNeutralCoords` /
+    `neutralCoordArrayBlock` so walls/half-covers emit an optional `hp` (byte-identical for
+    the committed file — every shipped wall is hp-less). A destructible wall/cover renders in
+    the in-game **CRACKED_STONE `#B5843C`** ochre (`--cracked-stone` var + a `.destructible`
+    class on the badge) with an hp-carrying hover title, so the author tells breakable from
+    indestructible at a glance. +2 formatter tests (destructible round-trip + a bare wall
+    stays hp-less; 1669 main green); browser-verified via computed-style sampling (ochre badge
+    = `rgb(181,132,60)`, bare wall = gray `#7A7066`, export emits `hp` only on destructibles,
+    repaint/erase/half-cover all correct). **Completing 40g-3 CLOSES Phase 40.**
 
 ---
 

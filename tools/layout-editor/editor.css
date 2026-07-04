@@ -12,6 +12,10 @@
   --fluorescent-blue: #15f4ee;
   --dark-fluorescent-blue: #034947;
   --neon-red: #ff3131;
+  /* §40g-3 — the in-game CRACKED_STONE tint (COLORS.CRACKED_STONE in
+     src/render/palette.ts) a destructible wall/half-cover renders in. Reused here
+     so the editor's "breakable" badge reads the same weathered ochre as the game. */
+  --cracked-stone: #b5843c;
   --panel-bg: #141414;
   --panel-border: #2c2c2c;
   /* D5.D.B — distinct per-region tints. Picked off the terminal
@@ -490,6 +494,21 @@ body {
   color: var(--terminal-stone);
 }
 
+/* §40g-3 — a DESTRUCTIBLE wall / half-cover (a per-instance HP was painted, →
+   the §40c wall_destructible / half_cover_destructible def) reads in the weathered
+   ochre CRACKED_STONE, matching the in-game spriteColor tint, so the author can tell
+   a breakable obstacle from an indestructible one at a glance. Glyph is unchanged
+   (# / ╥) — only the tint shifts, mirroring the game. */
+.cell.wall.destructible::before {
+  background: var(--cracked-stone);
+  color: var(--terminal-black);
+}
+
+.cell.halfCover.destructible::before {
+  background: #5a4420;
+  color: var(--cracked-stone);
+}
+
 /* D7.C — chasm / fire / healing cells. Each tile kind has a distinct
    color family so a glance at the editor maps onto the in-game look:
    - chasm: near-black void, no glyph (it's a pit, not an object).
@@ -753,6 +772,11 @@ body {
 
 .swatch.halfCover {
   background: var(--dark-stone);
+}
+
+/* §40g-3 — the destructible wall/cover legend swatch. */
+.swatch.cracked {
+  background: var(--cracked-stone);
 }
 
 .swatch.rubble {

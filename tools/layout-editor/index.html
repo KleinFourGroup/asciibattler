@@ -77,7 +77,13 @@
                 <input id="rubble-hp" type="number" min="1" step="1" placeholder="default" />
               </label>
             </div>
-            <span class="hint">Walls block pathing + LOS. Half-cover blocks pathing but ranged shots pass over. Rubble is a destructible N&times;N block (click places its top-left corner, extending right/down); HP blank uses the size&rsquo;s default. May sit on terrain.</span>
+            <div id="wall-hp-controls" class="rubble-controls">
+              <label class="inline">
+                HP
+                <input id="wall-hp" type="number" min="1" step="1" placeholder="indestructible" />
+              </label>
+            </div>
+            <span class="hint">Walls block pathing + LOS. Half-cover blocks pathing but ranged shots pass over. Give a wall/half-cover HP to make it destructible (ochre &ldquo;cracked&rdquo; badge); blank = indestructible. Rubble is a destructible N&times;N block (click places its top-left corner, extending right/down); HP blank uses the size&rsquo;s default. May sit on terrain.</span>
           </div>
           <div id="region-row" class="region-row" hidden>
             <div class="region-row-line">
@@ -109,6 +115,7 @@
             <li><span class="swatch mud"></span> Mud (%) — cost 4, &minus;accuracy, poison</li>
             <li><span class="swatch wall"></span> Wall (#) — blocks pathing + LOS</li>
             <li><span class="swatch halfCover"></span> Half-cover (&#x2565;) — pathing blocker, LOS-transparent</li>
+            <li><span class="swatch cracked"></span> Ochre wall/cover — destructible (has HP)</li>
             <li><span class="swatch rubble"></span> Rubble (&#x2584;) — destructible N&times;N block</li>
             <li><span class="swatch erase"></span> Right-click — erases active layer at the cell</li>
             <li><span class="swatch region-0"></span> Spawn regions — color-coded by index</li>

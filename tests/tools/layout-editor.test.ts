@@ -81,3 +81,42 @@ describe('§37f — the five new terrain tiles + a new theme', () => {
     expect(LayoutsSchema.safeParse([overlapping]).success).toBe(false);
   });
 });
+
+describe('§40g-3 — wall/half-cover destructibility hp', () => {
+  // A hand-built layout mixing a destructible wall (hp set), a bare indestructible
+  // wall (no hp), and a destructible half-cover. Round-tripping through the editor
+  // formatter → the REAL game schema proves the formatter emits the per-instance
+  // `hp` (the §40c destructibility toggle) AND that a bare wall survives hp-less —
+  // the editor's Save path end-to-end for wall/cover destructibility.
+  const band = (y: number): { x: number; y: number }[] =>
+    Array.from({ length: 8 }, (_, x) => ({ x, y }));
+  const withDestructibles: LayoutDef = {
+    id: 'destructible-walls',
+    name: 'Destructible Walls',
+    description: 'fixture exercising per-instance wall/half-cover destructibility hp.',
+    gridW: 8,
+    gridH: 8,
+    theme: 'grassland',
+    walls: [
+      { x: 0, y: 3, hp: 80 }, // destructible → wall_destructible with maxHp 80
+      { x: 1, y: 3 }, // bare → indestructible wall (destructibility OFF)
+    ],
+    halfCovers: [{ x: 3, y: 3, hp: 40 }], // destructible → half_cover_destructible
+    spawns: [
+      { availability: 'player', tiles: band(0) },
+      { availability: 'enemy', tiles: band(7) },
+    ],
+  };
+
+  it('formats + re-parses to a deep-equal layout (hp survives the round-trip)', () => {
+    const reparsed = LayoutsSchema.parse(JSON.parse(formatLayoutsJson([withDestructibles])));
+    expect(reparsed).toEqual([withDestructibles]);
+  });
+
+  it('emits hp only on destructible neutrals; a bare wall stays hp-less', () => {
+    const json = formatLayoutsJson([withDestructibles]);
+    expect(json).toContain('{ "x": 0, "y": 3, "hp": 80 }'); // destructible wall
+    expect(json).toContain('{ "x": 1, "y": 3 }'); // bare wall — no hp field
+    expect(json).toContain('{ "x": 3, "y": 3, "hp": 40 }'); // destructible half-cover
+  });
+});

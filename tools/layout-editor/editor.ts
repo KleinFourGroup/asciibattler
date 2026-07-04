@@ -173,9 +173,20 @@ let grid: Cell[][] = makeEmptyGrid(gridW, gridH);
  *  `NeutralKind` = a wall/half-cover sitting ON whatever terrain `grid` holds at
  *  that cell. Kept separate from the terrain grid so the two layers coexist. */
 let neutrals: (NeutralKind | null)[][] = makeEmptyNeutrals(gridW, gridH);
+/** §40g-3 — the per-cell wall/half-cover HP, parallel to `neutrals`. `null` = no
+ *  HP ⇒ an INDESTRUCTIBLE wall/half-cover (the locked "destructibility OFF by
+ *  default" rule); a number ⇒ a destructible placement (spawned as the §40c
+ *  `wall_destructible` / `half_cover_destructible` def with this maxHp). Only
+ *  meaningful where `neutrals` is non-null; cleared to `null` when a cell is
+ *  erased or repainted hp-less. */
+let neutralHp: (number | null)[][] = makeEmptyNeutralHp(gridW, gridH);
 let cellEls: HTMLDivElement[][] = [];
 let activeLayer: Layer = 'terrain';
 let activeNeutralKind: NeutralTool = 'wall';
+/** §40g-3 — the active wall/half-cover destructibility brush: the HP a newly
+ *  painted wall/half-cover gets (`null` = indestructible, the default). Shared by
+ *  both the wall and half-cover sub-tools (mirrors the single rubble HP brush). */
+let activeNeutralHp: number | null = null;
 let activeTerrainKind: TerrainKind = 'water';
 /** §40g-2 — authored rubble blocks (a list, not a per-cell overlay — each is a
  *  footprinted entity). Placement / erase / render / export / load / resize all
@@ -229,6 +240,18 @@ function makeEmptyNeutrals(w: number, h: number): (NeutralKind | null)[][] {
   return g;
 }
 
+/** §40g-3 — the empty wall/half-cover HP overlay (all `null` ⇒ indestructible),
+ *  same dimensions as `grid`, parallel to `neutrals`. */
+function makeEmptyNeutralHp(w: number, h: number): (number | null)[][] {
+  const g: (number | null)[][] = [];
+  for (let y = 0; y < h; y++) {
+    const row: (number | null)[] = [];
+    for (let x = 0; x < w; x++) row.push(null);
+    g.push(row);
+  }
+  return g;
+}
+
 const gridEl = mustQuery<HTMLDivElement>('#grid');
 const exportEl = mustQuery<HTMLTextAreaElement>('#export');
 const validationEl = mustQuery<HTMLUListElement>('#validation');
@@ -255,6 +278,10 @@ const neutralKindRadioEls = Array.from(
 const rubbleControlsEl = mustQuery<HTMLDivElement>('#rubble-controls');
 const rubbleSizeSelectEl = mustQuery<HTMLSelectElement>('#rubble-size');
 const rubbleHpInputEl = mustQuery<HTMLInputElement>('#rubble-hp');
+// §40g-3 — the wall/half-cover HP control, shown only while a wall/half-cover (not
+// rubble) is the active neutral sub-tool.
+const wallHpControlsEl = mustQuery<HTMLDivElement>('#wall-hp-controls');
+const wallHpInputEl = mustQuery<HTMLInputElement>('#wall-hp');
 const terrainRowEl = mustQuery<HTMLDivElement>('#terrain-row');
 const terrainKindRadioEls = Array.from(
   document.querySelectorAll<HTMLInputElement>('input[name="terrain-kind"]'),
@@ -287,6 +314,7 @@ attachLayerWatchers();
 attachTerrainKindWatchers();
 attachNeutralKindWatchers();
 attachRubbleControls();
+attachWallHpControls();
 attachRegionControls();
 window.addEventListener('mouseup', endStroke);
 // Re-fit the grid when the viewport changes so cells keep filling the
@@ -414,6 +442,16 @@ function resizeGridData(newW: number, newH: number): number {
     }
     nextNeutrals.push(row);
   }
+  // §40g-3 — resize the parallel wall/half-cover HP overlay the same way.
+  const nextNeutralHp: (number | null)[][] = [];
+  for (let y = 0; y < newH; y++) {
+    const row: (number | null)[] = [];
+    for (let x = 0; x < newW; x++) {
+      const existing = y < neutralHp.length && x < neutralHp[y]!.length ? neutralHp[y]![x]! : null;
+      row.push(existing);
+    }
+    nextNeutralHp.push(row);
+  }
   // Count any non-empty cell (terrain OR neutral) that USED to exist but is now
   // outside the new bounds, so the resize clip warning covers both layers.
   for (let y = 0; y < grid.length; y++) {
@@ -425,6 +463,7 @@ function resizeGridData(newW: number, newH: number): number {
   }
   grid = next;
   neutrals = nextNeutrals;
+  neutralHp = nextNeutralHp;
   gridW = newW;
   gridH = newH;
   // §40g-2 — drop any rubble whose footprint no longer fits inside the new bounds
@@ -733,11 +772,18 @@ function applyNeutralStroke(c: Coord): void {
       if (current === 'halfCover') next = null;
       break;
   }
-  if (next === undefined || next === current) return;
+  // `undefined` = an erase whose sub-tool doesn't match this cell's kind → no-op.
+  if (next === undefined) return;
   // §40g-2 — don't paint a 1×1 neutral onto a rubble footprint cell (neutrals are
   // mutex; the schema would reject the overlap). Erasing (next === null) is fine.
   if (next !== null && rubbleIndexAt(c.x, c.y) >= 0) return;
+  // §40g-3 — a paint stroke also stamps the active destructibility HP; an erase
+  // clears it. Re-apply when EITHER the kind OR the HP changes, so re-painting the
+  // same wall kind with a new HP (blank→value, or a different value) takes effect.
+  const nextHp = next === null ? null : activeNeutralHp;
+  if (next === current && nextHp === neutralHp[c.y]![c.x]) return;
   neutrals[c.y]![c.x] = next;
+  neutralHp[c.y]![c.x] = nextHp;
   strokeDirty = true;
   refreshCell(c);
 }
@@ -854,6 +900,7 @@ function refreshCell(c: Coord): void {
     'sand',
     'mud',
     'rubble',
+    'destructible',
     'invalid',
     'active-region-0',
     'active-region-1',
@@ -877,6 +924,20 @@ function refreshCell(c: Coord): void {
   const neutral = neutrals[c.y]![c.x]!;
   if (neutral === 'wall') el.classList.add('wall');
   if (neutral === 'halfCover') el.classList.add('halfCover');
+  // §40g-3 — a wall/half-cover with a per-instance HP is DESTRUCTIBLE (the §40c
+  // `wall_destructible` / `half_cover_destructible` path): flag it for the ochre
+  // "cracked" badge tell + carry its HP in the hover title. A bare (indestructible)
+  // wall stays gray and gets no title.
+  if (neutral !== null) {
+    const hp = neutralHp[c.y]![c.x];
+    const label = neutral === 'wall' ? 'wall' : 'half-cover';
+    if (hp != null) {
+      el.classList.add('destructible');
+      el.title = `${label}, destructible (hp ${hp})`;
+    } else {
+      el.title = `${label} (indestructible)`;
+    }
+  }
   // §40g-2 — a cell inside a rubble footprint gets the rubble badge (mutually
   // exclusive with wall/half-cover). The title carries its size + HP so the
   // author can hover any cell of the block to read its stats.
@@ -926,13 +987,27 @@ function collectCells(kind: Exclude<Cell, 'floor'>): Coord[] {
   return out;
 }
 
+/** §40g-3 — a wall/half-cover coord carrying its optional per-instance HP (present
+ *  ⇒ destructible; absent ⇒ indestructible). Mirrors `NeutralCoordSchema` /
+ *  `LayoutDef['walls']`; emitted to the layout's `walls` / `halfCovers` arrays. */
+interface NeutralCoord {
+  x: number;
+  y: number;
+  hp?: number;
+}
+
 /** §40g — collect the neutral OVERLAY cells of a given kind (wall / half-cover),
- *  the neutral-layer counterpart to `collectCells` (which now scans terrain only). */
-function collectNeutrals(kind: NeutralKind): Coord[] {
-  const out: Coord[] = [];
+ *  the neutral-layer counterpart to `collectCells` (which now scans terrain only).
+ *  §40g-3 — each coord carries its `neutralHp` (only when set — a bare cell stays
+ *  `{x,y}` so an indestructible wall re-exports hp-less). */
+function collectNeutrals(kind: NeutralKind): NeutralCoord[] {
+  const out: NeutralCoord[] = [];
   for (let y = 0; y < gridH; y++) {
     for (let x = 0; x < gridW; x++) {
-      if (neutrals[y]![x] === kind) out.push({ x, y });
+      if (neutrals[y]![x] === kind) {
+        const hp = neutralHp[y]![x];
+        out.push(hp != null ? { x, y, hp } : { x, y });
+      }
     }
   }
   return out;
@@ -1522,10 +1597,21 @@ function loadLayout(id: string): void {
   grid = makeEmptyGrid(gridW, gridH);
   // §40g — walls/half-cover load into the neutral OVERLAY; terrain into `grid`.
   // A neutral coord may now coincide with a terrain tile (both are applied).
+  // §40g-3 — a wall/half-cover coord's optional `hp` loads into the parallel
+  // `neutralHp` overlay (present ⇒ destructible), so a saved destructible wall
+  // round-trips back into the editor as destructible.
   neutrals = makeEmptyNeutrals(gridW, gridH);
-  for (const w of found.walls) neutrals[w.y]![w.x] = 'wall';
+  neutralHp = makeEmptyNeutralHp(gridW, gridH);
+  for (const w of found.walls) {
+    neutrals[w.y]![w.x] = 'wall';
+    if (w.hp != null) neutralHp[w.y]![w.x] = w.hp;
+  }
   if (found.water) for (const w of found.water) grid[w.y]![w.x] = 'water';
-  if (found.halfCovers) for (const c of found.halfCovers) neutrals[c.y]![c.x] = 'halfCover';
+  if (found.halfCovers)
+    for (const c of found.halfCovers) {
+      neutrals[c.y]![c.x] = 'halfCover';
+      if (c.hp != null) neutralHp[c.y]![c.x] = c.hp;
+    }
   if (found.chasms) for (const c of found.chasms) grid[c.y]![c.x] = 'chasm';
   if (found.fires) for (const c of found.fires) grid[c.y]![c.x] = 'fire';
   if (found.healings) for (const c of found.healings) grid[c.y]![c.x] = 'healing';
@@ -1566,6 +1652,7 @@ function loadLayout(id: string): void {
 function clearGrid(): void {
   grid = makeEmptyGrid(gridW, gridH);
   neutrals = makeEmptyNeutrals(gridW, gridH);
+  neutralHp = makeEmptyNeutralHp(gridW, gridH);
   rubble = [];
   spawns = defaultSpawns(gridW, gridH);
   activeRegionIdx = 0;
@@ -1633,8 +1720,9 @@ function attachLayerWatchers(): void {
       // D6 — show the wall/half-cover sub-tool only while the
       // neutral-units layer is active.
       neutralRowEl.hidden = value !== 'neutral-units';
-      // §40g-2 — and the rubble size/HP controls only when rubble is picked there.
-      syncRubbleControls();
+      // §40g-2/§40g-3 — sync the neutral sub-tool controls (rubble size/HP vs
+      // wall/half-cover HP) to the active layer + sub-tool.
+      syncNeutralSubToolControls();
       // D7.C — show the water/chasm/fire/healing sub-tool only while the
       // terrain layer is active. Matches the neutral-row pattern.
       terrainRowEl.hidden = value !== 'terrain';
@@ -1656,16 +1744,21 @@ function attachNeutralKindWatchers(): void {
       // before swapping the active sub-tool.
       if (activeStroke !== null) endStroke();
       activeNeutralKind = value;
-      // §40g-2 — reveal the size/HP controls only while rubble is the sub-tool.
-      syncRubbleControls();
+      // §40g-2/§40g-3 — swap between the rubble size/HP controls and the wall/
+      // half-cover HP control as the sub-tool changes.
+      syncNeutralSubToolControls();
     });
   }
 }
 
-/** §40g-2 — the rubble size + HP controls show only while the neutral layer is
- *  active AND rubble is the chosen sub-tool. Called on layer + sub-tool changes. */
-function syncRubbleControls(): void {
-  rubbleControlsEl.hidden = activeLayer !== 'neutral-units' || activeNeutralKind !== 'rubble';
+/** §40g-2/§40g-3 — the neutral sub-tool controls are mutually exclusive: the rubble
+ *  size+HP controls show only for the rubble sub-tool, the wall/half-cover HP control
+ *  only for wall/half-cover. Both hide off the neutral layer. Called on layer +
+ *  sub-tool changes. */
+function syncNeutralSubToolControls(): void {
+  const onNeutral = activeLayer === 'neutral-units';
+  rubbleControlsEl.hidden = !onNeutral || activeNeutralKind !== 'rubble';
+  wallHpControlsEl.hidden = !onNeutral || activeNeutralKind === 'rubble';
 }
 
 /** §40g-2 — read the rubble size selector + HP input into the active brush state.
@@ -1677,6 +1770,17 @@ function attachRubbleControls(): void {
   rubbleHpInputEl.addEventListener('input', () => {
     const v = Number(rubbleHpInputEl.value);
     activeRubbleHp = rubbleHpInputEl.value.trim() !== '' && Number.isFinite(v) && v > 0 ? Math.floor(v) : null;
+  });
+}
+
+/** §40g-3 — read the wall/half-cover HP input into the active destructibility brush.
+ *  A blank / non-positive value means "indestructible" (null) — the locked default.
+ *  A positive integer makes the next-painted wall/half-cover destructible with that
+ *  maxHp (→ the §40c `wall_destructible` / `half_cover_destructible` def). */
+function attachWallHpControls(): void {
+  wallHpInputEl.addEventListener('input', () => {
+    const v = Number(wallHpInputEl.value);
+    activeNeutralHp = wallHpInputEl.value.trim() !== '' && Number.isFinite(v) && v > 0 ? Math.floor(v) : null;
   });
 }
 

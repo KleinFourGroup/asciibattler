@@ -38,6 +38,35 @@ function coordArrayBlock(key: string, coords: readonly Coord[], pad: string): st
 }
 
 /**
+ * §40g-3 — one wall / half-cover coord per line, emitting an optional per-instance
+ * `hp` only when present (the §40c destructibility toggle: `hp` ⇒ a destructible
+ * `wall_destructible` / `half_cover_destructible`, absent ⇒ the indestructible
+ * default). A bare `{ "x": N, "y": M }` therefore round-trips unchanged — every
+ * shipped wall today is hp-less. Key order within a coord: x, y, hp.
+ */
+function formatNeutralCoords(
+  coords: readonly { x: number; y: number; hp?: number | undefined }[],
+  pad: string,
+): string[] {
+  return coords.map((c, i) => {
+    const sep = i === coords.length - 1 ? '' : ',';
+    let body = `"x": ${c.x}, "y": ${c.y}`;
+    if (c.hp !== undefined) body += `, "hp": ${c.hp}`;
+    return `${pad}    { ${body} }${sep}`;
+  });
+}
+
+/** §40g-3 — the `coordArrayBlock` variant for a neutral (wall / half-cover) array,
+ *  routing through `formatNeutralCoords` so per-instance `hp` survives the emit. */
+function neutralCoordArrayBlock(
+  key: string,
+  coords: readonly { x: number; y: number; hp?: number | undefined }[],
+  pad: string,
+): string[] {
+  return [`${pad}  "${key}": [`, ...formatNeutralCoords(coords, pad), `${pad}  ],`];
+}
+
+/**
  * §40d — one rubble coord per line, emitting `size` / `hp` only when present so a
  * bare 1×1 default reads as a plain `{ "x": N, "y": M }` (matching the optional-
  * field convention). Key order within a coord: x, y, size, hp.
@@ -73,12 +102,15 @@ export function formatLayoutLines(layout: LayoutDef, indent = 0): string[] {
   parts.push(`${pad}  "gridH": ${layout.gridH},`);
   // theme is REQUIRED in the schema — emit unconditionally.
   parts.push(`${pad}  "theme": ${JSON.stringify(layout.theme)},`);
-  // walls is always present (even when empty: an open+close bracket pair).
-  parts.push(...coordArrayBlock('walls', layout.walls, pad));
+  // walls is always present (even when empty: an open+close bracket pair). §40g-3 —
+  // routes through the neutral formatter so a per-instance `hp` (a destructible wall)
+  // is emitted; a bare wall stays `{x,y}`.
+  parts.push(...neutralCoordArrayBlock('walls', layout.walls, pad));
   // The optional terrain arrays, in the committed file's order, only when set.
   if (layout.water && layout.water.length > 0) parts.push(...coordArrayBlock('water', layout.water, pad));
+  // §40g-3 — half-covers likewise carry an optional destructibility `hp`.
   if (layout.halfCovers && layout.halfCovers.length > 0)
-    parts.push(...coordArrayBlock('halfCovers', layout.halfCovers, pad));
+    parts.push(...neutralCoordArrayBlock('halfCovers', layout.halfCovers, pad));
   // §40d — rubble, grouped with the other neutral obstacles (after half-cover).
   if (layout.rubble && layout.rubble.length > 0)
     parts.push(`${pad}  "rubble": [`, ...formatRubbleCoords(layout.rubble, pad), `${pad}  ],`);

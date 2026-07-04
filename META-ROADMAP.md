@@ -85,6 +85,14 @@ codebase is at its current maturity — before clusters 3–6 pile content on to
 means the later rounds are content/UI on a stable, hardened core. Getting them
 right once beats retrofitting later.
 
+**Interstitial rounds** (user-feedback rounds slotted between clusters — the
+Post-N O→R precedent) don't break the cluster order; they're recorded here as
+they happen: **2026-07-04 — the Pathfinding Audit (Phases 42→46,
+[ROADMAP.md](ROADMAP.md))** sits between Clusters 2 and 3: the movement-
+intelligence audit (bias fixes · first-class waiting · corridor cooperation ·
+a measured WHCA\*/flow-field gate), instrumented via PATHING.md. Cluster 3's
+kickoff follows its §46 close-out.
+
 ---
 
 ## Cluster 1 — Combat Depth  ✅ EXPANDED → [ROADMAP.md](ROADMAP.md) (Phases Y→33)

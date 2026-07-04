@@ -1,1432 +1,406 @@
-# ROADMAP — Cluster 2: Spatial & Movement
+# ROADMAP — The Pathfinding Audit (Movement Intelligence, Phases 42→46)
 
-> **▶ ACTIVE — the second of the six post-X meta-roadmap clusters
-> ([META-ROADMAP.md](META-ROADMAP.md)).** The second **engine round**: harden the
-> movement / pathfinding / occupancy core, give it terrain depth, **unify every
-> unit into one data-driven model**, and land multi-tile footprints + destructible
-> terrain on top. With Cluster 1 (Combat Depth) the codebase has *interesting units*
-> to test on; this round makes the *space they fight in* deep and the *unit model
-> they're built from* fully data-shaped. **Get the occupancy core + the unit model
-> right once** — Clusters 3–6 author against both. **First task of the *next*
-> cluster's round (Cluster 3 — Economy) = archive this file →
-> `archive/post-34-roadmap.md` and write a fresh ROADMAP.md** (the same
+> **▶ ACTIVE — an interstitial round between Cluster 2 (Spatial & Movement,
+> archived → [archive/post-34-roadmap.md](archive/post-34-roadmap.md)) and
+> Cluster 3 (Economy, [META-ROADMAP.md](META-ROADMAP.md)).** The user-called
+> movement-quality audit: fix the *directional biases* players can see, make
+> *waiting* a first-class tactical decision, and teach units to *cooperate*
+> (follow columns, queue at chokepoints) instead of fighting each other's
+> pathing — all measured by a new instrumentation harness, not vibes. Same
+> precedent as the Post-N agency round (O→R): a user-feedback round slotted
+> between clusters. **First task of Cluster 3's kickoff = archive this file →
+> `archive/post-41-roadmap.md` and author the Economy roadmap** (the same
 > archive-and-replace ritual that produced this one).
 
 Companion to [DESIGN.md](DESIGN.md), [ARCHITECTURE.md](ARCHITECTURE.md),
 [BALANCE.md](BALANCE.md), [TODO.md](TODO.md), [GOTCHAS.md](GOTCHAS.md), and
-[META-ROADMAP.md](META-ROADMAP.md) (the meta-order across all six clusters). The
-prior roadmaps live in the archive: [mvp](archive/mvp-roadmap.md),
-[post-mvp](archive/post-mvp-roadmap.md), [post-c1](archive/post-c1-roadmap.md),
-[post-d](archive/post-d-roadmap.md), [post-e](archive/post-e-roadmap.md),
-[post-f](archive/post-f-roadmap.md), [post-h](archive/post-h-roadmap.md) (I→N),
-[post-n](archive/post-n-roadmap.md) (O→R), [post-r](archive/post-r-roadmap.md)
-(S→X), and [post-x](archive/post-x-roadmap.md) (Cluster 1, Y→34 — the combat-depth
-round this one follows).
-
-Synthesized from [archive/cluster-two-spec.md](archive/cluster-two-spec.md) (the
-user's spec, now archived) **plus the design discussion that resolved its two open
-questions** — flight and the unit-representation overhaul. Once you've read this
-roadmap, that spec is fully absorbed; the locked refinements live below, not in the
-spec.
+[META-ROADMAP.md](META-ROADMAP.md). Prior roadmaps in [archive/](archive/) —
+most recently [post-x](archive/post-x-roadmap.md) (Cluster 1, Y→34) and
+[post-34](archive/post-34-roadmap.md) (Cluster 2, 35→41, the round this one
+audits). This round's run-logs live in a new **[PATHING.md](PATHING.md)**
+(the BALANCE.md pattern: baseline first, every change re-measured against it).
 
 ## Where this came from (read this first)
 
-Cluster 1 (Combat Depth) is **complete & user-confirmed**: every combat verb is now
-a data-driven `EffectAbility`/`EffectAction`, non-stat statuses + chain/status-on-
-hit/summon ship, and the band is re-derived around a caster-summoner equilibrium.
-The [META-ROADMAP.md](META-ROADMAP.md) front-loaded the two **deepest engine
-rounds** — Combat Depth (done) and **Spatial & Movement** (this one) — *before* the
-content clusters (Economy, Drafting, Map Content, Meta) pile on top. The order is
-the product: harden the core and lock the data models while the codebase is at its
-most malleable, so the later rounds are content/UI on a stable foundation.
+Cluster 2 hardened the spatial *substrate* (occupancy, claims, terrain,
+footprints, destructibles) but never audited the *intelligence* on top of it.
+The user's playtest observations (2026-07-04 session), each traced to code:
 
-**Spatial & Movement is #2 because it touches the deepest shared core —
-pathfinding / collision / `TileGrid` / the unit model — and the META principle is
-to design that core *once*, with all its requirements known, not poke it four
-separate times.** The kiting-class debt already bit us once (the Qb#3 corridor
-archer kite-pin was a real `MovementBehavior` bug). So this round hardens occupancy
-first, then builds terrain, the unit-model unification, multi-tile footprints, and
-destructible terrain on the hardened core — closing with a balance pass, because
-terrain and destructibles reshape the tactical layer.
+1. **"Bottom-spawn units drift left on River/Isthmus."** CONFIRMED, two causes.
+   (a) The E5.B sidestep ([movement.ts](src/sim/movement.ts) `sidestep`) tries
+   its two perpendicular candidates in a fixed order — `(x−1, …)` first — and
+   ties go to the *first candidate*. A unit heading straight at its target has
+   both candidates exactly tied in Chebyshev (the forward axis dominates), so
+   **every contested step shuffles toward −x**; top-spawn units get the mirror.
+   (b) The A* equal-f/equal-h tie-break ([Pathfinding.ts](src/sim/Pathfinding.ts)
+   `popLowestF`) compares `"x,y"` keys as **strings** — `"10,3" < "2,3"` — a
+   digit-ordering artifact, not a spatial rule. Under the Chebyshev heuristic
+   with uniform diagonal cost, min-cost ties are *everywhere* on open ground
+   (any path inside the diagonal cone costs the same), so this "rare fallback"
+   fires constantly. River amplifies both: its two crossings are near-equal
+   cost, so the tie-break — not tactics — picks the same one for the whole team.
+2. **"Not sure the boids fire at the right time."** "Boids" is only an informal
+   comment nickname (corridor-flow.test.ts) for the E5.B sidestep — there is no
+   flocking system. And no, it does NOT fire at the right time: it triggers on
+   "forward cell occupied *now*" with zero reasoning about whether the blocker
+   is mid-move and about to vacate. Sidestep → repath → routed back → sidestep:
+   the crab-walk oscillation.
+3. **"Units hate following each other down corridors."** Three compounding
+   causes: an ally-occupied cell costs +`occupiedCellPenalty` (4), so a 4-deep
+   queue justifies a ~16-cell detour; **claims read as walls** for pathing
+   (occupied-OR-claimed blocks, gotcha #113) even though every cell in a moving
+   column is about to be vacated; and full per-tick repathing re-litigates the
+   queue-vs-detour call every tick, so units flip-flop.
+4. **"Individual units fighting each other's algorithms, not a tactical
+   battle."** That's the architecture: greedy per-unit replanning, no plan
+   commitment, no vacancy prediction, first-mover advantage from tick iteration
+   order. Deterministic, but not coordinated.
 
-The spec decomposes into six build threads + one deferral, sequenced low-risk →
-high-risk so each phase hardens or de-risks the next:
+**The architecture verdict (settled with the user):** the proposal/selector
+system is **sound — evolve it, don't overhaul it**. Behaviors returning scored
+proposals to a 12-line arbiter is a standard utility/arbitration pattern, and
+the J2 seam (behavior = goal selection; `advance`/`routeToward` = routing) is
+exactly where any future cooperative planner plugs in. The real smells are
+*interface* problems: (a) `return null` means six different things in
+[MovementBehavior.ts](src/sim/behaviors/MovementBehavior.ts) — some "nothing to
+do", some "actively deciding to stand still" — so the decision "wait, the
+blocker clears in 3 ticks" has **nowhere to live**; (b) coordination-by-
+convention — movement re-implements firing-band/LOS/minRange knowledge just to
+know when to abstain for AbilityBehavior, a protocol enforced by comments
+instead of types. Both get fixed by *making the implicit explicit* (§44), not
+by a behavior tree / GOAP / two-phase global resolver (all rejected).
 
-1. **Harden the occupancy core** — pay down the same-tile-overlap debt; build the
-   single occupancy abstraction every spatial query routes through; plant the
-   footprint + plane seams.
-2. **Non-instant moves** — the claim system: a unit's logical tile changes partway
-   through its move, closing the collision window that opens.
-3. **Terrain depth** — new palettes + tiles (deep water / hills / ice / sand / mud)
-   as cost + passability + accuracy/evasion + status hooks.
-4. **The unit-data keystone** — unify playable / enemy / neutral / static units into
-   one data-driven `UnitDef` catalog (the third leg of the AbilityDef/StatusDef
-   stool — *not* an ECS).
-5. **Multi-tile footprints** — the fill: N×N bodies, authored against the keystone.
-6. **Destructible terrain** — HP-bearing neutral obstacles (rubble + optional
-   wall/cover destructibility) on the unified model + footprints.
+## The education (the state of the art, for orientation)
 
-**Flight is deferred** (build only — its *design* is locked and its *seams* are
-planted; see *Deferred: Flight* below). This is already, by the user's own
-estimate, the biggest cluster by far.
+Multi-unit pathfinding has four schools. Knowing which one we're in — and
+which we're deliberately NOT in — is this round's compass:
 
-## Design targets locked (the constraints sketch the META-ROADMAP asked for)
+- **School 1 — independent replanning + local rules** (*we are here*): per-unit
+  A*, conflicts patched locally (penalties, sidesteps, waits). The classic RTS
+  architecture; its ceiling is the quality of the local rules. Ours are
+  first-draft, two with literal bugs. This round raises the ceiling.
+- **School 2 — cooperative / space-time (WHCA\*, reservation tables, MAPF):**
+  units plan through (x, y, *time*), writing reservations others path around
+  (Silver 2005, *Cooperative Pathfinding*; windowed = WHCA\*). **Our claim
+  system is already a 1-step reservation table** — the §36 core is the seed of
+  WHCA\*-lite, and a deterministic 20Hz tick sim is the ideal host. §46 decides
+  whether to grow it.
+- **School 3 — flow fields:** one Dijkstra flood per *goal*, all units descend
+  the gradient (Supreme Commander 2, crowd sims). O(map) per goal — trivial at
+  ≤32×32 — and corridor-following/queueing emerge naturally. Our per-unit
+  sticky targets would need per-target fields; cacheable. The §46 alternative.
+- **School 4 — continuous local avoidance (actual boids, RVO/ORCA):** steering
+  forces and velocity obstacles in continuous space. **Ruled out** — it fights
+  the discrete grid, the claim-then-flip move model, and byte-stream
+  determinism.
 
-The META-ROADMAP required a one-paragraph design-target sketch so the footprint seam
-isn't shaped blind. These are **constraints, not a content round** — locked with the
-user in the spec's design discussion:
+What ships in real games is hybrids: global planner + local conflict resolver +
+explicit anti-deadlock rules. Phases 42→45 perfect our School-1 rules on
+instruments; Phase 46 decides — on measured data — whether School 2 or 3 earns
+its complexity. There's a decent chance a well-tuned School 1 is simply enough.
 
-- **Occupancy is one shared plane today (`ground`).** The occupancy abstraction
-  carries a **`plane` seam** (`OccupancyPlane`, ground-only now) so a future air
-  plane is a *fill*, not a retrofit. One unit per cell per plane — the hardening's
-  whole point. (Behavior-identical today: there is exactly one plane.)
-- **Footprints are axis-aligned N×N squares, N ∈ 1..4.** The unit's `position` stays
-  the single canonical **corner** (one serialized cell — no schema change);
-  `cellsOccupiedBy` derives the block. **Spawn anchoring is a policy:** ship
-  `corner` (in-bounds-biased — the spawn tile is *a* corner, pick the diagonal that
-  keeps the block on-grid); **defer `random-intersect`** (organic scatter) to its
-  consumer, camps (Cluster 5). Corner reuses the single-tile spawn path — **not a
-  new spawn class.**
-- **Units are fully data-driven.** The closed `Archetype` TS union relaxes to a
-  catalog-validated id; playable + enemy + neutral + static unify into ONE `UnitDef`
-  catalog. The "components" the spec intuited (optional HP pool, size, glyph,
-  pathing/LOS blocking, status susceptibility) are **optional schema fields**, not an
-  entity-component system. (The architecture's reserved "no ECS" call stays reserved
-  — unit counts are small, composition is stable.)
-- **Flight (build deferred) is a thin modifier:** always-flying (a static property),
-  shares the single occupancy plane (mobility + targeting modifier, never
-  co-location — the plane seam keeps overlap a future option), passes over all ground
-  obstacles (a `blocksFlight` predicate seam, always-false today), and is
-  **mobility-only** to start — everyone hits everyone, including adjacent ground
-  melee (the low-hover "meleeable" rule), with a per-ability `targetsLayer?` seam for
-  future anti-air / ground-only content. Flyer units carry `layer` + `ignoresTerrain`
-  fields (planted in the keystone, inert until flight builds).
+## The two guiding goals
 
-## The two guiding goals (the user's points, made structural)
-
-1. **Harden the core once, with every requirement known.** This is the charter. The
-   same-tile-overlap bugs get attacked from *several angles at once* (proactive
-   checks + claims + shove + a fuzz invariant), and the occupancy abstraction is
-   built *once* as the single chokepoint every spatial query routes through — so
-   footprints, claims, flight, and destructibles all extend one seam, never a dozen
-   scattered `key(position)` checks.
-2. **Update the editors as features land, so they're testable.** New terrain isn't
-   verifiable without painting it; a new unit kind isn't authorable without the
-   editor. So the **layout editor** extends with each terrain/destructible feature,
-   and the **unit-data keystone reworks the archetype editor** — the closed-union
-   code-edit wire-up *disappears* (creating a unit becomes pure data). Exactly the
-   "dev tools ship with their feature" convention the prior clusters held.
+1. **Instruments before interventions.** Movement quality is currently asserted
+   by mechanism-pinning tests and eyeballs. This round builds the measuring
+   harness FIRST (drift, throughput, oscillation, time-to-contact), captures
+   the baseline, and re-measures after every change — the BALANCE.md discipline
+   applied to movement ([PATHING.md](PATHING.md)). No fix lands without its
+   before/after numbers.
+2. **Determinism ≠ sameness.** The byte-stream determinism requirement stays
+   absolute (no RNG in tie-breaks — the E5.B call stands). But deterministic
+   tie-breaks must be *balanced* — symmetric across teams and axes (parity
+   alternation, straightness preference) — not "always the same world
+   direction". Fairness is a property we can now measure (goal 1).
 
 ## Vocabulary (the new types + seams — full shapes settled at each phase)
 
-The canonical home for the occupancy abstraction will be `src/sim/occupancy.ts`
-(new — the spatial sibling to the `src/sim/effects/` tree); the unit catalog mirrors
-[config/abilities.ts](src/config/abilities.ts) + [config/statuses.ts](src/config/statuses.ts).
-The headline shapes:
-
-- **`OccupancyPlane`** — a closed union, `'ground'` today (`'air'` is the flight
-  fill). Every occupancy query takes a plane; one unit per cell per plane.
-- **`cellsOccupiedBy(unit)` / `footprintFits(cells, plane)` / `isFree(cell, plane)`
-  / `distanceBetween(a, b)`** — the occupancy abstraction (§35). Single-cell today;
-  `cellsOccupiedBy` returns the N×N block once §39 fills it. The footprint seam the
-  Cluster-1 `unitsInCells` AoE helper already half-anticipated.
-- **`Claim`** — an in-flight cell reservation (§36): a unit claims its destination on
-  move-start; a cell is blocked-for-pathing if occupied **or** claimed; the claim
-  releases on logical arrival. Serialized (the §36 snapshot bump).
-- **`TileDef`** — the per-`TileKind` property table (§37), generalizing today's
-  `TILE_COSTS`: `{ cost, passable, evasionMod?, accuracyMod?, statusOnEnter?,
-  statusRemovedOnEnter? }`. Keyed by kind, not serialized (forward-compatible).
-- **`UnitDef`** — the unified unit catalog entry (§38): glyph + base stats + growth +
-  ability ids + targeting + movement-behavior selector + `draftable`, plus the
-  optional blocks `footprint` (default 1), `layer` (default `ground`),
-  `ignoresTerrain` (default false), `statusSusceptibility` (default: all), and an
-  optional/flat stat block (walls + rubble = a UnitDef with no abilities + a flat HP
-  pool). Resolved by archetype id at spawn — **def-resolved, not per-unit-serialized**
-  (like glyph/targeting/range today).
-- **`AnchorPolicy`** — footprint spawn anchoring (§39): `corner` ships;
-  `random-intersect` is the reserved camps fill.
-- **Flight seams (declared, inert):** `plane: 'air'` (§35 union), `layer` +
-  `ignoresTerrain` (§38 fields), `blocksFlight(cell)` (§37 predicate),
-  `targetsLayer?` (a future AbilityDef field).
+- **`MoveDecision`** (§42) — the typed record of *why* a unit did what it did
+  each tick: `advance | sidestep | queue | hold-band | hold-objective | no-goal
+  | pinned | wait`. Dev-observable (event or transient field), never serialized.
+- **The movement-metrics harness** (§42) — headless scripted battles emitting
+  aggregate movement-quality metrics: mean lateral drift, corridor throughput,
+  oscillation rate, time-to-first-contact, decision-mix histogram.
+- **`PATHING.md`** (§42) — the run-log home: baseline + every re-measure.
+- **`positioning.ts`** (§44) — the extracted "is this unit in position / where
+  should it stand" module (firing bands, LOS gating, kiting, acting cells);
+  the one place a new archetype teaches its positioning rules.
+- **`WaitAction`** (§44) — a deliberate short hold as a first-class proposal:
+  visible to the selector, the renderer, tests, and the §45 claim-ETA logic.
+- **Vacancy ETA** (§45) — when a claimed/occupied cell frees, *derived* from
+  the mover's in-flight action (startTick + phases + flip fraction). Derived,
+  never serialized — no snapshot bump.
+- **Path commitment / hysteresis** (§45) — keep last tick's route unless
+  invalidated or beaten by a margin; kills repath flip-flop.
 
 ## The phase sequence at a glance
 
-```
-35. Harden the occupancy core — abstraction + seams + shove + fuzz  ─┐ (the engine
-36. Non-instant moves — the claim system                            ┤  surgery: core
-                                                                    │  hardened first)
-37. Terrain, palettes & new tiles — cost/passability/mods/status   ─┤ (independent
-                                                                    │  content depth)
-38. The unit-data keystone — the full data-driven UnitDef overhaul ─┤ (the data model,
-39. Multi-tile footprints — the fill (N×N, anchoring, render)       ┤  then its spatial
-40. Destructible terrain — HP-bearing neutrals + targeting hook    ─┤  consumers)
-                                                                    │
-41. The closing balance pass                                       ─┘ (cluster closer)
-
-    Deferred: Flight — design LOCKED, build deferred (seams planted in 35/37/38)
-```
-
-Phase numbering continues the Cluster-1 sequence (Y, Z, 27…34 → **35, 36, …**).
-Recommended path **35 → 36 → 37 → 38 → 39 → 40 → 41**, with a **playtest pause
-between commits** as always.
+| Phase | Name | One-liner | Risk |
+|---|---|---|---|
+| **42** | Instrumentation | Decision records + metrics harness + PATHING.md baseline | Low (additive, byte-identical) |
+| **43** | The bias fixes | A* tie-break + sidestep balance, measured | Low-med (paths change; fuzz re-baseline) |
+| **44** | The decision protocol | `positioning.ts` extraction + first-class `WaitAction` | Med (interface refactor, behavior-neutral intent) |
+| **45** | Cooperation | Vacancy-aware costs, wait-vs-sidestep, path commitment | High (the round's behavior-changing core) |
+| **46** | The verdict | Re-measure + feel playtest + balance spot-check + School-2/3 gate | Low (decision phase; may be a documented no-op like §41) |
 
 ### Sequencing rationale
 
-- **35 first (the occupancy core).** The single dependency root — claims (§36),
-  footprints (§39), shove (§40), and the flight plane all extend the one abstraction
-  it builds. Pure sim, headless-first; pay down the kiting-class debt while building
-  the seam. Nothing spatial can harden until occupancy is one chokepoint.
-- **36 second (non-instant moves).** The feel fix the spec wants, and it *needs* §35's
-  occupancy core: the claim system is exactly what closes the same-tick collision
-  window that a non-instant logical-position flip opens. Riskier than §35 (a timing
-  change + a snapshot bump), so it's isolated in its own phase right after the core
-  it depends on.
-- **37 third (terrain).** Independent of the unit model (tiles are `TileGrid` + a
-  to-hit-roll fold, not units), so it slots in as a content-depth phase that also
-  gives the hardened movement system varied terrain to be fuzz-tested against — a
-  gentler ramp between the two heaviest engine changes (§35 core, §38 keystone).
-- **38 fourth (the unit-data keystone).** The "data model before its consumers"
-  move: multi-tile (§39) and destructibles (§40) author against the final unit
-  model, so the overhaul precedes them. A behavior-identical migration (the Y
-  pattern), so it's safe to sit mid-cluster after the de-risking phases.
-- **39 fifth (multi-tile fill).** Fills §35's footprint seam against §38's `footprint`
-  field. Lands right before its first consumer (§40's rubble), so the seam is proven
-  by a real multi-tile entity, not left notional.
-- **40 sixth (destructible terrain).** The payoff: HP-bearing neutral UnitDefs (§38)
-  with footprints (§39) + susceptibility. Last of the build phases because it
-  composes all the prior ones.
-- **41 (balance).** The closer — terrain, multi-tile bodies, and destructibles all
-  reshape board control + the to-hit layer, and §36's timing shift may move
-  melee-vs-ranged. Scoped to what actually moved (per the BALANCE.md loop), not a
-  full re-derivation.
+42 first — nothing else lands without its before/after numbers, and the
+decision records it adds are what make waits/oscillations *countable*. 43
+before 45 so the cooperation deltas aren't polluted by bias artifacts (a
+left-drifting queue measures as garbage throughput). 44 before 45 because
+`WaitAction` is where §45b's "queue instead of sidestepping" answer *lives* —
+building cooperation on six-meanings-of-null would recreate the mess we're
+draining. 46 last: it's the gate that decides whether this round closes the
+audit or specs WHCA\*-lite / flow fields as a follow-up.
 
 ### Hard ordering constraints
 
-§35 before everything (the occupancy abstraction is the root). §35 before §36 (claims
-extend the occupancy core). §38 before §39 (footprints need the `UnitDef.footprint`
-field) and before §40 (destructibles are neutral UnitDefs with susceptibility). §39
-before §40 (multi-tile rubble needs the footprint fill). §41 last (balance needs the
-final terrain + content + timing). §37 floats after §35 (no dependency on the unit
-model) — placed at #3 for the de-risking ramp.
+- 42a (decision records) gates 42b (the harness counts decisions).
+- 42c (baseline) gates every later re-measure step (43c, 45d, 46a).
+- 44b (`WaitAction`) gates 45b (wait-vs-sidestep proposes waits).
+- 43 and 44 are mutually independent — 43 may interleave if a playtest wants
+  the visible drift fix early.
 
 ## Conventions (unchanged — they still hold)
 
-- **Commit per logical change**, not per session. **Pause between commits** for the
-  user's manual playtest.
-- **Surface tradeoffs** before non-obvious calls; stop at "Decision points." Steps
-  marked **"DESIGN ROUND NEEDED"** want the shape locked with the user before
-  building.
-- **Headless-first** for sim/run/core/config — a vitest test before the browser. The
-  occupancy abstraction, claims, the tile defs, the unit-catalog resolve, footprint
-  geometry are **all pure logic**: unit-test them exhaustively before any UI.
-  **Browser-verify** render-observable work (new tile meshes/palettes, scaled
-  multi-tile glyphs, the non-instant-move + abort animation, rubble crumbling). A
-  genuinely new **3D glyph** (rubble) needs a `glyphs.ts` entry (FontAtlas.test
-  guards it; the atlas grid was resized at §30 — watch the budget).
-- **Hoist every number to config** (A4): tile costs/mods, the move position-flip
-  fraction, claim timing, footprint sizes, rubble HP, status-on-tile params — all in
-  `config/*.json`, authored in seconds/cells, never inline.
-- **Balance-proof tests derive from the config module** (never hardcode authored
-  numbers — tile mods from the tile-def table, rubble HP from its UnitDef);
-  mechanic/primitive tests use explicit literals and never read the shipped JSON.
-- **Keep DESIGN.md / ARCHITECTURE.md honest** in the same commit as the code that
-  invalidates them — this round adds `src/sim/occupancy.ts`, a tile-def table, the
-  `UnitDef` catalog (a new config file + the `Archetype`-union relaxation), reworks
-  the archetype editor, and extends the layout editor; the ARCHITECTURE source-tree +
-  event/command catalogs update as each phase lands.
-- **Schema discipline — one snapshot bump per shape-contract change.** Expected this
-  round: **§36** the **`WorldSnapshot`** bump (the claim registry + the in-flight
-  non-instant-move deferred-position state). **§37** may touch **`RunSnapshot`** *only*
-  if a theme string is serialized (the rock→barren / default→grassland rename — audit
-  first). **§38 is a byte-identical migration with NO bump expected** (the new unit
-  fields are def-resolved by archetype id at spawn, like glyph/targeting/range today
-  — the per-unit serialized form is unchanged; the determinism oracle proves it, the Y
-  pattern). **§39/§40 no bump expected** (footprint def-resolved + position stays the
-  canonical corner; destructible HP is already serialized). Reject stale, no migration
-  (the established rule). The **snapshot-roundtrip + determinism tests are the guard**;
-  several phases **re-baseline the fuzz win-rate** (movement/timing/terrain shift
-  outcomes) — that's expected, re-derived at §41.
-
-## Architectural decisions locked (the design-discussion outcomes)
-
-1. **One occupancy abstraction, plane-parameterized.** Every spatial query
-   (pathfinding, claims, shove, footprint-fit, targeting-adjacency, acting-position)
-   routes through `src/sim/occupancy.ts`, which takes an `OccupancyPlane` (ground
-   today). Centralizing now is what makes the flight fill cheap *later* — the
-   expensive part of adding a plane is hunting scattered single-layer assumptions, and
-   the abstraction's job is to eliminate them.
-2. **Claims, not a second occupancy layer, solve the non-instant collision.** A
-   unit reserves its destination; occupied-or-claimed blocks pathing; release on
-   arrival. Aborts caused by *other pathers* vanish (they see the claim); only the
-   rare non-pathed causes (dynamic terrain, knockback onto the destination) can abort
-   — the spec's accepted residual.
-3. **The unit model is a data catalog, NOT an ECS.** The third leg of the
-   AbilityDef/StatusDef stool: a `UnitDef` catalog + an interpreter-free resolve at
-   spawn. Optional fields (HP pool, footprint, layer, susceptibility) are *schema*,
-   not components. An ECS would discard the strangler-migration + snapshot discipline
-   that carried Cluster 1, for no payoff at this scale.
-4. **Full unification — active archetypes become data too.** USER-LOCKED. The closed
-   `Archetype` union relaxes to a catalog id; creating a unit kind = a JSON entry +
-   a glyph, no code edit. (The §30 archetype-editor "create" wire-up panel exists
-   *only* because of the closed union; the keystone deletes it.)
-5. **Flight is a deferred fill, not a Cluster-2 build.** Its design is locked (the
-   four answers) and its seams are planted (plane / layer / ignoresTerrain /
-   blocksFlight / targetsLayer); the build is a later small spec, like the multi-tile
-   fill was for Cluster 1.
-
-## Cross-phase seams to hold in mind
-
-- **`src/sim/occupancy.ts` is the chokepoint.** Today's checks are scattered —
-  `World.isOccupied` (the overflow scan, [World.ts](src/sim/World.ts) ~L1246),
-  `buildMovementContext`'s three sets ([movement.ts](src/sim/movement.ts)), the
-  sidestep occupancy set, the §29 `nearestFreeCells` BFS
-  ([effects/interpreter.ts](src/sim/effects/interpreter.ts) summon placement). §35
-  routes them all through one module; everything downstream extends it, not them.
-- **The Cluster-1 `unitsInCells` AoE helper is the footprint seam's other half.**
-  ([effects/targeting.ts](src/sim/effects/targeting.ts) — "the Cluster-2 footprint
-  seam"). AoE already resolves cells → units through it; §39's `cellsOccupiedBy`
-  makes it multi-tile-correct with no AoE retrofit.
-- **`MoveAction` is the non-instant seam.** ([actions/MoveAction.ts](src/sim/actions/MoveAction.ts))
-  Today `start` snaps `unit.position = to` instantly + emits `unit:moved{durationTicks}`
-  (the renderer lerps). §36 moves the logical flip to a mid-move tick and holds the
-  claim across the window; the renderer lerp already spans it.
-- **`TileGrid`'s cost table is the tile-def seam.** ([TileGrid.ts](src/sim/TileGrid.ts)
-  `TILE_COSTS`) — already a per-kind lookup; §37 generalizes it to a `TileDef` table
-  (cost + passability + combat mods + status hooks). New `TileKind`s are
-  forward-compatible strings (the snapshot stores kind strings) — no bump.
-- **`spawnEnvironment` + the `'environment'` archetype are the unit-unification
-  seam.** ([environment.ts](src/sim/environment.ts) + [World.ts](src/sim/World.ts)
-  `spawnEnvironment`) — walls/half-cover are *already* neutral Units with `maxHp`
-  plumbed and `blocksLineOfSight` orthogonal to path-blocking. §38 folds them into the
-  catalog; §40 gives them real HP + susceptibility + the targeting hook the file
-  headers already predict ("future destructibility is a matter of bumping `maxHp` and
-  adding a 'walls can be attacked' hook to Targeting").
-- **`applyDamage`'s to-hit roll is the terrain-mod seam.** ([World.ts](src/sim/World.ts)
-  `applyDamage` precision-vs-evasion) — water already pairs a precision penalty (M6);
-  §37 generalizes it to fold the attacker's tile accuracyMod + the defender's tile
-  evasionMod from the tile-def table.
-- **The dev-save endpoint is the editors' home.** `/__save-config`
-  ([vite.config.ts](vite.config.ts) `SAVABLE_CONFIG_FILES`) gains `units.json`; the
-  layout + archetype editors POST the same way the existing editors do.
+Headless-first (this whole round is pure-sim; vitest before browser — but
+movement *feel* is render-observable, so **browser/native playtest checkpoints
+close §43 and §45**); balance-proof tests derive from config, never hardcode;
+commit per sub-step + **pause between commits** for the user's manual run;
+fuzz re-baselines are EXPECTED at 43/45 (path bytes change — that's the point)
+and each gets its own commit note; keep DESIGN/ARCHITECTURE honest in-commit;
+⚠️ labyrinth's long fights are BY DESIGN (gotcha-adjacent — the harness may
+*measure* labyrinth, but its slowness is not a defect to fix).
 
 ---
 
-## Phase 35 — Harden the occupancy core (the abstraction + seams + shove + fuzz)
+## Phase 42 — Instrumentation (decision records + the metrics harness + the baseline)
 
-> **✅ COMPLETE (35a–35d), 2026-06-28.** `src/sim/occupancy.ts` is the chokepoint;
-> 35b the proactive check + abort (`unit:moveAborted`); 35c `World.shove`
-> (`unit:shoved`, the future-knockback primitive); 35d the opt-in
-> `HarnessOptions.assertOccupancy` fuzz invariant (holds across the corpus). All
-> byte-identical / inert on the instant model — no snapshot bump, fuzz baseline
-> unchanged. As-built: git + HANDOFF.
+The audit's measuring instruments. Additive and byte-identical: no unit moves
+differently after this phase; we can just finally *see* what they do.
 
-The dependency root (the Y of this round). Build the single occupancy abstraction
-every spatial query routes through, plant the **footprint** (single-cell) and
-**plane** (ground-only) seams, and pay down the same-tile-overlap debt from several
-angles at once. **Pure sim, headless-first. No snapshot bump** (no new serialized
-state); the fuzz invariant is added here and the baseline may shift.
+**Shape:** a typed `MoveDecision` taxonomy emitted from the movement layer
+(dev-observable, never serialized — the transient-field vs debug-event call is
+42a's decision point); a headless harness that runs scripted/seeded battles on
+fixture + shipped maps and computes aggregate movement-quality metrics; the
+PATHING.md baseline capture on the shipped layouts. Reuses `pathfindingStats`
+(movement.ts) where it fits.
 
-**Shape:**
-- **`src/sim/occupancy.ts`** — the abstraction: `cellsOccupiedBy(unit)` (returns
-  `[unit.position]` today), `isFree(cell, plane)`, `footprintFits(cells, plane)`,
-  each taking an `OccupancyPlane` (`'ground'` only). Centralizes the scattered
-  `World.isOccupied` + `buildMovementContext` checks (they call into it; behavior
-  byte-identical at one plane / single-cell).
-- **Proactive destination checks** — a move proposal re-validates its destination is
-  free *at execution*, not just at proposal (the spec's "move proposals must all be
-  proactively checked"). A stale proposal (the destination filled by an earlier-
-  processed unit this tick) is caught here.
-- **The abort primitive** — a move whose destination is occupied/untraversable at
-  execution becomes a clean no-op (the spec's abort system). Mostly inert on the
-  instant model (the spec's own note); built here so it's headless-testable before
-  §36 makes it load-bearing.
-- **Shove** — the backstop for units that *do* co-locate (a knockback/summon/spawn
-  landing on an occupied cell, or any future invariant breach): a deterministic shove
-  relocates one unit to the nearest free cell (reuse the §29 `nearestFreeCells` BFS).
-  The safety net the spec wants — and the primitive a future `knockback` op would
-  wrap (a knockback is a *directional* shove).
-- **The fuzz occupancy invariant** — a headless assertion that no two units share a
-  cell (per plane) at any tick, run across the fuzz corpus (the spec's "full occupancy
-  testing during fuzz"). Generalizes the Qb#3 same-cell-overlap invariant test to the
-  whole run.
+**Metrics (the v1 set):** mean signed lateral drift (x-displacement orthogonal
+to the spawn→spawn axis, per team — the River symptom, quantified); corridor
+throughput (units through a fixture chokepoint per 100 ticks); oscillation
+rate (a unit re-entering a cell it left within k ticks); time-to-first-contact;
+the decision-mix histogram (what % of ticks are advance/sidestep/queue/…).
 
-**Cost:** a centralizing refactor + the shove/abort primitives + the fuzz invariant.
-No new serialized state → no snapshot bump. Fuzz baseline may shift (proactive checks
-+ shove change a few outcomes); re-derived at §41.
+**Decision points 42:** event vs transient field for decisions (leaning event —
+`unit:moveDecision`, dev-gated, mirrors the existing bus idiom); the fixture-map
+set (a symmetric open field + a straight corridor + a two-crossing river
+abstraction — hand-authored TEST fixtures, not shipped layouts); whether drift
+is measured per-team or per-spawn-region (per-region — availability `both`
+means teams swap sides).
 
-**Headless tests:** `cellsOccupiedBy`/`footprintFits` are byte-identical to the old
-checks at single-cell/one-plane; a stale proposal onto a now-filled cell aborts;
-shove relocates a co-located unit deterministically to the nearest free cell; the
-occupancy invariant holds across a fuzz corpus; the kiting-class corridor fixtures
-(Qb#3) still pass.
+### Sub-steps (42a–42c) — the proposed cut
 
-**Decision points 35:** where the module lives (recommend a new `src/sim/occupancy.ts`
-— the spatial sibling to `src/sim/effects/`). The abort policy on a no-op move
-(cooldown consumed or not — recommend **not consumed**, retry next tick). The plane
-type (recommend a closed `OccupancyPlane = 'ground'` union now, `'air'` added when
-flight builds). Whether `distanceBetween` lands here (single-tile = `chebyshev`) or
-with §39 where multi-tile makes it non-trivial (recommend here as a behavior-identical
-seam, so adjacency/acting-position route through it early).
-
-### Sub-steps (35a–35d) — the cut (resolved with the user 2026-06-28)
-
-**Resolved decisions:** module home **`src/sim/occupancy.ts`**; plane **closed
-`OccupancyPlane = 'ground'`**; `distanceBetween` lands **here** (the chebyshev seam,
-so adjacency/acting-position route through it early); abort = **cooldown not
-consumed**, retry next tick; the **abort is a full `unit:moveAborted` event** (the
-sibling of `unit:moved`), NOT a silent internal no-op — inert on the instant model,
-load-bearing for §36's renderer settle-back (the renderer must *see* an abort to
-animate it; planting the event now makes §36 a subscribe, not a retrofit); the fuzz
-invariant is an **opt-in harness flag** (off by default like telemetry, so the
-`--search` hot-path pays nothing; a dedicated fuzz test turns it on across the smoke
-corpus). **Scope note:** 35a centralizes the **one-unit-per-cell occupancy** predicate
-only — the neutral-only *path-blocker* sets (`buildMovementContext.pathBlockers`,
-`nearestActingCell`'s wall set) stay put (a path-blocking concern §38 folds into the
-unit catalog, orthogonal to occupancy). The **footprint seam** is planted by routing
-every per-unit cell touch through `cellsOccupiedBy(unit)` + `cellKey` (→ `[position]`
-today), so §39's N×N fill is automatic, not a scattered retrofit.
-
-- **35a — the occupancy abstraction (the chokepoint + seams).** New
-  `src/sim/occupancy.ts`: `cellsOccupiedBy(unit)` (→ `[unit.position]`), `isFree(world,
-  cell, plane)` / `unitAt(world, cell, plane)`, `footprintFits(world, cells, plane)`,
-  `distanceBetween(a, b)` (chebyshev), `cellKey(cell)` — each plane-parameterized
-  (`'ground'`). Route the scattered occupancy point/set queries through it:
-  `World.isOccupied` (the overflow scan), `buildMovementContext`'s `occupied` set,
-  `nearestFreeCells` candidacy. Byte-identical at single-cell/one-plane. *Test:*
-  equivalence vs the old checks; existing snapshot + fuzz baselines unchanged. No bump.
-- **35b — proactive destination check + abort (the `unit:moveAborted` event).** A move
-  re-validates its destination is free *at execution* (catching a stale proposal whose
-  cell an earlier-processed unit took this tick); an occupied/untraversable destination
-  becomes a clean no-op + emits `unit:moveAborted {unitId, from, to}` (cooldown not
-  consumed → retry next tick). Mostly inert on the instant model; built + event-seamed
-  now so §36's non-instant settle-back is a renderer subscribe. ARCHITECTURE event
-  catalog updated in-commit. *Test:* a stale proposal onto a now-filled cell aborts,
-  fires the event, leaves the unit at `from` with cooldown intact.
-- **35c — shove (the co-location backstop).** A deterministic relocate of a co-located
-  unit to the nearest free cell, wrapping the §29 `nearestFreeCells` BFS — the safety
-  net for a spawn/summon/knockback landing on an occupied cell, and the primitive a
-  future `knockback` op wraps (a knockback = a directional shove). *Test:* a co-located
-  unit relocates deterministically to the nearest free cell.
-- **35d — the fuzz occupancy invariant (opt-in).** A per-tick "no two units share a
-  cell (per plane)" assertion, off by default (an opt-in harness flag, like telemetry),
-  turned on by a dedicated fuzz test across the smoke corpus — generalizing the Qb#3
-  same-cell fixture to the whole run. *Test:* the invariant holds across the corpus;
-  the Qb#3 corridor fixtures still pass. Baseline may shift (re-derived §41).
+- **42a — the `MoveDecision` records.** The typed taxonomy + emission from
+  `MovementBehavior`/`advance`/`sidestep` (and `SupportMovementBehavior`'s
+  paths). Byte-identical world; tests pin that every abstain/step maps to
+  exactly one decision kind. *Commit: sim + tests.*
+- **42b — the metrics harness.** The scripted-battle runner + the five v1
+  metrics over fixture maps; deterministic (seeded) so re-runs reproduce.
+  Tests pin harness determinism + metric arithmetic on hand-computable
+  micro-fixtures. *Commit: harness + fixtures + tests.*
+- **42c — the baseline.** Run the harness on the shipped layouts (River,
+  Isthmus, labyrinth, open procedural) + fixtures; author **PATHING.md** with
+  the numbers (the drift columns should *prove* the user's River report);
+  regression tests assert only harness stability, NOT drift-zero (that's §43's
+  exit criterion). *Commit: PATHING.md + baseline snapshot test.*
 
 ---
 
-## Phase 36 — Non-instant moves (the claim system)
+## Phase 43 — The bias fixes (the tie-breaks)
 
-> **✅ COMPLETE — 36a→36d SHIPPED.** **36a** the claim registry + the
-> occupied-OR-claimed pathing rule (`WorldSnapshot` v30→v31, inert). **36b** the
-> non-instant logical position flip: `MoveAction` defers `position = to` to the
-> 50% mark (`SIM.moveFlipFraction`, via a `travel`→`impact`→`recovery` phase
-> timeline) + the claim/release lifecycle (claim on start, release on flip + on
-> reap via `removeUnit`→`releaseClaimsBy`). The claim went load-bearing: the §35d
-> occupancy invariant exposed that the PLACEMENT paths (`nearestFreeCells` for
-> shove/summon, `runOverflowScan` reinforcement, the gambit `retreatCell`) also
-> had to exclude claimed cells, else a unit materialises where a deferred mover is
-> arriving. No new serialized state / no second bump. **36c** the smooth mid-flight
-> abort: a per-tick in-flight re-validation in `World.tick`'s active-action step
-> re-checks a deferred move's destination while the claim is still held (the
-> pre-flip signal); if `dest` went occupied/untraversable it aborts via
-> `unit:moveAborted` (release claim, reset move cooldown, hold at `from`). Render
-> decision LOCKED = **settle-back**: `BattleRenderer` eases the sprite from its
-> live mid-slide position back to `from` over `SETTLE_BACK_SECONDS` (0.22s). INERT
-> until §37/§40 supplies a trigger, so pinned by a synthetic headless test +
-> functional browser proof; no snapshot bump / no fuzz shift. **36d** the fuzz
-> re-baseline: §35d's occupancy invariant HOLDS across the open claim window
-> (`assertOccupancy` on, 12+12 smoke + a broad 40+40 corpus), and NO detectable
-> win-rate shift — greedy 7.5% (seeds 1–120) / 14.2% (held-out offset 5000)
-> bracket §33c's 10.0% (n=120 seed-variance ±~3.5pt swamps it); precise
-> melee/ranged characterization carried to §41 (BALANCE.md). **▶ Phase 36 CLOSED;
-> §37 Terrain next.**
+The two confirmed bias bugs, plus the exit criterion 42 made assertable:
+**|mean drift| ≈ 0 on symmetric fixtures, both teams**.
 
-The feel fix: a unit's logical tile changes **partway through** its move, not at
-move-start — so a slow unit attacked at melee range reads as still mostly on its
-prior tile (the spec's persistent quibble; the same gap tile-initiated statuses hit).
-The enabling mechanism is the **claim system**, which also closes the same-tick
-collision window the timing change opens. **WorldSnapshot bump** (the claim registry —
-landed in 36a); fuzz re-baseline (timing shifts outcomes).
+**Shape:** replace the string-lex A* tie-break with an explicitly *balanced*
+deterministic rule; balance the sidestep's first-candidate tie; re-measure.
+Paths WILL change → fuzz re-baseline + possibly hand-authored-layout test
+updates (they were hardened for resizes, not path shapes).
 
-**Shape:**
-- **Claims** — on move-start a unit claims its destination cell; the §35 occupancy
-  abstraction treats a cell as blocked-for-pathing if **occupied OR claimed**; the
-  claim releases on logical arrival. Two units never path to the same vacant cell —
-  the second sees the claim and re-routes (the spec's design, which "neatly resolves
-  aborts caused by other units' pathing").
-- **Non-instant logical position** — `MoveAction`'s `unit.position = to` moves from
-  `start` to a mid-move tick (**LOCKED 50%**, a config dial). Before the flip the unit
-  logically occupies `from` and holds the claim on `to`; after, it occupies `to` and
-  releases the claim. **Targeting / adjacency / pathing read the *logical* position**
-  (LOCKED). The renderer's existing `unit:moved{durationTicks}` lerp already spans the
-  window.
-- **Smooth abort (the §35 path goes load-bearing)** — a move whose destination becomes
-  invalid mid-flight (dynamic terrain, a non-pathed knockback onto `to`) aborts; the
-  claim guarantees *other pathers* never cause this. Animate as a settle-back (a render
-  design call — keep it from visually colliding with the melee hit anim, the spec's
-  worry).
-- **Serialize** the claim registry → the bump, reject-stale (**landed in 36a**; 36b
-  adds no new serialized state — the flip tick derives from the activeAction + the 50%
-  fraction, so the serialized claim is the only persistent piece).
+**Decision points 43:** the A* final tie-break rule — leading candidate:
+**cross-track straightness** (prefer the node nearer the start→goal line;
+symmetric by construction, complements the E5.B h-tie-break, and drains the
+Chebyshev cone's tie plateau) with numeric (y,x) as the boring fallback;
+the sidestep tie rule — leading candidate: **unit-id parity alternation**
+(deterministic, team-agnostic, self-decorrelating in a column) vs
+open-space-aware (more "tactical", more code — decide at the keyboard);
+whether a tiny cross-track cost epsilon is wanted at all after the tie-break
+fix (only if 43c still shows cone wander — keep admissibility, gotcha #34).
 
-**Cost:** the claim registry + the position-flip timing + the abort animation.
-WorldSnapshot bump. Fuzz re-baseline (a melee unit now connects against a still-
-arriving target differently — a likely melee/ranged shift, noted for §41).
+### Sub-steps (43a–43c) — the proposed cut
 
-**Headless tests:** a claimed cell blocks a second pather; the claim releases on
-arrival; the logical position flips at the locked 50% fraction (the unit is at `from`
-before, `to` after); targeting / adjacency resolve against the logical position; two
-units proposing the same vacant cell → one claims, the other re-routes (no collision);
-an aborted move leaves the unit at `from` with the claim released; snapshot round-trips
-a mid-move claim.
-
-**Decision points 36:** ✅ **LOCKED (this session):** the position-flip fraction =
-**50%** (a config dial); **targeting / adjacency / pathing read the *logical* position**
-(the attacker sees the still-arriving target on its old tile until the flip). **Still
-open:** the abort animation shape (a render design call — settle-back vs snap; resolves
-at 36c); whether a claim can be *stolen* by a higher-priority mover (recommend no —
-first-claim wins, deterministic, as 36a's last-writer-wins registry already implies).
-
-### Sub-steps (36a–36d) — the proposed cut
-
-**Decisions LOCKED (this session):** the position-flip fraction = **50%**; **targeting /
-adjacency / pathing read the *logical* position**. **Still open:** the abort-animation
-shape (36c) and the claim-steal policy (see *Decision points 36*). **The phase's single
-`WorldSnapshot` bump landed in 36a** (the claim registry) — **36b adds no new serialized
-state**: the deferred position is `unit.position` held at `from` until the flip, and the
-flip tick derives from the activeAction + the 50% fraction, so the already-serialized
-claim is the only persistent piece.
-
-- **36a — the claim registry + the occupied-OR-claimed pathing rule.** Add a `Claim`
-  (an in-flight cell reservation) registry to the World and extend the §35 occupancy
-  abstraction so a cell is blocked-for-pathing if **occupied OR claimed** (the one new
-  predicate; `isFree`/`footprintFits` consult it). Serialized → the `WorldSnapshot`
-  bump. The *mechanism* is testable on the instant model with explicit literal claims,
-  independent of 36b's timing change. *Test:* a manually-claimed cell blocks a second
-  pather's route; releasing it frees the cell; the registry round-trips a snapshot.
-- **36b — the non-instant logical position flip.** `MoveAction` defers `unit.position =
-  to` from `start` to a mid-move tick — the config fraction, **LOCKED 50%**: before the
-  flip the unit logically occupies `from` and holds the claim on `to`; after, it
-  occupies `to` and releases (+ release on reap, via 36a's `releaseClaimsBy`).
-  **Targeting / adjacency / pathing read the *logical* position** (LOCKED — the attacker
-  sees the still-arriving target on its old tile until the flip; the existing
-  `unit:moved{durationTicks}` lerp already spans the window). **No new serialized state
-  / no second bump** — the flip tick derives from the activeAction + the 50% fraction,
-  and the claim is already serialized (36a's v31). Now claims go load-bearing: two units
-  proposing the same vacant cell → one claims, the other re-routes. *Test:* the logical
-  position is `from` before the 50% mark and `to` after; targeting / adjacency resolve
-  against the logical position; two units → one claims, the other re-routes (no
-  collision); the claim releases on arrival; a snapshot round-trips a mid-move claim.
-- **36c — the smooth abort (§35b goes load-bearing) + the renderer settle-back. ✅
-  SHIPPED.** A move whose destination becomes invalid mid-flight aborts via the §35b
-  `unit:moveAborted` path — the claim guarantees *other pathers* never cause it (only
-  dynamic terrain or a non-pathed knockback onto `to` can). Mechanism = a per-tick
-  in-flight re-validation in `World.tick`'s active-action step: while the move still
-  HOLDS its destination claim (the exact pre-flip signal — `applyEffect` releases it at
-  the 50% flip), re-run `destinationBlocked` (which already excludes the mover's own
-  claim/occupancy); on a block, release the claim, reset the move cooldown (retry next
-  tick), clear `activeAction`, emit `unit:moveAborted`. Render decision LOCKED =
-  **settle-back** (not snap): `BattleRenderer` subscribes and eases the sprite from its
-  LIVE mid-slide position back to `from` over `SETTLE_BACK_SECONDS` (0.22s, a render
-  const; overrides the in-flight slide via the single-lerp-per-handle contract), kept
-  short so it clears before a concurrent melee-hit anim; a §35b selection-time abort
-  settles in place (no-op). The TRIGGER is inert today (the claim blocks peer
-  convergence; dynamic terrain/knockback land in §37/§40), so the mechanism is pinned
-  by a SYNTHETIC headless test (`moveAbortInflight.test.ts` — force `to`→chasm or shove
-  an occupant onto `to` mid-flight; covers the pre-flip tick, the flip tick, and a
-  no-spurious-abort control) + a functional browser proof (a real slide→abort cycle
-  driven through the bus reversed the sprite from mid-slide back EXACTLY onto `from`).
-  No snapshot bump / no fuzz shift (provably inert).
-- **36d — the fuzz re-baseline under claims. ✅ SHIPPED.** Re-ran the corpus with
-  non-instant moves on (no config touched since §33c, so a pure ENGINE delta; strategy
-  held fixed to the reproducible greedy/pure-random baselines — §33c's searched optimum
-  vector wasn't saved). §35d's occupancy invariant HOLDS across the open claim window
-  (`assertOccupancy` on, 12+12 smoke + a broad 40+40 temp corpus, ~80 full runs). **No
-  detectable win-rate shift:** greedy 7.5% / pure-random 15.8% (seeds 1–120) vs greedy
-  14.2% / pure-random 11.7% (held-out `--seed-offset=5000`), 0 hangs — the two greedy
-  samples BRACKET §33c's 10.0% (n=120 seed-variance ±~3.5pt swamps the in-sample −2.5pt).
-  Precise melee/ranged characterization + any rebalance carried to §41 (full `--search`
-  budget). Recorded in BALANCE.md; no config change, no snapshot bump.
+- **43a — the A* tie-break.** Fix `popLowestF`: straightness (or numeric)
+  final tie-break replacing the string compare; unit tests on constructed tie
+  plateaus (equal-f/equal-h sets resolve symmetrically); fuzz re-baseline.
+  *Commit: Pathfinding.ts + tests + baseline.*
+- **43b — the sidestep balance.** The balanced tie rule in `sidestep`;
+  mirrored-fixture unit tests (a bottom-spawn and top-spawn unit in identical
+  pockets sidestep mirror-symmetrically); fuzz re-baseline if bytes move.
+  *Commit: movement.ts + tests.*
+- **43c — the re-measure + the drift regression tests.** Harness re-run vs the
+  42c baseline; PATHING.md entry; NOW land the |drift| ≈ 0 symmetric-fixture
+  regression tests + River per-region drift bounds. **User playtest checkpoint
+  (native browser): does River still lean?** *Commit: PATHING.md + tests.*
 
 ---
 
-## Phase 37 — Terrain, palettes & new tiles
+## Phase 44 — The decision protocol (positioning extraction + first-class Wait)
 
-The terrain-depth content + mechanics: new palettes, five new tiles, and the tile→
-status hooks. Mostly `TileGrid` + render + a to-hit-roll fold; **independent of the
-unit model.** The layout editor extends to paint it. **No WorldSnapshot bump** (new
-`TileKind`s are forward-compatible strings; the tile-def table is keyed by kind, not
-serialized); a possible **RunSnapshot** touch from the theme rename (audit first).
+The targeted refactor that makes §45 buildable without spaghetti — the
+"evolve, don't overhaul" phase. Behavior-neutral INTENT throughout: world
+bytes should not change (the §38 equivalence-proof discipline; any deviation
+is a finding, not a shrug).
 
-**Shape:**
-- **Palettes (themes):** add **tundra** (blue-white snow), **desert** (sandy),
-  **swamp** (brown-greens + browns). Rename `rock` → **`barren`** and `default` →
-  **`grassland`**. (LOCKED: **barren**, not "mountain" — "mountain" would collide with
-  the Hills tile that renders mini-mountains.) Theme is a render + procedural-gen
-  concern; the rename touches `layouts.json` themes + the theme tables.
-- **New tiles** (`TileKind` + the generalized `TileDef` table):
-  - **deep_water** — impassable by default (cost `Infinity`, like chasm); a future
-    marine/privateer archetype passes it at water's effect **doubled** (a unit
-    `traversal`/waterwalk capability seam, declared-inert).
-  - **hills** — slower (high cost) + **evasion bonus**; renders 3–6 low-poly hills,
-    palette-conformant.
-  - **ice** — faster + a **severe accuracy penalty** (mind the A* floor: costs stay
-    ≥ 1 so the Chebyshev heuristic stays admissible, GOTCHAS #34 — "faster" comes from
-    cost 1, not < 1).
-  - **sand** — slower + **evasion penalty**.
-  - **mud** — severe **mobility + accuracy** penalty (deep-water's on-foot effect).
-- **Tile combat modifiers** — extend `applyDamage`'s precision-vs-evasion roll to fold
-  the attacker's tile `accuracyMod` + the defender's tile `evasionMod` from the
-  `TileDef` table (generalizing M6's water precision penalty). The combat-touching
-  part → balance implications (§41).
-- **Tile→status hooks (one seam, both directions)** — a tile may **apply** a status on
-  enter (**mud → poison**, behind a config flag) and **remove** a status on enter
-  (**water + deep_water → remove burn**). This generalizes the Cluster-1 tile
-  unification (fire → *apply* burn) to add the inverse (water → *remove* burn). (LOCKED:
-  trial poison-on-mud via a flag; do **not** ship a near-duplicate "mire" tile unless
-  playtest wants both mud-without-poison and mire-with as visibly distinct things.)
-- **Layout editor** — paint the new tiles + pick the new palettes; preview the theme
-  coloring.
+**Shape:** extract the positioning knowledge (firing band, LOS gate, minRange
+kiting, acting-cell goal list — MovementBehavior lines ~139–208 and its
+SupportMovementBehavior sibling) into one `positioning.ts` module both
+behaviors and future archetypes consult; then convert the *deliberate-hold*
+abstains (in-band hold; blocked-and-queueing) into explicit `WaitAction`
+proposals the selector weighs, leaving bare `null` to mean only "nothing to
+propose".
 
-**Cost:** the `TileDef` extension + the to-hit fold + the status hooks + render
-(palettes, hill/ice/sand/mud meshes) + the editor. No WorldSnapshot bump; possible
-RunSnapshot touch (theme rename). Browser-verify the palettes + tile renders + a
-wade/slip read.
+**Decision points 44:** `WaitAction` duration (leaning 1 tick — re-decide every
+tick, zero commitment) and cooldown (leaning none); whether a wait sets
+`activeAction` (if yes: **audit the WorldSnapshot surface first** — an
+in-flight wait entering serialization is a bump; leaning NO — resolve the wait
+within the tick, event-only, no in-flight state); which abstains convert
+(deliberate holds only — frozen/no-target/hold-objective stay null); whether
+the renderer gets a "queued" stance now or at §45 (leaning §45, when waits
+become common enough to see).
 
-**Headless tests:** each tile's cost + passability (deep_water/chasm short-circuit
-pathing; ice stays ≥ 1); the to-hit roll folds tile accuracy/evasion (balance-proof:
-derive from the `TileDef` table); mud applies poison on enter (flag on); water removes
-burn on enter; new `TileKind`s round-trip a `TileGrid` snapshot.
+### Sub-steps (44a–44b) — the proposed cut
 
-**Decision points 37:** is `theme` serialized anywhere the rock→barren / default→
-grassland rename makes a **RunSnapshot migration** (audit sectors/encounters/run
-state)? The ice cost-floor (confirm "faster" = cost 1 + speed from elsewhere, vs
-relaxing the heuristic). Mud-poison flag default (recommend **on** for the trial —
-easy to flip). The marine/waterwalk `traversal` capability — declare-inert (recommend,
-like the knockback seam) or fully omit.
-
-### Sub-steps (37a–37f) — the proposed cut
-
-**Decisions still open** (see *Decision points 37*): the theme-rename migration scope
-(a `RunSnapshot` touch?), the ice cost-floor, the mud-poison flag default, the
-waterwalk seam (declare-inert vs omit). 37a is a byte-identical seam; 37b–37f fill it.
-Independent of the unit model, so this whole phase floats free of §38.
-
-- **✅ 37a — the `TileDef` table (the seam).** Generalized `TileGrid`'s `TILE_COSTS` into a
-  per-`TileKind` `TileDef` table `{cost, passable, evasionMod?, accuracyMod?,
-  statusOnEnter?, statusRemovedOnEnter?}` (keyed by kind, not serialized) +
-  `tileDef(kind)` / `TileGrid.defAt(coord)` accessors; `costAt` reads `TILE_DEFS[…].cost`.
-  Existing kinds carry today's cost + no mods — **byte-identical** (1462 main + 212
-  fuzz:smoke green, no fuzz shift; typecheck clean). No bump. *Test:* every existing
-  tile's cost + passability resolves identically via the table (`TileGrid.test.ts`
-  "TileDef table" block).
-- **✅ 37b — the five new tiles (cost + passability + render).** Added `deep_water`
-  (impassable, cost `∞` like chasm), `hills` (cost 3), `ice` (cost-1 floor — GOTCHAS #34),
-  `sand` (cost 2), `mud` (cost 4, the worst passable mobility + sunken bog mesh), each a
-  `TileDef` (37a) entry + a `TerrainRenderer` `heightAt`/`topColorFor` branch (distinct
-  height + fixed identity color, theme-independent like water/chasm — combat mods are
-  37c, status hooks 37d). Costs are STARTING values (§41 tunes); only the relative
-  ordering + the ≥1 A* floor are load-bearing. Waterwalk = NOT YET a field (declared-inert
-  deferred to a real consumer). **Playtest follow-up (same commit-pair):** deep_water is
-  now COPLANAR with shallow water (depth reads via the darker color, not a sunken
-  surface — the recess looked wrong butted up against regular water); `hills` no longer
-  just rises — the base tile is flat ground + a child `bumpsMesh` scatters 4 low-poly
-  pyramid mounds/tile (deterministic from the noise field, faceted shading, raycast-off
-  so picking is unaffected), the "3–6 low-poly hills" look. Verified: 1469 main + 212
-  fuzz:smoke green, typecheck + lint clean; **browser readback** confirms coplanar
-  water + 48 mound-verts/hills-tile rising from ground (−0.27) to varied crests (+0.24).
-  *Test:* each tile's cost + passability (`TileGrid.test.ts` §37b block; deep_water
-  short-circuits pathing like chasm in `Pathfinding.test.ts`; ice stays ≥1); the new
-  kinds round-trip a `TileGrid` snapshot.
-- **✅ 37c — tile combat modifiers (the to-hit fold).** `applyDamage`'s
-  precision-vs-evasion roll now folds the ATTACKER's tile `accuracyMod` + the DEFENDER's
-  tile `evasionMod`, both LIVE reads via `TileGrid.defAt` (occupant-keyed, like the
-  fire/heal pass). The M6 `STATS.waterPrecisionPenalty` knob is **RETIRED** — every tile
-  combat mod now lives in the `TileDef` table as the single source
-  (`shallow_water.accuracyMod: -10` reproduces M6 byte-identically). Shipped magnitudes
-  (USER-LOCKED starting values, §41 tunes; 1 pt = 2% to-hit): ice/mud `accuracyMod -12`
-  (−24%), hills `evasionMod +8` (+16% harder to hit), sand `evasionMod -6` (−12%
-  easier), deep_water none. Verified: 1476 main + 212 fuzz:smoke green (byte-identical —
-  live battles only place `shallow_water`, unchanged), typecheck + lint clean. *Test
-  (balance-proof, derived from the table):* `World.test.ts`'s §37c fold block flips a
-  hit↔miss for an ice attacker / hills + sand defender from the table's own mod values;
-  `TileGrid.test.ts` asserts the mod signs + the water fold.
-- **✅ 37d — tile→status hooks (both directions).** A tile may **apply** a status on enter
-  (mud → poison, gated by `tiles.json` `applyStatusOnEnter`, USER-LOCKED default ON) and
-  **remove** one on enter (shallow_water + deep_water → strip `burn`, always on) —
-  generalizing the Cluster-1 fire → burn to add the inverse. Wired at the §36b 50% logical
-  flip (`MoveAction.applyEffect` → `World.applyTileEnterEffects`): the flip IS the "enter,"
-  so it reads the destination `TileDef` after `position` is set. ONE pass — remove
-  (`World.removeStatusEffect` → `Unit.removeEffect`, fires the existing `status:expired`
-  so the renderer clears the burn tint) then apply (`applyStatusEffect`, environmental
-  `sourceUnitId: null`). Distinct from the per-tick `applyTileStatuses` standing-on
-  sustain: fires ONCE per cell entry (poison isn't re-stamped while standing; the cleanse
-  only triggers on the move that lands in water). Scoped to a real `MoveAction` commit —
-  spawn/shove/summon placement aren't "enters." The `statusOnEnter`/`statusRemovedOnEnter`
-  ids are boot-asserted at `TileGrid.ts` module load (`assertTileStatusRefsResolve`, the
-  `assertStatusRefsResolve` sibling). **No snapshot bump.** Verified: 1485 main (+9: the
-  6-case `tileEnterStatus.test.ts` + 3 `TileGrid.test.ts` §37d cases, balance-proof from
-  the table) + 212 fuzz:smoke green, typecheck + lint clean. **Not byte-identical** (unlike
-  37c): `shallow_water` IS placed live, so water→strip-burn is a real new interaction (a
-  burning unit wading loses burn) — rare, win-rate delta carried to §41. *Test:* mud
-  applies poison on enter (flag on); water + deep_water strip burn on enter; the hook
-  fires at the flip, not at move-start (the integration proof).
-- **✅ 37e — palettes (themes) + the rename (the lone snapshot bump).** Added tundra /
-  desert / swamp (`TerrainRenderer.FLOOR_PALETTE` fixed-identity low→high hex) + renamed
-  `rock → barren` / `default → grassland` (barren avoids the Hills collision). **AUDIT
-  CONFIRMED `theme` IS serialized** (RunSnapshot `encounterMap`), so the rename forced
-  **`RUN_SCHEMA_VERSION` 23 → 24**, reject-stale (no transform — the existing relative
-  `schemaVersion - 1` tests auto-track it). The closed `Theme` union made typecheck the
-  exhaustive catch — every theme reference (incl. `Theme = 'default'` defaults + the
-  `BattleScene` banner `=== 'grassland'`) was flagged. **Browser-verified all 6 palettes
-  render** (run → encounter → `TerrainRenderer`). *Test:* `ThemeSchema` rejects the old
-  names + resolves the 6 new ones; the version bump rides the reject-stale tests.
-- **✅ 37f — the layout editor (schema + sim + editor).** Painting the 5 §37b tiles
-  spanned three layers: **schema** — 5 optional coord arrays (`deepWater`/`hills`/`ice`/
-  `sand`/`mud`) in `LayoutSchema` + `checkTileEffect` overlap validation; **sim** —
-  `terrainGen` applies them via `setKind`; **editor** — the 5 tiles woven through
-  `Cell`/`TerrainKind`/both paint switches/`refreshCell`/`validate`/export/load + 5 tile
-  radios + legend + CSS (cell colors/glyphs, the `data-theme` floor preview rename+3-new,
-  swatches) + `format.ts` emits the new arrays + the theme dropdown rename+3-new.
-  **GOTCHAS — the paint path has TWO switches:** `applyStrokeTo` ROUTES a stroke to
-  `applyTerrainStroke`, which then maps it to a `Cell`. A new tile must be added to BOTH;
-  the router has no exhaustiveness check, so a missing case silently no-ops (this bit us:
-  new tiles painted nothing while old tiles worked — chasm was in the router list, the new
-  ones weren't). Browser-verified: all 5 tiles paint + export their arrays; the 6 themes
-  preview. *Test:* a layout with all 5 new tiles + a new theme round-trips through the
-  editor formatter → the real schema; a mutex overlap is rejected.
-- **▶ 37g — editor playtest feedback + polish (OPEN; round 1 landed 2026-06-30).** A held-open
-  step for whatever the user surfaces while authoring real maps with the full tile + theme
-  set in the layout editor (UX, glyph/color tweaks, validation gaps, save/load edge cases,
-  missing affordances). Scope is defined by the feedback, not pre-specified. Closes Phase 37;
-  Phase 38 opens only after 37g lands (or the user waives it). **Watch the §37f gotcha** —
-  any new paintable kind must be added to BOTH paint switches (`applyStrokeTo` router +
-  `applyTerrainStroke` mapper); consider hardening the router with an exhaustiveness check
-  while in here.
-  - **✅ Round 1 (3 feedback items from the Isthmus/full-tile playtest):**
-    - **Spawns on passable terrain (LANDED).** Relaxed the spawn rule in BOTH validators (the
-      canonical `LayoutSchema.superRefine` + the editor's live `validate()`): a spawn region may
-      now sit on any PASSABLE tile (water/fire/healing/hills/ice/sand/mud) — the unit stands +
-      fights there with its terrain combat mods + wading cost live. Reject only cells it can't
-      occupy: impassable (chasm, deep water) + neutral-occupied (wall, half-cover). +11 schema
-      accept/reject tests; the shipped-layout spawn-overlap invariant updated to the new rule.
-    - **Deep-water connectivity gap (LANDED, latent 37f bug).** Deep water is Infinity-cost
-      (impassable) like chasm but was never in the connectivity blocker sets (`layouts.test.ts`
-      + the editor's `isConnected`), so a deep-water-severed map validated as connected. Closed
-      both. Validation-only, no snapshot bump.
-    - **Isthmus pathing quirk (TODO'd, map left as-is per user).** Units "charge at the deep
-      water and get stuck near it" — diagnosed as congestion at the Isthmus's 2-wide shallow
-      neck (hourglass map; deep water nearly severs the halves), NOT a pathing bug (A* routes
-      around deep water correctly; the sidestep can't escape because the flanking cells are
-      deep water → abstain). Left the map; opened a TODO to probe whether the choke reveals a
-      generalizable clumping/pathing quirk worth softening. See TODO.md "Polish / pre-launch".
-    - **Walls/cover on non-default terrain (DEFERRED → §40).** Today's walls/half-cover are
-      hard blockers nothing stands on, so terrain-under is gameplay-inert (cosmetic-only). It
-      becomes load-bearing with §40 destructibles (terrain revealed when rubble/cover breaks),
-      and should be built once against the final §38 `UnitDef` + §39 footprint model, not
-      today's closed wall/halfCover one. Scoped into §40 (see that phase).
+- **44a — the `positioning.ts` extraction.** Pure relocation + renames; both
+  movement behaviors consume it; the 70-line protocol comment gets carved into
+  the module docs it was compensating for. Existing tests pin byte-identity
+  (they already cover the band/LOS/kiting matrix). *Commit: refactor only.*
+- **44b — first-class `WaitAction` + typed abstains.** The action + proposal
+  plumbing; the two deliberate-hold sites convert; `MoveDecision` gains its
+  `wait` arm for real. Tests: selector still prefers attacks over waits; a
+  waiting unit's world bytes match the old abstaining unit's. *Commit: sim +
+  tests (+ snapshot audit note).*
 
 ---
 
-## Phase 38 — The unit-data keystone (the full data-driven `UnitDef` overhaul)
+## Phase 45 — Cooperation (the behavior-changing core)
 
-The cluster's keystone (the Y of this round). Unify **every** unit — playable, enemy,
-neutral, static — into one data-driven `UnitDef` catalog, the third leg of the
-AbilityDef/StatusDef stool. **Not an ECS.** A behavior-identical migration proven by
-the determinism oracle (the Y pattern). **No WorldSnapshot bump expected** (def-
-resolved by archetype id at spawn). USER-LOCKED: **in + FULL** (active archetypes
-become data too, not just neutrals).
+Units stop treating allies as furniture. Everything here is measured against
+the 42c baseline, and everything is dial-gated in `config/sim.json` so the
+balance surface stays inspectable (balance-proof tests derive from it).
 
-**Step 1 — the audit (gates the phase shape).** Grep sim/run/render for archetype-
-*literal* branches (`switch (archetype)`, `=== 'healer'`, …) vs archetype-*config*
-lookups (already data). Known data-driven: `glyphForArchetype`,
-`targetingForArchetype`, `range`/`minRangeForArchetype`, growth rates, the draft
-pool. Known literal: `createMovementBehavior`'s healer → `SupportMovementBehavior`
-special-case. The audit sizes the migration honestly *before* the steps lock — few
-literal branches (expected) → a clean 2–3 step migration; pervasive → re-scope with
-the user.
+**Shape:** three cooperating changes. (1) **Vacancy-aware costs** — a cell
+whose occupant/claimant will vacate within the unit's own arrival window costs
+near-nothing extra; a claim *into* the unit's path costs more than today's
+flat +4 (`occupiedCellPenalty` splits into dials). Corridor columns stop
+reading as walls (the gotcha #113 predicate softens for *outbound* claims —
+carefully: same-cell convergence must stay impossible). (2) **Wait-vs-
+sidestep** — when the forward cell's vacancy ETA ≤ k ticks, propose Wait;
+sidestep only otherwise. Queues form; the crab-walk dies. (3) **Path
+commitment + hysteresis** — cache the route, keep it unless invalidated
+(blocked, target moved past a threshold, or beaten by a margin); repath
+becomes the exception, not the tick default.
 
-**Shape:**
-- **`UnitDef` catalog** (`config/units.json` + `src/config/units.ts`, zod — mirroring
-  `abilities.ts`/`statuses.ts`): per-unit-kind glyph, base stats, growth, ability ids,
-  targeting strategy, **movement-behavior selector** (the literal special-case becomes
-  a field), `draftable`, plus the optional blocks:
-  - **`footprint`** (N, default 1 — the §39 field, inert until the fill).
-  - **`layer`** (default `ground` — the flight plane the unit lives on).
-  - **`ignoresTerrain`** (default false — flyers skip the §37 tile cost/effect pass).
-  - **`statusSusceptibility`** (default: all — an allow/deny filter the `applyStatus`
-    op consults; a wall opts into burn/frozen, out of poison/bleed — the spec's
-    burnable-not-poisonable wall).
-  - **An optional/flat stat block** — a wall/rubble is a `UnitDef` with no abilities +
-    a flat HP pool (folds `spawnEnvironment`'s `ZERO_STATS`/`inertDerived` path in).
-- **Relax `Archetype`** from a closed TS union → a catalog-validated string id (the
-  abilities/statuses move). A boot-assert validates every referenced id. Creating a
-  unit kind = a JSON entry + a glyph, **no code edit.**
-- **Fold neutrals into the catalog** — walls, half-cover, future rubble become
-  `UnitDef` entries; `spawnEnvironment` becomes "spawn a neutral `UnitDef`." The
-  team-based neutral filters (Targeting / HUD / `checkBattleEnd`) stay.
-- **Editors reworked** — the archetype editor's "create" wire-up panel **disappears**
-  (no more closed-union code edits — the keystone's whole point); it now creates/edits
-  `UnitDef` entries as pure data, neutrals included. The attack editor is unaffected
-  (abilities are referenced by id).
+**Decision points 45:** the vacancy window k (config dial; leaning ≈ the
+unit's own step duration); the outbound-claim cost discount + inbound-claim
+premium values; **the 45c determinism question — THE open decision of the
+round:** a transient path cache diverges a resumed-snapshot run from an
+uninterrupted one (cold cache ⇒ different repaths). Options: (a) serialize
+the committed path (WorldSnapshot bump), (b) derive commitment purely from
+serialized state (e.g. commit-until-invalidated recomputed from position +
+target — no cache to lose), (c) accept divergence and downgrade the
+determinism guarantee (REJECTED — the fuzz oracle depends on it). Leaning (b);
+audit before building, and if only (a) works, it's this round's one bump.
 
-**Cost:** the keystone migration — significant, but the proven Y pattern (strangler →
-determinism oracle → delete the old path). **No WorldSnapshot bump expected:** the
-new fields are def-resolved by archetype id at spawn (like glyph/targeting/range),
-so the per-unit serialized form is unchanged; the determinism oracle proves byte-
-identical. Browser-verify a full battle across all kinds + that the editor creates a
-new unit with **no** code edit.
+### Sub-steps (45a–45d) — the proposed cut
 
-**Headless tests:** every archetype id resolves in the catalog (boot-assert); a full
-multi-kind battle is byte-identical to pre-migration (the determinism oracle); a
-wall/half-cover spawned via the catalog is identical to the old `spawnEnvironment`
-path; `statusSusceptibility` filters an `applyStatus` (a wall ignores poison, takes
-burn); every new optional field defaults to a behavior-identical value.
-
-**Decision points 38:** the **audit result gates everything** (see Step 1). Catalog
-home (recommend `config/units.json` — the editor's target). Whether playable +
-neutral share **one** catalog (recommend yes — the unification's whole point) or a
-cosmetic two-file split. The `statusSusceptibility` default (recommend **allow-all**,
-so existing combatants are unchanged; neutrals opt into the few they allow). Whether
-the migration ports archetype-by-archetype (oracle per kind, the Y3/Y4 cadence) or
-all-at-once (recommend per-kind, each a playtest-pausable commit).
-
-### Sub-steps (38a–38e) — the proposed cut (38a GATES the rest)
-
-**Decisions LOCKED (38a, 2026-06-30):** catalog home = **rename `config/archetypes.json`
-→ `config/units.json`** (+ `src/config/archetypes.ts` → `src/config/units.ts`; the
-existing file already IS the catalog, so this evolves it rather than building a parallel
-one); **one** unified catalog (neutrals fold in at 38d); `statusSusceptibility` default
-= **allow-all**; migration cadence = **field-by-field, all archetypes at once** (the data
-is already centralized in one config record, so a per-archetype oracle cadence would be
-artificial — each commit kills one literal branch, the oracle proving it byte-identical).
-**Naming scope:** rename the config-layer symbols to UnitDef vocab (`ArchetypeConfig` →
-`UnitDef`, `ARCHETYPES` → `UNIT_DEFS`, `ArchetypesSchema` → `UnitDefsSchema`) but **keep
-`archetype` as the per-unit-kind id field/type name** (it appears at 100+ `unit.archetype`
-sites; the change is relaxing it from a closed union to a validated string id in 38c, not
-a field rename). A byte-identical migration (the Y determinism-oracle pattern) → **no
-`WorldSnapshot` bump expected** (the new fields are def-resolved by id at spawn). The
-oracle is the equivalence proof for 38c + 38d.
-
-- **✅ 38a — the archetype-literal audit (DESIGN ROUND, COMPLETE 2026-06-30).** Swept
-  sim/run/render. **Already config-driven** (via `ARCHETYPES` + `archetypes.ts`
-  accessors): glyph, targeting, range/minRange, growth, baseStats, abilities, draftable;
-  the **render layer has ZERO archetype branches** (glyph from config, FX key-driven).
-  **Genuine literal branches — only 3 + the `environment` sentinel:** (1) `stats.ts`
-  `damageStatFor`'s 18-case `switch(archetype)` → a `damageStat?` config field
-  (load-bearing for melee/ranged strikers; display-only for casters; absent ⇒
-  non-striker/0); (2) `behaviors/registry.ts` `createMovementBehavior`'s `=== 'healer'`
-  → a `movementBehavior` selector field; (3) `Targeting.ts:139`'s `=== 'ranged'`
-  LOS-retarget → a `retargetOnLosLoss` capability flag. The `'environment'` sentinel
-  (`UnitArchetype = Archetype | 'environment'`, branched in archetypes.ts ×2 / stats.ts /
-  UnitCard.ts) is the §38d neutral-fold. **Literal CONSTRUCTIONS** (not branches — ids
-  that just must stay valid once the union relaxes): `Run.ts` `'mercenary'` (start team),
-  `enemyBudget.ts` `'bandit'`/`'ranged'` (default enemy comp). **Verdict: clean/small —
-  no re-scope** (matches the "few literal branches → clean 38b–38e" expectation). Locked
-  decisions ↑.
-- **✅ 38b — rename `archetypes.json` → `units.json` + plant the inert UnitDef fields (COMPLETE + user-confirmed 2026-06-30).**
-  Mechanical, byte-identical: `git mv config/archetypes.json config/units.json` +
-  `src/config/archetypes.ts` → `src/config/units.ts` (the 3 source importers +
-  `SAVABLE_CONFIG_FILES` + the archetype-editor's path strings + tests follow the
-  compiler; config-layer symbols → UnitDef vocab per the naming scope above). Extend the
-  zod schema with the optional blocks at **behavior-identical defaults, not yet wired**:
-  `footprint` (1), `layer` (`ground`), `ignoresTerrain` (false), `statusSusceptibility`
-  (all), plus the three branch-killer fields planted OPTIONAL — absent in JSON, populated +
-  wired in 38c (`damageStat`, `movementBehavior`, `retargetOnLosLoss`); the flat-HP/neutral
-  block lands in 38d with the fold. A
-  boot-assert validates every referenced id. *Test:* every id resolves; each optional
-  field defaults to a behavior-identical value.
-- **✅ 38c — relax `Archetype` → a catalog id + route the data-driven lookups through the
-  catalog (COMPLETE 2026-07-01; byte-identical, no snapshot bump).** Shipped as four
-  field-by-field commits, each fuzz-oracle-proven (same seeds → same outcomes):
-  **38c-1** killed `stats.ts` `damageStatFor`'s 18-case `switch(archetype)` → the
-  `UnitDef.damageStat` catalog field (strikers only; healer/shaman absent ⇒ 0);
-  **38c-2** killed `behaviors/registry.ts` `createMovementBehavior`'s `=== 'healer'` →
-  the `movementBehavior` selector (`support` for the healer alone); **38c-3** killed
-  `Targeting.ts`'s `=== 'ranged'` LOS-retarget → the `retargetOnLosLoss` flag (`ranged`
-  alone); **38c-4** relaxed the closed `Archetype` union → `string` (`Unit.ts`) +
-  `UnitDefsSchema` `z.object`→`z.record` (open catalog, structural validation) + a
-  `REQUIRED_UNIT_IDS` boot-assert for the start-team/enemy-comp literals. **Each catalog
-  read is CALL-time off `UNIT_DEFS` (not the `archetypes.ts` accessor) — the
-  `config/units ⇄ sim` cycle makes an eval-time read a TDZ crash (GOTCHAS #114).** Final:
-  1570 tests + 212 fuzz:smoke green, typecheck + lint clean. *Test:* archetypes.test /
-  registry.test balance-proof each field ⇄ catalog; units.test pins the wiring cadence +
-  the open-catalog (new id validates, malformed rejected, key order preserved).
-- **✅ 38d — fold neutrals into the catalog (COMPLETE 2026-07-01; 3 commits).** Walls +
-  half-cover are now NEUTRAL `UnitDef` entries. **Schema:** a discriminated
-  `Combatant | Neutral` union (`z.union`) — a neutral is a glyph + a flat `hp` pool, no
-  abilities/stat blocks, discriminated structurally on the `hp` key (`isNeutralUnitDef`);
-  the 18 combatant entries stay byte-identical. **Runtime SPLIT by kind** (not one
-  union-typed record): `UNIT_DEFS` stays the COMBATANT catalog (walls were the
-  `environment` sentinel, never in it — so every pre-38d consumer keeps its exact types +
-  behavior, no union to narrow), with `NEUTRAL_DEFS` + `ALL_UNIT_DEFS` as sibling views
-  over the one `units.json` parse. **Spawn fold (38d-2):** `spawnEnvironment` takes a
-  neutral archetype id and resolves glyph / flat HP / LOS-blocking from
-  `NEUTRAL_DEFS[archetype]` (the old `ZERO_STATS`/`inertDerived` path made data). **The
-  `'environment'` sentinel is RETIRED** — `UnitArchetype` collapses to `Archetype`, the
-  four `=== 'environment'` guards + the UnitCard narrow become an optional chain on the
-  combatant catalog (a neutral/unknown id → the guard's old default). A wall's `archetype`
-  is now `'wall'` — **the FIRST non-byte-identical §38 step** (snapshot archetype string
-  changed; NO schema bump — WorldSnapshot v31/RunSnapshot v24 hold). **Susceptibility
-  (38d-3):** `applyStatusEffect` (the single apply chokepoint — covers the op AND the tile
-  enter/sustain hooks) consults `UnitDef.statusSusceptibility`; absent ⇒ all (combatants
-  unchanged), walls declare `['burn','frozen']` (inert until §40 lands damage on neutrals).
-  The team-based neutral filters (Targeting / HUD / `checkBattleEnd`) stay. Browser-verified
-  a live catalog-spawned wall/half-cover renders (sprite handles + `#`/`╥` glyphs). *Tests:*
-  a catalog wall/half-cover matches the old `spawnEnvironment` shape (+ a glyph-drift guard);
-  susceptibility filters an `applyStatus` (wall takes burn, ignores poison; no `status:applied`
-  for a filtered apply); a combatant still takes any status.
-- **✅ 38e — the editor rework + delete the old path (COMPLETE 2026-07-01; 2 commits).**
-  The keystone's payoff — authoring a unit is now **pure data, no code edit**. **38e-1**
-  made the font atlas **catalog-derived**: `GLYPHS` (`src/render/glyphs.ts`) derives the
-  UNIT glyphs from `ALL_UNIT_DEFS` (config key order, deduped) and keeps only the NON-unit
-  glyphs (root `@`, HUD digits/punctuation, projectile `*`, objective `X`) as a static
-  list — so a new unit's glyph auto-registers (the LAST code-edit dependency, removed). A
-  `FontAtlas` build-time guard + `atlasCellsFor`/`ATLAS_CELL_BUDGET` (48 = the 8×6 grid)
-  cap the count. **38e-2** reworked the editor: `working` is the full `Combatant|Neutral`
-  catalog (neutrals — walls/half-cover — now editable via a kind-scoped form: glyph, flat
-  `hp`, `blocksLineOfSight`, `statusSusceptibility` behind a "Restrict statuses" toggle),
-  the closed-union **"Wire-up" panel is DELETED** (its `Archetype`-union / `UnitDefsSchema`
-  / `glyphs.ts` edits were dead after 38c + 38e-1), replaced by a Font-atlas budget
-  indicator that **blocks Save** when over budget. `units.json` was already in
-  `SAVABLE_CONFIG_FILES` (38b). The attack editor is untouched (abilities referenced by id).
-  1563 main green; typecheck + lint clean. **Browser-verified end to end:** authored a
-  brand-new `vanguard` (glyph `N`) in the editor with NO code edit, Saved, reloaded — the
-  catalog + atlas auto-picked it up (`getGlyphUV('N')` resolves, 42/48 cells), and a spawned
-  vanguard rendered its `N`, pathed to the enemy, and landed an attack.
+- **45a — vacancy-aware costs.** Vacancy ETA derivation (from the mover's
+  in-flight action — derived, not serialized) + the cost split; corridor
+  fixture tests (a column follows nose-to-tail; convergence invariant holds —
+  extend the §35d fuzz invariant's reach). Fuzz re-baseline. *Commit: sim +
+  config + tests.*
+- **45b — wait-vs-sidestep.** The ETA-gated Wait proposal (on 44b); corridor-
+  flow integration tests flip from pinning the old shuffle to pinning queues;
+  oscillation-rate regression test (< baseline by a margin). *Commit: sim +
+  config + tests.*
+- **45c — path commitment + hysteresis.** Per the resolved determinism
+  decision; repath-count metric drops measurably; snapshot-resume equivalence
+  test (the §38 oracle pattern) proves the guarantee held. *Commit: sim +
+  tests (+ bump iff (a)).*
+- **45d — the re-measure + the cooperation regression suite.** Full harness
+  vs baseline; PATHING.md verdict entry; throughput/oscillation/time-to-
+  contact regression bounds land. **User playtest checkpoint (native browser):
+  the feel question — "a tactical battle playing out?"** *Commit: PATHING.md +
+  tests.*
 
 ---
 
-## Phase 39 — Multi-tile footprints (the fill)
+## Phase 46 — The verdict (measure, spot-check balance, gate School 2/3)
 
-Fill §35's footprint seam against §38's `footprint` field: `cellsOccupiedBy` returns
-the N×N block, rendering scales the glyph, spawning validates the block fits. The
-first multi-tile consumer is §40's rubble — so this lands right before it. **No
-WorldSnapshot bump expected** (footprint def-resolved; position stays the canonical
-corner). Fuzz inert until §40 ships a multi-tile entity.
+The round closer — a decision phase, possibly a documented no-op (§41
+precedent). **READ BALANCE.md + PATHING.md first.**
 
-**Design target (LOCKED):** axis-aligned N×N, N ∈ 1..4; `position` = the single
-canonical **corner**; spawn anchoring is a **policy** — ship **`corner`** (in-bounds-
-biased: the spawn tile is *a* corner, pick the diagonal that keeps the block on-grid,
-so an edge tile still fits); **defer `random-intersect`** (organic scatter) to camps
-(Cluster 5). Corner reuses the single-tile spawn path + the overflow scan's "walk
-candidate tiles, skip if it doesn't fit" loop — **not a new spawn class** (the spec's
-worry, resolved).
+**Shape:** the full-harness + feel review against the round's exit criteria
+(drift ≈ 0; corridors queue; oscillation down; the user's four symptoms
+addressed or explicitly re-scoped); a *scoped* balance spot-check — movement
+changes shift combat outcomes, so re-baseline the fuzz win-rate + gradient vs
+§41's numbers (33–35% / +22pt / boss 42–48%) and confirm the §33 equilibrium
+holds (full §41 methodology only if the spot-check flags drift); the
+**School-2/3 gate**: on the measured residue, decide NO (close the round;
+WHCA\*-lite / flow fields stay in the drawer, seams documented) or YES (spec
+the follow-up phases 46b+ *then*, from data, not now); the close-out
+(HANDOFF cursor → Cluster 3, META-ROADMAP note, memory update).
 
-**Shape:**
-- **`cellsOccupiedBy(unit)`** returns `corner..corner+N`; **`footprintFits(cells,
-  plane)`** checks all N cells; **`distanceBetween(a, b)`** becomes footprint-aware
-  (min cell-to-cell Chebyshev — single-tile stays `chebyshev(pos, pos)`). The
-  occupancy registry, claims (§36), shove (§35), pathfinding, targeting-adjacency, and
-  acting-position all route through these — already centralized in §35, so **no
-  scattered retrofit.**
-- **Pathfinding** — a multi-tile unit's step validates the whole destination footprint
-  is free (a wider body needs wider corridors). A* moves the canonical corner;
-  passability checks the block.
-- **Rendering** — scale the glyph quad to the footprint (the SpriteRenderer per-
-  instance `size` attr already exists, E6.B); the sprite anchor reads the footprint
-  center.
-- **Spawn anchoring** — `anchorFootprint(spawnTile, size, policy, grid, occupancy) →
-  cells | null`; ship `corner`; a null fit → the caller tries the next candidate tile.
-- **Layout editor** — multi-tile spawn-room validation (does an N×N spawn fit?) +
-  placing multi-tile entities.
+**Decision points 46:** the gate itself; whether any §45 dial needs a balance
+correction (the §41 lesson: measure at the optimum, not greedy); whether the
+renderer "queued" stance deferred from §44 is wanted for ship-feel.
 
-**Cost:** the seam fill + footprint-passability pathfinding + render scaling + the
-anchoring policy + the editor validation. No bump expected. Browser-verify a multi-
-tile unit renders scaled + paths through wide gaps but not narrow ones.
+### Sub-steps (46a–46c) — the proposed cut
 
-**Headless tests:** `cellsOccupiedBy` returns the N×N block from the corner;
-`footprintFits` rejects a block overlapping a unit/wall/edge; a 2×2 unit paths through
-a 2-wide gap, not a 1-wide; `distanceBetween` is footprint-aware (a 2×2 + an adjacent
-unit are at distance 1); corner anchoring keeps an edge-tile spawn on-grid; the fit-
-check skips a too-tight tile.
-
-**Decision points 39:** max N (LOCKED 4 — confirm 1..4). The passability rule (the
-whole destination footprint free — recommend the conservative correct rule). Whether
-a wide unit needs the A* heuristic adjusted (Chebyshev on the corner stays admissible
-— confirm with a wide-unit test). Render anchor (recommend center for the glyph,
-corner for the logic). Whether any §38 archetype goes multi-tile now or footprints
-stay inert until §40's rubble (recommend inert until §40 — keep the fuzz baseline
-stable through §39).
-
-### Sub-steps (39a–39e) — the proposed cut
-
-**Decisions still open** (see *Decision points 39*): the passability rule, the render
-anchor, whether the A* heuristic needs adjusting for wide bodies, and whether any §38
-archetype goes multi-tile now (recommend inert until §40's rubble — keep the fuzz
-baseline stable through §39). No bump expected (footprint def-resolved; `position`
-stays the canonical corner).
-
-- **✅ 39a — the footprint geometry fill.** `cellsOccupiedBy(unit)` returns
-  `corner..corner+N` (reading §38's `footprint` field via a call-time `footprintOf`,
-  gotcha #114); a pure `footprintCells(corner, n)` is the N×N geometry core (39c's
-  `anchorFootprint` reuses it); `footprintFits(cells, plane)` already checks all N cells;
-  the footprint-aware distance shipped as a NEW `unitDistance(a, b)` seam (min cell-to-
-  cell Chebyshev) — `distanceBetween(coord, coord)` stayed the untouched coord PRIMITIVE
-  so every existing caller (the A* heuristic, leash checks) is byte-identical. Single-cell
-  units keep the reference-identical `[position]` fast path; footprints stay INERT (no
-  multi-tile def ships until §40), so the N×N path is exercised by tests only. **No bump;
-  fuzz 212 held (byte-identical shipped roster).** *Tests (+13, occupancy.test.ts 21→31):*
-  `footprintCells` N∈1..4; `cellsOccupiedBy` returns the N×N block from the corner (via a
-  temp catalog id); `footprintFits` rejects a block overlapping a combatant/wall;
-  `unitDistance` footprint-aware (a 2×2 + an adjacent unit at distance 1, overlap at 0,
-  single-cell reduces to `distanceBetween`).
-- **✅ 39b — footprint-passability pathfinding.** `findPath` gained a trailing
-  `footprint = 1` param: a candidate corner is a valid A* node iff its WHOLE N×N block is
-  on-grid + unblocked + finite-cost (a `blockFits` closure; `footprint === 1` iterates
-  exactly the corner cell = the pre-§39b test verbatim, which is why it's a trailing
-  default — every existing caller stays byte-identical). A* still moves the single corner
-  and charges the CORNER's entry cost, so Chebyshev-on-corner stays admissible (confirmed
-  by a test: a fitting 2×2's path length equals the single-cell optimum). Pathfinding
-  stays a pure grid algorithm (footprint is a plain number — no unit/catalog knowledge).
-  Threaded the mover's `footprintOf(unit)` through `advance`/`leapLanding`→`routeToward`
-  and `SupportMovementBehavior`; the step-COMMIT collision + sidestep stay single-cell (a
-  multi-tile MOVER is post-§40 — §40's rubble is static). **No bump; fuzz 212 held.**
-  *Tests (+6, Pathfinding.test.ts):* a 2×2 paths a 2-wide gap but NOT a 1-wide (a 1×1 does,
-  proving footprint is the cause); footprint=1 byte-identical to default; admissibility
-  (fitting 2×2 path is minimal); a goal block overflowing the grid edge is rejected.
-- **✅ 39c — the spawn anchoring policy.** `anchorFootprint(spawnTile, size, grid,
-  isFreeCell, policy='corner') → cells | null` in [occupancy.ts](src/sim/occupancy.ts).
-  The `corner` policy is in-bounds-biased: the spawn tile is *a* corner, so it tries the
-  four diagonal orientations (spawn tile as TL/TR/BL/BR, preferring +x/+y) and returns the
-  first whose whole block is on-grid AND `isFreeCell` — an EDGE tile fits by extending
-  inward. `size === 1` collapses to "is the spawn tile free & on-grid" (the single-tile
-  check). PURE + World-free (a grid-dims record + an `isFreeCell` predicate) so the caller
-  decides what "free" means; a `null` return is the cue to walk to the next candidate tile
-  (the overflow scan's skip-if-doesn't-fit loop generalized — NOT a new spawn class).
-  `random-intersect` deferred to camps (Cluster 5). **INERT — not yet wired into a spawn
-  path** (nothing multi-tile spawns until §40's rubble); shipped tested + ready. No bump;
-  fuzz 212 held. *Tests (+7, occupancy.test.ts 31→38):* default +x/+y orientation; an
-  edge/corner tile stays on-grid with the spawn tile as a corner; size 1 == single-cell;
-  falls through to a flip that clears an occupied cell; null when the spawn tile is
-  occupied (every orientation includes it) or the body is too big for the grid.
-- **39d — multi-tile rendering.** Scale the glyph quad to the footprint (the
-  SpriteRenderer per-instance `size` attr, E6.B); the sprite anchor reads the footprint
-  center, the logic stays on the corner. Browser-verify. *Test (browser):* a 2×2 unit
-  renders at footprint scale, centered.
-- **39e — FOLDED INTO §40 (2026-07-01).** Both halves were forward-looking with no
-  §39 consumer: no footprint-bearing entity exists until §40's rubble, and §40 already
-  owns the layout editor (`40g`) + the rubble schema (`40d`). Building placement in §39
-  would have invented throwaway schema §40 redefines, so — per the "inert until §40's
-  rubble" recommendation — the multi-tile spawn-room fit validation (does an N×N deploy
-  fit? — a thin wrapper over 39c's `anchorFootprint`) + multi-tile entity placement ride
-  §40's editor (`40g`). **Phase 39 closes at 39d** (geometry + pathing + anchoring + render, all
-  byte-identical, fuzz 212 held).
+- **46a — the verdict measure + feel playtest.** Harness + native-browser
+  session against the exit criteria; PATHING.md verdict; the School-2/3 call
+  documented with its data. *Commit: PATHING.md.*
+- **46b — the balance spot-check.** Fuzz win-rate/gradient vs §41 baselines +
+  equilibrium confirmation; tune only what it flags (likely nothing — the §41
+  no-op is the prior). *Commit: config iff flagged + BALANCE.md entry.*
+- **46c — the close-out.** HANDOFF/META-ROADMAP/memory cursor flip → Cluster 3
+  kickoff (which archives this file). *Commit: docs.*
 
 ---
 
-## Phase 40 — Destructible terrain
+## What we're explicitly NOT doing (the scope guard)
 
-The §38 + §39 payoff: HP-bearing neutral obstacles that deny area until destroyed —
-rubble/debris (1×1–3×3, configurable HP), plus finally enabling **optional**
-destructibility for walls + half-cover. Authored as neutral `UnitDef`s (§38) with real
-HP + footprints (§39) + susceptibility. **WorldSnapshot: 40a–40d byte-identical** (HP
-already serialized); **40e bumped v31→v32** (a `neutral` ObjectiveTarget kind — rubble is
-manually targetable). The layout schema gains destructible HP fields (config). Balance
-implications → §41. **Absorbs §39e** (folded 2026-07-01) — the multi-tile spawn-room
-fit validation + editor placement land in the editor (`40g`); the first footprint-bearing
-entity (rubble) is born into layouts in `40d`.
-
-**Shape:**
-- **The rubble `UnitDef`(s)** — neutral, no abilities, a flat HP pool, a footprint
-  (1..3), a glyph (e.g. `▓` — needs a `glyphs.ts` entry + the §30-resized atlas
-  budget). **Burnable/freezable but not poisonable** (`statusSusceptibility`, §38) —
-  the spec's note that destructibles want burn but walls aren't poisonable.
-- **The targeting-neutrals hook** — Targeting filters neutrals out of the enemy pool
-  today; add an **opt-in, lower-priority** path: rubble is **auto-targeted below all
-  reachable hostiles** (a unit with no reachable hostile, or an explicit order, may
-  chip a blocking destructible — the "deny access until destroyed" loop). Walls +
-  half-cover are **not** auto-targeted (manual target or AoE only — the spec). AoE
-  already hits neutral cells for free (the Cluster-1 `affects:'enemies'` = not-caster's
-  -team filter + `unitsInCells`).
-- **Optional wall/cover destructibility** — a per-instance HP in the layout schema
-  (default today's indestructible 1-HP; a higher value = destructible). The lifecycle
-  already works end-to-end (a neutral at 0 HP reaps + fires `unit:died{neutral}`;
-  BattleRenderer fades, audio skips — all noted "ready" in `environment.ts`).
-- **Layout editor** — paint rubble (size + HP) + toggle wall/cover destructibility. **Also
-  here (deferred from 37g): walls/cover ON non-default terrain.** Today the editor's per-cell
-  model is mutex (`Cell[][]`, one kind/cell) + the schema rejects a wall/cover coord that
-  overlaps a terrain tile — so a wall can't sit on sand. Gameplay-inert for indestructible
-  walls (nothing stands on them), but once a destructible breaks, the unit that walks onto the
-  freed cell stands on the terrain underneath, so it MATTERS here. Build it now: split the
-  editor into a terrain layer + a separate neutral overlay (so a cell carries a tile kind AND
-  an optional neutral), and relax the schema overlap rule so a neutral coord may coincide with
-  a terrain tile. Built against the final §38 `UnitDef` + §39 footprint model (the reason it
-  waited — doing it at 37g would have been against the soon-replaced closed wall/halfCover one).
-
-**Cost:** content (rubble UnitDefs + glyph) + the targeting-neutrals priority hook +
-the layout HP schema + the editor. No WorldSnapshot bump expected. Browser-verify
-rubble renders, takes AoE + low-priority auto-fire, crumbles at 0 HP; a destructible
-wall falls to focused fire.
-
-**Headless tests:** a destructible takes AoE (affects-enemies includes neutrals) + DoT
-per its susceptibility (burn yes, poison no); auto-targeting picks a reachable hostile
-over a destructible (priority), a destructible only when no hostile is reachable;
-walls/cover are not auto-targeted (manual/AoE only); a 0-HP destructible reaps + fires
-`unit:died{neutral}`; a multi-tile rubble occupies its whole footprint until destroyed.
-
-**Decision points 40 — ALL LOCKED (user, 2026-07-01):**
-- **How "destructible" is expressed → HP-PRESENCE** (not a `destructible` flag). `hp`
-  becomes OPTIONAL on the neutral def; present ⇒ destructible/combat-targetable, absent ⇒
-  indestructible. Cleaner than a flag (removes a concept rather than adding one; makes
-  indestructibility semantically honest — no HP pool = can't be destroyed; retires the
-  awkward nominal `hp:1` on walls) and matches the 40c "HP = destructible" framing. This
-  is the signal `isCombatTargetable` keys off in 40b.
-- **Auto-target priority → destructibles below all reachable hostiles** (an idle unit
-  blocked from its hostile may chip the blocking destructible).
-- **Multi-tile rubble collapse → all-at-once at 0 HP** (one entity; partial-collapse is a
-  future fill).
-- **Wall/cover destructibility default → OFF** (hp-less = indestructible; opt in by giving
-  a wall an `hp` per layout — §40c).
-- **Rubble blocks LOS → yes** (a per-def `blocksLineOfSight`, default true like walls; low
-  rubble could set false).
-
-### Sub-steps (40a–40g) — the proposed cut
-
-**Decisions still open** (see *Decision points 40*): the auto-target priority rule,
-all-at-once vs incremental collapse (recommend all-at-once), the wall-destructibility
-default (recommend off), whether rubble blocks LOS. No `WorldSnapshot` bump expected
-(HP already serialized; the layout schema gains destructible HP fields as config). This
-phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
-
-- **✅ 40a — the rubble `UnitDef`(s) + glyph (the first real multi-tile entity; COMPLETE
-  2026-07-01).** Three neutral `UnitDef`s `rubble_1x1`/`2x2`/`3x3` (`config/units.json`):
-  no abilities, a flat `hp` (25/60/110 UNTUNED §41), a footprint (1/2/3),
-  burnable/freezable not poisonable (`statusSusceptibility ["burn","frozen"]`), LOS-
-  blocking. **NO schema change** — 38d planted every neutral field. `spawnRubble` +
-  `RUBBLE_ARCHETYPE_BY_SIZE` (environment.ts); the neutral formatter now emits `footprint`.
-  Proves the §39 fill LIVE (a rubble occupies its whole N×N block + renders scaled via
-  39d) + the 0-HP reap → `unit:died{neutral}` + susceptibility gate (balance-proof tests,
-  1594 + fuzz 212 green). **Glyph = `%` (STOPGAP):** the first-pass `▓` (U+2593) is a
-  FULL-EM block that towered over the wall `#` + occluded sprites; `%` is open + ~wall-
-  height. A true HALF-height look (`▄` U+2584, or a render-side vertical squash) is a
-  **TODO — next session, NATIVE-browser verify** (this session's remote render-verify was
-  unreliable + wrongly read the block range as tofu; the user sees `▓` render fine
-  natively — see TODO.md §Polish).
-- **40b — targeting-neutrals: LIFT the neutral guard + the auto-target hook.** The prep
-  the roadmap assumed ("AoE already hits neutral cells for free") is **wrong** —
-  `isCombatTargetable` (effects/targeting.ts:91) blanket-excludes `team === 'neutral'`,
-  so nothing (not even AoE) can damage rubble yet. **① Lift it → DESTRUCTIBILITY = HP-
-  PRESENCE (LOCKED 2026-07-01, user call — see §"Decision points 40").** Make `hp`
-  OPTIONAL on `NeutralUnitDefSchema`; `hp` present ⇒ destructible (combat-targetable),
-  absent ⇒ indestructible. `isCombatTargetable` allows a neutral iff its def has `hp`.
-  *Migration:* drop `hp` from `wall`/`half_cover` in units.json (they become genuinely
-  hp-less = indestructible, retiring the awkward nominal `hp:1` the 38d comment flags);
-  `spawnEnvironment`/`inertDerived` take a nominal maxHp fallback for hp-less neutrals
-  (cosmetic — never targeted); the formatter emits `hp` only when present; the couple of
-  `wall.derived.maxHp === NEUTRAL_DEFS.wall.hp` tests update. **② The auto-target hook**
-  (the new mechanic): rubble is **auto-targeted below all reachable hostiles** (a unit
-  with no reachable hostile, or an explicit order, may chip a blocking destructible — the
-  "deny access until destroyed" loop). Walls/half-cover stay NOT auto-targeted (manual /
-  AoE only — now AoE reaches them because it's hp-present that decides, and they're hp-
-  less unless §40c opts in). *Test:* a destructible rubble takes AoE + DoT (per
-  susceptibility); an indestructible (hp-less) wall does NOT; auto-targeting picks a
-  reachable hostile over rubble, rubble only when no hostile is reachable; walls/cover are
-  never auto-targeted.
-- **✅ 40c — optional wall/cover destructibility (COMPLETE 2026-07-02).** Under HP-presence
-  (40b), a destructible wall/cover = one that **carries an `hp`**; default = **no `hp` =
-  indestructible** (the locked "wall-destructibility OFF" default). *As built:* a per-instance
-  `hp` on a layout wall/cover coord (`NeutralCoordSchema`, backward-compatible with bare
-  `{x,y}`) routes that placement to a NEW hp-bearing neutral def — `wall_destructible`
-  (hp 40) / `half_cover_destructible` (hp 25, LOS-transparent), both burnable/freezable,
-  **no `autoTarget`** (⇒ combat-targetable per 40b, but never auto-chipped like rubble —
-  manual / AoE / focused fire only). `spawnWall`/`spawnHalfCover` pick the archetype off `hp`
-  presence and pass it as the maxHp override; the 0-HP crumble reap already runs end-to-end
-  (40a). Reuses the `#`/`╥` glyphs (zero atlas growth); **no WorldSnapshot bump, fuzz 212
-  held** (no shipped content carries wall `hp` yet). **VISUAL TELL (user call — 'add a tell
-  now'):** a destructible wall/cover shares its indestructible sibling's glyph, so it renders
-  in a weathered ochre `CRACKED_STONE #B5843C` (vs the gray `TERMINAL_STONE`) — a pure,
-  headless-tested `spriteColorForUnit` (THREE-free, extracted from BattleRenderer; keyed off
-  `isDestructibleNeutral && !isAutoTargetNeutral` so it's data-driven + excludes rubble, which
-  is already distinct by its `▄` glyph). User-confirmed native ("reads as wood/weaker");
-  browser buffer-readback exact (`#` → `#B5843C` for destructible, `#7A7066` for solid).
-  +11 tests. *Test:* a wall given an HP pool falls to focused fire; the default (hp-less)
-  stays indestructible; a destructible wall is NOT auto-targeted; the tint keys off the
-  destructible-obstacle predicate.
-- **✅ 40d — rubble in layouts (COMPLETE 2026-07-02).** The headless foundation for
-  authoring rubble into a layout + a demo to playtest it. **40d-1** = a footprint-aware
-  `RubbleCoordSchema` (`{x,y,size?,hp?}`) + a `rubble?` field on `LayoutSchema` (N×N
-  bounds / overlap / spawn-block validation) → `GeneratedTerrain.rubble` + the exported
-  `generateFromLayout` seam → a new exported `spawnLayoutNeutrals` (`battleSetup`) that
-  spawns rubble via 40a's `spawnRubble`. Fixed a latent leak — a neutral coord's extra
-  keys (40c `hp`, rubble `size`/`hp`) reached `unit.position`; now a clean `{x,y}` is
-  passed. Byte-identical for every shipped layout. **40d-1b** = a `rubbleQuarry` DEMO
-  layout (14×12 barren, mixed 1×1/2×2/3×3 + custom/default HP + two `#` pillars for scale
-  contrast) + taught the layout formatter to emit `rubble` (the verbatim round-trip test)
-  + added it to "The Start" pool (that sector ships every layout). Browser-verified:
-  forcing `?layout=rubbleQuarry` spawns all rubble at the authored pos/size/HP. 1645 main
-  + 212 fuzz green. **A playtest surfaced two gaps → 40e + 40f, which land BEFORE the
-  editor** (40g).
-- **✅ 40e — rubble manually targetable (clickable as an objective; COMPLETE 2026-07-03).**
-  Closed the playtest gap: you can now `focus`/`engage` a destructible neutral by clicking
-  it, so the "deny access until destroyed" loop fires by deliberate order, not only via
-  40b's AUTO-target. **Decisions (user, 2026-07-03):** a NEW `{kind:'neutral',unitId}`
-  `ObjectiveTarget` variant (NOT widening `enemy` — keeps the targeting resolvers honest;
-  every scan already branches on `team === 'neutral'`) → **WorldSnapshot v31→v32**
-  (reject-stale; a team objective is serialized, so a mid-battle rubble focus must resume);
-  **ALL destructibles clickable** (`isDestructibleNeutral` — rubble + 40c destructible
-  walls/cover; an indestructible hp-less wall stays unclickable); a manual **focus
-  OVERRIDES** the reachable-hostile priority (the full-preempt beeline — it's an explicit
-  order). **As-built:** `objectiveAtCell` gained a `neutrals: NeutralAtCell[]` param
-  (footprint-cell list → a click on ANY tile of a multi-tile rubble resolves it; ranks
-  enemy > neutral > tile); `updateFocusTarget` + `updateObjectiveTarget` pursue a valid
-  destructible neutral (shared `validDestructibleNeutralTarget`); `clearResolvedObjectives`
-  reverts to atWill on the neutral's destruction/reap (symmetric to the enemy branch);
-  `BattleRenderer.destructibleBillboards()` (footprint-scaled pick quads) + a second
-  `pickInstance` pass in `ObjectiveController.setFromClient`. The whole downstream
-  (`currentTarget` honoring the neutral, MovementBehavior's bestEffort approach, the strike,
-  the reap) is 40b's — the manual path just SETS `targetId`. The objective marker reuses the
-  existing unitId lookup (no render change). +17 tests (1656 main + 212 fuzz). **Headless-
-  verified end to end + browser-smoke-confirmed** (forced `?layout=rubbleQuarry`: the
-  `!` focus marker renders on rubble, all 6 players converge + chip a 3×3 rubble 150→85 HP
-  over 120 ticks; the raw DOM-click couldn't be exercised via the preview MCP's backgrounded
-  0×0 canvas; the live click-order was USER-CONFIRMED native 2026-07-03). *Test:* clicking
-  rubble sets a focus objective + units path to and attack it; an indestructible wall stays
-  unclickable + reverts a stray order to atWill.
-  **Clickbox follow-up (2026-07-03):** the playtest found the pick quad reached ~1 cell above
-  the visible rubble slab (worse for big rubble — the quad scales with the footprint, and `▄`
-  inks only its lower-center). Fix = a general **per-glyph normalized ink-rect** (`glyphInk`
-  in [glyphs.ts](src/render/glyphs.ts), THREE-free) that `pickInstanceAtNdc` tests instead of
-  the full quad; `PickCandidate.ink?` defaults to the full cell (byte-identical), both
-  billboard builders stamp `glyphInk(unit.glyph)`. `▄`'s rect `{0.17,0,0.83,0.53}` is MEASURED
-  (rasterized as FontAtlas does + alpha-bbox read), not guessed. The containment test is a
-  clean SEAM for a future pixel-perfect alpha mask (the ink-rect becomes its bbox pre-reject);
-  the mask's per-glyph COVERAGE data would live in the same table. +4 pick tests.
-- **✅ 40f — destructible-neutral HP bar (COMPLETE & user-confirmed native 2026-07-03).**
-  Closed the playtest gap (rubble showed no HP, so you couldn't see it chipped down).
-  **As built:** `BattleRenderer.onUnitSpawned` no longer blanket-returns for neutrals — an
-  `isDestructibleNeutral` unit now gets an overlay registered in `overlayHandles`, so the
-  EXISTING `unit:attacked → refreshHpBar` path fills it and the per-frame loop
-  position-follows it (zero new plumbing; indestructible walls still return bare). A new
-  `UnitOverlayLayer.addDestructible(footprint)` reuses the combatant-overlay machinery but:
-  drops the level badge (rubble has no level); **hides the HP bar until damaged**
-  (`destructible` flag → `applyHp` reveals it once `hpPct < 1`) so a rubble-heavy board
-  isn't a wall of full bars; and **scales to the footprint** via two CSS vars on
-  `.unit-overlay-stack` (`--fp-scale` widens the bar 56·N px, `--fp-lift` raises it to clear
-  the taller center-anchored glyph). *Decisions (all LOCKED, user 2026-07-03):*
-  **only-when-damaged** (not always); **scale to footprint** (not fixed); scope = **all
-  destructibles** (rubble + 40c walls/cover, keyed off `isDestructibleNeutral`). The lift is
-  a per-footprint TABLE `[0,0,22,33,39]`, not a linear `(N−1)·k` — `▄` is short + ground-
-  flush so its ink top rises sub-linearly (user-tuned: 2×2 perfect at 22, 3×3 dropped 44→33).
-  The `--fp-*` vars default to `1`/`0px` ⇒ combatant bars byte-identical. No snapshot bump
-  (render/CSS only; 1660 main green). **Eval-verified** (`?layout=rubbleQuarry`): at full HP
-  the 2 indestructible walls get no overlay + all rubble bars hidden; on damage the bar shows
-  at the right fill (3×3 168px/lift 33, 2×2 112px/lift 22, 1×1 56px/default), gradient color
-  per pct, no level badge. **User-confirmed native** ("we nailed this"). *Test (as built):*
-  the render layer has no unit-test harness (browser-verified per the render-change norm) —
-  the destructibility predicate `isDestructibleNeutral` that gates it is covered in
-  `units.test.ts`.
-- **40g — the layout editor (absorbs §39e; renumbered from 40d). CUT INTO 40g-1/2/3.**
-  - **✅ 40g-1 — the layered editor model (COMPLETE & user-confirmed native 2026-07-03).**
-    The 37g-deferred "walls/cover ON non-default terrain" rewrite. **40g-1a** (`809dd48`):
-    `LayoutSchema.superRefine` split its single accumulating `blocked` set into a TERRAIN
-    layer (water/chasm/fire/healing/§37 tiles, mutex among themselves) + a NEUTRAL layer
-    (walls/half-cover/rubble, mutex among themselves) that no longer cross-check — so a
-    neutral may sit on ANY terrain tile (a destructible wall on sand reveals sand when it
-    breaks). The game already supported it (`terrainGen` sets the TileGrid kind, `battleSetup`
-    spawns the obstacle as a neutral UNIT standing on that tile) — only the authoring guard
-    lifted; every existing layout stays valid; +7 tests. **40g-1b** (`c0ed65d`): split the
-    editor's mutex `Cell[][]` into a terrain grid + a parallel `neutrals` overlay; wall/
-    half-cover strokes write the overlay; composite render = terrain bg+glyph (::after) plus
-    an inset ::before badge (z-index above), so the terrain frames the obstacle; dimming
-    retargets to the per-layer pseudo-element; load/resize/export/erase handle both layers.
-  - **✅ 40g-2 — the rubble brush + §39e (COMPLETE & user-confirmed native 2026-07-03).**
-    **40g-2a** (`609e0ea`): a rubble neutral sub-tool (size 1/2/3 + optional HP) placing into
-    a `rubble` LIST (footprinted, not a per-cell overlay). WYSIWYG click-to-place min-corner
-    (extends +x/+y); places only if the whole footprint is in-bounds + clear of every other
-    neutral (won't paint an overlap the schema rejects); terrain underneath is fine; drag
-    places one block per click; right-click erases the whole block; walls won't overwrite a
-    rubble cell. Render = a debris-brown ▄ ::before badge; the cell title carries size+HP.
-    Byte-faithful emit (`size` only when > 1, `hp` only when set ⇒ a 1×1 default block →
-    bare `{x,y}`); validate() folds rubble footprints into spawn-block + connectivity + the
-    summary. rubbleQuarry loads + round-trips (5 blocks / 16 cells). **40g-2b** (`cb3be68`):
-    the §39e spawn-room deploy-fit WARN — a thin `anchorFootprint` wrapper (some region tile
-    must anchor a fully in-bounds, obstacle-clear `DEPLOY_FIT_SIZE` 2×2 block; "free" = a
-    stand-able cell) surfaced as a soft author warning for a too-cramped region (forward-
-    looking — no multi-tile DEPLOYABLE unit ships yet, so a warn, not a Save-blocker).
-  - **✅ 40g-3 — the wall/cover DESTRUCTIBILITY toggle (the LAST §40 step; COMPLETE &
-    user-confirmed native 2026-07-03).** A per-instance HP
-    control on painted walls/cover (→ the 40c `wall_destructible`/`half_cover_destructible`
-    path). **As built:** a `neutralHp: (number|null)[][]` overlay parallel to `neutrals`
-    (the "parallel map" option; `null` ⇒ indestructible, the locked default) + a single
-    `activeNeutralHp` brush read from a new `#wall-hp` input (shown for the wall/half-cover
-    sub-tools, mutually exclusive with the rubble size/HP controls via the renamed
-    `syncNeutralSubToolControls`). `applyNeutralStroke` stamps the HP alongside the kind and
-    re-applies when EITHER the kind OR the HP changes (so re-painting the same wall with a new
-    HP takes effect); erase clears both. `collectNeutrals` carries the HP through (emitting
-    `{x,y,hp}` only when set); `loadLayout`/`resizeGridData`/`clearGrid` keep the overlay in
-    lockstep. [format.ts](tools/layout-editor/format.ts) gained `formatNeutralCoords` /
-    `neutralCoordArrayBlock` so walls/half-covers emit an optional `hp` (byte-identical for
-    the committed file — every shipped wall is hp-less). A destructible wall/cover renders in
-    the in-game **CRACKED_STONE `#B5843C`** ochre (`--cracked-stone` var + a `.destructible`
-    class on the badge) with an hp-carrying hover title, so the author tells breakable from
-    indestructible at a glance. +2 formatter tests (destructible round-trip + a bare wall
-    stays hp-less; 1669 main green); browser-verified via computed-style sampling (ochre badge
-    = `rgb(181,132,60)`, bare wall = gray `#7A7066`, export emits `hp` only on destructibles,
-    repaint/erase/half-cover all correct). **Completing 40g-3 CLOSES Phase 40.**
-
----
-
-## Phase 41 — The closing balance pass
-
-> **✅ COMPLETE & user-confirmed (2026-07-04) — a documented NO-OP.** Re-derived the optimum on
-> the full §35–40 spatial layer (heavy `--search`, jobs=16): win **33–35%** (vs §33c ~25%) /
-> **+22 pt** gradient / boss wall hop-10 **42–48%** (dead-on §33c's 43–55% target); the §33
-> caster-summoner equilibrium HOLDS. **No config change** — every candidate flag dissolved under
-> correct optimum-based (not greedy) telemetry: banditQueen 10.0 on-band (greedy had inflated it),
-> ronin-vs-mages 3.4 in forced isolation on-band (the in-situ ~4.25 was the premium). Terrain mods
-> are heavily exposed (~31% of battles on 33–73%-modded maps) yet balance-neutral (symmetric) →
-> the terrain-density call resolves to **KEEP the clustered authoring** (flavor, not a balance
-> lever). No snapshot bump. Full run-log in [BALANCE.md](BALANCE.md) §41. **The 41a/41b/41c cut
-> below collapsed: 41a re-measure flagged two mild encounters, 41b's isolation reads cleared both
-> (no tuning), 41c's held-out verify + density call confirmed on the data.**
-
-The cluster closer — terrain, multi-tile bodies, and destructibles reshape board
-control + the to-hit layer, and §36's timing shift may move melee-vs-ranged (the META
-"balance pass per combat-touching cluster"). **READ BALANCE.md first.** Content/config
--only, no snapshot bump.
-
-**Shape:** re-derive the optimal strategy on the new spatial layer (terrain costs/
-mods, multi-tile bodies, destructibles as board control); confirm the new tiles/
-destructibles don't break the §33 caster-summoner equilibrium; re-baseline the fuzz
-win-rate (§35/§36/§37/§39/§40 each may have shifted it); hold-out-verify
-(`--seed-offset`). Scoped to what actually moved, per the BALANCE.md loop (pool-damage
-metric, gradient over win-rate, isolation + in-situ).
-
-**Decision points 41:** which terrain/destructible dials moved balance (tile cost/mod
-magnitudes, rubble HP/placement) vs. left it; whether §36's non-instant timing
-materially shifted melee-vs-ranged (the likely spot); the uniform-vs-curve terrain-
-density question (a content call deferred from earlier — decide on the data).
-
-### Sub-steps (41a–41c) — the proposed cut
-
-**READ BALANCE.md first.** Content/config only, no bump. The §X harness
-(`--per-encounter` / `--encounter` / `--seed-offset`) already exists — this is the
-sweep + verify, scoped to what actually moved (not a full re-derivation).
-
-- **41a — the re-measure (re-baseline the win-rate).** Re-run the fuzz win-rate across
-  every shift (§35 proactive checks/shove, §36 timing, §37 terrain, §39 footprints, §40
-  destructibles); diagnose what actually moved via the per-encounter / per-hop harness +
-  the pool-damage metric. *Output:* the new baseline + the gradient + a flagged list of
-  dials that moved balance.
-- **41b — the adjustments (scoped to 41a).** Turn only the dials 41a flagged — tile
-  cost/mod magnitudes, rubble HP/placement, any §36 non-instant melee-vs-ranged
-  correction — per the BALANCE.md loop (isolation + in-situ, gradient over win-rate).
-  Confirm the new tiles/destructibles don't break the §33 caster-summoner equilibrium.
-  *Test (balance-proof, derived from config):* the re-tuned dials hold the band.
-- **41c — the hold-out verify + the deferred content call.** Out-of-sample verify
-  (`--seed-offset`) that the re-tune generalizes; decide the uniform-vs-curve
-  terrain-density question on the data. *Output:* the out-of-sample confirmation + the
-  terrain-density call.
-
----
-
-## Deferred: Flight (design LOCKED, build deferred)
-
-Per the spec + the design discussion, flight's **build** is deferred (this cluster is
-already the biggest by far); its **design** is locked and its **seams** are planted,
-so the future fill is small — like the multi-tile fill was for Cluster 1. The four
-spec questions, resolved:
-
-1. **Land or always-fly → ALWAYS FLY.** No direct unit control → no clean actor to
-   decide *when* a unit lands; landing is a per-unit mode state machine for no current
-   payoff. Flight is a static unit property.
-2. **Share a tile with ground → NO.** One shared occupancy **plane** today (ground).
-   Flight changes *pathing* (ignore ground blockers/water/chasm — cost-1 to route
-   over) + *targeting* (who can hit you), **never co-location.** The occupancy
-   abstraction carries a `plane` seam (§35, ground-only) so air-with-overlap is a
-   future fill, not a retrofit — and the cross-layer interactions (melee hitting a
-   flyer, AoE across layers) live in *targeting*, not occupancy, handled by
-   `targetsLayer` + the unit `layer` field. Holds the META "flight doesn't break
-   1-unit-1-cell."
-3. **Pass over all walls or a blocks-flight prop → PASS OVER ALL** ground obstacles
-   now; the flight cost-fn consults a `blocksFlight(cell)` predicate seam (always-
-   false today), so tall-walls is a one-field add (mirrors `blocksLineOfSight`).
-4. **The attack matrix → MOBILITY-ONLY** to start: everyone hits everyone, including
-   adjacent ground melee (the low-hover "meleeable" rule), with a per-ability
-   `targetsLayer?: 'ground' | 'air' | 'both'` (default `both`) seam for future anti-
-   air / ground-only content. The 4-quadrant surface/air matrix is a trap in a
-   no-direct-control autobattler (hard to reason about, easy to make feel arbitrary)
-   — deferred to content.
-
-**Where the seams live:** the `plane` param on the §35 occupancy abstraction; the
-`layer` + `ignoresTerrain` fields on the §38 `UnitDef` (inert defaults); the
-`blocksFlight` predicate (a §37 tile-def field / §35 occupancy predicate, always-
-false); the `targetsLayer` ability field (a future AbilityDef addition). **When flight
-builds** (a later small spec): add `'air'` to the plane union, mark flyer `UnitDef`s,
-decide the overlap rule, wire `targetsLayer` — bounded, *because the seams exist.*
-
----
-
-## Cleanup / chores (land any time; several pair with this round)
-
-- **The marine/waterwalk `traversal` capability** (deep-water-passing archetypes) —
-  the §37 declared-inert seam, filled when a marine archetype is authored (Cluster
-  4/5 content).
-- **The `knockback` / `pull` `move`-op modes** — the **Cluster-1 reserved §Y seam**,
-  explicitly "deferred to Cluster 2's hardened occupancy core." §35's **shove IS the
-  primitive** (a knockback = a directional shove; a pull = its inverse). Wiring the
-  reserved op modes onto it is a *small* add now that the core exists — but no spec
-  content asks for a knockback attack, so **decide with the user**: build a minimal
-  knockback in §35/§40 if any content wants it (cheap, the dependency is now met), else
-  carry the op modes reserved one more cluster. (Recommend: leave reserved unless a
-  consumer appears — the primitive is built regardless, so the fill stays cheap.)
-- **Object-pooling the sim's hot allocators** ([TODO.md](TODO.md)) — still parked; the
-  §29 `maxLive` cap holds, and multi-tile + destructibles don't raise live counts
-  unboundedly.
-- **The FontAtlas budget** — §40's rubble glyph(s) draw from the §30-resized grid;
-  watch the n/48 budget.
-
-## What we're explicitly NOT doing yet (Cluster 2 scope guard)
-
-**Deferred (per the meta-roadmap order + the design discussion):**
-- **Flight (the build)** → design locked, seams planted; a later small spec.
-- **`random-intersect` spawn anchoring** → deferred to **camps (Cluster 5)**; ship
-  `corner` only.
-- **Air/ground co-location** → the `plane` seam is planted; the fill waits for flight.
-- **A separate "mire" tile** (mud + poison as a distinct tile) → trial poison-on-mud
-  via a flag first; split only if playtest wants both as visibly distinct.
-- **Partial / incremental rubble collapse** → all-at-once at 0 HP; partial is a future
-  fill.
-- **Consumables / camps / events using terrain + destructibles** → Clusters 3 + 5
-  (they consume what this round builds).
-
-**Seamed this round but deliberately NOT built (the future-proofing pass):**
-- **`plane: 'air'`** (§35), **`layer` / `ignoresTerrain`** (§38), **`blocksFlight`**
-  (§37), **`targetsLayer`** (a future ability field) — the flight seams.
-- **`traversal` / waterwalk** (§37) — deep-water-passing archetypes.
-- **`random-intersect` anchoring** (§39) — camps.
-- **`knockback` / `pull`** (the Cluster-1 reserved `move` modes) — now *buildable* on
-  the §35 shove primitive; filled only if a consumer appears (see Cleanup).
+- **No WHCA\*/reservation windows, no flow fields** — unless §46 says so, from
+  data. The seams (claims-as-reservations; per-target field caching at
+  `routeToward`) are documented, not built.
+- **No two-phase global conflict resolution** (everyone-proposes-then-resolve)
+  — rejected in the architecture verdict; the per-unit priority loop stays.
+- **No behavior tree / GOAP / utility-curve rewrite** — the selector stays.
+- **No RNG in movement decisions** — determinism is absolute; balance comes
+  from symmetric rules, not noise.
+- **No formation movement / group orders** — a different feature (Drafting/Map
+  Content era), not an audit item.
+- **No tick-iteration-order rework** — first-mover advantage is measured (§42)
+  but only acted on if the data says it matters (a rotating-priority note in
+  the §46 verdict at most).
+- **No labyrinth pacing "fix"** — by design, per the standing warning.
 
 ## Open decisions to resolve when building (the cross-cutting set)
 
-Each is also embedded as a per-phase "Decision points." **Resolved with the user in
-the design discussion (this session):**
-- **Unit overhaul = in + FULL** (active archetypes become data, not just neutrals). ✅
-- **Flight = deferred build, four answers locked** (always-fly · shared plane ·
-  pass-over-all + `blocksFlight` seam · mobility-only + `targetsLayer` seam). ✅
-- **Occupancy carries a `plane` seam** (ground-only today) so air is a cheap fill. ✅
-- **Spawn anchoring = a policy** (ship in-bounds-biased `corner`; `random-intersect`
-  waits for camps). ✅
-- **Palette rename = `barren`** (not "mountain" — avoids the Hills-tile collision). ✅
-- **mud → poison via a flag** (trial; no near-duplicate "mire" tile yet). ✅
-
-**Still open (resolve at the relevant phase):**
-- **35:** occupancy module home; abort cooldown policy; whether `distanceBetween`
-  lands here or with §39.
-- **36:** the abort animation shape; the claim-steal policy. *(LOCKED this session:
-  flip fraction = 50%; targeting / adjacency / pathing read the logical position.)*
-- **37:** the theme-rename migration scope (RunSnapshot?); the ice cost-floor; the
-  mud-poison flag default; the waterwalk seam (declare-inert vs omit).
-- **38:** **the archetype-literal audit result (gates the phase)**; catalog home; one
-  vs two catalog files; the susceptibility default; per-kind vs all-at-once migration.
-- **39:** max N (1..4); the passability rule; the render anchor; whether any archetype
-  goes multi-tile in §39 or stays inert until §40.
-- **40:** the auto-target priority rule; all-at-once vs incremental collapse; the
-  wall-destructibility default; whether rubble blocks LOS.
-- **41:** which dials moved balance; the non-instant melee/ranged shift; uniform vs
-  hop-ramped terrain density.
-- **Cross-cutting:** the `knockback`/`pull` op modes — build cheaply on the shove
-  primitive, or carry reserved one more cluster?
+- 42a: decision event vs transient field (leaning dev-gated event).
+- 43a: straightness vs numeric final tie-break (leaning straightness).
+- 43b: parity vs open-space sidestep tie (decide at the keyboard, measured).
+- 44b: wait-as-activeAction vs within-tick (leaning within-tick, no bump).
+- 45c: the determinism-vs-cache resolution (leaning derive-don't-cache; the
+  round's only candidate snapshot bump if not).
+- 46: the School-2/3 gate (the round's whole point — decided last, on data).

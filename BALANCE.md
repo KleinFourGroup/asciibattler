@@ -403,3 +403,41 @@ deltas. The pre-X H7c→O log lives at
     characterization + any rebalance, which gets the full `--search` re-derivation budget
     (re-saving the optimum vector this round retired). No config change, no snapshot bump;
     1458 main + 212 fuzz:smoke green. **▶ Phase 36 (36a→36d) COMPLETE; §37 Terrain next.**
+- **2026-07-04 — §41 the closing balance pass: a documented NO-OP (the Cluster-2 closer).**
+  The §35–40 spatial layer (occupancy core / non-instant move timing / terrain mods /
+  multi-tile footprints / destructibles) reshaped board control + the to-hit layer, so the
+  BALANCE.md loop was re-run scoped to what moved. **No config touched** — a pure ENGINE
+  re-baseline like §36d. Method: heavy full-length `--search` (120 vectors / 30 train / 10
+  test, jobs=16, ~11 min) re-derived the optimum (re-saved to `best-strategy.json` — §36d had
+  retired the vector), then per-encounter / per-hop telemetry gathered UNDER THE FIXED OPTIMUM
+  (BALANCE.md step 2 — NOT greedy) in-sample + held-out (`--seed-offset=5000`).
+  - **Reproducible anchors — no win-rate shift.** greedy 13.3% (in) / 11.7% (held) ·
+    pure-random 14.2% / 10.8% — all inside §36d's ±~3.5pt seed-variance band; balance-config
+    unchanged since §36d, so this isolates §37+§39+§40 as balance-neutral. 0 hangs across 480
+    runs (the labyrinth 15×15 slow maze did NOT hang).
+  - **Optimum in-situ — healthier than §33c.** win **35.0%** (in) / **33.3%** (held) vs §33c
+    ~25%; **+22pt** gradient over greedy; boss wall hop-10 death **48% / 42%** — dead-on §33c's
+    43–55% design target; early funnel (hops 0–9) ≤9% death. The **§33 caster-summoner
+    equilibrium HOLDS** (optimum favors shaman/reaver/ghoul; mercenary −0.83 / ranged −0.81 /
+    mage −0.88 disfavored — NO merc+ranged relapse).
+  - **The greedy-vs-optimum correction (the round's methodology re-learning of §33c).** The
+    FIRST telemetry pass used greedy/pure-random and flagged banditQueen ~12.5 (boss, band ~10)
+    + ronin-vs-mages ~5.4 (normal, band ~3). Re-gathered UNDER THE OPTIMUM both softened:
+    banditQueen **10.0** on-band (greedy had inflated it ~+2.5 — the §33c "greedy mis-rated
+    elementalTrio 2.5 vs the optimum's 0.5" trap). A forced-ISOLATION read of ronin
+    (`--encounter=ronin-vs-mages` under the optimum, 642/634 instances) landed **3.4 / 3.4** —
+    on the ~3 normal band; the in-situ ~4.25 is the in-situ premium §33c says to ACCEPT.
+    bandit-king 9.9/8.1, elites clustered on/under band. **Every flag dissolved → no dial
+    tuned.**
+  - **Terrain-density content call — settled with data.** The §37 mod tiles are HEAVILY
+    exposed, not dormant: the "The Start" pool (13 weight-units) puts ~31% of battles on a
+    33–73%-modded map (icebergs 73% / isthmus 58% / desertFortress 57% / fetidPond 33% —
+    ice/deep_water/sand/hills/mud), plus procedural's shallow_water. Balance stayed neutral
+    anyway because terrain mods are **symmetric** (they apply to whichever unit stands on the
+    tile). So the uniform-vs-curve question resolves: **KEEP the clustered authoring** —
+    density is flavor, not a balance lever.
+  - **Rubble HP (25/60/110, "UNTUNED")** stays a PLAYTEST-feel call — destructibles are too
+    rare in natural runs to register in the sweep; out of the fuzz-neutral scope.
+  - Docs-only close (BALANCE §41 + HANDOFF/ROADMAP/memory); no config, no snapshot bump; 1677
+    main + 212 fuzz:smoke green. **▶ Phase 41 + Cluster 2 (Spatial & Movement) COMPLETE &
+    user-confirmed; NEXT = Cluster 3 (Economy).**

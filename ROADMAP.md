@@ -1270,6 +1270,18 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
 
 ## Phase 41 — The closing balance pass
 
+> **✅ COMPLETE & user-confirmed (2026-07-04) — a documented NO-OP.** Re-derived the optimum on
+> the full §35–40 spatial layer (heavy `--search`, jobs=16): win **33–35%** (vs §33c ~25%) /
+> **+22 pt** gradient / boss wall hop-10 **42–48%** (dead-on §33c's 43–55% target); the §33
+> caster-summoner equilibrium HOLDS. **No config change** — every candidate flag dissolved under
+> correct optimum-based (not greedy) telemetry: banditQueen 10.0 on-band (greedy had inflated it),
+> ronin-vs-mages 3.4 in forced isolation on-band (the in-situ ~4.25 was the premium). Terrain mods
+> are heavily exposed (~31% of battles on 33–73%-modded maps) yet balance-neutral (symmetric) →
+> the terrain-density call resolves to **KEEP the clustered authoring** (flavor, not a balance
+> lever). No snapshot bump. Full run-log in [BALANCE.md](BALANCE.md) §41. **The 41a/41b/41c cut
+> below collapsed: 41a re-measure flagged two mild encounters, 41b's isolation reads cleared both
+> (no tuning), 41c's held-out verify + density call confirmed on the data.**
+
 The cluster closer — terrain, multi-tile bodies, and destructibles reshape board
 control + the to-hit layer, and §36's timing shift may move melee-vs-ranged (the META
 "balance pass per combat-touching cluster"). **READ BALANCE.md first.** Content/config

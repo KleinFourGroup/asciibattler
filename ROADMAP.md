@@ -1245,8 +1245,8 @@ phase composes §38 (neutral `UnitDef`s + susceptibility) + §39 (footprints).
     must anchor a fully in-bounds, obstacle-clear `DEPLOY_FIT_SIZE` 2×2 block; "free" = a
     stand-able cell) surfaced as a soft author warning for a too-cramped region (forward-
     looking — no multi-tile DEPLOYABLE unit ships yet, so a warn, not a Save-blocker).
-  - **✅ 40g-3 — the wall/cover DESTRUCTIBILITY toggle (the LAST §40 step; shipped
-    2026-07-03, browser-verified, awaiting the user's native confirm).** A per-instance HP
+  - **✅ 40g-3 — the wall/cover DESTRUCTIBILITY toggle (the LAST §40 step; COMPLETE &
+    user-confirmed native 2026-07-03).** A per-instance HP
     control on painted walls/cover (→ the 40c `wall_destructible`/`half_cover_destructible`
     path). **As built:** a `neutralHp: (number|null)[][]` overlay parallel to `neutrals`
     (the "parallel map" option; `null` ⇒ indestructible, the locked default) + a single

@@ -3,6 +3,7 @@ import { SupportMovementBehavior } from './SupportMovementBehavior';
 import { MoveAction } from '../actions/MoveAction';
 import { SwapAction } from '../actions/SwapAction';
 import { World } from '../World';
+import { spawnRubble } from '../environment';
 import { Unit, type Team, type UnitArchetype, type UnitStats } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
@@ -262,5 +263,51 @@ describe('SupportMovementBehavior — GP5.2 centroid navigable-snap', () => {
     );
     expect(p).not.toBeNull();
     expect(dest(p!).x).toBeGreaterThan(healer.position.x);
+  });
+});
+
+/**
+ * 43-pre — the healer's blocker sets must cover a multi-tile neutral's WHOLE
+ * footprint (`cellsOccupiedBy`), not just its canonical corner. Corner-only
+ * sets let `stepToward` route (and step!) onto rubble BODY cells, and let the
+ * GP5.2 navigable-snap accept an in-rubble centroid as a valid trail anchor.
+ * Unit ids here start at 50 — `spawnRubble` draws from the world's own id
+ * counter (from 1), and a collision makes `stepToward` skip the rubble as
+ * "itself".
+ */
+describe('SupportMovementBehavior — multi-tile neutral footprints (43-pre)', () => {
+  const RUBBLE_CORNER = { x: 3, y: 3 };
+  const RUBBLE_CELLS = [
+    { x: 3, y: 3 }, { x: 4, y: 3 },
+    { x: 3, y: 4 }, { x: 4, y: 4 },
+  ];
+
+  it('stepToward never proposes a step onto a rubble BODY cell', () => {
+    // Wounded ally straight across a 2x2 rubble. Corner-only blocking routed
+    // the healer THROUGH the body row and proposed the overlap step (3,4).
+    const healer = makeUnit(50, 'player', { x: 2, y: 4 }, { archetype: 'healer', range: HEAL_RANGE });
+    const wounded = makeUnit(51, 'player', { x: 7, y: 4 }, { hp: 5 });
+    const w = world([healer, wounded]);
+    spawnRubble(w, RUBBLE_CORNER, 2);
+    const p = new SupportMovementBehavior().proposeAction(healer, w);
+    expect(p).not.toBeNull(); // a route AROUND the rubble exists
+    expect(RUBBLE_CELLS).not.toContainEqual(dest(p!));
+  });
+
+  it('the trail anchor snaps OFF a rubble BODY cell (GP5.2 snap, footprint-aware)', () => {
+    // Allies astride the rubble → centroid (4,4) is a BODY cell (the corner
+    // (3,3) was already handled by GP5.2). Corner-only navigability accepted
+    // (4,4) as the anchor; the healer at (3,5) sat "in formation" against a
+    // phantom anchor inside the rubble and idled. Footprint-aware, the anchor
+    // snaps to real ground and the healer keeps trailing.
+    const healer = makeUnit(50, 'player', { x: 3, y: 5 }, { archetype: 'healer', range: HEAL_RANGE });
+    const allyW = makeUnit(51, 'player', { x: 1, y: 4 });
+    const allyE = makeUnit(52, 'player', { x: 7, y: 4 });
+    const w = world([healer, allyW, allyE]);
+    spawnRubble(w, RUBBLE_CORNER, 2);
+    const p = new SupportMovementBehavior().proposeAction(healer, w);
+    expect(p).not.toBeNull(); // buggy code abstained (`no_goal`) here
+    expect(p!.action).toBeInstanceOf(MoveAction);
+    expect(RUBBLE_CELLS).not.toContainEqual(dest(p!));
   });
 });

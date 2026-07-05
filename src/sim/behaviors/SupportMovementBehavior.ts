@@ -5,7 +5,7 @@ import type { ActionProposal } from '../Action';
 import { SwapAction } from '../actions/SwapAction';
 import { findTarget, lowestWoundedAlly, currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
-import { footprintOf } from '../occupancy';
+import { cellsOccupiedBy, footprintOf } from '../occupancy';
 import { SIM } from '../../config/sim';
 // J2 — share the leaf pathing helpers with MovementBehavior (these were
 // duplicated leaf-for-leaf). The healer's bespoke decision logic stays here.
@@ -271,11 +271,13 @@ function distanceField(start: GridCoord, world: World, walls: ReadonlySet<string
   return dist;
 }
 
-/** Set of neutral-unit (wall + half-cover) cell keys — the static blockers. */
+/** Set of neutral-unit (wall + half-cover) cell keys — the static blockers.
+ *  43-pre — full footprints (`cellsOccupiedBy`): corner-only let the GP5.2
+ *  navigable-snap accept a multi-tile rubble's body cell as a trail anchor. */
 function neutralCells(world: World): Set<string> {
   const cells = new Set<string>();
   for (const u of world.units) {
-    if (u.team === 'neutral') cells.add(key(u.position));
+    if (u.team === 'neutral') for (const c of cellsOccupiedBy(u)) cells.add(key(c));
   }
   return cells;
 }
@@ -422,12 +424,16 @@ function stepToward(
   const otherUnitCells = new Set<string>();
   for (const u of world.units) {
     if (u.id === unit.id) continue;
+    // 43-pre — the WHOLE footprint (`cellsOccupiedBy`), not just the §39
+    // corner: a corner-only blocker set routed the healer THROUGH (and onto)
+    // a multi-tile rubble's body cells. Combatants are footprint-1 today, so
+    // their branch is byte-identical.
     if (u.team === 'neutral') {
-      pathBlockers.push(u.position);
+      pathBlockers.push(...cellsOccupiedBy(u));
       continue;
     }
     if (u.position.x === goalPos.x && u.position.y === goalPos.y) continue;
-    otherUnitCells.add(key(u.position));
+    for (const c of cellsOccupiedBy(u)) otherUnitCells.add(key(c));
   }
 
   const path = findPath(

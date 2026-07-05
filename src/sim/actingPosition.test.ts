@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { nearestActingCell } from './actingPosition';
+import { spawnRubble } from './environment';
+import { footprintCells } from './occupancy';
 import { hasLineOfSight } from './LineOfSight';
 import { World } from './World';
 import { Unit } from './Unit';
@@ -133,6 +135,39 @@ describe('nearestActingCell', () => {
       // The nearest cell satisfying the floor sits exactly at minRange (2), not
       // farther — the unit backs out one step, it doesn't flee to max range.
       expect(cheb(cell!, target)).toBe(2);
+    });
+  });
+
+  // 43-pre — the wall set must cover a multi-tile neutral's WHOLE footprint
+  // (`cellsOccupiedBy`), not just its canonical corner. The corner-only set let
+  // the BFS return (and traverse through) rubble BODY cells — an unreachable
+  // goal for `findPath` (which blocks the full footprint) → the PATHING.md
+  // river `no_route` spam (78 polls, seed 100).
+  describe('multi-tile neutral footprints (43-pre)', () => {
+    it('never returns a rubble BODY cell — the river seed-100 repro', () => {
+      const world = mkWorld(12, 12);
+      spawnRubble(world, { x: 3, y: 2 }, 2); // covers (3,2)(4,2)(3,3)(4,3)
+      // The bow (band [2,3]) at (5,3); its target closed to (5,4). Corner-only
+      // blocking returned the body cell (4,2); the correct standoff is (5,2).
+      const cell = nearestActingCell({ x: 5, y: 3 }, { x: 5, y: 4 }, 3, 2, world, null, 2);
+      expect(cell).toEqual({ x: 5, y: 2 });
+    });
+
+    it('no from-position around a 3x3 rubble ever yields a footprint cell', () => {
+      const world = mkWorld(12, 12);
+      const corner = { x: 4, y: 4 };
+      spawnRubble(world, corner, 3); // covers (4..6, 4..6)
+      const body = footprintCells(corner, 3);
+      // Target the rubble's CENTER at range 1: every qualifying cell (cheb ≤ 1
+      // of the center) is a body cell, so the only correct answer is null —
+      // any non-null result is the corner-only bug returning a body cell.
+      const target = { x: 5, y: 5 };
+      for (let x = 0; x < 12; x++) {
+        for (let y = 0; y < 12; y++) {
+          if (body.some((c) => c.x === x && c.y === y)) continue;
+          expect(nearestActingCell({ x, y }, target, 1, 2, world, null)).toBeNull();
+        }
+      }
     });
   });
 });

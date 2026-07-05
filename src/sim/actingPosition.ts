@@ -1,7 +1,7 @@
 import type { GridCoord } from '../core/types';
 import type { World } from './World';
 import { hasLineOfSight } from './LineOfSight';
-import { cellKey, claimedCells, distanceBetween, occupiedCells } from './occupancy';
+import { cellKey, cellsOccupiedBy, claimedCells, distanceBetween, occupiedCells } from './occupancy';
 
 /**
  * GP4 — find the nearest reachable cell from which `from` could ACT on a unit
@@ -60,9 +60,12 @@ export function nearestActingCell(
 ): GridCoord | null {
   // Hard blockers for BFS traversal: neutral-team units (walls + half-cover),
   // exactly what `findPath` treats as impassable, so reachability matches.
+  // 43-pre — the WHOLE footprint (`cellsOccupiedBy`), not just the §39 corner:
+  // a corner-only set let the BFS return a multi-tile rubble's body cell — an
+  // unroutable goal (the river `no_route` spam in PATHING.md).
   const wallCells = new Set<string>();
   for (const u of world.units) {
-    if (u.team === 'neutral') wallCells.add(`${u.position.x},${u.position.y}`);
+    if (u.team === 'neutral') for (const c of cellsOccupiedBy(u)) wallCells.add(cellKey(c));
   }
 
   const maxDepth = range + searchSlack;

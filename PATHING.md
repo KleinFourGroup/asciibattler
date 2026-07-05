@@ -151,6 +151,8 @@ headline and dx the map-specific read.
   chase. Investigate during §43 with per-unit decision traces; if it's the
   §40b auto-target gate misfiring, that's a bug outside this round's four
   symptoms. *Filed as an audit finding, not fixed here.*
+  **→ RESOLVED in the 43-pre entry below** (footprint-blind
+  `nearestActingCell`, not the auto-target gate).
 - **labyrinth — the corridor-following cost, quantified (NOT a pacing
   bug — the slow maze is BY DESIGN).** `queue` is the largest or
   second-largest player decision in every seed (347 / 110 / **718**): units
@@ -190,4 +192,67 @@ headline and dx the map-specific read.
 
 ---
 
-*(Next entry: §43c — the bias-fix re-measure, diffed against this baseline.)*
+## 43-pre-a — footprint-blind pathing queries (the `no_route` finding) — 2026-07-05
+
+**Root cause of the river spam (traced with
+`tests/pathing/trace-no-route.ts`):** in both spam seeds the stuck unit is a
+kited archer (range 3, minRange 2) whose target closed to distance 1. The
+Qb#3 guard correctly withholds the charge-the-target fallback inside
+minRange, leaving ONE goal — the `nearestActingCell` firing cell. That
+helper's neutral wall set held only each neutral's §39 canonical CORNER, so
+it returned a multi-tile rubble's BODY cell (seed 100: (4,2) in the 2×2 at
+(3,2); seed 101: (3,7) in the 3×3 at (1,6)) — a cell `findPath`
+(footprint-aware via `buildMovementContext`) can never reach → `no_route`
+every poll until a death forced a retarget. NOT the §40b auto-target gate.
+
+**The fix:** three corner-only neutral blocker sets routed through
+`cellsOccupiedBy` (the occupancy chokepoint doctrine): `nearestActingCell`'s
+wall set ([actingPosition.ts]), and SupportMovementBehavior's `stepToward`
+blockers + `neutralCells` navigability set (the healer could otherwise route
+onto rubble body cells / anchor its trail inside one — both pinned by new
+unit tests). Three more corner-only sites are LOS-side (MovementBehavior's
+`losBlockers`, `collectLosBlockers`, `collectHalfCoverPositions`) — **43-pre-b,
+separate fingerprint** (behavior-changing: big rubble starts blocking shots
+through its whole body).
+
+**Fingerprint (vs the §42c baseline):** fixtures BYTE-IDENTICAL (no rubble
+in them — `baseline.test.ts` pins hold untouched); isthmus / labyrinth /
+endlessCorridors / procedural BYTE-IDENTICAL in every row; **river is the
+only mover** — exactly the bug's habitat.
+
+| map | seed | ticks | ttfc | lat drift P/E | net dx P/E | osc P/E | moves P/E |
+|---|---|---|---|---|---|---|---|
+| river @42c | 100 | 283 | 85 | 0.76 / -0.28 | -1.00 / 0.00 | 0.000 / 0.118 | 30 / 34 |
+| river 43-pre | 100 | 281 | 85 | 1.19 / -0.38 | -1.40 / 0.00 | 0.000 / 0.073 | 31 / 41 |
+| river @42c | 101 | 454 | 85 | 1.13 / -0.94 | -2.00 / -0.20 | 0.031 / 0.094 | 32 / 32 |
+| river 43-pre | 101 | 316 | 85 | 0.91 / -1.80 | -2.00 / -1.20 | 0.026 / 0.083 | 39 / 36 |
+| river @42c | 102 | 360 | 69 | 3.44 / -2.21 | -3.60 / -2.00 | 0.061 / 0.000 | 33 / 33 |
+| river 43-pre | 102 | 272 | 69 | 3.25 / -2.82 | -3.40 / -2.60 | 0.033 / 0.000 | 30 / 36 |
+
+| map | seed | team | decision mix (nonzero, desc) |
+|---|---|---|---|
+| river | 100 | player | advance 29 · hold_band 26 · sidestep 2 *(was: no_route 78 · advance 28 · hold_band 25 · sidestep 2)* |
+| river | 100 | enemy | advance 39 · hold_band 23 · sidestep 2 |
+| river | 101 | player | advance 36 · hold_band 22 · sidestep 3 |
+| river | 101 | enemy | advance 36 · hold_band 22 *(was: no_route 82 · advance 32 · hold_band 26)* |
+| river | 102 | player | advance 30 · hold_band 16 |
+| river | 102 | enemy | advance 36 · hold_band 26 |
+
+**Readings:**
+
+- **`no_route` mass is ZERO in all six river team-seeds** (was 78 + 82). The
+  trace tool confirms: no unit emits a single `no_route` on seeds 100–102.
+- **Battles shorten where the spam lived** (seed 101: 454 → 316 ticks; seed
+  100/102 shift a little) — the formerly-pinned archer repositions and
+  fights instead of idling helplessly, so ticks/moves/drift jitter within
+  normal seed noise. ttfc is UNCHANGED on all three seeds (approach paths
+  untouched — the fix only bites once a kite gets pinned near rubble).
+- **The §43 bias signatures are intact:** river net dx still ≤ 0 in 5/6
+  team-seeds (tie-break world-frame signature), openField/riverFork fixture
+  drifts untouched. This fix removes the audit-finding noise WITHOUT eating
+  into 43a/43b's before/after — the target table above stands as written.
+
+---
+
+*(Next entry: 43-pre-b — the LOS-side footprint fix; then §43c — the
+bias-fix re-measure, diffed against the §42c baseline.)*

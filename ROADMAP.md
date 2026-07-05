@@ -278,6 +278,35 @@ open-space-aware (more "tactical", more code — decide at the keyboard);
 whether a tiny cross-track cost epsilon is wanted at all after the tie-break
 fix (only if 43c still shows cone wander — keep admissibility, gotcha #34).
 
+### 43-pre — the audit-finding fix (inserted at the user's call, 2026-07-05)
+
+The 42c `no_route` finding got a timeboxed root-cause audit BEFORE the bias
+fixes (so a deeper bug couldn't hide under 43a/43b's re-baselines) — and it
+WAS deeper: a §39/§40 integration miss, not tie-break noise. Six spatial
+queries build neutral blocker/occluder sets from `u.position` alone — the
+§39 canonical CORNER — so a 2×2/3×3 rubble's body cells go missing from
+them (violating the "every spatial query routes through occupancy.ts"
+doctrine). `findPath` itself is footprint-correct, which is exactly why the
+mismatch strands units: `nearestActingCell` hands out goals `findPath` can
+never reach (a kited archer inside minRange has no other goal → the 78-poll
+river spam).
+
+- **✅ 43-pre-a — the pathing-side fix (landed).** `nearestActingCell`'s
+  wall set + SupportMovementBehavior's `stepToward` blockers + its
+  `neutralCells` navigability set route through `cellsOccupiedBy`. Four new
+  unit tests (the river seed-100 repro pinned exactly; a 3×3 all-positions
+  property; the healer's step-onto-rubble and phantom-trail-anchor shapes).
+  River `no_route` 78/82 → **0**; fixtures + all other shipped layouts
+  byte-identical (PATHING.md 43-pre-a entry). The §43 bias signatures are
+  untouched — the target table stands.
+- **43-pre-b — the LOS-side fix.** The same corner-only pattern in
+  MovementBehavior's `losBlockers`, `Targeting.collectLosBlockers`, and
+  `collectHalfCoverPositions`. Behavior-CHANGING (multi-tile rubble starts
+  blocking sight through its whole body, movement + shot gate together —
+  today both agree on the corner-only fiction, so no freeze, just wrong
+  cover geometry) → its own tests + its own PATHING.md fingerprint.
+  *Commit: sim + tests + PATHING.md.*
+
 ### Sub-steps (43a–43c) — the proposed cut
 
 - **43a — the A* tie-break.** Fix `popLowestF`: straightness (or numeric)

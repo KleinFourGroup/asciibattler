@@ -643,7 +643,9 @@ export function lowestWoundedAlly(unit: Unit, world: World, range: number): Unit
 export function collectLosBlockers(world: World): GridCoord[] {
   const blockers: GridCoord[] = [];
   for (const u of world.units) {
-    if (u.team === 'neutral' && u.blocksLineOfSight) blockers.push(u.position);
+    // 43-pre-b — the WHOLE footprint (`cellsOccupiedBy`), not just the §39
+    // corner: corner-only, shots passed through a multi-tile rubble's body.
+    if (u.team === 'neutral' && u.blocksLineOfSight) blockers.push(...cellsOccupiedBy(u));
   }
   return blockers;
 }
@@ -658,7 +660,11 @@ export function collectLosBlockers(world: World): GridCoord[] {
 export function collectHalfCoverPositions(world: World): GridCoord[] {
   const out: GridCoord[] = [];
   for (const u of world.units) {
-    if (u.team === 'neutral' && !u.blocksLineOfSight) out.push(u.position);
+    // 43-pre-b — full footprints, same class as `collectLosBlockers`. Pure
+    // future-proofing today: no shipped multi-tile def has
+    // `blocksLineOfSight: false` (only rubble_2x2/3x3 are multi-tile, both
+    // LOS-blocking), so this is byte-identical until one exists.
+    if (u.team === 'neutral' && !u.blocksLineOfSight) out.push(...cellsOccupiedBy(u));
   }
   return out;
 }

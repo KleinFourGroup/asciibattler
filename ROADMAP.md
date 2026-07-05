@@ -299,13 +299,16 @@ river spam).
   River `no_route` 78/82 → **0**; fixtures + all other shipped layouts
   byte-identical (PATHING.md 43-pre-a entry). The §43 bias signatures are
   untouched — the target table stands.
-- **43-pre-b — the LOS-side fix.** The same corner-only pattern in
-  MovementBehavior's `losBlockers`, `Targeting.collectLosBlockers`, and
-  `collectHalfCoverPositions`. Behavior-CHANGING (multi-tile rubble starts
-  blocking sight through its whole body, movement + shot gate together —
-  today both agree on the corner-only fiction, so no freeze, just wrong
-  cover geometry) → its own tests + its own PATHING.md fingerprint.
-  *Commit: sim + tests + PATHING.md.*
+- **✅ 43-pre-b — the LOS-side fix (landed).** The same corner-only pattern
+  in MovementBehavior's `losBlockers`, `Targeting.collectLosBlockers`, and
+  `collectHalfCoverPositions` (the last = byte-identical future-proofing —
+  no shipped multi-tile def is LOS-transparent). Behavior-CHANGING as
+  designed: multi-tile rubble blocks sight through its whole body, movement
+  + shot gate together — archers flank around big rubble instead of firing
+  through it; the E7.D catapult lob is pinned unchanged. Four new tests.
+  River 100/101 are the only fingerprint movers (seed 102 + every other
+  layout + the fixtures byte-identical; seed-100 ttfc 85→72 — the ranged
+  re-target check drops occluded marks sooner). PATHING.md 43-pre-b entry.
 
 ### Sub-steps (43a–43c) — the proposed cut
 

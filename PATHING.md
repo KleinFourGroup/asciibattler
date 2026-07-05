@@ -254,5 +254,53 @@ only mover** — exactly the bug's habitat.
 
 ---
 
-*(Next entry: 43-pre-b — the LOS-side footprint fix; then §43c — the
-bias-fix re-measure, diffed against the §42c baseline.)*
+## 43-pre-b — footprint-blind LOS/cover occluders — 2026-07-05
+
+**The fix:** the remaining three corner-only sites, all LOS-side, routed
+through `cellsOccupiedBy`: MovementBehavior's `losBlockers` (the in-band
+hold + firing-cell search), `Targeting.collectLosBlockers` (the shot gate +
+the ranged re-target visibility check), and `collectHalfCoverPositions`
+(byte-identical future-proofing — no shipped multi-tile def is
+LOS-transparent; only rubble_2x2/3x3 are multi-tile, both LOS-blocking).
+
+**Behavior change (deliberate):** a multi-tile rubble now blocks sight
+through its WHOLE body, not just its corner cell. Before, movement and the
+shot gate shared the corner-only fiction — an archer would hold_band behind
+a rubble body and fire straight through it (no freeze, just wrong cover
+geometry). Now "behind big rubble" means no shot: the unit repositions to a
+real firing cell, and the E7.D catapult still lobs over (pinned). Four new
+tests (shot gate + movement hold, each with a catapult/LOS-ignorer guard).
+
+**Fingerprint (vs the 43-pre-a entry above):** fixtures BYTE-IDENTICAL
+(pins untouched); isthmus / labyrinth / endlessCorridors / procedural
+BYTE-IDENTICAL; **river seeds 100/101 are the only movers** (seed 102 is
+byte-identical too — that battle's sight lines never crossed a rubble
+body).
+
+| map | seed | ticks | ttfc | lat drift P/E | net dx P/E | osc P/E | moves P/E |
+|---|---|---|---|---|---|---|---|
+| river @43-pre-a | 100 | 281 | 85 | 1.19 / -0.38 | -1.40 / 0.00 | 0.000 / 0.073 | 31 / 41 |
+| river 43-pre-b | 100 | 326 | 72 | 0.56 / -0.90 | -0.80 / -0.60 | 0.000 / 0.091 | 29 / 33 |
+| river @43-pre-a | 101 | 316 | 85 | 0.91 / -1.80 | -2.00 / -1.20 | 0.026 / 0.083 | 39 / 36 |
+| river 43-pre-b | 101 | 323 | 85 | 1.27 / -2.03 | -2.60 / -1.40 | 0.040 / 0.081 | 50 / 37 |
+| river (both) | 102 | 272 | 69 | 3.25 / -2.82 | -3.40 / -2.60 | 0.033 / 0.000 | 30 / 36 |
+
+**Readings:**
+
+- **Seed 100 ttfc 85 → 72:** the ranged re-target visibility check now sees
+  the rubble body, drops the occluded mark sooner and commits a VISIBLE
+  target — first attack attempt lands 13 ticks earlier. Ticks lengthen a
+  little (326 vs 281): archers flank around rubble instead of shooting
+  through it, which is the point.
+- **`no_route` stays ZERO everywhere** — the 43-pre-a guarantee holds
+  through the LOS change (the firing-cell search and the LOS occluders now
+  agree on the same footprint geometry, so a goal is never proposed that
+  the path layer can't reach).
+- **The §43 bias signatures remain intact:** river net dx ≤ 0 in ALL six
+  team-seeds now, fixture drifts untouched — 43a/43b's before/after stays
+  clean, the target table stands as written.
+
+---
+
+*(Next entry: §43c — the bias-fix re-measure, diffed against the §42c
+baseline.)*

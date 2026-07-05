@@ -661,3 +661,39 @@ function scene(specs: SceneUnit[]): {
   });
   return { world, units, moves };
 }
+
+/**
+ * 43-pre-b — the movement layer's LOS occluder list must cover a multi-tile
+ * neutral's WHOLE footprint (`cellsOccupiedBy`), not just its §39 canonical
+ * corner. Corner-only, a 2×2 rubble's body cells were LOS-transparent to the
+ * in-band hold: a ranged unit sat `hold_band` behind them with a shot the
+ * (consistently corner-blind) gate then fired through. Footprint-aware,
+ * "behind rubble" reads as no-LOS and the unit repositions for a real shot.
+ */
+describe('MovementBehavior — multi-tile neutral footprints (43-pre-b)', () => {
+  it('a rubble BODY cell on the sight line breaks the in-band hold (repositions)', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 5, attackRange: 3 },
+      // Corner (1,4) is OFF the sight line; body cells (1,5)(2,5) are ON it.
+      { team: 'neutral', x: 1, y: 4, archetype: 'rubble_2x2', inert: true },
+      { team: 'enemy', x: 3, y: 5, inert: true }, // dist 3 — in band, but no shot
+    ]);
+    const [m, , e] = units as [Unit, Unit, Unit];
+    m.targetId = e.id;
+    // Corner-only LOS read "clear" → hold_band → null. Footprint-aware the
+    // hold breaks and the unit moves for a firing cell with a true shot line.
+    expect(new MovementBehavior().proposeAction(m, world)).not.toBeNull();
+  });
+
+  it('an LOS-ignoring unit (the catapult) still holds in band behind the rubble body', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 5, attackRange: 3, ignoresLos: true },
+      { team: 'neutral', x: 1, y: 4, archetype: 'rubble_2x2', inert: true },
+      { team: 'enemy', x: 3, y: 5, inert: true },
+    ]);
+    const [m, , e] = units as [Unit, Unit, Unit];
+    m.targetId = e.id;
+    // E7.D — it lobs over the body exactly as it lobbed over the corner.
+    expect(new MovementBehavior().proposeAction(m, world)).toBeNull();
+  });
+});

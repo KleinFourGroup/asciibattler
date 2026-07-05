@@ -349,3 +349,40 @@ describe('proposeEffectAbility — applyStatus scaling capture (§31)', () => {
     expect(res.statusDurationSeconds).toBe(5);
   });
 });
+
+/**
+ * 43-pre-b — the LOS occluder pool (`collectLosBlockers`) must cover a
+ * multi-tile neutral's WHOLE footprint (`cellsOccupiedBy`), not just its §39
+ * canonical corner. Corner-only, a 2×2 rubble's body cells were invisible to
+ * the shot gate — archers fired straight through them. The rubble is built
+ * directly (id 900, clear of both id counters); `blocksLineOfSight` defaults
+ * true, and `footprintOf` resolves the 2×2 off the `rubble_2x2` def.
+ */
+describe('proposeEffectAbility — multi-tile neutral footprints (43-pre-b)', () => {
+  const rubble2x2 = (corner: GridCoord): Unit =>
+    new Unit({
+      id: 900,
+      team: 'neutral',
+      archetype: 'rubble_2x2',
+      glyph: '#',
+      stats: STATS,
+      derived: inertDerived(1),
+      position: corner,
+    });
+
+  it('the bow abstains when a rubble BODY cell (corner off-line) breaks LOS', () => {
+    const u = caster('bow', { x: 0, y: 5 });
+    const enemy = makeUnit('enemy', { x: 3, y: 5 }); // dist 3, in range
+    // Corner (1,4) is OFF the sight line; body cells (1,5)(2,5) are ON it.
+    const p = ability('bow').propose(u, world([u, enemy, rubble2x2({ x: 1, y: 4 })]));
+    expect(p).toBeNull();
+  });
+
+  it('the catapult (ignoresLineOfSight) still lobs over the rubble body', () => {
+    const u = caster('catapult_shot', { x: 0, y: 5 });
+    const dist = Math.min(abilityDef('catapult_shot').rangeCells, 5);
+    const enemy = makeUnit('enemy', { x: dist, y: 5 });
+    const p = ability('catapult_shot').propose(u, world([u, enemy, rubble2x2({ x: 1, y: 4 })]));
+    expect(p).not.toBeNull();
+  });
+});

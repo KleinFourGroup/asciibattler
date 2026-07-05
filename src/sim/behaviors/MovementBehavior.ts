@@ -6,7 +6,7 @@ import { currentTarget } from '../Targeting';
 import { SIM } from '../../config/sim';
 import { hasLineOfSight } from '../LineOfSight';
 import { nearestActingCell } from '../actingPosition';
-import { claimedDestinationOf } from '../occupancy';
+import { cellsOccupiedBy, claimedDestinationOf } from '../occupancy';
 import { minRangeForArchetype } from '../archetypes';
 import { advance, chebyshev, moveProposal, stepDurationTicks, key, type MovementIntent } from '../movement';
 import { emitMoveDecision } from '../moveDecision';
@@ -145,10 +145,14 @@ export class MovementBehavior implements Behavior {
     // walls that block sight (half-cover is `blocksLineOfSight: false` — D6 —
     // so it path-blocks but doesn't break LOS). Path-blocking is handled inside
     // `advance` (all neutrals), so this set is LOS-only.
+    // 43-pre-b — the WHOLE footprint (`cellsOccupiedBy`), not just the §39
+    // corner: corner-only, a multi-tile rubble's body cells were transparent
+    // to the in-band hold (the unit held a "shot" the gate then fired through
+    // the body — both sides corner-blind together).
     const losBlockers: GridCoord[] = [];
     for (const u of world.units) {
       if (u.id === unit.id) continue;
-      if (u.team === 'neutral' && u.blocksLineOfSight) losBlockers.push(u.position);
+      if (u.team === 'neutral' && u.blocksLineOfSight) losBlockers.push(...cellsOccupiedBy(u));
     }
 
     // E7.D — a unit whose engagement ability ignores LOS (the catapult's arcing

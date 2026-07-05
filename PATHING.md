@@ -692,7 +692,45 @@ through COMBAT/STATUS; 44a relocates onto this corrected base.
 
 ---
 
-*(Next entries: §44 decision-protocol checkpoints [44a byte-identical
-positioning.ts extraction + 44b WaitAction], then §45's before/afters —
-riverFork oscillation is the §45b centerpiece, corridor throughput
-§45a/c's, labyrinth queue mass §45's overall.)*
+## 44a — the `positioning.ts` extraction (behavior-NEUTRAL checkpoint) — 2026-07-05
+
+Phase 44 proper opens with the relocation onto the §44-pre-corrected
+base. New module [src/sim/positioning.ts](src/sim/positioning.ts) — the
+WHERE knowledge, one home:
+
+- **moved in:** `firingBandCell` + the LOS pools
+  (`collectLosBlockers` / `collectHalfCoverPositions`) from Targeting.ts;
+  MovementBehavior's engagement block (~120 lines: band hold incl. the
+  §36b arriving-claim case · the §40b rubble bestEffort approach · the
+  firing-cell/target goal list · the O4/Qb#3 minRange kite) as
+  `engagementDirective(unit, world, target, minRange)` returning
+  `hold | approach{intent} | pinned`; the behavior keeps only the
+  DECISION plumbing (proposals + `MoveDecisionKind`s). The 45-line
+  protocol comment is now the module doc it was compensating for.
+- **deduped:** the TRIPLICATED `NEIGHBORS`/`passable`/`countOpenNeighbors`
+  leaves (MovementBehavior · SupportMovementBehavior ·
+  effects/reposition) and the duplicated strictly-away retreat geometry —
+  now ONE `awayStep(from, anchor, world, occupied)`; the occupancy-set
+  semantics stay at the two callers (the gambit `retreatCell` folds
+  claims, the healer `stepAwayFrom` deliberately doesn't — 44-pre-a).
+- **⚠ gotcha #114 recurrence (documented there):** positioning.ts is
+  reachable from `config/units`'s init via the effects layer, so its
+  first cut importing `minRangeForArchetype` from archetypes.ts TDZ-
+  crashed 69 test files at import. Fix shape: `minRange` is a PARAMETER
+  (MovementBehavior, outside the cycle, resolves it); positioning.ts
+  carries a top-of-imports warning.
+
+**Byte-identity proof (the §38-oracle discipline):** 1752 main + 212
+fuzz:smoke green untouched (incl. baseline pins + drift gates,
+unregenerated), and the full `npm run pathing` re-measure is
+ROW-FOR-ROW identical to the 43c tables — fixtures AND all five shipped
+layouts × seeds 100–102, ticks/ttfc/drift/osc/moves/decision-mix all
+unmoved. No new tests (a pure relocation; the existing band/LOS/kiting
+matrix pins it), no snapshot change.
+
+---
+
+*(Next entries: 44b first-class WaitAction [the deliberate-hold nulls
+become proposals], then §45's before/afters — riverFork oscillation is
+the §45b centerpiece, corridor throughput §45a/c's, labyrinth queue mass
+§45's overall.)*

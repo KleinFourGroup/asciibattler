@@ -18,13 +18,8 @@
 import type { GridCoord } from '../../core/types';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
-import { GROUND, cellKey, claimedCells, distanceBetween, occupiedCells } from '../occupancy';
-
-const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
-  [-1, -1], [0, -1], [1, -1],
-  [-1, 0], [1, 0],
-  [-1, 1], [0, 1], [1, 1],
-];
+import { awayStep } from '../positioning';
+import { GROUND, claimedCells, occupiedCells } from '../occupancy';
 
 export function retreatCell(unit: Unit, anchor: GridCoord, world: World): GridCoord | null {
   // §35 — the occupancy chokepoint owns the "every OTHER unit" set (one cell per
@@ -34,38 +29,11 @@ export function retreatCell(unit: Unit, anchor: GridCoord, world: World): GridCo
   // off-limits to the gambit dart-back too: this reposition writes `position`
   // instantly, so darting onto a claimed cell collides when the claimant's
   // deferred flip arrives. The unit's own claim (if mid-move) is excluded.
+  // (The healer's `stepAwayFrom` twin deliberately does NOT fold claims — its
+  // proposal-model step is §35b-guarded; see 44-pre-a.)
   for (const k of claimedCells(world, GROUND, { excludeId: unit.id })) occupied.add(k);
 
-  const currentDist = distanceBetween(unit.position, anchor);
-  let best: GridCoord | null = null;
-  let bestDist = -1;
-  let bestOpenness = -1;
-  for (const [dx, dy] of NEIGHBORS) {
-    const c: GridCoord = { x: unit.position.x + dx, y: unit.position.y + dy };
-    if (!passable(c, world, occupied)) continue;
-    const dist = distanceBetween(c, anchor);
-    if (dist <= currentDist) continue;
-    const openness = countOpenNeighbors(c, world, occupied);
-    if (dist > bestDist || (dist === bestDist && openness > bestOpenness)) {
-      best = c;
-      bestDist = dist;
-      bestOpenness = openness;
-    }
-  }
-  return best;
-}
-
-function countOpenNeighbors(c: GridCoord, world: World, occupied: ReadonlySet<string>): number {
-  let n = 0;
-  for (const [dx, dy] of NEIGHBORS) {
-    if (passable({ x: c.x + dx, y: c.y + dy }, world, occupied)) n++;
-  }
-  return n;
-}
-
-function passable(c: GridCoord, world: World, occupied: ReadonlySet<string>): boolean {
-  if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) return false;
-  if (!isFinite(world.tileGrid.costAt(c))) return false;
-  if (occupied.has(cellKey(c))) return false;
-  return true;
+  // §44a — the strictly-away + open-space-tie geometry is the shared
+  // `positioning.awayStep`; only the occupancy semantics live here.
+  return awayStep(unit.position, anchor, world, occupied);
 }

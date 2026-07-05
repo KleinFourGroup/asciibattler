@@ -10,14 +10,8 @@ import { getTargetingStrategy } from './targetingStrategies';
 import { focusTileDirective } from './focusTile';
 import { behaviorFlags } from './statusBehavior';
 import { buildMovementContext, routeToward } from './movement';
-import {
-  footprintOf,
-  footprintCells,
-  unitDistance,
-  cellUnitDistance,
-  cellsOccupiedBy,
-  distanceBetween,
-} from './occupancy';
+import { collectLosBlockers } from './positioning';
+import { footprintOf, unitDistance, cellUnitDistance } from './occupancy';
 
 /**
  * Pick the best living enemy of `unit` according to its targeting strategy
@@ -635,77 +629,9 @@ export function lowestWoundedAlly(unit: Unit, world: World, range: number): Unit
   return best;
 }
 
-/**
- * Neutral units (walls, half-cover) whose `blocksLineOfSight` is true —
- * the LOS-occluder pool shared by the ranged re-target check here and the
- * strike abilities' shot gate. Half-cover (`blocksLineOfSight: false`) is
- * deliberately excluded: it blocks movement but not sight (D6).
- */
-export function collectLosBlockers(world: World): GridCoord[] {
-  const blockers: GridCoord[] = [];
-  for (const u of world.units) {
-    // 43-pre-b — the WHOLE footprint (`cellsOccupiedBy`), not just the §39
-    // corner: corner-only, shots passed through a multi-tile rubble's body.
-    if (u.team === 'neutral' && u.blocksLineOfSight) blockers.push(...cellsOccupiedBy(u));
-  }
-  return blockers;
-}
-
-/**
- * E4 — half-cover positions: neutral units whose `blocksLineOfSight` is `false`.
- * Symmetric to `collectLosBlockers` but for the OTHER half of the neutral-team
- * population. A shot that crosses one lands at `LEVELING.halfCoverDamageMult`.
- * Lives here (the LOS-collector home) so both the legacy strike propose path and
- * the Phase-Y3 `EffectAbility` propose bridge share one definition.
- */
-export function collectHalfCoverPositions(world: World): GridCoord[] {
-  const out: GridCoord[] = [];
-  for (const u of world.units) {
-    // 43-pre-b — full footprints, same class as `collectLosBlockers`. Pure
-    // future-proofing today: no shipped multi-tile def has
-    // `blocksLineOfSight: false` (only rubble_2x2/3x3 are multi-tile, both
-    // LOS-blocking), so this is byte-identical until one exists.
-    if (u.team === 'neutral' && !u.blocksLineOfSight) out.push(...cellsOccupiedBy(u));
-  }
-  return out;
-}
-
-/**
- * 44-pre-c — THE shared firing-band + LOS gate, footprint-aware: the first cell
- * of `target`'s body (anchored at `anchor` — its logical position, or its §36b
- * claimed destination for the movement hold's arriving-target case) that sits in
- * `[minRange, maxRange]` of `from` AND — unless `losBlockers` is null (an
- * LOS-ignoring lob, E7.D) — has a clear Bresenham line from `from`. Returns
- * `undefined` when no body cell qualifies.
- *
- * This ONE predicate is what keeps the strike gates (`effects/propose.ts`) and
- * the movement hold (`MovementBehavior.inFiringBand`) in agreement — the
- * GP4/Qb#3 freeze class IS the two layers disagreeing about "in range", so any
- * future range-gate must route through here rather than re-deriving the test.
- * For a 1×1 target this is exactly the old corner test (band first, then LOS),
- * byte-identical for the whole combatant roster. Against a multi-tile body the
- * ∃-cell shape matters: a melee unit flush against the FAR side of a 3×3 rubble
- * is in band via the near body cell (adjacent ray — endpoints are never
- * blockers), even though the ray to the §39 corner would thread the body.
- * `losBlockers` may include the target's own footprint (it does, for rubble —
- * `collectLosBlockers` collects all neutrals); self-occlusion of FAR body cells
- * is correct, the near visible cell carries the gate.
- */
-export function firingBandCell(
-  from: GridCoord,
-  target: Unit,
-  anchor: GridCoord,
-  minRange: number,
-  maxRange: number,
-  losBlockers: readonly GridCoord[] | null,
-): GridCoord | undefined {
-  for (const c of footprintCells(anchor, footprintOf(target))) {
-    const d = distanceBetween(from, c);
-    if (d < minRange || d > maxRange) continue;
-    if (losBlockers === null || hasLineOfSight(from, c, losBlockers)) return c;
-  }
-  return undefined;
-}
+/* §44a — `collectLosBlockers` / `collectHalfCoverPositions` / `firingBandCell`
+   moved to [positioning.ts](positioning.ts), the WHERE-knowledge home (the
+   re-target LOS check above imports the pool back from there). */
 
 function chebyshev(a: GridCoord, b: GridCoord): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));

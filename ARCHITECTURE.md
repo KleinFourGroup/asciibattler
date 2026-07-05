@@ -105,8 +105,9 @@ src/
     movement.ts              # J2: shared movement seam — MovementIntent + advance (the dash hook) + routeToward (cache boundary); §42a: advance emits the mechanical unit:moveDecision
     moveDecision.ts          # §42a: the MoveDecisionKind taxonomy + emitMoveDecision — the per-poll movement decision record (observational only, never serialized)
     actingPosition.ts        # GP4: nearestActingCell — bounded BFS to nearest firing cell in [minRange,range](+LOS) (O4 band); §29d nearestFreeCells (summon placement)
+    positioning.ts           # §44a: the WHERE knowledge — firingBandCell (44-pre-c, THE shared band+LOS gate) / collectLosBlockers·collectHalfCoverPositions / engagementDirective (hold|approach|pinned) / awayStep+passable+NEIGHBORS leaves; ⚠ must not import archetypes.ts (module-eval cycle, see its import note)
     occupancy.ts             # §35: the occupancy chokepoint — cellsOccupiedBy (footprint seam) / isFree·unitAt / occupiedCells / footprintFits / distanceBetween; OccupancyPlane (plane seam, ground-only)
-    Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5) w/ objective branches (engage/hold/focus + updateTargetDefault); lowestWoundedAlly (E7.B); 28: behavior preempt — confusion random-team pick / blind capped acquisition
+    Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5) w/ objective branches (engage/hold/focus + updateTargetDefault); lowestWoundedAlly (E7.B); 28: behavior preempt — confusion random-team pick / blind capped acquisition; §44a: the LOS pools + band gate moved to positioning.ts
                              # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
     targetingStrategies.ts   # per-archetype target-pick registry (nearest / weakest); Unit.targeting resolved at spawn
     archetypes.ts            # ALL_ARCHETYPES (full catalog) + DRAFTABLE_ARCHETYPES (§29-close draft pool, draftable-flag filtered), rollUnit, glyphForArchetype, targetingForArchetype, range/minRangeForArchetype (O4)

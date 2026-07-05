@@ -22,13 +22,12 @@
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { ActionProposal } from '../Action';
+import { currentTarget, lowestWoundedAlly } from '../Targeting';
 import {
   collectLosBlockers,
   collectHalfCoverPositions,
-  currentTarget,
   firingBandCell,
-  lowestWoundedAlly,
-} from '../Targeting';
+} from '../positioning';
 import { hasLineOfSight } from '../LineOfSight';
 import { unitDistance } from '../occupancy';
 import { leapLanding } from '../movement';

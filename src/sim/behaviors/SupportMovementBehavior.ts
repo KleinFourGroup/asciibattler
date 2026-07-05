@@ -5,6 +5,7 @@ import type { ActionProposal } from '../Action';
 import { SwapAction } from '../actions/SwapAction';
 import { findTarget, lowestWoundedAlly, currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
+import { NEIGHBORS, awayStep, passable } from '../positioning';
 import { GROUND, cellsOccupiedBy, footprintOf, occupiedCells } from '../occupancy';
 import { SIM } from '../../config/sim';
 // J2 — share the leaf pathing helpers with MovementBehavior (these were
@@ -442,62 +443,17 @@ function stepToward(
 }
 
 /**
- * One cell directly away from `enemyPos`: the passable, unoccupied neighbor
- * that strictly increases Chebyshev distance, ties broken toward open space
- * then fixed neighbor order. Returns null when boxed in (caller then holds).
- *
- * Mirrors `GambitStrikeAction.retreatCell` in shape, but retreats from the
- * nearest *enemy* (a movement choice) rather than from a just-struck target
- * (part of an action) — kept local rather than shared to avoid coupling the
- * two retreat semantics.
+ * One cell directly away from `enemyPos` — the healer's panic step, on the
+ * shared `positioning.awayStep` geometry (§44a; the gambit's `retreatCell` is
+ * the other twin — the occupancy-set choice stays at each caller). 44-pre-a —
+ * the WHOLE-footprint set (a rubble's body cells are occupied, not just its
+ * §39 corner); claims deliberately NOT folded: this ships as a MoveAction
+ * proposal, so §35b's `destinationBlocked` (occupied-OR-claimed) re-validates
+ * at execution — unlike the gambit's instant effect reposition, which must
+ * fold claims itself. Returns null when boxed in (caller then holds).
  */
 function stepAwayFrom(unit: Unit, enemyPos: GridCoord, world: World): GridCoord | null {
-  // 44-pre-a — the WHOLE footprint (the §35 set builder), not just the §39
-  // corner: corner-only, a rubble's body cells read as free retreat cells (and
-  // padded `countOpenNeighbors` openness ties) — the panic step onto one was a
-  // doomed proposal §35b then aborted, wasting the tick. Claims deliberately
-  // NOT folded: this ships as a MoveAction proposal, so `destinationBlocked`
-  // (occupied-OR-claimed) re-validates at execution — unlike `retreatCell`'s
-  // instant effect reposition, which must fold claims itself.
   const occupied = occupiedCells(world, GROUND, { excludeId: unit.id });
-
-  const currentDist = chebyshev(unit.position, enemyPos);
-  let best: GridCoord | null = null;
-  let bestDist = -1;
-  let bestOpenness = -1;
-  for (const [dx, dy] of NEIGHBORS) {
-    const c: GridCoord = { x: unit.position.x + dx, y: unit.position.y + dy };
-    if (!passable(c, world, occupied)) continue;
-    const dist = chebyshev(c, enemyPos);
-    if (dist <= currentDist) continue;
-    const openness = countOpenNeighbors(c, world, occupied);
-    if (dist > bestDist || (dist === bestDist && openness > bestOpenness)) {
-      best = c;
-      bestDist = dist;
-      bestOpenness = openness;
-    }
-  }
-  return best;
-}
-
-const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
-  [-1, -1], [0, -1], [1, -1],
-  [-1, 0], [1, 0],
-  [-1, 1], [0, 1], [1, 1],
-];
-
-function countOpenNeighbors(c: GridCoord, world: World, occupied: ReadonlySet<string>): number {
-  let n = 0;
-  for (const [dx, dy] of NEIGHBORS) {
-    if (passable({ x: c.x + dx, y: c.y + dy }, world, occupied)) n++;
-  }
-  return n;
-}
-
-function passable(c: GridCoord, world: World, occupied: ReadonlySet<string>): boolean {
-  if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) return false;
-  if (!isFinite(world.tileGrid.costAt(c))) return false;
-  if (occupied.has(key(c))) return false;
-  return true;
+  return awayStep(unit.position, enemyPos, world, occupied);
 }
 

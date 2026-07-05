@@ -310,7 +310,7 @@ tests/
   integration/               # determinism, snapshot-roundtrip, variable-size, layout-deadlock,
                              # spawn-overflow, corridor-flow, per-archetype battle tests
   fuzz/                      # A3: headless balance harness (opt-in CLI)
-  pathing/                   # §42b: movement-metrics harness (MovementMetricsCollector + fixture maps + runner) — the Pathfinding-Audit instrument; runs in the main suite
+  pathing/                   # §42b/c: movement-metrics harness (MovementMetricsCollector + fixture maps + runner + shipped-layout capture; `npm run pathing` → the PATHING.md tables; baseline.test.ts pins the fixture numbers) — the Pathfinding-Audit instrument; runs in the main suite
 
 retro/
   scratchpad.md              # rolling process notes

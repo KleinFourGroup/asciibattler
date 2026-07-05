@@ -177,6 +177,13 @@ and each gets its own commit note; keep DESIGN/ARCHITECTURE honest in-commit;
 
 ## Phase 42 — Instrumentation (decision records + the metrics harness + the baseline)
 
+> **✅ PHASE COMPLETE (42a–42c, 2026-07-04).** The instruments exist, the
+> baseline is frozen in [PATHING.md](PATHING.md), and the diagnosis is now
+> measured fact: openField = every open-ground step drifts world-left
+> (tie-break), riverFork oscillation 0.94 (crab-walk), corridor 0.75
+> crossings/100t, labyrinth queue-mass up to 718 polls. Re-measure with
+> `npm run pathing`; fixture numbers pinned in baseline.test.ts.
+
 The audit's measuring instruments. Additive and byte-identical: no unit moves
 differently after this phase; we can just finally *see* what they do.
 
@@ -232,11 +239,22 @@ regions per team.
   oscillation 0.94 (the crab-walk); corridor = 0.75 crossings/100t. Ability-
   less fixtures are seed-invariant (movement has no RNG) — the numbers are
   algorithm portraits, frozen properly in 42c.
-- **42c — the baseline.** Run the harness on the shipped layouts (River,
-  Isthmus, labyrinth, open procedural) + fixtures; author **PATHING.md** with
-  the numbers (the drift columns should *prove* the user's River report);
-  regression tests assert only harness stability, NOT drift-zero (that's §43's
-  exit criterion). *Commit: PATHING.md + baseline snapshot test.*
+- **✅ 42c — the baseline (landed).** `npm run pathing`
+  (`tests/pathing/cli.ts` + `capture.ts` — real battles via `spawnEncounter`,
+  the corridor-flow team shape) over river / isthmus / labyrinth /
+  **endlessCorridors (user-added to the suite — its odd-queuing report shows
+  as the highest shipped-map oscillation)** / procedural × seeds 100–102 +
+  the fixtures; **PATHING.md** authored with the full baseline + readings +
+  §43/§45 target table. The drift columns PROVE the River report (player dx
+  negative in 3/3 seeds; mirrored unit-frame signs = the tie-break's
+  world-frame signature — distinguishable from the sidestep's body-frame
+  signature, so 43a and 43b each get their own fingerprint).
+  `baseline.test.ts` pins the fixture numbers exactly (fuzz-baseline
+  discipline: deliberate §43+ changes re-baseline it; accidental movement
+  drift trips it). **⚠ Audit finding filed (PATHING.md): river-only
+  `no_route` spam (78–82 polls) — something is intermittently unreachable on
+  River; investigate via decision traces in §43, possibly the §40b
+  auto-target gate.**
 
 ---
 

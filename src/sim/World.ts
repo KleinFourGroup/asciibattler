@@ -1060,6 +1060,29 @@ export class World {
       }
 
       const cdKey = best.cooldownKey ?? best.action.id;
+
+      // §44b — the INSTANTANEOUS-ACTION rule: a zero-length timeline with no
+      // deferred effect resolves entirely within this tick — `start()` runs
+      // and nothing enters the in-flight machinery. Deliberate, not an
+      // optimization: `activeAction` is SERIALIZED, and a zero-length action
+      // set here would linger on the unit until next tick's in-flight sweep —
+      // exactly across the boundary where snapshots are taken — so routing it
+      // through the normal path would put "I did nothing" state into
+      // WorldSnapshot (a bump for no behavior). The 0-cooldown skip is the
+      // same discipline: `actionCooldowns` serializes 0-valued entries, and a
+      // wait must leave world bytes identical to the abstain it replaced.
+      // Today only `WaitAction` matches — every combat `moveCooldownTicks`
+      // floors at 1 and Move/Effect actions carry `applyEffect` — and the
+      // WaitAction tests pin the no-lingering-state contract.
+      if (totalTicks(best.phases) === 0 && !best.action.applyEffect) {
+        if (best.cooldown > 0) unit.actionCooldowns.set(cdKey, best.cooldown);
+        best.action.start(unit, this);
+        for (const phase of phasesBeginningAt(best.phases, 0)) {
+          this.emitActionPhase(unit, best.action, phase);
+        }
+        continue;
+      }
+
       unit.actionCooldowns.set(cdKey, best.cooldown);
       const activeAction = {
         action: best.action,

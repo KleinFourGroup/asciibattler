@@ -120,7 +120,8 @@ src/
       MoveAction.ts          # §36b NON-INSTANT: start() claims `to` + emits unit:moved; applyEffect() flips position + releases the claim at the 50% mark (SIM.moveFlipFraction)
       SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns
       SwapAction.ts          # GP5: healer chokepoint yield — two units trade cells
-      registry.ts            # Action factories keyed by Action.id (move/spawn/swap); every other id falls through to EffectAction.fromData (A2/Y5c)
+      WaitAction.ts          # §44b: the first-class deliberate hold — empty timeline + no applyEffect → World's instantaneous-action rule resolves it within the tick (never in activeAction, never serialized, NOT in the registry by design)
+      registry.ts            # Action factories keyed by Action.id (move/spawn/swap — 'wait' deliberately absent, §44b); every other id falls through to EffectAction.fromData (A2/Y5c)
     abilities/               # E2: generic Ability layer (retired AttackBehavior)
       Ability.ts             # Ability interface + propose() + ignoresLineOfSight flag (E7.D)
       registry.ts            # Ability factories; routes every id to EffectAbility (Y3–Y4 migration complete; the hand-coded classes retired in Y5)
@@ -421,6 +422,7 @@ unit:dashed             { unitId: number; from: GridCoord; to: GridCoord; durati
 unit:moveAborted        { unitId: number; from: GridCoord; to: GridCoord }            # §35b: a relocation aborted at execution (dest occupied/untraversable) — clean no-op, cooldown not consumed; inert on instant moves, §36's settle-back hook
 unit:shoved             { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }   # §35c: the de-overlap backstop relocated a co-located unit to the nearest free cell (also emits unit:moved for the slide); the future-knockback primitive
 unit:moveDecision       { unitId: number; kind: MoveDecisionKind }                  # §42a: the movement layer's per-poll decision record (exactly one per Movement/SupportMovement poll) — purely observational, never serialized; taxonomy in src/sim/moveDecision.ts; the §42b metrics harness is the consumer
+unit:waited             { unitId: number }                                          # §44b: a WaitAction EXECUTED (won the selector, resolved within the tick — the instantaneous-action rule keeps it out of activeAction/serialization); vs moveDecision{wait} = propose-time intent; no consumer yet (§45 "queued" stance is the intended first)
 unit:attacked           { attackerId: number; targetId: number; damage: number; crit: boolean }   # E1: damage post-crit; GP2: post-defense (via world.applyDamage)
 unit:missed             { attackerId: number; targetId: number }                   # I2: a single-target strike dodged (precision-vs-evasion roll); 0 dmg, no HP/ledger touch
 unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (hypothetical env heal); 27d: the healing-TILE chip moved to the rejuvenate status

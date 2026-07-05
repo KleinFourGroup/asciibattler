@@ -161,6 +161,19 @@ export interface GameEvents extends Record<string, unknown> {
     kind: MoveDecisionKind;
   };
   /**
+   * §44b — a unit EXECUTED a first-class wait: its `WaitAction` won the
+   * selector (nothing better on offer this tick) and resolved within the tick
+   * — a deliberate hold of its cell. Distinct from
+   * `unit:moveDecision{kind:'wait'}`, which records the movement layer's
+   * INTENT at propose time (emitted even when a ready attack outranks the
+   * wait): THIS event fires only when the wait actually executes. Like the
+   * decision record it is purely observational — no world state, never
+   * serialized (the §44b instantaneous-action rule keeps waits out of
+   * `activeAction`). No consumer yet; the §45 renderer "queued" stance is the
+   * intended first.
+   */
+  'unit:waited': { unitId: number };
+  /**
    * §35c — a unit was SHOVED off a cell it co-occupied: the occupancy backstop
    * relocated it from `from` to the nearest free cell `to` (deterministically),
    * lerped over `durationTicks`. Distinct from `unit:moved` because a shove is

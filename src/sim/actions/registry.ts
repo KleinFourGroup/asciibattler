@@ -15,6 +15,11 @@ import { abilityDef } from '../../config/abilities';
  * Factories take `(data, world)` because some actions reference live world
  * state (e.g. `AttackAction` resolves a `targetId` via `world.findUnit`).
  * Pure-data actions like `MoveAction` ignore the world arg.
+ *
+ * §44b — `WaitAction` ('wait') is DELIBERATELY absent: the instantaneous-
+ * action rule resolves a wait within its tick, so it can never be mid-flight
+ * at a snapshot. If 'wait' ever reaches `createAction`, that invariant broke
+ * — the `abilityDef` fallback below throws, keeping the failure loud.
  */
 export type ActionFactory = (data: unknown, world: World) => Action;
 

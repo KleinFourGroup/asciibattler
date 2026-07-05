@@ -597,9 +597,42 @@ clean; no fuzz re-baseline needed.
 
 ---
 
-*(Next entries: 44-pre-b [the `unitsInCells` AoE/chain footprint seam] ·
-44-pre-c [strike gate + movement hold → footprint distance, one commit] ·
-then §44 decision-protocol checkpoints [byte-identical refactor +
-WaitAction], then §45's before/afters — riverFork oscillation is the
-§45b centerpiece, corridor throughput §45a/c's, labyrinth queue mass
-§45's overall.)*
+## 44-pre-b — the AoE/chain footprint seam (the one §39 planted) — 2026-07-05
+
+The second §44-pre straggler: `effects/targeting.ts` was corner-only in
+three places — the seam §39's own docblock promised to fill and §39/§40
+never did. All three now route through the footprint:
+
+- **`unitsInCells`** — "units whose FOOTPRINT intersects the cells"
+  (`cellsOccupiedBy`), so an AoE covering a big rubble's BODY but not
+  its §39 corner no longer misses it entirely;
+- **`resolveAreaVictims` mult** — the BEST covered cell: any footprint
+  cell on the blast center → 1, else ring (a blast centered on a body
+  cell used to pay the ring multiplier against the corner);
+- **`nearestChainTarget`** — hop range + ranking measure to the nearest
+  body cell via the NEW `occupancy.cellUnitDistance` (cell→body min,
+  the `unitDistance` sibling; 44-pre-c's gates are its next consumers).
+  Covers both the synchronous chain loop and deferred
+  `pendingChainHops` (one geometry query serves both).
+
+Deliberate scope hold: a chain hopping ONWARD from a multi-tile victim
+still measures from that victim's corner (`from = victim.position`) —
+`PendingChainHop.fromPos` is serialized state, so re-anchoring it is not
+a docs-level tweak; today's chains chew INTO rubble, they don't relay
+out of it, so the corner origin has no observable consequence.
+
+**Fingerprint: BYTE-IDENTICAL for every 1×1 unit** (all three changes
+reduce to the old expressions at footprint 1 — `baseline.test.ts` pins +
+drift gates passed unregenerated; fixtures/captures carry no AoE anyway).
+Live behavior change: mage bolts / chain arcs vs River's 2×2/3×3 rubble
+only. 8 new tests (3 `cellUnitDistance`, 5 effects-targeting) verified
+to FAIL against the pre-fix sim. 1742 main / 212 fuzz:smoke / typecheck
+clean; no fuzz re-baseline needed.
+
+---
+
+*(Next entries: 44-pre-c [strike gate + movement hold → footprint
+distance, one commit] · then §44 decision-protocol checkpoints
+[byte-identical refactor + WaitAction], then §45's before/afters —
+riverFork oscillation is the §45b centerpiece, corridor throughput
+§45a/c's, labyrinth queue mass §45's overall.)*

@@ -243,6 +243,26 @@ export function unitDistance(a: Unit, b: Unit): number {
 }
 
 /**
+ * Distance from a CELL to a unit's BODY — the min Chebyshev from `cell` over the
+ * unit's footprint block (44-pre-b; the cell-to-body sibling of `unitDistance`).
+ * For a single-cell unit this is exactly `distanceBetween(cell, unit.position)`
+ * (the fast path), so every shipped-roster caller is byte-identical; against a
+ * multi-tile body it measures to the NEAREST occupied cell — 0 means `cell` is
+ * inside the body. The AoE center-cover test and the chain hop range consult
+ * this; 44-pre-c's strike/hold gates are the next consumers.
+ */
+export function cellUnitDistance(cell: GridCoord, unit: Unit): number {
+  const cells = cellsOccupiedBy(unit);
+  if (cells.length === 1) return distanceBetween(cell, cells[0]);
+  let min = Infinity;
+  for (const c of cells) {
+    const d = distanceBetween(cell, c);
+    if (d < min) min = d;
+  }
+  return min;
+}
+
+/**
  * §35d — the occupancy INVARIANT detector: the cell keys held by MORE THAN ONE
  * unit on `plane` — a breach of the one-unit-per-cell-per-plane invariant §35
  * hardens. Empty ⇒ the invariant holds. Footprint- and plane-aware via

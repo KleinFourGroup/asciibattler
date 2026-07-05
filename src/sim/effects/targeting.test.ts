@@ -12,6 +12,7 @@ import {
   resolveAreaVictims,
   affectsMatch,
   isCombatTargetable,
+  nearestChainTarget,
 } from './targeting';
 
 /**
@@ -123,6 +124,68 @@ describe('resolveAreaVictims — reproduces the MagicBolt blast set', () => {
       { unit: enemy, mult: 1 },
       { unit: rubble, mult: 0.5 },
     ]);
+  });
+});
+
+/**
+ * 44-pre-b — the AoE/chain footprint seam FILLED: `unitsInCells` intersects
+ * footprints (`cellsOccupiedBy`), the area `mult` is the BEST covered cell, and
+ * the chain hop range measures to the nearest body cell (`cellUnitDistance`).
+ * Corner-only, a 2×2 rubble whose §39 corner sat outside the blast/hop range
+ * was invisible to the whole effects layer. rubble_2x2 at corner (5,5) occupies
+ * (5,5) (6,5) (5,6) (6,6) throughout.
+ */
+describe('effects targeting — multi-tile footprints (44-pre-b)', () => {
+  const CORNER = { x: 5, y: 5 };
+
+  it('unitsInCells catches a rubble by a BODY cell when its corner is outside the set', () => {
+    const rubble = makeUnit('neutral', CORNER, 'rubble_2x2');
+    const w = world([rubble]);
+    expect(unitsInCells(w, [{ x: 6, y: 6 }])).toEqual([rubble]); // body, not corner
+    expect(unitsInCells(w, [{ x: 7, y: 7 }])).toEqual([]); // off the body entirely
+  });
+
+  it('a blast covering only BODY cells (corner outside) hits the rubble at ring mult', () => {
+    const caster = makeUnit('player', { x: 0, y: 0 }, 'mage');
+    const rubble = makeUnit('neutral', CORNER, 'rubble_2x2');
+    const w = world([caster, rubble]);
+    // Radius-1 square at (7,7) covers x∈[6,8] y∈[6,8] → body cell (6,6) only;
+    // the corner (5,5) is outside. Corner-only this blast missed entirely.
+    const victims = resolveAreaVictims(w, caster, { x: 7, y: 7 }, {
+      shape: 'square', radius: 1, ringMultiplier: 0.5, affects: 'enemies',
+    });
+    expect(victims).toEqual([{ unit: rubble, mult: 0.5 }]);
+  });
+
+  it('a blast centered ON a body cell gives the rubble the center mult (best covered cell)', () => {
+    const caster = makeUnit('player', { x: 0, y: 0 }, 'mage');
+    const rubble = makeUnit('neutral', CORNER, 'rubble_2x2');
+    const w = world([caster, rubble]);
+    // Center (6,6) is a body cell — corner-only the rubble was caught (its
+    // corner sits in the radius-1 square) but read as RING (mult 0.5).
+    const victims = resolveAreaVictims(w, caster, { x: 6, y: 6 }, {
+      shape: 'square', radius: 1, ringMultiplier: 0.5, affects: 'enemies',
+    });
+    expect(victims).toEqual([{ unit: rubble, mult: 1 }]);
+  });
+
+  it('a chain hop reaches a rubble whose BODY is in range but corner is not', () => {
+    const rubble = makeUnit('neutral', CORNER, 'rubble_2x2');
+    const w = world([rubble]);
+    // From (8,6), range 2: corner (5,5) is Chebyshev 3 (corner-only: no hop);
+    // body cell (6,6) is 2 → in range.
+    expect(nearestChainTarget(w, 'player', { x: 8, y: 6 }, 2, new Set())).toBe(rubble);
+    expect(nearestChainTarget(w, 'player', { x: 9, y: 6 }, 2, new Set())).toBeUndefined();
+  });
+
+  it('hop ranking uses body distance — a near body outranks a nearer-cornered 1×1', () => {
+    const rubble = makeUnit('neutral', CORNER, 'rubble_2x2'); // body cell (6,6)
+    const enemy = makeUnit('enemy', { x: 8, y: 8 });
+    const w = world([rubble, enemy]);
+    // From (7,7): rubble body (6,6) is 1, enemy (8,8) is 1 — tie goes to
+    // world.units order (rubble first). Corner-only the rubble measured 2 and
+    // the enemy won outright.
+    expect(nearestChainTarget(w, 'player', { x: 7, y: 7 }, 2, new Set())).toBe(rubble);
   });
 });
 

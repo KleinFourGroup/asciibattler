@@ -7,36 +7,30 @@
  * (impact) — "hit whoever is standing in the cells now" — which is what these
  * helpers do.
  *
- * `unitsInCells` is the **Cluster-2 footprint seam**: today a unit occupies
- * exactly its `position` cell, so an area op is "units whose position is in the
- * cell set." When multi-tile footprints land, this single helper generalizes to
- * "units whose footprint intersects the cells," and every area op is multi-tile-
- * correct for free — no retrofit.
+ * `unitsInCells` is the **Cluster-2 footprint seam** — FILLED (44-pre-b): an
+ * area op is "units whose FOOTPRINT intersects the cell set" (`cellsOccupiedBy`),
+ * so a 2×2/3×3 rubble is caught by a blast covering any of its body cells, not
+ * just its §39 corner. Every 1×1 unit takes the same single-cell membership test
+ * as before — byte-identical for the whole combatant roster.
  */
 
 import type { GridCoord } from '../../core/types';
 import type { World } from '../World';
 import { type Unit, type Team } from '../Unit';
 import { isDestructibleNeutral } from '../../config/units';
+import { cellKey, cellUnitDistance, cellsOccupiedBy } from '../occupancy';
 import type { Affects } from './schema';
 
-function cellKey(c: GridCoord): string {
-  return `${c.x},${c.y}`;
-}
-
-function chebyshev(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-}
-
 /**
- * The occupants of a cell set, in `world.units` order (so the downstream
- * per-victim event/draw order is the same deterministic order MagicBolt's
- * `world.units.slice()` loop used). The Cluster-2 footprint seam (see header).
+ * The units whose footprint intersects the cell set, in `world.units` order (so
+ * the downstream per-victim event/draw order is the same deterministic order
+ * MagicBolt's `world.units.slice()` loop used). The Cluster-2 footprint seam,
+ * filled 44-pre-b (see header).
  */
 export function unitsInCells(world: World, cells: Iterable<GridCoord>): Unit[] {
   const keys = new Set<string>();
   for (const c of cells) keys.add(cellKey(c));
-  return world.units.filter((u) => keys.has(cellKey(u.position)));
+  return world.units.filter((u) => cellsOccupiedBy(u).some((c) => keys.has(cellKey(c))));
 }
 
 /** The Chebyshev-radius square around a center — a (2·radius+1)² block. */
@@ -106,6 +100,9 @@ export function isCombatTargetable(u: Unit): boolean {
  * — `world.units` order tie-breaks an equal-distance pick (strict `<`, so the first
  * occupant wins), the same order `unitsInCells` preserves for the blast. Returns
  * `undefined` when no fresh target remains in range → the chain ends early.
+ * 44-pre-b — distance is to the nearest FOOTPRINT cell (`cellUnitDistance`), so a
+ * big rubble whose body edges into hop range is a valid (and honestly-ranked)
+ * hop even when its §39 corner sits outside; 1×1 units are byte-identical.
  *
  * Takes the caster's TEAM (not the caster unit) so a deferred hop — resolved a few
  * ticks after the cast — needn't deref a caster that may have died mid-chain (the
@@ -124,7 +121,7 @@ export function nearestChainTarget(
     if (exclude.has(u.id)) continue;
     if (u.team === casterTeam) continue;
     if (!isCombatTargetable(u)) continue;
-    const d = chebyshev(u.position, from);
+    const d = cellUnitDistance(from, u);
     if (d > rangeCells) continue;
     if (d < bestDist) {
       best = u;
@@ -145,7 +142,9 @@ export interface AreaVictim {
  * the shape, filtered by `affects` (relative to the caster), each tagged with its
  * center-vs-ring damage multiplier. Reproduces MagicBolt's blast set + order
  * (same-team / neutral / dead skipped, `world.units` order, center full / ring
- * scaled).
+ * scaled). 44-pre-b — the multiplier is the unit's BEST covered cell: any
+ * footprint cell on the center takes 1, else ring (`cellUnitDistance === 0` ⇔
+ * the body covers the center). Byte-identical for 1×1 units.
  */
 export function resolveAreaVictims(
   world: World,
@@ -156,5 +155,5 @@ export function resolveAreaVictims(
   const cells = cellsForAoeShape(params.shape, center, params.radius);
   return unitsInCells(world, cells)
     .filter((u) => isCombatTargetable(u) && affectsMatch(params.affects, u.team, caster.team))
-    .map((u) => ({ unit: u, mult: chebyshev(u.position, center) === 0 ? 1 : params.ringMultiplier }));
+    .map((u) => ({ unit: u, mult: cellUnitDistance(center, u) === 0 ? 1 : params.ringMultiplier }));
 }

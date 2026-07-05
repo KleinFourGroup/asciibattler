@@ -24,6 +24,7 @@ import {
   planeOf,
   unitAt,
   unitDistance,
+  cellUnitDistance,
 } from './occupancy';
 
 /**
@@ -343,6 +344,27 @@ describe('§39a — the footprint geometry seams', () => {
       const g3 = stub(G3, { x: 5, y: 0 }); // near edge at x=5
       // nearest cells (1,0)→(5,0): Chebyshev 4.
       expect(unitDistance(g2, g3)).toBe(4);
+    });
+  });
+
+  describe('cellUnitDistance — the cell-to-body distance (44-pre-b)', () => {
+    it('measures to the NEAREST footprint cell, not the §39 corner', () => {
+      const giant = stub(G2, { x: 5, y: 5 }); // occupies (5,5)..(6,6)
+      // From (8,6): corner (5,5) is Chebyshev 3, body cell (6,6) is 2.
+      expect(cellUnitDistance({ x: 8, y: 6 }, giant)).toBe(2);
+    });
+
+    it('a cell inside the body is at distance 0', () => {
+      const giant = stub(G3, { x: 2, y: 2 }); // occupies (2,2)..(4,4)
+      expect(cellUnitDistance({ x: 4, y: 3 }, giant)).toBe(0);
+      expect(cellUnitDistance({ x: 2, y: 2 }, giant)).toBe(0); // the corner too
+    });
+
+    it('single-cell units reduce to distanceBetween (byte-identical fast path)', () => {
+      const merc = stub('mercenary', { x: 3, y: 7 });
+      expect(cellUnitDistance({ x: 6, y: 5 }, merc)).toBe(
+        distanceBetween({ x: 6, y: 5 }, { x: 3, y: 7 }),
+      );
     });
   });
 });

@@ -473,5 +473,87 @@ mirror pair → id; the funnel-is-dead probe shape).
 
 ---
 
-*(Next entry: §43c — the full bias-fix re-measure vs the §42c baseline +
-the |drift| ≈ 0 regression tests + the user's River playtest.)*
+## 43c — the §43 close-out re-measure (vs the frozen §42c baseline) — 2026-07-05
+
+**The three tie fixes together** (43a A* cross-track straightness · 43b
+sidestep cell-parity · 43b2 targeting minor-axis alignment), measured
+against the frozen §42c tables. **USER VERDICT (native River playtest,
+2026-07-05): "No drift that I can ID at all."** Phase 43's exit criterion
+is met on every axis it owns; the §45 targets (oscillation, throughput,
+queue mass) remain open by design.
+
+### The §42c target table, checked off
+
+| metric | §42c | now | target (§43) | |
+|---|---|---|---|---|
+| openField lat drift | +4.00 / −4.00 | **0.00 / 0.00** | ≈ 0 / ≈ 0 | ✅ (exact) |
+| riverFork lat drift | +4.00 / −3.50 | **−0.25 / +0.25** | ≈ 0 / ≈ 0 | ✅ |
+| river net dx | ≤ 0 in 6/6 team-seeds | **sign-mixed** (P +0.8/−1.8/−1.2 · E +1.0/−0.4/−0.4) | sign-mixed, seed-dependent | ✅ |
+| corridor(3/6) throughput /100t | 0.75 / 1.50 | 0.75 / 1.50 | hold | ✅ (byte-identical) |
+| riverFork oscillation | 0.943 / 0.895 | 0.923 / 0.000 | may drop some (≪ 0.5 is §45b's) | → §45b |
+| labyrinth queue : advance | up to 4.1 : 1 (718) | up to 1.5 : 1 (287) | hold (↓ is §45's) | ✅ improved en passant |
+| endlessCorridors oscillation | up to 0.178 | up to 0.132 | ↓ is §45c's | → §45c |
+
+### Current shipped-layout picture (full tables regenerable via `npm run pathing`)
+
+| map | seed | ticks | ttfc | lat drift P/E | net dx P/E | osc P/E | moves P/E |
+|---|---|---|---|---|---|---|---|
+| river | 100 | 373 | 69 | -1.08 / 0.73 | 0.80 / 1.00 | 0.033 / 0.000 | 30 / 31 |
+| river | 101 | 281 | 85 | 0.81 / -1.11 | -1.80 / -0.40 | 0.053 / 0.033 | 38 / 30 |
+| river | 102 | 302 | 85 | 0.94 / -0.55 | -1.20 / -0.40 | 0.000 / 0.034 | 40 / 29 |
+| isthmus | 100 | 421 | 169 | -0.16 / 0.11 | -0.40 / 0.20 | 0.051 / 0.043 | 39 / 46 |
+| isthmus | 101 | 414 | 169 | -0.23 / 0.02 | -1.00 / 0.80 | 0.000 / 0.024 | 38 / 41 |
+| isthmus | 102 | 509 | 169 | 0.83 / -0.00 | -1.00 / 0.20 | 0.026 / 0.083 | 38 / 48 |
+| labyrinth | 100 | 987 | 491 | -1.15 / 1.30 | 4.40 / -7.80 | 0.163 / 0.100 | 208 / 220 |
+| labyrinth | 101 | 875 | 491 | 2.07 / -2.63 | 6.00 / -5.00 | 0.078 / 0.089 | 217 / 191 |
+| labyrinth | 102 | 1013 | 477 | -2.69 / 2.12 | -4.80 / 6.60 | 0.156 / 0.081 | 211 / 223 |
+| endlessCorridors | 100 | 849 | 225 | 1.66 / -3.87 | 2.20 / 3.60 | 0.073 / 0.075 | 151 / 159 |
+| endlessCorridors | 101 | 555 | 225 | -2.14 / 2.14 | -0.40 / -3.60 | 0.107 / 0.040 | 112 / 125 |
+| endlessCorridors | 102 | 694 | 225 | -1.18 / 1.44 | 1.40 / 0.80 | 0.132 / 0.098 | 136 / 183 |
+| procedural | 100 | 287 | 71 | 1.11 / -1.38 | 0.80 / 1.60 | 0.000 / 0.071 | 35 / 28 |
+| procedural | 101 | 407 | 71 | 2.58 / -3.76 | 1.60 / 4.40 | 0.000 / 0.053 | 39 / 38 |
+| procedural | 102 | 246 | 69 | 1.46 / -1.65 | -1.60 / -1.40 | 0.069 / 0.026 | 29 / 39 |
+
+**Readings:**
+
+- **River, the map the round was called on:** drift magnitudes ≤ 1.11
+  (were up to 3.44/−4.14 through the sub-steps), dx sign-mixed, decision
+  mixes clean (no `no_route`, tiny sidestep mass). Isthmus — the other
+  user-reported "leans left" map — now reads |drift| ≤ 0.83 with dx
+  straddling zero.
+- **procedural still shows mirrored unit-frame drifts (P +, E −)** — that
+  is GEOMETRY, not bias: procedural maps are not symmetric, so a fair
+  algorithm legitimately drifts around terrain. The symmetric-fixture
+  gates are the bias instrument; procedural is scenery here.
+- **labyrinth's queue collapse (718 → 287 worst-seed) came free** from the
+  §43 fixes reshaping approach paths (fewer units piling into the same
+  corridor at once). §45 still owns converting the remaining queue mass.
+- **ttfc:** stable per map (river 69/85/85, isthmus 169×3,
+  endlessCorridors 225×3 — seed 102's 351 normalized to 225 as its funnel
+  detour died). Approach paths remain deterministic — the point of
+  symmetric rules over RNG.
+
+### The standing gates (landed this sub-step)
+
+**[tests/pathing/drift.test.ts](tests/pathing/drift.test.ts)** — the
+fairness invariant as regression tests, BOUNDS distinct from
+`baseline.test.ts`'s exact pins (pins re-baseline on every deliberate
+change; gates must survive every re-baseline):
+
+- openField / riverFork: per-team |mean lateral drift| ≤ 0.5;
+- shipped river (seeds 100–102, real battles): per-team-seed |lat drift|
+  ≤ 2.5, and net dx sign-MIXED across the six team-seeds (the
+  everyone-drains-left signature stays dead).
+
+A future change (§45 included) that trips a gate has re-introduced a
+systematic bias — fix the change, never relax the gate.
+
+**PHASE 43 COMPLETE** (43-pre-a/b · 43a · 43b · 43b2 · 43c; user-confirmed
+twice — 43a "drift much reduced", 43c "no drift I can ID at all").
+
+---
+
+*(Next entries: §44 decision-protocol checkpoints [byte-identical
+refactor + WaitAction], then §45's before/afters — riverFork oscillation
+is the §45b centerpiece, corridor throughput §45a/c's, labyrinth queue
+mass §45's overall.)*

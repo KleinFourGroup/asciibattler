@@ -367,10 +367,21 @@ river spam).
   0.923 remains = §45b's, cleanly separated from drift at last.**
   baseline.test.ts re-pinned (deliberate); 1727 + 212 green, NO fuzz
   re-pin. PATHING.md 43b2 entry.
-- **43c — the re-measure + the drift regression tests.** Harness re-run vs the
-  42c baseline; PATHING.md entry; NOW land the |drift| ≈ 0 symmetric-fixture
-  regression tests + River per-region drift bounds. **User playtest checkpoint
-  (native browser): does River still lean?** *Commit: PATHING.md + tests.*
+- **✅ 43c — the re-measure + the drift gates (landed). PHASE 43 COMPLETE.**
+  Full harness re-run vs the frozen §42c baseline → the PATHING.md 43c
+  entry with the target table CHECKED OFF: openField drift 0.00 exact,
+  riverFork ±0.25, river dx sign-mixed, corridor throughput byte-identical
+  hold; labyrinth queue mass collapsed 718 → 287 worst-seed en passant
+  (§45 still owns it); riverFork osc 0.923 + endlessCorridors osc remain
+  §45's by charter. **The user's native River playtest: "No drift that I
+  can ID at all" — Phase 43 CLOSED user-confirmed.** Landed
+  [tests/pathing/drift.test.ts](tests/pathing/drift.test.ts) — the fairness
+  invariant as standing QUALITY GATES, bounds distinct from the baseline's
+  exact pins (pins re-baseline per deliberate change; the gates must
+  survive every re-baseline — a §45 change tripping one has re-introduced
+  a bias: fix the change, never relax the gate): fixture per-team
+  |drift| ≤ 0.5; shipped-river per-team-seed |drift| ≤ 2.5 + dx
+  sign-mixed. 1731 main green; no src change (fuzz untouched).
 
 ---
 
@@ -528,6 +539,9 @@ renderer "queued" stance deferred from §44 is wanted for ship-feel.
   ✅ DECIDED: minor-axis-offset alignment (`min(|dx|,|dy|)`, the frame-free
   own-column rule), inserted between the HP tie and the id last resort;
   `weakest` left for a future measured pass.
+- 43c: the tiny cross-track cost epsilon (only if 43c still showed cone
+  wander) — ✅ RESOLVED: NOT wanted (openField drift reads 0.00 exact;
+  no wander left to damp; admissibility never touched).
 - 44b: wait-as-activeAction vs within-tick (leaning within-tick, no bump).
 - 45c: the determinism-vs-cache resolution (leaning derive-don't-cache; the
   round's only candidate snapshot bump if not).

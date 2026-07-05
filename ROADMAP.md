@@ -409,12 +409,74 @@ within the tick, event-only, no in-flight state); which abstains convert
 the renderer gets a "queued" stance now or at §45 (leaning §45, when waits
 become common enough to see).
 
+### 44-pre — the corner-only stragglers (audit finding 2026-07-05, slotted at the user's call)
+
+The pre-44a extraction audit re-ran 43-pre's corner-only-vs-footprint sweep
+over the code being relocated (plus one hop outward) and found the §39
+doctrine never reached the COMBAT/STATUS layers — five more sites where a
+multi-tile body (rubble 2×2/3×3) is invisible except at its §39 corner
+cell. Fix BEFORE the 44a relocation (the 43-pre precedent: a correct base,
+nothing hides under the refactor). Three logically-cut commits, each with
+tests + its PATHING.md note; fixtures carry no rubble and the capture
+rosters no healers/AoE, so fingerprints should be near-silent — unit tests
+carry the proof; a fuzz re-baseline is possible (the arena rolls
+casters/healers).
+
+**Audited CLEAN (don't re-check):** `effects/reposition.ts retreatCell`
+(routes through `occupancy.occupiedCells` + folds `claimedCells`);
+`blockedAlly`'s forward test (its `passable` reads corner-only openness,
+but the BFS `distanceField` walls are footprint-correct and gate the
+result — fix the openness read in 44-pre-a anyway, expect no behavior
+change).
+
+- **44-pre-a — the movement/status occupancy sets.** (D)
+  `MovementBehavior.proposeWander`'s occupied set (`key(u.position)`,
+  MovementBehavior.ts ~281) and (E) `SupportMovementBehavior.occupiedCells`
+  (~333, feeding `stepAwayFrom` / `countOpenNeighbors` / `blockedAlly`) →
+  route through `cellsOccupiedBy`. Consequence today: a BLIND wanderer or
+  a PANICKING HEALER can step ONTO a rubble body cell (unit-inside-rubble
+  overlap; River ships 2×2/3×3). ⚠ VERIFY ALONGSIDE: neither site folds
+  `claimedCells` (their sibling `retreatCell` does) — check whether a
+  wander/panic step onto a claimed cell can same-cell-collide with an
+  in-flight mover's flip (`World.claimCell` semantics); if real, fold
+  claims in the same commit and test it; if guarded elsewhere, document
+  where. *Commit: sim + tests.*
+- **44-pre-b — the AoE/chain footprint seam (the one §39 explicitly
+  planted and never filled).** `unitsInCells` (effects/targeting.ts ~36)
+  matches corner keys only — ITS OWN DOCBLOCK calls it "the Cluster-2
+  footprint seam" that should become "units whose footprint intersects the
+  cells" when multi-tile lands. Landed §39/§40; never filled. An AoE
+  covering a big rubble's BODY but not its corner misses it entirely. Fix:
+  intersect footprints (`cellsOccupiedBy`); the center-vs-ring `mult` in
+  `resolveAreaVictims` becomes the BEST covered cell (any footprint cell
+  on the center → 1, else ring); `nearestChainTarget`'s hop range measures
+  to the nearest footprint cell. Byte-identical for every 1×1 unit.
+  *Commit: sim + tests.*
+- **44-pre-c — the range-gate consistency pair (movement + strike move
+  TOGETHER).** The strike band gate (effects/propose.ts ~83) + the dash
+  abstain (~168) + O2/blind `findInRangeEnemy` (Targeting.ts ~503) + the
+  movement hold `inFiringBand` (MovementBehavior.ts ~171) all measure
+  `chebyshev(unit.position, target.position)` — corner-to-corner. Against
+  a 3×3 rubble a melee unit flush against the FAR side reads "out of
+  range" and walks around the body to the corner (§40's "fires the moment
+  the unit is body-adjacent" comment is FALSE today; §40b's reachability
+  probes already use footprint-aware `unitDistance`, so the two layers
+  DISAGREE about "in range of rubble"). Fix: footprint distance
+  (`unitDistance` / a cell-to-body min) in BOTH the strike gates and the
+  movement hold in ONE commit — moving one without the other re-creates
+  the GP4/Qb#3 freeze class (hold says in-band, strike says out-of-range →
+  deadlock). Deliberate behavior change vs big rubble only (43-pre-b's
+  precedent); E7.D catapult + minRange kiting semantics re-pinned against
+  a multi-tile target. *Commit: sim + tests + PATHING.md note.*
+
 ### Sub-steps (44a–44b) — the proposed cut
 
 - **44a — the `positioning.ts` extraction.** Pure relocation + renames; both
   movement behaviors consume it; the 70-line protocol comment gets carved into
   the module docs it was compensating for. Existing tests pin byte-identity
   (they already cover the band/LOS/kiting matrix). *Commit: refactor only.*
+  **⚠ Do 44-pre FIRST (above) — the relocation must land on the corrected
+  base.**
 - **44b — first-class `WaitAction` + typed abstains.** The action + proposal
   plumbing; the two deliberate-hold sites convert; `MoveDecision` gains its
   `wait` arm for real. Tests: selector still prefers attacks over waits; a

@@ -322,12 +322,24 @@ river spam).
   (sim-content). **⚠ NEW finding filed (PATHING.md 43a): the openField
   residual ±1 is a `nearest`-TARGETING tie funnel (stable-order = leftmost
   spawn; probed — all 8 units commit to the leftmost opponent). One layer
-  above pathing, world-framed in effect; 43b won't clear it. Decide its
-  slot at the 43b/43c boundary.*
+  above pathing, world-framed in effect; 43b won't clear it. Slot
+  USER-LOCKED (2026-07-05) = **43b2**, a new sub-step between 43b and 43c:
+  a symmetric distance-tie rule in the `nearest` targeting strategy
+  (leaning candidate-nearest-the-unit's-own-column; decide the exact rule
+  at the keyboard, measured) so 43c re-measures all three fixes together.
+  43a itself USER-CONFIRMED in the native playtest (drift much reduced).*
 - **43b — the sidestep balance.** The balanced tie rule in `sidestep`;
   mirrored-fixture unit tests (a bottom-spawn and top-spawn unit in identical
   pockets sidestep mirror-symmetrically); fuzz re-baseline if bytes move.
   *Commit: movement.ts + tests.*
+- **43b2 — the targeting distance-tie (the 43a finding; USER-LOCKED slot).**
+  A symmetric tie rule in the `nearest` targeting strategy replacing the
+  stable-unit-order (= leftmost-spawn) resolution — leaning
+  candidate-nearest-the-unit's-own-column / axis-of-advance; decide the
+  exact rule at the keyboard, measured on the openField funnel (the probed
+  all-8-units-target-the-leftmost commit). Sticky-target (E5) semantics
+  unchanged — only the tie among equal-distance candidates moves. *Commit:
+  Targeting/targetingStrategies + tests + fixture re-pin.*
 - **43c — the re-measure + the drift regression tests.** Harness re-run vs the
   42c baseline; PATHING.md entry; NOW land the |drift| ≈ 0 symmetric-fixture
   regression tests + River per-region drift bounds. **User playtest checkpoint
@@ -478,8 +490,11 @@ renderer "queued" stance deferred from §44 is wanted for ship-feel.
 ## Open decisions to resolve when building (the cross-cutting set)
 
 - 42a: decision event vs transient field (leaning dev-gated event).
-- 43a: straightness vs numeric final tie-break (leaning straightness).
+- 43a: straightness vs numeric final tie-break (leaning straightness) —
+  ✅ DECIDED: straightness (cross-track), numeric (y,x) as the last resort.
 - 43b: parity vs open-space sidestep tie (decide at the keyboard, measured).
+- 43b2: the targeting distance-tie rule (leaning own-column/axis-of-advance
+  proximity; decide at the keyboard, measured).
 - 44b: wait-as-activeAction vs within-tick (leaning within-tick, no bump).
 - 45c: the determinism-vs-cache resolution (leaning derive-don't-cache; the
   round's only candidate snapshot bump if not).

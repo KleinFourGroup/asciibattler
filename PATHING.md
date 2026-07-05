@@ -338,8 +338,8 @@ after 43b):**
   to the leftmost opponent, so everyone honestly walks the (now-straight)
   line to a biased pick. World-framed in effect (spawn order correlates
   with x), a sibling of the A* bug one layer up. Zero sidesteps in the mix,
-  so 43b (body-framed) will NOT clear it. *Filed, not fixed here — decide
-  its slot at the 43b/43c boundary.*
+  so 43b (body-framed) will NOT clear it. *Filed, not fixed here — slot
+  USER-LOCKED (2026-07-05) = 43b2, between 43b and 43c.*
 - **riverFork barely moved (4.00 → 3.75), as predicted:** this fixture is
   the crab-walk's (osc 0.925) — the sidestep tie (43b) + wait-vs-sidestep
   (§45b) own it. The tie-break component here was the ford CHOICE, which
@@ -352,5 +352,6 @@ after 43b):**
 
 ---
 
-*(Next entry: 43b — the sidestep balance; then §43c — the full bias-fix
-re-measure vs the §42c baseline + the targeting-tie finding's disposition.)*
+*(Next entry: 43b — the sidestep balance; then 43b2 — the targeting
+distance-tie; then §43c — the full bias-fix re-measure vs the §42c
+baseline.)*

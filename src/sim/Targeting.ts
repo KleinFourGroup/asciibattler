@@ -10,7 +10,14 @@ import { getTargetingStrategy } from './targetingStrategies';
 import { focusTileDirective } from './focusTile';
 import { behaviorFlags } from './statusBehavior';
 import { buildMovementContext, routeToward } from './movement';
-import { footprintOf, unitDistance, cellsOccupiedBy, distanceBetween } from './occupancy';
+import {
+  footprintOf,
+  footprintCells,
+  unitDistance,
+  cellUnitDistance,
+  cellsOccupiedBy,
+  distanceBetween,
+} from './occupancy';
 
 /**
  * Pick the best living enemy of `unit` according to its targeting strategy
@@ -288,18 +295,9 @@ function canApproach(unit: Unit, world: World, rubble: Unit): boolean {
   const ctx = buildMovementContext(unit, world);
   const path = routeToward(unit.position, rubble.position, ctx, world, true, footprintOf(unit));
   if (path.length === 0) return false;
-  return minCellToBody(path[path.length - 1]!, rubble) <= unit.derived.attackRange;
-}
-
-/** §40b — min Chebyshev from a bare cell to any cell of `body`'s footprint (the
- *  cell-vs-multi-tile-body counterpart of `unitDistance`). */
-function minCellToBody(cell: GridCoord, body: Unit): number {
-  let min = Infinity;
-  for (const c of cellsOccupiedBy(body)) {
-    const d = distanceBetween(cell, c);
-    if (d < min) min = d;
-  }
-  return min;
+  // 44-pre-b promoted this file's private `minCellToBody` into
+  // `occupancy.cellUnitDistance` (same math, shared home) — deduped here.
+  return cellUnitDistance(path[path.length - 1]!, rubble) <= unit.derived.attackRange;
 }
 
 /**
@@ -500,7 +498,10 @@ function findInRangeEnemy(
     if (candidate.team === unit.team) continue;
     if (candidate.team === 'neutral') continue;
     if (candidate.currentHp <= 0) continue;
-    if (chebyshev(unit.position, candidate.position) > range) continue;
+    // 44-pre-c — footprint distance (byte-identical today: neutrals are
+    // excluded above, and every combatant is 1×1; the honest measure the
+    // moment a multi-tile combatant ships).
+    if (unitDistance(unit, candidate) > range) continue;
     if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
       best = candidate;
     }
@@ -667,6 +668,43 @@ export function collectHalfCoverPositions(world: World): GridCoord[] {
     if (u.team === 'neutral' && !u.blocksLineOfSight) out.push(...cellsOccupiedBy(u));
   }
   return out;
+}
+
+/**
+ * 44-pre-c — THE shared firing-band + LOS gate, footprint-aware: the first cell
+ * of `target`'s body (anchored at `anchor` — its logical position, or its §36b
+ * claimed destination for the movement hold's arriving-target case) that sits in
+ * `[minRange, maxRange]` of `from` AND — unless `losBlockers` is null (an
+ * LOS-ignoring lob, E7.D) — has a clear Bresenham line from `from`. Returns
+ * `undefined` when no body cell qualifies.
+ *
+ * This ONE predicate is what keeps the strike gates (`effects/propose.ts`) and
+ * the movement hold (`MovementBehavior.inFiringBand`) in agreement — the
+ * GP4/Qb#3 freeze class IS the two layers disagreeing about "in range", so any
+ * future range-gate must route through here rather than re-deriving the test.
+ * For a 1×1 target this is exactly the old corner test (band first, then LOS),
+ * byte-identical for the whole combatant roster. Against a multi-tile body the
+ * ∃-cell shape matters: a melee unit flush against the FAR side of a 3×3 rubble
+ * is in band via the near body cell (adjacent ray — endpoints are never
+ * blockers), even though the ray to the §39 corner would thread the body.
+ * `losBlockers` may include the target's own footprint (it does, for rubble —
+ * `collectLosBlockers` collects all neutrals); self-occlusion of FAR body cells
+ * is correct, the near visible cell carries the gate.
+ */
+export function firingBandCell(
+  from: GridCoord,
+  target: Unit,
+  anchor: GridCoord,
+  minRange: number,
+  maxRange: number,
+  losBlockers: readonly GridCoord[] | null,
+): GridCoord | undefined {
+  for (const c of footprintCells(anchor, footprintOf(target))) {
+    const d = distanceBetween(from, c);
+    if (d < minRange || d > maxRange) continue;
+    if (losBlockers === null || hasLineOfSight(from, c, losBlockers)) return c;
+  }
+  return undefined;
 }
 
 function chebyshev(a: GridCoord, b: GridCoord): number {

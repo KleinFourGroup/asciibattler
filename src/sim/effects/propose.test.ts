@@ -7,6 +7,8 @@ import { deriveStats, inertDerived } from '../stats';
 import { chebyshev } from '../movement';
 import { LEVELING } from '../../config/leveling';
 import { abilityDef } from '../../config/abilities';
+import { rangeForArchetype } from '../archetypes';
+import { MovementBehavior } from '../behaviors/MovementBehavior';
 import { EffectAbility } from './EffectAbility';
 import { parseAbilityDef, type AbilityDef, type ScaledValue } from './schema';
 import type { EffectActionData } from './EffectAction';
@@ -384,5 +386,129 @@ describe('proposeEffectAbility — multi-tile neutral footprints (43-pre-b)', ()
     const enemy = makeUnit('enemy', { x: dist, y: 5 });
     const p = ability('catapult_shot').propose(u, world([u, enemy, rubble2x2({ x: 1, y: 4 })]));
     expect(p).not.toBeNull();
+  });
+});
+
+/**
+ * 44-pre-c — the strike gates measure the firing band against the target's
+ * BODY (`firingBandCell` — in band of, and with LOS to, ANY body cell), not its
+ * §39 corner. Corner-only, a melee unit flush against a big rubble's far side
+ * read "out of range" (§40's "fires the moment body-adjacent" comment was
+ * FALSE); a bow in body-range abstained because the ray to the CORNER threaded
+ * the body; a mage/catapult whose corner sat past max range couldn't fire at
+ * the body under its nose. The movement hold routes through the SAME predicate
+ * — the sweep at the bottom pins the pair's agreement (the GP4/Qb#3
+ * freeze-class gate).
+ */
+describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
+  const rubble = (corner: GridCoord, archetype: UnitArchetype = 'rubble_2x2'): Unit =>
+    new Unit({
+      id: 900,
+      team: 'neutral',
+      archetype,
+      glyph: '#',
+      stats: STATS,
+      derived: inertDerived(1),
+      position: corner,
+    });
+
+  it('a sword flush against the FAR side of a 2×2 rubble strikes the body', () => {
+    const r = rubble({ x: 3, y: 3 }); // body (3,3)(4,3)(3,4)(4,4)
+    const u = caster('sword', { x: 5, y: 4 }); // adjacent to (4,3)/(4,4); corner dist 2
+    u.targetId = r.id;
+    const p = ability('sword').propose(u, world([u, r]));
+    expect(p).not.toBeNull();
+    expect(dataOf(p!.action).targetId).toBe(r.id);
+  });
+
+  it('a bow with a clear BODY shot fires though the corner ray threads the body', () => {
+    const r = rubble({ x: 3, y: 3 });
+    const u = caster('bow', { x: 6, y: 4 }); // body (4,3)/(4,4) at dist 2 ∈ [2,3]
+    u.targetId = r.id;
+    expect(ability('bow').propose(u, world([u, r]))).not.toBeNull();
+  });
+
+  it('a bow flush against the body abstains — the WHOLE body is under its floor or unseen', () => {
+    const r = rubble({ x: 3, y: 3 });
+    const u = caster('bow', { x: 5, y: 4 }); // nearest body dist 1 < minRange 2;
+    u.targetId = r.id; // in-band body cells only via rays through the body
+    expect(ability('bow').propose(u, world([u, r]))).toBeNull();
+  });
+
+  it('a catapult lobs at a body edging into range though the corner is past max', () => {
+    const r = rubble({ x: 4, y: 4 }, 'rubble_3x3'); // body x,y ∈ [4..6]
+    const u = caster('catapult_shot', { x: 11, y: 5 }); // corner 7 > 6; body (6,5) at 5
+    u.targetId = r.id;
+    expect(ability('catapult_shot').propose(u, world([u, r]))).not.toBeNull();
+  });
+
+  it('a mage bolt reaches a body cell past its corner range and centres the blast on it', () => {
+    const r = rubble({ x: 4, y: 4 }, 'rubble_3x3');
+    const u = caster('magic_bolt', { x: 11, y: 5 }); // corner 7 > 5; body edge at 5
+    u.targetId = r.id;
+    const p = ability('magic_bolt').propose(u, world([u, r]));
+    expect(p).not.toBeNull();
+    const cell = dataOf(p!.action).targetCell!;
+    // The blast centre is the gate's aim cell — an in-range, visible BODY cell.
+    expect(cell.x).toBeGreaterThanOrEqual(4);
+    expect(cell.x).toBeLessThanOrEqual(6);
+    expect(cell.y).toBeGreaterThanOrEqual(4);
+    expect(cell.y).toBeLessThanOrEqual(6);
+    expect(Math.max(Math.abs(cell.x - 11), Math.abs(cell.y - 5))).toBeLessThanOrEqual(
+      abilityDef('magic_bolt').rangeCells,
+    );
+  });
+
+  it('the dash abstains body-adjacent to a rubble (already in strike reach)', () => {
+    const r = rubble({ x: 3, y: 3 });
+    const u = makeUnit('player', { x: 5, y: 4 }, { range: 1 }); // body-adjacent melee
+    u.targetId = r.id;
+    // Corner-only read dist 2 > reach 1 and tried to leap at a body it could
+    // already hit (the leap then aborted on the unreachable corner — a wasted
+    // gate, not a freeze). Footprint distance abstains outright.
+    expect(ability('dash').propose(u, world([u, r]))).toBeNull();
+  });
+
+  it('the hold/strike pair NEVER disagrees around a 3×3 rubble (the freeze-class gate)', () => {
+    // The GP4/Qb#3 deadlock IS the movement hold and the strike gate answering
+    // "in range?" differently: hold_band with no fireable strike = a frozen
+    // unit. Sweep every free cell around a 3×3 rubble for the three gate
+    // shapes (melee / LOS-gated ranged / LOS-ignoring lob): wherever movement
+    // holds, the strike MUST fire.
+    const VARIANTS = [
+      { aid: 'sword', archetype: 'mercenary' },
+      { aid: 'bow', archetype: 'ranged' },
+      { aid: 'catapult_shot', archetype: 'catapult' },
+    ] as const;
+    for (const v of VARIANTS) {
+      const def = abilityDef(v.aid);
+      let holds = 0;
+      for (let x = 0; x < 14; x++) {
+        for (let y = 0; y < 14; y++) {
+          if (x >= 4 && x <= 6 && y >= 4 && y <= 6) continue; // the body itself
+          const r = rubble({ x: 4, y: 4 }, 'rubble_3x3');
+          const u = makeUnit('player', { x, y }, {
+            archetype: v.archetype,
+            range: rangeForArchetype(v.archetype),
+          });
+          u.targetId = r.id;
+          u.abilities.push(new EffectAbility(def)); // the hold reads ignoresLineOfSight
+          const bus = new EventBus<GameEvents>();
+          const w = new World(bus, new RNG(1), 16, 16);
+          w.units.push(u, r);
+          const kinds: string[] = [];
+          bus.on('unit:moveDecision', (p) => kinds.push(p.kind));
+          new MovementBehavior().proposeAction(u, w);
+          if (kinds[kinds.length - 1] === 'hold_band') {
+            holds++;
+            expect(
+              new EffectAbility(def).propose(u, w),
+              `${v.aid} holds at (${x},${y}) but cannot strike`,
+            ).not.toBeNull();
+          }
+        }
+      }
+      expect(holds, `${v.aid} never held — the sweep is vacuous`).toBeGreaterThan(0);
+    }
   });
 });

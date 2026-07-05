@@ -701,6 +701,58 @@ describe('MovementBehavior — multi-tile neutral footprints (43-pre-b)', () => 
 });
 
 /**
+ * 44-pre-c — the movement hold measures the firing band against the target's
+ * BODY (the shared `firingBandCell` predicate), not its §39 corner. Corner-only,
+ * a unit flush against a big rubble's far side read "out of range" and WALKED
+ * AROUND the body to its corner; a bow crept for corner-LOS it didn't need; a
+ * catapult marched inside its own lob arc. All three now hold (null) where the
+ * strike gate — the SAME predicate — fires. Open field + a committed target, so
+ * a null here can only be the `hold_band` abstain (no boxed/pinned/no_goal path
+ * is reachable).
+ */
+describe('MovementBehavior — footprint firing band vs multi-tile targets (44-pre-c)', () => {
+  // rubble_3x3 at (4,4) → body x,y ∈ [4..6].
+  const RUBBLE3 = { team: 'neutral' as const, x: 4, y: 4, archetype: 'rubble_3x3' as const, inert: true };
+
+  it('melee flush against the FAR side holds to strike the body (no walk-around)', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 7, y: 5, attackRange: 1 },
+      RUBBLE3,
+    ]);
+    const [m, rubble] = units as [Unit, Unit];
+    m.targetId = rubble.id;
+    // Corner-only: corner (4,4) read dist 3 > 1 → the §40b advance walked the
+    // unit around the body toward the corner. Body cell (6,5) is adjacent.
+    expect(new MovementBehavior().proposeAction(m, world)).toBeNull();
+  });
+
+  it('a bow holds on a clear BODY shot instead of creeping for corner-LOS', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 6, y: 4, attackRange: 3, archetype: 'ranged' },
+      { team: 'neutral', x: 3, y: 3, archetype: 'rubble_2x2', inert: true },
+    ]);
+    const [b, rubble] = units as [Unit, Unit];
+    b.targetId = rubble.id;
+    // Body cell (4,3) is at dist 2 (in the bow's [2,3] band) with a clear ray;
+    // the ray to the CORNER threads the body, so corner-only read no-LOS and
+    // proposed a reposition it didn't need.
+    expect(new MovementBehavior().proposeAction(b, world)).toBeNull();
+  });
+
+  it("E7.D — a catapult holds when the body's far side enters its lob band", () => {
+    const { world, units } = scene([
+      { team: 'player', x: 11, y: 5, attackRange: 6, archetype: 'catapult', ignoresLos: true },
+      RUBBLE3,
+    ]);
+    const [c, rubble] = units as [Unit, Unit];
+    c.targetId = rubble.id;
+    // Corner-only: corner dist 7 > 6 → marched in. Body cell (6,5) is at 5 —
+    // inside the [minRange 4, range 6] band, band-only (LOS-ignoring lob).
+    expect(new MovementBehavior().proposeAction(c, world)).toBeNull();
+  });
+});
+
+/**
  * 44-pre-a — the blind wander's occupied set must cover a multi-tile neutral's
  * WHOLE footprint (the §35 `occupiedCells` builder), not just its §39 corner.
  * Corner-only, a rubble's body cells read as free wander candidates: the roll

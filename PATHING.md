@@ -631,8 +631,68 @@ clean; no fuzz re-baseline needed.
 
 ---
 
-*(Next entries: 44-pre-c [strike gate + movement hold → footprint
-distance, one commit] · then §44 decision-protocol checkpoints
-[byte-identical refactor + WaitAction], then §45's before/afters —
+## 44-pre-c — the footprint firing band (strike gates + movement hold, ONE commit) — 2026-07-05
+
+The last §44-pre straggler, the behavior-changing one: every range gate
+measured `chebyshev(unit.position, target.position)` — corner-to-corner
+— so against a 3×3 rubble a melee unit flush with the FAR side read "out
+of range" and walked around the body to its §39 corner (§40's "fires the
+moment body-adjacent" comment was FALSE; §40b's reachability probes
+already used footprint-aware `unitDistance`, so the two layers
+disagreed).
+
+**The fix: ONE shared predicate.** `Targeting.firingBandCell(from,
+target, anchor, minRange, maxRange, losBlockers)` — the first target
+BODY cell (anchored at its logical position or its §36b claimed
+destination) inside the band with a clear line (`null` blockers = the
+E7.D band-only lob). Both halves of the freeze pair route through it in
+this commit:
+
+- **strike gates** (`effects/propose.ts`): the single-target strike, the
+  AoE blast (a FIFTH site the audit's list missed — same class, and a
+  hold/blast disagreement is the same freeze; its blast CENTRE becomes
+  the aim cell), and the dash abstain (`unitDistance`);
+- **movement hold** (`MovementBehavior.inFiringBand` + the kite `dist`);
+- **`findInRangeEnemy`** (O2 hold / blind acquisition) → `unitDistance`
+  (byte-identical — neutrals are excluded there — but the measure now
+  matches).
+
+Semantics deliberately accepted (∃-cell over the body; the corner IS a
+body cell, so the new band is a strict SUPERSET of the old one for
+LOS-ignoring lobs): a catapult now lobs at a big body whose FAR side
+enters its `[4,6]` band even when flush against the near side — "some
+part of the body is at lob distance" — and the hold agrees (same
+predicate), so it holds and fires instead of marching in. A bow in
+body-range with a clear body ray fires even though the ray to the corner
+threads the body; self-occlusion of far body cells is correct (the near
+visible cell carries the gate). Aim-cell iteration is `footprintCells`
+row-major — deterministic, no RNG.
+
+Housekeeping in the same commit: `Targeting.minCellToBody` deduped into
+44-pre-b's `occupancy.cellUnitDistance` (same math); the stale §40b
+comment corrected.
+
+**Fingerprint: the full `npm run pathing` re-measure is ROW-FOR-ROW
+IDENTICAL to the 43c tables** — fixtures (no rubble) AND all five
+shipped layouts × seeds 100–102, ticks/ttfc/drift/osc/decision-mix all
+unmoved: the measured seeds never commit a rubble target (auto-target
+fires only when a route is blocked; the fords stay open), so the change
+is confined to actual rubble engagements. Drift gates + baseline pins
+pass unregenerated. 10 new tests: 7 verified to FAIL pre-fix (melee
+far-side strike + hold, bow body-shot fire + hold, catapult far-lob fire
++ hold, mage body-cell blast) and 3 standing pins (bow/dash too-close
+abstains, and **the hold/strike pair-consistency sweep** — every free
+cell around a 3×3 rubble × melee/bow/catapult: wherever movement says
+`hold_band`, the strike MUST fire; the GP4/Qb#3 freeze-class gate, kept
+green forever). 1752 main / 212 fuzz:smoke / typecheck clean; no fuzz
+re-baseline needed.
+
+**§44-pre COMPLETE** (a·b·c) — the §39 corner-only class is now cleared
+through COMBAT/STATUS; 44a relocates onto this corrected base.
+
+---
+
+*(Next entries: §44 decision-protocol checkpoints [44a byte-identical
+positioning.ts extraction + 44b WaitAction], then §45's before/afters —
 riverFork oscillation is the §45b centerpiece, corridor throughput
 §45a/c's, labyrinth queue mass §45's overall.)*

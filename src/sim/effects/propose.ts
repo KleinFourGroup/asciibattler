@@ -26,9 +26,11 @@ import {
   collectLosBlockers,
   collectHalfCoverPositions,
   currentTarget,
+  firingBandCell,
   lowestWoundedAlly,
 } from '../Targeting';
 import { hasLineOfSight } from '../LineOfSight';
+import { unitDistance } from '../occupancy';
 import { leapLanding } from '../movement';
 import { LEVELING } from '../../config/leveling';
 import type { GridCoord } from '../../core/types';
@@ -37,10 +39,6 @@ import { EffectAction } from './EffectAction';
 import type { OpResolution } from './interpreter';
 import { evalScaled, resolveDamageScalars, resolveHealAmount } from './resolveScalars';
 import { resolveCadenceTicks, resolvePhases } from './timeline';
-
-function chebyshev(a: GridCoord, b: GridCoord): number {
-  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-}
 
 /**
  * Resolve an `AbilityDef` to a proposal for `unit` this tick, or null if it
@@ -80,27 +78,32 @@ function proposeSingleTargetAttack(
   const target = currentTarget(unit, world);
   if (target === null) return null;
 
-  const dist = chebyshev(unit.position, target.position);
-  if (dist > def.rangeCells || dist < def.minRangeCells) return null;
-
-  // LOS gate — skipped for an arcing shot that lobs OVER walls (the catapult,
-  // `ignoresLineOfSight`; `catapult.ts` has no `hasLineOfSight` check).
-  // `MovementBehavior`'s in-range abstain reads the same flag off the ability, so
-  // the gate and the movement stay consistent.
-  if (!def.ignoresLineOfSight) {
-    const blockers = collectLosBlockers(world);
-    if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {
-      return null;
-    }
-  }
+  // 44-pre-c — the band + LOS gate is the shared footprint-aware predicate
+  // (`firingBandCell`): in band of (and, for LOS-gated shots, with a clear line
+  // to) ANY of the target's body cells — 1×1 targets take the old corner test
+  // exactly. The LOS skip stays E7.D's (the catapult lobs OVER walls → null
+  // blockers, band-only). `MovementBehavior.inFiringBand` routes through the
+  // SAME predicate — moving one without the other re-creates the GP4/Qb#3
+  // freeze class (hold says in-band, strike says out-of-range → deadlock).
+  const aim = firingBandCell(
+    unit.position,
+    target,
+    target.position,
+    def.minRangeCells,
+    def.rangeCells,
+    def.ignoresLineOfSight ? null : collectLosBlockers(world),
+  );
+  if (aim === undefined) return null;
 
   // E4 half-cover: a neutral non-LOS-blocker on the Bresenham line halves the
   // damage (the same invert-the-LOS-check trick `proposeBasicStrike` uses). A
   // `fizzle` artillery shot ignores the multiplier in the interpreter, so it's
   // inert there — harmless to compute (and 0 in the open field anyway).
+  // 44-pre-c — measured to the AIM cell (the gate's body cell), which for a 1×1
+  // target is exactly `target.position`.
   const halfCovers = collectHalfCoverPositions(world);
   const behindCover =
-    halfCovers.length > 0 && !hasLineOfSight(unit.position, target.position, halfCovers);
+    halfCovers.length > 0 && !hasLineOfSight(unit.position, aim, halfCovers);
   const damageMultiplier = behindCover ? LEVELING.halfCoverDamageMult : 1;
 
   const speed = unit.effectiveStats.speed;
@@ -165,7 +168,9 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
   const target = currentTarget(unit, world);
   if (target === null) return null;
   // Already within strike reach → abstain so the strike (higher score) preempts.
-  if (chebyshev(unit.position, target.position) <= unit.derived.attackRange) return null;
+  // 44-pre-c — footprint distance: body-adjacent to a big rubble reads as "in
+  // reach" (corner-only, the rogue leapt around the body it could already hit).
+  if (unitDistance(unit, target) <= unit.derived.attackRange) return null;
 
   const landing = leapLanding(unit, world, {
     goals: [target.position],
@@ -255,13 +260,22 @@ function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProp
   const target = currentTarget(unit, world);
   if (target === null) return null;
 
-  const dist = chebyshev(unit.position, target.position);
-  if (dist > def.rangeCells || dist < def.minRangeCells) return null;
-
-  const blockers = collectLosBlockers(world);
-  if (blockers.length > 0 && !hasLineOfSight(unit.position, target.position, blockers)) {
-    return null;
-  }
+  // 44-pre-c — the same shared footprint band + LOS gate as the single-target
+  // strike (this gate was in the corner-only class too, though the audit's site
+  // list missed it — a hold/blast disagreement is the same freeze). The blast
+  // CENTRE becomes the aim cell: the in-range, visible body cell the gate
+  // passed on — for a 1×1 target that is exactly `target.position`, and against
+  // a multi-tile body the detonation lands where the caster can actually reach
+  // (44-pre-b's best-covered-cell mult reads it as a direct hit either way).
+  const aim = firingBandCell(
+    unit.position,
+    target,
+    target.position,
+    def.minRangeCells,
+    def.rangeCells,
+    collectLosBlockers(world),
+  );
+  if (aim === undefined) return null;
 
   const speed = unit.effectiveStats.speed;
   // No single-target unit + no half-cover: an area detonation is dodged by
@@ -270,7 +284,7 @@ function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProp
   const ops = def.effects.map((e) => resolveOp(e.op, { unit, damageMultiplier: 1 }));
 
   return {
-    action: new EffectAction(def, { targetId: -1, targetCell: { ...target.position }, ops }),
+    action: new EffectAction(def, { targetId: -1, targetCell: { ...aim }, ops }),
     score: def.priority,
     cooldown: resolveCadenceTicks(def, speed),
     phases: resolvePhases(def, speed),

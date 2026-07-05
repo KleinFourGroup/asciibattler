@@ -2,11 +2,16 @@ import type { Behavior, Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
 import type { ActionProposal } from '../Action';
-import { currentTarget } from '../Targeting';
+import { currentTarget, firingBandCell } from '../Targeting';
 import { SIM } from '../../config/sim';
-import { hasLineOfSight } from '../LineOfSight';
 import { nearestActingCell } from '../actingPosition';
-import { GROUND, cellsOccupiedBy, claimedDestinationOf, occupiedCells } from '../occupancy';
+import {
+  GROUND,
+  cellsOccupiedBy,
+  claimedDestinationOf,
+  occupiedCells,
+  unitDistance,
+} from '../occupancy';
 import { minRangeForArchetype } from '../archetypes';
 import { advance, chebyshev, moveProposal, stepDurationTicks, key, type MovementIntent } from '../movement';
 import { emitMoveDecision } from '../moveDecision';
@@ -166,13 +171,27 @@ export class MovementBehavior implements Behavior {
     // weapon pre-O4-values, all melee, heal) → `inBand === inRange`, so this is
     // byte-identical until the value commit sets a floor.
     const minRange = minRangeForArchetype(unit.archetype);
-    const dist = chebyshev(unit.position, target.position);
-    // The firing-band + LOS test, reusable against any candidate target cell.
-    const inFiringBand = (at: GridCoord): boolean => {
-      const d = chebyshev(unit.position, at);
-      if (d < minRange || d > unit.derived.attackRange) return false;
-      return ignoresLos || hasLineOfSight(unit.position, at, losBlockers);
-    };
+    // 44-pre-c — footprint distance (body-to-body), matching the strike gate's
+    // measure: too-close/too-far (the kite decision below) is judged against a
+    // multi-tile target's BODY, not its §39 corner. 1×1 targets byte-identical.
+    const dist = unitDistance(unit, target);
+    // The firing-band + LOS test against the target's body anchored at `at`
+    // (its logical position, or its §36b claimed destination). 44-pre-c — the
+    // SHARED footprint-aware predicate (`firingBandCell`), the same gate
+    // `effects/propose.ts` fires strikes through: the hold and the strike must
+    // agree about "in range" or the GP4/Qb#3 freeze class returns (hold says
+    // in-band, strike says out-of-range → deadlock). A melee unit flush against
+    // a 3×3 rubble's far side now holds and strikes the body instead of walking
+    // around to the corner.
+    const inFiringBand = (at: GridCoord): boolean =>
+      firingBandCell(
+        unit.position,
+        target,
+        at,
+        minRange,
+        unit.derived.attackRange,
+        ignoresLos ? null : losBlockers,
+      ) !== undefined;
     // §36b — abstain (hold + let AbilityBehavior fire) when in the band against
     // the target's logical position (strike it NOW) OR its in-flight CLAIMED
     // destination (the target is ARRIVING into the band — hold for it rather than
@@ -190,8 +209,11 @@ export class MovementBehavior implements Behavior {
     // `excludeUnitId` softens only NON-neutral cells, so the unit can't route ONTO
     // the rubble's corner. Route AS CLOSE AS POSSIBLE (bestEffort) toward it — the
     // J3 tile-rally shape — and the in-range abstain above fires the strike the
-    // moment the unit is body-adjacent. Reached only when the auto-target hook
-    // committed to rubble (target selection prefers a reachable hostile).
+    // moment the unit is body-adjacent (TRUE since 44-pre-c: the hold and the
+    // strike both measure the footprint band; corner-only, this comment overstated
+    // and units walked around the body to its corner). Reached only when the
+    // auto-target hook committed to rubble (target selection prefers a reachable
+    // hostile).
     if (target.team === 'neutral') {
       return advance(unit, world, {
         goals: [target.position],

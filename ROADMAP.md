@@ -348,14 +348,25 @@ river spam).
   drift is PROVEN not the sidestep's (tie rule changed, fixture didn't move
   a byte) → the "riverFork drift ≈ 0" target gates on **43b2**, and the
   open-space-aware escalation clause does NOT fire.
-- **43b2 — the targeting distance-tie (the 43a finding; USER-LOCKED slot).**
-  A symmetric tie rule in the `nearest` targeting strategy replacing the
-  stable-unit-order (= leftmost-spawn) resolution — leaning
-  candidate-nearest-the-unit's-own-column / axis-of-advance; decide the
-  exact rule at the keyboard, measured on the openField funnel (the probed
-  all-8-units-target-the-leftmost commit). Sticky-target (E5) semantics
-  unchanged — only the tie among equal-distance candidates moves. *Commit:
-  Targeting/targetingStrategies + tests + fixture re-pin.*
+- **✅ 43b2 — the targeting distance-tie (landed; the 43a finding,
+  USER-LOCKED slot).** `nearest`'s distance+HP tie no longer falls to
+  lowest id (= spawn order = leftmost): an **alignment layer** — smaller
+  minor-axis offset `min(|dx|,|dy|)` = the enemy nearest the unit's own
+  column/row of advance — sits between the HP tie and the id last-resort
+  (which now decides only true mirror pairs). Frame-free (the
+  own-column lean without needing a forward vector); symmetric under
+  mirrors/x-y swap/180° rotation; E5 stickiness untouched; all four
+  strategy-ranked pickers inherit via the one `compare` seam. `weakest`
+  deliberately NOT touched (same id residual, but outside the locked slot
+  and invisible to the §42 instruments — noted in code for a future
+  measured pass). Four new tests. **Measured: openField drift 1.00 →
+  0.00 EXACTLY both teams (the §43 exit criterion, hit); riverFork 3.75 →
+  ±0.25 (ford choice now column-driven); river net dx SIGN-MIXED across
+  seeds (was ≤ 0 in 6/6) — the whole §43 drift-target table is green.
+  labyrinth 100/101 byte-identical; corridor untouched. riverFork's osc
+  0.923 remains = §45b's, cleanly separated from drift at last.**
+  baseline.test.ts re-pinned (deliberate); 1727 + 212 green, NO fuzz
+  re-pin. PATHING.md 43b2 entry.
 - **43c — the re-measure + the drift regression tests.** Harness re-run vs the
   42c baseline; PATHING.md entry; NOW land the |drift| ≈ 0 symmetric-fixture
   regression tests + River per-region drift bounds. **User playtest checkpoint
@@ -513,8 +524,10 @@ renderer "queued" stance deferred from §44 is wanted for ship-feel.
   (interleaved spawn ids give a whole team one parity — measured on the
   §42b fixtures); open-space-aware rejected (the tie is too rare post-43a
   to justify tactical code).
-- 43b2: the targeting distance-tie rule (leaning own-column/axis-of-advance
-  proximity; decide at the keyboard, measured).
+- 43b2: the targeting distance-tie rule —
+  ✅ DECIDED: minor-axis-offset alignment (`min(|dx|,|dy|)`, the frame-free
+  own-column rule), inserted between the HP tie and the id last resort;
+  `weakest` left for a future measured pass.
 - 44b: wait-as-activeAction vs within-tick (leaning within-tick, no bump).
 - 45c: the determinism-vs-cache resolution (leaning derive-don't-cache; the
   round's only candidate snapshot bump if not).

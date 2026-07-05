@@ -40,13 +40,60 @@ describe('Targeting / findTarget', () => {
     expect(findTarget(units[0]!, world)?.id).toBe(3);
   });
 
-  it('breaks distance+HP ties by lowest id', () => {
+  it('§43b2: breaks distance+HP ties by ALIGNMENT — the enemy nearest the own axis, not spawn order', () => {
+    // Both enemies at Chebyshev 3, equal HP. The old chain fell to lowest id
+    // (= spawn order = the leftmost-spawn funnel 43a filed); now the smaller
+    // minor-axis offset wins: (5,8) is straight ahead (minor 0), (2,8) is
+    // fully diagonal (minor 3) — the aligned enemy wins DESPITE its higher id.
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 5, y: 5 },
+      { id: 2, team: 'enemy', x: 2, y: 8, currentHp: 20 },
+      { id: 9, team: 'enemy', x: 5, y: 8, currentHp: 20 },
+    ]);
+    expect(findTarget(units[0]!, world)?.id).toBe(9);
+  });
+
+  it('§43b2: lower currentHp still outranks alignment (finish-off stays above the new layer)', () => {
+    // Equal distance; the wounded enemy is fully diagonal AND higher-id, the
+    // healthy one straight ahead — the wounded pick must survive the insertion.
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 5, y: 5 },
+      { id: 2, team: 'enemy', x: 5, y: 8, currentHp: 20 },
+      { id: 8, team: 'enemy', x: 8, y: 8, currentHp: 10 },
+    ]);
+    expect(findTarget(units[0]!, world)?.id).toBe(8);
+  });
+
+  it('breaks distance+HP+alignment ties by lowest id (the deterministic last resort)', () => {
+    // A true mirror pair: both diagonal at Chebyshev 1 (equal minor offset 1),
+    // equal HP — only here does the id layer still decide.
     const { world, units } = scene([
       { id: 1, team: 'player', x: 5, y: 5 },
       { id: 7, team: 'enemy', x: 6, y: 6, currentHp: 20 },
       { id: 3, team: 'enemy', x: 4, y: 4, currentHp: 20 },
     ]);
     expect(findTarget(units[0]!, world)?.id).toBe(3);
+  });
+
+  it('§43b2: the openField funnel is dead — each unit picks its opposite number', () => {
+    // The 43a probe shape: a row of players facing a row of enemies, every
+    // cross-pair at Chebyshev 9 (distance ties for ALL of them). Old chain:
+    // all four commit to the leftmost enemy (lowest id). New chain: each
+    // commits to the enemy in its own column.
+    const { world, units } = scene([
+      { id: 1, team: 'player', x: 4, y: 1 },
+      { id: 2, team: 'player', x: 5, y: 1 },
+      { id: 3, team: 'player', x: 6, y: 1 },
+      { id: 4, team: 'player', x: 7, y: 1 },
+      { id: 5, team: 'enemy', x: 4, y: 10 },
+      { id: 6, team: 'enemy', x: 5, y: 10 },
+      { id: 7, team: 'enemy', x: 6, y: 10 },
+      { id: 8, team: 'enemy', x: 7, y: 10 },
+    ]);
+    for (let i = 0; i < 4; i++) {
+      const pick = findTarget(units[i]!, world);
+      expect(pick?.position.x).toBe(units[i]!.position.x);
+    }
   });
 
   it('skips dead enemies (currentHp <= 0)', () => {

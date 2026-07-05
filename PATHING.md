@@ -411,5 +411,67 @@ balances by geometry, not roster composition.
 
 ---
 
-*(Next entry: 43b2 — the targeting distance-tie; then §43c — the full
-bias-fix re-measure vs the §42c baseline.)*
+## 43b2 — the targeting distance-tie (the 43a finding; user-locked slot) — 2026-07-05
+
+**The fix:** the `nearest` strategy's distance+HP tie fell straight to
+lowest unit id = SPAWN order = the leftmost opponent (the probed openField
+funnel: all 8 units committing to the same flank). An **alignment layer**
+now sits between the HP tie and the id last-resort: prefer the candidate
+with the smaller **minor-axis offset** `min(|dx|, |dy|)` — among
+equal-Chebyshev candidates (whose distance IS the major axis) that is the
+enemy most directly ahead/beside, i.e. nearest the unit's own column/row of
+advance, with no forward vector needed. Frame-free and symmetric under both
+axis mirrors, x/y swap, and 180° rotation — the ROADMAP's
+"own-column/axis-of-advance" lean, derived without a frame. The id layer
+survives as the deterministic last resort but now only decides true mirror
+pairs. E5 stickiness (`shouldRetarget`) untouched — only the fresh-pick tie
+moved. All four strategy-ranked pickers (`findTarget`,
+`nearestReachableHostile`, `findEngageableEnemy`, `findInRangeEnemy`)
+inherit the fix through the one `compare` seam. **`weakest` deliberately
+NOT touched** (its distance-tie has the same id residual): the user-locked
+slot covers `nearest`, and no §42 instrument can see the rogue strategy —
+an unmeasured change would be doctrine, not data (noted in the code; insert
+the same layer if a playtest ever reads a rogue-flank bias). Four new
+targeting tests (alignment beats spawn order; HP still outranks alignment;
+mirror pair → id; the funnel-is-dead probe shape).
+
+**Fixture fingerprint (corridor byte-identical — one inert enemy, no tie):**
+
+| map | | lat drift P/E | net dx P/E | osc P/E | moves P/E |
+|---|---|---|---|---|---|
+| openField(4) | @43b | 1.00 / -1.00 | -1.00 / -1.00 | 0.000 / 0.000 | 19 / 18 |
+| openField(4) | 43b2 | **0.00 / 0.00** | **0.00 / 0.00** | 0.000 / 0.000 | 16 / 16 |
+| riverFork(4) | @43b | 3.75 / -3.50 | -3.75 / -3.50 | 0.925 / 0.845 | 453 / 168 |
+| riverFork(4) | 43b2 | **-0.25 / 0.25** | 0.25 / 0.25 | 0.923 / 0.000 | 310 / 19 |
+
+**Readings:**
+
+- **openField drift = 0.00 EXACTLY, both teams — the §43 exit criterion,
+  hit.** Each unit picks its opposite number and walks a straight line;
+  moves drop back to the minimal 16/16 (the 19/18 was the funnel detour).
+- **riverFork drift 3.75/−3.50 → ±0.25** — the ford choice is column-driven
+  and symmetric (columns 4,5 → the x=2 ford; 7,8 → x=10). The §43 target
+  table's "riverFork lat drift ≈ 0" — hit. The player-side crab-walk
+  REMAINS (osc 0.923, sidestep 194) — §45b's charter, cleanly separated
+  from the drift at last. (The enemy side now barely moves — its paired
+  targets come to it — hence osc 0 / 19 moves; expect §45 to reshape this
+  fixture again.)
+- **Shipped layouts (isolated pre/post at post-43b code): broadly
+  reshaped, biases collapse where geometry is symmetric.** River's seed-100
+  drift outlier tamed (−4.14 → −1.08) and **river net dx is finally
+  SIGN-MIXED across seeds** (P +0.8/−1.8/−1.2 — was ≤ 0 in 6/6 team-seeds
+  at §42c): the last §43 target-table row, hit. Isthmus drifts collapse
+  toward 0 (−0.16/0.11 · −0.23/0.02 · 0.83/−0.00). labyrinth 100/101
+  BYTE-IDENTICAL (corridor engagements rarely present equal-distance
+  ties); labyrinth 102 / endlessCorridors / procedural reshape within
+  seed noise, no systematic sign. ttfc stable everywhere (69/85/85 river,
+  169×3 isthmus).
+- **Suite: 1727 main + 212 fuzz:smoke green; NO fuzz re-pin needed.**
+  baseline.test.ts re-pinned deliberately (this entry is the diff). The
+  full three-fix re-measure vs the frozen §42c baseline + the drift
+  regression tests land at **43c**, as chartered.
+
+---
+
+*(Next entry: §43c — the full bias-fix re-measure vs the §42c baseline +
+the |drift| ≈ 0 regression tests + the user's River playtest.)*

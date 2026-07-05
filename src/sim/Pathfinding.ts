@@ -132,7 +132,7 @@ export function findPath(
   let closestG = 0;
 
   while (open.size > 0) {
-    const currentKey = popLowestF(open, fScore, goal);
+    const currentKey = popLowestF(open, fScore, start, goal);
     if (currentKey === goalKey) return reconstruct(cameFrom, currentKey);
 
     const current = fromKey(currentKey);
@@ -197,28 +197,61 @@ function fromKey(k: string): GridCoord {
  * at ~1024 entries; a binary heap would be overkill and harder to debug
  * at this scale.
  *
- * E5.B — f-ties break toward the goal: among equal-f nodes, expand the one
- * with the lower Chebyshev distance to goal (h), then the lexicographically
- * lower key as a final deterministic fallback. This is a pure ordering of
- * equal-f nodes, so it does NOT change f-values and keeps the Chebyshev
- * heuristic admissible (gotcha #34) — paths stay min-cost. What changes is
- * WHICH min-cost path is returned: the old insertion-order tie-break let
- * the `dx=-1..1` neighbour scan bias paths leftward (units crabbing on
- * open ground); the goal-directed tie-break yields straighter routes. RNG
- * shuffling was rejected — it would perturb the deterministic byte stream
- * on every tie.
+ * E5.B + 43a — f-ties break toward the goal, then toward the straight line:
+ * among equal-f nodes, expand the one with the lower Chebyshev distance to
+ * goal (h), then (43a) the one nearer the start→goal LINE — the cross-track
+ * tie-break that drains the Chebyshev cone's tie plateau into a straight
+ * route — then numeric (y, x) as the final deterministic total order. All
+ * of this is a pure ordering of equal-f nodes: f-values never change, the
+ * Chebyshev heuristic stays admissible (gotcha #34), paths stay min-cost.
+ * What changes is WHICH min-cost path is returned.
+ *
+ * 43a — the retired final fallback was a STRING compare of `"x,y"` keys
+ * (`"10,3" < "2,3"`, `"5,1" < "6,1"`), which resolved EVERY open-ground tie
+ * toward low-x: the world-frame leftward drift PATHING.md measured on every
+ * shipped map (openField: literally every step, both teams — the River
+ * "walks left" report). Cross-track distance is measured as the integer
+ * cross-product magnitude |(n−start) × (goal−start)| — proportional to the
+ * true point-to-line distance (the constant |goal−start| divisor can't
+ * change comparisons within one search), symmetric under grid mirroring, so
+ * mirrored worlds route mirrored paths. The (y, x) numeric fallback only
+ * decides genuine double-ties (equal f, h, AND cross — symmetric pairs
+ * about the line); some total order must, for determinism. RNG shuffling
+ * stays rejected — it would perturb the deterministic byte stream on every
+ * tie.
  */
-function popLowestF(open: Set<string>, fScore: Map<string, number>, goal: GridCoord): string {
+function popLowestF(
+  open: Set<string>,
+  fScore: Map<string, number>,
+  start: GridCoord,
+  goal: GridCoord,
+): string {
+  const lineDx = goal.x - start.x;
+  const lineDy = goal.y - start.y;
   let bestKey = '';
   let bestF = Infinity;
   let bestH = Infinity;
+  let bestCross = Infinity;
+  let bestX = Infinity;
+  let bestY = Infinity;
   for (const k of open) {
     const f = fScore.get(k) ?? Infinity;
     if (f > bestF) continue;
-    const h = chebyshev(fromKey(k), goal);
-    if (f < bestF || h < bestH || (h === bestH && k < bestKey)) {
+    const c = fromKey(k);
+    const h = chebyshev(c, goal);
+    const cross = Math.abs((c.x - start.x) * lineDy - (c.y - start.y) * lineDx);
+    const better =
+      f < bestF ||
+      h < bestH ||
+      (h === bestH &&
+        (cross < bestCross ||
+          (cross === bestCross && (c.y < bestY || (c.y === bestY && c.x < bestX)))));
+    if (better) {
       bestF = f;
       bestH = h;
+      bestCross = cross;
+      bestX = c.x;
+      bestY = c.y;
       bestKey = k;
     }
   }

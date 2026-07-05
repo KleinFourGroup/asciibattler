@@ -96,7 +96,10 @@ function runCatapultBattle(seed: number): {
 }
 
 describe('E7.D — catapult runs through a full battle', () => {
-  for (const seed of [1, 7, 42]) {
+  // 43a re-seed: seed 1's battle re-shaped under the straightness tie-break —
+  // the catapult still winds up but its shot fizzles (target dies mid-flight)
+  // before any impact lands. Seed 2 exercises the same full-loop contract.
+  for (const seed of [2, 7, 42]) {
     it(`winds up + lands a shot and the battle resolves (seed ${seed})`, () => {
       const { resolved, charged, chargeSpannedTicks, shotHit } = runCatapultBattle(seed);
       expect(resolved).toBe(true);

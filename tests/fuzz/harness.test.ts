@@ -76,11 +76,15 @@ describe('fuzz harness', () => {
     expect(a).toEqual(b);
   });
 
-  // §29d — explicit 30s timeout (the harnessDaemon precedent). The §29 roster is
+  // §29d — explicit timeout (the harnessDaemon precedent). The §29 roster is
   // now draftable/rollable, and a run that fields the pure-passive summoner (a
   // Shaman whose Ghouls can stalemate) drags more battles to the tick-cap draw, so
   // a full run takes longer wall-clock than the 5s default. The test still only
   // asserts determinism + completion; battle-length tuning is §31's balance pass.
+  // 43a — 30s → 90s: the straightness tie-break re-shaped battles (findPath
+  // itself benched slightly FASTER), and under the full parallel fuzz:smoke
+  // load this test started brushing 30s. Duration here is sim-content, not a
+  // perf contract.
   it('G5 menu strategies each drive a full run deterministically', () => {
     // One representative per family (recruit / stat / path). Each must drive a
     // real run end-to-end without throwing and be byte-stable per (seed,
@@ -93,7 +97,7 @@ describe('fuzz harness', () => {
       expect(a.strategyName).toBe(name);
       expect(['complete', 'defeat', 'hang', 'aborted']).toContain(a.outcome);
     }
-  }, 30000);
+  }, 90000);
 
   it('greedy and pure-random can diverge on the same seed', () => {
     // Not a balance assertion — just that the strategy actually

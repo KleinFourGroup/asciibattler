@@ -3,17 +3,24 @@ import { runMovementMetrics } from './harness';
 import { openFieldScenario, corridorScenario, riverForkScenario } from './fixtures';
 
 /**
- * §42c — the FIXTURE baseline, pinned exactly (the movement-layer sibling of
- * a fuzz baseline). The fixtures are ability-less and RNG-free, so these
- * numbers are fully deterministic properties of the movement algorithms —
- * NOT quality targets. They freeze the 2026-07-04 pre-fix state recorded in
- * PATHING.md §42c:
+ * The FIXTURE baseline, pinned exactly (the movement-layer sibling of a fuzz
+ * baseline). The fixtures are ability-less and RNG-free, so these numbers are
+ * fully deterministic properties of the movement algorithms — NOT quality
+ * targets. Currently frozen at the post-43a state (2026-07-05; the §42c
+ * pre-fix numbers live in PATHING.md):
  *
- *   - openField: the A* string tie-break drifts EVERY step world-left
- *     (net dx −4 per unit, both teams).
- *   - riverFork: the sidestep/repath crab-walk (osc 0.94) + both teams
- *     draining to the low-x ford.
- *   - corridor: thin tunnel throughput (0.75 / 1.50 per 100t).
+ *   - openField: the A* string tie-break is FIXED (was: every step drifted
+ *     world-left, net dx −4 both teams). The residual ±1 drift is NOT
+ *     pathing: all enemies tie at Chebyshev 9 from every spawn here, and the
+ *     `nearest` targeting strategy resolves the tie to the lowest unit id
+ *     (= the leftmost spawn), funneling every unit toward the same flank —
+ *     the 43a-filed TARGETING-tie audit finding. Zero sidesteps, so it is
+ *     not 43b's body-framed bias either.
+ *   - riverFork: the sidestep/repath crab-walk, essentially untouched by
+ *     43a (osc 0.925/0.845) — 43b (sidestep tie) + §45b (wait-vs-sidestep)
+ *     own this fixture.
+ *   - corridor: thin tunnel throughput (0.75 / 1.50 per 100t), unchanged —
+ *     a 1-wide tunnel has no route ties for a tie-break to decide.
  *
  * A DELIBERATE movement change (§43 tie-breaks, §45 cooperation) re-baselines
  * this file in its own commit — the new numbers are the change's measured
@@ -24,32 +31,32 @@ import { openFieldScenario, corridorScenario, riverForkScenario } from './fixtur
  * combat-coupled); they live in PATHING.md via `npm run pathing`.
  */
 
-describe('§42c fixture baseline (pre-fix, 2026-07-04 — re-baseline deliberately)', () => {
-  it('openField(4): total leftward tie-break drift, no contention', () => {
+describe('fixture baseline (post-43a, 2026-07-05 — re-baseline deliberately)', () => {
+  it('openField(4): A* drift dead; the ±1 residue is the targeting-tie funnel', () => {
     const m = runMovementMetrics(openFieldScenario(4), 200);
-    expect(m.teams.player.meanNetLateralDrift).toBeCloseTo(4, 10);
-    expect(m.teams.enemy.meanNetLateralDrift).toBeCloseTo(-4, 10);
-    expect(m.teams.player.meanNetDx).toBe(-4);
-    expect(m.teams.enemy.meanNetDx).toBe(-4);
-    expect(m.teams.player.moves).toBe(16);
-    expect(m.teams.enemy.moves).toBe(16);
+    expect(m.teams.player.meanNetLateralDrift).toBeCloseTo(1, 10);
+    expect(m.teams.enemy.meanNetLateralDrift).toBeCloseTo(-1, 10);
+    expect(m.teams.player.meanNetDx).toBe(-1);
+    expect(m.teams.enemy.meanNetDx).toBe(-1);
+    expect(m.teams.player.moves).toBe(19);
+    expect(m.teams.enemy.moves).toBe(18);
     expect(m.teams.player.backtracks).toBe(0);
     expect(m.teams.player.decisionMix.sidestep).toBe(0);
-    expect(m.teams.player.decisionMix.advance).toBe(16);
+    expect(m.teams.player.decisionMix.advance).toBe(19);
   });
 
-  it('riverFork(4): the crab-walk + the shared low-x ford', () => {
+  it('riverFork(4): the crab-walk persists (43b/§45 territory)', () => {
     const m = runMovementMetrics(riverForkScenario(4), 300);
-    expect(m.teams.player.meanNetLateralDrift).toBeCloseTo(4, 10);
+    expect(m.teams.player.meanNetLateralDrift).toBeCloseTo(3.75, 10);
     expect(m.teams.enemy.meanNetLateralDrift).toBeCloseTo(-3.5, 10);
-    expect(m.teams.player.moves).toBe(455);
-    expect(m.teams.player.backtracks).toBe(429);
-    expect(m.teams.enemy.moves).toBe(162);
-    expect(m.teams.enemy.backtracks).toBe(145);
-    expect(m.teams.player.decisionMix.sidestep).toBe(219);
+    expect(m.teams.player.moves).toBe(453);
+    expect(m.teams.player.backtracks).toBe(419);
+    expect(m.teams.enemy.moves).toBe(168);
+    expect(m.teams.enemy.backtracks).toBe(142);
+    expect(m.teams.player.decisionMix.sidestep).toBe(212);
   });
 
-  it('corridor(3) and corridor(6): tunnel throughput', () => {
+  it('corridor(3) and corridor(6): tunnel throughput (unchanged by 43a)', () => {
     const three = runMovementMetrics(corridorScenario(3), 400);
     expect(three.gateCrossings).toBe(3);
     expect(three.throughputPer100Ticks).toBeCloseTo(0.75, 10);

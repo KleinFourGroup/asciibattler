@@ -302,5 +302,55 @@ body).
 
 ---
 
-*(Next entry: §43c — the bias-fix re-measure, diffed against the §42c
-baseline.)*
+## 43a — the A* straightness tie-break — 2026-07-05
+
+**The fix:** `popLowestF`'s final tie among equal-f/equal-h open nodes was a
+STRING compare of `"x,y"` keys (`"5,1" < "6,1"`, `"10,3" < "2,3"`) —
+resolving every open-ground Chebyshev tie toward low-x. Replaced with
+**cross-track straightness**: prefer the node with the smallest integer
+cross-product magnitude |(n−start) × (goal−start)| (nearest the start→goal
+line), then numeric (y, x) as the deterministic total-order fallback. Pure
+expansion ordering — f-values untouched, Chebyshev admissibility (gotcha
+#34) holds, paths stay min-cost; benched slightly FASTER than the string
+compare (straightness drains tie plateaus with fewer pops). Five new unit
+tests incl. a hand-derived bend repro and a mirrored-worlds symmetry test.
+
+**Fixture fingerprint (the full shipped-layout re-measure lands at 43c,
+after 43b):**
+
+| map | | lat drift P/E | net dx P/E | osc P/E | moves P/E |
+|---|---|---|---|---|---|
+| openField(4) | @42c | 4.00 / -4.00 | -4.00 / -4.00 | 0.000 / 0.000 | 16 / 16 |
+| openField(4) | 43a | **1.00 / -1.00** | **-1.00 / -1.00** | 0.000 / 0.000 | 19 / 18 |
+| riverFork(4) | @42c | 4.00 / -3.50 | -4.00 / -3.50 | 0.943 / 0.895 | 455 / 162 |
+| riverFork(4) | 43a | 3.75 / -3.50 | -3.75 / -3.50 | 0.925 / 0.845 | 453 / 168 |
+| corridor(3/6) | 43a | unchanged | unchanged | 0.029 / 0.036 | unchanged |
+
+**Readings:**
+
+- **openField drift 4.00 → 1.00 (75% of the headline bias dead).** The A*
+  component was the mirrored world-frame signature — gone. Corridor
+  unchanged (a 1-wide tunnel has no route ties to decide).
+- **⚠ NEW audit finding — the residual ±1.00 is a TARGETING-tie funnel,
+  not pathing.** On openField every enemy ties at Chebyshev 9 from every
+  spawn, and the `nearest` strategy resolves the tie by stable unit order
+  (lowest id = leftmost spawn): PROBED — all 8 units on both teams commit
+  to the leftmost opponent, so everyone honestly walks the (now-straight)
+  line to a biased pick. World-framed in effect (spawn order correlates
+  with x), a sibling of the A* bug one layer up. Zero sidesteps in the mix,
+  so 43b (body-framed) will NOT clear it. *Filed, not fixed here — decide
+  its slot at the 43b/43c boundary.*
+- **riverFork barely moved (4.00 → 3.75), as predicted:** this fixture is
+  the crab-walk's (osc 0.925) — the sidestep tie (43b) + wait-vs-sidestep
+  (§45b) own it. The tie-break component here was the ford CHOICE, which
+  the targeting funnel + sidestep churn still dominate.
+- `baseline.test.ts` re-pinned to the post-43a numbers (this entry is the
+  diff). The catapult integration smoke re-seeded 1 → 2 (the seed-1 battle
+  re-shaped: the wind-up now fizzles mid-flight every time; 7/11 probed
+  seeds land shots, mechanic intact). Two full-run fuzz tests bumped 30s →
+  90s (sim-content duration, not a perf regression — see the bench note).
+
+---
+
+*(Next entry: 43b — the sidestep balance; then §43c — the full bias-fix
+re-measure vs the §42c baseline + the targeting-tie finding's disposition.)*

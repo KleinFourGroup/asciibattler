@@ -298,3 +298,62 @@ function assertContiguous(path: GridCoord[]): void {
     }
   }
 }
+
+/**
+ * 43a — the straightness tie-break. `popLowestF`'s FINAL tie among equal-f,
+ * equal-h open nodes was a STRING compare of `"x,y"` keys (`"10,3" < "2,3"`,
+ * `"5,1" < "6,1"`), which resolved every open-ground Chebyshev tie toward
+ * low-x — the world-frame leftward drift PATHING.md measured on every map
+ * (openField: literally every step, both teams). The fix prefers the node
+ * with the smallest CROSS-TRACK distance to the start→goal line (an integer
+ * cross-product magnitude — pure expansion ordering, f-values untouched, so
+ * Chebyshev admissibility [gotcha #34] holds), with numeric (y,x) as the
+ * final total-order fallback.
+ */
+describe('Pathfinding / the 43a straightness tie-break', () => {
+  it('a vertical route on open ground is the straight column (the string-compare repro)', () => {
+    // Pre-43a this returned (6,0)(5,1)(5,2)(6,3): "5,1" < "6,1" popped first
+    // and the min-cost path bent left. Same cost, wrong shape.
+    expect(findPath({ x: 6, y: 0 }, { x: 6, y: 3 }, [], G, G)).toEqual([
+      { x: 6, y: 0 },
+      { x: 6, y: 1 },
+      { x: 6, y: 2 },
+      { x: 6, y: 3 },
+    ]);
+  });
+
+  it('vertical straightness holds in BOTH directions (no world-frame bias)', () => {
+    const down = findPath({ x: 2, y: 1 }, { x: 2, y: 9 }, [], G, G);
+    const up = findPath({ x: 9, y: 9 }, { x: 9, y: 1 }, [], G, G);
+    for (const c of down) expect(c.x).toBe(2);
+    for (const c of up) expect(c.x).toBe(9);
+  });
+
+  it('a horizontal route on open ground is the straight row', () => {
+    const path = findPath({ x: 1, y: 6 }, { x: 8, y: 6 }, [], G, G);
+    for (const c of path) expect(c.y).toBe(6);
+  });
+
+  it('a diagonal route is the exact diagonal', () => {
+    const path = findPath({ x: 2, y: 2 }, { x: 7, y: 7 }, [], G, G);
+    for (const c of path) expect(c.x).toBe(c.y);
+  });
+
+  it('mirrored worlds yield mirrored paths (single-gap wall detour)', () => {
+    // An 11-wide grid (mirror axis x=5), a wall row at y=4 with one gap.
+    // World 1 gaps at x=3, world 2 at the x-mirrored 7. The route (5,0)→(5,8)
+    // must detour through the gap; the expansions on the way are all
+    // tie-break decisions. The old string compare was not mirror-symmetric
+    // (it always favored low-x); cross-track straightness is.
+    const W = 11;
+    const wallRow = (gapX: number): GridCoord[] => {
+      const cells: GridCoord[] = [];
+      for (let x = 0; x < W; x++) if (x !== gapX) cells.push({ x, y: 4 });
+      return cells;
+    };
+    const p1 = findPath({ x: 5, y: 0 }, { x: 5, y: 8 }, wallRow(3), W, G);
+    const p2 = findPath({ x: 5, y: 0 }, { x: 5, y: 8 }, wallRow(7), W, G);
+    expect(p1.length).toBeGreaterThan(0);
+    expect(p2).toEqual(p1.map((c) => ({ x: W - 1 - c.x, y: c.y })));
+  });
+});

@@ -312,10 +312,18 @@ river spam).
 
 ### Sub-steps (43a–43c) — the proposed cut
 
-- **43a — the A* tie-break.** Fix `popLowestF`: straightness (or numeric)
-  final tie-break replacing the string compare; unit tests on constructed tie
-  plateaus (equal-f/equal-h sets resolve symmetrically); fuzz re-baseline.
-  *Commit: Pathfinding.ts + tests + baseline.*
+- **✅ 43a — the A* tie-break (landed).** `popLowestF` final order is now
+  f → h → **cross-track straightness** (integer |cross to the start→goal
+  line|) → numeric (y,x); admissibility (gotcha #34) untouched; benched
+  slightly FASTER. Five unit tests (bend repro, both-direction columns,
+  mirrored-worlds symmetry). openField drift 4.00 → 1.00; riverFork ~flat
+  (the crab-walk is 43b/§45's). Re-pins: baseline.test.ts (deliberate),
+  catapult smoke seed 1→2, two full-run fuzz timeouts 30s→90s
+  (sim-content). **⚠ NEW finding filed (PATHING.md 43a): the openField
+  residual ±1 is a `nearest`-TARGETING tie funnel (stable-order = leftmost
+  spawn; probed — all 8 units commit to the leftmost opponent). One layer
+  above pathing, world-framed in effect; 43b won't clear it. Decide its
+  slot at the 43b/43c boundary.*
 - **43b — the sidestep balance.** The balanced tie rule in `sidestep`;
   mirrored-fixture unit tests (a bottom-spawn and top-spawn unit in identical
   pockets sidestep mirror-symmetrically); fuzz re-baseline if bytes move.

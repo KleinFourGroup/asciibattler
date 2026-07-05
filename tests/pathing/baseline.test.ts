@@ -6,19 +6,23 @@ import { openFieldScenario, corridorScenario, riverForkScenario } from './fixtur
  * The FIXTURE baseline, pinned exactly (the movement-layer sibling of a fuzz
  * baseline). The fixtures are ability-less and RNG-free, so these numbers are
  * fully deterministic properties of the movement algorithms — NOT quality
- * targets. Currently frozen at the post-43a state (2026-07-05; the §42c
- * pre-fix numbers live in PATHING.md):
+ * targets. Currently frozen at the post-43b state (2026-07-05 — numerically
+ * identical to post-43a: 43b's sidestep tie rule measured BYTE-IDENTICAL on
+ * all four fixtures, a deliberate no-re-pin; the §42c pre-fix numbers live
+ * in PATHING.md):
  *
  *   - openField: the A* string tie-break is FIXED (was: every step drifted
  *     world-left, net dx −4 both teams). The residual ±1 drift is NOT
  *     pathing: all enemies tie at Chebyshev 9 from every spawn here, and the
  *     `nearest` targeting strategy resolves the tie to the lowest unit id
  *     (= the leftmost spawn), funneling every unit toward the same flank —
- *     the 43a-filed TARGETING-tie audit finding. Zero sidesteps, so it is
- *     not 43b's body-framed bias either.
+ *     the 43a-filed TARGETING-tie audit finding (43b2's). Zero sidesteps.
  *   - riverFork: the sidestep/repath crab-walk, essentially untouched by
- *     43a (osc 0.925/0.845) — 43b (sidestep tie) + §45b (wait-vs-sidestep)
- *     own this fixture.
+ *     43a (osc 0.925/0.845) — and PROVEN untouched by the sidestep tie (43b
+ *     changed the tie rule; this fixture didn't move a byte: its forced
+ *     sidesteps never present a both-viable equidistant tie). The residual
+ *     drift is 43b2's targeting funnel; the oscillation is §45b's
+ *     (wait-vs-sidestep).
  *   - corridor: thin tunnel throughput (0.75 / 1.50 per 100t), unchanged —
  *     a 1-wide tunnel has no route ties for a tie-break to decide.
  *
@@ -31,7 +35,7 @@ import { openFieldScenario, corridorScenario, riverForkScenario } from './fixtur
  * combat-coupled); they live in PATHING.md via `npm run pathing`.
  */
 
-describe('fixture baseline (post-43a, 2026-07-05 — re-baseline deliberately)', () => {
+describe('fixture baseline (post-43b, 2026-07-05 — re-baseline deliberately)', () => {
   it('openField(4): A* drift dead; the ±1 residue is the targeting-tie funnel', () => {
     const m = runMovementMetrics(openFieldScenario(4), 200);
     expect(m.teams.player.meanNetLateralDrift).toBeCloseTo(1, 10);
@@ -45,7 +49,7 @@ describe('fixture baseline (post-43a, 2026-07-05 — re-baseline deliberately)',
     expect(m.teams.player.decisionMix.advance).toBe(19);
   });
 
-  it('riverFork(4): the crab-walk persists (43b/§45 territory)', () => {
+  it('riverFork(4): the crab-walk persists (43b2/§45 territory)', () => {
     const m = runMovementMetrics(riverForkScenario(4), 300);
     expect(m.teams.player.meanNetLateralDrift).toBeCloseTo(3.75, 10);
     expect(m.teams.enemy.meanNetLateralDrift).toBeCloseTo(-3.5, 10);

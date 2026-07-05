@@ -352,6 +352,64 @@ after 43b):**
 
 ---
 
-*(Next entry: 43b — the sidestep balance; then 43b2 — the targeting
-distance-tie; then §43c — the full bias-fix re-measure vs the §42c
-baseline.)*
+## 43b — the sidestep tie balance — 2026-07-05
+
+**The fix:** the E5.B `sidestep` tie among two viable equidistant
+perpendicular candidates was FIRST-CANDIDATE-WINS — a fixed array order =
+always the same rotation of the approach direction = the BODY-framed bias
+(every unit crabs the same body side). Replaced with **from-cell
+checkerboard parity**: `(from.x + from.y) % 2` decides which rotation gets
+tie priority (even → clockwise, odd → counter-clockwise; screen frame).
+Stateless, RNG-free, and self-decorrelating on every axis that matters:
+adjacent cells in a column alternate sides, a unit's own successive cardinal
+steps flip parity (a crab-walk pair nets zero instead of compounding), and
+the rule commutes with the 180° board rotation relating the two teams on
+symmetric maps (W+H even) — neither team gets a preferred side. Non-ties and
+single-viable-candidate sidesteps are untouched. Six new unit tests incl. a
+rotation-commutation sweep and the ROADMAP's mirrored-pocket `advance()` pin.
+
+**The keyboard decision (parity-of-WHAT — measured):** the ROADMAP's leading
+candidate, unit-ID parity, was REJECTED at the keyboard: spawn-order ids
+hand a whole team one parity whenever team spawns interleave — both §42b
+fixtures do exactly that (riverFork: neutrals take ids 1–11, then
+player/enemy alternate per column → players all EVEN, enemies all ODD), so
+the fixture that must zero would have kept its full one-sided bias; any
+odd-sized roster keeps a residual under id parity regardless. Cell parity
+balances by geometry, not roster composition.
+
+**Fingerprint (isolated — both runs at post-43a code):**
+
+- **Fixtures: BYTE-IDENTICAL, all four.** `baseline.test.ts` pins hold with
+  no re-pin — the first deliberate movement change that needed none.
+- **Shipped layouts: 12 of 15 battles byte-identical.** Movers: labyrinth
+  102 (queue 718 → 384, ticks 872 → 969, osc P 0.136 → 0.098 — one flipped
+  tie reshaped the battle and the giant queue pileup dissolved into a more
+  even fight), endlessCorridors 101 (739 → 709 ticks, drift jitter),
+  procedural 100 (sidestep 4 → 1, drift jitter). No systematic drift
+  direction in the deltas.
+
+**Readings:**
+
+- **⚠ Finding: post-43a, the E5.B tie is RARE in practice.** A sidestep
+  needs a forced geometry (open ground lets A* detour around soft blockers),
+  and forced geometries usually leave only ONE viable perpendicular — the
+  both-viable equidistant tie fired in 3 of 15 shipped battles and in ZERO
+  of the ~370 fixture sidesteps (riverFork's 212+143 all had a wall or a
+  strict distance winner on one side).
+- **riverFork's residual drift (3.75 / −3.50) is PROVEN not the
+  sidestep's:** the tie rule changed and the fixture didn't move a byte. The
+  drift is world-framed (same dx sign both teams) = the 43b2 targeting
+  funnel; the oscillation 0.925 is §45b's wait-vs-sidestep. The §43 target
+  table's "riverFork lat drift ≈ 0" therefore gates on **43b2**, not 43b.
+- **The ROADMAP's open-space-aware escalation clause does NOT fire:** the
+  mirrored-fixture drift that "doesn't zero" is attributable to the
+  targeting tie one layer up, not to any remaining sidestep bias — more
+  tactical sidestep code would decide almost nothing. Documented no-op
+  territory, §41 precedent.
+- Suite: 1724 main + 212 fuzz:smoke green with **zero re-pins** (no fuzz
+  re-baseline — the three moved battles sit outside the pinned smoke set).
+
+---
+
+*(Next entry: 43b2 — the targeting distance-tie; then §43c — the full
+bias-fix re-measure vs the §42c baseline.)*

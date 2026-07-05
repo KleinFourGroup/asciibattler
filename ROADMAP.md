@@ -328,10 +328,26 @@ river spam).
   (leaning candidate-nearest-the-unit's-own-column; decide the exact rule
   at the keyboard, measured) so 43c re-measures all three fixes together.
   43a itself USER-CONFIRMED in the native playtest (drift much reduced).*
-- **43b — the sidestep balance.** The balanced tie rule in `sidestep`;
-  mirrored-fixture unit tests (a bottom-spawn and top-spawn unit in identical
-  pockets sidestep mirror-symmetrically); fuzz re-baseline if bytes move.
-  *Commit: movement.ts + tests.*
+- **✅ 43b — the sidestep balance (landed).** The E5.B first-candidate tie →
+  **from-cell checkerboard parity** (`(x+y) % 2` picks which perpendicular
+  rotation wins a both-viable equidistant tie; non-ties + single-viable
+  untouched). Unit-ID parity — the pre-keyboard leading candidate —
+  REJECTED at the keyboard: interleaved spawn ids hand a whole team one
+  parity (both §42b fixtures do exactly that), and any odd roster keeps a
+  residual; cell parity balances by geometry and commutes with the 180°
+  rotation relating the teams. Six unit tests (alternation, column
+  self-decorrelation, non-tie/single-viable invariance, a
+  rotation-commutation sweep, the mirrored-pocket `advance()` pin).
+  **Measured near-no-op — a documented-good outcome:** fixtures
+  BYTE-IDENTICAL (no baseline.test.ts re-pin, no fuzz re-baseline; 1724 +
+  212 green untouched); 12/15 shipped battles byte-identical (the movers:
+  labyrinth-102's 718-poll queue pileup dissolved to 384; endlessCorridors
+  101 + procedural 100 jitter). ⚠ Finding (PATHING.md 43b): post-43a the
+  both-viable sidestep tie is RARE (forced geometries usually leave one
+  viable side — 0 ties in ~370 fixture sidesteps); riverFork's residual
+  drift is PROVEN not the sidestep's (tie rule changed, fixture didn't move
+  a byte) → the "riverFork drift ≈ 0" target gates on **43b2**, and the
+  open-space-aware escalation clause does NOT fire.
 - **43b2 — the targeting distance-tie (the 43a finding; USER-LOCKED slot).**
   A symmetric tie rule in the `nearest` targeting strategy replacing the
   stable-unit-order (= leftmost-spawn) resolution — leaning
@@ -492,7 +508,11 @@ renderer "queued" stance deferred from §44 is wanted for ship-feel.
 - 42a: decision event vs transient field (leaning dev-gated event).
 - 43a: straightness vs numeric final tie-break (leaning straightness) —
   ✅ DECIDED: straightness (cross-track), numeric (y,x) as the last resort.
-- 43b: parity vs open-space sidestep tie (decide at the keyboard, measured).
+- 43b: parity vs open-space sidestep tie —
+  ✅ DECIDED: parity, but of the FROM CELL (checkerboard), not the unit id
+  (interleaved spawn ids give a whole team one parity — measured on the
+  §42b fixtures); open-space-aware rejected (the tie is too rare post-43a
+  to justify tactical code).
 - 43b2: the targeting distance-tie rule (leaning own-column/axis-of-advance
   proximity; decide at the keyboard, measured).
 - 44b: wait-as-activeAction vs within-tick (leaning within-tick, no bump).

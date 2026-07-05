@@ -345,9 +345,24 @@ function stepAlongRoute(
  * cells perpendicular to the unit→target direction (per the E5 decision point:
  * 2 candidates, not 3 — back-step-forward is what the cost gradient already
  * does). Keeps only in-bounds, finite-cost, unoccupied cells, and returns the
- * one closest to the target (Chebyshev), first-candidate winning a tie for
- * determinism. Returns null when neither is viable, so the caller abstains and
- * corridor queueing still emerges.
+ * one closest to the target (Chebyshev). Returns null when neither is viable,
+ * so the caller abstains and corridor queueing still emerges.
+ *
+ * §43b — the tie rule. When both rotations are viable AND equidistant (the
+ * common case: any far-enough target ties), the winner is the rotation the
+ * FROM cell's checkerboard parity prefers — NOT a fixed first-candidate
+ * (which was body-framed: every unit always crabbed the same body side, the
+ * shared-sign drift the §42c fixtures measured). Cell parity is stateless +
+ * deterministic (no RNG — the standing movement ban), and self-decorrelates
+ * on every axis that matters: adjacent cells in a column alternate sides, a
+ * unit's own successive cardinal steps flip parity (so a crab-walk pair nets
+ * zero instead of compounding), and the rule is invariant under the 180°
+ * board rotation that relates the two teams on symmetric maps (W+H even), so
+ * neither team gets a preferred side. Unit-id parity (the other candidate
+ * rule) was measured and rejected: spawn-order ids hand a whole team one
+ * parity whenever teams interleave (both §42b fixtures do exactly that), and
+ * any odd roster keeps a residual bias. Non-ties are untouched — nearer
+ * still wins.
  */
 export function sidestep(
   from: GridCoord,
@@ -357,11 +372,11 @@ export function sidestep(
 ): GridCoord | null {
   const sx = Math.sign(target.x - from.x);
   const sy = Math.sign(target.y - from.y);
-  // Rotate the toward-target direction ±90°.
-  const candidates: GridCoord[] = [
-    { x: from.x - sy, y: from.y + sx },
-    { x: from.x + sy, y: from.y - sx },
-  ];
+  // The toward-target direction rotated 90° clockwise / counter-clockwise
+  // (screen frame: +y down). Parity 0 → CW gets the tie; parity 1 → CCW.
+  const cw: GridCoord = { x: from.x - sy, y: from.y + sx };
+  const ccw: GridCoord = { x: from.x + sy, y: from.y - sx };
+  const candidates: GridCoord[] = (from.x + from.y) % 2 === 0 ? [cw, ccw] : [ccw, cw];
   let best: GridCoord | null = null;
   let bestDist = Infinity;
   for (const c of candidates) {

@@ -8,7 +8,7 @@ import { ARCHETYPE_CONFIG } from './archetypes';
 import { MoveAction } from './actions/MoveAction';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
-import { advance, routeToward, buildMovementContext, type MovementIntent } from './movement';
+import { advance, routeToward, buildMovementContext, sidestep, type MovementIntent } from './movement';
 
 /**
  * J2 — unit tests for the shared movement seam. The behaviour-level
@@ -203,6 +203,117 @@ describe('movement / advance (maxCells = 1, the byte-identical step)', () => {
       maxCells: 1,
     };
     expect(advance(units[0]!, world, intent)).toBeNull();
+  });
+});
+
+describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
+  // Direct sidestep() probes on an empty board: both perpendiculars in-bounds,
+  // walkable, unoccupied — the pure tie geometry `advance` can't reach in open
+  // space (A* detours around soft blockers there; see the E5.B note above).
+  const empty = () => scene([{ team: 'player', x: 0, y: 11 }]); // parked out of the way
+  const none = new Set<string>();
+
+  it('a both-viable equidistant tie resolves by the FROM cell checkerboard parity', () => {
+    const { world } = empty();
+    // Moving east from an EVEN cell: the clockwise rotation (screen frame:
+    // east → south) wins the tie. From the ODD cell one row down, it flips.
+    expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 4 }, world, none)).toEqual({ x: 4, y: 5 });
+    expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 5 }, world, none)).toEqual({ x: 4, y: 4 });
+    // Same alternation on a diagonal approach (both rotations tie there too).
+    expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 9 }, world, none)).toEqual({ x: 3, y: 5 });
+    expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 10 }, world, none)).toEqual({ x: 5, y: 4 });
+  });
+
+  it('adjacent cells in a column alternate sides (the self-decorrelation property)', () => {
+    // A queue of units stacked in a column all heading east would previously
+    // ALL crab the same body side; under cell parity they split alternately.
+    const { world } = empty();
+    const sides = [3, 4, 5, 6].map((y) => {
+      const c = sidestep({ x: 4, y }, { x: 9, y }, world, none)!;
+      return c.y - y; // +1 = south rotation, -1 = north rotation
+    });
+    expect(sides).toEqual([-1, 1, -1, 1]);
+  });
+
+  it('a NON-tie is untouched: the nearer candidate wins regardless of parity', () => {
+    const { world } = empty();
+    // Even cell, but the counter-clockwise candidate is strictly closer.
+    expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 5 }, world, none)).toEqual({ x: 5, y: 3 });
+    // Odd cell, but the clockwise candidate is strictly closer.
+    expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 4 }, world, none)).toEqual({ x: 5, y: 6 });
+  });
+
+  it('a single viable candidate is untouched: the free cell wins regardless of parity', () => {
+    const { world } = empty();
+    // Even cell (parity prefers the clockwise (4,5)) — occupy it: (4,3) steps.
+    expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 4 }, world, new Set(['4,5']))).toEqual({
+      x: 4,
+      y: 3,
+    });
+    // Odd cell (parity prefers the counter-clockwise (4,4)) — occupy it: (4,6) steps.
+    expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 5 }, world, new Set(['4,4']))).toEqual({
+      x: 4,
+      y: 6,
+    });
+  });
+
+  it('the rule is 180°-rotation symmetric (neither team gets a preferred side)', () => {
+    // The fixtures relate the two teams by a 180° board rotation; a fair tie
+    // rule must commute with it. Cell parity does on any W+H-even board
+    // (rotation maps (x,y) → (W-1-x, H-1-y), preserving x+y parity). Probe a
+    // spread of parities and approach directions on the 12×12 test board.
+    const { world } = empty();
+    const rot = (c: GridCoord): GridCoord => ({ x: 11 - c.x, y: 11 - c.y });
+    const cases: [GridCoord, GridCoord][] = [
+      [{ x: 4, y: 4 }, { x: 9, y: 4 }], // even, east
+      [{ x: 4, y: 5 }, { x: 9, y: 5 }], // odd, east
+      [{ x: 4, y: 4 }, { x: 9, y: 9 }], // even, diagonal
+      [{ x: 5, y: 8 }, { x: 5, y: 2 }], // odd, north
+      [{ x: 6, y: 3 }, { x: 2, y: 7 }], // odd, diagonal south-west
+    ];
+    for (const [from, target] of cases) {
+      const straight = sidestep(from, target, world, none);
+      const rotated = sidestep(rot(from), rot(target), world, none);
+      expect(straight).not.toBeNull();
+      expect(rotated).toEqual(rot(straight!));
+    }
+  });
+
+  it('mirrored pockets sidestep mirror-symmetrically through advance() (the ROADMAP pin)', () => {
+    // The moveDecision.test.ts forced-pocket geometry (the only A* route runs
+    // through the ally ahead; both perpendiculars are open dead-ends) and its
+    // 180°-rotated copy: the two committed sidesteps must land on point-mirrored
+    // cells. Under the old first-candidate rule both went the same BODY side —
+    // the shared-sign drift 43b kills.
+    const pocket = (r: (c: GridCoord) => GridCoord) => {
+      const walls: Spec[] = [];
+      for (let x = 1; x <= 5; x++) {
+        walls.push({ team: 'neutral', ...r({ x, y: 4 }), neutral: true });
+        walls.push({ team: 'neutral', ...r({ x, y: 6 }), neutral: true });
+      }
+      for (let x = 0; x <= 6; x++) {
+        walls.push({ team: 'neutral', ...r({ x, y: 3 }), neutral: true });
+        walls.push({ team: 'neutral', ...r({ x, y: 7 }), neutral: true });
+      }
+      const { world, units } = scene([
+        { team: 'player', ...r({ x: 0, y: 5 }) },
+        { team: 'player', ...r({ x: 1, y: 5 }) }, // the blocker ahead
+        { team: 'enemy', ...r({ x: 5, y: 5 }) },
+        ...walls,
+      ]);
+      const goal = r({ x: 5, y: 5 });
+      const intent: MovementIntent = {
+        goals: [goal],
+        approachToward: goal,
+        excludeUnitId: units[2]!.id,
+        maxCells: 1,
+      };
+      return landing(advance(units[0]!, world, intent));
+    };
+    const straight = pocket((c) => c);
+    const rotated = pocket((c) => ({ x: 11 - c.x, y: 11 - c.y }));
+    expect(straight).toEqual({ x: 0, y: 4 }); // odd from-cell (0,5) → counter-clockwise
+    expect(rotated).toEqual({ x: 11, y: 7 }); // the exact point-image of (0,4)
   });
 });
 

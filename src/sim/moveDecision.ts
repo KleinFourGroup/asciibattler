@@ -45,21 +45,24 @@ import type { World } from './World';
  *                        the degenerate no-anchor cases those helpers fold in.
  *   - `frozen`         — a status (`preventsMove`) roots the unit.
  */
-export type MoveDecisionKind =
-  | 'advance'
-  | 'sidestep'
-  | 'retreat'
-  | 'flee'
-  | 'wander'
-  | 'yield_swap'
-  | 'queue'
-  | 'no_route'
-  | 'hold_band'
-  | 'hold_objective'
-  | 'no_goal'
-  | 'pinned'
-  | 'boxed'
-  | 'frozen';
+export const MOVE_DECISION_KINDS = [
+  'advance',
+  'sidestep',
+  'retreat',
+  'flee',
+  'wander',
+  'yield_swap',
+  'queue',
+  'no_route',
+  'hold_band',
+  'hold_objective',
+  'no_goal',
+  'pinned',
+  'boxed',
+  'frozen',
+] as const;
+
+export type MoveDecisionKind = (typeof MOVE_DECISION_KINDS)[number];
 
 /** Emit the one-per-poll decision record (see `MoveDecisionKind`). */
 export function emitMoveDecision(world: World, unit: Unit, kind: MoveDecisionKind): void {

@@ -200,11 +200,15 @@ conditionality: a no-subscriber emit is nearly free, events never serialize,
 and an always-on record works in any build. Kinds are snake_case (TileKind
 style); the taxonomy grew from the sketch's 8 to **14 kinds** to cover the
 healer's ladder honestly (`retreat`/`boxed`/`yield_swap`/`flee`/`wander`/
-`frozen` beyond the mechanical set). Still open: the fixture-map set (a
-symmetric open field + a straight corridor + a two-crossing river abstraction
-— hand-authored TEST fixtures, not shipped layouts); whether drift is measured
-per-team or per-spawn-region (per-region — availability `both` means teams
-swap sides).
+`frozen` beyond the mechanical set). ~~The fixture-map set / drift framing~~ **RESOLVED (42b):** fixtures =
+`tests/pathing/fixtures.ts` (symmetric open field · a SEALED 8-long tunnel
+corridor with a throughput gate · a two-ford river fork symmetric about the
+board's center column — the first corridor draft leaked around unsealed wall
+rows, caught by its own test). Drift is **per-team in TWO frames**: unit-frame
+lateral (forward = own→opposing centroid, lateral = 90° CCW — mirror-symmetric
+teams read the same sign) AND world-frame net dx/dy (the "left on River"
+claim). Per-spawn-region splitting is deferred until a layout pairs multiple
+regions per team.
 
 ### Sub-steps (42a–42c) — the proposed cut
 
@@ -217,10 +221,17 @@ swap sides).
   world; `moveDecision.test.ts` (13 tests) pins kind correctness per fixture
   + the exactly-one-per-poll invariant (in-flight units emit nothing; a
   finishing action polls same-tick).
-- **42b — the metrics harness.** The scripted-battle runner + the five v1
-  metrics over fixture maps; deterministic (seeded) so re-runs reproduce.
-  Tests pin harness determinism + metric arithmetic on hand-computable
-  micro-fixtures. *Commit: harness + fixtures + tests.*
+- **✅ 42b — the metrics harness (landed).** `tests/pathing/`: `metrics.ts`
+  (the pure `MovementMetricsCollector` — fold over bus events, no RNG, no
+  world writes; handles swap/dash/shove dedupe + §35b/§36c abort reverts),
+  `fixtures.ts` (the three fixture maps), `harness.ts` (the hot-loop runner).
+  12 tests: hand-computed arithmetic on synthetic streams + fixture wiring +
+  determinism (NO quality assertions — the current sim is the patient).
+  First probe already reproduces the diagnosis: open field = EVERY step
+  drifts −x for BOTH teams (the string tie-break, world-frame); river fork =
+  oscillation 0.94 (the crab-walk); corridor = 0.75 crossings/100t. Ability-
+  less fixtures are seed-invariant (movement has no RNG) — the numbers are
+  algorithm portraits, frozen properly in 42c.
 - **42c — the baseline.** Run the harness on the shipped layouts (River,
   Isthmus, labyrinth, open procedural) + fixtures; author **PATHING.md** with
   the numbers (the drift columns should *prove* the user's River report);

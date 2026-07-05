@@ -10,6 +10,7 @@ import { SIM } from '../../config/sim';
 // J2 — share the leaf pathing helpers with MovementBehavior (these were
 // duplicated leaf-for-leaf). The healer's bespoke decision logic stays here.
 import { costAt, moveProposal, stepDurationTicks, key, chebyshev } from '../movement';
+import { emitMoveDecision, type MoveDecisionKind } from '../moveDecision';
 
 /**
  * E7.B — the healer's movement, replacing the default `MovementBehavior`
@@ -69,8 +70,9 @@ export class SupportMovementBehavior implements Behavior {
 
     // 1. A wounded ally (self included) is already healable → idle, UNLESS the
     //    healer is blocking a boxed ally off a chokepoint (GP5 #5 yield rule).
+    //    §42a — the idle is a `hold_band`: in heal range, holding to act.
     if (lowestWoundedAlly(unit, world, healRange) !== null) {
-      return yieldChokepoint(unit, world, durationTicks);
+      return yieldChokepoint(unit, world, durationTicks, 'hold_band');
     }
 
     // 2. Panic-retreat from a too-close enemy.
@@ -80,22 +82,27 @@ export class SupportMovementBehavior implements Behavior {
       chebyshev(unit.position, enemy.position) <= SIM.healerPanicRangeCells
     ) {
       const away = stepAwayFrom(unit, enemy.position, world);
-      if (away !== null)
+      if (away !== null) {
+        emitMoveDecision(world, unit, 'retreat');
         return moveProposal(unit.position, away, stepDurationTicks(world, away, durationTicks), 5);
+      }
       // Boxed against the enemy with no retreat cell → don't idle ON a
       // chokepoint. Fall through to the yield rule. This is the load-bearing
       // path for the GP4 deadlock: a healer wedged at a 1-wide gap near the
       // front line is always within panic range, so `stepAwayFrom` returns null
       // and the pre-GP5 code idled here, stranding the column behind it.
-      return yieldChokepoint(unit, world, durationTicks);
+      return yieldChokepoint(unit, world, durationTicks, 'boxed');
     }
 
     // 3. Approach the nearest wounded ally that's out of range.
     const wounded = nearestAlly(unit, world, (c) => c.currentHp < c.derived.maxHp);
     if (wounded !== null) {
       const to = stepToward(unit, wounded.position, world);
-      if (to !== null) return moveProposal(unit.position, to, stepDurationTicks(world, to, durationTicks), 1);
-      return yieldChokepoint(unit, world, durationTicks);
+      if (typeof to !== 'string') {
+        emitMoveDecision(world, unit, 'advance');
+        return moveProposal(unit.position, to, stepDurationTicks(world, to, durationTicks), 1);
+      }
+      return yieldChokepoint(unit, world, durationTicks, to === 'blocked' ? 'queue' : 'no_route');
     }
 
     // 4. Trail the centroid of living allies to stay tucked in formation.
@@ -108,18 +115,21 @@ export class SupportMovementBehavior implements Behavior {
       const anchor = snapToNavigable(rawAnchor, world);
       if (chebyshev(unit.position, anchor) > SIM.healerFollowGapCells) {
         const to = stepToward(unit, anchor, world);
-        if (to !== null) return moveProposal(unit.position, to, stepDurationTicks(world, to, durationTicks), 1);
+        if (typeof to !== 'string') {
+          emitMoveDecision(world, unit, 'advance');
+          return moveProposal(unit.position, to, stepDurationTicks(world, to, durationTicks), 1);
+        }
         // Trail step blocked (an ally in a 1-wide row wants to pass the other
         // way) → fall through to the yield: swap the boxed ally past us rather
         // than idling in its way. With a *swap* (not a forward vacate) this is
         // safe — the healer goes to the rear, not leading the column.
-        return yieldChokepoint(unit, world, durationTicks);
+        return yieldChokepoint(unit, world, durationTicks, to === 'blocked' ? 'queue' : 'no_route');
       }
     }
 
     // No wounded ally, no threat, already in formation (or alone) → idle,
     // UNLESS blocking a boxed ally off a chokepoint (GP5 #5 yield rule).
-    return yieldChokepoint(unit, world, durationTicks);
+    return yieldChokepoint(unit, world, durationTicks, 'no_goal');
   }
 }
 
@@ -140,14 +150,24 @@ export class SupportMovementBehavior implements Behavior {
  * Returns null (→ idle) when the healer isn't strictly blocking anyone. Score
  * 1: a ready heal (`heal_ally`, score 10) still wins, so the swap only fires
  * on heal-cooldown ticks — exactly the ticks the deadlock would otherwise burn.
+ *
+ * §42a — every healer idle path funnels through here, so this is where the
+ * poll's `unit:moveDecision` lands: `yield_swap` when the swap fires, else the
+ * caller-supplied `abstainKind` naming WHY the healer is idling (in heal
+ * range / boxed / blocked approach / in formation).
  */
 function yieldChokepoint(
   unit: Unit,
   world: World,
   durationTicks: number,
+  abstainKind: MoveDecisionKind,
 ): ActionProposal | null {
   const ally = blockedAlly(unit, world);
-  if (ally === null) return null;
+  if (ally === null) {
+    emitMoveDecision(world, unit, abstainKind);
+    return null;
+  }
+  emitMoveDecision(world, unit, 'yield_swap');
   return swapProposal(unit.position, ally.position, ally.id, durationTicks);
 }
 
@@ -385,13 +405,19 @@ function alliesCentroidCell(unit: Unit, world: World): GridCoord | null {
 }
 
 /**
- * One A* step toward `goalPos`, or null when no path exists or the next
- * cell is occupied (abstain → queue). Neutrals hard-block; other units are
+ * One A* step toward `goalPos`, or a failure kind when no path exists
+ * (`'no_route'`) or the next cell is occupied (`'blocked'` — abstain →
+ * queue; §42a splits the two so the decision record can tell a queueing
+ * healer from a walled-off one). Neutrals hard-block; other units are
  * soft-cost. The occupant of the goal cell is un-blocked so a path to an
  * ally's own cell is reachable — the caller never actually steps onto it
  * (it stops once in heal range / once the ally is healable).
  */
-function stepToward(unit: Unit, goalPos: GridCoord, world: World): GridCoord | null {
+function stepToward(
+  unit: Unit,
+  goalPos: GridCoord,
+  world: World,
+): GridCoord | 'blocked' | 'no_route' {
   const pathBlockers: GridCoord[] = [];
   const otherUnitCells = new Set<string>();
   for (const u of world.units) {
@@ -414,9 +440,9 @@ function stepToward(unit: Unit, goalPos: GridCoord, world: World): GridCoord | n
     false,
     footprintOf(unit), // §39b — the support mover honors its body width too.
   );
-  if (path.length < 2) return null;
+  if (path.length < 2) return 'no_route';
   const to = path[1]!;
-  if (otherUnitCells.has(key(to))) return null;
+  if (otherUnitCells.has(key(to))) return 'blocked';
   return to;
 }
 

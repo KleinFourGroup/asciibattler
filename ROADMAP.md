@@ -193,19 +193,30 @@ throughput (units through a fixture chokepoint per 100 ticks); oscillation
 rate (a unit re-entering a cell it left within k ticks); time-to-first-contact;
 the decision-mix histogram (what % of ticks are advance/sidestep/queue/…).
 
-**Decision points 42:** event vs transient field for decisions (leaning event —
-`unit:moveDecision`, dev-gated, mirrors the existing bus idiom); the fixture-map
-set (a symmetric open field + a straight corridor + a two-crossing river
-abstraction — hand-authored TEST fixtures, not shipped layouts); whether drift
-is measured per-team or per-spawn-region (per-region — availability `both`
-means teams swap sides).
+**Decision points 42:** ~~event vs transient field for decisions~~ **RESOLVED
+(42a): an ALWAYS-ON event** — `unit:moveDecision { unitId, kind }`, one per
+Movement/SupportMovement poll. Dev-gating was rejected as needless
+conditionality: a no-subscriber emit is nearly free, events never serialize,
+and an always-on record works in any build. Kinds are snake_case (TileKind
+style); the taxonomy grew from the sketch's 8 to **14 kinds** to cover the
+healer's ladder honestly (`retreat`/`boxed`/`yield_swap`/`flee`/`wander`/
+`frozen` beyond the mechanical set). Still open: the fixture-map set (a
+symmetric open field + a straight corridor + a two-crossing river abstraction
+— hand-authored TEST fixtures, not shipped layouts); whether drift is measured
+per-team or per-spawn-region (per-region — availability `both` means teams
+swap sides).
 
 ### Sub-steps (42a–42c) — the proposed cut
 
-- **42a — the `MoveDecision` records.** The typed taxonomy + emission from
-  `MovementBehavior`/`advance`/`sidestep` (and `SupportMovementBehavior`'s
-  paths). Byte-identical world; tests pin that every abstain/step maps to
-  exactly one decision kind. *Commit: sim + tests.*
+- **✅ 42a — the `MoveDecision` records (landed).** The 14-kind taxonomy +
+  emit helper in `src/sim/moveDecision.ts`; the mechanical kinds
+  (`advance`/`sidestep`/`queue`/`no_route`) emit from `movement.ts advance`
+  (via a `StepOutcome` union on `stepAlongRoute`), the contextual kinds from
+  the two behaviors (every healer idle path funnels through
+  `yieldChokepoint`, which now carries the abstain kind). Byte-identical
+  world; `moveDecision.test.ts` (13 tests) pins kind correctness per fixture
+  + the exactly-one-per-poll invariant (in-flight units emit nothing; a
+  finishing action polls same-tick).
 - **42b — the metrics harness.** The scripted-battle runner + the five v1
   metrics over fixture maps; deterministic (seeded) so re-runs reproduce.
   Tests pin harness determinism + metric arithmetic on hand-computable

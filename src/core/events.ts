@@ -18,6 +18,7 @@ import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
 import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
 import type { StatusEffect } from '../sim/statusEffects';
+import type { MoveDecisionKind } from '../sim/moveDecision';
 import type { RedrawAvailability } from '../run/redraw';
 import type { EmpowerAvailability } from '../run/empower';
 import type { Theme } from '../sim/layouts';
@@ -143,6 +144,21 @@ export interface GameEvents extends Record<string, unknown> {
     unitId: number;
     from: GridCoord;
     to: GridCoord;
+  };
+  /**
+   * §42a — the movement layer's per-poll DECISION record: why the unit moved,
+   * or why it deliberately (or helplessly) didn't. Exactly ONE per
+   * MovementBehavior / SupportMovementBehavior poll (a unit with an in-flight
+   * action isn't polled and emits nothing that tick). Purely observational —
+   * no world state, never serialized; the §42b metrics harness (decision-mix /
+   * oscillation / queue counts) is the consumer. Records movement INTENT: the
+   * proposal can still lose the selector to a higher-scoring ability —
+   * cross-check `unit:moved` for actual motion. Kinds + full taxonomy doc:
+   * `src/sim/moveDecision.ts`.
+   */
+  'unit:moveDecision': {
+    unitId: number;
+    kind: MoveDecisionKind;
   };
   /**
    * §35c — a unit was SHOVED off a cell it co-occupied: the occupancy backstop

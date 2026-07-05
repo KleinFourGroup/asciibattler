@@ -9,6 +9,7 @@ import { nearestActingCell } from '../actingPosition';
 import { claimedDestinationOf } from '../occupancy';
 import { minRangeForArchetype } from '../archetypes';
 import { advance, chebyshev, moveProposal, stepDurationTicks, key, type MovementIntent } from '../movement';
+import { emitMoveDecision } from '../moveDecision';
 import { retreatCell } from '../effects/reposition';
 import { behaviorFlags } from '../statusBehavior';
 
@@ -74,9 +75,23 @@ export class MovementBehavior implements Behavior {
     // logic (a frozen/panicking/blinded unit ignores orders). Resolved off the
     // unit's effects (def-resolve), so no serialized state.
     const behavior = behaviorFlags(unit.effects);
-    if (behavior.preventsMove) return null; // frozen — rooted.
-    if (behavior.movement === 'flee') return proposeFlee(unit, world); // panic.
-    if (behavior.movement === 'wander') return proposeWander(unit, world); // blind.
+    if (behavior.preventsMove) {
+      emitMoveDecision(world, unit, 'frozen'); // rooted.
+      return null;
+    }
+    if (behavior.movement === 'flee') {
+      // Panic. §42a — `boxed` covers both no-retreat-cell and the degenerate
+      // no-threat case (see MoveDecisionKind docs).
+      const flee = proposeFlee(unit, world);
+      emitMoveDecision(world, unit, flee === null ? 'boxed' : 'flee');
+      return flee;
+    }
+    if (behavior.movement === 'wander') {
+      // Blind.
+      const wander = proposeWander(unit, world);
+      emitMoveDecision(world, unit, wander === null ? 'boxed' : 'wander');
+      return wander;
+    }
 
     // O2 — under a `hold` objective the unit NEVER repositions: it acts in place
     // (AbilityBehavior fires at whatever `updateTarget` left in range) but
@@ -84,7 +99,10 @@ export class MovementBehavior implements Behavior {
     // dash ability is independently gated off — `updateTarget`'s hold branch
     // only ever commits an in-range target (or none), so the dash's
     // "target beyond attackRange" trigger can't fire.
-    if (world.objectiveFor(unit.team).mode === 'hold') return null;
+    if (world.objectiveFor(unit.team).mode === 'hold') {
+      emitMoveDecision(world, unit, 'hold_objective');
+      return null;
+    }
 
     const target = currentTarget(unit, world);
     if (target === null) {
@@ -119,6 +137,7 @@ export class MovementBehavior implements Behavior {
           bestEffort: true,
         });
       }
+      emitMoveDecision(world, unit, 'no_goal'); // no enemy, no rally → idle.
       return null;
     }
 
@@ -159,6 +178,7 @@ export class MovementBehavior implements Behavior {
     // "wait for the arrival" so the pursuer doesn't thrash a cell short.
     const targetClaim = claimedDestinationOf(world, target.id);
     if (inFiringBand(target.position) || (targetClaim !== undefined && inFiringBand(targetClaim))) {
+      emitMoveDecision(world, unit, 'hold_band'); // in position — let the ability fire.
       return null;
     }
 
@@ -206,6 +226,15 @@ export class MovementBehavior implements Behavior {
     // (`dist >= minRange` is always true for melee [minRange 0] and the too-far
     // approach, so this is byte-identical except the blocked-kiter case.)
     if (dist >= minRange) goals.push(target.position);
+
+    // §42a — the Qb#3 pinned-kiter shape: too close (inside minRange, so the
+    // target-cell fallback is off) AND no reachable firing cell. `advance([])`
+    // would return null without emitting, so the decision is named here.
+    // Byte-identical: the empty-goal advance was already a guaranteed abstain.
+    if (goals.length === 0) {
+      emitMoveDecision(world, unit, 'pinned');
+      return null;
+    }
 
     const intent: MovementIntent = {
       goals,

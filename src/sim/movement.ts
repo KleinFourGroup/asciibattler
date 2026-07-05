@@ -13,6 +13,7 @@ import {
   footprintOf,
 } from './occupancy';
 import { SIM } from '../config/sim';
+import { emitMoveDecision } from './moveDecision';
 
 /**
  * J2 — the shared movement primitive + the movement-intent seam.
@@ -189,15 +190,31 @@ export interface MovementIntent {
  * Iterates the goal preference list and returns the first goal that produces a
  * step; abstains only when none do. Score 1 (low) so `AbilityBehavior`
  * (score 10) always wins when an attack is also available.
+ *
+ * §42a — emits the poll's mechanical `unit:moveDecision`: `advance`/`sidestep`
+ * on a step, and on a full abstain `queue` when ANY goal attempt was blocked
+ * by a unit (a route existed; a body was in the way) vs `no_route` when none
+ * was. Emits nothing on an empty goal list (the caller owns that decision —
+ * the Qb#3 `pinned` shape), so the one-decision-per-poll invariant holds.
  */
 export function advance(unit: Unit, world: World, intent: MovementIntent): ActionProposal | null {
   const ctx = buildMovementContext(unit, world, { excludeUnitId: intent.excludeUnitId });
   const from = unit.position;
   const baseTicks = unit.derived.moveCooldownTicks;
   const footprint = footprintOf(unit); // §39b — path a wider body through wider gaps.
+  let sawBlocked = false;
   for (const goal of intent.goals) {
-    const move = stepAlongRoute(from, goal, ctx, world, intent, baseTicks, footprint);
-    if (move !== null) return move;
+    const outcome = stepAlongRoute(from, goal, ctx, world, intent, baseTicks, footprint);
+    if (outcome === 'no_route') continue;
+    if (outcome === 'blocked') {
+      sawBlocked = true;
+      continue;
+    }
+    emitMoveDecision(world, unit, outcome.kind);
+    return outcome.proposal;
+  }
+  if (intent.goals.length > 0) {
+    emitMoveDecision(world, unit, sawBlocked ? 'queue' : 'no_route');
   }
   return null;
 }
@@ -249,6 +266,17 @@ function walkAlongPath(
 }
 
 /**
+ * §42a — a goal attempt's outcome. `blocked` = a route existed but a unit
+ * stood in the way and no sidestep committed (the aggregate `queue` signal);
+ * `no_route` = A* found nothing (or the unit already sits on the goal). The
+ * step kinds feed the `unit:moveDecision` record in `advance`.
+ */
+type StepOutcome =
+  | { proposal: ActionProposal; kind: 'advance' | 'sidestep' }
+  | 'blocked'
+  | 'no_route';
+
+/**
  * One A* route toward `goal`, then commit the step(s) per `intent.maxCells`:
  *
  *   - `maxCells <= 1` (the default step): take `path[1]`. If that cell is
@@ -261,7 +289,9 @@ function walkAlongPath(
  *     (Exact leap-over-occupant semantics are N1's call; the conservative
  *     stop-before-occupied default keeps the seam safe meanwhile.)
  *
- * Returns null when no route exists or no cell can be committed.
+ * Returns a failure kind (not a proposal) when no route exists or no cell can
+ * be committed — the caller (`advance`) keeps trying later goals either way,
+ * exactly as the pre-§42a `null` did.
  */
 function stepAlongRoute(
   from: GridCoord,
@@ -275,20 +305,26 @@ function stepAlongRoute(
   // multi-tile MOVER doesn't exist yet (§40's rubble is static), so widening the
   // commit-time occupancy check rides the same seam whenever one ships.
   footprint = 1,
-): ActionProposal | null {
+): StepOutcome {
   const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
-  if (path.length < 2) return null;
+  if (path.length < 2) return 'no_route';
 
   if (intent.maxCells <= 1) {
     const to = path[1]!;
     if (ctx.otherUnitCells.has(key(to))) {
-      if (intent.sidestepWhenBlocked === false) return null;
+      if (intent.sidestepWhenBlocked === false) return 'blocked';
       const side = sidestep(from, intent.approachToward, world, ctx.occupied);
       return side === null
-        ? null
-        : moveProposal(from, side, stepDurationTicks(world, side, baseTicks));
+        ? 'blocked'
+        : {
+            proposal: moveProposal(from, side, stepDurationTicks(world, side, baseTicks)),
+            kind: 'sidestep',
+          };
     }
-    return moveProposal(from, to, stepDurationTicks(world, to, baseTicks));
+    return {
+      proposal: moveProposal(from, to, stepDurationTicks(world, to, baseTicks)),
+      kind: 'advance',
+    };
   }
 
   // Dash/leap: furthest unoccupied cell within the step cap along the route.
@@ -298,7 +334,9 @@ function stepAlongRoute(
   // (DashAbility computes a landing without a full proposal, since a dash's
   // cooldown is decoupled from its motion duration).
   const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells);
-  return landing === null ? null : moveProposal(from, landing, baseTicks);
+  return landing === null
+    ? 'blocked'
+    : { proposal: moveProposal(from, landing, baseTicks), kind: 'advance' };
 }
 
 /**

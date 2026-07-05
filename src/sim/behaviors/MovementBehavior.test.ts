@@ -10,6 +10,8 @@ import { deriveStats, inertDerived } from '../stats';
 import { ARCHETYPE_CONFIG, minRangeForArchetype, rangeForArchetype } from '../archetypes';
 import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
+import type { StatusEffect } from '../statusEffects';
+import { MoveAction } from '../actions/MoveAction';
 
 describe('MovementBehavior', () => {
   it('does not move on the first tick when already in attack range', () => {
@@ -695,5 +697,66 @@ describe('MovementBehavior — multi-tile neutral footprints (43-pre-b)', () => 
     m.targetId = e.id;
     // E7.D — it lobs over the body exactly as it lobbed over the corner.
     expect(new MovementBehavior().proposeAction(m, world)).toBeNull();
+  });
+});
+
+/**
+ * 44-pre-a — the blind wander's occupied set must cover a multi-tile neutral's
+ * WHOLE footprint (the §35 `occupiedCells` builder), not just its §39 corner.
+ * Corner-only, a rubble's body cells read as free wander candidates: the roll
+ * onto one was a doomed proposal §35b's destination gate then aborted
+ * (`unit:moveAborted`, no overlap), wasting the wanderer's tick.
+ */
+describe('MovementBehavior — blind wander vs multi-tile footprints (44-pre-a)', () => {
+  /** A held blind status (movement: wander) — the shipped def, key-resolved. */
+  function blind(): StatusEffect {
+    return { key: 'blind', magnitude: 1, mods: {}, lifetime: { kind: 'endOfTurn' }, merge: 'replace' };
+  }
+
+  // rubble_2x2 anchored at (6,4) → cells (6,4) (7,4) (6,5) (7,5). Of the
+  // wanderer's ring at (5,5), (6,4) is the corner (blocked either way) and
+  // (6,5) is a BODY cell — free corner-only, occupied footprint-aware.
+  const RUBBLE = { team: 'neutral' as const, x: 6, y: 4, archetype: 'rubble_2x2' as const, inert: true };
+  const RUBBLE_CELLS = [
+    { x: 6, y: 4 }, { x: 7, y: 4 },
+    { x: 6, y: 5 }, { x: 7, y: 5 },
+  ];
+
+  it('abstains (boxed) when the only corner-free neighbor is a rubble BODY cell', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 5, y: 5 },
+      RUBBLE,
+      // Walls on every other ring cell → footprint-aware there is NO free
+      // neighbor; corner-only, body cell (6,5) reads free and gets proposed.
+      { team: 'neutral', x: 4, y: 4, inert: true },
+      { team: 'neutral', x: 5, y: 4, inert: true },
+      { team: 'neutral', x: 4, y: 5, inert: true },
+      { team: 'neutral', x: 4, y: 6, inert: true },
+      { team: 'neutral', x: 5, y: 6, inert: true },
+      { team: 'neutral', x: 6, y: 6, inert: true },
+    ]);
+    const w = units[0]!;
+    w.addEffect(blind());
+    expect(new MovementBehavior().proposeAction(w, world)).toBeNull();
+  });
+
+  it('never rolls a wander step onto a rubble BODY cell (open ring)', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 5, y: 5 },
+      RUBBLE,
+      // Leave (4,6) (5,6) (6,6) genuinely free alongside the phantom (6,5):
+      // corner-only, ~30 draws hit the body cell with p ≈ 1 − (3/4)³⁰.
+      { team: 'neutral', x: 4, y: 4, inert: true },
+      { team: 'neutral', x: 5, y: 4, inert: true },
+      { team: 'neutral', x: 4, y: 5, inert: true },
+    ]);
+    const w = units[0]!;
+    w.addEffect(blind());
+    for (let i = 0; i < 30; i++) {
+      const p = new MovementBehavior().proposeAction(w, world);
+      expect(p).not.toBeNull();
+      const to = (p!.action as MoveAction).toData().to;
+      expect(RUBBLE_CELLS).not.toContainEqual(to);
+    }
   });
 });

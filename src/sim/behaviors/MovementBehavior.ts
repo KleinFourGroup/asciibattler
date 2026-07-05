@@ -6,7 +6,7 @@ import { currentTarget } from '../Targeting';
 import { SIM } from '../../config/sim';
 import { hasLineOfSight } from '../LineOfSight';
 import { nearestActingCell } from '../actingPosition';
-import { cellsOccupiedBy, claimedDestinationOf } from '../occupancy';
+import { GROUND, cellsOccupiedBy, claimedDestinationOf, occupiedCells } from '../occupancy';
 import { minRangeForArchetype } from '../archetypes';
 import { advance, chebyshev, moveProposal, stepDurationTicks, key, type MovementIntent } from '../movement';
 import { emitMoveDecision } from '../moveDecision';
@@ -276,10 +276,15 @@ function proposeFlee(unit: Unit, world: World): ActionProposal | null {
  * strikes it and only wanders when it has nothing in reach.
  */
 function proposeWander(unit: Unit, world: World): ActionProposal | null {
-  const occupied = new Set<string>();
-  for (const u of world.units) {
-    if (u.id !== unit.id) occupied.add(key(u.position));
-  }
+  // 44-pre-a — the WHOLE footprint (the §35 set builder), not just the §39
+  // corner: corner-only, a multi-tile rubble's body cells read as free and the
+  // wander could roll a doomed step onto one — §35b's destination gate then
+  // aborts it (no overlap), but the unit wastes its tick on `unit:moveAborted`
+  // instead of wandering. Claims are deliberately NOT folded here: this ships
+  // as a MoveAction proposal, so `destinationBlocked` (occupied-OR-claimed)
+  // re-validates at execution — unlike `retreatCell`'s instant effect
+  // reposition, which bypasses the selector gate and must fold claims itself.
+  const occupied = occupiedCells(world, GROUND, { excludeId: unit.id });
   const free: GridCoord[] = [];
   for (const [dx, dy] of NEIGHBORS) {
     const c: GridCoord = { x: unit.position.x + dx, y: unit.position.y + dy };

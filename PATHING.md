@@ -553,7 +553,53 @@ twice — 43a "drift much reduced", 43c "no drift I can ID at all").
 
 ---
 
-*(Next entries: §44 decision-protocol checkpoints [byte-identical
-refactor + WaitAction], then §45's before/afters — riverFork oscillation
-is the §45b centerpiece, corridor throughput §45a/c's, labyrinth queue
-mass §45's overall.)*
+## 44-pre-a — footprint-blind movement/status occupancy sets — 2026-07-05
+
+The first of the three §44-pre corner-only straggler fixes (the pre-44a
+audit's COMBAT/STATUS sweep; spec in ROADMAP §44-pre). Two occupancy sets
+built from `key(u.position)` corners routed through the §35
+`occupiedCells` builder (footprint-aware via `cellsOccupiedBy`):
+
+- **(D) `MovementBehavior.proposeWander`** — a BLIND wanderer could roll
+  a step onto a rubble BODY cell;
+- **(E) `SupportMovementBehavior`'s local set** (fed `stepAwayFrom` /
+  `countOpenNeighbors` / `blockedAlly.passable`) — a PANICKING healer
+  could pick a rubble body cell as its retreat, and openness ties padded
+  toward bodies. The `blockedAlly` openness read is fixed alongside with
+  NO behavior change (its BFS `distanceField` walls were already
+  footprint-correct and gate the result) — the audited-clean prediction
+  held.
+
+**Severity correction vs the audit filing:** no unit-inside-rubble
+OVERLAP was actually reachable — both sites ship `MoveAction` proposals,
+and §35b's `destinationBlocked` (footprint-aware `unitAt`, occupied OR
+claimed) re-validates at execution. The real defect was a DOOMED
+proposal: the roll landed on a body cell, §35b aborted it
+(`unit:moveAborted`), and the unit wasted its whole tick instead of
+wandering/retreating/yielding.
+
+**The ⚠ claimedCells question (spec'd alongside): guarded elsewhere,
+documented, NOT folded.** A wander/panic step onto a claimed cell cannot
+same-cell-collide with an in-flight mover's flip — the same §35b
+occupied-OR-claimed gate rejects it at execution. The asymmetry with
+`retreatCell` (which folds claims itself) is principled: effect
+repositions write `position` instantly inside `applyEffect`, bypassing
+the selector gate. Comments at all three sites now say so.
+
+**Fingerprint: fixtures BYTE-IDENTICAL** (they carry no rubble and the
+capture rosters no healers/blind — `baseline.test.ts` pins + the
+drift gates passed unregenerated). Live behavior change is confined to a
+blind/panicking unit adjacent to a 2×2/3×3 rubble body (River): it now
+proposes among genuinely free cells (or holds/yields honestly) instead
+of burning ticks on aborts. 3 new tests (2 wander, 1 panic) verified to
+FAIL against the pre-fix sim. 1734 main / 212 fuzz:smoke / typecheck
+clean; no fuzz re-baseline needed.
+
+---
+
+*(Next entries: 44-pre-b [the `unitsInCells` AoE/chain footprint seam] ·
+44-pre-c [strike gate + movement hold → footprint distance, one commit] ·
+then §44 decision-protocol checkpoints [byte-identical refactor +
+WaitAction], then §45's before/afters — riverFork oscillation is the
+§45b centerpiece, corridor throughput §45a/c's, labyrinth queue mass
+§45's overall.)*

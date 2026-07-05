@@ -5,7 +5,7 @@ import type { ActionProposal } from '../Action';
 import { SwapAction } from '../actions/SwapAction';
 import { findTarget, lowestWoundedAlly, currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
-import { cellsOccupiedBy, footprintOf } from '../occupancy';
+import { GROUND, cellsOccupiedBy, footprintOf, occupiedCells } from '../occupancy';
 import { SIM } from '../../config/sim';
 // J2 — share the leaf pathing helpers with MovementBehavior (these were
 // duplicated leaf-for-leaf). The healer's bespoke decision logic stays here.
@@ -199,7 +199,11 @@ function yieldChokepoint(
 function blockedAlly(unit: Unit, world: World): Unit | null {
   const h = unit.position;
   const hKey = key(h);
-  const occupied = occupiedCells(unit, world);
+  // 44-pre-a — footprint-aware (the §35 set builder); corner-only, a rubble's
+  // body cells read as open "other forward" cells. No behavior change expected:
+  // the BFS `distanceField` walls are already footprint-correct and gate the
+  // result.
+  const occupied = occupiedCells(world, GROUND, { excludeId: unit.id });
   const walls = neutralCells(world);
   const fields = new Map<number, Map<string, number>>(); // target id → dist field
 
@@ -318,21 +322,6 @@ function snapToNavigable(cell: GridCoord, world: World): GridCoord {
     }
   }
   return cell;
-}
-
-/**
- * Every other unit's cell (all teams, neutrals INCLUDED) keyed for O(1)
- * membership. Neutral inclusion is the load-bearing bit: walls + half-cover
- * are neutral units rather than impassable tiles, so a passability check only
- * sees them through this set.
- */
-function occupiedCells(unit: Unit, world: World): Set<string> {
-  const occupied = new Set<string>();
-  for (const u of world.units) {
-    if (u.id === unit.id) continue;
-    occupied.add(key(u.position));
-  }
-  return occupied;
 }
 
 /**
@@ -463,7 +452,14 @@ function stepToward(
  * two retreat semantics.
  */
 function stepAwayFrom(unit: Unit, enemyPos: GridCoord, world: World): GridCoord | null {
-  const occupied = occupiedCells(unit, world);
+  // 44-pre-a — the WHOLE footprint (the §35 set builder), not just the §39
+  // corner: corner-only, a rubble's body cells read as free retreat cells (and
+  // padded `countOpenNeighbors` openness ties) — the panic step onto one was a
+  // doomed proposal §35b then aborted, wasting the tick. Claims deliberately
+  // NOT folded: this ships as a MoveAction proposal, so `destinationBlocked`
+  // (occupied-OR-claimed) re-validates at execution — unlike `retreatCell`'s
+  // instant effect reposition, which must fold claims itself.
+  const occupied = occupiedCells(world, GROUND, { excludeId: unit.id });
 
   const currentDist = chebyshev(unit.position, enemyPos);
   let best: GridCoord | null = null;

@@ -311,3 +311,28 @@ describe('SupportMovementBehavior — multi-tile neutral footprints (43-pre)', (
     expect(RUBBLE_CELLS).not.toContainEqual(dest(p!));
   });
 });
+
+/**
+ * 44-pre-a — the panic retreat's occupied set must cover a multi-tile
+ * neutral's WHOLE footprint (the §35 `occupiedCells` builder), not just its
+ * §39 corner. Corner-only, a rubble's body cells read as free retreat cells:
+ * the panicking healer's step onto one was a doomed proposal §35b's
+ * destination gate then aborted (`unit:moveAborted`, no overlap), wasting the
+ * tick it should have spent yielding/holding.
+ */
+describe('SupportMovementBehavior — panic retreat vs multi-tile footprints (44-pre-a)', () => {
+  it('stepAwayFrom never retreats onto a rubble BODY cell (abstains when boxed by the body)', () => {
+    // Enemy due south at exactly panic range; the only distance-increasing
+    // cells are the northern ring (3,4) (4,4) (5,4). A 2×2 rubble at corner
+    // (3,3) covers (3,4) (4,4) with BODY cells (the corner (3,3) is off the
+    // ring, so a corner-only set blocks neither) and a wall takes (5,4).
+    // Footprint-aware there is NO retreat cell → boxed → yield path → null
+    // (no blocked ally). Corner-only proposed the overlap step onto (3,4).
+    const healer = makeUnit(50, 'player', { x: 4, y: 5 }, { archetype: 'healer', range: HEAL_RANGE });
+    const enemy = makeUnit(51, 'enemy', { x: 4, y: 5 + PANIC });
+    const wall = makeWall(60, { x: 5, y: 4 });
+    const w = world([healer, enemy, wall]);
+    spawnRubble(w, { x: 3, y: 3 }, 2);
+    expect(new SupportMovementBehavior().proposeAction(healer, w)).toBeNull();
+  });
+});

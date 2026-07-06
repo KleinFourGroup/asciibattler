@@ -268,6 +268,7 @@ but the headline rules:
 ## Pre-flight when picking up a session
 
 ```bash
+git config core.hooksPath .githooks   # once per clone — activates the pre-commit gate
 git log --oneline -5    # confirm latest commit
 npm test                # should be all green, 0 todo
 npm run typecheck       # tsc --noEmit; clean (added E3.5)
@@ -275,6 +276,15 @@ npm run dev             # opens at :5173 (or :5174 if stale process held :5173)
 ```
 
 ## Pre-commit checklist
+
+**Mechanized (2026-07-06):** the checklist below runs automatically via the
+versioned hook [.githooks/pre-commit](.githooks/pre-commit) once
+`git config core.hooksPath .githooks` is set (see Pre-flight) — including
+the conditional fuzz:smoke, which triggers on staged `src/sim|src/run|
+src/core|config/` paths instead of memory. **Never bypass it with
+`--no-verify`** — a failing hook means fix the tree, not skip the check.
+The list stays here as documentation of what runs (and as the manual
+fallback on a clone that hasn't activated the hook).
 
 Run before every commit. Vitest and tsc are non-overlapping —
 vitest's esbuild transformer accepts some strict-tsc rejections

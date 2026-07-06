@@ -1,0 +1,28 @@
+#!/bin/sh
+# Pre-commit gate — mechanizes the AGENTS.md "Pre-commit checklist" so it no
+# longer depends on anyone remembering it (E7.A committed a broken build when
+# the checklist was skipped under pressure). NEVER bypass with --no-verify:
+# a failing hook means fix the tree, not skip the check.
+#
+# Activate once per clone:   git config core.hooksPath .githooks
+# (Documented in AGENTS.md "Pre-flight". Runs under Git Bash / sh on Windows.)
+
+set -e
+
+echo "[pre-commit] npm run typecheck ..."
+npm run typecheck
+
+echo "[pre-commit] npm test (full suite) ..."
+npm test
+
+# The checklist's conditional half, as path detection instead of memory:
+# fuzz:smoke when staged changes touch sim/run/core behavior or the balance
+# config surface (config JSON changes can shift fuzz baselines too).
+if git diff --cached --name-only | grep -qE '^(src/(sim|run|core)/|config/)'; then
+  echo "[pre-commit] staged sim/run/core/config changes -> npm run fuzz:smoke ..."
+  npm run fuzz:smoke
+else
+  echo "[pre-commit] no staged sim/run/core/config changes -> fuzz:smoke skipped."
+fi
+
+echo "[pre-commit] green — proceeding with commit."

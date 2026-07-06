@@ -48,6 +48,16 @@
  *     × own step ticks. 0 = only cells already free by strict arrival
  *     estimate; higher → more optimism about lanes clearing. A step-count,
  *     not a timing — scales with the unit's speed automatically.
+ *   waitForVacancyOwnSteps — §45b: the wait-vs-sidestep gate. When the
+ *     IMMEDIATE forward cell (the committed A* step) is occupied by a body
+ *     whose vacancy ETA <= this many of the pather's OWN steps, the unit
+ *     proposes a first-class WAIT (§44b) — queue in lane — instead of the
+ *     E5.B sidestep. Beyond the gate (or no derivable ETA: a static body, a
+ *     claim) the sidestep/queue behavior is exactly pre-§45b. 0 = wait only
+ *     for a same-tick flip; higher → deeper patience before crabbing.
+ *     Distinct from `vacancyWindowOwnSteps` (route pricing) so queueing
+ *     patience and route optimism tune independently. A step-count, not a
+ *     timing.
  *   healerPanicRangeCells — E7.B: when a healer (`SupportMovementBehavior`)
  *     has no wounded ally in heal range, it panic-retreats from the nearest
  *     enemy that is within this many cells (Chebyshev). A distance, not a
@@ -102,6 +112,7 @@ const SimSchema = z.object({
   vacatingCellPenalty: z.number().nonnegative(),
   inboundClaimPenalty: z.number().nonnegative(),
   vacancyWindowOwnSteps: z.number().nonnegative(),
+  waitForVacancyOwnSteps: z.number().nonnegative(),
   healerPanicRangeCells: z.number().int().nonnegative(),
   healerFollowGapCells: z.number().int().nonnegative(),
   actingCellSearchSlack: z.number().int().nonnegative(),
@@ -118,6 +129,7 @@ export const SIM = {
   vacatingCellPenalty: parsed.vacatingCellPenalty,
   inboundClaimPenalty: parsed.inboundClaimPenalty,
   vacancyWindowOwnSteps: parsed.vacancyWindowOwnSteps,
+  waitForVacancyOwnSteps: parsed.waitForVacancyOwnSteps,
   healerPanicRangeCells: parsed.healerPanicRangeCells,
   healerFollowGapCells: parsed.healerFollowGapCells,
   actingCellSearchSlack: parsed.actingCellSearchSlack,

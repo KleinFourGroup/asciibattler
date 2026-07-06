@@ -3,6 +3,7 @@ import type { Unit } from './Unit';
 import type { World } from './World';
 import type { ActionProposal } from './Action';
 import { MoveAction } from './actions/MoveAction';
+import { waitProposal } from './actions/WaitAction';
 import { findPath } from './Pathfinding';
 import {
   GROUND,
@@ -236,10 +237,12 @@ export interface MovementIntent {
  * (score 10) always wins when an attack is also available.
  *
  * §42a — emits the poll's mechanical `unit:moveDecision`: `advance`/`sidestep`
- * on a step, and on a full abstain `queue` when ANY goal attempt was blocked
- * by a unit (a route existed; a body was in the way) vs `no_route` when none
- * was. Emits nothing on an empty goal list (the caller owns that decision —
- * the Qb#3 `pinned` shape), so the one-decision-per-poll invariant holds.
+ * on a step, `wait` on §45b's ETA-gated queue-in-lane proposal, and on a full
+ * abstain `queue` when ANY goal attempt was blocked by a unit (a route
+ * existed; a body was in the way — and its drain ETA, if any, missed the
+ * §45b gate) vs `no_route` when none was. Emits nothing on an empty goal
+ * list (the caller owns that decision — the Qb#3 `pinned` shape), so the
+ * one-decision-per-poll invariant holds.
  */
 export function advance(unit: Unit, world: World, intent: MovementIntent): ActionProposal | null {
   const ctx = buildMovementContext(unit, world, { excludeUnitId: intent.excludeUnitId });
@@ -313,10 +316,13 @@ function walkAlongPath(
  * §42a — a goal attempt's outcome. `blocked` = a route existed but a unit
  * stood in the way and no sidestep committed (the aggregate `queue` signal);
  * `no_route` = A* found nothing (or the unit already sits on the goal). The
- * step kinds feed the `unit:moveDecision` record in `advance`.
+ * step kinds feed the `unit:moveDecision` record in `advance`. §45b adds
+ * `wait` — a first-class queue-in-lane proposal, returned like a step (it
+ * consumes the poll; the goal fallback chain finds a step, not a different
+ * queue).
  */
 type StepOutcome =
-  | { proposal: ActionProposal; kind: 'advance' | 'sidestep' }
+  | { proposal: ActionProposal; kind: 'advance' | 'sidestep' | 'wait' }
   | 'blocked'
   | 'no_route';
 
@@ -324,9 +330,15 @@ type StepOutcome =
  * One A* route toward `goal`, then commit the step(s) per `intent.maxCells`:
  *
  *   - `maxCells <= 1` (the default step): take `path[1]`. If that cell is
- *     occupied by another unit, try a perpendicular E5.B sidestep toward
- *     `approachToward` before giving up (unless `sidestepWhenBlocked` is
- *     false). Byte-identical to pre-J2 `MovementBehavior`/tile pursuit.
+ *     occupied by another unit: **§45b first asks whether the blocker is
+ *     already leaving** — when its vacancy ETA is within
+ *     `waitForVacancyOwnSteps` of the mover's own steps, propose a
+ *     first-class WAIT (queue in lane; the crab-walk dies here). Only
+ *     otherwise try the perpendicular E5.B sidestep toward `approachToward`
+ *     before giving up (unless `sidestepWhenBlocked` is false — the wait
+ *     gate fires for strict-queue consumers too; it IS queueing). A static
+ *     body or a claim has no derivable drain ETA and behaves exactly
+ *     pre-§45b.
  *   - `maxCells > 1` (a dash/leap): walk along the route from `path[1]`, taking
  *     cells until one is occupied or the cap/goal is reached; land on the
  *     furthest reachable cell. No sidestep — a leap doesn't crab sideways.
@@ -356,6 +368,19 @@ function stepAlongRoute(
   if (intent.maxCells <= 1) {
     const to = path[1]!;
     if (ctx.otherUnitCells.has(key(to))) {
+      // §45b — the ETA-gated wait-vs-sidestep. The forward cell's occupant is
+      // mid-move away and will free it within the gate: queue for it (a
+      // deliberate, selector-visible hold — §44b's WaitAction) instead of
+      // crabbing perpendicular. Re-decided fresh every poll: if the blocker
+      // stalls (its move ends, ETA gone), the gate fails next tick and the
+      // pre-§45b sidestep/queue behavior resumes — no freeze. Claims never
+      // reach here (`vacatingEta` holds body cells only; waiting for an
+      // ARRIVING body means waiting for it to arrive AND leave — not
+      // derivable from one in-flight action).
+      const eta = ctx.vacatingEta.get(key(to));
+      if (eta !== undefined && eta <= SIM.waitForVacancyOwnSteps * ctx.stepTicks) {
+        return { proposal: waitProposal(), kind: 'wait' };
+      }
       if (intent.sidestepWhenBlocked === false) return 'blocked';
       const side = sidestep(from, intent.approachToward, world, ctx.occupied);
       return side === null
@@ -388,9 +413,11 @@ function stepAlongRoute(
  * A*-chosen next step is occupied by another unit. Considers exactly the two
  * cells perpendicular to the unit→target direction (per the E5 decision point:
  * 2 candidates, not 3 — back-step-forward is what the cost gradient already
- * does). Keeps only in-bounds, finite-cost, unoccupied cells, and returns the
- * one closest to the target (Chebyshev). Returns null when neither is viable,
- * so the caller abstains and corridor queueing still emerges.
+ * does). Keeps only in-bounds, finite-cost, unoccupied cells THAT DO NOT LOSE
+ * GROUND (§45b — Chebyshev to `target` <= standing still; on a pure-diagonal
+ * approach both rotations are backward, so the sidestep abstains entirely),
+ * and returns the one closest to the target. Returns null when neither is
+ * viable, so the caller abstains and corridor queueing still emerges.
  *
  * §43b — the tie rule. When both rotations are viable AND equidistant (the
  * common case: any far-enough target ties), the winner is the rotation the
@@ -428,6 +455,16 @@ export function sidestep(
     if (!isFinite(world.tileGrid.costAt(c))) continue;
     if (occupied.has(key(c))) continue;
     const dist = chebyshev(c, target);
+    // §45b — the PROGRESS guard: never sidestep to a cell strictly FARTHER
+    // from the approach anchor than standing still. A diagonal approach makes
+    // one rotation a backward step (dist+1); pre-§45b it was taken whenever
+    // the other rotation was blocked, and pairs of such steps are the
+    // shuttle that kept riverFork's standoff oscillation at 0.92 through
+    // every §43 tie fix (286 backtracks/300t, measured). Equal-distance
+    // laterals — the sidesteps that actually unlock corridor flow — remain.
+    // The honest alternative to a backward crab is the queue abstain (or
+    // §45b's wait when the blocker's drain is derivable).
+    if (dist > chebyshev(from, target)) continue;
     if (dist < bestDist) {
       best = c;
       bestDist = dist;

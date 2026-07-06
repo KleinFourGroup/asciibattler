@@ -28,17 +28,22 @@ import type { World } from './World';
  *   - `flee`        — panic-status step away from the nearest threat.
  *   - `wander`      — blind-status step to a random open neighbor.
  *   - `yield_swap`  — the healer's GP5 chokepoint swap with a boxed ally.
- *   - `wait`        — §44b: the DELIBERATE hold, a first-class `WaitAction`
- *                     proposal — in acting range (firing band / heal range)
- *                     with the shot clear, holding to act. Replaces §42a's
- *                     `hold_band` abstain (same decision, same sites): the
- *                     selector now weighs it — a ready ability still outranks
- *                     it, and a winning wait resolves within its tick (the
- *                     instantaneous-action rule; no world-state trace).
+ *   - `wait`        — the DELIBERATE hold, a first-class `WaitAction`
+ *                     proposal, from two families of site: §44b's in-acting-
+ *                     range holds (firing band / heal range, holding to act —
+ *                     the `hold_band` rename) and §45b's ETA-gated queue-in-
+ *                     lane (the forward cell's occupant vacates within
+ *                     `waitForVacancyOwnSteps` own-steps — queue for it
+ *                     instead of crabbing). The selector weighs it — a ready
+ *                     ability still outranks it, and a winning wait resolves
+ *                     within its tick (the instantaneous-action rule; no
+ *                     world-state trace).
  *
  *   Abstains (returned null — which now means ONLY "nothing to propose")
- *   - `queue`          — wanted to step; a unit blocks the way; holding.
- *                        Stays an abstain until §45b's ETA-gated wait.
+ *   - `queue`          — wanted to step; a unit blocks the way with NO
+ *                        drain ETA inside §45b's gate (a static body, a
+ *                        claim, or a too-slow vacate); holding helplessly.
+ *                        The derivable-drain case is a `wait` since §45b.
  *   - `no_route`       — no path to any goal (or already on every goal).
  *   - `hold_objective` — an O2 `hold` objective forbids repositioning.
  *   - `no_goal`        — nothing to pursue (no enemy / rally / wounded ally;

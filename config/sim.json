@@ -5,6 +5,7 @@
   "vacatingCellPenalty": 1,
   "inboundClaimPenalty": 8,
   "vacancyWindowOwnSteps": 1,
+  "waitForVacancyOwnSteps": 1,
   "healerPanicRangeCells": 1,
   "healerFollowGapCells": 1,
   "actingCellSearchSlack": 2,

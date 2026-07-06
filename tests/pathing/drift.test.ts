@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { runMovementMetrics } from './harness';
-import { openFieldScenario, riverForkScenario } from './fixtures';
+import { corridorScenario, openFieldScenario, riverForkScenario } from './fixtures';
 import { measureLayout } from './capture';
 
 /**
@@ -39,6 +39,35 @@ describe('§43c drift gates — symmetric fixtures (seed-invariant)', () => {
     const m = runMovementMetrics(riverForkScenario(4), 300);
     expect(Math.abs(m.teams.player.meanNetLateralDrift)).toBeLessThanOrEqual(0.5);
     expect(Math.abs(m.teams.enemy.meanNetLateralDrift)).toBeLessThanOrEqual(0.5);
+  });
+});
+
+/**
+ * §45b — the COOPERATION gates, same doctrine as the drift gates above:
+ * bounds that survive every re-baseline, never to be relaxed.
+ *
+ *   - the OSCILLATION gate encodes "the crab-walk stays dead". Pre-§45b the
+ *     riverFork standoff read 0.923 (a unit reversing on ~every move — the
+ *     shuttle between the two plugged fords); post-§45b it reads 0.087. The
+ *     0.5 bound is the ROADMAP §45 target line with generous combat-noise
+ *     headroom — a change that trips it has re-created a shuttle.
+ *   - the THROUGHPUT floor encodes "queueing must never cost crossings". The
+ *     sealed corridor has pushed 0.75 / 1.50 per 100t through every §43+§45
+ *     change; patience dials (wait gates, progress guard) may reshape the
+ *     decision mix freely but may not starve the gate.
+ */
+describe('§45b cooperation gates — oscillation + throughput (seed-invariant)', () => {
+  it('riverFork(4): player oscillation stays ≤ 0.5 (was 0.923 pre-§45b)', () => {
+    const m = runMovementMetrics(riverForkScenario(4), 300);
+    expect(m.teams.player.oscillationRate).toBeLessThanOrEqual(0.5);
+    expect(m.teams.enemy.oscillationRate).toBeLessThanOrEqual(0.5);
+  });
+
+  it('corridor(3)/(6): gate throughput holds its floor (0.75 / 1.50 per 100t)', () => {
+    const three = runMovementMetrics(corridorScenario(3), 400);
+    expect(three.throughputPer100Ticks).toBeGreaterThanOrEqual(0.75);
+    const six = runMovementMetrics(corridorScenario(6), 400);
+    expect(six.throughputPer100Ticks).toBeGreaterThanOrEqual(1.5);
   });
 });
 

@@ -620,6 +620,18 @@ renderer "queued" stance deferred from §44 is wanted for ship-feel.
   A flat premium made a column's lead claim read WORSE than pre-45a and
   re-walled the corridors the phase exists to un-wall (arithmetic + the
   A/B corridor tests in movement.test.ts). Full entry: PATHING.md §45a.
+- 45b: the wait gate + what actually killed the crab-walk —
+  ✅ DECIDED (2026-07-05): gate k = 1 OWN-step (`waitForVacancyOwnSteps`,
+  its own dial — queueing patience tunes independently of 45a's route
+  optimism); wait consumes the poll (the goal fallback chain finds a step,
+  not a different queue); claims never qualify. ⚠ SCOPE ADDITION, measured
+  in: the sidestep PROGRESS GUARD (never crab to a cell strictly farther
+  from the approach anchor) — the ETA gate alone was a no-op on riverFork
+  (0.926: standoff blockers are instantaneous-wait units, ETA-less by
+  construction); the guard killed the backward shuttle (osc 0.923 → 0.087).
+  Interplay with §43b accepted: pure-diagonal approaches no longer sidestep
+  at all (both rotations lose ground); cell-parity governs the surviving
+  cardinal ties. Full entry: PATHING.md §45b.
 - 45c: the determinism-vs-cache resolution (leaning derive-don't-cache; the
   round's only candidate snapshot bump if not).
 - 46: the School-2/3 gate (the round's whole point — decided last, on data).

@@ -854,6 +854,81 @@ unregenerated + `baseline.test.ts` re-pinned (riverFork player drift
 
 ---
 
-*(Next entries: 45b wait-vs-sidestep — riverFork osc 0.923 is the
-centerpiece, and the 45a queue mass above is its conversion target;
-then 45c commitment/hysteresis, 45d the re-measure + playtest.)*
+## 45b — wait-vs-sidestep (THE CRAB-WALK DIES) — 2026-07-05
+
+Two rules land together; the second was found at the keyboard when the
+first alone measured a no-op on its own target.
+
+**Rule 1 — the ETA-gated wait (the chartered one).** In `stepAlongRoute`,
+when the committed forward cell (`path[1]`) is occupied by a body whose
+`vacancyEtaOf` is within `waitForVacancyOwnSteps` (**1** own-step,
+`config/sim.json`) of the mover's own cadence, propose §44b's first-class
+`WaitAction` — queue in lane — instead of the E5.B sidestep. Re-decided
+every poll (a stalled blocker fails the gate next tick — no freeze);
+claims never qualify (an ARRIVING body is not a draining lane); fires for
+`sidestepWhenBlocked: false` consumers too (it IS queueing). Decision
+kind: `wait` (its second site family); `queue` now means "blocked with NO
+derivable drain".
+
+**The measured surprise:** the gate alone left riverFork at **0.926**
+(was 0.923) — sidestep 194 → 195. Diagnosis (probed, not vibes): the
+fixture is ability-less, so the ford contest never resolves — the fords
+are PLUGGED by in-band units whose §44b waits are instantaneous
+(no `activeAction`), making every blocker ETA-LESS by construction. The
+gate's mechanism was proven elsewhere (corridor(6) queue 9 → 6 converted
+to waits; isthmus/labyrinth below) but the crab itself was a different
+animal: units SHUTTLING between the two plugged fords via sidesteps that
+moved them FARTHER from their targets (286 backtracks/300t — on a
+diagonal approach, both perpendicular rotations lose ground, and the
+viable one was taken anyway).
+
+**Rule 2 — the sidestep PROGRESS GUARD (the shuttle killer).** `sidestep`
+rejects a candidate strictly farther (Chebyshev) from the approach anchor
+than standing still. Stateless, RNG-free, rotation-symmetric (nullity
+commutes with the 180° board rotation — gate-tested). Consequences, all
+measured: a pure-diagonal approach never sidesteps backward (both
+rotations lose ground → honest queue/wait); a strictly-closer diagonal
+rotation still fires; cardinal ties — the ones corridor flow is made
+of — keep §43b's cell-parity rule untouched (the mirrored-pocket pin
+passes unmodified).
+
+**Fingerprint (vs 45a):**
+
+| fixture | 45a | 45b | |
+|---|---|---|---|
+| riverFork osc P | 0.923 | **0.087** | the §45 target line (≪ 0.5) — CLEARED |
+| riverFork sidestep / moves / backtracks P | 194 / 310 / 286 | **4 / 23 / 2** | the shuttle WAS the fixture's motion |
+| riverFork drift P/E | 0.00 / +0.25 | −0.25 / +0.25 | symmetric; 45a's 0.00 was partly shuttle-averaging; gate (≤0.5) holds |
+| corridor(3/6) throughput | 0.75 / 1.50 | **0.75 / 1.50** | HELD — patience costs zero crossings |
+| corridor(3/6) osc P | 0.029 / 0.037 | 0.000 / 0.014 | churn → waits/queues |
+| openField | byte-identical | byte-identical | no traffic, no change |
+
+Shipped layouts (vs 43c worst-seeds): **isthmus osc 0.000 in 4/6
+team-seeds** (43c worst 0.083) and 45a's queue-105 seed drained
+(→ waits); **labyrinth osc worst 0.163 → 0.066** with queue mass 623
+(45a) → 391 absorbed by waits 202–330; river osc ≤ 0.091 everywhere,
+seed 101 ends in 225t (fastest recorded); procedural osc ≈ 0.000
+across the board. endlessCorridors osc worst 0.150 (flat since 42c)
+— §45c's hysteresis owns it, unchanged by charter. Isthmus 100 runs
+534t vs 43c's 421t: approach-phase standoffs are queue-heavy now
+(honest queues > phantom shuffling); the 45d feel playtest judges it,
+45c's commitment should shrink it.
+
+**Standing gates landed (drift.test.ts, same never-relax doctrine):**
+riverFork oscillation ≤ 0.5 both teams (the crab-walk stays dead) +
+corridor(3/6) throughput floors ≥ 0.75/1.50 (queueing must never starve
+the gate).
+
+**Proof:** 1784 main (+9: the wait-gate matrix incl. the ford-mouth
+preempt-a-viable-sidestep pin and the gate-inclusive boundary; the
+progress-guard pins; the 2 gates) + 212 fuzz:smoke **NO re-baseline** +
+§43c drift gates passed unregenerated + baseline.test.ts re-pinned +
+typecheck clean. v32/v24 hold (nothing serialized — the wait stays
+instantaneous, the guard is pure geometry).
+
+---
+
+*(Next entries: 45c path commitment + hysteresis — endlessCorridors osc
++ repath count are its metrics, the isthmus approach-phase queue time its
+feel target; then 45d the full re-measure + the native playtest that
+closes §45.)*

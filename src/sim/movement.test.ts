@@ -6,6 +6,7 @@ import { RNG } from '../core/RNG';
 import { deriveStats, inertDerived } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { MoveAction } from './actions/MoveAction';
+import { WAIT_ACTION_ID } from './actions/WaitAction';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import {
@@ -227,9 +228,12 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
     // east → south) wins the tie. From the ODD cell one row down, it flips.
     expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 4 }, world, none)).toEqual({ x: 4, y: 5 });
     expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 5 }, world, none)).toEqual({ x: 4, y: 4 });
-    // Same alternation on a diagonal approach (both rotations tie there too).
-    expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 9 }, world, none)).toEqual({ x: 3, y: 5 });
-    expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 10 }, world, none)).toEqual({ x: 5, y: 4 });
+    // §45b — a pure-DIAGONAL approach no longer ties: both rotations are one
+    // step FARTHER from the target (the backward shuttle the progress guard
+    // culls), so the sidestep honestly abstains and the caller queues/waits.
+    // Cardinal ties — the ones corridor flow is made of — keep the §43b rule.
+    expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 9 }, world, none)).toBeNull();
+    expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 10 }, world, none)).toBeNull();
   });
 
   it('adjacent cells in a column alternate sides (the self-decorrelation property)', () => {
@@ -275,9 +279,9 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
     const cases: [GridCoord, GridCoord][] = [
       [{ x: 4, y: 4 }, { x: 9, y: 4 }], // even, east
       [{ x: 4, y: 5 }, { x: 9, y: 5 }], // odd, east
-      [{ x: 4, y: 4 }, { x: 9, y: 9 }], // even, diagonal
+      [{ x: 7, y: 4 }, { x: 2, y: 4 }], // odd, west
       [{ x: 5, y: 8 }, { x: 5, y: 2 }], // odd, north
-      [{ x: 6, y: 3 }, { x: 2, y: 7 }], // odd, diagonal south-west
+      [{ x: 6, y: 4 }, { x: 6, y: 9 }], // even, south
     ];
     for (const [from, target] of cases) {
       const straight = sidestep(from, target, world, none);
@@ -285,6 +289,10 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
       expect(straight).not.toBeNull();
       expect(rotated).toEqual(rot(straight!));
     }
+    // §45b — the guard commutes with the rotation too: a diagonal approach
+    // abstains identically in both frames (nullity is rotation-invariant).
+    expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 9 }, world, none)).toBeNull();
+    expect(sidestep(rot({ x: 4, y: 4 }), rot({ x: 9, y: 9 }), world, none)).toBeNull();
   });
 
   it('mirrored pockets sidestep mirror-symmetrically through advance() (the ROADMAP pin)', () => {
@@ -586,5 +594,140 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
     const path = corridorScene(10_000);
     expect(path.length).toBeGreaterThan(0);
     expect(path.some((c) => c.y !== 11)).toBe(true);
+  });
+});
+
+describe('§45b — the ETA-gated wait-vs-sidestep', () => {
+  /** Same seat shape as the §45a block: active move + destination claim. */
+  function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
+    const durationTicks = travel * 2;
+    unit.activeAction = {
+      action: new MoveAction(unit.position, to, durationTicks),
+      startTick: world.currentTick,
+      finishTick: world.currentTick + durationTicks,
+      phases: [
+        { phase: 'travel', ticks: travel },
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: durationTicks - travel },
+      ],
+    };
+    world.claimCell(to, unit.id);
+  }
+
+  /**
+   * The M6 forcedStep box: walls at (0,1)/(1,1) pin the mover's route to
+   * (1,0), and neither perpendicular sidestep cell exists ((0,1) walled,
+   * (0,-1) off-grid) — so the poll's outcome isolates the §45b gate: wait
+   * when it fires, bare-null queue when it doesn't.
+   */
+  function boxedAdvance(blockerTravel: number | 'static' | 'claim-only') {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'player', x: 1, y: 0 },
+      { team: 'neutral', x: 0, y: 1, neutral: true },
+      { team: 'neutral', x: 1, y: 1, neutral: true },
+      { team: 'player', x: 3, y: 3 }, // the claim-only case's claimant
+    ]);
+    const [mover, blocker, , , claimant] = units;
+    if (blockerTravel === 'claim-only') {
+      // The forward cell holds no body — only an inbound claim (an arriving
+      // unit). Move the blocker OFF the lane first.
+      blocker!.position = { x: 3, y: 5 };
+      seatMove(world, claimant!, { x: 1, y: 0 }, 2);
+    } else if (blockerTravel !== 'static') {
+      seatMove(world, blocker!, { x: 2, y: 0 }, blockerTravel);
+    }
+    const intent: MovementIntent = {
+      goals: [{ x: 5, y: 0 }],
+      approachToward: { x: 5, y: 0 },
+      maxCells: 1,
+    };
+    return advance(mover!, world, intent);
+  }
+
+  it('proposes the first-class wait when the forward blocker vacates within the gate', () => {
+    const p = boxedAdvance(3); // flips 3 ticks out — well inside 1 own-step
+    expect(p).not.toBeNull();
+    expect(p!.action.id).toBe(WAIT_ACTION_ID);
+    // The §44b wait shape: move-tier score, no cooldown, empty timeline
+    // (instantaneous — resolves within the tick, never enters activeAction).
+    expect(p!.score).toBe(1);
+    expect(p!.cooldown).toBe(0);
+    expect(p!.phases).toEqual([]);
+  });
+
+  it('does NOT wait for a blocker vacating beyond the gate (pre-§45b queue abstain)', () => {
+    // Gate = waitForVacancyOwnSteps × own step ticks; a glacial flip misses it.
+    expect(boxedAdvance(10_000)).toBeNull();
+  });
+
+  it('does NOT wait for a static blocker (no derivable drain)', () => {
+    expect(boxedAdvance('static')).toBeNull();
+  });
+
+  it('does NOT wait for a bare inbound claim (an arriving body is not a draining lane)', () => {
+    expect(boxedAdvance('claim-only')).toBeNull();
+  });
+
+  it('the gate derives from config (balance-proof): a flip exactly AT the gate waits', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'player', x: 1, y: 0 },
+      { team: 'neutral', x: 0, y: 1, neutral: true },
+      { team: 'neutral', x: 1, y: 1, neutral: true },
+    ]);
+    const [mover, blocker] = units;
+    const gateTicks = SIM.waitForVacancyOwnSteps * mover!.derived.moveCooldownTicks;
+    seatMove(world, blocker!, { x: 2, y: 0 }, gateTicks); // eta === gate, inclusive
+    const intent: MovementIntent = {
+      goals: [{ x: 5, y: 0 }],
+      approachToward: { x: 5, y: 0 },
+      maxCells: 1,
+    };
+    const p = advance(mover!, world, intent);
+    expect(p).not.toBeNull();
+    expect(p!.action.id).toBe(WAIT_ACTION_ID);
+  });
+
+  it('the progress guard: a sidestep never loses ground (the standoff shuttle dies)', () => {
+    // The riverFork shuttle engine, distilled: a diagonal approach whose
+    // forward cell is blocked. Both perpendicular rotations sit one step
+    // FARTHER from the target — pre-§45b the viable one was taken anyway
+    // (286 backtracks/300t on the fixture), post-§45b the unit queues.
+    const { world } = scene([{ team: 'player', x: 0, y: 11 }]);
+    const none = new Set<string>();
+    expect(sidestep({ x: 5, y: 5 }, { x: 8, y: 8 }, world, none)).toBeNull(); // even from-cell
+    expect(sidestep({ x: 5, y: 6 }, { x: 8, y: 9 }, world, none)).toBeNull(); // odd from-cell
+    // A strictly-CLOSER rotation on a diagonal approach still fires — the
+    // guard culls backward steps, not diagonal geometry.
+    expect(sidestep({ x: 5, y: 5 }, { x: 9, y: 6 }, world, none)).toEqual({ x: 6, y: 4 });
+  });
+
+  it('an in-gate wait preempts a VIABLE sidestep at a corridor mouth (the ford picture)', () => {
+    // The §45a A/B geometry: lane y=11 walled off for four rows (x=1..8,
+    // y=7..10) so the around-route costs more than the through-lane. The
+    // mover stands at the MOUTH (0,11) where the sidestep cell (0,10) is
+    // open and viable — pre-§45b this is exactly the crab-walk trigger.
+    // The blocker one cell in, mid-move away: the draining lane wins.
+    const specs: Spec[] = [
+      { team: 'player', x: 0, y: 11 },
+      { team: 'player', x: 1, y: 11 },
+    ];
+    for (let x = 1; x <= 8; x++) {
+      for (let y = 7; y <= 10; y++) specs.push({ team: 'neutral', x, y, neutral: true });
+    }
+    const { world, units } = scene(specs);
+    const [mover, blocker] = units;
+    seatMove(world, blocker!, { x: 2, y: 11 }, 3);
+    // Sanity: the sidestep really is viable (would fire without the gate).
+    const ctx = buildMovementContext(mover!, world);
+    expect(sidestep(mover!.position, { x: 9, y: 11 }, world, ctx.occupied)).not.toBeNull();
+    const p = advance(mover!, world, {
+      goals: [{ x: 9, y: 11 }],
+      approachToward: { x: 9, y: 11 },
+      maxCells: 1,
+    });
+    expect(p).not.toBeNull();
+    expect(p!.action.id).toBe(WAIT_ACTION_ID);
   });
 });

@@ -630,6 +630,7 @@ function scene(specs: SceneUnit[]): {
   world: World;
   units: Unit[];
   moves: GameEvents['unit:moved'][];
+  bus: EventBus<GameEvents>;
 } {
   const bus = new EventBus<GameEvents>();
   const world = new World(bus, new RNG(1));
@@ -664,7 +665,7 @@ function scene(specs: SceneUnit[]): {
     world.units.push(u);
     return u;
   });
-  return { world, units, moves };
+  return { world, units, moves, bus };
 }
 
 /**
@@ -839,8 +840,16 @@ describe('§45a — corridor column (nose-to-tail under vacancy-aware costs)', (
       specs.push({ team: 'neutral', x, y: 4, inert: true });
       specs.push({ team: 'neutral', x, y: 6, inert: true });
     }
-    const { world, units } = scene(specs);
+    const { world, units, bus } = scene(specs);
     const [rear, front] = units as [Unit, Unit];
+    // §45b — the rear's queueing is now DELIBERATE where the drain is
+    // derivable: behind a mid-move front it proposes the first-class wait
+    // (decision `wait`); it never crabs (walls preclude the sidestep anyway,
+    // but the decision record proves it queued by CHOICE, not helplessness).
+    const rearKinds: string[] = [];
+    bus.on('unit:moveDecision', (p) => {
+      if (p.unitId === rear.id) rearKinds.push(p.kind);
+    });
 
     for (let t = 0; t < 80; t++) {
       world.tick();
@@ -852,5 +861,8 @@ describe('§45a — corridor column (nose-to-tail under vacancy-aware costs)', (
     // The column drained: front holds at attack range 1, rear queues behind it.
     expect(front.position).toEqual({ x: 6, y: 5 });
     expect(rear.position).toEqual({ x: 5, y: 5 });
+    // §45b: the drain-derivable polls queued as waits; no sidesteps ever.
+    expect(rearKinds.filter((k) => k === 'wait').length).toBeGreaterThan(0);
+    expect(rearKinds).not.toContain('sidestep');
   });
 });

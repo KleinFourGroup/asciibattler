@@ -604,7 +604,12 @@ renderer "queued" stance deferred from §44 is wanted for ship-feel.
 - 43c: the tiny cross-track cost epsilon (only if 43c still showed cone
   wander) — ✅ RESOLVED: NOT wanted (openField drift reads 0.00 exact;
   no wander left to damp; admissibility never touched).
-- 44b: wait-as-activeAction vs within-tick (leaning within-tick, no bump).
+- 44b: wait-as-activeAction vs within-tick —
+  ✅ DECIDED (2026-07-05): within-tick, no bump. World's instantaneous-action
+  rule (zero-length timeline + no applyEffect ⇒ resolve inline, never enter
+  `activeAction`); 'wait' deliberately unregistered so a serialized wait
+  fails decode LOUDLY. All five §44 leanings locked as leaned (+ wait score
+  1, the move tier). Full entry: PATHING.md §44b.
 - 45c: the determinism-vs-cache resolution (leaning derive-don't-cache; the
   round's only candidate snapshot bump if not).
 - 46: the School-2/3 gate (the round's whole point — decided last, on data).

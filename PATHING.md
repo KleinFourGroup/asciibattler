@@ -1258,8 +1258,38 @@ outcome-drift hint (→ §46b, next).
 the user answered the charter's exact question ("a tactical battle
 playing out?") with 👍. Folded, not skipped.
 
-*(Next: 46b — the balance spot-check vs §41's numbers under the §41
-methodology [optimum re-derive → telemetry under the FIXED optimum,
-in+held-out], chasing the filed outcome-drift hint. Then 46c close-out:
-cursor → Cluster 3; delete trace-flips.ts + trace-no-route.ts per their
-headers; ROADMAP archives.)*
+---
+
+## 46b + 46c — the round CLOSES — 2026-07-06
+
+**46b (the balance spot-check — full entry lives in [BALANCE.md](BALANCE.md)
+§46b, the balance log's home turf): ACCEPT + RE-BASELINE, no config
+change.** The 45c outcome-drift hint confirmed and quantified: the floor
+(greedy/pure-random anchors) is stable, the CEILING moved — §41's fixed
+winning vector re-reads 25.0/24.2% vs its 35.0/33.3% on both seed sets;
+gradient stays steep (+20.8pt); every band holds under forced isolation
+(the natural-table boss spikes were small-sample noise); the §33
+equilibrium holds as a class and rotates within it (§45 rewards
+backline-heavy comps). Boss-wall held-out 59% (vs 43–55%) = the watch
+item filed for Cluster 3's balance pass. The instrument the round leaves
+behind: the FIXED-VECTOR probe (re-run `best-strategy.json` before/after
+any engine round — the cheapest ceiling-drift read).
+
+**46c (this entry): housekeeping + the cursor flip.** `trace-flips.ts` +
+`trace-no-route.ts` deleted per their own headers (round-scoped
+diagnostic tools; recoverable from git; their readings live in the
+§42c/43-pre/45c-pre/46a entries above). What REMAINS standing from the
+round: the always-on `unit:moveDecision` record · the
+[tests/pathing/](tests/pathing/) harness + `npm run pathing` (this file's
+tables) · `baseline.test.ts` exact pins (re-pin on every deliberate
+movement change) · the drift/cooperation/close-out GATES in
+[tests/pathing/drift.test.ts](tests/pathing/drift.test.ts) (bounds that
+survive re-baselines — NEVER relax a gate) · the §45 dials in
+`config/sim.json` · this run-log (append at any future movement change).
+
+**THE PATHFINDING AUDIT ROUND (Phases 42→46) IS COMPLETE** — called
+2026-07-04 on four playtest symptoms, closed 2026-07-06 with all four
+addressed, the School-2/3 gate decided NO on measured data, and the
+balance consequence measured and accepted. Next: the Cluster 3 (Economy)
+kickoff — a fresh session that authors the Economy roadmap from the
+META-ROADMAP brief and archives ROADMAP.md → `archive/post-41-roadmap.md`.

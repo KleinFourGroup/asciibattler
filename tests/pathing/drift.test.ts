@@ -82,8 +82,10 @@ describe('§45b cooperation gates — oscillation + throughput (seed-invariant)'
  *
  * (Deliberately NO standing endlessCorridors-oscillation gate: healthy reads
  * 0.104 worst-seed vs the 0.178 regression signature — too thin a margin for
- * a never-relax bound; 45c-pre honestly read 0.150 mid-round. That axis
- * belongs to §46a's re-measure + the trace-flips instrument.)
+ * a never-relax bound; 45c-pre honestly read 0.150 mid-round. That axis was
+ * verdict-checked at §46a via the harness re-measure + the round's
+ * trace-flips attribution tool — deleted at the §46c close-out, recoverable
+ * from git if the axis ever needs re-audit; PATHING.md carries its readings.)
  */
 describe('§45d close-out gates — standoff churn mass (seed-invariant)', () => {
   it('riverFork(4): total moves stay bounded (≤ 100 per team; the standoff churns no more)', () => {

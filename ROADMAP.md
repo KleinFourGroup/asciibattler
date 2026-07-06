@@ -610,6 +610,16 @@ renderer "queued" stance deferred from §44 is wanted for ship-feel.
   `activeAction`); 'wait' deliberately unregistered so a serialized wait
   fails decode LOUDLY. All five §44 leanings locked as leaned (+ wait score
   1, the move tier). Full entry: PATHING.md §44b.
+- 45a: the vacancy window k + the discount/premium values —
+  ✅ DECIDED (2026-07-05): k = 1 OWN-step (`vacancyWindowOwnSteps`, scales
+  with the pather's speed); vacating discount +1, static +4 (unchanged),
+  inbound premium +8 — all dials in `config/sim.json`. One REFINEMENT vs
+  the charter text: the claim premium is WINDOW-GATED, not flat — a claim
+  whose flip lands long before the pather's arrival prices as a mere body
+  (+4), only a convergence-window flip (or underivable timing) pays +8.
+  A flat premium made a column's lead claim read WORSE than pre-45a and
+  re-walled the corridors the phase exists to un-wall (arithmetic + the
+  A/B corridor tests in movement.test.ts). Full entry: PATHING.md §45a.
 - 45c: the determinism-vs-cache resolution (leaning derive-don't-cache; the
   round's only candidate snapshot bump if not).
 - 46: the School-2/3 gate (the round's whole point — decided last, on data).

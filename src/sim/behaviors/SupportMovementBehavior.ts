@@ -6,7 +6,14 @@ import { SwapAction } from '../actions/SwapAction';
 import { findTarget, lowestWoundedAlly, currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
 import { NEIGHBORS, awayStep, passable } from '../positioning';
-import { GROUND, cellsOccupiedBy, footprintOf, occupiedCells } from '../occupancy';
+import {
+  GROUND,
+  cellsOccupiedBy,
+  claimEtas,
+  footprintOf,
+  occupiedCells,
+  vacancyEtaOf,
+} from '../occupancy';
 import { SIM } from '../../config/sim';
 // J2 — share the leaf pathing helpers with MovementBehavior (these were
 // duplicated leaf-for-leaf). The healer's bespoke decision logic stays here.
@@ -427,6 +434,7 @@ function stepToward(
 ): GridCoord | 'blocked' | 'no_route' {
   const pathBlockers: GridCoord[] = [];
   const otherUnitCells = new Set<string>();
+  const vacatingEta = new Map<string, number>();
   for (const u of world.units) {
     if (u.id === unit.id) continue;
     // 43-pre — the WHOLE footprint (`cellsOccupiedBy`), not just the §39
@@ -438,8 +446,25 @@ function stepToward(
       continue;
     }
     if (u.position.x === goalPos.x && u.position.y === goalPos.y) continue;
-    for (const c of cellsOccupiedBy(u)) otherUnitCells.add(key(c));
+    // §45a — the healer prices vacancy the same way combat movement does
+    // (one costAt doctrine): a body mid-move away is a cheap cell, not a wall.
+    const eta = vacancyEtaOf(u, world);
+    for (const c of cellsOccupiedBy(u)) {
+      otherUnitCells.add(key(c));
+      if (eta !== undefined) vacatingEta.set(key(c), eta);
+    }
   }
+  // §45a — claims reach the healer's COST context only (inbound premium), NOT
+  // its commit set below: the step-commit / abstain semantics stay exactly
+  // pre-§45a (§35b's occupied-OR-claimed execution gate still re-validates a
+  // stale destination), so this changes which routes the healer prefers, never
+  // what it may step onto.
+  const cost = {
+    otherUnitCells,
+    vacatingEta,
+    claimed: claimEtas(world, GROUND, { excludeId: unit.id }),
+    stepTicks: unit.derived.moveCooldownTicks,
+  };
 
   const path = findPath(
     unit.position,
@@ -447,7 +472,7 @@ function stepToward(
     pathBlockers,
     world.gridW,
     world.gridH,
-    (c) => costAt(c, world, otherUnitCells),
+    (c) => costAt(c, world, cost, unit.position),
     false,
     footprintOf(unit), // §39b — the support mover honors its body width too.
   );

@@ -8,9 +8,10 @@ import {
   GROUND,
   cellKey,
   cellsOccupiedBy,
-  claimedCells,
+  claimEtas,
   distanceBetween,
   footprintOf,
+  vacancyEtaOf,
 } from './occupancy';
 import { SIM } from '../config/sim';
 import { emitMoveDecision } from './moveDecision';
@@ -56,11 +57,38 @@ import { emitMoveDecision } from './moveDecision';
  *     the unit a cell short); a tile/dash goal excludes nothing.
  *   - `occupied` — EVERY other unit's cell (all teams, neutrals included): the
  *     sidestep occupancy set, so a sidestep never lands on a filled square.
+ *   - `vacatingEta` / `claimed` / `stepTicks` — §45a: the vacancy-aware COST
+ *     inputs (see `PathCostContext`). Route-selection only — the commit-time
+ *     sets above stay strict, so softening a cost can never soften a collision
+ *     check (gotcha #113's placement rule is untouched).
  */
-export interface MovementContext {
+export interface MovementContext extends PathCostContext {
   readonly pathBlockers: GridCoord[];
   readonly otherUnitCells: Set<string>;
   readonly occupied: Set<string>;
+}
+
+/**
+ * §45a — what the vacancy-aware `costAt` needs to price a soft-blocked cell.
+ * `buildMovementContext` embeds it in the combat `MovementContext`; the
+ * healer's bespoke `stepToward` builds a lightweight literal. The route
+ * ORIGIN (the arrival-window anchor) is passed per-call, not carried here —
+ * it's `routeToward`'s `from`.
+ */
+export interface PathCostContext {
+  /** Soft-blocked cells (other units' bodies + in-flight claims). */
+  readonly otherUnitCells: ReadonlySet<string>;
+  /** Cell key → ticks until the occupant's in-flight move vacates it
+   *  (`vacancyEtaOf`); absent = the occupant isn't going anywhere. */
+  readonly vacatingEta: ReadonlyMap<string, number>;
+  /** Cells CLAIMED as in-flight move destinations → the flip's ETA
+   *  (`claimEtas`). A body materialises there at the flip; WHEN that lands
+   *  relative to the pather's own arrival decides premium vs static. An
+   *  `undefined` ETA = timing unknown — priced at the premium (conservative). */
+  readonly claimed: ReadonlyMap<string, number | undefined>;
+  /** The pather's own base step duration in ticks — the unit of the §45a
+   *  vacancy window (`SIM.vacancyWindowOwnSteps` is expressed in these). */
+  readonly stepTicks: number;
 }
 
 export function buildMovementContext(
@@ -74,8 +102,14 @@ export function buildMovementContext(
   const pathBlockers: GridCoord[] = [];
   const otherUnitCells = new Set<string>();
   const occupied = new Set<string>();
+  const vacatingEta = new Map<string, number>();
   for (const u of world.units) {
     if (u.id === unit.id) continue;
+    // §45a — a soft-blocked body mid-move AWAY prices by its vacancy ETA
+    // (derived from its active action, never serialized). Neutrals never move
+    // (hard blockers) and the pursued target is priced free, so only the
+    // soft-cost branch consults it.
+    const eta = u.team === 'neutral' || u.id === excludeUnitId ? undefined : vacancyEtaOf(u, world);
     // §35 — route each unit's cell touch through the occupancy footprint seam
     // (`cellsOccupiedBy`: one cell today, the N×N block once §39 fills it), so the
     // sidestep occupancy set + neutral path-blockers cover a multi-tile body for
@@ -86,6 +120,7 @@ export function buildMovementContext(
         pathBlockers.push(c);
       } else if (u.id !== excludeUnitId) {
         otherUnitCells.add(cellKey(c));
+        if (eta !== undefined) vacatingEta.set(cellKey(c), eta);
       }
     }
   }
@@ -93,13 +128,22 @@ export function buildMovementContext(
   // like an occupied cell (occupied OR claimed): fold it into BOTH the soft-cost
   // set (so A* routes around it) and the sidestep occupancy set (so a sidestep
   // never lands on it). Skip the building unit's own claims — it may step into
-  // what it reserved. Inert today (no persistent claims on the instant model);
-  // load-bearing once §36b defers the position flip and a claim outlives its tick.
-  for (const key of claimedCells(world, GROUND, { excludeId: unit.id })) {
+  // what it reserved. §45a carries each claim's flip ETA alongside: `costAt`
+  // prices a convergence-window claim at the inbound premium and a long-done
+  // flip as a mere future body.
+  const claimed = claimEtas(world, GROUND, { excludeId: unit.id });
+  for (const key of claimed.keys()) {
     occupied.add(key);
     otherUnitCells.add(key);
   }
-  return { pathBlockers, otherUnitCells, occupied };
+  return {
+    pathBlockers,
+    otherUnitCells,
+    occupied,
+    vacatingEta,
+    claimed,
+    stepTicks: unit.derived.moveCooldownTicks,
+  };
 }
 
 /**
@@ -132,7 +176,7 @@ export function routeToward(
     ctx.pathBlockers,
     world.gridW,
     world.gridH,
-    (c) => costAt(c, world, ctx.otherUnitCells),
+    (c) => costAt(c, world, ctx, from),
     bestEffort,
     footprint,
   );
@@ -442,20 +486,68 @@ export function stepDurationTicks(world: World, dest: GridCoord, base: number): 
 }
 
 /**
- * Penalty added (on top of tile cost) for routing through a cell occupied by
- * another *unit* (ally or non-target enemy) — the soft-block knob. A* detours
- * around an occupied cell only when the detour costs less than the penalty,
- * and routes *through* it (→ step-collision abstain / E5.B sidestep)
- * otherwise. Walls + half-cover never reach here (hard `blockers` in
- * `findPath`). Stays finite and >= 0 so total cost stays >= 1 and the
- * Chebyshev heuristic stays admissible (gotcha #34). Tunable in
+ * Penalty added (on top of tile cost) for routing through a soft-blocked cell
+ * — the soft-block knob, §45a split into tiers by WHEN the cell will actually
+ * hold a body at the pather's arrival (estimate: Chebyshev distance from
+ * `from` × the pather's own step ticks; the window slack is
+ * `vacancyWindowOwnSteps` more of those steps):
+ *
+ *   1. **Claimed, flip inside the window** (`inboundClaimPenalty`, > static) —
+ *      an in-flight mover lands there right around when the pather would:
+ *      the convergence-risk case, priced ABOVE a body (the §45 charter's
+ *      "a claim into the unit's path"). Also the fallback when the flip ETA
+ *      can't be derived (timing unknown = assume the worst).
+ *   2. **Claimed, flip long done by arrival** (`occupiedCellPenalty`) — by
+ *      then it's just a body standing there, today's flat +4. This is half of
+ *      what lets a corridor column drain: the leader's NEXT cell no longer
+ *      reads worse than the leader itself.
+ *   3. **Vacating in time** (`vacatingCellPenalty`, near-zero) — the
+ *      occupant's own in-flight move flips it vacant within the window. The
+ *      other half of the corridor fix: the lane ahead is cheap because it's
+ *      draining.
+ *   4. **Static occupant** (`occupiedCellPenalty`) — a body with no in-flight
+ *      move; the pre-§45a flat +4, unchanged.
+ *
+ * A* detours around a soft cell only when the detour costs less than its
+ * penalty, and routes *through* it (→ step-collision abstain / E5.B sidestep /
+ * §45b wait) otherwise. Route SELECTION only: the step-commit collision check
+ * and the §35b execution gate stay strict whatever these dials say. Walls +
+ * half-cover never reach here (hard `blockers` in `findPath`). Every tier
+ * stays finite and >= 0 so total cost stays >= 1 and the Chebyshev heuristic
+ * stays admissible (gotcha #34). All tiers + the window are tunable in
  * `config/sim.json`.
+ *
+ * The arrival estimate is a LOWER bound (real routes bend, terrain slows), so
+ * it errs toward "I'll be there sooner than I will": the vacating discount
+ * stays conservative near the pather, and the claim premium window stays wide.
  */
-export function costAt(c: GridCoord, world: World, occupied: ReadonlySet<string>): number {
+export function costAt(
+  c: GridCoord,
+  world: World,
+  cost: PathCostContext,
+  from: GridCoord,
+): number {
   const tileCost = world.tileGrid.costAt(c);
   if (!isFinite(tileCost)) return tileCost;
-  if (occupied.has(key(c))) return tileCost + SIM.occupiedCellPenalty;
-  return tileCost;
+  const k = key(c);
+  const arrivalSteps = chebyshev(from, c);
+  if (cost.claimed.has(k)) {
+    // Premium iff the flip lands at/after (arrival − k) own-steps — the pather
+    // would reach the cell around (or before) the body materialises. A flip
+    // safely done k+ steps before arrival is just a body by then (static tier).
+    // Near cells (arrival <= k) are always premium: the RHS is <= 0.
+    const flipEta = cost.claimed.get(k);
+    const premium =
+      flipEta === undefined ||
+      flipEta >= (arrivalSteps - SIM.vacancyWindowOwnSteps) * cost.stepTicks;
+    return tileCost + (premium ? SIM.inboundClaimPenalty : SIM.occupiedCellPenalty);
+  }
+  if (!cost.otherUnitCells.has(k)) return tileCost;
+  const eta = cost.vacatingEta.get(k);
+  if (eta !== undefined && eta <= (arrivalSteps + SIM.vacancyWindowOwnSteps) * cost.stepTicks) {
+    return tileCost + SIM.vacatingCellPenalty;
+  }
+  return tileCost + SIM.occupiedCellPenalty;
 }
 
 // §35 — `key`/`chebyshev` now live in the occupancy core (`cellKey`/

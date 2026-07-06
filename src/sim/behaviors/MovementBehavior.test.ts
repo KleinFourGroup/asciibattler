@@ -13,6 +13,7 @@ import type { GridCoord } from '../../core/types';
 import type { StatusEffect } from '../statusEffects';
 import { MoveAction } from '../actions/MoveAction';
 import { WAIT_ACTION_ID } from '../actions/WaitAction';
+import { findOverlappingCells } from '../occupancy';
 
 describe('MovementBehavior', () => {
   it('does not move on the first tick when already in attack range', () => {
@@ -814,5 +815,42 @@ describe('MovementBehavior — blind wander vs multi-tile footprints (44-pre-a)'
       const to = (p!.action as MoveAction).toData().to;
       expect(RUBBLE_CELLS).not.toContainEqual(to);
     }
+  });
+});
+
+/**
+ * §45a — the ticking nose-to-tail column: a sealed 1-wide corridor, two movers
+ * marching on an inert enemy at the far end. The route is forced (walls both
+ * sides), so this doesn't discriminate the cost tiers (movement.test.ts's
+ * corridor A/B does that) — it pins what must NOT change under them: the
+ * column drains single-file, nobody leaves the lane, nobody overtakes, and
+ * the §35d one-unit-per-cell invariant holds on EVERY tick (the charter's
+ * "same-cell convergence must stay impossible" — the §45a discounts touch
+ * route selection only, never the commit/execution gates).
+ */
+describe('§45a — corridor column (nose-to-tail under vacancy-aware costs)', () => {
+  it('drains single-file with the occupancy invariant intact every tick', () => {
+    const specs: SceneUnit[] = [
+      { team: 'player', x: 0, y: 5, moveCooldownTicks: 4 },
+      { team: 'player', x: 1, y: 5, moveCooldownTicks: 4 },
+      { team: 'enemy', x: 7, y: 5, inert: true },
+    ];
+    for (let x = 0; x <= 7; x++) {
+      specs.push({ team: 'neutral', x, y: 4, inert: true });
+      specs.push({ team: 'neutral', x, y: 6, inert: true });
+    }
+    const { world, units } = scene(specs);
+    const [rear, front] = units as [Unit, Unit];
+
+    for (let t = 0; t < 80; t++) {
+      world.tick();
+      expect(findOverlappingCells(world)).toEqual([]);
+      expect(rear.position.y).toBe(5);
+      expect(front.position.y).toBe(5);
+      expect(rear.position.x).toBeLessThan(front.position.x); // never overtakes/swaps
+    }
+    // The column drained: front holds at attack range 1, rear queues behind it.
+    expect(front.position).toEqual({ x: 6, y: 5 });
+    expect(rear.position).toEqual({ x: 5, y: 5 });
   });
 });

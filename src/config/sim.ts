@@ -23,6 +23,31 @@
  *     queue/sidestep when blocked. Must stay >= 0 (keeps total cost >= 1,
  *     Chebyshev admissible) and finite (no deadlock). Does NOT affect
  *     walls/half-cover — those are hard blockers, not penalised cells.
+ *     §45a splits this into three tiers — this dial now covers only the
+ *     STATIC occupant (a body with no in-flight move); the two below cover
+ *     the temporal cases. All three are route-SELECTION dials only: the
+ *     step-commit collision check and the §35b execution gate stay hard,
+ *     so same-cell convergence stays impossible whatever these are set to.
+ *   vacatingCellPenalty — §45a: the discounted penalty for a cell whose
+ *     occupant's in-flight move will vacate it within the pather's own
+ *     arrival window (Chebyshev distance × own step ticks, plus
+ *     `vacancyWindowOwnSteps` steps of slack). Near-zero → a corridor
+ *     column stops reading as a wall and followers route straight through
+ *     the vacating lane. Kept >= 0 (admissibility, as above); keep it
+ *     below `occupiedCellPenalty` or the split is meaningless. The vacancy
+ *     ETA is DERIVED from the mover's active action (occupancy.vacancyEtaOf)
+ *     — never serialized, no snapshot shape.
+ *   inboundClaimPenalty — §45a: the penalty for a cell CLAIMED as an
+ *     in-flight move's destination (a body is guaranteed to materialise
+ *     there at the flip — worse than a static body, which might move).
+ *     Replaces the flat `occupiedCellPenalty` those cells paid pre-§45a;
+ *     keep it above `occupiedCellPenalty` per the §45 charter. >= 0.
+ *   vacancyWindowOwnSteps — §45a: the vacancy window k, in multiples of the
+ *     pather's OWN step duration (the ROADMAP §45 leaning). A cell counts
+ *     as "vacating in time" when its ETA <= (Chebyshev distance to it + k)
+ *     × own step ticks. 0 = only cells already free by strict arrival
+ *     estimate; higher → more optimism about lanes clearing. A step-count,
+ *     not a timing — scales with the unit's speed automatically.
  *   healerPanicRangeCells — E7.B: when a healer (`SupportMovementBehavior`)
  *     has no wounded ally in heal range, it panic-retreats from the nearest
  *     enemy that is within this many cells (Chebyshev). A distance, not a
@@ -74,6 +99,9 @@ const SimSchema = z.object({
   retargetCloserRatio: z.number().min(1),
   rangedRetargetLosSeconds: z.number().positive(),
   occupiedCellPenalty: z.number().nonnegative(),
+  vacatingCellPenalty: z.number().nonnegative(),
+  inboundClaimPenalty: z.number().nonnegative(),
+  vacancyWindowOwnSteps: z.number().nonnegative(),
   healerPanicRangeCells: z.number().int().nonnegative(),
   healerFollowGapCells: z.number().int().nonnegative(),
   actingCellSearchSlack: z.number().int().nonnegative(),
@@ -87,6 +115,9 @@ export const SIM = {
   retargetCloserRatio: parsed.retargetCloserRatio,
   rangedRetargetLosTicks: Math.max(1, secondsToTicks(parsed.rangedRetargetLosSeconds)),
   occupiedCellPenalty: parsed.occupiedCellPenalty,
+  vacatingCellPenalty: parsed.vacatingCellPenalty,
+  inboundClaimPenalty: parsed.inboundClaimPenalty,
+  vacancyWindowOwnSteps: parsed.vacancyWindowOwnSteps,
   healerPanicRangeCells: parsed.healerPanicRangeCells,
   healerFollowGapCells: parsed.healerFollowGapCells,
   actingCellSearchSlack: parsed.actingCellSearchSlack,

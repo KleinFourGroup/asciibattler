@@ -8,7 +8,15 @@ import { ARCHETYPE_CONFIG } from './archetypes';
 import { MoveAction } from './actions/MoveAction';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
-import { advance, routeToward, buildMovementContext, sidestep, type MovementIntent } from './movement';
+import {
+  advance,
+  routeToward,
+  buildMovementContext,
+  costAt,
+  sidestep,
+  type MovementIntent,
+} from './movement';
+import { SIM } from '../config/sim';
 
 /**
  * J2 — unit tests for the shared movement seam. The behaviour-level
@@ -422,5 +430,161 @@ describe('movement / advance — M6 water bog-down (move duration)', () => {
     const p = advance(u, world, intent);
     expect(landing(p)).toEqual({ x: 4, y: 0 }); // leapt through the water
     expect(moveTicks(p)).toBe(u.derived.moveCooldownTicks); // base, not scaled
+  });
+});
+
+describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () => {
+  /**
+   * Seat `unit` mid-move to `to` the way World.executeActions does — active
+   * action + destination claim — pre-flip (`travel` ticks remain before the
+   * impact boundary). durationTicks = 2×travel matches the moveFlipFraction
+   * 0.5 timeline shape.
+   */
+  function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
+    const durationTicks = travel * 2;
+    unit.activeAction = {
+      action: new MoveAction(unit.position, to, durationTicks),
+      startTick: world.currentTick,
+      finishTick: world.currentTick + durationTicks,
+      phases: [
+        { phase: 'travel', ticks: travel },
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: durationTicks - travel },
+      ],
+    };
+    world.claimCell(to, unit.id);
+  }
+
+  // The dial ordering every §45a expectation below leans on. If a retune
+  // breaks one of these, the tier split has lost its meaning — fix the
+  // config, or rethink the tiers; don't loosen these.
+  it('preconditions: the three tiers are ordered (vacating < static < inbound premium)', () => {
+    expect(SIM.vacatingCellPenalty).toBeLessThan(SIM.occupiedCellPenalty);
+    expect(SIM.inboundClaimPenalty).toBeGreaterThan(SIM.occupiedCellPenalty);
+    expect(SIM.vacancyWindowOwnSteps).toBeGreaterThanOrEqual(0);
+  });
+
+  it('a static occupant prices at occupiedCellPenalty (the pre-§45a flat rate)', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'player', x: 2, y: 2 },
+    ]);
+    const ctx = buildMovementContext(units[0]!, world);
+    expect(costAt({ x: 2, y: 2 }, world, ctx, units[0]!.position)).toBe(
+      1 + SIM.occupiedCellPenalty,
+    );
+  });
+
+  it('a cell vacating within the arrival window prices at the discount', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'player', x: 2, y: 2 },
+    ]);
+    const [mover, ally] = units;
+    seatMove(world, ally!, { x: 3, y: 2 }, 2); // flips 2 ticks out — long before arrival
+    const ctx = buildMovementContext(mover!, world);
+    expect(ctx.vacatingEta.get('2,2')).toBe(2);
+    expect(costAt({ x: 2, y: 2 }, world, ctx, mover!.position)).toBe(
+      1 + SIM.vacatingCellPenalty,
+    );
+  });
+
+  it('a cell vacating far beyond the window prices as static', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'player', x: 2, y: 2 },
+    ]);
+    const [mover, ally] = units;
+    // Window for a cell 2 away = (2 + k) × own step; a glacial flip misses it.
+    const beyond = (2 + SIM.vacancyWindowOwnSteps + 1) * mover!.derived.moveCooldownTicks;
+    seatMove(world, ally!, { x: 3, y: 2 }, beyond);
+    const ctx = buildMovementContext(mover!, world);
+    expect(costAt({ x: 2, y: 2 }, world, ctx, mover!.position)).toBe(
+      1 + SIM.occupiedCellPenalty,
+    );
+  });
+
+  it('a claim flipping inside the convergence window prices at the inbound premium', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'player', x: 2, y: 0 },
+    ]);
+    const [mover, ally] = units;
+    seatMove(world, ally!, { x: 1, y: 0 }, 2); // arriving right next to the mover
+    const ctx = buildMovementContext(mover!, world);
+    expect(costAt({ x: 1, y: 0 }, world, ctx, mover!.position)).toBe(
+      1 + SIM.inboundClaimPenalty,
+    );
+  });
+
+  it('a claim whose flip is long done by arrival prices as a mere body (static tier)', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'player', x: 6, y: 6 },
+    ]);
+    const [mover, ally] = units;
+    seatMove(world, ally!, { x: 6, y: 7 }, 2); // flips in 2 ticks; the mover is ~7 steps away
+    const ctx = buildMovementContext(mover!, world);
+    expect(costAt({ x: 6, y: 7 }, world, ctx, mover!.position)).toBe(
+      1 + SIM.occupiedCellPenalty,
+    );
+  });
+
+  it('a claim with underivable timing prices at the premium (conservative fallback)', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 0, y: 0 },
+      { team: 'player', x: 6, y: 6 },
+    ]);
+    const [mover, claimant] = units;
+    world.claimCell({ x: 6, y: 7 }, claimant!.id); // hand-claimed; no in-flight move
+    const ctx = buildMovementContext(mover!, world);
+    expect(ctx.claimed.has('6,7')).toBe(true);
+    expect(ctx.claimed.get('6,7')).toBeUndefined();
+    expect(costAt({ x: 6, y: 7 }, world, ctx, mover!.position)).toBe(
+      1 + SIM.inboundClaimPenalty,
+    );
+  });
+
+  it('a free cell still prices at plain tile cost', () => {
+    const { world, units } = scene([{ team: 'player', x: 0, y: 0 }]);
+    const ctx = buildMovementContext(units[0]!, world);
+    expect(costAt({ x: 5, y: 5 }, world, ctx, units[0]!.position)).toBe(1);
+  });
+
+  /**
+   * The corridor-aversion A/B — the §42c diagnosis this phase exists to fix.
+   * A bottom-row lane walled off for four rows; a leader mid-move inside it.
+   * Straight-through costs (7 free + vacating body + settled claim); the
+   * around-the-wall detour costs ~17 plain cells. With the leader flipping
+   * SOON, the lane prices cheap → stay in lane. Same geometry with a GLACIAL
+   * leader (flip far beyond every window): body reads static, claim reads
+   * premium → the detour wins, exactly the pre-§45a read. The pair proves the
+   * discount is ETA-gated, not a blanket "mid-move = cheap".
+   */
+  function corridorScene(travel: number) {
+    const specs: Parameters<typeof scene>[0] = [
+      { team: 'player', x: 0, y: 11 }, // the follower
+      { team: 'player', x: 4, y: 11 }, // the leader, seated mid-move below
+    ];
+    for (let x = 1; x <= 8; x++) {
+      for (let y = 7; y <= 10; y++) specs.push({ team: 'neutral', x, y, neutral: true });
+    }
+    const { world, units } = scene(specs);
+    const [follower, leader] = units;
+    seatMove(world, leader!, { x: 5, y: 11 }, travel);
+    const ctx = buildMovementContext(follower!, world);
+    return routeToward(follower!.position, { x: 9, y: 11 }, ctx, world);
+  }
+
+  it('the follower stays in lane behind a leader vacating in time', () => {
+    const path = corridorScene(3);
+    expect(path.length).toBeGreaterThan(0);
+    expect(path.every((c) => c.y === 11)).toBe(true);
+  });
+
+  it('the follower detours around a glacial leader (the ETA gate really gates)', () => {
+    const path = corridorScene(10_000);
+    expect(path.length).toBeGreaterThan(0);
+    expect(path.some((c) => c.y !== 11)).toBe(true);
   });
 });

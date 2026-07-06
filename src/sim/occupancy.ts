@@ -26,6 +26,7 @@
 
 import type { GridCoord } from '../core/types';
 import { ALL_UNIT_DEFS } from '../config/units';
+import { MOVE_ACTION_ID } from './actions/MoveAction';
 import type { Unit } from './Unit';
 import type { World } from './World';
 
@@ -359,6 +360,36 @@ export function claimedDestinationOf(
  * `excludeId` drops the building unit's own claims (it may move into what it
  * reserved). Inert today (the set is empty with no persistent claims).
  */
+/**
+ * §45a — the VACANCY ETA: ticks until `unit`'s in-flight move flips it OFF the
+ * cells it currently occupies, or undefined when it isn't vacating them at all.
+ * Defined only for a unit mid-move and still PRE-FLIP (its destination claim is
+ * live): the flip lands at the `impact` phase boundary — `startTick` + the sum
+ * of the phase ticks before `impact` (the §36b timeline `moveProposal` builds
+ * from `moveFlipFraction`), so the ETA is that boundary minus `currentTick`,
+ * clamped at 0 (a flip landing later this same tick = "vacates now"). POST-flip
+ * the unit already stands on its destination (those cells are NOT vacating —
+ * it lingers through recovery), and the claim is released, so the claim check
+ * is what distinguishes the two halves without reading the action's privates.
+ *
+ * DERIVED, never serialized — recomputed from `activeAction` (which snapshots
+ * carry) on every query, so a resumed run answers identically and no snapshot
+ * shape changes (the §45 charter's no-bump rule). Consumers: the §45a
+ * vacancy-aware path costs (`buildMovementContext` → `costAt`); §45b's
+ * wait-vs-sidestep gate reads the same number for the forward cell.
+ */
+export function vacancyEtaOf(unit: Unit, world: World): number | undefined {
+  const active = unit.activeAction;
+  if (active === null || active.action.id !== MOVE_ACTION_ID) return undefined;
+  if (claimedDestinationOf(world, unit.id, planeOf(unit)) === undefined) return undefined;
+  let flipOffset = 0;
+  for (const p of active.phases) {
+    if (p.phase === 'impact') break;
+    flipOffset += p.ticks;
+  }
+  return Math.max(0, active.startTick + flipOffset - world.currentTick);
+}
+
 export function claimedCells(
   world: World,
   plane: OccupancyPlane = GROUND,
@@ -372,4 +403,31 @@ export function claimedCells(
     set.add(cellKey(claim.cell));
   }
   return set;
+}
+
+/**
+ * §45a — every claimed cell on `plane` with its OCCUPANCY ETA: ticks until the
+ * claimant's move flips and the cell holds a real body. The temporal sibling of
+ * `claimedCells` (same filtering, same key set) — a claim and its claimant's
+ * vacancy share one flip, so the value IS `vacancyEtaOf(claimant)`. `undefined`
+ * for a claim whose claimant can't be resolved to a live in-flight move (test
+ * fixtures claiming by hand; a consumer should read that as "timing unknown —
+ * price it like a wall", the conservative end). Feeds the §45a `costAt` claim
+ * tier: a flip landing inside the pather's own arrival window is a convergence
+ * risk (premium); a flip long done by then is merely a future body (static).
+ */
+export function claimEtas(
+  world: World,
+  plane: OccupancyPlane = GROUND,
+  opts?: { excludeId?: number },
+): Map<string, number | undefined> {
+  const excludeId = opts?.excludeId;
+  const etas = new Map<string, number | undefined>();
+  for (const claim of world.claims.values()) {
+    if (claim.unitId === excludeId) continue;
+    if (claim.plane !== plane) continue;
+    const claimant = world.findUnit(claim.unitId);
+    etas.set(cellKey(claim.cell), claimant === undefined ? undefined : vacancyEtaOf(claimant, world));
+  }
+  return etas;
 }

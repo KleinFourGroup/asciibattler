@@ -784,6 +784,76 @@ renderer's future "queued" stance hook.
 
 ---
 
-*(Next entries: §45's before/afters — riverFork oscillation is the §45b
-centerpiece, corridor throughput §45a/c's, labyrinth queue mass §45's
-overall.)*
+## 45a — vacancy-aware costs (occupancy stops being timeless) — 2026-07-05
+
+Phase 45 opens: the first behavior-changing cooperation step. The A* soft-
+block penalty stops pricing every body/claim at a flat +4 and starts asking
+WHEN the cell will actually hold a body at the pather's arrival:
+
+- **`occupancy.vacancyEtaOf(unit, world)`** — ticks until a unit's in-flight
+  move flips it off its current cells (`startTick` + the impact-boundary
+  offset − now; pre-flip detected by its live destination claim). DERIVED
+  from `activeAction` on every query, never serialized — a resumed snapshot
+  answers identically, no bump (v32/v24 hold). **`occupancy.claimEtas`** —
+  the claim-side sibling: every claimed cell with its flip ETA (the same
+  number; one flip both vacates the origin and fills the claim).
+- **`costAt` tiers** (`config/sim.json`; `occupiedCellPenalty` 4 splits):
+  *vacating in time* → `vacatingCellPenalty` **1** (occupant flips out within
+  `(chebyshev + vacancyWindowOwnSteps) ×` the pather's OWN step ticks; k =
+  **1** own-step, the ROADMAP leaning); *claim flipping inside the
+  convergence window* (or timing underivable) → `inboundClaimPenalty` **8**
+  (a body lands there right around when I would — the charter's "claim into
+  the unit's path", priced ABOVE a body); *claim flipping long before
+  arrival* → static 4 (just a body by then — this is what lets a column's
+  lead claim stop reading WORSE than the leader itself); *static body* →
+  4 unchanged.
+- **Both movers share the doctrine:** `buildMovementContext` (combat, tile
+  pursuit, dash) and the healer's bespoke `stepToward` feed the same
+  `costAt`. The healer's claim exposure is NEW (its cost fn never saw claims
+  before — routes shift, commit semantics untouched).
+- **Safety unchanged (the charter's "carefully"):** every discount touches
+  route SELECTION only. The step-commit collision set, the sidestep
+  occupancy set, and §35b's occupied-OR-claimed execution gate stay strict —
+  same-cell convergence stays impossible at any dial setting. Pinned by the
+  new ticking corridor-column test (80 ticks, `findOverlappingCells` empty
+  every tick, no overtake) + the standing §35d fuzz invariant.
+
+**Fingerprint (vs the 43c/44b tables):**
+
+| fixture | 43c | 45a | reading |
+|---|---|---|---|
+| openField(4) | 0.00 / 0.00, mix 768w/16a | byte-identical | no in-flight traffic on anyone's route |
+| corridor(3) | 0.75/100t, q1 s3 | byte-identical | sealed tunnel, no detour to un-choose |
+| corridor(6) | 1.50/100t, q9 **s12**, osc 0.048 | 1.50/100t, q9 **s11**, osc **0.036** | one crab-step became a lane-follow |
+| riverFork(4) | drift **−0.25** / +0.25 | drift **0.00 EXACT** / +0.25 | ford approach stops detouring around mid-move allies; osc 0.923 untouched (§45b's) |
+
+Shipped layouts (seeds 100–102): river 100 byte-identical; the rest reshape
+within the gates — all six river/isthmus team-seed |drifts| ≤ 1.08 (gate
+2.5), river net dx sign-mixed (gate), **labyrinth all three seeds END
+FASTER** (987→901, 875→850, 1013→989 ticks) on fewer moves (less detour
+walking); procedural 100/101 shorter too (287→255, 407→355).
+
+**⚠ Two honest intermediates, both §45b/§45c's charter — watch, don't fix
+here:** (1) **queue mass re-concentrates** (labyrinth 100 player queue
+287-era worst → 623; isthmus 102 → 105): units now stay in a blocked lane
+(queue-abstain) instead of flanking around it — pre-45b a queue-abstain
+does nothing useful, it's precisely the raw material 45b converts into
+ETA-gated waits. (2) **isthmus fights run longer** (421→534 / 414→440 /
+509→518) for the same reason — queuing at the chokepoint beats flanking
+only once waiting is an action. endlessCorridors osc worst 0.132 → 0.156
+(§45c's hysteresis owns oscillation there). If 45b doesn't drain these,
+the dials come down before 45d.
+
+**Proof:** 1775 main (18 new: 7 `vacancyEtaOf` · 10 costAt-tier/route —
+incl. the corridor A/B pair proving the discount is ETA-GATED (a glacial
+leader still reads as a wall and the follower detours; a prompt one reads
+as a draining lane and it stays in lane) · 1 ticking column) + 212
+fuzz:smoke green with **NO re-baseline** + drift gates passed
+unregenerated + `baseline.test.ts` re-pinned (riverFork player drift
+−0.25 → 0.00; corridor(6) sidestep 12 → 11) + typecheck clean.
+
+---
+
+*(Next entries: 45b wait-vs-sidestep — riverFork osc 0.923 is the
+centerpiece, and the 45a queue mass above is its conversion target;
+then 45c commitment/hysteresis, 45d the re-measure + playtest.)*

@@ -25,7 +25,11 @@ import {
   unitAt,
   unitDistance,
   cellUnitDistance,
+  vacancyEtaOf,
 } from './occupancy';
+import { MoveAction } from './actions/MoveAction';
+import { moveProposal } from './movement';
+import { SIM } from '../config/sim';
 
 /**
  * §35a — the occupancy core, in isolation. Mechanic tests on explicit inputs:
@@ -436,5 +440,88 @@ describe('§39c — anchorFootprint (the corner spawn policy)', () => {
 
   it('returns null when the body is too big for the grid', () => {
     expect(anchorFootprint({ x: 0, y: 0 }, 4, { gridW: 3, gridH: 3 }, allFree)).toBeNull();
+  });
+});
+
+describe('vacancyEtaOf — the §45a derived vacancy ETA', () => {
+  // Seat a MoveAction mid-flight the way World.executeActions does, including
+  // the destination claim `MoveAction.start` would have placed — `ticksAgo`
+  // back-dates the start so "N ticks into the move" needs no World.tick loop.
+  function seatMove(world: World, unit: Unit, to: GridCoord, travel: number, ticksAgo = 0) {
+    const durationTicks = travel * 2; // moveFlipFraction 0.5 shape: travel == recovery
+    const action = new MoveAction(unit.position, to, durationTicks);
+    unit.activeAction = {
+      action,
+      startTick: world.currentTick - ticksAgo,
+      finishTick: world.currentTick - ticksAgo + durationTicks,
+      phases: [
+        { phase: 'travel', ticks: travel },
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: durationTicks - travel },
+      ],
+    };
+    world.claimCell(to, unit.id);
+  }
+
+  it('is undefined for an idle unit (no active action)', () => {
+    const world = setup();
+    const u = spawnAt(world, 'player', { x: 2, y: 2 });
+    u.activeAction = null;
+    expect(vacancyEtaOf(u, world)).toBeUndefined();
+  });
+
+  it('is undefined for a non-move active action (nothing vacates)', () => {
+    const world = setup();
+    const u = spawnAt(world, 'player', { x: 2, y: 2 });
+    // spawnUnit seats a SpawnAction lockout — exactly the non-move case.
+    expect(u.activeAction?.action.id).not.toBe('move');
+    expect(vacancyEtaOf(u, world)).toBeUndefined();
+  });
+
+  it('pre-flip: ETA is the impact boundary minus now', () => {
+    const world = setup();
+    const u = spawnAt(world, 'player', { x: 2, y: 2 });
+    seatMove(world, u, { x: 3, y: 2 }, 5);
+    expect(vacancyEtaOf(u, world)).toBe(5);
+  });
+
+  it('counts down as ticks pass (back-dated start)', () => {
+    const world = setup();
+    const u = spawnAt(world, 'player', { x: 2, y: 2 });
+    seatMove(world, u, { x: 3, y: 2 }, 5, 3);
+    expect(vacancyEtaOf(u, world)).toBe(2);
+  });
+
+  it('clamps at 0 when the flip lands this tick', () => {
+    const world = setup();
+    const u = spawnAt(world, 'player', { x: 2, y: 2 });
+    seatMove(world, u, { x: 3, y: 2 }, 5, 5);
+    expect(vacancyEtaOf(u, world)).toBe(0);
+  });
+
+  it('is undefined POST-flip (claim released — the unit is arriving, not vacating)', () => {
+    const world = setup();
+    const u = spawnAt(world, 'player', { x: 2, y: 2 });
+    seatMove(world, u, { x: 3, y: 2 }, 5, 7);
+    // Simulate the §36b flip: position moves, the claim releases.
+    u.position = { x: 3, y: 2 };
+    world.releaseClaim({ x: 3, y: 2 });
+    expect(vacancyEtaOf(u, world)).toBeUndefined();
+  });
+
+  it('derives the same boundary a real moveProposal timeline carries', () => {
+    const world = setup();
+    const u = spawnAt(world, 'player', { x: 2, y: 2 });
+    const durationTicks = 8;
+    const proposal = moveProposal(u.position, { x: 3, y: 2 }, durationTicks);
+    u.activeAction = {
+      action: proposal.action,
+      startTick: world.currentTick,
+      finishTick: world.currentTick + durationTicks,
+      phases: proposal.phases,
+    };
+    world.claimCell({ x: 3, y: 2 }, u.id);
+    // Balance-proof: the flip offset derives from config, never hardcoded.
+    expect(vacancyEtaOf(u, world)).toBe(Math.floor(durationTicks * SIM.moveFlipFraction));
   });
 });

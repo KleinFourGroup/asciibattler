@@ -19,7 +19,9 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 1. Read [META-ROADMAP.md](META-ROADMAP.md) §Cluster 3 (the Economy brief: currency + rewards + shop + consumables + the reward/item/shop editors) + this file.
 2. **First act: archive [ROADMAP.md](ROADMAP.md) → `archive/post-41-roadmap.md`** — the Pathfinding-Audit round doc, now closed.
-3. Author the Economy roadmap from the META brief **WITH the user** — shape-lock before building; no spec pre-exists, writing it IS the kickoff.
+3. **Spec FIRST:** hold the Economy design conversation with the user, then distill it into a spec artifact (the user's voice, uncertainties marked) *before* any roadmap writing — the roadmap gets audited against it (AGENTS.md §"The planning stack").
+4. Author the Economy ROADMAP.md from the spec + META brief **WITH the user** — shape-lock before building. Phase entries carry charter / ordering + dependencies / risk / decision points / exit criteria / scope guards ONLY: no sub-step lists (those are cut at each phase kickoff), no as-built prose (→ the worklog).
+5. Create a fresh **WORKLOG.md** (the per-round narrative log; archived as a pair with its roadmap at round close).
 
 **Riders carried into Cluster 3:**
 

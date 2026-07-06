@@ -59,3 +59,8 @@ The snapshot-roundtrip test extends the contract across serialization: a `World`
 For pure-logic modules: co-locate `Module.test.ts` next to `Module.ts`. Keep tests narrow and named for the behavior, not the function: `it('returns empty array when no path exists', ...)` over `it('findPath case 4', ...)`.
 
 For anything that consumes randomness: take a seeded `RNG` instance as an explicit argument; never reach for global entropy. The tests prove this is doable; lint enforces it.
+
+Two patterns that earned their keep (promoted from the retro scratchpad, 2026-07-06):
+
+- **Conservation / partition invariants.** When state moves between buckets, assert the union is invariant at every step — one assertion catches a lost entry, a duplicate, a stale index, and a botched reshuffle all at once (H5's deck test: `[...drawPile, ...discardPile, ...hand].sort()` always equals `[0..n-1]`, asserted every turn through several reshuffles).
+- **Test the mechanism's invariant, not a downstream proxy.** When a metric keeps flagging legitimate behavior, the metric is testing the wrong thing. E5's corridor-flow test went through three proxy metrics (distance regression, long-axis distance) that flagged legal maneuvers before pinning the actual mechanism (`targetId` change count) — robust to layout topology because it measures the thing the fix fixed.

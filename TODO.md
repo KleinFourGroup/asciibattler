@@ -78,6 +78,9 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
       of scope for Phase G; revisit once the multi-turn loop has playtest
       data. (Flagged by the user during the Phase-G roadmap sync.)
 
+- [ ] **Unify the duplicated `chebyshev` helpers.** Still defined independently in five places ([Pathfinding.ts](src/sim/Pathfinding.ts), [Targeting.ts](src/sim/Targeting.ts), [targetingStrategies.ts](src/sim/targetingStrategies.ts), [focusTile.ts](src/sim/focusTile.ts), + [movement.ts](src/sim/movement.ts)'s `chebyshev = distanceBetween` alias) — rule-of-three was passed long ago (first flagged in the MVP-era scratchpad). Extract one shared geometry helper next time any of these files is open. Mechanical; zero behavior change. Promoted at the 2026-07-06 scratchpad sweep.
+- [ ] **`Run.pauseAtTurnGates` two-path loop — divergence watch.** H4b's flag keeps two paths through the encounter loop (headless straight-through vs gated screens), sharing the core (`resolveTurn`/`turnResult`/`continueAfterTurn`/`beginTurn`). Stable since Phase H, but if the loop grows hairier, the cleaner end-state is "always gated + tests/fuzz dispatch `advanceTurn`" (one path, more test churn). Promoted at the 2026-07-06 scratchpad sweep.
+
 ## Bundle / perf
 
 - [x] **Production JS chunk >500KB warning.** Resolved in R3: three.js split into its own vendor chunk + `chunkSizeWarningLimit` 1000 ([vite.config.ts](vite.config.ts)). *(Found already-done during the 2026-07-06 TODO demotion pass.)*

@@ -72,7 +72,11 @@ kickoff — has its own section below.)
   for the user) and, when over-batched alongside edits, causes
   out-of-order results and silently no-op'd edits. Batch only genuinely
   independent calls; never read-and-edit the same file in one message,
-  and confirm an edit landed before stacking the next on it.
+  and confirm an edit landed before stacking the next on it. (Also: in
+  the Bash tool, multi-line commit messages take multiple `-m` flags or
+  `$'…'` — a PowerShell `@'…'@` here-string parses as stray `@` lines
+  there; that syntax belongs to the PowerShell tool. One garbled commit
+  subject proved it.)
 - **Browser-verify visual work at native resolution.** The Preview MCP
   screenshots are unreliable for sub-pixel detail (JPEG compression
   smears 1–2px features). If a screenshot contradicts intuition, sample
@@ -204,7 +208,9 @@ authored. At phase start:
 2. **Draft the commit-granularity cut** — per step: intent, exit
    criterion, expected commit shape. One or two lines each; no
    implementation prose (or the old over-investment just relocates to
-   phase start).
+   phase start). When a risky change has a separable UI, cut it
+   headless-core-first, render-second (the H4a/H4b precedent) — it
+   shrinks the eyeball-only surface to what's actually visual.
 3. **Shape-lock with the user** — a pause point, same rhythm as
    pause-between-commits.
 4. **Write the cut into the ROADMAP phase section** as checkbox
@@ -226,9 +232,11 @@ At each round/cluster boundary, sweep [retro/scratchpad.md](retro/scratchpad.md)
 every entry is either **promoted** (to a norm here in AGENTS, a gotcha
 in GOTCHAS.md, or a TODO item) or **archived** (moved to `archive/` with
 the round's docs). The scratchpad holds only undistilled observations
-from the current round. First sweep: queued at the tail of the
-2026-07-06 process-audit round — the backlog reaches back to the MVP
-retro (the only prior distillation), with ad-hoc promotions since.
+from the current round. First sweep: done 2026-07-06 — the MVP→H7
+backlog moved to
+[archive/retro-scratchpad-mvp-to-h7.md](archive/retro-scratchpad-mvp-to-h7.md),
+with the still-live lessons promoted (here, TESTING.md, HANDOFF
+browser-verify tips, two TODO watch items).
 
 ## Load-bearing invariants
 

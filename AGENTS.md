@@ -18,16 +18,13 @@ After HANDOFF, the docs you'll cross-reference most often:
   it feels. The aesthetic / mechanics source of truth.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — how the code is organized.
   Includes the event catalog, key abstractions, the sim/render seam.
-- [ROADMAP.md](ROADMAP.md) — post-MVP build order. Phases A (foundation
-  refactors), B (style/visual), C1 (terrain), D (battle-layout), E
-  (combat + the six archetypes), F (Phase-E playtest response), G
-  (run depth), and GP (the Phase-G playtest response) are all complete;
-  **Phase H — the deckbuilder battle trial — is in progress.** Where H
-  stands and what's next shifts often, so this doc deliberately doesn't
-  restate it (that's how it drifts): **HANDOFF's `## Current state` /
-  `## What's next` is the single source of truth for the live phase
-  cursor.** See ROADMAP §Phase H for the locked sub-step detail.
-  Superseded roadmaps and feedback are in [archive/](archive/).
+- [ROADMAP.md](ROADMAP.md) — the active round's plan (phases → steps).
+  Which round is active and where it stands shifts often, so this doc
+  deliberately doesn't restate it (that's how it drifts — this very
+  bullet once sat stale at "Phase H in progress" for a month):
+  **HANDOFF's 🧭 Cursor is the single source of truth for the live
+  phase cursor.** Superseded roadmaps and feedback are in
+  [archive/](archive/).
 - [TODO.md](TODO.md) — small follow-ups that aren't roadmap steps.
 - [TESTING.md](TESTING.md) — what gets tested (`core`, `sim`, `run`),
   what doesn't (`render`, `ui`), and the determinism contract.
@@ -115,8 +112,9 @@ apply:
   ("gotcha #N" — never renumber; retired ones stay as tombstones), the
   source tree in [ARCHITECTURE.md](ARCHITECTURE.md), and the pre-flight /
   pre-commit / toolchain / collaboration norms here in AGENTS — so HANDOFF
-  holds just `Current state`, `What's next`, and the detailed browser-verify
-  tips.
+  holds just the 🧭 Cursor (the ONE live-status home), `Current state`,
+  `What's next`, the condensed Closed rounds, and the detailed
+  browser-verify tips.
 - **Roadmap "decision points" are stops.** Post-MVP doesn't have the
   rigid CHECKPOINT markers, but ROADMAP entries flagged "Decision
   point" call out moments where user input is required — stop and ask.
@@ -234,8 +232,9 @@ all three trees listing retired files and stale snapshot versions by GP1.
 - **A new event:** add to the catalog in [src/core/events.ts](src/core/events.ts).
   Naming: `subject:verbed`. Document it in ARCHITECTURE.md's event
   catalog table.
-- **A new gotcha that bit you:** add to HANDOFF.md's "Things that bit
-  us" list with a commit reference. Future-you will thank you.
+- **A new gotcha that bit you:** add to [GOTCHAS.md](GOTCHAS.md) with a
+  commit reference (permanent "gotcha #N" numbering — never renumber).
+  Future-you will thank you.
 - **A process observation worth keeping:** drop a short note in
   [retro/scratchpad.md](retro/scratchpad.md). Group by theme; keep
   entries short; link commits.

@@ -87,14 +87,13 @@ right once beats retrofitting later.
 
 **Interstitial rounds** (user-feedback rounds slotted between clusters — the
 Post-N O→R precedent) don't break the cluster order; they're recorded here as
-they happen: **2026-07-04 → 2026-07-06 — the Pathfinding Audit (Phases 42→46):
-✅ COMPLETE & user-confirmed**, between Clusters 2 and 3: the movement-
-intelligence audit (bias fixes · first-class waiting · corridor cooperation ·
-a measured WHCA\*/flow-field gate — **decided NO on data**; run-log =
-[PATHING.md](PATHING.md), balance close = BALANCE.md §46b "accept +
-re-baseline"). Its round doc archives → `archive/post-41-roadmap.md` at the
-Cluster-3 kickoff. Cluster 3 inherits one ⚠ watch item: boss wall held-out
-59% vs the 43–55% target (see BALANCE.md §46b).
+they happen:
+
+- **2026-07-04 → 2026-07-06 — the Pathfinding Audit (Phases 42→46): ✅ COMPLETE
+  & user-confirmed** — the movement-intelligence audit between Clusters 2 and 3;
+  the WHCA\*/flow-field gate **decided NO on data**. Detail: the
+  [PATHING.md](PATHING.md) run-log + BALANCE.md §46b; the riders it hands
+  Cluster 3 are carried by the HANDOFF 🧭 Cursor (the single live-status home).
 
 ---
 

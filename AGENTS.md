@@ -48,7 +48,8 @@ shape.
 
 The strict "one step → one commit, stop at every CHECKPOINT" rhythm was
 for the MVP build. Post-MVP is freer, but the underlying habits still
-apply:
+apply. (The planning pipeline itself — spec / roadmap / worklog / phase
+kickoff — has its own section below.)
 
 - **Commit per logical change**, not per session-of-work. Split commits
   when a step's intent grows mid-flight.
@@ -124,6 +125,110 @@ apply:
   that survive `taskkill` on the parent — letting the preview MCP
   shut down cleanly is what reaps them. Same applies to any
   long-running `run_in_background` Bash call.
+
+## The planning stack (spec → roadmap → worklog → step)
+
+Locked at the 2026-07-06 process-audit round (pre-Cluster-3). What each
+planning artifact is, what may be written where, and when step plans get
+cut. The failure modes this replaces, all observed across Phases H→46:
+roadmaps silently morphing into worklogs (the verbose ✅ as-built blocks),
+status facts duplicated across five docs (the "Phase H in progress" bullet
+above sat stale for a month), and commit-granularity step plans authored
+several phases before the code they'd land on (~70% survived contact;
+the durable parts — ordering, exit criteria, decision points, scope
+guards — survived essentially unchanged).
+
+### The artifacts
+
+- **Spec** — the user's intent in the user's voice: goals, constraints,
+  *marked uncertainty* ("still debating…"). **Every cluster kickoff
+  produces the spec artifact FIRST** — even when the design emerges from
+  a live conversation, distill it into a doc before the roadmap is
+  written, so the roadmap has an independent artifact to be audited
+  against. Superseded specs archive with their round.
+- **ROADMAP.md** — the active round's PLAN, and it stays a plan for its
+  whole life. A phase entry at authoring time carries only the durable
+  parts: charter (2–3 sentences), why-this-order + hard cross-phase
+  dependencies ("§45 consumes first-class Wait from §44"), risk rating,
+  known decision points, exit criteria, and scope guards (the
+  NOT-doing list). **No sub-step lists at authoring time** (they're cut
+  at phase kickoff, below) and **no as-built prose, ever**.
+- **WORKLOG.md** — the per-round narrative log: one file per roadmap,
+  sectioned `## Phase N`, created fresh at each round's kickoff (first
+  one: Cluster 3) and archived with its roadmap as a pair
+  (`archive/post-NN-roadmap.md` + `-worklog.md`). Write-mostly —
+  sessions orient from the HANDOFF 🧭 Cursor + ROADMAP and open the
+  worklog to APPEND or to investigate. (This revives the
+  [archive/phase-a-e-worklog.md](archive/phase-a-e-worklog.md) pattern;
+  the worklog function drifted into the roadmap's ✅ blocks around
+  Phase H without anyone deciding it.)
+- **Domain run-logs** ([BALANCE.md](BALANCE.md), [PATHING.md](PATHING.md))
+  — permanent, cross-round measurement records with a protocol header.
+  Not worklogs: measurements land here; narrative lands in the worklog.
+
+### The routing table (one fact, one home)
+
+If you're about to write the same fact in a second place, one of the two
+is wrong — link instead.
+
+| Content | Home |
+|---|---|
+| Live status — NEXT, in-flight round, snapshot versions, test counts, riders | HANDOFF 🧭 Cursor (everything else points at it) |
+| What changed, at code level | the git commit message |
+| Measurements, before/after numbers, protocol runs | the domain run-log, when one applies |
+| Findings, decision rationale, rejected alternatives, scope changes, playtest verdicts | WORKLOG.md |
+| Plan mutations — checkbox flips, inserted steps, resolved decision points | ROADMAP.md, one line + a worklog pointer |
+| Hard-won weirdness that must not be re-litigated | [GOTCHAS.md](GOTCHAS.md) ("gotcha #N", never renumber) |
+| Process lessons | [retro/scratchpad.md](retro/scratchpad.md), distilled by the ritual below |
+| Source tree, event/command catalogs | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Small non-roadmap follow-ups | [TODO.md](TODO.md) — completed = one ✅ line + pointer, in the landing commit |
+
+### Legal ROADMAP mutations (everything else → the worklog)
+
+- **Checking a box** — at most one line of outcome + a pointer.
+- **Inserting or re-scoping a step** — one line + why. (The
+  43-pre/44-pre/43b2 precedent: findings-driven insertions are the
+  instruments WORKING, not a planning failure — don't fight them.)
+- **Resolving a decision point** — flip to ✅ DECIDED with the one-line
+  resolution; rationale goes to the worklog.
+
+### Phase kickoff (just-in-time step planning)
+
+Sub-steps are cut when the PHASE starts, not when the roadmap is
+authored. At phase start:
+
+1. **Code-reality audit** — survey the surfaces the phase touches *as
+   they exist now*, several phases of churn later (the H2/H4 rule
+   generalized from step to phase; it's what caught 44-pre). Findings →
+   worklog; pre-steps inserted if warranted.
+2. **Draft the commit-granularity cut** — per step: intent, exit
+   criterion, expected commit shape. One or two lines each; no
+   implementation prose (or the old over-investment just relocates to
+   phase start).
+3. **Shape-lock with the user** — a pause point, same rhythm as
+   pause-between-commits.
+4. **Write the cut into the ROADMAP phase section** as checkbox
+   one-liners; rationale + audit findings into the worklog.
+
+Proportionality: a low-risk phase does all four in minutes at the top of
+its first build session; a high-risk phase (a §45-alike) gets a
+dedicated planning session.
+
+**Step zero of any step: re-verify the card's premise against the
+current code before building.** H2's specced mechanic had been live
+since D5.B; H4's predicted snapshot bump didn't exist. When a card
+predicts a side effect, the *absence* of that side effect is a tell the
+work is already done.
+
+### The scratchpad distillation ritual
+
+At each round/cluster boundary, sweep [retro/scratchpad.md](retro/scratchpad.md):
+every entry is either **promoted** (to a norm here in AGENTS, a gotcha
+in GOTCHAS.md, or a TODO item) or **archived** (moved to `archive/` with
+the round's docs). The scratchpad holds only undistilled observations
+from the current round. First sweep: queued at the tail of the
+2026-07-06 process-audit round — the backlog reaches back to the MVP
+retro (the only prior distillation), with ad-hoc promotions since.
 
 ## Load-bearing invariants
 
@@ -235,9 +340,13 @@ all three trees listing retired files and stale snapshot versions by GP1.
 - **A new gotcha that bit you:** add to [GOTCHAS.md](GOTCHAS.md) with a
   commit reference (permanent "gotcha #N" numbering — never renumber).
   Future-you will thank you.
+- **A finding / decision rationale / session-level story:** append to
+  WORKLOG.md under the phase's `## Phase N` section (see "The planning
+  stack" — the roadmap gets one line + a pointer, never the narrative).
 - **A process observation worth keeping:** drop a short note in
   [retro/scratchpad.md](retro/scratchpad.md). Group by theme; keep
-  entries short; link commits.
+  entries short; link commits. Swept at every round boundary by the
+  distillation ritual (promoted or archived).
 
 ## Things to avoid
 

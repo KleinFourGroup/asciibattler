@@ -14,8 +14,19 @@ import { fileURLToPath } from 'node:url';
 //      hit ~30k tokens / ~69k chars at only 120 lines on 2026-06-16, unreadable
 //      in one call while passing both line caps. The line metric is blind to
 //      density, so we also cap CHARACTERS (a tokenizer-free proxy for tokens).
+//   4. TODO-as-log — completed TODO items accreting forensic essays (the
+//      2026-07-06 demotion pass found 400-word ✅ blocks, plus three items
+//      still marked OPEN that had shipped weeks earlier).
+//   5. The CLAUDE.md auto-load pointer vanishing — Claude Code auto-reads
+//      CLAUDE.md, NOT AGENTS.md (a month of stale AGENTS status proved it);
+//      lose the @-import and every session silently stops loading the norms.
 // All are forcing functions: when one trips, do the cleanup it points at — or
 // bump the threshold deliberately if the growth is legitimate.
+//
+// (A ROADMAP.md plan-shape budget is deliberately NOT here yet — it lands
+// with the Economy roadmap at the Cluster-3 kickoff, per AGENTS "The planning
+// stack"; the current ROADMAP.md is a frozen pre-protocol artifact that
+// archives wholesale at that kickoff.)
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel: string) => readFileSync(join(repoRoot, rel), 'utf8');
@@ -62,6 +73,41 @@ describe('docs hygiene', () => {
       n,
       `HANDOFF.md is ${n} chars (~${Math.round(n / 2.3)} tokens) — past the ~25k-token Read-tool limit, so it can't be read in one call even though it may pass the line caps (dense, oversized lines). Demote completed-phase "Current state" detail to one line + an archive pointer (AGENTS "Keep HANDOFF lean"), or bump HANDOFF_MAX_CHARS deliberately.`,
     ).toBeLessThanOrEqual(HANDOFF_MAX_CHARS);
+  });
+
+  // TODO.md is a queue, not a log (the 2026-07-06 completion convention): a
+  // completed item is one ✅ line + a pointer — the full diagnosis lives in
+  // git history / the run-logs. The cap allows modest wrapping, not essays.
+  const TODO_COMPLETED_ITEM_MAX_LINES = 4;
+
+  it(`every completed TODO.md item stays under ${TODO_COMPLETED_ITEM_MAX_LINES} lines`, () => {
+    const lines = read('TODO.md').split(/\r?\n/);
+    const offenders: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (!/^- \[x\]/i.test(lines[i])) continue;
+      let end = i + 1;
+      while (end < lines.length && !/^- \[|^#/.test(lines[end])) end++;
+      let len = end - i;
+      while (len > 1 && lines[i + len - 1].trim() === '') len--; // trailing blanks
+      if (len > TODO_COMPLETED_ITEM_MAX_LINES) {
+        offenders.push(`line ${i + 1} (${len} lines): "${lines[i].slice(0, 60)}…"`);
+      }
+    }
+    expect(
+      offenders,
+      `Completed TODO items must be one ✅ line + a pointer (≤${TODO_COMPLETED_ITEM_MAX_LINES} lines — git history keeps the diagnosis; TODO.md header has the convention): ${offenders.join('; ')}`,
+    ).toEqual([]);
+  });
+
+  // CLAUDE.md is the thin auto-load pointer (rot pattern 5): Claude Code
+  // auto-reads CLAUDE.md, not AGENTS.md — if the @-import line disappears,
+  // sessions silently stop loading the norms + planning-stack protocols.
+  it('CLAUDE.md exists and @-imports AGENTS.md', () => {
+    expect(existsSync(join(repoRoot, 'CLAUDE.md')), 'CLAUDE.md is missing').toBe(true);
+    expect(
+      read('CLAUDE.md'),
+      'CLAUDE.md must keep its "@AGENTS.md" import line (the auto-load pointer)',
+    ).toMatch(/^@AGENTS\.md\s*$/m);
   });
 
   // ARCHITECTURE.md "Top-level structure" is the single canonical source tree

@@ -195,7 +195,7 @@ describe('metric arithmetic (synthetic event streams)', () => {
         for (let t = 1; t <= 7; t++) bus.emit('tick', { tick: t });
         bus.emit('unit:moveDecision', { unitId: 1, kind: 'advance' });
         bus.emit('unit:moveDecision', { unitId: 1, kind: 'queue' });
-        bus.emit('unit:moveDecision', { unitId: 2, kind: 'hold_band' });
+        bus.emit('unit:moveDecision', { unitId: 2, kind: 'wait' });
         bus.emit('unit:moveDecision', { unitId: 999, kind: 'advance' }); // unknown: ignored
         bus.emit('unit:attacked', { attackerId: 2, targetId: 1, damage: 3, crit: false });
       },
@@ -204,7 +204,7 @@ describe('metric arithmetic (synthetic event streams)', () => {
     expect(m.timeToFirstContactTicks).toBe(7);
     expect(m.teams.player.decisionMix.advance).toBe(1);
     expect(m.teams.player.decisionMix.queue).toBe(1);
-    expect(m.teams.enemy.decisionMix.hold_band).toBe(1);
+    expect(m.teams.enemy.decisionMix.wait).toBe(1);
     expect(m.teams.enemy.decisionMix.advance).toBe(0);
   });
 });

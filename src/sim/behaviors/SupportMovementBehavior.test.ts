@@ -91,15 +91,17 @@ function cheb(a: { x: number; y: number }, b: { x: number; y: number }): number 
 }
 
 describe('SupportMovementBehavior', () => {
-  it('idles when a wounded ally is already in heal range (lets heal_ally fire)', () => {
+  it('waits when a wounded ally is already in heal range (lets heal_ally fire)', () => {
+    // §44b — the in-heal-range hold is a first-class wait proposal (score 1);
+    // a ready heal_ally at 10 still pre-empts it in the selector.
     const healer = makeHealer({ x: 5, y: 5 });
     const wounded = makeUnit(2, 'player', { x: 5, y: 5 + HEAL_RANGE }, { hp: 5 });
-    expect(new SupportMovementBehavior().proposeAction(healer, world([healer, wounded]))).toBeNull();
+    expect(new SupportMovementBehavior().proposeAction(healer, world([healer, wounded]))?.action.id).toBe('wait');
   });
 
-  it('idles when only the healer itself is hurt (self-heal in range)', () => {
+  it('waits when only the healer itself is hurt (self-heal in range)', () => {
     const healer = makeHealer({ x: 5, y: 5 }, /* hp */ 5);
-    expect(new SupportMovementBehavior().proposeAction(healer, world([healer]))).toBeNull();
+    expect(new SupportMovementBehavior().proposeAction(healer, world([healer]))?.action.id).toBe('wait');
   });
 
   it('panic-retreats (score 5) from a too-close enemy when nothing is healable', () => {

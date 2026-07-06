@@ -18,8 +18,8 @@ import type { World } from './World';
  * ability (e.g. the dash) — cross-check `unit:moved` for actual motion. Units
  * with an in-flight action aren't polled and emit nothing that tick.
  *
- * The kinds (§44 adds `wait` when deliberate holds become WaitAction
- * proposals):
+ * The kinds (§44b converted the deliberate hold from an abstain into a real
+ * proposal):
  *
  *   Steps (a proposal was returned)
  *   - `advance`     — took the A* step (or leap landing) toward a goal.
@@ -28,12 +28,18 @@ import type { World } from './World';
  *   - `flee`        — panic-status step away from the nearest threat.
  *   - `wander`      — blind-status step to a random open neighbor.
  *   - `yield_swap`  — the healer's GP5 chokepoint swap with a boxed ally.
+ *   - `wait`        — §44b: the DELIBERATE hold, a first-class `WaitAction`
+ *                     proposal — in acting range (firing band / heal range)
+ *                     with the shot clear, holding to act. Replaces §42a's
+ *                     `hold_band` abstain (same decision, same sites): the
+ *                     selector now weighs it — a ready ability still outranks
+ *                     it, and a winning wait resolves within its tick (the
+ *                     instantaneous-action rule; no world-state trace).
  *
- *   Abstains (returned null)
+ *   Abstains (returned null — which now means ONLY "nothing to propose")
  *   - `queue`          — wanted to step; a unit blocks the way; holding.
+ *                        Stays an abstain until §45b's ETA-gated wait.
  *   - `no_route`       — no path to any goal (or already on every goal).
- *   - `hold_band`      — in acting range (firing band / heal range) with the
- *                        shot clear; holding to act. The §44 WaitAction site.
  *   - `hold_objective` — an O2 `hold` objective forbids repositioning.
  *   - `no_goal`        — nothing to pursue (no enemy / rally / wounded ally;
  *                        healer already in formation).
@@ -52,9 +58,9 @@ export const MOVE_DECISION_KINDS = [
   'flee',
   'wander',
   'yield_swap',
+  'wait',
   'queue',
   'no_route',
-  'hold_band',
   'hold_objective',
   'no_goal',
   'pinned',

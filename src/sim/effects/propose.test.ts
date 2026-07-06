@@ -471,10 +471,10 @@ describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
 
   it('the hold/strike pair NEVER disagrees around a 3×3 rubble (the freeze-class gate)', () => {
     // The GP4/Qb#3 deadlock IS the movement hold and the strike gate answering
-    // "in range?" differently: hold_band with no fireable strike = a frozen
-    // unit. Sweep every free cell around a 3×3 rubble for the three gate
-    // shapes (melee / LOS-gated ranged / LOS-ignoring lob): wherever movement
-    // holds, the strike MUST fire.
+    // "in range?" differently: a hold (§44b's `wait`, §42a's `hold_band`) with
+    // no fireable strike = a frozen unit. Sweep every free cell around a 3×3
+    // rubble for the three gate shapes (melee / LOS-gated ranged /
+    // LOS-ignoring lob): wherever movement holds, the strike MUST fire.
     const VARIANTS = [
       { aid: 'sword', archetype: 'mercenary' },
       { aid: 'bow', archetype: 'ranged' },
@@ -499,7 +499,7 @@ describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
           const kinds: string[] = [];
           bus.on('unit:moveDecision', (p) => kinds.push(p.kind));
           new MovementBehavior().proposeAction(u, w);
-          if (kinds[kinds.length - 1] === 'hold_band') {
+          if (kinds[kinds.length - 1] === 'wait') {
             holds++;
             expect(
               new EffectAbility(def).propose(u, w),

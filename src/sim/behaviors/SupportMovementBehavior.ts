@@ -12,6 +12,7 @@ import { SIM } from '../../config/sim';
 // duplicated leaf-for-leaf). The healer's bespoke decision logic stays here.
 import { costAt, moveProposal, stepDurationTicks, key, chebyshev } from '../movement';
 import { emitMoveDecision, type MoveDecisionKind } from '../moveDecision';
+import { waitProposal } from '../actions/WaitAction';
 
 /**
  * E7.B — the healer's movement, replacing the default `MovementBehavior`
@@ -25,10 +26,11 @@ import { emitMoveDecision, type MoveDecisionKind } from '../moveDecision';
  * Per-tick decision (highest applicable wins; `heal_ally` at 10 outranks
  * everything here, so a healable ally in range always pre-empts movement):
  *
- *   1. A wounded ally (incl. self) is already in heal range → abstain
- *      (null). Hold position and let `heal_ally` fire, or wait out its
- *      cooldown — matches the ROADMAP E7 rule "allies in healing range →
- *      heal/idle, don't retreat."
+ *   1. A wounded ally (incl. self) is already in heal range → hold: a
+ *      first-class WAIT proposal (§44b). `heal_ally` fires on ready ticks
+ *      (score 10 beats the wait's 1); on cooldown ticks the wait wins and
+ *      resolves within the tick — matches the ROADMAP E7 rule "allies in
+ *      healing range → heal/idle, don't retreat."
  *   2. Else the nearest enemy is within `SIM.healerPanicRangeCells` →
  *      PANIC-RETREAT one cell directly away (score 5 — the ROADMAP value,
  *      above movement, below the heal). The kite emerges from the healer's
@@ -69,11 +71,15 @@ export class SupportMovementBehavior implements Behavior {
     const healRange = unit.derived.attackRange;
     const durationTicks = unit.derived.moveCooldownTicks;
 
-    // 1. A wounded ally (self included) is already healable → idle, UNLESS the
-    //    healer is blocking a boxed ally off a chokepoint (GP5 #5 yield rule).
-    //    §42a — the idle is a `hold_band`: in heal range, holding to act.
+    // 1. A wounded ally (self included) is already healable → hold in heal
+    //    range, UNLESS the healer is blocking a boxed ally off a chokepoint
+    //    (GP5 #5 yield rule). §44b — the hold is a first-class WAIT proposal
+    //    (a ready `heal_ally` at 10 still wins), no longer a bare null.
     if (lowestWoundedAlly(unit, world, healRange) !== null) {
-      return yieldChokepoint(unit, world, durationTicks, 'hold_band');
+      const swap = yieldSwap(unit, world, durationTicks);
+      if (swap !== null) return swap;
+      emitMoveDecision(world, unit, 'wait');
+      return waitProposal();
     }
 
     // 2. Panic-retreat from a too-close enemy.
@@ -152,10 +158,12 @@ export class SupportMovementBehavior implements Behavior {
  * 1: a ready heal (`heal_ally`, score 10) still wins, so the swap only fires
  * on heal-cooldown ticks — exactly the ticks the deadlock would otherwise burn.
  *
- * §42a — every healer idle path funnels through here, so this is where the
- * poll's `unit:moveDecision` lands: `yield_swap` when the swap fires, else the
- * caller-supplied `abstainKind` naming WHY the healer is idling (in heal
- * range / boxed / blocked approach / in formation).
+ * §42a — every healer idle path funnels through the yield check, so this is
+ * where the poll's `unit:moveDecision` lands: `yield_swap` when the swap
+ * fires, else the caller-supplied `abstainKind` naming WHY the healer is
+ * idling (boxed / blocked approach / in formation). §44b split the swap probe
+ * out as `yieldSwap` so the in-heal-range hold (step 1) can fall through to a
+ * first-class WAIT proposal instead of this wrapper's bare-null abstain.
  */
 function yieldChokepoint(
   unit: Unit,
@@ -163,11 +171,18 @@ function yieldChokepoint(
   durationTicks: number,
   abstainKind: MoveDecisionKind,
 ): ActionProposal | null {
+  const swap = yieldSwap(unit, world, durationTicks);
+  if (swap !== null) return swap;
+  emitMoveDecision(world, unit, abstainKind);
+  return null;
+}
+
+/** The GP5 #5 swap probe: the proposal (+ its `yield_swap` decision record)
+ *  when the healer is strictly blocking a boxed ally, else null — no decision
+ *  emitted, the caller names its own idle. */
+function yieldSwap(unit: Unit, world: World, durationTicks: number): ActionProposal | null {
   const ally = blockedAlly(unit, world);
-  if (ally === null) {
-    emitMoveDecision(world, unit, abstainKind);
-    return null;
-  }
+  if (ally === null) return null;
   emitMoveDecision(world, unit, 'yield_swap');
   return swapProposal(unit.position, ally.position, ally.id, durationTicks);
 }

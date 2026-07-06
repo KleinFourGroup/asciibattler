@@ -171,13 +171,13 @@ describe('unit:moveDecision — kind correctness (MovementBehavior)', () => {
     expect(kindsFor(units[0]!.id)).toEqual(['no_route', 'no_route']);
   });
 
-  it('hold_band: in attack range with LOS emits `hold_band` and no move', () => {
+  it('wait: in attack range with LOS emits `wait` and no move (§44b, was hold_band)', () => {
     const { world, units, kindsFor } = scene([
       { team: 'player', x: 5, y: 5, attackRange: 1 },
       { team: 'enemy', x: 6, y: 5, inert: true },
     ]);
     world.tick();
-    expect(kindsFor(units[0]!.id)).toEqual(['hold_band']);
+    expect(kindsFor(units[0]!.id)).toEqual(['wait']);
     expect(units[0]!.position).toEqual({ x: 5, y: 5 });
   });
 
@@ -246,13 +246,13 @@ describe('unit:moveDecision — kind correctness (SupportMovementBehavior)', () 
     return built;
   }
 
-  it('hold_band: a wounded ally already in heal range emits `hold_band`', () => {
+  it('wait: a wounded ally already in heal range emits `wait` (§44b, was hold_band)', () => {
     const { world, units, kindsFor } = supportScene([
       { team: 'player', x: 5, y: 5, healer: true },
       { team: 'player', x: 5, y: 5 + HEAL_RANGE, hp: 5 },
     ]);
     world.tick();
-    expect(kindsFor(units[0]!.id)).toEqual(['hold_band']);
+    expect(kindsFor(units[0]!.id)).toEqual(['wait']);
   });
 
   it('advance: a wounded ally out of heal range emits `advance`', () => {
@@ -285,7 +285,7 @@ describe('unit:moveDecision — kind correctness (SupportMovementBehavior)', () 
 describe('unit:moveDecision — the one-per-poll invariant', () => {
   it('a mixed battle emits exactly one decision per free movement poll, none while in-flight', () => {
     // Two movers per side plus a corridor pinch — enough traffic to exercise
-    // advance/sidestep/queue/hold_band across the run.
+    // advance/sidestep/queue/wait across the run.
     const walls: SceneUnit[] = [];
     for (let x = 3; x <= 7; x++) {
       walls.push({ team: 'neutral', x, y: 4, inert: true });

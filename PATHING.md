@@ -35,6 +35,9 @@ exactly in `tests/pathing/baseline.test.ts` — a deliberate movement change
 - **decision mix** — the §42a per-poll histogram. `hold_band` dominating is
   normal (in-position units poll every tick); the load-bearing signals are
   the `queue`/`sidestep`/`no_route` masses and the `advance` share.
+  **§44b renamed `hold_band` → `wait`** (the deliberate hold became a
+  first-class WaitAction proposal — same decision, same sites, same counts);
+  tables at §44b and later say `wait` where earlier tables say `hold_band`.
 
 Fixtures are ability-less and hold no RNG → **seed-invariant** (pure
 algorithm portraits). Shipped-layout battles are real (3 merc + 2 ranged per
@@ -730,7 +733,57 @@ matrix pins it), no snapshot change.
 
 ---
 
-*(Next entries: 44b first-class WaitAction [the deliberate-hold nulls
-become proposals], then §45's before/afters — riverFork oscillation is
-the §45b centerpiece, corridor throughput §45a/c's, labyrinth queue mass
-§45's overall.)*
+## 44b — first-class WaitAction (the deliberate hold becomes a proposal) — 2026-07-05
+
+Two commits close Phase 44. **44b-1 (the seam):** `WaitAction` (empty
+timeline, no `applyEffect`, score 1 / cooldown 0) + World's
+INSTANTANEOUS-ACTION rule — a winning zero-length/no-deferred-effect
+proposal resolves entirely within its tick: `start()` emits the new
+`unit:waited`, nothing enters `activeAction`, no 0-cooldown entry is
+written (both serialize — the two byte-identity landmines, found by
+audit, dodged by construction). 'wait' is deliberately NOT in the action
+registry: it can never be mid-flight at a snapshot, so decode reaching it
+throws loudly. **44b-2 (the conversion):** the two deliberate-hold sites
+— MovementBehavior's `hold` directive (the firing-band hold) and the
+healer's in-heal-range hold (SupportMovementBehavior step 1, via the new
+`yieldSwap` split of `yieldChokepoint`) — now propose the wait instead of
+returning bare null. `MoveDecisionKind` **renames `hold_band` → `wait`**
+(same decision, same sites, same counts — now a Steps kind, since a
+proposal is returned); bare `null` again means only "nothing to propose".
+The helpless abstains (frozen / boxed / no_goal / hold_objective / queue /
+pinned / no_route) stay null — `queue`'s conversion is §45b's ETA-gated
+wait, deliberately NOT this step.
+
+**Decisions locked (from the ROADMAP §44 leanings, all confirmed):**
+1-tick re-decide · no cooldown · NO `activeAction` (within-tick,
+event-only — a committed multi-tick wait has no consumer; if §45+ wants
+one, audit the WorldSnapshot surface first, it's a bump) · deliberate
+holds only · renderer "queued" stance deferred to §45 · wait score 1
+(move tier — any ready ability outranks holding by construction, which
+is the selector-prefers-attacks exit test).
+
+**Byte-identity proof (the §44 exit criterion):** the standing A/B exit
+test (a wait-proposing world's serialized JSON === its bare-null twin's,
+5 ticks) + 1757 main + 212 fuzz:smoke green with NO re-baseline (incl.
+baseline pins + drift gates, unregenerated) + the full `npm run pathing`
+re-measure ROW-FOR-ROW identical to the 43c tables — fixtures AND all
+five shipped layouts × seeds 100–102, every metric unmoved; the decision
+mixes differ ONLY by the `hold_band` → `wait` rename (e.g. openField
+`wait 768 · advance 16`, exactly §42c's hold_band 768). WorldSnapshot
+v32 / RunSnapshot v24 hold. The §36b claim-hold, 43-pre-b LOS-hold,
+44-pre-c band-hold, and §40b rubble-hold tests all re-pin against the
+wait proposal (`action.id === 'wait'`), keeping the GP4/Qb#3
+hold⇒strike sweep aligned with the new kind.
+
+**What §45 buys with this:** the wait is now a REAL selector citizen —
+§45b's ETA-gated wait-vs-sidestep just proposes it from a new site with
+its own condition; no new machinery needed. `unit:waited` is the
+renderer's future "queued" stance hook.
+
+**PHASE 44 COMPLETE** (44-pre-a/b/c · 44a · 44b).
+
+---
+
+*(Next entries: §45's before/afters — riverFork oscillation is the §45b
+centerpiece, corridor throughput §45a/c's, labyrinth queue mass §45's
+overall.)*

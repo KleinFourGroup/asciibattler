@@ -12,6 +12,7 @@ import type { GameEvents } from '../../core/events';
 import type { GridCoord } from '../../core/types';
 import type { StatusEffect } from '../statusEffects';
 import { MoveAction } from '../actions/MoveAction';
+import { WAIT_ACTION_ID } from '../actions/WaitAction';
 
 describe('MovementBehavior', () => {
   it('does not move on the first tick when already in attack range', () => {
@@ -544,7 +545,7 @@ describe('MovementBehavior / corridor kite-pin (Qb #3)', () => {
 });
 
 describe('MovementBehavior / §36b: a pursuer holds for a target arriving into its band', () => {
-  it('a melee unit abstains when its target CLAIMS a cell in its firing band (no kite-pin sidestep)', () => {
+  it('a melee unit waits when its target CLAIMS a cell in its firing band (no kite-pin sidestep)', () => {
     // M targets E. E is mid-move toward M: logically still out of melee range, but
     // its destination CLAIM sits on the cell ADJACENT to M. Pre-fix M read itself
     // out of range and tried to advance — the forward step (E's claimed cell) was
@@ -561,15 +562,16 @@ describe('MovementBehavior / §36b: a pursuer holds for a target arriving into i
     const mover = new MovementBehavior();
 
     // No claim yet → out of range → M proposes a step toward E (the control).
-    expect(mover.proposeAction(m, world)).not.toBeNull();
+    expect(mover.proposeAction(m, world)?.action).toBeInstanceOf(MoveAction);
 
-    // E claims the cell ADJACENT to M (its in-flight destination) → M HOLDS.
+    // E claims the cell ADJACENT to M (its in-flight destination) → M HOLDS
+    // (§44b: the hold is a wait proposal, not a null).
     world.claimCell({ x: 6, y: 5 }, e.id);
-    expect(mover.proposeAction(m, world)).toBeNull();
+    expect(mover.proposeAction(m, world)?.action.id).toBe(WAIT_ACTION_ID);
 
     // Releasing the claim (e.g. the move aborted) resumes pursuit.
     world.releaseClaim({ x: 6, y: 5 });
-    expect(mover.proposeAction(m, world)).not.toBeNull();
+    expect(mover.proposeAction(m, world)?.action).toBeInstanceOf(MoveAction);
   });
 
   it('does NOT over-fire: a claim INSIDE a ranged unit’s minRange still kites (band-respecting)', () => {
@@ -589,9 +591,9 @@ describe('MovementBehavior / §36b: a pursuer holds for a target arriving into i
     const mover = new MovementBehavior();
 
     // Claim another adjacent cell — also inside minRange (dist 1 < floor). It is NOT
-    // in band, so it must not suppress the kite: M still proposes a move.
+    // in band, so it must not suppress the kite: M still proposes a MOVE (not a wait).
     world.claimCell({ x: 6, y: 6 }, e.id);
-    expect(mover.proposeAction(m, world)).not.toBeNull();
+    expect(mover.proposeAction(m, world)?.action).toBeInstanceOf(MoveAction);
   });
 });
 
@@ -668,9 +670,10 @@ function scene(specs: SceneUnit[]): {
  * 43-pre-b — the movement layer's LOS occluder list must cover a multi-tile
  * neutral's WHOLE footprint (`cellsOccupiedBy`), not just its §39 canonical
  * corner. Corner-only, a 2×2 rubble's body cells were LOS-transparent to the
- * in-band hold: a ranged unit sat `hold_band` behind them with a shot the
- * (consistently corner-blind) gate then fired through. Footprint-aware,
- * "behind rubble" reads as no-LOS and the unit repositions for a real shot.
+ * in-band hold: a ranged unit sat holding behind them (§42a's `hold_band`,
+ * §44b's `wait`) with a shot the (consistently corner-blind) gate then fired
+ * through. Footprint-aware, "behind rubble" reads as no-LOS and the unit
+ * repositions for a real shot.
  */
 describe('MovementBehavior — multi-tile neutral footprints (43-pre-b)', () => {
   it('a rubble BODY cell on the sight line breaks the in-band hold (repositions)', () => {
@@ -682,9 +685,9 @@ describe('MovementBehavior — multi-tile neutral footprints (43-pre-b)', () => 
     ]);
     const [m, , e] = units as [Unit, Unit, Unit];
     m.targetId = e.id;
-    // Corner-only LOS read "clear" → hold_band → null. Footprint-aware the
+    // Corner-only LOS read "clear" → the in-band hold. Footprint-aware the
     // hold breaks and the unit moves for a firing cell with a true shot line.
-    expect(new MovementBehavior().proposeAction(m, world)).not.toBeNull();
+    expect(new MovementBehavior().proposeAction(m, world)?.action).toBeInstanceOf(MoveAction);
   });
 
   it('an LOS-ignoring unit (the catapult) still holds in band behind the rubble body', () => {
@@ -695,8 +698,9 @@ describe('MovementBehavior — multi-tile neutral footprints (43-pre-b)', () => 
     ]);
     const [m, , e] = units as [Unit, Unit, Unit];
     m.targetId = e.id;
-    // E7.D — it lobs over the body exactly as it lobbed over the corner.
-    expect(new MovementBehavior().proposeAction(m, world)).toBeNull();
+    // E7.D — it lobs over the body exactly as it lobbed over the corner
+    // (§44b: the in-band hold is a wait proposal).
+    expect(new MovementBehavior().proposeAction(m, world)?.action.id).toBe(WAIT_ACTION_ID);
   });
 });
 
@@ -705,10 +709,10 @@ describe('MovementBehavior — multi-tile neutral footprints (43-pre-b)', () => 
  * BODY (the shared `firingBandCell` predicate), not its §39 corner. Corner-only,
  * a unit flush against a big rubble's far side read "out of range" and WALKED
  * AROUND the body to its corner; a bow crept for corner-LOS it didn't need; a
- * catapult marched inside its own lob arc. All three now hold (null) where the
- * strike gate — the SAME predicate — fires. Open field + a committed target, so
- * a null here can only be the `hold_band` abstain (no boxed/pinned/no_goal path
- * is reachable).
+ * catapult marched inside its own lob arc. All three now hold — §44b: a `wait`
+ * proposal — where the strike gate (the SAME predicate) fires. Open field + a
+ * committed target, so a wait here can only be the in-band hold (the
+ * boxed/pinned/no_goal abstains stay null and are unreachable in this scene).
  */
 describe('MovementBehavior — footprint firing band vs multi-tile targets (44-pre-c)', () => {
   // rubble_3x3 at (4,4) → body x,y ∈ [4..6].
@@ -723,7 +727,7 @@ describe('MovementBehavior — footprint firing band vs multi-tile targets (44-p
     m.targetId = rubble.id;
     // Corner-only: corner (4,4) read dist 3 > 1 → the §40b advance walked the
     // unit around the body toward the corner. Body cell (6,5) is adjacent.
-    expect(new MovementBehavior().proposeAction(m, world)).toBeNull();
+    expect(new MovementBehavior().proposeAction(m, world)?.action.id).toBe(WAIT_ACTION_ID);
   });
 
   it('a bow holds on a clear BODY shot instead of creeping for corner-LOS', () => {
@@ -736,7 +740,7 @@ describe('MovementBehavior — footprint firing band vs multi-tile targets (44-p
     // Body cell (4,3) is at dist 2 (in the bow's [2,3] band) with a clear ray;
     // the ray to the CORNER threads the body, so corner-only read no-LOS and
     // proposed a reposition it didn't need.
-    expect(new MovementBehavior().proposeAction(b, world)).toBeNull();
+    expect(new MovementBehavior().proposeAction(b, world)?.action.id).toBe(WAIT_ACTION_ID);
   });
 
   it("E7.D — a catapult holds when the body's far side enters its lob band", () => {
@@ -748,7 +752,7 @@ describe('MovementBehavior — footprint firing band vs multi-tile targets (44-p
     c.targetId = rubble.id;
     // Corner-only: corner dist 7 > 6 → marched in. Body cell (6,5) is at 5 —
     // inside the [minRange 4, range 6] band, band-only (LOS-ignoring lob).
-    expect(new MovementBehavior().proposeAction(c, world)).toBeNull();
+    expect(new MovementBehavior().proposeAction(c, world)?.action.id).toBe(WAIT_ACTION_ID);
   });
 });
 

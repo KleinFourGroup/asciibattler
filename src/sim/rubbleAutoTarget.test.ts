@@ -148,7 +148,7 @@ describe('§40b — rubble auto-target: currentTarget', () => {
 });
 
 describe('§40b — rubble auto-target: movement approach', () => {
-  it('bestEffort-approaches a committed rubble, then abstains once body-adjacent', () => {
+  it('bestEffort-approaches a committed rubble, then waits once body-adjacent', () => {
     const w = world(6, 1);
     const player = place(w, 100, 'player', 0, 0);
     const rubble = spawnRubble(w, { x: 3, y: 0 }, 1);
@@ -156,11 +156,12 @@ describe('§40b — rubble auto-target: movement approach', () => {
     const mover = new MovementBehavior();
 
     // Out of reach → proposes a step toward the rubble (the hard-blocker approach).
-    expect(mover.proposeAction(player, w)).not.toBeNull();
+    expect(mover.proposeAction(player, w)?.action.id).toBe('move');
 
-    // Adjacent to the rubble → abstains (in range → AbilityBehavior fires the strike).
+    // Adjacent to the rubble → holds (§44b: a wait proposal, no longer a bare
+    // null; in range → a ready AbilityBehavior strike at 10 outranks it).
     player.position = { x: 2, y: 0 };
-    expect(mover.proposeAction(player, w)).toBeNull();
+    expect(mover.proposeAction(player, w)?.action.id).toBe('wait');
   });
 });
 

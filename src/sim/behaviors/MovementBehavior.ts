@@ -8,16 +8,20 @@ import { minRangeForArchetype } from '../archetypes';
 import { GROUND, occupiedCells } from '../occupancy';
 import { advance, chebyshev, moveProposal, stepDurationTicks, key } from '../movement';
 import { emitMoveDecision } from '../moveDecision';
+import { waitProposal } from '../actions/WaitAction';
 import { retreatCell } from '../effects/reposition';
 import { behaviorFlags } from '../statusBehavior';
 
 /**
  * Proposes a one-cell step toward the unit's current (E5-sticky) target when
- * out of attack range. Abstains (returns null) when no enemy exists, when the
- * unit is in the firing band (with LOS where required), when no path to target
- * exists, or when the next step is blocked AND no sidestep is free. Score 1
- * (low); AbilityBehavior scores 10 (via each ability) so the selector prefers
- * attacking over moving when both fire.
+ * out of attack range, or a first-class WAIT (§44b) when the unit is in the
+ * firing band (with LOS where required) — the deliberate hold is a proposal
+ * the selector weighs, no longer a silent abstain. Abstains (returns null)
+ * only when there is genuinely nothing to propose: no enemy exists, no path
+ * to target, the next step is blocked AND no sidestep is free, or a status /
+ * objective forbids moving. Score 1 (low); AbilityBehavior scores 10 (via
+ * each ability) so the selector prefers attacking over moving/waiting when
+ * both fire.
  *
  * §44a — this behavior is a thin DECISION layer over two extracted seams:
  * [positioning.ts](../positioning.ts) owns the WHERE knowledge (the firing
@@ -114,8 +118,11 @@ export class MovementBehavior implements Behavior {
     const directive = engagementDirective(unit, world, target, minRangeForArchetype(unit.archetype));
     switch (directive.kind) {
       case 'hold':
-        emitMoveDecision(world, unit, 'hold_band'); // in position — let the ability fire.
-        return null;
+        // §44b — in position: a first-class WAIT proposal, not a bare null.
+        // A ready ability (score 10) still outranks it; on cooldown ticks the
+        // wait wins and resolves within the tick (no world-state trace).
+        emitMoveDecision(world, unit, 'wait');
+        return waitProposal();
       case 'pinned':
         // §42a — the Qb#3 pinned-kiter shape: too close (the charge fallback
         // off) AND no reachable firing cell. `advance([])` would return null

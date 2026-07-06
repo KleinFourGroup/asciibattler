@@ -1061,7 +1061,121 @@ it from the untouched lockfile; no project file was affected.)
 
 ---
 
-*(Next: 45d — the §45 close-out re-measure + regression bounds + the
-NATIVE PLAYTEST that closes the phase. Residual by charter: the §46
-verdict weighs the remaining queue mass, the A* load, and the School-2/3
-gate on the full residue.)*
+## 45d — the §45 close-out re-measure (vs the frozen §42c baseline) — 2026-07-06
+
+The whole cooperation stack together (45a vacancy-aware tiered costs ·
+45b ETA-gated wait + sidestep progress guard · 45c stable-route margin),
+measured against the frozen §42c tables. Tree clean at 45c — this
+re-measure reproduces the 45c readings exactly, so the numbers below ARE
+the shipped state, not a drifted one.
+
+### The §42c §45-target table, checked off
+
+| metric | §42c | now | target (§45) | |
+|---|---|---|---|---|
+| riverFork oscillation | 0.943 / 0.895 | **0.087 / 0.000** | ≪ 0.5 | ✅ gated ≤ 0.5 (45b) |
+| corridor(3/6) throughput /100t | 0.75 / 1.50 | 0.75 / 1.50 | ↑ measurably | ⚠ SATURATED — see reading 2; floor gated (45b) |
+| labyrinth queue : advance | up to 4.1 : 1 (mass 718) | worst **2.0 : 1** (mass 353) | ↓ substantially | ✅ waits absorb; maze stays long |
+| endlessCorridors oscillation | up to 0.178 | worst **0.104**, others ≤ 0.057 | ↓ | ✅ (no standing gate — reading 5) |
+| openField / riverFork lat drift | +4.00/−4.00 · +4.00/−3.50 | 0.00/0.00 · −0.25/+0.25 | hold §43 | ✅ gates unregenerated |
+| river net dx | ≤ 0 in 6/6 team-seeds | sign-mixed | hold §43 | ✅ gate unregenerated |
+
+### Fixtures (seed-invariant)
+
+| map | seed | ticks | ttfc | lat drift P/E | net dx P/E | osc P/E | zigzag P/E | moves P/E | A*/100t |
+|---|---|---|---|---|---|---|---|---|---|
+| openField(4) | — | 200 | — | 0.00 / 0.00 | 0.00 / 0.00 | 0.000 / 0.000 | 0.000 / 0.000 | 16 / 16 | 30 |
+| corridor(3) | — | 400 | — | 0.00 / 0.00 | 10.00 / 0.00 | 0.000 / 0.000 | 0.032 / 0.000 | 31 / 0 | 17 | 0.75 |
+| corridor(6) | — | 400 | — | -0.17 / 0.00 | 11.17 / 0.00 | 0.014 / 0.000 | 0.095 / 0.000 | 74 / 0 | 48 | 1.50 |
+| riverFork(4) | — | 300 | — | -0.25 / 0.25 | 0.25 / 0.25 | 0.087 / 0.000 | 0.087 / 0.105 | 23 / 19 | 218 |
+
+### Shipped layouts (real battles, seeds 100–102)
+
+| map | seed | ticks | ttfc | lat drift P/E | net dx P/E | osc P/E | zigzag P/E | moves P/E | A*/100t |
+|---|---|---|---|---|---|---|---|---|---|
+| river | 100 | 313 | 69 | 0.12 / -0.46 | -0.40 / -0.20 | 0.029 / 0.057 | 0.171 / 0.114 | 35 / 35 | 62 |
+| river | 101 | 288 | 69 | 0.14 / -0.57 | -0.80 / 0.40 | 0.000 / 0.000 | 0.036 / 0.032 | 28 / 31 | 131 |
+| river | 102 | 316 | 71 | 0.85 / -0.85 | -1.00 / -0.60 | 0.071 / 0.075 | 0.143 / 0.175 | 28 / 40 | 61 |
+| isthmus | 100 | 475 | 158 | 0.06 / -0.72 | -0.20 / 1.00 | 0.000 / 0.000 | 0.086 / 0.056 | 35 / 36 | 64 |
+| isthmus | 101 | 391 | 169 | 0.54 / -0.71 | -0.20 / 1.60 | 0.000 / 0.000 | 0.059 / 0.050 | 34 / 40 | 87 |
+| isthmus | 102 | 460 | 156 | 0.03 / 0.20 | -0.20 / 0.40 | 0.000 / 0.000 | 0.059 / 0.050 | 34 / 40 | 66 |
+| labyrinth | 100 | 864 | 491 | -2.93 / 1.37 | 4.60 / -6.60 | 0.055 / 0.030 | 0.158 / 0.130 | 183 / 200 | 339 |
+| labyrinth | 101 | 893 | 491 | 0.23 / 0.06 | 5.00 / -7.20 | 0.055 / 0.036 | 0.146 / 0.118 | 199 / 195 | 241 |
+| labyrinth | 102 | 843 | 477 | -2.83 / 1.56 | -4.40 / 6.20 | 0.045 / 0.048 | 0.148 / 0.148 | 176 / 209 | 457 |
+| endlessCorridors | 100 | 659 | 222 | 1.67 / -0.69 | 2.00 / 0.20 | 0.052 / 0.038 | 0.129 / 0.152 | 116 / 132 | 92 |
+| endlessCorridors | 101 | 743 | 225 | -1.81 / 2.18 | -0.40 / -3.80 | 0.053 / 0.057 | 0.115 / 0.143 | 113 / 105 | 114 |
+| endlessCorridors | 102 | 653 | 225 | -1.80 / 3.06 | 2.00 / 2.40 | 0.104 / 0.039 | 0.232 / 0.145 | 125 / 152 | 126 |
+| procedural | 100 | 325 | 71 | -0.68 / -0.59 | -1.00 / 0.80 | 0.000 / 0.040 | 0.139 / 0.160 | 36 / 25 | 42 |
+| procedural | 101 | 330 | 71 | 3.34 / -3.56 | 2.40 / 4.20 | 0.024 / 0.050 | 0.244 / 0.150 | 41 / 40 | 76 |
+| procedural | 102 | 289 | 69 | 0.81 / -0.97 | -1.00 / -0.80 | 0.000 / 0.000 | 0.138 / 0.042 | 29 / 24 | 43 |
+
+(Decision-mix tables regenerable via `npm run pathing`; the mix headline —
+`hold_band` is gone [→ wait, 44b], `no_route` is gone [43-pre-a], sidestep
+mass is single digits everywhere, and wait/queue now name what units are
+actually doing at contention.)
+
+**Readings:**
+
+1. **riverFork — the round's centerpiece portrait, closed.** 455 player
+   moves in 300 ticks (429 backtracks, sidestep 219) → **23 moves, sidestep
+   4**; the mix is now wait 581 · queue 573 — the standoff is a QUEUE, not
+   a dance. Both teams' drift within ±0.25.
+2. **corridor throughput — the §42c target was mis-aimed, owned here.**
+   `throughputPer100Ticks` counts gate crossings in the fixed window, and
+   every mover already crossed at §42c — the metric was a completion count
+   sitting at its ceiling, so "↑ measurably" was never reachable on this
+   fixture. What §45 actually improved is HOW they cross: corridor(6)
+   moves 83 → 74, sidestep 12 → 5, oscillation 0.048 → 0.014. The floor
+   gate ("queueing never costs crossings") remains the enforceable
+   invariant.
+3. **labyrinth — the queue converted, the maze survived.** Worst-seed
+   queue mass 718 → 353 (ratio 4.1:1 → 2.0:1), the balance absorbed into
+   deliberate waits (253/283 on the heavy seeds) — a wait is a unit
+   holding its lane on purpose, not a stall. Ticks 864/893/843 vs §42c's
+   923/910/872: ~6% faster while staying the intentional slow maze.
+4. **isthmus — oscillation 0.000 on ALL SIX team-seeds.** The 45b tempo
+   watch item stays recovered (s100: 534 → 475; §42c read 445). ttfc
+   shifted 169×3 → 158/169/156 — cooperation reshaped the approach by a
+   few ticks, still seed-stable.
+5. **endlessCorridors — the user-confirmed axis ("dithering WAY down",
+   45c).** Worst-seed oscillation 0.178 → 0.104, every other team-seed
+   ≤ 0.057. **Deliberately NO standing gate here:** healthy (0.104) and
+   regressed (0.178) are too close for a never-relax bound — 45c-pre
+   honestly read 0.150 mid-round. The axis stays under §46a's re-measure
+   + the trace-flips flicker instrument (the sharper detector: flicker
+   share 25% → 18%, endless flicker −49%).
+6. **river — the map the round was called on:** drift ≤ 0.85 (§42c worst
+   3.44), oscillation ≤ 0.075, dx sign-mixed, ttfc 69/69/71.
+7. **A\* load (informational, → §46):** labyrinth 241–457/100t and the
+   riverFork fixture 218/100t carry the 45c second search where traffic
+   is; quiet maps sit at 17–92. Filed as §46's optimization candidate —
+   correctness first, the round never chartered a perf budget.
+8. **procedural — scenery, not bias:** mirrored unit-frame drifts on an
+   asymmetric map are geometry; the symmetric-fixture gates remain the
+   bias instrument.
+
+### The standing gates (landed this sub-step)
+
+**[tests/pathing/drift.test.ts](tests/pathing/drift.test.ts)** gains the
+§45d close-out bounds (same doctrine — bounds survive re-baselines, never
+relax):
+
+- **shipped-river ttfc ≤ 120 per seed** (readings 69–85 through every
+  sub-step; the §45 patience machinery must never delay the OPENING
+  engagement — a patience pathology reads in the hundreds);
+- **riverFork move mass ≤ 100 per team / 300t** (the crab-walk's second
+  fingerprint: the oscillation gate catches immediate reversals, this
+  catches a rotating churn loop that dodges the reversal detector; §42c
+  read 455, today 23).
+
+With 45b's oscillation + throughput gates, the charter's three
+regression-bound axes (throughput / oscillation / time-to-contact) are
+all covered.
+
+**Residue handed to §46:** the A\*/100t load (reading 7) · labyrinth's
+remaining queue mass (School-2/3 gate weighs it) · the endless residual
+oscillation 0.104 (reading 5) · the 45c outcome-drift hint (FILED for
+§46b's balance spot-check).
+
+**USER PLAYTEST (native browser) — the checkpoint that closes §45:
+PENDING.** The feel question: *"a tactical battle playing out?"*

@@ -71,6 +71,28 @@ describe('§45b cooperation gates — oscillation + throughput (seed-invariant)'
   });
 });
 
+/**
+ * §45d — the close-out gates. The oscillation gate above catches IMMEDIATE
+ * reversals; a rotating churn loop (A→B→C→A) would dodge that detector while
+ * still burning the same motion. Move MASS is the second fingerprint of the
+ * §42c standoff: 455 player moves in 300 ticks pre-§45 (429 of them
+ * backtracks), 23 post. The 100 bound is ~4× today's reading and a fifth of
+ * the disease — a trip means units at a plugged crossing are walking again
+ * instead of holding/waiting.
+ *
+ * (Deliberately NO standing endlessCorridors-oscillation gate: healthy reads
+ * 0.104 worst-seed vs the 0.178 regression signature — too thin a margin for
+ * a never-relax bound; 45c-pre honestly read 0.150 mid-round. That axis
+ * belongs to §46a's re-measure + the trace-flips instrument.)
+ */
+describe('§45d close-out gates — standoff churn mass (seed-invariant)', () => {
+  it('riverFork(4): total moves stay bounded (≤ 100 per team; the standoff churns no more)', () => {
+    const m = runMovementMetrics(riverForkScenario(4), 300);
+    expect(m.teams.player.moves).toBeLessThanOrEqual(100);
+    expect(m.teams.enemy.moves).toBeLessThanOrEqual(100);
+  });
+});
+
 describe('§43c drift gates — shipped River (real battles, seeds 100–102)', () => {
   // One measurement pass shared by both gates (three real battles).
   const SEEDS = [100, 101, 102] as const;
@@ -103,6 +125,23 @@ describe('§43c drift gates — shipped River (real battles, seeds 100–102)', 
       const dxs = measure().flatMap(({ m }) => [m.teams.player.meanNetDx, m.teams.enemy.meanNetDx]);
       expect(dxs.some((dx) => dx > 0)).toBe(true);
       expect(dxs.some((dx) => dx < 0)).toBe(true);
+    },
+    120_000,
+  );
+
+  it(
+    '§45d: time-to-first-contact stays bounded (≤ 120 ticks per seed)',
+    () => {
+      // The §45 patience machinery (wait gates, stable-route margin) must
+      // never delay the OPENING engagement — approach is uncontended, so a
+      // slow ttfc means units waited/dithered on open ground. Readings have
+      // sat at 69–85 through every sub-step (42c → 45c); a patience
+      // pathology reads in the hundreds. 120 is combat-noise headroom, not
+      // license to dawdle.
+      for (const { seed, m } of measure()) {
+        expect(m.timeToFirstContactTicks, `river seed ${seed} ttfc`).not.toBeNull();
+        expect(m.timeToFirstContactTicks!, `river seed ${seed} ttfc`).toBeLessThanOrEqual(120);
+      }
     },
     120_000,
   );

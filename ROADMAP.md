@@ -632,6 +632,16 @@ renderer "queued" stance deferred from §44 is wanted for ship-feel.
   Interplay with §43b accepted: pure-diagonal approaches no longer sidestep
   at all (both rotations lose ground); cell-parity governs the surviving
   cardinal ties. Full entry: PATHING.md §45b.
-- 45c: the determinism-vs-cache resolution (leaning derive-don't-cache; the
-  round's only candidate snapshot bump if not).
+- 45c: the determinism-vs-cache resolution —
+  ✅ RESOLVED (2026-07-06, the 45c-pre flip audit — PATHING.md §45c-pre):
+  **(b) derive-don't-cache, NO snapshot bump.** The trace attributed 351
+  flips: 57% geometry (honest — switchbacks/chases; route memory would
+  wrongly fight them), 18% retarget (stickiness's domain), **25%
+  claim/body cost-flicker — the only fixable class, and it's derivable**
+  (strip the transient cost and the old heading returns). On
+  endlessCorridors, the centerpiece, flicker = 33–39% of flips. Option (a)
+  buys nothing measurable beyond (b); (c) stays rejected. ⚠ The charter's
+  "repath-count drops" metric is RE-FRAMED (it assumed caching): 45c's
+  success = flicker-flip share ↓ + endless osc/zigzag ↓ + gates hold;
+  A*/100t is informational. The build targets the flicker class ONLY.
 - 46: the School-2/3 gate (the round's whole point — decided last, on data).

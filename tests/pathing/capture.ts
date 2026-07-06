@@ -67,11 +67,13 @@ export function headlineRow(label: string, seed: number | string, m: MovementMet
   const p = m.teams.player;
   const e = m.teams.enemy;
   const tp = m.throughputPer100Ticks;
-  return `| ${label} | ${seed} | ${m.ticks} | ${m.timeToFirstContactTicks ?? '—'} | ${N(p.meanNetLateralDrift)} / ${N(e.meanNetLateralDrift)} | ${N(p.meanNetDx)} / ${N(e.meanNetDx)} | ${N(p.oscillationRate, 3)} / ${N(e.oscillationRate, 3)} | ${p.moves} / ${e.moves} |${tp === null ? '' : ` ${N(tp)} |`}`;
+  return `| ${label} | ${seed} | ${m.ticks} | ${m.timeToFirstContactTicks ?? '—'} | ${N(p.meanNetLateralDrift)} / ${N(e.meanNetLateralDrift)} | ${N(p.meanNetDx)} / ${N(e.meanNetDx)} | ${N(p.oscillationRate, 3)} / ${N(e.oscillationRate, 3)} | ${N(p.zigzagRate, 3)} / ${N(e.zigzagRate, 3)} | ${p.moves} / ${e.moves} | ${N(m.pathfindingCallsPer100Ticks ?? 0, 0)} |${tp === null ? '' : ` ${N(tp)} |`}`;
 }
 
-export const HEADLINE_HEADER = `| map | seed | ticks | ttfc | lat drift P/E | net dx P/E | osc P/E | moves P/E |
-|---|---|---|---|---|---|---|---|`;
+// §45c-pre — two columns joined: zigzag P/E (the flip-flop detector) and
+// A*/100t (the repath-count metric §45c must drop measurably).
+export const HEADLINE_HEADER = `| map | seed | ticks | ttfc | lat drift P/E | net dx P/E | osc P/E | zigzag P/E | moves P/E | A*/100t |
+|---|---|---|---|---|---|---|---|---|---|`;
 
 /** One markdown decision-mix row per team per battle (nonzero kinds only, sorted desc). */
 export function mixRows(label: string, seed: number | string, m: MovementMetrics): string[] {

@@ -256,3 +256,80 @@ describe('fixture wiring + determinism (no quality assertions — that is §43+)
     expect(mean).toBeCloseTo(6, 10); // the gaps at x=2 / x=10 are symmetric about 6
   });
 });
+
+describe('§45c-pre — zigzag rate (the flip-flop detector)', () => {
+  const P = { forward: { player: { x: 1, y: 0 }, enemy: { x: -1, y: 0 } } } as MetricsConfig;
+  const one = [{ id: 1, team: 'player' as Team, x: 0, y: 5 }];
+  const step = (bus: EventBus<GameEvents>, from: [number, number], to: [number, number]) =>
+    bus.emit('unit:moved', {
+      unitId: 1,
+      from: { x: from[0], y: from[1] },
+      to: { x: to[0], y: to[1] },
+      durationTicks: 1,
+    });
+
+  it('a straight run has zero zigzags', () => {
+    const m = collect(one, P, (bus) => {
+      step(bus, [0, 5], [1, 5]);
+      step(bus, [1, 5], [2, 5]);
+      step(bus, [2, 5], [3, 5]);
+    });
+    expect(m.teams.player.zigzags).toBe(0);
+    expect(m.teams.player.zigzagRate).toBe(0);
+  });
+
+  it('a lane thrash counts every dy inversion while advancing (what backtracks miss)', () => {
+    // +x/+y, +x/−y, +x/+y — two dy sign inversions, ZERO backtracks (never
+    // revisits a cell). This is the parallel-corridor thrash signature.
+    const m = collect(one, P, (bus) => {
+      step(bus, [0, 5], [1, 6]);
+      step(bus, [1, 6], [2, 5]);
+      step(bus, [2, 5], [3, 6]);
+    });
+    expect(m.teams.player.zigzags).toBe(2);
+    expect(m.teams.player.backtracks).toBe(0);
+    expect(m.teams.player.zigzagRate).toBeCloseTo(2 / 3, 10);
+  });
+
+  it('a backtrack is the both-axes special case (zigzags ⊇ backtracks)', () => {
+    const m = collect(one, P, (bus) => {
+      step(bus, [0, 5], [1, 5]);
+      step(bus, [1, 5], [0, 5]); // A→B→A
+    });
+    expect(m.teams.player.backtracks).toBe(1);
+    expect(m.teams.player.zigzags).toBe(1);
+  });
+
+  it('a turn without inversion (E then NE) is NOT a zigzag', () => {
+    const m = collect(one, P, (bus) => {
+      step(bus, [0, 5], [1, 5]); // +x, 0
+      step(bus, [1, 5], [2, 4]); // +x, −y — dy 0→−1 is a turn, not a flip
+    });
+    expect(m.teams.player.zigzags).toBe(0);
+  });
+
+  it('an aborted step restores the previous direction (revert-consistent)', () => {
+    const m = collect(one, P, (bus) => {
+      step(bus, [0, 5], [1, 6]); // +x/+y
+      step(bus, [1, 6], [2, 5]); // +x/−y — zigzag
+      bus.emit('unit:moveAborted', { unitId: 1, from: { x: 1, y: 6 }, to: { x: 2, y: 5 } });
+      step(bus, [1, 6], [2, 7]); // +x/+y again — NOT a zigzag vs the surviving step
+    });
+    expect(m.teams.player.zigzags).toBe(0);
+    expect(m.teams.player.moves).toBe(2);
+  });
+});
+
+describe('§45c-pre — pathfinding-call counting (the repath metric)', () => {
+  it('reports the A* delta across the run, per-100-ticks normalized', () => {
+    const a = runMovementMetrics(riverForkScenario(4), 300);
+    expect(a.pathfindingCalls).toBeGreaterThan(0);
+    expect(a.pathfindingCallsPer100Ticks).toBeCloseTo((a.pathfindingCalls / a.ticks) * 100, 10);
+  });
+
+  it('is delta-based: a second collector on a fresh run reads its own calls only', () => {
+    const a = runMovementMetrics(riverForkScenario(4), 300);
+    const b = runMovementMetrics(riverForkScenario(4), 300);
+    expect(b.pathfindingCalls).toBe(a.pathfindingCalls); // determinism, not accumulation
+  });
+});

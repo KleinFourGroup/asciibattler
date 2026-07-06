@@ -91,8 +91,12 @@ const LVL1_ROSTER = [
 ];
 
 describe('H4: encounter loop over real battles', () => {
+  // 20s budget (was the 5s default): §45's cooperation changes lengthen some
+  // battles legitimately (units queue at chokepoints instead of flanking —
+  // sim CONTENT, not a perf regression; the 43a fuzz-timeout precedent), and
+  // seed 4's encounter now sits right at the old 5s wall under parallel load.
   for (const seed of [1, 2, 3, 4]) {
-    it(`seed ${seed}: a real encounter terminates and ends the node`, () => {
+    it(`seed ${seed}: a real encounter terminates and ends the node`, { timeout: 20_000 }, () => {
       const bus = new EventBus<GameEvents>();
       const run = new Run(seed, bus);
       run.dispatch({ kind: 'enterNode', nodeId: firstFrontier(run) });

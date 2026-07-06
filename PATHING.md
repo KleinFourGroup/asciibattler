@@ -928,7 +928,72 @@ instantaneous, the guard is pure geometry).
 
 ---
 
-*(Next entries: 45c path commitment + hysteresis — endlessCorridors osc
-+ repath count are its metrics, the isthmus approach-phase queue time its
-feel target; then 45d the full re-measure + the native playtest that
-closes §45.)*
+## 45c-pre — the flip audit (the determinism decision resolves: DERIVE, no bump) — 2026-07-06
+
+Pure instrumentation + a trace, per the resolved plan (user-confirmed the
+(b) lean 2026-07-06): measure the repath flip-flop before building its
+cure, so the cache-vs-determinism decision — the round's ONE candidate
+snapshot bump — resolves on data.
+
+**New instruments (byte-identical — observational only):**
+
+- **`zigzagRate`** (per team) — consecutive move pairs whose direction
+  INVERTS on either axis, / moves. The flip-flop detector `oscillationRate`
+  (backtracks) can't see: lane thrash advances while alternating laterally,
+  never revisiting a cell. ⚠ zigzags ⊇ honest bends (maze switchbacks,
+  chases) — compare across runs, never to zero.
+- **`pathfindingCalls` (+ /100t)** — the A* delta per run, off the §J2
+  `pathfindingStats` counter. The headline tables carry both new columns
+  from this entry on.
+- **[tests/pathing/trace-flips.ts](tests/pathing/trace-flips.ts)** — the
+  attribution tool: for every flip it re-derives the route under
+  counterfactual contexts (claims stripped / all soft bodies stripped) and
+  names the cause. Kept through §46 alongside trace-no-route.ts.
+
+**The attribution table (endlessCorridors · isthmus · labyrinth × seeds
+100–102, 351 flips):**
+
+| cause | share | reading |
+|---|---|---|
+| geometry | **57%** | even the terrain-only route agrees with the flip — labyrinth switchbacks (44–47 of ~60 flips/seed) + honest chases. NOT flip-flop; nothing should suppress these. |
+| retarget | 18% | target changed between moves — deaths + stickiness (already dialed, §E5). |
+| **claim** | **17%** | strip claims and the old heading returns — the transient-reservation flicker. **The (b)-able class.** |
+| **body** | **8%** | claims kept, soft bodies stripped → old heading returns — peers shuffling in/out of the lane. Also (b)-able. |
+
+On **endlessCorridors — §45c's centerpiece — the flicker classes are
+33–39% of flips**; labyrinth is switchback-dominated (by design — the
+standing warning); **isthmus barely flips at all post-45b** (12 flips
+across three seeds).
+
+**Baseline readings (new columns):** endlessCorridors zigzag 0.12–0.26;
+riverFork fixture **A\* 205/100t** — its 573 queue-abstain polls re-path
+every tick ("repath is the tick default", quantified); corridor fixtures
+10–25/100t; labyrinth 168–238/100t.
+
+**THE §45c DECISION — ✅ RESOLVED: (b) derive-don't-cache, NO snapshot
+bump.** The data: the only fixable flip class (claim+body, 25% overall)
+is cost-flicker — a *derivable* hysteresis (stateless, from serialized
+state only) can suppress it; the 57% geometry class is honest and route
+MEMORY would wrongly fight it; nothing measurable remains that only (a)
+serialization could buy. Consequence, honestly stated: **the charter's
+"repath-count drops measurably" is RE-FRAMED** — it was premised on
+caching; under derive-don't-cache A* still runs per poll, so 45c's
+success metrics are the flicker-flip share (re-run the trace), the
+endlessCorridors oscillation/zigzag, and the standing gates holding.
+A\*/100t stays an informational perf meter (the pathing-perf budget test
+is green; if the queue-repath load ever matters, skipping repath for
+gate-failed queued units is a §46-notable optimization, not a §45c goal).
+
+Housekeeping in the same commit: the H4 encounter-loop seed tests get a
+20s budget (seed 4 sat at the old 5s wall — §45 battles legitimately run
+longer where units queue; sim CONTENT, the 43a fuzz-timeout precedent).
+
+**Proof:** 1791 main (+7 metric-arithmetic pins) + 212 fuzz:smoke, both
+green with zero sim changes (tests/ + docs only — byte-identical by
+construction); typecheck clean; v32/v24 hold.
+
+---
+
+*(Next entries: 45c proper — the derivable anti-flicker hysteresis; its
+before/after = this entry's trace table + endless osc/zigzag. Then 45d
+the full re-measure + the native playtest that closes §45.)*

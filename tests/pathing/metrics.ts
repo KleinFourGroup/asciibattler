@@ -16,6 +16,17 @@
  *      (`unit:attacked` / `unit:missed`).
  *   5. **Decision mix** (per team) — the `unit:moveDecision` histogram §42a
  *      made possible.
+ *   6. **Zigzag rate** (per team, §45c-pre) — consecutive move pairs whose
+ *      direction INVERTS on either axis (sign +→− or −→+), divided by moves.
+ *      The route flip-flop detector: a lane-thrashing unit on parallel
+ *      corridors alternates dy while advancing dx, which backtracks (metric 3)
+ *      never see. A backtrack is the both-axes special case, so zigzags ⊇
+ *      backtracks — read them together. Honest direction changes (a target
+ *      death, a corner turn) count too; compare across runs, not to zero.
+ *   7. **Pathfinding calls** (whole battle, §45c-pre) — the `pathfindingStats`
+ *      A*-invocation delta across the run, the §45c repath-count metric
+ *      ("repath becomes the exception" must show here). Counter-based, so
+ *      collectors must not run concurrently (they never do).
  *
  * Frames and signs: each team's `forward` is derived at attach time from the
  * initial team centroids (own → opposing), unless overridden. `lateral` is
@@ -42,6 +53,7 @@ import type { GameEvents } from '../../src/core/events';
 import type { GridCoord } from '../../src/core/types';
 import type { World } from '../../src/sim/World';
 import { MOVE_DECISION_KINDS, type MoveDecisionKind } from '../../src/sim/moveDecision';
+import { pathfindingStats } from '../../src/sim/Pathfinding';
 
 export type MetricTeam = 'player' | 'enemy';
 
@@ -76,6 +88,10 @@ export interface TeamMovementMetrics {
   backtracks: number;
   /** backtracks / moves (0 when the team never moved). */
   oscillationRate: number;
+  /** §45c-pre — consecutive move pairs with an axis sign inversion. */
+  zigzags: number;
+  /** zigzags / moves (0 when the team never moved). The flip-flop detector. */
+  zigzagRate: number;
   decisionMix: Record<MoveDecisionKind, number>;
 }
 
@@ -85,6 +101,10 @@ export interface MovementMetrics {
   gateCrossings: number;
   /** gateCrossings normalized per 100 ticks; null without a gate or ticks. */
   throughputPer100Ticks: number | null;
+  /** §45c-pre — A* invocations across the run (the repath-count metric). */
+  pathfindingCalls: number;
+  /** pathfindingCalls normalized per 100 ticks; null when ticks is 0. */
+  pathfindingCallsPer100Ticks: number | null;
   teams: Record<MetricTeam, TeamMovementMetrics>;
 }
 
@@ -98,8 +118,20 @@ interface TrackedUnit {
   netDx: number;
   netDy: number;
   backtracks: number;
+  /** §45c-pre — axis sign inversions between consecutive moves. */
+  zigzags: number;
+  /** The previous committed step's direction (sign-valued), for zigzag detection. */
+  lastDir: { dx: number; dy: number } | null;
   /** The last committed step, for the abort revert. */
-  lastStep: { from: GridCoord; to: GridCoord; wasBacktrack: boolean; crossedGate: boolean } | null;
+  lastStep: {
+    from: GridCoord;
+    to: GridCoord;
+    wasBacktrack: boolean;
+    crossedGate: boolean;
+    wasZigzag: boolean;
+    /** The direction BEFORE this step, restored on revert. */
+    prevDir: { dx: number; dy: number } | null;
+  } | null;
 }
 
 function zeroDecisionMix(): Record<MoveDecisionKind, number> {
@@ -126,6 +158,8 @@ export class MovementMetricsCollector {
   private ticks = 0;
   private firstContactTick: number | null = null;
   private gateCrossings = 0;
+  /** §45c-pre — the A* counter reading at attach; finish() reports the delta. */
+  private readonly pathfindingCallsAtStart = pathfindingStats.calls;
 
   constructor(
     private readonly world: World,
@@ -180,6 +214,8 @@ export class MovementMetricsCollector {
       netDx: 0,
       netDy: 0,
       backtracks: 0,
+      zigzags: 0,
+      lastDir: null,
       lastStep: null,
     });
   }
@@ -217,13 +253,22 @@ export class MovementMetricsCollector {
     const crossedGate = this.gate !== undefined && this.gate(from, to);
     if (crossedGate) this.gateCrossings++;
 
+    // §45c-pre — zigzag: this step's direction inverts the previous step's on
+    // either axis (sign product −1; a 0 on either side is a turn, not a flip).
+    const dir = { dx: Math.sign(to.x - from.x), dy: Math.sign(to.y - from.y) };
+    const prevDir = t.lastDir;
+    const wasZigzag =
+      prevDir !== null && (prevDir.dx * dir.dx === -1 || prevDir.dy * dir.dy === -1);
+    if (wasZigzag) t.zigzags++;
+    t.lastDir = dir;
+
     t.recentCells.push([key(from), moveIndex]);
     while (t.recentCells.length > this.windowMoves) t.recentCells.shift();
     t.moves++;
     t.netDx += to.x - from.x;
     t.netDy += to.y - from.y;
     t.position = { ...to };
-    t.lastStep = { from: { ...from }, to: { ...to }, wasBacktrack, crossedGate };
+    t.lastStep = { from: { ...from }, to: { ...to }, wasBacktrack, crossedGate, wasZigzag, prevDir };
   }
 
   /**
@@ -243,6 +288,8 @@ export class MovementMetricsCollector {
     t.position = { ...from };
     if (s.wasBacktrack) t.backtracks--;
     if (s.crossedGate) this.gateCrossings--;
+    if (s.wasZigzag) t.zigzags--;
+    t.lastDir = s.prevDir;
     t.recentCells.pop();
     t.lastStep = null;
   }
@@ -252,6 +299,7 @@ export class MovementMetricsCollector {
       player: this.teamMetrics('player'),
       enemy: this.teamMetrics('enemy'),
     };
+    const pathfindingCalls = pathfindingStats.calls - this.pathfindingCallsAtStart;
     return {
       ticks: this.ticks,
       timeToFirstContactTicks: this.firstContactTick,
@@ -260,6 +308,8 @@ export class MovementMetricsCollector {
         this.gate === undefined || this.ticks === 0
           ? null
           : (this.gateCrossings / this.ticks) * 100,
+      pathfindingCalls,
+      pathfindingCallsPer100Ticks: this.ticks === 0 ? null : (pathfindingCalls / this.ticks) * 100,
       teams,
     };
   }
@@ -269,6 +319,7 @@ export class MovementMetricsCollector {
     let unitCount = 0;
     let moves = 0;
     let backtracks = 0;
+    let zigzags = 0;
     let sumLateral = 0;
     let sumDx = 0;
     let sumDy = 0;
@@ -277,6 +328,7 @@ export class MovementMetricsCollector {
       unitCount++;
       moves += t.moves;
       backtracks += t.backtracks;
+      zigzags += t.zigzags;
       sumLateral += t.netDx * lateral.x + t.netDy * lateral.y;
       sumDx += t.netDx;
       sumDy += t.netDy;
@@ -289,6 +341,8 @@ export class MovementMetricsCollector {
       meanNetDy: unitCount === 0 ? 0 : sumDy / unitCount,
       backtracks,
       oscillationRate: moves === 0 ? 0 : backtracks / moves,
+      zigzags,
+      zigzagRate: moves === 0 ? 0 : zigzags / moves,
       decisionMix: this.decisionMix[team],
     };
   }

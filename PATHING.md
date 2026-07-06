@@ -1185,3 +1185,81 @@ question answered YES.
 three times — 45a/b sanity runs, 45c "dithering WAY down on endless
 corridors", 45d the closing 👍). Next: the §46 verdict — READ BALANCE.md
 + PATHING.md first.
+
+---
+
+## 46a — THE VERDICT: the round's exit criteria + the School-2/3 gate — 2026-07-06
+
+The decision entry the whole round aimed at. Data: the §45d re-measure
+tables (same build — nothing but docs landed since) + a fresh
+`trace-flips.ts` attribution run (**byte-identical to the §45c run — 291
+flips, same rows**; determinism itself is a verdict datum) + the user
+feel playtests.
+
+### The round's exit criteria, checked off
+
+| criterion | evidence | |
+|---|---|---|
+| drift ≈ 0 on symmetric fixtures, both teams | openField 0.00/0.00 EXACT · riverFork −0.25/+0.25; standing gates ≤ 0.5 | ✅ |
+| corridors QUEUE | corridor nose-to-tail pinned in tests · labyrinth queue:advance 4.1:1 → 2.0:1 with waits absorbing · isthmus osc 0.000×6 | ✅ |
+| oscillation DOWN | riverFork 0.943 → 0.087 (gated ≤ 0.5) · endless worst 0.178 → 0.104 · shipped maps ≤ 0.075 elsewhere | ✅ |
+| the user's four symptoms | table below | ✅ all four |
+
+### The four symptoms (the 2026-07-04 session that called the round)
+
+| # | symptom | disposition |
+|---|---|---|
+| 1 | "Bottom-spawn units drift left on River/Isthmus" | **FIXED §43** (A* string tie-break → straightness · sidestep first-candidate → cell parity · targeting alignment). River drift ≤ 0.85 dx sign-mixed; user 43c: "no drift that I can ID at all". Gated forever. |
+| 2 | "Not sure the boids fire at the right time" | **FIXED §45b** — the sidestep now fires only when waiting is worse (ETA gate) and never loses ground (progress guard). Sidestep mass single digits everywhere (riverFork 219 → 4); the crab-walk is dead (churn 455 → 23 moves, gated). |
+| 3 | "Units hate following each other down corridors" | **FIXED §45a+b+c** — vacancy-aware costs (columns stop reading as walls) + wait conversion (queues form) + the stable-route margin (the queue-vs-detour call stops re-litigating: flicker flips −41%). |
+| 4 | "Individual units fighting each other's algorithms, not a tactical battle" | **ANSWERED YES by the user** — 45c "dithering WAY down", 45d 👍 on the charter's exact feel question. The §44 protocol (explicit WaitAction) + §45 cooperation are the mechanism. |
+
+### The School-2/3 gate: **NO — the round closes as well-tuned School 1**
+
+ROADMAP line-100's "decent chance a well-tuned School 1 is simply
+enough" is the measured outcome. Per school, on the residue:
+
+- **School 2 (WHCA\*-lite / reservation tables): NOT EARNED.** The
+  symptom it exists for — units unable to plan through moving columns —
+  no longer registers: the derived vacancy window IS a 1-step
+  space-time read, and the residual claim+body flicker is **18% of 291
+  flips (~5.8/battle)** with the other 82% honest geometry/retarget
+  that reservations would fight wrongly. A multi-step reservation table
+  is also exactly the CACHE the round's resolved doctrine
+  (derive-don't-cache, §45c-pre) rejects — it would reopen the
+  serialize-vs-diverge decision §45c closed at zero bumps.
+- **School 3 (flow fields): NOT EARNED.** Its emergent good —
+  queueing/corridor-following — already emerged (§45b). Its perf good
+  targets the one residue that GREW (A\*/100t 241–457 on labyrinth,
+  ~2× pre-45c), but that load is microseconds on a ≤32×32 grid: the
+  §45c worktree A/B probe measured **+~1%/tick** — there is no symptom,
+  only a number. Optimization without a complaint stays in the drawer.
+- **School 4 (RVO/boids):** ruled out at charter (fights the grid, the
+  claim-flip model, and byte determinism). Unchanged.
+
+**The seams stay documented, not built** (the ROADMAP scope-guard
+drawer): claims-as-reservations (§36 core = the WHCA\*-lite seed, grown
+only if a future content round measures a real symptom) · per-target
+field caching at `routeToward` (any such cache must honor
+derive-don't-cache — flow fields ARE derivable, so a within-tick cache
+needs no serialization; noted for a perf phase iff profiling ever
+flags the A\* load).
+
+**Residue register (all owned, none blocking):** A\*/100t 241–457 where
+traffic is (informational; the §46 optimization candidate stays
+unclaimed) · labyrinth queue mass 353 worst (BY DESIGN — the maze is
+intentionally slow; a full 1-wide corridor queues correctly) · endless
+osc 0.104 worst seed (65% of its flips attribute to honest geometry —
+parallel-lane maps legitimately re-litigate at junctions) · the §45c
+outcome-drift hint (→ §46b, next).
+
+**Feel session note:** the charter's 46a native-browser session is the
+§45d playtest (2026-07-06, THIS build — only docs landed since), where
+the user answered the charter's exact question ("a tactical battle
+playing out?") with 👍. Folded, not skipped.
+
+*(Next: 46b — the balance spot-check vs §41's numbers under the §41
+methodology [optimum re-derive → telemetry under the FIXED optimum,
+in+held-out], chasing the filed outcome-drift hint. Then 46c close-out:
+cursor → Cluster 3; delete trace-flips.ts + trace-no-route.ts per their
+headers; ROADMAP archives.)*

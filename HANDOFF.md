@@ -9,11 +9,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 | | |
 |---|---|
 | **NEXT** | **The Cluster 3 (Economy) KICKOFF** — a fresh-session task; brief below |
-| **In flight** | The process-audit round (2026-07-06): docs + protocol cleanup before the kickoff |
+| **In flight** | — |
 | **Branch / tree** | `main`, working tree clean at last close |
 | **Snapshots** | WorldSnapshot **v32** · RunSnapshot **v24** |
-| **Tests** | **1799 main** (`npm test`) + **212 fuzz:smoke** green · typecheck clean |
-| **Last closed** | The Pathfinding Audit round (Phases 42→46), ✅ user-confirmed 2026-07-06 — see Closed rounds below |
+| **Tests** | **1801 main** (`npm test`) + **212 fuzz:smoke** green · typecheck clean |
+| **Last closed** | The process-audit docs round (2026-07-06, `f7fbf45`→`f0523fc`: the planning stack in AGENTS.md, CLAUDE.md auto-load, docs ratchets, the pre-commit gate, the scratchpad sweep) · before it, the Pathfinding Audit round (Phases 42→46), ✅ user-confirmed 2026-07-06 — see Closed rounds below |
 
 **The Cluster-3 kickoff brief:**
 

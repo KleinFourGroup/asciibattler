@@ -441,3 +441,56 @@ deltas. The pre-X H7c→O log lives at
   - Docs-only close (BALANCE §41 + HANDOFF/ROADMAP/memory); no config, no snapshot bump; 1677
     main + 212 fuzz:smoke green. **▶ Phase 41 + Cluster 2 (Spatial & Movement) COMPLETE &
     user-confirmed; NEXT = Cluster 3 (Economy).**
+- **2026-07-06 — §46b the Pathfinding-Audit closer spot-check: ACCEPT + RE-BASELINE, no
+  config change (the ceiling moved, the floor didn't).** The §42–45 movement round
+  (bias fixes / WaitAction / vacancy costs / wait-vs-sidestep / stable-route margin)
+  shifted battle outcomes — the §45c fuzz probe filed the hint ("greedy runs go deeper"),
+  and this scoped re-run of the §41 methodology quantifies it. Method: heavy `--search`
+  re-derive (preset=heavy 120/30/10, jobs=16, samplerSeed=1 — the SAME 120 candidates +
+  train seeds as §41) → anchors + telemetry UNDER THE FIXED OPTIMUM, in-sample + held-out
+  (`--seed-offset=5000`), 120 runs/batch → forced-isolation reads for everything the
+  natural tables flagged. **1,440 measured runs, 0 hangs.**
+  - **Anchors — the floor is STABLE.** greedy 10.0 (in) / 14.2 (held) vs §41's 13.3/11.7 ·
+    pure-random 12.5 / 14.2 vs 14.2/10.8 — all four inside the ±~3.5pt seed-variance band.
+  - **The ceiling is NOT — real engine drift, isolated on a fixed strategy.** §41's own
+    winning vector, re-run unchanged: win **25.0% (in) / 24.2% (held)** vs its §41 reads
+    35.0/33.3 — **−10.0/−9.1pt, consistent across BOTH seed sets** (so not seed noise, and
+    the anchors rule out a floor shift). A fresh search over the *identical* candidate pool
+    recovers in-sample to **30.8%** but only **22.5%** held-out: best-achievable now reads
+    ~31/~24 vs §41's 35/33. Part staleness (§41's vector was tuned to pre-§45 movement),
+    part a genuinely harder top end. **Skill gradient stays steep: +20.8pt in-sample**
+    (30.8 vs greedy 10.0; §41 +22) — the health metric holds.
+  - **Why (the mechanism, briefly):** §45's cooperation is symmetric, but its benefit
+    isn't uniform — big melee-heavy teams pushing chokepoints gain the most from queue
+    conversion + no-dither lanes, and at the wall that's the ENEMY (boss waves field 7–8
+    units vs the player's 6). Fights resolve more decisively; runs go deeper (greedy avg
+    hop 7.22, capped draws down); the bot's linear policy finds less edge at the top.
+  - **Per-encounter bands — HOLD; the natural-table boss spikes were sample noise.**
+    Normals/elites on-band in natural runs (ronin-vs-mages 3.3/4.7 ≈ its accepted in-situ
+    premium; elites 4.0–6.3 vs band ≈6). The bosses flagged in natural runs (banditQueen
+    12.6/**15.2**, n=37/24) → forced isolation under the fixed optimum (n=79 in / 66 held):
+    **bandit-king 10.6/10.4 · banditQueen 11.8/10.3 — ON the ≈10 band** (banditQueen's
+    in-sample +1.8 ≈ an in-situ-premium-sized residual, held-out on-band). **No off-band
+    encounter → no dial, per protocol.**
+  - **Boss wall (hop-10 death): 53% (in) / 59% (held)** vs the 43–55% design target and
+    §41's 48/42%. In-sample inside; held-out 4pt above. With both bosses ON-band in
+    isolation, the elevation is the weaker-arriving-optimum effect, not boss overweight —
+    tuning boss budgets down would push them UNDER band. **Filed as the WATCH ITEM for
+    Cluster 3's balance pass** (run-level economy — pool/rest — is the native lever if the
+    top end should come back up; re-read the wall there).
+  - **The §33 equilibrium HOLDS as a class — and rotated within it.** No merc+ranged
+    relapse (new optimum: mercenary −0.26 / mage −0.60 / ronin −0.89 disfavored; ranged
+    ~0.1 neutral). But the favored SET moved: §41's reaver/shaman/ghoul → warlock 0.99 /
+    ghoul 0.93 / ice_mage 0.89 / corrupter 0.76 / banshee 0.76 / stormcaller 0.70. Same
+    candidate pool, same train seeds, different winner — §45 changed which casters shine
+    (better lanes reward backline-heavy comps). Content-neutral; noted for Cluster 4
+    (Drafting) flavor awareness.
+  - **Early funnel ≤9%/hop (hops 0–9), 0 hangs, labyrinth included.** Capped draws 12–23
+    per 120 — in family with §41.
+  - **VERDICT: the §45 movement layer is balance-ACCEPTED, not balance-neutral** (contrast
+    §41's spatial layer, which WAS neutral): every design target holds (bands · gradient ·
+    equilibrium-class · funnel · in-sample wall), the one edge-high number (held-out wall
+    59%) is filed for Cluster 3, and the §46b readings become the comparison baseline going
+    forward (fixed-vector probes: re-run `best-strategy.json` before/after any future
+    engine round — the cheapest ceiling-drift instrument this round leaves behind).
+    Docs-only close; no config, no snapshot bump.

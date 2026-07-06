@@ -644,4 +644,12 @@ renderer "queued" stance deferred from §44 is wanted for ship-feel.
   "repath-count drops" metric is RE-FRAMED (it assumed caching): 45c's
   success = flicker-flip share ↓ + endless osc/zigzag ↓ + gates hold;
   A*/100t is informational. The build targets the flicker class ONLY.
+  **BUILT 2026-07-06 (PATHING.md §45c):** the stable-route margin —
+  stable incumbent (short-horizon transients stripped) vs live challenger,
+  first-step compare, `routeSwitchMargin` 8 / `stableRouteHorizonOwnSteps`
+  1. Flicker flips −41% (endless −49%), endless osc worst 0.150 → 0.104,
+  isthmus osc 0.000×6, all gates hold. Two perf gates tried + REJECTED
+  (they skipped real suppressions); fuzz budget growth measured as
+  CONTENT (deeper greedy runs, +~1% per-tick compute) → re-budgeted, and
+  the outcome-drift hint filed for §46b.
 - 46: the School-2/3 gate (the round's whole point — decided last, on data).

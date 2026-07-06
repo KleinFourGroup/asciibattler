@@ -994,6 +994,74 @@ construction); typecheck clean; v32/v24 hold.
 
 ---
 
-*(Next entries: 45c proper — the derivable anti-flicker hysteresis; its
-before/after = this entry's trace table + endless osc/zigzag. Then 45d
-the full re-measure + the native playtest that closes §45.)*
+## 45c — the stable-route margin (derivable anti-flicker hysteresis) — 2026-07-06
+
+The build the resolved decision allows: **route commitment without route
+memory.** Per poll, `chooseRoute` derives TWO routes from serialized state:
+
+- the **stable incumbent** — the same A* with short-horizon transients
+  stripped (bodies/claims whose flip ETA ≤ `stableRouteHorizonOwnSteps`
+  × the pather's own step — §45c-pre's counterfactual probe promoted to
+  the decision rule; longer-horizon traffic stays priced: a glacial
+  blocker is furniture and must still be detoured);
+- the **live challenger** — the full §45a pricing, exactly as before.
+
+When their FIRST steps agree (or no short-horizon transient exists — the
+quiet-world fast path, one search, byte-identical), the live route
+proceeds. When they diverge, the live detour is followed only if its
+advantage under live pricing exceeds `routeSwitchMargin` (**8** — one
+pulsing claim/body (+4..+8) holds the lane; a crossing column (+12 and
+up) still yields by detour); otherwise the unit keeps the stable lane and
+the §45b step machinery (wait / progress-guarded sidestep / queue)
+handles what's actually standing there. Everything re-derives per poll
+from serialized state — a resumed snapshot chooses identically (the H4
+resume-determinism oracle + the fuzz resume oracles keep proving it; NO
+snapshot bump, v32/v24 hold). Dash + healer stay live-only (no measured
+flip evidence there; scope tight).
+
+**Fingerprint (the §45c-pre instruments, pre → post):**
+
+| metric | 45c-pre | 45c | |
+|---|---|---|---|
+| trace: total flips (3 maps × 3 seeds) | 351 | **291** | −17% |
+| trace: claim+body FLICKER flips | 88 (25%) | **52 (18%)** | **−41% absolute — the target class** |
+| trace: endlessCorridors flicker | 57 | **29** | −49% on the centerpiece |
+| trace: geometry/retarget (honest) | 263 | 239 | untouched by design (fewer moves overall) |
+| endlessCorridors osc P (worst seed) | 0.150 | **0.104**; others ≤ 0.057 | first movement since 42c |
+| endlessCorridors moves P/E (s100) | 161/207 | 116/132 | the thrash was walking |
+| isthmus osc | 0.000×4 + 0.028/0.056 | **0.000 on ALL SIX team-seeds** | |
+| isthmus ticks (s100 — the 45b watch item) | 534 | **475** | most of the 43c-421 regression recovered |
+| labyrinth ticks / osc worst | 928/936/956 · 0.055 | **864/893/843** · 0.055 | faster again |
+| corridor(6) fixture | sidestep 6 | **5** (re-pin) | one more crab → lane-hold |
+| riverFork / openField / corridor(3) | — | byte-identical | |
+| A*/100t (labyrinth) | 168–238 | 241–457 | the second search; informational — see below |
+
+All standing gates pass unregenerated (drift bounds · dx sign-mixed ·
+riverFork osc ≤ 0.5 · throughput floors).
+
+**Two perf gates tried and REJECTED at the keyboard** (comment at the
+`chooseRoute` site): a straight-first-step fast path and a
+transient-distance prune — both measurably skipped REAL suppressions
+(corridor(6)'s conversion died; endless osc regressed toward baseline),
+and the fuzz wall-time growth that motivated them turned out to be
+**CONTENT, not compute**: the §45c perf probe (worktree A/B, greedy
+corpus) measured per-tick cost at +~1% on equal seeds, while several
+greedy RUNS now go materially deeper/longer — battle outcomes shifted, so
+run trajectories did too. Fuzz budgets re-bumped per the 43a precedent
+(30s → 90s config default; occupancyInvariant 60s → 180s). ⚠ The
+outcome-drift hint is FILED FOR §46b's balance spot-check (win rates vs
+the §41 numbers).
+
+**Proof:** 1797 main (+6: the junction margin matrix — baseline lane
+pick, single-pulse holds, heavy traffic yields, static blocker still
+detours, glacial-horizon gate, margin-from-config) + 212 fuzz:smoke
+green; typecheck clean. (Mid-step incident, owned: a scratch worktree's
+node_modules junction was deleted recursively — `npm install` restored
+it from the untouched lockfile; no project file was affected.)
+
+---
+
+*(Next: 45d — the §45 close-out re-measure + regression bounds + the
+NATIVE PLAYTEST that closes the phase. Residual by charter: the §46
+verdict weighs the remaining queue mass, the A* load, and the School-2/3
+gate on the full residue.)*

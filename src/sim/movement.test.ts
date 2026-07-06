@@ -731,3 +731,109 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
     expect(p!.action.id).toBe(WAIT_ACTION_ID);
   });
 });
+
+describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
+  /** Same seat shape as the §45a/§45b blocks: active move + destination claim. */
+  function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
+    const durationTicks = travel * 2;
+    unit.activeAction = {
+      action: new MoveAction(unit.position, to, durationTicks),
+      startTick: world.currentTick,
+      finishTick: world.currentTick + durationTicks,
+      phases: [
+        { phase: 'travel', ticks: travel },
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: durationTicks - travel },
+      ],
+    };
+    world.claimCell(to, unit.id);
+  }
+
+  /**
+   * The junction geometry — where lane flicker actually lives (§45c-pre: on
+   * open ground A* dodges diagonally without changing its FIRST step, so
+   * distant transients can't flip a poll; at a corridor branch the whole
+   * lane is committed at step one). Two parallel 1-wide lanes off a mouth:
+   * lane A (y=5) and lane B (y=7), a wall row between and around, goal at
+   * the far merge. Equal lengths — the mover's baseline choice is lane A
+   * (the 43a numeric (y,x) tie fallback).
+   */
+  function junction(traffic: (world: World, laneUnits: Unit[]) => void) {
+    const specs: Spec[] = [{ team: 'player', x: 0, y: 6 }];
+    // Lane-resident units get seated by the traffic callback (up to two).
+    specs.push({ team: 'player', x: 3, y: 5 });
+    specs.push({ team: 'player', x: 6, y: 5 });
+    for (let x = 1; x <= 8; x++) {
+      specs.push({ team: 'neutral', x, y: 4, neutral: true }); // above lane A
+      specs.push({ team: 'neutral', x, y: 6, neutral: true }); // between lanes
+      specs.push({ team: 'neutral', x, y: 8, neutral: true }); // below lane B
+    }
+    const { world, units } = scene(specs);
+    const [mover, resA, resB] = units;
+    traffic(world, [resA!, resB!]);
+    const p = advance(mover!, world, {
+      goals: [{ x: 9, y: 6 }],
+      approachToward: { x: 9, y: 6 },
+      maxCells: 1,
+    });
+    return { proposal: p, mover: mover! };
+  }
+
+  /** Park the lane residents far off the board's action (empty lane A). */
+  const parked = (_world: World, lane: Unit[]) => {
+    lane[0]!.position = { x: 0, y: 0 };
+    lane[1]!.position = { x: 11, y: 0 };
+  };
+
+  it('baseline: with no traffic the mover takes lane A (the deterministic tie)', () => {
+    const { proposal } = junction(parked);
+    expect(landing(proposal)).toEqual({ x: 1, y: 5 });
+  });
+
+  it('a single transient pulse on lane A does NOT flip the choice (the flicker dies)', () => {
+    // One mid-move body on lane A: vacating discount (+1) + its claim's
+    // static tier (+4) = a +5 live advantage for lane B — under the margin.
+    // Pre-§45c the live route switched lanes for it (and back, next poll).
+    const { proposal } = junction((world, lane) => {
+      lane[1]!.position = { x: 11, y: 0 }; // only one resident in play
+      seatMove(world, lane[0]!, { x: 4, y: 5 }, 2);
+    });
+    expect(landing(proposal)).toEqual({ x: 1, y: 5 }); // stays in lane A
+  });
+
+  it('heavy transient traffic on lane A still yields by detour (above the margin)', () => {
+    // Two mid-move bodies: 2 × (+1 body +4 claim) = +10 > routeSwitchMargin 8.
+    const { proposal } = junction((world, lane) => {
+      seatMove(world, lane[0]!, { x: 4, y: 5 }, 2);
+      seatMove(world, lane[1]!, { x: 7, y: 5 }, 2);
+    });
+    expect(landing(proposal)).toEqual({ x: 1, y: 7 }); // lane B
+  });
+
+  it('a STATIC blocker on lane A is priced in the stable route too (no stuck regression)', () => {
+    // A body at rest is furniture: both routes prefer lane B — agreement, no
+    // margin in play. The §45a corridor-aversion math is untouched.
+    const { proposal } = junction((_world, lane) => {
+      lane[1]!.position = { x: 11, y: 0 };
+      // lane[0] stays parked at (3,5) with no active move — a static body.
+    });
+    expect(landing(proposal)).toEqual({ x: 1, y: 7 }); // lane B
+  });
+
+  it('the margin derives from config (balance-proof: the pulse sits under it)', () => {
+    // The single-pulse advantage (+5) must actually be under the dial for the
+    // flicker test above to mean anything; the heavy case (+10) above it.
+    expect(SIM.routeSwitchMargin).toBeGreaterThanOrEqual(5);
+    expect(SIM.routeSwitchMargin).toBeLessThan(10);
+  });
+
+  it('a glacially-vacating blocker stays a stable cost (the horizon gates the strip)', () => {
+    // Same single-body geometry, but the move is far beyond the horizon: the
+    // body prices as furniture in BOTH routes → agreement on lane B.
+    const { proposal } = junction((world, lane) => {
+      lane[1]!.position = { x: 11, y: 0 };
+      seatMove(world, lane[0]!, { x: 4, y: 5 }, 10_000);
+    });
+    expect(landing(proposal)).toEqual({ x: 1, y: 7 }); // lane B
+  });
+});

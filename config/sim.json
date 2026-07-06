@@ -6,6 +6,8 @@
   "inboundClaimPenalty": 8,
   "vacancyWindowOwnSteps": 1,
   "waitForVacancyOwnSteps": 1,
+  "routeSwitchMargin": 8,
+  "stableRouteHorizonOwnSteps": 1,
   "healerPanicRangeCells": 1,
   "healerFollowGapCells": 1,
   "actingCellSearchSlack": 2,

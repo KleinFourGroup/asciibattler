@@ -69,6 +69,7 @@ describe('fixture baseline (post-45b, 2026-07-05 — re-baseline deliberately)',
     expect(six.gateCrossings).toBe(6);
     expect(six.throughputPer100Ticks).toBeCloseTo(1.5, 10);
     expect(six.teams.player.decisionMix.queue).toBe(13);
-    expect(six.teams.player.decisionMix.sidestep).toBe(6);
+    // §45c — one more flicker crab became a lane-hold (6 → 5).
+    expect(six.teams.player.decisionMix.sidestep).toBe(5);
   });
 });

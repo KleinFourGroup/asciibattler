@@ -313,6 +313,133 @@ function walkAlongPath(
 }
 
 /**
+ * §45c — the anti-flicker route choice: stable incumbent vs live challenger.
+ *
+ * The flip-flop the §45c-pre trace attributed (25% of flips; 33–39% on
+ * endlessCorridors) is TRANSIENT cost noise steering the router: a claim or a
+ * soon-vacating body appears, the optimum flips to a parallel lane, the
+ * transient resolves within a step or two, the optimum flips back — and the
+ * unit has crabbed laterally for nothing. The cure the resolved §45c decision
+ * allows (derive-don't-cache — nothing serialized, nothing to lose on a
+ * snapshot resume):
+ *
+ *   - The **stable route** — the same A* with short-horizon transients
+ *     STRIPPED (bodies/claims whose flip ETA is within
+ *     `stableRouteHorizonOwnSteps` of the pather's own step; §45c-pre's
+ *     counterfactual probe, promoted to the decision rule). Long-horizon
+ *     traffic (a glacially-vacating blocker) stays priced — it's furniture.
+ *     This is the derivable INCUMBENT: recomputable identically from
+ *     serialized state on any resume.
+ *   - The **live route** — today's full §45a pricing, the CHALLENGER.
+ *   - When their FIRST STEPS agree (or no transient exists at all — the
+ *     quiet-world fast path, one search, byte-identical to pre-§45c), the
+ *     live route proceeds as before. When they diverge, the live detour is
+ *     followed only if its advantage under live pricing exceeds
+ *     `routeSwitchMargin`; otherwise the unit holds the stable lane and the
+ *     §45b step machinery (wait / progress-guarded sidestep / queue) handles
+ *     whatever is actually standing there.
+ *
+ * Only the first step is compared — the choice is re-derived every poll, so
+ * later divergence is next poll's question. The dash/leap (`leapLanding`) and
+ * the healer's `stepToward` stay live-only: no flip evidence was measured
+ * there (§45c-pre traced combat comps), and scope stays tight.
+ */
+function chooseRoute(
+  from: GridCoord,
+  goal: GridCoord,
+  ctx: MovementContext,
+  world: World,
+  bestEffort: boolean,
+  footprint: number,
+): GridCoord[] {
+  const live = routeToward(from, goal, ctx, world, bestEffort, footprint);
+  if (live.length < 2) return live;
+  // (Two perf gates were tried here and REJECTED at the §45c keyboard, both
+  // measured to skip REAL suppressions: a straight-first-step fast path cost
+  // corridor(6)'s crab-to-lane-hold conversion + a chunk of endless osc, and
+  // a transient-distance gate pruned A* only on the cheap map whose flicker
+  // this phase exists to kill, while a maze's transients are always near so
+  // the expensive labyrinth searches ran anyway. The fuzz wall-time growth
+  // that motivated them was measured to be CONTENT — deeper greedy runs —
+  // not compute; the fuzz budgets carry it, per the 43a precedent.)
+  const stable = stableContext(ctx);
+  if (stable === null) return live; // no short-horizon transients — live IS stable.
+  const stablePath = findPath(
+    from,
+    goal,
+    ctx.pathBlockers,
+    world.gridW,
+    world.gridH,
+    (c) => costAt(c, world, stable, from),
+    bestEffort,
+    footprint,
+  );
+  if (stablePath.length < 2) return live;
+  const sameFirstStep =
+    stablePath[1]!.x === live[1]!.x && stablePath[1]!.y === live[1]!.y;
+  if (sameFirstStep) return live;
+  // Diverged: price BOTH under the live cost fn; live is optimal there, so
+  // the difference is the transient advantage the detour buys.
+  const advantage = pathCost(stablePath, ctx, world, from) - pathCost(live, ctx, world, from);
+  return advantage > SIM.routeSwitchMargin ? live : stablePath;
+}
+
+/**
+ * §45c — the stable-incumbent cost context: `ctx` with every short-horizon
+ * transient stripped (cost 0 — the cell will clear around one own-step from
+ * now, so for ROUTE choice it's noise). Long-horizon vacating bodies stay
+ * soft-blocked (their `vacatingEta` entry is dropped, so they price at the
+ * static tier); long-horizon / underivable claims keep their tier. Returns
+ * null when nothing qualifies — the caller then skips the second search
+ * entirely (the quiet-world fast path). COMMIT-time sets are untouched: this
+ * context exists only inside the stable `costAt` closure.
+ */
+const stableContextMemo = new WeakMap<MovementContext, PathCostContext | null>();
+
+function stableContext(ctx: MovementContext): PathCostContext | null {
+  // One build per poll, not per goal attempt — a pure function of the ctx,
+  // memoized on it (WeakMap: no retention beyond the poll's context object).
+  const memo = stableContextMemo.get(ctx);
+  if (memo !== undefined) return memo;
+  const built = buildStableContext(ctx);
+  stableContextMemo.set(ctx, built);
+  return built;
+}
+
+function buildStableContext(ctx: MovementContext): PathCostContext | null {
+  const horizon = SIM.stableRouteHorizonOwnSteps * ctx.stepTicks;
+  const strippedCells: string[] = [];
+  for (const [cell, eta] of ctx.vacatingEta) {
+    if (eta <= horizon) strippedCells.push(cell);
+  }
+  const strippedClaims: string[] = [];
+  for (const [cell, eta] of ctx.claimed) {
+    if (eta !== undefined && eta <= horizon) strippedClaims.push(cell);
+  }
+  if (strippedCells.length === 0 && strippedClaims.length === 0) return null;
+  const otherUnitCells = new Set(ctx.otherUnitCells);
+  for (const c of strippedCells) otherUnitCells.delete(c);
+  const claimed = new Map(ctx.claimed);
+  for (const c of strippedClaims) {
+    otherUnitCells.delete(c);
+    claimed.delete(c);
+  }
+  return { otherUnitCells, vacatingEta: new Map(), claimed, stepTicks: ctx.stepTicks };
+}
+
+/** §45c — a path's total entry cost under the LIVE pricing (cells 1..end). */
+function pathCost(
+  path: readonly GridCoord[],
+  ctx: MovementContext,
+  world: World,
+  from: GridCoord,
+): number {
+  let sum = 0;
+  for (let i = 1; i < path.length; i++) sum += costAt(path[i]!, world, ctx, from);
+  return sum;
+}
+
+/**
  * §42a — a goal attempt's outcome. `blocked` = a route existed but a unit
  * stood in the way and no sidestep committed (the aggregate `queue` signal);
  * `no_route` = A* found nothing (or the unit already sits on the goal). The
@@ -362,7 +489,10 @@ function stepAlongRoute(
   // commit-time occupancy check rides the same seam whenever one ships.
   footprint = 1,
 ): StepOutcome {
-  const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
+  // §45c — the anti-flicker route choice (stable incumbent vs live challenger)
+  // replaces the bare live search; identical single-search behavior on any
+  // poll without short-horizon transients in play.
+  const path = chooseRoute(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
   if (path.length < 2) return 'no_route';
 
   if (intent.maxCells <= 1) {

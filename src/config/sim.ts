@@ -58,6 +58,27 @@
  *     Distinct from `vacancyWindowOwnSteps` (route pricing) so queueing
  *     patience and route optimism tune independently. A step-count, not a
  *     timing.
+ *   routeSwitchMargin — §45c: the anti-flicker hysteresis, in A* COST units.
+ *     When transient traffic (claims / soon-vacating bodies) steers the live
+ *     route's first step OFF the stable-world route (the same route with
+ *     those transients stripped — the derivable incumbent; §45c-pre's
+ *     counterfactual, promoted to the decision rule), the unit follows the
+ *     live detour only if its advantage under live pricing EXCEEDS this
+ *     margin; otherwise it holds the stable lane and lets the §45b step
+ *     machinery (wait / progress-guarded sidestep / queue) handle the
+ *     traffic. One pulsing claim/body (+4..+8) stays under an 8-margin —
+ *     the §45c-pre flicker class dies; a real crossing column (+12 and up)
+ *     still yields by detour. 0 = live always wins (pre-§45c behavior).
+ *     Derived per poll from serialized state only — nothing cached, so a
+ *     resumed snapshot chooses identically (the §45c determinism decision).
+ *   stableRouteHorizonOwnSteps — §45c: what counts as "transient" when
+ *     building the stable incumbent, in multiples of the pather's OWN step
+ *     duration. A vacating body / derivable claim whose flip ETA is within
+ *     this horizon is stripped from the stable context (it will resolve
+ *     around one of my steps — routing noise); beyond it, the body/claim is
+ *     as good as furniture and stays a stable cost (a glacially-vacating
+ *     blocker must still be detoured, not queued behind). A step-count, not
+ *     a timing.
  *   healerPanicRangeCells — E7.B: when a healer (`SupportMovementBehavior`)
  *     has no wounded ally in heal range, it panic-retreats from the nearest
  *     enemy that is within this many cells (Chebyshev). A distance, not a
@@ -113,6 +134,8 @@ const SimSchema = z.object({
   inboundClaimPenalty: z.number().nonnegative(),
   vacancyWindowOwnSteps: z.number().nonnegative(),
   waitForVacancyOwnSteps: z.number().nonnegative(),
+  routeSwitchMargin: z.number().nonnegative(),
+  stableRouteHorizonOwnSteps: z.number().nonnegative(),
   healerPanicRangeCells: z.number().int().nonnegative(),
   healerFollowGapCells: z.number().int().nonnegative(),
   actingCellSearchSlack: z.number().int().nonnegative(),
@@ -130,6 +153,8 @@ export const SIM = {
   inboundClaimPenalty: parsed.inboundClaimPenalty,
   vacancyWindowOwnSteps: parsed.vacancyWindowOwnSteps,
   waitForVacancyOwnSteps: parsed.waitForVacancyOwnSteps,
+  routeSwitchMargin: parsed.routeSwitchMargin,
+  stableRouteHorizonOwnSteps: parsed.stableRouteHorizonOwnSteps,
   healerPanicRangeCells: parsed.healerPanicRangeCells,
   healerFollowGapCells: parsed.healerFollowGapCells,
   actingCellSearchSlack: parsed.actingCellSearchSlack,

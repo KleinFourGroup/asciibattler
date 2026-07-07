@@ -16,8 +16,10 @@
  *    comes from owning multiple daemons/packets, not per-instance stacks.
  */
 
-/** The launch run-stat keys (content-driven — grown when content demands). */
-export type RunStatKey = 'bitsGain' | 'cacheSize';
+/** The launch run-stat keys (content-driven — grown when content demands).
+ *  A tuple so the config layer's zod enum and this type share one source. */
+export const RUN_STAT_KEYS = ['bitsGain', 'cacheSize'] as const;
+export type RunStatKey = (typeof RUN_STAT_KEYS)[number];
 
 /** Base values before any modifier folds. */
 export const RUN_STAT_BASES: Readonly<Record<RunStatKey, number>> = {

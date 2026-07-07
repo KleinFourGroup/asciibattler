@@ -283,6 +283,8 @@ config/                      # A4: balance JSON source of truth (paired with src
                              # (L1: enabled ships FALSE — daemons carry their own buffs; the buff stays the K4-default shape)
   daemons.json               # L1: the idol catalog — per-daemon redraw/empower gates, each with a per-turn `chance`
                              # (Mars/Minerva empower; Mercury coin-flip full redraw; Janus guaranteed 2-card redraw)
+                             # 47b: daemons may also carry `rules: Rule[]` (modifier | hook — the shared
+                             # daemon/packet effect vocabulary; trigger×op×filter matrix parse-enforced)
   nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json

@@ -113,7 +113,7 @@ retires); PreTurnScreen = stacked banner lines; NO overlay pull-forward.
 **The cut (shape-locked 2026-07-07; rationale in worklog §47):**
 
 - [x] 47a — `foldRunStats` + `RunStatKey` (`bitsGain`, `cacheSize`): pure module + tests, zero consumers ✅ [runStats.ts](src/run/runStats.ts), 9 tests
-- [ ] 47b — the `Rule` zod schema (modifier | hook; triggers `turnStart/encounterStart/encounterEnd` + `dealHit/kill`; ops `grantRedraws/grantEmpowers/gainBits/healPool/applyStatus`; filters `archetype/crit/won`) alongside legacy gates; no behavior change
+- [x] 47b — the `Rule` zod schema (modifier | hook; triggers `turnStart/encounterStart/encounterEnd` + `dealHit/kill`; ops `grantRedraws/grantEmpowers/gainBits/healPool/applyStatus`; filters `archetype/crit/won`) alongside legacy gates; no behavior change ✅ [daemons.ts](src/config/daemons.ts) + matrix guard + boot assert, 16 tests
 - [ ] 47c — the run-domain hook engine; idols re-authored; serialized `turnGrants` replaces `turnGates`; legacy gates + `TurnGates` DELETED; **Run v24→v25** (oracle: fuzz `--daemon` byte-equivalent)
 - [ ] 47d — multi-daemon: `daemons[]` by id; PreTurnScreen stacked banners; `turn:starting` list payload; **v25→v26**
 - [ ] 47e — the bits substrate: `run.bits` + `run:bitsChanged` + `config/economy.json` + `RunConfig` override + `gainBits` with the `bitsGain` fold; example daemon #3; **v26→v27**

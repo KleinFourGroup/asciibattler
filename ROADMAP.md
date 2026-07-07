@@ -105,10 +105,20 @@ Both snapshots bump (Run: daemons-by-id + rules + bits; World: tallies +
 battleRules). Mitigation: the idol re-authoring is a behavior-equivalence
 refactor with the existing daemon fuzz arm as the oracle.
 
-**Decision points:** the exact launch trigger/op/stat lists (cut at kickoff —
-content-driven, ~6 triggers / ~7 ops per the spec); the multi-daemon
-PreTurnScreen list presentation; whether the bits overlay pulls forward from
-§48 if eyeball verification wants bits visible here.
+**Decision points — ✅ DECIDED at kickoff (2026-07-07, worklog §47):** launch
+lists = 5 triggers / 5 ops / 2 run-stats (see the cut; `grantPacket` waits
+for §49's `PacketDef`); daemons serialize BY ID (bespoke round-trip
+retires); PreTurnScreen = stacked banner lines; NO overlay pull-forward.
+
+**The cut (shape-locked 2026-07-07; rationale in worklog §47):**
+
+- [ ] 47a — `foldRunStats` + `RunStatKey` (`bitsGain`, `cacheSize`): pure module + tests, zero consumers
+- [ ] 47b — the `Rule` zod schema (modifier | hook; triggers `turnStart/encounterStart/encounterEnd` + `dealHit/kill`; ops `grantRedraws/grantEmpowers/gainBits/healPool/applyStatus`; filters `archetype/crit/won`) alongside legacy gates; no behavior change
+- [ ] 47c — the run-domain hook engine; idols re-authored; serialized `turnGrants` replaces `turnGates`; legacy gates + `TurnGates` DELETED; **Run v24→v25** (oracle: fuzz `--daemon` byte-equivalent)
+- [ ] 47d — multi-daemon: `daemons[]` by id; PreTurnScreen stacked banners; `turn:starting` list payload; **v25→v26**
+- [ ] 47e — the bits substrate: `run.bits` + `run:bitsChanged` + `config/economy.json` + `RunConfig` override + `gainBits` with the `bitsGain` fold; example daemon #3; **v26→v27**
+- [ ] 47f — `battleRules[]` compile-in + `tallies` settle (the XP pattern); examples #1+#2; **World v32→v33** + determinism/fuzz re-baseline
+- [ ] 47g — exit sweep: full fuzz pass, ARCHITECTURE catalog/tree, GOTCHAS, docs + cursor flip
 
 **Exit criteria:** the four idols behave equivalently under the new schema
 (fuzz `--daemon` green); the spec's five motivating example daemons are

@@ -20,13 +20,14 @@ import { fileURLToPath } from 'node:url';
 //   5. The CLAUDE.md auto-load pointer vanishing — Claude Code auto-reads
 //      CLAUDE.md, NOT AGENTS.md (a month of stale AGENTS status proved it);
 //      lose the @-import and every session silently stops loading the norms.
+//   6. ROADMAP-as-log — the pre-protocol failure mode (Phases H→46 all did
+//      it): the plan accreting verbose ✅ as-built blocks until it IS the
+//      worklog. The 2026-07-06 planning stack moved narrative to WORKLOG.md;
+//      legal ROADMAP mutations are one-liners + a pointer, so growth stays
+//      bounded. (Landed with the Economy roadmap at the Cluster-3 kickoff,
+//      as the note here promised.)
 // All are forcing functions: when one trips, do the cleanup it points at — or
 // bump the threshold deliberately if the growth is legitimate.
-//
-// (A ROADMAP.md plan-shape budget is deliberately NOT here yet — it lands
-// with the Economy roadmap at the Cluster-3 kickoff, per AGENTS "The planning
-// stack"; the current ROADMAP.md is a frozen pre-protocol artifact that
-// archives wholesale at that kickoff.)
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel: string) => readFileSync(join(repoRoot, rel), 'utf8');
@@ -97,6 +98,57 @@ describe('docs hygiene', () => {
       offenders,
       `Completed TODO items must be one ✅ line + a pointer (≤${TODO_COMPLETED_ITEM_MAX_LINES} lines — git history keeps the diagnosis; TODO.md header has the convention): ${offenders.join('; ')}`,
     ).toEqual([]);
+  });
+
+  // The ROADMAP plan-shape budget (rot pattern 6): phase entries carry
+  // charter / ordering / risk / decision points / exit criteria / scope
+  // guards ONLY; mutations are one-liners + a worklog pointer. Authored size
+  // at the Cluster-3 kickoff: 330 lines total, phase sections 30–40 lines.
+  // Tripping a cap means as-built prose crept in — move it to WORKLOG.md, or
+  // bump deliberately (e.g. an inserted phase grew the plan for real).
+  const ROADMAP_MAX_LINES = 450;
+  const ROADMAP_PHASE_MAX_LINES = 60;
+
+  it(`ROADMAP.md stays under ${ROADMAP_MAX_LINES} lines (a plan, not a log)`, () => {
+    const n = lineCount(read('ROADMAP.md'));
+    expect(
+      n,
+      `ROADMAP.md is ${n} lines. It must stay a PLAN (AGENTS "The planning stack") — move narrative/as-built prose to WORKLOG.md, or bump ROADMAP_MAX_LINES deliberately if the plan legitimately grew.`,
+    ).toBeLessThanOrEqual(ROADMAP_MAX_LINES);
+  });
+
+  it(`every ROADMAP.md "## Phase" section stays under ${ROADMAP_PHASE_MAX_LINES} lines`, () => {
+    const lines = read('ROADMAP.md').split(/\r?\n/);
+    const offenders: string[] = [];
+    let phases = 0;
+    let name = '';
+    let count = 0;
+    const flush = () => {
+      if (name !== '' && count > ROADMAP_PHASE_MAX_LINES) offenders.push(`"${name}" (${count} lines)`);
+    };
+    for (const l of lines) {
+      if (/^## /.test(l)) {
+        flush();
+        name = /^## Phase \d/.test(l) ? l.slice(3) : '';
+        if (name !== '') phases++;
+        count = 0;
+        continue;
+      }
+      if (name !== '') count++;
+    }
+    flush();
+    expect(phases, 'parsed no "## Phase N" sections — the heading format or parser drifted').toBeGreaterThan(0);
+    expect(
+      offenders,
+      `Phase sections must stay plan-shaped (charter/ordering/risk/decisions/exit/scope only — narrative goes to WORKLOG.md under the matching "## Phase N"): ${offenders.join('; ')}`,
+    ).toEqual([]);
+  });
+
+  it('WORKLOG.md exists (the narrative home the plan points at)', () => {
+    expect(
+      existsSync(join(repoRoot, 'WORKLOG.md')),
+      'WORKLOG.md is missing — every round has one (created at kickoff, archived as a pair with its roadmap); without it the ROADMAP caps just push prose into hiding.',
+    ).toBe(true);
   });
 
   // CLAUDE.md is the thin auto-load pointer (rot pattern 5): Claude Code

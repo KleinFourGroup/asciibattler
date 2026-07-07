@@ -1,655 +1,330 @@
-# ROADMAP — The Pathfinding Audit (Movement Intelligence, Phases 42→46)
+# ROADMAP — Cluster 3: Economy (Phases 47→52)
 
-> **▶ ACTIVE — an interstitial round between Cluster 2 (Spatial & Movement,
-> archived → [archive/post-34-roadmap.md](archive/post-34-roadmap.md)) and
-> Cluster 3 (Economy, [META-ROADMAP.md](META-ROADMAP.md)).** The user-called
-> movement-quality audit: fix the *directional biases* players can see, make
-> *waiting* a first-class tactical decision, and teach units to *cooperate*
-> (follow columns, queue at chokepoints) instead of fighting each other's
-> pathing — all measured by a new instrumentation harness, not vibes. Same
-> precedent as the Post-N agency round (O→R): a user-feedback round slotted
-> between clusters. **First task of Cluster 3's kickoff = archive this file →
-> `archive/post-41-roadmap.md` and author the Economy roadmap** (the same
-> archive-and-replace ritual that produced this one).
+> **▶ ACTIVE — the third of the six post-X meta-roadmap clusters
+> ([META-ROADMAP.md](META-ROADMAP.md)), and the first roadmap authored under
+> the 2026-07-06 planning-stack protocol** (AGENTS.md "The planning stack"):
+> this file is the PLAN and stays one for its whole life. Phase entries carry
+> charter / ordering + dependencies / risk / decision points / exit criteria /
+> scope guards ONLY; sub-steps are cut at each phase kickoff; narrative,
+> findings, and rationale land in [WORKLOG.md](WORKLOG.md); plan mutations here
+> are one line + a worklog pointer. Spec: **[cluster-3-spec.md](cluster-3-spec.md)**
+> (hardened + locked 2026-07-07 — audit this plan against it). **First task of
+> the next round's kickoff = archive this file + WORKLOG.md →
+> `archive/post-46-roadmap.md` + `archive/post-46-worklog.md`** (the ritual).
 
 Companion to [DESIGN.md](DESIGN.md), [ARCHITECTURE.md](ARCHITECTURE.md),
 [BALANCE.md](BALANCE.md), [TODO.md](TODO.md), [GOTCHAS.md](GOTCHAS.md), and
 [META-ROADMAP.md](META-ROADMAP.md). Prior roadmaps in [archive/](archive/) —
-most recently [post-x](archive/post-x-roadmap.md) (Cluster 1, Y→34) and
-[post-34](archive/post-34-roadmap.md) (Cluster 2, 35→41, the round this one
-audits). This round's run-logs live in a new **[PATHING.md](PATHING.md)**
-(the BALANCE.md pattern: baseline first, every change re-measured against it).
+most recently [post-41](archive/post-41-roadmap.md) (the Pathfinding Audit,
+42→46).
 
-## Where this came from (read this first)
+## Where this came from
 
-Cluster 2 hardened the spatial *substrate* (occupancy, claims, terrain,
-footprints, destructibles) but never audited the *intelligence* on top of it.
-The user's playtest observations (2026-07-04 session), each traced to code:
-
-1. **"Bottom-spawn units drift left on River/Isthmus."** CONFIRMED, two causes.
-   (a) The E5.B sidestep ([movement.ts](src/sim/movement.ts) `sidestep`) tries
-   its two perpendicular candidates in a fixed order — `(x−1, …)` first — and
-   ties go to the *first candidate*. A unit heading straight at its target has
-   both candidates exactly tied in Chebyshev (the forward axis dominates), so
-   **every contested step shuffles toward −x**; top-spawn units get the mirror.
-   (b) The A* equal-f/equal-h tie-break ([Pathfinding.ts](src/sim/Pathfinding.ts)
-   `popLowestF`) compares `"x,y"` keys as **strings** — `"10,3" < "2,3"` — a
-   digit-ordering artifact, not a spatial rule. Under the Chebyshev heuristic
-   with uniform diagonal cost, min-cost ties are *everywhere* on open ground
-   (any path inside the diagonal cone costs the same), so this "rare fallback"
-   fires constantly. River amplifies both: its two crossings are near-equal
-   cost, so the tie-break — not tactics — picks the same one for the whole team.
-2. **"Not sure the boids fire at the right time."** "Boids" is only an informal
-   comment nickname (corridor-flow.test.ts) for the E5.B sidestep — there is no
-   flocking system. And no, it does NOT fire at the right time: it triggers on
-   "forward cell occupied *now*" with zero reasoning about whether the blocker
-   is mid-move and about to vacate. Sidestep → repath → routed back → sidestep:
-   the crab-walk oscillation.
-3. **"Units hate following each other down corridors."** Three compounding
-   causes: an ally-occupied cell costs +`occupiedCellPenalty` (4), so a 4-deep
-   queue justifies a ~16-cell detour; **claims read as walls** for pathing
-   (occupied-OR-claimed blocks, gotcha #113) even though every cell in a moving
-   column is about to be vacated; and full per-tick repathing re-litigates the
-   queue-vs-detour call every tick, so units flip-flop.
-4. **"Individual units fighting each other's algorithms, not a tactical
-   battle."** That's the architecture: greedy per-unit replanning, no plan
-   commitment, no vacancy prediction, first-mover advantage from tick iteration
-   order. Deterministic, but not coordinated.
-
-**The architecture verdict (settled with the user):** the proposal/selector
-system is **sound — evolve it, don't overhaul it**. Behaviors returning scored
-proposals to a 12-line arbiter is a standard utility/arbitration pattern, and
-the J2 seam (behavior = goal selection; `advance`/`routeToward` = routing) is
-exactly where any future cooperative planner plugs in. The real smells are
-*interface* problems: (a) `return null` means six different things in
-[MovementBehavior.ts](src/sim/behaviors/MovementBehavior.ts) — some "nothing to
-do", some "actively deciding to stand still" — so the decision "wait, the
-blocker clears in 3 ticks" has **nowhere to live**; (b) coordination-by-
-convention — movement re-implements firing-band/LOS/minRange knowledge just to
-know when to abstain for AbilityBehavior, a protocol enforced by comments
-instead of types. Both get fixed by *making the implicit explicit* (§44), not
-by a behavior tree / GOAP / two-phase global resolver (all rejected).
-
-## The education (the state of the art, for orientation)
-
-Multi-unit pathfinding has four schools. Knowing which one we're in — and
-which we're deliberately NOT in — is this round's compass:
-
-- **School 1 — independent replanning + local rules** (*we are here*): per-unit
-  A*, conflicts patched locally (penalties, sidesteps, waits). The classic RTS
-  architecture; its ceiling is the quality of the local rules. Ours are
-  first-draft, two with literal bugs. This round raises the ceiling.
-- **School 2 — cooperative / space-time (WHCA\*, reservation tables, MAPF):**
-  units plan through (x, y, *time*), writing reservations others path around
-  (Silver 2005, *Cooperative Pathfinding*; windowed = WHCA\*). **Our claim
-  system is already a 1-step reservation table** — the §36 core is the seed of
-  WHCA\*-lite, and a deterministic 20Hz tick sim is the ideal host. §46 decides
-  whether to grow it.
-- **School 3 — flow fields:** one Dijkstra flood per *goal*, all units descend
-  the gradient (Supreme Commander 2, crowd sims). O(map) per goal — trivial at
-  ≤32×32 — and corridor-following/queueing emerge naturally. Our per-unit
-  sticky targets would need per-target fields; cacheable. The §46 alternative.
-- **School 4 — continuous local avoidance (actual boids, RVO/ORCA):** steering
-  forces and velocity obstacles in continuous space. **Ruled out** — it fights
-  the discrete grid, the claim-then-flip move model, and byte-stream
-  determinism.
-
-What ships in real games is hybrids: global planner + local conflict resolver +
-explicit anti-deadlock rules. Phases 42→45 perfect our School-1 rules on
-instruments; Phase 46 decides — on measured data — whether School 2 or 3 earns
-its complexity. There's a decent chance a well-tuned School 1 is simply enough.
-
-## The two guiding goals
-
-1. **Instruments before interventions.** Movement quality is currently asserted
-   by mechanism-pinning tests and eyeballs. This round builds the measuring
-   harness FIRST (drift, throughput, oscillation, time-to-contact), captures
-   the baseline, and re-measures after every change — the BALANCE.md discipline
-   applied to movement ([PATHING.md](PATHING.md)). No fix lands without its
-   before/after numbers.
-2. **Determinism ≠ sameness.** The byte-stream determinism requirement stays
-   absolute (no RNG in tie-breaks — the E5.B call stands). But deterministic
-   tie-breaks must be *balanced* — symmetric across teams and axes (parity
-   alternation, straightness preference) — not "always the same world
-   direction". Fairness is a property we can now measure (goal 1).
-
-## Vocabulary (the new types + seams — full shapes settled at each phase)
-
-- **`MoveDecision`** (§42) — the typed record of *why* a unit did what it did
-  each tick: `advance | sidestep | queue | hold-band | hold-objective | no-goal
-  | pinned | wait`. Dev-observable (event or transient field), never serialized.
-- **The movement-metrics harness** (§42) — headless scripted battles emitting
-  aggregate movement-quality metrics: mean lateral drift, corridor throughput,
-  oscillation rate, time-to-first-contact, decision-mix histogram.
-- **`PATHING.md`** (§42) — the run-log home: baseline + every re-measure.
-- **`positioning.ts`** (§44) — the extracted "is this unit in position / where
-  should it stand" module (firing bands, LOS gating, kiting, acting cells);
-  the one place a new archetype teaches its positioning rules.
-- **`WaitAction`** (§44) — a deliberate short hold as a first-class proposal:
-  visible to the selector, the renderer, tests, and the §45 claim-ETA logic.
-- **Vacancy ETA** (§45) — when a claimed/occupied cell frees, *derived* from
-  the mover's in-flight action (startTick + phases + flip fraction). Derived,
-  never serialized — no snapshot bump.
-- **Path commitment / hysteresis** (§45) — keep last tick's route unless
-  invalidated or beaten by a margin; kills repath flip-flop.
+The META Cluster-3 brief (currency + rewards + shop + consumables + their
+editors) expanded through the 2026-07-07 spec round. The kickoff's blind-spot
+audit found the load-bearing surprise that shapes this whole plan: **the
+daemon effect system the economy leans on doesn't exist yet** (today's daemons
+only gate redraw/empower), so the cluster opens by building the shared
+daemon/packet **rule vocabulary** — the meta-model analogue of Cluster 1's
+`AbilityDef` — and everything else authors against it. Full kickoff narrative:
+[WORKLOG.md](WORKLOG.md) §Kickoff. Vocabulary (locked): **bits** (currency) ·
+**packets** (consumables) · **cache** (inventory) · **ports** (shops).
 
 ## The phase sequence at a glance
 
 | Phase | Name | One-liner | Risk |
 |---|---|---|---|
-| **42** | Instrumentation | Decision records + metrics harness + PATHING.md baseline | Low (additive, byte-identical) |
-| **43** | The bias fixes | A* tie-break + sidestep balance, measured | Low-med (paths change; fuzz re-baseline) |
-| **44** | The decision protocol | `positioning.ts` extraction + first-class `WaitAction` | Med (interface refactor, behavior-neutral intent) |
-| **45** | Cooperation | Vacancy-aware costs, wait-vs-sidestep, path commitment | High (the round's behavior-changing core) |
-| **46** | The verdict | Re-measure + feel playtest + balance spot-check + School-2/3 gate | Low (decision phase; may be a documented no-op like §41) |
+| **47** | The rule vocabulary | Rules (modifiers + hooks) + run-stat folds; idols re-authored; multi-daemon; tally-settle + battleRules seams; bits substrate | High (run+sim seam surgery, both snapshots bump) |
+| **48** | Rewards | Reward tables + registry + editor; the reward phase + screen; the persistent bits overlay | Medium (new run phase; screen-flow insertion) |
+| **49** | Packets & cache | `PacketDef` + cache + the two use contexts; the pre-turn "fire" UX round; packet editor | Medium (the spec's one ⚠ OPEN resolves here) |
+| **50** | Ports | The node kind + scatter; the port phase + screen; stock/buy/sell; unit removal | Medium (broad surface, little core; the rosterIndex risk) |
+| **51** | The UI/UX cohesion review | A deliberate cohesion sweep over every surface the cluster added — may be a documented no-op | Low (review + polish; no new systems) |
+| **52** | The balance pass + close-out | Economy tuning vs BALANCE.md; the boss-wall rider re-read; round close | Low (measure + config; §41/§46b precedent) |
 
-### Sequencing rationale
+## Sequencing rationale
 
-42 first — nothing else lands without its before/after numbers, and the
-decision records it adds are what make waits/oscillations *countable*. 43
-before 45 so the cooperation deltas aren't polluted by bias artifacts (a
-left-drifting queue measures as garbage throughput). 44 before 45 because
-`WaitAction` is where §45b's "queue instead of sidestepping" answer *lives* —
-building cooperation on six-meanings-of-null would recreate the mess we're
-draining. 46 last: it's the gate that decides whether this round closes the
-audit or specs WHCA\*-lite / flow fields as a follow-up.
+§47 first — META principle 1 (model before content): every later phase
+authors ops, hooks, or folds against the vocabulary, and re-authoring the four
+idols early proves the schema on real content before new content exists. §48
+before §49 because packets *arrive* via rewards — the delivery pipe (tables,
+reward phase, screen) exists before the goods; packet table entries ship
+schema-complete but dormant in §48 and activate in §49. §50 after all three: a
+port sells packets and daemons for bits — it consumes every model this cluster
+defines. §51 (user-inserted at shape-lock) sits after §50 because every
+surface must exist to review, and before §52 because closing a cluster with
+the balance pass is the established routine. §52 last by that convention, and
+it owns the balance rider carried in from the Pathfinding Audit.
 
-### Hard ordering constraints
+## Hard ordering constraints
 
-- 42a (decision records) gates 42b (the harness counts decisions).
-- 42c (baseline) gates every later re-measure step (43c, 45d, 46a).
-- 44b (`WaitAction`) gates 45b (wait-vs-sidestep proposes waits).
-- 43 and 44 are mutually independent — 43 may interleave if a playtest wants
-  the visible drift fix early.
+- §47's multi-daemon ownership + owned-exclusion gate §48 (daemon table
+  entries) and §50 (daemon stock).
+- §47's run-stat fold machinery gates §49's derived `cacheSize` and §48's
+  `bitsGain` modifiers.
+- §47's bits substrate (`run.bits` + `run:bitsChanged`) gates §48's overlay
+  and every earn/spend surface.
+- §48's table schema + reward phase gate §49's packet rewards and §50's
+  richer port/elite loot authoring.
+- §49's `PacketDef` + cache gate §50 (ports stock and sell packets).
+- The spec's ⚠ OPEN (the pre-turn fire UX) resolves at §49's kickoff — no
+  phase before it depends on that answer.
+- §51 after §50 (nothing to review until every surface exists); §52 strictly
+  last (the close-out lives there).
 
-## Conventions (unchanged — they still hold)
+## Conventions (the standing set)
 
-Headless-first (this whole round is pure-sim; vitest before browser — but
-movement *feel* is render-observable, so **browser/native playtest checkpoints
-close §43 and §45**); balance-proof tests derive from config, never hardcode;
-commit per sub-step + **pause between commits** for the user's manual run;
-fuzz re-baselines are EXPECTED at 43/45 (path bytes change — that's the point)
-and each gets its own commit note; keep DESIGN/ARCHITECTURE honest in-commit;
-⚠️ labyrinth's long fights are BY DESIGN (gotcha-adjacent — the harness may
-*measure* labyrinth, but its slowness is not a defect to fix).
-
----
-
-## Phase 42 — Instrumentation (decision records + the metrics harness + the baseline)
-
-> **✅ PHASE COMPLETE (42a–42c, 2026-07-04).** The instruments exist, the
-> baseline is frozen in [PATHING.md](PATHING.md), and the diagnosis is now
-> measured fact: openField = every open-ground step drifts world-left
-> (tie-break), riverFork oscillation 0.94 (crab-walk), corridor 0.75
-> crossings/100t, labyrinth queue-mass up to 718 polls. Re-measure with
-> `npm run pathing`; fixture numbers pinned in baseline.test.ts.
-
-The audit's measuring instruments. Additive and byte-identical: no unit moves
-differently after this phase; we can just finally *see* what they do.
-
-**Shape:** a typed `MoveDecision` taxonomy emitted from the movement layer
-(dev-observable, never serialized — the transient-field vs debug-event call is
-42a's decision point); a headless harness that runs scripted/seeded battles on
-fixture + shipped maps and computes aggregate movement-quality metrics; the
-PATHING.md baseline capture on the shipped layouts. Reuses `pathfindingStats`
-(movement.ts) where it fits.
-
-**Metrics (the v1 set):** mean signed lateral drift (x-displacement orthogonal
-to the spawn→spawn axis, per team — the River symptom, quantified); corridor
-throughput (units through a fixture chokepoint per 100 ticks); oscillation
-rate (a unit re-entering a cell it left within k ticks); time-to-first-contact;
-the decision-mix histogram (what % of ticks are advance/sidestep/queue/…).
-
-**Decision points 42:** ~~event vs transient field for decisions~~ **RESOLVED
-(42a): an ALWAYS-ON event** — `unit:moveDecision { unitId, kind }`, one per
-Movement/SupportMovement poll. Dev-gating was rejected as needless
-conditionality: a no-subscriber emit is nearly free, events never serialize,
-and an always-on record works in any build. Kinds are snake_case (TileKind
-style); the taxonomy grew from the sketch's 8 to **14 kinds** to cover the
-healer's ladder honestly (`retreat`/`boxed`/`yield_swap`/`flee`/`wander`/
-`frozen` beyond the mechanical set). ~~The fixture-map set / drift framing~~ **RESOLVED (42b):** fixtures =
-`tests/pathing/fixtures.ts` (symmetric open field · a SEALED 8-long tunnel
-corridor with a throughput gate · a two-ford river fork symmetric about the
-board's center column — the first corridor draft leaked around unsealed wall
-rows, caught by its own test). Drift is **per-team in TWO frames**: unit-frame
-lateral (forward = own→opposing centroid, lateral = 90° CCW — mirror-symmetric
-teams read the same sign) AND world-frame net dx/dy (the "left on River"
-claim). Per-spawn-region splitting is deferred until a layout pairs multiple
-regions per team.
-
-### Sub-steps (42a–42c) — the proposed cut
-
-- **✅ 42a — the `MoveDecision` records (landed).** The 14-kind taxonomy +
-  emit helper in `src/sim/moveDecision.ts`; the mechanical kinds
-  (`advance`/`sidestep`/`queue`/`no_route`) emit from `movement.ts advance`
-  (via a `StepOutcome` union on `stepAlongRoute`), the contextual kinds from
-  the two behaviors (every healer idle path funnels through
-  `yieldChokepoint`, which now carries the abstain kind). Byte-identical
-  world; `moveDecision.test.ts` (13 tests) pins kind correctness per fixture
-  + the exactly-one-per-poll invariant (in-flight units emit nothing; a
-  finishing action polls same-tick).
-- **✅ 42b — the metrics harness (landed).** `tests/pathing/`: `metrics.ts`
-  (the pure `MovementMetricsCollector` — fold over bus events, no RNG, no
-  world writes; handles swap/dash/shove dedupe + §35b/§36c abort reverts),
-  `fixtures.ts` (the three fixture maps), `harness.ts` (the hot-loop runner).
-  12 tests: hand-computed arithmetic on synthetic streams + fixture wiring +
-  determinism (NO quality assertions — the current sim is the patient).
-  First probe already reproduces the diagnosis: open field = EVERY step
-  drifts −x for BOTH teams (the string tie-break, world-frame); river fork =
-  oscillation 0.94 (the crab-walk); corridor = 0.75 crossings/100t. Ability-
-  less fixtures are seed-invariant (movement has no RNG) — the numbers are
-  algorithm portraits, frozen properly in 42c.
-- **✅ 42c — the baseline (landed).** `npm run pathing`
-  (`tests/pathing/cli.ts` + `capture.ts` — real battles via `spawnEncounter`,
-  the corridor-flow team shape) over river / isthmus / labyrinth /
-  **endlessCorridors (user-added to the suite — its odd-queuing report shows
-  as the highest shipped-map oscillation)** / procedural × seeds 100–102 +
-  the fixtures; **PATHING.md** authored with the full baseline + readings +
-  §43/§45 target table. The drift columns PROVE the River report (player dx
-  negative in 3/3 seeds; mirrored unit-frame signs = the tie-break's
-  world-frame signature — distinguishable from the sidestep's body-frame
-  signature, so 43a and 43b each get their own fingerprint).
-  `baseline.test.ts` pins the fixture numbers exactly (fuzz-baseline
-  discipline: deliberate §43+ changes re-baseline it; accidental movement
-  drift trips it). **⚠ Audit finding filed (PATHING.md): river-only
-  `no_route` spam (78–82 polls) — something is intermittently unreachable on
-  River; investigate via decision traces in §43, possibly the §40b
-  auto-target gate.**
+Headless-first for all run/sim logic; every serialized-shape change bumps its
+snapshot version, reject-stale; commit per logical change + pause between
+commits; fuzz/determinism re-baselines are EXPECTED (new RNG streams §47/§48,
+the scatter pass + new phase §50) and each gets its own commit note; editors
+ride their feature and extend the `/__save-config` allowlist + `/tools/`
+index; balance-proof tests derive from config; keep DESIGN.md /
+ARCHITECTURE.md (event + command catalogs!) honest in the same commit;
+browser-verify the new UI surfaces natively (overlay, reward/port screens);
+SFX polish rides its feature (pickups §48, purchases §50).
 
 ---
 
-## Phase 43 — The bias fixes (the tie-breaks)
+## Phase 47 — The rule vocabulary (the keystone)
 
-The two confirmed bias bugs, plus the exit criterion 42 made assertable:
-**|mean drift| ≈ 0 on symmetric fixtures, both teams**.
+**Charter:** build the shared daemon/packet effect model: `Rule = modifier |
+hook` over a new run-stat fold vocabulary, run-domain + battle-domain triggers,
+and the two seam crossings (battle hooks compile into the World as
+`battleRules[]` data; battle-earned run resources settle via a serialized
+WorldSnapshot tally — the XP pattern). Re-author the four idols in it, delete
+the legacy gates + `TurnGates`, land uncapped multi-daemon ownership
+(serialized by id), and lay the bits substrate (`run.bits`, `run:bitsChanged`,
+floor-at-zero, `RunConfig` override) that tallies settle into.
 
-**Shape:** replace the string-lex A* tie-break with an explicitly *balanced*
-deterministic rule; balance the sidestep's first-candidate tie; re-measure.
-Paths WILL change → fuzz re-baseline + possibly hand-authored-layout test
-updates (they were hardened for resizes, not path shapes).
+**Why here / dependencies:** everything downstream authors against this
+schema; no new-system dependencies. Consumes the Phase-L deferral
+(multi-daemon economy) and the dormant `RunTriggerContextMap` seam.
 
-**Decision points 43:** the A* final tie-break rule — leading candidate:
-**cross-track straightness** (prefer the node nearer the start→goal line;
-symmetric by construction, complements the E5.B h-tie-break, and drains the
-Chebyshev cone's tie plateau) with numeric (y,x) as the boring fallback;
-the sidestep tie rule — leading candidate: **unit-id parity alternation**
-(deterministic, team-agnostic, self-decorrelating in a column) vs
-open-space-aware (more "tactical", more code — decide at the keyboard);
-whether a tiny cross-track cost epsilon is wanted at all after the tie-break
-fix (only if 43c still shows cone wander — keep admissibility, gotcha #34).
+**Risk:** **High** — the cluster's core surgery, crossing the run/sim seam.
+Both snapshots bump (Run: daemons-by-id + rules + bits; World: tallies +
+battleRules). Mitigation: the idol re-authoring is a behavior-equivalence
+refactor with the existing daemon fuzz arm as the oracle.
 
-### 43-pre — the audit-finding fix (inserted at the user's call, 2026-07-05)
+**Decision points:** the exact launch trigger/op/stat lists (cut at kickoff —
+content-driven, ~6 triggers / ~7 ops per the spec); the multi-daemon
+PreTurnScreen list presentation; whether the bits overlay pulls forward from
+§48 if eyeball verification wants bits visible here.
 
-The 42c `no_route` finding got a timeboxed root-cause audit BEFORE the bias
-fixes (so a deeper bug couldn't hide under 43a/43b's re-baselines) — and it
-WAS deeper: a §39/§40 integration miss, not tie-break noise. Six spatial
-queries build neutral blocker/occluder sets from `u.position` alone — the
-§39 canonical CORNER — so a 2×2/3×3 rubble's body cells go missing from
-them (violating the "every spatial query routes through occupancy.ts"
-doctrine). `findPath` itself is footprint-correct, which is exactly why the
-mismatch strands units: `nearestActingCell` hands out goals `findPath` can
-never reach (a kited archer inside minRange has no other goal → the 78-poll
-river spam).
+**Exit criteria:** the four idols behave equivalently under the new schema
+(fuzz `--daemon` green); the spec's five motivating example daemons are
+*authorable* and at least three are authored + tested (one per matrix
+quadrant: battle→run tally, battle→battle status, passive modifier);
+multi-daemon ownership round-trips by id; `TurnGates` and the legacy gate
+fields are gone.
 
-- **✅ 43-pre-a — the pathing-side fix (landed).** `nearestActingCell`'s
-  wall set + SupportMovementBehavior's `stepToward` blockers + its
-  `neutralCells` navigability set route through `cellsOccupiedBy`. Four new
-  unit tests (the river seed-100 repro pinned exactly; a 3×3 all-positions
-  property; the healer's step-onto-rubble and phantom-trail-anchor shapes).
-  River `no_route` 78/82 → **0**; fixtures + all other shipped layouts
-  byte-identical (PATHING.md 43-pre-a entry). The §43 bias signatures are
-  untouched — the target table stands.
-- **✅ 43-pre-b — the LOS-side fix (landed).** The same corner-only pattern
-  in MovementBehavior's `losBlockers`, `Targeting.collectLosBlockers`, and
-  `collectHalfCoverPositions` (the last = byte-identical future-proofing —
-  no shipped multi-tile def is LOS-transparent). Behavior-CHANGING as
-  designed: multi-tile rubble blocks sight through its whole body, movement
-  + shot gate together — archers flank around big rubble instead of firing
-  through it; the E7.D catapult lob is pinned unchanged. Four new tests.
-  River 100/101 are the only fingerprint movers (seed 102 + every other
-  layout + the fixtures byte-identical; seed-100 ttfc 85→72 — the ranged
-  re-target check drops occluded marks sooner). PATHING.md 43-pre-b entry.
-
-### Sub-steps (43a–43c) — the proposed cut
-
-- **✅ 43a — the A* tie-break (landed).** `popLowestF` final order is now
-  f → h → **cross-track straightness** (integer |cross to the start→goal
-  line|) → numeric (y,x); admissibility (gotcha #34) untouched; benched
-  slightly FASTER. Five unit tests (bend repro, both-direction columns,
-  mirrored-worlds symmetry). openField drift 4.00 → 1.00; riverFork ~flat
-  (the crab-walk is 43b/§45's). Re-pins: baseline.test.ts (deliberate),
-  catapult smoke seed 1→2, two full-run fuzz timeouts 30s→90s
-  (sim-content). **⚠ NEW finding filed (PATHING.md 43a): the openField
-  residual ±1 is a `nearest`-TARGETING tie funnel (stable-order = leftmost
-  spawn; probed — all 8 units commit to the leftmost opponent). One layer
-  above pathing, world-framed in effect; 43b won't clear it. Slot
-  USER-LOCKED (2026-07-05) = **43b2**, a new sub-step between 43b and 43c:
-  a symmetric distance-tie rule in the `nearest` targeting strategy
-  (leaning candidate-nearest-the-unit's-own-column; decide the exact rule
-  at the keyboard, measured) so 43c re-measures all three fixes together.
-  43a itself USER-CONFIRMED in the native playtest (drift much reduced).*
-- **✅ 43b — the sidestep balance (landed).** The E5.B first-candidate tie →
-  **from-cell checkerboard parity** (`(x+y) % 2` picks which perpendicular
-  rotation wins a both-viable equidistant tie; non-ties + single-viable
-  untouched). Unit-ID parity — the pre-keyboard leading candidate —
-  REJECTED at the keyboard: interleaved spawn ids hand a whole team one
-  parity (both §42b fixtures do exactly that), and any odd roster keeps a
-  residual; cell parity balances by geometry and commutes with the 180°
-  rotation relating the teams. Six unit tests (alternation, column
-  self-decorrelation, non-tie/single-viable invariance, a
-  rotation-commutation sweep, the mirrored-pocket `advance()` pin).
-  **Measured near-no-op — a documented-good outcome:** fixtures
-  BYTE-IDENTICAL (no baseline.test.ts re-pin, no fuzz re-baseline; 1724 +
-  212 green untouched); 12/15 shipped battles byte-identical (the movers:
-  labyrinth-102's 718-poll queue pileup dissolved to 384; endlessCorridors
-  101 + procedural 100 jitter). ⚠ Finding (PATHING.md 43b): post-43a the
-  both-viable sidestep tie is RARE (forced geometries usually leave one
-  viable side — 0 ties in ~370 fixture sidesteps); riverFork's residual
-  drift is PROVEN not the sidestep's (tie rule changed, fixture didn't move
-  a byte) → the "riverFork drift ≈ 0" target gates on **43b2**, and the
-  open-space-aware escalation clause does NOT fire.
-- **✅ 43b2 — the targeting distance-tie (landed; the 43a finding,
-  USER-LOCKED slot).** `nearest`'s distance+HP tie no longer falls to
-  lowest id (= spawn order = leftmost): an **alignment layer** — smaller
-  minor-axis offset `min(|dx|,|dy|)` = the enemy nearest the unit's own
-  column/row of advance — sits between the HP tie and the id last-resort
-  (which now decides only true mirror pairs). Frame-free (the
-  own-column lean without needing a forward vector); symmetric under
-  mirrors/x-y swap/180° rotation; E5 stickiness untouched; all four
-  strategy-ranked pickers inherit via the one `compare` seam. `weakest`
-  deliberately NOT touched (same id residual, but outside the locked slot
-  and invisible to the §42 instruments — noted in code for a future
-  measured pass). Four new tests. **Measured: openField drift 1.00 →
-  0.00 EXACTLY both teams (the §43 exit criterion, hit); riverFork 3.75 →
-  ±0.25 (ford choice now column-driven); river net dx SIGN-MIXED across
-  seeds (was ≤ 0 in 6/6) — the whole §43 drift-target table is green.
-  labyrinth 100/101 byte-identical; corridor untouched. riverFork's osc
-  0.923 remains = §45b's, cleanly separated from drift at last.**
-  baseline.test.ts re-pinned (deliberate); 1727 + 212 green, NO fuzz
-  re-pin. PATHING.md 43b2 entry.
-- **✅ 43c — the re-measure + the drift gates (landed). PHASE 43 COMPLETE.**
-  Full harness re-run vs the frozen §42c baseline → the PATHING.md 43c
-  entry with the target table CHECKED OFF: openField drift 0.00 exact,
-  riverFork ±0.25, river dx sign-mixed, corridor throughput byte-identical
-  hold; labyrinth queue mass collapsed 718 → 287 worst-seed en passant
-  (§45 still owns it); riverFork osc 0.923 + endlessCorridors osc remain
-  §45's by charter. **The user's native River playtest: "No drift that I
-  can ID at all" — Phase 43 CLOSED user-confirmed.** Landed
-  [tests/pathing/drift.test.ts](tests/pathing/drift.test.ts) — the fairness
-  invariant as standing QUALITY GATES, bounds distinct from the baseline's
-  exact pins (pins re-baseline per deliberate change; the gates must
-  survive every re-baseline — a §45 change tripping one has re-introduced
-  a bias: fix the change, never relax the gate): fixture per-team
-  |drift| ≤ 0.5; shipped-river per-team-seed |drift| ≤ 2.5 + dx
-  sign-mixed. 1731 main green; no src change (fuzz untouched).
+**Scope guards:** NO packet delivery mechanics (ops only — active/targeted
+delivery is §49); NO reward tables; NO speculative vocabulary beyond the
+launch lists; NO mid-battle player input of any kind.
 
 ---
 
-## Phase 44 — The decision protocol (positioning extraction + first-class Wait)
+## Phase 48 — Rewards (tables, the reward phase, the bits surfaces)
 
-The targeted refactor that makes §45 buildable without spaghetti — the
-"evolve, don't overhaul" phase. Behavior-neutral INTENT throughout: world
-bytes should not change (the §38 equivalence-proof discipline; any deviation
-is a finding, not a shrug).
+**Charter:** make the reserved `rewards?` encounter seam real: the
+reward-table registry (`config/rewards.json`, entries = bits `{min,max}` |
+packet | daemon, weighted, owned-daemon exclusion) referenced by name with a
+boot-time integrity assert; `{table, trigger}` lists on encounters
+(independent `chance` tests on win); the serialized reward run-phase + screen
+in the locked battle → rewards → promotion → recruit sequence, declinable
+per-portion; the persistent top-left bits overlay (the new Game-level
+page-lifetime layer); dedicated forked RNG streams; `bitsMultiplier` on the
+X1 difficulty seam. The reward-table editor rides.
 
-**Shape:** extract the positioning knowledge (firing band, LOS gate, minRange
-kiting, acting-cell goal list — MovementBehavior lines ~139–208 and its
-SupportMovementBehavior sibling) into one `positioning.ts` module both
-behaviors and future archetypes consult; then convert the *deliberate-hold*
-abstains (in-band hold; blocked-and-queueing) into explicit `WaitAction`
-proposals the selector weighs, leaving bare `null` to mean only "nothing to
-propose".
+**Why here / dependencies:** needs §47 (multi-daemon exclusion, bits
+substrate, `bitsGain` folds). Packet entries ship dormant (schema-complete,
+zero defs) — the pipe before the goods.
 
-**Decision points 44:** `WaitAction` duration (leaning 1 tick — re-decide every
-tick, zero commitment) and cooldown (leaning none); whether a wait sets
-`activeAction` (if yes: **audit the WorldSnapshot surface first** — an
-in-flight wait entering serialization is a bump; leaning NO — resolve the wait
-within the tick, event-only, no in-flight state); which abstains convert
-(deliberate holds only — frozen/no-target/hold-objective stay null); whether
-the renderer gets a "queued" stance now or at §45 (leaning §45, when waits
-become common enough to see).
+**Risk:** **Medium** — a new serialized run phase spliced into the post-battle
+scene chain, plus net-new persistent-UI infrastructure. RunSnapshot bumps
+(reward phase + pending offer + reward RNG streams).
 
-### 44-pre — the corner-only stragglers (audit finding 2026-07-05, slotted at the user's call)
+**Decision points:** the reward-screen UX (accept/decline layout; how
+inventory-full presents before the cache UI exists — likely "packet rewards
+can't appear until §49" makes this moot, confirm at kickoff); launch table
+catalog + which encounters reference which tables (authoring cut at kickoff);
+elite table richness (authoring, not engine).
 
-The pre-44a extraction audit re-ran 43-pre's corner-only-vs-footprint sweep
-over the code being relocated (plus one hop outward) and found the §39
-doctrine never reached the COMBAT/STATUS layers — five more sites where a
-multi-tile body (rubble 2×2/3×3) is invisible except at its §39 corner
-cell. Fix BEFORE the 44a relocation (the 43-pre precedent: a correct base,
-nothing hides under the refactor). Three logically-cut commits, each with
-tests + its PATHING.md note; fixtures carry no rubble and the capture
-rosters no healers/AoE, so fingerprints should be near-silent — unit tests
-carry the proof; a fuzz re-baseline is possible (the arena rolls
-casters/healers).
+**Exit criteria:** win a battle → reward screen → accept/decline bits +
+daemon rewards → promotion → recruit, user-confirmed in the native browser;
+bits visibly tick on the overlay in AND out of battle; a mid-reward
+save/reload reproduces the pending offer; fuzz drives through the reward
+phase green.
 
-**Audited CLEAN (don't re-check):** `effects/reposition.ts retreatCell`
-(routes through `occupancy.occupiedCells` + folds `claimedCells`);
-`blockedAlly`'s forward test (its `passable` reads corner-only openness,
-but the BFS `distanceField` walls are footprint-correct and gate the
-result — fix the openness read in 44-pre-a anyway, expect no behavior
-change).
-
-- **44-pre-a — the movement/status occupancy sets.** (D)
-  `MovementBehavior.proposeWander`'s occupied set (`key(u.position)`,
-  MovementBehavior.ts ~281) and (E) `SupportMovementBehavior.occupiedCells`
-  (~333, feeding `stepAwayFrom` / `countOpenNeighbors` / `blockedAlly`) →
-  route through `cellsOccupiedBy`. Consequence today: a BLIND wanderer or
-  a PANICKING HEALER can step ONTO a rubble body cell (unit-inside-rubble
-  overlap; River ships 2×2/3×3). ⚠ VERIFY ALONGSIDE: neither site folds
-  `claimedCells` (their sibling `retreatCell` does) — check whether a
-  wander/panic step onto a claimed cell can same-cell-collide with an
-  in-flight mover's flip (`World.claimCell` semantics); if real, fold
-  claims in the same commit and test it; if guarded elsewhere, document
-  where. *Commit: sim + tests.*
-- **44-pre-b — the AoE/chain footprint seam (the one §39 explicitly
-  planted and never filled).** `unitsInCells` (effects/targeting.ts ~36)
-  matches corner keys only — ITS OWN DOCBLOCK calls it "the Cluster-2
-  footprint seam" that should become "units whose footprint intersects the
-  cells" when multi-tile lands. Landed §39/§40; never filled. An AoE
-  covering a big rubble's BODY but not its corner misses it entirely. Fix:
-  intersect footprints (`cellsOccupiedBy`); the center-vs-ring `mult` in
-  `resolveAreaVictims` becomes the BEST covered cell (any footprint cell
-  on the center → 1, else ring); `nearestChainTarget`'s hop range measures
-  to the nearest footprint cell. Byte-identical for every 1×1 unit.
-  *Commit: sim + tests.*
-- **44-pre-c — the range-gate consistency pair (movement + strike move
-  TOGETHER).** The strike band gate (effects/propose.ts ~83) + the dash
-  abstain (~168) + O2/blind `findInRangeEnemy` (Targeting.ts ~503) + the
-  movement hold `inFiringBand` (MovementBehavior.ts ~171) all measure
-  `chebyshev(unit.position, target.position)` — corner-to-corner. Against
-  a 3×3 rubble a melee unit flush against the FAR side reads "out of
-  range" and walks around the body to the corner (§40's "fires the moment
-  the unit is body-adjacent" comment is FALSE today; §40b's reachability
-  probes already use footprint-aware `unitDistance`, so the two layers
-  DISAGREE about "in range of rubble"). Fix: footprint distance
-  (`unitDistance` / a cell-to-body min) in BOTH the strike gates and the
-  movement hold in ONE commit — moving one without the other re-creates
-  the GP4/Qb#3 freeze class (hold says in-band, strike says out-of-range →
-  deadlock). Deliberate behavior change vs big rubble only (43-pre-b's
-  precedent); E7.D catapult + minRange kiting semantics re-pinned against
-  a multi-tile target. *Commit: sim + tests + PATHING.md note.*
-
-### Sub-steps (44a–44b) — the proposed cut
-
-- **44a — the `positioning.ts` extraction.** Pure relocation + renames; both
-  movement behaviors consume it; the 70-line protocol comment gets carved into
-  the module docs it was compensating for. Existing tests pin byte-identity
-  (they already cover the band/LOS/kiting matrix). *Commit: refactor only.*
-  **⚠ Do 44-pre FIRST (above) — the relocation must land on the corrected
-  base.**
-- **44b — first-class `WaitAction` + typed abstains.** The action + proposal
-  plumbing; the two deliberate-hold sites convert; `MoveDecision` gains its
-  `wait` arm for real. Tests: selector still prefers attacks over waits; a
-  waiting unit's world bytes match the old abstaining unit's. *Commit: sim +
-  tests (+ snapshot audit note).*
+**Scope guards:** NO packet defs (dormant entries only); NO trigger
+predicates beyond `chance`; NO reward sources besides encounter-win (camps/
+events are Cluster 5); rest nodes unchanged.
 
 ---
 
-## Phase 45 — Cooperation (the behavior-changing core)
+## Phase 49 — Packets & cache
 
-Units stop treating allies as furniture. Everything here is measured against
-the 42c baseline, and everything is dial-gated in `config/sim.json` so the
-balance surface stays inspectable (balance-proof tests derive from it).
+**Charter:** `PacketDef` (`usableIn` + `TargetSpec` + the duration axis from
+day one — the mid-battle seam ships dormant) + the cache (base six slots, no
+stacking, size as a derived run-stat, discard, the forced-keep shrink flow,
+reward-time decline-or-swap); the two launch use contexts (out-of-battle on
+roster/piles/run; pre-turn on hand units + battle-wide via battle-scoped rule
+injection); launch packet content (the empower set + redraw-2 + a couple of
+Cluster-1-effect packets); packet reward entries activate. The packet editor
+rides.
 
-**Shape:** three cooperating changes. (1) **Vacancy-aware costs** — a cell
-whose occupant/claimant will vacate within the unit's own arrival window costs
-near-nothing extra; a claim *into* the unit's path costs more than today's
-flat +4 (`occupiedCellPenalty` splits into dials). Corridor columns stop
-reading as walls (the gotcha #113 predicate softens for *outbound* claims —
-carefully: same-cell convergence must stay impossible). (2) **Wait-vs-
-sidestep** — when the forward cell's vacancy ETA ≤ k ticks, propose Wait;
-sidestep only otherwise. Queues form; the crab-walk dies. (3) **Path
-commitment + hysteresis** — cache the route, keep it unless invalidated
-(blocked, target moved past a threshold, or beaten by a margin); repath
-becomes the exception, not the tick default.
+**Why here / dependencies:** needs §47 (the op pool, `cacheSize` folds) and
+§48 (packets arrive via rewards). Resolves the spec's one ⚠ OPEN — the
+pre-turn "fire" UX (the popup-window instinct) — as a design round AT this
+kickoff (shape-lock with the user before building; empower/redraw stop being
+inline and generalize into it).
 
-**Decision points 45:** the vacancy window k (config dial; leaning ≈ the
-unit's own step duration); the outbound-claim cost discount + inbound-claim
-premium values; **the 45c determinism question — THE open decision of the
-round:** a transient path cache diverges a resumed-snapshot run from an
-uninterrupted one (cold cache ⇒ different repaths). Options: (a) serialize
-the committed path (WorldSnapshot bump), (b) derive commitment purely from
-serialized state (e.g. commit-until-invalidated recomputed from position +
-target — no cache to lose), (c) accept divergence and downgrade the
-determinism guarantee (REJECTED — the fuzz oracle depends on it). Leaning (b);
-audit before building, and if only (a) works, it's this round's one bump.
+**Risk:** **Medium** — mostly new UI surfaces + run-level state; the sim
+stays untouched beyond §47's machinery. RunSnapshot bumps (cache contents).
 
-### Sub-steps (45a–45d) — the proposed cut
+**Decision points:** the pre-turn fire UX (THE design round — flagged since
+the spec draft); the launch packet list; where cache management UI lives
+out-of-battle (map-screen modal vs a persistent-layer button next to the
+overlay).
 
-- **45a — vacancy-aware costs.** Vacancy ETA derivation (from the mover's
-  in-flight action — derived, not serialized) + the cost split; corridor
-  fixture tests (a column follows nose-to-tail; convergence invariant holds —
-  extend the §35d fuzz invariant's reach). Fuzz re-baseline. *Commit: sim +
-  config + tests.*
-- **45b — wait-vs-sidestep.** The ETA-gated Wait proposal (on 44b); corridor-
-  flow integration tests flip from pinning the old shuffle to pinning queues;
-  oscillation-rate regression test (< baseline by a margin). *Commit: sim +
-  config + tests.*
-- **45c — path commitment + hysteresis.** Per the resolved determinism
-  decision; repath-count metric drops measurably; snapshot-resume equivalence
-  test (the §38 oracle pattern) proves the guarantee held. *Commit: sim +
-  tests (+ bump iff (a)).*
-- **45d — the re-measure + the cooperation regression suite.** Full harness
-  vs baseline; PATHING.md verdict entry; throughput/oscillation/time-to-
-  contact regression bounds land. **User playtest checkpoint (native browser):
-  the feel question — "a tactical battle playing out?"** *Commit: PATHING.md +
-  tests.*
+**Exit criteria:** the loop earn-store-use runs end to end: a packet won from
+a reward table lands in the cache, survives save/reload, fires pre-turn (unit
++ battle-wide) and out-of-battle (roster target), with its status/effect
+visible in battle; full/swap/shrink flows user-confirmed; empower/redraw
+still work as packet-shaped fires under the new UX.
+
+**Scope guards:** NO mid-battle pause-to-cast (the seam ships, the feature
+doesn't); NO tile-targeted launch content (waits for mid-battle); NO
+stacking; NO permanent-duration launch content (`encounter`/`run` only).
 
 ---
 
-## Phase 46 — The verdict (measure, spot-check balance, gate School 2/3)
+## Phase 50 — Ports
 
-The round closer — a decision phase, possibly a documented no-op (§41
-precedent). **READ BALANCE.md + PATHING.md first.**
+**Charter:** the port node kind (glyph, scatter pass mirroring elites:
+`portChance`/`portMinSpacing`, ≥1 per sector guarantee, never the boss hop);
+the serialized port run-phase + screen; stock (5 units priced by
+archetype+level / 5 packets / 2 daemons owned-excluded) rolled on entry from
+a dedicated stream and serialized; buy/sell (sell = config fraction) +
+pay-to-remove-a-unit via the single `removeRosterUnit` chokepoint fixing all
+five rosterIndex-keyed structures; prices config + the port editor; the fuzz
+harness gains `case 'port'` immediately (and eventually a purchase-policy
+arm).
 
-**Shape:** the full-harness + feel review against the round's exit criteria
-(drift ≈ 0; corridors queue; oscillation down; the user's four symptoms
-addressed or explicitly re-scoped); a *scoped* balance spot-check — movement
-changes shift combat outcomes, so re-baseline the fuzz win-rate + gradient vs
-§41's numbers (33–35% / +22pt / boss 42–48%) and confirm the §33 equilibrium
-holds (full §41 methodology only if the spot-check flags drift); the
-**School-2/3 gate**: on the measured residue, decide NO (close the round;
-WHCA\*-lite / flow fields stay in the drawer, seams documented) or YES (spec
-the follow-up phases 46b+ *then*, from data, not now); the close-out
-(HANDOFF cursor → Cluster 3, META-ROADMAP note, memory update).
+**Why here / dependencies:** consumes everything — bits (§47), the exclusion
++ pricing patterns (§48), `PacketDef` + cache (§49). Port-recruited units
+wire into the deck exactly like post-battle recruits.
 
-**Decision points 46:** the gate itself; whether any §45 dial needs a balance
-correction (the §41 lesson: measure at the optimum, not greedy); whether the
-renderer "queued" stance deferred from §44 is wanted for ship-feel.
+**Risk:** **Medium** — broad surface (node generation, a new phase, a big
+screen, the fuzz case) but little core surgery. The one flagged engineering
+risk: unit removal shrinking the roster for the first time (the rosterIndex
+collision — chokepoint + co-located test, per the spec). RunSnapshot bumps
+(node kind regenerates maps + port phase + stock).
 
-### Sub-steps (46a–46c) — the proposed cut
+**Decision points:** the port glyph (`$`?) + map presentation; the port
+screen layout (five surfaces in one screen — recruit/packets/daemons/sell/
+remove); price formula shapes (flat-per-archetype × level curve vs budget-
+derived — decide at kickoff with the editor in hand); removal service
+pricing.
 
-- **46a — the verdict measure + feel playtest.** Harness + native-browser
-  session against the exit criteria; PATHING.md verdict; the School-2/3 call
-  documented with its data. *Commit: PATHING.md.*
-- **46b — the balance spot-check.** Fuzz win-rate/gradient vs §41 baselines +
-  equilibrium confirmation; tune only what it flags (likely nothing — the §41
-  no-op is the prior). *Commit: config iff flagged + BALANCE.md entry.*
-- **46c — the close-out.** HANDOFF/META-ROADMAP/memory cursor flip → Cluster 3
-  kickoff (which archives this file). *Commit: docs.*
+**Exit criteria:** a full economy loop in one run, user-confirmed natively:
+earn bits → dock at a port → buy a packet + a daemon + a unit, sell a
+packet, pay to remove a unit → the roster/deck/effects all stay coherent
+(the chokepoint test proves it); every sector map rolls ≥1 port; fuzz drives
+through ports green with the new baselines pinned.
+
+**Scope guards:** NO rarity/draft-pool weighting in stock (Cluster 4 — price
+by archetype+level only); NO port re-visits / stock rerolls; NO stable-
+unit-id refactor (the chokepoint is the fix); NO haggling/reputation/other
+shop mechanics not in the spec.
 
 ---
 
-## What we're explicitly NOT doing (the scope guard)
+## Phase 51 — The UI/UX cohesion review
 
-- **No WHCA\*/reservation windows, no flow fields** — unless §46 says so, from
-  data. The seams (claims-as-reservations; per-target field caching at
-  `routeToward`) are documented, not built.
-- **No two-phase global conflict resolution** (everyone-proposes-then-resolve)
-  — rejected in the architecture verdict; the per-unit priority loop stays.
-- **No behavior tree / GOAP / utility-curve rewrite** — the selector stays.
-- **No RNG in movement decisions** — determinism is absolute; balance comes
-  from symmetric rules, not noise.
-- **No formation movement / group orders** — a different feature (Drafting/Map
-  Content era), not an audit item.
-- **No tick-iteration-order rework** — first-mover advantage is measured (§42)
-  but only acted on if the data says it matters (a rotating-priority note in
-  the §46 verdict at most).
-- **No labyrinth pacing "fix"** — by design, per the standing warning.
+**Charter:** a deliberate cohesion pass over every surface this cluster adds
+or reshapes — the persistent bits overlay, the reward screen, the
+multi-daemon pre-turn list + fire UX, cache management, the port screen — and
+their seams with the existing HUD/screens (corners, modals, typography,
+fades, keybindings). We design and revise UI concurrently with features, so
+this phase MAY close as a documented no-op (the §41/§46b precedent); it
+exists to make cohesion an explicit checkpoint instead of an assumption.
+*(User-inserted at shape-lock, 2026-07-07.)*
+
+**Why here / dependencies:** after §50 — every surface must exist to review.
+Before §52 — closing with the balance pass is the cluster routine.
+
+**Risk:** **Low** — review + polish fixes; no new systems, no serialized
+state.
+
+**Decision points:** the triage boundary (what gets fixed in-phase vs filed
+to TODO.md); whether the carried renderer "queued"-stance rider (TODO.md)
+folds in here or stays deferred.
+
+**Exit criteria:** a full-run native playtest sweeping every new surface;
+every finding either fixed or filed, with the user's sign-off; the verdict —
+fixes or documented no-op — recorded in the worklog.
+
+**Scope guards:** NO new features or mechanics; NO redesigns beyond cohesion
+(a finding that wants one becomes a next-round item); NO balance changes
+(§52's domain).
+
+---
+
+## Phase 52 — The economy balance pass + close-out
+
+**Charter:** the cluster-closing balance pass, BALANCE.md protocol: tune the
+bits curve (encounter tables), prices, and `bitsMultiplier` at the optimum
+strategy; **re-read the carried boss-wall rider** (59% held-out vs the 43–55%
+target — run-level economy is the named lever; BALANCE.md §46b) and resolve
+it: tune, or document the acceptance. Then the round close: HANDOFF cursor
+flip, archive the roadmap+worklog pair, memory update, and the post-cluster
+interstitial-audit proposal (the standing convention).
+
+**Why here / dependencies:** last by convention; needs the whole economy
+live to measure. The fuzz purchase-policy arm (from §50) is what makes the
+optimum measurable — confirm it exists before sweeping.
+
+**Risk:** **Low** — measure + config; the §41/§46b "documented no-op is a
+legitimate outcome" precedent applies to the tuning (NOT to the rider, which
+must be explicitly resolved or re-scoped).
+
+**Decision points:** the rider verdict itself; whether packet/daemon prices
+join the difficulty-multiplier seam; whether an economy section lands in
+BALANCE.md's protocol header (a new metric family: bits-per-hop, spend
+mix).
+
+**Exit criteria:** a BALANCE.md entry with the economy baseline (bits
+earned/spent per hop at the optimum, win-rate + gradient vs the §46b
+numbers); the boss-wall rider explicitly resolved; docs closed (cursor
+flipped, pair archived at the next kickoff per the ritual).
+
+**Scope guards:** NO new content/features (tuning + docs only — findings
+that want features become TODO/next-round items); NO relaxing any standing
+gate (drift gates, determinism) to make numbers fit.
+
+---
+
+## What we're explicitly NOT doing (the cluster scope guard)
+
+- **No mid-battle pause-to-cast** — the `usableIn`/`TargetSpec` seam ships;
+  the player→sim input channel does not. (Deferred, spec §Packets.)
+- **No tile-targeted packet content** — waits for mid-battle casting.
+- **No rarity, draft pools, or starting characters** — Cluster 4 (ports sell
+  by archetype+level; the rarity-weighted stock upgrade lands there).
+- **No camps, events, or non-encounter reward sources** — Cluster 5.
+- **No meta-currency or cross-run persistence** — Cluster 6.
+- **No stable-unit-id refactor** — `removeRosterUnit` chokepoint only.
+- **No synergies/traits** — the Cluster-4 spec-time decision, not ours.
+- **No trigger predicates beyond `chance`** on reward tables at launch.
+- **No daemon cap** — uncapped is the locked design; don't re-litigate.
 
 ## Open decisions to resolve when building (the cross-cutting set)
 
-- 42a: decision event vs transient field (leaning dev-gated event).
-- 43a: straightness vs numeric final tie-break (leaning straightness) —
-  ✅ DECIDED: straightness (cross-track), numeric (y,x) as the last resort.
-- 43b: parity vs open-space sidestep tie —
-  ✅ DECIDED: parity, but of the FROM CELL (checkerboard), not the unit id
-  (interleaved spawn ids give a whole team one parity — measured on the
-  §42b fixtures); open-space-aware rejected (the tie is too rare post-43a
-  to justify tactical code).
-- 43b2: the targeting distance-tie rule —
-  ✅ DECIDED: minor-axis-offset alignment (`min(|dx|,|dy|)`, the frame-free
-  own-column rule), inserted between the HP tie and the id last resort;
-  `weakest` left for a future measured pass.
-- 43c: the tiny cross-track cost epsilon (only if 43c still showed cone
-  wander) — ✅ RESOLVED: NOT wanted (openField drift reads 0.00 exact;
-  no wander left to damp; admissibility never touched).
-- 44b: wait-as-activeAction vs within-tick —
-  ✅ DECIDED (2026-07-05): within-tick, no bump. World's instantaneous-action
-  rule (zero-length timeline + no applyEffect ⇒ resolve inline, never enter
-  `activeAction`); 'wait' deliberately unregistered so a serialized wait
-  fails decode LOUDLY. All five §44 leanings locked as leaned (+ wait score
-  1, the move tier). Full entry: PATHING.md §44b.
-- 45a: the vacancy window k + the discount/premium values —
-  ✅ DECIDED (2026-07-05): k = 1 OWN-step (`vacancyWindowOwnSteps`, scales
-  with the pather's speed); vacating discount +1, static +4 (unchanged),
-  inbound premium +8 — all dials in `config/sim.json`. One REFINEMENT vs
-  the charter text: the claim premium is WINDOW-GATED, not flat — a claim
-  whose flip lands long before the pather's arrival prices as a mere body
-  (+4), only a convergence-window flip (or underivable timing) pays +8.
-  A flat premium made a column's lead claim read WORSE than pre-45a and
-  re-walled the corridors the phase exists to un-wall (arithmetic + the
-  A/B corridor tests in movement.test.ts). Full entry: PATHING.md §45a.
-- 45b: the wait gate + what actually killed the crab-walk —
-  ✅ DECIDED (2026-07-05): gate k = 1 OWN-step (`waitForVacancyOwnSteps`,
-  its own dial — queueing patience tunes independently of 45a's route
-  optimism); wait consumes the poll (the goal fallback chain finds a step,
-  not a different queue); claims never qualify. ⚠ SCOPE ADDITION, measured
-  in: the sidestep PROGRESS GUARD (never crab to a cell strictly farther
-  from the approach anchor) — the ETA gate alone was a no-op on riverFork
-  (0.926: standoff blockers are instantaneous-wait units, ETA-less by
-  construction); the guard killed the backward shuttle (osc 0.923 → 0.087).
-  Interplay with §43b accepted: pure-diagonal approaches no longer sidestep
-  at all (both rotations lose ground); cell-parity governs the surviving
-  cardinal ties. Full entry: PATHING.md §45b.
-- 45c: the determinism-vs-cache resolution —
-  ✅ RESOLVED (2026-07-06, the 45c-pre flip audit — PATHING.md §45c-pre):
-  **(b) derive-don't-cache, NO snapshot bump.** The trace attributed 351
-  flips: 57% geometry (honest — switchbacks/chases; route memory would
-  wrongly fight them), 18% retarget (stickiness's domain), **25%
-  claim/body cost-flicker — the only fixable class, and it's derivable**
-  (strip the transient cost and the old heading returns). On
-  endlessCorridors, the centerpiece, flicker = 33–39% of flips. Option (a)
-  buys nothing measurable beyond (b); (c) stays rejected. ⚠ The charter's
-  "repath-count drops" metric is RE-FRAMED (it assumed caching): 45c's
-  success = flicker-flip share ↓ + endless osc/zigzag ↓ + gates hold;
-  A*/100t is informational. The build targets the flicker class ONLY.
-  **BUILT 2026-07-06 (PATHING.md §45c):** the stable-route margin —
-  stable incumbent (short-horizon transients stripped) vs live challenger,
-  first-step compare, `routeSwitchMargin` 8 / `stableRouteHorizonOwnSteps`
-  1. Flicker flips −41% (endless −49%), endless osc worst 0.150 → 0.104,
-  isthmus osc 0.000×6, all gates hold. Two perf gates tried + REJECTED
-  (they skipped real suppressions); fuzz budget growth measured as
-  CONTENT (deeper greedy runs, +~1% per-tick compute) → re-budgeted, and
-  the outcome-drift hint filed for §46b.
-- 46: the School-2/3 gate (the round's whole point — decided last, on data).
+- 47: launch trigger/op/stat lists; multi-daemon PreTurnScreen presentation;
+  overlay pull-forward.
+- 48: reward-screen UX; launch table catalog.
+- 49: **the pre-turn fire UX** (the spec's ⚠ OPEN — a design round at phase
+  kickoff); the launch packet list; cache-UI home.
+- 50: port glyph + screen layout; price formulas; removal pricing.
+- 51: the triage boundary; the "queued"-stance rider call (fold in or defer).
+- 52: the boss-wall rider verdict; the BALANCE.md economy-metric family.

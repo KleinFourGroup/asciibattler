@@ -8,20 +8,22 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 | | |
 |---|---|
-| **NEXT** | **The Cluster 3 (Economy) KICKOFF** — a fresh-session task; brief below |
-| **In flight** | — |
+| **NEXT** | **Phase 47 kickoff — the rule vocabulary** (the AGENTS phase-kickoff protocol: code-reality audit → step cut → shape-lock with the user → build) |
+| **In flight** | **Cluster 3 — Economy (Phases 47→52)**: spec [cluster-3-spec.md](cluster-3-spec.md) ✅ LOCKED · [ROADMAP.md](ROADMAP.md) ✅ shape-locked 2026-07-07 · [WORKLOG.md](WORKLOG.md) live (narrative appends there) |
 | **Branch / tree** | `main`, working tree clean at last close |
 | **Snapshots** | WorldSnapshot **v32** · RunSnapshot **v24** |
-| **Tests** | **1801 main** (`npm test`) + **212 fuzz:smoke** green · typecheck clean |
+| **Tests** | **1804 main** (`npm test`) + **212 fuzz:smoke** green · typecheck clean |
 | **Last closed** | The process-audit docs round (2026-07-06, `f7fbf45`→`f0523fc`: the planning stack in AGENTS.md, CLAUDE.md auto-load, docs ratchets, the pre-commit gate, the scratchpad sweep) · before it, the Pathfinding Audit round (Phases 42→46), ✅ user-confirmed 2026-07-06 — see Closed rounds below |
 
-**The Cluster-3 kickoff brief:**
-
-1. Read [META-ROADMAP.md](META-ROADMAP.md) §Cluster 3 (the Economy brief: currency + rewards + shop + consumables + the reward/item/shop editors) + this file.
-2. **First act: archive [ROADMAP.md](ROADMAP.md) → `archive/post-41-roadmap.md`** — the Pathfinding-Audit round doc, now closed.
-3. **Spec FIRST:** hold the Economy design conversation with the user, then distill it into a spec artifact (the user's voice, uncertainties marked) *before* any roadmap writing — the roadmap gets audited against it (AGENTS.md §"The planning stack").
-4. Author the Economy ROADMAP.md from the spec + META brief **WITH the user** — shape-lock before building. Phase entries carry charter / ordering + dependencies / risk / decision points / exit criteria / scope guards ONLY: no sub-step lists (those are cut at each phase kickoff), no as-built prose (→ the worklog).
-5. Create a fresh **WORKLOG.md** (the per-round narrative log; archived as a pair with its roadmap at round close).
+**The Cluster-3 kickoff (2026-07-07): ✅ COMPLETE.** Spec hardened + locked
+([cluster-3-spec.md](cluster-3-spec.md) — vocabulary: **bits · packets ·
+cache · ports**; one ⚠ OPEN: the pre-turn fire UX, resolves at §49 kickoff);
+the plan authored + shape-locked ([ROADMAP.md](ROADMAP.md), Phases 47→52,
+the first roadmap under the planning-stack protocol); the first
+[WORKLOG.md](WORKLOG.md) created (the kickoff story: §Kickoff); the ROADMAP
+plan-shape guard landed ([tests/docs.test.ts](tests/docs.test.ts)); post-41
+archived. Every phase opens with the AGENTS phase-kickoff protocol — sub-steps
+are cut then, not in advance.
 
 **Riders carried into Cluster 3:**
 

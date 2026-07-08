@@ -183,6 +183,36 @@ Process note: AskUserQuestion dialogs hide same-turn assistant text in the
 desktop app — shape-lock proposals must be presented as a plain final
 message, then approved in the next turn.
 
+### 47d — the multi-empower decision + build (2026-07-07)
+
+**The flagged 47c decision (what happens when a run owns Mars AND Minerva)
+resolved as option B — per-idol empower controls.** The user's reasoning:
+the combined-blessing model (A) stacks BOTH the number of empowers and the
+effects per empower — "really OP, really fast"; adding just the effects
+would cap each daemon at one empower. So: `turnGrants.empower` became the
+per-source `empowers: EmpowerGrant[]` ({daemonId, empowersPerTurn, buff}
+per granted hook), `empowerUnit` gained `grantIndex`, per-source
+`empowersUsedThisTurn: number[]`, and the PreTurnScreen renders one
+"Empower ▲ (idol name)" control per granting idol (name shown only when
+several granted — a single-idol run keeps the exact pre-47d look). Redraw
+stays ONE summed budget (redraws have no identity). Empower denial is now
+per idol ("Mars is silent…"); redraw denial = every redraw idol cold.
+
+Oracle: the six single-daemon fuzz arms re-diffed **byte-IDENTICAL**
+against the 47c baselines (the empower bot drains grant 0 first — same
+policy draws as the old single-budget loop). Browser-verified in the
+preview at :5191 (mars+minerva injected via `addDaemon` pre-node): two
+stacked banners, two named controls, mars's `empowered` and minerva's
+`warded` each landing from THEIR control, spent controls retiring
+independently; single-idol look unchanged. §51 nit filed here: the ▲
+badge title joins ALL granting idols' buff summaries rather than the
+per-card one (the badge itself sums stacks correctly).
+
+The K3/K4 save-round-trip tests moved to CATALOG daemons (janus/mars) —
+the bespoke `K_DEFAULT_DAEMON` still drives every in-memory test but by-id
+serialization hard-rejects its id on load, which is itself now pinned by
+a dedicated test (the "no silent drops" lock).
+
 ### 47c — the oracle run (2026-07-07)
 
 The behavior-equivalence oracle was run as a live before/after diff, not

@@ -1192,7 +1192,9 @@ describe('Run', () => {
     });
 
     it('round-trips the redraw counters (a save at the gate must not refresh the budget)', () => {
-      const { run } = gatedToFirstTurnIntro(10);
+      // 47d — save/reload needs a CATALOG daemon (bespoke ids hard-reject on
+      // load); janus is the guaranteed-redraw idol.
+      const { run } = gatedToFirstTurnIntro(10, daemonById('janus')!);
       run.dispatch({ kind: 'redrawCards', handIndices: [1] });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
@@ -1210,7 +1212,7 @@ describe('Run', () => {
       const { run } = gatedToFirstTurnIntro(1);
       const pos = 2;
       const slot = run.hand[pos]!;
-      run.dispatch({ kind: 'empowerUnit', handIndex: pos });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: pos });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
       expect(stored[0]).toEqual({
@@ -1240,13 +1242,13 @@ describe('Run', () => {
       bus.on('turn:unitEmpowered', () => emits++);
       // Burn the budget, bound derived from config.
       for (let i = 0; i < EMPOWER.empowersPerTurn; i++) {
-        run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+        run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       }
-      expect(run.empowersUsedThisTurn).toBe(EMPOWER.empowersPerTurn);
+      expect(run.empowersUsedThisTurn).toEqual([EMPOWER.empowersPerTurn]);
       expect(emits).toBe(EMPOWER.empowersPerTurn);
       const stored = run.encounterEffects[run.hand[0]!]!.map((e) => ({ ...e }));
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
-      expect(run.empowersUsedThisTurn).toBe(EMPOWER.empowersPerTurn);
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
+      expect(run.empowersUsedThisTurn).toEqual([EMPOWER.empowersPerTurn]);
       expect(emits).toBe(EMPOWER.empowersPerTurn);
       expect(run.encounterEffects[run.hand[0]!]).toMatchObject(stored);
     });
@@ -1255,22 +1257,22 @@ describe('Run', () => {
       const { run, bus } = gatedToFirstTurnIntro(3);
       let emits = 0;
       bus.on('turn:unitEmpowered', () => emits++);
-      run.dispatch({ kind: 'empowerUnit', handIndex: run.hand.length }); // range
-      run.dispatch({ kind: 'empowerUnit', handIndex: -1 }); // negative
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0.5 }); // non-integer
-      expect(run.empowersUsedThisTurn).toBe(0);
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: run.hand.length }); // range
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: -1 }); // negative
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0.5 }); // non-integer
+      expect(run.empowersUsedThisTurn).toEqual([0]);
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
       expect(emits).toBe(0);
     });
 
     it('is a no-op outside the pre-turn gate (map phase, headless battle)', () => {
       const { run } = freshRunWithBus(4, { daemon: K_DEFAULT_DAEMON });
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0 }); // map
-      expect(run.empowersUsedThisTurn).toBe(0);
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 }); // map
+      expect(run.empowersUsedThisTurn).toEqual([]); // no turn resolved yet
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // gates off → battle
       expect(run.phase).toBe('battle');
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
-      expect(run.empowersUsedThisTurn).toBe(0);
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
+      expect(run.empowersUsedThisTurn).toEqual([0]);
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
     });
 
@@ -1283,18 +1285,18 @@ describe('Run', () => {
       bus.on('turn:starting', (p) => startings.push(p));
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       const slot = run.hand[0]!;
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       run.dispatch({ kind: 'advanceTurn' }); // → battle
       chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
       run.dispatch({ kind: 'advanceTurn' }); // → next turn's gate
       expect(run.phase).toBe('turn-intro');
-      expect(run.empowersUsedThisTurn).toBe(0);
+      expect(run.empowersUsedThisTurn).toEqual([0]);
       // The turn-2 pre-turn payload already badges the carried buff (the
       // "empowered on an earlier turn, drawn back" pin).
       const pos2 = run.hand.indexOf(slot);
       expect(pos2).toBeGreaterThanOrEqual(0); // short roster: always in hand
       expect(startings[1]!.empowerMagnitudes[pos2]).toBe(1);
-      run.dispatch({ kind: 'empowerUnit', handIndex: pos2 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: pos2 });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
       // Expectation derived from the config merge policy (K1 magnitude math).
@@ -1307,7 +1309,7 @@ describe('Run', () => {
       const redrawns: GameEvents['turn:handRedrawn'][] = [];
       bus.on('turn:handRedrawn', (p) => redrawns.push(p));
       const benched = run.hand[0]!;
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       run.dispatch({ kind: 'redrawCards', handIndices: [0] });
       expect(run.hand[0]).not.toBe(benched);
       // The store keeps the buff; the badge column re-derived for the NEW hand.
@@ -1327,15 +1329,14 @@ describe('Run', () => {
       bus.on('turn:unitEmpowered', (p) => empowereds.push(p));
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       // Fresh budget straight off the fixture daemon's dial (= the config dial).
-      expect(startings[0]!.empower).toEqual({
-        empowersRemaining: EMPOWER.empowersPerTurn,
-      });
+      expect(startings[0]!.empowers).toHaveLength(1);
+      expect(startings[0]!.empowers[0]!.empowersRemaining).toBe(EMPOWER.empowersPerTurn);
       expect(startings[0]!.empowerMagnitudes).toEqual(run.hand.map(() => 0));
-      run.dispatch({ kind: 'empowerUnit', handIndex: 1 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 1 });
       expect(empowereds).toHaveLength(1);
       expect(empowereds[0]!.handIndex).toBe(1);
-      expect(empowereds[0]!.empower).toEqual(run.empowerAvailability);
-      expect(empowereds[0]!.empower.empowersRemaining).toBe(EMPOWER.empowersPerTurn - 1);
+      expect(empowereds[0]!.empowers).toEqual(run.empowerGrants);
+      expect(empowereds[0]!.empowers[0]!.empowersRemaining).toBe(EMPOWER.empowersPerTurn - 1);
       expect(empowereds[0]!.empowerMagnitudes).toEqual(
         run.hand.map((_, i) => (i === 1 ? 1 : 0)),
       );
@@ -1345,7 +1346,7 @@ describe('Run', () => {
       const a = gatedToFirstTurnIntro(8);
       const b = gatedToFirstTurnIntro(8);
       for (const { run } of [a, b]) {
-        run.dispatch({ kind: 'empowerUnit', handIndex: 3 });
+        run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 3 });
         run.dispatch({ kind: 'advanceTurn' });
       }
       expect(JSON.parse(JSON.stringify(a.run.toJSON()))).toEqual(
@@ -1354,13 +1355,15 @@ describe('Run', () => {
     });
 
     it('round-trips the empower counter (a save at the gate must not refresh the budget)', () => {
-      const { run } = gatedToFirstTurnIntro(9);
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      // 47d — save/reload needs a CATALOG daemon (bespoke ids hard-reject on
+      // load); mars is the guaranteed-empower idol.
+      const { run } = gatedToFirstTurnIntro(9, daemonById('mars')!);
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('turn-intro');
-      expect(restored.empowersUsedThisTurn).toBe(run.empowersUsedThisTurn);
-      expect(restored.empowerAvailability).toEqual(run.empowerAvailability);
+      expect(restored.empowersUsedThisTurn).toEqual(run.empowersUsedThisTurn);
+      expect(restored.empowerGrants).toEqual(run.empowerGrants);
       // The buff itself rides the K1 v12 `encounterEffects` round-trip.
       expect(restored.encounterEffects).toEqual(run.encounterEffects);
       // (The pre-K4 v14 reject rides the generic `schemaVersion - 1` test.)
@@ -1371,31 +1374,31 @@ describe('Run', () => {
     it('rolls exactly one daemon at construction, deterministically per seed', () => {
       const a = freshRunWithBus(21).run;
       const b = freshRunWithBus(21).run;
-      expect(a.daemon).not.toBeNull();
-      expect(a.daemon!.id).toBe(b.daemon!.id);
+      expect(a.daemons).toHaveLength(1);
+      expect(a.daemons[0]!.id).toBe(b.daemons[0]!.id);
     });
 
     it('covers the whole catalog over seeds', () => {
       const seen = new Set<string>();
-      for (let seed = 0; seed < 60; seed++) seen.add(freshRunWithBus(seed).run.daemon!.id);
+      for (let seed = 0; seed < 60; seed++) seen.add(freshRunWithBus(seed).run.daemons[0]!.id);
       expect([...seen].sort()).toEqual(DAEMONS.map((d) => d.id).sort());
     });
 
-    it('RunConfig.daemon forces the daemon; null forces daemon-less', () => {
-      expect(freshRunWithBus(1, { daemon: daemonById('mars')! }).run.daemon!.id).toBe('mars');
-      expect(freshRunWithBus(1, { daemon: null }).run.daemon).toBeNull();
+    it('RunConfig.daemon seeds the ownership list; null forces daemon-less', () => {
+      expect(freshRunWithBus(1, { daemon: daemonById('mars')! }).run.daemons[0]!.id).toBe('mars');
+      expect(freshRunWithBus(1, { daemon: null }).run.daemons).toEqual([]);
     });
 
     it('daemon-less: both gates read 0 at the gate and both commands are no-ops', () => {
       const { run } = gatedToFirstTurnIntro(22, null);
       expect(run.redrawAvailability).toEqual({ redrawsRemaining: 0, cardsRemaining: 0 });
-      expect(run.empowerAvailability).toEqual({ empowersRemaining: 0 });
+      expect(run.empowerGrants).toEqual([]);
       const hand = run.hand.slice();
       run.dispatch({ kind: 'redrawCards', handIndices: [0] });
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       expect(run.hand).toEqual(hand);
       expect(run.redrawsUsedThisTurn).toBe(0);
-      expect(run.empowersUsedThisTurn).toBe(0);
+      expect(run.empowersUsedThisTurn).toEqual([]);
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
     });
 
@@ -1403,13 +1406,13 @@ describe('Run', () => {
       const mars = daemonById('mars')!;
       const marsEmpower = daemonEmpowerHook(mars)!;
       const { run } = gatedToFirstTurnIntro(23, mars);
-      expect(run.empowerAvailability.empowersRemaining).toBe(marsEmpower.empowersPerTurn);
+      expect(run.empowerGrants[0]!.empowersRemaining).toBe(marsEmpower.empowersPerTurn);
       expect(run.redrawAvailability).toEqual({ redrawsRemaining: 0, cardsRemaining: 0 });
       const hand = run.hand.slice();
       run.dispatch({ kind: 'redrawCards', handIndices: [0] });
       expect(run.hand).toEqual(hand); // no redraw under mars
       const slot = run.hand[1]!;
-      run.dispatch({ kind: 'empowerUnit', handIndex: 1 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 1 });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
       expect(stored[0]!.key).toBe(marsEmpower.buff.key);
@@ -1421,7 +1424,7 @@ describe('Run', () => {
       const minervaEmpower = daemonEmpowerHook(minerva)!;
       const { run } = gatedToFirstTurnIntro(24, minerva);
       const slot = run.hand[0]!;
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       const stored = run.encounterEffects[slot]!;
       expect(stored[0]!.key).toBe(minervaEmpower.buff.key);
       expect(stored[0]!.mods).toEqual(minervaEmpower.buff.mods);
@@ -1437,7 +1440,7 @@ describe('Run', () => {
         redrawsRemaining: janusRedraw.redrawsPerTurn,
         cardsRemaining: cap,
       });
-      expect(run.empowerAvailability.empowersRemaining).toBe(0);
+      expect(run.empowerGrants).toEqual([]);
       const hand = run.hand.slice();
       // One past the cap → silent no-op; at the cap → lands.
       run.dispatch({
@@ -1447,7 +1450,7 @@ describe('Run', () => {
       expect(run.hand).toEqual(hand);
       run.dispatch({ kind: 'redrawCards', handIndices: hand.map((_, i) => i).slice(0, cap) });
       expect(run.cardsRedrawnThisTurn).toBe(cap);
-      run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
     });
 
@@ -1473,44 +1476,61 @@ describe('Run', () => {
       expect(grantsOf(mixed!)).toEqual(grantsOf(mixed!)); // per-seed deterministic
     });
 
-    it('turn:starting carries the daemon identity + gate shape (and null for daemon-less)', () => {
+    it('turn:starting carries the owned-daemon list + hook shape (empty for daemon-less)', () => {
       const mars = daemonById('mars')!;
       for (const [daemon, expected] of [
         [
           mars,
-          {
-            id: mars.id,
-            name: mars.name,
-            description: mars.description,
-            // L1c2→47c — hook presence + the daemon's OWN buff, derived from
-            // the catalog entry's rules (mars is empower-only).
-            redrawGate: false,
-            empowerGate: true,
-            empowerBuff: daemonEmpowerHook(mars)!.buff.mods,
-          },
+          [
+            {
+              id: mars.id,
+              name: mars.name,
+              description: mars.description,
+              // L1c2→47d — hook presence, derived from the catalog entry's
+              // rules (mars is empower-only). The buff rides `empowers`.
+              redrawGate: false,
+              empowerGate: true,
+            },
+          ],
         ],
-        [null, null],
+        [null, []],
       ] as const) {
         const { run, bus } = freshRunWithBus(26, { daemon });
         run.pauseAtTurnGates = true;
         const startings: GameEvents['turn:starting'][] = [];
         bus.on('turn:starting', (p) => startings.push(p));
         run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-        expect(startings[0]!.daemon).toEqual(expected);
+        expect(startings[0]!.daemons).toEqual(expected);
+        // 47d — the granted-empower list carries the buff + source identity.
+        if (daemon !== null) {
+          expect(startings[0]!.empowers).toEqual([
+            {
+              daemonId: mars.id,
+              name: mars.name,
+              empowersRemaining: daemonEmpowerHook(mars)!.empowersPerTurn,
+              buff: daemonEmpowerHook(mars)!.buff.mods,
+            },
+          ]);
+        } else {
+          expect(startings[0]!.empowers).toEqual([]);
+        }
       }
     });
 
-    it('round-trips the daemon whole, the stream, and the CURRENT flip (v16→v25)', () => {
+    it('round-trips the daemons BY ID, the stream, and the CURRENT flip (v16→v26)', () => {
       const mercury = daemonById('mercury')!;
       const { run, bus } = gatedToFirstTurnIntro(27, mercury);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      // 47d — the wire carries ids only, not rule payloads.
+      expect(wire.daemonIds).toEqual(['mercury']);
       const busB = new EventBus<GameEvents>();
       const restored = Run.fromJSON(wire, busB);
       // `pauseAtTurnGates` is a DRIVER flag (not snapshotted) — re-arm it so
       // both runs walk the same gated path below.
       restored.pauseAtTurnGates = true;
-      // The save's gate state is restored, never re-flipped.
-      expect(restored.daemon).toEqual(run.daemon);
+      // The save's grant state is restored, never re-flipped; the daemon
+      // def-resolves back to the catalog object.
+      expect(restored.daemons).toEqual(run.daemons);
       expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
       // The daemonRng round-trips: both runs flip the SAME coins forever after.
       for (const [r, b] of [
@@ -1527,13 +1547,48 @@ describe('Run', () => {
       );
     });
 
-    it('a bespoke (non-catalog) daemon round-trips whole', () => {
+    it('multi-daemon ownership round-trips by id (addDaemon → save → load)', () => {
+      const { run } = gatedToFirstTurnIntro(29, daemonById('mars')!);
+      run.addDaemon(daemonById('janus')!);
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      expect(wire.daemonIds).toEqual(['mars', 'janus']);
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.daemons.map((d) => d.id)).toEqual(['mars', 'janus']);
+    });
+
+    it('an unknown daemon id on load is a hard reject (the 47 shape-lock: no silent drops)', () => {
       const { run } = gatedToFirstTurnIntro(28); // K_DEFAULT_DAEMON, not in DAEMONS
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
-      expect(restored.daemon).toEqual(K_DEFAULT_DAEMON);
-      expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
-      expect(restored.empowerAvailability).toEqual(run.empowerAvailability);
+      expect(wire.daemonIds).toEqual(['test-k-defaults']);
+      expect(() => Run.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
+        /unknown daemon id 'test-k-defaults'/,
+      );
+    });
+
+    it('two empower idols → two per-source grants, each applying ITS buff (47d)', () => {
+      const { run, bus } = gatedToFirstTurnIntro(31, daemonById('mars')!);
+      run.addDaemon(daemonById('minerva')!);
+      // Acquisition lands mid-turn: this turn's grants are unchanged; the
+      // list takes effect at the NEXT turn's resolution.
+      expect(run.empowerGrants.map((g) => g.daemonId)).toEqual(['mars']);
+      run.dispatch({ kind: 'advanceTurn' }); // → battle
+      chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
+      run.dispatch({ kind: 'advanceTurn' }); // → turn 2's gate
+      expect(run.phase).toBe('turn-intro');
+      expect(run.empowerGrants.map((g) => g.daemonId)).toEqual(['mars', 'minerva']);
+      // Each grant applies ITS OWN buff, budgeted independently.
+      const marsBuff = daemonEmpowerHook(daemonById('mars')!)!.buff;
+      const minervaBuff = daemonEmpowerHook(daemonById('minerva')!)!.buff;
+      const slot0 = run.hand[0]!;
+      const slot1 = run.hand[1]!;
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 1 });
+      expect(run.encounterEffects[slot0]!.map((e) => e.key)).toEqual([marsBuff.key]);
+      expect(run.encounterEffects[slot1]!.map((e) => e.key)).toEqual([minervaBuff.key]);
+      expect(run.empowerGrants.map((g) => g.empowersRemaining)).toEqual([0, 0]);
+      // A spent source rejects silently; the OTHER source's budget is its own.
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 2 });
+      expect(run.encounterEffects[run.hand[2]!]!).toHaveLength(0);
     });
   });
 

@@ -54,12 +54,7 @@ import {
   redrawRejection,
   type RedrawAvailability,
 } from './redraw';
-import {
-  empowerAvailability,
-  empowerRejection,
-  empowerEffect,
-  type EmpowerAvailability,
-} from './empower';
+import { empowerRejection, empowerEffect } from './empower';
 import {
   rollDaemon,
   resolveTurnGrants,
@@ -80,7 +75,7 @@ import { getEncounter, type Encounter } from '../config/encounters';
 import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
 import { selectEncounter } from './encounters/selection';
-import { DAEMONS, type DaemonConfig } from '../config/daemons';
+import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
 import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { xpToNext } from '../sim/xp';
@@ -232,8 +227,14 @@ export interface BattleEncounter {
  *  still stored whole, so its SHAPE changed), and the serialized `turnGates`
  *  (resolved gate configs) became `turnGrants` (the rule-engine fold —
  *  `resolveTurnGrants`). A v24 save carries a gate-shaped daemon + a
- *  `turnGates` field the rule engine can't read → reject. */
-const RUN_SCHEMA_VERSION = 25;
+ *  `turnGates` field the rule engine can't read → reject.
+ *  47d: bumped 25→26. Multi-daemon ownership: `daemon` (one whole object |
+ *  null) becomes `daemonIds: string[]` (BY ID, def-resolved on load — an
+ *  unknown id hard-rejects; bespoke daemons no longer round-trip, the 47
+ *  shape-lock), `turnGrants.empower` becomes the per-source `empowers:
+ *  EmpowerGrant[]` (the per-idol model), and `empowersUsedThisTurn` becomes
+ *  a per-source array. A v25 save carries the old shapes → reject. */
+const RUN_SCHEMA_VERSION = 26;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -276,10 +277,13 @@ export interface RunSnapshot {
   /** L1: dedicated stream for the daemon roll + per-turn gate chance flips,
    *  forked from `rng` at construction (isolated like `levelupRng`). */
   daemonRng: RNGSnapshot;
-  /** L1: the run's daemon, stored whole (not by id) — a save survives catalog
-   *  edits, and a bespoke (test / future-profile) daemon round-trips. Null =
-   *  a daemon-less run (both pre-turn gates permanently disabled). */
-  daemon: DaemonConfig | null;
+  /** L1→47d: the run's owned daemons BY ID, in acquisition order (the
+   *  def-resolved pattern — what makes uncapped multi-daemon cheap). An id
+   *  missing from the catalog on load is a hard reject (no silent drops);
+   *  bespoke non-catalog daemons are in-memory only and don't survive
+   *  save/reload (the 47 shape-lock). Empty = a daemon-less run (both
+   *  pre-turn tools permanently unavailable). */
+  daemonIds: string[];
   /** L1→47c: the current turn's resolved pre-turn grants (`resolveTurnGrants`
    *  output). Persisted so a save at the gate restores the same chance flips. */
   turnGrants: TurnGrants;
@@ -311,9 +315,10 @@ export interface RunSnapshot {
   redrawsUsedThisTurn: number;
   /** K3: total cards redrawn this turn (vs `turnGrants.redraw.maxCardsPerTurn`). */
   cardsRedrawnThisTurn: number;
-  /** K4: empower actions taken this turn (vs `turnGrants.empower.empowersPerTurn`).
-   *  Reset at every turn start; meaningful only at the pre-turn gate. */
-  empowersUsedThisTurn: number;
+  /** K4→47d: empower actions taken this turn PER GRANT SOURCE (parallel to
+   *  `turnGrants.empowers`). Rebuilt at every turn start; meaningful only at
+   *  the pre-turn gate. */
+  empowersUsedThisTurn: number[];
   /** H4: the run-wide player health pool (persists across the whole run). */
   playerHealth: number;
   /** H4: the active encounter's enemy pool (reset each encounter). */
@@ -379,11 +384,13 @@ export class Run {
    *  (Mercury's coin). Forked once at construction (isolated like
    *  `levelupRng`), so a chance-gated daemon doesn't perturb any other stream. */
   readonly daemonRng: RNG;
-  /** L1: the run's daemon — rolled uniformly over `DAEMONS` at construction,
-   *  or forced via `RunConfig.daemon` (a bespoke config, or null = daemon-less,
-   *  the fuzz control arm). Daemon-only gates: this is the ONLY source of
-   *  redraw/empower availability. */
-  readonly daemon: DaemonConfig | null;
+  /** L1→47d: the run's owned daemons, in ACQUISITION order (index 0 = the
+   *  run-start roll; §48 rewards / §50 ports append via `addDaemon` —
+   *  uncapped, the locked design). Seeded from `RunConfig.daemon` (a bespoke
+   *  config, or null = daemon-less, the fuzz control arm) or one uniform
+   *  roll over `DAEMONS`. Daemon-only gates: these are the ONLY source of
+   *  redraw/empower availability. Serialized BY ID (v26). */
+  readonly daemons: DaemonConfig[];
   /** L1→47c: the current turn's resolved pre-turn grants — re-resolved at
    *  every turn start (`startNextTurn`, where a chance hook flips its coin),
    *  the config the K3/K4 validators consume in place of the retired static
@@ -457,12 +464,13 @@ export class Run {
   redrawsUsedThisTurn: number;
   cardsRedrawnThisTurn: number;
   /**
-   * K4 — per-turn empower bookkeeping: actions taken this turn, checked
-   * against `turnGrants.empower.empowersPerTurn` by `handleEmpowerUnit`. Same
-   * lifecycle as the K3 redraw counters (reset in `startNextTurn` before the
-   * `turn:starting` emit; round-trips in the Run save, v15).
+   * K4→47d — per-turn empower bookkeeping: actions taken this turn PER
+   * GRANT SOURCE (parallel to `turnGrants.empowers`; each granted idol has
+   * its own budget), checked by `handleEmpowerUnit`. Same lifecycle as the
+   * K3 redraw counters (rebuilt in `startNextTurn` when the grants resolve,
+   * before the `turn:starting` emit; round-trips in the Run save, v26).
    */
-  empowersUsedThisTurn: number;
+  empowersUsedThisTurn: number[];
   /**
    * H4 — the run-wide player health pool. Persists across the WHOLE run (every
    * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
@@ -602,7 +610,7 @@ export class Run {
     this.redrawsUsedThisTurn = 0;
     this.cardsRedrawnThisTurn = 0;
     // K4 — empower budget bookkeeping; same lifecycle.
-    this.empowersUsedThisTurn = 0;
+    this.empowersUsedThisTurn = [];
     // H4 — the run-wide player pool starts full; the per-encounter state
     // (enemyHealth/turnIndex/selectedEncounter) is set when an encounter
     // actually begins (`beginEncounter`).
@@ -622,8 +630,14 @@ export class Run {
     // so a forced daemon keeps the parent alignment (the G1 contract); gates
     // stay disabled until the first turn resolves them (`startNextTurn`).
     this.daemonRng = this.rng.fork();
-    this.daemon =
-      config?.daemon !== undefined ? config.daemon : rollDaemon(DAEMONS, this.daemonRng);
+    // 47d — the ownership list. A forced config seeds it without a roll (the
+    // G1 parent-alignment contract holds — the roll/skip is on the child).
+    this.daemons =
+      config?.daemon !== undefined
+        ? config.daemon === null
+          ? []
+          : [config.daemon]
+        : [rollDaemon(DAEMONS, this.daemonRng)];
     this.turnGrants = disabledTurnGrants();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
@@ -691,7 +705,7 @@ export class Run {
         this.handleRedrawCards(command.handIndices);
         break;
       case 'empowerUnit':
-        this.handleEmpowerUnit(command.handIndex);
+        this.handleEmpowerUnit(command.handIndex, command.grantIndex);
         break;
       case 'resetRun':
         // No-op at this layer — Game handles reset by disposing this Run
@@ -882,16 +896,16 @@ export class Run {
   private startNextTurn(): void {
     this.drawTurnHand();
     // K3 — a fresh redraw budget every turn, reset BEFORE the `turn:starting`
-    // emit below so its payload reads full availability. K4's empower budget
-    // resets on the same schedule.
+    // emit below so its payload reads full availability.
     this.redrawsUsedThisTurn = 0;
     this.cardsRedrawnThisTurn = 0;
-    this.empowersUsedThisTurn = 0;
     // L1→47c — resolve this turn's daemon grants (the `turnStart` grant
     // hooks). A chance hook (Mercury) flips its coin off the isolated
     // `daemonRng` exactly HERE, once per turn, on both the gated + headless
-    // paths (path-independent draw count).
-    this.turnGrants = resolveTurnGrants(this.daemon, this.daemonRng);
+    // paths (path-independent draw count). 47d: the per-source empower
+    // counters rebuild to match this turn's grant list.
+    this.turnGrants = resolveTurnGrants(this.daemons, this.daemonRng);
+    this.empowersUsedThisTurn = this.turnGrants.empowers.map(() => 0);
     // K1 — `turnStart` fires before the turn's battle is built (on both the
     // gated + headless paths), so a daemon's encounter effect added here is
     // seeded onto this turn's hand in `beginTurn`. No-op at the default.
@@ -916,20 +930,20 @@ export class Run {
         drawPile: this.resolvePileForDisplay(this.drawPile),
         discardPile: this.resolvePileForDisplay(this.discardPile),
         redraw: this.redrawAvailability,
-        empower: this.empowerAvailability,
+        // 47d — one empower control per granted idol (per-source budgets).
+        empowers: this.empowerGrants,
         empowerMagnitudes: this.empowerMagnitudes(),
-        daemon: this.daemon
-          ? {
-              id: this.daemon.id,
-              name: this.daemon.name,
-              description: this.daemon.description,
-              // 47c — "does this idol EVER grant it": derived from the
-              // authored turnStart grant hooks, not this turn's resolution.
-              redrawGate: daemonRedrawHook(this.daemon) !== undefined,
-              empowerGate: daemonEmpowerHook(this.daemon) !== undefined,
-              empowerBuff: daemonEmpowerHook(this.daemon)?.buff.mods ?? null,
-            }
-          : null,
+        // 47d — the owned-daemon list (stacked banners). `redrawGate`/
+        // `empowerGate` = "does this idol EVER grant it" (authored hooks,
+        // not this turn's resolution) — the screen tells "denied this turn"
+        // from "never grants it".
+        daemons: this.daemons.map((d) => ({
+          id: d.id,
+          name: d.name,
+          description: d.description,
+          redrawGate: daemonRedrawHook(d) !== undefined,
+          empowerGate: daemonEmpowerHook(d) !== undefined,
+        })),
         encounter: { name: encounter.name, kind: encounter.kind },
         map: { layoutId, gridW, gridH, theme },
       });
@@ -1267,14 +1281,23 @@ export class Run {
 
   /**
    * K4 — this turn's remaining empower budget, the shape the pre-turn screen
-   * renders. L1→47c: reads this turn's resolved grant — 0 when the active
-   * daemon grants no empower this turn.
+   * renders. L1→47d: one entry per idol GRANTED this turn (empty when
+   * nothing granted — daemon-less, chance-denied, or no empower idols), each
+   * with its own remaining budget + buff mods. The fuzz empower bot iterates
+   * these; `grantIndex` into this list rides the `empowerUnit` command.
    */
-  get empowerAvailability(): EmpowerAvailability {
-    return empowerAvailability(
-      { empowersUsed: this.empowersUsedThisTurn },
-      this.turnGrants.empower,
-    );
+  get empowerGrants(): Array<{
+    daemonId: string;
+    name: string;
+    empowersRemaining: number;
+    buff: StatusEffect['mods'];
+  }> {
+    return this.turnGrants.empowers.map((grant, i) => ({
+      daemonId: grant.daemonId,
+      name: this.daemons.find((d) => d.id === grant.daemonId)?.name ?? grant.daemonId,
+      empowersRemaining: Math.max(0, grant.empowersPerTurn - (this.empowersUsedThisTurn[i] ?? 0)),
+      buff: grant.buff.mods,
+    }));
   }
 
   /**
@@ -1287,10 +1310,19 @@ export class Run {
    * stacks); no empower daemon → no key → all zeros.
    */
   private empowerMagnitudes(): number[] {
-    const buffKey = daemonEmpowerHook(this.daemon)?.buff.key;
+    // 47d — one badge column across ALL owned empower idols' buff keys
+    // (magnitudes sum; keys are distinct per idol by authoring convention).
+    const buffKeys = new Set<string>();
+    for (const d of this.daemons) {
+      const hook = daemonEmpowerHook(d);
+      if (hook !== undefined) buffKeys.add(hook.buff.key);
+    }
     return this.hand.map((idx) => {
-      const effect = this.encounterEffects[idx]?.find((e) => e.key === buffKey);
-      return effect?.magnitude ?? 0;
+      let total = 0;
+      for (const effect of this.encounterEffects[idx] ?? []) {
+        if (buffKeys.has(effect.key)) total += effect.magnitude;
+      }
+      return total;
     });
   }
 
@@ -1320,22 +1352,38 @@ export class Run {
    * reject is a silent no-op that consumes no budget (mirrors
    * `handleRedrawCards`).
    */
-  private handleEmpowerUnit(handIndex: number): void {
+  private handleEmpowerUnit(handIndex: number, grantIndex: number): void {
     if (this.phase !== 'turn-intro') return;
+    // 47d — the command names its grant source (which idol's blessing).
+    // An out-of-range source is a silent no-op like every other reject.
+    const grant = this.turnGrants.empowers[grantIndex];
+    if (grant === undefined) return;
+    const cfg = { enabled: true, empowersPerTurn: grant.empowersPerTurn, buff: grant.buff };
     const rejection = empowerRejection(
       handIndex,
       this.hand.length,
-      { empowersUsed: this.empowersUsedThisTurn },
-      this.turnGrants.empower,
+      { empowersUsed: this.empowersUsedThisTurn[grantIndex]! },
+      cfg,
     );
     if (rejection !== null) return;
-    this.addEncounterEffect(this.hand[handIndex]!, empowerEffect(this.turnGrants.empower));
-    this.empowersUsedThisTurn += 1;
+    this.addEncounterEffect(this.hand[handIndex]!, empowerEffect(cfg));
+    this.empowersUsedThisTurn[grantIndex]! += 1;
     this.bus.emit('turn:unitEmpowered', {
       handIndex,
-      empower: this.empowerAvailability,
+      empowers: this.empowerGrants,
       empowerMagnitudes: this.empowerMagnitudes(),
     });
+  }
+
+  /**
+   * 47d — append a daemon to the ownership list (the §48 reward / §50 port
+   * acquisition seam). Takes effect at the NEXT turn's grant resolution —
+   * a mid-turn acquisition never retro-grants the current turn. Uncapped
+   * (the locked design); duplicates are the CALLER's concern (reward tables
+   * + port stock exclude owned ids upstream).
+   */
+  addDaemon(daemon: DaemonConfig): void {
+    this.daemons.push(daemon);
   }
 
   /**
@@ -1687,11 +1735,10 @@ export class Run {
       levelupRng: this.levelupRng.toJSON(),
       deckRng: this.deckRng.toJSON(),
       daemonRng: this.daemonRng.toJSON(),
-      // L1 — stored by reference (the `nodeMap`/`encounterMap` convention):
-      // neither the daemon nor a resolved grant is ever mutated in place
-      // (`turnGrants` is reassigned whole each turn; `empowerEffect` deep-copies
-      // the buff mods at apply time).
-      daemon: this.daemon,
+      // 47d — daemons serialize BY ID (def-resolved on load); `turnGrants`
+      // by reference (never mutated in place — reassigned whole each turn;
+      // `empowerEffect` deep-copies the buff mods at apply time).
+      daemonIds: this.daemons.map((d) => d.id),
       turnGrants: this.turnGrants,
       currentSectorId: this.currentSectorId,
       currentSectorNodeId: this.currentSectorNodeId,
@@ -1706,7 +1753,7 @@ export class Run {
       hand: this.hand.slice(),
       redrawsUsedThisTurn: this.redrawsUsedThisTurn,
       cardsRedrawnThisTurn: this.cardsRedrawnThisTurn,
-      empowersUsedThisTurn: this.empowersUsedThisTurn,
+      empowersUsedThisTurn: this.empowersUsedThisTurn.slice(),
       playerHealth: this.playerHealth,
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
@@ -1761,9 +1808,17 @@ export class Run {
     m.levelupRng = RNG.fromJSON(snap.levelupRng);
     m.deckRng = RNG.fromJSON(snap.deckRng);
     m.daemonRng = RNG.fromJSON(snap.daemonRng);
-    // L1 — restore the daemon + the CURRENT turn's resolved grants as-is (a
-    // save at the pre-turn gate keeps its Mercury flip — never re-rolled).
-    m.daemon = snap.daemon;
+    // 47d — re-resolve owned daemons BY ID from the shipped catalog; an
+    // unknown id (retired entry / bespoke daemon) is a hard reject, never a
+    // silent drop. The CURRENT turn's resolved grants restore as-is (a save
+    // at the pre-turn gate keeps its Mercury flip — never re-rolled).
+    m.daemons = snap.daemonIds.map((id) => {
+      const daemon = daemonById(id);
+      if (daemon === undefined) {
+        throw new Error(`Run.fromJSON: unknown daemon id '${id}' (not in the catalog)`);
+      }
+      return daemon;
+    });
     m.turnGrants = snap.turnGrants;
     // T2 — RunConfig (incl. a sectorMap override) isn't persisted; a restored
     // run walks the shipped DAG. The shipped DAG is a single sink, so a save is
@@ -1783,7 +1838,7 @@ export class Run {
     m.hand = snap.hand.slice();
     m.redrawsUsedThisTurn = snap.redrawsUsedThisTurn;
     m.cardsRedrawnThisTurn = snap.cardsRedrawnThisTurn;
-    m.empowersUsedThisTurn = snap.empowersUsedThisTurn;
+    m.empowersUsedThisTurn = snap.empowersUsedThisTurn.slice();
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;

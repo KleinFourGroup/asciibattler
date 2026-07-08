@@ -24,18 +24,23 @@
  * `turn:unitEmpowered` → `updateEmpower`.
  *
  * L1 — the gates are DAEMON-owned now: a banner under the map line names the
- * run's idol, the empower hint/badge derive from the ACTIVE daemon's buff
- * (payload-carried — the retired `EMPOWER` singleton ships disabled), and a
- * chance gate that denied this turn (Mercury's cold coin) renders an inert
- * "the idol is silent" line where its control would be — distinguishable from
- * "spent" (no line) because gate-denial is computed ONCE from the fresh
- * `turn:starting` budget.
+ * run's idol(s), the empower hints/badges derive from the granting idols'
+ * buffs (payload-carried — the retired `EMPOWER` singleton ships disabled),
+ * and a chance hook that denied this turn (Mercury's cold coin) renders an
+ * inert "the idol is silent" line where its control would be —
+ * distinguishable from "spent" (no line) because denial is computed ONCE
+ * from the fresh `turn:starting` payload.
+ *
+ * 47d — multi-daemon: the banner is a STACKED list (one line per owned
+ * idol), and empower is PER-SOURCE — one control per granting idol (the
+ * `empowers` payload list; the `empowerUnit` command carries `grantIndex`),
+ * so the player picks which blessing lands on which card. Redraw stays one
+ * summed budget. A single-idol run renders exactly as before.
  */
 
 import type { GameEvents } from '../core/events';
 import type { UnitTemplate, UnitStats } from '../sim/Unit';
 import type { RedrawAvailability } from '../run/redraw';
-import type { EmpowerAvailability } from '../run/empower';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { StatusEffect } from '../sim/statusEffects';
@@ -61,19 +66,19 @@ export class PreTurnScreen {
   private drawPile: readonly UnitTemplate[] = [];
   private discardPile: readonly UnitTemplate[] = [];
   private redraw: RedrawAvailability = { redrawsRemaining: 0, cardsRemaining: 0 };
-  private empower: EmpowerAvailability = { empowersRemaining: 0 };
+  // 47d — this turn's granted empower sources (one control each) and the
+  // owned-daemon list (stacked banners).
+  private empowers: GameEvents['turn:starting']['empowers'] = [];
   private empowerMagnitudes: readonly number[] = [];
-  // L1 — the run's daemon (the banner + the buff the hint/badge spell out) and
-  // the per-turn chance-denial flags. The flags are computed ONCE in `show`
-  // from the FRESH `turn:starting` budget (gate exists but granted nothing →
-  // denied), so a later spent budget never reads as "denied".
-  private daemon: GameEvents['turn:starting']['daemon'] = null;
+  // L1→47d — the per-turn chance-denial state, computed ONCE in `show` from
+  // the FRESH `turn:starting` payload (an idol authors the hook but granted
+  // nothing → denied), so a later spent budget never reads as "denied".
   private redrawDenied = false;
-  private empowerDenied = false;
+  private deniedEmpowerIdols: string[] = [];
   private readonly selected = new Set<number>();
   private handWrap: HTMLDivElement | null = null;
   private redrawButton: HTMLButtonElement | null = null;
-  private empowerButton: HTMLButtonElement | null = null;
+  private empowerButtons: HTMLButtonElement[] = [];
   // R1/R2 — the shared card-list affordances: roster (top-right) + draw
   // (bottom-right) + discard (bottom-left) pile views. All disposed on hide.
   private cardListButtons: CardListButton[] = [];
@@ -91,13 +96,16 @@ export class PreTurnScreen {
     this.drawPile = info.drawPile;
     this.discardPile = info.discardPile;
     this.redraw = info.redraw;
-    this.empower = info.empower;
+    this.empowers = info.empowers;
     this.empowerMagnitudes = info.empowerMagnitudes;
-    this.daemon = info.daemon;
+    // 47d — redraw is one summed budget: "denied" = some idol authors the
+    // hook but the fresh total is 0 (every redraw idol's coin came up cold).
     this.redrawDenied =
-      (info.daemon?.redrawGate ?? false) && info.redraw.redrawsRemaining === 0;
-    this.empowerDenied =
-      (info.daemon?.empowerGate ?? false) && info.empower.empowersRemaining === 0;
+      info.daemons.some((d) => d.redrawGate) && info.redraw.redrawsRemaining === 0;
+    // 47d — empower denial is per idol: authors the hook, no grant entry.
+    this.deniedEmpowerIdols = info.daemons
+      .filter((d) => d.empowerGate && !info.empowers.some((e) => e.daemonId === d.id))
+      .map((d) => d.name);
     this.selected.clear();
     this.container = this.render(info);
     this.container.classList.add('screen-fade');
@@ -114,7 +122,7 @@ export class PreTurnScreen {
     }
     this.handWrap = null;
     this.redrawButton = null;
-    this.empowerButton = null;
+    this.empowerButtons = [];
   }
 
   /**
@@ -144,7 +152,7 @@ export class PreTurnScreen {
    * was consumed by the action).
    */
   updateEmpower(payload: GameEvents['turn:unitEmpowered']): void {
-    this.empower = payload.empower;
+    this.empowers = payload.empowers;
     this.empowerMagnitudes = payload.empowerMagnitudes;
     this.selected.clear();
     this.refreshHand();
@@ -228,14 +236,15 @@ export class PreTurnScreen {
     map.textContent = `⌖ ${mapName} — ${info.map.gridW}×${info.map.gridH}`;
     panel.appendChild(map);
 
-    // L1 — the run's daemon banner: which idol governs the gates below. The
+    // L1→47d — the daemon banners: one stacked line per owned idol (the 47
+    // shape-lock; a single-idol run renders exactly the old banner). The
     // relic layer reads FLOURESCENT_BLUE (the K4 empower accent) against the
     // amber battlefield line. Daemon-less runs (fuzz control arm) show none.
-    if (info.daemon) {
-      const daemon = document.createElement('div');
-      daemon.className = 'preturn-daemon';
-      daemon.textContent = `◈ ${info.daemon.name} — ${info.daemon.description}`;
-      panel.appendChild(daemon);
+    for (const daemon of info.daemons) {
+      const line = document.createElement('div');
+      line.className = 'preturn-daemon';
+      line.textContent = `◈ ${daemon.name} — ${daemon.description}`;
+      panel.appendChild(line);
     }
 
     const pools = document.createElement('div');
@@ -269,7 +278,7 @@ export class PreTurnScreen {
   }
 
   private get canEmpower(): boolean {
-    return this.empower.empowersRemaining > 0;
+    return this.empowers.some((e) => e.empowersRemaining > 0);
   }
 
   /**
@@ -282,7 +291,7 @@ export class PreTurnScreen {
     if (!wrap) return;
     wrap.replaceChildren();
     this.redrawButton = null;
-    this.empowerButton = null;
+    this.empowerButtons = [];
 
     const label = document.createElement('div');
     label.className = 'preturn-hand-label';
@@ -304,23 +313,30 @@ export class PreTurnScreen {
     });
     wrap.appendChild(cards);
 
-    // L1 — a control renders only when its gate granted this turn; a chance
-    // gate that denied (e.g. Mercury's cold coin) shows the inert line instead.
+    // L1→47d — a control renders only for what granted this turn; a chance
+    // hook that denied (e.g. Mercury's cold coin) shows the inert line
+    // instead, naming its idol when several are owned.
     if (this.canRedraw) wrap.appendChild(this.renderRedrawControl());
     else if (this.redrawDenied) {
       wrap.appendChild(renderGateDenied('the idol is silent — no redraw this turn'));
     }
-    if (this.canEmpower) wrap.appendChild(this.renderEmpowerControl());
-    else if (this.empowerDenied) {
-      wrap.appendChild(renderGateDenied('the idol is silent — no empower this turn'));
+    // 47d — one empower control per granted idol with budget left (spent
+    // sources leave nothing, same as before); one denial line per cold idol.
+    this.empowers.forEach((grant, grantIndex) => {
+      if (grant.empowersRemaining > 0) {
+        wrap.appendChild(this.renderEmpowerControl(grant, grantIndex));
+      }
+    });
+    for (const name of this.deniedEmpowerIdols) {
+      wrap.appendChild(renderGateDenied(`${name} is silent — no empower this turn`));
     }
   }
 
-  /** L1 — the ACTIVE daemon's buff, spelled out for the hint + badge title
-   *  (null when the daemon grants no empower at all). */
+  /** L1→47d — every granting idol's buff, spelled out for the badge title
+   *  (null when nothing grants an empower this turn). */
   private get buffSummary(): string | null {
-    const mods = this.daemon?.empowerBuff;
-    return mods ? buffModsSummary(mods) : null;
+    if (this.empowers.length === 0) return null;
+    return this.empowers.map((e) => buffModsSummary(e.buff)).join(' / ');
   }
 
   /** K3/K4 — toggle a card's selection. The cap is the larger of the two
@@ -339,7 +355,7 @@ export class PreTurnScreen {
     }
     this.audio.play('click');
     this.syncRedrawButton();
-    this.syncEmpowerButton();
+    this.syncEmpowerButtons();
   }
 
   /** K3 — the Redraw button + budget hint under the card row. Only rendered
@@ -372,36 +388,44 @@ export class PreTurnScreen {
     return row;
   }
 
-  /** K4 — the Empower button + buff hint, the redraw control's sibling. Only
-   *  rendered while an empower is available this turn. Acts on the single
-   *  selected card; the hint spells out the buff (L1: derived from the ACTIVE
-   *  daemon's `empowerBuff` mods, never hardcoded) so the choice is informed. */
-  private renderEmpowerControl(): HTMLDivElement {
+  /** K4→47d — one Empower button + buff hint PER granting idol, the redraw
+   *  control's siblings. Only rendered while that source has budget left.
+   *  Acts on the single selected card; the hint spells out the idol's OWN
+   *  buff (payload-carried, never hardcoded) so the choice is informed. The
+   *  button names its idol only when several sources granted (a single-idol
+   *  run keeps the plain 'Empower ▲' look). */
+  private renderEmpowerControl(
+    grant: GameEvents['turn:starting']['empowers'][number],
+    grantIndex: number,
+  ): HTMLDivElement {
     const row = document.createElement('div');
     row.className = 'preturn-redraw preturn-empower';
 
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'preturn-redraw-button preturn-empower-button';
-    button.textContent = 'Empower ▲';
+    button.textContent = this.empowers.length > 1 ? `Empower ▲ (${grant.name})` : 'Empower ▲';
     button.addEventListener('click', () => {
       if (this.selected.size !== 1) return;
       this.audio.play('click');
       // Same events-only refresh: the result comes back via
       // `turn:unitEmpowered` → `updateEmpower`.
-      this.dispatcher.dispatch({ kind: 'empowerUnit', handIndex: [...this.selected][0]! });
+      this.dispatcher.dispatch({
+        kind: 'empowerUnit',
+        handIndex: [...this.selected][0]!,
+        grantIndex,
+      });
     });
-    this.empowerButton = button;
+    this.empowerButtons.push(button);
 
     const hint = document.createElement('div');
     hint.className = 'preturn-redraw-hint';
-    const { empowersRemaining } = this.empower;
     hint.textContent =
-      `pick one card: ${this.buffSummary ?? 'the daemon buff'} for this encounter` +
-      ` — ${empowersRemaining} left`;
+      `pick one card: ${buffModsSummary(grant.buff)} for this encounter` +
+      ` — ${grant.empowersRemaining} left`;
 
     row.append(button, hint);
-    this.syncEmpowerButton();
+    this.syncEmpowerButtons();
     return row;
   }
 
@@ -415,11 +439,11 @@ export class PreTurnScreen {
       this.selected.size === 0 || this.selected.size > this.redraw.cardsRemaining;
   }
 
-  /** K4 — Empower wants exactly ONE card picked. */
-  private syncEmpowerButton(): void {
-    const button = this.empowerButton;
-    if (!button) return;
-    button.disabled = this.selected.size !== 1;
+  /** K4 — Empower wants exactly ONE card picked (every source's button). */
+  private syncEmpowerButtons(): void {
+    for (const button of this.empowerButtons) {
+      button.disabled = this.selected.size !== 1;
+    }
   }
 }
 

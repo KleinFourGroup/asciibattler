@@ -76,51 +76,53 @@ describe('rollDaemon', () => {
 });
 
 describe('resolveTurnGrants', () => {
-  it('null daemon → both grants disabled, no RNG draw', () => {
+  it('no daemons → nothing granted, no RNG draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    expect(resolveTurnGrants(null, rng)).toEqual(disabledTurnGrants());
+    expect(resolveTurnGrants([], rng)).toEqual(disabledTurnGrants());
     expect(rng.toJSON()).toEqual(before);
   });
 
-  it('a rule-less daemon → both grants disabled, no RNG draw', () => {
+  it('a rule-less daemon → nothing granted, no RNG draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
     const inert: DaemonConfig = { id: 'inert', name: 'Inert', description: 'no rules' };
-    expect(resolveTurnGrants(inert, rng)).toEqual(disabledTurnGrants());
+    expect(resolveTurnGrants([inert], rng)).toEqual(disabledTurnGrants());
     expect(rng.toJSON()).toEqual(before);
   });
 
   it('a chance-less hook is granted with the authored knobs and costs no draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    const grants = resolveTurnGrants(SURE_BOTH, rng);
+    const grants = resolveTurnGrants([SURE_BOTH], rng);
     const [redraw, empower] = SURE_BOTH.rules! as [HookRule, HookRule];
     expect(grants.redraw).toEqual({
       enabled: true,
       redrawsPerTurn: (redraw.effect as { redrawsPerTurn: number }).redrawsPerTurn,
       maxCardsPerTurn: (redraw.effect as { maxCardsPerTurn: number }).maxCardsPerTurn,
     });
-    expect(grants.empower.enabled).toBe(true);
-    expect(grants.empower.empowersPerTurn).toBe(
-      (empower.effect as { empowersPerTurn: number }).empowersPerTurn,
-    );
-    expect(grants.empower.buff).toEqual((empower.effect as { buff: object }).buff);
+    expect(grants.empowers).toEqual([
+      {
+        daemonId: SURE_BOTH.id,
+        empowersPerTurn: (empower.effect as { empowersPerTurn: number }).empowersPerTurn,
+        buff: (empower.effect as { buff: object }).buff,
+      },
+    ]);
     expect(rng.toJSON()).toEqual(before);
   });
 
   it('a chance-0 hook is denied and costs no draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    expect(resolveTurnGrants(NEVER, rng).redraw.enabled).toBe(false);
+    expect(resolveTurnGrants([NEVER], rng).redraw.enabled).toBe(false);
     expect(rng.toJSON()).toEqual(before);
   });
 
-  it('an ungranted kind resolves to the disabled config', () => {
-    // COIN_REDRAW authors no empower hook at all — empower must read disabled
+  it('an ungranted kind resolves to the disabled baseline', () => {
+    // COIN_REDRAW authors no empower hook at all — empowers must read empty
     // whatever the coin does.
-    const grants = resolveTurnGrants(COIN_REDRAW, new RNG(7));
-    expect(grants.empower).toEqual(disabledTurnGrants().empower);
+    const grants = resolveTurnGrants([COIN_REDRAW], new RNG(7));
+    expect(grants.empowers).toEqual([]);
   });
 
   it('a coin-flip hook draws exactly once, deterministically, and lands both ways', () => {
@@ -128,10 +130,10 @@ describe('resolveTurnGrants', () => {
     for (let seed = 0; seed < 50; seed++) {
       const rng = new RNG(seed);
       const replay = new RNG(seed);
-      const flip = resolveTurnGrants(COIN_REDRAW, rng).redraw.enabled;
+      const flip = resolveTurnGrants([COIN_REDRAW], rng).redraw.enabled;
       // Same stream state → same outcome (the determinism the save relies
       // on), and the stream advanced by exactly the one flip draw.
-      expect(resolveTurnGrants(COIN_REDRAW, replay).redraw.enabled).toBe(flip);
+      expect(resolveTurnGrants([COIN_REDRAW], replay).redraw.enabled).toBe(flip);
       expect(rng.toJSON()).toEqual(replay.toJSON());
       replay.next();
       outcomes.add(flip);
@@ -145,24 +147,60 @@ describe('resolveTurnGrants', () => {
       rules: [redrawHook(0.5, 6), empowerHook(0.5)],
     };
     for (let seed = 0; seed < 20; seed++) {
-      const grants = resolveTurnGrants(both, new RNG(seed));
+      const grants = resolveTurnGrants([both], new RNG(seed));
       const manual = new RNG(seed);
       const redrawFlip = manual.next() < 0.5;
       const empowerFlip = manual.next() < 0.5;
       expect(grants.redraw.enabled).toBe(redrawFlip);
-      expect(grants.empower.enabled).toBe(empowerFlip);
+      expect(grants.empowers.length === 1).toBe(empowerFlip);
     }
   });
 
-  it('multiple granted redraw hooks ACCUMULATE (the 47d multi-daemon fold)', () => {
+  it('daemons evaluate in OWNERSHIP order (the 47d multi-daemon draw contract)', () => {
+    const coinA: DaemonConfig = { ...COIN_REDRAW, id: 'coin-a' };
+    const coinB: DaemonConfig = {
+      id: 'coin-b',
+      name: 'Coin B',
+      description: 'coin-flip empower',
+      rules: [empowerHook(0.5)],
+    };
+    for (let seed = 0; seed < 20; seed++) {
+      const grants = resolveTurnGrants([coinA, coinB], new RNG(seed));
+      const manual = new RNG(seed);
+      const aFlip = manual.next() < 0.5;
+      const bFlip = manual.next() < 0.5;
+      expect(grants.redraw.enabled).toBe(aFlip);
+      expect(grants.empowers.map((g) => g.daemonId)).toEqual(bFlip ? ['coin-b'] : []);
+    }
+  });
+
+  it('multiple granted redraw hooks ACCUMULATE into the one summed budget', () => {
     const stacked: DaemonConfig = {
       id: 'test-stack',
       name: 'Test Stack',
       description: 'two redraw hooks',
       rules: [redrawHook(undefined, 2), redrawHook(undefined, 6)],
     };
-    const grants = resolveTurnGrants(stacked, new RNG(7));
+    const grants = resolveTurnGrants([stacked], new RNG(7));
     expect(grants.redraw).toEqual({ enabled: true, redrawsPerTurn: 2, maxCardsPerTurn: 8 });
+  });
+
+  it('granted empower hooks stay PER SOURCE (the 47d per-idol model)', () => {
+    const marsLike: DaemonConfig = {
+      id: 'idol-a',
+      name: 'Idol A',
+      description: 'empower a',
+      rules: [empowerHook(undefined)],
+    };
+    const minervaLike: DaemonConfig = {
+      id: 'idol-b',
+      name: 'Idol B',
+      description: 'empower b',
+      rules: [empowerHook(undefined)],
+    };
+    const grants = resolveTurnGrants([marsLike, minervaLike], new RNG(7));
+    expect(grants.empowers.map((g) => g.daemonId)).toEqual(['idol-a', 'idol-b']);
+    expect(grants.empowers.map((g) => g.empowersPerTurn)).toEqual([1, 1]);
   });
 
   it('non-grant turnStart ops are skipped here (fire-site execution, not the grant fold)', () => {
@@ -177,9 +215,9 @@ describe('resolveTurnGrants', () => {
     };
     const rng = new RNG(7);
     const before = rng.toJSON();
-    const grants = resolveTurnGrants(withInstant, rng);
+    const grants = resolveTurnGrants([withInstant], rng);
     expect(grants.redraw.enabled).toBe(true);
-    expect(grants.empower.enabled).toBe(false);
+    expect(grants.empowers).toEqual([]);
     // The chance-less gainBits hook still costs no draw.
     expect(rng.toJSON()).toEqual(before);
   });

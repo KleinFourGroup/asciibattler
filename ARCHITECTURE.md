@@ -163,9 +163,10 @@ src/
                              # encounterBudget retired; encounter.name → HUD enemy pane. RUN_SCHEMA_VERSION 21
     redraw.ts                # K3: pure redraw rules — redrawRejection / redrawAvailability (config injected, both L modes provable)
     empower.ts               # K4: pure empower rules — empowerRejection / empowerAvailability / empowerEffect (config injected)
-    daemon.ts                # L1→47c: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
-                             # (turnStart grant hooks → effective Redraw/EmpowerConfigs, authored-rule-order draws,
-                             # chance draws only when 0<c<1) + daemonRedrawHook/daemonEmpowerHook lookups
+    daemon.ts                # L1→47d: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
+                             # (owned daemons' turnStart grant hooks → ONE summed RedrawConfig + PER-SOURCE
+                             # EmpowerGrant[]; ownership-then-rule-order draws, chance draws only when 0<c<1)
+                             # + daemonRedrawHook/daemonEmpowerHook lookups
     runStats.ts              # 47a: the run-stat vocabulary — RunStatKey (bitsGain, cacheSize) + foldRunStats
                              # (foldEffects mirrored: adds→mults, identity-on-empty; NO rounding — read site rounds)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
@@ -443,10 +444,10 @@ recruit:offered         { units: UnitTemplate[] }
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
 objective:set           { team; objective: TeamObjective }                          # O1: a team set/replaced its steering objective (marker tracks player only)
 objective:cleared       { team }                                                    # O1: a team reverted to atWill (explicit, or engage-target died)
-turn:starting           { turn; hop; pools; hand; drawPile; discardPile; redraw; empower; empowerMagnitudes; daemon; map }  # H4b/H5b/K3/K3.5/K4/L1/R2: pre-turn gate cue (gated only); hand + the other two piles (R2, recruitment order) + daemon-resolved redraw/empower budgets + per-card empower stacks + the run's daemon {id;name;description;redrawGate;empowerGate;empowerBuff} + the ENCOUNTER's map
+turn:starting           { turn; hop; pools; hand; drawPile; discardPile; redraw; empowers; empowerMagnitudes; daemons; map }  # H4b/H5b/K3/K3.5/K4/L1/R2/47d: pre-turn gate cue (gated only); hand + the other two piles (R2, recruitment order) + the summed redraw budget + PER-SOURCE empower grants [{daemonId;name;empowersRemaining;buff}] + per-card empower stacks + the OWNED daemons [{id;name;description;redrawGate;empowerGate}] + the ENCOUNTER's map
 turn:resolved           { turn; winner; pool chips; result; pools }                 # H4b: post-turn outcome cue (gated path only)
 turn:handRedrawn        { hand; drawPile; discardPile; redraw; empowerMagnitudes }  # K3: a redrawCards command landed — full new hand + decremented budget (K4: + re-derived badge column; R2: + refreshed draw/discard piles)
-turn:unitEmpowered      { handIndex; empower; empowerMagnitudes }                   # K4: an empowerUnit command landed — decremented budget + per-card empower stacks
+turn:unitEmpowered      { handIndex; empowers; empowerMagnitudes }                  # K4/47d: an empowerUnit command landed — the full per-source grant list + per-card empower stacks
 ```
 
 `action:phase` (F2): every action declares an ordered phase timeline (`windup → release → travel → impact → recovery`, all optional/zero-length); `World.tick` fires this event at each boundary that begins on a tick (zero-length phases share one), and runs the action's effect (`applyEffect`) at `impact`. It carries no damage — that still rides `unit:attacked` / `unit:healed`. Renderer-only consumer (F3/F4). The "target died mid-flight" handling is a declared per-action `OrphanPolicy` (`commit-at-cast` / `fizzle` / `ground-target` / `re-home`).

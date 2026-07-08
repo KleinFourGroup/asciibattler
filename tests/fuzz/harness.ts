@@ -424,14 +424,25 @@ export function runOne(
         }
         // K4c3 — empower AFTER redraw (buff the FINAL hand). Same ask-until-
         // null loop + no-progress guard shape as the redraw policy above.
+        // 47d — per-source grants: the bot drains each granted idol's budget
+        // in grant order (index 0 first — a single-daemon run makes the same
+        // policy draws as before, byte-for-byte).
         if (empower && empowerRng) {
-          for (;;) {
-            const hand = run.hand.map((i) => run.team[i]!);
-            const pos = selectEmpowerPosition(hand, run.empowerAvailability, empower, empowerRng);
-            if (pos === null) break;
-            const before = run.empowersUsedThisTurn;
-            run.dispatch({ kind: 'empowerUnit', handIndex: pos });
-            if (run.empowersUsedThisTurn === before) break; // rejected — never spin
+          for (let grantIndex = 0; grantIndex < run.empowerGrants.length; grantIndex++) {
+            for (;;) {
+              const hand = run.hand.map((i) => run.team[i]!);
+              const remaining = run.empowerGrants[grantIndex]!.empowersRemaining;
+              const pos = selectEmpowerPosition(
+                hand,
+                { empowersRemaining: remaining },
+                empower,
+                empowerRng,
+              );
+              if (pos === null) break;
+              const before = run.empowersUsedThisTurn[grantIndex]!;
+              run.dispatch({ kind: 'empowerUnit', handIndex: pos, grantIndex });
+              if (run.empowersUsedThisTurn[grantIndex] === before) break; // rejected — never spin
+            }
           }
         }
         run.dispatch({ kind: 'advanceTurn' });
@@ -615,7 +626,7 @@ function finalize(
   return {
     seed,
     strategyName,
-    daemonId: run.daemon?.id ?? null,
+    daemonId: run.daemons[0]?.id ?? null,
     outcome,
     finalHopReached: run.currentHop,
     totalTicks,

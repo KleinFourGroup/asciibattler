@@ -64,7 +64,14 @@ export type RunCommand =
    * budget — anything else is a silent no-op that consumes no budget. Emits
    * `turn:unitEmpowered`.
    */
-  | { readonly kind: 'empowerUnit'; readonly handIndex: number }
+  | {
+      readonly kind: 'empowerUnit';
+      readonly handIndex: number;
+      /** 47d — which granted idol's blessing (an index into this turn's
+       *  `Run.empowerGrants` / `turnGrants.empowers`). Out-of-range = the
+       *  usual silent no-op. */
+      readonly grantIndex: number;
+    }
   | { readonly kind: 'resetRun' };
 
 export interface RunDispatcher {

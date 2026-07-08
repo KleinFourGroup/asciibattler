@@ -20,7 +20,6 @@ import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
 import type { StatusEffect } from '../sim/statusEffects';
 import type { MoveDecisionKind } from '../sim/moveDecision';
 import type { RedrawAvailability } from '../run/redraw';
-import type { EmpowerAvailability } from '../run/empower';
 import type { Theme } from '../sim/layouts';
 import type { EncounterKind } from '../config/encounters';
 
@@ -386,26 +385,34 @@ export interface GameEvents extends Record<string, unknown> {
     drawPile: UnitTemplate[];
     discardPile: UnitTemplate[];
     redraw: RedrawAvailability;
-    empower: EmpowerAvailability;
-    /** K4 — per-hand-position empower stacks (0 = none), see `turn:starting`. */
+    /** 47d — this turn's granted empower sources, one control per entry (the
+     *  per-idol model: each granted idol has its own budget + buff). Empty =
+     *  nothing granted (daemon-less, chance-denied, or no empower idols).
+     *  `buff` is the idol's OWN buff mods for the hint text; a command names
+     *  its source by INDEX into this list (`empowerUnit.grantIndex`). */
+    empowers: Array<{
+      daemonId: string;
+      name: string;
+      empowersRemaining: number;
+      buff: StatusEffect['mods'];
+    }>;
+    /** K4 — per-hand-position empower stacks (0 = none; 47d: summed across
+     *  every owned empower idol's buff key), see `turn:starting`. */
     empowerMagnitudes: number[];
-    /** L1 — the run's daemon (null = daemon-less), for the pre-turn banner.
-     *  Inline structural shape (the `map` convention). Per-turn grant state is
-     *  NOT a separate field — it's what `redraw`/`empower` availability
-     *  already say (a denied Mercury flip reads as 0/0); `redrawGate`/
-     *  `empowerGate` say whether the daemon HAS each gate at all, so the
-     *  screen can tell "denied this turn" (gate exists, fresh budget 0) from
-     *  "this idol never grants it". `empowerBuff` is the daemon's OWN buff
-     *  mods for the hint/badge text (payload-carried so a bespoke non-catalog
-     *  daemon renders correctly — the events-only discipline). */
-    daemon: {
+    /** L1→47d — the run's OWNED daemons in acquisition order (empty =
+     *  daemon-less), for the stacked pre-turn banners. Inline structural
+     *  shape (the `map` convention). Per-turn grant state is NOT here — it's
+     *  what `redraw`/`empowers` already say (a denied Mercury flip reads as
+     *  0/0 / a missing `empowers` entry); `redrawGate`/`empowerGate` say
+     *  whether an idol HAS each hook at all, so the screen can tell "denied
+     *  this turn" from "this idol never grants it". */
+    daemons: Array<{
       id: string;
       name: string;
       description: string;
       redrawGate: boolean;
       empowerGate: boolean;
-      empowerBuff: StatusEffect['mods'] | null;
-    } | null;
+    }>;
     /** Wb1 — the active encounter's identity, so the pre-turn screen can NAME
      *  the fight (otherwise the player guesses turn 1). `name` mirrors the HUD
      *  enemy-pane title; `kind` lets the screen badge an elite/boss. */
@@ -453,7 +460,14 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'turn:unitEmpowered': {
     handIndex: number;
-    empower: EmpowerAvailability;
+    /** 47d — the full per-source list (same shape as `turn:starting`), so
+     *  the screen re-renders every idol's control state in place. */
+    empowers: Array<{
+      daemonId: string;
+      name: string;
+      empowersRemaining: number;
+      buff: StatusEffect['mods'];
+    }>;
     empowerMagnitudes: number[];
   };
 

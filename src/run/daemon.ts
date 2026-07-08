@@ -14,9 +14,18 @@
  * `resolveTurnGrants` returns disabled configs for anything not granted, and
  * the K3/K4 pure validators consume the result unchanged. The roguelite
  * variance is the point: a run's idol defines which pre-turn tools exist at
- * all. Non-grant `turnStart` ops (`gainBits`/`healPool`) are NOT resolved
- * here — they're instant effects, executed at the trigger fire site once
- * their targets exist (bits 47e; the battle-domain hooks compile at 47f).
+ * all.
+ *
+ * 47e — instant (non-grant) run-domain ops. A granted `turnStart`
+ * `gainBits`/`healPool` hook rides the SAME walk as the grants (its coin
+ * already flips there — the draw-count parity 47c preserved on purpose;
+ * never add a second walk, it would double-draw) and comes back in
+ * `TurnStartResolution.instants` for the caller to execute at the fire
+ * site. `encounterStart`/`encounterEnd` hooks resolve via
+ * `resolveInstantHooks` at THEIR fire sites (Run.beginEncounter /
+ * Run.finishEncounter). Instants are executed immediately and never
+ * serialized — a save taken after the fire site has already banked their
+ * effects (`run.bits` / `playerHealth`).
  *
  * RNG contract (unchanged from L1): a hook draws from the daemon stream ONLY
  * when its `chance` is strictly between 0 and 1 (absent = 1; a deterministic
@@ -26,10 +35,14 @@
  * into (a daemon carrying both authors its redraw hook first).
  */
 
-import type { DaemonConfig, HookRule } from '../config/daemons';
+import type { DaemonConfig, EffectOp, HookRule } from '../config/daemons';
 import type { EmpowerConfig } from '../config/empower';
 import type { RNG } from '../core/RNG';
 import type { RedrawConfig } from './redraw';
+
+/** 47e — the instant (non-grant) run-domain ops a hook can carry: executed
+ *  at the trigger fire site the moment they resolve, never serialized. */
+export type InstantOp = Extract<EffectOp, { op: 'gainBits' } | { op: 'healPool' }>;
 
 /** One granted empower source this turn (47d — the per-idol model: the
  *  player picks WHICH idol's blessing goes on which card, so each granted
@@ -58,6 +71,14 @@ export function disabledTurnGrants(): TurnGrants {
     redraw: { enabled: false, redrawsPerTurn: 0, maxCardsPerTurn: 0 },
     empowers: [],
   };
+}
+
+/** 47e — one turn-start walk's full result: the serialized grants (round-trip
+ *  in the Run save) plus this turn's granted instant ops (executed at the
+ *  fire site, then discarded — see the module header). */
+export interface TurnStartResolution {
+  grants: TurnGrants;
+  instants: InstantOp[];
 }
 
 /** The per-firing chance condition. Draws only on a genuine coin flip
@@ -109,18 +130,26 @@ export function daemonEmpowerHook(
 }
 
 /**
- * Resolve one turn's grants from the owned daemons' `turnStart` hooks. An
- * empty list (a daemon-less run — the fuzz control arm) resolves to
- * all-disabled with no RNG draw. Daemons evaluate in OWNERSHIP order, rules
- * in authored order within each — the fixed draw-order discipline. A granted
- * `grantRedraws` ACCUMULATES onto the one redraw config (budgets sum); a
- * granted `grantEmpowers` PUSHES its own `EmpowerGrant` (47d — per-idol
- * empowers, the player picks which blessing lands where). Buffs are carried
- * by REFERENCE (safe: nothing mutates a buff — `empowerEffect` deep-copies
- * mods at apply time, and `turnGrants` is reassigned whole each turn).
+ * Resolve one turn's grants + granted instant ops from the owned daemons'
+ * `turnStart` hooks. An empty list (a daemon-less run — the fuzz control
+ * arm) resolves to all-disabled with no RNG draw. Daemons evaluate in
+ * OWNERSHIP order, rules in authored order within each — the fixed
+ * draw-order discipline. A granted `grantRedraws` ACCUMULATES onto the one
+ * redraw config (budgets sum); a granted `grantEmpowers` PUSHES its own
+ * `EmpowerGrant` (47d — per-idol empowers, the player picks which blessing
+ * lands where); a granted instant op (`gainBits`/`healPool`) collects into
+ * `instants` for the caller to execute at the fire site (47e — the coin
+ * flip happens HERE, in the one walk; see the module header). Buffs are
+ * carried by REFERENCE (safe: nothing mutates a buff — `empowerEffect`
+ * deep-copies mods at apply time, and `turnGrants` is reassigned whole each
+ * turn).
  */
-export function resolveTurnGrants(daemons: readonly DaemonConfig[], rng: RNG): TurnGrants {
+export function resolveTurnGrants(
+  daemons: readonly DaemonConfig[],
+  rng: RNG,
+): TurnStartResolution {
   const grants = disabledTurnGrants();
+  const instants: InstantOp[] = [];
   for (const daemon of daemons) {
     for (const hook of turnStartHooks(daemon)) {
       // Every turnStart hook rolls its chance in order (draw-count parity
@@ -141,12 +170,59 @@ export function resolveTurnGrants(daemons: readonly DaemonConfig[], rng: RNG): T
             buff: hook.effect.buff,
           });
           break;
+        case 'gainBits':
+        case 'healPool':
+          instants.push(hook.effect);
+          break;
         default:
-          // Instant run-ops (gainBits/healPool) execute at the fire site, not
-          // in the grant fold — see the module header. Nothing to do here.
+          // A battle-domain op (`applyStatus`) on a run trigger is
+          // parse-illegal (the 47b matrix); only a bespoke in-memory daemon
+          // could author one. Skip it — battle ops compile at 47f.
           break;
       }
     }
   }
-  return grants;
+  return { grants, instants };
+}
+
+/** 47e — the filter context a run-lifecycle firing carries. `won` exists
+ *  only at `encounterEnd` (the 47b matrix pins the `won` filter there). */
+export interface RunFireContext {
+  won?: boolean;
+}
+
+/**
+ * 47e — resolve the granted instant ops for an `encounterStart` /
+ * `encounterEnd` firing (the `turnStart` instants ride `resolveTurnGrants`
+ * instead — one walk, one coin). Same ordering discipline: daemons in
+ * ownership order, rules in authored order.
+ *
+ * The FILTER gates before the chance rolls: a firing that doesn't match
+ * (`won: true` on a lost encounter) costs no draw — the filter is part of
+ * "did this hook fire at all", matching how the 47f battle-side filters
+ * will behave at the sim chokepoints. Determinism holds either way (the
+ * outcome itself is seed-determined); parity just stays easy to reason
+ * about: draws happen only for matching, coin-carrying firings.
+ */
+export function resolveInstantHooks(
+  daemons: readonly DaemonConfig[],
+  on: 'encounterStart' | 'encounterEnd',
+  ctx: RunFireContext,
+  rng: RNG,
+): InstantOp[] {
+  const instants: InstantOp[] = [];
+  for (const daemon of daemons) {
+    for (const rule of daemon.rules ?? []) {
+      if (rule.kind !== 'hook' || rule.on !== on) continue;
+      if (rule.filter?.won !== undefined && rule.filter.won !== (ctx.won ?? false)) continue;
+      if (!granted(rule.chance, rng)) continue;
+      if (rule.effect.op === 'gainBits' || rule.effect.op === 'healPool') {
+        instants.push(rule.effect);
+      }
+      // Grant ops are turnStart-only and battle ops are parse-illegal here
+      // (the 47b matrix) — anything else on these triggers is a bespoke
+      // in-memory authoring error and is skipped.
+    }
+  }
+  return instants;
 }

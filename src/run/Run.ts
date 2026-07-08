@@ -58,11 +58,15 @@ import { empowerRejection, empowerEffect } from './empower';
 import {
   rollDaemon,
   resolveTurnGrants,
+  resolveInstantHooks,
   disabledTurnGrants,
   daemonRedrawHook,
   daemonEmpowerHook,
   type TurnGrants,
+  type InstantOp,
 } from './daemon';
+import { foldRunStats, RUN_STAT_BASES, type RunStatKey, type RunStatModifier } from './runStats';
+import { ECONOMY } from '../config/economy';
 import { cloneEffect, mergeEffectInto, type StatusEffect } from '../sim/statusEffects';
 import { TriggerDispatcher } from '../sim/triggers';
 import type { RunCommand } from './Command';
@@ -233,8 +237,10 @@ export interface BattleEncounter {
  *  unknown id hard-rejects; bespoke daemons no longer round-trip, the 47
  *  shape-lock), `turnGrants.empower` becomes the per-source `empowers:
  *  EmpowerGrant[]` (the per-idol model), and `empowersUsedThisTurn` becomes
- *  a per-source array. A v25 save carries the old shapes → reject. */
-const RUN_SCHEMA_VERSION = 26;
+ *  a per-source array. A v25 save carries the old shapes → reject.
+ *  47e: bumped 26→27. The bits substrate: adds `bits` (the run's currency
+ *  balance — integer, floored at zero). A v26 save has no bits → reject. */
+const RUN_SCHEMA_VERSION = 27;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -319,6 +325,9 @@ export interface RunSnapshot {
    *  `turnGrants.empowers`). Rebuilt at every turn start; meaningful only at
    *  the pre-turn gate. */
   empowersUsedThisTurn: number[];
+  /** 47e: the run's bits balance (integer, floored at zero — the spec §Bits
+   *  substrate). Persists across the whole run like `playerHealth`. */
+  bits: number;
   /** H4: the run-wide player health pool (persists across the whole run). */
   playerHealth: number;
   /** H4: the active encounter's enemy pool (reset each encounter). */
@@ -472,6 +481,15 @@ export class Run {
    */
   empowersUsedThisTurn: number[];
   /**
+   * 47e — the run's bits balance (the currency; spec §Bits). Integer,
+   * floored at ZERO, mutated only through the private `addBits` chokepoint
+   * (which clamps + emits `run:bitsChanged`). Earns go through `gainBits`,
+   * which applies the folded `bitsGain` run-stat multiplier at the grant
+   * site; spend surfaces arrive with §50 ports. Init: `RunConfig.startingBits`
+   * override ?? `config/economy.json`. Round-trips in the Run save (v27).
+   */
+  bits: number;
+  /**
    * H4 — the run-wide player health pool. Persists across the WHOLE run (every
    * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
    * lost. Each turn it's chipped by the enemy survivors' Σ`power`. Init +
@@ -611,6 +629,10 @@ export class Run {
     this.cardsRedrawnThisTurn = 0;
     // K4 — empower budget bookkeeping; same lifecycle.
     this.empowersUsedThisTurn = [];
+    // 47e — starting bits: override ?? config/economy.json. Pure of RNG
+    // (no draw), so it doesn't perturb the fork alignment; clamped so a
+    // programmatic override can't start a run below the zero floor.
+    this.bits = Math.max(0, config?.startingBits ?? ECONOMY.startingBits);
     // H4 — the run-wide player pool starts full; the per-encounter state
     // (enemyHealth/turnIndex/selectedEncounter) is set when an encounter
     // actually begins (`beginEncounter`).
@@ -805,6 +827,10 @@ export class Run {
     // future daemon can read `encounterMap`.
     this.resetEncounterEffects();
     this.fireTrigger('encounterStart', { hop: this.currentHop, nodeId: this.currentNodeId });
+    // 47e — daemon `encounterStart` instant hooks fire alongside the K1
+    // trigger (no launch daemon authors one — byte-identical until content
+    // does; a chance-gated hook here would draw off `daemonRng`).
+    this.executeInstantOps(resolveInstantHooks(this.daemons, 'encounterStart', {}, this.daemonRng));
     this.startNextTurn();
   }
 
@@ -904,8 +930,14 @@ export class Run {
     // `daemonRng` exactly HERE, once per turn, on both the gated + headless
     // paths (path-independent draw count). 47d: the per-source empower
     // counters rebuild to match this turn's grant list.
-    this.turnGrants = resolveTurnGrants(this.daemons, this.daemonRng);
+    const resolution = resolveTurnGrants(this.daemons, this.daemonRng);
+    this.turnGrants = resolution.grants;
     this.empowersUsedThisTurn = this.turnGrants.empowers.map(() => 0);
+    // 47e — the walk's granted instant ops (gainBits/healPool) execute NOW,
+    // at the fire site — their coins already flipped in the walk above (one
+    // walk, one draw; never re-resolve). Applied before the `turn:starting`
+    // emit so the gate screen reads post-effect state.
+    this.executeInstantOps(resolution.instants);
     // K1 — `turnStart` fires before the turn's battle is built (on both the
     // gated + headless paths), so a daemon's encounter effect added here is
     // seeded onto this turn's hand in `beginTurn`. No-op at the default.
@@ -965,6 +997,67 @@ export class Run {
   private drawTurnHand(): void {
     this.discardPile.push(...this.hand);
     this.hand = this.drawHand();
+  }
+
+  /**
+   * 47e — the effective run stats: `RUN_STAT_BASES` folded with every owned
+   * daemon's `modifier` rules, derived AT CALL TIME (derive-don't-cache —
+   * ownership changes, §49 packet modifiers, and future removal all stay
+   * correct for free). Today's only consumer is `gainBits` (`bitsGain`);
+   * §49's cache reads `cacheSize` from here.
+   */
+  private effectiveRunStats(): Readonly<Record<RunStatKey, number>> {
+    const mods: RunStatModifier[] = [];
+    for (const daemon of this.daemons) {
+      for (const rule of daemon.rules ?? []) {
+        if (rule.kind === 'modifier') mods.push(rule);
+      }
+    }
+    return foldRunStats(RUN_STAT_BASES, mods);
+  }
+
+  /**
+   * 47e — earn bits: `base` × the folded `bitsGain` multiplier, ROUNDED to
+   * an integer at the grant site (the runStats.ts contract — the fold itself
+   * never rounds), then through the floor-at-zero chokepoint. Every earn
+   * surface routes here (daemon hooks now; §48 reward settles + the 47f
+   * battle-tally settle next), so a bits-gain modifier daemon applies
+   * uniformly without per-surface bookkeeping.
+   */
+  gainBits(base: number): void {
+    this.addBits(Math.round(base * this.effectiveRunStats().bitsGain));
+  }
+
+  /**
+   * 47e — the single bits mutation chokepoint: clamps the balance at ZERO
+   * (spec §Bits — integer, floor at zero) and emits `run:bitsChanged` with
+   * the post-clamp applied delta. Emits only on a real change, so a clamped
+   * no-op spend or a ×0 grant stays silent. §50's spend surfaces will call
+   * this with negative deltas.
+   */
+  private addBits(delta: number): void {
+    const next = Math.max(0, this.bits + delta);
+    if (next === this.bits) return;
+    const applied = next - this.bits;
+    this.bits = next;
+    this.bus.emit('run:bitsChanged', { bits: this.bits, delta: applied });
+  }
+
+  /**
+   * 47e — execute a firing's resolved instant run-ops at the fire site:
+   * `gainBits` through the fold + chokepoint; `healPool` onto the run-wide
+   * player pool, capped at max (the rest-node discipline). The resolution
+   * (coin flips, filters) already happened in the daemon walk — this only
+   * applies effects, so it draws nothing.
+   */
+  private executeInstantOps(ops: readonly InstantOp[]): void {
+    for (const op of ops) {
+      if (op.op === 'gainBits') {
+        this.gainBits(op.amount);
+      } else {
+        this.playerHealth = Math.min(HEALTH.playerHealthMax, this.playerHealth + op.amount);
+      }
+    }
   }
 
   /**
@@ -1398,6 +1491,13 @@ export class Run {
    * the recruit offer's fork is independent.
    */
   private finishEncounter(outcome: 'win' | 'defeat'): void {
+    // 47e — daemon `encounterEnd` instant hooks fire FIRST, on both
+    // outcomes, with the outcome as the `won` filter context (the 47b
+    // matrix pins `won` to this trigger). A defeat-path heal can leave a
+    // lost run with a positive pool — harmless, the run is already over.
+    this.executeInstantOps(
+      resolveInstantHooks(this.daemons, 'encounterEnd', { won: outcome === 'win' }, this.daemonRng),
+    );
     // K3.5 — the battlefield is encounter-scoped; drop it with the encounter.
     this.encounterMap = null;
     // U3 — the selected encounter + its wave cursor are encounter-scoped too.
@@ -1754,6 +1854,7 @@ export class Run {
       redrawsUsedThisTurn: this.redrawsUsedThisTurn,
       cardsRedrawnThisTurn: this.cardsRedrawnThisTurn,
       empowersUsedThisTurn: this.empowersUsedThisTurn.slice(),
+      bits: this.bits,
       playerHealth: this.playerHealth,
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
@@ -1839,6 +1940,9 @@ export class Run {
     m.redrawsUsedThisTurn = snap.redrawsUsedThisTurn;
     m.cardsRedrawnThisTurn = snap.cardsRedrawnThisTurn;
     m.empowersUsedThisTurn = snap.empowersUsedThisTurn.slice();
+    // 47e — re-clamp on load: the zero floor is an invariant, not a trust
+    // in the wire image (a hand-edited save can't restore a negative balance).
+    m.bits = Math.max(0, snap.bits);
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;

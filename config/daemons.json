@@ -78,6 +78,19 @@
           }
         }
       ]
+    },
+    {
+      "id": "moneta",
+      "name": "Idol of Moneta",
+      "description": "All bits earned are increased by 20%.",
+      "rules": [
+        {
+          "kind": "modifier",
+          "stat": "bitsGain",
+          "op": "mult",
+          "value": 1.2
+        }
+      ]
     }
   ]
 }

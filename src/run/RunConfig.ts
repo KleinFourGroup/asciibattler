@@ -100,6 +100,13 @@ export interface RunConfig {
    */
   readonly waveSizeMultiplier?: number;
   readonly levelBudgetMultiplier?: number;
+  /**
+   * 47e — override the run's starting bits balance (the spec §Bits testing
+   * override, for dev / fuzz / playtest runs). Unset → the
+   * `config/economy.json#startingBits` default. Pure of RNG, clamped at the
+   * zero floor by the Run constructor. URL form: `bits=100`.
+   */
+  readonly startingBits?: number;
 }
 
 /**
@@ -113,6 +120,7 @@ export const RUN_CONFIG_PARAMS = {
   layout: 'layout',
   width: 'width',
   daemon: 'daemon',
+  bits: 'bits',
 } as const;
 
 type MutableRunConfig = { -readonly [K in keyof RunConfig]: RunConfig[K] };
@@ -195,6 +203,10 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
   const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));
   if (daemon !== undefined) config.daemon = daemon;
+  // 47e — a nonnegative integer (0 is meaningful: force a broke run even if
+  // the config default ever moves above zero).
+  const startingBits = parseIntStrict(params.get(RUN_CONFIG_PARAMS.bits));
+  if (startingBits !== undefined && startingBits >= 0) config.startingBits = startingBits;
   return config;
 }
 
@@ -237,6 +249,9 @@ export function runConfigToQueryString(config: RunConfig): string {
     // A bespoke (non-catalog) daemon round-trips by id only if the catalog
     // resolves it — acceptable: the URL form is a dev/playtest convenience.
     params.set(RUN_CONFIG_PARAMS.daemon, config.daemon === null ? 'none' : config.daemon.id);
+  }
+  if (config.startingBits !== undefined) {
+    params.set(RUN_CONFIG_PARAMS.bits, String(config.startingBits));
   }
   return params.toString();
 }

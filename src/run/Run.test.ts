@@ -20,6 +20,8 @@ import { DECK } from '../config/deck';
 import { EMPOWER } from '../config/empower';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
 import { daemonRedrawHook, daemonEmpowerHook } from './daemon';
+import { RUN_STAT_BASES } from './runStats';
+import { ECONOMY } from '../config/economy';
 import { avgTeamLevel } from './enemyBudget';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 
@@ -1940,6 +1942,114 @@ describe('Run', () => {
       expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
         /unsupported schema version/,
       );
+    });
+  });
+
+  describe('bits (47e — the substrate)', () => {
+    /** A bespoke daemon paying bits at every turn start (fire-site execution). */
+    const TURN_BITS: DaemonConfig = {
+      id: 'test-turn-bits',
+      name: 'Test Turn Bits',
+      description: '+5 bits every turn',
+      rules: [{ kind: 'hook', on: 'turnStart', effect: { op: 'gainBits', amount: 5 } }],
+    };
+    /** A bespoke win-bounty daemon (`won`-filtered encounterEnd). */
+    const WIN_BOUNTY: DaemonConfig = {
+      id: 'test-win-bounty',
+      name: 'Test Win Bounty',
+      description: '+7 bits on a won encounter',
+      rules: [
+        {
+          kind: 'hook',
+          on: 'encounterEnd',
+          filter: { won: true },
+          effect: { op: 'gainBits', amount: 7 },
+        },
+      ],
+    };
+    /** The shipped bitsGain multiplier (moneta's rule) — derived, never hardcoded. */
+    const monetaMult = (): number => {
+      const rule = daemonById('moneta')!.rules![0]!;
+      if (rule.kind !== 'modifier') throw new Error('moneta rule shape changed');
+      return rule.value;
+    };
+
+    it('starts at the config default; a RunConfig override wins; negatives clamp to the floor', () => {
+      expect(freshRunWithBus(1).run.bits).toBe(ECONOMY.startingBits);
+      expect(freshRunWithBus(1, { startingBits: 25 }).run.bits).toBe(25);
+      expect(freshRunWithBus(1, { startingBits: -10 }).run.bits).toBe(0);
+    });
+
+    it('the bits override does not perturb any RNG stream (the G1 contract)', () => {
+      const a = freshRunWithBus(9).run;
+      const b = freshRunWithBus(9, { startingBits: 50 }).run;
+      expect(b.nodeMap).toEqual(a.nodeMap);
+      expect(b.team).toEqual(a.team);
+      expect(b.daemons.map((d) => d.id)).toEqual(a.daemons.map((d) => d.id));
+    });
+
+    it('gainBits adds the neutral-fold amount when no modifier daemon is owned', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.gainBits(10);
+      expect(run.bits).toBe(Math.round(10 * RUN_STAT_BASES.bitsGain));
+    });
+
+    it("gainBits applies moneta's bitsGain fold, ROUNDING at the grant site", () => {
+      const { run } = freshRunWithBus(1, { daemon: daemonById('moneta')! });
+      run.gainBits(10);
+      const first = Math.round(10 * RUN_STAT_BASES.bitsGain * monetaMult());
+      expect(run.bits).toBe(first);
+      // A fractional product rounds per grant (3 × 1.2 = 3.6 → 4 at the
+      // shipped value) — the fold itself never rounds (runStats.ts).
+      run.gainBits(3);
+      expect(run.bits).toBe(first + Math.round(3 * RUN_STAT_BASES.bitsGain * monetaMult()));
+    });
+
+    it('emits run:bitsChanged with the new balance + applied delta, only on a real change', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      const events: Array<{ bits: number; delta: number }> = [];
+      bus.on('run:bitsChanged', (e) => events.push(e));
+      run.gainBits(10);
+      run.gainBits(0); // rounds to a zero delta → silent
+      expect(events).toEqual([{ bits: 10, delta: 10 }]);
+    });
+
+    it('a turnStart gainBits hook pays at EVERY turn start (the fire-site execution)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: TURN_BITS });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // turn 1
+      expect(run.bits).toBe(5);
+      chipTurn(bus, { player: 0, enemy: 0 }); // ongoing → turn 2 starts
+      expect(run.bits).toBe(10);
+    });
+
+    it('an encounterEnd win-bounty pays on a win, not on a loss (the won filter)', () => {
+      const won = freshRunWithBus(1, { daemon: WIN_BOUNTY });
+      won.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(won.run) });
+      winEncounter(won.bus);
+      expect(won.run.bits).toBe(7);
+
+      const lost = freshRunWithBus(1, { daemon: WIN_BOUNTY });
+      lost.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(lost.run) });
+      loseEncounter(lost.bus);
+      expect(lost.run.bits).toBe(0);
+      expect(lost.run.phase).toBe('defeat');
+    });
+
+    it('the fold applies to hook earns too (moneta stacked via addDaemon)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: WIN_BOUNTY });
+      run.addDaemon(daemonById('moneta')!);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      winEncounter(bus);
+      expect(run.bits).toBe(Math.round(7 * RUN_STAT_BASES.bitsGain * monetaMult()));
+    });
+
+    it('round-trips bits in the save; a negative wire value re-clamps to the floor', () => {
+      const { run } = freshRunWithBus(1, { startingBits: 33 });
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      expect(wire.bits).toBe(33);
+      expect(Run.fromJSON(wire, new EventBus<GameEvents>()).bits).toBe(33);
+      const tampered = { ...wire, bits: -5 };
+      expect(Run.fromJSON(tampered, new EventBus<GameEvents>()).bits).toBe(0);
     });
   });
 

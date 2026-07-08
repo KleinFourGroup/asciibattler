@@ -80,6 +80,8 @@ function printHelp(): void {
       '  --roster=LIST    archetype[:level],...  e.g. rogue:3,healer:2,mercenary',
       '  --layout=ID      force every battle onto a named layout',
       '  --width=N        middle-hop max width',
+      '  --daemon=ID      force the run daemon (a catalog id, or `none` = daemon-less)',
+      '  --bits=N         starting bits balance (nonnegative; default config/economy.json)',
       '  --strategy=NAME  headless drive strategy from the G5 menu (default: pure-random);',
       '                   e.g. greedy | recruit:mage | stat:constitution | path:rest',
       '  --no-run         print the launch URL only; skip the headless run',

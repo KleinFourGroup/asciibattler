@@ -60,6 +60,7 @@ src/
     sectorMap.ts             #   T2: the sector-selection meta-DAG schema (nodes hold sector lists; sources/sinks; acyclic, non-sink-has-outgoing guards)
     encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement moved to the sector pool; V1: catalog ships Brigands/Highwaymen/Deserters
     selection.ts             #   V1: the SELECTION policy (strategy: encounterFirst|layoutFirst) — config/selection.json
+    economy.ts               #   47e: the economy substrate (startingBits) — config/economy.json; grows with Cluster 3
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
@@ -161,16 +162,22 @@ src/
                              # seeds enemyHealth from its healthPool + resets waveCursor; beginTurn resolves the per-turn
                              # enemy team from the encounter's wave grammar (waveForTurn→resolveWave) NOT rollEnemyWave;
                              # encounterBudget retired; encounter.name → HUD enemy pane. RUN_SCHEMA_VERSION 21
+                             # 47c–e: daemons re-authored to rules + multi-daemon by id + the bits substrate —
+                             # bits (floor-at-zero via the addBits chokepoint → run:bitsChanged) + gainBits (the
+                             # bitsGain fold at the grant site) + instant-op execution at the run trigger fire
+                             # sites (turnStart via resolveTurnGrants; encounterStart/encounterEnd via
+                             # resolveInstantHooks in beginEncounter/finishEncounter). Live version: HANDOFF 🧭
     redraw.ts                # K3: pure redraw rules — redrawRejection / redrawAvailability (config injected, both L modes provable)
     empower.ts               # K4: pure empower rules — empowerRejection / empowerAvailability / empowerEffect (config injected)
-    daemon.ts                # L1→47d: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
+    daemon.ts                # L1→47e: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
                              # (owned daemons' turnStart grant hooks → ONE summed RedrawConfig + PER-SOURCE
-                             # EmpowerGrant[]; ownership-then-rule-order draws, chance draws only when 0<c<1)
-                             # + daemonRedrawHook/daemonEmpowerHook lookups
+                             # EmpowerGrant[] + this turn's granted InstantOps; ownership-then-rule-order draws,
+                             # chance draws only when 0<c<1) + resolveInstantHooks (encounterStart/encounterEnd,
+                             # filter-gates-before-chance) + daemonRedrawHook/daemonEmpowerHook lookups
     runStats.ts              # 47a: the run-stat vocabulary — RunStatKey (bitsGain, cacheSize) + foldRunStats
                              # (foldEffects mirrored: adds→mults, identity-on-empty; NO rounding — read site rounds)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
-    RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>)
+    RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
                              # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))
     encounters/
@@ -440,6 +447,8 @@ action:phase            { unitId; actionId; phase; targetId?; targetCell? }     
 run:started             { seed: number }
 run:victory             { }
 run:defeated            { }
+run:bitsChanged         { bits: number; delta: number }                             # 47e: the balance moved (bits = new total, delta = post-clamp change); emitted only on a real change from Run.addBits; the §48 overlay's feed
+
 recruit:offered         { units: UnitTemplate[] }
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
 objective:set           { team; objective: TeamObjective }                          # O1: a team set/replaced its steering objective (marker tracks player only)

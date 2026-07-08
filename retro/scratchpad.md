@@ -71,3 +71,31 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   §49's fire-UX round will likely rework the whole badge surface — polish
   before a redesign is throwaway. The sizing conversation itself is what
   made the parking decision easy for the user to co-sign.
+
+## First fresh-session resumption under the planning stack (2026-07-08, into 47e)
+
+- **The protocol's first cold pickup worked**: HANDOFF 🧭 Cursor → ROADMAP §47
+  → WORKLOG §47 → code, ~8 reads to a confident build plan, no conflicting
+  statuses anywhere. Each doc paid off with DISTINCT content (the routing
+  table doing its job): the Cursor gave the step + scope in read #1, the
+  roadmap gave locked decisions + scope guards, the worklog gave the why.
+- **The single highest-value orientation artifact was a deferral note**: the
+  47c worklog "engine notes" paragraph ("non-grant turnStart ops are
+  deliberately NOT resolved in the grant fold — they execute at the fire site
+  (bits 47e)") + the matching code comment in daemon.ts. Without it, a fresh
+  session would plausibly have designed a second hook walk that DOUBLE-DRAWS
+  the chance flip and broken byte-parity. Worth promoting as a norm: **when a
+  step deliberately defers work to a later step, write the landing note (what
+  was left, where it lands, what invariant the landing must preserve) in the
+  deferring step's worklog entry AND a code comment at the seam.**
+- **Residual triangulation cost**: 47e's exact boundary (does healPool ride?
+  does the encounterEnd fire site land here?) had to be inferred across three
+  artifacts rather than read from one. Cheap to fix at phase kickoff: when a
+  cut step's one-liner names an op/mechanism, spell out the edge cases it
+  owns vs. defers.
+- **Content-landing side effects are invisible at shape-lock**: "example
+  daemon #3 authored + tested" didn't decide WHERE it lands, and catalog
+  membership turned out to carry two real consequences (run-start roll
+  dilution — a 1-in-5 chance of a no-pre-turn-tools run — and a
+  `--daemon=random` fuzz re-baseline). Resolved live (user: in the catalog).
+  Note for future cuts: "author content X" should say catalog vs. fixture.

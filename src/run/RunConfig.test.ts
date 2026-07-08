@@ -106,4 +106,21 @@ describe('RunConfig parsing', () => {
   it('parseRunConfigFromURL strips a leading "?" (location.search shape)', () => {
     expect(parseRunConfigFromURL('?hops=2&seed=9')).toEqual({ seed: 9, hopCount: 2 });
   });
+
+  it('parses `bits=` as a nonnegative integer, 0 included (47e)', () => {
+    expect(cfg('bits=100').startingBits).toBe(100);
+    expect(cfg('bits=0').startingBits).toBe(0);
+  });
+
+  it('drops a negative / non-integer / absent bits override (47e)', () => {
+    expect(cfg('bits=-5').startingBits).toBeUndefined();
+    expect(cfg('bits=2.5').startingBits).toBeUndefined();
+    expect(cfg('bits=abc').startingBits).toBeUndefined();
+    expect(cfg('').startingBits).toBeUndefined();
+  });
+
+  it('round-trips the bits override through the query string (47e)', () => {
+    const original = cfg('bits=42&seed=7');
+    expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
+  });
 });

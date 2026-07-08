@@ -229,3 +229,56 @@ the grant fold — they execute at the trigger fire site once their targets
 exist (47e); grant hooks ACCUMULATE (budgets sum), the fold 47d's
 multi-daemon leans on, with the multi-BUFF presentation explicitly a 47d
 decision (last grant's buff wins until then).
+
+### 47e — the bits substrate (2026-07-08)
+
+The first fresh-session resumption under the planning stack (reorientation
+verdict → retro/scratchpad.md). Two calls surfaced pre-build, resolved in
+one turn:
+
+- **Moneta ships IN the catalog (user: "totally fine for now").** The
+  consequences accepted with it: the run-start roll pool grows to five, so
+  ~1 in 5 fresh runs starts with a pure-passive daemon granting NO pre-turn
+  tools (strictly the daemon-less experience +20% bits — invisible until
+  §48's overlay); and the `--daemon=random` fuzz arm re-baselines (pick
+  over 5). §48's reward tables diversify acquisition within this cluster,
+  which is what made "accept the variance now" cheap. The name: **Idol of
+  Moneta** — the Juno Moneta mint-temple epithet ("money" descends from
+  it); lay reading "money idol" stands alone per the naming principle.
+- **`healPool` rides the same instant-op executor** (default I proposed,
+  user co-signed): its target (`playerHealth`) has existed since H4, and a
+  parse-legal authored hook silently no-op'ing is a trap. Example daemon #4
+  stays unauthored — only the machinery covers it.
+
+Build shape: `run.bits` mutated only through the private `addBits`
+chokepoint (floor-at-zero + `run:bitsChanged {bits, delta}`, emit only on
+real change); `gainBits(base)` applies the `bitsGain` fold derived AT CALL
+TIME from owned daemons' modifier rules (derive-don't-cache; the
+`effectiveRunStats()` seam §49's `cacheSize` will reuse). Instant-op
+execution landed at all three run-trigger fire sites: `turnStart` rides
+`resolveTurnGrants`' one walk (the 47c parity landing pad — its coins
+already flipped there; **gotcha #115** pins the never-double-draw rule),
+`encounterStart`/`encounterEnd` via the new `resolveInstantHooks` in
+`beginEncounter`/`finishEncounter`, with `encounterEnd` carrying the `won`
+filter context. **Filter gates BEFORE chance** (a `won: true` hook on a
+loss costs no draw) — chosen to match how 47f's battle-side filters will
+behave at the sim chokepoints; documented at the function + gotcha #115.
+`RunConfig.startingBits` + `bits=` URL/CLI form (the run-config CLI help
+also gained the missing `--daemon` line, pre-existing drift). Run
+v26→v27 (adds `bits`; fromJSON re-clamps the floor).
+
+Session note: the pre-47e fuzz-arm baseline capture was first launched in
+the BACKGROUND and then raced my own edits (the CLI compiles the live
+tree — arms 3–6 crashed mid-capture on the half-edited engine). Recaptured
+from a detached git worktree pinned at HEAD with a node_modules junction —
+the zero-risk shape for before/after oracles from a dirty tree; worth
+keeping as the standard pattern.
+
+Oracle verdict (6 arms × `--count=6`, worktree-pre vs post `summary.csv`
+diff): **mars / minerva / mercury / janus / none byte-IDENTICAL; random
+DIFFERS exactly as predicted** — same seeds, same strategies, only the
+run-start roll lands differently over the 5-entry catalog (moneta appears
+from seed 2). The random arm re-baseline is the accepted catalog-growth
+cost, not an engine regression — the five forced arms prove the engine
+surgery (instant-op execution, the resolveTurnGrants return change, the
+encounterEnd fire site) changed nothing for existing content.

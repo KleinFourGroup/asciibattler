@@ -331,6 +331,17 @@ export interface GameEvents extends Record<string, unknown> {
   'run:victory': Record<string, never>;
   'run:defeated': Record<string, never>;
 
+  /**
+   * 47e — the run's bits balance changed. `bits` is the new balance
+   * (authoritative — a consumer never needs to accumulate deltas); `delta`
+   * is the applied signed change AFTER the floor-at-zero clamp. Emitted
+   * only on a real change, from the single `Run.addBits` chokepoint (earns
+   * via `Run.gainBits` today — daemon hooks + the coming §48 reward
+   * settles; spends arrive with §50 ports). The §48 persistent top-left
+   * overlay is the intended consumer; no sim/run subscriber exists.
+   */
+  'run:bitsChanged': { bits: number; delta: number };
+
   'recruit:offered': { units: UnitTemplate[] };
 
   /**

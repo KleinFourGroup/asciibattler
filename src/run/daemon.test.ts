@@ -2,9 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   rollDaemon,
   resolveTurnGrants,
+  resolveInstantHooks,
   disabledTurnGrants,
   daemonRedrawHook,
   daemonEmpowerHook,
+  type TurnGrants,
 } from './daemon';
 import { DAEMONS, daemonById, type DaemonConfig, type HookRule } from '../config/daemons';
 import { DECK } from '../config/deck';
@@ -75,11 +77,16 @@ describe('rollDaemon', () => {
   });
 });
 
+/** 47e — the all-disabled resolution (grants baseline, no instants). */
+function disabledResolution(): { grants: TurnGrants; instants: never[] } {
+  return { grants: disabledTurnGrants(), instants: [] };
+}
+
 describe('resolveTurnGrants', () => {
   it('no daemons → nothing granted, no RNG draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    expect(resolveTurnGrants([], rng)).toEqual(disabledTurnGrants());
+    expect(resolveTurnGrants([], rng)).toEqual(disabledResolution());
     expect(rng.toJSON()).toEqual(before);
   });
 
@@ -87,14 +94,14 @@ describe('resolveTurnGrants', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
     const inert: DaemonConfig = { id: 'inert', name: 'Inert', description: 'no rules' };
-    expect(resolveTurnGrants([inert], rng)).toEqual(disabledTurnGrants());
+    expect(resolveTurnGrants([inert], rng)).toEqual(disabledResolution());
     expect(rng.toJSON()).toEqual(before);
   });
 
   it('a chance-less hook is granted with the authored knobs and costs no draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    const grants = resolveTurnGrants([SURE_BOTH], rng);
+    const { grants } = resolveTurnGrants([SURE_BOTH], rng);
     const [redraw, empower] = SURE_BOTH.rules! as [HookRule, HookRule];
     expect(grants.redraw).toEqual({
       enabled: true,
@@ -114,14 +121,14 @@ describe('resolveTurnGrants', () => {
   it('a chance-0 hook is denied and costs no draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    expect(resolveTurnGrants([NEVER], rng).redraw.enabled).toBe(false);
+    expect(resolveTurnGrants([NEVER], rng).grants.redraw.enabled).toBe(false);
     expect(rng.toJSON()).toEqual(before);
   });
 
   it('an ungranted kind resolves to the disabled baseline', () => {
     // COIN_REDRAW authors no empower hook at all — empowers must read empty
     // whatever the coin does.
-    const grants = resolveTurnGrants([COIN_REDRAW], new RNG(7));
+    const { grants } = resolveTurnGrants([COIN_REDRAW], new RNG(7));
     expect(grants.empowers).toEqual([]);
   });
 
@@ -130,10 +137,10 @@ describe('resolveTurnGrants', () => {
     for (let seed = 0; seed < 50; seed++) {
       const rng = new RNG(seed);
       const replay = new RNG(seed);
-      const flip = resolveTurnGrants([COIN_REDRAW], rng).redraw.enabled;
+      const flip = resolveTurnGrants([COIN_REDRAW], rng).grants.redraw.enabled;
       // Same stream state → same outcome (the determinism the save relies
       // on), and the stream advanced by exactly the one flip draw.
-      expect(resolveTurnGrants([COIN_REDRAW], replay).redraw.enabled).toBe(flip);
+      expect(resolveTurnGrants([COIN_REDRAW], replay).grants.redraw.enabled).toBe(flip);
       expect(rng.toJSON()).toEqual(replay.toJSON());
       replay.next();
       outcomes.add(flip);
@@ -147,7 +154,7 @@ describe('resolveTurnGrants', () => {
       rules: [redrawHook(0.5, 6), empowerHook(0.5)],
     };
     for (let seed = 0; seed < 20; seed++) {
-      const grants = resolveTurnGrants([both], new RNG(seed));
+      const { grants } = resolveTurnGrants([both], new RNG(seed));
       const manual = new RNG(seed);
       const redrawFlip = manual.next() < 0.5;
       const empowerFlip = manual.next() < 0.5;
@@ -165,7 +172,7 @@ describe('resolveTurnGrants', () => {
       rules: [empowerHook(0.5)],
     };
     for (let seed = 0; seed < 20; seed++) {
-      const grants = resolveTurnGrants([coinA, coinB], new RNG(seed));
+      const { grants } = resolveTurnGrants([coinA, coinB], new RNG(seed));
       const manual = new RNG(seed);
       const aFlip = manual.next() < 0.5;
       const bFlip = manual.next() < 0.5;
@@ -181,7 +188,7 @@ describe('resolveTurnGrants', () => {
       description: 'two redraw hooks',
       rules: [redrawHook(undefined, 2), redrawHook(undefined, 6)],
     };
-    const grants = resolveTurnGrants([stacked], new RNG(7));
+    const { grants } = resolveTurnGrants([stacked], new RNG(7));
     expect(grants.redraw).toEqual({ enabled: true, redrawsPerTurn: 2, maxCardsPerTurn: 8 });
   });
 
@@ -198,12 +205,12 @@ describe('resolveTurnGrants', () => {
       description: 'empower b',
       rules: [empowerHook(undefined)],
     };
-    const grants = resolveTurnGrants([marsLike, minervaLike], new RNG(7));
+    const { grants } = resolveTurnGrants([marsLike, minervaLike], new RNG(7));
     expect(grants.empowers.map((g) => g.daemonId)).toEqual(['idol-a', 'idol-b']);
     expect(grants.empowers.map((g) => g.empowersPerTurn)).toEqual([1, 1]);
   });
 
-  it('non-grant turnStart ops are skipped here (fire-site execution, not the grant fold)', () => {
+  it('granted instant ops collect into `instants` in walk order, still costing no draw (47e)', () => {
     const withInstant: DaemonConfig = {
       id: 'test-instant',
       name: 'Test Instant',
@@ -211,15 +218,102 @@ describe('resolveTurnGrants', () => {
       rules: [
         { kind: 'hook', on: 'turnStart', effect: { op: 'gainBits', amount: 5 } },
         redrawHook(undefined, 6),
+        { kind: 'hook', on: 'turnStart', effect: { op: 'healPool', amount: 3 } },
       ],
     };
     const rng = new RNG(7);
     const before = rng.toJSON();
-    const grants = resolveTurnGrants([withInstant], rng);
+    const { grants, instants } = resolveTurnGrants([withInstant], rng);
     expect(grants.redraw.enabled).toBe(true);
     expect(grants.empowers).toEqual([]);
-    // The chance-less gainBits hook still costs no draw.
+    expect(instants).toEqual([
+      { op: 'gainBits', amount: 5 },
+      { op: 'healPool', amount: 3 },
+    ]);
+    // The chance-less instant hooks still cost no draw.
     expect(rng.toJSON()).toEqual(before);
+  });
+
+  it('a denied coin-flip instant op stays OUT of `instants` (47e)', () => {
+    const coinBits: DaemonConfig = {
+      id: 'test-coin-bits',
+      name: 'Test Coin Bits',
+      description: 'coin-flip gainBits',
+      rules: [{ kind: 'hook', on: 'turnStart', chance: 0.5, effect: { op: 'gainBits', amount: 5 } }],
+    };
+    for (let seed = 0; seed < 20; seed++) {
+      const { instants } = resolveTurnGrants([coinBits], new RNG(seed));
+      const flip = new RNG(seed).next() < 0.5;
+      expect(instants.length === 1).toBe(flip);
+    }
+  });
+});
+
+describe('resolveInstantHooks (47e — the encounterStart/encounterEnd fire sites)', () => {
+  const endBits = (
+    filter?: { won: boolean },
+    chance?: number,
+  ): DaemonConfig => ({
+    id: 'test-end-bits',
+    name: 'Test End Bits',
+    description: 'bits at encounter end',
+    rules: [
+      {
+        kind: 'hook',
+        on: 'encounterEnd',
+        ...(chance !== undefined ? { chance } : {}),
+        ...(filter !== undefined ? { filter } : {}),
+        effect: { op: 'gainBits', amount: 5 },
+      },
+    ],
+  });
+
+  it('no daemons / no matching trigger → empty, no draw', () => {
+    const rng = new RNG(7);
+    const before = rng.toJSON();
+    expect(resolveInstantHooks([], 'encounterEnd', { won: true }, rng)).toEqual([]);
+    // A turnStart-only daemon has nothing at encounterEnd.
+    expect(resolveInstantHooks([SURE_BOTH], 'encounterEnd', { won: true }, rng)).toEqual([]);
+    expect(rng.toJSON()).toEqual(before);
+  });
+
+  it("the `won` filter gates the firing — and a filtered-out firing costs NO draw", () => {
+    const daemon = endBits({ won: true }, 0.5);
+    const rng = new RNG(7);
+    const before = rng.toJSON();
+    // Lost encounter: filter fails → no draw, no op (the coin never flips).
+    expect(resolveInstantHooks([daemon], 'encounterEnd', { won: false }, rng)).toEqual([]);
+    expect(rng.toJSON()).toEqual(before);
+    // Won encounter: filter passes → the coin flips (one draw).
+    resolveInstantHooks([daemon], 'encounterEnd', { won: true }, rng);
+    expect(rng.toJSON()).not.toEqual(before);
+  });
+
+  it('an unfiltered hook fires on both outcomes; a chance-less one costs no draw', () => {
+    const daemon = endBits();
+    const rng = new RNG(7);
+    const before = rng.toJSON();
+    expect(resolveInstantHooks([daemon], 'encounterEnd', { won: true }, rng)).toEqual([
+      { op: 'gainBits', amount: 5 },
+    ]);
+    expect(resolveInstantHooks([daemon], 'encounterEnd', { won: false }, rng)).toEqual([
+      { op: 'gainBits', amount: 5 },
+    ]);
+    expect(rng.toJSON()).toEqual(before);
+  });
+
+  it('encounterStart hooks resolve at their own trigger only', () => {
+    const startHeal: DaemonConfig = {
+      id: 'test-start-heal',
+      name: 'Test Start Heal',
+      description: 'heal at encounter start',
+      rules: [{ kind: 'hook', on: 'encounterStart', effect: { op: 'healPool', amount: 2 } }],
+    };
+    const rng = new RNG(7);
+    expect(resolveInstantHooks([startHeal], 'encounterStart', {}, rng)).toEqual([
+      { op: 'healPool', amount: 2 },
+    ]);
+    expect(resolveInstantHooks([startHeal], 'encounterEnd', { won: true }, rng)).toEqual([]);
   });
 });
 
@@ -235,8 +329,30 @@ describe('daemonRedrawHook / daemonEmpowerHook (the authored-hook lookups)', () 
 });
 
 describe('the shipped catalog (config/daemons.json) — design-shape pins', () => {
-  it('ships the four idols of the L design round', () => {
-    expect(DAEMONS.map((d) => d.id).sort()).toEqual(['janus', 'mars', 'mercury', 'minerva']);
+  it('ships the four idols of the L design round plus 47e Moneta', () => {
+    expect(DAEMONS.map((d) => d.id).sort()).toEqual([
+      'janus',
+      'mars',
+      'mercury',
+      'minerva',
+      'moneta',
+    ]);
+  });
+
+  it('moneta is a pure passive: one bitsGain mult > 1, no hooks (example daemon #3)', () => {
+    const moneta = daemonById('moneta')!;
+    expect(moneta.rules).toHaveLength(1);
+    const rule = moneta.rules![0]!;
+    expect(rule.kind).toBe('modifier');
+    if (rule.kind === 'modifier') {
+      expect(rule.stat).toBe('bitsGain');
+      expect(rule.op).toBe('mult');
+      expect(rule.value).toBeGreaterThan(1);
+    }
+    // A pure passive grants NO pre-turn tools — a moneta-only run has
+    // neither redraw nor empower (the catalog-inclusion call, 47e).
+    expect(daemonRedrawHook(moneta)).toBeUndefined();
+    expect(daemonEmpowerHook(moneta)).toBeUndefined();
   });
 
   it('mars and minerva are empower-only; mercury and janus are redraw-only', () => {

@@ -337,3 +337,39 @@ surgery — the World constructor-adjacent install, the trigger handlers,
 the tally plumbing, the `battle:ended` payload growth — changed nothing
 for existing content (a non-battle-hook daemon installs zero rules, and
 an empty install is a structural no-op).
+
+### 47g — the exit sweep + phase close (2026-07-08)
+
+**Full fuzz pass:** 20 seeds × 2 strategies = 40 runs, **0 hangs**, win
+rates in the usual band (pure-random 35% / greedy 10%). The natural
+daemon roll exercised ALL SEVEN idols — the three economy idols drove
+real runs end-to-end (fortuna 4 runs, laverna 4, moneta 6; fortuna's 50%
+and laverna's 0% are 4-run noise — §52's economy balance pass owns the
+real read).
+
+**Exit criteria — all four MET:**
+
+1. *Idols behavior-equivalent under the new schema* ✅ — the 47c AND 47d
+   live oracles (byte-identical ×6 arms each), plus the forced arms
+   holding through 47e/f.
+2. *Five example daemons authorable, ≥3 authored + tested, one per matrix
+   quadrant* ✅ — laverna (battle→run tally) / fortuna (battle→battle
+   status) / moneta (passive modifier) shipped + design-pinned; #4
+   (encounterEnd won → healPool) and #5 (+cacheSize) pinned authorable by
+   the new §47-exit-receipt schema test (daemons.test.ts).
+3. *Multi-daemon ownership round-trips by id* ✅ — 47d (unknown-id
+   hard-reject pinned; bespoke = in-memory only).
+4. *`TurnGates` + legacy gate fields GONE* ✅ — 47c deletion; the 47g
+   sweep found only two stale doc-comments still saying `Run.turnGates`
+   (deck.ts / empower.ts headers — fixed) and one stale command-catalog
+   row (`empowerUnit` missing 47d's `grantIndex` — fixed).
+
+**Scope guards held:** no packet delivery mechanics, no reward tables, no
+vocabulary beyond the launch lists (the one addition — `statMods` — was a
+27-era deferral coming due, not new vocabulary), no mid-battle player
+input. Snapshot trail across the phase: Run v24→v28, World v32→v33.
+
+**Phase 47 CLOSED.** The keystone stands: one rule vocabulary
+(`modifier | hook`), both seam crossings live (battleRules in;
+tallies out), all consumers downstream (§48 rewards → §49 packets →
+§50 ports) author against it.

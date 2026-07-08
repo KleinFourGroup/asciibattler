@@ -482,8 +482,8 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   passRecruit             { }     # H6b: decline the recruit offer
   dismissPromotion        { }     # E4: dismiss the PromotionScene
   advanceTurn             { }     # H4b: resume from a turn gate (pre/post-turn screen)
-  redrawCards             { handIndices: number[] }   # K3: redraw selected hand positions at the pre-turn gate (L1: budget = the daemon-resolved turnGates.redraw)
-  empowerUnit             { handIndex: number }        # K4: buff one drawn card for the rest of the encounter (L1: buff + budget = the daemon-resolved turnGates.empower)
+  redrawCards             { handIndices: number[] }   # K3: redraw selected hand positions at the pre-turn gate (47c: budget = the rule-resolved turnGrants.redraw, ONE summed config)
+  empowerUnit             { handIndex: number; grantIndex: number }   # K4/47d: buff one drawn card for the rest of the encounter with the CHOSEN idol's blessing (grantIndex → turnGrants.empowers[i], per-source budgets)
   resetRun                { }
 
 WorldCommand (queued; drained at top of tick)

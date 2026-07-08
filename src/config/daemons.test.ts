@@ -135,6 +135,31 @@ describe('the Rule schema (47b — the rule vocabulary)', () => {
     });
   });
 
+  it("the spec's five motivating example daemons are ALL authorable (the §47 exit receipt)", () => {
+    // The coverage target from cluster-3-spec §"The rule vocabulary": the
+    // full (trigger domain × effect domain) matrix. #1–#3 ship in the
+    // catalog (laverna / fortuna / moneta — pinned below); #4 and #5 are
+    // authorable-but-unshipped, pinned here as schema literals so the
+    // vocabulary can never silently lose them.
+    const example4 = {
+      kind: 'hook',
+      on: 'encounterEnd',
+      filter: { won: true },
+      effect: { op: 'healPool', amount: 3 },
+    }; // run lifecycle → run (the machinery: resolveInstantHooks, 47e)
+    const example5 = {
+      kind: 'modifier',
+      stat: 'cacheSize',
+      op: 'add',
+      value: 3,
+    }; // passive modifier → run (the fold: foldRunStats; consumer lands §49)
+    expect(parses([example4])).toBe(true);
+    expect(parses([example5])).toBe(true);
+    expect(daemonById('laverna')).toBeDefined(); // #1 battle sim → run tally
+    expect(daemonById('fortuna')).toBeDefined(); // #2 battle sim → battle sim
+    expect(daemonById('moneta')).toBeDefined(); //  #3 passive modifier → run
+  });
+
   it('normalizeDaemon builds exact-optional rules (no explicit-undefined keys)', () => {
     const parsed = DaemonsSchema.parse(
       withRules([

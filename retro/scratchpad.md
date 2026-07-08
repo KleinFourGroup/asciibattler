@@ -72,6 +72,25 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   before a redesign is throwaway. The sizing conversation itself is what
   made the parking decision easy for the user to co-sign.
 
+## Phase 47 build, steps e–g (2026-07-08)
+
+- **Never background a "before" capture and keep editing — pin it in a
+  worktree.** The 47e pre-baseline fuzz capture was launched in the
+  background against the LIVE tree (the CLI compiles imports at run time),
+  then the engine edits landed underneath it: arms 3–6 crashed mid-capture
+  and even the "successful" early arms were untrustworthy. The fix that
+  holds: `git worktree add --detach <tmp> HEAD` + a `node_modules`
+  junction/symlink — a frozen checkout the oracle reads while the working
+  tree stays fully editable. Zero risk, ~zero setup cost; used cleanly for
+  both the 47e and 47f oracles. Candidate for promotion into the AGENTS
+  oracle habit (the 47a–d entry above) at the round sweep.
+- **The step-zero premise check keeps paying**: 47f's survey caught two
+  unpredicted side effects BEFORE the build (battleRules riding the
+  serialized `currentEncounter` ⇒ a Run bump the cut hadn't listed; the
+  statusSchema `statMods` deferral coming due) — both became plan-mutation
+  one-liners instead of mid-build surprises. Also caught: a 47b test whose
+  "vacuously passes" premise the new content invalidated.
+
 ## First fresh-session resumption under the planning stack (2026-07-08, into 47e)
 
 - **The protocol's first cold pickup worked**: HANDOFF 🧭 Cursor → ROADMAP §47

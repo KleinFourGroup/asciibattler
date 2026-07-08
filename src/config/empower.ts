@@ -9,11 +9,12 @@
  * (re-seeded onto the fielded unit each turn — the K1 store's lifetime).
  *
  * - `enabled`         — master switch. L1 flipped this OFF for good: daemons
- *                       own empower availability now (`Run.turnGates`, resolved
- *                       per turn from the active daemon's gates), so this
- *                       config is the daemon-LESS baseline = disabled. The
- *                       `buff` below stays as the canonical "K4 default
- *                       empower" shape that tests/fixture daemons derive from.
+ *                       own empower availability now (`Run.turnGrants`, resolved
+ *                       per turn from the owned daemons' `grantEmpowers` hooks —
+ *                       47c re-authored the gates into rules), so this config
+ *                       is the daemon-LESS baseline = disabled. The `buff`
+ *                       below stays as the canonical "K4 default empower"
+ *                       shape that tests/fixture daemons derive from.
  * - `empowersPerTurn` — empower ACTIONS allowed per turn (one card each). The
  *                       shipped default (1) makes empower a once-a-turn pick;
  *                       a daemon can raise it without new plumbing.

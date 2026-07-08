@@ -61,6 +61,7 @@ src/
     encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement moved to the sector pool; V1: catalog ships Brigands/Highwaymen/Deserters
     selection.ts             #   V1: the SELECTION policy (strategy: encounterFirst|layoutFirst) — config/selection.json
     economy.ts               #   47e: the economy substrate (startingBits) — config/economy.json; grows with Cluster 3
+    rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon entries) + the {table,trigger} encounter-ref schema + the daemon-ref boot assert — config/rewards.json
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;

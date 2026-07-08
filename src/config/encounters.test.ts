@@ -4,6 +4,7 @@ import {
   ENCOUNTER_IDS,
   EncountersSchema,
   ENCOUNTER_KINDS,
+  assertEncounterRewardRefs,
   getEncounter,
   type Encounter,
 } from './encounters';
@@ -194,6 +195,39 @@ describe('encounters schema', () => {
       waves: [{ kind: 'wave', spec: { levelBudget: { kind: 'fixed', value: 1 }, count: { kind: 'fixed', value: 1 }, units: [] } }],
     };
     expect(EncountersSchema.safeParse([emptyUnits]).success).toBe(false);
+  });
+
+  it('the rewards seam is typed (48a): accepts {table, trigger} refs, rejects malformed ones', () => {
+    const good = EncountersSchema.parse([
+      { ...base, rewards: [{ table: 'bits-small', trigger: { chance: 1 } }] },
+    ])[0]!;
+    expect(good.rewards![0]!.table).toBe('bits-small');
+    expect(good.rewards![0]!.trigger.chance).toBe(1);
+    // The pre-48a `unknown` seam is gone — a shapeless blob no longer parses.
+    expect(EncountersSchema.safeParse([{ ...base, rewards: 'loot!' }]).success).toBe(false);
+    expect(
+      EncountersSchema.safeParse([
+        { ...base, rewards: [{ table: 'bits-small', trigger: { chance: 2 } }] },
+      ]).success,
+    ).toBe(false);
+  });
+
+  it('the shipped skeleton ref: brigands carries bits-small at chance 1 (48a)', () => {
+    expect(getEncounter('brigands')!.rewards).toEqual([
+      { table: 'bits-small', trigger: { chance: 1 } },
+    ]);
+  });
+
+  it('assertEncounterRewardRefs throws on an unknown table and passes on a real one', () => {
+    const withRef = (table: string): Encounter =>
+      EncountersSchema.parse([{ ...base, rewards: [{ table, trigger: { chance: 1 } }] }])[0]!;
+    expect(() => assertEncounterRewardRefs([withRef('no-such-table')], ['bits-small'])).toThrow(
+      /unknown reward table "no-such-table"/,
+    );
+    expect(() => assertEncounterRewardRefs([withRef('bits-small')], ['bits-small'])).not.toThrow();
+    // The check has a real shipped subject (the 47f "no longer vacuous"
+    // discipline): strip the registry and brigands' ref must fail loudly.
+    expect(() => assertEncounterRewardRefs(ENCOUNTERS, [])).toThrow(/brigands/);
   });
 
   it('rejects a malformed stage condition (out-of-range fraction)', () => {

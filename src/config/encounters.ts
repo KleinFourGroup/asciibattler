@@ -37,7 +37,10 @@
  * so it lives on the sector pool entry. (This reverses the config dependency —
  * `sectors.ts` now imports `ENCOUNTER_IDS`; `encounters.ts` no longer imports
  * `sectors.ts`, so there's no cycle.) Selection among many encounters is V.
- * `rewards?` is a reserved, unconsumed seam (the loot/economy round hangs here).
+ * `rewards?` (typed at 48a, formerly the reserved `unknown` seam) is the
+ * encounter's list of `{table, trigger}` reward refs — tables live in their
+ * own registry (rewards.ts; import direction encounters → rewards, cycle-free)
+ * and each ref's `chance` is independently tested on encounter win (48b).
  * `kind` is an ENUM (not an `isBoss` bool) reserving `'elite'` for future elite
  * map-nodes.
  */
@@ -46,6 +49,11 @@ import { z } from 'zod';
 import encountersJson from '../../config/encounters.json';
 import { UNIT_DEFS } from './units';
 import { LAYOUT_IDS } from './layouts';
+import {
+  EncounterRewardRefSchema,
+  REWARD_TABLE_IDS,
+  type EncounterRewardRef,
+} from './rewards';
 import type { Archetype } from '../sim/Unit';
 import type {
   WaveSpec,
@@ -176,8 +184,9 @@ export interface Encounter {
    *  gate, weight) lives on the sector's encounter pool, not here. */
   readonly layouts?: readonly string[];
   readonly kind: EncounterKind;
-  /** Reserved, unconsumed seam — the loot/economy round (gold / recruit / relic). */
-  readonly rewards?: unknown;
+  /** Reward refs (48a): each `{table, trigger}` is independently chance-tested
+   *  on encounter win and its table sampled (48b). Omitted = no rewards. */
+  readonly rewards?: readonly EncounterRewardRef[];
   readonly waves: WaveList;
 }
 
@@ -188,7 +197,7 @@ const EncounterSchema = z.object({
   healthPool: z.number().int().positive(),
   layouts: z.array(z.string().min(1)).optional(),
   kind: z.enum(ENCOUNTER_KINDS).default('normal'),
-  rewards: z.unknown().optional(),
+  rewards: z.array(EncounterRewardRefSchema).optional(),
   waves: WaveListSchema,
   // Cast at the zod boundary (see StageSchema) — `.optional()` vs exact-optional.
 }) as z.ZodType<Encounter>;
@@ -214,6 +223,30 @@ for (const encounter of ENCOUNTERS_LIST) {
     }
   }
 }
+
+/**
+ * Boot check (48a, the `assertRewardDaemonRefs` sibling): every reward ref
+ * must name a table in the registry — the fxRegistry-style referential
+ * integrity the spec locks for by-name references. Args-injected for
+ * synthetic tests; self-wired below with the real catalogs.
+ */
+export function assertEncounterRewardRefs(
+  encounters: readonly Encounter[],
+  tableIds: readonly string[],
+): void {
+  const ids = new Set(tableIds);
+  for (const encounter of encounters) {
+    for (const ref of encounter.rewards ?? []) {
+      if (!ids.has(ref.table)) {
+        throw new Error(
+          `encounters.json: encounter "${encounter.id}" references unknown reward table "${ref.table}"`,
+        );
+      }
+    }
+  }
+}
+
+assertEncounterRewardRefs(ENCOUNTERS_LIST, REWARD_TABLE_IDS);
 
 export const ENCOUNTERS: readonly Encounter[] = ENCOUNTERS_LIST;
 export const ENCOUNTER_IDS: readonly string[] = ENCOUNTERS_LIST.map((e) => e.id);

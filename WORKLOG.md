@@ -532,3 +532,51 @@ Decisions locked:
   convention) / `boss-hoard` (bits + daemon at weight). All 13
   encounters reference something; numbers deliberately rough (§52 owns
   tuning).
+
+### 48b — the reward engine build (2026-07-08)
+
+Two build-time notes beyond the shape-lock:
+
+- **A reward daemon fires for the fight it dropped from** (the
+  encounterEnd edge): acceptance happens BEFORE `finishEncounter`
+  (dismiss-chain ordering), so an accepted daemon's `encounterEnd` hooks
+  are included when they fire moments later. Accepted as designed —
+  unreachable via the launch catalog (no encounterEnd idol ships), and
+  "the loot works immediately" is the friendlier reading of the
+  next-turn grant rule. Pinned in the `handleAcceptReward` doc comment.
+- **The 48b Game bridge** (temporary): `reward:offered` → auto-accept
+  all portions, so the live game flows through the new phase with no
+  screen until 48c. Invisible in play — the skeleton catalog is
+  bits-only and nothing displays bits until 48d.
+- Test fallout was contained: three existing tests + two drive helpers
+  assumed win→recruit directly and now pass through `acceptAllRewards`
+  (the harness accept-all policy as a test helper). Determinism/
+  snapshot-roundtrip suites absorbed the two new streams untouched
+  (relative comparisons, as the kickoff audit mapped); the committed
+  fuzz CSVs are stale until 48g's re-baseline.
+
+### 48c — the RewardScreen build + the dispatch hole (2026-07-08)
+
+**The browser-verify caught a real bug the whole headless surface
+couldn't**: `Game.dispatch` re-enumerates `RunCommand` by hand with no
+default — `acceptReward`/`declineReward` fell through and were silently
+DROPPED. Every headless path (tests, harness) calls `run.dispatch`
+directly, so 1915 green tests never touched the hole; it also means
+48b's temporary auto-accept bridge was dead code (it dispatched into
+the void — a live brigands win under pure 48b would have soft-locked
+in the reward phase; the 48b playtest evidently never won one). Fixed
+by routing the two commands AND adding a `command satisfies never`
+default to the switch — the next unrouted command is now a compile
+error, not a silent drop (the harness's phase-switch discipline,
+applied to Game).
+
+Build notes: RewardScreen renders from the LIVE `run.pendingRewards`
+(full re-render per resolution keeps button indices true; bits rows
+through `run.effectiveBits` — never the base); `pickup` coin-blip
+authored as a gen-sfx recipe (deterministic, B5→E6 square chime).
+Browser-verified at :5191 end to end: accept settles (base 10 →
+granted 12 with Moneta, display == settle to the digit), decline
+leaves bits untouched, and **the Moneta-order rider works visually**
+— accepting her from a mixed offer re-priced the remaining bits row
+10→12 on the spot. Zero console errors; scene chain reward → recruit
+confirmed both paths.

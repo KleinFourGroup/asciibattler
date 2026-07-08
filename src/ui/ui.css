@@ -786,6 +786,103 @@ body {
   color: #15f4ee;
 }
 
+/* RewardScreen (48c). Shown on a won encounter whose reward refs rolled an
+   offer (battle → rewards → promotion → recruit). Each portion row resolves
+   independently (Accept / Decline); bits rows display the DERIVED effective
+   value (run.effectiveBits — the settle math), so accepting a bits-fold
+   daemon re-prices the remaining rows live. */
+
+.reward-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+}
+
+.reward-heading {
+  color: #ffb000; /* TERMINAL_AMBER — loot is treasure (promotion keeps blue) */
+  font-family: var(--font-mono);
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.reward-portions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(560px, 90vw);
+}
+
+.reward-portion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 18px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.reward-portion__title {
+  color: #33ff00; /* TERMINAL_GREEN — the gain */
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+
+.reward-portion__desc {
+  color: #ffb000; /* TERMINAL_AMBER */
+  opacity: 0.75;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  margin-top: 4px;
+  max-width: 320px;
+}
+
+.reward-portion__actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.reward-accept,
+.reward-decline {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 7px 18px;
+  background: #000;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, opacity 0.1s;
+}
+
+.reward-accept {
+  border: 1px solid #33ff00; /* TERMINAL_GREEN — the affirmative */
+  color: #33ff00;
+}
+
+.reward-accept:hover {
+  background: rgba(51, 255, 0, 0.12);
+}
+
+.reward-decline {
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER — the recruit-pass shape */
+  color: #ffb000;
+  opacity: 0.7;
+}
+
+.reward-decline:hover {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  background: rgba(21, 244, 238, 0.08);
+  opacity: 1;
+}
+
 /* GameOverScreen (Step 4.5). Full-overlay defeat modal with a single button
    to start a fresh run. NEON_RED heading sets the "you died" tone; the
    button uses the same amber-on-hover affordance as other interactive

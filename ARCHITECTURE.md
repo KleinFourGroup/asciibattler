@@ -256,7 +256,8 @@ src/
     PreBattleCountdown.ts    #   Q2: the pre-battle countdown timer (real-dt; active/displaySeconds/advance/skip) — unit-testable
     MapScene.ts              #   DOM-only, wraps MapScreen
     RecruitScene.ts          #   DOM-only, wraps RecruitScreen
-    PromotionScene.ts        #   E4.4: DOM-only level-up summary; M1: pops at each turn boundary (mid-encounter, or before recruit on the final turn)
+    RewardScene.ts           #   48c: DOM-only, wraps RewardScreen (no payload — the screen reads the live offer off ctx.run)
+    PromotionScene.ts        #   E4.4: DOM-only level-up summary; M1: pops at each turn boundary (mid-encounter, or before recruit on the final turn); 48b: the reward gate interposes BEFORE it on a won final turn
     PreTurnScene.ts          #   H4b: DOM-only, wraps PreTurnScreen (the turn-intro gate)
     PostTurnScene.ts         #   H4b: DOM-only, wraps PostTurnScreen (the turn-outcome gate)
     GameOverScene.ts         #   DOM-only, wraps GameOverScreen
@@ -281,6 +282,7 @@ src/
     CardListModal.ts         # R1/R2: shared card-list modal (CardListModal overlay + CardListButton) — full UnitCards in a dimmed, scrollable overlay (Esc/backdrop/✕ dismiss); R1 roster view (top-right, Map/Recruit/PreTurn) + R2 draw/discard pile views (PreTurn bottom corners)
     rosterOrder.ts           # R1: pure card-ordering seam (orderRoster: recruited[default]/archetype/level, stable on recruitment order) — only recruited wired to the UI, others switchable
     PromotionScreen.ts       # E4.4: per-unit level-up cards (P1: shared UnitCard, promotion skin); M2: two-phase reveal (all cards pop in, then gains tick green card-by-card + +N chip; click-anywhere skips) — the screen owns the timeline, driving the card via UnitCard's levelValue/statRows handles
+    RewardScreen.ts          # 48c: the reward offer — one row per portion, Accept (pickup blip) / Decline per row; bits rows render run.effectiveBits (the settle math, never the base) and re-derive after every resolution
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
     statLabels.ts            # GP3: shared STAT_LABELS map (card + HUD + PromotionScreen)
     UnitCard.ts              # P1: shared unit-card builder — one DOM/CSS source for recruit + promotion (+ P3 pre-turn, Q4/Q5 HUD player+enemy cards, R1/R2 card-list modal). compact/full modes × recruit/promotion/preturn/hud/roster skins; compact (Q4) = glyph + Lv(TL)/POW(TR) + glyph-width HP bar, via unitCardFromUnit adapter + the hpFill handle; Q5 team coloring via the `team` opt → unit-card--enemy (red glyph + HP, vs the green player default); carries the "card can't disagree with the unit" ability readings (was RecruitScreen); rarity-accent seam (unit-card--rarity-*, default common = today's look); §32c updateCardStatusRow reconciles the compact card's status row (a chip per active status: swatch + name + `×stacks · ±N/s · Ns`, the §31 scaled potency made literal)

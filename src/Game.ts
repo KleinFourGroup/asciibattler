@@ -15,6 +15,7 @@ import { MapScene } from './scenes/MapScene';
 import { BattleScene } from './scenes/BattleScene';
 import { RecruitScene } from './scenes/RecruitScene';
 import { PromotionScene } from './scenes/PromotionScene';
+import { RewardScene } from './scenes/RewardScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { PreTurnScene } from './scenes/PreTurnScene';
 import { PostTurnScene } from './scenes/PostTurnScene';
@@ -177,15 +178,9 @@ export class Game implements RunDispatcher {
       this.swap(new PromotionScene(promotions)),
     );
     this.bus.on('recruit:offered', ({ units }) => this.swap(new RecruitScene(units)));
-    // 48b BRIDGE (temporary — 48c's RewardScene replaces this): auto-accept
-    // every reward portion so the live game flows through the new reward
-    // phase without a screen. The launch skeleton rewards are bits-only, so
-    // this is invisible until 48d's overlay lands.
-    this.bus.on('reward:offered', ({ rewards }) => {
-      for (let i = rewards.length; i > 0; i--) {
-        this.dispatch({ kind: 'acceptReward', index: 0 });
-      }
-    });
+    // 48c — the reward offer's screen (battle → rewards → promotion →
+    // recruit). No payload: the screen reads the live offer off ctx.run.
+    this.bus.on('reward:offered', () => this.swap(new RewardScene()));
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
 
@@ -288,6 +283,14 @@ export class Game implements RunDispatcher {
         // nothing to swap explicitly here.
         this.run.dispatch(command);
         break;
+      case 'acceptReward':
+      case 'declineReward':
+        // 48c — resolve one reward portion. Mid-offer the RewardScreen
+        // re-renders in place; the LAST resolution advances the run, whose
+        // event (promotion:pending / recruit:offered / run:victory) drives
+        // its own swap — no silent-map path exists off a won encounter.
+        this.run.dispatch(command);
+        break;
       case 'redrawCards':
         // K3 — redraw at the pre-turn gate. The phase doesn't change (the
         // pre-turn screen stays up and refreshes in place off the
@@ -301,6 +304,14 @@ export class Game implements RunDispatcher {
         break;
       case 'resetRun':
         this.resetRun();
+        break;
+      default:
+        // Exhaustiveness guard (48c): this switch re-enumerates RunCommand by
+        // hand, and a missing case silently DROPS the command — exactly how
+        // acceptReward/declineReward shipped unroutable in 48b (the bridge
+        // dispatched into the void; the browser-verify caught it). A new
+        // command now fails to compile until it's routed here.
+        command satisfies never;
         break;
     }
   }

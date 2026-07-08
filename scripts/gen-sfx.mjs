@@ -246,6 +246,27 @@ const SOUNDS = {
     });
     return finish(b, 0.85);
   },
+
+  // 48c — the reward-pickup coin blip: the classic two-step rising chime
+  // (a square at B5 stepping to E6 mid-flight), one per accepted portion.
+  // Bright + positive, kept short so accepting several portions back-to-back
+  // reads as a happy little run of coins rather than a jingle pile-up.
+  pickup: () => {
+    const b = buffer(0.24);
+    const step = 0.055; // the B5 → E6 handoff point
+    addOsc(b, {
+      type: 'square',
+      freq: (t) => (t < step ? 988 : 1319),
+      amp: (t) => 0.3 * attack(0.004)(t) * (t < step ? 1 : Math.exp(-(t - step) / 0.09)),
+    });
+    // a faint sine an octave up softens the square's buzz into a chime
+    addOsc(b, {
+      type: 'sine',
+      freq: (t) => (t < step ? 1976 : 2637),
+      amp: (t) => 0.08 * attack(0.004)(t) * (t < step ? 1 : Math.exp(-(t - step) / 0.07)),
+    });
+    return finish(b, 0.8);
+  },
 };
 
 /* --------------------------------- main --------------------------------- */

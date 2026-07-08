@@ -33,6 +33,7 @@ export type SoundKey =
   | 'lose'
   | 'magicboom'
   | 'melee'
+  | 'pickup'
   | 'poison'
   | 'recruit'
   | 'shoot'
@@ -57,6 +58,9 @@ const SOURCES: Record<SoundKey, string> = {
   // registry's `magic_bolt_burst` cue on `action:phase{impact}`).
   magicboom: 'audio/magicboom.wav',
   melee: 'audio/melee.wav',
+  // 48c — the reward-pickup coin blip (gen-sfx recipe), one per accepted
+  // reward portion on the RewardScreen.
+  pickup: 'audio/pickup.wav',
   recruit: 'audio/recruit.wav',
   shoot: 'audio/shoot.wav',
   win: 'audio/win.wav',
@@ -99,6 +103,8 @@ const VOLUMES: Record<SoundKey, number> = {
   // a two-mage barrage (~one cast each per 2s) doesn't dominate the mix.
   magicboom: 0.9,
   melee: 1.0,
+  // 48c — a positive one-shot chime; click-adjacent loudness, not an impact.
+  pickup: 0.7,
   recruit: 0.8,
   shoot: 1.0,
   win: 0.7,
@@ -147,6 +153,9 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
   // low (±8%): too much tempo shift makes an explosion read as a broken sample.
   magicboom: 0.08,
   melee: 0.1,
+  // 48c — a deliberate one-shot cue (the click/recruit rule: variation on
+  // something heard in isolation reads as inconsistency, not life).
+  pickup: 0,
   recruit: 0,
   shoot: 0.1,
   win: 0,

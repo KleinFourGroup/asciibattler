@@ -59,12 +59,14 @@ import {
   rollDaemon,
   resolveTurnGrants,
   resolveInstantHooks,
+  battleRulesFor,
   disabledTurnGrants,
   daemonRedrawHook,
   daemonEmpowerHook,
   type TurnGrants,
   type InstantOp,
 } from './daemon';
+import type { BattleRule } from '../sim/battleRules';
 import { foldRunStats, RUN_STAT_BASES, type RunStatKey, type RunStatModifier } from './runStats';
 import { ECONOMY } from '../config/economy';
 import { cloneEffect, mergeEffectInto, type StatusEffect } from '../sim/statusEffects';
@@ -135,6 +137,16 @@ export interface BattleEncounter {
   readonly theme: Theme;
   readonly playerTeam: readonly UnitTemplate[];
   readonly enemyTeam: readonly UnitTemplate[];
+  /**
+   * 47f — the owned daemons' battle-domain hooks, compiled to plain data
+   * (`battleRulesFor`) for the World to install at construction (the spec's
+   * seam crossing; evaluation semantics in src/sim/battleRules.ts). Riding
+   * the encounter is what reaches BOTH construction sites (BattleScene +
+   * the fuzz harness) for free. Optional so the integration-test fixtures
+   * that hand-build encounters stay untouched (absent = none); `beginTurn`
+   * always sets it.
+   */
+  readonly battleRules?: readonly BattleRule[];
 }
 
 /** E4: bumped 3→5 in two steps. v4 added `xp` on UnitTemplate + the
@@ -239,8 +251,13 @@ export interface BattleEncounter {
  *  EmpowerGrant[]` (the per-idol model), and `empowersUsedThisTurn` becomes
  *  a per-source array. A v25 save carries the old shapes → reject.
  *  47e: bumped 26→27. The bits substrate: adds `bits` (the run's currency
- *  balance — integer, floored at zero). A v26 save has no bits → reject. */
-const RUN_SCHEMA_VERSION = 27;
+ *  balance — integer, floored at zero). A v26 save has no bits → reject.
+ *  47f: bumped 27→28. The serialized `currentEncounter` (a `BattleEncounter`)
+ *  gains `battleRules` (the owned daemons' compiled battle hooks — the World
+ *  installs them at construction). A v27 save's mid-battle encounter lacks
+ *  them → a resumed battle would silently fight without the run's daemons —
+ *  reject. */
+const RUN_SCHEMA_VERSION = 28;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -683,8 +700,8 @@ export class Run {
       // H4: a `battle:ended` ends a TURN, not the node. `winner` doesn't route
       // the outcome — the pools do (chipped symmetrically off `survivorPower`)
       // — but H4b surfaces it on the post-turn screen, so it's passed through.
-      this.bus.on('battle:ended', ({ winner, xpAwards, survivorPower }) =>
-        this.handleTurnEnded(winner, xpAwards, survivorPower),
+      this.bus.on('battle:ended', ({ winner, xpAwards, survivorPower, tallies }) =>
+        this.handleTurnEnded(winner, xpAwards, survivorPower, tallies),
       ),
     );
   }
@@ -1155,6 +1172,10 @@ export class Run {
       theme,
       playerTeam: stampedPlayerTeam,
       enemyTeam,
+      // 47f — the owned daemons' battle hooks, compiled fresh each turn
+      // (ownership can grow mid-encounter via addDaemon: a §48 reward daemon
+      // fights from the NEXT turn, matching the grant-resolution rule).
+      battleRules: battleRulesFor(this.daemons),
     };
     this.bus.emit('battle:started', { worldSeed });
   }
@@ -1190,6 +1211,7 @@ export class Run {
     winner: GameEvents['battle:ended']['winner'],
     xpAwards: GameEvents['battle:ended']['xpAwards'],
     survivorPower: GameEvents['battle:ended']['survivorPower'],
+    tallies: GameEvents['battle:ended']['tallies'],
   ): void {
     if (this.phase !== 'battle') return;
     this.currentEncounter = null;
@@ -1206,6 +1228,11 @@ export class Run {
     if (result !== 'lost') {
       const promotions = this.bankXpAwards(xpAwards);
       if (promotions.length > 0) this.pendingPromotions = promotions;
+      // 47f — settle the turn's battle-earned bits (the World's serialized
+      // tally, the XP pattern). Through `gainBits`, so the `bitsGain` fold
+      // applies at the settle (Laverna stacks with Moneta for free). Mirrors
+      // the XP bank's skip-on-lost: a defeat's loot is dead state.
+      if (tallies !== undefined && tallies.bits > 0) this.gainBits(tallies.bits);
     }
     if (this.pauseAtTurnGates) {
       // Pause on the post-turn outcome screen; the player's `advanceTurn`

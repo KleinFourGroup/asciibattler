@@ -81,6 +81,11 @@ src/
                              # I2/I6: applyDamage(evadable, accuracy) rolls accuracy-vs-evasion to-hit off combatRng (crit→miss order);
                              #     a miss emits unit:missed + 0 dmg. Only single-target strikes opt in; AoE/catapult/tile unmissable
                              # K1: applyDamage reads effectiveStats (prc/eva/def) + fires dealHit/takeHit/dealMiss/evade/kill triggers (post-resolution)
+                             # 47f: installBattleRules (once per battle; data serialized v33, handlers re-registered on fromJSON)
+                             #      + tallies {bits} (battle-earned run resources → the battle:ended payload, settled by Run.gainBits)
+    battleRules.ts           # 47f: the battle-domain daemon seam — BattleRule (plain compiled data) + registerBattleRules
+                             # (evaluation at the K1 triggers: player-team acting only; filter-before-chance; chance off
+                             # combatRng; gainBits → tallies, applyStatus → the ACTING unit, def-resolved at fire time)
     Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab + GP2 defense) + UnitDerived + Team + Behavior
                              # archetype: mercenary|adventurer|ronin|bandit|ranged|rogue|healer|mage|catapult|environment (I5 split melee→the 4-class melee family)
                              # level (E3) + xp/rosterIndex (E4); actionCooldowns Map + activeAction (A1)
@@ -134,7 +139,7 @@ src/
       registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
     effects/                 # Y1–Y3: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
       schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types; 27a: PeriodicOp (damage|heal subset for status ticks)
-      statusSchema.ts        #   27a: StatusDef vocabulary (zod) — durationSeconds/merge/periodic{everySeconds,op}/fx; 28: behavior{preventsAttack/preventsMove/movement/targeting/acquisitionRange/affects} (the AI decision-hook axis)
+      statusSchema.ts        #   27a: StatusDef vocabulary (zod) — durationSeconds/merge/periodic{everySeconds,op}/fx; 28: behavior{preventsAttack/preventsMove/movement/targeting/acquisitionRange/affects} (the AI decision-hook axis); 47f: statMods (the deferred stat-mod axis, first consumer = emboldened)
       statusRuntime.ts       #   27b: StatusDef → runtime StatusEffect bridge (buildStatusEffect + statusMergeToPolicy: brief merge vocab → K1 MergePolicy)
       timeline.ts            #   Y1: seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase
       targeting.ts           #   Y2: unitsInCells (the Cluster-2 footprint seam) + aoe victim resolution + the affects filter
@@ -162,18 +167,21 @@ src/
                              # seeds enemyHealth from its healthPool + resets waveCursor; beginTurn resolves the per-turn
                              # enemy team from the encounter's wave grammar (waveForTurn→resolveWave) NOT rollEnemyWave;
                              # encounterBudget retired; encounter.name → HUD enemy pane. RUN_SCHEMA_VERSION 21
-                             # 47c–e: daemons re-authored to rules + multi-daemon by id + the bits substrate —
+                             # 47c–f: daemons re-authored to rules + multi-daemon by id + the bits substrate —
                              # bits (floor-at-zero via the addBits chokepoint → run:bitsChanged) + gainBits (the
                              # bitsGain fold at the grant site) + instant-op execution at the run trigger fire
                              # sites (turnStart via resolveTurnGrants; encounterStart/encounterEnd via
-                             # resolveInstantHooks in beginEncounter/finishEncounter). Live version: HANDOFF 🧭
+                             # resolveInstantHooks in beginEncounter/finishEncounter). 47f: BattleEncounter
+                             # carries battleRulesFor(daemons); handleTurnEnded settles battle:ended tallies
+                             # via gainBits (skip-on-lost, the XP mirror). Live version: HANDOFF 🧭
     redraw.ts                # K3: pure redraw rules — redrawRejection / redrawAvailability (config injected, both L modes provable)
     empower.ts               # K4: pure empower rules — empowerRejection / empowerAvailability / empowerEffect (config injected)
-    daemon.ts                # L1→47e: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
+    daemon.ts                # L1→47f: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
                              # (owned daemons' turnStart grant hooks → ONE summed RedrawConfig + PER-SOURCE
                              # EmpowerGrant[] + this turn's granted InstantOps; ownership-then-rule-order draws,
                              # chance draws only when 0<c<1) + resolveInstantHooks (encounterStart/encounterEnd,
-                             # filter-gates-before-chance) + daemonRedrawHook/daemonEmpowerHook lookups
+                             # filter-gates-before-chance) + battleRulesFor (47f: compiles battle-domain hooks →
+                             # sim BattleRule[] data, riding BattleEncounter) + daemonRedrawHook/daemonEmpowerHook
     runStats.ts              # 47a: the run-stat vocabulary — RunStatKey (bitsGain, cacheSize) + foldRunStats
                              # (foldEffects mirrored: adds→mults, identity-on-empty; NO rounding — read site rounds)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
@@ -428,7 +436,7 @@ Bridges simulation and rendering. Subscribes to `unit:moved` events and starts a
 ```
 tick                    { tick: number }
 battle:started          { worldSeed: number }
-battle:ended            { winner: 'player' | 'enemy'; xpAwards: { unitId; rosterIndex; damageDealt; xpGained }[] }   # E4: per-roster XP
+battle:ended            { winner: 'player' | 'enemy' | 'draw'; xpAwards: { unitId; rosterIndex; damageDealt; xpGained }[]; survivorPower?; tallies? }   # E4: per-roster XP; H4: draw + pool chips; 47f: tallies {bits} — the battle-earned settle (Run.gainBits)
 unit:spawned            { unitId: number; instant: boolean }                       # instant=false → D5.C overflow-queue spawn (fade-in)
 unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }
 unit:dashed             { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }   # N1: a dash LEAP (also emits unit:moved for the slide) — audio/VFX cue, fires even on a 1-cell dash

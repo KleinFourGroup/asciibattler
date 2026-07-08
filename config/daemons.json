@@ -91,6 +91,38 @@
           "value": 1.2
         }
       ]
+    },
+    {
+      "id": "laverna",
+      "name": "Idol of Laverna",
+      "description": "Each blow a rogue lands earns a bit.",
+      "rules": [
+        {
+          "kind": "hook",
+          "on": "dealHit",
+          "filter": { "archetype": "rogue" },
+          "effect": {
+            "op": "gainBits",
+            "amount": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "fortuna",
+      "name": "Idol of Fortuna",
+      "description": "A critical strike emboldens the striker: +1 STR / RNG / MAG for 5s.",
+      "rules": [
+        {
+          "kind": "hook",
+          "on": "dealHit",
+          "filter": { "crit": true },
+          "effect": {
+            "op": "applyStatus",
+            "statusId": "emboldened"
+          }
+        }
+      ]
     }
   ]
 }

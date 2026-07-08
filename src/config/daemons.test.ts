@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { StatusDef } from '../sim/effects/statusSchema';
+import { STATUS_DEFS } from './statuses';
 import {
   DAEMONS,
   DaemonsSchema,
@@ -162,8 +163,13 @@ describe('assertDaemonStatusRefs (the boot check)', () => {
     ...(rules !== undefined ? { rules } : {}),
   });
 
-  it('passes vacuously on rule-less daemons (the shipped catalog today)', () => {
-    expect(() => assertDaemonStatusRefs(DAEMONS, {})).not.toThrow();
+  it('the shipped catalog resolves against the real registry — no longer vacuous (47f: fortuna refs emboldened)', () => {
+    expect(() => assertDaemonStatusRefs(DAEMONS, STATUS_DEFS)).not.toThrow();
+    // The check has a real subject now: strip the registry and fortuna's
+    // applyStatus ref must fail loudly at boot.
+    expect(() => assertDaemonStatusRefs(DAEMONS, {})).toThrow(
+      /daemon 'fortuna': applyStatus references unknown status id 'emboldened'/,
+    );
   });
 
   it('throws on a dangling applyStatus statusId', () => {

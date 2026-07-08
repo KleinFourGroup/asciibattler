@@ -282,3 +282,58 @@ from seed 2). The random arm re-baseline is the accepted catalog-growth
 cost, not an engine regression — the five forced arms prove the engine
 surgery (instant-op execution, the resolveTurnGrants return change, the
 encounterEnd fire site) changed nothing for existing content.
+
+### 47f — the battle-domain seam (2026-07-08)
+
+Step-zero premise check turned up two side effects the cut hadn't
+predicted, both surfaced pre-build and accepted:
+
+- **Run v27→v28 rides along with World v32→v33.** `battleRules` belong on
+  `BattleEncounter` (the complete battle-spec handoff both World
+  construction sites already read) — and `currentEncounter` is serialized
+  in the Run save, so its shape change bumps the Run schema too. The field
+  is optional on the interface (nine integration fixtures hand-build
+  encounters), but `beginTurn` always sets it and reject-stale applies.
+- **The `statMods` authoring axis landed** — statusSchema.ts had deferred
+  it since 27 "until its first consumer," and Fortuna's crit-buff is that
+  consumer. Config-only as the deferral note predicted (defs never
+  serialize; the runtime `StatusEffect.mods` existed since K1). New status:
+  `emboldened` (+1 STR/RNG/MAG, 5s, refresh — a re-crit refreshes, never
+  stacks). A side effect of the side effect: 47b's "assertDaemonStatusRefs
+  passes vacuously" test stopped being vacuous — rewritten to pin fortuna's
+  ref both resolving (real registry) and failing loudly (stripped one).
+
+Design locks (user, this session): **battle rules evaluate for PLAYER-team
+acting units only** — a daemon is the player's relic; enemy-scoped daemons
+are a noted future idea, not launch vocabulary. **`applyStatus` lands on
+the ACTING unit** (Fortuna's "embolden the striker"). Filter gates BEFORE
+chance (the 47e discipline carried across the seam); chance rides
+`world.combatRng` (launch content is chance-less — no new draws). Names
+locked: **Idol of Laverna** (goddess of thieves — rogue blows earn bits)
+and **Idol of Fortuna** (crit IS luck-derived). Catalog → 7; the 3-in-7
+no-pre-turn-tools start-roll odds explicitly accepted ("keep clobbering
+the starting pool — that's the Cluster 4 overhaul's problem").
+
+Build shape: `src/sim/battleRules.ts` owns the plain `BattleRule` data
+type + trigger-handler registration (the K1 behavior-registry pattern —
+data serialized, handlers re-attached on `fromJSON` via the same
+`installBattleRules`, which also validates `applyStatus` refs at INSTALL
+time so a bad id can never throw mid-tick, and throws on a second call —
+rules are per-battle constants). `battleRulesFor` (run/daemon.ts) compiles
+ownership-order × authored-order; recompiled fresh each turn so a §48
+mid-encounter daemon acquisition fights from the NEXT turn (the
+grant-resolution rule). `tallies {bits}` follows the XP-ledger pattern
+verbatim: serialized accumulator → copied into the `battle:ended` payload
+(optional, the `survivorPower` test-fake rationale) → settled by
+`Run.gainBits` so the `bitsGain` fold applies at the settle (Laverna
+stacks with Moneta, zero coupling) — and the settle mirrors the XP bank's
+skip-on-lost (a defeat's loot is dead state).
+
+Oracle verdict (6 arms × `--count=6`, worktree-pre at `143cce4` vs post):
+**mars / minerva / mercury / janus / none byte-IDENTICAL; random DIFFERS
+only in the roll landing over the 7-entry catalog** (fortuna/laverna
+appear from seed 2/6). The five forced arms prove the whole battle-domain
+surgery — the World constructor-adjacent install, the trigger handlers,
+the tally plumbing, the `battle:ended` payload growth — changed nothing
+for existing content (a non-battle-hook daemon installs zero rules, and
+an empty install is a structural no-op).

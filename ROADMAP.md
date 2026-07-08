@@ -117,7 +117,7 @@ retires); PreTurnScreen = stacked banner lines; NO overlay pull-forward.
 - [x] 47c — the run-domain hook engine; idols re-authored; serialized `turnGrants` replaces `turnGates`; legacy gates + `TurnGates` DELETED; **Run v24→v25** ✅ oracle PASSED — all 6 fuzz arms byte-identical (worklog §47)
 - [x] 47d — multi-daemon: `daemons[]` by id; PreTurnScreen stacked banners; `turn:starting` list payload; **v25→v26** ✅ per-idol empower controls (option B, worklog §47); oracle IDENTICAL ×6; browser-verified
 - [x] 47e — the bits substrate: `run.bits` + `run:bitsChanged` + `config/economy.json` + `RunConfig` override + `gainBits` with the `bitsGain` fold; example daemon #3; **v26→v27** ✅ Moneta in-catalog (user call) + run-domain instant-op execution at all three fire sites; oracle + decisions: worklog §47e
-- [ ] 47f — `battleRules[]` compile-in + `tallies` settle (the XP pattern); examples #1+#2; **World v32→v33** + determinism/fuzz re-baseline
+- [x] 47f — `battleRules[]` compile-in + `tallies` settle (the XP pattern); examples #1+#2; **World v32→v33** + determinism/fuzz re-baseline ✅ Laverna + Fortuna in-catalog; the statMods axis landed with its first consumer; **+ Run v27→v28** (battleRules ride the serialized `currentEncounter` — an unpredicted bump, worklog §47f)
 - [ ] 47g — exit sweep: full fuzz pass, ARCHITECTURE catalog/tree, GOTCHAS, docs + cursor flip
 
 **Exit criteria:** the four idols behave equivalently under the new schema

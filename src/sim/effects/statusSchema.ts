@@ -22,12 +22,13 @@
  *                         sim — resolved by the renderer over the `status:*`
  *                         lifecycle events (27e) + the held `active` overlay (28).
  *
- * SCOPE (27 periodic + 28 behavior). One axis the cluster vocabulary lists is
- * still deferred to its CONSUMING phase — config is never serialized, so adding
- * it later costs NO snapshot bump:
- *   - `statMods?` (the K1 stat-mod axis — a slow, a defense debuff) → arrives
- *     with its first consumer (§31 content). The runtime `StatusEffect.mods`
- *     already exists; this is only the authoring surface.
+ * SCOPE (27 periodic + 28 behavior + 47f statMods). The `statMods?` axis —
+ * deferred at 27 "until its first consumer" — landed at 47f with exactly
+ * that consumer: the Fortuna daemon's crit-buff status (`emboldened`,
+ * +1 STR/RNG/MAG for 5s). Config-only as predicted (no snapshot bump —
+ * defs are never serialized; the runtime `StatusEffect.mods` existed since
+ * K1, this is just the authoring surface). Mods are expressed PER ONE UNIT
+ * of magnitude (the K1 contract — `foldEffects` scales them).
  *
  * Authored in SECONDS (canonical, TICK_RATE-independent), converted at apply —
  * the existing convention. Config home: `config/statuses.json`
@@ -37,6 +38,7 @@
 
 import { z } from 'zod';
 import { PeriodicOpSchema } from './schema';
+import type { StatKey } from '../statusEffects';
 
 /**
  * How a re-applied status (same id) combines with the live instance. The
@@ -115,6 +117,28 @@ const StatusFxSchema = z
   })
   .partial();
 
+/** The 11-stat vocabulary as zod keys (the `config/empower.ts` BuffSchema
+ *  shape; `satisfies` pins it to `UnitStats` so a stat rename breaks the
+ *  build here rather than silently orphaning a config key). */
+const STAT_KEYS = [
+  'constitution',
+  'strength',
+  'ranged',
+  'magic',
+  'luck',
+  'defense',
+  'precision',
+  'evasion',
+  'speed',
+  'mobility',
+  'power',
+] as const satisfies readonly StatKey[];
+
+const StatModSchema = z.object({
+  add: z.number().optional(),
+  mul: z.number().optional(),
+});
+
 export const StatusDefSchema = z.object({
   id: z.string().min(1),
   /** Player-facing display name (the status overlay / future tooltip). */
@@ -125,6 +149,10 @@ export const StatusDefSchema = z.object({
   periodic: PeriodicSchema.optional(),
   behavior: BehaviorSchema.optional(),
   fx: StatusFxSchema.optional(),
+  /** 47f — the stat-mod axis: per-stat `add`/`mul`, per one unit of
+   *  magnitude (the K1 `StatusEffect.mods` contract). Any subset of the
+   *  11-stat vocabulary; absent = a pure periodic/behavior status. */
+  statMods: z.partialRecord(z.enum(STAT_KEYS), StatModSchema).optional(),
 });
 
 export type StatusMerge = z.infer<typeof StatusMergeSchema>;

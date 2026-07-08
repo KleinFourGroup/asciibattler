@@ -73,6 +73,14 @@ export interface GameEvents extends Record<string, unknown> {
      * (`World.emitBattleEnded`) sets it.
      */
     survivorPower?: { player: number; enemy: number };
+    /**
+     * 47f: battle-earned run resources (the World's serialized tally —
+     * accumulated by battle-domain daemon rules, spec §"the seam
+     * crossings"). Run settles `bits` through `gainBits` (the `bitsGain`
+     * fold applies at the settle). Optional on the `survivorPower`
+     * rationale — test fakes omit it; every real emit sets it.
+     */
+    tallies?: { bits: number };
   };
 
   /**

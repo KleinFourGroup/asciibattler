@@ -84,6 +84,9 @@ export class BattleScene implements Scene {
       encounter.gridW,
       encounter.gridH,
     );
+    // 47f — install the run's compiled daemon battle-hooks (data on the
+    // encounter; the fuzz harness mirrors this at ITS construction site).
+    this.world.installBattleRules(encounter.battleRules ?? []);
     this.clock = new Clock(TICK_RATE, () => {
       const w = this.world;
       if (!w || w.ended) return;

@@ -276,6 +276,9 @@ export function runOne(
   bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
     currentWorld = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
+    // 47f — the run's compiled daemon battle-hooks (BattleScene mirrors this
+    // at the live construction site).
+    currentWorld.installBattleRules(encounter.battleRules ?? []);
     currentObjRng = objectiveActive ? new RNG(worldSeed).fork() : null;
     currentCoverage = coverageActive ? new CoverageObjectiveDriver(new RNG(worldSeed).fork()) : null;
     unitTeams = new Map();

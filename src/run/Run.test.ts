@@ -2053,6 +2053,66 @@ describe('Run', () => {
     });
   });
 
+  describe('battle tallies (47f — the settle seam)', () => {
+    /** A bespoke battle-hook daemon (Laverna-shaped). */
+    const BATTLE_BITS: DaemonConfig = {
+      id: 'test-battle-bits',
+      name: 'Test Battle Bits',
+      description: '+1 bit per player hit',
+      rules: [{ kind: 'hook', on: 'dealHit', effect: { op: 'gainBits', amount: 1 } }],
+    };
+
+    it('the encounter carries the compiled battleRules (the seam into both World sites)', () => {
+      const { run } = freshRunWithBus(1, { daemon: BATTLE_BITS });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      expect(run.currentEncounter!.battleRules).toEqual([
+        { on: 'dealHit', effect: { op: 'gainBits', amount: 1 } },
+      ]);
+      // A grant-only idol compiles to an empty list.
+      const plain = freshRunWithBus(1, { daemon: daemonById('janus')! });
+      plain.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(plain.run) });
+      expect(plain.run.currentEncounter!.battleRules).toEqual([]);
+    });
+
+    it('a won turn settles the tally through gainBits (the bitsGain fold applies)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      run.addDaemon(daemonById('moneta')!);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      winEncounter(bus, [], 1_000, { bits: 10 });
+      const rule = daemonById('moneta')!.rules![0]!;
+      const mult = rule.kind === 'modifier' ? rule.value : NaN;
+      expect(run.bits).toBe(Math.round(10 * mult));
+    });
+
+    it('an ongoing (draw) turn settles too — bits accrue per turn, the XP cadence', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 3 });
+      chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 4 });
+      expect(run.bits).toBe(7);
+    });
+
+    it('a LOSING turn banks nothing (the skip-on-lost XP mirror)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      bus.emit('battle:ended', {
+        winner: 'enemy',
+        xpAwards: [],
+        survivorPower: { player: 0, enemy: HEALTH.playerHealthMax },
+        tallies: { bits: 50 },
+      });
+      expect(run.phase).toBe('defeat');
+      expect(run.bits).toBe(0);
+    });
+
+    it('an absent tally (test fakes) is a silent no-op', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      winEncounter(bus);
+      expect(run.bits).toBe(0);
+    });
+  });
+
   describe('resetRun command at Run level', () => {
     it('is a silent no-op (Game intercepts reset, not Run)', () => {
       const { run } = freshRunWithBus(1);
@@ -2596,11 +2656,15 @@ function winEncounter(
   // the encounter resolves as a win regardless of pool depth. Pass an explicit
   // poolMax only for partial-chip / multi-turn cases (those use chipTurn anyway).
   poolMax: number = 1_000,
+  // 47f — optional battle tally (the settle-seam tests); absent = the
+  // pre-47f no-tally emit, which Run treats as zero.
+  tallies?: GameEvents['battle:ended']['tallies'],
 ): void {
   bus.emit('battle:ended', {
     winner: 'player',
     xpAwards,
     survivorPower: { player: poolMax, enemy: 0 },
+    ...(tallies !== undefined ? { tallies } : {}),
   });
 }
 
@@ -2620,8 +2684,15 @@ function chipTurn(
   bus: EventBus<GameEvents>,
   survivorPower: { player: number; enemy: number },
   xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
+  // 47f — optional battle tally (the settle-seam tests).
+  tallies?: GameEvents['battle:ended']['tallies'],
 ): void {
-  bus.emit('battle:ended', { winner: 'draw', xpAwards, survivorPower });
+  bus.emit('battle:ended', {
+    winner: 'draw',
+    xpAwards,
+    survivorPower,
+    ...(tallies !== undefined ? { tallies } : {}),
+  });
 }
 
 function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {

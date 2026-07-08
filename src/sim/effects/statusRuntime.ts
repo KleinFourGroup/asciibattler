@@ -9,7 +9,7 @@
  */
 
 import { secondsToTicks } from '../../config';
-import type { StatusEffect, MergePolicy } from '../statusEffects';
+import type { StatusEffect, MergePolicy, StatKey, StatMod } from '../statusEffects';
 import type { StatusDef, StatusMerge } from './statusSchema';
 
 /**
@@ -37,9 +37,11 @@ export function statusMergeToPolicy(merge: StatusMerge): MergePolicy {
  * periodic op / interval / duration are NOT stored on the effect — they're
  * def-resolved by `key` (= the def id) at tick time; the only periodic runtime
  * state is `nextTickAt` (the per-unit cursor, first tick one interval AFTER
- * apply, so the applying hit doesn't double-dip). `mods` is empty in 27 (the
- * `statMods` authoring axis is deferred — see `statusSchema.ts`). Tick/duration
- * conversions floor at 1 tick so a sub-tick interval still advances.
+ * apply, so the applying hit doesn't double-dip). `mods` copies the def's
+ * `statMods` (the 47f authoring axis — per one unit of magnitude, the K1
+ * contract; each instance gets its OWN copy since merging mutates mods in
+ * place). Tick/duration conversions floor at 1 tick so a sub-tick interval
+ * still advances.
  */
 export function buildStatusEffect(
   def: StatusDef,
@@ -54,10 +56,22 @@ export function buildStatusEffect(
     1,
     secondsToTicks(durationSecondsOverride ?? def.durationSeconds),
   );
+  // 47f — normalize zod's explicit-`undefined` optionals into exact `StatMod`
+  // objects (the `config/empower.ts` `normalizeMods` discipline), copying per
+  // instance.
+  const mods: Partial<Record<StatKey, StatMod>> = {};
+  if (def.statMods) {
+    for (const [stat, mod] of Object.entries(def.statMods)) {
+      const out: StatMod = {};
+      if (mod.add !== undefined) out.add = mod.add;
+      if (mod.mul !== undefined) out.mul = mod.mul;
+      mods[stat as StatKey] = out;
+    }
+  }
   const effect: StatusEffect = {
     key: def.id,
     magnitude,
-    mods: {},
+    mods,
     lifetime: { kind: 'ticks', expiresAtTick: atTick + durationTicks },
     merge: statusMergeToPolicy(def.merge),
     sourceUnitId,

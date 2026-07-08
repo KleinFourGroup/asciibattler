@@ -105,5 +105,12 @@
     "merge": "refresh",
     "behavior": { "targeting": "random", "affects": "all", "acquisitionRange": 5 },
     "fx": { "active": "confusion_active" }
+  },
+  "emboldened": {
+    "id": "emboldened",
+    "name": "Emboldened",
+    "durationSeconds": 5,
+    "merge": "refresh",
+    "statMods": { "strength": { "add": 1 }, "ranged": { "add": 1 }, "magic": { "add": 1 } }
   }
 }

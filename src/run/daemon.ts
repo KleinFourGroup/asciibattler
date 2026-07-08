@@ -35,10 +35,11 @@
  * into (a daemon carrying both authors its redraw hook first).
  */
 
-import type { DaemonConfig, EffectOp, HookRule } from '../config/daemons';
+import { TRIGGER_DOMAIN, type DaemonConfig, type EffectOp, type HookRule } from '../config/daemons';
 import type { EmpowerConfig } from '../config/empower';
 import type { RNG } from '../core/RNG';
 import type { RedrawConfig } from './redraw';
+import type { BattleRule, BattleRuleTrigger } from '../sim/battleRules';
 
 /** 47e — the instant (non-grant) run-domain ops a hook can carry: executed
  *  at the trigger fire site the moment they resolve, never serialized. */
@@ -204,6 +205,42 @@ export interface RunFireContext {
  * outcome itself is seed-determined); parity just stays easy to reason
  * about: draws happen only for matching, coin-carrying firings.
  */
+/**
+ * 47f — compile the owned daemons' BATTLE-domain hooks into the plain
+ * `BattleRule[]` the World installs at battle setup (the spec's first seam
+ * crossing — see src/sim/battleRules.ts for the evaluation semantics).
+ * Daemons in ownership order, rules in authored order — the same fixed
+ * evaluation discipline as the run-domain walks, carried across the seam.
+ * The parse-time matrix (config/daemons.ts) guarantees a battle-trigger
+ * hook's op is `gainBits`/`applyStatus` and its filter is battle-legal; a
+ * bespoke in-memory daemon violating that throws loudly here.
+ */
+export function battleRulesFor(daemons: readonly DaemonConfig[]): BattleRule[] {
+  const rules: BattleRule[] = [];
+  for (const daemon of daemons) {
+    for (const rule of daemon.rules ?? []) {
+      if (rule.kind !== 'hook' || TRIGGER_DOMAIN[rule.on] !== 'battle') continue;
+      if (rule.effect.op !== 'gainBits' && rule.effect.op !== 'applyStatus') {
+        throw new Error(
+          `battleRulesFor: daemon '${daemon.id}' authors op '${rule.effect.op}' on battle trigger '${rule.on}' (parse-illegal — bespoke daemon?)`,
+        );
+      }
+      const compiled: BattleRule = {
+        on: rule.on as BattleRuleTrigger,
+        effect: rule.effect,
+      };
+      if (rule.chance !== undefined) compiled.chance = rule.chance;
+      if (rule.filter !== undefined) {
+        compiled.filter = {};
+        if (rule.filter.archetype !== undefined) compiled.filter.archetype = rule.filter.archetype;
+        if (rule.filter.crit !== undefined) compiled.filter.crit = rule.filter.crit;
+      }
+      rules.push(compiled);
+    }
+  }
+  return rules;
+}
+
 export function resolveInstantHooks(
   daemons: readonly DaemonConfig[],
   on: 'encounterStart' | 'encounterEnd',

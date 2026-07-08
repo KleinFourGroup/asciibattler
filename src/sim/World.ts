@@ -39,6 +39,7 @@ import type { StatusDef } from './effects/statusSchema';
 import { buildStatusEffect } from './effects/statusRuntime';
 import { TriggerDispatcher } from './triggers';
 import type { TriggerContextMap, TriggerHandler, TriggerName } from './triggers';
+import { assertBattleRuleStatusRefs, registerBattleRules, type BattleRule } from './battleRules';
 import { createAction } from './actions/registry';
 import { processChainHops, type PendingChainHop } from './effects/interpreter';
 import { createBehavior, createMovementBehavior } from './behaviors/registry';
@@ -250,6 +251,13 @@ import { NEUTRAL_DEFS, ALL_UNIT_DEFS, isDestructibleNeutral } from '../config/un
  *       §36b's non-instant moves (which DO leave a claim mid-flight) can never load
  *       under a stale reader. RunSnapshot is unaffected (claims are World-side +
  *       transient per battle).
+ *  33 — 47f (the battle-domain daemon seam) adds `battleRules` (compiled
+ *       daemon battle-hooks, plain data — handlers re-register from it on load,
+ *       the K1 behavior-registry pattern) and `tallies` (battle-earned run
+ *       resources, today `{ bits }` — the XP-ledger pattern; settled by Run at
+ *       `battle:ended`). A v32 save has neither field — a mid-battle resume
+ *       would silently drop an in-flight tally and every installed rule —
+ *       reject outright per the no-migration contract.
  *  32 — §40e (rubble clickable) added a `neutral` variant to `ObjectiveTarget`
  *       (`{kind:'neutral',unitId}`) so a player can manually `focus`/`engage` a
  *       DESTRUCTIBLE neutral (rubble / a destructible wall). A team objective is
@@ -261,7 +269,7 @@ import { NEUTRAL_DEFS, ALL_UNIT_DEFS, isDestructibleNeutral } from '../config/un
  *       objective (no way to set one), so nothing is lost. RunSnapshot is
  *       unaffected — the objective is World-side + transient per battle.
  */
-const WORLD_SCHEMA_VERSION = 32;
+const WORLD_SCHEMA_VERSION = 33;
 
 /** §40b — filler maxHp for an hp-less (indestructible) neutral so its Unit is
  *  "alive" enough to block pathing / LOS. Never a damage target — `isCombatTargetable`
@@ -396,6 +404,17 @@ export interface WorldSnapshot {
    *  wires the claim/release lifecycle), serialized so a save caught mid-move
    *  (post-§36b) resumes the reservations. */
   claims: Claim[];
+  /** 47f: the installed battle-domain daemon rules (compiled data — see
+   *  src/sim/battleRules.ts). Serialized verbatim; `fromJSON` re-registers
+   *  the handlers from it (the K1 behavior-registry pattern). */
+  battleRules: BattleRule[];
+  /** 47f: battle-earned run resources (the XP-ledger pattern, spec §"the
+   *  seam crossings"). Accumulated by rule execution mid-battle, serialized
+   *  so a mid-battle resume keeps the earnings, computed into the
+   *  `battle:ended` payload and settled by `Run.gainBits` (where the
+   *  `bitsGain` fold applies). Launch shape: bits only — grows when
+   *  content demands. */
+  tallies: { bits: number };
 }
 
 /**
@@ -467,6 +486,24 @@ export class World {
    * Serialized in the WorldSnapshot (v31).
    */
   readonly claims: Map<string, Claim> = new Map();
+
+  /**
+   * 47f — the installed battle-domain daemon rules (plain compiled data; see
+   * src/sim/battleRules.ts for the evaluation semantics). Set once per battle
+   * via `installBattleRules` (both construction sites + `fromJSON`), which
+   * also registers the trigger handlers — the data is serialized (v33), the
+   * handlers never are (the K1 behavior-registry pattern).
+   */
+  private battleRules: readonly BattleRule[] = [];
+
+  /**
+   * 47f — battle-earned run resources (the XP-ledger pattern): rule
+   * execution accumulates here mid-battle; `emitBattleEnded` copies it into
+   * the `battle:ended` payload; Run settles it (`gainBits`, where the
+   * `bitsGain` fold applies). Serialized (v33) so a mid-battle resume keeps
+   * the earnings. Launch shape: bits only.
+   */
+  private readonly tallies = { bits: 0 };
 
   private readonly bus: EventBus<GameEvents>;
   private tickCount = 0;
@@ -621,6 +658,35 @@ export class World {
    */
   registerTrigger<K extends TriggerName>(name: K, handler: TriggerHandler<K>): void {
     this.triggers.register(name, handler);
+  }
+
+  /**
+   * 47f — install the battle's compiled daemon rules: store the data (for
+   * the snapshot) and register its trigger handlers. Called at most once per
+   * World (BattleScene / the fuzz harness / `fromJSON`); a second call
+   * throws — rules are per-battle constants, never appended mid-fight.
+   * Status refs are validated HERE so a bad id fails at battle setup, never
+   * mid-tick. An empty list is a free no-op (the daemon-less common case).
+   */
+  installBattleRules(rules: readonly BattleRule[]): void {
+    if (this.battleRules.length > 0) {
+      throw new Error('World.installBattleRules: rules already installed');
+    }
+    if (rules.length === 0) return;
+    assertBattleRuleStatusRefs(rules);
+    this.battleRules = rules;
+    registerBattleRules(this, rules);
+  }
+
+  /** 47f — accumulate battle-earned bits into the serialized tally (rule
+   *  execution's write path; settled by Run at `battle:ended`). */
+  tallyBits(amount: number): void {
+    this.tallies.bits += amount;
+  }
+
+  /** Test-only read of the bits tally (the `damageDealtBy` precedent). */
+  bitsTallied(): number {
+    return this.tallies.bits;
   }
 
   /**
@@ -1699,7 +1765,14 @@ export class World {
       this.damageDealt,
       this.utilityDone,
     );
-    this.bus.emit('battle:ended', { winner, xpAwards, survivorPower: this.survivorPower() });
+    this.bus.emit('battle:ended', {
+      winner,
+      xpAwards,
+      survivorPower: this.survivorPower(),
+      // 47f — the battle-earned run resources (copied: the payload must not
+      // share the live accumulator). Run settles bits via `gainBits`.
+      tallies: { ...this.tallies },
+    });
   }
 
   /**
@@ -2025,6 +2098,11 @@ export class World {
         unitId: c.unitId,
         plane: c.plane,
       })),
+      // 47f — the rules are immutable per battle (installed once), so a
+      // JSON-serialized wire image can reference them; the tally is live —
+      // copy it.
+      battleRules: this.battleRules.slice(),
+      tallies: { ...this.tallies },
     };
   }
 
@@ -2150,6 +2228,12 @@ export class World {
     for (const c of snap.claims) {
       world.claims.set(cellKey(c.cell), { cell: { x: c.cell.x, y: c.cell.y }, unitId: c.unitId, plane: c.plane });
     }
+
+    // 47f — restore the battle rules AND re-register their handlers (the K1
+    // behavior-registry pattern: data snapshotted, handlers re-attached), then
+    // the in-flight tally — a mid-battle resume keeps its earnings.
+    world.installBattleRules(snap.battleRules);
+    world.tallies.bits = snap.tallies.bits;
 
     return world;
   }

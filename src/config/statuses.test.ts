@@ -13,18 +13,30 @@ import { parseStatusDef, type StatusDef } from '../sim/effects/statusSchema';
  * still build literal fixtures (they probe the check, not the catalog).
  */
 
-describe('STATUS_DEFS registry (27c periodic + 28 behavior content)', () => {
-  it('ships the four periodic + four behavior statuses', () => {
+describe('STATUS_DEFS registry (27c periodic + 28 behavior + 47f statMods content)', () => {
+  it('ships the four periodic + four behavior statuses + 47f emboldened', () => {
     expect(Object.keys(STATUS_DEFS).sort()).toEqual([
       'bleed',
       'blind',
       'burn',
       'confusion',
+      'emboldened',
       'frozen',
       'panic',
       'poison',
       'rejuvenate',
     ]);
+  });
+
+  it('emboldened is a pure statMods buff (+offense triple, no periodic/behavior) — the axis first consumer (47f)', () => {
+    const def = statusDef('emboldened');
+    expect(def.periodic).toBeUndefined();
+    expect(def.behavior).toBeUndefined();
+    expect(def.merge).toBe('refresh'); // a re-crit refreshes, never stacks
+    for (const stat of ['strength', 'ranged', 'magic'] as const) {
+      expect(def.statMods?.[stat]?.add).toBeGreaterThan(0);
+    }
+    expect(def.statMods?.defense).toBeUndefined();
   });
 
   it('every entry declares an id matching its registry key', () => {

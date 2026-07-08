@@ -3,6 +3,7 @@ import {
   rollDaemon,
   resolveTurnGrants,
   resolveInstantHooks,
+  battleRulesFor,
   disabledTurnGrants,
   daemonRedrawHook,
   daemonEmpowerHook,
@@ -328,15 +329,80 @@ describe('daemonRedrawHook / daemonEmpowerHook (the authored-hook lookups)', () 
   });
 });
 
+describe('battleRulesFor (47f — the battle-domain compile)', () => {
+  it('compiles ONLY battle-domain hooks, preserving ownership × authored order', () => {
+    const mixed: DaemonConfig = {
+      id: 'test-mixed',
+      name: 'Test Mixed',
+      description: 'run + battle hooks + a modifier',
+      rules: [
+        { kind: 'modifier', stat: 'bitsGain', op: 'mult', value: 1.5 },
+        { kind: 'hook', on: 'turnStart', effect: { op: 'gainBits', amount: 2 } },
+        { kind: 'hook', on: 'dealHit', filter: { crit: true }, effect: { op: 'gainBits', amount: 1 } },
+        { kind: 'hook', on: 'kill', chance: 0.5, effect: { op: 'gainBits', amount: 5 } },
+      ],
+    };
+    const second: DaemonConfig = {
+      id: 'test-second',
+      name: 'Test Second',
+      description: 'one battle hook',
+      rules: [{ kind: 'hook', on: 'dealHit', effect: { op: 'gainBits', amount: 3 } }],
+    };
+    expect(battleRulesFor([mixed, second])).toEqual([
+      { on: 'dealHit', filter: { crit: true }, effect: { op: 'gainBits', amount: 1 } },
+      { on: 'kill', chance: 0.5, effect: { op: 'gainBits', amount: 5 } },
+      { on: 'dealHit', effect: { op: 'gainBits', amount: 3 } },
+    ]);
+  });
+
+  it('no daemons / run-only daemons compile to an empty list', () => {
+    expect(battleRulesFor([])).toEqual([]);
+    expect(battleRulesFor([SURE_BOTH, COIN_REDRAW])).toEqual([]);
+  });
+
+  it('the shipped catalog compiles clean: laverna + fortuna are the only battle-hook idols', () => {
+    for (const d of DAEMONS) {
+      const compiled = battleRulesFor([d]);
+      if (d.id === 'laverna' || d.id === 'fortuna') expect(compiled).toHaveLength(1);
+      else expect(compiled).toEqual([]);
+    }
+  });
+});
+
 describe('the shipped catalog (config/daemons.json) — design-shape pins', () => {
-  it('ships the four idols of the L design round plus 47e Moneta', () => {
+  it('ships the four L idols + the three 47e/f economy idols', () => {
     expect(DAEMONS.map((d) => d.id).sort()).toEqual([
+      'fortuna',
       'janus',
+      'laverna',
       'mars',
       'mercury',
       'minerva',
       'moneta',
     ]);
+  });
+
+  it('laverna pays a bit per rogue blow (example daemon #1 — battle→run tally)', () => {
+    const [rule] = battleRulesFor([daemonById('laverna')!]);
+    expect(rule).toEqual({
+      on: 'dealHit',
+      filter: { archetype: 'rogue' },
+      effect: { op: 'gainBits', amount: 1 },
+    });
+  });
+
+  it('fortuna emboldens the striker on a crit (example daemon #2 — battle→battle status)', () => {
+    const [rule] = battleRulesFor([daemonById('fortuna')!]);
+    expect(rule).toEqual({
+      on: 'dealHit',
+      filter: { crit: true },
+      effect: { op: 'applyStatus', statusId: 'emboldened' },
+    });
+    // Neither battle idol grants a pre-turn tool (the catalog-inclusion call).
+    for (const id of ['laverna', 'fortuna']) {
+      expect(daemonRedrawHook(daemonById(id)!)).toBeUndefined();
+      expect(daemonEmpowerHook(daemonById(id)!)).toBeUndefined();
+    }
   });
 
   it('moneta is a pure passive: one bitsGain mult > 1, no hooks (example daemon #3)', () => {

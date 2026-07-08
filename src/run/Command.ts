@@ -34,6 +34,21 @@ export type RunCommand =
    */
   | { readonly kind: 'dismissPromotion' }
   /**
+   * 48b — accept ONE pending reward portion (`index` into
+   * `Run.pendingRewards`). Bits settle through `gainBits` (the fold applies
+   * at accept time); a daemon joins the ownership list immediately. Only
+   * valid in the `reward` phase with a live offer — anything else (wrong
+   * phase, out-of-range index) is a silent no-op. Resolving the last
+   * portion re-enters the gate chain (promotion → recruit/victory).
+   */
+  | { readonly kind: 'acceptReward'; readonly index: number }
+  /**
+   * 48b — decline ONE pending reward portion (the declinable-per-portion
+   * spec lock; `passRecruit`'s sibling). Same validity + no-op contract as
+   * `acceptReward`.
+   */
+  | { readonly kind: 'declineReward'; readonly index: number }
+  /**
    * H4b — advance past a turn gate (the pre-turn or post-turn screen). From
    * `turn-intro` it starts the turn's tactical battle; from `turn-outcome` it
    * continues the encounter (next turn) or ends it (recruit / promotion /

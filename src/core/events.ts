@@ -20,6 +20,7 @@ import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
 import type { StatusEffect } from '../sim/statusEffects';
 import type { MoveDecisionKind } from '../sim/moveDecision';
 import type { RedrawAvailability } from '../run/redraw';
+import type { RewardPortion } from '../run/rewards';
 import type { Theme } from '../sim/layouts';
 import type { EncounterKind } from '../config/encounters';
 
@@ -351,6 +352,17 @@ export interface GameEvents extends Record<string, unknown> {
   'run:bitsChanged': { bits: number; delta: number };
 
   'recruit:offered': { units: UnitTemplate[] };
+
+  /**
+   * 48b: a won encounter's reward offer is ready — the run just entered the
+   * `reward` phase (interposed BEFORE any promotion: battle → rewards →
+   * promotion → recruit, the shape-locked ordering). The payload is a copy
+   * of the rolled portions; the screen resolves them one at a time via the
+   * `acceptReward` / `declineReward` commands and should re-read
+   * `run.pendingRewards` (and derive bits displays via `run.effectiveBits`)
+   * after each — the live offer shrinks as portions resolve.
+   */
+  'reward:offered': { rewards: readonly RewardPortion[] };
 
   /**
    * E4: one or more player roster units crossed an XP threshold during

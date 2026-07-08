@@ -12,6 +12,10 @@
  *   battle ── battle:ended (enemy win)                       ──▶ defeat
  *   recruit ── chooseRecruit ──▶ map
  *
+ * 48b — a winning final turn interposes the gate chain BEFORE the win path
+ * above: reward (if the encounter's refs rolled an offer) → promotion (if
+ * units leveled) → the recruit/complete fork (`continueFromTurnGate`).
+ *
  * T2 — the run is a *sequence of sectors* (a sector = one node-map + its layout
  * pool/theme/length, selected off the sector-selection DAG in `sectorWalk.ts`).
  * Clearing a sector's terminal advances to a successor sector unless that DAG
@@ -82,6 +86,8 @@ import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
 import { selectEncounter } from './encounters/selection';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
+import { rewardTableById } from '../config/rewards';
+import { rollRewards, type RewardPortion } from './rewards';
 import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { xpToNext } from '../sim/xp';
@@ -93,11 +99,16 @@ import type { Archetype } from '../sim/archetypes';
 // only when `pauseAtTurnGates` is on, so the pre/post-turn screens can pause the
 // encounter loop. The headless loop never enters them (it runs straight through
 // `battle`), so existing headless tests + the fuzz harness are unaffected.
+// 48b adds `reward` — entered on a WON final turn when the encounter's reward
+// refs rolled a non-empty offer (both gated AND headless paths: the offer is a
+// real decision, not presentation). The locked ordering: battle → reward →
+// promotion → recruit (`continueFromTurnGate`).
 export type RunPhase =
   | 'map'
   | 'turn-intro'
   | 'battle'
   | 'turn-outcome'
+  | 'reward'
   | 'promotion'
   | 'recruit'
   | 'defeat'
@@ -256,8 +267,13 @@ export interface BattleEncounter {
  *  gains `battleRules` (the owned daemons' compiled battle hooks — the World
  *  installs them at construction). A v27 save's mid-battle encounter lacks
  *  them → a resumed battle would silently fight without the run's daemons —
- *  reject. */
-const RUN_SCHEMA_VERSION = 28;
+ *  reject.
+ *  48b: bumped 28→29. The reward phase: adds the two dedicated reward
+ *  streams (`rewardRng` sampling / `rewardBitsRng` bits rolls), the
+ *  `pendingRewards` offer, and the `'reward'` member of `phase`. A v28 save
+ *  lacks the streams (and could sit in a phase shape this engine routes
+ *  differently) → reject. */
+const RUN_SCHEMA_VERSION = 29;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -300,6 +316,11 @@ export interface RunSnapshot {
   /** L1: dedicated stream for the daemon roll + per-turn gate chance flips,
    *  forked from `rng` at construction (isolated like `levelupRng`). */
   daemonRng: RNGSnapshot;
+  /** 48b: dedicated stream for reward chance tests + table sampling (the
+   *  draw count is filter-dependent — isolation is load-bearing). */
+  rewardRng: RNGSnapshot;
+  /** 48b: dedicated stream for reward bits `{min,max}` rolls. */
+  rewardBitsRng: RNGSnapshot;
   /** L1→47d: the run's owned daemons BY ID, in acquisition order (the
    *  def-resolved pattern — what makes uncapped multi-daemon cheap). An id
    *  missing from the catalog on load is a hard reject (no silent drops);
@@ -370,6 +391,11 @@ export interface RunSnapshot {
    *  while `phase === 'promotion'`. Snapshotted so a save mid-promotion
    *  restores to the same screen with the same deltas. */
   pendingPromotions: PromotionInfo[] | null;
+  /** 48b: the rolled-but-unresolved reward portions (the pending offer —
+   *  the `currentOffer` pattern). Rolled ONCE at the winning turn boundary;
+   *  each accept/decline removes its portion. Snapshotted so a mid-reward
+   *  save reproduces the exact offer (the §48 exit-criterion contract). */
+  pendingRewards: RewardPortion[] | null;
 }
 
 /**
@@ -410,6 +436,14 @@ export class Run {
    *  (Mercury's coin). Forked once at construction (isolated like
    *  `levelupRng`), so a chance-gated daemon doesn't perturb any other stream. */
   readonly daemonRng: RNG;
+  /** 48b: dedicated stream for reward-ref chance tests + table sampling.
+   *  Isolated because the draw count is FILTER-DEPENDENT (owned-daemon
+   *  exclusion can collapse a table to a zero-draw singleton — gotcha #111),
+   *  so it must never share a stream with anything else. */
+  readonly rewardRng: RNG;
+  /** 48b: dedicated stream for bits `{min,max}` rolls (the spec's "bits
+   *  rolls, table sampling ... EACH get dedicated forked RNG streams"). */
+  readonly rewardBitsRng: RNG;
   /** L1→47d: the run's owned daemons, in ACQUISITION order (index 0 = the
    *  run-start roll; §48 rewards / §50 ports append via `addDaemon` —
    *  uncapped, the locked design). Seeded from `RunConfig.daemon` (a bespoke
@@ -570,6 +604,15 @@ export class Run {
    */
   pendingPromotions: PromotionInfo[] | null = null;
   /**
+   * 48b — the rolled-but-unresolved reward portions (the pending offer, the
+   * `currentOffer` pattern). Rolled ONCE in `handleTurnEnded` when the final
+   * turn wins; `continueFromTurnGate` interposes the reward phase while it's
+   * non-null; each accept/decline removes its portion, and resolving the
+   * last one re-enters the gate chain. Persisted (v29) so a mid-reward save
+   * reproduces the exact offer.
+   */
+  pendingRewards: RewardPortion[] | null = null;
+  /**
    * Nodes the player has cleared (entered + survived). Used by MapScreen to
    * draw a visual trail of completed nodes. Root is never added — it's not
    * "completed" in the battle sense, it's just the starting point.
@@ -677,6 +720,12 @@ export class Run {
           ? []
           : [config.daemon]
         : [rollDaemon(DAEMONS, this.daemonRng)];
+    // 48b — the two reward streams, appended after daemon (the same
+    // convention + fuzz-re-baseline note as H5/L1). Sampling and bits rolls
+    // are SEPARATE streams because the sampling draw count is
+    // filter-dependent (owned-daemon exclusion → zero-draw singletons).
+    this.rewardRng = this.rng.fork();
+    this.rewardBitsRng = this.rng.fork();
     this.turnGrants = disabledTurnGrants();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
@@ -736,6 +785,12 @@ export class Run {
         break;
       case 'dismissPromotion':
         this.handleDismissPromotion();
+        break;
+      case 'acceptReward':
+        this.handleAcceptReward(command.index);
+        break;
+      case 'declineReward':
+        this.handleDeclineReward(command.index);
         break;
       case 'advanceTurn':
         this.handleAdvanceTurn();
@@ -1034,15 +1089,29 @@ export class Run {
   }
 
   /**
-   * 47e — earn bits: `base` × the folded `bitsGain` multiplier, ROUNDED to
-   * an integer at the grant site (the runStats.ts contract — the fold itself
-   * never rounds), then through the floor-at-zero chokepoint. Every earn
-   * surface routes here (daemon hooks now; §48 reward settles + the 47f
-   * battle-tally settle next), so a bits-gain modifier daemon applies
-   * uniformly without per-surface bookkeeping.
+   * 48b — the settle math for a bits earn: `base` × the folded `bitsGain`
+   * multiplier, ROUNDED to an integer (the runStats.ts contract — the fold
+   * itself never rounds). Public and SHARED with the reward screen's display
+   * derivation (the shape-lock rider: the screen must show exactly what the
+   * settle grants — one code path, drift-impossible; accepting a bits-fold
+   * daemon mid-offer visibly re-derives the remaining portions). 48f's
+   * `bitsMultiplier` difficulty lever joins this product.
+   */
+  effectiveBits(base: number): number {
+    return Math.round(base * this.effectiveRunStats().bitsGain);
+  }
+
+  /**
+   * 47e — earn bits: the `effectiveBits` settle math, then through the
+   * floor-at-zero chokepoint. Every earn surface routes here (daemon hooks,
+   * the 47f battle-tally settle, the 48b reward settle), so a bits-gain
+   * modifier daemon applies uniformly without per-surface bookkeeping.
+   * NB for §50: port SELL proceeds are a refund, not income — they must
+   * take the raw `addBits` path, never this one, or a bits fold above
+   * 1/sellFraction mints an infinite buy-sell loop (worklog §48).
    */
   gainBits(base: number): void {
-    this.addBits(Math.round(base * this.effectiveRunStats().bitsGain));
+    this.addBits(this.effectiveBits(base));
   }
 
   /**
@@ -1233,6 +1302,22 @@ export class Run {
       // applies at the settle (Laverna stacks with Moneta for free). Mirrors
       // the XP bank's skip-on-lost: a defeat's loot is dead state.
       if (tallies !== undefined && tallies.bits > 0) this.gainBits(tallies.bits);
+      // 48b — the winning boundary rolls the encounter's rewards, alongside
+      // the XP/tally banking above (rolled HERE, not at the gate, so a save
+      // on the turn-outcome screen already carries the exact offer). Empty
+      // roll → null → `continueFromTurnGate` skips the phase entirely (the
+      // `promotions.length > 0` shape). Draws ride the two dedicated reward
+      // streams, so a rewards-less win perturbs nothing.
+      if (result === 'won') {
+        const portions = rollRewards(
+          this.selectedEncounter?.rewards ?? [],
+          rewardTableById,
+          this.ownedDaemonIds(),
+          this.rewardRng,
+          this.rewardBitsRng,
+        );
+        this.pendingRewards = portions.length > 0 ? portions : null;
+      }
     }
     if (this.pauseAtTurnGates) {
       // Pause on the post-turn outcome screen; the player's `advanceTurn`
@@ -1250,15 +1335,38 @@ export class Run {
         enemyHealth: this.enemyHealth,
         enemyHealthMax: this.enemyHealthPoolMax,
       });
-    } else if (this.pendingPromotions) {
-      // M1 headless — the promotion pause interposes between the resolved
-      // turn and the loop continuing (the gated path does the same from
-      // `handleAdvanceTurn`). The harness/test loop dismisses and re-enters.
+    } else {
+      // 48b headless — the gate chain (reward → promotion → continue)
+      // interposes between the resolved turn and the loop continuing (the
+      // gated path enters the same chain from `handleAdvanceTurn`). The
+      // harness/test loop resolves each gate and re-enters.
+      this.continueFromTurnGate();
+    }
+  }
+
+  /**
+   * 48b — the post-turn gate chain, the shape-locked ordering: reward (loot
+   * while the win is fresh) → promotion → `continueAfterTurn` (next turn /
+   * finishEncounter → recruit/victory). Every gate resolution re-enters this
+   * chain, so the ordering holds regardless of which gate a save/reload (or
+   * the gated vs headless path) lands on. `turnResult` is pure — the pools
+   * don't change across the pauses — so re-reading it here routes exactly as
+   * the original boundary would have (the H4b `continueAfterTurn` contract).
+   * `pendingRewards` is non-null only on a won final turn (`handleTurnEnded`
+   * rolls it), so the reward gate can never interpose mid-encounter.
+   */
+  private continueFromTurnGate(): void {
+    if (this.pendingRewards !== null) {
+      this.phase = 'reward';
+      this.bus.emit('reward:offered', { rewards: this.pendingRewards.slice() });
+      return;
+    }
+    if (this.pendingPromotions !== null) {
       this.phase = 'promotion';
       this.bus.emit('promotion:pending', { promotions: this.pendingPromotions });
-    } else {
-      this.continueAfterTurn(result);
+      return;
     }
+    this.continueAfterTurn(this.turnResult());
   }
 
   /**
@@ -1329,15 +1437,10 @@ export class Run {
       this.phase = 'battle';
       this.beginTurn();
     } else if (this.phase === 'turn-outcome') {
-      if (this.pendingPromotions) {
-        // M1 — surface the turn's level-ups (banked in `handleTurnEnded`)
-        // before the loop continues; `handleDismissPromotion` resumes it.
-        // AFTER the outcome screen, so the result is read first.
-        this.phase = 'promotion';
-        this.bus.emit('promotion:pending', { promotions: this.pendingPromotions });
-      } else {
-        this.continueAfterTurn(this.turnResult());
-      }
+      // 48b — the gate chain (reward → promotion → continue) runs AFTER the
+      // outcome screen, so the result is read first (the M1 discipline,
+      // generalized from the single promotion gate).
+      this.continueFromTurnGate();
     }
   }
 
@@ -1504,6 +1607,69 @@ export class Run {
    */
   addDaemon(daemon: DaemonConfig): void {
     this.daemons.push(daemon);
+  }
+
+  /**
+   * 48b — the ids the run currently owns, derived at call time (the only
+   * pre-48b expression was `toJSON`'s inline map). The exclusion input for
+   * reward-table sampling (and §50's port stock after it).
+   */
+  ownedDaemonIds(): ReadonlySet<string> {
+    return new Set(this.daemons.map((d) => d.id));
+  }
+
+  /**
+   * 48b — accept one pending reward portion (an index into `pendingRewards`).
+   * Bits settle through `gainBits` (the fold applies NOW, at accept time —
+   * so a daemon accepted earlier in this same offer already counts); a
+   * daemon joins the ownership list immediately, which also means the
+   * just-won encounter's `encounterEnd` hooks (fired later, in
+   * `finishEncounter`) include it — accepted behavior, the loot fires for
+   * the fight it dropped from (worklog §48). Outside the reward phase or
+   * out-of-range: the silent no-op discipline (a double-click can't corrupt
+   * state). Resolving the last portion re-enters the gate chain.
+   */
+  private handleAcceptReward(index: number): void {
+    const portion = this.takePendingReward(index);
+    if (portion === null) return;
+    if (portion.kind === 'bits') {
+      this.gainBits(portion.base);
+    } else {
+      const daemon = daemonById(portion.daemonId);
+      if (daemon === undefined) {
+        // The roller only emits catalog ids (boot-asserted tables) — a miss
+        // here is corruption, and loud beats a silently vanished reward.
+        throw new Error(`Run.handleAcceptReward: unknown daemon id '${portion.daemonId}'`);
+      }
+      this.addDaemon(daemon);
+    }
+    this.afterRewardResolved();
+  }
+
+  /** 48b — decline one pending reward portion (the declinable-per-portion
+   *  spec lock, `passRecruit`'s sibling). Same no-op guards as accept. */
+  private handleDeclineReward(index: number): void {
+    if (this.takePendingReward(index) === null) return;
+    this.afterRewardResolved();
+  }
+
+  /** 48b — pop portion `index` out of the pending offer, or null when the
+   *  command is stray (wrong phase / no offer / out-of-range index). */
+  private takePendingReward(index: number): RewardPortion | null {
+    if (this.phase !== 'reward' || this.pendingRewards === null) return null;
+    const portion = this.pendingRewards[index];
+    if (portion === undefined) return null;
+    this.pendingRewards.splice(index, 1);
+    return portion;
+  }
+
+  /** 48b — after a portion resolves: wait for the rest, or (offer drained)
+   *  clear it and re-enter the gate chain (promotion next, then the
+   *  recruit/victory fork via `continueAfterTurn` → `finishEncounter`). */
+  private afterRewardResolved(): void {
+    if (this.pendingRewards !== null && this.pendingRewards.length > 0) return;
+    this.pendingRewards = null;
+    this.continueFromTurnGate();
   }
 
   /**
@@ -1862,6 +2028,8 @@ export class Run {
       levelupRng: this.levelupRng.toJSON(),
       deckRng: this.deckRng.toJSON(),
       daemonRng: this.daemonRng.toJSON(),
+      rewardRng: this.rewardRng.toJSON(),
+      rewardBitsRng: this.rewardBitsRng.toJSON(),
       // 47d — daemons serialize BY ID (def-resolved on load); `turnGrants`
       // by reference (never mutated in place — reassigned whole each turn;
       // `empowerEffect` deep-copies the buff mods at apply time).
@@ -1895,6 +2063,11 @@ export class Run {
       visitedNodes: Array.from(this.visitedNodes),
       pendingPromotions: this.pendingPromotions
         ? this.pendingPromotions.slice()
+        : null,
+      // 48b — copy each portion (flat objects, mutated only by splice — the
+      // copies keep the wire image independent of the live offer).
+      pendingRewards: this.pendingRewards
+        ? this.pendingRewards.map((p) => ({ ...p }))
         : null,
     };
   }
@@ -1936,6 +2109,8 @@ export class Run {
     m.levelupRng = RNG.fromJSON(snap.levelupRng);
     m.deckRng = RNG.fromJSON(snap.deckRng);
     m.daemonRng = RNG.fromJSON(snap.daemonRng);
+    m.rewardRng = RNG.fromJSON(snap.rewardRng);
+    m.rewardBitsRng = RNG.fromJSON(snap.rewardBitsRng);
     // 47d — re-resolve owned daemons BY ID from the shipped catalog; an
     // unknown id (retired entry / bespoke daemon) is a hard reject, never a
     // silent drop. The CURRENT turn's resolved grants restore as-is (a save
@@ -1985,6 +2160,19 @@ export class Run {
     m.visitedNodes = new Set(snap.visitedNodes);
     m.pendingPromotions = snap.pendingPromotions
       ? snap.pendingPromotions.slice()
+      : null;
+    // 48b — restore the pending offer, validating daemon portions against
+    // the catalog (the daemonIds discipline: an unknown id is a hard reject,
+    // never a silently unacceptable reward).
+    m.pendingRewards = snap.pendingRewards
+      ? snap.pendingRewards.map((p) => {
+          if (p.kind === 'daemon' && daemonById(p.daemonId) === undefined) {
+            throw new Error(
+              `Run.fromJSON: pending reward references unknown daemon id '${p.daemonId}'`,
+            );
+          }
+          return { ...p };
+        })
       : null;
     run['subscribe']();
     return run;

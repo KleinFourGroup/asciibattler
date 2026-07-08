@@ -8,7 +8,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 | | |
 |---|---|
-| **NEXT** | **Phase 48 IN BUILD (Rewards)** — kickoff ✅ 2026-07-08 (audit + shape-lock: [WORKLOG.md](WORKLOG.md) §48; all decision points DECIDED — turn-gate splice · round-trip contract · overlay owns top-left · `bitsMultiplier` in `gainBits` with display-derives-from-settle · 4-table launch catalog). The 7-commit cut 48a–g: [ROADMAP.md](ROADMAP.md) §48. **Next commit: 48a** (the rewards config layer). Charter + exit criteria: ROADMAP §48 |
+| **NEXT** | **Phase 48 IN BUILD (Rewards)** — kickoff ✅ 2026-07-08 (audit + shape-lock: [WORKLOG.md](WORKLOG.md) §48; all decision points DECIDED — turn-gate splice · round-trip contract · overlay owns top-left · `bitsMultiplier` in `gainBits` with display-derives-from-settle · 4-table launch catalog). The 7-commit cut 48a–g: [ROADMAP.md](ROADMAP.md) §48. **Next commit: 48b** (the Run engine — streams, roll-on-win, the `'reward'` phase, Run v28→v29). Charter + exit criteria: ROADMAP §48 |
 | **In flight** | **Cluster 3 — Economy (Phases 47→52)**: spec [cluster-3-spec.md](cluster-3-spec.md) ✅ LOCKED · [ROADMAP.md](ROADMAP.md) ✅ shape-locked 2026-07-07 · [WORKLOG.md](WORKLOG.md) live (narrative appends there) · **Phase 47 (the rule vocabulary) ✅ CLOSED 2026-07-08, all exit criteria met + user-playtested throughout** (`3494722`→the 47g close: Rule schema + hook engine + multi-daemon by id + bits substrate + battleRules/tallies seam + the 7-idol catalog; Run v24→v28, World v32→v33; every step fuzz-oracled — full story: [WORKLOG.md](WORKLOG.md) §47) |
 | **Branch / tree** | `main`, working tree clean at last close |
 | **Snapshots** | WorldSnapshot **v33** · RunSnapshot **v28** |

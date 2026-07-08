@@ -19,6 +19,7 @@ import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import { EMPOWER } from '../config/empower';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
+import { rewardTableById } from '../config/rewards';
 import { daemonRedrawHook, daemonEmpowerHook } from './daemon';
 import { RUN_STAT_BASES } from './runStats';
 import { ECONOMY } from '../config/economy';
@@ -2187,6 +2188,7 @@ describe('Run', () => {
       const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       winEncounter(bus);
+      acceptAllRewards(run); // 48b — the selection may carry rewards
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       const snap = run.toJSON();
@@ -2210,6 +2212,7 @@ describe('Run', () => {
       const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       winEncounter(bus);
+      acceptAllRewards(run); // 48b — the selection may carry rewards
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
@@ -2638,6 +2641,152 @@ describe('Run', () => {
   });
 });
 
+describe('48b — the reward phase', () => {
+  /** A daemon-less run forced onto brigands (which ships the 48a skeleton
+   *  ref: `bits-small` at chance 1), driven to a one-turn encounter win.
+   *  Daemon-less so the bits fold starts at identity. */
+  function winWithRewards(
+    seed = 1,
+    xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
+  ): RunHandle {
+    const handle = freshRunWithBus(seed, { daemon: null, forcedEncounterId: 'brigands' });
+    handle.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(handle.run) });
+    winEncounter(handle.bus, xpAwards);
+    return handle;
+  }
+
+  /** The 48a skeleton table's authored bits range (balance-proof: derived
+   *  from config, never hardcoded). */
+  function skeletonRange(): { min: number; max: number } {
+    const entry = rewardTableById('bits-small')!.entries[0]!;
+    if (entry.kind !== 'bits') throw new Error('expected the bits skeleton entry');
+    return { min: entry.min, max: entry.max };
+  }
+
+  it('a won rewards-carrying encounter enters the reward phase FIRST, recruit deferred', () => {
+    const { run, bus } = freshRunWithBus(1, { daemon: null, forcedEncounterId: 'brigands' });
+    const offered: number[] = [];
+    const recruits: number[] = [];
+    bus.on('reward:offered', ({ rewards }) => offered.push(rewards.length));
+    bus.on('recruit:offered', ({ units }) => recruits.push(units.length));
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    winEncounter(bus);
+    expect(run.phase).toBe('reward');
+    expect(offered).toEqual([1]);
+    expect(recruits).toEqual([]);
+    expect(run.currentOffer).toBeNull();
+    const portion = run.pendingRewards![0]!;
+    if (portion.kind !== 'bits') throw new Error('expected a bits portion');
+    const { min, max } = skeletonRange();
+    expect(portion.base).toBeGreaterThanOrEqual(min);
+    expect(portion.base).toBeLessThanOrEqual(max);
+  });
+
+  it('acceptReward settles bits through the shared settle math and advances to recruit', () => {
+    const { run, bus } = winWithRewards();
+    const portion = run.pendingRewards![0]!;
+    if (portion.kind !== 'bits') throw new Error('expected a bits portion');
+    const deltas: number[] = [];
+    bus.on('run:bitsChanged', ({ delta }) => deltas.push(delta));
+    run.dispatch({ kind: 'acceptReward', index: 0 });
+    // Daemon-less run: the fold is identity, so effective === base — but the
+    // assertion derives through the SAME helper the screen will use.
+    expect(run.bits).toBe(run.effectiveBits(portion.base));
+    expect(deltas).toEqual([run.effectiveBits(portion.base)]);
+    expect(run.pendingRewards).toBeNull();
+    expect(run.phase).toBe('recruit');
+  });
+
+  it('declineReward leaves bits untouched and advances', () => {
+    const { run } = winWithRewards();
+    run.dispatch({ kind: 'declineReward', index: 0 });
+    expect(run.bits).toBe(0);
+    expect(run.pendingRewards).toBeNull();
+    expect(run.phase).toBe('recruit');
+  });
+
+  it('a rewards-less encounter skips the phase entirely (the promotions.length shape)', () => {
+    const { run, bus } = freshRunWithBus(1, { daemon: null, forcedEncounterId: 'highwaymen' });
+    const offered: unknown[] = [];
+    bus.on('reward:offered', (o) => offered.push(o));
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    winEncounter(bus);
+    expect(offered).toEqual([]);
+    expect(run.pendingRewards).toBeNull();
+    expect(run.phase).toBe('recruit');
+  });
+
+  it('the gate chain orders reward → promotion → recruit (the shape-locked sequence)', () => {
+    // A roster-level-independent award (levels slot 0 to the cap) — the
+    // starting roster's rolled levels vary by seed.
+    const { run } = winWithRewards(2, [
+      { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 100_000 },
+    ]);
+    // Rewards interpose FIRST even though a promotion is banked.
+    expect(run.phase).toBe('reward');
+    expect(run.pendingPromotions).not.toBeNull();
+    run.dispatch({ kind: 'acceptReward', index: 0 });
+    expect(run.phase).toBe('promotion');
+    run.dispatch({ kind: 'dismissPromotion' });
+    expect(run.phase).toBe('recruit');
+  });
+
+  it('an accepted daemon joins ownership immediately and re-derives later bits portions', () => {
+    const { run } = winWithRewards();
+    // Overwrite the live offer with the Moneta-order edge: daemon first,
+    // bits second (the shape-lock rider's motivating case).
+    run.pendingRewards = [
+      { kind: 'daemon', daemonId: 'moneta' },
+      { kind: 'bits', base: 10 },
+    ];
+    run.dispatch({ kind: 'acceptReward', index: 0 });
+    expect(run.ownedDaemonIds().has('moneta')).toBe(true);
+    expect(run.phase).toBe('reward'); // the bits portion is still pending
+    // Balance-proof: the expected boost derives from moneta's authored rule.
+    const monetaRule = daemonById('moneta')!.rules!.find((r) => r.kind === 'modifier')!;
+    if (monetaRule.kind !== 'modifier') throw new Error('expected a modifier rule');
+    const expected = Math.round(10 * monetaRule.value);
+    expect(run.effectiveBits(10)).toBe(expected);
+    run.dispatch({ kind: 'acceptReward', index: 0 });
+    expect(run.bits).toBe(expected);
+    expect(run.phase).toBe('recruit');
+  });
+
+  it('stray reward commands are silent no-ops (wrong phase / out-of-range index)', () => {
+    const { run } = freshRunWithBus(1, { daemon: null });
+    run.dispatch({ kind: 'acceptReward', index: 0 }); // phase 'map' — nothing
+    expect(run.bits).toBe(0);
+    expect(run.phase).toBe('map');
+    const handle = winWithRewards();
+    const before = handle.run.pendingRewards!.slice();
+    handle.run.dispatch({ kind: 'acceptReward', index: 99 });
+    expect(handle.run.pendingRewards).toEqual(before);
+    expect(handle.run.phase).toBe('reward');
+  });
+
+  it('a mid-reward save reproduces the pending offer (the §48 exit-criterion contract)', () => {
+    const { run } = winWithRewards();
+    const wire = JSON.parse(JSON.stringify(run.toJSON())) as ReturnType<Run['toJSON']>;
+    const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.phase).toBe('reward');
+    expect(restored.pendingRewards).toEqual(run.pendingRewards);
+    const portion = restored.pendingRewards![0]!;
+    if (portion.kind !== 'bits') throw new Error('expected a bits portion');
+    restored.dispatch({ kind: 'acceptReward', index: 0 });
+    expect(restored.bits).toBe(restored.effectiveBits(portion.base));
+    expect(restored.phase).toBe('recruit');
+  });
+
+  it('fromJSON hard-rejects a pending reward naming an unknown daemon (no silent drops)', () => {
+    const { run } = winWithRewards();
+    const wire = run.toJSON();
+    wire.pendingRewards = [{ kind: 'daemon', daemonId: 'ghost' }];
+    expect(() => Run.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
+      /unknown daemon id 'ghost'/,
+    );
+  });
+});
+
 /**
  * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
  * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn
@@ -2699,6 +2848,15 @@ function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
   const frontier = frontierOf(run);
   run.dispatch({ kind: 'enterNode', nodeId: frontier });
   winEncounter(bus);
+  // 48b — the sector pool can select a rewards-carrying encounter (brigands
+  // ships the 48a skeleton ref), which interposes the reward phase first.
+  acceptAllRewards(run);
+}
+
+/** 48b — resolve a pending reward offer by accepting every portion (the
+ *  harness policy). A no-op when the win rolled no rewards. */
+function acceptAllRewards(run: Run): void {
+  while (run.phase === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
 }
 
 interface RunHandle {
@@ -2849,6 +3007,8 @@ function driveToRestFrontier(
     // deeper than HEALTH.enemyHealthMax (highwaymen/deserters), so chip by the
     // selected encounter's actual healthPool rather than the default 8.
     winEncounter(bus, awardsForHop(run, i), run.enemyHealthPoolMax);
+    // 48b — a rewards-carrying selection interposes the reward phase first.
+    acceptAllRewards(run);
     // A battle whose awards level a unit pauses on promotion first; clear it
     // so we land in the recruit phase (the mandatory post-battle recruit).
     if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });

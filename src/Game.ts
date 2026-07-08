@@ -177,6 +177,15 @@ export class Game implements RunDispatcher {
       this.swap(new PromotionScene(promotions)),
     );
     this.bus.on('recruit:offered', ({ units }) => this.swap(new RecruitScene(units)));
+    // 48b BRIDGE (temporary — 48c's RewardScene replaces this): auto-accept
+    // every reward portion so the live game flows through the new reward
+    // phase without a screen. The launch skeleton rewards are bits-only, so
+    // this is invisible until 48d's overlay lands.
+    this.bus.on('reward:offered', ({ rewards }) => {
+      for (let i = rewards.length; i > 0; i--) {
+        this.dispatch({ kind: 'acceptReward', index: 0 });
+      }
+    });
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
 

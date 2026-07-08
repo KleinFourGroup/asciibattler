@@ -203,6 +203,8 @@ src/
     NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3)|elite (W2 scatter) + dump; T2: per-sector length override
     sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks
     Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1); per-card level (post-G5)
+    rewards.ts               # 48b: rollRewards — the pure reward roller (chance tests + weighted sampling w/ owned-daemon
+                             # exclusion + dormant-packet guard; bits {min,max} on the separate bits stream) + RewardPortion
 
   render/
     Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
@@ -459,6 +461,7 @@ run:defeated            { }
 run:bitsChanged         { bits: number; delta: number }                             # 47e: the balance moved (bits = new total, delta = post-clamp change); emitted only on a real change from Run.addBits; the §48 overlay's feed
 
 recruit:offered         { units: UnitTemplate[] }
+reward:offered          { rewards: readonly RewardPortion[] }                       # 48b: a won encounter's rolled reward offer — the run entered the reward phase (battle → rewards → promotion → recruit)
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
 objective:set           { team; objective: TeamObjective }                          # O1: a team set/replaced its steering objective (marker tracks player only)
 objective:cleared       { team }                                                    # O1: a team reverted to atWill (explicit, or engage-target died)
@@ -482,6 +485,8 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   chooseRecruit           { unitTemplate: UnitTemplate }
   passRecruit             { }     # H6b: decline the recruit offer
   dismissPromotion        { }     # E4: dismiss the PromotionScene
+  acceptReward            { index: number }   # 48b: accept ONE pending reward portion (bits settle via gainBits; a daemon joins ownership immediately)
+  declineReward           { index: number }   # 48b: decline ONE pending reward portion (declinable-per-portion, passRecruit's sibling)
   advanceTurn             { }     # H4b: resume from a turn gate (pre/post-turn screen)
   redrawCards             { handIndices: number[] }   # K3: redraw selected hand positions at the pre-turn gate (47c: budget = the rule-resolved turnGrants.redraw, ONE summed config)
   empowerUnit             { handIndex: number; grantIndex: number }   # K4/47d: buff one drawn card for the rest of the encounter with the CHOSEN idol's blessing (grantIndex → turnGrants.empowers[i], per-source budgets)

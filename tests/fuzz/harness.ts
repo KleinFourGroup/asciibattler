@@ -539,6 +539,15 @@ export function runOne(
         }
         break;
       }
+      case 'reward': {
+        // 48b: headless policy — accept EVERYTHING, front to back. No
+        // strategy seam and no policy draws yet (acceptance is
+        // deterministic): bits exercise the `gainBits` settle, daemons the
+        // `addDaemon` acquisition seam. A §50-style purchase-policy arm can
+        // upgrade this to a real decision later.
+        run.dispatch({ kind: 'acceptReward', index: 0 });
+        break;
+      }
       case 'promotion': {
         // E4: headless run; PromotionScene has no observable side
         // effects on the sim, just dismiss and continue. M1: promotions

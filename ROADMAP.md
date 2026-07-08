@@ -166,7 +166,7 @@ helper); two dedicated streams; launch catalog = 4 tables
 
 **The cut (shape-locked 2026-07-08; rationale in worklog §48):**
 
-- [ ] 48a — the rewards config layer: `config/rewards.json` + `src/config/rewards.ts` (zod, tested), the `rewards?` seam typed to `{table, trigger:{chance}}[]`, boot referential assert; skeleton table + one reference; zero consumers
+- [x] 48a — the rewards config layer: `config/rewards.json` + `src/config/rewards.ts` (zod, tested), the `rewards?` seam typed to `{table, trigger:{chance}}[]`, boot referential assert; skeleton table + one reference; zero consumers ✅ `dda1032`, +15 tests; brigands carries `bits-small` at chance 1
 - [ ] 48b — the Run engine: two reward streams (append-at-end), `ownedDaemonIds`, roll-on-win + owned-exclusion + the empty-after-filter guard, `'reward'` phase + serialized pending offer (base amounts) + the shared effective-bits helper, accept/decline per-portion commands, the turn-gate splice, harness `case 'reward'`; **Run v28→v29**
 - [ ] 48c — RewardScreen + RewardScene + Game wiring, per-portion accept with derived re-render, pickup SFX; browser-verify
 - [ ] 48d — the bits overlay: the Game-level page-lifetime layer (top-left), `run:bitsChanged` + direct first paint, hop chip relocation; browser-verify in AND out of battle

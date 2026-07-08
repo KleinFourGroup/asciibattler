@@ -153,11 +153,26 @@ zero defs) — the pipe before the goods.
 scene chain, plus net-new persistent-UI infrastructure. RunSnapshot bumps
 (reward phase + pending offer + reward RNG streams).
 
-**Decision points:** the reward-screen UX (accept/decline layout; how
-inventory-full presents before the cache UI exists — likely "packet rewards
-can't appear until §49" makes this moot, confirm at kickoff); launch table
-catalog + which encounters reference which tables (authoring cut at kickoff);
-elite table richness (authoring, not engine).
+**Decision points — ✅ DECIDED at kickoff (2026-07-08, worklog §48):**
+reward phase splices at the TURN GATE ahead of the promotion interpose
+(spec order honored; a between-turn-rewards seam falls out free);
+"save/reload" = the serialization round-trip CONTRACT (no live persistence
+exists); inventory-full confirmed moot (zero PacketDefs); bits overlay OWNS
+top-left everywhere — the battle hop chip moves to its right (refine §51);
+`bitsMultiplier` applies inside `gainBits`, multiplicative with the
+`bitsGain` fold, and the DISPLAY derives from the settle math (one shared
+helper); two dedicated streams; launch catalog = 4 tables
+(bits-small / bits-large / daemon-cache / boss-hoard).
+
+**The cut (shape-locked 2026-07-08; rationale in worklog §48):**
+
+- [ ] 48a — the rewards config layer: `config/rewards.json` + `src/config/rewards.ts` (zod, tested), the `rewards?` seam typed to `{table, trigger:{chance}}[]`, boot referential assert; skeleton table + one reference; zero consumers
+- [ ] 48b — the Run engine: two reward streams (append-at-end), `ownedDaemonIds`, roll-on-win + owned-exclusion + the empty-after-filter guard, `'reward'` phase + serialized pending offer (base amounts) + the shared effective-bits helper, accept/decline per-portion commands, the turn-gate splice, harness `case 'reward'`; **Run v28→v29**
+- [ ] 48c — RewardScreen + RewardScene + Game wiring, per-portion accept with derived re-render, pickup SFX; browser-verify
+- [ ] 48d — the bits overlay: the Game-level page-lifetime layer (top-left), `run:bitsChanged` + direct first paint, hop chip relocation; browser-verify in AND out of battle
+- [ ] 48e — the reward-table editor + `formatRewardsJson` + the encounters `rewards` block emitter + `/__save-config` allowlist + `/tools/` index
+- [ ] 48f — `bitsMultiplier` (difficulty.json + `RunConfig` + the `gainBits` site) + the launch catalog authored with the editor in hand
+- [ ] 48g — exit sweep: full fuzz pass + CSV re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip
 
 **Exit criteria:** win a battle → reward screen → accept/decline bits +
 daemon rewards → promotion → recruit, user-confirmed in the native browser;

@@ -373,3 +373,162 @@ input. Snapshot trail across the phase: Run v24→v28, World v32→v33.
 (`modifier | hook`), both seam crossings live (battleRules in;
 tallies out), all consumers downstream (§48 rewards → §49 packets →
 §50 ports) author against it.
+
+## Phase 48 — Rewards
+
+### Kickoff audit (2026-07-08)
+
+Four parallel surface surveys (the `rewards?` seam + config/editor
+patterns / the post-battle scene chain / the Game-level overlay gap /
+Run RNG + serialization + fuzz); pre-flight green (1880 tests + typecheck
+clean) at `355bb91`.
+
+**Spec assumptions that check out against code reality:**
+
+- **The `rewards?` seam exists and is a clean placeholder** —
+  `z.unknown().optional()` (encounters.ts:180/191), nothing on disk
+  carries it, so tightening to the real `{table, trigger}[]` schema has
+  zero migration. `formatEncountersJson` even reserves the key slot in
+  its canonical order already (emits an opaque blob — needs a real block
+  emitter once structured).
+- **The pending-offer precedent is exact**: `currentOffer` (rolled in
+  `advancePastBattle`, serialized, consumed by `chooseRecruit` /
+  declined by `passRecruit`) is the verbatim template for the pending
+  reward offer; `pendingPromotions` is the parallel case. `PromotionScene`
+  (29 lines, DOM-only, payload via constructor) is the scene template;
+  `PreTurnScene` the template if the screen needs live bus subscriptions.
+- **The engine anticipated §48 by name**: `addDaemon` (Run.ts:1499) is
+  documented as "the §48 reward / §50 port acquisition seam" with
+  duplicates the CALLER's concern (exclusion upstream); `gainBits`'s doc
+  names "§48 reward settles" as an intended earn surface (the `bitsGain`
+  fold applies uniformly); `beginTurn` recompiles `battleRulesFor` fresh
+  each turn so a mid-encounter reward daemon fights from the NEXT turn.
+- **Boot-assert + config-module patterns ready**: the daemons.ts
+  module-load self-assert is the referential-integrity flavor to copy;
+  the natural home for "encounter references a real table" is the
+  existing encounters.ts post-parse loop (:201–216, already does the
+  layout referential check). Watch the import direction: rewards.ts must
+  not import encounters.ts back (the daemons.ts cycle-avoidance note).
+- **`pickWeighted` (sectorWalk.ts:42) is the reuse** for table sampling —
+  already the production precedent in selection.ts. Gotcha #111 applies:
+  zero draws on a singleton, so owned-daemon exclusion makes the sample's
+  draw count filter-dependent — exactly why the dedicated reward streams
+  exist. One trap: `pickWeighted` on an EMPTY array still burns a draw
+  and falls through — the empty-after-filter case ("yields nothing this
+  trigger") must short-circuit BEFORE the call.
+- **Fuzz/determinism re-baseline is CSV-regeneration only**: determinism
+  tests are all relative (same-seed-twice), fork-order guards only pin
+  nodeMap/team (forked before the append point). Adding streams after
+  `daemonRng` (Run.ts:671, the append-at-end doctrine) shifts every
+  per-encounter fork → regenerate the committed fuzz artifacts, no test
+  goes red. The harness's `satisfies never` phase switch (harness.ts:570)
+  force-compiles `case 'reward'` — a built-in checklist for every
+  exhaustive site.
+
+**Surprises / tensions the surveys turned up:**
+
+1. **The phase-ordering tension (THE structural call):** the spec locks
+   battle → rewards → promotion → recruit, but promotion interposes at
+   the TURN GATE (handleTurnEnded:1253 headless / handleAdvanceTurn:1332
+   gated) — BEFORE `continueAfterTurn` → `finishEncounter('win')`, where
+   a naive reward hook would land. Honoring the spec means splicing the
+   reward phase at the turn-gate win path, ahead of the promotion
+   interpose; `turnResult()` is documented pure/re-readable exactly so
+   gates can do this, and `selectedEncounter` (which carries `rewards`)
+   is still set there. Resolved at shape-lock — see below.
+2. **No live save/load exists.** `Run.fromJSON` is test-only; nothing
+   maps a restored `run.phase` to a scene. The "mid-reward save/reload
+   reproduces the pending offer" exit criterion can only be the
+   serialization round-trip CONTRACT (the `currentOffer` test pattern),
+   unless the user means net-new live persistence. Resolved at
+   shape-lock — see below.
+3. **Top-left is NOT free in battle.** `.hud-hop` (the hop/turn chip)
+   sits at exactly top:20px/left:20px (its CSS comment: "mirrors the
+   top-right speed pane"); free on map/pre-turn/all other screens. The
+   overlay needs a collision call: relocate the chip vs stack.
+4. **Two overlay wiring subtleties**: the starting balance never emits
+   `run:bitsChanged` (init bypasses `addBits` — first paint must read
+   `run.bits` directly), and the FIRST run's `run:started` fires from the
+   Game field initializer BEFORE constructor subscriptions exist (works
+   as a reset-re-show signal only). `Run` is never null — visibility
+   keys off `run.phase` / `run:victory` / `run:defeated`.
+5. **`bitsMultiplier` can't ride `WaveContext`** like its X1 siblings —
+   bits earn at the `gainBits` chokepoint, which already carries the
+   daemon `bitsGain` fold. Where the difficulty lever applies (and how it
+   stacks with the fold) is a shape-lock decision.
+6. **No "owned daemon ids" accessor exists** — the only expression is
+   the inline `map(d => d.id)` in `toJSON`. The exclusion filter (and
+   §50's stock filter after it) wants a shared accessor; rides the
+   engine commit, no pre-step.
+7. Minor: `economy.ts` shipped 47e without a schema test — rewards.ts
+   follows the tested daemons/encounters pattern instead. `rewards.json`
+   is the first economy-cluster file to join the `/__save-config`
+   allowlist (vite.config.ts:22–28).
+
+**Determinism / re-baseline map:** run-level fork order confirmed
+(`sectorRng→teamRng→levelupRng→deckRng→daemonRng`, append-at-end); §48
+appends the reward streams after `daemonRng` → all later per-encounter
+forks shift → fuzz CSV re-baseline (budgeted in ROADMAP conventions).
+RunSnapshot v28→v29 (reward phase + pending offer + streams), reject-
+stale, changelog entry in the Run.ts doc comment; round-trip additions
+ride the generic `schemaVersion - 1` staleness pattern.
+
+**Pre-steps:** none warranted — every seam the spec leans on exists
+(several with §48 already named in their doc comments); the two
+structural tensions (#1, #2) are decision points, not missing
+infrastructure.
+
+### Shape-lock (2026-07-08)
+
+The 7-commit cut (48a–g, now in ROADMAP §48) approved as proposed.
+Decisions locked:
+
+- **Reward phase splices at the TURN GATE, ahead of the promotion
+  interpose** — honoring the spec's battle → rewards → promotion →
+  recruit rather than the naive `finishEncounter` hook (which would have
+  produced promotion → rewards). `turnResult()` is pure/re-readable at
+  the gate and `selectedEncounter` still carries `rewards` there.
+  Mid-encounter turns keep the M1 promotion cadence untouched; empty
+  roll skips through (the `promotions.length > 0` shape); uniform on
+  terminal wins (boss rewards fire before `run:victory`, no special
+  case). The user's extra endorsement: this leaves a **between-turn
+  rewards seam** for the future — not planned, but "that's how
+  promotions ultimately evolved."
+- **"Mid-reward save/reload" = the serialization round-trip contract**
+  (the `currentOffer` test pattern) — no live save/load exists anywhere.
+  The user is now mulling a post-cluster interstitial round to build
+  real saving/loading (noted in TODO.md as a cluster-boundary watch
+  item).
+- **Inventory-full confirmed moot** — schema-complete packet entries,
+  zero `PacketDef`s, launch tables author none; no cache-full flow
+  until §49.
+- **Bits overlay OWNS top-left in all cases** (user call, emphatic);
+  the battle hop/turn chip moves to the bits chip's RIGHT (the hop chip
+  is likely the wider of the two) — placement refined at §51 if needed.
+- **`bitsMultiplier` = Option B, inside `gainBits`**, multiplicative
+  with the daemon `bitsGain` fold — the difficulty lever scales TOTAL
+  income uniformly (reward rolls, Laverna tallies, daemon hooks), which
+  is what §52's boss-wall tuning needs from it; Option A (at the reward
+  roll only) would let daemon-driven income escape the knob and make
+  the dial read mushy at tuning time. **Rider (the user caught the
+  display hazard): the screen must never show the un-folded base** —
+  "screen said 10, total went up 18" reads as a bug. So the pending
+  offer serializes the rolled BASE and the display derives the
+  effective amount via ONE shared helper that `gainBits` itself calls
+  (display and settle are the same code path, drift-impossible). The
+  acceptance-order edge falls out correctly: accept Moneta from a
+  mixed offer and the remaining bits portion visibly re-derives +20% —
+  derive-don't-cache doing player-facing work. Freeze-at-roll would get
+  that edge WRONG. §50 landmine pinned while we're here: port SELL
+  proceeds are a refund, not income — they take the raw `addBits` path,
+  never `gainBits`, or Moneta + sellFraction can exceed 1.0 and mint an
+  infinite-money loop.
+- **Two dedicated streams** (table/trigger sampling + bits rolls),
+  appended after `daemonRng` per the convention; fuzz CSV re-baseline
+  accepted.
+- **Launch catalog approved as a first pass**: 4 tables — `bits-small`
+  (normals, chance 1) / `bits-large` (elites+bosses) / `daemon-cache`
+  (elite, chanced; bits floor entry per the spec's authoring
+  convention) / `boss-hoard` (bits + daemon at weight). All 13
+  encounters reference something; numbers deliberately rough (§52 owns
+  tuning).

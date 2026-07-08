@@ -50,6 +50,16 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Design explorations (post-Phase-G)
 
+- [ ] **Save/load interstitial round (live persistence).** Everything
+      *serializes* (Run/World snapshots, reject-stale, round-trip tests) but no
+      LIVE save/load exists — `Run.fromJSON` is called only from tests, and
+      nothing maps a restored `run.phase` back to a scene. The §48 kickoff
+      audit confirmed the gap while pinning "mid-reward save/reload" as the
+      round-trip *contract*; the user is mulling a post-Cluster-3 interstitial
+      round to build the real thing (a scene-for-phase resolver + a storage
+      trigger + a load entry point). Surfaced at the §48 shape-lock
+      (2026-07-08).
+
 - [x] **Movement abilities (dash / gap-closer) — the real rogue fix.** Done N1 (2026-06-14): the rogue dash shipped (range 2 / 0.25s / 10s cd, `unit:dashed` event). The motivating disproof (`weakest` targeting halved a dash-less rogue's damage) + the full data live in [BALANCE.md](BALANCE.md) + git history.
 - [ ] **Post-Phase-H map / difficulty gating (incl. layout-by-hop weighting).** The planned
       post-H map rework should gate content by depth — and per-layout telemetry (H7c, `npm run fuzz

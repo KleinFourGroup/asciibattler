@@ -20,12 +20,12 @@ const BUFF = { key: 'empowered', mods: { strength: { add: 4 } }, merge: 'add' };
 const parses = (rules: unknown[]): boolean => DaemonsSchema.safeParse(withRules(rules)).success;
 
 describe('the Rule schema (47b — the rule vocabulary)', () => {
-  it('the shipped catalog parses and none of the idols author rules yet', () => {
+  it('the shipped catalog parses and every idol authors rules (47c)', () => {
     expect(DAEMONS.length).toBeGreaterThanOrEqual(4);
-    for (const d of DAEMONS) expect(d.rules).toBeUndefined();
+    for (const d of DAEMONS) expect(d.rules!.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('accepts a daemon with no rules field (legacy-gate daemons)', () => {
+  it('accepts a daemon with no rules field (inert but legal)', () => {
     expect(
       DaemonsSchema.safeParse({
         daemons: [{ id: 'bare', name: 'Bare', description: 'No rules.' }],

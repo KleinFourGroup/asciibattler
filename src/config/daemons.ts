@@ -1,18 +1,22 @@
 /**
- * L1 — the daemon catalog. Source of truth at `config/daemons.json`. Mirrors
- * the `config/empower.json` pattern (parse at module load, throw on malformed
- * JSON).
+ * L1→47c — the daemon catalog. Source of truth at `config/daemons.json`.
+ * Mirrors the `config/empower.json` pattern (parse at module load, throw on
+ * malformed JSON).
  *
- * A daemon is a run-scoped relic that GATES the pre-turn mechanics (the
- * user-locked "daemon-only gates" model — without a daemon granting it,
- * redraw/empower simply isn't available). Each daemon may carry a `redraw`
- * gate and/or an `empower` gate; a gate it doesn't carry is never granted.
+ * A daemon is a run-scoped relic carrying `rules: Rule[]` — the shared
+ * daemon/packet effect vocabulary (cluster-3-spec §"The rule vocabulary"):
+ * `modifier` (a passive fold onto a run stat, `src/run/runStats.ts`) or
+ * `hook` (an EffectOp fired on a trigger, with an optional `chance` +
+ * `filter`). Triggers split by DOMAIN: run-lifecycle triggers resolve on the
+ * Run (`turnStart` grant hooks → `resolveTurnGrants`, src/run/daemon.ts);
+ * battle triggers compile into the World as `battleRules[]` (47f). The legal
+ * (trigger × op × filter) matrix is enforced at parse time.
  *
- * Every gate has a `chance` — the generalized "X% per turn" condition (the
- * user's call: many daemons will be chance-triggered). `1` = granted every
- * turn (no RNG draw), `0 < chance < 1` = a per-turn flip off the run's
- * dedicated daemon stream (`Run.daemonRng`), `0` = never (no draw). The
- * resolution lives in `src/run/daemon.ts` (`resolveTurnGates`).
+ * The daemon-only-gates model (user-locked, Phase L) survives the 47c
+ * re-authoring: without a daemon whose `turnStart` hook grants it, pre-turn
+ * redraw/empower simply isn't available. A hook's `chance` is the
+ * generalized "X% per turn" condition — absent/`1` = fires every time (no
+ * RNG draw), `0 < chance < 1` = a per-firing flip off `Run.daemonRng`.
  *
  * The first catalog (the Phase-L design round, 2026-06-12) is four idols —
  * Roman-statue flavor in the terminal frame, the synthwave blend:
@@ -21,15 +25,6 @@
  * - Mercury — 50%/turn coin flip for the FULL standard redraw.
  * - Janus   — guaranteed redraw every turn, capped at 2 cards (the
  *             reliable-but-small face opposite Mercury's all-or-nothing).
- *
- * 47b — the rule vocabulary (cluster-3-spec §"The rule vocabulary"): a daemon
- * may also carry `rules: Rule[]` — `modifier` (a passive fold onto a run stat,
- * `src/run/runStats.ts`) or `hook` (an EffectOp fired on a trigger, with an
- * optional `chance` + `filter`). Triggers split by DOMAIN: run-lifecycle
- * triggers resolve on the Run (47c); battle triggers compile into the World
- * as `battleRules[]` (47f). The legal (trigger × op × filter) matrix is
- * enforced at parse time. The legacy `redraw`/`empower` gates coexist with
- * `rules` until 47c re-authors the idols and deletes them.
  */
 
 import { z } from 'zod';
@@ -178,25 +173,11 @@ const RuleSchema = z
     }
   });
 
-const DaemonRedrawGateSchema = z.object({
-  chance: ChanceSchema,
-  redrawsPerTurn: z.number().int().nonnegative(),
-  maxCardsPerTurn: z.number().int().nonnegative(),
-});
-
-const DaemonEmpowerGateSchema = z.object({
-  chance: ChanceSchema,
-  empowersPerTurn: z.number().int().nonnegative(),
-  buff: BuffSchema,
-});
-
 const DaemonSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string().min(1),
-  redraw: DaemonRedrawGateSchema.optional(),
-  empower: DaemonEmpowerGateSchema.optional(),
-  rules: z.array(RuleSchema).optional(), // 47b — absent until content authors them
+  rules: z.array(RuleSchema).optional(), // absent = an inert daemon (legal, rule-less)
 });
 
 /** Exported for schema tests (the `EncountersSchema` precedent). */
@@ -206,23 +187,6 @@ export const DaemonsSchema = z
     (cfg) => new Set(cfg.daemons.map((d) => d.id)).size === cfg.daemons.length,
     { message: 'daemon ids must be unique' },
   );
-
-/** A redraw grant: when the per-turn `chance` lands, redraw is available with
- *  these knobs (the `RedrawConfig` shape minus `enabled`, which the grant IS). */
-export interface DaemonRedrawGate {
-  chance: number;
-  redrawsPerTurn: number;
-  maxCardsPerTurn: number;
-}
-
-/** An empower grant: when the per-turn `chance` lands, empower is available
- *  with these knobs + this buff (each daemon carries its OWN buff — Mars and
- *  Minerva differ only here). */
-export interface DaemonEmpowerGate {
-  chance: number;
-  empowersPerTurn: number;
-  buff: EmpowerConfig['buff'];
-}
 
 /** A hook's optional predicate — every key legality-checked against the
  *  trigger at parse time (the matrix in `RuleSchema`). */
@@ -265,9 +229,7 @@ export interface DaemonConfig {
   id: string;
   name: string;
   description: string;
-  redraw?: DaemonRedrawGate;
-  empower?: DaemonEmpowerGate;
-  /** 47b — the rule vocabulary. Absent = no rules (legacy-gate daemons). */
+  /** The rule vocabulary (47b/47c). Absent = an inert daemon. */
   rules?: readonly Rule[];
 }
 
@@ -327,20 +289,6 @@ export function normalizeDaemon(raw: RawDaemon): DaemonConfig {
     name: raw.name,
     description: raw.description,
   };
-  if (raw.redraw !== undefined) {
-    daemon.redraw = {
-      chance: raw.redraw.chance,
-      redrawsPerTurn: raw.redraw.redrawsPerTurn,
-      maxCardsPerTurn: raw.redraw.maxCardsPerTurn,
-    };
-  }
-  if (raw.empower !== undefined) {
-    daemon.empower = {
-      chance: raw.empower.chance,
-      empowersPerTurn: raw.empower.empowersPerTurn,
-      buff: normalizeBuff(raw.empower.buff),
-    };
-  }
   if (raw.rules !== undefined) {
     daemon.rules = raw.rules.map(normalizeRule);
   }

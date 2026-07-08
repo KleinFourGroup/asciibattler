@@ -182,3 +182,20 @@ seam). Decisions locked:
 Process note: AskUserQuestion dialogs hide same-turn assistant text in the
 desktop app — shape-lock proposals must be presented as a plain final
 message, then approved in the next turn.
+
+### 47c — the oracle run (2026-07-07)
+
+The behavior-equivalence oracle was run as a live before/after diff, not
+just the in-tree suites: six fuzz arms (`--daemon=mars/minerva/mercury/
+janus/random/none`, `--count=6` each) captured to scratchpad at `a39a991`
+(pre-47c), re-run after the surgery, `summary.csv` diffed per arm — **all
+six byte-IDENTICAL**. The draw-count parity that makes this work: a
+chance-less hook costs no draw (legacy `chance: 1` ≡ absent), Mercury's
+one coin per turn maps 1:1 onto its one chance-hook, and hooks evaluate
+in authored rule order (a both-grants daemon authors redraw first — the
+L1 redraw-then-empower contract generalized). Engine notes: non-grant
+`turnStart` ops (`gainBits`/`healPool`) are deliberately NOT resolved in
+the grant fold — they execute at the trigger fire site once their targets
+exist (47e); grant hooks ACCUMULATE (budgets sum), the fold 47d's
+multi-daemon leans on, with the multi-BUFF presentation explicitly a 47d
+decision (last grant's buff wins until then).

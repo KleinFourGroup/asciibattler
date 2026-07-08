@@ -1,29 +1,50 @@
 import { describe, it, expect } from 'vitest';
-import { rollDaemon, resolveTurnGates, disabledTurnGates } from './daemon';
-import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
+import {
+  rollDaemon,
+  resolveTurnGrants,
+  disabledTurnGrants,
+  daemonRedrawHook,
+  daemonEmpowerHook,
+} from './daemon';
+import { DAEMONS, daemonById, type DaemonConfig, type HookRule } from '../config/daemons';
 import { DECK } from '../config/deck';
 import { RNG } from '../core/RNG';
 
 /**
- * L1 — the pure daemon rules: the run-start roll + the per-turn gate
- * resolution. Bespoke fixture daemons exercise the mechanics (the
- * redraw.test.ts pattern — explicit literals, not the `DAEMONS` singleton);
- * a separate block pins the SHIPPED catalog's design shape, with every
- * expectation derived from the config modules (no hardcoded balance values).
+ * L1→47c — the pure daemon rules: the run-start roll + the per-turn grant
+ * resolution (`turnStart` hooks → this turn's effective configs). Bespoke
+ * fixture daemons exercise the mechanics (the redraw.test.ts pattern —
+ * explicit literals, not the `DAEMONS` singleton); a separate block pins the
+ * SHIPPED catalog's design shape, with every expectation derived from the
+ * config modules (no hardcoded balance values).
  */
 
-/** A guaranteed full-package daemon (both gates, no coin) — the K3/K4 static
- *  defaults reborn as a daemon, also the Run.test.ts fixture shape. */
-const SURE_BOTH: DaemonConfig = {
-  id: 'test-sure',
-  name: 'Test Sure',
-  description: 'both gates, guaranteed',
-  redraw: { chance: 1, redrawsPerTurn: 1, maxCardsPerTurn: 6 },
-  empower: {
-    chance: 1,
+const redrawHook = (chance: number | undefined, maxCards: number): HookRule => ({
+  kind: 'hook',
+  on: 'turnStart',
+  ...(chance !== undefined ? { chance } : {}),
+  effect: { op: 'grantRedraws', redrawsPerTurn: 1, maxCardsPerTurn: maxCards },
+});
+
+const empowerHook = (chance: number | undefined): HookRule => ({
+  kind: 'hook',
+  on: 'turnStart',
+  ...(chance !== undefined ? { chance } : {}),
+  effect: {
+    op: 'grantEmpowers',
     empowersPerTurn: 1,
     buff: { key: 'test-buff', mods: { strength: { add: 2 } }, merge: 'add' },
   },
+});
+
+/** A guaranteed full-package daemon (both grants, no coin) — the K3/K4 static
+ *  defaults reborn as a daemon. Redraw hook FIRST (the L1 draw-order
+ *  discipline, now the authored-rule-order contract). */
+const SURE_BOTH: DaemonConfig = {
+  id: 'test-sure',
+  name: 'Test Sure',
+  description: 'both grants, guaranteed',
+  rules: [redrawHook(undefined, 6), empowerHook(undefined)],
 };
 
 /** A coin-flip redraw daemon (the Mercury shape). */
@@ -31,7 +52,7 @@ const COIN_REDRAW: DaemonConfig = {
   id: 'test-coin',
   name: 'Test Coin',
   description: 'coin-flip redraw',
-  redraw: { chance: 0.5, redrawsPerTurn: 1, maxCardsPerTurn: 6 },
+  rules: [redrawHook(0.5, 6)],
 };
 
 /** A never-grants daemon (chance 0 — the no-draw contract's other edge). */
@@ -39,7 +60,7 @@ const NEVER: DaemonConfig = {
   id: 'test-never',
   name: 'Test Never',
   description: 'never grants',
-  redraw: { chance: 0, redrawsPerTurn: 1, maxCardsPerTurn: 6 },
+  rules: [redrawHook(0, 6)],
 };
 
 describe('rollDaemon', () => {
@@ -54,52 +75,63 @@ describe('rollDaemon', () => {
   });
 });
 
-describe('resolveTurnGates', () => {
-  it('null daemon → both gates disabled, no RNG draw', () => {
+describe('resolveTurnGrants', () => {
+  it('null daemon → both grants disabled, no RNG draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    expect(resolveTurnGates(null, rng)).toEqual(disabledTurnGates());
+    expect(resolveTurnGrants(null, rng)).toEqual(disabledTurnGrants());
     expect(rng.toJSON()).toEqual(before);
   });
 
-  it('a chance-1 gate is granted with the daemon knobs and costs no draw', () => {
+  it('a rule-less daemon → both grants disabled, no RNG draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    const gates = resolveTurnGates(SURE_BOTH, rng);
-    expect(gates.redraw).toEqual({
+    const inert: DaemonConfig = { id: 'inert', name: 'Inert', description: 'no rules' };
+    expect(resolveTurnGrants(inert, rng)).toEqual(disabledTurnGrants());
+    expect(rng.toJSON()).toEqual(before);
+  });
+
+  it('a chance-less hook is granted with the authored knobs and costs no draw', () => {
+    const rng = new RNG(7);
+    const before = rng.toJSON();
+    const grants = resolveTurnGrants(SURE_BOTH, rng);
+    const [redraw, empower] = SURE_BOTH.rules! as [HookRule, HookRule];
+    expect(grants.redraw).toEqual({
       enabled: true,
-      redrawsPerTurn: SURE_BOTH.redraw!.redrawsPerTurn,
-      maxCardsPerTurn: SURE_BOTH.redraw!.maxCardsPerTurn,
+      redrawsPerTurn: (redraw.effect as { redrawsPerTurn: number }).redrawsPerTurn,
+      maxCardsPerTurn: (redraw.effect as { maxCardsPerTurn: number }).maxCardsPerTurn,
     });
-    expect(gates.empower.enabled).toBe(true);
-    expect(gates.empower.empowersPerTurn).toBe(SURE_BOTH.empower!.empowersPerTurn);
-    expect(gates.empower.buff).toEqual(SURE_BOTH.empower!.buff);
+    expect(grants.empower.enabled).toBe(true);
+    expect(grants.empower.empowersPerTurn).toBe(
+      (empower.effect as { empowersPerTurn: number }).empowersPerTurn,
+    );
+    expect(grants.empower.buff).toEqual((empower.effect as { buff: object }).buff);
     expect(rng.toJSON()).toEqual(before);
   });
 
-  it('a chance-0 gate is denied and costs no draw', () => {
+  it('a chance-0 hook is denied and costs no draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    expect(resolveTurnGates(NEVER, rng).redraw.enabled).toBe(false);
+    expect(resolveTurnGrants(NEVER, rng).redraw.enabled).toBe(false);
     expect(rng.toJSON()).toEqual(before);
   });
 
-  it('an ungranted gate kind resolves to the disabled config', () => {
-    // COIN_REDRAW carries no empower gate at all — empower must read disabled
+  it('an ungranted kind resolves to the disabled config', () => {
+    // COIN_REDRAW authors no empower hook at all — empower must read disabled
     // whatever the coin does.
-    const gates = resolveTurnGates(COIN_REDRAW, new RNG(7));
-    expect(gates.empower).toEqual(disabledTurnGates().empower);
+    const grants = resolveTurnGrants(COIN_REDRAW, new RNG(7));
+    expect(grants.empower).toEqual(disabledTurnGrants().empower);
   });
 
-  it('a coin-flip gate draws exactly once, deterministically, and lands both ways', () => {
+  it('a coin-flip hook draws exactly once, deterministically, and lands both ways', () => {
     const outcomes = new Set<boolean>();
     for (let seed = 0; seed < 50; seed++) {
       const rng = new RNG(seed);
       const replay = new RNG(seed);
-      const flip = resolveTurnGates(COIN_REDRAW, rng).redraw.enabled;
-      // Same stream state → same outcome (the determinism the v16 save relies
+      const flip = resolveTurnGrants(COIN_REDRAW, rng).redraw.enabled;
+      // Same stream state → same outcome (the determinism the save relies
       // on), and the stream advanced by exactly the one flip draw.
-      expect(resolveTurnGates(COIN_REDRAW, replay).redraw.enabled).toBe(flip);
+      expect(resolveTurnGrants(COIN_REDRAW, replay).redraw.enabled).toBe(flip);
       expect(rng.toJSON()).toEqual(replay.toJSON());
       replay.next();
       outcomes.add(flip);
@@ -107,20 +139,60 @@ describe('resolveTurnGates', () => {
     expect(outcomes).toEqual(new Set([true, false]));
   });
 
-  it('draw order is redraw-then-empower (the fixed per-turn contract)', () => {
+  it('draws in authored rule order (the L1 redraw-then-empower contract, generalized)', () => {
     const both: DaemonConfig = {
       ...SURE_BOTH,
-      redraw: { ...SURE_BOTH.redraw!, chance: 0.5 },
-      empower: { ...SURE_BOTH.empower!, chance: 0.5 },
+      rules: [redrawHook(0.5, 6), empowerHook(0.5)],
     };
     for (let seed = 0; seed < 20; seed++) {
-      const gates = resolveTurnGates(both, new RNG(seed));
+      const grants = resolveTurnGrants(both, new RNG(seed));
       const manual = new RNG(seed);
-      const redrawFlip = manual.next() < both.redraw!.chance;
-      const empowerFlip = manual.next() < both.empower!.chance;
-      expect(gates.redraw.enabled).toBe(redrawFlip);
-      expect(gates.empower.enabled).toBe(empowerFlip);
+      const redrawFlip = manual.next() < 0.5;
+      const empowerFlip = manual.next() < 0.5;
+      expect(grants.redraw.enabled).toBe(redrawFlip);
+      expect(grants.empower.enabled).toBe(empowerFlip);
     }
+  });
+
+  it('multiple granted redraw hooks ACCUMULATE (the 47d multi-daemon fold)', () => {
+    const stacked: DaemonConfig = {
+      id: 'test-stack',
+      name: 'Test Stack',
+      description: 'two redraw hooks',
+      rules: [redrawHook(undefined, 2), redrawHook(undefined, 6)],
+    };
+    const grants = resolveTurnGrants(stacked, new RNG(7));
+    expect(grants.redraw).toEqual({ enabled: true, redrawsPerTurn: 2, maxCardsPerTurn: 8 });
+  });
+
+  it('non-grant turnStart ops are skipped here (fire-site execution, not the grant fold)', () => {
+    const withInstant: DaemonConfig = {
+      id: 'test-instant',
+      name: 'Test Instant',
+      description: 'a gainBits turnStart hook',
+      rules: [
+        { kind: 'hook', on: 'turnStart', effect: { op: 'gainBits', amount: 5 } },
+        redrawHook(undefined, 6),
+      ],
+    };
+    const rng = new RNG(7);
+    const before = rng.toJSON();
+    const grants = resolveTurnGrants(withInstant, rng);
+    expect(grants.redraw.enabled).toBe(true);
+    expect(grants.empower.enabled).toBe(false);
+    // The chance-less gainBits hook still costs no draw.
+    expect(rng.toJSON()).toEqual(before);
+  });
+});
+
+describe('daemonRedrawHook / daemonEmpowerHook (the authored-hook lookups)', () => {
+  it('finds the authored grant effects; undefined for null / missing kinds', () => {
+    expect(daemonRedrawHook(SURE_BOTH)?.op).toBe('grantRedraws');
+    expect(daemonEmpowerHook(SURE_BOTH)?.op).toBe('grantEmpowers');
+    expect(daemonRedrawHook(null)).toBeUndefined();
+    expect(daemonEmpowerHook(COIN_REDRAW)).toBeUndefined();
+    expect(daemonRedrawHook(daemonById('mars')!)).toBeUndefined();
+    expect(daemonEmpowerHook(daemonById('mars')!)?.op).toBe('grantEmpowers');
   });
 });
 
@@ -132,36 +204,39 @@ describe('the shipped catalog (config/daemons.json) — design-shape pins', () =
   it('mars and minerva are empower-only; mercury and janus are redraw-only', () => {
     for (const id of ['mars', 'minerva']) {
       const d = daemonById(id)!;
-      expect(d.empower).toBeDefined();
-      expect(d.redraw).toBeUndefined();
+      expect(daemonEmpowerHook(d)).toBeDefined();
+      expect(daemonRedrawHook(d)).toBeUndefined();
       // The empower idols grant every turn (no coin) — one pick per turn.
-      expect(d.empower!.chance).toBe(1);
+      const hook = d.rules!.find((r) => r.kind === 'hook' && r.effect.op === 'grantEmpowers')!;
+      expect(hook.kind === 'hook' && (hook.chance ?? 1)).toBe(1);
     }
     for (const id of ['mercury', 'janus']) {
       const d = daemonById(id)!;
-      expect(d.redraw).toBeDefined();
-      expect(d.empower).toBeUndefined();
+      expect(daemonRedrawHook(d)).toBeDefined();
+      expect(daemonEmpowerHook(d)).toBeUndefined();
     }
   });
 
   it('mercury is a genuine coin flip for the FULL redraw', () => {
     const mercury = daemonById('mercury')!;
-    expect(mercury.redraw!.chance).toBeGreaterThan(0);
-    expect(mercury.redraw!.chance).toBeLessThan(1);
+    const hook = mercury.rules!.find((r): r is HookRule => r.kind === 'hook')!;
+    expect(hook.chance).toBeGreaterThan(0);
+    expect(hook.chance).toBeLessThan(1);
     // "Full" = the whole hand is selectable in the one batch.
-    expect(mercury.redraw!.maxCardsPerTurn).toBe(DECK.handSize);
+    expect(daemonRedrawHook(mercury)!.maxCardsPerTurn).toBe(DECK.handSize);
   });
 
   it('janus is guaranteed but partial — the reliable-but-small face', () => {
     const janus = daemonById('janus')!;
-    expect(janus.redraw!.chance).toBe(1);
-    expect(janus.redraw!.maxCardsPerTurn).toBeGreaterThanOrEqual(1);
-    expect(janus.redraw!.maxCardsPerTurn).toBeLessThan(DECK.handSize);
+    const hook = janus.rules!.find((r): r is HookRule => r.kind === 'hook')!;
+    expect(hook.chance ?? 1).toBe(1);
+    expect(daemonRedrawHook(janus)!.maxCardsPerTurn).toBeGreaterThanOrEqual(1);
+    expect(daemonRedrawHook(janus)!.maxCardsPerTurn).toBeLessThan(DECK.handSize);
   });
 
   it('mars buffs offense, minerva buffs defense (distinct keys, additive mods)', () => {
-    const mars = daemonById('mars')!.empower!.buff;
-    const minerva = daemonById('minerva')!.empower!.buff;
+    const mars = daemonEmpowerHook(daemonById('mars')!)!.buff;
+    const minerva = daemonEmpowerHook(daemonById('minerva')!)!.buff;
     expect(mars.key).not.toBe(minerva.key);
     for (const stat of ['strength', 'ranged', 'magic'] as const) {
       expect(mars.mods[stat]?.add).toBeGreaterThan(0);

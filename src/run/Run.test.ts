@@ -19,31 +19,43 @@ import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import { EMPOWER } from '../config/empower';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
+import { daemonRedrawHook, daemonEmpowerHook } from './daemon';
 import { avgTeamLevel } from './enemyBudget';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 
 /**
- * L1 — the K3/K4 static defaults reborn as a guaranteed fixture daemon.
+ * L1→47c — the K3/K4 static defaults reborn as a guaranteed fixture daemon.
  * Daemon-only gates retired the `DECK.redraw.enabled` / `EMPOWER.enabled`
  * statics (both now ship false), so the pre-existing K3/K4 gate-mechanic tests
  * run under this daemon instead: its knobs ARE the config dials (derived, not
  * hardcoded), which keeps every `DECK.redraw.*` / `EMPOWER.*`-derived
- * expectation in those blocks literally true.
+ * expectation in those blocks literally true. 47c: authored as `rules`
+ * (redraw hook FIRST — the fixed draw-order discipline).
  */
 const K_DEFAULT_DAEMON: DaemonConfig = {
   id: 'test-k-defaults',
   name: 'Test K Defaults',
   description: 'the pre-L static gates as a daemon',
-  redraw: {
-    chance: 1,
-    redrawsPerTurn: DECK.redraw.redrawsPerTurn,
-    maxCardsPerTurn: DECK.redraw.maxCardsPerTurn,
-  },
-  empower: {
-    chance: 1,
-    empowersPerTurn: EMPOWER.empowersPerTurn,
-    buff: EMPOWER.buff,
-  },
+  rules: [
+    {
+      kind: 'hook',
+      on: 'turnStart',
+      effect: {
+        op: 'grantRedraws',
+        redrawsPerTurn: DECK.redraw.redrawsPerTurn,
+        maxCardsPerTurn: DECK.redraw.maxCardsPerTurn,
+      },
+    },
+    {
+      kind: 'hook',
+      on: 'turnStart',
+      effect: {
+        op: 'grantEmpowers',
+        empowersPerTurn: EMPOWER.empowersPerTurn,
+        buff: EMPOWER.buff,
+      },
+    },
+  ],
 };
 
 describe('Run', () => {
@@ -1389,8 +1401,9 @@ describe('Run', () => {
 
     it('an empower idol (mars) grants empower per its dials and NO redraw', () => {
       const mars = daemonById('mars')!;
+      const marsEmpower = daemonEmpowerHook(mars)!;
       const { run } = gatedToFirstTurnIntro(23, mars);
-      expect(run.empowerAvailability.empowersRemaining).toBe(mars.empower!.empowersPerTurn);
+      expect(run.empowerAvailability.empowersRemaining).toBe(marsEmpower.empowersPerTurn);
       expect(run.redrawAvailability).toEqual({ redrawsRemaining: 0, cardsRemaining: 0 });
       const hand = run.hand.slice();
       run.dispatch({ kind: 'redrawCards', handIndices: [0] });
@@ -1399,27 +1412,29 @@ describe('Run', () => {
       run.dispatch({ kind: 'empowerUnit', handIndex: 1 });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
-      expect(stored[0]!.key).toBe(mars.empower!.buff.key);
-      expect(stored[0]!.mods).toEqual(mars.empower!.buff.mods);
+      expect(stored[0]!.key).toBe(marsEmpower.buff.key);
+      expect(stored[0]!.mods).toEqual(marsEmpower.buff.mods);
     });
 
     it("minerva applies HER buff (the daemon's own, not a shared config)", () => {
       const minerva = daemonById('minerva')!;
+      const minervaEmpower = daemonEmpowerHook(minerva)!;
       const { run } = gatedToFirstTurnIntro(24, minerva);
       const slot = run.hand[0]!;
       run.dispatch({ kind: 'empowerUnit', handIndex: 0 });
       const stored = run.encounterEffects[slot]!;
-      expect(stored[0]!.key).toBe(minerva.empower!.buff.key);
-      expect(stored[0]!.mods).toEqual(minerva.empower!.buff.mods);
-      expect(stored[0]!.key).not.toBe(daemonById('mars')!.empower!.buff.key);
+      expect(stored[0]!.key).toBe(minervaEmpower.buff.key);
+      expect(stored[0]!.mods).toEqual(minervaEmpower.buff.mods);
+      expect(stored[0]!.key).not.toBe(daemonEmpowerHook(daemonById('mars')!)!.buff.key);
     });
 
     it('a redraw idol (janus) grants redraw capped by its dial and NO empower', () => {
       const janus = daemonById('janus')!;
+      const janusRedraw = daemonRedrawHook(janus)!;
       const { run } = gatedToFirstTurnIntro(25, janus);
-      const cap = janus.redraw!.maxCardsPerTurn;
+      const cap = janusRedraw.maxCardsPerTurn;
       expect(run.redrawAvailability).toEqual({
-        redrawsRemaining: janus.redraw!.redrawsPerTurn,
+        redrawsRemaining: janusRedraw.redrawsPerTurn,
         cardsRemaining: cap,
       });
       expect(run.empowerAvailability.empowersRemaining).toBe(0);
@@ -1467,11 +1482,11 @@ describe('Run', () => {
             id: mars.id,
             name: mars.name,
             description: mars.description,
-            // L1c2 — gate presence + the daemon's OWN buff, derived from the
-            // catalog entry (mars is empower-only).
+            // L1c2→47c — hook presence + the daemon's OWN buff, derived from
+            // the catalog entry's rules (mars is empower-only).
             redrawGate: false,
             empowerGate: true,
-            empowerBuff: mars.empower!.buff.mods,
+            empowerBuff: daemonEmpowerHook(mars)!.buff.mods,
           },
         ],
         [null, null],
@@ -1485,7 +1500,7 @@ describe('Run', () => {
       }
     });
 
-    it('v16 round-trips the daemon whole, the stream, and the CURRENT flip', () => {
+    it('round-trips the daemon whole, the stream, and the CURRENT flip (v16→v25)', () => {
       const mercury = daemonById('mercury')!;
       const { run, bus } = gatedToFirstTurnIntro(27, mercury);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));

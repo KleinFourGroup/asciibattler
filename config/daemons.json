@@ -4,55 +4,80 @@
       "id": "mars",
       "name": "Idol of Mars",
       "description": "Once per turn, empower a unit: +4 STR / RNG / MAG for the encounter.",
-      "empower": {
-        "chance": 1,
-        "empowersPerTurn": 1,
-        "buff": {
-          "key": "empowered",
-          "mods": {
-            "strength": { "add": 4 },
-            "ranged": { "add": 4 },
-            "magic": { "add": 4 }
-          },
-          "merge": "add"
+      "rules": [
+        {
+          "kind": "hook",
+          "on": "turnStart",
+          "effect": {
+            "op": "grantEmpowers",
+            "empowersPerTurn": 1,
+            "buff": {
+              "key": "empowered",
+              "mods": {
+                "strength": { "add": 4 },
+                "ranged": { "add": 4 },
+                "magic": { "add": 4 }
+              },
+              "merge": "add"
+            }
+          }
         }
-      }
+      ]
     },
     {
       "id": "minerva",
       "name": "Idol of Minerva",
       "description": "Once per turn, empower a unit: +2 DEF for the encounter.",
-      "empower": {
-        "chance": 1,
-        "empowersPerTurn": 1,
-        "buff": {
-          "key": "warded",
-          "mods": {
-            "defense": { "add": 2 }
-          },
-          "merge": "add"
+      "rules": [
+        {
+          "kind": "hook",
+          "on": "turnStart",
+          "effect": {
+            "op": "grantEmpowers",
+            "empowersPerTurn": 1,
+            "buff": {
+              "key": "warded",
+              "mods": {
+                "defense": { "add": 2 }
+              },
+              "merge": "add"
+            }
+          }
         }
-      }
+      ]
     },
     {
       "id": "mercury",
       "name": "Idol of Mercury",
       "description": "Each turn, a coin flip: heads grants the full redraw.",
-      "redraw": {
-        "chance": 0.5,
-        "redrawsPerTurn": 1,
-        "maxCardsPerTurn": 6
-      }
+      "rules": [
+        {
+          "kind": "hook",
+          "on": "turnStart",
+          "chance": 0.5,
+          "effect": {
+            "op": "grantRedraws",
+            "redrawsPerTurn": 1,
+            "maxCardsPerTurn": 6
+          }
+        }
+      ]
     },
     {
       "id": "janus",
       "name": "Idol of Janus",
       "description": "Every turn, redraw up to two cards.",
-      "redraw": {
-        "chance": 1,
-        "redrawsPerTurn": 1,
-        "maxCardsPerTurn": 2
-      }
+      "rules": [
+        {
+          "kind": "hook",
+          "on": "turnStart",
+          "effect": {
+            "op": "grantRedraws",
+            "redrawsPerTurn": 1,
+            "maxCardsPerTurn": 2
+          }
+        }
+      ]
     }
   ]
 }

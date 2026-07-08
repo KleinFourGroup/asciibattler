@@ -163,8 +163,9 @@ src/
                              # encounterBudget retired; encounter.name → HUD enemy pane. RUN_SCHEMA_VERSION 21
     redraw.ts                # K3: pure redraw rules — redrawRejection / redrawAvailability (config injected, both L modes provable)
     empower.ts               # K4: pure empower rules — empowerRejection / empowerAvailability / empowerEffect (config injected)
-    daemon.ts                # L1: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGates
-                             # (daemon → effective Redraw/EmpowerConfigs; chance gates draw only when 0<c<1)
+    daemon.ts                # L1→47c: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
+                             # (turnStart grant hooks → effective Redraw/EmpowerConfigs, authored-rule-order draws,
+                             # chance draws only when 0<c<1) + daemonRedrawHook/daemonEmpowerHook lookups
     runStats.ts              # 47a: the run-stat vocabulary — RunStatKey (bitsGain, cacheSize) + foldRunStats
                              # (foldEffects mirrored: adds→mults, identity-on-empty; NO rounding — read site rounds)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
@@ -281,10 +282,10 @@ config/                      # A4: balance JSON source of truth (paired with src
                              # (L1: enabled ships FALSE — daemons own availability; the block stays as the type anchor)
   empower.json               # K4: empower { enabled, empowersPerTurn, buff } — the pre-turn unit buff (encounter-lived, via the K1 store)
                              # (L1: enabled ships FALSE — daemons carry their own buffs; the buff stays the K4-default shape)
-  daemons.json               # L1: the idol catalog — per-daemon redraw/empower gates, each with a per-turn `chance`
-                             # (Mars/Minerva empower; Mercury coin-flip full redraw; Janus guaranteed 2-card redraw)
-                             # 47b: daemons may also carry `rules: Rule[]` (modifier | hook — the shared
-                             # daemon/packet effect vocabulary; trigger×op×filter matrix parse-enforced)
+  daemons.json               # L1→47c: the idol catalog, authored in the rule vocabulary — `rules: Rule[]`
+                             # (modifier | hook; the shared daemon/packet effect pool; trigger×op×filter
+                             # matrix parse-enforced). Mars/Minerva empower hooks; Mercury coin-flip full
+                             # redraw; Janus guaranteed 2-card redraw — all `turnStart` grant hooks
   nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json

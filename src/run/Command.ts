@@ -48,14 +48,14 @@ export type RunCommand =
    * discard, draw that many fresh (the deck's normal reshuffle cycle applies).
    * `handIndices` are positions into the current hand (not roster indices).
    * Only valid in `turn-intro` and within this turn's daemon-resolved budget
-   * (L1 `Run.turnGates.redraw`: `redrawsPerTurn` actions / `maxCardsPerTurn`
+   * (`Run.turnGrants.redraw`: `redrawsPerTurn` actions / `maxCardsPerTurn`
    * cards; no grant → always rejected) — anything else is a silent no-op that
    * consumes no budget. The redrawn hand re-emits via `turn:handRedrawn`.
    */
   | { readonly kind: 'redrawCards'; readonly handIndices: readonly number[] }
   /**
    * K4 — empower one drawn card at the pre-turn gate: its roster slot gains
-   * the active daemon's buff (L1 `Run.turnGates.empower.buff`; no grant →
+   * the active daemon's buff (`Run.turnGrants.empower.buff`; no grant →
    * always rejected) for the rest of the ENCOUNTER (the K1
    * encounter-effect store — re-seeded onto the unit each turn at deploy, so
    * it survives being redrawn away or benched). `handIndex` is a position

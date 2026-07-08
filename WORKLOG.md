@@ -580,3 +580,25 @@ leaves bits untouched, and **the Moneta-order rider works visually**
 — accepting her from a mixed offer re-priced the remaining bits row
 10→12 on the spot. Zero console errors; scene chain reward → recruit
 confirmed both paths.
+
+### 48d — the bits overlay build (2026-07-08)
+
+The first page-lifetime UI element ([BitsOverlay.ts](src/ui/BitsOverlay.ts)
+— Game-owned, appended once to #ui, untouched by scene swaps). The
+browser-verify caught its second ordering trap, the mirror of the
+audit's first: **`run:started` can't drive the reset re-paint either** —
+it emits from inside the NEW Run's constructor, before `Game.run` is
+reassigned, so the getter closure read the DEAD run's balance (the chip
+kept showing the lost run's total after a reset). Fix: `run:started`
+only re-shows; `Game.resetRun` calls `refresh()` AFTER the
+reassignment. Both traps pinned in the class header.
+
+Verified at :5191 across the whole lifecycle: earn (0→13 with pulse,
+chip in sync with `run.bits` on map / battle / reward / recruit
+screens), hide at defeat, re-show at 0 on reset. Corner geometry: the
+hop chip's new `left: 148px` clears a 4-digit balance; measured the
+narrow-viewport limit — hop overlaps the top-right speed pane only
+below ~580px viewport width (the 529px preview tab; any real desktop
+width has ample clearance). §51 note if small-window play ever
+matters. z-index 15: above screens, below corner buttons (20) /
+modals (30) / scanlines (1000).

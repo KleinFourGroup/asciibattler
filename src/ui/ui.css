@@ -1053,11 +1053,15 @@ body {
    dismantled in Q6 (rosters + per-unit stat lines → the Q4/Q5 card panes; the
    inline You/Foe pools → the panes' gauges); this label is the one survivor,
    relocated to a standalone top-left chip that mirrors the top-right speed pane,
-   with the location banner centered between them. Amber terminal chrome. */
+   with the location banner centered between them. Amber terminal chrome.
+   48d — the persistent bits chip now OWNS the top-left corner (the shape-lock
+   call: persistent chrome outranks scene chrome), so this chip sits to its
+   RIGHT. The fixed offset clears a 4-digit balance; if the two ever crowd,
+   §51's cohesion review owns the refinement (the user's noted expectation). */
 .hud-hop {
   position: absolute;
   top: 20px;
-  left: 20px;
+  left: 148px;
   font-family: var(--font-mono);
   font-size: 14px;
   text-transform: uppercase;
@@ -1066,6 +1070,52 @@ body {
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid #ffb000;
   padding: 4px 10px;
+}
+
+/* 48d — the persistent bits chip: the game's first PAGE-LIFETIME UI element
+   (Game-owned, appended once to #ui, survives every scene swap). Top-left in
+   and out of battle — the .hud-hop chip moved to its right. Fixed (ignores
+   host-screen scroll, like the corner card-list buttons); z-index 15 = above
+   the plain screens (which carry no z-index), below the corner buttons (20) /
+   modals (30), and under the #scanlines rake (1000) like all chrome. The
+   value is TERMINAL_GREEN (the gain color); .is-pulsing flashes the border
+   green for PULSE_MS on any balance change so mid-run earns register. */
+.bits-overlay {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 15;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ffb000; /* TERMINAL_AMBER */
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ffb000;
+  padding: 4px 10px;
+  min-width: 96px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.bits-overlay__value {
+  color: #33ff00; /* TERMINAL_GREEN */
+}
+
+.bits-overlay__label {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.bits-overlay.is-pulsing {
+  border-color: #33ff00;
+  box-shadow: 0 0 8px rgba(51, 255, 0, 0.55);
+}
+
+.bits-overlay.is-hidden {
+  display: none;
 }
 
 /* Q1 — speed-command pane (top-right): one button per enabled speed (ascending,

@@ -16,6 +16,7 @@ import { BattleScene } from './scenes/BattleScene';
 import { RecruitScene } from './scenes/RecruitScene';
 import { PromotionScene } from './scenes/PromotionScene';
 import { RewardScene } from './scenes/RewardScene';
+import { BitsOverlay } from './ui/BitsOverlay';
 import { GameOverScene } from './scenes/GameOverScene';
 import { PreTurnScene } from './scenes/PreTurnScene';
 import { PostTurnScene } from './scenes/PostTurnScene';
@@ -57,6 +58,9 @@ export class Game implements RunDispatcher {
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
   private readonly overlays: UnitOverlayLayer;
+  /** 48d — the persistent bits chip (page-lifetime, survives scene swaps);
+   *  held for `resetRun`'s post-reassignment `refresh()`. */
+  private readonly bitsOverlay: BitsOverlay;
   private readonly terrain: TerrainRenderer;
   /** M4 — the backdrop apron ring. Dev consoles reach it as `__game.apron`
    *  (TS `private` is runtime-accessible) for the dither A/B flip. */
@@ -164,6 +168,14 @@ export class Game implements RunDispatcher {
     // wins z-order disputes. #scanlines (z-index 1000) still rakes
     // across the overlays.
     this.overlays = new UnitOverlayLayer(this.renderer.camera, canvas, uiMount);
+
+    // 48d: the persistent bits overlay — page-lifetime chrome appended once
+    // to the shared #ui mount, NEVER touched by scene swaps (the first UI
+    // element to survive them). The first paint happens in its constructor
+    // (Run's init never emits run:bitsChanged, and the first run:started
+    // predates this line); resetRun re-paints via refresh() after the run
+    // reassignment (see the ordering note there).
+    this.bitsOverlay = new BitsOverlay(uiMount, this.bus, () => this.run.bits);
 
     // Scene transitions driven by Run lifecycle events. All of the
     // post-battle handlers fire *after* Run has already updated phase +
@@ -330,6 +342,10 @@ export class Game implements RunDispatcher {
   private resetRun(): void {
     this.run.dispose();
     this.run = this.createRun();
+    // 48d — re-paint the bits chip AFTER the reassignment: the new Run's
+    // `run:started` fired mid-construction (before this.run pointed at it),
+    // so the overlay's event-driven paint would have read the dead run.
+    this.bitsOverlay.refresh();
     this.swap(new MapScene());
   }
 

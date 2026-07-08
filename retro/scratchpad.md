@@ -50,3 +50,24 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   review). No protocol friction to report; the plan-shape guard caps
   (450/60) were set from measured authored size, the existing tests'
   headroom convention.
+
+## Phase 47 build, steps a–d (2026-07-07)
+
+- **The live before/after fuzz-arm diff is the cheapest strong oracle for
+  behavior-equivalence refactors.** Capture per-arm `summary.csv` baselines
+  at HEAD *before* the surgery (6 arms × `--count=6`, ~2 min), re-run after,
+  `diff` — byte-identity across arms proved both 47c (gates→rules) and 47d
+  (single→multi daemon) changed nothing for existing content, catching what
+  live-vs-live suites structurally can't (they recompute both sides on the
+  NEW code). Worth making a habit for any "re-author X, behavior must hold"
+  step (`73c88b0`, `c8129d3`).
+- **AskUserQuestion dialogs hide same-turn assistant text in the desktop
+  app** — a shape-lock proposal presented in the same turn as the question
+  dialog is invisible to the user (bit twice at the 47 kickoff). Present
+  the proposal as a plain final message, collect the approval next turn.
+- **Deferring cosmetic polish past a known redesign is a scope call worth
+  making explicit.** The 47d badge-tooltip nit (joined idol summaries) was
+  sized (~1 commit, 3 payloads), then deliberately parked for §51 because
+  §49's fire-UX round will likely rework the whole badge surface — polish
+  before a redesign is throwaway. The sizing conversation itself is what
+  made the parking decision easy for the user to co-sign.

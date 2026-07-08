@@ -8,11 +8,11 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 
 | | |
 |---|---|
-| **NEXT** | **Phase 47 kickoff — the rule vocabulary** (the AGENTS phase-kickoff protocol: code-reality audit → step cut → shape-lock with the user → build) |
-| **In flight** | **Cluster 3 — Economy (Phases 47→52)**: spec [cluster-3-spec.md](cluster-3-spec.md) ✅ LOCKED · [ROADMAP.md](ROADMAP.md) ✅ shape-locked 2026-07-07 · [WORKLOG.md](WORKLOG.md) live (narrative appends there) |
+| **NEXT** | **Phase 47 build — step 47e (the bits substrate)**: `run.bits` floor-at-zero + `run:bitsChanged` + `config/economy.json` + `RunConfig` override + `gainBits` with the `bitsGain` fold; example daemon #3 (+20% bits) authored + tested; **Run v26→v27**. Then 47f (battleRules + tallies, World v32→v33, examples #1+#2) and 47g (exit sweep + docs). The 47a–d story + decisions: [WORKLOG.md](WORKLOG.md) §47; the cut: [ROADMAP.md](ROADMAP.md) §47 |
+| **In flight** | **Cluster 3 — Economy (Phases 47→52)**: spec [cluster-3-spec.md](cluster-3-spec.md) ✅ LOCKED · [ROADMAP.md](ROADMAP.md) ✅ shape-locked 2026-07-07 · [WORKLOG.md](WORKLOG.md) live (narrative appends there) · **Phase 47 kickoff ✅ (audit + 7-step cut shape-locked); 47a–d ✅ landed + user-playtested** (`3494722`→`c8129d3`: foldRunStats · the Rule schema · the hook engine + idols re-authored + legacy gates DELETED · multi-daemon by id + per-idol empower controls). Fuzz oracle byte-IDENTICAL ×6 arms at both 47c and 47d |
 | **Branch / tree** | `main`, working tree clean at last close |
-| **Snapshots** | WorldSnapshot **v32** · RunSnapshot **v24** |
-| **Tests** | **1804 main** (`npm test`) + **212 fuzz:smoke** green · typecheck clean |
+| **Snapshots** | WorldSnapshot **v32** · RunSnapshot **v26** |
+| **Tests** | **1837 main** (`npm test`) + **212 fuzz:smoke** green · typecheck clean |
 | **Last closed** | The process-audit docs round (2026-07-06, `f7fbf45`→`f0523fc`: the planning stack in AGENTS.md, CLAUDE.md auto-load, docs ratchets, the pre-commit gate, the scratchpad sweep) · before it, the Pathfinding Audit round (Phases 42→46), ✅ user-confirmed 2026-07-06 — see Closed rounds below |
 
 **The Cluster-3 kickoff (2026-07-07): ✅ COMPLETE.** Spec hardened + locked

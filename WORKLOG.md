@@ -602,3 +602,7 @@ below ~580px viewport width (the 529px preview tab; any real desktop
 width has ample clearance). §51 note if small-window play ever
 matters. z-index 15: above screens, below corner buttons (20) /
 modals (30) / scanlines (1000).
+
+**48c + 48d user-playtested natively 2026-07-08** — the reward screen,
+the coin blip, and the overlay pulse all confirmed ("playtest pulsed
+properly"). Session handed off with 48e next.

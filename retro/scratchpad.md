@@ -118,3 +118,28 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   dilution — a 1-in-5 chance of a no-pre-turn-tools run — and a
   `--daemon=random` fuzz re-baseline). Resolved live (user: in the catalog).
   Note for future cuts: "author content X" should say catalog vs. fixture.
+
+## Phase 48 build, steps a–d (2026-07-08)
+
+- **Per-commit browser-verify caught two real bugs 1,915 green headless
+  tests structurally couldn't** (48c: Game.dispatch's hand-enumerated
+  switch silently DROPPED the new reward commands — every headless path
+  calls run.dispatch directly, so only the live command channel exposed
+  it; 48d: the overlay's reset re-paint read the DEAD run — `run:started`
+  emits mid-construction, before Game.run is reassigned). Both are
+  GAME-LAYER wiring bugs: Game.ts sits in the untested render/ui zone,
+  so the browser IS its only test surface. The generalizable fixes: any
+  hand-re-enumeration of a union gets a `satisfies never` default (the
+  harness discipline, now in Game.dispatch), and event handlers that read
+  `this.run` via closure must not fire during run construction.
+- **A deterministic SFX recipe beats an asset hunt**: the 48c pickup
+  coin-blip was authored as a ~15-line gen-sfx.mjs recipe (B5→E6 square +
+  soft octave sine) in minutes, byte-stable across regens. The §32b
+  pipeline keeps paying — reach for a recipe FIRST when a cue is simple
+  and chiptune-adjacent.
+- **The 48a byte-faithful trap generalized**: adding a config key that an
+  existing formatter emits (encounters' `rewards`) means the hand-authored
+  JSON must match the formatter's exact byte-form (compact stringify, key
+  order = zod shape order) or the round-trip test trips. Cheap once known;
+  worth remembering whenever authoring config by hand mid-phase (48f's
+  catalog authoring hits this again — author via the 48e editor instead).

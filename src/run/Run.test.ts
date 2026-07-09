@@ -19,6 +19,7 @@ import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import { EMPOWER } from '../config/empower';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
+import { PACKETS } from '../config/packets';
 import { rewardTableById } from '../config/rewards';
 import { daemonRedrawHook, daemonEmpowerHook } from './daemon';
 import { RUN_STAT_BASES } from './runStats';
@@ -2095,6 +2096,139 @@ describe('Run', () => {
       expect(Run.fromJSON(wire, new EventBus<GameEvents>()).bits).toBe(33);
       const tampered = { ...wire, bits: -5 };
       expect(Run.fromJSON(tampered, new EventBus<GameEvents>()).bits).toBe(0);
+    });
+  });
+
+  describe('the cache (49b — the core)', () => {
+    /** A real catalog id (derived, never hardcoded — the catalog is 49g's). */
+    const PACKET_ID = PACKETS[0]!.id;
+    const BASE_SIZE = RUN_STAT_BASES.cacheSize;
+    /** A bespoke shrink idol leaving exactly 2 slots (derived from the base). */
+    const SHRINK_IDOL: DaemonConfig = {
+      id: 'test-cache-shrink',
+      name: 'Test Cache Shrink',
+      description: 'cursed: the cache shrinks to 2 slots',
+      rules: [{ kind: 'modifier', stat: 'cacheSize', op: 'add', value: -(BASE_SIZE - 2) }],
+    };
+    const GROW_IDOL: DaemonConfig = {
+      id: 'test-cache-grow',
+      name: 'Test Cache Grow',
+      description: '+3 cache slots (the spec example)',
+      rules: [{ kind: 'modifier', stat: 'cacheSize', op: 'add', value: 3 }],
+    };
+
+    it('starts empty at the base capacity (derived, never stored)', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      expect(run.cache).toEqual([]);
+      expect(run.effectiveCacheSize).toBe(Math.floor(BASE_SIZE));
+      expect(run.cacheHasRoom).toBe(true);
+      expect(run.cacheOverflow).toBe(0);
+    });
+
+    it('addPacket appends in acquisition order (duplicates = one slot each) and emits run:cacheChanged', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      const events: Array<{ packetIds: string[]; size: number }> = [];
+      bus.on('run:cacheChanged', (e) => events.push(e));
+      run.addPacket(PACKET_ID);
+      run.addPacket(PACKET_ID);
+      expect(run.cache).toEqual([PACKET_ID, PACKET_ID]);
+      expect(events).toEqual([
+        { packetIds: [PACKET_ID], size: Math.floor(BASE_SIZE) },
+        { packetIds: [PACKET_ID, PACKET_ID], size: Math.floor(BASE_SIZE) },
+      ]);
+      // The payload is a COPY — mutating it can't reach the live cache.
+      events[1]!.packetIds.pop();
+      expect(run.cache).toHaveLength(2);
+    });
+
+    it('addPacket throws on an id missing from the catalog (a poisoned save beats a silent one)', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      expect(() => run.addPacket('no-such-packet')).toThrow(/unknown packet id 'no-such-packet'/);
+      expect(run.cache).toEqual([]);
+    });
+
+    it('the discardPacket command removes one slot; out-of-range / fractional are silent no-ops', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      run.addPacket(PACKET_ID);
+      run.addPacket(PACKET_ID);
+      const events: unknown[] = [];
+      bus.on('run:cacheChanged', (e) => events.push(e));
+      run.dispatch({ kind: 'discardPacket', cacheIndex: 0 });
+      expect(run.cache).toEqual([PACKET_ID]);
+      expect(events).toHaveLength(1);
+      run.dispatch({ kind: 'discardPacket', cacheIndex: 5 });
+      run.dispatch({ kind: 'discardPacket', cacheIndex: -1 });
+      run.dispatch({ kind: 'discardPacket', cacheIndex: 0.5 });
+      expect(run.cache).toEqual([PACKET_ID]);
+      expect(events).toHaveLength(1); // the no-ops stayed silent
+    });
+
+    it('discard is legal in any phase (no phase guard — a shrink must resolve wherever it lands)', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.addPacket(PACKET_ID);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      expect(run.phase).not.toBe('map'); // mid-encounter, not the map
+      run.dispatch({ kind: 'discardPacket', cacheIndex: 0 });
+      expect(run.cache).toEqual([]);
+    });
+
+    it('a cacheSize modifier changes the DERIVED capacity at read time, flooring at the read site', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.addDaemon(GROW_IDOL);
+      expect(run.effectiveCacheSize).toBe(Math.floor(BASE_SIZE + 3));
+      const halved = freshRunWithBus(1, {
+        daemon: {
+          id: 'test-cache-halve',
+          name: 'Test Cache Halve',
+          description: 'halves the cache',
+          rules: [{ kind: 'modifier', stat: 'cacheSize', op: 'mult', value: 0.5 }],
+        },
+      }).run;
+      expect(halved.effectiveCacheSize).toBe(Math.floor(BASE_SIZE * 0.5));
+    });
+
+    it('a shrink under current holdings sets cacheOverflow; discards resolve it (the forced-keep state)', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.addPacket(PACKET_ID);
+      run.addPacket(PACKET_ID);
+      run.addPacket(PACKET_ID);
+      expect(run.cacheOverflow).toBe(0);
+      run.addDaemon(SHRINK_IDOL); // capacity → 2, holdings 3
+      expect(run.effectiveCacheSize).toBe(2);
+      expect(run.cacheOverflow).toBe(1);
+      expect(run.cacheHasRoom).toBe(false);
+      run.dispatch({ kind: 'discardPacket', cacheIndex: 0 });
+      expect(run.cacheOverflow).toBe(0);
+      expect(run.cacheHasRoom).toBe(false); // exactly full, not roomy
+    });
+
+    it('addDaemon emits run:cacheChanged (ownership moves the derived capacity)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      run.addPacket(PACKET_ID);
+      const events: Array<{ packetIds: string[]; size: number }> = [];
+      bus.on('run:cacheChanged', (e) => events.push(e));
+      run.addDaemon(SHRINK_IDOL);
+      expect(events).toEqual([{ packetIds: [PACKET_ID], size: 2 }]);
+    });
+
+    it('round-trips the cache (overflow re-derives); an unknown cached id hard-rejects', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.addPacket(PACKET_ID);
+      run.addPacket(PACKET_ID);
+      run.addPacket(PACKET_ID);
+      run.addDaemon(SHRINK_IDOL);
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      expect(wire.cache).toEqual([PACKET_ID, PACKET_ID, PACKET_ID]);
+      // The bespoke idol doesn't survive by-id rehydration (the 47d
+      // shape-lock), so restore WITHOUT it: contents held, base capacity.
+      const restoredWire = { ...wire, daemonIds: [] };
+      const restored = Run.fromJSON(restoredWire, new EventBus<GameEvents>());
+      expect(restored.cache).toEqual([PACKET_ID, PACKET_ID, PACKET_ID]);
+      expect(restored.cacheOverflow).toBe(0); // no shrink idol → re-derives clean
+      const tampered = { ...wire, daemonIds: [], cache: ['no-such-packet'] };
+      expect(() => Run.fromJSON(tampered, new EventBus<GameEvents>())).toThrow(
+        /unknown packet id 'no-such-packet'/,
+      );
     });
   });
 

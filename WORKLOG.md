@@ -890,3 +890,33 @@ to rename before 49g authors content:
 - Skeleton catalog = **patch** (heal 3, out-of-battle) — the simplest
   schema-prover, and the name passes the graceful-degradation test
   (lay: patch up a wound; tech: software patch).
+
+### 49b — the cache core (2026-07-09)
+
+`run.cache` = packet IDS in acquisition order (the daemons-by-id
+def-resolved pattern; **Run v29→v30**, ids re-resolve on load with the
+hard-reject discipline). The semantics, all deliberate:
+
+- **Capacity is never stored**: `effectiveCacheSize` reads the
+  `cacheSize` fold at call time and FLOORS at the read site (the
+  runStats contract). **The forced-keep shrink "state" is likewise
+  derived, never flagged**: `cacheOverflow = max(0, held − size)` —
+  a save mid-shrink round-trips cache + daemons and the overflow
+  recomputes (derive-don't-cache doing the serialization work).
+- **`addPacket` throws on a non-catalog id** (unlike `addDaemon`,
+  which accepts bespoke in-memory daemons): the cache serializes ids,
+  so a non-catalog packet would poison the save — loud beats silent.
+  Fullness stays the CALLER's concern (the addDaemon duplicate
+  discipline; 49c gates accepts on `cacheHasRoom`). Duplicates legal —
+  no-stacking means one SLOT each, not one copy each.
+- **`discardPacket` (new command) is deliberately phase-unguarded** —
+  pure run-level state, no sim seam, and a shrink must be resolvable
+  wherever it lands (reward phase today, ports at §50). Out-of-range /
+  fractional = silent no-op.
+- **`addDaemon` now emits `run:cacheChanged`** — ownership feeds the
+  size fold, so a size-modifier idol can move the derived capacity
+  (into overflow) without touching the list; the 49f chip repaints
+  off one event either way. Payload = authoritative ids copy + the
+  derived size.
+- Game.dispatch routes the new command (the 48c `satisfies never`
+  guard forced it at compile time — the guard earning its keep).

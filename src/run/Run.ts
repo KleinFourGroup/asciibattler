@@ -86,6 +86,7 @@ import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
 import { selectEncounter } from './encounters/selection';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
+import { packetById } from '../config/packets';
 import { rewardTableById } from '../config/rewards';
 import { rollRewards, type RewardPortion } from './rewards';
 import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
@@ -272,8 +273,11 @@ export interface BattleEncounter {
  *  streams (`rewardRng` sampling / `rewardBitsRng` bits rolls), the
  *  `pendingRewards` offer, and the `'reward'` member of `phase`. A v28 save
  *  lacks the streams (and could sit in a phase shape this engine routes
- *  differently) → reject. */
-const RUN_SCHEMA_VERSION = 29;
+ *  differently) → reject.
+ *  49b: bumped 29→30. The cache: adds `cache` (owned packet ids, acquisition
+ *  order — the daemonIds def-resolved pattern). A v29 save has no cache →
+ *  reject rather than rehydrate a run whose packets silently vanished. */
+const RUN_SCHEMA_VERSION = 30;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -366,6 +370,12 @@ export interface RunSnapshot {
   /** 47e: the run's bits balance (integer, floored at zero — the spec §Bits
    *  substrate). Persists across the whole run like `playerHealth`. */
   bits: number;
+  /** 49b: the cache — owned packet ids in acquisition order (the `daemonIds`
+   *  def-resolved pattern: re-resolved against the catalog on load, an
+   *  unknown id hard-rejects). MAY legally exceed the derived `cacheSize`
+   *  (a shrink daemon drops capacity under current holdings; the overflow is
+   *  DERIVED state, never a serialized flag — see `Run.cacheOverflow`). */
+  cache: string[];
   /** H4: the run-wide player health pool (persists across the whole run). */
   playerHealth: number;
   /** H4: the active encounter's enemy pool (reset each encounter). */
@@ -541,6 +551,18 @@ export class Run {
    */
   bits: number;
   /**
+   * 49b — the cache: owned packet ids in acquisition order (defs resolve at
+   * read time — the daemons-by-id pattern). Capacity is NOT stored: it
+   * derives from the `cacheSize` run-stat fold at read time
+   * (`effectiveCacheSize`), so a size-modifier daemon joining is correct for
+   * free. The list MAY exceed the derived capacity transiently — a shrink
+   * daemon lands under current holdings and the overflow (`cacheOverflow`)
+   * stays pending until the forced-keep discards resolve it (49f renders
+   * that flow). Mutated only by `addPacket` / `handleDiscardPacket`, both of
+   * which emit `run:cacheChanged`. Round-trips in the Run save (v30).
+   */
+  cache: string[];
+  /**
    * H4 — the run-wide player health pool. Persists across the WHOLE run (every
    * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
    * lost. Each turn it's chipped by the enemy survivors' Σ`power`. Init +
@@ -693,6 +715,9 @@ export class Run {
     // (no draw), so it doesn't perturb the fork alignment; clamped so a
     // programmatic override can't start a run below the zero floor.
     this.bits = Math.max(0, config?.startingBits ?? ECONOMY.startingBits);
+    // 49b — the cache starts empty (packets arrive via rewards/ports only;
+    // no starting-packet config until content demands one).
+    this.cache = [];
     // H4 — the run-wide player pool starts full; the per-encounter state
     // (enemyHealth/turnIndex/selectedEncounter) is set when an encounter
     // actually begins (`beginEncounter`).
@@ -801,6 +826,9 @@ export class Run {
         break;
       case 'empowerUnit':
         this.handleEmpowerUnit(command.handIndex, command.grantIndex);
+        break;
+      case 'discardPacket':
+        this.handleDiscardPacket(command.cacheIndex);
         break;
       case 'resetRun':
         // No-op at this layer — Game handles reset by disposing this Run
@@ -1130,6 +1158,77 @@ export class Run {
     const applied = next - this.bits;
     this.bits = next;
     this.bus.emit('run:bitsChanged', { bits: this.bits, delta: applied });
+  }
+
+  /**
+   * 49b — the effective cache capacity: the `cacheSize` run-stat fold read
+   * at call time and FLOORED here (the runStats.ts contract — the fold never
+   * rounds; the read site does). Derive-don't-cache: a size-modifier daemon
+   * joining is correct with zero bookkeeping.
+   */
+  get effectiveCacheSize(): number {
+    return Math.floor(this.effectiveRunStats().cacheSize);
+  }
+
+  /**
+   * 49b — packets held beyond the derived capacity (0 = none). Non-zero only
+   * after a SHRINK (a cacheSize-lowering daemon landing under current
+   * holdings) — acquisition surfaces gate on `cacheHasRoom`, so adds never
+   * overflow. DERIVED, never serialized: a save mid-shrink round-trips the
+   * cache + daemons and this recomputes (derive-don't-cache). While > 0 the
+   * 49f forced-keep flow demands discards.
+   */
+  get cacheOverflow(): number {
+    return Math.max(0, this.cache.length - this.effectiveCacheSize);
+  }
+
+  /** 49b — room for one more packet (the acquisition gate: 49c reward
+   *  accepts, §50 port buys). */
+  get cacheHasRoom(): boolean {
+    return this.cache.length < this.effectiveCacheSize;
+  }
+
+  /**
+   * 49b — append a packet to the cache (the 49c reward / §50 port
+   * acquisition seam — `addDaemon`'s sibling). Takes the ID: the cache
+   * serializes ids, so a non-catalog packet can never legally exist here
+   * (unlike bespoke in-memory daemons) — an unknown id throws, loud beats a
+   * poisoned save. Fullness is the CALLER's concern (the addDaemon duplicate
+   * discipline): acquisition surfaces gate on `cacheHasRoom` upstream, and
+   * the 49c swap flow discards before adding. Duplicate ids are legal — no
+   * stacking means one SLOT each, not one copy each (spec §Cache).
+   */
+  addPacket(packetId: string): void {
+    if (packetById(packetId) === undefined) {
+      throw new Error(`Run.addPacket: unknown packet id '${packetId}'`);
+    }
+    this.cache.push(packetId);
+    this.emitCacheChanged();
+  }
+
+  /**
+   * 49b — discard one cache slot (the `discardPacket` command: the at-will
+   * discard, and the instrument of the 49f forced-keep shrink flow).
+   * Out-of-range / fractional = the silent no-op discipline. Deliberately
+   * NOT phase-guarded: the cache is pure run-level state with no sim seam,
+   * the modal opens on any screen (49f), and a shrink must be resolvable
+   * wherever it landed (the reward phase today, ports at §50).
+   */
+  private handleDiscardPacket(cacheIndex: number): void {
+    if (!Number.isInteger(cacheIndex)) return;
+    if (cacheIndex < 0 || cacheIndex >= this.cache.length) return;
+    this.cache.splice(cacheIndex, 1);
+    this.emitCacheChanged();
+  }
+
+  /** 49b — the one `run:cacheChanged` emit site: an authoritative copy of
+   *  the ids + the derived capacity, so consumers repaint from the payload
+   *  without re-deriving. */
+  private emitCacheChanged(): void {
+    this.bus.emit('run:cacheChanged', {
+      packetIds: this.cache.slice(),
+      size: this.effectiveCacheSize,
+    });
   }
 
   /**
@@ -1610,6 +1709,11 @@ export class Run {
    */
   addDaemon(daemon: DaemonConfig): void {
     this.daemons.push(daemon);
+    // 49b — ownership feeds the cacheSize fold: a size-modifier idol changes
+    // the DERIVED capacity (possibly into overflow — the forced-keep state)
+    // without touching the cache list, so the cache surfaces repaint off
+    // this emit too.
+    this.emitCacheChanged();
   }
 
   /**
@@ -2053,6 +2157,7 @@ export class Run {
       cardsRedrawnThisTurn: this.cardsRedrawnThisTurn,
       empowersUsedThisTurn: this.empowersUsedThisTurn.slice(),
       bits: this.bits,
+      cache: this.cache.slice(),
       playerHealth: this.playerHealth,
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
@@ -2148,6 +2253,15 @@ export class Run {
     // 47e — re-clamp on load: the zero floor is an invariant, not a trust
     // in the wire image (a hand-edited save can't restore a negative balance).
     m.bits = Math.max(0, snap.bits);
+    // 49b — re-resolve each cached packet id against the catalog (the
+    // daemonIds discipline: unknown = hard reject, never a silent drop). An
+    // over-capacity cache is legal — the shrink overflow re-derives.
+    m.cache = snap.cache.map((id) => {
+      if (packetById(id) === undefined) {
+        throw new Error(`Run.fromJSON: unknown packet id '${id}' (not in the catalog)`);
+      }
+      return id;
+    });
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;

@@ -87,6 +87,15 @@ export type RunCommand =
        *  usual silent no-op. */
       readonly grantIndex: number;
     }
+  /**
+   * 49b — discard one cache slot (`cacheIndex` into `Run.cache`): the
+   * at-will discard (spec §Cache) and the instrument of the 49f forced-keep
+   * shrink flow (the modal dispatches one per drop-choice). Deliberately
+   * legal in ANY phase — pure run-level state with no sim seam, and the
+   * cache modal opens on every screen. Out-of-range / fractional = the
+   * usual silent no-op. Emits `run:cacheChanged`.
+   */
+  | { readonly kind: 'discardPacket'; readonly cacheIndex: number }
   | { readonly kind: 'resetRun' };
 
 export interface RunDispatcher {

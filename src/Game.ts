@@ -314,6 +314,11 @@ export class Game implements RunDispatcher {
         // redrawCards: the screen refreshes off `turn:unitEmpowered`.
         this.run.dispatch(command);
         break;
+      case 'discardPacket':
+        // 49b — cache discard: run-level state only, legal in any phase; the
+        // cache surfaces repaint off `run:cacheChanged` (no scene swap).
+        this.run.dispatch(command);
+        break;
       case 'resetRun':
         this.resetRun();
         break;

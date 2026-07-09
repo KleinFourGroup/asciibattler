@@ -351,6 +351,18 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'run:bitsChanged': { bits: number; delta: number };
 
+  /**
+   * 49b — the run's cache changed: a packet was added (`Run.addPacket` —
+   * reward accepts at 49c, port buys at §50) or discarded (the
+   * `discardPacket` command), or daemon ownership moved the DERIVED
+   * capacity (`Run.addDaemon` emits too — a size-modifier idol can shrink
+   * the cache into the forced-keep overflow without touching the list).
+   * `packetIds` is an authoritative copy (ids — defs resolve via
+   * `packetById`); `size` is the folded effective capacity. The 49f cache
+   * chip + modal are the intended consumers; no sim/run subscriber exists.
+   */
+  'run:cacheChanged': { packetIds: string[]; size: number };
+
   'recruit:offered': { units: UnitTemplate[] };
 
   /**

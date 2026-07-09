@@ -472,6 +472,7 @@ run:started             { seed: number }
 run:victory             { }
 run:defeated            { }
 run:bitsChanged         { bits: number; delta: number }                             # 47e: the balance moved (bits = new total, delta = post-clamp change); emitted only on a real change from Run.addBits; the §48 overlay's feed
+run:cacheChanged        { packetIds: string[]; size: number }                       # 49b: the cache changed — a packet added/discarded, OR addDaemon moved the DERIVED capacity (size = the folded effectiveCacheSize); the 49f chip+modal's feed
 
 recruit:offered         { units: UnitTemplate[] }
 reward:offered          { rewards: readonly RewardPortion[] }                       # 48b: a won encounter's rolled reward offer — the run entered the reward phase (battle → rewards → promotion → recruit)
@@ -503,6 +504,7 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   advanceTurn             { }     # H4b: resume from a turn gate (pre/post-turn screen)
   redrawCards             { handIndices: number[] }   # K3: redraw selected hand positions at the pre-turn gate (47c: budget = the rule-resolved turnGrants.redraw, ONE summed config)
   empowerUnit             { handIndex: number; grantIndex: number }   # K4/47d: buff one drawn card for the rest of the encounter with the CHOSEN idol's blessing (grantIndex → turnGrants.empowers[i], per-source budgets)
+  discardPacket           { cacheIndex: number }   # 49b: drop one cache slot (at-will + the forced-keep shrink instrument); ANY phase — pure run-level state
   resetRun                { }
 
 WorldCommand (queued; drained at top of tick)

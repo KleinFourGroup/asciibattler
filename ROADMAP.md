@@ -217,8 +217,8 @@ deferred.
 
 **The cut (shape-locked 2026-07-09; rationale in worklog §49):**
 
-- [x] 49a — the packet config layer: `PacketDef` zod (`config/packets.json` + `src/config/packets.ts`: `usableIn` + `TargetSpec` + the duration axis), boot asserts incl. `assertRewardPacketRefs`; zero consumers ✅ 2026-07-09, +21 tests; the op pool grows `applyBuff`/`injectRule` (worklog §49a)
-- [ ] 49b — the cache core: `run.cache` (packet ids), size derived via the `cacheSize` fold, add/discard/full + the forced-keep shrink state, `run:cacheChanged`; **Run v29→v30**; headless
+- [x] 49a — the packet config layer: `PacketDef` zod (`config/packets.json` + `src/config/packets.ts`: `usableIn` + `TargetSpec` + the duration axis), boot asserts incl. `assertRewardPacketRefs`; zero consumers ✅ 2026-07-09, +16 tests; the op pool grows `applyBuff`/`injectRule` (worklog §49a)
+- [x] 49b — the cache core: `run.cache` (packet ids), size derived via the `cacheSize` fold, add/discard/full + the forced-keep shrink state, `run:cacheChanged`; **Run v29→v30**; headless ✅ 2026-07-09, +9 tests; overflow = derived, never flagged (worklog §49b)
 - [ ] 49c — packet rewards activate: the `rollRewards` packet arm + `RewardPortion` packet kind + cache-full decline-or-swap + the fuzz reward policy (accept-if-room); RewardScreen packet portions + cache state
 - [ ] 49d — the grant queue: `TurnGrants` → one ordered per-source list (consumed/passed serialized, active grant derived), `passGrant`, active-grant validation + the finality toggle, fuzz bots adapt; **Run v30→v31**; headless
 - [ ] 49e — the fire engine: the `usePacket` command, per-context targets, op execution (encounterEffect path / redraw / rule injection incl. the run-duration store / out-of-battle instants); headless

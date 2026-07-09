@@ -729,11 +729,12 @@ export class Run {
     this.turnGrants = disabledTurnGrants();
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
-    // X1 — resolve the per-run difficulty lever (override ?? difficulty.json
+    // X1/48f — resolve the per-run difficulty lever (override ?? difficulty.json
     // default). Pure of RNG, so it doesn't perturb the fork alignment.
     this.difficultyMultipliers = resolveDifficultyMultipliers({
       waveSize: config?.waveSizeMultiplier,
       levelBudget: config?.levelBudgetMultiplier,
+      bits: config?.bitsMultiplier,
     });
     // S2 — the run begins at the virtual pre-root position (no node entered
     // yet); the root is the sole frontier, so it's selected as the first
@@ -1089,16 +1090,18 @@ export class Run {
   }
 
   /**
-   * 48b — the settle math for a bits earn: `base` × the folded `bitsGain`
-   * multiplier, ROUNDED to an integer (the runStats.ts contract — the fold
+   * 48b/48f — the settle math for a bits earn: `base` × the folded `bitsGain`
+   * multiplier × the per-run `bitsMultiplier` difficulty lever (48f — the
+   * shape-lock's Option B: inside the settle, so reward rolls, battle
+   * tallies, and daemon hooks all scale uniformly and the §52 dial reads
+   * clean), ROUNDED once to an integer (the runStats.ts contract — the fold
    * itself never rounds). Public and SHARED with the reward screen's display
    * derivation (the shape-lock rider: the screen must show exactly what the
    * settle grants — one code path, drift-impossible; accepting a bits-fold
-   * daemon mid-offer visibly re-derives the remaining portions). 48f's
-   * `bitsMultiplier` difficulty lever joins this product.
+   * daemon mid-offer visibly re-derives the remaining portions).
    */
   effectiveBits(base: number): number {
-    return Math.round(base * this.effectiveRunStats().bitsGain);
+    return Math.round(base * this.effectiveRunStats().bitsGain * this.difficultyMultipliers.bits);
   }
 
   /**

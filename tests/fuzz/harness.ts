@@ -83,8 +83,10 @@ export interface RecruitChoice {
 export interface RunResult {
   seed: number;
   strategyName: string;
-  /** L1c3 — the run's rolled (or forced) daemon id, `null` for a daemon-less
-   *  run. The per-daemon win/hop bucketing key. */
+  /** L1c3 — the run's rolled (or forced) STARTING daemon id, `null` for a
+   *  daemon-less arm. The per-daemon win/hop bucketing key. Captured at
+   *  construction (48f): reward tables grant daemons mid-run, so end-state
+   *  ownership no longer identifies the arm. */
   daemonId: string | null;
   outcome: RunOutcome;
   finalHopReached: number;
@@ -376,6 +378,11 @@ export function runOne(
   const runConfig =
     daemonOverride !== undefined ? { ...options.runConfig, daemon: daemonOverride } : options.runConfig;
   const run = new Run(runConfig?.seed ?? seed, bus, runConfig);
+  // L1c3/48f — the arm key is the STARTING daemon (rolled or forced at
+  // construction). Read it NOW: reward tables grant daemons mid-run (accepted
+  // by the harness's accept-all policy), so end-state `run.daemons` no longer
+  // answers "which arm ran" — a `none` control run can finish owning loot.
+  const startingDaemonId = run.daemons[0]?.id ?? null;
   // K3c3/K4c3 — a live redraw OR empower policy needs the turn gates: the
   // `redrawCards`/`empowerUnit` commands are only legal in `turn-intro`,
   // which exists only when `pauseAtTurnGates` is on.
@@ -388,14 +395,14 @@ export function runOne(
     if (run.phase === 'defeat' || run.phase === 'complete') break;
 
     if (hops > maxNodeHops) {
-      return aborted(seed, strategy.name, run, battles, recruits, totalTicks, telemetry);
+      return aborted(seed, strategy.name, run, startingDaemonId, battles, recruits, totalTicks, telemetry);
     }
 
     switch (run.phase) {
       case 'map': {
         const frontier = computeFrontier(run);
         if (frontier.length === 0) {
-          return aborted(seed, strategy.name, run, battles, recruits, totalTicks, telemetry);
+          return aborted(seed, strategy.name, run, startingDaemonId, battles, recruits, totalTicks, telemetry);
         }
         const nodeId = strategy.pickNextNode(frontier, run, strategyRng);
         run.dispatch({ kind: 'enterNode', nodeId });
@@ -535,7 +542,17 @@ export function runOne(
               enemyLevels: cb.enemyLevels,
             });
           }
-          return finalize(seed, strategy.name, 'hang', run, battles, recruits, totalTicks, telemetry);
+          return finalize(
+            seed,
+            strategy.name,
+            'hang',
+            run,
+            startingDaemonId,
+            battles,
+            recruits,
+            totalTicks,
+            telemetry,
+          );
         }
         break;
       }
@@ -585,6 +602,7 @@ export function runOne(
     strategy.name,
     run.phase === 'complete' ? 'complete' : 'defeat',
     run,
+    startingDaemonId,
     battles,
     recruits,
     totalTicks,
@@ -622,6 +640,7 @@ function finalize(
   strategyName: string,
   outcome: RunOutcome,
   run: Run,
+  startingDaemonId: string | null,
   battles: BattleResult[],
   recruits: RecruitChoice[],
   totalTicks: number,
@@ -638,7 +657,7 @@ function finalize(
   return {
     seed,
     strategyName,
-    daemonId: run.daemons[0]?.id ?? null,
+    daemonId: startingDaemonId,
     outcome,
     finalHopReached: run.currentHop,
     totalTicks,
@@ -653,12 +672,23 @@ function aborted(
   seed: number,
   strategyName: string,
   run: Run,
+  startingDaemonId: string | null,
   battles: BattleResult[],
   recruits: RecruitChoice[],
   totalTicks: number,
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
-  return finalize(seed, strategyName, 'aborted', run, battles, recruits, totalTicks, telemetry);
+  return finalize(
+    seed,
+    strategyName,
+    'aborted',
+    run,
+    startingDaemonId,
+    battles,
+    recruits,
+    totalTicks,
+    telemetry,
+  );
 }
 
 /**

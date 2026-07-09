@@ -5,6 +5,38 @@
       "entries": [
         { "kind": "bits", "weight": 1, "min": 8, "max": 15 }
       ]
+    },
+    {
+      "id": "bits-large",
+      "entries": [
+        { "kind": "bits", "weight": 1, "min": 20, "max": 35 }
+      ]
+    },
+    {
+      "id": "daemon-cache",
+      "entries": [
+        { "kind": "daemon", "weight": 1, "daemon": "mars" },
+        { "kind": "daemon", "weight": 1, "daemon": "minerva" },
+        { "kind": "daemon", "weight": 1, "daemon": "mercury" },
+        { "kind": "daemon", "weight": 1, "daemon": "janus" },
+        { "kind": "daemon", "weight": 1, "daemon": "moneta" },
+        { "kind": "daemon", "weight": 1, "daemon": "laverna" },
+        { "kind": "daemon", "weight": 1, "daemon": "fortuna" },
+        { "kind": "bits", "weight": 1, "min": 12, "max": 20 }
+      ]
+    },
+    {
+      "id": "boss-hoard",
+      "entries": [
+        { "kind": "daemon", "weight": 1, "daemon": "mars" },
+        { "kind": "daemon", "weight": 1, "daemon": "minerva" },
+        { "kind": "daemon", "weight": 1, "daemon": "mercury" },
+        { "kind": "daemon", "weight": 1, "daemon": "janus" },
+        { "kind": "daemon", "weight": 1, "daemon": "moneta" },
+        { "kind": "daemon", "weight": 1, "daemon": "laverna" },
+        { "kind": "daemon", "weight": 1, "daemon": "fortuna" },
+        { "kind": "bits", "weight": 2, "min": 25, "max": 40 }
+      ]
     }
   ]
 }

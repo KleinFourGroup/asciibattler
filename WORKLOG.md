@@ -654,3 +654,49 @@ Build notes:
   removing the last ref omits the key (the `description`/`layouts`
   optional-key discipline), tools-index card present. Zero console
   errors on any page.
+
+**48e user-playtested natively 2026-07-09** — "seems to be working
+great"; as their test the user authored bits-small refs onto highwaymen
++ deserters IN the new panel and confirmed the save landed (those two
+refs fold into 48f's catalog).
+
+### 48f — `bitsMultiplier` + the launch catalog (2026-07-09)
+
+- **The lever**: `bitsMultiplier` joined `DifficultyMultipliers` /
+  `resolveDifficultyMultipliers` as a third axis of the X1 seam (one
+  resolution seam, one stored field — NOT a second resolver; unlike its
+  siblings it never rides `WaveContext`), a `RunConfig.bitsMultiplier`
+  passthrough, and the `effectiveBits` product per the shape-lock
+  (Option B — multiplicative with the `bitsGain` fold, one rounding at
+  the settle; display==settle carries the lever for free since the
+  screen derives through the same helper). Default 1 pinned as the
+  no-op contract alongside the X1 pair.
+- **The catalog** (numbers deliberately rough — §52 owns tuning, and
+  the 48e editor makes retuning cheap): `bits-small` 8–15 (48a) ·
+  `bits-large` 20–35 · `daemon-cache` = all 7 idols w1 + a 12–20 bits
+  floor (the spec's authoring convention: daemon tables carry a floor
+  so full-ownership stays non-empty) · `boss-hoard` = all 7 idols w1 +
+  a 25–40 floor at w2. Refs: 8 normals → bits-small@1 (three were the
+  user's own panel-authored saves); 3 elites → bits-large@1 +
+  daemon-cache@0.35; 2 bosses → bits-large@1 + boss-hoard@1.
+- **The test fallout was the real work**: with every encounter now
+  rewarding, ~27 win-path sites across Run.test.ts + the determinism /
+  encounter-loop integration suites assumed win → recruit/promotion
+  directly and now pause in `'reward'`. Swept with `acceptAllRewards`
+  (the 48b helper), a new `declineAllRewards` twin for the two
+  exact-balance bounty tests (accepting would pollute the asserted
+  amount — the hook fires at `finishEncounter`, AFTER reward
+  resolution), and one structural rewrite: the "rewards-less encounter
+  skips the phase" regression now SYNTHESIZES its shape by swapping
+  `run.selectedEncounter` for a rewards-stripped clone — the catalog
+  can no longer supply a rewards-less fight, the field is
+  plain-mutable, and the shared catalog object is never touched.
+- **The pre-commit hook caught a semantic collision the main suite
+  couldn't**: the fuzz L1c3 daemon-ARM key (`RunResult.daemonId`) read
+  END-state `run.daemons[0]` — and under the accept-all reward policy a
+  `daemon: none` CONTROL run now finishes owning loot (seed 1 ended the
+  control arm holding Minerva out of a daemon-cache drop). Fixed by
+  capturing the STARTING daemon at construction and threading it
+  through `finalize`/`aborted` — the per-daemon win/hop bucketing keeps
+  meaning "which arm ran," and loot acquisitions can't reclassify runs
+  between buckets mid-sweep.

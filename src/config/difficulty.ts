@@ -53,6 +53,14 @@
  *                            value, then the result is BAKED into the encounter's
  *                            authored wave-spec budget (the multiplier is a lever,
  *                            not persisted content). See BALANCE.md.
+ * - `bitsMultiplier`       — 48f, the ECONOMY axis: scales every bits EARN at
+ *                            the `Run.gainBits` settle, multiplicative with the
+ *                            folded `bitsGain` run-stat (the shape-lock's Option
+ *                            B — inside `gainBits`, so reward rolls, Laverna
+ *                            tallies, and daemon hooks all scale uniformly and
+ *                            the dial reads clean at §52 tuning time). Unlike
+ *                            its two X1 siblings it does NOT ride `WaveContext`
+ *                            — bits earn at the run layer, not wave resolution.
  *
  * ── Calibration presets (G4, all at `recruitment.startingLevel = 5`) ─────────
  * The budget is conserved, so there's a hard tradeoff: spreading it wide
@@ -106,6 +114,8 @@ const DifficultySchema = z.object({
   // multiplier never zeros a wave; the sweep mutates this in-memory in isolation.
   waveSizeMultiplier: z.number().positive(),
   levelBudgetMultiplier: z.number().positive(),
+  // 48f — the economy lever (default 1.0). Positive so it never zeros an earn.
+  bitsMultiplier: z.number().positive(),
 });
 
 export type DifficultyConfig = z.infer<typeof DifficultySchema>;
@@ -113,14 +123,16 @@ export type DifficultyConfig = z.infer<typeof DifficultySchema>;
 export const DIFFICULTY: DifficultyConfig = DifficultySchema.parse(difficultyJson);
 
 /**
- * X1 — the per-run difficulty multipliers applied to every authored-encounter
- * wave at resolve time (the K2 count-vs-strength split): `waveSize` scales the
- * resolved count, `levelBudget` the resolved level budget. Threaded through
- * `WaveContext`; absent → 1 (no scaling, byte-identical to pre-X1).
+ * The per-run difficulty multipliers. `waveSize` / `levelBudget` (X1) apply to
+ * every authored-encounter wave at resolve time (the K2 count-vs-strength
+ * split), threaded through `WaveContext`; `bits` (48f) applies at the
+ * `Run.gainBits` settle — the run layer, never `WaveContext`. Absent overrides
+ * → 1 (no scaling, byte-identical to pre-X1/pre-48f).
  */
 export interface DifficultyMultipliers {
   readonly waveSize: number;
   readonly levelBudget: number;
+  readonly bits: number;
 }
 
 /**
@@ -135,9 +147,11 @@ export interface DifficultyMultipliers {
 export function resolveDifficultyMultipliers(overrides?: {
   readonly waveSize?: number | undefined;
   readonly levelBudget?: number | undefined;
+  readonly bits?: number | undefined;
 }): DifficultyMultipliers {
   return {
     waveSize: overrides?.waveSize ?? DIFFICULTY.waveSizeMultiplier,
     levelBudget: overrides?.levelBudget ?? DIFFICULTY.levelBudgetMultiplier,
+    bits: overrides?.bits ?? DIFFICULTY.bitsMultiplier,
   };
 }

@@ -106,6 +106,9 @@ describe('H4: encounter loop over real battles', () => {
       expect(turns.length).toBeGreaterThanOrEqual(1);
       expect(turns.length).toBeLessThanOrEqual(HEALTH.maxTurns);
       expect(run.phase).not.toBe('battle');
+      // 48f — every catalog encounter carries reward refs, so a win pauses in
+      // the reward phase (ahead of finishEncounter); resolve it first.
+      while (run.phase === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
       expect(['recruit', 'promotion', 'defeat']).toContain(run.phase);
       expect(run.currentEncounter).toBeNull();
       // The outcome was driven by a pool emptying (decisive) or the turn cap.

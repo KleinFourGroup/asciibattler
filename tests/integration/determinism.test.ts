@@ -166,8 +166,10 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
     xpAwards: [],
     survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
   });
-  // Victory routes through recruit phase. Pick the first offer to get
-  // back to 'map' so the second hop is accepted.
+  // 48f — the win pauses in the reward phase first (the full catalog carries
+  // refs); accept through it, then pick the first offer to get back to 'map'
+  // so the second hop is accepted.
+  while (run.phase === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
   run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
   const second = run.nodeMap.edges.find((e) => e.from === first)?.to;
@@ -209,6 +211,9 @@ function driveForcedRun(
     xpAwards: [],
     survivorPower: { player: run.enemyHealthPoolMax, enemy: 0 },
   });
+  // 48f — boss rewards fire before run:victory; accept through the pause so
+  // the drive lands at its terminal phase.
+  while (run.phase === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
   return { phase: run.phase, encounter };
 }
 

@@ -352,6 +352,7 @@ describe('Run', () => {
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
       expect(run.currentEncounter).toBeNull();
       expect(run.currentOffer).not.toBeNull();
@@ -365,6 +366,7 @@ describe('Run', () => {
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       expect(offers).toEqual([3]);
       expect(run.currentOffer).toHaveLength(3);
     });
@@ -411,6 +413,7 @@ describe('Run', () => {
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
 
       const offer = run.currentOffer!;
       expect(offer).not.toBeNull();
@@ -553,8 +556,9 @@ describe('Run', () => {
       const promotions: number[] = [];
       bus.on('promotion:pending', ({ promotions: p }) => promotions.push(p.length));
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: 5 }]);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       expect(promotions).toEqual([]);
-      // Flow lands directly in recruit phase.
+      // Flow lands directly in recruit phase (no promotion interposes).
       expect(run.phase).toBe('recruit');
       expect(run.currentOffer).not.toBeNull();
     });
@@ -570,6 +574,7 @@ describe('Run', () => {
       );
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
+      acceptAllRewards(run); // 48f — rewards interpose ahead of promotion
       expect(run.phase).toBe('promotion');
       expect(run.pendingPromotions).not.toBeNull();
       expect(run.pendingPromotions).toHaveLength(1);
@@ -590,6 +595,10 @@ describe('Run', () => {
       const offers: number[] = [];
       bus.on('recruit:offered', ({ units }) => offers.push(units.length));
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
+      // 48f — the full catalog carries reward refs, so the reward phase
+      // interposes first (the shape-locked sequence); resolve it to reach
+      // the promotion assertion this test is about.
+      acceptAllRewards(run);
       expect(run.phase).toBe('promotion');
       run.dispatch({ kind: 'dismissPromotion' });
       expect(run.phase).toBe('recruit');
@@ -626,6 +635,7 @@ describe('Run', () => {
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
+      acceptAllRewards(run); // 48f — rewards interpose ahead of promotion
       const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
       expect(restored.phase).toBe('promotion');
       expect(restored.pendingPromotions).toEqual(run.pendingPromotions);
@@ -679,6 +689,7 @@ describe('Run', () => {
       // A chip >= the remaining pool empties it → encounter won → recruit.
       chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: 0 });
       expect(run.enemyHealth).toBe(0);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
       expect(run.turnIndex).toBe(2);
       expect(starts).toHaveLength(2); // no turn 3
@@ -694,6 +705,7 @@ describe('Run', () => {
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax - 5);
       // Win the encounter, recruit, then enter the next node.
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -741,6 +753,7 @@ describe('Run', () => {
       expect(run.phase).toBe('battle');
       while (run.turnIndex < HEALTH.maxTurns) chipTurn(bus, { player: 0, enemy: 0 });
       // playerFrac (1.0) > enemyFrac (1/max) → encounter won.
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
     });
 
@@ -770,7 +783,9 @@ describe('Run', () => {
         { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: half2 },
       ]);
       // The second half crosses → the promotion pauses at the WINNING turn's
-      // boundary, before the encounter resolves into the recruit offer.
+      // boundary, before the encounter resolves into the recruit offer
+      // (rewards interpose ahead of it — 48f, the full catalog carries refs).
+      acceptAllRewards(run);
       expect(run.phase).toBe('promotion');
       expect(promotions).toEqual([[0]]);
       expect(run.team[0]!.level).toBe(2);
@@ -995,7 +1010,8 @@ describe('Run', () => {
       expect(run.phase).toBe('turn-outcome');
       expect(resolved[0]!.result).toBe('won');
 
-      run.dispatch({ kind: 'advanceTurn' }); // won → finishEncounter → recruit
+      run.dispatch({ kind: 'advanceTurn' }); // won → rewards → finishEncounter → recruit
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
       expect(run.currentOffer).not.toBeNull();
     });
@@ -1626,6 +1642,7 @@ describe('Run', () => {
         run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
         const first = run.encounterMap!.layoutId;
         winEncounter(bus);
+        acceptAllRewards(run); // 48f — the full catalog carries reward refs
         if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
         if (run.phase !== 'recruit') continue;
         run.dispatch({ kind: 'passRecruit' });
@@ -1706,6 +1723,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       expect(run.encounterMap).not.toBeNull();
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — finishEncounter (which drops the map) runs after rewards
       expect(run.encounterMap).toBeNull(); // dropped with the encounter
       // The defeat path drops it too.
       const lost = freshRunWithBus(2);
@@ -1891,6 +1909,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: first });
       run.addEncounterEffect(0, empower());
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -1903,6 +1922,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       const before = run.team.length;
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       expect(run.encounterEffects).toHaveLength(before + 1);
       expect(run.encounterEffects[run.encounterEffects.length - 1]).toEqual([]);
@@ -2006,6 +2026,26 @@ describe('Run', () => {
       expect(run.bits).toBe(first + Math.round(3 * RUN_STAT_BASES.bitsGain * monetaMult()));
     });
 
+    it('the 48f bitsMultiplier scales gainBits (the economy difficulty lever)', () => {
+      const { run } = freshRunWithBus(1, { daemon: null, bitsMultiplier: 1.5 });
+      run.gainBits(10);
+      expect(run.bits).toBe(Math.round(10 * RUN_STAT_BASES.bitsGain * 1.5));
+    });
+
+    it('bitsMultiplier stacks MULTIPLICATIVELY with the bitsGain fold, rounding once at the settle', () => {
+      // The shape-lock's Option B: the lever joins the effectiveBits product,
+      // so a fold daemon and the difficulty dial compound (never add) and the
+      // display helper carries both — screen == settle stays drift-impossible.
+      const { run } = freshRunWithBus(1, {
+        daemon: daemonById('moneta')!,
+        bitsMultiplier: 1.5,
+      });
+      const expected = Math.round(10 * RUN_STAT_BASES.bitsGain * monetaMult() * 1.5);
+      expect(run.effectiveBits(10)).toBe(expected);
+      run.gainBits(10);
+      expect(run.bits).toBe(expected);
+    });
+
     it('emits run:bitsChanged with the new balance + applied delta, only on a real change', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       const events: Array<{ bits: number; delta: number }> = [];
@@ -2027,6 +2067,9 @@ describe('Run', () => {
       const won = freshRunWithBus(1, { daemon: WIN_BOUNTY });
       won.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(won.run) });
       winEncounter(won.bus);
+      // 48f — decline the rolled reward (the hook fires at finishEncounter,
+      // AFTER reward resolution; accepting would pollute the exact balance).
+      declineAllRewards(won.run);
       expect(won.run.bits).toBe(7);
 
       const lost = freshRunWithBus(1, { daemon: WIN_BOUNTY });
@@ -2041,6 +2084,7 @@ describe('Run', () => {
       run.addDaemon(daemonById('moneta')!);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       winEncounter(bus);
+      declineAllRewards(run); // 48f — keep the balance to the hook earn alone
       expect(run.bits).toBe(Math.round(7 * RUN_STAT_BASES.bitsGain * monetaMult()));
     });
 
@@ -2153,6 +2197,9 @@ describe('Run', () => {
       // Now end the new run's battle. The old Run is disposed, so its
       // battle:ended handler is gone — only newRun reacts.
       winEncounter(bus);
+      // 48f — the full catalog carries reward refs; resolve the interposed
+      // reward phase to reach the recruit assertion.
+      acceptAllRewards(newRun);
       expect(newRun.phase).toBe('recruit');
       expect(oldRun.phase).toBe('battle'); // unchanged
     });
@@ -2173,6 +2220,7 @@ describe('Run', () => {
 
       // Clear the root battle, recruit, then hop to a child node.
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === run.nodeMap.rootId)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -2334,6 +2382,7 @@ describe('Run', () => {
       const first = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: first });
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
@@ -2353,6 +2402,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const before = run.team.length;
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       expect(run.team).toHaveLength(before + 1);
       expect(run.deploymentCounts).toHaveLength(run.team.length);
@@ -2459,6 +2509,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: first });
       const sizeBefore = run.team.length;
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
       expect(run.team).toHaveLength(sizeBefore + 1);
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
@@ -2600,6 +2651,7 @@ describe('Run', () => {
       // The root is a normal battle node → a normal encounter.
       expect(run.selectedEncounter!.kind).toBe('normal');
       winEncounter(bus);
+      acceptAllRewards(run); // 48f — the full catalog carries reward refs
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
       run.dispatch({ kind: 'enterNode', nodeId: boss });
@@ -2612,6 +2664,9 @@ describe('Run', () => {
       // And a win at the boss completes the run (existing terminal path). The
       // boss pool is deeper than the default, so chip its actual pool to drain it.
       winEncounter(bus, [], run.enemyHealthPoolMax);
+      // 48f — boss rewards fire BEFORE run:victory (uniform on terminal wins,
+      // per the shape-lock); resolve them to reach the completion.
+      acceptAllRewards(run);
       expect(run.phase).toBe('complete');
     });
 
@@ -2710,6 +2765,12 @@ describe('48b — the reward phase', () => {
     const offered: unknown[] = [];
     bus.on('reward:offered', (o) => offered.push(o));
     run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    // 48f — every catalog encounter now references a table, so the rewards-less
+    // shape is SYNTHESIZED: swap the held selection for a stripped clone (a
+    // plain field; the shared catalog object is never mutated). The win-boundary
+    // roller reads `selectedEncounter`, so this exercises the real skip path.
+    const { rewards: _stripped, ...noRewards } = run.selectedEncounter!;
+    run.selectedEncounter = noRewards as typeof run.selectedEncounter;
     winEncounter(bus);
     expect(offered).toEqual([]);
     expect(run.pendingRewards).toBeNull();
@@ -2857,6 +2918,13 @@ function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
  *  harness policy). A no-op when the win rolled no rewards. */
 function acceptAllRewards(run: Run): void {
   while (run.phase === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
+}
+
+/** 48f — resolve a pending reward offer by DECLINING every portion, for tests
+ *  that assert an exact bits balance a rolled reward would pollute. A no-op
+ *  when the win rolled no rewards. */
+function declineAllRewards(run: Run): void {
+  while (run.phase === 'reward') run.dispatch({ kind: 'declineReward', index: 0 });
 }
 
 interface RunHandle {

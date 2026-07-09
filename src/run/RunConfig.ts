@@ -101,6 +101,16 @@ export interface RunConfig {
   readonly waveSizeMultiplier?: number;
   readonly levelBudgetMultiplier?: number;
   /**
+   * 48f — the per-run ECONOMY multiplier (the X1 siblings' third axis): scales
+   * every bits earn at the `Run.gainBits` settle, multiplicative with the
+   * folded `bitsGain` run-stat — reward rolls, battle tallies, and daemon
+   * hooks all scale uniformly (the §52 boss-wall lever). Applies at the run
+   * layer, never `WaveContext`. Programmatic-only; unset → the
+   * `config/difficulty.json` default (1.0 = no scaling); NOT persisted (the
+   * X1 discipline above).
+   */
+  readonly bitsMultiplier?: number;
+  /**
    * 47e — override the run's starting bits balance (the spec §Bits testing
    * override, for dev / fuzz / playtest runs). Unset → the
    * `config/economy.json#startingBits` default. Pure of RNG, clamped at the

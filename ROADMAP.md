@@ -206,10 +206,25 @@ inline and generalize into it).
 **Risk:** **Medium** — mostly new UI surfaces + run-level state; the sim
 stays untouched beyond §47's machinery. RunSnapshot bumps (cache contents).
 
-**Decision points:** the pre-turn fire UX (THE design round — flagged since
-the spec draft); the launch packet list; where cache management UI lives
-out-of-battle (map-screen modal vs a persistent-layer button next to the
-overlay).
+**Decision points — ✅ DECIDED at kickoff (2026-07-09, worklog §49):** the
+pre-turn fire UX = **the guided fire strip** (grant chips in acquisition
+order, auto-arm + inline hand targeting, **pass-is-final by default,
+ENGINE-enforced, config toggle**; packets at-will, consume-on-fire) — and
+with it the 47d summed-redraw lock deliberately REVERSES (per-source grant
+queue); cache home = a persistent chip beside the bits overlay; launch
+catalog = 7 packets (incl. one run-duration rule packet); `grantPacket`
+deferred.
+
+**The cut (shape-locked 2026-07-09; rationale in worklog §49):**
+
+- [ ] 49a — the packet config layer: `PacketDef` zod (`config/packets.json` + `src/config/packets.ts`: `usableIn` + `TargetSpec` + the duration axis), boot asserts incl. `assertRewardPacketRefs`; zero consumers
+- [ ] 49b — the cache core: `run.cache` (packet ids), size derived via the `cacheSize` fold, add/discard/full + the forced-keep shrink state, `run:cacheChanged`; **Run v29→v30**; headless
+- [ ] 49c — packet rewards activate: the `rollRewards` packet arm + `RewardPortion` packet kind + cache-full decline-or-swap + the fuzz reward policy (accept-if-room); RewardScreen packet portions + cache state
+- [ ] 49d — the grant queue: `TurnGrants` → one ordered per-source list (consumed/passed serialized, active grant derived), `passGrant`, active-grant validation + the finality toggle, fuzz bots adapt; **Run v30→v31**; headless
+- [ ] 49e — the fire engine: the `usePacket` command, per-context targets, op execution (encounterEffect path / redraw / rule injection incl. the run-duration store / out-of-battle instants); headless
+- [ ] 49f — the fire UX: the guided chip strip + Pass, the cache chip + modal + shrink flow, out-of-battle use; browser-verify natively
+- [ ] 49g — the launch catalog (7) + the packet editor + `/__save-config` allowlist + `/tools/` index; reward tables gain packet entries
+- [ ] 49h — exit sweep: full fuzz + re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip
 
 **Exit criteria:** the loop earn-store-use runs end to end: a packet won from
 a reward table lands in the cache, survives save/reload, fires pre-turn (unit
@@ -219,7 +234,11 @@ still work as packet-shaped fires under the new UX.
 
 **Scope guards:** NO mid-battle pause-to-cast (the seam ships, the feature
 doesn't); NO tile-targeted launch content (waits for mid-battle); NO
-stacking; NO permanent-duration launch content (`encounter`/`run` only).
+stacking; NO permanent-duration launch content (`encounter`/`run` only);
+NO `grantPacket` daemon op (kickoff call — deferred until content demands);
+NO `battleStart` trigger (launch battle-wide packets are rule-shaped);
+NO packet fire-policy fuzz arm (the engine-level pass state makes one
+possible later).
 
 ---
 

@@ -746,3 +746,113 @@ Game.dispatch silent-drop, the overlay reset-repaint), one hook-caught
 fuzz semantic (the daemon-arm key), one scope rider (the encounter
 editor's rewards panel, user-approved). Packet entries ship dormant as
 designed — §49's pipe is primed.
+
+## Phase 49 — Packets & cache
+
+### Kickoff audit (2026-07-09)
+
+Surface survey (the rule/op schema + `cacheSize` fold / the dormant
+packet reward entries / the PreTurnScreen redraw-empower flow +
+`TurnGrants` / the battleRules compile + `encounterEffects` store).
+**Every 47/48 seam is where its docs promised — no pre-steps.** The
+waiting seams, confirmed: the `EffectOp` pool with `grantPacket`
+explicitly deferred here (daemons.ts header + worklog §47b);
+`cacheSize` base 6 behind the `effectiveRunStats()` fold (47e);
+`PacketRewardEntry` schema-complete with ids deliberately unvalidated
+pending `assertRewardPacketRefs` (rewards.ts:23–25); `rollRewards`'s
+wholesale packet exclusion (the guard 49c removes) + `RewardPortion`
+awaiting a packet arm; `battleRulesFor` riding the serialized
+`currentEncounter` (v28), so **encounter-duration injected rules get
+persistence for free**; `addEncounterEffect` as the unit-target path.
+
+Two audit findings that shaped the plan:
+
+1. **Battle-wide packets must be rule-shaped.** The battle trigger
+   vocabulary is `dealHit`/`kill` only — "your hits apply poison this
+   encounter" injects cleanly; a literal "buff everyone right now" has
+   no `battleStart` trigger to ride. Launch content stays rule-shaped;
+   `battleStart` waits for content that demands it (the content-driven
+   vocabulary rule).
+2. **`encounterEffects` resets at encounter START** (K1), so an
+   out-of-battle unit-target packet ("empower for the next encounter")
+   needs a pending-until-start ordering decision — resolved at 49e
+   build time, flagged here so it isn't a surprise.
+
+### The fire-UX design round (2026-07-09) — the spec's ⚠ OPEN, resolved
+
+The user's shape: grants prompt **one at a time, in acquisition
+order** ("Idol of Mars: Empower" → pick a card → Janus: redraw 2 → …),
+with a pass affordance. Refined together into **the guided fire
+strip**: one chip per granted idol effect in ownership order (exactly
+the `resolveTurnGrants` walk order), the first unresolved chip
+auto-arms (glow + effect hint; the hand cards on screen are the click
+targets; redraw chips arm multi-select with confirm-on-chip), **Pass**
+advances the queue, Fight ▸ = implicit pass-all.
+
+**Pass is FINAL by default, ENGINE-enforced, behind a config toggle**
+— the user's call, three-legged rationale: (1) the roguelike angle —
+acquisition order mattering is a real consideration, not a trap, when
+it's a deliberate dial; (2) balance posture — the data trends toward
+overstating difficulty and multi-daemon is already a major buff, so
+launch restrictive and loosen if playtests say "not fun" (loosening
+later reads as a buff; tightening later reads as a nerf); (3)
+**headless↔rendered fidelity** — a UI-only rule can't be exercised by
+the fuzz harness or proven by a test, and dev-console evasion is
+trivial in a browser game. The agent's UI-level counter-proposal was
+withdrawn on that doctrine + one hard fact: **the user announced
+save/load ships as the next update, an interstitial between Clusters
+3 and 4** — serialized pass state stops being optional the moment a
+real mid-run save exists.
+
+Fallout, all deliberate:
+
+- **`TurnGrants` re-models into ONE ordered per-source grant list**
+  (consumed/passed state serialized per entry; the active grant
+  DERIVED as first-pending — derive-don't-cache). This **reverses the
+  47d "redraw stays one summed budget" lock**: redraw un-sums into
+  per-idol fires (Mercury and Janus each prompt their own), making
+  every grant packet-shaped. User: "I fully agree."
+- New `passGrant` run command; `empowerUnit`/`redrawCards` validation
+  gains "must be the active grant" (finality-toggle-off relaxes to
+  any-pending). Fuzz redraw/empower bots iterate the queue in order —
+  naturally compliant under both modes; a pass-aware policy arm
+  becomes POSSIBLE later precisely because the state is engine-level.
+- **Packet fires consume immediately and irrevocably** — no batching,
+  no undo; order of consumption IS order of effect. Packets never
+  auto-arm and never pass (ignoring one costs nothing — it stays in
+  the cache, unlike a grant, which expires at Fight). They fire
+  **at-will at ANY moment during the gate**, including before/between
+  idol chips — blessed as the economy working: the strict idol order
+  creates the very flexibility packets then sell back (a redraw packet
+  buys an early-acquired empower idol a look at the post-redraw hand).
+
+### The other kickoff decisions (2026-07-09)
+
+- **Cache home: a persistent `▤ n/6` chip beside the bits overlay**
+  (the 48d page-lifetime layer grows a second element — gotcha #116
+  applies). Opens the cache modal anywhere (view/discard always, fire
+  where context allows); hosts the forced-keep shrink flow, which can
+  trigger on any screen. Map-screen-only rejected: reward-time swap +
+  shrink need cache views elsewhere regardless.
+- **Launch catalog (7)**: hype (+STR/RNG/MAG, pre-turn/unit/encounter)
+  · shield (+DEF, pre-turn/unit/encounter) · reroute (redraw 2,
+  pre-turn/none/instant) · venom (hits apply poison, pre-turn/
+  battle-wide/encounter — the injection proof) · patch (heal pool,
+  out-of-battle/none/instant) · overclock (empower next encounter,
+  out-of-battle/roster-unit — the exit-criteria context) · a 7th
+  run-duration injected-rule packet (proves the `run` axis; costs one
+  run-level injected-rules store folded into the battleRules compile).
+- **`grantPacket` daemon op DEFERRED** until content demands it —
+  reward tables already deliver packets; no launch idol needs the op.
+- **Fuzz reward policy**: accept packet portions while the cache has
+  room, else decline; NO fire-policy arm at launch.
+- **Two snapshot bumps, honestly separate**: Run v29→v30 (49b cache)
+  and v30→v31 (49d grant queue) — the 47 multi-bump pattern.
+
+**The cut** (49a config → 49b cache core → 49c rewards activate →
+49d grant queue → 49e fire engine → 49f fire UX → 49g catalog+editor
+→ 49h exit sweep) is in ROADMAP §49. Ordering rationale:
+headless-core-first throughout; 49c before the queue/fire steps so
+packets ARRIVE before they fire (fuzz drives the earn-store loop green
+while use doesn't exist yet); the UX step consumes the queue + engine
+in one browser-verified build.

@@ -25,6 +25,7 @@ const SAVABLE_CONFIG_FILES = new Set([
   'sectors.json',
   'encounters.json',
   'abilities.json',
+  'rewards.json', // 48e — the reward-table editor (the first economy-cluster file here)
 ]);
 
 function configSavePlugin(): Plugin {

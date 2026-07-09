@@ -606,3 +606,51 @@ modals (30) / scanlines (1000).
 **48c + 48d user-playtested natively 2026-07-08** — the reward screen,
 the coin blip, and the overlay pulse all confirmed ("playtest pulsed
 properly"). Session handed off with 48e next.
+
+### 48e — the dev-tooling build (2026-07-08)
+
+**Scope rider (user-approved at step start): the encounter editor gained
+a Rewards PANEL** (a table dropdown over `REWARD_TABLE_IDS` + a chance
+input + remove, the sector-editor pool-row shape) beyond the card's
+emitter-only scope. The step-zero audit showed the encounter editor had
+NO rewards UI at all — the key survived load→save only via the 48a
+blob-stringify — which would have left `rewards` the one config field
+the editor suite could preserve but not author, and made 48f's "author
+the catalog with the editor in hand" a hand-edit job for the 13 refs.
+
+Build notes:
+
+- **The reward-table editor** ([tools/reward-editor/](tools/reward-editor/))
+  follows the sector-editor template: weighted entry rows (kind-convert
+  select; bits min/max, free-text packet id — dormant per §49 — and a
+  daemon dropdown over the live catalog so a typo'd id can't be
+  authored), live `RewardTablesSchema` validation, a draw-% preview
+  (`weight/total`, the `pickWeighted` math) with an avg-BASE-bits line,
+  a **Referenced by** pane over the committed encounters, and
+  `formatRewardsJson` byte-pinned to the committed file. Validation runs
+  BOTH referential boot asserts live — `assertRewardDaemonRefs` and the
+  reverse of `assertEncounterRewardRefs` (renaming/deleting a table a
+  committed encounter references trips an error + disables Save). The
+  Save path carries the encounter editor's sessionStorage stash from day
+  one: rewards.json → rewards.ts → editor.ts has no HMR boundary, so a
+  save full-reloads the page (the trap Wb2 fixed reactively on the
+  encounter editor, avoided proactively here).
+- **The emitter**: `formatEncountersJson` now emits `rewards` as a real
+  block — the list expands, each ref leaf-inline
+  (`{ "table": …, "trigger": { "chance": … } }`), matching the
+  stage-`until` convention; the committed encounters.json reformatted
+  from the 48a blob in the same commit (the byte-faithful test pins the
+  two together). The grammar-demo test fixture extended with a multi-ref
+  `rewards` key.
+- **Browser-verified at :5191** (per the ui/render eyeball policy):
+  reward-editor boot state (export == committed file to the byte, draw
+  math 11.5 = (8+15)/2, Brigands in referenced-by), kind-convert with
+  50/50 renormalize, the rename guard tripping + disabling Save, revert,
+  and a **no-op Save round-trip** — endpoint 200 through the new
+  allowlist entry, stash-restored tab + confirmation across the Vite
+  reload, and ZERO diff on config/rewards.json afterward (byte-fidelity
+  proven on disk, not just in vitest). Encounter-editor panel: Brigands'
+  committed ref renders, add/edit/remove flow into the block emit,
+  removing the last ref omits the key (the `description`/`layouts`
+  optional-key discipline), tools-index card present. Zero console
+  errors on any page.

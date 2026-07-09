@@ -44,9 +44,12 @@ describe('formatEncountersJson', () => {
 
   it('formats the full recursive grammar + optional keys, round-tripping deep-equal', () => {
     // A synthetic encounter exercising every grammar node (pick / loop / stages,
-    // nested) plus the optional `layouts` / `description` keys — none of which the
-    // shipped catalog uses yet. Parse it through the schema first so the fixture
-    // can't drift from the real shape, then assert the formatter round-trips it.
+    // nested) plus the optional `layouts` / `description` / multi-ref `rewards`
+    // keys (48e — the committed catalog carries only a single-ref `rewards` so
+    // far). Parse it through the schema first so the fixture can't drift from
+    // the real shape, then assert the formatter round-trips it. Synthetic table
+    // ids are fine — referential integrity is the separate boot assert
+    // (`assertEncounterRewardRefs`), not the schema.
     const fixture: Encounter[] = EncountersSchema.parse([
       {
         id: 'grammar-demo',
@@ -55,6 +58,10 @@ describe('formatEncountersJson', () => {
         healthPool: 12,
         kind: 'boss',
         layouts: ['river', 'labyrinth'],
+        rewards: [
+          { table: 'boss-hoard', trigger: { chance: 1 } },
+          { table: 'daemon-cache', trigger: { chance: 0.35 } },
+        ],
         waves: [
           {
             kind: 'pick',

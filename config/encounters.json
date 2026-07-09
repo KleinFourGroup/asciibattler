@@ -5,7 +5,9 @@
     "description": "A roving band of brigands.  Not much more to say here.",
     "healthPool": 7,
     "kind": "normal",
-    "rewards": [{"table":"bits-small","trigger":{"chance":1}}],
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } }
+    ],
     "waves": [
       {
         "kind": "loop",

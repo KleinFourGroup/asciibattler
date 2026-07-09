@@ -17,8 +17,11 @@
  *    layouts? / rewards? / waves` (optional keys appear only when present).
  *  - Composite grammar nodes (`wave`/`pick`/`loop`/`stages`, the spec, the
  *    `units` array) expand one field per line; the LEAF objects stay inline on
- *    one line: `levelBudget` / `count` kind-objects, each `units` entry, and a
- *    stage's `until` condition (e.g. `{ "kind": "weight", "weight": 0.7 }`).
+ *    one line: `levelBudget` / `count` kind-objects, each `units` entry, a
+ *    stage's `until` condition (e.g. `{ "kind": "weight", "weight": 0.7 }`),
+ *    and each `rewards` ref (48e — the real block emitter replacing the 48a
+ *    opaque `JSON.stringify` blob): the list expands, each
+ *    `{ "table": …, "trigger": { "chance": … } }` stays on one line.
  *
  * The leaf-inline / composite-expand split is what makes a hand-authored
  * encounter readable; the byte-for-byte test pins it so the formatter and the
@@ -26,6 +29,7 @@
  */
 
 import type { Encounter } from '../../src/config/encounters';
+import type { EncounterRewardRef } from '../../src/config/rewards';
 import type { WaveEntry, PickOption, Stage } from '../../src/run/encounters/sequencer';
 import type { WaveSpec, WaveUnitSpec } from '../../src/run/encounters/wave';
 
@@ -130,6 +134,14 @@ function stageBlock(pad: string, stage: Stage): string {
   return objBlock(pad, lines);
 }
 
+/** One reward ref, inline (the leaf convention): the nested `trigger` object
+ *  stays on the same line — `{ "table": …, "trigger": { "chance": … } }`.
+ *  `chance` is emitted explicitly (not via `inlineObj`) because the launch
+ *  trigger vocabulary is chance-only; a §-later predicate join extends this. */
+function inlineRewardRef(ref: EncounterRewardRef): string {
+  return `{ "table": ${JSON.stringify(ref.table)}, "trigger": { "chance": ${JSON.stringify(ref.trigger.chance)} } }`;
+}
+
 /** One encounter object block. Optional keys (`description` / `layouts` /
  *  `rewards`) are emitted only when present, in the canonical order. */
 function encounterBlock(pad: string, e: Encounter): string {
@@ -145,7 +157,19 @@ function encounterBlock(pad: string, e: Encounter): string {
     const inner = e.layouts.map((l) => JSON.stringify(l)).join(', ');
     lines.push(`${childPad}"layouts": [${inner}]`);
   }
-  if (e.rewards !== undefined) lines.push(`${childPad}"rewards": ${JSON.stringify(e.rewards)}`);
+  if (e.rewards !== undefined) {
+    // 48e — the real block emitter (the 48a placeholder blob-stringified). An
+    // empty list emits `[]` inline (the schema allows it; the editor omits the
+    // key instead, so this is the hand-edit path only).
+    const refs =
+      e.rewards.length === 0
+        ? '[]'
+        : arrBlock(
+            childPad,
+            e.rewards.map((r) => childPad + IND + inlineRewardRef(r)),
+          );
+    lines.push(`${childPad}"rewards": ${refs}`);
+  }
   lines.push(`${childPad}"waves": ${waveListBlock(childPad, e.waves)}`);
   return objBlock(pad, lines);
 }

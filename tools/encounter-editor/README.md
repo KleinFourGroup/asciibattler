@@ -16,6 +16,10 @@ Each encounter's:
   **layout fit-filter** (which battlefields the fight makes sense on, intersected
   against the sector's layout pool at selection — leave all unchecked to fit
   every board).
+- **Rewards** (48e) — optional `{table, trigger:{chance}}` refs over the
+  reward-table registry (`config/rewards.json`; author tables in the
+  [reward table editor](../reward-editor/)). Each ref's `chance` is tested
+  independently on encounter win; no rows omits the key entirely.
 - **Wave list** — the U2 grammar (`wave` / `pick` / `loop` / `stages`, nesting to
   any depth). It's a small recursive DSL, so it's edited as live-validated JSON
   rather than a bespoke tree GUI; the **Insert skeleton** buttons append a

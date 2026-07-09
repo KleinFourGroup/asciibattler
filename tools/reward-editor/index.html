@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Reward Table Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Reward Table Editor</h1>
+        <span class="subtitle"
+          >Author <code>config/rewards.json</code> · schema-validated · live draw-chance
+          preview · save straight to disk</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+      <section class="workspace">
+        <div class="edit-pane">
+          <div class="tabs-row">
+            <div id="tabs" class="tabs" role="tablist" aria-label="Reward table"></div>
+            <button id="new-btn" type="button" class="tab new-tab" title="Add a new table">+ New table</button>
+            <button id="delete-btn" type="button" class="tab new-tab" title="Delete this table">✕ Delete</button>
+          </div>
+          <section class="card">
+            <h2>Identity</h2>
+            <div class="field-row">
+              <label class="inline stack">
+                <span class="field-label">Id <span class="sub">(encounters reference tables by this name)</span></span>
+                <input id="id" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+            </div>
+          </section>
+          <section class="card">
+            <h2>
+              Entries
+              <span class="sub">(one draw per settle, proportional to weight)</span>
+            </h2>
+            <div id="entries" class="pool"></div>
+            <div class="row">
+              <button id="add-entry-btn" type="button">+ Add entry</button>
+            </div>
+            <p class="hint">
+              <code>bits</code> rolls uniformly in <code>[min, max]</code> (inclusive; the BASE amount —
+              <code>bitsGain</code> folds and <code>bitsMultiplier</code> apply at the settle).
+              <code>daemon</code> grants the idol; owned daemons filter out before sampling, so authoring
+              an owned entry is fine. <code>packet</code> is the §49 seam — schema-complete but
+              <strong>dormant</strong> (zero <code>PacketDef</code>s exist; launch tables author none).
+            </p>
+          </section>
+        </div>
+        <aside class="side-pane">
+          <section class="card preview-card">
+            <h2>Draw preview</h2>
+            <dl id="preview" class="preview"></dl>
+            <p class="hint">
+              Each entry's roll chance (<code>weight / total</code>) — the same weighted pick the reward
+              engine makes. At runtime, owned daemons are excluded <em>before</em> the draw, re-normalizing
+              the live weights (a table whose non-owned entries are empty yields nothing that trigger).
+            </p>
+          </section>
+          <section class="card">
+            <h2>Referenced by <span class="sub">(committed encounters)</span></h2>
+            <dl id="refs" class="preview"></dl>
+            <p class="hint">
+              Reads the committed catalog — attach refs in the
+              <a href="/tools/encounter-editor/">encounter editor</a>'s Rewards panel.
+            </p>
+          </section>
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation"></ul>
+          </section>
+          <section class="card">
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary">Save to config</button>
+              <button id="revert-btn" type="button" class="danger-outline">Revert all</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+          </section>
+          <section class="card">
+            <h2>Export <span class="sub">(whole file)</span></h2>
+            <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

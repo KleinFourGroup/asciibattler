@@ -4,7 +4,9 @@
  * production build (no rollupOptions.input entry).
  *
  * Authors `config/encounters.json` — each encounter's id / name / description /
- * health pool / kind / optional layout fit-filter / **wave-list grammar** — with
+ * health pool / kind / optional layout fit-filter / optional **reward refs**
+ * (48e — `{table, trigger:{chance}}` rows over the reward-table registry) /
+ * **wave-list grammar** — with
  * the affordances the archetype/sector editors established plus the one the wave
  * grammar specifically needs:
  *
@@ -43,6 +45,9 @@ import {
   type EncounterKind,
 } from '../../src/config/encounters';
 import { LAYOUT_IDS } from '../../src/config/layouts';
+// 48e — the Rewards panel's table dropdown enumerates the live registry, so a
+// ref can only name a real table (the sector editor's encounter-id precedent).
+import { REWARD_TABLE_IDS } from '../../src/config/rewards';
 // V2 placement — the "add to sector" toggle. The sector FILE is fetched live (not
 // imported) so the encounter editor never gains a runtime dependency on
 // sectors.json and stays off its rebuild chain. (A write still triggers a Vite
@@ -206,6 +211,8 @@ const descEl = mustQuery<HTMLTextAreaElement>('#description');
 const healthPoolEl = mustQuery<HTMLInputElement>('#health-pool');
 const kindEl = mustQuery<HTMLDivElement>('#kind');
 const layoutsEl = mustQuery<HTMLDivElement>('#layouts');
+const rewardsEl = mustQuery<HTMLDivElement>('#rewards');
+const addRewardBtn = mustQuery<HTMLButtonElement>('#add-reward-btn');
 const viewVisualBtn = mustQuery<HTMLButtonElement>('#view-visual');
 const viewJsonBtn = mustQuery<HTMLButtonElement>('#view-json');
 const wavesVisualEl = mustQuery<HTMLDivElement>('#waves-visual');
@@ -321,6 +328,73 @@ function onLayoutChange(): void {
   refreshDerived();
 }
 
+// ---- Rewards panel (48e) ----
+// One row per `{table, trigger:{chance}}` ref; the table dropdown enumerates
+// the live registry. An empty list DELETES the key (absent stays absent —
+// the optional-key discipline `description` / `layouts` follow).
+
+function addRewardRef(): void {
+  const first = REWARD_TABLE_IDS[0];
+  if (first === undefined) return; // registry schema floors at ≥1 table, so unreachable
+  const e = encounter();
+  if (!e.rewards) e.rewards = [];
+  e.rewards.push({ table: first, trigger: { chance: 1 } });
+  buildRewards();
+  refreshDerived();
+}
+
+function removeRewardRef(index: number): void {
+  const e = encounter();
+  e.rewards?.splice(index, 1);
+  if (e.rewards !== undefined && e.rewards.length === 0) delete e.rewards;
+  buildRewards();
+  refreshDerived();
+}
+
+function buildRewards(): void {
+  rewardsEl.innerHTML = '';
+  (encounter().rewards ?? []).forEach((ref, i) => rewardsEl.appendChild(makeRewardRow(ref, i)));
+}
+
+function makeRewardRow(
+  ref: { table: string; trigger: { chance: number } },
+  index: number,
+): HTMLDivElement {
+  const row = el('div', 'pool-row');
+
+  const sel = el('select', 'pool-layout');
+  for (const id of REWARD_TABLE_IDS) sel.appendChild(option(id));
+  sel.value = ref.table;
+  sel.addEventListener('change', () => {
+    ref.table = sel.value;
+    refreshDerived();
+  });
+  row.appendChild(sel);
+
+  const wrap = el('label', 'pool-num');
+  wrap.append(el('span', undefined, 'chance'));
+  const chance = el('input', 'kn-num');
+  chance.type = 'number';
+  chance.min = '0';
+  chance.max = '1';
+  chance.step = '0.05';
+  chance.value = String(ref.trigger.chance);
+  chance.addEventListener('input', () => {
+    const v = Number.parseFloat(chance.value);
+    ref.trigger.chance = Number.isFinite(v) ? v : 0;
+    refreshDerived();
+  });
+  wrap.appendChild(chance);
+  row.appendChild(wrap);
+
+  const remove = el('button', 'pool-remove', '✕');
+  remove.type = 'button';
+  remove.title = 'Remove this reward ref';
+  remove.addEventListener('click', () => removeRewardRef(index));
+  row.appendChild(remove);
+  return row;
+}
+
 function attachWaves(): void {
   wavesEl.addEventListener('input', () => {
     const parsed = tryParseWaves(wavesEl.value);
@@ -399,6 +473,7 @@ function attachPreviewControls(): void {
 function attachButtons(): void {
   newBtn.addEventListener('click', addEncounter);
   deleteBtn.addEventListener('click', deleteEncounter);
+  addRewardBtn.addEventListener('click', addRewardRef);
   saveBtn.addEventListener('click', () => void save());
   addToSectorsBtn.addEventListener('click', () => void addCurrentEncounterToSectors());
   revertBtn.addEventListener('click', revert);
@@ -463,6 +538,7 @@ function syncForm(): void {
   for (const [kind, radio] of kindRadios) radio.checked = e.kind === kind;
   const fit = e.layouts ?? [];
   for (const [id, cb] of layoutChecks) cb.checked = fit.includes(id);
+  buildRewards();
   syncWavesTextarea();
   wavesParseOk = true;
   renderVisual();

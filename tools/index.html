@@ -142,6 +142,11 @@
           <p class="desc">Author authored fights — name, health pool, kind, layout fit-filter, and the wave-list grammar (wave / pick / loop / stages) — with a live turn-by-turn resolution preview that shares the real resolvers.</p>
           <p class="path"><code>config/encounters.json</code></p>
         </a>
+        <a class="tool" href="/tools/reward-editor/">
+          <p class="name">Reward Table Editor</p>
+          <p class="desc">Author weighted reward tables — bits ranges, daemon grants, dormant packet entries — with a live draw-chance preview and encounter cross-references.</p>
+          <p class="path"><code>config/rewards.json</code></p>
+        </a>
         <a class="tool" href="/tools/attack-editor/">
           <p class="name">Attack Editor</p>
           <p class="desc">Author ability definitions — name, cooldown, range, target selector, timeline, and the effect-op tree (damage / heal / status / chain / summon) — with live schema validation and a structure preview.</p>
@@ -174,7 +179,7 @@
 
       <footer>
         Each tool is a standalone Vite page with no <code>rollupOptions.input</code> entry, so it
-        is served only by the dev server and never bundled into a production build. The three config
+        is served only by the dev server and never bundled into a production build. The config
         editors save straight to disk through the dev-only <code>/__save-config</code> endpoint
         (<code>vite.config.ts</code>); an open game tab hot-reloads the new values.
       </footer>

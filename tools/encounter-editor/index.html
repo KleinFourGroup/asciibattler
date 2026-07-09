@@ -58,6 +58,20 @@
           </section>
 
           <section class="card">
+            <h2>Rewards <span class="sub">(rolled on win; each ref chance-tested independently)</span></h2>
+            <div id="rewards" class="pool"></div>
+            <div class="row">
+              <button id="add-reward-btn" type="button">+ Add reward</button>
+            </div>
+            <p class="hint">
+              Each row references a table in <code>config/rewards.json</code> by name (author tables in
+              the <a href="/tools/reward-editor/">reward table editor</a>); on encounter win, every
+              ref's <code>chance</code> is tested independently and a passing table is sampled once.
+              No rows = the <code>rewards</code> key is omitted (the encounter yields nothing).
+            </p>
+          </section>
+
+          <section class="card">
             <h2>Wave list <span class="sub">(the U2 grammar — wave / pick / loop / stages)</span></h2>
             <div class="view-toggle" role="tablist" aria-label="Wave editor view">
               <button id="view-visual" type="button" class="tab seg active">▦ Visual</button>

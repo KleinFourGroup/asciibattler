@@ -506,7 +506,7 @@ textarea:focus {
   padding-left: 0;
 }
 
-/* ---- Encounter pool (add-to-sector toggle) ---- */
+/* ---- Pool rows (the Rewards panel — 48e — and the add-to-sector toggle) ---- */
 .pool {
   display: flex;
   flex-direction: column;
@@ -535,6 +535,20 @@ textarea:focus {
 
 .pool-num input {
   width: 3.5rem;
+}
+
+/* 48e — the Rewards panel's table dropdown + remove button (the sector
+   editor's pool-row controls). */
+.pool-layout {
+  min-width: 12rem;
+}
+
+.pool-remove {
+  margin-left: auto;
+  color: var(--danger);
+  border-color: var(--border);
+  background: transparent;
+  padding: 4px 9px;
 }
 
 /* ---- Preview ---- */

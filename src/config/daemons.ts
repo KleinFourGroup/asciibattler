@@ -69,7 +69,11 @@ const OP_DOMAIN = {
   applyStatus: 'battle',
 } as const;
 
-const GrantRedrawsOpSchema = z.object({
+/** The op sub-schemas are EXPORTED where §49 packets reuse them — daemons
+ *  and packets share ONE effect-op pool (the spec's rule-vocabulary lock),
+ *  so an op's shape is defined once, here, and imported by packets.ts
+ *  (import direction: packets → daemons, never back). */
+export const GrantRedrawsOpSchema = z.object({
   op: z.literal('grantRedraws'),
   redrawsPerTurn: z.number().int().nonnegative(),
   maxCardsPerTurn: z.number().int().nonnegative(),
@@ -81,17 +85,17 @@ const GrantEmpowersOpSchema = z.object({
   buff: BuffSchema,
 });
 
-const GainBitsOpSchema = z.object({
+export const GainBitsOpSchema = z.object({
   op: z.literal('gainBits'),
   amount: z.number().int().positive(),
 });
 
-const HealPoolOpSchema = z.object({
+export const HealPoolOpSchema = z.object({
   op: z.literal('healPool'),
   amount: z.number().int().positive(),
 });
 
-const ApplyStatusOpSchema = z.object({
+export const ApplyStatusOpSchema = z.object({
   op: z.literal('applyStatus'),
   statusId: z.string().min(1),
   magnitude: z.number().positive().optional(),

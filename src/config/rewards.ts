@@ -20,9 +20,10 @@
  * - `daemon` — grants the named idol; daemons the run already owns filter out
  *   BEFORE sampling (48b), so authored tables may carry owned entries freely.
  *   Referential integrity boot-asserted here against the daemon catalog.
- * - `packet` — schema-complete but DORMANT until §49 (zero `PacketDef`s
- *   exist): launch tables author none, and the id is deliberately
- *   unvalidated — §49's registry brings the `assertRewardPacketRefs` sibling.
+ * - `packet` — grants the named packet into the cache. Referential integrity
+ *   boot-asserted against the 49a packet catalog (`assertRewardPacketRefs`
+ *   below); ENGINE-dormant until 49c (rollRewards still excludes packet
+ *   entries wholesale — the guard 49c removes).
  *
  * Trigger vocabulary at launch: `chance` only — each ref independently tested
  * on encounter win. `trigger` is an OBJECT (not a bare number) so predicates
@@ -32,6 +33,7 @@
 import { z } from 'zod';
 import rewardsJson from '../../config/rewards.json';
 import { DAEMONS, type DaemonConfig } from './daemons';
+import { PACKETS, type PacketConfig } from './packets';
 
 export const REWARD_ENTRY_KINDS = ['bits', 'packet', 'daemon'] as const;
 export type RewardEntryKind = (typeof REWARD_ENTRY_KINDS)[number];
@@ -143,8 +145,7 @@ export const REWARD_TABLE_IDS: readonly string[] = REWARD_TABLES.map((t) => t.id
  * Boot check (the `assertDaemonStatusRefs` sibling): every daemon entry must
  * name an idol in the catalog — a typo'd id fails at startup, not silently at
  * 48b sample time. Args-injected for synthetic tests; self-wired below
- * (cycle-free: daemons.ts never imports this module). Packet ids are
- * deliberately NOT checked until §49's registry exists (see the header).
+ * (cycle-free: daemons.ts never imports this module).
  */
 export function assertRewardDaemonRefs(
   tables: readonly RewardTable[],
@@ -163,6 +164,29 @@ export function assertRewardDaemonRefs(
 }
 
 assertRewardDaemonRefs(REWARD_TABLES, DAEMONS);
+
+/**
+ * 49a — the promised sibling: every packet entry must name a packet in the
+ * catalog (import direction: rewards → packets, never back — the daemons
+ * shape). Args-injected for synthetic tests; self-wired below.
+ */
+export function assertRewardPacketRefs(
+  tables: readonly RewardTable[],
+  packets: readonly PacketConfig[],
+): void {
+  const ids = new Set(packets.map((p) => p.id));
+  for (const table of tables) {
+    for (const entry of table.entries) {
+      if (entry.kind === 'packet' && !ids.has(entry.packet)) {
+        throw new Error(
+          `reward table '${table.id}': packet entry references unknown packet id '${entry.packet}'`,
+        );
+      }
+    }
+  }
+}
+
+assertRewardPacketRefs(REWARD_TABLES, PACKETS);
 
 /** Registry lookup by id (`undefined` on a miss — callers decide throw vs
  *  skip; the boot asserts make a miss unreachable for authored refs). */

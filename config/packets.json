@@ -1,0 +1,12 @@
+{
+  "packets": [
+    {
+      "id": "patch",
+      "name": "Patch",
+      "description": "Apply in the field: restores 3 to your health pool.",
+      "usableIn": ["outOfBattle"],
+      "target": "none",
+      "effect": { "op": "healPool", "amount": 3 }
+    }
+  ]
+}

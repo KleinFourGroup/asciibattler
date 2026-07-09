@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { DAEMONS, type DaemonConfig } from './daemons';
+import { PACKETS, type PacketConfig } from './packets';
 import {
   EncounterRewardRefSchema,
   REWARD_TABLES,
   REWARD_TABLE_IDS,
   RewardTablesSchema,
   assertRewardDaemonRefs,
+  assertRewardPacketRefs,
   rewardTableById,
   type RewardTable,
 } from './rewards';
@@ -106,9 +108,35 @@ describe('assertRewardDaemonRefs (the boot check)', () => {
     const table = tableWith([
       { kind: 'daemon', weight: 1, daemon: 'x' },
       { kind: 'bits', weight: 1, min: 1, max: 2 },
-      { kind: 'packet', weight: 1, packet: 'unchecked-until-49' },
+      { kind: 'packet', weight: 1, packet: 'not-this-asserts-problem' },
     ]);
     const x = { id: 'x', name: 'X', description: 'Fixture.' } as DaemonConfig;
     expect(() => assertRewardDaemonRefs([table], [x])).not.toThrow();
+  });
+});
+
+describe('assertRewardPacketRefs (the 49a sibling boot check)', () => {
+  const tableWith = (entries: RewardTable['entries']): RewardTable => ({
+    id: 'synthetic',
+    entries,
+  });
+
+  it('the shipped registry resolves against the real packet catalog', () => {
+    expect(() => assertRewardPacketRefs(REWARD_TABLES, PACKETS)).not.toThrow();
+  });
+
+  it('throws on a dangling packet id', () => {
+    const table = tableWith([{ kind: 'packet', weight: 1, packet: 'nope' }]);
+    expect(() => assertRewardPacketRefs([table], [])).toThrow(/unknown packet id 'nope'/);
+  });
+
+  it('passes when every packet ref resolves (and ignores bits/daemon entries)', () => {
+    const table = tableWith([
+      { kind: 'packet', weight: 1, packet: 'x' },
+      { kind: 'bits', weight: 1, min: 1, max: 2 },
+      { kind: 'daemon', weight: 1, daemon: 'not-this-asserts-problem' },
+    ]);
+    const x = { id: 'x' } as PacketConfig;
+    expect(() => assertRewardPacketRefs([table], [x])).not.toThrow();
   });
 });

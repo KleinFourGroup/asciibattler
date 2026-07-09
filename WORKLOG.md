@@ -856,3 +856,37 @@ headless-core-first throughout; 49c before the queue/fire steps so
 packets ARRIVE before they fire (fuzz drives the earn-store loop green
 while use doesn't exist yet); the UX step consumes the queue + engine
 in one browser-verified build.
+
+### 49a — the packet config layer (2026-07-09)
+
+`config/packets.json` + `src/config/packets.ts` (the daemons.ts module
+shape: parse at load, normalize exact-optional, boot asserts
+self-wired, `packetById`). The shape calls, all schema-level and cheap
+to rename before 49g authors content:
+
+- **The op pool grows two packet ops**: `applyBuff` (the empower
+  generalization — the shared `BuffSchema`, lands via the K1
+  encounter-effect store) and `injectRule` (the battle-wide delivery —
+  the inner rule IS the sim's `BattleRule` shape verbatim, since
+  that's the compile target). `grantRedraws`/`healPool` reuse the
+  daemon op schemas — their zod sub-schemas are now EXPORTED from
+  daemons.ts rather than redefined (one pool, one definition; import
+  direction packets → daemons).
+- **The (op × target × context) matrix is EXPORTED data**
+  (`PACKET_OP_TARGET` / `PACKET_OP_CONTEXTS`) — the parse-time
+  superRefine, the 49e engine validation, and the 49g editor all read
+  the same source. `midBattle` and `tile` are first-class vocabulary
+  values NO op admits (parse-illegal everywhere — the seam ships, the
+  feature doesn't), pinned by a matrix-derived test that self-updates
+  if a future op legalizes them.
+- **The duration axis restricts per op to engine truth**: `applyBuff`
+  = `encounter` only (a `run` buff needs a store nothing ships);
+  `injectRule` = `encounter | run`; instants carry none. The full
+  4-value `EFFECT_DURATIONS` vocabulary ships as the spec's axis.
+- `assertRewardPacketRefs` landed in rewards.ts as promised
+  (self-wired; the 48a "deliberately unvalidated" note retired) +
+  `assertPacketStatusRefs` guards applyStatus ids inside injected
+  rules. The rollRewards wholesale packet exclusion STAYS until 49c.
+- Skeleton catalog = **patch** (heal 3, out-of-battle) — the simplest
+  schema-prover, and the name passes the graceful-degradation test
+  (lay: patch up a wound; tech: software patch).

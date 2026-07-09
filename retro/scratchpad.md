@@ -143,3 +143,16 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   order = zod shape order) or the round-trip test trips. Cheap once known;
   worth remembering whenever authoring config by hand mid-phase (48f's
   catalog authoring hits this again — author via the 48e editor instead).
+
+- **48f (2026-07-09): when a catalog goes from "some" to "all," grep the
+  win-path test helpers FIRST.** Giving all 13 encounters reward refs
+  rippled through ~27 test sites that assumed win → recruit/promotion
+  directly — the sweep was mechanical (`acceptAllRewards` after each
+  `winEncounter`) but finding the sites reactively cost three
+  fail-fix-rerun cycles (main suite → integration → the hook's
+  fuzz:smoke). Universal-content flips deserve a pre-pass: grep the drive
+  helpers and phase assertions before running anything. Related keeper:
+  the conditional fuzz:smoke hook caught a SEMANTIC collision the main
+  suite couldn't (the L1c3 daemon-ARM key read end-state ownership, and
+  loot daemons reclassified a control run) — the "staged config/ paths →
+  fuzz:smoke" trigger earned its slot.

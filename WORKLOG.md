@@ -700,3 +700,49 @@ refs fold into 48f's catalog).
   through `finalize`/`aborted` — the per-daemon win/hop bucketing keeps
   meaning "which arm ran," and loot acquisitions can't reclassify runs
   between buckets mid-sweep.
+
+**48f user-playtested natively 2026-07-09 — a FULL RUN cleared** ("full
+run complete... everything else worked perfectly"). The daemon-cache
+35% natural trigger didn't fire in that run (a coin flip, not a bug —
+the daemon-accept path is browser-verified at 48c via the Moneta
+re-price rider and headless-pinned); everything else confirmed in play.
+User vote: close the phase.
+
+### 48g — the exit sweep (2026-07-09)
+
+**Exit criteria, checked:** ① win → reward screen → accept/decline →
+promotion → recruit: user-confirmed in the native browser across a full
+run (48c–f playtests; the daemon-accept visual specifically at 48c).
+② bits tick on the overlay in AND out of battle: 48d browser-verify +
+the user's playtests. ③ mid-reward save/reload reproduces the pending
+offer: the serialization round-trip CONTRACT tests (48b — per the
+shape-lock, no live persistence exists; the watch item stays in
+TODO.md). ④ fuzz drives the reward phase green: 212 fuzz:smoke at every
+commit + the 48g full pass below.
+
+**Docs sweep:** ARCHITECTURE — the tools/ tree caught up (it had
+drifted to 3 editors; now all 7 pages incl. the 48e reward editor), the
+Run.ts entry gained the 48b/f reward-phase paragraph, difficulty.ts /
+RunConfig.ts lines gained `bitsMultiplier`. GOTCHAS — **#116** (the
+`run:started` constructor-emission ordering pair from 48d, generalized
+for §51's future page-lifetime elements). Scratchpad — the
+universal-catalog test-sweep lesson + the hook's fuzz:smoke earning its
+slot. TODO — the save/load cluster-boundary watch item was already
+filed at kickoff; nothing new.
+
+**The fuzz re-baseline (the §46b fixed-vector doctrine, 480 runs, 0
+hangs): STABLE — the reward economy is outcome-neutral at launch
+numbers.** The fixed-vector probe read dead flat (25.0/25.0 vs §46b's
+25.0/24.2); anchors +~2pt, inside seed variance. The mechanism reading:
+bits have no spend surface until §50, so the only outcome-coupled
+reward is the elite-gated daemon drop — the economy's real lever
+arrives with ports. Full entry + the per-encounter spot reads:
+[BALANCE.md](BALANCE.md) §48g; the 48g batches supersede §46b as the
+comparison baseline, and the boss-wall watch item stays filed for §52.
+
+**Phase 48 CLOSED 2026-07-09.** Run v28→v29 (48b); World v33 holds. Six
+build commits + this close; two browser-verify-only bugs (the
+Game.dispatch silent-drop, the overlay reset-repaint), one hook-caught
+fuzz semantic (the daemon-arm key), one scope rider (the encounter
+editor's rewards panel, user-approved). Packet entries ship dormant as
+designed — §49's pipe is primed.

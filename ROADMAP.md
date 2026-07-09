@@ -172,7 +172,7 @@ helper); two dedicated streams; launch catalog = 4 tables
 - [x] 48d — the bits overlay: the Game-level page-lifetime layer (top-left), `run:bitsChanged` + direct first paint, hop chip relocation; browser-verify in AND out of battle ✅ `be3a8b4`, browser-verified full lifecycle at :5191; + the reset-repaint ordering fix (worklog §48)
 - [x] 48e — the reward-table editor + `formatRewardsJson` + the encounters `rewards` block emitter + `/__save-config` allowlist + `/tools/` index ✅ 2026-07-08, +3 tests, browser-verified; scope rider: the encounter editor gained the rewards-ref panel (user-approved — worklog §48)
 - [x] 48f — `bitsMultiplier` (difficulty.json + `RunConfig` + the `gainBits` site) + the launch catalog authored with the editor in hand ✅ 2026-07-09, +2 tests; all 13 encounters reference a table (numbers rough — §52 tunes); the universal-catalog test sweep — worklog §48
-- [ ] 48g — exit sweep: full fuzz pass + CSV re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip
+- [x] 48g — exit sweep: full fuzz pass + CSV re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip ✅ 2026-07-09 — re-baseline STABLE (fixed-vector probe flat 25.0/25.0; 480 runs, 0 hangs; BALANCE.md §48g), gotcha #116, phase CLOSED — worklog §48
 
 **Exit criteria:** win a battle → reward screen → accept/decline bits +
 daemon rewards → promotion → recruit, user-confirmed in the native browser;

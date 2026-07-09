@@ -50,7 +50,7 @@ src/
     units.ts                 #   §38 UnitDef catalog (was archetypes.ts): glyph + baseStats + growthRates + abilities/targeting (E1/E3) + inert §38 fields (footprint/layer/ignoresTerrain/susceptibility); attackRange moved to abilities (E5); 29d: assertSummonRefsResolve boot-checks every summon op's archetype id
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
     statuses.ts              #   27a: loads config/statuses.json into the StatusDef catalog; statusDef(id) + assertStatusRefsResolve (boot-checks every applyStatus statusId, wired into abilities/registry.ts)
-    difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets
+    difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets; X1: per-run waveSize/levelBudget multipliers; 48f: bitsMultiplier (the economy lever — applies in Run.effectiveBits, never WaveContext)
     recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4)
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
     nodemap.ts               #   hop count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
@@ -174,7 +174,11 @@ src/
                              # sites (turnStart via resolveTurnGrants; encounterStart/encounterEnd via
                              # resolveInstantHooks in beginEncounter/finishEncounter). 47f: BattleEncounter
                              # carries battleRulesFor(daemons); handleTurnEnded settles battle:ended tallies
-                             # via gainBits (skip-on-lost, the XP mirror). Live version: HANDOFF 🧭
+                             # via gainBits (skip-on-lost, the XP mirror). 48b/f: the 'reward' run phase —
+                             # rolled at the win boundary (rollRewards off two dedicated streams), spliced at
+                             # the turn gate AHEAD of promotion; pendingRewards serializes BASE amounts and
+                             # effectiveBits (base × bitsGain fold × 48f bitsMultiplier, one rounding) is the
+                             # SHARED display/settle helper. Live version: HANDOFF 🧭
     redraw.ts                # K3: pure redraw rules — redrawRejection / redrawAvailability (config injected, both L modes provable)
     empower.ts               # K4: pure empower rules — empowerRejection / empowerAvailability / empowerEffect (config injected)
     daemon.ts                # L1→47f: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
@@ -186,7 +190,7 @@ src/
     runStats.ts              # 47a: the run-stat vocabulary — RunStatKey (bitsGain, cacheSize) + foldRunStats
                              # (foldEffects mirrored: adds→mults, identity-on-empty; NO rounding — read site rounds)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
-    RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N)
+    RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
                              # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))
     encounters/
@@ -326,10 +330,16 @@ config/                      # A4: balance JSON source of truth (paired with src
 public/
   audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, magicboom, ...)
 
-tools/                       # Dev-only; not bundled into dist/
+tools/                       # Dev-only; not bundled into dist/ (index page at /tools/)
   layout-editor/             # C1d.B → D8: layout painter at /tools/layout-editor/
   run-config/                # G1/G5: short-run CLI + GUI launcher at /tools/run-config/
   archetype-editor/          # I4: schema-driven units.json editor (live preview + save) at /tools/archetype-editor/
+  attack-editor/             # Cluster 1: abilities.json editor (effect-op tree + live schema validation) at /tools/attack-editor/
+  sector-editor/             # T3: sectors.json editor (layout + per-kind encounter pools, weighted-roll preview) at /tools/sector-editor/
+  encounter-editor/          # V2: encounters.json editor (visual wave-grammar builder + live resolution preview; 48e adds the rewards-ref panel) at /tools/encounter-editor/
+  reward-editor/             # 48e: rewards.json editor (weighted tables + draw-% preview + referenced-by pane) at /tools/reward-editor/
+  sweep-gui/                 # command-builder GUI for the fuzz balance harness at /tools/sweep-gui/
+  mapgen-prototype/          # M6: procedural node-map generator sandbox at /tools/mapgen-prototype/
 
 scripts/                     # Dev-only Node utilities; not bundled into dist/
   gen-sfx.mjs                # §32b: deterministic, dependency-free SFX synth → public/audio/ (npm run gen:sfx)

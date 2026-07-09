@@ -494,3 +494,30 @@ deltas. The pre-X H7c→O log lives at
     forward (fixed-vector probes: re-run `best-strategy.json` before/after any future
     engine round — the cheapest ceiling-drift instrument this round leaves behind).
     Docs-only close; no config, no snapshot bump.
+
+- **2026-07-09 — §48g the Rewards-phase closer re-baseline: STABLE — the reward economy is
+  outcome-neutral at launch numbers (fixed-vector probe flat; anchors within noise).** §48
+  is an engine round twice over: two new run-level RNG streams shift every per-encounter
+  fork (48b, append-after-daemonRng), and the reward economy itself now grants loot
+  daemons mid-run (the harness accept-all policy takes them). Method: the §46b
+  fixed-vector doctrine — 4 × 120-run batches (greedy + pure-random anchors · §41's
+  winning vector re-run unchanged, in-sample + `--seed-offset=5000` held-out), 480
+  measured runs, **0 hangs**, capped draws 11–19/120 (in family).
+  - **The fixed-vector probe is FLAT: 25.0% (in) / 25.0% (held) vs §46b's 25.0/24.2** —
+    the cheapest ceiling-drift read says the ceiling didn't move. Anchors: greedy 12.5%
+    (§46b 10.0) · pure-random 14.2% (§46b 12.5) — both +~2pt, inside the ±~3.5pt
+    seed-variance band and directionally consistent with free loot idols.
+  - **Why so quiet:** bits have NO spend surface until §50 ports, so the only
+    outcome-coupled reward is the daemon drop — elite-gated at chance 0.35 through a
+    7-idol table that owned-exclusion thins further. The economy's outcome lever arrives
+    with ports; today's rewards are mostly banked potential. (Per-daemon splits shifted
+    seat-to-seat as the stream re-alignment re-dealt arms — expected, not signal.)
+  - **Natural-table spot reads (greedy, small-n — hints per protocol, not dials):**
+    bosses banditQueen 9.1 / bandit-king 9.0 PDmg/inst (≈10 band holds); elites 6.0–10.0
+    vs band ≈6 (warband-vanguard's 10.0 at n=18 is the §46b-style natural-run spike —
+    forced isolation owns the verdict if §52 cares); normals 2.3–4.5 vs band ≈3.
+  - **VERDICT: re-baseline ACCEPTED, no config change.** The 48g batches
+    (`tests/fuzz/output/48g-{greedy,random,fixed-in,fixed-held}`) supersede §46b as the
+    comparison baseline; the boss-wall watch item (held-out 59% at §46b) stays FILED for
+    §52's cluster-closing pass, where `bitsMultiplier` (48f) + ports give run-level
+    economy its first real levers.

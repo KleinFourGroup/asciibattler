@@ -132,15 +132,35 @@ describe('rollRewards (48b — the pure roller)', () => {
     expect(portions).toEqual([{ kind: 'daemon', daemonId: 'fortuna' }]);
   });
 
-  it('packet entries are dormant at launch — excluded from sampling wholesale (§49 activates)', () => {
+  it('packet entries sample and carry their id (49c — the dormancy guard retired)', () => {
+    const tableRng = new RNG(1);
+    const t0 = pos(tableRng);
     const portions = rollRewards(
       [ref('t')],
-      lookup(table('t', [packetE('redraw-2', 1000), bitsE(2, 2, 0.001)])),
+      lookup(table('t', [packetE('patch')])),
+      NONE,
+      tableRng,
+      new RNG(0),
+    );
+    expect(portions).toEqual([{ kind: 'packet', packetId: 'patch' }]);
+    // A singleton packet entry draws nothing (gotcha #111 parity with bits).
+    expect(pos(tableRng)).toBe(t0);
+  });
+
+  it('packets have NO exclusion — the same packet can drop from every ref in one roll', () => {
+    const portions = rollRewards(
+      [ref('t'), ref('t')],
+      lookup(table('t', [packetE('patch')])),
       NONE,
       new RNG(1),
       new RNG(0),
     );
-    expect(portions).toEqual([{ kind: 'bits', base: 2 }]);
+    // Contrast the daemon same-roll exclusion test above: duplicates are
+    // legal cache content (one SLOT each), so both refs pay out.
+    expect(portions).toEqual([
+      { kind: 'packet', packetId: 'patch' },
+      { kind: 'packet', packetId: 'patch' },
+    ]);
   });
 
   it('refs resolve in authored order (the deterministic evaluation order)', () => {

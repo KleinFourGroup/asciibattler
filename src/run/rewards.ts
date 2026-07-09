@@ -26,10 +26,11 @@
  *   job, and this is the caller). Ids granted EARLIER IN THIS SAME ROLL
  *   accumulate into the exclusion too, so a multi-ref offer can never carry
  *   the same idol twice.
- * - Packet entries are excluded wholesale until §49 (schema-complete but
- *   dormant — zero `PacketDef`s exist, so a sampled packet would be
- *   ungrantable; launch tables author none, this guard makes synthetic ones
- *   inert too).
+ * - Packet entries have NO exclusion (49c — the wholesale dormancy guard
+ *   retired): duplicates are legal (one SLOT each, spec §Cache), and a full
+ *   cache resolves at ACCEPT time (decline-or-swap), never at sample time —
+ *   a cache-state filter here would make the draw count depend on a UI
+ *   concern.
  */
 
 import type { EncounterRewardRef, RewardTable } from '../config/rewards';
@@ -39,10 +40,13 @@ import { pickWeighted } from './sectorWalk';
 /** One rolled, offerable reward portion. Bits carry the ROLLED BASE — the
  *  effective amount derives at display/settle time via `Run.effectiveBits`
  *  (one shared code path, the shape-lock rider), so accepting a bits-fold
- *  daemon EARLIER in the same offer visibly boosts the portions after it. */
+ *  daemon EARLIER in the same offer visibly boosts the portions after it.
+ *  49c adds the packet member (a catalog id — `Run.addPacket` settles it,
+ *  cache-full accepts resolve via the acceptReward swap field). */
 export type RewardPortion =
   | { readonly kind: 'bits'; readonly base: number }
-  | { readonly kind: 'daemon'; readonly daemonId: string };
+  | { readonly kind: 'daemon'; readonly daemonId: string }
+  | { readonly kind: 'packet'; readonly packetId: string };
 
 /**
  * Roll an encounter's reward refs into portions (authored ref order — the
@@ -67,7 +71,7 @@ export function rollRewards(
       throw new Error(`rollRewards: unknown reward table '${ref.table}'`);
     }
     const eligible = table.entries.filter(
-      (e) => e.kind === 'bits' || (e.kind === 'daemon' && !excluded.has(e.daemon)),
+      (e) => e.kind !== 'daemon' || !excluded.has(e.daemon),
     );
     if (eligible.length === 0) continue;
     const entry = pickWeighted(eligible, (e) => e.weight, tableRng);
@@ -77,6 +81,10 @@ export function rollRewards(
     } else if (entry.kind === 'daemon') {
       excluded.add(entry.daemon);
       portions.push({ kind: 'daemon', daemonId: entry.daemon });
+    } else {
+      // 49c — packets sample with no exclusion (see the header) and carry
+      // only their id; the settle is `Run.addPacket` at accept time.
+      portions.push({ kind: 'packet', packetId: entry.packet });
     }
   }
   return portions;

@@ -883,6 +883,32 @@ body {
   opacity: 1;
 }
 
+/* 49c — the live cache line above the rows (shown only while a packet
+   portion is pending) + the full-cache swap picker (select over held
+   packets + the Swap button, an Accept variant). */
+.reward-cache-line {
+  color: #15f4ee; /* FLOURESCENT_BLUE — the relic/system layer */
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.reward-swap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.reward-swap__select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: #000;
+  color: #ffb000; /* TERMINAL_AMBER */
+  border: 1px solid #664600;
+  padding: 6px 8px;
+}
+
 /* GameOverScreen (Step 4.5). Full-overlay defeat modal with a single button
    to start a fresh run. NEON_RED heading sets the "you died" tone; the
    button uses the same amber-on-hover affordance as other interactive

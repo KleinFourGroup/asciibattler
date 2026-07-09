@@ -562,7 +562,16 @@ export function runOne(
         // deterministic): bits exercise the `gainBits` settle, daemons the
         // `addDaemon` acquisition seam. A §50-style purchase-policy arm can
         // upgrade this to a real decision later.
-        run.dispatch({ kind: 'acceptReward', index: 0 });
+        // 49c: one refinement — a packet portion against a FULL cache is
+        // DECLINED (the kickoff lock: accept-if-room; a swap policy would
+        // need a value model the harness doesn't have). Still deterministic,
+        // still zero draws.
+        const portion = run.pendingRewards![0]!;
+        if (portion.kind === 'packet' && !run.cacheHasRoom) {
+          run.dispatch({ kind: 'declineReward', index: 0 });
+        } else {
+          run.dispatch({ kind: 'acceptReward', index: 0 });
+        }
         break;
       }
       case 'promotion': {

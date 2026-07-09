@@ -920,3 +920,37 @@ hard-reject discipline). The semantics, all deliberate:
   derived size.
 - Game.dispatch routes the new command (the 48c `satisfies never`
   guard forced it at compile time — the guard earning its keep).
+
+### 49c — packet rewards activate (2026-07-09)
+
+The earn-store loop is live end to end (headless + browser-verified):
+a packet entry samples, rides the offer, and lands in the cache.
+
+- **An unpredicted THIRD snapshot bump — Run v30→v31.** Widening the
+  `pendingRewards` portion union with the `packet` member is a shape
+  change (a v30 reader would route a packet portion down the daemon
+  arm and throw on a phantom id); the 48b "'reward' member of `phase`"
+  precedent settled that union-widenings bump. The kickoff's
+  "two bumps" plan-line was wrong by one — worth remembering: any step
+  that touches a serialized UNION probably bumps.
+- **The decline-or-swap contract lives in the ENGINE** (the finality
+  doctrine applied consistently): `acceptReward` gains an optional
+  `swapCacheIndex`, required (and only honored) when a packet portion
+  meets a FULL cache; anything invalid is a silent no-op that leaves
+  the offer intact (validation BEFORE the splice). With room the field
+  is ignored — no phantom discards. The swap's discard routes through
+  `handleDiscardPacket` (single-mutator discipline), so one swap emits
+  two idempotent `run:cacheChanged` repaints.
+- **Packets sample with NO exclusion** — duplicates are legal cache
+  content (one slot each) and a full cache resolves at ACCEPT time; a
+  sample-time cache filter would make draw counts depend on UI state.
+- **Fuzz reward policy**: accept-if-room, else DECLINE (deterministic,
+  zero draws — a swap policy needs a value model the harness lacks).
+- **RewardScreen**: packet rows (▤ + name + description, def-resolved),
+  a live `▤ cache n/size` line rendered only while a packet portion is
+  pending, and the full-cache swap picker (a select over held slots +
+  Swap) replacing that row's plain Accept. Browser-verified at :5191
+  via a forged live offer (accept → cache fills → line re-derives;
+  swap at 6/6 → one out one in, offer resolves; zero console errors).
+  The shipped catalog still authors no packet entries — the loop goes
+  content-live at 49g.

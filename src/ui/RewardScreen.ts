@@ -17,6 +17,7 @@
  */
 
 import { daemonById } from '../config/daemons';
+import { packetById } from '../config/packets';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Run } from '../run/Run';
@@ -67,11 +68,26 @@ export class RewardScreen {
    * (Re)render the rows from the LIVE offer. Row indices map 1:1 onto
    * `run.pendingRewards` positions — the offer shrinks as portions resolve,
    * so a full re-render after each command keeps every button's index true.
+   * 49c: cache state re-derives here too, so accepting/swapping a packet
+   * visibly moves the `n/size` line and flips later packet rows between the
+   * plain Accept and the swap control.
    */
   private renderPortions(): void {
     if (this.portionsEl === null) return;
     this.portionsEl.replaceChildren();
     const portions = this.run.pendingRewards ?? [];
+
+    // 49c — the live cache line (spec §Cache: "the reward screen shows
+    // cache state"), rendered only while a packet portion is pending — a
+    // bits/daemon-only offer has no cache decision to inform.
+    if (portions.some((p) => p.kind === 'packet')) {
+      const cacheLine = document.createElement('div');
+      cacheLine.className = 'reward-cache-line';
+      // ▤ is the cache mark (the coming 49f chip vocabulary).
+      cacheLine.textContent = `▤ cache ${this.run.cache.length}/${this.run.effectiveCacheSize}`;
+      this.portionsEl.appendChild(cacheLine);
+    }
+
     portions.forEach((portion, index) => {
       const row = document.createElement('div');
       row.className = 'reward-portion';
@@ -83,7 +99,7 @@ export class RewardScreen {
         title.className = 'reward-portion__title';
         title.textContent = `${this.run.effectiveBits(portion.base)} bits`;
         body.appendChild(title);
-      } else {
+      } else if (portion.kind === 'daemon') {
         const daemon = daemonById(portion.daemonId);
         const title = document.createElement('div');
         title.className = 'reward-portion__title';
@@ -96,14 +112,35 @@ export class RewardScreen {
           desc.textContent = daemon.description;
           body.appendChild(desc);
         }
+      } else {
+        // 49c — a packet portion (def-resolved for display; the id is
+        // boot-asserted, so the fallback never renders for authored tables).
+        const packet = packetById(portion.packetId);
+        const title = document.createElement('div');
+        title.className = 'reward-portion__title';
+        title.textContent = `▤ ${packet?.name ?? portion.packetId}`;
+        body.appendChild(title);
+        if (packet !== undefined) {
+          const desc = document.createElement('div');
+          desc.className = 'reward-portion__desc';
+          desc.textContent = packet.description;
+          body.appendChild(desc);
+        }
       }
       row.appendChild(body);
 
       const actions = document.createElement('div');
       actions.className = 'reward-portion__actions';
-      actions.appendChild(this.actionButton('Accept', 'reward-accept', () =>
-        this.resolve(index, 'accept'),
-      ));
+      if (portion.kind === 'packet' && !this.run.cacheHasRoom) {
+        // 49c — the decline-or-swap control: pick a held packet to drop,
+        // then Swap dispatches the accept WITH the slot (the engine
+        // enforces the same contract — a swap-less accept would no-op).
+        actions.appendChild(this.swapControl(index));
+      } else {
+        actions.appendChild(this.actionButton('Accept', 'reward-accept', () =>
+          this.resolve(index, 'accept'),
+        ));
+      }
       actions.appendChild(this.actionButton('Decline', 'reward-decline', () =>
         this.resolve(index, 'decline'),
       ));
@@ -111,6 +148,35 @@ export class RewardScreen {
 
       this.portionsEl!.appendChild(row);
     });
+  }
+
+  /** 49c — the full-cache swap picker: a select over the HELD packets (by
+   *  slot) + a Swap button carrying the chosen `swapCacheIndex`. Rebuilt on
+   *  every re-render, so the slot list is always the live cache. */
+  private swapControl(portionIndex: number): HTMLSpanElement {
+    const wrap = document.createElement('span');
+    wrap.className = 'reward-swap';
+
+    const select = document.createElement('select');
+    select.className = 'reward-swap__select';
+    this.run.cache.forEach((packetId, slot) => {
+      const option = document.createElement('option');
+      option.value = String(slot);
+      option.textContent = packetById(packetId)?.name ?? packetId;
+      select.appendChild(option);
+    });
+    wrap.appendChild(select);
+
+    wrap.appendChild(this.actionButton('Swap', 'reward-accept reward-swap__button', () => {
+      this.audio.play('pickup');
+      this.dispatcher.dispatch({
+        kind: 'acceptReward',
+        index: portionIndex,
+        swapCacheIndex: Number(select.value),
+      });
+      this.renderPortions();
+    }));
+    return wrap;
   }
 
   private actionButton(label: string, className: string, onClick: () => void): HTMLButtonElement {

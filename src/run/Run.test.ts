@@ -2232,6 +2232,87 @@ describe('Run', () => {
     });
   });
 
+  describe('packet rewards (49c — the earn pipe activates)', () => {
+    const PACKET_ID = PACKETS[0]!.id;
+
+    /** Forge a live offer holding a packet portion PLUS a tail portion, so
+     *  resolving the packet never drains the offer (afterRewardResolved
+     *  would re-enter the gate chain outside a real encounter — the 48f
+     *  synthesize-the-shape precedent, plain-mutation on public fields). */
+    const forgedOffer = () => {
+      const fresh = freshRunWithBus(1, { daemon: null });
+      fresh.run.phase = 'reward';
+      fresh.run.pendingRewards = [
+        { kind: 'packet', packetId: PACKET_ID },
+        { kind: 'bits', base: 1 },
+      ];
+      return fresh;
+    };
+
+    it('accepting a packet portion lands it in the cache (the earn-store loop)', () => {
+      const { run } = forgedOffer();
+      run.dispatch({ kind: 'acceptReward', index: 0 });
+      expect(run.cache).toEqual([PACKET_ID]);
+      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 1 }]);
+    });
+
+    it('a full-cache accept WITHOUT a swap slot is a silent no-op — the offer stays intact', () => {
+      const { run } = forgedOffer();
+      while (run.cacheHasRoom) run.addPacket(PACKET_ID);
+      const held = run.cache.length;
+      run.dispatch({ kind: 'acceptReward', index: 0 });
+      expect(run.cache).toHaveLength(held);
+      expect(run.pendingRewards).toHaveLength(2); // still both portions
+    });
+
+    it('a full-cache accept WITH a valid swapCacheIndex discards that slot, then accepts', () => {
+      const { run, bus } = forgedOffer();
+      while (run.cacheHasRoom) run.addPacket(PACKET_ID);
+      const size = run.effectiveCacheSize;
+      const events: Array<{ packetIds: string[]; size: number }> = [];
+      bus.on('run:cacheChanged', (e) => events.push(e));
+      run.dispatch({ kind: 'acceptReward', index: 0, swapCacheIndex: 0 });
+      expect(run.cache).toHaveLength(size); // exactly full again
+      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 1 }]);
+      // Two repaints (discard, then add) — the documented swap shape.
+      expect(events).toHaveLength(2);
+    });
+
+    it('a full-cache accept with an invalid swap slot (fractional / out-of-range) is a no-op', () => {
+      const { run } = forgedOffer();
+      while (run.cacheHasRoom) run.addPacket(PACKET_ID);
+      run.dispatch({ kind: 'acceptReward', index: 0, swapCacheIndex: 0.5 });
+      run.dispatch({ kind: 'acceptReward', index: 0, swapCacheIndex: -1 });
+      run.dispatch({ kind: 'acceptReward', index: 0, swapCacheIndex: 99 });
+      expect(run.pendingRewards).toHaveLength(2);
+    });
+
+    it('swapCacheIndex is IGNORED while the cache has room (no phantom discard)', () => {
+      const { run } = forgedOffer();
+      run.addPacket(PACKET_ID);
+      run.dispatch({ kind: 'acceptReward', index: 0, swapCacheIndex: 0 });
+      // Both survive: the held one (no discard) plus the accepted one.
+      expect(run.cache).toEqual([PACKET_ID, PACKET_ID]);
+    });
+
+    it('a pending packet portion round-trips (v31); an unknown pending packet id rejects', () => {
+      const { run } = forgedOffer();
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.pendingRewards).toEqual([
+        { kind: 'packet', packetId: PACKET_ID },
+        { kind: 'bits', base: 1 },
+      ]);
+      const tampered = {
+        ...wire,
+        pendingRewards: [{ kind: 'packet', packetId: 'no-such-packet' }],
+      };
+      expect(() => Run.fromJSON(tampered, new EventBus<GameEvents>())).toThrow(
+        /pending reward references unknown packet id 'no-such-packet'/,
+      );
+    });
+  });
+
   describe('battle tallies (47f — the settle seam)', () => {
     /** A bespoke battle-hook daemon (Laverna-shaped). */
     const BATTLE_BITS: DaemonConfig = {

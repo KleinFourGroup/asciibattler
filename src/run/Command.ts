@@ -41,7 +41,15 @@ export type RunCommand =
    * phase, out-of-range index) is a silent no-op. Resolving the last
    * portion re-enters the gate chain (promotion → recruit/victory).
    */
-  | { readonly kind: 'acceptReward'; readonly index: number }
+  | {
+      readonly kind: 'acceptReward';
+      readonly index: number;
+      /** 49c — the decline-or-swap contract for a packet portion hitting a
+       *  FULL cache: the held slot to discard first. Required (and consumed)
+       *  ONLY in that case — with room it's ignored, and a full-cache accept
+       *  without a valid one is a silent no-op that leaves the offer intact. */
+      readonly swapCacheIndex?: number;
+    }
   /**
    * 48b — decline ONE pending reward portion (the declinable-per-portion
    * spec lock; `passRecruit`'s sibling). Same validity + no-op contract as

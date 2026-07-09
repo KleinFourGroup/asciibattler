@@ -276,8 +276,12 @@ export interface BattleEncounter {
  *  differently) → reject.
  *  49b: bumped 29→30. The cache: adds `cache` (owned packet ids, acquisition
  *  order — the daemonIds def-resolved pattern). A v29 save has no cache →
- *  reject rather than rehydrate a run whose packets silently vanished. */
-const RUN_SCHEMA_VERSION = 30;
+ *  reject rather than rehydrate a run whose packets silently vanished.
+ *  49c: bumped 30→31. Packet rewards activate: the `pendingRewards` portion
+ *  union gains the `packet` member (the 48b "'reward' member of `phase`"
+ *  precedent — a union widening is a shape change: a v30 reader would route
+ *  a packet portion down the daemon arm and throw on a phantom id). */
+const RUN_SCHEMA_VERSION = 31;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -813,7 +817,7 @@ export class Run {
         this.handleDismissPromotion();
         break;
       case 'acceptReward':
-        this.handleAcceptReward(command.index);
+        this.handleAcceptReward(command.index, command.swapCacheIndex);
         break;
       case 'declineReward':
         this.handleDeclineReward(command.index);
@@ -1735,13 +1739,37 @@ export class Run {
    * the fight it dropped from (worklog §48). Outside the reward phase or
    * out-of-range: the silent no-op discipline (a double-click can't corrupt
    * state). Resolving the last portion re-enters the gate chain.
+   *
+   * 49c — a packet portion settles via `addPacket`, gated by the
+   * DECLINE-OR-SWAP contract (spec §Cache): with room it just accepts
+   * (`swapCacheIndex` ignored — the gesture doesn't exist while roomy); with
+   * a FULL cache it accepts only by naming a held slot to discard first, and
+   * anything else (absent / fractional / out-of-range swap index) is the
+   * silent no-op — THE OFFER STAYS INTACT, so validation runs before the
+   * splice. The swap's discard routes through `handleDiscardPacket` (the
+   * single-mutator discipline), so a swap emits two `run:cacheChanged`
+   * repaints — idempotent by payload design.
    */
-  private handleAcceptReward(index: number): void {
+  private handleAcceptReward(index: number, swapCacheIndex?: number): void {
+    if (this.phase !== 'reward' || this.pendingRewards === null) return;
+    const peeked = this.pendingRewards[index];
+    if (peeked === undefined) return;
+    if (peeked.kind === 'packet' && !this.cacheHasRoom) {
+      if (
+        swapCacheIndex === undefined ||
+        !Number.isInteger(swapCacheIndex) ||
+        swapCacheIndex < 0 ||
+        swapCacheIndex >= this.cache.length
+      ) {
+        return;
+      }
+      this.handleDiscardPacket(swapCacheIndex);
+    }
     const portion = this.takePendingReward(index);
-    if (portion === null) return;
+    if (portion === null) return; // unreachable after the peek — belt over suspenders
     if (portion.kind === 'bits') {
       this.gainBits(portion.base);
-    } else {
+    } else if (portion.kind === 'daemon') {
       const daemon = daemonById(portion.daemonId);
       if (daemon === undefined) {
         // The roller only emits catalog ids (boot-asserted tables) — a miss
@@ -1749,6 +1777,9 @@ export class Run {
         throw new Error(`Run.handleAcceptReward: unknown daemon id '${portion.daemonId}'`);
       }
       this.addDaemon(daemon);
+    } else {
+      // 49c — addPacket owns the unknown-id throw (same corruption logic).
+      this.addPacket(portion.packetId);
     }
     this.afterRewardResolved();
   }
@@ -2280,12 +2311,18 @@ export class Run {
       : null;
     // 48b — restore the pending offer, validating daemon portions against
     // the catalog (the daemonIds discipline: an unknown id is a hard reject,
-    // never a silently unacceptable reward).
+    // never a silently unacceptable reward). 49c — packet portions get the
+    // same treatment against the packet catalog.
     m.pendingRewards = snap.pendingRewards
       ? snap.pendingRewards.map((p) => {
           if (p.kind === 'daemon' && daemonById(p.daemonId) === undefined) {
             throw new Error(
               `Run.fromJSON: pending reward references unknown daemon id '${p.daemonId}'`,
+            );
+          }
+          if (p.kind === 'packet' && packetById(p.packetId) === undefined) {
+            throw new Error(
+              `Run.fromJSON: pending reward references unknown packet id '${p.packetId}'`,
             );
           }
           return { ...p };

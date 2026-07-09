@@ -410,49 +410,59 @@ export function runOne(
         break;
       }
       case 'turn-intro': {
-        // K3c3 — the pre-turn gate (only entered with a live redraw policy).
-        // Policy loop: keep deciding while the budget allows and the policy
-        // tosses, so ONE policy covers both the shipped one-batch mode and the
-        // L-era "N actions" mode. The no-progress guard (a silently-rejected
-        // dispatch changes no counter) bounds the loop absolutely.
-        if (redraw && redrawRng) {
-          for (;;) {
-            const hand = run.hand.map((i) => run.team[i]!);
-            const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
-            const positions = selectRedrawPositions(
-              hand,
-              pool,
-              run.redrawAvailability,
-              redraw,
-              redrawRng,
-            );
-            if (positions.length === 0) break;
-            const before = run.cardsRedrawnThisTurn;
-            run.dispatch({ kind: 'redrawCards', handIndices: positions });
-            if (run.cardsRedrawnThisTurn === before) break; // rejected — never spin
-          }
-        }
-        // K4c3 — empower AFTER redraw (buff the FINAL hand). Same ask-until-
-        // null loop + no-progress guard shape as the redraw policy above.
-        // 47d — per-source grants: the bot drains each granted idol's budget
-        // in grant order (index 0 first — a single-daemon run makes the same
-        // policy draws as before, byte-for-byte).
-        if (empower && empowerRng) {
-          for (let grantIndex = 0; grantIndex < run.empowerGrants.length; grantIndex++) {
+        // K3c3/K4c3→49d — the pre-turn gate: the bot walks the GRANT QUEUE
+        // in order (acquisition order — naturally compliant under BOTH
+        // finality modes), asking its policy per grant. The ask-until-null
+        // inner loop covers both the shipped one-action mode and a raised-
+        // budget grant; the no-progress guard (a silently-rejected dispatch
+        // moves no budget) bounds every loop absolutely. A single-daemon run
+        // makes the same policy draws as the pre-49d bot, byte-for-byte
+        // (one grant = one policy block, same order).
+        for (let grantIndex = 0; grantIndex < run.grantViews().length; grantIndex++) {
+          const view = () => run.grantViews()[grantIndex]!;
+          const kind = view().effect.kind;
+          if (kind === 'redraw' && redraw && redrawRng) {
             for (;;) {
+              const grant = view();
+              if (grant.remaining <= 0) break;
+              const effect = grant.effect;
+              if (effect.kind !== 'redraw') break;
               const hand = run.hand.map((i) => run.team[i]!);
-              const remaining = run.empowerGrants[grantIndex]!.empowersRemaining;
+              const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
+              const positions = selectRedrawPositions(
+                hand,
+                pool,
+                { redrawsRemaining: grant.remaining, cardsRemaining: effect.maxCards },
+                redraw,
+                redrawRng,
+              );
+              if (positions.length === 0) break;
+              const before = grant.remaining;
+              run.dispatch({ kind: 'redrawCards', handIndices: positions, grantIndex });
+              if (view().remaining === before) break; // rejected — never spin
+            }
+          } else if (kind === 'empower' && empower && empowerRng) {
+            for (;;) {
+              const grant = view();
+              if (grant.remaining <= 0) break;
+              const hand = run.hand.map((i) => run.team[i]!);
               const pos = selectEmpowerPosition(
                 hand,
-                { empowersRemaining: remaining },
+                { empowersRemaining: grant.remaining },
                 empower,
                 empowerRng,
               );
               if (pos === null) break;
-              const before = run.empowersUsedThisTurn[grantIndex]!;
+              const before = grant.remaining;
               run.dispatch({ kind: 'empowerUnit', handIndex: pos, grantIndex });
-              if (run.empowersUsedThisTurn[grantIndex] === before) break; // rejected — never spin
+              if (view().remaining === before) break; // rejected — never spin
             }
+          }
+          // 49d — under STRICT finality a declined/unpoliced grant blocks
+          // the queue; pass it so later grants stay reachable. Free mode
+          // makes this a harmless no-op (passGrant no-ops there).
+          if (view().active && view().remaining > 0) {
+            run.dispatch({ kind: 'passGrant' });
           }
         }
         run.dispatch({ kind: 'advanceTurn' });

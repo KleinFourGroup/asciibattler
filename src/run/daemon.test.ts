@@ -7,6 +7,8 @@ import {
   disabledTurnGrants,
   daemonRedrawHook,
   daemonEmpowerHook,
+  activeGrantIndex,
+  grantViews,
   type TurnGrants,
 } from './daemon';
 import { DAEMONS, daemonById, type DaemonConfig, type HookRule } from '../config/daemons';
@@ -99,38 +101,48 @@ describe('resolveTurnGrants', () => {
     expect(rng.toJSON()).toEqual(before);
   });
 
-  it('a chance-less hook is granted with the authored knobs and costs no draw', () => {
+  it('a chance-less hook is granted as a fresh queue entry and costs no draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
     const { grants } = resolveTurnGrants([SURE_BOTH], rng);
     const [redraw, empower] = SURE_BOTH.rules! as [HookRule, HookRule];
-    expect(grants.redraw).toEqual({
-      enabled: true,
-      redrawsPerTurn: (redraw.effect as { redrawsPerTurn: number }).redrawsPerTurn,
-      maxCardsPerTurn: (redraw.effect as { maxCardsPerTurn: number }).maxCardsPerTurn,
-    });
-    expect(grants.empowers).toEqual([
+    expect(grants).toEqual([
       {
         daemonId: SURE_BOTH.id,
-        empowersPerTurn: (empower.effect as { empowersPerTurn: number }).empowersPerTurn,
-        buff: (empower.effect as { buff: object }).buff,
+        effect: {
+          kind: 'redraw',
+          budget: (redraw.effect as { redrawsPerTurn: number }).redrawsPerTurn,
+          maxCards: (redraw.effect as { maxCardsPerTurn: number }).maxCardsPerTurn,
+        },
+        used: 0,
+        passed: false,
+      },
+      {
+        daemonId: SURE_BOTH.id,
+        effect: {
+          kind: 'empower',
+          budget: (empower.effect as { empowersPerTurn: number }).empowersPerTurn,
+          buff: (empower.effect as { buff: object }).buff,
+        },
+        used: 0,
+        passed: false,
       },
     ]);
     expect(rng.toJSON()).toEqual(before);
   });
 
-  it('a chance-0 hook is denied and costs no draw', () => {
+  it('a chance-0 hook is denied (no queue entry) and costs no draw', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
-    expect(resolveTurnGrants([NEVER], rng).grants.redraw.enabled).toBe(false);
+    expect(resolveTurnGrants([NEVER], rng).grants).toEqual([]);
     expect(rng.toJSON()).toEqual(before);
   });
 
-  it('an ungranted kind resolves to the disabled baseline', () => {
-    // COIN_REDRAW authors no empower hook at all — empowers must read empty
-    // whatever the coin does.
+  it('an unauthored kind simply has no entry', () => {
+    // COIN_REDRAW authors no empower hook at all — the queue never holds an
+    // empower entry whatever the coin does.
     const { grants } = resolveTurnGrants([COIN_REDRAW], new RNG(7));
-    expect(grants.empowers).toEqual([]);
+    expect(grants.some((g) => g.effect.kind === 'empower')).toBe(false);
   });
 
   it('a coin-flip hook draws exactly once, deterministically, and lands both ways', () => {
@@ -138,10 +150,10 @@ describe('resolveTurnGrants', () => {
     for (let seed = 0; seed < 50; seed++) {
       const rng = new RNG(seed);
       const replay = new RNG(seed);
-      const flip = resolveTurnGrants([COIN_REDRAW], rng).grants.redraw.enabled;
+      const flip = resolveTurnGrants([COIN_REDRAW], rng).grants.length === 1;
       // Same stream state → same outcome (the determinism the save relies
       // on), and the stream advanced by exactly the one flip draw.
-      expect(resolveTurnGrants([COIN_REDRAW], replay).grants.redraw.enabled).toBe(flip);
+      expect(resolveTurnGrants([COIN_REDRAW], replay).grants.length === 1).toBe(flip);
       expect(rng.toJSON()).toEqual(replay.toJSON());
       replay.next();
       outcomes.add(flip);
@@ -159,12 +171,12 @@ describe('resolveTurnGrants', () => {
       const manual = new RNG(seed);
       const redrawFlip = manual.next() < 0.5;
       const empowerFlip = manual.next() < 0.5;
-      expect(grants.redraw.enabled).toBe(redrawFlip);
-      expect(grants.empowers.length === 1).toBe(empowerFlip);
+      expect(grants.some((g) => g.effect.kind === 'redraw')).toBe(redrawFlip);
+      expect(grants.some((g) => g.effect.kind === 'empower')).toBe(empowerFlip);
     }
   });
 
-  it('daemons evaluate in OWNERSHIP order (the 47d multi-daemon draw contract)', () => {
+  it('daemons evaluate in OWNERSHIP order — the queue order strict mode enforces (49d)', () => {
     const coinA: DaemonConfig = { ...COIN_REDRAW, id: 'coin-a' };
     const coinB: DaemonConfig = {
       id: 'coin-b',
@@ -177,12 +189,14 @@ describe('resolveTurnGrants', () => {
       const manual = new RNG(seed);
       const aFlip = manual.next() < 0.5;
       const bFlip = manual.next() < 0.5;
-      expect(grants.redraw.enabled).toBe(aFlip);
-      expect(grants.empowers.map((g) => g.daemonId)).toEqual(bFlip ? ['coin-b'] : []);
+      const expected: string[] = [];
+      if (aFlip) expected.push('coin-a');
+      if (bFlip) expected.push('coin-b');
+      expect(grants.map((g) => g.daemonId)).toEqual(expected);
     }
   });
 
-  it('multiple granted redraw hooks ACCUMULATE into the one summed budget', () => {
+  it('multiple granted redraw hooks stay PER SOURCE (49d — the 47d summed budget deliberately reversed)', () => {
     const stacked: DaemonConfig = {
       id: 'test-stack',
       name: 'Test Stack',
@@ -190,7 +204,10 @@ describe('resolveTurnGrants', () => {
       rules: [redrawHook(undefined, 2), redrawHook(undefined, 6)],
     };
     const { grants } = resolveTurnGrants([stacked], new RNG(7));
-    expect(grants.redraw).toEqual({ enabled: true, redrawsPerTurn: 2, maxCardsPerTurn: 8 });
+    expect(grants.map((g) => g.effect)).toEqual([
+      { kind: 'redraw', budget: 1, maxCards: 2 },
+      { kind: 'redraw', budget: 1, maxCards: 6 },
+    ]);
   });
 
   it('granted empower hooks stay PER SOURCE (the 47d per-idol model)', () => {
@@ -207,8 +224,8 @@ describe('resolveTurnGrants', () => {
       rules: [empowerHook(undefined)],
     };
     const { grants } = resolveTurnGrants([marsLike, minervaLike], new RNG(7));
-    expect(grants.empowers.map((g) => g.daemonId)).toEqual(['idol-a', 'idol-b']);
-    expect(grants.empowers.map((g) => g.empowersPerTurn)).toEqual([1, 1]);
+    expect(grants.map((g) => g.daemonId)).toEqual(['idol-a', 'idol-b']);
+    expect(grants.map((g) => g.effect.budget)).toEqual([1, 1]);
   });
 
   it('granted instant ops collect into `instants` in walk order, still costing no draw (47e)', () => {
@@ -225,8 +242,8 @@ describe('resolveTurnGrants', () => {
     const rng = new RNG(7);
     const before = rng.toJSON();
     const { grants, instants } = resolveTurnGrants([withInstant], rng);
-    expect(grants.redraw.enabled).toBe(true);
-    expect(grants.empowers).toEqual([]);
+    // Instant ops never join the queue — only the redraw grant does.
+    expect(grants.map((g) => g.effect.kind)).toEqual(['redraw']);
     expect(instants).toEqual([
       { op: 'gainBits', amount: 5 },
       { op: 'healPool', amount: 3 },
@@ -247,6 +264,47 @@ describe('resolveTurnGrants', () => {
       const flip = new RNG(seed).next() < 0.5;
       expect(instants.length === 1).toBe(flip);
     }
+  });
+});
+
+describe('activeGrantIndex / grantViews (49d — the queue cursor)', () => {
+  const entry = (daemonId: string, used = 0, passed = false): TurnGrants[number] => ({
+    daemonId,
+    effect: { kind: 'redraw', budget: 1, maxCards: 2 },
+    used,
+    passed,
+  });
+
+  it('the cursor is the first entry with budget left and no pass mark', () => {
+    expect(activeGrantIndex([])).toBeNull();
+    expect(activeGrantIndex([entry('a'), entry('b')])).toBe(0);
+    expect(activeGrantIndex([entry('a', 1), entry('b')])).toBe(1); // exhausted skips
+    expect(activeGrantIndex([entry('a', 0, true), entry('b')])).toBe(1); // passed skips
+    expect(activeGrantIndex([entry('a', 1), entry('b', 0, true)])).toBeNull(); // spent queue
+  });
+
+  it('grantViews carries index/remaining/active and resolves names via the lookup', () => {
+    const views = grantViews([entry('a', 1), entry('b')], (id) => id.toUpperCase());
+    expect(views).toEqual([
+      {
+        grantIndex: 0,
+        daemonId: 'a',
+        name: 'A',
+        effect: { kind: 'redraw', budget: 1, maxCards: 2 },
+        remaining: 0,
+        passed: false,
+        active: false,
+      },
+      {
+        grantIndex: 1,
+        daemonId: 'b',
+        name: 'B',
+        effect: { kind: 'redraw', budget: 1, maxCards: 2 },
+        remaining: 1,
+        passed: false,
+        active: true,
+      },
+    ]);
   });
 });
 

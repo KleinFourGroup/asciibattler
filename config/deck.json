@@ -4,5 +4,8 @@
     "enabled": false,
     "redrawsPerTurn": 1,
     "maxCardsPerTurn": 6
+  },
+  "grantQueue": {
+    "passIsFinal": false
   }
 }

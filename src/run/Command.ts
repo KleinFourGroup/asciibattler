@@ -70,31 +70,43 @@ export type RunCommand =
    * K3 — redraw selected hand cards at the pre-turn gate: send them to the
    * discard, draw that many fresh (the deck's normal reshuffle cycle applies).
    * `handIndices` are positions into the current hand (not roster indices).
-   * Only valid in `turn-intro` and within this turn's daemon-resolved budget
-   * (`Run.turnGrants.redraw`: `redrawsPerTurn` actions / `maxCardsPerTurn`
-   * cards; no grant → always rejected) — anything else is a silent no-op that
+   * 49d: `grantIndex` targets ONE redraw grant in the turn's queue (per-
+   * source now — the 47d summed budget is retired); under the strict
+   * finality mode it must be the ACTIVE grant. Only valid in `turn-intro`
+   * within that grant's budget — anything else is a silent no-op that
    * consumes no budget. The redrawn hand re-emits via `turn:handRedrawn`.
    */
-  | { readonly kind: 'redrawCards'; readonly handIndices: readonly number[] }
+  | {
+      readonly kind: 'redrawCards';
+      readonly handIndices: readonly number[];
+      readonly grantIndex: number;
+    }
   /**
    * K4 — empower one drawn card at the pre-turn gate: its roster slot gains
-   * the active daemon's buff (`Run.turnGrants.empower.buff`; no grant →
-   * always rejected) for the rest of the ENCOUNTER (the K1
+   * the granting source's buff for the rest of the ENCOUNTER (the K1
    * encounter-effect store — re-seeded onto the unit each turn at deploy, so
    * it survives being redrawn away or benched). `handIndex` is a position
    * into the current hand (not a roster index), same contract as
-   * `redrawCards`. Only valid in `turn-intro` within the `empowersPerTurn`
-   * budget — anything else is a silent no-op that consumes no budget. Emits
+   * `redrawCards`. Only valid in `turn-intro` within the grant's budget —
+   * anything else is a silent no-op that consumes no budget. Emits
    * `turn:unitEmpowered`.
    */
   | {
       readonly kind: 'empowerUnit';
       readonly handIndex: number;
-      /** 47d — which granted idol's blessing (an index into this turn's
-       *  `Run.empowerGrants` / `turnGrants.empowers`). Out-of-range = the
-       *  usual silent no-op. */
+      /** 47d→49d — which grant (an index into the turn's grant QUEUE —
+       *  `Run.grantViews()`); strict mode requires the active one.
+       *  Out-of-range / wrong-kind = the usual silent no-op. */
       readonly grantIndex: number;
     }
+  /**
+   * 49d — finalize the ACTIVE grant unspent (the guided strip's Pass).
+   * Engine-enforced finality (the §49 shape-lock): meaningful only under
+   * `deck.json#grantQueue.passIsFinal` — free mode is a deliberate no-op.
+   * No index: it always finalizes the derived cursor (first pending grant).
+   * Emits `turn:grantPassed`.
+   */
+  | { readonly kind: 'passGrant' }
   /**
    * 49b — discard one cache slot (`cacheIndex` into `Run.cache`): the
    * at-will discard (spec §Cache) and the instrument of the 49f forced-keep

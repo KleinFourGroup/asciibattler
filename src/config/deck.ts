@@ -39,6 +39,18 @@
  *                        block stays as the `RedrawConfig` type anchor the
  *                        daemon grants resolve into.
  *
+ * 49d — `grantQueue`: the pre-turn grant-queue rules (the §49 fire-UX
+ * shape-lock). `passIsFinal` = the finality toggle: ON, grants resolve in
+ * strict acquisition order — only the ACTIVE (first pending) grant may fire,
+ * and `passGrant` finalizes it; OFF, any pending grant may fire in any order
+ * and `passGrant` is a no-op (the loosened mode the shape-lock reserved for
+ * "not fun" feedback). ⚠ SHIPS `false` until 49f: the strict default is the
+ * LOCKED design, but the current pre-turn screen can't express a queue — the
+ * guided strip (49f) flips this to `true` in the same commit it becomes
+ * renderable (the H4a/H4b headless-core-first discipline). Engine-enforced
+ * (headless↔rendered fidelity + the coming save/load interstitial — worklog
+ * §49 kickoff); `RunConfig.passIsFinal` overrides per run for tests/fuzz.
+ *
  * Balance-tuned in H6, decoupled in K2 — a starting point, re-swept in N2.
  * Source of truth at `config/deck.json`.
  */
@@ -52,6 +64,9 @@ const DeckSchema = z.object({
     enabled: z.boolean(),
     redrawsPerTurn: z.number().int().nonnegative(),
     maxCardsPerTurn: z.number().int().nonnegative(),
+  }),
+  grantQueue: z.object({
+    passIsFinal: z.boolean(),
   }),
 });
 

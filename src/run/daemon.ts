@@ -10,11 +10,11 @@
  *
  * 47c re-authored the Phase-L gate model into the rule vocabulary
  * (`config/daemons.ts` — `Rule = modifier | hook`): a turn's redraw/empower
- * availability IS the fold of the daemon's granted `turnStart` grant hooks —
- * `resolveTurnGrants` returns disabled configs for anything not granted, and
- * the K3/K4 pure validators consume the result unchanged. The roguelite
- * variance is the point: a run's idol defines which pre-turn tools exist at
- * all.
+ * availability IS the fold of the daemon's granted `turnStart` grant hooks.
+ * 49d re-modeled the resolution into THE GRANT QUEUE (`TurnGrant[]`, one
+ * entry per granted hook in walk order) — the strict-mode ordering surface
+ * of the §49 fire-UX shape-lock. The roguelite variance is the point: a
+ * run's idol defines which pre-turn tools exist at all.
  *
  * 47e — instant (non-grant) run-domain ops. A granted `turnStart`
  * `gainBits`/`healPool` hook rides the SAME walk as the grants (its coin
@@ -38,40 +38,86 @@
 import { TRIGGER_DOMAIN, type DaemonConfig, type EffectOp, type HookRule } from '../config/daemons';
 import type { EmpowerConfig } from '../config/empower';
 import type { RNG } from '../core/RNG';
-import type { RedrawConfig } from './redraw';
 import type { BattleRule, BattleRuleTrigger } from '../sim/battleRules';
 
 /** 47e — the instant (non-grant) run-domain ops a hook can carry: executed
  *  at the trigger fire site the moment they resolve, never serialized. */
 export type InstantOp = Extract<EffectOp, { op: 'gainBits' } | { op: 'healPool' }>;
 
-/** One granted empower source this turn (47d — the per-idol model: the
- *  player picks WHICH idol's blessing goes on which card, so each granted
- *  `grantEmpowers` hook keeps its own budget + buff instead of folding into
- *  one config). `daemonId` labels the control + matches the chance-denied
- *  banner state in the pre-turn screen. */
-export interface EmpowerGrant {
+/** 49d — one grant's effect in the queue. Budgets unify onto `budget`
+ *  (actions from this grant); redraw carries its per-action card cap,
+ *  empower its buff. */
+export type GrantEffect =
+  | { kind: 'redraw'; budget: number; maxCards: number }
+  | { kind: 'empower'; budget: number; buff: EmpowerConfig['buff'] };
+
+/**
+ * 49d — one granted pre-turn tool: an entry in the ORDERED grant queue (the
+ * §49 fire-UX shape-lock — this re-models 47d's `{redraw, empowers}` split
+ * and deliberately REVERSES the "redraw stays one summed budget" call:
+ * every grant is per-source and packet-shaped). `used`/`passed` are ENGINE
+ * state, serialized (v32): `used` counts actions consumed; `passed` is the
+ * strict-mode finality mark (`passGrant` — free mode never sets it).
+ * `daemonId` names the source (49e packet fires push their own entries).
+ */
+export interface TurnGrant {
   daemonId: string;
-  empowersPerTurn: number;
-  buff: EmpowerConfig['buff'];
+  effect: GrantEffect;
+  used: number;
+  passed: boolean;
 }
 
-/** This turn's resolved pre-turn grants. Redraw stays ONE summed budget
- *  (redraws have no identity — the K3 validator eats the accumulated config);
- *  empowers are per-source (`EmpowerGrant[]`, empty = none granted).
- *  Round-trips in the Run save (v26, née `turnGates` v16): a save taken at
- *  the pre-turn gate must restore the SAME Mercury flip, never re-roll it. */
-export interface TurnGrants {
-  redraw: RedrawConfig;
-  empowers: EmpowerGrant[];
-}
+/** 49d — the queue IS the turn's grants (ownership order, rules in authored
+ *  order within each idol — the resolve walk order). Round-trips in the Run
+ *  save: a save at the gate restores the same flips AND the same cursor. */
+export type TurnGrants = TurnGrant[];
 
-/** The no-grant baseline: redraw disabled, no empower sources. */
+/** The no-grant baseline: an empty queue. */
 export function disabledTurnGrants(): TurnGrants {
-  return {
-    redraw: { enabled: false, redrawsPerTurn: 0, maxCardsPerTurn: 0 },
-    empowers: [],
-  };
+  return [];
+}
+
+/** 49d — the queue cursor: the first grant still pending (not passed, budget
+ *  left), or null when the queue is spent. DERIVED, never serialized —
+ *  recomputes from the entries (derive-don't-cache). */
+export function activeGrantIndex(grants: TurnGrants): number | null {
+  for (let i = 0; i < grants.length; i++) {
+    const grant = grants[i]!;
+    if (!grant.passed && grant.used < grant.effect.budget) return i;
+  }
+  return null;
+}
+
+/** 49d — one grant as the UI/fuzz payloads carry it (`turn:starting` etc.):
+ *  the queue entry plus its index (the command key), remaining budget, and
+ *  the derived cursor flag. */
+export interface TurnGrantView {
+  grantIndex: number;
+  daemonId: string;
+  name: string;
+  effect: GrantEffect;
+  remaining: number;
+  passed: boolean;
+  active: boolean;
+}
+
+/** Build the payload views (pure — the name lookup is injected). `active`
+ *  marks the cursor in BOTH modes; strict mode enforces it, free mode may
+ *  merely highlight it. */
+export function grantViews(
+  grants: TurnGrants,
+  nameOf: (daemonId: string) => string,
+): TurnGrantView[] {
+  const cursor = activeGrantIndex(grants);
+  return grants.map((grant, grantIndex) => ({
+    grantIndex,
+    daemonId: grant.daemonId,
+    name: nameOf(grant.daemonId),
+    effect: grant.effect,
+    remaining: Math.max(0, grant.effect.budget - grant.used),
+    passed: grant.passed,
+    active: grantIndex === cursor,
+  }));
 }
 
 /** 47e — one turn-start walk's full result: the serialized grants (round-trip
@@ -133,23 +179,25 @@ export function daemonEmpowerHook(
 /**
  * Resolve one turn's grants + granted instant ops from the owned daemons'
  * `turnStart` hooks. An empty list (a daemon-less run — the fuzz control
- * arm) resolves to all-disabled with no RNG draw. Daemons evaluate in
+ * arm) resolves to an empty queue with no RNG draw. Daemons evaluate in
  * OWNERSHIP order, rules in authored order within each — the fixed
- * draw-order discipline. A granted `grantRedraws` ACCUMULATES onto the one
- * redraw config (budgets sum); a granted `grantEmpowers` PUSHES its own
- * `EmpowerGrant` (47d — per-idol empowers, the player picks which blessing
- * lands where); a granted instant op (`gainBits`/`healPool`) collects into
- * `instants` for the caller to execute at the fire site (47e — the coin
- * flip happens HERE, in the one walk; see the module header). Buffs are
- * carried by REFERENCE (safe: nothing mutates a buff — `empowerEffect`
- * deep-copies mods at apply time, and `turnGrants` is reassigned whole each
- * turn).
+ * draw-order discipline, and (49d) the queue order the strict mode
+ * enforces: EVERY granted hook pushes its own `TurnGrant` entry (the §49
+ * per-source re-model — a granted `grantRedraws` no longer sums onto one
+ * config; Mercury and Janus each prompt their own redraw). A granted
+ * instant op (`gainBits`/`healPool`) collects into `instants` for the
+ * caller to execute at the fire site (47e — the coin flip happens HERE, in
+ * the one walk; see the module header). The DRAW COUNT is byte-identical
+ * to the 47d walk — only the accumulation changed. Buffs are carried by
+ * REFERENCE (safe: nothing mutates a buff — `empowerEffect` deep-copies
+ * mods at apply time; the queue entries' `used`/`passed` mutate, the buffs
+ * never do).
  */
 export function resolveTurnGrants(
   daemons: readonly DaemonConfig[],
   rng: RNG,
 ): TurnStartResolution {
-  const grants = disabledTurnGrants();
+  const grants: TurnGrants = [];
   const instants: InstantOp[] = [];
   for (const daemon of daemons) {
     for (const hook of turnStartHooks(daemon)) {
@@ -158,17 +206,27 @@ export function resolveTurnGrants(
       if (!granted(hook.chance, rng)) continue;
       switch (hook.effect.op) {
         case 'grantRedraws':
-          grants.redraw = {
-            enabled: true,
-            redrawsPerTurn: grants.redraw.redrawsPerTurn + hook.effect.redrawsPerTurn,
-            maxCardsPerTurn: grants.redraw.maxCardsPerTurn + hook.effect.maxCardsPerTurn,
-          };
+          grants.push({
+            daemonId: daemon.id,
+            effect: {
+              kind: 'redraw',
+              budget: hook.effect.redrawsPerTurn,
+              maxCards: hook.effect.maxCardsPerTurn,
+            },
+            used: 0,
+            passed: false,
+          });
           break;
         case 'grantEmpowers':
-          grants.empowers.push({
+          grants.push({
             daemonId: daemon.id,
-            empowersPerTurn: hook.effect.empowersPerTurn,
-            buff: hook.effect.buff,
+            effect: {
+              kind: 'empower',
+              budget: hook.effect.empowersPerTurn,
+              buff: hook.effect.buff,
+            },
+            used: 0,
+            passed: false,
           });
           break;
         case 'gainBits':

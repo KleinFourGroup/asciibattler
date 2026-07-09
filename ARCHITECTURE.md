@@ -179,14 +179,16 @@ src/
                              # the turn gate AHEAD of promotion; pendingRewards serializes BASE amounts and
                              # effectiveBits (base × bitsGain fold × 48f bitsMultiplier, one rounding) is the
                              # SHARED display/settle helper. Live version: HANDOFF 🧭
-    redraw.ts                # K3: pure redraw rules — redrawRejection / redrawAvailability (config injected, both L modes provable)
-    empower.ts               # K4: pure empower rules — empowerRejection / empowerAvailability / empowerEffect (config injected)
-    daemon.ts                # L1→47f: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
-                             # (owned daemons' turnStart grant hooks → ONE summed RedrawConfig + PER-SOURCE
-                             # EmpowerGrant[] + this turn's granted InstantOps; ownership-then-rule-order draws,
-                             # chance draws only when 0<c<1) + resolveInstantHooks (encounterStart/encounterEnd,
-                             # filter-gates-before-chance) + battleRulesFor (47f: compiles battle-domain hooks →
-                             # sim BattleRule[] data, riding BattleEncounter) + daemonRedrawHook/daemonEmpowerHook
+    redraw.ts                # K3→49d: pure redraw rules against ONE grant entry — redrawRejection / redrawAvailability (RedrawGrantState: used/budget/maxCards-per-ACTION)
+    empower.ts               # K4→49d: pure empower rules against ONE grant entry — empowerRejection / empowerAvailability / empowerEffect(buff)
+    daemon.ts                # L1→49d: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
+                             # (owned daemons' turnStart grant hooks → THE GRANT QUEUE: TurnGrant[] per-source in
+                             # walk order, each {daemonId; effect(kind/budget/maxCards|buff); used; passed} +
+                             # this turn's granted InstantOps; ownership-then-rule-order draws, chance draws only
+                             # when 0<c<1) + activeGrantIndex/grantViews (the DERIVED cursor + payload views) +
+                             # resolveInstantHooks (encounterStart/encounterEnd, filter-gates-before-chance) +
+                             # battleRulesFor (47f: compiles battle-domain hooks → sim BattleRule[] data, riding
+                             # BattleEncounter) + daemonRedrawHook/daemonEmpowerHook
     runStats.ts              # 47a: the run-stat vocabulary — RunStatKey (bitsGain, cacheSize) + foldRunStats
                              # (foldEffects mirrored: adds→mults, identity-on-empty; NO rounding — read site rounds)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
@@ -479,10 +481,11 @@ reward:offered          { rewards: readonly RewardPortion[] }                   
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
 objective:set           { team; objective: TeamObjective }                          # O1: a team set/replaced its steering objective (marker tracks player only)
 objective:cleared       { team }                                                    # O1: a team reverted to atWill (explicit, or engage-target died)
-turn:starting           { turn; hop; pools; hand; drawPile; discardPile; redraw; empowers; empowerMagnitudes; daemons; map }  # H4b/H5b/K3/K3.5/K4/L1/R2/47d: pre-turn gate cue (gated only); hand + the other two piles (R2, recruitment order) + the summed redraw budget + PER-SOURCE empower grants [{daemonId;name;empowersRemaining;buff}] + per-card empower stacks + the OWNED daemons [{id;name;description;redrawGate;empowerGate}] + the ENCOUNTER's map
+turn:starting           { turn; hop; pools; hand; drawPile; discardPile; grants; empowerMagnitudes; daemons; map }  # H4b/H5b/K3/K3.5/K4/L1/R2/49d: pre-turn gate cue (gated only); hand + the other two piles (R2, recruitment order) + the GRANT QUEUE (TurnGrantView[] — per-source redraw+empower in acquisition order, `active` = the cursor) + per-card empower stacks + the OWNED daemons [{id;name;description;redrawGate;empowerGate}] + the ENCOUNTER's map
 turn:resolved           { turn; winner; pool chips; result; pools }                 # H4b: post-turn outcome cue (gated path only)
-turn:handRedrawn        { hand; drawPile; discardPile; redraw; empowerMagnitudes }  # K3: a redrawCards command landed — full new hand + decremented budget (K4: + re-derived badge column; R2: + refreshed draw/discard piles)
-turn:unitEmpowered      { handIndex; empowers; empowerMagnitudes }                  # K4/47d: an empowerUnit command landed — the full per-source grant list + per-card empower stacks
+turn:handRedrawn        { hand; drawPile; discardPile; grants; empowerMagnitudes }  # K3/49d: a redrawCards command landed — full new hand + the re-derived queue (K4: + re-derived badge column; R2: + refreshed draw/discard piles)
+turn:unitEmpowered      { handIndex; grants; empowerMagnitudes }                    # K4/49d: an empowerUnit command landed — the re-derived queue + per-card empower stacks
+turn:grantPassed        { grants }                                                  # 49d: a passGrant finalized the active grant (strict finality mode only) — the re-derived queue for the strip's auto-arm
 ```
 
 `action:phase` (F2): every action declares an ordered phase timeline (`windup → release → travel → impact → recovery`, all optional/zero-length); `World.tick` fires this event at each boundary that begins on a tick (zero-length phases share one), and runs the action's effect (`applyEffect`) at `impact`. It carries no damage — that still rides `unit:attacked` / `unit:healed`. Renderer-only consumer (F3/F4). The "target died mid-flight" handling is a declared per-action `OrphanPolicy` (`commit-at-cast` / `fizzle` / `ground-target` / `re-home`).
@@ -502,8 +505,9 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   acceptReward            { index: number }   # 48b: accept ONE pending reward portion (bits settle via gainBits; a daemon joins ownership immediately)
   declineReward           { index: number }   # 48b: decline ONE pending reward portion (declinable-per-portion, passRecruit's sibling)
   advanceTurn             { }     # H4b: resume from a turn gate (pre/post-turn screen)
-  redrawCards             { handIndices: number[] }   # K3: redraw selected hand positions at the pre-turn gate (47c: budget = the rule-resolved turnGrants.redraw, ONE summed config)
-  empowerUnit             { handIndex: number; grantIndex: number }   # K4/47d: buff one drawn card for the rest of the encounter with the CHOSEN idol's blessing (grantIndex → turnGrants.empowers[i], per-source budgets)
+  redrawCards             { handIndices: number[]; grantIndex: number }   # K3/49d: redraw selected hand positions at the pre-turn gate; grantIndex targets ONE redraw grant in the queue (per-source — the 47d summed budget retired; strict mode requires the ACTIVE grant)
+  empowerUnit             { handIndex: number; grantIndex: number }   # K4/49d: buff one drawn card for the rest of the encounter (grantIndex → the grant QUEUE; strict mode requires the active grant)
+  passGrant               { }     # 49d: finalize the ACTIVE grant unspent (the strip's Pass) — engine-enforced finality; a no-op with passIsFinal off
   discardPacket           { cacheIndex: number }   # 49b: drop one cache slot (at-will + the forced-keep shrink instrument); ANY phase — pure run-level state
   resetRun                { }
 

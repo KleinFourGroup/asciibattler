@@ -2,64 +2,69 @@
  * K3 — the pure redraw rules: validation + availability math for the pre-turn
  * redraw (select drawn cards → discard them → draw that many fresh).
  *
- * Pulled out of `Run` so both config MODES are provable in isolation (the
- * config is a parameter, not the `DECK` singleton): the shipped "one batch per
- * turn" default (`redrawsPerTurn 1`, `maxCardsPerTurn` = hand size) and the
- * "N cards per turn" alternative (`redrawsPerTurn` raised, `maxCardsPerTurn`
- * lowered) that Phase L's daemons will switch between. `Run.handleRedrawCards`
- * is a thin caller at the `DECK.redraw` defaults.
+ * Pulled out of `Run` so the modes are provable in isolation. 49d re-modeled
+ * the input from the old summed per-turn config + counters to ONE GRANT
+ * QUEUE ENTRY (`RedrawGrantState` — a `TurnGrant` redraw effect flattened
+ * with its `used` count): each granted idol prompts its own redraw now (the
+ * §49 per-source shape-lock), so the budget semantics moved with it —
+ * `budget` redraw ACTIONS on this grant, each swapping up to `maxCards`
+ * cards PER ACTION (the old model capped cards per TURN across actions;
+ * content-invisible — every shipped grant is single-action). Existence is
+ * availability: a hook that didn't grant this turn simply has no queue
+ * entry, so the K3-era `enabled` gate is gone. `Run.handleRedrawCards` is a
+ * thin caller.
  */
 
 import type { DeckConfig } from '../config/deck';
 
+/** The deck-config anchor (the daemon-less baseline + the authored
+ *  `grantRedraws` op shape). Grants resolve OUT of this shape into queue
+ *  entries at `resolveTurnGrants`. */
 export type RedrawConfig = DeckConfig['redraw'];
 
-/** Per-turn redraw bookkeeping, reset at every turn start (`startNextTurn`).
- *  Both counters round-trip in the Run save (v13) — a save taken at the
- *  pre-turn gate after a redraw must not refresh the budget on load. */
-export interface RedrawTurnState {
-  /** Redraw ACTIONS taken this turn (vs `cfg.redrawsPerTurn`). */
-  redrawsUsed: number;
-  /** Total CARDS redrawn this turn (vs `cfg.maxCardsPerTurn`). */
-  cardsRedrawn: number;
+/** 49d — one redraw grant's live state, as the validator reads it (a
+ *  `TurnGrant` with `effect.kind === 'redraw'`, flattened). */
+export interface RedrawGrantState {
+  /** Actions consumed from this grant (`TurnGrant.used`). */
+  used: number;
+  /** Actions this grant carries (`effect.budget`). */
+  budget: number;
+  /** Cards swappable PER ACTION (`effect.maxCards`). */
+  maxCards: number;
 }
 
-/** What the pre-turn screen needs to render the control: actions + cards
- *  still available this turn. Disabled config reads as 0/0. */
+/** What a redraw control renders: actions left on this grant + the per-
+ *  action card cap (0/0 once the grant is spent). */
 export interface RedrawAvailability {
   redrawsRemaining: number;
   cardsRemaining: number;
 }
 
-export function redrawAvailability(
-  state: RedrawTurnState,
-  cfg: RedrawConfig,
-): RedrawAvailability {
-  if (!cfg.enabled) return { redrawsRemaining: 0, cardsRemaining: 0 };
+export function redrawAvailability(grant: RedrawGrantState): RedrawAvailability {
+  const redrawsRemaining = Math.max(0, grant.budget - grant.used);
   return {
-    redrawsRemaining: Math.max(0, cfg.redrawsPerTurn - state.redrawsUsed),
-    cardsRemaining: Math.max(0, cfg.maxCardsPerTurn - state.cardsRedrawn),
+    redrawsRemaining,
+    cardsRemaining: redrawsRemaining > 0 ? grant.maxCards : 0,
   };
 }
 
 /**
- * Validate one redraw request: `selection` holds positions into the current
- * hand (NOT roster indices — positions are the unambiguous "which card the
- * player clicked" contract). Returns a reject reason, or `null` when the
- * redraw may proceed. A rejected request consumes NO budget (the caller
- * returns without mutating).
+ * Validate one redraw request against ONE grant: `selection` holds positions
+ * into the current hand (NOT roster indices — positions are the unambiguous
+ * "which card the player clicked" contract). Returns a reject reason, or
+ * `null` when the redraw may proceed. A rejected request consumes NO budget
+ * (the caller returns without mutating). Queue-order legality (strict mode's
+ * active-grant rule) is the CALLER's check — this validates the grant's own
+ * budget only.
  */
 export function redrawRejection(
   selection: readonly number[],
   handLength: number,
-  state: RedrawTurnState,
-  cfg: RedrawConfig,
+  grant: RedrawGrantState,
 ): string | null {
-  if (!cfg.enabled) return 'redraw disabled';
+  if (grant.used >= grant.budget) return 'no redraws left on this grant';
   if (selection.length === 0) return 'empty selection';
-  const { redrawsRemaining, cardsRemaining } = redrawAvailability(state, cfg);
-  if (redrawsRemaining <= 0) return 'no redraws left this turn';
-  if (selection.length > cardsRemaining) return 'over the card budget';
+  if (selection.length > grant.maxCards) return 'over the card cap';
   const seen = new Set<number>();
   for (const pos of selection) {
     if (!Number.isInteger(pos) || pos < 0 || pos >= handLength) {

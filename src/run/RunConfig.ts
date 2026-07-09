@@ -117,6 +117,13 @@ export interface RunConfig {
    * zero floor by the Run constructor. URL form: `bits=100`.
    */
   readonly startingBits?: number;
+  /**
+   * 49d — override the grant-queue finality toggle
+   * (`deck.json#grantQueue.passIsFinal`) for this run, so tests/fuzz can
+   * exercise BOTH modes without config edits. Programmatic-only; unset → the
+   * shipped config. Pure of RNG; NOT persisted (the X1 discipline above).
+   */
+  readonly passIsFinal?: boolean;
 }
 
 /**

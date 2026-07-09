@@ -319,6 +319,12 @@ export class Game implements RunDispatcher {
         // cache surfaces repaint off `run:cacheChanged` (no scene swap).
         this.run.dispatch(command);
         break;
+      case 'passGrant':
+        // 49d — finalize the active grant at the pre-turn gate. Same
+        // in-place pattern as redrawCards: the screen refreshes off
+        // `turn:grantPassed` (no phase change, no scene swap).
+        this.run.dispatch(command);
+        break;
       case 'resetRun':
         this.resetRun();
         break;

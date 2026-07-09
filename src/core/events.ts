@@ -17,9 +17,8 @@ import type { Team, UnitStats, UnitTemplate } from '../sim/Unit';
 import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
 import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
-import type { StatusEffect } from '../sim/statusEffects';
 import type { MoveDecisionKind } from '../sim/moveDecision';
-import type { RedrawAvailability } from '../run/redraw';
+import type { TurnGrantView } from '../run/daemon';
 import type { RewardPortion } from '../run/rewards';
 import type { Theme } from '../sim/layouts';
 import type { EncounterKind } from '../config/encounters';
@@ -398,20 +397,19 @@ export interface GameEvents extends Record<string, unknown> {
    * drawn. The hand is drawn before this fires (Run.startNextTurn), so it's
    * authoritative — the same templates `beginTurn` then sends to the World.
    *
-   * K3 — also carries `redraw`: this turn's redraw availability (actions +
-   * cards remaining, 0/0 when the config disables it), so the screen renders
-   * the redraw control without a follow-up Run query.
-   *
    * K3.5 — also carries `map`: the ENCOUNTER's battlefield (one map per
    * encounter as of K3.5, rolled at encounter start), so the redraw decision
    * is made knowing the field. Inline structural shape rather than the Run
    * `EncounterMap` type to keep core → run imports type-light (the terrain
    * seed is deliberately omitted — presentation needs name/size/theme only).
    *
-   * K4 — also carries `empower` (this turn's empower availability) +
-   * `empowerMagnitudes` (parallel to `hand`: each card's accumulated empower
-   * stack on its roster slot, 0 = unbuffed), so the screen can badge a card
-   * that was empowered on an EARLIER turn of the encounter and drawn back.
+   * K3/K4→49d — also carries `grants`: this turn's GRANT QUEUE (one view
+   * per granted idol effect in acquisition order — the §49 per-source
+   * re-model; the old summed `redraw` + `empowers` list retired with it).
+   * `active` marks the derived cursor the strict finality mode enforces.
+   * Plus `empowerMagnitudes` (parallel to `hand`: each card's accumulated
+   * empower stack on its roster slot, 0 = unbuffed), so the screen can badge
+   * a card that was empowered on an EARLIER turn and drawn back.
    */
   'turn:starting': {
     turn: number; // 1-based, within the current encounter
@@ -427,28 +425,19 @@ export interface GameEvents extends Record<string, unknown> {
      *  `hand` ∪ `drawPile` ∪ `discardPile` is the whole fielded roster. */
     drawPile: UnitTemplate[];
     discardPile: UnitTemplate[];
-    redraw: RedrawAvailability;
-    /** 47d — this turn's granted empower sources, one control per entry (the
-     *  per-idol model: each granted idol has its own budget + buff). Empty =
-     *  nothing granted (daemon-less, chance-denied, or no empower idols).
-     *  `buff` is the idol's OWN buff mods for the hint text; a command names
-     *  its source by INDEX into this list (`empowerUnit.grantIndex`). */
-    empowers: Array<{
-      daemonId: string;
-      name: string;
-      empowersRemaining: number;
-      buff: StatusEffect['mods'];
-    }>;
+    /** 49d — the grant queue views (`Run.grantViews()`): a command names its
+     *  grant by `grantIndex`; strict mode fires only the `active` one. */
+    grants: TurnGrantView[];
     /** K4 — per-hand-position empower stacks (0 = none; 47d: summed across
      *  every owned empower idol's buff key), see `turn:starting`. */
     empowerMagnitudes: number[];
     /** L1→47d — the run's OWNED daemons in acquisition order (empty =
      *  daemon-less), for the stacked pre-turn banners. Inline structural
      *  shape (the `map` convention). Per-turn grant state is NOT here — it's
-     *  what `redraw`/`empowers` already say (a denied Mercury flip reads as
-     *  0/0 / a missing `empowers` entry); `redrawGate`/`empowerGate` say
-     *  whether an idol HAS each hook at all, so the screen can tell "denied
-     *  this turn" from "this idol never grants it". */
+     *  what `grants` already says (a denied Mercury flip reads as a missing
+     *  queue entry); `redrawGate`/`empowerGate` say whether an idol HAS each
+     *  hook at all, so the screen can tell "denied this turn" from "this
+     *  idol never grants it". */
     daemons: Array<{
       id: string;
       name: string;
@@ -489,29 +478,34 @@ export interface GameEvents extends Record<string, unknown> {
      *  pre-turn pile views reflect the swap. Same contract as `turn:starting`. */
     drawPile: UnitTemplate[];
     discardPile: UnitTemplate[];
-    redraw: RedrawAvailability;
+    /** 49d — the full queue re-derived (the fired grant's budget moved,
+     *  possibly the cursor too). */
+    grants: TurnGrantView[];
     empowerMagnitudes: number[];
   };
 
   /**
    * K4 — an `empowerUnit` command landed at the pre-turn gate: the selected
    * card's roster slot gained the configured buff for the rest of the
-   * encounter. Carries the decremented availability + the full per-hand
-   * stack column (`empowerMagnitudes`, parallel to the unchanged hand) so
-   * the pre-turn screen updates its badge + control state in place. Only
-   * ever fires during `turn-intro` (the command is phase-gated).
+   * encounter. Carries the re-derived queue + the full per-hand stack column
+   * (`empowerMagnitudes`, parallel to the unchanged hand) so the pre-turn
+   * screen updates its badge + control state in place. Only ever fires
+   * during `turn-intro` (the command is phase-gated).
    */
   'turn:unitEmpowered': {
     handIndex: number;
-    /** 47d — the full per-source list (same shape as `turn:starting`), so
-     *  the screen re-renders every idol's control state in place. */
-    empowers: Array<{
-      daemonId: string;
-      name: string;
-      empowersRemaining: number;
-      buff: StatusEffect['mods'];
-    }>;
+    /** 49d — the full queue re-derived (same shape as `turn:starting`). */
+    grants: TurnGrantView[];
     empowerMagnitudes: number[];
+  };
+
+  /**
+   * 49d — a `passGrant` command finalized the active grant unspent (strict
+   * finality mode only — free mode never emits this). Carries the re-derived
+   * queue so the strip advances its auto-arm to the new cursor.
+   */
+  'turn:grantPassed': {
+    grants: TurnGrantView[];
   };
 
   /**

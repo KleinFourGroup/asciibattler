@@ -53,11 +53,7 @@ import { pickStartSector, pickNextSector, isSectorSink } from './sectorWalk';
 import { rollOffer, recruitLevelBonus } from './Recruitment';
 import { avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
-import {
-  redrawAvailability,
-  redrawRejection,
-  type RedrawAvailability,
-} from './redraw';
+import { redrawRejection } from './redraw';
 import { empowerRejection, empowerEffect } from './empower';
 import {
   rollDaemon,
@@ -67,7 +63,11 @@ import {
   disabledTurnGrants,
   daemonRedrawHook,
   daemonEmpowerHook,
+  activeGrantIndex,
+  grantViews,
+  type TurnGrant,
   type TurnGrants,
+  type TurnGrantView,
   type InstantOp,
 } from './daemon';
 import type { BattleRule } from '../sim/battleRules';
@@ -280,8 +280,14 @@ export interface BattleEncounter {
  *  49c: bumped 30→31. Packet rewards activate: the `pendingRewards` portion
  *  union gains the `packet` member (the 48b "'reward' member of `phase`"
  *  precedent — a union widening is a shape change: a v30 reader would route
- *  a packet portion down the daemon arm and throw on a phantom id). */
-const RUN_SCHEMA_VERSION = 31;
+ *  a packet portion down the daemon arm and throw on a phantom id).
+ *  49d: bumped 31→32. The grant queue: `turnGrants` re-models from the 47d
+ *  `{redraw, empowers}` split into ONE ordered `TurnGrant[]` (per-source
+ *  entries with serialized `used`/`passed`), and the three per-turn counters
+ *  (`redrawsUsedThisTurn`/`cardsRedrawnThisTurn`/`empowersUsedThisTurn`)
+ *  fold into the entries. A v31 save carries shapes this engine can't read
+ *  → reject. */
+const RUN_SCHEMA_VERSION = 32;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -336,8 +342,9 @@ export interface RunSnapshot {
    *  save/reload (the 47 shape-lock). Empty = a daemon-less run (both
    *  pre-turn tools permanently unavailable). */
   daemonIds: string[];
-  /** L1→47c: the current turn's resolved pre-turn grants (`resolveTurnGrants`
-   *  output). Persisted so a save at the gate restores the same chance flips. */
+  /** L1→49d: the current turn's grant QUEUE (`resolveTurnGrants` output +
+   *  per-entry `used`/`passed` engine state). Persisted so a save at the
+   *  gate restores the same chance flips AND the same cursor position. */
   turnGrants: TurnGrants;
   /** T2 — the run's position on the sector-selection DAG: the chosen sector
    *  (`currentSectorId` — its length/theme/layout-pool drive the active map) and
@@ -362,15 +369,6 @@ export interface RunSnapshot {
   drawPile: number[];
   discardPile: number[];
   hand: number[];
-  /** K3: redraw actions taken this turn (vs the `turnGrants.redraw` budget).
-   *  Reset at every turn start; meaningful only at the pre-turn gate. */
-  redrawsUsedThisTurn: number;
-  /** K3: total cards redrawn this turn (vs `turnGrants.redraw.maxCardsPerTurn`). */
-  cardsRedrawnThisTurn: number;
-  /** K4→47d: empower actions taken this turn PER GRANT SOURCE (parallel to
-   *  `turnGrants.empowers`). Rebuilt at every turn start; meaningful only at
-   *  the pre-turn gate. */
-  empowersUsedThisTurn: number[];
   /** 47e: the run's bits balance (integer, floored at zero — the spec §Bits
    *  substrate). Persists across the whole run like `playerHealth`. */
   bits: number;
@@ -465,11 +463,19 @@ export class Run {
    *  roll over `DAEMONS`. Daemon-only gates: these are the ONLY source of
    *  redraw/empower availability. Serialized BY ID (v26). */
   readonly daemons: DaemonConfig[];
-  /** L1→47c: the current turn's resolved pre-turn grants — re-resolved at
-   *  every turn start (`startNextTurn`, where a chance hook flips its coin),
-   *  the config the K3/K4 validators consume in place of the retired static
-   *  `DECK.redraw` / `EMPOWER` enables. Round-trips in the save (v25). */
+  /** L1→49d: the current turn's grant QUEUE — re-resolved at every turn
+   *  start (`startNextTurn`, where a chance hook flips its coin): one entry
+   *  per granted hook in walk order, each carrying its own `used`/`passed`
+   *  engine state (the §49 fire-UX shape-lock). Entries MUTATE in place as
+   *  commands land, so serialization copies them (v32). The cursor (`active`
+   *  grant) is DERIVED — `activeGrantIndex`, never stored. */
   private turnGrants: TurnGrants;
+  /** 49d — the finality toggle, resolved at construction:
+   *  `RunConfig.passIsFinal` override ?? `config/deck.json#grantQueue`. ON =
+   *  strict acquisition order (only the active grant fires; `passGrant`
+   *  finalizes); OFF = any pending grant, `passGrant` no-ops. NOT persisted
+   *  (the X1 RunConfig discipline — a rehydrate re-reads shipped config). */
+  private readonly passIsFinal: boolean;
   /** T2 — the sector-selection meta-DAG the run walks (default: the shipped
    *  `SECTOR_MAP`; a `RunConfig.sectorMap` overrides it for tests). Not
    *  persisted — a RunConfig input, reconstructable; a rehydrate resets it to
@@ -527,24 +533,6 @@ export class Run {
   drawPile: number[];
   discardPile: number[];
   hand: number[];
-  /**
-   * K3 — per-turn redraw bookkeeping: actions taken / cards redrawn this turn,
-   * checked against the `turnGrants.redraw` budget by `handleRedrawCards`.
-   * Both reset at every turn start (`startNextTurn`, BEFORE `turn:starting`
-   * fires so the payload reads a fresh budget) and round-trip in the Run save
-   * (v13) — a save at the pre-turn gate after a redraw must not refresh the
-   * budget.
-   */
-  redrawsUsedThisTurn: number;
-  cardsRedrawnThisTurn: number;
-  /**
-   * K4→47d — per-turn empower bookkeeping: actions taken this turn PER
-   * GRANT SOURCE (parallel to `turnGrants.empowers`; each granted idol has
-   * its own budget), checked by `handleEmpowerUnit`. Same lifecycle as the
-   * K3 redraw counters (rebuilt in `startNextTurn` when the grants resolve,
-   * before the `turn:starting` emit; round-trips in the Run save, v26).
-   */
-  empowersUsedThisTurn: number[];
   /**
    * 47e — the run's bits balance (the currency; spec §Bits). Integer,
    * floored at ZERO, mutated only through the private `addBits` chokepoint
@@ -710,11 +698,6 @@ export class Run {
     this.drawPile = [];
     this.discardPile = [];
     this.hand = [];
-    // K3 — redraw budget bookkeeping; meaningful only at a pre-turn gate.
-    this.redrawsUsedThisTurn = 0;
-    this.cardsRedrawnThisTurn = 0;
-    // K4 — empower budget bookkeeping; same lifecycle.
-    this.empowersUsedThisTurn = [];
     // 47e — starting bits: override ?? config/economy.json. Pure of RNG
     // (no draw), so it doesn't perturb the fork alignment; clamped so a
     // programmatic override can't start a run below the zero floor.
@@ -756,6 +739,8 @@ export class Run {
     this.rewardRng = this.rng.fork();
     this.rewardBitsRng = this.rng.fork();
     this.turnGrants = disabledTurnGrants();
+    // 49d — the finality toggle: override ?? deck.json. Pure of RNG.
+    this.passIsFinal = config?.passIsFinal ?? DECK.grantQueue.passIsFinal;
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
     // X1/48f — resolve the per-run difficulty lever (override ?? difficulty.json
@@ -826,10 +811,13 @@ export class Run {
         this.handleAdvanceTurn();
         break;
       case 'redrawCards':
-        this.handleRedrawCards(command.handIndices);
+        this.handleRedrawCards(command.handIndices, command.grantIndex);
         break;
       case 'empowerUnit':
         this.handleEmpowerUnit(command.handIndex, command.grantIndex);
+        break;
+      case 'passGrant':
+        this.handlePassGrant();
         break;
       case 'discardPacket':
         this.handleDiscardPacket(command.cacheIndex);
@@ -1026,18 +1014,13 @@ export class Run {
    */
   private startNextTurn(): void {
     this.drawTurnHand();
-    // K3 — a fresh redraw budget every turn, reset BEFORE the `turn:starting`
-    // emit below so its payload reads full availability.
-    this.redrawsUsedThisTurn = 0;
-    this.cardsRedrawnThisTurn = 0;
     // L1→47c — resolve this turn's daemon grants (the `turnStart` grant
     // hooks). A chance hook (Mercury) flips its coin off the isolated
     // `daemonRng` exactly HERE, once per turn, on both the gated + headless
-    // paths (path-independent draw count). 47d: the per-source empower
-    // counters rebuild to match this turn's grant list.
+    // paths (path-independent draw count). 49d: the resolution IS the fresh
+    // queue — per-grant `used`/`passed` start clean, so no counter resets.
     const resolution = resolveTurnGrants(this.daemons, this.daemonRng);
     this.turnGrants = resolution.grants;
-    this.empowersUsedThisTurn = this.turnGrants.empowers.map(() => 0);
     // 47e — the walk's granted instant ops (gainBits/healPool) execute NOW,
     // at the fire site — their coins already flipped in the walk above (one
     // walk, one draw; never re-resolve). Applied before the `turn:starting`
@@ -1066,9 +1049,9 @@ export class Run {
         // order; see resolvePileForDisplay).
         drawPile: this.resolvePileForDisplay(this.drawPile),
         discardPile: this.resolvePileForDisplay(this.discardPile),
-        redraw: this.redrawAvailability,
-        // 47d — one empower control per granted idol (per-source budgets).
-        empowers: this.empowerGrants,
+        // 49d — the grant queue (per-source, walk order; `active` = the
+        // cursor the strict mode enforces).
+        grants: this.grantViews(),
         empowerMagnitudes: this.empowerMagnitudes(),
         // 47d — the owned-daemon list (stacked banners). `redrawGate`/
         // `empowerGate` = "does this idol EVER grant it" (authored hooks,
@@ -1551,23 +1534,43 @@ export class Run {
   }
 
   /**
-   * K3 — this turn's remaining redraw budget (actions + cards), the shape the
-   * pre-turn screen renders. L1→47c: reads this turn's resolved grant —
-   * 0/0 when the active daemon grants no redraw this turn.
+   * 49d — the grant queue as the payloads/fuzz/UI read it: one view per
+   * queue entry (index = the command key), with remaining budget + the
+   * derived cursor flag (`active` = first pending). Derived at call time.
    */
-  get redrawAvailability(): RedrawAvailability {
-    return redrawAvailability(
-      { redrawsUsed: this.redrawsUsedThisTurn, cardsRedrawn: this.cardsRedrawnThisTurn },
-      this.turnGrants.redraw,
+  grantViews(): TurnGrantView[] {
+    return grantViews(
+      this.turnGrants,
+      (daemonId) => this.daemons.find((d) => d.id === daemonId)?.name ?? daemonId,
     );
+  }
+
+  /**
+   * 49d — the strict-mode ordering guard, shared by redraw/empower: resolve
+   * the targeted grant or null-reject. Legality: the entry exists, its
+   * effect kind matches the command, it isn't passed, and — with
+   * `passIsFinal` ON — it IS the active (first-pending) grant. Free mode
+   * accepts any pending grant in any order (the shape-lock's loosened
+   * fallback). Budget itself is the pure validators' check.
+   */
+  private targetableGrant(
+    grantIndex: number,
+    kind: TurnGrant['effect']['kind'],
+  ): TurnGrant | null {
+    const grant = this.turnGrants[grantIndex];
+    if (grant === undefined || grant.effect.kind !== kind) return null;
+    if (grant.passed) return null;
+    if (this.passIsFinal && grantIndex !== activeGrantIndex(this.turnGrants)) return null;
+    return grant;
   }
 
   /**
    * K3 — redraw selected hand cards at the pre-turn gate (the `redrawCards`
    * command): send them to the discard, draw replacements into the SAME hand
-   * positions. Validation (phase aside) lives in the pure `redrawRejection`;
-   * any reject is a silent no-op that consumes no budget (mirrors the other
-   * phase-guarded handlers).
+   * positions. 49d: the command targets ONE redraw grant (`grantIndex` into
+   * the queue — strict mode requires the active one); budget validation
+   * lives in the pure `redrawRejection`. Any reject is a silent no-op that
+   * consumes no budget (mirrors the other phase-guarded handlers).
    *
    * Order contract: positions are processed in ASCENDING hand order, so the
    * selection's click/dispatch order never changes the outcome (determinism
@@ -1581,27 +1584,27 @@ export class Run {
    * count / fatigue stack) needs no code here: `beginTurn` records only the
    * FINAL fielded hand, and this runs strictly before it.
    */
-  private handleRedrawCards(handIndices: readonly number[]): void {
+  private handleRedrawCards(handIndices: readonly number[], grantIndex: number): void {
     if (this.phase !== 'turn-intro') return;
-    const rejection = redrawRejection(
-      handIndices,
-      this.hand.length,
-      { redrawsUsed: this.redrawsUsedThisTurn, cardsRedrawn: this.cardsRedrawnThisTurn },
-      this.turnGrants.redraw,
-    );
+    const grant = this.targetableGrant(grantIndex, 'redraw');
+    if (grant === null || grant.effect.kind !== 'redraw') return;
+    const rejection = redrawRejection(handIndices, this.hand.length, {
+      used: grant.used,
+      budget: grant.effect.budget,
+      maxCards: grant.effect.maxCards,
+    });
     if (rejection !== null) return;
     const positions = [...handIndices].sort((a, b) => a - b);
     for (const pos of positions) this.discardPile.push(this.hand[pos]!);
     for (const pos of positions) this.hand[pos] = this.drawCard()!;
-    this.redrawsUsedThisTurn += 1;
-    this.cardsRedrawnThisTurn += positions.length;
+    grant.used += 1;
     this.bus.emit('turn:handRedrawn', {
       hand: this.hand.map((idx) => this.team[idx]!),
       // R2 — the redraw moved cards between hand/draw/discard; re-send the piles
       // so the pre-turn pile views reflect the swap.
       drawPile: this.resolvePileForDisplay(this.drawPile),
       discardPile: this.resolvePileForDisplay(this.discardPile),
-      redraw: this.redrawAvailability,
+      grants: this.grantViews(),
       // K4 — the refill may seat an already-empowered card (and the old
       // positions no longer line up), so the badge column re-derives here.
       empowerMagnitudes: this.empowerMagnitudes(),
@@ -1609,24 +1612,19 @@ export class Run {
   }
 
   /**
-   * K4 — this turn's remaining empower budget, the shape the pre-turn screen
-   * renders. L1→47d: one entry per idol GRANTED this turn (empty when
-   * nothing granted — daemon-less, chance-denied, or no empower idols), each
-   * with its own remaining budget + buff mods. The fuzz empower bot iterates
-   * these; `grantIndex` into this list rides the `empowerUnit` command.
+   * 49d — finalize the ACTIVE grant unspent (the `passGrant` command, the
+   * guided strip's Pass). Meaningful ONLY under `passIsFinal` — free mode is
+   * a deliberate no-op (a "pass" there is pure UI navigation; marking state
+   * would make it final by the back door). Fight ▸ needs no pass-all: the
+   * queue is rebuilt at every turn start, so unspent grants simply expire.
    */
-  get empowerGrants(): Array<{
-    daemonId: string;
-    name: string;
-    empowersRemaining: number;
-    buff: StatusEffect['mods'];
-  }> {
-    return this.turnGrants.empowers.map((grant, i) => ({
-      daemonId: grant.daemonId,
-      name: this.daemons.find((d) => d.id === grant.daemonId)?.name ?? grant.daemonId,
-      empowersRemaining: Math.max(0, grant.empowersPerTurn - (this.empowersUsedThisTurn[i] ?? 0)),
-      buff: grant.buff.mods,
-    }));
+  private handlePassGrant(): void {
+    if (this.phase !== 'turn-intro') return;
+    if (!this.passIsFinal) return;
+    const cursor = activeGrantIndex(this.turnGrants);
+    if (cursor === null) return;
+    this.turnGrants[cursor]!.passed = true;
+    this.bus.emit('turn:grantPassed', { grants: this.grantViews() });
   }
 
   /**
@@ -1667,9 +1665,8 @@ export class Run {
 
   /**
    * K4 — empower one drawn card at the pre-turn gate (the `empowerUnit`
-   * command): its roster slot gains the active daemon's buff (L1 — the
-   * resolved `turnGrants.empower.buff`) in the K1 encounter-effect store, so
-   * the buff lasts the rest of the ENCOUNTER
+   * command): its roster slot gains the granting source's buff in the K1
+   * encounter-effect store, so the buff lasts the rest of the ENCOUNTER
    * (re-seeded onto the unit each turn at deploy — `beginTurn` runs after
    * this gate, so the buff is live on the very turn it's granted). The store
    * merges by key per the buff's policy: at the shipped `merge: "add"`,
@@ -1677,29 +1674,25 @@ export class Run {
    * the mods). It lands on the SLOT, not the fielded copy, so it survives
    * the card being redrawn away or benched on later turns.
    *
-   * Validation (phase aside) lives in the pure `empowerRejection`; any
-   * reject is a silent no-op that consumes no budget (mirrors
-   * `handleRedrawCards`).
+   * 49d: `grantIndex` targets the QUEUE (strict mode requires the active
+   * grant — `targetableGrant`); budget validation lives in the pure
+   * `empowerRejection`. Any reject is a silent no-op that consumes no
+   * budget (mirrors `handleRedrawCards`).
    */
   private handleEmpowerUnit(handIndex: number, grantIndex: number): void {
     if (this.phase !== 'turn-intro') return;
-    // 47d — the command names its grant source (which idol's blessing).
-    // An out-of-range source is a silent no-op like every other reject.
-    const grant = this.turnGrants.empowers[grantIndex];
-    if (grant === undefined) return;
-    const cfg = { enabled: true, empowersPerTurn: grant.empowersPerTurn, buff: grant.buff };
-    const rejection = empowerRejection(
-      handIndex,
-      this.hand.length,
-      { empowersUsed: this.empowersUsedThisTurn[grantIndex]! },
-      cfg,
-    );
+    const grant = this.targetableGrant(grantIndex, 'empower');
+    if (grant === null || grant.effect.kind !== 'empower') return;
+    const rejection = empowerRejection(handIndex, this.hand.length, {
+      used: grant.used,
+      budget: grant.effect.budget,
+    });
     if (rejection !== null) return;
-    this.addEncounterEffect(this.hand[handIndex]!, empowerEffect(cfg));
-    this.empowersUsedThisTurn[grantIndex]! += 1;
+    this.addEncounterEffect(this.hand[handIndex]!, empowerEffect(grant.effect.buff));
+    grant.used += 1;
     this.bus.emit('turn:unitEmpowered', {
       handIndex,
-      empowers: this.empowerGrants,
+      grants: this.grantViews(),
       empowerMagnitudes: this.empowerMagnitudes(),
     });
   }
@@ -2168,11 +2161,12 @@ export class Run {
       daemonRng: this.daemonRng.toJSON(),
       rewardRng: this.rewardRng.toJSON(),
       rewardBitsRng: this.rewardBitsRng.toJSON(),
-      // 47d — daemons serialize BY ID (def-resolved on load); `turnGrants`
-      // by reference (never mutated in place — reassigned whole each turn;
-      // `empowerEffect` deep-copies the buff mods at apply time).
+      // 47d — daemons serialize BY ID (def-resolved on load). 49d: the
+      // queue's entries MUTATE in place (`used`/`passed`), so the wire image
+      // copies each entry (buffs stay by reference — never mutated;
+      // `empowerEffect` deep-copies mods at apply time).
       daemonIds: this.daemons.map((d) => d.id),
-      turnGrants: this.turnGrants,
+      turnGrants: this.turnGrants.map((g) => ({ ...g })),
       currentSectorId: this.currentSectorId,
       currentSectorNodeId: this.currentSectorNodeId,
       nodeMap: this.nodeMap,
@@ -2184,9 +2178,6 @@ export class Run {
       drawPile: this.drawPile.slice(),
       discardPile: this.discardPile.slice(),
       hand: this.hand.slice(),
-      redrawsUsedThisTurn: this.redrawsUsedThisTurn,
-      cardsRedrawnThisTurn: this.cardsRedrawnThisTurn,
-      empowersUsedThisTurn: this.empowersUsedThisTurn.slice(),
       bits: this.bits,
       cache: this.cache.slice(),
       playerHealth: this.playerHealth,
@@ -2231,6 +2222,7 @@ export class Run {
       difficultyMultipliers: DifficultyMultipliers;
       runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
       turnGrants: TurnGrants;
+      passIsFinal: boolean;
       sectorMap: SectorMap;
     };
     const m = run as unknown as Mut;
@@ -2261,7 +2253,10 @@ export class Run {
       }
       return daemon;
     });
-    m.turnGrants = snap.turnGrants;
+    // 49d — copy each queue entry (the live entries mutate in place); the
+    // finality toggle re-reads shipped config (RunConfig isn't persisted).
+    m.turnGrants = snap.turnGrants.map((g) => ({ ...g }));
+    m.passIsFinal = DECK.grantQueue.passIsFinal;
     // T2 — RunConfig (incl. a sectorMap override) isn't persisted; a restored
     // run walks the shipped DAG. The shipped DAG is a single sink, so a save is
     // never taken mid-walk of a multi-node graph — the fallback is exact.
@@ -2278,9 +2273,6 @@ export class Run {
     m.drawPile = snap.drawPile.slice();
     m.discardPile = snap.discardPile.slice();
     m.hand = snap.hand.slice();
-    m.redrawsUsedThisTurn = snap.redrawsUsedThisTurn;
-    m.cardsRedrawnThisTurn = snap.cardsRedrawnThisTurn;
-    m.empowersUsedThisTurn = snap.empowersUsedThisTurn.slice();
     // 47e — re-clamp on load: the zero floor is an invariant, not a trust
     // in the wire image (a hand-edited save can't restore a negative balance).
     m.bits = Math.max(0, snap.bits);

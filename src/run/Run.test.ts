@@ -1053,7 +1053,8 @@ describe('Run', () => {
       const pile = run.drawPile.slice();
       // Deliberately unsorted: positions refill in ASCENDING hand order
       // whatever the dispatch order, so 1 gets the pile top, 3 the next.
-      run.dispatch({ kind: 'redrawCards', handIndices: [3, 1] });
+      // (49d: K_DEFAULT_DAEMON's queue is [redraw@0, empower@1].)
+      run.dispatch({ kind: 'redrawCards', handIndices: [3, 1], grantIndex: 0 });
       expect(run.hand).toHaveLength(before.length);
       expect(run.hand[1]).toBe(pile[pile.length - 1]);
       expect(run.hand[3]).toBe(pile[pile.length - 2]);
@@ -1063,21 +1064,19 @@ describe('Run', () => {
       expect(run.discardPile).toEqual(expect.arrayContaining([before[1]!, before[3]!]));
     });
 
-    it('consumes the budget; a request past either dial is a silent no-op', () => {
+    it('consumes the grant budget; a request past it is a silent no-op (49d: per-source)', () => {
       const { run } = gatedToFirstTurnIntro(2);
-      // Burn the budget with single-card actions, bounds derived from config.
-      // After min(redrawsPerTurn, maxCardsPerTurn) one-card actions, ONE of the
-      // two dials is exhausted for any further ask — whichever is smaller.
-      const actions = Math.min(DECK.redraw.redrawsPerTurn, DECK.redraw.maxCardsPerTurn);
-      for (let i = 0; i < actions; i++) {
-        run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      // Burn the redraw grant's action budget (derived from the config dial
+      // the fixture daemon authors from).
+      const budget = DECK.redraw.redrawsPerTurn;
+      for (let i = 0; i < budget; i++) {
+        run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       }
-      expect(run.redrawsUsedThisTurn).toBe(actions);
-      expect(run.cardsRedrawnThisTurn).toBe(actions);
+      expect(run.grantViews()[0]!.remaining).toBe(0);
       const hand = run.hand.slice();
-      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       expect(run.hand).toEqual(hand);
-      expect(run.redrawsUsedThisTurn).toBe(actions);
+      expect(run.grantViews()[0]!.remaining).toBe(0);
     });
 
     it('a rejected selection consumes no budget, mutates nothing, emits nothing', () => {
@@ -1085,40 +1084,42 @@ describe('Run', () => {
       let emits = 0;
       bus.on('turn:handRedrawn', () => emits++);
       const hand = run.hand.slice();
-      run.dispatch({ kind: 'redrawCards', handIndices: [] }); // empty
-      run.dispatch({ kind: 'redrawCards', handIndices: [0, 0] }); // duplicate
-      run.dispatch({ kind: 'redrawCards', handIndices: [run.hand.length] }); // range
+      run.dispatch({ kind: 'redrawCards', handIndices: [], grantIndex: 0 }); // empty
+      run.dispatch({ kind: 'redrawCards', handIndices: [0, 0], grantIndex: 0 }); // duplicate
+      run.dispatch({ kind: 'redrawCards', handIndices: [run.hand.length], grantIndex: 0 }); // range
+      // 49d — grant-targeting rejects: the wrong KIND (index 1 is the
+      // empower grant) and an out-of-range queue index.
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 1 });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 99 });
       expect(run.hand).toEqual(hand);
-      expect(run.redrawsUsedThisTurn).toBe(0);
-      expect(run.cardsRedrawnThisTurn).toBe(0);
+      expect(run.grantViews()[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn);
       expect(emits).toBe(0);
     });
 
     it('is a no-op outside the pre-turn gate (map phase, headless battle)', () => {
       const { run } = freshRunWithBus(4, { daemon: K_DEFAULT_DAEMON });
-      run.dispatch({ kind: 'redrawCards', handIndices: [0] }); // map
-      expect(run.redrawsUsedThisTurn).toBe(0);
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 }); // map
+      expect(run.grantViews()).toEqual([]); // no turn resolved yet
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // gates off → battle
       expect(run.phase).toBe('battle');
       const hand = run.hand.slice();
-      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       expect(run.hand).toEqual(hand);
-      expect(run.redrawsUsedThisTurn).toBe(0);
+      expect(run.grantViews()[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn);
     });
 
-    it('the budget resets at the next turn', () => {
+    it('the budget resets at the next turn (a fresh queue per resolution)', () => {
       const { run, bus } = gatedToFirstTurnIntro(5);
-      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
-      expect(run.redrawsUsedThisTurn).toBe(1);
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
+      expect(run.grantViews()[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn - 1);
       run.dispatch({ kind: 'advanceTurn' }); // → battle
       chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
       run.dispatch({ kind: 'advanceTurn' }); // → next turn's gate
       expect(run.phase).toBe('turn-intro');
-      expect(run.redrawsUsedThisTurn).toBe(0);
-      expect(run.cardsRedrawnThisTurn).toBe(0);
+      expect(run.grantViews()[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn);
     });
 
-    it('turn:starting carries the fresh availability; turn:handRedrawn the new hand + decrement', () => {
+    it('turn:starting carries the fresh queue; turn:handRedrawn the new hand + decrement', () => {
       const { run, bus } = freshRunWithBus(6, { daemon: K_DEFAULT_DAEMON });
       run.pauseAtTurnGates = true;
       const startings: GameEvents['turn:starting'][] = [];
@@ -1126,16 +1127,25 @@ describe('Run', () => {
       bus.on('turn:starting', (p) => startings.push(p));
       bus.on('turn:handRedrawn', (p) => redrawns.push(p));
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      // Fresh budget straight off the fixture daemon's dials (= the config dials).
-      expect(startings[0]!.redraw).toEqual({
-        redrawsRemaining: DECK.redraw.redrawsPerTurn,
-        cardsRemaining: DECK.redraw.maxCardsPerTurn,
+      // Fresh queue straight off the fixture daemon's dials (= the config
+      // dials): redraw first (authored order), the CURSOR, then empower.
+      expect(startings[0]!.grants.map((g) => g.effect.kind)).toEqual(['redraw', 'empower']);
+      expect(startings[0]!.grants[0]).toMatchObject({
+        grantIndex: 0,
+        effect: {
+          kind: 'redraw',
+          budget: DECK.redraw.redrawsPerTurn,
+          maxCards: DECK.redraw.maxCardsPerTurn,
+        },
+        remaining: DECK.redraw.redrawsPerTurn,
+        passed: false,
+        active: true,
       });
-      run.dispatch({ kind: 'redrawCards', handIndices: [0, 2] });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0, 2], grantIndex: 0 });
       expect(redrawns).toHaveLength(1);
       expect(redrawns[0]!.hand).toEqual(run.hand.map((idx) => run.team[idx]!));
-      expect(redrawns[0]!.redraw).toEqual(run.redrawAvailability);
-      expect(redrawns[0]!.redraw.cardsRemaining).toBe(DECK.redraw.maxCardsPerTurn - 2);
+      expect(redrawns[0]!.grants).toEqual(run.grantViews());
+      expect(redrawns[0]!.grants[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn - 1);
     });
 
     it('turn:starting + turn:handRedrawn carry the draw/discard piles in recruitment order (R2)', () => {
@@ -1165,7 +1175,7 @@ describe('Run', () => {
       expect(counted).toBe(run.team.length);
 
       // A redraw shuffles cards between piles; the event re-sends them, same contract.
-      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       expect(redrawns).toHaveLength(1);
       expect(redrawns[0]!.drawPile).toEqual(inRecruitmentOrder(run.drawPile));
       expect(redrawns[0]!.discardPile).toEqual(inRecruitmentOrder(run.discardPile));
@@ -1175,7 +1185,7 @@ describe('Run', () => {
       const { run } = gatedToFirstTurnIntro(7);
       expect(run.drawPile.length).toBeGreaterThan(0); // replacement ≠ benched below
       const benched = run.hand[0]!;
-      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       const replacement = run.hand[0]!;
       expect(replacement).not.toBe(benched);
       // Still eligible to be drawn — and then counted — on a LATER turn.
@@ -1191,7 +1201,7 @@ describe('Run', () => {
         .map((_, i) => i)
         .slice(0, Math.min(run.hand.length, DECK.redraw.maxCardsPerTurn));
       expect(sel.length).toBeGreaterThan(run.drawPile.length); // forces the reshuffle
-      run.dispatch({ kind: 'redrawCards', handIndices: sel });
+      run.dispatch({ kind: 'redrawCards', handIndices: sel, grantIndex: 0 });
       expect(run.hand).toHaveLength(Math.min(DECK.handSize, run.team.length));
       expect(new Set(run.hand).size).toBe(run.hand.length);
       // hand + piles still partition the roster exactly.
@@ -1203,7 +1213,7 @@ describe('Run', () => {
       const a = gatedToFirstTurnIntro(9);
       const b = gatedToFirstTurnIntro(9);
       for (const { run } of [a, b]) {
-        run.dispatch({ kind: 'redrawCards', handIndices: [4, 0] });
+        run.dispatch({ kind: 'redrawCards', handIndices: [4, 0], grantIndex: 0 });
         run.dispatch({ kind: 'advanceTurn' });
       }
       expect(JSON.parse(JSON.stringify(a.run.toJSON()))).toEqual(
@@ -1211,18 +1221,18 @@ describe('Run', () => {
       );
     });
 
-    it('round-trips the redraw counters (a save at the gate must not refresh the budget)', () => {
+    it('round-trips the grant queue (a save at the gate must not refresh a spent budget)', () => {
       // 47d — save/reload needs a CATALOG daemon (bespoke ids hard-reject on
       // load); janus is the guaranteed-redraw idol.
       const { run } = gatedToFirstTurnIntro(10, daemonById('janus')!);
-      run.dispatch({ kind: 'redrawCards', handIndices: [1] });
+      run.dispatch({ kind: 'redrawCards', handIndices: [1], grantIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('turn-intro');
       expect(restored.hand).toEqual(run.hand);
-      expect(restored.redrawsUsedThisTurn).toBe(run.redrawsUsedThisTurn);
-      expect(restored.cardsRedrawnThisTurn).toBe(run.cardsRedrawnThisTurn);
-      expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
+      // 49d — the queue entries round-trip whole (used/passed included).
+      expect(restored.grantViews()).toEqual(run.grantViews());
+      expect(restored.grantViews()[0]!.remaining).toBe(0); // still spent
       // (The pre-K3 v12 reject rides the generic `schemaVersion - 1` test.)
     });
   });
@@ -1232,7 +1242,8 @@ describe('Run', () => {
       const { run } = gatedToFirstTurnIntro(1);
       const pos = 2;
       const slot = run.hand[pos]!;
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: pos });
+      // 49d: K_DEFAULT_DAEMON's queue is [redraw@0, empower@1].
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: pos });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
       expect(stored[0]).toEqual({
@@ -1256,19 +1267,19 @@ describe('Run', () => {
       }
     });
 
-    it('consumes the budget; a request past the dial is a silent no-op', () => {
+    it('consumes the grant budget; a request past it is a silent no-op', () => {
       const { run, bus } = gatedToFirstTurnIntro(2);
       let emits = 0;
       bus.on('turn:unitEmpowered', () => emits++);
       // Burn the budget, bound derived from config.
       for (let i = 0; i < EMPOWER.empowersPerTurn; i++) {
-        run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
+        run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0 });
       }
-      expect(run.empowersUsedThisTurn).toEqual([EMPOWER.empowersPerTurn]);
+      expect(run.grantViews()[1]!.remaining).toBe(0);
       expect(emits).toBe(EMPOWER.empowersPerTurn);
       const stored = run.encounterEffects[run.hand[0]!]!.map((e) => ({ ...e }));
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
-      expect(run.empowersUsedThisTurn).toEqual([EMPOWER.empowersPerTurn]);
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0 });
+      expect(run.grantViews()[1]!.remaining).toBe(0);
       expect(emits).toBe(EMPOWER.empowersPerTurn);
       expect(run.encounterEffects[run.hand[0]!]).toMatchObject(stored);
     });
@@ -1277,22 +1288,26 @@ describe('Run', () => {
       const { run, bus } = gatedToFirstTurnIntro(3);
       let emits = 0;
       bus.on('turn:unitEmpowered', () => emits++);
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: run.hand.length }); // range
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: -1 }); // negative
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0.5 }); // non-integer
-      expect(run.empowersUsedThisTurn).toEqual([0]);
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: run.hand.length }); // range
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: -1 }); // negative
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0.5 }); // non-integer
+      // 49d — grant-targeting rejects: the wrong KIND (index 0 is the redraw
+      // grant) and an out-of-range queue index.
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 99, handIndex: 0 });
+      expect(run.grantViews()[1]!.remaining).toBe(EMPOWER.empowersPerTurn);
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
       expect(emits).toBe(0);
     });
 
     it('is a no-op outside the pre-turn gate (map phase, headless battle)', () => {
       const { run } = freshRunWithBus(4, { daemon: K_DEFAULT_DAEMON });
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 }); // map
-      expect(run.empowersUsedThisTurn).toEqual([]); // no turn resolved yet
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0 }); // map
+      expect(run.grantViews()).toEqual([]); // no turn resolved yet
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // gates off → battle
       expect(run.phase).toBe('battle');
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
-      expect(run.empowersUsedThisTurn).toEqual([0]);
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0 });
+      expect(run.grantViews()[1]!.remaining).toBe(EMPOWER.empowersPerTurn);
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
     });
 
@@ -1305,18 +1320,18 @@ describe('Run', () => {
       bus.on('turn:starting', (p) => startings.push(p));
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       const slot = run.hand[0]!;
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0 });
       run.dispatch({ kind: 'advanceTurn' }); // → battle
       chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
       run.dispatch({ kind: 'advanceTurn' }); // → next turn's gate
       expect(run.phase).toBe('turn-intro');
-      expect(run.empowersUsedThisTurn).toEqual([0]);
+      expect(run.grantViews()[1]!.remaining).toBe(EMPOWER.empowersPerTurn); // fresh queue
       // The turn-2 pre-turn payload already badges the carried buff (the
       // "empowered on an earlier turn, drawn back" pin).
       const pos2 = run.hand.indexOf(slot);
       expect(pos2).toBeGreaterThanOrEqual(0); // short roster: always in hand
       expect(startings[1]!.empowerMagnitudes[pos2]).toBe(1);
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: pos2 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: pos2 });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
       // Expectation derived from the config merge policy (K1 magnitude math).
@@ -1329,8 +1344,8 @@ describe('Run', () => {
       const redrawns: GameEvents['turn:handRedrawn'][] = [];
       bus.on('turn:handRedrawn', (p) => redrawns.push(p));
       const benched = run.hand[0]!;
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
-      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0 });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       expect(run.hand[0]).not.toBe(benched);
       // The store keeps the buff; the badge column re-derived for the NEW hand.
       expect(run.encounterEffects[benched]!.some((e) => e.key === EMPOWER.buff.key)).toBe(true);
@@ -1340,7 +1355,7 @@ describe('Run', () => {
       expect(run.encounterEffects[benched]!.some((e) => e.key === EMPOWER.buff.key)).toBe(true);
     });
 
-    it('turn:starting carries the fresh availability; turn:unitEmpowered the decrement + badge column', () => {
+    it('turn:starting carries the fresh queue; turn:unitEmpowered the decrement + badge column', () => {
       const { run, bus } = freshRunWithBus(7, { daemon: K_DEFAULT_DAEMON });
       run.pauseAtTurnGates = true;
       const startings: GameEvents['turn:starting'][] = [];
@@ -1348,15 +1363,19 @@ describe('Run', () => {
       bus.on('turn:starting', (p) => startings.push(p));
       bus.on('turn:unitEmpowered', (p) => empowereds.push(p));
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      // Fresh budget straight off the fixture daemon's dial (= the config dial).
-      expect(startings[0]!.empowers).toHaveLength(1);
-      expect(startings[0]!.empowers[0]!.empowersRemaining).toBe(EMPOWER.empowersPerTurn);
+      // Fresh queue straight off the fixture daemon's dial (= the config dial).
+      expect(startings[0]!.grants[1]).toMatchObject({
+        grantIndex: 1,
+        effect: { kind: 'empower', budget: EMPOWER.empowersPerTurn },
+        remaining: EMPOWER.empowersPerTurn,
+        active: false, // the redraw grant at index 0 holds the cursor
+      });
       expect(startings[0]!.empowerMagnitudes).toEqual(run.hand.map(() => 0));
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 1 });
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 1 });
       expect(empowereds).toHaveLength(1);
       expect(empowereds[0]!.handIndex).toBe(1);
-      expect(empowereds[0]!.empowers).toEqual(run.empowerGrants);
-      expect(empowereds[0]!.empowers[0]!.empowersRemaining).toBe(EMPOWER.empowersPerTurn - 1);
+      expect(empowereds[0]!.grants).toEqual(run.grantViews());
+      expect(empowereds[0]!.grants[1]!.remaining).toBe(EMPOWER.empowersPerTurn - 1);
       expect(empowereds[0]!.empowerMagnitudes).toEqual(
         run.hand.map((_, i) => (i === 1 ? 1 : 0)),
       );
@@ -1366,7 +1385,7 @@ describe('Run', () => {
       const a = gatedToFirstTurnIntro(8);
       const b = gatedToFirstTurnIntro(8);
       for (const { run } of [a, b]) {
-        run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 3 });
+        run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 3 });
         run.dispatch({ kind: 'advanceTurn' });
       }
       expect(JSON.parse(JSON.stringify(a.run.toJSON()))).toEqual(
@@ -1374,16 +1393,16 @@ describe('Run', () => {
       );
     });
 
-    it('round-trips the empower counter (a save at the gate must not refresh the budget)', () => {
+    it('round-trips the spent grant (a save at the gate must not refresh the budget)', () => {
       // 47d — save/reload needs a CATALOG daemon (bespoke ids hard-reject on
-      // load); mars is the guaranteed-empower idol.
+      // load); mars is the guaranteed-empower idol (its queue = [empower@0]).
       const { run } = gatedToFirstTurnIntro(9, daemonById('mars')!);
       run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('turn-intro');
-      expect(restored.empowersUsedThisTurn).toEqual(run.empowersUsedThisTurn);
-      expect(restored.empowerGrants).toEqual(run.empowerGrants);
+      expect(restored.grantViews()).toEqual(run.grantViews());
+      expect(restored.grantViews()[0]!.remaining).toBe(0); // still spent
       // The buff itself rides the K1 v12 `encounterEffects` round-trip.
       expect(restored.encounterEffects).toEqual(run.encounterEffects);
       // (The pre-K4 v14 reject rides the generic `schemaVersion - 1` test.)
@@ -1409,16 +1428,13 @@ describe('Run', () => {
       expect(freshRunWithBus(1, { daemon: null }).run.daemons).toEqual([]);
     });
 
-    it('daemon-less: both gates read 0 at the gate and both commands are no-ops', () => {
+    it('daemon-less: an empty queue at the gate and both commands are no-ops', () => {
       const { run } = gatedToFirstTurnIntro(22, null);
-      expect(run.redrawAvailability).toEqual({ redrawsRemaining: 0, cardsRemaining: 0 });
-      expect(run.empowerGrants).toEqual([]);
+      expect(run.grantViews()).toEqual([]);
       const hand = run.hand.slice();
-      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       expect(run.hand).toEqual(hand);
-      expect(run.redrawsUsedThisTurn).toBe(0);
-      expect(run.empowersUsedThisTurn).toEqual([]);
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
     });
 
@@ -1426,10 +1442,11 @@ describe('Run', () => {
       const mars = daemonById('mars')!;
       const marsEmpower = daemonEmpowerHook(mars)!;
       const { run } = gatedToFirstTurnIntro(23, mars);
-      expect(run.empowerGrants[0]!.empowersRemaining).toBe(marsEmpower.empowersPerTurn);
-      expect(run.redrawAvailability).toEqual({ redrawsRemaining: 0, cardsRemaining: 0 });
+      // Mars's queue = [empower@0]; no redraw entry exists at all.
+      expect(run.grantViews().map((g) => g.effect.kind)).toEqual(['empower']);
+      expect(run.grantViews()[0]!.remaining).toBe(marsEmpower.empowersPerTurn);
       const hand = run.hand.slice();
-      run.dispatch({ kind: 'redrawCards', handIndices: [0] });
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 }); // wrong kind
       expect(run.hand).toEqual(hand); // no redraw under mars
       const slot = run.hand[1]!;
       run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 1 });
@@ -1456,21 +1473,27 @@ describe('Run', () => {
       const janusRedraw = daemonRedrawHook(janus)!;
       const { run } = gatedToFirstTurnIntro(25, janus);
       const cap = janusRedraw.maxCardsPerTurn;
-      expect(run.redrawAvailability).toEqual({
-        redrawsRemaining: janusRedraw.redrawsPerTurn,
-        cardsRemaining: cap,
+      expect(run.grantViews()).toHaveLength(1);
+      expect(run.grantViews()[0]!.effect).toEqual({
+        kind: 'redraw',
+        budget: janusRedraw.redrawsPerTurn,
+        maxCards: cap,
       });
-      expect(run.empowerGrants).toEqual([]);
       const hand = run.hand.slice();
       // One past the cap → silent no-op; at the cap → lands.
       run.dispatch({
         kind: 'redrawCards',
         handIndices: hand.map((_, i) => i).slice(0, cap + 1),
+        grantIndex: 0,
       });
       expect(run.hand).toEqual(hand);
-      run.dispatch({ kind: 'redrawCards', handIndices: hand.map((_, i) => i).slice(0, cap) });
-      expect(run.cardsRedrawnThisTurn).toBe(cap);
-      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
+      run.dispatch({
+        kind: 'redrawCards',
+        handIndices: hand.map((_, i) => i).slice(0, cap),
+        grantIndex: 0,
+      });
+      expect(run.grantViews()[0]!.remaining).toBe(janusRedraw.redrawsPerTurn - 1);
+      run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 }); // wrong kind
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
     });
 
@@ -1480,7 +1503,7 @@ describe('Run', () => {
         const { run, bus } = gatedToFirstTurnIntro(seed, mercury);
         const grants: boolean[] = [];
         for (let t = 0; t < 6 && run.phase === 'turn-intro'; t++) {
-          grants.push(run.redrawAvailability.redrawsRemaining > 0);
+          grants.push(run.grantViews().length > 0);
           run.dispatch({ kind: 'advanceTurn' }); // → battle
           chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
           run.dispatch({ kind: 'advanceTurn' }); // → next turn's gate
@@ -1521,18 +1544,25 @@ describe('Run', () => {
         bus.on('turn:starting', (p) => startings.push(p));
         run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
         expect(startings[0]!.daemons).toEqual(expected);
-        // 47d — the granted-empower list carries the buff + source identity.
+        // 49d — the queue view carries the buff + source identity.
         if (daemon !== null) {
-          expect(startings[0]!.empowers).toEqual([
+          expect(startings[0]!.grants).toEqual([
             {
+              grantIndex: 0,
               daemonId: mars.id,
               name: mars.name,
-              empowersRemaining: daemonEmpowerHook(mars)!.empowersPerTurn,
-              buff: daemonEmpowerHook(mars)!.buff.mods,
+              effect: {
+                kind: 'empower',
+                budget: daemonEmpowerHook(mars)!.empowersPerTurn,
+                buff: daemonEmpowerHook(mars)!.buff,
+              },
+              remaining: daemonEmpowerHook(mars)!.empowersPerTurn,
+              passed: false,
+              active: true,
             },
           ]);
         } else {
-          expect(startings[0]!.empowers).toEqual([]);
+          expect(startings[0]!.grants).toEqual([]);
         }
       }
     });
@@ -1551,7 +1581,7 @@ describe('Run', () => {
       // The save's grant state is restored, never re-flipped; the daemon
       // def-resolves back to the catalog object.
       expect(restored.daemons).toEqual(run.daemons);
-      expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
+      expect(restored.grantViews()).toEqual(run.grantViews());
       // The daemonRng round-trips: both runs flip the SAME coins forever after.
       for (const [r, b] of [
         [run, bus],
@@ -1561,7 +1591,7 @@ describe('Run', () => {
         chipTurn(b, { player: 1, enemy: 1 });
         r.dispatch({ kind: 'advanceTurn' });
       }
-      expect(restored.redrawAvailability).toEqual(run.redrawAvailability);
+      expect(restored.grantViews()).toEqual(run.grantViews());
       expect(JSON.parse(JSON.stringify(restored.toJSON()))).toEqual(
         JSON.parse(JSON.stringify(run.toJSON())),
       );
@@ -1585,17 +1615,17 @@ describe('Run', () => {
       );
     });
 
-    it('two empower idols → two per-source grants, each applying ITS buff (47d)', () => {
+    it('two empower idols → two per-source grants, each applying ITS buff (47d→49d)', () => {
       const { run, bus } = gatedToFirstTurnIntro(31, daemonById('mars')!);
       run.addDaemon(daemonById('minerva')!);
       // Acquisition lands mid-turn: this turn's grants are unchanged; the
       // list takes effect at the NEXT turn's resolution.
-      expect(run.empowerGrants.map((g) => g.daemonId)).toEqual(['mars']);
+      expect(run.grantViews().map((g) => g.daemonId)).toEqual(['mars']);
       run.dispatch({ kind: 'advanceTurn' }); // → battle
       chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
       run.dispatch({ kind: 'advanceTurn' }); // → turn 2's gate
       expect(run.phase).toBe('turn-intro');
-      expect(run.empowerGrants.map((g) => g.daemonId)).toEqual(['mars', 'minerva']);
+      expect(run.grantViews().map((g) => g.daemonId)).toEqual(['mars', 'minerva']);
       // Each grant applies ITS OWN buff, budgeted independently.
       const marsBuff = daemonEmpowerHook(daemonById('mars')!)!.buff;
       const minervaBuff = daemonEmpowerHook(daemonById('minerva')!)!.buff;
@@ -1605,10 +1635,60 @@ describe('Run', () => {
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 1 });
       expect(run.encounterEffects[slot0]!.map((e) => e.key)).toEqual([marsBuff.key]);
       expect(run.encounterEffects[slot1]!.map((e) => e.key)).toEqual([minervaBuff.key]);
-      expect(run.empowerGrants.map((g) => g.empowersRemaining)).toEqual([0, 0]);
+      expect(run.grantViews().map((g) => g.remaining)).toEqual([0, 0]);
       // A spent source rejects silently; the OTHER source's budget is its own.
       run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 2 });
       expect(run.encounterEffects[run.hand[2]!]!).toHaveLength(0);
+    });
+
+    it('strict finality (49d): only the ACTIVE grant fires; passGrant finalizes; free mode no-ops it', () => {
+      // Mars-then-Janus ownership under passIsFinal: the empower grant holds
+      // the cursor, so the redraw behind it is unreachable until it resolves.
+      const strict = gatedToFirstTurnIntro(33, daemonById('mars')!, { passIsFinal: true });
+      strict.run.addDaemon(daemonById('janus')!);
+      strict.run.dispatch({ kind: 'advanceTurn' });
+      chipTurn(strict.bus, { player: 1, enemy: 1 });
+      strict.run.dispatch({ kind: 'advanceTurn' }); // → turn 2: [empower, redraw]
+      expect(strict.run.grantViews().map((g) => g.effect.kind)).toEqual(['empower', 'redraw']);
+      expect(strict.run.grantViews()[0]!.active).toBe(true);
+      const hand = strict.run.hand.slice();
+      // Firing PAST the cursor is rejected...
+      strict.run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 1 });
+      expect(strict.run.hand).toEqual(hand);
+      // ...passing finalizes the empower (unspent, forever this turn)...
+      strict.run.dispatch({ kind: 'passGrant' });
+      expect(strict.run.grantViews()[0]!.passed).toBe(true);
+      expect(strict.run.grantViews()[1]!.active).toBe(true);
+      strict.run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
+      expect(strict.run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
+      // ...and the redraw behind it is now live.
+      strict.run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 1 });
+      expect(strict.run.hand).not.toEqual(hand);
+
+      // Free mode (the shipped default): out-of-order fires are legal and
+      // passGrant is a deliberate no-op.
+      const free = gatedToFirstTurnIntro(33, daemonById('mars')!, { passIsFinal: false });
+      free.run.addDaemon(daemonById('janus')!);
+      free.run.dispatch({ kind: 'advanceTurn' });
+      chipTurn(free.bus, { player: 1, enemy: 1 });
+      free.run.dispatch({ kind: 'advanceTurn' });
+      const freeHand = free.run.hand.slice();
+      free.run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 1 }); // past the cursor
+      expect(free.run.hand).not.toEqual(freeHand);
+      free.run.dispatch({ kind: 'passGrant' });
+      expect(free.run.grantViews()[0]!.passed).toBe(false); // no-op
+      free.run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
+      expect(free.run.encounterEffects.some((slot) => slot.length > 0)).toBe(true);
+    });
+
+    it('the pass mark round-trips: a save mid-queue restores the exact cursor (49d)', () => {
+      const { run } = gatedToFirstTurnIntro(34, daemonById('mars')!, { passIsFinal: true });
+      run.dispatch({ kind: 'passGrant' }); // finalize the lone empower grant
+      expect(run.grantViews()[0]!.passed).toBe(true);
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.grantViews()[0]!.passed).toBe(true);
+      expect(restored.grantViews()[0]!.active).toBe(false);
     });
   });
 
@@ -3168,8 +3248,9 @@ function frontierOf(run: Run): number {
 function gatedToFirstTurnIntro(
   seed: number,
   daemon: DaemonConfig | null = K_DEFAULT_DAEMON,
+  config?: RunConfig,
 ): RunHandle {
-  const handle = freshRunWithBus(seed, { daemon });
+  const handle = freshRunWithBus(seed, { daemon, ...config });
   handle.run.pauseAtTurnGates = true;
   handle.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(handle.run) });
   return handle;

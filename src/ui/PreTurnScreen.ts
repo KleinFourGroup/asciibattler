@@ -32,15 +32,20 @@
  * from the fresh `turn:starting` payload.
  *
  * 47d — multi-daemon: the banner is a STACKED list (one line per owned
- * idol), and empower is PER-SOURCE — one control per granting idol (the
- * `empowers` payload list; the `empowerUnit` command carries `grantIndex`),
- * so the player picks which blessing lands on which card. Redraw stays one
- * summed budget. A single-idol run renders exactly as before.
+ * idol), and empower is PER-SOURCE — one control per granting idol, so the
+ * player picks which blessing lands on which card.
+ *
+ * 49d — the grant QUEUE: the payload's `grants` list (one entry per granted
+ * idol effect in acquisition order, redraw included — the summed redraw
+ * budget retired with the §49 shape-lock) drives one control per entry, and
+ * every command carries `grantIndex`. This is the MECHANICAL adaptation
+ * (free-order mode — `passIsFinal` ships false): the guided chip strip with
+ * auto-arm + Pass replaces this rendering at 49f and flips the toggle on.
  */
 
 import type { GameEvents } from '../core/events';
 import type { UnitTemplate, UnitStats } from '../sim/Unit';
-import type { RedrawAvailability } from '../run/redraw';
+import type { TurnGrantView } from '../run/daemon';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { StatusEffect } from '../sim/statusEffects';
@@ -65,19 +70,18 @@ export class PreTurnScreen {
   // `updateHand` so a reopened pile view reflects a redraw.
   private drawPile: readonly UnitTemplate[] = [];
   private discardPile: readonly UnitTemplate[] = [];
-  private redraw: RedrawAvailability = { redrawsRemaining: 0, cardsRemaining: 0 };
-  // 47d — this turn's granted empower sources (one control each) and the
-  // owned-daemon list (stacked banners).
-  private empowers: GameEvents['turn:starting']['empowers'] = [];
+  // 49d — this turn's grant queue (one control per entry, queue order).
+  private grants: readonly TurnGrantView[] = [];
   private empowerMagnitudes: readonly number[] = [];
   // L1→47d — the per-turn chance-denial state, computed ONCE in `show` from
   // the FRESH `turn:starting` payload (an idol authors the hook but granted
   // nothing → denied), so a later spent budget never reads as "denied".
-  private redrawDenied = false;
+  private deniedRedrawIdols: string[] = [];
   private deniedEmpowerIdols: string[] = [];
   private readonly selected = new Set<number>();
   private handWrap: HTMLDivElement | null = null;
-  private redrawButton: HTMLButtonElement | null = null;
+  // 49d — per-redraw-grant buttons carry their own card cap.
+  private redrawButtons: Array<{ button: HTMLButtonElement; maxCards: number }> = [];
   private empowerButtons: HTMLButtonElement[] = [];
   // R1/R2 — the shared card-list affordances: roster (top-right) + draw
   // (bottom-right) + discard (bottom-left) pile views. All disposed on hide.
@@ -95,16 +99,25 @@ export class PreTurnScreen {
     this.hand = info.hand;
     this.drawPile = info.drawPile;
     this.discardPile = info.discardPile;
-    this.redraw = info.redraw;
-    this.empowers = info.empowers;
+    this.grants = info.grants;
     this.empowerMagnitudes = info.empowerMagnitudes;
-    // 47d — redraw is one summed budget: "denied" = some idol authors the
-    // hook but the fresh total is 0 (every redraw idol's coin came up cold).
-    this.redrawDenied =
-      info.daemons.some((d) => d.redrawGate) && info.redraw.redrawsRemaining === 0;
-    // 47d — empower denial is per idol: authors the hook, no grant entry.
+    // 49d — denial is per idol per hook kind: the idol authors the hook but
+    // this turn's queue holds no matching entry from it (the coin came up
+    // cold). Computed ONCE from the fresh payload — a spent grant keeps its
+    // queue entry, so it can never read as "denied".
+    this.deniedRedrawIdols = info.daemons
+      .filter(
+        (d) =>
+          d.redrawGate &&
+          !info.grants.some((g) => g.daemonId === d.id && g.effect.kind === 'redraw'),
+      )
+      .map((d) => d.name);
     this.deniedEmpowerIdols = info.daemons
-      .filter((d) => d.empowerGate && !info.empowers.some((e) => e.daemonId === d.id))
+      .filter(
+        (d) =>
+          d.empowerGate &&
+          !info.grants.some((g) => g.daemonId === d.id && g.effect.kind === 'empower'),
+      )
       .map((d) => d.name);
     this.selected.clear();
     this.container = this.render(info);
@@ -121,7 +134,7 @@ export class PreTurnScreen {
       this.container = null;
     }
     this.handWrap = null;
-    this.redrawButton = null;
+    this.redrawButtons = [];
     this.empowerButtons = [];
   }
 
@@ -139,7 +152,7 @@ export class PreTurnScreen {
     // a reopened pile view reflects it (the buttons read these at click time).
     this.drawPile = payload.drawPile;
     this.discardPile = payload.discardPile;
-    this.redraw = payload.redraw;
+    this.grants = payload.grants;
     this.empowerMagnitudes = payload.empowerMagnitudes;
     this.selected.clear();
     this.refreshHand();
@@ -148,11 +161,11 @@ export class PreTurnScreen {
   /**
    * K4 — a `turn:unitEmpowered` landed (PreTurnScene forwards it): the hand is
    * unchanged but the picked card's slot now carries the buff. Swap in the
-   * decremented budget + the new badge column; the selection clears (the pick
+   * re-derived queue + the new badge column; the selection clears (the pick
    * was consumed by the action).
    */
   updateEmpower(payload: GameEvents['turn:unitEmpowered']): void {
-    this.empowers = payload.empowers;
+    this.grants = payload.grants;
     this.empowerMagnitudes = payload.empowerMagnitudes;
     this.selected.clear();
     this.refreshHand();
@@ -273,24 +286,30 @@ export class PreTurnScreen {
     return panel;
   }
 
+  /** 49d — the queue entries still holding budget, by kind. */
+  private pendingGrants(kind: 'redraw' | 'empower'): TurnGrantView[] {
+    return this.grants.filter((g) => g.effect.kind === kind && g.remaining > 0 && !g.passed);
+  }
+
   private get canRedraw(): boolean {
-    return this.redraw.redrawsRemaining > 0 && this.redraw.cardsRemaining > 0;
+    return this.pendingGrants('redraw').length > 0;
   }
 
   private get canEmpower(): boolean {
-    return this.empowers.some((e) => e.empowersRemaining > 0);
+    return this.pendingGrants('empower').length > 0;
   }
 
   /**
    * K3/K4 — (re)build the hand block in place: label, card row (selectable
-   * while EITHER budget allows), and the redraw + empower controls. Runs at
-   * first render and after every `turn:handRedrawn` / `turn:unitEmpowered`.
+   * while EITHER budget allows), and one control per pending grant in QUEUE
+   * order (49d). Runs at first render and after every `turn:handRedrawn` /
+   * `turn:unitEmpowered`.
    */
   private refreshHand(): void {
     const wrap = this.handWrap;
     if (!wrap) return;
     wrap.replaceChildren();
-    this.redrawButton = null;
+    this.redrawButtons = [];
     this.empowerButtons = [];
 
     const label = document.createElement('div');
@@ -313,98 +332,114 @@ export class PreTurnScreen {
     });
     wrap.appendChild(cards);
 
-    // L1→47d — a control renders only for what granted this turn; a chance
-    // hook that denied (e.g. Mercury's cold coin) shows the inert line
-    // instead, naming its idol when several are owned.
-    if (this.canRedraw) wrap.appendChild(this.renderRedrawControl());
-    else if (this.redrawDenied) {
-      wrap.appendChild(renderGateDenied('the idol is silent — no redraw this turn'));
-    }
-    // 47d — one empower control per granted idol with budget left (spent
-    // sources leave nothing, same as before); one denial line per cold idol.
-    this.empowers.forEach((grant, grantIndex) => {
-      if (grant.empowersRemaining > 0) {
-        wrap.appendChild(this.renderEmpowerControl(grant, grantIndex));
+    // 49d — one control per pending grant, in QUEUE order (the acquisition
+    // order the strict mode will enforce; free mode just renders them all).
+    // A chance hook that denied (e.g. Mercury's cold coin) shows the inert
+    // line instead, naming its idol when several are owned.
+    for (const grant of this.grants) {
+      if (grant.remaining <= 0 || grant.passed) continue;
+      if (grant.effect.kind === 'redraw') {
+        wrap.appendChild(this.renderRedrawControl(grant));
+      } else {
+        wrap.appendChild(this.renderEmpowerControl(grant));
       }
-    });
+    }
+    for (const name of this.deniedRedrawIdols) {
+      wrap.appendChild(renderGateDenied(`${name} is silent — no redraw this turn`));
+    }
     for (const name of this.deniedEmpowerIdols) {
       wrap.appendChild(renderGateDenied(`${name} is silent — no empower this turn`));
     }
   }
 
-  /** L1→47d — every granting idol's buff, spelled out for the badge title
-   *  (null when nothing grants an empower this turn). */
+  /** L1→49d — every granting idol's empower buff, spelled out for the badge
+   *  title (null when nothing grants an empower this turn). */
   private get buffSummary(): string | null {
-    if (this.empowers.length === 0) return null;
-    return this.empowers.map((e) => buffModsSummary(e.buff)).join(' / ');
+    const empowers = this.grants.filter((g) => g.effect.kind === 'empower');
+    if (empowers.length === 0) return null;
+    return empowers
+      .map((g) => (g.effect.kind === 'empower' ? buffModsSummary(g.effect.buff.mods) : ''))
+      .join(' / ');
   }
 
-  /** K3/K4 — toggle a card's selection. The cap is the larger of the two
-   *  consumers' needs: the redraw card budget (only binding when
-   *  `maxCardsPerTurn` < hand size — a Phase-L daemon mode) or ONE for
-   *  empower, so a redraw-exhausted turn can still pick its empower target. */
+  /** K3/K4 — toggle a card's selection. The cap is the largest consumer's
+   *  need: the biggest pending redraw grant's card cap, or ONE for empower,
+   *  so a redraw-exhausted turn can still pick its empower target. */
   private toggleCard(pos: number, card: HTMLDivElement): void {
     if (this.selected.has(pos)) {
       this.selected.delete(pos);
       card.classList.remove('is-selected');
     } else {
-      const cap = Math.max(this.canRedraw ? this.redraw.cardsRemaining : 0, this.canEmpower ? 1 : 0);
+      const redrawCap = Math.max(
+        0,
+        ...this.pendingGrants('redraw').map((g) =>
+          g.effect.kind === 'redraw' ? g.effect.maxCards : 0,
+        ),
+      );
+      const cap = Math.max(redrawCap, this.canEmpower ? 1 : 0);
       if (this.selected.size >= cap) return;
       this.selected.add(pos);
       card.classList.add('is-selected');
     }
     this.audio.play('click');
-    this.syncRedrawButton();
+    this.syncRedrawButtons();
     this.syncEmpowerButtons();
   }
 
-  /** K3 — the Redraw button + budget hint under the card row. Only rendered
-   *  while a redraw is available this turn. */
-  private renderRedrawControl(): HTMLDivElement {
+  /** K3→49d — one Redraw button + budget hint PER pending redraw grant (the
+   *  per-source model; a single-redraw-idol run renders one control as
+   *  before, naming its idol only when several granted). */
+  private renderRedrawControl(grant: TurnGrantView): HTMLDivElement {
+    if (grant.effect.kind !== 'redraw') throw new Error('renderRedrawControl: wrong kind');
+    const { maxCards } = grant.effect;
     const row = document.createElement('div');
     row.className = 'preturn-redraw';
 
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'preturn-redraw-button';
+    button.dataset['label'] =
+      this.pendingGrants('redraw').length > 1 ? `Redraw (${grant.name})` : 'Redraw';
     button.addEventListener('click', () => {
-      if (this.selected.size === 0 || this.selected.size > this.redraw.cardsRemaining) return;
+      if (this.selected.size === 0 || this.selected.size > maxCards) return;
       this.audio.play('click');
       // No optimistic update — the authoritative new hand comes back via
       // `turn:handRedrawn` → `updateHand` (the J3 events-only pattern).
-      this.dispatcher.dispatch({ kind: 'redrawCards', handIndices: [...this.selected] });
+      this.dispatcher.dispatch({
+        kind: 'redrawCards',
+        handIndices: [...this.selected],
+        grantIndex: grant.grantIndex,
+      });
     });
-    this.redrawButton = button;
+    this.redrawButtons.push({ button, maxCards });
 
     const hint = document.createElement('div');
     hint.className = 'preturn-redraw-hint';
-    const { redrawsRemaining, cardsRemaining } = this.redraw;
     hint.textContent =
-      `swap up to ${cardsRemaining} card${cardsRemaining === 1 ? '' : 's'}` +
-      ` — ${redrawsRemaining} redraw${redrawsRemaining === 1 ? '' : 's'} left`;
+      `swap up to ${maxCards} card${maxCards === 1 ? '' : 's'}` +
+      ` — ${grant.remaining} redraw${grant.remaining === 1 ? '' : 's'} left`;
 
     row.append(button, hint);
-    this.syncRedrawButton();
+    this.syncRedrawButtons();
     return row;
   }
 
-  /** K4→47d — one Empower button + buff hint PER granting idol, the redraw
-   *  control's siblings. Only rendered while that source has budget left.
-   *  Acts on the single selected card; the hint spells out the idol's OWN
-   *  buff (payload-carried, never hardcoded) so the choice is informed. The
-   *  button names its idol only when several sources granted (a single-idol
-   *  run keeps the plain 'Empower ▲' look). */
-  private renderEmpowerControl(
-    grant: GameEvents['turn:starting']['empowers'][number],
-    grantIndex: number,
-  ): HTMLDivElement {
+  /** K4→49d — one Empower button + buff hint PER pending empower grant, the
+   *  redraw controls' sibling. Acts on the single selected card; the hint
+   *  spells out the idol's OWN buff (payload-carried, never hardcoded) so
+   *  the choice is informed. The button names its idol only when several
+   *  sources granted (a single-idol run keeps the plain 'Empower ▲' look). */
+  private renderEmpowerControl(grant: TurnGrantView): HTMLDivElement {
+    if (grant.effect.kind !== 'empower') throw new Error('renderEmpowerControl: wrong kind');
+    const { buff } = grant.effect;
     const row = document.createElement('div');
     row.className = 'preturn-redraw preturn-empower';
 
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'preturn-redraw-button preturn-empower-button';
-    button.textContent = this.empowers.length > 1 ? `Empower ▲ (${grant.name})` : 'Empower ▲';
+    button.textContent =
+      this.pendingGrants('empower').length > 1 ? `Empower ▲ (${grant.name})` : 'Empower ▲';
     button.addEventListener('click', () => {
       if (this.selected.size !== 1) return;
       this.audio.play('click');
@@ -413,7 +448,7 @@ export class PreTurnScreen {
       this.dispatcher.dispatch({
         kind: 'empowerUnit',
         handIndex: [...this.selected][0]!,
-        grantIndex,
+        grantIndex: grant.grantIndex,
       });
     });
     this.empowerButtons.push(button);
@@ -421,22 +456,22 @@ export class PreTurnScreen {
     const hint = document.createElement('div');
     hint.className = 'preturn-redraw-hint';
     hint.textContent =
-      `pick one card: ${buffModsSummary(grant.buff)} for this encounter` +
-      ` — ${grant.empowersRemaining} left`;
+      `pick one card: ${buffModsSummary(buff.mods)} for this encounter` +
+      ` — ${grant.remaining} left`;
 
     row.append(button, hint);
     this.syncEmpowerButtons();
     return row;
   }
 
-  private syncRedrawButton(): void {
-    const button = this.redrawButton;
-    if (!button) return;
-    button.textContent = `Redraw (${this.selected.size})`;
-    // Over-the-card-budget selections can exist when empower raised the cap
-    // (an L-daemon mode); the redraw ask is then invalid as a whole.
-    button.disabled =
-      this.selected.size === 0 || this.selected.size > this.redraw.cardsRemaining;
+  /** 49d — every redraw button syncs against ITS grant's card cap. */
+  private syncRedrawButtons(): void {
+    for (const { button, maxCards } of this.redrawButtons) {
+      button.textContent = `${button.dataset['label']} (${this.selected.size})`;
+      // Over-the-cap selections can exist when empower raised the cap (an
+      // L-daemon mode); the redraw ask is then invalid as a whole.
+      button.disabled = this.selected.size === 0 || this.selected.size > maxCards;
+    }
   }
 
   /** K4 — Empower wants exactly ONE card picked (every source's button). */

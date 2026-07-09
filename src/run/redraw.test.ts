@@ -1,97 +1,79 @@
 import { describe, it, expect } from 'vitest';
-import {
-  redrawAvailability,
-  redrawRejection,
-  type RedrawConfig,
-  type RedrawTurnState,
-} from './redraw';
+import { redrawAvailability, redrawRejection, type RedrawGrantState } from './redraw';
 
 /**
- * K3 — the pure redraw rules, exercised in BOTH config modes (the reason this
- * module exists outside `Run`): the shipped "one batch per turn" default and
- * the "N cards per turn" alternative Phase L's daemons will switch between.
- * The configs here are deliberately explicit literals, NOT `DECK.redraw` —
- * the mode contract must hold whatever the shipped knobs say (the Run.test.ts
+ * K3→49d — the pure redraw rules against ONE grant queue entry (the §49
+ * per-source re-model), exercised in both budget modes: the shipped
+ * single-action grant and a raised-budget alternative. The grants here are
+ * deliberately explicit literals, NOT derived from the catalog — the mode
+ * contract must hold whatever the shipped knobs say (the Run.test.ts
  * integration block covers the live config).
  */
 
-/** One batch per turn, arbitrary selection (the shipped default's shape). */
-const BATCH: RedrawConfig = { enabled: true, redrawsPerTurn: 1, maxCardsPerTurn: 6 };
-/** N cards per turn across any number of actions (the L-daemon alternative). */
-const N_CARDS: RedrawConfig = { enabled: true, redrawsPerTurn: 99, maxCardsPerTurn: 3 };
-const DISABLED: RedrawConfig = { enabled: false, redrawsPerTurn: 1, maxCardsPerTurn: 6 };
+/** One action, arbitrary selection (Mercury's full-hand shape). */
+const BATCH: RedrawGrantState = { used: 0, budget: 1, maxCards: 6 };
+/** Many actions, small per-action cap (the raised-budget alternative). */
+const N_ACTIONS: RedrawGrantState = { used: 0, budget: 99, maxCards: 3 };
 
 const HAND = 6;
-const fresh = (): RedrawTurnState => ({ redrawsUsed: 0, cardsRedrawn: 0 });
 
 describe('redrawAvailability', () => {
-  it('reads the full budget on a fresh turn', () => {
-    expect(redrawAvailability(fresh(), BATCH)).toEqual({
-      redrawsRemaining: BATCH.redrawsPerTurn,
-      cardsRemaining: BATCH.maxCardsPerTurn,
+  it('reads the full budget on a fresh grant', () => {
+    expect(redrawAvailability(BATCH)).toEqual({
+      redrawsRemaining: BATCH.budget,
+      cardsRemaining: BATCH.maxCards,
     });
   });
 
-  it('decrements per use and clamps at zero', () => {
-    expect(redrawAvailability({ redrawsUsed: 1, cardsRedrawn: 4 }, BATCH)).toEqual({
-      redrawsRemaining: 0,
-      cardsRemaining: 2,
+  it('decrements per action; a spent grant reads 0/0 (the card cap is per action)', () => {
+    expect(redrawAvailability({ ...N_ACTIONS, used: 1 })).toEqual({
+      redrawsRemaining: 98,
+      cardsRemaining: 3,
     });
-    // Over-counted state (can't happen via the handler, but the math clamps).
-    expect(redrawAvailability({ redrawsUsed: 5, cardsRedrawn: 99 }, BATCH)).toEqual({
+    expect(redrawAvailability({ ...BATCH, used: 1 })).toEqual({
       redrawsRemaining: 0,
       cardsRemaining: 0,
     });
-  });
-
-  it('disabled config reads as 0/0 regardless of the dials', () => {
-    expect(redrawAvailability(fresh(), DISABLED)).toEqual({
+    // Over-counted state (can't happen via the handler, but the math clamps).
+    expect(redrawAvailability({ ...BATCH, used: 5 })).toEqual({
       redrawsRemaining: 0,
       cardsRemaining: 0,
     });
   });
 });
 
-describe('redrawRejection — one-batch-per-turn mode', () => {
-  it('accepts any subset of the hand on the first action, including the whole hand', () => {
-    expect(redrawRejection([2], HAND, fresh(), BATCH)).toBeNull();
-    expect(redrawRejection([0, 1, 2, 3, 4, 5], HAND, fresh(), BATCH)).toBeNull();
+describe('redrawRejection — single-action grant', () => {
+  it('accepts any subset of the hand up to the cap, including the whole hand', () => {
+    expect(redrawRejection([2], HAND, BATCH)).toBeNull();
+    expect(redrawRejection([0, 1, 2, 3, 4, 5], HAND, BATCH)).toBeNull();
   });
 
-  it('rejects a second action the same turn', () => {
-    const used: RedrawTurnState = { redrawsUsed: 1, cardsRedrawn: 2 };
-    expect(redrawRejection([3], HAND, used, BATCH)).toMatch(/no redraws left/);
+  it('rejects a second action on the same grant', () => {
+    expect(redrawRejection([3], HAND, { ...BATCH, used: 1 })).toMatch(/no redraws left/);
   });
 
   it('rejects an empty selection (and it must not consume the budget)', () => {
-    expect(redrawRejection([], HAND, fresh(), BATCH)).toMatch(/empty/);
+    expect(redrawRejection([], HAND, BATCH)).toMatch(/empty/);
   });
 
   it('rejects duplicate and out-of-range hand positions', () => {
-    expect(redrawRejection([1, 1], HAND, fresh(), BATCH)).toMatch(/duplicate/);
-    expect(redrawRejection([-1], HAND, fresh(), BATCH)).toMatch(/out of range/);
-    expect(redrawRejection([HAND], HAND, fresh(), BATCH)).toMatch(/out of range/);
-    expect(redrawRejection([1.5], HAND, fresh(), BATCH)).toMatch(/out of range/);
-  });
-
-  it('rejects everything when disabled', () => {
-    expect(redrawRejection([0], HAND, fresh(), DISABLED)).toMatch(/disabled/);
+    expect(redrawRejection([1, 1], HAND, BATCH)).toMatch(/duplicate/);
+    expect(redrawRejection([-1], HAND, BATCH)).toMatch(/out of range/);
+    expect(redrawRejection([HAND], HAND, BATCH)).toMatch(/out of range/);
+    expect(redrawRejection([1.5], HAND, BATCH)).toMatch(/out of range/);
   });
 });
 
-describe('redrawRejection — N-cards-per-turn mode', () => {
-  it('allows multiple actions until the card budget runs out', () => {
-    // 3-card budget: a 2-card action, then a 1-card action — both fine...
-    expect(redrawRejection([0, 4], HAND, fresh(), N_CARDS)).toBeNull();
-    const afterTwo: RedrawTurnState = { redrawsUsed: 1, cardsRedrawn: 2 };
-    expect(redrawRejection([1], HAND, afterTwo, N_CARDS)).toBeNull();
-    // ...but a third card past the budget is rejected, whole-selection.
-    const afterThree: RedrawTurnState = { redrawsUsed: 2, cardsRedrawn: 3 };
-    expect(redrawRejection([2], HAND, afterThree, N_CARDS)).toMatch(/card budget/);
+describe('redrawRejection — raised-budget grant (per-action card cap)', () => {
+  it('allows repeat actions, each capped at maxCards (49d: per ACTION, not per turn)', () => {
+    expect(redrawRejection([0, 4], HAND, N_ACTIONS)).toBeNull();
+    // The second action gets a FRESH 3-card cap (the 49d semantic shift —
+    // the old model tracked cards-per-turn across actions).
+    expect(redrawRejection([0, 1, 2], HAND, { ...N_ACTIONS, used: 1 })).toBeNull();
   });
 
-  it('rejects a single selection bigger than the remaining card budget outright', () => {
-    // 3-card budget, 4-card ask: rejected as a whole (no partial redraw).
-    expect(redrawRejection([0, 1, 2, 3], HAND, fresh(), N_CARDS)).toMatch(/card budget/);
+  it('rejects a single selection bigger than the per-action cap outright', () => {
+    // 3-card cap, 4-card ask: rejected as a whole (no partial redraw).
+    expect(redrawRejection([0, 1, 2, 3], HAND, N_ACTIONS)).toMatch(/card cap/);
   });
 });

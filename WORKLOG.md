@@ -954,3 +954,53 @@ a packet entry samples, rides the offer, and lands in the cache.
   swap at 6/6 → one out one in, offer resolves; zero console errors).
   The shipped catalog still authors no packet entries — the loop goes
   content-live at 49g.
+
+### 49d — the grant queue (2026-07-09)
+
+The phase's core surgery: `TurnGrants` re-modeled from 47d's
+`{redraw, empowers}` split into **one ordered `TurnGrant[]`** — per
+granted hook, in the resolve walk's ownership × authored-rule order,
+each entry `{daemonId, effect(kind/budget/maxCards|buff), used,
+passed}`. **Run v31→v32** (the planned queue bump, renumbered by 49c's
+union bump); the three per-turn counters (`redrawsUsedThisTurn` /
+`cardsRedrawnThisTurn` / `empowersUsedThisTurn`) folded into the
+entries and died. Deliberate calls:
+
+- **The cursor is DERIVED, never stored** (`activeGrantIndex` = first
+  entry not passed with budget left — derive-don't-cache); only
+  `used`/`passed` serialize. A save mid-queue restores the exact
+  cursor (pinned).
+- **Draw-count parity held**: `resolveTurnGrants` walks identically —
+  only the ACCUMULATION changed (each granted `grantRedraws` pushes
+  its own entry instead of summing; the 47d reversal executed).
+- **Redraw card-cap semantics shifted per-ACTION** (was per-turn
+  across actions): each action on a grant swaps ≤ `maxCards`.
+  Content-invisible — every shipped grant is single-action; pinned in
+  redraw.test.ts as the 49d semantic note.
+- **`targetableGrant`** is the shared ordering guard: entry exists +
+  kind matches + not passed + (strict) IS the cursor. `passGrant`
+  finalizes the cursor under `passIsFinal` and **no-ops in free mode**
+  (marking state there would be finality by the back door).
+- **`passIsFinal` SHIPS `false`** (`deck.json#grantQueue` +
+  `RunConfig.passIsFinal` override): the strict default is the LOCKED
+  design, but the current pre-turn screen can't express a queue — 49f
+  flips it in the commit that renders the strip (the H4a/H4b
+  headless-core-first discipline). Both modes are headless-pinned
+  (strict: past-cursor rejects, pass-finalizes, pass round-trips;
+  free: out-of-order legal, passGrant no-op). NOT persisted (the X1
+  RunConfig discipline).
+- **Payloads re-shaped**: `turn:starting`/`turn:handRedrawn`/
+  `turn:unitEmpowered` carry `grants: TurnGrantView[]` (the old
+  `redraw` + `empowers` fields retired); new `turn:grantPassed`.
+  PreTurnScreen got the MECHANICAL adaptation (one control per
+  pending grant in queue order, per-grant card caps, per-idol denial
+  lines for BOTH kinds now) — browser-verified at :5191 (janus
+  redraw select→fire→spent, mars empower + badge, mercury cold-coin
+  denial line; zero console errors). The guided strip replaces this
+  rendering at 49f.
+- **Fuzz bots walk the queue in order** (naturally compliant under
+  both modes) and pass a declined active grant so strict mode never
+  wedges the queue; a single-daemon run makes byte-identical policy
+  draws to the pre-49d bot. The pure validators re-shaped to ONE
+  grant entry (`RedrawGrantState`/`EmpowerGrantState`); the K4-era
+  `EmpowerConfig` shim in `empowerEffect` retired (takes the buff).

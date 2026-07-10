@@ -1379,3 +1379,39 @@ the re-baseline (one behavior change, one read). +9 tests (stock
 counts/exclusion/determinism, jitter bounds, all five commands incl.
 no-op edges, round-trip + corruption, stock lifecycle); the dock
 walker hoisted to file scope for both port describes.
+
+### 50e — the PortScreen (2026-07-10)
+
+The shape-locked sectioned single screen ships (render/ui — eyeball
+policy, no tests): `PortScreen` + the thin `PortScene`
+(RewardScene shape, payload-less, reads the live `run.portStock`),
+wired via `port:entered` → scene swap — **the 50c interim auto-undock
+stub retires**. Five sections in one scroll (Units-for-hire on
+recruit-skin UnitCards with price footers / Packets / Daemons /
+Sell-packets / Crew-removal) + a viewport-PINNED Leave (never scrolls
+away). Amber commerce chrome; stock rows reuse the reward-portion
+shape; the full-cache packet buy renders the 49c swap select.
+
+Two RewardScreen disciplines carried + one extended: full re-render
+after every own dispatch (indices always true); display honesty
+(prices render the serialized slot price / the shared book helpers —
+never a re-derivation); and NEW — the screen also re-renders off
+`run:bitsChanged` + `run:cacheChanged`, because the cache MODAL stays
+usable while docked and a modal discard would otherwise stale the
+sell-row indices (selling the wrong packet — a real bug, prevented
+by subscription; `bus.on`'s returned unsubscribers dispose with the
+screen). Unaffordable buys render DISABLED not hidden (the
+shape-lock); sold slots keep their row with a SOLD badge (50d's
+flag-not-splice paying off); removal disables at last-unit.
+
+**Browser-verified at :5191 via live DOM clicks** (screenshot path
+again hit the documented rAF-throttle timeout; DOM + state evidence
+throughout): docked with a funded run → the screen rendered 5/5/2
+stock + 10 crew rows; then through the REAL buttons — packet buy
+(500→485, reroute at the book 15, SOLD badge rendered), daemon buy
+(→440, moneta joined), unit buy (→369 at the displayed jittered 71;
+team 10→11 with all three parallels at 11), sell (→376: **+7 = ⌊15 ×
+0.5⌋ RAW despite the just-bought moneta fold — the mint guard live in
+the browser**), remove (→356, team back to 10, parallels 10), Leave →
+map re-rendered standing on the `$`, stock cleared, BitsOverlay 356.
+Zero console errors.

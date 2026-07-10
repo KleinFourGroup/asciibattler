@@ -891,6 +891,203 @@ body {
   opacity: 1;
 }
 
+/* 50e — the port screen (spec §Ports; the kickoff shape-lock: ONE sectioned
+   scrolling screen). Amber commerce chrome (the $ node / bits hue); stock
+   rows reuse the reward-portion shape; unit slots wrap recruit-skin cards
+   with a price footer. */
+
+.port-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 24px 60px;
+  overflow-y: auto;
+  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+}
+
+.port-heading {
+  color: #ffb000; /* TERMINAL_AMBER — commerce */
+  font-family: var(--font-mono);
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.port-subtitle {
+  color: #b0b0b0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Viewport-pinned so Leave never scrolls away (the roster-button idiom). */
+.port-leave {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 18px;
+  background: #000;
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  color: #ffb000;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.port-leave:hover {
+  background: rgba(255, 176, 0, 0.12);
+}
+
+.port-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(720px, 92vw);
+}
+
+.port-section-heading {
+  margin-top: 18px;
+  color: #15f4ee; /* FLOURESCENT_BLUE — the section rail */
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #0e4f4c;
+  padding-bottom: 4px;
+}
+
+.port-empty-line {
+  color: #808080;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.port-unit-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+
+.port-unit-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.port-unit-slot__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.port-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px 14px;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER — the reward-portion shape */
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.port-row__title {
+  color: #33ff00; /* TERMINAL_GREEN */
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.port-row__desc {
+  color: #b0b0b0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.port-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.port-price {
+  color: #ffb000; /* TERMINAL_AMBER — what it costs / pays */
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.port-buy,
+.port-remove {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 7px 18px;
+  background: #000;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, opacity 0.1s;
+}
+
+.port-buy {
+  border: 1px solid #33ff00; /* TERMINAL_GREEN — the affirmative */
+  color: #33ff00;
+}
+
+.port-buy:hover:not(:disabled) {
+  background: rgba(51, 255, 0, 0.12);
+}
+
+.port-remove {
+  border: 1px solid #ff3131; /* NEON_RED — removal is destructive */
+  color: #ff3131;
+  opacity: 0.85;
+}
+
+.port-remove:hover:not(:disabled) {
+  background: rgba(255, 49, 49, 0.12);
+}
+
+.port-buy:disabled,
+.port-remove:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.port-sold {
+  color: #808080;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.port-swap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.port-swap__select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: #000;
+  color: #33ff00;
+  border: 1px solid #664600;
+  padding: 6px;
+}
+
 /* 49c — the live cache line above the rows (shown only while a packet
    portion is pending) + the full-cache swap picker (select over held
    packets + the Swap button, an Accept variant). */

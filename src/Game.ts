@@ -16,6 +16,7 @@ import { BattleScene } from './scenes/BattleScene';
 import { RecruitScene } from './scenes/RecruitScene';
 import { PromotionScene } from './scenes/PromotionScene';
 import { RewardScene } from './scenes/RewardScene';
+import { PortScene } from './scenes/PortScene';
 import { BitsOverlay } from './ui/BitsOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { GameOverScene } from './scenes/GameOverScene';
@@ -208,6 +209,9 @@ export class Game implements RunDispatcher {
     // 48c — the reward offer's screen (battle → rewards → promotion →
     // recruit). No payload: the screen reads the live offer off ctx.run.
     this.bus.on('reward:offered', () => this.swap(new RewardScene()));
+    // 50e — docking at a port (replaces the 50c interim auto-undock stub).
+    // No payload: the screen reads the live stock off ctx.run.portStock.
+    this.bus.on('port:entered', () => this.swap(new PortScene()));
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
 
@@ -264,15 +268,8 @@ export class Game implements RunDispatcher {
         // Rejected hops (non-frontier, wrong phase) emit nothing — we stay
         // on the map.
         this.run.dispatch(command);
-        // 50c INTERIM — docking at a port immediately undocks (there's no
-        // PortScreen yet; §50e replaces this stub with a `port:entered` →
-        // PortScene swap). The recursive dispatch lands on 'map' and the
-        // leavePort case below refreshes the map — so a `$` click consumes
-        // the hop and returns to the map, never soft-locking the browser.
-        if (this.run.phase === 'port') {
-          this.dispatch({ kind: 'leavePort' });
-          break;
-        }
+        // 50e — docking emits `port:entered`, whose bus subscription swaps
+        // the PortScene (the reward:offered pattern) — nothing to do here.
         // G3 — a rest node resolves inline. If it banked XP without a
         // level-up, phase falls to 'map' with no event (like chooseRecruit
         // below), so refresh the map explicitly. A battle (battle:started) or

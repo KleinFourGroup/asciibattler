@@ -1076,3 +1076,57 @@ venom/miner duration split incl. the union order, the overclock
 pend-drain, and the v33 + pending round-trips). 1966 main + 212
 fuzz:smoke green, typecheck clean. No UI surface — the strip renders
 at 49f (which also flips `passIsFinal` to true).
+
+### 49f — the fire UX (2026-07-09)
+
+Two commits (the render/ui layer — eyeball policy, agent
+browser-verified at :5191 throughout, zero console errors):
+
+**Commit 1 — the cache chip + modal** (`ac18e89`, user-playtested
+same day — "it's working"): `CacheOverlay` is the SECOND page-lifetime
+element (the BitsOverlay pattern; gotcha #116 lifecycle applied
+verbatim — cacheChanged repaints, `run:started` re-show only, an
+explicit `resetRun` refresh). Placement call: the chip stacks BELOW
+the bits chip (the in-battle hop chip owns the right-of-bits slot —
+persistent chrome grows as a left column; §51's cohesion review owns
+refinements). The modal opens anywhere: Discard always; Fire by the
+phase-derived context (the UI mirrors the 49e engine derivation and
+only offers what it would accept); overclock expands an inline roster
+picker; the forced-keep shrink flow force-opens discard-only and
+can't be dismissed until the overflow resolves (discards are always
+available — no soft-lock). PreTurnScene forwards `run:packetUsed` so
+gate-time fires refresh grants/badges/pools in place (the pool gauge
+"bug" during verify was the heal correctly capping at max).
+
+**Commit 2 — the guided strip**: PreTurnScreen's 49d per-grant
+control rows die; the strip renders one chip per queue entry in
+acquisition order — active glows + carries the hint (empower: card
+click fires; redraw: multi-select + CONFIRM ON THE CHIP), queued dim,
+spent fade, passed struck. Pass ▸ dispatches `passGrant` (hover reads
+NEON_RED — finality signaled). **`passIsFinal` flipped TRUE in this
+commit** (the 49d rider retires — the locked strict default ships).
+One surface decision made here (the design round hadn't pinned it):
+**the at-will packets render as their own chip row ON the gate
+screen** (fire-on-click; hype toggles a pick-a-card arming state with
+a banner) rather than arming from the cache modal — the targeting
+state lives where its hand targets are, and it avoids a page-lifetime
+↔ scene coupling channel; the modal keeps its target-none fires at
+the gate (same command), and hype is modal-fireless there. Cache data
+reaches the screen as a live thunk (`() => ctx.run.cache`, the
+CardListButton getUnits pattern); any cache change disarms (indices
+shift under fires/discards — re-derive, don't hold).
+
+The flip's test fallout, deliberate: the K4 empower-mechanic block
+now runs under an explicit `FREE_MODE` override (K_DEFAULT_DAEMON's
+queue is [redraw@0, empower@1], so its empowers sit behind the
+cursor; the block pins the MECHANIC — strict ordering has its own 49d
+pins, which were already explicit on both modes). Fuzz bots needed
+nothing (49d's queue-walk compliance held). Verified interactions:
+select-2 → confirm → Janus spent → Mars auto-arms → card-click
+empower (▲); patch fires from the row (gauge live); hype arms →
+banner → card click → ▲▲ (the idol+packet badge sum); reroute at a
+spent queue appends AND arms; Pass strikes the chip and advances the
+arm; the strict cursor holds across a forged turn boundary. One
+verify note: a chip-count read straight after Fight ▸ double-counts —
+the disposed screen's ~180ms fade linger (the documented HANDOFF
+gotcha), not a bug; `grantViews()` stayed authoritative.

@@ -1238,8 +1238,15 @@ describe('Run', () => {
   });
 
   describe('empower at the pre-turn gate (K4)', () => {
+    // 49f — this block pins the empower MECHANIC (store/budget/badges),
+    // not queue ordering, and K_DEFAULT_DAEMON's queue is [redraw@0,
+    // empower@1] — under the now-shipped strict default (`passIsFinal:
+    // true`, the 49f flip) an empower behind the cursor rejects. These
+    // tests run under an explicit FREE-mode override; the strict-ordering
+    // behavior has its own 49d pins ("the grant queue" block below).
+    const FREE_MODE = { passIsFinal: false } as const;
     it('adds the configured buff to the slot store; the fielded unit carries it that turn', () => {
-      const { run } = gatedToFirstTurnIntro(1);
+      const { run } = gatedToFirstTurnIntro(1, K_DEFAULT_DAEMON, FREE_MODE);
       const pos = 2;
       const slot = run.hand[pos]!;
       // 49d: K_DEFAULT_DAEMON's queue is [redraw@0, empower@1].
@@ -1268,7 +1275,7 @@ describe('Run', () => {
     });
 
     it('consumes the grant budget; a request past it is a silent no-op', () => {
-      const { run, bus } = gatedToFirstTurnIntro(2);
+      const { run, bus } = gatedToFirstTurnIntro(2, K_DEFAULT_DAEMON, FREE_MODE);
       let emits = 0;
       bus.on('turn:unitEmpowered', () => emits++);
       // Burn the budget, bound derived from config.
@@ -1314,7 +1321,7 @@ describe('Run', () => {
     it('the budget resets next turn; re-empowering the same unit merges per the config policy', () => {
       // Short roster (≤ handSize) so the SAME unit is in hand every turn —
       // the stacking path needs a deterministic re-pick across turns.
-      const { run, bus } = freshShortRosterRun(5, { daemon: K_DEFAULT_DAEMON });
+      const { run, bus } = freshShortRosterRun(5, { daemon: K_DEFAULT_DAEMON, ...FREE_MODE });
       run.pauseAtTurnGates = true;
       const startings: GameEvents['turn:starting'][] = [];
       bus.on('turn:starting', (p) => startings.push(p));
@@ -1339,7 +1346,7 @@ describe('Run', () => {
     });
 
     it('the buff lives on the SLOT: it survives the card being redrawn away', () => {
-      const { run, bus } = gatedToFirstTurnIntro(6);
+      const { run, bus } = gatedToFirstTurnIntro(6, K_DEFAULT_DAEMON, FREE_MODE);
       expect(run.drawPile.length).toBeGreaterThan(0); // replacement ≠ benched below
       const redrawns: GameEvents['turn:handRedrawn'][] = [];
       bus.on('turn:handRedrawn', (p) => redrawns.push(p));
@@ -1356,7 +1363,7 @@ describe('Run', () => {
     });
 
     it('turn:starting carries the fresh queue; turn:unitEmpowered the decrement + badge column', () => {
-      const { run, bus } = freshRunWithBus(7, { daemon: K_DEFAULT_DAEMON });
+      const { run, bus } = freshRunWithBus(7, { daemon: K_DEFAULT_DAEMON, ...FREE_MODE });
       run.pauseAtTurnGates = true;
       const startings: GameEvents['turn:starting'][] = [];
       const empowereds: GameEvents['turn:unitEmpowered'][] = [];
@@ -1382,8 +1389,10 @@ describe('Run', () => {
     });
 
     it('same seed + same empower dispatches stay byte-identical', () => {
-      const a = gatedToFirstTurnIntro(8);
-      const b = gatedToFirstTurnIntro(8);
+      // FREE_MODE so the empowers actually land (strict would no-op both
+      // sides identically — trivially byte-identical, pinning nothing).
+      const a = gatedToFirstTurnIntro(8, K_DEFAULT_DAEMON, FREE_MODE);
+      const b = gatedToFirstTurnIntro(8, K_DEFAULT_DAEMON, FREE_MODE);
       for (const { run } of [a, b]) {
         run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 3 });
         run.dispatch({ kind: 'advanceTurn' });

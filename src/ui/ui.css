@@ -1778,54 +1778,146 @@ body {
   box-shadow: 0 0 6px rgba(21, 244, 238, 0.5);
 }
 
-.preturn-redraw {
+/* 49f — THE GUIDED FIRE STRIP (replaces the K3/K4→49d per-grant control
+   rows): one chip per queue entry in acquisition order + Pass. The ACTIVE
+   chip glows FLOURESCENT_BLUE and carries the inline hint (an active
+   redraw chip is also the confirm button); queued chips wait dim amber;
+   spent chips fade; passed chips are struck (the turn's receipt). */
+.preturn-strip {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
 }
 
-.preturn-redraw-button {
+.fire-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  background: #000;
+  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  color: #664600;
+  text-align: left;
+  cursor: default;
+}
+
+.fire-chip--active {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: #15f4ee;
+  box-shadow: 0 0 8px rgba(21, 244, 238, 0.45);
+}
+
+/* The active REDRAW chip doubles as the confirm button — clickable once a
+   selection exists (the :not(:disabled) gate). */
+.fire-chip--active:not(:disabled) {
+  cursor: pointer;
+}
+
+.fire-chip--active:not(:disabled):hover {
+  background: rgba(21, 244, 238, 0.12);
+}
+
+.fire-chip--queued {
+  border-color: #664600;
+  color: #664600;
+}
+
+.fire-chip--spent {
+  border-color: #332300;
+  color: #332300;
+}
+
+.fire-chip--passed {
+  border-color: #332300;
+  color: #332300;
+  text-decoration: line-through;
+}
+
+.fire-chip-main {
+  white-space: nowrap;
+}
+
+.fire-chip-hint {
+  font-size: 10px;
+  opacity: 0.85;
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+
+.preturn-pass {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 6px 16px;
+  padding: 6px 14px;
   border: 1px solid #ffb000; /* TERMINAL_AMBER */
   background: #000;
   color: #ffb000;
   cursor: pointer;
+  align-self: center;
   transition: border-color 0.1s, background 0.1s, color 0.1s;
 }
 
-.preturn-redraw-button:hover:not(:disabled) {
-  border-color: #15f4ee;
-  background: rgba(21, 244, 238, 0.08);
-  color: #15f4ee;
+.preturn-pass:hover {
+  border-color: #ff3131; /* NEON_RED — pass is FINAL, the hover says so */
+  color: #ff3131;
+  background: rgba(255, 49, 49, 0.08);
 }
 
-.preturn-redraw-button:disabled {
-  border-color: #664600; /* DARK_TERMINAL_AMBER */
-  color: #664600;
-  cursor: default;
+/* 49f — the at-will packet row (below the strip): the held preTurn-usable
+   packets, fire-on-click (or arm-then-pick for a unit target). */
+.preturn-packets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.preturn-redraw-hint {
+.preturn-packets-label {
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #664600; /* DARK_TERMINAL_AMBER */
 }
 
-/* K4 — empower: a sibling control row under the redraw one (shares the
-   .preturn-redraw layout + button base), accented FLOURESCENT_BLUE to match
-   the buff badge below. Acts on the single selected card. */
-.preturn-empower-button:not(:disabled) {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+.packet-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  background: #000;
+  border: 1px solid #15f4ee; /* FLOURESCENT_BLUE — the packet accent */
   color: #15f4ee;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, color 0.1s, box-shadow 0.1s;
 }
 
-.preturn-empower-button:hover:not(:disabled) {
-  background: rgba(21, 244, 238, 0.08);
+.packet-chip:hover {
+  background: rgba(21, 244, 238, 0.12);
+}
+
+.packet-chip--armed {
+  box-shadow: 0 0 8px rgba(21, 244, 238, 0.55);
+  background: rgba(21, 244, 238, 0.15);
+}
+
+/* The armed-packet banner (hype's pick-a-card state). */
+.preturn-arm-hint {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #15f4ee; /* FLOURESCENT_BLUE */
 }
 
 /* K4 — the empowered-card badge: one ▲ per stack (the slot carries the buff

@@ -37,10 +37,31 @@
  *
  * 49d — the grant QUEUE: the payload's `grants` list (one entry per granted
  * idol effect in acquisition order, redraw included — the summed redraw
- * budget retired with the §49 shape-lock) drives one control per entry, and
- * every command carries `grantIndex`. This is the MECHANICAL adaptation
- * (free-order mode — `passIsFinal` ships false): the guided chip strip with
- * auto-arm + Pass replaces this rendering at 49f and flips the toggle on.
+ * budget retired with the §49 shape-lock) drives the strip below, and
+ * every command carries `grantIndex`.
+ *
+ * 49f — THE GUIDED FIRE STRIP (the §49 fire-UX shape-lock, rendered): one
+ * chip per queue entry in acquisition order; the ACTIVE chip (the engine's
+ * derived cursor — `grantViews[].active`) auto-arms with a glow + effect
+ * hint, and the hand cards on screen are its click targets. An armed
+ * EMPOWER fires on a single card click; an armed REDRAW multi-selects up
+ * to its card cap and confirms ON THE CHIP. **Pass ▸** finalizes the
+ * active grant unspent (`passGrant` — `passIsFinal` flipped TRUE in this
+ * commit, the locked default; the engine enforces the order, this strip
+ * just renders it honestly). Fight ▸ stays the implicit pass-all (the
+ * queue expires at turn start). Later chips render queued/dimmed; passed
+ * chips render struck. The strip is strict-shaped even under a free-mode
+ * config override (a test/fuzz relaxation — the UI never offers more than
+ * strict allows).
+ *
+ * 49f — the at-will PACKET row: the gate's held `preTurn`-usable packets
+ * (read live from the cache via the injected thunk) render as their own
+ * chips BELOW the strip — at-will, any moment during the gate, before or
+ * between idol chips (the kickoff economy lock). A target-`none` packet
+ * fires on chip click; a unit-target one (hype) ARMS pick-a-card targeting
+ * (click again to cancel). Fires ride the same `usePacket` command the
+ * cache modal uses; the screen refreshes off `run:packetUsed` /
+ * `run:cacheChanged` (PreTurnScene forwards both).
  */
 
 import type { GameEvents } from '../core/events';
@@ -50,6 +71,7 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { StatusEffect } from '../sim/statusEffects';
 import { getLayout, PROCEDURAL_MAP_NAME } from '../sim/layouts';
+import { packetById, type PacketConfig } from '../config/packets';
 import { STAT_LABELS } from './statLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
@@ -84,9 +106,13 @@ export class PreTurnScreen {
   private deniedEmpowerIdols: string[] = [];
   private readonly selected = new Set<number>();
   private handWrap: HTMLDivElement | null = null;
-  // 49d — per-redraw-grant buttons carry their own card cap.
-  private redrawButtons: Array<{ button: HTMLButtonElement; maxCards: number }> = [];
-  private empowerButtons: HTMLButtonElement[] = [];
+  // 49f — the held cache, read LIVE at render time (a thunk from
+  // PreTurnScene — `ctx.run.cache`), so the packet row always reflects the
+  // authoritative cache; and the armed unit-target packet (hype's
+  // pick-a-card state), a CACHE index. Any cache change disarms — indices
+  // shift under fires/discards, and re-deriving beats holding a stale one.
+  private getCache: () => readonly string[] = () => [];
+  private armedPacketIndex: number | null = null;
   // R1/R2 — the shared card-list affordances: roster (top-right) + draw
   // (bottom-right) + discard (bottom-left) pile views. All disposed on hide.
   private cardListButtons: CardListButton[] = [];
@@ -97,9 +123,15 @@ export class PreTurnScreen {
     private readonly audio: AudioPlayer,
   ) {}
 
-  show(info: GameEvents['turn:starting'], roster: readonly UnitTemplate[]): void {
+  show(
+    info: GameEvents['turn:starting'],
+    roster: readonly UnitTemplate[],
+    getCache: () => readonly string[],
+  ): void {
     this.hide();
     this.roster = roster;
+    this.getCache = getCache;
+    this.armedPacketIndex = null;
     this.hand = info.hand;
     this.drawPile = info.drawPile;
     this.discardPile = info.discardPile;
@@ -139,8 +171,7 @@ export class PreTurnScreen {
     }
     this.handWrap = null;
     this.poolsEl = null;
-    this.redrawButtons = [];
-    this.empowerButtons = [];
+    this.armedPacketIndex = null;
   }
 
   /**
@@ -188,6 +219,7 @@ export class PreTurnScreen {
     this.grants = payload.grants;
     this.empowerMagnitudes = payload.empowerMagnitudes;
     this.selected.clear();
+    this.armedPacketIndex = null; // the fire consumed a slot — indices shifted
     this.refreshHand();
     if (this.poolsEl !== null) {
       this.poolsEl.replaceChildren(
@@ -195,6 +227,27 @@ export class PreTurnScreen {
         renderPoolGauge('enemy', 'Enemy Pool', this.poolBounds.enemy, this.poolBounds.enemyMax),
       );
     }
+  }
+
+  /**
+   * 49f — a `passGrant` finalized the active grant (`turn:grantPassed`,
+   * strict mode): swap in the re-derived queue so the strip advances its
+   * auto-arm to the new cursor.
+   */
+  updateGrantPassed(payload: GameEvents['turn:grantPassed']): void {
+    this.grants = payload.grants;
+    this.selected.clear();
+    this.refreshHand();
+  }
+
+  /**
+   * 49f — the cache changed under this gate (a modal discard, a reward
+   * accept can't happen here but addDaemon shrink can): re-render the
+   * packet row from the live thunk. Indices shifted → disarm.
+   */
+  updateCache(): void {
+    this.armedPacketIndex = null;
+    this.refreshHand();
   }
 
   /** Single advance path — the Fight button lands here. (The auto-advance
@@ -319,38 +372,44 @@ export class PreTurnScreen {
     return panel;
   }
 
-  /** 49d — the queue entries still holding budget, by kind. */
-  private pendingGrants(kind: 'redraw' | 'empower'): TurnGrantView[] {
-    return this.grants.filter((g) => g.effect.kind === kind && g.remaining > 0 && !g.passed);
+  /** 49f — the strip's cursor: the engine-derived active grant (first
+   *  pending — `grantViews[].active`), or null when the queue is spent. */
+  private activeGrant(): TurnGrantView | null {
+    return this.grants.find((g) => g.active && !g.passed && g.remaining > 0) ?? null;
   }
 
-  private get canRedraw(): boolean {
-    return this.pendingGrants('redraw').length > 0;
-  }
-
-  private get canEmpower(): boolean {
-    return this.pendingGrants('empower').length > 0;
+  /** 49f — the armed unit-target packet, re-resolved from the LIVE cache
+   *  (never a held def — indices shift under fires/discards; a dangling
+   *  index resolves to null, i.e. disarmed). */
+  private armedPacket(): { cacheIndex: number; packet: PacketConfig } | null {
+    if (this.armedPacketIndex === null) return null;
+    const id = this.getCache()[this.armedPacketIndex];
+    const packet = id !== undefined ? packetById(id) : undefined;
+    if (packet === undefined) return null;
+    return { cacheIndex: this.armedPacketIndex, packet };
   }
 
   /**
-   * K3/K4 — (re)build the hand block in place: label, card row (selectable
-   * while EITHER budget allows), and one control per pending grant in QUEUE
-   * order (49d). Runs at first render and after every `turn:handRedrawn` /
-   * `turn:unitEmpowered`.
+   * K3/K4→49f — (re)build the hand block in place: label, card row
+   * (clickable while something is armed), the GUIDED STRIP (one chip per
+   * queue entry + Pass), the at-will packet row, and the denial lines.
+   * Runs at first render and after every gate event (`turn:handRedrawn` /
+   * `turn:unitEmpowered` / `turn:grantPassed` / `run:packetUsed` /
+   * `run:cacheChanged`) — one render path, no optimistic copies.
    */
   private refreshHand(): void {
     const wrap = this.handWrap;
     if (!wrap) return;
     wrap.replaceChildren();
-    this.redrawButtons = [];
-    this.empowerButtons = [];
 
     const label = document.createElement('div');
     label.className = 'preturn-hand-label';
     label.textContent = `Your hand — ${this.hand.length} drawn`;
     wrap.appendChild(label);
 
-    const selectable = this.canRedraw || this.canEmpower;
+    const armed = this.armedPacket();
+    const active = this.activeGrant();
+    const selectable = armed !== null || active !== null;
     const cards = document.createElement('div');
     cards.className = 'preturn-hand-cards';
     const buffSummary = this.buffSummary;
@@ -359,24 +418,26 @@ export class PreTurnScreen {
       if (selectable) {
         card.classList.add('unit-card--clickable');
         if (this.selected.has(pos)) card.classList.add('is-selected');
-        card.addEventListener('click', () => this.toggleCard(pos, card));
+        card.addEventListener('click', () => this.onCardClick(pos));
       }
       cards.appendChild(card);
     });
     wrap.appendChild(cards);
 
-    // 49d — one control per pending grant, in QUEUE order (the acquisition
-    // order the strict mode will enforce; free mode just renders them all).
-    // A chance hook that denied (e.g. Mercury's cold coin) shows the inert
-    // line instead, naming its idol when several are owned.
-    for (const grant of this.grants) {
-      if (grant.remaining <= 0 || grant.passed) continue;
-      if (grant.effect.kind === 'redraw') {
-        wrap.appendChild(this.renderRedrawControl(grant));
-      } else {
-        wrap.appendChild(this.renderEmpowerControl(grant));
-      }
+    // The armed-packet banner (hype's pick-a-card state) outranks the
+    // strip's own hints — it's the transient, user-initiated mode.
+    if (armed !== null) {
+      const banner = document.createElement('div');
+      banner.className = 'preturn-arm-hint';
+      banner.textContent =
+        `▤ ${armed.packet.name} armed — click a card to fire it (click the chip again to cancel)`;
+      wrap.appendChild(banner);
     }
+
+    if (this.grants.length > 0) wrap.appendChild(this.renderStrip());
+    const packetRow = this.renderPacketRow();
+    if (packetRow !== null) wrap.appendChild(packetRow);
+
     for (const name of this.deniedRedrawIdols) {
       wrap.appendChild(renderGateDenied(`${name} is silent — no redraw this turn`));
     }
@@ -395,123 +456,171 @@ export class PreTurnScreen {
       .join(' / ');
   }
 
-  /** K3/K4 — toggle a card's selection. The cap is the largest consumer's
-   *  need: the biggest pending redraw grant's card cap, or ONE for empower,
-   *  so a redraw-exhausted turn can still pick its empower target. */
-  private toggleCard(pos: number, card: HTMLDivElement): void {
-    if (this.selected.has(pos)) {
-      this.selected.delete(pos);
-      card.classList.remove('is-selected');
-    } else {
-      const redrawCap = Math.max(
-        0,
-        ...this.pendingGrants('redraw').map((g) =>
-          g.effect.kind === 'redraw' ? g.effect.maxCards : 0,
-        ),
-      );
-      const cap = Math.max(redrawCap, this.canEmpower ? 1 : 0);
-      if (this.selected.size >= cap) return;
-      this.selected.add(pos);
-      card.classList.add('is-selected');
-    }
-    this.audio.play('click');
-    this.syncRedrawButtons();
-    this.syncEmpowerButtons();
-  }
-
-  /** K3→49d — one Redraw button + budget hint PER pending redraw grant (the
-   *  per-source model; a single-redraw-idol run renders one control as
-   *  before, naming its idol only when several granted). */
-  private renderRedrawControl(grant: TurnGrantView): HTMLDivElement {
-    if (grant.effect.kind !== 'redraw') throw new Error('renderRedrawControl: wrong kind');
-    const { maxCards } = grant.effect;
-    const row = document.createElement('div');
-    row.className = 'preturn-redraw';
-
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'preturn-redraw-button';
-    button.dataset['label'] =
-      this.pendingGrants('redraw').length > 1 ? `Redraw (${grant.name})` : 'Redraw';
-    button.addEventListener('click', () => {
-      if (this.selected.size === 0 || this.selected.size > maxCards) return;
+  /**
+   * 49f — a hand-card click routes by what's armed. An armed PACKET fires
+   * on it (usePacket, consume-on-fire); an active EMPOWER grant fires on it
+   * (one click = the pick — the strip's inline hand targeting); an active
+   * REDRAW grant toggles the multi-select up to ITS card cap (confirm on
+   * the chip). Refreshes ride the result events (the J3 events-only
+   * pattern) — a toggle re-renders locally.
+   */
+  private onCardClick(pos: number): void {
+    const armed = this.armedPacket();
+    if (armed !== null) {
       this.audio.play('click');
-      // No optimistic update — the authoritative new hand comes back via
-      // `turn:handRedrawn` → `updateHand` (the J3 events-only pattern).
       this.dispatcher.dispatch({
-        kind: 'redrawCards',
-        handIndices: [...this.selected],
-        grantIndex: grant.grantIndex,
+        kind: 'usePacket',
+        cacheIndex: armed.cacheIndex,
+        handIndex: pos,
       });
-    });
-    this.redrawButtons.push({ button, maxCards });
-
-    const hint = document.createElement('div');
-    hint.className = 'preturn-redraw-hint';
-    hint.textContent =
-      `swap up to ${maxCards} card${maxCards === 1 ? '' : 's'}` +
-      ` — ${grant.remaining} redraw${grant.remaining === 1 ? '' : 's'} left`;
-
-    row.append(button, hint);
-    this.syncRedrawButtons();
-    return row;
-  }
-
-  /** K4→49d — one Empower button + buff hint PER pending empower grant, the
-   *  redraw controls' sibling. Acts on the single selected card; the hint
-   *  spells out the idol's OWN buff (payload-carried, never hardcoded) so
-   *  the choice is informed. The button names its idol only when several
-   *  sources granted (a single-idol run keeps the plain 'Empower ▲' look). */
-  private renderEmpowerControl(grant: TurnGrantView): HTMLDivElement {
-    if (grant.effect.kind !== 'empower') throw new Error('renderEmpowerControl: wrong kind');
-    const { buff } = grant.effect;
-    const row = document.createElement('div');
-    row.className = 'preturn-redraw preturn-empower';
-
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'preturn-redraw-button preturn-empower-button';
-    button.textContent =
-      this.pendingGrants('empower').length > 1 ? `Empower ▲ (${grant.name})` : 'Empower ▲';
-    button.addEventListener('click', () => {
-      if (this.selected.size !== 1) return;
+      return; // the refresh rides run:packetUsed
+    }
+    const active = this.activeGrant();
+    if (active === null) return;
+    if (active.effect.kind === 'empower') {
       this.audio.play('click');
-      // Same events-only refresh: the result comes back via
-      // `turn:unitEmpowered` → `updateEmpower`.
       this.dispatcher.dispatch({
         kind: 'empowerUnit',
-        handIndex: [...this.selected][0]!,
-        grantIndex: grant.grantIndex,
+        handIndex: pos,
+        grantIndex: active.grantIndex,
       });
+      return; // the refresh rides turn:unitEmpowered
+    }
+    if (this.selected.has(pos)) {
+      this.selected.delete(pos);
+    } else {
+      if (this.selected.size >= active.effect.maxCards) return;
+      this.selected.add(pos);
+    }
+    this.audio.play('click');
+    this.refreshHand();
+  }
+
+  /**
+   * 49f — the guided strip: one chip per queue entry in acquisition order
+   * (the resolve-walk order the strict engine enforces), plus Pass while a
+   * cursor exists. The ACTIVE chip glows and carries its hint; an active
+   * REDRAW chip is also the confirm button (enabled at 1..maxCards
+   * selected). Queued chips wait dimmed; spent/passed chips stay as the
+   * turn's receipt (passed = struck).
+   */
+  private renderStrip(): HTMLDivElement {
+    const strip = document.createElement('div');
+    strip.className = 'preturn-strip';
+    for (const grant of this.grants) strip.appendChild(this.renderGrantChip(grant));
+    const active = this.activeGrant();
+    if (active !== null) {
+      const pass = document.createElement('button');
+      pass.type = 'button';
+      pass.className = 'preturn-pass';
+      pass.textContent = 'Pass ▸';
+      pass.title = `Skip ${active.name} — final for this turn (the queue moves on)`;
+      pass.addEventListener('click', () => {
+        this.audio.play('click');
+        // The refresh rides turn:grantPassed → updateGrantPassed.
+        this.dispatcher.dispatch({ kind: 'passGrant' });
+      });
+      strip.appendChild(pass);
+    }
+    return strip;
+  }
+
+  /** One grant chip. Active redraw = the confirm button; everything else
+   *  is a state display (the card clicks do the acting). */
+  private renderGrantChip(grant: TurnGrantView): HTMLButtonElement {
+    const isActive = grant.active && !grant.passed && grant.remaining > 0;
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    const state = grant.passed
+      ? 'passed'
+      : grant.remaining <= 0
+        ? 'spent'
+        : isActive
+          ? 'active'
+          : 'queued';
+    chip.className = `fire-chip fire-chip--${state}`;
+
+    const summary =
+      grant.effect.kind === 'redraw'
+        ? `redraw ≤${grant.effect.maxCards}`
+        : buffModsSummary(grant.effect.buff.mods);
+    const main = document.createElement('span');
+    main.className = 'fire-chip-main';
+    main.textContent =
+      `◈ ${grant.name} — ${summary}` + (grant.remaining > 1 ? ` ×${grant.remaining}` : '');
+    chip.appendChild(main);
+
+    if (isActive) {
+      const hint = document.createElement('span');
+      hint.className = 'fire-chip-hint';
+      if (grant.effect.kind === 'empower') {
+        hint.textContent = 'click a card to empower';
+        chip.disabled = true; // the cards are the buttons
+      } else {
+        const n = this.selected.size;
+        hint.textContent = n === 0 ? 'click cards to swap' : `swap ${n} ▸ confirm`;
+        chip.disabled = n === 0 || n > grant.effect.maxCards;
+        chip.addEventListener('click', () => {
+          this.audio.play('click');
+          // The refresh rides turn:handRedrawn → updateHand.
+          this.dispatcher.dispatch({
+            kind: 'redrawCards',
+            handIndices: [...this.selected],
+            grantIndex: grant.grantIndex,
+          });
+        });
+      }
+      chip.appendChild(hint);
+    } else {
+      chip.disabled = true;
+    }
+    return chip;
+  }
+
+  /**
+   * 49f — the at-will packet row: the held `preTurn`-usable packets, read
+   * LIVE from the cache. A target-`none` chip fires on click (before,
+   * between, or after idol chips — the at-will economy lock); a unit-target
+   * chip (hype) toggles the pick-a-card arming state.
+   */
+  private renderPacketRow(): HTMLDivElement | null {
+    const row = document.createElement('div');
+    row.className = 'preturn-packets';
+    const label = document.createElement('span');
+    label.className = 'preturn-packets-label';
+    label.textContent = '▤ packets:';
+    row.appendChild(label);
+
+    let count = 0;
+    this.getCache().forEach((id, cacheIndex) => {
+      const packet = packetById(id);
+      if (packet === undefined || !packet.usableIn.includes('preTurn')) return;
+      row.appendChild(this.renderPacketChip(packet, cacheIndex));
+      count += 1;
     });
-    this.empowerButtons.push(button);
-
-    const hint = document.createElement('div');
-    hint.className = 'preturn-redraw-hint';
-    hint.textContent =
-      `pick one card: ${buffModsSummary(buff.mods)} for this encounter` +
-      ` — ${grant.remaining} left`;
-
-    row.append(button, hint);
-    this.syncEmpowerButtons();
-    return row;
+    return count > 0 ? row : null;
   }
 
-  /** 49d — every redraw button syncs against ITS grant's card cap. */
-  private syncRedrawButtons(): void {
-    for (const { button, maxCards } of this.redrawButtons) {
-      button.textContent = `${button.dataset['label']} (${this.selected.size})`;
-      // Over-the-cap selections can exist when empower raised the cap (an
-      // L-daemon mode); the redraw ask is then invalid as a whole.
-      button.disabled = this.selected.size === 0 || this.selected.size > maxCards;
-    }
-  }
-
-  /** K4 — Empower wants exactly ONE card picked (every source's button). */
-  private syncEmpowerButtons(): void {
-    for (const button of this.empowerButtons) {
-      button.disabled = this.selected.size !== 1;
-    }
+  private renderPacketChip(packet: PacketConfig, cacheIndex: number): HTMLButtonElement {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    const isArmed = this.armedPacketIndex === cacheIndex;
+    chip.className = `packet-chip${isArmed ? ' packet-chip--armed' : ''}`;
+    chip.textContent = `▤ ${packet.name}`;
+    chip.title =
+      packet.description +
+      (packet.target === 'unit' ? ' — click, then pick a card' : ' — fires on click');
+    chip.addEventListener('click', () => {
+      this.audio.play('click');
+      if (packet.target === 'none') {
+        // Consume-on-fire; the refresh rides run:packetUsed.
+        this.dispatcher.dispatch({ kind: 'usePacket', cacheIndex });
+      } else {
+        this.armedPacketIndex = isArmed ? null : cacheIndex;
+        this.refreshHand();
+      }
+    });
+    return chip;
   }
 }
 

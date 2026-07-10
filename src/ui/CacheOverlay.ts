@@ -18,8 +18,10 @@
  * contract; the UI derives the same way and only offers what the engine
  * would accept). Target-`none` packets fire straight from their row; a
  * unit-target OUT-OF-BATTLE packet (overclock) expands an inline roster
- * picker. A unit-target PRE-TURN packet (hype) shows no Fire here yet —
- * its pick-a-card targeting lands with the guided strip (49f commit 2).
+ * picker. A unit-target PRE-TURN packet (hype) fires from the gate's OWN
+ * at-will packet row instead (PreTurnScreen — the pick-a-card arming
+ * state lives where its hand targets are), so this modal offers it no
+ * Fire at the gate.
  *
  * The forced-keep shrink flow lives here too: while `cacheOverflow > 0`
  * (a size-shrinking daemon landed under current holdings) the modal

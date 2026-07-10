@@ -6,6 +6,6 @@
     "maxCardsPerTurn": 6
   },
   "grantQueue": {
-    "passIsFinal": false
+    "passIsFinal": true
   }
 }

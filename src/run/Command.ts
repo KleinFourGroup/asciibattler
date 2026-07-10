@@ -42,6 +42,45 @@ export type RunCommand =
    */
   | { readonly kind: 'leavePort' }
   /**
+   * 50d — buy the stocked unit at `index` into `Run.portStock.units`: spends
+   * the slot's (jittered) price via the `spendBits` chokepoint, appends the
+   * unit through the same roster path as a post-battle recruit, and marks
+   * the slot sold. Wrong phase / bad index / sold / unaffordable — silent
+   * no-ops that mutate nothing (the acceptReward discipline).
+   */
+  | { readonly kind: 'buyPortUnit'; readonly index: number }
+  /**
+   * 50d — buy the stocked packet at `index` into `Run.portStock.packets`.
+   * A FULL cache requires `swapCacheIndex` (the 49c decline-or-swap
+   * contract, `acceptReward`'s shape); affordability is validated BEFORE
+   * the swap discard. Same silent no-op contract as `buyPortUnit`.
+   */
+  | {
+      readonly kind: 'buyPortPacket';
+      readonly index: number;
+      readonly swapCacheIndex?: number;
+    }
+  /**
+   * 50d — buy the stocked daemon at `index` into `Run.portStock.daemons`
+   * (stock was owned-excluded at roll). Same contract as `buyPortUnit`.
+   */
+  | { readonly kind: 'buyPortDaemon'; readonly index: number }
+  /**
+   * 50d — sell one held packet while docked (`cacheIndex` into `Run.cache`):
+   * discards the slot and refunds ⌊buy price × sellFraction⌋ via RAW
+   * `addBits` — deliberately NOT `gainBits` (a bits-gain fold above
+   * 1/sellFraction would mint an infinite buy-sell loop). Port phase only.
+   */
+  | { readonly kind: 'sellPacket'; readonly cacheIndex: number }
+  /**
+   * 50d — the pay-to-remove service: spend the flat `unitRemovalPrice`, then
+   * remove `rosterIndex` through the single `removeRosterUnit` chokepoint
+   * (all six roster-parallel structures fixed in one place). Port phase
+   * only; the last unit can't be removed; every reject is a silent no-op
+   * that charges nothing.
+   */
+  | { readonly kind: 'payToRemoveUnit'; readonly rosterIndex: number }
+  /**
    * 48b — accept ONE pending reward portion (`index` into
    * `Run.pendingRewards`). Bits settle through `gainBits` (the fold applies
    * at accept time); a daemon joins the ownership list immediately. Only

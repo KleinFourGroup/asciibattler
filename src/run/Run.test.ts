@@ -24,6 +24,7 @@ import { rewardTableById } from '../config/rewards';
 import { daemonRedrawHook, daemonEmpowerHook } from './daemon';
 import { RUN_STAT_BASES } from './runStats';
 import { ECONOMY } from '../config/economy';
+import { PRICES, unitPrice, packetPrice, daemonPrice, sellPrice } from '../config/prices';
 import { avgTeamLevel } from './enemyBudget';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 
@@ -2637,7 +2638,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(34);
+      expect(wire.schemaVersion).toBe(35);
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.injectedEncounterRules).toEqual([ruleOf('venom')]);
       expect(restored.injectedRunRules).toEqual([ruleOf('miner')]);
@@ -2775,56 +2776,6 @@ describe('Run', () => {
   });
 
   describe('50c — the port phase (dock / undock)', () => {
-    const nodeKindOf = (run: Run, id: number) => run.nodeMap.nodes.find((n) => n.id === id)!.kind;
-
-    const frontierIdsOf = (run: Run): number[] =>
-      run.currentNodeId === PRE_ROOT_NODE_ID
-        ? [run.nodeMap.rootId]
-        : run.nodeMap.edges.filter((e) => e.from === run.currentNodeId).map((e) => e.to);
-
-    /** Any port reachable strictly downstream of (or at) `from`? */
-    const reachesPort = (run: Run, from: number): boolean => {
-      const stack = [from];
-      const seen = new Set([from]);
-      while (stack.length > 0) {
-        const id = stack.pop()!;
-        if (nodeKindOf(run, id) === 'port') return true;
-        for (const e of run.nodeMap.edges) {
-          if (e.from === id && !seen.has(e.to)) {
-            seen.add(e.to);
-            stack.push(e.to);
-          }
-        }
-      }
-      return false;
-    };
-
-    /** Walk the run to a port node and dock (wins forged via battle:ended —
-     *  the WIN_BOUNTY idiom). Every default map has ≥1 port (the NodeMap
-     *  guarantee) and every node is root-reachable, so a port-reaching
-     *  frontier choice always exists from the start. */
-    const dockAtPort = (run: Run, bus: EventBus<GameEvents>): void => {
-      for (let guard = 0; guard < 20; guard++) {
-        expect(run.phase).toBe('map');
-        const frontier = frontierIdsOf(run);
-        const port = frontier.find((id) => nodeKindOf(run, id) === 'port');
-        if (port !== undefined) {
-          run.dispatch({ kind: 'enterNode', nodeId: port });
-          return;
-        }
-        const next = frontier.find((id) => reachesPort(run, id));
-        expect(next).toBeDefined();
-        run.dispatch({ kind: 'enterNode', nodeId: next! });
-        if (run.phase === 'battle') {
-          winEncounter(bus);
-          declineAllRewards(run);
-        }
-        if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
-        if (run.phase === 'recruit') run.dispatch({ kind: 'passRecruit' });
-      }
-      throw new Error('dockAtPort: never reached a port');
-    };
-
     it('docking consumes the hop, enters the serialized port phase, and emits port:entered', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       const entered: Array<{ nodeId: number }> = [];
@@ -2859,11 +2810,11 @@ describe('Run', () => {
       expect(run.phase).toBe(during);
     });
 
-    it('a mid-dock save round-trips the port phase (v34); undock works on the restored run', () => {
+    it('a mid-dock save round-trips the port phase (v35); undock works on the restored run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(34);
+      expect(wire.schemaVersion).toBe(35);
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -2871,8 +2822,184 @@ describe('Run', () => {
       restored.dispatch({ kind: 'leavePort' });
       expect(restored.phase).toBe('map');
       expect(() =>
-        Run.fromJSON({ ...wire, schemaVersion: 33 }, new EventBus<GameEvents>()),
+        Run.fromJSON({ ...wire, schemaVersion: 34 }, new EventBus<GameEvents>()),
       ).toThrow(/unsupported schema version/);
+    });
+  });
+
+  describe('50d — port stock + transactions', () => {
+    const RICH = 10_000; // affordability never the variable unless a test makes it one
+
+    it('docking rolls stock at the config counts; packets/daemons distinct; owned daemons excluded', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: daemonById('moneta')! });
+      dockAtPort(run, bus);
+      const stock = run.portStock!;
+      expect(stock.units).toHaveLength(PRICES.portStock.units);
+      expect(stock.packets).toHaveLength(Math.min(PRICES.portStock.packets, PACKETS.length));
+      expect(new Set(stock.packets.map((s) => s.packetId)).size).toBe(stock.packets.length);
+      const owned = new Set(run.daemons.map((d) => d.id));
+      expect(stock.daemons).toHaveLength(
+        Math.min(PRICES.portStock.daemons, DAEMONS.length - owned.size),
+      );
+      expect(new Set(stock.daemons.map((s) => s.daemonId)).size).toBe(stock.daemons.length);
+      for (const s of stock.daemons) expect(owned.has(s.daemonId)).toBe(false);
+      // Flat price-book prices on packet/daemon slots (no jitter axis there).
+      for (const s of stock.packets) expect(s.price).toBe(packetPrice(s.packetId));
+      for (const s of stock.daemons) expect(s.price).toBe(daemonPrice(s.daemonId));
+    });
+
+    it('unit slots price at the level curve ± the config jitter, integer ≥1; same seed → same stock', () => {
+      const a = freshRunWithBus(7, { daemon: null });
+      dockAtPort(a.run, a.bus);
+      for (const s of a.run.portStock!.units) {
+        const base = unitPrice(s.template.archetype, s.template.level);
+        expect(Number.isInteger(s.price)).toBe(true);
+        expect(s.price).toBeGreaterThanOrEqual(1);
+        // round(base × factor) with factor ∈ [1−j, 1+j] → half-a-unit slack
+        expect(Math.abs(s.price - base)).toBeLessThanOrEqual(base * PRICES.units.jitter + 0.5);
+      }
+      const b = freshRunWithBus(7, { daemon: null });
+      dockAtPort(b.run, b.bus);
+      expect(b.run.portStock).toEqual(a.run.portStock);
+    });
+
+    it('buyPortUnit: spends the slot price, appends via the recruit path, marks sold; re-buy + broke are no-ops', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null, startingBits: RICH });
+      dockAtPort(run, bus);
+      const slot = run.portStock!.units[0]!;
+      const teamBefore = run.team.length;
+      run.dispatch({ kind: 'buyPortUnit', index: 0 });
+      expect(run.bits).toBe(RICH - slot.price);
+      expect(run.team).toHaveLength(teamBefore + 1);
+      expect(run.team[teamBefore]).toEqual(slot.template);
+      expect(run.deploymentCounts).toHaveLength(run.team.length);
+      expect(run.encounterEffects).toHaveLength(run.team.length);
+      expect(run.pendingEncounterEffects).toHaveLength(run.team.length);
+      expect(slot.sold).toBe(true);
+      run.dispatch({ kind: 'buyPortUnit', index: 0 }); // sold — no-op
+      expect(run.bits).toBe(RICH - slot.price);
+      expect(run.team).toHaveLength(teamBefore + 1);
+      const broke = freshRunWithBus(1, { daemon: null, startingBits: 0 });
+      dockAtPort(broke.run, broke.bus);
+      broke.run.dispatch({ kind: 'buyPortUnit', index: 0 });
+      expect(broke.run.team).toHaveLength(teamBefore);
+      expect(broke.run.portStock!.units[0]!.sold).toBe(false);
+    });
+
+    it('buyPortPacket: room = plain buy; full cache = the swap contract, affordability validated FIRST', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null, startingBits: RICH });
+      dockAtPort(run, bus);
+      const slot = run.portStock!.packets[0]!;
+      run.dispatch({ kind: 'buyPortPacket', index: 0 });
+      expect(run.cache).toContain(slot.packetId);
+      expect(run.bits).toBe(RICH - slot.price);
+      expect(slot.sold).toBe(true);
+      // Fill the cache to the derived size, then a swap-less buy no-ops…
+      while (run.cacheHasRoom) run.addPacket('patch');
+      const full = [...run.cache];
+      const slot1 = run.portStock!.packets[1]!;
+      run.dispatch({ kind: 'buyPortPacket', index: 1 });
+      expect(run.cache).toEqual(full);
+      expect(slot1.sold).toBe(false);
+      // …and a valid swap discards the held slot and adds the bought one.
+      run.dispatch({ kind: 'buyPortPacket', index: 1, swapCacheIndex: 0 });
+      expect(run.cache).toHaveLength(full.length);
+      expect(run.cache).toContain(slot1.packetId);
+      expect(slot1.sold).toBe(true);
+      // Validate-first: a broke buyer's swap discards NOTHING.
+      const broke = freshRunWithBus(1, { daemon: null, startingBits: 0 });
+      dockAtPort(broke.run, broke.bus);
+      while (broke.run.cacheHasRoom) broke.run.addPacket('patch');
+      const held = [...broke.run.cache];
+      broke.run.dispatch({ kind: 'buyPortPacket', index: 0, swapCacheIndex: 0 });
+      expect(broke.run.cache).toEqual(held);
+    });
+
+    it('buyPortDaemon: joins ownership + spends; a second dock re-excludes it from stock', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null, startingBits: RICH });
+      dockAtPort(run, bus);
+      const slot = run.portStock!.daemons[0]!;
+      const ownedBefore = run.daemons.length;
+      run.dispatch({ kind: 'buyPortDaemon', index: 0 });
+      expect(run.daemons).toHaveLength(ownedBefore + 1);
+      expect(run.daemons.at(-1)!.id).toBe(slot.daemonId);
+      expect(run.bits).toBe(RICH - slot.price);
+      expect(slot.sold).toBe(true);
+    });
+
+    it('sellPacket: the refund is RAW ⌊price × sellFraction⌋ — the bitsGain fold never applies (no mint)', () => {
+      const { run, bus } = freshRunWithBus(1, {
+        daemon: daemonById('moneta')!, // the fold daemon — a folded refund would differ
+        startingBits: 0,
+      });
+      run.addPacket('patch');
+      run.addPacket('patch');
+      run.dispatch({ kind: 'sellPacket', cacheIndex: 0 }); // not docked — no-op
+      expect(run.cache).toHaveLength(2);
+      expect(run.bits).toBe(0);
+      dockAtPort(run, bus);
+      run.dispatch({ kind: 'sellPacket', cacheIndex: 0 });
+      expect(run.cache).toHaveLength(1);
+      expect(run.bits).toBe(sellPrice(packetPrice('patch'))); // raw — NOT effectiveBits
+      run.dispatch({ kind: 'sellPacket', cacheIndex: 5 }); // out of range — no-op
+      expect(run.cache).toHaveLength(1);
+    });
+
+    it('payToRemoveUnit: spends the flat price through the chokepoint; last-unit + broke charge nothing', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null, startingBits: RICH });
+      dockAtPort(run, bus);
+      const teamBefore = run.team.length;
+      const survivor = run.team[1]!.archetype;
+      run.dispatch({ kind: 'payToRemoveUnit', rosterIndex: 0 });
+      expect(run.team).toHaveLength(teamBefore - 1);
+      expect(run.team[0]!.archetype).toBe(survivor);
+      expect(run.bits).toBe(RICH - PRICES.unitRemovalPrice);
+      expect(run.pendingEncounterEffects).toHaveLength(run.team.length);
+      while (run.team.length > 1) run.dispatch({ kind: 'payToRemoveUnit', rosterIndex: 0 });
+      const bitsAtOne = run.bits;
+      run.dispatch({ kind: 'payToRemoveUnit', rosterIndex: 0 }); // last unit — no-op, no charge
+      expect(run.team).toHaveLength(1);
+      expect(run.bits).toBe(bitsAtOne);
+      const broke = freshRunWithBus(1, { daemon: null, startingBits: 0 });
+      dockAtPort(broke.run, broke.bus);
+      const brokeTeam = broke.run.team.length;
+      broke.run.dispatch({ kind: 'payToRemoveUnit', rosterIndex: 0 });
+      expect(broke.run.team).toHaveLength(brokeTeam);
+    });
+
+    it('a mid-dock save round-trips the stock (prices + sold flags); a corrupt slot id rejects', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null, startingBits: RICH });
+      dockAtPort(run, bus);
+      run.dispatch({ kind: 'buyPortUnit', index: 0 }); // a sold flag to carry
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.portStock).toEqual(run.portStock);
+      expect(restored.bits).toBe(run.bits);
+      // Transactions keep working on the restored run.
+      const slot = restored.portStock!.packets[0]!;
+      restored.dispatch({ kind: 'buyPortPacket', index: 0 });
+      expect(restored.cache).toContain(slot.packetId);
+      // Corruption rejects loudly (the pendingRewards discipline).
+      const corruptPacket = JSON.parse(JSON.stringify(wire));
+      corruptPacket.portStock.packets[0].packetId = 'ghost';
+      expect(() => Run.fromJSON(corruptPacket, new EventBus<GameEvents>())).toThrow(
+        /unknown packet id 'ghost'/,
+      );
+      const corruptDaemon = JSON.parse(JSON.stringify(wire));
+      corruptDaemon.portStock.daemons[0].daemonId = 'ghost';
+      expect(() => Run.fromJSON(corruptDaemon, new EventBus<GameEvents>())).toThrow(
+        /unknown daemon id 'ghost'/,
+      );
+    });
+
+    it('leavePort clears the stock; the next save carries null', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      dockAtPort(run, bus);
+      expect(run.portStock).not.toBeNull();
+      run.dispatch({ kind: 'leavePort' });
+      expect(run.portStock).toBeNull();
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      expect(wire.portStock).toBeNull();
     });
   });
 
@@ -3734,6 +3861,62 @@ function freshRunWithBus(seed: number, config?: RunConfig): RunHandle {
 function frontierOf(run: Run): number {
   if (run.currentNodeId === PRE_ROOT_NODE_ID) return run.nodeMap.rootId;
   return run.nodeMap.edges.find((e) => e.from === run.currentNodeId)!.to;
+}
+
+// ---- 50c/50d — the port-dock helpers ---------------------------------------
+
+function nodeKindOf(run: Run, id: number) {
+  return run.nodeMap.nodes.find((n) => n.id === id)!.kind;
+}
+
+function frontierIdsOf(run: Run): number[] {
+  return run.currentNodeId === PRE_ROOT_NODE_ID
+    ? [run.nodeMap.rootId]
+    : run.nodeMap.edges.filter((e) => e.from === run.currentNodeId).map((e) => e.to);
+}
+
+/** Any port reachable strictly downstream of (or at) `from`? */
+function reachesPort(run: Run, from: number): boolean {
+  const stack = [from];
+  const seen = new Set([from]);
+  while (stack.length > 0) {
+    const id = stack.pop()!;
+    if (nodeKindOf(run, id) === 'port') return true;
+    for (const e of run.nodeMap.edges) {
+      if (e.from === id && !seen.has(e.to)) {
+        seen.add(e.to);
+        stack.push(e.to);
+      }
+    }
+  }
+  return false;
+}
+
+/** Walk the run to a port node and dock (wins forged via battle:ended — the
+ *  WIN_BOUNTY idiom; rewards declined so bits stay exactly at their starting
+ *  value). Every default map has ≥1 port (the NodeMap guarantee) and every
+ *  node is root-reachable, so a port-reaching frontier choice always exists
+ *  from the start. Deterministic — no policy draws. */
+function dockAtPort(run: Run, bus: EventBus<GameEvents>): void {
+  for (let guard = 0; guard < 20; guard++) {
+    expect(run.phase).toBe('map');
+    const frontier = frontierIdsOf(run);
+    const port = frontier.find((id) => nodeKindOf(run, id) === 'port');
+    if (port !== undefined) {
+      run.dispatch({ kind: 'enterNode', nodeId: port });
+      return;
+    }
+    const next = frontier.find((id) => reachesPort(run, id));
+    expect(next).toBeDefined();
+    run.dispatch({ kind: 'enterNode', nodeId: next! });
+    if (run.phase === 'battle') {
+      winEncounter(bus);
+      declineAllRewards(run);
+    }
+    if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
+    if (run.phase === 'recruit') run.dispatch({ kind: 'passRecruit' });
+  }
+  throw new Error('dockAtPort: never reached a port');
 }
 
 /** K3 — a gated run paused at its FIRST pre-turn gate (`turn-intro`), the only

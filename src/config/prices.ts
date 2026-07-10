@@ -22,6 +22,10 @@
  * - `unitRemovalPrice` — the flat pay-to-remove service fee (kickoff
  *   lock: level-scaled removal punishes exactly the low-value units
  *   removal exists for).
+ * - `portStock` — how many of each slot kind a port rolls on entry
+ *   (spec §Ports starting points: 5 units / 5 packets / 2 daemons). Slots
+ *   are DISTINCT samples, so a count above the (owned-excluded) catalog
+ *   size just fills what exists.
  *
  * Boot referential asserts (args-injected for synthetic tests, self-wired
  * below — the packets.ts discipline): every priced archetype exists, every
@@ -56,6 +60,11 @@ export const PricesSchema = z.object({
   }),
   sellFraction: z.number().min(0).max(1),
   unitRemovalPrice: z.number().int().nonnegative(),
+  portStock: z.object({
+    units: z.number().int().nonnegative(),
+    packets: z.number().int().nonnegative(),
+    daemons: z.number().int().nonnegative(),
+  }),
 });
 
 export type PricesConfig = z.infer<typeof PricesSchema>;

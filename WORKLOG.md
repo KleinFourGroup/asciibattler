@@ -1340,3 +1340,42 @@ snapshot and adds stock draws immediately after, so re-baselining per
 step would produce two stale intermediates (the 49h proportionality
 precedent). The 48g CSV baselines are STALE for comparison as of this
 commit (ports replace battles on some paths).
+
+### 50d — the stock + transaction engine (2026-07-10)
+
+The port sells. **Run v34→v35** (the predicted bump): `portStock`
+(units/packets/daemons with prices + `sold` flags — flag-not-splice so
+slot indices stay stable for commands and §50e renders sold-out; null
+undocked; cleared on `leavePort`, no rerolls) + the two port streams
+appended LAST (`portStockRng` composition / `portPriceRng` jitter —
+separate because the owned-daemon exclusion makes composition draw
+counts filter-dependent, the reward two-stream rationale).
+
+**Stock shape**: units reuse `rollOffer` VERBATIM (distinct draftable
+archetypes at team-scaled levels + the geometric bonus — port recruits
+ARE recruits, the spec lock), priced base × level-curve then jittered
+±15% off the price stream, floored at 1; packets = distinct catalog
+sample at flat book prices; daemons = distinct owned-excluded sample
+(a maxed collector sees an empty shelf — fine). `sampleDistinct` is
+Recruitment's partial Fisher–Yates generalized.
+
+**The five commands** (`buyPortUnit`/`buyPortPacket`/`buyPortDaemon`/
+`sellPacket`/`payToRemoveUnit`): every reject is a silent no-op that
+mutates nothing. Notables: `appendRosterUnit` extracted from
+handleChooseRecruit (the removeRosterUnit inverse — one append
+chokepoint now that buys are a second caller); buyPortPacket takes the
+49c swap contract with affordability validated BEFORE the swap discard
+(a broke buyer never loses a held packet); **sellPacket refunds via RAW
+addBits — the standing gainBits mint warning, now PINNED by a moneta
+test** (fold owner sells at book price, no compounding);
+payToRemoveUnit pre-checks what the chokepoint would throw on
+(last-unit, range) and `removeRosterUnit`'s guard widened to
+map-or-port. Decode re-validates every stock id against the catalogs
+(the pendingRewards discipline) — a corrupt slot rejects loudly.
+
+**Fuzz**: `case 'port'` stays leave-immediately — the §52 charter
+expects the purchase-policy arm "from §50", so it lands at 50g with
+the re-baseline (one behavior change, one read). +9 tests (stock
+counts/exclusion/determinism, jitter bounds, all five commands incl.
+no-op edges, round-trip + corruption, stock lifecycle); the dock
+walker hoisted to file scope for both port describes.

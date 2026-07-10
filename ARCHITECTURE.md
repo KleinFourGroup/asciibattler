@@ -524,7 +524,12 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   enterNode               { nodeId: number }
   chooseRecruit           { unitTemplate: UnitTemplate }
   passRecruit             { }     # H6b: decline the recruit offer
-  leavePort               { }     # 50c: undock from a port node back to the map (the hop was consumed on entry); §50d adds the buy/sell/remove siblings
+  leavePort               { }     # 50c: undock from a port node back to the map (the hop was consumed on entry); clears the rolled stock (50d)
+  buyPortUnit             { index: number }   # 50d: buy the stocked unit — spends the jittered price, appends via the recruit path (appendRosterUnit); sold/broke/bad-index = silent no-op
+  buyPortPacket           { index: number; swapCacheIndex?: number }   # 50d: buy the stocked packet; a FULL cache takes the 49c swap contract (affordability validated BEFORE the swap discard)
+  buyPortDaemon           { index: number }   # 50d: buy the stocked daemon (stock owned-excluded at roll)
+  sellPacket              { cacheIndex: number }   # 50d: sell one held packet while docked — refund = ⌊price × sellFraction⌋ via RAW addBits (NEVER gainBits — the fold-loop mint)
+  payToRemoveUnit         { rosterIndex: number }   # 50d: pay the flat unitRemovalPrice, remove through the removeRosterUnit chokepoint (all six roster-parallel structures); last unit irremovable
   dismissPromotion        { }     # E4: dismiss the PromotionScene
   acceptReward            { index: number; swapCacheIndex?: number }   # 48b: accept ONE pending reward portion (bits settle via gainBits; a daemon joins ownership immediately); 49c: swapCacheIndex = the slot to discard when a packet portion meets a FULL cache
   declineReward           { index: number }   # 48b: decline ONE pending reward portion (declinable-per-portion, passRecruit's sibling)

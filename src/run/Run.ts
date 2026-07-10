@@ -89,6 +89,7 @@ import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
 import { packetById, PACKETS, type UseContext } from '../config/packets';
 import { rewardTableById } from '../config/rewards';
 import { rollRewards, type RewardPortion } from './rewards';
+import { PRICES, unitPrice, packetPrice, daemonPrice, sellPrice } from '../config/prices';
 import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { xpToNext } from '../sim/xp';
@@ -120,6 +121,60 @@ export type RunPhase =
   | 'recruit'
   | 'defeat'
   | 'complete';
+
+/**
+ * 50d — a port's rolled stock (spec §Ports). Rolled ONCE on docking
+ * (`rollPortStock`, off the two dedicated port streams), serialized while
+ * docked (a mid-port save keeps the stock — the pending-offer pattern), and
+ * cleared on `leavePort` (no re-visits / no rerolls — the cluster scope
+ * guard; a port isn't in its own frontier anyway). Slots carry a `sold`
+ * flag rather than splicing, so indices stay stable for the transaction
+ * commands and §50e can render sold-out slots.
+ *
+ * Unit slots carry the full rolled template (the recruit-offer pattern —
+ * a `currentOffer` sibling) and a JITTERED price; packet/daemon slots carry
+ * catalog ids (defs resolve at read time) and flat price-book prices.
+ */
+export interface PortUnitSlot {
+  readonly template: UnitTemplate;
+  readonly price: number;
+  sold: boolean;
+}
+export interface PortPacketSlot {
+  readonly packetId: string;
+  readonly price: number;
+  sold: boolean;
+}
+export interface PortDaemonSlot {
+  readonly daemonId: string;
+  readonly price: number;
+  sold: boolean;
+}
+export interface PortStock {
+  readonly units: PortUnitSlot[];
+  readonly packets: PortPacketSlot[];
+  readonly daemons: PortDaemonSlot[];
+}
+
+/**
+ * 50d — sample up to `count` DISTINCT entries uniformly from `pool` via a
+ * partial Fisher–Yates on a copy (the `Recruitment.sampleDistinctArchetypes`
+ * shape, generalized). Draws exactly `min(count, pool.length)` ints — the
+ * draw count depends only on the pool SIZE, and the owned-daemon exclusion
+ * makes that size filter-dependent, which is why port stock gets its own
+ * streams (the two-reward-stream rationale, gotcha #111's cousin).
+ */
+function sampleDistinct<T>(pool: readonly T[], count: number, rng: RNG): T[] {
+  const copy = [...pool];
+  const n = Math.min(count, copy.length);
+  for (let i = 0; i < n; i++) {
+    const j = rng.int(i, copy.length - 1);
+    const tmp = copy[i]!;
+    copy[i] = copy[j]!;
+    copy[j] = tmp;
+  }
+  return copy.slice(0, n);
+}
 
 export interface BattleEncounter {
   readonly worldSeed: number;
@@ -305,8 +360,15 @@ export interface BattleEncounter {
  *  generator gains the port scatter pass, so the seed→map mapping changed:
  *  a v33 save's map has no port nodes and its serialized phase can never be
  *  'port' — but a v33 READER handed a v34 save would choke on both →
- *  reject. */
-const RUN_SCHEMA_VERSION = 34;
+ *  reject.
+ *  50d: bumped 34→35. The port engine: adds `portStock` (the docked port's
+ *  rolled stock — units/packets/daemons with prices + sold flags; null
+ *  undocked) and the two port streams (`portStockRng` composition /
+ *  `portPriceRng` unit-price jitter — separate because the owned-daemon
+ *  exclusion makes composition draw counts filter-dependent, the
+ *  two-reward-stream rationale). A v34 mid-dock save has no stock to
+ *  restore → reject rather than strand a docked run with nothing to buy. */
+const RUN_SCHEMA_VERSION = 35;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -364,6 +426,16 @@ export interface RunSnapshot {
   rewardRng: RNGSnapshot;
   /** 48b: dedicated stream for reward bits `{min,max}` rolls. */
   rewardBitsRng: RNGSnapshot;
+  /** 50d: dedicated stream for port stock composition (unit/packet/daemon
+   *  sampling — draw count is owned-exclusion-dependent, so isolated). */
+  portStockRng: RNGSnapshot;
+  /** 50d: dedicated stream for port unit-price jitter rolls. */
+  portPriceRng: RNGSnapshot;
+  /** 50d: the docked port's rolled stock (null undocked) — a mid-dock save
+   *  restores the exact stock, prices, and sold flags (the pending-offer
+   *  pattern). Packet/daemon ids re-validate against the catalogs on load
+   *  (hard reject on a miss — the daemonIds discipline). */
+  portStock: PortStock | null;
   /** L1→47d: the run's owned daemons BY ID, in acquisition order (the
    *  def-resolved pattern — what makes uncapped multi-daemon cheap). An id
    *  missing from the catalog on load is a hard reject (no silent drops);
@@ -495,6 +567,18 @@ export class Run {
   /** 48b: dedicated stream for bits `{min,max}` rolls (the spec's "bits
    *  rolls, table sampling ... EACH get dedicated forked RNG streams"). */
   readonly rewardBitsRng: RNG;
+  /** 50d: dedicated stream for port stock COMPOSITION (unit archetype/level
+   *  rolls, packet sampling, daemon sampling). Isolated because the daemon
+   *  sample's draw count is owned-exclusion-dependent (the rewardRng
+   *  rationale) — ownership differences must never shift another stream. */
+  readonly portStockRng: RNG;
+  /** 50d: dedicated stream for port unit-price JITTER rolls (the spec's
+   *  "randomly chosen price"; `config/prices.json#units.jitter`). */
+  readonly portPriceRng: RNG;
+  /** 50d: the docked port's stock — see `PortStock`. Null undocked; rolled
+   *  at dock (`handleEnterNode`), cleared at `leavePort`, serialized while
+   *  docked (v35). */
+  portStock: PortStock | null = null;
   /** L1→47d: the run's owned daemons, in ACQUISITION order (index 0 = the
    *  run-start roll; §48 rewards / §50 ports append via `addDaemon` —
    *  uncapped, the locked design). Seeded from `RunConfig.daemon` (a bespoke
@@ -805,6 +889,12 @@ export class Run {
     // filter-dependent (owned-daemon exclusion → zero-draw singletons).
     this.rewardRng = this.rng.fork();
     this.rewardBitsRng = this.rng.fork();
+    // 50d — the two port streams, appended LAST (the append-at-end fork
+    // discipline). Composition and price jitter are separate because the
+    // daemon sample's draw count is owned-exclusion-dependent (the reward
+    // two-stream rationale) — prices must not shift when ownership does.
+    this.portStockRng = this.rng.fork();
+    this.portPriceRng = this.rng.fork();
     this.turnGrants = disabledTurnGrants();
     // 49d — the finality toggle: override ?? deck.json. Pure of RNG.
     this.passIsFinal = config?.passIsFinal ?? DECK.grantQueue.passIsFinal;
@@ -867,6 +957,21 @@ export class Run {
         break;
       case 'leavePort':
         this.handleLeavePort();
+        break;
+      case 'buyPortUnit':
+        this.handleBuyPortUnit(command.index);
+        break;
+      case 'buyPortPacket':
+        this.handleBuyPortPacket(command.index, command.swapCacheIndex);
+        break;
+      case 'buyPortDaemon':
+        this.handleBuyPortDaemon(command.index);
+        break;
+      case 'sellPacket':
+        this.handleSellPacket(command.cacheIndex);
+        break;
+      case 'payToRemoveUnit':
+        this.handlePayToRemoveUnit(command.rosterIndex);
         break;
       case 'dismissPromotion':
         this.handleDismissPromotion();
@@ -933,6 +1038,9 @@ export class Run {
     }
     if (this.kindOf(nodeId) === 'port') {
       this.phase = 'port';
+      // 50d — the stock rolls ONCE, at dock (spec §Ports: "on node entry"),
+      // then serializes with the save. No rerolls, no re-visits.
+      this.portStock = this.rollPortStock();
       this.bus.emit('port:entered', { nodeId });
       return;
     }
@@ -950,7 +1058,152 @@ export class Run {
    */
   private handleLeavePort(): void {
     if (this.phase !== 'port') return;
+    // 50d — the stock dies with the dock (no re-visits / no rerolls — the
+    // cluster scope guard; the port isn't in its own frontier anyway).
+    this.portStock = null;
     this.phase = 'map';
+  }
+
+  /**
+   * 50d — roll a docked port's stock (spec §Ports), all off the two
+   * dedicated port streams:
+   * - UNITS: the recruit-offer roll reused verbatim (`rollOffer` — distinct
+   *   draftable archetypes at team-scaled levels with the geometric bonus;
+   *   port recruits ARE recruits, the spec's wire-in-identically lock), each
+   *   priced by the price book's base × level curve, then JITTERED
+   *   (`±units.jitter`, the spec's "randomly chosen price") off
+   *   `portPriceRng` and floored at 1.
+   * - PACKETS: distinct catalog sample at flat price-book prices.
+   * - DAEMONS: distinct sample from the OWNED-EXCLUDED catalog (the reward
+   *   exclusion discipline) at flat prices; fewer unowned than the count →
+   *   fewer slots (possibly zero — a maxed collector sees an empty shelf).
+   * Composition draws ride `portStockRng` in a fixed order (units →
+   * packets → daemons); only the daemon sample's count varies.
+   */
+  private rollPortStock(): PortStock {
+    const counts = PRICES.portStock;
+    const baseLevel = Math.round(avgTeamLevel(this.team));
+    const units: PortUnitSlot[] = rollOffer(this.portStockRng, counts.units, (cardRng) =>
+      Math.min(
+        LEVELING.levelCap,
+        baseLevel + recruitLevelBonus(cardRng, RECRUITMENT.recruitBonusChance),
+      ),
+    ).map((template) => {
+      const { jitter } = PRICES.units;
+      const factor = 1 - jitter + this.portPriceRng.next() * 2 * jitter;
+      return {
+        template,
+        price: Math.max(1, Math.round(unitPrice(template.archetype, template.level) * factor)),
+        sold: false,
+      };
+    });
+    const packets: PortPacketSlot[] = sampleDistinct(
+      PACKETS.map((p) => p.id),
+      counts.packets,
+      this.portStockRng,
+    ).map((packetId) => ({ packetId, price: packetPrice(packetId), sold: false }));
+    const owned = new Set(this.daemons.map((d) => d.id));
+    const daemons: PortDaemonSlot[] = sampleDistinct(
+      DAEMONS.map((d) => d.id).filter((id) => !owned.has(id)),
+      counts.daemons,
+      this.portStockRng,
+    ).map((daemonId) => ({ daemonId, price: daemonPrice(daemonId), sold: false }));
+    return { units, packets, daemons };
+  }
+
+  /**
+   * 50d — buy a stocked unit: spend the slot's (jittered) price, then append
+   * through the SAME roster path as a post-battle recruit
+   * (`appendRosterUnit` — all four parallel structures; the deck picks the
+   * new card up at the next encounter's rebuild). Wrong phase / no stock /
+   * bad index / already sold / can't afford — all silent no-ops that mutate
+   * nothing (the acceptReward validate-first discipline).
+   */
+  private handleBuyPortUnit(index: number): void {
+    if (this.phase !== 'port' || this.portStock === null) return;
+    const slot = this.portStock.units[index];
+    if (slot === undefined || slot.sold) return;
+    if (!this.spendBits(slot.price)) return;
+    slot.sold = true;
+    this.appendRosterUnit(slot.template);
+  }
+
+  /**
+   * 50d — buy a stocked packet. A FULL cache requires a valid
+   * `swapCacheIndex` (the 49c decline-or-swap contract, acceptReward's
+   * shape) — and affordability is checked BEFORE the swap discard, so a
+   * broke buyer never loses the held packet to a swap that can't complete.
+   */
+  private handleBuyPortPacket(index: number, swapCacheIndex?: number): void {
+    if (this.phase !== 'port' || this.portStock === null) return;
+    const slot = this.portStock.packets[index];
+    if (slot === undefined || slot.sold) return;
+    if (!this.cacheHasRoom) {
+      if (
+        swapCacheIndex === undefined ||
+        !Number.isInteger(swapCacheIndex) ||
+        swapCacheIndex < 0 ||
+        swapCacheIndex >= this.cache.length
+      ) {
+        return;
+      }
+      if (this.bits < slot.price) return; // validate-first: no discard on a doomed buy
+      this.handleDiscardPacket(swapCacheIndex);
+    }
+    if (!this.spendBits(slot.price)) return;
+    slot.sold = true;
+    this.addPacket(slot.packetId);
+  }
+
+  /** 50d — buy a stocked daemon (stock was owned-excluded at roll, so a
+   *  duplicate is unreachable). Same silent no-op guards as the unit buy. */
+  private handleBuyPortDaemon(index: number): void {
+    if (this.phase !== 'port' || this.portStock === null) return;
+    const slot = this.portStock.daemons[index];
+    if (slot === undefined || slot.sold) return;
+    const daemon = daemonById(slot.daemonId);
+    if (daemon === undefined) {
+      // The roll samples the catalog and decode re-validates — a miss here
+      // is corruption; loud beats a silently vanished purchase.
+      throw new Error(`Run.handleBuyPortDaemon: unknown daemon id '${slot.daemonId}'`);
+    }
+    if (!this.spendBits(slot.price)) return;
+    slot.sold = true;
+    this.addDaemon(daemon);
+  }
+
+  /**
+   * 50d — sell one held packet while docked: the cache slot discards and
+   * the refund lands via RAW `addBits` — NEVER `gainBits` (the standing
+   * warning on `gainBits`: a bitsGain fold above 1/sellFraction would mint
+   * an infinite buy-sell loop). Refund = ⌊price-book buy price ×
+   * sellFraction⌋, independent of any stocked slot's jitter.
+   */
+  private handleSellPacket(cacheIndex: number): void {
+    if (this.phase !== 'port') return;
+    if (!Number.isInteger(cacheIndex)) return;
+    const packetId = this.cache[cacheIndex];
+    if (packetId === undefined) return;
+    this.handleDiscardPacket(cacheIndex);
+    this.addBits(sellPrice(packetPrice(packetId)));
+  }
+
+  /**
+   * 50d — the pay-to-remove service: spend the flat `unitRemovalPrice`,
+   * then route through the ONE roster-shrink chokepoint
+   * (`removeRosterUnit`). The command layer converts the chokepoint's
+   * throw-conditions into silent no-ops (wrong phase is guarded here;
+   * out-of-range and last-unit are pre-checked) — the chokepoint keeps
+   * throwing for real callers-gone-wrong.
+   */
+  private handlePayToRemoveUnit(rosterIndex: number): void {
+    if (this.phase !== 'port') return;
+    if (!Number.isInteger(rosterIndex) || rosterIndex < 0 || rosterIndex >= this.team.length) {
+      return;
+    }
+    if (this.team.length <= 1) return;
+    if (!this.spendBits(PRICES.unitRemovalPrice)) return;
+    this.removeRosterUnit(rosterIndex);
   }
 
   /**
@@ -2272,6 +2525,19 @@ export class Run {
 
   private handleChooseRecruit(unitTemplate: UnitTemplate): void {
     if (this.phase !== 'recruit') return;
+    this.appendRosterUnit(unitTemplate);
+    this.currentOffer = null;
+    this.phase = 'map';
+  }
+
+  /**
+   * 50d — THE roster-append chokepoint, `removeRosterUnit`'s inverse: every
+   * way a unit joins the roster (post-battle recruit, port buy) pushes the
+   * unit AND its slot in each parallel structure here, in one place.
+   * (Extracted from `handleChooseRecruit` when port buys became the second
+   * caller.)
+   */
+  private appendRosterUnit(unitTemplate: UnitTemplate): void {
     this.team.push(unitTemplate);
     // H3 — keep the deployment counter parallel to the roster. A fresh
     // recruit hasn't been deployed in the current encounter yet.
@@ -2281,8 +2547,6 @@ export class Run {
     this.encounterEffects.push([]);
     // 49e — the pending store stays parallel to `team` too.
     this.pendingEncounterEffects.push([]);
-    this.currentOffer = null;
-    this.phase = 'map';
   }
 
   /**
@@ -2313,17 +2577,18 @@ export class Run {
    *   (every pile value < team.length) must not depend on call-site phase
    *   (worklog §50).
    *
-   * Map-phase-only (§50d adds 'port'): outside that window roster indices
-   * are live in places a splice can't reach (a battle's `playerRosterIds`
-   * stamp, un-banked `xpAwards`, `pendingPromotions`) — throwing beats a
-   * silent desync. `pendingPromotions` is structurally null here (non-null
-   * only during 'promotion'). The roster can't be emptied — a zero-unit
-   * run has no deck to draw. Emits nothing: §50d's command wrapper owns
-   * eventing, and roster UI re-derives from the live roster on render.
+   * Map- or port-phase-only (50d widened it for the pay-to-remove service):
+   * outside those windows roster indices are live in places a splice can't
+   * reach (a battle's `playerRosterIds` stamp, un-banked `xpAwards`,
+   * `pendingPromotions`) — throwing beats a silent desync.
+   * `pendingPromotions` is structurally null here (non-null only during
+   * 'promotion'). The roster can't be emptied — a zero-unit run has no deck
+   * to draw. Emits nothing: the command wrapper owns eventing, and roster
+   * UI re-derives from the live roster on render.
    */
   removeRosterUnit(index: number): void {
-    if (this.phase !== 'map') {
-      throw new Error(`removeRosterUnit: only legal at the map (phase '${this.phase}')`);
+    if (this.phase !== 'map' && this.phase !== 'port') {
+      throw new Error(`removeRosterUnit: only legal at the map or a port (phase '${this.phase}')`);
     }
     if (!Number.isInteger(index) || index < 0 || index >= this.team.length) {
       throw new Error(
@@ -2481,6 +2746,19 @@ export class Run {
       daemonRng: this.daemonRng.toJSON(),
       rewardRng: this.rewardRng.toJSON(),
       rewardBitsRng: this.rewardBitsRng.toJSON(),
+      portStockRng: this.portStockRng.toJSON(),
+      portPriceRng: this.portPriceRng.toJSON(),
+      // 50d — the docked stock's slots MUTATE in place (`sold`), so the wire
+      // image copies each slot (the turnGrants discipline; templates stay by
+      // reference — never mutated after the roll).
+      portStock:
+        this.portStock === null
+          ? null
+          : {
+              units: this.portStock.units.map((s) => ({ ...s })),
+              packets: this.portStock.packets.map((s) => ({ ...s })),
+              daemons: this.portStock.daemons.map((s) => ({ ...s })),
+            },
       // 47d — daemons serialize BY ID (def-resolved on load). 49d: the
       // queue's entries MUTATE in place (`used`/`passed`), so the wire image
       // copies each entry (buffs stay by reference — never mutated;
@@ -2652,6 +2930,33 @@ export class Run {
           return { ...p };
         })
       : null;
+    // 50d — the two port streams + the docked stock. Packet/daemon slot ids
+    // re-validate against the catalogs (the pendingRewards discipline); unit
+    // templates pass through like `team`.
+    m.portStockRng = RNG.fromJSON(snap.portStockRng);
+    m.portPriceRng = RNG.fromJSON(snap.portPriceRng);
+    m.portStock =
+      snap.portStock === null
+        ? null
+        : {
+            units: snap.portStock.units.map((s) => ({ ...s })),
+            packets: snap.portStock.packets.map((s) => {
+              if (packetById(s.packetId) === undefined) {
+                throw new Error(
+                  `Run.fromJSON: port stock references unknown packet id '${s.packetId}'`,
+                );
+              }
+              return { ...s };
+            }),
+            daemons: snap.portStock.daemons.map((s) => {
+              if (daemonById(s.daemonId) === undefined) {
+                throw new Error(
+                  `Run.fromJSON: port stock references unknown daemon id '${s.daemonId}'`,
+                );
+              }
+              return { ...s };
+            }),
+          };
     run['subscribe']();
     return run;
   }

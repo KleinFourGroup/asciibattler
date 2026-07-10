@@ -29,5 +29,10 @@
     "byId": {}
   },
   "sellFraction": 0.5,
-  "unitRemovalPrice": 20
+  "unitRemovalPrice": 20,
+  "portStock": {
+    "units": 5,
+    "packets": 5,
+    "daemons": 2
+  }
 }

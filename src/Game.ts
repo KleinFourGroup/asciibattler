@@ -289,6 +289,17 @@ export class Game implements RunDispatcher {
           this.swap(new MapScene());
         }
         break;
+      case 'buyPortUnit':
+      case 'buyPortPacket':
+      case 'buyPortDaemon':
+      case 'sellPacket':
+      case 'payToRemoveUnit':
+        // 50d — port transactions: run-level state only, no phase change
+        // (the §50e port screen re-renders in place after dispatch, the
+        // RewardScreen pattern; the overlays repaint off run:bitsChanged /
+        // run:cacheChanged).
+        this.run.dispatch(command);
+        break;
       case 'chooseRecruit':
         this.run.dispatch(command);
         // Non-terminal recruit: phase falls back to 'map' with no event

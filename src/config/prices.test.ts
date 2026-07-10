@@ -19,6 +19,7 @@ const SYNTHETIC = {
   daemons: { default: 7, byId: {} },
   sellFraction: 0.5,
   unitRemovalPrice: 3,
+  portStock: { units: 2, packets: 2, daemons: 1 },
 };
 
 const SYNTHETIC_CATALOGS = {
@@ -144,5 +145,8 @@ describe('50a — the price book (config/prices.json)', () => {
     expect(() => PricesSchema.parse({ ...SYNTHETIC, sellFraction: 1.5 })).toThrow();
     expect(() => PricesSchema.parse({ ...SYNTHETIC, packets: { default: 0, byId: {} } })).toThrow();
     expect(() => PricesSchema.parse({ ...SYNTHETIC, unitRemovalPrice: -1 })).toThrow();
+    expect(() =>
+      PricesSchema.parse({ ...SYNTHETIC, portStock: { units: -1, packets: 2, daemons: 1 } }),
+    ).toThrow();
   });
 });

@@ -156,3 +156,25 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   suite couldn't (the L1c3 daemon-ARM key read end-state ownership, and
   loot daemons reclassified a control run) — the "staged config/ paths →
   fuzz:smoke" trigger earned its slot.
+
+## Phase 49 (2026-07-09 → 07-10)
+
+- **Serialized-union prediction rule, second confirmation:** 49c's "unpredicted"
+  Run bump was a union widening (`pendingRewards` gains the packet member) —
+  the same shape 48b's phase-member bump had already taught. When cutting a
+  step that touches ANY serialized union, predict the bump in the cut line.
+  (49e then predicted its Run bump correctly; the World bump it DIDN'T predict
+  was the next lesson down: a phase risk note saying "sim untouched" is a
+  prediction too, and the step-zero audit is what catches it — venom's
+  target-side need was found before authoring, not after a wrong ship.)
+- **Deferred-axis debts come due through content:** 47f locked applyStatus
+  actor-side with "a target-side axis waits for content that needs it"; the
+  content arrived ONE PHASE later (venom). When locking a deliberately-narrow
+  axis, note WHICH already-planned content will demand the general case — the
+  49 kickoff catalog already contained venom, so the collision was findable at
+  47f time.
+- **The step-zero audit caught a second latent gap:** the 48e reward-editor
+  shipped without `assertRewardPacketRefs` in its validation (fine while
+  packet entries were dormant free-text; a foot-gun the moment content went
+  live). Editors that validate "the asserts a bad save would trip" need a
+  sweep whenever a NEW assert lands next to an existing editor's domain.

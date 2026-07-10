@@ -1177,3 +1177,44 @@ updated. Browser-verified at :5191: all 7 tabs, both complex
 sub-forms, the matrix constraints, the reverse-ref rename trap
 (Save disables), and a live no-edit save that produced a ZERO diff
 on disk. Zero console errors throughout.
+
+**49g user-playtested natively 2026-07-10** — "everything looks
+great" (a full run with live packet drops).
+
+### 49h — the exit sweep (2026-07-10, the phase close)
+
+- **Full fuzz sweep: HEALTHY** — 20 seeds × 2 strategies, greedy
+  20.0% / pure-random 15.0%, **0 hangs**, capped draws 2–3. NOT a
+  re-baseline (the 48g batches stay the comparison baseline) — §49's
+  battle streams are untouched; the read + the
+  proportionality rationale are in [BALANCE.md](BALANCE.md) §49h.
+- **ARCHITECTURE swept**: packets.ts/CacheOverlay/packet-editor
+  entries; the Run.ts/battleRules.ts/World.ts/rewards.ts/
+  PreTurnScreen/RewardScreen/deck.json lines updated; and a DRIFT
+  FIX — the config/ tree had never gained encounters.json/
+  selection.json/economy.json/rewards.json (latent since U3a→48a);
+  all five config files now listed. World's inline "v31" replaced
+  with the HANDOFF-🧭 pointer (the Run.ts precedent — inline version
+  numbers are how that drift happened).
+- **GOTCHAS #117**: the pending-until-start store (don't write
+  out-of-battle buffs straight to `encounterEffects`) + packet ids in
+  `TurnGrant.daemonId` (don't validate it against the daemon catalog).
+- **The scratchpad** gains three §49 process notes (the serialized-
+  union prediction rule's second confirmation; deferred-axis debts
+  coming due through content; editors needing a sweep when a new
+  boot assert lands in their domain).
+
+**The §49 exit-criteria walk** (roadmap §49): the earn-store-use loop
+runs end to end — a packet won from a reward table lands in the cache
+(49g browser-verified + user-playtested), survives save/reload (49b/
+49e round-trip pins), fires pre-turn unit (hype, strip-verified) +
+battle-wide (venom, headless + rules-compile pins) and out-of-battle
+roster-target (overclock, picker-verified + pend-drain pins), with
+effects visible in battle (poison/buffs ride the existing status viz;
+user-playtested). Full/swap flows user-confirmed (49c/49g playtests);
+empower/redraw work as packet-shaped fires under the strip
+(49f playtest). **One honest caveat:** the forced-keep SHRINK flow is
+agent-verified only (49f, forged shrink idol) — NO SHIPPED CONTENT
+can trigger it (no cacheSize-lowering daemon exists), so it stays
+un-user-testable until content arrives; noted, not blocking.
+**Phase 49 ✅ CLOSED.**

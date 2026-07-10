@@ -521,3 +521,25 @@ deltas. The pre-X H7c→O log lives at
     comparison baseline; the boss-wall watch item (held-out 59% at §46b) stays FILED for
     §52's cluster-closing pass, where `bitsMultiplier` (48f) + ports give run-level
     economy its first real levers.
+
+- **2026-07-10 — §49h the Packets-phase closer sweep: HEALTHY, deliberately light — NOT a
+  re-baseline (the 48g batches stay the comparison baseline).** §49's outcome coupling is
+  one notch below §48's: every battle stream is untouched (the fire engine is run-level;
+  `passIsFinal` is validation-only, the 49d bots were already strict-compliant), and the
+  only outcome-coupled config change is reward-table dilution — `daemon-cache`'s daemon
+  odds drop 7/8 → 7/11 with the three packet entries (slightly fewer loot idols per
+  elite), and `bits-small` stops being a zero-draw singleton (one new `rewardRng` draw per
+  sample; isolated stream, reward outcomes only). Packets themselves are OUTCOME-INERT in
+  the harness — the fuzz policy accepts-if-room but never fires (the noted future
+  fire-policy arm, possible since 49d precisely because pass/fire state is engine-level).
+  Method: the standard 20-seed sweep (`npm run fuzz`), not the 480-run fixed-vector
+  protocol — proportional to the coupling (the §47-close precedent: no BALANCE entry at
+  all; §49 gets the spot read because a table shape DID change).
+  - **greedy 20.0% / pure-random 15.0%, 0 hangs, capped draws 2–3/20** — vs the 48g
+    n=120 anchors (12.5 / 14.2), inside the n=20 binomial band (±~8pt); no directional
+    read at this n, and none sought. The health signals (hangs, caps) are the sweep's
+    real payload: both clean.
+  - **VERDICT: phase close ACCEPTED, no config change.** Packet drop weights ship rough
+    BY DESIGN — §52's cluster-closing pass owns the tuning, with the fire-policy fuzz arm
+    as its instrument if packet POWER (not just drop rate) needs measuring; the boss-wall
+    watch item stays FILED there too.

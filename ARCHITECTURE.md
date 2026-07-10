@@ -61,7 +61,8 @@ src/
     encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement moved to the sector pool; V1: catalog ships Brigands/Highwaymen/Deserters
     selection.ts             #   V1: the SELECTION policy (strategy: encounterFirst|layoutFirst) — config/selection.json
     economy.ts               #   47e: the economy substrate (startingBits) — config/economy.json; grows with Cluster 3
-    rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon entries) + the {table,trigger} encounter-ref schema + the daemon-ref boot assert — config/rewards.json
+    rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon entries) + the {table,trigger} encounter-ref schema + the daemon/packet-ref boot asserts (49a activated the packet sibling) — config/rewards.json
+    packets.ts               #   49a: the packet catalog (one effect op per packet: applyBuff|grantRedraws|injectRule|healPool) — the EXPORTED (op×target×context) matrix (PACKET_OP_TARGET/PACKET_OP_CONTEXTS: parse guard + the 49e engine + the 49g editor read ONE source; midBattle/tile = dormant vocabulary no op admits) + per-op duration restrictions + assertPacketStatusRefs — config/packets.json
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
@@ -73,7 +74,7 @@ src/
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
                              # phase timeline (F2), overflow scan, tile-effect pass, reapDead, checkBattleEnd.
-                             # Serializable; WorldSnapshot v31 (bumped E1 → §36a; I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses; I6 = removed UnitDerived.critChance, crit is per-ability now; J1 = added the shared objective; K1 = per-unit status effects; §31 = effect-scaling op-resolution slots; §36a = the in-flight claim registry)
+                             # Serializable; WorldSnapshot (live version: HANDOFF 🧭; bumped E1 → 49e: I1 = agility→speed + precision/evasion; I5 = melee→mercenary rename + subclasses; I6 = removed UnitDerived.critChance, crit is per-ability now; J1 = added the shared objective; K1 = per-unit status effects; §31 = effect-scaling op-resolution slots; §36a = the in-flight claim registry; 47f = battleRules + tallies; 49e = the applyStatus applyTo axis)
                              # K1: registerTrigger/fireTrigger — combat/lifecycle trigger dispatch (the L daemon seam; NOT bus events)
                              # E1: combatRng (forked from rng); E4/F6: damageDealt + utilityDone XP ledgers
                              # J1: objective (player-team shared steering, tile|enemy) — set via WorldCommand, auto-clears on enemy death
@@ -82,11 +83,13 @@ src/
                              # I2/I6: applyDamage(evadable, accuracy) rolls accuracy-vs-evasion to-hit off combatRng (crit→miss order);
                              #     a miss emits unit:missed + 0 dmg. Only single-target strikes opt in; AoE/catapult/tile unmissable
                              # K1: applyDamage reads effectiveStats (prc/eva/def) + fires dealHit/takeHit/dealMiss/evade/kill triggers (post-resolution)
-                             # 47f: installBattleRules (once per battle; data serialized v33, handlers re-registered on fromJSON)
+                             # 47f: installBattleRules (once per battle; data serialized, handlers re-registered on fromJSON)
                              #      + tallies {bits} (battle-earned run resources → the battle:ended payload, settled by Run.gainBits)
-    battleRules.ts           # 47f: the battle-domain daemon seam — BattleRule (plain compiled data) + registerBattleRules
+    battleRules.ts           # 47f: the battle-domain daemon/packet seam — BattleRule (plain compiled data) + registerBattleRules
                              # (evaluation at the K1 triggers: player-team acting only; filter-before-chance; chance off
-                             # combatRng; gainBits → tallies, applyStatus → the ACTING unit, def-resolved at fire time)
+                             # combatRng; gainBits → tallies, applyStatus → the ACTING unit by default, def-resolved at fire
+                             # time; 49e: applyTo:'target' lands on the STRUCK unit — dealHit-only, corpse-guarded AFTER the
+                             # chance draw so draw counts never depend on hp state)
     Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab + GP2 defense) + UnitDerived + Team + Behavior
                              # archetype: mercenary|adventurer|ronin|bandit|ranged|rogue|healer|mage|catapult|environment (I5 split melee→the 4-class melee family)
                              # level (E3) + xp/rosterIndex (E4); actionCooldowns Map + activeAction (A1)
@@ -178,7 +181,16 @@ src/
                              # rolled at the win boundary (rollRewards off two dedicated streams), spliced at
                              # the turn gate AHEAD of promotion; pendingRewards serializes BASE amounts and
                              # effectiveBits (base × bitsGain fold × 48f bitsMultiplier, one rounding) is the
-                             # SHARED display/settle helper. Live version: HANDOFF 🧭
+                             # SHARED display/settle helper. 49b–e: the CACHE (packet ids, acquisition
+                             # order; capacity DERIVED via the cacheSize fold, overflow = derived
+                             # forced-keep state; addPacket/handleDiscardPacket → run:cacheChanged) +
+                             # THE GRANT QUEUE (turnGrants: TurnGrant[] per-source, cursor DERIVED,
+                             # passGrant + the passIsFinal strict default — flipped TRUE at 49f) +
+                             # THE FIRE ENGINE (handleUsePacket: context from phase, validate-first,
+                             # consume-on-fire → run:packetUsed; pendingEncounterEffects drained after
+                             # the K1 reset at encounter start; injectedEncounterRules/injectedRunRules
+                             # unioned into every beginTurn compile after the daemon rules; packet
+                             # redraw grants INSERT AT THE CURSOR). Live version: HANDOFF 🧭
     redraw.ts                # K3→49d: pure redraw rules against ONE grant entry — redrawRejection / redrawAvailability (RedrawGrantState: used/budget/maxCards-per-ACTION)
     empower.ts               # K4→49d: pure empower rules against ONE grant entry — empowerRejection / empowerAvailability / empowerEffect(buff)
     daemon.ts                # L1→49d: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
@@ -210,7 +222,8 @@ src/
     sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks
     Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1); per-card level (post-G5)
     rewards.ts               # 48b: rollRewards — the pure reward roller (chance tests + weighted sampling w/ owned-daemon
-                             # exclusion + dormant-packet guard; bits {min,max} on the separate bits stream) + RewardPortion
+                             # exclusion; bits {min,max} on the separate bits stream) + RewardPortion (49c: + the packet
+                             # member — packets sample with NO exclusion, duplicates legal; a full cache resolves at ACCEPT)
 
   render/
     Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
@@ -282,14 +295,15 @@ src/
     Keybindings.ts           # J3: runtime-rebindable hotkey registry (codeFor/actionFor/rebind/on + DOM-free handleKeyDown)
     ObjectiveController.ts   # J3/Q3: battle-scoped objective input — right-click quick-Engage / arm(engage|focus)-then-click / hold / stop → World commands
     MapScreen.ts             # full-viewport node map (G2) + kind icons (G3); frontier click → enterNode; R1: top-right roster CardListButton
-    PreTurnScreen.ts         # H4b: turn N + pools + the drawn hand (H5b; P3: shared full UnitCard — all stats + abilities + XP bar, screen scrolls); K3 redraw + K4 empower selection + ▲ badge ride on the card; K3.5 map label; L1 idol banner; R1/R2: roster (top-right) + draw/discard pile (bottom corners) CardListButtons; the piles ride turn:starting/turn:handRedrawn (recruitment order)
+    PreTurnScreen.ts         # H4b: turn N + pools + the drawn hand (H5b; P3: shared full UnitCard — all stats + abilities + XP bar, screen scrolls); ▲ badge rides the card; K3.5 map label; L1 idol banner; R1/R2: roster (top-right) + draw/discard pile (bottom corners) CardListButtons; 49f: THE GUIDED FIRE STRIP (one chip per grant-queue entry in acquisition order; active auto-arms — empower fires on card click, redraw multi-selects + confirms ON the chip; Pass ▸ = passGrant; queued dim / spent fade / passed struck) + the at-will PACKET chip row (live cache thunk; target-none fires on click, hype arms pick-a-card) — refreshes off turn:handRedrawn/unitEmpowered/grantPassed + run:packetUsed/cacheChanged
     PostTurnScreen.ts        # H4b: turn outcome (winner / pool chips / gauges); M3: Continue-only (auto-timer removed)
     RecruitScreen.ts         # recruit offer cards (P1: shared UnitCard, recruit skin) → dispatch chooseRecruit; R1: top-right roster CardListButton
     CardListModal.ts         # R1/R2: shared card-list modal (CardListModal overlay + CardListButton) — full UnitCards in a dimmed, scrollable overlay (Esc/backdrop/✕ dismiss); R1 roster view (top-right, Map/Recruit/PreTurn) + R2 draw/discard pile views (PreTurn bottom corners)
     rosterOrder.ts           # R1: pure card-ordering seam (orderRoster: recruited[default]/archetype/level, stable on recruitment order) — only recruited wired to the UI, others switchable
     PromotionScreen.ts       # E4.4: per-unit level-up cards (P1: shared UnitCard, promotion skin); M2: two-phase reveal (all cards pop in, then gains tick green card-by-card + +N chip; click-anywhere skips) — the screen owns the timeline, driving the card via UnitCard's levelValue/statRows handles
-    RewardScreen.ts          # 48c: the reward offer — one row per portion, Accept (pickup blip) / Decline per row; bits rows render run.effectiveBits (the settle math, never the base) and re-derive after every resolution
+    RewardScreen.ts          # 48c: the reward offer — one row per portion, Accept (pickup blip) / Decline per row; bits rows render run.effectiveBits (the settle math, never the base) and re-derive after every resolution; 49c: packet rows (▤ + def-resolved name/description) + a live `▤ cache n/size` line while a packet portion pends + the full-cache SWAP picker (a select over held slots replacing Accept)
     BitsOverlay.ts           # 48d: the persistent top-left bits chip — the FIRST page-lifetime UI element (Game-owned, survives scene swaps); paints from run.bits + run:bitsChanged, hides at game-over, re-shows on run:started
+    CacheOverlay.ts          # 49f: the persistent cache chip (▤ n/6, stacked below the bits chip) + the open-anywhere cache modal — the SECOND page-lifetime element (the gotcha #116 lifecycle verbatim); Discard always, Fire by the phase-derived context (mirrors the 49e engine derivation), overclock's inline roster picker, the forced-keep shrink flow (overflow force-opens discard-only, un-dismissable until resolved)
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
     statLabels.ts            # GP3: shared STAT_LABELS map (card + HUD + PromotionScreen)
     UnitCard.ts              # P1: shared unit-card builder — one DOM/CSS source for recruit + promotion (+ P3 pre-turn, Q4/Q5 HUD player+enemy cards, R1/R2 card-list modal). compact/full modes × recruit/promotion/preturn/hud/roster skins; compact (Q4) = glyph + Lv(TL)/POW(TR) + glyph-width HP bar, via unitCardFromUnit adapter + the hpFill handle; Q5 team coloring via the `team` opt → unit-card--enemy (red glyph + HP, vs the green player default); carries the "card can't disagree with the unit" ability readings (was RecruitScreen); rarity-accent seam (unit-card--rarity-*, default common = today's look); §32c updateCardStatusRow reconciles the compact card's status row (a chip per active status: swatch + name + `×stacks · ±N/s · Ns`, the §31 scaled potency made literal)
@@ -308,12 +322,18 @@ config/                      # A4: balance JSON source of truth (paired with src
   deck.json                  # H5: handSize (card-drawn hand; also the 2nd half of the playerTeamLevel seam)
                              # K3: redraw { enabled, redrawsPerTurn, maxCardsPerTurn } — the pre-turn redraw budget
                              # (L1: enabled ships FALSE — daemons own availability; the block stays as the type anchor)
+                             # 49d/f: grantQueue { passIsFinal } — the strict acquisition-order dial (ships TRUE, the locked default; RunConfig.passIsFinal overrides for tests/fuzz)
   empower.json               # K4: empower { enabled, empowersPerTurn, buff } — the pre-turn unit buff (encounter-lived, via the K1 store)
                              # (L1: enabled ships FALSE — daemons carry their own buffs; the buff stays the K4-default shape)
   daemons.json               # L1→47c: the idol catalog, authored in the rule vocabulary — `rules: Rule[]`
                              # (modifier | hook; the shared daemon/packet effect pool; trigger×op×filter
                              # matrix parse-enforced). Mars/Minerva empower hooks; Mercury coin-flip full
                              # redraw; Janus guaranteed 2-card redraw — all `turnStart` grant hooks
+  encounters.json            # U3a: the authored-fight catalog (name/healthPool/kind/fit-filter/waves grammar + 48a rewards refs) — ALL 13 encounters reference a reward table (48g)
+  selection.json             # V1: the encounter-selection policy (strategy: encounterFirst|layoutFirst)
+  economy.json               # 47e: startingBits — the economy substrate; grows with Cluster 3
+  rewards.json               # 48a: the weighted reward tables (bits{min,max}|packet|daemon entries); 49g: packet entries LIVE across all four tables — every launch packet reachable
+  packets.json               # 49a→g: the packet catalog — the locked launch 7 (patch/hype/shield/reroute/venom/overclock/miner), one effect op each
   nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
@@ -339,7 +359,8 @@ tools/                       # Dev-only; not bundled into dist/ (index page at /
   attack-editor/             # Cluster 1: abilities.json editor (effect-op tree + live schema validation) at /tools/attack-editor/
   sector-editor/             # T3: sectors.json editor (layout + per-kind encounter pools, weighted-roll preview) at /tools/sector-editor/
   encounter-editor/          # V2: encounters.json editor (visual wave-grammar builder + live resolution preview; 48e adds the rewards-ref panel) at /tools/encounter-editor/
-  reward-editor/             # 48e: rewards.json editor (weighted tables + draw-% preview + referenced-by pane) at /tools/reward-editor/
+  reward-editor/             # 48e: rewards.json editor (weighted tables + draw-% preview + referenced-by pane; 49g: packet entries = a catalog select + the packet-ref assert) at /tools/reward-editor/
+  packet-editor/             # 49g: packets.json editor (matrix-driven per-op sub-forms, derived target, constrained contexts, fire summary + dropped-by pane; byte-faithful formatPacketsJson) at /tools/packet-editor/
   sweep-gui/                 # command-builder GUI for the fuzz balance harness at /tools/sweep-gui/
   mapgen-prototype/          # M6: procedural node-map generator sandbox at /tools/mapgen-prototype/
 

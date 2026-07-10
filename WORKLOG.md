@@ -1415,3 +1415,8 @@ team 10→11 with all three parallels at 11), sell (→376: **+7 = ⌊15 ×
 the browser**), remove (→356, team back to 10, parallels 10), Leave →
 map re-rendered standing on the `$`, stock cleared, BitsOverlay 356.
 Zero console errors.
+
+**50e user-playtested natively 2026-07-10** — "it's working amazingly."
+The full economy loop (earn → dock → buy/sell/remove → fight on) is
+live and user-confirmed; the §50 exit criterion's native-playtest leg
+is satisfied ahead of the 50g walk.

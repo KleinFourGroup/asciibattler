@@ -86,7 +86,7 @@ import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
 import { selectEncounter } from './encounters/selection';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
-import { packetById } from '../config/packets';
+import { packetById, PACKETS, type UseContext } from '../config/packets';
 import { rewardTableById } from '../config/rewards';
 import { rollRewards, type RewardPortion } from './rewards';
 import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
@@ -286,8 +286,15 @@ export interface BattleEncounter {
  *  entries with serialized `used`/`passed`), and the three per-turn counters
  *  (`redrawsUsedThisTurn`/`cardsRedrawnThisTurn`/`empowersUsedThisTurn`)
  *  fold into the entries. A v31 save carries shapes this engine can't read
- *  → reject. */
-const RUN_SCHEMA_VERSION = 32;
+ *  → reject.
+ *  49e: bumped 32→33. The fire engine: adds `pendingEncounterEffects` (an
+ *  out-of-battle `applyBuff` fire pends until the next encounter start) and
+ *  `injectedEncounterRules` + `injectedRunRules` (packet-injected battle
+ *  rules, encounter- and run-duration). A v32 save has none of the three →
+ *  reject rather than rehydrate a run whose fired packets silently lost
+ *  their effects (the packet was already consumed — dropping the stores
+ *  would eat it). */
+const RUN_SCHEMA_VERSION = 33;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -295,6 +302,16 @@ const RUN_SCHEMA_VERSION = 32;
  * retired catalog entry) → null too. (U3's code-built reproduction was retired
  * in V1: every encounter, Brigands included, is now `config/encounters.json`.)
  */
+/** 49e — an independent copy of one battle rule (plain nested data, never
+ *  mutated post-creation — the copy just keeps the injected-rules stores and
+ *  their wire images from aliasing the packet catalog / each other). */
+function cloneBattleRule(rule: BattleRule): BattleRule {
+  const copy: BattleRule = { on: rule.on, effect: { ...rule.effect } };
+  if (rule.chance !== undefined) copy.chance = rule.chance;
+  if (rule.filter !== undefined) copy.filter = { ...rule.filter };
+  return copy;
+}
+
 function resolveSelectedEncounter(id: string | null): Encounter | null {
   if (id === null) return null;
   return getEncounter(id) ?? null;
@@ -378,6 +395,16 @@ export interface RunSnapshot {
    *  (a shrink daemon drops capacity under current holdings; the overflow is
    *  DERIVED state, never a serialized flag — see `Run.cacheOverflow`). */
   cache: string[];
+  /** 49e: out-of-battle `applyBuff` fires (overclock), pending until the
+   *  NEXT encounter start — drained into `encounterEffects` right after the
+   *  K1 reset (per-roster-slot, parallel to `team`, like the live store). */
+  pendingEncounterEffects: StatusEffect[][];
+  /** 49e: packet-injected battle rules, in fire order. `encounter`-duration
+   *  ones reset at the next encounter start (the K1 reset-at-start
+   *  doctrine); `run`-duration ones persist for the whole run. Both union
+   *  into every turn's `battleRules` compile after the daemon rules. */
+  injectedEncounterRules: BattleRule[];
+  injectedRunRules: BattleRule[];
   /** H4: the run-wide player health pool (persists across the whole run). */
   playerHealth: number;
   /** H4: the active encounter's enemy pool (reset each encounter). */
@@ -555,6 +582,29 @@ export class Run {
    */
   cache: string[];
   /**
+   * 49e — the pending-until-start store: an OUT-OF-BATTLE `applyBuff` fire
+   * (overclock, "empower for the next encounter") can't land in
+   * `encounterEffects` directly — `resetEncounterEffects` wipes that store
+   * at the next encounter's start (the K1 doctrine), so the buff pends HERE
+   * (per-roster-slot, parallel to `team`; a recruit appends a fresh `[]`)
+   * and `beginEncounter` drains it in right after the reset. A save between
+   * fire and next encounter round-trips it (v33). Pre-turn `applyBuff` fires
+   * skip this store — they land on the live encounter directly.
+   */
+  pendingEncounterEffects: StatusEffect[][];
+  /**
+   * 49e — packet-injected battle rules, in fire order. The `injectRule` op's
+   * landing stores: `encounter`-duration rules reset at the next encounter
+   * START (`beginEncounter`, the K1 reset-at-start doctrine — they persist
+   * through the post-encounter phases and die when a new encounter begins);
+   * `run`-duration rules persist for the whole run. Every turn's
+   * `battleRules` compile unions them AFTER the daemon rules (daemons →
+   * run-injected → encounter-injected, each in acquisition/fire order — the
+   * 47c fixed-evaluation-order discipline extended). Both round-trip (v33).
+   */
+  injectedEncounterRules: BattleRule[];
+  injectedRunRules: BattleRule[];
+  /**
    * H4 — the run-wide player health pool. Persists across the WHOLE run (every
    * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
    * lost. Each turn it's chipped by the enemy survivors' Σ`power`. Init +
@@ -705,6 +755,11 @@ export class Run {
     // 49b — the cache starts empty (packets arrive via rewards/ports only;
     // no starting-packet config until content demands one).
     this.cache = [];
+    // 49e — the fire engine's stores start empty (one pending-effect slot
+    // per roster unit, synced like `encounterEffects`; no injected rules).
+    this.pendingEncounterEffects = this.team.map(() => []);
+    this.injectedEncounterRules = [];
+    this.injectedRunRules = [];
     // H4 — the run-wide player pool starts full; the per-encounter state
     // (enemyHealth/turnIndex/selectedEncounter) is set when an encounter
     // actually begins (`beginEncounter`).
@@ -822,6 +877,9 @@ export class Run {
       case 'discardPacket':
         this.handleDiscardPacket(command.cacheIndex);
         break;
+      case 'usePacket':
+        this.handleUsePacket(command.cacheIndex, command.handIndex, command.rosterIndex);
+        break;
       case 'resetRun':
         // No-op at this layer — Game handles reset by disposing this Run
         // and constructing a new one. Falls through silently rather than
@@ -919,6 +977,12 @@ export class Run {
     // no handler registered → byte-identical). Fired AFTER the map roll so a
     // future daemon can read `encounterMap`.
     this.resetEncounterEffects();
+    // 49e — the pending out-of-battle buffs (overclock) land NOW, right
+    // after the reset (the pending-until-start ordering, the 49e shape-lock),
+    // and the previous encounter's injected rules expire (the same
+    // reset-at-start doctrine; run-duration injections persist).
+    this.drainPendingEncounterEffects();
+    this.injectedEncounterRules = [];
     this.fireTrigger('encounterStart', { hop: this.currentHop, nodeId: this.currentNodeId });
     // 47e — daemon `encounterStart` instant hooks fire alongside the K1
     // trigger (no launch daemon authors one — byte-identical until content
@@ -1208,6 +1272,122 @@ export class Run {
     this.emitCacheChanged();
   }
 
+  /**
+   * 49e — fire one held packet (the `usePacket` command): the consume side
+   * of the earn-store-use loop. The contract, all shape-locked (worklog §49e):
+   *
+   * - **Context derives from the phase** — `turn-intro` → `preTurn`, `map` →
+   *   `outOfBattle`, anything else rejects. The packet's authored `usableIn`
+   *   must admit the derived context (the parse-time matrix already
+   *   guarantees op×context legality, so the engine only re-checks the
+   *   authored subset).
+   * - **Validation before ANY mutation** (the acceptReward discipline):
+   *   every reject is a silent no-op that consumes nothing.
+   * - **Consume-on-fire, irrevocable** (the §49 kickoff lock): the effect
+   *   executes, then the slot splices — no batching, no undo. Order of
+   *   consumption IS order of effect.
+   * - **Op landing sites**: `applyBuff` → the live encounter store (preTurn,
+   *   on the targeted hand card's roster slot) or the pending-until-start
+   *   store (outOfBattle, on the roster slot directly); `grantRedraws` →
+   *   a `TurnGrant` INSERTED AT THE CURSOR (immediately active — the packet
+   *   buys back the flexibility the strict idol order takes; the queue
+   *   resumes behind it); `injectRule` → the duration's injected-rules
+   *   store; `healPool` → the instant-op executor (capped at max).
+   */
+  private handleUsePacket(cacheIndex: number, handIndex?: number, rosterIndex?: number): void {
+    const context: UseContext | null =
+      this.phase === 'turn-intro' ? 'preTurn' : this.phase === 'map' ? 'outOfBattle' : null;
+    if (context === null) return;
+    if (!Number.isInteger(cacheIndex) || cacheIndex < 0 || cacheIndex >= this.cache.length) return;
+    // The cache holds catalog-validated ids (addPacket/fromJSON both hard-
+    // reject unknowns), so a miss here is unreachable — guarded anyway.
+    const packet = packetById(this.cache[cacheIndex]!);
+    if (packet === undefined) return;
+    if (!packet.usableIn.includes(context)) return;
+    // Resolve the unit target per context BEFORE mutating anything: preTurn
+    // targets a HAND position (the redraw/empower click contract), out-of-
+    // battle a roster slot. Target-less packets ignore both fields.
+    let targetSlot: number | null = null;
+    if (packet.target === 'unit') {
+      if (context === 'preTurn') {
+        if (
+          handIndex === undefined ||
+          !Number.isInteger(handIndex) ||
+          handIndex < 0 ||
+          handIndex >= this.hand.length
+        ) {
+          return;
+        }
+        targetSlot = this.hand[handIndex]!;
+      } else {
+        if (
+          rosterIndex === undefined ||
+          !Number.isInteger(rosterIndex) ||
+          rosterIndex < 0 ||
+          rosterIndex >= this.team.length
+        ) {
+          return;
+        }
+        targetSlot = rosterIndex;
+      }
+    }
+    const effect = packet.effect;
+    switch (effect.op) {
+      case 'applyBuff':
+        // The same builder as the empower path (magnitude 1, endOfTurn seed
+        // lifetime — the encounter store's re-seed contract, deep-copied
+        // mods). The pending store merges by key too, so double-firing
+        // overclock on one unit stacks exactly like double-empowering.
+        if (context === 'preTurn') {
+          this.addEncounterEffect(targetSlot!, empowerEffect(effect.buff));
+        } else {
+          mergeEffectInto(this.pendingEncounterEffects[targetSlot!]!, empowerEffect(effect.buff));
+        }
+        break;
+      case 'grantRedraws': {
+        // Insert AT the derived cursor (or append to a spent queue) so the
+        // packet's redraw is the active grant NOW under strict finality —
+        // the previously-active idol grant resumes right behind it. The
+        // entry's source id is the PACKET id (grantViews resolves names
+        // from either catalog).
+        const entry: TurnGrant = {
+          daemonId: packet.id,
+          effect: {
+            kind: 'redraw',
+            budget: effect.redrawsPerTurn,
+            maxCards: effect.maxCardsPerTurn,
+          },
+          used: 0,
+          passed: false,
+        };
+        const cursor = activeGrantIndex(this.turnGrants);
+        this.turnGrants.splice(cursor ?? this.turnGrants.length, 0, entry);
+        break;
+      }
+      case 'injectRule':
+        // Push a COPY so the store never aliases the catalog object (rules
+        // are never mutated, but the store serializes — keep it independent).
+        (effect.duration === 'run' ? this.injectedRunRules : this.injectedEncounterRules).push(
+          cloneBattleRule(effect.rule),
+        );
+        break;
+      case 'healPool':
+        this.executeInstantOps([effect]);
+        break;
+    }
+    // Consume + repaint: the splice emits the shrunk cache; run:packetUsed
+    // carries the re-derived pre-turn state for the 49f strip.
+    this.cache.splice(cacheIndex, 1);
+    this.emitCacheChanged();
+    this.bus.emit('run:packetUsed', {
+      packetId: packet.id,
+      context,
+      playerHealth: this.playerHealth,
+      grants: this.grantViews(),
+      empowerMagnitudes: this.empowerMagnitudes(),
+    });
+  }
+
   /** 49b — the one `run:cacheChanged` emit site: an authoritative copy of
    *  the ids + the derived capacity, so consumers repaint from the payload
    *  without re-deriving. */
@@ -1333,7 +1513,15 @@ export class Run {
       // 47f — the owned daemons' battle hooks, compiled fresh each turn
       // (ownership can grow mid-encounter via addDaemon: a §48 reward daemon
       // fights from the NEXT turn, matching the grant-resolution rule).
-      battleRules: battleRulesFor(this.daemons),
+      // 49e — packet-injected rules union in AFTER the daemon rules
+      // (daemons → run-injected → encounter-injected, fire order within
+      // each); a pre-turn injection is live this very turn (beginTurn runs
+      // after the gate).
+      battleRules: [
+        ...battleRulesFor(this.daemons),
+        ...this.injectedRunRules,
+        ...this.injectedEncounterRules,
+      ],
     };
     this.bus.emit('battle:started', { worldSeed });
   }
@@ -1539,9 +1727,14 @@ export class Run {
    * derived cursor flag (`active` = first pending). Derived at call time.
    */
   grantViews(): TurnGrantView[] {
+    // 49e — a grant's source id can be a PACKET now (a reroute fire inserts
+    // its own entry), so the name lookup falls through to the packet catalog.
     return grantViews(
       this.turnGrants,
-      (daemonId) => this.daemons.find((d) => d.id === daemonId)?.name ?? daemonId,
+      (sourceId) =>
+        this.daemons.find((d) => d.id === sourceId)?.name ??
+        packetById(sourceId)?.name ??
+        sourceId,
     );
   }
 
@@ -1643,6 +1836,12 @@ export class Run {
     for (const d of this.daemons) {
       const hook = daemonEmpowerHook(d);
       if (hook !== undefined) buffKeys.add(hook.buff.key);
+    }
+    // 49e — packet `applyBuff` keys badge too (a hyped/overclocked card
+    // shows its stacks). Catalog-wide is safe: a key with no store presence
+    // contributes zero.
+    for (const p of PACKETS) {
+      if (p.effect.op === 'applyBuff') buffKeys.add(p.effect.buff.key);
     }
     return this.hand.map((idx) => {
       let total = 0;
@@ -2026,6 +2225,8 @@ export class Run {
     // K1 — keep the encounter-effect store synced with `team` (fresh slot, no
     // effects). Parallel to the deploymentCounts append above.
     this.encounterEffects.push([]);
+    // 49e — the pending store stays parallel to `team` too.
+    this.pendingEncounterEffects.push([]);
     this.currentOffer = null;
     this.phase = 'map';
   }
@@ -2068,6 +2269,23 @@ export class Run {
    */
   resetEncounterEffects(): void {
     for (let i = 0; i < this.encounterEffects.length; i++) this.encounterEffects[i] = [];
+  }
+
+  /**
+   * 49e — land the pending out-of-battle buffs (overclock fires) on the live
+   * encounter store, then clear the pending slots. Called from
+   * `beginEncounter` RIGHT AFTER `resetEncounterEffects` (the pending-until-
+   * start ordering — the buff must survive the K1 wipe, not precede it).
+   * The instances MOVE into the live store (merge-by-key applies), so no
+   * clone is needed — the pending slot is emptied in the same pass.
+   */
+  private drainPendingEncounterEffects(): void {
+    for (let i = 0; i < this.pendingEncounterEffects.length; i++) {
+      for (const effect of this.pendingEncounterEffects[i]!) {
+        this.addEncounterEffect(i, effect);
+      }
+      this.pendingEncounterEffects[i] = [];
+    }
   }
 
   /**
@@ -2180,6 +2398,12 @@ export class Run {
       hand: this.hand.slice(),
       bits: this.bits,
       cache: this.cache.slice(),
+      // 49e — the fire engine's stores: pending effects deep-copy like the
+      // live store (merge mutates in place); rules copy per entry (never
+      // mutated, but the wire image stays independent of the live arrays).
+      pendingEncounterEffects: this.pendingEncounterEffects.map((slot) => slot.map(cloneEffect)),
+      injectedEncounterRules: this.injectedEncounterRules.map(cloneBattleRule),
+      injectedRunRules: this.injectedRunRules.map(cloneBattleRule),
       playerHealth: this.playerHealth,
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
@@ -2285,6 +2509,12 @@ export class Run {
       }
       return id;
     });
+    // 49e — restore the fire engine's stores (same copy discipline as
+    // toJSON). Injected rules are plain data; their status refs re-validate
+    // at battle setup (World.installBattleRules), never mid-tick.
+    m.pendingEncounterEffects = snap.pendingEncounterEffects.map((slot) => slot.map(cloneEffect));
+    m.injectedEncounterRules = snap.injectedEncounterRules.map(cloneBattleRule);
+    m.injectedRunRules = snap.injectedRunRules.map(cloneBattleRule);
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;

@@ -251,6 +251,13 @@ import { NEUTRAL_DEFS, ALL_UNIT_DEFS, isDestructibleNeutral } from '../config/un
  *       §36b's non-instant moves (which DO leave a claim mid-flight) can never load
  *       under a stale reader. RunSnapshot is unaffected (claims are World-side +
  *       transient per battle).
+ *  34 — 49e (the packet fire engine) widens the serialized `battleRules`
+ *       entries: `applyStatus` gains the optional `applyTo: 'actor'|'target'`
+ *       axis (venom's "your hits apply poison" — the content 47f's actor-side
+ *       lock was waiting for; absent = actor, byte-identical for every
+ *       pre-49e rule). A v33 reader would silently land a target-side status
+ *       on the ACTOR on a mid-battle resume — reject outright per the
+ *       no-migration contract.
  *  33 — 47f (the battle-domain daemon seam) adds `battleRules` (compiled
  *       daemon battle-hooks, plain data — handlers re-register from it on load,
  *       the K1 behavior-registry pattern) and `tallies` (battle-earned run
@@ -269,7 +276,7 @@ import { NEUTRAL_DEFS, ALL_UNIT_DEFS, isDestructibleNeutral } from '../config/un
  *       objective (no way to set one), so nothing is lost. RunSnapshot is
  *       unaffected — the objective is World-side + transient per battle.
  */
-const WORLD_SCHEMA_VERSION = 33;
+const WORLD_SCHEMA_VERSION = 34;
 
 /** §40b — filler maxHp for an hp-less (indestructible) neutral so its Unit is
  *  "alive" enough to block pathing / LOS. Never a damage target — `isCombatTargetable`

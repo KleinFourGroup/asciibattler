@@ -1007,3 +1007,72 @@ entries and died. Deliberate calls:
 
 **49d user-playtested natively 2026-07-09** — "test worked perfectly."
 Session handed off with 49e (the fire engine) next.
+
+### 49e — the fire engine (2026-07-09)
+
+`usePacket` lands: validate-everything-first (the acceptReward
+discipline — every reject a silent no-op consuming nothing), then
+execute, then consume-on-fire. Context derives from the PHASE
+(`turn-intro` → `preTurn`, `map` → `outOfBattle`, anything else
+rejects). **Run v32→v33** (the step's one predicted bump — three new
+serialized stores in one commit). The build-time decisions, all
+user-locked at the step top:
+
+- **The pending-until-start ordering (kickoff finding #2, resolved):**
+  an out-of-battle `applyBuff` (overclock) pends in a new serialized
+  `pendingEncounterEffects` store (parallel to `team`) and
+  `beginEncounter` drains it into `encounterEffects` RIGHT AFTER the
+  K1 reset — the reset-at-start doctrine untouched, save-safe anywhere
+  between fire and next encounter. Merge-by-key applies in the pending
+  store too, so double-firing overclock stacks exactly like
+  double-empowering.
+- **Packet redraw grants insert AT THE CURSOR** (`activeGrantIndex`,
+  append when spent/empty): under strict finality the reroute grant is
+  immediately active and the idol queue resumes behind it — the
+  kickoff's economy story ("a redraw packet buys an early-acquired
+  empower idol a look at the post-redraw hand") realized mechanically.
+  The entry's `daemonId` carries the PACKET id; `grantViews` name
+  resolution falls through daemon → packet catalog.
+- **`outOfBattle` = the map phase only** (launch-restrictive), and the
+  user's between-turns heal need routed the OTHER way: **`healPool`
+  grew `preTurn` legality** (the matrix comment's predicted
+  content-driven growth) — patch authors both contexts.
+- **The target axis landed (an unpredicted World v33→v34):** venom
+  ("your hits apply poison") collided with the 47f actor-side
+  `applyStatus` lock — authored as-was it would poison OUR strikers.
+  47f had deferred a target axis "for content that needs it"; venom IS
+  that content, so `applyTo: 'actor'|'target'` (absent = actor,
+  byte-identical for every existing rule; parse-legal on `dealHit`
+  only — a kill's victim is dead, matrix-enforced in daemons.ts AND
+  packets.ts) + a corpse guard (a lethal blow's dealHit doesn't
+  decorate the dead target; the guard sits AFTER the chance draw so
+  draw counts never depend on hp state). `BattleRule` is serialized →
+  the honest WorldSnapshot bump. §49's risk note said "sim untouched"
+  — wrong by one optional field; the step-zero audit caught it before
+  authoring, not after.
+- **Rule injection**: two new stores (`injectedEncounterRules` /
+  `injectedRunRules`, fire order); every `beginTurn` compile unions
+  daemons → run-injected → encounter-injected. Encounter-duration
+  rules reset at the NEXT `beginEncounter` (reset-at-start, like the
+  effect store); run-duration persist — the miner packet proves the
+  `run` axis end to end. A pre-turn injection is live the very turn it
+  fires (beginTurn runs after the gate).
+- **The catalog grew to 6 of the locked 7 early** (hype / reroute /
+  venom / overclock / miner + patch): headless op coverage needs real
+  catalog entries (`addPacket` hard-rejects non-catalog ids by 49b
+  design — mocking the config was rejected as test machinery). 49g
+  authors shield + reward-table entries + the editor; numbers stay
+  rough (§52 tunes).
+- New `run:packetUsed` event (post-effect `playerHealth` + re-derived
+  `grants`/`empowerMagnitudes` — the 49f strip's repaint feed);
+  `empowerMagnitudes` badges packet `applyBuff` keys alongside idol
+  keys, so a hyped card shows its stacks.
+
+Headless throughout (+14 tests: the sim target-axis pins in
+battleRules.test.ts, the matrix updates in packets.test.ts, and the
+fire-engine block in Run.test.ts — validation matrix, both patch
+contexts, hype stacking, the cursor insert under strict finality,
+venom/miner duration split incl. the union order, the overclock
+pend-drain, and the v33 + pending round-trips). 1966 main + 212
+fuzz:smoke green, typecheck clean. No UI surface — the strip renders
+at 49f (which also flips `passIsFinal` to true).

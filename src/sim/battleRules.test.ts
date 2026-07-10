@@ -12,8 +12,8 @@ import type { Unit } from './Unit';
  * 47f — the battle-domain daemon rules: install → trigger evaluation →
  * tally/status execution → serialization round-trip. Bespoke rule literals
  * (the daemon.test.ts fixture pattern); the launch evaluation semantics
- * (player-team acting only, filter-before-chance, status-on-actor) are each
- * pinned here.
+ * (player-team acting only, filter-before-chance, status-on-actor by
+ * default + the 49e `applyTo: 'target'` axis) are each pinned here.
  */
 
 const BITS_ON_HIT: BattleRule = { on: 'dealHit', effect: { op: 'gainBits', amount: 1 } };
@@ -28,6 +28,11 @@ const CRIT_EMBOLDEN: BattleRule = {
   effect: { op: 'applyStatus', statusId: 'emboldened' },
 };
 const KILL_BOUNTY: BattleRule = { on: 'kill', effect: { op: 'gainBits', amount: 5 } };
+/** 49e — the target-side axis (venom's shape: your hits poison the struck unit). */
+const VENOM_HITS: BattleRule = {
+  on: 'dealHit',
+  effect: { op: 'applyStatus', statusId: 'poison', applyTo: 'target' },
+};
 
 interface Scene {
   world: World;
@@ -80,6 +85,24 @@ describe('registerBattleRules — evaluation semantics', () => {
     const mod = statusDef('emboldened').statMods!.strength!.add!;
     expect(player.effectiveStats.strength).toBe(baseStrength + mod);
     // The target is untouched.
+    expect(enemy.effects).toHaveLength(0);
+  });
+
+  it("applyTo 'target' lands the status on the STRUCK unit; the actor is untouched (venom — 49e)", () => {
+    const { world, player, enemy } = scene([VENOM_HITS]);
+    world.applyDamage(player.id, enemy, 3, { crit: false });
+    expect(enemy.effects.map((e) => e.key)).toEqual(['poison']);
+    expect(player.effects).toHaveLength(0);
+    // Attribution stays the ACTOR (a scaling periodic would read the striker).
+    expect(enemy.effects[0]!.sourceUnitId).toBe(player.id);
+  });
+
+  it('a LETHAL blow never decorates the corpse (dealHit fires, the target-side apply skips)', () => {
+    const { world, bus, player, enemy } = scene([VENOM_HITS]);
+    const applied: string[] = [];
+    bus.on('status:applied', (p) => applied.push(p.statusId));
+    world.applyDamage(player.id, enemy, 10_000, { crit: false, bypassDefense: true });
+    expect(applied).toEqual([]); // no phantom status:applied on the dead unit
     expect(enemy.effects).toHaveLength(0);
   });
 
@@ -150,7 +173,7 @@ describe('installBattleRules — the install contract', () => {
   });
 });
 
-describe('serialization (WorldSnapshot v33)', () => {
+describe('serialization (WorldSnapshot v34)', () => {
   it('battle:ended carries a COPY of the tally', () => {
     const { world, bus, player, enemy } = scene([BITS_ON_HIT]);
     const payloads: GameEvents['battle:ended'][] = [];
@@ -165,23 +188,27 @@ describe('serialization (WorldSnapshot v33)', () => {
   });
 
   it('rules + an in-flight tally round-trip, and the restored world still evaluates', () => {
-    const { world, player, enemy } = scene([BITS_ON_HIT, CRIT_EMBOLDEN]);
+    const { world, player, enemy } = scene([BITS_ON_HIT, CRIT_EMBOLDEN, VENOM_HITS]);
     world.applyDamage(player.id, enemy, 3, { crit: false });
     expect(world.bitsTallied()).toBe(1);
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
     expect(wire.tallies).toEqual({ bits: 1 });
-    expect(wire.battleRules).toHaveLength(2);
+    expect(wire.battleRules).toHaveLength(3);
+    // 49e — the applyTo axis serializes (the v34 widening).
+    expect(wire.battleRules[2].effect.applyTo).toBe('target');
 
     const restored = World.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.bitsTallied()).toBe(1);
     // The handlers re-registered from the data (the K1 behavior-registry
-    // pattern) — a post-restore hit still tallies and still emboldens.
+    // pattern) — a post-restore hit still tallies, still emboldens the
+    // actor, and still lands the target-side poison (49e).
     const rPlayer = restored.findUnit(player.id)!;
     const rEnemy = restored.findUnit(enemy.id)!;
     restored.applyDamage(rPlayer.id, rEnemy, 3, { crit: true });
     expect(restored.bitsTallied()).toBe(2);
     expect(rPlayer.effects.map((e) => e.key)).toEqual(['emboldened']);
+    expect(rEnemy.effects.map((e) => e.key)).toEqual(['poison']);
   });
 
   it('a stale (v-1) snapshot is rejected', () => {

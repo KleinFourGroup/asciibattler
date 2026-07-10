@@ -475,6 +475,7 @@ run:victory             { }
 run:defeated            { }
 run:bitsChanged         { bits: number; delta: number }                             # 47e: the balance moved (bits = new total, delta = post-clamp change); emitted only on a real change from Run.addBits; the §48 overlay's feed
 run:cacheChanged        { packetIds: string[]; size: number }                       # 49b: the cache changed — a packet added/discarded, OR addDaemon moved the DERIVED capacity (size = the folded effectiveCacheSize); the 49f chip+modal's feed
+run:packetUsed          { packetId; context; playerHealth; grants; empowerMagnitudes }  # 49e: a usePacket fired (consume-on-fire; the paired run:cacheChanged carries the shrunk cache) — post-effect health + the re-derived queue/badge column for the 49f strip
 
 recruit:offered         { units: UnitTemplate[] }
 reward:offered          { rewards: readonly RewardPortion[] }                       # 48b: a won encounter's rolled reward offer — the run entered the reward phase (battle → rewards → promotion → recruit)
@@ -502,13 +503,14 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   chooseRecruit           { unitTemplate: UnitTemplate }
   passRecruit             { }     # H6b: decline the recruit offer
   dismissPromotion        { }     # E4: dismiss the PromotionScene
-  acceptReward            { index: number }   # 48b: accept ONE pending reward portion (bits settle via gainBits; a daemon joins ownership immediately)
+  acceptReward            { index: number; swapCacheIndex?: number }   # 48b: accept ONE pending reward portion (bits settle via gainBits; a daemon joins ownership immediately); 49c: swapCacheIndex = the slot to discard when a packet portion meets a FULL cache
   declineReward           { index: number }   # 48b: decline ONE pending reward portion (declinable-per-portion, passRecruit's sibling)
   advanceTurn             { }     # H4b: resume from a turn gate (pre/post-turn screen)
   redrawCards             { handIndices: number[]; grantIndex: number }   # K3/49d: redraw selected hand positions at the pre-turn gate; grantIndex targets ONE redraw grant in the queue (per-source — the 47d summed budget retired; strict mode requires the ACTIVE grant)
   empowerUnit             { handIndex: number; grantIndex: number }   # K4/49d: buff one drawn card for the rest of the encounter (grantIndex → the grant QUEUE; strict mode requires the active grant)
   passGrant               { }     # 49d: finalize the ACTIVE grant unspent (the strip's Pass) — engine-enforced finality; a no-op with passIsFinal off
   discardPacket           { cacheIndex: number }   # 49b: drop one cache slot (at-will + the forced-keep shrink instrument); ANY phase — pure run-level state
+  usePacket               { cacheIndex: number; handIndex?: number; rosterIndex?: number }   # 49e: fire one held packet (consume-on-fire, validate-first); context from PHASE (turn-intro→preTurn, map→outOfBattle); unit targets: handIndex (preTurn) / rosterIndex (outOfBattle)
   resetRun                { }
 
 WorldCommand (queued; drained at top of tick)

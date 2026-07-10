@@ -15,9 +15,12 @@
  *  - **Player-team acting units only.** A daemon is the player's relic — an
  *    enemy rogue's blow earns no bits, an enemy crit emboldens no one.
  *    (Enemy-scoped daemons are a noted future idea, not launch vocabulary.)
- *  - **`applyStatus` lands on the ACTING unit** (the striker/killer) — the
- *    "any crit → embolden the striker" shape. A target-side axis waits for
- *    content that needs it.
+ *  - **`applyStatus` lands on the ACTING unit by default** (the striker/
+ *    killer) — the "any crit → embolden the striker" shape. 49e adds the
+ *    content-demanded target axis (`applyTo: 'target'` — venom's "your hits
+ *    apply poison"): legal on `dealHit` only (a `kill`'s victim is already
+ *    dead — parse-illegal, enforced by the config matrices). Filters still
+ *    read the ACTING unit either way; only the landing site moves.
  *  - **Filter gates BEFORE chance** (the 47e `resolveInstantHooks`
  *    discipline): a non-matching firing costs no `combatRng` draw.
  *  - **Chance draws ride `world.combatRng`** (only when `0 < chance < 1` —
@@ -52,10 +55,17 @@ export interface BattleRuleFilter {
 }
 
 /** The battle-legal effect ops: `gainBits` (→ the serialized tally) and
- *  `applyStatus` (→ the acting unit, def-resolved by id at fire time). */
+ *  `applyStatus` (def-resolved by id at fire time; `applyTo` absent =
+ *  `'actor'`, the 47f default — `'target'` is the 49e axis, `dealHit`-only). */
 export type BattleRuleEffect =
   | { op: 'gainBits'; amount: number }
-  | { op: 'applyStatus'; statusId: string; magnitude?: number; durationSeconds?: number };
+  | {
+      op: 'applyStatus';
+      statusId: string;
+      magnitude?: number;
+      durationSeconds?: number;
+      applyTo?: 'actor' | 'target';
+    };
 
 /** One compiled battle rule — plain JSON, serialized verbatim (v33). */
 export interface BattleRule {
@@ -90,8 +100,15 @@ function granted(chance: number | undefined, world: World): boolean {
   return world.combatRng.next() < c;
 }
 
-/** Execute one granted rule's effect for the acting unit. */
-function execute(world: World, actor: TriggerContextMap['dealHit']['attacker'], effect: BattleRuleEffect): void {
+/** Execute one granted rule's effect. `recipient` is where an `applyStatus`
+ *  lands (the actor, or — 49e `applyTo: 'target'` — the struck unit);
+ *  attribution (`sourceUnitId`) stays the ACTOR either way. */
+function execute(
+  world: World,
+  actor: TriggerContextMap['dealHit']['attacker'],
+  recipient: TriggerContextMap['dealHit']['attacker'],
+  effect: BattleRuleEffect,
+): void {
   if (effect.op === 'gainBits') {
     world.tallyBits(effect.amount);
   } else {
@@ -99,7 +116,7 @@ function execute(world: World, actor: TriggerContextMap['dealHit']['attacker'], 
     // the install-time assert guarantees the ref resolves, so the throwing
     // `statusDef` lookup can never fire mid-tick.
     world.applyStatusEffect(
-      actor,
+      recipient,
       statusDef(effect.statusId),
       actor.id,
       effect.magnitude ?? 1,
@@ -117,20 +134,32 @@ function execute(world: World, actor: TriggerContextMap['dealHit']['attacker'], 
 export function registerBattleRules(world: World, rules: readonly BattleRule[]): void {
   for (const rule of rules) {
     if (rule.on === 'dealHit') {
-      world.registerTrigger('dealHit', ({ attacker, crit }) => {
+      world.registerTrigger('dealHit', ({ attacker, target, crit }) => {
         if (attacker.team !== 'player') return;
         if (rule.filter?.archetype !== undefined && attacker.archetype !== rule.filter.archetype) return;
         if (rule.filter?.crit !== undefined && crit !== rule.filter.crit) return;
         if (!granted(rule.chance, world)) return;
-        execute(world, attacker, rule.effect);
+        // 49e — `applyTo: 'target'` lands the status on the struck unit
+        // (venom); default = the actor (the 47f shape). `gainBits` ignores it.
+        const recipient =
+          rule.effect.op === 'applyStatus' && rule.effect.applyTo === 'target' ? target : attacker;
+        // A LETHAL blow fires dealHit too (kill follows it) — don't decorate
+        // a corpse: the effect would vanish with the removal, and skipping
+        // avoids a phantom `status:applied` emit. Placed AFTER the chance
+        // draw so the draw count never depends on hp state (the filter-
+        // before-chance discipline covers authored predicates only).
+        if (recipient.currentHp <= 0) return;
+        execute(world, attacker, recipient, rule.effect);
       });
     } else {
       world.registerTrigger('kill', ({ attacker }) => {
         if (attacker.team !== 'player') return;
         if (rule.filter?.archetype !== undefined && attacker.archetype !== rule.filter.archetype) return;
-        // `crit` is parse-illegal on `kill` (the 47b matrix) — no crit gate here.
+        // `crit` is parse-illegal on `kill` (the 47b matrix) — no crit gate
+        // here, and `applyTo: 'target'` is parse-illegal too (the victim is
+        // already dead), so the recipient is always the actor.
         if (!granted(rule.chance, world)) return;
-        execute(world, attacker, rule.effect);
+        execute(world, attacker, attacker, rule.effect);
       });
     }
   }

@@ -100,6 +100,11 @@ export const ApplyStatusOpSchema = z.object({
   statusId: z.string().min(1),
   magnitude: z.number().positive().optional(),
   durationSeconds: z.number().positive().optional(),
+  /** 49e — where the status lands. Absent = `'actor'` (the striker/killer,
+   *  the 47f shape); `'target'` = the struck unit (venom's axis), legal on
+   *  `dealHit` only — a `kill`'s victim is already dead (matrix-enforced
+   *  here and in packets.ts). */
+  applyTo: z.enum(['actor', 'target']).optional(),
 });
 
 const EffectOpSchema = z.discriminatedUnion('op', [
@@ -144,6 +149,16 @@ const RuleSchema = z
       ctx.addIssue({
         code: 'custom',
         message: `op '${rule.effect.op}' (${opDomain}-domain) cannot fire on ${triggerDomain}-domain trigger '${rule.on}'`,
+      });
+    }
+    if (
+      rule.effect.op === 'applyStatus' &&
+      rule.effect.applyTo === 'target' &&
+      rule.on !== 'dealHit'
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `applyTo 'target' is only carried by 'dealHit' (a '${rule.on}' firing has no living target)`,
       });
     }
     if (
@@ -207,7 +222,13 @@ export type EffectOp =
   | { op: 'grantEmpowers'; empowersPerTurn: number; buff: EmpowerConfig['buff'] }
   | { op: 'gainBits'; amount: number }
   | { op: 'healPool'; amount: number }
-  | { op: 'applyStatus'; statusId: string; magnitude?: number; durationSeconds?: number };
+  | {
+      op: 'applyStatus';
+      statusId: string;
+      magnitude?: number;
+      durationSeconds?: number;
+      applyTo?: 'actor' | 'target';
+    };
 
 /** A passive fold onto a run stat (`foldRunStats` consumes these, 47c). */
 export interface ModifierRule {
@@ -264,6 +285,7 @@ function normalizeEffectOp(raw: Extract<RawRule, { kind: 'hook' }>['effect']): E
       const op: EffectOp = { op: 'applyStatus', statusId: raw.statusId };
       if (raw.magnitude !== undefined) op.magnitude = raw.magnitude;
       if (raw.durationSeconds !== undefined) op.durationSeconds = raw.durationSeconds;
+      if (raw.applyTo !== undefined) op.applyTo = raw.applyTo;
       return op;
     }
   }

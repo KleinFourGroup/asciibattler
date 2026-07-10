@@ -22,6 +22,7 @@ import type { TurnGrantView } from '../run/daemon';
 import type { RewardPortion } from '../run/rewards';
 import type { Theme } from '../sim/layouts';
 import type { EncounterKind } from '../config/encounters';
+import type { UseContext } from '../config/packets';
 
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
@@ -361,6 +362,23 @@ export interface GameEvents extends Record<string, unknown> {
    * chip + modal are the intended consumers; no sim/run subscriber exists.
    */
   'run:cacheChanged': { packetIds: string[]; size: number };
+
+  /**
+   * 49e — a `usePacket` command fired a held packet (consume-on-fire; the
+   * paired `run:cacheChanged` already carried the shrunk cache). `context`
+   * is where it fired; `playerHealth` is post-effect (patch heals it);
+   * `grants` + `empowerMagnitudes` are the re-derived pre-turn state (a
+   * reroute INSERTS a grant at the cursor, a hype re-badges the hand) —
+   * both derived-empty outside `turn-intro`. The 49f fire strip + cache
+   * modal are the intended consumers; no sim/run subscriber exists.
+   */
+  'run:packetUsed': {
+    packetId: string;
+    context: UseContext;
+    playerHealth: number;
+    grants: TurnGrantView[];
+    empowerMagnitudes: number[];
+  };
 
   'recruit:offered': { units: UnitTemplate[] };
 

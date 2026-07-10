@@ -325,6 +325,12 @@ export class Game implements RunDispatcher {
         // `turn:grantPassed` (no phase change, no scene swap).
         this.run.dispatch(command);
         break;
+      case 'usePacket':
+        // 49e — fire a held packet. No phase change in either context (the
+        // pre-turn screen / map stay up); consumers repaint off
+        // `run:cacheChanged` + `run:packetUsed` (no scene swap).
+        this.run.dispatch(command);
+        break;
       case 'resetRun':
         this.resetRun();
         break;

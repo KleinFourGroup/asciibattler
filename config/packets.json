@@ -4,9 +4,87 @@
       "id": "patch",
       "name": "Patch",
       "description": "Apply in the field: restores 3 to your health pool.",
-      "usableIn": ["outOfBattle"],
+      "usableIn": ["preTurn", "outOfBattle"],
       "target": "none",
       "effect": { "op": "healPool", "amount": 3 }
+    },
+    {
+      "id": "hype",
+      "name": "Hype",
+      "description": "Hype up one drawn card: +4 STR / RNG / MAG for the encounter.",
+      "usableIn": ["preTurn"],
+      "target": "unit",
+      "effect": {
+        "op": "applyBuff",
+        "buff": {
+          "key": "hyped",
+          "mods": {
+            "strength": { "add": 4 },
+            "ranged": { "add": 4 },
+            "magic": { "add": 4 }
+          },
+          "merge": "add"
+        },
+        "duration": "encounter"
+      }
+    },
+    {
+      "id": "reroute",
+      "name": "Reroute",
+      "description": "Reroute the hand: redraw up to two cards, right now.",
+      "usableIn": ["preTurn"],
+      "target": "none",
+      "effect": { "op": "grantRedraws", "redrawsPerTurn": 1, "maxCardsPerTurn": 2 }
+    },
+    {
+      "id": "venom",
+      "name": "Venom",
+      "description": "Lace every blade: this encounter, your units' hits inject poison.",
+      "usableIn": ["preTurn"],
+      "target": "none",
+      "effect": {
+        "op": "injectRule",
+        "rule": {
+          "on": "dealHit",
+          "effect": { "op": "applyStatus", "statusId": "poison", "applyTo": "target" }
+        },
+        "duration": "encounter"
+      }
+    },
+    {
+      "id": "overclock",
+      "name": "Overclock",
+      "description": "Overclock a roster unit: +4 STR / RNG / MAG for the next encounter.",
+      "usableIn": ["outOfBattle"],
+      "target": "unit",
+      "effect": {
+        "op": "applyBuff",
+        "buff": {
+          "key": "overclocked",
+          "mods": {
+            "strength": { "add": 4 },
+            "ranged": { "add": 4 },
+            "magic": { "add": 4 }
+          },
+          "merge": "add"
+        },
+        "duration": "encounter"
+      }
+    },
+    {
+      "id": "miner",
+      "name": "Miner",
+      "description": "Install a miner: for the rest of the run, each kill mines 2 bits.",
+      "usableIn": ["preTurn"],
+      "target": "none",
+      "effect": {
+        "op": "injectRule",
+        "rule": {
+          "on": "kill",
+          "effect": { "op": "gainBits", "amount": 2 }
+        },
+        "duration": "run"
+      }
     }
   ]
 }

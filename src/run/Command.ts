@@ -116,6 +116,25 @@ export type RunCommand =
    * usual silent no-op. Emits `run:cacheChanged`.
    */
   | { readonly kind: 'discardPacket'; readonly cacheIndex: number }
+  /**
+   * 49e — fire one held packet (`cacheIndex` into `Run.cache`): the consume
+   * path of the earn-store-use loop. The context derives from the PHASE
+   * (`turn-intro` → `preTurn`; `map` → `outOfBattle` — the 49e shape-lock;
+   * anything else rejects), and the packet's authored `usableIn` must admit
+   * it. A `unit`-target packet takes `handIndex` (preTurn — a position into
+   * the current hand) or `rosterIndex` (outOfBattle — a `Run.team` slot);
+   * the other field is ignored, and a missing/invalid one rejects. Every
+   * reject is a silent no-op that consumes NOTHING (validation before any
+   * mutation — the acceptReward discipline); a fire consumes the packet
+   * immediately and irrevocably (the §49 kickoff lock — no batching, no
+   * undo). Emits `run:cacheChanged` + `run:packetUsed`.
+   */
+  | {
+      readonly kind: 'usePacket';
+      readonly cacheIndex: number;
+      readonly handIndex?: number;
+      readonly rosterIndex?: number;
+    }
   | { readonly kind: 'resetRun' };
 
 export interface RunDispatcher {

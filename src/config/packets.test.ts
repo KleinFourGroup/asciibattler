@@ -102,8 +102,9 @@ describe('the packet schema (49a)', () => {
   });
 
   it('enforces the op → context matrix', () => {
-    // healPool is out-of-battle only; grantRedraws is pre-turn only.
-    expect(parses({ usableIn: ['preTurn'] })).toBe(false);
+    // 49e grew healPool to BOTH launch contexts (patch's between-turns
+    // heal); grantRedraws / injectRule stay pre-turn only.
+    expect(parses({ usableIn: ['preTurn'] })).toBe(true);
     expect(
       parses({
         target: 'none',
@@ -111,6 +112,34 @@ describe('the packet schema (49a)', () => {
         effect: { op: 'grantRedraws', redrawsPerTurn: 1, maxCardsPerTurn: 2 },
       }),
     ).toBe(false);
+    expect(
+      parses({
+        target: 'none',
+        usableIn: ['outOfBattle'],
+        effect: {
+          op: 'injectRule',
+          rule: { on: 'dealHit', effect: { op: 'gainBits', amount: 1 } },
+          duration: 'encounter',
+        },
+      }),
+    ).toBe(false);
+  });
+
+  it("restricts applyTo 'target' to dealHit rules (a kill's victim is already dead — 49e)", () => {
+    const venomish = (on: string) =>
+      parses({
+        ...legalFor('injectRule'),
+        effect: {
+          op: 'injectRule',
+          rule: {
+            on,
+            effect: { op: 'applyStatus', statusId: 'poison', applyTo: 'target' },
+          },
+          duration: 'encounter',
+        },
+      });
+    expect(venomish('dealHit')).toBe(true);
+    expect(venomish('kill')).toBe(false);
   });
 
   it("rejects the dormant seams for EVERY op — 'tile' targets and 'midBattle' contexts", () => {

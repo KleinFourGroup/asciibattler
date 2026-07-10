@@ -19,7 +19,7 @@ import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import { EMPOWER } from '../config/empower';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
-import { PACKETS } from '../config/packets';
+import { PACKETS, packetById } from '../config/packets';
 import { rewardTableById } from '../config/rewards';
 import { daemonRedrawHook, daemonEmpowerHook } from './daemon';
 import { RUN_STAT_BASES } from './runStats';
@@ -2390,6 +2390,233 @@ describe('Run', () => {
       expect(() => Run.fromJSON(tampered, new EventBus<GameEvents>())).toThrow(
         /pending reward references unknown packet id 'no-such-packet'/,
       );
+    });
+  });
+
+  describe('the fire engine (49e — usePacket)', () => {
+    /** Catalog-derived effect readers (the balance-proof discipline — never
+     *  hardcode what packets.json authors). */
+    const packetEffect = (id: string) => {
+      const p = packetById(id);
+      if (p === undefined) throw new Error(`test fixture: no packet '${id}' in the catalog`);
+      return p.effect;
+    };
+    const healAmountOf = (id: string): number => {
+      const e = packetEffect(id);
+      if (e.op !== 'healPool') throw new Error(`'${id}' is not healPool`);
+      return e.amount;
+    };
+    const buffOf = (id: string) => {
+      const e = packetEffect(id);
+      if (e.op !== 'applyBuff') throw new Error(`'${id}' is not applyBuff`);
+      return e.buff;
+    };
+    const ruleOf = (id: string) => {
+      const e = packetEffect(id);
+      if (e.op !== 'injectRule') throw new Error(`'${id}' is not injectRule`);
+      return e.rule;
+    };
+    /** An empower-only idol, for cursor-interplay tests (one queue entry). */
+    const EMPOWER_IDOL: DaemonConfig = {
+      id: 'test-empower-only',
+      name: 'Test Empower Only',
+      description: 'one empower grant per turn',
+      rules: [
+        {
+          kind: 'hook',
+          on: 'turnStart',
+          effect: { op: 'grantEmpowers', empowersPerTurn: 1, buff: EMPOWER.buff },
+        },
+      ],
+    };
+
+    it('rejects silently at the gate — wrong usableIn, bad cache index, missing/bad unit target', () => {
+      const { run, bus } = gatedToFirstTurnIntro(1, null);
+      run.addPacket('overclock'); // outOfBattle-only
+      run.addPacket('hype'); // preTurn, unit target
+      const used: unknown[] = [];
+      bus.on('run:packetUsed', (e) => used.push(e));
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, rosterIndex: 0 }); // context not authored
+      run.dispatch({ kind: 'usePacket', cacheIndex: 5 }); // out of range
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0.5 }); // fractional
+      run.dispatch({ kind: 'usePacket', cacheIndex: -1 });
+      run.dispatch({ kind: 'usePacket', cacheIndex: 1 }); // unit target missing
+      run.dispatch({ kind: 'usePacket', cacheIndex: 1, handIndex: 99 }); // target out of range
+      run.dispatch({ kind: 'usePacket', cacheIndex: 1, handIndex: 0.5 });
+      expect(run.cache).toEqual(['overclock', 'hype']); // nothing consumed
+      expect(used).toEqual([]);
+    });
+
+    it('rejects in a context-less phase (battle) and rejects a preTurn-only packet at the map', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.addPacket('hype'); // preTurn-only
+      run.addPacket('patch');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 }); // map ⇒ outOfBattle — not authored
+      expect(run.cache).toEqual(['hype', 'patch']);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // headless → phase 'battle'
+      expect(run.phase).toBe('battle');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 1 }); // no context mid-battle
+      expect(run.cache).toEqual(['hype', 'patch']);
+    });
+
+    it('patch heals the pool at the MAP (instant, capped at max, consume-on-fire)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      const amount = healAmountOf('patch');
+      run.addPacket('patch');
+      run.addPacket('patch');
+      run.playerHealth = HEALTH.playerHealthMax - (amount + 2);
+      const used: GameEvents['run:packetUsed'][] = [];
+      const cacheEvents: unknown[] = [];
+      bus.on('run:packetUsed', (e) => used.push(e));
+      bus.on('run:cacheChanged', (e) => cacheEvents.push(e));
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      expect(run.playerHealth).toBe(HEALTH.playerHealthMax - 2);
+      expect(run.cache).toEqual(['patch']);
+      expect(cacheEvents).toHaveLength(1);
+      expect(used).toHaveLength(1);
+      expect(used[0]).toMatchObject({
+        packetId: 'patch',
+        context: 'outOfBattle',
+        playerHealth: HEALTH.playerHealthMax - 2,
+      });
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 }); // 2 short of max → caps
+      expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
+    });
+
+    it('patch heals BETWEEN TURNS too (the 49e healPool preTurn growth — the shape-lock)', () => {
+      const { run } = gatedToFirstTurnIntro(1, null);
+      run.addPacket('patch');
+      run.playerHealth = HEALTH.playerHealthMax - healAmountOf('patch');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
+      expect(run.cache).toEqual([]);
+    });
+
+    it("hype lands the buff on the targeted hand card's roster slot; re-firing stacks (merge add)", () => {
+      const { run, bus } = gatedToFirstTurnIntro(1, null);
+      const buff = buffOf('hype');
+      run.addPacket('hype');
+      run.addPacket('hype');
+      const slot = run.hand[0]!;
+      const used: GameEvents['run:packetUsed'][] = [];
+      bus.on('run:packetUsed', (e) => used.push(e));
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
+      expect(run.encounterEffects[slot]!.map((e) => e.key)).toEqual([buff.key]);
+      // The payload badge column marks the hyped hand position (packet buff
+      // keys badge alongside idol empower keys — 49e).
+      expect(used[0]!.empowerMagnitudes[0]).toBe(1);
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
+      expect(run.encounterEffects[slot]).toHaveLength(1); // merged, not appended
+      expect(run.encounterEffects[slot]![0]!.magnitude).toBe(2);
+      expect(run.cache).toEqual([]);
+    });
+
+    it('reroute INSERTS at the cursor — immediately active under strict finality, the idol resumes behind', () => {
+      const { run } = gatedToFirstTurnIntro(1, EMPOWER_IDOL, { passIsFinal: true });
+      run.addPacket('reroute');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      const grants = run.grantViews();
+      expect(grants.map((g) => g.effect.kind)).toEqual(['redraw', 'empower']);
+      expect(grants[0]).toMatchObject({ daemonId: 'reroute', name: 'Reroute', active: true });
+      // Strict mode: the idol grant behind the insert is NOT yet targetable…
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0, grantIndex: 1 });
+      expect(run.encounterEffects[run.hand[0]!]).toEqual([]);
+      // …while the packet's redraw fires through the NORMAL redraw command.
+      run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
+      const after = run.grantViews();
+      expect(after[0]!.remaining).toBe(0);
+      expect(after[1]!.active).toBe(true); // the cursor fell through to the idol
+      run.dispatch({ kind: 'empowerUnit', handIndex: 0, grantIndex: 1 });
+      expect(run.encounterEffects[run.hand[0]!]).toHaveLength(1);
+    });
+
+    it('reroute on a grant-less turn appends to the empty queue (still immediately active)', () => {
+      const { run } = gatedToFirstTurnIntro(1, null);
+      expect(run.grantViews()).toEqual([]);
+      run.addPacket('reroute');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      expect(run.grantViews()).toHaveLength(1);
+      expect(run.grantViews()[0]).toMatchObject({ effect: { kind: 'redraw' }, active: true });
+    });
+
+    it('venom (encounter) + miner (run) inject in union order and live/expire by duration', () => {
+      const { run, bus } = gatedToFirstTurnIntro(1, null);
+      const venomRule = ruleOf('venom');
+      const minerRule = ruleOf('miner');
+      run.addPacket('venom');
+      run.addPacket('miner');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      // Live THIS very turn (beginTurn runs after the gate); union order =
+      // daemons (none) → run-injected → encounter-injected.
+      run.dispatch({ kind: 'advanceTurn' });
+      expect(run.currentEncounter!.battleRules).toEqual([minerRule, venomRule]);
+      // Persists across turns WITHIN the encounter.
+      chipTurn(bus, { player: 0, enemy: 0 });
+      run.dispatch({ kind: 'advanceTurn' }); // outcome → next intro
+      run.dispatch({ kind: 'advanceTurn' }); // intro → battle
+      expect(run.currentEncounter!.battleRules).toEqual([minerRule, venomRule]);
+      // Win + walk to the NEXT encounter: venom expires at its start (the
+      // reset-at-start doctrine), miner persists (run duration). Rewards are
+      // DECLINED so an accepted daemon can't pollute the compile.
+      winEncounter(bus);
+      run.dispatch({ kind: 'advanceTurn' });
+      declineAllRewards(run);
+      if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
+      if (run.phase === 'recruit') run.dispatch({ kind: 'passRecruit' });
+      expect(run.phase).toBe('map');
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      run.dispatch({ kind: 'advanceTurn' });
+      expect(run.currentEncounter!.battleRules).toEqual([minerRule]);
+    });
+
+    it('overclock pends until the next encounter START, then lands post-reset (the pending store)', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      const buff = buffOf('overclock');
+      run.addPacket('overclock');
+      run.addPacket('overclock');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, rosterIndex: 2 });
+      expect(run.pendingEncounterEffects[2]!.map((e) => e.key)).toEqual([buff.key]);
+      expect(run.encounterEffects[2]).toEqual([]); // pending, not live
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, rosterIndex: 2 }); // stacks while pending
+      expect(run.pendingEncounterEffects[2]![0]!.magnitude).toBe(2);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      // Drained in AFTER the K1 reset — the buff survives into the live store.
+      expect(run.encounterEffects[2]!.map((e) => e.key)).toEqual([buff.key]);
+      expect(run.encounterEffects[2]![0]!.magnitude).toBe(2);
+      expect(run.pendingEncounterEffects[2]).toEqual([]);
+    });
+
+    it('the three 49e stores round-trip (v33); a packet-sourced grant keeps its name; stale rejects', () => {
+      const { run } = gatedToFirstTurnIntro(1, null);
+      run.addPacket('venom');
+      run.addPacket('miner');
+      run.addPacket('reroute');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      expect(wire.schemaVersion).toBe(33);
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.injectedEncounterRules).toEqual([ruleOf('venom')]);
+      expect(restored.injectedRunRules).toEqual([ruleOf('miner')]);
+      expect(restored.grantViews()[0]).toMatchObject({ daemonId: 'reroute', name: 'Reroute' });
+      expect(() =>
+        Run.fromJSON({ ...wire, schemaVersion: 32 }, new EventBus<GameEvents>()),
+      ).toThrow(/unsupported schema version/);
+    });
+
+    it('the pending store round-trips (a save between fire and next encounter keeps the buff)', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.addPacket('overclock');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, rosterIndex: 1 });
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.pendingEncounterEffects[1]!.map((e) => e.key)).toEqual([
+        buffOf('overclock').key,
+      ]);
+      restored.dispatch({ kind: 'enterNode', nodeId: restored.nodeMap.rootId });
+      expect(restored.encounterEffects[1]!.map((e) => e.key)).toEqual([buffOf('overclock').key]);
     });
   });
 

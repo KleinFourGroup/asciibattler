@@ -119,12 +119,13 @@ export const PACKET_OP_TARGET = {
 } as const satisfies Record<PacketOpKey, PacketTargetKind>;
 
 /** The op → legal-contexts matrix (same one-source rule). Content-driven:
- *  `healPool` could trivially admit `preTurn` later; nothing needs it. */
+ *  49e grew `healPool` to `preTurn` when patch demanded the between-turns
+ *  heal (the 49e shape-lock — the growth this comment used to predict). */
 export const PACKET_OP_CONTEXTS = {
   applyBuff: ['preTurn', 'outOfBattle'],
   grantRedraws: ['preTurn'],
   injectRule: ['preTurn'],
-  healPool: ['outOfBattle'],
+  healPool: ['preTurn', 'outOfBattle'],
 } as const satisfies Record<PacketOpKey, readonly UseContext[]>;
 
 const PacketSchema = z
@@ -164,6 +165,17 @@ const PacketSchema = z
       ctx.addIssue({
         code: 'custom',
         message: `filter 'crit' is only carried by 'dealHit' (trigger '${packet.effect.rule.on}' has no crit flag)`,
+      });
+    }
+    if (
+      packet.effect.op === 'injectRule' &&
+      packet.effect.rule.effect.op === 'applyStatus' &&
+      packet.effect.rule.effect.applyTo === 'target' &&
+      packet.effect.rule.on !== 'dealHit'
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `applyTo 'target' is only carried by 'dealHit' (a '${packet.effect.rule.on}' firing has no living target)`,
       });
     }
   });
@@ -233,6 +245,7 @@ function normalizeRuleEffect(
   const effect: BattleRule['effect'] = { op: 'applyStatus', statusId: raw.statusId };
   if (raw.magnitude !== undefined) effect.magnitude = raw.magnitude;
   if (raw.durationSeconds !== undefined) effect.durationSeconds = raw.durationSeconds;
+  if (raw.applyTo !== undefined) effect.applyTo = raw.applyTo;
   return effect;
 }
 

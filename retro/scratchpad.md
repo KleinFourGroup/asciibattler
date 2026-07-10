@@ -178,3 +178,14 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   packet entries were dormant free-text; a foot-gun the moment content went
   live). Editors that validate "the asserts a bad save would trip" need a
   sweep whenever a NEW assert lands next to an existing editor's domain.
+
+## Phase 50 (2026-07-10)
+
+- **The pre-commit fuzz trigger doesn't cover `src/config/`** — the hook's
+  regex is `^(src/(sim|run|core)/|config/)`, so the 50f commit (`b3a27e7`)
+  staged `src/config/prices.ts` (where the `unitPrice` FORMULA lives) and
+  the hook skipped fuzz:smoke. The zod loaders are behavior-carrying run
+  surface, arguably more than the JSON the trigger does watch. 50f's change
+  was a behavior-neutral refactor (fuzz:smoke run manually after — 212
+  green), but the gap is real. Candidate fix at the round sweep: widen the
+  regex to `src/(sim|run|core|config)/`.

@@ -250,9 +250,10 @@ the serialized port run-phase + screen; stock (5 units priced by
 archetype+level / 5 packets / 2 daemons owned-excluded) rolled on entry from
 a dedicated stream and serialized; buy/sell (sell = config fraction) +
 pay-to-remove-a-unit via the single `removeRosterUnit` chokepoint fixing all
-five rosterIndex-keyed structures; prices config + the port editor; the fuzz
-harness gains `case 'port'` immediately (and eventually a purchase-policy
-arm).
+**six** rosterIndex-keyed structures (the kickoff audit found a §49e-added
+sixth, `pendingEncounterEffects` — worklog §50); prices config + the port
+editor; the fuzz harness gains `case 'port'` immediately (and eventually a
+purchase-policy arm).
 
 **Why here / dependencies:** consumes everything — bits (§47), the exclusion
 + pricing patterns (§48), `PacketDef` + cache (§49). Port-recruited units
@@ -264,11 +265,22 @@ risk: unit removal shrinking the roster for the first time (the rosterIndex
 collision — chokepoint + co-located test, per the spec). RunSnapshot bumps
 (node kind regenerates maps + port phase + stock).
 
-**Decision points:** the port glyph (`$`?) + map presentation; the port
-screen layout (five surfaces in one screen — recruit/packets/daemons/sell/
-remove); price formula shapes (flat-per-archetype × level curve vs budget-
-derived — decide at kickoff with the editor in hand); removal service
-pricing.
+**Decision points — ✅ DECIDED at kickoff (2026-07-10, worklog §50):** glyph
+= `$` (amber — money lay reading, shell-prompt tech reading); screen = one
+sectioned scrolling screen (stock → your-cargo; unaffordable buys disabled);
+prices = config table (per-archetype base × level curve ± port-stream
+jitter; packet/daemon prices per-id with per-kind defaults, boot-asserted);
+removal = flat config price.
+
+**The cut (shape-locked 2026-07-10; rationale in worklog §50):**
+
+- [ ] 50a — the prices config layer: `config/prices.json` + `src/config/prices.ts` (unit base × level curve + jitter, packet/daemon per-id + per-kind defaults, sell fraction, removal price; boot asserts) + `Run.spendBits` (affordability-guarded; sell proceeds stay raw `addBits` — the Run.ts:1191 fold-loop warning); zero consumers
+- [ ] 50b — `removeRosterUnit`: the chokepoint splicing all SIX roster-parallel structures + deck-value renumber, co-located tests + snapshot-roundtrip alignment asserts (closes the existing encounterEffects-length test gap); zero callers
+- [ ] 50c — the port node kind: the third tail scatter pass (`portChance`/`portMinSpacing` + the ≥1-per-sector fallback), `$` glyph + CSS, the three compile-gate sites, entry dispatch beside `rest` → a minimal serialized `'port'` phase + `leavePort`; fuzz `case 'port'` (leave-immediately); **Run v33→v34** + re-baseline
+- [ ] 50d — the stock + transaction engine (headless): stock rolled on entry from dedicated streams (owned-daemon exclusion at roll), serialized; buy unit (recruit-append reuse) / buy packet (cache-room guard) / buy daemon / sell packet / pay-to-remove commands; **Run v34→v35**
+- [ ] 50e — PortScreen/PortScene (the sectioned single screen) + Game wiring + purchase SFX; browser-verify
+- [ ] 50f — the port editor (prices) + `formatPricesJson` + the `/__save-config` allowlist + the `/tools/` index; the launch price catalog authored with the editor in hand (the 48f precedent)
+- [ ] 50g — exit sweep: full fuzz + re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip
 
 **Exit criteria:** a full economy loop in one run, user-confirmed natively:
 earn bits → dock at a port → buy a packet + a daemon + a unit, sell a

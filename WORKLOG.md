@@ -1218,3 +1218,79 @@ agent-verified only (49f, forged shrink idol) — NO SHIPPED CONTENT
 can trigger it (no cacheSize-lowering daemon exists), so it stays
 un-user-testable until content arrives; noted, not blocking.
 **Phase 49 ✅ CLOSED.**
+
+## Phase 50 — Ports
+
+### Kickoff (2026-07-10) — the code-reality audit + the cut
+
+Four parallel audit sweeps over the phase's surfaces (node generation /
+phase machinery / rosterIndex structures / economy+editor patterns).
+
+**The step-zero catch: the spec's "five rosterIndex-keyed structures" is
+stale — there are SIX.** §49e added `pendingEncounterEffects`
+(Run.ts:594, the out-of-battle applyBuff pend-until-encounter store):
+roster-parallel, recruit-appended at handleChooseRecruit alongside the
+other five, written by roster index in the packet-fire path, serialized.
+A `removeRosterUnit` that spliced only the spec's five would desync it
+silently. Second removal subtlety: the three deck piles hold rosterIndex
+VALUES, so removal renumbers every value above the removed index (port
+removal is out-of-encounter and the next beginEncounter rebuilds the
+piles anyway, but the chokepoint renumbers unconditionally — the
+invariant shouldn't depend on call-site phase). The append chokepoint to
+invert: handleChooseRecruit (Run.ts:2219). Charter's "five" corrected to
+"six" in the roadmap (the one-line mutation).
+
+**The rest of the audit found the ground prepared:**
+
+- *Node kind:* the W2 elite scatter is the template; a port pass appends
+  as a THIRD tail pass after elites (the NodeMap header's locked draw
+  order — widths → edges → rest → elite → port — keeps every existing
+  seed's structure byte-identical). Three compile-gates force complete
+  wiring: MapScreen's KIND_GLYPH record, selection.ts's KIND_BY_NODE
+  record (port maps defensively to 'normal', stays out of
+  FIGHTING_NODE_KINDS), scored.ts's kindWeight switch. PATH_KINDS
+  (policies.ts:58 — NOT harness.ts as the roadmap assumed) is a
+  deliberate-subset type, so 'port' is opted in explicitly. One
+  divergence from the elite mirror: elites have no placement guarantee —
+  the ≥1-per-sector rule needs a fallback pass (no port rolled → force
+  one onto an eligible middle hop; boss hop structurally excluded by the
+  [2, hopCount-2] band).
+- *Phase machinery:* §48's reward phase supplies the whole pattern
+  (serialized pending state + accept/decline with silent-no-op guards +
+  a payload-less Scene reading the live Run + streams forked
+  append-at-end + Game.dispatch's `satisfies never` forcing command
+  routing + the fuzz switch's own exhaustiveness guard forcing
+  `case 'port'`) — EXCEPT the entry point: reward splices at the turn
+  gate, but a port is a map node, so it enters at handleEnterNode beside
+  the `rest` branch and returns to map via `leavePort`.
+- *Economy:* the codebase pre-announced this phase — economy.ts:6
+  reserves a separate prices file; addBits documents negative-delta
+  spends (no spendBits exists; it must guard affordability because
+  addBits CLAMPS at zero rather than rejecting); and Run.ts:1191 already
+  carries the landmine warning that sell proceeds must take raw addBits,
+  NOT gainBits (a bitsGain fold above 1/sellFraction would mint an
+  infinite buy-sell loop). No price/cost field exists anywhere — pricing
+  is greenfield. Config/editor/formatter/allowlist patterns all have
+  fresh 49g precedents to clone.
+
+**Decisions (shape-locked with the user, all four on the recommended
+option):** glyph `$` in amber — money is the lay reading, shell prompt
+the tech reading (the naming principle holds); ONE sectioned scrolling
+screen (stock: units-on-UnitCards / packets / daemons, then your-cargo:
+sell + pay-to-remove; unaffordable buys render disabled — everything
+visible, no tab chrome the game doesn't use elsewhere); prices = a
+config table (per-archetype base × level curve ± a jitter fraction
+rolled from the port stream — the spec's "randomly chosen price";
+packet/daemon prices per-id with per-kind defaults, boot-asserted;
+budget-derived pricing rejected for coupling shop economy to difficulty
+tuning); removal = one flat config price (level-scaled rejected as
+perverse — removal wants out LOW-value units; §52 tunes).
+
+**The cut's shape** (roadmap §50): headless-core-first — the two pure
+zero-consumer pieces land first (50a prices+spendBits, 50b the
+removal chokepoint — the phase's one flagged risk, isolated and tested
+before anything calls it), then the node kind with a minimal phase
+(50c), the transaction engine (50d), and only then the screen (50e),
+editor+catalog (50f), exit sweep (50g). Two PREDICTED snapshot bumps
+(50c v33→v34 node kind + phase; 50d v34→v35 stock + streams) — the
+§49 lesson (serialized-union predictions) applied at plan time.

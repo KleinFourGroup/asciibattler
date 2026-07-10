@@ -2661,6 +2661,119 @@ describe('Run', () => {
     });
   });
 
+  describe('50b — removeRosterUnit (the roster-shrink chokepoint)', () => {
+    /** Catalog-derived (never hardcoded): overclock's buff key marks a
+     *  roster slot so the tests can watch it ride the splice. */
+    const buffOf = (id: string) => {
+      const e = packetById(id)?.effect;
+      if (e?.op !== 'applyBuff') throw new Error(`test fixture: '${id}' is not applyBuff`);
+      return e.buff;
+    };
+
+    /** The renumber contract, restated: drop the removed VALUE, shift
+     *  every higher value down one, preserve order. */
+    const renumbered = (pile: readonly number[], removed: number): number[] =>
+      pile.filter((v) => v !== removed).map((v) => (v > removed ? v - 1 : v));
+
+    const pileUnion = (run: Run): number[] =>
+      [...run.hand, ...run.drawPile, ...run.discardPile].sort((a, b) => a - b);
+
+    it('splices team + all THREE parallel stores in lockstep (the sixth structure shifts)', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      const before = run.team.map((u) => u.archetype);
+      expect(before.length).toBeGreaterThanOrEqual(3);
+      run.addPacket('overclock');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, rosterIndex: 2 }); // mark slot 2
+      run.removeRosterUnit(0);
+      expect(run.team.map((u) => u.archetype)).toEqual(before.slice(1));
+      expect(run.deploymentCounts).toHaveLength(run.team.length);
+      expect(run.encounterEffects).toHaveLength(run.team.length);
+      expect(run.pendingEncounterEffects).toHaveLength(run.team.length);
+      // The marked slot rode the shift: 2 → 1, and no other slot has it.
+      expect(run.pendingEncounterEffects[1]!.map((e) => e.key)).toEqual([buffOf('overclock').key]);
+      run.pendingEncounterEffects.forEach((slot, i) => {
+        if (i !== 1) expect(slot).toEqual([]);
+      });
+    });
+
+    it('removing the marked slot itself drops its pending effects with it', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.addPacket('overclock');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, rosterIndex: 2 });
+      run.removeRosterUnit(2);
+      expect(run.pendingEncounterEffects).toHaveLength(run.team.length);
+      run.pendingEncounterEffects.forEach((slot) => expect(slot).toEqual([]));
+    });
+
+    it('renumbers all three deck piles (post-encounter piles hold live rosterIndex values)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      winEncounter(bus);
+      declineAllRewards(run);
+      if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
+      if (run.phase === 'recruit') run.dispatch({ kind: 'passRecruit' });
+      expect(run.phase).toBe('map');
+      // Sanity: the post-encounter piles cover the roster completely.
+      expect(pileUnion(run)).toEqual(run.team.map((_, i) => i));
+      const before = { hand: [...run.hand], draw: [...run.drawPile], discard: [...run.discardPile] };
+      const removed = 1;
+      run.removeRosterUnit(removed);
+      expect(run.hand).toEqual(renumbered(before.hand, removed));
+      expect(run.drawPile).toEqual(renumbered(before.draw, removed));
+      expect(run.discardPile).toEqual(renumbered(before.discard, removed));
+      // The serialized invariant holds unconditionally: complete coverage,
+      // every value < team.length.
+      expect(pileUnion(run)).toEqual(run.team.map((_, i) => i));
+    });
+
+    it('guards: out-of-range and last-unit throw; a non-map phase throws (live indices)', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      expect(() => run.removeRosterUnit(run.team.length)).toThrow(/out of range/);
+      expect(() => run.removeRosterUnit(-1)).toThrow(/out of range/);
+      expect(() => run.removeRosterUnit(1.5)).toThrow(/out of range/);
+      while (run.team.length > 1) run.removeRosterUnit(0);
+      expect(() => run.removeRosterUnit(0)).toThrow(/last roster unit/);
+      const fighting = freshRunWithBus(2, { daemon: null }).run;
+      fighting.dispatch({ kind: 'enterNode', nodeId: frontierOf(fighting) });
+      expect(fighting.phase).toBe('battle');
+      expect(() => fighting.removeRosterUnit(0)).toThrow(/only legal at the map/);
+    });
+
+    it('a post-removal save round-trips with every structure still aligned', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.addPacket('overclock');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, rosterIndex: 2 });
+      run.removeRosterUnit(0);
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.team.map((u) => u.archetype)).toEqual(run.team.map((u) => u.archetype));
+      expect(restored.deploymentCounts).toHaveLength(restored.team.length);
+      expect(restored.encounterEffects).toHaveLength(restored.team.length);
+      expect(restored.pendingEncounterEffects).toHaveLength(restored.team.length);
+      expect(restored.pendingEncounterEffects[1]!.map((e) => e.key)).toEqual([
+        buffOf('overclock').key,
+      ]);
+      for (const v of [...restored.hand, ...restored.drawPile, ...restored.discardPile]) {
+        expect(v).toBeLessThan(restored.team.length);
+      }
+    });
+
+    it('the shrunk run still runs: the next encounter rebuilds the deck at the new size', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      const marked = run.team[2]!.archetype;
+      run.addPacket('overclock');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0, rosterIndex: 2 }); // slot 2, shifts to 1
+      run.removeRosterUnit(0);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      expect([...run.drawPile, ...run.hand].sort((a, b) => a - b)).toEqual(
+        run.team.map((_, i) => i),
+      );
+      // The pending buff drained onto the SHIFTED slot's unit at encounter start.
+      expect(run.team[1]!.archetype).toBe(marked);
+      expect(run.encounterEffects[1]!.map((e) => e.key)).toEqual([buffOf('overclock').key]);
+    });
+  });
+
   describe('battle tallies (47f — the settle seam)', () => {
     /** A bespoke battle-hook daemon (Laverna-shaped). */
     const BATTLE_BITS: DaemonConfig = {

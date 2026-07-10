@@ -795,6 +795,29 @@ describe('A2 round-trip: Run', () => {
     );
   });
 
+  it('50b: the K1/49e effect stores round-trip parallel to the roster (the alignment invariant)', () => {
+    // The §50 kickoff audit found the roundtrip suite pinned deploymentCounts
+    // parallelism (H3 above) but neither effect store — the gap mattered the
+    // moment removeRosterUnit made the roster shrinkable. All three
+    // roster-parallel arrays must restore at team.length, before AND after a
+    // removal.
+    const run = new Run(2026, new EventBus<GameEvents>());
+    const restored = Run.fromJSON(JSON.parse(JSON.stringify(run.toJSON())), new EventBus<GameEvents>());
+    expect(restored.deploymentCounts).toHaveLength(restored.team.length);
+    expect(restored.encounterEffects).toHaveLength(restored.team.length);
+    expect(restored.pendingEncounterEffects).toHaveLength(restored.team.length);
+
+    run.removeRosterUnit(0);
+    const shrunk = Run.fromJSON(JSON.parse(JSON.stringify(run.toJSON())), new EventBus<GameEvents>());
+    expect(shrunk.team).toHaveLength(run.team.length);
+    expect(shrunk.deploymentCounts).toHaveLength(shrunk.team.length);
+    expect(shrunk.encounterEffects).toHaveLength(shrunk.team.length);
+    expect(shrunk.pendingEncounterEffects).toHaveLength(shrunk.team.length);
+    for (const v of [...shrunk.hand, ...shrunk.drawPile, ...shrunk.discardPile]) {
+      expect(v).toBeLessThan(shrunk.team.length);
+    }
+  });
+
   it('H4/M1: a mid-encounter Run save carries the pools + the per-turn-banked XP; a stale snapshot is rejected', () => {
     // H4 added the encounter-loop state (playerHealth/enemyHealth/turnIndex/
     // encounterBudget) to the Run save (7→8). M1 (16→17) REMOVED the

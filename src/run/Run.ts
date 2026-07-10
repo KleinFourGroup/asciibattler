@@ -2261,6 +2261,54 @@ export class Run {
     this.phase = 'map';
   }
 
+  /**
+   * 50b — THE roster-shrink chokepoint (spec §Ports): the only code allowed
+   * to remove a roster unit, inverting `handleChooseRecruit`'s appends in
+   * one place. The roster has only ever GROWN before this; SIX structures
+   * are keyed by / aligned with roster indices (the §50 kickoff audit — the
+   * spec's five plus 49e's `pendingEncounterEffects`), so a removal must:
+   *
+   * - splice the three parallel arrays (`deploymentCounts`,
+   *   `encounterEffects`, `pendingEncounterEffects`) in lockstep with
+   *   `team`;
+   * - renumber the three deck piles (they hold rosterIndex VALUES): drop
+   *   the removed index, shift every higher value down one. Renumbering is
+   *   UNCONDITIONAL even though map-phase piles are semantically dead
+   *   (rebuilt at the next `beginEncounter`) — the serialized invariant
+   *   (every pile value < team.length) must not depend on call-site phase
+   *   (worklog §50).
+   *
+   * Map-phase-only (§50d adds 'port'): outside that window roster indices
+   * are live in places a splice can't reach (a battle's `playerRosterIds`
+   * stamp, un-banked `xpAwards`, `pendingPromotions`) — throwing beats a
+   * silent desync. `pendingPromotions` is structurally null here (non-null
+   * only during 'promotion'). The roster can't be emptied — a zero-unit
+   * run has no deck to draw. Emits nothing: §50d's command wrapper owns
+   * eventing, and roster UI re-derives from the live roster on render.
+   */
+  removeRosterUnit(index: number): void {
+    if (this.phase !== 'map') {
+      throw new Error(`removeRosterUnit: only legal at the map (phase '${this.phase}')`);
+    }
+    if (!Number.isInteger(index) || index < 0 || index >= this.team.length) {
+      throw new Error(
+        `removeRosterUnit: index ${index} out of range (roster size ${this.team.length})`,
+      );
+    }
+    if (this.team.length <= 1) {
+      throw new Error('removeRosterUnit: cannot remove the last roster unit');
+    }
+    this.team.splice(index, 1);
+    this.deploymentCounts.splice(index, 1);
+    this.encounterEffects.splice(index, 1);
+    this.pendingEncounterEffects.splice(index, 1);
+    const renumber = (pile: number[]): number[] =>
+      pile.filter((v) => v !== index).map((v) => (v > index ? v - 1 : v));
+    this.hand = renumber(this.hand);
+    this.drawPile = renumber(this.drawPile);
+    this.discardPile = renumber(this.discardPile);
+  }
+
   private isFrontier(nodeId: number): boolean {
     // S2 — at the pre-root start the root is the sole frontier; thereafter the
     // frontier is the current node's outgoing edges.

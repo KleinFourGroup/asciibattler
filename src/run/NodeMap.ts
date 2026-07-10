@@ -3,8 +3,9 @@
  * Node kinds: the terminal is a `boss` (G3); `rest` nodes scatter through the
  * middle hops (a non-combat XP grant — see `Run.resolveRest`, G3); `elite` nodes
  * also scatter the middle hops (W2 — an optional, harder fight, selected from
- * the sector's elite encounter pool); everything else is a `battle`. A full
- * event system (shop / etc.) is still future work.
+ * the sector's elite encounter pool); `port` nodes scatter there too (50c —
+ * the shop dock, ≥1 guaranteed per map; see `Run.handleEnterNode`); everything
+ * else is a `battle`. A full event system (camps / etc.) is Cluster 5.
  *
  * Layout (G2): `HOP_COUNT` hops total. Hop 0 and the last hop are
  * single nodes (root / terminal). Middle hops are `MIDDLE_WIDTH_MIN`..
@@ -36,16 +37,19 @@
  * **`a` before `b`**) followed by a single **mirror bit** (only when both
  * hops are wider than 1); then the rest-kind scatter pass (one draw per
  * eligible middle hop, plus a node-pick draw only when a rest is placed);
- * then **W2** the elite-kind scatter pass (same shape, appended AFTER rest).
- * The kinds passes run **after** the full structure is built and append their
- * draws at the tail, so the width+edge stream — and thus the map *structure*
- * for any seed — is byte-identical to the pre-G3 generator. The elite pass
- * comes strictly after the rest pass, so rest placement is byte-identical to
- * pre-W2 too; only which nodes carry the `elite` kind is new. (Gameplay still
- * shifts, since rests/elites replace battles on some paths → expected
- * fuzz/determinism baseline reset, folded into Phase X.) The number and order
- * of RNG draws *is* the seed→map mapping; reordering them silently remaps
- * every seed.
+ * then **W2** the elite-kind scatter pass (same shape, appended AFTER rest);
+ * then **50c** the port-kind scatter pass (same shape again, appended AFTER
+ * elite, plus a two-draw fallback ONLY when the scatter placed no port — the
+ * ≥1-per-map guarantee). The kinds passes run **after** the full structure is
+ * built and append their draws at the tail, so the width+edge stream — and
+ * thus the map *structure* for any seed — is byte-identical to the pre-G3
+ * generator. Each kind pass comes strictly after the one before it, so rest
+ * placement is byte-identical to pre-W2 and rest+elite placement to pre-50c;
+ * only the newest pass's draws are new. (Gameplay still shifts, since
+ * rests/elites/ports replace battles on some paths → expected
+ * fuzz/determinism baseline reset, folded into the introducing phase.) The
+ * number and order of RNG draws *is* the seed→map mapping; reordering them
+ * silently remaps every seed.
  *
  * NB: no max-*in*-degree is assumed. Boundary children may collect several
  * parents (the merges/diamonds that give the map variety). Adding an in-degree
@@ -57,7 +61,7 @@ import { RNG } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
 import type { RunConfig } from './RunConfig';
 
-export type NodeKind = 'battle' | 'rest' | 'boss' | 'elite';
+export type NodeKind = 'battle' | 'rest' | 'boss' | 'elite' | 'port';
 
 /**
  * S2 — the "pre-root" start position. A run begins here (no node entered yet),
@@ -99,6 +103,8 @@ const {
   restMinSpacing: REST_MIN_SPACING,
   eliteChance: ELITE_CHANCE,
   eliteMinSpacing: ELITE_MIN_SPACING,
+  portChance: PORT_CHANCE,
+  portMinSpacing: PORT_MIN_SPACING,
 } = NODE_MAP;
 
 export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number): NodeMap {
@@ -263,6 +269,42 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
       }
     }
   }
+  // 50c port kinds — a THIRD tail pass, AFTER the elite scatter, so rest AND
+  // elite placement stay byte-identical to pre-50c; only the port draws are
+  // new, appended at the tail (the W2 discipline again). Same eligible band +
+  // per-hop roll + min-spacing; the candidate set excludes the hop's rest and
+  // elite nodes, so a port never overwrites either. Unlike elites, ports carry
+  // a ≥1-PER-MAP GUARANTEE (spec §Ports — every sector map has somewhere to
+  // spend): if the scatter places none, a fallback forces one onto a
+  // uniformly-picked eligible hop (two extra draws, only in that case — the
+  // draw count is outcome-dependent like every kind pass's placement pick).
+  // Maps too short to have an eligible middle hop (dev/fuzz hopCount
+  // overrides ≤ 3) place no port: the guarantee is a sector-map contract,
+  // not a degenerate-map invariant.
+  const portIds = new Set<number>();
+  let lastPortHop = -Infinity;
+  for (let f = 2; f <= hopCount - 2; f++) {
+    const roll = rng.next();
+    if (roll < PORT_CHANCE && f - lastPortHop >= PORT_MIN_SPACING) {
+      const ids = hops[f]!.filter((id) => !restIds.has(id) && !eliteIds.has(id));
+      if (ids.length > 0) {
+        const pick = ids[rng.int(0, ids.length - 1)]!;
+        portIds.add(pick);
+        lastPortHop = f;
+      }
+    }
+  }
+  if (portIds.size === 0) {
+    const eligibleHops: number[][] = [];
+    for (let f = 2; f <= hopCount - 2; f++) {
+      const ids = hops[f]!.filter((id) => !restIds.has(id) && !eliteIds.has(id));
+      if (ids.length > 0) eligibleHops.push(ids);
+    }
+    if (eligibleHops.length > 0) {
+      const ids = eligibleHops[rng.int(0, eligibleHops.length - 1)]!;
+      portIds.add(ids[rng.int(0, ids.length - 1)]!);
+    }
+  }
   // hopCount === 1 degenerates to root == terminal: `bossId` is the root, so
   // the single node is tagged `boss` — the player's one fight IS the boss, and
   // the map renderer shows its `!` kind glyph (S2 dropped the root `@`-override,
@@ -274,7 +316,9 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
         ? { ...n, kind: 'rest' }
         : eliteIds.has(n.id)
           ? { ...n, kind: 'elite' }
-          : n,
+          : portIds.has(n.id)
+            ? { ...n, kind: 'port' }
+            : n,
   );
 
   return {
@@ -307,6 +351,7 @@ export function dump(map: NodeMap): string {
       const node = map.nodes.find((n) => n.id === id);
       if (node?.kind === 'rest') return `${id}(rest)`;
       if (node?.kind === 'elite') return `${id}(elite)`;
+      if (node?.kind === 'port') return `${id}(port)`;
       return String(id);
     });
     lines.push(`  Hop ${f}: ${labeled.join(', ')}`);

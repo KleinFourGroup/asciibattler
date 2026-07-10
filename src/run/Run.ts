@@ -104,8 +104,14 @@ import type { Archetype } from '../sim/archetypes';
 // refs rolled a non-empty offer (both gated AND headless paths: the offer is a
 // real decision, not presentation). The locked ordering: battle → reward →
 // promotion → recruit (`continueFromTurnGate`).
+// 50c adds `port` — entered from the map when the player docks at a port node
+// (`handleEnterNode`; the rest-style inline branch, NOT the turn-gate chain —
+// a port is a map node, not a post-battle phase). Left via the `leavePort`
+// command back to 'map'. Minimal at 50c; §50d rolls stock on entry and adds
+// the buy/sell commands.
 export type RunPhase =
   | 'map'
+  | 'port'
   | 'turn-intro'
   | 'battle'
   | 'turn-outcome'
@@ -293,8 +299,14 @@ export interface BattleEncounter {
  *  rules, encounter- and run-duration). A v32 save has none of the three →
  *  reject rather than rehydrate a run whose fired packets silently lost
  *  their effects (the packet was already consumed — dropping the stores
- *  would eat it). */
-const RUN_SCHEMA_VERSION = 33;
+ *  would eat it).
+ *  50c: bumped 33→34. Ports open: `phase` gains the `port` member (the 48b
+ *  precedent — a union widening is a shape change), and the NodeMap
+ *  generator gains the port scatter pass, so the seed→map mapping changed:
+ *  a v33 save's map has no port nodes and its serialized phase can never be
+ *  'port' — but a v33 READER handed a v34 save would choke on both →
+ *  reject. */
+const RUN_SCHEMA_VERSION = 34;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -853,6 +865,9 @@ export class Run {
       case 'passRecruit':
         this.handlePassRecruit();
         break;
+      case 'leavePort':
+        this.handleLeavePort();
+        break;
       case 'dismissPromotion':
         this.handleDismissPromotion();
         break;
@@ -905,17 +920,37 @@ export class Run {
     }
     this.currentNodeId = nodeId;
 
-    // G3 — dispatch on node kind. A rest resolves inline (no battle); battle
-    // and boss both build an encounter (boss is a regular fight, just tagged
-    // — the terminal-win → run:victory path in `advancePastBattle` already
-    // handles it). The frontier check above gates entry the same for all.
+    // G3 — dispatch on node kind. A rest resolves inline (no battle); a port
+    // (50c) docks — the run holds in the serialized `port` phase until the
+    // player dispatches `leavePort` (§50d rolls stock here on entry); battle,
+    // boss, and elite all build an encounter (boss is a regular fight, just
+    // tagged — the terminal-win → run:victory path in `advancePastBattle`
+    // already handles it). The frontier check above gates entry the same for
+    // all.
     if (this.kindOf(nodeId) === 'rest') {
       this.resolveRest();
+      return;
+    }
+    if (this.kindOf(nodeId) === 'port') {
+      this.phase = 'port';
+      this.bus.emit('port:entered', { nodeId });
       return;
     }
 
     this.phase = 'battle';
     this.beginEncounter();
+  }
+
+  /**
+   * 50c — undock: leave the port and return to the map. The hop was consumed
+   * on entry (`handleEnterNode` moved `currentNodeId` onto the port node), so
+   * leaving just releases the phase — the frontier advances from the port.
+   * Emits nothing: Game swaps the map explicitly off the phase landing on
+   * 'map' (the chooseRecruit silent-transition pattern).
+   */
+  private handleLeavePort(): void {
+    if (this.phase !== 'port') return;
+    this.phase = 'map';
   }
 
   /**

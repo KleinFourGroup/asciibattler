@@ -1,5 +1,5 @@
 {
-  "path": { "battle": 0, "rest": 0, "elite": 0 },
+  "path": { "battle": 0, "rest": 0, "elite": 0, "port": 0 },
   "archetype": {
     "mercenary": 0,
     "adventurer": 0,

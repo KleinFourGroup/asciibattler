@@ -34,6 +34,14 @@ export type RunCommand =
    */
   | { readonly kind: 'dismissPromotion' }
   /**
+   * 50c — undock from a port node (spec §Ports): the run holds in the
+   * serialized `port` phase from docking (`enterNode` on a port) until this
+   * lands, then returns to 'map' (the hop was consumed on entry — the
+   * frontier advances from the port). A no-op outside the `port` phase.
+   * §50d adds the buy/sell/remove commands that spend bits while docked.
+   */
+  | { readonly kind: 'leavePort' }
+  /**
    * 48b — accept ONE pending reward portion (`index` into
    * `Run.pendingRewards`). Bits settle through `gainBits` (the fold applies
    * at accept time); a daemon joins the ownership list immediately. Only

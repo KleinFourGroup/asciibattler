@@ -498,6 +498,7 @@ run:bitsChanged         { bits: number; delta: number }                         
 run:cacheChanged        { packetIds: string[]; size: number }                       # 49b: the cache changed — a packet added/discarded, OR addDaemon moved the DERIVED capacity (size = the folded effectiveCacheSize); the 49f chip+modal's feed
 run:packetUsed          { packetId; context; playerHealth; grants; empowerMagnitudes }  # 49e: a usePacket fired (consume-on-fire; the paired run:cacheChanged carries the shrunk cache) — post-effect health + the re-derived queue/badge column for the 49f strip
 
+port:entered            { nodeId: number }                                          # 50c: docked at a port node — the run holds in the serialized port phase until leavePort; §50e's PortScene feed (the 50c interim stub undocks immediately)
 recruit:offered         { units: UnitTemplate[] }
 reward:offered          { rewards: readonly RewardPortion[] }                       # 48b: a won encounter's rolled reward offer — the run entered the reward phase (battle → rewards → promotion → recruit)
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
@@ -523,6 +524,7 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   enterNode               { nodeId: number }
   chooseRecruit           { unitTemplate: UnitTemplate }
   passRecruit             { }     # H6b: decline the recruit offer
+  leavePort               { }     # 50c: undock from a port node back to the map (the hop was consumed on entry); §50d adds the buy/sell/remove siblings
   dismissPromotion        { }     # E4: dismiss the PromotionScene
   acceptReward            { index: number; swapCacheIndex?: number }   # 48b: accept ONE pending reward portion (bits settle via gainBits; a daemon joins ownership immediately); 49c: swapCacheIndex = the slot to discard when a packet portion meets a FULL cache
   declineReward           { index: number }   # 48b: decline ONE pending reward portion (declinable-per-portion, passRecruit's sibling)

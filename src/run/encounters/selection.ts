@@ -67,6 +67,7 @@ const KIND_BY_NODE: Record<NodeKind, EncounterKind> = {
   boss: 'boss', // W1: the terminal boss node selects from the boss pool
   elite: 'elite', // W2: an elite node selects from the elite pool
   rest: 'normal', // rest nodes never fight; defensive default
+  port: 'normal', // 50c: port nodes never fight either; same defensive default
 };
 
 export function encounterKindFor(nodeKind: NodeKind): EncounterKind {

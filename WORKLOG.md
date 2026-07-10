@@ -1294,3 +1294,49 @@ before anything calls it), then the node kind with a minimal phase
 editor+catalog (50f), exit sweep (50g). Two PREDICTED snapshot bumps
 (50c v33→v34 node kind + phase; 50d v34→v35 stock + streams) — the
 §49 lesson (serialized-union predictions) applied at plan time.
+
+### 50c — the port node kind + the minimal phase (2026-07-10)
+
+The `$` lands: the union member, the THIRD tail scatter pass
+(`portChance 0.2` / `portMinSpacing 3`, candidates exclude rest+elite,
+plus the ≥1-per-map fallback the elite pass never needed — two extra
+draws only when the scatter rolls zero; short dev maps with no
+eligible band are exempt), the serialized `port` phase entered at
+`handleEnterNode` beside `rest` (NOT the turn-gate chain — the
+audit's template divergence held), `leavePort` back to map, and fuzz
+`case 'port'` (leave-immediately; the purchase-policy arm waits for
+§50d goods). **Run v33→v34.**
+
+**The tail-pass contract was PROVEN, not assumed**: a one-shot
+200-seed oracle (HEAD's generator snapshotted beside a temp test —
+the 47c idol-equivalence pattern) confirmed structure, rest, elite,
+and boss placement byte-identical, and every kind change is
+battle→port. Oracle deleted after the green run; the in-tree suite
+keeps the property-level guards (band, spacing, ≥1 guarantee ×200
+seeds, sibling variety, reachability).
+
+**The three compile-gates all fired as predicted** (KIND_GLYPH /
+KIND_BY_NODE / the scored kindWeight switch), plus one the audit
+called: `PATH_KINDS`' strict record schema rippled `port: 0` into
+`config/fuzz-strategies.json` and three scored.test fixtures —
+typecheck caught the fixtures (vitest alone wouldn't; the
+non-overlapping-checkers doctrine earns its keep again). ⚠ carried:
+a stale local `output/best-strategy.json` will now fail
+`loadWeightsFile` (missing `port`) — regenerate at the §52 probe.
+
+**Browser-verified at :5191** (DOM inspection — the screenshot path
+hit the documented rAF-throttle timeout): 2 `$` nodes amber
+(rgb 255,176,0) on the boot map; a scripted walk (forged gate wins,
+the HANDOFF force pattern — note the forge must follow `advanceTurn`,
+the gate guards a turn that never started) docked at node 9 →
+`port:entered {nodeId:9}` fired → **the Game interim stub auto-undocked
+to map@9, map re-rendered with the port as current, zero console
+errors** — no soft-lock; §50e replaces the stub with the PortScene
+swap.
+
+**Plan deviation, one line**: the cut said "+ re-baseline"; the fuzz
+re-baseline READ is deferred to 50g's exit sweep — 50d bumps the
+snapshot and adds stock draws immediately after, so re-baselining per
+step would produce two stale intermediates (the 49h proportionality
+precedent). The 48g CSV baselines are STALE for comparison as of this
+commit (ports replace battles on some paths).

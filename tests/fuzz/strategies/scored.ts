@@ -77,6 +77,8 @@ function kindWeight(kind: NodeKind, w: ScoredWeights): number {
       return w.path.rest;
     case 'elite':
       return w.path.elite; // W2 — the optional harder detour's route weight
+    case 'port':
+      return w.path.port; // 50c — the shop dock (a real route weight once §50d sells)
     case 'boss':
       return 0; // forced terminal — no weight
   }

@@ -176,8 +176,8 @@ describe('recruit policies', () => {
 
 describe('strategy registry', () => {
   it('registers the full G5 menu, config-derived', () => {
-    // 2 baselines + one per archetype + one per stat + 2 path kinds + the H6b
-    // pass strategy + the H7a scored strategy.
+    // 2 baselines + one per archetype + one per stat + one per PATH_KINDS
+    // entry + the H6b pass strategy + the H7a scored strategy.
     const expected = 2 + ALL_ARCHETYPES.length + STAT_KEYS.length + PATH_KINDS.length + 1 + 1;
     expect(STRATEGY_NAMES).toHaveLength(expected);
     for (const a of ALL_ARCHETYPES) expect(STRATEGY_NAMES).toContain(`recruit:${a}`);

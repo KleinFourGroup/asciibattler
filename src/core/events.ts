@@ -380,6 +380,16 @@ export interface GameEvents extends Record<string, unknown> {
     empowerMagnitudes: number[];
   };
 
+  /**
+   * 50c — the player docked at a port node (spec §Ports): `enterNode` on a
+   * `port`-kind node consumed the hop and the run entered the serialized
+   * `port` phase (it holds there until a `leavePort` command). `nodeId` is
+   * the docked node. §50e's PortScene swap is the intended consumer (the
+   * 50c interim Game stub undocks immediately instead); no sim/run
+   * subscriber exists. §50d rolls the stock at this same entry point.
+   */
+  'port:entered': { nodeId: number };
+
   'recruit:offered': { units: UnitTemplate[] };
 
   /**

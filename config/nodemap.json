@@ -7,5 +7,7 @@
   "restChance": 0.35,
   "restMinSpacing": 2,
   "eliteChance": 0.25,
-  "eliteMinSpacing": 2
+  "eliteMinSpacing": 2,
+  "portChance": 0.2,
+  "portMinSpacing": 3
 }

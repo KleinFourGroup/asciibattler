@@ -14,6 +14,12 @@
  * band, in a pass AFTER the rest scatter (so rest placement is unchanged), and
  * never overwrite a rest. Middle hops are always >= 2 wide, so an elite always
  * leaves a non-elite sibling — taking the elite is a route choice.
+ *
+ * 50c — port scatter: `portChance` / `portMinSpacing` mirror the elite knobs
+ * for the port (shop) node. A third pass AFTER elites (rest + elite placement
+ * unchanged); never overwrites either; and unlike elites, ≥1 port per map is
+ * GUARANTEED via a fallback placement when the scatter rolls none (maps with
+ * no eligible middle hop — dev hopCount overrides ≤ 3 — are exempt).
  */
 
 import { z } from 'zod';
@@ -30,6 +36,8 @@ const NodeMapSchema = z
     restMinSpacing: z.number().int().positive(),
     eliteChance: z.number().min(0).max(1),
     eliteMinSpacing: z.number().int().positive(),
+    portChance: z.number().min(0).max(1),
+    portMinSpacing: z.number().int().positive(),
   })
   .refine((c) => c.middleWidthMin <= c.middleWidthMax, {
     message: 'middleWidthMin must be <= middleWidthMax',

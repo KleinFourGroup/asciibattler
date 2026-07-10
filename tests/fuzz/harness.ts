@@ -584,6 +584,15 @@ export function runOne(
         }
         break;
       }
+      case 'port': {
+        // 50c: headless policy — undock immediately (nothing to buy until
+        // §50d rolls stock + adds the transaction commands; a purchase-
+        // policy arm upgrades this then, the reward-case trajectory).
+        // Deterministic, zero draws. The dock consumed a hop in the 'map'
+        // case above, so the abort guard still bounds the walk.
+        run.dispatch({ kind: 'leavePort' });
+        break;
+      }
       case 'promotion': {
         // E4: headless run; PromotionScene has no observable side
         // effects on the sim, just dismiss and continue. M1: promotions

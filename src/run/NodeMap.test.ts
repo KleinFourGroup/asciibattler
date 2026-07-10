@@ -78,7 +78,7 @@ describe('NodeMap.generate', () => {
       for (let s = 0; s < 50; s++) {
         const map = generate(new RNG(s));
         for (const n of map.nodes) {
-          expect(['battle', 'rest', 'boss', 'elite']).toContain(n.kind);
+          expect(['battle', 'rest', 'boss', 'elite', 'port']).toContain(n.kind);
         }
       }
     });
@@ -218,6 +218,92 @@ describe('NodeMap.generate', () => {
         for (let s = 0; s < 20; s++) {
           const map = generate(new RNG(s), { hopCount: fc });
           expect(map.nodes.some((n) => n.kind === 'elite')).toBe(false);
+        }
+      }
+    });
+  });
+
+  describe('node kinds (50c — port)', () => {
+    // Balance-proof: the spacing bound comes from the config the generator reads.
+    const { portMinSpacing } = NODE_MAP;
+
+    it('EVERY default-length map places at least one port (the ≥1 guarantee)', () => {
+      for (let s = 0; s < 200; s++) {
+        const map = generate(new RNG(s));
+        expect(
+          map.nodes.filter((n) => n.kind === 'port').length,
+          `seed ${s}`,
+        ).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    it('port nodes only sit on eligible middle hops [2, hopCount-2]', () => {
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const lastHop = map.hops.length - 1;
+        for (const n of map.nodes) {
+          if (n.kind === 'port') {
+            expect(n.hop).toBeGreaterThanOrEqual(2);
+            expect(n.hop).toBeLessThanOrEqual(lastHop - 1);
+          }
+        }
+      }
+    });
+
+    it('at most one port per hop; multi-port maps respect the min spacing', () => {
+      // The fallback pass only ever fires when the scatter placed ZERO ports,
+      // so any map with two or more ports is pure scatter — spacing applies.
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const perHop = new Map<number, number>();
+        for (const n of map.nodes) {
+          if (n.kind === 'port') perHop.set(n.hop, (perHop.get(n.hop) ?? 0) + 1);
+        }
+        for (const count of perHop.values()) expect(count).toBe(1);
+        const portHops = [...perHop.keys()].sort((a, b) => a - b);
+        for (let i = 1; i < portHops.length; i++) {
+          expect(portHops[i]! - portHops[i - 1]!).toBeGreaterThanOrEqual(portMinSpacing);
+        }
+      }
+    });
+
+    it('a port always leaves a non-port, non-elite-only route (sibling variety holds)', () => {
+      // A port never overwrites a rest or an elite (the candidate filter), a
+      // hop hosts at most one of each kind, and middle hops are >= 2 wide —
+      // so a port hop always offers a sibling of some other kind.
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        for (const n of map.nodes) {
+          if (n.kind !== 'port') continue;
+          const siblings = map.hops[n.hop]!.map((id) => nodeById(map, id));
+          expect(siblings.some((sib) => sib.kind !== 'port')).toBe(true);
+        }
+      }
+    });
+
+    // NB the tail-pass contract (structure + rest + elite placement
+    // byte-identical to pre-50c) was proven by a one-shot 200-seed oracle
+    // against HEAD's generator at 50c build time (worklog §50) — the pass
+    // order in `generate` is what holds it going forward.
+    it('port nodes stay root-reachable and co-reachable to the boss', () => {
+      for (let s = 0; s < 50; s++) {
+        const map = generate(new RNG(s));
+        const fromRoot = reachableFrom(map, map.rootId);
+        const toBoss = coReachableTo(map, map.terminalId);
+        for (const n of map.nodes) {
+          if (n.kind === 'port') {
+            expect(fromRoot.has(n.id)).toBe(true);
+            expect(toBoss.has(n.id)).toBe(true);
+          }
+        }
+      }
+    });
+
+    it('hopCount <= 3 produces no port nodes (empty eligible band — the guarantee is exempt)', () => {
+      for (const fc of [1, 2, 3]) {
+        for (let s = 0; s < 20; s++) {
+          const map = generate(new RNG(s), { hopCount: fc });
+          expect(map.nodes.some((n) => n.kind === 'port')).toBe(false);
         }
       }
     });

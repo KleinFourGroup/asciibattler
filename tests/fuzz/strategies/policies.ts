@@ -55,7 +55,7 @@ export const STAT_KEYS = Object.keys(baseStatsForArchetype('mercenary')) as (key
  * strategy's path weights (`scoredWeights.ts`). `as const` preserves the literal
  * element type, so a `Record` over it doesn't demand a `boss` key.
  */
-export const PATH_KINDS = ['battle', 'rest', 'elite'] as const satisfies readonly NodeKind[];
+export const PATH_KINDS = ['battle', 'rest', 'elite', 'port'] as const satisfies readonly NodeKind[];
 
 // ---- node policies --------------------------------------------------------
 

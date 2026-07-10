@@ -264,10 +264,27 @@ export class Game implements RunDispatcher {
         // Rejected hops (non-frontier, wrong phase) emit nothing — we stay
         // on the map.
         this.run.dispatch(command);
+        // 50c INTERIM — docking at a port immediately undocks (there's no
+        // PortScreen yet; §50e replaces this stub with a `port:entered` →
+        // PortScene swap). The recursive dispatch lands on 'map' and the
+        // leavePort case below refreshes the map — so a `$` click consumes
+        // the hop and returns to the map, never soft-locking the browser.
+        if (this.run.phase === 'port') {
+          this.dispatch({ kind: 'leavePort' });
+          break;
+        }
         // G3 — a rest node resolves inline. If it banked XP without a
         // level-up, phase falls to 'map' with no event (like chooseRecruit
         // below), so refresh the map explicitly. A battle (battle:started) or
         // a rest-with-promotion (promotion:pending) fires its own swap.
+        if (this.run.phase === 'map') {
+          this.swap(new MapScene());
+        }
+        break;
+      case 'leavePort':
+        // 50c — undock lands on 'map' with no event emit (the chooseRecruit
+        // silent-transition pattern), so swap explicitly.
+        this.run.dispatch(command);
         if (this.run.phase === 'map') {
           this.swap(new MapScene());
         }

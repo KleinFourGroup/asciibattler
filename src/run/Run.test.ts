@@ -2637,7 +2637,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(33);
+      expect(wire.schemaVersion).toBe(34);
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.injectedEncounterRules).toEqual([ruleOf('venom')]);
       expect(restored.injectedRunRules).toEqual([ruleOf('miner')]);
@@ -2771,6 +2771,108 @@ describe('Run', () => {
       // The pending buff drained onto the SHIFTED slot's unit at encounter start.
       expect(run.team[1]!.archetype).toBe(marked);
       expect(run.encounterEffects[1]!.map((e) => e.key)).toEqual([buffOf('overclock').key]);
+    });
+  });
+
+  describe('50c — the port phase (dock / undock)', () => {
+    const nodeKindOf = (run: Run, id: number) => run.nodeMap.nodes.find((n) => n.id === id)!.kind;
+
+    const frontierIdsOf = (run: Run): number[] =>
+      run.currentNodeId === PRE_ROOT_NODE_ID
+        ? [run.nodeMap.rootId]
+        : run.nodeMap.edges.filter((e) => e.from === run.currentNodeId).map((e) => e.to);
+
+    /** Any port reachable strictly downstream of (or at) `from`? */
+    const reachesPort = (run: Run, from: number): boolean => {
+      const stack = [from];
+      const seen = new Set([from]);
+      while (stack.length > 0) {
+        const id = stack.pop()!;
+        if (nodeKindOf(run, id) === 'port') return true;
+        for (const e of run.nodeMap.edges) {
+          if (e.from === id && !seen.has(e.to)) {
+            seen.add(e.to);
+            stack.push(e.to);
+          }
+        }
+      }
+      return false;
+    };
+
+    /** Walk the run to a port node and dock (wins forged via battle:ended —
+     *  the WIN_BOUNTY idiom). Every default map has ≥1 port (the NodeMap
+     *  guarantee) and every node is root-reachable, so a port-reaching
+     *  frontier choice always exists from the start. */
+    const dockAtPort = (run: Run, bus: EventBus<GameEvents>): void => {
+      for (let guard = 0; guard < 20; guard++) {
+        expect(run.phase).toBe('map');
+        const frontier = frontierIdsOf(run);
+        const port = frontier.find((id) => nodeKindOf(run, id) === 'port');
+        if (port !== undefined) {
+          run.dispatch({ kind: 'enterNode', nodeId: port });
+          return;
+        }
+        const next = frontier.find((id) => reachesPort(run, id));
+        expect(next).toBeDefined();
+        run.dispatch({ kind: 'enterNode', nodeId: next! });
+        if (run.phase === 'battle') {
+          winEncounter(bus);
+          declineAllRewards(run);
+        }
+        if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
+        if (run.phase === 'recruit') run.dispatch({ kind: 'passRecruit' });
+      }
+      throw new Error('dockAtPort: never reached a port');
+    };
+
+    it('docking consumes the hop, enters the serialized port phase, and emits port:entered', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      const entered: Array<{ nodeId: number }> = [];
+      bus.on('port:entered', (e) => entered.push(e));
+      dockAtPort(run, bus);
+      expect(run.phase).toBe('port');
+      expect(entered).toHaveLength(1);
+      expect(entered[0]!.nodeId).toBe(run.currentNodeId);
+      expect(nodeKindOf(run, run.currentNodeId)).toBe('port');
+    });
+
+    it('leavePort undocks to the map; the frontier advances FROM the port node', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      dockAtPort(run, bus);
+      const portNode = run.currentNodeId;
+      run.dispatch({ kind: 'leavePort' });
+      expect(run.phase).toBe('map');
+      expect(run.currentNodeId).toBe(portNode); // still standing on the dock
+      // The onward frontier is live: entering a next-hop node leaves 'map'.
+      const onward = frontierIdsOf(run)[0]!;
+      run.dispatch({ kind: 'enterNode', nodeId: onward });
+      expect(run.phase).not.toBe('map');
+    });
+
+    it('leavePort outside the port phase is a silent no-op', () => {
+      const { run } = freshRunWithBus(1, { daemon: null });
+      run.dispatch({ kind: 'leavePort' });
+      expect(run.phase).toBe('map');
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      const during = run.phase;
+      run.dispatch({ kind: 'leavePort' });
+      expect(run.phase).toBe(during);
+    });
+
+    it('a mid-dock save round-trips the port phase (v34); undock works on the restored run', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      dockAtPort(run, bus);
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      expect(wire.schemaVersion).toBe(34);
+      expect(wire.phase).toBe('port');
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.phase).toBe('port');
+      expect(restored.currentNodeId).toBe(run.currentNodeId);
+      restored.dispatch({ kind: 'leavePort' });
+      expect(restored.phase).toBe('map');
+      expect(() =>
+        Run.fromJSON({ ...wire, schemaVersion: 33 }, new EventBus<GameEvents>()),
+      ).toThrow(/unsupported schema version/);
     });
   });
 

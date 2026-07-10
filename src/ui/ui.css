@@ -424,6 +424,14 @@ body {
   text-shadow: 0 0 4px #9d00ff, 0 0 9px #9d00ff;
 }
 
+/* 50c — port nodes: the shop dock. TERMINAL_AMBER (the money hue — bits
+   chrome reads amber too) so the `$` reads as "somewhere to spend" against
+   the green rests + purple elites during route planning. */
+.map-node.port {
+  color: #ffb000; /* TERMINAL_AMBER */
+  text-shadow: 0 0 4px #ffb000, 0 0 9px #ffb000;
+}
+
 /* RecruitScreen (Step 4.4). Full-overlay modal that appears between
    victory and the next map screen. Cards are clickable; clicking emits
    recruit:chosen and Game swaps back to MapScreen. */

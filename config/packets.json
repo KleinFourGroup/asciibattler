@@ -29,6 +29,24 @@
       }
     },
     {
+      "id": "shield",
+      "name": "Shield",
+      "description": "Raise a shield on one drawn card: +2 DEF for the encounter.",
+      "usableIn": ["preTurn"],
+      "target": "unit",
+      "effect": {
+        "op": "applyBuff",
+        "buff": {
+          "key": "shielded",
+          "mods": {
+            "defense": { "add": 2 }
+          },
+          "merge": "add"
+        },
+        "duration": "encounter"
+      }
+    },
+    {
       "id": "reroute",
       "name": "Reroute",
       "description": "Reroute the hand: redraw up to two cards, right now.",

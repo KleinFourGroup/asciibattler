@@ -9,11 +9,12 @@
  *
  *  1. **Live schema validation.** Every edit re-runs the SAME
  *     `RewardTablesSchema` the game boots on (src/config/rewards.ts), plus the
- *     two referential asserts a bad save would trip at the NEXT boot:
- *     `assertRewardDaemonRefs` (a daemon entry must name a catalog idol) and
- *     the encounters-side check in reverse (renaming/deleting a table a
- *     committed encounter references would fail `assertEncounterRewardRefs`).
- *     Save is disabled while any of the three complain.
+ *     referential asserts a bad save would trip at the NEXT boot:
+ *     `assertRewardDaemonRefs` (a daemon entry must name a catalog idol),
+ *     `assertRewardPacketRefs` (49g — packet entries are live catalog refs
+ *     now), and the encounters-side check in reverse (renaming/deleting a
+ *     table a committed encounter references would fail
+ *     `assertEncounterRewardRefs`). Save is disabled while any complain.
  *  2. **A live draw preview.** Each entry's roll chance (`weight / total` — the
  *     same one-entry-proportional-to-weight sample `pickWeighted` makes) plus
  *     the table's average bits per settle (BASE amounts — the display/settle
@@ -40,11 +41,13 @@ import {
   REWARD_ENTRY_KINDS,
   RewardTablesSchema,
   assertRewardDaemonRefs,
+  assertRewardPacketRefs,
   type RewardTable,
   type RewardEntry,
   type RewardEntryKind,
 } from '../../src/config/rewards';
 import { DAEMONS } from '../../src/config/daemons';
+import { PACKETS } from '../../src/config/packets';
 import { ENCOUNTERS } from '../../src/config/encounters';
 import { formatRewardsJson } from './format';
 
@@ -164,7 +167,8 @@ function defaultEntry(kind: RewardEntryKind, weight: number): WorkingEntry {
     case 'bits':
       return { kind: 'bits', weight, min: 5, max: 10 };
     case 'packet':
-      return { kind: 'packet', weight, packet: 'packet-id' };
+      // 49g — the catalog exists now: default to a real id (the daemon shape).
+      return { kind: 'packet', weight, packet: PACKETS[0]?.id ?? 'packet-id' };
     case 'daemon':
       return { kind: 'daemon', weight, daemon: DAEMONS[0]?.id ?? 'daemon-id' };
   }
@@ -212,18 +216,16 @@ function makeEntryRow(entry: WorkingEntry, index: number): HTMLDivElement {
       );
       break;
     case 'packet': {
-      const wrap = el('label', 'pool-num');
-      wrap.append(el('span', undefined, 'packet'));
-      const input = el('input', 'packet-id');
-      input.type = 'text';
-      input.spellcheck = false;
-      input.value = entry.packet;
-      input.addEventListener('input', () => {
-        entry.packet = input.value;
+      // 49g — a SELECT over the live packet catalog (was a free-text id from
+      // 48e, before the catalog existed; the daemon-entry pattern).
+      const sel = el('select', 'packet-sel');
+      for (const p of PACKETS) sel.appendChild(option(p.id, `${p.name} (${p.id})`));
+      sel.value = entry.packet;
+      sel.addEventListener('change', () => {
+        entry.packet = sel.value;
         refreshDerived();
       });
-      wrap.appendChild(input);
-      row.appendChild(wrap);
+      row.appendChild(sel);
       break;
     }
     case 'daemon': {
@@ -302,9 +304,16 @@ function refreshValidation(): void {
       issues.push(`${issue.path.join('.') || '(root)'}: ${issue.message}`);
     }
   }
-  // The two boot asserts a bad save would trip at the game's NEXT load:
+  // The boot asserts a bad save would trip at the game's NEXT load:
   try {
     assertRewardDaemonRefs(working, DAEMONS);
+  } catch (err) {
+    issues.push(err instanceof Error ? err.message : String(err));
+  }
+  // 49g — the packet sibling (48e shipped without it: packet entries were a
+  // dormant free-text seam then; they're live catalog refs now).
+  try {
+    assertRewardPacketRefs(working, PACKETS);
   } catch (err) {
     issues.push(err instanceof Error ? err.message : String(err));
   }
@@ -358,7 +367,7 @@ function describeEntry(e: WorkingEntry): string {
     case 'bits':
       return e.min === e.max ? `${e.min} bits` : `${e.min}–${e.max} bits`;
     case 'packet':
-      return `packet ${e.packet || '(unnamed)'}`;
+      return `packet ${PACKETS.find((p) => p.id === e.packet)?.name ?? e.packet}`;
     case 'daemon':
       return `daemon ${DAEMONS.find((d) => d.id === e.daemon)?.name ?? e.daemon}`;
   }

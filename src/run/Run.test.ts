@@ -3241,14 +3241,6 @@ describe('48b — the reward phase', () => {
     return handle;
   }
 
-  /** The 48a skeleton table's authored bits range (balance-proof: derived
-   *  from config, never hardcoded). */
-  function skeletonRange(): { min: number; max: number } {
-    const entry = rewardTableById('bits-small')!.entries[0]!;
-    if (entry.kind !== 'bits') throw new Error('expected the bits skeleton entry');
-    return { min: entry.min, max: entry.max };
-  }
-
   it('a won rewards-carrying encounter enters the reward phase FIRST, recruit deferred', () => {
     const { run, bus } = freshRunWithBus(1, { daemon: null, forcedEncounterId: 'brigands' });
     const offered: number[] = [];
@@ -3261,16 +3253,33 @@ describe('48b — the reward phase', () => {
     expect(offered).toEqual([1]);
     expect(recruits).toEqual([]);
     expect(run.currentOffer).toBeNull();
+    // 49g — bits-small authors bits AND packet entries now, so the sample
+    // may legitimately yield either. Assert the drawn portion matches an
+    // AUTHORED entry (config-derived — robust to future table tuning).
+    const table = rewardTableById('bits-small')!;
     const portion = run.pendingRewards![0]!;
-    if (portion.kind !== 'bits') throw new Error('expected a bits portion');
-    const { min, max } = skeletonRange();
-    expect(portion.base).toBeGreaterThanOrEqual(min);
-    expect(portion.base).toBeLessThanOrEqual(max);
+    if (portion.kind === 'bits') {
+      expect(
+        table.entries.some(
+          (e) => e.kind === 'bits' && portion.base >= e.min && portion.base <= e.max,
+        ),
+      ).toBe(true);
+    } else if (portion.kind === 'packet') {
+      expect(
+        table.entries.some((e) => e.kind === 'packet' && e.packet === portion.packetId),
+      ).toBe(true);
+    } else {
+      throw new Error('bits-small authors no daemon entries');
+    }
   });
 
   it('acceptReward settles bits through the shared settle math and advances to recruit', () => {
     const { run, bus } = winWithRewards();
-    const portion = run.pendingRewards![0]!;
+    // 49g — the live table can draw a packet now; the SETTLE pin needs a
+    // bits portion, so overwrite the offer (the in-block daemon-order forge
+    // pattern — plain mutation on the public field).
+    run.pendingRewards = [{ kind: 'bits', base: 10 }];
+    const portion = run.pendingRewards[0]!;
     if (portion.kind !== 'bits') throw new Error('expected a bits portion');
     const deltas: number[] = [];
     bus.on('run:bitsChanged', ({ delta }) => deltas.push(delta));
@@ -3358,6 +3367,9 @@ describe('48b — the reward phase', () => {
 
   it('a mid-reward save reproduces the pending offer (the §48 exit-criterion contract)', () => {
     const { run } = winWithRewards();
+    // 49g — pin the offer to a bits portion (the settle math below needs
+    // one; the rolled draw may be a packet now — same forge as above).
+    run.pendingRewards = [{ kind: 'bits', base: 12 }];
     const wire = JSON.parse(JSON.stringify(run.toJSON())) as ReturnType<Run['toJSON']>;
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.phase).toBe('reward');

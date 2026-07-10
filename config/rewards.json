@@ -3,13 +3,16 @@
     {
       "id": "bits-small",
       "entries": [
-        { "kind": "bits", "weight": 1, "min": 8, "max": 15 }
+        { "kind": "bits", "weight": 1, "min": 8, "max": 15 },
+        { "kind": "packet", "weight": 0.5, "packet": "patch" }
       ]
     },
     {
       "id": "bits-large",
       "entries": [
-        { "kind": "bits", "weight": 1, "min": 20, "max": 35 }
+        { "kind": "bits", "weight": 1, "min": 20, "max": 35 },
+        { "kind": "packet", "weight": 0.5, "packet": "reroute" },
+        { "kind": "packet", "weight": 0.5, "packet": "shield" }
       ]
     },
     {
@@ -22,6 +25,9 @@
         { "kind": "daemon", "weight": 1, "daemon": "moneta" },
         { "kind": "daemon", "weight": 1, "daemon": "laverna" },
         { "kind": "daemon", "weight": 1, "daemon": "fortuna" },
+        { "kind": "packet", "weight": 1, "packet": "hype" },
+        { "kind": "packet", "weight": 1, "packet": "venom" },
+        { "kind": "packet", "weight": 1, "packet": "overclock" },
         { "kind": "bits", "weight": 1, "min": 12, "max": 20 }
       ]
     },
@@ -35,6 +41,7 @@
         { "kind": "daemon", "weight": 1, "daemon": "moneta" },
         { "kind": "daemon", "weight": 1, "daemon": "laverna" },
         { "kind": "daemon", "weight": 1, "daemon": "fortuna" },
+        { "kind": "packet", "weight": 2, "packet": "miner" },
         { "kind": "bits", "weight": 2, "min": 25, "max": 40 }
       ]
     }

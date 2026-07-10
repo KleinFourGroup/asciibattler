@@ -2145,6 +2145,38 @@ describe('Run', () => {
       expect(events).toEqual([{ bits: 10, delta: 10 }]);
     });
 
+    it('50a — spendBits deducts and reports true iff affordable; refusal is silent', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null, startingBits: 10 });
+      const events: Array<{ bits: number; delta: number }> = [];
+      bus.on('run:bitsChanged', (e) => events.push(e));
+      expect(run.spendBits(11)).toBe(false); // short by one → clean refusal
+      expect(run.bits).toBe(10);
+      expect(run.spendBits(7)).toBe(true);
+      expect(run.bits).toBe(3);
+      expect(run.spendBits(4)).toBe(false); // no partial deduction at the floor
+      expect(run.bits).toBe(3);
+      expect(run.spendBits(3)).toBe(true); // exact balance spends to zero
+      expect(run.bits).toBe(0);
+      expect(events).toEqual([
+        { bits: 3, delta: -7 },
+        { bits: 0, delta: -3 },
+      ]);
+    });
+
+    it('50a — spendBits takes no fold: moneta scales earns, never prices', () => {
+      const { run } = freshRunWithBus(1, { daemon: daemonById('moneta')!, startingBits: 10 });
+      expect(run.spendBits(10)).toBe(true); // a folded spend would under/over-charge
+      expect(run.bits).toBe(0);
+    });
+
+    it('50a — spendBits rejects non-integer and negative amounts loudly', () => {
+      const { run } = freshRunWithBus(1, { daemon: null, startingBits: 10 });
+      expect(() => run.spendBits(2.5)).toThrow(/nonnegative integer/);
+      expect(() => run.spendBits(-3)).toThrow(/nonnegative integer/);
+      expect(run.spendBits(0)).toBe(true); // zero is a legal no-op spend
+      expect(run.bits).toBe(10);
+    });
+
     it('a turnStart gainBits hook pays at EVERY turn start (the fire-site execution)', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: TURN_BITS });
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // turn 1

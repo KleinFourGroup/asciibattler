@@ -1,0 +1,33 @@
+{
+  "units": {
+    "baseByArchetype": {
+      "mercenary": 25,
+      "adventurer": 25,
+      "ronin": 30,
+      "bandit": 25,
+      "ranged": 25,
+      "rogue": 25,
+      "healer": 30,
+      "mage": 30,
+      "catapult": 35,
+      "reaver": 30,
+      "corrupter": 30,
+      "stormcaller": 35,
+      "shaman": 30
+    },
+    "levelGrowth": 1.25,
+    "jitter": 0.15
+  },
+  "packets": {
+    "default": 15,
+    "byId": {
+      "miner": 40
+    }
+  },
+  "daemons": {
+    "default": 45,
+    "byId": {}
+  },
+  "sellFraction": 0.5,
+  "unitRemovalPrice": 20
+}

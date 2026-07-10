@@ -1197,6 +1197,25 @@ export class Run {
   }
 
   /**
+   * 50a — the spend chokepoint: every §50d buy/removal surface routes here.
+   * The affordability guard lives HERE (not at call sites) because `addBits`
+   * CLAMPS at zero — a raw negative delta would silently under-charge when
+   * the balance is short. Returns whether the spend happened; an
+   * unaffordable spend is a clean refusal (no emit, no partial deduction).
+   * No fold applies in either direction: prices are what they say (the
+   * `bitsGain` fold is an EARN modifier), and sell proceeds are a refund
+   * through raw `addBits` — see the `gainBits` NB above.
+   */
+  spendBits(amount: number): boolean {
+    if (!Number.isInteger(amount) || amount < 0) {
+      throw new Error(`spendBits: amount must be a nonnegative integer (got ${amount})`);
+    }
+    if (amount > this.bits) return false;
+    this.addBits(-amount);
+    return true;
+  }
+
+  /**
    * 47e — the single bits mutation chokepoint: clamps the balance at ZERO
    * (spec §Bits — integer, floor at zero) and emits `run:bitsChanged` with
    * the post-clamp applied delta. Emits only on a real change, so a clamped

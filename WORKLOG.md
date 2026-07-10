@@ -1004,3 +1004,6 @@ entries and died. Deliberate calls:
   draws to the pre-49d bot. The pure validators re-shaped to ONE
   grant entry (`RedrawGrantState`/`EmpowerGrantState`); the K4-era
   `EmpowerConfig` shim in `empowerEffect` retired (takes the buff).
+
+**49d user-playtested natively 2026-07-09** — "test worked perfectly."
+Session handed off with 49e (the fire engine) next.

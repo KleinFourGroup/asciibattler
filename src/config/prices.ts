@@ -115,6 +115,14 @@ assertPriceRefs(PRICES, {
   daemonIds: DAEMONS.map((d) => d.id),
 });
 
+/*
+ * Each price read has a PURE, config-parameterized core (`*For`) plus a
+ * PRICES-bound convenience wrapper. The game reads through the wrappers;
+ * the §50f editor previews its WORKING (unsaved) document through the
+ * cores — one formula, so the preview can't drift from what the game
+ * would charge (the PortScreen display-honesty discipline).
+ */
+
 /**
  * The deterministic (UNJITTERED) unit price: base × levelGrowth^(level−1),
  * rounded once here (the runStats.ts read-site-rounds contract). The §50d
@@ -122,25 +130,41 @@ assertPriceRefs(PRICES, {
  * on an unpriced archetype — the boot assert makes that unreachable for
  * draftable stock; a non-draftable archetype reaching a port IS the bug.
  */
-export function unitPrice(archetype: string, level: number): number {
-  const base = PRICES.units.baseByArchetype[archetype];
+export function unitPriceFor(prices: PricesConfig, archetype: string, level: number): number {
+  const base = prices.units.baseByArchetype[archetype];
   if (base === undefined) throw new Error(`unitPrice: archetype '${archetype}' has no base price`);
   const clamped = Math.max(1, level);
-  return Math.round(base * Math.pow(PRICES.units.levelGrowth, clamped - 1));
+  return Math.round(base * Math.pow(prices.units.levelGrowth, clamped - 1));
+}
+
+export function unitPrice(archetype: string, level: number): number {
+  return unitPriceFor(PRICES, archetype, level);
 }
 
 /** Packet buy price: the per-id override, else the kind default. */
+export function packetPriceFor(prices: PricesConfig, id: string): number {
+  return prices.packets.byId[id] ?? prices.packets.default;
+}
+
 export function packetPrice(id: string): number {
-  return PRICES.packets.byId[id] ?? PRICES.packets.default;
+  return packetPriceFor(PRICES, id);
 }
 
 /** Daemon buy price: the per-id override, else the kind default. */
+export function daemonPriceFor(prices: PricesConfig, id: string): number {
+  return prices.daemons.byId[id] ?? prices.daemons.default;
+}
+
 export function daemonPrice(id: string): number {
-  return PRICES.daemons.byId[id] ?? PRICES.daemons.default;
+  return daemonPriceFor(PRICES, id);
 }
 
 /** Sell price for a given buy price: ⌊buy × sellFraction⌋ (floored — a
  *  refund never rounds up past the fraction). */
+export function sellPriceFor(prices: PricesConfig, buyPrice: number): number {
+  return Math.floor(buyPrice * prices.sellFraction);
+}
+
 export function sellPrice(buyPrice: number): number {
-  return Math.floor(buyPrice * PRICES.sellFraction);
+  return sellPriceFor(PRICES, buyPrice);
 }

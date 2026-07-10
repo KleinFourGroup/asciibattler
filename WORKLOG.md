@@ -1420,3 +1420,45 @@ Zero console errors.
 The full economy loop (earn → dock → buy/sell/remove → fight on) is
 live and user-confirmed; the §50 exit criterion's native-playtest leg
 is satisfied ahead of the 50g walk.
+
+### 50f — the price editor (2026-07-10)
+
+**The editor leg ships** (`tools/price-editor/`): the packet-editor
+shell minus tabs — `prices.json` is ONE document, not an item catalog,
+so the tab/new/delete chrome would be noise. Five form cards (unit
+base prices / the packet + daemon override books / economy knobs /
+stock counts) constrained so the form can barely go invalid: a
+draftable archetype's row can't be removed (the boot assert's
+requirement rendered as a disabled ✕), override ids come from the
+catalogs, scalars clamp at input. Save still gates on the REAL
+`PricesSchema` + `assertPriceRefs` — constraint is convenience,
+validation is the contract (the packet-editor discipline).
+
+**One src change for display honesty**: the preview must derive
+WORKING (unsaved) values through the game's own formulas, but the 50a
+helpers were bound to the committed `PRICES`. prices.ts now carries
+pure config-parameterized cores (`unitPriceFor` / `packetPriceFor` /
+`daemonPriceFor` / `sellPriceFor`) with the bound wrappers delegating
+— one formula, two callers, zero consumer churn (the 50a tests pass
+untouched).
+
+`formatPricesJson` pinned three ways (+3 tests → 2010): committed-file
+byte-fidelity, schema round-trip, and a fixture FLIPPING the committed
+file's override coverage (packets.byId empty / daemons.byId populated
+— the branches content doesn't author yet). `/__save-config`
+allowlists `prices.json`; the `/tools/` index gains the card.
+
+**Browser-verified at :5191 via live DOM** (the rAF-throttle
+screenshot caveat again — DOM + state evidence): 13 unit rows all
+draftable-badged, miner's override present; a real-input merc edit
+25→40 rippled the preview to the exact curve (L5 98 =
+round(40×1.25⁴)) and the export; a daemon override added + re-keyed
+to moneta@90 rendered "(override)" while mars held the 45 default;
+Patch previewed 15 → sells 7 (⌊×0.5⌋, the shared core); revert
+restored the committed book; and a NO-EDIT SAVE hit the endpoint
+green and left `config/prices.json` git-clean — the byte-identical
+no-op-diff guarantee proven end-to-end, not just pinned. Zero console
+errors.
+
+The catalog-authoring leg follows with the editor in hand (the 48f
+precedent).

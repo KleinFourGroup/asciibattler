@@ -27,6 +27,7 @@ const SAVABLE_CONFIG_FILES = new Set([
   'abilities.json',
   'rewards.json', // 48e — the reward-table editor (the first economy-cluster file here)
   'packets.json', // 49g — the packet editor
+  'prices.json', // 50f — the price editor (the port price book)
 ]);
 
 function configSavePlugin(): Plugin {

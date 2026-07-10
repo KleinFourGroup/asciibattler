@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Price Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Price Editor</h1>
+        <span class="subtitle"
+          >Author <code>config/prices.json</code> — the port price book · schema-validated ·
+          save straight to disk</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+      <section class="workspace">
+        <div class="edit-pane">
+          <section class="card">
+            <h2>Unit prices <span class="sub">(bits for a LEVEL-1 unit; the level curve scales it)</span></h2>
+            <div id="unit-rows" class="pool"></div>
+            <div class="row">
+              <select id="add-archetype-sel" class="entry-kind"></select>
+              <button id="add-archetype-btn" type="button">+ Price an archetype</button>
+            </div>
+            <div class="field-row" style="margin-top: 10px">
+              <label class="pool-num">
+                <span>level growth (×^(level−1))</span>
+                <input id="level-growth" type="number" step="0.05" min="1" />
+              </label>
+              <label class="pool-num">
+                <span>jitter (±fraction at the dock)</span>
+                <input id="jitter" type="number" step="0.05" min="0" max="0.9" />
+              </label>
+            </div>
+            <p class="hint">
+              Every DRAFTABLE archetype must carry a base price (port stock rolls from the
+              draft pool — the boot assert). The dock multiplies the curve price by a factor
+              from [1−jitter, 1+jitter] off the port price stream.
+            </p>
+          </section>
+          <section class="card">
+            <h2>Packet prices <span class="sub">(per-id overrides over the kind default)</span></h2>
+            <div class="field-row">
+              <label class="pool-num">
+                <span>default (bits)</span>
+                <input id="packet-default" type="number" step="1" min="1" />
+              </label>
+            </div>
+            <div id="packet-overrides" class="pool"></div>
+            <div class="row">
+              <button id="add-packet-override" type="button">+ Add override</button>
+            </div>
+          </section>
+          <section class="card">
+            <h2>Daemon prices <span class="sub">(per-id overrides over the kind default)</span></h2>
+            <div class="field-row">
+              <label class="pool-num">
+                <span>default (bits)</span>
+                <input id="daemon-default" type="number" step="1" min="1" />
+              </label>
+            </div>
+            <div id="daemon-overrides" class="pool"></div>
+            <div class="row">
+              <button id="add-daemon-override" type="button">+ Add override</button>
+            </div>
+          </section>
+          <section class="card">
+            <h2>Economy knobs</h2>
+            <div class="field-row">
+              <label class="pool-num">
+                <span>sell fraction (sell = ⌊buy × fraction⌋)</span>
+                <input id="sell-fraction" type="number" step="0.05" min="0" max="1" />
+              </label>
+              <label class="pool-num">
+                <span>unit removal fee (flat bits)</span>
+                <input id="removal-price" type="number" step="1" min="0" />
+              </label>
+            </div>
+            <p class="hint">
+              Sell proceeds refund through RAW <code>addBits</code> (never the
+              <code>bitsGain</code> fold — the pinned mint guard), so the fraction alone
+              bounds the buy-sell loop.
+            </p>
+          </section>
+          <section class="card">
+            <h2>Port stock <span class="sub">(slots rolled on entry; distinct samples)</span></h2>
+            <div class="field-row">
+              <label class="pool-num">
+                <span>units</span>
+                <input id="stock-units" type="number" step="1" min="0" />
+              </label>
+              <label class="pool-num">
+                <span>packets</span>
+                <input id="stock-packets" type="number" step="1" min="0" />
+              </label>
+              <label class="pool-num">
+                <span>daemons</span>
+                <input id="stock-daemons" type="number" step="1" min="0" />
+              </label>
+            </div>
+            <p class="hint">
+              A count above the (owned-excluded) catalog size just fills what exists — a
+              maxed collector sees an empty daemon shelf.
+            </p>
+          </section>
+        </div>
+        <aside class="side-pane">
+          <section class="card preview-card">
+            <h2>Resolved unit prices <span class="sub">(unjittered curve; the dock adds ±jitter)</span></h2>
+            <dl id="preview-units" class="preview"></dl>
+          </section>
+          <section class="card">
+            <h2>Resolved goods <span class="sub">(buy → sell)</span></h2>
+            <dl id="preview-goods" class="preview"></dl>
+          </section>
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation"></ul>
+          </section>
+          <section class="card">
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary">Save to config</button>
+              <button id="revert-btn" type="button" class="danger-outline">Revert all</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+          </section>
+          <section class="card">
+            <h2>Export <span class="sub">(whole file)</span></h2>
+            <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

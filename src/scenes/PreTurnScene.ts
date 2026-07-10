@@ -30,6 +30,9 @@ export class PreTurnScene implements Scene {
     this.unsubscribes = [
       ctx.bus.on('turn:handRedrawn', (payload) => this.screen?.updateHand(payload)),
       ctx.bus.on('turn:unitEmpowered', (payload) => this.screen?.updateEmpower(payload)),
+      // 49f — a cache-modal packet fire at this gate (a reroute inserts a
+      // grant, a patch heals the pool) refreshes the screen in place.
+      ctx.bus.on('run:packetUsed', (payload) => this.screen?.updatePacketUsed(payload)),
     ];
   }
 

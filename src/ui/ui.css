@@ -1144,6 +1144,194 @@ body {
   display: none;
 }
 
+/* 49f — the persistent cache chip: the bits chip's page-lifetime sibling
+   (src/ui/CacheOverlay.ts), stacked BELOW it — the in-battle .hud-hop chip
+   owns the slot to the bits chip's right, so persistent chrome grows as a
+   left COLUMN (§51's cohesion review owns refinements, same note as
+   .hud-hop). Clickable: it opens the cache modal on any screen. Fluorescent
+   blue value (the relic/packet accent, vs the bits chip's gain-green);
+   .is-over flags the forced-keep shrink state (held > derived capacity). */
+.cache-overlay {
+  position: fixed;
+  top: 58px;
+  left: 20px;
+  z-index: 15;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ffb000; /* TERMINAL_AMBER */
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ffb000;
+  padding: 4px 10px;
+  min-width: 96px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.cache-overlay:hover {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: #15f4ee;
+}
+
+.cache-overlay__value {
+  color: #15f4ee; /* FLOURESCENT_BLUE — the packet accent */
+}
+
+.cache-overlay__label {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.cache-overlay.is-pulsing {
+  border-color: #15f4ee;
+  box-shadow: 0 0 8px rgba(21, 244, 238, 0.55);
+}
+
+.cache-overlay.is-over,
+.cache-overlay.is-over .cache-overlay__value {
+  border-color: #ff3131; /* NEON_RED — over capacity, the forced-keep flag */
+  color: #ff3131;
+}
+
+.cache-overlay.is-hidden {
+  display: none;
+}
+
+/* The cache modal (the R1 roster-modal shell + packet rows). One row per
+   held slot: name + description on the left, Fire/Discard on the right;
+   the inline roster picker (a unit-target out-of-battle fire) expands
+   under its row. The shrink banner tops the list while over capacity. */
+.cache-modal {
+  max-width: 720px;
+}
+
+.cache-shrink-banner {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ff3131; /* NEON_RED */
+  border: 1px solid #ff3131;
+  background: rgba(255, 49, 49, 0.08);
+  padding: 8px 12px;
+  margin: 0 16px 12px;
+}
+
+.cache-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px 16px;
+  overflow-y: auto;
+}
+
+.cache-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  border: 1px solid rgba(255, 176, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px 14px;
+}
+
+.cache-row-text {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.cache-row-name {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: #15f4ee; /* FLOURESCENT_BLUE */
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cache-row-desc {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #ffb000;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.cache-row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cache-fire-button,
+.cache-discard-button {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #ffb000;
+  color: #ffb000;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, color 0.1s;
+}
+
+.cache-fire-button {
+  border-color: #15f4ee;
+  color: #15f4ee;
+}
+
+.cache-fire-button:hover {
+  background: rgba(21, 244, 238, 0.12);
+}
+
+.cache-discard-button:hover {
+  border-color: #ff3131;
+  color: #ff3131;
+  background: rgba(255, 49, 49, 0.08);
+}
+
+/* The inline roster picker (overclock's "pick a roster unit"). */
+.cache-roster-pick {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px dashed rgba(255, 176, 0, 0.4);
+  padding-top: 8px;
+}
+
+.cache-roster-pick-hint {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #ffb000;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.cache-roster-pick-unit {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #ffb000;
+  color: #ffb000;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: border-color 0.1s, color 0.1s, background 0.1s;
+}
+
+.cache-roster-pick-unit:hover {
+  border-color: #15f4ee;
+  color: #15f4ee;
+  background: rgba(21, 244, 238, 0.08);
+}
+
 /* Q1 — speed-command pane (top-right): one button per enabled speed (ascending,
    0.5×/1×/2×/3×) + a pause/play toggle. Lives outside the left side-panel so it
    anchors top-right; same screen-fade lifecycle as the banner. Amber terminal

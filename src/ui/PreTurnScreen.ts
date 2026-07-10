@@ -73,6 +73,10 @@ export class PreTurnScreen {
   // 49d — this turn's grant queue (one control per entry, queue order).
   private grants: readonly TurnGrantView[] = [];
   private empowerMagnitudes: readonly number[] = [];
+  // 49f — the pools block + its static bounds, kept so a gate-time packet
+  // fire (patch heals the player pool) can re-render the gauges in place.
+  private poolsEl: HTMLDivElement | null = null;
+  private poolBounds = { playerMax: 0, enemy: 0, enemyMax: 0 };
   // L1→47d — the per-turn chance-denial state, computed ONCE in `show` from
   // the FRESH `turn:starting` payload (an idol authors the hook but granted
   // nothing → denied), so a later spent budget never reads as "denied".
@@ -134,6 +138,7 @@ export class PreTurnScreen {
       this.container = null;
     }
     this.handWrap = null;
+    this.poolsEl = null;
     this.redrawButtons = [];
     this.empowerButtons = [];
   }
@@ -169,6 +174,27 @@ export class PreTurnScreen {
     this.empowerMagnitudes = payload.empowerMagnitudes;
     this.selected.clear();
     this.refreshHand();
+  }
+
+  /**
+   * 49f — a `run:packetUsed` landed while this gate is up (PreTurnScene
+   * forwards it): a cache-modal fire just changed gate state — a reroute
+   * INSERTED a redraw grant, a patch healed the player pool, a venom/miner
+   * changed nothing visible here. Swap in the re-derived queue + badges and
+   * re-render the pools from the post-effect health (same events-only
+   * refresh as the redraw/empower paths).
+   */
+  updatePacketUsed(payload: GameEvents['run:packetUsed']): void {
+    this.grants = payload.grants;
+    this.empowerMagnitudes = payload.empowerMagnitudes;
+    this.selected.clear();
+    this.refreshHand();
+    if (this.poolsEl !== null) {
+      this.poolsEl.replaceChildren(
+        renderPoolGauge('player', 'Your Pool', payload.playerHealth, this.poolBounds.playerMax),
+        renderPoolGauge('enemy', 'Enemy Pool', this.poolBounds.enemy, this.poolBounds.enemyMax),
+      );
+    }
   }
 
   /** Single advance path — the Fight button lands here. (The auto-advance
@@ -267,6 +293,13 @@ export class PreTurnScreen {
       renderPoolGauge('enemy', 'Enemy Pool', info.enemyHealth, info.enemyHealthMax),
     );
     panel.appendChild(pools);
+    // 49f — held for the packet-fire re-render (`updatePacketUsed`).
+    this.poolsEl = pools;
+    this.poolBounds = {
+      playerMax: info.playerHealthMax,
+      enemy: info.enemyHealth,
+      enemyMax: info.enemyHealthMax,
+    };
 
     this.handWrap = document.createElement('div');
     this.handWrap.className = 'preturn-hand';

@@ -17,6 +17,7 @@ import { RecruitScene } from './scenes/RecruitScene';
 import { PromotionScene } from './scenes/PromotionScene';
 import { RewardScene } from './scenes/RewardScene';
 import { BitsOverlay } from './ui/BitsOverlay';
+import { CacheOverlay } from './ui/CacheOverlay';
 import { GameOverScene } from './scenes/GameOverScene';
 import { PreTurnScene } from './scenes/PreTurnScene';
 import { PostTurnScene } from './scenes/PostTurnScene';
@@ -61,6 +62,9 @@ export class Game implements RunDispatcher {
   /** 48d — the persistent bits chip (page-lifetime, survives scene swaps);
    *  held for `resetRun`'s post-reassignment `refresh()`. */
   private readonly bitsOverlay: BitsOverlay;
+  /** 49f — the persistent cache chip + modal (the bits chip's sibling; same
+   *  gotcha #116 lifecycle, incl. the resetRun `refresh()`). */
+  private readonly cacheOverlay: CacheOverlay;
   private readonly terrain: TerrainRenderer;
   /** M4 — the backdrop apron ring. Dev consoles reach it as `__game.apron`
    *  (TS `private` is runtime-accessible) for the dither A/B flip. */
@@ -176,6 +180,17 @@ export class Game implements RunDispatcher {
     // predates this line); resetRun re-paints via refresh() after the run
     // reassignment (see the ordering note there).
     this.bitsOverlay = new BitsOverlay(uiMount, this.bus, () => this.run.bits);
+
+    // 49f: the cache chip — the bits chip's page-lifetime sibling (stacked
+    // below it). Getters close over `this.run` so a reset's Run swap is
+    // invisible (the dispatcher pattern); `this` is the RunDispatcher.
+    this.cacheOverlay = new CacheOverlay(uiMount, this.bus, this, this.audio, {
+      getCache: () => this.run.cache,
+      getSize: () => this.run.effectiveCacheSize,
+      getOverflow: () => this.run.cacheOverflow,
+      getPhase: () => this.run.phase,
+      getRoster: () => this.run.team,
+    });
 
     // Scene transitions driven by Run lifecycle events. All of the
     // post-battle handlers fire *after* Run has already updated phase +
@@ -363,6 +378,8 @@ export class Game implements RunDispatcher {
     // `run:started` fired mid-construction (before this.run pointed at it),
     // so the overlay's event-driven paint would have read the dead run.
     this.bitsOverlay.refresh();
+    // 49f — same ordering for the cache chip (also closes a stale modal).
+    this.cacheOverlay.refresh();
     this.swap(new MapScene());
   }
 

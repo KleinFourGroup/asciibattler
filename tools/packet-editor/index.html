@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Packet Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Packet Editor</h1>
+        <span class="subtitle"
+          >Author <code>config/packets.json</code> · schema-validated (the op×target×context
+          matrix) · save straight to disk</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+      <section class="workspace">
+        <div class="edit-pane">
+          <div class="tabs-row">
+            <div id="tabs" class="tabs" role="tablist" aria-label="Packet"></div>
+            <button id="new-btn" type="button" class="tab new-tab" title="Add a new packet">+ New packet</button>
+            <button id="delete-btn" type="button" class="tab new-tab" title="Delete this packet">✕ Delete</button>
+          </div>
+          <section class="card">
+            <h2>Identity</h2>
+            <div class="field-row">
+              <label class="inline stack">
+                <span class="field-label">Id <span class="sub">(reward tables + the cache reference packets by this name)</span></span>
+                <input id="id" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+              <label class="inline stack">
+                <span class="field-label">Name</span>
+                <input id="name" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label class="inline stack">
+                <span class="field-label">Description <span class="sub">(the cache modal / reward screen line — the lay reading must stand alone)</span></span>
+                <input id="description" type="text" autocomplete="off" />
+              </label>
+            </div>
+          </section>
+          <section class="card">
+            <h2>Effect <span class="sub">(one op per packet — the shared daemon/packet pool)</span></h2>
+            <div class="field-row">
+              <label class="inline stack">
+                <span class="field-label">Op</span>
+                <select id="op"></select>
+              </label>
+              <div class="inline stack">
+                <span class="field-label">Target <span class="sub">(derived from the op matrix)</span></span>
+                <span id="target" class="derived"></span>
+              </div>
+            </div>
+            <div id="effect-form" class="pool"></div>
+          </section>
+          <section class="card">
+            <h2>Usable in <span class="sub">(matrix-constrained; ≥1 required)</span></h2>
+            <div id="contexts" class="pool"></div>
+            <p class="hint">
+              <code>preTurn</code> fires at the gate (unit target = a hand card);
+              <code>outOfBattle</code> fires on the map (unit target = a roster unit).
+              <code>midBattle</code> is the dormant seam — vocabulary from day one, admitted by no op.
+            </p>
+          </section>
+        </div>
+        <aside class="side-pane">
+          <section class="card preview-card">
+            <h2>Fire summary</h2>
+            <dl id="preview" class="preview"></dl>
+          </section>
+          <section class="card">
+            <h2>Dropped by <span class="sub">(committed reward tables)</span></h2>
+            <dl id="refs" class="preview"></dl>
+            <p class="hint">
+              Reads the committed tables — attach packet entries in the
+              <a href="/tools/reward-editor/">reward editor</a>.
+            </p>
+          </section>
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation"></ul>
+          </section>
+          <section class="card">
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary">Save to config</button>
+              <button id="revert-btn" type="button" class="danger-outline">Revert all</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+          </section>
+          <section class="card">
+            <h2>Export <span class="sub">(whole file)</span></h2>
+            <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

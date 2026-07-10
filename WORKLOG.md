@@ -1130,3 +1130,50 @@ arm; the strict cursor holds across a forged turn boundary. One
 verify note: a chip-count read straight after Fight ▸ double-counts —
 the disposed screen's ~180ms fade linger (the documented HANDOFF
 gotcha), not a bug; `grantViews()` stayed authoritative.
+
+**49f user-playtested natively 2026-07-10** — "things seem to be
+working well", and the packet-row-on-the-gate surface call confirmed
+("your call is definitely correct"). (The playtest note "didn't get
+one to spawn, had to console it in" was the documented 49g rider, not
+a bug — tables authored zero packet entries until the next step.)
+
+### 49g — the launch catalog + the packet editor (2026-07-10)
+
+Two commits:
+
+**49g-1 — content live** (`6d3d762`): shield joins (applyBuff +2 DEF,
+the minerva-parity number — 7/7, the locked catalog complete) and the
+reward tables author packet entries: patch via bits-small (w 0.5),
+reroute+shield via bits-large (w 0.5 each), hype/venom/overclock via
+daemon-cache (w 1 each), miner via boss-hoard (w 2 — the run-duration
+prize) — every packet reachable, numbers rough (§52 tunes). The
+reward-editor's 48e packet entry (a free-text id from before the
+catalog existed) became a catalog SELECT, and
+`assertRewardPacketRefs` joined its validation — the missing sibling,
+found by the step-zero audit. Test fallout, deliberate: the three 48b
+tests that assumed bits-small deterministically rolls BITS went
+content-robust (the drawn portion must match an AUTHORED entry) or
+forge a bits portion (the in-block daemon-order pattern);
+`skeletonRange` retired. Browser-verified: a genuine encounter win
+rolled `▤ Patch` onto the RewardScreen (attempt 4 of the ~1/3 odds),
+accepted into the cache, chip repainted — the earn loop content-live
+end to end.
+
+**49g-2 — the packet editor** (`tools/packet-editor/`, the reward-
+editor shell): tabs per packet; op select swaps per-op sub-forms
+(healPool/grantRedraws flat; applyBuff = key/merge/stat-mod rows;
+injectRule = duration/trigger/chance/filters/rule-effect incl. the
+49e `applyTo` axis, with the dealHit-only knobs pruning when the
+trigger leaves dealHit); `target` DERIVED from `PACKET_OP_TARGET`;
+`usableIn` checkboxes matrix-constrained (`midBattle` renders
+disabled — the dormant seam made visible); validation = the real
+`PacketsSchema` + `assertPacketStatusRefs` + the reverse reward-ref
+check; a live fire summary + a Dropped-by pane. `formatPacketsJson`
+reproduces the committed file byte-for-byte (pinned in
+tests/tools/packet-editor.test.ts, +3, incl. an all-optional-axes
+fixture); `/__save-config` allowlists `packets.json`; the `/tools/`
+index gains the card; the reward-editor's stale "dormant" hint
+updated. Browser-verified at :5191: all 7 tabs, both complex
+sub-forms, the matrix constraints, the reverse-ref rename trap
+(Save disables), and a live no-edit save that produced a ZERO diff
+on disk. Zero console errors throughout.

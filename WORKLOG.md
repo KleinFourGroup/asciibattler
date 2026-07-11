@@ -1798,3 +1798,23 @@ forced tally turn rendered "▤ Miner — 4 bits"; a precision-5/luck-3
 mercenary's sword row read "70% hit · 8% crit" vs the authored base
 60%/5% — derived on the card, confirmed against config
 (0.6 + 5×0.02 · 0.05 + 3×0.01).
+
+### 51f — the sweep close + the phase verdict (2026-07-11)
+
+The exit playtest: the user's full sweeps bracketed the fix batch —
+the pre-51f sweep surfaced the two findings above; the post-fix sweep
+came back clean ("we've nailed it — nothing is standing out"), which
+is the phase's user sign-off. The deliberate Mercury denial-line look
+had already resolved at kickoff (the rolled-path probe + the user's
+clean re-run; the TODO watch item stands). Nothing new filed to
+TODO.md — the fix-vs-file triage ledger closes empty on the file side.
+
+**The phase verdict: NOT a documented no-op** (the charter's allowed
+outcome went unused): five user kickoff changes + one bug verdict +
+two sweep findings, all fixed in-phase across six steps (51a–51f).
+Serialized-shape: Run v35→v37 (labeled tally portions + mid-encounter
+offers at 51a; injected-rule provenance at 51f), World untouched, no
+balance changes (the §52 scope guard held). Exit criteria: ① a
+full-run native playtest over every new surface — the user's sweeps ✓;
+② every finding fixed or filed ✓ (all fixed; Mercury = the watch
+item); ③ the verdict recorded ✓ (this entry). **Phase 51 CLOSED.**

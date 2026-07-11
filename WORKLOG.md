@@ -1460,5 +1460,32 @@ green and left `config/prices.json` git-clean — the byte-identical
 no-op-diff guarantee proven end-to-end, not just pinned. Zero console
 errors.
 
-The catalog-authoring leg follows with the editor in hand (the 48f
-precedent).
+**The catalog leg (same day) — the editor's first real user session.**
+The user authored the launch book natively through the new editor:
+the proposed packet overrides (venom 25 — team-wide poison-on-hit is
+a different class from a one-card buff; shield 10) plus two calls of
+their own — **levelGrowth 1.25→1.05** ("recruit prices were kinda
+absurdly high": at 1.25 a L10 recruit cost ~7.5× base; at 1.05 it's
+~1.55×, sane for a game whose port recruits arrive team-scaled) and
+the daemon default 45→40.
+
+**The daemon spread** (agreed after a design read — no measured
+per-daemon data exists; the 48g per-daemon splits were seat-shuffle
+noise, §52 + the 50g purchase-policy arm own real measurement):
+default **35**, overrides `mars 55 · janus 45 · mercury 40 ·
+fortuna 25`; minerva/laverna/moneta sit on the default. The yardstick
+was PACKET EQUIVALENCE — several idols are recurring packets (Mars =
+a free Hype/turn, Janus = a free Reroute/turn, Minerva = a free
+Shield/turn), so their remaining-run value dwarfs any one-shot's.
+Notables: Mars premium-priced both for power and to COMMUNICATE power
+(the Miner-40 convention); Fortuna cheapest (double-RNG-gated, small
+magnitude — at flat pricing it's the shelf item nobody takes);
+**Moneta kept LOW deliberately** — 0.2 × remaining earnings rarely
+clears a mid-run price on its own (~200-bit full-clear earn), so it's
+an early-port-or-skip tension piece that only compounds through
+Miner/Laverna (whose gainBits hooks DO ride the fold — the mint
+guard's player-favoring half). Numbers launch-rough; §52 tunes.
+
+Catalog entered by direct edit matching the formatter byte-form (the
+48a trap, known); the pinned fidelity + book tests re-run green
+before commit.

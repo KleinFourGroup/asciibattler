@@ -15,18 +15,25 @@
       "stormcaller": 35,
       "shaman": 30
     },
-    "levelGrowth": 1.25,
+    "levelGrowth": 1.05,
     "jitter": 0.15
   },
   "packets": {
     "default": 15,
     "byId": {
-      "miner": 40
+      "miner": 40,
+      "shield": 10,
+      "venom": 25
     }
   },
   "daemons": {
-    "default": 45,
-    "byId": {}
+    "default": 35,
+    "byId": {
+      "mars": 55,
+      "janus": 45,
+      "mercury": 40,
+      "fortuna": 25
+    }
   },
   "sellFraction": 0.5,
   "unitRemovalPrice": 20,

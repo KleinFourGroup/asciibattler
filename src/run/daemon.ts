@@ -299,6 +299,28 @@ export function battleRulesFor(daemons: readonly DaemonConfig[]): BattleRule[] {
   return rules;
 }
 
+/**
+ * 51a — the daemons that EARN battle-tally bits: ids of owned daemons
+ * authoring a battle-domain `gainBits` hook (ownership order). The reward
+ * offer's tally portion is source-labeled only when this is a singleton —
+ * the World tally is one aggregate number, so a multi-earner run can't
+ * attribute it (revisit per-source tallies if content ever ships a second
+ * battle-bits idol worth crediting separately).
+ */
+export function battleBitsDaemonIds(daemons: readonly DaemonConfig[]): string[] {
+  const ids: string[] = [];
+  for (const daemon of daemons) {
+    const earns = (daemon.rules ?? []).some(
+      (r) =>
+        r.kind === 'hook' &&
+        TRIGGER_DOMAIN[r.on] === 'battle' &&
+        r.effect.op === 'gainBits',
+    );
+    if (earns) ids.push(daemon.id);
+  }
+  return ids;
+}
+
 export function resolveInstantHooks(
   daemons: readonly DaemonConfig[],
   on: 'encounterStart' | 'encounterEnd',

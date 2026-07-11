@@ -97,7 +97,14 @@ export class RewardScreen {
       if (portion.kind === 'bits') {
         const title = document.createElement('div');
         title.className = 'reward-portion__title';
-        title.textContent = `${this.run.effectiveBits(portion.base)} bits`;
+        // 51a — a battle-tally portion names its earner ("◈ Idol of Laverna
+        // — N bits", the labeled-row shape-lock). The id def-resolves like
+        // the daemon rows; a catalog miss falls back to the raw id.
+        const source =
+          portion.source !== undefined
+            ? `◈ ${daemonById(portion.source)?.name ?? portion.source} — `
+            : '';
+        title.textContent = `${source}${this.run.effectiveBits(portion.base)} bits`;
         body.appendChild(title);
       } else if (portion.kind === 'daemon') {
         const daemon = daemonById(portion.daemonId);

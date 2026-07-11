@@ -1618,3 +1618,44 @@ only serialized-shape change): 51a Laverna→reward offer · 51b
 accept/continue · 51c the selectable roster view · 51d the port
 adoption · 51e the chrome sizing pass · 51f the cohesion sweep + exit.
 51c gates 51d; everything else is order-free but lands in list order.
+
+### 51a — Laverna's plunder rides the reward offer (2026-07-11)
+
+The reroute: `handleTurnEnded` no longer settles the battle tally
+through `gainBits` — it BUILDS THE OFFER: the tally portion first
+(source-labeled via the new `battleBitsDaemonIds` walk when the
+attribution is unambiguous — exactly one owned battle-bits daemon),
+win-rolled portions appended after. The settle happens at accept
+(`handleAcceptReward` → `gainBits`), so the `bitsGain` fold +
+`bitsMultiplier` apply exactly as before — one code path, now
+player-visible and declinable. **Run v35→v36** (the bits portion union
+member gains optional `source`, and `pendingRewards` is now legal at
+ANY non-lost turn boundary).
+
+The §48 machinery consumed as designed: `continueFromTurnGate` already
+interposed the reward phase at every turn gate — the shape-lock's
+"between-turn-rewards seam falls out free" note, cashed in three
+phases later. ZERO Game/scene changes: the mid-encounter RewardScene →
+next `turn:starting` → PreTurnScene chain swaps itself (event-driven
+routing did the work).
+
+Fuzz: the harness `case 'reward'` is phase-generic — accept-all
+handles mid-encounter offers untouched; 215 fuzz:smoke green, and
+deliberately NO re-baseline (tally portions cost no RNG draws, and
+accept-all lands the same bits totals — same streams, same outcomes).
+
+Browser-verified at :5191 (DOM-read; the throttled-tab screenshot
+stall is the known HANDOFF item — functional reads are authoritative):
+forced `?daemon=laverna&roster=rogue:5×5` — a won turn offered
+"◈ Idol of Laverna — 67 bits" leading the rolled "9 bits", DOM-click
+accepts settled 0→67→76 with the bits overlay ticking, then the gate
+chain continued to promotion as before; a forced draw turn
+(`battle:ended` emit, the HANDOFF force-verify pattern) offered
+mid-encounter ("◈ Idol of Laverna — 5 bits"), accept → 81 → Turn 2's
+pre-turn gate. Zero console errors.
+
++6 tests: the 47f settle tests re-pointed at the offer flow, plus the
+51a set — mid-encounter interpose, decline-forfeits, label/no-label
+attribution (incl. the run-domain `turnStart` gainBits NON-earner
+guard), win-turn merge order (forced brigands), the v36 labeled-portion
+round-trip — and `battleBitsDaemonIds` pinned in daemon.test.ts.

@@ -60,6 +60,7 @@ import {
   resolveTurnGrants,
   resolveInstantHooks,
   battleRulesFor,
+  battleBitsDaemonIds,
   disabledTurnGrants,
   daemonRedrawHook,
   daemonEmpowerHook,
@@ -367,8 +368,13 @@ export interface BattleEncounter {
  *  `portPriceRng` unit-price jitter — separate because the owned-daemon
  *  exclusion makes composition draw counts filter-dependent, the
  *  two-reward-stream rationale). A v34 mid-dock save has no stock to
- *  restore → reject rather than strand a docked run with nothing to buy. */
-const RUN_SCHEMA_VERSION = 35;
+ *  restore → reject rather than strand a docked run with nothing to buy.
+ *  51a: bumped 35→36. Battle-tally bits ride the reward offer: the bits
+ *  portion member gains the optional `source` label (the 49c union-widening
+ *  precedent), and `pendingRewards` can now be non-null at ANY non-lost
+ *  turn boundary — a v35 reader restoring a mid-encounter offer would route
+ *  the run through a phase sequence it never planned for → reject. */
+const RUN_SCHEMA_VERSION = 36;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -515,7 +521,8 @@ export interface RunSnapshot {
    *  restores to the same screen with the same deltas. */
   pendingPromotions: PromotionInfo[] | null;
   /** 48b: the rolled-but-unresolved reward portions (the pending offer —
-   *  the `currentOffer` pattern). Rolled ONCE at the winning turn boundary;
+   *  the `currentOffer` pattern). Built ONCE at the turn boundary (51a: the
+   *  battle tally leads at any non-lost turn; the win roll appends on won);
    *  each accept/decline removes its portion. Snapshotted so a mid-reward
    *  save reproduces the exact offer (the §48 exit-criterion contract). */
   pendingRewards: RewardPortion[] | null;
@@ -765,11 +772,12 @@ export class Run {
   pendingPromotions: PromotionInfo[] | null = null;
   /**
    * 48b — the rolled-but-unresolved reward portions (the pending offer, the
-   * `currentOffer` pattern). Rolled ONCE in `handleTurnEnded` when the final
-   * turn wins; `continueFromTurnGate` interposes the reward phase while it's
-   * non-null; each accept/decline removes its portion, and resolving the
-   * last one re-enters the gate chain. Persisted (v29) so a mid-reward save
-   * reproduces the exact offer.
+   * `currentOffer` pattern). Built ONCE in `handleTurnEnded` at any non-lost
+   * turn boundary (51a: the battle tally leads the offer; the win roll
+   * appends on won); `continueFromTurnGate` interposes the reward phase
+   * while it's non-null; each accept/decline removes its portion, and
+   * resolving the last one re-enters the gate chain. Persisted (v29) so a
+   * mid-reward save reproduces the exact offer.
    */
   pendingRewards: RewardPortion[] | null = null;
   /**
@@ -1474,8 +1482,9 @@ export class Run {
   /**
    * 47e — earn bits: the `effectiveBits` settle math, then through the
    * floor-at-zero chokepoint. Every earn surface routes here (daemon hooks,
-   * the 47f battle-tally settle, the 48b reward settle), so a bits-gain
-   * modifier daemon applies uniformly without per-surface bookkeeping.
+   * the 48b reward settle — which, since 51a, is also how the 47f battle
+   * tally lands: as an accepted offer portion), so a bits-gain modifier
+   * daemon applies uniformly without per-surface bookkeeping.
    * NB for §50: port SELL proceeds are a refund, not income — they must
    * take the raw `addBits` path, never this one, or a bits fold above
    * 1/sellFraction mints an infinite buy-sell loop (worklog §48).
@@ -1881,27 +1890,44 @@ export class Run {
     if (result !== 'lost') {
       const promotions = this.bankXpAwards(xpAwards);
       if (promotions.length > 0) this.pendingPromotions = promotions;
-      // 47f — settle the turn's battle-earned bits (the World's serialized
-      // tally, the XP pattern). Through `gainBits`, so the `bitsGain` fold
-      // applies at the settle (Laverna stacks with Moneta for free). Mirrors
+      const portions: RewardPortion[] = [];
+      // 47f→51a — the turn's battle-earned bits (the World's serialized
+      // tally, the XP pattern) become a DECLINABLE reward portion instead of
+      // settling directly (the §51 user call): the offer rides the existing
+      // turn-gate seam, so a mid-encounter tally now interposes the reward
+      // phase between turns. The settle moved with it — `gainBits` fires at
+      // ACCEPT time (`handleAcceptReward`), so the `bitsGain` fold still
+      // applies and Laverna still stacks with Moneta. SOURCE-LABELED when
+      // exactly one owned daemon authors battle-bits hooks (the aggregate
+      // tally can't split across several earners). The tally portion leads
+      // the offer — earned in the fight, ahead of the rolled loot. Mirrors
       // the XP bank's skip-on-lost: a defeat's loot is dead state.
-      if (tallies !== undefined && tallies.bits > 0) this.gainBits(tallies.bits);
+      if (tallies !== undefined && tallies.bits > 0) {
+        const earners = battleBitsDaemonIds(this.daemons);
+        portions.push(
+          earners.length === 1
+            ? { kind: 'bits', base: tallies.bits, source: earners[0]! }
+            : { kind: 'bits', base: tallies.bits },
+        );
+      }
       // 48b — the winning boundary rolls the encounter's rewards, alongside
       // the XP/tally banking above (rolled HERE, not at the gate, so a save
       // on the turn-outcome screen already carries the exact offer). Empty
-      // roll → null → `continueFromTurnGate` skips the phase entirely (the
+      // offer → null → `continueFromTurnGate` skips the phase entirely (the
       // `promotions.length > 0` shape). Draws ride the two dedicated reward
       // streams, so a rewards-less win perturbs nothing.
       if (result === 'won') {
-        const portions = rollRewards(
-          this.selectedEncounter?.rewards ?? [],
-          rewardTableById,
-          this.ownedDaemonIds(),
-          this.rewardRng,
-          this.rewardBitsRng,
+        portions.push(
+          ...rollRewards(
+            this.selectedEncounter?.rewards ?? [],
+            rewardTableById,
+            this.ownedDaemonIds(),
+            this.rewardRng,
+            this.rewardBitsRng,
+          ),
         );
-        this.pendingRewards = portions.length > 0 ? portions : null;
       }
+      this.pendingRewards = portions.length > 0 ? portions : null;
     }
     if (this.pauseAtTurnGates) {
       // Pause on the post-turn outcome screen; the player's `advanceTurn`
@@ -1936,8 +1962,10 @@ export class Run {
    * the gated vs headless path) lands on. `turnResult` is pure — the pools
    * don't change across the pauses — so re-reading it here routes exactly as
    * the original boundary would have (the H4b `continueAfterTurn` contract).
-   * `pendingRewards` is non-null only on a won final turn (`handleTurnEnded`
-   * rolls it), so the reward gate can never interpose mid-encounter.
+   * 51a: `pendingRewards` can be non-null at ANY non-lost boundary now (a
+   * battle-tally portion), so the reward gate DOES interpose mid-encounter —
+   * resolving it re-enters here and `continueAfterTurn('ongoing')` starts
+   * the next turn as before.
    */
   private continueFromTurnGate(): void {
     if (this.pendingRewards !== null) {

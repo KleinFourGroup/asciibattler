@@ -4,6 +4,7 @@ import {
   resolveTurnGrants,
   resolveInstantHooks,
   battleRulesFor,
+  battleBitsDaemonIds,
   disabledTurnGrants,
   daemonRedrawHook,
   daemonEmpowerHook,
@@ -447,6 +448,40 @@ describe('the shipped catalog (config/daemons.json) — design-shape pins', () =
       filter: { archetype: 'rogue' },
       effect: { op: 'gainBits', amount: 1 },
     });
+  });
+
+  it('battleBitsDaemonIds names the battle-bits earners, ownership order (51a — the tally label)', () => {
+    // Laverna is the catalog's one battle-bits earner; grant/passive/status
+    // idols never qualify.
+    expect(battleBitsDaemonIds([daemonById('laverna')!])).toEqual(['laverna']);
+    expect(
+      battleBitsDaemonIds([
+        daemonById('mars')!,
+        daemonById('moneta')!,
+        daemonById('fortuna')!,
+      ]),
+    ).toEqual([]);
+    // A turnStart gainBits hook is RUN-domain — it must not read as a
+    // battle earner (the instant-op path, not the tally).
+    const turnBits: DaemonConfig = {
+      id: 'test-turn-bits',
+      name: 'Test Turn Bits',
+      description: 'run-domain bits',
+      rules: [{ kind: 'hook', on: 'turnStart', effect: { op: 'gainBits', amount: 1 } }],
+    };
+    expect(battleBitsDaemonIds([turnBits])).toEqual([]);
+    // Two earners, ownership order preserved.
+    const second: DaemonConfig = {
+      id: 'test-second-earner',
+      name: 'Second',
+      description: 'kill bounty',
+      rules: [{ kind: 'hook', on: 'kill', effect: { op: 'gainBits', amount: 2 } }],
+    };
+    expect(battleBitsDaemonIds([second, daemonById('laverna')!])).toEqual([
+      'test-second-earner',
+      'laverna',
+    ]);
+    expect(battleBitsDaemonIds([])).toEqual([]);
   });
 
   it('fortuna emboldens the striker on a crit (example daemon #2 — battle→battle status)', () => {

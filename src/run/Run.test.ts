@@ -2638,7 +2638,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(35);
+      expect(wire.schemaVersion).toBe(36);
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.injectedEncounterRules).toEqual([ruleOf('venom')]);
       expect(restored.injectedRunRules).toEqual([ruleOf('miner')]);
@@ -2810,11 +2810,11 @@ describe('Run', () => {
       expect(run.phase).toBe(during);
     });
 
-    it('a mid-dock save round-trips the port phase (v35); undock works on the restored run', () => {
+    it('a mid-dock save round-trips the port phase; undock works on the restored run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(35);
+      expect(wire.schemaVersion).toBe(36);
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3024,22 +3024,98 @@ describe('Run', () => {
       expect(plain.run.currentEncounter!.battleRules).toEqual([]);
     });
 
-    it('a won turn settles the tally through gainBits (the bitsGain fold applies)', () => {
+    it('a won turn offers the tally as the LEADING portion; accepting settles through gainBits (the bitsGain fold applies)', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       run.addDaemon(daemonById('moneta')!);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       winEncounter(bus, [], 1_000, { bits: 10 });
+      // 51a — the tally no longer settles directly: it leads the offer
+      // (ahead of any win-rolled portions) and settles at ACCEPT time.
+      expect(run.phase).toBe('reward');
+      expect(run.pendingRewards![0]).toEqual({ kind: 'bits', base: 10 });
+      expect(run.bits).toBe(0);
+      run.dispatch({ kind: 'acceptReward', index: 0 });
       const rule = daemonById('moneta')!.rules![0]!;
       const mult = rule.kind === 'modifier' ? rule.value : NaN;
       expect(run.bits).toBe(Math.round(10 * mult));
     });
 
-    it('an ongoing (draw) turn settles too — bits accrue per turn, the XP cadence', () => {
+    it('an ongoing (draw) turn offers too — the reward gate interposes MID-ENCOUNTER (51a)', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 3 });
+      expect(run.phase).toBe('reward');
+      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 3 }]);
+      run.dispatch({ kind: 'acceptReward', index: 0 });
+      // Resolving the offer resumes the encounter (the ungated path falls
+      // straight into the next turn's battle).
+      expect(run.phase).toBe('battle');
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 4 });
+      run.dispatch({ kind: 'acceptReward', index: 0 });
       expect(run.bits).toBe(7);
+    });
+
+    it('declining the tally forfeits it — the encounter continues, no bits (51a)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: null });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 5 });
+      expect(run.phase).toBe('reward');
+      run.dispatch({ kind: 'declineReward', index: 0 });
+      expect(run.bits).toBe(0);
+      expect(run.phase).toBe('battle');
+    });
+
+    it('the tally portion is SOURCE-LABELED when exactly one owned daemon earns battle bits (51a)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: BATTLE_BITS });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 2 });
+      expect(run.pendingRewards).toEqual([
+        { kind: 'bits', base: 2, source: 'test-battle-bits' },
+      ]);
+    });
+
+    it('a winning turn MERGES the tally into the rolled offer — tally first (51a)', () => {
+      // brigands carries `bits-small` at chance 1 (the 48a reference), so
+      // the win roll is guaranteed at least one portion after the tally.
+      const { run, bus } = freshRunWithBus(1, {
+        daemon: BATTLE_BITS,
+        forcedEncounterId: 'brigands',
+      });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      winEncounter(bus, [], 1_000, { bits: 6 });
+      expect(run.phase).toBe('reward');
+      expect(run.pendingRewards!.length).toBeGreaterThanOrEqual(2);
+      expect(run.pendingRewards![0]).toEqual({
+        kind: 'bits',
+        base: 6,
+        source: 'test-battle-bits',
+      });
+    });
+
+    it('two battle-bits earners → the label drops (the aggregate tally cannot attribute)', () => {
+      const { run, bus } = freshRunWithBus(1, { daemon: BATTLE_BITS });
+      run.addDaemon({ ...BATTLE_BITS, id: 'test-battle-bits-2', name: 'Test Battle Bits 2' });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 2 });
+      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 2 }]);
+    });
+
+    it('a mid-offer save round-trips the labeled tally portion (v36)', () => {
+      // The CATALOG battle-bits idol (daemons restore by id — a bespoke
+      // daemon would hard-reject at fromJSON).
+      const { run, bus } = freshRunWithBus(1, { daemon: daemonById('laverna')! });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
+      const wire = JSON.parse(JSON.stringify(run.toJSON()));
+      expect(wire.schemaVersion).toBe(36);
+      expect(wire.phase).toBe('reward');
+      const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+      expect(restored.pendingRewards).toEqual([
+        { kind: 'bits', base: 9, source: 'laverna' },
+      ]);
+      restored.dispatch({ kind: 'acceptReward', index: 0 });
+      expect(restored.bits).toBe(9);
+      expect(restored.phase).toBe('battle');
     });
 
     it('a LOSING turn banks nothing (the skip-on-lost XP mirror)', () => {

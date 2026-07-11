@@ -42,9 +42,16 @@ import { pickWeighted } from './sectorWalk';
  *  (one shared code path, the shape-lock rider), so accepting a bits-fold
  *  daemon EARLIER in the same offer visibly boosts the portions after it.
  *  49c adds the packet member (a catalog id — `Run.addPacket` settles it,
- *  cache-full accepts resolve via the acceptReward swap field). */
+ *  cache-full accepts resolve via the acceptReward swap field).
+ *  51a adds `source` on the bits member: the daemon id CREDITED for a
+ *  battle-tally earn (Laverna's per-turn plunder rides the offer now,
+ *  labeled — Run v36). Display-only — the settle ignores it, and the
+ *  roller here never sets it (a rolled table's bits have no single
+ *  author). Set by `Run.handleTurnEnded` only when the attribution is
+ *  unambiguous (exactly one owned battle-bits daemon — the aggregate
+ *  World tally can't split across multiple earners). */
 export type RewardPortion =
-  | { readonly kind: 'bits'; readonly base: number }
+  | { readonly kind: 'bits'; readonly base: number; readonly source?: string }
   | { readonly kind: 'daemon'; readonly daemonId: string }
   | { readonly kind: 'packet'; readonly packetId: string };
 

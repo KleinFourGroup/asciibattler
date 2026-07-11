@@ -1920,3 +1920,32 @@ AS the balance-pass result + the metric-family header) · 52b — the
 round close (rider re-scope on record, ROADMAP/HANDOFF cursor flip,
 memory update, the interstitial proposal). Docs-only; no code, no
 measurement, no snapshot change.
+
+### 52a + 52b — the close (2026-07-11)
+
+**52a** (`738b10f`): the run-log entry (the finding, the localization,
+the traffic-management portfolio, the reaction-time asymmetry, the
+re-scope), the economy-metric family in the protocol header
+(bits-per-hop · spend mix + terminal bank · transaction rate — all
+STRATEGY-TIER metrics), and the bot-lower-bound caveat now carries
+the quantified ~50pt margin.
+
+**52b**: the archive-ritual line in the ROADMAP header gains the spec
+(a user catch at execution — AGENTS' "superseded specs archive with
+their round" was implicit but the ritual line the next kickoff
+actually follows named only the roadmap+worklog pair; now explicit:
++ `cluster-3-spec.md` → `archive/cluster-3-spec.md`). HANDOFF: cursor
+flipped (NEXT = the micro/balance-realism interstitial kickoff, spec
+first, archive-first task; the rung ladder + the frozen-anchors rule
++ the dev export/load key rider pinned there), Phase 52 to Last
+phase, the Cluster-3 condensed entry into Closed rounds (the
+load-bearing facts: mint guard, injected-rule provenance, derived
+cache size, gotchas #116–118), the stale kickoff paragraph + riders
+block retired (boss-wall → re-scoped; queued-stance → TODO.md
+unchanged). Memory updated at the round boundary per its convention.
+
+**Exit criteria (as re-scoped):** the calibration finding recorded in
+BALANCE.md ✓ (52a) · the rider explicitly re-scoped with the reason
+on record ✓ (BALANCE §52 + the ROADMAP decision line) · docs closed ✓
+(cursor flipped; the pair + spec archive at the next kickoff per the
+amended ritual). **Phase 52 CLOSED · Cluster 3 (Economy) COMPLETE.**

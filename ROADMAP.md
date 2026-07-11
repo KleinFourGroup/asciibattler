@@ -9,8 +9,11 @@
 > findings, and rationale land in [WORKLOG.md](WORKLOG.md); plan mutations here
 > are one line + a worklog pointer. Spec: **[cluster-3-spec.md](cluster-3-spec.md)**
 > (hardened + locked 2026-07-07 — audit this plan against it). **First task of
-> the next round's kickoff = archive this file + WORKLOG.md →
-> `archive/post-46-roadmap.md` + `archive/post-46-worklog.md`** (the ritual).
+> the next round's kickoff = archive this file + WORKLOG.md + cluster-3-spec.md →
+> `archive/post-46-roadmap.md` + `archive/post-46-worklog.md` +
+> `archive/cluster-3-spec.md`** (the ritual; the spec clause was implicit in
+> AGENTS "superseded specs archive with their round" — made explicit here
+> 2026-07-11 so the next kickoff can't miss it).
 
 Companion to [DESIGN.md](DESIGN.md), [ARCHITECTURE.md](ARCHITECTURE.md),
 [BALANCE.md](BALANCE.md), [TODO.md](TODO.md), [GOTCHAS.md](GOTCHAS.md), and
@@ -373,7 +376,7 @@ YES, lands now as a BALANCE.md protocol-header definition.
 **The cut (shape-locked 2026-07-11; rationale in worklog §52):**
 
 - [x] 52a — the BALANCE.md §52 entry: the calibration finding AS the balance-pass result (bot ~30 vs human ~80, gap localization, run-killer cells, no-measurement rationale) + the economy-metric family in the protocol header ✅ 2026-07-11 — run-log entry + metric family + the quantified bot-lower-bound caveat (BALANCE §52)
-- [ ] 52b — the round close: rider re-scope on record, HANDOFF cursor flip, memory update, the interstitial proposal (the micro round; dev export/load key rides its Rung 0 — menu save/load stays Cluster 6)
+- [x] 52b — the round close: rider re-scope on record, HANDOFF cursor flip, memory update, the interstitial proposal (the micro round; dev export/load key rides its Rung 0 — menu save/load stays Cluster 6) ✅ 2026-07-11 — + the archive-ritual line gains the spec (user catch); **Phase 52 CLOSED · Cluster 3 COMPLETE** (worklog §52)
 
 **Exit criteria (re-scoped 2026-07-11):** the calibration finding recorded
 in BALANCE.md; the boss-wall rider explicitly re-scoped with the reason on

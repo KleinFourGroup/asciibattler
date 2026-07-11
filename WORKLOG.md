@@ -1539,3 +1539,82 @@ seeds. ③ roster/deck/effects coherent through buys + removals — the
 #118 now guards re-litigation). ④ fuzz drives through ports green
 with new baselines pinned — the purchase arm default-on, 215
 fuzz:smoke + 2×120 anchor batches, 0 hangs. **Phase 50 CLOSED.**
+
+## Phase 51 — The UI/UX cohesion review
+
+### Kickoff (2026-07-11) — the code-reality audit + the cut
+
+**NOT a no-op.** The phase was chartered as "may close as a documented
+no-op," but the user opened the kickoff with five named cohesion changes
+plus one bug report — the cut is user-directed, and the ROADMAP charter
+carries the one-line mutation note.
+
+**The audit, surface by surface:**
+
+- **Laverna bits bypass the reward UI** (user change #1). The battle
+  tally settles directly at every non-lost turn boundary
+  (`Run.handleTurnEnded` — `gainBits(tallies.bits)`), so stolen bits
+  deposit silently. The fix rides an existing seam: `continueFromTurnGate`
+  checks `pendingRewards` at EVERY turn gate (the §48 shape-lock's
+  "between-turn-rewards seam falls out free" — never consumed until
+  now). Appending a bits portion instead of settling makes the earn
+  declinable with no new phase machinery; on a winning turn it merges
+  into the rolled offer. Behavior deltas accepted at shape-lock: the
+  fold applies at ACCEPT time (`effectiveBits` — same math, later
+  read), and declining forfeits the tally. **Decision: the portion is
+  SOURCE-LABELED ("◈ Laverna — N bits") → an optional field on the
+  serialized offer → Run v35→v36.**
+- **The port dismiss list is signature-thin** (user change #2). Crew
+  removal renders `glyph archetype · Lv N` (PortScreen) — too many
+  units collide on that signature. Locked shape: CardListModal (the R1
+  shared modal) grows a SELECTION mode — `selectCount: n` + a confirm
+  callback; `selectCount: 0` IS today's view, so this is a merge, not a
+  fork — and the port's removal section becomes a picker launch over
+  full UnitCards. Build wrinkle: display order (the rosterOrder seam) ≠
+  roster order, so the selection must map back to SOURCE indices
+  (`payToRemoveUnit` takes rosterIndex). Future packets that target a
+  roster unit get the same picker for free (the user's motivating
+  case).
+- **Bits/cache/sector chips undersized** (user change #3). Census:
+  `.bits-overlay`/`.cache-overlay` sit at 14px / 4×10 padding vs the
+  card-list buttons' 18px / 12×24 (the R1 1.5× user call). Reflow
+  riders: `.hud-hop` pins at `left: 148px` beside the bits chip and the
+  cache chip stacks at `top: 58px` — both shift with the enlargement.
+  The sector banner (`.map-banner`) goes larger still (user call).
+- **Accept/decline is two clicks per portion** (user change #4). Pure
+  UI: `declineReward` already exists, so a **Continue ▸** under the
+  rows loop-declines the remaining offer; each row keeps an explicit
+  Accept (the full-cache swap control unchanged). No engine change.
+- **Draw/discard pile chips easily missed** (user change #5). The
+  audit's one surprise: they ALREADY share the roster chip's sizing —
+  all three are the one `.card-list-button` class, and R1's 1.5×
+  applied to the shared rule. The real gap is the counts: the labels
+  are static ("Draw Pile") while the pile copies refresh on redraw.
+  The chips gain live counts ("Draw Pile · 12"), refreshed where
+  `updateHand` already lands.
+- **The Mercury "bug"** (user report #6): closed NOT-REPRODUCIBLE, and
+  the engine is now proven on the exact live path. The trail: the zod
+  schema parses `chance` through (daemons.ts); `resolveTurnGrants`
+  flips once per turn off the dedicated serialized `daemonRng`; the
+  redraw command null-rejects without a queue grant; PreTurnScreen
+  renders the denial line on cold turns. The existing coin test FORCES
+  the daemon — skipping the run-start roll draw — so a throwaway
+  kickoff probe drove the ROLLED path: **100 rolled-Mercury runs × up
+  to 12 gated turns = 826 turns, 44.9% granted, exactly one ≥8-turn
+  all-heads run (seed 65)**. The user re-ran natively during
+  shape-lock and the coin behaved ("I guess I was incredibly lucky").
+  Verdict: luck; a TODO watch item (not a build step), and the 51f
+  exit playtest keeps one deliberate eye on the "Idol of Mercury is
+  silent" denial line.
+
+**Shape-lock decisions (user, 2026-07-11):** Laverna row labeled →
+v36 · the carried renderer "queued"-stance rider stays DEFERRED in
+TODO.md · Mercury = watch item. Triage boundary: the five user changes
+are fix-in-phase by charter; anything NEW the 51f sweep surfaces
+triages fix-vs-TODO there.
+
+**The cut** (headless-first where there's engine surface; 51a is the
+only serialized-shape change): 51a Laverna→reward offer · 51b
+accept/continue · 51c the selectable roster view · 51d the port
+adoption · 51e the chrome sizing pass · 51f the cohesion sweep + exit.
+51c gates 51d; everything else is order-free but lands in list order.

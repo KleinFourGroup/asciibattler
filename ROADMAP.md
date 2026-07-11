@@ -312,9 +312,22 @@ Before §52 — closing with the balance pass is the cluster routine.
 **Risk:** **Low** — review + polish fixes; no new systems, no serialized
 state.
 
-**Decision points:** the triage boundary (what gets fixed in-phase vs filed
-to TODO.md); whether the carried renderer "queued"-stance rider (TODO.md)
-folds in here or stays deferred.
+**Decision points — ✅ DECIDED at kickoff (2026-07-11, worklog §51):** the
+triage boundary = the user's five kickoff changes fix in-phase, new
+51f-sweep findings triage fix-vs-TODO there; the "queued"-stance rider
+stays DEFERRED (TODO.md). Plan mutation: NOT a no-op — the kickoff arrived
+with five user changes + one bug report (worklog §51); the Mercury report
+closed NOT-REPRODUCIBLE at kickoff (probe + user re-run → a TODO watch
+item, not a step).
+
+**The cut (shape-locked 2026-07-11; rationale in worklog §51):**
+
+- [ ] 51a — Laverna battle-tally bits become a SOURCE-LABELED declinable reward portion (the settle moves to accept time; merges into the win-turn offer; rides the existing turn-gate seam); **Run v35→v36**; headless-first
+- [ ] 51b — RewardScreen: per-portion Accept + one **Continue ▸** that declines all remaining portions (the existing command, looped; the swap control unchanged)
+- [ ] 51c — CardListModal grows the selection mode (`selectCount` + confirm + display-order→roster-index mapping; 0 = today's view — merge, not fork)
+- [ ] 51d — PortScreen crew removal adopts the selectable roster view (full cards, select 1, confirm = `payToRemoveUnit`)
+- [ ] 51e — the chrome sizing pass: bits/cache chips to the card-list scale + `.hud-hop`/cache-stack reflow; the sector banner larger still; draw/discard chips gain LIVE counts
+- [ ] 51f — the cohesion sweep + exit: full-run native playtest over every Cluster-3 surface (one deliberate Mercury denial-line look), triage fix-vs-TODO, docs + cursor flip
 
 **Exit criteria:** a full-run native playtest sweeping every new surface;
 every finding either fixed or filed, with the user's sign-off; the verdict —
@@ -382,5 +395,5 @@ gate (drift gates, determinism) to make numbers fit.
 - 49: **the pre-turn fire UX** (the spec's ⚠ OPEN — a design round at phase
   kickoff); the launch packet list; cache-UI home.
 - 50: port glyph + screen layout; price formulas; removal pricing.
-- 51: the triage boundary; the "queued"-stance rider call (fold in or defer).
+- 51: ✅ resolved at kickoff — triage boundary set, the rider stays deferred (worklog §51).
 - 52: the boss-wall rider verdict; the BALANCE.md economy-metric family.

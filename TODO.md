@@ -16,6 +16,8 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Polish / pre-launch
 
+- [ ] **Mercury coin-flip watch.** The §51 kickoff report ("always got the full redraw for a whole run") closed NOT-REPRODUCIBLE: the engine is proven on the exact live path (a kickoff probe drove 100 ROLLED-mercury runs — 826 gated turns, 44.9% granted, one ≥8-turn all-heads seed), and the user's very next native run behaved. If a future run shows the same streak, grab its seed (`?seed=`) and re-probe on the rolled path before touching the engine — the "Idol of Mercury is silent" denial line (PreTurnScreen) is the tell to watch for. Detail: WORKLOG.md §51 kickoff (2026-07-11).
+
 - [ ] **Renderer "queued/waiting" stance — the §44/§46 ship-feel deferral.** Units now WAIT on purpose (§44b's first-class `WaitAction`; §45b queues) and the seam for showing it was planted deliberately: the `unit:waited` event (event-only, [WaitAction.ts](src/sim/actions/WaitAction.ts)) fires once per deliberate hold. A subtle render tell (dim pulse, stance glyph tint, whatever reads at a glance) would let a player SEE "this unit is queueing, not stuck" — the §46 decision point deferred it as pure ship-feel polish. Render-only; no sim/snapshot impact. Natural home: any Cluster-3+ polish rider or the pre-launch pass. Filed at the §46c close-out (2026-07-06).
 
 - [x] **§40a rubble glyph — a true HALF-height look.** Done 2026-07-02, user-confirmed native: the glyph is now `▄` (U+2584 LOWER HALF BLOCK), replacing the `%` stopgap. Detail in git.

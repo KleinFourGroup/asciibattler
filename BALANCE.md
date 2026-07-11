@@ -60,6 +60,25 @@ comparable across encounters — unlike a binary win/loss. Keep three things dis
 
 Tune on pool damage; sanity-check against run-death.
 
+## The economy metrics (§52 — defined ahead of the data)
+
+The Cluster-3 metric family, defined at the §52 close so the interstitial's
+balance pass measures against a settled vocabulary (no numbers exist yet —
+the §52 calibration finding deferred all measurement; see the run log):
+
+- **bits-per-hop** — total bits earned ÷ hops survived; the earn-curve
+  signal. Split by source (win bounty vs daemon tally) when provenance
+  matters — the 51a labeled portions make that free.
+- **spend mix** — fraction of earned bits spent, split by sink (units /
+  daemons / packets / removal), plus the **terminal bank** (bits held at
+  run end — §50g's "dies holding ~50" read is the founding data point).
+- **transaction rate** — fraction of runs that ever buy + purchases/run
+  (§50g: ~24% / ~0.4). The transaction-starvation guard: a price read at
+  near-zero transactions is not a price read (sweep `path.port` first).
+
+Like win rate, these are STRATEGY-TIER metrics — read them at the anchors
+AND the optimum; an earn/spend number quoted without its tier is noise.
+
 ## The protocol — the 5-step loop
 
 The method the user converged on (2026-06-21):
@@ -205,6 +224,10 @@ re-time mid-sweep).
 - **Bot lower-bound:** the search can't reach every comp (the composition blind-spot
   history). "No sampled strategy beats it" ≠ "unwinnable." Trust the BAND from any
   tier; trust the **OP/archetype** read only at FULL length (`--hops=11`).
+  **The margin is now QUANTIFIED (§52): ~50pt** — bot optimum ~30% vs human ~80%
+  native, localized to battle-layer objective handling. Until the interstitial's
+  bot-realism round closes the gap, treat every ABSOLUTE win-rate target as
+  bot-anchored (relative reads — gradients, bands, deltas — stay valid).
 
 ## Parallelism + the dwm leak (unchanged, environmental)
 
@@ -574,3 +597,41 @@ deltas. The pre-X H7c→O log lives at
     DESIGN (50a/f); the boss-wall watch item (held-out 59%, §46b) stays FILED for §52,
     which now owns: the fixed-vector regeneration + probe, the `path.port` weight sweep,
     prices + `bitsMultiplier` at the optimum, and the packet fire-policy arm decision.
+
+- **2026-07-11 — §52 the Economy-cluster closer: NO MEASUREMENT RUN — the pass's result
+  is a CALIBRATION FINDING about the instrument, not a tuning read on the game.**
+  Method: the kickoff code-reality audit + the user's playtest report; zero batches,
+  deliberately — a heavy `--search` against the current bot would derive an optimum the
+  next round immediately replaces (dead compute), and prices tuned at a fictional
+  optimum are fictional prices.
+  - **The finding: bot best-achievable ~30% (§46b ~31 in / ~24 held) vs the user's
+    native win rate ~80% (self-report, error bars honest) — a ~50pt human–bot gap.**
+    Localized by ELIMINATION: the user wins usually without recruiting and without
+    daemon mechanics, so the run-level strategy layer isn't the edge — the battle-layer
+    objective handling is (J4's static proclivity draw vs closed-loop human control).
+  - **The human edge is TRAFFIC MANAGEMENT, not targeting** (user introspection,
+    worklog §52): un-jamming melee stuck behind own ranged (fall back → re-sort →
+    re-engage), stopping short of hazard terrain, choke holding, the spiral
+    opposite-spawn burn cheese (attrition wins without fighting), focus fire mainly as
+    cohesion (catapults the one assassination target). The §42–46 round's residual:
+    unit-level cooperation is fixed; composition-level traffic is objective-layer work.
+  - **The human's ~20% losses are REACTION-TIME cells** (spawn-in-range alpha strikes:
+    funnel / adjacent-spiral vs ronin+mages; artillery company on strafing funnel;
+    junction ambush) — a loss mode a tick-0 bot is IMMUNE to. Expect per-fixture sign
+    flips in paired comparisons; that's signal, not noise.
+  - **Consequences:** every ABSOLUTE bot-anchored target — including the boss-wall
+    43–55% design target the §46b rider measures against — needs re-derivation once a
+    realistic bot exists; RELATIVE reads (gradients, per-encounter bands, before/after
+    deltas) remain valid, so the run log's history stands. The bot-lower-bound caveat
+    (protocol header) now carries the quantified margin.
+  - **The rider: RE-SCOPED, not resolved-by-tuning** — the boss-wall verdict moves to
+    the interstitial round's re-anchoring phase, per the §52 charter's own escape
+    clause ("resolved or re-scoped"). Alongside it move: the fixed-vector probe
+    regeneration, the `path.port` sweep, prices + `bitsMultiplier`, packet drop
+    weights, the fire-policy arm, and the expressive economy-strategy design (one
+    scored vector; recruit-scorer reuse for port units) — the full agenda: worklog §52.
+  - **VERDICT: Cluster 3 closes with economy numbers launch-rough BY DESIGN**, awaiting
+    the interstitial's realistic optimum (rung ladder: recorder + gauntlet → reactive
+    traffic scripts → gated portfolio rollout search → economy expressiveness → the
+    real balance pass). The 50g anchor batches stay the comparison baseline; the
+    economy metric family above is defined and waiting for its first data.

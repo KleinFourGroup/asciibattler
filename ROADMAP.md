@@ -372,7 +372,7 @@ YES, lands now as a BALANCE.md protocol-header definition.
 
 **The cut (shape-locked 2026-07-11; rationale in worklog §52):**
 
-- [ ] 52a — the BALANCE.md §52 entry: the calibration finding AS the balance-pass result (bot ~30 vs human ~80, gap localization, run-killer cells, no-measurement rationale) + the economy-metric family in the protocol header
+- [x] 52a — the BALANCE.md §52 entry: the calibration finding AS the balance-pass result (bot ~30 vs human ~80, gap localization, run-killer cells, no-measurement rationale) + the economy-metric family in the protocol header ✅ 2026-07-11 — run-log entry + metric family + the quantified bot-lower-bound caveat (BALANCE §52)
 - [ ] 52b — the round close: rider re-scope on record, HANDOFF cursor flip, memory update, the interstitial proposal (the micro round; dev export/load key rides its Rung 0 — menu save/load stays Cluster 6)
 
 **Exit criteria (re-scoped 2026-07-11):** the calibration finding recorded

@@ -2638,10 +2638,13 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(36);
+      expect(wire.schemaVersion).toBe(37);
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
-      expect(restored.injectedEncounterRules).toEqual([ruleOf('venom')]);
-      expect(restored.injectedRunRules).toEqual([ruleOf('miner')]);
+      // 51f — the stores carry provenance now ({rule, sourceId}).
+      expect(restored.injectedEncounterRules).toEqual([
+        { rule: ruleOf('venom'), sourceId: 'venom' },
+      ]);
+      expect(restored.injectedRunRules).toEqual([{ rule: ruleOf('miner'), sourceId: 'miner' }]);
       expect(restored.grantViews()[0]).toMatchObject({ daemonId: 'reroute', name: 'Reroute' });
       expect(() =>
         Run.fromJSON({ ...wire, schemaVersion: 32 }, new EventBus<GameEvents>()),
@@ -2814,7 +2817,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(36);
+      expect(wire.schemaVersion).toBe(37);
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3100,6 +3103,39 @@ describe('Run', () => {
       expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 2 }]);
     });
 
+    it('a miner-mined tally labels its PACKET source (51f — the earner pool spans injected rules)', () => {
+      const { run, bus } = gatedToFirstTurnIntro(1, null);
+      run.addPacket('miner');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 }); // install the run-duration rule
+      run.dispatch({ kind: 'advanceTurn' }); // gate → battle
+      chipTurn(bus, { player: 1, enemy: 1 }, [], { bits: 4 });
+      run.dispatch({ kind: 'advanceTurn' }); // outcome → the gate chain
+      expect(run.phase).toBe('reward');
+      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 4, source: 'miner' }]);
+    });
+
+    it('a daemon earner + a packet earner together drop the label (cross-pool ambiguity)', () => {
+      const { run, bus } = gatedToFirstTurnIntro(1, daemonById('laverna')!);
+      run.addPacket('miner');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      run.dispatch({ kind: 'advanceTurn' });
+      chipTurn(bus, { player: 1, enemy: 1 }, [], { bits: 4 });
+      run.dispatch({ kind: 'advanceTurn' });
+      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 4 }]);
+    });
+
+    it('two miner installs stay ONE earner — the label holds (dedupe by source id)', () => {
+      const { run, bus } = gatedToFirstTurnIntro(1, null);
+      run.addPacket('miner');
+      run.addPacket('miner');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      run.dispatch({ kind: 'advanceTurn' });
+      chipTurn(bus, { player: 1, enemy: 1 }, [], { bits: 6 });
+      run.dispatch({ kind: 'advanceTurn' });
+      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 6, source: 'miner' }]);
+    });
+
     it('a mid-offer save round-trips the labeled tally portion (v36)', () => {
       // The CATALOG battle-bits idol (daemons restore by id — a bespoke
       // daemon would hard-reject at fromJSON).
@@ -3107,7 +3143,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(36);
+      expect(wire.schemaVersion).toBe(37);
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([

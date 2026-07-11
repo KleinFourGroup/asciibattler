@@ -373,8 +373,12 @@ export interface BattleEncounter {
  *  portion member gains the optional `source` label (the 49c union-widening
  *  precedent), and `pendingRewards` can now be non-null at ANY non-lost
  *  turn boundary — a v35 reader restoring a mid-encounter offer would route
- *  the run through a phase sequence it never planned for → reject. */
-const RUN_SCHEMA_VERSION = 36;
+ *  the run through a phase sequence it never planned for → reject.
+ *  51f: bumped 36→37. The injected-rule stores gain PROVENANCE: entries are
+ *  `InjectedRule` ({rule, sourceId}) instead of bare `BattleRule`s, so a
+ *  packet-mined tally labels its earner. A v36 save's bare-rule arrays
+ *  can't restore into the wrapped shape → reject. */
+const RUN_SCHEMA_VERSION = 37;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -390,6 +394,19 @@ function cloneBattleRule(rule: BattleRule): BattleRule {
   if (rule.chance !== undefined) copy.chance = rule.chance;
   if (rule.filter !== undefined) copy.filter = { ...rule.filter };
   return copy;
+}
+
+/** 51f — one packet-injected battle rule + its PROVENANCE (the source packet
+ *  id). The sim never sees the wrapper — the battle compile strips to the
+ *  plain rule — but the run keeps it so a rule's earnings can be credited
+ *  (the reward tally's source label: a miner-mined bit says "Miner"). */
+export interface InjectedRule {
+  rule: BattleRule;
+  sourceId: string;
+}
+
+function cloneInjectedRule(entry: InjectedRule): InjectedRule {
+  return { rule: cloneBattleRule(entry.rule), sourceId: entry.sourceId };
 }
 
 function resolveSelectedEncounter(id: string | null): Encounter | null {
@@ -492,9 +509,11 @@ export interface RunSnapshot {
   /** 49e: packet-injected battle rules, in fire order. `encounter`-duration
    *  ones reset at the next encounter start (the K1 reset-at-start
    *  doctrine); `run`-duration ones persist for the whole run. Both union
-   *  into every turn's `battleRules` compile after the daemon rules. */
-  injectedEncounterRules: BattleRule[];
-  injectedRunRules: BattleRule[];
+   *  into every turn's `battleRules` compile after the daemon rules.
+   *  51f (v37): entries carry their source packet id (`InjectedRule`) so
+   *  the reward tally's label can credit a packet-mined bit. */
+  injectedEncounterRules: InjectedRule[];
+  injectedRunRules: InjectedRule[];
   /** H4: the run-wide player health pool (persists across the whole run). */
   playerHealth: number;
   /** H4: the active encounter's enemy pool (reset each encounter). */
@@ -703,10 +722,11 @@ export class Run {
    * `run`-duration rules persist for the whole run. Every turn's
    * `battleRules` compile unions them AFTER the daemon rules (daemons →
    * run-injected → encounter-injected, each in acquisition/fire order — the
-   * 47c fixed-evaluation-order discipline extended). Both round-trip (v33).
+   * 47c fixed-evaluation-order discipline extended). Both round-trip (v33;
+   * 51f/v37 wraps each entry with its source packet id — see `InjectedRule`).
    */
-  injectedEncounterRules: BattleRule[];
-  injectedRunRules: BattleRule[];
+  injectedEncounterRules: InjectedRule[];
+  injectedRunRules: InjectedRule[];
   /**
    * H4 — the run-wide player health pool. Persists across the WHOLE run (every
    * encounter chips it; it's never reset between encounters). At ≤ 0 the run is
@@ -1683,9 +1703,11 @@ export class Run {
       case 'injectRule':
         // Push a COPY so the store never aliases the catalog object (rules
         // are never mutated, but the store serializes — keep it independent).
-        (effect.duration === 'run' ? this.injectedRunRules : this.injectedEncounterRules).push(
-          cloneBattleRule(effect.rule),
-        );
+        // 51f — the entry carries its source packet id (the tally label).
+        (effect.duration === 'run' ? this.injectedRunRules : this.injectedEncounterRules).push({
+          rule: cloneBattleRule(effect.rule),
+          sourceId: packet.id,
+        });
         break;
       case 'healPool':
         this.executeInstantOps([effect]);
@@ -1833,10 +1855,12 @@ export class Run {
       // (daemons → run-injected → encounter-injected, fire order within
       // each); a pre-turn injection is live this very turn (beginTurn runs
       // after the gate).
+      // 51f — the injected entries strip to their plain rules at the seam
+      // (the sim never sees the provenance wrapper).
       battleRules: [
         ...battleRulesFor(this.daemons),
-        ...this.injectedRunRules,
-        ...this.injectedEncounterRules,
+        ...this.injectedRunRules.map((e) => e.rule),
+        ...this.injectedEncounterRules.map((e) => e.rule),
       ],
     };
     this.bus.emit('battle:started', { worldSeed });
@@ -1903,10 +1927,17 @@ export class Run {
       // the offer — earned in the fight, ahead of the rolled loot. Mirrors
       // the XP bank's skip-on-lost: a defeat's loot is dead state.
       if (tallies !== undefined && tallies.bits > 0) {
-        const earners = battleBitsDaemonIds(this.daemons);
+        // 51f — the earner pool spans BOTH rule sources: daemon battle-bits
+        // hooks and packet-injected gainBits rules (miner). Dedup by id —
+        // two miner installs are still ONE earner; a daemon + a packet are
+        // two, and the label drops (the aggregate tally can't attribute).
+        const earners = new Set(battleBitsDaemonIds(this.daemons));
+        for (const entry of [...this.injectedRunRules, ...this.injectedEncounterRules]) {
+          if (entry.rule.effect.op === 'gainBits') earners.add(entry.sourceId);
+        }
         portions.push(
-          earners.length === 1
-            ? { kind: 'bits', base: tallies.bits, source: earners[0]! }
+          earners.size === 1
+            ? { kind: 'bits', base: tallies.bits, source: [...earners][0]! }
             : { kind: 'bits', base: tallies.bits },
         );
       }
@@ -2810,8 +2841,8 @@ export class Run {
       // live store (merge mutates in place); rules copy per entry (never
       // mutated, but the wire image stays independent of the live arrays).
       pendingEncounterEffects: this.pendingEncounterEffects.map((slot) => slot.map(cloneEffect)),
-      injectedEncounterRules: this.injectedEncounterRules.map(cloneBattleRule),
-      injectedRunRules: this.injectedRunRules.map(cloneBattleRule),
+      injectedEncounterRules: this.injectedEncounterRules.map(cloneInjectedRule),
+      injectedRunRules: this.injectedRunRules.map(cloneInjectedRule),
       playerHealth: this.playerHealth,
       enemyHealth: this.enemyHealth,
       turnIndex: this.turnIndex,
@@ -2921,8 +2952,8 @@ export class Run {
     // toJSON). Injected rules are plain data; their status refs re-validate
     // at battle setup (World.installBattleRules), never mid-tick.
     m.pendingEncounterEffects = snap.pendingEncounterEffects.map((slot) => slot.map(cloneEffect));
-    m.injectedEncounterRules = snap.injectedEncounterRules.map(cloneBattleRule);
-    m.injectedRunRules = snap.injectedRunRules.map(cloneBattleRule);
+    m.injectedEncounterRules = snap.injectedEncounterRules.map(cloneInjectedRule);
+    m.injectedRunRules = snap.injectedRunRules.map(cloneInjectedRule);
     m.playerHealth = snap.playerHealth;
     m.enemyHealth = snap.enemyHealth;
     m.turnIndex = snap.turnIndex;

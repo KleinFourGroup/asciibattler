@@ -14,7 +14,7 @@
 
 import type { Archetype, UnitStats } from '../sim/Unit';
 import { abilityDef, damageOpOf, healOpOf, firstOpOf } from '../config/abilities';
-import { damageStatFor } from '../sim/stats';
+import { damageStatFor, hitChanceFor, critChanceFor } from '../sim/stats';
 
 export function abilityDetailParts(id: string, archetype: Archetype, stats: UnitStats): string[] {
   const def = abilityDef(id);
@@ -30,10 +30,13 @@ export function abilityDetailParts(id: string, archetype: Archetype, stats: Unit
     parts.push(`${healOp.might + stats.magic} heal`, `rng ${def.rangeCells}`);
   } else if (damageOp) {
     parts.push(`${damageOp.might + damageStatFor(archetype, stats)} dmg`, `rng ${def.rangeCells}`);
-    // I6 — surface the per-weapon profile: base hit chance for an evadable
-    // strike, base crit for a critable one (terse percentages, e.g. "60% hit").
-    if (damageOp.evadable) parts.push(`${Math.round(damageOp.accuracy * 100)}% hit`);
-    if (damageOp.critable) parts.push(`${Math.round(damageOp.critBase * 100)}% crit`);
+    // I6→51f — the per-weapon profile, DERIVED like the damage number is
+    // (base + the unit's stat, the §51 sweep call): hit runs the real
+    // `hitChanceFor` with this unit's precision against a neutral 0-evasion
+    // target (the same convention as damage ignoring the target's defense);
+    // crit runs the real `critChanceFor` with this unit's luck — that one is
+    // exact (no target term). Both inherit the sim's floors/caps for free.
+    pushHitCrit(parts, damageOp, stats);
   } else if (chainOp) {
     // 29c — the bolt's damage is NESTED in the chain's inner ops (the chain arcs
     // and applies them per hop), so `damageOpOf` finds none; pull the inner
@@ -41,6 +44,9 @@ export function abilityDetailParts(id: string, archetype: Archetype, stats: Unit
     const inner = chainOp.ops.find((o) => o.kind === 'damage');
     if (inner && inner.kind === 'damage') {
       parts.push(`${inner.might + damageStatFor(archetype, stats)} dmg`);
+      // 51f — the inner strike carries the same per-weapon profile; derive
+      // it identically (flag-gated, so an unmissable bolt adds nothing).
+      pushHitCrit(parts, inner, stats);
     }
     parts.push(`chains ${chainOp.maxJumps}`, `rng ${def.rangeCells}`);
   } else if (summonOp) {
@@ -64,4 +70,19 @@ export function abilityDetailParts(id: string, archetype: Archetype, stats: Unit
   if (statusOp && (damageOp || chainOp)) parts.push(`+${statusOp.statusId}`);
 
   return parts;
+}
+
+/** 51f — the derived hit/crit readout for one damage op (see the damageOp
+ *  branch for the vs-neutral-target convention). */
+function pushHitCrit(
+  parts: string[],
+  op: { evadable: boolean; accuracy: number; critable: boolean; critBase: number },
+  stats: UnitStats,
+): void {
+  if (op.evadable) {
+    parts.push(`${Math.round(hitChanceFor(op.accuracy, stats.precision, 0) * 100)}% hit`);
+  }
+  if (op.critable) {
+    parts.push(`${Math.round(critChanceFor(op.critBase, stats.luck) * 100)}% crit`);
+  }
 }

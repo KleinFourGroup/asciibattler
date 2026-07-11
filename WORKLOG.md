@@ -1761,3 +1761,40 @@ Pile · 0", and a one-card janus redraw refreshed the faces to 3/1 on
 the spot; in battle — bits 20–186 · hop 200–414 · banner 530–750 ·
 speed 1020–1260, one aligned 45px-tall row, no overlaps (the enemy
 pane at top 62 stays horizontally clear of the hop chip).
+
+### 51f — the sweep opens: two user findings fixed in-phase (2026-07-11)
+
+The user's pre-51f full play sweep surfaced two cohesion gaps; both
+triaged FIX-IN-PHASE (the shape-locked boundary).
+
+**#1 — miner bits weren't labeled (and worse, could mis-attribute).**
+Root cause: the 51a earner walk read only `this.daemons`, but the
+miner packet's `injectRule` fire lands a plain `BattleRule` in
+`injectedRunRules` — no provenance — so a miner-only tally rendered
+unlabeled, and a Laverna+miner tally would have credited EVERYTHING
+to Laverna. The fix is the honest model: the injected-rule stores
+carry provenance (`InjectedRule = {rule, sourceId}`; the sim compile
+strips to the plain rule at the seam — the World never sees the
+wrapper), and the earner pool unions daemon battle-bits hooks with
+injected `gainBits` rules, deduped by id (two miner installs = ONE
+earner, label holds; Laverna + miner = two, label drops). RewardScreen
+resolves the source through BOTH catalogs with the matching mark
+(◈ daemon / ▤ packet — the grantViews fallback chain). **Run v36→v37**
+(the store-shape change). +4 tests (miner label, cross-pool ambiguity,
+same-source dedupe, the wrapped round-trip).
+
+**#2 — ability rows showed BASE hit/crit beside DERIVED damage.**
+`abilityDetailParts` printed `damageOp.accuracy`/`critBase` raw. Now
+both run the real sim helpers (the damage-number convention): hit =
+`hitChanceFor(accuracy, unit.precision, 0)` — the vs-neutral-target
+read, same stance as damage ignoring the target's defense; crit =
+`critChanceFor(critBase, unit.luck)` — exact, no target term. Both
+inherit the sim's floors/caps for free; the chain branch's nested
+bolt takes the same flag-gated treatment. +1 test, expectations
+computed THROUGH the helpers (the balance-proof rule).
+
+Browser-verified at :5191 (zero console errors): a miner install + a
+forced tally turn rendered "▤ Miner — 4 bits"; a precision-5/luck-3
+mercenary's sword row read "70% hit · 8% crit" vs the authored base
+60%/5% — derived on the card, confirmed against config
+(0.6 + 5×0.02 · 0.05 + 3×0.01).

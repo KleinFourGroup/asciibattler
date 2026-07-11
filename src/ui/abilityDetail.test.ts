@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
 import { rollUnit } from '../sim/archetypes';
 import { abilityDetailParts } from './abilityDetail';
+import { damageOpOf } from '../config/abilities';
+import { hitChanceFor, critChanceFor } from '../sim/stats';
 import type { Archetype } from '../sim/Unit';
 
 /**
@@ -46,6 +48,23 @@ describe('abilityDetailParts (34b — every §29 op kind renders a non-blank det
     expect(partsFor('healer', 'heal_ally').join(' · ')).toContain('heal');
     expect(partsFor('mercenary', 'sword').join(' · ')).toMatch(/\d+ dmg/);
     expect(partsFor('rogue', 'dash').join(' · ')).toContain('dash');
+  });
+
+  it('hit/crit derive from the UNIT (51f — precision/luck fold in, the damage-number convention)', () => {
+    // Expectations run THROUGH the same sim helpers the readout uses
+    // (balance-proof: no hand-computed arithmetic; floors/caps inherited).
+    const op = damageOpOf('sword')!;
+    expect(op.evadable).toBe(true); // pin the shipped profile the test rides on
+    expect(op.critable).toBe(true);
+    const base = rollUnit('mercenary', new RNG(1)).stats;
+    const sharp = { ...base, precision: base.precision + 3, luck: base.luck + 3 };
+    for (const stats of [base, sharp]) {
+      const text = abilityDetailParts('sword', 'mercenary', stats).join(' · ');
+      expect(text).toContain(
+        `${Math.round(hitChanceFor(op.accuracy, stats.precision, 0) * 100)}% hit`,
+      );
+      expect(text).toContain(`${Math.round(critChanceFor(op.critBase, stats.luck) * 100)}% crit`);
+    }
   });
 
   it('no §29 archetype ability renders a blank detail', () => {

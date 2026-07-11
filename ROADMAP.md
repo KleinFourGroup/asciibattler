@@ -323,7 +323,7 @@ item, not a step).
 **The cut (shape-locked 2026-07-11; rationale in worklog §51):**
 
 - [x] 51a — Laverna battle-tally bits become a SOURCE-LABELED declinable reward portion (the settle moves to accept time; merges into the win-turn offer; rides the existing turn-gate seam); **Run v35→v36**; headless-first ✅ 2026-07-11, +6 tests; zero Game/scene changes (the 48b seam cashed in); browser-verified at :5191 (worklog §51a)
-- [ ] 51b — RewardScreen: per-portion Accept + one **Continue ▸** that declines all remaining portions (the existing command, looped; the swap control unchanged)
+- [x] 51b — RewardScreen: per-portion Accept + one **Continue ▸** that declines all remaining portions (the existing command, looped; the swap control unchanged) ✅ 2026-07-11, UI-only; browser-verified at :5191 — all three flows via live DOM clicks (worklog §51b)
 - [ ] 51c — CardListModal grows the selection mode (`selectCount` + confirm + display-order→roster-index mapping; 0 = today's view — merge, not fork)
 - [ ] 51d — PortScreen crew removal adopts the selectable roster view (full cards, select 1, confirm = `payToRemoveUnit`)
 - [ ] 51e — the chrome sizing pass: bits/cache chips to the card-list scale + `.hud-hop`/cache-stack reflow; the sector banner larger still; draw/discard chips gain LIVE counts

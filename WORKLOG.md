@@ -1659,3 +1659,24 @@ pre-turn gate. Zero console errors.
 attribution (incl. the run-domain `turnStart` gainBits NON-earner
 guard), win-turn merge order (forced brigands), the v36 labeled-portion
 round-trip — and `battleBitsDaemonIds` pinned in daemon.test.ts.
+
+### 51b — reward accept/Continue (2026-07-11)
+
+UI-only (the render/ui eyeball policy — no unit tests; the engine
+commands were already pinned at 48b/51a). The per-row Decline retires;
+each row keeps its explicit Accept (the full-cache packet rows keep the
+49c swap control — skipping one is Continue's job now), and one
+**Continue ▸** under the rows loop-declines the remaining offer
+front-to-back (`declineReward index 0` until drained, with a
+shrink-guard break against a silent no-op). Resolving the last portion
+advances the run synchronously, exactly as accepts always have.
+`.reward-continue` joins the shared `.preturn-continue`/
+`.postturn-continue` chrome (the cohesion move); the dead
+`.reward-decline` CSS deleted.
+
+Browser-verified at :5191 via live DOM clicks (zero console errors),
+all three flows: ① accept the Laverna tally then Continue — the rolled
+portion declined, bits pinned at the accepted 67, chain → promotion;
+② a mid-encounter single-row offer — Continue → straight to the next
+turn's gate; ③ a two-row offer, Continue cold — BOTH declined in one
+click, bits unchanged, chain → recruit.

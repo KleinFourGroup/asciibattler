@@ -858,8 +858,9 @@ body {
   flex-shrink: 0;
 }
 
-.reward-accept,
-.reward-decline {
+/* 51b — the per-row Decline retired; Continue ▸ under the rows is the one
+   walk-away control (declines everything left). */
+.reward-accept {
   font-family: var(--font-mono);
   font-size: 12px;
   text-transform: uppercase;
@@ -868,27 +869,12 @@ body {
   background: #000;
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, opacity 0.1s;
-}
-
-.reward-accept {
   border: 1px solid #33ff00; /* TERMINAL_GREEN — the affirmative */
   color: #33ff00;
 }
 
 .reward-accept:hover {
   background: rgba(51, 255, 0, 0.12);
-}
-
-.reward-decline {
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER — the recruit-pass shape */
-  color: #ffb000;
-  opacity: 0.7;
-}
-
-.reward-decline:hover {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  background: rgba(21, 244, 238, 0.08);
-  opacity: 1;
 }
 
 /* 50e — the port screen (spec §Ports; the kickoff shape-lock: ONE sectioned
@@ -2147,8 +2133,11 @@ body {
   justify-content: center;
 }
 
+/* 51b — .reward-continue joins the shared continue-button chrome (the
+   cohesion move: one walk-on shape across the gate screens). */
 .preturn-continue,
-.postturn-continue {
+.postturn-continue,
+.reward-continue {
   font-family: var(--font-mono);
   font-size: 14px;
   letter-spacing: 0.1em;
@@ -2162,7 +2151,8 @@ body {
 }
 
 .preturn-continue:hover,
-.postturn-continue:hover {
+.postturn-continue:hover,
+.reward-continue:hover {
   border-color: #15f4ee;
   background: rgba(21, 244, 238, 0.08);
   color: #15f4ee;

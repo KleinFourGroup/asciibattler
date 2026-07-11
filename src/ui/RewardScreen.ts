@@ -1,11 +1,14 @@
 /**
- * 48c — the reward screen. Shown when a won encounter's reward refs rolled a
- * non-empty offer (the `reward` run phase — battle → rewards → promotion →
- * recruit, the shape-locked ordering). Each portion is a row resolved
- * INDEPENDENTLY (the declinable-per-portion spec lock): Accept settles it
- * (bits through `Run.gainBits`; a daemon joins ownership immediately),
- * Decline discards it. Resolving the last portion advances the run — the
- * follow-on event (promotion:pending / recruit:offered / run:victory) swaps
+ * 48c — the reward screen. Shown when a turn boundary yields a non-empty
+ * offer (the `reward` run phase — battle → rewards → promotion → recruit,
+ * the shape-locked ordering; since 51a a battle-tally portion can raise it
+ * MID-ENCOUNTER too). Each portion is a row: Accept settles it (bits
+ * through `Run.gainBits`; a daemon joins ownership immediately). 51b — the
+ * per-row Decline retired (the §51 click-burden call): one **Continue ▸**
+ * under the rows declines every remaining portion (the engine command,
+ * looped — declinable-per-portion is preserved at the engine level).
+ * Resolving the last portion advances the run — the follow-on event
+ * (promotion:pending / recruit:offered / turn:starting / run:victory) swaps
  * this scene out, so the screen never dismisses itself.
  *
  * Display honesty (the shape-lock rider, worklog §48): bits rows never show
@@ -50,6 +53,16 @@ export class RewardScreen {
     this.portionsEl.className = 'reward-portions';
     panel.appendChild(this.portionsEl);
     this.renderPortions();
+
+    // 51b — the single exit: Continue declines every remaining portion
+    // (accept what you want, walk away in one click instead of N).
+    const cont = document.createElement('button');
+    cont.type = 'button';
+    cont.className = 'reward-continue';
+    cont.textContent = 'Continue ▸';
+    cont.title = 'Decline the remaining rewards and move on';
+    cont.addEventListener('click', () => this.continueRun());
+    panel.appendChild(cont);
 
     this.container = panel;
     this.mount.appendChild(panel);
@@ -142,15 +155,13 @@ export class RewardScreen {
         // 49c — the decline-or-swap control: pick a held packet to drop,
         // then Swap dispatches the accept WITH the slot (the engine
         // enforces the same contract — a swap-less accept would no-op).
+        // 51b: skipping it is Continue's job now (declines ride the exit).
         actions.appendChild(this.swapControl(index));
       } else {
         actions.appendChild(this.actionButton('Accept', 'reward-accept', () =>
-          this.resolve(index, 'accept'),
+          this.accept(index),
         ));
       }
-      actions.appendChild(this.actionButton('Decline', 'reward-decline', () =>
-        this.resolve(index, 'decline'),
-      ));
       row.appendChild(actions);
 
       this.portionsEl!.appendChild(row);
@@ -195,16 +206,27 @@ export class RewardScreen {
     return button;
   }
 
-  private resolve(index: number, action: 'accept' | 'decline'): void {
-    this.audio.play(action === 'accept' ? 'pickup' : 'click');
-    this.dispatcher.dispatch(
-      action === 'accept'
-        ? { kind: 'acceptReward', index }
-        : { kind: 'declineReward', index },
-    );
+  private accept(index: number): void {
+    this.audio.play('pickup');
+    this.dispatcher.dispatch({ kind: 'acceptReward', index });
     // Resolving the LAST portion advances the run synchronously inside the
     // dispatch — Game swaps the scene and `hide()` has already nulled the
     // mount points, making this re-render a no-op on the fading DOM.
     this.renderPortions();
+  }
+
+  /** 51b — decline every remaining portion front-to-back. Resolving the
+   *  last one advances the run synchronously (the scene swap hides us).
+   *  The shrink guard breaks on a silent no-op — never expected while the
+   *  phase is 'reward', belt over suspenders against an infinite loop. */
+  private continueRun(): void {
+    this.audio.play('click');
+    let remaining = this.run.pendingRewards?.length ?? 0;
+    while (this.run.phase === 'reward' && remaining > 0) {
+      this.dispatcher.dispatch({ kind: 'declineReward', index: 0 });
+      const next = this.run.pendingRewards?.length ?? 0;
+      if (next >= remaining) break;
+      remaining = next;
+    }
   }
 }

@@ -1699,7 +1699,7 @@ The index mapping is the load-bearing bit: display order (the
 rosterIndex-keyed commands. New `orderRosterWithIndices` on the PURE
 seam carries `{unit, sourceIndex}` pairs (`orderRoster` now delegates);
 confirm reports SOURCE indices ascending (the redrawCards
-dispatch-order discipline). +5 tests on the mapping (identity under
+dispatch-order discipline). +4 tests on the mapping (identity under
 'recruited', object-identity round-trip under both sorts, permutation
 agreement with `orderRoster`, no mutation).
 
@@ -1708,3 +1708,26 @@ browser at :5191 (roster modal — 10 cards, zero clickable, no footer).
 The picker's LIVE verify deliberately rides 51d's first consumer (the
 50b zero-callers precedent). `CardListButton` untouched — corner
 buttons never pick.
+
+### 51d — the port crew-removal picker (2026-07-11)
+
+The 51c picker's first consumer, and the user's motivating case
+retired: the signature-thin per-unit rows ("rogue · Lv 5" × N
+identical) collapse into ONE launch row (price tag + "Choose… ▸",
+carrying the same team>1 / affordability disables the old buttons
+had), and the modal shows the full cards — stats, abilities, XP — for
+an informed strike. Confirm reports the SOURCE index, which IS the
+rosterIndex (`run.team` passed unsorted; the 51c mapping holds even if
+a sorted display order ever lands). `payToRemoveUnit` unchanged; the
+picker disposes with the screen.
+
+Browser-verified at :5191 via live DOM clicks (zero console errors), a
+force-won walk to a real docked port (10-unit crew — six IDENTICAL
+"mercenary:5" signatures, the exact collision this fixes): picker
+opened with all 10 cards clickable + confirm disabled → first click
+selected + enabled confirm → second click REPLACED the selection (the
+one-card ergonomics) → confirm closed the modal and struck exactly
+sourceIndex 7 (one ranged gone, six mercs intact, 10→9) at exactly
+20 bits (500→480) → Esc with a selection armed cancelled clean
+(team/bits untouched). (Also fixed in this commit: the §51c
+worklog/ROADMAP test-count line said +5; the mapping suite is +4.)

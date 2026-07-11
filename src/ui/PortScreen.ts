@@ -29,14 +29,17 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Run } from '../run/Run';
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
-import { glyphForArchetype } from '../sim/archetypes';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
+import { CardListModal } from './CardListModal';
 import { fadeIn, fadeOutAndRemove } from './fade';
 
 export class PortScreen {
   private container: HTMLDivElement | null = null;
   private bodyEl: HTMLDivElement | null = null;
   private unsubscribes: Array<() => void> = [];
+  // 51d — the crew-removal picker (the 51c selectable roster view). One
+  // instance per screen, disposed on hide (closes a lingering overlay).
+  private readonly removalPicker: CardListModal;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -44,7 +47,9 @@ export class PortScreen {
     private readonly audio: AudioPlayer,
     private readonly run: Run,
     private readonly bus: EventBus<GameEvents>,
-  ) {}
+  ) {
+    this.removalPicker = new CardListModal(mount, audio);
+  }
 
   show(): void {
     this.hide();
@@ -92,6 +97,7 @@ export class PortScreen {
   }
 
   hide(): void {
+    this.removalPicker.dispose();
     for (const off of this.unsubscribes) off();
     this.unsubscribes = [];
     if (this.container) {
@@ -191,32 +197,46 @@ export class PortScreen {
     });
 
     this.bodyEl.appendChild(this.sectionHeading('Crew removal'));
+    // 51d — the signature-thin per-unit rows ("rogue · Lv 5" × N identical)
+    // retire for the 51c roster PICKER: one launch row; the modal shows the
+    // full cards (stats/abilities/XP), select one, confirm strikes it.
     const removalNote = this.emptyLine(
       `Pay ${PRICES.unitRemovalPrice} bits to strike a unit from the roster — its deck card goes with it.`,
     );
     this.bodyEl.appendChild(removalNote);
-    this.run.team.forEach((template, rosterIndex) => {
-      const row = document.createElement('div');
-      row.className = 'port-row';
-      row.appendChild(
-        this.rowBody(
-          `${glyphForArchetype(template.archetype)} ${template.archetype} · Lv ${template.level}`,
-          undefined,
-        ),
-      );
-      const actions = document.createElement('div');
-      actions.className = 'port-row__actions';
-      actions.appendChild(this.priceTag(PRICES.unitRemovalPrice));
-      const button = this.actionButton('Remove', 'port-remove', () =>
-        this.transact('click', { kind: 'payToRemoveUnit', rosterIndex }),
-      );
-      // The engine's silent no-op conditions, surfaced as disables.
-      if (this.run.team.length <= 1 || this.run.bits < PRICES.unitRemovalPrice) {
-        button.disabled = true;
-      }
-      actions.appendChild(button);
-      row.appendChild(actions);
-      this.bodyEl!.appendChild(row);
+    const row = document.createElement('div');
+    row.className = 'port-row';
+    row.appendChild(this.rowBody(`✕ Strike a unit from the crew`, undefined));
+    const actions = document.createElement('div');
+    actions.className = 'port-row__actions';
+    actions.appendChild(this.priceTag(PRICES.unitRemovalPrice));
+    const button = this.actionButton('Choose… ▸', 'port-remove', () => {
+      this.audio.play('click');
+      this.openRemovalPicker();
+    });
+    // The engine's silent no-op conditions, surfaced as disables.
+    if (this.run.team.length <= 1 || this.run.bits < PRICES.unitRemovalPrice) {
+      button.disabled = true;
+    }
+    actions.appendChild(button);
+    row.appendChild(actions);
+    this.bodyEl.appendChild(row);
+  }
+
+  /** 51d — the removal picker: the 51c selectable roster view over the live
+   *  crew (select 1 → confirm = `payToRemoveUnit`). The modal reports the
+   *  SOURCE index, which IS the rosterIndex (`run.team` passed unsorted —
+   *  and the mapping would hold even under a sorted display order). */
+  private openRemovalPicker(): void {
+    this.removalPicker.open('Strike a unit', this.run.team, {
+      selection: {
+        count: 1,
+        confirmText: `Remove for ${PRICES.unitRemovalPrice} bits ▸`,
+        onConfirm: ([rosterIndex]) => {
+          if (rosterIndex === undefined) return;
+          this.transact('click', { kind: 'payToRemoveUnit', rosterIndex });
+        },
+      },
     });
   }
 

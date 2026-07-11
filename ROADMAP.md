@@ -357,15 +357,28 @@ optimum measurable — confirm it exists before sweeping.
 legitimate outcome" precedent applies to the tuning (NOT to the rider, which
 must be explicitly resolved or re-scoped).
 
-**Decision points:** the rider verdict itself; whether packet/daemon prices
-join the difficulty-multiplier seam; whether an economy section lands in
-BALANCE.md's protocol header (a new metric family: bits-per-hop, spend
-mix).
+**Plan mutation (2026-07-11, kickoff):** re-scoped to a MINIMAL DOCS-ONLY
+close — the kickoff surfaced a calibration gap (bot optimum ~30% vs human
+~80%; the battle-layer objective bot is unrealistic), so tuning at that
+optimum would be measurement against fiction; the whole tuning agenda moves
+to the micro/balance-realism interstitial round between Clusters 3 and 4
+(full narrative + the rung ladder: worklog §52).
 
-**Exit criteria:** a BALANCE.md entry with the economy baseline (bits
-earned/spent per hop at the optimum, win-rate + gradient vs the §46b
-numbers); the boss-wall rider explicitly resolved; docs closed (cursor
-flipped, pair archived at the next kickoff per the ritual).
+**Decision points — ✅ DECIDED at kickoff (2026-07-11, worklog §52):** the
+rider verdict = RE-SCOPED to the interstitial's re-anchoring phase (the
+43–55% target was anchored to the fictional bot ceiling); prices on the
+difficulty seam = deferred with the tuning; the economy metric family =
+YES, lands now as a BALANCE.md protocol-header definition.
+
+**The cut (shape-locked 2026-07-11; rationale in worklog §52):**
+
+- [ ] 52a — the BALANCE.md §52 entry: the calibration finding AS the balance-pass result (bot ~30 vs human ~80, gap localization, run-killer cells, no-measurement rationale) + the economy-metric family in the protocol header
+- [ ] 52b — the round close: rider re-scope on record, HANDOFF cursor flip, memory update, the interstitial proposal (the micro round; dev export/load key rides its Rung 0 — menu save/load stays Cluster 6)
+
+**Exit criteria (re-scoped 2026-07-11):** the calibration finding recorded
+in BALANCE.md; the boss-wall rider explicitly re-scoped with the reason on
+record; docs closed (cursor flipped, pair archived at the next kickoff per
+the ritual).
 
 **Scope guards:** NO new content/features (tuning + docs only — findings
 that want features become TODO/next-round items); NO relaxing any standing
@@ -396,4 +409,5 @@ gate (drift gates, determinism) to make numbers fit.
   kickoff); the launch packet list; cache-UI home.
 - 50: port glyph + screen layout; price formulas; removal pricing.
 - 51: ✅ resolved at kickoff — triage boundary set, the rider stays deferred (worklog §51).
-- 52: the boss-wall rider verdict; the BALANCE.md economy-metric family.
+- 52: ✅ resolved at kickoff — rider RE-SCOPED to the interstitial, metric
+  family lands now, tuning agenda moves wholesale (worklog §52).

@@ -1818,3 +1818,105 @@ balance changes (the §52 scope guard held). Exit criteria: ① a
 full-run native playtest over every new surface — the user's sweeps ✓;
 ② every finding fixed or filed ✓ (all fixed; Mercury = the watch
 item); ③ the verdict recorded ✓ (this entry). **Phase 51 CLOSED.**
+
+## Phase 52 — The economy balance pass + close-out
+
+### Kickoff (2026-07-11) — the audit, the curveball, and the re-scope
+
+The kickoff ran long and changed the phase's shape twice. Three acts.
+
+**Act 1 — the code-reality audit (the planned agenda).** The strategy
+layer is further along than the cursor's task list implies. Already
+integrated: `PATH_KINDS` grew `'port'` at 50c, so the scored strategy
+scores port nodes, the `path:port` menu arm exists for free, and
+`sampleWeights` samples `path.port` natively — a fresh `--search`
+explores port-seeking with zero code changes (only
+`output/best-strategy.json` is stale, per §50g). The 50g purchase
+policy (buy-all-affordable, daemons→units→packets, zero draws) and
+the reward accept-all are fixed heuristics outside the strategy. The
+three genuine gaps: packets are outcome-inert (the harness never
+fires one), the optimum vector is stale, and there's no
+earned/spent/spend-mix telemetry. A six-step cut was drafted
+(telemetry · fire arm · search regen · sweeps · rider · close) and
+an expressiveness design sketched at shape-lock: economy decisions
+join the ONE scored vector (a port-purchase scorer REUSING the
+recruit scorer — a port unit is a priced recruit — plus flat
+per-kind value weights, ~6–8 dims; a 3–5-dim fire scorer keyed on
+encounter kind; anchors frozen on the fixed policies; arms kept as
+A/B controls; a top-K perturb-and-reselect refinement stage for the
+search, motivated by §46b's 30.8/22.5 fresh-search shortfall).
+
+**Act 2 — the calibration curveball (user).** The bot optimum reads
+~30% (§46b best-achievable ~31/~24) but the user's native win rate
+is **~80%** — usually WITHOUT recruiting and WITHOUT daemon
+mechanics. By elimination that localizes the gap to the one lever
+left: battle-layer objective handling (the J4 static proclivity draw
+vs the user's closed-loop control). The user's introspection
+sharpened it further — the human edge is TRAFFIC MANAGEMENT, not
+targeting: un-jamming melee stuck behind own ranged (fall back →
+re-sort → re-engage), stopping short of hazard terrain, choke
+holding, the spiral opposite-spawn burn cheese (win by attrition
+without fighting), and focus fire mainly as a cohesion tool
+(catapults the one true assassination target). Notably this is the
+residual the §42–46 round left: unit-level cooperation got fixed;
+composition-level traffic is only fixable from above, i.e. the
+objective layer. Named run-killers (the human's ~20%): spawn-in-range
+alpha strikes (funnel / adjacent-spiral spawns vs ronin+mages —
+reaction-time losses a tick-0 bot is IMMUNE to; expect per-fixture
+sign flips there), artillery company on strafing funnel (catapult
+wave), junction ambush vs heavies.
+
+**The design answer (locked in principle, specced next round):** the
+industry middle ground between linear proclivities and an RTS bot is
+**portfolio-based search over scripted policies** (the Churchill &
+Buro StarCraft-micro lineage), and this project is unusually cheap
+to apply it to because the determinism doctrine IS the prerequisite
+infrastructure (serializable world, forked RNG, headless speed). The
+ladder, each rung gated by measurement: **Rung 0** — a passive
+DEV-only trace recorder (`seed + config hash + tick-stamped command
+log + outcome`; determinism makes every recorded human run a
+replayable fixture and paired-seed bot comparisons the unit of
+evidence) + a ~10-cell battle GAUNTLET from the named killer
+encounters (~3 seeds each, ~1 hour of user time — battle-level, not
+run-level, so no 15-min-run grind; the user's ~80% self-report
+stands as the provisional re-anchor). **Rung 1** — five
+state-reactive traffic scripts (unjam · terrain-edge hold · choke
+hold · attrition stall · cohesion focus), event-driven, no rollouts.
+**Rung 2** (gated on Rung 1's residual gap) — portfolio greedy
+search: clone via snapshot, roll each script forward ~10–20s of game
+time, score by pool differential, commit the winner — with the
+CLAIRVOYANCE GUARD (rollouts fork a divergent RNG so the bot
+predicts distributionally, never foresees actual rolls). Anchors
+(greedy/random) keep the old objective handling forever. Non-goals:
+RL/imitation, raw action-space search.
+
+**Act 3 — the promotion (user call).** This is more than a phase;
+it's a round — the 42→46 shape exactly (playtest symptom →
+instrument audit → fix → re-baseline), and the standing post-cluster
+audit convention's proposal, arrived early. So: **§52 re-scopes to a
+minimal docs-only close** (no throwaway measurement — a heavy search
+against the about-to-be-replaced bot would be dead compute) and the
+whole tuning agenda (bits curve, prices, `bitsMultiplier`, packet
+drop weights, `path.port`, fire arm, economy expressiveness) moves
+into **the micro/balance-realism interstitial round** between
+Clusters 3 and 4. The rider resolves by RE-SCOPE: the 43–55%
+boss-wall target was anchored to a bot ceiling now known fictional —
+the verdict moves to the interstitial's re-anchoring phase. The
+2026-07-09 "save/load interstitial" fact CORRECTS to: menu-grade
+save/load is Cluster 6; what was wanted is a dev export/load key,
+which rides Rung 0 nearly free (RunSnapshot already round-trips by
+contract — the dev key is dump/restore JSON on a keybinding, beside
+the recorder's replay path). One interstitial, not two.
+
+**Shape-lock decisions (user, 2026-07-11):** minimal close CONFIRMED
+· the interstitial promotion CONFIRMED · fire arm + expressive
+economy strategy endorsed but DEFERRED to the interstitial · the
+economy-metric family lands NOW as a BALANCE.md protocol-header
+definition (cheap, durable, no measurement) · prices-on-difficulty-
+seam defers with the tuning.
+
+**The cut:** 52a — the BALANCE.md §52 entry (the calibration finding
+AS the balance-pass result + the metric-family header) · 52b — the
+round close (rider re-scope on record, ROADMAP/HANDOFF cursor flip,
+memory update, the interstitial proposal). Docs-only; no code, no
+measurement, no snapshot change.

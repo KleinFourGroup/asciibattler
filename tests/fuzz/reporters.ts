@@ -32,6 +32,10 @@ const CSV_HEADER = [
   'recruitedMelee',
   'recruitedRanged',
   'hangLayout',
+  // 50g — appended LAST (after the sometimes-empty hangLayout) so every
+  // pre-existing column keeps its position for positional consumers.
+  'portPurchases',
+  'finalBits',
 ].join(',');
 
 export function renderSummaryCsv(results: readonly RunResult[]): string {
@@ -64,6 +68,8 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
         meleeRecruits,
         rangedRecruits,
         hangLayout,
+        r.portPurchases,
+        r.finalBits,
       ].join(','),
     );
   }
@@ -188,6 +194,7 @@ export function renderFailureTrace(result: RunResult): string {
   lines.push(`- **Final hop reached:** ${result.finalHopReached}`);
   lines.push(`- **Total ticks:** ${result.totalTicks}`);
   lines.push(`- **Final team size:** ${result.finalTeamSize}`);
+  lines.push(`- **Port purchases / final bits:** ${result.portPurchases} / ${result.finalBits}`);
   lines.push('');
   lines.push('## Battles');
   lines.push('');

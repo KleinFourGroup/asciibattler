@@ -92,6 +92,13 @@ export interface RunResult {
   finalHopReached: number;
   totalTicks: number;
   finalTeamSize: number;
+  /** 50g — purchases the port buy policy made across the run (all three
+   *  buy kinds). The arm's non-vacuous proof + the §52 price-tuning
+   *  pre-instrumentation (with `finalBits`, the spend-volume read). */
+  portPurchases: number;
+  /** 50g — the run's closing bits balance (leftover liquidity: high values
+   *  with low `portPurchases` read as "prices out of reach"). */
+  finalBits: number;
   battles: BattleResult[];
   recruits: RecruitChoice[];
   /**
@@ -390,19 +397,20 @@ export function runOne(
 
   let hops = 0;
   let totalTicks = 0;
+  let portPurchases = 0; // 50g — the buy policy's transaction count
 
   while (true) {
     if (run.phase === 'defeat' || run.phase === 'complete') break;
 
     if (hops > maxNodeHops) {
-      return aborted(seed, strategy.name, run, startingDaemonId, battles, recruits, totalTicks, telemetry);
+      return aborted(seed, strategy.name, run, startingDaemonId, battles, recruits, totalTicks, portPurchases, telemetry);
     }
 
     switch (run.phase) {
       case 'map': {
         const frontier = computeFrontier(run);
         if (frontier.length === 0) {
-          return aborted(seed, strategy.name, run, startingDaemonId, battles, recruits, totalTicks, telemetry);
+          return aborted(seed, strategy.name, run, startingDaemonId, battles, recruits, totalTicks, portPurchases, telemetry);
         }
         const nodeId = strategy.pickNextNode(frontier, run, strategyRng);
         run.dispatch({ kind: 'enterNode', nodeId });
@@ -561,6 +569,7 @@ export function runOne(
             battles,
             recruits,
             totalTicks,
+            portPurchases,
             telemetry,
           );
         }
@@ -585,11 +594,41 @@ export function runOne(
         break;
       }
       case 'port': {
-        // 50c: headless policy — undock immediately (nothing to buy until
-        // §50d rolls stock + adds the transaction commands; a purchase-
-        // policy arm upgrades this then, the reward-case trajectory).
-        // Deterministic, zero draws. The dock consumed a hop in the 'map'
-        // case above, so the abort guard still bounds the walk.
+        // 50g: the purchase policy — the reward accept-all analog. BUYS
+        // ONLY, in outcome-coupling order: daemons (idols change battles)
+        // → units (roster growth) → packets IF the cache has room (the
+        // 49c accept-if-room lock; a swap would need a value model, and
+        // the harness never fires packets anyway — the future fire-policy
+        // arm's business). Sell/remove stay unexercised here for the same
+        // value-model reason (pinned by the Run suite + the 50e
+        // browser-verify). Slot order within each kind; skip what's
+        // unaffordable, never wait for it. Deterministic, ZERO policy
+        // draws — every price is serialized state; the pre-dispatch
+        // guards mirror the handlers' no-op conditions exactly, so every
+        // issued command lands (portPurchases counts real transactions).
+        // Then undock — the dock consumed a hop in the 'map' case above,
+        // so the abort guard still bounds the walk.
+        const stock = run.portStock;
+        if (stock) {
+          stock.daemons.forEach((slot, index) => {
+            if (!slot.sold && run.bits >= slot.price) {
+              run.dispatch({ kind: 'buyPortDaemon', index });
+              portPurchases++;
+            }
+          });
+          stock.units.forEach((slot, index) => {
+            if (!slot.sold && run.bits >= slot.price) {
+              run.dispatch({ kind: 'buyPortUnit', index });
+              portPurchases++;
+            }
+          });
+          stock.packets.forEach((slot, index) => {
+            if (!slot.sold && run.bits >= slot.price && run.cacheHasRoom) {
+              run.dispatch({ kind: 'buyPortPacket', index });
+              portPurchases++;
+            }
+          });
+        }
         run.dispatch({ kind: 'leavePort' });
         break;
       }
@@ -634,6 +673,7 @@ export function runOne(
     battles,
     recruits,
     totalTicks,
+    portPurchases,
     telemetry,
   );
 }
@@ -672,6 +712,7 @@ function finalize(
   battles: BattleResult[],
   recruits: RecruitChoice[],
   totalTicks: number,
+  portPurchases: number,
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   // Fold in the recruit log + final roster composition (player-side, already
@@ -690,6 +731,8 @@ function finalize(
     finalHopReached: run.currentHop,
     totalTicks,
     finalTeamSize: run.team.length,
+    portPurchases,
+    finalBits: run.bits,
     battles,
     recruits,
     ...(finishedTelemetry !== undefined ? { telemetry: finishedTelemetry } : {}),
@@ -704,6 +747,7 @@ function aborted(
   battles: BattleResult[],
   recruits: RecruitChoice[],
   totalTicks: number,
+  portPurchases: number,
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   return finalize(
@@ -715,6 +759,7 @@ function aborted(
     battles,
     recruits,
     totalTicks,
+    portPurchases,
     telemetry,
   );
 }

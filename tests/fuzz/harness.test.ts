@@ -218,6 +218,8 @@ describe('fuzz reporters', () => {
       finalHopReached,
       totalTicks: 0,
       finalTeamSize: 5,
+      portPurchases: 0,
+      finalBits: 0,
       battles,
       recruits: [],
     });
@@ -274,6 +276,8 @@ describe('fuzz reporters', () => {
         finalHopReached: 2,
         totalTicks: 0,
         finalTeamSize: 5,
+        portPurchases: 0,
+        finalBits: 0,
         recruits: [],
         battles: [
           // junctionAmbush: 1 of 4 player wins (brutal), outnumbered 9-vs-5.
@@ -352,6 +356,8 @@ describe('fuzz reporters', () => {
         finalHopReached: 2,
         totalTicks: 0,
         finalTeamSize: 5,
+        portPurchases: 0,
+        finalBits: 0,
         battles: [eb(1, 'enc1', 'player'), eb(1, 'enc1', 'enemy'), eb(2, 'enc2', 'player')],
         recruits: [],
         telemetry: tel([
@@ -368,6 +374,8 @@ describe('fuzz reporters', () => {
         finalHopReached: 1,
         totalTicks: 0,
         finalTeamSize: 5,
+        portPurchases: 0,
+        finalBits: 0,
         battles: [eb(1, 'enc1', 'player')],
         recruits: [],
         telemetry: tel([{ hop: 1, encounterId: 'enc1', player: 1, enemy: 7 }]),
@@ -418,6 +426,8 @@ describe('fuzz reporters', () => {
         finalHopReached: 1,
         totalTicks: 0,
         finalTeamSize: 5,
+        portPurchases: 0,
+        finalBits: 0,
         battles: [eb('enc1')],
         recruits: [],
       },

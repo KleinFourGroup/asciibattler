@@ -63,6 +63,7 @@ src/
     economy.ts               #   47e: the economy substrate (startingBits) — config/economy.json; grows with Cluster 3
     rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon entries) + the {table,trigger} encounter-ref schema + the daemon/packet-ref boot asserts (49a activated the packet sibling) — config/rewards.json
     packets.ts               #   49a: the packet catalog (one effect op per packet: applyBuff|grantRedraws|injectRule|healPool) — the EXPORTED (op×target×context) matrix (PACKET_OP_TARGET/PACKET_OP_CONTEXTS: parse guard + the 49e engine + the 49g editor read ONE source; midBattle/tile = dormant vocabulary no op admits) + per-op duration restrictions + assertPacketStatusRefs — config/packets.json
+    prices.ts                #   50a/f: the port price book — PricesSchema + assertPriceRefs (draftable coverage + packet/daemon key refs) + the PURE *For price cores (unitPriceFor/packetPriceFor/daemonPriceFor/sellPriceFor; PRICES-bound wrappers delegate — one formula for the game AND the 50f editor preview) — config/prices.json
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
@@ -276,6 +277,7 @@ src/
     MapScene.ts              #   DOM-only, wraps MapScreen
     RecruitScene.ts          #   DOM-only, wraps RecruitScreen
     RewardScene.ts           #   48c: DOM-only, wraps RewardScreen (no payload — the screen reads the live offer off ctx.run)
+    PortScene.ts             #   50e: DOM-only, wraps PortScreen (RewardScene's shape — no payload, reads the live run.portStock); swapped in off port:entered
     PromotionScene.ts        #   E4.4: DOM-only level-up summary; M1: pops at each turn boundary (mid-encounter, or before recruit on the final turn); 48b: the reward gate interposes BEFORE it on a won final turn
     PreTurnScene.ts          #   H4b: DOM-only, wraps PreTurnScreen (the turn-intro gate)
     PostTurnScene.ts         #   H4b: DOM-only, wraps PostTurnScreen (the turn-outcome gate)
@@ -302,6 +304,7 @@ src/
     rosterOrder.ts           # R1: pure card-ordering seam (orderRoster: recruited[default]/archetype/level, stable on recruitment order) — only recruited wired to the UI, others switchable
     PromotionScreen.ts       # E4.4: per-unit level-up cards (P1: shared UnitCard, promotion skin); M2: two-phase reveal (all cards pop in, then gains tick green card-by-card + +N chip; click-anywhere skips) — the screen owns the timeline, driving the card via UnitCard's levelValue/statRows handles
     RewardScreen.ts          # 48c: the reward offer — one row per portion, Accept (pickup blip) / Decline per row; bits rows render run.effectiveBits (the settle math, never the base) and re-derive after every resolution; 49c: packet rows (▤ + def-resolved name/description) + a live `▤ cache n/size` line while a packet portion pends + the full-cache SWAP picker (a select over held slots replacing Accept)
+    PortScreen.ts            # 50e: the docked-port screen — five sections in one scroll (Units-for-hire on recruit-skin UnitCards with price footers / Packets / Daemons / Sell-packets / Crew-removal) + a viewport-PINNED Leave; full re-render after every own dispatch + off run:bitsChanged/cacheChanged (the cache modal stays usable while docked); prices render the serialized slot price / the shared book helpers (display honesty); unaffordable = disabled, sold = SOLD badge (50d flag-not-splice), removal disabled at last-unit
     BitsOverlay.ts           # 48d: the persistent top-left bits chip — the FIRST page-lifetime UI element (Game-owned, survives scene swaps); paints from run.bits + run:bitsChanged, hides at game-over, re-shows on run:started
     CacheOverlay.ts          # 49f: the persistent cache chip (▤ n/6, stacked below the bits chip) + the open-anywhere cache modal — the SECOND page-lifetime element (the gotcha #116 lifecycle verbatim); Discard always, Fire by the phase-derived context (mirrors the 49e engine derivation), overclock's inline roster picker, the forced-keep shrink flow (overflow force-opens discard-only, un-dismissable until resolved)
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
@@ -334,6 +337,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   economy.json               # 47e: startingBits — the economy substrate; grows with Cluster 3
   rewards.json               # 48a: the weighted reward tables (bits{min,max}|packet|daemon entries); 49g: packet entries LIVE across all four tables — every launch packet reachable
   packets.json               # 49a→g: the packet catalog — the locked launch 7 (patch/hype/shield/reroute/venom/overclock/miner), one effect op each
+  prices.json                # 50a→f: the port price book — unit base×levelGrowth^(lv−1)±jitter, packet/daemon byId-over-default, sellFraction, unitRemovalPrice, portStock counts; launch catalog user-authored at 50f (§52 tunes)
   nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
@@ -361,6 +365,7 @@ tools/                       # Dev-only; not bundled into dist/ (index page at /
   encounter-editor/          # V2: encounters.json editor (visual wave-grammar builder + live resolution preview; 48e adds the rewards-ref panel) at /tools/encounter-editor/
   reward-editor/             # 48e: rewards.json editor (weighted tables + draw-% preview + referenced-by pane; 49g: packet entries = a catalog select + the packet-ref assert) at /tools/reward-editor/
   packet-editor/             # 49g: packets.json editor (matrix-driven per-op sub-forms, derived target, constrained contexts, fire summary + dropped-by pane; byte-faithful formatPacketsJson) at /tools/packet-editor/
+  price-editor/              # 50f: prices.json editor (one document, no tabs — unit/packet/daemon books + economy knobs + stock counts; resolved-price preview through the *For price cores; byte-faithful formatPricesJson) at /tools/price-editor/
   sweep-gui/                 # command-builder GUI for the fuzz balance harness at /tools/sweep-gui/
   mapgen-prototype/          # M6: procedural node-map generator sandbox at /tools/mapgen-prototype/
 

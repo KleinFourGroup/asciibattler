@@ -1489,3 +1489,53 @@ guard's player-favoring half). Numbers launch-rough; §52 tunes.
 Catalog entered by direct edit matching the formatter byte-form (the
 48a trap, known); the pinned fidelity + book tests re-run green
 before commit.
+
+### 50g — the exit sweep (2026-07-10)
+
+**The purchase-policy arm** (the §52 charter's "from §50" expectation)
+lands as the DEFAULT port behavior — the reward accept-all analog,
+inline in the harness's `case 'port'`: BUYS ONLY, in outcome-coupling
+order (daemons → units → packets-if-cache-room), skip-don't-wait on
+affordability, zero policy draws (every price is serialized state;
+the pre-dispatch guards mirror the handlers' no-op conditions, so
+every issued command lands). Sell / remove stay unexercised — both
+need a value model the harness doesn't have (selling at ⌊×0.5⌋ is
+never rational without one), and both are pinned by the Run suite +
+the 50e browser walk. `RunResult` gains `portPurchases` + `finalBits`
+(the §52 pre-instrumentation: buy volume + leftover liquidity),
+appended LAST in summary.csv so every pre-existing column keeps its
+position. The non-vacuous proof is pinned (harnessPort.test.ts, the
+47b lesson): a scanned-and-pinned seed docks and buys; determinism
+asserted; a no-buy run reports coherent zeros.
+
+**An early price-tuning signal from the pin scan** (12 seeds × short +
+full): purchases are RARE — most greedy walks never dock (ports are
+optional detours and the bot's path scoring carries `port: 0` weight),
+and runs bank unspent bits (one full run ended 137 bits / 0 buys).
+§52's optimum probe should sweep the `path.port` weight alongside
+prices, or the price read will be starved of transactions.
+
+**The §49 shrink-flow carry-in, called**: NO port item ships to
+trigger it this phase (the 50g scope guard — an exit sweep adds no
+mechanics; 50f's catalog was prices only). The CacheOverlay forced-
+keep flow remains shipped-but-untriggerable content-wise (nothing
+shrinks the folded cache size mid-run); the carry-in stands, routed
+to §51's cohesion triage / §52's content look.
+
+**The re-baseline read** (BALANCE.md §50g — the canonical numbers):
+two 120-run anchors, **greedy 12.5% / random 10.8%, 0 hangs** — vs
+48g's 12.5/14.2, greedy exact and random inside the band; the 50g
+CSVs supersede 48g as the comparison baseline. The fixed-vector probe
+deliberately waits for §52 (the stale `best-strategy.json` missing
+the `port` weight — the 50c carry). At scale the pin-scan signal
+held: ~24% of runs buy, ~0.4 purchases/run, ~50 bits die banked —
+§52's charter grows the `path.port` weight sweep explicitly.
+
+**Exit criteria, checked**: ① the full economy loop user-confirmed
+natively — the 50e playtest ("it's working amazingly"). ② every
+sector map rolls ≥1 port — the 50c ≥1-guarantee property test ×200
+seeds. ③ roster/deck/effects coherent through buys + removals — the
+50b chokepoint tests + snapshot-roundtrip alignment asserts (gotcha
+#118 now guards re-litigation). ④ fuzz drives through ports green
+with new baselines pinned — the purchase arm default-on, 215
+fuzz:smoke + 2×120 anchor batches, 0 hangs. **Phase 50 CLOSED.**

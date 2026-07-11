@@ -280,7 +280,7 @@ removal = flat config price.
 - [x] 50d — the stock + transaction engine (headless): stock rolled on entry from dedicated streams (owned-daemon exclusion at roll), serialized; buy unit (recruit-append reuse) / buy packet (cache-room guard) / buy daemon / sell packet / pay-to-remove commands; **Run v34→v35** ✅ 2026-07-10, +9 tests; `appendRosterUnit` extracted (the chokepoint pair); sell = raw `addBits` (the mint guard pinned vs moneta)
 - [x] 50e — PortScreen/PortScene (the sectioned single screen) + Game wiring + purchase SFX; browser-verify ✅ 2026-07-10 — all five surfaces exercised via live DOM clicks at :5191, exact arithmetic incl. the raw-refund mint guard; the 50c interim stub retired (worklog §50)
 - [x] 50f — the port editor (prices) + `formatPricesJson` + the `/__save-config` allowlist + the `/tools/` index; the launch price catalog authored with the editor in hand (the 48f precedent) ✅ 2026-07-10, +3 tests; editor leg `b3a27e7` browser-proven (no-edit save git-clean); catalog: user-authored packet overrides + curve 1.25→1.05 + the daemon spread (default 35, four overrides) — rationale in worklog §50f
-- [ ] 50g — exit sweep: full fuzz + re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip
+- [x] 50g — exit sweep: full fuzz + re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip ✅ 2026-07-10 — the purchase-policy arm (default-on) + portPurchases/finalBits columns; anchors 12.5/10.8 STABLE, 0 hangs (BALANCE §50g, supersedes 48g); gotcha #118; all four exit criteria met — **Phase 50 CLOSED** (worklog §50g; fixed-vector probe + path.port sweep → §52)
 
 **Exit criteria:** a full economy loop in one run, user-confirmed natively:
 earn bits → dock at a port → buy a packet + a daemon + a unit, sell a

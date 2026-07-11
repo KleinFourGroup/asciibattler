@@ -543,3 +543,34 @@ deltas. The pre-X H7c→O log lives at
     BY DESIGN — §52's cluster-closing pass owns the tuning, with the fire-policy fuzz arm
     as its instrument if packet POWER (not just drop rate) needs measuring; the boss-wall
     watch item stays FILED there too.
+
+- **2026-07-10 — §50g the Ports-phase closer re-baseline: STABLE — ports + the purchase
+  policy are outcome-neutral at anchor level, and the spend surface is BARELY COUPLED in
+  bot play (the §52 headline).** §50 is an engine round twice over (Run v33→v35: the port
+  node kind regenerates map-kind assignments on some paths — battles → ports — and two new
+  port streams append; the 50c 200-seed oracle proved structure/rest/elite/boss placement
+  byte-identical, so only kind + streams moved) AND the harness gains its first SPEND
+  behavior (the 50g purchase policy: buys daemons → units → packets-if-room, default-on,
+  the reward accept-all analog). The 48g CSVs were stale for comparison since 50c; these
+  batches supersede them as the comparison baseline. Method: two 120-run anchors
+  (`tests/fuzz/output/50g-{greedy,random}`); the FIXED-VECTOR probe is deliberately absent
+  — the §41 winning vector's weights file predates the `port` path-weight key and fails
+  `loadWeightsFile` (the 50c carry), so the probe re-runs at §52 after `--search`
+  regenerates it. New summary.csv columns (appended last): `portPurchases` + `finalBits`.
+  - **greedy 12.5% / pure-random 10.8%, 0 hangs, capped draws 25 / 14 per 120** — vs the
+    48g anchors 12.5 / 14.2: greedy EXACT, random −3.4pt (inside the ±~3.5pt band).
+    Ports replacing some battles + buys changing rosters did not move the anchor ceiling.
+  - **The purchase read (the §52 pre-instrumentation earning its keep): only ~24% of runs
+    ever buy (29/120 greedy, 28/120 random), ~0.4 purchases/run, and runs die holding
+    ~50 bits on average.** Two compounding causes, both named for §52: the scored/greedy
+    path weighting carries `port: 0` (ports are optional detours the bots don't seek),
+    and prices sit high relative to mid-run bank (~1 daemon ≈ 3–4 normal-win bounties).
+    §52 must sweep `path.port` alongside prices + `bitsMultiplier`, or the price read is
+    transaction-starved.
+  - Per-daemon splits (n=10–25/bucket) remain seat-level noise — no read taken (the 48g
+    discipline); the daemon-price spread (50f) gets its verdict from §52's forced arms if
+    sought.
+  - **VERDICT: re-baseline ACCEPTED, no config change.** Prices ship launch-rough BY
+    DESIGN (50a/f); the boss-wall watch item (held-out 59%, §46b) stays FILED for §52,
+    which now owns: the fixed-vector regeneration + probe, the `path.port` weight sweep,
+    prices + `bitsMultiplier` at the optimum, and the packet fire-policy arm decision.

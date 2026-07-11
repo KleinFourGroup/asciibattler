@@ -1731,3 +1731,33 @@ sourceIndex 7 (one ranged gone, six mercs intact, 10→9) at exactly
 20 bits (500→480) → Esc with a selection armed cancelled clean
 (team/bits untouched). (Also fixed in this commit: the §51c
 worklog/ROADMAP test-count line said +5; the mapping suite is +4.)
+
+### 51e — the chrome sizing pass (2026-07-11)
+
+The R1 1.5× user call finally reaches the persistent chips: bits +
+cache go to the card-list-button scale (14→18px, padding 10×18,
+min-width 128, labels 11→13px), and the two pixel pins the kickoff
+audit flagged move with them — the cache chip re-stacks at top 76
+(was 58) and the in-battle `.hud-hop` re-pins at left 200 (was 148),
+itself raised to 18px so the top-left chip row reads as one scale.
+The sector banner (`.map-banner`) steps ABOVE the chip scale to 22px /
+12×32 (the "even bigger" user call); `.map-screen`'s banner-clearing
+padding-top bumps 56→88 with it.
+
+The pile chips: the audit's finding stood — sizing was ALREADY shared
+(one `.card-list-button` class) — so the change is the LIVE counts:
+`CardListButton` gains an optional `getCount` thunk + `refresh()`
+("Draw Pile · 12"; no thunk = the pre-51e face exactly), and
+PreTurnScreen refreshes the faces where its pile copies already swap
+(`updateHand`). Cohesion rider: the ROSTER chips (gate + map) take the
+same badge — three corner chips, one vocabulary.
+
+Geometry rect-verified at :5191 (zero console errors; visual FEEL is
+the user's native call, per the browser-verify doctrine): map screen —
+bits 20→65 / cache 76→122 (11px stack gap), banner 533–747 clear of
+both corners, bottom 75 under the 88px pad; roster chip bottom aligns
+the bits chip (65); pre-turn — "Roster · 10 / Draw Pile · 4 / Discard
+Pile · 0", and a one-card janus redraw refreshed the faces to 3/1 on
+the spot; in battle — bits 20–186 · hop 200–414 · banner 530–750 ·
+speed 1020–1260, one aligned 45px-tall row, no overlaps (the enemy
+pane at top 62 stays horizontally clear of the hop chip).

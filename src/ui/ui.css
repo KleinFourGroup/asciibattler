@@ -292,8 +292,9 @@ body {
   background: #000; /* opaque — no battle-canvas bleed */
   /* T2 — clear the fixed top-center sector banner so hop 0 (the root, near the
      board top at the pre-root start) doesn't tuck under it. The fixed banner +
-     roster button are viewport-anchored, so this just pads the scrollable board. */
-  padding-top: 56px;
+     roster button are viewport-anchored, so this just pads the scrollable board.
+     51e: bumped with the banner's larger scale (measured ~74px tall). */
+  padding-top: 88px;
   box-sizing: border-box;
 }
 
@@ -314,12 +315,12 @@ body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
-  padding: 6px 20px;
+  padding: 12px 32px; /* 51e — the sector title headlines the screen */
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid #ffb000; /* TERMINAL_AMBER */
   color: #ffb000;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 22px; /* 51e — a step above the chip scale (user call) */
   letter-spacing: 0.15em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1278,15 +1279,15 @@ body {
 .hud-hop {
   position: absolute;
   top: 20px;
-  left: 148px;
+  left: 200px; /* 51e — re-pinned beside the enlarged bits chip (measured) */
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 18px; /* 51e — the chip row stays one scale */
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #ffb000; /* TERMINAL_AMBER */
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid #ffb000;
-  padding: 4px 10px;
+  padding: 10px 18px;
 }
 
 /* 48d — the persistent bits chip: the game's first PAGE-LIFETIME UI element
@@ -1304,16 +1305,18 @@ body {
   z-index: 15;
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 8px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  /* 51e — raised to the card-list-button scale (the R1 1.5× user call
+     finally applied here too; the cache chip + .hud-hop pins move with it). */
+  font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #ffb000; /* TERMINAL_AMBER */
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid #ffb000;
-  padding: 4px 10px;
-  min-width: 96px;
+  padding: 10px 18px;
+  min-width: 128px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -1322,7 +1325,7 @@ body {
 }
 
 .bits-overlay__label {
-  font-size: 11px;
+  font-size: 13px; /* 51e — scaled with the chip */
   opacity: 0.85;
 }
 
@@ -1344,21 +1347,21 @@ body {
    .is-over flags the forced-keep shrink state (held > derived capacity). */
 .cache-overlay {
   position: fixed;
-  top: 58px;
+  top: 76px; /* 51e — stacks under the enlarged bits chip (measured) */
   left: 20px;
   z-index: 15;
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 8px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 18px; /* 51e — the card-list-button scale, with the bits chip */
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #ffb000; /* TERMINAL_AMBER */
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid #ffb000;
-  padding: 4px 10px;
-  min-width: 96px;
+  padding: 10px 18px;
+  min-width: 128px;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
 }
@@ -1373,7 +1376,7 @@ body {
 }
 
 .cache-overlay__label {
-  font-size: 11px;
+  font-size: 13px; /* 51e — scaled with the chip */
   opacity: 0.85;
 }
 

@@ -192,6 +192,8 @@ export class PreTurnScreen {
     this.empowerMagnitudes = payload.empowerMagnitudes;
     this.selected.clear();
     this.refreshHand();
+    // 51e — the pile counts on the chip faces moved with the cards.
+    for (const button of this.cardListButtons) button.refresh();
   }
 
   /**
@@ -264,12 +266,15 @@ export class PreTurnScreen {
     // this screen's vertical scroll for a tall hand): the roster view top-right,
     // and the draw/discard pile views in the bottom corners. The pile buttons
     // read their stored copies at click time (refreshed by `updateHand`).
+    // 51e — the face labels carry live counts ("Draw Pile · 12"), re-read
+    // via refresh() wherever the stored pile copies swap (updateHand).
     this.cardListButtons = [
       new CardListButton(this.mount, this.audio, {
         text: 'Roster',
         title: 'Your Roster',
         position: 'roster',
         getUnits: () => this.roster,
+        getCount: () => this.roster.length,
         emptyText: 'No units in your roster.',
       }),
       new CardListButton(this.mount, this.audio, {
@@ -277,6 +282,7 @@ export class PreTurnScreen {
         title: 'Draw Pile',
         position: 'draw',
         getUnits: () => this.drawPile,
+        getCount: () => this.drawPile.length,
         emptyText: 'The draw pile is empty.',
       }),
       new CardListButton(this.mount, this.audio, {
@@ -284,6 +290,7 @@ export class PreTurnScreen {
         title: 'Discard Pile',
         position: 'discard',
         getUnits: () => this.discardPile,
+        getCount: () => this.discardPile.length,
         emptyText: 'The discard pile is empty.',
       }),
     ];

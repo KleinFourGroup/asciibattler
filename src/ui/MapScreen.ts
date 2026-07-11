@@ -128,6 +128,9 @@ export class MapScreen {
       title: 'Your Roster',
       position: 'roster',
       getUnits: () => roster,
+      // 51e — the count badge ("Roster · 10"); the screen re-renders on
+      // every show, so no refresh wiring is needed here.
+      getCount: () => roster.length,
       emptyText: 'No units in your roster.',
     });
     container.appendChild(this.rosterButton.el);

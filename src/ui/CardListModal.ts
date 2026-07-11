@@ -226,6 +226,10 @@ export interface CardListButtonOptions {
   readonly getUnits: () => readonly UnitTemplate[];
   readonly emptyText?: string;
   readonly order?: RosterOrder;
+  /** 51e — the live count badge: the face renders "text · N", read at
+   *  mount and on every `refresh()` (a redraw moves cards between piles —
+   *  the host calls refresh where it refreshes its stored copies). */
+  readonly getCount?: () => number;
 }
 
 /**
@@ -236,13 +240,15 @@ export interface CardListButtonOptions {
 export class CardListButton {
   readonly el: HTMLButtonElement;
   private readonly modal: CardListModal;
+  private readonly opts: CardListButtonOptions;
 
   constructor(mount: HTMLElement, audio: AudioPlayer, opts: CardListButtonOptions) {
+    this.opts = opts;
     this.modal = new CardListModal(mount, audio);
     this.el = document.createElement('button');
     this.el.type = 'button';
     this.el.className = `card-list-button card-list-button--${opts.position}`;
-    this.el.textContent = opts.text;
+    this.refresh();
     this.el.addEventListener('click', () => {
       audio.play('click');
       // Spread only the present options (exactOptionalPropertyTypes — no
@@ -252,6 +258,13 @@ export class CardListButton {
         ...(opts.emptyText !== undefined ? { emptyText: opts.emptyText } : {}),
       });
     });
+  }
+
+  /** 51e — re-read the count thunk into the face label ("Draw Pile · 12").
+   *  No thunk → the plain text, exactly the pre-51e face. */
+  refresh(): void {
+    const badge = this.opts.getCount !== undefined ? ` · ${this.opts.getCount()}` : '';
+    this.el.textContent = `${this.opts.text}${badge}`;
   }
 
   dispose(): void {

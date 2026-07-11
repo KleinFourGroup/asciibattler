@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { orderRoster, DEFAULT_ROSTER_ORDER } from './rosterOrder';
+import { orderRoster, orderRosterWithIndices, DEFAULT_ROSTER_ORDER } from './rosterOrder';
 import { scaledUnit, ALL_ARCHETYPES } from '../sim/archetypes';
 import type { UnitTemplate } from '../sim/Unit';
 
@@ -79,5 +79,44 @@ describe('orderRoster', () => {
     expect(orderRoster([], 'archetype')).toEqual([]);
     const one = [scaledUnit('rogue', 3)];
     expect(orderRoster(one, 'level')).toEqual(one);
+  });
+});
+
+describe('orderRosterWithIndices (51c — the selection mapping)', () => {
+  it("'recruited' maps each unit to its own position", () => {
+    const roster = sampleRoster();
+    const out = orderRosterWithIndices(roster);
+    expect(out.map((e) => e.sourceIndex)).toEqual([0, 1, 2, 3, 4]);
+    expect(out.map((e) => e.unit)).toEqual(roster);
+  });
+
+  it('a sorted order carries every unit back to its SOURCE index', () => {
+    const roster = sampleRoster();
+    for (const order of ['archetype', 'level'] as const) {
+      const out = orderRosterWithIndices(roster, order);
+      // Same units, permuted — and each entry's sourceIndex points at the
+      // identical object in the input (the mapping a picker confirms with).
+      expect(out).toHaveLength(roster.length);
+      for (const entry of out) {
+        expect(roster[entry.sourceIndex]).toBe(entry.unit);
+      }
+      expect(new Set(out.map((e) => e.sourceIndex)).size).toBe(roster.length);
+    }
+  });
+
+  it('agrees with orderRoster (the undecorated view is the same permutation)', () => {
+    const roster = sampleRoster();
+    for (const order of ['recruited', 'archetype', 'level'] as const) {
+      expect(orderRosterWithIndices(roster, order).map((e) => e.unit)).toEqual(
+        orderRoster(roster, order) as UnitTemplate[],
+      );
+    }
+  });
+
+  it('never mutates the input', () => {
+    const roster = sampleRoster();
+    const before = roster.slice();
+    orderRosterWithIndices(roster, 'level');
+    expect(roster).toEqual(before);
   });
 });

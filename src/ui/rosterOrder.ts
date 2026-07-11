@@ -26,30 +26,43 @@ const ARCHETYPE_RANK = new Map<UnitTemplate['archetype'], number>(
   ALL_ARCHETYPES.map((a, i) => [a, i] as const),
 );
 
+/** 51c — one displayed card with its position in the SOURCE array. The
+ *  selectable roster view confirms in source indices (a `payToRemoveUnit`
+ *  takes a rosterIndex, not a display position), so the ordering seam
+ *  surfaces the mapping rather than each consumer re-deriving it. */
+export interface OrderedRosterEntry {
+  readonly unit: UnitTemplate;
+  readonly sourceIndex: number;
+}
+
 /**
- * Reorder a roster for display. Returns a NEW array (never mutates the input);
+ * Reorder a roster for display, carrying each unit's SOURCE index (51c — the
+ * selection mapping). Returns a NEW array (never mutates the input);
  * `recruited` preserves the roster's natural order exactly. The sorts are
  * STABLE on recruitment order (the original array index breaks every tie), so
  * cards never churn position between renders for units that compare equal.
  */
+export function orderRosterWithIndices(
+  roster: readonly UnitTemplate[],
+  order: RosterOrder = DEFAULT_ROSTER_ORDER,
+): readonly OrderedRosterEntry[] {
+  const decorated = roster.map((unit, sourceIndex) => ({ unit, sourceIndex }));
+  if (order === 'recruited') return decorated;
+  return decorated.sort((a, b) => compare(order, a, b));
+}
+
+/** The undecorated view (the R1 shape — display order only). */
 export function orderRoster(
   roster: readonly UnitTemplate[],
   order: RosterOrder = DEFAULT_ROSTER_ORDER,
 ): readonly UnitTemplate[] {
-  if (order === 'recruited') return roster.slice();
-  // Decorate-sort-undecorate: carry the original index so the comparator can
-  // fall back to it for a stable tie-break, independent of the JS engine's
-  // Array.sort stability guarantees.
-  return roster
-    .map((unit, index) => ({ unit, index }))
-    .sort((a, b) => compare(order, a, b))
-    .map((d) => d.unit);
+  return orderRosterWithIndices(roster, order).map((d) => d.unit);
 }
 
 function compare(
   order: Exclude<RosterOrder, 'recruited'>,
-  a: { unit: UnitTemplate; index: number },
-  b: { unit: UnitTemplate; index: number },
+  a: OrderedRosterEntry,
+  b: OrderedRosterEntry,
 ): number {
   if (order === 'archetype') {
     const byArchetype = rankOf(a.unit) - rankOf(b.unit);
@@ -59,7 +72,7 @@ function compare(
     const byLevel = b.unit.level - a.unit.level;
     if (byLevel !== 0) return byLevel;
   }
-  return a.index - b.index; // stable tie-break: recruitment order
+  return a.sourceIndex - b.sourceIndex; // stable tie-break: recruitment order
 }
 
 function rankOf(unit: UnitTemplate): number {

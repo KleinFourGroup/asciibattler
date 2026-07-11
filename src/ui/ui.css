@@ -2386,12 +2386,63 @@ body {
 }
 
 /* --- Roster skin (R1/R2): the full card in the shared card-list modal (roster
-   view + draw/discard pile views). Display-only (no click), all stats +
+   view + draw/discard pile views). Display-only by default, all stats +
    abilities + the XP-to-next bar (owned units carry banked XP). Reuses the
-   recruit amber theme + the base two-col stats, like the pre-turn skin. --- */
+   recruit amber theme + the base two-col stats, like the pre-turn skin.
+   51c: in the modal's PICKER mode the cards go clickable/selectable — the
+   pre-turn hand's affordance vocabulary (amber hover, blue selected). --- */
 .unit-card--roster {
   width: 184px;
   border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
   color: #ffb000; /* TERMINAL_AMBER */
+}
+
+.unit-card--roster.unit-card--clickable {
+  cursor: pointer;
+  transition: border-color 0.1s, box-shadow 0.1s;
+}
+
+/* The :not keeps the hover border from masking the selected border while the
+   cursor still sits on the just-clicked card (the preturn-skin lesson). */
+.unit-card--roster.unit-card--clickable:hover:not(.is-selected) {
+  border-color: #ffb000; /* TERMINAL_AMBER */
+}
+
+.unit-card--roster.is-selected {
+  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  box-shadow: 0 0 6px rgba(21, 244, 238, 0.5);
+}
+
+/* 51c — the picker footer: the confirm button under the grid, the shared
+   continue-button chrome but green-affirmed when armed (exact count met). */
+.roster-modal-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 14px;
+  flex-shrink: 0;
+}
+
+.roster-modal-confirm {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 28px;
+  border: 1px solid #33ff00; /* TERMINAL_GREEN — the affirmative */
+  background: #000;
+  color: #33ff00;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, color 0.1s, opacity 0.1s;
+}
+
+.roster-modal-confirm:hover:not(:disabled) {
+  background: rgba(51, 255, 0, 0.12);
+}
+
+.roster-modal-confirm:disabled {
+  border-color: #664600; /* DARK_TERMINAL_AMBER */
+  color: #664600;
+  cursor: default;
+  opacity: 0.7;
 }
 

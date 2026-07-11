@@ -1680,3 +1680,31 @@ portion declined, bits pinned at the accepted 67, chain → promotion;
 ② a mid-encounter single-row offer — Continue → straight to the next
 turn's gate; ③ a two-row offer, Continue cold — BOTH declined in one
 click, bits unchanged, chain → recruit.
+
+### 51c — the selectable roster view (2026-07-11)
+
+The merge, not the fork: `CardListModal` gains an optional `selection`
+option (`{count, confirmText, onConfirm}`) — absent, the modal IS the
+R1 view byte-for-byte; present, it's a picker. Cards go clickable in
+the pre-turn hand's affordance vocabulary (amber hover, blue selected —
+new `.unit-card--roster` clickable/selected rules, incl. the
+preturn-skin `:hover:not(.is-selected)` specificity lesson); a footer
+confirm enables at EXACTLY `count` picked; Esc/backdrop/✕ stay pure
+cancels. Selection ergonomics: a one-card picker click REPLACES the
+pick (deselect-first would be clunky); a multi-card picker ignores
+clicks past its cap (the K3 redraw precedent).
+
+The index mapping is the load-bearing bit: display order (the
+`rosterOrder` seam) ≠ roster order, and the consumers dispatch
+rosterIndex-keyed commands. New `orderRosterWithIndices` on the PURE
+seam carries `{unit, sourceIndex}` pairs (`orderRoster` now delegates);
+confirm reports SOURCE indices ascending (the redrawCards
+dispatch-order discipline). +5 tests on the mapping (identity under
+'recruited', object-identity round-trip under both sorts, permutation
+agreement with `orderRoster`, no mutation).
+
+Verified: the mapping headlessly; the view-mode regression in the
+browser at :5191 (roster modal — 10 cards, zero clickable, no footer).
+The picker's LIVE verify deliberately rides 51d's first consumer (the
+50b zero-callers precedent). `CardListButton` untouched — corner
+buttons never pick.

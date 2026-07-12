@@ -15,12 +15,15 @@
  *   Ctrl+Alt+L — load a run: file picker → Run.fromJSON → the Game run swap
  *                (map-phase saves only — mid-encounter restore is menu-grade
  *                save/load, Cluster 6).
+ *   Ctrl+Alt+D — dump the trace ring: the whole localStorage ring → one JSON
+ *                download (D not T — KeyT is the bound stopObjective code).
  *
  * Wired in main.ts's DEV block; the shipped bundle never touches this.
  */
 
 import type { Game } from '../Game';
 import type { RunSnapshot } from '../run/Run';
+import { loadTraces } from './traceStore';
 
 export function attachDevKeys(game: Game): void {
   window.addEventListener('keydown', (e) => {
@@ -34,8 +37,23 @@ export function attachDevKeys(game: Game): void {
         e.preventDefault();
         pickAndLoadRun(game);
         break;
+      case 'KeyD':
+        e.preventDefault();
+        exportTraces();
+        break;
     }
   });
+}
+
+function exportTraces(): void {
+  const traces = loadTraces();
+  if (traces.length === 0) {
+    console.warn('[dev-keys] the trace ring is empty — nothing to export');
+    return;
+  }
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  downloadJson(`asciibattler-traces-${stamp}.json`, traces);
+  console.info(`[dev-keys] ${traces.length} trace(s) exported (newest last)`);
 }
 
 function exportRun(game: Game): void {

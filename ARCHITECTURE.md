@@ -49,9 +49,9 @@ src/
   dev/                       # 53b: DEV-only surfaces (main.ts's import.meta.env.DEV block is the sole app entry; the gauntlet harness may import headless)
     TraceRecorder.ts         #   53b: passive battle-trace assembler — bus subscriber (battle:started encounter + the 53a command:applied stream + outcome) → BattleTrace {version, configHash, encounter, commands, outcome}; storage-agnostic (onTrace callback); tested
     configHash.ts            #   53b: fnv1a fingerprint over the RAW config/*.json registry (plain JSON imports — tsx-compatible, NOT import.meta.glob); the trace-invalidation key; drift-guard test walks config/
-    traceStore.ts            #   53b: localStorage ring (last 40 traces) + __game.dumpTraces()/clearTraces() console surface; DOM-zone glue, untested; the export KEY rides 53f
+    traceStore.ts            #   53b: localStorage ring (last 80 traces; 53f bumped 40→80 for the 53g session) + __game.dumpTraces()/clearTraces() console surface; DOM-zone glue, untested
     replayTrace.ts           #   53c: headless byte-identical trace replay — strict version+configHash refusal; reconstruction ≡ both production battle-construction sites; commands injected before their stamped effective tick; the fidelity keystone test lives beside it
-    devKeys.ts               #   53f: the Ctrl+Alt dev-key window listener (NOT the Keybindings registry — bare-code dispatch would co-fire chords on bound codes): S = export Run.toJSON download / L = file-picker → Game.devLoadRun (map-phase only); DOM-zone glue, untested
+    devKeys.ts               #   53f: the Ctrl+Alt dev-key window listener (NOT the Keybindings registry — bare-code dispatch would co-fire chords on bound codes): S = export Run.toJSON download / L = file-picker → Game.devLoadRun (map-phase only) / D = dump the trace ring (D not T — KeyT is bound); DOM-zone glue, untested
 
   config/                    # A4: zod-validated wrappers around config/*.json
     units.ts                 #   §38 UnitDef catalog (was archetypes.ts): glyph + baseStats + growthRates + abilities/targeting (E1/E3) + inert §38 fields (footprint/layer/ignoresTerrain/susceptibility); attackRange moved to abilities (E5); 29d: assertSummonRefsResolve boot-checks every summon op's archetype id

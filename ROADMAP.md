@@ -121,7 +121,7 @@ driver = an opt-in fuzz-CLI sibling (`npm run gauntlet`).
 - [x] 53d — the `?encounter=` URL param + run-config launcher field (step zero: verify RunSnapshot doesn't embed RunConfig) ✅ 2026-07-12 — no-bump prediction held (RunConfig is never persisted, by its own header); browser-verified: `?seed=777&hops=2&layout=strafingFunnel&encounter=artillery` forces the named killer cell end-to-end (worklog §53d)
 - [x] 53e — the gauntlet cells file + the `npm run gauntlet` driver; headless bot baseline → BALANCE.md §53 ✅ 2026-07-12 — 10 cells × 3 seeds × arms none/random on record (BALANCE §53e); elite cell re-shaped to hops=4 + scan-verified seeds (a 3-hop map can never host an elite — worklog §53e)
 - [x] 53e.2 — AMENDED same day (user call at the saturation finding): the STANDARD mid-run roster baked into the cells + pool damage taken as the primary metric ✅ 2026-07-12 — the gradient is back, pointing at the §52 killers (BALANCE §53e.2; worklog §53e.2)
-- [ ] 53f — the dev export/load key (DEV window listener; `Run.toJSON`/`fromJSON` + Game swap; browser-verified)
+- [x] 53f — the dev export/load key (DEV window listener; `Run.toJSON`/`fromJSON` + Game swap; browser-verified) ✅ 2026-07-12 — Ctrl+Alt+S/L/D (D=trace dump; T is a bound code) + the map-only load rule + riders (ring cap 40→80); user-verified native; worklog §53f
 - [ ] 53g — the human baseline session (~30 recorded battles); paired-seed table → BALANCE.md; the ~80% self-report retires
 
 **Exit criteria:** a recorded human battle replays byte-identically in a

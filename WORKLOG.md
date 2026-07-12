@@ -326,6 +326,11 @@ Browser-verified via dev-preview evals: chord fires once (bare S inert;
 the doubled console line = the known cosmetic preview duplication),
 non-map save hard-rejects with the live run untouched, map save
 restores (run swapped · MapScene · bits/team/node byte-equal · gate
-flag re-set), restored run plays. The file-picker + download UX halves
-= the user's native check (the exit criterion). Riders (trace-export
-key + `TRACE_RING_CAP` 40→80) land in the next commit.
+flag re-set), restored run plays. **User native check: PASS 2026-07-12**
+(download + file picker + round-trip, "worked perfectly").
+
+**Riders (second commit):** `Ctrl+Alt+D` dumps the whole trace ring as
+one JSON download (empty ring warns instead of downloading a `[]`), and
+`TRACE_RING_CAP` 40→80 — the 53g session is ~30 battles plus retries in
+one sitting; a 40-deep ring could evict its own early traces before the
+end-of-session export. Console `dumpTraces()`/`clearTraces()` stay.

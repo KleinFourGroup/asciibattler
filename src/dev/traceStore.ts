@@ -5,16 +5,19 @@
  *
  * DOM-zone glue (browser-only, eyeball-verified per the TESTING policy) — the
  * testable assembly logic lives in `TraceRecorder.ts`. Wired in `main.ts`'s
- * DEV block; the shipped bundle never touches this. The export/download KEY
- * rides 53f's dev-key listener; until then `__game.dumpTraces()` returns the
- * ring from the console.
+ * DEV block; the shipped bundle never touches this. Bulk export: the
+ * `Ctrl+Alt+D` dev key (devKeys.ts, 53f) downloads the whole ring as one
+ * JSON file; `__game.dumpTraces()` returns it from the console.
  */
 
 import type { BattleTrace } from './TraceRecorder';
 
 const KEY = 'asciibattler:traces:v1';
 
-export const TRACE_RING_CAP = 40;
+/** 53f rider — 40→80: the 53g human session is ~30 battles plus retries and
+ *  warm-ups in ONE sitting; a 40-deep ring could evict the session's own
+ *  early traces before the end-of-session export. */
+export const TRACE_RING_CAP = 80;
 
 export function loadTraces(): BattleTrace[] {
   try {

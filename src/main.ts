@@ -41,10 +41,10 @@ if (import.meta.env.DEV) {
   };
   handle.__game = game;
   // 53b — the passive battle-trace recorder (DEV-only, page-lifetime). Every
-  // battle auto-records into the localStorage ring (last 40); from the console:
+  // battle auto-records into the localStorage ring (last 80); from the console:
   //   __game.dumpTraces()   → the ring, newest last (copy(...) to clipboard)
   //   __game.clearTraces()  → empty the ring
-  // The export/download KEY rides 53f's dev-key listener.
+  // Bulk download: Ctrl+Alt+D (devKeys.ts, 53f).
   // Game keeps `bus` TS-private; the dev convention (devApplyStatus's
   // activeScene reach-in below) is a cast — private is runtime-accessible.
   const bus = (game as unknown as { bus: EventBus<GameEvents> }).bus;
@@ -55,9 +55,10 @@ if (import.meta.env.DEV) {
     return traces;
   };
   handle.__game.clearTraces = clearTraces;
-  // 53f — the dev export/load keys (Ctrl+Alt+S export the run / Ctrl+Alt+L
-  // load one; map-phase saves only). A separate window listener, NOT the
-  // Keybindings registry (its zod schema ships every action — worklog §53).
+  // 53f — the dev keys (Ctrl+Alt+S export the run / Ctrl+Alt+L load one,
+  // map-phase saves only / Ctrl+Alt+D dump the trace ring). A separate window
+  // listener, NOT the Keybindings registry (its zod schema ships every
+  // action — worklog §53).
   attachDevKeys(game);
   // 28 dev hook — apply a status to units in the ACTIVE battle so the behavior
   // statuses (blind/panic/frozen/confusion) are observable BEFORE §29's

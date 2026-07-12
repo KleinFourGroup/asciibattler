@@ -42,8 +42,13 @@ The round opened per the planning-stack protocol, spec first:
   land in ONE commit — tests/docs.test.ts requires both files to exist
   (and the roadmap to parse ≥1 phase section) at every commit boundary.
   Followed here.
-- **Scratchpad sweep** (the boundary distillation ritual) runs immediately
-  after the open-round commit — the Cluster-3 build left ~a dozen entries,
-  three self-flagged for promotion (the worktree-pinned before-capture
-  oracle habit; the deferral landing-note norm; the pre-commit fuzz-trigger
-  regex gap `src/config/` — a hook code fix).
+- **Scratchpad sweep** (the boundary distillation ritual, second run) —
+  done 2026-07-11, immediately after the open-round commit. Promoted to
+  AGENTS: the worktree-pinned before/after diff oracle, the AskUserQuestion
+  same-turn-text note, the spec-vs-code audit, the serialized-union bump
+  prediction, the deferral landing-note norm. Promoted to TESTING: the
+  Game-layer wiring disciplines (`satisfies never`; no `this.run` handlers
+  during run construction). Fixed in code: the pre-commit fuzz-trigger
+  regex now covers `src/config/` (`7eba39e` — the 50f gap). Everything
+  else archived verbatim →
+  [archive/retro-scratchpad-cluster-3.md](archive/retro-scratchpad-cluster-3.md).

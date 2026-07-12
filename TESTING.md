@@ -12,6 +12,15 @@ How we keep the simulation honest. Companion to `DESIGN.md`, `ARCHITECTURE.md`, 
 
 - **`src/render`** — three.js, shaders, DOM. Visual verification by eyeball. Trying to unit-test render code with jsdom is a tax we choose not to pay for an MVP.
 - **`src/ui`** — DOM screens. Same reasoning.
+- **Game-layer wiring (`Game.ts` / `main.ts`)** — same untested zone, with a
+  sharper consequence (the 48c/48d lesson, swept 2026-07-11): every headless
+  path calls `run.dispatch` directly, so the live command channel and the
+  event handlers wired in `Game` fail ONLY in the browser — per-commit
+  browser-verify IS their test surface. Two disciplines that came out of it:
+  any hand-re-enumerated union (e.g. `Game.dispatch`'s switch) gets a
+  `satisfies never` default so a new member can't be silently dropped, and
+  event handlers reading `this.run` via closure must not fire during run
+  construction (`run:started` emits mid-construction).
 
 If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those can live in a tested utility module.
 

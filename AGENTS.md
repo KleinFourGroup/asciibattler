@@ -98,6 +98,21 @@ kickoff — has its own section below.)
   Don't reach for `window.__world` / `window.__game` debug hooks for the
   same purpose — a failing test surfaces the same state with a stack
   trace.
+- **Behavior-equivalence refactors get a before/after fuzz-arm diff
+  oracle — with the "before" pinned in a worktree.** Capture per-arm
+  `summary.csv` baselines at HEAD *before* the surgery, re-run after,
+  `diff`: byte-identity across arms is the cheapest strong proof a
+  re-author changed nothing — it catches what live-vs-live suites
+  structurally can't (they recompute both sides on the NEW code; the
+  47c gates→rules and 47d single→multi-daemon oracles). Pin the
+  baseline checkout with `git worktree add --detach <tmp> HEAD` + a
+  `node_modules` junction — NEVER a background capture against the
+  live tree: the CLI compiles imports at run time, so edits landing
+  underneath crash or silently poison the capture (47e).
+- **Shape-lock proposals go in a plain message; collect the approval
+  next turn.** AskUserQuestion dialogs hide same-turn assistant text in
+  the desktop app (bit twice at the 47 kickoff) — a proposal presented
+  in the same turn as the question dialog is invisible to the user.
 - **Keep DESIGN.md / ARCHITECTURE.md honest.** If a change reveals a
   documented decision is wrong, update the doc in the same commit as
   the code change.
@@ -149,7 +164,11 @@ guards — survived essentially unchanged).
   produces the spec artifact FIRST** — even when the design emerges from
   a live conversation, distill it into a doc before the roadmap is
   written, so the roadmap has an independent artifact to be audited
-  against. Superseded specs archive with their round.
+  against. **Audit the spec against CODE REALITY before the design
+  conversation** — the Cluster-3 blind-spot pass found the draft spec's
+  whole daemon⇄consumable premise unbuilt, and posing each design fork
+  with its real engineering cost attached is what made the user's calls
+  fast (`b966187`). Superseded specs archive with their round.
 - **ROADMAP.md** — the active round's PLAN, and it stays a plan for its
   whole life. A phase entry at authoring time carries only the durable
   parts: charter (2–3 sentences), why-this-order + hard cross-phase
@@ -208,7 +227,10 @@ authored. At phase start:
 2. **Draft the commit-granularity cut** — per step: intent, exit
    criterion, expected commit shape. One or two lines each; no
    implementation prose (or the old over-investment just relocates to
-   phase start). When a risky change has a separable UI, cut it
+   phase start). When a step touches ANY serialized union, the cut
+   line predicts the snapshot bump (the 48b/49c twice-taught rule — a
+   "sim untouched" risk note is a prediction too). When a risky
+   change has a separable UI, cut it
    headless-core-first, render-second (the H4a/H4b precedent) — it
    shrinks the eyeball-only surface to what's actually visual.
 3. **Shape-lock with the user** — a pause point, same rhythm as
@@ -226,6 +248,14 @@ since D5.B; H4's predicted snapshot bump didn't exist. When a card
 predicts a side effect, the *absence* of that side effect is a tell the
 work is already done.
 
+**When a step deliberately defers work to a later step, write the
+landing note** — what was left, where it lands, and what invariant the
+landing must preserve — in the deferring step's worklog entry AND a
+code comment at the seam. The 47c note ("non-grant turnStart ops are
+deliberately NOT resolved in the grant fold — they execute at the fire
+site, bits 47e") is what kept a fresh session from designing a second
+hook walk that double-draws the chance flip and breaks byte-parity.
+
 ### The scratchpad distillation ritual
 
 At each round/cluster boundary, sweep [retro/scratchpad.md](retro/scratchpad.md):
@@ -236,7 +266,13 @@ from the current round. First sweep: done 2026-07-06 — the MVP→H7
 backlog moved to
 [archive/retro-scratchpad-mvp-to-h7.md](archive/retro-scratchpad-mvp-to-h7.md),
 with the still-live lessons promoted (here, TESTING.md, HANDOFF
-browser-verify tips, two TODO watch items).
+browser-verify tips, two TODO watch items). Second: 2026-07-11 at the
+micro-round kickoff — the process-audit + Cluster-3 backlog moved to
+[archive/retro-scratchpad-cluster-3.md](archive/retro-scratchpad-cluster-3.md);
+promoted: the worktree-pinned diff oracle, the AskUserQuestion note, the
+spec-vs-code audit, the union-bump prediction, the deferral landing note
+(all here), the Game-layer wiring note (TESTING.md), and the fuzz-trigger
+`src/config/` fix (the hook itself).
 
 ## Load-bearing invariants
 
@@ -289,7 +325,8 @@ npm run dev             # opens at :5173 (or :5174 if stale process held :5173)
 versioned hook [.githooks/pre-commit](.githooks/pre-commit) once
 `git config core.hooksPath .githooks` is set (see Pre-flight) — including
 the conditional fuzz:smoke, which triggers on staged `src/sim|src/run|
-src/core|config/` paths instead of memory. **Never bypass it with
+src/core|src/config|config/` paths instead of memory (`src/config/` added
+at the 2026-07-11 sweep — the zod loaders carry behavior; the 50f gap). **Never bypass it with
 `--no-verify`** — a failing hook means fix the tree, not skip the check.
 The list stays here as documentation of what runs (and as the manual
 fallback on a clone that hasn't activated the hook).

@@ -46,6 +46,11 @@ src/
     events.ts                # GameEvents catalog (typed event payloads)
     types.ts                 # Shared primitives: Vec2, GridCoord
 
+  dev/                       # 53b: DEV-only surfaces (main.ts's import.meta.env.DEV block is the sole app entry; the gauntlet harness may import headless)
+    TraceRecorder.ts         #   53b: passive battle-trace assembler — bus subscriber (battle:started encounter + the 53a command:applied stream + outcome) → BattleTrace {version, configHash, encounter, commands, outcome}; storage-agnostic (onTrace callback); tested
+    configHash.ts            #   53b: fnv1a fingerprint over the RAW config/*.json registry (plain JSON imports — tsx-compatible, NOT import.meta.glob); the trace-invalidation key; drift-guard test walks config/
+    traceStore.ts            #   53b: localStorage ring (last 40 traces) + __game.dumpTraces()/clearTraces() console surface; DOM-zone glue, untested; the export KEY rides 53f
+
   config/                    # A4: zod-validated wrappers around config/*.json
     units.ts                 #   §38 UnitDef catalog (was archetypes.ts): glyph + baseStats + growthRates + abilities/targeting (E1/E3) + inert §38 fields (footprint/layer/ignoresTerrain/susceptibility); attackRange moved to abilities (E5); 29d: assertSummonRefsResolve boot-checks every summon op's archetype id
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
@@ -479,7 +484,7 @@ Bridges simulation and rendering. Subscribes to `unit:moved` events and starts a
 
 ```
 tick                    { tick: number }
-battle:started          { worldSeed: number }
+battle:started          { worldSeed: number; encounter: BattleEncounter }          # 53b: + the full self-contained fixture (the trace recorder's begin-marker; only Run emits, no sim/run reader)
 battle:ended            { winner: 'player' | 'enemy' | 'draw'; xpAwards: { unitId; rosterIndex; damageDealt; xpGained }[]; survivorPower?; tallies? }   # E4: per-roster XP; H4: draw + pool chips; 47f: tallies {bits} — the battle-earned settle (Run.gainBits)
 unit:spawned            { unitId: number; instant: boolean }                       # instant=false → D5.C overflow-queue spawn (fade-in)
 unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }

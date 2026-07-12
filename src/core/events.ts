@@ -18,6 +18,7 @@ import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
 import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
 import type { WorldCommand } from '../sim/Command';
+import type { BattleEncounter } from '../run/Run';
 import type { MoveDecisionKind } from '../sim/moveDecision';
 import type { TurnGrantView } from '../run/daemon';
 import type { RewardPortion } from '../run/rewards';
@@ -28,7 +29,16 @@ import type { UseContext } from '../config/packets';
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
 
-  'battle:started': { worldSeed: number };
+  /**
+   * 53b — payload extended with the full `BattleEncounter` (the
+   * self-contained battle fixture `beginTurn` assembled: seeds, layout,
+   * grid, teams, battleRules). It is the trace recorder's begin-marker:
+   * encounter + the `command:applied` stream + the outcome IS a replayable
+   * trace. Only Run emits this event, and no sim/run subscriber reads
+   * `encounter`, so the payload growth cannot perturb the deterministic sim
+   * or the fuzz baseline.
+   */
+  'battle:started': { worldSeed: number; encounter: BattleEncounter };
   /**
    * E4: payload extended with `xpAwards` — one entry per player roster unit
    * (survivor OR fallen) that earned XP this battle. `damageDealt` is the raw

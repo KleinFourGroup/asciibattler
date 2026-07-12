@@ -116,7 +116,7 @@ driver = an opt-in fuzz-CLI sibling (`npm run gauntlet`).
 **The cut (shape-locked 2026-07-12; audit + rationale in worklog §53):**
 
 - [x] 53a — the `command:applied` bus event at World's apply site (`{tick, command}`) + ARCHITECTURE catalog row; no snapshot bump predicted ✅ 2026-07-12 — emitted at the drain (post-apply); 4 co-located tests incl. the parked-drain stamp + the auto-revert-purity case; no bump, as predicted
-- [ ] 53b — `configHash` util + the passive DEV trace recorder (bus subscriber → `TraceV1`; localStorage ring)
+- [x] 53b — `configHash` util + the passive DEV trace recorder (bus subscriber → `TraceV1`; localStorage ring) ✅ 2026-07-12 — src/dev/ (recorder + hash tested, 9 tests; ring = DOM-zone glue); `battle:started` payload grew the full `BattleEncounter` (worklog §53b)
 - [ ] 53c — `replayTrace` + the fidelity test: byte-identical outcome + event trace vs the live drive (the keystone)
 - [ ] 53d — the `?encounter=` URL param + run-config launcher field (step zero: verify RunSnapshot doesn't embed RunConfig)
 - [ ] 53e — the gauntlet cells file + the `npm run gauntlet` driver; headless bot baseline → BALANCE.md §53

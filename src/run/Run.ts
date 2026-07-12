@@ -1839,7 +1839,7 @@ export class Run {
     for (const idx of this.hand) {
       this.fireTrigger('deploy', { rosterIndex: idx, template: this.team[idx]! });
     }
-    this.currentEncounter = {
+    const battleEncounter: BattleEncounter = {
       worldSeed,
       terrainSeed,
       layoutId,
@@ -1863,7 +1863,9 @@ export class Run {
         ...this.injectedEncounterRules.map((e) => e.rule),
       ],
     };
-    this.bus.emit('battle:started', { worldSeed });
+    this.currentEncounter = battleEncounter;
+    // 53b — the payload carries the whole fixture for the trace recorder.
+    this.bus.emit('battle:started', { worldSeed, encounter: battleEncounter });
   }
 
   /**

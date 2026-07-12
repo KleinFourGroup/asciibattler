@@ -7,6 +7,7 @@ How we keep the simulation honest. Companion to `DESIGN.md`, `ARCHITECTURE.md`, 
 - **`src/core`** — `RNG`, `EventBus`, `Clock`. Pure logic, trivial to assert against.
 - **`src/sim`** — `World`, `Unit`, `Pathfinding`, `Targeting`, `archetypes`, behaviors. The whole point of the determinism contract.
 - **`src/run`** — `NodeMap`, `Recruitment`, `Run`. Generation is seeded, so the same seed must produce the same map / offers.
+- **`src/dev`** — the DEV-only trace tooling's pure logic (`TraceRecorder`, `configHash` — 53b). Co-located tests; the localStorage ring + `main.ts` wiring stay in the eyeball zone below.
 
 ## What does NOT get tested here
 

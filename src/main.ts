@@ -7,6 +7,10 @@ import { FontAtlas } from './render/FontAtlas';
 import { statusDef } from './config/statuses';
 import type { World } from './sim/World';
 import type { Team } from './sim/Unit';
+import { TraceRecorder, type BattleTrace } from './dev/TraceRecorder';
+import { pushTrace, loadTraces, clearTraces } from './dev/traceStore';
+import type { EventBus } from './core/EventBus';
+import type { GameEvents } from './core/events';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game-canvas');
 if (!canvas) throw new Error('Missing <canvas id="game-canvas"> in index.html');
@@ -27,9 +31,29 @@ game.start();
 // the production bundle by `import.meta.env.DEV`.
 if (import.meta.env.DEV) {
   const handle = window as unknown as {
-    __game: typeof game & { applyStatus?: (id: string, target?: number | Team) => void };
+    __game: typeof game & {
+      applyStatus?: (id: string, target?: number | Team) => void;
+      traceRecorder?: TraceRecorder;
+      dumpTraces?: () => BattleTrace[];
+      clearTraces?: () => void;
+    };
   };
   handle.__game = game;
+  // 53b — the passive battle-trace recorder (DEV-only, page-lifetime). Every
+  // battle auto-records into the localStorage ring (last 40); from the console:
+  //   __game.dumpTraces()   → the ring, newest last (copy(...) to clipboard)
+  //   __game.clearTraces()  → empty the ring
+  // The export/download KEY rides 53f's dev-key listener.
+  // Game keeps `bus` TS-private; the dev convention (devApplyStatus's
+  // activeScene reach-in below) is a cast — private is runtime-accessible.
+  const bus = (game as unknown as { bus: EventBus<GameEvents> }).bus;
+  handle.__game.traceRecorder = new TraceRecorder(bus, pushTrace);
+  handle.__game.dumpTraces = () => {
+    const traces = loadTraces();
+    console.info(`[traces] ${traces.length} trace(s) in the ring`);
+    return traces;
+  };
+  handle.__game.clearTraces = clearTraces;
   // 28 dev hook — apply a status to units in the ACTIVE battle so the behavior
   // statuses (blind/panic/frozen/confusion) are observable BEFORE §29's
   // status-on-hit applier ships. From the browser console:

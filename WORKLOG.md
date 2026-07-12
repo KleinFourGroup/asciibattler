@@ -132,6 +132,31 @@ this phase — the recorder/replay/gauntlet are DEV+harness surfaces; the
 Step-zero must verify RunSnapshot doesn't embed RunConfig before trusting
 the 53d line.
 
+### 53b — the recorder (2026-07-12)
+
+New `src/dev/` home (first entry in the tree): `TraceRecorder` (passive bus
+subscriber, storage-agnostic via `onTrace`) + `configHash` + the
+`traceStore` localStorage ring. Build findings beyond the audit:
+
+- **`battle:started` grew the full `BattleEncounter`** — the payload only
+  carried `worldSeed`; the fixture the trace needs was otherwise
+  unreachable by a passive subscriber. Additive, Run-only emitter, no
+  sim/run reader → no baseline impact. (`Run.beginTurn` got a local-name
+  collision with the U3 `encounter` — the new local is `battleEncounter`.)
+- **`configHash` uses plain JSON imports, NOT `import.meta.glob`** — the
+  fuzz/gauntlet CLIs run under **tsx**, where Vite-only APIs don't exist.
+  The hand-maintained 30-file registry is backstopped by a drift-guard
+  test that walks `config/` (`readdirSync` ↔ registry keys, both ways).
+- **Recorder lifecycle rules:** a second `battle:started` while a trace is
+  open DISCARDS the open one (an abandoned battle has no outcome); a
+  `battle:ended` with no open trace is ignored (Run.test emits synthetic
+  ends). Encounter deep-copied at start (`structuredClone`) so the Run
+  moving on can't mutate a recorded trace.
+- **Deferral landing notes:** the export/download KEY rides 53f's dev-key
+  listener (console surface today: `__game.dumpTraces()` /
+  `clearTraces()`); trace VALIDATION (version + configHash check) lands at
+  53c's replay entry, not the recorder.
+
 ### Shape-lock (2026-07-12)
 
 User approved the full proposal, no vetoes. Locked: stamp-at-apply via

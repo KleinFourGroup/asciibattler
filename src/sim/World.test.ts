@@ -1220,21 +1220,30 @@ describe('World command:applied (53a — the trace-recorder stamp)', () => {
     expect(applied[0]?.command).toBe(command);
   });
 
-  it('a PARKED drain (Q2 countdown/pause) stamps the current frozen tick; the next tick does not re-emit', () => {
+  it('a PARKED drain (Q2 countdown/pause) stamps the NEXT tick — the first that can observe it (53c)', () => {
     const { world, bus } = setup();
     const applied: GameEvents['command:applied'][] = [];
     bus.on('command:applied', (p) => applied.push(p));
 
     world.tick();
     world.tick();
-    const frozen = world.currentTick;
+    const frozen = world.currentTick; // this tick's units already acted
     world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
     world.drainCommands(); // BattleScene's parked drain — the sim does not advance
     expect(applied).toEqual([
-      { tick: frozen, command: { kind: 'setObjective', team: 'player', objective: { mode: 'hold' } } },
+      { tick: frozen + 1, command: { kind: 'setObjective', team: 'player', objective: { mode: 'hold' } } },
     ]);
-    world.tick();
+    world.tick(); // the stamped tick runs — no re-emit, the queue was drained
     expect(applied).toHaveLength(1);
+  });
+
+  it('the pre-battle countdown case: a parked drain before any tick stamps tick 1', () => {
+    const { world, bus } = setup();
+    const applied: GameEvents['command:applied'][] = [];
+    bus.on('command:applied', (p) => applied.push(p));
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
+    world.drainCommands(); // orders set during the countdown — the common case
+    expect(applied[0]?.tick).toBe(1); // tick 1 is the first that acts on it
   });
 
   it('an auto-revert (engage target dies) emits objective:cleared but NEVER command:applied', () => {

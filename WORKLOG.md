@@ -157,6 +157,42 @@ subscriber, storage-agnostic via `onTrace`) + `configHash` + the
   `clearTraces()`); trace VALIDATION (version + configHash check) lands at
   53c's replay entry, not the recorder.
 
+### 53c — the replay + the stamp amendment (2026-07-12)
+
+**The step-zero audit caught 53a's stamp being replay-ambiguous.** A
+mid-battle PARKED drain stamped the frozen tick N — but tick N's units had
+already acted without the command; its first observable tick is N+1. A
+normal in-tick drain's stamp N IS observed at N. Same stamp, two required
+injection points — a replay couldn't distinguish them. **Fix: stamp the
+EFFECTIVE tick** (the first tick whose unit actions can observe the
+command): in-tick drain → `tickCount`, parked drain → `tickCount + 1`
+(`World.drain(effectiveTick)`, both entry points delegate). One uniform
+replay rule falls out: inject everything stamped E before tick E. The
+countdown case lands at stamp 1 naturally. 53a's tests + docs amended in
+place.
+
+**`replayTrace` (src/dev/replayTrace.ts):** strict refusal on version or
+configHash mismatch (a silently-diverging replay poisons paired-seed
+comparisons); reconstruction ≡ both production construction sites (the
+audit verified BattleScene ≡ `spawnEncounter`: same `applyTerrain` →
+`setupRngFor` → `pickSpawnRegions` → `spawnTeam`×2 off one fork — the
+interleaved render calls touch no RNG); the drive loop mirrors
+BattleScene's clock body verbatim (resolveAsDraw at the N2 cap), so
+draw-at-cap traces replay as draws; leftover stamped commands after the
+battle ends throw (a divergence tell).
+
+**The fidelity keystone test** drives a live battle through all three real
+input timings (countdown-parked → stamp 1 · between-ticks → stamp 10 ·
+mid-battle-pause-parked → stamp 26) and asserts the replay reproduces the
+winner, the tick count, the sim-event stream, and the byte-identical final
+`world.toJSON()` (RNG state included). **One deliberate scope note:** the
+bare `tick` markers are excluded from the event comparison — a live parked
+drain emits its command markers BETWEEN tick markers, the replay emits
+them just after tick E's marker; pure bus interleaving, zero
+unit-observable effect, and the world-state oracle pins the rest
+byte-exactly. First divergence caught by the test during development was
+exactly this artifact — the oracle works.
+
 ### Shape-lock (2026-07-12)
 
 User approved the full proposal, no vetoes. Locked: stamp-at-apply via

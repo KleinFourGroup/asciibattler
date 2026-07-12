@@ -348,18 +348,20 @@ export interface GameEvents extends Record<string, unknown> {
   'objective:cleared': { team: ObjectiveTeam };
 
   /**
-   * 53a — a drained `WorldCommand` took effect. Emitted once per command at
-   * the drain site, AFTER `applyCommand` ran, stamped with the tick it took
-   * effect (`World.currentTick`; a PARKED drain — countdown/pause, Q2 —
-   * stamps the current frozen tick, which is exactly when the command
-   * applied). This is the trace recorder's substrate: unlike
-   * `objective:set`/`objective:cleared`, it fires ONLY for real drained
-   * commands (an auto-revert via `clearResolvedObjectives` emits
-   * `objective:cleared` but never this) and carries the whole command, so a
-   * replay can re-enqueue it verbatim. Determinism already guarantees
-   * `worldSeed` + this stream → a byte-identical battle. No sim/run
-   * subscriber exists, so emitting it cannot perturb the deterministic sim
-   * or the fuzz baseline.
+   * 53a/53c — a drained `WorldCommand` took effect. Emitted once per command
+   * at the drain site, AFTER `applyCommand` ran, stamped with its EFFECTIVE
+   * tick — the first tick whose unit actions can observe it. The in-tick
+   * drain stamps the current tick (it runs before the per-unit step); a
+   * PARKED drain (countdown/pause, Q2) stamps the NEXT tick, because the
+   * frozen tick's units already acted. One uniform replay rule falls out:
+   * inject every command stamped E before tick E (replayTrace.ts). This is
+   * the trace recorder's substrate: unlike `objective:set`/
+   * `objective:cleared`, it fires ONLY for real drained commands (an
+   * auto-revert via `clearResolvedObjectives` emits `objective:cleared` but
+   * never this) and carries the whole command, so a replay re-enqueues it
+   * verbatim. Determinism already guarantees `worldSeed` + this stream → a
+   * byte-identical battle. No sim/run subscriber exists, so emitting it
+   * cannot perturb the deterministic sim or the fuzz baseline.
    */
   'command:applied': { tick: number; command: WorldCommand };
 

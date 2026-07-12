@@ -727,17 +727,26 @@ export class World {
    * observably identical (the next tick's drain then finds the queue empty).
    * No-op once ended or when the queue is empty.
    *
-   * 53a — every drained command emits `command:applied` stamped with the tick
-   * it took effect (a parked drain stamps the current frozen tick). The emit
-   * follows `applyCommand`, so subscribers see post-apply state (and any
-   * `objective:set` the apply produced lands first).
+   * 53a/53c — every drained command emits `command:applied` stamped with its
+   * EFFECTIVE tick: the first tick whose unit actions can observe it. For the
+   * in-tick drain that's the current tick (the drain runs before the per-unit
+   * step). For THIS parked entry point, tick `tickCount` has already fully
+   * run — the command is first observable at the NEXT tick, so it stamps
+   * `tickCount + 1`. One uniform rule falls out for replay: inject every
+   * command stamped E before tick E runs (replayTrace.ts) — no parked/normal
+   * case split. The emit follows `applyCommand`, so subscribers see
+   * post-apply state (and any `objective:set` the apply produced lands first).
    */
   drainCommands(): void {
+    this.drain(this.tickCount + 1);
+  }
+
+  private drain(effectiveTick: number): void {
     if (this._ended || this.commands.length === 0) return;
     const drained = this.commands.splice(0, this.commands.length);
     for (const cmd of drained) {
       this.applyCommand(cmd);
-      this.bus.emit('command:applied', { tick: this.tickCount, command: cmd });
+      this.bus.emit('command:applied', { tick: effectiveTick, command: cmd });
     }
   }
 
@@ -1014,7 +1023,9 @@ export class World {
     this.tickCount++;
     this.bus.emit('tick', { tick: this.tickCount });
 
-    this.drainCommands();
+    // In-tick drain: this tick's per-unit step observes the commands, so the
+    // effective tick IS the current tick (53a/53c — see drainCommands).
+    this.drain(this.tickCount);
 
     // O1 — revert any team whose `engage` enemy target died (e.g. last tick) to
     // `atWill`, so the per-unit `updateTarget` below sees the reverted objective

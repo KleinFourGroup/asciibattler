@@ -18,7 +18,10 @@ npm test
 # The checklist's conditional half, as path detection instead of memory:
 # fuzz:smoke when staged changes touch sim/run/core behavior or the balance
 # config surface (config JSON changes can shift fuzz baselines too).
-if git diff --cached --name-only | grep -qE '^(src/(sim|run|core)/|config/)'; then
+# src/config/ is included too — the zod loaders carry behavior (price
+# formulas etc.); the 50f commit staged src/config/prices.ts and slipped
+# past the old regex (scratchpad, Phase 50 → swept at the micro kickoff).
+if git diff --cached --name-only | grep -qE '^(src/(sim|run|core|config)/|config/)'; then
   echo "[pre-commit] staged sim/run/core/config changes -> npm run fuzz:smoke ..."
   npm run fuzz:smoke
 else

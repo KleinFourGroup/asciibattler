@@ -288,3 +288,44 @@ battles × arms). The cut: ROADMAP §53.
 | 8 | `adventurer-with-guards` × `spiralFireLife` | Traffic: attrition stall (opposite-spawn burn cheese) |
 | 9 | `elementalTrio` × `river` | Traffic: cohesion focus (assassinate the catapult) |
 | 10 | `bandit-king` × `desertFortress` | The boss cell (boss-wall relevance, stages grammar) |
+
+### 53f — the dev export/load key (2026-07-12)
+
+Shape-locked in conversation, no vetoes: `Ctrl+Alt+S` export /
+`Ctrl+Alt+L` load in a new [devKeys.ts](src/dev/devKeys.ts) window
+listener (the main.ts DEV-block pattern), backed by public
+`Game.devExportRun()`/`devLoadRun(snap)` so the swap-ordering discipline
+lives beside `resetRun` instead of in private-cast glue. **Load is
+map-phase only** — the user probed the deferral cost explicitly and
+agreed it's ~zero: the hard half (gate-save serialization semantics) is
+already round-trip-tested in Run, and the deferred half's natural
+mechanism is a Run-side "re-emit the gate event from current state"
+that reuses the live `turn:starting` builder (Run.ts ~1420) — building
+Game-side payload reconstruction now would just create a parallel path
+to keep in sync through Clusters 4–5. **Deferral landing note (Cluster 6
+menu-grade save/load):** remount-from-cold-state should land as a Run
+method that re-emits the current phase's gate event from its own fields
+— never a second Game-side payload builder; the seam comment on
+`devLoadRun` points here.
+
+Two build findings:
+
+- **The bare-code chord collision:** `Keybindings.handleKeyDown`
+  dispatches on raw `KeyboardEvent.code` with no modifier check, so a
+  `Ctrl+Alt` chord on any bound code (E/F/H/T, digits, Space) would
+  co-fire the battle hotkey. S and L are unbound; the trace-export
+  rider's key moves `Ctrl+Alt+T` → **`Ctrl+Alt+D`** (dump) for this
+  reason. Pinned as a comment in devKeys.ts for future chord additions.
+- **The `pauseAtTurnGates` trap (the audit's catch, confirmed live):**
+  `Run.fromJSON` leaves the headless default (`false`) — an unset flag
+  silently skips every pre/post-turn screen. `devLoadRun` re-sets it,
+  and the browser-verify's last check drove the RESTORED run into an
+  encounter to prove the gate pauses (turn-intro + PreTurnScene ✓).
+
+Browser-verified via dev-preview evals: chord fires once (bare S inert;
+the doubled console line = the known cosmetic preview duplication),
+non-map save hard-rejects with the live run untouched, map save
+restores (run swapped · MapScene · bits/team/node byte-equal · gate
+flag re-set), restored run plays. The file-picker + download UX halves
+= the user's native check (the exit criterion). Riders (trace-export
+key + `TRACE_RING_CAP` 40→80) land in the next commit.

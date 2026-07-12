@@ -7,7 +7,7 @@ import { ApronRenderer } from './render/ApronRenderer';
 import { BackdropRenderer } from './render/BackdropRenderer';
 import { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
-import { Run } from './run/Run';
+import { Run, type RunSnapshot } from './run/Run';
 import { parseRunConfigFromURL, type RunConfig } from './run/RunConfig';
 import type { RunCommand, RunDispatcher } from './run/Command';
 import type { Scene, SceneContext } from './scenes/Scene';
@@ -404,6 +404,50 @@ export class Game implements RunDispatcher {
     // so the overlay's event-driven paint would have read the dead run.
     this.bitsOverlay.refresh();
     // 49f — same ordering for the cache chip (also closes a stale modal).
+    this.cacheOverlay.refresh();
+    this.swap(new MapScene());
+  }
+
+  /**
+   * 53f — the dev export half: the live run's wire image, for the DEV export
+   * key ([devKeys.ts](src/dev/devKeys.ts)). A read-only dump — phase gating
+   * (the map-only load rule) is enforced on the LOAD side, so any phase may
+   * be exported (a non-map file is still headless-fixture material).
+   */
+  devExportRun(): RunSnapshot {
+    return this.run.toJSON();
+  }
+
+  /**
+   * 53f — the dev load half: swap the live Run for a rehydrated one (the
+   * `resetRun` teardown ordering). Map-phase saves only: every other phase's
+   * scene mounts from an event payload the snapshot doesn't carry —
+   * remount-from-cold-state is menu-grade save/load (Cluster 6; landing
+   * note in worklog §53f: it should land as a Run-side re-emit of the
+   * current phase's gate event, never a Game-side payload builder).
+   *
+   * Ordering:
+   *  - `fromJSON` runs BEFORE the old run is disposed, so a corrupt file /
+   *    stale schema / unknown catalog id throws with the live run untouched.
+   *    (Both runs are bus-subscribed for the lines in between; nothing emits
+   *    synchronously there, so the overlap is inert.)
+   *  - `pauseAtTurnGates` is re-set by hand: `fromJSON` leaves the headless
+   *    default (false), which would silently skip every pre/post-turn
+   *    screen — the H4b flag is Game's to set, not the snapshot's.
+   */
+  devLoadRun(snap: RunSnapshot): void {
+    if (snap.phase !== 'map') {
+      throw new Error(
+        `devLoadRun: only 'map'-phase saves load in the browser (got '${snap.phase}')`,
+      );
+    }
+    const restored = Run.fromJSON(snap, this.bus);
+    restored.pauseAtTurnGates = true;
+    this.run.dispose();
+    this.run = restored;
+    // 48d/49f — the resetRun ordering: re-paint the page-lifetime chips
+    // AFTER the reassignment so their getters read the new run.
+    this.bitsOverlay.refresh();
     this.cacheOverlay.refresh();
     this.swap(new MapScene());
   }

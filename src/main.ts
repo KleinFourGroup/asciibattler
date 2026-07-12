@@ -9,6 +9,7 @@ import type { World } from './sim/World';
 import type { Team } from './sim/Unit';
 import { TraceRecorder, type BattleTrace } from './dev/TraceRecorder';
 import { pushTrace, loadTraces, clearTraces } from './dev/traceStore';
+import { attachDevKeys } from './dev/devKeys';
 import type { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
 
@@ -54,6 +55,10 @@ if (import.meta.env.DEV) {
     return traces;
   };
   handle.__game.clearTraces = clearTraces;
+  // 53f — the dev export/load keys (Ctrl+Alt+S export the run / Ctrl+Alt+L
+  // load one; map-phase saves only). A separate window listener, NOT the
+  // Keybindings registry (its zod schema ships every action — worklog §53).
+  attachDevKeys(game);
   // 28 dev hook — apply a status to units in the ACTIVE battle so the behavior
   // statuses (blind/panic/frozen/confusion) are observable BEFORE §29's
   // status-on-hit applier ships. From the browser console:

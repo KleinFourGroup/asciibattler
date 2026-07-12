@@ -17,6 +17,7 @@ import type { Team, UnitStats, UnitTemplate } from '../sim/Unit';
 import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
 import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
+import type { WorldCommand } from '../sim/Command';
 import type { MoveDecisionKind } from '../sim/moveDecision';
 import type { TurnGrantView } from '../run/daemon';
 import type { RewardPortion } from '../run/rewards';
@@ -335,6 +336,22 @@ export interface GameEvents extends Record<string, unknown> {
    * this fires only on a real non-`atWill` → `atWill` transition.
    */
   'objective:cleared': { team: ObjectiveTeam };
+
+  /**
+   * 53a — a drained `WorldCommand` took effect. Emitted once per command at
+   * the drain site, AFTER `applyCommand` ran, stamped with the tick it took
+   * effect (`World.currentTick`; a PARKED drain — countdown/pause, Q2 —
+   * stamps the current frozen tick, which is exactly when the command
+   * applied). This is the trace recorder's substrate: unlike
+   * `objective:set`/`objective:cleared`, it fires ONLY for real drained
+   * commands (an auto-revert via `clearResolvedObjectives` emits
+   * `objective:cleared` but never this) and carries the whole command, so a
+   * replay can re-enqueue it verbatim. Determinism already guarantees
+   * `worldSeed` + this stream → a byte-identical battle. No sim/run
+   * subscriber exists, so emitting it cannot perturb the deterministic sim
+   * or the fuzz baseline.
+   */
+  'command:applied': { tick: number; command: WorldCommand };
 
   'run:started': { seed: number };
   'run:victory': Record<string, never>;

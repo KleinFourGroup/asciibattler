@@ -726,11 +726,19 @@ export class World {
    * while parked, so applying an objective now vs. at the next tick is
    * observably identical (the next tick's drain then finds the queue empty).
    * No-op once ended or when the queue is empty.
+   *
+   * 53a — every drained command emits `command:applied` stamped with the tick
+   * it took effect (a parked drain stamps the current frozen tick). The emit
+   * follows `applyCommand`, so subscribers see post-apply state (and any
+   * `objective:set` the apply produced lands first).
    */
   drainCommands(): void {
     if (this._ended || this.commands.length === 0) return;
     const drained = this.commands.splice(0, this.commands.length);
-    for (const cmd of drained) this.applyCommand(cmd);
+    for (const cmd of drained) {
+      this.applyCommand(cmd);
+      this.bus.emit('command:applied', { tick: this.tickCount, command: cmd });
+    }
   }
 
   /**

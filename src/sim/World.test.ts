@@ -1192,6 +1192,92 @@ describe('World per-team objective (J1 → O1)', () => {
   });
 });
 
+describe('World command:applied (53a — the trace-recorder stamp)', () => {
+  function setup(): { world: World; bus: EventBus<GameEvents>; enemy: Unit } {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const world = new World(bus, rng);
+    world.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 1, y: 1 });
+    const enemy = world.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 9, y: 9 });
+    return { world, bus, enemy };
+  }
+
+  it('emits once per drained command, stamped with the tick it took effect, carrying the command verbatim', () => {
+    const { world, bus, enemy } = setup();
+    const applied: GameEvents['command:applied'][] = [];
+    bus.on('command:applied', (p) => applied.push(p));
+
+    const command = {
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId: enemy.id } },
+    } as const;
+    world.enqueueCommand(command);
+    expect(applied).toEqual([]); // queued, not yet applied
+    world.tick();
+    expect(applied).toEqual([{ tick: world.currentTick, command }]);
+    // Verbatim (same reference) — a replay re-enqueues it as-is.
+    expect(applied[0]?.command).toBe(command);
+  });
+
+  it('a PARKED drain (Q2 countdown/pause) stamps the current frozen tick; the next tick does not re-emit', () => {
+    const { world, bus } = setup();
+    const applied: GameEvents['command:applied'][] = [];
+    bus.on('command:applied', (p) => applied.push(p));
+
+    world.tick();
+    world.tick();
+    const frozen = world.currentTick;
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
+    world.drainCommands(); // BattleScene's parked drain — the sim does not advance
+    expect(applied).toEqual([
+      { tick: frozen, command: { kind: 'setObjective', team: 'player', objective: { mode: 'hold' } } },
+    ]);
+    world.tick();
+    expect(applied).toHaveLength(1);
+  });
+
+  it('an auto-revert (engage target dies) emits objective:cleared but NEVER command:applied', () => {
+    // The recorder-purity property: the stream carries enqueued commands only,
+    // so a replayed trace never double-applies what the sim does on its own.
+    const { world, bus, enemy } = setup();
+    const applied: GameEvents['command:applied'][] = [];
+    const cleared = vi.fn();
+    bus.on('command:applied', (p) => applied.push(p));
+    bus.on('objective:cleared', cleared);
+
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId: enemy.id } },
+    });
+    world.tick();
+    expect(applied).toHaveLength(1);
+
+    enemy.currentHp = 0;
+    world.tick(); // clearResolvedObjectives reverts to atWill
+    expect(cleared).toHaveBeenCalledTimes(1);
+    expect(applied).toHaveLength(1); // no phantom command in the trace
+  });
+
+  it('every command kind emits, noop included (the channel is uniform), in drain order', () => {
+    const { world, bus } = setup();
+    const kinds: string[] = [];
+    const ticks: number[] = [];
+    bus.on('command:applied', ({ tick, command }) => {
+      kinds.push(command.kind);
+      ticks.push(tick);
+    });
+
+    world.enqueueCommand({ kind: 'noop' });
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective: { mode: 'hold' } });
+    world.enqueueCommand({ kind: 'clearObjective', team: 'player' });
+    world.tick();
+    expect(kinds).toEqual(['noop', 'setObjective', 'clearObjective']);
+    expect(ticks).toEqual([world.currentTick, world.currentTick, world.currentTick]);
+  });
+});
+
 interface DeathSceneUnit {
   team: Team;
   x: number;

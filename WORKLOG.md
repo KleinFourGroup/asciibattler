@@ -210,6 +210,38 @@ snapshot bump. Browser-verified end-to-end:
 URL, and the same RunConfig drives the headless CLI (`--encounter=`), which
 is the paired-seed symmetry 53e builds on.
 
+### 53e — the gauntlet (2026-07-12)
+
+`tests/gauntlet/`: the shape-locked 10-cell catalog as code
+([cells.ts](tests/gauntlet/cells.ts) — cell = encounter × layout × 3 fixed
+seeds, launched as a minimal run with `daemon=none` so the human's and the
+bot's turn-1 BattleEncounter are identical), the opt-in `npm run gauntlet`
+CLI (cells × seeds × objective arms, reusing `parseObjectiveFlag` + the
+strategy registry + `runOne` — `BattleResult.encounterId` from X2 made
+outcome extraction free), and a main-suite integrity test (ids/kinds/
+layouts/seeds + one live 1-hop drive). `--urls` prints the 53g session's
+30 launch URLs; `--csv` writes the raw rows.
+
+Build findings:
+
+- **A 3-hop map can NEVER host an elite** — the scatter's min-spacing
+  excludes it structurally; a 401–460 seed scan found 0 hits at hops=3,
+  8 at hops=4. The elite cell re-shaped to `hops: 4` with scan-verified
+  seeds (407/409/416); the driver's loud bad-seed warning (`n/a` +
+  a ⚠ list) is the regression guard. **The boss cell's known impurity**
+  (a pool-rolled root battle precedes the forced boss) is documented in
+  the cells header — both sides share it.
+- **Cell-clearing saturates at fresh-team strength**: the bot clears every
+  normal cell 3/3 on both arms. Not a surprise in hindsight — the §52
+  killers were reported from MID-RUN contexts (worn rosters, real pools);
+  a hops=2 cell starts fresh. The discriminating metrics are deaths /
+  draws / ticks + the elite and boss cells (boss: none 2/3 vs random 0/3 —
+  the only arm gradient). The 53g paired read is per-cell deltas on the
+  SAME seeds, so the comparison stands within this context — the caveat is
+  pinned in BALANCE §53e. If Rung 1's re-measure needs a harder context,
+  a roster/level knob on the cells is the natural extension (the cells
+  file already carries the RunConfig seam).
+
 ### Shape-lock (2026-07-12)
 
 User approved the full proposal, no vetoes. Locked: stamp-at-apply via

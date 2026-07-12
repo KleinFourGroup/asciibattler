@@ -635,3 +635,50 @@ deltas. The pre-X H7c→O log lives at
     traffic scripts → gated portfolio rollout search → economy expressiveness → the
     real balance pass). The 50g anchor batches stay the comparison baseline; the
     economy metric family above is defined and waiting for its first data.
+
+- **2026-07-12 — §53e the GAUNTLET bot baseline (micro round, Rung 0).**
+  Method: `npm run gauntlet` — the 10 shape-locked cells (worklog §53) × 3
+  fixed seeds × objective arms `none`/`random`; run-level strategy `greedy`
+  (`path:elite` for the elite cell); `daemon=none` (no pre-turn choices — the
+  paired-seed contract); each cell a minimal run (`hops=2`; elite `hops=4` —
+  a 3-hop map can NEVER host an elite, the scatter min-spacing; seeds
+  scan-verified). "cleared" = the target encounter's node was advanced past.
+  ⚠ **Context caveat:** cells run vs FRESH seed-rolled default starting
+  teams at full pool — easier than the mid-run contexts the killer cells
+  were reported in. The paired human read (53g) shares the exact context, so
+  the comparison stands; do NOT read these as run-level rates.
+
+  | cell | arm | cleared | draws | deaths | avg ticks |
+  |---|---|---|---|---|---|
+  | alpha-funnel | none | 3/3 | 0 | 24 | 1635 |
+  | alpha-funnel | random | 3/3 | 0 | 32 | 2178 |
+  | alpha-spiral | none | 3/3 | 0 | 33 | 834 |
+  | alpha-spiral | random | 3/3 | 1 | 40 | 941 |
+  | artillery-funnel | none | 3/3 | 0 | 24 | 2606 |
+  | artillery-funnel | random | 3/3 | 0 | 13 | 1924 |
+  | junction-elite | none | 2/3 | 0 | 57 | 1068 |
+  | junction-elite | random | 2/3 | 0 | 68 | 1418 |
+  | unjam-corridors | none | 3/3 | 0 | 28 | 1848 |
+  | unjam-corridors | random | 3/3 | 0 | 18 | 1748 |
+  | fire-edge | none | 3/3 | 1 | 67 | 1861 |
+  | fire-edge | random | 3/3 | 0 | 58 | 1784 |
+  | choke-isthmus | none | 3/3 | 0 | 8 | 1254 |
+  | choke-isthmus | random | 3/3 | 0 | 9 | 1047 |
+  | stall-spiral | none | 3/3 | 0 | 10 | 419 |
+  | stall-spiral | random | 3/3 | 0 | 23 | 581 |
+  | focus-river | none | 3/3 | 0 | 20 | 960 |
+  | focus-river | random | 3/3 | 0 | 7 | 556 |
+  | boss-fortress | none | 2/3 | 0 | 58 | 1487 |
+  | boss-fortress | random | 0/3 | 0 | 80 | 1800 |
+
+  - **Reads:** the bot CLEARS every normal cell 3/3 on both arms — at
+    fresh-team strength, cell *clearing* is not the discriminator; the
+    discriminating signals are **deaths** (8–68 across cells), **draws**,
+    **ticks**, and the elite/boss cells (elite 2/3 both arms; boss `none`
+    2/3 vs `random` 0/3 — the only arm gradient, and it points the expected
+    direction). The 53g human session reads PAIRED per-cell deltas on these
+    same seeds; per-fixture sign flips on the reaction-time cells are
+    expected signal (§52).
+  - Raw rows: `tests/gauntlet/output/gauntlet.csv` (regenerate:
+    `npm run gauntlet -- --csv`); the human-session URL list:
+    `npm run gauntlet -- --urls`.

@@ -14,6 +14,7 @@
     "test:watch": "vitest",
     "fuzz": "tsx tests/fuzz/cli.ts",
     "fuzz:smoke": "vitest run --config vitest.fuzz.config.ts",
+    "gauntlet": "tsx tests/gauntlet/cli.ts",
     "pathing": "tsx tests/pathing/cli.ts",
     "run-config": "tsx tools/run-config/cli.ts",
     "gen:sfx": "node scripts/gen-sfx.mjs"

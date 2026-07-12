@@ -242,6 +242,28 @@ Build findings:
   a roster/level knob on the cells is the natural extension (the cells
   file already carries the RunConfig seam).
 
+### 53e.2 — the standard roster + the pool-damage metric (2026-07-12)
+
+The saturation finding went to the user with three options (difficulty
+multiplier · simulate the mid-run starting state · pool damage taken as the
+metric); the call: **(b)+(c), skip (a)** — the multiplier is a second
+invented anchor (§52's lesson), while the roster route uses the game's own
+relative scaling. The STANDARD ROSTER derives from the user's real habit
+(~no recruiting ⇒ the default 6-melee+4-ranged comp, leveled to their
+reported 7–8 band + one 9). User tweak on record: <50% of real runs carry a
+recruited healer/shaman (rogues on Laverna runs) — majority-shape stands;
+**real comp frequencies come from recorded FULL runs later in the round.**
+Pool damage taken rides the existing telemetry pool chips (whose own doc
+calls the enemy chip "the X balance metric") — `telemetry: true` in the
+driver, one filtered sum. `--fresh` keeps the superseded context reachable.
+
+**The result (BALANCE §53e.2): the gradient is back and it points at the
+§52 killers** — alpha-funnel ~12 / elite up to 16.3 (1/3 cleared) / boss
+~22 (0/3) vs the traffic cells at 0–4. One surprise for §57:
+artillery-funnel collapses to ~0.2 at leveled strength (a fresh-team-only
+threat, maybe). The cell URLs auto-carry `roster=`, so the 53g human
+session plays the identical context.
+
 ### Shape-lock (2026-07-12)
 
 User approved the full proposal, no vetoes. Locked: stamp-at-apply via

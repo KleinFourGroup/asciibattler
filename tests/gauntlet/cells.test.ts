@@ -52,7 +52,7 @@ describe('gauntlet cells (53e)', () => {
     expect(parseRunConfig(new URLSearchParams(query))).toEqual(cellRunConfig(cell, seed));
   });
 
-  it('a live headless drive of cell #1 actually fights the forced encounter on the forced layout', () => {
+  it('a live headless drive of cell #1 fights the forced encounter, on the forced layout, with the standard roster', () => {
     const cell = GAUNTLET_CELLS[0]!;
     const result = runOne(cell.seeds[0], makeStrategy('greedy')!, {
       runConfig: cellRunConfig(cell, cell.seeds[0]),
@@ -61,5 +61,11 @@ describe('gauntlet cells (53e)', () => {
     expect(target.length).toBeGreaterThan(0);
     expect(target.every((b) => b.layoutId === cell.layoutId)).toBe(true);
     expect(target[0]?.hop).toBe(0); // a normal cell fires at the root node
+    // 53e.2 — the fielded team comes from the STANDARD mid-run roster (levels
+    // 7–9), not a seed-rolled fresh team (which would start at level 5).
+    for (const level of target[0]?.playerLevels ?? []) {
+      expect(level).toBeGreaterThanOrEqual(7);
+      expect(level).toBeLessThanOrEqual(9);
+    }
   });
 });

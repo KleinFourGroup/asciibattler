@@ -636,7 +636,9 @@ deltas. The pre-X H7c→O log lives at
     real balance pass). The 50g anchor batches stay the comparison baseline; the
     economy metric family above is defined and waiting for its first data.
 
-- **2026-07-12 — §53e the GAUNTLET bot baseline (micro round, Rung 0).**
+- **2026-07-12 — §53e the GAUNTLET bot baseline (micro round, Rung 0). ⚠ SUPERSEDED
+  same day as the 53g comparator by §53e.2 below (the STANDARD-ROSTER context);
+  this fresh-team table stays as the contrast row (`npm run gauntlet -- --fresh`).**
   Method: `npm run gauntlet` — the 10 shape-locked cells (worklog §53) × 3
   fixed seeds × objective arms `none`/`random`; run-level strategy `greedy`
   (`path:elite` for the elite cell); `daemon=none` (no pre-turn choices — the
@@ -682,3 +684,54 @@ deltas. The pre-X H7c→O log lives at
   - Raw rows: `tests/gauntlet/output/gauntlet.csv` (regenerate:
     `npm run gauntlet -- --csv`); the human-session URL list:
     `npm run gauntlet -- --urls`.
+
+- **2026-07-12 — §53e.2 THE gauntlet bot baseline: the STANDARD mid-run roster +
+  pool damage taken as the primary metric (user-locked; supersedes §53e as the
+  53g comparator).** The fresh-team context saturated (§53e); the user's real
+  context is the default starting comp leveled (~no recruiting): the STANDARD
+  ROSTER = 6 mercenary + 4 ranged at levels 7–8 with one ranged 9 ("something
+  higher thrown in"), baked into the cells (`tests/gauntlet/cells.ts`) and the
+  53g URLs alike — the game's own relative enemy-budget scaling supplies the
+  hardness, no fictional difficulty multiplier. **Primary metric = player pool
+  damage taken** across the target encounter (telemetry pool chips — the
+  established tuning signal, X3-band-comparable: normal≈3 / elite≈6 / boss≈10).
+  Known simplification: in <50% of real runs the user recruits a healer/shaman
+  (rogues on Laverna runs) — the standard comp stays majority-shape; real comp
+  frequencies come from recorded FULL runs later in the round.
+
+  | cell | arm | pool dmg | cleared | draws | deaths | avg ticks |
+  |---|---|---|---|---|---|---|
+  | alpha-funnel | none | 12.7 | 2/3 | 0 | 41 | 2008 |
+  | alpha-funnel | random | 12.0 | 2/3 | 0 | 40 | 2103 |
+  | alpha-spiral | none | 8.7 | 3/3 | 0 | 43 | 901 |
+  | alpha-spiral | random | 9.3 | 3/3 | 0 | 43 | 955 |
+  | artillery-funnel | none | 0.3 | 3/3 | 0 | 12 | 1587 |
+  | artillery-funnel | random | 0.0 | 3/3 | 0 | 11 | 1623 |
+  | junction-elite | none | 16.3 | 1/3 | 0 | 70 | 1006 |
+  | junction-elite | random | 10.7 | 1/3 | 0 | 52 | 903 |
+  | unjam-corridors | none | 4.0 | 3/3 | 0 | 34 | 2059 |
+  | unjam-corridors | random | 2.3 | 3/3 | 0 | 29 | 2097 |
+  | fire-edge | none | 10.7 | 2/3 | 0 | 80 | 2125 |
+  | fire-edge | random | 9.0 | 3/3 | 0 | 65 | 1842 |
+  | choke-isthmus | none | 0.0 | 3/3 | 0 | 10 | 1090 |
+  | choke-isthmus | random | 0.0 | 3/3 | 0 | 8 | 1029 |
+  | stall-spiral | none | 4.0 | 3/3 | 0 | 25 | 521 |
+  | stall-spiral | random | 2.0 | 3/3 | 0 | 21 | 512 |
+  | focus-river | none | 0.0 | 3/3 | 0 | 8 | 468 |
+  | focus-river | random | 6.3 | 3/3 | 0 | 27 | 1028 |
+  | boss-fortress | none | 19.3 | 0/3 | 0 | 52 | 1294 |
+  | boss-fortress | random | 24.7 | 0/3 | 0 | 64 | 1458 |
+
+  - **Reads: the gradient is BACK, and it points at the §52 killers.** Pool
+    damage spans 0.0–24.7. The named killer cells sit far above band:
+    `alpha-funnel` ~12 (4× the normal band), `alpha-spiral` ~9 (3×),
+    `junction-elite` 10.7–16.3 (vs elite≈6, and only 1/3 cleared), the boss
+    19.3–24.7 (2× boss band, 0/3 cleared). The traffic showcases are mild
+    (unjam/stall ~2–4) to zero (choke, focus-none) — consistent with §52's
+    localization: the bot survives easy traffic but bleeds where traffic
+    management IS the fight. One surprise: `artillery-funnel` collapses to
+    ~0.2 at leveled strength — the catapult wave may be a fresh-team-only
+    threat (a §57 tuning note, not a gauntlet defect).
+  - These arm-labeled rows are the 53g paired comparator: the human plays the
+    SAME cells/seeds/roster; the read is per-cell pool-damage deltas + the
+    cleared column on the elite/boss cells.

@@ -11,8 +11,16 @@
  *   npm run gauntlet -- --arms=none,random,hp:lowest
  *   npm run gauntlet -- --cell=artillery-funnel
  *   npm run gauntlet -- --strategy=greedy     # run-level strategy override
+ *   npm run gauntlet -- --fresh               # seed-rolled fresh teams (the
+ *                                             # superseded §53e context)
  *   npm run gauntlet -- --urls                # print the 53g session URL list
  *   npm run gauntlet -- --csv                 # also write output/gauntlet.csv
+ *
+ * 53e.2 — the PRIMARY metric is `pool dmg` (player pool damage taken across
+ * the target encounter's turns, from the harness telemetry's per-turn pool
+ * chips — the BALANCE tuning signal, directly comparable to the X3 bands
+ * normal≈3 / elite≈6 / boss≈10). Cells run the STANDARD mid-run roster
+ * (cells.ts) — `cleared` saturated on fresh teams and stays as sanity.
  *
  * Cell outcome = "the target encounter was CLEARED": the run fought the
  * cell's encounter and advanced past its node (`finalHopReached > cell hop`,
@@ -39,6 +47,7 @@ interface CliArgs {
   arms: { label: string; proclivity: ObjectiveProclivity }[];
   cellFilter: string | undefined;
   strategyOverride: string | undefined;
+  fresh: boolean;
   urls: boolean;
   csv: boolean;
 }
@@ -48,6 +57,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     arms: [],
     cellFilter: undefined,
     strategyOverride: undefined,
+    fresh: false,
     urls: false,
     csv: false,
   };
@@ -68,6 +78,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
       case '--strategy':
         args.strategyOverride = value;
         break;
+      case '--fresh':
+        args.fresh = true;
+        break;
       case '--urls':
         args.urls = true;
         break;
@@ -77,7 +90,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
       case '--help':
         process.stdout.write(
           'gauntlet — headless bot baseline over the 10-cell battle gauntlet.\n' +
-            'Flags: --arms=LIST  --cell=ID  --strategy=NAME  --urls  --csv  --help\n',
+            'Flags: --arms=LIST  --cell=ID  --strategy=NAME  --fresh  --urls  --csv  --help\n',
         );
         process.exit(0);
         break;
@@ -105,6 +118,10 @@ interface CellRunRow {
   draws: number;
   ticks: number;
   playerDeaths: number;
+  /** 53e.2 — player pool damage TAKEN across the target encounter's turns
+   *  (the enemy side of the telemetry pool chips; the BALANCE tuning
+   *  signal, X3-band-comparable). */
+  poolDamage: number;
 }
 
 function strategyNameFor(cell: GauntletCell, override: string | undefined): string {
@@ -117,6 +134,7 @@ function runCell(
   seed: number,
   arm: { label: string; proclivity: ObjectiveProclivity },
   strategyOverride: string | undefined,
+  fresh: boolean,
 ): CellRunRow {
   const strategyName = strategyNameFor(cell, strategyOverride);
   const strategy = makeStrategy(strategyName);
@@ -124,13 +142,17 @@ function runCell(
     throw new Error(`Unknown strategy: ${strategyName} (choices: ${STRATEGY_NAMES.join(', ')})`);
   }
   const result: RunResult = runOne(seed, strategy, {
-    runConfig: cellRunConfig(cell, seed),
+    runConfig: cellRunConfig(cell, seed, fresh),
     objective: arm.proclivity,
+    telemetry: true, // 53e.2 — the pool-chip source (pure observation)
   });
   const target = result.battles.filter((b) => b.encounterId === cell.encounterId);
   const fought = target.length > 0;
   const cellHop = target[0]?.hop ?? -1;
   const cleared = fought && (result.outcome === 'complete' || result.finalHopReached > cellHop);
+  const poolDamage = (result.telemetry?.poolChips ?? [])
+    .filter((c) => c.encounterId === cell.encounterId)
+    .reduce((sum, c) => sum + c.enemy, 0);
   return {
     cell,
     arm: arm.label,
@@ -141,6 +163,7 @@ function runCell(
     draws: target.filter((b) => b.winner === 'draw').length,
     ticks: target.reduce((sum, b) => sum + b.ticks, 0),
     playerDeaths: target.reduce((sum, b) => sum + b.playerDeaths, 0),
+    poolDamage,
   };
 }
 
@@ -178,14 +201,16 @@ function main(): void {
   for (const cell of cells) {
     for (const seed of cell.seeds) {
       for (const arm of args.arms) {
-        rows.push(runCell(cell, seed, arm, args.strategyOverride));
+        rows.push(runCell(cell, seed, arm, args.strategyOverride, args.fresh));
       }
     }
   }
 
-  // Per cell × arm aggregation.
+  // Per cell × arm aggregation. `pool dmg` (avg player pool damage taken per
+  // run of the target encounter) is the PRIMARY metric — X3-band-comparable.
+  if (args.fresh) process.stdout.write('\n(fresh seed-rolled teams — the superseded context)\n');
   process.stdout.write(
-    `\n${pad('cell', 18)}${pad('arm', 12)}${pad('cleared', 9)}${pad('draws', 7)}${pad('deaths', 8)}avg ticks\n`,
+    `\n${pad('cell', 18)}${pad('arm', 12)}${pad('pool dmg', 10)}${pad('cleared', 9)}${pad('draws', 7)}${pad('deaths', 8)}avg ticks\n`,
   );
   for (const cell of cells) {
     for (const arm of args.arms) {
@@ -194,6 +219,10 @@ function main(): void {
       const cleared = fought.filter((r) => r.cleared).length;
       const clearedStr =
         fought.length === 0 ? 'n/a' : `${cleared}/${fought.length}`;
+      const avgPool =
+        fought.length === 0
+          ? '—'
+          : (fought.reduce((s, r) => s + r.poolDamage, 0) / fought.length).toFixed(1);
       const avgTicks =
         fought.length === 0
           ? '—'
@@ -201,7 +230,7 @@ function main(): void {
       const draws = fought.reduce((s, r) => s + r.draws, 0);
       const deaths = fought.reduce((s, r) => s + r.playerDeaths, 0);
       process.stdout.write(
-        `${pad(cell.id, 18)}${pad(arm.label, 12)}${pad(clearedStr, 9)}${pad(String(draws), 7)}${pad(String(deaths), 8)}${avgTicks}\n`,
+        `${pad(cell.id, 18)}${pad(arm.label, 12)}${pad(avgPool, 10)}${pad(clearedStr, 9)}${pad(String(draws), 7)}${pad(String(deaths), 8)}${avgTicks}\n`,
       );
     }
   }
@@ -219,10 +248,10 @@ function main(): void {
   if (args.csv) {
     const outDir = join(dirname(fileURLToPath(import.meta.url)), 'output');
     mkdirSync(outDir, { recursive: true });
-    const header = 'cell,arm,seed,fought,cleared,turns,draws,ticks,playerDeaths';
+    const header = 'cell,arm,seed,fought,cleared,turns,draws,ticks,playerDeaths,poolDamage';
     const lines = rows.map(
       (r) =>
-        `${r.cell.id},${r.arm},${r.seed},${r.fought},${r.cleared},${r.turns},${r.draws},${r.ticks},${r.playerDeaths}`,
+        `${r.cell.id},${r.arm},${r.seed},${r.fought},${r.cleared},${r.turns},${r.draws},${r.ticks},${r.playerDeaths},${r.poolDamage}`,
     );
     const file = join(outDir, 'gauntlet.csv');
     writeFileSync(file, [header, ...lines].join('\n') + '\n');

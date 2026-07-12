@@ -25,9 +25,35 @@
  *   `path:elite`; the human protocol: enter the `*` node.
  */
 
-import type { RunConfig } from '../../src/run/RunConfig';
+import type { RosterEntry, RunConfig } from '../../src/run/RunConfig';
 import { runConfigToQueryString } from '../../src/run/RunConfig';
 import type { EncounterKind } from '../../src/config/encounters';
+
+/**
+ * 53e.2 — the STANDARD mid-run roster (user-locked 2026-07-12): the default
+ * starting comp (6 melee + 4 ranged, `config/recruitment.json`) leveled to
+ * the user's reported hop-6–8 state — "units usually in the 7-8 range, with
+ * something higher thrown in". The fresh seed-rolled teams saturated the
+ * cells (bot cleared every normal 3/3 — worklog §53e); this reproduces the
+ * context where the §52 killer cells actually kill, using the game's own
+ * relative enemy-budget scaling (no fictional difficulty multiplier).
+ * Known simplification, on record: in a non-negligible minority of real runs
+ * (<50%) the user has recruited a healer or shaman (rogues on Laverna runs);
+ * the standard comp stays majority-shape — real comp frequencies come from
+ * recorded FULL runs later in the round.
+ */
+export const STANDARD_ROSTER: readonly RosterEntry[] = [
+  { archetype: 'mercenary', level: 8 },
+  { archetype: 'mercenary', level: 7 },
+  { archetype: 'mercenary', level: 7 },
+  { archetype: 'mercenary', level: 7 },
+  { archetype: 'mercenary', level: 7 },
+  { archetype: 'mercenary', level: 7 },
+  { archetype: 'ranged', level: 9 },
+  { archetype: 'ranged', level: 7 },
+  { archetype: 'ranged', level: 7 },
+  { archetype: 'ranged', level: 7 },
+];
 
 export interface GauntletCell {
   /** Short stable slug — the reporting + `--cell=` filter key. */
@@ -142,14 +168,17 @@ export const GAUNTLET_CELLS: readonly GauntletCell[] = [
   },
 ];
 
-/** The one RunConfig both sides play (see the header for why `daemon: null`). */
-export function cellRunConfig(cell: GauntletCell, seed: number): RunConfig {
+/** The one RunConfig both sides play (see the header for why `daemon: null`).
+ *  `fresh: true` drops the standard roster (the seed-rolled fresh-team
+ *  context — the superseded §53e baseline, kept reachable for contrast). */
+export function cellRunConfig(cell: GauntletCell, seed: number, fresh = false): RunConfig {
   return {
     seed,
     hopCount: cell.hops,
     forcedEncounterId: cell.encounterId,
     forcedLayoutId: cell.layoutId,
     daemon: null,
+    ...(fresh ? {} : { startingRoster: STANDARD_ROSTER }),
   };
 }
 

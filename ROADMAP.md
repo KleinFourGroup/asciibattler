@@ -106,9 +106,22 @@ reads this phase's numbers. No upstream dependencies.
 every comparison the round makes; the command-log tick-stamping touches the
 player→run input channel (currently untraced).
 
-**Decision points:** the gauntlet cell list (encounter × layout × seeds —
-cut WITH the user at kickoff, from the reaction-time killers + the traffic
-scenarios); where the command stream gets stamped (design at kickoff).
+**Decision points — ✅ DECIDED at kickoff (2026-07-12, worklog §53):** the
+10-cell gauntlet list locked (4 killer + 5 traffic + 1 boss, × 3 seeds —
+table in worklog §53); command stamping = at APPLY time via a new
+`command:applied` bus event (covers the parked-drain case); recorder
+persistence = localStorage ring + an export-all dev key; the gauntlet
+driver = an opt-in fuzz-CLI sibling (`npm run gauntlet`).
+
+**The cut (shape-locked 2026-07-12; audit + rationale in worklog §53):**
+
+- [ ] 53a — the `command:applied` bus event at World's apply site (`{tick, command}`) + ARCHITECTURE catalog row; no snapshot bump predicted
+- [ ] 53b — `configHash` util + the passive DEV trace recorder (bus subscriber → `TraceV1`; localStorage ring)
+- [ ] 53c — `replayTrace` + the fidelity test: byte-identical outcome + event trace vs the live drive (the keystone)
+- [ ] 53d — the `?encounter=` URL param + run-config launcher field (step zero: verify RunSnapshot doesn't embed RunConfig)
+- [ ] 53e — the gauntlet cells file + the `npm run gauntlet` driver; headless bot baseline → BALANCE.md §53
+- [ ] 53f — the dev export/load key (DEV window listener; `Run.toJSON`/`fromJSON` + Game swap; browser-verified)
+- [ ] 53g — the human baseline session (~30 recorded battles); paired-seed table → BALANCE.md; the ~80% self-report retires
 
 **Exit criteria:** a recorded human battle replays byte-identically in a
 headless test; the gauntlet runs headless per-cell; the measured human

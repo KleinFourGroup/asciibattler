@@ -20,6 +20,7 @@ import { ALL_ARCHETYPES, type Archetype } from '../sim/archetypes';
 import { LAYOUT_IDS } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { daemonById, type DaemonConfig } from '../config/daemons';
+import { ENCOUNTER_IDS } from '../config/encounters';
 import type { SectorMap } from '../config/sectorMap';
 
 /** One starting-roster slot: an archetype at a chosen level (>= 1, capped). */
@@ -55,9 +56,14 @@ export interface RunConfig {
    * whose kind matches the encounter's kind (`selectEncounter`'s force-select),
    * bypassing the sector pool + hop gate for a clean per-encounter balance sample
    * (the `--encounter=<id>` isolation). A kind mismatch leaves that node's normal
-   * selection (boss/elite nodes still draw their bucket). Programmatic-only (no
-   * URL form — the balance harness sets it); validated loud at construction. NOT
-   * persisted (a RunConfig input); a rehydrated run resets to normal selection.
+   * selection (boss/elite nodes still draw their bucket). 53d — gained the URL
+   * form `encounter=artillery` (ids are case-sensitive; unknown ids dropped like
+   * `layout=`'s), so a gauntlet cell is a shareable URL: `?hops=2&encounter=X&
+   * layout=Y&seed=N&roster=…&daemon=none` pins the whole battle for BOTH the
+   * browser (the human) and the headless CLI (the bot) — note `encounter=` alone
+   * does NOT pin the board (the layout still rolls; pair it with `layout=`).
+   * Validated loud at construction. NOT persisted (a RunConfig input); a
+   * rehydrated run resets to normal selection.
    */
   readonly forcedEncounterId?: string;
   /**
@@ -135,6 +141,7 @@ export const RUN_CONFIG_PARAMS = {
   hops: 'hops',
   roster: 'roster',
   layout: 'layout',
+  encounter: 'encounter',
   width: 'width',
   daemon: 'daemon',
   bits: 'bits',
@@ -192,6 +199,15 @@ function parseLayout(raw: string | null): string | undefined {
   return LAYOUT_IDS.includes(raw) ? raw : undefined;
 }
 
+/** 53d — a known encounter id (case-sensitive — the catalog mixes kebab and
+ *  camelCase ids). Unknown / absent → undefined (normal pool selection),
+ *  matching `parseLayout`'s drop-don't-throw discipline. */
+function parseEncounter(raw: string | null): string | undefined {
+  if (!raw) return undefined;
+  const token = raw.trim();
+  return ENCOUNTER_IDS.includes(token) ? token : undefined;
+}
+
 /** L1 — `none` → null (daemon-less), a catalog id → that daemon, anything
  *  else (absent / unknown id) → undefined (the normal roll). */
 function parseDaemon(raw: string | null): DaemonConfig | null | undefined {
@@ -216,6 +232,8 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (startingRoster !== undefined) config.startingRoster = startingRoster;
   const forcedLayoutId = parseLayout(params.get(RUN_CONFIG_PARAMS.layout));
   if (forcedLayoutId !== undefined) config.forcedLayoutId = forcedLayoutId;
+  const forcedEncounterId = parseEncounter(params.get(RUN_CONFIG_PARAMS.encounter));
+  if (forcedEncounterId !== undefined) config.forcedEncounterId = forcedEncounterId;
   const mapMaxWidth = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.width));
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
   const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));
@@ -258,6 +276,9 @@ export function runConfigToQueryString(config: RunConfig): string {
   }
   if (config.forcedLayoutId !== undefined) {
     params.set(RUN_CONFIG_PARAMS.layout, config.forcedLayoutId);
+  }
+  if (config.forcedEncounterId !== undefined) {
+    params.set(RUN_CONFIG_PARAMS.encounter, config.forcedEncounterId);
   }
   if (config.mapMaxWidth !== undefined) {
     params.set(RUN_CONFIG_PARAMS.width, String(config.mapMaxWidth));

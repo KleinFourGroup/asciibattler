@@ -79,6 +79,8 @@ function printHelp(): void {
       '  --hops=N         total hops incl. root + terminal (>=2 to be playable; 2 = one battle)',
       '  --roster=LIST    archetype[:level],...  e.g. rogue:3,healer:2,mercenary',
       '  --layout=ID      force every battle onto a named layout',
+      '  --encounter=ID   force the authored encounter at every kind-matching node',
+      '                   (53d; pair with --layout to pin the whole board — a gauntlet cell)',
       '  --width=N        middle-hop max width',
       '  --daemon=ID      force the run daemon (a catalog id, or `none` = daemon-less)',
       '  --bits=N         starting bits balance (nonnegative; default config/economy.json)',

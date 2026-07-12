@@ -193,6 +193,23 @@ unit-observable effect, and the world-state oracle pins the rest
 byte-exactly. First divergence caught by the test during development was
 exactly this artifact — the oracle works.
 
+### 53d — the `?encounter=` param (2026-07-12)
+
+A small plumb, exactly as audited: the Run-side `forcedEncounterId` (X2)
+already existed — only the URL form was missing. `parseEncounter` validates
+against the live `ENCOUNTER_IDS` catalog, CASE-SENSITIVE (the catalog mixes
+kebab and camelCase ids — `parseLayout`'s drop-don't-throw discipline
+otherwise); `runConfigToQueryString` round-trips it; the CLI accepted the
+flag for free (it iterates `RUN_CONFIG_PARAMS`) and gained a help line; the
+launcher GUI grew an encounter select with kind-labeled options ("(elite)"/
+"(boss)" — a forced encounter only fires on kind-matching nodes). Step-zero
+prediction held: RunConfig is never persisted (its own header says so), no
+snapshot bump. Browser-verified end-to-end:
+`?seed=777&hops=2&layout=strafingFunnel&encounter=artillery` launches
+"Artillery Company on Strafing Funnel" — gauntlet cell #3 as a shareable
+URL, and the same RunConfig drives the headless CLI (`--encounter=`), which
+is the paired-seed symmetry 53e builds on.
+
 ### Shape-lock (2026-07-12)
 
 User approved the full proposal, no vetoes. Locked: stamp-at-apply via

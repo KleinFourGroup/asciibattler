@@ -24,6 +24,7 @@ import {
 } from '../../src/run/RunConfig';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
+import { ENCOUNTERS } from '../../src/config/encounters';
 import { LEVELING } from '../../src/config/leveling';
 import { NODE_MAP } from '../../src/config/nodemap';
 
@@ -37,6 +38,7 @@ const seedInput = byId<HTMLInputElement>('seed');
 const hopsInput = byId<HTMLInputElement>('hops');
 const widthInput = byId<HTMLInputElement>('width');
 const layoutSelect = byId<HTMLSelectElement>('layout');
+const encounterSelect = byId<HTMLSelectElement>('encounter');
 const rosterRows = byId<HTMLDivElement>('roster-rows');
 const launchUrl = byId<HTMLTextAreaElement>('launch-url');
 const launchLink = byId<HTMLAnchorElement>('launch-link');
@@ -59,6 +61,14 @@ seedInput.placeholder = 'blank → game picks one';
 
 layoutSelect.append(option('', '— procedural (random) —'));
 for (const id of LAYOUT_IDS) layoutSelect.append(option(id, id));
+
+// 53d — force an authored encounter at every kind-matching node (a gauntlet
+// cell = encounter + layout + seed + roster). Kind shown so a boss/elite pick
+// is an informed one (it only fires on nodes of that kind).
+encounterSelect.append(option('', '— pool roll (random) —'));
+for (const e of ENCOUNTERS) {
+  encounterSelect.append(option(e.id, e.kind === 'normal' ? e.id : `${e.id} (${e.kind})`));
+}
 
 // ---- roster builder -------------------------------------------------------
 
@@ -123,6 +133,7 @@ function recompute(): void {
   setIf(params, RUN_CONFIG_PARAMS.hops, hopsInput.value);
   setIf(params, RUN_CONFIG_PARAMS.width, widthInput.value);
   setIf(params, RUN_CONFIG_PARAMS.layout, layoutSelect.value);
+  setIf(params, RUN_CONFIG_PARAMS.encounter, encounterSelect.value);
   setIf(params, RUN_CONFIG_PARAMS.roster, readRosterParam());
 
   // Round-trip through the game's own validator so the launcher drops /
@@ -146,6 +157,7 @@ function renderSummary(config: RunConfig): void {
     `hops:    ${config.hopCount ?? `default (${NODE_MAP.hopCount})`}`,
     `width:   ${config.mapMaxWidth ?? `default (${NODE_MAP.middleWidthMax})`}`,
     `layout:  ${config.forcedLayoutId ?? 'procedural (random per battle)'}`,
+    `encounter: ${config.forcedEncounterId ?? 'pool roll (random per node)'}`,
     `roster:  ${roster}`,
   ].join('\n');
 }
@@ -156,6 +168,7 @@ for (const el of [seedInput, hopsInput, widthInput]) {
   el.addEventListener('input', recompute);
 }
 layoutSelect.addEventListener('change', recompute);
+encounterSelect.addEventListener('change', recompute);
 
 byId<HTMLButtonElement>('random-seed').addEventListener('click', () => {
   // Tool-side randomness only (the ban on Math.random is scoped to

@@ -8,6 +8,7 @@ import {
 } from './RunConfig';
 import { ALL_ARCHETYPES } from '../sim/archetypes';
 import { LAYOUT_IDS } from '../sim/layouts';
+import { ENCOUNTER_IDS } from '../config/encounters';
 import { LEVELING } from '../config/leveling';
 
 // Mechanic-level tests: the parser logic is config-free, so explicit inputs
@@ -121,6 +122,30 @@ describe('RunConfig parsing', () => {
 
   it('round-trips the bits override through the query string (47e)', () => {
     const original = cfg('bits=42&seed=7');
+    expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
+  });
+
+  it('parses `encounter=` against the live catalog (53d)', () => {
+    const id = ENCOUNTER_IDS[0]!;
+    expect(cfg(`encounter=${id}`).forcedEncounterId).toBe(id);
+  });
+
+  it('drops an unknown encounter id (53d)', () => {
+    expect(cfg('encounter=not_a_real_encounter').forcedEncounterId).toBeUndefined();
+  });
+
+  it('encounter ids are case-sensitive — a case-mangled catalog id drops (53d)', () => {
+    // The catalog mixes kebab and camelCase ids; find one with a case-mangled
+    // variant that is NOT itself a catalog member. Skip-proof: every catalog
+    // has at least one id whose uppercase form is foreign.
+    const id = ENCOUNTER_IDS.find((e) => !ENCOUNTER_IDS.includes(e.toUpperCase()))!;
+    expect(cfg(`encounter=${id.toUpperCase()}`).forcedEncounterId).toBeUndefined();
+  });
+
+  it('round-trips the encounter override, alone and with a pinned layout (53d — the gauntlet-cell URL)', () => {
+    const id = ENCOUNTER_IDS[0]!;
+    const original = cfg(`hops=2&seed=9&encounter=${id}&layout=${LAYOUT}`);
+    expect(original.forcedEncounterId).toBe(id);
     expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
   });
 });

@@ -1,416 +1,272 @@
-# ROADMAP — Cluster 3: Economy (Phases 47→52)
+# ROADMAP — The Micro Round (Phases 53→57)
 
-> **▶ ACTIVE — the third of the six post-X meta-roadmap clusters
-> ([META-ROADMAP.md](META-ROADMAP.md)), and the first roadmap authored under
-> the 2026-07-06 planning-stack protocol** (AGENTS.md "The planning stack"):
-> this file is the PLAN and stays one for its whole life. Phase entries carry
-> charter / ordering + dependencies / risk / decision points / exit criteria /
-> scope guards ONLY; sub-steps are cut at each phase kickoff; narrative,
-> findings, and rationale land in [WORKLOG.md](WORKLOG.md); plan mutations here
-> are one line + a worklog pointer. Spec: **[cluster-3-spec.md](cluster-3-spec.md)**
-> (hardened + locked 2026-07-07 — audit this plan against it). **First task of
-> the next round's kickoff = archive this file + WORKLOG.md + cluster-3-spec.md →
-> `archive/post-46-roadmap.md` + `archive/post-46-worklog.md` +
-> `archive/cluster-3-spec.md`** (the ritual; the spec clause was implicit in
-> AGENTS "superseded specs archive with their round" — made explicit here
-> 2026-07-11 so the next kickoff can't miss it).
+> **▶ ACTIVE — the micro/balance-realism interstitial round between Clusters
+> 3 and 4** — the standing post-cluster-audit convention, promoted to a full
+> round by the §52 calibration finding. Authored under the planning-stack
+> protocol (AGENTS.md "The planning stack"): this file is the PLAN and stays
+> one for its whole life. Phase entries carry charter / ordering +
+> dependencies / risk / decision points / exit criteria / scope guards ONLY;
+> sub-steps are cut at each phase kickoff; narrative, findings, and rationale
+> land in [WORKLOG.md](WORKLOG.md); plan mutations here are one line + a
+> worklog pointer. Spec: **[micro-round-spec.md](micro-round-spec.md)**
+> (shape-locked 2026-07-11 — audit this plan against it). **First task of the
+> next round's kickoff = archive this file + WORKLOG.md + micro-round-spec.md →
+> `archive/post-52-roadmap.md` + `archive/post-52-worklog.md` +
+> `archive/micro-round-spec.md`** (the ritual).
 
 Companion to [DESIGN.md](DESIGN.md), [ARCHITECTURE.md](ARCHITECTURE.md),
-[BALANCE.md](BALANCE.md), [TODO.md](TODO.md), [GOTCHAS.md](GOTCHAS.md), and
-[META-ROADMAP.md](META-ROADMAP.md). Prior roadmaps in [archive/](archive/) —
-most recently [post-41](archive/post-41-roadmap.md) (the Pathfinding Audit,
-42→46).
+[BALANCE.md](BALANCE.md), [PATHING.md](PATHING.md), [TODO.md](TODO.md),
+[GOTCHAS.md](GOTCHAS.md), and [META-ROADMAP.md](META-ROADMAP.md). Prior
+roadmaps in [archive/](archive/) — most recently
+[post-46](archive/post-46-roadmap.md) (Cluster 3 — Economy, 47→52).
 
 ## Where this came from
 
-The META Cluster-3 brief (currency + rewards + shop + consumables + their
-editors) expanded through the 2026-07-07 spec round. The kickoff's blind-spot
-audit found the load-bearing surprise that shapes this whole plan: **the
-daemon effect system the economy leans on doesn't exist yet** (today's daemons
-only gate redraw/empower), so the cluster opens by building the shared
-daemon/packet **rule vocabulary** — the meta-model analogue of Cluster 1's
-`AbilityDef` — and everything else authors against it. Full kickoff narrative:
-[WORKLOG.md](WORKLOG.md) §Kickoff. Vocabulary (locked): **bits** (currency) ·
-**packets** (consumables) · **cache** (inventory) · **ports** (shops).
+The §52 calibration finding (BALANCE §52, worklog
+[post-46](archive/post-46-worklog.md) §52): **bot best-achievable ~30% vs
+the user's native ~80%** — a ~50pt gap localized by elimination to
+battle-layer objective handling; the human edge is TRAFFIC MANAGEMENT
+(composition-level — exactly the residual §42–46 left after fixing
+unit-level cooperation). Every absolute bot-anchored target is fiction
+until the bot is realistic, so Cluster 3 shipped its economy numbers
+launch-rough BY DESIGN and its whole tuning agenda moved here. The design
+answer, locked in principle at §52: **portfolio-based search over scripted
+policies** (Churchill & Buro lineage), climbed as a measurement-gated rung
+ladder. The round has the 42→46 shape: symptom → instrument → fix →
+re-baseline.
 
 ## The phase sequence at a glance
 
 | Phase | Name | One-liner | Risk |
 |---|---|---|---|
-| **47** | The rule vocabulary | Rules (modifiers + hooks) + run-stat folds; idols re-authored; multi-daemon; tally-settle + battleRules seams; bits substrate | High (run+sim seam surgery, both snapshots bump) |
-| **48** | Rewards | Reward tables + registry + editor; the reward phase + screen; the persistent bits overlay | Medium (new run phase; screen-flow insertion) |
-| **49** | Packets & cache | `PacketDef` + cache + the two use contexts; the pre-turn "fire" UX round; packet editor | Medium (the spec's one ⚠ OPEN resolves here) |
-| **50** | Ports | The node kind + scatter; the port phase + screen; stock/buy/sell; unit removal | Medium (broad surface, little core; the rosterIndex risk) |
-| **51** | The UI/UX cohesion review | A deliberate cohesion sweep over every surface the cluster added — may be a documented no-op | Low (review + polish; no new systems) |
-| **52** | The balance pass + close-out | Economy tuning vs BALANCE.md; the boss-wall rider re-read; round close | Low (measure + config; §41/§46b precedent) |
+| **53** | Rung 0 — the recorder + the gauntlet | Passive DEV trace recorder (replayable human fixtures; paired-seed comparisons) + the ~10-cell battle gauntlet; rider: the dev export/load key | Medium (replay fidelity is the round's foundation) |
+| **54** | Rung 1 — the traffic scripts | Five reactive traffic scripts at the objective layer; anchors frozen; gauntlet re-measure | High (the round's core surgery) |
+| **55** | Rung 2 — portfolio rollout search | GATED on §54's residual: snapshot-clone rollouts + the clairvoyance guard — or a documented NO | High if built (may legitimately not run) |
+| **56** | The expressive economy strategy | Economy dims join the ONE scored vector; fire scorer; top-K refinement; `--search` regen | Medium (harness-only surface) |
+| **57** | The REAL balance pass + close-out | Re-anchor targets · boss-wall verdict · prices/`bitsMultiplier`/drop weights/`path.port`/fire arm · round close | Low-Medium (measure + config) |
 
 ## Sequencing rationale
 
-§47 first — META principle 1 (model before content): every later phase
-authors ops, hooks, or folds against the vocabulary, and re-authoring the four
-idols early proves the schema on real content before new content exists. §48
-before §49 because packets *arrive* via rewards — the delivery pipe (tables,
-reward phase, screen) exists before the goods; packet table entries ship
-schema-complete but dormant in §48 and activate in §49. §50 after all three: a
-port sells packets and daemons for bits — it consumes every model this cluster
-defines. §51 (user-inserted at shape-lock) sits after §50 because every
-surface must exist to review, and before §52 because closing a cluster with
-the balance pass is the established routine. §52 last by that convention, and
-it owns the balance rider carried in from the Pathfinding Audit.
+Instrument before fix — the 42→46 shape: §53 builds the measurement
+apparatus every later gate reads, and its human baseline is what "realistic"
+means for the rest of the round. §54 before §55 because the portfolio IS
+the scripts — nothing to search over until they exist — and §55's existence
+is itself a measurement call on §54's residual. §56 waits for the bot to
+stabilize (whichever rung that turns out to be): a `--search` optimum
+derived against a still-moving bot is dead compute — §52's own re-scope
+rationale, applied forward. §57 strictly last by the cluster-closer
+convention; it consumes §56's expressive vector and the stable bot, and it
+owns the re-anchoring + the boss-wall rider verdict.
 
 ## Hard ordering constraints
 
-- §47's multi-daemon ownership + owned-exclusion gate §48 (daemon table
-  entries) and §50 (daemon stock).
-- §47's run-stat fold machinery gates §49's derived `cacheSize` and §48's
-  `bitsGain` modifiers.
-- §47's bits substrate (`run.bits` + `run:bitsChanged`) gates §48's overlay
-  and every earn/spend surface.
-- §48's table schema + reward phase gate §49's packet rewards and §50's
-  richer port/elite loot authoring.
-- §49's `PacketDef` + cache gate §50 (ports stock and sell packets).
-- The spec's ⚠ OPEN (the pre-turn fire UX) resolves at §49's kickoff — no
-  phase before it depends on that answer.
-- §51 after §50 (nothing to review until every surface exists); §52 strictly
-  last (the close-out lives there).
+- §53's gauntlet is the instrument for §54's re-measure and §55's gate; its
+  recorder replay path is what the dev export/load key rides.
+- §53's human gauntlet baseline (user play session, ~1 hour) gates every
+  human–bot comparison downstream; the ~80% self-report stands as the
+  provisional re-anchor only until then.
+- §54 before §55 (the portfolio is the scripts); §55's go/no-go reads §54's
+  quantified residual — a decision-point STOP.
+- §56 after the behavior rungs settle; §57 after §56 (it measures at the
+  expressive optimum).
+- `path.port` sweeps FIRST within §57 (the transaction-starvation guard: a
+  price read at ~24% transaction rate is not a price read — BALANCE §50g).
 
 ## Conventions (the standing set)
 
-Headless-first for all run/sim logic; every serialized-shape change bumps its
-snapshot version, reject-stale; commit per logical change + pause between
-commits; fuzz/determinism re-baselines are EXPECTED (new RNG streams §47/§48,
-the scatter pass + new phase §50) and each gets its own commit note; editors
-ride their feature and extend the `/__save-config` allowlist + `/tools/`
-index; balance-proof tests derive from config; keep DESIGN.md /
-ARCHITECTURE.md (event + command catalogs!) honest in the same commit;
-browser-verify the new UI surfaces natively (overlay, reward/port screens);
-SFX polish rides its feature (pickups §48, purchases §50).
+Headless-first for all bot/harness logic; win-rate + calibration
+measurements land in [BALANCE.md](BALANCE.md), movement-quality reads in
+[PATHING.md](PATHING.md) (append at any movement change, per its header);
+**anchors stay FROZEN on the old objective handling forever**
+(greedy/random = the stable floor); the drift.test.ts quality gates are
+NEVER relaxed and `baseline.test.ts` exact pins re-pin only on DELIBERATE
+movement change; NO RNG in movement — symmetric rules only; the
+clairvoyance guard is non-negotiable wherever rollouts exist;
+fuzz/determinism re-baselines are EXPECTED when bot behavior changes and
+each gets its own commit note; commit per logical change + pause between
+commits; keep DESIGN.md / ARCHITECTURE.md honest in the same commit.
 
 ---
 
-## Phase 47 — The rule vocabulary (the keystone)
+## Phase 53 — Rung 0: the recorder + the gauntlet
 
-**Charter:** build the shared daemon/packet effect model: `Rule = modifier |
-hook` over a new run-stat fold vocabulary, run-domain + battle-domain triggers,
-and the two seam crossings (battle hooks compile into the World as
-`battleRules[]` data; battle-earned run resources settle via a serialized
-WorldSnapshot tally — the XP pattern). Re-author the four idols in it, delete
-the legacy gates + `TurnGates`, land uncapped multi-daemon ownership
-(serialized by id), and lay the bits substrate (`run.bits`, `run:bitsChanged`,
-floor-at-zero, `RunConfig` override) that tallies settle into.
+**Charter:** build the passive DEV trace recorder — `seed + config hash +
+tick-stamped command log + outcome`; determinism makes every recorded human
+run a replayable fixture, and paired-seed human-vs-bot comparison becomes
+the round's unit of evidence. Assemble the ~10-cell battle GAUNTLET from
+the named killer cells + traffic showcases (~3 seeds each — battle-level,
+not run-level; ~1 hour of user time). Rider: the **dev export/load key**
+(RunSnapshot dump/restore on a keybinding, beside the recorder's replay
+path — nearly free, RunSnapshot round-trips by contract).
 
-**Why here / dependencies:** everything downstream authors against this
-schema; no new-system dependencies. Consumes the Phase-L deferral
-(multi-daemon economy) and the dormant `RunTriggerContextMap` seam.
+**Why here / dependencies:** instrument before fix; every later rung's gate
+reads this phase's numbers. No upstream dependencies.
 
-**Risk:** **High** — the cluster's core surgery, crossing the run/sim seam.
-Both snapshots bump (Run: daemons-by-id + rules + bits; World: tallies +
-battleRules). Mitigation: the idol re-authoring is a behavior-equivalence
-refactor with the existing daemon fuzz arm as the oracle.
+**Risk:** **Medium** — a trace that doesn't replay byte-identically poisons
+every comparison the round makes; the command-log tick-stamping touches the
+player→run input channel (currently untraced).
 
-**Decision points — ✅ DECIDED at kickoff (2026-07-07, worklog §47):** launch
-lists = 5 triggers / 5 ops / 2 run-stats (see the cut; `grantPacket` waits
-for §49's `PacketDef`); daemons serialize BY ID (bespoke round-trip
-retires); PreTurnScreen = stacked banner lines; NO overlay pull-forward.
+**Decision points:** the gauntlet cell list (encounter × layout × seeds —
+cut WITH the user at kickoff, from the reaction-time killers + the traffic
+scenarios); where the command stream gets stamped (design at kickoff).
 
-**The cut (shape-locked 2026-07-07; rationale in worklog §47):**
+**Exit criteria:** a recorded human battle replays byte-identically in a
+headless test; the gauntlet runs headless per-cell; the measured human
+baseline + paired-seed bot numbers on record in BALANCE.md (the ~80%
+self-report retires as provisional anchor); the export/load key
+user-verified in the native browser.
 
-- [x] 47a — `foldRunStats` + `RunStatKey` (`bitsGain`, `cacheSize`): pure module + tests, zero consumers ✅ [runStats.ts](src/run/runStats.ts), 9 tests
-- [x] 47b — the `Rule` zod schema (modifier | hook; triggers `turnStart/encounterStart/encounterEnd` + `dealHit/kill`; ops `grantRedraws/grantEmpowers/gainBits/healPool/applyStatus`; filters `archetype/crit/won`) alongside legacy gates; no behavior change ✅ [daemons.ts](src/config/daemons.ts) + matrix guard + boot assert, 16 tests
-- [x] 47c — the run-domain hook engine; idols re-authored; serialized `turnGrants` replaces `turnGates`; legacy gates + `TurnGates` DELETED; **Run v24→v25** ✅ oracle PASSED — all 6 fuzz arms byte-identical (worklog §47)
-- [x] 47d — multi-daemon: `daemons[]` by id; PreTurnScreen stacked banners; `turn:starting` list payload; **v25→v26** ✅ per-idol empower controls (option B, worklog §47); oracle IDENTICAL ×6; browser-verified
-- [x] 47e — the bits substrate: `run.bits` + `run:bitsChanged` + `config/economy.json` + `RunConfig` override + `gainBits` with the `bitsGain` fold; example daemon #3; **v26→v27** ✅ Moneta in-catalog (user call) + run-domain instant-op execution at all three fire sites; oracle + decisions: worklog §47e
-- [x] 47f — `battleRules[]` compile-in + `tallies` settle (the XP pattern); examples #1+#2; **World v32→v33** + determinism/fuzz re-baseline ✅ Laverna + Fortuna in-catalog; the statMods axis landed with its first consumer; **+ Run v27→v28** (battleRules ride the serialized `currentEncounter` — an unpredicted bump, worklog §47f)
-- [x] 47g — exit sweep: full fuzz pass, ARCHITECTURE catalog/tree, GOTCHAS, docs + cursor flip ✅ 40 runs 0 hangs, all 7 idols exercised; all four exit criteria MET; **Phase 47 CLOSED** (audit + verdict: worklog §47g)
-
-**Exit criteria:** the four idols behave equivalently under the new schema
-(fuzz `--daemon` green); the spec's five motivating example daemons are
-*authorable* and at least three are authored + tested (one per matrix
-quadrant: battle→run tally, battle→battle status, passive modifier);
-multi-daemon ownership round-trips by id; `TurnGates` and the legacy gate
-fields are gone.
-
-**Scope guards:** NO packet delivery mechanics (ops only — active/targeted
-delivery is §49); NO reward tables; NO speculative vocabulary beyond the
-launch lists; NO mid-battle player input of any kind.
+**Scope guards:** the recorder is passive + DEV-only — ZERO shipped-game
+behavior change; NO bot changes this phase (baseline first); menu-grade
+save/load stays Cluster 6; no run-level gauntlet cells.
 
 ---
 
-## Phase 48 — Rewards (tables, the reward phase, the bits surfaces)
+## Phase 54 — Rung 1: the five traffic scripts
 
-**Charter:** make the reserved `rewards?` encounter seam real: the
-reward-table registry (`config/rewards.json`, entries = bits `{min,max}` |
-packet | daemon, weighted, owned-daemon exclusion) referenced by name with a
-boot-time integrity assert; `{table, trigger}` lists on encounters
-(independent `chance` tests on win); the serialized reward run-phase + screen
-in the locked battle → rewards → promotion → recruit sequence, declinable
-per-portion; the persistent top-left bits overlay (the new Game-level
-page-lifetime layer); dedicated forked RNG streams; `bitsMultiplier` on the
-X1 difficulty seam. The reward-table editor rides.
+**Charter:** five state-reactive, event-driven traffic scripts — **unjam ·
+terrain-edge hold · choke hold · attrition stall · cohesion focus** —
+mapping one-to-one onto the introspected human edge, at the objective
+layer (composition-level traffic; the §42–46 residual). No rollouts.
+Re-measure the gauntlet; the quantified human–bot residual is §55's gate
+input.
 
-**Why here / dependencies:** needs §47 (multi-daemon exclusion, bits
-substrate, `bitsGain` folds). Packet entries ship dormant (schema-complete,
-zero defs) — the pipe before the goods.
+**Why here / dependencies:** the design answer's first behavioral rung;
+needs §53's instrument to prove any of it moved.
 
-**Risk:** **Medium** — a new serialized run phase spliced into the post-battle
-scene chain, plus net-new persistent-UI infrastructure. RunSnapshot bumps
-(reward phase + pending offer + reward RNG streams).
+**Risk:** **High** — the round's core surgery. The spec's biggest ⚠ OPEN
+lives here: how scripts integrate with the O1 typed objective model (new
+objective kinds vs a layer above) and the arbitration rule when several
+scripts trigger at once.
 
-**Decision points — ✅ DECIDED at kickoff (2026-07-08, worklog §48):**
-reward phase splices at the TURN GATE ahead of the promotion interpose
-(spec order honored; a between-turn-rewards seam falls out free);
-"save/reload" = the serialization round-trip CONTRACT (no live persistence
-exists); inventory-full confirmed moot (zero PacketDefs); bits overlay OWNS
-top-left everywhere — the battle hop chip moves to its right (refine §51);
-`bitsMultiplier` applies inside `gainBits`, multiplicative with the
-`bitsGain` fold, and the DISPLAY derives from the settle math (one shared
-helper); two dedicated streams; launch catalog = 4 tables
-(bits-small / bits-large / daemon-cache / boss-hoard).
+**Decision points:** the integration architecture + arbitration (a design
+round at kickoff, the §44 decision-protocol precedent); per-script trigger
+conditions; whether the serialized objective shape changes (snapshot-bump
+prediction goes in the cut lines).
 
-**The cut (shape-locked 2026-07-08; rationale in worklog §48):**
+**Exit criteria:** five scripts live behind the new bot with the anchors
+byte-frozen on the old handling; drift gates green with NO gate relaxed;
+any baseline re-pin deliberate and noted; the gauntlet re-measure on record
+in BALANCE.md with the residual quantified.
 
-- [x] 48a — the rewards config layer: `config/rewards.json` + `src/config/rewards.ts` (zod, tested), the `rewards?` seam typed to `{table, trigger:{chance}}[]`, boot referential assert; skeleton table + one reference; zero consumers ✅ `dda1032`, +15 tests; brigands carries `bits-small` at chance 1
-- [x] 48b — the Run engine: two reward streams (append-at-end), `ownedDaemonIds`, roll-on-win + owned-exclusion + the empty-after-filter guard, `'reward'` phase + serialized pending offer (base amounts) + the shared effective-bits helper, accept/decline per-portion commands, the turn-gate splice, harness `case 'reward'`; **Run v28→v29** ✅ `10659a2`, +20 tests; temp Game auto-accept bridge until 48c (worklog §48)
-- [x] 48c — RewardScreen + RewardScene + Game wiring, per-portion accept with derived re-render, pickup SFX; browser-verify ✅ `1272e69`, browser-verified at :5191 (incl. the Moneta re-price rider); + the Game.dispatch exhaustiveness fix (worklog §48)
-- [x] 48d — the bits overlay: the Game-level page-lifetime layer (top-left), `run:bitsChanged` + direct first paint, hop chip relocation; browser-verify in AND out of battle ✅ `be3a8b4`, browser-verified full lifecycle at :5191; + the reset-repaint ordering fix (worklog §48)
-- [x] 48e — the reward-table editor + `formatRewardsJson` + the encounters `rewards` block emitter + `/__save-config` allowlist + `/tools/` index ✅ 2026-07-08, +3 tests, browser-verified; scope rider: the encounter editor gained the rewards-ref panel (user-approved — worklog §48)
-- [x] 48f — `bitsMultiplier` (difficulty.json + `RunConfig` + the `gainBits` site) + the launch catalog authored with the editor in hand ✅ 2026-07-09, +2 tests; all 13 encounters reference a table (numbers rough — §52 tunes); the universal-catalog test sweep — worklog §48
-- [x] 48g — exit sweep: full fuzz pass + CSV re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip ✅ 2026-07-09 — re-baseline STABLE (fixed-vector probe flat 25.0/25.0; 480 runs, 0 hangs; BALANCE.md §48g), gotcha #116, phase CLOSED — worklog §48
-
-**Exit criteria:** win a battle → reward screen → accept/decline bits +
-daemon rewards → promotion → recruit, user-confirmed in the native browser;
-bits visibly tick on the overlay in AND out of battle; a mid-reward
-save/reload reproduces the pending offer; fuzz drives through the reward
-phase green.
-
-**Scope guards:** NO packet defs (dormant entries only); NO trigger
-predicates beyond `chance`; NO reward sources besides encounter-win (camps/
-events are Cluster 5); rest nodes unchanged.
+**Scope guards:** NO rollouts (§55's domain); NO RNG in movement; the
+anchors untouched; ⚠ labyrinth stays an intentional slow maze; no economy
+work.
 
 ---
 
-## Phase 49 — Packets & cache
+## Phase 55 — Rung 2: portfolio rollout search (GATED)
 
-**Charter:** `PacketDef` (`usableIn` + `TargetSpec` + the duration axis from
-day one — the mid-battle seam ships dormant) + the cache (base six slots, no
-stacking, size as a derived run-stat, discard, the forced-keep shrink flow,
-reward-time decline-or-swap); the two launch use contexts (out-of-battle on
-roster/piles/run; pre-turn on hand units + battle-wide via battle-scoped rule
-injection); launch packet content (the empower set + redraw-2 + a couple of
-Cluster-1-effect packets); packet reward entries activate. The packet editor
-rides.
+**Charter:** IF §54's residual justifies it — portfolio greedy search:
+clone the world via snapshot, roll each script forward ~10–20s of game
+time, score by pool differential, commit the winner. The **CLAIRVOYANCE
+GUARD**: rollouts fork a divergent RNG so the bot predicts
+distributionally, never foresees actual rolls.
 
-**Why here / dependencies:** needs §47 (the op pool, `cacheSize` folds) and
-§48 (packets arrive via rewards). Resolves the spec's one ⚠ OPEN — the
-pre-turn "fire" UX (the popup-window instinct) — as a design round AT this
-kickoff (shape-lock with the user before building; empower/redraw stop being
-inline and generalize into it).
+**Why here / dependencies:** strictly after §54 — the portfolio IS the
+scripts.
 
-**Risk:** **Medium** — mostly new UI surfaces + run-level state; the sim
-stays untouched beyond §47's machinery. RunSnapshot bumps (cache contents).
+**Risk:** **High if built** (sim-clone machinery, rollout perf budget) —
+and it may legitimately not run at all: the §46a "NO — well-tuned School 1
+is enough" precedent is a fully respectable outcome.
 
-**Decision points — ✅ DECIDED at kickoff (2026-07-09, worklog §49):** the
-pre-turn fire UX = **the guided fire strip** (grant chips in acquisition
-order, auto-arm + inline hand targeting, **pass-is-final by default,
-ENGINE-enforced, config toggle**; packets at-will, consume-on-fire) — and
-with it the 47d summed-redraw lock deliberately REVERSES (per-source grant
-queue); cache home = a persistent chip beside the bits overlay; launch
-catalog = 7 packets (incl. one run-duration rule packet); `grantPacket`
-deferred.
+**Decision points:** **THE GATE — a stop.** Go/no-go on §54's quantified
+residual; the threshold is set when the numbers exist, not before. If GO:
+rollout horizon + compute budget.
 
-**The cut (shape-locked 2026-07-09; rationale in worklog §49):**
+**Exit criteria:** GO → the search live behind the bot, gauntlet
+re-measure on record; NO-GO → the documented verdict with the numbers that
+decided it (the §46a shape). Either way, the decision line lands here with
+a worklog pointer.
 
-- [x] 49a — the packet config layer: `PacketDef` zod (`config/packets.json` + `src/config/packets.ts`: `usableIn` + `TargetSpec` + the duration axis), boot asserts incl. `assertRewardPacketRefs`; zero consumers ✅ 2026-07-09, +16 tests; the op pool grows `applyBuff`/`injectRule` (worklog §49a)
-- [x] 49b — the cache core: `run.cache` (packet ids), size derived via the `cacheSize` fold, add/discard/full + the forced-keep shrink state, `run:cacheChanged`; **Run v29→v30**; headless ✅ 2026-07-09, +9 tests; overflow = derived, never flagged (worklog §49b)
-- [x] 49c — packet rewards activate: the `rollRewards` packet arm + `RewardPortion` packet kind + cache-full decline-or-swap + the fuzz reward policy (accept-if-room); RewardScreen packet portions + cache state ✅ 2026-07-09, +7 tests, browser-verified at :5191; **+ an unpredicted Run v30→v31** (the portion-union widening — worklog §49c)
-- [x] 49d — the grant queue: `TurnGrants` → one ordered per-source list (consumed/passed serialized, active grant derived), `passGrant`, active-grant validation + the finality toggle, fuzz bots adapt; **Run v31→v32** (renumbered by 49c's bump); headless + the PreTurnScreen mechanical adaptation ✅ 2026-07-09, browser-verified at :5191; ⚠ `passIsFinal` SHIPS `false` until 49f renders the strip (worklog §49d)
-- [x] 49e — the fire engine: the `usePacket` command, per-context targets, op execution (encounterEffect path / redraw / rule injection incl. the run-duration store / out-of-battle instants); headless ✅ 2026-07-09, +14 tests; **Run v32→v33** (the 3 fire stores) **+ an unpredicted World v33→v34** (the `applyTo:'target'` axis venom demanded — the 47f deferral's content arrived); healPool grew `preTurn`; catalog at 6/7 early for op coverage (worklog §49e)
-- [x] 49f — the fire UX: the guided chip strip + Pass, the cache chip + modal + shrink flow, out-of-battle use ✅ 2026-07-09 in two commits (`ac18e89` cache surfaces, user-playtested + the strip commit); **`passIsFinal` flipped TRUE** (the 49d rider retires); at-will packets = a chip row ON the gate screen (worklog §49f)
-- [x] 49g — the launch catalog (7) + the packet editor + `/__save-config` allowlist + `/tools/` index; reward tables gain packet entries ✅ 2026-07-10 in two commits (`6d3d762` content live — a real win dropped a packet; + the editor, byte-faithful formatter pinned +3 tests); reward-editor gains the packet select + the missing `assertRewardPacketRefs` (worklog §49g)
-- [x] 49h — exit sweep: full fuzz + re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip ✅ 2026-07-10 — sweep healthy 0 hangs (BALANCE §49h: deliberately NOT a re-baseline); gotcha #117; exit criteria all met, one noted caveat (the shrink flow has no shipped trigger content — agent-verified only). **Phase 49 ✅ CLOSED** (worklog §49h)
-
-**Exit criteria:** the loop earn-store-use runs end to end: a packet won from
-a reward table lands in the cache, survives save/reload, fires pre-turn (unit
-+ battle-wide) and out-of-battle (roster target), with its status/effect
-visible in battle; full/swap/shrink flows user-confirmed; empower/redraw
-still work as packet-shaped fires under the new UX.
-
-**Scope guards:** NO mid-battle pause-to-cast (the seam ships, the feature
-doesn't); NO tile-targeted launch content (waits for mid-battle); NO
-stacking; NO permanent-duration launch content (`encounter`/`run` only);
-NO `grantPacket` daemon op (kickoff call — deferred until content demands);
-NO `battleStart` trigger (launch battle-wide packets are rule-shaped);
-NO packet fire-policy fuzz arm (the engine-level pass state makes one
-possible later).
+**Scope guards:** NO raw action-space search; NO RL/imitation; the
+clairvoyance guard is non-negotiable; anchors frozen.
 
 ---
 
-## Phase 50 — Ports
+## Phase 56 — The expressive economy strategy layer
 
-**Charter:** the port node kind (glyph, scatter pass mirroring elites:
-`portChance`/`portMinSpacing`, ≥1 per sector guarantee, never the boss hop);
-the serialized port run-phase + screen; stock (5 units priced by
-archetype+level / 5 packets / 2 daemons owned-excluded) rolled on entry from
-a dedicated stream and serialized; buy/sell (sell = config fraction) +
-pay-to-remove-a-unit via the single `removeRosterUnit` chokepoint fixing all
-**six** rosterIndex-keyed structures (the kickoff audit found a §49e-added
-sixth, `pendingEncounterEffects` — worklog §50); prices config + the port
-editor; the fuzz harness gains `case 'port'` immediately (and eventually a
-purchase-policy arm).
+**Charter:** economy decisions join the ONE scored vector — a
+port-purchase scorer REUSING the recruit scorer (a port unit is a priced
+recruit) + flat per-kind value weights (~6–8 dims), and a 3–5-dim packet
+FIRE scorer keyed on encounter kind (packets stop being outcome-inert in
+the harness). The fixed policies (50g buy-all-affordable, accept-all) stay
+as anchors; the policy arms stay as A/B controls. Add the top-K
+perturb-and-reselect refinement stage to `--search` (motivated by §46b's
+30.8/22.5 fresh-search shortfall) and regenerate
+`output/best-strategy.json` against the new bot.
 
-**Why here / dependencies:** consumes everything — bits (§47), the exclusion
-+ pricing patterns (§48), `PacketDef` + cache (§49). Port-recruited units
-wire into the deck exactly like post-battle recruits.
+**Why here / dependencies:** after the behavior rungs settle — an optimum
+against a moving bot is dead compute; before §57, which measures at this
+optimum.
 
-**Risk:** **Medium** — broad surface (node generation, a new phase, a big
-screen, the fuzz case) but little core surgery. The one flagged engineering
-risk: unit removal shrinking the roster for the first time (the rosterIndex
-collision — chokepoint + co-located test, per the spec). RunSnapshot bumps
-(node kind regenerates maps + port phase + stock).
+**Risk:** **Medium** — harness/strategy surface only, no shipped-game
+change; the search compute budget is the main unknown.
 
-**Decision points — ✅ DECIDED at kickoff (2026-07-10, worklog §50):** glyph
-= `$` (amber — money lay reading, shell-prompt tech reading); screen = one
-sectioned scrolling screen (stock → your-cargo; unaffordable buys disabled);
-prices = config table (per-archetype base × level curve ± port-stream
-jitter; packet/daemon prices per-id with per-kind defaults, boot-asserted);
-removal = flat config price.
+**Decision points:** the exact scorer dim lists (kickoff); refinement K +
+search budget.
 
-**The cut (shape-locked 2026-07-10; rationale in worklog §50):**
+**Exit criteria:** a fresh `--search` converges with the economy dims
+live; packets fire in harness runs (outcome-inertness gone); the
+fixed-vector probe re-run on record in BALANCE.md.
 
-- [x] 50a — the prices config layer: `config/prices.json` + `src/config/prices.ts` (unit base × level curve + jitter, packet/daemon per-id + per-kind defaults, sell fraction, removal price; boot asserts) + `Run.spendBits` (affordability-guarded; sell proceeds stay raw `addBits` — the Run.ts:1191 fold-loop warning); zero consumers ✅ 2026-07-10, +12 tests; numbers launch-rough (§52 tunes)
-- [x] 50b — `removeRosterUnit`: the chokepoint splicing all SIX roster-parallel structures + deck-value renumber, co-located tests + snapshot-roundtrip alignment asserts (closes the existing encounterEffects-length test gap); zero callers ✅ 2026-07-10, +7 tests; map-phase-only guard (§50d adds 'port')
-- [x] 50c — the port node kind: the third tail scatter pass (`portChance`/`portMinSpacing` + the ≥1-per-sector fallback), `$` glyph + CSS, the three compile-gate sites, entry dispatch beside `rest` → a minimal serialized `'port'` phase + `leavePort`; fuzz `case 'port'` (leave-immediately); **Run v33→v34** ✅ 2026-07-10, +10 tests; 200-seed oracle vs HEAD byte-identical; browser-verified; the fuzz re-baseline READ deferred to 50g (one clean read at phase close — worklog §50)
-- [x] 50d — the stock + transaction engine (headless): stock rolled on entry from dedicated streams (owned-daemon exclusion at roll), serialized; buy unit (recruit-append reuse) / buy packet (cache-room guard) / buy daemon / sell packet / pay-to-remove commands; **Run v34→v35** ✅ 2026-07-10, +9 tests; `appendRosterUnit` extracted (the chokepoint pair); sell = raw `addBits` (the mint guard pinned vs moneta)
-- [x] 50e — PortScreen/PortScene (the sectioned single screen) + Game wiring + purchase SFX; browser-verify ✅ 2026-07-10 — all five surfaces exercised via live DOM clicks at :5191, exact arithmetic incl. the raw-refund mint guard; the 50c interim stub retired (worklog §50)
-- [x] 50f — the port editor (prices) + `formatPricesJson` + the `/__save-config` allowlist + the `/tools/` index; the launch price catalog authored with the editor in hand (the 48f precedent) ✅ 2026-07-10, +3 tests; editor leg `b3a27e7` browser-proven (no-edit save git-clean); catalog: user-authored packet overrides + curve 1.25→1.05 + the daemon spread (default 35, four overrides) — rationale in worklog §50f
-- [x] 50g — exit sweep: full fuzz + re-baselines, ARCHITECTURE catalogs/tree, GOTCHAS, docs + cursor flip ✅ 2026-07-10 — the purchase-policy arm (default-on) + portPurchases/finalBits columns; anchors 12.5/10.8 STABLE, 0 hangs (BALANCE §50g, supersedes 48g); gotcha #118; all four exit criteria met — **Phase 50 CLOSED** (worklog §50g; fixed-vector probe + path.port sweep → §52)
-
-**Exit criteria:** a full economy loop in one run, user-confirmed natively:
-earn bits → dock at a port → buy a packet + a daemon + a unit, sell a
-packet, pay to remove a unit → the roster/deck/effects all stay coherent
-(the chokepoint test proves it); every sector map rolls ≥1 port; fuzz drives
-through ports green with the new baselines pinned.
-
-**Scope guards:** NO rarity/draft-pool weighting in stock (Cluster 4 — price
-by archetype+level only); NO port re-visits / stock rerolls; NO stable-
-unit-id refactor (the chokepoint is the fix); NO haggling/reputation/other
-shop mechanics not in the spec.
+**Scope guards:** ONE scored vector — no second optimizer; the fixed
+policies survive as anchors; no price/config tuning yet (§57's domain).
 
 ---
 
-## Phase 51 — The UI/UX cohesion review
+## Phase 57 — The REAL balance pass + close-out
 
-**Charter:** a deliberate cohesion pass over every surface this cluster adds
-or reshapes — the persistent bits overlay, the reward screen, the
-multi-daemon pre-turn list + fire UX, cache management, the port screen — and
-their seams with the existing HUD/screens (corners, modals, typography,
-fades, keybindings). We design and revise UI concurrently with features, so
-this phase MAY close as a documented no-op (the §41/§46b precedent); it
-exists to make cohesion an explicit checkpoint instead of an assumption.
-*(User-inserted at shape-lock, 2026-07-07.)*
+**Charter:** the deferred Cluster-3 tuning agenda at the realistic optimum,
+measured with the §52 economy metric family (bits-per-hop · spend mix +
+terminal bank · transaction rate, strategy-tier discipline): **re-anchor
+the design targets** off the measured optimum; **the boss-wall rider
+verdict** (the 43–55% target, re-derived against a real ceiling); sweep
+prices · `bitsMultiplier` · packet drop weights · `path.port` · the fire
+arm — `path.port` FIRST (the transaction-starvation guard). Then the round
+close: cursor flip, memory update, archive-ritual note, and the Cluster-4
+kickoff proposal.
 
-**Why here / dependencies:** after §50 — every surface must exist to review.
-Before §52 — closing with the balance pass is the cluster routine.
+**Why here / dependencies:** last by the closer convention; consumes §56's
+vector and the stable bot.
 
-**Risk:** **Low** — review + polish fixes; no new systems, no serialized
-state.
+**Risk:** **Low-Medium** — measure + config. The §41/§46b documented-no-op
+precedent applies to the TUNING, not to the rider verdict or the
+re-anchor — those must be explicit.
 
-**Decision points — ✅ DECIDED at kickoff (2026-07-11, worklog §51):** the
-triage boundary = the user's five kickoff changes fix in-phase, new
-51f-sweep findings triage fix-vs-TODO there; the "queued"-stance rider
-stays DEFERRED (TODO.md). Plan mutation: NOT a no-op — the kickoff arrived
-with five user changes + one bug report (worklog §51); the Mercury report
-closed NOT-REPRODUCIBLE at kickoff (probe + user re-run → a TODO watch
-item, not a step).
+**Decision points:** the re-anchored design targets themselves (user
+calls); tune-vs-accept per lever; whether the §49 cache-shrink flow's first
+trigger content earns a slot in the price work.
 
-**The cut (shape-locked 2026-07-11; rationale in worklog §51):**
+**Exit criteria:** targets re-anchored on record in BALANCE.md; the
+boss-wall rider verdict explicit; every swept lever either baked or
+accepted with numbers; the round closed per the ritual.
 
-- [x] 51a — Laverna battle-tally bits become a SOURCE-LABELED declinable reward portion (the settle moves to accept time; merges into the win-turn offer; rides the existing turn-gate seam); **Run v35→v36**; headless-first ✅ 2026-07-11, +6 tests; zero Game/scene changes (the 48b seam cashed in); browser-verified at :5191 (worklog §51a)
-- [x] 51b — RewardScreen: per-portion Accept + one **Continue ▸** that declines all remaining portions (the existing command, looped; the swap control unchanged) ✅ 2026-07-11, UI-only; browser-verified at :5191 — all three flows via live DOM clicks (worklog §51b)
-- [x] 51c — CardListModal grows the selection mode (`selection` + confirm + display-order→roster-index mapping; absent = today's view — merge, not fork) ✅ 2026-07-11, +4 mapping tests; view-mode regression browser-checked; the picker's live verify rides 51d (worklog §51c)
-- [x] 51d — PortScreen crew removal adopts the selectable roster view (full cards, select 1, confirm = `payToRemoveUnit`) ✅ 2026-07-11, UI-only; browser-verified at :5191 — select/replace/confirm/Esc all exercised live, exact index + arithmetic (worklog §51d)
-- [x] 51e — the chrome sizing pass: bits/cache chips to the card-list scale + `.hud-hop`/cache-stack reflow; the sector banner larger still; draw/discard chips gain LIVE counts ✅ 2026-07-11, UI-only; + the roster chips gain the count badge (cohesion rider); geometry rect-verified at :5191, feel = the native playtest (worklog §51e)
-- [x] 51f — the cohesion sweep + exit: full-run native playtest over every Cluster-3 surface (one deliberate Mercury denial-line look), triage fix-vs-TODO, docs + cursor flip — sweep findings #1–2 (the miner tally label, **Run v36→v37** · derived hit/crit on the ability rows) fixed in-phase 2026-07-11 (worklog §51f) ✅ 2026-07-11 — the post-fix sweep came back clean, user sign-off; verdict NOT a no-op; all exit criteria met — **Phase 51 CLOSED** (worklog §51f)
-
-**Exit criteria:** a full-run native playtest sweeping every new surface;
-every finding either fixed or filed, with the user's sign-off; the verdict —
-fixes or documented no-op — recorded in the worklog.
-
-**Scope guards:** NO new features or mechanics; NO redesigns beyond cohesion
-(a finding that wants one becomes a next-round item); NO balance changes
-(§52's domain).
+**Scope guards:** NO relaxing any standing gate to make numbers fit; NO
+new mechanics (findings that want one become TODO/next-round items).
 
 ---
 
-## Phase 52 — The economy balance pass + close-out
+## What we're explicitly NOT doing (the round scope guard)
 
-**Charter:** the cluster-closing balance pass, BALANCE.md protocol: tune the
-bits curve (encounter tables), prices, and `bitsMultiplier` at the optimum
-strategy; **re-read the carried boss-wall rider** (59% held-out vs the 43–55%
-target — run-level economy is the named lever; BALANCE.md §46b) and resolve
-it: tune, or document the acceptance. Then the round close: HANDOFF cursor
-flip, archive the roadmap+worklog pair, memory update, and the post-cluster
-interstitial-audit proposal (the standing convention).
-
-**Why here / dependencies:** last by convention; needs the whole economy
-live to measure. The fuzz purchase-policy arm (from §50) is what makes the
-optimum measurable — confirm it exists before sweeping.
-
-**Risk:** **Low** — measure + config; the §41/§46b "documented no-op is a
-legitimate outcome" precedent applies to the tuning (NOT to the rider, which
-must be explicitly resolved or re-scoped).
-
-**Plan mutation (2026-07-11, kickoff):** re-scoped to a MINIMAL DOCS-ONLY
-close — the kickoff surfaced a calibration gap (bot optimum ~30% vs human
-~80%; the battle-layer objective bot is unrealistic), so tuning at that
-optimum would be measurement against fiction; the whole tuning agenda moves
-to the micro/balance-realism interstitial round between Clusters 3 and 4
-(full narrative + the rung ladder: worklog §52).
-
-**Decision points — ✅ DECIDED at kickoff (2026-07-11, worklog §52):** the
-rider verdict = RE-SCOPED to the interstitial's re-anchoring phase (the
-43–55% target was anchored to the fictional bot ceiling); prices on the
-difficulty seam = deferred with the tuning; the economy metric family =
-YES, lands now as a BALANCE.md protocol-header definition.
-
-**The cut (shape-locked 2026-07-11; rationale in worklog §52):**
-
-- [x] 52a — the BALANCE.md §52 entry: the calibration finding AS the balance-pass result (bot ~30 vs human ~80, gap localization, run-killer cells, no-measurement rationale) + the economy-metric family in the protocol header ✅ 2026-07-11 — run-log entry + metric family + the quantified bot-lower-bound caveat (BALANCE §52)
-- [x] 52b — the round close: rider re-scope on record, HANDOFF cursor flip, memory update, the interstitial proposal (the micro round; dev export/load key rides its Rung 0 — menu save/load stays Cluster 6) ✅ 2026-07-11 — + the archive-ritual line gains the spec (user catch); **Phase 52 CLOSED · Cluster 3 COMPLETE** (worklog §52)
-
-**Exit criteria (re-scoped 2026-07-11):** the calibration finding recorded
-in BALANCE.md; the boss-wall rider explicitly re-scoped with the reason on
-record; docs closed (cursor flipped, pair archived at the next kickoff per
-the ritual).
-
-**Scope guards:** NO new content/features (tuning + docs only — findings
-that want features become TODO/next-round items); NO relaxing any standing
-gate (drift gates, determinism) to make numbers fit.
-
----
-
-## What we're explicitly NOT doing (the cluster scope guard)
-
-- **No mid-battle pause-to-cast** — the `usableIn`/`TargetSpec` seam ships;
-  the player→sim input channel does not. (Deferred, spec §Packets.)
-- **No tile-targeted packet content** — waits for mid-battle casting.
-- **No rarity, draft pools, or starting characters** — Cluster 4 (ports sell
-  by archetype+level; the rarity-weighted stock upgrade lands there).
-- **No camps, events, or non-encounter reward sources** — Cluster 5.
-- **No meta-currency or cross-run persistence** — Cluster 6.
-- **No stable-unit-id refactor** — `removeRosterUnit` chokepoint only.
-- **No synergies/traits** — the Cluster-4 spec-time decision, not ours.
-- **No trigger predicates beyond `chance`** on reward tables at launch.
-- **No daemon cap** — uncapped is the locked design; don't re-litigate.
+- **No RL / imitation learning; no raw action-space search** — locked
+  non-goals (spec §The design answer).
+- **No menu-grade save/load** — Cluster 6 (the corrected 2026-07-09 fact);
+  only the dev export/load key ships here.
+- **No mid-battle pause-to-cast** — still deferred (the Cluster-3 spec's
+  deferral stands).
+- **No unfrozen anchors, ever** — greedy/random keep the old objective
+  handling as the permanent comparison floor.
+- **No Cluster-4 content** (rarity, draft pools, starting characters).
+- **The §49 shrink-flow content lands ONLY via §57's decision point** —
+  otherwise it keeps waiting (worklog §50g watch item).
 
 ## Open decisions to resolve when building (the cross-cutting set)
 
-- 47: launch trigger/op/stat lists; multi-daemon PreTurnScreen presentation;
-  overlay pull-forward.
-- 48: reward-screen UX; launch table catalog.
-- 49: **the pre-turn fire UX** (the spec's ⚠ OPEN — a design round at phase
-  kickoff); the launch packet list; cache-UI home.
-- 50: port glyph + screen layout; price formulas; removal pricing.
-- 51: ✅ resolved at kickoff — triage boundary set, the rider stays deferred (worklog §51).
-- 52: ✅ resolved at kickoff — rider RE-SCOPED to the interstitial, metric
-  family lands now, tuning agenda moves wholesale (worklog §52).
+- 53: the gauntlet cell list; the command-stamp seam.
+- 54: **script ↔ objective-model integration + arbitration** (the spec's
+  big ⚠ OPEN — a design round at kickoff).
+- 55: **the gate threshold** (set from §54's numbers — a stop).
+- 56: scorer dim lists; refinement K + budget.
+- 57: the re-anchored targets; per-lever tune-vs-accept; the shrink-flow
+  slot.

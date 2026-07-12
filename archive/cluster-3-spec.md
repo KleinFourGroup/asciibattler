@@ -1,5 +1,11 @@
 # Cluster 3 Specification
 
+> **🗄️ ARCHIVED 2026-07-11** at the micro-round kickoff, with its round's
+> pair ([post-46-roadmap.md](post-46-roadmap.md) +
+> [post-46-worklog.md](post-46-worklog.md)) — AGENTS "superseded specs
+> archive with their round." The live spec is now
+> [micro-round-spec.md](../micro-round-spec.md).
+
 ## "It's the economy, stupid!"
 
 This specification fleshes out the "economy" feature cluster for ASCIIbattler.

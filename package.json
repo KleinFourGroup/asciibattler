@@ -17,7 +17,8 @@
     "gauntlet": "tsx tests/gauntlet/cli.ts",
     "pathing": "tsx tests/pathing/cli.ts",
     "run-config": "tsx tools/run-config/cli.ts",
-    "gen:sfx": "node scripts/gen-sfx.mjs"
+    "gen:sfx": "node scripts/gen-sfx.mjs",
+    "trace-mine": "tsx tests/gauntlet/traceMine.ts"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.2.8",

@@ -49,6 +49,19 @@ export interface ReplayResult {
   readonly world: World;
 }
 
+export interface ReplayHooks {
+  /**
+   * 54c — called once per replay tick, just BEFORE that tick's stamped
+   * commands are enqueued and the tick runs: the world state the hook sees
+   * is exactly what the live player saw when they issued those commands
+   * (the trace-mining sample point). `commands` is empty on non-command
+   * ticks. OBSERVATION ONLY — a hook that mutates the world or enqueues
+   * commands voids the fidelity contract (the replay would diverge from
+   * the recorded battle by construction).
+   */
+  readonly beforeTick?: (world: World, tick: number, commands: readonly WorldCommand[]) => void;
+}
+
 /**
  * Rebuild the trace's battle and drive it to its end, feeding the recorded
  * commands at their stamped ticks. Pass a bus to observe the replay's events
@@ -60,6 +73,7 @@ export interface ReplayResult {
 export function replayTrace(
   trace: BattleTrace,
   bus: EventBus<GameEvents> = new EventBus<GameEvents>(),
+  hooks: ReplayHooks = {},
 ): ReplayResult {
   if (trace.version !== 1) {
     throw new Error(`replayTrace: unsupported trace version ${String(trace.version)}`);
@@ -95,7 +109,11 @@ export function replayTrace(
   const maxTurnTicks = secondsToTicks(HEALTH.maxTurnSeconds);
   while (!world.ended) {
     const next = world.currentTick + 1;
-    for (const command of byTick.get(next) ?? []) world.enqueueCommand(command);
+    const stamped = byTick.get(next) ?? [];
+    // 54c — the observation hook fires on the pre-tick state (what the live
+    // player saw when issuing this tick's commands). See `ReplayHooks`.
+    hooks.beforeTick?.(world, next, stamped);
+    for (const command of stamped) world.enqueueCommand(command);
     byTick.delete(next);
     world.tick();
     if (!world.ended && world.currentTick >= maxTurnTicks) world.resolveAsDraw();

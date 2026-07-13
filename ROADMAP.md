@@ -154,14 +154,11 @@ lives here: how scripts integrate with the O1 typed objective model (new
 objective kinds vs a layer above) and the arbitration rule when several
 scripts trigger at once.
 
-**Decision points — ✅ DECIDED at kickoff (2026-07-13, worklog §54):** all
-four forks locked — scripts = a layer ABOVE the objective model (emit the
-existing four modes; the 53g expressiveness proof); arbitration =
-dumb-deterministic (fixed priority · null-action threshold · min-dwell —
-scoring is §55's job); sensors = pure functions of world STATE (rollout-
-compatible, derive-don't-cache); home = `src/bot/`. Per-script triggers
-derived from the 53g traces (step 54c). **Snapshot-bump prediction: NONE —
-v34 holds** (the O2/O3 no-new-field precedent).
+**Decision points — ✅ DECIDED at kickoff (2026-07-13):** all four forks
+locked — layer ABOVE the objective model · dumb-deterministic arbitration
+(priority / null threshold / min-dwell) · state-only sensors · `src/bot/`;
+triggers derived from traces (54c). **Snapshot prediction: NO bump — v34
+holds.** Rationale: worklog §54.
 
 **The cut (shape-locked 2026-07-13; audit + rationale in worklog §54):**
 
@@ -177,8 +174,10 @@ v34 holds** (the O2/O3 no-new-field precedent).
   ⚠ jam sensor = the phase's real unknown; fallback = narrower
   blocked-path-only sensor, noted in worklog
   ✅ 2026-07-13 — five live, 19 tests, jam fallback unneeded; worklog §54b
-- [ ] 54c — trace mining: replay the 53g fixture, dump sensor values at
+- [x] 54c — trace mining: replay the 53g fixture, dump sensor values at
   each human command tick per traffic cell → the trigger-threshold table
+  ✅ 2026-07-13 — table = BALANCE §54c (76/104 joined; engage:tile is the
+  human workhorse; ⚠ isthmus choke-sensor gap → 54f); worklog §54c
 - [ ] 54d–54h — the five scripts, ONE COMMIT EACH, priority order:
   terrain-edge hold (the fire-edge 0.0-vs-10.7 target) · unjam (corridors +
   the labyrinth null-discipline read) · choke hold · cohesion focus ·

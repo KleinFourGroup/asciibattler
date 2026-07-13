@@ -808,3 +808,63 @@ deltas. The pre-X H7c→O log lives at
     incident (session + retries overran cap 80 — recovered via the
     mid-session partial export + a 4-URL top-up; protocol for future
     sessions: `clearTraces()` at session start + export mid-session).
+
+- **2026-07-13 — §54c TRACE MINING: sensor values at the human's command
+  moments (the trigger-threshold table for 54d–54h).** Method: `npm run
+  trace-mine` — replay the 53g fixture (era `e5c8a0fd`) through the 54b
+  sensors via `replayTrace`'s observation hook, sampling every tick;
+  cell join reproduces the 53g ingest (worldSeed anchors from 33
+  deterministic bot re-runs; layout+enemy-multiset fallback). Joined
+  76/104 traces (59 seed + 17 fingerprint); 17 off-target correctly
+  excluded; 11 unjoined-excluded (mostly non-cell strays — fetidPond /
+  procedural warm-ups — plus the known junction-407/boss-1003 divergence
+  tail). Full 197-command dump:
+  `tests/gauntlet/output/trace-mine-commands.csv` (regenerate:
+  `npm run trace-mine`).
+
+  Condensed contrast (bg mean → mean at the human's commands), the
+  load-bearing rows:
+
+  | cell | cmds (mix) | jamCount | jamFrac | hazApproach | powerΔ | enemyDot |
+  |---|---|---|---|---|---|---|
+  | alpha-funnel | 20 (engage:enemy 12 / :tile 8) | 0.01→0.50 | 0.00→0.08 | 0 | −1.6→−1.4 | 0 |
+  | alpha-spiral | 9 (:tile 6) | 0.77→1.67 | 0.13→0.28 | 3.9→4.8 | 1.5→3.2 | 1.5 |
+  | unjam-corridors | 23 (:tile 13 / :enemy 10) | 0.13→0.13 | 0.03→0.03 | 0 | 0.9→1.6 | 0 |
+  | unjam-labyrinth | 30 (:tile 14 / :neutral 9) | 0.16→0.50 | 0.03→0.09 | 0 | 0.0→−0.6 | 0 |
+  | fire-edge | 18 (:tile 15!) | 0.93→1.44 | 0.17→0.25 | 3.9→3.9 | 1.4→1.1 | 3.2→2.0 |
+  | choke-isthmus | 12 (:tile 7 / clear 3 / hold 2) | 0.25→0.17 | — | 0 | 2.7→0.8 | 0 |
+  | stall-spiral | 16 (:tile 10 / clear 3) | 0.91→1.69 | 0.16→0.29 | 3.6→4.3 | 2.1→1.9 | 2.0→1.6 |
+  | focus-river | 10 (:enemy 7) | 0.05→0 | — | 0 | 2.5→2.3 | 0 |
+  | boss-fortress | 17 (mixed + clear 4) | 0 | — | 0 | −5.0→−8.3 | 0 |
+
+  - **⭐ `engage:tile` is the human's workhorse** (~55% of all 197
+    commands; 15/18 on fire-edge, 13/23 on corridors) — the scripts
+    should steer by RALLY TILES, exactly what the four-mode vocabulary
+    already expresses. `hold` is RARE (3 uses total) — the human "holds"
+    by rallying short, not by the hold mode.
+  - **Jam lift is real where jams form** (alpha-spiral 0.77→1.67,
+    stall 0.91→1.69, fire-edge 0.93→1.44, labyrinth 3× lift) — but
+    **unjam-corridors shows NO lift (0.13→0.13): the corridors human
+    plays PREVENTIVELY**, re-sorting with rally tiles before jams
+    register. 54e design input: a reactive jamCount≥1 trigger
+    under-fires on corridors; trigger shape ≈ jamFraction ≥ ~0.2
+    (fires on the spiral/fire/stall cells' command levels, stays silent
+    on labyrinth background 0.03 — the null-discipline read).
+  - **fire cells: hazardApproach is a STANDING condition (~3.9 bg),
+    not a spike** — the human manages the edge continuously (15
+    engage:tile). 54d's trigger = hazardApproach ≥ 1-2; the script's
+    value is the PROPOSAL (hold units at a computed pre-hazard edge
+    tile), not trigger timing.
+  - **⚠ SENSOR GAP: `chokeCells` reads ZERO on choke-isthmus** (bg max
+    0 for both choke columns) — the isthmus "land bridge" is ≥2 cells
+    wide, so it has NO articulation points; labyrinth's 1-wide
+    corridors read fine (playerOnChoke bg 3.5). 54f needs a width-
+    tolerant choke definition (bottleneck/min-cut generalization) or a
+    different trigger entirely — decided at 54f, on record here.
+  - **stall-spiral: the burn cheese is measurable** — enemyDot bg 2.0
+    with powerΔ ≈ +2: enemies burn while the human refuses engagement
+    (10 rally tiles + 3 clears). 54h trigger shape ≈ enemyDot ≥ 1 ∧
+    powerΔ ≥ 0 → disengage/rally-away.
+  - **boss confirms content** (powerΔ bg −5.0, commands at −8.3 — the
+    human commands hardest while already losing); alpha-funnel commands
+    are the opening scramble (jam 0.01→0.50 in the first ticks).

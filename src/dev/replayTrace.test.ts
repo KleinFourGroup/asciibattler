@@ -187,4 +187,29 @@ describe('replayTrace (53c — the fidelity keystone)', () => {
     };
     expect(() => replayTrace(doctored)).toThrow(/still holds commands stamped/);
   });
+
+  it('54c — beforeTick observes every tick + the stamped commands, changing nothing', () => {
+    const live = driveLive(makeEncounter());
+    const plain = replayTrace(live.trace);
+
+    const tickSequence: number[] = [];
+    const commandTicks: number[] = [];
+    const hooked = replayTrace(live.trace, new EventBus<GameEvents>(), {
+      beforeTick: (world, tick, commands) => {
+        // The hook sees the PRE-tick state — what the live player saw when
+        // they issued this tick's commands.
+        expect(world.currentTick).toBe(tick - 1);
+        tickSequence.push(tick);
+        if (commands.length > 0) commandTicks.push(tick);
+      },
+    });
+
+    // The observation changed nothing: same outcome, same final world bytes.
+    expect(hooked.winner).toBe(plain.winner);
+    expect(hooked.ticks).toBe(plain.ticks);
+    expect(JSON.stringify(hooked.world.toJSON())).toBe(JSON.stringify(plain.world.toJSON()));
+    // Fired once per tick, in order, and surfaced the three stamped ticks.
+    expect(tickSequence).toEqual(Array.from({ length: hooked.ticks }, (_, i) => i + 1));
+    expect(commandTicks).toEqual([1, 10, 26]);
+  });
 });

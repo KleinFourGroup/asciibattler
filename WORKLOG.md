@@ -582,3 +582,37 @@ deviations from the cut's assumptions, in build order:
   hpFraction / power / attackRange / distToNearestOwn) and the WEIGHTS
   stay 54g's job, set from 54c's table. The frozen proclivity keeps its
   own model untouched — better for the anchor than sharing code anyway.
+
+### 54c — trace mining (2026-07-13)
+
+Built `npm run trace-mine` (tests/gauntlet/traceMine.ts) + the one enabling
+change: `replayTrace` grew an optional OBSERVATION-ONLY `beforeTick` hook
+(fires on the pre-tick state — exactly what the live player saw when
+issuing that tick's commands; a mutating hook voids the fidelity contract
+by construction; covered by a 6th fidelity test). The miner: era-guard →
+worldSeed-anchor join (33 bot re-runs, the 53g ingest method reproduced;
+layout+enemy-multiset fallback for the path-diverged tail) → replay all
+joined traces sampling the 54b sensors every tick → per-cell
+background-vs-at-command contrast table + a 197-row CSV. Joined 76/104;
+17 off-target + 11 stray/diverged excluded LOUDLY (no silent drops).
+
+Results → **BALANCE §54c** (the trigger-threshold table). The three
+findings that reshape the script steps:
+1. **engage:tile is the human's workhorse (~55%)** — scripts steer by
+   rally tiles; `hold` is nearly unused (3/197). 54d–54h proposals
+   should emit tile-engages, not holds.
+2. **The corridors human plays PREVENTIVELY** — zero jam lift on
+   unjam-corridors (0.13→0.13) while every other jam cell shows 1.7–3×;
+   54e's reactive trigger calibrates on jamFraction ≥ ~0.2 and accepts
+   under-firing on corridors v1 (the preventive re-sort is a possible
+   54e stretch, decided there).
+3. **⚠ chokeCells reads ZERO on the isthmus** — the land bridge is
+   ≥2 wide; articulation points only catch 1-wide chokes (labyrinth
+   reads fine). 54f opens with a width-tolerant choke read decision
+   (min-cut / bottleneck generalization) — flagged in BALANCE, not
+   silently absorbed.
+
+Also on record: fire cells show hazardApproach as a STANDING ~3.9
+condition (54d's value is the edge-tile proposal, not trigger timing);
+the stall cheese is measurable (enemyDot ≈ 2 while powerΔ ≥ 0); boss
+commands cluster at powerΔ −8 (content, again).

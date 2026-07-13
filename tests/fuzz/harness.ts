@@ -33,6 +33,11 @@ import type { FuzzStrategy } from './Strategy';
 import { decideObjectiveCommand } from './objectiveStrategy';
 import type { ObjectiveProclivity } from './objectiveStrategy';
 import { CoverageObjectiveDriver, COVERAGE_MAX_TICKS } from './objectiveCoverage';
+import {
+  TrafficScriptDriver,
+  TRAFFIC_SCRIPTS,
+  type TrafficScript,
+} from '../../src/bot/TrafficScriptDriver';
 import { selectRedrawPositions } from './redrawPolicy';
 import type { RedrawPolicy } from './redrawPolicy';
 import { selectEmpowerPosition } from './empowerPolicy';
@@ -161,6 +166,17 @@ export interface HarnessOptions {
    */
   readonly coverageObjectives?: boolean;
   /**
+   * §54 — the traffic-script bot (Rung 1): `true` drives the player team's
+   * objective through `TrafficScriptDriver` over the standard `TRAFFIC_SCRIPTS`
+   * registry; an explicit script array substitutes a custom registry (the test
+   * seam — how the parity + liveness tests inject stubs). Mutually exclusive
+   * with `objective` / `coverageObjectives` (enforced — the anchors stay frozen
+   * on the old handling). The driver holds NO RNG: no stream is forked, and an
+   * absent / `false` / EMPTY-registry arm enqueues nothing — byte-identical to
+   * the pre-§54 path (the 54a parity contract; existing baselines untouched).
+   */
+  readonly trafficScripts?: boolean | readonly TrafficScript[];
+  /**
    * K3c3 — the redraw policy the bot drives the pre-turn redraw with.
    * Undefined / `{ kind: 'none' }` (the default) keeps the turn gates OFF —
    * the run is byte-identical to the pre-K3c3 path (existing baselines stay
@@ -243,6 +259,23 @@ export function runOne(
   // O5 — `coverage` replaces it (mutually exclusive); the CLI never sets both.
   const objective = options.objective;
   const objectiveActive = objective !== undefined && objective.kind !== 'none';
+  // §54 — the traffic-script arm: `true` = the standard registry, an array =
+  // a custom (test) registry. Null when off. Mutually exclusive with BOTH
+  // older objective arms — enforced here (not just at the CLI) because the
+  // frozen-anchor doctrine depends on it: an anchor arm accidentally layered
+  // with scripts would silently unfreeze the comparison floor.
+  const trafficScripts: readonly TrafficScript[] | null =
+    options.trafficScripts === true
+      ? TRAFFIC_SCRIPTS
+      : options.trafficScripts === false || options.trafficScripts === undefined
+        ? null
+        : options.trafficScripts;
+  if (trafficScripts !== null && (objectiveActive || coverageActive)) {
+    throw new Error(
+      'harness: trafficScripts is mutually exclusive with objective/coverageObjectives ' +
+        '(the §54 frozen-anchor contract)',
+    );
+  }
   // K3c3 — same contract for the redraw bot: `none`/absent forks no RNG and
   // leaves the turn gates off. Only the `random` policy ever draws from this
   // stream (a dedicated fork, so policy draws never perturb the run streams).
@@ -281,6 +314,10 @@ export function runOne(
   // worldSeed stream (mutually exclusive with the objective bot). Null when
   // coverage is off.
   let currentCoverage: CoverageObjectiveDriver | null = null;
+  // §54 — a per-battle traffic-script driver (mutually exclusive with both
+  // arms above). RNG-free by lock, so nothing is forked; fresh per battle so
+  // the dwell/standing bookkeeping never leaks across battles.
+  let currentTraffic: TrafficScriptDriver | null = null;
 
   bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
@@ -290,6 +327,7 @@ export function runOne(
     currentWorld.installBattleRules(encounter.battleRules ?? []);
     currentObjRng = objectiveActive ? new RNG(worldSeed).fork() : null;
     currentCoverage = coverageActive ? new CoverageObjectiveDriver(new RNG(worldSeed).fork()) : null;
+    currentTraffic = trafficScripts !== null ? new TrafficScriptDriver('player', trafficScripts) : null;
     unitTeams = new Map();
     currentBattle = {
       hop: run.currentHop,
@@ -509,6 +547,13 @@ export function runOne(
           const coverage = currentCoverage as CoverageObjectiveDriver | null;
           if (coverage) {
             for (const cmd of coverage.decide(w)) w.enqueueCommand(cmd);
+          }
+          // §54 — or the traffic-script driver (mutually exclusive with both,
+          // enforced above). Same placement contract: decide BEFORE the tick
+          // drains, at most one command per dwell window.
+          const traffic = currentTraffic as TrafficScriptDriver | null;
+          if (traffic) {
+            for (const cmd of traffic.decide(w)) w.enqueueCommand(cmd);
           }
           w.tick();
           battleTicks++;

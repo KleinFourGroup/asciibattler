@@ -19,3 +19,27 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 ## The micro round (opened 2026-07-11)
 
 *(no entries yet)*
+
+## §54a — the 45-minute test hang (2026-07-13)
+
+- `World.tick()` NO-OPS once `ended` is set (World.ts ~1022), freezing
+  `currentTick`. A test that polls `while (world.currentTick < N)` spins
+  FOREVER if anything ends the battle mid-test (killing a team's last
+  unit does). Bit 54a for 45 min of wall clock. Rules adopted in the
+  test file: (1) never loop on `currentTick` — loop a BOUNDED count of
+  steps; (2) assert `world.ended === false` inside the step helper so
+  the failure is a red assert, not a hang; (3) crafted worlds keep 2+
+  units per team when a test kills one.
+- Compounding it: the batch ran via `run_in_background` with no
+  timeout, so the hang looked like "still running" instead of failing
+  loudly. Long test batches: foreground + explicit `timeout`, or check
+  the output file after the expected duration, not on notification
+  faith. (The user caught it at 45 min; nothing would have self-
+  reported.)
+- Also learned: `tests/fuzz/**` is EXCLUDED from the main vitest
+  config — harness tests run ONLY under `vitest.fuzz.config.ts`
+  (`npm run fuzz:smoke`). A plain `npx vitest run tests/fuzz/x.test.ts`
+  reports "No test files found" (exit 1) rather than running it — and
+  the pre-commit fuzz trigger does NOT fire for `src/bot/` or
+  `tests/fuzz/` paths, so harness-touching commits need a MANUAL
+  fuzz:smoke (candidate hook-path addition at the next sweep).

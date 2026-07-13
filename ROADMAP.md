@@ -165,10 +165,12 @@ v34 holds** (the O2/O3 no-new-field precedent).
 
 **The cut (shape-locked 2026-07-13; audit + rationale in worklog §54):**
 
-- [ ] 54a — `src/bot/` scaffold: `TrafficScriptDriver` (trigger predicate +
+- [x] 54a — `src/bot/` scaffold: `TrafficScriptDriver` (trigger predicate +
   proposed command · fixed-priority arbitration · null threshold ·
   min-dwell no-thrash) + the third mutually-exclusive `HarnessOptions`
   branch; zero scripts registered; exit = byte-identical no-op parity test
+  ✅ 2026-07-13 — parity + liveness + exclusion-throw proven; no bump, as
+  predicted; build story (incl. the test-hang lesson) in worklog §54a
 - [ ] 54b — the sensors (`src/bot/sensors.ts`): jam index (claims +
   `vacancyEtaOf`, NOT events) · hazard reads (`statusOnEnter`) · setup-time
   choke-cell analysis · attrition differential (`survivorPower`) ·

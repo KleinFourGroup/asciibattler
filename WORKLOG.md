@@ -504,3 +504,37 @@ resolutions land here next entry.
 Trigger conditions per script: derived from the 53g traces (state at
 the human's command times), not invented a priori — a dedicated
 trace-mining step in the cut.
+
+### 54a — the driver skeleton + the harness arm (2026-07-13)
+
+Built per the locked shape. `src/bot/TrafficScriptDriver.ts`: the
+`TrafficScript` interface (trigger + proposal fused — `evaluate` returns
+non-null only past the script's own threshold), the empty priority-ordered
+`TRAFFIC_SCRIPTS` registry, and the driver — fixed-priority first-match
+arbitration, `MIN_DWELL_TICKS` no-thrash (2s PROVISIONAL, 54c calibrates),
+null-action release, and an ownership rule that emerged during build: the
+driver only ever clears an order IT issued (`standingScriptId`), so a
+foreign `setObjective` (the UI path, a future second driver) is never
+clobbered by the null action. Idempotent adoption outranks the dwell gate
+(nothing emitted → nothing to thrash). NO RNG anywhere — the eslint
+Math.random ban now covers `src/bot/` too.
+
+Harness: `trafficScripts?: boolean | readonly TrafficScript[]` — `true` =
+the standard registry, an array = a custom registry (the test seam that
+let 54a prove LIVENESS with a stub instead of waiting for 54d to expose a
+dead branch). Mutual exclusion with `objective`/`coverageObjectives` is
+ENFORCED with a throw (not just CLI convention): an anchor arm silently
+layered with scripts would unfreeze the comparison floor.
+
+Tests: 9 co-located driver tests (real 20×20 World, both command paths
+drained for real) + 5 harness tests (no-op parity ×2, determinism,
+liveness-via-stub, the exclusion throw). fuzz:smoke 220/220 (215+5).
+As predicted: NO snapshot bump, no baseline/drift change.
+
+The build story: a 45-min hang — an unbounded `while (currentTick < N)`
+test loop over a world whose battle had ENDED (`tick()` no-ops when
+ended, freezing the counter; killing the crafted world's only enemy ended
+it). Rules adopted + the fuzz-config discovery (tests/fuzz runs ONLY
+under `vitest.fuzz.config.ts`; the pre-commit fuzz trigger doesn't fire
+for `src/bot/`/`tests/fuzz/` — manual fuzz:smoke on harness-touching
+commits): retro/scratchpad.md §54a.

@@ -413,3 +413,94 @@ passive walks the slow maze clean (0.0 pool dmg), random orders bleed
 more than passivity. ⚠ doctrine unchanged: labyrinth stays the
 intentional slow maze; long bot battles there are signal. The session
 grows ~30→~33 battles (ring cap 80 has ample headroom).
+
+## Phase 54 — Rung 1: the five traffic scripts
+
+### Kickoff: the code-reality audit (2026-07-13)
+
+Surfaces surveyed ahead of the design round (script ↔ O1 integration +
+arbitration — the spec's big ⚠ OPEN). Findings:
+
+- **The objective model is per-TEAM and single-valued.** `TeamObjective`
+  ([src/sim/objective.ts](src/sim/objective.ts)) = `atWill | engage(target)
+  | hold | focus(target)`; stored on World as `{player, enemy}`, read via
+  the one seam `world.objectiveFor(team)`, mutated ONLY through
+  `setObjective`/`clearObjective` commands in the top-of-tick drain, with
+  the auto-revert scan landing everything back on the shared `AT_WILL`
+  singleton. Last-write-wins; **arbitration has zero precedent in code.**
+- **The snapshot stores `TeamObjective` verbatim** (WorldSnapshot v34,
+  hard version-equality reject, no migration). Precedent both ways: v23/
+  v25/v32 bumped for objective-SHAPE changes; O2 `hold`/O3 `focus` added
+  modes with NO new serialized field and did NOT bump (focusTile.ts's own
+  header notes it "rides O1's snapshot"). So: scripts that only *emit
+  existing commands* = no bump; new modes with payload fields or a
+  serialized layer above = bump.
+- **⭐ The human baseline is an expressiveness proof.** The 53g session —
+  including fire-edge 0.0 and the 93% non-boss clear rate — was played
+  entirely through `ObjectiveController`'s existing command vocabulary
+  (team-wide engage/focus/hold/clear; 104/104 turns replay from those
+  commands alone). The four modes + targets are SUFFICIENT to express the
+  human edge, by construction; the recorded traces are per-cell worked
+  examples of each script family.
+- **The bot seam is proven twice.** Objective driving in the harness is a
+  per-option branch in the battle loop (tests/fuzz/harness.ts ~499–513):
+  `objective` (J4 proclivities, no-thrash gate = refill only at `atWill`)
+  and `coverageObjectives` (O5 churn driver) — mutually exclusive, both
+  = byte-identical no-op when unset. A scripts bot slots in as a third
+  branch; anchors stay frozen for free. The gauntlet CLI's `--arms`
+  vocabulary is proclivity-only today and needs a scripts-arm resolution
+  path (mirrors the harness split it doesn't yet expose).
+- **The enemy team's objective plumbing is real but inert** (only the O5
+  coverage driver ever exercises it) — a per-team script driver gets
+  symmetric machinery for free, but nothing depends on it.
+- **Sensor gaps (spec-vs-code mismatches):** (1) `fire` tiles carry NO
+  damage field — hazard damage is burn-status-mediated (`statusOnEnter`
+  + `applyTileStatuses`), so "terrain-edge hold" reads status-application
+  tiles, not a damage number; (2) NO runtime chokepoint query —
+  layoutConnectivity is setup-time classification; (3) NO standing
+  jam/congestion state on World — the jam signal exists only as the
+  transient `unit:moveDecision` event stream (`queue`/`pinned`/`boxed`);
+  a script must aggregate or derive (vacancy ETAs/claims in occupancy.ts
+  are derived-never-serialized, per doctrine); (4) no `objective:changed`
+  event — only `objective:set`/`objective:cleared`.
+- **The 53g reshape stands as design input:** gap localized to traffic
+  cells; the null action beats the human on labyrinth/river — "do
+  nothing" must be a first-class arbitration arm with a threshold to
+  beat, not a fallback; command intensity (~10/enc on the traffic cells)
+  maps where scripts should be willing to act.
+
+Design forks + the shape-lock proposal → presented in conversation;
+resolutions land here next entry.
+
+### The design round — ✅ ALL FOUR FORKS LOCKED (user, 2026-07-13)
+
+1. **Integration = a layer ABOVE the objective model.** Scripts are a
+   bot-side driver emitting the existing four modes through the existing
+   command channel — the same vocabulary the 53g human session proved
+   sufficient (the expressiveness proof, audit above). No new objective
+   kinds; no Targeting/Movement branches; **no snapshot bump — v34
+   holds** (the O2/O3 no-new-field precedent).
+2. **Arbitration = dumb-deterministic at §54.** Per-script trigger
+   predicate + proposed command; fixed priority order breaks
+   simultaneous triggers (straw order at lock: terrain-edge hold ›
+   unjam › choke hold › cohesion focus › attrition stall — safety
+   first, opportunism last); **the null action is the arm to beat**
+   (explicit trigger threshold, else emit nothing — the 53g
+   labyrinth/river finding); a min-dwell no-thrash gate (the J4
+   atWill-refill precedent). Rationale for NOT scoring here: §55's
+   portfolio rollout search IS the principled scorer, gated on exactly
+   this phase's residual — a clean residual from priority+thresholds is
+   the best possible gate input.
+3. **Sensors = pure functions of world STATE, never event history.**
+   §55 rollouts evaluate on cloned snapshots, so any sensor needing the
+   `unit:moveDecision` stream would be un-rollout-able. Derived reads
+   only (claims/`vacancyEtaOf`, tile `statusOnEnter`, `survivorPower`,
+   positions); choke cells from per-battle setup-time layout analysis;
+   derive-don't-cache; nothing serialized.
+4. **Scripts live in `src/bot/`** (new; sim-pure imports only; nothing
+   shipped calls it) — `src` never imports from `tests`, and §55 (and a
+   possible future enemy-team consumer) sit on the src side.
+
+Trigger conditions per script: derived from the 53g traces (state at
+the human's command times), not invented a priori — a dedicated
+trace-mining step in the cut.

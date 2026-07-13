@@ -154,10 +154,36 @@ lives here: how scripts integrate with the O1 typed objective model (new
 objective kinds vs a layer above) and the arbitration rule when several
 scripts trigger at once.
 
-**Decision points:** the integration architecture + arbitration (a design
-round at kickoff, the §44 decision-protocol precedent); per-script trigger
-conditions; whether the serialized objective shape changes (snapshot-bump
-prediction goes in the cut lines).
+**Decision points — ✅ DECIDED at kickoff (2026-07-13, worklog §54):** all
+four forks locked — scripts = a layer ABOVE the objective model (emit the
+existing four modes; the 53g expressiveness proof); arbitration =
+dumb-deterministic (fixed priority · null-action threshold · min-dwell —
+scoring is §55's job); sensors = pure functions of world STATE (rollout-
+compatible, derive-don't-cache); home = `src/bot/`. Per-script triggers
+derived from the 53g traces (step 54c). **Snapshot-bump prediction: NONE —
+v34 holds** (the O2/O3 no-new-field precedent).
+
+**The cut (shape-locked 2026-07-13; audit + rationale in worklog §54):**
+
+- [ ] 54a — `src/bot/` scaffold: `TrafficScriptDriver` (trigger predicate +
+  proposed command · fixed-priority arbitration · null threshold ·
+  min-dwell no-thrash) + the third mutually-exclusive `HarnessOptions`
+  branch; zero scripts registered; exit = byte-identical no-op parity test
+- [ ] 54b — the sensors (`src/bot/sensors.ts`): jam index (claims +
+  `vacancyEtaOf`, NOT events) · hazard reads (`statusOnEnter`) · setup-time
+  choke-cell analysis · attrition differential (`survivorPower`) ·
+  focus-target scoring (reuse `scored`); per-sensor tests on crafted worlds
+  ⚠ jam sensor = the phase's real unknown; fallback = narrower
+  blocked-path-only sensor, noted in worklog
+- [ ] 54c — trace mining: replay the 53g fixture, dump sensor values at
+  each human command tick per traffic cell → the trigger-threshold table
+- [ ] 54d–54h — the five scripts, ONE COMMIT EACH, priority order:
+  terrain-edge hold (the fire-edge 0.0-vs-10.7 target) · unjam (corridors +
+  the labyrinth null-discipline read) · choke hold · cohesion focus ·
+  attrition stall; each = script + co-located test + triggers from 54c's
+  table + a spot-check of its own gauntlet cells (full re-measure at 54i)
+- [ ] 54i — gauntlet `--arms=scripts` + the full paired re-measure →
+  BALANCE §54 (residual quantified = §55's gate input); cursor flip
 
 **Exit criteria:** five scripts live behind the new bot with the anchors
 byte-frozen on the old handling; drift gates green with NO gate relaxed;

@@ -169,14 +169,14 @@ v34 holds** (the O2/O3 no-new-field precedent).
   proposed command · fixed-priority arbitration · null threshold ·
   min-dwell no-thrash) + the third mutually-exclusive `HarnessOptions`
   branch; zero scripts registered; exit = byte-identical no-op parity test
-  ✅ 2026-07-13 — parity + liveness + exclusion-throw proven; no bump, as
-  predicted; build story (incl. the test-hang lesson) in worklog §54a
-- [ ] 54b — the sensors (`src/bot/sensors.ts`): jam index (claims +
+  ✅ 2026-07-13 — parity/liveness/exclusion proven; no bump; worklog §54a
+- [x] 54b — the sensors (`src/bot/sensors.ts`): jam index (claims +
   `vacancyEtaOf`, NOT events) · hazard reads (`statusOnEnter`) · setup-time
   choke-cell analysis · attrition differential (`survivorPower`) ·
   focus-target scoring (reuse `scored`); per-sensor tests on crafted worlds
   ⚠ jam sensor = the phase's real unknown; fallback = narrower
   blocked-path-only sensor, noted in worklog
+  ✅ 2026-07-13 — five live, 19 tests, jam fallback unneeded; worklog §54b
 - [ ] 54c — trace mining: replay the 53g fixture, dump sensor values at
   each human command tick per traffic cell → the trigger-threshold table
 - [ ] 54d–54h — the five scripts, ONE COMMIT EACH, priority order:

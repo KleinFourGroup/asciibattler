@@ -538,3 +538,47 @@ it). Rules adopted + the fuzz-config discovery (tests/fuzz runs ONLY
 under `vitest.fuzz.config.ts`; the pre-commit fuzz trigger doesn't fire
 for `src/bot/`/`tests/fuzz/` — manual fuzz:smoke on harness-touching
 commits): retro/scratchpad.md §54a.
+
+### 54b — the sensors (2026-07-13)
+
+`src/bot/sensors.ts` — the five reads, all pure functions of world state
+(the fork-3 lock), each with crafted-world tests (19). Findings + the
+deviations from the cut's assumptions, in build order:
+
+- **The jam sensor's flagged unknown resolved WITHOUT the fallback.** The
+  local read — idle + out of acting range + ≥1 passable progress cell
+  (8-way, strictly Chebyshev-closer to the nearest enemy) + every progress
+  cell occupied/claimed with no free cell, ≥1 blocker a TEAMMATE, and no
+  teammate blocker vacating within `JAM_VACANCY_WINDOW_SECONDS` (0.5s
+  provisional) — composes cleanly from `unitAt`/`claimantOf`/
+  `vacancyEtaOf`. Approximations on record in the doc comment: one-step
+  locality (corner jams register only when the column stalls) and
+  canonical-corner positions for N×N units. Whether it fires where the
+  human clicked is 54c's question, as planned.
+- **Hazard = a MIRROR of two sim apply sites**, not a tile-def read alone:
+  `fire` is a hardcoded ungated sustain (`World.applyTileStatuses`),
+  `statusOnEnter` (mud→poison) is gated by `TILES_CONFIG.
+  applyStatusOnEnter`, `healing`/rejuvenate is beneficial (periodic op
+  kind `heal` ≠ hazard), impassable kinds are walls-not-hazards. Lockstep
+  comment at the sensor; the mud test derives its expectation from the
+  config flag (balance-proof style).
+- **⚠ Walls are neutral-team UNITS, not tiles** — there is no `'wall'`
+  TileKind (three first-draft tests died on `TILE_DEFS['wall']` =
+  undefined). Consequence for choke: a terrain-only articulation scan
+  would read every walled corridor map as an OPEN FIELD. `chokeCells`
+  folds living neutral bodies (walls / half-cover / rubble, via
+  `cellsOccupiedBy`) into the passability mask; mobile combatants stay
+  out (bodies move; choke is the arena's shape); rubble death re-opens
+  cells on the next call (derive-don't-cache). Both representations
+  tested (chasm tiles + `spawnWall` units). The jam sensor was already
+  correct on unit-walls for free (a neutral blocker is not a teammate).
+- **`World.survivorPower` is PRIVATE** — `attritionRead` re-derives the
+  formula (Σ `effectiveStats.power`, living units) with a lockstep
+  comment; DoT counts def-resolve `effects[].key` and count only
+  damage-kind periodics.
+- **"Reuse `scored`" was impossible by import direction** (it lives in
+  tests/fuzz — an anchor arm; src never imports tests). Deliberate call:
+  `focusTargetFeatures` exposes RAW per-enemy features (archetype /
+  hpFraction / power / attackRange / distToNearestOwn) and the WEIGHTS
+  stay 54g's job, set from 54c's table. The frozen proclivity keeps its
+  own model untouched — better for the anchor than sharing code anyway.

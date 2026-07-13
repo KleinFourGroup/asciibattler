@@ -664,3 +664,38 @@ stall-spiral 0.0 held. **⚠ Script interaction observed:** fire-edge 5.7 →
 6.3 and alpha-spiral 6.7 → 7.3 vs 54d-ALONE (both still ≪ passive
 10.7/8.7, deaths better) — post-release re-engagement jams now pull back.
 3 seeds can't separate noise; 54i's paired re-measure arbitrates.
+
+### 54f — choke hold + the armyMinCut sensor (2026-07-13)
+
+**The sensor decision (flagged at 54c, user-approved):** replaced the
+articulation question with the right one — `armyMinCut` (sensors.ts) = the
+min vertex cut between the armies on the free-passable grid, via explicit
+node-split Edmonds–Karp with an early bail past `CHOKE_MAX_CUT` (3). Any
+passage width, one algorithm: the 2-wide isthmus bridge reads as a cut of
+exactly 2 (the articulation blindness is pinned as a regression test), a
+labyrinth door as 1, open ground bails to null. First draft used a
+forward-only path search — caught in self-review before commit: without
+reverse residual arcs the flow is maximal-not-maximum and the reachability
+cut extraction reads a bogus frontier; rewritten as a true residual.
+
+**Script (priority #3):** trigger = cut ≤ 3 ∧ enemies ≥ 2× cut (the
+funnel trade; the isthmus signature — the session's highest enemy counts
+and its only `hold` uses) ∧ cut STRICTLY our side (the 54d diagonal-tie
+lesson). Proposal = `engage` on the cut's central cell. Release = the
+null action when the conditions break.
+
+**⭐ User correction on record:** the human's isthmus play was NOT a
+geometric plug — it was a TERRAIN-ADVANTAGE hold at the water's edge
+(force the engagement with the enemy still in shallow water's −10
+attacker-accuracy; own units on sand's −6 evasion — a positive trade
+despite the sand). The geometric funnel stands on its own value; the
+water's-edge play is a documented candidate EXTENSION of terrain-edge
+hold (hazard → combat-penalty tiles), deliberately unbuilt while
+choke-isthmus shows no damage gap (0.0 everywhere). Re-open if 54i shows
+a residual where tile mods decide fights.
+
+**Spot-check (7 cells × 3 seeds):** isthmus 0.0 HELD (+19% ticks — the
+hold is a wait; fine); focus-river BYTE-IDENTICAL (silent); corridors
+3.3 → 3.0 (bonus — corridors has real ≤3-cuts); **labyrinth identical to
+54e (0.0 pool) — the user's approval gate MET, no door-camping**;
+fire/spiral pools unchanged (6.3/7.3/0.0). 52 bot tests green.

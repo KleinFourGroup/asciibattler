@@ -323,6 +323,151 @@ export function chokeCells(world: World): GridCoord[] {
   return out;
 }
 
+/**
+ * 54f — the MIN VERTEX CUT between the armies: the smallest set of free
+ * passable cells the enemy must cross to reach us, or null when no cut of
+ * size ≤ `maxCut` exists (open ground — bail early, cheap) or the armies
+ * aren't connected at all (nothing to hold). Generalizes `chokeCells` to
+ * ANY passage width — the articulation scan reads zero on the ≥2-wide
+ * isthmus bridge (the 54c sensor gap, BALANCE §54c); a cut of size 1 IS an
+ * articulation door.
+ *
+ * Standard node-split max-flow (Even–Tarjan): each free passable cell
+ * splits in→out with capacity 1; 8-way adjacency carries ∞; unit-occupied
+ * cells (either army — bodies, not geometry) carry ∞ so the cut lands on
+ * FREE cells only (the cells a holder could actually stand on); neutral
+ * bodies (walls/rubble) are impassable exactly as in `chokeCells`. Flow
+ * augments via BFS from the enemy cells toward ours and bails once flow
+ * exceeds `maxCut`; the cut is read from source-side residual
+ * reachability. Deterministic (row-major adjacency, no RNG), state-only,
+ * O(maxCut × cells) — fine per tick.
+ */
+export function armyMinCut(
+  world: World,
+  team: ObjectiveTeam,
+  maxCut: number,
+): GridCoord[] | null {
+  const w = world.gridW;
+  const h = world.gridH;
+  const n = w * h;
+  const idx = (x: number, y: number) => y * w + x;
+
+  // Cell classification (mirrors chokeCells' passability mask).
+  const neutralBlocked = new Set<string>();
+  for (const u of world.units) {
+    if (u.team !== 'neutral' || u.currentHp <= 0) continue;
+    for (const c of cellsOccupiedBy(u)) neutralBlocked.add(cellKey(c));
+  }
+  const passable = new Array<boolean>(n).fill(false);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      passable[idx(x, y)] =
+        tileDef(world.tileGrid.kindAt({ x, y })).passable && !neutralBlocked.has(cellKey({ x, y }));
+    }
+  }
+  const own = livingUnits(world, team);
+  const enemies = livingUnits(world, opposingTeam(team));
+  if (own.length === 0 || enemies.length === 0) return null;
+  const sourceCells = new Set(enemies.map((u) => idx(u.position.x, u.position.y)));
+  const sinkCells = new Set(own.map((u) => idx(u.position.x, u.position.y)));
+  // Any unit's cell is a body, not geometry — un-cuttable (∞ vertex capacity).
+  const uncuttable = new Set<number>();
+  for (const u of world.units) {
+    if (u.currentHp <= 0) continue;
+    for (const c of cellsOccupiedBy(u)) uncuttable.add(idx(c.x, c.y));
+  }
+
+  // Explicit edge-list max-flow (Edmonds–Karp) over the node-split graph —
+  // a true residual (with reverse arcs) is required for the reachability
+  // cut extraction to be valid; a forward-only path search finds a maximal
+  // (not maximum) path set and reads a bogus frontier. Nodes: 2v = v's IN,
+  // 2v+1 = v's OUT, plus S and T. Arcs: IN(v)→OUT(v) cap 1 (∞ when
+  // uncuttable); OUT(u)→IN(v) ∞ per 8-adjacency; S→IN(enemy) ∞;
+  // OUT(own)→T ∞.
+  const S = 2 * n;
+  const T = 2 * n + 1;
+  const INF = 1 << 29;
+  const head: number[] = new Array<number>(2 * n + 2).fill(-1);
+  const to: number[] = [];
+  const nxt: number[] = [];
+  const cap: number[] = [];
+  const addEdge = (u: number, v: number, c: number) => {
+    to.push(v);
+    cap.push(c);
+    nxt.push(head[u]!);
+    head[u] = to.length - 1;
+    to.push(u);
+    cap.push(0);
+    nxt.push(head[v]!);
+    head[v] = to.length - 1;
+  };
+  for (let v = 0; v < n; v++) {
+    if (!passable[v]) continue;
+    addEdge(2 * v, 2 * v + 1, uncuttable.has(v) ? INF : 1);
+    const x = v % w;
+    const y = (v - x) / w;
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx2 = x + dx;
+        const ny2 = y + dy;
+        if (nx2 < 0 || ny2 < 0 || nx2 >= w || ny2 >= h) continue;
+        const u = idx(nx2, ny2);
+        if (passable[u]) addEdge(2 * v + 1, 2 * u, INF);
+      }
+    }
+  }
+  for (const s of sourceCells) if (passable[s]) addEdge(S, 2 * s, INF);
+  for (const t of sinkCells) if (passable[t]) addEdge(2 * t + 1, T, INF);
+
+  // BFS residual reachability from S; fills prevEdge for path recovery.
+  const bfs = (prevEdge: number[] | null): boolean[] => {
+    const seen = new Array<boolean>(2 * n + 2).fill(false);
+    seen[S] = true;
+    const queue = [S];
+    for (let qi = 0; qi < queue.length; qi++) {
+      const u = queue[qi]!;
+      for (let e = head[u]!; e !== -1; e = nxt[e]!) {
+        if (cap[e]! <= 0 || seen[to[e]!]) continue;
+        seen[to[e]!] = true;
+        if (prevEdge) prevEdge[to[e]!] = e;
+        if (to[e] === T) return seen;
+        queue.push(to[e]!);
+      }
+    }
+    return seen;
+  };
+
+  let flow = 0;
+  for (;;) {
+    const prevEdge = new Array<number>(2 * n + 2).fill(-1);
+    const seen = bfs(prevEdge);
+    if (!seen[T]) break;
+    flow++;
+    if (flow > maxCut) return null; // open ground — no holdable choke
+    // Unit augmentation (every S→T path carries exactly 1 through a split).
+    for (let v = T; v !== S; ) {
+      const e = prevEdge[v]!;
+      cap[e] = cap[e]! - 1;
+      cap[e ^ 1] = cap[e ^ 1]! + 1;
+      v = to[e ^ 1]!;
+    }
+  }
+  if (flow === 0) return null; // armies not connected — nothing to hold
+
+  // Min cut = cells whose IN is S-reachable in the final residual but whose
+  // OUT is not (the saturated splits on the frontier).
+  const reach = bfs(null);
+  const cut: GridCoord[] = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const v = idx(x, y);
+      if (passable[v] && reach[2 * v] && !reach[2 * v + 1]) cut.push({ x, y });
+    }
+  }
+  return cut.length > 0 && cut.length <= maxCut ? cut : null;
+}
+
 // ---------------------------------------------------------------------------
 // Attrition (the attrition-stall script's read)
 // ---------------------------------------------------------------------------

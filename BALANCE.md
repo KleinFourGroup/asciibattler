@@ -746,3 +746,65 @@ deltas. The pre-X H7c→O log lives at
   - These arm-labeled rows are the 53g paired comparator: the human plays the
     SAME cells/seeds/roster; the read is per-cell pool-damage deltas + the
     cleared column on the elite/boss cells.
+
+- **2026-07-13 — §53g THE HUMAN BASELINE (the paired-seed session; the ~80%
+  self-report RETIRES).** The user played all 11 cells × 3 seeds in the native
+  browser over the `--urls` list (standard roster, `daemon=none`, recorder on);
+  ingest validated **104/104 unique turns replay byte-identical** (fixture:
+  `tests/gauntlet/fixtures/53g-human-traces.json`, era `e5c8a0fd`, guarded by
+  `humanFixture.test.ts`). Method: traces joined to cells by worldSeed against
+  deterministic bot re-runs of each cell's RunConfig; layout+enemy-composition
+  fingerprint fallback where the human's path diverged the RNG (junction 407,
+  boss 1003); per-turn pool damage reconstructed from `battle:ended.
+  survivorPower` on replay. Bot columns = §53e.2 above.
+
+  | cell | human dmg | bot none | bot random | human cleared | bot cleared (none) | human cmds/enc |
+  |---|---|---|---|---|---|---|
+  | alpha-funnel | 13.3 | 12.7 | 12.0 | 2/3 | 2/3 | 6.7 |
+  | alpha-spiral | 3.3 | 8.7 | 9.3 | 3/3 | 3/3 | 3.0 |
+  | artillery-funnel | 1.3 | 0.3 | 0.0 | 3/3 | 3/3 | 8.0 |
+  | junction-elite | 6.7† | 16.3 | 10.7 | 2/3 | 1/3 | 5.0 |
+  | unjam-corridors | 2.3 | 4.0 | 2.3 | 3/3 | 3/3 | 10.3 |
+  | fire-edge | **0.0** | 10.7 | 9.0 | 3/3 | 2/3 | 6.0 |
+  | choke-isthmus | 0.0 | 0.0 | 0.0 | 3/3 | 3/3 | 4.0 |
+  | stall-spiral | 0.7 | 4.0 | 2.0 | 3/3 | 3/3 | 5.3 |
+  | focus-river | 3.3 | 0.0 | 6.3 | 3/3 | 3/3 | 4.7 |
+  | unjam-labyrinth | 1.7 | 0.0 | 4.3 | 3/3 | 3/3 | 10.0 |
+  | boss-fortress | 23.0‡ | 19.3 | 24.7 | **0/2**‡ | 0/3 | 10.5 |
+
+  † seed 416 recorded as DEFEATED at pool damage 20 (= playerHealthMax): the
+  ledger shows 19 across six turns and the user confirmed the seventh, fatal
+  turn resolved as a loss but its trace was lost to a fast tab-close.
+  ‡ two completed attempts, both full-pool defeats; the third abandoned after
+  one lost turn (the user declined to finish: "I don't think it's winnable").
+
+  - **⭐ The headline: the human–bot gap is LOCALIZED, not uniform.** Decisive
+    human edge exactly where §52 predicted — the traffic cells: `fire-edge`
+    **0.0 vs 10.7** (the round's cleanest single number), `junction-elite`
+    6.7 & 2/3 vs 16.3 & 1/3, `alpha-spiral` 3.3 vs 8.7, `stall-spiral` 0.7 vs
+    4.0. Near-PARITY on the pure-geometry killer (`alpha-funnel` 13.3 vs 12.7
+    — the adjacent-spawn alpha strike kills humans too) and at the boss.
+  - **⭐ The boss wall is NOT a bot artifact: the human is 0-for-3.** User
+    diagnosis on record (worklog §53g): the mercenary wave alone is brutal,
+    and the final stage's mage AoE is unanswerable because the desert sand's
+    slow means melee can never close. §57's boss-wall rider verdict must
+    treat this as CONTENT tuning, not bot realism — the 43–55% target is
+    unreachable by anyone today.
+  - **The null-action finding (a §54 design input):** on the slow-terrain
+    cells the PASSIVE bot beats the human — `unjam-labyrinth` 0.0 vs 1.7,
+    `focus-river` 0.0 vs 3.3 (and §53e.2's labyrinth arm-split showed random
+    orders bleeding 4.3). Intervention has negative marginal value there;
+    the traffic scripts' arbitration needs "do nothing" as a first-class arm.
+  - **Command intensity tracks the traffic cells:** ~10 commands/encounter on
+    corridors/labyrinth/boss vs ~3–5 on the rest — the user's clicking
+    concentrates exactly where the §54 script families live.
+  - **The ~80% self-report retires with credit:** measured 28/30 non-boss
+    encounters cleared (93%) and 28/33 overall (85%) — the per-cell rows
+    above are the anchor now.
+  - ⚠ Caveats on record: the SPIRAL SPAWN SCRAMBLE (user report — spawn
+    geometry is seed-rolled, so the spiral cells' why-labels are approximate;
+    alpha-spiral 201/203's instant clears were likely non-adjacent spawns
+    while 202's LLW/10-dmg was the real alpha geometry); the RING EVICTION
+    incident (session + retries overran cap 80 — recovered via the
+    mid-session partial export + a 4-URL top-up; protocol for future
+    sessions: `clearTraces()` at session start + export mid-session).

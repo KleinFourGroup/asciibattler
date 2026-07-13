@@ -336,6 +336,67 @@ one JSON download (empty ring warns instead of downloading a `[]`), and
 one sitting; a 40-deep ring could evict its own early traces before the
 end-of-session export. Console `dumpTraces()`/`clearTraces()` stay.
 
+### 53g — the human baseline session (2026-07-13)
+
+The session ran in three exchanges: a mid-session pipeline check (16
+traces — providential, see the eviction incident), the full dump, and a
+4-URL top-up. **Every number and finding: BALANCE §53g** (the paired
+table; the ~80% self-report retired). Story and method here:
+
+- **Pipeline check first (the user's idea):** a partial export after the
+  first cells let ingest prove replay fidelity (16/16) before the hour
+  was invested. It also revealed the dump carried 6 pre-session warm-up
+  traces (fresh roster, casual play) — the ring persists across page
+  loads by design; filtered at ingest by roster level.
+- **⚠ The ring-eviction incident:** the session (33+ encounters of
+  multi-turn battles + retries + warm-ups) overran `TRACE_RING_CAP` 80 —
+  the full dump had silently evicted alpha-funnel entirely, alpha-spiral
+  202/203, and artillery 301. Recovered: alpha-funnel lived in the
+  mid-session partial; the rest re-played in the top-up. **Protocol for
+  future sessions: `clearTraces()` at session start + export
+  mid-session.** (The 53f cap bump 40→80 was sized to "~30 battles" —
+  the miss was counting encounters, not turns; a battle ≈ 1–6 turns.)
+- **Ingest method (scripts in session scratchpad, results in BALANCE):**
+  union dumps deduped by worldSeed (newest wins) → join to cell×seed by
+  worldSeed against deterministic bot re-runs of `cellRunConfig` → a
+  layout+enemy-comp fingerprint fallback for path-diverged runs (the
+  human's junction-407 route and boss-1003 differed from the bot's
+  draws) → per-turn pool damage via `battle:ended.survivorPower` on
+  replay → a pool ledger per encounter (cleared/defeated). En-route
+  battles on forced-layout runs (8) excluded from cell reads.
+- **104/104 unique turns replay byte-identical.** The union is COMMITTED
+  as [tests/gauntlet/fixtures/53g-human-traces.json](tests/gauntlet/fixtures/53g-human-traces.json)
+  (315KB, era `e5c8a0fd`) with
+  [humanFixture.test.ts](tests/gauntlet/humanFixture.test.ts) keeping
+  three representative turns under regression — ERA-BOUND by design: the
+  test skip-guards on configHash so §57's balance changes retire the
+  fixture instead of blocking the tuning (the 53c keystone keeps the
+  mechanism covered continuously). This closes the phase exit criterion
+  on real human data.
+- **Two fast-close discards** (junction-416's fatal seventh turn; the
+  boss-1003 abandonment): the recorder's discard-open-trace rule means
+  "wait for the post-turn screen before closing" belongs in the session
+  protocol. 416 recorded as DEFEATED at pool damage 20 (user-confirmed
+  loss; footnoted in BALANCE).
+- **The user's boss report (verbatim input for §57):** "I've never
+  actually fought the boss on desert. I don't think it's winnable. The
+  mercenary wave is hard enough, but if you make it to the final stage,
+  you just die to mage AoE because the sand slows you down enough that
+  you can't close to melee range." Measured: 0-for-3, both completed
+  attempts full-pool wipes — the boss wall is content, not bot fiction.
+- **The spiral spawn scramble (user report):** spawn-region geometry is
+  seed-rolled, so the three spiralFireLife cells' why-labels (adjacent
+  alpha / edge hold / opposite stall) describe tendencies, not
+  guarantees — "it ultimately evened out to good coverage, but treat
+  those as scrambled." Watch item in TODO: pin or classify spawn
+  geometry if §54's re-measure needs it controlled.
+- **The finding that reshapes §54's cut: the gap is localized** (traffic
+  cells only; parity on geometry killers and the boss) **and the null
+  action is strong** (the passive bot beats the human on labyrinth and
+  river — arbitration must be able to choose "do nothing"). Command
+  intensity (~10/encounter on corridors/labyrinth/boss vs ~3–5
+  elsewhere) maps the user's attention to exactly the script families.
+
 ### 53g-pre — the labyrinth cell (2026-07-12)
 
 User catch just before the session: the gauntlet had no labyrinth cell,

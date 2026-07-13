@@ -14,6 +14,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [x] **"Add to sector" button did nothing.** Un-imported `LAYOUT_IDS` → runtime `ReferenceError` swallowed by a `void` handler; fixed 2026-06-19 (+ the confirmation now survives Vite's full-reload). Full diagnosis in git.
 - [x] **Typecheck coverage extended to `tools/` + `tests/`.** Root tsconfig `include` widened; 49 pre-existing errors fixed type-only (2026-06-19). Detail in git.
 
+## Micro round (53→57) — watch items
+
+- [ ] **Gauntlet spiral cells: spawn geometry is seed-rolled, not cell-pinned.** The 53g session surfaced (user report) that the three `spiralFireLife` cells' why-labels (adjacent-alpha / edge-hold / opposite-stall) describe *tendencies* — `pickSpawnRegions` rolls the geometry per seed, so e.g. alpha-spiral seeds 201/203 spawned non-adjacent and cleared instantly while 202 produced the real alpha strike (BALANCE §53g caveats). Fine for 53g's paired read (both sides play the same roll), but **if §54's re-measure needs geometry controlled** (a script's trigger may be geometry-keyed), either classify each cell×seed's actual geometry from the committed traces (spawn regions are replayable) or add an optional spawn-region pin to the cells. Surfaced 2026-07-13.
+
 ## Polish / pre-launch
 
 - [ ] **Mercury coin-flip watch.** The §51 kickoff report ("always got the full redraw for a whole run") closed NOT-REPRODUCIBLE: the engine is proven on the exact live path (a kickoff probe drove 100 ROLLED-mercury runs — 826 gated turns, 44.9% granted, one ≥8-turn all-heads seed), and the user's very next native run behaved. If a future run shows the same streak, grab its seed (`?seed=`) and re-probe on the rolled path before touching the engine — the "Idol of Mercury is silent" denial line (PreTurnScreen) is the tell to watch for. Detail: WORKLOG.md §51 kickoff (2026-07-11).

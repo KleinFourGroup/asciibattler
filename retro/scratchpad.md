@@ -43,3 +43,17 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   the pre-commit fuzz trigger does NOT fire for `src/bot/` or
   `tests/fuzz/` paths, so harness-touching commits need a MANUAL
   fuzz:smoke (candidate hook-path addition at the next sweep).
+
+## §54d–g — spot-check discipline (2026-07-13)
+
+- Per-script ATTRIBUTION via explicit script arrays (`trafficScripts:
+  [subset]`) pinpointed every regression source this phase (focus-mode
+  beeline; reach-4 mage-chasing; unjam-under-fire) — but the 54e
+  amendment proved its limit: a 3-cell attribution fix regressed 3
+  OTHER cells. Rule adopted: diagnose on the targeted A/B, but every
+  fix re-runs the FULL 10-cell board before commit.
+- The 54c trace table beat design intuition twice: the human barely
+  uses focus-mode (3/197 — their assassination tool is the leashed
+  engage), and "artillery" by capability needed reach 6, not 4
+  (reach-5 casters are everywhere). Mine the data before hardcoding
+  the introspection.

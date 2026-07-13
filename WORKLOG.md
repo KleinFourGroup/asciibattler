@@ -643,3 +643,24 @@ alpha-spiral **8.7 → 6.7** (deaths 43→26); stall-spiral **4.0 → 0.0**
 (human: 0.7 — edge-holding at the fire IS most of the burn cheese);
 unjam-corridors **byte-identical** (no hazards → the script never fires —
 the null-discipline proof on non-fire maps).
+
+### 54e — unjam (2026-07-13)
+
+Priority #2. Trigger: `jamFraction ≥ 0.2` (54c: the human's command levels
+0.25–0.29 on the jam-forming cells; labyrinth bg 0.03). Proposal: `engage`
+on a REGROUP tile — open (max free 8-neighbors), near the jammed centroid,
+NO CLOSER to the enemy (≥ not >, so a map-edge jam can rally laterally),
+non-hazard, unoccupied. The elegant part is free: engage's 3-step
+targeting means the ENGAGED FRONT holds its fight and only the unengaged
+(= the jammed rear) walk to the rally — fall back → re-sort; re-engage is
+the driver's null-action release when the jam clears. Corridors' v1
+under-fire (the preventive human) accepted per 54c.
+
+**Spot-check (3 seeds/cell vs §53e.2 + the 54d rows):** corridors **4.0 →
+3.3** (target ✓; human 2.3); labyrinth **0.0 → 0.0 pool HELD** but not
+free (deaths 10→14, ~16% slower — transient spikes cross 0.2; ⚠ 54i
+threshold-bump candidate, deliberately NOT tuned off one spot-check);
+stall-spiral 0.0 held. **⚠ Script interaction observed:** fire-edge 5.7 →
+6.3 and alpha-spiral 6.7 → 7.3 vs 54d-ALONE (both still ≪ passive
+10.7/8.7, deaths better) — post-release re-engagement jams now pull back.
+3 seeds can't separate noise; 54i's paired re-measure arbitrates.

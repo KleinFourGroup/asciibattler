@@ -108,7 +108,8 @@ player→run input channel (currently untraced).
 
 **Decision points — ✅ DECIDED at kickoff (2026-07-12, worklog §53):** the
 10-cell gauntlet list locked (4 killer + 5 traffic + 1 boss, × 3 seeds —
-table in worklog §53); command stamping = at APPLY time via a new
+table in worklog §53; +1 traffic cell `unjam-labyrinth` at 53g-pre, user
+call — worklog §53g-pre); command stamping = at APPLY time via a new
 `command:applied` bus event (covers the parked-drain case); recorder
 persistence = localStorage ring + an export-all dev key; the gauntlet
 driver = an opt-in fuzz-CLI sibling (`npm run gauntlet`).

@@ -288,6 +288,7 @@ battles × arms). The cut: ROADMAP §53.
 | 8 | `adventurer-with-guards` × `spiralFireLife` | Traffic: attrition stall (opposite-spawn burn cheese) |
 | 9 | `elementalTrio` × `river` | Traffic: cohesion focus (assassinate the catapult) |
 | 10 | `bandit-king` × `desertFortress` | The boss cell (boss-wall relevance, stages grammar) |
+| 11† | `brigands` × `labyrinth` | Traffic: unjam, maze variant (53g-pre amendment — see §53g-pre below) |
 
 ### 53f — the dev export/load key (2026-07-12)
 
@@ -334,3 +335,20 @@ one JSON download (empty ring warns instead of downloading a `[]`), and
 `TRACE_RING_CAP` 40→80 — the 53g session is ~30 battles plus retries in
 one sitting; a 40-deep ring could evict its own early traces before the
 end-of-session export. Console `dumpTraces()`/`clearTraces()` stay.
+
+### 53g-pre — the labyrinth cell (2026-07-12)
+
+User catch just before the session: the gauntlet had no labyrinth cell,
+and their corridors-vs-labyrinth play uses DISTINCT strategies — exactly
+the introspected-edge signal the §54 traffic scripts derive from. Locked
+in conversation: **cell 11 `unjam-labyrinth`** = `brigands` × `labyrinth`
+(seeds 1101–1103, normal/hops-2) — the corridors cell with ONLY the
+layout swapped, a clean layout A/B on the same encounter. The cells
+guard test's 10-cell pin re-pinned to 11 (a deliberate amendment — the
+baseline discipline). Bot baseline appended to BALANCE §53e.2 (same
+protocol, no bad seeds): **the arm split INVERTS vs most cells** —
+passive walks the slow maze clean (0.0 pool dmg), random orders bleed
+(4.3, 33 deaths, ~70% longer) — labyrinth punishes bad traffic orders
+more than passivity. ⚠ doctrine unchanged: labyrinth stays the
+intentional slow maze; long bot battles there are signal. The session
+grows ~30→~33 battles (ring cap 80 has ample headroom).

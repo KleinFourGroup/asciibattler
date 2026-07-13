@@ -13,8 +13,10 @@ import { makeStrategy } from '../fuzz/strategies/registry';
  */
 
 describe('gauntlet cells (53e)', () => {
-  it('is the shape-locked 10-cell catalog with unique ids and seeds', () => {
-    expect(GAUNTLET_CELLS).toHaveLength(10);
+  // 11 = the shape-locked 10 + the 53g-pre labyrinth unjam variant (user
+  // call — worklog §53g-pre). A deliberate re-pin, the baseline discipline.
+  it('is the shape-locked catalog (10 + the 53g-pre amendment) with unique ids and seeds', () => {
+    expect(GAUNTLET_CELLS).toHaveLength(11);
     const ids = GAUNTLET_CELLS.map((c) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
     const seeds = GAUNTLET_CELLS.flatMap((c) => [...c.seeds]);

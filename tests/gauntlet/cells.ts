@@ -1,7 +1,8 @@
 /**
  * 53e — the battle gauntlet's cell catalog (the shape-locked 10-cell list,
- * worklog §53 shape-lock table): 4 reaction-time killer cells + 5 traffic
- * showcases + 1 boss cell, × 3 fixed seeds each ≈ the 1-hour human session.
+ * worklog §53 shape-lock table; +1 at 53g-pre, the labyrinth unjam variant —
+ * user call, worklog §53g-pre): 4 reaction-time killer cells + 6 traffic
+ * showcases + 1 boss cell, × 3 fixed seeds each ≈ the ~1-hour human session.
  *
  * A cell is a PINNED battle context: encounter × layout × seed, launched as a
  * minimal run (`hops`) with `daemon=none` (no pre-turn grant choices — the
@@ -156,6 +157,21 @@ export const GAUNTLET_CELLS: readonly GauntletCell[] = [
     hops: 2,
     seeds: [901, 902, 903],
     why: 'Traffic: cohesion focus — assassinate the catapult across the river',
+  },
+  {
+    // 53g-pre (user call): the maze variant of unjam — same encounter as
+    // unjam-corridors with ONLY the layout swapped (a clean layout A/B). The
+    // user reports a DISTINCT strategy here vs corridors — a §54 trigger-shape
+    // signal the paired traces should capture. ⚠ labyrinth is the intentional
+    // slow maze (standing doctrine): long, cap-flirting bot battles are
+    // expected signal, not a bug.
+    id: 'unjam-labyrinth',
+    encounterId: 'brigands',
+    layoutId: 'labyrinth',
+    kind: 'normal',
+    hops: 2,
+    seeds: [1101, 1102, 1103],
+    why: 'Traffic: unjam, maze variant — same brigands as the corridors cell, layout swapped',
   },
   {
     id: 'boss-fortress',

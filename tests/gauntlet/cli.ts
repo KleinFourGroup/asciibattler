@@ -1,6 +1,6 @@
 /**
- * `npm run gauntlet` — 53e's headless bot baseline over the 10-cell battle
- * gauntlet (cells.ts). Opt-in like the fuzz CLI (never part of `npm test`);
+ * `npm run gauntlet` — 53e's headless bot baseline over the battle gauntlet
+ * (the cells.ts catalog). Opt-in like the fuzz CLI (never part of `npm test`);
  * runs every cell × its 3 fixed seeds × each objective ARM and reports the
  * per-cell outcome table that lands in BALANCE.md §53 — the bot side of the
  * paired-seed human-vs-bot comparison (the human side is 53g's recorded
@@ -89,7 +89,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--help':
         process.stdout.write(
-          'gauntlet — headless bot baseline over the 10-cell battle gauntlet.\n' +
+          'gauntlet — headless bot baseline over the battle gauntlet (cells.ts).\n' +
             'Flags: --arms=LIST  --cell=ID  --strategy=NAME  --fresh  --urls  --csv  --help\n',
         );
         process.exit(0);

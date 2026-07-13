@@ -721,6 +721,17 @@ deltas. The pre-X H7c→O log lives at
   | focus-river | random | 6.3 | 3/3 | 0 | 27 | 1028 |
   | boss-fortress | none | 19.3 | 0/3 | 0 | 52 | 1294 |
   | boss-fortress | random | 24.7 | 0/3 | 0 | 64 | 1458 |
+  | unjam-labyrinth† | none | 0.0 | 3/3 | 0 | 10 | 1660 |
+  | unjam-labyrinth† | random | 4.3 | 3/3 | 0 | 33 | 2820 |
+
+  † added 53g-pre (user call, same protocol/roster — worklog §53g-pre): the
+  maze variant of unjam, `brigands` × `labyrinth` (seeds 1101–1103) — same
+  encounter as `unjam-corridors`, only the layout swapped (a clean layout
+  A/B). Read: **labyrinth punishes bad traffic orders more than passivity**
+  — the passive arm walks the intentional slow maze clean (0.0, but slow),
+  while random objectives bleed (4.3, 33 deaths, ~70% longer battles); the
+  inverse of `focus-river`'s arm split. The user reports a distinct human
+  strategy here vs corridors — the paired traces should show its shape.
 
   - **Reads: the gradient is BACK, and it points at the §52 killers.** Pool
     damage spans 0.0–24.7. The named killer cells sit far above band:

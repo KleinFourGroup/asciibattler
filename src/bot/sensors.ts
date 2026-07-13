@@ -41,6 +41,16 @@ export function opposingTeam(team: ObjectiveTeam): ObjectiveTeam {
   return team === 'player' ? 'enemy' : 'player';
 }
 
+/**
+ * Reach that classifies a unit as TRUE ARTILLERY (catapult/shaman, 6) —
+ * capability-based, archetype-blind. Shared by cohesion focus (the
+ * assassination bar; reach-5 casters deliberately DON'T qualify — the
+ * junction mage-chasing lesson, worklog §54g) and unjam's under-fire rally
+ * filter (only artillery zones forbid a rally; a hard all-reach filter
+ * pushed rallies into deep retreat marches — the 54e-amendment lesson).
+ */
+export const ARTILLERY_REACH = 6;
+
 /** Living, on-grid units of `team` (world.units never holds the spawn queue). */
 export function livingUnits(world: World, team: ObjectiveTeam): Unit[] {
   return world.units.filter((u) => u.team === team && u.currentHp > 0);

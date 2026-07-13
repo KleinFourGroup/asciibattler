@@ -80,6 +80,32 @@ describe('unjam', () => {
     expect(unjam.evaluate(world, 'player')).toBeNull();
   });
 
+  it('rallies OUTSIDE enemy reach when artillery covers part of the field', () => {
+    const world = makeWorld();
+    const stuck = spawn(world, 'player', { x: 0, y: 5 });
+    spawn(world, 'player', { x: 1, y: 4 });
+    spawn(world, 'player', { x: 1, y: 5 });
+    spawn(world, 'player', { x: 1, y: 6 });
+    const cat = world.spawnUnit(scaledUnit('catapult', 1), 'enemy', { x: 10, y: 5 }, null);
+    const cell = regroupCell(world, 'player', [stuck.id]);
+    expect(cell).not.toBeNull();
+    // Strictly beyond the catapult's reach — the amendment's contract.
+    expect(distanceBetween(cell!, cat.position)).toBeGreaterThan(cat.derived.attackRange);
+  });
+
+  it('stands on the null action under TOTAL fire coverage (never falls back through it)', () => {
+    const world = makeWorld();
+    const stuck = spawn(world, 'player', { x: 0, y: 5 });
+    spawn(world, 'player', { x: 1, y: 4 });
+    spawn(world, 'player', { x: 1, y: 5 });
+    spawn(world, 'player', { x: 1, y: 6 });
+    // A catapult at board center: reach 6 covers every cell of a 12×12.
+    const cat = world.spawnUnit(scaledUnit('catapult', 1), 'enemy', { x: 6, y: 5 }, null);
+    expect(cat.derived.attackRange).toBeGreaterThanOrEqual(6); // premise
+    expect(regroupCell(world, 'player', [stuck.id])).toBeNull();
+    expect(unjam.evaluate(world, 'player')).toBeNull();
+  });
+
   it('never rallies onto a hazard tile', () => {
     const { world, stuckId } = jamWorld();
     // Carpet the whole fall-back half with fire except one safe plaza cell —

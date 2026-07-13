@@ -181,8 +181,9 @@ holds.** Rationale: worklog §54.
   the labyrinth null-discipline read) · choke hold · cohesion focus ·
   attrition stall; each = script + co-located test + triggers from 54c's
   table + a spot-check of its own gauntlet cells (full re-measure at 54i)
-  — done: 54d–54g ✅ (fire-edge 10.7→6.7 · corridors →3.0 · stall →0.0 ·
-  null cells HELD; focus A/B-corrected ×2; residual = unjam; worklog §54d–g)
+  — done: 54d–54g ✅ + the 54e amendment (artillery-only under-fire rally
+  filter; fire-edge 10.7→7.0 · corridors →3.0 · stall →0.0 · null cells
+  HELD; residuals for 54i on record; worklog §54d–g + §54e-amendment)
 - [ ] 54i — gauntlet `--arms=scripts` + the full paired re-measure →
   BALANCE §54 (residual quantified = §55's gate input); cursor flip
 

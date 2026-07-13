@@ -29,7 +29,7 @@ import type { ObjectiveTeam, TeamObjective } from '../../sim/objective';
 import { claimantOf, distanceBetween, unitAt } from '../../sim/occupancy';
 import { tileDef } from '../../sim/TileGrid';
 import type { TrafficScript } from '../TrafficScriptDriver';
-import { isHazardKind, jamRead, livingUnits, opposingTeam } from '../sensors';
+import { ARTILLERY_REACH, isHazardKind, jamRead, livingUnits, opposingTeam } from '../sensors';
 
 /** Trigger: the team's jammed fraction (54c — fires at the human's ~0.25–0.29
  *  command levels, silent on labyrinth's 0.03 background). PROVISIONAL. */
@@ -57,9 +57,14 @@ function openNeighbors(world: World, cell: GridCoord): number {
 /**
  * The regroup tile: passable, non-hazard, unoccupied/unclaimed, within
  * `UNJAM_RALLY_RADIUS` of the jammed centroid, NO CLOSER to the nearest
- * enemy than the centroid is (fall back or lateral, never advance), scored
- * by open neighbors DESC → centroid distance ASC → row-major. Null when
- * nothing qualifies (a fully boxed board — the null action stands).
+ * enemy than the centroid is (fall back or lateral, never advance), and
+ * OUTSIDE every enemy's attack range (the post-54g amendment, user-approved:
+ * the attribution A/B put the whole artillery-funnel +1.7 / junction +1.7
+ * residual on regrouping under ranged fire — a retreat that eats
+ * catapult/champion shots the passive bot never takes; worklog §54g/§54e-
+ * amendment). Scored by open neighbors DESC → centroid distance ASC →
+ * row-major. Null when nothing qualifies — under total fire coverage the
+ * null action stands (wait it out; never fall back through the barrage).
  */
 export function regroupCell(
   world: World,
@@ -77,6 +82,20 @@ export function regroupCell(
   const minEnemyDist = (c: GridCoord) =>
     enemies.reduce((m, e) => Math.min(m, distanceBetween(c, e.position)), Infinity);
   const centroidEnemyDist = minEnemyDist(centroid);
+  // The under-fire filter (post-54g amendment): a rally inside ARTILLERY
+  // reach is a retreat that eats shots. Deliberately artillery-only
+  // (`ARTILLERY_REACH`): the first cut counted EVERY enemy's reach, and
+  // reach-3/5 coverage (bows, mages) pushed rallies out of the local area
+  // entirely — corridors 3.0→4.3 (worse than passive), alpha-spiral
+  // 7.3→10.7, +60% ticks: a local re-sort became a deep retreat march.
+  // Melee/caster zones stay rally-able; only the siege line forbids its
+  // firing zone.
+  const underFire = (c: GridCoord) =>
+    enemies.some(
+      (e) =>
+        e.derived.attackRange >= ARTILLERY_REACH &&
+        distanceBetween(c, e.position) <= e.derived.attackRange,
+    );
 
   let best: GridCoord | null = null;
   let bestOpen = -1;
@@ -89,6 +108,7 @@ export function regroupCell(
       if (!tileDef(kind).passable || isHazardKind(kind)) continue;
       if (unitAt(world, c) !== undefined || claimantOf(world, c) !== undefined) continue;
       if (minEnemyDist(c) < centroidEnemyDist) continue; // never rally FORWARD
+      if (underFire(c)) continue; // never rally under the barrage
       const open = openNeighbors(world, c);
       const centroidDist = distanceBetween(c, centroid);
       const better =

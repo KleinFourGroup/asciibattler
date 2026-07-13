@@ -729,3 +729,28 @@ proposed next: the regroup cell must sit OUTSIDE enemy reach, else the
 null action stands. Running tally vs passive: fire-edge 10.7→6.7,
 corridors 4.0→3.0, stall 4.0→0.0, alpha-spiral 8.7→7.3, alpha-funnel
 12.7→10.7; labyrinth/isthmus/river 0.0 HELD. 61 bot tests green.
+
+### 54e-amendment — the under-fire rally filter (2026-07-13, user-approved)
+
+Two-round fix, the full-board spot-check earning its keep:
+
+1. **The hard filter overcorrected.** "Regroup cell outside EVERY enemy's
+   reach" fixed artillery (unjam's +1.7 → 0.0, better than passive) but
+   the 10-cell board caught what the 3-cell attribution couldn't:
+   reach-3/5 coverage (bows, mages) pushed rallies out of the local area
+   entirely — corridors 3.0→4.3 (WORSE than passive), alpha-spiral
+   7.3→10.7, labyrinth deaths 10→26 at +66% ticks. A local re-sort had
+   become a deep retreat march.
+2. **Artillery-only is the faithful fix.** The actual 54g finding was
+   falling back under CATAPULT fire — so the filter now counts only
+   `ARTILLERY_REACH` (≥6) enemies, promoted to a shared sensors constant
+   (cohesion focus's assassination bar aliases it — one classification,
+   one home). Everything restored: corridors 3.0, alpha-spiral 7.3,
+   labyrinth at its 54e level; artillery protected (residual 1.3 = the
+   focus engage, on record).
+
+**54i inputs on record:** junction's unjam +1.7 (melee fall-back cost in
+the ambush layout — NOT under-fire-related); artillery's focus +1.3;
+labyrinth's minor unjam cost (threshold candidate). Lesson promoted to
+practice: attribution A/Bs target the diagnosis, but every amendment
+re-runs the FULL board — three cells can't see a fourth's regression.

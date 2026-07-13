@@ -32,14 +32,14 @@
 import type { World } from '../../sim/World';
 import type { ObjectiveTeam, TeamObjective } from '../../sim/objective';
 import type { TrafficScript } from '../TrafficScriptDriver';
-import { focusTargetFeatures, type FocusTargetFeature } from '../sensors';
+import { ARTILLERY_REACH, focusTargetFeatures, type FocusTargetFeature } from '../sensors';
 
-/** Reach that reads as TRUE artillery — catapult/shaman class (6). The
- *  first draft used 4, which swept in every reach-5 caster: chasing mages
- *  behind the junction champion wall cost +4.0 pool and a lost clear
- *  (attribution A/B, worklog §54g). "The one true assassination target"
- *  means the siege pieces, literally. */
-export const FOCUS_MIN_RANGE = 6;
+/** Reach that reads as TRUE artillery — the shared `ARTILLERY_REACH`
+ *  (catapult/shaman class, 6). The first draft used 4, which swept in
+ *  every reach-5 caster: chasing mages behind the junction champion wall
+ *  cost +4.0 pool and a lost clear (attribution A/B, worklog §54g). "The
+ *  one true assassination target" means the siege pieces, literally. */
+export const FOCUS_MIN_RANGE = ARTILLERY_REACH;
 
 /** Assassination reachability: the target's distance to our nearest unit. */
 export const FOCUS_MAX_DIST = 6;

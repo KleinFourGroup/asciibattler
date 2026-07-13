@@ -171,8 +171,6 @@ holds.** Rationale: worklog §54.
   `vacancyEtaOf`, NOT events) · hazard reads (`statusOnEnter`) · setup-time
   choke-cell analysis · attrition differential (`survivorPower`) ·
   focus-target scoring (reuse `scored`); per-sensor tests on crafted worlds
-  ⚠ jam sensor = the phase's real unknown; fallback = narrower
-  blocked-path-only sensor, noted in worklog
   ✅ 2026-07-13 — five live, 19 tests, jam fallback unneeded; worklog §54b
 - [x] 54c — trace mining: replay the 53g fixture, dump sensor values at
   each human command tick per traffic cell → the trigger-threshold table
@@ -183,6 +181,8 @@ holds.** Rationale: worklog §54.
   the labyrinth null-discipline read) · choke hold · cohesion focus ·
   attrition stall; each = script + co-located test + triggers from 54c's
   table + a spot-check of its own gauntlet cells (full re-measure at 54i)
+  — 54d ✅ 2026-07-13: fire-edge 10.7→5.7 & 3/3, stall-spiral 4.0→0.0,
+  corridors byte-identical (null discipline); parity re-pin; worklog §54d
 - [ ] 54i — gauntlet `--arms=scripts` + the full paired re-measure →
   BALANCE §54 (residual quantified = §55's gate input); cursor flip
 

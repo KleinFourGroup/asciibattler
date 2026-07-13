@@ -22,16 +22,20 @@ const HOLD_EVERYTHING: TrafficScript = {
   evaluate: () => ({ mode: 'hold' }),
 };
 
-describe('harness traffic-scripts arm (54a)', () => {
-  it('the standard registry (EMPTY at 54a) is byte-identical to no arm at all', () => {
-    const a = runOne(3, strat(), SHORT);
-    const b = runOne(3, strat(), { ...SHORT, trafficScripts: true });
+describe('harness traffic-scripts arm (54a; parity re-pinned at 54d)', () => {
+  // 54d amendment (deliberate): the standard registry stopped being empty
+  // when terrain-edge hold landed, so `trafficScripts: true` is the LIVE bot
+  // now. The no-op parity contract survives on the arm mechanism itself:
+  // absent / false / explicit-EMPTY-registry are byte-identical.
+  it('an explicit empty registry is byte-identical to no arm at all', () => {
+    const a = runOne(7, strat(), SHORT);
+    const b = runOne(7, strat(), { ...SHORT, trafficScripts: [] });
     expect(b).toEqual(a);
   });
 
-  it('an explicit empty registry is byte-identical too (the driver never emits)', () => {
-    const a = runOne(7, strat(), SHORT);
-    const b = runOne(7, strat(), { ...SHORT, trafficScripts: [] });
+  it('the standard registry (live since 54d) is deterministic for the same seed', () => {
+    const a = runOne(3, strat(), { ...SHORT, trafficScripts: true });
+    const b = runOne(3, strat(), { ...SHORT, trafficScripts: true });
     expect(b).toEqual(a);
   });
 

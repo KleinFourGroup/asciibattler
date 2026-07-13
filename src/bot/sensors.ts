@@ -164,16 +164,21 @@ export function isHazardKind(kind: TileKind): boolean {
   return false;
 }
 
-/** Every hazard cell on the grid, as a `cellKey` set. Pure grid scan —
- *  recomputed per call (tile kinds can change; derive-don't-cache). */
-export function hazardCells(world: World): Set<string> {
-  const out = new Set<string>();
-  for (let x = 0; x < world.gridW; x++) {
-    for (let y = 0; y < world.gridH; y++) {
-      if (isHazardKind(world.tileGrid.kindAt({ x, y }))) out.add(cellKey({ x, y }));
+/** Every hazard cell on the grid, row-major. Pure grid scan — recomputed
+ *  per call (tile kinds can change; derive-don't-cache). */
+export function hazardCellList(world: World): GridCoord[] {
+  const out: GridCoord[] = [];
+  for (let y = 0; y < world.gridH; y++) {
+    for (let x = 0; x < world.gridW; x++) {
+      if (isHazardKind(world.tileGrid.kindAt({ x, y }))) out.push({ x, y });
     }
   }
   return out;
+}
+
+/** The `cellKey` set form of `hazardCellList`. */
+export function hazardCells(world: World): Set<string> {
+  return new Set(hazardCellList(world).map(cellKey));
 }
 
 /**
@@ -187,13 +192,8 @@ export function unitsApproachingHazard(
   team: ObjectiveTeam,
   withinSteps: number,
 ): number[] {
-  const hazards = hazardCells(world);
-  if (hazards.size === 0) return [];
-  const cells: GridCoord[] = [];
-  for (const key of hazards) {
-    const [x, y] = key.split(',').map(Number);
-    cells.push({ x: x!, y: y! });
-  }
+  const cells = hazardCellList(world);
+  if (cells.length === 0) return [];
   const enemies = livingUnits(world, opposingTeam(team));
   if (enemies.length === 0) return [];
   const out: number[] = [];

@@ -616,3 +616,30 @@ Also on record: fire cells show hazardApproach as a STANDING ~3.9
 condition (54d's value is the edge-tile proposal, not trigger timing);
 the stall cheese is measurable (enemyDot ≈ 2 while powerΔ ≥ 0); boss
 commands cluster at powerΔ −8 (content, again).
+
+### 54d — terrain-edge hold (2026-07-13)
+
+The first registered script (priority #1). Trigger: `unitsApproachingHazard`
+≥ 2 (54c: the fire cells' standing ~3.9 read; provisional). Proposal:
+`engage` on the computed EDGE TILE — passable non-hazard hazard-neighbor,
+STRICTLY our side by Chebyshev (a ties-to-us side test leaked through
+diagonal corners: a far-side corner tied our distance then won on enemy
+proximity — caught by the wall-geometry test, fixed to strict), closest to
+the enemy, then closest to our approaching units, then row-major.
+`engage`-not-`hold` per 54c (the human's 15/18 tile-rallies; engage keeps
+units fighting whatever crosses). Known v1 limits on record in the doc
+comment: Chebyshev (not path) side test; A* prices fire at 1 so a route TO
+a safe rally can cross fire in convoluted geometry — sim pathing stays
+untouched (scope guard).
+
+Registry live → **the 54a parity contract re-pinned (deliberate test
+amendment):** absent/false/explicit-`[]` remain byte-identical; the `true`
+arm is the live bot (determinism-pinned). 35 bot tests + 5 harness green.
+
+**Spot-check (3 seeds/cell, greedy, vs §53e.2 — full re-measure at 54i):**
+`none` rows REPRODUCE §53e.2 exactly (method validity). fire-edge
+**10.7 → 5.7** pool, 2/3 → 3/3 cleared, 80 → 57 deaths, ~20% faster;
+alpha-spiral **8.7 → 6.7** (deaths 43→26); stall-spiral **4.0 → 0.0**
+(human: 0.7 — edge-holding at the fire IS most of the burn cheese);
+unjam-corridors **byte-identical** (no hazards → the script never fires —
+the null-discipline proof on non-fire maps).

@@ -34,6 +34,7 @@ import type { World } from '../sim/World';
 import type { WorldCommand } from '../sim/Command';
 import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
 import { secondsToTicks } from '../config';
+import { terrainEdgeHold } from './scripts/terrainEdgeHold';
 
 /**
  * One traffic script: a trigger predicate + a proposed objective, fused —
@@ -50,11 +51,13 @@ export interface TrafficScript {
 /**
  * The priority-ordered script registry — registry order IS the arbitration
  * order (safety first, opportunism last; the §54 straw order): terrain-edge
- * hold › unjam › choke hold › cohesion focus › attrition stall. EMPTY at
- * 54a — the five scripts land one commit each (54d–54h); with zero scripts
- * the driver never emits (the no-op parity contract).
+ * hold › unjam › choke hold › cohesion focus › attrition stall. Scripts
+ * land one commit each (54d–54h); imports stay type-only script-side so
+ * the runtime dependency is one-directional. The EXPLICIT-empty registry
+ * (`trafficScripts: []`) remains the byte-identical no-op arm (the 54a
+ * parity contract, re-pinned at 54d when this list stopped being empty).
  */
-export const TRAFFIC_SCRIPTS: readonly TrafficScript[] = [];
+export const TRAFFIC_SCRIPTS: readonly TrafficScript[] = [terrainEdgeHold];
 
 /**
  * The no-thrash dwell: minimum ticks between driver commands. Authored in

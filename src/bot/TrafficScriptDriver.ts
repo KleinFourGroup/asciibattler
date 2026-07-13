@@ -37,6 +37,7 @@ import { secondsToTicks } from '../config';
 import { terrainEdgeHold } from './scripts/terrainEdgeHold';
 import { unjam } from './scripts/unjam';
 import { chokeHold } from './scripts/chokeHold';
+import { cohesionFocus } from './scripts/cohesionFocus';
 
 /**
  * One traffic script: a trigger predicate + a proposed objective, fused —
@@ -59,7 +60,12 @@ export interface TrafficScript {
  * (`trafficScripts: []`) remains the byte-identical no-op arm (the 54a
  * parity contract, re-pinned at 54d when this list stopped being empty).
  */
-export const TRAFFIC_SCRIPTS: readonly TrafficScript[] = [terrainEdgeHold, unjam, chokeHold];
+export const TRAFFIC_SCRIPTS: readonly TrafficScript[] = [
+  terrainEdgeHold,
+  unjam,
+  chokeHold,
+  cohesionFocus,
+];
 
 /**
  * The no-thrash dwell: minimum ticks between driver commands. Authored in

@@ -699,3 +699,33 @@ hold is a wait; fine); focus-river BYTE-IDENTICAL (silent); corridors
 3.3 → 3.0 (bonus — corridors has real ≤3-cuts); **labyrinth identical to
 54e (0.0 pool) — the user's approval gate MET, no door-camping**;
 fire/spiral pools unchanged (6.3/7.3/0.0). 52 bot tests green.
+
+### 54g — cohesion focus (2026-07-13): the attribution A/B earns its keep
+
+The first draft — `focus` mode on any reach-≥4 enemy within 6 — regressed
+THREE cells (junction 18.0→22.0 & a lost clear, artillery 2.0→3.0,
+fire-edge 6.3→7.7). The per-script registry A/B (the 54a array seam)
+attributed and fixed it in two cuts:
+
+1. **`focus` → `engage`.** The full-preempt beeline walks the team
+   through waves/fire to reach the piece. The human's own mix was the
+   tell, under-weighted at design time: 3 focus commands in 197 — their
+   assassination tool is the LEASHED `engage:enemy` (12/15 junction,
+   16/27 artillery). Artillery recovered 3.0 → 1.3 (now BETTER than the
+   unjam-damaged 2.0 baseline — engaging the catapult helps).
+2. **Reach bar 4 → 6.** Reach-4 swept in every reach-5 caster; chasing
+   mages behind the junction champion wall was the whole junction
+   regression (attackRange table: mage/warlock/ice_mage/stormcaller 5,
+   banshee 4, catapult/shaman 6). "The one TRUE assassination target"
+   means the siege pieces literally. Junction restored to 18.0/1-of-3
+   (= the unjam-only level); a mage-silence premise test pins the lesson.
+
+**Final 10-cell spot-check:** focus-river BYTE-IDENTICAL (the null-action
+cell stays untouched — the tight trigger never fires there);
+alpha-funnel 12.7→10.7 (a small unexpected win); artillery 0.3→1.3 and
+junction 16.3→18.0 — **both residuals attributed 100% to UNJAM**
+(falling back under ranged fire), not to focus. → the 54e amendment
+proposed next: the regroup cell must sit OUTSIDE enemy reach, else the
+null action stands. Running tally vs passive: fire-edge 10.7→6.7,
+corridors 4.0→3.0, stall 4.0→0.0, alpha-spiral 8.7→7.3, alpha-funnel
+12.7→10.7; labyrinth/isthmus/river 0.0 HELD. 61 bot tests green.

@@ -21,6 +21,7 @@ import { TILES_CONFIG } from '../config/tiles';
 import {
   jamRead,
   isHazardKind,
+  isBarrierHazard,
   hazardCells,
   unitsApproachingHazard,
   chokeCells,
@@ -109,6 +110,24 @@ describe('hazard sensors', () => {
     // mud→poison is gated by the config flag — the expectation DERIVES from
     // the flag (flag off would legitimately make mud safe).
     expect(isHazardKind('mud')).toBe(TILES_CONFIG.applyStatusOnEnter);
+  });
+
+  it('55a: the barrier split — sustained per-tick damage only (mud is a toll booth, not a wall)', () => {
+    expect(isBarrierHazard('fire')).toBe(true); // the per-tick sustain
+    expect(isBarrierHazard('mud')).toBe(false); // on-enter poison — never a barrier
+    expect(isBarrierHazard('healing')).toBe(false); // beneficial sustain
+    expect(isBarrierHazard('floor')).toBe(false);
+  });
+
+  it('55a: a mud field between the armies does NOT read as an approach (fetidPond)', () => {
+    const world = makeWorld();
+    for (const y of [4, 5, 6]) world.tileGrid.setKind({ x: 4, y }, 'mud');
+    spawn(world, 'player', { x: 2, y: 5 });
+    spawn(world, 'enemy', { x: 8, y: 5 });
+    // Premise: mud IS a hazard kind (rally-spot avoidance keeps it)…
+    expect(isHazardKind('mud')).toBe(TILES_CONFIG.applyStatusOnEnter);
+    // …but it is not a barrier, so the edge-hold trigger read stays empty.
+    expect(unitsApproachingHazard(world, 'player', 3)).toEqual([]);
   });
 
   it('hazardCells scans the grid', () => {

@@ -161,8 +161,11 @@ export const attritionStall: TrafficScript = {
     if (read.enemyDotCount < STALL_MIN_ENEMY_DOTS) return null;
     if (read.ownPower - read.enemyPower < STALL_MIN_POWER_DELTA) return null;
     if (armiesInContact(world, team)) return null; // the fight is joined — fight
-    // The hazard deferral (see the header): ANY terrain in play is
-    // terrain-edge hold's domain — the stall owns only hazard-free maps.
+    // The hazard deferral (see the header): ANY terrain in play defers —
+    // deliberately the BROAD `hazardCellList` (all hazard kinds), not 55a's
+    // barrier read: mud IS terrain, and a stall keyed on mud-poisoned
+    // enemies standing off across a pond is exactly the §55-pre pathology
+    // from the other direction. The stall owns only hazard-FREE maps.
     if (hazardCellList(world).length > 0) return null;
     const cell = standOffCell(world, team);
     if (cell === null) return null;

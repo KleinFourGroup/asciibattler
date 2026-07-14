@@ -31,7 +31,7 @@ import { distanceBetween } from '../../sim/occupancy';
 import { tileDef } from '../../sim/TileGrid';
 import type { TrafficScript } from '../TrafficScriptDriver';
 import {
-  hazardCellList,
+  barrierCellList,
   isHazardKind,
   livingUnits,
   opposingTeam,
@@ -78,7 +78,12 @@ export function edgeHoldCell(
   let bestEnemyDist = Infinity;
   let bestOwnDist = Infinity;
   const seen = new Set<string>();
-  for (const h of hazardCellList(world)) {
+  // 55a — the frontier is the BARRIER frontier (fire-class, sustained
+  // per-tick damage); an on-enter hazard (mud) is a toll booth, not a wall
+  // (the §55-pre fetidPond finding: hazard-shaped rallies at puddle edges
+  // cost −16.7% on that layout). The STANDING check below keeps the broad
+  // `isHazardKind` — holding the line while soaking poison is still bad.
+  for (const h of barrierCellList(world)) {
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         if (dx === 0 && dy === 0) continue;

@@ -174,6 +174,23 @@ export function isHazardKind(kind: TileKind): boolean {
   return false;
 }
 
+/**
+ * 55a — the hazard SEVERITY split (the §55-pre fetidPond finding, −16.7%
+ * full-run win rate on that layout, BALANCE §55-pre): a BARRIER hazard
+ * keeps damaging a unit for every tick it stands there — crossing cost
+ * scales with time-in-hazard, so rallying SHORT of it is the play. An
+ * on-enter hazard (mud → one poison application) is a toll booth, not a
+ * wall — treating it as a barrier made terrain-edge hold rally armies at
+ * puddle edges while the passive bot just walked through and won. The
+ * split is STRUCTURAL, not a tuned number: it mirrors the two sim apply
+ * sites exactly (`World.applyTileStatuses` = the per-tick sustain, fire →
+ * burn, HARDCODED by kind; `World.applyTileEnterEffects` = once on enter)
+ * — keep in lockstep if a new sustained kind lands there.
+ */
+export function isBarrierHazard(kind: TileKind): boolean {
+  return kind === 'fire';
+}
+
 /** Every hazard cell on the grid, row-major. Pure grid scan — recomputed
  *  per call (tile kinds can change; derive-don't-cache). */
 export function hazardCellList(world: World): GridCoord[] {
@@ -186,23 +203,37 @@ export function hazardCellList(world: World): GridCoord[] {
   return out;
 }
 
+/** Every BARRIER-hazard cell (see `isBarrierHazard`), row-major. */
+export function barrierCellList(world: World): GridCoord[] {
+  const out: GridCoord[] = [];
+  for (let y = 0; y < world.gridH; y++) {
+    for (let x = 0; x < world.gridW; x++) {
+      if (isBarrierHazard(world.tileGrid.kindAt({ x, y }))) out.push({ x, y });
+    }
+  }
+  return out;
+}
+
 /** The `cellKey` set form of `hazardCellList`. */
 export function hazardCells(world: World): Set<string> {
   return new Set(hazardCellList(world).map(cellKey));
 }
 
 /**
- * Units of `team` within `withinSteps` Chebyshev of a hazard cell AND whose
- * nearest enemy lies on the far side (the hazard sits between: stepping
- * toward the enemy shrinks hazard distance). The terrain-edge-hold trigger's
- * core read: "my advance is about to walk into the fire".
+ * Units of `team` within `withinSteps` Chebyshev of a BARRIER-hazard cell
+ * AND whose nearest enemy lies on the far side (the hazard sits between:
+ * stepping toward the enemy shrinks hazard distance). The terrain-edge-hold
+ * trigger's core read: "my advance is about to walk into the fire".
+ * 55a: barriers only — an on-enter hazard (mud) is not worth a team rally
+ * (the fetidPond finding); the 54c calibration numbers are unchanged (every
+ * mined cell's hazard was fire, which IS a barrier).
  */
 export function unitsApproachingHazard(
   world: World,
   team: ObjectiveTeam,
   withinSteps: number,
 ): number[] {
-  const cells = hazardCellList(world);
+  const cells = barrierCellList(world);
   if (cells.length === 0) return [];
   const enemies = livingUnits(world, opposingTeam(team));
   if (enemies.length === 0) return [];

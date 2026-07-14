@@ -112,6 +112,13 @@ describe('attritionStall', () => {
     );
   });
 
+  it('55a: mud terrain still defers — the deferral keys on ALL hazard kinds, not just barriers', () => {
+    const { world } = stallWorld(); // poisoned enemy, open field — would fire…
+    world.tileGrid.setKind({ x: 5, y: 5 }, 'mud'); // …but mud IS terrain
+    expect(hazardCellList(world).length).toBeGreaterThan(0); // premise
+    expect(attritionStall.evaluate(world, 'player')).toBeNull();
+  });
+
   it('stays silent when no enemy carries a DoT', () => {
     const world = makeWorld();
     spawn(world, 'player', { x: 1, y: 4 });

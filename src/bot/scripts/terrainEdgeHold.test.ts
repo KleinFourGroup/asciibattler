@@ -38,6 +38,15 @@ function fireWorld(): World {
 }
 
 describe('terrainEdgeHold', () => {
+  it('55a: stays SILENT on a mud wall — an on-enter hazard is a toll booth, not a barrier (fetidPond)', () => {
+    const world = makeWorld();
+    for (let y = 0; y < 12; y++) world.tileGrid.setKind({ x: 5, y }, 'mud');
+    spawn(world, 'player', { x: 2, y: 4 });
+    spawn(world, 'player', { x: 2, y: 6 });
+    spawn(world, 'enemy', { x: 9, y: 5 });
+    expect(terrainEdgeHold.evaluate(world, 'player')).toBeNull();
+  });
+
   it('proposes an engage:tile rally at the near edge of the fire', () => {
     const proposal = terrainEdgeHold.evaluate(fireWorld(), 'player');
     expect(proposal).not.toBeNull();

@@ -38,6 +38,7 @@ import { terrainEdgeHold } from './scripts/terrainEdgeHold';
 import { unjam } from './scripts/unjam';
 import { chokeHold } from './scripts/chokeHold';
 import { cohesionFocus } from './scripts/cohesionFocus';
+import { attritionStall } from './scripts/attritionStall';
 
 /**
  * One traffic script: a trigger predicate + a proposed objective, fused —
@@ -65,6 +66,7 @@ export const TRAFFIC_SCRIPTS: readonly TrafficScript[] = [
   unjam,
   chokeHold,
   cohesionFocus,
+  attritionStall,
 ];
 
 /**

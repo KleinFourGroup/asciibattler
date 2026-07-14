@@ -24,6 +24,7 @@ import {
   hazardCells,
   unitsApproachingHazard,
   chokeCells,
+  armiesInContact,
   attritionRead,
   focusTargetFeatures,
 } from './sensors';
@@ -208,6 +209,30 @@ describe('attritionRead', () => {
     const read = attritionRead(world, 'player');
     expect(read.enemyDotCount).toBe(1); // burn = damage periodic
     expect(read.ownDotCount).toBe(0); // rejuvenate = heal periodic, not a DoT
+  });
+});
+
+describe('armiesInContact', () => {
+  it('reads contact by EITHER side own reach — a bow in range is contact even when melee cannot answer', () => {
+    const world = makeWorld();
+    const merc = spawn(world, 'player', { x: 1, y: 5 });
+    const bow = spawn(world, 'enemy', { x: 4, y: 5 }, 'ranged');
+    // Premises derived from the units' own stats (never hardcoded): the gap
+    // exceeds the merc's reach but sits inside the bow's.
+    const gap = 3; // Chebyshev between (1,5) and (4,5) by construction
+    expect(gap).toBeGreaterThan(merc.derived.attackRange);
+    expect(gap).toBeLessThanOrEqual(bow.derived.attackRange);
+    expect(armiesInContact(world, 'player')).toBe(true);
+    expect(armiesInContact(world, 'enemy')).toBe(true); // symmetric by definition
+  });
+
+  it('reads disengaged when the separation exceeds every reach', () => {
+    const world = makeWorld();
+    const merc = spawn(world, 'player', { x: 1, y: 5 });
+    const enemy = spawn(world, 'enemy', { x: 10, y: 5 });
+    expect(9).toBeGreaterThan(merc.derived.attackRange); // premise
+    expect(9).toBeGreaterThan(enemy.derived.attackRange); // premise
+    expect(armiesInContact(world, 'player')).toBe(false);
   });
 });
 

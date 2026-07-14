@@ -494,6 +494,28 @@ export interface AttritionRead {
   readonly enemyDotCount: number;
 }
 
+/**
+ * Whether the fight is JOINED: any unit on either side stands within its OWN
+ * attack range of an opposing unit (each side judged by its own reach — a
+ * bow shooting us from 3 is contact even when our melee can't answer yet).
+ * The attrition-stall contact gate (the 54h amendment): "refuse the
+ * engagement" is only coherent while no engagement exists — the 54c table
+ * shows the stall signature (enemyDot ≥ 1 ∧ powerΔ ≥ 0) standing-true in
+ * alpha-spiral's BACKGROUND, where the adjacent-spawn brawl is already
+ * joined and backing the rear out mid-fight bleeds deaths (worklog §54h).
+ */
+export function armiesInContact(world: World, team: ObjectiveTeam): boolean {
+  const own = livingUnits(world, team);
+  const enemies = livingUnits(world, opposingTeam(team));
+  for (const u of own) {
+    for (const e of enemies) {
+      const d = distanceBetween(u.position, e.position);
+      if (d <= u.derived.attackRange || d <= e.derived.attackRange) return true;
+    }
+  }
+  return false;
+}
+
 export function attritionRead(world: World, team: ObjectiveTeam): AttritionRead {
   const sum = (units: Unit[]) => units.reduce((acc, u) => acc + u.effectiveStats.power, 0);
   const dots = (units: Unit[]) =>

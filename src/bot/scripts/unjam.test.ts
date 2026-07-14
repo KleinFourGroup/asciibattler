@@ -60,9 +60,9 @@ describe('unjam', () => {
       distanceBetween({ x: 0, y: 5 }, enemy),
     );
     // Unoccupied, on the board, and passable by construction — spot-check it
-    // isn't one of the occupied cells.
-    expect([{ x: 0, y: 5 }, { x: 1, y: 4 }, { x: 1, y: 5 }, { x: 1, y: 6 }]).not.toContainEqual(
-      cell,
+    // isn't any unit's cell.
+    expect(world.units.map((u) => `${u.position.x},${u.position.y}`)).not.toContain(
+      `${cell.x},${cell.y}`,
     );
   });
 

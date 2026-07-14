@@ -32,7 +32,18 @@ import type { TrafficScript } from '../TrafficScriptDriver';
 import { ARTILLERY_REACH, isHazardKind, jamRead, livingUnits, opposingTeam } from '../sensors';
 
 /** Trigger: the team's jammed fraction (54c — fires at the human's ~0.25–0.29
- *  command levels, silent on labyrinth's 0.03 background). PROVISIONAL. */
+ *  command levels, silent on labyrinth's 0.03 background).
+ *  ⚠ 0.2 is CONFIRMED, not provisional — do not re-tune it off cell reads
+ *  (the 55c2 sweep, worklog §55c2): 0.25/0.30 fixed the four WATCHED cells
+ *  (boss to the unjam-silent 17.3, junction 16.3, labyrinth deaths 14→10)
+ *  and the natural-run probe then exposed a distribution-wide collapse
+ *  (29.2% → 15.8% at 0.30; icebergs −13 / quarry −11 / corridors −11 /
+ *  isthmus −10 per-wave) — unjam at 0.2 quietly carries most layouts, and
+ *  the gauntlet's corridors cell was merely the only witness. A contact
+ *  gate was also tried and falsified (corridors' win is partly mid-fight
+ *  re-sorting; alpha-funnel regressed). The boss/junction mid-fight-rally
+ *  cost stays as a MEASURED ACCEPTED residual — a trigger-shaped fix
+ *  cannot separate it from the global value (both directions measured). */
 export const UNJAM_MIN_FRACTION = 0.2;
 
 /** Regroup-tile search radius around the jammed cluster's centroid. */

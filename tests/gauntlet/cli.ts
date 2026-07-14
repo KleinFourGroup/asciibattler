@@ -31,8 +31,11 @@
  * Arms reuse the fuzz `--objective` vocabulary (`parseObjectiveFlag`):
  * `none` = the passive control (byte-identical to a click-less human),
  * `random`/`hp:…`/`stat:…`/`archetype:…`/a saved `.json` = the J4
- * proclivities. Run-level choices (path/recruit) use `greedy`, except the
- * elite cell which walks `path:elite` to reach its node (override: `--strategy`).
+ * proclivities — plus `scripts` (54i): the §54 traffic-script bot
+ * (`trafficScripts: true`, the standard registry; mutually exclusive with
+ * the objective arms by the harness's frozen-anchor contract). Run-level
+ * choices (path/recruit) use `greedy`, except the elite cell which walks
+ * `path:elite` to reach its node (override: `--strategy`).
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -43,8 +46,16 @@ import { makeStrategy, STRATEGY_NAMES } from '../fuzz/strategies/registry';
 import { parseObjectiveFlag, type ObjectiveProclivity } from '../fuzz/objectiveStrategy';
 import { GAUNTLET_CELLS, cellRunConfig, cellUrl, type GauntletCell } from './cells';
 
+/** One gauntlet arm: an objective proclivity (the J4 vocabulary) OR the §54
+ *  traffic-script bot (`scripts: true`) — never both (harness-enforced). */
+interface Arm {
+  label: string;
+  proclivity?: ObjectiveProclivity;
+  scripts?: boolean;
+}
+
 interface CliArgs {
-  arms: { label: string; proclivity: ObjectiveProclivity }[];
+  arms: Arm[];
   cellFilter: string | undefined;
   strategyOverride: string | undefined;
   fresh: boolean;
@@ -69,7 +80,11 @@ function parseArgs(argv: readonly string[]): CliArgs {
       case '--arms':
         if (!value) throw new Error('--arms needs a comma list (e.g. --arms=none,random)');
         for (const token of value.split(',')) {
-          args.arms.push({ label: token, proclivity: parseObjectiveFlag(token) });
+          args.arms.push(
+            token === 'scripts'
+              ? { label: token, scripts: true }
+              : { label: token, proclivity: parseObjectiveFlag(token) },
+          );
         }
         break;
       case '--cell':
@@ -132,7 +147,7 @@ function strategyNameFor(cell: GauntletCell, override: string | undefined): stri
 function runCell(
   cell: GauntletCell,
   seed: number,
-  arm: { label: string; proclivity: ObjectiveProclivity },
+  arm: Arm,
   strategyOverride: string | undefined,
   fresh: boolean,
 ): CellRunRow {
@@ -143,7 +158,9 @@ function runCell(
   }
   const result: RunResult = runOne(seed, strategy, {
     runConfig: cellRunConfig(cell, seed, fresh),
-    objective: arm.proclivity,
+    // 54i — the arms are mutually exclusive at the harness (frozen-anchor
+    // contract): a scripts arm passes trafficScripts and NO objective.
+    ...(arm.proclivity ? { objective: arm.proclivity } : { trafficScripts: true as const }),
     telemetry: true, // 53e.2 — the pool-chip source (pure observation)
   });
   const target = result.battles.filter((b) => b.encounterId === cell.encounterId);

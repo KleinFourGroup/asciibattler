@@ -861,6 +861,67 @@ deltas. The pre-X H7c→O log lives at
     are exactly where dumb-deterministic arbitration runs out (junction's
     fall-back-vs-fight tradeoff, fire-edge's edge-perfection, the
     spiral's jam depth).
+    **⚠ SUPERSEDED AS THE GATE INPUT by §55-pre below** (user re-framing:
+    the gauntlet is the instrument, not the target — the gate question is
+    whether the BALANCE TESTER moves toward human-real numbers).
+
+- **2026-07-14 — §55-pre THE FIXED-VECTOR PROBE WITH SCRIPTS: scripts-on
+  REGRESSES full-run win rate — the §55 gate re-scoped on this reading.**
+  Method: the §46b/§48g fixed-vector doctrine — the §46b winning vector
+  re-run unchanged (`55pre-vector.json` = `best-strategy.json` + a neutral
+  `path.port: 0` patch; the saved vector predates §50 ports — schema
+  requires the axis now; ⚠ the vector is STALE wrt the §49–52 economy, so
+  absolute levels aren't §48g-comparable — the OFF arms are the new
+  baseline, the ON−OFF delta is the read), 120 runs/arm, full length,
+  in-sample (seeds 1–120) + held-out (`--seed-offset=5000`), greedy
+  anchors; scripts arm = the new fuzz `--scripts` flag (run-mode only).
+
+  | arm | scripts OFF | scripts ON | Δ win rate |
+  |---|---|---|---|
+  | fixed vector, in-sample | 27.5% (avgHop 8.03) | 24.2% (7.05) | **−3.3** |
+  | fixed vector, held-out | 38.3% (8.04) | 23.3% (7.45) | **−15.0** |
+  | greedy, in-sample | 12.5% (7.45) | 10.8% (6.40) | **−1.7** |
+
+  Paired per-seed (same seeds, on-vs-off): fixed-in 22 win→loss / 18
+  loss→win · fixed-held 30/12 · greedy 15/13; hop-down ≫ hop-up in all
+  three. Terminal-reach drops ~11pt per pairing.
+
+  Per-layout localization (fixed-in pair, per-wave player win rate,
+  off → on): **fetidPond 78.5→61.8 (−16.7)** · **spiralFireLife
+  67.2→54.7 (−12.5)** · **desertFortress 76.5→66.1 (−10.4)** · labyrinth
+  −6.5 · junctionAmbush −5.1 · procedural −2.0 · river −1.0 ·
+  strafingFunnel +2.4 · isthmus +2.9 · endlessCorridors +3.8 · icebergs
+  +6.8 · rubbleQuarry +8.7.
+
+  - **⭐ The headline: the gauntlet's positive signs GENERALIZE where it
+    sampled (corridors/isthmus/funnel all positive in the wild) — but the
+    distribution contains failure modes the gauntlet structurally could
+    not see,** and they outweigh the wins:
+    1. **fetidPond (−16.7): mud read as fire-grade hazard.** 74 mud cells
+       on 15×15, zero fire; mud's on-enter poison makes `isHazardKind`
+       true, so terrain-edge hold rallies at puddle edges instead of
+       crossing. The scripts were calibrated ENTIRELY on fire; the
+       gauntlet never sampled this layout (excluded as strays at §54c).
+       → 55a: hazard severity.
+    2. **desertFortress (−10.4): the §54 table's one scripts-worse-than-
+       passive row (+1.4) was DISCOUNTED because the human loses that
+       cell too — but in full runs the boss is the last gate of every
+       win: 8 of the fixed-in pair's 22 win→loss flips died at hop 10.**
+       → 55b attribution.
+    3. **spiralFireLife (−12.5) FLIPS SIGN vs the gauntlet** (all three
+       gauntlet spiral cells improved) — the gauntlet ran 2-hop
+       fresh-STANDARD-roster daemon-none contexts; full runs hit spirals
+       with recruited comps, active daemons, attrition-worn rosters.
+       → 55b attribution.
+  - **The verdict that re-scoped §55 (user, 2026-07-14):** rollouts on
+    mis-calibrated primitives optimize the wrong thing — portfolio search
+    PARKED; §55 = the distribution-generalization arc (gate/threshold
+    fixes only, cutoff + decision rules in ROADMAP §55). The re-probe
+    (55d) re-runs THIS protocol on the same seeds; scripts-on must beat
+    scripts-off on both seed sets to become the balance-tester default.
+  - ⚠ On record: the OFF arms' in-vs-held spread (27.5 vs 38.3) is wide —
+    seed-set variance at 120 runs is real; the paired same-seed deltas +
+    the layout attribution carry the finding, not the absolute levels.
 
 - **2026-07-13 — §54c TRACE MINING: sensor values at the human's command
   moments (the trigger-threshold table for 54d–54h).** Method: `npm run

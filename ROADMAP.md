@@ -198,32 +198,56 @@ work.
 
 ---
 
-## Phase 55 — Rung 2: portfolio rollout search (GATED)
+## Phase 55 — Rung 2: distribution generalization (RE-SCOPED 2026-07-14)
 
-**Charter:** IF §54's residual justifies it — portfolio greedy search:
-clone the world via snapshot, roll each script forward ~10–20s of game
-time, score by pool differential, commit the winner. The **CLAIRVOYANCE
-GUARD**: rollouts fork a divergent RNG so the bot predicts
-distributionally, never foresees actual rolls.
+**Charter (re-scoped):** make the scripts help — or prove they can't — on
+the FULL-RUN distribution. The original charter (portfolio rollout
+search) is PARKED: the §55-pre fixed-vector probe (BALANCE §55-pre)
+showed scripts-on REGRESSES full-run win rate (−3.3 in / −15.0 held /
+−1.7 greedy), per-layout-attributed (fetidPond −16.7 · spiral-wild −12.5
+· desertFortress −10.4, vs corridors/isthmus/funnel/icebergs/quarry
+POSITIVE) — rollouts on mis-calibrated primitives would optimize the
+wrong thing. Rationale + the cutoff conversation: worklog §55.
 
-**Why here / dependencies:** strictly after §54 — the portfolio IS the
-scripts.
+**Why here / dependencies:** strictly after §54 — the fixes are
+gate/threshold amendments to §54's scripts, driven by §54's instruments.
 
-**Risk:** **High if built** (sim-clone machinery, rollout perf budget) —
-and it may legitimately not run at all: the §46a "NO — well-tuned School 1
-is enough" precedent is a fully respectable outcome.
+**Risk:** Medium — bounded by the cutoff rule below, not by ambition.
 
-**Decision points:** **THE GATE — a stop.** Go/no-go on §54's quantified
-residual; the threshold is set when the numbers exist, not before. If GO:
-rollout horizon + compute budget.
+**Decision points:** ✅ DECIDED 2026-07-14 (user) — the original GATE
+resolves **NOT NOW**; re-scope to this arc. **CUTOFF RULE (binding):**
+fixes must be gate/threshold-shaped (the 54h cuts); an attribution that
+demands a NEW script design or NEW sensor family is the cutoff bell —
+stop, don't build. **DECISION RULE:** after the re-probe, scripts-on
+beats scripts-off on BOTH seed sets ⇒ scripts become the balance-tester
+default, rung closes GO; flat-or-negative ⇒ default stays off, the
+§46a-shape NO is written (passive bot = the balance anchor; relative
+reads govern), rung closes NO. ~2–3 sessions; early exit on structural
+findings.
 
-**Exit criteria:** GO → the search live behind the bot, gauntlet
-re-measure on record; NO-GO → the documented verdict with the numbers that
-decided it (the §46a shape). Either way, the decision line lands here with
-a worklog pointer.
+**The cut (2026-07-14; the §55-pre probe = the code-reality audit):**
 
-**Scope guards:** NO raw action-space search; NO RL/imitation; the
-clairvoyance guard is non-negotiable; anchors frozen.
+- [ ] 55a — hazard SEVERITY: mud ≠ fire — key the hazard reads on the
+  status's damage magnitude, not the binary `isHazardKind`; target =
+  fetidPond (−16.7; 74 mud cells); the gauntlet fire cells are the
+  regression gate (must hold)
+- [ ] 55b — attribution pass: desertFortress (−10.4; 8 hop-10 win→loss
+  flips) + spiral-in-the-wild (−12.5 vs gauntlet-POSITIVE —
+  comp/daemon/mid-run suspects) via the per-script A/B seam on flipped
+  seeds; findings → worklog; fixes cut here as 55c lines
+- [ ] 55c — (cut at 55b close) at most ONE gate-shaped fix per
+  attributed cause; full-board gauntlet spot-check each (§54 practice)
+- [ ] 55d — the re-probe (the §55-pre six-batch protocol, same seeds)
+  → apply the DECISION RULE; BALANCE §55 + cursor flip
+
+**Exit criteria:** the decision rule applied with the re-probe on record
+in BALANCE §55; the scripts default set accordingly; either verdict is a
+valid close.
+
+**Scope guards:** NO new scripts, NO new sensor families, NO rollout
+machinery, NO RL/imitation (standing); anchors frozen (`--scripts` stays
+opt-in until the decision rule says otherwise); the parked
+portfolio-rollout charter re-opens ONLY via a future roadmap round.
 
 ---
 

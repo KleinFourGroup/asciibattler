@@ -827,3 +827,50 @@ gate input: what a scoring layer must beat is now a number, cell by
 cell. §54 exit criteria all met — five scripts live, anchors
 byte-frozen, drift gates green with nothing relaxed, no baseline
 re-pin needed, the re-measure on record.
+
+## Phase 55 — Rung 2: distribution generalization (re-scoped)
+
+### §55-pre — the probe that re-scoped the phase (2026-07-14, `9bc1950` + docs)
+
+**The user re-framed the gate before it was decided** — and the re-frame
+was the finding. Their stream-of-consciousness read: the goal isn't a bot
+that beats them on the gauntlet; it's a BALANCE TESTER that produces
+numbers matching real play — the gauntlet is a chosen-cell instrument, so
+the gate input should be "does the full-run needle move with scripts on?",
+not the per-cell residual. (Goodhart named and dodged. The three residual
+cells might just be "too hard" — or might not matter at real-run
+frequencies.)
+
+Built the fuzz `--scripts` run-mode arm (`9bc1950`; search/sweep/arena
+bail loudly — a mode silently ignoring the flag would measure the OLD bot
+under a flag claiming otherwise) and ran the §46b/§48g fixed-vector
+doctrine: §46b's winning vector unchanged (+ a neutral `path.port: 0` —
+the vector predates §50's schema axis), 6 × 120-run batches. **Result:
+scripts-on regresses full-run win rate in every pairing** (−3.3 in /
+−15.0 held / −1.7 greedy) — full tables + per-layout localization in
+**BALANCE §55-pre**. The §54 per-cell story survives (corridors/isthmus/
+funnel stay positive in the wild); what the gauntlet couldn't see is
+fetidPond's mud-read-as-fire (−16.7; the scripts were calibrated entirely
+on fire), the boss cost compounding at the last gate of every winning run
+(8 of 22 flips died at hop 10 — the §54 table's +1.4 was visible and
+discounted), and spiral flipping sign under real comps/daemons/attrition.
+
+**The cutoff conversation (worth keeping):** the user asked for an
+explicit time-sink guard — if distilling strategic insight into scripts
+is less tractable than believed, feature-completeness + (their floated)
+ML or player telemetry might be the better path. The pushback that
+landed: cell-level distillation WORKED (81% gap closure); what failed is
+calibration breadth, a punch-list not a research problem — and ML/
+telemetry are heavier than they sound (training infra + its own realism
+question; post-launch by definition). **Agreed resolution: scope-bounded
+cutoff, not effort-bounded** — gate/threshold fixes only, a new-script/
+new-sensor demand IS the cutoff bell, one re-probe, and a binding
+decision rule (beat scripts-off on both seed sets or the default stays
+off and the §46a-shape NO closes the rung). Full rules: ROADMAP §55.
+Either verdict closes the question — that's what makes it not a sink.
+
+Method notes on record: the probe re-runs are byte-deterministic (the
+off re-run reproduced 33/120 exactly, then grew --per-hop/--per-layout);
+the OFF arms' in-vs-held spread (27.5/38.3) says 120-run absolute levels
+carry wide seed variance — paired same-seed deltas and layout
+attribution carry the finding, not absolute levels.

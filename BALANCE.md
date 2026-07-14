@@ -809,6 +809,59 @@ deltas. The pre-X H7c→O log lives at
     mid-session partial export + a 4-URL top-up; protocol for future
     sessions: `clearTraces()` at session start + export mid-session).
 
+- **2026-07-13 — §54 THE PAIRED RE-MEASURE (54i): the five traffic scripts
+  vs the passive anchor vs the human, all 11 cells × 3 seeds.** Protocol:
+  `npm run gauntlet -- --arms=none,scripts --csv` (the 54i `scripts` arm =
+  `trafficScripts: true`, the standard registry in priority order
+  terrain-edge hold › unjam › choke hold › cohesion focus › attrition
+  stall; greedy strategy, `path:elite` on the elite cell; STANDARD roster;
+  CSV: `tests/gauntlet/output/gauntlet.csv`). **The `none` rows reproduce
+  §53e.2 EXACTLY — method validity; the anchors stayed frozen through the
+  whole build.** Human column = §53g. Residual = scripts − human (negative
+  = the bot BEATS the human).
+
+  | cell | human | bot none | bot scripts | Δ vs none | residual |
+  |---|---|---|---|---|---|
+  | alpha-funnel | 13.3 | 12.7 | 10.7 | −2.0 | **−2.6** |
+  | alpha-spiral | 3.3 | 8.7 | 7.3 | −1.4 | +4.0 |
+  | artillery-funnel | 1.3 | 0.3 | 1.3 | +1.0 | 0.0 |
+  | junction-elite | 6.7 | 16.3 | 18.0 | +1.7 | **+11.3** |
+  | unjam-corridors | 2.3 | 4.0 | 3.0 | −1.0 | +0.7 |
+  | fire-edge | 0.0 | 10.7 | 7.0 | −3.7 & 3/3 | **+7.0** |
+  | choke-isthmus | 0.0 | 0.0 | 0.0 | 0 | 0.0 |
+  | stall-spiral | 0.7 | 4.0 | 0.0 | −4.0 | **−0.7** |
+  | focus-river | 3.3 | 0.0 | 0.0 | 0 | **−3.3** |
+  | unjam-labyrinth | 1.7 | 0.0 | 0.0 | 0 | **−1.7** |
+  | boss-fortress | 23.0 | 19.3 | 20.7 | +1.4 | −2.3 |
+
+  - **⭐ The headline: on the six traffic showcases the human–bot gap
+    closes ~81%** (none-vs-human 10.7 total → scripts-vs-human 2.0), and
+    the scripts bot sits AT-OR-BETTER-THAN-HUMAN on **7 of 11 cells**
+    (funnel, artillery, isthmus, stall, river, labyrinth, boss). fire-edge
+    — the round's cleanest single number — moves 10.7 → 7.0 with the clear
+    going 2/3 → 3/3 and deaths 80 → 55; alpha-spiral deaths drop 43 → 27
+    at 30% faster; stall-spiral 4.0 → 0.0 beats the human's 0.7.
+  - **⭐ The RESIDUAL — §55's gate input — is concentrated in THREE cells,
+    each with an attributed cause on record (worklog §54d–h):**
+    `junction-elite` **+11.3** (and +1.7 vs passive — the unjam melee
+    fall-back cost in the ambush layout, the one cell the scripts made
+    WORSE than doing nothing); `fire-edge` **+7.0** (the human's 0.0 is
+    edge-perfection; −1.7 of it is banked as the
+    `EDGE_HOLD_APPROACH_STEPS` 3→~5 widening candidate, worklog §54h);
+    `alpha-spiral` **+4.0** (jam-management depth). Everything else is
+    ≤ +0.7 or bot-better.
+  - **Known costs held, on record:** artillery +1.0 vs passive (the 54g
+    focus-engage residual); labyrinth deaths 10→14 at +16% ticks, pool
+    0.0 HELD (the 54e transient-spike threshold candidate); boss +1.4
+    (content wall — the human is 0-for-3 there too, §53g).
+  - **§55 framing:** priority + thresholds alone got 81% of the traffic
+    gap with a null-discipline record of zero damage-regressions on the
+    slow-terrain cells the passive bot already won. What a scoring layer
+    must beat is now quantified per cell — and the three residual cells
+    are exactly where dumb-deterministic arbitration runs out (junction's
+    fall-back-vs-fight tradeoff, fire-edge's edge-perfection, the
+    spiral's jam depth).
+
 - **2026-07-13 — §54c TRACE MINING: sensor values at the human's command
   moments (the trigger-threshold table for 54d–54h).** Method: `npm run
   trace-mine` — replay the 53g fixture (era `e5c8a0fd`) through the 54b

@@ -805,3 +805,25 @@ positive-path tests deliberately use `applyStatusEffect` — a fire-tile
 burn now correctly defers). On-record v1 cost: a corner mud patch
 disables the stall map-wide; §55's scorer is the principled arbiter.
 2132 main + 220 fuzz:smoke (manual — registry commit) green.
+
+### 54i — the paired re-measure closes §54 (2026-07-13, `b8e8bb5` + docs)
+
+The gauntlet CLI grew the `scripts` arm (`--arms=scripts` →
+`trafficScripts: true`, no objective — the arm shapes are mutually
+exclusive by the harness's frozen-anchor contract; smoke-tested on
+focus-river, 0.0 both arms). Full run `--arms=none,scripts --csv`:
+**every `none` row reproduced §53e.2 exactly** — the anchors stayed
+frozen through the entire five-script build, measured not assumed.
+
+Results + reads → **BALANCE §54** (the round-log home). One breath:
+the traffic-six human–bot gap closed **~81%**, the scripts bot is
+at-or-better-than-human on **7/11 cells** (including BEATING the human
+on stall-spiral, focus-river, labyrinth, alpha-funnel), and the residual
+concentrates in three attributed cells — junction +11.3 (the unjam
+melee fall-back, the one scripts-worse-than-passive cell), fire-edge
++7.0 (edge-perfection; the `EDGE_HOLD_APPROACH_STEPS` 3→~5 candidate is
+banked), alpha-spiral +4.0 (jam depth). That per-cell table IS §55's
+gate input: what a scoring layer must beat is now a number, cell by
+cell. §54 exit criteria all met — five scripts live, anchors
+byte-frozen, drift gates green with nothing relaxed, no baseline
+re-pin needed, the re-measure on record.

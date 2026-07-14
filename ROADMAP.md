@@ -181,11 +181,11 @@ holds.** Rationale: worklog §54.
   the labyrinth null-discipline read) · choke hold · cohesion focus ·
   attrition stall; each = script + co-located test + triggers from 54c's
   table + a spot-check of its own gauntlet cells (full re-measure at 54i)
-  ✅ 2026-07-13 — all five live (+ the 54e amendment); 54h = contact gate +
-  map-level hazard deferral, board byte-identical (hurts-nowhere BY
-  DESIGN); worklog §54d–g, §54e-amendment, §54h
-- [ ] 54i — gauntlet `--arms=scripts` + the full paired re-measure →
-  BALANCE §54 (residual quantified = §55's gate input); cursor flip
+  ✅ 2026-07-13 — all five live (+ the 54e amendment); 54h = contact gate
+  + map-level hazard deferral, board byte-identical; worklog §54d–§54h
+- [x] 54i — gauntlet `--arms=scripts` + the paired re-measure ✅ 2026-07-13
+  — traffic-six gap closed ~81%, 7/11 at-or-better-than-human; residual =
+  3 attributed cells = §55's gate input (BALANCE §54; worklog §54i)
 
 **Exit criteria:** five scripts live behind the new bot with the anchors
 byte-frozen on the old handling; drift gates green with NO gate relaxed;

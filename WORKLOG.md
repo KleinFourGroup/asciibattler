@@ -899,3 +899,75 @@ is acceptable v1: mud still shapes rally spots); spiral 56.0 / desert
 positive layouts held or improved (rubbleQuarry 72.5 → 77.2). Held-out
 verification deliberately deferred to 55d's full re-probe — the
 decision rule reads both seed sets there.
+
+### 55b — the attribution pass (2026-07-14): two culprits, both named
+
+Per-script leave-one-out via the 54a array seam, two isolates:
+
+- **desertFortress → UNJAM.** The boss-cell A/B (12 arms × 3 seeds):
+  only-unjam reproduces the full registry's 20.7/68 exactly;
+  minus-unjam reads 17.3/47 — BETTER than passive (19.3/52) — because
+  removing unjam also stops it preempting cohesion-focus (priority #2 >
+  #4), whose only-arm alone reads 17.3 (engaging the siege pieces
+  helps). Unjam-alone is also worse than nothing, so the harm is the
+  trigger, not just the shadow.
+- **spiralFireLife-wild → TERRAIN-EDGE HOLD.** Forced-spiral full runs
+  (fixed vector, 40 seeds, 7 arms): minus-edge-hold 50.0% vs full 25.0%
+  vs none 52.5% — full recovery from one removal; every other arm ≈
+  full. Mechanism chain, probe by probe: cap-draws 4× (17/832 vs 4/771)
+  = the standing-hold stall; the standard-roster variant EXCLUDED the
+  comp/team-size axis (worse still: 20.0% vs 57.5%); the per-encounter
+  split named **deserters** (fleers: 51% loss vs passive 21%, 10 of 13
+  draws) with ronin-vs-mages mildly worse (shellers).
+
+### 55c1 — prey-in-force (2026-07-14, `3574acf`): three cuts, one bell
+
+The prey condition landed in three measured cuts: (1) ≥1 enemy
+approaching-or-on-the-barrier — killed the cap-draw stall (draws 17→9)
+but not the losses (isolate 27.5%); (2) counting mid-crossers ON the
+barrier as prey (a crosser's own cell is its nearest hazard, so the
+between-test misses it); (3) the COUNT FLOOR — prey ≥
+`EDGE_HOLD_MIN_UNITS`, symmetric with our own trigger. The isolate and
+the board DIVERGED on variant choice (the floor read worse on the
+forced isolate, better everywhere real); the natural-run probe
+arbitrated: floor and ≥1 tie at 29.2% overall, floor wins the spiral
+row (60.9 vs 57.8) and the gauntlet board (fire-edge 7.0→5.7, all else
+held-or-better). **The deserters residual survives every variant
+(~50% loss in the isolate) — separating committed attackers from
+fleers is INTENT detection, a new sensor family: the arc's first
+CUTOFF BELL, documented not built (the §55 rules working as designed).**
+
+### 55c2 — the unjam sweep (2026-07-14, `d1a29c9`): a documented no-change
+
+The full A/B: 0.25 and 0.30 fixed the four WATCHED cells (boss 20.7 →
+18.7 → 17.3 = the minus-unjam optimum; junction → 16.3 passive;
+labyrinth deaths 14 → 10) — 0.25 broke corridors (3.0 → 6.0, worse
+than passive), 0.30 didn't restore it (5.3). The contact gate (the 54h
+sensor reused — "a rear queue behind an active front is healthy") was
+FALSIFIED: corridors' win is partly mid-fight re-sorting (4.7), the
+boss barely moved (20.0 — the harm also fires between waves), and
+alpha-funnel regressed (10.7 → 13.3). Then the natural-run probe
+delivered the real verdict on 0.30: **29.2% → 15.8%** — a
+distribution-wide collapse (icebergs −13 / quarry −11 / corridors −11
+/ isthmus −10 per-wave). Unjam at 0.2 quietly carries most layouts;
+the gauntlet's corridors cell was merely the only WITNESS — the
+cell-level Goodhart trap, sprung twice in one arc and caught twice by
+the same instrument. 0.2 CONFIRMED (the doc comment now carries the
+receipts); the boss/junction mid-fight-rally cost = a measured,
+accepted residual.
+
+### 55d — the re-probe: the verdict is NO (2026-07-14)
+
+The §55-pre protocol re-run at the final state (off arms reused —
+scripts-off is code-untouched; the on-in batch reproduced the working
+tree BYTE-IDENTICALLY, the determinism check): fixed-in +1.7 ·
+**fixed-held −14.2 (24.2 vs 38.3)** · greedy-in +0.8. **The binding
+decision rule fails on the held-out set → the §46a-shape NO: the
+passive bot remains the balance anchor, `--scripts` stays opt-in.**
+Caveats on record (BALANCE §55): the off-held 38.3 is a hot seed set;
+the 55c selection iterated in-sample (part of the +5.0 in-sample
+recovery is selection overfit — held-out transfer +0.9). What the arc
+bought anyway: the opt-in scripts arm at its best-ever state (the
+most human-real CELL-LEVEL instrument, available for §57), three
+named-with-mechanism residuals, and the §52 doctrine reconfirmed —
+relative reads govern the balance pass.

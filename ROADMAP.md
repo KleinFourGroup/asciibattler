@@ -202,12 +202,10 @@ work.
 
 **Charter (re-scoped):** make the scripts help — or prove they can't — on
 the FULL-RUN distribution. The original charter (portfolio rollout
-search) is PARKED: the §55-pre fixed-vector probe (BALANCE §55-pre)
-showed scripts-on REGRESSES full-run win rate (−3.3 in / −15.0 held /
-−1.7 greedy), per-layout-attributed (fetidPond −16.7 · spiral-wild −12.5
-· desertFortress −10.4, vs corridors/isthmus/funnel/icebergs/quarry
-POSITIVE) — rollouts on mis-calibrated primitives would optimize the
-wrong thing. Rationale + the cutoff conversation: worklog §55.
+search) is PARKED: the §55-pre probe (BALANCE §55-pre) showed scripts-on
+regresses full-run win rate, per-layout-attributed — rollouts on
+mis-calibrated primitives would optimize the wrong thing. Rationale +
+the cutoff conversation: worklog §55.
 
 **Why here / dependencies:** strictly after §54 — the fixes are
 gate/threshold amendments to §54's scripts, driven by §54's instruments.
@@ -234,14 +232,21 @@ findings.
   ✅ 2026-07-14 — built as the STRUCTURAL barrier/toll-booth split (no
   tunable); gauntlet byte-identical; in-sample scripts-on 24.2→28.3%
   (above off 27.5); fetidPond 61.8→72.9; worklog §55a
-- [ ] 55b — attribution pass: desertFortress (−10.4; 8 hop-10 win→loss
+- [x] 55b — attribution pass: desertFortress (−10.4; 8 hop-10 win→loss
   flips) + spiral-in-the-wild (−12.5 vs gauntlet-POSITIVE —
   comp/daemon/mid-run suspects) via the per-script A/B seam on flipped
   seeds; findings → worklog; fixes cut here as 55c lines
-- [ ] 55c — (cut at 55b close) at most ONE gate-shaped fix per
+  ✅ 2026-07-14 — desert = UNJAM · spiral-wild = EDGE-HOLD (deserters);
+  worklog §55b
+- [x] 55c — (cut at 55b close) at most ONE gate-shaped fix per
   attributed cause; full-board gauntlet spot-check each (§54 practice)
-- [ ] 55d — the re-probe (the §55-pre six-batch protocol, same seeds)
+  ✅ 2026-07-14 — 55c1 prey-in-force shipped (`3574acf`; cutoff bell rung
+  on the deserters residual) · 55c2 = documented no-change (`d1a29c9`);
+  worklog §55c1/§55c2
+- [x] 55d — the re-probe (the §55-pre six-batch protocol, same seeds)
   → apply the DECISION RULE; BALANCE §55 + cursor flip
+  ✅ 2026-07-14 — fixed-held **−14.2** fails the rule → **VERDICT NO
+  (the §46a shape)**: passive stays the anchor (BALANCE §55)
 
 **Exit criteria:** the decision rule applied with the re-probe on record
 in BALANCE §55; the scripts default set accordingly; either verdict is a

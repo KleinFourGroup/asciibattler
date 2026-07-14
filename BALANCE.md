@@ -923,6 +923,48 @@ deltas. The pre-X H7c→O log lives at
     seed-set variance at 120 runs is real; the paired same-seed deltas +
     the layout attribution carry the finding, not the absolute levels.
 
+- **2026-07-14 — §55 THE VERDICT: NO (the §46a shape) — the scripts do not
+  robustly improve full-run realism; the PASSIVE bot remains the balance
+  anchor and `--scripts` stays opt-in.** The distribution-generalization
+  arc ran its full course (55a barrier split · 55b attributions · 55c1
+  prey-in-force · 55c2 threshold sweep = documented no-change) and 55d
+  re-ran the §55-pre protocol on the same seeds (off arms reused —
+  scripts-off is code-untouched; the on-in batch reproduced the working
+  state BYTE-IDENTICALLY):
+
+  | arm | OFF | ON (final) | Δ |
+  |---|---|---|---|
+  | fixed vector, in-sample | 27.5% | 29.2% | +1.7 |
+  | fixed vector, held-out | 38.3% | 24.2% | **−14.2** |
+  | greedy, in-sample | 12.5% | 13.3% | +0.8 |
+
+  **The decision rule (ROADMAP §55, binding): beat scripts-off on BOTH
+  seed sets → the held-out arm fails decisively.** Caveats on record, not
+  verdict-changing: the off-held 38.3% is an anomalously hot seed set
+  (in-sample sibling 27.5); the 55c variant selection iterated on the
+  in-sample seeds, so part of the +5.0 in-sample recovery (24.2→29.2) is
+  selection overfit by construction — the held-out transfer was +0.9.
+  - **What the arc bought anyway:** scripts-on at its final state is
+    strictly better than at §54 close everywhere measured (gauntlet
+    fire-edge 7.0→5.7 with all other cells held-or-better; fetidPond
+    61.8→72.9 per-wave; natural in-sample 24.2→29.2) — the OPT-IN scripts
+    arm is now the most human-real CELL-LEVEL instrument we have, and
+    stays available for §57 cell-scale work. The full-run anchor stays
+    passive.
+  - **The named residuals (all measured, none buildable within the §55
+    scope rules):** deserters/fleers vs edge-hold (~50% loss vs passive
+    21% in the forced-spiral isolate under every prey variant — separating
+    committed attackers from fleers is INTENT detection, a new sensor
+    family = the cutoff bell); unjam's mid-fight rallies at the boss/
+    junction (a trigger cannot separate them from unjam's
+    distribution-wide value — 0.25/0.30 collapsed the natural probe
+    29.2→15.8; contact gate falsified); seed-set sensitivity of the
+    scripts arm itself (29.2 in vs 24.2 held).
+  - **Doctrine unchanged:** the §52 calibration finding stands — the
+    human–bot gap remains ~50pt on full runs, bot-anchored ABSOLUTE
+    targets remain fiction, RELATIVE reads (gradients, bands, deltas)
+    govern §57's balance pass, exactly as §52 prescribed.
+
 - **2026-07-13 — §54c TRACE MINING: sensor values at the human's command
   moments (the trigger-threshold table for 54d–54h).** Method: `npm run
   trace-mine` — replay the 53g fixture (era `e5c8a0fd`) through the 54b

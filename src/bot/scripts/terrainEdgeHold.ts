@@ -32,6 +32,7 @@ import { tileDef } from '../../sim/TileGrid';
 import type { TrafficScript } from '../TrafficScriptDriver';
 import {
   barrierCellList,
+  isBarrierHazard,
   isHazardKind,
   livingUnits,
   opposingTeam,
@@ -123,6 +124,26 @@ export const terrainEdgeHold: TrafficScript = {
   evaluate(world: World, team: ObjectiveTeam): TeamObjective | null {
     const approaching = unitsApproachingHazard(world, team, EDGE_HOLD_APPROACH_STEPS);
     if (approaching.length < EDGE_HOLD_MIN_UNITS) return null;
+    // 55c1 — the PREY condition (the §55b attribution): holding an edge
+    // nobody is crossing IN FORCE is a stall, not a defense. The forced-
+    // spiral isolate read 25.0% win / 4× cap-draws vs 52.5% passive; a
+    // first ≥1-prey cut recovered only 27.5% because the true breaker is
+    // NON-COMMITTAL enemies — the deserters encounter (fleers) lost 51%
+    // vs passive's 21% and owned 10 of 13 cap-draws: strays flitting near
+    // the fire kept a ≥1 read alive while the army held an edge nobody
+    // honored. Prey = enemies approaching the barrier from their side
+    // (same sensor, opposing team, same window) PLUS enemies already
+    // standing ON it (a mid-crosser's own cell is its nearest hazard, so
+    // the between-test misses it), and the count must reach
+    // EDGE_HOLD_MIN_UNITS — symmetric with our own trigger: rally 2+
+    // units only when 2+ of them are actually coming. Below that → null
+    // → default pursuit (what the passive bot does, and wins with, on
+    // camper/fleer maps).
+    const enemies = livingUnits(world, opposingTeam(team));
+    const preyCount =
+      unitsApproachingHazard(world, opposingTeam(team), EDGE_HOLD_APPROACH_STEPS).length +
+      enemies.filter((u) => isBarrierHazard(world.tileGrid.kindAt(u.position))).length;
+    if (preyCount < EDGE_HOLD_MIN_UNITS) return null;
     const cell = edgeHoldCell(world, team, approaching);
     if (cell === null) return null;
     return { mode: 'engage', target: { kind: 'tile', cell } };

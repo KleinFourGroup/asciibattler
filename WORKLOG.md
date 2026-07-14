@@ -754,3 +754,54 @@ the ambush layout — NOT under-fire-related); artillery's focus +1.3;
 labyrinth's minor unjam cost (threshold candidate). Lesson promoted to
 practice: attribution A/Bs target the diagnosis, but every amendment
 re-runs the FULL board — three cells can't see a fourth's regression.
+
+### 54h — attrition stall (2026-07-13, `d608cb6`): three cuts to a clean null
+
+The last script (priority #5). Trigger from the 54c on-record shape
+(`enemyDot ≥ 1 ∧ powerΔ ≥ 0`); proposal = `engage` on a stand-off tile.
+The step's framing held exactly: stall-spiral already reads 0.0 via
+edge-hold, so the exit bar was prove-it-triggers + hurts-nowhere — and
+getting to "hurts nowhere" took three spot-check-arbitrated cuts (all
+board runs = quartet [54g+amendment] vs quintet in ONE scratch script —
+per-cut attribution built in):
+
+1. **Back-off scoring regressed the spirals.** The first stand-off
+   preferred the cell FARTHEST from the enemy within radius 4 — every
+   re-issue backed the team off again: continuous retreat under ronin
+   pursuit, units strung out and picked off in detail (alpha-spiral
+   7.3→9.3, WORSE than the 8.7 passive; stall-spiral deaths 11→19).
+   Two fixes came out of it: the **contact gate** (`armiesInContact`,
+   new sensor — either side's own reach counts; user-approved) — the
+   54c table itself was the tell, the stall signature standing-true in
+   alpha-spiral's BACKGROUND where the brawl is already joined — and
+   **stand-pat scoring** (nearest-centroid first; the human "holds by
+   rallying SHORT", never by walking away).
+2. **Stand-pat still leaked on its own showcase** (stall-spiral
+   0.0→2.0). The arbitration probe (wrapper scripts on the 54a array
+   seam, transition timeline) put it at the OPENING: the stall fired at
+   t8–t98 while enemies crossed the spiral, froze the team at spawn,
+   the burns expired mid-approach, and the fight happened healthy on
+   neutral ground — pre-empting the advance that lets edge-hold take
+   over at the fire's edge. The same overlap produced fire-edge's
+   7.0→5.3 as an accidental wider-radius edge-hold backstop.
+3. **⭐ The hazard deferral (option A, user-locked): terrain in play is
+   edge-hold's domain WHOLESALE.** A first, narrower "hazard between
+   the armies" deferral still leaked (fire-edge 7.0→7.3, +9 deaths):
+   in post-crossing windows nothing reads "between" anymore, but
+   standing pat while the crossers' burns EXPIRE wastes the finish —
+   on a hazard map even stall-positive-looking windows act
+   stall-negative. Final rule: ANY hazard cell on the map → null. The
+   fire-edge −1.7 was deliberately given back (architecture over a
+   spot-check number — one behavior, one owner) and banked as a 54i
+   candidate: widen `EDGE_HOLD_APPROACH_STEPS` (3 → ~5) so edge-hold
+   itself owns the backstop.
+
+**Final board: all 11 cells BYTE-IDENTICAL to the quartet** — the
+stall's remaining domain (DoTs with NO terrain in play: poison /
+on-hit-status content) doesn't exist on this board, quartet-identity is
+the DESIGNED outcome, and the trigger is pinned by 10 co-located tests
+(poison-crafted worlds fire end-to-end through the real registry; the
+positive-path tests deliberately use `applyStatusEffect` — a fire-tile
+burn now correctly defers). On-record v1 cost: a corner mud patch
+disables the stall map-wide; §55's scorer is the principled arbiter.
+2132 main + 220 fuzz:smoke (manual — registry commit) green.

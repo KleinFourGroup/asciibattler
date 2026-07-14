@@ -176,14 +176,14 @@ holds.** Rationale: worklog §54.
   each human command tick per traffic cell → the trigger-threshold table
   ✅ 2026-07-13 — table = BALANCE §54c (76/104 joined; engage:tile is the
   human workhorse; ⚠ isthmus choke-sensor gap → 54f); worklog §54c
-- [ ] 54d–54h — the five scripts, ONE COMMIT EACH, priority order:
+- [x] 54d–54h — the five scripts, ONE COMMIT EACH, priority order:
   terrain-edge hold (the fire-edge 0.0-vs-10.7 target) · unjam (corridors +
   the labyrinth null-discipline read) · choke hold · cohesion focus ·
   attrition stall; each = script + co-located test + triggers from 54c's
   table + a spot-check of its own gauntlet cells (full re-measure at 54i)
-  — done: 54d–54g ✅ + the 54e amendment (artillery-only under-fire rally
-  filter; fire-edge 10.7→7.0 · corridors →3.0 · stall →0.0 · null cells
-  HELD; residuals for 54i on record; worklog §54d–g + §54e-amendment)
+  ✅ 2026-07-13 — all five live (+ the 54e amendment); 54h = contact gate +
+  map-level hazard deferral, board byte-identical (hurts-nowhere BY
+  DESIGN); worklog §54d–g, §54e-amendment, §54h
 - [ ] 54i — gauntlet `--arms=scripts` + the full paired re-measure →
   BALANCE §54 (residual quantified = §55's gate input); cursor flip
 

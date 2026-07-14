@@ -69,6 +69,7 @@ export type RunModeArgs = Pick<
   | 'redraw'
   | 'empower'
   | 'daemon'
+  | 'scripts'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -115,6 +116,10 @@ export function runRunCli(args: RunModeArgs): void {
   // O5 — `--objective=coverage` instead churns every objective mode on both
   // teams (debug-only termination/determinism coverage; never a balance read).
   if (coverageFromArgs(args)) harnessOptions = { ...harnessOptions, coverageObjectives: true };
+  // §55 pre-gate — `--scripts` drives the §54 traffic-script bot in every
+  // battle (the standard registry; exclusivity vs --objective enforced at
+  // parseArgs AND in the harness — the frozen-anchor contract).
+  if (args.scripts) harnessOptions = { ...harnessOptions, trafficScripts: true };
   // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =
   // gates off, byte-identical).
   const redraw = redrawFromArgs(args);
@@ -148,9 +153,10 @@ export function runRunCli(args: RunModeArgs): void {
     ? ` (roster=[${roster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}])`
     : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
+  const scriptsNote = args.scripts ? ' scripts=ON' : '';
   for (const strategy of strategies) {
     process.stdout.write(
-      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}…\n`,
+      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${scriptsNote}…\n`,
     );
     for (const s of seeds) allResults.push(runOne(s, strategy, harnessOptions));
   }

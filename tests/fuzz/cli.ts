@@ -79,6 +79,11 @@
  *   npm run fuzz -- --balance-sweep --knob=difficulty.budgetFactor --range=0.5:0.75:2 \
  *     --objective=output/best-objective.json --tier=medium --jobs=8
  *
+ *   # §55 pre-gate — drive the §54 traffic-script bot in a plain run (the
+ *   # fixed-vector probe arm; run mode ONLY — search/sweep/arena bail; mutually
+ *   # exclusive with --objective per the frozen-anchor contract):
+ *   npm run fuzz -- --count=120 --strategy=output/best-strategy.json --scripts
+ *
  *   # K3c3 — drive a FIXED redraw policy through the same three modes (default
  *   # none = turn gates stay off, byte-identical baselines). Inline forms
  *   # random:<k> / level:<k> (toss k random / k lowest-level cards per turn;

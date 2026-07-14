@@ -80,6 +80,11 @@ export interface CliArgs {
   // (`--daemon=<random|none|id>`; default random = the Run's own roll, the
   // real game's behavior — byte-identical to the flag being absent).
   daemon?: string;
+  // §55 pre-gate — drive the §54 traffic-script bot (`trafficScripts: true`,
+  // the standard registry) in every battle. RUN MODE ONLY for now (the
+  // fixed-vector probe); --search/--sweep/--arena bail loudly rather than
+  // silently measuring the old bot. Mutually exclusive with --objective.
+  scripts: boolean;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -94,6 +99,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     dryRun: false,
     evalShard: false,
     arena: false,
+    scripts: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -201,11 +207,23 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--daemon':
         if (v !== undefined) args.daemon = v;
         break;
+      case '--scripts':
+        args.scripts = true;
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
         }
     }
+  }
+  // §55 pre-gate — --scripts is run-mode-only until a mode needs it: a search
+  // or sweep silently ignoring it would measure the OLD bot under a flag that
+  // claims otherwise. Support lands mode-by-mode, deliberately.
+  if (args.scripts && (args.search || args.balanceSweep || args.arena || args.evalShard)) {
+    throw new Error('--scripts is not supported in --search/--balance-sweep/--arena yet (run mode only)');
+  }
+  if (args.scripts && args.objective !== undefined) {
+    throw new Error('--scripts is mutually exclusive with --objective (the frozen-anchor contract)');
   }
   return args;
 }

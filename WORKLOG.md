@@ -874,3 +874,28 @@ off re-run reproduced 33/120 exactly, then grew --per-hop/--per-layout);
 the OFF arms' in-vs-held spread (27.5/38.3) says 120-run absolute levels
 carry wide seed variance — paired same-seed deltas and layout
 attribution carry the finding, not absolute levels.
+
+### 55a — the barrier split (2026-07-14, `60097f5`)
+
+The cut said "damage magnitude"; the build found something better — a
+STRUCTURAL split with no tunable: the sim already distinguishes
+sustained per-tick tile damage (`applyTileStatuses`: fire → burn, every
+tick you stand there — a WALL) from on-enter one-shots
+(`applyTileEnterEffects`: mud → one poison — a TOLL BOOTH).
+`isBarrierHazard` mirrors that exactly. Terrain-edge hold's trigger +
+frontier now read barriers only; the rally-spot avoidance (unjam/stall
+stand-off cells) and the attrition stall's map-wide deferral
+deliberately KEEP the broad hazard read — mud is still terrain and
+still a bad parking spot (a stall keyed on mud-poisoned enemies across
+a pond would be the §55-pre pathology from the other direction).
+
+Measured: the gauntlet scripts arm all 11 cells BYTE-IDENTICAL (the
+fire gate holds — every mined 54c cell's hazard was fire, so the
+calibration numbers are untouched by construction); the in-sample
+fixed-vector pair: scripts-on 24.2% → **28.3%, now ABOVE the off arm's
+27.5%**; fetidPond per-wave 61.8 → 72.9 (off 78.5 — the residual ~5.6
+is acceptable v1: mud still shapes rally spots); spiral 56.0 / desert
+66.4 essentially unchanged (55b's targets, as predicted); the five
+positive layouts held or improved (rubbleQuarry 72.5 → 77.2). Held-out
+verification deliberately deferred to 55d's full re-probe — the
+decision rule reads both seed sets there.

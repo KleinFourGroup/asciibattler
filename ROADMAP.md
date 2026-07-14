@@ -227,10 +227,13 @@ findings.
 
 **The cut (2026-07-14; the §55-pre probe = the code-reality audit):**
 
-- [ ] 55a — hazard SEVERITY: mud ≠ fire — key the hazard reads on the
+- [x] 55a — hazard SEVERITY: mud ≠ fire — key the hazard reads on the
   status's damage magnitude, not the binary `isHazardKind`; target =
   fetidPond (−16.7; 74 mud cells); the gauntlet fire cells are the
   regression gate (must hold)
+  ✅ 2026-07-14 — built as the STRUCTURAL barrier/toll-booth split (no
+  tunable); gauntlet byte-identical; in-sample scripts-on 24.2→28.3%
+  (above off 27.5); fetidPond 61.8→72.9; worklog §55a
 - [ ] 55b — attribution pass: desertFortress (−10.4; 8 hop-10 win→loss
   flips) + spiral-in-the-wild (−12.5 vs gauntlet-POSITIVE —
   comp/daemon/mid-run suspects) via the per-script A/B seam on flipped

@@ -218,6 +218,31 @@ describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
     expect(swapData(p!).otherId).toBe(ally.id);
   });
 
+  it('does NOT offer a swap to a mid-move ally (56a — the in-flight partner gate)', () => {
+    // The corridor-swap shape, but the ally has an IN-FLIGHT move (logical
+    // position holds at (4,5) until the §36b flip, so pre-56a it read as
+    // adjacent-and-blocked and the healer proposed a doomed swap — the latent
+    // GP5 hazard). With the gate the healer abstains instead.
+    const healer = makeHealer({ x: 5, y: 5 });
+    const ally = makeUnit(2, 'player', { x: 4, y: 5 });
+    const enemy = makeUnit(3, 'enemy', { x: 8, y: 5 });
+    const w = world([healer, ally, enemy, ...corridorWalls(5, 3, 8)]);
+    const durationTicks = 8;
+    ally.activeAction = {
+      action: new MoveAction(ally.position, { x: 3, y: 5 }, durationTicks),
+      startTick: w.currentTick,
+      finishTick: w.currentTick + durationTicks,
+      phases: [
+        { phase: 'travel', ticks: 4 },
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: 4 },
+      ],
+    };
+    w.claimCell({ x: 3, y: 5 }, ally.id);
+
+    expect(new SupportMovementBehavior().proposeAction(healer, w)).toBeNull();
+  });
+
   it('does NOT swap in the open — the ally has another way forward', () => {
     // Same units, NO walls: the ally can route around the healer, so it isn't
     // strictly blocked and the healer just idles.

@@ -308,10 +308,11 @@ bump, v34 holds · unjam's fate = §57's re-ask input.
 
 **The cut (shape-locked 2026-07-15; audit + rationale in worklog §56):**
 
-- [ ] 56a — the SwapAction hardening (the audit-caught bug, separable +
+- [x] 56a — the SwapAction hardening (the audit-caught bug, separable +
   first): proposer gates (incl. the healer's `blockedAlly` — a latent
   GP5 hazard) + a no-op branch in `start` for a present-but-in-flight
   partner; co-located tests (mid-move partner, post-rehydrate shape)
+  ✅ 2026-07-15 — hazard was LIVE (port canary re-pinned 10→12); worklog §56a
 - [ ] 56b — the role-order swap probe in `stepAlongRoute`'s blocked
   branch: melee-passes-ranged (`attackRange` test), partner idle,
   last-resort placement; oscillation/chain-jam/corridor tests

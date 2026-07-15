@@ -22,14 +22,16 @@ describe('harness port purchase policy (50g)', () => {
     // Seed pinned by a one-shot scan (worklog §50g): this walk crosses a
     // port with bits in hand. If a future engine round re-deals the streams
     // and this reads 0, re-scan and re-pin — the contract is that the ARM
-    // buys, not that this particular seed does.
-    const r = runOne(10, strat(), SHORT);
+    // buys, not that this particular seed does. Re-pinned 10→12 at 56a (the
+    // SwapAction in-flight-partner fix re-dealt battle trajectories; scan
+    // read seeds 12/15/24 buying — worklog §56a).
+    const r = runOne(12, strat(), SHORT);
     expect(r.portPurchases).toBeGreaterThan(0);
   });
 
   it('is deterministic: same seed, same purchases, same closing bits', () => {
-    const a = runOne(10, strat(), SHORT);
-    const b = runOne(10, strat(), SHORT);
+    const a = runOne(12, strat(), SHORT);
+    const b = runOne(12, strat(), SHORT);
     expect(b).toEqual(a);
   });
 

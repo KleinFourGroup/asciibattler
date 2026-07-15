@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { SwapAction } from './SwapAction';
+import { MoveAction } from './MoveAction';
 import { createAction } from './registry';
 import { World } from '../World';
-import type { UnitStats, UnitTemplate } from '../Unit';
+import type { Unit, UnitStats, UnitTemplate } from '../Unit';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import type { GameEvents } from '../../core/events';
@@ -25,6 +26,23 @@ function spawn(w: World, x: number, y: number) {
 
 function makeWorld(bus: EventBus<GameEvents> = new EventBus<GameEvents>()): World {
   return new World(bus, new RNG(1));
+}
+
+/** Seat `unit` mid-move to `to` the way World.executeActions does — active
+ *  action + destination claim, pre-flip (the movement.test.ts §45a helper). */
+function seatMove(world: World, unit: Unit, to: { x: number; y: number }, travel: number) {
+  const durationTicks = travel * 2;
+  unit.activeAction = {
+    action: new MoveAction(unit.position, to, durationTicks),
+    startTick: world.currentTick,
+    finishTick: world.currentTick + durationTicks,
+    phases: [
+      { phase: 'travel', ticks: travel },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: durationTicks - travel },
+    ],
+  };
+  world.claimCell(to, unit.id);
 }
 
 describe('SwapAction', () => {
@@ -74,6 +92,33 @@ describe('SwapAction', () => {
     expect(mover.position).toEqual({ x: 4, y: 5 });
     expect(swaps).toEqual([]);
     expect(moves).toEqual([{ unitId: mover.id, from: { x: 5, y: 5 }, to: { x: 4, y: 5 }, durationTicks: 10 }]);
+  });
+
+  it('no-ops (positions untouched + unit:moveAborted) when the partner is present but mid-action', () => {
+    // 56a — the post-rehydrate hazard shape: the partner is still ON `to`
+    // (logical position holds until the §36b flip) but mid-move elsewhere.
+    // Swapping would teleport it and then its own move-impact would overwrite
+    // the relocation; the plain-step degrade would double-occupy the still-
+    // filled `to`. The only safe outcome is a clean abort.
+    const bus = new EventBus<GameEvents>();
+    const w = makeWorld(bus);
+    const mover = spawn(w, 5, 5);
+    const other = spawn(w, 4, 5);
+    seatMove(w, other, { x: 3, y: 5 }, 4); // mid-move away, pre-flip
+    const swaps: GameEvents['unit:swapped'][] = [];
+    const moves: GameEvents['unit:moved'][] = [];
+    const aborts: GameEvents['unit:moveAborted'][] = [];
+    bus.on('unit:swapped', (e) => swaps.push(e));
+    bus.on('unit:moved', (e) => moves.push(e));
+    bus.on('unit:moveAborted', (e) => aborts.push(e));
+
+    new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, other.id, 10).start(mover, w);
+
+    expect(mover.position).toEqual({ x: 5, y: 5 }); // untouched
+    expect(other.position).toEqual({ x: 4, y: 5 }); // untouched (its own move still lands)
+    expect(swaps).toEqual([]);
+    expect(moves).toEqual([]);
+    expect(aborts).toEqual([{ unitId: mover.id, from: { x: 5, y: 5 }, to: { x: 4, y: 5 } }]);
   });
 
   it('round-trips through the action registry', () => {

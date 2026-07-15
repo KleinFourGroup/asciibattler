@@ -1137,3 +1137,21 @@ two-sided: proposer gates (synchronous propose→start makes them
 race-free) + a no-op branch in `start` (covers the post-rehydrate
 path). The healer's `blockedAlly` can construct the hazard TODAY with
 a mid-move adjacent ally — a latent GP5 bug, so 56a leads the cut.
+
+### 56a — the SwapAction hardening (2026-07-15)
+
+Built as cut: the no-op branch in `start` (present-but-in-flight
+partner → positions untouched + `unit:moveAborted`, the renderer's
+settle-in-place path) + the `activeAction === null` proposer gate in
+the healer's `blockedAlly`. Tests: the mid-move-partner no-op (seated
+the §45a way — active action + claim, pre-flip) and the healer
+abstaining on the corridor-swap shape with a mid-move ally.
+
+**The byte-parity prediction was WRONG, and the miss is the finding:
+the hazard was LIVE, not latent.** fuzz:smoke flipped exactly one test
+— the 50g port-arm non-vacuousness canary (greedy SHORT seed 10 no
+longer buys) — meaning real fuzz runs contained healer swaps against
+mid-move allies (the corrupted teleport-then-overwrite shape) and
+fixing them re-dealt battle trajectories. Handled per the canary's own
+protocol: re-scan (seeds 12/15/24 buy), re-pin 10→12. No other pin
+moved (219/220 held); main suite + typecheck green throughout.

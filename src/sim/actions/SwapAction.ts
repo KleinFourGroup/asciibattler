@@ -35,6 +35,18 @@ export interface SwapActionData {
  * by the time `start` runs (only possible after a snapshot rehydrate — within
  * a live tick `start` fires synchronously right after propose), the swap
  * degrades to a plain step onto the now-free `to`.
+ *
+ * 56a — a partner that is still ON `to` but has an IN-FLIGHT action is
+ * unswappable, and the whole action no-ops (positions untouched,
+ * `unit:moveAborted` for the renderer's settle-in-place path). Relocating a
+ * mid-MOVE partner is corruption: its logical position holds at `to` until
+ * the §36b flip, so the position check passes, the swap teleports it, and
+ * then its own move-impact overwrites `position` — with an outstanding claim
+ * and a `unit:swapped` event the sim immediately contradicts. Neither degrade
+ * branch is safe here (`to` is still occupied, so the plain step would
+ * double-occupy). Proposers gate on `activeAction === null` too (synchronous
+ * propose→start makes that race-free); this branch is the backstop for the
+ * post-rehydrate path where `start` runs a tick after the proposal was cut.
  */
 export class SwapAction implements Action {
   readonly id = SWAP_ACTION_ID;
@@ -48,15 +60,24 @@ export class SwapAction implements Action {
 
   start(unit: Unit, world: World): void {
     const other = world.findUnit(this.otherId);
-    const swappable =
+    const present =
       other !== undefined &&
       other.currentHp > 0 &&
       other.position.x === this.to.x &&
       other.position.y === this.to.y;
 
+    // 56a — present but mid-action → the no-op branch (see the class doc):
+    // swapping corrupts a mid-mover, and `to` is still occupied so the plain-
+    // step degrade would double-occupy. Abort cleanly; the sprite settles in
+    // place (§35b's selection-time-abort render path).
+    if (present && other.activeAction !== null) {
+      world.emit('unit:moveAborted', { unitId: unit.id, from: this.from, to: this.to });
+      return;
+    }
+
     unit.position = this.to;
 
-    if (swappable) {
+    if (present) {
       other.position = this.from;
       // One swap event with shared timing — the renderer lerps both sprites
       // from their live positions (so a partner caught mid-step stays smooth).

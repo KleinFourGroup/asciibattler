@@ -234,6 +234,12 @@ function blockedAlly(unit: Unit, world: World): Unit | null {
     if (a.team !== unit.team) continue;
     if (a.id === unit.id) continue;
     if (a.currentHp <= 0) continue;
+    // 56a — never offer a swap to a partner with an IN-FLIGHT action: a
+    // mid-mover's logical position holds until the §36b flip, so it reads as
+    // adjacent-and-blocked here while its own impact would overwrite the
+    // swap's relocation (SwapAction's no-op branch is the backstop; this gate
+    // keeps the healer from wasting its poll proposing a doomed swap).
+    if (a.activeAction !== null) continue;
     if (chebyshev(a.position, h) !== 1) continue;
 
     const enemy = currentTarget(a, world);

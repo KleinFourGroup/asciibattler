@@ -3,7 +3,7 @@ import type { Unit } from './Unit';
 import type { World } from './World';
 import type { ActionProposal } from './Action';
 import { MoveAction } from './actions/MoveAction';
-import { SwapAction } from './actions/SwapAction';
+import { SwapAction, isSwappablePartner } from './actions/SwapAction';
 import { waitProposal } from './actions/WaitAction';
 import { findPath } from './Pathfinding';
 import {
@@ -516,20 +516,37 @@ function stepAlongRoute(
       if (eta !== undefined && eta <= SIM.waitForVacancyOwnSteps * ctx.stepTicks) {
         return { proposal: waitProposal(), kind: 'wait' };
       }
+      // 56c2 — a ROLE-ELIGIBLE blocker (friendly ranged that belongs behind
+      // this melee) is never sidestepped around: swap through it when it's
+      // between actions, else QUEUE — the abstain keeps the mover polling
+      // every tick, and the blocker's own yield (MovementBehavior's 56c2
+      // probe) covers its busy windows from the other side. The sidestep
+      // reordering is the scenario-2 fix (worklog §56c2): an equal-distance
+      // sidestep "succeeds" without progress, locks the mover for a full
+      // move window, and loops — while the swap it preempted was the answer.
+      const eligible = roleEligibleBlocker(unit, to, world);
+      if (eligible !== null) {
+        if (isSwappablePartner(eligible, world)) {
+          return {
+            proposal: swapProposal(
+              unit.position,
+              to,
+              eligible.id,
+              stepDurationTicks(world, to, baseTicks),
+            ),
+            kind: 'swap_through',
+          };
+        }
+        return 'blocked';
+      }
       if (intent.sidestepWhenBlocked === false) return 'blocked';
       const side = sidestep(from, intent.approachToward, world, ctx.occupied);
-      if (side !== null) {
-        return {
-          proposal: moveProposal(from, side, stepDurationTicks(world, side, baseTicks)),
-          kind: 'sidestep',
-        };
-      }
-      // 56b — the LAST-RESORT swap-through (wait and sidestep both failed →
-      // corridor-shaped by construction). A blocked melee passes an idle
-      // friendly ranged blocker via the GP5 atomic swap; the role order
-      // (melee through ranged, never the reverse) is the anti-oscillation.
-      const swap = swapThroughProposal(unit, to, world, baseTicks);
-      return swap === null ? 'blocked' : { proposal: swap, kind: 'swap_through' };
+      return side === null
+        ? 'blocked'
+        : {
+            proposal: moveProposal(from, side, stepDurationTicks(world, side, baseTicks)),
+            kind: 'sidestep',
+          };
     }
     return {
       proposal: moveProposal(from, to, stepDurationTicks(world, to, baseTicks)),
@@ -550,9 +567,9 @@ function stepAlongRoute(
 }
 
 /**
- * 56b — the swap-through eligibility probe: the proposal for a blocked mover
- * to pass the unit on its forward cell `to` via the GP5 atomic SwapAction, or
- * null when the pair doesn't qualify. The rule set (shape-locked 2026-07-15,
+ * 56b/56c2 — the STATIC half of the swap-through eligibility: the unit on the
+ * mover's forward cell `to` when the pair's ROLES qualify, else null. The
+ * rule set (shape-locked 2026-07-15, amended at the 56c2 design round —
  * worklog §56):
  *
  *   - **Role order** — only a MELEE mover (attackRange 1) may initiate, and
@@ -564,9 +581,6 @@ function stepAlongRoute(
  *     archer re-enters as the passer marches on (the band loss is transient
  *     — the user's §56 design-round read; an in-band eligibility check was
  *     REJECTED for excluding the canonical max-range corridor jam).
- *   - **Idle partners only** (`activeAction === null`) — the 56a doctrine: a
- *     mid-move partner is corruption, a mid-anything partner is next poll's
- *     swap. SwapAction's no-op branch backstops the post-rehydrate path.
  *   - **Friendly only** — enemies are fought, not passed. (Symmetric: enemy
  *     melee passes enemy ranged through this same probe.)
  *   - **No supports** — the healer reads as ranged (heal range IS its
@@ -576,16 +590,17 @@ function stepAlongRoute(
  *   - **Single-cell bodies both sides** — SwapAction exchanges two positions;
  *     a multi-tile participant has no defined exchange yet (§39b).
  *
+ * The DYNAMIC half (`isSwappablePartner` — genuinely between actions, not
+ * reserved by another in-flight swap) is checked at the call site: a
+ * role-eligible-but-busy blocker means QUEUE, not sidestep — the blocker's
+ * own 56c2 yield covers its busy windows at its next selection poll (the
+ * two-sided protocol; see MovementBehavior's yield probe).
+ *
  * Speed-order (melee passing slower melee) was considered and DEFERRED to
  * playtest at the shape-lock — the solo-dart worry; don't add it here without
  * that evidence.
  */
-function swapThroughProposal(
-  unit: Unit,
-  to: GridCoord,
-  world: World,
-  baseTicks: number,
-): ActionProposal | null {
+function roleEligibleBlocker(unit: Unit, to: GridCoord, world: World): Unit | null {
   if (unit.derived.attackRange > 1) return null; // role order: melee initiates
   if (footprintOf(unit) !== 1) return null;
   // The forward cell can be soft-blocked by a CLAIM with no body on it —
@@ -595,34 +610,54 @@ function swapThroughProposal(
   );
   if (blocker === undefined) return null;
   if (blocker.team !== unit.team) return null; // fought, not passed
-  if (blocker.activeAction !== null) return null; // 56a: idle partners only
   if (footprintOf(blocker) !== 1) return null;
   if (blocker.derived.attackRange <= 1) return null; // role order: ranged yields
   if (blocker.behaviors.some((b) => b.kind === 'support_movement')) return null; // GP5 owns the healer
-  return swapProposal(unit.position, to, blocker.id, stepDurationTicks(world, to, baseTicks));
+  return blocker;
 }
 
 /**
- * GP5 #5 / 56b — the shared swap proposal: the actor trades cells with the
- * unit at `to` (`otherId`). Move-shaped timing (score 1; single `impact`
- * lockout for the full window — the exchange itself is atomic in
- * `SwapAction.start`, so there is no travel/flip split like `moveProposal`).
- * Only the actor pays the cooldown; the partner is merely relocated. Was
- * SupportMovementBehavior-local until 56b needed it for the mover-initiated
- * swap-through — one definition, two proposers (the healer's yield + the
- * blocked-cascade probe above).
+ * 56c2 — the yield's selector score. Ability proposals score `def.priority`
+ * (10 across the shipped catalog, pinned by a balance-proof test against
+ * this constant): a fill-phase attacker's next attack is already ready the
+ * instant its action ends, so a yield at move-score 1 would starve at the
+ * selector forever — the yield must OUTRANK the attack. Tactically: an
+ * archer strictly blocking a boxed melee teammate skips ONE attack cycle to
+ * let it through (the 56c2 design-round call, user-signed). Panic never
+ * reaches the yield (the flee branch returns first), so nothing above
+ * ability score competes.
+ */
+export const YIELD_SWAP_SCORE = 12;
+
+/**
+ * GP5 #5 / 56b / 56c2 — the shared swap proposal: the actor trades cells
+ * with the unit at `to` (`otherId`). Move-shaped in BOTH senses since 56c2:
+ * score (default 1; the blocker-initiated yield passes `YIELD_SWAP_SCORE`)
+ * and the §36b deferred timeline — travel → the logical exchange at the
+ * 50% `impact` boundary (`SwapAction.applyEffect`) → recovery, mirroring
+ * `moveProposal` exactly (`floor` keeps a 1-tick swap instant). Only the
+ * actor pays the cooldown; the partner is merely relocated — but stays
+ * RESERVED until the flip (see SwapAction's class doc). One definition,
+ * three proposers: the healer's GP5 yield, the 56b mover probe, and the
+ * 56c2 ranged yield.
  */
 export function swapProposal(
   from: GridCoord,
   to: GridCoord,
   otherId: number,
   durationTicks: number,
+  score = 1,
 ): ActionProposal {
+  const flipOffset = Math.floor(durationTicks * SIM.moveFlipFraction);
   return {
     action: new SwapAction(from, to, otherId, durationTicks),
-    score: 1,
+    score,
     cooldown: durationTicks,
-    phases: [{ phase: 'impact', ticks: durationTicks }],
+    phases: [
+      { phase: 'travel', ticks: flipOffset },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: durationTicks - flipOffset },
+    ],
   };
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SwapAction } from './SwapAction';
+import { SwapAction, isPreFlipSwapPartner, isSwappablePartner } from './SwapAction';
 import { MoveAction } from './MoveAction';
 import { createAction } from './registry';
 import { World } from '../World';
@@ -9,10 +9,13 @@ import { RNG } from '../../core/RNG';
 import type { GameEvents } from '../../core/events';
 
 /**
- * GP5 #5 — SwapAction mechanic. The atomic position exchange that lets a boxed
- * fighter pass a yielding support in a 1-wide corridor (no double-occupancy
- * window). These pin the primitive with explicit inputs (no config / no
- * behavior), so they stay valid regardless of when the healer chooses to swap.
+ * GP5 #5 / 56c2 — SwapAction, the DEFERRED atomic position exchange (§36b
+ * twin): `start` emits the render event only; the logical exchange lands in
+ * `applyEffect` at the impact boundary, where all validation now lives (a
+ * live-tick propose→start is synchronous behind the proposers' own gates, and
+ * a rehydrated action never re-runs `start` — the flip is the one place stale
+ * state can appear). These pin the primitive with explicit inputs (no config
+ * / no behavior), so they stay valid regardless of who proposes the swap.
  */
 
 const STATS: UnitStats = {
@@ -45,19 +48,23 @@ function seatMove(world: World, unit: Unit, to: { x: number; y: number }, travel
   world.claimCell(to, unit.id);
 }
 
-describe('SwapAction', () => {
-  it('atomically exchanges the two units\' positions', () => {
-    const w = makeWorld();
-    const mover = spawn(w, 5, 5);
-    const other = spawn(w, 4, 5);
+/** Seat an in-flight PRE-FLIP swap on `actor` (the 56c2 deferred timeline). */
+function seatSwap(world: World, actor: Unit, action: SwapAction, durationTicks: number) {
+  const travel = Math.floor(durationTicks / 2);
+  actor.activeAction = {
+    action,
+    startTick: world.currentTick,
+    finishTick: world.currentTick + durationTicks,
+    phases: [
+      { phase: 'travel', ticks: travel },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: durationTicks - travel },
+    ],
+  };
+}
 
-    new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, other.id, 10).start(mover, w);
-
-    expect(mover.position).toEqual({ x: 4, y: 5 });
-    expect(other.position).toEqual({ x: 5, y: 5 });
-  });
-
-  it('emits ONE unit:swapped event (not two moves) carrying both units', () => {
+describe('SwapAction (deferred, 56c2)', () => {
+  it('start emits ONE unit:swapped and moves NOBODY (the flip is deferred)', () => {
     const bus = new EventBus<GameEvents>();
     const w = makeWorld(bus);
     const mover = spawn(w, 5, 5);
@@ -69,56 +76,89 @@ describe('SwapAction', () => {
 
     new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, other.id, 10).start(mover, w);
 
+    expect(mover.position).toEqual({ x: 5, y: 5 }); // still pre-flip
+    expect(other.position).toEqual({ x: 4, y: 5 });
     expect(moves).toEqual([]);
     expect(swaps).toEqual([
       { unitA: mover.id, unitB: other.id, cellA: { x: 5, y: 5 }, cellB: { x: 4, y: 5 }, durationTicks: 10 },
     ]);
   });
 
-  it('degrades to a plain unit:moved step when the partner is gone', () => {
-    // After a snapshot rehydrate the partner could have moved/died; the swap
-    // then just relocates the mover onto the (now-free) cell (a plain move,
-    // not a swap), never desyncing.
-    const bus = new EventBus<GameEvents>();
-    const w = makeWorld(bus);
-    const mover = spawn(w, 5, 5); // no unit with id 999 exists
-    const swaps: GameEvents['unit:swapped'][] = [];
-    const moves: GameEvents['unit:moved'][] = [];
-    bus.on('unit:swapped', (e) => swaps.push(e));
-    bus.on('unit:moved', (e) => moves.push(e));
-
-    new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, 999, 10).start(mover, w);
-
-    expect(mover.position).toEqual({ x: 4, y: 5 });
-    expect(swaps).toEqual([]);
-    expect(moves).toEqual([{ unitId: mover.id, from: { x: 5, y: 5 }, to: { x: 4, y: 5 }, durationTicks: 10 }]);
-  });
-
-  it('no-ops (positions untouched + unit:moveAborted) when the partner is present but mid-action', () => {
-    // 56a — the post-rehydrate hazard shape: the partner is still ON `to`
-    // (logical position holds until the §36b flip) but mid-move elsewhere.
-    // Swapping would teleport it and then its own move-impact would overwrite
-    // the relocation; the plain-step degrade would double-occupy the still-
-    // filled `to`. The only safe outcome is a clean abort.
+  it('applyEffect performs the atomic exchange (silent — the start event promised it)', () => {
     const bus = new EventBus<GameEvents>();
     const w = makeWorld(bus);
     const mover = spawn(w, 5, 5);
     const other = spawn(w, 4, 5);
-    seatMove(w, other, { x: 3, y: 5 }, 4); // mid-move away, pre-flip
-    const swaps: GameEvents['unit:swapped'][] = [];
-    const moves: GameEvents['unit:moved'][] = [];
+    const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, other.id, 10);
+    action.start(mover, w);
+    const events: string[] = [];
+    bus.on('unit:moved', () => events.push('moved'));
+    bus.on('unit:moveAborted', () => events.push('aborted'));
+
+    action.applyEffect(mover, w, 5);
+
+    expect(mover.position).toEqual({ x: 4, y: 5 });
+    expect(other.position).toEqual({ x: 5, y: 5 });
+    expect(events).toEqual([]);
+  });
+
+  it('degrades to a silent plain step at the flip when the partner is gone and the cell is free', () => {
+    // Post-rehydrate / partner-died-mid-window shape: nobody on `to` by flip
+    // time → the actor just arrives (the start event already showed it
+    // sliding there; a dead partner's sprite belongs to the death anim).
+    const bus = new EventBus<GameEvents>();
+    const w = makeWorld(bus);
+    const mover = spawn(w, 5, 5); // no unit with id 999 exists
+    const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, 999, 10);
+    action.start(mover, w);
+    const events: string[] = [];
+    bus.on('unit:moved', () => events.push('moved'));
+    bus.on('unit:moveAborted', () => events.push('aborted'));
+
+    action.applyEffect(mover, w, 5);
+
+    expect(mover.position).toEqual({ x: 4, y: 5 });
+    expect(events).toEqual([]);
+  });
+
+  it('aborts at the flip when the cell is occupied by a third party (§36c shape)', () => {
+    const bus = new EventBus<GameEvents>();
+    const w = makeWorld(bus);
+    const mover = spawn(w, 5, 5);
+    const third = spawn(w, 4, 5); // NOT the named partner — a usurper
+    const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, 999, 10);
+    seatSwap(w, mover, action, 10);
     const aborts: GameEvents['unit:moveAborted'][] = [];
-    bus.on('unit:swapped', (e) => swaps.push(e));
-    bus.on('unit:moved', (e) => moves.push(e));
     bus.on('unit:moveAborted', (e) => aborts.push(e));
 
-    new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, other.id, 10).start(mover, w);
+    action.applyEffect(mover, w, 5);
 
-    expect(mover.position).toEqual({ x: 5, y: 5 }); // untouched
-    expect(other.position).toEqual({ x: 4, y: 5 }); // untouched (its own move still lands)
-    expect(swaps).toEqual([]);
-    expect(moves).toEqual([]);
+    expect(mover.position).toEqual({ x: 5, y: 5 }); // stayed home
+    expect(third.position).toEqual({ x: 4, y: 5 }); // untouched
     expect(aborts).toEqual([{ unitId: mover.id, from: { x: 5, y: 5 }, to: { x: 4, y: 5 } }]);
+    expect(mover.activeAction).toBeNull(); // lockout released for the retry
+    expect(mover.actionCooldowns.get('swap')).toBe(0); // cooldown reset
+  });
+
+  it('aborts at the flip when the partner is present but mid-action (never relocate in-flight units)', () => {
+    // The partner started something mid-window (only reachable post-rehydrate
+    // — live play reserves pre-flip partners via the World.tick skip). Its
+    // own body makes `to` non-free, so the abort branch catches it.
+    const bus = new EventBus<GameEvents>();
+    const w = makeWorld(bus);
+    const mover = spawn(w, 5, 5);
+    const other = spawn(w, 4, 5);
+    seatMove(w, other, { x: 3, y: 5 }, 4);
+    const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, other.id, 10);
+    seatSwap(w, mover, action, 10);
+    const aborts: GameEvents['unit:moveAborted'][] = [];
+    bus.on('unit:moveAborted', (e) => aborts.push(e));
+
+    action.applyEffect(mover, w, 5);
+
+    expect(mover.position).toEqual({ x: 5, y: 5 });
+    expect(other.position).toEqual({ x: 4, y: 5 }); // its own move still owns it
+    expect(aborts).toHaveLength(1);
   });
 
   it('round-trips through the action registry', () => {
@@ -126,5 +166,27 @@ describe('SwapAction', () => {
     const rebuilt = createAction('swap', data, makeWorld());
     expect(rebuilt).toBeInstanceOf(SwapAction);
     expect(rebuilt.toData()).toEqual(data);
+  });
+});
+
+describe('the pre-flip partner reserve (56c2)', () => {
+  it('a named partner is reserved pre-flip and free post-flip', () => {
+    const w = makeWorld();
+    const actor = spawn(w, 5, 5);
+    const partner = spawn(w, 4, 5);
+    const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, partner.id, 10);
+    seatSwap(w, actor, action, 10);
+
+    // Pre-flip (offset 0 < travel 5): reserved.
+    expect(isPreFlipSwapPartner(partner.id, w)).toBe(true);
+    expect(isSwappablePartner(partner, w)).toBe(false);
+    // The ACTOR is busy via its own activeAction, not the partner scan.
+    expect(isPreFlipSwapPartner(actor.id, w)).toBe(false);
+    expect(isSwappablePartner(actor, w)).toBe(false);
+
+    // Simulate the flip landing: reseat with the travel boundary in the past.
+    actor.activeAction = { ...actor.activeAction!, startTick: w.currentTick - 5 };
+    expect(isPreFlipSwapPartner(partner.id, w)).toBe(false);
+    expect(isSwappablePartner(partner, w)).toBe(true);
   });
 });

@@ -51,6 +51,7 @@ import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { SpawnAction } from './actions/SpawnAction';
+import { isPreFlipSwapPartner } from './actions/SwapAction';
 import { SPAWN } from '../config/spawn';
 /**
  * 27d — the tile→status map. A unit standing on a `fire` tile sustains `burn`;
@@ -1114,6 +1115,17 @@ export class World {
         }
       }
 
+      // 3.75 (sits between 3 and 3.5 conceptually) — 56c2: a unit named as
+      // the RESERVED PARTNER of someone's in-flight, pre-flip SwapAction is
+      // skipped: it must not start an action the coming flip would invalidate
+      // (a move would corrupt the exchange; an attack would make it
+      // mid-action at relocation — the very thing the swap gates forbid).
+      // Derived fresh per unit (never serialized; an earlier-order unit may
+      // have STARTED the swap this same tick), cheap at real unit counts.
+      // Post-flip the scan clears and the partner acts normally — the GP5
+      // "merely relocated" contract, anchored to the flip.
+      if (unit.activeAction === null && isPreFlipSwapPartner(unit.id, this)) continue;
+
       // 3.5. E5 — refresh the sticky target ONCE per free unit, before
       // behaviors poll. Both MovementBehavior and the strike abilities
       // read `unit.targetId` via `currentTarget`; updating here (not
@@ -1187,10 +1199,12 @@ export class World {
       // F2 — emit the offset-0 phase boundary(ies) on the start tick, AFTER
       // start(), so the renderer hears `windup` (or `impact` for a strike)
       // the instant the action begins — mirroring step 3's per-tick handling
-      // for actions already in flight at tick top. No migrated action has
+      // for actions already in flight at tick top. No F2-migrated action has
       // BOTH an offset-0 `impact` AND an `applyEffect` (a strike's effect is
-      // in `start()`, which already ran), so the guarded `applyEffect` call
-      // never fires here in F2 — no effect or combatRng draw moves.
+      // in `start()`, which already ran) — the one modern case is a 1-tick
+      // 56c2 SwapAction (flipOffset floors to 0), where firing the flip here
+      // on the start tick is exactly right (the same instant-at-1-tick rule
+      // a 1-tick move gets from its own offset-0 impact).
       for (const phase of phasesBeginningAt(activeAction.phases, 0)) {
         this.emitActionPhase(unit, activeAction.action, phase);
         if (phase === 'impact' && activeAction.action.applyEffect) {

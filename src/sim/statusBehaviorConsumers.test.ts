@@ -173,7 +173,9 @@ describe('56c — the flee-swap (boxed panic bubble-back)', () => {
     const p = new MovementBehavior().proposeAction(fleer, world);
     expect(p).not.toBeNull();
     expect(p!.action.id).toBe('swap');
+    // Execute the full deferred swap (56c2): start (event) then the flip.
     p!.action.start(fleer, world);
+    p!.action.applyEffect!(fleer, world, 0);
     expect(fleer.position).toEqual({ x: 0, y: 5 }); // bubbled back…
     expect(ally.position).toEqual({ x: 1, y: 5 }); // …the fighter steps up
   });

@@ -6,8 +6,17 @@ import { currentTarget } from '../Targeting';
 import { NEIGHBORS, engagementDirective } from '../positioning';
 import { minRangeForArchetype } from '../archetypes';
 import { GROUND, footprintOf, occupiedCells } from '../occupancy';
-import { SWAP_ACTION_ID } from '../actions/SwapAction';
-import { advance, chebyshev, moveProposal, swapProposal, stepDurationTicks, key } from '../movement';
+import { SWAP_ACTION_ID, isSwappablePartner } from '../actions/SwapAction';
+import { blockedAlly } from '../blockedAlly';
+import {
+  YIELD_SWAP_SCORE,
+  advance,
+  chebyshev,
+  moveProposal,
+  swapProposal,
+  stepDurationTicks,
+  key,
+} from '../movement';
 import { emitMoveDecision } from '../moveDecision';
 import { waitProposal } from '../actions/WaitAction';
 import { retreatCell } from '../effects/reposition';
@@ -78,6 +87,26 @@ export class MovementBehavior implements Behavior {
       return null;
     }
 
+    // 56c2 — the blocker-initiated YIELD (the GP5 healer pattern generalized
+    // to ranged units — the "swap request" design, made stateless): before
+    // pursuing its own engagement, a ranged unit asks whether it is strictly
+    // blocking a boxed MELEE teammate, and if so proposes the yield-swap at
+    // YIELD_SWAP_SCORE — ABOVE its own attack, or a fill-phase attacker
+    // (busy for its entire cadence, by design) re-attacks every selection
+    // poll and the yield starves at the selector; the archer skips ONE
+    // attack cycle to let the swordsman through. This is the busy-window
+    // half of the two-sided protocol (the mover's probe handles idle
+    // blockers instantly); it sits AFTER the status branches (a panicking
+    // archer flees, it doesn't hold doors) and AFTER the O2 hold (which
+    // forbids all repositioning, yields included).
+    if (unit.derived.attackRange > 1 && footprintOf(unit) === 1) {
+      const yieldSwap = yieldToBlockedMelee(unit, world);
+      if (yieldSwap !== null) {
+        emitMoveDecision(world, unit, 'yield_swap');
+        return yieldSwap;
+      }
+    }
+
     const target = currentTarget(unit, world);
     if (target === null) {
       // J1 — no enemy to engage. A unit under an `engage` TILE objective
@@ -143,6 +172,40 @@ export class MovementBehavior implements Behavior {
 }
 
 /**
+ * 56c2 — the ranged unit's yield probe: the swap proposal when this unit is
+ * strictly blocking a boxed melee teammate, else null. The cheap pre-filter
+ * (an adjacent friendly melee exists at all) runs before the detector's BFS
+ * so the common case (nobody adjacent) costs one unit scan. Eligibility =
+ * the role order (melee only — antisymmetry keeps the no-ping-pong
+ * guarantee) + the shared swappable-partner gate + single-cell bodies.
+ */
+function yieldToBlockedMelee(unit: Unit, world: World): ActionProposal | null {
+  let adjacentMelee = false;
+  for (const u of world.units) {
+    if (u.team !== unit.team || u.id === unit.id || u.currentHp <= 0) continue;
+    if (u.derived.attackRange > 1) continue;
+    if (chebyshev(u.position, unit.position) !== 1) continue;
+    adjacentMelee = true;
+    break;
+  }
+  if (!adjacentMelee) return null;
+  const ally = blockedAlly(
+    unit,
+    world,
+    (a) =>
+      a.derived.attackRange <= 1 && footprintOf(a) === 1 && isSwappablePartner(a, world),
+  );
+  if (ally === null) return null;
+  return swapProposal(
+    unit.position,
+    ally.position,
+    ally.id,
+    stepDurationTicks(world, ally.position, unit.derived.moveCooldownTicks),
+    YIELD_SWAP_SCORE,
+  );
+}
+
+/**
  * 28 — panic FLEE: a one-cell step that STRICTLY increases distance from the
  * nearest enemy, reusing the gambit's `retreatCell` primitive (away-from-anchor,
  * tie-broken toward open space). 56c — when boxed (`retreatCell` null: no FREE
@@ -199,7 +262,7 @@ function fleeSwapProposal(
     );
     if (partner === undefined) continue;
     if (partner.team !== unit.team) continue; // never swap with an enemy (or a wall)
-    if (partner.activeAction !== null) continue; // 56a: idle partners only
+    if (!isSwappablePartner(partner, world)) continue; // 56a/56c2: idle + unreserved
     if (footprintOf(partner) !== 1) continue;
     if (behaviorFlags(partner.effects).movement === 'flee') continue; // panicker pairs ping-pong
     if (partner.behaviors.some((b) => b.kind === 'support_movement')) continue; // GP5 owns the healer

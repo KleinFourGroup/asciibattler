@@ -27,15 +27,21 @@ import type { World } from './World';
  *   - `retreat`     — a deliberate away-step (the healer's panic-retreat).
  *   - `flee`        — panic-status step away from the nearest threat.
  *   - `wander`      — blind-status step to a random open neighbor.
- *   - `yield_swap`  — the healer's GP5 chokepoint swap with a boxed ally
- *                     (BLOCKER-initiated: the support steps aside).
+ *   - `yield_swap`  — a BLOCKER-initiated swap: the healer's GP5 chokepoint
+ *                     yield, and (56c2) a ranged unit yielding to a strictly
+ *                     blocked melee teammate at its own selection poll —
+ *                     scored ABOVE its attack (YIELD_SWAP_SCORE), because a
+ *                     fill-phase attacker is otherwise busy for its entire
+ *                     cadence and the yield would starve at the selector.
  *   - `swap_through`— 56b: the MOVER-initiated pass — a blocked melee swaps
- *                     forward through an idle friendly ranged blocker (the
- *                     role order: melee passes ranged, never the reverse —
- *                     antisymmetry is the anti-oscillation). Fires only as
- *                     the LAST RESORT of the blocked cascade (§45b wait →
- *                     E5.B sidestep → this), so it's corridor-shaped by
- *                     construction.
+ *                     forward through a friendly ranged blocker that is
+ *                     between actions (the role order: melee passes ranged,
+ *                     never the reverse — antisymmetry is the
+ *                     anti-oscillation). Since 56c2 it PRECEDES the E5.B
+ *                     sidestep for role-eligible blockers (an equal-distance
+ *                     sidestep around a unit that belongs behind you is a
+ *                     loop, not progress); a role-eligible-but-busy blocker
+ *                     means `queue` — its own yield covers that window.
  *   - `flee_swap`   — 56c: the boxed panic bubble-back — a fleeing unit with
  *                     no free retreat cell swaps with an adjacent idle,
  *                     non-fleeing, non-support ally standing strictly

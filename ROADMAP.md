@@ -292,16 +292,15 @@ dead compute. First sim-engine change of the round.
 **Risk:** **High** — a shipped-game sim change; every balance number
 moves; anti-oscillation and chain-jam behavior are correctness surfaces.
 
-**Decision points — ✅ DECIDED at kickoff (2026-07-15, worklog §56):**
-eligibility = ROLE ORDER (melee passes ranged, never the reverse —
-antisymmetry IS the anti-oscillation; the audit's in-band predicate
-REJECTED: it excludes the canonical max-range corridor jam, user catch)
-· flee-swap adopted (gates: partner not fleeing, not support) · swap =
-LAST RESORT in the blocked cascade (wait → sidestep → swap) · tile-rally
-included · enemy symmetry YES (automatic) · healer excluded both ways
-(GP5 yield owns its seam) · **speed-order (melee-passes-melee) DEFERRED
-to playtest** (user call — solo-dart risk) · snapshot prediction: NO
-bump, v34 holds · unjam's fate = §57's re-ask input.
+**Decision points — ✅ DECIDED at kickoff (2026-07-15, worklog §56;
+cascade + timing AMENDED at 56c2, user field report):** eligibility =
+ROLE ORDER (melee passes ranged, never the reverse — antisymmetry IS the
+anti-oscillation; the audit's in-band predicate REJECTED, user catch) ·
+flee-swap adopted (partner not fleeing, not support) · cascade = wait →
+swap-or-queue for role-eligible blockers → sidestep (56c2; was
+swap-last) · tile-rally included · enemy symmetry YES · healer excluded
+both ways · **speed-order DEFERRED to playtest** (user call — solo-dart
+risk) · NO snapshot bump, v34 holds · unjam's fate = §57's re-ask input.
 
 **The cut (shape-locked 2026-07-15; audit + rationale in worklog §56):**
 
@@ -318,25 +317,26 @@ bump, v34 holds · unjam's fate = §57's re-ask input.
 - [x] 56c — the flee-swap: the `boxed` fallback in `proposeFlee`;
   partner-not-fleeing + partner-not-support gates, both tested
   ✅ 2026-07-15 — all gates/canaries held; 5 tests; worklog §56c
+- [x] 56c2 — (inserted; user field report: 3 labyrinth swap bugs) the
+  two-sided protocol: deferred flip (§36b twin) + pre-flip partner
+  reserve + ranged YIELD above ability score + swap-before-sidestep
+  ✅ 2026-07-15 — all gates/canaries held; worklog §56c2
 - [ ] 56d — the FULL re-baseline: fuzz + gauntlet board + `npm run
   pathing` + the PATHING.md append; drift gates predicted to HOLD
   un-relaxed; `baseline.test.ts` re-pins deliberate, receipts in the
   commit note
 - [ ] 56e — native browser verify + the labyrinth doctrine spot-check
 
-**Exit criteria:** the swap rule live + co-located tests (headless-first;
-oscillation + chain-jam cases explicit); drift/baseline gates re-derived
-DELIBERATELY with receipts (never relaxed); the FULL baseline
-re-derivation on record (fuzz baselines + gauntlet board + a PATHING.md
-append per its header); browser-verified natively (render swap lerp
-already exists — `unit:swapped`); the 53g fixture's fidelity break
-acknowledged on record.
+**Exit criteria:** the swap rules live + co-located tests (headless-first;
+oscillation + chain-jam explicit); drift/baseline gates re-derived
+DELIBERATELY with receipts (never relaxed); the FULL re-baseline on
+record (fuzz + gauntlet + a PATHING.md append); browser-verified
+natively; the 53g fixture's fidelity break acknowledged on record.
 
-**Scope guards:** NO RNG in movement (symmetric rules only); anchors
-frozen (an engine change reaches them symmetrically — that's fine;
-their POLICY stays old-objective-handling); no bot/script changes this
-phase (that's §57's re-ask input: same scripts, new engine); no new
-human fixtures recorded until this lands.
+**Scope guards:** NO RNG in movement; anchors frozen (the engine change
+reaches them symmetrically; their POLICY stays old-objective-handling);
+no bot/script changes (§57's re-ask input: same scripts, new engine); no
+new human fixtures until this lands.
 
 ---
 

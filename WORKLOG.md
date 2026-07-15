@@ -1214,3 +1214,78 @@ partner refused · the corner pin proves STRICT distance gain (no
 lateral shuffle). All gates + 220/220 canaries held again — a boxed
 panicker adjacent to a steady idle ally is a narrow intersection in
 fuzz runs; 56d owns the distribution read.
+
+### 56c2 — the two-sided swap protocol (2026-07-15, inserted)
+
+**Source: a user field report from labyrinth watching — three observed
+bugs, all real, and the design conversation that followed reshaped the
+mechanic.** The observations: (1) a firing archer never yields; (2) a
+melee loops up/down beside a pinned archer instead of passing it;
+(3) an `aMM` corridor double-swapped to `MMa` within one tick.
+
+**The diagnosis chain (each step corrected the previous):**
+- (1) is STRUCTURAL starvation, not a race: `resolvePhases` stretches a
+  `'fill'` phase to consume the whole cadence, so an engaging archer is
+  NEVER poll-visible idle — the 56a/56b `activeAction === null` gate can
+  never pass. First fix idea (relocate mid-attack partners) died on the
+  user's gambit catch (attacks CAN carry repositions) + animation bleed;
+  second idea (a no-pending-effects predicate) died on the user's
+  fill-WINDUP catch (artillery-style defs spend the whole cadence
+  pre-impact — a content-shape assumption, exactly what we don't build
+  invariants on). The user then proposed a swap-REQUEST system (busy
+  blocker evaluates at its next selection point) — whose stateless
+  reduction is the shipped design: **the request is re-derivable at the
+  blocker's poll** (the GP5 `blockedAlly` question), so no message
+  queue, no stored state, no snapshot bump.
+- (2) re-read by the user: the adjacent bandit is inside the archer's
+  minRange → the archer is the Qb#3 PINNED kiter, genuinely idle — the
+  swap never fired because the CASCADE never asked: an equal-distance
+  sidestep "succeeds" (the §45b progress guard allows laterals), locks
+  the mover a full move window, and loops. Pure cascade-order evidence.
+- (3) two defects the user named exactly: GP5's swap flipped positions
+  INSTANTLY at `start` (predating §36b), and the partner is never
+  seated with anything — so the just-displaced archer was a fresh idle
+  body for the next mover in the same tick.
+
+**Shipped (all stateless, v34 holds):**
+- **The deferred flip** — SwapAction is the §36b twin: `start` emits
+  only; the exchange lands in `applyEffect` at the 50% impact boundary,
+  where ALL validation now lives (start never re-runs post-rehydrate,
+  so the flip is the only stale-state point): exchange / degrade-to-
+  step / abort (§36c shape: cooldown reset, lockout released). No
+  claims needed — both cells read occupied from outside all window.
+  Fix-along: both units now get `applyTileEnterEffects` at the flip —
+  the instant GP5 model never fired tile-enter for EITHER party (a
+  latent mud-dodge exploit, closed).
+- **The pre-flip partner reserve** — `isPreFlipSwapPartner` (derived
+  scan of live activeActions): World.tick skips the partner's selector
+  (it must not start an action the flip would invalidate) and every
+  proposer's shared `isSwappablePartner` gate refuses it — which IS the
+  one-hop-per-window chain throttle for (3).
+- **The ranged YIELD** — GP5's `blockedAlly` extracted to a shared home
+  (blockedAlly.ts, eligibility now a caller filter); MovementBehavior's
+  ranged units run it at their selection polls behind a cheap
+  adjacent-melee pre-filter, proposing the yield at YIELD_SWAP_SCORE=12
+  — ABOVE ability priority (all shipped defs are 10, dash 5, pinned by
+  a balance-proof test): a fill-phase attacker re-attacks the instant
+  its action ends, so a yield at move-score would starve at the
+  SELECTOR — the archer skips ONE attack cycle to let the melee pass
+  (user-signed). Fixes (1); the healer keeps its GP5 semantics.
+- **The cascade reorder** — role-eligible blockers are never
+  sidestepped around: swap when between actions, else QUEUE (poll-dense
+  for the yield window). Fixes (2); the sidestep survives for
+  role-ineligible blockers.
+
+**Tests:** SwapAction suite reworked to the deferred model (start-only /
+exchange / degrade / abort / busy-partner-at-flip / the reserve pin);
+movement 56b block reworked + the pocket-geometry pair (busy → queue,
+idle → swap-over-sidestep) + the one-hop-per-window chain (the old
+version had ENCODED bug 3 — two start() calls back-to-back labeled
+"iterative"); rangedYield.test.ts new (the yield rules, the balance-
+proof score pin, the tick-driven scenario-1 drain regression, the
+World.tick reserve skip); flee-swap execution updated.
+
+**Gates:** typecheck + 143 files + 220/220 fuzz canaries ALL held (the
+port pin survived this re-deal). The §45c stable-route machinery and
+drift gates untouched. Distribution impact still deliberately unread —
+56d follows.

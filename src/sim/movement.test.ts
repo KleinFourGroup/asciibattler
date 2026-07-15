@@ -7,7 +7,7 @@ import { deriveStats, inertDerived } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { MoveAction } from './actions/MoveAction';
 import { SwapAction } from './actions/SwapAction';
-import { WAIT_ACTION_ID } from './actions/WaitAction';
+import { WAIT_ACTION_ID, WaitAction } from './actions/WaitAction';
 import { SupportMovementBehavior } from './behaviors/SupportMovementBehavior';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
@@ -846,13 +846,17 @@ describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
 });
 
 /**
- * 56b — the swap-through probe: a blocked MELEE mover passes an idle friendly
- * RANGED blocker via the GP5 atomic swap, as the blocked cascade's LAST
- * resort (§45b wait → E5.B sidestep → swap). The role order (melee through
- * ranged, never the reverse) is the anti-oscillation: antisymmetry means a
- * pair can never swap twice. Shape-locked 2026-07-15 (worklog §56); the
- * in-band eligibility alternative was REJECTED there (it excludes the
- * canonical max-range corridor jam).
+ * 56b/56c2 — the swap-through probe: a blocked MELEE mover passes a friendly
+ * RANGED blocker via the GP5 atomic swap. Since 56c2 the probe PRECEDES the
+ * E5.B sidestep for role-eligible blockers (§45b wait → swap-or-queue →
+ * sidestep for everyone else): an equal-distance sidestep around a unit that
+ * belongs behind you is a loop, not progress (the observed labyrinth
+ * scenario 2). A role-eligible-but-BUSY blocker means queue — its own 56c2
+ * yield (MovementBehavior) covers that window from the other side. The role
+ * order (melee through ranged, never the reverse) is the anti-oscillation:
+ * antisymmetry means a pair can never swap twice. Shape-locked 2026-07-15
+ * (worklog §56, amended §56c2); the in-band eligibility alternative was
+ * REJECTED there (it excludes the canonical max-range corridor jam).
  */
 describe('56b — swap-through (the mover-initiated pass)', () => {
   /** A 1-wide corridor at row `y`: walls on y±1 across the full grid width. */
@@ -962,7 +966,85 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     expect(decisions[0]!.kind).toBe('wait');
   });
 
-  it('the swap never fires in the open (last-resort placement)', () => {
+  /** The scenario-2 pocket: a 1-wide corridor with ONE open sidestep bay at
+   *  (3,6) — the route must pass the blocker at (4,5), but an equal-distance
+   *  lateral exists, so pre-56c2 the mover crab-looped through it. */
+  function pocketSpecs(): Spec[] {
+    const specs: Spec[] = [];
+    for (let x = 0; x < 12; x++) {
+      specs.push({ team: 'neutral', x, y: 4, neutral: true });
+      if (x !== 3) specs.push({ team: 'neutral', x, y: 6, neutral: true });
+    }
+    return specs;
+  }
+
+  it('a role-eligible blocker is never sidestepped around: BUSY → queue (the scenario-2 loop fix)', () => {
+    // Pre-56c2 the mover crabbed to the (3,6) bay — an equal-distance
+    // sidestep that locks it for a full move window and loops. Now:
+    // eligible-but-busy blocker → queue, staying poll-dense for the
+    // blocker's own yield window.
+    const bus = new EventBus<GameEvents>();
+    const decisions: GameEvents['unit:moveDecision'][] = [];
+    bus.on('unit:moveDecision', (e) => decisions.push(e));
+    const { world, units } = scene(
+      [
+        { team: 'player', x: 3, y: 5 },
+        { team: 'player', x: 4, y: 5, range: 3 },
+        { team: 'enemy', x: 8, y: 5 },
+        ...pocketSpecs(),
+      ],
+      12,
+      12,
+      bus,
+    );
+    const [mover, blocker, enemy] = units;
+    // Busy but going nowhere (no claim → no §45b vacancy ETA): a seated wait.
+    blocker!.activeAction = {
+      action: new WaitAction(),
+      startTick: world.currentTick,
+      finishTick: world.currentTick + 6,
+      phases: [{ phase: 'recovery', ticks: 6 }],
+    };
+    const proposal = advance(mover!, world, {
+      goals: [enemy!.position],
+      approachToward: enemy!.position,
+      excludeUnitId: enemy!.id,
+      maxCells: 1,
+    });
+    expect(proposal).toBeNull();
+    expect(decisions).toEqual([{ unitId: mover!.id, kind: 'queue' }]);
+  });
+
+  it('a role-eligible IDLE blocker is swapped, not sidestepped (precedence proof)', () => {
+    // Same pocket geometry, blocker idle: the swap now outranks the available
+    // equal-distance sidestep.
+    const bus = new EventBus<GameEvents>();
+    const decisions: GameEvents['unit:moveDecision'][] = [];
+    bus.on('unit:moveDecision', (e) => decisions.push(e));
+    const { world, units } = scene(
+      [
+        { team: 'player', x: 3, y: 5 },
+        { team: 'player', x: 4, y: 5, range: 3 },
+        { team: 'enemy', x: 8, y: 5 },
+        ...pocketSpecs(),
+      ],
+      12,
+      12,
+      bus,
+    );
+    const [mover, , enemy] = units;
+    const proposal = advance(mover!, world, {
+      goals: [enemy!.position],
+      approachToward: enemy!.position,
+      excludeUnitId: enemy!.id,
+      maxCells: 1,
+    });
+    expect(proposal).not.toBeNull();
+    expect(proposal!.action.id).toBe('swap');
+    expect(decisions[0]!.kind).toBe('swap_through');
+  });
+
+  it('the swap never fires in the open (the router detours first)', () => {
     // Same units, NO corridor walls: the router detours around the soft-
     // blocked cell (or the E5.B sidestep crabs past it) long before the
     // cascade reaches the probe — a plain move, never a swap.
@@ -993,7 +1075,9 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
 
   it('anti-oscillation: the displaced ranged unit does NOT swap back (antisymmetry)', () => {
     const { proposal, world, mover, blocker, enemy } = jam();
-    proposal!.action.start(mover, world); // execute the swap
+    // Execute the full deferred swap: start (event only) then the flip.
+    proposal!.action.start(mover, world);
+    proposal!.action.applyEffect!(mover, world, 0);
     expect(mover.position).toEqual({ x: 4, y: 5 });
     expect(blocker.position).toEqual({ x: 3, y: 5 });
     // The displaced archer polls next: forward cell holds the melee that just
@@ -1007,7 +1091,11 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     expect(reverse).toBeNull();
   });
 
-  it('chain jam: a 3-deep column sorts iteratively (each melee passes once)', () => {
+  it('chain jam: ONE hop per swap window — the reserved partner refuses the second swap', () => {
+    // The observed 56c2 bug: instant flips + a free-idle partner let an aMM
+    // column double-swap to MMa within one tick. Now: while M1's swap is
+    // PRE-FLIP, the archer is reserved (isPreFlipSwapPartner) and M2 queues;
+    // only after the flip does the next hop propose.
     const { world, units } = scene([
       { team: 'player', x: 2, y: 5 }, // M2 (rear)
       { team: 'player', x: 3, y: 5 }, // M1
@@ -1022,16 +1110,31 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       excludeUnitId: enemy!.id,
       maxCells: 1,
     };
-    // Poll M1: swaps with R.
+    // Poll M1: proposes the swap; World would seat it in flight — mirror that.
     const p1 = advance(m1!, world, intent);
     expect(p1!.action.id).toBe('swap');
+    const total = p1!.phases.reduce((s, p) => s + p.ticks, 0);
+    m1!.activeAction = {
+      action: p1!.action,
+      startTick: world.currentTick,
+      finishTick: world.currentTick + total,
+      phases: p1!.phases,
+    };
     p1!.action.start(m1!, world);
+    // Mid-window: nobody has moved, and M2's probe refuses the reserved archer.
+    expect(m1!.position).toEqual({ x: 3, y: 5 });
+    expect(r!.position).toEqual({ x: 4, y: 5 });
+    expect(advance(m2!, world, intent)).toBeNull();
+    // The flip lands; the window closes.
+    p1!.action.applyEffect!(m1!, world, 0);
+    m1!.activeAction = null;
     expect(m1!.position).toEqual({ x: 4, y: 5 });
     expect(r!.position).toEqual({ x: 3, y: 5 });
-    // Poll M2: R is now ITS forward blocker → swaps too.
+    // Only NOW does the second hop propose: R files one more cell rearward.
     const p2 = advance(m2!, world, intent);
     expect(p2!.action.id).toBe('swap');
     p2!.action.start(m2!, world);
+    p2!.action.applyEffect!(m2!, world, 0);
     expect(m2!.position).toEqual({ x: 3, y: 5 });
     expect(r!.position).toEqual({ x: 2, y: 5 }); // the archer filed to the rear
   });

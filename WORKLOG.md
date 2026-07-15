@@ -1155,3 +1155,42 @@ mid-move allies (the corrupted teleport-then-overwrite shape) and
 fixing them re-dealt battle trajectories. Handled per the canary's own
 protocol: re-scan (seeds 12/15/24 buy), re-pin 10→12. No other pin
 moved (219/220 held); main suite + typecheck green throughout.
+
+### 56b — the role-order swap probe (2026-07-15)
+
+Built as shape-locked, all in the shared seam so every consumer
+(MovementBehavior combat pursuit, tile-rally, both teams) gets it:
+
+- `stepAlongRoute` gained the acting `unit` and the LAST-RESORT probe
+  (§45b wait → E5.B sidestep → swap → 'blocked'); `swap_through` joined
+  `MoveDecisionKind` (the metrics histogram picks it up automatically —
+  it enumerates `MOVE_DECISION_KINDS`).
+- `swapThroughProposal` gates, in order: melee mover (attackRange 1) ·
+  footprint-1 both sides · a live BODY on the forward cell (a claimed-
+  but-empty cell yields no partner) · friendly · idle (`activeAction
+  === null`, the 56a doctrine) · ranged blocker (attackRange > 1) · not
+  support (kind literal — importing SupportMovementBehavior is a module
+  cycle; the healer reads as ranged because heal range IS attackRange,
+  so the explicit exclusion is load-bearing).
+- `swapProposal` moved healer-local → movement.ts (one definition, two
+  proposers). The probe's duration is `stepDurationTicks` (M6 wade
+  scaling, move-consistent); the healer's yield keeps its raw cadence.
+
+9 tests: the canonical jam (proposal shape + the `swap_through`
+decision) · both role-order refusals · enemy · support · mid-move-
+blocker (resolves upstream via the §45b WAIT — the 56a doctrine never
+reached) · open-field (router detours; probe never fires — last-resort
+proven) · anti-oscillation (the displaced archer's reverse poll queues;
+antisymmetry) · the 3-deep chain jam (column sorts iteratively, archer
+files to the rear).
+
+**Gate results — quieter than predicted, and the quiet is informative:**
+drift gates HELD, `baseline.test.ts` exact pins HELD (the pathing
+fixtures are same-role comps — no swap can fire there), and fuzz:smoke
+220/220 with NO canary flips. The one casualty was the pre-registered
+one: the 53g human fixture stopped replaying (its configHash era-guard
+only sees CONFIG eras; 56b ended its ENGINE era) — retired with an
+explicit `engineEraRetired` flag + doc block per the spec AMENDMENT
+cost line; traces stand as pre-swap history; the consistency test still
+runs. ⚠ The smoke quiet does NOT mean swaps are rare in the wild —
+distribution-level liveness + impact is exactly 56d's measurement.

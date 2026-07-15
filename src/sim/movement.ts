@@ -3,6 +3,7 @@ import type { Unit } from './Unit';
 import type { World } from './World';
 import type { ActionProposal } from './Action';
 import { MoveAction } from './actions/MoveAction';
+import { SwapAction } from './actions/SwapAction';
 import { waitProposal } from './actions/WaitAction';
 import { findPath } from './Pathfinding';
 import {
@@ -251,7 +252,7 @@ export function advance(unit: Unit, world: World, intent: MovementIntent): Actio
   const footprint = footprintOf(unit); // §39b — path a wider body through wider gaps.
   let sawBlocked = false;
   for (const goal of intent.goals) {
-    const outcome = stepAlongRoute(from, goal, ctx, world, intent, baseTicks, footprint);
+    const outcome = stepAlongRoute(unit, from, goal, ctx, world, intent, baseTicks, footprint);
     if (outcome === 'no_route') continue;
     if (outcome === 'blocked') {
       sawBlocked = true;
@@ -449,7 +450,7 @@ function pathCost(
  * queue).
  */
 type StepOutcome =
-  | { proposal: ActionProposal; kind: 'advance' | 'sidestep' | 'wait' }
+  | { proposal: ActionProposal; kind: 'advance' | 'sidestep' | 'wait' | 'swap_through' }
   | 'blocked'
   | 'no_route';
 
@@ -477,6 +478,10 @@ type StepOutcome =
  * exactly as the pre-§42a `null` did.
  */
 function stepAlongRoute(
+  // 56b — the acting unit, for the swap-through probe (team / role / id).
+  // Everything else still flows through the extracted params so the routing
+  // layers below stay unit-agnostic.
+  unit: Unit,
   from: GridCoord,
   goal: GridCoord,
   ctx: MovementContext,
@@ -513,12 +518,18 @@ function stepAlongRoute(
       }
       if (intent.sidestepWhenBlocked === false) return 'blocked';
       const side = sidestep(from, intent.approachToward, world, ctx.occupied);
-      return side === null
-        ? 'blocked'
-        : {
-            proposal: moveProposal(from, side, stepDurationTicks(world, side, baseTicks)),
-            kind: 'sidestep',
-          };
+      if (side !== null) {
+        return {
+          proposal: moveProposal(from, side, stepDurationTicks(world, side, baseTicks)),
+          kind: 'sidestep',
+        };
+      }
+      // 56b — the LAST-RESORT swap-through (wait and sidestep both failed →
+      // corridor-shaped by construction). A blocked melee passes an idle
+      // friendly ranged blocker via the GP5 atomic swap; the role order
+      // (melee through ranged, never the reverse) is the anti-oscillation.
+      const swap = swapThroughProposal(unit, to, world, baseTicks);
+      return swap === null ? 'blocked' : { proposal: swap, kind: 'swap_through' };
     }
     return {
       proposal: moveProposal(from, to, stepDurationTicks(world, to, baseTicks)),
@@ -536,6 +547,83 @@ function stepAlongRoute(
   return landing === null
     ? 'blocked'
     : { proposal: moveProposal(from, landing, baseTicks), kind: 'advance' };
+}
+
+/**
+ * 56b — the swap-through eligibility probe: the proposal for a blocked mover
+ * to pass the unit on its forward cell `to` via the GP5 atomic SwapAction, or
+ * null when the pair doesn't qualify. The rule set (shape-locked 2026-07-15,
+ * worklog §56):
+ *
+ *   - **Role order** — only a MELEE mover (attackRange 1) may initiate, and
+ *     only a RANGED blocker (attackRange > 1) yields. Antisymmetry is the
+ *     whole anti-oscillation story: swaps flow one direction in the role
+ *     relation, so a pair can never swap twice — no hysteresis, no state.
+ *     Backward displacement is neutral-to-good for every ranged archetype
+ *     (a minRange kiter WANTS the extra cell), and a displaced-out-of-band
+ *     archer re-enters as the passer marches on (the band loss is transient
+ *     — the user's §56 design-round read; an in-band eligibility check was
+ *     REJECTED for excluding the canonical max-range corridor jam).
+ *   - **Idle partners only** (`activeAction === null`) — the 56a doctrine: a
+ *     mid-move partner is corruption, a mid-anything partner is next poll's
+ *     swap. SwapAction's no-op branch backstops the post-rehydrate path.
+ *   - **Friendly only** — enemies are fought, not passed. (Symmetric: enemy
+ *     melee passes enemy ranged through this same probe.)
+ *   - **No supports** — the healer reads as ranged (heal range IS its
+ *     attackRange) but yields on its own terms via the GP5 `blockedAlly`
+ *     machinery; kind literal because importing SupportMovementBehavior here
+ *     is a module cycle (it imports this file).
+ *   - **Single-cell bodies both sides** — SwapAction exchanges two positions;
+ *     a multi-tile participant has no defined exchange yet (§39b).
+ *
+ * Speed-order (melee passing slower melee) was considered and DEFERRED to
+ * playtest at the shape-lock — the solo-dart worry; don't add it here without
+ * that evidence.
+ */
+function swapThroughProposal(
+  unit: Unit,
+  to: GridCoord,
+  world: World,
+  baseTicks: number,
+): ActionProposal | null {
+  if (unit.derived.attackRange > 1) return null; // role order: melee initiates
+  if (footprintOf(unit) !== 1) return null;
+  // The forward cell can be soft-blocked by a CLAIM with no body on it —
+  // world.units position scan naturally yields no partner there.
+  const blocker = world.units.find(
+    (u) => u.id !== unit.id && u.currentHp > 0 && u.position.x === to.x && u.position.y === to.y,
+  );
+  if (blocker === undefined) return null;
+  if (blocker.team !== unit.team) return null; // fought, not passed
+  if (blocker.activeAction !== null) return null; // 56a: idle partners only
+  if (footprintOf(blocker) !== 1) return null;
+  if (blocker.derived.attackRange <= 1) return null; // role order: ranged yields
+  if (blocker.behaviors.some((b) => b.kind === 'support_movement')) return null; // GP5 owns the healer
+  return swapProposal(unit.position, to, blocker.id, stepDurationTicks(world, to, baseTicks));
+}
+
+/**
+ * GP5 #5 / 56b — the shared swap proposal: the actor trades cells with the
+ * unit at `to` (`otherId`). Move-shaped timing (score 1; single `impact`
+ * lockout for the full window — the exchange itself is atomic in
+ * `SwapAction.start`, so there is no travel/flip split like `moveProposal`).
+ * Only the actor pays the cooldown; the partner is merely relocated. Was
+ * SupportMovementBehavior-local until 56b needed it for the mover-initiated
+ * swap-through — one definition, two proposers (the healer's yield + the
+ * blocked-cascade probe above).
+ */
+export function swapProposal(
+  from: GridCoord,
+  to: GridCoord,
+  otherId: number,
+  durationTicks: number,
+): ActionProposal {
+  return {
+    action: new SwapAction(from, to, otherId, durationTicks),
+    score: 1,
+    cooldown: durationTicks,
+    phases: [{ phase: 'impact', ticks: durationTicks }],
+  };
 }
 
 /**

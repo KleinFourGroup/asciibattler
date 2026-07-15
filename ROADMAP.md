@@ -281,11 +281,9 @@ charter re-opens ONLY via a future roadmap round *(→ exercised
 
 ## Phase 56 — Generalized swap (engine self-sorting) — INSERTED 2026-07-15
 
-**Charter:** generalize `SwapAction` (GP5 #5, today healer-only via
-`SupportMovementBehavior`) so units resolve their own traffic: melee pass
-ranged allies who are already in range when the melee isn't (exact rule =
-the design round). Unjam is an engine smell, not a skill — the sim owes
-the fix, for humans and bots alike (spec AMENDMENT "The swap insight").
+**Charter:** generalize `SwapAction` (GP5 #5, today healer-only) so units
+resolve their own traffic — unjam is an engine smell, not a skill; the sim
+owes the fix, for humans and bots alike (spec AMENDMENT "The swap insight").
 
 **Why here / dependencies:** before §57 — the engine change redefines the
 script portfolio and moves every baseline; recalibrating first would be
@@ -313,9 +311,11 @@ bump, v34 holds · unjam's fate = §57's re-ask input.
   GP5 hazard) + a no-op branch in `start` for a present-but-in-flight
   partner; co-located tests (mid-move partner, post-rehydrate shape)
   ✅ 2026-07-15 — hazard was LIVE (port canary re-pinned 10→12); worklog §56a
-- [ ] 56b — the role-order swap probe in `stepAlongRoute`'s blocked
+- [x] 56b — the role-order swap probe in `stepAlongRoute`'s blocked
   branch: melee-passes-ranged (`attackRange` test), partner idle,
   last-resort placement; oscillation/chain-jam/corridor tests
+  ✅ 2026-07-15 — 9 tests; gates/pins/canaries ALL held; 53g fixture
+  retired (engine era, the pre-registered cost); worklog §56b
 - [ ] 56c — the flee-swap: the `boxed` fallback in `proposeFlee`;
   partner-not-fleeing + partner-not-support gates, both tested
 - [ ] 56d — the FULL re-baseline: fuzz + gauntlet board + `npm run

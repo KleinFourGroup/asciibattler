@@ -6,7 +6,9 @@ import { RNG } from '../core/RNG';
 import { deriveStats, inertDerived } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { MoveAction } from './actions/MoveAction';
+import { SwapAction } from './actions/SwapAction';
 import { WAIT_ACTION_ID } from './actions/WaitAction';
+import { SupportMovementBehavior } from './behaviors/SupportMovementBehavior';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import {
@@ -37,8 +39,13 @@ interface Spec {
   neutral?: boolean;
 }
 
-function scene(specs: Spec[], gridW = 12, gridH = 12): { world: World; units: Unit[] } {
-  const world = new World(new EventBus<GameEvents>(), new RNG(1), gridW, gridH);
+function scene(
+  specs: Spec[],
+  gridW = 12,
+  gridH = 12,
+  bus: EventBus<GameEvents> = new EventBus<GameEvents>(),
+): { world: World; units: Unit[] } {
+  const world = new World(bus, new RNG(1), gridW, gridH);
   let nextId = 1;
   const units = specs.map((s) => {
     const neutral = s.neutral === true;
@@ -835,5 +842,197 @@ describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
       seatMove(world, lane[0]!, { x: 4, y: 5 }, 10_000);
     });
     expect(landing(proposal)).toEqual({ x: 1, y: 7 }); // lane B
+  });
+});
+
+/**
+ * 56b — the swap-through probe: a blocked MELEE mover passes an idle friendly
+ * RANGED blocker via the GP5 atomic swap, as the blocked cascade's LAST
+ * resort (§45b wait → E5.B sidestep → swap). The role order (melee through
+ * ranged, never the reverse) is the anti-oscillation: antisymmetry means a
+ * pair can never swap twice. Shape-locked 2026-07-15 (worklog §56); the
+ * in-band eligibility alternative was REJECTED there (it excludes the
+ * canonical max-range corridor jam).
+ */
+describe('56b — swap-through (the mover-initiated pass)', () => {
+  /** A 1-wide corridor at row `y`: walls on y±1 across the full grid width. */
+  function corridorSpecs(y: number, gridW = 12): Spec[] {
+    const specs: Spec[] = [];
+    for (let x = 0; x < gridW; x++) {
+      specs.push({ team: 'neutral', x, y: y - 1, neutral: true });
+      specs.push({ team: 'neutral', x, y: y + 1, neutral: true });
+    }
+    return specs;
+  }
+
+  /** The standard jam: melee at (3,5) behind a ranged ally at (4,5), enemy
+   *  at (8,5), 1-wide corridor. Returns the advance() proposal for the melee. */
+  function jam(
+    opts: {
+      blockerRange?: number;
+      blockerTeam?: Team;
+      blockerSupport?: boolean;
+      blockerMidMove?: boolean;
+      moverRange?: number;
+    } = {},
+  ) {
+    const bus = new EventBus<GameEvents>();
+    const decisions: GameEvents['unit:moveDecision'][] = [];
+    bus.on('unit:moveDecision', (e) => decisions.push(e));
+    const { world, units } = scene(
+      [
+        { team: 'player', x: 3, y: 5, range: opts.moverRange ?? 1 }, // the mover
+        { team: opts.blockerTeam ?? 'player', x: 4, y: 5, range: opts.blockerRange ?? 3 },
+        { team: 'enemy', x: 8, y: 5 }, // the target
+        ...corridorSpecs(5),
+      ],
+      12,
+      12,
+      bus,
+    );
+    const [mover, blocker, enemy] = units;
+    if (opts.blockerSupport === true) blocker!.behaviors.push(new SupportMovementBehavior());
+    if (opts.blockerMidMove === true) {
+      // Mid-move BACKWARD (the forward cell holds the mover) — pre-flip, so
+      // the logical position still reads (4,5). ETA (4 ticks) is inside the
+      // §45b gate, so the WAIT branch resolves this shape before the probe.
+      blocker!.activeAction = {
+        action: new MoveAction(blocker!.position, { x: 5, y: 5 }, 8),
+        startTick: world.currentTick,
+        finishTick: world.currentTick + 8,
+        phases: [
+          { phase: 'travel', ticks: 4 },
+          { phase: 'impact', ticks: 0 },
+          { phase: 'recovery', ticks: 4 },
+        ],
+      };
+      world.claimCell({ x: 5, y: 5 }, blocker!.id);
+    }
+    const proposal = advance(mover!, world, {
+      goals: [enemy!.position],
+      approachToward: enemy!.position,
+      excludeUnitId: enemy!.id,
+      maxCells: 1,
+    });
+    return { proposal, decisions, world, mover: mover!, blocker: blocker!, enemy: enemy! };
+  }
+
+  it('proposes the swap in the canonical corridor jam (melee behind idle friendly ranged)', () => {
+    const { proposal, decisions, mover, blocker } = jam();
+    expect(proposal).not.toBeNull();
+    expect(proposal!.action.id).toBe('swap');
+    expect(decisions).toEqual([{ unitId: mover.id, kind: 'swap_through' }]);
+    // The swap is move-shaped: score 1, cooldown = the full step duration.
+    expect(proposal!.score).toBe(1);
+    expect(proposal!.cooldown).toBe(mover.derived.moveCooldownTicks);
+    const data = (proposal!.action as SwapAction).toData();
+    expect(data.from).toEqual(mover.position);
+    expect(data.to).toEqual(blocker.position);
+    expect(data.otherId).toBe(blocker.id);
+  });
+
+  it('role order: a MELEE blocker is never passed (equal roles queue)', () => {
+    const { proposal, decisions } = jam({ blockerRange: 1 });
+    expect(proposal).toBeNull();
+    expect(decisions[0]!.kind).toBe('queue');
+  });
+
+  it('role order: a RANGED mover never initiates (ranged queues behind anyone)', () => {
+    const { proposal, decisions } = jam({ moverRange: 3, blockerRange: 3 });
+    expect(proposal).toBeNull();
+    expect(decisions[0]!.kind).toBe('queue');
+  });
+
+  it('an ENEMY blocker is fought, not passed', () => {
+    const { proposal, decisions } = jam({ blockerTeam: 'enemy' });
+    expect(proposal).toBeNull();
+    expect(decisions[0]!.kind).toBe('queue');
+  });
+
+  it('a SUPPORT blocker is never passed from the mover side (GP5 owns the healer yield)', () => {
+    const { proposal, decisions } = jam({ blockerSupport: true });
+    expect(proposal).toBeNull();
+    expect(decisions[0]!.kind).toBe('queue');
+  });
+
+  it('a mid-move blocker resolves via the §45b WAIT gate, not the swap (56a doctrine upstream)', () => {
+    const { proposal, decisions } = jam({ blockerMidMove: true });
+    expect(proposal).not.toBeNull();
+    expect(proposal!.action.id).toBe('wait');
+    expect(decisions[0]!.kind).toBe('wait');
+  });
+
+  it('the swap never fires in the open (last-resort placement)', () => {
+    // Same units, NO corridor walls: the router detours around the soft-
+    // blocked cell (or the E5.B sidestep crabs past it) long before the
+    // cascade reaches the probe — a plain move, never a swap.
+    const bus = new EventBus<GameEvents>();
+    const decisions: GameEvents['unit:moveDecision'][] = [];
+    bus.on('unit:moveDecision', (e) => decisions.push(e));
+    const { world, units } = scene(
+      [
+        { team: 'player', x: 3, y: 5 },
+        { team: 'player', x: 4, y: 5, range: 3 },
+        { team: 'enemy', x: 8, y: 5 },
+      ],
+      12,
+      12,
+      bus,
+    );
+    const [mover, , enemy] = units;
+    const proposal = advance(mover!, world, {
+      goals: [enemy!.position],
+      approachToward: enemy!.position,
+      excludeUnitId: enemy!.id,
+      maxCells: 1,
+    });
+    expect(proposal).not.toBeNull();
+    expect(proposal!.action.id).toBe('move');
+    expect(['advance', 'sidestep']).toContain(decisions[0]!.kind);
+  });
+
+  it('anti-oscillation: the displaced ranged unit does NOT swap back (antisymmetry)', () => {
+    const { proposal, world, mover, blocker, enemy } = jam();
+    proposal!.action.start(mover, world); // execute the swap
+    expect(mover.position).toEqual({ x: 4, y: 5 });
+    expect(blocker.position).toEqual({ x: 3, y: 5 });
+    // The displaced archer polls next: forward cell holds the melee that just
+    // passed — a ranged MOVER never initiates, so it queues (no ping-pong).
+    const reverse = advance(blocker, world, {
+      goals: [enemy.position],
+      approachToward: enemy.position,
+      excludeUnitId: enemy.id,
+      maxCells: 1,
+    });
+    expect(reverse).toBeNull();
+  });
+
+  it('chain jam: a 3-deep column sorts iteratively (each melee passes once)', () => {
+    const { world, units } = scene([
+      { team: 'player', x: 2, y: 5 }, // M2 (rear)
+      { team: 'player', x: 3, y: 5 }, // M1
+      { team: 'player', x: 4, y: 5, range: 3 }, // R (front)
+      { team: 'enemy', x: 8, y: 5 },
+      ...corridorSpecs(5),
+    ]);
+    const [m2, m1, r, enemy] = units;
+    const intent = {
+      goals: [enemy!.position],
+      approachToward: enemy!.position,
+      excludeUnitId: enemy!.id,
+      maxCells: 1,
+    };
+    // Poll M1: swaps with R.
+    const p1 = advance(m1!, world, intent);
+    expect(p1!.action.id).toBe('swap');
+    p1!.action.start(m1!, world);
+    expect(m1!.position).toEqual({ x: 4, y: 5 });
+    expect(r!.position).toEqual({ x: 3, y: 5 });
+    // Poll M2: R is now ITS forward blocker → swaps too.
+    const p2 = advance(m2!, world, intent);
+    expect(p2!.action.id).toBe('swap');
+    p2!.action.start(m2!, world);
+    expect(m2!.position).toEqual({ x: 3, y: 5 });
+    expect(r!.position).toEqual({ x: 2, y: 5 }); // the archer filed to the rear
   });
 });

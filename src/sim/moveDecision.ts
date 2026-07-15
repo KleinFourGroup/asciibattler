@@ -27,7 +27,15 @@ import type { World } from './World';
  *   - `retreat`     — a deliberate away-step (the healer's panic-retreat).
  *   - `flee`        — panic-status step away from the nearest threat.
  *   - `wander`      — blind-status step to a random open neighbor.
- *   - `yield_swap`  — the healer's GP5 chokepoint swap with a boxed ally.
+ *   - `yield_swap`  — the healer's GP5 chokepoint swap with a boxed ally
+ *                     (BLOCKER-initiated: the support steps aside).
+ *   - `swap_through`— 56b: the MOVER-initiated pass — a blocked melee swaps
+ *                     forward through an idle friendly ranged blocker (the
+ *                     role order: melee passes ranged, never the reverse —
+ *                     antisymmetry is the anti-oscillation). Fires only as
+ *                     the LAST RESORT of the blocked cascade (§45b wait →
+ *                     E5.B sidestep → this), so it's corridor-shaped by
+ *                     construction.
  *   - `wait`        — the DELIBERATE hold, a first-class `WaitAction`
  *                     proposal, from two families of site: §44b's in-acting-
  *                     range holds (firing band / heal range, holding to act —
@@ -63,6 +71,7 @@ export const MOVE_DECISION_KINDS = [
   'flee',
   'wander',
   'yield_swap',
+  'swap_through',
   'wait',
   'queue',
   'no_route',

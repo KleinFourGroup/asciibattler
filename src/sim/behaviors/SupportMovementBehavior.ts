@@ -2,7 +2,6 @@ import type { Behavior, Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
 import type { ActionProposal } from '../Action';
-import { SwapAction } from '../actions/SwapAction';
 import { findTarget, lowestWoundedAlly, currentTarget } from '../Targeting';
 import { findPath } from '../Pathfinding';
 import { NEIGHBORS, awayStep, passable } from '../positioning';
@@ -17,7 +16,7 @@ import {
 import { SIM } from '../../config/sim';
 // J2 — share the leaf pathing helpers with MovementBehavior (these were
 // duplicated leaf-for-leaf). The healer's bespoke decision logic stays here.
-import { costAt, moveProposal, stepDurationTicks, key, chebyshev } from '../movement';
+import { costAt, moveProposal, swapProposal, stepDurationTicks, key, chebyshev } from '../movement';
 import { emitMoveDecision, type MoveDecisionKind } from '../moveDecision';
 import { waitProposal } from '../actions/WaitAction';
 
@@ -353,25 +352,8 @@ function snapToNavigable(cell: GridCoord, world: World): GridCoord {
   return cell;
 }
 
-/**
- * GP5 #5 — the swap proposal: the healer (`from`) trades cells with the boxed
- * ally at `to` (`otherId`). Same timing shape as a move (score 1, single
- * `impact` lockout for the move-cooldown window); the exchange itself is
- * atomic in `SwapAction.start`.
- */
-function swapProposal(
-  from: GridCoord,
-  to: GridCoord,
-  otherId: number,
-  durationTicks: number,
-): ActionProposal {
-  return {
-    action: new SwapAction(from, to, otherId, durationTicks),
-    score: 1,
-    cooldown: durationTicks,
-    phases: [{ phase: 'impact', ticks: durationTicks }],
-  };
-}
+// (GP5 #5's swapProposal moved to movement.ts at 56b — one definition serves
+// both proposers: this yield and the blocked-cascade swap-through probe.)
 
 /**
  * Nearest living ally of `unit` (same team, excluding the unit itself)

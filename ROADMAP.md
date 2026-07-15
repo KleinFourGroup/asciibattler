@@ -295,12 +295,33 @@ bot/harness-only).
 **Risk:** **High** — a shipped-game sim change; every balance number
 moves; anti-oscillation and chain-jam behavior are correctness surfaces.
 
-**Decision points:** the swap-eligibility rule itself (who yields to
-whom — a design round at kickoff, user shape-lock); anti-oscillation
-mechanism (hysteresis vs strict need-ordering); enemy symmetry (presumed
-YES per the symmetric-rules doctrine); the ⚠ labyrinth
-intentional-slow-maze doctrine re-check; whether unjam (the script)
-survives; snapshot-bump prediction cut at kickoff.
+**Decision points — ✅ DECIDED at kickoff (2026-07-15, worklog §56):**
+eligibility = ROLE ORDER (melee passes ranged, never the reverse —
+antisymmetry IS the anti-oscillation; the audit's in-band predicate
+REJECTED: it excludes the canonical max-range corridor jam, user catch)
+· flee-swap adopted (gates: partner not fleeing, not support) · swap =
+LAST RESORT in the blocked cascade (wait → sidestep → swap) · tile-rally
+included · enemy symmetry YES (automatic) · healer excluded both ways
+(GP5 yield owns its seam) · **speed-order (melee-passes-melee) DEFERRED
+to playtest** (user call — solo-dart risk) · snapshot prediction: NO
+bump, v34 holds · unjam's fate = §57's re-ask input.
+
+**The cut (shape-locked 2026-07-15; audit + rationale in worklog §56):**
+
+- [ ] 56a — the SwapAction hardening (the audit-caught bug, separable +
+  first): proposer gates (incl. the healer's `blockedAlly` — a latent
+  GP5 hazard) + a no-op branch in `start` for a present-but-in-flight
+  partner; co-located tests (mid-move partner, post-rehydrate shape)
+- [ ] 56b — the role-order swap probe in `stepAlongRoute`'s blocked
+  branch: melee-passes-ranged (`attackRange` test), partner idle,
+  last-resort placement; oscillation/chain-jam/corridor tests
+- [ ] 56c — the flee-swap: the `boxed` fallback in `proposeFlee`;
+  partner-not-fleeing + partner-not-support gates, both tested
+- [ ] 56d — the FULL re-baseline: fuzz + gauntlet board + `npm run
+  pathing` + the PATHING.md append; drift gates predicted to HOLD
+  un-relaxed; `baseline.test.ts` re-pins deliberate, receipts in the
+  commit note
+- [ ] 56e — native browser verify + the labyrinth doctrine spot-check
 
 **Exit criteria:** the swap rule live + co-located tests (headless-first;
 oscillation + chain-jam cases explicit); drift/baseline gates re-derived

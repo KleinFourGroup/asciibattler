@@ -1016,3 +1016,124 @@ Rider: the stall-detection idea from the draw/timeout-unification era
 tick-cap wait) finally got captured — TODO.md Polish/pre-launch,
 2026-07-15. Docs commit: spec AMENDMENT + ROADMAP restructure + HANDOFF
 cursor + this entry.
+
+## Phase 56 — Generalized swap (engine self-sorting)
+
+### The kickoff code-reality audit (2026-07-15)
+
+**Headline: GP5 built the entire swap periphery; only the PROPOSER is
+healer-only.** `SwapAction` is atomic, serialized (registry entry, no
+new action kind), §35b-exempt by design (no `destinationCell` — its `to`
+is intentionally occupied); `unit:swapped` is in the event catalog, the
+renderer dual-lerps it, AND the pathing metrics harness already counts
+it as two committed steps (tests/pathing/metrics.ts:41, tested). No
+instrumentation pre-step needed — the suspected "metrics must learn
+swaps first" 56-pre evaporated on inspection.
+
+**The natural seam is `stepAlongRoute`'s blocked branch**
+(src/sim/movement.ts): the maxCells≤1 cascade is currently §45b
+wait-gate (blocker vacating soon → queue) → E5.B sidestep → 'blocked'
+abstain. A holding in-band ranged blocker has NO vacancy ETA, so it
+falls through wait, and in a corridor the sidestep fails → today's
+permanent queue. A swap probe slots into that cascade; everything
+upstream (goal lists, route choice, §45c stability) is untouched.
+
+**⭐ The audit's design gift — ONE predicate does all the work:**
+"the blocker, standing on MY cell, would still hold" — i.e. the
+mover's cell is inside the blocker's firing band (range AND LOS, the
+44-pre-c `firingBandCell` machinery, reusable). This single check:
+- protects the yielder (never swap a ranged unit out of its shot);
+- kills melee-through-melee ping-pong automatically (a front melee
+  displaced one cell back is at range 2 → out of band → ineligible);
+- kills ranged-through-ranged pathologies the same way (incl. the
+  LOS-gated case — the predicate carries LOS);
+- needs NO persistent state → hysteresis-free anti-oscillation, no
+  snapshot bump, potentially ZERO new config knobs.
+Friendly bodies do NOT block LOS (only neutral `blocksLineOfSight`
+units — positioning.ts `collectLosBlockers`), so a displaced ranged
+unit shoots over the passer's head; only wall geometry can break the
+displaced shot, and the band predicate checks exactly that.
+
+**Economics differ from the healer yield, in a good way:** GP5's yield
+has the BLOCKER pay (healer's cooldown) while the fighter advances
+free. Mover-initiated inverts it: the advancing melee pays a normal
+move cooldown for a normal forward step; the displaced blocker is
+relocated free (SwapAction semantics — partner keeps its cadence).
+Nobody gets a free ADVANCE; the yielder is compensated for being
+moved. Cleaner than the healer shape, no changes to SwapAction needed.
+
+**The partner-in-flight hazard (audit catch):** `SwapAction.start`
+relocates the partner regardless of its `activeAction`. A mid-MOVE
+partner (logical position holds until the §36b flip, claim
+outstanding) would be teleported and then have its own impact overwrite
+`position` — claim/position corruption territory. The healer flow
+never hits it (a strictly-blocked ally can't be mid-move), but the
+generalized rule must gate on it: partner has no in-flight action
+(derivable — `activeAction === null`; `claimedDestinationOf` covers
+the move case specifically). V1 recommendation: idle-or-waiting
+partners only.
+
+**Drift gates (tests/pathing/drift.test.ts):** all floors/bounds, not
+pins — corridor throughput (≥0.75/1.50 per 100t) should IMPROVE;
+riverFork moves ≤100 gains 2 counted steps per swap (headroom: reading
+was ~23 backtracks vs 100 bound); oscillation ≤0.5 unthreatened when
+the yielder holds post-swap (the predicate guarantees it wants to).
+Prediction: gates HOLD un-relaxed; `baseline.test.ts` exact pins
+re-pin deliberately; PATHING.md gets its append per header protocol.
+
+**Scope reality:** `advance` is shared by MovementBehavior (enemy team
+included — symmetry is automatic, same behavior class) AND tile-rally
+pursuit (a rally column jams identically — swap reach is a design
+call). The healer's bespoke `stepToward` and the dash/leap path are
+separate seams — v1 leaves both untouched (healer keeps its GP5 yield).
+
+**Snapshot prediction: NO bump — v34 holds.** Stateless rule, existing
+action + registry entry, proposal sites don't serialize. (The
+twice-taught rule: this line is the prediction.)
+
+### The design round + shape-lock (2026-07-15)
+
+**The audit's in-band predicate DIED at the design round — the user's
+edge case killed it, and the post-mortem matters:** a ranged unit
+approaching down a corridor stops at the FIRST in-band cell =
+`nearestActingCell` = MAX RANGE, so any backward displacement exits the
+band and the predicate refuses the swap — in exactly the canonical
+melee-behind-ranged jam the phase exists to fix. The predicate proved
+a tidy no-loser property while excluding the primary use case. The
+user's temporal read is the right model: the archer's band loss is
+TRANSIENT (the passer keeps marching and vacates; the archer re-enters
+a beat later) — a human archer holds fire while the swordsmen file
+past.
+
+**Adopted (user heuristics, both):**
+1. **Role order** — melee passes ranged, never the reverse
+   (`attackRange > 1` = ranged; backward displacement is neutral-to-
+   good for every ranged archetype incl. minRange kiters). The
+   anti-oscillation property survives the predicate swap: ANTISYMMETRY
+   replaces "displaced blocker doesn't want to move" — swaps flow one
+   direction in the role relation, so a pair can never swap twice.
+   Still stateless, no snapshot bump, zero tunables.
+2. **Flee-swap** — a boxed fleeing unit swaps with a neighbor whose
+   cell strictly increases distance from the threat. Two derivable
+   gates: partner NOT fleeing (two panickers ping-pong) and NOT
+   support (a healer displaced into panic range retreats right back;
+   it also has its own GP5 machinery). Convergent by construction:
+   the fleer's threat distance strictly increases per swap, and the
+   displaced fighter is handed a step it already wanted.
+
+**Deferred (user call): speed-order** (melee-passes-melee by mobility —
+the rogue-behind-tank march case). The worry on record: a lone fast
+unit darting in solo and dying to the whole enemy army. Revisit with
+playtest evidence, not theory. V1 holds the coarse two-role line.
+
+**The 56a bug, upgraded from the audit note:** `SwapAction.start` does
+`unit.position = this.to` UNCONDITIONALLY — the "partner gone" degrade
+assumed a free cell. A present-but-mid-move partner passes the position
+check (logical position holds until the §36b flip), gets teleported,
+then its own move-impact overwrites its position (claim/position
+corruption). And a naive eligibility check WITHOUT restructuring
+`start` would land the actor on a still-occupied cell. Fix is
+two-sided: proposer gates (synchronous propose→start makes them
+race-free) + a no-op branch in `start` (covers the post-rehydrate
+path). The healer's `blockedAlly` can construct the hazard TODAY with
+a mid-move adjacent ally — a latent GP5 bug, so 56a leads the cut.

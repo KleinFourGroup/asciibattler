@@ -108,7 +108,11 @@ describe('docs hygiene', () => {
   // bump deliberately (e.g. an inserted phase grew the plan for real).
   // Bumped 450→500 at the 2026-07-15 §55-reopen restructure: the micro
   // round grew 5→8 phases (§§56–58 inserted) — a real plan growth, not rot.
-  const ROADMAP_MAX_LINES = 500;
+  // Bumped 500→550 at the §56 kickoff (same day): 500 left no room for the
+  // per-phase CUTS the protocol adds at each kickoff — §56's tripped it at
+  // 505, and §57/§58's cuts are still to come. 550 = the 8-phase plan plus
+  // three kickoffs' worth of checkbox lines; a trip beyond that is rot again.
+  const ROADMAP_MAX_LINES = 550;
   const ROADMAP_PHASE_MAX_LINES = 60;
 
   it(`ROADMAP.md stays under ${ROADMAP_MAX_LINES} lines (a plan, not a log)`, () => {

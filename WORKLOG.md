@@ -971,3 +971,48 @@ bought anyway: the opt-in scripts arm at its best-ever state (the
 most human-real CELL-LEVEL instrument, available for §57), three
 named-with-mechanism residuals, and the §52 doctrine reconfirmed —
 relative reads govern the balance pass.
+
+## The §55 reopen + the renumber (2026-07-15)
+
+**The user reopened the question the day after the close — and the
+challenge held up.** Their five-point read (worklog-worthy because three
+of the five became phase charters): (1) the cutoff was set under a
+time-pressure mindset the project doesn't actually have — EV positive,
+reopen; (2) [headspace — for the record: the §55-pre re-frame that
+caught the Goodhart trap twice was THEIR call; the self-doubt was
+miscalibrated]; (3) **the crux: portfolio search scores OUTCOMES, so a
+script that's worse than null simply doesn't get picked — the §55 NO
+tested "can trigger fixes make static scripts safe," never "does
+rollout arbitration make them safe."** Confirmed against the record:
+every §55 failure (fetidPond mud-as-fire, unjam's boss trigger + its
+priority shadow, edge-hold vs deserters) is trigger/arbitration-class —
+exactly what rollouts dissolve (triggers demote to nomination; the
+priority list disappears; the null arm floors at passive). Rung 2
+proper was parked on a prediction, not a measurement. (4) **Unjam is
+an engine smell, not a skill** — and the user's correction landed:
+placement is SEED-ROLLED, so there is no player formation decision for
+engine self-sorting to render moot; melee-behind-ranged is
+seed-determined jank today. Generalize `SwapAction` (GP5 #5) instead of
+scripting around the jam. (5) The deserters residual doesn't need
+intent detection — reachability math on derived state ("the stranded
+healer can't do damage"), or the searcher arbitrates hold-vs-advance
+with no sensor at all.
+
+**Resolution (user + assistant, shape-locked in plain conversation):**
+the reopen rides §55's own scope guard ("the parked charter re-opens
+ONLY via a future roadmap round" — this is that round). Renumber:
+**§56 swap → §57 Rung 2 proper (re-ask gate first) → §58 threat read
+(no-op exit legal) → §59 economy → §60 balance pass + close-out.**
+Round 53→57 becomes 53→60. The §55 VERDICT NO stands unrevised — it
+answered its own question. Costs named at shape-lock (spec AMENDMENT):
+full re-baseline at §56 (drift gates trip deliberately), the 53g human
+fixture's replay fidelity breaks at the engine change (no new human
+fixtures until §56 lands; §60's re-anchor was always fresh), rollout
+horizon/noise/cadence is §57's real hard part, and the seed protocol
+widens so no future verdict carries the −14.2's hot-seed asterisk.
+
+Rider: the stall-detection idea from the draw/timeout-unification era
+(engine prompt "this looks stalled; accept a draw?" instead of a silent
+tick-cap wait) finally got captured — TODO.md Polish/pre-launch,
+2026-07-15. Docs commit: spec AMENDMENT + ROADMAP restructure + HANDOFF
+cursor + this entry.

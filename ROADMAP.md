@@ -1,4 +1,9 @@
-# ROADMAP — The Micro Round (Phases 53→57)
+# ROADMAP — The Micro Round (Phases 53→60)
+
+> **RESTRUCTURED 2026-07-15** (the §55 reopen — spec AMENDMENT + worklog
+> "The §55 reopen"): swap inserted as §56, Rung 2 proper un-parked as §57
+> (§55's own scope-guard path), threat read as §58; economy → §59, balance
+> pass + close-out → §60. The §55 VERDICT NO stands unrevised.
 
 > **▶ ACTIVE — the micro/balance-realism interstitial round between Clusters
 > 3 and 4** — the standing post-cluster-audit convention, promoted to a full
@@ -41,9 +46,12 @@ re-baseline.
 |---|---|---|---|
 | **53** | Rung 0 — the recorder + the gauntlet | Passive DEV trace recorder (replayable human fixtures; paired-seed comparisons) + the ~10-cell battle gauntlet; rider: the dev export/load key | Medium (replay fidelity is the round's foundation) |
 | **54** | Rung 1 — the traffic scripts | Five reactive traffic scripts at the objective layer; anchors frozen; gauntlet re-measure | High (the round's core surgery) |
-| **55** | Rung 2 — portfolio rollout search | GATED on §54's residual: snapshot-clone rollouts + the clairvoyance guard — or a documented NO | High if built (may legitimately not run) |
-| **56** | The expressive economy strategy | Economy dims join the ONE scored vector; fire scorer; top-K refinement; `--search` regen | Medium (harness-only surface) |
-| **57** | The REAL balance pass + close-out | Re-anchor targets · boss-wall verdict · prices/`bitsMultiplier`/drop weights/`path.port`/fire arm · round close | Low-Medium (measure + config) |
+| **55** | Rung 2 — distribution generalization (re-scoped) | ✅ CLOSED, VERDICT NO — gate/threshold fixes couldn't rescue static triggers held-out (−14.2); passive stays the anchor | — (closed) |
+| **56** | Generalized swap (engine self-sorting) | SwapAction generalized beyond the healer: units pass their own traffic; design round at kickoff; exit = FULL baseline re-derivation | High (sim engine change; every balance number moves) |
+| **57** | Rung 2 PROPER — portfolio rollout search | Opens with the re-ask gate (§55-pre protocol post-swap), then rollout arbitration: null arm floor, clairvoyance guard, horizon/cadence design round | High (the reopened core surgery) |
+| **58** | The derived threat read | Deserters residual as reachability math on derived state — NOT intent detection; no-op exit legal if §57's searcher eats it | Low-Medium (may legitimately no-op) |
+| **59** | The expressive economy strategy | Economy dims join the ONE scored vector; fire scorer; top-K refinement; `--search` regen | Medium (harness-only surface) |
+| **60** | The REAL balance pass + close-out | Re-anchor targets · boss-wall verdict · prices/`bitsMultiplier`/drop weights/`path.port`/fire arm · round close | Low-Medium (measure + config) |
 
 ## Sequencing rationale
 
@@ -51,12 +59,16 @@ Instrument before fix — the 42→46 shape: §53 builds the measurement
 apparatus every later gate reads, and its human baseline is what "realistic"
 means for the rest of the round. §54 before §55 because the portfolio IS
 the scripts — nothing to search over until they exist — and §55's existence
-is itself a measurement call on §54's residual. §56 waits for the bot to
-stabilize (whichever rung that turns out to be): a `--search` optimum
-derived against a still-moving bot is dead compute — §52's own re-scope
-rationale, applied forward. §57 strictly last by the cluster-closer
-convention; it consumes §56's expressive vector and the stable bot, and it
-owns the re-anchoring + the boss-wall rider verdict.
+is itself a measurement call on §54's residual. **§56 (swap) before §57
+(Rung 2 proper)** because the engine change redefines what the portfolio
+contains — unjam may shrink or die; a searcher calibrated against traffic
+behavior about to be deleted is dead compute. §58 after §57 because the
+searcher may arbitrate hold-vs-advance directly, making the sensor a
+no-op. §59 waits for the bot to stabilize (whichever rung that turns out
+to be): a `--search` optimum derived against a still-moving bot is dead
+compute — §52's own re-scope rationale, applied forward. §60 strictly last
+by the cluster-closer convention; it consumes §59's expressive vector and
+the stable bot, and it owns the re-anchoring + the boss-wall rider verdict.
 
 ## Hard ordering constraints
 
@@ -67,9 +79,17 @@ owns the re-anchoring + the boss-wall rider verdict.
   provisional re-anchor only until then.
 - §54 before §55 (the portfolio is the scripts); §55's go/no-go reads §54's
   quantified residual — a decision-point STOP.
-- §56 after the behavior rungs settle; §57 after §56 (it measures at the
+- §56 (swap) before §57 (Rung 2 proper): the engine change moves every
+  baseline AND redefines the script portfolio — no bot recalibration or
+  searcher work against a pre-swap engine. NO new human gauntlet fixtures
+  recorded until §56 lands (trace replay fidelity breaks at the engine
+  change — spec AMENDMENT costs).
+- §57 opens with the re-ask gate (the §55-pre protocol re-run post-swap) —
+  a decision-point STOP: swaps alone may close enough of the gap.
+- §58 after §57 (the searcher may make the sensor a no-op).
+- §59 after the behavior rungs settle; §60 after §59 (it measures at the
   expressive optimum).
-- `path.port` sweeps FIRST within §57 (the transaction-starvation guard: a
+- `path.port` sweeps FIRST within §60 (the transaction-starvation guard: a
   price read at ~24% transaction rate is not a price read — BALANCE §50g).
 
 ## Conventions (the standing set)
@@ -253,13 +273,121 @@ in BALANCE §55; the scripts default set accordingly; either verdict is a
 valid close.
 
 **Scope guards:** NO new scripts, NO new sensor families, NO rollout
-machinery, NO RL/imitation (standing); anchors frozen (`--scripts` stays
-opt-in until the decision rule says otherwise); the parked
-portfolio-rollout charter re-opens ONLY via a future roadmap round.
+machinery, NO RL/imitation (standing); anchors frozen; the parked rollout
+charter re-opens ONLY via a future roadmap round *(→ exercised
+2026-07-15: §§56–58 below — spec AMENDMENT + worklog "The §55 reopen")*.
 
 ---
 
-## Phase 56 — The expressive economy strategy layer
+## Phase 56 — Generalized swap (engine self-sorting) — INSERTED 2026-07-15
+
+**Charter:** generalize `SwapAction` (GP5 #5, today healer-only via
+`SupportMovementBehavior`) so units resolve their own traffic: melee pass
+ranged allies who are already in range when the melee isn't (exact rule =
+the design round). Unjam is an engine smell, not a skill — the sim owes
+the fix, for humans and bots alike (spec AMENDMENT "The swap insight").
+
+**Why here / dependencies:** before §57 — the engine change redefines the
+script portfolio and moves every baseline; recalibrating first would be
+dead compute. First sim-engine change of the round (53–55 were
+bot/harness-only).
+
+**Risk:** **High** — a shipped-game sim change; every balance number
+moves; anti-oscillation and chain-jam behavior are correctness surfaces.
+
+**Decision points:** the swap-eligibility rule itself (who yields to
+whom — a design round at kickoff, user shape-lock); anti-oscillation
+mechanism (hysteresis vs strict need-ordering); enemy symmetry (presumed
+YES per the symmetric-rules doctrine); the ⚠ labyrinth
+intentional-slow-maze doctrine re-check; whether unjam (the script)
+survives; snapshot-bump prediction cut at kickoff.
+
+**Exit criteria:** the swap rule live + co-located tests (headless-first;
+oscillation + chain-jam cases explicit); drift/baseline gates re-derived
+DELIBERATELY with receipts (never relaxed); the FULL baseline
+re-derivation on record (fuzz baselines + gauntlet board + a PATHING.md
+append per its header); browser-verified natively (render swap lerp
+already exists — `unit:swapped`); the 53g fixture's fidelity break
+acknowledged on record.
+
+**Scope guards:** NO RNG in movement (symmetric rules only); anchors
+frozen (an engine change reaches them symmetrically — that's fine;
+their POLICY stays old-objective-handling); no bot/script changes this
+phase (that's §57's re-ask input: same scripts, new engine); no new
+human fixtures recorded until this lands.
+
+---
+
+## Phase 57 — Rung 2 PROPER: portfolio rollout search — UN-PARKED 2026-07-15
+
+**Charter:** the original Rung-2 charter, un-parked: portfolio greedy
+search — clone via snapshot, roll each candidate script forward, score by
+pool differential, commit the winner — with the **null arm** as the
+structural floor and triggers demoted to nomination. The §55 NO answered
+the static-trigger question; this phase measures the arbitration question
+it never tested (spec AMENDMENT "Why reopen").
+
+**Why here / dependencies:** strictly after §56 (searches the post-swap
+portfolio). Consumes §54's scripts, §53's instruments, §55's probe
+protocol + `55pre-vector.json`.
+
+**Risk:** **High** — the reopened core surgery. The hard part is rollout
+DESIGN, not plumbing: horizon vs attrition-stall/choke-hold payoffs,
+evaluation noise under the clairvoyance guard (K-rollout averaging ×
+compute), re-search cadence.
+
+**Decision points:** **the RE-ASK GATE first — a STOP**: the §55-pre
+six-batch protocol re-run post-swap (same fixed vector, wider seed
+protocol) — if swaps alone closed enough, the phase may close NO-BUILD
+(not expected; verified). Then the design round: horizon length + scoring
+window · rollout count K · re-search cadence · candidate nomination rule ·
+the sensor audit vs the derived-reads-only constraint (the 54h contact
+sensor first). Decision rule for the close pre-registered at kickoff,
+§55-style, on BOTH-seed-sets discipline + the third-set upgrade.
+
+**Exit criteria:** either the re-ask closes the phase with numbers on
+record, or the searcher ships behind the harness flag with the
+clairvoyance guard proven (a foresee-the-rolls test), the re-measure on
+record in BALANCE.md under the pre-registered rule, and the scripts-arm
+default resolved by that rule.
+
+**Scope guards:** the clairvoyance guard is NON-NEGOTIABLE; anchors
+frozen; NO RL/imitation, NO raw action-space search (standing non-goals);
+derived reads only for anything rolled out; DEV-only surface — zero
+shipped-game behavior change.
+
+---
+
+## Phase 58 — The derived threat read (deserters) — INSERTED 2026-07-15
+
+**Charter:** the deserters residual (55c1's cutoff bell) rebuilt as
+reachability math on derived state — a fleer that cannot reach or damage
+within N ticks is neither prey nor threat, so advance — NOT behavioral
+intent detection (spec AMENDMENT "The deserters correction").
+Snapshot-computable, therefore rollout-compatible.
+
+**Why here / dependencies:** after §57 — the searcher may arbitrate
+hold-vs-advance directly and make the sensor a NO-OP; that exit is legal
+and cheap. Reads 55b's forced-spiral isolate as its regression fixture.
+
+**Risk:** **Low-Medium** — one sensor + gauntlet/isolate verification; may
+legitimately not build.
+
+**Decision points:** the no-op check first (does §57's searcher already
+clear the spiral-deserters isolate?); if built, threshold N from trace
+data not intuition; landing surface if no-op'd — user-facing threat tell
+(UI) or TODO park (user call).
+
+**Exit criteria:** the spiral-deserters isolate number on record either
+way; the residual's ledger entry updated (built / searcher-ate-it /
+parked-with-pointer).
+
+**Scope guards:** derived reads only; no new script families; the
+attrition-stall map-wide deferral stays untouched.
+
+---
+
+## Phase 59 — The expressive economy strategy layer
 
 **Charter:** economy decisions join the ONE scored vector — a
 port-purchase scorer REUSING the recruit scorer (a port unit is a priced
@@ -272,7 +400,7 @@ perturb-and-reselect refinement stage to `--search` (motivated by §46b's
 `output/best-strategy.json` against the new bot.
 
 **Why here / dependencies:** after the behavior rungs settle — an optimum
-against a moving bot is dead compute; before §57, which measures at this
+against a moving bot is dead compute; before §60, which measures at this
 optimum.
 
 **Risk:** **Medium** — harness/strategy surface only, no shipped-game
@@ -286,11 +414,11 @@ live; packets fire in harness runs (outcome-inertness gone); the
 fixed-vector probe re-run on record in BALANCE.md.
 
 **Scope guards:** ONE scored vector — no second optimizer; the fixed
-policies survive as anchors; no price/config tuning yet (§57's domain).
+policies survive as anchors; no price/config tuning yet (§60's domain).
 
 ---
 
-## Phase 57 — The REAL balance pass + close-out
+## Phase 60 — The REAL balance pass + close-out
 
 **Charter:** the deferred Cluster-3 tuning agenda at the realistic optimum,
 measured with the §52 economy metric family (bits-per-hop · spend mix +
@@ -302,8 +430,9 @@ arm — `path.port` FIRST (the transaction-starvation guard). Then the round
 close: cursor flip, memory update, archive-ritual note, and the Cluster-4
 kickoff proposal.
 
-**Why here / dependencies:** last by the closer convention; consumes §56's
-vector and the stable bot.
+**Why here / dependencies:** last by the closer convention; consumes §59's
+vector and the stable bot — now two realism rungs better than the §52
+finding assumed.
 
 **Risk:** **Low-Medium** — measure + config. The §41/§46b documented-no-op
 precedent applies to the TUNING, not to the rider verdict or the
@@ -333,7 +462,7 @@ new mechanics (findings that want one become TODO/next-round items).
 - **No unfrozen anchors, ever** — greedy/random keep the old objective
   handling as the permanent comparison floor.
 - **No Cluster-4 content** (rarity, draft pools, starting characters).
-- **The §49 shrink-flow content lands ONLY via §57's decision point** —
+- **The §49 shrink-flow content lands ONLY via §60's decision point** —
   otherwise it keeps waiting (worklog §50g watch item).
 
 ## Open decisions to resolve when building (the cross-cutting set)
@@ -341,7 +470,14 @@ new mechanics (findings that want one become TODO/next-round items).
 - 53: the gauntlet cell list; the command-stamp seam.
 - 54: **script ↔ objective-model integration + arbitration** (the spec's
   big ⚠ OPEN — a design round at kickoff).
-- 55: **the gate threshold** (set from §54's numbers — a stop).
-- 56: scorer dim lists; refinement K + budget.
-- 57: the re-anchored targets; per-lever tune-vs-accept; the shrink-flow
+- 55: **the gate threshold** (set from §54's numbers — a stop). ✅ resolved
+  by the 2026-07-14 re-scope + the 2026-07-15 reopen (spec AMENDMENT).
+- 56: **the swap-eligibility rule** (design round — a shape-lock);
+  anti-oscillation; the labyrinth doctrine re-check; unjam's fate.
+- 57: **the re-ask gate** (a STOP); rollout horizon/scoring/cadence/K; the
+  sensor audit; the pre-registered decision rule.
+- 58: the no-op check; threshold-from-traces; the landing surface if
+  no-op'd.
+- 59: scorer dim lists; refinement K + budget.
+- 60: the re-anchored targets; per-lever tune-vs-accept; the shrink-flow
   slot.

@@ -163,3 +163,105 @@ rate — all strategy-tier):
 - Expect fuzz/determinism baseline resets when scripts change bot
   behavior; snapshot bumps only if the objective layer's serialized shape
   changes (⚠ OPEN until the Rung-1 design round).
+
+---
+
+## AMENDMENT (2026-07-15) — the §55 reopen: swap-first, then Rung 2 proper
+
+> **Status: ✅ SHAPE-LOCKED 2026-07-15** (user + assistant, distilled from
+> the two-session reopen conversation; rationale narrative in worklog
+> "The §55 reopen"). Supersedes the Rung-2 section above and re-sequences
+> the round's back half. The §55 VERDICT NO (BALANCE §55) is NOT
+> overturned — it stands as the answer to the question it asked.
+
+### Why reopen (the ledger, stated honestly)
+
+The §55 NO answered a **narrower question than the Rung-2 gate
+originally asked**. The 2026-07-14 re-scope tested *"can gate/threshold
+fixes make static-trigger scripts globally safe?"* (answer: no,
+held-out −14.2). The original question — *"does rollout **arbitration**
+make the scripts globally safe?"* — was parked on a prediction
+("rollouts on mis-calibrated primitives optimize the wrong thing"),
+never a measurement. Three structural arguments say the prediction
+over-reached, all grounded in what §55 itself found:
+
+1. **Triggers demote to nomination.** Under rollout arbitration the
+   rollout scores *outcomes*; trigger calibration shifts from precision
+   (never fire wrongly — what failed at fetidPond/boss/spiral) to recall
+   (don't forget to consider it) — a strictly easier problem.
+2. **The fixed priority list disappears** — and with it the 55b
+   shadowing pathology (unjam at #2 preempting cohesion-focus at #4).
+3. **The null arm is a floor.** With "do what passive would do" in the
+   portfolio, a §55-shape distribution-wide regression is close to
+   structurally impossible, modulo rollout-evaluation error.
+
+§54's cell-level result (81% gap closure) is the positive half: the
+scripts are good-in-context primitives — context-dependent selection via
+simulation is literally the locked design answer (Churchill & Buro).
+
+The time posture also changes (user call): the §55 cutoff protected
+against an open-ended sink under a launch mindset; there is no outside
+time pressure, expected value is positive, so the reopened arc is
+**time-relaxed but still scope-disciplined per phase** — pre-registered
+decision rules and cutoff bells stay, set per phase at kickoff.
+
+### The swap insight (the new first-class finding)
+
+**Unjam is an engine smell, not a skill.** Receipts: unjam's boss harm
+is the trigger itself ("unjam-alone is worse than nothing", 55b); at 0.2
+it "quietly carries most layouts" (55c2) — the engine jams routinely
+enough that a bot-side workaround is load-bearing distribution-wide; and
+the human plays the same janitor micro by hand (the traffic-six
+introspection). Decisive: **spawn placement is seed-rolled, not
+player-chosen** — a melee-behind-ranged jam is seed-determined jank no
+decision caused and none can prevent. Random placement + no self-sorting
+is the worst combination; there is no placement decision for
+self-sorting to render moot.
+
+The primitive already exists: `SwapAction` (GP5 #5, atomic corridor
+pass, healer-only proposer today). Generalizing it — melee swaps forward
+through a ranged ally when the ranged unit is in range and the melee
+isn't (exact rule = the §56 design round) — is symmetric, deterministic,
+RNG-free, and moves unjam's function INTO the sim for humans and bots
+alike.
+
+### The deserters correction
+
+The 55c1 cutoff bell named the residual "intent detection." The cheaper
+reframe (user): **threat/reachability math on derived state** — a fleer
+that cannot reach or damage you within N ticks is neither prey nor
+threat, so advance. Snapshot-computable (capability + path distance),
+which keeps it rollout-compatible (the derived-reads-only constraint,
+worklog §54b note). And under rollout arbitration the hold-vs-advance
+decision may be arbitrated directly with no new sensor at all — hence
+§58's graceful no-op exit.
+
+### The re-sequenced ladder (the renumber)
+
+| Phase | Was | Now |
+|---|---|---|
+| **56** | economy | **Generalized swap** (engine-side self-sorting; design round at kickoff; exit = full baseline re-derivation) |
+| **57** | balance pass | **Rung 2 proper** — opens with the re-ask gate (the §55-pre protocol re-run post-swap: swaps may already resolve enough; not expected, but verified), then the portfolio-search design round (horizon/scoring/cadence/K-rollouts), build, re-measure |
+| **58** | — | **Derived threat read** (deserters); no-op exit legal if §57's searcher eats it — then user-facing surface or TODO park |
+| **59** | — | The expressive economy strategy layer (unchanged content) |
+| **60** | — | The REAL balance pass + close-out (unchanged content; gains a bot two rungs more real) |
+
+Economy stays after the behavior rungs by the round's own doctrine ("a
+`--search` optimum derived against a still-moving bot is dead compute").
+
+### Costs on record (named at shape-lock, owned by the phases)
+
+- **The full balance re-baseline** (§56 exit): drift gates WILL trip —
+  deliberate engine change, re-derive with receipts (never a relaxation).
+- **Committed human-trace fidelity degrades at the engine change**: the
+  53g fixture stops replaying byte-identically against the new sim; the
+  §54 tables stand as historical record; the §60 re-anchor was always a
+  fresh measurement. Record no new human fixtures until §56 lands.
+- **Rollout design is the hard part, not plumbing**: horizon vs
+  attrition-stall/choke-hold payoffs; evaluation noise under the
+  clairvoyance guard (K-rollout averaging × compute); re-search cadence.
+  The §57 design round owns these; the clairvoyance guard stays
+  non-negotiable.
+- **Seed-protocol upgrade (standing for §57+)**: a third seed set or
+  bigger batches, so no future verdict carries the hot-seed-set asterisk
+  the −14.2 did.

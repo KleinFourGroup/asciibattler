@@ -106,7 +106,9 @@ describe('docs hygiene', () => {
   // at the Cluster-3 kickoff: 330 lines total, phase sections 30–40 lines.
   // Tripping a cap means as-built prose crept in — move it to WORKLOG.md, or
   // bump deliberately (e.g. an inserted phase grew the plan for real).
-  const ROADMAP_MAX_LINES = 450;
+  // Bumped 450→500 at the 2026-07-15 §55-reopen restructure: the micro
+  // round grew 5→8 phases (§§56–58 inserted) — a real plan growth, not rot.
+  const ROADMAP_MAX_LINES = 500;
   const ROADMAP_PHASE_MAX_LINES = 60;
 
   it(`ROADMAP.md stays under ${ROADMAP_MAX_LINES} lines (a plan, not a log)`, () => {

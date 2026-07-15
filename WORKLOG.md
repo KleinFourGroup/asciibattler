@@ -1289,3 +1289,10 @@ World.tick reserve skip); flee-swap execution updated.
 port pin survived this re-deal). The §45c stable-route machinery and
 drift gates untouched. Distribution impact still deliberately unread —
 56d follows.
+
+**User native verification (2026-07-15, same day):** labyrinth re-watch
+confirmed all three observations resolved — "looks great, and there's a
+visible and prominent sorting effect." The 56e formal close still rides
+after 56d (labyrinth doctrine eyeball + the full-board verify), but the
+mechanic itself is user-confirmed on the live renderer. Session handed
+off at the 56d boundary (context budget); the cursor carries the state.

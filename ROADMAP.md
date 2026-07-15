@@ -287,8 +287,7 @@ owes the fix, for humans and bots alike (spec AMENDMENT "The swap insight").
 
 **Why here / dependencies:** before §57 — the engine change redefines the
 script portfolio and moves every baseline; recalibrating first would be
-dead compute. First sim-engine change of the round (53–55 were
-bot/harness-only).
+dead compute. First sim-engine change of the round.
 
 **Risk:** **High** — a shipped-game sim change; every balance number
 moves; anti-oscillation and chain-jam behavior are correctness surfaces.
@@ -316,8 +315,9 @@ bump, v34 holds · unjam's fate = §57's re-ask input.
   last-resort placement; oscillation/chain-jam/corridor tests
   ✅ 2026-07-15 — 9 tests; gates/pins/canaries ALL held; 53g fixture
   retired (engine era, the pre-registered cost); worklog §56b
-- [ ] 56c — the flee-swap: the `boxed` fallback in `proposeFlee`;
+- [x] 56c — the flee-swap: the `boxed` fallback in `proposeFlee`;
   partner-not-fleeing + partner-not-support gates, both tested
+  ✅ 2026-07-15 — all gates/canaries held; 5 tests; worklog §56c
 - [ ] 56d — the FULL re-baseline: fuzz + gauntlet board + `npm run
   pathing` + the PATHING.md append; drift gates predicted to HOLD
   un-relaxed; `baseline.test.ts` re-pins deliberate, receipts in the

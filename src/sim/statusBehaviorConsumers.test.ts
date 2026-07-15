@@ -5,7 +5,9 @@ import { RNG } from '../core/RNG';
 import { ARCHETYPE_CONFIG } from './archetypes';
 import { createAbility } from './abilities/registry';
 import { MovementBehavior } from './behaviors/MovementBehavior';
+import { SupportMovementBehavior } from './behaviors/SupportMovementBehavior';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
+import { MoveAction } from './actions/MoveAction';
 import { updateTarget } from './Targeting';
 import type { StatusEffect } from './statusEffects';
 import type { Unit, Archetype, Team } from './Unit';
@@ -136,6 +138,86 @@ describe('28 — panic', () => {
     ]);
     (units[0] as Unit).addEffect(status('panic'));
     expect(new MovementBehavior().proposeAction(units[0] as Unit, world)).toBeNull();
+  });
+});
+
+/**
+ * 56c — the flee-swap: a BOXED panicker (retreatCell null — every free cell
+ * fails to gain distance) bubbles backward by swapping with an adjacent idle,
+ * non-fleeing, non-support ally standing strictly farther from the threat.
+ * The rout geometry used throughout: fleer at (1,5), enemy at (2,5), the
+ * three strictly-farther cells (0,4)/(0,5)/(0,6) all occupied — retreatCell
+ * is null by construction, so the probe is the only out.
+ */
+describe('56c — the flee-swap (boxed panic bubble-back)', () => {
+  /** The rout: fleer boxed against a full rear rank. The two flankers are
+   *  ALSO panicked (ineligible), so eligibility decides the middle. */
+  function rout(middle: { archetype?: Archetype; panicked?: boolean } = {}) {
+    const { world, units } = build([
+      { archetype: 'mercenary', team: 'player', x: 1, y: 5, combat: true }, // the fleer
+      { archetype: middle.archetype ?? 'mercenary', team: 'player', x: 0, y: 5 }, // the rear ally
+      { archetype: 'mercenary', team: 'player', x: 0, y: 4 }, // flanker (panicked below)
+      { archetype: 'mercenary', team: 'player', x: 0, y: 6 }, // flanker (panicked below)
+      { archetype: 'mercenary', team: 'enemy', x: 2, y: 5, hp: 100 },
+    ]);
+    const [fleer, ally, f1, f2] = units as [Unit, Unit, Unit, Unit];
+    fleer.addEffect(status('panic'));
+    f1.addEffect(status('panic'));
+    f2.addEffect(status('panic'));
+    if (middle.panicked === true) ally.addEffect(status('panic'));
+    return { world, fleer, ally };
+  }
+
+  it('swaps with the steady rear ally (the fellow panickers are ineligible)', () => {
+    const { world, fleer, ally } = rout();
+    const p = new MovementBehavior().proposeAction(fleer, world);
+    expect(p).not.toBeNull();
+    expect(p!.action.id).toBe('swap');
+    p!.action.start(fleer, world);
+    expect(fleer.position).toEqual({ x: 0, y: 5 }); // bubbled back…
+    expect(ally.position).toEqual({ x: 1, y: 5 }); // …the fighter steps up
+  });
+
+  it('cowers when the whole rear rank is panicking (no eligible partner)', () => {
+    const { world, fleer } = rout({ panicked: true });
+    expect(new MovementBehavior().proposeAction(fleer, world)).toBeNull();
+  });
+
+  it('never yanks a SUPPORT back into panic range (GP5 owns the healer)', () => {
+    const { world, fleer, ally } = rout({ archetype: 'healer' });
+    ally.behaviors.push(new SupportMovementBehavior());
+    expect(new MovementBehavior().proposeAction(fleer, world)).toBeNull();
+  });
+
+  it('never swaps with a mid-action partner (the 56a doctrine)', () => {
+    const { world, fleer, ally } = rout();
+    const durationTicks = 8;
+    ally.activeAction = {
+      action: new MoveAction(ally.position, { x: 0, y: 7 }, durationTicks),
+      startTick: world.currentTick,
+      finishTick: world.currentTick + durationTicks,
+      phases: [
+        { phase: 'travel', ticks: 4 },
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: 4 },
+      ],
+    };
+    world.claimCell({ x: 0, y: 7 }, ally.id);
+    expect(new MovementBehavior().proposeAction(fleer, world)).toBeNull();
+  });
+
+  it('requires STRICT distance gain: a same-distance neighbor is never a partner', () => {
+    // Corner pin: fleer at (0,0), enemy at (1,1) — no in-bounds cell is
+    // strictly farther, and the adjacent ally at (1,0) is same-distance.
+    // No lateral shuffle: the fleer cowers.
+    const { world, units } = build([
+      { archetype: 'mercenary', team: 'player', x: 0, y: 0, combat: true },
+      { archetype: 'mercenary', team: 'player', x: 1, y: 0 },
+      { archetype: 'mercenary', team: 'enemy', x: 1, y: 1, hp: 100 },
+    ]);
+    const fleer = units[0] as Unit;
+    fleer.addEffect(status('panic'));
+    expect(new MovementBehavior().proposeAction(fleer, world)).toBeNull();
   });
 });
 

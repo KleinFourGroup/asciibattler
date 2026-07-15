@@ -1194,3 +1194,23 @@ explicit `engineEraRetired` flag + doc block per the spec AMENDMENT
 cost line; traces stand as pre-swap history; the consistency test still
 runs. ⚠ The smoke quiet does NOT mean swaps are rare in the wild —
 distribution-level liveness + impact is exactly 56d's measurement.
+
+### 56c — the flee-swap (2026-07-15)
+
+Built as shape-locked: `proposeFlee`'s null branch (retreatCell boxed)
+falls through to `fleeSwapProposal` — an adjacent ally STRICTLY farther
+from the threat, greatest-distance-first with ties to the fixed
+NEIGHBORS order (no RNG). Gates as designed: partner not fleeing
+(`behaviorFlags` — panicker pairs ping-pong) · not support (GP5 owns
+the healer) · plus the 56b structural set (idle/friendly/footprint-1).
+New decision kind `flee_swap` (the `boxed` doc amended — a fleeing
+boxed now also means "no swap partner qualified").
+
+5 tests on a rout geometry (fleer boxed against a full rear rank —
+retreatCell null by construction): the steady-ally bubble-back (the
+fellow panickers are ineligible, which doubles as the not-fleeing-gate
+proof) · whole-rank-panicking cowers · healer never yanked · mid-action
+partner refused · the corner pin proves STRICT distance gain (no
+lateral shuffle). All gates + 220/220 canaries held again — a boxed
+panicker adjacent to a steady idle ally is a narrow intersection in
+fuzz runs; 56d owns the distribution read.

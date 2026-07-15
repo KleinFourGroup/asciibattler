@@ -5,8 +5,9 @@ import type { ActionProposal } from '../Action';
 import { currentTarget } from '../Targeting';
 import { NEIGHBORS, engagementDirective } from '../positioning';
 import { minRangeForArchetype } from '../archetypes';
-import { GROUND, occupiedCells } from '../occupancy';
-import { advance, chebyshev, moveProposal, stepDurationTicks, key } from '../movement';
+import { GROUND, footprintOf, occupiedCells } from '../occupancy';
+import { SWAP_ACTION_ID } from '../actions/SwapAction';
+import { advance, chebyshev, moveProposal, swapProposal, stepDurationTicks, key } from '../movement';
 import { emitMoveDecision } from '../moveDecision';
 import { waitProposal } from '../actions/WaitAction';
 import { retreatCell } from '../effects/reposition';
@@ -48,9 +49,15 @@ export class MovementBehavior implements Behavior {
     }
     if (behavior.movement === 'flee') {
       // Panic. §42a — `boxed` covers both no-retreat-cell and the degenerate
-      // no-threat case (see MoveDecisionKind docs).
+      // no-threat case (see MoveDecisionKind docs). 56c — a boxed fleer first
+      // tries the bubble-back swap (proposeFlee's fallback); the decision
+      // record distinguishes it (`flee_swap`) so panic churn stays attributable.
       const flee = proposeFlee(unit, world);
-      emitMoveDecision(world, unit, flee === null ? 'boxed' : 'flee');
+      if (flee === null) {
+        emitMoveDecision(world, unit, 'boxed');
+        return null;
+      }
+      emitMoveDecision(world, unit, flee.action.id === SWAP_ACTION_ID ? 'flee_swap' : 'flee');
       return flee;
     }
     if (behavior.movement === 'wander') {
@@ -138,18 +145,73 @@ export class MovementBehavior implements Behavior {
 /**
  * 28 — panic FLEE: a one-cell step that STRICTLY increases distance from the
  * nearest enemy, reusing the gambit's `retreatCell` primitive (away-from-anchor,
- * tie-broken toward open space). Abstains when no enemy exists or the unit is
- * boxed in (`retreatCell` null → cower in place). Score 1, like every move.
+ * tie-broken toward open space). 56c — when boxed (`retreatCell` null: no FREE
+ * cell increases distance), fall through to the bubble-back swap before
+ * cowering in place. Abstains when no enemy exists or nothing qualifies.
+ * Score 1, like every move.
  */
 function proposeFlee(unit: Unit, world: World): ActionProposal | null {
   const threat = nearestEnemy(unit, world);
   if (threat === null) return null;
   const dest = retreatCell(unit, threat.position, world);
-  if (dest === null) return null;
+  if (dest === null) return fleeSwapProposal(unit, threat.position, world);
   return moveProposal(
     unit.position,
     dest,
     stepDurationTicks(world, dest, unit.derived.moveCooldownTicks),
+  );
+}
+
+/**
+ * 56c — the flee-swap (the shape-locked user heuristic, worklog §56): a BOXED
+ * fleeing unit bubbles backward by swapping with an adjacent ally standing
+ * STRICTLY farther from the threat. The exchange is mutually agreeable — the
+ * fleer gains distance, the displaced FIGHTER is handed a step toward the
+ * enemy it already wanted — which is exactly why the two eligibility gates
+ * are load-bearing:
+ *
+ *   - **Partner not itself fleeing** — two panickers ping-pong (each swap
+ *     hands the partner a step toward the threat it also fears).
+ *   - **Partner not support** — a healer displaced into panic range
+ *     immediately retreats back through the fleer (same churn), and the
+ *     healer's yielding already lives in its GP5 `blockedAlly` machinery.
+ *     Kind literal (module cycle — see `swapThroughProposal`'s twin note).
+ *
+ * Plus the structural gates shared with 56b: idle partner only (the 56a
+ * doctrine), friendly, footprint-1 both sides. Candidate choice is
+ * deterministic: greatest distance-from-threat wins, ties to the fixed
+ * `NEIGHBORS` scan order (no RNG in movement — the standing ban).
+ */
+function fleeSwapProposal(
+  unit: Unit,
+  threatPos: GridCoord,
+  world: World,
+): ActionProposal | null {
+  if (footprintOf(unit) !== 1) return null;
+  let best: Unit | null = null;
+  let bestDist = chebyshev(unit.position, threatPos); // must STRICTLY gain distance
+  for (const [dx, dy] of NEIGHBORS) {
+    const c: GridCoord = { x: unit.position.x + dx, y: unit.position.y + dy };
+    const d = chebyshev(c, threatPos);
+    if (d <= bestDist) continue;
+    const partner = world.units.find(
+      (u) => u.id !== unit.id && u.currentHp > 0 && u.position.x === c.x && u.position.y === c.y,
+    );
+    if (partner === undefined) continue;
+    if (partner.team !== unit.team) continue; // never swap with an enemy (or a wall)
+    if (partner.activeAction !== null) continue; // 56a: idle partners only
+    if (footprintOf(partner) !== 1) continue;
+    if (behaviorFlags(partner.effects).movement === 'flee') continue; // panicker pairs ping-pong
+    if (partner.behaviors.some((b) => b.kind === 'support_movement')) continue; // GP5 owns the healer
+    best = partner;
+    bestDist = d;
+  }
+  if (best === null) return null;
+  return swapProposal(
+    unit.position,
+    best.position,
+    best.id,
+    stepDurationTicks(world, best.position, unit.derived.moveCooldownTicks),
   );
 }
 

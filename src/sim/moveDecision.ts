@@ -36,6 +36,11 @@ import type { World } from './World';
  *                     the LAST RESORT of the blocked cascade (§45b wait →
  *                     E5.B sidestep → this), so it's corridor-shaped by
  *                     construction.
+ *   - `flee_swap`   — 56c: the boxed panic bubble-back — a fleeing unit with
+ *                     no free retreat cell swaps with an adjacent idle,
+ *                     non-fleeing, non-support ally standing strictly
+ *                     farther from the threat (the displaced fighter gains
+ *                     a step it already wanted — no ping-pong).
  *   - `wait`        — the DELIBERATE hold, a first-class `WaitAction`
  *                     proposal, from two families of site: §44b's in-acting-
  *                     range holds (firing band / heal range, holding to act —
@@ -62,6 +67,8 @@ import type { World } from './World';
  *   - `boxed`          — wanted an away/scatter step (flee / wander / the
  *                        healer's panic-retreat) and no cell qualified; also
  *                        the degenerate no-anchor cases those helpers fold in.
+ *                        Since 56c a fleeing `boxed` also means no flee-swap
+ *                        partner qualified (the swap probe runs first).
  *   - `frozen`         — a status (`preventsMove`) roots the unit.
  */
 export const MOVE_DECISION_KINDS = [
@@ -72,6 +79,7 @@ export const MOVE_DECISION_KINDS = [
   'wander',
   'yield_swap',
   'swap_through',
+  'flee_swap',
   'wait',
   'queue',
   'no_route',

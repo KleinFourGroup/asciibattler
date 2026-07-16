@@ -1644,3 +1644,36 @@ player-team only (the enemy stays engine-driven; game-theoretic
 nesting deliberately out of scope — §58 may revisit) · budget: local
 batches ≤ ~1hr, the heavy tier moves to the box; the 57h close may be
 an overnight-batch affair, accepted in advance.
+
+### 57d — the clone seam + the micro-benchmark (2026-07-16)
+
+[rollout.ts](src/bot/rollout.ts): divergence at the DATA level — the
+wire snapshot's two RNG fields re-seeded as independent forks of the
+`rolloutSeed` stream BEFORE `fromJSON`; World itself untouched, live
+world never mutated, fresh bus per clone. The foresee-the-rolls test
+was written FIRST and keeps a CONTROL case: a plain toJSON→fromJSON
+clone DOES share the live streams (documents the hazard the seam
+exists for — v34 serializes both streams by the A2 design). Five
+co-located pins: guard (+control) · live-world purity · same-seed
+byte-identity (the CRN contract's foundation) · different-seed
+divergence · bus isolation.
+
+**The driver-state-carry card resolved to a NO-OP** (the H2 rule —
+the predicted work's absence, explained): v1 rollouts apply ONE
+candidate command and tick; no script evaluation happens inside a
+horizon, so the live driver's counters can't matter to a clone. The
+landing note (if a later design runs scripts mid-rollout, carry
+`lastCommandTick`/`standingScriptId`) lives in the rollout.ts header.
+
+**The benchmark (`npx tsx tests/fuzz/benchRollout.ts`, committed as a
+re-runnable instrument):** clone **0.07 ms** (16 units mid-battle —
+the JSON-round-trip fear was unfounded; the dedicated `World.clone()`
+optimization is NOT needed, the no-premature-abstraction receipt) ·
+**~94k clone-ticks/sec** incl. cloning · projection ~4 ms/search at
+the v2 dials (4 candidates × K=2), ~40 ms/battle at 10 searches.
+⚠ Floor-cost caveats ON RECORD: sword-merc comp only (no casters/
+statuses/projectiles — real battles tick slower) and rollouts end
+early in a melee comp, so ticks/sec is the honest unit and the true
+in-situ multiplier gets measured at 57f (which sizes the 57f2 box).
+Even at 10× pessimism the ≤1hr local budget holds; the box's value
+concentrates in the heavy 57g arms + the 57h close.

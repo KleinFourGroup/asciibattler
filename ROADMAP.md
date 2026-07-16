@@ -374,8 +374,8 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
   (BALANCE §57-gate); **user VERDICT: BUILD** (outcome c — worklog §57)
 - [x] 57c — the design round ✅ 2026-07-16 — v2 shape user-locked (the
   VPS reframe: compute forks → 57g box arms); worklog §57c
-- [ ] 57d — the clone seam: snapshot-clone + RNG divergence on BOTH
-  streams + the clone/tick micro-benchmark; foresee-the-rolls FIRST
+- [x] 57d ✅ 2026-07-16 — seam + guard/purity/CRN pins (5 tests); bench:
+  clone 0.07ms · ~94k clone-ticks/s (floor caveat — worklog §57d)
 - [ ] 57e — the rollout evaluator: terminal material + end bonus + HP
   fractions, ties→null; CRN K-forks; the propose-regardless
   `nominate()` seam; crafted-world tests

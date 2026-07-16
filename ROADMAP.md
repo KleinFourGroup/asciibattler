@@ -321,10 +321,10 @@ risk) · NO snapshot bump, v34 holds · unjam's fate = §57's re-ask input.
   two-sided protocol: deferred flip (§36b twin) + pre-flip partner
   reserve + ranged YIELD above ability score + swap-before-sidestep
   ✅ 2026-07-15 — all gates/canaries held; worklog §56c2
-- [ ] 56d — the FULL re-baseline: fuzz + gauntlet board + `npm run
-  pathing` + the PATHING.md append; drift gates predicted to HOLD
-  un-relaxed; `baseline.test.ts` re-pins deliberate, receipts in the
-  commit note
+- [x] 56d — the FULL re-baseline: fuzz + gauntlet board + `npm run
+  pathing` + PATHING.md append; drift gates predicted to HOLD un-relaxed;
+  re-pins deliberate with receipts ✅ 2026-07-15 — ceiling UP every arm;
+  gates held, fixtures identical → NO re-pins; BALANCE/PATHING/worklog §56d
 - [ ] 56e — native browser verify + the labyrinth doctrine spot-check
 
 **Exit criteria:** the swap rules live + co-located tests (headless-first;

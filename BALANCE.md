@@ -1024,3 +1024,79 @@ deltas. The pre-X H7c→O log lives at
   - **boss confirms content** (powerΔ bg −5.0, commands at −8.3 — the
     human commands hardest while already losing); alpha-funnel commands
     are the opening scramble (jam 0.01→0.50 in the first ticks).
+
+- **2026-07-15 — §56d THE FULL RE-BASELINE: the swap engine (56a–56c2)
+  measured at distribution level — the ceiling MOVED UP on every arm.**
+  §56 changed the movement engine (role-order swap-through · flee-swap ·
+  the 56c2 two-sided protocol: deferred flip / pre-flip partner reserve /
+  ranged YIELD at score 12 / swap-before-sidestep); every gate stayed
+  quiet through the build because the pathing fixtures are same-role.
+  This entry is the deliberate read. Movement-quality tables:
+  [PATHING.md](PATHING.md) §56d (fixtures byte-identical → NO re-pins;
+  `yield_swap` live at last-resort mass; labyrinth doctrine intact).
+
+  **The fixed-vector probe (§46b/§55-pre protocol, `55pre-vector.json`,
+  120 runs/arm, scripts OFF — the passive anchor; comparators = the §55
+  OFF arms on the same seeds/vector):**
+
+  | arm | §55 OFF (pre-swap) | §56d (post-swap) | Δ win rate |
+  |---|---|---|---|
+  | fixed vector, in-sample | 27.5% (avgHop 8.03) | 40.0% (8.32) | **+12.5** |
+  | fixed vector, held-out | 38.3% (8.04) | 40.8% (7.84) | **+2.5** |
+  | greedy, in-sample | 12.5% (7.45) | 19.2% (7.38) | **+6.7** |
+
+  All three arms UP, hangs 0 everywhere (also 0 across the 20-seed
+  default sweep — no new deadlock mode). ⭐ **The §55 in-vs-held spread
+  COLLAPSED** (27.5/38.3 → 40.0/40.8): what read as "an anomalously hot
+  held-out seed set" at §55 was substantially traffic-jam variance the
+  sorting effect smoothed out. ⚠ The §55-pre vector-staleness caveat
+  carries: absolute levels aren't §48g-comparable; the pre/post delta on
+  the SAME vector+seeds is the read. Outputs: `tests/fuzz/output/56d-*`.
+
+  **The gauntlet board (all 11 cells × 3 seeds × none/random/scripts;
+  STANDARD roster, pool damage taken; comparators = §53e.2 none/random +
+  §54i/§55-final scripts; CSV refreshed):** ⚠ the none rows NO LONGER
+  reproduce §53e.2 — that is the measurement, not a validity break: the
+  engine changed, and **this board supersedes §53e.2/§54i as the cell
+  anchor for §57+.**
+
+  | cell | none 53e.2→56d | random 53e.2→56d | scripts 54i/55→56d |
+  |---|---|---|---|
+  | alpha-funnel | 12.7→10.0 | 12.0→10.0 (2/3→3/3) | 10.7→8.0 |
+  | alpha-spiral | 8.7→10.7 ⚠ (3/3→2/3) | 9.3→12.0 ⚠ (3/3→2/3) | 7.3→13.3 ⚠ |
+  | artillery-funnel | 0.3→4.3 ⚠ | 0.0→2.0 | 1.3→4.0 |
+  | junction-elite | 16.3→14.0 | 10.7→10.0 (1/3→2/3) | 18.0→14.0 |
+  | unjam-corridors | 4.0→2.7 | 2.3→0.7 | 3.0→4.3 |
+  | fire-edge | 10.7→9.3 (2/3→3/3) | 9.0→13.3 ⚠ (3/3→2/3) | 5.7→8.0 ⚠ |
+  | choke-isthmus | 0.0→0.0 | 0.0→0.0 | 0.0→0.0 |
+  | stall-spiral | 4.0→3.3 | 2.0→2.0 | 0.0→0.0 |
+  | focus-river | 0.0→0.0 | 6.3→6.3 | 0.0→0.0 |
+  | unjam-labyrinth | 0.0→0.0 (ticks −29%, deaths 10→5) | 4.3→0.0 ⭐ (deaths 33→12) | 0.0→0.0 |
+  | boss-fortress | 19.3→20.0 (0/3) | 24.7→20.7 (0/3) | 20.7→20.0 (0/3) |
+
+  - **⭐ The traffic cells improve SCRIPT-FREE — the swap engine does part
+    of unjam's job passively.** unjam-labyrinth random 4.3→0.0 with
+    deaths 33→12 (the §53g-pre "labyrinth punishes bad traffic orders"
+    read has softened — the maze self-sorts); the none arm crosses it
+    29% faster (1660→1177 ticks, deaths 10→5); unjam-corridors down on
+    both non-script arms; junction-elite better on ALL arms (scripts
+    18.0→14.0 — §54's one made-it-worse cell is off that list; random
+    now clears 2/3).
+  - **⚠ The spiral cells regress on the board** (alpha-spiral up on all
+    three arms, two clears slip 3/3→2/3; scripts 7.3→13.3 is the worst)
+    — while spiralFireLife IMPROVES in full runs (per-wave 67.2→70.4 on
+    the fixed-in pair; §55-pre's other named layouts: desertFortress
+    76.5→80.8, fetidPond 78.5→70.6 with the survivor-composition
+    confound — runs live longer, deeper waves enter the sample). This is
+    the §55 cell-Goodhart shape with the sign REVERSED, and the doctrine
+    holds unchanged: **the cell board never arbitrates global tuning —
+    the full-run anchor governs, and it is up.** The spiral cell rows +
+    the fire-edge scripts drift (5.7→8.0: edge-hold was calibrated on
+    pre-swap movement) go on record as §57/§58 inputs, not §56 actions.
+  - **artillery-funnel none 0.3→4.3:** the §53e.2 "fresh-team-only
+    threat?" note re-opens — faster front arrival re-exposes the
+    catapult wave (ticks 1587→2006). At-band for a normal (≈3), filed
+    for §57.
+  - **Boss wall unchanged** (~20, 0/3 on every arm) — the content wall
+    stands exactly as §52 diagnosed; §60 owns the verdict. Gradient
+    intact: 0.0–20.7 span, killers still killers.

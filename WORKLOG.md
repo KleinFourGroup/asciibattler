@@ -1296,3 +1296,47 @@ visible and prominent sorting effect." The 56e formal close still rides
 after 56d (labyrinth doctrine eyeball + the full-board verify), but the
 mechanic itself is user-confirmed on the live renderer. Session handed
 off at the 56d boundary (context budget); the cursor carries the state.
+
+### 56d — the FULL re-baseline (2026-07-15)
+
+Measurement, not build — the deliberate distribution read the whole
+phase deferred (every gate/canary stayed quiet through 56a–56c2 because
+the pathing fixtures are same-role comps where no swap can fire).
+Pre-flight green first (2165 + 1 skip / 143 files, typecheck clean),
+then six instruments: the 20-seed default sweep, the three fixed-vector
+probe arms (§46b/§55-pre protocol, `55pre-vector.json`, 120 runs/arm,
+scripts OFF), the full gauntlet board (11 cells × 3 seeds ×
+none/random/scripts, CSV refreshed), and `npm run pathing`.
+
+**The headline (BALANCE §56d): the swap engine raised the full-run
+ceiling on every arm** — fixed-in +12.5 (27.5→40.0), fixed-held +2.5
+(38.3→40.8), greedy +6.7 (12.5→19.2), hangs 0 everywhere. Second-order:
+the §55 in-vs-held spread (27.5/38.3) collapsed to 40.0/40.8 — the "hot
+held-out seed set" was substantially traffic-jam variance the sort
+smoothed. The gauntlet traffic cells improved SCRIPT-FREE (labyrinth
+random 4.3→0.0, deaths 33→12; junction better on all arms) — the swap
+engine does part of unjam's job passively.
+
+**The movement tables (PATHING §56d):** fixtures byte-identical to §45d
+→ `baseline.test.ts` pins HELD, NO re-pin (the "deliberate re-pins"
+card resolved to identity — the receipt is the reproduced rows, exactly
+the H2-rule shape: the predicted side effect's absence means the work
+is measurement-only); all drift gates held un-relaxed; `yield_swap`
+live at last-resort mass (≤2 per team-seed vs advance/queue in the
+hundreds); `swap_through`/`flee_swap` zero in shipped 3+2 comps (the
+cascade resolves via the ranged unit's own yield first — liveness of
+those kinds is proven by their unit tests + the 56b/56c geometries, not
+by these comps). ⚠ Labyrinth doctrine RE-CHECKED and intact: ttfc
+491/491/489, ticks mixed-direction (935/880/723 vs 864/893/843) — the
+maze is still the maze; traffic sorts inside it.
+
+**Findings that go forward (not §56 actions):** the spiral cells
+regress on the board (alpha-spiral up on all three arms) while
+spiralFireLife improves in full runs — the §55 cell-Goodhart shape with
+the sign reversed; doctrine unchanged, full-run anchor governs. Filed
+as §57/§58 inputs: the spiral rows, fire-edge scripts 5.7→8.0
+(edge-hold calibrated on pre-swap movement), artillery-funnel none
+0.3→4.3 (the "fresh-team-only threat?" note re-opens). Boss wall
+unchanged (~20, 0/3) — §60 owns it. **The 56d board supersedes
+§53e.2/§54i as the cell anchor for §57+**; scripts stay opt-in per the
+§55 verdict.

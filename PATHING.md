@@ -1293,3 +1293,84 @@ addressed, the School-2/3 gate decided NO on measured data, and the
 balance consequence measured and accepted. Next: the Cluster 3 (Economy)
 kickoff — a fresh session that authors the Economy roadmap from the
 META-ROADMAP brief and archives ROADMAP.md → `archive/post-41-roadmap.md`.
+
+---
+
+## 56d — the §56 swap-engine re-baseline (vs the frozen §45d tables) — 2026-07-15
+
+The first append since the audit round closed, per this file's header: §56
+(56a hardening · 56b role-order swap-through · 56c flee-swap · 56c2 the
+two-sided protocol — deferred flip, pre-flip partner reserve, ranged YIELD,
+swap-before-sidestep) is an ENGINE round, and every gate/canary stayed
+quiet through the build because the fixtures are same-role comps where no
+swap can fire. This entry is the deliberate distribution read. Companion
+distribution numbers (fixed-vector probe + the gauntlet board) live in
+[BALANCE.md](BALANCE.md) §56d — this entry owns the movement-quality
+tables.
+
+### Fixtures (seed-invariant) — BYTE-IDENTICAL, the re-pin receipt
+
+All four §45d fixture rows reproduce EXACTLY (headline metrics and
+decision mixes; same-role comps — no swap-eligible pairing exists).
+**`baseline.test.ts` exact pins HELD with NO re-pin needed; every
+drift/cooperation/close-out gate in `drift.test.ts` HELD un-relaxed.**
+The receipt for "re-pins deliberate" is identity, not a shifted pin.
+
+### Shipped layouts (real battles, seeds 100–102)
+
+| map | seed | ticks | ttfc | lat drift P/E | net dx P/E | osc P/E | zigzag P/E | moves P/E | A*/100t |
+|---|---|---|---|---|---|---|---|---|---|
+| river | 100 | 313 | 69 | 0.12 / -0.46 | -0.40 / -0.20 | 0.029 / 0.057 | 0.171 / 0.114 | 35 / 35 | 62 |
+| river | 101 | 268 | 78 | 0.01 / -0.15 | -0.80 / 0.60 | 0.000 / 0.000 | 0.034 / 0.042 | 29 / 24 | 127 |
+| river | 102 | 316 | 71 | 0.85 / -0.85 | -1.00 / -0.60 | 0.071 / 0.075 | 0.143 / 0.175 | 28 / 40 | 61 |
+| isthmus | 100 | 475 | 158 | 0.06 / -0.72 | -0.20 / 1.00 | 0.000 / 0.000 | 0.086 / 0.056 | 35 / 36 | 64 |
+| isthmus | 101 | 391 | 169 | 0.54 / -0.71 | -0.20 / 1.60 | 0.000 / 0.000 | 0.059 / 0.050 | 34 / 40 | 87 |
+| isthmus | 102 | 460 | 156 | 0.03 / 0.20 | -0.20 / 0.40 | 0.000 / 0.000 | 0.059 / 0.050 | 34 / 40 | 66 |
+| labyrinth | 100 | 935 | 491 | -2.93 / 1.69 | 4.60 / -6.20 | 0.074 / 0.020 | 0.159 / 0.124 | 189 / 202 | 331 |
+| labyrinth | 101 | 880 | 491 | 1.49 / -1.35 | 6.20 / -5.60 | 0.035 / 0.052 | 0.139 / 0.162 | 201 / 191 | 201 |
+| labyrinth | 102 | 723 | 489 | -1.56 / 1.56 | -4.60 / 7.80 | 0.023 / 0.020 | 0.131 / 0.111 | 175 / 199 | 261 |
+| endlessCorridors | 100 | 659 | 222 | 1.67 / -0.69 | 2.00 / 0.20 | 0.052 / 0.038 | 0.129 / 0.152 | 116 / 132 | 92 |
+| endlessCorridors | 101 | 580 | 225 | -1.24 / 1.22 | 0.20 / -2.80 | 0.046 / 0.070 | 0.111 / 0.174 | 108 / 115 | 146 |
+| endlessCorridors | 102 | 657 | 225 | -1.79 / 3.08 | 2.00 / 2.40 | 0.103 / 0.057 | 0.206 / 0.158 | 126 / 158 | 162 |
+| procedural | 100 | 325 | 71 | -0.68 / -0.59 | -1.00 / 0.80 | 0.000 / 0.040 | 0.139 / 0.160 | 36 / 25 | 42 |
+| procedural | 101 | 330 | 71 | 3.34 / -3.56 | 2.40 / 4.20 | 0.024 / 0.050 | 0.244 / 0.150 | 41 / 40 | 76 |
+| procedural | 102 | 289 | 69 | 0.81 / -0.97 | -1.00 / -0.80 | 0.000 / 0.000 | 0.138 / 0.042 | 29 / 24 | 43 |
+
+(Decision-mix tables regenerable via `npm run pathing`; the mix headline
+is reading 1 below — `yield_swap` is on the board.)
+
+**Readings:**
+
+1. **`yield_swap` is LIVE at exactly last-resort mass.** The new decision
+   kind appears on river s101 (P 1), labyrinth (1–2 per team on all three
+   seeds), and endlessCorridors s101/s102 (1 each) — single digits against
+   advance/queue masses in the hundreds, the same order as sidestep. This
+   is the 56c2 design intent measured: a rare unstick, not a new movement
+   mode. `swap_through` and `flee_swap` masses are ZERO in these comps —
+   the cascade resolves melee-behind-ranged via the ranged unit's OWN
+   yield poll before the melee-side last-resort probe is ever reached
+   (and 3+2 comps rarely box a panicker against a steady rear rank).
+2. **Which rows moved:** river s101, labyrinth ×3, endlessCorridors
+   s101/s102. Which didn't: river s100/s102, isthmus ×3, procedural ×3,
+   endlessCorridors s100 — byte-identical to §45d. Movement changes are
+   confined to the battles where a yield actually fired (plus its
+   downstream RNG ripple); the engine is inert where no jam exists.
+3. **⚠ Labyrinth doctrine re-check: the slow maze SURVIVES.** ttfc
+   491/491/489 (§45d: 491/491/477) — the approach length is untouched.
+   Ticks 935/880/723 vs 864/893/843: mixed direction, not a systematic
+   shortcut — s102 resolves 120 ticks faster (the sort paying off in the
+   endgame), s100 71 slower. Queue/wait masses stay the dominant
+   contention story. The maze is still the maze; the traffic sorts
+   INSIDE it.
+4. **endlessCorridors s101 −163 ticks** (743 → 580) with oscillation
+   DOWN on both teams (0.053/0.057 → 0.046/0.070 worst-axis stable) —
+   one yield unjammed the enemy column's approach lane.
+5. **Gates, itemized:** shipped-river ttfc 69/78/71 (bound ≤ 120) ·
+   riverFork osc 0.087 (≤ 0.5) · riverFork move mass 23/19 (≤ 100) ·
+   corridor throughput 0.75/1.50 (floors) · drift/dx gates all inside
+   bounds. Nothing relaxed, nothing re-pinned.
+6. **The distribution verdict lives in BALANCE §56d:** fixed-vector
+   +12.5 in / +2.5 held / +6.7 greedy (all arms up, 0 hangs), the
+   gauntlet traffic cells improve script-free, the spiral cells regress
+   on the board while spiralFireLife improves in full runs (the §55
+   cell-Goodhart shape, reversed sign — the full-run anchor governs).

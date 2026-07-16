@@ -1142,3 +1142,51 @@ deltas. The pre-X H7c→O log lives at
     probe is an INSTRUMENT (§52 — bot-anchored absolutes are fiction).
     Whether the ceiling cost changes anything is the user's 56e call; §57's
     re-ask gate re-runs this protocol and accumulates the evidence.
+
+- **2026-07-16 — §57-GATE (the re-ask): static scripts lose-or-tie on ALL
+  FOUR pairings post-swap; the −14.2 pathology is GONE but nothing beats
+  OFF; unjam = post-swap dead weight; spiral = the lone repeated villain.**
+  Method: the §55-pre protocol on the post-swap engine (`55pre-vector.json`,
+  120 runs/arm, `--per-layout`), widened per the reopen with a THIRD seed
+  set (`--seed-offset=10000`) so no verdict carries the hot-seed asterisk.
+  **Determinism spot-check first (the 55d precedent):** the OFF fixed-in
+  arm re-run at HEAD reproduced `56e-pre-fixed-in` BYTE-IDENTICALLY (all
+  three CSVs) — the 56e-pre anchors are valid, and 56e-pre2's
+  "event-emission-only, no outcome change" claim is proven at distribution
+  scale, not just asserted. Scripts ran AS-IS (§55-final state; the kickoff
+  staleness caveat applies — a regression reads "stale static scripts
+  regress," NOT "scripts are worthless").
+
+  | arm | scripts OFF | scripts ON | Δ win rate |
+  |---|---|---|---|
+  | fixed vector, in-sample (1–120) | 33.3% | 30.8% | −2.5 |
+  | fixed vector, held-out (5001–5120) | 30.8% | 30.0% | −0.8 |
+  | fixed vector, third (10001–10120) | 37.5% | 33.3% | −4.2 |
+  | greedy, in-sample | 18.3% | 18.3% | 0.0 |
+
+  Paired same-seed flips (win→loss / loss→win): 29/26 · 22/21 · 27/22 ·
+  16/16 — near-symmetric churn everywhere (§55's held-out was 30/12,
+  systematically negative; that pathology did not survive the swap engine).
+  Hangs 0 on every arm.
+  - **The unjam leave-one-out (fixed-in, the new `--scripts=<spec>` CLI
+    seam):** minus-unjam **32.5%** (≈ the OFF 33.3) · only-unjam **31.7%**
+    (worse than nothing). The 55b shape, inverted by the engine: unjam
+    carried most layouts pre-swap (55c2); post-swap it is dead weight —
+    the engine self-sorts (56d's "does part of unjam's job passively"
+    prediction, now measured). The other four scripts together ≈ −0.8.
+  - **Per-layout: spiralFireLife is negative in ALL FOUR pairings**
+    (−9.2 / −2.9 / −9.8 / −14.4) — the deserters/edge-hold residual (55b,
+    55c1's cutoff bell) is THE surviving named failure. The old villains
+    resolved: desertFortress +4.6 in-sample (unjam's boss harm gone with
+    unjam's value); fetidPond flat everywhere (the 55a barrier split
+    holding). Other negatives (labyrinth/icebergs on fixed-in) do NOT
+    replicate across seed sets — churn, not signal.
+  - **The gate read for the STOP (user verdict pending):** static
+    triggers don't flip the default on the new engine either — the §55 NO
+    generalizes, now on three seed sets. The residual persists (bot 33–37%
+    vs the human ~80% class); the question this phase exists to measure —
+    rollout ARBITRATION (triggers demoted to nomination, the null-arm
+    floor) — remains unmeasured. NO-BUILD-outcome (a)/(b) conditions did
+    not materialize; outcome (c) BUILD is the assistant read. ⚠ OFF
+    absolute levels span 30.8–37.5 across seed sets — the §55-pre
+    seed-variance note stands; deltas carry the finding.

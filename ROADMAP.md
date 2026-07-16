@@ -369,12 +369,12 @@ OPEN for 57c: horizon/window · K · cadence · nomination · clone budget.
 
 **The cut (shape-locked 2026-07-16; audit + rationale in worklog §57):**
 
-- [ ] 57a — re-ask gate 1: OFF determinism spot-check at HEAD (56e-pre
-  anchors reusable iff byte-identical) + three scripts-ON arms (fixed-
-  in/held/greedy-in, `55pre-vector.json`, 120/arm, `--per-layout`) +
-  unjam LOO (CLI grows a `--scripts` subset spec)
-- [ ] 57b — re-ask gate 2: the third seed set (`--seed-offset=10000`,
-  ON + OFF) → BALANCE §57-gate; **STOP — user verdict** (NO-BUILD legal)
+- [x] 57a — re-ask gate 1 ✅ 2026-07-16 — OFF spot-check byte-identical
+  (anchors valid); ON arms + unjam LOO on record (unjam = post-swap
+  dead weight); `--scripts=<spec>` seam = `4d93ee2`; BALANCE §57-gate
+- [ ] 57b — re-ask gate 2: third-set numbers on record (OFF 37.5 / ON
+  33.3 — BALANCE §57-gate); **STOP — user verdict PENDING** (NO-BUILD
+  legal)
 - [ ] 57c — (contingent) the design round + second shape-lock: horizon/
   scoring window · K · cadence · nomination · clone-cost budget
 - [ ] 57d — the clone seam: snapshot-clone + RNG divergence on BOTH

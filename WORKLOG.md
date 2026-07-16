@@ -1545,3 +1545,33 @@ or §46a-shape NO) + unjam leave-one-out AT the gate. Cut and rule:
 ROADMAP §57. Instrument note for the LOO: the harness's
 `trafficScripts` already accepts a registry array (the 54a seam); only
 the CLI needs a subset spec — a small instrument commit, parity-tested.
+
+### 57a + 57b — the re-ask gate runs (2026-07-16)
+
+Sequential batches (the 47e no-edits-under-a-live-capture rule
+observed: the `--scripts=<spec>` instrument commit, `4d93ee2`, landed
+in the quiet window between the primary arms and the LOO arms;
+fuzz:smoke 226/226 run manually — the hook trigger doesn't watch
+`tests/fuzz/`). The OFF determinism spot-check reproduced
+`56e-pre-fixed-in` byte-identically on all three CSVs — the anchors
+are valid at HEAD, and 56e-pre2's event-emission-only claim is now
+PROVEN at distribution scale rather than argued from the diff.
+
+**The numbers: BALANCE §57-gate.** The shape in one breath: the §55
+−14.2 held-out pathology did not survive the swap engine (paired flips
+near-symmetric on all four pairings), but static scripts still
+lose-or-tie everywhere (−2.5 / −0.8 / −4.2 / 0.0); the unjam LOO
+inverted 55b — minus-unjam ≈ OFF, only-unjam worse than nothing, so
+unjam is post-swap dead weight exactly as 56d predicted; and
+spiralFireLife is the ONLY layout negative in all four pairings (the
+deserters residual, still alive, still trigger/arbitration-class). The
+old villains (desertFortress boss harm, fetidPond mud-as-fire) are
+resolved or flat.
+
+**Where this leaves the STOP:** outcome (a) (static ON beats OFF —
+flip default, close NO-BUILD) did not materialize; outcome (b)
+(residual gone) did not either — the bot sits at 33–37% against the
+human ~80% class. The assistant read is outcome (c) BUILD: every
+surviving failure is the class rollout arbitration dissolves, and the
+arbitration question remains unmeasured — which is the phase's charter.
+The user's verdict is pending; 57b's box stays open until it lands.

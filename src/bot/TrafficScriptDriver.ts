@@ -50,6 +50,17 @@ import { attritionStall } from './scripts/attritionStall';
 export interface TrafficScript {
   readonly id: string;
   evaluate(world: World, team: ObjectiveTeam): TeamObjective | null;
+  /**
+   * 57e — the propose-regardless variant for the audition-everyone arm
+   * (a 57g box A/B): propose whenever geometrically meaningful, IGNORING
+   * the go/no-go threshold — under rollout arbitration the threshold's
+   * job (deciding) belongs to the search, so a looser nominator only
+   * costs an audition, never a wrong action. OPTIONAL — absent, the
+   * searcher nominates via `evaluate()` (the §57c v1 lock). No script
+   * implements it yet; the seam lands with the evaluator so the 57g arm
+   * needs no interface surgery. Same purity contract as `evaluate`.
+   */
+  nominate?(world: World, team: ObjectiveTeam): TeamObjective | null;
 }
 
 /**

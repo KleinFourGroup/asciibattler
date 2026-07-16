@@ -376,9 +376,9 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
   VPS reframe: compute forks → 57g box arms); worklog §57c
 - [x] 57d ✅ 2026-07-16 — seam + guard/purity/CRN pins (5 tests); bench:
   clone 0.07ms · ~94k clone-ticks/s (floor caveat — worklog §57d)
-- [ ] 57e — the rollout evaluator: terminal material + end bonus + HP
-  fractions, ties→null; CRN K-forks; the propose-regardless
-  `nominate()` seam; crafted-world tests
+- [x] 57e ✅ 2026-07-16 — evaluator (terminal material + end bonus, HP
+  fractions) + the `nominate()` seam; 5 pins incl. discrimination
+  (advance-and-wipe > stand-off on a crafted world); worklog §57e
 - [ ] 57f — the searcher driver + the mutually-exclusive harness arm;
   byte-identical no-op parity (the 54a shape)
 - [ ] 57f2 — the measurement box: VPS + cross-machine byte-identity

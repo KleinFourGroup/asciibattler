@@ -1677,3 +1677,34 @@ early in a melee comp, so ticks/sec is the honest unit and the true
 in-situ multiplier gets measured at 57f (which sizes the 57f2 box).
 Even at 10× pessimism the ≤1hr local budget holds; the box's value
 concentrates in the heavy 57g arms + the 57h close.
+
+### 57e — the rollout evaluator + the nominate() seam (2026-07-16)
+
+[evaluator.ts](src/bot/evaluator.ts): `evaluateCandidate(live, team,
+command|null, {horizonTicks, rolloutSeeds})` — one clone per CRN seed,
+command enqueued (null = the null arm: no command, current
+trajectory), H ticks or battle end, TERMINAL score averaged. Score =
+(enemy material lost) − (own material lost) + end bonus: material in
+HP-FRACTION units (Σ hp/maxHp over living units — "score +2.0" reads
+"two full units ahead"); `WIN_BONUS = 100` dominant by construction
+over any achievable material swing; winner INFERRED from terminal
+state (living units over an emptied opponent; anything else ended =
+draw — covers `resolveAsDraw` and double-KO), no bus subscription —
+derived reads only, per the scope guard. Ties→NULL, hysteresis, and
+cadence deliberately NOT here — 57f's domain; the evaluator returns
+exact numbers only.
+
+The `nominate?()` seam landed on `TrafficScript` (optional, no script
+implements it yet): the propose-regardless variant the 57g
+audition-everyone arm needs — under rollout arbitration a looser
+nominator costs an audition, never a wrong action. Absent ⇒ the
+searcher nominates via `evaluate()` (the v1 lock).
+
+Five pins, the DISCRIMINATION case the headline: three mercs vs one
+HOLDING enemy across the map — the null arm (advance-and-wipe, end
+bonus in the score) beats a player `hold` (stand-off, |score| < 1),
+first try. Plus determinism (exact-equal re-evaluation), HP-fraction
+accounting (half-HP unit = 0.5), the mean-aggregation contract
+(evaluate([a,b]) = mean of singles — CRN comparability rests on it),
+and the empty-seed-list throw. fuzz:smoke 226/226 manual (src/bot
+untouched by the hook trigger).

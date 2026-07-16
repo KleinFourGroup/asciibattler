@@ -1440,3 +1440,29 @@ emits NOTHING · metrics revert-both case. Renderer stays eyeball-only
 near-unreachable live, which is why it hid). TODO.md gains the
 reconciliation-sweep follow-up (cheap self-heal + dev-warn reporter;
 compositor sized only if the warn ever fires).
+
+### §56 CLOSE (2026-07-16)
+
+**User verdict: close it out** — the 56e native passes happened
+continuously through the arc (the 56c2 field report, the "visible and
+prominent sorting effect" confirm, the 56e-pre sighting, the 56e-pre2
+desync catch), and the final call closes the phase with the FULL-WINDOW
+reserve KEPT (the ceiling read accepted as instrument noise vs design
+correctness — the user's ruling, on record at BALANCE §56e-pre).
+
+Exit criteria, checked: swap rules live + co-located tests ✅ (56a–56c2,
+oscillation + chain-jam explicit) · gates re-derived deliberately with
+receipts ✅ (fixtures byte-identical TWICE — the receipt was identity;
+nothing relaxed) · the FULL re-baseline on record ✅ (BALANCE §56d +
+§56e-pre; PATHING §56d + §56e-pre) · browser-verified natively ✅ ·
+the 53g fidelity break acknowledged ✅ (56b, `engineEraRetired`).
+
+**What the phase leaves behind:** the engine self-sorts (yield_swap live
+at last-resort mass; unjam's job partially passive now — §57's re-ask
+input) · the 56e-pre BALANCE board + probe (33.3/30.8/18.3) = the
+CURRENT anchors for §57+ · the ⚠ NO-new-human-fixtures freeze LIFTS at
+this close (new fixtures record the new engine era) · filed forward:
+spiral cells (§57/§58) · fire-edge scripts drift · artillery-funnel
+wake-up · the renderer reconciliation sweep (TODO). Two feel-test
+catches the gate suite structurally couldn't see (56e-pre, 56e-pre2)
+— the eyeball-only render policy carried its weight both times.

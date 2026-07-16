@@ -325,7 +325,7 @@ risk) · NO snapshot bump, v34 holds · unjam's fate = §57's re-ask input.
   the partner reserve pre-flip → FULL window ✅ 2026-07-15 — worklog §56e-pre
 - [x] 56e-pre2 — (inserted; 56e caught a sprite/sim desync) `unit:swapAborted`,
   the two-body settle on flip-less swap ends ✅ 2026-07-15 — worklog §56e-pre2
-- [ ] 56e — native browser verify + the labyrinth doctrine spot-check
+- [x] 56e — native verify + labyrinth spot-check ✅ 2026-07-16 — user close; full-window KEPT; worklog §56 close
 
 **Exit criteria:** the swap rules live + co-located tests (headless-first;
 oscillation + chain-jam explicit); drift/baseline gates re-derived

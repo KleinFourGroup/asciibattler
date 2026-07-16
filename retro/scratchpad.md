@@ -57,3 +57,20 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   engage), and "artillery" by capability needed reach 6, not 4
   (reach-5 casters are everywhere). Mine the data before hardcoding
   the introspection.
+
+## §56 close (2026-07-16)
+
+- **User feel tests caught TWO bugs the entire gate suite structurally
+  could not see** (56e-pre: the mid-window partner re-grab — the chain
+  test cleared activeAction at the flip, conflating "flip landed" with
+  "window over"; 56e-pre2: the flip-less-swap sprite desync — the render
+  layer has no tests BY POLICY). Pattern for test authoring: when an
+  action has a WINDOW with an interior boundary (flip), test the state
+  BETWEEN boundary and finish, not just before/after. And the eyeball-only
+  render policy's cost surfaced as "unreproducible one-glimpse sightings"
+  — the TODO reconciliation-sweep (self-heal + dev-warn) is the cheap
+  instrument that would convert those into named, logged offsets.
+- **Cell boards are volatile at 3-seed granularity under engine changes**
+  (the 56e-pre board moved in both directions from a half-window timing
+  shift; ~42% of probe seeds flipped outcome). The §55 cell-Goodhart
+  doctrine held its second test: probes arbitrate, cells attribute.

@@ -1466,3 +1466,82 @@ spiral cells (§57/§58) · fire-edge scripts drift · artillery-funnel
 wake-up · the renderer reconciliation sweep (TODO). Two feel-test
 catches the gate suite structurally couldn't see (56e-pre, 56e-pre2)
 — the eyeball-only render policy carried its weight both times.
+
+## Phase 57 — Rung 2 proper: portfolio rollout search
+
+### Kickoff: the code-reality audit + shape-lock (2026-07-16)
+
+**The audit (surfaces as they exist at `a06ee8b`), seven load-bearing
+facts:**
+
+1. **The clairvoyance hazard is REAL and confirmed at the source.**
+   `World.toJSON()` serializes BOTH RNG streams verbatim (`rng` +
+   `combatRng`, World.ts ~2137) — by design, for save/load determinism;
+   the snapshot round-trip tests assert byte-identical futures BECAUSE
+   of it. A naive rollout clone therefore foresees the live battle's
+   exact future rolls, and nothing anywhere calls `fork()` post-
+   `fromJSON` today. 57d's divergence seam + foresee-the-rolls test are
+   load-bearing, not ceremony.
+2. **The clone primitive exists and is proven MID-battle.**
+   `snapshot-roundtrip.test.ts` round-trips mid-move (deferred position
+   + held claim), mid-heal, mid-charge, mid-wind-up, mid-dash, and
+   asserts trace-identical resumes. v34 carries `activeAction`, claims,
+   cooldowns, `pendingCommands`. Rollout plumbing is a seam on a proven
+   base.
+3. **Two counters live OUTSIDE the world snapshot:** the driver's
+   `lastCommandTick` + `standingScriptId` (TrafficScriptDriver.ts ~111,
+   deliberately unserialized). A rollout clone must carry them or the
+   rolled-forward driver diverges from what the live one would do.
+4. **The sensor-audit decision point resolves at zero cost:** every 54b
+   sensor is a pure function of serialized state by construction (the
+   54b header explicitly rejected event-history reads), incl. the 54h
+   contact gate `armiesInContact`. Scripts hold no cross-tick state.
+   All rollout-compatible as-is.
+5. **No rollout/lookahead machinery exists anywhere** — evaluator,
+   searcher, and RNG-divergence seam are all fresh build. The driver is
+   harness-only ("nothing shipped calls it"), so the DEV-only scope
+   guard holds structurally.
+6. **The clone-cost flag for 57c:** a clone today is
+   `fromJSON(JSON.parse(JSON.stringify(toJSON())))` — per candidate ×
+   per rollout × per re-search, that round-trip is the compute hot
+   spot; budget is an explicit 57c design item.
+7. **Anchor-reuse caveat:** the OFF anchors were measured at `880901e`;
+   56e-pre2 (event-emission only) landed after. The 55d precedent
+   applies — reuse the OFF arms only after a byte-identity spot-check
+   at HEAD (57a's first act).
+
+**The retune question (user asked; resolved into the shape):** all
+script triggers were calibrated on pre-swap movement (the 54c table was
+mined from the now era-retired 53g fixture; fire-edge drifted 5.7→8.0
+at 56d). 57a/57b deliberately do NOT retune first — (a) the gate's
+question is "what did the engine change about the existing scripts'
+value," which needs the scripts byte-frozen at §55-final or the delta
+conflates two causes; (b) retuning before measuring is the §55-pre
+mistake in reverse; (c) under rollout arbitration triggers demote to
+nomination, so a stale threshold stops deciding whether a script ACTS —
+possibly dissolving the retune entirely (a 57c fork: if nomination =
+"all scripts always candidates," trigger calibration stops being
+load-bearing). The staleness therefore goes on record as a GATE-READ
+CAVEAT: a scripts-ON regression at the gate reads "stale static scripts
+regress," NOT "scripts are worthless" — it biases the gate away from a
+NO-BUILD close, known going in. If static triggers stay load-bearing
+anywhere (e.g. gate outcome (a) flips the default ON), a retune becomes
+its own step — and the right instrument would be NEW-ERA human fixtures
+(freeze lifted at §56 close), flagged as a user-time decision point,
+not slipped in.
+
+**The gate's three legal outcomes, agreed:** (a) ON beats OFF on all
+sets → the §55 rule finally passes, default flips ON, close NO-BUILD;
+(b) residual gone/negligible → close NO-BUILD; (c) residual persists
+(expected) → build 57c–57h. The user's calibrated expectation on
+record: "whatever plan we come up with for the gate steps is unlikely
+to survive contact with the actual numbers" — the 43-pre/44-pre
+insertion pattern is anticipated, not a failure.
+
+**Shape-locked (user, 2026-07-16):** the 57a–57h cut + the amendments
+(scripts AS-IS at the gate; the 57c calibration fork) + the
+pre-registered BINDING close rule (beat passive on ALL THREE seed sets
+or §46a-shape NO) + unjam leave-one-out AT the gate. Cut and rule:
+ROADMAP §57. Instrument note for the LOO: the harness's
+`trafficScripts` already accepts a registry array (the 54a seam); only
+the CLI needs a subset spec — a small instrument commit, parity-tested.

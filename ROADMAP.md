@@ -358,20 +358,40 @@ DESIGN, not plumbing: horizon vs attrition-stall/choke-hold payoffs,
 evaluation noise under the clairvoyance guard (K-rollout averaging ×
 compute), re-search cadence.
 
-**Decision points:** **the RE-ASK GATE first — a STOP**: the §55-pre
-six-batch protocol re-run post-swap (same fixed vector, wider seed
-protocol) — if swaps alone closed enough, the phase may close NO-BUILD
-(not expected; verified). Then the design round: horizon length + scoring
-window · rollout count K · re-search cadence · candidate nomination rule ·
-the sensor audit vs the derived-reads-only constraint (the 54h contact
-sensor first). Decision rule for the close pre-registered at kickoff,
-§55-style, on BOTH-seed-sets discipline + the third-set upgrade.
+**Decision points — kickoff set ✅ DECIDED (2026-07-16, worklog §57):**
+scripts AS-IS at the gate (staleness = a named caveat; retune → 57c's
+nomination fork) · third seed set `--seed-offset=10000` · unjam LOO at
+the gate (user call) · sensor audit RESOLVED (all derived-state) ·
+**pre-registered BINDING close rule:** default flips to the searcher
+only if it beats passive on ALL THREE seed sets (in · held-5000 ·
+third-10000); flat-or-negative on ANY ⇒ passive stays, §46a-shape NO.
+OPEN for 57c: horizon/window · K · cadence · nomination · clone budget.
+
+**The cut (shape-locked 2026-07-16; audit + rationale in worklog §57):**
+
+- [ ] 57a — re-ask gate 1: OFF determinism spot-check at HEAD (56e-pre
+  anchors reusable iff byte-identical) + three scripts-ON arms (fixed-
+  in/held/greedy-in, `55pre-vector.json`, 120/arm, `--per-layout`) +
+  unjam LOO (CLI grows a `--scripts` subset spec)
+- [ ] 57b — re-ask gate 2: the third seed set (`--seed-offset=10000`,
+  ON + OFF) → BALANCE §57-gate; **STOP — user verdict** (NO-BUILD legal)
+- [ ] 57c — (contingent) the design round + second shape-lock: horizon/
+  scoring window · K · cadence · nomination · clone-cost budget
+- [ ] 57d — the clone seam: snapshot-clone + RNG divergence on BOTH
+  streams + driver-state carry; the foresee-the-rolls test FIRST
+- [ ] 57e — the rollout evaluator: one candidate × H ticks × pool
+  differential; deterministic K-forks; crafted-world tests
+- [ ] 57f — the searcher driver + the mutually-exclusive harness arm;
+  byte-identical no-op parity (the 54a shape)
+- [ ] 57g — cell-scale spot-checks (gauntlet arm; the spiral/fire-edge/
+  artillery §56 inputs) + IN-SAMPLE-ONLY iteration (the 55d lesson)
+- [ ] 57h — the close re-measure under the pre-registered rule (all
+  three sets) → BALANCE §57; scripts-arm default resolved; close
 
 **Exit criteria:** either the re-ask closes the phase with numbers on
-record, or the searcher ships behind the harness flag with the
-clairvoyance guard proven (a foresee-the-rolls test), the re-measure on
-record in BALANCE.md under the pre-registered rule, and the scripts-arm
-default resolved by that rule.
+record, or: the searcher ships behind the harness flag, the clairvoyance
+guard proven (foresee-the-rolls), the re-measure on record in BALANCE.md
+under the pre-registered rule, the scripts-arm default resolved.
 
 **Scope guards:** the clairvoyance guard is NON-NEGOTIABLE; anchors
 frozen; NO RL/imitation, NO raw action-space search (standing non-goals);

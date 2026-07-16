@@ -128,14 +128,18 @@ describe('SwapAction (deferred, 56c2)', () => {
     const third = spawn(w, 4, 5); // NOT the named partner — a usurper
     const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, 999, 10);
     seatSwap(w, mover, action, 10);
-    const aborts: GameEvents['unit:moveAborted'][] = [];
-    bus.on('unit:moveAborted', (e) => aborts.push(e));
+    const aborts: GameEvents['unit:swapAborted'][] = [];
+    bus.on('unit:swapAborted', (e) => aborts.push(e));
 
     action.applyEffect(mover, w, 5);
 
     expect(mover.position).toEqual({ x: 5, y: 5 }); // stayed home
     expect(third.position).toEqual({ x: 4, y: 5 }); // untouched
-    expect(aborts).toEqual([{ unitId: mover.id, from: { x: 5, y: 5 }, to: { x: 4, y: 5 } }]);
+    // 56e-pre2 — the TWO-body abort: both parties' true cells, so the
+    // renderer settles both sprites (the partner began the dual lerp too).
+    expect(aborts).toEqual([
+      { unitA: mover.id, unitB: 999, cellA: { x: 5, y: 5 }, cellB: { x: 4, y: 5 } },
+    ]);
     expect(mover.activeAction).toBeNull(); // lockout released for the retry
     expect(mover.actionCooldowns.get('swap')).toBe(0); // cooldown reset
   });
@@ -151,14 +155,54 @@ describe('SwapAction (deferred, 56c2)', () => {
     seatMove(w, other, { x: 3, y: 5 }, 4);
     const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, other.id, 10);
     seatSwap(w, mover, action, 10);
-    const aborts: GameEvents['unit:moveAborted'][] = [];
-    bus.on('unit:moveAborted', (e) => aborts.push(e));
+    const aborts: GameEvents['unit:swapAborted'][] = [];
+    bus.on('unit:swapAborted', (e) => aborts.push(e));
 
     action.applyEffect(mover, w, 5);
 
     expect(mover.position).toEqual({ x: 5, y: 5 });
     expect(other.position).toEqual({ x: 4, y: 5 }); // its own move still owns it
     expect(aborts).toHaveLength(1);
+  });
+
+  it('56e-pre2: removing the actor PRE-FLIP emits the two-body abort (death mid-window)', () => {
+    // The 56e labyrinth desync's likeliest trigger: the actor is killed
+    // inside the swap's first half. The flip will never fire, but BOTH
+    // sprites began the dual lerp at start — removeUnit must tell the
+    // renderer (and the pathing metrics) to settle the partner back.
+    const bus = new EventBus<GameEvents>();
+    const w = makeWorld(bus);
+    const actor = spawn(w, 5, 5);
+    const partner = spawn(w, 4, 5);
+    const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, partner.id, 10);
+    seatSwap(w, actor, action, 10); // pre-flip: offset 0 < travel 5
+    const aborts: GameEvents['unit:swapAborted'][] = [];
+    bus.on('unit:swapAborted', (e) => aborts.push(e));
+
+    w.removeUnit(actor.id);
+
+    expect(aborts).toEqual([
+      { unitA: actor.id, unitB: partner.id, cellA: { x: 5, y: 5 }, cellB: { x: 4, y: 5 } },
+    ]);
+    expect(partner.position).toEqual({ x: 4, y: 5 }); // never moved logically
+  });
+
+  it('56e-pre2: removing the actor POST-FLIP emits nothing (the exchange landed)', () => {
+    const bus = new EventBus<GameEvents>();
+    const w = makeWorld(bus);
+    const actor = spawn(w, 5, 5);
+    const partner = spawn(w, 4, 5);
+    const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, partner.id, 10);
+    seatSwap(w, actor, action, 10);
+    action.applyEffect(actor, w, 5); // the flip lands; window still open
+    actor.activeAction = { ...actor.activeAction!, startTick: w.currentTick - 5 };
+    const aborts: GameEvents['unit:swapAborted'][] = [];
+    bus.on('unit:swapAborted', (e) => aborts.push(e));
+
+    w.removeUnit(actor.id);
+
+    expect(aborts).toEqual([]); // both sprites already lerp to their true cells
+    expect(partner.position).toEqual({ x: 5, y: 5 }); // the exchange stands
   });
 
   it('round-trips through the action registry', () => {

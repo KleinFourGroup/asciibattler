@@ -1396,3 +1396,47 @@ flat; spiral stays a §57/§58 input). Numbers: BALANCE §56e-pre; tables:
 PATHING §56e-pre. The semantics is the user's design ruling; whether
 the ceiling cost changes anything rides the 56e close — §57's re-ask
 gate re-runs this protocol regardless.
+
+### 56e-pre2 — unit:swapAborted, the two-body settle (2026-07-15, inserted)
+
+**Source: the user's 56e playthrough — a labyrinth unit melee-attacking
+tiles from its true cell after a tab-throttle resume, a hole in the
+frontline where it stood; one glimpse, unreproduced.** Diagnosis from
+code receipts (renderer untouched since Phase 40 — the bug is new EVENT
+shape feeding old renderer code): 56c2's deferred flip introduced
+failure branches (abort at impact; actor removed pre-flip) where the
+exchange never lands — but `onUnitSwapped` starts BOTH sprites' dual
+lerp at `start`, and nothing settles the PARTNER on failure (the abort
+emitted the one-body `unit:moveAborted` naming the actor; actor death
+emitted NOTHING — the flip just never fires). The partner's sprite
+completes a slide the sim never honored and rests on the wrong tile
+until its next absolute-target move re-syncs it — a stationary frontline
+melee never re-syncs. Throttle = amplifier not cause (the resume burst
+packs deaths and swap windows densely); magnitude caveat ON RECORD: one
+failed swap = one cell, compounding requires repeated failures without
+intervening moves, so the user's "several tiles" reading is either
+compounding or a second mechanism — the TODO reconciliation-sweep item
+(dev-warn) is the instrument that would name it.
+
+**Shipped (user call on the event shape — dedicated, not reused):**
+`unit:swapAborted {unitA, unitB, cellA, cellB}` — the failure is a
+two-body fact, so one first-class event replaces what would have been
+TWO role-swapped `unit:moveAborted` emissions per site (LESS code, not
+more). Emitters: SwapAction's abort branch + `World.removeUnit` (via the
+resurrected pre-flip walk, now `preFlipSwap` — a partner removed
+pre-flip needs nothing, the actor's own flip degrades/aborts; post-flip
+removal needs nothing, the exchange landed). Consumers: BattleRenderer
+(`settleSpriteTo` extracted from the §36c handler; settles BOTH, missing
+handles skipped) + the pathing `MovementMetricsCollector`, which had THE
+SAME one-sided hole (committed both steps at `unit:swapped`, reverted
+only via one-body aborts) — the instrument and the renderer are fixed by
+the same event. Catalog + ARCHITECTURE rows added (unit:swapped's row
+was MISSING since GP5 — backfilled). No state change, no snapshot bump.
+
+**Tests:** abort branch asserts the two-body payload · removeUnit
+pre-flip death emits (+ partner logically unmoved) · post-flip death
+emits NOTHING · metrics revert-both case. Renderer stays eyeball-only
+(the settle reuses the proven §36c lerp; the abort itself is
+near-unreachable live, which is why it hid). TODO.md gains the
+reconciliation-sweep follow-up (cheap self-heal + dev-warn reporter;
+compositor sized only if the warn ever fires).

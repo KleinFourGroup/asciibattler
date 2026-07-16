@@ -32,6 +32,26 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 - [ ] **Mercury coin-flip watch.** The §51 kickoff report ("always got the full redraw for a whole run") closed NOT-REPRODUCIBLE: the engine is proven on the exact live path (a kickoff probe drove 100 ROLLED-mercury runs — 826 gated turns, 44.9% granted, one ≥8-turn all-heads seed), and the user's very next native run behaved. If a future run shows the same streak, grab its seed (`?seed=`) and re-probe on the rolled path before touching the engine — the "Idol of Mercury is silent" denial line (PreTurnScreen) is the tell to watch for. Detail: WORKLOG.md §51 kickoff (2026-07-11).
 
+- [ ] **Renderer position-reconciliation sweep (self-heal + REPORT sprite/sim
+  desyncs).** The 56e labyrinth desync (a sprite resting tiles from its
+  logical cell, fixed at 56e-pre2 via `unit:swapAborted`) showed the failure
+  class exists: the renderer maintains derived position state via
+  event-driven lerps with NO reconciliation, so any missed/unhonored slide
+  desyncs a sprite until its next absolute-target move. The cheap tier:
+  each frame, any sprite with NO active animator entry whose position
+  disagrees with its unit's logical cell beyond an epsilon gets the §36c
+  settle-lerp — plus a DEV-mode `console.warn` naming the unit and offset,
+  which turns unreproducible one-glimpse sightings into logged data (the
+  user's "several tiles off" report couldn't be confirmed at 1-cell-per-
+  failure; a warn would have named the real offset). Guard: only reconcile
+  when the animator holds nothing for the handle (never fight a lunge/
+  shove/slide). The full tier — sprite pos = authoritative base derived
+  from sim position + transient offset envelopes (derive-don't-cache for
+  the render layer) — makes desync impossible by construction but is a
+  real SpriteAnimator/BattleRenderer rework in the eyeball-only layer;
+  size it only if the warn ever fires after 56e-pre2. Filed 2026-07-15
+  (user question at the 56e-pre2 diagnosis).
+
 - [ ] **Renderer "queued/waiting" stance — the §44/§46 ship-feel deferral.** Units now WAIT on purpose (§44b's first-class `WaitAction`; §45b queues) and the seam for showing it was planted deliberately: the `unit:waited` event (event-only, [WaitAction.ts](src/sim/actions/WaitAction.ts)) fires once per deliberate hold. A subtle render tell (dim pulse, stance glyph tint, whatever reads at a glance) would let a player SEE "this unit is queueing, not stuck" — the §46 decision point deferred it as pure ship-feel polish. Render-only; no sim/snapshot impact. Natural home: any Cluster-3+ polish rider or the pre-launch pass. Filed at the §46c close-out (2026-07-06).
 
 - [x] **§40a rubble glyph — a true HALF-height look.** Done 2026-07-02, user-confirmed native: the glyph is now `▄` (U+2584 LOWER HALF BLOCK), replacing the `%` stopgap. Detail in git.

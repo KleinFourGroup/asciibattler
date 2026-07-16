@@ -53,8 +53,10 @@ export interface SwapActionData {
  * after a snapshot rehydrate `start` never re-runs — only future
  * `applyEffect` boundaries fire — so the flip is the one place stale state
  * can appear. Partner gone/dead/busy by then → degrade to a plain step when
- * `to` is actually free, else abort (`unit:moveAborted`, swap cooldown
- * reset, lockout released — the §36c abort shape).
+ * `to` is actually free, else abort (`unit:swapAborted` — the TWO-body
+ * settle, 56e-pre2; swap cooldown reset, lockout released — the §36c abort
+ * shape). The sibling failure site is `World.removeUnit`: an actor removed
+ * pre-flip (death mid-window) emits the same event there.
  */
 export class SwapAction implements Action {
   readonly id = SWAP_ACTION_ID;
@@ -101,7 +103,9 @@ export class SwapAction implements Action {
    *   3. `to` still occupied (a busy partner is its own occupant) or
    *      claimed by a third → abort: stay on `from`, release the lockout,
    *      reset the swap cooldown for an immediate retry, and emit
-   *      `unit:moveAborted` so the renderer settles the actor back (§36c).
+   *      `unit:swapAborted` so the renderer settles BOTH sprites (§36c
+   *      shape, two-body since 56e-pre2 — the partner began the dual lerp
+   *      too, and settling only the actor left it desynced).
    */
   applyEffect(unit: Unit, world: World, _tickOffset: number, _phase?: ActionPhaseName): void {
     const other = world.findUnit(this.otherId);
@@ -126,9 +130,18 @@ export class SwapAction implements Action {
     }
 
     // Abort: the §36c shape — cooldown reset for the retry, lockout released.
+    // 56e-pre2: the failure is a TWO-body fact (both sprites began the dual
+    // lerp at `start`), so the dedicated event settles both — emitting the
+    // one-body `unit:moveAborted` here left the partner's sprite resting on
+    // a slide the sim never honored (the 56e labyrinth desync).
     unit.actionCooldowns.set(this.id, 0);
     unit.activeAction = null;
-    world.emit('unit:moveAborted', { unitId: unit.id, from: this.from, to: this.to });
+    world.emit('unit:swapAborted', {
+      unitA: unit.id,
+      unitB: this.otherId,
+      cellA: this.from,
+      cellB: this.to,
+    });
   }
 
   /** No living body (other than `unit`) covers `cell` and no other unit
@@ -182,6 +195,29 @@ export function isReservedSwapPartner(unitId: number, world: World): boolean {
     if ((aa.action as SwapAction).partnerId === unitId) return true;
   }
   return false;
+}
+
+/**
+ * 56e-pre2 — the seated swap on `aa` whose flip has NOT yet fired, else null.
+ * Pre-flip = offset < the tick-sum of the phases before `impact` (the check
+ * the 56e-pre reserve dropped, resurrected for a narrower question).
+ * Consumer: `World.removeUnit` — a participant removed pre-flip (death
+ * mid-window) means the exchange will never land, and the dual lerp both
+ * sprites started at `start` must be settled via `unit:swapAborted`.
+ * Post-flip removal needs nothing: the exchange already landed and both
+ * sprites are lerping toward their true cells.
+ */
+export function preFlipSwap(
+  aa: { action: Action; startTick: number; phases: readonly { phase: string; ticks: number }[] } | null,
+  currentTick: number,
+): SwapAction | null {
+  if (aa === null || aa.action.id !== SWAP_ACTION_ID) return null;
+  let impactOffset = 0;
+  for (const p of aa.phases) {
+    if (p.phase === 'impact') break;
+    impactOffset += p.ticks;
+  }
+  return currentTick - aa.startTick < impactOffset ? (aa.action as SwapAction) : null;
 }
 
 /**

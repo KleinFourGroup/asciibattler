@@ -143,6 +143,26 @@ describe('metric arithmetic (synthetic event streams)', () => {
     expect(m.teams.player.meanNetDx).toBe(0); // both ended where they started
   });
 
+  it('an aborted swap reverts BOTH committed steps (56e-pre2)', () => {
+    // The flip never fired — neither participant moved. Reverting only the
+    // actor's step (the old one-body abort) left the partner's phantom step
+    // in the counts, the instrument mirror of the renderer desync.
+    const m = collect(
+      [
+        { id: 1, team: 'player', x: 0, y: 0 },
+        { id: 2, team: 'player', x: 1, y: 0 },
+        { id: 3, team: 'enemy', x: 5, y: 5 },
+      ],
+      { forward: { player: { x: 1, y: 0 }, enemy: { x: -1, y: 0 } } },
+      (bus) => {
+        bus.emit('unit:swapped', { unitA: 1, unitB: 2, cellA: { x: 0, y: 0 }, cellB: { x: 1, y: 0 }, durationTicks: 1 });
+        bus.emit('unit:swapAborted', { unitA: 1, unitB: 2, cellA: { x: 0, y: 0 }, cellB: { x: 1, y: 0 } });
+      },
+    );
+    expect(m.teams.player.moves).toBe(0);
+    expect(m.teams.player.meanNetDx).toBe(0);
+  });
+
   it('an aborted move is fully reverted (moves, drift, gate, backtrack)', () => {
     const m = collect(
       [

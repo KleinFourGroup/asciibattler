@@ -176,6 +176,7 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
     this.subscriptions.push(bus.on('unit:moveAborted', this.onUnitMoveAborted));
     this.subscriptions.push(bus.on('unit:swapped', this.onUnitSwapped));
+    this.subscriptions.push(bus.on('unit:swapAborted', this.onUnitSwapAborted));
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
     // I2: a dodged single-target strike. The attacker still swung/shot (same
     // triggerAttackVisual lunge/tracer), but a "Miss" floats instead of damage.
@@ -546,14 +547,40 @@ export class BattleRenderer {
    * until §37/§40 can invalidate a claimed destination.
    */
   private onUnitMoveAborted = ({ unitId, from }: GameEvents['unit:moveAborted']): void => {
+    this.settleSpriteTo(unitId, from);
+  };
+
+  /**
+   * 56e-pre2 — a swap ended WITHOUT its flip (abort at the impact boundary,
+   * or a participant removed pre-flip). BOTH sprites began the dual lerp at
+   * swap-start, so both settle back to their true cells — the one-body
+   * `unit:moveAborted` this replaces settled only the actor, leaving the
+   * partner's sprite resting on a slide the sim never honored (the 56e
+   * labyrinth desync: a melee attacking from a tile it wasn't on). A dead
+   * participant's handle is already gone (`unit:died` owns that sprite) —
+   * `settleSpriteTo` skips it.
+   */
+  private onUnitSwapAborted = ({
+    unitA,
+    unitB,
+    cellA,
+    cellB,
+  }: GameEvents['unit:swapAborted']): void => {
+    this.settleSpriteTo(unitA, cellA);
+    this.settleSpriteTo(unitB, cellB);
+  };
+
+  /** The §36c settle: ease the sprite from its LIVE position to `cell`'s rest
+   *  position (single lerp per handle — overrides any in-flight slide). */
+  private settleSpriteTo(unitId: number, cell: GridCoord): void {
     if (!this.world) return;
     const handle = this.handles.get(unitId);
     if (!handle) return;
     const footprint = this.footprintFor(unitId);
-    const restPos = this.unitSpritePos(from, footprint);
+    const restPos = this.unitSpritePos(cell, footprint);
     const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? restPos).clone();
     this.animator.startLerp(handle, origin, restPos, SETTLE_BACK_SECONDS);
-  };
+  }
 
   /**
    * GP5.1 — a swap (`SwapAction`) animates as two simultaneous steps in

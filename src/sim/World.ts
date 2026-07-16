@@ -51,7 +51,7 @@ import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { SpawnAction } from './actions/SpawnAction';
-import { isReservedSwapPartner } from './actions/SwapAction';
+import { isReservedSwapPartner, preFlipSwap } from './actions/SwapAction';
 import { SPAWN } from '../config/spawn';
 /**
  * 27d — the tile→status map. A unit standing on a `fire` tile sustains `burn`;
@@ -1842,7 +1842,29 @@ export class World {
 
   removeUnit(id: number): void {
     const i = this.units.findIndex((u) => u.id === id);
-    if (i >= 0) this.units.splice(i, 1);
+    // 56e-pre2 — a removed unit can't carry an in-flight PRE-FLIP swap: the
+    // exchange will never land, but both sprites already began the 56c2 dual
+    // lerp at `start`, so the abort must be told to the renderer (and the
+    // pathing metrics) as the two-body fact it is. Without this, the
+    // PARTNER's sprite finished a slide the sim never honored and rested on
+    // the wrong tile until its next move (the 56e labyrinth desync). The
+    // sibling failure site is SwapAction.applyEffect's abort branch; a
+    // PARTNER removed pre-flip needs nothing here — the actor's own flip
+    // degrades or aborts when it fires. Post-flip removal also needs
+    // nothing: the exchange landed, both sprites head to their true cells.
+    if (i >= 0) {
+      const swap = preFlipSwap(this.units[i]!.activeAction, this.tickCount);
+      if (swap !== null) {
+        const d = swap.toData();
+        this.bus.emit('unit:swapAborted', {
+          unitA: id,
+          unitB: d.otherId,
+          cellA: d.from,
+          cellB: d.to,
+        });
+      }
+      this.units.splice(i, 1);
+    }
     this.unitsById.delete(id);
     // §36b — a removed unit can't hold an in-flight destination reservation:
     // drop every claim it owns (the "release on reap" half of the claim

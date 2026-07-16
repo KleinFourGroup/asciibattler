@@ -115,10 +115,11 @@ export interface GameEvents extends Record<string, unknown> {
    * swap is one event with shared timing, and because the mechanic is
    * non-obvious — keeping it first-class leaves a clean hook for a future
    * swap-specific cue / VFX / telemetry without conflating it with a normal
-   * step. Today the healer (`SupportMovementBehavior`) is the only emitter and
-   * the renderer the only consumer (it lerps both sprites from their live
-   * positions). A degraded swap (partner gone after a snapshot) falls back to a
-   * plain `unit:moved`.
+   * step. §56 generalized the emitters (the healer's yield, the 56b
+   * swap-through, the 56c flee-swap, the 56c2 ranged yield); consumers: the
+   * renderer (lerps both sprites from their live positions) + the pathing
+   * metrics collector (two committed steps). A degraded swap (partner gone
+   * after a snapshot) falls back to a plain `unit:moved`.
    */
   'unit:swapped': {
     unitA: number;
@@ -126,6 +127,27 @@ export interface GameEvents extends Record<string, unknown> {
     cellA: GridCoord;
     cellB: GridCoord;
     durationTicks: number;
+  };
+  /**
+   * 56e-pre2 — an in-flight swap ended WITHOUT its flip: the `applyEffect`
+   * abort branch fired (`to` occupied/claimed at the impact boundary), or a
+   * participant was removed pre-flip (`World.removeUnit` — death mid-window).
+   * First-class (not two `unit:moveAborted`s) because the failure is a
+   * two-body fact: BOTH sprites began the 56c2 dual lerp at `start`, so both
+   * must settle back to their true cells — `unitA` to `cellA`, `unitB` to
+   * `cellB` (neither ever moved logically). Without this event the PARTNER's
+   * sprite finished a slide the sim never honored and rested on the wrong
+   * tile until its next move re-synced it (the 56e labyrinth desync
+   * sighting). Consumers: BattleRenderer (settles both, missing handles
+   * skipped — a dead participant's sprite is the death anim's) + the pathing
+   * metrics collector (reverts BOTH committed steps — it had the same
+   * one-sided hole). Payload mirrors `unit:swapped` minus the timing.
+   */
+  'unit:swapAborted': {
+    unitA: number;
+    unitB: number;
+    cellA: GridCoord;
+    cellB: GridCoord;
   };
   /**
    * N1 — a `DashAbility` LEAP (a `DashAction`): the unit blinked from `from` to

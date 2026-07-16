@@ -42,7 +42,11 @@
  *   - `unit:dashed` / `unit:shoved` are IGNORED — both also emit `unit:moved`
  *     for the slide, which is the single source counted;
  *   - `unit:moveAborted` REVERTS the matching committed step (the §35b/§36c
- *     abort means the unit never left).
+ *     abort means the unit never left);
+ *   - `unit:swapAborted` (56e-pre2) REVERTS BOTH of the swap's committed
+ *     steps — the flip never fired, so neither participant moved (reusing
+ *     `unit:moveAborted` here would have reverted only the actor's step,
+ *     the renderer's exact one-sided hole mirrored in the instrument).
  *
  * The collector holds no RNG and touches no world state — a run measured
  * twice from the same seed produces identical metrics (pinned in tests).
@@ -191,6 +195,10 @@ export class MovementMetricsCollector {
       this.recordStep(p.unitB, p.cellB, p.cellA);
     });
     bus.on('unit:moveAborted', (p) => this.revertStep(p.unitId, p.from, p.to));
+    bus.on('unit:swapAborted', (p) => {
+      this.revertStep(p.unitA, p.cellA, p.cellB);
+      this.revertStep(p.unitB, p.cellB, p.cellA);
+    });
     bus.on('unit:moveDecision', (p) => {
       const t = this.units.get(p.unitId);
       if (t !== undefined) this.decisionMix[t.team][p.kind]++;

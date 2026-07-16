@@ -307,8 +307,7 @@ risk) · NO snapshot bump, v34 holds · unjam's fate = §57's re-ask input.
 - [x] 56a — the SwapAction hardening (the audit-caught bug, separable +
   first): proposer gates (incl. the healer's `blockedAlly` — a latent
   GP5 hazard) + a no-op branch in `start` for a present-but-in-flight
-  partner; co-located tests (mid-move partner, post-rehydrate shape)
-  ✅ 2026-07-15 — hazard was LIVE (port canary re-pinned 10→12); worklog §56a
+  partner; co-located tests ✅ 2026-07-15 — hazard was LIVE (port canary re-pinned 10→12); worklog §56a
 - [x] 56b — the role-order swap probe in `stepAlongRoute`'s blocked
   branch: melee-passes-ranged (`attackRange` test), partner idle,
   last-resort placement; oscillation/chain-jam/corridor tests
@@ -317,14 +316,15 @@ risk) · NO snapshot bump, v34 holds · unjam's fate = §57's re-ask input.
   partner-not-fleeing + -not-support gates ✅ 2026-07-15 — 5 tests; worklog §56c
 - [x] 56c2 — (inserted; user field report: 3 labyrinth swap bugs) the
   two-sided protocol: deferred flip (§36b twin) + pre-flip partner
-  reserve + ranged YIELD above ability score + swap-before-sidestep
-  ✅ 2026-07-15 — all gates/canaries held; worklog §56c2
+  reserve + ranged YIELD + swap-before-sidestep ✅ 2026-07-15 — gates/canaries held; worklog §56c2
 - [x] 56d — the FULL re-baseline: fuzz + gauntlet board + `npm run
   pathing` + PATHING.md append; drift gates predicted to HOLD un-relaxed;
   re-pins deliberate with receipts ✅ 2026-07-15 — ceiling UP every arm;
   gates held, fixtures identical → NO re-pins; BALANCE/PATHING/worklog §56d
 - [x] 56e-pre — (inserted; the 56e feel test caught a mid-window re-grab)
   the partner reserve pre-flip → FULL window ✅ 2026-07-15 — worklog §56e-pre
+- [x] 56e-pre2 — (inserted; 56e caught a sprite/sim desync) `unit:swapAborted`,
+  the two-body settle on flip-less swap ends ✅ 2026-07-15 — worklog §56e-pre2
 - [ ] 56e — native browser verify + the labyrinth doctrine spot-check
 
 **Exit criteria:** the swap rules live + co-located tests (headless-first;

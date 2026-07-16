@@ -312,11 +312,9 @@ risk) · NO snapshot bump, v34 holds · unjam's fate = §57's re-ask input.
 - [x] 56b — the role-order swap probe in `stepAlongRoute`'s blocked
   branch: melee-passes-ranged (`attackRange` test), partner idle,
   last-resort placement; oscillation/chain-jam/corridor tests
-  ✅ 2026-07-15 — 9 tests; gates/pins/canaries ALL held; 53g fixture
-  retired (engine era, the pre-registered cost); worklog §56b
+  ✅ 2026-07-15 — 9 tests; gates held; 53g retired (engine era); worklog §56b
 - [x] 56c — the flee-swap: the `boxed` fallback in `proposeFlee`;
-  partner-not-fleeing + partner-not-support gates, both tested
-  ✅ 2026-07-15 — all gates/canaries held; 5 tests; worklog §56c
+  partner-not-fleeing + -not-support gates ✅ 2026-07-15 — 5 tests; worklog §56c
 - [x] 56c2 — (inserted; user field report: 3 labyrinth swap bugs) the
   two-sided protocol: deferred flip (§36b twin) + pre-flip partner
   reserve + ranged YIELD above ability score + swap-before-sidestep
@@ -325,6 +323,8 @@ risk) · NO snapshot bump, v34 holds · unjam's fate = §57's re-ask input.
   pathing` + PATHING.md append; drift gates predicted to HOLD un-relaxed;
   re-pins deliberate with receipts ✅ 2026-07-15 — ceiling UP every arm;
   gates held, fixtures identical → NO re-pins; BALANCE/PATHING/worklog §56d
+- [x] 56e-pre — (inserted; the 56e feel test caught a mid-window re-grab)
+  the partner reserve pre-flip → FULL window ✅ 2026-07-15 — worklog §56e-pre
 - [ ] 56e — native browser verify + the labyrinth doctrine spot-check
 
 **Exit criteria:** the swap rules live + co-located tests (headless-first;

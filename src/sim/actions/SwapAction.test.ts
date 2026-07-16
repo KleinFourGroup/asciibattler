@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SwapAction, isPreFlipSwapPartner, isSwappablePartner } from './SwapAction';
+import { SwapAction, isReservedSwapPartner, isSwappablePartner } from './SwapAction';
 import { MoveAction } from './MoveAction';
 import { createAction } from './registry';
 import { World } from '../World';
@@ -142,8 +142,8 @@ describe('SwapAction (deferred, 56c2)', () => {
 
   it('aborts at the flip when the partner is present but mid-action (never relocate in-flight units)', () => {
     // The partner started something mid-window (only reachable post-rehydrate
-    // — live play reserves pre-flip partners via the World.tick skip). Its
-    // own body makes `to` non-free, so the abort branch catches it.
+    // — live play reserves partners for the whole window via the World.tick
+    // skip). Its own body makes `to` non-free, so the abort branch catches it.
     const bus = new EventBus<GameEvents>();
     const w = makeWorld(bus);
     const mover = spawn(w, 5, 5);
@@ -169,8 +169,8 @@ describe('SwapAction (deferred, 56c2)', () => {
   });
 });
 
-describe('the pre-flip partner reserve (56c2)', () => {
-  it('a named partner is reserved pre-flip and free post-flip', () => {
+describe('the swap-partner reserve (56c2; full-window since 56e-pre)', () => {
+  it('a named partner is reserved for the WHOLE window and freed when the action clears', () => {
     const w = makeWorld();
     const actor = spawn(w, 5, 5);
     const partner = spawn(w, 4, 5);
@@ -178,15 +178,22 @@ describe('the pre-flip partner reserve (56c2)', () => {
     seatSwap(w, actor, action, 10);
 
     // Pre-flip (offset 0 < travel 5): reserved.
-    expect(isPreFlipSwapPartner(partner.id, w)).toBe(true);
+    expect(isReservedSwapPartner(partner.id, w)).toBe(true);
     expect(isSwappablePartner(partner, w)).toBe(false);
     // The ACTOR is busy via its own activeAction, not the partner scan.
-    expect(isPreFlipSwapPartner(actor.id, w)).toBe(false);
+    expect(isReservedSwapPartner(actor.id, w)).toBe(false);
     expect(isSwappablePartner(actor, w)).toBe(false);
 
-    // Simulate the flip landing: reseat with the travel boundary in the past.
+    // Post-flip, window still open (travel boundary in the past, finishTick
+    // ahead): STILL reserved — the swap is the partner's action too, and the
+    // renderer's dual lerp is mid-slide (the 56e mid-window re-grab).
     actor.activeAction = { ...actor.activeAction!, startTick: w.currentTick - 5 };
-    expect(isPreFlipSwapPartner(partner.id, w)).toBe(false);
+    expect(isReservedSwapPartner(partner.id, w)).toBe(true);
+    expect(isSwappablePartner(partner, w)).toBe(false);
+
+    // The window closes (the actor's action clears): the reserve drops.
+    actor.activeAction = null;
+    expect(isReservedSwapPartner(partner.id, w)).toBe(false);
     expect(isSwappablePartner(partner, w)).toBe(true);
   });
 });

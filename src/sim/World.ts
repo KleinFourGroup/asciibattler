@@ -51,7 +51,7 @@ import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { SpawnAction } from './actions/SpawnAction';
-import { isPreFlipSwapPartner } from './actions/SwapAction';
+import { isReservedSwapPartner } from './actions/SwapAction';
 import { SPAWN } from '../config/spawn';
 /**
  * 27d — the tile→status map. A unit standing on a `fire` tile sustains `burn`;
@@ -1115,16 +1115,21 @@ export class World {
         }
       }
 
-      // 3.75 (sits between 3 and 3.5 conceptually) — 56c2: a unit named as
-      // the RESERVED PARTNER of someone's in-flight, pre-flip SwapAction is
-      // skipped: it must not start an action the coming flip would invalidate
-      // (a move would corrupt the exchange; an attack would make it
-      // mid-action at relocation — the very thing the swap gates forbid).
-      // Derived fresh per unit (never serialized; an earlier-order unit may
-      // have STARTED the swap this same tick), cheap at real unit counts.
-      // Post-flip the scan clears and the partner acts normally — the GP5
-      // "merely relocated" contract, anchored to the flip.
-      if (unit.activeAction === null && isPreFlipSwapPartner(unit.id, this)) continue;
+      // 3.75 (sits between 3 and 3.5 conceptually) — 56c2/56e-pre: a unit
+      // named as the RESERVED PARTNER of someone's in-flight SwapAction is
+      // skipped for the swap's WHOLE window. Pre-flip it must not start an
+      // action the coming flip would invalidate (a move would corrupt the
+      // exchange; an attack would make it mid-action at relocation — the
+      // very thing the swap gates forbid); post-flip the swap is still ITS
+      // action too — the renderer's dual lerp is mid-slide, and the
+      // flip-anchored release let a half-displaced unit act or be grabbed
+      // by a second swap (the 56e sighting). Derived fresh per unit (never
+      // serialized; an earlier-order unit may have STARTED the swap this
+      // same tick), cheap at real unit counts. The partner still pays no
+      // cooldown — "merely relocated" survives; only the mid-window
+      // freedom is gone. The reserve clears with the actor's action
+      // (finishTick, or the flip's abort branch).
+      if (unit.activeAction === null && isReservedSwapPartner(unit.id, this)) continue;
 
       // 3.5. E5 — refresh the sticky target ONCE per free unit, before
       // behaviors poll. Both MovementBehavior and the strike abilities

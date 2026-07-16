@@ -1340,3 +1340,44 @@ as §57/§58 inputs: the spiral rows, fire-edge scripts 5.7→8.0
 unchanged (~20, 0/3) — §60 owns it. **The 56d board supersedes
 §53e.2/§54i as the cell anchor for §57+**; scripts stay opt-in per the
 §55 verdict.
+
+### 56e-pre — the full-window partner reserve (2026-07-15, inserted)
+
+**Source: the user's 56e feel test — "I thought I saw one swap again
+only halfway through."** Real, deterministic, and designed-in: 56c2
+anchored the partner reserve to the FLIP (`isPreFlipSwapPartner` — "GP5's
+acts-normally-next-tick contract, now anchored to the flip"), so for the
+back half of the window the partner (never seated with an action) passed
+`isSwappablePartner` and re-entered World.tick's selector — grabbable
+for a second swap while the renderer's full-window dual lerp was still
+sliding it. The shipped "one-hop-per-window throttle" was really one hop
+per HALF-window, and the partner could also start attacks/moves post-flip
+— both contrary to the design intent the user stated at the report: the
+swap is fundamentally the partner's action too.
+
+**Why the 56c2 tests missed it:** the chain-jam test cleared the actor's
+`activeAction` at the flip — conflating "flip landed" with "window over"
+— so post-flip-mid-window (activeAction seated, the real World.tick
+shape) was never visited. The repro was written headless FIRST (the
+doctrine paying off again), confirmed the mid-window re-grab, then
+flipped into the regression pin.
+
+**Shipped:** `isPreFlipSwapPartner` → `isReservedSwapPartner` (the name
+must not lie): the impactOffset check dropped — reserved while ANY live
+swap names the unit, seat through finishTick (or the abort branch
+clearing early). Both consumers (World.tick selector skip +
+`isSwappablePartner`) inherit; still fully derived, NO snapshot bump
+(v34 holds). The partner still pays no cooldown — "merely relocated"
+survives; only the mid-window freedom is gone. Chain re-sorts now
+genuinely one hop per window (slower by up to a half-window per hop —
+the user's accepted cost: "swaps are rare, and this even rarer").
+
+**Tests:** the movement.test.ts regression pin (post-flip mid-window →
+M2 queues; window closes → the hop proposes) · the SwapAction reserve
+suite reworked (reserved through the window, freed at clear) · the
+rangedYield World.tick-skip test extended through the back half (flip
+lands, partner still starts nothing). 2166 + 1 skip green; typecheck
+clean (one strict-tsc readonly catch the esbuild path accepted — the
+AGENTS vitest≠tsc note, again); fuzz:smoke 220/220, NO canary flips.
+Distribution re-read (the 56d battery re-run) follows as the same-day
+amendment — 56d's numbers were measured on the half-window engine.

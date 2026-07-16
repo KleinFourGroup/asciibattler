@@ -1093,9 +1093,11 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
 
   it('chain jam: ONE hop per swap window — the reserved partner refuses the second swap', () => {
     // The observed 56c2 bug: instant flips + a free-idle partner let an aMM
-    // column double-swap to MMa within one tick. Now: while M1's swap is
-    // PRE-FLIP, the archer is reserved (isPreFlipSwapPartner) and M2 queues;
-    // only after the flip does the next hop propose.
+    // column double-swap to MMa within one tick. Now: while M1's swap is IN
+    // FLIGHT, the archer is reserved (isReservedSwapPartner) and M2 queues;
+    // only after the WINDOW closes (56e-pre — not merely the flip) does the
+    // next hop propose. This test drives the window-closed path; the
+    // mid-window path is the regression test below.
     const { world, units } = scene([
       { team: 'player', x: 2, y: 5 }, // M2 (rear)
       { team: 'player', x: 3, y: 5 }, // M1
@@ -1137,5 +1139,58 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     p2!.action.applyEffect!(m2!, world, 0);
     expect(m2!.position).toEqual({ x: 3, y: 5 });
     expect(r!.position).toEqual({ x: 2, y: 5 }); // the archer filed to the rear
+  });
+
+  it('56e-pre: post-flip but MID-WINDOW, the partner stays reserved — no re-grab', () => {
+    // The 56e sighting, pinned: M1's activeAction stays SEATED through the
+    // flip (the real World.tick shape: the flip fires at the impact
+    // boundary; the action ends at finishTick). The 56c2 flip-anchored
+    // release made the half-displaced archer — renderer lerp mid-slide —
+    // grabbable for a SECOND swap here. The chain test above cleared
+    // activeAction at the flip, so this state was never visited.
+    const { world, units } = scene([
+      { team: 'player', x: 2, y: 5 }, // M2 (rear)
+      { team: 'player', x: 3, y: 5 }, // M1
+      { team: 'player', x: 4, y: 5, range: 3 }, // R (front)
+      { team: 'enemy', x: 8, y: 5 },
+      ...corridorSpecs(5),
+    ]);
+    const [m2, m1, r, enemy] = units;
+    const intent = {
+      goals: [enemy!.position],
+      approachToward: enemy!.position,
+      excludeUnitId: enemy!.id,
+      maxCells: 1,
+    };
+    const p1 = advance(m1!, world, intent);
+    expect(p1!.action.id).toBe('swap');
+    const total = p1!.phases.reduce((s, p) => s + p.ticks, 0);
+    m1!.activeAction = {
+      action: p1!.action,
+      startTick: world.currentTick,
+      finishTick: world.currentTick + total,
+      phases: p1!.phases,
+    };
+    p1!.action.start(m1!, world);
+    // The flip lands at the impact boundary; backdate startTick so the
+    // derived scan reads elapsed == impactOffset (post-flip). The window is
+    // still OPEN: activeAction remains seated (finishTick not reached).
+    p1!.action.applyEffect!(m1!, world, 0);
+    let impactOffset = 0;
+    for (const p of p1!.phases) {
+      if (p.phase === 'impact') break;
+      impactOffset += p.ticks;
+    }
+    m1!.activeAction = { ...m1!.activeAction!, startTick: world.currentTick - impactOffset };
+    expect(m1!.position).toEqual({ x: 4, y: 5 });
+    expect(r!.position).toEqual({ x: 3, y: 5 });
+    expect(m1!.activeAction).not.toBeNull(); // M1's swap window still running
+    // M2 polls mid-window: the archer stays reserved — M2 queues (blocked),
+    // never overlapping two swap windows on one unit.
+    expect(advance(m2!, world, intent)).toBeNull();
+    // The window closes: the reserve drops and the next hop proposes.
+    m1!.activeAction = null;
+    const p2 = advance(m2!, world, intent);
+    expect(p2!.action.id).toBe('swap');
   });
 });

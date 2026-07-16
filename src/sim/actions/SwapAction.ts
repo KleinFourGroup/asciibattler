@@ -37,11 +37,16 @@ export interface SwapActionData {
  * window (each by one of the pair, before and after the flip).
  *
  * The PARTNER is never seated with an action and pays no cooldown (it is
- * merely relocated, keeping its own cadence) — but while the swap is
- * PRE-FLIP the partner is reserved: `World.tick` skips its selector and
+ * merely relocated, keeping its own cadence) — but for the WHOLE swap
+ * window the partner is reserved: `World.tick` skips its selector and
  * every proposer's `isSwappablePartner` gate refuses it (both via the
- * derived `isPreFlipSwapPartner` scan — no serialized state). That reserve
- * is what throttles a column re-sort to ONE hop per swap window.
+ * derived `isReservedSwapPartner` scan — no serialized state). The swap is
+ * fundamentally the partner's action too (56e-pre): pre-flip it must not
+ * start anything the flip would invalidate, and post-flip it is still
+ * mid-slide on the renderer's full-window dual lerp — releasing it at the
+ * flip let a second swap grab a half-displaced unit (the 56e sighting).
+ * That full-window reserve is what throttles a column re-sort to ONE hop
+ * per swap window, now literally.
  *
  * Validation lives at the FLIP, not at `start`: within a live tick,
  * propose→start is synchronous right after the proposer's own gates, and
@@ -61,7 +66,7 @@ export class SwapAction implements Action {
     private readonly durationTicks: number,
   ) {}
 
-  /** The reserved partner's id — read by the derived pre-flip-partner scan. */
+  /** The reserved partner's id — read by the derived reserved-partner scan. */
   get partnerId(): number {
     return this.otherId;
   }
@@ -80,7 +85,7 @@ export class SwapAction implements Action {
 
   /**
    * 56c2 — the deferred exchange, fired at the `impact` boundary. Three
-   * branches, validated against LIVE state (the pre-flip reserve makes the
+   * branches, validated against LIVE state (the partner reserve makes the
    * happy path a guarantee in live play; the others cover a partner that
    * died mid-window or post-rehydrate staleness):
    *
@@ -155,28 +160,26 @@ export class SwapAction implements Action {
 }
 
 /**
- * 56c2 — is `unitId` the reserved partner of someone's IN-FLIGHT, PRE-FLIP
- * swap? Derived from live `activeAction`s (never serialized, so it survives
- * snapshot resume by construction). Pre-flip = the `impact` boundary hasn't
- * fired yet: offset < the tick-sum of the phases before `impact`. Post-flip
- * the exchange already happened and the partner is free again — GP5's "acts
- * normally next tick" contract, now anchored to the flip.
+ * 56c2/56e-pre — is `unitId` the reserved partner of someone's IN-FLIGHT
+ * SwapAction? Derived from live `activeAction`s (never serialized, so it
+ * survives snapshot resume by construction). The reserve holds for the
+ * WHOLE window — seat through finishTick — not just pre-flip: the swap is
+ * fundamentally the partner's action too, so it neither starts anything
+ * the coming flip would invalidate (pre-flip) nor acts or gets grabbed by
+ * a second swap while the renderer's dual lerp is still sliding it
+ * (post-flip — the flip-anchored release shipped at 56c2 allowed exactly
+ * that mid-window re-grab, the 56e sighting; regression pins in
+ * movement.test.ts + rangedYield.test.ts). The reserve clears when the
+ * actor's action does: finishTick, or the abort branch clearing early.
  *
- * Consumed by `World.tick`'s selector skip (the partner must not start an
- * action the flip would invalidate) and by `isSwappablePartner` (the
- * one-hop-per-window chain throttle).
+ * Consumed by `World.tick`'s selector skip and by `isSwappablePartner`
+ * (the one-hop-per-window chain throttle — window-true since 56e-pre).
  */
-export function isPreFlipSwapPartner(unitId: number, world: World): boolean {
+export function isReservedSwapPartner(unitId: number, world: World): boolean {
   for (const u of world.units) {
     const aa = u.activeAction;
     if (aa === null || aa.action.id !== SWAP_ACTION_ID) continue;
-    if ((aa.action as SwapAction).partnerId !== unitId) continue;
-    let impactOffset = 0;
-    for (const p of aa.phases) {
-      if (p.phase === 'impact') break;
-      impactOffset += p.ticks;
-    }
-    if (world.currentTick - aa.startTick < impactOffset) return true;
+    if ((aa.action as SwapAction).partnerId === unitId) return true;
   }
   return false;
 }
@@ -186,8 +189,9 @@ export function isPreFlipSwapPartner(unitId: number, world: World): boolean {
  * mover-side probe, the ranged yield, the flee-swap, the healer's GP5
  * yield): the partner must be genuinely between actions (`activeAction`
  * null — never relocate anything in flight, whatever its phase shape; the
- * fill-windup lesson) and not already reserved by another in-flight swap.
+ * fill-windup lesson) and not already reserved by another in-flight swap
+ * (for that swap's whole window, 56e-pre).
  */
 export function isSwappablePartner(u: Unit, world: World): boolean {
-  return u.activeAction === null && !isPreFlipSwapPartner(u.id, world);
+  return u.activeAction === null && !isReservedSwapPartner(u.id, world);
 }

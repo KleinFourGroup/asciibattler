@@ -168,11 +168,12 @@ describe('56c2 — the tick-driven corridor drain (the scenario-1 regression)', 
   });
 });
 
-describe('56c2 — the pre-flip partner reserve (World.tick skip)', () => {
-  it('a reserved partner starts NOTHING while the swap is pre-flip', () => {
+describe('56c2/56e-pre — the swap-partner reserve (World.tick skip, full window)', () => {
+  it('a reserved partner starts NOTHING for the WHOLE swap window', () => {
     // The partner would otherwise attack every poll (adjacent enemy). While
-    // the actor's swap is in flight pre-flip, the partner must not start an
-    // action the coming exchange would invalidate.
+    // the actor's swap is in flight the partner must not start an action —
+    // pre-flip it would invalidate the exchange; post-flip (56e-pre) the
+    // swap is still the partner's action too (renderer dual-lerp mid-slide).
     const b = bus();
     const attacks: GameEvents['unit:attacked'][] = [];
     b.on('unit:attacked', (e) => attacks.push(e));
@@ -200,6 +201,15 @@ describe('56c2 — the pre-flip partner reserve (World.tick skip)', () => {
     for (let i = 0; i < 5; i++) world.tick(); // all pre-flip (travel = 10)
 
     expect(partner.activeAction).toBeNull();
+    expect(attacks.filter((a) => a.attackerId === partner.id)).toEqual([]);
+
+    // Through the flip and into the back half of the window (ticks 10–19):
+    // the exchange has landed, but the partner stays reserved to finishTick.
+    for (let i = 0; i < 10; i++) world.tick();
+    expect(actor.position).toEqual({ x: 4, y: 5 }); // the flip DID land
+    expect(partner.position).toEqual({ x: 5, y: 5 });
+    expect(actor.activeAction).not.toBeNull(); // window still open
+    expect(partner.activeAction).toBeNull(); // 56e-pre: still reserved
     expect(attacks.filter((a) => a.attackerId === partner.id)).toEqual([]);
   });
 });

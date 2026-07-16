@@ -1100,3 +1100,45 @@ deltas. The pre-X H7c→O log lives at
   - **Boss wall unchanged** (~20, 0/3 on every arm) — the content wall
     stands exactly as §52 diagnosed; §60 owns the verdict. Gradient
     intact: 0.0–20.7 span, killers still killers.
+
+- **2026-07-15 — §56e-pre RE-MEASURE: the full-window partner reserve — the
+  fixed arms give back part of the 56d ceiling gain; the read is SOFT and
+  the verdict rides the user's 56e close.** The 56e feel test caught a
+  mid-window partner re-grab (the 56c2 reserve released at the FLIP);
+  56e-pre (`880901e`) extends it to the whole window — the designed
+  semantics (the swap is the partner's action too). Same battery, same
+  protocol; movement tables: [PATHING.md](PATHING.md) §56e-pre (fixtures
+  byte-identical AGAIN → no re-pins; all gates held).
+
+  | arm | §55 OFF | 56d half-window | 56e-pre full-window |
+  |---|---|---|---|
+  | fixed vector, in-sample | 27.5% | 40.0% | 33.3% (8.50) |
+  | fixed vector, held-out | 38.3% | 40.8% | 30.8% (8.03) |
+  | greedy, in-sample | 12.5% | 19.2% | 18.3% (7.78) |
+
+  - **Paired same-seed vs 56d:** fixed-in 29 win→loss / 21 loss→win ·
+    fixed-held 32/20 · **~42% of seeds flip outcome entirely** — the nets
+    (−8/−12 runs) ride on churn; sign tests are individually borderline
+    (p≈0.32 / 0.12, jointly ≈0.06). Directionally consistent, statistically
+    soft. Greedy −0.8 = noise. Hangs 0 on all arms + the 20-seed sweep.
+  - **vs PRE-SWAP:** +5.8 in-sample / +5.8 greedy / −7.5 held-out — the
+    engine's gain survives on two of three arms; held-out was §55's
+    flagged-hot seed set (38.3). The 56d spread-collapse SURVIVES
+    (33.3/30.8 stay tight) — the LEVEL dropped, not the stability.
+  - **Probable mechanism (symmetric rule, asymmetric benefit — the §46b
+    shape):** attackers push through terrain and therefore swap more; the
+    reserve taxes each swap up to a half-window of partner tempo, so the
+    pushing side pays more. Consistent with capped draws 12→15 (in) and
+    avg ticks +2–5%.
+  - **The 56e-pre gauntlet board (CSV refreshed):** volatile in both
+    directions at 3-seed granularity — better: artillery-funnel none
+    4.3→0.0 · unjam-corridors none 2.7→0.0 · alpha-funnel random 10.0→7.3;
+    worse: alpha-spiral all arms → 14.0–14.7 (clears 1/3 across) ·
+    junction-elite +3 · unjam-labyrinth none/random 0.0→2.0/3.3. Boss flat
+    (~21, 0/3). Doctrine: cells never arbitrate — the probe carries the
+    read; the spiral row stays a §57/§58 input either way.
+  - **On record, not re-litigated here:** the full-window semantics is the
+    USER'S design ruling (correctness + the visible mid-lerp grab); the
+    probe is an INSTRUMENT (§52 — bot-anchored absolutes are fiction).
+    Whether the ceiling cost changes anything is the user's 56e call; §57's
+    re-ask gate re-runs this protocol and accumulates the evidence.

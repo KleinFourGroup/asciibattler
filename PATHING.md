@@ -1374,3 +1374,31 @@ is reading 1 below — `yield_swap` is on the board.)
    gauntlet traffic cells improve script-free, the spiral cells regress
    on the board while spiralFireLife improves in full runs (the §55
    cell-Goodhart shape, reversed sign — the full-run anchor governs).
+
+---
+
+## 56e-pre — the full-window partner reserve re-measure — 2026-07-15
+
+One engine change after §56d (`880901e` — the swap-partner reserve
+extended from pre-flip to the WHOLE window; the 56e feel test caught the
+mid-window re-grab): the battery re-ran same-day. **Fixtures
+byte-identical to §45d/§56d for the second time — `baseline.test.ts`
+pins HELD, NO re-pin; every `drift.test.ts` gate HELD un-relaxed**
+(river ttfc 69/71/71 ≤ 120 · riverFork osc 0.087 · move mass 23/19 ·
+corridor floors 0.75/1.50). Tables regenerable via `npm run pathing`;
+the §56d entry's tables stay the READ reference — deltas here:
+
+- **Which rows moved vs §56d:** river s101 (268 → 445 ticks — one yield
+  landing at a different moment reshapes the battle; ttfc 78 → 71),
+  labyrinth ×3 (911/932/713 — mixed direction again; ttfc 491×3, the
+  slow-maze doctrine intact), endlessCorridors s101/s102 (marginal).
+  Byte-identical: river s100/s102 · isthmus ×3 · procedural ×3 ·
+  endless s100 — the engine stays inert where no jam exists.
+- **The reserve reads as QUEUE mass, not yield mass:** `yield_swap`
+  stays last-resort (1–3 per team-seed); followers now queue through a
+  swap's full window (labyrinth s100 enemy queue 86 → 526 — one
+  battle's chaos ripple, within every bound).
+- **Distribution read → [BALANCE.md](BALANCE.md) §56e-pre:** the fixed
+  probe arms give back part of the 56d gain (40.0/40.8 → 33.3/30.8,
+  ~42% seed churn, soft significance; greedy flat; 0 hangs); verdict
+  rides the user's 56e close.

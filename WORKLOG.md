@@ -1381,3 +1381,18 @@ clean (one strict-tsc readonly catch the esbuild path accepted — the
 AGENTS vitest≠tsc note, again); fuzz:smoke 220/220, NO canary flips.
 Distribution re-read (the 56d battery re-run) follows as the same-day
 amendment — 56d's numbers were measured on the half-window engine.
+
+**56e-pre re-measure (same day):** the battery re-ran on the full-window
+engine. Fixtures byte-identical (no re-pins, gates held, 0 hangs
+anywhere); the fixed probe arms gave back part of the 56d gain — in
+33.3 (−6.7) / held 30.8 (−10.0) / greedy 18.3 (−0.8) — on ~42% seed
+churn with soft significance (paired 29/21 and 32/20; jointly p≈0.06).
+vs pre-swap the engine keeps +5.8 on both in-sample arms; held-out (the
+§55 flagged-hot seed set) lands −7.5. Probable mechanism: symmetric
+rule, asymmetric benefit (§46b shape) — attackers swap more, and the
+reserve taxes each swap up to a half-window of partner tempo. The
+gauntlet board is volatile both directions at 3-seed granularity (boss
+flat; spiral stays a §57/§58 input). Numbers: BALANCE §56e-pre; tables:
+PATHING §56e-pre. The semantics is the user's design ruling; whether
+the ceiling cost changes anything rides the 56e close — §57's re-ask
+gate re-runs this protocol regardless.

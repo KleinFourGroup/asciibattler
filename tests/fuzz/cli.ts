@@ -84,6 +84,12 @@
  *   # exclusive with --objective per the frozen-anchor contract):
  *   npm run fuzz -- --count=120 --strategy=output/best-strategy.json --scripts
  *
+ *   # 57a — a subset registry for leave-one-out / only-arm A/Bs (minus form
+ *   # subtracts from the standard registry; plain ids select exactly those;
+ *   # grammar + loud-bail validation in scriptSubset.ts):
+ *   npm run fuzz -- --count=120 --scripts=-unjam
+ *   npm run fuzz -- --count=120 --scripts=unjam
+ *
  *   # K3c3 — drive a FIXED redraw policy through the same three modes (default
  *   # none = turn gates stay off, byte-identical baselines). Inline forms
  *   # random:<k> / level:<k> (toss k random / k lowest-level cards per turn;

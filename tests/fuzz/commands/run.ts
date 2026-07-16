@@ -8,6 +8,7 @@
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { runOne } from '../harness';
+import { parseScriptsSpec } from '../scriptSubset';
 import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
@@ -70,6 +71,7 @@ export type RunModeArgs = Pick<
   | 'empower'
   | 'daemon'
   | 'scripts'
+  | 'scriptsSpec'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -118,8 +120,14 @@ export function runRunCli(args: RunModeArgs): void {
   if (coverageFromArgs(args)) harnessOptions = { ...harnessOptions, coverageObjectives: true };
   // §55 pre-gate — `--scripts` drives the §54 traffic-script bot in every
   // battle (the standard registry; exclusivity vs --objective enforced at
-  // parseArgs AND in the harness — the frozen-anchor contract).
-  if (args.scripts) harnessOptions = { ...harnessOptions, trafficScripts: true };
+  // parseArgs AND in the harness — the frozen-anchor contract). 57a — an
+  // optional `=<spec>` value selects a subset registry (leave-one-out arms).
+  if (args.scripts) {
+    harnessOptions = {
+      ...harnessOptions,
+      trafficScripts: args.scriptsSpec !== undefined ? parseScriptsSpec(args.scriptsSpec) : true,
+    };
+  }
   // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =
   // gates off, byte-identical).
   const redraw = redrawFromArgs(args);

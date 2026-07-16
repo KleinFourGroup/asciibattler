@@ -85,6 +85,10 @@ export interface CliArgs {
   // fixed-vector probe); --search/--sweep/--arena bail loudly rather than
   // silently measuring the old bot. Mutually exclusive with --objective.
   scripts: boolean;
+  // 57a — the optional `--scripts=<spec>` subset (leave-one-out / only-arm
+  // registries; grammar + loud-bail validation in scriptSubset.ts). Absent =
+  // the full standard registry, exactly the bare `--scripts` behavior.
+  scriptsSpec?: string;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -209,6 +213,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--scripts':
         args.scripts = true;
+        if (v !== undefined) args.scriptsSpec = v;
         break;
       default:
         if (raw.startsWith('--')) {

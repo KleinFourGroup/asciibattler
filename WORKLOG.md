@@ -1582,3 +1582,65 @@ far outside my normal wheelhouse — give me as much detail on tradeoffs
 as you can, any blind spots"): every fork presented with tradeoffs +
 recommendation, blind spots named, dials provisional until the 57d
 clone/tick micro-benchmark prices them.
+
+### 57c — the design round, v2 SHAPE-LOCKED (user, 2026-07-16)
+
+Two proposal rounds. V1 presented seven forks (horizon · scoring · K ·
+cadence · nomination · the opponent model · the compute budget) plus
+the blind-spot list (the searcher referees, it can't invent · battle
+≠ run optimization · 57g in-sample contamination · absolute win rates
+= the calibration trap). The user pushed on three points and the
+pushback IMPROVED the shape:
+
+1. **The VPS (user float; honest-cost read: genuinely cheap, unlike
+   most floated infra).** Headless Node harness → `git clone && npm
+   ci`; determinism makes remote numbers VERIFIABLE (one batch,
+   byte-compare vs local — a proof most distributed setups never get);
+   the dwm leak (N4's indefinite deferral!) is Windows-compositor-only.
+   Slot: **57f2, after the searcher exists** (real costs size the box)
+   and before 57g's wide measurement. Round infrastructure, not phase
+   infrastructure — §59/§60 inherit it; N4's overnight verify rides.
+   ⭐ The design consequence: the two compute-driven compromises
+   (nomination pre-filter, K=2) convert from LOCKED FORKS into 57g
+   MEASURED A/Bs on the box — the round's instrument-then-decide ethos
+   applied to its own design. Cost named: 57e/57f must build the
+   propose-regardless `nominate()` seam NOW (scripts fuse
+   trigger+proposal; evaluate()→null proposes nothing to roll) so
+   audition-everyone is A/B-able without later surgery. The provider
+   talk (hourly vs flat, host, budget) = a 57f2 education session
+   (user has limited experience here — flagged in advance).
+2. **K=2 discomfort (user statistical instinct).** The teach: with
+   common random numbers K is a PAIRED-comparison sample, not an
+   estimation sample — shared luck cancels (the round's own same-seed
+   methodology, applied inside the searcher); movement is RNG-free by
+   doctrine so rollout variance is combat-rolls only; small-K error
+   concentrates where candidates are near-equal (low regret). The real
+   residual risk = knife-edge coverage (a crit-dependent cascade both
+   shared seeds miss) — a COVERAGE problem, measured directly by the
+   57g K-sensitivity arm (2/4/8, count winner-flips).
+3. **Scoring: "up on pool damage but surrounded" (user).** Named: the
+   horizon-edge problem (the chess horizon effect's cousin). Two v1
+   mitigations already cover most of it — cadence OVERLAP (4s re-search
+   under an 8s horizon: the NEXT search sees the trap inside its
+   window; a re-planning agent's defense that fixed-depth chess lacks)
+   and the battle-end bonus (doom-within-H is watched, not inferred).
+   The residual blind band (doomed-after-H but committed-before) is
+   real → **the 57g scoring investigation**: ONE threat-exposure
+   experiment term built from the EXISTING derived sensors (jamRead /
+   chokeCells / armiesInContact — snapshot-computable, near-free),
+   judged on the spiral isolate (a sharp test: material says hold,
+   right answer is advance). ⚠ Every term carries a λ and a wrong λ is
+   systematic bias at scale, amplified confidently — the chess lesson;
+   λ-fitting bandwidth on 120 in-sample seeds is thin, so the term
+   must EARN the slot. Parked alternative on record: quiescence
+   rolling (score at the next quiet state ≤ H_max) — the classic
+   horizon-effect cure, fiddly in a tick sim, variable cost.
+
+**The v2 locks (ROADMAP §57 decision block):** local dials H=8s ·
+K=2+CRN · cadence 4s + death/contact re-search · ε from 57g ·
+nominate = evaluate()+null+standing · scoring = terminal material +
+end bonus + HP fractions, ties→NULL (the anti-thrash floor) ·
+player-team only (the enemy stays engine-driven; game-theoretic
+nesting deliberately out of scope — §58 may revisit) · budget: local
+batches ≤ ~1hr, the heavy tier moves to the box; the 57h close may be
+an overnight-batch affair, accepted in advance.

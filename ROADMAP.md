@@ -342,30 +342,28 @@ new human fixtures until this lands.
 
 ## Phase 57 — Rung 2 PROPER: portfolio rollout search — UN-PARKED 2026-07-15
 
-**Charter:** the original Rung-2 charter, un-parked: portfolio greedy
-search — clone via snapshot, roll each candidate script forward, score by
-pool differential, commit the winner — with the **null arm** as the
-structural floor and triggers demoted to nomination. The §55 NO answered
-the static-trigger question; this phase measures the arbitration question
-it never tested (spec AMENDMENT "Why reopen").
+**Charter:** portfolio greedy search, un-parked: clone via snapshot,
+roll each candidate forward, score, commit the winner — null arm = the
+floor, triggers demoted to nomination. The §55 NO answered static
+triggers; this measures ARBITRATION (spec AMENDMENT "Why reopen").
 
 **Why here / dependencies:** strictly after §56 (searches the post-swap
 portfolio). Consumes §54's scripts, §53's instruments, §55's probe
 protocol + `55pre-vector.json`.
 
-**Risk:** **High** — the reopened core surgery. The hard part is rollout
-DESIGN, not plumbing: horizon vs attrition-stall/choke-hold payoffs,
-evaluation noise under the clairvoyance guard (K-rollout averaging ×
-compute), re-search cadence.
+**Risk:** **High** — the reopened core surgery; the hard part is rollout
+DESIGN (horizon vs slow payoffs · evaluation noise · cadence), priced by
+the 57d clone/tick micro-benchmark before the dials lock.
 
-**Decision points — kickoff set ✅ DECIDED (2026-07-16, worklog §57):**
-scripts AS-IS at the gate (staleness = a named caveat; retune → 57c's
-nomination fork) · third seed set `--seed-offset=10000` · unjam LOO at
-the gate (user call) · sensor audit RESOLVED (all derived-state) ·
-**pre-registered BINDING close rule:** default flips to the searcher
-only if it beats passive on ALL THREE seed sets (in · held-5000 ·
-third-10000); flat-or-negative on ANY ⇒ passive stays, §46a-shape NO.
-OPEN for 57c: horizon/window · K · cadence · nomination · clone budget.
+**Decision points — kickoff + 57c sets ✅ DECIDED (2026-07-16, worklog
+§57):** scripts AS-IS at the gate · third seed set `--seed-offset=10000`
+· unjam LOO at the gate · sensors RESOLVED (all derived-state) ·
+**pre-registered BINDING close rule:** the searcher becomes default only
+if it beats passive on ALL THREE seed sets; flat-or-negative on ANY ⇒
+passive stays, §46a-shape NO · **57c v2 (user-locked):** local dials
+H=8s · K=2+CRN · cadence 4s + death/contact re-search · ε from 57g ·
+nominate = evaluate()+null+standing · scoring = terminal material +
+end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
 
 **The cut (shape-locked 2026-07-16; audit + rationale in worklog §57):**
 
@@ -374,28 +372,31 @@ OPEN for 57c: horizon/window · K · cadence · nomination · clone budget.
   dead weight); `--scripts=<spec>` seam = `4d93ee2`; BALANCE §57-gate
 - [x] 57b — re-ask gate 2 ✅ 2026-07-16 — third set OFF 37.5 / ON 33.3
   (BALANCE §57-gate); **user VERDICT: BUILD** (outcome c — worklog §57)
-- [ ] 57c — (contingent) the design round + second shape-lock: horizon/
-  scoring window · K · cadence · nomination · clone-cost budget
+- [x] 57c — the design round ✅ 2026-07-16 — v2 shape user-locked (the
+  VPS reframe: compute forks → 57g box arms); worklog §57c
 - [ ] 57d — the clone seam: snapshot-clone + RNG divergence on BOTH
-  streams + driver-state carry; the foresee-the-rolls test FIRST
-- [ ] 57e — the rollout evaluator: one candidate × H ticks × pool
-  differential; deterministic K-forks; crafted-world tests
+  streams + the clone/tick micro-benchmark; foresee-the-rolls FIRST
+- [ ] 57e — the rollout evaluator: terminal material + end bonus + HP
+  fractions, ties→null; CRN K-forks; the propose-regardless
+  `nominate()` seam; crafted-world tests
 - [ ] 57f — the searcher driver + the mutually-exclusive harness arm;
   byte-identical no-op parity (the 54a shape)
-- [ ] 57g — cell-scale spot-checks (gauntlet arm; the spiral/fire-edge/
-  artillery §56 inputs) + IN-SAMPLE-ONLY iteration (the 55d lesson)
+- [ ] 57f2 — the measurement box: VPS + cross-machine byte-identity
+  proof + parallel batch runner (sized from 57f; N4's verify rides)
+- [ ] 57g — cell spot-checks + IN-SAMPLE-ONLY iteration + the box arms:
+  audition-everyone A/B · K-sensitivity (2/4/8 winner-flips) · the
+  scoring investigation (threat-exposure term; quiescence parked)
 - [ ] 57h — the close re-measure under the pre-registered rule (all
   three sets) → BALANCE §57; scripts-arm default resolved; close
 
-**Exit criteria:** either the re-ask closes the phase with numbers on
-record, or: the searcher ships behind the harness flag, the clairvoyance
-guard proven (foresee-the-rolls), the re-measure on record in BALANCE.md
-under the pre-registered rule, the scripts-arm default resolved.
+**Exit criteria:** the searcher ships behind the harness flag, the
+clairvoyance guard proven (foresee-the-rolls), the re-measure on record
+in BALANCE.md under the pre-registered rule, the default resolved.
 
-**Scope guards:** the clairvoyance guard is NON-NEGOTIABLE; anchors
-frozen; NO RL/imitation, NO raw action-space search (standing non-goals);
-derived reads only for anything rolled out; DEV-only surface — zero
-shipped-game behavior change.
+**Scope guards:** clairvoyance guard NON-NEGOTIABLE; anchors frozen; NO
+RL/imitation or raw action-space search; derived reads only for anything
+rolled out; DEV-only — zero shipped-game change; player-team searcher
+ONLY (the enemy stays engine-driven).
 
 ---
 

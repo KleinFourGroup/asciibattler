@@ -372,9 +372,8 @@ OPEN for 57c: horizon/window · K · cadence · nomination · clone budget.
 - [x] 57a — re-ask gate 1 ✅ 2026-07-16 — OFF spot-check byte-identical
   (anchors valid); ON arms + unjam LOO on record (unjam = post-swap
   dead weight); `--scripts=<spec>` seam = `4d93ee2`; BALANCE §57-gate
-- [ ] 57b — re-ask gate 2: third-set numbers on record (OFF 37.5 / ON
-  33.3 — BALANCE §57-gate); **STOP — user verdict PENDING** (NO-BUILD
-  legal)
+- [x] 57b — re-ask gate 2 ✅ 2026-07-16 — third set OFF 37.5 / ON 33.3
+  (BALANCE §57-gate); **user VERDICT: BUILD** (outcome c — worklog §57)
 - [ ] 57c — (contingent) the design round + second shape-lock: horizon/
   scoring window · K · cadence · nomination · clone-cost budget
 - [ ] 57d — the clone seam: snapshot-clone + RNG divergence on BOTH

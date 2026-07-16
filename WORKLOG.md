@@ -1575,3 +1575,10 @@ human ~80% class. The assistant read is outcome (c) BUILD: every
 surviving failure is the class rollout arbitration dissolves, and the
 arbitration question remains unmeasured — which is the phase's charter.
 The user's verdict is pending; 57b's box stays open until it lands.
+
+**Verdict (user, 2026-07-16): BUILD — outcome (c).** The 57c design
+round opens at education depth by explicit user request ("we're very
+far outside my normal wheelhouse — give me as much detail on tradeoffs
+as you can, any blind spots"): every fork presented with tradeoffs +
+recommendation, blind spots named, dials provisional until the 57d
+clone/tick micro-benchmark prices them.

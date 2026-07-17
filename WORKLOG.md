@@ -1821,3 +1821,41 @@ batch's timing data; the wrapper also ENFORCES commit parity, the
 byte-identity contract's precondition, instead of trusting sessions
 to remember it). The full hcloud create/destroy automation stays
 UNSCHEDULED (trigger: the box's deletion at round close, §60-ish).
+
+### 57g-pre — scripts/box-batch.sh: doctrine → structure (2026-07-17)
+
+The wrapper shipped (`36b1ac7` + `642dd7d`):
+[scripts/box-batch.sh](scripts/box-batch.sh) with five subcommands —
+`launch` (nohup + exit-code sentinel behind the TWO-SIDED parity guard:
+dirty-tree bail locally, HEAD-match bail on the box after its pull,
+conditional `npm ci` on lockfile change) · `status` / `fetch` (one
+short-lived ssh each, never a live pipe) · `kill` (the bracket-class
+pkill; the nohup wrapper falls through so the sentinel still lands) ·
+`run` (launch + 15s poll loop + fetch, the in-session convenience).
+User calls at kickoff: box address is ALWAYS an argument, never env/
+hardcoded (ephemeral IP + a multi-box future), and the `kill` extension
+approved.
+
+The live E2E earned its keep immediately: the first launch dropped
+`--scripts --jobs=8` on the floor — **ssh flattens its command args
+into one string the remote shell re-parses**, so the %q-quoted
+FUZZ_ARGS bundle word-split on the box and the remote script saw only
+`--count=8` (it ran pure-random baselines; the box-side log tail in
+`status` is what exposed it). `box()` now re-quotes every positional
+arg (`642dd7d`). The mis-args batch doubled as the kill-leg live test:
+sentinel landed, DONE exit 143. Full `run` E2E then green, and the
+byte-identity contract holds THROUGH the wrapper: `--count=8 --scripts
+--jobs=8` at `642dd7d` → summary.csv sha256 **1b302f84** local == box,
+all 14 failure traces per-file identical.
+
+⚠ Hash-protocol note ON RECORD: the wrapper standardizes
+**sha256(summary.csv)** (first-8 short form). The §57f2 recorded hashes
+(5d18b270 / f4a95bf4) came from a different ad-hoc pipeline — never
+cross-compare a 57f2 recorded hash against a wrapper hash; parity
+going forward is wrapper-to-wrapper (or plain `sha256sum`) per
+(commit, toolchain) pair. Also tidied at this step: the hcloud
+create/destroy automation promoted from this worklog's UNSCHEDULED
+note to [TODO.md](TODO.md) (a worklog note would not survive round
+close), and the box coordinates stashed in the agent memory — the IP
+can't live in the public repo, and the 57f2 session had left it only
+in shell history (user-flagged).

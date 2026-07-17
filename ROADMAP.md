@@ -380,9 +380,9 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
 - [x] 57f2 ✅ 2026-07-17 — CX43 box + `box-setup.sh`; byte-identity
   5d18b270 ×3 (local/serial/jobs8); `--jobs` 3.8×; N4 verify
   unblocked; worklog §57f2
-- [ ] 57g-pre — `scripts/box-batch.sh`: the detached remote-batch
-  wrapper (nohup+sentinel · short-poll · fetch · commit-parity guard)
-  — inserted 2026-07-17, §57f2 doctrine→structure (worklog §57f2)
+- [x] 57g-pre ✅ 2026-07-17 — `box-batch.sh` (launch/status/fetch/
+  kill/run; two-sided parity guard); live-box E2E byte-identity
+  1b302f84 + traces; ssh word-split caught → `642dd7d`; worklog §57g-pre
 - [ ] 57g — cell spot-checks + IN-SAMPLE-ONLY iteration + the box arms:
   audition-everyone A/B · K-sensitivity (2/4/8 winner-flips) · the
   scoring investigation (threat-exposure term; quiescence parked)

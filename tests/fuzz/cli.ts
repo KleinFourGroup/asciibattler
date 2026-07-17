@@ -97,6 +97,13 @@
  *   npm run fuzz -- --count=120 --searcher
  *   npm run fuzz -- --count=120 --searcher=-unjam
  *
+ *   # 57f2 — run-mode parallelism: fan a measurement batch's seed range across
+ *   # N child processes (summary.csv + failure traces byte-identical to serial —
+ *   # pinned by parallelRun.test.ts; --seed and the --per-* analyses bail loudly;
+ *   # sized for the box: 8 cores → --jobs=8):
+ *   npm run fuzz -- --count=120 --scripts --jobs=8
+ *   npm run fuzz -- --count=120 --searcher --jobs=8
+ *
  *   # K3c3 — drive a FIXED redraw policy through the same three modes (default
  *   # none = turn gates stay off, byte-identical baselines). Inline forms
  *   # random:<k> / level:<k> (toss k random / k lowest-level cards per turn;
@@ -115,6 +122,7 @@
 
 import { parseArgs } from './commands/args';
 import { runRunCli } from './commands/run';
+import { runParallelRunCli } from './commands/parallel';
 import { runSearchCli } from './commands/search';
 import { runBalanceSweepCli } from './commands/sweep';
 import { runEvalShardCli } from './commands/evalShard';
@@ -141,6 +149,12 @@ async function main(): Promise<void> {
   }
   if (args.arena) {
     runArenaCli(args);
+    return;
+  }
+  // 57f2 — run-mode parallelism: `--jobs>1` fans the seed range across child
+  // processes; file outputs are byte-identical to serial (commands/parallel.ts).
+  if ((args.jobs ?? 1) > 1) {
+    await runParallelRunCli(args);
     return;
   }
   runRunCli(args);

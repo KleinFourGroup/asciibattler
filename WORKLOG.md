@@ -1780,3 +1780,19 @@ sample. Box serial wall-clock is materially slower than local (older-
 gen shared silicon; the 20-seed batch took several× local) — exact
 throughput + the `--jobs=8` speedup get measured at 57f2.c, and the
 8-way fan-out is what makes the box competitive at all.
+
+**57f2.b — run-mode `--jobs`**
+([commands/parallel.ts](tests/fuzz/commands/parallel.ts)): children
+are UNMODIFIED CLI invocations over contiguous seed windows
+(`--seed-offset`/`--count` already express an arbitrary window, so the
+child IS the serial CLI and argv pass-through inherits every future
+run-mode flag for free); the merge is TEXTUAL — summary.csv is per-run
+rows, so regrouping strategy-major + chunk-order reconstructs the
+serial file byte-for-byte, and traces adopt by unique filename.
+**Byte-identity vs serial is PINNED** by
+[parallelRun.test.ts](tests/fuzz/parallelRun.test.ts) against real
+child spawns (~29s). Reuses searchShard's contiguous chunker + the
+Windows 0xC0000142 spawn retry. Loud bails: `--seed` (nothing to
+split) and the `--per-*` aggregate analyses (cross-run CSVs a textual
+merge can't reproduce). fuzz:smoke 232 run MANUALLY (the hook's
+trigger still doesn't watch tests/fuzz — scratchpad note stands).

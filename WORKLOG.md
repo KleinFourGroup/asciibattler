@@ -1796,3 +1796,18 @@ Windows 0xC0000142 spawn retry. Loud bails: `--seed` (nothing to
 split) and the `--per-*` aggregate analyses (cross-run CSVs a textual
 merge can't reproduce). fuzz:smoke 232 run MANUALLY (the hook's
 trigger still doesn't watch tests/fuzz — scratchpad note stands).
+
+**57f2.c — the on-box close.** Serial 20-seed `--scripts` batch
+**7m36s**; `--jobs=8` **1m59s = 3.8×** (chunk granularity 20/8 +
+shared-core contention bound it under 8×; user-CPU ≈ equal serial vs
+parallel — no wasted work). Hashes: c-serial = c-jobs = **5d18b270** =
+the local reference — cross-machine AND cross-parallelism parity in
+one read. Ops doctrine banked for the phase-2 wrapper: long remote
+batches run DETACHED (nohup + box-side log + short-lived poll
+connections) — the live ssh pipe died twice (NAT idle timeout,
+exit-255-after-success) and one cleanup `pkill -f` self-matched its
+own carrying pipe (the `cli[.]ts` regex trick excludes self). Note
+`--jobs` serves LOCAL batches too (the desktop's cores are faster) —
+the box's edge is offload + overnight, not raw speed. N4's overnight
+out-of-sample verify is now UNBLOCKED (rides the box at its natural
+slot). 57f2 CLOSED.

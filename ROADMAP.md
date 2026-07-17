@@ -381,8 +381,9 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
   (advance-and-wipe > stand-off on a crafted world); worklog §57e
 - [x] 57f ✅ 2026-07-16 — searcher + `--searcher[=<spec>]` arm; parity/
   liveness/exclusivity; in-situ cost 4.1× (~30min/batch); worklog §57f
-- [ ] 57f2 — the measurement box: VPS + cross-machine byte-identity
-  proof + parallel batch runner (sized from 57f; N4's verify rides)
+- [x] 57f2 ✅ 2026-07-17 — CX43 box + `box-setup.sh`; byte-identity
+  5d18b270 ×3 (local/serial/jobs8); `--jobs` runner 3.8×; N4's verify
+  UNBLOCKED (rides at its natural slot); worklog §57f2
 - [ ] 57g — cell spot-checks + IN-SAMPLE-ONLY iteration + the box arms:
   audition-everyone A/B · K-sensitivity (2/4/8 winner-flips) · the
   scoring investigation (threat-exposure term; quiescence parked)

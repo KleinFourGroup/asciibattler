@@ -33,7 +33,9 @@
  * `random`/`hp:…`/`stat:…`/`archetype:…`/a saved `.json` = the J4
  * proclivities — plus `scripts` (54i): the §54 traffic-script bot
  * (`trafficScripts: true`, the standard registry; mutually exclusive with
- * the objective arms by the harness's frozen-anchor contract). Run-level
+ * the objective arms by the harness's frozen-anchor contract) — and
+ * `searcher` (57g): the §57f portfolio rollout searcher at the v2 default
+ * dials (`rolloutSearch: true`; same mutual exclusion). Run-level
  * choices (path/recruit) use `greedy`, except the elite cell which walks
  * `path:elite` to reach its node (override: `--strategy`).
  */
@@ -46,12 +48,14 @@ import { makeStrategy, STRATEGY_NAMES } from '../fuzz/strategies/registry';
 import { parseObjectiveFlag, type ObjectiveProclivity } from '../fuzz/objectiveStrategy';
 import { GAUNTLET_CELLS, cellRunConfig, cellUrl, type GauntletCell } from './cells';
 
-/** One gauntlet arm: an objective proclivity (the J4 vocabulary) OR the §54
- *  traffic-script bot (`scripts: true`) — never both (harness-enforced). */
+/** One gauntlet arm: an objective proclivity (the J4 vocabulary), the §54
+ *  traffic-script bot (`scripts: true`), OR the §57f rollout searcher
+ *  (`searcher: true`) — exactly one (harness-enforced). */
 interface Arm {
   label: string;
   proclivity?: ObjectiveProclivity;
   scripts?: boolean;
+  searcher?: boolean;
 }
 
 interface CliArgs {
@@ -83,7 +87,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
           args.arms.push(
             token === 'scripts'
               ? { label: token, scripts: true }
-              : { label: token, proclivity: parseObjectiveFlag(token) },
+              : token === 'searcher'
+                ? { label: token, searcher: true }
+                : { label: token, proclivity: parseObjectiveFlag(token) },
           );
         }
         break;
@@ -158,9 +164,13 @@ function runCell(
   }
   const result: RunResult = runOne(seed, strategy, {
     runConfig: cellRunConfig(cell, seed, fresh),
-    // 54i — the arms are mutually exclusive at the harness (frozen-anchor
-    // contract): a scripts arm passes trafficScripts and NO objective.
-    ...(arm.proclivity ? { objective: arm.proclivity } : { trafficScripts: true as const }),
+    // 54i/57g — the arms are mutually exclusive at the harness (frozen-anchor
+    // contract): each arm kind passes exactly its own harness option.
+    ...(arm.proclivity
+      ? { objective: arm.proclivity }
+      : arm.searcher
+        ? { rolloutSearch: true as const }
+        : { trafficScripts: true as const }),
     telemetry: true, // 53e.2 — the pool-chip source (pure observation)
   });
   const target = result.battles.filter((b) => b.encounterId === cell.encounterId);

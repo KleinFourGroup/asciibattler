@@ -379,8 +379,8 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
 - [x] 57e ✅ 2026-07-16 — evaluator (terminal material + end bonus, HP
   fractions) + the `nominate()` seam; 5 pins incl. discrimination
   (advance-and-wipe > stand-off on a crafted world); worklog §57e
-- [ ] 57f — the searcher driver + the mutually-exclusive harness arm;
-  byte-identical no-op parity (the 54a shape)
+- [x] 57f ✅ 2026-07-16 — searcher + `--searcher[=<spec>]` arm; parity/
+  liveness/exclusivity; in-situ cost 4.1× (~30min/batch); worklog §57f
 - [ ] 57f2 — the measurement box: VPS + cross-machine byte-identity
   proof + parallel batch runner (sized from 57f; N4's verify rides)
 - [ ] 57g — cell spot-checks + IN-SAMPLE-ONLY iteration + the box arms:

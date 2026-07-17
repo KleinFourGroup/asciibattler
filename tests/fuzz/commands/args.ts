@@ -89,6 +89,12 @@ export interface CliArgs {
   // registries; grammar + loud-bail validation in scriptSubset.ts). Absent =
   // the full standard registry, exactly the bare `--scripts` behavior.
   scriptsSpec?: string;
+  // §57f — the portfolio rollout searcher arm (`--searcher[=<spec>]`; the
+  // spec selects a nominator subset, same grammar as --scripts). RUN MODE
+  // ONLY (same contract as --scripts); mutually exclusive with --objective
+  // AND --scripts (one bot arm at a time — the frozen-anchor contract).
+  searcher: boolean;
+  searcherSpec?: string;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -104,6 +110,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     evalShard: false,
     arena: false,
     scripts: false,
+    searcher: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -215,6 +222,10 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         args.scripts = true;
         if (v !== undefined) args.scriptsSpec = v;
         break;
+      case '--searcher':
+        args.searcher = true;
+        if (v !== undefined) args.searcherSpec = v;
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
@@ -229,6 +240,16 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   }
   if (args.scripts && args.objective !== undefined) {
     throw new Error('--scripts is mutually exclusive with --objective (the frozen-anchor contract)');
+  }
+  // §57f — same contracts for the searcher arm.
+  if (args.searcher && (args.search || args.balanceSweep || args.arena || args.evalShard)) {
+    throw new Error('--searcher is not supported in --search/--balance-sweep/--arena yet (run mode only)');
+  }
+  if (args.searcher && args.objective !== undefined) {
+    throw new Error('--searcher is mutually exclusive with --objective (the frozen-anchor contract)');
+  }
+  if (args.searcher && args.scripts) {
+    throw new Error('--searcher is mutually exclusive with --scripts (one bot arm at a time)');
   }
   return args;
 }

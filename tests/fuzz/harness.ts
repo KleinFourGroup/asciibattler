@@ -38,6 +38,10 @@ import {
   TRAFFIC_SCRIPTS,
   type TrafficScript,
 } from '../../src/bot/TrafficScriptDriver';
+import {
+  RolloutSearchDriver,
+  type RolloutSearchConfig,
+} from '../../src/bot/RolloutSearchDriver';
 import { selectRedrawPositions } from './redrawPolicy';
 import type { RedrawPolicy } from './redrawPolicy';
 import { selectEmpowerPosition } from './empowerPolicy';
@@ -177,6 +181,19 @@ export interface HarnessOptions {
    */
   readonly trafficScripts?: boolean | readonly TrafficScript[];
   /**
+   * §57f — the portfolio rollout searcher (Rung 2 proper): `true` drives the
+   * player team through `RolloutSearchDriver` at the §57c v2 default dials;
+   * a script array substitutes a custom nominator registry; a full
+   * `RolloutSearchConfig` overrides the dials (the 57g sensitivity seam —
+   * K / horizon / ε / cadence arms run through here, no code surgery).
+   * Mutually exclusive with all three arms above (the frozen-anchor
+   * contract). One RNG is forked per battle off the worldSeed for CRN seed
+   * derivation — world/combat streams untouched; an absent / `false` /
+   * empty-registry arm enqueues nothing and forks nothing world-side
+   * (byte-identical, the 54a parity shape).
+   */
+  readonly rolloutSearch?: boolean | readonly TrafficScript[] | RolloutSearchConfig;
+  /**
    * K3c3 — the redraw policy the bot drives the pre-turn redraw with.
    * Undefined / `{ kind: 'none' }` (the default) keeps the turn gates OFF —
    * the run is byte-identical to the pre-K3c3 path (existing baselines stay
@@ -276,6 +293,27 @@ export function runOne(
         '(the §54 frozen-anchor contract)',
     );
   }
+  // §57f — the searcher arm: `true` = default dials over the standard
+  // registry, an array = a custom nominator registry, an object = full dial
+  // overrides (the 57g seam). Null when off. Mutually exclusive with ALL
+  // THREE arms above — same frozen-anchor reasoning, enforced here too.
+  const rolloutSearch: RolloutSearchConfig | null =
+    options.rolloutSearch === true
+      ? {}
+      : options.rolloutSearch === false || options.rolloutSearch === undefined
+        ? null
+        : Array.isArray(options.rolloutSearch)
+          ? { scripts: options.rolloutSearch }
+          : (options.rolloutSearch as RolloutSearchConfig);
+  if (
+    rolloutSearch !== null &&
+    (objectiveActive || coverageActive || trafficScripts !== null)
+  ) {
+    throw new Error(
+      'harness: rolloutSearch is mutually exclusive with objective/coverageObjectives/' +
+        'trafficScripts (the frozen-anchor contract)',
+    );
+  }
   // K3c3 — same contract for the redraw bot: `none`/absent forks no RNG and
   // leaves the turn gates off. Only the `random` policy ever draws from this
   // stream (a dedicated fork, so policy draws never perturb the run streams).
@@ -318,6 +356,10 @@ export function runOne(
   // arms above). RNG-free by lock, so nothing is forked; fresh per battle so
   // the dwell/standing bookkeeping never leaks across battles.
   let currentTraffic: TrafficScriptDriver | null = null;
+  // §57f — a per-battle rollout searcher (mutually exclusive with all three).
+  // Fresh per battle: the standing/tracker bookkeeping and the CRN stream
+  // (forked off the worldSeed) never leak across battles.
+  let currentSearcher: RolloutSearchDriver | null = null;
 
   bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
@@ -328,6 +370,10 @@ export function runOne(
     currentObjRng = objectiveActive ? new RNG(worldSeed).fork() : null;
     currentCoverage = coverageActive ? new CoverageObjectiveDriver(new RNG(worldSeed).fork()) : null;
     currentTraffic = trafficScripts !== null ? new TrafficScriptDriver('player', trafficScripts) : null;
+    currentSearcher =
+      rolloutSearch !== null
+        ? new RolloutSearchDriver('player', new RNG(worldSeed).fork(), rolloutSearch)
+        : null;
     unitTeams = new Map();
     currentBattle = {
       hop: run.currentHop,
@@ -554,6 +600,13 @@ export function runOne(
           const traffic = currentTraffic as TrafficScriptDriver | null;
           if (traffic) {
             for (const cmd of traffic.decide(w)) w.enqueueCommand(cmd);
+          }
+          // §57f — or the rollout searcher (mutually exclusive with all
+          // three, enforced above). Same placement contract: decide BEFORE
+          // the tick drains; at most one command per search point.
+          const searcher = currentSearcher as RolloutSearchDriver | null;
+          if (searcher) {
+            for (const cmd of searcher.decide(w)) w.enqueueCommand(cmd);
           }
           w.tick();
           battleTicks++;

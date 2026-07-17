@@ -53,6 +53,14 @@ src/
     replayTrace.ts           #   53c: headless byte-identical trace replay — strict version+configHash refusal; reconstruction ≡ both production battle-construction sites; commands injected before their stamped effective tick; the fidelity keystone test lives beside it
     devKeys.ts               #   53f: the Ctrl+Alt dev-key window listener (NOT the Keybindings registry — bare-code dispatch would co-fire chords on bound codes): S = export Run.toJSON download / L = file-picker → Game.devLoadRun (map-phase only) / D = dump the trace ring (D not T — KeyT is bound); DOM-zone glue, untested
 
+  bot/                       # §54: the harness-only bot layer — nothing shipped imports it; Math.random ESLint-banned (backfilled here at 57f; the block was missing since §54)
+    TrafficScriptDriver.ts   #   54a: TrafficScript {id, evaluate, 57e nominate?} + TRAFFIC_SCRIPTS (registry order = arbitration priority) + the fixed-priority per-battle driver (min-dwell, standing-order ownership) + sameObjective
+    sensors.ts               #   54b: pure derived-state reads (jamRead / hazard+barrier / chokeCells / armyMinCut / armiesInContact / attritionRead / focusTargetFeatures) — no event history; rollout-compatible by construction
+    scripts/                 #   54d–54h: the five traffic scripts (terrainEdgeHold / unjam / chokeHold / cohesionFocus / attritionStall), one file each, co-located tests; 57a: --scripts=<spec> subsets select from the registry
+    rollout.ts               #   57d: cloneForRollout — the CLAIRVOYANCE GUARD (both RNG streams re-seeded at the wire level pre-fromJSON; fresh bus; live world untouched); the foresee-the-rolls test keeps the plain-clone control case
+    evaluator.ts             #   57e: evaluateCandidate — K CRN rollouts × H ticks → terminal material differential (HP fractions) + dominant WIN_BONUS; winner inferred from terminal state (derived reads only)
+    RolloutSearchDriver.ts   #   57f: the portfolio greedy searcher — nominate (evaluate()/nominate?) → CRN-evaluate → commit only past the null arm + ε; cadence + death/contact re-search; dials as ctor options (§57c v2 defaults — the 57g sensitivity seam)
+
   config/                    # A4: zod-validated wrappers around config/*.json
     units.ts                 #   §38 UnitDef catalog (was archetypes.ts): glyph + baseStats + growthRates + abilities/targeting (E1/E3) + inert §38 fields (footprint/layer/ignoresTerrain/susceptibility); attackRange moved to abilities (E5); 29d: assertSummonRefsResolve boot-checks every summon op's archetype id
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig

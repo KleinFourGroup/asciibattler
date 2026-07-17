@@ -1708,3 +1708,45 @@ accounting (half-HP unit = 0.5), the mean-aggregation contract
 (evaluate([a,b]) = mean of singles — CRN comparability rests on it),
 and the empty-seed-list throw. fuzz:smoke 226/226 manual (src/bot
 untouched by the hook trigger).
+
+### 57f — the searcher + the harness arm (2026-07-16)
+
+[RolloutSearchDriver.ts](src/bot/RolloutSearchDriver.ts): nomination
+(each script's `nominate ?? evaluate`, deduped vs the standing
+objective and each other; null = continue, implicit; RELEASE
+challenges only our own standing order) → ONE CRN seed set per search
+(fork() draws off a per-battle searcher stream) → evaluateCandidate
+per challenger → commit ONLY past `nullScore + ε` (ties→NULL and
+hysteresis are one rule). Re-search points: first decide · cadence
+expiry · any death · any `armiesInContact` flip — all edge-triggered
+off derived state; the min-dwell timer is RETIRED here (commit-until-
+next-search + ε are the anti-thrash). The §54 ownership rule carries
+verbatim (a foreign objective silences the searcher). **Dials are ctor
+options defaulting to the v2 locks** — the 57g sensitivity arms drive
+K/H/ε/cadence through `HarnessOptions.rolloutSearch` with no surgery,
+and the liveness test uses exactly that (ε=−1000 forces every commit —
+liveness by construction, not luck). `searchCount` exposed for cost
+telemetry + the trigger tests.
+
+Seven driver pins (commit on an unambiguous crafted world · null-floor
+rejection · cadence gate + re-arm · death trigger · contact trigger ·
+foreign-order silence · command-sequence determinism) + five harness
+pins (empty-registry AND false byte-identical parity — 54a shape ·
+determinism · forced-commit liveness · the three mutual-exclusion
+throws). Two test-authoring catches worth keeping: the first fixture
+put the enemies too FAR (the charge consumed most of the horizon —
+marginal vs ε and seed-dependent), and the first draft never ENQUEUED
+committed commands (ownStanding said hold; the world still said atWill
+— the auto-revert branch ate the bookkeeping). Both are instructive
+about the real machine: horizons must contain the payoff, and the
+searcher's state is only as real as the commands the harness drains.
+
+**The in-situ cost re-price (10-run timed pair, fixed vector, default
+dials): baseline 37s → searcher 152s = 4.1× wall.** A 120-run searcher
+batch ≈ ~30 min local — INSIDE the ≤1hr budget with headroom; the
+bench's floor-cost caveat was justified (real battles + real registry
+≈ 30× the sword-merc floor per search). Box implication confirmed: the
+heavy 57g arms (audition-everyone ↑candidates · K=4/8 ↑linear) push
+past the local budget → 57f2 earns its slot exactly as scoped. Also
+landed: the `src/bot/` block BACKFILLED into ARCHITECTURE's tree (it
+had been missing since §54 — the honest-docs rule, applied late).

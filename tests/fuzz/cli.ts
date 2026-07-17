@@ -90,6 +90,13 @@
  *   npm run fuzz -- --count=120 --scripts=-unjam
  *   npm run fuzz -- --count=120 --scripts=unjam
  *
+ *   # §57f — the portfolio rollout searcher (Rung 2 proper): scripts NOMINATE,
+ *   # rollouts arbitrate, the null arm floors (§57c v2 dials; run mode ONLY;
+ *   # mutually exclusive with --objective and --scripts; optional =<spec>
+ *   # selects a nominator subset, same grammar as --scripts):
+ *   npm run fuzz -- --count=120 --searcher
+ *   npm run fuzz -- --count=120 --searcher=-unjam
+ *
  *   # K3c3 — drive a FIXED redraw policy through the same three modes (default
  *   # none = turn gates stay off, byte-identical baselines). Inline forms
  *   # random:<k> / level:<k> (toss k random / k lowest-level cards per turn;

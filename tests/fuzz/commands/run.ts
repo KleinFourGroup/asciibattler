@@ -72,6 +72,8 @@ export type RunModeArgs = Pick<
   | 'daemon'
   | 'scripts'
   | 'scriptsSpec'
+  | 'searcher'
+  | 'searcherSpec'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -126,6 +128,15 @@ export function runRunCli(args: RunModeArgs): void {
     harnessOptions = {
       ...harnessOptions,
       trafficScripts: args.scriptsSpec !== undefined ? parseScriptsSpec(args.scriptsSpec) : true,
+    };
+  }
+  // §57f — `--searcher` drives the portfolio rollout searcher at the §57c v2
+  // default dials (an optional `=<spec>` value selects a nominator subset —
+  // the same grammar as --scripts; dial overrides are the 57g surface).
+  if (args.searcher) {
+    harnessOptions = {
+      ...harnessOptions,
+      rolloutSearch: args.searcherSpec !== undefined ? parseScriptsSpec(args.searcherSpec) : true,
     };
   }
   // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =

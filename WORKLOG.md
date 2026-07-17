@@ -1811,3 +1811,13 @@ own carrying pipe (the `cli[.]ts` regex trick excludes self). Note
 the box's edge is offload + overnight, not raw speed. N4's overnight
 out-of-sample verify is now UNBLOCKED (rides the box at its natural
 slot). 57f2 CLOSED.
+
+At close, **57g-pre inserted** (user instinct, concurred): the
+detached/poll/fetch machinery graduates from shell history + this
+worklog entry to `scripts/box-batch.sh` BEFORE the 57g heavy arms
+consume it — a worklog note is a warning, a script is a guardrail
+(today's live-pipe failure was graceful but cost ~40 min + one
+batch's timing data; the wrapper also ENFORCES commit parity, the
+byte-identity contract's precondition, instead of trusting sessions
+to remember it). The full hcloud create/destroy automation stays
+UNSCHEDULED (trigger: the box's deletion at round close, §60-ish).

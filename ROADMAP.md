@@ -355,35 +355,34 @@ protocol + `55pre-vector.json`.
 DESIGN (horizon vs slow payoffs · evaluation noise · cadence), priced by
 the 57d clone/tick micro-benchmark before the dials lock.
 
-**Decision points — kickoff + 57c sets ✅ DECIDED (2026-07-16, worklog
-§57):** scripts AS-IS at the gate · third seed set `--seed-offset=10000`
-· unjam LOO at the gate · sensors RESOLVED (all derived-state) ·
-**pre-registered BINDING close rule:** the searcher becomes default only
-if it beats passive on ALL THREE seed sets; flat-or-negative on ANY ⇒
-passive stays, §46a-shape NO · **57c v2 (user-locked):** local dials
-H=8s · K=2+CRN · cadence 4s + death/contact re-search · ε from 57g ·
-nominate = evaluate()+null+standing · scoring = terminal material +
+**Decision points ✅ DECIDED (2026-07-16, worklog §57):** scripts AS-IS
+· third set `--seed-offset=10000` · unjam LOO · sensors derived-state ·
+**pre-registered BINDING close rule:** default only if the searcher
+beats passive on ALL THREE seed sets, else passive stays (§46a-shape
+NO) · **57c v2 (user-locked):** H=8s · K=2+CRN · cadence 4s +
+death/contact re-search · ε from 57g · scoring = terminal material +
 end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
 
 **The cut (shape-locked 2026-07-16; audit + rationale in worklog §57):**
 
-- [x] 57a — re-ask gate 1 ✅ 2026-07-16 — OFF spot-check byte-identical
-  (anchors valid); ON arms + unjam LOO on record (unjam = post-swap
-  dead weight); `--scripts=<spec>` seam = `4d93ee2`; BALANCE §57-gate
+- [x] 57a — re-ask gate 1 ✅ 2026-07-16 — OFF byte-identical (anchors
+  valid); unjam LOO = dead weight; `--scripts=<spec>` = `4d93ee2`
 - [x] 57b — re-ask gate 2 ✅ 2026-07-16 — third set OFF 37.5 / ON 33.3
   (BALANCE §57-gate); **user VERDICT: BUILD** (outcome c — worklog §57)
 - [x] 57c — the design round ✅ 2026-07-16 — v2 shape user-locked (the
   VPS reframe: compute forks → 57g box arms); worklog §57c
 - [x] 57d ✅ 2026-07-16 — seam + guard/purity/CRN pins (5 tests); bench:
   clone 0.07ms · ~94k clone-ticks/s (floor caveat — worklog §57d)
-- [x] 57e ✅ 2026-07-16 — evaluator (terminal material + end bonus, HP
-  fractions) + the `nominate()` seam; 5 pins incl. discrimination
-  (advance-and-wipe > stand-off on a crafted world); worklog §57e
+- [x] 57e ✅ 2026-07-16 — evaluator + the `nominate()` seam; 5 pins
+  incl. discrimination; worklog §57e
 - [x] 57f ✅ 2026-07-16 — searcher + `--searcher[=<spec>]` arm; parity/
   liveness/exclusivity; in-situ cost 4.1× (~30min/batch); worklog §57f
 - [x] 57f2 ✅ 2026-07-17 — CX43 box + `box-setup.sh`; byte-identity
-  5d18b270 ×3 (local/serial/jobs8); `--jobs` runner 3.8×; N4's verify
-  UNBLOCKED (rides at its natural slot); worklog §57f2
+  5d18b270 ×3 (local/serial/jobs8); `--jobs` 3.8×; N4 verify
+  unblocked; worklog §57f2
+- [ ] 57g-pre — `scripts/box-batch.sh`: the detached remote-batch
+  wrapper (nohup+sentinel · short-poll · fetch · commit-parity guard)
+  — inserted 2026-07-17, §57f2 doctrine→structure (worklog §57f2)
 - [ ] 57g — cell spot-checks + IN-SAMPLE-ONLY iteration + the box arms:
   audition-everyone A/B · K-sensitivity (2/4/8 winner-flips) · the
   scoring investigation (threat-exposure term; quiescence parked)

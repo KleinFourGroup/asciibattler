@@ -20,6 +20,20 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 *(no entries yet)*
 
+## 57g — background batches survive a harness crash (2026-07-17)
+
+- Claude Code crashed mid-way through the 57g.1 measurement batch. The
+  batch — a `run_in_background` Bash child — kept running as an
+  orphaned process and completed normally; its stdout kept landing in
+  the old session's task output file. Recovery protocol that worked:
+  (1) `git status` first — file edits live on disk, not in the
+  session; (2) check for orphaned `node` processes BEFORE re-launching
+  a "lost" batch (CPU time ≈ wall clock since launch = it never
+  stopped); (3) a fresh watcher loop polling for the output artifact
+  re-attaches the notification. Determinism made the worst case
+  (re-run) a pure time cost — another quiet argument for the
+  measurement doctrine.
+
 ## §54a — the 45-minute test hang (2026-07-13)
 
 - `World.tick()` NO-OPS once `ended` is set (World.ts ~1022), freezing

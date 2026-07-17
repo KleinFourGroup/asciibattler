@@ -1190,3 +1190,25 @@ deltas. The pre-X H7c→O log lives at
     not materialize; outcome (c) BUILD is the assistant read. ⚠ OFF
     absolute levels span 30.8–37.5 across seed sets — the §55-pre
     seed-variance note stands; deltas carry the finding.
+
+- **2026-07-17 — §57g.1 THE SEARCHER'S FIRST MEASUREMENT: fixed-in 36.7%
+  vs OFF 33.3 (+3.4) and static scripts ON 30.8 (+5.9) — the first arm
+  EVER to beat passive in-sample on this engine; the static-scripts
+  spiral harm is GONE under arbitration.** Protocol: the §57-gate shape —
+  55pre vector (as of this arm the COMMITTED fixture
+  [tests/fuzz/fixtures/55pre-vector.json](tests/fuzz/fixtures/55pre-vector.json);
+  byte-identical to the output/ scratch copy), seeds 1–120, `--searcher`
+  at the v2 default dials (H=8s · K=2 · cadence 4s · ε=0.25),
+  `--per-layout`. Hangs 0. Output: `tests/fuzz/output/57g-searcher-fixed-in`.
+  - **Paired same-seed flips vs OFF: 21 win→loss / 25 loss→win, net +4**
+    — direction positive, individually soft (the familiar churn-heavy
+    shape); the BINDING read is 57h's three-set rule, not this arm.
+  - **Per-layout (per-wave win-rate deltas vs OFF): spiralFireLife −0.2**
+    — static scripts scored −9.2 here; the searcher ELIMINATES the harm
+    (the deserters pathology doesn't survive nomination→rollout→null-floor)
+    but does not yet improve the layout — the 57g threat-exposure scoring
+    arm keeps its target. Gains concentrate in the contested-crossing
+    traffic layouts: **river +6.2 · isthmus +5.8**. New watch rows:
+    rubbleQuarry −6.4 · desertFortress −4.3.
+  - **⚠ Capped draws 15→24 vs OFF** — the ties→NULL hysteresis floor may
+    be leaving wins on the table as draws; filed as a 57g ε/dial input.

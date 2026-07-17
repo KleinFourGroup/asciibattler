@@ -1859,3 +1859,36 @@ note to [TODO.md](TODO.md) (a worklog note would not survive round
 close), and the box coordinates stashed in the agent memory — the IP
 can't live in the public repo, and the 57f2 session had left it only
 in shell history (user-flagged).
+
+### 57g — cell spot-checks + in-sample iteration (opened 2026-07-17)
+
+The execution cut (user-approved, incl. the two flagged calls): 57g.1
+baseline searcher fixed-in → 57g.2 wiring (gauntlet `searcher` arm +
+the 55pre vector committed as a fixture) → 57g.3 cell board → 57g.4
+audition-everyone (build `nominate()` on the five scripts, A/B on the
+box) → 57g.5 K-sensitivity via the PREFIX-SUBSET instrument (one K=8
+batch scoring every search under seed-prefixes {2,4,8}, exact
+winner-flips from one batch — approved over three separate batches) →
+57g.6 the threat-exposure term on the spiral isolate. In-sample only
+throughout; the three-set verdict is 57h's.
+
+**57g.1 — the numbers: BALANCE §57g.1.** The one-breath story: 36.7%
+— the first arm to beat passive in-sample (+3.4 OFF / +5.9 static ON),
+and the spiral harm (−9.2 static) is eliminated (−0.2) — the
+arbitration hypothesis's first confirmation: triggers demoted to
+nomination can't fire the deserters pathology past the null floor.
+Gains pool in river/isthmus (contested crossings — verified positioning
+orders earn their keep where traffic is the problem); rubbleQuarry/
+desertFortress go on watch; capped draws 15→24 files the first ε
+question (is the hysteresis floor eating wins as draws?).
+
+**57g.2 shipped** (`0f0513f`): the gauntlet `searcher` arm
+(three-way dispatch, frozen-anchor exclusion preserved) + the vector
+fixture. Smoke: alpha-funnel searcher beats none on all columns
+(pool 10.7 vs 12.7); the none arm reproduces the stored 56e-pre CSV
+exactly — no engine drift under the new harness arms.
+
+Mid-arm crash note: Claude Code died mid-57g.1; the batch SURVIVED as
+an orphaned process (detached child) and completed while the recovery
+session verified the tree — no re-run needed, no rollback. Process
+lesson → retro/scratchpad.

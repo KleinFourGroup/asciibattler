@@ -56,7 +56,12 @@ case "$CMD" in
 esac
 
 box() {
-  ssh "${SSH_OPTS[@]}" "$BOX" bash -s -- "$@"
+  # ssh flattens its command args into one space-joined string that the remote
+  # shell re-parses, so each positional arg must be re-quoted here or a
+  # multi-word arg (the FUZZ_ARGS bundle) silently word-splits on the box.
+  local quoted=""
+  [ $# -gt 0 ] && quoted=$(printf '%q ' "$@")
+  ssh "${SSH_OPTS[@]}" "$BOX" "bash -s -- $quoted"
 }
 
 launch() {

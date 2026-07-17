@@ -1750,3 +1750,33 @@ heavy 57g arms (audition-everyone ↑candidates · K=4/8 ↑linear) push
 past the local budget → 57f2 earns its slot exactly as scoped. Also
 landed: the `src/bot/` block BACKFILLED into ARCHITECTURE's tree (it
 had been missing since §54 — the honest-docs rule, applied late).
+
+### 57f2 — the measurement box: VPS + the byte-identity proof (2026-07-17)
+
+The education session (user-flagged in advance) ran first and earned
+its keep beyond education: the user's live-pricing sanity check caught
+the 2026-06-15 Hetzner increases — CPX ~TRIPLED (CPX41 $46.49→$141.49,
++204%) while CX/CAX rose only ~30-38% — so the plan pivoted from the
+CPX line to **CX (cost-optimized, older-gen shared x86)**. CX53 out of
+stock → **CX43, Nuremberg: 8 vCPU / 15 GB, €15.99 + €0.50 IPv4/mo**,
+Ubuntu 26.04 LTS. Deliberate calls on record: shared-vCPU variability
+accepted (we measure VALUES, not timings — determinism makes a
+throttled run compute the same bytes); **x86 over cheaper ARM** to
+kill the cross-ISA `Math.*` risk axis rather than test it; **no
+snapshots** — provisioning is [scripts/box-setup.sh](scripts/box-setup.sh)
+(stock image + PINNED Node v25.5.0, checksum-verified, + clone +
+`npm ci`), so the box is a pure function from commit hash to batch
+output and the environment pin is grep-able, not archaeological.
+
+**The proof, at `02c68dc`:** 20 seeds × default strategies, `--scripts`
+arm — `summary.csv` **5d18b270** IDENTICAL Windows/x64 ↔ Linux/x64,
+plus all 35 failure traces identical per-file (a combined-hash scare
+en route was Git Bash's `*` binary-mode marker in MY pipeline, not the
+data). Searcher arm (single-seed batch): summary **f4a95bf4** + trace
+identical. ⚠ Protocol correction ON RECORD: `--seed` pins ONE seed and
+IGNORES `--count` (run.ts:84) — the first pass was a 1-seed batch
+misreported as 20 runs before the re-run; the re-proof is the real
+sample. Box serial wall-clock is materially slower than local (older-
+gen shared silicon; the 20-seed batch took several× local) — exact
+throughput + the `--jobs=8` speedup get measured at 57f2.c, and the
+8-way fan-out is what makes the box competitive at all.

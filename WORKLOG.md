@@ -1935,3 +1935,32 @@ all eight in-flight 57g.5 files intact on disk); the audition serial
 batch runs ~3× trigger-gated wall clock (~85 min — deeper runs, avg
 hop 9.07), and the no-progress-output gap turned a routine wait into
 a CPU-probe question — the run-mode progress tick is filed in TODO.
+
+### 57h — the close protocol, PRE-REGISTERED (written 2026-07-18,
+BEFORE the K read and before any held-out contact)
+
+Sharpened while the K batch runs, so no number can bend it later:
+
+1. **Candidate:** the audition searcher (`--searcher --audition`) at
+   the dials standing when 57g closes. If the K read motivates a dial
+   change (it may not), the changed config becomes the candidate and
+   the in-sample batch RE-RUNS under it — the close never mixes dials
+   across sets.
+2. **The three arms:** fixture vector, 120 seeds each — in-sample
+   (1–120) · held-out (`--seed-offset=5000`) · third
+   (`--seed-offset=10000`). Box `--jobs=8` (~18 min each; no
+   `--per-layout` — diagnostics only run AFTER the verdict, serially,
+   if wanted). OFF anchors: `56e-pre-fixed-in` 33.3 ·
+   `56e-pre-fixed-held` 30.8 · `57b-fixed-off-third` 37.5 — all at
+   HEAD-equivalent engine (57a/57b determinism spot-checks); a 1-seed
+   OFF re-check at the close commit guards engine drift since.
+3. **"Beats passive" =** strictly higher win rate than the OFF anchor
+   on the SAME seed set (same seeds ⟹ this is exactly paired net
+   flips > 0 — the round's paired methodology and the absolute read
+   coincide on identical seeds). Ties FAIL (the §46a-shape NO is the
+   pre-registered default, not the fallback).
+4. **The verdict is three ANDs, no averaging:** win on all three →
+   the searcher becomes the default arm; lose or tie ANY → NO, passive
+   stays default, the searcher stays opt-in — and the near-miss
+   pattern (if any) goes to §58 as input, not to a 57h retune. No
+   post-hoc seed-set relitigating under ANY outcome.

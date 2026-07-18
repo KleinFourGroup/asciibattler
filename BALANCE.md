@@ -1212,3 +1212,28 @@ deltas. The pre-X H7c→O log lives at
     rubbleQuarry −6.4 · desertFortress −4.3.
   - **⚠ Capped draws 15→24 vs OFF** — the ties→NULL hysteresis floor may
     be leaving wins on the table as draws; filed as a 57g ε/dial input.
+  - **The greedy companion: 30.8% vs OFF 18.3 — +12.5, the largest delta
+    any arm has ever posted** (static scripts moved this row 0.0). Paired
+    13 win→loss / 28 loss→win, net +15, **p≈0.02 — the round's first
+    individually-significant paired read.** The shape: searcher value
+    GROWS as the surrounding run-policy weakens (+3.4 tuned vector /
+    +12.5 greedy) — in-battle arbitration compensates for bad recruiting,
+    consistent with the §52 human-gap read (humans have both). Output:
+    `tests/fuzz/output/57g-searcher-greedy-in`.
+
+- **2026-07-17 — §57g.3 THE SEARCHER CELL BOARD (all 11 cells × 3 seeds,
+  `--arms=searcher`, vs the stored §56e-pre board): the boss wall CRACKS
+  — the first boss clear by ANY bot arm since §52 (1/3 at pool 17.3;
+  every prior arm 0/3 at ~21) — and the spiral watch row breaks open.**
+  CSV refreshed (56e-pre board preserved at `gauntlet-56e-pre.csv`).
+  - **alpha-spiral 14.7→7.3, clears 1/3→2/3** — HALVED on the cell that
+    regressed on every §56 arm. **fire-edge 9.7→3.0 (3/3)** — 3× better
+    than the best prior arm; the "edge-hold calibrated on pre-swap
+    movement" drift row, answered by arbitration instead of re-tuning.
+    **stall-spiral 0.7** (best); corridors/isthmus/river/labyrinth tie
+    or near-tie the best.
+  - **⚠ artillery-funnel 0.0→3.3 vs none** — the lone cell where the
+    searcher is worse than passive; the §53e.2 catapult wake-up row
+    stays open as a §57/§58 input.
+  - Caveat stands: 3-seed cells never arbitrate — these are spot-checks;
+    the full-run probe (§57g.1) and the 57h three-set rule govern.

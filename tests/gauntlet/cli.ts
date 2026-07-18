@@ -35,7 +35,9 @@
  * (`trafficScripts: true`, the standard registry; mutually exclusive with
  * the objective arms by the harness's frozen-anchor contract) — and
  * `searcher` (57g): the §57f portfolio rollout searcher at the v2 default
- * dials (`rolloutSearch: true`; same mutual exclusion). Run-level
+ * dials (`rolloutSearch: true`; same mutual exclusion) — and `audition`
+ * (57g.4): the searcher over AUDITION_SCRIPTS (propose-regardless
+ * nomination, the 57.5% in-sample candidate default). Run-level
  * choices (path/recruit) use `greedy`, except the elite cell which walks
  * `path:elite` to reach its node (override: `--strategy`).
  */
@@ -46,6 +48,7 @@ import { fileURLToPath } from 'node:url';
 import { runOne, type RunResult } from '../fuzz/harness';
 import { makeStrategy, STRATEGY_NAMES } from '../fuzz/strategies/registry';
 import { parseObjectiveFlag, type ObjectiveProclivity } from '../fuzz/objectiveStrategy';
+import { AUDITION_SCRIPTS } from '../../src/bot/TrafficScriptDriver';
 import { GAUNTLET_CELLS, cellRunConfig, cellUrl, type GauntletCell } from './cells';
 
 /** One gauntlet arm: an objective proclivity (the J4 vocabulary), the §54
@@ -56,6 +59,7 @@ interface Arm {
   proclivity?: ObjectiveProclivity;
   scripts?: boolean;
   searcher?: boolean;
+  audition?: boolean;
 }
 
 interface CliArgs {
@@ -89,7 +93,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
               ? { label: token, scripts: true }
               : token === 'searcher'
                 ? { label: token, searcher: true }
-                : { label: token, proclivity: parseObjectiveFlag(token) },
+                : token === 'audition'
+                  ? { label: token, audition: true }
+                  : { label: token, proclivity: parseObjectiveFlag(token) },
           );
         }
         break;
@@ -170,7 +176,9 @@ function runCell(
       ? { objective: arm.proclivity }
       : arm.searcher
         ? { rolloutSearch: true as const }
-        : { trafficScripts: true as const }),
+        : arm.audition
+          ? { rolloutSearch: AUDITION_SCRIPTS }
+          : { trafficScripts: true as const }),
     telemetry: true, // 53e.2 — the pool-chip source (pure observation)
   });
   const target = result.battles.filter((b) => b.encounterId === cell.encounterId);

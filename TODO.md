@@ -56,7 +56,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 - [x] **§40a rubble glyph — a true HALF-height look.** Done 2026-07-02, user-confirmed native: the glyph is now `▄` (U+2584 LOWER HALF BLOCK), replacing the `%` stopgap. Detail in git.
 
-- [ ] **Run-mode progress output for long serial batches.** `npm run fuzz` run mode prints nothing between "Running N seeds…" and the final stats — a 60–90 min serial batch (the audition per-layout shape) is unobservable without a CPU probe, and "is it hung?" became a live user question at 57g. One line per seed (or every 10th) to stderr: seed index, outcome, elapsed. Same gap in the gauntlet CLI. Filed 2026-07-18 at 57g.4c.
+- [x] **Run-mode progress output for long serial batches.** Done 2026-07-18, same session it was filed: one stderr line per run in fuzz run mode + per cell-run in the gauntlet CLI (index, outcome, elapsed); remote batches now tail live progress via `box-batch.sh status`. Detail in git.
 
 - [ ] **hcloud create/destroy automation for measurement boxes.** The 57f2 box (Hetzner CX43) stays live through the micro round and dies at round close (§60-ish). At that point, script the lifecycle via the `hcloud` CLI (`server create` → [scripts/box-setup.sh](scripts/box-setup.sh) → `server delete`) so boxes spin up on demand — the provisioning script already makes a box a pure function of commit hash; the missing piece is only the create/destroy plumbing. Needs an hcloud API token (user's Hetzner console). Day-to-day batch driving is already structured ([scripts/box-batch.sh](scripts/box-batch.sh), 57g-pre). Filed 2026-07-17, promoted from worklog §57f2's "UNSCHEDULED" note so it survives round-close archiving.
 

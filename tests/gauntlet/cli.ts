@@ -233,10 +233,16 @@ function main(): void {
   }
 
   const rows: CellRunRow[] = [];
+  const totalCellRuns = cells.reduce((n, c) => n + c.seeds.length * args.arms.length, 0);
+  const startedAt = Date.now();
   for (const cell of cells) {
     for (const seed of cell.seeds) {
       for (const arm of args.arms) {
         rows.push(runCell(cell, seed, arm, args.strategyOverride, args.fresh));
+        // 57g QoL — same progress contract as the fuzz run mode (stderr).
+        process.stderr.write(
+          `  [${rows.length}/${totalCellRuns}] ${cell.id} seed=${seed} arm=${arm.label} · ${Math.round((Date.now() - startedAt) / 1000)}s\n`,
+        );
       }
     }
   }

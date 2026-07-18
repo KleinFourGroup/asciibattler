@@ -1923,7 +1923,10 @@ inverts spiralFireLife to +12.2 and resolves both watch rows, with the
 serial summary BYTE-IDENTICAL to the box jobs=8 hash (4d273a18) —
 determinism across machine × parallelism × telemetry in one read.
 **57g.6 recommendation: measured-unnecessary** — the λ-term's target
-dissolved under candidate supply; awaiting the user's call. The ε
+dissolved under candidate supply; **RATIFIED by the user 2026-07-18**
+("incredibly comfortable") — the scoring investigation closes with no
+term built, the round's instrument-then-decide ethos delivering its
+first negative build verdict. The ε
 question also stands down (capped draws 18, between OFF 15 and
 trigger-gated 24). Ops notes: a power outage killed the first cell
 board mid-run (unlike a harness crash, an outage kills orphans — the

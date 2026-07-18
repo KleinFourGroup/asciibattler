@@ -191,11 +191,25 @@ export function runRunCli(args: RunModeArgs): void {
     : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   const scriptsNote = args.scripts ? ' scripts=ON' : '';
+  const startedAt = Date.now();
+  let done = 0;
+  const totalRuns = strategies.length * seeds.length;
   for (const strategy of strategies) {
     process.stdout.write(
       `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${scriptsNote}…\n`,
     );
-    for (const s of seeds) allResults.push(runOne(s, strategy, harnessOptions));
+    for (const s of seeds) {
+      const r = runOne(s, strategy, harnessOptions);
+      allResults.push(r);
+      // 57g QoL — one progress line per run, to STDERR (stdout stays the
+      // parseable stats stream): a 60–90 min serial batch is observable
+      // without a CPU probe, and the line lands in a remote batch.log so
+      // `box-batch.sh status` tails live progress.
+      done++;
+      process.stderr.write(
+        `  [${done}/${totalRuns}] seed ${r.seed}: ${r.outcome} (hop ${r.finalHopReached}) · ${Math.round((Date.now() - startedAt) / 1000)}s\n`,
+      );
+    }
   }
 
   writeFileSync(join(args.outDir, 'summary.csv'), renderSummaryCsv(allResults));

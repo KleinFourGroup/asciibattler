@@ -384,8 +384,9 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
   kill/run; two-sided parity guard); live-box E2E byte-identity
   1b302f84 + traces; ssh word-split caught → `642dd7d`; worklog §57g-pre
 - [ ] 57g — cell spot-checks + IN-SAMPLE-ONLY iteration + the box arms:
-  audition-everyone A/B · K-sensitivity (2/4/8 winner-flips) · the
-  scoring investigation (threat-exposure term; quiescence parked)
+  audition A/B ✅ 57.5% = the candidate default (BALANCE §57g.4) ·
+  K-sensitivity ◀ on the box · scoring ✅ DECIDED 2026-07-18
+  MEASURED-UNNECESSARY (user; BALANCE §57g.4c + worklog)
 - [ ] 57h — the close re-measure under the pre-registered rule (all
   three sets) → BALANCE §57; scripts-arm default resolved; close
 

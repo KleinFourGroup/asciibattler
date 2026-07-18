@@ -48,7 +48,15 @@ import { bail, range, type CliArgs } from './args';
 
 export type ParallelRunArgs = Pick<
   CliArgs,
-  'count' | 'seed' | 'seedOffset' | 'jobs' | 'outDir' | 'perHop' | 'perLayout' | 'perEncounter'
+  | 'count'
+  | 'seed'
+  | 'seedOffset'
+  | 'jobs'
+  | 'outDir'
+  | 'perHop'
+  | 'perLayout'
+  | 'perEncounter'
+  | 'kTelemetry'
 >;
 
 const CLI_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', 'cli.ts');
@@ -70,6 +78,12 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
   }
   if (args.perHop || args.perLayout || args.perEncounter) {
     bail('--jobs: the aggregate analyses (--per-hop / --per-layout / --per-encounter) are cross-run aggregates the shard merge cannot reproduce — run them serially.');
+  }
+  // 57g.5 — same shape: k-flips.csv + the aggregate print are cross-run
+  // outputs the textual merge doesn't reproduce. The K arm runs serially
+  // (detached on the box via box-batch.sh — its natural home).
+  if (args.kTelemetry) {
+    bail('--jobs: --k-telemetry writes a cross-run aggregate (k-flips.csv) the shard merge cannot reproduce — run it serially.');
   }
 
   const seeds = range(1 + (args.seedOffset ?? 0), args.count);

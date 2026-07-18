@@ -58,6 +58,20 @@ export interface RolloutSearchConfig {
   readonly horizonTicks?: number;
   readonly rolloutsPerCandidate?: number;
   readonly epsilon?: number;
+  /**
+   * 57g.5 — the K-sensitivity PREFIX instrument: evaluate per CRN seed
+   * (same total rollouts — the evaluator clones per seed either way),
+   * decide from the full-K means, and re-derive the decision under the
+   * seed-prefixes {2, 4} (those below K), counting searches where a prefix
+   * decision DISAGREES with the full-K one — the §57c "knife-edge
+   * coverage" question measured directly: one K=8 batch yields exact
+   * winner-flip counts for K=2 and K=4, no cross-batch inference. Read
+   * via `kFlipStats`. ⚠ The telemetry arm is its OWN arm: its decisions
+   * come from per-seed means (the 57e mean-aggregation contract makes
+   * them equal to the batch path — pinned on a crafted world), but
+   * cross-batch byte-parity vs a plain K=8 arm is not a protocol claim.
+   */
+  readonly kFlipTelemetry?: boolean;
 }
 
 export class RolloutSearchDriver {
@@ -82,6 +96,14 @@ export class RolloutSearchDriver {
     return this.searches;
   }
 
+  private readonly kFlipTelemetry: boolean;
+  private kFlipsByPrefix = new Map<number, number>();
+  /** 57g.5 — prefix-instrument counters: evaluated searches (== searchCount)
+   *  and, per prefix length, how many DISAGREED with the full-K decision. */
+  get kFlipStats(): { searches: number; byPrefix: ReadonlyMap<number, number> } {
+    return { searches: this.searches, byPrefix: this.kFlipsByPrefix };
+  }
+
   constructor(team: ObjectiveTeam, rng: RNG, config: RolloutSearchConfig = {}) {
     this.team = team;
     this.rng = rng;
@@ -90,6 +112,7 @@ export class RolloutSearchDriver {
     this.horizonTicks = config.horizonTicks ?? ROLLOUT_HORIZON_TICKS;
     this.rolloutsPerCandidate = config.rolloutsPerCandidate ?? ROLLOUTS_PER_CANDIDATE;
     this.epsilon = config.epsilon ?? HYSTERESIS_EPSILON;
+    this.kFlipTelemetry = config.kFlipTelemetry ?? false;
   }
 
   decide(world: World): WorldCommand[] {
@@ -151,6 +174,55 @@ export class RolloutSearchDriver {
       seeds.push(this.rng.fork().toJSON().state);
     }
     const spec = { horizonTicks: this.horizonTicks, rolloutSeeds: seeds };
+
+    // 57g.5 — the prefix instrument evaluates per seed (same rollouts, the
+    // evaluator clones per seed either way) so prefix decisions can be
+    // re-derived; the REAL decision uses the full-K means (equal to the
+    // batch path by the 57e mean-aggregation contract — pinned).
+    if (this.kFlipTelemetry) {
+      const perSeed = (cmd: WorldCommand | null): number[] =>
+        seeds.map((s) =>
+          evaluateCandidate(world, this.team, cmd, {
+            horizonTicks: this.horizonTicks,
+            rolloutSeeds: [s],
+          }),
+        );
+      const nullSeedScores = perSeed(null);
+      const challengerSeedScores = challengers.map((c) => perSeed(c.command));
+      const meanOf = (scores: readonly number[], n: number): number => {
+        let sum = 0;
+        for (let i = 0; i < n; i++) sum += scores[i]!;
+        return sum / n;
+      };
+      // The decision under the first n seeds: challenger index, -1 = null.
+      // Argmax is strictly-greater first-wins — the same tie rule as the
+      // batch path below, so the comparison is like-for-like.
+      const decideAt = (n: number): number => {
+        let bestIdx = -1;
+        let bestMean = -Infinity;
+        for (let i = 0; i < challengerSeedScores.length; i++) {
+          const m = meanOf(challengerSeedScores[i]!, n);
+          if (m > bestMean) {
+            bestMean = m;
+            bestIdx = i;
+          }
+        }
+        return bestIdx >= 0 && bestMean > meanOf(nullSeedScores, n) + this.epsilon
+          ? bestIdx
+          : -1;
+      };
+      const full = decideAt(seeds.length);
+      for (const prefix of [2, 4]) {
+        if (prefix >= seeds.length) continue;
+        if (decideAt(prefix) !== full) {
+          this.kFlipsByPrefix.set(prefix, (this.kFlipsByPrefix.get(prefix) ?? 0) + 1);
+        }
+      }
+      if (full < 0) return [];
+      const winner = challengers[full]!;
+      this.ownStanding = winner.sets;
+      return [winner.command];
+    }
 
     const nullScore = evaluateCandidate(world, this.team, null, spec);
     let best: { readonly command: WorldCommand; readonly sets: boolean } | null = null;

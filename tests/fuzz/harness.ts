@@ -74,6 +74,11 @@ export interface BattleResult {
   ticks: number;
   playerDeaths: number;
   enemyDeaths: number;
+  /** 57g.5 — the K-sensitivity prefix instrument's per-battle counters,
+   *  present ONLY when `rolloutSearch.kFlipTelemetry` is on (the schema is
+   *  otherwise untouched — no parity risk for existing arms). Flattened to
+   *  the {2,4} prefixes the instrument compares (K=8 is the arm's shape). */
+  searcherKFlips?: { searches: number; flips2: number; flips4: number };
   playerTeamSize: number;
   enemyTeamSize: number;
   /** G4 telemetry — per-unit levels of each team at battle START (from the
@@ -445,7 +450,23 @@ export function runOne(
         );
       }
     }
+    // 57g.5 — harvest the prefix-instrument counters while this battle's
+    // searcher is still live (a fresh driver is built per battle, so the
+    // stats ARE this battle's totals). Attached only under the telemetry
+    // flag so every other arm's battle records stay byte-shaped.
+    const endedSearcher = currentSearcher as RolloutSearchDriver | null;
+    const kFlips =
+      rolloutSearch?.kFlipTelemetry === true && endedSearcher
+        ? {
+            searcherKFlips: {
+              searches: endedSearcher.searchCount,
+              flips2: endedSearcher.kFlipStats.byPrefix.get(2) ?? 0,
+              flips4: endedSearcher.kFlipStats.byPrefix.get(4) ?? 0,
+            },
+          }
+        : {};
     battles.push({
+      ...kFlips,
       hop: currentBattle.hop,
       worldSeed: currentBattle.worldSeed,
       encounterId: currentBattle.encounterId,

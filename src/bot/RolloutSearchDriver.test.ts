@@ -171,3 +171,35 @@ describe('RolloutSearchDriver (57f — rollout arbitration)', () => {
     expect(JSON.stringify(run())).toBe(JSON.stringify(run()));
   });
 });
+
+describe('57g.5 — the K-prefix instrument', () => {
+  it('telemetry mode does not change the decision (the mean-aggregation contract, end to end)', () => {
+    // Both the commit case and the reject case, at K=8: the instrumented
+    // driver's per-seed means must reproduce the batch path's decisions
+    // exactly (same-seeded rng ⇒ same CRN seed sets).
+    for (const make of [outnumbered, overwhelming]) {
+      const plain = driver(1, { rolloutsPerCandidate: 8 });
+      const instrumented = driver(1, { rolloutsPerCandidate: 8, kFlipTelemetry: true });
+      expect(instrumented.decide(make(101))).toEqual(plain.decide(make(101)));
+    }
+  });
+
+  it('counts searches, and flips only at sub-K prefixes', () => {
+    const d = driver(1, { rolloutsPerCandidate: 8, kFlipTelemetry: true });
+    d.decide(outnumbered(101));
+    const stats = d.kFlipStats;
+    expect(stats.searches).toBe(1);
+    for (const [prefix, flips] of stats.byPrefix) {
+      expect([2, 4]).toContain(prefix);
+      expect(flips).toBeGreaterThanOrEqual(0);
+      expect(flips).toBeLessThanOrEqual(stats.searches);
+    }
+  });
+
+  it('K=2 has no sub-prefixes — the flip map stays empty', () => {
+    const d = driver(1, { kFlipTelemetry: true }); // default K = 2
+    d.decide(outnumbered(101));
+    expect(d.kFlipStats.searches).toBe(1);
+    expect(d.kFlipStats.byPrefix.size).toBe(0);
+  });
+});

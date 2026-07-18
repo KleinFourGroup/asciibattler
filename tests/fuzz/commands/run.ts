@@ -76,6 +76,8 @@ export type RunModeArgs = Pick<
   | 'searcher'
   | 'searcherSpec'
   | 'audition'
+  | 'k'
+  | 'kTelemetry'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -139,12 +141,20 @@ export function runRunCli(args: RunModeArgs): void {
   // (propose-regardless nominate on every script; the A/B arm).
   if (args.searcher) {
     const registry = args.audition ? AUDITION_SCRIPTS : undefined;
+    const scripts =
+      args.searcherSpec !== undefined ? parseScriptsSpec(args.searcherSpec, registry) : registry;
+    // 57g.5 — dial overrides force the full-config form; otherwise keep the
+    // minimal boolean/array forms (existing arms stay byte-shaped).
     harnessOptions = {
       ...harnessOptions,
       rolloutSearch:
-        args.searcherSpec !== undefined
-          ? parseScriptsSpec(args.searcherSpec, registry)
-          : (registry ?? true),
+        args.k !== undefined || args.kTelemetry
+          ? {
+              ...(scripts !== undefined ? { scripts } : {}),
+              ...(args.k !== undefined ? { rolloutsPerCandidate: args.k } : {}),
+              ...(args.kTelemetry ? { kFlipTelemetry: true } : {}),
+            }
+          : (scripts ?? true),
     };
   }
   // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =
@@ -189,6 +199,38 @@ export function runRunCli(args: RunModeArgs): void {
   }
 
   writeFileSync(join(args.outDir, 'summary.csv'), renderSummaryCsv(allResults));
+
+  // 57g.5 — the prefix instrument's outputs: an aggregate line + a SIDE CSV
+  // (k-flips.csv; summary.csv's schema is untouched — no parity risk).
+  if (args.kTelemetry) {
+    let searches = 0;
+    let flips2 = 0;
+    let flips4 = 0;
+    const rows: string[] = ['seed,strategy,searches,flips2,flips4'];
+    for (const r of allResults) {
+      let s = 0;
+      let f2 = 0;
+      let f4 = 0;
+      for (const b of r.battles) {
+        if (!b.searcherKFlips) continue;
+        s += b.searcherKFlips.searches;
+        f2 += b.searcherKFlips.flips2;
+        f4 += b.searcherKFlips.flips4;
+      }
+      searches += s;
+      flips2 += f2;
+      flips4 += f4;
+      rows.push(`${r.seed},${r.strategyName},${s},${f2},${f4}`);
+    }
+    writeFileSync(join(args.outDir, 'k-flips.csv'), rows.join('\n') + '\n');
+    const pct = (n: number) => (searches === 0 ? '—' : `${((100 * n) / searches).toFixed(1)}%`);
+    process.stdout.write(
+      `\n### K-prefix instrument (full K=${args.k ?? '?'})\n` +
+        `  searches: ${searches}\n` +
+        `  decision flips @K=2: ${flips2} (${pct(flips2)})\n` +
+        `  decision flips @K=4: ${flips4} (${pct(flips4)})\n`,
+    );
+  }
 
   if (args.perHop) {
     process.stdout.write('\n' + renderPerHopAnalysis(allResults));

@@ -103,6 +103,13 @@
  *   # decides). Requires --searcher; composes with =<spec>:
  *   npm run fuzz -- --count=120 --searcher --audition
  *
+ *   # 57g.5 — searcher dials + the K-sensitivity prefix instrument: --k=<n>
+ *   # overrides rolloutsPerCandidate; --k-telemetry evaluates per seed and
+ *   # counts decision flips at the {2,4} seed-prefixes vs full K (exact
+ *   # winner-flip counts from ONE K=8 batch → k-flips.csv + an aggregate
+ *   # print; serial only — --jobs bails):
+ *   npm run fuzz -- --count=120 --searcher --audition --k=8 --k-telemetry
+ *
  *   # 57f2 — run-mode parallelism: fan a measurement batch's seed range across
  *   # N child processes (summary.csv + failure traces byte-identical to serial —
  *   # pinned by parallelRun.test.ts; --seed and the --per-* analyses bail loudly;

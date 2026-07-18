@@ -99,6 +99,11 @@ export interface CliArgs {
   // nominator registry to AUDITION_SCRIPTS (propose-regardless nominate on
   // every script). Requires --searcher; composes with --searcher=<spec>.
   audition: boolean;
+  // 57g.5 — searcher dial + instrument: `--k=<n>` overrides
+  // rolloutsPerCandidate; `--k-telemetry` turns on the prefix-flip
+  // instrument (run it at --k=8). Both require --searcher.
+  k?: number;
+  kTelemetry: boolean;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -116,6 +121,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     scripts: false,
     searcher: false,
     audition: false,
+    kTelemetry: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -234,6 +240,15 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--audition':
         args.audition = true;
         break;
+      case '--k': {
+        const n = Number(v);
+        if (!Number.isInteger(n) || n < 1) throw new Error(`--k needs a positive integer (got '${v}')`);
+        args.k = n;
+        break;
+      }
+      case '--k-telemetry':
+        args.kTelemetry = true;
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
@@ -262,6 +277,10 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   // 57g.4 — audition is a searcher registry swap, meaningless without one.
   if (args.audition && !args.searcher) {
     throw new Error('--audition requires --searcher (it swaps the nominator registry)');
+  }
+  // 57g.5 — the K dial and the prefix instrument are searcher-only too.
+  if ((args.k !== undefined || args.kTelemetry) && !args.searcher) {
+    throw new Error('--k / --k-telemetry require --searcher');
   }
   return args;
 }

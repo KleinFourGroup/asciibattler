@@ -1221,6 +1221,29 @@ deltas. The pre-X H7c→O log lives at
     consistent with the §52 human-gap read (humans have both). Output:
     `tests/fuzz/output/57g-searcher-greedy-in`.
 
+- **2026-07-18 — §57g.4 THE AUDITION-EVERYONE A/B: 57.5% — audition
+  nomination beats trigger-gated nomination by +20.8 and passive by +24.2;
+  both paired reads individually significant. The §57c v1 nomination lock
+  (nominate = evaluate) was the binding constraint on the whole searcher.**
+  Protocol: same §57g.1 shape (fixture vector, seeds 1–120, v2 dials),
+  `--searcher --audition`, `--jobs=8` ON THE BOX via box-batch.sh (batch
+  `20260718-010409-9927b41`, 18 min wall — the audition cost fear did not
+  materialize; summary sha256 4d273a18). Hangs 0. Fetched:
+  `output/box-batches/20260718-010409-9927b41`.
+  - **Paired same-seed flips: vs trigger-gated searcher 14 win→loss /
+    39 loss→win (net +25, p≈0.0006); vs OFF 15/44 (net +29, p≈0.0002)**
+    — not churn; the first LARGE paired effects of the round.
+  - The read: rollout arbitration was never the bottleneck — CANDIDATE
+    SUPPLY was. Trigger-gated nomination starved the search (the §57-gate
+    scripts lose-or-tie shape reached the nomination channel too); with
+    thresholds stripped, the null-floor does the deciding job the
+    thresholds were badly approximating.
+  - ⚠ IN-SAMPLE ONLY (57g contamination discipline). Consequence for 57h,
+    ON RECORD BEFORE any held-out contact: the audition searcher is now
+    the NAMED CANDIDATE DEFAULT for the pre-registered three-set close.
+  - ⚠ Per-layout not captured (`--jobs` bails on `--per-*`); the spiral/
+    artillery diagnostics re-run serial if the 57g.6 scoring arm needs them.
+
 - **2026-07-17 — §57g.3 THE SEARCHER CELL BOARD (all 11 cells × 3 seeds,
   `--arms=searcher`, vs the stored §56e-pre board): the boss wall CRACKS
   — the first boss clear by ANY bot arm since §52 (1/3 at pool 17.3;

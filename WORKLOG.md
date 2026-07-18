@@ -1892,3 +1892,25 @@ Mid-arm crash note: Claude Code died mid-57g.1; the batch SURVIVED as
 an orphaned process (detached child) and completed while the recovery
 session verified the tree — no re-run needed, no rollback. Process
 lesson → retro/scratchpad.
+
+**57g.4 — the audition build + the A/B (2026-07-17/18).** The build
+(`9927b41`): per-script `nominate()` at each evaluate-null boundary
+(the per-script drop/keep table = the user-approved proposal; the two
+stall judgment calls — contact gate KEPT, hazard deferral DROPPED —
+documented at the seam), a SEPARATE `AUDITION_SCRIPTS` registry (the
+`nominate ?? evaluate` channel keys off the script object, so the
+standard registry staying nominate-free IS the baseline-parity
+mechanism — pinned, plus a seed-1 byte-check), `--audition` composing
+with the parameterized subset resolver. 10 pins in
+[auditionNominate.test.ts](src/bot/auditionNominate.test.ts).
+
+**The result: BALANCE §57g.4 — 57.5%, +20.8 over trigger-gated, both
+paired reads significant (p≈0.0006/0.0002), 18 min on the box.** The
+story: candidate supply, not arbitration quality, was the searcher's
+binding constraint — the v1 nomination lock imported the §57-gate's
+"triggers lose-or-tie" pathology into the nomination channel, and the
+57c VPS reframe (locked forks → measured A/Bs) just earned the whole
+box budget in one batch. The audition searcher is the NAMED candidate
+default for 57h, on record before any held-out contact. First
+production run of box-batch.sh end to end (launch → sentinel → fetch →
+hash), no manual ssh.

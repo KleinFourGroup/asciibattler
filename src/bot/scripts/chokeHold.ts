@@ -52,20 +52,45 @@ export function cutCenter(cut: readonly GridCoord[]): GridCoord {
   return best;
 }
 
+/** The geometric core shared by `evaluate` and `nominate`: a cut ≤
+ *  `CHOKE_MAX_CUT` exists and its center sits STRICTLY on our side (the 54d
+ *  diagonal-tie lesson applies here too) — without both there is no coherent
+ *  "plug OUR choke" proposal at all. One `armyMinCut` computation serves
+ *  both callers. */
+function chokeRead(
+  world: World,
+  team: ObjectiveTeam,
+): { cut: readonly GridCoord[]; proposal: TeamObjective } | null {
+  const enemies = livingUnits(world, opposingTeam(team));
+  const own = livingUnits(world, team);
+  if (own.length === 0 || enemies.length === 0) return null;
+  const cut = armyMinCut(world, team, CHOKE_MAX_CUT);
+  if (cut === null) return null;
+  const center = cutCenter(cut);
+  const minDist = (units: readonly { position: GridCoord }[]) =>
+    units.reduce((m, u) => Math.min(m, distanceBetween(center, u.position)), Infinity);
+  if (minDist(own) >= minDist(enemies)) return null;
+  return { cut, proposal: { mode: 'engage', target: { kind: 'tile', cell: center } } };
+}
+
+/**
+ * 57g.4 — the propose-regardless nominator: the 2× outnumber "funnel trade"
+ * is the go/no-go judgment the rollout arbitrates under audition; the
+ * geometric core (cut exists, our side) is all that must hold. Same purity
+ * contract as `evaluate`.
+ */
+export function nominateChokeHold(world: World, team: ObjectiveTeam): TeamObjective | null {
+  return chokeRead(world, team)?.proposal ?? null;
+}
+
 export const chokeHold: TrafficScript = {
   id: 'choke-hold',
   evaluate(world: World, team: ObjectiveTeam): TeamObjective | null {
     const enemies = livingUnits(world, opposingTeam(team));
-    const own = livingUnits(world, team);
-    if (own.length === 0 || enemies.length < CHOKE_OUTNUMBER_FACTOR) return null;
-    const cut = armyMinCut(world, team, CHOKE_MAX_CUT);
-    if (cut === null) return null;
-    if (enemies.length < cut.length * CHOKE_OUTNUMBER_FACTOR) return null;
-    const center = cutCenter(cut);
-    const minDist = (units: readonly { position: GridCoord }[]) =>
-      units.reduce((m, u) => Math.min(m, distanceBetween(center, u.position)), Infinity);
-    // STRICTLY our side (the 54d diagonal-tie lesson applies here too).
-    if (minDist(own) >= minDist(enemies)) return null;
-    return { mode: 'engage', target: { kind: 'tile', cell: center } };
+    if (enemies.length < CHOKE_OUTNUMBER_FACTOR) return null;
+    const read = chokeRead(world, team);
+    if (read === null) return null;
+    if (enemies.length < read.cut.length * CHOKE_OUTNUMBER_FACTOR) return null;
+    return read.proposal;
   },
 };

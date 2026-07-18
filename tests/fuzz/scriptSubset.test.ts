@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { TRAFFIC_SCRIPTS } from '../../src/bot/TrafficScriptDriver';
+import { AUDITION_SCRIPTS, TRAFFIC_SCRIPTS } from '../../src/bot/TrafficScriptDriver';
 import { parseScriptsSpec } from './scriptSubset';
 
 describe('parseScriptsSpec (57a — the leave-one-out CLI seam)', () => {
@@ -40,5 +40,15 @@ describe('parseScriptsSpec (57a — the leave-one-out CLI seam)', () => {
 
   it('throws on an empty spec', () => {
     expect(() => parseScriptsSpec('  ,  ')).toThrow(/empty spec/);
+  });
+
+  it('57g.4: resolves against a parameterized registry — the --audition composition', () => {
+    const subset = parseScriptsSpec('-unjam', AUDITION_SCRIPTS);
+    expect(subset.map((s) => s.id)).toEqual(
+      AUDITION_SCRIPTS.filter((s) => s.id !== 'unjam').map((s) => s.id),
+    );
+    // The resolved objects are the AUDITION variants (nominate present) —
+    // the spec grammar composes with the registry swap, not around it.
+    for (const s of subset) expect(s.nominate).toBeDefined();
   });
 });

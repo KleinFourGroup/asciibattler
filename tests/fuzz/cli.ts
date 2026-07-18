@@ -97,6 +97,12 @@
  *   npm run fuzz -- --count=120 --searcher
  *   npm run fuzz -- --count=120 --searcher=-unjam
  *
+ *   # 57g.4 — the audition-everyone A/B arm: --audition swaps the searcher's
+ *   # nominator registry to AUDITION_SCRIPTS (propose-regardless nominate on
+ *   # every script — go/no-go thresholds stripped, the rollout null-floor
+ *   # decides). Requires --searcher; composes with =<spec>:
+ *   npm run fuzz -- --count=120 --searcher --audition
+ *
  *   # 57f2 — run-mode parallelism: fan a measurement batch's seed range across
  *   # N child processes (summary.csv + failure traces byte-identical to serial —
  *   # pinned by parallelRun.test.ts; --seed and the --per-* analyses bail loudly;

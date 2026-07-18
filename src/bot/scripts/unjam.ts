@@ -139,6 +139,20 @@ export function regroupCell(
   return best;
 }
 
+/**
+ * 57g.4 — the propose-regardless nominator: the CONFIRMED 0.2 trigger
+ * threshold (which stays untouched on the `evaluate` path) is a go/no-go
+ * call the rollout arbitrates under audition; any jammed unit at all makes
+ * a regroup geometrically meaningful. Same purity contract as `evaluate`.
+ */
+export function nominateUnjam(world: World, team: ObjectiveTeam): TeamObjective | null {
+  const jam = jamRead(world, team);
+  if (jam.jammedUnitIds.length === 0) return null;
+  const cell = regroupCell(world, team, jam.jammedUnitIds);
+  if (cell === null) return null;
+  return { mode: 'engage', target: { kind: 'tile', cell } };
+}
+
 export const unjam: TrafficScript = {
   id: 'unjam',
   evaluate(world: World, team: ObjectiveTeam): TeamObjective | null {

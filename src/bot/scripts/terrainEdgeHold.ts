@@ -119,6 +119,24 @@ export function edgeHoldCell(
   return best;
 }
 
+/**
+ * 57g.4 — the propose-regardless nominator (the audition-everyone arm):
+ * the go/no-go thresholds — the ≥2-approaching floor and the 55c1 prey
+ * gate — are the rollout null-floor's job under audition; what remains is
+ * geometric well-formedness (≥1 approaching unit to anchor the side test,
+ * and an edge cell that exists). Same purity contract as `evaluate`.
+ */
+export function nominateTerrainEdgeHold(
+  world: World,
+  team: ObjectiveTeam,
+): TeamObjective | null {
+  const approaching = unitsApproachingHazard(world, team, EDGE_HOLD_APPROACH_STEPS);
+  if (approaching.length === 0) return null;
+  const cell = edgeHoldCell(world, team, approaching);
+  if (cell === null) return null;
+  return { mode: 'engage', target: { kind: 'tile', cell } };
+}
+
 export const terrainEdgeHold: TrafficScript = {
   id: 'terrain-edge-hold',
   evaluate(world: World, team: ObjectiveTeam): TeamObjective | null {

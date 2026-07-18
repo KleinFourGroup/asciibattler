@@ -17,7 +17,13 @@
 
 import { TRAFFIC_SCRIPTS, type TrafficScript } from '../../src/bot/TrafficScriptDriver';
 
-export function parseScriptsSpec(spec: string): readonly TrafficScript[] {
+/** 57g.4 — `registry` parameterizes the resolution base (the audition arm
+ *  resolves the same spec grammar against `AUDITION_SCRIPTS`); ids and
+ *  order semantics are identical across registries by construction. */
+export function parseScriptsSpec(
+  spec: string,
+  registry: readonly TrafficScript[] = TRAFFIC_SCRIPTS,
+): readonly TrafficScript[] {
   const tokens = spec
     .split(',')
     .map((t) => t.trim())
@@ -32,7 +38,7 @@ export function parseScriptsSpec(spec: string): readonly TrafficScript[] {
       '--scripts=<spec>: mixed only-ids and -minus-ids in one spec (pick one form)',
     );
   }
-  const knownIds = TRAFFIC_SCRIPTS.map((s) => s.id);
+  const knownIds = registry.map((s) => s.id);
   const ids = tokens.map((t) => (isMinus ? t.slice(1) : t));
   for (const id of ids) {
     if (!knownIds.includes(id)) {
@@ -41,6 +47,6 @@ export function parseScriptsSpec(spec: string): readonly TrafficScript[] {
   }
   const wanted = new Set(ids);
   return isMinus
-    ? TRAFFIC_SCRIPTS.filter((s) => !wanted.has(s.id))
-    : TRAFFIC_SCRIPTS.filter((s) => wanted.has(s.id));
+    ? registry.filter((s) => !wanted.has(s.id))
+    : registry.filter((s) => wanted.has(s.id));
 }

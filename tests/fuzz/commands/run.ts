@@ -9,6 +9,7 @@ import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { runOne } from '../harness';
 import { parseScriptsSpec } from '../scriptSubset';
+import { AUDITION_SCRIPTS } from '../../../src/bot/TrafficScriptDriver';
 import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
@@ -74,6 +75,7 @@ export type RunModeArgs = Pick<
   | 'scriptsSpec'
   | 'searcher'
   | 'searcherSpec'
+  | 'audition'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -133,10 +135,16 @@ export function runRunCli(args: RunModeArgs): void {
   // §57f — `--searcher` drives the portfolio rollout searcher at the §57c v2
   // default dials (an optional `=<spec>` value selects a nominator subset —
   // the same grammar as --scripts; dial overrides are the 57g surface).
+  // 57g.4 — `--audition` swaps the resolution base to AUDITION_SCRIPTS
+  // (propose-regardless nominate on every script; the A/B arm).
   if (args.searcher) {
+    const registry = args.audition ? AUDITION_SCRIPTS : undefined;
     harnessOptions = {
       ...harnessOptions,
-      rolloutSearch: args.searcherSpec !== undefined ? parseScriptsSpec(args.searcherSpec) : true,
+      rolloutSearch:
+        args.searcherSpec !== undefined
+          ? parseScriptsSpec(args.searcherSpec, registry)
+          : (registry ?? true),
     };
   }
   // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =

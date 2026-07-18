@@ -34,11 +34,11 @@ import type { World } from '../sim/World';
 import type { WorldCommand } from '../sim/Command';
 import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
 import { secondsToTicks } from '../config';
-import { terrainEdgeHold } from './scripts/terrainEdgeHold';
-import { unjam } from './scripts/unjam';
-import { chokeHold } from './scripts/chokeHold';
-import { cohesionFocus } from './scripts/cohesionFocus';
-import { attritionStall } from './scripts/attritionStall';
+import { terrainEdgeHold, nominateTerrainEdgeHold } from './scripts/terrainEdgeHold';
+import { unjam, nominateUnjam } from './scripts/unjam';
+import { chokeHold, nominateChokeHold } from './scripts/chokeHold';
+import { cohesionFocus, nominateCohesionFocus } from './scripts/cohesionFocus';
+import { attritionStall, nominateAttritionStall } from './scripts/attritionStall';
 
 /**
  * One traffic script: a trigger predicate + a proposed objective, fused —
@@ -78,6 +78,26 @@ export const TRAFFIC_SCRIPTS: readonly TrafficScript[] = [
   chokeHold,
   cohesionFocus,
   attritionStall,
+];
+
+/**
+ * 57g.4 — the AUDITION registry: the same five scripts, each wrapped with
+ * its propose-regardless `nominate` (go/no-go thresholds stripped; only
+ * geometric well-formedness remains — the per-script rationale lives in
+ * each script file). A SEPARATE registry, deliberately: the searcher's
+ * nomination channel is `nominate ?? evaluate` keyed off the script
+ * OBJECT, so leaving `TRAFFIC_SCRIPTS` nominate-free keeps the default
+ * `--searcher` arm byte-identical to the §57g.1 baseline by construction —
+ * the audition-everyone A/B flips registries (`--audition`), never code
+ * paths. Trigger-mode drivers ignore `nominate` entirely, so this registry
+ * is also legal (if pointless) under `trafficScripts:`.
+ */
+export const AUDITION_SCRIPTS: readonly TrafficScript[] = [
+  { ...terrainEdgeHold, nominate: nominateTerrainEdgeHold },
+  { ...unjam, nominate: nominateUnjam },
+  { ...chokeHold, nominate: nominateChokeHold },
+  { ...cohesionFocus, nominate: nominateCohesionFocus },
+  { ...attritionStall, nominate: nominateAttritionStall },
 ];
 
 /**

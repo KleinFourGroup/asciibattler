@@ -95,6 +95,10 @@ export interface CliArgs {
   // AND --scripts (one bot arm at a time — the frozen-anchor contract).
   searcher: boolean;
   searcherSpec?: string;
+  // 57g.4 — the audition-everyone arm: `--audition` swaps the searcher's
+  // nominator registry to AUDITION_SCRIPTS (propose-regardless nominate on
+  // every script). Requires --searcher; composes with --searcher=<spec>.
+  audition: boolean;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -111,6 +115,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     arena: false,
     scripts: false,
     searcher: false,
+    audition: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -226,6 +231,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         args.searcher = true;
         if (v !== undefined) args.searcherSpec = v;
         break;
+      case '--audition':
+        args.audition = true;
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
@@ -250,6 +258,10 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   }
   if (args.searcher && args.scripts) {
     throw new Error('--searcher is mutually exclusive with --scripts (one bot arm at a time)');
+  }
+  // 57g.4 — audition is a searcher registry swap, meaningless without one.
+  if (args.audition && !args.searcher) {
+    throw new Error('--audition requires --searcher (it swaps the nominator registry)');
   }
   return args;
 }

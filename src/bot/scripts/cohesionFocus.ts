@@ -44,6 +44,39 @@ export const FOCUS_MIN_RANGE = ARTILLERY_REACH;
 /** Assassination reachability: the target's distance to our nearest unit. */
 export const FOCUS_MAX_DIST = 6;
 
+/** The one-true-target ranking (header): longest reach › nearest › most
+ *  wounded › lowest id — shared by `evaluate` and `nominate`. */
+function bestTarget(candidates: readonly FocusTargetFeature[]): FocusTargetFeature {
+  let best: FocusTargetFeature = candidates[0]!;
+  for (const c of candidates) {
+    const better =
+      c.attackRange > best.attackRange ||
+      (c.attackRange === best.attackRange &&
+        (c.distToNearestOwn < best.distToNearestOwn ||
+          (c.distToNearestOwn === best.distToNearestOwn &&
+            (c.hpFraction < best.hpFraction ||
+              (c.hpFraction === best.hpFraction && c.unitId < best.unitId)))));
+    if (better) best = c;
+  }
+  return best;
+}
+
+/**
+ * 57g.4 — the propose-regardless nominator: the `FOCUS_MAX_DIST`
+ * reachability leash was both go/no-go AND the release leash — under the
+ * searcher both jobs belong to the null arm, so audition nominates ANY true
+ * artillery piece on the field. The reach ≥ `ARTILLERY_REACH` target-class
+ * filter stays: dropping it would nominate arbitrary enemies, which is a
+ * different script. Same purity contract as `evaluate`.
+ */
+export function nominateCohesionFocus(world: World, team: ObjectiveTeam): TeamObjective | null {
+  const candidates = focusTargetFeatures(world, team).filter(
+    (f) => f.attackRange >= FOCUS_MIN_RANGE,
+  );
+  if (candidates.length === 0) return null;
+  return { mode: 'engage', target: { kind: 'enemy', unitId: bestTarget(candidates).unitId } };
+}
+
 export const cohesionFocus: TrafficScript = {
   id: 'cohesion-focus',
   evaluate(world: World, team: ObjectiveTeam): TeamObjective | null {
@@ -51,17 +84,6 @@ export const cohesionFocus: TrafficScript = {
       (f) => f.attackRange >= FOCUS_MIN_RANGE && f.distToNearestOwn <= FOCUS_MAX_DIST,
     );
     if (candidates.length === 0) return null;
-    let best: FocusTargetFeature = candidates[0]!;
-    for (const c of candidates) {
-      const better =
-        c.attackRange > best.attackRange ||
-        (c.attackRange === best.attackRange &&
-          (c.distToNearestOwn < best.distToNearestOwn ||
-            (c.distToNearestOwn === best.distToNearestOwn &&
-              (c.hpFraction < best.hpFraction ||
-                (c.hpFraction === best.hpFraction && c.unitId < best.unitId)))));
-      if (better) best = c;
-    }
-    return { mode: 'engage', target: { kind: 'enemy', unitId: best.unitId } };
+    return { mode: 'engage', target: { kind: 'enemy', unitId: bestTarget(candidates).unitId } };
   },
 };

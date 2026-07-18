@@ -154,6 +154,26 @@ export function standOffCell(world: World, team: ObjectiveTeam): GridCoord | nul
   return best;
 }
 
+/**
+ * 57g.4 — the propose-regardless nominator. Dropped (the rollout's job
+ * now): the DoT-count and power-delta triggers, AND the hazard deferral —
+ * that rule was ownership discipline for blind triggers (one behavior one
+ * owner); under audition, overlap with terrain-edge hold is arbitrated by
+ * the rollout (dedup collapses identical proposals), and the burn-expiry
+ * cost that motivated the deferral ticks INSIDE an 8s horizon, so the
+ * search can see it. KEPT: the contact gate — "refuse the engagement"
+ * mid-brawl means disengage under fire (the 54h conviction), and its
+ * strung-out-and-picked-off cost materializes partly PAST the horizon
+ * (the 57c horizon-edge trap), so it stays structurally off the menu.
+ * User-approved calls, worklog §57g.4. Same purity contract as `evaluate`.
+ */
+export function nominateAttritionStall(world: World, team: ObjectiveTeam): TeamObjective | null {
+  if (armiesInContact(world, team)) return null;
+  const cell = standOffCell(world, team);
+  if (cell === null) return null;
+  return { mode: 'engage', target: { kind: 'tile', cell } };
+}
+
 export const attritionStall: TrafficScript = {
   id: 'attrition-stall',
   evaluate(world: World, team: ObjectiveTeam): TeamObjective | null {

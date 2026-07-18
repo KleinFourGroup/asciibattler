@@ -1914,3 +1914,21 @@ box budget in one batch. The audition searcher is the NAMED candidate
 default for 57h, on record before any held-out contact. First
 production run of box-batch.sh end to end (launch → sentinel → fetch →
 hash), no manual ssh.
+
+**57g.4b/c — the audition boards + the 57g.6 gate evidence
+(2026-07-18).** The cell board sweeps (BALANCE §57g.4b — fire-edge 0.0
+= the §53g human number, closed outright; artillery blemish gone;
+alpha-spiral 3/3); the full-run per-layout read (BALANCE §57g.4c)
+inverts spiralFireLife to +12.2 and resolves both watch rows, with the
+serial summary BYTE-IDENTICAL to the box jobs=8 hash (4d273a18) —
+determinism across machine × parallelism × telemetry in one read.
+**57g.6 recommendation: measured-unnecessary** — the λ-term's target
+dissolved under candidate supply; awaiting the user's call. The ε
+question also stands down (capped draws 18, between OFF 15 and
+trigger-gated 24). Ops notes: a power outage killed the first cell
+board mid-run (unlike a harness crash, an outage kills orphans — the
+recovery protocol from the scratchpad note applied; zero code loss,
+all eight in-flight 57g.5 files intact on disk); the audition serial
+batch runs ~3× trigger-gated wall clock (~85 min — deeper runs, avg
+hop 9.07), and the no-progress-output gap turned a routine wait into
+a CPU-probe question — the run-mode progress tick is filed in TODO.

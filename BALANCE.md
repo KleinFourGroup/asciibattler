@@ -1265,6 +1265,28 @@ deltas. The pre-X H7c→O log lives at
   the term must earn its slot against THIS board; the full-run
   `--per-layout` audition read is the gate evidence (running).
 
+- **2026-07-18 — §57g.4c THE AUDITION PER-LAYOUT READ (serial local,
+  `--per-layout`; summary.csv **4d273a18** = BYTE-IDENTICAL to the box
+  jobs=8 batch — machine × parallelism × telemetry parity in one hash):
+  spiralFireLife INVERTS to +12.2 — the deserters residual is not merely
+  neutralized but a STRENGTH; both trigger-gated watch rows resolve.**
+  Per-wave win-rate deltas vs OFF: rubbleQuarry **+16.1** (was −6.4 ⚠) ·
+  isthmus +15.7 · fetidPond +12.7 · icebergs/spiralFireLife +12.2 ·
+  desertFortress +0.4 (was −4.3) · negatives small: junctionAmbush −4.4
+  (filed as a §58 threat-read input) · strafingFunnel −2.4. Aggregates:
+  win 57.5%, avg hop 9.07 (audition runs go DEEP — the serial batch runs
+  ~3× the trigger-gated wall clock, ~85 min), capped draws 18 (OFF 15 /
+  trigger-gated 24 — the ε floor is NOT eating wins; the ε arm is
+  deprioritized to optional). Output:
+  `tests/fuzz/output/57g-audition-fixed-in-perlayout`.
+  - **§57g.6 GATE RECOMMENDATION (assistant; decision = user's):** close
+    the threat-exposure scoring investigation as MEASURED-UNNECESSARY.
+    The term's designated target (spiral: "material says hold, right
+    answer is advance") is +12.2 with 3/3 cell clears under candidate
+    supply alone; a λ-term must earn its slot against THIS board, and
+    the λ-at-scale risk (§57c: systematic bias, amplified confidently)
+    now buys nothing measurable. Quiescence stays parked as designed.
+
 - **2026-07-17 — §57g.3 THE SEARCHER CELL BOARD (all 11 cells × 3 seeds,
   `--arms=searcher`, vs the stored §56e-pre board): the boss wall CRACKS
   — the first boss clear by ANY bot arm since §52 (1/3 at pool 17.3;

@@ -1244,6 +1244,27 @@ deltas. The pre-X H7c→O log lives at
   - ⚠ Per-layout not captured (`--jobs` bails on `--per-*`); the spiral/
     artillery diagnostics re-run serial if the 57g.6 scoring arm needs them.
 
+- **2026-07-18 — §57g.4b THE AUDITION CELL BOARD (11 cells × 3 seeds,
+  `--arms=audition`): a clean sweep — equal-or-better than the
+  trigger-gated searcher on EVERY cell; SIX cells at 0.0 pool; fire-edge
+  0.0 = THE HUMAN'S NUMBER (the §53g original gap, human 0.0 vs bot 10.7,
+  closed outright); the artillery-funnel blemish GONE (3.3→0.0).**
+  | cell | none | searcher | audition |
+  |---|---|---|---|
+  | alpha-spiral | 14.7 (1/3) | 7.3 (2/3) | **6.7 (3/3)** |
+  | fire-edge | 9.7 | 3.0 | **0.0 (3/3)** |
+  | artillery-funnel | 0.0 | 3.3 ⚠ | **0.0 (3/3)** |
+  | stall-spiral | 4.7 | 0.7 | **0.0** |
+  | unjam-labyrinth | 2.0 | 1.3 | **0.0** |
+  | alpha-funnel | 12.7 | 10.7 | **8.7** |
+  | junction-elite | 17.3 (1/3) | 15.7 (1/3) | 15.0 (1/3) |
+  | boss-fortress | 21.3 (0/3) | 17.3 (1/3) | **16.0 (1/3)** |
+  (corridors/isthmus/river all 0.0 across.) Caveats standing: 3 seeds,
+  cells never arbitrate. 57g.6 consequence: the threat-exposure term's
+  designated spiral target has largely dissolved under candidate supply —
+  the term must earn its slot against THIS board; the full-run
+  `--per-layout` audition read is the gate evidence (running).
+
 - **2026-07-17 — §57g.3 THE SEARCHER CELL BOARD (all 11 cells × 3 seeds,
   `--arms=searcher`, vs the stored §56e-pre board): the boss wall CRACKS
   — the first boss clear by ANY bot arm since §52 (1/3 at pool 17.3;

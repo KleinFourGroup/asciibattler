@@ -365,10 +365,8 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
 
 **The cut (shape-locked 2026-07-16; audit + rationale in worklog §57):**
 
-- [x] 57a — re-ask gate 1 ✅ 2026-07-16 — OFF byte-identical (anchors
-  valid); unjam LOO = dead weight; `--scripts=<spec>` = `4d93ee2`
-- [x] 57b — re-ask gate 2 ✅ 2026-07-16 — third set OFF 37.5 / ON 33.3
-  (BALANCE §57-gate); **user VERDICT: BUILD** (outcome c — worklog §57)
+- [x] 57a+57b — the re-ask gates ✅ 2026-07-16 — anchors valid; unjam
+  LOO dead weight; **user VERDICT: BUILD** (BALANCE §57-gate · worklog)
 - [x] 57c — the design round ✅ 2026-07-16 — v2 shape user-locked (the
   VPS reframe: compute forks → 57g box arms); worklog §57c
 - [x] 57d ✅ 2026-07-16 — seam + guard/purity/CRN pins (5 tests); bench:
@@ -385,7 +383,8 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
   1b302f84 + traces; ssh word-split caught → `642dd7d`; worklog §57g-pre
 - [ ] 57g — cell spot-checks + IN-SAMPLE-ONLY iteration + the box arms:
   audition A/B ✅ 57.5% = the candidate default (BALANCE §57g.4) ·
-  K-sensitivity ◀ on the box · scoring ✅ DECIDED 2026-07-18
+  K-sensitivity ✅ 2026-07-18 — flips 9.5% of searches, 0 outcome
+  delta; K=2 lock recommended (§57g.5) · scoring ✅ DECIDED 2026-07-18
   MEASURED-UNNECESSARY (user; BALANCE §57g.4c + worklog)
 - [ ] 57h — the close re-measure under the pre-registered rule (all
   three sets) → BALANCE §57; scripts-arm default resolved; close

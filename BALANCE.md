@@ -1244,6 +1244,20 @@ deltas. The pre-X H7c→O log lives at
   - ⚠ Per-layout not captured (`--jobs` bails on `--per-*`); the spiral/
     artillery diagnostics re-run serial if the 57g.6 scoring arm needs them.
 
+- **2026-07-18 — §57g.5 THE K-SENSITIVITY READ (K=8 prefix instrument,
+  box serial ~9.7h, batch `20260718-131436-402b3ea`, summary 3aecf834):
+  K=2 disagrees with K=8 on 9.5% of SEARCH decisions (1,325/13,928;
+  K=4: 5.8%) — and on ZERO of the outcomes: 57.5% both arms, paired
+  22/22, perfectly symmetric.** The §57c low-regret prediction measured:
+  prefix disagreements concentrate on near-tie decisions; shared-luck
+  K=2 already ranks meaningfully-different candidates correctly. The
+  knife-edge coverage fear is dismissed at distribution scale.
+  **Recommendation: LOCK K=2** (4× cheaper searches, no measurable
+  cost); candidate config unchanged ⟹ per the pre-registered §57h
+  protocol the existing in-sample audition arm STANDS. Hangs 0, capped
+  draws 14. Output: `output/box-batches/20260718-131436-402b3ea`
+  (k-flips.csv = per-run counters).
+
 - **2026-07-18 — §57g.4b THE AUDITION CELL BOARD (11 cells × 3 seeds,
   `--arms=audition`): a clean sweep — equal-or-better than the
   trigger-gated searcher on EVERY cell; SIX cells at 0.0 pool; fire-edge

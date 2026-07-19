@@ -18,6 +18,7 @@ import { z } from 'zod';
 import defaultWeightsJson from '../../../config/fuzz-strategies.json';
 import type { UnitStats } from '../../../src/sim/Unit';
 import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
+import { ENCOUNTER_KINDS, type EncounterKind } from '../../../src/config/encounters';
 import { numberRecordSchema } from '../scoring';
 import { STAT_KEYS, PATH_KINDS } from './policies';
 
@@ -53,6 +54,10 @@ export interface ScoredWeights {
    *  parsing AND keeps its exact behavior. All five dims required when the
    *  group is present. */
   readonly port?: PortWeights;
+  /** 59c — OPTIONAL packet-fire dim group. ABSENT = packets never fire (no
+   *  `pickPacketFire`, the pre-§59 harness behavior — old vectors keep
+   *  parsing and behaving). All four dims required when present. */
+  readonly fire?: FireWeights;
   /** OPTIONAL inert seam (H7 `selectByScore`). 0 = argmax. Default 0; not a
    *  search dimension this cycle. */
   readonly temperature?: number;
@@ -81,6 +86,27 @@ export interface PortWeights {
   readonly unitBias: number;
 }
 
+/** 59c — the packet-fire scorer's four dims (the kickoff lock): hoard-vs-
+ *  spend per stakes + spend-when-flush. The fire rule (scored.ts): at a
+ *  legal site, fire while `bias[kind] + cachePressure × cacheFill > 0` —
+ *  strictly positive, so the ALL-ZERO group never fires (the fixed-policy
+ *  point, mirroring the port group's zero-equals-50g story). */
+export interface FireWeights {
+  /** Per-encounter-kind fire appetite. preTurn keys on the CURRENT
+   *  encounter; outOfBattle (the map screen) on the frontier's worst
+   *  battle-kind (boss > elite > normal; no battle ahead → no fire). */
+  readonly bias: Record<EncounterKind, number>;
+  /** Weight on cache fill (`cache.length / effectiveCacheSize`): firing
+   *  gets more attractive as the cache fills — the 49c decline-on-full
+   *  waste, spent instead of declined. */
+  readonly cachePressure: number;
+}
+
+const FireWeightsSchema = z.strictObject({
+  bias: numberRecordSchema(ENCOUNTER_KINDS),
+  cachePressure: z.number(),
+});
+
 const PortWeightsSchema = z.strictObject({
   daemonValue: z.number(),
   packetValue: z.number(),
@@ -100,6 +126,8 @@ const WeightsSchema = z.strictObject({
   passBias: z.number(),
   // 59b — optional group: absent = the fixed 50g policy (see PortWeights).
   port: PortWeightsSchema.optional(),
+  // 59c — optional group: absent = packets never fire (see FireWeights).
+  fire: FireWeightsSchema.optional(),
   temperature: z.number().optional(),
 });
 

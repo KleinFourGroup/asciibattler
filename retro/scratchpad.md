@@ -88,3 +88,22 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   (the 56e-pre board moved in both directions from a half-window timing
   shift; ~42% of probe seeds flipped outcome). The §55 cell-Goodhart
   doctrine held its second test: probes arbitrate, cells attribute.
+
+## ROADMAP line guards vs a mid-round expansion (2026-07-19, §59)
+
+The §55 reopen grew the round 5→8 phases after the caps were sized, and
+the guards have now needed three dated bumps (total 450→500→550→600;
+per-phase 60→70 at 59c). User floated suspending the guard or splitting/
+early-archiving ROADMAP; both rejected — suspension drops the rot
+protection at peak file size, and a split breaks the one-file-one-round
+archive ritual + the cross-phase sequencing sections. The dated-bump
+mechanism worked as designed each time (cause on record, guard still
+armed).
+
+**Proposed for the round-close distillation ritual:** import HANDOFF's
+demote-as-you-close rule into ROADMAP — when a phase CLOSES, collapse
+its section to a stub (header + one-breath outcome + the checked cut),
+since worklog/BALANCE/git already carry the rest. That would make the
+caps hold structurally instead of by bump, at the cost of one new legal
+mutation kind in the planning stack (AGENTS "Legal ROADMAP mutations").
+Weigh at the §60 close; if adopted, re-tighten both caps.

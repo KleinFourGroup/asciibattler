@@ -15,14 +15,16 @@
  */
 
 import type { RNG } from '../../../src/core/RNG';
-import type { NodeMap, NodeKind } from '../../../src/run/NodeMap';
+import { PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from '../../../src/run/NodeMap';
 import type { PortStock, Run } from '../../../src/run/Run';
 import type { UnitStats, UnitTemplate } from '../../../src/sim/Unit';
 import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
+import type { EncounterKind } from '../../../src/config/encounters';
+import { packetById, type UseContext } from '../../../src/config/packets';
 import { minMax, norm, type MinMax } from '../scoring';
 import { STAT_KEYS } from './policies';
-import type { FuzzStrategy, PortBuy } from '../Strategy';
-import type { PortWeights, ScoredWeights } from './scoredWeights';
+import type { FuzzStrategy, PacketFire, PortBuy } from '../Strategy';
+import type { FireWeights, PortWeights, ScoredWeights } from './scoredWeights';
 
 // ---- selection seam -------------------------------------------------------
 
@@ -284,11 +286,97 @@ function pickPortBuyScored(
   return candidates[best]!;
 }
 
+// ---- the packet-fire scorer (59c) ------------------------------------------
+
+/** NodeKind → the EncounterKind its battle hosts (rest/port host none). */
+function battleKindOf(kind: NodeKind): EncounterKind | null {
+  switch (kind) {
+    case 'battle':
+      return 'normal';
+    case 'elite':
+      return 'elite';
+    case 'boss':
+      return 'boss';
+    case 'rest':
+    case 'port':
+      return null;
+  }
+}
+
+/** The frontier's WORST battle-kind (boss > elite > normal) — what the
+ *  outOfBattle fire decision keys on: stakes ahead, not stakes behind. The
+ *  frontier derivation mirrors the harness's (pre-root → the root). */
+function worstFrontierKind(run: Run): EncounterKind | null {
+  const ids =
+    run.currentNodeId === PRE_ROOT_NODE_ID
+      ? [run.nodeMap.rootId]
+      : run.nodeMap.edges.filter((e) => e.from === run.currentNodeId).map((e) => e.to);
+  const kindOf = new Map(run.nodeMap.nodes.map((n) => [n.id, n.kind]));
+  let worst: EncounterKind | null = null;
+  const rank: Record<EncounterKind, number> = { normal: 0, elite: 1, boss: 2 };
+  for (const id of ids) {
+    const nodeKind = kindOf.get(id);
+    const bk = nodeKind === undefined ? null : battleKindOf(nodeKind);
+    if (bk !== null && (worst === null || rank[bk] > rank[worst])) worst = bk;
+  }
+  return worst;
+}
+
+/** Max-`power` slot index (lowest index ties) — the unit-target heuristic:
+ *  `power` chips the pools, so the biggest chipper gets the buff. One field
+ *  read, deterministic, no scorer machinery. */
+function maxPowerIndex(units: readonly UnitTemplate[]): number | null {
+  if (units.length === 0) return null;
+  let best = 0;
+  for (let i = 1; i < units.length; i++) {
+    if (units[i]!.stats.power > units[best]!.stats.power) best = i;
+  }
+  return best;
+}
+
+/**
+ * One ask of the 59a fire loop: fire the first context-usable held packet
+ * while `bias[kind] + cachePressure × cacheFill` is STRICTLY positive, else
+ * `null`. Strict, so the all-zero group never fires — the fixed-policy
+ * point (the port group's zero-equals-50g story, mirrored). Each landed
+ * fire shrinks the cache, so a pressure-carried spree self-limits. preTurn
+ * keys on the current encounter; outOfBattle on the frontier's worst
+ * battle-kind (nothing battle-shaped ahead → no fire). Packet choice is
+ * acquisition order (lowest cache index); unit-target packets aim at the
+ * max-`power` hand card (preTurn) / roster unit (outOfBattle).
+ */
+function pickPacketFireScored(context: UseContext, run: Run, fire: FireWeights): PacketFire | null {
+  const kind =
+    context === 'preTurn' ? (run.selectedEncounter?.kind ?? null) : worstFrontierKind(run);
+  if (kind === null) return null;
+  const fill = run.cache.length / Math.max(1, run.effectiveCacheSize);
+  if (fire.bias[kind] + fire.cachePressure * fill <= 0) return null;
+
+  for (let cacheIndex = 0; cacheIndex < run.cache.length; cacheIndex++) {
+    const packet = packetById(run.cache[cacheIndex]!);
+    if (packet === undefined || !packet.usableIn.includes(context)) continue;
+    if (packet.target === 'tile') continue; // mid-battle only — no launch context
+    if (packet.target === 'unit') {
+      if (context === 'preTurn') {
+        const handIndex = maxPowerIndex(run.hand.map((slot) => run.team[slot]!));
+        if (handIndex === null) continue;
+        return { cacheIndex, handIndex };
+      }
+      const rosterIndex = maxPowerIndex(run.team);
+      if (rosterIndex === null) continue;
+      return { cacheIndex, rosterIndex };
+    }
+    return { cacheIndex };
+  }
+  return null;
+}
+
 // ---- the strategy ---------------------------------------------------------
 
 export function scoredStrategy(name: string, weights: ScoredWeights): FuzzStrategy {
   const temperature = weights.temperature ?? 0;
   const port = weights.port;
+  const fireWeights = weights.fire;
   return {
     name,
     pickNextNode: (frontier, run, rng) => {
@@ -317,13 +405,21 @@ export function scoredStrategy(name: string, weights: ScoredWeights): FuzzStrate
       if (bestContinuous - avgContinuous + weights.passBias < 0) return null;
       return bestIdx;
     },
-    // 59b — present ONLY when the vector carries the optional `port` group:
-    // an old vector = no method = the harness's hardwired 50g branch, byte
-    // for byte (the kickoff's fixed-policy-defaults lock).
+    // 59b/59c — present ONLY when the vector carries the optional group:
+    // an old vector = no method = the harness's hardwired policies, byte
+    // for byte (the kickoff's fixed-policy-defaults lock). NB defining
+    // `pickPacketFire` flips the harness turn gates ON (59a; alignment
+    // pinned by the gates-on control).
     ...(port !== undefined
       ? {
           pickPortBuy: (stock: PortStock, run: Run, rng: RNG) =>
             pickPortBuyScored(stock, run, rng, weights, port, temperature),
+        }
+      : {}),
+    ...(fireWeights !== undefined
+      ? {
+          pickPacketFire: (context: UseContext, run: Run, _rng: RNG) =>
+            pickPacketFireScored(context, run, fireWeights),
         }
       : {}),
   };

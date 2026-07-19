@@ -401,3 +401,132 @@ describe('scored port-purchase policy (59b)', () => {
     expect(parseWeights(JSON.parse(serializeWeights(zeroWeights()))).port).toBeUndefined();
   });
 });
+
+// ---- packet-fire scorer (59c) ----------------------------------------------
+
+import type { FireWeights } from './scoredWeights';
+import type { EncounterKind } from '../../../src/config/encounters';
+import type { NodeKind } from '../../../src/run/NodeMap';
+
+function zeroFire(): FireWeights {
+  return { bias: { normal: 0, elite: 0, boss: 0 }, cachePressure: 0 };
+}
+
+/** A Run stub for the fire scorer: current encounter kind, cache + derived
+ *  capacity, hand/team for unit targeting, and a one-hop frontier built as
+ *  node 0 → nodes 1..n carrying the given kinds. */
+function fireRun(parts: {
+  kind?: EncounterKind;
+  cache?: string[];
+  capacity?: number;
+  team?: UnitTemplate[];
+  hand?: number[];
+  frontier?: NodeKind[];
+}): Run {
+  const frontier = parts.frontier ?? [];
+  return {
+    selectedEncounter: parts.kind !== undefined ? { kind: parts.kind } : null,
+    cache: parts.cache ?? [],
+    effectiveCacheSize: parts.capacity ?? 4,
+    team: parts.team ?? [],
+    hand: parts.hand ?? [],
+    currentNodeId: 0,
+    nodeMap: {
+      rootId: 0,
+      nodes: [{ id: 0, kind: 'battle' }, ...frontier.map((kind, i) => ({ id: i + 1, kind }))],
+      edges: frontier.map((_k, i) => ({ from: 0, to: i + 1 })),
+    },
+  } as unknown as Run;
+}
+
+function fireStrategy(fire: FireWeights): FuzzStrategyWithPort {
+  return scoredStrategy('fire-test', { ...zeroWeights(), fire });
+}
+
+describe('scored packet-fire policy (59c)', () => {
+  it('absent fire group → NO pickPacketFire (old vectors never fire, gates stay off)', () => {
+    expect(scoredStrategy('plain', zeroWeights()).pickPacketFire).toBeUndefined();
+  });
+
+  it('the ALL-ZERO fire group never fires — the fixed-policy point', () => {
+    const run = fireRun({ kind: 'boss', cache: ['patch', 'reroute'], capacity: 2 }); // full cache
+    expect(fireStrategy(zeroFire()).pickPacketFire!('preTurn', run, ANY_RNG)).toBeNull();
+  });
+
+  it('preTurn keys on the CURRENT encounter kind (hoard for the boss, spend at the boss)', () => {
+    const fire = { ...zeroFire(), bias: { normal: 0, elite: 0, boss: 1 } };
+    const atBoss = fireRun({ kind: 'boss', cache: ['patch'] });
+    const atNormal = fireRun({ kind: 'normal', cache: ['patch'] });
+    expect(fireStrategy(fire).pickPacketFire!('preTurn', atBoss, ANY_RNG)).toEqual({
+      cacheIndex: 0,
+    });
+    expect(fireStrategy(fire).pickPacketFire!('preTurn', atNormal, ANY_RNG)).toBeNull();
+  });
+
+  it('cachePressure makes a full cache overcome a negative bias — and an empty one not', () => {
+    const fire: FireWeights = { bias: { normal: -0.5, elite: 0, boss: 0 }, cachePressure: 1 };
+    const full = fireRun({
+      kind: 'normal',
+      cache: ['patch', 'venom', 'miner', 'reroute'],
+      capacity: 4,
+    });
+    const light = fireRun({ kind: 'normal', cache: ['patch'], capacity: 4 });
+    expect(fireStrategy(fire).pickPacketFire!('preTurn', full, ANY_RNG)).toEqual({ cacheIndex: 0 });
+    expect(fireStrategy(fire).pickPacketFire!('preTurn', light, ANY_RNG)).toBeNull();
+  });
+
+  it('selection is acquisition order, filtered to context-usable packets', () => {
+    // overclock is outOfBattle-only → preTurn skips it and fires patch at index 1.
+    const fire = { ...zeroFire(), bias: { normal: 1, elite: 1, boss: 1 } };
+    const run = fireRun({ kind: 'normal', cache: ['overclock', 'patch'] });
+    expect(fireStrategy(fire).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({ cacheIndex: 1 });
+  });
+
+  it('unit-target packets aim at the max-power card: hand at preTurn, roster outOfBattle', () => {
+    const fire = { ...zeroFire(), bias: { normal: 1, elite: 1, boss: 1 } };
+    const team = [meleeWithPower(3), meleeWithPower(9), meleeWithPower(5)];
+    // hype (preTurn, unit): hand positions map to team slots — slot 1 has power 9 → handIndex 1.
+    const preTurn = fireRun({ kind: 'normal', cache: ['hype'], team, hand: [0, 1, 2] });
+    expect(fireStrategy(fire).pickPacketFire!('preTurn', preTurn, ANY_RNG)).toEqual({
+      cacheIndex: 0,
+      handIndex: 1,
+    });
+    // overclock (outOfBattle, unit): targets the roster directly → rosterIndex 1.
+    const map = fireRun({ cache: ['overclock'], team, frontier: ['battle'] });
+    expect(fireStrategy(fire).pickPacketFire!('outOfBattle', map, ANY_RNG)).toEqual({
+      cacheIndex: 0,
+      rosterIndex: 1,
+    });
+  });
+
+  it('outOfBattle keys on the frontier WORST battle-kind; no battle ahead → no fire', () => {
+    const bossOnly = { ...zeroFire(), bias: { normal: -1, elite: -1, boss: 1 } };
+    const bossAhead = fireRun({ cache: ['patch'], frontier: ['rest', 'battle', 'boss'] });
+    const restAhead = fireRun({ cache: ['patch'], frontier: ['rest', 'port'] });
+    const normalAhead = fireRun({ cache: ['patch'], frontier: ['battle'] });
+    expect(fireStrategy(bossOnly).pickPacketFire!('outOfBattle', bossAhead, ANY_RNG)).toEqual({
+      cacheIndex: 0,
+    });
+    expect(fireStrategy(bossOnly).pickPacketFire!('outOfBattle', restAhead, ANY_RNG)).toBeNull();
+    expect(fireStrategy(bossOnly).pickPacketFire!('outOfBattle', normalAhead, ANY_RNG)).toBeNull();
+  });
+
+  it('draws NOTHING from the rng and the fire group round-trips/strict-rejects', () => {
+    const rng = new RNG(13);
+    const ref = new RNG(13);
+    const run = fireRun({ kind: 'boss', cache: ['patch'] });
+    fireStrategy({ ...zeroFire(), bias: { normal: 0, elite: 0, boss: 1 } }).pickPacketFire!(
+      'preTurn',
+      run,
+      rng,
+    );
+    expect(rng.toJSON()).toEqual(ref.toJSON());
+
+    const withFire: ScoredWeights = { ...zeroWeights(), fire: zeroFire() };
+    expect(parseWeights(JSON.parse(serializeWeights(withFire)))).toEqual(withFire);
+    expect(() => parseWeights({ ...withFire, fire: { ...zeroFire(), bogus: 1 } })).toThrow();
+    expect(() =>
+      parseWeights({ ...withFire, fire: { bias: { normal: 0, elite: 0 }, cachePressure: 0 } }),
+    ).toThrow(); // missing boss key
+  });
+});

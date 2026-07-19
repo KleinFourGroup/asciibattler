@@ -26,6 +26,7 @@ import { runMany } from './harness';
 import type { HarnessOptions } from './harness';
 import { aggregate } from './reporters';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
+import { ENCOUNTER_KINDS } from '../../src/config/encounters';
 import { STAT_KEYS, PATH_KINDS } from './strategies/policies';
 import { scoredStrategy } from './strategies/scored';
 import type { ScoredWeights } from './strategies/scoredWeights';
@@ -48,13 +49,15 @@ export const DEFAULT_BOX: SearchBox = { range: { min: -1, max: 1 } };
  * Draw one full `ScoredWeights` from the box. Weights are drawn in a FIXED order
  * (path → archetype → composition → compWeight → level → stats → total →
  * passBias → port[daemonValue → packetValue → priceSensitivity → bankReserve →
- * unitBias]) so the sample sequence is reproducible given `(samplerSeed, box,
- * vector index)`. `temperature` is left at its inert default (not sampled this
- * cycle). 59b — the port group is ALWAYS sampled (every candidate is a
- * port-scoring strategy; the fixed 50g policy stays reachable inside the
- * space: an all-zero group replicates it exactly, see scored.ts). Appending
- * the new draws LAST keeps the pre-59b prefix of the sequence identical for
- * a given samplerSeed.
+ * unitBias] → fire[bias.normal → bias.elite → bias.boss → cachePressure]) so
+ * the sample sequence is reproducible given `(samplerSeed, box, vector
+ * index)`. `temperature` is left at its inert default (not sampled this
+ * cycle). 59b/59c — the port + fire groups are ALWAYS sampled (every
+ * candidate is a port-scoring, fire-capable strategy; the fixed policies
+ * stay reachable inside the space: an all-zero port group replicates 50g
+ * exactly and an all-zero fire group never fires, see scored.ts). Appending
+ * new draws LAST keeps each earlier prefix of the sequence identical for a
+ * given samplerSeed.
  */
 export function sampleWeights(box: SearchBox, rng: RNG): ScoredWeights {
   const { min, max } = box.range;
@@ -77,7 +80,11 @@ export function sampleWeights(box: SearchBox, rng: RNG): ScoredWeights {
     bankReserve: draw(),
     unitBias: draw(),
   };
-  return { path, archetype, composition, compWeight, level, stats, total, passBias, port };
+  const fire = {
+    bias: record(ENCOUNTER_KINDS),
+    cachePressure: draw(),
+  };
+  return { path, archetype, composition, compWeight, level, stats, total, passBias, port, fire };
 }
 
 // ---- train / test seed split ----------------------------------------------

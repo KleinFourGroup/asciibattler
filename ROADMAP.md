@@ -484,8 +484,10 @@ prediction: NO bump, v34/v37 hold** (dev-harness surface only).
 - [x] 59b — the port scorer: recruit scoring reused + the 5 dims
   ✅ 2026-07-19 — ⭐ zero group = the 50g policy exactly (pinned);
   fixed-scale price term; 8 tests; worklog §59b
-- [ ] 59c — the fire scorer: 4 kind-keyed dims; gates-on wiring + the
-  no-fire parity pin; co-located tests
+- [x] 59c — the fire scorer: 4 kind-keyed dims; gates-on wiring + the
+  no-fire parity pin; co-located tests ✅ 2026-07-19 — zero group never
+  fires (the fixed point); kind = `selectedEncounter`; e2e probe: 10
+  fired/6 seeds, deterministic; 8 tests; worklog §59c
 - [ ] 59d — the top-K perturb-and-reselect refinement in search.ts + CLI;
   stubbed-evaluator tests
 - [ ] 59e — `--searcher --audition` (+ dials) into the search command +

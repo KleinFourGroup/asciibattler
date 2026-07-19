@@ -2246,3 +2246,35 @@ pin) · priceSensitivity prefer-cheaper + stop-at-negative · full-cache
 lane exclusion · recruit-scorer reuse + unitBias veto · zero RNG draws
 · schema round-trip/strict/optional. Suites: scored 38-total board +
 search + searchShard green; typecheck clean.
+
+### 59c — the packet fire scorer (2026-07-19)
+
+The 4-dim `fire` group (kickoff lock): `bias.normal/elite/boss` +
+`cachePressure`, fire rule = fire the first context-usable held packet
+while `bias[kind] + cachePressure × cacheFill` is STRICTLY positive
+(each landed fire shrinks the cache, so a pressure-carried spree
+self-limits). The zero group NEVER fires — the fixed-policy point,
+mirroring 59b's zero-equals-50g story. Notes:
+
+- **Kind source = `run.selectedEncounter.kind`** (the authored
+  Encounter) — the first draft read `currentEncounter.kind` and
+  typecheck caught it: `BattleEncounter` is the per-wave spawn snapshot
+  and carries no kind. outOfBattle keys on the frontier's WORST
+  battle-kind (boss > elite > normal; battle→normal mapping; rest/port
+  host nothing → no fire), the kickoff's overclock plan as locked.
+- **Selection heuristics (decided here, deliberately dumb):** packet
+  choice = acquisition order (lowest usable cache index); unit-target
+  packets aim at the max-`power` card (hand at preTurn, roster at
+  outOfBattle) — power chips the pools, one field read, no machinery.
+  Smarter targeting is a future dim family ONLY if 59f says the fire
+  arm is under-powered.
+- **E2E probe before commit:** a hand vector (positive biases, port
+  group live) over seeds {1,2,3,12,15,24} × hopCount 4: 10 packets
+  fired, 5 scored purchases, byte-deterministic on double-runs — the
+  charter's "packets stop being outcome-inert in the harness" is now
+  measurably true through the REAL scorer, not just the 59a stubs.
+
+Sampler draws the fire group last (prefix-stable); 8 co-located tests.
+Also this session: the per-phase line guard bumped 60→70 (user call —
+suspension + early-archive both rejected; closed-phase demotion rule
+PROPOSED for the round-close ritual; retro/scratchpad.md entry).

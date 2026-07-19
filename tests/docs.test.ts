@@ -117,7 +117,13 @@ describe('docs hygiene', () => {
   // one-liners are still to come. 600 = the full 8-phase round, all cuts in;
   // this round should never need another bump (the file archives at close).
   const ROADMAP_MAX_LINES = 600;
-  const ROADMAP_PHASE_MAX_LINES = 60;
+  // Per-phase bumped 60→70 at 59c (2026-07-19, user call): the §55-reopen
+  // round runs LONG phases (§57 hit ~60 legitimately — 8 sub-steps + the
+  // audition breakthrough; §59's remaining checkbox annotations would trip
+  // 60 again). Suspension and early-archiving both rejected (worklog §59 /
+  // retro scratchpad); a closed-phase demotion rule is PROPOSED for the
+  // round-close distillation ritual — re-examine both caps there.
+  const ROADMAP_PHASE_MAX_LINES = 70;
 
   it(`ROADMAP.md stays under ${ROADMAP_MAX_LINES} lines (a plan, not a log)`, () => {
     const n = lineCount(read('ROADMAP.md'));

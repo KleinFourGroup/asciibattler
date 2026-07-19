@@ -1964,3 +1964,15 @@ Sharpened while the K batch runs, so no number can bend it later:
    stays default, the searcher stays opt-in — and the near-miss
    pattern (if any) goes to §58 as input, not to a 57h retune. No
    post-hoc seed-set relitigating under ANY outcome.
+
+**RAN 2026-07-18 — VERDICT: YES, three of three, decisively (BALANCE
+§57h: +24.2 / +30.0 / +22.5; held-out ABOVE in-sample — anti-overfit).**
+The protocol executed mechanically: OFF drift-check byte-valid at
+HEAD, two chained box arms (~20 min each), three comparisons, no
+judgment calls anywhere. The phase's charter question ("does rollout
+arbitration dissolve the trigger-class failures?") closes YES — with
+the 57g.4 rider that the dissolving agent was candidate SUPPLY under
+arbitration, not arbitration alone. The K instrument's wash (9.5%
+search flips, zero outcome delta) meant the user never faced a
+cost-vs-quality dial call — "kinda glad it was a wash" (user). Bot
+~60% vs human ~80%: the §52 gap halved by one phase.

@@ -381,13 +381,12 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
 - [x] 57g-pre ✅ 2026-07-17 — `box-batch.sh` (launch/status/fetch/
   kill/run; two-sided parity guard); live-box E2E byte-identity
   1b302f84 + traces; ssh word-split caught → `642dd7d`; worklog §57g-pre
-- [ ] 57g — cell spot-checks + IN-SAMPLE-ONLY iteration + the box arms:
-  audition A/B ✅ 57.5% = the candidate default (BALANCE §57g.4) ·
-  K-sensitivity ✅ 2026-07-18 — flips 9.5% of searches, 0 outcome
-  delta; K=2 lock recommended (§57g.5) · scoring ✅ DECIDED 2026-07-18
-  MEASURED-UNNECESSARY (user; BALANCE §57g.4c + worklog)
-- [ ] 57h — the close re-measure under the pre-registered rule (all
-  three sets) → BALANCE §57; scripts-arm default resolved; close
+- [x] 57g ✅ CLOSED 2026-07-18 — audition A/B 57.5% = the candidate
+  (§57g.4) · K-sensitivity: 9.5% search flips, 0 outcome delta, **K=2
+  LOCKED (user)** (§57g.5) · scoring ✅ MEASURED-UNNECESSARY (user)
+- [x] 57h ✅ 2026-07-18 — **VERDICT YES ×3** (+24.2/+30.0/+22.5,
+  held-out ABOVE in-sample; BALANCE §57h) — the audition searcher =
+  the default realistic-bot arm; phase close awaiting user sign-off
 
 **Exit criteria:** the searcher ships behind the harness flag, the
 clairvoyance guard proven (foresee-the-rolls), the re-measure on record

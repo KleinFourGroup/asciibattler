@@ -1244,7 +1244,26 @@ deltas. The pre-X H7c→O log lives at
   - ⚠ Per-layout not captured (`--jobs` bails on `--per-*`); the spiral/
     artillery diagnostics re-run serial if the 57g.6 scoring arm needs them.
 
-- **2026-07-18 — §57g.5 THE K-SENSITIVITY READ (K=8 prefix instrument,
+- **2026-07-18 — §57h THE PRE-REGISTERED CLOSE: VERDICT YES ON ALL
+  THREE SETS — the audition searcher beats passive everywhere, and the
+  held-out sets beat IN-SAMPLE (the anti-overfit signature; the §55
+  pathology's mirror image).** Protocol exactly as pre-registered
+  (worklog §57h, written before the K read): candidate = audition
+  searcher at v2 dials + K=2 (user-locked); OFF anchors re-validated
+  byte-identical at HEAD (seed-1 check); both arms box `--jobs=8`.
+  | set | OFF | audition | Δ | paired (w→l / l→w) |
+  |---|---|---|---|---|
+  | in-sample 1–120 | 33.3 | 57.5 | +24.2 | 15/44 (p≈2e-4) |
+  | held-out 5001+ | 30.8 | **60.8** | **+30.0** | **11/47 (p≈2e-6)** |
+  | third 10001+ | 37.5 | **60.0** | **+22.5** | 12/39 (p≈2e-4) |
+  Hashes: held 7afc9ffb · third bf32973b (fetched
+  `output/box-batches/20260718-23*-e6f4e34`). **Consequence, per the
+  pre-registered rule: the audition searcher IS the default realistic-
+  bot arm** — the §55 "passive = anchor" NO stands for the FROZEN
+  anchors (they remain the comparison floor), but skill-anchored
+  balance reads from §58 on use the searcher. ⭐ Calibration: bot ~60%
+  vs human ~80% — the §52 ~50pt gap is now ~20pts; absolute bot-
+  anchored targets remain fiction, but the fiction is half as tall. (K=8 prefix instrument,
   box serial ~9.7h, batch `20260718-131436-402b3ea`, summary 3aecf834):
   K=2 disagrees with K=8 on 9.5% of SEARCH decisions (1,325/13,928;
   K=4: 5.8%) — and on ZERO of the outcomes: 57.5% both arms, paired

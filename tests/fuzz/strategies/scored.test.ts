@@ -42,7 +42,12 @@ function template(archetype: Archetype): UnitTemplate {
 }
 
 function meleeWithPower(power: number): UnitTemplate {
-  return { archetype: 'mercenary', level: 1, stats: { ...baseStatsForArchetype('mercenary'), power }, xp: 0 };
+  return {
+    archetype: 'mercenary',
+    level: 1,
+    stats: { ...baseStatsForArchetype('mercenary'), power },
+    xp: 0,
+  };
 }
 
 function fakeRun(parts: { team?: UnitTemplate[]; nodes?: MapNode[]; edges?: MapEdge[] }): Run {
@@ -181,7 +186,9 @@ describe('scored recruit policy', () => {
 
     // Roster all melee → rogue is at fraction 0 (under target) → take rogue,
     // a count-0 foothold the rich-get-richer term could never give.
-    const allMelee = fakeRun({ team: [template('mercenary'), template('mercenary'), template('mercenary')] });
+    const allMelee = fakeRun({
+      team: [template('mercenary'), template('mercenary'), template('mercenary')],
+    });
     expect(scoredStrategy('c', w).pickRecruit(offer, allMelee, ANY_RNG)).toBe(1);
 
     // Roster now over target on rogue (0.75) but under on melee (0.25) → the
@@ -230,5 +237,167 @@ describe('scored weight vector config', () => {
     expect(() => parseWeights({ ...valid, bogus: 1 })).toThrow();
     const { passBias: _omitted, ...missing } = valid;
     expect(() => parseWeights(missing)).toThrow();
+  });
+});
+
+// ---- port-purchase scorer (59b) --------------------------------------------
+
+import type { PortStock } from '../../../src/run/Run';
+import type { PortWeights } from './scoredWeights';
+import { BITS_SCALE } from './scored';
+import type { PortBuy } from '../Strategy';
+
+function zeroPort(): PortWeights {
+  return { daemonValue: 0, packetValue: 0, priceSensitivity: 0, bankReserve: 0, unitBias: 0 };
+}
+
+interface StockSpec {
+  daemons?: number[]; // prices
+  units?: Array<{ t: UnitTemplate; price: number }>;
+  packets?: number[]; // prices
+}
+
+function makeStock(spec: StockSpec): PortStock {
+  return {
+    daemons: (spec.daemons ?? []).map((price, i) => ({ daemonId: `d${i}`, price, sold: false })),
+    units: (spec.units ?? []).map(({ t, price }) => ({ template: t, price, sold: false })),
+    packets: (spec.packets ?? []).map((price, i) => ({ packetId: `p${i}`, price, sold: false })),
+  };
+}
+
+/** A Run stub for the port scorer: bits + cacheHasRoom + team are all it
+ *  reads. Mutable bits so tests can drive the 59a ask-until-null loop. */
+function portRun(parts: { bits: number; cacheHasRoom?: boolean; team?: UnitTemplate[] }): Run {
+  return {
+    bits: parts.bits,
+    cacheHasRoom: parts.cacheHasRoom ?? true,
+    team: parts.team ?? [],
+    nodeMap: { nodes: [], edges: [] },
+  } as unknown as Run;
+}
+
+/** Drive the harness's ask-until-null loop against a crafted stock: apply
+ *  each proposal (mark sold, spend bits), collect the transaction sequence. */
+function driveBuys(strategy: FuzzStrategyWithPort, stock: PortStock, run: Run): PortBuy[] {
+  const buys: PortBuy[] = [];
+  for (;;) {
+    const buy = strategy.pickPortBuy!(stock, run, ANY_RNG);
+    if (buy === null) break;
+    const lane =
+      buy.kind === 'daemon' ? stock.daemons : buy.kind === 'unit' ? stock.units : stock.packets;
+    const slot = lane[buy.index]!;
+    expect(slot.sold).toBe(false); // a proposal must always be legal
+    expect((run as { bits: number }).bits).toBeGreaterThanOrEqual(slot.price);
+    slot.sold = true;
+    (run as { bits: number }).bits -= slot.price;
+    buys.push(buy);
+    if (buys.length > 50) throw new Error('driveBuys: runaway loop');
+  }
+  return buys;
+}
+
+type FuzzStrategyWithPort = ReturnType<typeof scoredStrategy>;
+
+function portStrategy(port: PortWeights, base: Partial<ScoredWeights> = {}): FuzzStrategyWithPort {
+  return scoredStrategy('port-test', { ...zeroWeights(), ...base, port });
+}
+
+describe('scored port-purchase policy (59b)', () => {
+  it('absent port group → NO pickPortBuy (old vectors keep the hardwired 50g branch)', () => {
+    expect(scoredStrategy('plain', zeroWeights()).pickPortBuy).toBeUndefined();
+  });
+
+  it('an ALL-ZERO port group replicates the 50g fixed policy, transaction for transaction', () => {
+    // 50g single pass at bits 40: d0(10) ✓, d1(99) skip, u0(15) ✓, p0(5) ✓,
+    // p1(8) ✓ → the zero scorer must emit the same sequence (all-equal net
+    // scores → lowest-index tiebreak over the daemons→units→packets order).
+    const stock = makeStock({
+      daemons: [10, 99],
+      units: [{ t: template('mercenary'), price: 15 }],
+      packets: [5, 8],
+    });
+    const run = portRun({ bits: 40 });
+    expect(driveBuys(portStrategy(zeroPort()), stock, run)).toEqual([
+      { kind: 'daemon', index: 0 },
+      { kind: 'unit', index: 0 },
+      { kind: 'packet', index: 0 },
+      { kind: 'packet', index: 1 },
+    ]);
+    expect((run as { bits: number }).bits).toBe(40 - 10 - 15 - 5 - 8);
+  });
+
+  it('bankReserve is a bank floor: a buy that would dip below it never fires', () => {
+    const stock = makeStock({ daemons: [20] });
+    const port = { ...zeroPort(), daemonValue: 0.5, bankReserve: 0.5 }; // floor = 25 bits
+    expect(portStrategy(port).pickPortBuy!(stock, portRun({ bits: 30 }), ANY_RNG)).toBeNull();
+    // 45 − 20 = 25 ≥ floor → fires.
+    expect(portStrategy(port).pickPortBuy!(stock, portRun({ bits: 45 }), ANY_RNG)).toEqual({
+      kind: 'daemon',
+      index: 0,
+    });
+    expect(Math.max(0, port.bankReserve) * BITS_SCALE).toBe(25); // the scale contract
+  });
+
+  it('priceSensitivity prefers the cheaper of equal values and stops at negative net', () => {
+    const stock = makeStock({ daemons: [10, 30] });
+    const port = { ...zeroPort(), daemonValue: 0.5, priceSensitivity: 1 };
+    // nets: 0.5 − 10/50 = 0.3 · 0.5 − 30/50 = −0.1 → buy d0, then STOP (d1 < 0).
+    const run = portRun({ bits: 100 });
+    expect(driveBuys(portStrategy(port), stock, run)).toEqual([{ kind: 'daemon', index: 0 }]);
+  });
+
+  it('a full cache excludes the packet lane entirely', () => {
+    const stock = makeStock({ packets: [5] });
+    const port = { ...zeroPort(), packetValue: 1 };
+    expect(
+      portStrategy(port).pickPortBuy!(stock, portRun({ bits: 100, cacheHasRoom: false }), ANY_RNG),
+    ).toBeNull();
+  });
+
+  it('unit slots ride the recruit scorer: the stat-weighted template wins; unitBias can veto', () => {
+    const stock = makeStock({
+      units: [
+        { t: meleeWithPower(5), price: 10 },
+        { t: meleeWithPower(10), price: 10 },
+      ],
+    });
+    const statWeights: Partial<ScoredWeights> = {
+      stats: { ...zeroWeights().stats, power: 1 },
+    };
+    // power normalized over {offer ∪ roster}: 0 vs 1 → the higher-power slot
+    // wins despite the lowest-index tiebreak favoring index 0.
+    expect(
+      portStrategy(zeroPort(), statWeights).pickPortBuy!(stock, portRun({ bits: 100 }), ANY_RNG),
+    ).toEqual({ kind: 'unit', index: 1 });
+    // A deep-negative unitBias drives every unit net below zero → null.
+    expect(
+      portStrategy({ ...zeroPort(), unitBias: -5 }, statWeights).pickPortBuy!(
+        stock,
+        portRun({ bits: 100 }),
+        ANY_RNG,
+      ),
+    ).toBeNull();
+  });
+
+  it('draws NOTHING from the rng (deterministic argmax, the H7a contract)', () => {
+    const rng = new RNG(11);
+    const ref = new RNG(11);
+    const stock = makeStock({ daemons: [10, 20], packets: [5] });
+    portStrategy({ ...zeroPort(), daemonValue: 1, packetValue: 1 }).pickPortBuy!(
+      stock,
+      portRun({ bits: 100 }),
+      rng,
+    );
+    expect(rng.toJSON()).toEqual(ref.toJSON());
+  });
+
+  it('the port group round-trips, strict-rejects unknown fields, and stays optional', () => {
+    const withPort: ScoredWeights = { ...zeroWeights(), port: zeroPort() };
+    expect(parseWeights(JSON.parse(serializeWeights(withPort)))).toEqual(withPort);
+    expect(() => parseWeights({ ...withPort, port: { ...zeroPort(), bogus: 1 } })).toThrow();
+    const { daemonValue: _omitted, ...missing } = zeroPort();
+    expect(() => parseWeights({ ...withPort, port: missing })).toThrow();
+    // The pre-59b shape (no port key) still parses — the anchors story.
+    expect(parseWeights(JSON.parse(serializeWeights(zeroWeights()))).port).toBeUndefined();
   });
 });

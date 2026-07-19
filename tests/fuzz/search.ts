@@ -47,9 +47,14 @@ export const DEFAULT_BOX: SearchBox = { range: { min: -1, max: 1 } };
 /**
  * Draw one full `ScoredWeights` from the box. Weights are drawn in a FIXED order
  * (path → archetype → composition → compWeight → level → stats → total →
- * passBias) so the sample sequence is reproducible given `(samplerSeed, box,
+ * passBias → port[daemonValue → packetValue → priceSensitivity → bankReserve →
+ * unitBias]) so the sample sequence is reproducible given `(samplerSeed, box,
  * vector index)`. `temperature` is left at its inert default (not sampled this
- * cycle).
+ * cycle). 59b — the port group is ALWAYS sampled (every candidate is a
+ * port-scoring strategy; the fixed 50g policy stays reachable inside the
+ * space: an all-zero group replicates it exactly, see scored.ts). Appending
+ * the new draws LAST keeps the pre-59b prefix of the sequence identical for
+ * a given samplerSeed.
  */
 export function sampleWeights(box: SearchBox, rng: RNG): ScoredWeights {
   const { min, max } = box.range;
@@ -65,7 +70,14 @@ export function sampleWeights(box: SearchBox, rng: RNG): ScoredWeights {
   const stats = record(STAT_KEYS);
   const total = draw();
   const passBias = draw();
-  return { path, archetype, composition, compWeight, level, stats, total, passBias };
+  const port = {
+    daemonValue: draw(),
+    packetValue: draw(),
+    priceSensitivity: draw(),
+    bankReserve: draw(),
+    unitBias: draw(),
+  };
+  return { path, archetype, composition, compWeight, level, stats, total, passBias, port };
 }
 
 // ---- train / test seed split ----------------------------------------------
@@ -176,7 +188,11 @@ export function harnessEvaluate(
  * this list; the parent re-derives it identically, so sharded results are
  * byte-identical to single-process.
  */
-export function generateVectors(box: SearchBox, samplerSeed: number, count: number): ScoredWeights[] {
+export function generateVectors(
+  box: SearchBox,
+  samplerSeed: number,
+  count: number,
+): ScoredWeights[] {
   const rng = new RNG(samplerSeed);
   return Array.from({ length: count }, () => sampleWeights(box, rng));
 }

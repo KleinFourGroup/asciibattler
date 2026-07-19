@@ -46,10 +46,48 @@ export interface ScoredWeights {
    *  when the sum is < 0. Higher = recruit more readily; lower = pass more
    *  readily. */
   readonly passBias: number;
+  /** 59b — OPTIONAL port-purchase dim group. ABSENT = the fixed 50g
+   *  buy-all-affordable policy (the scored strategy defines no `pickPortBuy`
+   *  and the harness keeps its hardwired branch) — so every pre-§59 saved
+   *  vector (`55pre-vector.json`, the shipping `best-strategy.json`) keeps
+   *  parsing AND keeps its exact behavior. All five dims required when the
+   *  group is present. */
+  readonly port?: PortWeights;
   /** OPTIONAL inert seam (H7 `selectByScore`). 0 = argmax. Default 0; not a
    *  search dimension this cycle. */
   readonly temperature?: number;
 }
+
+/** 59b — the port-purchase scorer's five dims (the kickoff lock). Unit slots
+ *  reuse the WHOLE recruit scorer on `slot.template`; these dims add what a
+ *  recruit offer doesn't have: prices, a bank, and non-unit lanes. */
+export interface PortWeights {
+  /** Flat value of a daemon slot (idols aren't unit-scorable). */
+  readonly daemonValue: number;
+  /** Flat value of a packet slot (per-id values would be 6 more dims — the
+   *  kickoff kept the group at 5; revisit only if 59f says under-powered). */
+  readonly packetValue: number;
+  /** Price pressure (subtracted): `priceSensitivity × price / BITS_SCALE`
+   *  (scored.ts) — 0 = price-blind; 1.0 charges a full score-point per 50
+   *  bits. Fixed-scale, not candidate-relative, so the penalty is stable
+   *  across asks and single candidates keep theirs. */
+  readonly priceSensitivity: number;
+  /** Bank floor: no buy may drop `run.bits` below `max(0, bankReserve) ×
+   *  BITS_SCALE` (scored.ts) — ≤0 disables the reserve, so half the
+   *  [-1,1] sampling box is "spend freely" (the 50g fixed policy's shape). */
+  readonly bankReserve: number;
+  /** Added to every unit slot's recruit score — buying can be tighter or
+   *  looser than free recruiting without re-weighting the shared dims. */
+  readonly unitBias: number;
+}
+
+const PortWeightsSchema = z.strictObject({
+  daemonValue: z.number(),
+  packetValue: z.number(),
+  priceSensitivity: z.number(),
+  bankReserve: z.number(),
+  unitBias: z.number(),
+});
 
 const WeightsSchema = z.strictObject({
   path: numberRecordSchema(PATH_KINDS),
@@ -60,6 +98,8 @@ const WeightsSchema = z.strictObject({
   stats: numberRecordSchema(STAT_KEYS),
   total: z.number(),
   passBias: z.number(),
+  // 59b — optional group: absent = the fixed 50g policy (see PortWeights).
+  port: PortWeightsSchema.optional(),
   temperature: z.number().optional(),
 });
 

@@ -2211,3 +2211,38 @@ determinism under live stubs + both seams' liveness. The greedy-fire
 stub fired real packets on the 1–8 band (rewards + the fixed buy policy
 supply the cache), so outcome-inertness is already measurably gone at
 the seam level — 59c decides WHEN, not WHETHER.
+
+### 59b — the port-purchase scorer (2026-07-19)
+
+The 5-dim `port` group (kickoff lock) behind the 59a seam: unit slots
+ride the WHOLE recruit scorer (extracted as `scoreOffer`, the shared
+helper `pickRecruit` now also calls — zero behavior change there),
+daemons/packets get flat value dials, price and bank ride a fixed
+`BITS_SCALE = 50`. Three notes beyond the cut line:
+
+- **⭐ The all-zero port group IS the 50g fixed policy** — zero net
+  scores → lowest-index argmax over the daemons→units→packets candidate
+  order → the exact fixed-policy transaction sequence. Pinned as a test
+  (crafted stock, full ask-until-null drive). The anchors story gets a
+  second floor: not only does an OLD vector keep the hardwired branch
+  (no `port` key → no `pickPortBuy`), the ZERO point of the new dims
+  reproduces it through the seam.
+- **Fixed-scale price term (design deviation from the first draft):**
+  min–max-normalizing prices over the candidate set was wrong — the
+  set shrinks as the loop buys, so the last slot standing would get a
+  ZERO price penalty and rankings would shift between asks. The price
+  term is `priceSensitivity × price / BITS_SCALE` instead: stable
+  across asks, single candidates keep their penalty, and "too
+  expensive to buy at all" is expressible (net < 0 → stop).
+- **Sampler: the port group is ALWAYS drawn** (appended LAST, so a
+  given samplerSeed's pre-59b draw prefix is unchanged); the fixed
+  policy stays reachable INSIDE the search space via the zero point.
+  The shipped `config/fuzz-strategies.json` default deliberately does
+  NOT gain the group — `--strategy=scored` keeps pre-§59 behavior.
+
+8 co-located tests (scored.test.ts §59b): absent-group = no method ·
+the zero-policy equivalence drive · bankReserve floor (25-bit contract
+pin) · priceSensitivity prefer-cheaper + stop-at-negative · full-cache
+lane exclusion · recruit-scorer reuse + unitBias veto · zero RNG draws
+· schema round-trip/strict/optional. Suites: scored 38-total board +
+search + searchShard green; typecheck clean.

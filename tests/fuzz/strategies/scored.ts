@@ -16,12 +16,13 @@
 
 import type { RNG } from '../../../src/core/RNG';
 import type { NodeMap, NodeKind } from '../../../src/run/NodeMap';
+import type { PortStock, Run } from '../../../src/run/Run';
 import type { UnitStats, UnitTemplate } from '../../../src/sim/Unit';
 import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
 import { minMax, norm, type MinMax } from '../scoring';
 import { STAT_KEYS } from './policies';
-import type { FuzzStrategy } from '../Strategy';
-import type { ScoredWeights } from './scoredWeights';
+import type { FuzzStrategy, PortBuy } from '../Strategy';
+import type { PortWeights, ScoredWeights } from './scoredWeights';
 
 // ---- selection seam -------------------------------------------------------
 
@@ -169,18 +170,125 @@ function rosterAverageFeatures(team: readonly UnitTemplate[]): Features {
 }
 
 function countByArchetype(team: readonly UnitTemplate[]): Record<Archetype, number> {
-  const counts = Object.fromEntries(ALL_ARCHETYPES.map((a) => [a, 0])) as Record<
-    Archetype,
-    number
-  >;
+  const counts = Object.fromEntries(ALL_ARCHETYPES.map((a) => [a, 0])) as Record<Archetype, number>;
   for (const t of team) counts[t.archetype]++;
   return counts;
+}
+
+// ---- the shared offer scorer (recruit + port unit slots, 59b) --------------
+
+interface OfferScoring {
+  /** Full weighted score per offer card (archetype + composition +
+   *  continuous), aligned to the offer. */
+  readonly scores: readonly number[];
+  readonly offerFeatures: readonly Features[];
+  readonly normalizers: Normalizers;
+}
+
+/**
+ * Score a set of candidate unit templates against the roster — THE recruit
+ * scorer, factored out at 59b so port unit slots reuse it wholesale ("a port
+ * unit is a priced recruit"). Normalization spans {offer ∪ roster}, exactly
+ * as `pickRecruit` always did; the composition term is the H7c
+ * target-fraction pull.
+ */
+function scoreOffer(
+  offer: readonly UnitTemplate[],
+  team: readonly UnitTemplate[],
+  weights: ScoredWeights,
+): OfferScoring {
+  const offerFeatures = offer.map((u) => featuresOf(u.stats, u.level));
+  const teamFeatures = team.map((u) => featuresOf(u.stats, u.level));
+  const normalizers = makeNormalizers([...offerFeatures, ...teamFeatures]);
+  const rosterCount = countByArchetype(team);
+  const rosterFraction = (a: Archetype): number =>
+    team.length === 0 ? 0 : rosterCount[a] / team.length;
+  const scores = offer.map(
+    (card, i) =>
+      weights.archetype[card.archetype] +
+      weights.compWeight * (weights.composition[card.archetype] - rosterFraction(card.archetype)) +
+      continuousScore(offerFeatures[i]!, normalizers, weights),
+  );
+  return { scores, offerFeatures, normalizers };
+}
+
+// ---- the port-purchase scorer (59b) ----------------------------------------
+
+/** Bits per unit of the `bankReserve` and `priceSensitivity` dims: the
+ *  reserve floor spans "none" (≤0, half the [-1,1] sampling box — the 50g
+ *  fixed policy's spend-freely shape) up to ~two unit prices at 1.0, and a
+ *  priceSensitivity of 1.0 charges one full score-point per 50 bits (price
+ *  book: units 25–35 base, daemons ≤55). A FIXED scale, deliberately not
+ *  min–max over the candidates: a shrinking candidate set would zero the
+ *  penalty on the last slot standing and re-rank between asks. */
+export const BITS_SCALE = 50;
+
+/**
+ * One ask of the 59a ask-until-null loop: the best affordable slot by net
+ * score, or `null` to stop buying. Candidates are ordered daemons → units →
+ * packets (slot order within each lane) so the lowest-index tiebreak matches
+ * the 50g fixed policy's lane order at all-zero weights — a zero `port`
+ * group IS the fixed policy, transaction for transaction (pinned in
+ * scored.test.ts). Net score: flat per-kind value (daemon/packet) or the
+ * shared recruit score + `unitBias` (units), minus `priceSensitivity ×
+ * price / BITS_SCALE`. A negative best net score means nothing on offer is
+ * worth its price — stop.
+ */
+function pickPortBuyScored(
+  stock: PortStock,
+  run: Run,
+  rng: RNG,
+  weights: ScoredWeights,
+  port: PortWeights,
+  temperature: number,
+): PortBuy | null {
+  const reserve = Math.max(0, port.bankReserve) * BITS_SCALE;
+  const affordable = (price: number): boolean => run.bits >= price && run.bits - price >= reserve;
+
+  const candidates: PortBuy[] = [];
+  const prices: number[] = [];
+  // value() is computed lazily per lane below; unit slots share ONE
+  // scoreOffer pass over every unsold unit template (the normalizers must
+  // span the full unit offer, affordable or not — same set a recruit offer
+  // would present).
+  const unitTemplates = stock.units.filter((s) => !s.sold).map((s) => s.template);
+  const unitScores = scoreOffer(unitTemplates, run.team, weights).scores;
+  const values: number[] = [];
+
+  stock.daemons.forEach((slot, index) => {
+    if (slot.sold || !affordable(slot.price)) return;
+    candidates.push({ kind: 'daemon', index });
+    prices.push(slot.price);
+    values.push(port.daemonValue);
+  });
+  let unsoldUnitIdx = 0;
+  stock.units.forEach((slot, index) => {
+    if (slot.sold) return;
+    const score = unitScores[unsoldUnitIdx++]!;
+    if (!affordable(slot.price)) return;
+    candidates.push({ kind: 'unit', index });
+    prices.push(slot.price);
+    values.push(score + port.unitBias);
+  });
+  stock.packets.forEach((slot, index) => {
+    if (slot.sold || !affordable(slot.price) || !run.cacheHasRoom) return;
+    candidates.push({ kind: 'packet', index });
+    prices.push(slot.price);
+    values.push(port.packetValue);
+  });
+  if (candidates.length === 0) return null;
+
+  const net = values.map((v, i) => v - port.priceSensitivity * (prices[i]! / BITS_SCALE));
+  const best = selectByScore(net, rng, { temperature });
+  if (net[best]! < 0) return null;
+  return candidates[best]!;
 }
 
 // ---- the strategy ---------------------------------------------------------
 
 export function scoredStrategy(name: string, weights: ScoredWeights): FuzzStrategy {
   const temperature = weights.temperature ?? 0;
+  const port = weights.port;
   return {
     name,
     pickNextNode: (frontier, run, rng) => {
@@ -193,27 +301,13 @@ export function scoredStrategy(name: string, weights: ScoredWeights): FuzzStrate
     },
     pickRecruit: (offer, run, rng) => {
       const team = run.team;
-      const offerFeatures = offer.map((u) => featuresOf(u.stats, u.level));
-      const teamFeatures = team.map((u) => featuresOf(u.stats, u.level));
-      const normalizers = makeNormalizers([...offerFeatures, ...teamFeatures]);
-      const rosterCount = countByArchetype(team);
-
-      // Composition term: pull toward the per-archetype target *fraction* of the
-      // roster. `target − currentFraction` is positive while under target (a
-      // count-0 archetype still gets a foothold, unlike the old `diversity ×
-      // count`) and saturates / goes negative as it fills, so the search can
-      // seed AND stack a comp instead of only rich-get-richer-ing the incumbents.
-      const rosterFraction = (a: Archetype): number =>
-        team.length === 0 ? 0 : rosterCount[a] / team.length;
-
-      const fullScores = offer.map(
-        (card, i) =>
-          weights.archetype[card.archetype] +
-          weights.compWeight *
-            (weights.composition[card.archetype] - rosterFraction(card.archetype)) +
-          continuousScore(offerFeatures[i]!, normalizers, weights),
-      );
-      const bestIdx = selectByScore(fullScores, rng, { temperature });
+      // The composition term inside scoreOffer pulls toward the per-archetype
+      // target *fraction* of the roster: positive while under target (a
+      // count-0 archetype still gets a foothold), saturating / negative as it
+      // fills — so the search can seed AND stack a comp instead of only
+      // rich-get-richer-ing the incumbents.
+      const { scores, offerFeatures, normalizers } = scoreOffer(offer, team, weights);
+      const bestIdx = selectByScore([...scores], rng, { temperature });
 
       // Pass = a virtual "roster-average unit" candidate, compared on the
       // continuous terms only. An empty roster has no average → never pass.
@@ -223,5 +317,14 @@ export function scoredStrategy(name: string, weights: ScoredWeights): FuzzStrate
       if (bestContinuous - avgContinuous + weights.passBias < 0) return null;
       return bestIdx;
     },
+    // 59b — present ONLY when the vector carries the optional `port` group:
+    // an old vector = no method = the harness's hardwired 50g branch, byte
+    // for byte (the kickoff's fixed-policy-defaults lock).
+    ...(port !== undefined
+      ? {
+          pickPortBuy: (stock: PortStock, run: Run, rng: RNG) =>
+            pickPortBuyScored(stock, run, rng, weights, port, temperature),
+        }
+      : {}),
   };
 }

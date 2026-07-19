@@ -478,24 +478,20 @@ prediction: NO bump, v34/v37 hold** (dev-harness surface only).
 
 **The cut (shape-locked 2026-07-19; audit + rationale in worklog §59):**
 
-- [x] 59a — the strategy seam: optional `FuzzStrategy` port/fire methods
-  + harness dispatch behind them; absent = today's hardwired policies;
-  exit = byte-identical parity test (the 54a shape)
-  ✅ 2026-07-19 — 5-test parity suite incl. the gates-on control (H4b's
-  third surfacing); + `RunResult.packetsFired` (the portPurchases twin);
-  fire site = BEFORE the grant walk; worklog §59a
-- [ ] 59b — the port-purchase scorer in `scored`: recruit scoring reused
-  on `slot.template` + the 5 dims; schema grows optionally; co-located
-  tests derive expectations from config
-- [ ] 59c — the packet fire scorer: the 4 kind-keyed dims; gates-on
-  wiring + the gates-on-no-fire parity pin; co-located tests
-- [ ] 59d — the top-K perturb-and-reselect refinement stage in search.ts
-  + CLI flags; stubbed-evaluator tests
-- [ ] 59e — wire `--searcher --audition` (+ dials) into the search
-  command + shards; parity vs run-mode pinned
-- [ ] 59f — the regen on the box: cost probe → sized fresh `--search`
-  vs the audition searcher (refinement on, economy dims live); the
-  fixed-vector probe re-run; numbers → BALANCE §59
+- [x] 59a — the strategy seam: optional port/fire methods, absent = the
+  hardwired policies ✅ 2026-07-19 — 5-test parity incl. the gates-on
+  control; +`RunResult.packetsFired`; fire BEFORE the grant walk; worklog §59a
+- [x] 59b — the port scorer: recruit scoring reused + the 5 dims
+  ✅ 2026-07-19 — ⭐ zero group = the 50g policy exactly (pinned);
+  fixed-scale price term; 8 tests; worklog §59b
+- [ ] 59c — the fire scorer: 4 kind-keyed dims; gates-on wiring + the
+  no-fire parity pin; co-located tests
+- [ ] 59d — the top-K perturb-and-reselect refinement in search.ts + CLI;
+  stubbed-evaluator tests
+- [ ] 59e — `--searcher --audition` (+ dials) into the search command +
+  shards; parity vs run-mode pinned
+- [ ] 59f — the box regen: cost probe → sized `--search` (refinement on,
+  economy dims live); fixed-vector probe re-run; numbers → BALANCE §59
 
 **Exit criteria:** a fresh `--search` converges with the economy dims
 live; packets fire in harness runs (outcome-inertness gone); the

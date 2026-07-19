@@ -30,6 +30,7 @@ import { PRE_ROOT_NODE_ID } from '../../src/run/NodeMap';
 import type { RunConfig } from '../../src/run/RunConfig';
 import { spawnEncounter } from '../../src/sim/battleSetup';
 import type { FuzzStrategy } from './Strategy';
+import type { UseContext } from '../../src/config/packets';
 import { decideObjectiveCommand } from './objectiveStrategy';
 import type { ObjectiveProclivity } from './objectiveStrategy';
 import { CoverageObjectiveDriver, COVERAGE_MAX_TICKS } from './objectiveCoverage';
@@ -38,10 +39,7 @@ import {
   TRAFFIC_SCRIPTS,
   type TrafficScript,
 } from '../../src/bot/TrafficScriptDriver';
-import {
-  RolloutSearchDriver,
-  type RolloutSearchConfig,
-} from '../../src/bot/RolloutSearchDriver';
+import { RolloutSearchDriver, type RolloutSearchConfig } from '../../src/bot/RolloutSearchDriver';
 import { selectRedrawPositions } from './redrawPolicy';
 import type { RedrawPolicy } from './redrawPolicy';
 import { selectEmpowerPosition } from './empowerPolicy';
@@ -113,6 +111,11 @@ export interface RunResult {
   /** 50g — the run's closing bits balance (leftover liquidity: high values
    *  with low `portPurchases` read as "prices out of reach"). */
   finalBits: number;
+  /** 59a — packets the fire seam consumed across the run (`usePacket`
+   *  dispatches that landed, both contexts). The fire arm's non-vacuous
+   *  proof — the `portPurchases` twin; 0 forever on the anchor arms
+   *  (absent `pickPacketFire` = the pre-§59 never-fire behavior). */
+  packetsFired: number;
   battles: BattleResult[];
   recruits: RecruitChoice[];
   /**
@@ -310,10 +313,7 @@ export function runOne(
         : Array.isArray(options.rolloutSearch)
           ? { scripts: options.rolloutSearch }
           : (options.rolloutSearch as RolloutSearchConfig);
-  if (
-    rolloutSearch !== null &&
-    (objectiveActive || coverageActive || trafficScripts !== null)
-  ) {
+  if (rolloutSearch !== null && (objectiveActive || coverageActive || trafficScripts !== null)) {
     throw new Error(
       'harness: rolloutSearch is mutually exclusive with objective/coverageObjectives/' +
         'trafficScripts (the frozen-anchor contract)',
@@ -373,8 +373,11 @@ export function runOne(
     // at the live construction site).
     currentWorld.installBattleRules(encounter.battleRules ?? []);
     currentObjRng = objectiveActive ? new RNG(worldSeed).fork() : null;
-    currentCoverage = coverageActive ? new CoverageObjectiveDriver(new RNG(worldSeed).fork()) : null;
-    currentTraffic = trafficScripts !== null ? new TrafficScriptDriver('player', trafficScripts) : null;
+    currentCoverage = coverageActive
+      ? new CoverageObjectiveDriver(new RNG(worldSeed).fork())
+      : null;
+    currentTraffic =
+      trafficScripts !== null ? new TrafficScriptDriver('player', trafficScripts) : null;
     currentSearcher =
       rolloutSearch !== null
         ? new RolloutSearchDriver('player', new RNG(worldSeed).fork(), rolloutSearch)
@@ -488,7 +491,9 @@ export function runOne(
   // resolves to undefined = options.runConfig used untouched (byte-identical).
   const daemonOverride = options.daemon !== undefined ? daemonConfigFor(options.daemon) : undefined;
   const runConfig =
-    daemonOverride !== undefined ? { ...options.runConfig, daemon: daemonOverride } : options.runConfig;
+    daemonOverride !== undefined
+      ? { ...options.runConfig, daemon: daemonOverride }
+      : options.runConfig;
   const run = new Run(runConfig?.seed ?? seed, bus, runConfig);
   // L1c3/48f — the arm key is the STARTING daemon (rolled or forced at
   // construction). Read it NOW: reward tables grant daemons mid-run (accepted
@@ -497,8 +502,28 @@ export function runOne(
   const startingDaemonId = run.daemons[0]?.id ?? null;
   // K3c3/K4c3 — a live redraw OR empower policy needs the turn gates: the
   // `redrawCards`/`empowerUnit` commands are only legal in `turn-intro`,
-  // which exists only when `pauseAtTurnGates` is on.
-  if (redrawActive || empowerActive) run.pauseAtTurnGates = true;
+  // which exists only when `pauseAtTurnGates` is on. 59a — a strategy that
+  // DEFINES `pickPacketFire` needs the gate too (preTurn is one of the two
+  // legal fire contexts); the gated path is RNG-aligned with the headless
+  // one (H4b), pinned by the fire-null control in harnessEconomy.test.ts.
+  const fireActive = strategy.pickPacketFire !== undefined;
+  if (redrawActive || empowerActive || fireActive) run.pauseAtTurnGates = true;
+
+  // 59a — the ask-until-null packet-fire loop at one legal fire site. A
+  // rejected `usePacket` consumes nothing (the 49e validate-before-mutate
+  // contract), so "cache didn't shrink" is the break condition — never spin.
+  let packetsFired = 0;
+  const firePackets = (context: UseContext): void => {
+    if (!strategy.pickPacketFire) return;
+    for (;;) {
+      const fire = strategy.pickPacketFire(context, run, strategyRng);
+      if (fire === null) break;
+      const before = run.cache.length;
+      run.dispatch({ kind: 'usePacket', ...fire });
+      if (run.cache.length >= before) break; // rejected — never spin
+      packetsFired++;
+    }
+  };
 
   let hops = 0;
   let totalTicks = 0;
@@ -508,14 +533,40 @@ export function runOne(
     if (run.phase === 'defeat' || run.phase === 'complete') break;
 
     if (hops > maxNodeHops) {
-      return aborted(seed, strategy.name, run, startingDaemonId, battles, recruits, totalTicks, portPurchases, telemetry);
+      return aborted(
+        seed,
+        strategy.name,
+        run,
+        startingDaemonId,
+        battles,
+        recruits,
+        totalTicks,
+        portPurchases,
+        packetsFired,
+        telemetry,
+      );
     }
 
     switch (run.phase) {
       case 'map': {
+        // 59a — the outOfBattle fire site (the map screen; roster-targeted
+        // packets take `rosterIndex` here). Before the node pick, so a fired
+        // buff/heal lands ahead of the hop it was fired for.
+        firePackets('outOfBattle');
         const frontier = computeFrontier(run);
         if (frontier.length === 0) {
-          return aborted(seed, strategy.name, run, startingDaemonId, battles, recruits, totalTicks, portPurchases, telemetry);
+          return aborted(
+            seed,
+            strategy.name,
+            run,
+            startingDaemonId,
+            battles,
+            recruits,
+            totalTicks,
+            portPurchases,
+            packetsFired,
+            telemetry,
+          );
         }
         const nodeId = strategy.pickNextNode(frontier, run, strategyRng);
         run.dispatch({ kind: 'enterNode', nodeId });
@@ -523,6 +574,13 @@ export function runOne(
         break;
       }
       case 'turn-intro': {
+        // 59a — the preTurn fire site, BEFORE the grant walk: a fired
+        // grantRedraws packet inserts its grant at the cursor (49e), so the
+        // walk below can actually spend it — firing after the walk would
+        // leave reroute-style packets outcome-inert, the exact smell §59
+        // exists to remove. Hand-targeted packets take `handIndex`; buffs
+        // land before the redraw/empower policies read the hand.
+        firePackets('preTurn');
         // K3c3/K4c3→49d — the pre-turn gate: the bot walks the GRANT QUEUE
         // in order (acquisition order — naturally compliant under BOTH
         // finality modes), asking its policy per grant. The ask-until-null
@@ -689,6 +747,7 @@ export function runOne(
             recruits,
             totalTicks,
             portPurchases,
+            packetsFired,
             telemetry,
           );
         }
@@ -728,7 +787,35 @@ export function runOne(
         // Then undock — the dock consumed a hop in the 'map' case above,
         // so the abort guard still bounds the walk.
         const stock = run.portStock;
-        if (stock) {
+        if (stock && strategy.pickPortBuy) {
+          // 59a — the strategy-driven purchase loop (ask-until-null, the
+          // grant-walk idiom): one proposal per ask, dispatched against the
+          // live stock/bits, re-asked after each landed buy. The sold-flag
+          // flip is the landed-transaction read (portPurchases keeps
+          // counting REAL transactions, same as the fixed policy below); a
+          // proposal that doesn't land breaks the loop — never spin.
+          for (;;) {
+            const buy = strategy.pickPortBuy(stock, run, strategyRng);
+            if (buy === null) break;
+            const lane =
+              buy.kind === 'daemon'
+                ? stock.daemons
+                : buy.kind === 'unit'
+                  ? stock.units
+                  : stock.packets;
+            const slot = lane[buy.index];
+            if (slot === undefined || slot.sold) break;
+            run.dispatch(
+              buy.kind === 'daemon'
+                ? { kind: 'buyPortDaemon', index: buy.index }
+                : buy.kind === 'unit'
+                  ? { kind: 'buyPortUnit', index: buy.index }
+                  : { kind: 'buyPortPacket', index: buy.index },
+            );
+            if (!slot.sold) break; // rejected (unaffordable / cache full) — never spin
+            portPurchases++;
+          }
+        } else if (stock) {
           stock.daemons.forEach((slot, index) => {
             if (!slot.sold && run.bits >= slot.price) {
               run.dispatch({ kind: 'buyPortDaemon', index });
@@ -793,6 +880,7 @@ export function runOne(
     recruits,
     totalTicks,
     portPurchases,
+    packetsFired,
     telemetry,
   );
 }
@@ -832,6 +920,7 @@ function finalize(
   recruits: RecruitChoice[],
   totalTicks: number,
   portPurchases: number,
+  packetsFired: number,
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   // Fold in the recruit log + final roster composition (player-side, already
@@ -852,6 +941,7 @@ function finalize(
     finalTeamSize: run.team.length,
     portPurchases,
     finalBits: run.bits,
+    packetsFired,
     battles,
     recruits,
     ...(finishedTelemetry !== undefined ? { telemetry: finishedTelemetry } : {}),
@@ -867,6 +957,7 @@ function aborted(
   recruits: RecruitChoice[],
   totalTicks: number,
   portPurchases: number,
+  packetsFired: number,
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   return finalize(
@@ -879,6 +970,7 @@ function aborted(
     recruits,
     totalTicks,
     portPurchases,
+    packetsFired,
     telemetry,
   );
 }

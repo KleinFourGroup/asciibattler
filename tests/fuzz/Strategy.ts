@@ -16,8 +16,24 @@
  */
 
 import type { RNG } from '../../src/core/RNG';
-import type { Run } from '../../src/run/Run';
+import type { Run, PortStock } from '../../src/run/Run';
+import type { UseContext } from '../../src/config/packets';
 import type { UnitTemplate } from '../../src/sim/Unit';
+
+/** 59a — one port-purchase proposal: which stock lane + slot to buy. */
+export interface PortBuy {
+  readonly kind: 'daemon' | 'unit' | 'packet';
+  readonly index: number;
+}
+
+/** 59a — one packet-fire proposal (the `usePacket` command minus its kind;
+ *  `handIndex` targets a hand position at `preTurn`, `rosterIndex` a team
+ *  slot at `outOfBattle` — the 49e targeting contract). */
+export interface PacketFire {
+  readonly cacheIndex: number;
+  readonly handIndex?: number;
+  readonly rosterIndex?: number;
+}
 
 export interface FuzzStrategy {
   readonly name: string;
@@ -28,4 +44,25 @@ export interface FuzzStrategy {
    * return `null`, so their draw sequences (and fuzz baselines) are unchanged.
    */
   pickRecruit(offer: readonly UnitTemplate[], run: Run, rng: RNG): number | null;
+  /**
+   * 59a — OPTIONAL port-purchase decision, asked repeatedly while docked
+   * (ask-until-null, the grant-walk idiom): each call proposes ONE buy, the
+   * harness dispatches it and asks again against the mutated stock/bits;
+   * `null` stops buying and undocks. A proposal that doesn't land (sold /
+   * unaffordable / cache full) breaks the loop — never spin. ABSENT = the
+   * hardwired 50g buy-all-affordable policy (daemons → units →
+   * packets-if-room, slot order); the fixed-policy anchor arms never define
+   * this, so their draw sequences and the fuzz baselines are untouched.
+   */
+  pickPortBuy?(stock: PortStock, run: Run, rng: RNG): PortBuy | null;
+  /**
+   * 59a — OPTIONAL packet-fire decision, asked ask-until-null at the two
+   * legal fire sites (the 49e context contract): `preTurn` (the turn-intro
+   * gate — DEFINING this method flips `pauseAtTurnGates` ON, riding the
+   * H4b-aligned gated path) and `outOfBattle` (the map screen, before the
+   * node pick). Each call proposes one `usePacket`; a rejected dispatch
+   * (cache length unchanged) breaks the loop. ABSENT = packets never fire —
+   * the pre-§59 harness behavior, and the anchor arms' permanent policy.
+   */
+  pickPacketFire?(context: UseContext, run: Run, rng: RNG): PacketFire | null;
 }

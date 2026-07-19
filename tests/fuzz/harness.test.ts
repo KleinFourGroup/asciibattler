@@ -116,10 +116,7 @@ describe('fuzz harness', () => {
 
 describe('fuzz reporters', () => {
   it('renders a well-formed CSV summary', () => {
-    const results = [
-      runOne(1, makeStrategy('pure-random')!),
-      runOne(2, makeStrategy('greedy')!),
-    ];
+    const results = [runOne(1, makeStrategy('pure-random')!), runOne(2, makeStrategy('greedy')!)];
     const csv = renderSummaryCsv(results);
     const lines = csv.trim().split('\n');
     expect(lines).toHaveLength(3); // header + 2 rows
@@ -192,7 +189,11 @@ describe('fuzz reporters', () => {
     // system. Run A: 3 waves on hop 1 (loses 2 of them — pool absorbs it),
     // survives to hop 2, completes. Run B: dies on hop 1. So hop 1 has 2
     // runs reached, 1 died (B) — NOT 3 (the lost waves don't count as run-deaths).
-    const battle = (hop: number, winner: 'player' | 'enemy', playerDeaths: number): BattleResult => ({
+    const battle = (
+      hop: number,
+      winner: 'player' | 'enemy',
+      playerDeaths: number,
+    ): BattleResult => ({
       hop,
       worldSeed: 0,
       encounterId: 'fixture',
@@ -219,13 +220,19 @@ describe('fuzz reporters', () => {
       totalTicks: 0,
       finalTeamSize: 5,
       portPurchases: 0,
+      packetsFired: 0,
       finalBits: 0,
       battles,
       recruits: [],
     });
     // Run A: 3 hop-1 waves (2 lost but absorbed), then hop 2, completes.
     const runA = run(
-      [battle(1, 'enemy', 4), battle(1, 'enemy', 3), battle(1, 'player', 1), battle(2, 'player', 0)],
+      [
+        battle(1, 'enemy', 4),
+        battle(1, 'enemy', 3),
+        battle(1, 'player', 1),
+        battle(2, 'player', 0),
+      ],
       'complete',
       2,
     );
@@ -277,6 +284,7 @@ describe('fuzz reporters', () => {
         totalTicks: 0,
         finalTeamSize: 5,
         portPurchases: 0,
+        packetsFired: 0,
         finalBits: 0,
         recruits: [],
         battles: [
@@ -357,6 +365,7 @@ describe('fuzz reporters', () => {
         totalTicks: 0,
         finalTeamSize: 5,
         portPurchases: 0,
+        packetsFired: 0,
         finalBits: 0,
         battles: [eb(1, 'enc1', 'player'), eb(1, 'enc1', 'enemy'), eb(2, 'enc2', 'player')],
         recruits: [],
@@ -375,6 +384,7 @@ describe('fuzz reporters', () => {
         totalTicks: 0,
         finalTeamSize: 5,
         portPurchases: 0,
+        packetsFired: 0,
         finalBits: 0,
         battles: [eb(1, 'enc1', 'player')],
         recruits: [],
@@ -427,6 +437,7 @@ describe('fuzz reporters', () => {
         totalTicks: 0,
         finalTeamSize: 5,
         portPurchases: 0,
+        packetsFired: 0,
         finalBits: 0,
         battles: [eb('enc1')],
         recruits: [],

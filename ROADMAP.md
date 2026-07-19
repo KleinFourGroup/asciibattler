@@ -478,9 +478,12 @@ prediction: NO bump, v34/v37 hold** (dev-harness surface only).
 
 **The cut (shape-locked 2026-07-19; audit + rationale in worklog §59):**
 
-- [ ] 59a — the strategy seam: optional `FuzzStrategy` port/fire methods
+- [x] 59a — the strategy seam: optional `FuzzStrategy` port/fire methods
   + harness dispatch behind them; absent = today's hardwired policies;
   exit = byte-identical parity test (the 54a shape)
+  ✅ 2026-07-19 — 5-test parity suite incl. the gates-on control (H4b's
+  third surfacing); + `RunResult.packetsFired` (the portPurchases twin);
+  fire site = BEFORE the grant walk; worklog §59a
 - [ ] 59b — the port-purchase scorer in `scored`: recruit scoring reused
   on `slot.template` + the 5 dims; schema grows optionally; co-located
   tests derive expectations from config

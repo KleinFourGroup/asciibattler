@@ -36,6 +36,8 @@ const CSV_HEADER = [
   // pre-existing column keeps its position for positional consumers.
   'portPurchases',
   'finalBits',
+  // 59a — same append-last rule; the fire seam's non-vacuous proof.
+  'packetsFired',
 ].join(',');
 
 export function renderSummaryCsv(results: readonly RunResult[]): string {
@@ -48,8 +50,7 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
     // The hung battle (if any) is always the last entry — harness aborts
     // the run on hang. Empty string for non-hung runs so CSV consumers
     // can spreadsheet-filter on layout without nulls.
-    const hangBattle =
-      r.outcome === 'hang' ? r.battles[r.battles.length - 1] : undefined;
+    const hangBattle = r.outcome === 'hang' ? r.battles[r.battles.length - 1] : undefined;
     const hangLayout = hangBattle ? (hangBattle.layoutId ?? 'procedural') : '';
     lines.push(
       [
@@ -70,6 +71,7 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
         hangLayout,
         r.portPurchases,
         r.finalBits,
+        r.packetsFired,
       ].join(','),
     );
   }
@@ -195,11 +197,16 @@ export function renderFailureTrace(result: RunResult): string {
   lines.push(`- **Total ticks:** ${result.totalTicks}`);
   lines.push(`- **Final team size:** ${result.finalTeamSize}`);
   lines.push(`- **Port purchases / final bits:** ${result.portPurchases} / ${result.finalBits}`);
+  lines.push(`- **Packets fired:** ${result.packetsFired}`);
   lines.push('');
   lines.push('## Battles');
   lines.push('');
-  lines.push('| Hop | Layout | Winner | Ticks | Player deaths | Enemy deaths | Player size | Enemy size |');
-  lines.push('|----:|:-------|:-------|------:|--------------:|-------------:|------------:|-----------:|');
+  lines.push(
+    '| Hop | Layout | Winner | Ticks | Player deaths | Enemy deaths | Player size | Enemy size |',
+  );
+  lines.push(
+    '|----:|:-------|:-------|------:|--------------:|-------------:|------------:|-----------:|',
+  );
   for (const b of result.battles) {
     const layout = b.layoutId ?? 'procedural';
     lines.push(
@@ -358,9 +365,7 @@ export function renderPerHopAnalysis(results: readonly RunResult[]): string {
     rs.enemyMedianLevel.toFixed(1),
     rs.enemyLevelSpread.toFixed(2),
   ];
-  const widths = header.map((h, i) =>
-    Math.max(h.length, ...rows.map((r) => cell(r)[i]!.length)),
-  );
+  const widths = header.map((h, i) => Math.max(h.length, ...rows.map((r) => cell(r)[i]!.length)));
   const fmt = (cells: string[]) => cells.map((c, i) => c.padStart(widths[i]!)).join('  ');
   const lines: string[] = [];
   lines.push(`### Per-hop team analysis (${totalBattles} battles across ${results.length} runs)`);
@@ -412,8 +417,7 @@ function layoutKey(b: BattleResult): string {
  *  layout-only and the layout×hop groupings). */
 function layoutCore(layout: string, bs: readonly BattleResult[]): LayoutStats {
   const n = bs.length;
-  const frac = (pred: (b: BattleResult) => boolean) =>
-    n === 0 ? 0 : bs.filter(pred).length / n;
+  const frac = (pred: (b: BattleResult) => boolean) => (n === 0 ? 0 : bs.filter(pred).length / n);
   return {
     layout,
     battles: n,
@@ -484,8 +488,12 @@ export function renderLayoutAnalysis(results: readonly RunResult[]): string {
   const totalBattles = results.reduce((acc, r) => acc + r.battles.length, 0);
   const lines: string[] = [];
   lines.push(`### Per-layout difficulty (${totalBattles} waves across ${results.length} runs)`);
-  lines.push('Waves = battles on this layout (SAMPLE SIZE — a layout is only ~12% of natural battles;');
-  lines.push('  force one with --layout=<id> for a full sample). PWin%/EWin% = player/enemy WAVE win');
+  lines.push(
+    'Waves = battles on this layout (SAMPLE SIZE — a layout is only ~12% of natural battles;',
+  );
+  lines.push(
+    '  force one with --layout=<id> for a full sample). PWin%/EWin% = player/enemy WAVE win',
+  );
   lines.push('  rate (remainder = draws + hangs) · Dth/wv = mean deaths per wave.');
   lines.push('E.size ≫ P.size ⇒ outnumbered ("ambush"). Sorted most-brutal-first (lowest PWin%).');
   lines.push('');
@@ -526,7 +534,8 @@ export function renderLayoutAnalysis(results: readonly RunResult[]): string {
 
 /** CSV of `perLayoutStats` (one row per layout) for spreadsheet filtering. */
 export function renderLayoutCsv(stats: readonly LayoutStats[]): string {
-  const header = 'layout,waves,playerWinRate,enemyWinRate,avgPlayerDeaths,avgEnemyDeaths,playerSize,enemySize';
+  const header =
+    'layout,waves,playerWinRate,enemyWinRate,avgPlayerDeaths,avgEnemyDeaths,playerSize,enemySize';
   const rows = stats.map((s) =>
     [
       s.layout,
@@ -643,7 +652,14 @@ export function perEncounterStats(results: readonly RunResult[]): EncounterStats
   const ensure = (id: string): EncounterAccum => {
     let e = byEnc.get(id);
     if (!e) {
-      e = { battles: [], instancesTaken: [], instancesDealt: [], poolWaves: 0, takenWaveSum: 0, dealtWaveSum: 0 };
+      e = {
+        battles: [],
+        instancesTaken: [],
+        instancesDealt: [],
+        poolWaves: 0,
+        takenWaveSum: 0,
+        dealtWaveSum: 0,
+      };
       byEnc.set(id, e);
     }
     return e;
@@ -714,12 +730,22 @@ export function renderEncounterAnalysis(results: readonly RunResult[]): string {
   const anyPool = rows.some((r) => r.hasPoolData);
   const lines: string[] = [];
   lines.push(`### Per-encounter difficulty (${totalWaves} waves across ${results.length} runs)`);
-  lines.push('Inst = encounter instances (node visits w/ pool data) · Waves = turns (SAMPLE SIZE —');
-  lines.push('  force one with --encounter=<id> for a full sample). PWin%/EWin% = player/enemy WAVE win.');
-  lines.push('PDmgTaken = mean PLAYER pool damage TAKEN per instance (HP — the X tuning metric); /wv = per wave.');
-  lines.push('EDmgDlt = mean enemy-pool damage dealt per instance. Sorted most-costly-first (PDmgTaken).');
+  lines.push(
+    'Inst = encounter instances (node visits w/ pool data) · Waves = turns (SAMPLE SIZE —',
+  );
+  lines.push(
+    '  force one with --encounter=<id> for a full sample). PWin%/EWin% = player/enemy WAVE win.',
+  );
+  lines.push(
+    'PDmgTaken = mean PLAYER pool damage TAKEN per instance (HP — the X tuning metric); /wv = per wave.',
+  );
+  lines.push(
+    'EDmgDlt = mean enemy-pool damage dealt per instance. Sorted most-costly-first (PDmgTaken).',
+  );
   if (!anyPool) {
-    lines.push('(no pool data — telemetry was off; --per-encounter enables it. Pool columns blank.)');
+    lines.push(
+      '(no pool data — telemetry was off; --per-encounter enables it. Pool columns blank.)',
+    );
   }
   lines.push('');
   const header = [

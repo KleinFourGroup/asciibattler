@@ -2178,3 +2178,36 @@ every phase, crash/invariant coverage not balance) is a different
 instrument for a different job → TODO §Docs/tooling, out of §59 scope.
 
 Shape-locked 2026-07-19 (user): the 59a–59f cut as in ROADMAP §59.
+
+### 59a — the strategy seam (2026-07-19)
+
+Two optional `FuzzStrategy` methods (`pickPortBuy` ask-until-null while
+docked; `pickPacketFire` ask-until-null at both 49e fire sites), harness
+dispatch behind presence checks, absent = the fixed policies verbatim.
+Three notes beyond the cut line:
+
+- **Fire-before-grant-walk (ordering call, made here):** the preTurn
+  fire site sits at the TOP of the turn-intro case — a `grantRedraws`
+  packet inserts its grant at the cursor (49e), so firing after the
+  walk would leave reroute-style packets outcome-inert, the exact smell
+  §59 removes. Corollary for 59c's scorer: a hand-targeted buff fired
+  preTurn lands before the redraw policy reads the hand — a tossed card
+  keeps its buff (it rides the ROSTER slot), but the scorer shouldn't
+  pay for a buff it's about to redraw away.
+- **`RunResult.packetsFired` added (small cut deviation):** the
+  `portPurchases` twin — the fire arm's non-vacuous proof, appended
+  LAST in summary.csv per the 50g column rule + a failure-trace line.
+  Decided here rather than 59c so the seam commit owns the whole
+  RunResult shape change and the liveness test reads a counter instead
+  of inferring from divergence.
+- **The port-liveness pin rides the seed-12 canary** (harnessPort's
+  50g/56a re-pin contract — one canary, two suites, same re-scan rule).
+
+Parity suite (harnessEconomy.test.ts, 5 tests): the 50g-replica-via-seam
+byte-identity + the GATES-ON CONTROL (a never-firing `pickPacketFire`
+flips `pauseAtTurnGates` ON and stays byte-identical — the H4b
+invariant's third surfacing, after redraw level:0 and empower none) +
+determinism under live stubs + both seams' liveness. The greedy-fire
+stub fired real packets on the 1–8 band (rewards + the fixed buy policy
+supply the cache), so outcome-inertness is already measurably gone at
+the seam level — 59c decides WHEN, not WHETHER.

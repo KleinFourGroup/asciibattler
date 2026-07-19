@@ -2032,3 +2032,45 @@ at 58b either way; the TODO spawn-geometry watch item only matters if
 a geometry-keyed sensor gets built.
 
 Shape-locked 2026-07-18 (user): the 58a/58b cut as in ROADMAP §58.
+
+### 58a — the no-op check RAN (2026-07-19): the exit is earned
+
+Numbers + protocol: BALANCE §58. The one-breath story: audition
+77.5/87.5 vs OFF 52.5/40.0 on the forced-spiral isolate — the rule
+resolves mechanically, **no-op exit EARNED**, and the held-out set is
+again ABOVE in-sample (the §57h anti-overfit signature, now reproduced
+on the residual's own regression fixture). Zero draws in 160 runs —
+the 55b standing-hold stall (cap-draws 4×, 10-of-13 draws vs fleers)
+has no trace under arbitration; the searcher doesn't just win more, it
+never gets stuck the way the static trigger did. The four arms ran as
+one chained box session (~35 min total; the audition arms dominate —
+audition runs go deep, avgHop 9.35–9.45 vs OFF's 6.78–7.80).
+
+Why this didn't need a sensor, in the charter's own terms: the
+reachability question ("can that fleer reach or damage within N
+ticks?") is answered IMPLICITLY by the rollout — a candidate that
+holds for an unreachable fleer scores no material inside H and loses
+to advance at the null-floor comparison. The spec AMENDMENT's
+"may be arbitrated directly with no new sensor at all" clause is
+measured true.
+
+### 58b — the rider dispositions (the verdict's one-liners)
+
+- **junctionAmbush −4.4 (§57g.4c):** NOT a deserters read — junction's
+  negative sits beside strafingFunnel −2.4 at churn scale (both
+  non-replicating watch-row size, the §57g.1 lesson) and the cell-board
+  junction-elite row is flat across arms (15.0–17.3). Disposition:
+  stays an ordinary §60 watch row; no §58 claim on it.
+- **artillery §53e.2 fresh-team note:** CLOSED — the wake-up concern
+  (catapults undisturbed vs fresh teams) is answered by the audition
+  cell board's 0.0 (3/3 clears, §57g.4b) and the §57g.3 blemish (3.3)
+  not surviving candidate supply. The fresh-team gauntlet context is
+  exactly the cell that now reads 0.0.
+- **TODO spawn-geometry watch item:** RETIRED — it was conditioned on
+  a re-measure needing geometry control or a geometry-keyed trigger;
+  §54's re-measure closed without it and §58 builds no sensor. Paired
+  reads share the roll by construction (its own "fine for paired"
+  carve-out is the standing posture).
+
+Landing surface (the deferred user call): pending — UI threat tell vs
+TODO park, decided with the user at phase close.

@@ -1336,3 +1336,31 @@ deltas. The pre-X H7c→O log lives at
     stays open as a §57/§58 input.
   - Caveat stands: 3-seed cells never arbitrate — these are spot-checks;
     the full-run probe (§57g.1) and the 57h three-set rule govern.
+
+- **2026-07-19 — §58 THE NO-OP CHECK (58a): the forced-spiral isolate
+  under the audition searcher — audition beats OFF on BOTH seed sets,
+  decisively; per the pre-registered rule (worklog §58, locked before
+  the read) the NO-OP EXIT IS EARNED — the deserters residual is
+  SEARCHER-ATE-IT.** Protocol: the 55b isolate shape at HEAD `4917b31`
+  (fixture vector [tests/fuzz/fixtures/55pre-vector.json](tests/fuzz/fixtures/55pre-vector.json),
+  `--layout=spiralFireLife`, 40 full runs/arm), in-sample seeds 1–40 +
+  held-out `--seed-offset=5000`, arms OFF vs `--searcher --audition`
+  (v2 dials, K=2), box `--jobs=8`. Hangs 0, draws 0 on every arm.
+  | set | OFF | audition | Δ | paired (w→l / l→w) | sign p |
+  |---|---|---|---|---|---|
+  | in-sample 1–40 | 52.5 (avgHop 7.80) | 77.5 (9.45) | +25.0 | 5/15 | ≈0.04 |
+  | held-out 5001–5040 | 40.0 (6.78) | **87.5** (9.35) | **+47.5** | **2/21** | **≈7e-5** |
+  - Held-out ABOVE in-sample again — the §57h anti-overfit signature,
+    reproduced on the isolate. The 55b cap-draw stall signature (4×
+    cap-draws under static edge-hold) is ABSENT outright: zero draws
+    in 160 runs.
+  - Baseline staleness confirmed as predicted: 55b's pre-swap passive
+    read 52.5% on the old engine; OFF at HEAD reads 52.5/40.0 (the
+    in-sample match is coincidence — different engine, different arms).
+  - Ledger consequence: the §55 named residual "deserters/fleers vs
+    edge-hold (~50% loss in the isolate)" closes SEARCHER-ATE-IT — the
+    audition searcher holds-or-advances correctly where the static
+    trigger held for fleers; no threat sensor built (§58's no-op exit,
+    exercised as designed). Batches `output/box-batches/20260719-{005301,
+    005430,005600,011157}-4917b31` (OFF-in / OFF-held / aud-in /
+    aud-held); summary sha256 5bc07142 / 1acbd4ff / 66600e28 / ba13c958.

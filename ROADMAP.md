@@ -424,14 +424,18 @@ from traces only if 58a says build.
 
 **The cut (shape-locked 2026-07-18; audit + rationale in worklog §58):**
 
-- [ ] 58a — the no-op check: the 55b forced-spiral isolate protocol at
+- [x] 58a — the no-op check: the 55b forced-spiral isolate protocol at
   HEAD (fixture vector, `--layout=spiralFireLife`, 40 seeds in-sample +
   40 held-out `--seed-offset=5000`), arms OFF vs `--searcher --audition`
   (v2 dials, K=2), box `--jobs=8`; numbers → BALANCE §58
+  ✅ 2026-07-19 — audition 77.5/87.5 vs OFF 52.5/40.0, **NO-OP EARNED**
+  per the pre-registered rule (BALANCE §58; worklog §58)
 - [ ] 58b — verdict + ledger: apply the pre-registered rule; if cleared
   → searcher-ate-it entry + the junctionAmbush/artillery/spawn-geometry
   one-line dispositions + the landing-surface user call; if not → stop,
   cut the sensor build as 58c+
+  ◔ 2026-07-19 — ledger + dispositions written (worklog §58b); OPEN:
+  the landing-surface user call (UI threat tell vs TODO park)
 
 **Exit criteria:** the spiral-deserters isolate number on record either
 way; the residual's ledger entry updated (built / searcher-ate-it /

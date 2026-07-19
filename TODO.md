@@ -16,7 +16,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Micro round (53→57) — watch items
 
-- [ ] **Gauntlet spiral cells: spawn geometry is seed-rolled, not cell-pinned.** The 53g session surfaced (user report) that the three `spiralFireLife` cells' why-labels (adjacent-alpha / edge-hold / opposite-stall) describe *tendencies* — `pickSpawnRegions` rolls the geometry per seed, so e.g. alpha-spiral seeds 201/203 spawned non-adjacent and cleared instantly while 202 produced the real alpha strike (BALANCE §53g caveats). Fine for 53g's paired read (both sides play the same roll), but **if §54's re-measure needs geometry controlled** (a script's trigger may be geometry-keyed), either classify each cell×seed's actual geometry from the committed traces (spawn regions are replayable) or add an optional spawn-region pin to the cells. Surfaced 2026-07-13.
+- [x] **Gauntlet spiral cells: spawn geometry is seed-rolled, not cell-pinned.** ✅ RETIRED 2026-07-19 at the §58 no-op verdict — the item was conditioned on a geometry-keyed trigger or a re-measure needing geometry control; §54 closed without either and §58 built no sensor; paired reads share the roll by construction (the note's own carve-out). Full original note: git history + worklog §58b pointer. Surfaced 2026-07-13.
 
 ## Polish / pre-launch
 

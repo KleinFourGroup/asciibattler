@@ -466,8 +466,33 @@ optimum.
 **Risk:** **Medium** — harness/strategy surface only, no shipped-game
 change; the search compute budget is the main unknown.
 
-**Decision points:** the exact scorer dim lists (kickoff); refinement K +
-search budget.
+**Decision points — ✅ DECIDED at kickoff (2026-07-19, worklog §59):**
+port scorer = 5 dims (per-kind daemon/packet value · priceSensitivity ·
+bankReserve · portUnitBias; units reuse the WHOLE recruit scorer) · fire
+scorer = 4 dims (`fireBias` per encounter kind + `fireCachePressure`;
+overclock in scope, simplest-possible) · refinement K=3, one perturb
+round (8/finalist, ±0.15 box-scale) · regen budget sized by a 57f-style
+cost probe at 59f, not guessed · new dims OPTIONAL with fixed-policy
+defaults (old vectors keep parsing = the anchors story) · **snapshot
+prediction: NO bump, v34/v37 hold** (dev-harness surface only).
+
+**The cut (shape-locked 2026-07-19; audit + rationale in worklog §59):**
+
+- [ ] 59a — the strategy seam: optional `FuzzStrategy` port/fire methods
+  + harness dispatch behind them; absent = today's hardwired policies;
+  exit = byte-identical parity test (the 54a shape)
+- [ ] 59b — the port-purchase scorer in `scored`: recruit scoring reused
+  on `slot.template` + the 5 dims; schema grows optionally; co-located
+  tests derive expectations from config
+- [ ] 59c — the packet fire scorer: the 4 kind-keyed dims; gates-on
+  wiring + the gates-on-no-fire parity pin; co-located tests
+- [ ] 59d — the top-K perturb-and-reselect refinement stage in search.ts
+  + CLI flags; stubbed-evaluator tests
+- [ ] 59e — wire `--searcher --audition` (+ dials) into the search
+  command + shards; parity vs run-mode pinned
+- [ ] 59f — the regen on the box: cost probe → sized fresh `--search`
+  vs the audition searcher (refinement on, economy dims live); the
+  fixed-vector probe re-run; numbers → BALANCE §59
 
 **Exit criteria:** a fresh `--search` converges with the economy dims
 live; packets fire in harness runs (outcome-inertness gone); the
@@ -538,6 +563,7 @@ new mechanics (findings that want one become TODO/next-round items).
   sensor audit; the pre-registered decision rule.
 - 58: the no-op check; threshold-from-traces; the landing surface if
   no-op'd.
-- 59: scorer dim lists; refinement K + budget.
+- 59: scorer dim lists; refinement K + budget. ✅ resolved at the
+  2026-07-19 kickoff (worklog §59).
 - 60: the re-anchored targets; per-lever tune-vs-accept; the shrink-flow
   slot.

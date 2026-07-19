@@ -146,5 +146,21 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Docs / tooling
 
+- [ ] **A true chaos fuzz driver (random legal `RunCommand` dispatch).** The
+  fuzz harness has fully evolved into a *balance* harness: the `random`
+  strategy randomizes only 2 of the ~10 decision surfaces `Run` exposes
+  (node choice + recruit choice) — port purchases are the hardwired 50g
+  buy-all-affordable, rewards are hardwired accept-all, and NOTHING ever
+  dispatches `usePacket`/`sellPortPacket`/`discardPacket`/`declineReward`
+  beyond the fixed policies' paths. A proper chaos driver would dispatch
+  random *legal* commands in every phase (buys, sells, discards, fires,
+  declines, grant passes, dock/undock churn) purely for crash/invariant/
+  serialization coverage — a different instrument from the balance harness,
+  never a balance input (the O5 coverage-bot precedent: kept separate from
+  the measurement proclivity). Candidate shape: a `--chaos` arm beside the
+  strategy arms, driven off its own forked stream, asserting the occupancy
+  invariant + snapshot round-trip per phase transition. Surfaced by the
+  user at the §59 kickoff (2026-07-19, worklog §59); out of §59 scope.
+
 - [x] **`--seed-offset` for a true config-overfit holdout.** Shipped in X2 (`--seed-offset=N` across run/sweep/search, `tests/fuzz/`) — the overnight verify can run on never-tuned seeds. *(Found already-done during the 2026-07-06 TODO demotion pass; X2 landed it without checking this off.)*
 - [x] **Catch doc-tree drift automatically.** Done 2026-06-07: ARCHITECTURE.md holds the single canonical tree; [tests/docs.test.ts](tests/docs.test.ts) parses it on every `npm test` (+ caps HANDOFF line counts).

@@ -2091,3 +2091,90 @@ pre-registered fixture actually run (the isolate-vs-board divergence
 hazard, 55c1). The fixture then earned the exit decisively — and the
 "spiral inverted" cursor warning turned out to be UNDERSTATED: the
 isolate delta is +25/+47.5, bigger than the distribution read hinted.
+
+## Phase 59 — the expressive economy strategy layer
+
+### Kickoff (2026-07-19): the code-reality audit + the shape-lock
+
+Own session, per the 57f2/58 precedent. The audit surveyed the recruit
+scorer, the harness policy sites, the packet fire contract, and the
+`--search` machinery as they exist post-§57.
+
+**The two charter premises hold, with receipts:**
+
+- **"A port unit is a priced recruit" is literally true in the types.**
+  `PortUnitSlot.template` is a full `UnitTemplate` — exactly what
+  `scored`'s `pickRecruit` already scores (archetype + composition +
+  continuous terms, roster-average pass). Direct reuse, no adapter.
+- **The fire-policy deferral landing note is sitting where §50g left
+  it** — the harness port case's own comment: "the harness never fires
+  packets anyway — the future fire-policy arm's business." Rewards
+  (accept-all + the 49c decline-on-full refinement) and port purchases
+  (buy-all-affordable, daemons→units→packets) are hardwired in the
+  harness loop with zero strategy involvement; `FuzzStrategy` has only
+  `pickNextNode` + `pickRecruit`. NO strategy arm dispatches
+  `usePacket` — packets are outcome-inert exactly as charged.
+
+**Four things the charter didn't know (the audit's contribution):**
+
+1. **The preTurn fire site only exists gates-on.** `usePacket` derives
+   context from phase (`turn-intro` → `preTurn`, `map` →
+   `outOfBattle`), and the harness only enters `turn-intro` when
+   `pauseAtTurnGates` is on — today flipped only by the redraw/empower
+   arms. A kind-keyed fire scorer (encounter kind IS available there:
+   `run.currentEncounter.kind`) must flip gates on itself. The gated
+   path is RNG-aligned and pinned (H4b), so safe — but it's a
+   deliberate wiring step with its own parity pin, not a freebie.
+   Catalog note: 6 packets ship; 5 preTurn-usable, `overclock`
+   outOfBattle-only.
+2. **The vector schema is `z.strictObject` — new required dims would
+   break every saved vector**, including `55pre-vector.json` (the
+   pinned fixed-vector probe instrument) and the shipping
+   `best-strategy.json`. Resolution (locked): the new dim groups are
+   OPTIONAL, defaulting to fixed-policy behavior — an old vector = the
+   fixed policies, by construction, which also keeps the anchors story
+   clean.
+3. **The refinement seam was designed in.** search.ts's own header:
+   "a later hill-climb (`propose = (best) => perturb(best, step)` +
+   greedy accept) is a small add reusing the same `evaluate`" — and
+   `topK`/`assembleSearchResult` already rank candidates. 59d is
+   genuinely small.
+4. **`--search` can't drive the audition searcher today.** The search
+   command wires objective/redraw/empower/daemon into its evaluator
+   but not `--searcher`/`--audition`; shard jobs pass arms as plain
+   JSON, so the fix is run.ts's pattern (flags in the job, children
+   resolve `AUDITION_SCRIPTS` themselves). Cost reality: searcher
+   evals are 4.1× (~30min/120-seed batch local) — the 59f regen
+   belongs on the box (`--jobs=8`, 3.8×), alive through §60.
+
+**Decisions locked (user, 2026-07-19):**
+
+- **Port scorer dims (5):** `portDaemonValue` + `portPacketValue`
+  (flat per-kind value dials; the unit path reuses the whole recruit
+  scorer), `priceSensitivity` (score − price×this), `bankReserve`
+  (floor below which no purchase fires), `portUnitBias` (offset vs
+  the recruit score — buying can be tighter/looser than free
+  recruiting). Start at 5 — every dim widens the box; per-kind price
+  sensitivity is the known extension if 59f says under-powered.
+- **Fire scorer dims (4):** `fireBias.normal/elite/boss` (kind-keyed
+  hoard-vs-spend) + `fireCachePressure` (firing more attractive as
+  the cache fills — connects to the 49c decline-on-full waste).
+  `overclock` (outOfBattle-only) in scope but simplest-possible;
+  defer to a TODO one-liner if it creeps.
+- **Refinement:** K=3, one perturb round (8 perturbs/finalist at
+  ±0.15 box-scale, greedy accept on train, winner re-scored
+  held-out). The regen budget is NOT guessed now — 59f opens with a
+  57f-style cost probe and sizes the box run from measurement.
+- **Vector compat:** optional-with-fixed-policy-defaults (finding #2).
+- **Snapshot prediction: NO bump — World v34 / Run v37 hold.** The
+  whole phase is dev-harness surface; the sim/run engine is untouched.
+
+**Also captured at kickoff (user observation, parked):** the fuzz
+harness has fully evolved into a balance harness — the `random`
+strategy only randomizes 2 of the ~10 decision surfaces `Run` exposes
+(node + recruit); sells/discards/fires/declines are hardwired or never
+exercised. A TRUE chaos driver (random legal `RunCommand` dispatch,
+every phase, crash/invariant coverage not balance) is a different
+instrument for a different job → TODO §Docs/tooling, out of §59 scope.
+
+Shape-locked 2026-07-19 (user): the 59a–59f cut as in ROADMAP §59.

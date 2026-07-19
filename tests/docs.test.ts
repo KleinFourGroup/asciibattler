@@ -112,7 +112,11 @@ describe('docs hygiene', () => {
   // per-phase CUTS the protocol adds at each kickoff — §56's tripped it at
   // 505, and §57/§58's cuts are still to come. 550 = the 8-phase plan plus
   // three kickoffs' worth of checkbox lines; a trip beyond that is rot again.
-  const ROADMAP_MAX_LINES = 550;
+  // Bumped 550→600 at the §59 kickoff (2026-07-19): 550 covered cuts through
+  // §58 only — §59's cut tripped it at 570, and §60's kickoff cut + close-out
+  // one-liners are still to come. 600 = the full 8-phase round, all cuts in;
+  // this round should never need another bump (the file archives at close).
+  const ROADMAP_MAX_LINES = 600;
   const ROADMAP_PHASE_MAX_LINES = 60;
 
   it(`ROADMAP.md stays under ${ROADMAP_MAX_LINES} lines (a plan, not a log)`, () => {

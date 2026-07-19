@@ -414,10 +414,24 @@ and cheap. Reads 55b's forced-spiral isolate as its regression fixture.
 **Risk:** **Low-Medium** — one sensor + gauntlet/isolate verification; may
 legitimately not build.
 
-**Decision points:** the no-op check first (does §57's searcher already
-clear the spiral-deserters isolate?); if built, threshold N from trace
-data not intuition; landing surface if no-op'd — user-facing threat tell
-(UI) or TODO park (user call).
+**Decision points — ✅ DECIDED at kickoff (2026-07-18, worklog §58):**
+the no-op check runs FIRST as 58a (the premise audit found §57's
+evidence is all natural-run/cell-scale — the pre-registered fixture
+itself was never run under the audition arm); verdict rule
+pre-registered (audition ≥ OFF on both seed sets ⇒ no-op earned);
+landing surface if no-op'd DEFERRED to 58b (user call); threshold-N
+from traces only if 58a says build.
+
+**The cut (shape-locked 2026-07-18; audit + rationale in worklog §58):**
+
+- [ ] 58a — the no-op check: the 55b forced-spiral isolate protocol at
+  HEAD (fixture vector, `--layout=spiralFireLife`, 40 seeds in-sample +
+  40 held-out `--seed-offset=5000`), arms OFF vs `--searcher --audition`
+  (v2 dials, K=2), box `--jobs=8`; numbers → BALANCE §58
+- [ ] 58b — verdict + ledger: apply the pre-registered rule; if cleared
+  → searcher-ate-it entry + the junctionAmbush/artillery/spawn-geometry
+  one-line dispositions + the landing-surface user call; if not → stop,
+  cut the sensor build as 58c+
 
 **Exit criteria:** the spiral-deserters isolate number on record either
 way; the residual's ledger entry updated (built / searcher-ate-it /

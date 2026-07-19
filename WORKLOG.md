@@ -1981,3 +1981,54 @@ cost-vs-quality dial call — "kinda glad it was a wash" (user). Bot
 this phase"). §58 opens in its own session (user call, the 57f2
 precedent) — its kickoff audit's headline question is whether the
 phase's premise survived §57 at all (the no-op exit clause).**
+
+## Phase 58 — the derived threat read (deserters)
+
+### The kickoff premise audit (2026-07-18): inverted villain, unrun fixture
+
+The headline question resolved in one sentence: **the charter's villain
+has inverted, but the pre-registered fixture has never actually been
+run.** The evidence stack, in scoping order:
+
+- **What §58 was scoped against (2026-07-15, the 55c1 cutoff bell):**
+  under static scripts, terrain-edge hold lost ~50% in the forced-spiral
+  isolate vs passive's 21% — fleers read as prey worth holding for;
+  separating committed attackers from fleers = intent detection = the
+  bell. The spec AMENDMENT's correction: reachability math on derived
+  state, with a graceful no-op exit if §57's searcher eats the residual.
+- **What §57 left behind:** §57g.1 — triggers demoted to nomination
+  can't fire the deserters pathology past the null floor (spiral −9.2
+  static → −0.2 searcher). §57g.4c — under the audition searcher
+  spiralFireLife INVERTS to **+12.2** vs OFF (a strength, not a
+  neutralization). §57g.4b — alpha-spiral 6.7 pool (3/3 clears),
+  stall-spiral 0.0.
+- **The gap:** every §57 read is natural-run distribution or 3-seed
+  cells. ROADMAP §58's decision point pre-registers the no-op check
+  against **55b's forced-spiral isolate** (fixture vector,
+  `--layout=spiralFireLife`, 40 full runs) — never run under the
+  audition arm, and on a pre-swap engine besides (§56 moved every
+  number, so 55b's 52.5% passive baseline is stale too). The
+  isolate-vs-board divergence is a documented hazard (55c1's variant
+  choice flipped between them) — the no-op exit must be EARNED by the
+  isolate number, which is exactly what the decision point says.
+
+Composition audit: `--layout` + `--searcher --audition` compose (no
+exclusivity in args.ts; `--jobs` bails only on `--seed`/`--per-*`, and
+a forced layout needs no per-layout analysis — box `--jobs=8` is safe).
+
+**The pre-registered verdict rule (locked with the user BEFORE the
+read, the 57h shape):** audition beats-or-ties OFF on forced-spiral
+win rate on BOTH seed sets (55b's in-sample + one held-out) ⇒ the
+no-op exit is earned ⇒ 58b writes the searcher-ate-it ledger entry and
+the landing surface goes to the user (UI threat tell vs TODO park —
+deferred to 58b by user call at kickoff). Any loss to OFF ⇒ the
+residual survives ⇒ stop and cut the sensor build (58c+, threshold
+from trace data).
+
+Secondary inputs riding on the verdict: junctionAmbush −4.4 (the lone
+audition per-layout negative) and the artillery §53e.2 fresh-team note
+(cell 0.0 under audition — likely closeable) get one-line dispositions
+at 58b either way; the TODO spawn-geometry watch item only matters if
+a geometry-keyed sensor gets built.
+
+Shape-locked 2026-07-18 (user): the 58a/58b cut as in ROADMAP §58.

@@ -386,7 +386,7 @@ end bonus + HP fractions, ties→NULL (heavy forks → the 57g box arms).
   LOCKED (user)** (§57g.5) · scoring ✅ MEASURED-UNNECESSARY (user)
 - [x] 57h ✅ 2026-07-18 — **VERDICT YES ×3** (+24.2/+30.0/+22.5,
   held-out ABOVE in-sample; BALANCE §57h) — the audition searcher =
-  the default realistic-bot arm; phase close awaiting user sign-off
+  the default realistic-bot arm; **phase CLOSED, user-signed 2026-07-18**
 
 **Exit criteria:** the searcher ships behind the harness flag, the
 clairvoyance guard proven (foresee-the-rolls), the re-measure on record

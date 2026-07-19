@@ -488,8 +488,10 @@ prediction: NO bump, v34/v37 hold** (dev-harness surface only).
   no-fire parity pin; co-located tests ✅ 2026-07-19 — zero group never
   fires (the fixed point); kind = `selectedEncounter`; e2e probe: 10
   fired/6 seeds, deterministic; 8 tests; worklog §59c
-- [ ] 59d — the top-K perturb-and-reselect refinement in search.ts + CLI;
-  stubbed-evaluator tests
+- [x] 59d — the top-K perturb-and-reselect refinement in search.ts + CLI;
+  stubbed-evaluator tests ✅ 2026-07-19 — `--refine` K3×8@0.15 defaults;
+  strict-improve greedy (ties keep incumbent); distinct refine RNG
+  stream; CLI e2e verified; 5 tests; worklog §59d
 - [ ] 59e — `--searcher --audition` (+ dials) into the search command +
   shards; parity vs run-mode pinned
 - [ ] 59f — the box regen: cost probe → sized `--search` (refinement on,

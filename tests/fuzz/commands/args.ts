@@ -104,6 +104,13 @@ export interface CliArgs {
   // instrument (run it at --k=8). Both require --searcher.
   k?: number;
   kTelemetry: boolean;
+  // 59d — the top-K perturb-and-reselect refinement stage: `--refine`
+  // enables it after the base `--search` (defaults K=3 · 8 perturbs ·
+  // ±0.15 box-scale, the kickoff lock); the three dial flags override.
+  refine: boolean;
+  refineK?: number;
+  refinePerturbs?: number;
+  refineRadius?: number;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -122,6 +129,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     searcher: false,
     audition: false,
     kTelemetry: false,
+    refine: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -240,9 +248,22 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--audition':
         args.audition = true;
         break;
+      case '--refine':
+        args.refine = true;
+        break;
+      case '--refine-k':
+        args.refineK = Number(v);
+        break;
+      case '--refine-perturbs':
+        args.refinePerturbs = Number(v);
+        break;
+      case '--refine-radius':
+        args.refineRadius = Number(v);
+        break;
       case '--k': {
         const n = Number(v);
-        if (!Number.isInteger(n) || n < 1) throw new Error(`--k needs a positive integer (got '${v}')`);
+        if (!Number.isInteger(n) || n < 1)
+          throw new Error(`--k needs a positive integer (got '${v}')`);
         args.k = n;
         break;
       }
@@ -259,17 +280,25 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   // or sweep silently ignoring it would measure the OLD bot under a flag that
   // claims otherwise. Support lands mode-by-mode, deliberately.
   if (args.scripts && (args.search || args.balanceSweep || args.arena || args.evalShard)) {
-    throw new Error('--scripts is not supported in --search/--balance-sweep/--arena yet (run mode only)');
+    throw new Error(
+      '--scripts is not supported in --search/--balance-sweep/--arena yet (run mode only)',
+    );
   }
   if (args.scripts && args.objective !== undefined) {
-    throw new Error('--scripts is mutually exclusive with --objective (the frozen-anchor contract)');
+    throw new Error(
+      '--scripts is mutually exclusive with --objective (the frozen-anchor contract)',
+    );
   }
   // §57f — same contracts for the searcher arm.
   if (args.searcher && (args.search || args.balanceSweep || args.arena || args.evalShard)) {
-    throw new Error('--searcher is not supported in --search/--balance-sweep/--arena yet (run mode only)');
+    throw new Error(
+      '--searcher is not supported in --search/--balance-sweep/--arena yet (run mode only)',
+    );
   }
   if (args.searcher && args.objective !== undefined) {
-    throw new Error('--searcher is mutually exclusive with --objective (the frozen-anchor contract)');
+    throw new Error(
+      '--searcher is mutually exclusive with --objective (the frozen-anchor contract)',
+    );
   }
   if (args.searcher && args.scripts) {
     throw new Error('--searcher is mutually exclusive with --scripts (one bot arm at a time)');
@@ -307,7 +336,9 @@ export const COVERAGE_OBJECTIVE = 'coverage';
  *  which `coverageFromArgs` handles separately — the two are mutually
  *  exclusive). The harness treats undefined as `none` → byte-identical
  *  baselines. Shared by the standard run, `--search`, and `--balance-sweep`. */
-export function objectiveFromArgs(args: Pick<CliArgs, 'objective'>): ObjectiveProclivity | undefined {
+export function objectiveFromArgs(
+  args: Pick<CliArgs, 'objective'>,
+): ObjectiveProclivity | undefined {
   if (args.objective === undefined || args.objective === COVERAGE_OBJECTIVE) return undefined;
   return parseObjectiveFlag(args.objective);
 }

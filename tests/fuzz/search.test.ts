@@ -32,6 +32,10 @@ function allWeights(w: ScoredWeights): number[] {
     ...Object.values(w.stats),
     w.total,
     w.passBias,
+    // 59b/59c — the optional economy groups (always present on SAMPLED
+    // vectors; guarded so hand-built old-shape vectors still walk).
+    ...(w.port !== undefined ? Object.values(w.port) : []),
+    ...(w.fire !== undefined ? [...Object.values(w.fire.bias), w.fire.cachePressure] : []),
   ];
 }
 
@@ -183,5 +187,101 @@ describe('runSearch reproducibility (real harness, short runs)', () => {
     expect(b.best.trainWinRate).toBe(a.best.trainWinRate);
     expect(b.best.testWinRate).toBe(a.best.testWinRate);
     expect(b.trainWinRates).toEqual(a.trainWinRates);
+  });
+});
+
+// ---- refinement stage (59d) -------------------------------------------------
+
+import { perturbWeights, refineSearch, DEFAULT_REFINE } from './search';
+
+describe('perturbWeights (59d)', () => {
+  it('every perturbed weight stays inside the box (clamped), radius 0 is the identity', () => {
+    const box = { range: { min: -1, max: 1 } };
+    const base = generateVectors(box, 42, 1)[0]!;
+    const rng = new RNG(7);
+    for (let n = 0; n < 20; n++) {
+      for (const v of allWeights(perturbWeights(base, box, 1.0, rng))) {
+        expect(v).toBeGreaterThanOrEqual(box.range.min);
+        expect(v).toBeLessThanOrEqual(box.range.max);
+      }
+    }
+    expect(perturbWeights(base, box, 0, new RNG(1))).toEqual(base);
+  });
+
+  it('is reproducible at a fixed rng state and preserves optional-group absence', () => {
+    const base = generateVectors(DEFAULT_BOX, 42, 1)[0]!;
+    expect(perturbWeights(base, DEFAULT_BOX, 0.15, new RNG(3))).toEqual(
+      perturbWeights(base, DEFAULT_BOX, 0.15, new RNG(3)),
+    );
+    // An old-shape vector (no port/fire) never grows the groups under perturb.
+    const { port: _p, fire: _f, ...oldShape } = base;
+    const perturbed = perturbWeights(oldShape as ScoredWeights, DEFAULT_BOX, 0.15, new RNG(3));
+    expect(perturbed.port).toBeUndefined();
+    expect(perturbed.fire).toBeUndefined();
+  });
+});
+
+describe('refineSearch (59d)', () => {
+  const trainSeeds = [1, 2, 3];
+  const testSeeds = [9, 10];
+
+  /** A 3-finalist base result via the shared keep-best, stub-scored. */
+  function makeBase(finalistRates: number[]) {
+    const vectors = generateVectors(DEFAULT_BOX, 5, finalistRates.length);
+    return assembleSearchResult(vectors, finalistRates, () => 0.11, {
+      samplerSeed: 5,
+      trainSeeds,
+      testSeeds,
+      topK: finalistRates.length,
+    });
+  }
+
+  it('greedy accept: a strictly better perturb replaces its finalist; the winner is re-scored held-out', () => {
+    const base = makeBase([0.5, 0.4, 0.3]);
+    const finalists = new Set(base.ranked.map((c) => JSON.stringify(c.weights)));
+    const evaluate = (w: ScoredWeights, seeds: readonly number[]): number => {
+      if (seeds === testSeeds) return 0.42;
+      return finalists.has(JSON.stringify(w)) ? 0.5 : 0.9; // every perturb beats every finalist
+    };
+    const r = refineSearch(base, {
+      box: DEFAULT_BOX,
+      refine: DEFAULT_REFINE,
+      trainSeeds,
+      testSeeds,
+      evaluate,
+    });
+    expect(r.trainEvals).toBe(DEFAULT_REFINE.topK * DEFAULT_REFINE.perturbs);
+    expect(r.best.trainWinRate).toBe(0.9);
+    expect(r.best.testWinRate).toBe(0.42); // held-out re-score, not the train rate
+    expect(r.refined.every((f) => f.improved)).toBe(true);
+    expect(finalists.has(JSON.stringify(r.best.weights))).toBe(false); // a perturb won
+  });
+
+  it('worse-or-equal perturbs keep the incumbent (ties never churn the vector)', () => {
+    // ALL finalists at 0.5 so a 0.5-scoring perturb is a TIE everywhere —
+    // rates like [0.5, 0.4, 0.3] would make 0.5 a strict improvement for
+    // the lower finalists (the first draft's mistake).
+    const base = makeBase([0.5, 0.5, 0.5]);
+    const evaluate = (_w: ScoredWeights, seeds: readonly number[]): number =>
+      seeds === testSeeds ? 0.42 : 0.5; // every perturb TIES the best finalist
+    const r = refineSearch(base, {
+      box: DEFAULT_BOX,
+      refine: DEFAULT_REFINE,
+      trainSeeds,
+      testSeeds,
+      evaluate,
+    });
+    expect(r.refined.every((f) => !f.improved)).toBe(true);
+    expect(r.best.weights).toEqual(base.best.weights); // incumbent holds
+    // Unimproved non-winners carry the base held-out score (no re-eval).
+    expect(r.refined[1]!.testWinRate).toBe(base.ranked[1]!.testWinRate);
+  });
+
+  it('is deterministic: same base + same stub → identical result objects', () => {
+    const base = makeBase([0.6, 0.2, 0.1]);
+    const evaluate = (w: ScoredWeights, seeds: readonly number[]): number =>
+      seeds === testSeeds ? 0.3 : JSON.stringify(w).length % 7 === 0 ? 0.95 : 0.1;
+    const opts = { box: DEFAULT_BOX, refine: DEFAULT_REFINE, trainSeeds, testSeeds, evaluate };
+    expect(refineSearch(base, opts)).toEqual(refineSearch(base, opts));
   });
 });

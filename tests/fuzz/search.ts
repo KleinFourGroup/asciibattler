@@ -262,3 +262,152 @@ export function runSearch(config: SearchConfig): SearchResult {
     topK,
   });
 }
+
+// ---- the top-K perturb-and-reselect refinement stage (59d) -----------------
+
+/** 59d — refinement dials (kickoff lock: K=3 · one round · 8 perturbs per
+ *  finalist · ±0.15 box-scale). Motivated by §46b's 30.8/22.5 fresh-search
+ *  shortfall: pure random search under-exploits its own finalists' basins. */
+export interface RefineConfig {
+  /** Finalists taken from the base search's train ranking. */
+  readonly topK: number;
+  /** Perturbed variants evaluated per finalist (one round). */
+  readonly perturbs: number;
+  /** Perturbation radius as a fraction of the box span, clamped to the box. */
+  readonly radius: number;
+}
+
+export const DEFAULT_REFINE: RefineConfig = { topK: 3, perturbs: 8, radius: 0.15 };
+
+/** Offset added to `samplerSeed` for the refinement RNG — a DISTINCT stream
+ *  from `generateVectors`' (same seed would replay the base draw sequence
+ *  and correlate perturbs with the vectors they perturb). */
+export const REFINE_SEED_OFFSET = 59_000_000;
+
+/**
+ * One perturbed variant: every sampled dim jittered uniformly within
+ * ±radius×span, clamped to the box. Fixed draw order (the sampleWeights
+ * order), so the perturb sequence is reproducible given the rng state.
+ * Optional groups perturb ONLY if present — an old-shape vector refines
+ * inside its own dim space and never grows a group it didn't carry;
+ * `temperature` is inert and carried verbatim.
+ */
+export function perturbWeights(
+  w: ScoredWeights,
+  box: SearchBox,
+  radius: number,
+  rng: RNG,
+): ScoredWeights {
+  const { min, max } = box.range;
+  const span = max - min;
+  const jitter = (v: number): number =>
+    Math.min(max, Math.max(min, v + (rng.next() * 2 - 1) * radius * span));
+  const rec = <K extends string>(r: Record<K, number>, keys: readonly K[]): Record<K, number> =>
+    Object.fromEntries(keys.map((k) => [k, jitter(r[k])])) as Record<K, number>;
+  return {
+    path: rec(w.path, PATH_KINDS),
+    archetype: rec(w.archetype, ALL_ARCHETYPES),
+    composition: rec(w.composition, ALL_ARCHETYPES),
+    compWeight: jitter(w.compWeight),
+    level: jitter(w.level),
+    stats: rec(w.stats, STAT_KEYS),
+    total: jitter(w.total),
+    passBias: jitter(w.passBias),
+    ...(w.port !== undefined
+      ? {
+          port: {
+            daemonValue: jitter(w.port.daemonValue),
+            packetValue: jitter(w.port.packetValue),
+            priceSensitivity: jitter(w.port.priceSensitivity),
+            bankReserve: jitter(w.port.bankReserve),
+            unitBias: jitter(w.port.unitBias),
+          },
+        }
+      : {}),
+    ...(w.fire !== undefined
+      ? {
+          fire: {
+            bias: rec(w.fire.bias, ENCOUNTER_KINDS),
+            cachePressure: jitter(w.fire.cachePressure),
+          },
+        }
+      : {}),
+    ...(w.temperature !== undefined ? { temperature: w.temperature } : {}),
+  };
+}
+
+export interface RefineResult {
+  /** The post-refinement winner (train-ranked over all refined finalists),
+   *  re-scored on the held-out test set. */
+  readonly best: ScoredCandidate;
+  /** Per finalist (base-rank order): the greedy winner of {finalist ∪ its
+   *  perturbs} by train fitness. `improved` = a perturb strictly beat it. */
+  readonly refined: readonly (ScoredCandidate & { readonly improved: boolean })[];
+  /** Train evaluations spent (topK × perturbs). */
+  readonly trainEvals: number;
+}
+
+/**
+ * The refinement pass over a completed base search: take the top-K train
+ * finalists, evaluate `perturbs` jittered variants each, greedily keep the
+ * best-by-train of each family (STRICT improvement replaces — ties keep the
+ * incumbent, so refinement never churns the vector on noise-equal scores),
+ * then re-rank the K family winners and score the overall winner held-out.
+ * Composes with BOTH search paths (in-process runSearch and the sharded
+ * assembleSearchResult) — it only needs `base.ranked` to carry K entries,
+ * i.e. the base search must have run with `topK ≥ refine.topK`. Refinement
+ * evaluations run through the supplied `evaluate` in-process (24 evals at
+ * the default dials — the 59f cost probe prices this before the box regen).
+ */
+export function refineSearch(
+  base: SearchResult,
+  opts: {
+    readonly box: SearchBox;
+    readonly refine: RefineConfig;
+    readonly trainSeeds: readonly number[];
+    readonly testSeeds: readonly number[];
+    readonly evaluate: (weights: ScoredWeights, seeds: readonly number[]) => number;
+  },
+): RefineResult {
+  const { box, refine, trainSeeds, testSeeds, evaluate } = opts;
+  const finalists = base.ranked.slice(0, refine.topK);
+  if (finalists.length === 0) throw new Error('refineSearch: base.ranked is empty');
+  const rng = new RNG(base.samplerSeed + REFINE_SEED_OFFSET);
+
+  let trainEvals = 0;
+  const refined = finalists.map((finalist) => {
+    let bestWeights = finalist.weights;
+    let bestTrain = finalist.trainWinRate;
+    let improved = false;
+    for (let p = 0; p < refine.perturbs; p++) {
+      const variant = perturbWeights(finalist.weights, box, refine.radius, rng);
+      const rate = evaluate(variant, trainSeeds);
+      trainEvals++;
+      if (rate > bestTrain) {
+        bestTrain = rate;
+        bestWeights = variant;
+        improved = true;
+      }
+    }
+    return { weights: bestWeights, trainWinRate: bestTrain, improved };
+  });
+
+  // Re-rank the family winners; earliest base rank breaks ties (stable map
+  // order → the base winner keeps the crown on equal train rates).
+  let winner = 0;
+  for (let i = 1; i < refined.length; i++) {
+    if (refined[i]!.trainWinRate > refined[winner]!.trainWinRate) winner = i;
+  }
+  const withTest = refined.map((r, i) => ({
+    weights: r.weights,
+    trainWinRate: r.trainWinRate,
+    improved: r.improved,
+    // Held-out score only where it's read: the winner (each extra test eval
+    // is a full seed-set run). Non-winners carry the base testWinRate when
+    // unimproved (still valid — same vector), else NaN-free 0 sentinel is
+    // WRONG — so re-score improved non-winners too, cheap at K=3.
+    testWinRate:
+      i === winner || r.improved ? evaluate(r.weights, testSeeds) : finalists[i]!.testWinRate,
+  }));
+  return { best: withTest[winner]!, refined: withTest, trainEvals };
+}

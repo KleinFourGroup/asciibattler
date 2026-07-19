@@ -2278,3 +2278,35 @@ Sampler draws the fire group last (prefix-stable); 8 co-located tests.
 Also this session: the per-phase line guard bumped 60→70 (user call —
 suspension + early-archive both rejected; closed-phase demotion rule
 PROPOSED for the round-close ritual; retro/scratchpad.md entry).
+
+### 59d — the top-K perturb-and-reselect refinement stage (2026-07-19)
+
+The search.ts header's own predicted seam, filled in: `perturbWeights`
+(every sampled dim jittered ±radius×span, clamped to the box, fixed
+draw order; optional groups perturb ONLY if present — an old-shape
+vector refines inside its own dim space) + `refineSearch` (top-K train
+finalists → `perturbs` variants each → greedy accept with STRICT
+improvement — ties keep the incumbent, so noise-equal scores never
+churn the vector → re-rank the K family winners → held-out re-score).
+Composes with BOTH search paths (in-process `runSearch` and the
+sharded `assembleSearchResult`) since it only needs `base.ranked` to
+carry K entries. Notes:
+
+- **The refinement RNG is samplerSeed + REFINE_SEED_OFFSET** — a
+  distinct stream; the raw samplerSeed would replay the base draw
+  sequence and correlate perturbs with the vectors they perturb.
+- **Refine evals run in-process** even under `--jobs` (children are
+  done by then) — 24 train evals at the default dials; the 59f cost
+  probe prices this before the box regen.
+- **CLI:** `--refine` (+ `--refine-k/-perturbs/-radius`); with the flag
+  the base search ranks K finalists (topK≥K); without it topK stays 1
+  and nothing downstream changes. E2E: a tiny
+  `--search --refine --vectors=6` run printed `refine=K3x8@0.15`,
+  24 evals, and emitted the winner with both economy groups
+  (scratchpad out-dir — the real output/best-strategy.json untouched).
+- One test-design catch: the tie test's finalists must ALL sit at the
+  tie rate — [0.5,0.4,0.3] finalists make a 0.5 perturb a strict
+  improvement for the lower two (caught by the test itself failing).
+
+5 new tests (search.test.ts §59d) + the bounds walker extended to the
+economy groups; suites green; typecheck clean.

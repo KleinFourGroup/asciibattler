@@ -28,6 +28,10 @@
  *   npm run fuzz -- --search --preset=overnight    # the real sweep (full runs, hours)
  *   npm run fuzz -- --search --vectors=200 --seeds=40 --sampler-seed=7
  *   # → writes output/best-strategy.json (re-runnable via --strategy=…json) + search-results.csv
+ *   # 59d — the top-K perturb-and-reselect refinement stage (defaults K=3,
+ *   # 8 perturbs/finalist, ±0.15 box-scale; dials override):
+ *   npm run fuzz -- --search --refine
+ *   npm run fuzz -- --search --refine --refine-k=5 --refine-perturbs=12 --refine-radius=0.1
  *   # X2 — --seed-offset=N bases the eval seeds past the tuned range (the
  *   # config-overfit holdout for the X3 verify; applies to run / search / sweep):
  *   npm run fuzz -- --search --preset=overnight --seed-offset=2000   # held-out verify

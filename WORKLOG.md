@@ -2074,3 +2074,20 @@ measured true.
 
 Landing surface (the deferred user call): pending — UI threat tell vs
 TODO park, decided with the user at phase close.
+
+### §58 CLOSE (2026-07-19, user-signed)
+
+Landing surface: **TODO PARK** (user call) — the UI threat tell would
+require building the reachability math anyway plus an eyeball-verified
+render/ui surface; polish-shaped, not realism-shaped. Parked as TODO
+§Polish "Fleeing-enemy threat tell" with the §58 ledger pointer.
+
+The phase in one breath: two steps, one measurement session, zero code
+— the round's fastest phase, and the premise-audit-first posture
+working exactly as designed. The 2026-07-15 charter was scoped against
+a villain that §57 had since inverted; the audit's contribution was
+refusing to no-op on natural-run evidence alone and insisting the
+pre-registered fixture actually run (the isolate-vs-board divergence
+hazard, 55c1). The fixture then earned the exit decisively — and the
+"spiral inverted" cursor warning turned out to be UNDERSTATED: the
+isolate delta is +25/+47.5, bigger than the distribution read hinted.

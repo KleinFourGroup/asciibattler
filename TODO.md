@@ -20,6 +20,15 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Polish / pre-launch
 
+- [ ] **Fleeing-enemy threat tell (UI).** Parked at the §58 close
+  (2026-07-19, user call): a player-facing "that unit can't reach/harm
+  you" read — the derived reachability math (§58's unbuilt sensor)
+  surfaced as UI instead of bot input. The bot side proved unnecessary
+  (searcher-ate-it, BALANCE §58); the player value is readability on the
+  fleer/deserter situation the experienced eye reads natively. Needs a
+  snapshot-computable reachability read + a render/ui surface
+  (eyeball-verify); candidate slot: a later UI/polish round.
+
 - [ ] **Stalled-battle draw prompt (live-game UX).** The only stall guard is
   the per-turn tick cap (`resolveAsDraw`, driver-owned) — a player who hits a
   genuine stall IRL is stuck watching until the cap expires, with no engine

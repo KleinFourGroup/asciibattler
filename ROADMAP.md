@@ -49,7 +49,7 @@ re-baseline.
 | **55** | Rung 2 — distribution generalization (re-scoped) | ✅ CLOSED, VERDICT NO — gate/threshold fixes couldn't rescue static triggers held-out (−14.2); passive stays the anchor | — (closed) |
 | **56** | Generalized swap (engine self-sorting) | SwapAction generalized beyond the healer: units pass their own traffic; design round at kickoff; exit = FULL baseline re-derivation | High (sim engine change; every balance number moves) |
 | **57** | Rung 2 PROPER — portfolio rollout search | Opens with the re-ask gate (§55-pre protocol post-swap), then rollout arbitration: null arm floor, clairvoyance guard, horizon/cadence design round | High (the reopened core surgery) |
-| **58** | The derived threat read | Deserters residual as reachability math on derived state — NOT intent detection; no-op exit legal if §57's searcher eats it | Low-Medium (may legitimately no-op) |
+| **58** | The derived threat read | ✅ CLOSED 2026-07-19, NO-OP EARNED — the searcher ate the deserters residual (isolate measured, both sets); threat tell → TODO park | — (closed) |
 | **59** | The expressive economy strategy | Economy dims join the ONE scored vector; fire scorer; top-K refinement; `--search` regen | Medium (harness-only surface) |
 | **60** | The REAL balance pass + close-out | Re-anchor targets · boss-wall verdict · prices/`bitsMultiplier`/drop weights/`path.port`/fire arm · round close | Low-Medium (measure + config) |
 
@@ -434,8 +434,9 @@ from traces only if 58a says build.
   → searcher-ate-it entry + the junctionAmbush/artillery/spawn-geometry
   one-line dispositions + the landing-surface user call; if not → stop,
   cut the sensor build as 58c+
-  ◔ 2026-07-19 — ledger + dispositions written (worklog §58b); OPEN:
-  the landing-surface user call (UI threat tell vs TODO park)
+  ✅ 2026-07-19 — ledger + dispositions written; landing surface =
+  TODO PARK (user call; TODO §Polish "Fleeing-enemy threat tell");
+  worklog §58b + close
 
 **Exit criteria:** the spiral-deserters isolate number on record either
 way; the residual's ledger entry updated (built / searcher-ate-it /

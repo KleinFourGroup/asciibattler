@@ -1414,3 +1414,59 @@ deltas. The pre-X H7c→O log lives at
     variance. Batches `20260720-{124227,125030,130045,131033}-2b42019`
     (new-in/new-held/old-in/old-held), summary sha256 f90f1cfe /
     a1ca0174 / 8e8c1607 / 87f3858f.
+- **2026-07-20 — §60 THE OPENING READS: 60a fire-ablation (fires are
+  REAL — the §59 wash decomposed into two equal channels) + 60b the
+  `path.port` ladder (the toll curve exists and the FIXED BUY POLICY is
+  who pays it).** 8 batches at HEAD `f5f504d`, 40 seeds each,
+  `--searcher --audition --jobs=8`; the live comparison arms are the
+  §59 probe batches (code-identical — `2b42019..f5f504d` is docs-only).
+  - **60a — the fire ablation (59-regen with the fire group zeroed;
+    port group untouched):**
+  | arm | in-sample | held-out |
+  |---|---|---|
+  | live 59-regen (~2.4 fires/run) | **65.0** | **57.5** |
+  | ablated (0 fires) | 57.5 | 52.5 |
+  - **Paired same-seed flips: +3/−0 in-sample, +2/−0 held-out — five
+    wins lost to ablation, ZERO reverse flips in 80 paired runs**
+    (one-sided sign p≈0.03). **Firing packets IS strictly beneficial**
+    — the user's §59 close hypothesis confirmed in the strict sense
+    (no seed anywhere got worse by firing).
+  - **⭐ The §59 wash DECOMPOSED — two equal channels, not a dead
+    layer:** no-economy (ablated: no fires, no buys) 57.5/52.5 ·
+    fire-only (59-regen) 65.0/57.5 · shop-only (55pre) 62.5/57.5. The
+    economy layer carries ~+5pt through EITHER channel; the §59 tie
+    was two vectors harvesting the same-size dividend, not
+    outcome-neutrality. "Make it matter" sharpens to "make the
+    channels STACK and DIFFERENTIATE."
+  - **60b — the `path.port` ladder (40 in-sample seeds/rung; tx-rate =
+    runs with ≥1 purchase; bank = mean finalBits):**
+  | rung | regen win% | tx | buys/run | bank | 55pre win% | tx | buys/run | bank |
+  |---|---|---|---|---|---|---|---|---|
+  | −0.28 | 65.0 (native) | 0/40 | 0 | 81.5 | 57.5 | 12/40 | 0.42 | 66.3 |
+  | 0 | 65.0 (row-identical to native) | 0/40 | 0 | 81.5 | 62.5 (native) | 17/40 | 0.63 | 60.6 |
+  | +0.75 | 67.5 | 9/40 | 0.25 | 64.0 | 55.0 | 21/40 | 0.82 | 55.9 |
+  | +1.5 | 67.5 | 11/40 | 0.33 | 59.8 | **50.0** | 32/40 | 1.43 | 39.4 |
+  - **The toll is POLICY-SHAPED, not universal:** the learned tight
+    posture (reserve ≈26, daemons-only) pays NOTHING for dock-forcing
+    (paired +8/−7 ≈ net 0 at both +0.75 and +1.5) but also barely
+    transacts — 0.33 buys/run at DOMINANT port weight: the port
+    SCORER throttles, not the route. The fixed buy-all policy pays
+    monotonically: 62.5 → 55.0 → 50.0 (always-dock vs native paired
+    +6/−1 AGAINST docking). The §59 "ports aren't worth the hop"
+    refines to: **the GOODS aren't worth the hop under buy-all
+    discipline; a disciplined buyer breaks even; nobody profits** —
+    port stock has no upside at ANY tested posture. That no-upside
+    curve is 60c's tuning target.
+  - Kickoff predictions: regen@0 starved ✅ (stronger — all 40 rows
+    identical to native ex strategy-name) · 55pre@−0.28 still docks ✅
+    (12/40) · both @+1.5 dock-heavy — HALF-MISS for regen (the route
+    docks but the scorer keeps tx at 11/40; NB `portPurchases` can't
+    distinguish dock-without-buy from no-dock — a dock counter is a
+    small RunResult add if 60c needs the split).
+  - **The 60c operating point (PROPOSED, user confirms): 55pre@+1.5**
+    (80% tx-rate, 1.43 buys/run — the §50g guard finally satisfied)
+    as the primary price-read arm + **regen@+1.5** as the
+    learned-posture control; held-out seeds spent only there.
+  - Batches `20260720-{142120,142852,143854,144624,145640,150655,
+    151439,152341}-f5f504d`, summary sha256 a06c6bfa / 71422f88 /
+    d1c8e6d2 / 17ef9357 / dd2e1d8f / c9cd86c4 / 4bc0b8b5 / 34c5f386.

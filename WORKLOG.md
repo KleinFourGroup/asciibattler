@@ -2489,3 +2489,41 @@ fetched §59 batches. Reading: ablation costs nothing ⇒ the fires are
 expressiveness-waste or the economy is structurally saturated at
 current numbers; ablation costs win rate ⇒ firing IS beneficial and
 the §59 wash was the port side.
+
+### 60a + 60b — the opening reads (2026-07-20, same session)
+
+The 8-batch driver ran clean (~71 min box wall, all exit 0, fetched
+with shas). Numbers + tables: BALANCE §60. The narrative bits beyond
+the entry:
+
+- **The wash's autopsy came out cleaner than hoped.** Three postures
+  now bracket the economy: none (ablated) 57.5/52.5 · fire-only
+  (59-regen) 65.0/57.5 · shop-only (55pre) 62.5/57.5. Both channels
+  are worth ~+5pt and they were never measured STACKED — no §59 arm
+  fires AND shops (the searcher-optimal vector never docks; 55pre
+  never fires). A natural 60c probe if wanted: regen's port group
+  swapped for buy-friendlier dials at a docking rung — does the
+  dividend stack toward ~+10, or saturate?
+- **The 60a verdict is the strict form of the user's close question:**
+  zero reverse flips in 80 paired runs — firing is never harmful at
+  the learned biases. The −0.84 hoard-at-boss dial survives ablation
+  scrutiny too: the learned personality's value is real, so its
+  boss-hoarding says boss-relevant fire value genuinely isn't there
+  (60c's sign probe stands).
+- **The dock≠buy gap surfaced as an instrument limit:** regen@+1.5
+  routes to ports (the DP has port dominant) but `portPurchases`
+  stays 0.33/run — the tight port scorer (reserve ≈26, daemons-only,
+  packets −0.97) throttles at the counter, and the columns can't
+  separate dock-without-buy from no-dock. Filed in the BALANCE entry:
+  a `portDocks` counter is a small RunResult add IF 60c's price work
+  needs the split — not built on spec.
+- **Why buy-all loses at high visitation (the working read, untested):
+  the hop opportunity cost** — a port hop forgoes a battle's
+  reward/XP or a rest's bank, and buy-all then converts the bank into
+  goods that don't return the difference. Distinguishing "goods
+  underpriced vs hop overpriced" is exactly what sweeping prices at
+  the fixed 55pre@+1.5 visitation level can now do — route held
+  constant, only prices move.
+- Operating-point proposal (user confirms at 60c): 55pre@+1.5 primary
+  + regen@+1.5 control; held-out spent only at the chosen point. The
+  ladder itself stays in-sample-only by design.

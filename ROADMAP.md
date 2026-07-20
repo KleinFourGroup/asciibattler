@@ -536,16 +536,16 @@ re-anchor — those must be explicit.
 calls); tune-vs-accept per lever; whether the §49 cache-shrink flow's first
 trigger content earns a slot in the price work.
 
-**Kickoff ✅ 2026-07-20 (worklog §60):** levers all live (config JSON;
-`path.port` = a vector dim → fixture ladder); 60a+60b batched (user).
+**Kickoff ✅ 2026-07-20 (worklog §60):** levers live; 60a+60b batched (user).
 
 **The cut (shape-locked 2026-07-20; rationale in worklog §60):**
 
-- [ ] 60a — fire-ablation probe: 59-regen, fire group zeroed, vs live;
-  paired 40+40 box seeds — the §59-wash discriminator; BALANCE opener
-- [ ] 60b — the `path.port` ladder: rungs {−0.28, 0, +0.75, +1.5} × both
-  instrument vectors, 40 in-sample seeds/rung → the transaction-live
-  operating point (held-out reserved for the chosen point)
+- [x] 60a — fire-ablation probe ✅ 2026-07-20 — fires REAL: paired +5/−0
+  over 80 runs, both sets; the §59 wash DECOMPOSED (two equal ~+5pt
+  channels, fire-only vs shop-only); BALANCE §60
+- [x] 60b — the `path.port` ladder ✅ 2026-07-20 — the toll is
+  POLICY-SHAPED (buy-all −12.5 at always-dock; the tight posture net 0);
+  operating point proposed 55pre@+1.5 + regen@+1.5 control; BALANCE §60
 - [ ] 60c — lever sweeps at that point: prices · `bitsMultiplier` · drop
   weights · fire arm (hoard-at-boss sign probe); tune-vs-accept = user
 - [ ] 60d — the §49 shrink-flow slot decision (user call, 60c evidence)

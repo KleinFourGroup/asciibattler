@@ -545,8 +545,9 @@ the §49 shrink slot — all user calls, resolved in the cut lines below.
 - [x] 60b — the `path.port` ladder ✅ 2026-07-20 — the toll is
   POLICY-SHAPED (buy-all −12.5 at always-dock; the tight posture net 0);
   operating point proposed 55pre@+1.5 + regen@+1.5 control; BALANCE §60
-- [ ] 60c — lever sweeps at that point: prices · `bitsMultiplier` · drop
-  weights · fire arm (hoard-at-boss sign probe); tune-vs-accept = user
+- [x] 60c ✅ 2026-07-20 — every lever measured + dispositioned (reprice +
+  drop probe BAKED, validation +3/−1 clean · bits/port ACCEPT · the heal
+  guard ships · ⭐ the grant-consumer catch → extended arm); BALANCE §60c
 - [x] 60d — the §49 shrink slot ✅ 2026-07-20 NO SLOT (user); keeps waiting
 - [ ] 60e — the re-anchor + boss-wall verdict — band RE-ANCHORED **30–35%**
   (user 2026-07-20; measured 26.8% ⇒ boss tunes UP)

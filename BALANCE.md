@@ -1573,3 +1573,30 @@ deltas. The pre-X H7c→O log lives at
     60.0 / 67.5.** Batches `20260720-{182938,183725,184741,185602}-
     7e3895f`, summary sha256 936b3669 / 6ccba1d6 / d181a6d1 /
     6876e956.
+- **2026-07-20 — §60c CLOSES: the config bake validates clean (+3/−1
+  firer, +1/−1 shopper) and every lever is dispositioned.** The two
+  user-called changes (daemon reprice mars 40/janus 32/mercury 30 ·
+  bits-small patch 0.25 + shield 0.25) ran combined, 40 in-sample
+  seeds per vector, extended arm, HEAD `eb07276`:
+  | arm | win% | paired vs pinned | fires/run |
+  |---|---|---|---|
+  | regen @ final config | **65.0** | +3/−1 (vs B's 60.0) | 1.30 → **1.95** |
+  | 55pre @ final config | 67.5 | +1/−1 (flat) | 0 |
+  - The firer's gain is the drop probe working as designed: shield in
+    the common table → the heal-guarded rule finally fires buffs
+    (fires/run up 50% with the guard still banking patches). The
+    shopper is unmoved (native docking is modest; the reprice shifts
+    little volume at 0.63 buys/run). **Both changes STAY.**
+  - **Ledger of the 60c dispositions:** daemon prices TUNED (toward
+    realized value, deliberately partial) · drop weights TUNED (the
+    probe stays) · fire arm TUNED (the heal guard) · `bitsMultiplier`
+    ACCEPT at 1.0 (income is not the port problem — documented no-op)
+    · `path.port`/port economics ACCEPT-AS-MEASURED (the toll is the
+    policy; goods-vs-hop value is next-round content work, filed for
+    the Cluster-4 proposal) · the ladder's held-out spend CLOSED
+    UNSPENT (no price sweep materialized at the operating point —
+    the in-sample ladder + the documented-no-op precedent carry it).
+  - **Boss wall at the FINAL config: 26.4% (19/72 arrivals)** —
+    consistent pre/post config; §60e tunes it up into the re-anchored
+    **30–35%** band (user call). Batches `20260720-{222911,223730}-
+    eb07276`, summary sha256 e41693a8 / c1859eb7.

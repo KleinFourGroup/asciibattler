@@ -2703,3 +2703,18 @@ protocol: both config changes commit separately, then ONE paired
 in-sample wave (regen + 55pre vs the pinned B-wave/floor arms) reads
 them combined — attribution splits into a second wave only if
 something regresses.
+
+### 60c CLOSES (2026-07-20): the bake validates; the ledger is full
+
+Validation numbers + the disposition ledger: BALANCE §60c close. The
+satisfying detail: the firer's +3/−1 comes with fires/run RISING
+1.30→1.95 under the same heal guard — the drop probe put shields
+where the guard could reach them, which is the two changes composing
+exactly as designed (C supplies, B times). No attribution split
+needed. The ladder's reserved held-out spend closes UNSPENT — no
+price sweep materialized at the operating point, so the in-sample
+ladder + the documented-no-op precedent carry the record. §60e is the
+last measured step: tune the Bandit King up from 26.4% into the
+30–35% band at the final config (the lever menu goes to the user —
+healthPool 13 vs stage levelBudget factors vs wave count factor),
+then the re-anchor sheet + 60f.

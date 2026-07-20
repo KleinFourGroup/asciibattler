@@ -2378,3 +2378,32 @@ refineSearch went async (the 59d tests await; +2 tests).
 (the 59b/59c sampler-order change makes old seeds' sequences moot
 anyway). Launched DETACHED via box-batch launch; fetch + fixed-vector
 probe + BALANCE §59 = the morning session.
+
+### 59f close — the morning session (2026-07-20)
+
+The overnight batch landed clean (8.85h, exit 0 — the probe-sized ~8h
+estimate held). Fetch → the 4-batch fixed-vector probe (~7 min each) →
+BALANCE §59. The full story is the BALANCE entry; the narrative bits:
+
+- **The verdict is a WASH, and that's a finding, not a failure.** The
+  economy dims are live and coherently used (the winner's personality:
+  fire-at-normals/hoard-at-boss, never-shop/high-reserve), packets
+  fire in 92% of runs — but two OPPOSITE economic postures tie on
+  held-out. At current prices/drops the economy layer is
+  outcome-neutral at the optimum. §59's job was expressiveness, and
+  expressiveness now EXISTS; §60's job is making it matter — and it
+  inherits the measured port-starvation optimum as its motivating
+  number plus a natural A/B instrument pair (59-regen vs 55pre).
+- **The hoard-at-boss inversion** (fire at normals, never at the boss)
+  is worth carrying into §60's fire-arm sweep: if boss-relevant
+  packets existed (or prices made hoarding pay), that sign should
+  flip — a concrete lever-sensitivity probe.
+- Honest caveats: 96 vectors < heavy's 120; 40-seed reads carry the
+  §52 seed-variance band (±~8pt); the 6-seed test split in the regen
+  is presentation-only, the probe is the decision read. And the old
+  vector's 40-seed reads sit consistent with §57h's 120-seed values.
+
+Exit criteria: fresh search converged with economy dims live ✅ ·
+packets fire in harness runs ✅ (96/76 across the probe arms) ·
+fixed-vector probe on record in BALANCE §59 ✅. Phase close pending
+user sign-off.

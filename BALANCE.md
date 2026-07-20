@@ -1364,3 +1364,53 @@ deltas. The pre-X H7c→O log lives at
     exercised as designed). Batches `output/box-batches/20260719-{005301,
     005430,005600,011157}-4917b31` (OFF-in / OFF-held / aud-in /
     aud-held); summary sha256 5bc07142 / 1acbd4ff / 66600e28 / ba13c958.
+
+- **2026-07-20 — §59 THE ECONOMY REGEN + THE FIXED-VECTOR PROBE: the
+  first overnight box search (economy dims live) converges and the
+  economy layer is measurably ALIVE (packets fire in 37/40 runs) — but
+  the expressiveness LIFT over the pinned old vector is a WASH at
+  current economy config: two opposite economic postures tie.** All
+  §59 exit criteria met; the wash is itself the §60 input.
+  - **The regen (batch `20260720-020433-4acca2c`, 8.85h box wall):**
+    `--search --refine --searcher --audition --preset=heavy
+    --vectors=96 --seeds=32 --sampler-seed=59 --jobs=8` at HEAD
+    `4acca2c` — 96 full-length candidates × 26 train / 6 test seeds,
+    K3×8@0.15 refinement (SHARDED — 59f-pre; the cost probe caught the
+    serial-refine trap: ~67s/full-length audition eval ⇒ ~7h serial).
+    Winner: train 73.1% / 6-seed test 50.0%; refinement improved 1/3
+    finalists, crown unchanged. Pinned as
+    [tests/fuzz/fixtures/59-regen-vector.json](tests/fuzz/fixtures/59-regen-vector.json).
+  - **The winner's economy posture (coherent, learned):** avoid ports
+    (`path.port` −0.28 vs battle/rest/elite ≈0.7) · if docked buy
+    daemons (0.92) never packets (−0.97) · reserve ≈26 bits · FIRE at
+    normals (+0.37), lukewarm elites (+0.08), HOARD at boss (−0.84 —
+    a full cache can't flip it: −0.84+0.46<0). The inverse of the
+    save-for-boss human instinct.
+  - **The fixed-vector probe (§46b instrument): new vs old
+    ([55pre-vector](tests/fuzz/fixtures/55pre-vector.json)), both
+    `--searcher --audition`, 40 seeds in-sample + 40 held-out
+    (`--seed-offset=5000`), box `--jobs=8`, HEAD `2b42019`:**
+  | vector | in-sample | held-out | packetsFired | portPurchases |
+  |---|---|---|---|---|
+  | NEW 59-regen | **65.0** (26/40) | 57.5 (23/40) | 96 / 76 | **0 / 0** |
+  | OLD 55pre | 62.5 (25/40) | 57.5 (23/40) | 0 / 0 | 25 / 21 |
+  - Paired same-seed flips: in-sample +10/−9, held-out +7/−7 — **net
+    ≈0 both sets**. +2.5pt in-sample is inside the §52 seed-variance
+    band; held-out is an exact tie. **VERDICT: the expressive economy
+    vector matches, not beats, the fixed-policy vector** — the whole
+    strategy-side economy (fires, no shopping) and the hardwired one
+    (buy-all, no fires) reach the same ceiling.
+  - **⭐ The §60 handoff finding — PORT STARVATION IS OPTIMAL:** the
+    searcher-optimal vector never docks (0 purchases in 80 runs; mean
+    terminal bank 81.5 bits = massive idle liquidity). "Ports aren't
+    worth the hop at current prices" is now a MEASURED optimum, not a
+    bot quirk — §60's `path.port`-first sweep order (the §50g
+    transaction-starvation guard) has its motivating number, and
+    "make economy decisions matter" (prices · bitsMultiplier · drop
+    weights) is the tuning target, with BOTH instrument vectors
+    (economy-live + fixed-policy) as the A/B pair.
+  - Stability cross-check: the old vector at 40 seeds (62.5/57.5)
+    is consistent with §57h's 120-seed reads (57.5/60.8) within seed
+    variance. Batches `20260720-{124227,125030,130045,131033}-2b42019`
+    (new-in/new-held/old-in/old-held), summary sha256 f90f1cfe /
+    a1ca0174 / 8e8c1607 / 87f3858f.

@@ -496,11 +496,12 @@ prediction: NO bump, v34/v37 hold** (dev-harness surface only).
   shards; parity vs run-mode pinned ✅ 2026-07-19 — `searcherFromArgs`
   = the ONE resolver (run/search/shard children; flags cross the job
   file); evaluator parity pinned; 4 tests; worklog §59e
-- [ ] 59f — the box regen: cost probe → sized `--search` (refinement on,
+- [x] 59f — the box regen: cost probe → sized `--search` (refinement on,
   economy dims live); fixed-vector probe re-run; numbers → BALANCE §59
-  ◐ 2026-07-20 — probe DONE (~67s/full audition eval; ⚠ caught serial
-  in-parent refine ≈7h → 59f-pre batched it, sharded ≈1.4h); overnight
-  batch LAUNCHED (96 vectors × 26/6 seeds, ~8h); worklog §59f
+  ✅ 2026-07-20 — cost probe caught the serial-refine trap (59f-pre
+  sharded it); overnight regen 8.85h clean; probe verdict = WASH (economy
+  expressive but outcome-neutral at current config; ⭐ port starvation =
+  the measured optimum → §60's motivating number); BALANCE §59
 
 **Exit criteria:** a fresh `--search` converges with the economy dims
 live; packets fire in harness runs (outcome-inertness gone); the

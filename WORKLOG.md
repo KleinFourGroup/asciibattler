@@ -2601,3 +2601,35 @@ climbs). The port-side full fix smells like next-round content/
 structure (port goods must out-value the forgone hop; §60's scope
 guard forbids new mechanics) — but the sweeps get to SAY so with
 numbers before the 60e re-anchor writes it down.
+
+### ⭐ The grant-consumer catch + the protocol extension (2026-07-20)
+
+The user's question at the wave-1 fork — "why doesn't reroute reuse
+the Mercury/Janus code paths; are THOSE used?" — found the round's
+measurement gap. It DOES reuse them (the same `grantRedraws` op, the
+same 49e cursor insert); the gap is the shared CONSUMER: the harness
+grant walk spends redraw grants only under `--redraw` and empower
+grants only under `--empower` (harness.ts ~595 — absent policy →
+passGrant), and NO §53–60 arm ever carried either flag (every
+recorded batch `args` file: bare `--searcher --audition`). Net:
+mercury + janus + reroute (redraws) and mars + minerva (empowers) —
+**4 of 7 daemons and 1 of 7 packets fully inert in every read this
+round**; measured 24/40 runs (60%) of each live instrument arm roll
+a dead daemon (identical tallies both vectors — the roll is
+seed-determined at construction). Why invisible until now: the
+deadness was UNIFORM — anchors and skill arms alike — so it cancels
+in every paired comparison; it stops canceling exactly at §60's
+grant-content value questions (reroute fire value, mercury/janus
+prices, the 50f spread). Verified: daemons.json ops · the harness
+gate branch · the batch args files.
+
+**Decision (user, greenlit): the instrument-arm definition EXTENDS to
+`--searcher --audition --redraw=level:2 --empower=level:hi`** — the
+deterministic fixed-policy dials (level variants draw no RNG; k=2
+mirrors janus's/reroute's maxCards). Zero new code (K3c3/K4c3
+consumers + composable gates, verified). Prior verdicts STAND
+(internally consistent — both sides of every §57h/§59/§60 comparison
+shared the deadness); the §57h default-arm doctrine amends once the
+floor re-runs. Sequence: the A/B floor pair re-runs under the
+extended arm (in + held both vectors), THEN B (state-aware fire
+selection) builds and measures against the NEW floor.

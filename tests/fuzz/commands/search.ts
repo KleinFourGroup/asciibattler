@@ -217,12 +217,44 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
     process.stdout.write(
       `Refining top-${refine.topK} (${refine.perturbs} perturbs each, radius ${refine.radius})…\n`,
     );
-    const refined = refineSearch(result, {
+    const refined = await refineSearch(result, {
       box: DEFAULT_BOX,
       refine,
       trainSeeds,
       testSeeds,
       evaluate: (w, seeds) => harnessEvaluate(w, seeds, harnessOptions),
+      // 59f-pre — under --jobs the K×perturbs train evals ride the same
+      // vector-sharded children as the base search (the cost probe measured
+      // serial in-parent refinement at ~7h for an overnight-shaped regen —
+      // the whole reason this seam exists). Serial mode keeps the default
+      // map-the-scalar behavior.
+      ...(jobs > 1
+        ? {
+            batchEvaluate: (
+              vecs: readonly Parameters<typeof harnessEvaluate>[0][],
+              seeds: readonly number[],
+            ) =>
+              evaluateVectorsSharded({
+                vectors: vecs,
+                seeds,
+                knobs: {},
+                hopCount,
+                roster: runConfig.startingRoster,
+                forcedLayoutId: runConfig.forcedLayoutId,
+                forcedEncounterId: runConfig.forcedEncounterId,
+                objective,
+                redraw,
+                empower,
+                daemon,
+                searcher: args.searcher,
+                searcherSpec: args.searcherSpec,
+                audition: args.audition,
+                k: args.k,
+                jobs,
+                tmpDir: join(args.outDir, 'shard-tmp-refine'),
+              }),
+          }
+        : {}),
     });
     const improvedCount = refined.refined.filter((r) => r.improved).length;
     process.stdout.write(

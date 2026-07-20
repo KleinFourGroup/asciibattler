@@ -355,11 +355,20 @@ export interface RefineResult {
  * then re-rank the K family winners and score the overall winner held-out.
  * Composes with BOTH search paths (in-process runSearch and the sharded
  * assembleSearchResult) — it only needs `base.ranked` to carry K entries,
- * i.e. the base search must have run with `topK ≥ refine.topK`. Refinement
- * evaluations run through the supplied `evaluate` in-process (24 evals at
- * the default dials — the 59f cost probe prices this before the box regen).
+ * i.e. the base search must have run with `topK ≥ refine.topK`.
+ *
+ * 59f-pre — the perturbs are INDEPENDENT (best-of-family is a max, not a
+ * sequential climb), so all K×perturbs variants are generated up front (per
+ * finalist, in rng order — byte-identical variants to the serial draft) and
+ * evaluated in ONE `batchEvaluate` call. Under `--jobs` the CLI passes the
+ * vector-sharded evaluator here, which is what makes an overnight refine
+ * affordable: the 59f cost probe measured serial in-parent refinement at
+ * ~7h for K3×8×26-seeds full-length audition evals (~67s/run) vs ~1.4h
+ * sharded. Default `batchEvaluate` maps the scalar `evaluate` (the serial
+ * behavior, byte-identical — pinned by the equivalence test). Test-set
+ * re-scores stay on the scalar `evaluate` (a handful of runs).
  */
-export function refineSearch(
+export async function refineSearch(
   base: SearchResult,
   opts: {
     readonly box: SearchBox;
@@ -367,25 +376,50 @@ export function refineSearch(
     readonly trainSeeds: readonly number[];
     readonly testSeeds: readonly number[];
     readonly evaluate: (weights: ScoredWeights, seeds: readonly number[]) => number;
+    /** Optional batch evaluator for the K×perturbs train evals (the CLI's
+     *  sharded path). Must return rates aligned to the input vectors.
+     *  Default: map the scalar `evaluate`. */
+    readonly batchEvaluate?: (
+      vectors: readonly ScoredWeights[],
+      seeds: readonly number[],
+    ) => Promise<readonly number[]>;
   },
-): RefineResult {
+): Promise<RefineResult> {
   const { box, refine, trainSeeds, testSeeds, evaluate } = opts;
+  const batchEvaluate =
+    opts.batchEvaluate ??
+    ((vectors: readonly ScoredWeights[], seeds: readonly number[]) =>
+      Promise.resolve(vectors.map((w) => evaluate(w, seeds))));
   const finalists = base.ranked.slice(0, refine.topK);
   if (finalists.length === 0) throw new Error('refineSearch: base.ranked is empty');
   const rng = new RNG(base.samplerSeed + REFINE_SEED_OFFSET);
 
-  let trainEvals = 0;
-  const refined = finalists.map((finalist) => {
+  // Generate ALL variants first, finalist-major in rng order (identical
+  // draw sequence to the serial formulation), then evaluate as one batch.
+  const variants: ScoredWeights[] = [];
+  for (const finalist of finalists) {
+    for (let p = 0; p < refine.perturbs; p++) {
+      variants.push(perturbWeights(finalist.weights, box, refine.radius, rng));
+    }
+  }
+  const rates = await batchEvaluate(variants, trainSeeds);
+  if (rates.length !== variants.length) {
+    throw new Error(
+      `refineSearch: batchEvaluate returned ${rates.length} rates for ${variants.length} vectors`,
+    );
+  }
+  const trainEvals = variants.length;
+
+  const refined = finalists.map((finalist, f) => {
     let bestWeights = finalist.weights;
     let bestTrain = finalist.trainWinRate;
     let improved = false;
     for (let p = 0; p < refine.perturbs; p++) {
-      const variant = perturbWeights(finalist.weights, box, refine.radius, rng);
-      const rate = evaluate(variant, trainSeeds);
-      trainEvals++;
+      const idx = f * refine.perturbs + p;
+      const rate = rates[idx]!;
       if (rate > bestTrain) {
         bestTrain = rate;
-        bestWeights = variant;
+        bestWeights = variants[idx]!;
         improved = true;
       }
     }

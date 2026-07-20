@@ -498,6 +498,9 @@ prediction: NO bump, v34/v37 hold** (dev-harness surface only).
   file); evaluator parity pinned; 4 tests; worklog §59e
 - [ ] 59f — the box regen: cost probe → sized `--search` (refinement on,
   economy dims live); fixed-vector probe re-run; numbers → BALANCE §59
+  ◐ 2026-07-20 — probe DONE (~67s/full audition eval; ⚠ caught serial
+  in-parent refine ≈7h → 59f-pre batched it, sharded ≈1.4h); overnight
+  batch LAUNCHED (96 vectors × 26/6 seeds, ~8h); worklog §59f
 
 **Exit criteria:** a fresh `--search` converges with the economy dims
 live; packets fire in harness runs (outcome-inertness gone); the

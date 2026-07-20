@@ -2341,3 +2341,40 @@ serial one as run mode. Notes:
 evaluator-vs-run-mode parity pin. E2E: a minimum-scale sharded
 `--search --refine --searcher --audition --k=1 --jobs=2` run on record
 (scratchpad out dir).
+
+### 59f — the box regen: the cost probe + 59f-pre (2026-07-20, the overnight session)
+
+**The cost probe (two box batches, timed by exit-code mtimes):**
+
+- Probe 1 (`--search --searcher --audition --vectors=4 --seeds=10
+  --jobs=8`, quick preset → hops=4): 353s for ~34 evals → **~33s per
+  hops-4 audition run** single-core. ⚠ protocol note: the quick preset
+  silently pinned hops=4 — full-length reads need `--preset=heavy`.
+- Probe 2 (same + `--preset=heavy --vectors=2 --seeds=5`): 366s for 9
+  full-length evals, 2 vector-sharded children → **~67s per full-length
+  audition run** single-core (a clean 2× over hops-4).
+
+**⭐ The probe's real catch — refinement was serial in the parent.**
+`--jobs` shards only the BASE vectors; at K3×8 × ~26 train seeds ×
+67s/run, in-parent refinement ≈ **7 HOURS serial** — the overnight
+batch would have spent the night 8:1 on the wrong stage. Exactly what
+the "size by probe, not guess" lock existed to catch.
+
+**59f-pre (inserted, one commit): batched refinement.** The perturbs
+are independent (best-of-family is a MAX, not a sequential climb), so
+`refineSearch` now generates all K×perturbs variants up front
+(finalist-major, same rng order — byte-identical variants) and
+evaluates them in ONE `batchEvaluate` call; under `--jobs` the CLI
+passes the vector-sharded evaluator (own shard-tmp dir). Serial default
+= map the scalar evaluate, pinned byte-equivalent by test; misaligned
+batch length throws loudly. Refine cost: ~7h serial → ~1.4h sharded.
+refineSearch went async (the 59d tests await; +2 tests).
+
+**The overnight regen, sized from the probes (R≈67s, 8 cores):**
+`--search --refine --searcher --audition --preset=heavy --vectors=96
+--seeds=32 --sampler-seed=59 --jobs=8` → train 26 / test 6; base 96×26
+= 2496 runs ≈ 5.8h (12 vectors/child) + refine 24×26 = 624 sharded ≈
+1.45h + serial test evals ≈ 0.8h ≈ **~8h wall**. Fresh samplerSeed=59
+(the 59b/59c sampler-order change makes old seeds' sequences moot
+anyway). Launched DETACHED via box-batch launch; fetch + fixed-vector
+probe + BALANCE §59 = the morning session.

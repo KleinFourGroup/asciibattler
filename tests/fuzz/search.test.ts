@@ -236,14 +236,14 @@ describe('refineSearch (59d)', () => {
     });
   }
 
-  it('greedy accept: a strictly better perturb replaces its finalist; the winner is re-scored held-out', () => {
+  it('greedy accept: a strictly better perturb replaces its finalist; the winner is re-scored held-out', async () => {
     const base = makeBase([0.5, 0.4, 0.3]);
     const finalists = new Set(base.ranked.map((c) => JSON.stringify(c.weights)));
     const evaluate = (w: ScoredWeights, seeds: readonly number[]): number => {
       if (seeds === testSeeds) return 0.42;
       return finalists.has(JSON.stringify(w)) ? 0.5 : 0.9; // every perturb beats every finalist
     };
-    const r = refineSearch(base, {
+    const r = await refineSearch(base, {
       box: DEFAULT_BOX,
       refine: DEFAULT_REFINE,
       trainSeeds,
@@ -257,14 +257,14 @@ describe('refineSearch (59d)', () => {
     expect(finalists.has(JSON.stringify(r.best.weights))).toBe(false); // a perturb won
   });
 
-  it('worse-or-equal perturbs keep the incumbent (ties never churn the vector)', () => {
+  it('worse-or-equal perturbs keep the incumbent (ties never churn the vector)', async () => {
     // ALL finalists at 0.5 so a 0.5-scoring perturb is a TIE everywhere —
     // rates like [0.5, 0.4, 0.3] would make 0.5 a strict improvement for
     // the lower finalists (the first draft's mistake).
     const base = makeBase([0.5, 0.5, 0.5]);
     const evaluate = (_w: ScoredWeights, seeds: readonly number[]): number =>
       seeds === testSeeds ? 0.42 : 0.5; // every perturb TIES the best finalist
-    const r = refineSearch(base, {
+    const r = await refineSearch(base, {
       box: DEFAULT_BOX,
       refine: DEFAULT_REFINE,
       trainSeeds,
@@ -277,11 +277,46 @@ describe('refineSearch (59d)', () => {
     expect(r.refined[1]!.testWinRate).toBe(base.ranked[1]!.testWinRate);
   });
 
-  it('is deterministic: same base + same stub → identical result objects', () => {
+  it('is deterministic: same base + same stub → identical result objects', async () => {
     const base = makeBase([0.6, 0.2, 0.1]);
     const evaluate = (w: ScoredWeights, seeds: readonly number[]): number =>
       seeds === testSeeds ? 0.3 : JSON.stringify(w).length % 7 === 0 ? 0.95 : 0.1;
     const opts = { box: DEFAULT_BOX, refine: DEFAULT_REFINE, trainSeeds, testSeeds, evaluate };
-    expect(refineSearch(base, opts)).toEqual(refineSearch(base, opts));
+    expect(await refineSearch(base, opts)).toEqual(await refineSearch(base, opts));
+  });
+
+  it('59f-pre: a batch evaluator is byte-equivalent to the serial scalar path', async () => {
+    // The perturbs are independent (best-of-family is a max), so batching
+    // must change NOTHING: same variants (same rng order), same winners.
+    const base = makeBase([0.6, 0.2, 0.1]);
+    const score = (w: ScoredWeights): number => (JSON.stringify(w).length % 5) / 10;
+    const evaluate = (w: ScoredWeights, seeds: readonly number[]): number =>
+      seeds === testSeeds ? 0.33 : score(w);
+    const opts = { box: DEFAULT_BOX, refine: DEFAULT_REFINE, trainSeeds, testSeeds, evaluate };
+    const serial = await refineSearch(base, opts);
+    let batchCalls = 0;
+    const batched = await refineSearch(base, {
+      ...opts,
+      batchEvaluate: (vectors, _seeds) => {
+        batchCalls++;
+        return Promise.resolve(vectors.map(score));
+      },
+    });
+    expect(batchCalls).toBe(1); // ONE sharded round-trip, not one per eval
+    expect(batched).toEqual(serial);
+  });
+
+  it('59f-pre: a misaligned batchEvaluate throws loudly', async () => {
+    const base = makeBase([0.5]);
+    await expect(
+      refineSearch(base, {
+        box: DEFAULT_BOX,
+        refine: { topK: 1, perturbs: 4, radius: 0.15 },
+        trainSeeds,
+        testSeeds,
+        evaluate: () => 0,
+        batchEvaluate: () => Promise.resolve([0]),
+      }),
+    ).rejects.toThrow(/returned 1 rates for 4 vectors/);
   });
 });

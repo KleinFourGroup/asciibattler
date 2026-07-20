@@ -2310,3 +2310,34 @@ carry K entries. Notes:
 
 5 new tests (search.test.ts §59d) + the bounds walker extended to the
 economy groups; suites green; typecheck clean.
+
+### 59e — `--searcher --audition` into search + shards (2026-07-19)
+
+The audit's gap #6 closed, parity BY CONSTRUCTION: the run.ts §57f/57g
+arm-building block extracted verbatim as `searcherFromArgs` (args.ts) —
+the ONE resolver now used by run mode, the `--search` serial path, and
+the `--eval-shard` children. The shard boundary carries FLAGS, not the
+arm (the registry isn't JSON-safe): ShardJob/ShardedEvalParams gain
+`searcher/searcherSpec/audition/k`; children re-resolve through the
+same function, so a sharded search drives the identical registry as a
+serial one as run mode. Notes:
+
+- The parseArgs gate relaxes exactly one notch: `--searcher` now legal
+  with `--search` (sweep/arena still bail — "support lands mode-by-
+  mode, deliberately", the gate's own doctrine). `--k-telemetry`
+  stays a run-mode instrument (bails with --search).
+- Refinement composes for free: the search command resolves the arm
+  into `harnessOptions` BEFORE the evaluator closure is built, so
+  train, test, AND refine evals all drive the searcher.
+- Cost note honored in the CLI header + the Search: line
+  (`searcher=audition k=…`): searcher evals ~4.1× — real regens go to
+  the box with `--jobs` after the 59f cost probe.
+- Test-scale lesson: an audition eval at hopCount 2 runs ~30-45s — the
+  parity pin runs ONE seed at K=1 with an explicit 300s timeout (the
+  first draft's 2-seed K=2 version blew the 90s default).
+
+4 tests (searcherArgs.test.ts): resolver shapes (bare/audition/k/spec)
+· JSON round-trip re-resolution · the relaxed+kept gates · the
+evaluator-vs-run-mode parity pin. E2E: a minimum-scale sharded
+`--search --refine --searcher --audition --k=1 --jobs=2` run on record
+(scratchpad out dir).

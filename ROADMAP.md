@@ -492,8 +492,10 @@ prediction: NO bump, v34/v37 hold** (dev-harness surface only).
   stubbed-evaluator tests ✅ 2026-07-19 — `--refine` K3×8@0.15 defaults;
   strict-improve greedy (ties keep incumbent); distinct refine RNG
   stream; CLI e2e verified; 5 tests; worklog §59d
-- [ ] 59e — `--searcher --audition` (+ dials) into the search command +
-  shards; parity vs run-mode pinned
+- [x] 59e — `--searcher --audition` (+ dials) into the search command +
+  shards; parity vs run-mode pinned ✅ 2026-07-19 — `searcherFromArgs`
+  = the ONE resolver (run/search/shard children; flags cross the job
+  file); evaluator parity pinned; 4 tests; worklog §59e
 - [ ] 59f — the box regen: cost probe → sized `--search` (refinement on,
   economy dims live); fixed-vector probe re-run; numbers → BALANCE §59
 

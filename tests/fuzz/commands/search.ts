@@ -44,6 +44,7 @@ import {
   layoutFromArgs,
   objectiveFromArgs,
   redrawFromArgs,
+  searcherFromArgs,
   type CliArgs,
 } from './args';
 
@@ -68,6 +69,11 @@ export type SearchModeArgs = Pick<
   | 'refineK'
   | 'refinePerturbs'
   | 'refineRadius'
+  | 'searcher'
+  | 'searcherSpec'
+  | 'audition'
+  | 'k'
+  | 'kTelemetry'
 >;
 
 export async function runSearchCli(args: SearchModeArgs): Promise<void> {
@@ -116,6 +122,13 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   if (redraw) harnessOptions = { ...harnessOptions, redraw };
   if (empower) harnessOptions = { ...harnessOptions, empower };
   if (daemon) harnessOptions = { ...harnessOptions, daemon };
+  // 59e — the audition-searcher regen path: `--searcher [--audition] [--k=n]`
+  // drives every candidate evaluation (train, test, AND refinement) through
+  // the rollout searcher, resolved by the shared searcherFromArgs. ⚠ cost:
+  // searcher evals are ~4.1× (57f) — size real regens with a cost probe
+  // and prefer the box + --jobs (the 59f protocol).
+  const rolloutSearch = searcherFromArgs(args);
+  if (rolloutSearch !== undefined) harnessOptions = { ...harnessOptions, rolloutSearch };
 
   // 59d — the refinement stage: the base search must rank K finalists for
   // refineSearch to take (topK ≥ refine.topK); without --refine the base
@@ -135,6 +148,9 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
     : '';
   const jobsNote = jobs > 1 ? ` jobs=${jobs}` : '';
   const refineNote = refine ? ` refine=K${refine.topK}x${refine.perturbs}@${refine.radius}` : '';
+  const searcherNote = args.searcher
+    ? ` searcher=${args.audition ? 'audition' : 'trigger'}${args.searcherSpec ? `:${args.searcherSpec}` : ''}${args.k !== undefined ? ` k=${args.k}` : ''}`
+    : '';
   const seedNote = args.seedOffset ? ` seedOffset=${args.seedOffset}` : '';
   const layoutNote = forcedLayoutId ? ` layout=${forcedLayoutId}` : '';
   const encounterNote = forcedEncounterId ? ` encounter=${forcedEncounterId}` : '';
@@ -143,7 +159,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${seedNote}${jobsNote}${refineNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${seedNote}${jobsNote}${refineNote}${searcherNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -167,6 +183,10 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       redraw,
       empower,
       daemon,
+      searcher: args.searcher,
+      searcherSpec: args.searcherSpec,
+      audition: args.audition,
+      k: args.k,
       jobs,
       tmpDir: join(args.outDir, 'shard-tmp'),
     });

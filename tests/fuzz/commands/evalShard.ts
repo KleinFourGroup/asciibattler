@@ -16,7 +16,7 @@ import { resolveKnob } from '../balanceSweep';
 import type { ShardJob } from '../searchShard';
 import { aggregate } from '../reporters';
 import type { RosterEntry } from '../../../src/run/RunConfig';
-import { bail, type CliArgs } from './args';
+import { bail, searcherFromArgs, type CliArgs } from './args';
 
 export type EvalShardModeArgs = Pick<CliArgs, 'job' | 'outFile'>;
 
@@ -50,6 +50,17 @@ export function runEvalShardCli(args: EvalShardModeArgs): void {
   if (job.redraw) harnessOptions = { ...harnessOptions, redraw: job.redraw };
   if (job.empower) harnessOptions = { ...harnessOptions, empower: job.empower };
   if (job.daemon) harnessOptions = { ...harnessOptions, daemon: job.daemon };
+  // 59e — the searcher arm arrives as FLAGS (the registry isn't JSON-safe)
+  // and re-resolves through the SAME resolver run mode uses, so a sharded
+  // search drives the identical arm byte-for-byte.
+  const rolloutSearch = searcherFromArgs({
+    searcher: job.searcher ?? false,
+    audition: job.audition ?? false,
+    kTelemetry: false,
+    ...(job.searcherSpec !== undefined ? { searcherSpec: job.searcherSpec } : {}),
+    ...(job.k !== undefined ? { k: job.k } : {}),
+  });
+  if (rolloutSearch !== undefined) harnessOptions = { ...harnessOptions, rolloutSearch };
 
   const winRates = job.vectors.map(
     (w) =>

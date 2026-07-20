@@ -32,6 +32,9 @@
  *   # 8 perturbs/finalist, ±0.15 box-scale; dials override):
  *   npm run fuzz -- --search --refine
  *   npm run fuzz -- --search --refine --refine-k=5 --refine-perturbs=12 --refine-radius=0.1
+ *   # 59e — search AGAINST the audition-searcher bot (the realistic-bot regen;
+ *   # ⚠ ~4.1× eval cost — size with a cost probe, prefer the box + --jobs):
+ *   npm run fuzz -- --search --refine --searcher --audition --jobs=8
  *   # X2 — --seed-offset=N bases the eval seeds past the tuned range (the
  *   # config-overfit holdout for the X3 verify; applies to run / search / sweep):
  *   npm run fuzz -- --search --preset=overnight --seed-offset=2000   # held-out verify

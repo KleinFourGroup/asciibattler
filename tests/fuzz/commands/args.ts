@@ -16,6 +16,9 @@ import { parseObjectiveFlag, type ObjectiveProclivity } from '../objectiveStrate
 import { parseRedrawFlag, type RedrawPolicy } from '../redrawPolicy';
 import { parseEmpowerFlag, type EmpowerPolicy } from '../empowerPolicy';
 import { parseDaemonFlag, type DaemonSelection } from '../daemonSelection';
+import { parseScriptsSpec } from '../scriptSubset';
+import { AUDITION_SCRIPTS, type TrafficScript } from '../../../src/bot/TrafficScriptDriver';
+import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
 import { FORCE_PROCEDURAL } from '../../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../../src/sim/layouts';
 import { ENCOUNTER_IDS } from '../../../src/config/encounters';
@@ -90,9 +93,10 @@ export interface CliArgs {
   // the full standard registry, exactly the bare `--scripts` behavior.
   scriptsSpec?: string;
   // §57f — the portfolio rollout searcher arm (`--searcher[=<spec>]`; the
-  // spec selects a nominator subset, same grammar as --scripts). RUN MODE
-  // ONLY (same contract as --scripts); mutually exclusive with --objective
-  // AND --scripts (one bot arm at a time — the frozen-anchor contract).
+  // spec selects a nominator subset, same grammar as --scripts). RUN +
+  // SEARCH modes (59e — sweep/arena still bail); mutually exclusive with
+  // --objective AND --scripts (one bot arm at a time — the frozen-anchor
+  // contract).
   searcher: boolean;
   searcherSpec?: string;
   // 57g.4 — the audition-everyone arm: `--audition` swaps the searcher's
@@ -289,11 +293,18 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       '--scripts is mutually exclusive with --objective (the frozen-anchor contract)',
     );
   }
-  // §57f — same contracts for the searcher arm.
-  if (args.searcher && (args.search || args.balanceSweep || args.arena || args.evalShard)) {
+  // §57f — same contracts for the searcher arm. 59e — `--search` now
+  // SUPPORTS it (the audition-searcher regen path); sweep/arena still bail,
+  // and the internal --eval-shard worker takes it via the job file, never
+  // the CLI.
+  if (args.searcher && (args.balanceSweep || args.arena || args.evalShard)) {
     throw new Error(
-      '--searcher is not supported in --search/--balance-sweep/--arena yet (run mode only)',
+      '--searcher is not supported in --balance-sweep/--arena (run + search modes only)',
     );
+  }
+  // 59e — the K-flip prefix instrument stays a serial RUN-mode read.
+  if (args.kTelemetry && args.search) {
+    throw new Error('--k-telemetry is a run-mode instrument (not supported with --search)');
   }
   if (args.searcher && args.objective !== undefined) {
     throw new Error(
@@ -396,6 +407,32 @@ export function encounterFromArgs(args: Pick<CliArgs, 'encounter'>): string | un
     bail(`Unknown encounter: ${args.encounter} (choices: ${ENCOUNTER_IDS.join(', ')})`);
   }
   return args.encounter;
+}
+
+/** 59e — resolve the searcher flags into the `rolloutSearch` harness arm:
+ *  the ONE resolver shared by run mode, the `--search` serial path, and the
+ *  `--eval-shard` children (which receive the FLAGS via the job file — the
+ *  arm value itself isn't JSON-safe — and re-resolve here), so every mode
+ *  drives the identical registry by construction. Extracted verbatim from
+ *  run.ts's §57f/57g.4/57g.5 block: `--audition` swaps the resolution base
+ *  to AUDITION_SCRIPTS; a spec selects a subset; dial overrides force the
+ *  full-config form (otherwise the minimal boolean/array forms keep
+ *  existing arms byte-shaped). */
+export function searcherFromArgs(
+  args: Pick<CliArgs, 'searcher' | 'searcherSpec' | 'audition' | 'k' | 'kTelemetry'>,
+): true | readonly TrafficScript[] | RolloutSearchConfig | undefined {
+  if (!args.searcher) return undefined;
+  const registry = args.audition ? AUDITION_SCRIPTS : undefined;
+  const scripts =
+    args.searcherSpec !== undefined ? parseScriptsSpec(args.searcherSpec, registry) : registry;
+  if (args.k !== undefined || args.kTelemetry) {
+    return {
+      ...(scripts !== undefined ? { scripts } : {}),
+      ...(args.k !== undefined ? { rolloutsPerCandidate: args.k } : {}),
+      ...(args.kTelemetry ? { kFlipTelemetry: true } : {}),
+    };
+  }
+  return scripts ?? true;
 }
 
 export function range(start: number, count: number): number[] {

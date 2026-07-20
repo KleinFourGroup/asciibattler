@@ -56,6 +56,13 @@ export interface ShardJob {
   readonly redraw?: RedrawPolicy | undefined;
   readonly empower?: EmpowerPolicy | undefined;
   readonly daemon?: DaemonSelection | undefined;
+  /** 59e — the searcher arm as FLAGS (the resolved registry isn't JSON-safe;
+   *  the child re-resolves via `searcherFromArgs`, the shared resolver, so
+   *  sharded runs drive the identical arm as the parent/run mode). */
+  readonly searcher?: boolean | undefined;
+  readonly searcherSpec?: string | undefined;
+  readonly audition?: boolean | undefined;
+  readonly k?: number | undefined;
 }
 
 /**
@@ -145,7 +152,9 @@ function spawnChunkOnce(
         const parsed = JSON.parse(readFileSync(outFile, 'utf8')) as { winRates: number[] };
         resolve(parsed.winRates);
       } catch (e) {
-        reject(new Error(`eval-shard ${index} produced no/invalid output: ${String(e)}\n${stderr}`));
+        reject(
+          new Error(`eval-shard ${index} produced no/invalid output: ${String(e)}\n${stderr}`),
+        );
       }
     });
   });
@@ -193,6 +202,11 @@ export interface ShardedEvalParams {
   readonly empower?: EmpowerPolicy | undefined;
   /** L1c3 — the fixed daemon arm the children's runs carry (or random). */
   readonly daemon?: DaemonSelection | undefined;
+  /** 59e — the searcher arm flags (see ShardJob). */
+  readonly searcher?: boolean | undefined;
+  readonly searcherSpec?: string | undefined;
+  readonly audition?: boolean | undefined;
+  readonly k?: number | undefined;
   readonly jobs: number;
   /** Scratch dir for the per-chunk job/result JSON; created + removed here. */
   readonly tmpDir: string;
@@ -216,6 +230,10 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
     redraw,
     empower,
     daemon,
+    searcher,
+    searcherSpec,
+    audition,
+    k,
     jobs,
     tmpDir,
   } = params;
@@ -233,10 +251,12 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
       redraw,
       empower,
       daemon,
+      searcher,
+      searcherSpec,
+      audition,
+      k,
     };
-    const perChunk = await Promise.all(
-      chunks.map((chunk, i) => runChunk(chunk, i, base, tmpDir)),
-    );
+    const perChunk = await Promise.all(chunks.map((chunk, i) => runChunk(chunk, i, base, tmpDir)));
     return perChunk.flat();
   } finally {
     rmSync(tmpDir, { recursive: true, force: true });

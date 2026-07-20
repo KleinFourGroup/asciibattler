@@ -9,7 +9,6 @@ import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { runOne } from '../harness';
 import { parseScriptsSpec } from '../scriptSubset';
-import { AUDITION_SCRIPTS } from '../../../src/bot/TrafficScriptDriver';
 import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
@@ -49,6 +48,7 @@ import {
   layoutFromArgs,
   objectiveFromArgs,
   redrawFromArgs,
+  searcherFromArgs,
   range,
   type CliArgs,
 } from './args';
@@ -85,7 +85,8 @@ export function runRunCli(args: RunModeArgs): void {
 
   // X2 — --seed-offset shifts the seed base past the tuned range (a held-out
   // telemetry read); an explicit --seed pins a single seed and ignores it.
-  const seeds = args.seed !== undefined ? [args.seed] : range(1 + (args.seedOffset ?? 0), args.count);
+  const seeds =
+    args.seed !== undefined ? [args.seed] : range(1 + (args.seedOffset ?? 0), args.count);
 
   // --layout=<id> forces a single hand-authored layout on EVERY battle — a clean
   // full-sample isolate for the per-layout / per-hop difficulty read (natural
@@ -134,28 +135,13 @@ export function runRunCli(args: RunModeArgs): void {
       trafficScripts: args.scriptsSpec !== undefined ? parseScriptsSpec(args.scriptsSpec) : true,
     };
   }
-  // §57f — `--searcher` drives the portfolio rollout searcher at the §57c v2
-  // default dials (an optional `=<spec>` value selects a nominator subset —
-  // the same grammar as --scripts; dial overrides are the 57g surface).
-  // 57g.4 — `--audition` swaps the resolution base to AUDITION_SCRIPTS
-  // (propose-regardless nominate on every script; the A/B arm).
-  if (args.searcher) {
-    const registry = args.audition ? AUDITION_SCRIPTS : undefined;
-    const scripts =
-      args.searcherSpec !== undefined ? parseScriptsSpec(args.searcherSpec, registry) : registry;
-    // 57g.5 — dial overrides force the full-config form; otherwise keep the
-    // minimal boolean/array forms (existing arms stay byte-shaped).
-    harnessOptions = {
-      ...harnessOptions,
-      rolloutSearch:
-        args.k !== undefined || args.kTelemetry
-          ? {
-              ...(scripts !== undefined ? { scripts } : {}),
-              ...(args.k !== undefined ? { rolloutsPerCandidate: args.k } : {}),
-              ...(args.kTelemetry ? { kFlipTelemetry: true } : {}),
-            }
-          : (scripts ?? true),
-    };
+  // §57f/57g — `--searcher[=<spec>]` (+ `--audition`, `--k`, `--k-telemetry`)
+  // drives the portfolio rollout searcher; resolution lives in
+  // `searcherFromArgs` (59e — the ONE resolver shared with --search and the
+  // shard children, so every mode drives the identical registry).
+  const rolloutSearch = searcherFromArgs(args);
+  if (rolloutSearch !== undefined) {
+    harnessOptions = { ...harnessOptions, rolloutSearch };
   }
   // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =
   // gates off, byte-identical).
@@ -324,7 +310,9 @@ export function runRunCli(args: RunModeArgs): void {
   if (daemon !== undefined || perDaemonStats(allResults).length > 1) {
     process.stdout.write(renderDaemonAnalysis(allResults) + '\n');
   }
-  process.stdout.write(`Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`);
+  process.stdout.write(
+    `Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`,
+  );
 }
 
 /** Resolve the `--strategy` flag: a `*.json` file path (a scored-strategy weight

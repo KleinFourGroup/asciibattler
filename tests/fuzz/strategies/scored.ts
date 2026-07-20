@@ -21,6 +21,7 @@ import type { UnitStats, UnitTemplate } from '../../../src/sim/Unit';
 import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
 import type { EncounterKind } from '../../../src/config/encounters';
 import { packetById, type UseContext } from '../../../src/config/packets';
+import { HEALTH } from '../../../src/config/health';
 import { minMax, norm, type MinMax } from '../scoring';
 import { STAT_KEYS } from './policies';
 import type { FuzzStrategy, PacketFire, PortBuy } from '../Strategy';
@@ -356,6 +357,15 @@ function pickPacketFireScored(context: UseContext, run: Run, fire: FireWeights):
     const packet = packetById(run.cache[cacheIndex]!);
     if (packet === undefined || !packet.usableIn.includes(context)) continue;
     if (packet.target === 'tile') continue; // mid-battle only — no launch context
+    // 60c — the state-aware heal guard: a healPool packet whose heal would
+    // be partially clamped is a banked asset, not a fire — skip it so the
+    // next usable packet (a buff / injected rule) gets the slot. This
+    // breaks the wave-1 patch monopoly: patch is the most-common drop AND
+    // the only dual-context packet, so the bare "first context-usable"
+    // rule fired it at full pools forever (BALANCE §60c wave 1).
+    if (packet.effect.op === 'healPool' && HEALTH.playerHealthMax - run.playerHealth < packet.effect.amount) {
+      continue;
+    }
     if (packet.target === 'unit') {
       if (context === 'preTurn') {
         const handIndex = maxPowerIndex(run.hand.map((slot) => run.team[slot]!));

@@ -407,6 +407,8 @@ describe('scored port-purchase policy (59b)', () => {
 import type { FireWeights } from './scoredWeights';
 import type { EncounterKind } from '../../../src/config/encounters';
 import type { NodeKind } from '../../../src/run/NodeMap';
+import { packetById } from '../../../src/config/packets';
+import { HEALTH } from '../../../src/config/health';
 
 function zeroFire(): FireWeights {
   return { bias: { normal: 0, elite: 0, boss: 0 }, cachePressure: 0 };
@@ -422,6 +424,7 @@ function fireRun(parts: {
   team?: UnitTemplate[];
   hand?: number[];
   frontier?: NodeKind[];
+  playerHealth?: number;
 }): Run {
   const frontier = parts.frontier ?? [];
   return {
@@ -430,6 +433,10 @@ function fireRun(parts: {
     effectiveCacheSize: parts.capacity ?? 4,
     team: parts.team ?? [],
     hand: parts.hand ?? [],
+    // Default = a FULLY-DAMAGED pool, so the pre-60c fire tests (which fire
+    // patch freely) keep their meaning under the 60c heal guard explicitly
+    // rather than by accident.
+    playerHealth: parts.playerHealth ?? 0,
     currentNodeId: 0,
     nodeMap: {
       rootId: 0,
@@ -509,6 +516,48 @@ describe('scored packet-fire policy (59c)', () => {
     });
     expect(fireStrategy(bossOnly).pickPacketFire!('outOfBattle', restAhead, ANY_RNG)).toBeNull();
     expect(fireStrategy(bossOnly).pickPacketFire!('outOfBattle', normalAhead, ANY_RNG)).toBeNull();
+  });
+
+  describe('the 60c heal guard (the patch-monopoly breaker)', () => {
+    // Balance-proof: amounts derive from the config, never hardcoded.
+    const patchHeal = (packetById('patch')!.effect as { amount: number }).amount;
+    const max = HEALTH.playerHealthMax;
+    const eager = { ...zeroFire(), bias: { normal: 1, elite: 1, boss: 1 } };
+
+    it('a full pool SKIPS patch and the next usable packet gets the slot', () => {
+      const team = [meleeWithPower(3), meleeWithPower(9)];
+      const run = fireRun({
+        kind: 'normal',
+        cache: ['patch', 'shield'],
+        team,
+        hand: [0, 1],
+        playerHealth: max,
+      });
+      expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({
+        cacheIndex: 1,
+        handIndex: 1,
+      });
+    });
+
+    it('pool damage below the heal amount still skips (a partially-clamped heal is banked)', () => {
+      const run = fireRun({
+        kind: 'normal',
+        cache: ['patch'],
+        playerHealth: max - (patchHeal - 1),
+      });
+      expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toBeNull();
+    });
+
+    it('pool damage at the heal amount fires patch (fully realized)', () => {
+      const run = fireRun({
+        kind: 'normal',
+        cache: ['patch'],
+        playerHealth: max - patchHeal,
+      });
+      expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({
+        cacheIndex: 0,
+      });
+    });
   });
 
   it('draws NOTHING from the rng and the fire group round-trips/strict-rejects', () => {

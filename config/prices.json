@@ -29,9 +29,9 @@
   "daemons": {
     "default": 35,
     "byId": {
-      "mars": 55,
-      "janus": 45,
-      "mercury": 40,
+      "mars": 40,
+      "janus": 32,
+      "mercury": 30,
       "fortuna": 25
     }
   },

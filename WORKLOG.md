@@ -2679,3 +2679,27 @@ the synthesis + menu goes to the user next. Held-out at the ladder
 operating point stays reserved until the price arms are decided (if
 prices don't move, the ladder pin can close on in-sample + the
 documented-no-op precedent).
+
+### The lever calls (2026-07-20, user)
+
+All four calls at the synthesis: **(1) daemon reprice YES** at the
+sketched numbers — mars 55→40 · janus 45→32 · mercury 40→30
+(deliberately NOT slashed to bot-measured value: the live game's
+human realizes grants far better than the level:2 floor consumer;
+minerva stays on the 35 default — flagged, not silently changed).
+The user's observation for the record: Mars "used to be the strongest
+by far" — that crown was measured pre-micro, against a bot that
+couldn't consume its grants at all; it never held up under a
+realistic consumer. **(2) drop-weight probe YES** — bits-small gains
+shield at 0.25 and patch demotes 0.5→0.25 (halve the monopoly's
+supply side, put one buff in the common table; A/B before it stays).
+**(3) confirmed:** `bitsMultiplier` ACCEPTS at 1.0 (documented no-op
+— the toll isn't income) · the port toll ACCEPTS as-measured
+(content/structure work → the Cluster-4 proposal) · 60d NO SLOT.
+**(4) the boss band RE-ANCHORS to 30–35%** (user; the old 43–55% was
+derived against a fictional bot) — measured 26.8% pooled ⇒ the boss
+tunes UP into the new band at 60e, at the final config. Validation
+protocol: both config changes commit separately, then ONE paired
+in-sample wave (regen + 55pre vs the pinned B-wave/floor arms) reads
+them combined — attribution splits into a second wave only if
+something regresses.

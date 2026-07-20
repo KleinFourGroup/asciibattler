@@ -532,9 +532,8 @@ finding assumed.
 precedent applies to the TUNING, not to the rider verdict or the
 re-anchor — those must be explicit.
 
-**Decision points:** the re-anchored design targets themselves (user
-calls); tune-vs-accept per lever; whether the §49 cache-shrink flow's first
-trigger content earns a slot in the price work.
+**Decision points:** re-anchored targets · tune-vs-accept per lever ·
+the §49 shrink slot — all user calls, resolved in the cut lines below.
 
 **Kickoff ✅ 2026-07-20 (worklog §60):** levers live; 60a+60b batched (user).
 
@@ -548,9 +547,9 @@ trigger content earns a slot in the price work.
   operating point proposed 55pre@+1.5 + regen@+1.5 control; BALANCE §60
 - [ ] 60c — lever sweeps at that point: prices · `bitsMultiplier` · drop
   weights · fire arm (hoard-at-boss sign probe); tune-vs-accept = user
-- [ ] 60d — the §49 shrink-flow slot decision (user call, 60c evidence)
-- [ ] 60e — the re-anchor (user calls) + the explicit boss-wall verdict
-  vs the 43–55% band
+- [x] 60d — the §49 shrink slot ✅ 2026-07-20 NO SLOT (user); keeps waiting
+- [ ] 60e — the re-anchor + boss-wall verdict — band RE-ANCHORED **30–35%**
+  (user 2026-07-20; measured 26.8% ⇒ boss tunes UP)
 - [ ] 60f — the close ritual: archives · scratchpad distillation (incl. the
   ROADMAP demotion decision) · box death · cursor/memory · Cluster-4 proposal
 

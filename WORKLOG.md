@@ -2527,3 +2527,36 @@ the entry:
 - Operating-point proposal (user confirms at 60c): 55pre@+1.5 primary
   + regen@+1.5 control; held-out spent only at the chosen point. The
   ladder itself stays in-sample-only by design.
+
+### 60c opens (2026-07-20): wave 1 — the stack, the boss sign, and income
+
+User calls at the open: operating point CONFIRMED (55pre@+1.5 primary
++ regen@+1.5 control) · stack probe GO · `portDocks` counter DEFERRED
+(built only if a wave read needs the dock/buy split). Wave-1
+instruments, 6 batches, all in-sample paired:
+
+- **The stack probes (2 fixtures).** 60-stack-55pre = 55pre native +
+  regen's learned fire dials — the CLEAN read: fire is
+  routing-neutral, so the paired delta vs native 55pre is the pure
+  fire-channel marginal on a shopping vector (channels additive ⇒
+  ~+5pt toward the low 70s%). 60-stack-regen = regen@+1.5 with the
+  port group REMOVED (absent group = the hardwired 50g buy-all,
+  59a-pinned) — deliberately conflated with the buy-all toll: it asks
+  "does fire + buy-all at the docking rung beat both fire-only (67.5)
+  and shop-only (50.0) there," the composite the game actually ships.
+- **The boss-flip probe.** 60-fire-bossflip = regen native with
+  `fire.bias.boss` sign-flipped (−0.84 → +0.84). Paired vs the live
+  regen arm: a cost confirms the learned hoard is correct (no
+  boss-relevant fire value exists to buy — a catalog/pricing finding,
+  not a bot quirk); no-cost says the dial is slack.
+- **The `--bits-multiplier` seam + income arms.** The 48f RunConfig
+  lever exposed to RUN MODE ONLY (args parse + runConfig wiring +
+  positive-finite bail + a parse-pin test file; the lever itself is
+  Run.test.ts §48f's pin, passthrough is the --hops path). Arms:
+  ×1.5 and ×2.0 at 55pre@+1.5, paired vs its ×1.0 read (50.0) — the
+  income-vs-price duality: if the buy-all toll shrinks as income
+  rises, goods value is price-relative and 60c's price cuts have a
+  target; if the toll holds, the toll is the HOP itself and prices
+  alone can't rescue ports. Control: ×1.5 at regen@+1.5 (the tight
+  posture shouldn't move — its reserve binds long before income
+  does). fuzz:smoke manual: 266 passed (the +1 = the parse pin).

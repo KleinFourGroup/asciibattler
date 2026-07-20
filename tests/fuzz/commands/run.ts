@@ -78,6 +78,7 @@ export type RunModeArgs = Pick<
   | 'audition'
   | 'k'
   | 'kTelemetry'
+  | 'bitsMultiplier'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -112,11 +113,20 @@ export function runRunCli(args: RunModeArgs): void {
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
     forcedEncounterId?: string;
+    bitsMultiplier?: number;
   } = {};
   if (args.hops !== undefined) runConfig.hopCount = args.hops;
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
   if (layout !== undefined) runConfig.forcedLayoutId = layout;
   if (encounter !== undefined) runConfig.forcedEncounterId = encounter;
+  // 60c — `--bits-multiplier=<f>` rides the 48f RunConfig lever (finite,
+  // > 0; anything else is a flag typo worth failing loudly on).
+  if (args.bitsMultiplier !== undefined) {
+    if (!Number.isFinite(args.bitsMultiplier) || args.bitsMultiplier <= 0) {
+      bail(`--bits-multiplier must be a positive number (got ${args.bitsMultiplier})`);
+    }
+    runConfig.bitsMultiplier = args.bitsMultiplier;
+  }
   if (Object.keys(runConfig).length > 0) harnessOptions = { runConfig };
   // J4 — drive a fixed objective strategy in every battle (default none =
   // byte-identical to the pre-J4 fuzz path; the baselines stay put).

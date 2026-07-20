@@ -108,6 +108,11 @@ export interface CliArgs {
   // instrument (run it at --k=8). Both require --searcher.
   k?: number;
   kTelemetry: boolean;
+  // 60c — scale per-run bits income (`--bits-multiplier=<f>`): exposes the
+  // 48f RunConfig lever to RUN MODE ONLY (the economy lever sweeps at the
+  // fixed operating point). Run mode's runConfig wiring consumes it; other
+  // modes ignore it per the flags-are-global grammar note above.
+  bitsMultiplier?: number;
   // 59d — the top-K perturb-and-reselect refinement stage: `--refine`
   // enables it after the base `--search` (defaults K=3 · 8 perturbs ·
   // ±0.15 box-scale, the kickoff lock); the three dial flags override.
@@ -206,6 +211,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--roster':
         if (v !== undefined) args.roster = v;
+        break;
+      case '--bits-multiplier':
+        if (v !== undefined) args.bitsMultiplier = Number(v);
         break;
       case '--jobs':
         args.jobs = Number(v);

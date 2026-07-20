@@ -1512,3 +1512,40 @@ deltas. The pre-X H7c→O log lives at
   - Batches `20260720-{162110,163037,163930,164701,165555,170509}-
     d476fa9`, summary sha256 406d2233 / 25cb3145 / b3ed8a76 /
     06371a29 / 02b1e8c2 / 1d418d81.
+- **2026-07-20 — §60c THE GRANT-LIVE FLOOR: the instrument arm extends
+  to `--searcher --audition --redraw=level:2 --empower=level:hi`
+  (⚠ DOCTRINE — the §57h default realistic-bot arm definition AMENDS
+  to this; the grant-consumer catch is the worklog §60c story), and
+  the re-run says the grant layer is worth LESS than its price sheet:
+  ≈0 for the firer, a lean +5 for the shopper.** 4 batches at HEAD
+  `035b3be`, the A/B pair × in/held, 40 seeds each.
+  | vector | in (old→new) | held (old→new) | paired vs old floor |
+  |---|---|---|---|
+  | 59-regen | 65.0 → 57.5 | 57.5 → 65.0 | in +3/−6 · held +5/−2 — **net 0/80** |
+  | 55pre | 62.5 → 67.5 | 57.5 → 65.0 | in +7/−5 · held +4/−1 — net +5/80 |
+  - **The grant layer's realized value at fixed dials ≈ NOTHING for
+    the never-shopping firer** (+8/−8 over 80 — pure churn from
+    perturbed hands) **and a modest consistent-direction lean for the
+    shopper** (+11/−6). The per-daemon lens agrees: grant-daemon runs
+    didn't jump (regen-in 15/24 → 13/24 wins; 55pre-in 14/24 →
+    15/24). 60% of runs roll a grant daemon, and consuming its grants
+    every turn barely moves outcomes.
+  - **⭐ The pricing implication:** Mars (55 bits — the priciest
+    daemon) delivers ≈0 realized bot value; the only daemons whose
+    value the harness realizes are the auto three, and Fortuna (25)
+    is the CHEAPEST. The 50f daemon-price spread is upside-down
+    against measured value — a direct 60c/60e input. Caveat on
+    record: level:2 / level:hi are DUMB consumers; a smarter redraw
+    could realize more (the §55 lesson pattern) — but the shipped
+    game's floor player is not smarter, so the price sheet still has
+    to answer to these numbers.
+  - **The §59 WASH verdict stands, now leaning shopper:** regen vs
+    55pre on the new floor = in +5/−9, held +5/−5 (net −4/80) —
+    inside variance; two postures, one ceiling, unchanged.
+  - Prior §53–60 verdicts STAND (the deadness was uniform → cancels
+    in every paired read); absolute levels from grant-dead arms are
+    superseded by this floor. Held-out spend on the ladder point
+    deferred until the fire-selection fix (next entry) settles the
+    regen arm.
+  - Batches `20260720-{174431,175219,180218,180842}-035b3be`, summary
+    sha256 d3bb5644 / 8879ae43 / 3393e002 / 6a75ffaa.

@@ -2633,3 +2633,30 @@ shared the deadness); the §57h default-arm doctrine amends once the
 floor re-runs. Sequence: the A/B floor pair re-runs under the
 extended arm (in + held both vectors), THEN B (state-aware fire
 selection) builds and measures against the NEW floor.
+
+### The grant-live floor + the heal guard (2026-07-20)
+
+Floor numbers + the doctrine amendment: BALANCE §60c grant-live floor
+(cursor doctrine line updated in the same commit). The surprise was
+the SIZE: 60% dead-daemon runs un-deadened moved the firer net ZERO
+(+8/−8 over 80 — hand-perturbation churn, no value) and the shopper
++5 net. Consuming a Mars empower every turn (+4/+4/+4 on one card)
+and tossing 2 low cards on every Mercury/Janus grant barely flips
+outcomes at run scale — the grant layer's REALIZED value is far below
+its price sheet (Mars 55 ≈ 0 realized; auto-hook Fortuna 25 = the
+cheapest and the only kind that pays). Filed as the upside-down 50f
+spread finding for 60c/60e, with the dumb-consumer caveat on record.
+
+**B built (the heal guard):** `fireFromWeights` now skips a
+`healPool` packet whose heal would be partially clamped
+(`playerHealthMax − playerHealth < amount`) — a banked asset, not a
+fire; the next usable packet gets the slot. One guard, config-derived
+amounts, zero new dials — the smallest change that breaks the patch
+monopoly. The fireRun test stub gained an explicit `playerHealth`
+(default = fully damaged, so the pre-60c fire pins keep their meaning
+deliberately); 3 new co-located tests (skip-at-full →
+next-packet-gets-slot · partial-clamp banks · exact-damage fires).
+fuzz:smoke 269. The B wave (next): regen-B in/held + fire-ablated
+in/held, ALL under the extended arm — B's value reads against the
+grant-live floor, and the ablated pair re-establishes the no-fire
+control there.

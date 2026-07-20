@@ -2407,3 +2407,13 @@ Exit criteria: fresh search converged with economy dims live ✅ ·
 packets fire in harness runs ✅ (96/76 across the probe arms) ·
 fixed-vector probe on record in BALANCE §59 ✅. Phase close pending
 user sign-off.
+
+### §59 CLOSE (2026-07-20, user-signed)
+
+Signed at the probe verdict. The user's close question — "firing
+packets should be strictly beneficial, no?" — and the working
+hypotheses (balance-magnitude vs expressiveness-waste vs
+structural-saturation) are §60 kickoff inputs; the fire-ablation A/B
+(59-regen vector with its fire group zeroed, paired seeds) is the
+proposed discriminating instrument, cut at §60's kickoff if it earns
+its slot. Cursor flipped; memory updated at the boundary.

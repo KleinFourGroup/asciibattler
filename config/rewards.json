@@ -4,7 +4,8 @@
       "id": "bits-small",
       "entries": [
         { "kind": "bits", "weight": 1, "min": 8, "max": 15 },
-        { "kind": "packet", "weight": 0.5, "packet": "patch" }
+        { "kind": "packet", "weight": 0.25, "packet": "patch" },
+        { "kind": "packet", "weight": 0.25, "packet": "shield" }
       ]
     },
     {

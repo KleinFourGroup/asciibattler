@@ -1600,3 +1600,20 @@ deltas. The pre-X H7c→O log lives at
     consistent pre/post config; §60e tunes it up into the re-anchored
     **30–35%** band (user call). Batches `20260720-{222911,223730}-
     eb07276`, summary sha256 e41693a8 / c1859eb7.
+- **2026-07-20 — §60e THE PER-BOSS SPLIT (user catch: the catalog has
+  TWO bosses — every §60 wall number to here pooled the roll): the
+  measured order INVERTS the paper read — the King (pool 13) is the
+  harder wall.** Forced-boss in-situ (`--encounter=`), both vectors,
+  40 in-sample seeds each, extended arm, HEAD `fb3bf75`:
+  | forced boss | win regen/55pre | wall (pooled n=72) |
+  |---|---|---|
+  | bandit-king (pool 13, factors 1.15/1.2) | 65.0 / 55.0 | **33.3%** — IN the 30–35 band |
+  | banditQueen (pool 20, factors 1.25/1.3, banshee-led) | 70.0 / 60.0 | **27.8%** — just under |
+  - Paired same-seed King-vs-Queen: +5/−7 (regen) · +2/−4 (55pre) —
+    net −4/80, every read the same direction: Queen-runs win MORE.
+    The bigger pool + hotter factors do NOT make the harder fight —
+    the Queen's banshee-led waves are softer in practice than the
+    King's mercenary/ranged discipline (mechanism unprobed; the
+    numbers govern, per the round's doctrine).
+  - Batches `20260720-{232038,232914,233522,234307}-fb3bf75`, summary
+    sha256 88f439f7 / e0cb55d7 / dc10150e / 8f08270a.

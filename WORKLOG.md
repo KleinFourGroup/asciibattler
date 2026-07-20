@@ -2718,3 +2718,21 @@ last measured step: tune the Bandit King up from 26.4% into the
 30–35% band at the final config (the lever menu goes to the user —
 healthPool 13 vs stage levelBudget factors vs wave count factor),
 then the re-anchor sheet + 60f.
+
+### 60e — the user's two-boss catch + the split (2026-07-20)
+
+The user caught the boss-tune plan targeting ONE boss — the catalog
+has TWO (banditQueen joined after W1; my catalog check used `.find()`
+and stopped at the first `kind:'boss'`). Every §60 wall number to
+that point pooled the roll. The forced-boss split (BALANCE §60e)
+then INVERTED the paper read: the King (pool 13, cooler factors) is
+the harder wall (33.3%, in-band) and the Queen (pool 20, hotter
+factors, banshee-led) the softer (27.8%, just under). Paired
+same-seed reads agree in direction (+7/−11 combined). Two lessons on
+record: (1) never derive a tune target from a pooled read over a
+rolled encounter — force-isolate first (the X2 instrument exists for
+exactly this); (2) authored "bigger numbers" ≠ measured difficulty —
+the Queen's banshee-led comp underperforms the King's disciplined
+mercenary/ranged core (mechanism unprobed by choice; §60 tunes on
+measurement, not diagnosis). The band-application fork (both-in-band
+vs deliberate spread) + the Queen verdict go to the user.

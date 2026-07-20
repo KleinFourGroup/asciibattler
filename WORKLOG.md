@@ -2660,3 +2660,22 @@ fuzz:smoke 269. The B wave (next): regen-B in/held + fire-ablated
 in/held, ALL under the extended arm — B's value reads against the
 grant-live floor, and the ablated pair re-establishes the no-fire
 control there.
+
+### The B wave lands (2026-07-20): the guard ships; the instruments rest
+
+Numbers: BALANCE §60c B wave. The strictly-positive shape (+1/−0 per
+set, fires nearly halved) is the best possible outcome for a one-line
+guard: it never mistimes a patch the dumb rule got right, and the
+banked patches convert. The fire channel's grant-live read (+8/−3
+over 80 vs ablated) settles wave 1's question — real, modest, now
+properly timed. With this, every instrumental read the 60c cut called
+for is on the table: the ladder (toll policy-shaped), income (half-
+recovery, plateau), the stack (channels don't stack), the boss sign
+(slack — but see the patch-monopoly re-reading), grants (≈0 realized
+at fixed dials; Mars priced upside-down), and the fire channel
+(~+5pt, guard-timed). What remains in 60c is CONFIG, and per the
+phase's decision points every lever is a tune-vs-accept USER call —
+the synthesis + menu goes to the user next. Held-out at the ladder
+operating point stays reserved until the price arms are decided (if
+prices don't move, the ladder pin can close on in-sample + the
+documented-no-op precedent).

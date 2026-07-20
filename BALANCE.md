@@ -1549,3 +1549,27 @@ deltas. The pre-X H7c→O log lives at
     regen arm.
   - Batches `20260720-{174431,175219,180218,180842}-035b3be`, summary
     sha256 d3bb5644 / 8879ae43 / 3393e002 / 6a75ffaa.
+- **2026-07-20 — §60c THE B WAVE: the heal guard pays small but
+  STRICTLY (+1/−0 on each set — zero regressions in 80 paired runs),
+  and the fire channel on the grant-live floor confirms real-but-
+  modest.** 4 batches at HEAD `7e3895f` (the guard live), extended
+  arm, 40 seeds each.
+  | arm | in | held | fires/run |
+  |---|---|---|---|
+  | regen + heal guard | **60.0** | **67.5** | 1.30 / 1.70 |
+  | fire-ablated (no fires) | 57.5 | 57.5 | 0 |
+  | (regen, dumb selection — prior entry) | 57.5 | 65.0 | 2.40 / 2.13 |
+  - **B vs dumb selection: +1/−0 in, +1/−0 held** — fires/run DROPS
+    2.40→1.30 while win rate rises: fewer fires, better fires, no
+    seed anywhere got worse. The guard ships as the fire rule.
+  - **The fire channel (B vs ablated): +3/−2 in, +5/−1 held** — net
+    +8/−3 over 80 (60.0/67.5 vs 57.5/57.5): the channel is real and
+    worth ~+2.5–10pt, strongest held-out — consistent with 60a's
+    +5/−0 direction on the old floor.
+  - Ablated grant-live vs grant-dead: +4/−7 — the third net-zero
+    grant read (the floor entry's finding, re-confirmed with fires
+    removed from the comparison).
+  - **The regen instrument arm's pinned numbers are now B's:
+    60.0 / 67.5.** Batches `20260720-{182938,183725,184741,185602}-
+    7e3895f`, summary sha256 936b3669 / 6ccba1d6 / d181a6d1 /
+    6876e956.

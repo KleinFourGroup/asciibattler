@@ -536,6 +536,27 @@ re-anchor — those must be explicit.
 calls); tune-vs-accept per lever; whether the §49 cache-shrink flow's first
 trigger content earns a slot in the price work.
 
+**Kickoff ✅ 2026-07-20 (worklog §60):** levers all live (config JSON;
+`path.port` = a vector dim → fixture ladder); 60a+60b batched (user).
+
+**The cut (shape-locked 2026-07-20; rationale in worklog §60):**
+
+- [ ] 60a — fire-ablation probe: 59-regen, fire group zeroed, vs live;
+  paired 40+40 box seeds — the §59-wash discriminator; BALANCE opener
+- [ ] 60b — the `path.port` ladder: rungs {−0.28, 0, +0.75, +1.5} × both
+  instrument vectors, 40 in-sample seeds/rung → the transaction-live
+  operating point (held-out reserved for the chosen point)
+- [ ] 60c — lever sweeps at that point: prices · `bitsMultiplier` · drop
+  weights · fire arm (hoard-at-boss sign probe); tune-vs-accept = user
+- [ ] 60d — the §49 shrink-flow slot decision (user call, 60c evidence)
+- [ ] 60e — the re-anchor (user calls) + the explicit boss-wall verdict
+  vs the 43–55% band
+- [ ] 60f — the close ritual: archives · scratchpad distillation (incl. the
+  ROADMAP demotion decision) · box death · cursor/memory · Cluster-4 proposal
+
+**Predictions:** NO snapshot bump (config/fixtures/docs; v34/v37 hold);
+gates untouched; manual fuzz:smoke on fixture commits.
+
 **Exit criteria:** targets re-anchored on record in BALANCE.md; the
 boss-wall rider verdict explicit; every swept lever either baked or
 accepted with numbers; the round closed per the ritual.

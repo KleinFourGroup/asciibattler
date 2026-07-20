@@ -2417,3 +2417,75 @@ structural-saturation) are §60 kickoff inputs; the fire-ablation A/B
 (59-regen vector with its fire group zeroed, paired seeds) is the
 proposed discriminating instrument, cut at §60's kickoff if it earns
 its slot. Cursor flipped; memory updated at the boundary.
+
+## Phase 60 — the REAL balance pass + close-out
+
+### Kickoff (2026-07-20): the code-reality audit + the shape-lock
+
+Own session, the round closer. The audit surveyed the lever surfaces,
+the instrument pair, and the close-out obligations post-§59.
+
+**Everything the phase touches already exists — no engine work anywhere
+in the cut:**
+
+- **The levers are hot-reload JSON:** prices.json (unit bases 25–35 ×
+  1.05 growth; packets default 15, miner 40 / shield 10 / venom 25;
+  daemons default 35, mars 55 … fortuna 25; sellFraction 0.5; removal
+  20; stock 5/5/2) · difficulty.json `bitsMultiplier` (=1) ·
+  rewards.json (4 tables; NB boss-hoard already weights miner ×2 +
+  bits ×2 — the config-side lever for the hoard-at-boss probe).
+- **`path.port` is a VECTOR dim, not config** (scored.ts `kindWeight` →
+  full-path backward-DP argmax), so the sweep is a fixture ladder.
+- **Why the §59 vectors behave as they do (the audit's read):** docking
+  happens when a port-bearing path's TOTAL beats the alternatives, so
+  the effective comparison is `path.port` vs the competing kind
+  weights. 59-regen: battle 0.66 / rest 0.72 / port −0.28 → ports lose
+  everywhere → 0 purchases. 55pre: battle −0.55 / rest 0.96 / port 0 →
+  port BEATS battle → 25/40 runs dock under the fixed buy-all policy.
+  The §59 "port starvation" headline is one vector's learned
+  route-aversion sitting on top of the general price question — the
+  ladder separates route-aversion from price-aversion.
+- **The metric columns already ride summary.csv:** outcome ·
+  finalHopReached · portPurchases · finalBits (terminal bank) ·
+  packetsFired — transaction rate, win toll, and bank are direct
+  reads; bits-per-hop / spend-mix need `--telemetry` and wait for 60c
+  if the direct reads under-determine a lever call.
+- **The §49 shrink flow is BUILT, trigger-less:** the forced-keep
+  overflow path exists end-to-end (CacheOverlay + Run's derived
+  overflow); 60d is a content-slot decision, not a build question.
+- **Boss-wall trail on record:** band ~43–55% (§33c-era; §46b held-out
+  59%); human 0-for-3 (§53g); first bot clears under audition (§57g).
+- **Code-identity check:** `2b42019..HEAD` is docs-only (`git diff
+  --stat -- . ':!*.md'` empty) → the §59 probe batches remain valid
+  comparison arms at the current HEAD; the live 59-regen / 55pre arms
+  are NOT re-run.
+
+**Decisions locked (user, 2026-07-20):** the 60a–60f cut as proposed;
+60a+60b batched in one box session (independent reads, no shared
+lever).
+
+**The 60b ladder design (cut here):** absolute rungs {−0.28, 0, +0.75,
++1.5} shared by both vectors — −0.28 = the learned aversion · 0 = the
+neutral point · +0.75 = the parity band (between 59-regen's battle
+0.66 and rest 0.72) · +1.5 = dominant, dock-whenever-offered. 2 of the
+8 cells are the natives already measured in the §59 probe; 6 new
+fixtures. 40 in-sample seeds per rung (`--count=40 --searcher
+--audition --jobs=8`, the §59 probe protocol); held-out is reserved
+for the chosen operating point, not spent on the ladder. The two
+families price DIFFERENT postures by construction: ladder-55pre cells
+have no economy groups → fixed buy-all-affordable when docked;
+ladder-regen cells carry the learned port scorer (reserve ≈26,
+daemons-only). Predictions on record: regen@0 stays starved (port
+still loses to battle/rest everywhere) · 55pre@−0.28 still docks some
+(port still beats battle −0.55 — the negative-but-docking cell) ·
+both @+1.5 dock at every offer.
+
+**The 60a instrument:** 60-fire-ablated-vector.json = 59-regen with
+the fire group zeroed (the 59c fixed point — the zero group provably
+never fires); the port group untouched, so 60a isolates FIRE. Arms:
+ablated in-sample + ablated held-out (`--seed-offset=5000`) vs the §59
+probe's live-arm numbers (65.0 / 57.5), paired per-seed via the
+fetched §59 batches. Reading: ablation costs nothing ⇒ the fires are
+expressiveness-waste or the economy is structurally saturated at
+current numbers; ablation costs win rate ⇒ firing IS beneficial and
+the §59 wash was the port side.

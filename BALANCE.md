@@ -1470,3 +1470,45 @@ deltas. The pre-X H7c→O log lives at
   - Batches `20260720-{142120,142852,143854,144624,145640,150655,
     151439,152341}-f5f504d`, summary sha256 a06c6bfa / 71422f88 /
     d1c8e6d2 / 17ef9357 / dd2e1d8f / c9cd86c4 / 4bc0b8b5 / 34c5f386.
+- **2026-07-20 — §60c WAVE 1: the stack DOESN'T stack, the boss dial is
+  SLACK, income recovers only HALF the buy-all toll — and ONE mechanism
+  explains all three: ⭐ THE FIRE ARM MOSTLY FIRES NO-OPS** (patch at a
+  full pool; acquisition-order "first usable" = a patch monopoly). 6
+  batches at HEAD `d476fa9`, 40 in-sample seeds each, paired.
+  | arm | win% | paired | vs |
+  |---|---|---|---|
+  | stack-55pre (shopper + fire dials) | 62.5 | **+0/−0, 40 same** | native 55pre 62.5 |
+  | stack-regen (fire + buy-all @+1.5) | 60.0 | +0/−3 | fire-only @+1.5 67.5 |
+  | bossflip (boss bias −0.84→+0.84) | 65.0 | **+0/−0, 40 same** | live regen 65.0 |
+  | bits ×1.5 @ 55pre@+1.5 | 57.5 | +4/−1 | ×1.0 50.0 |
+  | bits ×2.0 @ 55pre@+1.5 | 52.5 | +3/−2 | ×1.0 50.0 |
+  | bits ×1.5 @ regen@+1.5 (control) | 65.0 | +0/−1 | ×1.0 67.5 |
+  - **The mechanism (row-diffs + a headless fire-log probe):** the two
+    +0/−0 arms are TICK-IDENTICAL to their controls per row (only the
+    `packetsFired` column differs) — and re-examining 60a, **33/40 of
+    live-vs-ablated regen rows are tick-identical too**: the fire
+    channel's +5pt rides a consequential MINORITY of fires. The probe
+    (fires logged, no searcher) shows why: fires are almost all
+    `outOfBattle:patch` (+ the odd `preTurn:reroute`). `patch` =
+    healPool +3 — clamps to a NO-OP at a full pool; `reroute` grants
+    redraws NO harness redraw policy consumes (a harness artifact, not
+    a content verdict); hype/shield/venom/miner essentially never fire
+    — patch is the most-common drop AND dual-context, so "fire the
+    first context-usable cache slot" is a patch monopoly.
+  - **Re-readings forced by the mechanism:** 60a's fire value =
+    pool-repair-when-damaged (real, just badly timed — fired on
+    cooldown regardless of pool state); the boss-flip slack is NOT
+    evidence that boss-relevant fire content is missing (miner/hype
+    were never TRIED at the boss — blocked behind patch); §59's
+    "packets fire in 92% of runs" was DISPATCH liveness, not EFFECT
+    liveness.
+  - **The income duality read:** ×1.5 recovers about half the buy-all
+    toll (50.0 → 57.5, +4/−1) but ×2.0 does no better (buys rise to
+    2.23/run while the bank climbs to 76 — income outruns useful
+    stock; a junk-buying ceiling). The tight-posture control is flat
+    (+0/−1), as predicted (the reserve binds before income). ⇒ price
+    cuts (income's dual) likely NARROW but cannot FLIP the port toll
+    under buy-all; the disciplined buyer already breaks even.
+  - Batches `20260720-{162110,163037,163930,164701,165555,170509}-
+    d476fa9`, summary sha256 406d2233 / 25cb3145 / b3ed8a76 /
+    06371a29 / 02b1e8c2 / 1d418d81.

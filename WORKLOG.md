@@ -2560,3 +2560,44 @@ instruments, 6 batches, all in-sample paired:
   alone can't rescue ports. Control: ×1.5 at regen@+1.5 (the tight
   posture shouldn't move — its reserve binds long before income
   does). fuzz:smoke manual: 266 passed (the +1 = the parse pin).
+
+### 60c wave 1 lands (2026-07-20): the fire arm fires no-ops
+
+Numbers + the mechanism: BALANCE §60c wave 1. How the mechanism was
+found, because the hunt is the story: the clean stack read came back
++0/−0 with all 40 rows TICK-IDENTICAL except `packetsFired` — fires
+landing, sim untouched. Same for the boss flip. That prompted
+re-diffing 60a: even there, 33/40 rows are tick-identical — the fire
+channel's +5pt was always a consequential-minority story. A headless
+fire-log probe (wrap `pickPacketFire`, log `run.cache[cacheIndex]`,
+no searcher — mechanism only) named it in eight runs: nearly every
+fire is `outOfBattle:patch`, healPool +3, clamped no-op at a full
+pool; the occasional `preTurn:reroute` grants redraws no harness
+policy consumes. Patch is the most-common drop AND the only
+dual-context packet, so 59c's deliberately-dumb "first context-usable
+slot" rule is a patch monopoly — hype/shield/venom/miner never reach
+the front. The 59c deferral clause ("smarter selection ONLY if the
+fire arm is under-powered") has its evidence; the fork goes to the
+user rather than being built unilaterally:
+
+- **(A) accept + document** — fire = a pool-repair channel worth
+  ~+5pt; drop weights can still shift patch frequency; selection
+  intelligence parks as a TODO for the next bot round.
+- **(B) state-aware fire selection** (sanctioned by 59c's own clause)
+  — e.g. fire patch only when pool damage ≥ its heal, prefer
+  unit-buff packets otherwise; a scored.ts-only change, but it moves
+  the realistic-bot arm mid-balance-pass → the live instrument arms
+  re-run (~15 min box) and every §60 fire read re-anchors.
+- **(C) the drop-weight lever** (already on the 60c list) — demote
+  patch's dominance in rewards.json so consequential packets reach
+  the cache front without touching the bot.
+
+Also pinned this session: the buy-all toll follows the POLICY (−3
+seeds even on the firing vector at +1.5 — stack-regen vs fire-only),
+and the §41-shape suspicion is now on record that prices alone
+narrow-but-don't-flip the port toll (the income duality: ×1.5
+half-recovers, ×2.0 plateaus at a junk-buying ceiling while the bank
+climbs). The port-side full fix smells like next-round content/
+structure (port goods must out-value the forgone hop; §60's scope
+guard forbids new mechanics) — but the sweeps get to SAY so with
+numbers before the 60e re-anchor writes it down.

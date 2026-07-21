@@ -214,6 +214,14 @@ is wrong — link instead.
   instruments WORKING, not a planning failure — don't fight them.)
 - **Resolving a decision point** — flip to ✅ DECIDED with the one-line
   resolution; rationale goes to the worklog.
+- **Demoting a CLOSED phase to a stub** (adopted 2026-07-21 at the §60f
+  close — user-signed) — as a phase closes, collapse its ROADMAP section
+  to the header + a one-breath outcome + the checked cut lines; the
+  worklog/BALANCE/git already carry the rest. This is HANDOFF's
+  demote-as-you-close rule imported to ROADMAP: it makes the
+  docs.test.ts line caps hold structurally instead of by dated bump
+  (the micro round needed four). Caps re-size to fit when each new
+  round's roadmap is authored.
 
 ### Phase kickoff (just-in-time step planning)
 

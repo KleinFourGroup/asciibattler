@@ -2759,3 +2759,25 @@ file + ROADMAP + the spec → archive/post-52-*) and the scratchpad
 distillation sweep are the FIRST TASKS OF THE CLUSTER-4 KICKOFF (the
 post-46 precedent), not §60f actions — 60f closes the round and
 points at them.
+
+### 60f — THE ROUND CLOSES (2026-07-21, user-signed)
+
+The three close calls: **(1) the demotion rule ADOPTED** ("we
+definitely need this rule, if not immediately then for future us'
+sake") — now a legal ROADMAP mutation in AGENTS; caps re-size when
+the Cluster-4 roadmap is authored. **(2) the box is DOWN** (user's
+console) — ~34 batches this round, every §60 read fetched with shas
+before the plug; the **hcloud launcher goes INTO the Cluster-4 spec**
+(user call — "I'd rather not leave it as an indefinite todo"): built
+and PROVEN against a real create→provision→destroy cycle at the next
+round's first measurement need, with the install-path mini education
+session at the build. **(3) the Cluster-4 spec is USER-AUTHORING**
+(in progress, in parallel — nothing blocked on it). Session split at
+the close (context-driven, user call): this session ends at the 60f
+flip; the Cluster-4 kickoff is a FRESH session whose first tasks are
+the archive ritual + the scratchpad distillation sweep + the spec
+audit. Phases 53→60: all eight closed, user-signed, every verdict
+paired-measured. The round that began with "bot ~30% vs human ~80%,
+absolute targets are fiction" ends with a signed re-anchor sheet at
+~62% held-out, a doctrine-grade instrument arm, and an economy whose
+every lever has a number.

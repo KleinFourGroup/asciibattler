@@ -512,32 +512,12 @@ policies survive as anchors; no price/config tuning yet (§60's domain).
 
 ---
 
-## Phase 60 — The REAL balance pass + close-out
+## Phase 60 — The REAL balance pass + close-out ✅ CLOSED 2026-07-21
 
-**Charter:** the deferred Cluster-3 tuning agenda at the realistic optimum,
-measured with the §52 economy metric family (bits-per-hop · spend mix +
-terminal bank · transaction rate, strategy-tier discipline): **re-anchor
-the design targets** off the measured optimum; **the boss-wall rider
-verdict** (the 43–55% target, re-derived against a real ceiling); sweep
-prices · `bitsMultiplier` · packet drop weights · `path.port` · the fire
-arm — `path.port` FIRST (the transaction-starvation guard). Then the round
-close: cursor flip, memory update, archive-ritual note, and the Cluster-4
-kickoff proposal.
-
-**Why here / dependencies:** last by the closer convention; consumes §59's
-vector and the stable bot — now two realism rungs better than the §52
-finding assumed.
-
-**Risk:** **Low-Medium** — measure + config. The §41/§46b documented-no-op
-precedent applies to the TUNING, not to the rider verdict or the
-re-anchor — those must be explicit.
-
-**Decision points:** re-anchored targets · tune-vs-accept per lever ·
-the §49 shrink slot — all user calls, resolved in the cut lines below.
-
-**Kickoff ✅ 2026-07-20 (worklog §60):** levers live; 60a+60b batched (user).
-
-**The cut (shape-locked 2026-07-20; rationale in worklog §60):**
+**Stub (DEMOTED per the rule this phase adopted, its first use):** every
+lever measured + tuned-or-accepted at the extended realistic arm; the
+re-anchor sheet SIGNED; the round closed, user-signed. Detail: BALANCE
+§§60a–60e · worklog §60 · git. The cut:
 
 - [x] 60a — fire-ablation probe ✅ 2026-07-20 — fires REAL: paired +5/−0
   over 80 runs, both sets; the §59 wash DECOMPOSED (two equal ~+5pt
@@ -551,18 +531,10 @@ the §49 shrink slot — all user calls, resolved in the cut lines below.
 - [x] 60d — the §49 shrink slot ✅ 2026-07-20 NO SLOT (user); keeps waiting
 - [x] 60e ✅ 2026-07-21 — held-out verify 62.5/62.5 (tie), wall 27.5%;
   boss verdict ACCEPT ×2 (user); the re-anchor sheet SIGNED — BALANCE §60e
-- [ ] 60f — the close ritual: archives · scratchpad distillation (incl. the
-  ROADMAP demotion decision) · box death · cursor/memory · Cluster-4 proposal
-
-**Predictions:** NO snapshot bump (config/fixtures/docs; v34/v37 hold);
-gates untouched; manual fuzz:smoke on fixture commits.
-
-**Exit criteria:** targets re-anchored on record in BALANCE.md; the
-boss-wall rider verdict explicit; every swept lever either baked or
-accepted with numbers; the round closed per the ritual.
-
-**Scope guards:** NO relaxing any standing gate to make numbers fit; NO
-new mechanics (findings that want one become TODO/next-round items).
+- [x] 60f ✅ 2026-07-21 — demotion rule ADOPTED (user; AGENTS legal-mutations) ·
+  box DOWN (user) · cursor/memory flipped · hcloud launcher → the Cluster-4
+  SPEC (user call, user-authoring); archive ritual + distillation = the
+  Cluster-4 kickoff's first tasks (the header's own contract)
 
 ---
 

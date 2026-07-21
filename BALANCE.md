@@ -1617,3 +1617,31 @@ deltas. The pre-X H7c→O log lives at
     numbers govern, per the round's doctrine).
   - Batches `20260720-{232038,232914,233522,234307}-fb3bf75`, summary
     sha256 88f439f7 / e0cb55d7 / dc10150e / 8f08270a.
+- **2026-07-21 — §60e CLOSES: the held-out verify at the FINAL config
+  + THE RE-ANCHOR SHEET (user-signed).** Verify: natural boss roll,
+  seeds 5001+, both vectors, extended arm, HEAD `c677545`:
+  | vector | held-out win | wall | tx | bank | fires/run |
+  |---|---|---|---|---|---|
+  | 59-regen | **62.5** | 7/32 (21.9%) | 0/40 | 76.5 | 1.93 |
+  | 55pre | **62.5** | 12/37 (32.4%) | 16/40 | 62.1 | 0 |
+  - A dead tie held-out — the two-postures-one-ceiling finding holds
+    to the round's last read. Pooled wall 19/69 = **27.5%**,
+    consistent with in-sample (26.4%); no overfit signature anywhere.
+  - **Boss verdict (user): ACCEPT BOTH AS-IS** — King 33.3% in-band,
+    Queen 27.8% within noise of the band floor; the banshee-comp
+    underperformance files as a Cluster-4 content observation.
+  - **⭐ THE RE-ANCHOR SHEET (supersedes §52's provisional targets +
+    the §33c-era 43–55% boss band):**
+    · realistic-bot win rate **~60–67%** (in-sample) / **~62%**
+      (held-out), human ~80% (§53g historical) = the ceiling ref
+    · boss wall band **30–35%** (per-boss measured 27.8–33.3, both
+      ACCEPTED)
+    · transaction rate **~40%** at the shopper posture, ~0 at the
+      firer — the posture split is a FEATURE, accepted
+    · terminal bank **60–85 idle — accepted HIGH**; port goods-vs-hop
+      value = Cluster-4 content work
+    · economy channels: fire ≈ +5pt (guard-timed) · shop ≈ +5pt ·
+      NON-STACKING — accepted
+  - All sheet reads are STRATEGY-TIER (the extended realistic arm) per
+    the §52 metric doctrine. Batches `20260721-{001819,002746}-
+    c677545`, summary sha256 3dcee678 / 1f8810fc.

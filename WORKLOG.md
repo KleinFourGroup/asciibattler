@@ -2736,3 +2736,26 @@ the Queen's banshee-led comp underperforms the King's disciplined
 mercenary/ranged core (mechanism unprobed by choice; §60 tunes on
 measurement, not diagnosis). The band-application fork (both-in-band
 vs deliberate spread) + the Queen verdict go to the user.
+
+### 60e CLOSES (2026-07-21): accept ×2, the tie that held, the sheet
+
+The user's verdict on the split: **accept both bosses as-is** ("this
+tells me they're both close enough for now") — the cleanest possible
+§41-shape close for the wall: zero config change, both bosses
+measured at-or-in the re-anchored band, and the tune that opened the
+phase as "the boss wants +5–8pt" dissolved under per-boss attribution.
+The held-out verify then closed the round's measurement arc on a
+poetic note: both instrument vectors at exactly 62.5% on never-tuned
+seeds — the §59 wash, the 60a decomposition, the grant-live floor,
+and the config bake all funneling to the same ceiling from two
+opposite economic personalities. The re-anchor sheet (BALANCE §60e)
+supersedes §52's provisional targets; every §60 exit criterion is met
+except the 60f ritual items. Remaining for 60f: the ROADMAP
+closed-phase-demotion decision (the scratchpad's queued weigh-at-
+close), the box death (user's console — all batches fetched), the
+cursor/memory boundary updates, and the Cluster-4 kickoff proposal.
+NB per the ROADMAP header's own contract, the FILE archiving (this
+file + ROADMAP + the spec → archive/post-52-*) and the scratchpad
+distillation sweep are the FIRST TASKS OF THE CLUSTER-4 KICKOFF (the
+post-46 precedent), not §60f actions — 60f closes the round and
+points at them.

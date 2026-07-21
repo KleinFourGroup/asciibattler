@@ -549,8 +549,8 @@ the §49 shrink slot — all user calls, resolved in the cut lines below.
   drop probe BAKED, validation +3/−1 clean · bits/port ACCEPT · the heal
   guard ships · ⭐ the grant-consumer catch → extended arm); BALANCE §60c
 - [x] 60d — the §49 shrink slot ✅ 2026-07-20 NO SLOT (user); keeps waiting
-- [ ] 60e — the re-anchor + boss-wall verdict — band RE-ANCHORED **30–35%**
-  (user 2026-07-20; measured 26.8% ⇒ boss tunes UP)
+- [x] 60e ✅ 2026-07-21 — held-out verify 62.5/62.5 (tie), wall 27.5%;
+  boss verdict ACCEPT ×2 (user); the re-anchor sheet SIGNED — BALANCE §60e
 - [ ] 60f — the close ritual: archives · scratchpad distillation (incl. the
   ROADMAP demotion decision) · box death · cursor/memory · Cluster-4 proposal
 

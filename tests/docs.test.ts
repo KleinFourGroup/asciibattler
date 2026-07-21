@@ -114,15 +114,18 @@ describe('docs hygiene', () => {
   // three kickoffs' worth of checkbox lines; a trip beyond that is rot again.
   // Bumped 550→600 at the §59 kickoff (2026-07-19): 550 covered cuts through
   // §58 only — §59's cut tripped it at 570, and §60's kickoff cut + close-out
-  // one-liners are still to come. 600 = the full 8-phase round, all cuts in;
-  // this round should never need another bump (the file archives at close).
-  const ROADMAP_MAX_LINES = 600;
-  // Per-phase bumped 60→70 at 59c (2026-07-19, user call): the §55-reopen
-  // round runs LONG phases (§57 hit ~60 legitimately — 8 sub-steps + the
-  // audition breakthrough; §59's remaining checkbox annotations would trip
-  // 60 again). Suspension and early-archiving both rejected (worklog §59 /
-  // retro scratchpad); a closed-phase demotion rule is PROPOSED for the
-  // round-close distillation ritual — re-examine both caps there.
+  // one-liners were still to come.
+  // RE-SIZED 600→500 at the Cluster-4 authoring (2026-07-21): the
+  // closed-phase DEMOTION rule (adopted at the §60f close — AGENTS "Legal
+  // ROADMAP mutations") now collapses each phase to a stub as it closes, so
+  // the cap holds structurally instead of by dated bump. The C4 roadmap
+  // authored at ~215 lines for 8 phases; 500 = that plus eight kickoffs'
+  // worth of cut lines, with demotion reclaiming space behind the cursor.
+  const ROADMAP_MAX_LINES = 500;
+  // Per-phase bumped 60→70 at 59c (2026-07-19, user call): long phases (§57
+  // hit ~60 legitimately). HELD at 70 for Cluster 4 — the demotion rule
+  // bounds CLOSED phases; 70 is the budget for the one in-flight phase's
+  // charter + cut.
   const ROADMAP_PHASE_MAX_LINES = 70;
 
   it(`ROADMAP.md stays under ${ROADMAP_MAX_LINES} lines (a plan, not a log)`, () => {

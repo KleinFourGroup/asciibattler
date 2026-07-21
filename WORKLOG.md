@@ -202,3 +202,18 @@ Full resolutions appended to [cluster-4-spec.md](cluster-4-spec.md)
 - **Boss forewarning expectation confirmed:** identity + layout only;
   waves resolve at fight time. **Sector-transition UI:** a sector-cleared
   clone of the run-cleared screen.
+
+### Roadmap authored (2026-07-21) — the kickoff CLOSES
+
+- The 8-phase cut (§61 rarity → §62 infra (non-blocking) → §63 characters
+  → §64 drafting daemons → §65 hand/draw → §66 forewarning → §67 second
+  sector → §68 protocol v2 + balance pass) shape-locked with the user in
+  one pass; the only redline discussed was §62-first, resolved KEEP-AT-62:
+  §61 needs no box (headless distribution tests + local smoke), and
+  infra-first would BLOCK the round on scheduling the user's education
+  session — §62 floats instead.
+- Caps re-sized 600→500 total (the demotion rule now does the structural
+  work; authored size ~215 lines), per-phase HELD at 70.
+- The overdue micro-round demotion done alongside: the giant §59/§60-era
+  cursor cells collapsed; the micro round's condensed block added to
+  HANDOFF §Closed rounds.

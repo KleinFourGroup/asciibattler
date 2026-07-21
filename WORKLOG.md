@@ -18,3 +18,144 @@ Prior round's log: [archive/post-52-worklog.md](archive/post-52-worklog.md).
   test patterns (TESTING) · full-board-before-commit + probes-arbitrate +
   trace-mining caveats (BALANCE) · the pre-commit fuzz trigger now watches
   `src/bot/` + `tests/fuzz/` (the §54a gap, FIXED in the hook).
+
+### The spec-vs-code-reality audit (2026-07-21, pre-design-conversation)
+
+Spec: [cluster-4-spec.md](cluster-4-spec.md) (user-authored draft). Surveyed
+the recruitment/daemon/run/scene/sector/editor/infra surfaces as they exist
+at `48b988a`. Per-item findings:
+
+**1. Unit rarity — the seams are already planted; the data model is net-new.**
+
+- `UnitCard.ts` carries the P1 rarity-accent seam intact: `UnitRarity` is a
+  single-member `'common'` union (UnitCard.ts:34), every card stamps
+  `unit-card--rarity-${rarity}` (:183/:229), all three adapters hardcode
+  `'common'`, zero CSS ships. Adding tiers = grow the union + thread the
+  field + CSS blocks.
+- `config/units.ts` has NO rarity field (Recruitment.ts:14 explicitly
+  deferred it). 18 combatant archetypes; 13 draftable.
+- The recruit pool: `rollOffer` (Recruitment.ts:42) samples DISTINCT
+  archetypes UNIFORMLY from `DRAFTABLE_ARCHETYPES` via partial Fisher–Yates;
+  offer count = `RECRUITMENT.defaultOfferSize` = 3.
+- **Ports already reuse `rollOffer` verbatim** (Run.ts:1114) — the spec's
+  "port pools follow the same mechanics" is ALREADY TRUE for composition;
+  rarity weighting added inside `rollOffer` is inherited free. Open edge:
+  port unit PRICING (`unitPrice` + jitter) is rarity-blind — does rarity
+  carry a price multiplier? (Spec silent; price-against-REALIZED-value
+  doctrine applies.)
+- ⚠ Determinism: rarity-weighted sampling changes the NUMBER of RNG draws →
+  shifts both the post-encounter ephemeral fork and the dedicated
+  `portStockRng` sequence → full fuzz re-baseline (the code flags this at
+  Recruitment.ts:29 / Run.ts:160).
+- Palette: green/purple/gold map cleanly (TERMINAL_GREEN / NEON_PURPLE /
+  TERMINAL_AMBER); **"blue" is actually cyan** (`FLOURESCENT_BLUE #15f4ee`)
+  — no true blue in COLORS. Design-round item, as is the tier-4 name
+  ("elite" collides with elite encounters — spec AN acknowledges).
+
+**2. Starting characters — fills a seam the code literally names.**
+
+- RunConfig.ts:82 comment: "a profile = a `startingRoster` + a `daemon`" —
+  the planned starting-profile seam. `?roster=` and `?daemon=` URL params
+  both exist and validate; `startingRoster` already round-trips through the
+  Run constructor's team fork WITHOUT disturbing fork order.
+- Current starting roster (spec's "the current"): **6 mercenary + 4 ranged,
+  all L5** (`config/recruitment.json` counts; archetypes hardcoded in
+  `rollTeam`, Run.ts:3044). ⚠ Spec says "archer" — the archetype id is
+  `ranged`; no `archer` exists.
+- "Same blacklist as current global configs" = the **`draftable: false`
+  flag set** (ice_mage, warlock, luminant, banshee, ghoul) — the single
+  existing global exclusion mechanism; no blacklist config file exists. The
+  spec's Global Blacklist Editor is functionally a UI over `draftable`.
+- ⚠ **Characters KILL the run-start daemon roll**: today `Run` rolls ONE
+  uniform daemon from the catalog (Run.ts:905) unless `?daemon=` overrides.
+  Per-character fixed daemons replace that roll — a run-identity change
+  touching every baseline arm (fuzz `--daemon` flags exist; the realistic-
+  bot arm's grant-consumer dials were tuned against rolled daemons).
+- No pre-run scene exists: `Game` constructs the Run BEFORE MapScene mounts
+  (Game.ts:126→252). Character select must either interpose before
+  `createRun` (Game holds the choice, constructs on confirm — cleaner) or
+  add a pending-character Run state. RecruitScene (28 lines) is the
+  cheapest scene precedent.
+- Character identity must SERIALIZE (blacklist/weights govern all future
+  recruit rolls) → **RunSnapshot v37→v38 predicted.**
+- Weight overrides (default 1; Priest mage 0.25, Gambler rogue 3) =
+  net-new weighted within-tier sampling.
+
+**3. The three drafting daemons — one is plumbing, two need new vocabulary.**
+
+- Pool 3→4: the run-stat fold mechanism is the exact precedent
+  (`effectiveCacheSize`, Run.ts:1556) — add `recruitOfferSize` to
+  `RUN_STAT_KEYS` (today only `bitsGain`/`cacheSize`), route Run.ts:2436
+  through `effectiveRunStats()`. Clean.
+- "No commons in draft" and "guaranteed elite port offering": NO existing
+  rule vocabulary expresses pool-composition constraints. If rarity weights
+  themselves become run-stats, "no commons" = a mult-0 modifier (elegant);
+  a GUARANTEE is not a weight — needs a new op/flag. Design fork.
+- ⚠ §60c grant-consumer doctrine: new drafting daemons are only measurable
+  if the bot arm actually consumes the changed pools — check the shopper
+  policy exercises them before reading any balance number.
+
+**4. Hand/draw size — the enemy-budget coupling is the load-bearing fork.**
+
+- `handSize: 6` lives in `config/deck.json` (not hardcoded); `drawHand`
+  (Run.ts:2774) draws to it; K's drawPile/discardPile/hand model + redraw
+  all present.
+- ⚠ **Enemy budget ALREADY scales with hand size**: `playerTeamLevel = avg
+  × min(team, DECK.handSize)` (enemyBudget.ts:42) and the wave count basis
+  likewise — the spec's UNDECIDED "does enemy budget scale with draw?" has
+  a code-reality answer: today it scales with the CONSTANT; a variable draw
+  must decide which value feeds this seam (difficulty.ts:85 records a past
+  desync bug). This is the full-design-session item, with data.
+- A persistent draw-size modifier fits the run-stat fold (derived, NO
+  snapshot bump); one-shot packet draws ("draw two") need a new shared op
+  (`drawCards`) + fire-site handler; "discard one" likewise (no hand-
+  discard op exists; `discardPacket` is cache-only — naming care). A
+  per-turn additive counter would be new serialized state (v38 rider).
+- Draw/discard animation: render/ui eyeball zone; PreTurnScreen is DOM.
+- Max-hand-size UNDECIDED → A/B on the harness per spec.
+
+**5. Boss forewarning — the one deliberate byte-identity break.**
+
+- Today the boss encounter + layout are drawn at NODE ENTRY
+  (`beginEncounter` forks `mapRng`, selects encounter + layout + terrain,
+  Run.ts:1244–1279). Pre-rolling at sector start inserts forks EARLY in the
+  parent stream → every downstream fork shifts → **every seed re-rolls**
+  (spec acknowledges). Consequences: full fuzz re-baseline; seed-paired
+  baselines die; the §60e re-anchor BANDS survive as distributions but the
+  held-out vectors need a re-verify run after the change.
+- Pre-rolled `{bossEncounterId, bossEncounterMap}` must serialize
+  (portStock pending-offer precedent) → rides the same v38 bump.
+- Map UI: no tooltip/per-node detail surface exists; node divs carry
+  kind+id (the elite `*` precedent) and the sector banner is the only
+  sector-level info surface. Net-new but small UI.
+- "The Start" boss pool has TWO bosses (King/Queen — the §60e split made
+  them deliberately distinct walls) — forewarning now reveals WHICH, which
+  is exactly the point.
+
+**6. Second sector — machinery built, content + one deferred UI item.**
+
+- Multi-sector walk (`advanceSector`, DAG guards, carry-across) is BUILT
+  and headless-tested, never reached in shipped play (single-node DAG,
+  source==sink). A second sector = append to `config/sectors.json` (sector
+  editor supports) + hand-edit `config/sector-map.json` (the DAG is
+  explicitly NOT editor-owned) + satisfy the coverage guards.
+- ⚠ Hidden cost: the deferred between-sector UI (banner/map re-render at
+  sector transition, Run.ts:2451 comment) becomes REACHABLE for the first
+  time — it's part of this item's real scope.
+
+**7. Infra — box-setup.sh SURVIVED the box teardown; hcloud is greenfield.**
+
+- `scripts/box-setup.sh` (provision: Node 25.5 pin + clone + npm ci) and
+  `box-batch.sh` (launch/status/fetch/kill over SSH, parity guard) are both
+  intact; NO hcloud usage exists anywhere in executable code. The launcher
+  = a new `scripts/box-launch.sh` (or tools/-style CLI) wrapping `hcloud
+  server create/delete` + chaining box-setup; API token + addresses stay
+  out of the repo (standing rule). Education session for the user = spec
+  item.
+
+**Cross-cutting predictions** (the 48b/49c rule): RunSnapshot **v37→v38**
+(character id + pre-rolled boss, possibly a turn-draw counter);
+WorldSnapshot **v34 HOLDS** (everything is run-layer; battle sim untouched
+unless the draw ops leak in). Two separate full fuzz re-baselines loom
+(rarity draw-count shift; boss pre-roll stream shift) — sequencing them
+into the SAME re-baseline window would pay once instead of twice.

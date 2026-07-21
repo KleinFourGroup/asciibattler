@@ -21,7 +21,11 @@ npm test
 # src/config/ is included too — the zod loaders carry behavior (price
 # formulas etc.); the 50f commit staged src/config/prices.ts and slipped
 # past the old regex (scratchpad, Phase 50 → swept at the micro kickoff).
-if git diff --cached --name-only | grep -qE '^(src/(sim|run|core|config)/|config/)'; then
+# src/bot/ + tests/fuzz/ added at the C4 kickoff sweep (2026-07-21): the
+# harness + searcher live there, and harness tests run ONLY under
+# vitest.fuzz.config.ts — the main suite never exercises them (the §54a
+# scratchpad note; until now those commits needed a MANUAL fuzz:smoke).
+if git diff --cached --name-only | grep -qE '^(src/(sim|run|core|config|bot)/|config/|tests/fuzz/)'; then
   echo "[pre-commit] staged sim/run/core/config changes -> npm run fuzz:smoke ..."
   npm run fuzz:smoke
 else

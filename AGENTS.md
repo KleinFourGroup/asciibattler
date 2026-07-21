@@ -138,6 +138,17 @@ kickoff — has its own section below.)
 - **Roadmap "decision points" are stops.** Post-MVP doesn't have the
   rigid CHECKPOINT markers, but ROADMAP entries flagged "Decision
   point" call out moments where user input is required — stop and ask.
+- **Long batches: foreground with an explicit `timeout`, or verify by
+  output artifact — never on notification faith.** A `run_in_background`
+  batch with no timeout makes a hang look like "still running" (§54a: a
+  45-min silent test hang the user caught; nothing would have
+  self-reported). The flip side (57g): background batches SURVIVE a
+  harness crash as orphaned processes — after a crash, `git status`
+  first (edits live on disk, not the session), then check for orphaned
+  `node` processes (CPU time ≈ wall clock since launch = still running)
+  BEFORE re-launching a "lost" batch; a fresh watcher loop polling for
+  the output artifact re-attaches. Determinism makes the worst case a
+  pure time cost.
 - **Stop preview servers (and other background processes) before
   ending the session.** If you called `preview_start`, call
   `preview_stop` before signing off. Vite spawns child Node processes
@@ -333,8 +344,10 @@ npm run dev             # opens at :5173 (or :5174 if stale process held :5173)
 versioned hook [.githooks/pre-commit](.githooks/pre-commit) once
 `git config core.hooksPath .githooks` is set (see Pre-flight) — including
 the conditional fuzz:smoke, which triggers on staged `src/sim|src/run|
-src/core|src/config|config/` paths instead of memory (`src/config/` added
-at the 2026-07-11 sweep — the zod loaders carry behavior; the 50f gap). **Never bypass it with
+src/core|src/config|src/bot|config/|tests/fuzz/` paths instead of memory
+(`src/config/` added at the 2026-07-11 sweep — the zod loaders carry
+behavior; the 50f gap. `src/bot/` + `tests/fuzz/` added at the
+2026-07-21 sweep — harness tests run only under fuzz:smoke; the §54a gap). **Never bypass it with
 `--no-verify`** — a failing hook means fix the tree, not skip the check.
 The list stays here as documentation of what runs (and as the manual
 fallback on a clone that hasn't activated the hook).

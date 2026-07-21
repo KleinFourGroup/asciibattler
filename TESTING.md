@@ -70,7 +70,9 @@ For pure-logic modules: co-locate `Module.test.ts` next to `Module.ts`. Keep tes
 
 For anything that consumes randomness: take a seeded `RNG` instance as an explicit argument; never reach for global entropy. The tests prove this is doable; lint enforces it.
 
-Two patterns that earned their keep (promoted from the retro scratchpad, 2026-07-06):
+Patterns that earned their keep (promoted from the retro scratchpad — first two 2026-07-06, last two 2026-07-21):
 
 - **Conservation / partition invariants.** When state moves between buckets, assert the union is invariant at every step — one assertion catches a lost entry, a duplicate, a stale index, and a botched reshuffle all at once (H5's deck test: `[...drawPile, ...discardPile, ...hand].sort()` always equals `[0..n-1]`, asserted every turn through several reshuffles).
 - **Test the mechanism's invariant, not a downstream proxy.** When a metric keeps flagging legitimate behavior, the metric is testing the wrong thing. E5's corridor-flow test went through three proxy metrics (distance regression, long-axis distance) that flagged legal maneuvers before pinning the actual mechanism (`targetId` change count) — robust to layout topology because it measures the thing the fix fixed.
+- **Bounded steps, never poll `currentTick`.** `World.tick()` no-ops once `ended` is set, freezing `currentTick` — a `while (world.currentTick < N)` loop spins FOREVER if anything ends the battle mid-test (killing a team's last unit does; §54a lost 45 minutes to this). Loop a bounded count of steps; assert `world.ended === false` inside the step helper so failure is a red assert, not a hang; keep 2+ units per team in crafted worlds when a test kills one.
+- **Test inside the window, not just around it.** When an action has a WINDOW with an interior boundary (e.g. the §36 move-flip at 50%), test the state BETWEEN the boundary and the finish, not only before/after — the §56 chain test cleared `activeAction` at the flip, conflating "flip landed" with "window over", and the mid-window partner re-grab bug walked straight through it (caught only by user feel-testing).

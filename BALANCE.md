@@ -228,6 +228,21 @@ re-time mid-sweep).
   native, localized to battle-layer objective handling. Until the interstitial's
   bot-realism round closes the gap, treat every ABSOLUTE win-rate target as
   bot-anchored (relative reads — gradients, bands, deltas — stay valid).
+  *(§57h halved this: the audition-searcher arm reads ~60% vs human ~80 — see the
+  🧭 Cursor doctrine; the §60e re-anchor sheet carries the signed targets.)*
+- **Probes arbitrate, cells attribute (§55/§56 doctrine, promoted 2026-07-21):**
+  the per-cell spot-check board is an ATTRIBUTION instrument — cell boards are
+  volatile at 3-seed granularity under engine changes (§56e-pre: ~42% of probe
+  seeds flipped outcome from a half-window timing shift, moving cells in BOTH
+  directions). A cell read never arbitrates a global tuning call; the paired
+  probe does. Diagnose on the targeted A/B, but **every fix re-runs the FULL
+  board before commit** — the §54e amendment's 3-cell attribution fix regressed
+  3 OTHER cells.
+- **Mine the trace data before hardcoding introspection (§54c):** the trace
+  table beat design intuition twice (the human's assassination tool is the
+  leashed engage, not focus-mode — 3/197; "artillery" by capability needed
+  reach 6, not 4). Check what the human actually does before encoding an
+  assumption into a script or scorer.
 
 ## Parallelism + the dwm leak (unchanged, environmental)
 

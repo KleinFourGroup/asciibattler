@@ -159,3 +159,46 @@ WorldSnapshot **v34 HOLDS** (everything is run-layer; battle sim untouched
 unless the draw ops leak in). Two separate full fuzz re-baselines loom
 (rarity draw-count shift; boss pre-roll stream shift) — sequencing them
 into the SAME re-baseline window would pay once instead of twice.
+
+### The design conversation (2026-07-21) — decisions locked
+
+Full resolutions appended to [cluster-4-spec.md](cluster-4-spec.md)
+§"Kickoff resolutions"; the reasoning worth keeping:
+
+- **Tier-4 name = legendary.** Genre-standard beats clever; the
+  graceful-degradation naming principle argues FOR the boring choice (no
+  unix egg worth confusing players over). Colors green/cyan/purple/gold —
+  cyan accepted (no true blue added to COLORS).
+- **All-common start REJECTED (user, on reflection)** — a design round
+  assigns initial tiers when the mechanics land; tuning at the round-end
+  balance pass.
+- **Duplicates ALLOWED in offers** (user prior + agent concurrence):
+  rolled levels/growth differentiate; under weight overrides dupes ARE the
+  character identity working (double-rogue Gambler offers); independent
+  draws + renormalize-on-empty make the sampler trivial and un-wedgeable
+  by the guarantee daemon. Named fallback (not pre-built): one resample
+  per duplicate if playtest shows degenerate offers.
+- **Characters kill the daemon roll — confirmed intended.** Harness gains
+  `--character`; arms default to The Soldier. USER CALL: a dedicated
+  balance-protocol-v2 step ("I just tripled the balance work" 😅), which
+  also owns extending the bot arm to consume the new mechanics (the §60c
+  lesson applied prospectively, agent catch).
+- **Port rarity pricing: seam now, tune later** — per-tier multiplier
+  table authored with the rarity field so pricing/editor code doesn't
+  need a second pass; numbers at the balance pass.
+- **Filed inputs absorbed:** port goods-vs-hop value + banshee-comp →
+  the balance pass. **Riders absorbed:** rarity-accent CSS TODO +
+  display-label layer + the internal `ranged`→`archer` rename (cost
+  flagged: load-bearing id string — units/encounters/rollTeam/tests +
+  the FROZEN instrument fixtures carry per-archetype keys; own cut line).
+- **Save/load → Cluster 6** (original home; this round's v38 bump(s)
+  would orphan earlier-built saves).
+- **Synergies/traits: OUT** — the META-ROADMAP C4 conscious call, made
+  with a sharpened rationale: **the daemon layer IS the synergy system**
+  (Laverna = a working archetype-filtered build-around; §47 vocabulary
+  makes more nearly free). Revisit trigger: drafting feels thin at the
+  round-close playtest. Revisit shape: `tags` on UnitDef + tag-filtered
+  hooks — an extension, not a new system.
+- **Boss forewarning expectation confirmed:** identity + layout only;
+  waves resolve at fight time. **Sector-transition UI:** a sector-cleared
+  clone of the run-cleared screen.

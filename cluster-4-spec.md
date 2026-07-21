@@ -83,3 +83,84 @@ We're getting an increasingly large amount of content for one fifteen minute run
 
 We need to get the CLI script for starting and stopping VPS instances made, so we're able to run balance batches on demand.  This will require an education session for me.
 
+## Kickoff resolutions (LOCKED 2026-07-21 — the spec-audit design conversation)
+
+Decisions from the code-reality audit (WORKLOG §Kickoff) + the design
+conversation. These amend the draft above; rationale in the worklog.
+
+**Rarity**
+
+- Tier 4 is named **legendary** (the "elite" collision resolved; genre-standard
+  beats clever here). Colors: green / **cyan** (`FLOURESCENT_BLUE` — no true
+  blue is added to the palette) / purple / gold.
+- **NOT all-common at first**: a design round assigns initial tiers to the 13
+  draftable archetypes when the rarity mechanics land; the assignment is
+  *tuned* at the round-end balance pass.
+- Sampling semantics: the tier roll **renormalizes over non-empty tiers**;
+  offers **MAY contain duplicate archetypes** (rolled levels + growth
+  differentiate; with weight overrides, dupes are the character identity
+  working). Named fallback if playtest shows degenerate offers: one resample
+  per duplicate — not pre-built.
+- The global blacklist mechanism IS the existing `draftable` flag; the Global
+  Blacklist Editor is a UI over it (no new config file).
+- Port unit pricing gains a **per-tier price-multiplier seam** in
+  `prices.json`, authored alongside the rarity field (seed values ~1/1.5/2/3),
+  tuned only at the balance pass (price against REALIZED value).
+
+**Characters**
+
+- Characters **replace the run-start daemon roll** — intended. The harness
+  gains an explicit character selector (`--character` / `?character=`);
+  fuzz/bot arms **default to The Soldier**.
+- The spec's "archer" = the archetype id `ranged` today; see the rename rider
+  below.
+
+**Hand/draw**
+
+- The enemy-budget question gets its **full design session at that phase**,
+  anchored on code reality: the budget basis is ALREADY
+  `min(roster, DECK.handSize)` — the session decides what feeds that seam
+  when draw varies.
+
+**Boss forewarning**
+
+- Reveals boss **identity + layout only**; waves still resolve at fight time
+  against team level (the existing budget model). Byte-identity break
+  ACCEPTED; the two stream-breaking changes (rarity draw-counts, boss
+  pre-roll) share **one measurement re-baseline window**.
+
+**Second sector**
+
+- Sector-transition UI = a **sector-cleared screen cloned from the
+  run-cleared screen** (GameOverScene precedent). The sector-map DAG stays
+  hand-edited JSON.
+
+**Balance (new scope, absorbed by user call)**
+
+- A dedicated **balance-protocol-v2 step**: characters tripled the
+  measurement surface — the step owns the per-character doctrine (which §60e
+  bands apply per character) AND **extending the realistic-bot arm to consume
+  the new mechanics** (the drafting daemons, the draw/discard packets, the
+  character selector) — the §60c grant-consumer lesson, applied prospectively.
+- Absorbed into the round-end balance pass: **port goods-vs-hop value** (the
+  §60c filed input) and the **banshee-comp underperformance** (§60e split).
+
+**Riders absorbed**
+
+- The rarity-accent CSS TODO (the P1 seam gets styled here).
+- The **display-label layer** (archetype + ability display names) AND the
+  internal rename **`ranged` → `archer`** — flagged cost: the id is a
+  load-bearing string (units/encounters/rollTeam/tests + the FROZEN
+  instrument fixtures carry per-archetype keys); its own deliberate cut line.
+
+**Explicitly OUT / deferred**
+
+- **Synergies/traits: OUT** (the META-ROADMAP C4 conscious call). The daemon
+  layer is the sanctioned synergy channel — archetype-filtered hooks (the
+  Laverna precedent) are nearly free to author under the §47 vocabulary.
+  Revisit trigger: drafting feels thin at the round-close playtest; revisit
+  shape: a `tags` field on UnitDef + tag-filtered hooks (an extension, not a
+  system).
+- **Save/load: deferred back to Cluster 6** (its original META-ROADMAP home)
+  — this round's RunSnapshot bump(s) would orphan any saves built before it.
+

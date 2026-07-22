@@ -420,3 +420,25 @@ seeds 0..30 → **2/10/15 buy** under the new stream; canary re-pinned
 12→2 (both files); the seed-1 never-buys pin still holds. So the
 per-phase re-pin expectation lands as: invariants survive free,
 non-vacuousness canaries re-scan — minutes, not a re-baseline.
+
+### 61e — the rarity-accent CSS (2026-07-22)
+
+- Accent channel = the GLYPH (tier color + soft `text-shadow` CRT glow),
+  NOT the border — borders carry skin identity + interaction states
+  (recruit amber, hover/selected cyan) and rarity must not fight them.
+  `common` gets NO rule: its color IS the default terminal green, so
+  every pre-rarity surface renders unchanged (the P1 promise held
+  structurally). Colors per the kickoff lock: cyan `#15f4ee` / purple
+  `#9d00ff` / gold `#ffb000`.
+- The Q5 enemy override survives by SPECIFICITY ((0,3,0) vs the
+  accents' (0,2,0)), not rule order — enemy battle glyphs stay red.
+- Player battle-HUD compact cards DO carry the tier tint (identity
+  carry-over; team still reads from pane position) — deliberate,
+  flagged for the user's native eyeball to veto. Board sprites are
+  renderer-owned and untouched.
+- Verified in the dev preview by computed style on a live mixed-tier
+  pre-turn hand (ronin/mage cyan · reaver purple · stormcaller gold ·
+  mercenary/archer green with NO shadow) and in-battle (player tints
+  live, enemies `rgb(255,49,49)`). Screenshot unavailable (pane not
+  compositing); computed-style reads are the stronger evidence per the
+  browser-verify norms — the aesthetic eyeball is the user's test run.

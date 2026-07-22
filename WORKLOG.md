@@ -217,3 +217,74 @@ Full resolutions appended to [cluster-4-spec.md](cluster-4-spec.md)
 - The overdue micro-round demotion done alongside: the giant §59/§60-era
   cursor cells collapsed; the micro round's condensed block added to
   HANDOFF §Closed rounds.
+
+## Phase 61 — Rarity core
+
+### The §61 kickoff code-reality audit (2026-07-21)
+
+Surfaces surveyed at `97ed760` (same day as the cluster kickoff audit —
+this pass verifies + deepens the five §61 surfaces for the cut):
+
+- **The sampler:** `rollOffer` (Recruitment.ts:42) → `sampleDistinctArchetypes`
+  (partial Fisher–Yates over `DRAFTABLE_ARCHETYPES`, 1 RNG draw/slot).
+  Replacing it with tier-roll + within-tier-roll = **2 draws/slot** — the
+  predicted draw-count break. Both call sites go through the ONE function
+  (post-encounter Run.ts:2436, port stock Run.ts:1114), so ports inherit
+  the weighting by construction, as the cluster audit found.
+- **The schema:** `CombatantUnitDefSchema` (units.ts:134) has no rarity
+  field; the §38 open-record catalog means adding `rarity` (z.enum, default
+  `'common'`) is one schema line + JSON entries. Rarity is DEF-RESOLVED by
+  archetype id (the `targetingForArchetype` convention) — `UnitTemplate`
+  doesn't grow a field ⇒ **no RunSnapshot bump; v37 HOLDS through §61**
+  (matches the roadmap's round-wide prediction). WorldSnapshot v34 holds.
+- **The card seam:** `UnitRarity = 'common'` single-member union
+  (UnitCard.ts:36); all three adapters hardcode `'common'`
+  (:116/:134/:149); both builders already stamp `unit-card--rarity-*`
+  (:183/:229); ui.css:468 reserves the hook, zero CSS ships. Growing the
+  union + threading the def lookup through the adapters is the whole wire.
+- **Port pricing:** `unitPriceFor` (prices.ts:133) is the pure core both
+  the game and the §50f editor preview read — the per-tier multiplier
+  threads through it once and can't drift (the display-honesty
+  discipline). Seam shape: a `rarityMultiplier` record in `prices.json`
+  validated exhaustive-over-tiers, seeds ~1/1.5/2/3, TUNED at §68.
+- **Display labels:** ability names are ALREADY config
+  (`AbilityDef.name`, required — the Yb QoL; schema.ts:414). The gap is
+  archetype names: UnitCard renders the raw id in both headers
+  (`data.archetype.toUpperCase()` :367, `Level N ${archetype}` :375).
+  Rider = a `name` field on `CombatantUnitDefSchema` + a sweep of the id
+  display sites, the AbilityDef precedent.
+- **The rename (`ranged`→`archer`):** the quoted-`'ranged'` grep counts
+  239 hits / 79 files but MOST are the stat (`baseStats.ranged`,
+  `damageStat: 'ranged'`, growth rates) — **the stat does NOT rename**,
+  only the archetype id. Real blast radius: the `units.json` key ·
+  `encounters.json` comps (6) · `prices.json` baseByArchetype ·
+  `Run.ts` rollTeam:3047 · `enemyBudget.ts` default comp ·
+  `REQUIRED_UNIT_IDS` (units.ts:332) · ~20 test files · the FROZEN
+  fixtures (tests/fuzz/fixtures/*.json ×10, 53g-human-traces.json),
+  which carry per-archetype KEYED RECORDS — a mechanical key rename
+  preserves their semantics (values untouched). An in-place key rename
+  keeps `units.json` key order, so `ALL_ARCHETYPES` order — and every
+  order-dependent stream — is preserved: **predicted byte-stream-NEUTRAL**
+  (the absence of a re-pin is itself the H4-style check).
+- **The draftable 13** (for the tier-assignment decision point):
+  mercenary, adventurer, ronin, bandit, ranged(→archer), rogue, healer,
+  mage, catapult, reaver, corrupter, stormcaller, shaman. (Non-draftable:
+  ice_mage, warlock, luminant, banshee, ghoul.)
+
+### Shape-lock (2026-07-21) — cut approved, three calls resolved
+
+The 7-step cut (61a→61g, ROADMAP §61) approved as proposed, rename-first
+so later §61 tests/fixtures are written with `archer` natively.
+
+- **A — weights home: `recruitment.json`** gains a `rarityWeights` block
+  (exhaustive over the tier enum). Rationale: recruitment.ts already owns
+  offer-composition knobs; four numbers don't justify a new config file.
+- **B — frozen fixtures: mechanical KEY rename** in the 61a commit
+  (values byte-untouched, semantics preserved) over a load-time legacy
+  alias — alias code would be permanent complexity for a one-time rename.
+- **C — tier assignment: DATA FIRST** (the design round stays a mid-phase
+  stop after 61c). The user's provisional guesses, on record for that
+  round: common = mercenary / archer / rogue / healer · uncommon =
+  adventurer / ronin / mage · rare = catapult / reaver / corrupter ·
+  legendary = stormcaller / shaman. ⚠ **bandit unassigned** (12 of 13
+  covered) — an explicit open item for the design round.

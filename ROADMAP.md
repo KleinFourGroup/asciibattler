@@ -68,7 +68,29 @@ display names) and the internal `ranged`→`archer` rename.
   green with re-pins committed deliberately.
 - **Scope guards:** no tier-weight TUNING (§68); no resample-on-duplicate
   (named fallback only); no price-multiplier tuning (§68).
-- [ ] *(cut at phase kickoff)*
+
+Cut 2026-07-21 (shape-locked; audit + resolutions → worklog §61):
+
+- [ ] **61a** — the `ranged`→`archer` rename, first (mechanical: config
+  keys + literals + tests + frozen-fixture KEY renames; predicted
+  byte-stream-NEUTRAL — zero re-pins IS the check).
+- [ ] **61b** — the `rarity` field, inert (z.enum default `common`;
+  `UnitRarity` re-pointed; the three UnitCard adapters read the def;
+  `DRAFTABLE_BY_TIER` derived; byte-identical).
+- [ ] **61c** — `rarityWeights` in recruitment.json + the weighted sampler
+  in `rollOffer` (2 draws/slot — THE stream break, smoke re-pins
+  deliberate; config-derived distribution tests + synthetic empty-tier
+  renormalization proof).
+- [ ] **61d** — initial-tier assignment (DECISION POINT: user design round
+  with 61c in hand; provisional table on record in the worklog, bandit
+  unassigned; second small re-pin).
+- [ ] **61e** — rarity-accent CSS on the `unit-card--rarity-*` hook
+  (green/cyan/purple/gold; browser-verify + user native check).
+- [ ] **61f** — the per-tier port price-multiplier seam in prices.json
+  (exhaustive record, seeds 1/1.5/2/3, threaded through `unitPriceFor`;
+  tuned §68).
+- [ ] **61g** — archetype display `name` on the schema + the id-display
+  site sweep (the `AbilityDef.name` precedent).
 
 ## Phase 62 — Infra: the hcloud box launcher
 

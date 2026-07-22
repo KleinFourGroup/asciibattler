@@ -442,3 +442,24 @@ non-vacuousness canaries re-scan — minutes, not a re-baseline.
   live, enemies `rgb(255,49,49)`). Screenshot unavailable (pane not
   compositing); computed-style reads are the stronger evidence per the
   browser-verify norms — the aesthetic eyeball is the user's test run.
+
+**REWORKED same-day — the playtest verdict on glyph tints:** "absolutely
+gorgeous, but it adds a moment of confusion" in the battle HUD (the
+flagged veto, exercised). New design (user): glyphs revert to pure team
+colors EVERYWHERE; the accent is the CARD BACKGROUND — all four tiers
+tint now, commons subtly green (the "common = pixel-identical" promise
+deliberately retired). Implementation: a uniform `background-image`
+linear-gradient tint layer over each skin's own background-COLOR, so
+full cards keep black, compacts keep their rgba(0,0,0,.7) HUD
+darkening, and no background-color rule (skin/hover/selected) is
+fought — the recruit hover's shorthand still clears the tint while
+hovered (interaction affordance wins, deliberate). Alphas
+luminosity-compensated per hue (green .07 / cyan .09 / purple .16 /
+gold .10) — user tunes by native eyeball. One landmine defused:
+`.unit-card--compact`'s `background:` SHORTHAND (later in file)
+implicitly reset `background-image` and silently ate the tint on
+battle cards — converted to `background-color` with a warning comment.
+Re-verified by computed style (pre-turn + battle, player and enemy).
+Watch-item for the user's next run: enemy cards carry the subtle tint
+too (a faint GREEN wash on enemy commons — green is ally vocabulary);
+scoping `.unit-card--enemy` out is one line if vetoed.

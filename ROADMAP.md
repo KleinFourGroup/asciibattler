@@ -81,9 +81,9 @@ Cut 2026-07-21 (shape-locked; audit + resolutions → worklog §61):
 - [x] **61d** — initial-tier assignment ✅ 2026-07-22 (USER): provisional
   table + bandit common; ronin/reaver KEPT up-tier on flavor, their buff
   is a named §68 goal; worklog §61d.
-- [x] **61e** — rarity-accent CSS ✅ 2026-07-22: glyph tint + CRT glow,
-  common untouched, enemy-red preserved; computed-style-verified, user
-  native check at their test run; worklog §61e.
+- [x] **61e** — rarity-accent CSS ✅ 2026-07-22, REWORKED same-day on the
+  playtest read: accent = card BACKGROUND tint (all four tiers), glyphs
+  back to pure team colors; computed-style-verified; worklog §61e.
 - [ ] **61f** — the per-tier port price-multiplier seam in prices.json
   (exhaustive record, seeds 1/1.5/2/3, threaded through `unitPriceFor`;
   tuned §68).

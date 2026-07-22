@@ -484,28 +484,35 @@ body {
   font-weight: bold;
 }
 
-/* §61e — the rarity accents (the P1 seam, filled). The accent channel is the
-   GLYPH: the unit renders in its tier color with a soft CRT glow. `common` has
-   NO rule — its color IS the default terminal green, so common cards render
-   exactly as they always have. Borders stay skin/interaction channels (recruit
-   amber, hover/selected cyan) — rarity deliberately doesn't touch them. The Q5
-   enemy override (`--compact.--enemy`, specificity (0,3,0)) outspecifies these,
-   so enemy glyphs stay red in battle. Colors = the kickoff design lock
+/* §61e — the rarity accents (the P1 seam, filled; REWORKED same-step on the
+   user's playtest read: glyph tints in the battle HUD muddied the team-color
+   read). The GLYPH stays untouched everywhere (green ally / red enemy — the
+   identity channel); the accent is the CARD BACKGROUND: a uniform tier-color
+   tint layered as a `background-image` gradient OVER each skin's own
+   background-color — full cards keep their black, compact battle cards keep
+   their translucent rgba(0,0,0,.7) darkening, and no background-color rule
+   (skin, hover, selected) is fought (different property; the recruit hover's
+   `background:` shorthand still clears the tint while hovered — the
+   interaction affordance deliberately wins). ALL FOUR tiers tint now — a
+   common card is subtly green, no longer pixel-identical to pre-rarity.
+   Alphas are luminosity-compensated per hue (purple is the darkest, amber the
+   loudest), tuned for the user's native eyeball. Colors = the kickoff lock:
    green/cyan/purple/gold (TERMINAL_GREEN / FLOURESCENT_BLUE / NEON_PURPLE /
-   TERMINAL_AMBER — no true blue in COLORS, cyan accepted). */
-.unit-card--rarity-uncommon .unit-card__glyph {
-  color: #15f4ee; /* FLOURESCENT_BLUE */
-  text-shadow: 0 0 8px rgba(21, 244, 238, 0.55);
+   TERMINAL_AMBER). */
+.unit-card--rarity-common {
+  background-image: linear-gradient(rgba(51, 255, 0, 0.07), rgba(51, 255, 0, 0.07));
 }
 
-.unit-card--rarity-rare .unit-card__glyph {
-  color: #9d00ff; /* NEON_PURPLE */
-  text-shadow: 0 0 8px rgba(157, 0, 255, 0.6);
+.unit-card--rarity-uncommon {
+  background-image: linear-gradient(rgba(21, 244, 238, 0.09), rgba(21, 244, 238, 0.09));
 }
 
-.unit-card--rarity-legendary .unit-card__glyph {
-  color: #ffb000; /* TERMINAL_AMBER */
-  text-shadow: 0 0 8px rgba(255, 176, 0, 0.55);
+.unit-card--rarity-rare {
+  background-image: linear-gradient(rgba(157, 0, 255, 0.16), rgba(157, 0, 255, 0.16));
+}
+
+.unit-card--rarity-legendary {
+  background-image: linear-gradient(rgba(255, 176, 0, 0.1), rgba(255, 176, 0, 0.1));
 }
 
 .unit-card__header {
@@ -1689,7 +1696,9 @@ body {
   padding: 5px 6px 7px;
   gap: 5px;
   border: 1px solid #664600; /* DARK_TERMINAL_AMBER chrome */
-  background: rgba(0, 0, 0, 0.7);
+  /* background-COLOR, not the shorthand — the shorthand implicitly resets
+     background-image and would eat the §61e rarity tint layer. */
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 .unit-card--compact .unit-card__glyph {

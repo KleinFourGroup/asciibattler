@@ -3,5 +3,11 @@
   "startingRanged": 4,
   "startingLevel": 5,
   "defaultOfferSize": 3,
-  "recruitBonusChance": 0.5
+  "recruitBonusChance": 0.5,
+  "rarityWeights": {
+    "common": 6,
+    "uncommon": 3,
+    "rare": 2,
+    "legendary": 1
+  }
 }

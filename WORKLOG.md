@@ -344,3 +344,36 @@ re-pinned).
 - Verify: 2207 green (+8), typecheck clean, fuzz:smoke via the commit
   hook; editor select verified in the dev preview by DOM eval (4 tiers,
   change wiring updates the working doc, zero console errors).
+
+### 61c — rarityWeights + the weighted sampler (2026-07-22)
+
+- `rarityWeights` (6/3/2/1 seeds, §68 tunes) in recruitment.json;
+  schema exhaustive over the tiers with a compile-time coverage assert.
+  Zero-per-tier is legal ("tier off" — and the §64 no-commons fold
+  shape); all-zero over non-empty tiers throws at the roll site.
+- `rollArchetypeByRarity` = the pure, config-parameterized core (the
+  `unitPriceFor` discipline): weighted tier roll RENORMALIZED over
+  non-empty tiers, then uniform within tier — **exactly 2 draws, always**
+  (the tier roll fires even with one populated tier, so 61d's
+  assignments shift WHICH archetypes appear, never draw counts — pinned
+  by a stream-shape test). `rollOffer` binds live pools/weights, keeps
+  the two-phase draw shape, drops F1's distinctness + pool-size cap
+  (dupes by design, kickoff lock). Old Fisher–Yates sampler deleted;
+  two F1-era tests (distinctness, pool cap) retired with it.
+- Tests: synthetic-catalog distribution vs config-derived expected
+  shares (N=20k seeded, ±0.02) · empty-tier renormalization · zero-
+  weight-tier exclusion · all-zero throw · pigeonhole dupes · 2-draw
+  stream pins (core + through rollOffer) · live-config boot sanity.
+- **Finding — "smoke re-pins" turned out VACUOUS for this break:** 2212
+  main + 269 smoke green with zero edits. The smoke/harness pins are
+  INVARIANTS (same-seed-twice equality, outcome-in-set, CSV shape,
+  occupancy/coverage guards), not per-seed content pins — same-seed
+  equality survives any deterministic change by construction. The
+  round-plan line "smoke pins re-pin per phase as mechanical fallout"
+  overestimated this class of break; what the stream shift ACTUALLY
+  invalidates is the measurement baselines (BALANCE §60e held-out
+  vectors, best-strategy fixed-vector probes), and those re-anchor ONCE
+  at §68 per plan (mid-round reads: paired same-seed A/Bs). Content
+  change positively proven (not silently equivalent): dupes at
+  size>pool + the 2-draws/slot pin are both impossible under the old
+  sampler.

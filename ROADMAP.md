@@ -75,10 +75,9 @@ Cut 2026-07-21 (shape-locked; audit + resolutions → worklog §61):
   replacements, zero re-pins (stream-neutrality proven); worklog §61a.
 - [x] **61b** — the `rarity` field, inert ✅ 2026-07-21: schema + adapters +
   `DRAFTABLE_BY_TIER` + editor select/formatter; byte-identical; worklog §61b.
-- [ ] **61c** — `rarityWeights` in recruitment.json + the weighted sampler
-  in `rollOffer` (2 draws/slot — THE stream break, smoke re-pins
-  deliberate; config-derived distribution tests + synthetic empty-tier
-  renormalization proof).
+- [x] **61c** — weights + the weighted sampler ✅ 2026-07-22: 2 draws/slot,
+  dupes by design; zero re-pins NEEDED (smoke pins are invariants, not
+  content — the §68 measurement re-anchor is the real cost); worklog §61c.
 - [ ] **61d** — initial-tier assignment (DECISION POINT: user design round
   with 61c in hand; provisional table on record in the worklog, bandit
   unassigned; second small re-pin).

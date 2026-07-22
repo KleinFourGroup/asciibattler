@@ -21,6 +21,23 @@
 
 import { z } from 'zod';
 import recruitmentJson from '../../config/recruitment.json';
+import type { UnitRarity } from './units';
+
+/**
+ * §61c — the global rarity tier weights (the kickoff's 6/3/2/1 seed values;
+ * TUNED only at the §68 balance pass). The tier roll renormalizes these over
+ * the NON-EMPTY tiers of the draftable pool, so an unpopulated tier costs no
+ * probability mass. Zero is legal per tier ("tier off" — and the §64
+ * no-commons daemon's likely fold shape); all-zero over the non-empty tiers is
+ * a config error the sampler throws on. Weights are within-RUN global — the
+ * §63 character overrides are WITHIN-tier archetype weights, never these.
+ */
+const RarityWeightsSchema = z.object({
+  common: z.number().nonnegative(),
+  uncommon: z.number().nonnegative(),
+  rare: z.number().nonnegative(),
+  legendary: z.number().nonnegative(),
+});
 
 const RecruitmentSchema = z.object({
   startingMelee: z.number().int().nonnegative(),
@@ -28,7 +45,15 @@ const RecruitmentSchema = z.object({
   startingLevel: z.number().int().positive(),
   defaultOfferSize: z.number().int().positive(),
   recruitBonusChance: z.number().min(0).max(1),
+  rarityWeights: RarityWeightsSchema,
 });
+
+// Compile-time exhaustiveness: the schema's keys must cover every RARITY_TIER
+// (a new tier fails this assignment, not a mid-run sampler lookup).
+const _rarityWeightsCoverTiers: Record<UnitRarity, number> = {} as z.infer<
+  typeof RarityWeightsSchema
+>;
+void _rarityWeightsCoverTiers;
 
 export type RecruitmentConfig = z.infer<typeof RecruitmentSchema>;
 

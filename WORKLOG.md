@@ -521,3 +521,14 @@ the approach, not yet the pixels).
 - Browser-verified: pre-turn headers read "Level 5 Ice Mage" etc. (the
   two-word case proves config-name, not casing transform).
 
+### Phase 61 CLOSED (2026-07-22)
+
+All seven cuts landed (`67cd952`…`d2d5ccf`), every exit criterion met:
+accents live (user-approved natively) · weights govern both offer
+surfaces (config-derived tests; ports by construction) · empty-tier
+renormalization proven · price seam authored · display labels shipped ·
+full gauntlet green per-commit with the one owed content re-pin (port
+canary 12→2) committed deliberately. Zero snapshot bumps (v37/v34 held
+as predicted). ROADMAP §61 demoted to a stub per the §60f rule; cursor
+moved to the §63 kickoff; memory updated at the boundary.
+

@@ -44,32 +44,17 @@ deferred by design) · a true-blue palette entry (cyan accepted) · boss
 WAVE pre-roll (identity + layout only) · multi-daemon starting characters
 (the config field stays single until a character needs more).
 
-## Phase 61 — Rarity core
+## Phase 61 — Rarity core ✅ CLOSED 2026-07-22
 
-**Charter:** the round keystone. The `rarity` field on UnitDef (four
-tiers, top tier **legendary**), the tier-weighted sampler inside
-`rollOffer` (weights 6/3/2/1 from JSON; renormalize over non-empty tiers;
-duplicates allowed) — ports inherit by construction — the rarity-accent
-CSS (the P1 seam), and the per-tier port price-multiplier SEAM (seeded,
-not tuned). Tail riders: the display-label layer (archetype + ability
-display names) and the internal `ranged`→`archer` rename.
-
-- **Depends on:** nothing. **Feeds:** §§63/64/68.
-- **Risk:** medium — the first RNG draw-count change (fuzz re-pins begin);
-  the rename touches a load-bearing id string (units/encounters/rollTeam/
-  tests + the FROZEN instrument fixtures) and gets its own deliberate cut
-  line.
-- **Decision point:** the initial-tier ASSIGNMENT design round (user) —
-  tiers for the 13 draftable archetypes; assignment tunes at §68.
-- **Exit criteria:** tiers visible on cards (accent CSS live); weights
-  govern post-encounter AND port offers (headless distribution tests,
-  expectations derived from config); empty-tier renormalization proven;
-  price seam authored; display labels shipped; suite + typecheck + smoke
-  green with re-pins committed deliberately.
-- **Scope guards:** no tier-weight TUNING (§68); no resample-on-duplicate
-  (named fallback only); no price-multiplier tuning (§68).
-
-Cut 2026-07-21 (shape-locked; audit + resolutions → worklog §61):
+**Outcome:** the round keystone shipped in seven cuts over two days —
+four tiers (legendary top) def-resolved by archetype id, the 2-draw
+weighted sampler (dupes by design; ports inherit by construction), the
+USER-SIGNED 5/3/3/2 assignment (ronin/reaver kept up-tier on flavor →
+their buff is a named §68 goal), background-tint accents (glyph tints
+vetoed at playtest), the 1/1.5/2/3 price seam through `unitPriceFor`,
+display names, and the stream-neutral `ranged`→`archer` rename. Zero
+snapshot bumps (v37/v34 hold); the only content re-pin was the port
+canary (12→2). All exit criteria met; detail worklog §61 + git.
 
 - [x] **61a** — the `ranged`→`archer` rename ✅ 2026-07-21: ~500
   replacements, zero re-pins (stream-neutrality proven); worklog §61a.

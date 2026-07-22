@@ -120,6 +120,8 @@ const newBtn = mustQuery<HTMLButtonElement>('#new-btn');
 const deleteBtn = mustQuery<HTMLButtonElement>('#delete-btn');
 const kindBadgeEl = mustQuery<HTMLSpanElement>('#kind-badge');
 const glyphEl = mustQuery<HTMLInputElement>('#glyph');
+// §61g — the player-facing display name (required on every combatant).
+const displayNameEl = mustQuery<HTMLInputElement>('#display-name');
 const draftableEl = mustQuery<HTMLInputElement>('#draftable');
 // §61b — options enumerate from RARITY_TIERS (the schema-driven discipline), so
 // a future tier surfaces here with no edit.
@@ -309,6 +311,10 @@ function attachIdentity(): void {
     activeCombatant().rarity = rarityEl.value as CombatantUnitDef['rarity'];
     refreshDerived();
   });
+  displayNameEl.addEventListener('input', () => {
+    activeCombatant().name = displayNameEl.value;
+    refreshDerived(); // an empty name fails the schema → validation surfaces it
+  });
   // ── Neutral fields ──────────────────────────────────────────────────────────
   neutralHpEl.addEventListener('input', () => {
     const n = Number.parseInt(neutralHpEl.value, 10);
@@ -426,6 +432,7 @@ function syncForm(): void {
   }
 
   editorRoot.classList.remove('sus-restricted');
+  displayNameEl.value = a.name;
   draftableEl.checked = a.draftable;
   rarityEl.value = a.rarity ?? 'common';
   for (const key of STAT_ORDER) {

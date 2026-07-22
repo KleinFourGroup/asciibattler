@@ -144,6 +144,11 @@ const TargetingIdSchema = z.string().refine((id) => TARGETING_IDS.includes(id), 
 // read; the `Combatant`-typed catalog view lives in `archetypes.ts` (`CONFIGS`),
 // which is why the combatant-side readers/tests never see the union.
 export const CombatantUnitDefSchema = z.object({
+  // §61g — the player-facing display name (the `AbilityDef.name` precedent:
+  // required, config-owned — no hardcoded UI label map, no humanized raw id).
+  // The internal key stays the load-bearing id everywhere (serialization,
+  // URL params, error messages); UI surfaces read `nameForArchetype`.
+  name: z.string().min(1),
   glyph: z.string().length(1),
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,

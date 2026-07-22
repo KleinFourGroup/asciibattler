@@ -1,5 +1,6 @@
 {
   "mercenary": {
+    "name": "Mercenary",
     "glyph": "M",
     "abilities": ["sword"],
     "targeting": "nearest",
@@ -32,6 +33,7 @@
     }
   },
   "adventurer": {
+    "name": "Adventurer",
     "glyph": "A",
     "abilities": ["whip"],
     "targeting": "nearest",
@@ -65,6 +67,7 @@
     }
   },
   "ronin": {
+    "name": "Ronin",
     "glyph": "R",
     "abilities": ["katana"],
     "targeting": "nearest",
@@ -98,6 +101,7 @@
     }
   },
   "bandit": {
+    "name": "Bandit",
     "glyph": "B",
     "abilities": ["club"],
     "targeting": "nearest",
@@ -130,6 +134,7 @@
     }
   },
   "archer": {
+    "name": "Archer",
     "glyph": "a",
     "abilities": ["bow"],
     "targeting": "nearest",
@@ -163,6 +168,7 @@
     }
   },
   "rogue": {
+    "name": "Rogue",
     "glyph": "r",
     "abilities": ["gambit_strike","dash"],
     "targeting": "nearest",
@@ -195,6 +201,7 @@
     }
   },
   "healer": {
+    "name": "Healer",
     "glyph": "h",
     "abilities": ["heal_ally"],
     "targeting": "nearest",
@@ -227,6 +234,7 @@
     }
   },
   "mage": {
+    "name": "Mage",
     "glyph": "m",
     "abilities": ["magic_bolt"],
     "targeting": "nearest",
@@ -260,6 +268,7 @@
     }
   },
   "catapult": {
+    "name": "Catapult",
     "glyph": "c",
     "abilities": ["catapult_shot"],
     "targeting": "nearest",
@@ -293,6 +302,7 @@
     }
   },
   "reaver": {
+    "name": "Reaver",
     "glyph": "V",
     "abilities": ["cleaver"],
     "targeting": "nearest",
@@ -326,6 +336,7 @@
     }
   },
   "corrupter": {
+    "name": "Corrupter",
     "glyph": "C",
     "abilities": ["vial"],
     "targeting": "nearest",
@@ -359,6 +370,7 @@
     }
   },
   "ice_mage": {
+    "name": "Ice Mage",
     "glyph": "I",
     "abilities": ["ice_storm"],
     "targeting": "nearest",
@@ -392,6 +404,7 @@
     }
   },
   "warlock": {
+    "name": "Warlock",
     "glyph": "W",
     "abilities": ["hex"],
     "targeting": "nearest",
@@ -425,6 +438,7 @@
     }
   },
   "luminant": {
+    "name": "Luminant",
     "glyph": "L",
     "abilities": ["light_ray"],
     "targeting": "nearest",
@@ -458,6 +472,7 @@
     }
   },
   "banshee": {
+    "name": "Banshee",
     "glyph": "b",
     "abilities": ["wail"],
     "targeting": "nearest",
@@ -491,6 +506,7 @@
     }
   },
   "stormcaller": {
+    "name": "Stormcaller",
     "glyph": "z",
     "abilities": ["chain_lightning"],
     "targeting": "nearest",
@@ -524,6 +540,7 @@
     }
   },
   "shaman": {
+    "name": "Shaman",
     "glyph": "s",
     "abilities": ["raise_dead"],
     "targeting": "nearest",
@@ -556,6 +573,7 @@
     }
   },
   "ghoul": {
+    "name": "Ghoul",
     "glyph": "g",
     "abilities": ["ghoul_claw"],
     "targeting": "nearest",

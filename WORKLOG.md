@@ -497,5 +497,27 @@ the approach, not yet the pixels).
   lesson) · missing-tier schema rejection.
 - NB uncommon+ port prices just rose 1.5–3× — greedy-arm buy decisions
   may shift (canary re-scan if smoke says so); the REAL price read is
-  §68's.
+  §68's. (Outcome: smoke green as-committed — seed 2 still buys; no
+  re-scan needed.)
+
+### 61g — archetype display names (2026-07-22)
+
+- Required `name` on `CombatantUnitDefSchema` (the `AbilityDef.name`
+  precedent — config-owned, no UI label map), emitted FIRST in the
+  formatter (identity before mechanics); 18 names authored (`ice_mage`
+  → "Ice Mage" the two-word case). Neutrals excluded (strict schema —
+  walls don't card).
+- `nameForArchetype` falls back to the RAW ID for neutral/unknown
+  (graceful-degradation naming — a display path never throws).
+- Display sweep: the two UnitCard headers + the CacheOverlay roster
+  picker. Deliberately UNCHANGED: Game.ts dev console.warn +
+  RunConfig URL serialization + error messages (the id IS the right
+  surface there). Editor gained the Name input (empty name → schema
+  validation surfaces it).
+- Retired TODO #82 (the I5 "display label" item — this was its
+  landing); TODO #83 re-scoped to its remaining half (ability
+  DESCRIPTIONS — the name half turned out already live since Yb, the
+  kickoff-audit finding).
+- Browser-verified: pre-turn headers read "Level 5 Ice Mage" etc. (the
+  two-word case proves config-name, not casing transform).
 

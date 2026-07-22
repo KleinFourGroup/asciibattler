@@ -87,8 +87,9 @@ Cut 2026-07-21 (shape-locked; audit + resolutions → worklog §61):
 - [x] **61f** — the per-tier price-multiplier seam ✅ 2026-07-22: seeds
   1/1.5/2/3 through `unitPriceFor` (buy/sell/stock/editor inherit from
   the one formula); editor + formatter taught; worklog §61f.
-- [ ] **61g** — archetype display `name` on the schema + the id-display
-  site sweep (the `AbilityDef.name` precedent).
+- [x] **61g** — archetype display names ✅ 2026-07-22: required `name` on
+  UnitDef + `nameForArchetype`; UnitCard/CacheOverlay sweep; editor Name
+  input; TODO #82 retired; worklog §61g.
 
 ## Phase 62 — Infra: the hcloud box launcher
 

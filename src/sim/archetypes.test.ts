@@ -7,6 +7,7 @@ import {
   targetingForArchetype,
   abilityIdsForArchetype,
   rarityForArchetype,
+  nameForArchetype,
   ARCHETYPE_CONFIG,
   ALL_ARCHETYPES,
   DRAFTABLE_ARCHETYPES,
@@ -185,6 +186,19 @@ describe('archetypes / config round-trip (every archetype)', () => {
     for (const a of ALL_ARCHETYPES) {
       expect(rollUnit(a, new RNG(0)).stats).toEqual(ARCHETYPE_CONFIG[a].baseStats);
     }
+  });
+});
+
+describe('§61g — nameForArchetype (derived from config)', () => {
+  it('resolves every archetype to its configured display name', () => {
+    for (const a of ALL_ARCHETYPES) {
+      expect(nameForArchetype(a), a).toBe(ARCHETYPE_CONFIG[a].name);
+    }
+  });
+
+  it('falls back to the raw id for a neutral / unknown archetype (never throws)', () => {
+    expect(nameForArchetype('wall')).toBe('wall');
+    expect(nameForArchetype('no_such_archetype')).toBe('no_such_archetype');
   });
 });
 

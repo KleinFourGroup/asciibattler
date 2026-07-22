@@ -210,6 +210,17 @@ export function rarityForArchetype(archetype: UnitArchetype): UnitRarity {
 }
 
 /**
+ * §61g — the player-facing display name (`UnitDef.name`, the AbilityDef
+ * precedent), def-resolved by id. Falls back to the RAW ID for a neutral /
+ * unknown archetype — graceful-degradation naming: a missing def shows the
+ * id, never throws in a display path. The id stays the load-bearing key
+ * everywhere else (serialization, URLs, error messages).
+ */
+export function nameForArchetype(archetype: UnitArchetype): string {
+  return CONFIGS[archetype]?.name ?? archetype;
+}
+
+/**
  * §61b — the draft pool PARTITIONED by rarity tier (every tier key present,
  * possibly empty), in `config/units.json` key order within each tier. 61c's
  * sampler rolls a tier over the NON-EMPTY entries (renormalizing the config

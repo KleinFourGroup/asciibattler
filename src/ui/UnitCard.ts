@@ -22,7 +22,12 @@
 import type { UnitTemplate, Archetype, UnitStats, Unit } from '../sim/Unit';
 import type { PromotionInfo } from '../core/events';
 import type { StatusReadout } from '../sim/statusReadout';
-import { abilityIdsForArchetype, glyphForArchetype, rarityForArchetype } from '../sim/archetypes';
+import {
+  abilityIdsForArchetype,
+  glyphForArchetype,
+  nameForArchetype,
+  rarityForArchetype,
+} from '../sim/archetypes';
 import { attackCooldownTicksFor } from '../sim/stats';
 import { abilityDef } from '../config/abilities';
 import { abilityDetailParts } from './abilityDetail';
@@ -366,7 +371,8 @@ function buildHeader(
 
   if (skin === 'promotion') {
     const label = document.createElement('span');
-    label.textContent = `${data.archetype.toUpperCase()} • `;
+    // §61g — the config display name (nameForArchetype), not the raw id.
+    label.textContent = `${nameForArchetype(data.archetype).toUpperCase()} • `;
     const value = document.createElement('span');
     value.className = 'unit-card__level-value';
     value.textContent = `Lv ${data.level}`;
@@ -374,7 +380,7 @@ function buildHeader(
     return { headerEl: header, levelValue: value };
   }
 
-  header.textContent = `Level ${data.level} ${data.archetype}`;
+  header.textContent = `Level ${data.level} ${nameForArchetype(data.archetype)}`;
   // No reveal for this skin — point the handle at the header itself so callers
   // have a non-null target.
   return { headerEl: header, levelValue: header };

@@ -72,6 +72,9 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
       parts.push(`  }${tail}`);
       return;
     }
+    // §61g — the display name: required on every combatant, emitted FIRST
+    // (identity before mechanics — matches the committed file's field order).
+    parts.push(`    "name": ${JSON.stringify(a.name)},`);
     parts.push(`    "glyph": ${JSON.stringify(a.glyph)},`);
     parts.push(`    "abilities": ${JSON.stringify(a.abilities)},`);
     parts.push(`    "targeting": ${JSON.stringify(a.targeting)},`);

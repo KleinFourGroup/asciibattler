@@ -35,7 +35,7 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { UnitTemplate } from '../sim/Unit';
 import { packetById, type PacketConfig, type UseContext } from '../config/packets';
-import { glyphForArchetype } from '../sim/archetypes';
+import { glyphForArchetype, nameForArchetype } from '../sim/archetypes';
 import type { RunPhase } from '../run/Run';
 
 /** How long the value-change pulse glows (matches the bits chip). */
@@ -305,7 +305,8 @@ export class CacheOverlay {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'cache-roster-pick-unit';
-      button.textContent = `${glyphForArchetype(unit.archetype)} ${unit.archetype} — Lv ${unit.level}`;
+      // §61g — the config display name, not the raw id.
+      button.textContent = `${glyphForArchetype(unit.archetype)} ${nameForArchetype(unit.archetype)} — Lv ${unit.level}`;
       button.addEventListener('click', () => {
         this.audio.play('click');
         this.dispatcher.dispatch({ kind: 'usePacket', cacheIndex, rosterIndex });

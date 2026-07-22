@@ -254,6 +254,23 @@ describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
   });
 });
 
+// §61g — the display-name layer (the AbilityDef.name precedent).
+describe('§61g — display names', () => {
+  it('every combatant carries a non-empty display name', () => {
+    for (const [id, def] of COMBATANT_ENTRIES) {
+      expect(typeof def.name, id).toBe('string');
+      expect(def.name.length, id).toBeGreaterThan(0);
+    }
+  });
+
+  it('rejects a combatant with an empty name (required, min 1)', () => {
+    const seed = CombatantUnitDefSchema.parse(UNIT_DEFS.mercenary);
+    expect(CombatantUnitDefSchema.safeParse({ ...seed, name: '' }).success).toBe(false);
+    const { name: _name, ...nameless } = seed;
+    expect(CombatantUnitDefSchema.safeParse(nameless).success).toBe(false);
+  });
+});
+
 // §61b — the rarity field, planted INERT (every entry omits it until 61d's
 // assignment round; the sampler consumes it at 61c). Derived-from-config where
 // the claim is about the catalog; explicit literals where it's about the

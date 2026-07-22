@@ -73,9 +73,8 @@ Cut 2026-07-21 (shape-locked; audit + resolutions → worklog §61):
 
 - [x] **61a** — the `ranged`→`archer` rename ✅ 2026-07-21: ~500
   replacements, zero re-pins (stream-neutrality proven); worklog §61a.
-- [ ] **61b** — the `rarity` field, inert (z.enum default `common`;
-  `UnitRarity` re-pointed; the three UnitCard adapters read the def;
-  `DRAFTABLE_BY_TIER` derived; byte-identical).
+- [x] **61b** — the `rarity` field, inert ✅ 2026-07-21: schema + adapters +
+  `DRAFTABLE_BY_TIER` + editor select/formatter; byte-identical; worklog §61b.
 - [ ] **61c** — `rarityWeights` in recruitment.json + the weighted sampler
   in `rollOffer` (2 draws/slot — THE stream break, smoke re-pins
   deliberate; config-derived distribution tests + synthetic empty-tier

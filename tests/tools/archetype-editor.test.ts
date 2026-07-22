@@ -66,4 +66,19 @@ describe('formatArchetypesJson', () => {
     }
     expect(CombatantUnitDefSchema.parse(parsed.necromancer).draftable).toBe(false);
   });
+
+  // §61b — `rarity` follows the `draftable` emit convention: the default
+  // `common` is omitted (so the pre-61d file stays byte-identical — the verbatim
+  // test above covers that side), and a non-default tier survives the
+  // format→parse round-trip (61d's assignments must not be stripped by a Save).
+  it('emits a non-default rarity and round-trips it; omits the common default', () => {
+    const edited: Record<string, UnitDef> = structuredClone(ALL_UNIT_DEFS);
+    edited.mage = { ...structuredClone(UNIT_DEFS.mage), rarity: 'rare' };
+    const text = formatArchetypesJson(edited);
+
+    expect(text).toContain('"rarity": "rare"');
+    expect(text.match(/"rarity"/g)).toHaveLength(1); // every common stays omitted
+    const reparsed = UnitDefsSchema.parse(JSON.parse(text));
+    expect(reparsed).toEqual(edited);
+  });
 });

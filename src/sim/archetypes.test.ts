@@ -6,9 +6,13 @@ import {
   minRangeForArchetype,
   targetingForArchetype,
   abilityIdsForArchetype,
+  rarityForArchetype,
   ARCHETYPE_CONFIG,
   ALL_ARCHETYPES,
+  DRAFTABLE_ARCHETYPES,
+  DRAFTABLE_BY_TIER,
 } from './archetypes';
+import { RARITY_TIERS } from '../config/units';
 import { damageStatFor } from './stats';
 import { abilityDef } from '../config/abilities';
 import { knownTargetingIds } from './targetingStrategies';
@@ -180,6 +184,33 @@ describe('archetypes / config round-trip (every archetype)', () => {
     // a level-1 roll is baseStats by reference-equality of values, no RNG draws.
     for (const a of ALL_ARCHETYPES) {
       expect(rollUnit(a, new RNG(0)).stats).toEqual(ARCHETYPE_CONFIG[a].baseStats);
+    }
+  });
+});
+
+describe('§61b — rarityForArchetype + DRAFTABLE_BY_TIER (derived from config)', () => {
+  it('resolves every archetype to its configured tier', () => {
+    for (const a of ALL_ARCHETYPES) {
+      expect(rarityForArchetype(a), a).toBe(ARCHETYPE_CONFIG[a].rarity);
+    }
+  });
+
+  it('maps a neutral / unknown id to the harmless common default', () => {
+    // The `targetingForArchetype` optional-chain convention — never throws.
+    expect(rarityForArchetype('wall')).toBe('common');
+    expect(rarityForArchetype('no_such_archetype')).toBe('common');
+  });
+
+  it('partitions the draft pool: tiers are disjoint and union to DRAFTABLE_ARCHETYPES', () => {
+    expect(Object.keys(DRAFTABLE_BY_TIER)).toEqual([...RARITY_TIERS]); // every tier keyed
+    const flat = RARITY_TIERS.flatMap((t) => [...DRAFTABLE_BY_TIER[t]]);
+    expect(flat.length).toBe(DRAFTABLE_ARCHETYPES.length); // disjoint (no double-counting)
+    expect([...flat].sort()).toEqual([...DRAFTABLE_ARCHETYPES].sort()); // exact cover
+    for (const t of RARITY_TIERS) {
+      for (const a of DRAFTABLE_BY_TIER[t]) {
+        expect(ARCHETYPE_CONFIG[a].rarity, `${t}:${a}`).toBe(t); // right bucket
+        expect(ARCHETYPE_CONFIG[a].draftable, `${t}:${a}`).toBe(true); // draftable only
+      }
     }
   });
 });

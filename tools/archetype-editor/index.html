@@ -30,12 +30,14 @@
                 <input id="glyph" type="text" maxlength="1" autocomplete="off" spellcheck="false" />
               </label>
               <label class="inline combatant-only"><input id="draftable" type="checkbox" /> Draftable</label>
+              <label class="inline combatant-only">Rarity <select id="rarity"></select></label>
             </div>
             <p class="hint">
               Single character. Unit glyphs auto-register in the font atlas &mdash; no code
               edit (watch the Font-atlas budget on the right).
               <span class="combatant-only"
-                >Draftable = appears in the player's post-victory recruit offer.</span
+                >Draftable = appears in the player's post-victory recruit offer; Rarity = its
+                §61 draft-pool tier (weights in <code>config/recruitment.json</code>).</span
               >
             </p>
             <!-- Combatant-only -->

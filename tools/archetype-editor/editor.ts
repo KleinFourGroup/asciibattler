@@ -42,6 +42,7 @@
 import './editor.css';
 import {
   ALL_UNIT_DEFS,
+  RARITY_TIERS,
   UnitDefSchema,
   isNeutralUnitDef,
   type CombatantUnitDef,
@@ -120,6 +121,15 @@ const deleteBtn = mustQuery<HTMLButtonElement>('#delete-btn');
 const kindBadgeEl = mustQuery<HTMLSpanElement>('#kind-badge');
 const glyphEl = mustQuery<HTMLInputElement>('#glyph');
 const draftableEl = mustQuery<HTMLInputElement>('#draftable');
+// §61b — options enumerate from RARITY_TIERS (the schema-driven discipline), so
+// a future tier surfaces here with no edit.
+const rarityEl = mustQuery<HTMLSelectElement>('#rarity');
+for (const tier of RARITY_TIERS) {
+  const opt = document.createElement('option');
+  opt.value = tier;
+  opt.textContent = tier;
+  rarityEl.appendChild(opt);
+}
 const abilitiesEl = mustQuery<HTMLDivElement>('#abilities');
 const targetingEl = mustQuery<HTMLDivElement>('#targeting');
 // §38e — neutral-only controls.
@@ -295,6 +305,10 @@ function attachIdentity(): void {
     activeCombatant().draftable = draftableEl.checked;
     refreshDerived();
   });
+  rarityEl.addEventListener('change', () => {
+    activeCombatant().rarity = rarityEl.value as CombatantUnitDef['rarity'];
+    refreshDerived();
+  });
   // ── Neutral fields ──────────────────────────────────────────────────────────
   neutralHpEl.addEventListener('input', () => {
     const n = Number.parseInt(neutralHpEl.value, 10);
@@ -413,6 +427,7 @@ function syncForm(): void {
 
   editorRoot.classList.remove('sus-restricted');
   draftableEl.checked = a.draftable;
+  rarityEl.value = a.rarity ?? 'common';
   for (const key of STAT_ORDER) {
     baseInputs.get(key)!.value = String(a.baseStats[key]);
     growthInputs.get(key)!.value = String(a.growthRates[key]);

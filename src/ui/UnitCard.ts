@@ -22,7 +22,7 @@
 import type { UnitTemplate, Archetype, UnitStats, Unit } from '../sim/Unit';
 import type { PromotionInfo } from '../core/events';
 import type { StatusReadout } from '../sim/statusReadout';
-import { abilityIdsForArchetype, glyphForArchetype } from '../sim/archetypes';
+import { abilityIdsForArchetype, glyphForArchetype, rarityForArchetype } from '../sim/archetypes';
 import { attackCooldownTicksFor } from '../sim/stats';
 import { abilityDef } from '../config/abilities';
 import { abilityDetailParts } from './abilityDetail';
@@ -31,9 +31,11 @@ import { xpProgress, displayLevel } from '../sim/xp';
 import { statusColor } from '../render/statusDisplay';
 import { STAT_LABELS } from './statLabels';
 
-/** Future per-unit accent dimension. Only `common` exists today (unstyled =
- *  current look); the union grows when the rarity system lands. */
-export type UnitRarity = 'common';
+/** §61b — the accent dimension is the config rarity tier (def-resolved via
+ *  `rarityForArchetype`; re-exported so existing importers keep working).
+ *  Accent CSS lands at 61e; until then every tier renders as `common` did. */
+import type { UnitRarity } from '../config/units';
+export type { UnitRarity };
 
 /** Macro layout. `full` = recruit-style detail (stats + abilities); `compact`
  *  = the in-battle HUD card (consumed in Phase Q). */
@@ -113,7 +115,7 @@ export function unitCardFromTemplate(template: UnitTemplate): UnitCardData {
     glyph: glyphForArchetype(template.archetype),
     level: template.level,
     stats: template.stats,
-    rarity: 'common',
+    rarity: rarityForArchetype(template.archetype),
     xp: template.xp,
   };
 }
@@ -131,7 +133,7 @@ export function unitCardFromUnit(unit: Unit): UnitCardData {
     glyph: unit.glyph,
     level: displayLevel(unit.level),
     stats: unit.stats,
-    rarity: 'common',
+    rarity: rarityForArchetype(unit.archetype),
     xp: unit.xp,
     hp: { current: unit.currentHp, max: unit.derived.maxHp },
   };
@@ -146,7 +148,7 @@ export function unitCardFromPromotion(p: PromotionInfo): UnitCardData {
     glyph: p.glyph,
     level: p.oldLevel,
     stats: p.oldStats,
-    rarity: 'common',
+    rarity: rarityForArchetype(p.archetype),
     xp: 0,
   };
 }

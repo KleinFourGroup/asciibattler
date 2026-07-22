@@ -3,6 +3,7 @@ import {
   UNIT_DEFS,
   NEUTRAL_DEFS,
   ALL_UNIT_DEFS,
+  RARITY_TIERS,
   UnitDefSchema,
   UnitDefsSchema,
   CombatantUnitDefSchema,
@@ -250,5 +251,32 @@ describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
     for (const id of ['mercenary', 'bandit', 'archer']) {
       expect(UNIT_DEFS[id], id).toBeDefined();
     }
+  });
+});
+
+// §61b — the rarity field, planted INERT (every entry omits it until 61d's
+// assignment round; the sampler consumes it at 61c). Derived-from-config where
+// the claim is about the catalog; explicit literals where it's about the
+// schema's fixed defaults (the §38b split).
+describe('§61b — rarity tier field', () => {
+  it('every combatant resolves a valid tier (absent ⇒ the common default)', () => {
+    for (const [id, def] of COMBATANT_ENTRIES) {
+      expect(RARITY_TIERS, `${id}.rarity`).toContain(def.rarity);
+    }
+  });
+
+  it('accepts an entry that populates a non-default tier (61d forward-compat)', () => {
+    const seed = CombatantUnitDefSchema.parse(UNIT_DEFS.mercenary);
+    expect(CombatantUnitDefSchema.parse({ ...seed, rarity: 'legendary' }).rarity).toBe('legendary');
+  });
+
+  it('rejects an unknown tier (the typo guard)', () => {
+    const seed = CombatantUnitDefSchema.parse(UNIT_DEFS.mercenary);
+    expect(CombatantUnitDefSchema.safeParse({ ...seed, rarity: 'elite' }).success).toBe(false);
+  });
+
+  it('rejects rarity on a NEUTRAL entry (strict — never drafted, never tiered)', () => {
+    const wall = NeutralUnitDefSchema.parse(NEUTRAL_DEFS.wall);
+    expect(NeutralUnitDefSchema.safeParse({ ...wall, rarity: 'common' }).success).toBe(false);
   });
 });

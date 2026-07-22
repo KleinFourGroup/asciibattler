@@ -66,6 +66,18 @@ import { ABILITY_DEFS } from './abilities';
 /** Defensive cap to catch a designer typo (e.g. 500 instead of 5). */
 const STAT_CAP = 99;
 
+/**
+ * §61b — the rarity tier vocabulary, in ascending-rarity order (the order is
+ * load-bearing: 61c's `rarityWeights` config validates exhaustive over it and
+ * the tier-roll iterates it). Tier 4 is `legendary` (the kickoff lock — "elite"
+ * collides with elite encounters). Rarity is DEF-RESOLVED by archetype id
+ * (the `targetingForArchetype` convention): no serialized per-unit copy, so
+ * offers/rosters/snapshots carry only the archetype string — no snapshot bump.
+ */
+export const RARITY_TIERS = ['common', 'uncommon', 'rare', 'legendary'] as const;
+export const RaritySchema = z.enum(RARITY_TIERS);
+export type UnitRarity = z.infer<typeof RaritySchema>;
+
 const BaseStatsSchema = z.object({
   constitution: z.number().int().nonnegative().max(STAT_CAP),
   strength: z.number().int().nonnegative().max(STAT_CAP),
@@ -149,6 +161,12 @@ export const CombatantUnitDefSchema = z.object({
   // formatter emits the line only when false, keeping the file diff to the
   // exclusions.
   draftable: z.boolean().default(true),
+  // §61b — the draft-pool rarity tier. Default `common`; absent in the JSON ⇒
+  // common (the `draftable` emit-only-when-non-default convention — the editor
+  // formatter mirrors it). 61d's design round assigns the non-default tiers;
+  // 61c's weighted sampler + the card accent CSS consume it. Combatant-only —
+  // neutrals (walls/rubble) are never drafted and their strict schema rejects it.
+  rarity: RaritySchema.default('common'),
 
   // ── §38 fields (planted INERT by 38b) ──────────────────────────────────────
   // All def-resolved by id at spawn (like glyph/targeting), so no WorldSnapshot

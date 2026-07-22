@@ -1,6 +1,6 @@
 import type { RNG } from '../core/RNG';
 import type { Archetype, UnitArchetype, UnitTemplate } from './Unit';
-import { UNIT_DEFS, type CombatantUnitDef } from '../config/units';
+import { UNIT_DEFS, type CombatantUnitDef, type UnitRarity } from '../config/units';
 import { abilityDef } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
 
@@ -198,3 +198,34 @@ export const ALL_ARCHETYPES: readonly Archetype[] = Object.keys(CONFIGS) as Arch
 export const DRAFTABLE_ARCHETYPES: readonly Archetype[] = ALL_ARCHETYPES.filter(
   (a) => CONFIGS[a].draftable,
 );
+
+/**
+ * §61b — per-archetype rarity tier, def-resolved by id (the
+ * `targetingForArchetype` convention — no serialized per-unit copy). The
+ * optional chain maps a neutral/unknown id to `common` (harmless: neutrals are
+ * never drafted or carded; a legacy fixture id shouldn't throw here).
+ */
+export function rarityForArchetype(archetype: UnitArchetype): UnitRarity {
+  return CONFIGS[archetype]?.rarity ?? 'common';
+}
+
+/**
+ * §61b — the draft pool PARTITIONED by rarity tier (every tier key present,
+ * possibly empty), in `config/units.json` key order within each tier. 61c's
+ * sampler rolls a tier over the NON-EMPTY entries (renormalizing the config
+ * weights), then uniform within the tier. Derived from the same flags as
+ * `DRAFTABLE_ARCHETYPES`, so the union over tiers IS that list — a new
+ * archetype joins its tier automatically.
+ */
+function draftableOfTier(tier: UnitRarity): readonly Archetype[] {
+  return DRAFTABLE_ARCHETYPES.filter((a) => CONFIGS[a].rarity === tier);
+}
+// Explicit keys (not Object.fromEntries, which erases the key union): the
+// exhaustive Record type makes a future RARITY_TIERS addition a compile error
+// here instead of a silently-missing bucket.
+export const DRAFTABLE_BY_TIER: Readonly<Record<UnitRarity, readonly Archetype[]>> = {
+  common: draftableOfTier('common'),
+  uncommon: draftableOfTier('uncommon'),
+  rare: draftableOfTier('rare'),
+  legendary: draftableOfTier('legendary'),
+};

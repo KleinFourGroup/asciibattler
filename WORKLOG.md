@@ -322,3 +322,25 @@ was caught:
 changes — the predicted byte-stream neutrality, proven** (the smoke
 pins encode exact per-seed outcomes; any stream shift would have
 re-pinned).
+
+### 61b — the rarity field, inert (2026-07-21)
+
+- `RARITY_TIERS` / `RaritySchema` / `UnitRarity` live in config/units.ts
+  (ascending order is load-bearing — 61c's weights validate exhaustive
+  over it); `rarity: RaritySchema.default('common')` on the combatant
+  schema only (neutrals reject it via strict — pinned).
+- Def-resolved by id: `rarityForArchetype` (optional-chain → common, the
+  targetingForArchetype convention) + `DRAFTABLE_BY_TIER` (explicit-key
+  record, NOT Object.fromEntries — fromEntries erases the key union and
+  tripped TS2352; the exhaustive Record makes a future tier a compile
+  error instead of a silent missing bucket). UnitCard's `UnitRarity`
+  re-pointed to config; all three adapters read the def.
+- **Editor stripping hazard closed in-step:** the archetype-editor
+  formatter learned `rarity` (emit only when non-default, the
+  `draftable` convention) so a post-61d Save can't strip assignments;
+  round-trip pinned (emit + reparse; commons stay omitted so the
+  pre-61d file is byte-identical). Editor UI got the schema-driven
+  Rarity select (options enumerate RARITY_TIERS).
+- Verify: 2207 green (+8), typecheck clean, fuzz:smoke via the commit
+  hook; editor select verified in the dev preview by DOM eval (4 tiers,
+  change wiring updates the working doc, zero console errors).

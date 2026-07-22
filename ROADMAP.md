@@ -84,9 +84,9 @@ Cut 2026-07-21 (shape-locked; audit + resolutions → worklog §61):
 - [x] **61e** — rarity-accent CSS ✅ 2026-07-22, REWORKED same-day on the
   playtest read: accent = card BACKGROUND tint (all four tiers), glyphs
   back to pure team colors; computed-style-verified; worklog §61e.
-- [ ] **61f** — the per-tier port price-multiplier seam in prices.json
-  (exhaustive record, seeds 1/1.5/2/3, threaded through `unitPriceFor`;
-  tuned §68).
+- [x] **61f** — the per-tier price-multiplier seam ✅ 2026-07-22: seeds
+  1/1.5/2/3 through `unitPriceFor` (buy/sell/stock/editor inherit from
+  the one formula); editor + formatter taught; worklog §61f.
 - [ ] **61g** — archetype display `name` on the schema + the id-display
   site sweep (the `AbilityDef.name` precedent).
 

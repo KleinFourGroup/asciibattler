@@ -60,6 +60,11 @@ const addArchetypeSel = mustQuery<HTMLSelectElement>('#add-archetype-sel');
 const addArchetypeBtn = mustQuery<HTMLButtonElement>('#add-archetype-btn');
 const levelGrowthEl = mustQuery<HTMLInputElement>('#level-growth');
 const jitterEl = mustQuery<HTMLInputElement>('#jitter');
+// §61f — the per-tier rarity multipliers (a required seam field; §68 tunes).
+const multCommonEl = mustQuery<HTMLInputElement>('#mult-common');
+const multUncommonEl = mustQuery<HTMLInputElement>('#mult-uncommon');
+const multRareEl = mustQuery<HTMLInputElement>('#mult-rare');
+const multLegendaryEl = mustQuery<HTMLInputElement>('#mult-legendary');
 const packetDefaultEl = mustQuery<HTMLInputElement>('#packet-default');
 const packetOverridesEl = mustQuery<HTMLDivElement>('#packet-overrides');
 const addPacketOverrideBtn = mustQuery<HTMLButtonElement>('#add-packet-override');
@@ -95,6 +100,18 @@ function attachScalars(): void {
   });
   numInput(jitterEl, working.units.jitter, (v) => {
     working.units.jitter = Math.min(0.9, Math.max(0, v));
+  });
+  numInput(multCommonEl, working.units.rarityMultiplier.common, (v) => {
+    working.units.rarityMultiplier.common = Math.max(0.25, v);
+  });
+  numInput(multUncommonEl, working.units.rarityMultiplier.uncommon, (v) => {
+    working.units.rarityMultiplier.uncommon = Math.max(0.25, v);
+  });
+  numInput(multRareEl, working.units.rarityMultiplier.rare, (v) => {
+    working.units.rarityMultiplier.rare = Math.max(0.25, v);
+  });
+  numInput(multLegendaryEl, working.units.rarityMultiplier.legendary, (v) => {
+    working.units.rarityMultiplier.legendary = Math.max(0.25, v);
   });
   numInput(packetDefaultEl, working.packets.default, (v) => {
     working.packets.default = intAtLeast(1, v);
@@ -311,6 +328,10 @@ function rebuildAll(): void {
 function syncScalarInputs(): void {
   levelGrowthEl.value = String(working.units.levelGrowth);
   jitterEl.value = String(working.units.jitter);
+  multCommonEl.value = String(working.units.rarityMultiplier.common);
+  multUncommonEl.value = String(working.units.rarityMultiplier.uncommon);
+  multRareEl.value = String(working.units.rarityMultiplier.rare);
+  multLegendaryEl.value = String(working.units.rarityMultiplier.legendary);
   packetDefaultEl.value = String(working.packets.default);
   daemonDefaultEl.value = String(working.daemons.default);
   sellFractionEl.value = String(working.sellFraction);

@@ -34,10 +34,30 @@
                 <input id="jitter" type="number" step="0.05" min="0" max="0.9" />
               </label>
             </div>
+            <div class="field-row" style="margin-top: 10px">
+              <label class="pool-num">
+                <span>× common</span>
+                <input id="mult-common" type="number" step="0.25" min="0.25" />
+              </label>
+              <label class="pool-num">
+                <span>× uncommon</span>
+                <input id="mult-uncommon" type="number" step="0.25" min="0.25" />
+              </label>
+              <label class="pool-num">
+                <span>× rare</span>
+                <input id="mult-rare" type="number" step="0.25" min="0.25" />
+              </label>
+              <label class="pool-num">
+                <span>× legendary</span>
+                <input id="mult-legendary" type="number" step="0.25" min="0.25" />
+              </label>
+            </div>
             <p class="hint">
               Every DRAFTABLE archetype must carry a base price (port stock rolls from the
               draft pool — the boot assert). The dock multiplies the curve price by a factor
-              from [1−jitter, 1+jitter] off the port price stream.
+              from [1−jitter, 1+jitter] off the port price stream. The §61 rarity
+              multipliers scale the whole curve per tier (an archetype's tier comes from
+              <code>config/units.json</code>).
             </p>
           </section>
           <section class="card">

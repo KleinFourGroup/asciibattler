@@ -16,7 +16,13 @@
       "shaman": 30
     },
     "levelGrowth": 1.05,
-    "jitter": 0.15
+    "jitter": 0.15,
+    "rarityMultiplier": {
+      "common": 1,
+      "uncommon": 1.5,
+      "rare": 2,
+      "legendary": 3
+    }
   },
   "packets": {
     "default": 15,

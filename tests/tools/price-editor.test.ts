@@ -55,6 +55,8 @@ describe('formatPricesJson', () => {
         baseByArchetype: { mercenary: 10, healer: 40 },
         levelGrowth: 1.5,
         jitter: 0.25,
+        // §61f — required seam field; non-uniform values exercise the emit.
+        rarityMultiplier: { common: 1, uncommon: 1.25, rare: 2.5, legendary: 4 },
       },
       packets: { default: 12, byId: {} },
       daemons: { default: 50, byId: { moneta: 90, laverna: 35 } },

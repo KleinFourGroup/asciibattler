@@ -36,7 +36,7 @@
 
 import { z } from 'zod';
 import pricesJson from '../../config/prices.json';
-import { ALL_ARCHETYPES, DRAFTABLE_ARCHETYPES } from '../sim/archetypes';
+import { ALL_ARCHETYPES, DRAFTABLE_ARCHETYPES, rarityForArchetype } from '../sim/archetypes';
 import { PACKET_IDS } from './packets';
 import { DAEMONS } from './daemons';
 
@@ -49,6 +49,18 @@ export const PricesSchema = z.object({
     baseByArchetype: z.record(z.string(), PriceIntSchema),
     levelGrowth: z.number().min(1),
     jitter: z.number().min(0).max(0.9),
+    // §61f — the per-tier price-multiplier SEAM (kickoff lock: authored with
+    // the rarity field so pricing/editor code needs no second pass; seed
+    // values 1/1.5/2/3, TUNED only at the §68 balance pass — price against
+    // REALIZED value). Applied inside `unitPriceFor`, so buy, sell (a
+    // fraction of buy), port stock, and the editor preview all inherit it
+    // from the one formula. Exhaustive over the rarity tiers.
+    rarityMultiplier: z.object({
+      common: z.number().positive(),
+      uncommon: z.number().positive(),
+      rare: z.number().positive(),
+      legendary: z.number().positive(),
+    }),
   }),
   packets: z.object({
     default: PriceIntSchema,
@@ -124,17 +136,20 @@ assertPriceRefs(PRICES, {
  */
 
 /**
- * The deterministic (UNJITTERED) unit price: base × levelGrowth^(level−1),
- * rounded once here (the runStats.ts read-site-rounds contract). The §50d
- * stock roll applies the jitter factor on top with its own stream. Throws
- * on an unpriced archetype — the boot assert makes that unreachable for
- * draftable stock; a non-draftable archetype reaching a port IS the bug.
+ * The deterministic (UNJITTERED) unit price: base × levelGrowth^(level−1)
+ * × the §61f per-tier rarity multiplier, rounded once here (the runStats.ts
+ * read-site-rounds contract). The tier resolves from the archetype id (the
+ * def-resolved convention — no tier parameter to drift from the catalog).
+ * The §50d stock roll applies the jitter factor on top with its own stream.
+ * Throws on an unpriced archetype — the boot assert makes that unreachable
+ * for draftable stock; a non-draftable archetype reaching a port IS the bug.
  */
 export function unitPriceFor(prices: PricesConfig, archetype: string, level: number): number {
   const base = prices.units.baseByArchetype[archetype];
   if (base === undefined) throw new Error(`unitPrice: archetype '${archetype}' has no base price`);
   const clamped = Math.max(1, level);
-  return Math.round(base * Math.pow(prices.units.levelGrowth, clamped - 1));
+  const multiplier = prices.units.rarityMultiplier[rarityForArchetype(archetype)];
+  return Math.round(base * Math.pow(prices.units.levelGrowth, clamped - 1) * multiplier);
 }
 
 export function unitPrice(archetype: string, level: number): number {

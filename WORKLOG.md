@@ -474,4 +474,28 @@ an inset edge-glow added (`box-shadow: inset 0 0 16px rgba(gold,.25)` —
 states that set their own box-shadow still win). Options considered:
 raw alpha raise (rejected — monochromes the amber skins), brighter-gold
 hue (bends the palette lock), shimmer (off-brand). Computed-style
-verified; user eyeball pending.
+verified; the glow's native eyeball is still pending (the user approved
+the approach, not yet the pixels).
+
+### 61f — the per-tier price-multiplier seam (2026-07-22)
+
+- `units.rarityMultiplier` in prices.json (seeds 1/1.5/2/3 — the
+  kickoff lock; TUNED only at §68 against REALIZED value), schema
+  exhaustive over tiers, applied inside `unitPriceFor` with the tier
+  def-resolved from the archetype id (no tier parameter to drift).
+  One formula ⇒ buy price, sell refund (fraction of buy — a legendary
+  refunds proportionally), §50d port stock, and the price-editor
+  preview all inherit; the display-honesty discipline holds free.
+- Editor taught in-step (the 61b stripping lesson, now standard): the
+  price-editor FORMATTER emits the block (required field, always
+  present — unlike the per-entry `rarity` override convention) + four
+  UI inputs on the levelGrowth/jitter pattern. Byte-identity test =
+  the hand-placement proof; the empty-branches fixture gained the
+  field with non-uniform values to exercise the emit.
+- Tests: curve test now derives base × growth^(l−1) × mult-via-rarity
+  from config · seam non-vacuousness (some active tier ≠ ×1 — the 47b
+  lesson) · missing-tier schema rejection.
+- NB uncommon+ port prices just rose 1.5–3× — greedy-arm buy decisions
+  may shift (canary re-scan if smoke says so); the REAL price read is
+  §68's.
+

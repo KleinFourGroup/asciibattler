@@ -52,7 +52,15 @@ export function formatPricesJson(prices: PricesConfig): string {
   lines.push(
     '    },',
     `    "levelGrowth": ${JSON.stringify(prices.units.levelGrowth)},`,
-    `    "jitter": ${JSON.stringify(prices.units.jitter)}`,
+    `    "jitter": ${JSON.stringify(prices.units.jitter)},`,
+    // §61f — the per-tier rarity multiplier, always present (a required seam
+    // field, not a per-entry override), emitted in tier order.
+    '    "rarityMultiplier": {',
+    `      "common": ${JSON.stringify(prices.units.rarityMultiplier.common)},`,
+    `      "uncommon": ${JSON.stringify(prices.units.rarityMultiplier.uncommon)},`,
+    `      "rare": ${JSON.stringify(prices.units.rarityMultiplier.rare)},`,
+    `      "legendary": ${JSON.stringify(prices.units.rarityMultiplier.legendary)}`,
+    '    }',
     '  },',
   );
 

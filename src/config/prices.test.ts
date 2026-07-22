@@ -8,13 +8,20 @@ import {
   sellPrice,
   unitPrice,
 } from './prices';
-import { ALL_ARCHETYPES, DRAFTABLE_ARCHETYPES } from '../sim/archetypes';
+import { ALL_ARCHETYPES, DRAFTABLE_ARCHETYPES, rarityForArchetype } from '../sim/archetypes';
+import { RARITY_TIERS } from './units';
 import { PACKETS, PACKET_IDS } from './packets';
 import { DAEMONS } from './daemons';
 
 /** A minimal valid config for the synthetic assert/schema cases. */
+const FLAT_MULTIPLIER = { common: 1, uncommon: 1, rare: 1, legendary: 1 };
 const SYNTHETIC = {
-  units: { baseByArchetype: { alpha: 10 }, levelGrowth: 1.5, jitter: 0.1 },
+  units: {
+    baseByArchetype: { alpha: 10 },
+    levelGrowth: 1.5,
+    jitter: 0.1,
+    rarityMultiplier: FLAT_MULTIPLIER,
+  },
   packets: { default: 5, byId: {} },
   daemons: { default: 7, byId: {} },
   sellFraction: 0.5,
@@ -56,16 +63,36 @@ describe('50a — the price book (config/prices.json)', () => {
     }
   });
 
-  it('unitPrice scales the config base by the config growth curve, rounding at the read site', () => {
+  it('unitPrice scales the config base by the growth curve × the tier multiplier, rounding once', () => {
+    // §61f — the whole expectation derives from config: base, curve, and the
+    // per-tier multiplier resolved through the archetype's own rarity.
     for (const archetype of DRAFTABLE_ARCHETYPES) {
       const base = PRICES.units.baseByArchetype[archetype]!;
-      expect(unitPrice(archetype, 1)).toBe(base);
+      const mult = PRICES.units.rarityMultiplier[rarityForArchetype(archetype)];
+      expect(unitPrice(archetype, 1)).toBe(Math.round(base * mult));
       for (const level of [2, 5, 10]) {
         expect(unitPrice(archetype, level)).toBe(
-          Math.round(base * Math.pow(PRICES.units.levelGrowth, level - 1)),
+          Math.round(base * Math.pow(PRICES.units.levelGrowth, level - 1) * mult),
         );
       }
     }
+  });
+
+  it('§61f — every tier multiplier is authored positive and the seam is non-vacuous', () => {
+    for (const tier of RARITY_TIERS) {
+      expect(PRICES.units.rarityMultiplier[tier], tier).toBeGreaterThan(0);
+    }
+    // Non-vacuous: at least one draftable archetype resolves a non-1 multiplier
+    // (all-1 would make the seam indistinguishable from no seam — the 47b lesson).
+    const activeTiers = new Set(DRAFTABLE_ARCHETYPES.map((a) => rarityForArchetype(a)));
+    const multipliers = [...activeTiers].map((t) => PRICES.units.rarityMultiplier[t]);
+    expect(multipliers.some((m) => m !== 1)).toBe(true);
+  });
+
+  it('§61f — the schema rejects a missing tier in rarityMultiplier', () => {
+    const broken = structuredClone(SYNTHETIC) as Record<string, unknown>;
+    delete (broken.units as { rarityMultiplier: Record<string, number> }).rarityMultiplier.rare;
+    expect(PricesSchema.safeParse(broken).success).toBe(false);
   });
 
   it('unitPrice clamps sub-1 levels to level 1 and throws on an unpriced archetype', () => {

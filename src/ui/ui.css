@@ -511,8 +511,14 @@ body {
   background-image: linear-gradient(rgba(157, 0, 255, 0.16), rgba(157, 0, 255, 0.16));
 }
 
+/* Legendary gets an extra INSET edge-glow on top of its wash ("lit from
+   within") — the flat tint alone read muted next to the amber card chrome
+   (user playtest). box-shadow composes with the border; a skin/interaction
+   state that sets its own box-shadow (preturn selected etc.) outspecifies
+   this and wins while active, same doctrine as the hover wash. */
 .unit-card--rarity-legendary {
-  background-image: linear-gradient(rgba(255, 176, 0, 0.1), rgba(255, 176, 0, 0.1));
+  background-image: linear-gradient(rgba(255, 176, 0, 0.12), rgba(255, 176, 0, 0.12));
+  box-shadow: inset 0 0 16px rgba(255, 176, 0, 0.25);
 }
 
 .unit-card__header {

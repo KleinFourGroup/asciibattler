@@ -463,3 +463,15 @@ Re-verified by computed style (pre-turn + battle, player and enemy).
 Watch-item for the user's next run: enemy cards carry the subtle tint
 too (a faint GREEN wash on enemy commons — green is ally vocabulary);
 scoping `.unit-card--enemy` out is one line if vetoed.
+
+**Background verdict (user, native): APPROVED — "they look great on the
+HUD cards too."** Named fallback on record: if the faint green on enemy
+commons ever confuses, swap the COMMON wash to a neutral gray (user
+suggestion) rather than scoping enemies out. One refinement from the
+same read: **legendary gold read muted** → the wash bumped .10→.12 AND
+an inset edge-glow added (`box-shadow: inset 0 0 16px rgba(gold,.25)` —
+"lit from within"; structurally different, not just louder; interaction
+states that set their own box-shadow still win). Options considered:
+raw alpha raise (rejected — monochromes the amber skins), brighter-gold
+hue (bends the palette lock), shimmer (off-brand). Computed-style
+verified; user eyeball pending.

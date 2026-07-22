@@ -16,7 +16,7 @@ function sampleRoster(): UnitTemplate[] {
   return [
     scaledUnit('mage', 3),
     scaledUnit('mercenary', 1),
-    scaledUnit('ranged', 5),
+    scaledUnit('archer', 5),
     scaledUnit('mercenary', 4),
     scaledUnit('healer', 2),
   ];
@@ -59,14 +59,14 @@ describe('orderRoster', () => {
   it("'level' sorts strongest-first, stable on recruitment order for ties", () => {
     const roster = [
       scaledUnit('mercenary', 2),
-      scaledUnit('ranged', 5),
+      scaledUnit('archer', 5),
       scaledUnit('mage', 2),
       scaledUnit('healer', 5),
     ];
     const out = orderRoster(roster, 'level');
     expect(out.map((u) => u.level)).toEqual([5, 5, 2, 2]);
     // Ties hold recruitment order: ranged(5) drafted before healer(5); merc(2) before mage(2).
-    expect(out.map((u) => u.archetype)).toEqual(['ranged', 'healer', 'mercenary', 'mage']);
+    expect(out.map((u) => u.archetype)).toEqual(['archer', 'healer', 'mercenary', 'mage']);
   });
 
   it('is deterministic (same input → same output)', () => {

@@ -28,9 +28,9 @@ describe('archetypes / rollUnit (E1: returns baseStats verbatim, no rolls)', () 
 
   it('produces a ranged template equal to the configured baseStats', () => {
     const rng = new RNG(1);
-    const expected = ARCHETYPE_CONFIG.ranged.baseStats;
-    const t = rollUnit('ranged', rng);
-    expect(t.archetype).toBe('ranged');
+    const expected = ARCHETYPE_CONFIG.archer.baseStats;
+    const t = rollUnit('archer', rng);
+    expect(t.archetype).toBe('archer');
     expect(t.stats).toEqual(expected);
   });
 
@@ -52,7 +52,7 @@ describe('archetypes / rollUnit (E1: returns baseStats verbatim, no rolls)', () 
   it('melee and ranged templates have non-overlapping stat profiles', () => {
     // Smoke check that the JSON wasn't accidentally symmetric.
     const m = rollUnit('mercenary', new RNG(0));
-    const r = rollUnit('ranged', new RNG(0));
+    const r = rollUnit('archer', new RNG(0));
     expect(m.stats.strength).toBeGreaterThan(r.stats.strength);
     expect(r.stats.ranged).toBeGreaterThan(m.stats.ranged);
   });
@@ -61,18 +61,18 @@ describe('archetypes / rollUnit (E1: returns baseStats verbatim, no rolls)', () 
 describe('archetypes / lookups', () => {
   it('glyphForArchetype maps to M / a', () => {
     expect(glyphForArchetype('mercenary')).toBe('M');
-    expect(glyphForArchetype('ranged')).toBe('a');
+    expect(glyphForArchetype('archer')).toBe('a');
   });
 
   it('rangeForArchetype is the max over abilities (melee=1, ranged>1)', () => {
     expect(rangeForArchetype('mercenary')).toBe(1);
-    expect(rangeForArchetype('ranged')).toBeGreaterThan(1);
+    expect(rangeForArchetype('archer')).toBeGreaterThan(1);
   });
 
   it('minRangeForArchetype is the floor of the longest-range attack (O4, config-derived)', () => {
     // Balance-proof: the engagement floor IS the attack ability's minRangeCells,
     // whether that's 0 (the O4a plumbing commit) or set (the O4b value commit).
-    expect(minRangeForArchetype('ranged')).toBe(abilityDef('bow').minRangeCells);
+    expect(minRangeForArchetype('archer')).toBe(abilityDef('bow').minRangeCells);
     expect(minRangeForArchetype('mage')).toBe(abilityDef('magic_bolt').minRangeCells);
     expect(minRangeForArchetype('catapult')).toBe(abilityDef('catapult_shot').minRangeCells);
     // Melee carries no floor; the rogue's `self`-target dash is excluded, so its

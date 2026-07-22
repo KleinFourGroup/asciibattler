@@ -71,9 +71,8 @@ display names) and the internal `ranged`→`archer` rename.
 
 Cut 2026-07-21 (shape-locked; audit + resolutions → worklog §61):
 
-- [ ] **61a** — the `ranged`→`archer` rename, first (mechanical: config
-  keys + literals + tests + frozen-fixture KEY renames; predicted
-  byte-stream-NEUTRAL — zero re-pins IS the check).
+- [x] **61a** — the `ranged`→`archer` rename ✅ 2026-07-21: ~500
+  replacements, zero re-pins (stream-neutrality proven); worklog §61a.
 - [ ] **61b** — the `rarity` field, inert (z.enum default `common`;
   `UnitRarity` re-pointed; the three UnitCard adapters read the def;
   `DRAFTABLE_BY_TIER` derived; byte-identical).

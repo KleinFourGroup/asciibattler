@@ -19,7 +19,7 @@
  *   # X2d — --hops / --roster apply to a plain run too (boss/elite isolation: every
  *   # run is that fight). The boss fields only at its node kind, so --hops=2 puts the
  *   # terminal boss node one step in:
- *   npm run fuzz -- --encounter=bandit-king --hops=2 --roster=mercenary:6,ranged:6,mage:6 --per-encounter
+ *   npm run fuzz -- --encounter=bandit-king --hops=2 --roster=mercenary:6,archer:6,mage:6 --per-encounter
  *   npm run fuzz -- --layout=junctionAmbush --per-hop   # force ONE layout (clean full sample)
  *   npm run fuzz -- --layout=procedural --per-hop       # force PROCEDURAL maps every battle (M6 isolate)
  *
@@ -69,7 +69,7 @@
  *   # J4 — arena mode: tune an objective strategy in a single forced battle
  *   # (no Run wrapper). No --objective → enumerate the proclivity menu, rank by
  *   # win rate, write output/best-objective.json:
- *   npm run fuzz -- --arena --seeds=40 --roster=mercenary:5,mercenary:5,ranged:5
+ *   npm run fuzz -- --arena --seeds=40 --roster=mercenary:5,mercenary:5,archer:5
  *   npm run fuzz -- --arena --objective=stat:evasion:lowest --layout=junctionAmbush
  *   npm run fuzz -- --arena --objective=output/best-objective.json   # inspect one
  *

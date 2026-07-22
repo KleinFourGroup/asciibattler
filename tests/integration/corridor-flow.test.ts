@@ -54,8 +54,8 @@ describe('E5: corridor flow (target stickiness, no thrash)', () => {
           rollUnit('mercenary', teamRng),
           rollUnit('mercenary', teamRng),
           rollUnit('mercenary', teamRng),
-          rollUnit('ranged', teamRng),
-          rollUnit('ranged', teamRng),
+          rollUnit('archer', teamRng),
+          rollUnit('archer', teamRng),
         ];
         const encounter: BattleEncounter = {
           worldSeed: seed,

@@ -48,7 +48,7 @@ function runRogueBattle(seed: number): {
       rollUnit('mercenary', new RNG(seed + 1)),
       rollUnit('mercenary', new RNG(seed + 2)),
     ],
-    enemyTeam: [rollUnit('ranged', new RNG(seed + 10))],
+    enemyTeam: [rollUnit('archer', new RNG(seed + 10))],
   };
 
   const world = new World(bus, new RNG(seed));

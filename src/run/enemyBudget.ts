@@ -146,7 +146,7 @@ export function rollEnemyWave(
   for (let i = 0; i < count; i++) {
     // I5: the melee slot fields `bandit` (low-growth enemy fodder), not the
     // player-grade `mercenary`. See the function comment for the difficulty note.
-    const archetype: Archetype = i < meleeCount ? 'bandit' : 'ranged';
+    const archetype: Archetype = i < meleeCount ? 'bandit' : 'archer';
     team.push(scaledUnit(archetype, levels[i]!));
   }
   return team;

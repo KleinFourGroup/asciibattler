@@ -50,10 +50,10 @@ export const STANDARD_ROSTER: readonly RosterEntry[] = [
   { archetype: 'mercenary', level: 7 },
   { archetype: 'mercenary', level: 7 },
   { archetype: 'mercenary', level: 7 },
-  { archetype: 'ranged', level: 9 },
-  { archetype: 'ranged', level: 7 },
-  { archetype: 'ranged', level: 7 },
-  { archetype: 'ranged', level: 7 },
+  { archetype: 'archer', level: 9 },
+  { archetype: 'archer', level: 7 },
+  { archetype: 'archer', level: 7 },
+  { archetype: 'archer', level: 7 },
 ];
 
 export interface GauntletCell {

@@ -326,10 +326,10 @@ export function isAutoTargetNeutral(archetype: string): boolean {
  * compile time; with the union relaxed to an open string id, a typo/rename/removal
  * would otherwise surface only at spawn. Keep this list in sync with the literal
  * constructions the 38a audit found: `Run.ts` start team (`mercenary`) +
- * `enemyBudget.ts` default enemy comp (`bandit`/`ranged`). Summon targets get
+ * `enemyBudget.ts` default enemy comp (`bandit`/`archer`). Summon targets get
  * their own resolve check in `assertSummonRefsResolve`.
  */
-const REQUIRED_UNIT_IDS = ['mercenary', 'bandit', 'ranged'] as const;
+const REQUIRED_UNIT_IDS = ['mercenary', 'bandit', 'archer'] as const;
 (function assertRequiredUnitsPresent(): void {
   for (const id of REQUIRED_UNIT_IDS) {
     if (!(id in UNIT_DEFS)) {

@@ -85,15 +85,15 @@ function runHeadlessBattle(seed: number, scenario: Scenario): { world: World; ti
     rollUnit('mercenary', teamRng),
     rollUnit('mercenary', teamRng),
     rollUnit('mercenary', teamRng),
-    rollUnit('ranged', teamRng),
-    rollUnit('ranged', teamRng),
+    rollUnit('archer', teamRng),
+    rollUnit('archer', teamRng),
   ];
   const enemyTeam = [
     rollUnit('mercenary', teamRng),
     rollUnit('mercenary', teamRng),
     rollUnit('mercenary', teamRng),
-    rollUnit('ranged', teamRng),
-    rollUnit('ranged', teamRng),
+    rollUnit('archer', teamRng),
+    rollUnit('archer', teamRng),
   ];
   const encounter: BattleEncounter = {
     worldSeed: seed,

@@ -144,7 +144,7 @@ describe('EventBus', () => {
       units: [{ archetype: 'mercenary', level: 1, stats: stubStats, xp: 0 }],
     });
     bus.emit('recruit:chosen', {
-      unitTemplate: { archetype: 'ranged', level: 1, stats: stubStats, xp: 0 },
+      unitTemplate: { archetype: 'archer', level: 1, stats: stubStats, xp: 0 },
     });
     // Reaching this line means every catalog entry compiles.
     expect(true).toBe(true);

@@ -274,12 +274,12 @@ describe('inertDerived', () => {
 });
 
 describe('basicAttackDamage', () => {
-  function makeUnit(arch: 'mercenary' | 'ranged' | 'environment', stats: UnitStats): Unit {
+  function makeUnit(arch: 'mercenary' | 'archer' | 'environment', stats: UnitStats): Unit {
     return new Unit({
       id: 1,
       team: arch === 'environment' ? 'neutral' : 'player',
       archetype: arch,
-      glyph: arch === 'mercenary' ? 'M' : arch === 'ranged' ? 'a' : '#',
+      glyph: arch === 'mercenary' ? 'M' : arch === 'archer' ? 'a' : '#',
       stats,
       derived: arch === 'environment' ? inertDerived(1) : deriveStats(stats, 1),
       position: { x: 0, y: 0 },
@@ -293,7 +293,7 @@ describe('basicAttackDamage', () => {
   });
 
   it('ranged → might + ranged stat', () => {
-    const u = makeUnit('ranged', { ...TEMPLATE, ranged: 7 });
+    const u = makeUnit('archer', { ...TEMPLATE, ranged: 7 });
     expect(basicAttackDamage(u, 0)).toBe(7);
     expect(basicAttackDamage(u, 2)).toBe(9);
   });

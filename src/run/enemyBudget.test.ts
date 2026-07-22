@@ -15,7 +15,7 @@ import type { UnitTemplate } from '../sim/Unit';
 
 /** Build a fake roster at the given per-unit levels (stats = baseStats; only
  *  `level` matters to the budget math). */
-function roster(levels: number[], archetype: 'mercenary' | 'ranged' = 'mercenary'): UnitTemplate[] {
+function roster(levels: number[], archetype: 'mercenary' | 'archer' = 'mercenary'): UnitTemplate[] {
   return levels.map((level) => ({
     archetype,
     level,
@@ -190,7 +190,7 @@ describe('buildEnemyTeam (balance-proof — derives from DIFFICULTY)', () => {
     expect(bandits).toBe(Math.round(team.length * (1 - DIFFICULTY.enemyArcherRatio)));
     // No `mercenary` ever appears on the enemy side post-I5.
     expect(team.some((u) => u.archetype === 'mercenary')).toBe(false);
-    expect(team.every((u) => u.archetype === 'bandit' || u.archetype === 'ranged')).toBe(true);
+    expect(team.every((u) => u.archetype === 'bandit' || u.archetype === 'archer')).toBe(true);
   });
 
   it('budget follows the affine formula, floored at minBudget', () => {

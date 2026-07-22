@@ -467,14 +467,14 @@ describe('MovementBehavior / minRange kiting (O4)', () => {
   const cheb = (a: GridCoord, b: GridCoord) =>
     Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
   // Config-derived so these hold at whatever floor the bow ships with.
-  const FLOOR = minRangeForArchetype('ranged');
-  const REACH = rangeForArchetype('ranged');
+  const FLOOR = minRangeForArchetype('archer');
+  const REACH = rangeForArchetype('archer');
 
   it('a ranged unit with an enemy INSIDE minRange kites OUT to the band', () => {
     // An enemy one cell inside the floor: the unit backs away to re-establish
     // standoff instead of holding point-blank (the anti-blob fall-back).
     const { world, units, moves } = scene([
-      { team: 'player', x: 5, y: 5, archetype: 'ranged', attackRange: REACH, moveCooldownTicks: 1 },
+      { team: 'player', x: 5, y: 5, archetype: 'archer', attackRange: REACH, moveCooldownTicks: 1 },
       { team: 'enemy', x: 5 + (FLOOR - 1), y: 5, inert: true },
     ]);
     expect(cheb(units[0]!.position, units[1]!.position)).toBe(FLOOR - 1); // starts inside
@@ -485,7 +485,7 @@ describe('MovementBehavior / minRange kiting (O4)', () => {
 
   it('a ranged unit already at the floor holds (in band → abstains, no creep)', () => {
     const { world, units, moves } = scene([
-      { team: 'player', x: 5, y: 5, archetype: 'ranged', attackRange: REACH, moveCooldownTicks: 1 },
+      { team: 'player', x: 5, y: 5, archetype: 'archer', attackRange: REACH, moveCooldownTicks: 1 },
       { team: 'enemy', x: 5 + FLOOR, y: 5, inert: true }, // exactly at the floor → in band
     ]);
     for (let i = 0; i < 5; i++) world.tick();
@@ -497,8 +497,8 @@ describe('MovementBehavior / minRange kiting (O4)', () => {
 describe('MovementBehavior / corridor kite-pin (Qb #3)', () => {
   const cheb = (a: GridCoord, b: GridCoord) =>
     Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-  const FLOOR = minRangeForArchetype('ranged');
-  const REACH = rangeForArchetype('ranged');
+  const FLOOR = minRangeForArchetype('archer');
+  const REACH = rangeForArchetype('archer');
 
   /** Cells shared by more than one non-neutral (combatant) unit. */
   function overlappingCells(world: World): string[] {
@@ -526,7 +526,7 @@ describe('MovementBehavior / corridor kite-pin (Qb #3)', () => {
       walls.push({ team: 'neutral', x, y: 6, inert: true });
     }
     const { world, units } = scene([
-      { team: 'player', x: 5, y: 5, archetype: 'ranged', attackRange: REACH, moveCooldownTicks: 1 },
+      { team: 'player', x: 5, y: 5, archetype: 'archer', attackRange: REACH, moveCooldownTicks: 1 },
       { team: 'enemy', x: 5 + (FLOOR - 1), y: 5, inert: true }, // hostile, one cell inside the floor
       { team: 'player', x: 4, y: 5, inert: true }, // friendly on the only retreat cell
       ...walls,
@@ -580,11 +580,11 @@ describe('MovementBehavior / §36b: a pursuer holds for a target arriving into i
     // A ranged unit whose target is arriving INSIDE its minRange must still kite out,
     // not freeze — a claim short of the floor must NOT abstain (the `inFiringBand`
     // floor check is what guarantees it).
-    const FLOOR = minRangeForArchetype('ranged');
-    const REACH = rangeForArchetype('ranged');
+    const FLOOR = minRangeForArchetype('archer');
+    const REACH = rangeForArchetype('archer');
     expect(FLOOR).toBeGreaterThan(1); // the test needs a floor for "inside minRange" to exist
     const { world, units } = scene([
-      { team: 'player', x: 5, y: 5, archetype: 'ranged', attackRange: REACH, moveCooldownTicks: 1 },
+      { team: 'player', x: 5, y: 5, archetype: 'archer', attackRange: REACH, moveCooldownTicks: 1 },
       { team: 'enemy', x: 6, y: 5, inert: true }, // adjacent → inside minRange → M wants to kite
     ]);
     const [m, e] = units as [Unit, Unit];
@@ -734,7 +734,7 @@ describe('MovementBehavior — footprint firing band vs multi-tile targets (44-p
 
   it('a bow holds on a clear BODY shot instead of creeping for corner-LOS', () => {
     const { world, units } = scene([
-      { team: 'player', x: 6, y: 4, attackRange: 3, archetype: 'ranged' },
+      { team: 'player', x: 6, y: 4, attackRange: 3, archetype: 'archer' },
       { team: 'neutral', x: 3, y: 3, archetype: 'rubble_2x2', inert: true },
     ]);
     const [b, rubble] = units as [Unit, Unit];

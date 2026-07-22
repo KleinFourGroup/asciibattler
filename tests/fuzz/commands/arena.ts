@@ -6,7 +6,7 @@
  * table, and writes the winner to `output/best-objective.json` — the strategy
  * the full-run fuzz then consumes via `--objective=<file>.json` (commit 2).
  *
- *   npm run fuzz -- --arena --seeds=40 --roster=mercenary:5,mercenary:5,ranged:5
+ *   npm run fuzz -- --arena --seeds=40 --roster=mercenary:5,mercenary:5,archer:5
  *   npm run fuzz -- --arena --objective=stat:evasion:lowest --layout=junctionAmbush
  *   npm run fuzz -- --arena --objective=output/best-objective.json
  *

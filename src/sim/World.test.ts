@@ -83,7 +83,7 @@ describe('World.spawnUnit', () => {
     const rng = new RNG(1);
     const w = new World(bus, rng);
     const m = w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 });
-    const r = w.spawnUnit(rollUnit('ranged', rng), 'player', { x: 1, y: 0 });
+    const r = w.spawnUnit(rollUnit('archer', rng), 'player', { x: 1, y: 0 });
     expect(m.glyph).toBe('M');
     expect(r.glyph).toBe('a');
   });

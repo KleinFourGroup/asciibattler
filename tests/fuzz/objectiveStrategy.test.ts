@@ -47,7 +47,7 @@ function makeWorld(): World {
   return new World(new EventBus<GameEvents>(), new RNG(1), 12, 12);
 }
 
-const BASE = scaledUnit('ranged', 1).stats;
+const BASE = scaledUnit('archer', 1).stats;
 
 function spawn(
   world: World,
@@ -56,7 +56,7 @@ function spawn(
   overrides: Partial<UnitStats> = {},
 ) {
   const template: UnitTemplate = {
-    archetype: 'ranged',
+    archetype: 'archer',
     level: 1,
     stats: { ...BASE, ...overrides },
     xp: 0,
@@ -150,7 +150,7 @@ describe('selectObjectiveTarget', () => {
 
   it('archetype picks a living enemy of that archetype ("focus the X")', () => {
     const world = makeWorld();
-    spawnArch(world, 'enemy', { x: 1, y: 1 }, 'ranged');
+    spawnArch(world, 'enemy', { x: 1, y: 1 }, 'archer');
     const bandit = spawnArch(world, 'enemy', { x: 2, y: 1 }, 'bandit');
     expect(selectObjectiveTarget(world, { kind: 'archetype', archetype: 'bandit' }, rng())).toBe(
       bandit.id,
@@ -159,7 +159,7 @@ describe('selectObjectiveTarget', () => {
 
   it('archetype returns null when no living enemy matches', () => {
     const world = makeWorld();
-    spawnArch(world, 'enemy', { x: 1, y: 1 }, 'ranged');
+    spawnArch(world, 'enemy', { x: 1, y: 1 }, 'archer');
     expect(
       selectObjectiveTarget(world, { kind: 'archetype', archetype: 'mage' }, rng()),
     ).toBeNull();
@@ -218,7 +218,7 @@ describe('selectObjectiveTarget — scored proclivity', () => {
 
   it('archetype affinity steers between otherwise-equal enemies', () => {
     const world = makeWorld();
-    spawnArch(world, 'enemy', { x: 1, y: 1 }, 'ranged');
+    spawnArch(world, 'enemy', { x: 1, y: 1 }, 'archer');
     const bandit = spawnArch(world, 'enemy', { x: 2, y: 1 }, 'bandit');
     const w = zeroWeights();
     w.archetype.bandit = 1;

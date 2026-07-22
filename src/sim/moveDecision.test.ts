@@ -201,8 +201,8 @@ describe('unit:moveDecision — kind correctness (MovementBehavior)', () => {
   });
 
   it('pinned: a kiting archer inside minRange with no reachable firing cell emits `pinned`', () => {
-    const FLOOR = minRangeForArchetype('ranged');
-    const REACH = rangeForArchetype('ranged');
+    const FLOOR = minRangeForArchetype('archer');
+    const REACH = rangeForArchetype('archer');
     expect(FLOOR).toBeGreaterThan(1); // the fixture needs an "inside minRange" to exist
     // Seal the archer and its adjacent target in a 2-cell box: dist 1 < FLOOR
     // (too close, so the target-cell fallback is off) and the acting-cell BFS
@@ -216,7 +216,7 @@ describe('unit:moveDecision — kind correctness (MovementBehavior)', () => {
       }
     }
     const { world, units, kindsFor } = scene([
-      { team: 'player', x: 5, y: 5, archetype: 'ranged', attackRange: REACH, moveCooldownTicks: 1 },
+      { team: 'player', x: 5, y: 5, archetype: 'archer', attackRange: REACH, moveCooldownTicks: 1 },
       { team: 'enemy', x: 6, y: 5, inert: true },
       ...box,
     ]);

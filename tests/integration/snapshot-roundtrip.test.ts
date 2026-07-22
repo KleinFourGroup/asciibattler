@@ -955,9 +955,9 @@ describe('A2 round-trip: Run', () => {
 });
 
 /** An 8-card roster (> handSize) for the H5 deck round-trip tests. */
-function bigRoster(): { archetype: 'mercenary' | 'ranged'; level: number }[] {
+function bigRoster(): { archetype: 'mercenary' | 'archer'; level: number }[] {
   return Array.from({ length: 8 }, (_, i) => ({
-    archetype: i % 2 === 0 ? 'mercenary' : 'ranged',
+    archetype: i % 2 === 0 ? 'mercenary' : 'archer',
     level: 1,
   }));
 }

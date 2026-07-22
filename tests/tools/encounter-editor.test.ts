@@ -87,7 +87,7 @@ describe('formatEncountersJson', () => {
                       spec: {
                         levelBudget: { kind: 'mean', factor: 1 },
                         count: { kind: 'hand', factor: 1 },
-                        units: [{ archetype: 'ranged', count: { kind: 'fixed', value: 1 }, level: { kind: 'fixed', value: 3 } }],
+                        units: [{ archetype: 'archer', count: { kind: 'fixed', value: 1 }, level: { kind: 'fixed', value: 3 } }],
                       },
                     },
                   ],

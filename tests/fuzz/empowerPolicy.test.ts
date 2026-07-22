@@ -91,7 +91,7 @@ describe('empower policy parsing', () => {
 });
 
 describe('selectEmpowerPosition', () => {
-  const HAND = [card('mercenary', 3), card('ranged', 7), card('mercenary', 5)];
+  const HAND = [card('mercenary', 3), card('archer', 7), card('mercenary', 5)];
 
   it('none and an exhausted budget both return null', () => {
     expect(selectEmpowerPosition(HAND, AVAIL, { kind: 'none' }, rng())).toBeNull();
@@ -105,7 +105,7 @@ describe('selectEmpowerPosition', () => {
   });
 
   it('level ties break by ascending hand position', () => {
-    const tied = [card('mercenary', 5), card('ranged', 5), card('mercenary', 5)];
+    const tied = [card('mercenary', 5), card('archer', 5), card('mercenary', 5)];
     expect(selectEmpowerPosition(tied, AVAIL, { kind: 'level', dir: 'hi' }, rng())).toBe(0);
     expect(selectEmpowerPosition(tied, AVAIL, { kind: 'level', dir: 'lo' }, rng())).toBe(0);
   });
@@ -127,7 +127,7 @@ describe('selectEmpowerPosition', () => {
 
   it('scored archetype affinity steers the pick', () => {
     const base = zeroWeights();
-    const weights = { ...base, archetype: { ...base.archetype, ranged: 1 } };
+    const weights = { ...base, archetype: { ...base.archetype, archer: 1 } };
     const policy: EmpowerPolicy = { kind: 'scored', weights };
     expect(selectEmpowerPosition(HAND, AVAIL, policy, rng())).toBe(1); // the lone archer
   });

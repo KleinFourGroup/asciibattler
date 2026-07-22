@@ -59,12 +59,12 @@ function makeEncounter(): BattleEncounter {
     playerTeam: [
       rollUnit('mercenary', rosterRng),
       rollUnit('mercenary', rosterRng),
-      rollUnit('ranged', rosterRng),
+      rollUnit('archer', rosterRng),
     ],
     enemyTeam: [
       rollUnit('mercenary', rosterRng),
       rollUnit('mercenary', rosterRng),
-      rollUnit('ranged', rosterRng),
+      rollUnit('archer', rosterRng),
     ],
     battleRules: [],
   };

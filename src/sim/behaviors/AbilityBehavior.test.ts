@@ -295,7 +295,7 @@ interface SceneUnit {
   inert?: boolean;
 }
 
-function buildStats(s: SceneUnit, archetype: 'mercenary' | 'ranged'): UnitStats {
+function buildStats(s: SceneUnit, archetype: 'mercenary' | 'archer'): UnitStats {
   const baseStats = ARCHETYPE_CONFIG[archetype].baseStats;
   return {
     ...baseStats,
@@ -326,7 +326,7 @@ function scene(specs: SceneUnit[]): {
   bus.on('unit:attacked', (p) => attacks.push(p));
 
   const units = specs.map((s) => {
-    const archetype = (s.attackRange ?? 1) > 1 ? 'ranged' : 'mercenary';
+    const archetype = (s.attackRange ?? 1) > 1 ? 'archer' : 'mercenary';
     const stats = buildStats(s, archetype);
     const template: UnitTemplate = { archetype, level: 1, stats, xp: 0 };
     const u = world.spawnUnit(template, s.team, { x: s.x, y: s.y });

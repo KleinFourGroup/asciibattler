@@ -127,7 +127,7 @@
       "power": 0.05
     }
   },
-  "ranged": {
+  "archer": {
     "glyph": "a",
     "abilities": ["bow"],
     "targeting": "nearest",

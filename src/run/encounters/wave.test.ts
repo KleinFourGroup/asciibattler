@@ -47,12 +47,12 @@ describe('resolveWave — count distribution', () => {
       units: [
         { archetype: 'catapult', count: { kind: 'fixed', value: 2 }, level: { kind: 'weight', weight: 1 } },
         { archetype: 'bandit', count: { kind: 'weight', weight: 3 }, level: { kind: 'weight', weight: 1 } },
-        { archetype: 'ranged', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } },
+        { archetype: 'archer', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } },
       ],
     };
     const team = resolveWave(spec, ctx(), new RNG(1));
     expect(team).toHaveLength(10);
-    expect(counts(team)).toEqual({ catapult: 2, bandit: 6, ranged: 2 });
+    expect(counts(team)).toEqual({ catapult: 2, bandit: 6, archer: 2 });
   });
 
   it('the count split is DETERMINISTIC — independent of the RNG seed', () => {
@@ -61,14 +61,14 @@ describe('resolveWave — count distribution', () => {
       count: { kind: 'fixed', value: 13 },
       units: [
         { archetype: 'bandit', count: { kind: 'weight', weight: 2 }, level: { kind: 'weight', weight: 1 } },
-        { archetype: 'ranged', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } },
+        { archetype: 'archer', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } },
       ],
     };
     const a = counts(resolveWave(spec, ctx(), new RNG(1)));
     const b = counts(resolveWave(spec, ctx(), new RNG(99)));
     expect(a).toEqual(b);
     // 13 split 2:1 → 9 / 4 (largest-remainder; index tiebreak favours bandit).
-    expect(a).toEqual({ bandit: 9, ranged: 4 });
+    expect(a).toEqual({ bandit: 9, archer: 4 });
   });
 
   it('fixed counts exceeding C → weight-count units resolve to 0 (fixed still placed)', () => {
@@ -77,7 +77,7 @@ describe('resolveWave — count distribution', () => {
       count: { kind: 'fixed', value: 5 },
       units: [
         { archetype: 'bandit', count: { kind: 'fixed', value: 8 }, level: { kind: 'weight', weight: 1 } },
-        { archetype: 'ranged', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } },
+        { archetype: 'archer', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } },
         { archetype: 'mage', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } },
       ],
     };
@@ -101,13 +101,13 @@ describe('resolveWave — count distribution', () => {
       count: { kind: 'fixed', value: c },
       units: [
         { archetype: 'bandit', count: { kind: 'weight', weight: 3 }, level: { kind: 'weight', weight: 1 } },
-        { archetype: 'ranged', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } },
+        { archetype: 'archer', count: { kind: 'weight', weight: 1 }, level: { kind: 'weight', weight: 1 } },
       ],
     });
     for (const c of [4, 8, 40, 100]) {
       const m = counts(resolveWave(spec(c), ctx(), new RNG(1)));
-      expect((m.bandit ?? 0) + (m.ranged ?? 0)).toBe(c);
-      expect(m.bandit! / m.ranged!).toBeCloseTo(3, 0); // ≈ 3:1
+      expect((m.bandit ?? 0) + (m.archer ?? 0)).toBe(c);
+      expect(m.bandit! / m.archer!).toBeCloseTo(3, 0); // ≈ 3:1
     }
   });
 });
@@ -146,11 +146,11 @@ describe('resolveWave — level distribution', () => {
       count: { kind: 'fixed', value: 6 },
       units: [
         { archetype: 'bandit', count: { kind: 'fixed', value: 4 }, level: { kind: 'weight', weight: 1 } },
-        { archetype: 'ranged', count: { kind: 'fixed', value: 2 }, level: { kind: 'weight', weight: 4 } },
+        { archetype: 'archer', count: { kind: 'fixed', value: 2 }, level: { kind: 'weight', weight: 4 } },
       ],
     };
     const team = resolveWave(spec, ctx(), new RNG(3));
-    const archerLv = team.filter((u) => u.archetype === 'ranged').map((u) => u.level);
+    const archerLv = team.filter((u) => u.archetype === 'archer').map((u) => u.level);
     const banditLv = team.filter((u) => u.archetype === 'bandit').map((u) => u.level);
     expect(Math.min(...archerLv)).toBeGreaterThan(Math.max(...banditLv));
     expect(team.reduce((a, u) => a + u.level, 0)).toBe(30);
@@ -309,7 +309,7 @@ describe('resolveWave — X1 difficulty multipliers (the per-run lever)', () => 
       count: { kind: 'hand', factor: 1.75 },
       units: [
         { archetype: 'bandit', count: { kind: 'weight', weight: 7 }, level: { kind: 'weight', weight: 1 } },
-        { archetype: 'ranged', count: { kind: 'weight', weight: 3 }, level: { kind: 'weight', weight: 1 } },
+        { archetype: 'archer', count: { kind: 'weight', weight: 3 }, level: { kind: 'weight', weight: 1 } },
       ],
     };
     expect(resolveWave(spec, ctx(), new RNG(42))).toEqual(
@@ -324,7 +324,7 @@ describe('resolveWave — determinism & edge cases', () => {
     count: { kind: 'hand', factor: 1.75 },
     units: [
       { archetype: 'bandit', count: { kind: 'weight', weight: 7 }, level: { kind: 'weight', weight: 1 } },
-      { archetype: 'ranged', count: { kind: 'weight', weight: 3 }, level: { kind: 'weight', weight: 1 } },
+      { archetype: 'archer', count: { kind: 'weight', weight: 3 }, level: { kind: 'weight', weight: 1 } },
     ],
   };
 

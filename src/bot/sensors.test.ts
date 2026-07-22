@@ -205,7 +205,7 @@ describe('attritionRead', () => {
   it('sums living effective power per side (the survivorPower formula)', () => {
     const world = makeWorld();
     const a = spawn(world, 'player', { x: 1, y: 1 });
-    const b = spawn(world, 'player', { x: 1, y: 3 }, 'ranged');
+    const b = spawn(world, 'player', { x: 1, y: 3 }, 'archer');
     const e = spawn(world, 'enemy', { x: 10, y: 10 });
     const dead = spawn(world, 'enemy', { x: 10, y: 8 });
     dead.currentHp = 0;
@@ -235,7 +235,7 @@ describe('armiesInContact', () => {
   it('reads contact by EITHER side own reach — a bow in range is contact even when melee cannot answer', () => {
     const world = makeWorld();
     const merc = spawn(world, 'player', { x: 1, y: 5 });
-    const bow = spawn(world, 'enemy', { x: 4, y: 5 }, 'ranged');
+    const bow = spawn(world, 'enemy', { x: 4, y: 5 }, 'archer');
     // Premises derived from the units' own stats (never hardcoded): the gap
     // exceeds the merc's reach but sits inside the bow's.
     const gap = 3; // Chebyshev between (1,5) and (4,5) by construction
@@ -260,7 +260,7 @@ describe('focusTargetFeatures', () => {
     const world = makeWorld();
     spawn(world, 'player', { x: 0, y: 0 });
     const near = spawn(world, 'enemy', { x: 3, y: 3 });
-    const far = spawn(world, 'enemy', { x: 9, y: 9 }, 'ranged');
+    const far = spawn(world, 'enemy', { x: 9, y: 9 }, 'archer');
     far.currentHp = far.derived.maxHp / 2;
     const features = focusTargetFeatures(world, 'player');
     expect(features).toEqual([
@@ -274,7 +274,7 @@ describe('focusTargetFeatures', () => {
       },
       {
         unitId: far.id,
-        archetype: 'ranged',
+        archetype: 'archer',
         hpFraction: 0.5,
         power: far.effectiveStats.power,
         attackRange: far.derived.attackRange,

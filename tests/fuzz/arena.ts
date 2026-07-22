@@ -56,8 +56,8 @@ export const DEFAULT_ARENA_ROSTER: readonly RosterEntry[] = [
   { archetype: 'mercenary', level: 5 },
   { archetype: 'mercenary', level: 5 },
   { archetype: 'mercenary', level: 5 },
-  { archetype: 'ranged', level: 5 },
-  { archetype: 'ranged', level: 5 },
+  { archetype: 'archer', level: 5 },
+  { archetype: 'archer', level: 5 },
 ];
 
 export interface ArenaOptions {

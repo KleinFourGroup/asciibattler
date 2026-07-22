@@ -107,7 +107,7 @@ src/
                              # time; 49e: applyTo:'target' lands on the STRUCK unit — dealHit-only, corpse-guarded AFTER the
                              # chance draw so draw counts never depend on hp state)
     Unit.ts                  # Unit + UnitTemplate + UnitStats (GP1 vocab + GP2 defense) + UnitDerived + Team + Behavior
-                             # archetype: mercenary|adventurer|ronin|bandit|ranged|rogue|healer|mage|catapult|environment (I5 split melee→the 4-class melee family)
+                             # archetype: mercenary|adventurer|ronin|bandit|archer|rogue|healer|mage|catapult|environment (I5 split melee→the 4-class melee family; §61a renamed ranged→archer — the STAT is still `ranged`)
                              # level (E3) + xp/rosterIndex (E4); actionCooldowns Map + activeAction (A1)
                              # blocksLineOfSight (D6)
                              # K1: effects[] (status effects) + effectiveStats (cached fold; === stats when empty) + addEffect/expireEffects/refreshDerived

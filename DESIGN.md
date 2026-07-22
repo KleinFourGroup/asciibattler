@@ -59,7 +59,7 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
 - All stat / derive knobs live in [config/stats.json](config/stats.json) (linear HP-per-constitution, crit cap + multiplier, base cooldowns, scale floor). Archetype baselines live in [config/units.json](config/units.json).
 - Archetypes for MVP:
   - **Melee** (`M`): higher constitution + strength, range 1, moderate speed/mobility.
-  - **Ranged** (`a`): lower constitution, no strength, ranged damage on the `ranged` stat, range 3–5, moderate speed/mobility.
+  - **Ranged** (`a`; the archetype id is `archer` since §61a — the *stat* is still `ranged`): lower constitution, no strength, ranged damage on the `ranged` stat, range 3–5, moderate speed/mobility.
 - E1 ships every unit at its archetype's exact baseStats (no per-stat randomization). E3 reintroduces variety via `simulateLevelUps` (player recruits) and `scaleStats` (enemies), driven by per-archetype `growthRates`.
 
 **Targeting:** Nearest enemy by Chebyshev distance. Ties broken by lowest current HP. Re-evaluated each time a unit's attack cooldown elapses or its current target dies.

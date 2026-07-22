@@ -288,3 +288,37 @@ so later §61 tests/fixtures are written with `archer` natively.
   adventurer / ronin / mage · rare = catapult / reaver / corrupter ·
   legendary = stormcaller / shaman. ⚠ **bandit unassigned** (12 of 13
   covered) — an explicit open item for the design round.
+
+### 61a — the `ranged`→`archer` rename (2026-07-21)
+
+Codemod with an explicit whitelist of archetype-context patterns (the
+stat `ranged` shares the literal — blanket sed was never safe): 486
+replacements + 14 hand edits. What the whitelist missed, and how each
+was caught:
+
+- Three `offerOf(…, 'ranged')` endings without a brace (pattern was
+  `}, 'ranged')`) — caught by the per-file count check against the
+  audit's hit list before any test ran.
+- **UNQUOTED archetype-keyed property accesses** (`m.ranged`,
+  `ARCHETYPE_CONFIG.ranged`, `UNIT_DEFS.ranged`, `{ bandit: 6,
+  ranged: 2 }`) — invisible to a quoted-literal grep; 5 test failures
+  in 3 files surfaced them, and a follow-up `\.ranged\b|ranged:` sweep
+  found the rest, including **sweepReport.test.ts's synthetic
+  `ranged_*` CSV** (fuzz-smoke-only — `sweepReport.ts` iterates
+  `ALL_ARCHETYPES` to parse columns, so it WOULD have failed there;
+  caught by reading the parser before running smoke). Lesson for any
+  future id rename: grep quoted AND unquoted forms up front.
+- CSV column `recruitedRanged` (reporters.ts header) deliberately KEPT
+  — positional/name stability for CSV consumers; only the filter
+  (`=== 'archer'`) renamed, else the column silently zeroes.
+- Frozen fixtures: keyed-record KEY renames only (values
+  byte-untouched) — the two archetype blocks per strategy vector
+  (bandit-context regex), `"archetype":"archer"` ×339 in the 53g
+  traces; stat blocks untouched.
+- Docs kept honest in-commit: ARCHITECTURE archetype list, DESIGN
+  archetype entry, fuzz CLI roster examples, sweep-gui placeholder.
+
+**Verify: 2199 + 269 fuzz:smoke green, typecheck clean, ZERO pin
+changes — the predicted byte-stream neutrality, proven** (the smoke
+pins encode exact per-seed outcomes; any stream shift would have
+re-pinned).

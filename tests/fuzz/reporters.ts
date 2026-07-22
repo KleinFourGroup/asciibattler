@@ -46,7 +46,7 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
     const playerDeaths = r.battles.reduce((acc, b) => acc + b.playerDeaths, 0);
     const enemyDeaths = r.battles.reduce((acc, b) => acc + b.enemyDeaths, 0);
     const meleeRecruits = r.recruits.filter((x) => x.archetype === 'mercenary').length;
-    const rangedRecruits = r.recruits.filter((x) => x.archetype === 'ranged').length;
+    const rangedRecruits = r.recruits.filter((x) => x.archetype === 'archer').length;
     // The hung battle (if any) is always the last entry — harness aborts
     // the run on hang. Empty string for non-hung runs so CSV consumers
     // can spreadsheet-filter on layout without nulls.

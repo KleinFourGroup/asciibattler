@@ -86,8 +86,8 @@ const LVL1_ROSTER = [
   { archetype: 'mercenary' as const, level: 1 },
   { archetype: 'mercenary' as const, level: 1 },
   { archetype: 'mercenary' as const, level: 1 },
-  { archetype: 'ranged' as const, level: 1 },
-  { archetype: 'ranged' as const, level: 1 },
+  { archetype: 'archer' as const, level: 1 },
+  { archetype: 'archer' as const, level: 1 },
 ];
 
 describe('H4: encounter loop over real battles', () => {

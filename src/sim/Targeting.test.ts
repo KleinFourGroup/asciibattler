@@ -205,7 +205,7 @@ describe('Targeting / target stickiness (E5)', () => {
       // chebyshev 4, behind a wall — the slightly-nearer rival (3) is NOT
       // 1.5x closer (3*1.5=4.5 > 4) so rule (b) never fires; only the LOS
       // timeout breaks the lock.
-      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged' },
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'archer' },
       { id: 2, team: 'enemy', x: 4, y: 0 }, // committed, will be occluded
       { id: 3, team: 'enemy', x: 3, y: 3 }, // visible alternative, chebyshev 3
     ]);
@@ -363,7 +363,7 @@ describe('Targeting / shared objective (J1)', () => {
 
   it('the leash CAPS a long-range unit: an enemy beyond the leash but within firing range does NOT preempt the tile', () => {
     const { world, units } = scene([
-      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged', attackRange: 6 },
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'archer', attackRange: 6 },
       { id: 2, team: 'enemy', x: 5, y: 0 }, // cheby 5 > leash 3, <= range 6
     ]);
     applyTileObjective(world, { x: 0, y: 10 });
@@ -372,10 +372,10 @@ describe('Targeting / shared objective (J1)', () => {
 
   it('RETALIATION: a leashed archer engages an attacker beyond the leash that is shooting it', () => {
     const { world, units } = scene([
-      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged', attackRange: 6 },
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'archer', attackRange: 6 },
       // a ranged enemy at cheby 5 (> leash 3, within both ranges) committed to
       // the archer (it's actively shooting) → retaliation overrides the leash.
-      { id: 2, team: 'enemy', x: 5, y: 0, archetype: 'ranged', attackRange: 6, targetId: 1 },
+      { id: 2, team: 'enemy', x: 5, y: 0, archetype: 'archer', attackRange: 6, targetId: 1 },
     ]);
     applyTileObjective(world, { x: 0, y: 10 });
     expect(units[0]!.targetId).toBe(2);
@@ -383,8 +383,8 @@ describe('Targeting / shared objective (J1)', () => {
 
   it('no retaliation when the far enemy is NOT attacking this unit (leashed out)', () => {
     const { world, units } = scene([
-      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged', attackRange: 6 },
-      { id: 2, team: 'enemy', x: 5, y: 0, archetype: 'ranged', attackRange: 6 }, // not committed
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'archer', attackRange: 6 },
+      { id: 2, team: 'enemy', x: 5, y: 0, archetype: 'archer', attackRange: 6 }, // not committed
     ]);
     applyTileObjective(world, { x: 0, y: 10 });
     expect(units[0]!.targetId).toBeNull();
@@ -435,7 +435,7 @@ describe('Targeting / hold (O2)', () => {
     // engage would NOT target (leashed off the objective), but hold attacks
     // anything in actual reach.
     const { world, units } = scene([
-      { id: 1, team: 'player', x: 0, y: 0, archetype: 'ranged', attackRange: 6 },
+      { id: 1, team: 'player', x: 0, y: 0, archetype: 'archer', attackRange: 6 },
       { id: 2, team: 'enemy', x: 5, y: 0 }, // cheby 5 <= range 6
     ]);
     setHold(world);

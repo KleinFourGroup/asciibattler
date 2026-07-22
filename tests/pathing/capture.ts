@@ -40,8 +40,8 @@ export function measureLayout(layoutId: string | null, seed: number): MovementMe
     rollUnit('mercenary', teamRng),
     rollUnit('mercenary', teamRng),
     rollUnit('mercenary', teamRng),
-    rollUnit('ranged', teamRng),
-    rollUnit('ranged', teamRng),
+    rollUnit('archer', teamRng),
+    rollUnit('archer', teamRng),
   ];
   const encounter: BattleEncounter = {
     worldSeed: seed,

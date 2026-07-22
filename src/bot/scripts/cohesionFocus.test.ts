@@ -61,7 +61,7 @@ describe('cohesionFocus', () => {
     const world = makeWorld();
     spawn(world, 'player', { x: 2, y: 5 });
     spawn(world, 'enemy', { x: 5, y: 5 });
-    spawn(world, 'enemy', { x: 6, y: 5 }, 'ranged'); // bows are reach 3 — not artillery
+    spawn(world, 'enemy', { x: 6, y: 5 }, 'archer'); // bows are reach 3 — not artillery
     expect(cohesionFocus.evaluate(world, 'player')).toBeNull();
   });
 

@@ -128,7 +128,7 @@ describe('scored path policy — full-path backward DP', () => {
 describe('scored recruit policy', () => {
   it('is deterministic + RNG-independent with lowest-index ties', () => {
     const s = scoredStrategy('z', zeroWeights());
-    const offer = [template('mercenary'), template('ranged'), template('rogue')];
+    const offer = [template('mercenary'), template('archer'), template('rogue')];
     const run = fakeRun({ team: [template('mercenary')] });
     for (const seed of [1, 2, 3, 99]) {
       expect(s.pickRecruit(offer, run, new RNG(seed))).toBe(0); // all-zero → lowest index

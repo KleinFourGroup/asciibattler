@@ -13,7 +13,7 @@ const FULL_CSV =
   [
     'difficulty.budgetFactor,bestTrainWin,bestTestWin,pureRandomWin,greedyWin,gradient,meanChipPlayer,meanChipEnemy,' +
       'mercenary_dmg,mercenary_dmgTaken,mercenary_deployments,mercenary_deathsPerRun,mercenary_heal,mercenary_xp,mercenary_final,' +
-      'ranged_dmg,ranged_dmgTaken,ranged_deployments,ranged_deathsPerRun,ranged_heal,ranged_xp,ranged_final',
+      'archer_dmg,archer_dmgTaken,archer_deployments,archer_deathsPerRun,archer_heal,archer_xp,archer_final',
     '0.625,0.6,0.7,0,0,0.6,4.47,0.99,' +
       '60918,43210,100,21.7,0,210529,96,' +
       '22917,31050,60,16.8,0,86451,60',
@@ -30,7 +30,7 @@ describe('parseSweepCsv', () => {
     expect(row.metrics.gradient).toBe(0.6);
     expect(row.archetypes.mercenary.dmg).toBe(60918);
     expect(row.archetypes.mercenary.deployments).toBe(100);
-    expect(row.archetypes.ranged.final).toBe(60);
+    expect(row.archetypes.archer.final).toBe(60);
   });
 
   it('throws on a header with no bestTrainWin column', () => {

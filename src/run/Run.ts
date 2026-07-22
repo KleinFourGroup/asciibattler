@@ -3044,7 +3044,7 @@ function shuffleInPlace<T>(arr: T[], rng: RNG): void {
 function rollTeam(rng: RNG): UnitTemplate[] {
   const team: UnitTemplate[] = [];
   for (let i = 0; i < STARTING_MELEE; i++) team.push(rollUnit('mercenary', rng, STARTING_LEVEL));
-  for (let i = 0; i < STARTING_RANGED; i++) team.push(rollUnit('ranged', rng, STARTING_LEVEL));
+  for (let i = 0; i < STARTING_RANGED; i++) team.push(rollUnit('archer', rng, STARTING_LEVEL));
   return team;
 }
 

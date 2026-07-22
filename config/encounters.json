@@ -20,7 +20,7 @@
               "count": { "kind": "hand", "factor": 1.3 },
               "units": [
                 { "archetype": "bandit", "count": { "kind": "weight", "weight": 0.7 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "ranged", "count": { "kind": "weight", "weight": 0.3 }, "level": { "kind": "weight", "weight": 1 } }
+                { "archetype": "archer", "count": { "kind": "weight", "weight": 0.3 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }
           }
@@ -198,7 +198,7 @@
               "levelCap": { "kind": "roster", "delta": 2 },
               "units": [
                 { "archetype": "mercenary", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "rogue", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }
@@ -242,7 +242,7 @@
                   "count": { "kind": "hand", "factor": 1.2 },
                   "units": [
                     { "archetype": "mercenary", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
-                    { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                    { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
                   ]
                 }
               }
@@ -338,7 +338,7 @@
               "count": { "kind": "hand", "factor": 0.8 },
               "units": [
                 { "archetype": "mercenary", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "mage", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }
@@ -421,7 +421,7 @@
               "units": [
                 { "archetype": "luminant", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "rogue", "count": { "kind": "weight", "weight": 1.5 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }
           },
@@ -482,7 +482,7 @@
                   "units": [
                     { "archetype": "banshee", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
                     { "archetype": "rogue", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
-                    { "archetype": "ranged", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                    { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
                   ]
                 }
               }

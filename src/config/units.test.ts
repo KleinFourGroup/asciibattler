@@ -77,8 +77,8 @@ describe('§38b — UnitDef catalog scaffold', () => {
         expect(typeof def.retargetOnLosLoss, `${id}.retargetOnLosLoss`).toBe('boolean');
       }
     }
-    // Anchor the lone LOS-kiter (the old `=== 'ranged'` branch).
-    expect(CombatantUnitDefSchema.parse(UNIT_DEFS.ranged).retargetOnLosLoss).toBe(true);
+    // Anchor the lone LOS-kiter (the old `=== 'archer'` branch).
+    expect(CombatantUnitDefSchema.parse(UNIT_DEFS.archer).retargetOnLosLoss).toBe(true);
   });
 
   it('accepts an entry that DOES populate the new fields (38c forward-compat)', () => {
@@ -247,7 +247,7 @@ describe('§38c-4 — open catalog (relaxed Archetype id)', () => {
   it('carries the ids the game hard-references by literal (boot-assert contract)', () => {
     // Mirrors REQUIRED_UNIT_IDS — start team + default enemy comp. If the module
     // imported at all, the boot-assert already passed; this documents the set.
-    for (const id of ['mercenary', 'bandit', 'ranged']) {
+    for (const id of ['mercenary', 'bandit', 'archer']) {
       expect(UNIT_DEFS[id], id).toBeDefined();
     }
   });

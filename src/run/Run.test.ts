@@ -80,7 +80,7 @@ describe('Run', () => {
       const { startingMelee, startingRanged } = RECRUITMENT;
       expect(run.team).toHaveLength(startingMelee + startingRanged);
       const melee = run.team.filter((t) => t.archetype === 'mercenary');
-      const ranged = run.team.filter((t) => t.archetype === 'ranged');
+      const ranged = run.team.filter((t) => t.archetype === 'archer');
       expect(melee).toHaveLength(startingMelee);
       expect(ranged).toHaveLength(startingRanged);
     });
@@ -409,7 +409,7 @@ describe('Run', () => {
         startingRoster: [
           { archetype: 'mercenary', level: 6 },
           { archetype: 'mercenary', level: 6 },
-          { archetype: 'ranged', level: 6 },
+          { archetype: 'archer', level: 6 },
         ],
       });
       const frontier = frontierOf(run);
@@ -3457,9 +3457,9 @@ describe('Run', () => {
 
   describe('card deck (H5)', () => {
     // An oversized roster (> handSize) so draw variance + dilution are live.
-    type RosterSpec = { archetype: 'mercenary' | 'ranged'; level: number };
+    type RosterSpec = { archetype: 'mercenary' | 'archer'; level: number };
     const BIG_ROSTER: RosterSpec[] = Array.from({ length: 8 }, (_, i) => ({
-      archetype: i % 2 === 0 ? 'mercenary' : 'ranged',
+      archetype: i % 2 === 0 ? 'mercenary' : 'archer',
       level: 1,
     }));
 
@@ -3488,7 +3488,7 @@ describe('Run', () => {
     it('a roster smaller than handSize fields everyone (no overdraw)', () => {
       const small = [
         { archetype: 'mercenary' as const, level: 1 },
-        { archetype: 'ranged' as const, level: 1 },
+        { archetype: 'archer' as const, level: 1 },
       ];
       const { run } = enterFirstBattle(small);
       expect(run.team.length).toBeLessThan(DECK.handSize);
@@ -3630,7 +3630,7 @@ describe('Run', () => {
       const cap = LEVELING.levelCap;
       const startingRoster = [
         { archetype: 'mercenary' as const, level: cap },
-        { archetype: 'ranged' as const, level: cap },
+        { archetype: 'archer' as const, level: cap },
       ];
       const vaultAll = (r: Run) =>
         r.team.map((_, i) => ({ unitId: i, rosterIndex: i, damageDealt: 0, xpGained: 1e9 }));
@@ -4052,8 +4052,8 @@ const LVL1_ROSTER = [
   { archetype: 'mercenary' as const, level: 1 },
   { archetype: 'mercenary' as const, level: 1 },
   { archetype: 'mercenary' as const, level: 1 },
-  { archetype: 'ranged' as const, level: 1 },
-  { archetype: 'ranged' as const, level: 1 },
+  { archetype: 'archer' as const, level: 1 },
+  { archetype: 'archer' as const, level: 1 },
 ];
 
 /** Like `freshRunWithBus` but pins a level-1 roster, for XP / promotion
@@ -4077,8 +4077,8 @@ const SHORT_ROSTER = [
   { archetype: 'mercenary' as const, level: RECRUITMENT.startingLevel },
   { archetype: 'mercenary' as const, level: RECRUITMENT.startingLevel },
   { archetype: 'mercenary' as const, level: RECRUITMENT.startingLevel },
-  { archetype: 'ranged' as const, level: RECRUITMENT.startingLevel },
-  { archetype: 'ranged' as const, level: RECRUITMENT.startingLevel },
+  { archetype: 'archer' as const, level: RECRUITMENT.startingLevel },
+  { archetype: 'archer' as const, level: RECRUITMENT.startingLevel },
 ];
 function freshShortRosterRun(seed: number, config?: RunConfig): RunHandle {
   const bus = new EventBus<GameEvents>();

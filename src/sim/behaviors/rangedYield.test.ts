@@ -96,7 +96,7 @@ describe('56c2 — the ranged yield (blocker-initiated)', () => {
    *  melee, enemy beyond. Returns the archer's MovementBehavior proposal. */
   function jam(opts: { allyArchetype?: Archetype; allyBusy?: boolean; walls?: boolean } = {}) {
     const { world, units } = build([
-      { archetype: 'ranged', team: 'player', x: 4, y: 5, combat: true, ability: 'bow' },
+      { archetype: 'archer', team: 'player', x: 4, y: 5, combat: true, ability: 'bow' },
       { archetype: opts.allyArchetype ?? 'mercenary', team: 'player', x: 3, y: 5, combat: true },
       { archetype: 'mercenary', team: 'enemy', x: 8, y: 5, hp: 500 },
     ]);
@@ -130,7 +130,7 @@ describe('56c2 — the ranged yield (blocker-initiated)', () => {
   });
 
   it('does NOT yield to a blocked RANGED ally (role order)', () => {
-    const { proposal } = jam({ allyArchetype: 'ranged' });
+    const { proposal } = jam({ allyArchetype: 'archer' });
     expect(proposal === null || !(proposal.action instanceof SwapAction)).toBe(true);
   });
 
@@ -150,7 +150,7 @@ describe('56c2 — the tick-driven corridor drain (the scenario-1 regression)', 
     b.on('unit:swapped', (e) => swaps.push(e));
     const { world, units } = build(
       [
-        { archetype: 'ranged', team: 'player', x: 4, y: 5, combat: true, ability: 'bow' },
+        { archetype: 'archer', team: 'player', x: 4, y: 5, combat: true, ability: 'bow' },
         { archetype: 'mercenary', team: 'player', x: 3, y: 5, combat: true },
         // A tough, inert target dummy (no behaviors): in bow range of the
         // archer's cell, so the archer opens fire immediately and never stops.

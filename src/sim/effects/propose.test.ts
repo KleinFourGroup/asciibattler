@@ -477,7 +477,7 @@ describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
     // LOS-ignoring lob): wherever movement holds, the strike MUST fire.
     const VARIANTS = [
       { aid: 'sword', archetype: 'mercenary' },
-      { aid: 'bow', archetype: 'ranged' },
+      { aid: 'bow', archetype: 'archer' },
       { aid: 'catapult_shot', archetype: 'catapult' },
     ] as const;
     for (const v of VARIANTS) {

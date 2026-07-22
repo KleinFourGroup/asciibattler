@@ -32,9 +32,9 @@ import { objectiveFromArgs, coverageFromArgs } from './commands/args';
 function populatedWorld(): World {
   const world = new World(new EventBus<GameEvents>(), new RNG(1), 12, 12);
   world.spawnUnit(scaledUnit('mercenary', 3), 'player', { x: 1, y: 5 }, null);
-  world.spawnUnit(scaledUnit('ranged', 3), 'player', { x: 1, y: 6 }, null);
+  world.spawnUnit(scaledUnit('archer', 3), 'player', { x: 1, y: 6 }, null);
   world.spawnUnit(scaledUnit('mercenary', 3), 'enemy', { x: 10, y: 5 }, null);
-  world.spawnUnit(scaledUnit('ranged', 3), 'enemy', { x: 10, y: 6 }, null);
+  world.spawnUnit(scaledUnit('archer', 3), 'enemy', { x: 10, y: 6 }, null);
   return world;
 }
 

@@ -35,6 +35,7 @@
     "glyph": "A",
     "abilities": ["whip"],
     "targeting": "nearest",
+    "rarity": "uncommon",
     "damageStat": "strength",
     "baseStats": {
       "constitution": 20,
@@ -67,6 +68,7 @@
     "glyph": "R",
     "abilities": ["katana"],
     "targeting": "nearest",
+    "rarity": "uncommon",
     "damageStat": "strength",
     "baseStats": {
       "constitution": 20,
@@ -228,6 +230,7 @@
     "glyph": "m",
     "abilities": ["magic_bolt"],
     "targeting": "nearest",
+    "rarity": "uncommon",
     "damageStat": "magic",
     "baseStats": {
       "constitution": 18,
@@ -260,6 +263,7 @@
     "glyph": "c",
     "abilities": ["catapult_shot"],
     "targeting": "nearest",
+    "rarity": "rare",
     "damageStat": "ranged",
     "baseStats": {
       "constitution": 20,
@@ -292,6 +296,7 @@
     "glyph": "V",
     "abilities": ["cleaver"],
     "targeting": "nearest",
+    "rarity": "rare",
     "damageStat": "strength",
     "baseStats": {
       "constitution": 20,
@@ -324,6 +329,7 @@
     "glyph": "C",
     "abilities": ["vial"],
     "targeting": "nearest",
+    "rarity": "rare",
     "damageStat": "magic",
     "baseStats": {
       "constitution": 18,
@@ -488,6 +494,7 @@
     "glyph": "z",
     "abilities": ["chain_lightning"],
     "targeting": "nearest",
+    "rarity": "legendary",
     "damageStat": "magic",
     "baseStats": {
       "constitution": 18,
@@ -520,6 +527,7 @@
     "glyph": "s",
     "abilities": ["raise_dead"],
     "targeting": "nearest",
+    "rarity": "legendary",
     "baseStats": {
       "constitution": 20,
       "strength": 0,

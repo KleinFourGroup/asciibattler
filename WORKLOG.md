@@ -377,3 +377,46 @@ re-pinned).
   change positively proven (not silently equivalent): dupes at
   size>pool + the 2-draws/slot pin are both impossible under the old
   sampler.
+
+### 61d — the initial-tier assignment (2026-07-22, USER design round)
+
+Evidence base: the two §60e held-out instrument vectors' archetype
+preferences (robust where they agree — stormcaller strong in both;
+ronin/adventurer/bandit/reaver negative in both; healer/catapult
+posture-split) + the §33/§41 equilibrium reads; caveat stated that bot
+preference ≠ human power.
+
+**Assignment (USER-SIGNED):** common = mercenary / archer / rogue /
+healer / **bandit** (the open item, resolved common) · uncommon =
+adventurer / ronin / mage · rare = catapult / reaver / corrupter ·
+legendary = stormcaller / shaman. Populated 5/3/3/2 → tier shares
+50/25/16.7/8.3%, per-archetype ≈10/8.3/5.6/4.2% — felt rarity is mild
+at the seed weights (a specific common ≈2.4× a specific legendary);
+noted, tunes at §68.
+
+**The ronin/reaver tension resolved FLAVOR-OVER-POWER (user):** both are
+searcher-disliked in both postures (ronin worst in class, −0.89/−0.93)
+but neither reads as a common; they KEEP uncommon/rare and **buffing
+them is a named §68 goal** (added to the §68 charter's absorbed
+threads). §60c rider: the arm may simply not field them, so the buff
+read needs force-comp probes (the §60e per-boss force-isolate
+precedent), not arm uptake.
+
+Mechanics: 8 `"rarity"` lines hand-placed in units.json at the
+formatter's emit position (commons stay absent per the
+emit-only-when-non-default convention) — the editor byte-identity test
+is the placement proof. One 61b test corrected in-step: it hardcoded
+"exactly one rarity emission" against the then-all-common catalog;
+now derives the count from the working set (the balance-proof rule
+applied to a formatter test).
+
+**The re-pin the stream break DID owe (refines the 61c "vacuous"
+finding):** the port-canary NON-VACUOUSNESS pins (harnessPort "the
+pinned seed docks and buys" + harnessEconomy's port-seam-LIVE, both
+seed 12) are the one genuine content-pin class in smoke — they assert
+a SPECIFIC seed exercises a behavior, and the 61c+61d content shift
+un-bought seed 12. Re-scan per the tests' own documented contract:
+seeds 0..30 → **2/10/15 buy** under the new stream; canary re-pinned
+12→2 (both files); the seed-1 never-buys pin still holds. So the
+per-phase re-pin expectation lands as: invariants survive free,
+non-vacuousness canaries re-scan — minutes, not a re-baseline.

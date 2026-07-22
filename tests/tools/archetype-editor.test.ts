@@ -23,6 +23,7 @@ import {
   UnitDefSchema,
   UnitDefsSchema,
   CombatantUnitDefSchema,
+  isNeutralUnitDef,
   type UnitDef,
 } from '../../src/config/units';
 import { formatArchetypesJson } from '../../tools/archetype-editor/format';
@@ -73,11 +74,17 @@ describe('formatArchetypesJson', () => {
   // format→parse round-trip (61d's assignments must not be stripped by a Save).
   it('emits a non-default rarity and round-trips it; omits the common default', () => {
     const edited: Record<string, UnitDef> = structuredClone(ALL_UNIT_DEFS);
-    edited.mage = { ...structuredClone(UNIT_DEFS.mage), rarity: 'rare' };
+    edited.mercenary = { ...structuredClone(UNIT_DEFS.mercenary), rarity: 'rare' };
     const text = formatArchetypesJson(edited);
 
     expect(text).toContain('"rarity": "rare"');
-    expect(text.match(/"rarity"/g)).toHaveLength(1); // every common stays omitted
+    // Emission count derived from the working set (not a hardcoded 1 — 61d
+    // populated the catalog's tiers): every non-common combatant emits exactly
+    // one line, every common stays omitted.
+    const nonDefault = Object.values(edited).filter(
+      (d) => !isNeutralUnitDef(d) && d.rarity !== 'common',
+    ).length;
+    expect(text.match(/"rarity"/g)).toHaveLength(nonDefault);
     const reparsed = UnitDefsSchema.parse(JSON.parse(text));
     expect(reparsed).toEqual(edited);
   });

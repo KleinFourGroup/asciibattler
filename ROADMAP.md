@@ -78,9 +78,9 @@ Cut 2026-07-21 (shape-locked; audit + resolutions → worklog §61):
 - [x] **61c** — weights + the weighted sampler ✅ 2026-07-22: 2 draws/slot,
   dupes by design; zero re-pins NEEDED (smoke pins are invariants, not
   content — the §68 measurement re-anchor is the real cost); worklog §61c.
-- [ ] **61d** — initial-tier assignment (DECISION POINT: user design round
-  with 61c in hand; provisional table on record in the worklog, bandit
-  unassigned; second small re-pin).
+- [x] **61d** — initial-tier assignment ✅ 2026-07-22 (USER): provisional
+  table + bandit common; ronin/reaver KEPT up-tier on flavor, their buff
+  is a named §68 goal; worklog §61d.
 - [ ] **61e** — rarity-accent CSS on the `unit-card--rarity-*` hook
   (green/cyan/purple/gold; browser-verify + user native check).
 - [ ] **61f** — the per-tier port price-multiplier seam in prices.json
@@ -227,7 +227,9 @@ drafting-daemon coverage — §60c applied prospectively), and the
 post-stream-shift re-baseline (§60e held-out band re-verify). Then the
 pass: initial-tier assignment tuning (§61's design round, now with data),
 new daemon/packet prices + the port per-tier multiplier, the absorbed
-threads (port goods-vs-hop value · the banshee-comp underperformance),
+threads (port goods-vs-hop value · the banshee-comp underperformance ·
+the **ronin/reaver buff look** — the 61d flavor-over-power call made
+their weakness a named goal; force-comp probes per §60c, worklog §61d),
 and the boss wall re-check per character.
 
 - **Depends on:** everything; §62's launcher for the batch tail.

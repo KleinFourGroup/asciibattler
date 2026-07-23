@@ -76,22 +76,21 @@ canary (12→2). All exit criteria met; detail worklog §61 + git.
   UnitDef + `nameForArchetype`; UnitCard/CacheOverlay sweep; editor Name
   input; TODO #82 retired; worklog §61g.
 
-## Phase 62 — Infra: the hcloud box launcher
+## Phase 62 — Infra: the hcloud box launcher ✅ CLOSED 2026-07-23
 
-**Charter:** the create/destroy lifecycle CLI (`hcloud server create` →
-[scripts/box-setup.sh](scripts/box-setup.sh) → `server delete`) so boxes
-spin up on demand; the user education session (hcloud install + API token
-path) is part of the phase. Retires the TODO item (filed 2026-07-17).
+**Outcome:** [scripts/box-launch.sh](scripts/box-launch.sh) (`6cfe73a`) —
+`create`/`destroy`/`list` wrapping hcloud, defaults cx43/fsn1/ubuntu-26.04
+(the §57f2 pair); availability doctrine: location auto-falls-back
+(fsn1→nbg1→hel1), type fails LOUD (user-shaped). Education session done
+live (winget install · token → `hcloud context` by the user's own hand ·
+the 57f2 ssh key survived); the user ran the full cycle themselves
+(create → 8-run smoke via box-batch.sh unchanged → destroy, <1¢). All
+exit criteria met; TODO's 2026-07-17 hcloud item retired. Detail:
+worklog §62.
 
-- **Depends on:** nothing in-round. **NON-BLOCKING:** schedulable any time
-  §61+ is in flight; must land before §68's batch tail. Needs the USER
-  (education session; token from their Hetzner console — token + addresses
-  stay OUT of the repo, standing rule).
-- **Risk:** low (plumbing around proven scripts; box-setup.sh + box-batch.sh
-  both survived the round close intact).
-- **Exit criteria:** one command creates a provisioned box; one destroys
-  it; box-batch.sh drives it unchanged; user has run the cycle themselves.
-- [ ] *(cut at phase kickoff)*
+- [x] **62a** — education: install + context + key check ✅ 2026-07-23
+- [x] **62b** — `scripts/box-launch.sh` ✅ 2026-07-23 (`6cfe73a`)
+- [x] **62c** — the user's full create→batch→destroy cycle ✅ 2026-07-23
 
 ## Phase 63 — Starting characters
 

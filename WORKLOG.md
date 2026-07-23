@@ -532,3 +532,68 @@ canary 12→2) committed deliberately. Zero snapshot bumps (v37/v34 held
 as predicted). ROADMAP §61 demoted to a stub per the §60f rule; cursor
 moved to the §63 kickoff; memory updated at the boundary.
 
+## Phase 62 — Infra: the hcloud box launcher
+
+### 62a — the education session (2026-07-23, live with the user)
+
+Kickoff audit re-verified finding #7 unchanged (box-setup.sh /
+box-batch.sh intact, hcloud greenfield). Then the user drove the whole
+Hetzner side themselves, per the phase's design:
+
+- **Install:** winget `HetznerCloud.CLI` 1.66.0. Provenance checked
+  before recommending (user asked): the winget manifest is
+  community-repo, but the installer URL is hetznercloud/cli's official
+  GitHub release zip with a pinned SHA256 — official binary,
+  checksum-enforced pointer.
+- **Auth:** user minted a Read+Write token in their console and pasted
+  it into `hcloud context create asciibattler` themselves (agent never
+  touched it). Clarified live: a context is a global user-config slot
+  for one token (which is what binds to a Hetzner project) — not
+  directory-scoped, nothing to do with the repo folder.
+- **Key:** `mkilgore_desktop` SURVIVED the 57f2 round-close teardown
+  (project keys outlive servers) — zero key work needed.
+- **Type/price read (the June-hike check):** cx43 $0.0296/hr — the CPX
+  line is the one that tripled (cpx42 = 4.4× for the same 8 cores);
+  ARM cax31 rejected (box-setup hardcodes the linux-x64 Node tarball —
+  not worth touching the proven provisioner for ~1¢/hr).
+
+### 62b — scripts/box-launch.sh (`6cfe73a`)
+
+**The availability doctrine (shape-locked; the user's question drove
+it — 57f2 create had hit DC-availability flakiness):** LOCATION falls
+back automatically (fsn1→nbg1→hel1 — same hardware, same price, no
+bearing on the byte-identity contract, which is per commit+toolchain),
+while SERVER TYPE fails LOUD (a substitution changes core count, the
+`--jobs` sizing, and price 4× — always a human call, rerun with an
+explicit `--type`). `--location=` pins and disables the fallback.
+
+Implementation calls worth keeping:
+
+- Provisioning stays **ssh-piped box-setup.sh**, not cloud-init
+  user-data: one versioned provisioning truth, live output, loud
+  failure (cloud-init would bury errors in a box-side log).
+- Defaults `cx43`/`ubuntu-26.04` (the §57f2 pair, worklog line 1762) —
+  boxes stay comparable to the proven baseline by default.
+- ssh `accept-new` in the launcher (vs box-batch's bare BatchMode)
+  deliberately seeds known_hosts so box-batch's stricter calls work
+  unprompted after; `ssh-keygen -R <ip>` first, because Hetzner
+  recycles IPs and a stale entry hard-fails before accept-new gets a
+  say.
+- ALL project ssh keys attach at create (key names are user-side
+  config — none baked into the repo, the standing token/address rule
+  extended to key names).
+- `destroy` defaults to the single `abox-*` server; multiple → refuses
+  and lists (never guess which box to kill).
+
+### 62c — the user's cycle + CLOSE (2026-07-23)
+
+The user ran the full lifecycle from Git Bash (a PowerShell-vs-bash
+education detour: Git for Windows doesn't put `bash` on PATH — the
+`& "C:\Program Files\Git\bin\bash.exe" …` call-operator form, or the
+Git Bash app): `create` → fsn1 took it first try, box ready at
+`6cfe73a` = local HEAD (parity by construction) · an 8-run smoke batch
+via **box-batch.sh unchanged** (DONE exit 0, fetched with summary
+sha256) · `destroy` → server deleted. ~15 min of billing, under a
+cent. Every exit criterion met; TODO's hcloud item (filed 2026-07-17)
+retired. ROADMAP §62 demoted to a stub; cursor to the §63 kickoff.
+

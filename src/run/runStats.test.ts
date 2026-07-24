@@ -90,4 +90,15 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
     expect(folded.rarityWeightCommon).toBe(0);
     expect(folded.rarityWeightUncommon).toBe(RUN_STAT_BASES.rarityWeightUncommon);
   });
+
+  // 64c — a design literal, not config-derived: zero forced slots is the
+  // no-source baseline (Portunus adds; there is no config base to track).
+  it('64c: portLegendaryOffers bases at zero and stacks by add', () => {
+    expect(RUN_STAT_BASES.portLegendaryOffers).toBe(0);
+    const folded = foldRunStats(RUN_STAT_BASES, [
+      mod('portLegendaryOffers', 'add', 1),
+      mod('portLegendaryOffers', 'add', 1),
+    ]);
+    expect(folded.portLegendaryOffers).toBe(2);
+  });
 });

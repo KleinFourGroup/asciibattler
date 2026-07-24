@@ -28,6 +28,7 @@
         { "kind": "daemon", "weight": 1, "daemon": "fortuna" },
         { "kind": "daemon", "weight": 1, "daemon": "cornucopia" },
         { "kind": "daemon", "weight": 1, "daemon": "patricians-seal" },
+        { "kind": "daemon", "weight": 1, "daemon": "portunus" },
         { "kind": "packet", "weight": 1, "packet": "hype" },
         { "kind": "packet", "weight": 1, "packet": "venom" },
         { "kind": "packet", "weight": 1, "packet": "overclock" },
@@ -46,6 +47,7 @@
         { "kind": "daemon", "weight": 1, "daemon": "fortuna" },
         { "kind": "daemon", "weight": 1, "daemon": "cornucopia" },
         { "kind": "daemon", "weight": 1, "daemon": "patricians-seal" },
+        { "kind": "daemon", "weight": 1, "daemon": "portunus" },
         { "kind": "packet", "weight": 2, "packet": "miner" },
         { "kind": "bits", "weight": 2, "min": 25, "max": 40 }
       ]

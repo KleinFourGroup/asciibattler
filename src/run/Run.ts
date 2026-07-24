@@ -1194,6 +1194,15 @@ export class Run {
   private rollPortStock(): PortStock {
     const counts = PRICES.portStock;
     const baseLevel = Math.round(avgTeamLevel(this.team));
+    // 64c — Portunus: the first ⌊fold⌋ slots are tier-forced to legendary,
+    // clamped at the slot count (two sources under a 5-slot shelf = 2
+    // forced). The draw shape is forcing-independent (the sampler consumes
+    // the tier draw either way), and an empty legendary pool degrades those
+    // slots to the normal roll inside the sampler.
+    const forcedTiers: readonly UnitRarity[] = Array.from(
+      { length: Math.min(counts.units, this.effectivePortLegendaryOffers) },
+      () => 'legendary' as const,
+    );
     const units: PortUnitSlot[] = rollOffer(
       this.portStockRng,
       counts.units,
@@ -1208,6 +1217,7 @@ export class Run {
       this.draftPools(),
       this.character.weightOverrides,
       this.effectiveRarityWeights(),
+      forcedTiers,
     ).map((template) => {
       const { jitter } = PRICES.units;
       const factor = 1 - jitter + this.portPriceRng.next() * 2 * jitter;
@@ -1659,6 +1669,16 @@ export class Run {
    */
   get effectiveOfferSize(): number {
     return Math.floor(this.effectiveRunStats().recruitOfferSize);
+  }
+
+  /**
+   * 64c — how many port unit slots are TIER-FORCED to legendary (Idol of
+   * Portunus). The count-stat shape-lock: a second source is +1 more —
+   * stacking needs no design work; `rollPortStock` clamps at the slot
+   * count. Floored at the read site (the fold contract).
+   */
+  get effectivePortLegendaryOffers(): number {
+    return Math.floor(this.effectiveRunStats().portLegendaryOffers);
   }
 
   /**

@@ -58,6 +58,12 @@ export function rollOffer(
   // Run passes the folded weights (Patrician's Seal's mult-0 lands there);
   // the default keeps every other caller on the raw config values.
   rarityWeights: Readonly<Record<UnitRarity, number>> = RECRUITMENT.rarityWeights,
+  // 64c — per-slot tier forcing (Idol of Portunus): slot i < length draws
+  // WITHIN forcedTiers[i] (tier roll consumed-and-overridden — the draw
+  // shape never changes); slots beyond the list roll normally. An empty
+  // forced tier degrades that slot to the normal roll (graceful — a
+  // blacklist-emptied legendary pool must not crash the port).
+  forcedTiers: readonly UnitRarity[] = [],
 ): UnitTemplate[] {
   if (size <= 0) return [];
   // Sample every slot's archetype FIRST, then materialize the units — keeps the
@@ -66,8 +72,8 @@ export function rollOffer(
   // global draft pool at uniform weight — §63c passes the character-derived
   // pair (blacklist-filtered pools + the character's overrides), and the port
   // stock inherits through this same signature by construction.
-  const archetypes = Array.from({ length: size }, () =>
-    rollArchetypeByRarity(rng, pools, rarityWeights, archetypeWeights),
+  const archetypes = Array.from({ length: size }, (_, i) =>
+    rollArchetypeByRarity(rng, pools, rarityWeights, archetypeWeights, forcedTiers[i]),
   );
   // A function `level` is resolved PER CARD (drawing off the shared `rng`), so
   // a geometric bonus rolls independently for each offered unit; a number is a
@@ -100,7 +106,20 @@ export function rollArchetypeByRarity(
   pools: Readonly<Record<UnitRarity, readonly Archetype[]>>,
   weights: Readonly<Record<UnitRarity, number>>,
   archetypeWeights: ArchetypeWeights = {},
+  forceTier?: UnitRarity,
 ): Archetype {
+  // 64c — a forced tier: the tier draw is CONSUMED then overridden (the
+  // 2-draws-per-slot shape stays independent of forcing — the §61c
+  // discipline), and the within-tier pick proceeds as usual (character
+  // weight overrides still govern inside the forced tier). Forcing
+  // bypasses tier WEIGHTS entirely (a Seal-zeroed common could still be
+  // forced by future content — orthogonal axes by design). An EMPTY
+  // forced pool falls through to the normal roll instead (graceful
+  // degradation — the caller guaranteed a tier the config can't supply).
+  if (forceTier !== undefined && pools[forceTier].length > 0) {
+    rng.next();
+    return pickWeighted(rng, pools[forceTier], archetypeWeights);
+  }
   const tiers = RARITY_TIERS.filter((t) => pools[t].length > 0);
   const total = tiers.reduce((acc, t) => acc + weights[t], 0);
   if (total <= 0) {

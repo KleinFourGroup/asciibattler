@@ -135,6 +135,19 @@
       ]
     },
     {
+      "id": "portunus",
+      "name": "Idol of Portunus",
+      "description": "Ports always stock a legendary unit.",
+      "rules": [
+        {
+          "kind": "modifier",
+          "stat": "portLegendaryOffers",
+          "op": "add",
+          "value": 1
+        }
+      ]
+    },
+    {
       "id": "fortuna",
       "name": "Idol of Fortuna",
       "description": "A critical strike emboldens the striker: +1 STR / RNG / MAG for 5s.",

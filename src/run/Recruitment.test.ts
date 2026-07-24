@@ -446,6 +446,92 @@ describe('§64b — folded tier weights through the sampler', () => {
   });
 });
 
+/**
+ * §64c — per-slot tier forcing (Idol of Portunus's seam). The forced draw
+ * keeps the 2-draws-per-slot shape (tier draw consumed-and-overridden) and
+ * degrades gracefully when the forced pool is empty.
+ */
+describe('§64c — forced-tier draws', () => {
+  type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
+  const pools = (p: Partial<Record<UnitRarity, readonly string[]>>): Pools => ({
+    common: [],
+    uncommon: [],
+    rare: [],
+    legendary: [],
+    ...p,
+  });
+  const W: Readonly<Record<UnitRarity, number>> = {
+    common: 6,
+    uncommon: 3,
+    rare: 2,
+    legendary: 1,
+  };
+
+  it('a forced tier always lands in that tier (absolute across seeds)', () => {
+    const P = pools({ common: ['c1', 'c2', 'c3'], legendary: ['l1', 'l2'] });
+    for (let s = 0; s < 500; s++) {
+      expect(['l1', 'l2']).toContain(rollArchetypeByRarity(new RNG(s), P, W, {}, 'legendary'));
+    }
+  });
+
+  it('a forced draw still consumes exactly 2 (the stream-shape pin held under forcing)', () => {
+    const seed = 656565;
+    const rng = new RNG(seed);
+    rollArchetypeByRarity(rng, pools({ common: ['c1'], legendary: ['l1', 'l2'] }), W, {}, 'legendary');
+    const ref = new RNG(seed);
+    ref.next();
+    ref.next();
+    expect(rng.toJSON()).toEqual(ref.toJSON());
+  });
+
+  it('forcing bypasses tier WEIGHTS — a zero-weight tier can still be forced (orthogonal axes)', () => {
+    const P = pools({ common: ['c1'], legendary: ['l1'] });
+    const zeroLegendary: Readonly<Record<UnitRarity, number>> = {
+      common: 6,
+      uncommon: 0,
+      rare: 0,
+      legendary: 0,
+    };
+    expect(rollArchetypeByRarity(new RNG(9), P, zeroLegendary, {}, 'legendary')).toBe('l1');
+  });
+
+  it('character weight overrides still govern INSIDE a forced tier', () => {
+    const P = pools({ legendary: ['heavy', 'light'] });
+    const N = 20_000;
+    const rng = new RNG(66);
+    let heavies = 0;
+    for (let i = 0; i < N; i++) {
+      if (rollArchetypeByRarity(rng, P, W, { heavy: 3 }, 'legendary') === 'heavy') heavies++;
+    }
+    expect(Math.abs(heavies / N - 3 / 4)).toBeLessThan(0.02);
+  });
+
+  it('an EMPTY forced pool degrades to the normal roll, byte-identically (graceful degradation)', () => {
+    const P = pools({ common: ['c1', 'c2'], uncommon: ['u1'] });
+    for (let s = 0; s < 200; s++) {
+      const forced = new RNG(s);
+      const bare = new RNG(s);
+      expect(rollArchetypeByRarity(forced, P, W, {}, 'legendary')).toBe(
+        rollArchetypeByRarity(bare, P, W, {}),
+      );
+      expect(forced.toJSON()).toEqual(bare.toJSON());
+    }
+  });
+
+  it('rollOffer forces per SLOT: listed slots pinned, the rest roll free', () => {
+    // Real archetype ids — rollOffer materializes units through the catalog
+    // (the §63b synthetic-pool discipline: tiers are the param, ids are real).
+    const P = pools({ common: ['mercenary'], legendary: ['ronin'] });
+    let freeSlotCommons = 0;
+    for (let s = 0; s < 300; s++) {
+      const offer = rollOffer(new RNG(s), 3, 1, P, {}, W, ['legendary']);
+      expect(offer[0]!.archetype).toBe('ronin'); // slot 0 forced, always
+      for (const u of offer.slice(1)) if (u.archetype === 'mercenary') freeSlotCommons++;
+    }
+    expect(freeSlotCommons).toBeGreaterThan(0); // the free slots really roll
+  });
+});
+
 describe('recruitLevelBonus (G4 geometric bonus)', () => {
   it('matches P(+k) = (1−c)·c^k over a wide sample (derives c from config)', () => {
     const c = RECRUITMENT.recruitBonusChance;

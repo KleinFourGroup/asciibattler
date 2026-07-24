@@ -28,6 +28,7 @@ export const RUN_STAT_KEYS = [
   'rarityWeightUncommon',
   'rarityWeightRare',
   'rarityWeightLegendary',
+  'portLegendaryOffers',
 ] as const;
 export type RunStatKey = (typeof RUN_STAT_KEYS)[number];
 
@@ -55,6 +56,11 @@ export const RUN_STAT_BASES: Readonly<Record<RunStatKey, number>> = {
   rarityWeightUncommon: RECRUITMENT.rarityWeights.uncommon,
   rarityWeightRare: RECRUITMENT.rarityWeights.rare,
   rarityWeightLegendary: RECRUITMENT.rarityWeights.legendary,
+  /** 64c — port unit slots whose TIER is forced to legendary (Idol of
+   *  Portunus's +1; the shape-lock's count-stat generalization — a second
+   *  source stacks to two forced slots, naturally clamped by the slot
+   *  count at the read site). Base 0: no guarantee without a source. */
+  portLegendaryOffers: 0,
 };
 
 /** One passive modifier, as authored by a `modifier` rule. */

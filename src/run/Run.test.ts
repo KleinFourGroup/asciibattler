@@ -4075,6 +4075,68 @@ describe("64b — Patrician's Seal (no commons)", () => {
   });
 });
 
+describe('64c — Idol of Portunus (guaranteed port legendary)', () => {
+  const portunus = daemonById('portunus')!;
+  const legendaries = new Set<string>(DRAFTABLE_BY_TIER.legendary);
+
+  it('ships as a pure add modifier on portLegendaryOffers (the 64 shape-lock)', () => {
+    expect(portunus.rules).toEqual([
+      { kind: 'modifier', stat: 'portLegendaryOffers', op: 'add', value: 1 },
+    ]);
+  });
+
+  it('slot 0 of the port shelf is legendary with the idol owned (across seeds)', () => {
+    for (const seed of [81, 82, 83]) {
+      const { run, bus } = freshRunWithBus(seed, { daemon: portunus });
+      dockAtPort(run, bus);
+      expect(run.portStock!.units).toHaveLength(PRICES.portStock.units);
+      expect(legendaries.has(run.portStock!.units[0]!.template.archetype)).toBe(true);
+    }
+  });
+
+  it('stacking: a second source forces a second slot (the count-stat shape-lock)', () => {
+    const { run, bus } = freshRunWithBus(84, { daemon: portunus });
+    run.addDaemon(portunus); // addDaemon never dedupes — two sources, +1 each
+    expect(run.effectivePortLegendaryOffers).toBe(2);
+    dockAtPort(run, bus);
+    for (const slot of run.portStock!.units.slice(0, 2)) {
+      expect(legendaries.has(slot.template.archetype)).toBe(true);
+    }
+  });
+
+  it('degrades gracefully when the character blacklist empties the legendary pool', () => {
+    // A synthetic in-memory character (the RunConfig.character seam takes the
+    // object directly): every legendary blacklisted. The guarantee must fall
+    // back to the normal roll — a stocked shelf, no throw, nothing legendary.
+    const noLegends = {
+      id: 'test-no-legends',
+      name: 'Test No Legends',
+      description: 'blacklists the whole legendary tier',
+      roster: ['mercenary', 'archer'],
+      daemon: 'mars',
+      blacklist: [...DRAFTABLE_BY_TIER.legendary],
+      weightOverrides: {},
+    } as const;
+    const { run, bus } = freshRunWithBus(85, { character: noLegends, daemon: portunus });
+    dockAtPort(run, bus);
+    expect(run.portStock!.units).toHaveLength(PRICES.portStock.units);
+    for (const slot of run.portStock!.units) {
+      expect(legendaries.has(slot.template.archetype)).toBe(false);
+    }
+  });
+
+  it('composes with the Seal: no commons anywhere AND slot 0 legendary', () => {
+    const { run, bus } = freshRunWithBus(86, { daemon: daemonById('patricians-seal')! });
+    run.addDaemon(portunus);
+    dockAtPort(run, bus);
+    const commons = new Set<string>(DRAFTABLE_BY_TIER.common);
+    expect(legendaries.has(run.portStock!.units[0]!.template.archetype)).toBe(true);
+    for (const slot of run.portStock!.units) {
+      expect(commons.has(slot.template.archetype)).toBe(false);
+    }
+  });
+});
+
 /**
  * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
  * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn

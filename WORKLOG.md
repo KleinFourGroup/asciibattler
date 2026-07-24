@@ -843,3 +843,33 @@ plus the encounter-editor's byte-faithful-formatter discipline:
 - TODO fold-in: the run-config launcher character dropdown (blank =
   the select scene; `?character=priest` round-trips through
   `parseRunConfig` with the summary line reading the resolved name).
+
+### 63g — the Global Blacklist Editor (2026-07-24)
+
+`59b310e` — tools/blacklist-editor/, the phase's last cut. A UI over
+the `draftable` flags per the kickoff lock (NO new config file; the
+63a-post verdict keeps the flag as the shared home for structural
+exclusions + curation, unified at this UI layer):
+
+- Saves through the ARCHETYPE editor's `formatArchetypesJson` — no
+  second formatter to drift. The blacklist-specific contract is pinned
+  in tests/tools/blacklist-editor.test.ts over node-safe toggle
+  helpers (`draftable.ts`): one toggle off = EXACTLY one added
+  `"draftable": false,` line (and back on restores the file verbatim);
+  schema round-trip deep-equal; `poolsByTier` ≡ the live
+  `DRAFTABLE_BY_TIER` grouping (the preview can't drift from the
+  sampler's).
+- Validation runs the REAL cross-config contracts a draftable change
+  can break, not form goodwill: `assertPriceRefs` against the WORKING
+  draftable set (toggling ghoul on trips the genuine "no base price"
+  boot assert), the character catalog's dead-config guard as a
+  Save-gating error (toggling shaman off names the priest's blacklist
+  entry — the characters.test.ts pin), and an inert weight-override as
+  a new non-gating `warn` level (legal, just dead weight).
+- Browser-verified: all three checks fire and clear on restore; a
+  no-edit Save is a byte-level no-op on disk (`git status` clean after
+  the write through `/__save-config`).
+
+Both editors now satisfy the phase exit criterion — "the editors write
+byte-faithful config" — proven twice over: unit-pinned (verbatim +
+round-trip) AND end-to-end (no-edit Save ⇒ zero diff on disk).

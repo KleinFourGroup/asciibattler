@@ -144,8 +144,9 @@ harness, Soldier default), the three shipped characters (Soldier / Priest
 - [x] **63f** — the Character Editor (tools/character-editor +
   byte-faithful formatter + round-trip tests). ✅ `4fe8a06` — no-edit
   Save = byte no-op, launcher dropdown folded in; worklog §63f.
-- [ ] **63g** — the Global Blacklist Editor (a UI over `draftable`
-  via the archetype-editor formatter + round-trip test).
+- [x] **63g** — the Global Blacklist Editor (a UI over `draftable`
+  via the archetype-editor formatter + round-trip test). ✅ `59b310e` —
+  one toggle = one line, real cross-checks gate Save; worklog §63g.
 
 ## Phase 64 — The three drafting daemons
 

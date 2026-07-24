@@ -420,8 +420,9 @@ describe('battleRulesFor (47f — the battle-domain compile)', () => {
 });
 
 describe('the shipped catalog (config/daemons.json) — design-shape pins', () => {
-  it('ships the four L idols + the three 47e/f economy idols', () => {
+  it('ships the four L idols + the three 47e/f economy idols + the §64 drafting daemons', () => {
     expect(DAEMONS.map((d) => d.id).sort()).toEqual([
+      'cornucopia',
       'fortuna',
       'janus',
       'laverna',

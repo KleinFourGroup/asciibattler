@@ -38,7 +38,8 @@
       "mars": 40,
       "janus": 32,
       "mercury": 30,
-      "fortuna": 25
+      "fortuna": 25,
+      "cornucopia": 30
     }
   },
   "sellFraction": 0.5,

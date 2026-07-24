@@ -3965,6 +3965,65 @@ describe('48b — the reward phase', () => {
   });
 });
 
+describe('64a — The Cornucopia (recruitOfferSize)', () => {
+  /** Drive one victory to the recruit offer, DECLINING rewards — an accepted
+   *  daemon portion could be the Cornucopia itself (it ships in both reward
+   *  tables), which would pollute an offer-size read. */
+  const firstOfferDeclining = (seed: number, config?: RunConfig) => {
+    const { run, bus } = freshRunWithBus(seed, config);
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    winEncounter(bus);
+    declineAllRewards(run);
+    return run.currentOffer ?? [];
+  };
+
+  const cornucopia = daemonById('cornucopia')!;
+  // The catalog's authored bonus, DERIVED (not a hardcoded +1) so a §68
+  // retune of the value keeps these expectations honest.
+  const bonus = (() => {
+    const rule = cornucopia.rules![0]!;
+    if (rule.kind !== 'modifier') throw new Error('cornucopia rule 0 must be a modifier');
+    return rule.value;
+  })();
+
+  it('ships as a pure modifier on recruitOfferSize (no hooks — the 64 shape-lock)', () => {
+    expect(cornucopia.rules).toEqual([
+      { kind: 'modifier', stat: 'recruitOfferSize', op: 'add', value: bonus },
+    ]);
+  });
+
+  it('effectiveOfferSize folds the catalog bonus over the config base', () => {
+    const { run } = freshRunWithBus(11, { daemon: cornucopia });
+    expect(run.effectiveOfferSize).toBe(Math.floor(RECRUITMENT.defaultOfferSize + bonus));
+    expect(freshRunWithBus(11, { daemon: null }).run.effectiveOfferSize).toBe(
+      RECRUITMENT.defaultOfferSize,
+    );
+  });
+
+  it('a won battle offers one more recruit with the daemon owned', () => {
+    expect(firstOfferDeclining(21, { daemon: cornucopia })).toHaveLength(
+      RECRUITMENT.defaultOfferSize + bonus,
+    );
+    expect(firstOfferDeclining(21, { daemon: null })).toHaveLength(RECRUITMENT.defaultOfferSize);
+  });
+
+  it('holds × each character (the count is orthogonal to the 63c pools/weights seam)', () => {
+    for (const id of [DEFAULT_CHARACTER_ID, 'priest', 'gambler']) {
+      const character = characterById(id)!;
+      const offer = firstOfferDeclining(31, { character, daemon: cornucopia });
+      expect(offer).toHaveLength(RECRUITMENT.defaultOfferSize + bonus);
+      // Composition still character-governed (63c): nothing blacklisted leaks.
+      for (const t of offer) expect(character.blacklist).not.toContain(t.archetype);
+    }
+  });
+
+  it('leaves the PORT unit count untouched (spec scope: post-encounter only)', () => {
+    const { run, bus } = freshRunWithBus(41, { daemon: cornucopia });
+    dockAtPort(run, bus);
+    expect(run.portStock!.units).toHaveLength(PRICES.portStock.units);
+  });
+});
+
 /**
  * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
  * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn

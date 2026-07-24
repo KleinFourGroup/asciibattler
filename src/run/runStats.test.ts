@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { RUN_STAT_BASES, foldRunStats, type RunStatModifier } from './runStats';
+import { RECRUITMENT } from '../config/recruitment';
 
 const mod = (
   stat: RunStatModifier['stat'],
@@ -64,5 +65,12 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
   it('pins the spec-locked bases: neutral bitsGain, six cache slots', () => {
     expect(RUN_STAT_BASES.bitsGain).toBe(1);
     expect(RUN_STAT_BASES.cacheSize).toBe(6);
+  });
+
+  // 64a — CONFIG-DERIVED, not pinned to a literal (the balance-proof-tests
+  // norm): the offer-size base must track recruitment.json, so a tuning edit
+  // there can never silently desync the fold's baseline.
+  it('64a: recruitOfferSize base derives from recruitment.json', () => {
+    expect(RUN_STAT_BASES.recruitOfferSize).toBe(RECRUITMENT.defaultOfferSize);
   });
 });

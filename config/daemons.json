@@ -109,6 +109,19 @@
       ]
     },
     {
+      "id": "cornucopia",
+      "name": "The Cornucopia",
+      "description": "Post-battle recruit offers hold one more unit.",
+      "rules": [
+        {
+          "kind": "modifier",
+          "stat": "recruitOfferSize",
+          "op": "add",
+          "value": 1
+        }
+      ]
+    },
+    {
       "id": "fortuna",
       "name": "Idol of Fortuna",
       "description": "A critical strike emboldens the striker: +1 STR / RNG / MAG for 5s.",

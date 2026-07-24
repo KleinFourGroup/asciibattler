@@ -1630,6 +1630,18 @@ export class Run {
   }
 
   /**
+   * 64a — the effective post-battle recruit-offer size: the
+   * `recruitOfferSize` run-stat fold (base = recruitment.json's
+   * defaultOfferSize) read at call time and FLOORED here (the
+   * `effectiveCacheSize` discipline). The Cornucopia's +1 lands through
+   * this; the PORT unit count deliberately does not read it (spec scope:
+   * post-encounter only).
+   */
+  get effectiveOfferSize(): number {
+    return Math.floor(this.effectiveRunStats().recruitOfferSize);
+  }
+
+  /**
    * 49b — packets held beyond the derived capacity (0 = none). Non-zero only
    * after a SHRINK (a cacheSize-lowering daemon landing under current
    * holdings) — acquisition surfaces gate on `cacheHasRoom`, so adds never
@@ -2506,9 +2518,10 @@ export class Run {
       const offerRng = this.rng.fork();
       const baseLevel = Math.round(avgTeamLevel(this.team));
       // 63c — offers draw from the character-governed pools + weights.
+      // 64a — the slot count is the folded run stat (The Cornucopia's +1).
       this.currentOffer = rollOffer(
         offerRng,
-        undefined,
+        this.effectiveOfferSize,
         (cardRng) =>
           Math.min(
             LEVELING.levelCap,

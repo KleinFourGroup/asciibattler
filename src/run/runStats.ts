@@ -16,17 +16,25 @@
  *    comes from owning multiple daemons/packets, not per-instance stacks.
  */
 
+import { RECRUITMENT } from '../config/recruitment';
+
 /** The launch run-stat keys (content-driven — grown when content demands).
  *  A tuple so the config layer's zod enum and this type share one source. */
-export const RUN_STAT_KEYS = ['bitsGain', 'cacheSize'] as const;
+export const RUN_STAT_KEYS = ['bitsGain', 'cacheSize', 'recruitOfferSize'] as const;
 export type RunStatKey = (typeof RUN_STAT_KEYS)[number];
 
-/** Base values before any modifier folds. */
+/** Base values before any modifier folds. §64a: bases may be CONFIG-DERIVED
+ *  (recruitOfferSize reads recruitment.json — one source of truth; the import
+ *  is cycle-free: recruitment.ts touches only zod/json/type-only units). */
 export const RUN_STAT_BASES: Readonly<Record<RunStatKey, number>> = {
   /** Multiplier applied to every bits grant (1 = neutral). */
   bitsGain: 1,
   /** Cache slots (spec: base six). Dormant until §49 builds the cache. */
   cacheSize: 6,
+  /** 64a — post-battle recruit-offer slots (The Cornucopia's +1). The PORT
+   *  unit count is deliberately NOT this stat (spec: "the post-encounter
+   *  pool from three to four" — `PRICES.portStock.units` is untouched). */
+  recruitOfferSize: RECRUITMENT.defaultOfferSize,
 };
 
 /** One passive modifier, as authored by a `modifier` rule. */

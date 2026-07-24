@@ -814,3 +814,32 @@ the pre-turn gate normally · zero console errors across all flows.
 Screenshot unavailable (backgrounded-pane compositing — the known
 HANDOFF limitation); the subjective look goes to the user's native
 browser per the standing norm.
+
+### 63f — the Character Editor (2026-07-24)
+
+`4fe8a06` — tools/character-editor/ on the price-editor affordance set
+(live real-schema validation · display-honest preview · save-to-disk),
+plus the encounter-editor's byte-faithful-formatter discipline:
+
+- `formatCharactersJson` mirrors the committed file's leaf-inline /
+  composite-expand split: `roster` expands one id per line (it IS the
+  ten slots), `blacklist` stays inline (curation, not a roster),
+  `weightOverrides` emits `{}` inline or one entry per line. Pinned
+  verbatim against config/characters.json + schema round-trip
+  (via the exported `normalizeCharacter`) + a synthetic multi-entry
+  blacklist/overrides case the shipped catalog doesn't author yet.
+- The editor validates through the REAL `CharactersSchema` +
+  `assertDefaultCharacter` (Save gates on them, not the form's
+  goodwill); the form is constrained anyway — blacklist⇄override
+  disjointness is enforced at the row selects, the default character
+  can't be deleted, a roster can't go below the schema minimum.
+- Draft-pool preview derives through the real `draftPoolsFor` + the
+  sampler's exact tier rule (rarityWeights renormalized over non-empty
+  tiers × within-tier weight share) — the Priest reads mage 2.8%
+  (25% × 0.25/2.25) and shaman gone from legendary, both correct.
+- `/__save-config` allowlists `characters.json`. Browser-verified: a
+  no-edit Save is a byte-level no-op on disk (`git status` clean after
+  the write) — the exit criterion, proven end-to-end.
+- TODO fold-in: the run-config launcher character dropdown (blank =
+  the select scene; `?character=priest` round-trips through
+  `parseRunConfig` with the summary line reading the resolved name).

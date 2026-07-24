@@ -141,8 +141,9 @@ harness, Soldier default), the three shipped characters (Soldier / Priest
 - [ ] **63e** — CharacterSelectScene + the Game deferred-Run surgery
   (`run: Run | null`; boot branches on `?character=`; resetRun per
   the locked fork). Browser-verified natively.
-- [ ] **63f** — the Character Editor (tools/character-editor +
-  byte-faithful formatter + round-trip tests).
+- [x] **63f** — the Character Editor (tools/character-editor +
+  byte-faithful formatter + round-trip tests). ✅ `4fe8a06` — no-edit
+  Save = byte no-op, launcher dropdown folded in; worklog §63f.
 - [ ] **63g** — the Global Blacklist Editor (a UI over `draftable`
   via the archetype-editor formatter + round-trip test).
 

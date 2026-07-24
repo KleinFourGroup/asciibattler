@@ -20,6 +20,8 @@ import { PortScene } from './scenes/PortScene';
 import { BitsOverlay } from './ui/BitsOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { GameOverScene } from './scenes/GameOverScene';
+import { CharacterSelectScene } from './scenes/CharacterSelectScene';
+import { characterById, type CharacterConfig } from './config/characters';
 import { PreTurnScene } from './scenes/PreTurnScene';
 import { PostTurnScene } from './scenes/PostTurnScene';
 import { AudioPlayer } from './audio/AudioPlayer';
@@ -46,7 +48,10 @@ const TURN_OUTRO_MS = 900;
  *   - run:defeated → GameOverScene('defeat')
  *   - chooseRecruit returning to phase=='map' → MapScene (driven from
  *     dispatch, since no bus event fires for that transition)
- *   - resetRun → MapScene (new Run)
+ *   - resetRun → MapScene (new Run) with a `?character=` pin, else the
+ *     CharacterSelectScene (63e — the choice is per-run)
+ *   - chooseCharacter (63e, select-scene confirm) → construct the Run →
+ *     MapScene
  *
  * A2: implements `RunDispatcher`. UI screens (now Scene-owned) hold this as
  * their command sink. Game forwards `enterNode` / `chooseRecruit` to the
@@ -90,11 +95,13 @@ export class Game implements RunDispatcher {
    */
   private readonly keybindings = new Keybindings();
   /**
-   * Active run. Replaced on `resetRun` command, so it's not readonly — but
-   * every method should still treat `this.run` as the authoritative source
-   * for meta state.
+   * Active run. Replaced on `resetRun`, and — 63e — NULL while the
+   * CharacterSelectScene is up (the choice precedes Run construction; a
+   * `?character=` pin skips that state entirely). Every method treats
+   * `this.run` as the authoritative source for meta state; run-level
+   * commands arriving while null are dropped loud in `dispatch`.
    */
-  private run: Run;
+  private run: Run | null;
   /**
    * G1 — the RunConfig parsed once from the launch URL. Reused on `resetRun`
    * so a reset re-rolls a fresh run with the *same* shape (short floor count /
@@ -119,11 +126,14 @@ export class Game implements RunDispatcher {
     // run, byte-identical to pre-G1. Supersedes the old inline `?roster=`.
     this.runConfig = parseRunConfigFromURL();
 
-    // Construct Run first so its battle:ended handler subscribes before any
-    // Game listener that reads run.phase. The recruit:offered/run:victory/
-    // run:defeated subscriptions below all run *after* Run has updated phase
-    // because Run emits those from within its own battle:ended handler.
-    this.run = this.createRun();
+    // 63e — construct the Run NOW only when `?character=` pins the choice;
+    // otherwise it stays null until the CharacterSelectScene confirms
+    // (`confirmCharacter`). Late Run construction is safe ordering-wise:
+    // Game has no direct battle:ended listener, and every Run follow-on
+    // event (recruit:offered/run:victory/run:defeated) is emitted from
+    // within Run's own handler AFTER it updates phase — subscription order
+    // doesn't matter for those (the devLoadRun precedent).
+    this.run = this.runConfig.character !== undefined ? this.createRun() : null;
 
     // Renderer drives the per-frame tick of whatever scene is active. After the
     // scene has updated (sprite positions lerped for this frame), Qb#2 depth-
@@ -180,18 +190,32 @@ export class Game implements RunDispatcher {
     // (Run's init never emits run:bitsChanged, and the first run:started
     // predates this line); resetRun re-paints via refresh() after the run
     // reassignment (see the ordering note there).
-    this.bitsOverlay = new BitsOverlay(uiMount, this.bus, () => this.run.bits);
+    // 63e — getters are null-safe (a pre-select boot has no run; the chip
+    // starts hidden then and `run:started` reveals it on confirm).
+    this.bitsOverlay = new BitsOverlay(
+      uiMount,
+      this.bus,
+      () => this.run?.bits ?? 0,
+      this.run === null,
+    );
 
     // 49f: the cache chip — the bits chip's page-lifetime sibling (stacked
     // below it). Getters close over `this.run` so a reset's Run swap is
     // invisible (the dispatcher pattern); `this` is the RunDispatcher.
-    this.cacheOverlay = new CacheOverlay(uiMount, this.bus, this, this.audio, {
-      getCache: () => this.run.cache,
-      getSize: () => this.run.effectiveCacheSize,
-      getOverflow: () => this.run.cacheOverflow,
-      getPhase: () => this.run.phase,
-      getRoster: () => this.run.team,
-    });
+    this.cacheOverlay = new CacheOverlay(
+      uiMount,
+      this.bus,
+      this,
+      this.audio,
+      {
+        getCache: () => this.run?.cache ?? [],
+        getSize: () => this.run?.effectiveCacheSize ?? 0,
+        getOverflow: () => this.run?.cacheOverflow ?? 0,
+        getPhase: () => this.run?.phase ?? 'map',
+        getRoster: () => this.run?.team ?? [],
+      },
+      this.run === null,
+    );
 
     // Scene transitions driven by Run lifecycle events. All of the
     // post-battle handlers fire *after* Run has already updated phase +
@@ -248,7 +272,31 @@ export class Game implements RunDispatcher {
     // no-op until a scene subscribes a handler, so this can attach once at boot.
     window.addEventListener('keydown', this.keybindings.handleKeyDown);
 
-    // Boot into the map.
+    // Boot into the map (a `?character=` pin constructed the Run above) or
+    // the character select (63e — the choice precedes Run construction).
+    this.swap(this.run !== null ? new MapScene() : new CharacterSelectScene());
+  }
+
+  /**
+   * 63e — the CharacterSelectScreen's confirm: resolve the chosen character
+   * and CONSTRUCT the Run (the §63 seam — Game holds the choice, constructs
+   * on confirm). The new Run's `run:started` re-shows the overlay chips
+   * (their subscriptions are live by now — unlike the pinned-boot path);
+   * the refresh() pair after the assignment is the 48d/49f re-paint
+   * ordering. A confirm while a Run already exists is a misroute — ignore.
+   */
+  private confirmCharacter(characterId: string): void {
+    if (this.run !== null) {
+      console.warn(`[Game] chooseCharacter '${characterId}' ignored — a run is already live`);
+      return;
+    }
+    const character = characterById(characterId);
+    if (character === undefined) {
+      throw new Error(`Game.confirmCharacter: unknown character id '${characterId}'`);
+    }
+    this.run = this.createRun(character);
+    this.bitsOverlay.refresh();
+    this.cacheOverlay.refresh();
     this.swap(new MapScene());
   }
 
@@ -261,28 +309,46 @@ export class Game implements RunDispatcher {
    *     exception is recruit → map, which is silent, so we swap explicitly.
    */
   dispatch(command: RunCommand): void {
+    // 63e — the two GAME-level commands work without a live Run:
+    // chooseCharacter CONSTRUCTS it (the select-precedes-Run seam);
+    // resetRun tears down whatever exists. Everything else needs a Run —
+    // a run-level command arriving pre-select is a scene sequencing bug,
+    // so warn loud and drop rather than silently no-op it.
+    if (command.kind === 'chooseCharacter') {
+      this.confirmCharacter(command.characterId);
+      return;
+    }
+    if (command.kind === 'resetRun') {
+      this.resetRun();
+      return;
+    }
+    const run = this.run;
+    if (run === null) {
+      console.warn(`[Game] '${command.kind}' ignored — no Run yet (character select pending)`);
+      return;
+    }
     switch (command.kind) {
       case 'enterNode':
         // If the hop is accepted, Run synchronously emits `battle:started`,
         // which fires the BattleScene swap before this line returns.
         // Rejected hops (non-frontier, wrong phase) emit nothing — we stay
         // on the map.
-        this.run.dispatch(command);
+        run.dispatch(command);
         // 50e — docking emits `port:entered`, whose bus subscription swaps
         // the PortScene (the reward:offered pattern) — nothing to do here.
         // G3 — a rest node resolves inline. If it banked XP without a
         // level-up, phase falls to 'map' with no event (like chooseRecruit
         // below), so refresh the map explicitly. A battle (battle:started) or
         // a rest-with-promotion (promotion:pending) fires its own swap.
-        if (this.run.phase === 'map') {
+        if (run.phase === 'map') {
           this.swap(new MapScene());
         }
         break;
       case 'leavePort':
         // 50c — undock lands on 'map' with no event emit (the chooseRecruit
         // silent-transition pattern), so swap explicitly.
-        this.run.dispatch(command);
-        if (this.run.phase === 'map') {
+        run.dispatch(command);
+        if (run.phase === 'map') {
           this.swap(new MapScene());
         }
         break;
@@ -295,14 +361,14 @@ export class Game implements RunDispatcher {
         // (the §50e port screen re-renders in place after dispatch, the
         // RewardScreen pattern; the overlays repaint off run:bitsChanged /
         // run:cacheChanged).
-        this.run.dispatch(command);
+        run.dispatch(command);
         break;
       case 'chooseRecruit':
-        this.run.dispatch(command);
+        run.dispatch(command);
         // Non-terminal recruit: phase falls back to 'map' with no event
         // emit. The terminal-floor case fires `run:victory` which is handled
         // by the bus subscription above.
-        if (this.run.phase === 'map') {
+        if (run.phase === 'map') {
           this.swap(new MapScene());
         }
         break;
@@ -311,8 +377,8 @@ export class Game implements RunDispatcher {
         // so swap explicitly (same pattern as chooseRecruit). A non-terminal
         // recruit is the only phase that reaches here; the terminal floor
         // routes through run:victory, never the recruit screen.
-        this.run.dispatch(command);
-        if (this.run.phase === 'map') {
+        run.dispatch(command);
+        if (run.phase === 'map') {
           this.swap(new MapScene());
         }
         break;
@@ -323,8 +389,8 @@ export class Game implements RunDispatcher {
         // (terminal), likewise self-swapping. After a G3 rest-triggered
         // promotion it instead falls back to 'map' with no event, so swap
         // explicitly (same pattern as chooseRecruit / enterNode above).
-        this.run.dispatch(command);
-        if (this.run.phase === 'map') {
+        run.dispatch(command);
+        if (run.phase === 'map') {
           this.swap(new MapScene());
         }
         break;
@@ -333,7 +399,7 @@ export class Game implements RunDispatcher {
         // (start the battle, the next pre-turn screen, recruit, promotion, or
         // defeat) emits its own bus event that drives the scene swap, so there's
         // nothing to swap explicitly here.
-        this.run.dispatch(command);
+        run.dispatch(command);
         break;
       case 'acceptReward':
       case 'declineReward':
@@ -341,38 +407,35 @@ export class Game implements RunDispatcher {
         // re-renders in place; the LAST resolution advances the run, whose
         // event (promotion:pending / recruit:offered / run:victory) drives
         // its own swap — no silent-map path exists off a won encounter.
-        this.run.dispatch(command);
+        run.dispatch(command);
         break;
       case 'redrawCards':
         // K3 — redraw at the pre-turn gate. The phase doesn't change (the
         // pre-turn screen stays up and refreshes in place off the
         // `turn:handRedrawn` emit), so there's no scene swap here either.
-        this.run.dispatch(command);
+        run.dispatch(command);
         break;
       case 'empowerUnit':
         // K4 — empower at the pre-turn gate. Same in-place pattern as
         // redrawCards: the screen refreshes off `turn:unitEmpowered`.
-        this.run.dispatch(command);
+        run.dispatch(command);
         break;
       case 'discardPacket':
         // 49b — cache discard: run-level state only, legal in any phase; the
         // cache surfaces repaint off `run:cacheChanged` (no scene swap).
-        this.run.dispatch(command);
+        run.dispatch(command);
         break;
       case 'passGrant':
         // 49d — finalize the active grant at the pre-turn gate. Same
         // in-place pattern as redrawCards: the screen refreshes off
         // `turn:grantPassed` (no phase change, no scene swap).
-        this.run.dispatch(command);
+        run.dispatch(command);
         break;
       case 'usePacket':
         // 49e — fire a held packet. No phase change in either context (the
         // pre-turn screen / map stay up); consumers repaint off
         // `run:cacheChanged` + `run:packetUsed` (no scene swap).
-        this.run.dispatch(command);
-        break;
-      case 'resetRun':
-        this.resetRun();
+        run.dispatch(command);
         break;
       default:
         // Exhaustiveness guard (48c): this switch re-enumerates RunCommand by
@@ -397,15 +460,28 @@ export class Game implements RunDispatcher {
    * debug panel.
    */
   private resetRun(): void {
-    this.run.dispose();
-    this.run = this.createRun();
-    // 48d — re-paint the bits chip AFTER the reassignment: the new Run's
-    // `run:started` fired mid-construction (before this.run pointed at it),
-    // so the overlay's event-driven paint would have read the dead run.
-    this.bitsOverlay.refresh();
-    // 49f — same ordering for the cache chip (also closes a stale modal).
-    this.cacheOverlay.refresh();
-    this.swap(new MapScene());
+    this.run?.dispose();
+    // 63e — the locked reset fork: a `?character=` pin goes straight to a
+    // fresh run + map; without it, a new run STARTS at character select
+    // (the choice is per-run, not sticky). The chips were hidden by the
+    // run:defeated/run:victory that preceded the reset button, so the
+    // select path leaves them hidden until the next run:started.
+    if (this.runConfig.character !== undefined) {
+      this.run = this.createRun();
+      // 48d — re-paint the bits chip AFTER the reassignment: the new Run's
+      // `run:started` fired mid-construction (before this.run pointed at
+      // it), so the overlay's event-driven paint would have read the dead
+      // run.
+      this.bitsOverlay.refresh();
+      // 49f — same ordering for the cache chip (also closes a stale modal).
+      this.cacheOverlay.refresh();
+      this.swap(new MapScene());
+    } else {
+      this.run = null;
+      this.bitsOverlay.refresh();
+      this.cacheOverlay.refresh();
+      this.swap(new CharacterSelectScene());
+    }
   }
 
   /**
@@ -415,6 +491,9 @@ export class Game implements RunDispatcher {
    * be exported (a non-map file is still headless-fixture material).
    */
   devExportRun(): RunSnapshot {
+    if (this.run === null) {
+      throw new Error('devExportRun: no run to export (character select pending)');
+    }
     return this.run.toJSON();
   }
 
@@ -443,7 +522,7 @@ export class Game implements RunDispatcher {
     }
     const restored = Run.fromJSON(snap, this.bus);
     restored.pauseAtTurnGates = true;
-    this.run.dispose();
+    this.run?.dispose();
     this.run = restored;
     // 48d/49f — the resetRun ordering: re-paint the page-lifetime chips
     // AFTER the reassignment so their getters read the new run.
@@ -454,11 +533,14 @@ export class Game implements RunDispatcher {
 
   /**
    * G1 — build a fresh Run from the parsed RunConfig. Shared by the
-   * constructor and `resetRun` so both honor `?floors=` / `?layout=` /
-   * `?roster=` / `?width=` (and a pinned `?seed=`) identically.
+   * constructor, `resetRun`, and — 63e — `confirmCharacter`, which passes
+   * the scene-chosen character (layered over the URL config; a URL
+   * `?character=` pin means this is never called with one).
    */
-  private createRun(): Run {
-    const run = new Run(this.runConfig.seed ?? Date.now(), this.bus, this.runConfig);
+  private createRun(character?: CharacterConfig): Run {
+    const config: RunConfig =
+      character !== undefined ? { ...this.runConfig, character } : this.runConfig;
+    const run = new Run(config.seed ?? Date.now(), this.bus, config);
     // H4b — the live game pauses at turn gates so the pre/post-turn screens can
     // show. (Headless tests + the fuzz harness leave this off → the synchronous
     // H4a loop, so they're unaffected.)

@@ -16,7 +16,7 @@
 
 import { PreTurnScreen } from '../ui/PreTurnScreen';
 import type { GameEvents } from '../core/events';
-import type { Scene, SceneContext } from './Scene';
+import { requireRun, type Scene, type SceneContext } from './Scene';
 
 export class PreTurnScene implements Scene {
   private screen: PreTurnScreen | null = null;
@@ -28,7 +28,8 @@ export class PreTurnScene implements Scene {
     this.screen = new PreTurnScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
     // 49f — the cache thunk feeds the at-will packet row (read live at
     // render time, the CardListButton getUnits pattern).
-    this.screen.show(this.info, ctx.run.team, () => ctx.run.cache);
+    const run = requireRun(ctx);
+    this.screen.show(this.info, run.team, () => run.cache);
     this.unsubscribes = [
       ctx.bus.on('turn:handRedrawn', (payload) => this.screen?.updateHand(payload)),
       ctx.bus.on('turn:unitEmpowered', (payload) => this.screen?.updateEmpower(payload)),

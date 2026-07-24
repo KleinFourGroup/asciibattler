@@ -7,7 +7,7 @@
 
 import { RecruitScreen } from '../ui/RecruitScreen';
 import type { UnitTemplate } from '../sim/Unit';
-import type { Scene, SceneContext } from './Scene';
+import { requireRun, type Scene, type SceneContext } from './Scene';
 
 export class RecruitScene implements Scene {
   private screen: RecruitScreen | null = null;
@@ -16,7 +16,7 @@ export class RecruitScene implements Scene {
 
   mount(ctx: SceneContext): void {
     this.screen = new RecruitScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
-    this.screen.show(this.offer, ctx.run.team);
+    this.screen.show(this.offer, requireRun(ctx).team);
   }
 
   tick(_dt: number): void {}

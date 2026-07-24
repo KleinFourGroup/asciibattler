@@ -44,9 +44,15 @@ export class BitsOverlay {
     mount: HTMLElement,
     bus: EventBus<GameEvents>,
     private readonly getBits: () => number,
+    /** 63e — start hidden when no Run exists yet (the pre-select boot); the
+     *  existing `run:started` re-show reveals the chip when select confirms
+     *  (the new Run's constructor emits it — subscription below is live by
+     *  then, unlike the pinned-boot path where Run predates this chip). */
+    startHidden = false,
   ) {
     this.el = document.createElement('div');
     this.el.className = 'bits-overlay';
+    if (startHidden) this.el.classList.add('is-hidden');
     this.value = document.createElement('span');
     this.value.className = 'bits-overlay__value';
     const label = document.createElement('span');

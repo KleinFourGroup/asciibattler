@@ -1092,9 +1092,11 @@ export class Run {
         this.handleUsePacket(command.cacheIndex, command.handIndex, command.rosterIndex);
         break;
       case 'resetRun':
-        // No-op at this layer — Game handles reset by disposing this Run
-        // and constructing a new one. Falls through silently rather than
-        // throwing so a misrouted command doesn't crash a battle.
+      case 'chooseCharacter':
+        // No-ops at this layer — Game handles both (reset disposes this Run;
+        // chooseCharacter CONSTRUCTS one, so a live Run can only see it
+        // misrouted). Fall through silently rather than throwing so a
+        // misrouted command doesn't crash a battle.
         break;
     }
   }

@@ -9,13 +9,13 @@
  */
 
 import { PortScreen } from '../ui/PortScreen';
-import type { Scene, SceneContext } from './Scene';
+import { requireRun, type Scene, type SceneContext } from './Scene';
 
 export class PortScene implements Scene {
   private screen: PortScreen | null = null;
 
   mount(ctx: SceneContext): void {
-    this.screen = new PortScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, ctx.run, ctx.bus);
+    this.screen = new PortScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, requireRun(ctx), ctx.bus);
     this.screen.show();
   }
 

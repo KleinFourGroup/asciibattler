@@ -182,7 +182,15 @@ export type RunCommand =
       readonly handIndex?: number;
       readonly rosterIndex?: number;
     }
-  | { readonly kind: 'resetRun' };
+  | { readonly kind: 'resetRun' }
+  /**
+   * 63e — confirm the starting character on the CharacterSelectScene. GAME-
+   * handled (the `resetRun` shape): it CONSTRUCTS the Run (the choice must
+   * exist before Run construction — the §63 seam), so Run itself only ever
+   * sees it as a misrouted no-op. `characterId` is a characters.json id;
+   * Game validates it loud (the scene only offers catalog entries).
+   */
+  | { readonly kind: 'chooseCharacter'; readonly characterId: string };
 
 export interface RunDispatcher {
   dispatch(command: RunCommand): void;

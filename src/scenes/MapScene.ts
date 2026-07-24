@@ -10,19 +10,20 @@
  */
 
 import { MapScreen } from '../ui/MapScreen';
-import type { Scene, SceneContext } from './Scene';
+import { requireRun, type Scene, type SceneContext } from './Scene';
 
 export class MapScene implements Scene {
   private screen: MapScreen | null = null;
 
   mount(ctx: SceneContext): void {
+    const run = requireRun(ctx);
     this.screen = new MapScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
     this.screen.show(
-      ctx.run.nodeMap,
-      ctx.run.currentNodeId,
-      ctx.run.visitedNodes,
-      ctx.run.team,
-      ctx.run.currentSectorTitle,
+      run.nodeMap,
+      run.currentNodeId,
+      run.visitedNodes,
+      run.team,
+      run.currentSectorTitle,
     );
   }
 

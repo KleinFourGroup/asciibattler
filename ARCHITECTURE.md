@@ -298,6 +298,7 @@ src/
     PreTurnScene.ts          #   H4b: DOM-only, wraps PreTurnScreen (the turn-intro gate)
     PostTurnScene.ts         #   H4b: DOM-only, wraps PostTurnScreen (the turn-outcome gate)
     GameOverScene.ts         #   DOM-only, wraps GameOverScreen
+    CharacterSelectScene.ts  #   63e: DOM-only, wraps CharacterSelectScreen — the ONE scene that mounts with ctx.run === null (the choice precedes Run construction); every other scene asserts via requireRun(ctx)
 
   ui/
     ui.css
@@ -324,6 +325,7 @@ src/
     BitsOverlay.ts           # 48d: the persistent top-left bits chip — the FIRST page-lifetime UI element (Game-owned, survives scene swaps); paints from run.bits + run:bitsChanged, hides at game-over, re-shows on run:started
     CacheOverlay.ts          # 49f: the persistent cache chip (▤ n/6, stacked below the bits chip) + the open-anywhere cache modal — the SECOND page-lifetime element (the gotcha #116 lifecycle verbatim); Discard always, Fire by the phase-derived context (mirrors the 49e engine derivation), overclock's inline roster picker, the forced-keep shrink flow (overflow force-opens discard-only, un-dismissable until resolved)
     GameOverScreen.ts        # defeat / complete variants → dispatch resetRun
+    CharacterSelectScreen.ts # 63e: the character-select cards (name/description/roster summary/idol per catalog entry) → dispatch chooseCharacter; the run's first screen unless ?character= pins
     statLabels.ts            # GP3: shared STAT_LABELS map (card + HUD + PromotionScreen)
     UnitCard.ts              # P1: shared unit-card builder — one DOM/CSS source for recruit + promotion (+ P3 pre-turn, Q4/Q5 HUD player+enemy cards, R1/R2 card-list modal). compact/full modes × recruit/promotion/preturn/hud/roster skins; compact (Q4) = glyph + Lv(TL)/POW(TR) + glyph-width HP bar, via unitCardFromUnit adapter + the hpFill handle; Q5 team coloring via the `team` opt → unit-card--enemy (red glyph + HP, vs the green player default); carries the "card can't disagree with the unit" ability readings (was RecruitScreen); rarity-accent seam (unit-card--rarity-*, default common = today's look); §32c updateCardStatusRow reconciles the compact card's status row (a chip per active status: swatch + name + `×stacks · ±N/s · Ns`, the §31 scaled potency made literal)
 
@@ -563,7 +565,8 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   passGrant               { }     # 49d: finalize the ACTIVE grant unspent (the strip's Pass) — engine-enforced finality; a no-op with passIsFinal off
   discardPacket           { cacheIndex: number }   # 49b: drop one cache slot (at-will + the forced-keep shrink instrument); ANY phase — pure run-level state
   usePacket               { cacheIndex: number; handIndex?: number; rosterIndex?: number }   # 49e: fire one held packet (consume-on-fire, validate-first); context from PHASE (turn-intro→preTurn, map→outOfBattle); unit targets: handIndex (preTurn) / rosterIndex (outOfBattle)
-  resetRun                { }
+  resetRun                { }     # 63e: with ?character= pinned → fresh run + map; else → back to the CharacterSelectScene (the choice is per-run)
+  chooseCharacter         { characterId: string }   # 63e: GAME-handled (the resetRun shape) — CONSTRUCTS the Run from the select scene's confirm; a live Run only ever sees it misrouted (no-op)
 
 WorldCommand (queued; drained at top of tick)
   noop                    { }                                # snapshot-test channel exerciser

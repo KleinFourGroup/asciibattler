@@ -1202,6 +1202,82 @@ body {
   color: #000;
 }
 
+/* Character select (63e). The run's first screen when no ?character= pins
+   the choice. Functional, not art-directed (the §63 scope guard) — the
+   gameover-screen chrome vocabulary: opaque black, mono, amber borders. */
+
+.charselect-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  font-family: var(--font-mono);
+}
+
+.charselect-heading {
+  font-size: 32px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #33ff00; /* TERMINAL_GREEN */
+}
+
+.charselect-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  max-width: 1100px;
+}
+
+.charselect-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
+  padding: 20px;
+  background: transparent;
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  color: #ffb000;
+  font-family: var(--font-mono);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, transform 0.1s;
+}
+
+.charselect-card:hover {
+  background: rgba(255, 176, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.charselect-card__name {
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #33ff00; /* TERMINAL_GREEN */
+}
+
+.charselect-card__desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #ffb000;
+}
+
+.charselect-card__roster {
+  font-size: 12px;
+  color: #15f4ee; /* FLOURESCENT_BLUE */
+}
+
+.charselect-card__daemon {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9d00ff; /* NEON_PURPLE */
+}
+
 /* Battle banner (C1d follow-up). Top-center label naming the encounter's
    hand-authored layout ("Corridor" / "Diamond" / etc.) or "Uncharted Ground"
    for procedural battles. Shares the HUD's amber chrome and screen-fade

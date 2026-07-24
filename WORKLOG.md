@@ -774,3 +774,43 @@ is a filed TODO (fold into 63f). New tests: selection parse/resolve,
 URL round-trip, and the harness arm's three guarantees
 (absent ≡ explicit soldier byte-identity · forced-priest liveness ·
 per-arm determinism).
+
+### 63e — the CharacterSelectScene + the Game deferred-Run surgery (2026-07-24)
+
+The risk cut, landed on the locked forks:
+
+- `SceneContext.run: Run | null` + `requireRun(ctx)` (Scene.ts); the six
+  run-dependent scenes assert at mount — typecheck came back clean on
+  the FIRST pass, which is the nullable-types fork doing exactly what it
+  was chosen for (the compiler ran the sweep).
+- `chooseCharacter` joined RunCommand as the second GAME-handled command
+  (the resetRun shape): Game.dispatch early-returns it +
+  resetRun, then narrows a non-null `run` local for the whole forwarding
+  switch — a run-level command arriving pre-select warns + drops (loud
+  beats the silent-no-op discipline here: it's a sequencing bug).
+- Game: `run: Run | null`; boot branches on `runConfig.character`
+  (pinned → construct-now + MapScene, byte-identical to the old path;
+  else → CharacterSelectScene). `confirmCharacter` constructs via
+  `createRun(character)` (layered over the URL config) with the 48d/49f
+  post-assignment refresh ordering; resetRun honors the locked fork
+  (pin → map, else → select, choice is per-run). Late Run construction
+  is ordering-safe: Game has no direct battle:ended listener and Run's
+  follow-on events emit from within its own handler (the devLoadRun
+  precedent, now load-bearing).
+- The overlay chips gained `startHidden` (pre-run boot shows no stale
+  chrome); the existing `run:started` re-show reveals them on confirm —
+  zero new event wiring.
+- CharacterSelectScreen: functional cards (name / description / roster
+  summary via nameForArchetype / idol name), gameover-screen chrome
+  vocabulary, canonical palette hexes.
+
+Browser-verified (preview MCP, DOM/state reads — the authoritative
+kind): un-pinned boot → select scene, run null, chips hidden · pre-run
+command warns + drops · confirm(priest) → MapScene, minerva, 6/3/1
+roster, chip revealed · `?character=gambler` bypass → straight to map,
+janus · pinned reset → map (same character) · un-pinned reset → BACK to
+select, run null · select-constructed run enters the root and lands on
+the pre-turn gate normally · zero console errors across all flows.
+Screenshot unavailable (backgrounded-pane compositing — the known
+HANDOFF limitation); the subjective look goes to the user's native
+browser per the standing norm.

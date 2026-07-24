@@ -9,13 +9,13 @@
  */
 
 import { RewardScreen } from '../ui/RewardScreen';
-import type { Scene, SceneContext } from './Scene';
+import { requireRun, type Scene, type SceneContext } from './Scene';
 
 export class RewardScene implements Scene {
   private screen: RewardScreen | null = null;
 
   mount(ctx: SceneContext): void {
-    this.screen = new RewardScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, ctx.run);
+    this.screen = new RewardScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, requireRun(ctx));
     this.screen.show();
   }
 

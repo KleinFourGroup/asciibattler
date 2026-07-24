@@ -52,7 +52,11 @@ export interface SceneContext {
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;
   readonly dispatcher: RunDispatcher;
-  readonly run: Run;
+  /** 63e — NULL exactly when no Run exists yet (the pre-select boot: the
+   *  CharacterSelectScene mounts before Run construction). Every other
+   *  scene asserts via `requireRun(ctx)` at mount — the compiler makes each
+   *  scene say whether it can run pre-Run (the kickoff shape-lock). */
+  readonly run: Run | null;
   readonly audio: AudioPlayer;
   /** I3 — the page-lifetime fast-forward speed. BattleScene reads `current`
    *  live each tick to scale `dt`; the HUD button + hotkey cycle it. Persists
@@ -68,4 +72,14 @@ export interface Scene {
   mount(ctx: SceneContext): void;
   tick(dt: number): void;
   dispose(): void;
+}
+
+/** 63e — assert the context carries a live Run (every scene except the
+ *  CharacterSelectScene). A null here is a Game sequencing bug — a run-
+ *  dependent scene mounted before select confirmed — so throw loud. */
+export function requireRun(ctx: SceneContext): Run {
+  if (ctx.run === null) {
+    throw new Error('Scene requires a live Run, but none exists yet (pre-select boot)');
+  }
+  return ctx.run;
 }

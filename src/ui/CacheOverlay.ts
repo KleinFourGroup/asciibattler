@@ -66,9 +66,12 @@ export class CacheOverlay {
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
     private readonly deps: CacheOverlayDeps,
+    /** 63e — start hidden pre-run (the BitsOverlay contract). */
+    startHidden = false,
   ) {
     this.el = document.createElement('div');
     this.el.className = 'cache-overlay';
+    if (startHidden) this.el.classList.add('is-hidden');
     this.el.title = 'The cache — your held packets';
     this.value = document.createElement('span');
     this.value.className = 'cache-overlay__value';

@@ -25,7 +25,7 @@ import { HEALTH } from '../config/health';
 import { PLAYBACK } from '../config/playback';
 import { getLayout, PROCEDURAL_MAP_NAME, type Theme } from '../sim/layouts';
 import { PreBattleCountdown } from './PreBattleCountdown';
-import type { Scene, SceneContext } from './Scene';
+import { requireRun, type Scene, type SceneContext } from './Scene';
 
 /** D8 — banner suffix helper. The theme enum stores lowercase
  *  (default / rock / volcanic); the banner wants Title Case so the
@@ -73,7 +73,8 @@ export class BattleScene implements Scene {
   private readonly subscriptions: Array<() => void> = [];
 
   mount(ctx: SceneContext): void {
-    const encounter = ctx.run.currentEncounter;
+    const run = requireRun(ctx);
+    const encounter = run.currentEncounter;
     if (!encounter) {
       throw new Error('BattleScene.mount: no Run encounter');
     }
@@ -192,15 +193,15 @@ export class BattleScene implements Scene {
     // H4b — surface the encounter pools + the turn being fought. `turnIndex`
     // counts RESOLVED turns, so the current turn is +1. Pools are this turn's
     // pre-chip state (they chip on the post-turn screen).
-    this.hud.show(this.world, ctx.run.currentHop, bannerText, {
-      turn: ctx.run.turnIndex + 1,
-      playerHealth: ctx.run.playerHealth,
+    this.hud.show(this.world, run.currentHop, bannerText, {
+      turn: run.turnIndex + 1,
+      playerHealth: run.playerHealth,
       playerHealthMax: HEALTH.playerHealthMax,
-      enemyHealth: ctx.run.enemyHealth,
+      enemyHealth: run.enemyHealth,
       // U3 — per-encounter pool max + name (replaces the global enemyHealthMax /
       // the hardcoded "Foe").
-      enemyHealthMax: ctx.run.enemyHealthPoolMax,
-      ...(ctx.run.currentEncounterName ? { enemyName: ctx.run.currentEncounterName } : {}),
+      enemyHealthMax: run.enemyHealthPoolMax,
+      ...(run.currentEncounterName ? { enemyName: run.currentEncounterName } : {}),
     });
     this.battleRenderer.attach(this.world);
     const spawnRegions = applyTerrain(this.world, encounter);

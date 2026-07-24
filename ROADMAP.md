@@ -140,10 +140,9 @@ latter two need, designed here.
 - [x] **64b** — Patrician's Seal ✅ 2026-07-24 (`4f9a4db`): shipped as
   cut (weights promoted, fallback hardened, both offer sites read the
   fold); worklog §64b.
-- [ ] **64c** — Idol of Portunus (guaranteed port legendary):
-  `portLegendaryOffers` count stat + forced-tier slots in
-  `rollPortStock` (draw-shape preserved) + graceful empty-pool degrade
-  + rows.
+- [x] **64c** — Idol of Portunus ✅ 2026-07-24 (`757b7b0`): shipped as
+  cut (count stat, per-slot forcing, byte-identical degrade);
+  worklog §64c.
 - [ ] **64d** — close: the stacked all-three × each-character matrix
   test + docs honesty pass + flips.
 

@@ -1005,3 +1005,31 @@ one-line `mult 0` on `rarityWeightCommon`.
   scans, with a control test proving non-vacuousness.
 - 2271→2283 main; fuzz:smoke 278 green; catalog-shape pin re-pinned
   deliberately (+patricians-seal).
+
+### 64c — Idol of Portunus (2026-07-24)
+
+`757b7b0` — the port-legendary guarantee, the shape-lock's count-stat
+generalization made real: `portLegendaryOffers` (base 0 — a design
+literal, the one new stat with no config base to track) folded by a
+plain `add 1` modifier; `rollPortStock` tier-forces the first ⌊fold⌋
+unit slots, clamped at the slot count.
+
+- The sampler's forcing axis is PER SLOT (`rollOffer` takes a
+  `forcedTiers` list; `rollArchetypeByRarity` an optional `forceTier`):
+  the tier draw is consumed-and-overridden, so the 2-draws-per-slot
+  shape is forcing-independent (the §61c discipline held a third time).
+- Orthogonality proofs pinned: forcing bypasses tier WEIGHTS (a
+  Seal-zeroed tier could still be forced — separate axes); character
+  weight overrides still govern INSIDE the forced tier; and the
+  Seal+Portunus composition test shows no-commons and slot-0-legendary
+  holding simultaneously (addDaemon stacking — two Portunus sources
+  force two slots, the count-stat payoff).
+- Graceful degradation is BYTE-identical, not merely non-crashing: an
+  empty forced pool falls through to the normal roll on the same
+  draws (pinned stream-equal), proven at Run level with a synthetic
+  no-legends character (the whole legendary tier blacklisted).
+- One build stumble, caught by the scoped run: the new stat landed in
+  RUN_STAT_BASES but not RUN_STAT_KEYS (the tuple is the type source);
+  and the per-slot test's synthetic pools need REAL archetype ids
+  (rollOffer materializes through the catalog — the §63b discipline).
+- 2283→2295 main; fuzz:smoke 278 green; catalog-shape pin +portunus.

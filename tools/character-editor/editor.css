@@ -14,6 +14,12 @@
   --danger: #ff5470;
   --ok: #46d369;
   --err: #ff6b81;
+  /* The §61e kickoff-lock rarity palette: TERMINAL_GREEN / FLOURESCENT_BLUE /
+     NEON_PURPLE / TERMINAL_AMBER — the same hues the unit-card washes use. */
+  --tier-common: #33ff00;
+  --tier-uncommon: #15f4ee;
+  --tier-rare: #9d00ff;
+  --tier-legendary: #ffb000;
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
@@ -289,6 +295,22 @@ textarea:focus {
   font-size: 11px;
   letter-spacing: 0.06em;
   margin-top: 4px;
+}
+
+.preview dt.tier.common {
+  color: var(--tier-common);
+}
+
+.preview dt.tier.uncommon {
+  color: var(--tier-uncommon);
+}
+
+.preview dt.tier.rare {
+  color: var(--tier-rare);
+}
+
+.preview dt.tier.legendary {
+  color: var(--tier-legendary);
 }
 
 .preview dd.tier {

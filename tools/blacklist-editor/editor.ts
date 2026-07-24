@@ -215,14 +215,14 @@ function refreshPreview(): void {
     const pool = pools[tier];
     if (pool.length === 0) {
       previewPoolEl.append(
-        el('dt', 'tier muted', tier),
+        el('dt', `tier ${tier} muted`, tier),
         el('dd', 'tier muted', 'empty — costs no probability mass'),
       );
       continue;
     }
     const tierP = RECRUITMENT.rarityWeights[tier] / tierTotal;
     previewPoolEl.append(
-      el('dt', 'tier', tier),
+      el('dt', `tier ${tier}`, tier),
       el('dd', 'tier', `${pct(tierP)} of each offer slot`),
     );
     for (const id of pool) {

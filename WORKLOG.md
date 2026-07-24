@@ -873,3 +873,13 @@ exclusions + curation, unified at this UI layer):
 Both editors now satisfy the phase exit criterion — "the editors write
 byte-faithful config" — proven twice over: unit-pinned (verbatim +
 round-trip) AND end-to-end (no-edit Save ⇒ zero diff on disk).
+
+### 63 — phase close (2026-07-24)
+
+User-signed after native verification of both editors. One catch on the
+way out: the tier badges/headers used an invented gray/green/blue/purple
+ramp — recolored to the §61e kickoff-lock palette (green/cyan/purple/
+gold, the unit-card wash hues), computed-style-verified (`5341452`).
+ROADMAP §63 demoted to a stub per the close rule; cursor → the §64
+kickoff (own session — the guarantee/no-commons mechanism is its known
+decision point).

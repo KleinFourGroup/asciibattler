@@ -92,61 +92,26 @@ worklog §62.
 - [x] **62b** — `scripts/box-launch.sh` ✅ 2026-07-23 (`6cfe73a`)
 - [x] **62c** — the user's full create→batch→destroy cycle ✅ 2026-07-23
 
-## Phase 63 — Starting characters
+## Phase 63 — Starting characters ✅ CLOSED 2026-07-24 (user-signed)
 
-**Charter:** `config/characters.json` + zod (roster / daemons / blacklist
-additions / weight overrides), the character field on Run (**RunSnapshot
-v37→v38**; the daemon roll dies), the character-select scene (select
-before Run construction; `?character=` bypass; `--character` on the
-harness, Soldier default), the three shipped characters (Soldier / Priest
-/ Gambler), the Character Editor + Global Blacklist Editor (a UI over the
-`draftable` flags).
+**Outcome:** the three starting characters (Soldier / Priest / Gambler,
+`config/characters.json` + zod) live end to end — the character owns
+roster/daemon/blacklist-additions/weight-overrides (**RunSnapshot v37→v38**,
+`characterId` serialized; the L1 daemon roll retired — default = Soldier→Mars
+always, offers byte-neutral), selectable via the CharacterSelectScene
+(`Game.run: Run \| null` deferred construction), `?character=`, and
+`--character` (explicit Soldier default). Both editors write byte-faithful
+config (no-edit Save = byte no-op on disk, proven end-to-end) and the
+launcher gained its character dropdown. All exit criteria met; all five
+kickoff forks held. Detail: worklog §63a–§63g.
 
-- **Depends on:** §61 (weight overrides are within-tier weights).
-  **Feeds:** §64, §68.
-- **Risk:** medium-high — the select scene interposes before Run
-  construction (Game holds the choice, constructs on confirm — the
-  `createRun` seam); every default-run baseline changes when the daemon
-  roll dies.
-- **Decision point:** none planned (design locked at kickoff); flag any
-  discovered fork per protocol.
-- **Exit criteria:** all three characters playable from the select scene
-  and the URL; blacklists + overrides govern offers (headless tests);
-  editors write byte-faithful config; v38 lands with its ledger entry;
-  fuzz defaults to Soldier explicitly.
-- **Scope guards:** exactly three characters (no fourth); no unlock
-  gating (Cluster 6); the select scene is functional, not art-directed.
-- **Kickoff forks resolved** (all five, user-signed 2026-07-23):
-  nullable `SceneContext.run` + `requireRun` sweep · explicit
-  `--roster`/`--daemon` beat the character · `resetRun` → select scene
-  unless `?character=` pins · flat roster id-list (length = roster
-  size) · `rollDaemon` deleted. Audit + rationale: worklog §63.
-- [ ] **63a** — `config/characters.json` + zod loader, INERT: schema
-  (id/name/description/roster/daemon/blacklist/weightOverrides),
-  superRefine legality (ids resolve · weights > 0 · blacklist∧override
-  = error · `soldier` exists), the three characters authored. No
-  consumer; no bump.
-- [ ] **63b** — the weighted within-tier sampler, PURE: pools+weights
-  params on `rollOffer`/`rollArchetypeByRarity` (defaults ≡ today);
-  the equal-weights ≡ `rng.pick` identity pinned. Byte-neutral.
-- [ ] **63c** — Run gains the character: `RunConfig.character` +
-  soldier default for bare constructors, roster/daemon/draft pools
-  from the def (explicit overrides win), `rollDaemon` deleted,
-  characterId serialized — **RunSnapshot v37→v38** + ledger entry;
-  any re-pins committed deliberately. The phase's big cut.
-- [ ] **63d** — selectors: harness `characterSelection.ts`
-  (`--character`, EXPLICIT soldier default), `?character=`
-  parse/serialize, `--daemon=random` relabeled ("no override → the
-  character's daemon").
-- [ ] **63e** — CharacterSelectScene + the Game deferred-Run surgery
-  (`run: Run | null`; boot branches on `?character=`; resetRun per
-  the locked fork). Browser-verified natively.
-- [x] **63f** — the Character Editor (tools/character-editor +
-  byte-faithful formatter + round-trip tests). ✅ `4fe8a06` — no-edit
-  Save = byte no-op, launcher dropdown folded in; worklog §63f.
-- [x] **63g** — the Global Blacklist Editor (a UI over `draftable`
-  via the archetype-editor formatter + round-trip test). ✅ `59b310e` —
-  one toggle = one line, real cross-checks gate Save; worklog §63g.
+- [x] **63a** — characters.json + zod loader, inert ✅ `0537106`
+- [x] **63b** — the weighted within-tier sampler, byte-neutral ✅ `f8b3e26`
+- [x] **63c** — Run gains the character; v38; the roll dies ✅ `32dac45`
+- [x] **63d** — `--character` / `?character=` / the relabel ✅ `f958d37`
+- [x] **63e** — CharacterSelectScene + deferred-Run surgery ✅ `0d329ac`
+- [x] **63f** — the Character Editor + launcher dropdown ✅ `4fe8a06`
+- [x] **63g** — the Global Blacklist Editor ✅ `59b310e` + `5341452`
 
 ## Phase 64 — The three drafting daemons
 

@@ -4,9 +4,10 @@
  * §61c — each offer slot is an INDEPENDENT rarity-weighted draw: roll a tier
  * (the `RECRUITMENT.rarityWeights` config, renormalized over the NON-EMPTY
  * tiers of the draft pool — an unpopulated tier costs no probability mass),
- * then uniform among that tier's draftable archetypes (`DRAFTABLE_BY_TIER` —
- * the §29-close `draftable:false` exclusions still never appear; the §63
- * character weight overrides layer WITHIN the tier, not here). Duplicate
+ * then a WEIGHTED pick among that tier's draftable archetypes (§63b:
+ * `archetypeWeights`, absent = 1 — the character weight-override seam; the
+ * default pool is `DRAFTABLE_BY_TIER`, so the §29-close `draftable:false`
+ * exclusions still never appear, and §63c swaps in blacklist-filtered pools). Duplicate
  * archetypes in one offer are ALLOWED by design (kickoff lock: rolled levels +
  * growth differentiate, and under weight overrides dupes ARE the character
  * identity working; the named fallback if playtest shows degenerate offers is
@@ -39,17 +40,30 @@ import { RECRUITMENT } from '../config/recruitment';
 import { RARITY_TIERS, type UnitRarity } from '../config/units';
 import { LEVELING } from '../config/leveling';
 
+/**
+ * §63b — per-archetype within-tier weights (absent key = 1, the spec's
+ * default). Strictly positive by authoring contract (characters.ts forbids 0
+ * — a zero is spelled "blacklist", which removes the archetype from `pools`
+ * instead); the sampler still guards a zero-total pool loudly.
+ */
+export type ArchetypeWeights = Readonly<Partial<Record<Archetype, number>>>;
+
 export function rollOffer(
   rng: RNG,
   size: number = RECRUITMENT.defaultOfferSize,
   level: number | ((rng: RNG) => number) = 1,
+  pools: Readonly<Record<UnitRarity, readonly Archetype[]>> = DRAFTABLE_BY_TIER,
+  archetypeWeights: ArchetypeWeights = {},
 ): UnitTemplate[] {
   if (size <= 0) return [];
   // Sample every slot's archetype FIRST, then materialize the units — keeps the
   // two-phase draw shape the F1 sampler had (all composition draws, then the
-  // per-card level/stat draws).
+  // per-card level/stat draws). §63b: `pools`/`archetypeWeights` default to the
+  // global draft pool at uniform weight — §63c passes the character-derived
+  // pair (blacklist-filtered pools + the character's overrides), and the port
+  // stock inherits through this same signature by construction.
   const archetypes = Array.from({ length: size }, () =>
-    rollArchetypeByRarity(rng, DRAFTABLE_BY_TIER, RECRUITMENT.rarityWeights),
+    rollArchetypeByRarity(rng, pools, RECRUITMENT.rarityWeights, archetypeWeights),
   );
   // A function `level` is resolved PER CARD (drawing off the shared `rng`), so
   // a geometric bonus rolls independently for each offered unit; a number is a
@@ -69,11 +83,19 @@ export function rollOffer(
  * binds the live pools + weights; tests drive synthetic ones. Throws when every
  * non-empty tier carries zero weight — a broken config should be loud, not
  * silently uniform.
+ *
+ * §63b — the within-tier pick is WEIGHTED (`archetypeWeights`, absent key = 1;
+ * the character weight-override seam). Still exactly 1 draw: the cumulative
+ * walk consumes one `next()` like `rng.pick` did, and with all-default weights
+ * it selects the IDENTICAL index (`floor(next()·len)` — the `RNG.pick`/`int`
+ * mapping), so a no-override draw is byte-identical to the pre-63b uniform
+ * pick. The kickoff audit's identity proof; pinned in the test file.
  */
 export function rollArchetypeByRarity(
   rng: RNG,
   pools: Readonly<Record<UnitRarity, readonly Archetype[]>>,
   weights: Readonly<Record<UnitRarity, number>>,
+  archetypeWeights: ArchetypeWeights = {},
 ): Archetype {
   const tiers = RARITY_TIERS.filter((t) => pools[t].length > 0);
   const total = tiers.reduce((acc, t) => acc + weights[t], 0);
@@ -89,7 +111,28 @@ export function rollArchetypeByRarity(
       break;
     }
   }
-  return rng.pick(pools[tier]);
+  return pickWeighted(rng, pools[tier], archetypeWeights);
+}
+
+/**
+ * §63b — one weighted draw from a non-empty pool (absent weight = 1). The
+ * equal-weights case reduces to `pool[floor(next()·len)]` — exactly
+ * `RNG.pick`'s mapping off the same single draw (integer cumulative sums, no
+ * float drift), which is what keeps default draft streams byte-identical
+ * across the §63 landing. A zero-total pool throws (a blacklist should have
+ * REMOVED the archetype from the pool; weight 0 reaching here is a bug).
+ */
+function pickWeighted(rng: RNG, pool: readonly Archetype[], weights: ArchetypeWeights): Archetype {
+  const total = pool.reduce((acc, a) => acc + (weights[a] ?? 1), 0);
+  if (total <= 0) {
+    throw new Error('pickWeighted: pool has zero total weight');
+  }
+  let roll = rng.next() * total;
+  for (const a of pool) {
+    roll -= weights[a] ?? 1;
+    if (roll < 0) return a;
+  }
+  return pool[pool.length - 1]!;
 }
 
 /**

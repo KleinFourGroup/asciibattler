@@ -221,6 +221,147 @@ describe('§61c — rollArchetypeByRarity (pure core, synthetic catalogs)', () =
   });
 });
 
+/**
+ * §63b — the weighted within-tier pick (the character weight-override seam).
+ * Same synthetic-catalog discipline as §61c above; the identity pin is the
+ * kickoff audit's byte-neutrality proof made executable.
+ */
+describe('§63b — within-tier archetype weights', () => {
+  type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
+  const pools = (p: Partial<Record<UnitRarity, readonly string[]>>): Pools => ({
+    common: [],
+    uncommon: [],
+    rare: [],
+    legendary: [],
+    ...p,
+  });
+  const W: Readonly<Record<UnitRarity, number>> = {
+    common: 6,
+    uncommon: 3,
+    rare: 2,
+    legendary: 1,
+  };
+  const N = 20_000;
+  const TOLERANCE = 0.02;
+
+  it('default weights select the IDENTICAL archetype off the IDENTICAL draw as rng.pick (the byte-identity pin)', () => {
+    // Single-tier pool: draw 1 = the tier roll, draw 2 = the pick. The
+    // reference RNG replays draw 1 then applies RNG.pick's exact mapping
+    // (`int(0, len−1)`). Any divergence — index mapping OR draw count —
+    // fails across the seed scan. This is what keeps every no-override
+    // draft stream byte-identical across the §63 landing.
+    const P = pools({ common: ['a', 'b', 'c', 'd', 'e'] });
+    for (let seed = 0; seed < 500; seed++) {
+      const rng = new RNG(seed);
+      const picked = rollArchetypeByRarity(rng, P, W);
+      const ref = new RNG(seed);
+      ref.next(); // the tier roll
+      expect(picked).toBe(P.common[ref.int(0, P.common.length - 1)]!);
+      expect(rng.toJSON()).toEqual(ref.toJSON()); // stream alignment after
+    }
+  });
+
+  it('an explicit all-1 weight map is byte-identical to an absent one', () => {
+    const P = pools({ common: ['a', 'b'], rare: ['r1', 'r2', 'r3'] });
+    for (let seed = 0; seed < 200; seed++) {
+      const bare = new RNG(seed);
+      const explicit = new RNG(seed);
+      const a = rollArchetypeByRarity(bare, P, W);
+      const b = rollArchetypeByRarity(explicit, P, W, { a: 1, b: 1, r1: 1, r2: 1, r3: 1 });
+      expect(b).toBe(a);
+      expect(explicit.toJSON()).toEqual(bare.toJSON());
+    }
+  });
+
+  it('weights skew the within-tier split by their ratio (derived, not hardcoded)', () => {
+    const weight = 3;
+    const P = pools({ common: ['heavy', 'light'] });
+    const rng = new RNG(63);
+    const count: Record<string, number> = {};
+    for (let i = 0; i < N; i++) {
+      const a = rollArchetypeByRarity(rng, P, W, { heavy: weight });
+      count[a] = (count[a] ?? 0) + 1;
+    }
+    const expectedHeavy = weight / (weight + 1); // 1 = light's default weight
+    expect(Math.abs((count.heavy ?? 0) / N - expectedHeavy)).toBeLessThan(TOLERANCE);
+  });
+
+  it('fractional weights suppress (the Priest mage-0.25 shape)', () => {
+    const weight = 0.25;
+    const P = pools({ uncommon: ['rare-taste', 'plain'] });
+    const rng = new RNG(64);
+    const count: Record<string, number> = {};
+    for (let i = 0; i < N; i++) {
+      const a = rollArchetypeByRarity(rng, P, W, { 'rare-taste': weight });
+      count[a] = (count[a] ?? 0) + 1;
+    }
+    const expectedSuppressed = weight / (weight + 1);
+    expect(Math.abs((count['rare-taste'] ?? 0) / N - expectedSuppressed)).toBeLessThan(TOLERANCE);
+  });
+
+  it('within-tier weights never leak into the TIER frequencies (the spec lock: rarity levels stay global)', () => {
+    // A huge override inside `common` must not change how often `common`
+    // itself is drawn — the tier roll reads only the tier weights.
+    const P = pools({ common: ['boosted', 'plain'], legendary: ['l1'] });
+    const rng = new RNG(65);
+    let commons = 0;
+    for (let i = 0; i < N; i++) {
+      const a = rollArchetypeByRarity(rng, P, W, { boosted: 1000 });
+      if (a !== 'l1') commons++;
+    }
+    const expectedCommonShare = W.common / (W.common + W.legendary);
+    expect(Math.abs(commons / N - expectedCommonShare)).toBeLessThan(TOLERANCE);
+  });
+
+  it('a weighted pick still consumes exactly 2 draws (the stream-shape pin extended)', () => {
+    const seed = 636363;
+    const rng = new RNG(seed);
+    rollArchetypeByRarity(rng, pools({ common: ['a', 'b'] }), W, { a: 5 });
+    const ref = new RNG(seed);
+    ref.next();
+    ref.next();
+    expect(rng.toJSON()).toEqual(ref.toJSON());
+  });
+
+  it('throws loudly on a zero-total pool (weight 0 is a bug — blacklist removes instead)', () => {
+    const P = pools({ common: ['only'] });
+    expect(() => rollArchetypeByRarity(new RNG(1), P, W, { only: 0 })).toThrow(
+      /zero total weight/,
+    );
+  });
+
+  it('rollOffer threads custom pools — an excluded archetype never appears (the blacklist path)', () => {
+    // The §63c call shape: pools pre-filtered by the character blacklist.
+    const P = pools({ common: ['mercenary'], uncommon: ['ronin'] });
+    for (let s = 0; s < 100; s++) {
+      for (const u of rollOffer(new RNG(s), 3, 1, P)) {
+        expect(['mercenary', 'ronin']).toContain(u.archetype);
+      }
+    }
+  });
+
+  it('rollOffer threads archetype weights into every slot', () => {
+    const P = pools({ common: ['mercenary', 'rogue'] });
+    let rogues = 0;
+    let total = 0;
+    for (let s = 0; s < 2_000; s++) {
+      for (const u of rollOffer(new RNG(s), 3, 1, P, { rogue: 3 })) {
+        total++;
+        if (u.archetype === 'rogue') rogues++;
+      }
+    }
+    expect(Math.abs(rogues / total - 3 / 4)).toBeLessThan(TOLERANCE);
+  });
+
+  it('rollOffer defaults are byte-identical to the pre-63b signature (the regression pin)', () => {
+    for (let s = 0; s < 50; s++) {
+      expect(rollOffer(new RNG(s), 3, 1, DRAFTABLE_BY_TIER, {})).toEqual(
+        rollOffer(new RNG(s), 3, 1),
+      );
+    }
+  });
+});
+
 describe('recruitLevelBonus (G4 geometric bonus)', () => {
   it('matches P(+k) = (1−c)·c^k over a wide sample (derives c from config)', () => {
     const c = RECRUITMENT.recruitBonusChance;

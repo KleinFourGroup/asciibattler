@@ -1,0 +1,335 @@
+/* Global Blacklist Editor (63g) — the price editor's stylesheet adapted:
+   same tokens, cards, pool rows, preview grid, and validation list; plus
+   rarity-tier badges and a `warn` validation level (inert-but-legal config
+   notes that don't gate Save). */
+
+:root {
+  --bg: #0e1116;
+  --panel: #161b22;
+  --panel-2: #1c2330;
+  --border: #2a3140;
+  --text: #d6deeb;
+  --muted: #8b97ab;
+  --accent: #33ff00;
+  --accent-dim: #1f7a12;
+  --danger: #ff5470;
+  --ok: #46d369;
+  --err: #ff6b81;
+  --warn: #ffc857;
+  --tier-uncommon: #46d369;
+  --tier-rare: #4fc3f7;
+  --tier-legendary: #c792ea;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+#editor-root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.bar {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bar h1 {
+  font-size: 18px;
+  margin: 0;
+  color: var(--accent);
+}
+
+.bar a.home {
+  margin-left: auto;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 11px;
+}
+.bar a.home:hover {
+  border-color: var(--accent-dim);
+  color: var(--text);
+}
+
+.subtitle {
+  color: var(--muted);
+}
+
+code {
+  background: var(--panel-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #aaccff;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.edit-pane,
+.side-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.card h2 {
+  font-size: 13px;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.card h2 .sub {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+  opacity: 0.8;
+  font-weight: normal;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 8px 0 0;
+}
+
+.hint.ok {
+  color: var(--ok);
+}
+
+.hint.err {
+  color: var(--err);
+}
+
+.hint a {
+  color: #aaccff;
+}
+
+textarea {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 6px;
+  width: 100%;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ---- The catalog rows ---- */
+.pool {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.pool-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.pool-row.excluded {
+  opacity: 0.55;
+}
+
+.pool-row input[type='checkbox'] {
+  accent-color: var(--accent-dim);
+  width: 15px;
+  height: 15px;
+}
+
+.glyph {
+  color: var(--accent);
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+.arch-name {
+  min-width: 8.5rem;
+}
+
+.arch-id {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.badge {
+  margin-left: auto;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--muted);
+}
+
+.badge.uncommon {
+  color: var(--tier-uncommon);
+  border-color: var(--tier-uncommon);
+}
+
+.badge.rare {
+  color: var(--tier-rare);
+  border-color: var(--tier-rare);
+}
+
+.badge.legendary {
+  color: var(--tier-legendary);
+  border-color: var(--tier-legendary);
+}
+
+/* ---- Preview ---- */
+.preview {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 0;
+}
+
+.preview dt {
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.preview dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+.preview dt.tier {
+  color: var(--accent);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+.preview dd.tier {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.preview dt.muted,
+.preview dd.muted {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+/* ---- Validation ---- */
+.validation {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.validation li {
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.validation li.ok {
+  background: rgba(70, 211, 105, 0.12);
+  color: var(--ok);
+}
+
+.validation li.warn {
+  background: rgba(255, 200, 87, 0.12);
+  color: var(--warn);
+}
+
+.validation li.error {
+  background: rgba(255, 107, 129, 0.12);
+  color: var(--err);
+}
+
+/* ---- Buttons ---- */
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 6px 12px;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button:hover {
+  border-color: var(--accent-dim);
+}
+
+button.primary {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #eaffea;
+}
+
+button.primary:disabled {
+  background: var(--panel-2);
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+button.danger-outline {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: transparent;
+}
+
+@media (max-width: 880px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+}

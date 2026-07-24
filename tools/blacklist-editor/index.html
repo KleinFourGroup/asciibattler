@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Global Blacklist Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Global Blacklist Editor</h1>
+        <span class="subtitle"
+          >The <code>draftable</code> flags in <code>config/units.json</code> — the global draft
+          pool · schema-validated · save straight to disk</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+      <section class="workspace">
+        <div class="edit-pane">
+          <section class="card">
+            <h2>Combatant catalog <span class="sub">(checked = in the global draft pool)</span></h2>
+            <div id="unit-rows" class="pool"></div>
+            <p class="hint">
+              Unchecking sets <code>draftable: false</code> — the archetype leaves recruit
+              offers, port stock, and the character editors' blacklist/override candidates.
+              The flag carries BOTH the structural exclusions (summon-only / enemy-only units
+              outside the draft system) and curation calls — this editor unifies the two
+              (the 63a-post verdict); neutral entries (walls / cover / rubble) have no draft
+              concept and aren't listed. Per-character blacklist ADDITIONS live in the
+              <a href="/tools/character-editor/">Character Editor</a>.
+            </p>
+          </section>
+        </div>
+        <aside class="side-pane">
+          <section class="card preview-card">
+            <h2>Global draft pool <span class="sub">(offer chance per slot — uniform within tier)</span></h2>
+            <dl id="preview-pool" class="preview"></dl>
+          </section>
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation"></ul>
+          </section>
+          <section class="card">
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary">Save to config</button>
+              <button id="revert-btn" type="button" class="danger-outline">Revert all</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+          </section>
+          <section class="card">
+            <h2>Export <span class="sub">(whole file — the archetype-editor formatter)</span></h2>
+            <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

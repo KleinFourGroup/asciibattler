@@ -362,6 +362,90 @@ describe('§63b — within-tier archetype weights', () => {
   });
 });
 
+/**
+ * §64b — tier weights as a rollOffer param (the run-stat fold's seam;
+ * Patrician's Seal's mult-0 lands through it). Same synthetic-catalog
+ * discipline as §63b above.
+ */
+describe('§64b — folded tier weights through the sampler', () => {
+  type Pools = Readonly<Record<UnitRarity, readonly string[]>>;
+  const pools = (p: Partial<Record<UnitRarity, readonly string[]>>): Pools => ({
+    common: [],
+    uncommon: [],
+    rare: [],
+    legendary: [],
+    ...p,
+  });
+  const noCommons: Readonly<Record<UnitRarity, number>> = {
+    common: 0,
+    uncommon: 3,
+    rare: 2,
+    legendary: 1,
+  };
+
+  it('a zero-weight tier is NEVER drawn — a populated common pool with no mass', () => {
+    // Absolute, not statistical: the walk subtracts 0 for the tier (it can
+    // never flip roll negative there) and the hardened fallback skips it.
+    const P = pools({ common: ['c1', 'c2'], uncommon: ['u1'], legendary: ['l1'] });
+    for (let s = 0; s < 2_000; s++) {
+      const a = rollArchetypeByRarity(new RNG(s), P, noCommons);
+      expect(['u1', 'l1']).toContain(a);
+    }
+  });
+
+  it('zeroing a tier still consumes exactly 2 draws (the stream-shape pin held)', () => {
+    const seed = 646464;
+    const rng = new RNG(seed);
+    rollArchetypeByRarity(rng, pools({ common: ['c1'], rare: ['r1'] }), noCommons);
+    const ref = new RNG(seed);
+    ref.next();
+    ref.next();
+    expect(rng.toJSON()).toEqual(ref.toJSON());
+  });
+
+  it('the float-boundary fallback lands in a POSITIVE-weight tier (the 64b hardening)', () => {
+    // A stub rng returning 1 (out of the [0,1) contract, deliberately) makes
+    // the walk's roll survive every subtraction — the exact shape of the
+    // float-rounding edge the fallback exists for. The last NON-EMPTY tier
+    // here is legendary at weight 0: the pre-64b init would hand back a tier
+    // holding no probability mass; the hardened init must pick uncommon (the
+    // last positive-weight tier).
+    const P = pools({ common: ['c1'], uncommon: ['u1'], legendary: ['l1'] });
+    const edge = { next: () => 1 } as unknown as RNG;
+    const weights: Readonly<Record<UnitRarity, number>> = {
+      common: 0,
+      uncommon: 2,
+      rare: 0,
+      legendary: 0,
+    };
+    expect(rollArchetypeByRarity(edge, P, weights)).toBe('u1');
+  });
+
+  it('all-zero weights over the non-empty tiers still throw (the guard survives the param)', () => {
+    const P = pools({ common: ['c1'] });
+    expect(() => rollArchetypeByRarity(new RNG(1), P, noCommons)).toThrow(
+      /every non-empty tier has zero weight/,
+    );
+  });
+
+  it('rollOffer threads the weights param into every slot', () => {
+    const P = pools({ common: ['mercenary'], uncommon: ['ronin'] });
+    for (let s = 0; s < 200; s++) {
+      for (const u of rollOffer(new RNG(s), 3, 1, P, {}, noCommons)) {
+        expect(u.archetype).toBe('ronin');
+      }
+    }
+  });
+
+  it('an explicit config-weight param is byte-identical to the default (the regression pin)', () => {
+    for (let s = 0; s < 50; s++) {
+      expect(
+        rollOffer(new RNG(s), 3, 1, DRAFTABLE_BY_TIER, {}, RECRUITMENT.rarityWeights),
+      ).toEqual(rollOffer(new RNG(s), 3, 1));
+    }
+  });
+});
+
 describe('recruitLevelBonus (G4 geometric bonus)', () => {
   it('matches P(+k) = (1−c)·c^k over a wide sample (derives c from config)', () => {
     const c = RECRUITMENT.recruitBonusChance;

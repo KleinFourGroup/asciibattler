@@ -54,6 +54,10 @@ export function rollOffer(
   level: number | ((rng: RNG) => number) = 1,
   pools: Readonly<Record<UnitRarity, readonly Archetype[]>> = DRAFTABLE_BY_TIER,
   archetypeWeights: ArchetypeWeights = {},
+  // 64b — the tier weights are now a param (the run-stat fold's seam):
+  // Run passes the folded weights (Patrician's Seal's mult-0 lands there);
+  // the default keeps every other caller on the raw config values.
+  rarityWeights: Readonly<Record<UnitRarity, number>> = RECRUITMENT.rarityWeights,
 ): UnitTemplate[] {
   if (size <= 0) return [];
   // Sample every slot's archetype FIRST, then materialize the units — keeps the
@@ -63,7 +67,7 @@ export function rollOffer(
   // pair (blacklist-filtered pools + the character's overrides), and the port
   // stock inherits through this same signature by construction.
   const archetypes = Array.from({ length: size }, () =>
-    rollArchetypeByRarity(rng, pools, RECRUITMENT.rarityWeights, archetypeWeights),
+    rollArchetypeByRarity(rng, pools, rarityWeights, archetypeWeights),
   );
   // A function `level` is resolved PER CARD (drawing off the shared `rng`), so
   // a geometric bonus rolls independently for each offered unit; a number is a
@@ -103,7 +107,11 @@ export function rollArchetypeByRarity(
     throw new Error('rollArchetypeByRarity: every non-empty tier has zero weight');
   }
   let roll = rng.next() * total;
-  let tier: UnitRarity = tiers[tiers.length - 1]!;
+  // 64b hardening — the float-boundary fallback must be the last
+  // POSITIVE-weight tier, not merely the last non-empty one: with zeroed
+  // weights in play (Patrician's Seal), the old init could land a rounding
+  // edge case in a tier that holds no probability mass at all.
+  let tier: UnitRarity = [...tiers].reverse().find((t) => weights[t] > 0)!;
   for (const t of tiers) {
     roll -= weights[t];
     if (roll < 0) {

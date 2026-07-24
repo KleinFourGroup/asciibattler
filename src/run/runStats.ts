@@ -20,7 +20,15 @@ import { RECRUITMENT } from '../config/recruitment';
 
 /** The launch run-stat keys (content-driven — grown when content demands).
  *  A tuple so the config layer's zod enum and this type share one source. */
-export const RUN_STAT_KEYS = ['bitsGain', 'cacheSize', 'recruitOfferSize'] as const;
+export const RUN_STAT_KEYS = [
+  'bitsGain',
+  'cacheSize',
+  'recruitOfferSize',
+  'rarityWeightCommon',
+  'rarityWeightUncommon',
+  'rarityWeightRare',
+  'rarityWeightLegendary',
+] as const;
 export type RunStatKey = (typeof RUN_STAT_KEYS)[number];
 
 /** Base values before any modifier folds. §64a: bases may be CONFIG-DERIVED
@@ -35,6 +43,18 @@ export const RUN_STAT_BASES: Readonly<Record<RunStatKey, number>> = {
    *  unit count is deliberately NOT this stat (spec: "the post-encounter
    *  pool from three to four" — `PRICES.portStock.units` is untouched). */
   recruitOfferSize: RECRUITMENT.defaultOfferSize,
+  /** 64b — the global tier weights, promoted to run stats (the no-commons
+   *  shape-lock: Patrician's Seal is a `mult 0` fold on the common weight;
+   *  the fold's max(0,·) clamp keeps a folded weight legal for the sampler).
+   *  Bases = recruitment.json — the tier roll renormalizes over non-empty
+   *  tiers, so a zeroed tier costs no probability mass. BOTH offer sites
+   *  (recruit + port) read the fold: the Seal governs drafting everywhere
+   *  (spec: ports follow the same mechanics), unlike 64a's
+   *  recruit-only scope. */
+  rarityWeightCommon: RECRUITMENT.rarityWeights.common,
+  rarityWeightUncommon: RECRUITMENT.rarityWeights.uncommon,
+  rarityWeightRare: RECRUITMENT.rarityWeights.rare,
+  rarityWeightLegendary: RECRUITMENT.rarityWeights.legendary,
 };
 
 /** One passive modifier, as authored by a `modifier` rule. */

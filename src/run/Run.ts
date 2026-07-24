@@ -1007,6 +1007,24 @@ export class Run {
     return draftPoolsFor(this.character.blacklist);
   }
 
+  /** 64b — the tier weights as the run-stat fold sees them (Patrician's
+   *  Seal's mult-0 on common lands here). Derived per roll
+   *  (derive-don't-cache); the no-modifier fold returns the base block by
+   *  identity, so the unmodified path hands back the raw config record —
+   *  values AND allocation untouched. BOTH offer sites read this: the Seal
+   *  governs drafting everywhere (spec: ports follow the same mechanics),
+   *  unlike 64a's recruit-only offer size. */
+  private effectiveRarityWeights(): Readonly<Record<UnitRarity, number>> {
+    const stats = this.effectiveRunStats();
+    if (stats === RUN_STAT_BASES) return RECRUITMENT.rarityWeights;
+    return {
+      common: stats.rarityWeightCommon,
+      uncommon: stats.rarityWeightUncommon,
+      rare: stats.rarityWeightRare,
+      legendary: stats.rarityWeightLegendary,
+    };
+  }
+
   private subscribe(): void {
     this.subscriptions.push(
       // H4: a `battle:ended` ends a TURN, not the node. `winner` doesn't route
@@ -1185,9 +1203,11 @@ export class Run {
           baseLevel + recruitLevelBonus(cardRng, RECRUITMENT.recruitBonusChance),
         ),
       // 63c — port recruits ARE recruits: the character's pools + weights
-      // govern here identically (the spec's ports-inherit lock).
+      // govern here identically (the spec's ports-inherit lock). 64b — as do
+      // the folded tier weights (Patrician's Seal empties commons here too).
       this.draftPools(),
       this.character.weightOverrides,
+      this.effectiveRarityWeights(),
     ).map((template) => {
       const { jitter } = PRICES.units;
       const factor = 1 - jitter + this.portPriceRng.next() * 2 * jitter;
@@ -2529,6 +2549,8 @@ export class Run {
           ),
         this.draftPools(),
         this.character.weightOverrides,
+        // 64b — the folded tier weights (the Seal's no-commons fold).
+        this.effectiveRarityWeights(),
       );
       this.bus.emit('recruit:offered', { units: this.currentOffer });
     }

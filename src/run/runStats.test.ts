@@ -73,4 +73,21 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
   it('64a: recruitOfferSize base derives from recruitment.json', () => {
     expect(RUN_STAT_BASES.recruitOfferSize).toBe(RECRUITMENT.defaultOfferSize);
   });
+
+  // 64b — same discipline for the promoted tier weights: one source of
+  // truth in recruitment.json, the fold's bases can never desync from it.
+  it('64b: the four rarity-weight bases derive from recruitment.json', () => {
+    expect(RUN_STAT_BASES.rarityWeightCommon).toBe(RECRUITMENT.rarityWeights.common);
+    expect(RUN_STAT_BASES.rarityWeightUncommon).toBe(RECRUITMENT.rarityWeights.uncommon);
+    expect(RUN_STAT_BASES.rarityWeightRare).toBe(RECRUITMENT.rarityWeights.rare);
+    expect(RUN_STAT_BASES.rarityWeightLegendary).toBe(RECRUITMENT.rarityWeights.legendary);
+  });
+
+  // 64b — the Seal's exact fold shape: a mult-0 zeroes the weight (adds
+  // apply first, then mults; the max(0,·) clamp keeps it sampler-legal).
+  it('64b: a mult-0 modifier zeroes a tier weight (the no-commons fold)', () => {
+    const folded = foldRunStats(RUN_STAT_BASES, [mod('rarityWeightCommon', 'mult', 0)]);
+    expect(folded.rarityWeightCommon).toBe(0);
+    expect(folded.rarityWeightUncommon).toBe(RUN_STAT_BASES.rarityWeightUncommon);
+  });
 });

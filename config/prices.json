@@ -39,7 +39,8 @@
       "janus": 32,
       "mercury": 30,
       "fortuna": 25,
-      "cornucopia": 30
+      "cornucopia": 30,
+      "patricians-seal": 35
     }
   },
   "sellFraction": 0.5,

@@ -430,6 +430,7 @@ describe('the shipped catalog (config/daemons.json) — design-shape pins', () =
       'mercury',
       'minerva',
       'moneta',
+      'patricians-seal',
     ]);
   });
 

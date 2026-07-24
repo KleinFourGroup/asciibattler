@@ -122,6 +122,19 @@
       ]
     },
     {
+      "id": "patricians-seal",
+      "name": "Patrician's Seal",
+      "description": "Common units no longer appear in draft pools.",
+      "rules": [
+        {
+          "kind": "modifier",
+          "stat": "rarityWeightCommon",
+          "op": "mult",
+          "value": 0
+        }
+      ]
+    },
+    {
       "id": "fortuna",
       "name": "Idol of Fortuna",
       "description": "A critical strike emboldens the striker: +1 STR / RNG / MAG for 5s.",

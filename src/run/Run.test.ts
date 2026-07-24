@@ -9,7 +9,7 @@ import { getSector, PROCEDURAL_LAYOUT_ID } from '../config/sectors';
 import { getEncounter, ENCOUNTERS } from '../config/encounters';
 import { SectorMapSchema } from '../config/sectorMap';
 import type { GameEvents } from '../core/events';
-import { ARCHETYPE_CONFIG } from '../sim/archetypes';
+import { ARCHETYPE_CONFIG, DRAFTABLE_BY_TIER } from '../sim/archetypes';
 import { scaleStats } from '../sim/leveling';
 import { xpToNext } from '../sim/xp';
 import { LEVELING } from '../config/leveling';
@@ -4021,6 +4021,57 @@ describe('64a — The Cornucopia (recruitOfferSize)', () => {
     const { run, bus } = freshRunWithBus(41, { daemon: cornucopia });
     dockAtPort(run, bus);
     expect(run.portStock!.units).toHaveLength(PRICES.portStock.units);
+  });
+});
+
+describe("64b — Patrician's Seal (no commons)", () => {
+  const seal = daemonById('patricians-seal')!;
+  const commons = new Set<string>(DRAFTABLE_BY_TIER.common);
+
+  /** Drive one victory to the recruit offer, DECLINING rewards (the 64a
+   *  rationale — an accepted daemon portion would pollute the read). */
+  const firstOfferDeclining = (seed: number, config?: RunConfig) => {
+    const { run, bus } = freshRunWithBus(seed, config);
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    winEncounter(bus);
+    declineAllRewards(run);
+    return run.currentOffer ?? [];
+  };
+
+  it('ships as a pure mult-0 modifier on the common tier weight (the 64 shape-lock)', () => {
+    expect(seal.rules).toEqual([
+      { kind: 'modifier', stat: 'rarityWeightCommon', op: 'mult', value: 0 },
+    ]);
+  });
+
+  it('recruit offers hold NO common-tier units with the Seal owned (× each character)', () => {
+    // Absolute across a seed scan — the zeroed tier holds no probability
+    // mass (Recruitment.test pins the sampler math; this is the Run seam).
+    for (const id of [DEFAULT_CHARACTER_ID, 'priest', 'gambler']) {
+      const character = characterById(id)!;
+      for (let seed = 50; seed < 60; seed++) {
+        for (const u of firstOfferDeclining(seed, { character, daemon: seal })) {
+          expect(commons.has(u.archetype)).toBe(false);
+        }
+      }
+    }
+  });
+
+  it('a control run without the Seal DOES surface commons (the test is not vacuous)', () => {
+    const seen = new Set<string>();
+    for (let seed = 50; seed < 60; seed++) {
+      for (const u of firstOfferDeclining(seed, { daemon: null })) seen.add(u.archetype);
+    }
+    expect([...seen].some((a) => commons.has(a))).toBe(true);
+  });
+
+  it('PORT stock inherits the fold — no commons on the shelf either (ports follow the same mechanics)', () => {
+    const { run, bus } = freshRunWithBus(71, { daemon: seal });
+    dockAtPort(run, bus);
+    expect(run.portStock!.units).toHaveLength(PRICES.portStock.units); // count untouched (64a scope)
+    for (const slot of run.portStock!.units) {
+      expect(commons.has(slot.template.archetype)).toBe(false);
+    }
   });
 });
 

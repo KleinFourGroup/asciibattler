@@ -116,7 +116,35 @@ harness, Soldier default), the three shipped characters (Soldier / Priest
   fuzz defaults to Soldier explicitly.
 - **Scope guards:** exactly three characters (no fourth); no unlock
   gating (Cluster 6); the select scene is functional, not art-directed.
-- [ ] *(cut at phase kickoff)*
+- **Kickoff forks resolved** (all five, user-signed 2026-07-23):
+  nullable `SceneContext.run` + `requireRun` sweep · explicit
+  `--roster`/`--daemon` beat the character · `resetRun` → select scene
+  unless `?character=` pins · flat roster id-list (length = roster
+  size) · `rollDaemon` deleted. Audit + rationale: worklog §63.
+- [ ] **63a** — `config/characters.json` + zod loader, INERT: schema
+  (id/name/description/roster/daemon/blacklist/weightOverrides),
+  superRefine legality (ids resolve · weights > 0 · blacklist∧override
+  = error · `soldier` exists), the three characters authored. No
+  consumer; no bump.
+- [ ] **63b** — the weighted within-tier sampler, PURE: pools+weights
+  params on `rollOffer`/`rollArchetypeByRarity` (defaults ≡ today);
+  the equal-weights ≡ `rng.pick` identity pinned. Byte-neutral.
+- [ ] **63c** — Run gains the character: `RunConfig.character` +
+  soldier default for bare constructors, roster/daemon/draft pools
+  from the def (explicit overrides win), `rollDaemon` deleted,
+  characterId serialized — **RunSnapshot v37→v38** + ledger entry;
+  any re-pins committed deliberately. The phase's big cut.
+- [ ] **63d** — selectors: harness `characterSelection.ts`
+  (`--character`, EXPLICIT soldier default), `?character=`
+  parse/serialize, `--daemon=random` relabeled ("no override → the
+  character's daemon").
+- [ ] **63e** — CharacterSelectScene + the Game deferred-Run surgery
+  (`run: Run | null`; boot branches on `?character=`; resetRun per
+  the locked fork). Browser-verified natively.
+- [ ] **63f** — the Character Editor (tools/character-editor +
+  byte-faithful formatter + round-trip tests).
+- [ ] **63g** — the Global Blacklist Editor (a UI over `draftable`
+  via the archetype-editor formatter + round-trip test).
 
 ## Phase 64 — The three drafting daemons
 

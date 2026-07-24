@@ -597,3 +597,106 @@ sha256) · `destroy` → server deleted. ~15 min of billing, under a
 cent. Every exit criterion met; TODO's hcloud item (filed 2026-07-17)
 retired. ROADMAP §62 demoted to a stub; cursor to the §63 kickoff.
 
+
+## Phase 63 — Starting characters
+
+### 63-kickoff — the code-reality audit (2026-07-23)
+
+Premise re-verified (step zero): the daemon roll is live
+(`Run.ts:913`, the only production `rollDaemon` call), RunSnapshot
+sits at v37 (`RUN_SCHEMA_VERSION`, Run.ts:381), no `character`
+appears anywhere in RunConfig/Run, and no select scene exists — the
+phase's work is all unbuilt. Findings, by surface:
+
+- **The seams anticipated the phase.** `RunConfig.daemon`'s doc names
+  itself "the future starting-profile seam (a profile = a
+  `startingRoster` + a `daemon`)", and the §61c sampler comment
+  pre-marks where character weight overrides layer ("WITHIN the
+  tier"). Both landing sites are exactly where the spec points.
+- **The byte-identity win (unlooked-for):** `RNG.pick` is
+  `floor(next()·len)`; a cumulative-walk weighted pick over EQUAL
+  weights selects the identical index off the identical single
+  `next()` — so the weighted within-tier sampler is **byte-identical
+  to today's uniform pick whenever no override applies** (default
+  weight 1 exactly; integer cumulative sums, no float-drift edge).
+  And offers ride `recruitRng` while the daemon roll rides the
+  dedicated `daemonRng` fork, so killing the roll shifts NO offer
+  content. Net: seed-pinned offer/content expectations survive §63
+  for the no-override character; only daemonRng-downstream draws
+  (grant chance flips) shift — the "every default-run baseline
+  changes" prediction stays true for fuzz outcomes but the unit-pin
+  blast radius is far smaller than budgeted.
+- **The Game surgery is the real risk, confirmed.** `this.run` is
+  constructed in the Game CONSTRUCTOR (Game.ts:126) and page-lifetime
+  chrome assumes it lives: BitsOverlay's FIRST PAINT happens in its
+  constructor reading `() => this.run.bits`; CacheOverlay's getters
+  likewise; `buildContext()` hands `run` to every scene; boot swaps
+  MapScene at constructor end (Game.ts:252); `resetRun` +
+  `devLoadRun` swap MapScene directly. Deferring Run to
+  select-confirm means `run: Run | null`, guarded overlay getters /
+  deferred first paint, and a nullability decision on
+  `SceneContext.run`.
+- **The sampler wiring is two call sites.** `rollOffer` binds
+  `DRAFTABLE_BY_TIER` + `RECRUITMENT.rarityWeights` internally; it
+  needs pools+weights params. Its only callers are the recruit offer
+  and `rollPortStock` (units roll via `rollOffer` verbatim,
+  Run.ts:1114) — so the spec's "ports follow the same mechanics"
+  lock is satisfied by construction once Run passes character-derived
+  pools.
+- **Serialization has an exact precedent.** Daemons serialize BY ID
+  (`daemonIds`, def-resolved on load, unknown id throws —
+  Run.ts:2823/2910). `characterId` follows the same pattern;
+  blacklist/overrides stay def-resolved at read time
+  (derive-don't-cache). v37→v38 as predicted.
+- **Catalog reality checks out.** All spec'd archetypes exist
+  (mercenary/archer/healer/ronin/rogue/mage/shaman); the current
+  global blacklist = `draftable:false` on
+  ice_mage/warlock/luminant/banshee/ghoul; shaman is draftable
+  legendary (the Priest's ADDITIONAL blacklist entry). Daemon ids
+  mars/minerva/mercury/janus all present. The current starting
+  roster (config/recruitment.json): **6 mercenary + 4 archer at
+  startingLevel 5** — the Soldier reproduces it; Priest/Gambler are
+  one/two-slot swaps as spec'd.
+- **Harness precedent is exact.** `tests/fuzz/daemonSelection.ts` is
+  the template for a `characterSelection.ts` (`--character=<id>`,
+  default `soldier` EXPLICIT per the exit criteria);
+  `RUN_CONFIG_PARAMS` + `parseRunConfig` + `runConfigToQueryString`
+  are the URL-side landing sites. NOTE: `--daemon=random`'s meaning
+  ("the Run's own roll") dies with the roll — the flag stays valid
+  but 'random' becomes "no override → the character's daemon"; doc
+  + label updated at the harness cut.
+- **Editor precedents:** `tools/encounter-editor/format.ts` for a
+  byte-faithful `formatCharactersJson`; the Global Blacklist Editor
+  is a UI over units.json `draftable` flags via the archetype-editor
+  formatter (`ALL_UNIT_DEFS` iteration order).
+- **Bare-constructor blast radius:** ~2200 tests construct
+  `new Run(seed, bus)` with no config — Run must default the
+  character internally (`?? soldier`) so headless callers keep
+  working; their daemon expectations move from "rolled idol" to
+  "Mars always."
+
+Cut + micro-fork resolutions recorded on the shape-lock turn.
+
+### 63-kickoff — shape-lock (2026-07-23, user-signed)
+
+All five recommendations approved as proposed; the seven-cut plan is
+in ROADMAP §63. The fork resolutions and their why:
+
+1. **`SceneContext.run: Run | null`** (+ a `requireRun(ctx)` helper
+   asserted at each run-dependent scene's mount). Chosen over a
+   bespoke pre-run mount path: one uniform swap()/buildContext()
+   pipeline, and the new permanent state ("a scene can exist before
+   the Run does") lives in the types where the compiler enforces it,
+   not in a runtime-throwing getter + comment.
+2. **Explicit `RunConfig.startingRoster`/`daemon` overrides beat the
+   character's** — measurement arms keep their isolation power
+   (`--character=priest --daemon=none` = the Priest minus Minerva).
+3. **`resetRun` returns to the select scene** when no `?character=`
+   pins the choice; a pinned URL goes straight to map (a reset run
+   re-reads the same RunConfig, same as every other param).
+4. **Roster = a flat archetype-id list; its length IS the roster
+   size** (non-empty is the only structural bound; hand draw and
+   enemy budget both already take `min(roster, handSize)`). The
+   three shipped characters stay at 10 per spec.
+5. **`rollDaemon` is deleted at 63c** (with its describe block) —
+   the roll dies by design; git history keeps the code.

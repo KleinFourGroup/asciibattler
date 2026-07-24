@@ -20,7 +20,7 @@ import { ALL_ARCHETYPES, type Archetype } from '../sim/archetypes';
 import { LAYOUT_IDS } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { daemonById, type DaemonConfig } from '../config/daemons';
-import type { CharacterConfig } from '../config/characters';
+import { characterById, type CharacterConfig } from '../config/characters';
 import { ENCOUNTER_IDS } from '../config/encounters';
 import type { SectorMap } from '../config/sectorMap';
 
@@ -94,8 +94,9 @@ export interface RunConfig {
    * explicit `startingRoster` or `daemon` override beats the character's
    * corresponding field, so measurement arms keep their isolation power
    * (`--character=priest --daemon=none` = the Priest minus Minerva).
-   * Programmatic-only until §63d adds `?character=` / `--character`. NOT
-   * persisted itself — the Run serializes the resolved `characterId` (v38).
+   * URL form (63d): `character=<id>` (unknown ids dropped, the `layout=`
+   * discipline); the harness mirrors it as `--character`. NOT persisted
+   * itself — the Run serializes the resolved `characterId` (v38).
    */
   readonly character?: CharacterConfig;
   /**
@@ -159,6 +160,7 @@ export const RUN_CONFIG_PARAMS = {
   encounter: 'encounter',
   width: 'width',
   daemon: 'daemon',
+  character: 'character',
   bits: 'bits',
 } as const;
 
@@ -224,12 +226,22 @@ function parseEncounter(raw: string | null): string | undefined {
 }
 
 /** L1 — `none` → null (daemon-less), a catalog id → that daemon, anything
- *  else (absent / unknown id) → undefined (the normal roll). */
+ *  else (absent / unknown id) → undefined (63d: no override → the
+ *  character's daemon; the run-start roll retired at 63c). */
 function parseDaemon(raw: string | null): DaemonConfig | null | undefined {
   if (!raw) return undefined;
   const token = raw.trim().toLowerCase();
   if (token === 'none') return null;
   return daemonById(token);
+}
+
+/** 63d — a catalog character id → the resolved def; absent / unknown →
+ *  undefined (the parseLayout drop-don't-throw discipline). In the browser,
+ *  undefined means "no URL bypass" — 63e shows the select scene; headless
+ *  callers fall through to Run's Soldier default. */
+function parseCharacter(raw: string | null): CharacterConfig | undefined {
+  if (!raw) return undefined;
+  return characterById(raw.trim().toLowerCase());
 }
 
 /**
@@ -253,6 +265,8 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
   const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));
   if (daemon !== undefined) config.daemon = daemon;
+  const character = parseCharacter(params.get(RUN_CONFIG_PARAMS.character));
+  if (character !== undefined) config.character = character;
   // 47e — a nonnegative integer (0 is meaningful: force a broke run even if
   // the config default ever moves above zero).
   const startingBits = parseIntStrict(params.get(RUN_CONFIG_PARAMS.bits));
@@ -302,6 +316,9 @@ export function runConfigToQueryString(config: RunConfig): string {
     // A bespoke (non-catalog) daemon round-trips by id only if the catalog
     // resolves it — acceptable: the URL form is a dev/playtest convenience.
     params.set(RUN_CONFIG_PARAMS.daemon, config.daemon === null ? 'none' : config.daemon.id);
+  }
+  if (config.character !== undefined) {
+    params.set(RUN_CONFIG_PARAMS.character, config.character.id);
   }
   if (config.startingBits !== undefined) {
     params.set(RUN_CONFIG_PARAMS.bits, String(config.startingBits));

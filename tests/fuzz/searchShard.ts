@@ -29,6 +29,7 @@ import type { ObjectiveProclivity } from './objectiveStrategy';
 import type { RedrawPolicy } from './redrawPolicy';
 import type { EmpowerPolicy } from './empowerPolicy';
 import type { DaemonSelection } from './daemonSelection';
+import type { CharacterSelection } from './characterSelection';
 
 /** The job handed to one `--eval-shard` child (written as JSON to a temp file).
  *  `knobs` are the grid point's config overrides (empty `{}` means no override);
@@ -56,6 +57,9 @@ export interface ShardJob {
   readonly redraw?: RedrawPolicy | undefined;
   readonly empower?: EmpowerPolicy | undefined;
   readonly daemon?: DaemonSelection | undefined;
+  /** 63d — the character arm the child's runs carry (plain JSON, round-trips
+   *  the job file; absent = the harness's explicit Soldier default). */
+  readonly character?: CharacterSelection | undefined;
   /** 59e — the searcher arm as FLAGS (the resolved registry isn't JSON-safe;
    *  the child re-resolves via `searcherFromArgs`, the shared resolver, so
    *  sharded runs drive the identical arm as the parent/run mode). */
@@ -202,6 +206,8 @@ export interface ShardedEvalParams {
   readonly empower?: EmpowerPolicy | undefined;
   /** L1c3 — the fixed daemon arm the children's runs carry (or random). */
   readonly daemon?: DaemonSelection | undefined;
+  /** 63d — the character arm the children's runs carry (or the Soldier). */
+  readonly character?: CharacterSelection | undefined;
   /** 59e — the searcher arm flags (see ShardJob). */
   readonly searcher?: boolean | undefined;
   readonly searcherSpec?: string | undefined;
@@ -230,6 +236,7 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
     redraw,
     empower,
     daemon,
+    character,
     searcher,
     searcherSpec,
     audition,
@@ -251,6 +258,7 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
       redraw,
       empower,
       daemon,
+      character,
       searcher,
       searcherSpec,
       audition,

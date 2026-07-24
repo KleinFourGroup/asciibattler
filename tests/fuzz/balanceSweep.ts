@@ -44,6 +44,7 @@ import type { ObjectiveProclivity } from './objectiveStrategy';
 import type { RedrawPolicy } from './redrawPolicy';
 import type { EmpowerPolicy } from './empowerPolicy';
 import type { DaemonSelection } from './daemonSelection';
+import type { CharacterSelection } from './characterSelection';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import type { RosterEntry } from '../../src/run/RunConfig';
 import { DIFFICULTY } from '../../src/config/difficulty';
@@ -254,6 +255,9 @@ export interface BalanceSweepConfig {
    * game — byte-identical to the flag being absent).
    */
   readonly daemon?: DaemonSelection | undefined;
+  /** 63d — hold one character arm FIXED across every run at every grid point
+   *  (absent = the harness's explicit Soldier default). */
+  readonly character?: CharacterSelection | undefined;
   /** Stop after this many grid points (the `--dry-run` estimate runs 1). */
   readonly maxPoints?: number | undefined;
   /**
@@ -303,6 +307,7 @@ function harnessOptionsFor(
   redraw?: RedrawPolicy,
   empower?: EmpowerPolicy,
   daemon?: DaemonSelection,
+  character?: CharacterSelection,
   forcedLayoutId?: string,
   forcedEncounterId?: string,
 ): HarnessOptions {
@@ -322,6 +327,7 @@ function harnessOptionsFor(
   if (redraw) opts = { ...opts, redraw };
   if (empower) opts = { ...opts, empower };
   if (daemon) opts = { ...opts, daemon };
+  if (character) opts = { ...opts, character };
   return opts;
 }
 
@@ -349,6 +355,7 @@ async function defaultMeasurePoint(
     config.redraw,
     config.empower,
     config.daemon,
+    config.character,
     config.forcedLayoutId,
     config.forcedEncounterId,
   );
@@ -374,6 +381,7 @@ async function defaultMeasurePoint(
       redraw: config.redraw,
       empower: config.empower,
       daemon: config.daemon,
+      character: config.character,
       jobs,
       tmpDir: config.tmpDir,
     });

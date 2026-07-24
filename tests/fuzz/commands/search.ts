@@ -38,6 +38,7 @@ import { daemonLabel } from '../daemonSelection';
 import { parseRunConfig } from '../../../src/run/RunConfig';
 import {
   bail,
+  characterFromArgs,
   daemonFromArgs,
   empowerFromArgs,
   encounterFromArgs,
@@ -64,6 +65,7 @@ export type SearchModeArgs = Pick<
   | 'redraw'
   | 'empower'
   | 'daemon'
+  | 'character'
   | 'outDir'
   | 'refine'
   | 'refineK'
@@ -117,11 +119,14 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const redraw = redrawFromArgs(args);
   const empower = empowerFromArgs(args);
   const daemon = daemonFromArgs(args);
+  // 63d — the character arm (ALWAYS set: absent = the explicit Soldier).
+  const character = characterFromArgs(args);
   let harnessOptions: HarnessOptions = Object.keys(runConfig).length > 0 ? { runConfig } : {};
   if (objective) harnessOptions = { ...harnessOptions, objective };
   if (redraw) harnessOptions = { ...harnessOptions, redraw };
   if (empower) harnessOptions = { ...harnessOptions, empower };
   if (daemon) harnessOptions = { ...harnessOptions, daemon };
+  harnessOptions = { ...harnessOptions, character };
   // 59e — the audition-searcher regen path: `--searcher [--audition] [--k=n]`
   // drives every candidate evaluation (train, test, AND refinement) through
   // the rollout searcher, resolved by the shared searcherFromArgs. ⚠ cost:
@@ -183,6 +188,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       redraw,
       empower,
       daemon,
+      character,
       searcher: args.searcher,
       searcherSpec: args.searcherSpec,
       audition: args.audition,
@@ -246,6 +252,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
                 redraw,
                 empower,
                 daemon,
+                character,
                 searcher: args.searcher,
                 searcherSpec: args.searcherSpec,
                 audition: args.audition,

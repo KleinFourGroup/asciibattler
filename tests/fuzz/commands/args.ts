@@ -16,6 +16,11 @@ import { parseObjectiveFlag, type ObjectiveProclivity } from '../objectiveStrate
 import { parseRedrawFlag, type RedrawPolicy } from '../redrawPolicy';
 import { parseEmpowerFlag, type EmpowerPolicy } from '../empowerPolicy';
 import { parseDaemonFlag, type DaemonSelection } from '../daemonSelection';
+import {
+  parseCharacterFlag,
+  DEFAULT_CHARACTER_SELECTION,
+  type CharacterSelection,
+} from '../characterSelection';
 import { parseScriptsSpec } from '../scriptSubset';
 import { AUDITION_SCRIPTS, type TrafficScript } from '../../../src/bot/TrafficScriptDriver';
 import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
@@ -80,9 +85,14 @@ export interface CliArgs {
   // (`--empower=<none|random|level:hi|level:lo|file.json>`; default none).
   empower?: string;
   // L1c3 — the daemon arm driven through the run / search / sweep modes
-  // (`--daemon=<random|none|id>`; default random = the Run's own roll, the
-  // real game's behavior — byte-identical to the flag being absent).
+  // (`--daemon=<random|none|id>`). 63d relabel: `random`/absent = no
+  // override → the CHARACTER's daemon (the run-start roll retired at 63c);
+  // still byte-identical to the flag being absent.
   daemon?: string;
+  // 63d — the character arm (`--character=<id>`), all three modes. Absent =
+  // the EXPLICIT Soldier default (the harness names its arm rather than
+  // leaning on Run's internal fallback — the §63 exit-criterion lock).
+  character?: string;
   // §55 pre-gate — drive the §54 traffic-script bot (`trafficScripts: true`,
   // the standard registry) in every battle. RUN MODE ONLY for now (the
   // fixed-vector probe); --search/--sweep/--arena bail loudly rather than
@@ -249,6 +259,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--daemon':
         if (v !== undefined) args.daemon = v;
         break;
+      case '--character':
+        if (v !== undefined) args.character = v;
+        break;
       case '--scripts':
         args.scripts = true;
         if (v !== undefined) args.scriptsSpec = v;
@@ -384,10 +397,20 @@ export function empowerFromArgs(args: Pick<CliArgs, 'empower'>): EmpowerPolicy |
 }
 
 /** L1c3 — resolve the `--daemon` flag into a selection, or `undefined` when
- *  absent (the harness leaves the Run's own roll — byte-identical to
- *  `random`). Bails loudly on an unknown idol id. */
+ *  absent (no override → the character's daemon; the 63d relabel of what
+ *  was "the Run's own roll" — still byte-identical to `random`). Bails
+ *  loudly on an unknown idol id. */
 export function daemonFromArgs(args: Pick<CliArgs, 'daemon'>): DaemonSelection | undefined {
   return args.daemon !== undefined ? parseDaemonFlag(args.daemon) : undefined;
+}
+
+/** 63d — resolve the `--character` flag into a selection; absent = the
+ *  EXPLICIT Soldier default (never `undefined` — a batch always names its
+ *  character arm). Throws loudly on an unknown id. */
+export function characterFromArgs(args: Pick<CliArgs, 'character'>): CharacterSelection {
+  return args.character !== undefined
+    ? parseCharacterFlag(args.character)
+    : DEFAULT_CHARACTER_SELECTION;
 }
 
 /** M6/N2 — resolve + VALIDATE the `--layout` flag into a `forcedLayoutId` (a

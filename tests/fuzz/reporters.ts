@@ -79,11 +79,13 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
 }
 
 /**
- * L1c3 — per-daemon aggregate buckets, keyed by the rolled/forced idol id
- * (`'none'` for daemon-less runs), sorted by key for stable output. Under
- * `--daemon=random` this is the per-idol win/hop read in ONE batch; under a
- * forced arm it degenerates to a single bucket. The future starting-profiles
- * round inherits this bucketing as-is (a profile pins the daemon).
+ * L1c3 — per-daemon aggregate buckets, keyed by the carried/forced idol id
+ * (`'none'` for daemon-less runs), sorted by key for stable output. 63c —
+ * the run-start roll is retired, so `--daemon=random` no longer spreads a
+ * batch across idols (a default batch is all the character's daemon — one
+ * bucket); a per-idol read now takes one forced `--daemon=<id>` batch per
+ * idol. The 63c prediction ("the starting-profiles round inherits this
+ * bucketing — a profile pins the daemon") landed as written.
  */
 export function perDaemonStats(
   results: readonly RunResult[],

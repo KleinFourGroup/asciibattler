@@ -46,6 +46,8 @@ import { selectEmpowerPosition } from './empowerPolicy';
 import type { EmpowerPolicy } from './empowerPolicy';
 import { daemonConfigFor } from './daemonSelection';
 import type { DaemonSelection } from './daemonSelection';
+import { characterConfigFor, DEFAULT_CHARACTER_SELECTION } from './characterSelection';
+import type { CharacterSelection } from './characterSelection';
 import { TelemetryAccumulator } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 
@@ -224,17 +226,26 @@ export interface HarnessOptions {
    */
   readonly empower?: EmpowerPolicy;
   /**
-   * L1c3 — the daemon arm: `random`/absent leaves the Run's own uniform roll
-   * (the REAL GAME's default — byte-identical to a pre-flag run, pinned);
-   * `none` forces the daemon-less control arm (both pre-turn gates
-   * permanently disabled — what a per-idol lift is measured against);
-   * `fixed` forces one idol on every run. Not a per-turn policy — it resolves
-   * to the `RunConfig.daemon` override once per run, so the roll/skip stays
-   * on the Run's child stream (the G1 determinism contract). The redraw/
-   * empower bots above act on whatever the daemon grants (a denied/absent
-   * gate reads as zero availability and the bot no-ops).
+   * L1c3 — the daemon arm: `random`/absent leaves the override unset — post-
+   * 63c that means the CHARACTER's daemon (the run-start roll is retired;
+   * the 63d relabel), still byte-identical to a pre-flag run; `none` forces
+   * the daemon-less control arm (both pre-turn gates permanently disabled —
+   * what a per-idol lift is measured against); `fixed` forces one idol on
+   * every run. Not a per-turn policy — it resolves to the `RunConfig.daemon`
+   * override once per run (the G1 determinism contract). The redraw/empower
+   * bots above act on whatever the daemon grants (a denied/absent gate reads
+   * as zero availability and the bot no-ops).
    */
   readonly daemon?: DaemonSelection;
+  /**
+   * 63d — the character arm: absent = the EXPLICIT Soldier default (the
+   * harness always names its character, never leaning on Run's internal
+   * fallback — the §63 exit-criterion lock; byte-identical to the fallback
+   * by construction). An explicit selection forces that catalog character;
+   * a caller-supplied `runConfig.character` sits between the two in
+   * precedence (arm > runConfig > Soldier).
+   */
+  readonly character?: CharacterSelection;
   /**
    * §35d — assert the occupancy invariant (no two units share a cell, per plane)
    * after every battle tick, across the whole run. OFF by default so the
@@ -488,13 +499,20 @@ export function runOne(
   });
 
   // L1c3 — resolve the daemon arm into the RunConfig override. `random`/absent
-  // resolves to undefined = options.runConfig used untouched (byte-identical).
+  // resolves to undefined = no override (the character's daemon, post-63c).
   const daemonOverride = options.daemon !== undefined ? daemonConfigFor(options.daemon) : undefined;
-  const runConfig =
-    daemonOverride !== undefined
-      ? { ...options.runConfig, daemon: daemonOverride }
-      : options.runConfig;
-  const run = new Run(runConfig?.seed ?? seed, bus, runConfig);
+  // 63d — the character arm resolves ALWAYS (arm > caller runConfig > the
+  // explicit Soldier default), so every run's RunConfig names its character.
+  const character =
+    options.character !== undefined
+      ? characterConfigFor(options.character)
+      : (options.runConfig?.character ?? characterConfigFor(DEFAULT_CHARACTER_SELECTION));
+  const runConfig: RunConfig = {
+    ...options.runConfig,
+    character,
+    ...(daemonOverride !== undefined ? { daemon: daemonOverride } : {}),
+  };
+  const run = new Run(runConfig.seed ?? seed, bus, runConfig);
   // L1c3/48f — the arm key is the STARTING daemon (rolled or forced at
   // construction). Read it NOW: reward tables grant daemons mid-run (accepted
   // by the harness's accept-all policy), so end-state `run.daemons` no longer

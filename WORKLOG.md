@@ -751,3 +751,26 @@ anchored on a forced Janus in both arms), (2) harnessDaemon's
 perDaemonStats bucketing (12 default runs are all-Mars now; re-anchored
 on forced fixed arms, one bucket per idol). The §60c grant-consumer
 lesson in miniature: a policy read needs a granter in the arm.
+
+### 63d — the selectors (2026-07-24)
+
+`--character=<id>` on the harness (characterSelection.ts — the
+daemonSelection shape minus the random/none kinds: a run ALWAYS has a
+character) with the EXPLICIT Soldier default resolved at the harness
+layer (arm > caller runConfig > Soldier), threaded through all three
+modes + the --jobs shard files (ShardJob/ShardedEvalParams/evalShard,
+the daemon pattern verbatim) + the sweep config; run/search/sweep
+banners print `character=<id>` unconditionally. `?character=` in
+RunConfig parse/serialize (drop-don't-throw, the layout= discipline —
+undefined = "no URL bypass", which is 63e's select-scene signal). The
+`--daemon=random` RELABEL: docs at daemonSelection/args/harness/
+RunConfig now say "no override → the character's daemon"; the
+historical arm name survives for label continuity, and the
+perDaemonStats doc records that a per-idol read now takes one forced
+batch per idol (a random batch is all-Mars). run-config CLI help
+gained both lines (the flag itself came free — RUN_CONFIG_KEYS derives
+from RUN_CONFIG_PARAMS); the launcher GUI's missing character dropdown
+is a filed TODO (fold into 63f). New tests: selection parse/resolve,
+URL round-trip, and the harness arm's three guarantees
+(absent ≡ explicit soldier byte-identity · forced-priest liveness ·
+per-arm determinism).

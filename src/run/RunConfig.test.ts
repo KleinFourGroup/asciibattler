@@ -7,6 +7,7 @@ import {
   type RunConfig,
 } from './RunConfig';
 import { ALL_ARCHETYPES } from '../sim/archetypes';
+import { characterById } from '../config/characters';
 import { LAYOUT_IDS } from '../sim/layouts';
 import { ENCOUNTER_IDS } from '../config/encounters';
 import { LEVELING } from '../config/leveling';
@@ -106,6 +107,23 @@ describe('RunConfig parsing', () => {
 
   it('parseRunConfigFromURL strips a leading "?" (location.search shape)', () => {
     expect(parseRunConfigFromURL('?hops=2&seed=9')).toEqual({ seed: 9, hopCount: 2 });
+  });
+
+  it('63d: parses `character=` to the resolved catalog def, case/space tolerant', () => {
+    expect(cfg('character=priest').character).toBe(characterById('priest'));
+    expect(cfg('character=GAMBLER').character).toBe(characterById('gambler'));
+  });
+
+  it('63d: drops an unknown / absent character id (undefined = no URL bypass)', () => {
+    expect(cfg('character=warlord').character).toBeUndefined();
+    expect(cfg('').character).toBeUndefined();
+  });
+
+  it('63d: round-trips the character through the query string by id', () => {
+    const original = cfg('character=gambler&hops=3');
+    const query = runConfigToQueryString(original);
+    expect(query).toContain('character=gambler');
+    expect(parseRunConfig(new URLSearchParams(query))).toEqual(original);
   });
 
   it('parses `bits=` as a nonnegative integer, 0 included (47e)', () => {

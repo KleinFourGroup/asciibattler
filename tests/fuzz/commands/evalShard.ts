@@ -50,6 +50,8 @@ export function runEvalShardCli(args: EvalShardModeArgs): void {
   if (job.redraw) harnessOptions = { ...harnessOptions, redraw: job.redraw };
   if (job.empower) harnessOptions = { ...harnessOptions, empower: job.empower };
   if (job.daemon) harnessOptions = { ...harnessOptions, daemon: job.daemon };
+  // 63d — the character arm (absent = the harness's explicit Soldier default).
+  if (job.character) harnessOptions = { ...harnessOptions, character: job.character };
   // 59e — the searcher arm arrives as FLAGS (the registry isn't JSON-safe)
   // and re-resolves through the SAME resolver run mode uses, so a sharded
   // search drives the identical arm byte-for-byte.

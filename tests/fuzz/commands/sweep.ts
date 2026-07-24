@@ -26,9 +26,11 @@ import { proclivityLabel } from '../objectiveStrategy';
 import { redrawPolicyLabel } from '../redrawPolicy';
 import { empowerPolicyLabel } from '../empowerPolicy';
 import { daemonLabel } from '../daemonSelection';
+import { characterLabel } from '../characterSelection';
 import { parseRunConfig } from '../../../src/run/RunConfig';
 import {
   bail,
+  characterFromArgs,
   daemonFromArgs,
   empowerFromArgs,
   encounterFromArgs,
@@ -56,6 +58,7 @@ export type SweepModeArgs = Pick<
   | 'redraw'
   | 'empower'
   | 'daemon'
+  | 'character'
   | 'jobs'
   | 'dryRun'
   | 'outDir'
@@ -89,6 +92,8 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
   const redraw = redrawFromArgs(args);
   const empower = empowerFromArgs(args);
   const daemon = daemonFromArgs(args);
+  // 63d — the character arm (ALWAYS set: absent = the explicit Soldier).
+  const character = characterFromArgs(args);
   // M6/N2 — force one layout (or `procedural`) across every battle at every grid
   // point, so the band can be re-found ISOLATED to the new procedural maps.
   const forcedLayoutId = layoutFromArgs(args);
@@ -109,10 +114,11 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
   const redrawNote = redraw ? ` redraw=${redrawPolicyLabel(redraw)}` : '';
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
+  const characterNote = ` character=${characterLabel(character)}`;
   const layoutNote = forcedLayoutId ? ` layout=${forcedLayoutId}` : '';
   const encounterNote = forcedEncounterId ? ` encounter=${forcedEncounterId}` : '';
   process.stdout.write(
-    `Balance sweep: tier=${tierName}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${seedNote}${jobsNote} grid=${gridSize} point(s) ` +
+    `Balance sweep: tier=${tierName}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${characterNote}${seedNote}${jobsNote} grid=${gridSize} point(s) ` +
       `[${knobs.map((k) => `${k.path}×${k.range.steps}`).join(', ')}] samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -129,6 +135,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     redraw,
     empower,
     daemon,
+    character,
     jobs,
     tmpDir: join(args.outDir, 'shard-tmp'),
     maxPoints: args.dryRun ? 1 : undefined,

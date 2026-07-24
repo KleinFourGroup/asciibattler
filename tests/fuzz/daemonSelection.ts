@@ -5,10 +5,11 @@
  * the daemon is rolled once per run by `Run` itself (L1). The selection just
  * decides the `RunConfig.daemon` override:
  *
- * - `random` (the default, ≡ flag absent) — leave the override unset, so the
- *   Run rolls uniformly off its own daemon stream. This is the REAL GAME's
- *   behavior, hence the harness default; pinned byte-identical to an absent
- *   flag.
+ * - `random` (the default, ≡ flag absent) — leave the override unset. 63d
+ *   relabel: post-63c that means the CHARACTER's daemon (the run-start roll
+ *   is retired — a default run carries the Soldier's Mars). Still the REAL
+ *   GAME's behavior and still pinned byte-identical to an absent flag; the
+ *   historical name survives for arm-label continuity.
  * - `none` — force a daemon-less run (both pre-turn gates permanently
  *   disabled): the control arm a per-idol lift is measured against.
  * - a catalog id (`mars` / `minerva` / `mercury` / `janus`) — force that idol

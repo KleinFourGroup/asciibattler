@@ -39,8 +39,10 @@ import {
   renderEncounterCsv,
 } from '../reporters';
 import { daemonLabel } from '../daemonSelection';
+import { characterLabel } from '../characterSelection';
 import {
   bail,
+  characterFromArgs,
   coverageFromArgs,
   daemonFromArgs,
   empowerFromArgs,
@@ -71,6 +73,7 @@ export type RunModeArgs = Pick<
   | 'redraw'
   | 'empower'
   | 'daemon'
+  | 'character'
   | 'scripts'
   | 'scriptsSpec'
   | 'searcher'
@@ -160,10 +163,13 @@ export function runRunCli(args: RunModeArgs): void {
   // K4c3 — and a fixed empower policy (same contract).
   const empower = empowerFromArgs(args);
   if (empower) harnessOptions = { ...harnessOptions, empower };
-  // L1c3 — the daemon arm (default random = the Run's own roll, byte-identical
-  // to the flag being absent; none = the daemon-less control arm).
+  // L1c3 — the daemon arm (63d relabel: default random = no override → the
+  // character's daemon; none = the daemon-less control arm).
   const daemon = daemonFromArgs(args);
   if (daemon) harnessOptions = { ...harnessOptions, daemon };
+  // 63d — the character arm (ALWAYS set: absent = the explicit Soldier).
+  const character = characterFromArgs(args);
+  harnessOptions = { ...harnessOptions, character };
   // X2 — `--per-encounter` needs the opt-in mechanism telemetry on (pool chips)
   // so the per-encounter pool-damage metric is populated. Pure observation —
   // doesn't perturb determinism or the summary.csv / failure-trace output.
@@ -186,13 +192,14 @@ export function runRunCli(args: RunModeArgs): void {
     ? ` (roster=[${roster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}])`
     : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
+  const characterNote = ` character=${characterLabel(character)}`;
   const scriptsNote = args.scripts ? ' scripts=ON' : '';
   const startedAt = Date.now();
   let done = 0;
   const totalRuns = strategies.length * seeds.length;
   for (const strategy of strategies) {
     process.stdout.write(
-      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${scriptsNote}…\n`,
+      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}…\n`,
     );
     for (const s of seeds) {
       const r = runOne(s, strategy, harnessOptions);

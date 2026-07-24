@@ -978,3 +978,30 @@ all idols anymore, by design. Cut = ROADMAP §64 (64a–64d).
   reward tables), which would pollute the offer-size read.
 - 2265→2271 main; fuzz:smoke 278 green (invariant pins — no content
   re-pins needed, as §61c predicted for sampler-adjacent content).
+
+### 64b — Patrician's Seal (2026-07-24)
+
+`4f9a4db` — the no-commons daemon, the shape-lock's mechanism-A design
+made real: the four global tier weights promoted to run stats (bases
+config-derived from `recruitment.json`, the 64a discipline), the Seal a
+one-line `mult 0` on `rarityWeightCommon`.
+
+- `rollOffer` grew a trailing `rarityWeights` param (default = the raw
+  config — every non-Run caller untouched, byte-identity pinned);
+  `Run.effectiveRarityWeights()` derives the folded record per roll,
+  with the no-modifier identity fast path returning the config record
+  itself (foldRunStats's base-identity guarantee made useful).
+- SCOPE contrast with 64a, deliberate: the Seal reads at BOTH offer
+  sites (recruit + port stock) — "ports follow the same mechanics" —
+  where the Cornucopia's count is recruit-only. Both pinned.
+- The audit's sampler edge landed with it: the float-boundary fallback
+  tier is now the last POSITIVE-weight tier (was: last non-empty —
+  under zeroed weights that could hold no probability mass). Pinned
+  via a deliberate out-of-contract stub rng (`next() => 1`) that
+  forces the fallback path deterministically.
+- Zero-weight-tier semantics are ABSOLUTE, not statistical: the walk
+  subtracts 0 (can never flip the roll negative there) + the hardened
+  fallback — so the no-commons tests assert zero leakage across seed
+  scans, with a control test proving non-vacuousness.
+- 2271→2283 main; fuzz:smoke 278 green; catalog-shape pin re-pinned
+  deliberately (+patricians-seal).

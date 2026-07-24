@@ -137,9 +137,9 @@ latter two need, designed here.
 - [x] **64a** — The Cornucopia ✅ 2026-07-24 (`d310364`): shipped as cut
   (pure modifier, config-derived base, port count pinned untouched);
   worklog §64a.
-- [ ] **64b** — Patrician's Seal (no commons): the four tier weights
-  promoted to run stats (bases = `recruitment.json`) + the sampler's
-  zero-weight fallback hardening + rows. Byte-neutral for non-owners.
+- [x] **64b** — Patrician's Seal ✅ 2026-07-24 (`4f9a4db`): shipped as
+  cut (weights promoted, fallback hardened, both offer sites read the
+  fold); worklog §64b.
 - [ ] **64c** — Idol of Portunus (guaranteed port legendary):
   `portLegendaryOffers` count stat + forced-tier slots in
   `rollPortStock` (draw-shape preserved) + graceful empty-pool degrade

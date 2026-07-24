@@ -883,3 +883,73 @@ gold, the unit-card wash hues), computed-style-verified (`5341452`).
 ROADMAP §63 demoted to a stub per the close rule; cursor → the §64
 kickoff (own session — the guarantee/no-commons mechanism is its known
 decision point).
+
+## Phase 64 — The three drafting daemons
+
+### 64-kickoff — the code-reality audit (2026-07-24)
+
+Surfaces surveyed: `Recruitment.ts` (the §61c/63b sampler), `runStats.ts`
++ `Run.effectiveRunStats` (the fold), `config/daemons.ts` (the rule
+vocabulary + parse matrix), `Run.rollPortStock` / the recruit-offer site,
+`prices.json`, `rewards.json`. Findings:
+
+- **The substrate is better than the roadmap assumed.** All three
+  daemons can land as pure `modifier` rules over new run-stat keys —
+  ZERO new rule kinds, no matrix rows, no hook ops. The §47 vocabulary
+  absorbs the whole phase:
+  - *Pool size* — `recruitOfferSize` run stat (the `effectiveCacheSize`
+    precedent verbatim: fold at call time, floor at the read site). The
+    recruit site already passes `size: undefined` → the config default;
+    it just starts passing the folded value.
+  - *No commons* — `rollArchetypeByRarity` ALREADY takes `weights` as a
+    param and renormalizes over non-empty tiers; a zero-weight tier
+    gets no probability mass and the all-zero guard already throws.
+    Promoting the four tier weights to run stats (bases =
+    `recruitment.json#rarityWeights`) makes "no commons" a `mult 0`
+    fold — and buys future tier-shaping daemons for free.
+  - *Port legendary* — a `portLegendaryOffers` count stat (base 0):
+    `rollPortStock` forces the first ⌊fold⌋ unit slots' TIER to
+    legendary. `portStockRng` draw counts are already
+    ownership-dependent by design (the owned-daemon exclusion — the
+    50d two-stream rationale), so the guarantee costs nothing
+    determinism-wise; still keeping the consume-the-tier-draw shape
+    (2 draws/slot always) for parity discipline.
+- **One wrinkle:** `RUN_STAT_BASES` is a static record; the new stats'
+  bases live in `recruitment.json`. Resolution: bases become
+  config-derived (runStats → config/recruitment import is cycle-free —
+  recruitment.ts touches only zod/json/units). Tests derive
+  expectations from the config module (the balance-proof-tests norm).
+- **Sampler edge found:** `rollArchetypeByRarity`'s fallback tier (the
+  float-boundary catch) initializes to the last NON-EMPTY tier — under
+  zero weights that could be a zero-weight tier. Hardened alongside
+  64b: fallback = last positive-weight tier.
+- **Acquisition surfaces:** port stock samples the daemon catalog
+  automatically (new entries appear for free), but `rewards.json` lists
+  daemon ids EXPLICITLY (both tables) — the cut must add the three ids
+  deliberately. Prices are authored in `prices.json#daemons.byId`.
+- **Snapshot prediction: NO bump.** Daemons serialize by id (v38's
+  `daemonIds`); every new stat is derived at read time
+  (derive-don't-cache). v38/v34 hold — the roadmap's round-wide
+  prediction is unchanged.
+- **Spec ambiguity for the shape-lock:** "guarantees an elite offering"
+  predates the §61 tier rename — read as the LEGENDARY tier. Degrade
+  question: a character blacklist could empty the legendary pool
+  (not with shipped content, but legal config); proposed: guarantee
+  degrades to the normal roll (graceful degradation), pinned by test.
+
+### 64-kickoff — the shape-lock (2026-07-24)
+
+User-signed, all items: **mechanism A** (weights-as-run-stats; the
+vocabulary walk-through — modifiers are labeled numbers whose meaning
+lives at the single read site, hooks are for momentary delivery; the
+count-stat generalization gives the port guarantee stacking semantics
+for free) · Cornucopia leaves the PORT unit count untouched (spec:
+"post-encounter pool from three to four") · "elite offering" read as
+the LEGENDARY tier (the word predates the §61 rename) with graceful
+degrade on an empty pool (test-pinned) · seed prices 30/35/25 (tuned
+§68) · all three added to both `rewards.json` daemon tables at
+weight 1. **Names** (the user widened the frame beyond Roman idols):
+**The Cornucopia** (pool size — a trinket) · **Patrician's Seal** (no
+commons — patricians vs. plebeians) · **Idol of Portunus** (the actual
+Roman god of ports). One trinket, one mark, one god — daemons aren't
+all idols anymore, by design. Cut = ROADMAP §64 (64a–64d).

@@ -122,17 +122,30 @@ latter two need, designed here.
 
 - **Depends on:** §61 (tiers) + §63 (character weights/blacklists live, so
   daemon×character pool interactions are testable at this kickoff).
-- **Risk:** medium — two daemons need NEW vocabulary (a pool-composition
-  constraint is not a weight).
-- **Decision point:** the guarantee/no-commons MECHANISM design (weights-
-  as-run-stats making "no commons" a mult-0 fold vs a bespoke op/flag) —
-  shape-lock with the user at this kickoff.
+- **Risk:** DOWNGRADED to low at the kickoff audit — no new vocabulary
+  needed; all three land as `modifier` rules over new run stats
+  (worklog §64-kickoff).
+- **Decision point:** ✅ DECIDED 2026-07-24 — weights-as-run-stats
+  (option A): no-commons = a mult-0 fold on promoted tier-weight stats;
+  the port guarantee = a count stat read by `rollPortStock`; rationale
+  + the read-site-owns-meaning argument in worklog §64-kickoff.
 - **Exit criteria:** all three daemons purchasable + functional (headless
   pool tests per daemon, incl. each × each character); parse-time legality
   enforced (the superRefine matrix pattern); prices authored (tuned §68).
 - **Scope guards:** three daemons only; no bot-arm consumption work here
   (§68 owns it — interim reads carry the inert-mechanic caveat).
-- [ ] *(cut at phase kickoff)*
+- [ ] **64a** — The Cornucopia (+1 recruit offer): `recruitOfferSize` run
+  stat (config-derived base) + the recruit-site read (port count
+  deliberately untouched) + catalog/price/reward rows. No snapshot bump.
+- [ ] **64b** — Patrician's Seal (no commons): the four tier weights
+  promoted to run stats (bases = `recruitment.json`) + the sampler's
+  zero-weight fallback hardening + rows. Byte-neutral for non-owners.
+- [ ] **64c** — Idol of Portunus (guaranteed port legendary):
+  `portLegendaryOffers` count stat + forced-tier slots in
+  `rollPortStock` (draw-shape preserved) + graceful empty-pool degrade
+  + rows.
+- [ ] **64d** — close: the stacked all-three × each-character matrix
+  test + docs honesty pass + flips.
 
 ## Phase 65 — Hand & draw size
 

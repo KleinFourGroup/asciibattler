@@ -134,9 +134,9 @@ latter two need, designed here.
   enforced (the superRefine matrix pattern); prices authored (tuned §68).
 - **Scope guards:** three daemons only; no bot-arm consumption work here
   (§68 owns it — interim reads carry the inert-mechanic caveat).
-- [ ] **64a** — The Cornucopia (+1 recruit offer): `recruitOfferSize` run
-  stat (config-derived base) + the recruit-site read (port count
-  deliberately untouched) + catalog/price/reward rows. No snapshot bump.
+- [x] **64a** — The Cornucopia ✅ 2026-07-24 (`d310364`): shipped as cut
+  (pure modifier, config-derived base, port count pinned untouched);
+  worklog §64a.
 - [ ] **64b** — Patrician's Seal (no commons): the four tier weights
   promoted to run stats (bases = `recruitment.json`) + the sampler's
   zero-weight fallback hardening + rows. Byte-neutral for non-owners.

@@ -953,3 +953,28 @@ weight 1. **Names** (the user widened the frame beyond Roman idols):
 commons — patricians vs. plebeians) · **Idol of Portunus** (the actual
 Roman god of ports). One trinket, one mark, one god — daemons aren't
 all idols anymore, by design. Cut = ROADMAP §64 (64a–64d).
+
+### 64a — The Cornucopia (2026-07-24)
+
+`d310364` — the first drafting daemon, exactly as shape-locked: a pure
+`modifier` rule on the new `recruitOfferSize` run stat.
+
+- `RUN_STAT_KEYS` grows its first CONFIG-DERIVED base:
+  `recruitment.json#defaultOfferSize` (the balance-proof-tests norm —
+  the base pin asserts equality with the config module, no literal).
+  The runStats → config/recruitment import is cycle-free as audited.
+- `Run.effectiveOfferSize` = the `effectiveCacheSize` discipline
+  verbatim (fold at call time, floor at the read site); the recruit
+  site passes it where it passed `undefined`. The PORT unit count
+  stays `PRICES.portStock.units` — the shape-lock scope call,
+  test-pinned via `dockAtPort` with the daemon owned.
+- Tests derive the +1 from the CATALOG rule (a §68 retune of the value
+  keeps them honest): offer +1 with the daemon (× all three
+  characters, blacklist-leak checked), default without, the fold
+  getter both ways. One deliberate re-pin: daemon.test.ts's
+  catalog-shape id list gains `cornucopia`.
+- Test detail: the offer-drive helper DECLINES rewards — the accepted
+  daemon portion could be the Cornucopia itself (it ships in both
+  reward tables), which would pollute the offer-size read.
+- 2265→2271 main; fuzz:smoke 278 green (invariant pins — no content
+  re-pins needed, as §61c predicted for sampler-adjacent content).

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import {
-  rollDaemon,
   resolveTurnGrants,
   resolveInstantHooks,
   battleRulesFor,
@@ -17,8 +16,9 @@ import { DECK } from '../config/deck';
 import { RNG } from '../core/RNG';
 
 /**
- * L1→47c — the pure daemon rules: the run-start roll + the per-turn grant
- * resolution (`turnStart` hooks → this turn's effective configs). Bespoke
+ * L1→47c — the pure daemon rules: the per-turn grant resolution (`turnStart`
+ * hooks → this turn's effective configs; the run-start roll retired at 63c —
+ * characters seed the starting daemon now). Bespoke
  * fixture daemons exercise the mechanics (the redraw.test.ts pattern —
  * explicit literals, not the `DAEMONS` singleton); a separate block pins the
  * SHIPPED catalog's design shape, with every expectation derived from the
@@ -69,17 +69,8 @@ const NEVER: DaemonConfig = {
   rules: [redrawHook(0, 6)],
 };
 
-describe('rollDaemon', () => {
-  it('is deterministic per seed', () => {
-    expect(rollDaemon(DAEMONS, new RNG(42)).id).toBe(rollDaemon(DAEMONS, new RNG(42)).id);
-  });
-
-  it('covers the whole catalog over seeds (uniform roll, no dead entries)', () => {
-    const seen = new Set<string>();
-    for (let seed = 0; seed < 200; seed++) seen.add(rollDaemon(DAEMONS, new RNG(seed)).id);
-    expect([...seen].sort()).toEqual(DAEMONS.map((d) => d.id).sort());
-  });
-});
+// 63c — the rollDaemon describe left with the function (characters replaced
+// the run-start roll; Run.test.ts §63c covers character-seeded daemons).
 
 /** 47e — the all-disabled resolution (grants baseline, no instants). */
 function disabledResolution(): { grants: TurnGrants; instants: never[] } {

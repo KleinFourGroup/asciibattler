@@ -50,13 +50,18 @@ import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
 import { getSector, type SectorDef } from '../config/sectors';
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
 import { pickStartSector, pickNextSector, isSectorSink } from './sectorWalk';
-import { rollOffer, recruitLevelBonus } from './Recruitment';
+import { rollOffer, recruitLevelBonus, draftPoolsFor } from './Recruitment';
+import {
+  characterById,
+  DEFAULT_CHARACTER_ID,
+  type CharacterConfig,
+} from '../config/characters';
+import type { UnitRarity } from '../config/units';
 import { avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
 import { redrawRejection } from './redraw';
 import { empowerRejection, empowerEffect } from './empower';
 import {
-  rollDaemon,
   resolveTurnGrants,
   resolveInstantHooks,
   battleRulesFor,
@@ -377,8 +382,15 @@ export interface BattleEncounter {
  *  51f: bumped 36→37. The injected-rule stores gain PROVENANCE: entries are
  *  `InjectedRule` ({rule, sourceId}) instead of bare `BattleRule`s, so a
  *  packet-mined tally labels its earner. A v36 save's bare-rule arrays
- *  can't restore into the wrapped shape → reject. */
-const RUN_SCHEMA_VERSION = 37;
+ *  can't restore into the wrapped shape → reject.
+ *  63c: bumped 37→38. Starting characters: adds `characterId` (BY ID,
+ *  def-resolved on load — an unknown id hard-rejects, the daemonIds
+ *  discipline), and the L1 run-start daemon ROLL is retired (daemons seed
+ *  from the character def; the daemonRng fork survives for grant flips, so
+ *  its stream position advances differently from v37). A v37 save has no
+ *  characterId and its daemon/pool provenance predates the character model
+ *  → reject. */
+const RUN_SCHEMA_VERSION = 38;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -466,6 +478,10 @@ export interface RunSnapshot {
    *  save/reload (the 47 shape-lock). Empty = a daemon-less run (both
    *  pre-turn tools permanently unavailable). */
   daemonIds: string[];
+  /** 63c (v38): the run's character BY ID (def-resolved on load — an
+   *  unknown id hard-rejects, the daemonIds discipline). Blacklists/weights
+   *  are derived from the def at read time, never serialized. */
+  characterId: string;
   /** L1→49d: the current turn's grant QUEUE (`resolveTurnGrants` output +
    *  per-entry `used`/`passed` engine state). Persisted so a save at the
    *  gate restores the same chance flips AND the same cursor position. */
@@ -565,11 +581,9 @@ export interface RunTriggerContextMap {
 // Balance constants now live in config/*.json — see src/config/recruitment.ts.
 // Bound to locals here just for readability at the call sites. (The G4 enemy
 // budget reads `config/difficulty.json` inside `src/run/enemyBudget.ts`.)
-const {
-  startingMelee: STARTING_MELEE,
-  startingRanged: STARTING_RANGED,
-  startingLevel: STARTING_LEVEL,
-} = RECRUITMENT;
+// 63c retired startingMelee/startingRanged with `rollTeam` — the starting
+// roster is the character def's list now (config/characters.json).
+const { startingLevel: STARTING_LEVEL } = RECRUITMENT;
 
 export class Run {
   readonly rng: RNG;
@@ -606,12 +620,20 @@ export class Run {
    *  docked (v35). */
   portStock: PortStock | null = null;
   /** L1→47d: the run's owned daemons, in ACQUISITION order (index 0 = the
-   *  run-start roll; §48 rewards / §50 ports append via `addDaemon` —
-   *  uncapped, the locked design). Seeded from `RunConfig.daemon` (a bespoke
-   *  config, or null = daemon-less, the fuzz control arm) or one uniform
-   *  roll over `DAEMONS`. Daemon-only gates: these are the ONLY source of
-   *  redraw/empower availability. Serialized BY ID (v26). */
+   *  run-start seed; §48 rewards / §50 ports append via `addDaemon` —
+   *  uncapped, the locked design). 63c: seeded from the CHARACTER def (the
+   *  L1 run-start roll retired); an explicit `RunConfig.daemon` (a bespoke
+   *  config, or null = daemon-less, the fuzz control arm) still wins.
+   *  Daemon-only gates: these are the ONLY source of redraw/empower
+   *  availability. Serialized BY ID (v26). */
   readonly daemons: DaemonConfig[];
+  /** 63c: the run's starting character (resolved def; the id serializes at
+   *  v38, def-resolved on load — the daemonIds discipline). Fixed for the
+   *  run's whole life: drives the starting roster + daemon at construction
+   *  and the draft pools (blacklist additions + weight overrides) at every
+   *  offer/port-stock roll — both DERIVED from this def at call time, never
+   *  serialized themselves. */
+  readonly character: CharacterConfig;
   /** L1→49d: the current turn's grant QUEUE — re-resolved at every turn
    *  start (`startNextTurn`, where a chance hook flips its coin): one entry
    *  per granted hook in walk order, each carrying its own `used`/`passed`
@@ -841,6 +863,15 @@ export class Run {
   constructor(seed: number, bus: EventBus<GameEvents>, config?: RunConfig) {
     this.bus = bus;
     this.rng = new RNG(seed);
+    // 63c — resolve the starting character FIRST (pure of RNG — no draw, so
+    // the fork alignment below is untouched). Unset → The Soldier, so every
+    // bare headless constructor keeps working; the boot assert in
+    // characters.ts guarantees the default resolves, but stay loud anyway.
+    const character = config?.character ?? characterById(DEFAULT_CHARACTER_ID);
+    if (character === undefined) {
+      throw new Error(`Run: default character '${DEFAULT_CHARACTER_ID}' missing from the catalog`);
+    }
+    this.character = character;
     // Fork order is the determinism invariant (sector+nodeMap → team → levelup).
     // Each override only changes a forked *child* stream's content, never how
     // many times the parent is forked — so the default path stays byte-identical
@@ -858,9 +889,14 @@ export class Run {
     this.currentSectorId = start.sectorId;
     this.nodeMap = generateNodeMap(sectorRng, config, this.currentSectorLength());
     const teamRng = this.rng.fork();
+    // 63c — the starting roster comes from the character def (an explicit
+    // `startingRoster` override still wins — the kickoff precedence fork).
+    // The Soldier's list reproduces the retired `rollTeam` sequence exactly
+    // (6 mercenary + 4 archer, same order, same STARTING_LEVEL), so the
+    // default team stream is byte-identical across the 63c landing.
     this.team = config?.startingRoster
       ? config.startingRoster.map((e) => rollUnit(e.archetype, teamRng, e.level))
-      : rollTeam(teamRng);
+      : this.character.roster.map((a) => rollUnit(a, teamRng, STARTING_LEVEL));
     // H3 — one deployment slot per roster unit, all zero at run start.
     this.deploymentCounts = new Array(this.team.length).fill(0);
     // K1 — one (empty) encounter-effect list per roster unit + the run-trigger
@@ -898,19 +934,24 @@ export class Run {
     // H5 re-baselines the fuzz output — acceptable, since the seam swap + the
     // drawn-hand subset already change battle outcomes wholesale.
     this.deckRng = this.rng.fork();
-    // L1 — the daemon stream, appended after deck (same convention, same
-    // fuzz-re-baseline note as H5). The roll/skip happens on the CHILD stream,
-    // so a forced daemon keeps the parent alignment (the G1 contract); gates
-    // stay disabled until the first turn resolves them (`startNextTurn`).
+    // L1→63c — the daemon stream, appended after deck (same convention, same
+    // fuzz-re-baseline note as H5). The FORK stays load-bearing (per-turn
+    // grant chance flips + instant hooks ride it) but the L1 run-start ROLL
+    // is retired: characters replaced it (the kickoff lock), so the stream's
+    // first draw is now the first turn's grant resolution — every
+    // daemonRng-downstream draw shifts by one vs pre-63c (the predicted
+    // default-baseline change; offers ride recruitRng and are untouched).
     this.daemonRng = this.rng.fork();
-    // 47d — the ownership list. A forced config seeds it without a roll (the
-    // G1 parent-alignment contract holds — the roll/skip is on the child).
+    // 47d→63c — the ownership list seeds from the character def; an explicit
+    // `config.daemon` override (incl. null = daemon-less) still wins — the
+    // kickoff precedence fork, which keeps the fuzz control/fixed arms
+    // meaningful. Character daemon ids are parse-validated, but resolve loud.
     this.daemons =
       config?.daemon !== undefined
         ? config.daemon === null
           ? []
           : [config.daemon]
-        : [rollDaemon(DAEMONS, this.daemonRng)];
+        : [this.resolveCharacterDaemon()];
     // 48b — the two reward streams, appended after daemon (the same
     // convention + fuzz-re-baseline note as H5/L1). Sampling and bits rolls
     // are SEPARATE streams because the sampling draw count is
@@ -942,6 +983,28 @@ export class Run {
     this.visitedNodes = new Set<number>();
     this.subscribe();
     bus.emit('run:started', { seed });
+  }
+
+  /** 63c — resolve the character's starting daemon from the catalog. Parse
+   *  time already validated the id; a miss here means the catalogs drifted
+   *  after load, which deserves a loud throw (the daemonIds discipline). */
+  private resolveCharacterDaemon(): DaemonConfig {
+    const daemon = daemonById(this.character.daemon);
+    if (daemon === undefined) {
+      throw new Error(
+        `Run: character '${this.character.id}' names unknown daemon '${this.character.daemon}'`,
+      );
+    }
+    return daemon;
+  }
+
+  /** 63c — the character-governed draft pools, derived fresh per roll
+   *  (derive-don't-cache; the empty-blacklist fast path returns the shared
+   *  table). Both offer sites (recruit + port stock) draw through this, so
+   *  the port inherits the character's pools by construction (the spec's
+   *  ports-follow-the-same-mechanics lock). */
+  private draftPools(): Readonly<Record<UnitRarity, readonly Archetype[]>> {
+    return draftPoolsFor(this.character.blacklist);
   }
 
   private subscribe(): void {
@@ -1111,11 +1174,18 @@ export class Run {
   private rollPortStock(): PortStock {
     const counts = PRICES.portStock;
     const baseLevel = Math.round(avgTeamLevel(this.team));
-    const units: PortUnitSlot[] = rollOffer(this.portStockRng, counts.units, (cardRng) =>
-      Math.min(
-        LEVELING.levelCap,
-        baseLevel + recruitLevelBonus(cardRng, RECRUITMENT.recruitBonusChance),
-      ),
+    const units: PortUnitSlot[] = rollOffer(
+      this.portStockRng,
+      counts.units,
+      (cardRng) =>
+        Math.min(
+          LEVELING.levelCap,
+          baseLevel + recruitLevelBonus(cardRng, RECRUITMENT.recruitBonusChance),
+        ),
+      // 63c — port recruits ARE recruits: the character's pools + weights
+      // govern here identically (the spec's ports-inherit lock).
+      this.draftPools(),
+      this.character.weightOverrides,
     ).map((template) => {
       const { jitter } = PRICES.units;
       const factor = 1 - jitter + this.portPriceRng.next() * 2 * jitter;
@@ -2433,8 +2503,17 @@ export class Run {
       // clamped to the level cap.
       const offerRng = this.rng.fork();
       const baseLevel = Math.round(avgTeamLevel(this.team));
-      this.currentOffer = rollOffer(offerRng, undefined, (cardRng) =>
-        Math.min(LEVELING.levelCap, baseLevel + recruitLevelBonus(cardRng, RECRUITMENT.recruitBonusChance)),
+      // 63c — offers draw from the character-governed pools + weights.
+      this.currentOffer = rollOffer(
+        offerRng,
+        undefined,
+        (cardRng) =>
+          Math.min(
+            LEVELING.levelCap,
+            baseLevel + recruitLevelBonus(cardRng, RECRUITMENT.recruitBonusChance),
+          ),
+        this.draftPools(),
+        this.character.weightOverrides,
       );
       this.bus.emit('recruit:offered', { units: this.currentOffer });
     }
@@ -2825,6 +2904,8 @@ export class Run {
       // copies each entry (buffs stay by reference — never mutated;
       // `empowerEffect` deep-copies mods at apply time).
       daemonIds: this.daemons.map((d) => d.id),
+      // 63c — the character serializes BY ID (def-resolved on load).
+      characterId: this.character.id,
       turnGrants: this.turnGrants.map((g) => ({ ...g })),
       currentSectorId: this.currentSectorId,
       currentSectorNodeId: this.currentSectorNodeId,
@@ -2918,6 +2999,16 @@ export class Run {
       }
       return daemon;
     });
+    // 63c — re-resolve the character BY ID (the daemonIds discipline: a
+    // retired catalog entry is a hard reject, never a silent fallback —
+    // silently swapping to the Soldier would rewrite the run's draft pools).
+    const character = characterById(snap.characterId);
+    if (character === undefined) {
+      throw new Error(
+        `Run.fromJSON: unknown character id '${snap.characterId}' (not in the catalog)`,
+      );
+    }
+    m.character = character;
     // 49d — copy each queue entry (the live entries mutate in place); the
     // finality toggle re-reads shipped config (RunConfig isn't persisted).
     m.turnGrants = snap.turnGrants.map((g) => ({ ...g }));
@@ -3033,19 +3124,6 @@ function shuffleInPlace<T>(arr: T[], rng: RNG): void {
     const j = rng.int(0, i);
     [arr[i], arr[j]] = [arr[j]!, arr[i]!];
   }
-}
-
-/**
- * Player starting team: fixed 3 melee + 2 ranged at `RECRUITMENT.startingLevel`
- * (default 1 → byte-identical to the pre-knob roll, since rollUnit short-circuits
- * level 1 without drawing). Doesn't change with run progress — recruits grow the
- * team via Run.handleChooseRecruit.
- */
-function rollTeam(rng: RNG): UnitTemplate[] {
-  const team: UnitTemplate[] = [];
-  for (let i = 0; i < STARTING_MELEE; i++) team.push(rollUnit('mercenary', rng, STARTING_LEVEL));
-  for (let i = 0; i < STARTING_RANGED; i++) team.push(rollUnit('archer', rng, STARTING_LEVEL));
-  return team;
 }
 
 /**

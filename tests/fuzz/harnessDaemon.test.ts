@@ -72,10 +72,18 @@ describe('harness daemon arm (L1c3)', () => {
   // straightness tie-break re-shaped battles (findPath itself benched slightly
   // FASTER) and this test started brushing 30s under the full parallel
   // fuzz:smoke load. Duration here is sim-content, not a perf contract.
-  it('perDaemonStats buckets a random batch by rolled idol, sorted', () => {
-    const results = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((s) => runOne(s, strat(), SHORT));
+  it('perDaemonStats buckets a batch by carried idol, sorted', () => {
+    // 63c — the run-start roll is retired (a default run always carries the
+    // Soldier's Mars now), so the idol spread is forced per-arm: three runs
+    // per idol via the fixed arm exercises the bucketing exactly as the old
+    // rolled batch did (still 12 runs total).
+    const results = DAEMONS.flatMap((d, i) =>
+      [1, 2, 3].map((s) =>
+        runOne(s + i * 3, strat(), { ...SHORT, daemon: { kind: 'fixed', id: d.id } }),
+      ),
+    );
     const buckets = perDaemonStats(results);
-    expect(buckets.length).toBeGreaterThan(1); // 12 rolls span several idols
+    expect(buckets.length).toBe(DAEMONS.length); // one bucket per forced idol
     const keys = buckets.map((b) => b.daemon);
     expect([...keys].sort()).toEqual(keys); // stable sorted output
     for (const k of keys) expect(DAEMONS.some((d) => d.id === k)).toBe(true);

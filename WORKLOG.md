@@ -700,3 +700,54 @@ in ROADMAP §63. The fork resolutions and their why:
    three shipped characters stay at 10 per spec.
 5. **`rollDaemon` is deleted at 63c** (with its describe block) —
    the roll dies by design; git history keeps the code.
+
+### 63a-post — fork floated: retire `draftable` for blacklists? (2026-07-24)
+
+At the 63a review the user floated eventually retiring the `draftable`
+flag in favor of blacklist lists. Verdict: NOT NOW, agreed by both.
+The flag marks a STRUCTURAL fact (summon-only/enemy-only units sit
+outside the whole draft system — no rarity, no tier, no price
+multiplier), while blacklists are CURATION; 63g's Global Blacklist
+Editor already unifies the two at the UI layer, and retiring the flag
+would force draft metadata onto units it means nothing for. Revisit
+trigger: global-blacklisting becomes a FREQUENT tuning action in
+practice — and the shape then is a curation list ALONGSIDE the
+structural flag, not a replacement.
+
+### 63c — Run gains the character; v37→v38; the daemon roll dies (2026-07-24)
+
+The phase's big cut, landed as audited:
+
+- `RunConfig.character` (resolved def, programmatic until 63d) →
+  `Run.character` (public readonly); bare constructors default to the
+  Soldier, so ~2200 existing `new Run(seed, bus)` call sites kept
+  working untouched. Precedence per the kickoff fork: explicit
+  `startingRoster`/`daemon` overrides beat the character's fields.
+- The starting roster rolls from the character's list (the Soldier's
+  reproduces the retired `rollTeam` sequence exactly — default team
+  stream byte-identical); `rollTeam` + `startingMelee`/`startingRanged`
+  (recruitment.json + schema) retired — roster composition now has ONE
+  home, characters.json.
+- The L1 run-start daemon roll DELETED (`rollDaemon` + its describe);
+  the daemonRng FORK survives (grant flips ride it). Ownership seeds
+  from the character def, override still wins (incl. `null` control).
+- Draft pools: `draftPoolsFor(blacklist)` (Recruitment.ts, fast-path
+  returns the shared table) + the character's `weightOverrides`, wired
+  through BOTH `rollOffer` sites — recruit offer + port stock — so
+  ports inherit by construction (the spec lock).
+- v38: `characterId` serialized (daemonIds discipline — unknown id
+  hard-rejects on load, never a silent Soldier fallback); ledger entry
+  in the Run.ts version trail.
+
+**Fallout, exactly as predicted plus two semantic catches:** the main
+suite needed only 3 mechanical `schemaVersion` re-pins (37→38) — ZERO
+offer-content re-pins, confirming the audit's byte-neutrality analysis
+(offers ride recruitRng; the Soldier's equal-weight picks are
+rng.pick-identical). Two fuzz:smoke tests failed on DEAD PREMISES, not
+drift — both had silently depended on the run-start ROLL for their
+spread: (1) harnessRedraw's liveness test (a default run now carries
+Mars, which grants no redraws — the redraw policy could never fire; re-
+anchored on a forced Janus in both arms), (2) harnessDaemon's
+perDaemonStats bucketing (12 default runs are all-Mars now; re-anchored
+on forced fixed arms, one bucket per idol). The §60c grant-consumer
+lesson in miniature: a policy read needs a granter in the arm.

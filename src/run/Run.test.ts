@@ -19,6 +19,7 @@ import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import { EMPOWER } from '../config/empower';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
+import { characterById, DEFAULT_CHARACTER_ID } from '../config/characters';
 import { PACKETS, packetById } from '../config/packets';
 import { rewardTableById } from '../config/rewards';
 import { daemonRedrawHook, daemonEmpowerHook } from './daemon';
@@ -73,16 +74,13 @@ describe('Run', () => {
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
     });
 
-    it('rolls the configured starting team (mercenary + ranged per RECRUITMENT)', () => {
+    it("63c: rolls the DEFAULT CHARACTER's starting roster (derived from characters.json)", () => {
       const run = new Run(1, new EventBus<GameEvents>());
-      // Derived from the config dials (K2 raised these to 6 + 4), not hardcoded —
-      // so a future roster-size tune doesn't silently break this.
-      const { startingMelee, startingRanged } = RECRUITMENT;
-      expect(run.team).toHaveLength(startingMelee + startingRanged);
-      const melee = run.team.filter((t) => t.archetype === 'mercenary');
-      const ranged = run.team.filter((t) => t.archetype === 'archer');
-      expect(melee).toHaveLength(startingMelee);
-      expect(ranged).toHaveLength(startingRanged);
+      // Derived from the character def, not hardcoded — a roster edit in
+      // characters.json must not silently break this.
+      const expected = characterById(DEFAULT_CHARACTER_ID)!.roster;
+      expect(run.team.map((t) => t.archetype)).toEqual([...expected]);
+      for (const t of run.team) expect(t.level).toBe(RECRUITMENT.startingLevel);
     });
 
     it('emits run:started on construction', () => {
@@ -91,6 +89,99 @@ describe('Run', () => {
       bus.on('run:started', ({ seed }) => seen.push(seed));
       new Run(42, bus);
       expect(seen).toEqual([42]);
+    });
+  });
+
+  describe('63c — starting characters', () => {
+    const priest = characterById('priest')!;
+    const gambler = characterById('gambler')!;
+
+    /** Drive one victory to the recruit offer (the handleBattleEnded shape). */
+    const firstOffer = (seed: number, config?: RunConfig) => {
+      const { run, bus } = freshRunWithBus(seed, config);
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      winEncounter(bus);
+      acceptAllRewards(run);
+      return run.currentOffer ?? [];
+    };
+
+    it('a bare constructor resolves to the default character', () => {
+      const { run } = freshRunWithBus(1);
+      expect(run.character.id).toBe(DEFAULT_CHARACTER_ID);
+    });
+
+    it("RunConfig.character drives the roster + daemon (derived from the def, not hardcoded)", () => {
+      for (const character of [priest, gambler]) {
+        const { run } = freshRunWithBus(2, { character });
+        expect(run.character.id).toBe(character.id);
+        expect(run.team.map((t) => t.archetype)).toEqual([...character.roster]);
+        expect(run.daemons.map((d) => d.id)).toEqual([character.daemon]);
+      }
+    });
+
+    it('an explicit daemon override BEATS the character daemon (the precedence fork)', () => {
+      expect(freshRunWithBus(3, { character: priest, daemon: null }).run.daemons).toEqual([]);
+      expect(
+        freshRunWithBus(3, { character: priest, daemon: daemonById('mars')! }).run.daemons.map(
+          (d) => d.id,
+        ),
+      ).toEqual(['mars']);
+    });
+
+    it('an explicit startingRoster override BEATS the character roster', () => {
+      const { run } = freshRunWithBus(4, {
+        character: priest,
+        startingRoster: [{ archetype: 'rogue', level: 2 }],
+      });
+      expect(run.team.map((t) => t.archetype)).toEqual(['rogue']);
+      // The rest of the character still applies (daemon untouched by roster).
+      expect(run.daemons.map((d) => d.id)).toEqual([priest.daemon]);
+    });
+
+    it("the character blacklist governs recruit offers (priest never sees what soldier can)", () => {
+      // The Priest adds 'shaman'; the same seed scan under the Soldier DOES
+      // surface it — the non-vacuousness guard for the exclusion assertion.
+      const [excluded] = priest.blacklist;
+      expect(excluded).toBeDefined();
+      let soldierSaw = 0;
+      for (let seed = 0; seed < 120; seed++) {
+        for (const u of firstOffer(seed)) if (u.archetype === excluded) soldierSaw++;
+        for (const u of firstOffer(seed, { character: priest })) {
+          expect(u.archetype).not.toBe(excluded);
+        }
+      }
+      expect(soldierSaw).toBeGreaterThan(0);
+    });
+
+    it('weight overrides skew offers (gambler outdraws soldier on the boosted archetype, paired seeds)', () => {
+      // The Gambler triples 'rogue' within its tier; same-seed pairing makes
+      // the comparison deterministic — over the scan the boosted arm must see
+      // strictly more of it.
+      const boosted = Object.keys(gambler.weightOverrides)[0]!;
+      let soldierCount = 0;
+      let gamblerCount = 0;
+      for (let seed = 0; seed < 120; seed++) {
+        for (const u of firstOffer(seed)) if (u.archetype === boosted) soldierCount++;
+        for (const u of firstOffer(seed, { character: gambler })) {
+          if (u.archetype === boosted) gamblerCount++;
+        }
+      }
+      expect(gamblerCount).toBeGreaterThan(soldierCount);
+    });
+
+    it('round-trips the character BY ID (v38)', () => {
+      const { run, bus } = freshRunWithBus(5, { character: gambler });
+      const snap = run.toJSON();
+      expect(snap.characterId).toBe('gambler');
+      const restored = Run.fromJSON(JSON.parse(JSON.stringify(snap)), bus);
+      expect(restored.character.id).toBe('gambler');
+      expect(restored.daemons.map((d) => d.id)).toEqual([gambler.daemon]);
+    });
+
+    it('fromJSON hard-rejects an unknown character id (the daemonIds discipline)', () => {
+      const { run, bus } = freshRunWithBus(6);
+      const snap = { ...run.toJSON(), characterId: 'no-such-character' };
+      expect(() => Run.fromJSON(snap, bus)).toThrow(/unknown character id/);
     });
   });
 
@@ -1420,17 +1511,14 @@ describe('Run', () => {
   });
 
   describe('daemons (L1 — daemon-only gates)', () => {
-    it('rolls exactly one daemon at construction, deterministically per seed', () => {
-      const a = freshRunWithBus(21).run;
-      const b = freshRunWithBus(21).run;
-      expect(a.daemons).toHaveLength(1);
-      expect(a.daemons[0]!.id).toBe(b.daemons[0]!.id);
-    });
-
-    it('covers the whole catalog over seeds', () => {
-      const seen = new Set<string>();
-      for (let seed = 0; seed < 60; seed++) seen.add(freshRunWithBus(seed).run.daemons[0]!.id);
-      expect([...seen].sort()).toEqual(DAEMONS.map((d) => d.id).sort());
+    it("63c: seeds the CHARACTER's daemon at construction (the roll retired), seed-independent", () => {
+      // Derived from the default character's config, not hardcoded to 'mars'.
+      const expected = characterById(DEFAULT_CHARACTER_ID)!.daemon;
+      for (const seed of [1, 21, 999]) {
+        const { run } = freshRunWithBus(seed);
+        expect(run.daemons).toHaveLength(1);
+        expect(run.daemons[0]!.id).toBe(expected);
+      }
     });
 
     it('RunConfig.daemon seeds the ownership list; null forces daemon-less', () => {
@@ -2638,7 +2726,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(37);
+      expect(wire.schemaVersion).toBe(38); // 63c — characterId
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -2817,7 +2905,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(37);
+      expect(wire.schemaVersion).toBe(38); // 63c — characterId
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3143,7 +3231,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(37);
+      expect(wire.schemaVersion).toBe(38); // 63c — characterId
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([

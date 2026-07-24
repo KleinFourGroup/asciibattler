@@ -10,6 +10,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { daemonById } from '../../src/config/daemons';
 import { runOne } from './harness';
 import { makeStrategy } from './strategies/registry';
 import type { RedrawPolicy } from './redrawPolicy';
@@ -48,10 +49,16 @@ describe('harness redraw injection (K3c3)', () => {
   it('an active policy is live — it changes at least one run vs none', () => {
     // Tossing the whole hand every turn re-fields different cards, which
     // shifts battles; over a small seed band at least one run must diverge.
+    // 63c — the default character (Soldier) carries Mars, which grants NO
+    // redraws, so the policy would never fire on a default run (pre-63c the
+    // rolled daemon made some seeds redraw-capable). Pin Janus — a
+    // guaranteed-redraw granter — in BOTH arms so the policy is exercisable
+    // and the only difference between the arms is the policy itself.
+    const janus = { runConfig: { ...SHORT.runConfig, daemon: daemonById('janus')! } };
     const policy: RedrawPolicy = { kind: 'level', cards: 6 };
     const differs = [1, 2, 3, 4, 5, 6].some((s) => {
-      const none = runOne(s, strat(), SHORT);
-      const withRedraw = runOne(s, strat(), { ...SHORT, redraw: policy });
+      const none = runOne(s, strat(), janus);
+      const withRedraw = runOne(s, strat(), { ...janus, redraw: policy });
       return none.totalTicks !== withRedraw.totalTicks || none.outcome !== withRedraw.outcome;
     });
     expect(differs).toBe(true);

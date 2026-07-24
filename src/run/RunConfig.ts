@@ -20,6 +20,7 @@ import { ALL_ARCHETYPES, type Archetype } from '../sim/archetypes';
 import { LAYOUT_IDS } from '../sim/layouts';
 import { LEVELING } from '../config/leveling';
 import { daemonById, type DaemonConfig } from '../config/daemons';
+import type { CharacterConfig } from '../config/characters';
 import { ENCOUNTER_IDS } from '../config/encounters';
 import type { SectorMap } from '../config/sectorMap';
 
@@ -83,6 +84,20 @@ export interface RunConfig {
    * seam (a profile = a `startingRoster` + a `daemon`).
    */
   readonly daemon?: DaemonConfig | null;
+  /**
+   * §63c — the run's starting character (a resolved `config/characters.json`
+   * def). Unset → `DEFAULT_CHARACTER_ID` (The Soldier), so every bare
+   * headless constructor keeps working. Drives the starting roster, the
+   * starting daemon (the run-start daemon ROLL retired here — characters
+   * replaced it, the kickoff lock), and the draft pools (blacklist additions
+   * + within-tier weight overrides). PRECEDENCE (kickoff fork #2): an
+   * explicit `startingRoster` or `daemon` override beats the character's
+   * corresponding field, so measurement arms keep their isolation power
+   * (`--character=priest --daemon=none` = the Priest minus Minerva).
+   * Programmatic-only until §63d adds `?character=` / `--character`. NOT
+   * persisted itself — the Run serializes the resolved `characterId` (v38).
+   */
+  readonly character?: CharacterConfig;
   /**
    * T2 — override the sector-selection meta-DAG (default: the shipped
    * `SECTOR_MAP`). Programmatic-only (a full graph object — no URL form), the

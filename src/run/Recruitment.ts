@@ -115,6 +115,29 @@ export function rollArchetypeByRarity(
 }
 
 /**
+ * §63c — the character-filtered draft pool: `DRAFTABLE_BY_TIER` minus the
+ * character's blacklist ADDITIONS (the global `draftable:false` exclusions are
+ * already out by construction). Derived at call time from the character def
+ * (derive-don't-cache — a rehydrated run recomputes identically), returning
+ * the shared table untouched on the empty-blacklist fast path so the default
+ * character allocates nothing per offer.
+ */
+export function draftPoolsFor(
+  blacklist: readonly Archetype[],
+): Readonly<Record<UnitRarity, readonly Archetype[]>> {
+  if (blacklist.length === 0) return DRAFTABLE_BY_TIER;
+  const excluded = new Set(blacklist);
+  const filter = (pool: readonly Archetype[]): readonly Archetype[] =>
+    pool.filter((a) => !excluded.has(a));
+  return {
+    common: filter(DRAFTABLE_BY_TIER.common),
+    uncommon: filter(DRAFTABLE_BY_TIER.uncommon),
+    rare: filter(DRAFTABLE_BY_TIER.rare),
+    legendary: filter(DRAFTABLE_BY_TIER.legendary),
+  };
+}
+
+/**
  * §63b — one weighted draw from a non-empty pool (absent weight = 1). The
  * equal-weights case reduces to `pool[floor(next()·len)]` — exactly
  * `RNG.pick`'s mapping off the same single draw (integer cumulative sums, no

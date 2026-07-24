@@ -66,7 +66,7 @@ src/
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
     statuses.ts              #   27a: loads config/statuses.json into the StatusDef catalog; statusDef(id) + assertStatusRefsResolve (boot-checks every applyStatus statusId, wired into abilities/registry.ts)
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets; X1: per-run waveSize/levelBudget multipliers; 48f: bitsMultiplier (the economy lever — applies in Run.effectiveBits, never WaveContext)
-    recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4); §61c rarityWeights
+    recruitment.ts           #   offer size + startingLevel + recruitBonusChance (G4); §61c rarityWeights (63c: roster composition moved to characters.json)
     characters.ts            #   §63a: loads config/characters.json — starting characters (roster/daemon/blacklist additions/weight overrides); characterById + DEFAULT_CHARACTER_ID ('soldier') + assertDefaultCharacter boot check
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
     nodemap.ts               #   hop count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
@@ -210,7 +210,7 @@ src/
                              # redraw grants INSERT AT THE CURSOR). Live version: HANDOFF 🧭
     redraw.ts                # K3→49d: pure redraw rules against ONE grant entry — redrawRejection / redrawAvailability (RedrawGrantState: used/budget/maxCards-per-ACTION)
     empower.ts               # K4→49d: pure empower rules against ONE grant entry — empowerRejection / empowerAvailability / empowerEffect(buff)
-    daemon.ts                # L1→49d: pure daemon rules — rollDaemon (uniform run-start roll) + resolveTurnGrants
+    daemon.ts                # L1→49d: pure daemon rules — resolveTurnGrants + hooks (63c retired rollDaemon: characters seed the starting daemon)
                              # (owned daemons' turnStart grant hooks → THE GRANT QUEUE: TurnGrant[] per-source in
                              # walk order, each {daemonId; effect(kind/budget/maxCards|buff); used; passed} +
                              # this turn's granted InstantOps; ownership-then-rule-order draws, chance draws only

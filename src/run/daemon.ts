@@ -137,10 +137,10 @@ function granted(chance: number | undefined, rng: RNG): boolean {
   return rng.next() < c;
 }
 
-/** Uniform run-start roll over the catalog (one draw off the daemon stream). */
-export function rollDaemon(daemons: readonly DaemonConfig[], rng: RNG): DaemonConfig {
-  return rng.pick(daemons);
-}
+// 63c — `rollDaemon` (the L1 uniform run-start roll) was DELETED here:
+// characters replaced the roll (config/characters.json seeds the starting
+// daemon; the kickoff lock). The daemon stream itself survives for the
+// per-turn chance flips below.
 
 /** The daemon's authored `turnStart` hooks, in rule order (the evaluation +
  *  draw order). Pure filter — no chance resolution here. */

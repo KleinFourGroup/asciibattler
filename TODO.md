@@ -146,13 +146,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Docs / tooling
 
-- [ ] **run-config GUI: a character dropdown.** The CLI/URL side gained
-  `--character` / `?character=` at 63d, but the launcher GUI
-  ([tools/run-config/launcher.ts](tools/run-config/launcher.ts)) has no
-  character select input yet — a URL built there always omits it (= the
-  select-scene path in the browser, the Soldier headlessly). One `setIf`
-  + a dropdown over `CHARACTER_IDS`; natural to fold into the §63f
-  editor session.
+- [x] **run-config GUI: a character dropdown.** ✅ Done in the §63f landing
+  commit — a `CHARACTERS`-driven dropdown (blank = the select scene) +
+  `setIf` + a summary line in
+  [tools/run-config/launcher.ts](tools/run-config/launcher.ts).
 
 - [ ] **A true chaos fuzz driver (random legal `RunCommand` dispatch).** The
   fuzz harness has fully evolved into a *balance* harness: the `random`

@@ -23,6 +23,7 @@ import {
   type RunConfig,
 } from '../../src/run/RunConfig';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
+import { CHARACTERS } from '../../src/config/characters';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
 import { ENCOUNTERS } from '../../src/config/encounters';
 import { LEVELING } from '../../src/config/leveling';
@@ -37,6 +38,7 @@ function byId<T extends HTMLElement>(id: string): T {
 const seedInput = byId<HTMLInputElement>('seed');
 const hopsInput = byId<HTMLInputElement>('hops');
 const widthInput = byId<HTMLInputElement>('width');
+const characterSelect = byId<HTMLSelectElement>('character');
 const layoutSelect = byId<HTMLSelectElement>('layout');
 const encounterSelect = byId<HTMLSelectElement>('encounter');
 const rosterRows = byId<HTMLDivElement>('roster-rows');
@@ -58,6 +60,11 @@ byId('level-cap').textContent = String(LEVELING.levelCap);
 hopsInput.placeholder = `default ${NODE_MAP.hopCount}`;
 widthInput.placeholder = `default ${NODE_MAP.middleWidthMax}`;
 seedInput.placeholder = 'blank → game picks one';
+
+// 63d/63f — a pinned character skips the select scene; blank = the scene
+// picks (the URL-less boot path).
+characterSelect.append(option('', '— pick in the select scene —'));
+for (const c of CHARACTERS) characterSelect.append(option(c.id, c.name));
 
 layoutSelect.append(option('', '— procedural (random) —'));
 for (const id of LAYOUT_IDS) layoutSelect.append(option(id, id));
@@ -132,6 +139,7 @@ function recompute(): void {
   setIf(params, RUN_CONFIG_PARAMS.seed, seedInput.value);
   setIf(params, RUN_CONFIG_PARAMS.hops, hopsInput.value);
   setIf(params, RUN_CONFIG_PARAMS.width, widthInput.value);
+  setIf(params, RUN_CONFIG_PARAMS.character, characterSelect.value);
   setIf(params, RUN_CONFIG_PARAMS.layout, layoutSelect.value);
   setIf(params, RUN_CONFIG_PARAMS.encounter, encounterSelect.value);
   setIf(params, RUN_CONFIG_PARAMS.roster, readRosterParam());
@@ -154,6 +162,7 @@ function renderSummary(config: RunConfig): void {
       : 'default rolled team';
   summary.textContent = [
     `seed:    ${config.seed ?? '(game picks at launch)'}`,
+    `character: ${config.character?.name ?? 'the select scene picks at boot'}`,
     `hops:    ${config.hopCount ?? `default (${NODE_MAP.hopCount})`}`,
     `width:   ${config.mapMaxWidth ?? `default (${NODE_MAP.middleWidthMax})`}`,
     `layout:  ${config.forcedLayoutId ?? 'procedural (random per battle)'}`,
@@ -167,6 +176,7 @@ function renderSummary(config: RunConfig): void {
 for (const el of [seedInput, hopsInput, widthInput]) {
   el.addEventListener('input', recompute);
 }
+characterSelect.addEventListener('change', recompute);
 layoutSelect.addEventListener('change', recompute);
 encounterSelect.addEventListener('change', recompute);
 

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Character Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Character Editor</h1>
+        <span class="subtitle"
+          >Author <code>config/characters.json</code> — starting characters · schema-validated ·
+          save straight to disk</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+      <div class="tabs-row">
+        <div id="char-tabs" class="tabs"></div>
+        <button id="add-char-btn" type="button">+ New character</button>
+      </div>
+      <section class="workspace">
+        <div class="edit-pane">
+          <section class="card">
+            <h2>Identity</h2>
+            <div class="field-row">
+              <label class="inline stack">
+                <span class="field-label">id <span class="sub">(the URL / harness / save-file key)</span></span>
+                <input id="char-id" type="text" spellcheck="false" />
+              </label>
+              <label class="inline stack">
+                <span class="field-label">name</span>
+                <input id="char-name" type="text" />
+              </label>
+            </div>
+            <label class="inline stack" style="width: 100%">
+              <span class="field-label">description <span class="sub">(the select-scene blurb)</span></span>
+              <textarea id="char-desc" rows="2"></textarea>
+            </label>
+            <div class="field-row" style="margin-top: 10px">
+              <label class="inline stack">
+                <span class="field-label">daemon <span class="sub">(carried from run start — the roll is retired)</span></span>
+                <select id="char-daemon"></select>
+              </label>
+            </div>
+          </section>
+          <section class="card">
+            <h2>Starting roster <span class="sub">(deployment order; its length IS the roster size)</span></h2>
+            <div id="roster-rows" class="pool"></div>
+            <div class="row">
+              <button id="add-roster-btn" type="button">+ Add unit</button>
+            </div>
+            <p class="hint">
+              Every unit starts at the global <code>RECRUITMENT.startingLevel</code>. Any
+              combatant archetype is legal here — the draft blacklist below governs
+              future offers, not the opening roster.
+            </p>
+          </section>
+          <section class="card">
+            <h2>Draft blacklist <span class="sub">(additions on top of the global <code>draftable: false</code> set)</span></h2>
+            <div id="blacklist-rows" class="pool"></div>
+            <div class="row">
+              <button id="add-blacklist-btn" type="button">+ Blacklist an archetype</button>
+            </div>
+            <p class="hint">
+              Removed from this character's recruit offers AND port stock (ports inherit by
+              construction). Blacklisting is weight 0 — an archetype can't also carry a
+              weight override.
+            </p>
+          </section>
+          <section class="card">
+            <h2>Weight overrides <span class="sub">(within-tier draft weight; unlisted = 1)</span></h2>
+            <div id="override-rows" class="pool"></div>
+            <div class="row">
+              <button id="add-override-btn" type="button">+ Add override</button>
+            </div>
+            <p class="hint">
+              Strictly positive — weight 0 is spelled <em>blacklist</em>. The rarity-tier
+              frequencies themselves stay global (<code>config/recruitment.json</code>).
+            </p>
+          </section>
+          <section class="card">
+            <h2>Character actions</h2>
+            <div class="row">
+              <button id="dup-char-btn" type="button">Duplicate</button>
+              <button id="del-char-btn" type="button" class="danger-outline">Delete character</button>
+            </div>
+          </section>
+        </div>
+        <aside class="side-pane">
+          <section class="card">
+            <h2>Run summary</h2>
+            <dl id="preview-summary" class="preview"></dl>
+          </section>
+          <section class="card preview-card">
+            <h2>Draft pool <span class="sub">(offer chance per slot — real pools + weights)</span></h2>
+            <dl id="preview-pool" class="preview"></dl>
+          </section>
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation"></ul>
+          </section>
+          <section class="card">
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary">Save to config</button>
+              <button id="revert-btn" type="button" class="danger-outline">Revert all</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+          </section>
+          <section class="card">
+            <h2>Export <span class="sub">(whole file)</span></h2>
+            <textarea id="export" rows="10" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

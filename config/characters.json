@@ -1,0 +1,68 @@
+{
+  "characters": [
+    {
+      "id": "soldier",
+      "name": "The Soldier",
+      "description": "The standard company — a mercenary line backed by archers, marching under the Idol of Mars.",
+      "roster": [
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "archer",
+        "archer",
+        "archer",
+        "archer"
+      ],
+      "daemon": "mars",
+      "blacklist": [],
+      "weightOverrides": {}
+    },
+    {
+      "id": "priest",
+      "name": "The Priest",
+      "description": "Trades an archer for a healer and carries the Idol of Minerva. Shuns the shaman's craft; mages seldom answer the call.",
+      "roster": [
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "archer",
+        "archer",
+        "archer",
+        "healer"
+      ],
+      "daemon": "minerva",
+      "blacklist": ["shaman"],
+      "weightOverrides": {
+        "mage": 0.25
+      }
+    },
+    {
+      "id": "gambler",
+      "name": "The Gambler",
+      "description": "Two mercenaries traded for a ronin and a rogue, with the Idol of Janus. Rogues flock to the table.",
+      "roster": [
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "mercenary",
+        "ronin",
+        "rogue",
+        "archer",
+        "archer",
+        "archer",
+        "archer"
+      ],
+      "daemon": "janus",
+      "blacklist": [],
+      "weightOverrides": {
+        "rogue": 3
+      }
+    }
+  ]
+}

@@ -18,6 +18,7 @@
  */
 
 import abilities from '../../config/abilities.json';
+import characters from '../../config/characters.json';
 import daemons from '../../config/daemons.json';
 import deck from '../../config/deck.json';
 import difficulty from '../../config/difficulty.json';
@@ -55,6 +56,7 @@ import units from '../../config/units.json';
  */
 export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'abilities.json': abilities,
+  'characters.json': characters,
   'daemons.json': daemons,
   'deck.json': deck,
   'difficulty.json': difficulty,

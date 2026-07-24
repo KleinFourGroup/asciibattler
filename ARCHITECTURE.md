@@ -66,7 +66,8 @@ src/
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
     statuses.ts              #   27a: loads config/statuses.json into the StatusDef catalog; statusDef(id) + assertStatusRefsResolve (boot-checks every applyStatus statusId, wired into abilities/registry.ts)
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets; X1: per-run waveSize/levelBudget multipliers; 48f: bitsMultiplier (the economy lever — applies in Run.effectiveBits, never WaveContext)
-    recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4)
+    recruitment.ts           #   starting team + offer size + startingLevel + recruitBonusChance (G4); §61c rarityWeights
+    characters.ts            #   §63a: loads config/characters.json — starting characters (roster/daemon/blacklist additions/weight overrides); characterById + DEFAULT_CHARACTER_ID ('soldier') + assertDefaultCharacter boot check
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
     nodemap.ts               #   hop count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
     terrain.ts               #   C1a: wall + water density

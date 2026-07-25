@@ -158,9 +158,8 @@ animation/transition (render tail, eyeball-verified).
 - **Kickoff prediction (2026-07-25):** NO snapshot bump — hand/piles
   serialize since H5, the fold is derived, packet draws mutate the
   already-serialized hand (audit, worklog §65-kickoff).
-- [ ] **65a** — the `drawAmount` run stat (base = `DECK.handSize`,
-  config-derived) + `effectiveDrawAmount` (floored, clamped ≥1) +
-  `drawHand` reads it; byte-identical via the fold identity fast path.
+- [x] **65a** — the `drawAmount` run stat ✅ 2026-07-25 (`aa3c8c4`):
+  byte-identity proven (fuzz:smoke 278 unchanged); worklog §65a.
 - [ ] **65b** — Option B at the `WaveContext` seam + the
   count-basis==budget-basis desync regression pin.
 - [ ] **65c** — the `drawCards`/`discardCards` packet-only ops

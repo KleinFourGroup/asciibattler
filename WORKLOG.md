@@ -1148,3 +1148,27 @@ two-part split.**
 **Cut shape-locked as proposed** (65a fold → 65b seam → 65c packets →
 65d cap A/B → 65e render tail), one amendment: 65e absorbs the
 "Draw: N" chip. Kickoff prediction on record: NO snapshot bump.
+
+### 65a — the drawAmount fold (2026-07-25)
+
+`aa3c8c4` — the draw amount is a run stat: `drawAmount` joins
+`RUN_STAT_KEYS` (base config-derived from `DECK.handSize`, the 64a
+discipline), `Run.effectiveDrawAmount` floors at the read site AND
+clamps ≥1 (the roster can't be emptied, so a pathological mult-0
+modifier must not zero a hand into a soft-lock — a clamp the
+`effectiveCacheSize` siblings don't need), and `drawHand()` targets
+the fold instead of the raw config.
+
+- Byte-identity proven the strong way: fuzz:smoke 278 green UNCHANGED
+  — no daemon touches `drawAmount`, so the identity fast path hands
+  every existing run the raw base and the deal streams verbatim.
+- Tests (+5): the base-derivation pin (runStats.test.ts — deck.json is
+  the one source), fold + floor + clamp reads, a synthetic +1 idol
+  dealing a 7-card turn-1 hand against a same-seed 6-card baseline,
+  and the overdraw contract (a +100 idol fields the whole roster and
+  stops — the H5 exhaustion path, now the min(roster, ·) proof).
+- No shipped content moves: §65 ships no draw daemon (the shape-lock's
+  happy accident) — the stat waits for 65c's packets to bypass it and
+  for future daemon content to fold it.
+- 2296→2301 main; typecheck clean; ARCHITECTURE's runStats line grew
+  the key in the same commit.

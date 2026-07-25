@@ -113,39 +113,22 @@ kickoff forks held. Detail: worklog §63a–§63g.
 - [x] **63f** — the Character Editor + launcher dropdown ✅ `4fe8a06`
 - [x] **63g** — the Global Blacklist Editor ✅ `59b310e` + `5341452`
 
-## Phase 64 — The three drafting daemons
+## Phase 64 — The three drafting daemons ✅ CLOSED 2026-07-25 (user-signed)
 
-**Charter:** the pool-size daemon (`recruitOfferSize` run-stat — the
-`effectiveCacheSize` precedent), the no-commons daemon, and the
-guaranteed-elite-port-offering daemon; whatever rule vocabulary the
-latter two need, designed here.
+**Outcome:** all three daemons live as pure `modifier` rules over new
+run stats — ZERO new vocabulary (the kickoff audit's claim, held):
+The Cornucopia (`recruitOfferSize` +1, recruit-only) · Patrician's
+Seal (tier weights promoted to run stats, no-commons = mult-0, BOTH
+offer sites) · Idol of Portunus (`portLegendaryOffers` count stat,
+per-slot tier forcing, byte-identical empty-pool degrade). Prices
+30/35/25 (tuned §68), both reward tables, no snapshot bump (v38/v34
+hold). The composed matrix (all three × each character) is test-pinned.
+Detail: worklog §64-kickoff–§64d.
 
-- **Depends on:** §61 (tiers) + §63 (character weights/blacklists live, so
-  daemon×character pool interactions are testable at this kickoff).
-- **Risk:** DOWNGRADED to low at the kickoff audit — no new vocabulary
-  needed; all three land as `modifier` rules over new run stats
-  (worklog §64-kickoff).
-- **Decision point:** ✅ DECIDED 2026-07-24 — weights-as-run-stats
-  (option A): no-commons = a mult-0 fold on promoted tier-weight stats;
-  the port guarantee = a count stat read by `rollPortStock`; rationale
-  + the read-site-owns-meaning argument in worklog §64-kickoff.
-- **Exit criteria:** all three daemons purchasable + functional (headless
-  pool tests per daemon, incl. each × each character); parse-time legality
-  enforced (the superRefine matrix pattern); prices authored (tuned §68).
-- **Scope guards:** three daemons only; no bot-arm consumption work here
-  (§68 owns it — interim reads carry the inert-mechanic caveat).
-- [x] **64a** — The Cornucopia ✅ 2026-07-24 (`d310364`): shipped as cut
-  (pure modifier, config-derived base, port count pinned untouched);
-  worklog §64a.
-- [x] **64b** — Patrician's Seal ✅ 2026-07-24 (`4f9a4db`): shipped as
-  cut (weights promoted, fallback hardened, both offer sites read the
-  fold); worklog §64b.
-- [x] **64c** — Idol of Portunus ✅ 2026-07-24 (`757b7b0`): shipped as
-  cut (count stat, per-slot forcing, byte-identical degrade);
-  worklog §64c.
-- [x] **64d** — close ✅ 2026-07-25 (`59c052e`): the stacked matrix test
-  + the ARCHITECTURE honesty pass (stale F1 Recruitment line caught);
-  worklog §64d.
+- [x] **64a** — The Cornucopia ✅ 2026-07-24 (`d310364`); worklog §64a.
+- [x] **64b** — Patrician's Seal ✅ 2026-07-24 (`4f9a4db`); worklog §64b.
+- [x] **64c** — Idol of Portunus ✅ 2026-07-24 (`757b7b0`); worklog §64c.
+- [x] **64d** — close ✅ 2026-07-25 (`59c052e`); worklog §64d.
 
 ## Phase 65 — Hand & draw size
 

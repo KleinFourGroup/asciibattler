@@ -1112,3 +1112,39 @@ substrate, the packet fire path, and the PreTurnScreen render tail.
 
 Budget-basis options + the cut proposed for shape-lock in the session
 message; decision + rationale land here when the user calls it.
+
+### 65-shape-lock — Option B + the transparency call (2026-07-25)
+
+**Decision point 1 resolved (USER): Option B, the folded basis.** The
+budget seam reads `min(roster, effectiveDrawAmount)` — the H5 doctrine
+("budget tracks the expected fielded hand") extended to the fold.
+Persistent daemon draw modifiers scale the opposition (draw daemons
+become identity, not raw power); TRANSIENT packet draws are deliberately
+excluded (a consumable stays pure advantage the turn it fires). Options
+A (static — a +2-draw daemon at fixed budget is the K2 action-economy
+lesson in reverse, unpriceable) and C (post-packet final hand — punishes
+firing packets, and is exactly the desync geometry the seam's history
+warns about) rejected.
+
+**The transparency question (the user's stumble): resolved as a
+two-part split.**
+
+- The draw AMOUNT gets a first-class surface: a "Draw: N" chip beside
+  the draw-pile button on the pre-turn screen (the R1/R2 CardListButton
+  corner — where the player already reasons about the deck), reading
+  `effectiveDrawAmount` at render time. Rides 65e.
+- The budget COUPLING surfaces as authored daemon card text at the
+  purchase decision ("Draw +1 each turn. Foes muster to match."), NOT
+  as a HUD number — the game has never exposed the budget math (G4
+  scaled opposition off avg level invisibly from day one); a raw
+  budget readout would be a bigger transparency change than the
+  mechanic itself.
+- Happy accident of B: §65 ships no draw daemon (packets only, and
+  packet draws don't touch the basis), so no shipped §65 content needs
+  the coupling sentence. **Landing note:** the FIRST draw-daemon
+  author owes the coupling sentence in its description — recorded here
+  and as a comment at the `WaveContext` seam (65b lands it).
+
+**Cut shape-locked as proposed** (65a fold → 65b seam → 65c packets →
+65d cap A/B → 65e render tail), one amendment: 65e absorbs the
+"Draw: N" chip. Kickoff prediction on record: NO snapshot bump.

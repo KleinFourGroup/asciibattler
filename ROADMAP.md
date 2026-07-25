@@ -141,16 +141,35 @@ animation/transition (render tail, eyeball-verified).
 - **Risk:** medium-high — the enemy-budget coupling (`min(roster,
   DECK.handSize)` is the budget basis TODAY; difficulty.ts records a past
   desync bug here).
-- **Decision points:** (1) the enemy-budget DESIGN SESSION (what feeds the
-  budget seam when draw varies) — a genuine stop, user required; (2) max
-  hand size — A/B on the harness, then user call.
+- **Decision points:** (1) ✅ DECIDED 2026-07-25 (kickoff design session)
+  — **Option B, the folded basis**: the budget seam reads
+  `min(roster, effectiveDrawAmount)` (persistent daemon fold only;
+  transient packet draws deliberately excluded); transparency = the
+  "Draw: N" pre-turn chip + the coupling sentence in future draw-daemon
+  card text (rationale worklog §65-shape-lock); (2) max hand size — A/B
+  on the harness (needs a forced-draw dial — the bot arm fires no
+  packets), then user call.
 - **Exit criteria:** both packets exercised headlessly; the budget
   decision implemented + tested; persistent modifiers via run-stat fold
   (derived, unserialized) proven; any per-turn draw state that must
   serialize lands with its predicted bump (a v39 rider at §66 if timing
   aligns, else its own); animation browser-verified.
 - **Scope guards:** two packets only; no packet-economy tuning (§68).
-- [ ] *(cut at phase kickoff)*
+- **Kickoff prediction (2026-07-25):** NO snapshot bump — hand/piles
+  serialize since H5, the fold is derived, packet draws mutate the
+  already-serialized hand (audit, worklog §65-kickoff).
+- [ ] **65a** — the `drawAmount` run stat (base = `DECK.handSize`,
+  config-derived) + `effectiveDrawAmount` (floored, clamped ≥1) +
+  `drawHand` reads it; byte-identical via the fold identity fast path.
+- [ ] **65b** — Option B at the `WaveContext` seam + the
+  count-basis==budget-basis desync regression pin.
+- [ ] **65c** — the `drawCards`/`discardCards` packet-only ops
+  (packets.ts matrices grow two rows) + the draw-two/discard-one
+  packets + acquisition wiring; exercised headlessly.
+- [ ] **65d** — the max-hand A/B (forced-draw dial) → user call →
+  the deck.json cap knob at the draw sites.
+- [ ] **65e** — the draw/discard animation + the "Draw: N" pre-turn
+  chip (render tail, eyeball-verified natively).
 
 ## Phase 66 — Boss forewarning
 

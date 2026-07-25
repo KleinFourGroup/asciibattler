@@ -163,9 +163,8 @@ animation/transition (render tail, eyeball-verified).
 - [x] **65b** — Option B at the `WaveContext` seam ✅ 2026-07-25
   (`ccb5270`): desync pin landed; byte-identical (fuzz:smoke 278
   unchanged); worklog §65b.
-- [ ] **65c** — the `drawCards`/`discardCards` packet-only ops
-  (packets.ts matrices grow two rows) + the draw-two/discard-one
-  packets + acquisition wiring; exercised headlessly.
+- [x] **65c** — the hand-op packets ✅ 2026-07-25 (`ce7ff15`): Surge +
+  Cull live, exclusion pin landed, last-card guard added; worklog §65c.
 - [ ] **65d** — the max-hand A/B (forced-draw dial) → user call →
   the deck.json cap knob at the draw sites.
 - [ ] **65e** — the draw/discard animation + the "Draw: N" pre-turn

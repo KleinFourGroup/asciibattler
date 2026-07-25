@@ -1203,3 +1203,33 @@ the seam, as promised in §65-shape-lock.
   fired draw packet grows the hand but must NOT move the next wave's
   basis) lands with the packets — the real fire path is what should
   exercise it, not a synthetic hand mutation.
+
+### 65c — the hand-op packets (2026-07-25)
+
+`ce7ff15` — the shared pool grows its two chartered ops (packet-ONLY,
+authored in packets.ts — the ApplyBuff/InjectRule precedent; the op
+dropdown and legality matrices grew rows, no daemon-side change), and
+the two packets ship: **Surge** (`draw-two`, drawCards count 2, target
+none) and **Cull** (`discard-one`, discardCards, target unit — rides
+the existing hype pick-a-card arming contract with zero UI wiring).
+
+- `turn:handRedrawn` is now "the pre-turn hand changed": the emit
+  factored to `Run.emitHandChanged()` (one emit site — redraw + both
+  hand ops), payload unchanged; the hand length may now DIFFER from
+  the drawn size (events.ts + ARCHITECTURE catalog updated).
+- **Two design micro-calls made in-flight** (worth flagging): (1) the
+  **last-card guard** — firing Cull on a 1-card hand rejects at the
+  validation gate (an empty fielded team is a misclick-shaped instant
+  loss, not a strategy); (2) **exhaustion semantics** — Surge on a
+  fully dealt deck stops early but still consumes (the
+  patch-at-full-health precedent: order of consumption IS effect).
+- The Option-B **exclusion pin** landed through the REAL fire path:
+  gated turn-intro → fire Surge → advanceTurn → the resolved wave
+  prices against the FOLD basis (6), not the 8-card fielded hand.
+- Acquisition wiring: prices 20/8 (byId, tuned §68), discard-one →
+  bits-small, draw-two → bits-large; port shelf automatic (catalog).
+  The editor learned both ops (defaultEffect/describeEffect/sub-form +
+  format.ts lines); the byte-faithful round-trip pin passed against
+  the hand-authored JSON first try.
+- fuzz:smoke 278 green — the reward-table content shifts stay within
+  the invariant pins (the §61c/§64 precedent). 2303→2309 main.

@@ -160,8 +160,9 @@ animation/transition (render tail, eyeball-verified).
   already-serialized hand (audit, worklog §65-kickoff).
 - [x] **65a** — the `drawAmount` run stat ✅ 2026-07-25 (`aa3c8c4`):
   byte-identity proven (fuzz:smoke 278 unchanged); worklog §65a.
-- [ ] **65b** — Option B at the `WaveContext` seam + the
-  count-basis==budget-basis desync regression pin.
+- [x] **65b** — Option B at the `WaveContext` seam ✅ 2026-07-25
+  (`ccb5270`): desync pin landed; byte-identical (fuzz:smoke 278
+  unchanged); worklog §65b.
 - [ ] **65c** — the `drawCards`/`discardCards` packet-only ops
   (packets.ts matrices grow two rows) + the draw-two/discard-one
   packets + acquisition wiring; exercised headlessly.

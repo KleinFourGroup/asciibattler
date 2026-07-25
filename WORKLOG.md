@@ -1172,3 +1172,34 @@ the fold instead of the raw config.
   for future daemon content to fold it.
 - 2296→2301 main; typecheck clean; ARCHITECTURE's runStats line grew
   the key in the same commit.
+
+### 65b — Option B at the WaveContext seam (2026-07-25)
+
+`ccb5270` — the one-line seam swap the shape-lock decided:
+`WaveContext.handSize` is now `min(roster, effectiveDrawAmount)`
+(was the static `DECK.handSize`). The landing-note comment for the
+first draw-daemon author (the coupling sentence obligation) sits at
+the seam, as promised in §65-shape-lock.
+
+- **The desync pin is structural + consumer-side.** One `WaveContext`
+  field feeds BOTH `resolveTotalCount` and `resolveLevelBudget`, so
+  count-basis == budget-basis by construction — the K2 desync shape
+  can only re-enter via a second supplier. The test pins it from the
+  consumer side: a same-seed pair (no idol / +1 draw idol) against a
+  catalog-derived hand-relative reference encounter (brigands' shape,
+  found by filter — no hardcoded id), asserting BOTH the wave count
+  and the level sum track the moved basis (expectations derived from
+  the authored spec + the uncapped Σlevels = max(C, L) contract),
+  plus the roster clamp under a +100 overdraw fold.
+- One test-authoring stumble: every catalog encounter wraps its wave
+  in the standard `loop{forever}` shell — the reference-encounter
+  filter must unwrap `waves[0].body[0]`, not read `waves[0]`.
+- The RANDOM lineage (`playerTeamLevel` — fuzz arena + spawn-overflow
+  only) deliberately KEEPS the static basis: no Run, hence no fold, in
+  scope there. Header note added same commit (wave.ts context doc too).
+- Byte-identity: fuzz:smoke 278 green unchanged (the fold identity —
+  no shipped daemon touches drawAmount). 2301→2303 main.
+- **65c test obligation carried:** the transient-exclusion pin (a
+  fired draw packet grows the hand but must NOT move the next wave's
+  basis) lands with the packets — the real fire path is what should
+  exercise it, not a synthetic hand mutation.

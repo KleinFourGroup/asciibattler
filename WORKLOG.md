@@ -1033,3 +1033,27 @@ unit slots, clamped at the slot count.
   and the per-slot test's synthetic pools need REAL archetype ids
   (rollOffer materializes through the catalog — the §63b discipline).
 - 2283→2295 main; fuzz:smoke 278 green; catalog-shape pin +portunus.
+
+### 64d — the matrix close (2026-07-25)
+
+`59c052e` — one test proves the whole phase composes: all three daemons
+stacked (seed one via config, the rest through the REAL `addDaemon`
+acquisition path) × all three characters, asserting simultaneously:
+offer = default+bonus (64a, bonus catalog-derived) · no commons and
+nothing character-blacklisted in the offer (64b × 63c) · port shelf
+count untouched (the 64a scope pin) · slot 0 legendary (64c) · no
+commons on the shelf (64b's port inheritance). Docs honesty: the
+ARCHITECTURE runStats line now carries the 64a–c keys, and the
+Recruitment.ts tree line was still describing F1's distinct sampler —
+three sampler generations stale — rewritten to the 61c/63/64 shape.
+2295→2296 main; fuzz:smoke 278 green.
+
+**Phase verdict:** all four cuts landed as shape-locked; the audit's
+central claim (zero new vocabulary — three pure modifier rules over
+new run stats) survived contact with the code intact. Exit criteria:
+purchasable ✅ (port stock automatic + both reward tables + prices) ·
+functional per daemon × character ✅ (headless, incl. the matrix) ·
+parse-time legality ✅ (modifier rules ride the existing
+z.enum(RUN_STAT_KEYS) — no new matrix rows needed, which WAS the
+design) · prices authored ✅ (30/35/25, tuned §68). No snapshot bump
+(v38/v34 hold, as predicted round-wide).

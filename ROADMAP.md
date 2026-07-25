@@ -143,8 +143,9 @@ latter two need, designed here.
 - [x] **64c** — Idol of Portunus ✅ 2026-07-24 (`757b7b0`): shipped as
   cut (count stat, per-slot forcing, byte-identical degrade);
   worklog §64c.
-- [ ] **64d** — close: the stacked all-three × each-character matrix
-  test + docs honesty pass + flips.
+- [x] **64d** — close ✅ 2026-07-25 (`59c052e`): the stacked matrix test
+  + the ARCHITECTURE honesty pass (stale F1 Recruitment line caught);
+  worklog §64d.
 
 ## Phase 65 — Hand & draw size
 

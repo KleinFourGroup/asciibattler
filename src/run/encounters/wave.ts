@@ -116,8 +116,11 @@ export interface WaveSpec {
  * explicit literals:
  * - `roster` — the player roster, for `mean`/`median` level budgets AND the
  *   `roster`-relative level cap (its `highestRosterLevel` basis).
- * - `handSize` — the FIELDED hand size (`min(roster, DECK.handSize)`), for
- *   `hand`-relative counts (mirrors `rollEnemyWave`'s `size`).
+ * - `handSize` — the FIELDED hand size, for `hand`-relative counts (mirrors
+ *   `rollEnemyWave`'s `size`). 65b: the production caller supplies
+ *   `min(roster, effectiveDrawAmount)` — the folded draw stat, so persistent
+ *   draw daemons scale the opposition (Option B, worklog §65-shape-lock);
+ *   pre-65b this was `min(roster, DECK.handSize)`.
  *
  * The per-instance level cap is no longer supplied here — it's authored on the
  * `WaveSpec` (`levelCap?`) and resolved against this `roster`, so the production

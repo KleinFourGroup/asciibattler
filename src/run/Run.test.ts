@@ -4223,6 +4223,71 @@ describe('65a — drawAmount (the variable draw fold)', () => {
   });
 });
 
+describe('65b — the budget seam consumes the draw fold (Option B)', () => {
+  const drawIdol = (value: number): DaemonConfig => ({
+    id: 'test-draw',
+    name: 'Test Draw',
+    description: 'draw modifier',
+    rules: [{ kind: 'modifier', stat: 'drawAmount', op: 'add', value }],
+  });
+
+  // A hand-relative reference encounter, DERIVED from the catalog (no
+  // hardcoded id to drift): first wave plain (unwrapping the catalog's
+  // standard loop{forever} shell), count hand-relative, budget
+  // mean-relative, uncapped — both resolver axes read the seam directly.
+  const ref = ENCOUNTERS.flatMap((e) => {
+    const first = e.waves[0];
+    const entry = first?.kind === 'loop' ? first.body[0] : first;
+    return e.kind === 'normal' &&
+      entry !== undefined &&
+      entry.kind === 'wave' &&
+      entry.spec.count.kind === 'hand' &&
+      entry.spec.levelBudget.kind === 'mean' &&
+      entry.spec.levelCap === undefined
+      ? [
+          {
+            id: e.id,
+            countFactor: entry.spec.count.factor,
+            budgetFactor: entry.spec.levelBudget.factor,
+          },
+        ]
+      : [];
+  })[0]!;
+
+  /** Enter a forced hand-relative encounter; read the resolved turn-1 wave. */
+  const turn1 = (daemon: DaemonConfig | null) => {
+    const { run } = freshRunWithBus(41, { daemon, forcedEncounterId: ref.id });
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    const enemies = run.currentEncounter!.enemyTeam;
+    const basis = Math.min(run.team.length, run.effectiveDrawAmount);
+    const mean = run.team.reduce((a, u) => a + u.level, 0) / run.team.length;
+    return { run, enemies, basis, mean };
+  };
+
+  it('count-basis and budget-basis BOTH track min(roster, effectiveDrawAmount) — the K2 desync pin', () => {
+    const base = turn1(null);
+    const plus = turn1(drawIdol(1));
+    // Non-vacuous: the idol moved the basis (roster > base draw at start).
+    expect(plus.basis).toBe(base.basis + 1);
+    // ONE basis feeds both resolver axes — count and level budget move
+    // together or not at all (the K2 desync shape, pinned from the seam's
+    // consumer side; expectations derived from the authored spec + the
+    // uncapped distribute contract: Σlevels = max(C, L)).
+    for (const { enemies, basis, mean } of [base, plus]) {
+      const expectedCount = Math.round(ref.countFactor * basis);
+      const expectedLevels = Math.max(expectedCount, Math.round(ref.budgetFactor * mean * basis));
+      expect(enemies).toHaveLength(expectedCount);
+      expect(enemies.reduce((a, u) => a + u.level, 0)).toBe(expectedLevels);
+    }
+  });
+
+  it('the basis stays roster-clamped under an overdrawn fold', () => {
+    const { run, enemies, basis } = turn1(drawIdol(100));
+    expect(basis).toBe(run.team.length);
+    expect(enemies).toHaveLength(Math.round(ref.countFactor * basis));
+  });
+});
+
 /**
  * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
  * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn

@@ -38,6 +38,12 @@ function rosterLevelSum(team: readonly UnitTemplate[]): number {
  * single-battle model); for a roster ≤ `handSize` the two are identical
  * (`avg × size == sum`), so the swap only diverges once the roster outgrows the
  * hand. Empty roster → 0 (avg 1 × min(0, handSize) = 0), as before.
+ *
+ * 65b — this RANDOM lineage (fuzz arena + spawn-overflow only; production
+ * routes through `WaveContext` since U3) deliberately keeps the static
+ * `DECK.handSize` basis: there is no Run (hence no daemon fold) in scope
+ * here. The production basis is `min(roster, effectiveDrawAmount)`, supplied
+ * by `Run.beginTurn` (Option B, worklog §65-shape-lock).
  */
 export function playerTeamLevel(team: readonly UnitTemplate[]): number {
   return avgTeamLevel(team) * Math.min(team.length, DECK.handSize);

@@ -1933,11 +1933,20 @@ export class Run {
     this.waveCursor = cursor;
     const waveContext: WaveContext = {
       roster: this.team,
-      // The count/budget basis is the FIELDED hand (min(roster, handSize)), as
-      // `rollEnemyWave`/`playerTeamLevel` used. The per-instance level cap is now
-      // authored per wave (`spec.levelCap`) and resolved against `roster`, so it's
-      // no longer computed here.
-      handSize: Math.min(this.team.length, DECK.handSize),
+      // 65b — the count/budget basis is the FIELDED hand: min(roster,
+      // effectiveDrawAmount) — Option B, the FOLDED basis (worklog
+      // §65-shape-lock). Persistent daemon draw modifiers scale the
+      // opposition with the hand they grant; TRANSIENT packet draws (65c)
+      // deliberately never reach this seam — they mutate `hand` directly,
+      // not the fold. This ONE field feeds BOTH resolveTotalCount and
+      // resolveLevelBudget, so count-basis == budget-basis by construction
+      // (the K2 desync shape can only re-enter via a second supplier).
+      // ⚠ Landing note (worklog §65-shape-lock): the FIRST draw-daemon's
+      // authored description owes the coupling sentence ("Foes muster to
+      // match") — the budget consequence is surfaced nowhere else.
+      // The per-instance level cap is authored per wave (`spec.levelCap`)
+      // and resolved against `roster`, so it's no longer computed here.
+      handSize: Math.min(this.team.length, this.effectiveDrawAmount),
       // X1 — the per-run difficulty lever, applied to every wave at resolve time.
       waveSizeMultiplier: this.difficultyMultipliers.waveSize,
       levelBudgetMultiplier: this.difficultyMultipliers.levelBudget,

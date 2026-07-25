@@ -116,6 +116,13 @@ export class PreTurnScreen {
   // R1/R2 — the shared card-list affordances: roster (top-right) + draw
   // (bottom-right) + discard (bottom-left) pile views. All disposed on hide.
   private cardListButtons: CardListButton[] = [];
+  // 65e — the folded per-turn draw amount (the "Draw: N" chip; the §65
+  // transparency surface). Set in `show` from the turn:starting payload.
+  private drawAmount = 0;
+  // 65e — hand positions to ENTER-animate on the next `refreshHand` ('all'
+  // = the initial deal, staggered). Consumed once, then cleared — refreshes
+  // driven by non-hand events (cache/grant changes) must not replay it.
+  private enterPositions: Set<number> | 'all' | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -135,6 +142,8 @@ export class PreTurnScreen {
     this.hand = info.hand;
     this.drawPile = info.drawPile;
     this.discardPile = info.discardPile;
+    this.drawAmount = info.drawAmount;
+    this.enterPositions = 'all'; // 65e — the initial deal animates in, staggered
     this.grants = info.grants;
     this.empowerMagnitudes = info.empowerMagnitudes;
     // 49d — denial is per idol per hook kind: the idol authors the hook but
@@ -183,6 +192,33 @@ export class PreTurnScreen {
    * an already-empowered card).
    */
   updateHand(payload: GameEvents['turn:handRedrawn']): void {
+    // 65e — identity diff BEFORE the swap (payload hand entries are
+    // references into the run's team templates, so `===` is a stable card
+    // key): changed/new positions enter-animate; outgoing cards exit as
+    // fixed-position clones. Redraw = same length (replaced slots exit AND
+    // enter); Surge = longer (appended slots enter); Cull = shorter (the
+    // two-pointer walk finds the spliced-out cards).
+    const prev = this.hand;
+    const next = payload.hand;
+    const enter = new Set<number>();
+    const exits: number[] = [];
+    if (next.length >= prev.length) {
+      for (let i = 0; i < next.length; i++) {
+        if (next[i] !== prev[i]) {
+          enter.add(i);
+          if (i < prev.length) exits.push(i); // a replaced slot's outgoing card
+        }
+      }
+    } else {
+      let j = 0;
+      for (let i = 0; i < prev.length; i++) {
+        if (j < next.length && prev[i] === next[j]) j++;
+        else exits.push(i);
+      }
+    }
+    this.animateExits(exits);
+    this.enterPositions = enter.size > 0 ? enter : null;
+
     this.hand = payload.hand;
     // R2 — the redraw shuffled cards between piles; refresh the stored copies so
     // a reopened pile view reflects it (the buttons read these at click time).
@@ -194,6 +230,34 @@ export class PreTurnScreen {
     this.refreshHand();
     // 51e — the pile counts on the chip faces moved with the cards.
     for (const button of this.cardListButtons) button.refresh();
+  }
+
+  /**
+   * 65e — exit animation: clone each outgoing card at its current screen
+   * rect (the hand row is about to be rebuilt), let the clone fall/fade via
+   * CSS, then remove it. Pure presentation — the authoritative state moved
+   * in the Run before the event fired. Positions index the OLD hand row.
+   */
+  private animateExits(positions: readonly number[]): void {
+    if (positions.length === 0) return;
+    const cards = this.handWrap?.querySelector('.preturn-hand-cards');
+    if (!cards) return;
+    for (const pos of positions) {
+      const node = cards.children[pos];
+      if (!(node instanceof HTMLElement)) continue;
+      const rect = node.getBoundingClientRect();
+      const clone = node.cloneNode(true) as HTMLElement;
+      clone.classList.add('preturn-card-exit');
+      clone.style.left = `${rect.left}px`;
+      clone.style.top = `${rect.top}px`;
+      clone.style.width = `${rect.width}px`;
+      this.mount.appendChild(clone);
+      // animationend is the normal path; the timeout is the safety net (a
+      // backgrounded tab can throttle animations indefinitely).
+      const remove = (): void => clone.remove();
+      clone.addEventListener('animationend', remove, { once: true });
+      setTimeout(remove, 600);
+    }
   }
 
   /**
@@ -295,6 +359,16 @@ export class PreTurnScreen {
       }),
     ];
     for (const button of this.cardListButtons) panel.appendChild(button.el);
+
+    // 65e — the "Draw: N" chip (the §65 transparency surface): the folded
+    // per-turn draw amount, anchored above the Draw Pile button — where the
+    // player already reasons about the deck. Non-interactive.
+    const drawChip = document.createElement('div');
+    drawChip.className = 'preturn-draw-chip';
+    drawChip.textContent = `Draw: ${this.drawAmount}`;
+    drawChip.title =
+      'Cards dealt into your hand each turn. Daemons can raise it permanently; packets can draw extra this turn.';
+    panel.appendChild(drawChip);
 
     const heading = document.createElement('div');
     heading.className = 'preturn-heading';
@@ -420,8 +494,18 @@ export class PreTurnScreen {
     const cards = document.createElement('div');
     cards.className = 'preturn-hand-cards';
     const buffSummary = this.buffSummary;
+    // 65e — the one-shot enter set (the initial deal, a redraw refill, a
+    // Surge draw): entering cards animate in with a small stagger.
+    const entering = this.enterPositions;
+    this.enterPositions = null;
+    let enterOrdinal = 0;
     this.hand.forEach((unit, pos) => {
       const card = renderHandCard(unit, this.empowerMagnitudes[pos] ?? 0, buffSummary);
+      if (entering === 'all' || (entering !== null && entering.has(pos))) {
+        card.classList.add('preturn-card-enter');
+        card.style.animationDelay = `${enterOrdinal * 45}ms`;
+        enterOrdinal++;
+      }
       if (selectable) {
         card.classList.add('unit-card--clickable');
         if (this.selected.has(pos)) card.classList.add('is-selected');

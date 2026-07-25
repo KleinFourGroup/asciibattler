@@ -1556,6 +1556,9 @@ export class Run {
         })),
         encounter: { name: encounter.name, kind: encounter.kind },
         map: { layoutId, gridW, gridH, theme },
+        // 65e — the folded draw amount for the "Draw: N" chip (the §65
+        // transparency surface; derived, so a draw daemon moves it live).
+        drawAmount: this.effectiveDrawAmount,
       });
     } else {
       this.phase = 'battle';
@@ -1827,6 +1830,7 @@ export class Run {
     // empty team at beginTurn (a self-inflicted instant loss shaped like a
     // misclick) — reject like any other illegal target, consuming nothing.
     if (effect.op === 'discardCards' && this.hand.length <= 1) return;
+    let handChanged = false;
     switch (effect.op) {
       case 'applyBuff':
         // The same builder as the empower path (magnitude 1, endOfTurn seed
@@ -1883,7 +1887,7 @@ export class Run {
           if (card === undefined) break;
           this.hand.push(card);
         }
-        this.emitHandChanged();
+        handChanged = true;
         break;
       case 'discardCards':
         // 65c — send the targeted card to the discard; the hand SHRINKS
@@ -1891,7 +1895,7 @@ export class Run {
         // discarded card recycles via the normal H5 reshuffle.
         this.discardPile.push(this.hand[targetHandIndex!]!);
         this.hand.splice(targetHandIndex!, 1);
-        this.emitHandChanged();
+        handChanged = true;
         break;
     }
     // Consume + repaint: the splice emits the shrunk cache; run:packetUsed
@@ -1905,6 +1909,11 @@ export class Run {
       grants: this.grantViews(),
       empowerMagnitudes: this.empowerMagnitudes(),
     });
+    // 65e — the hand emit goes LAST: the cache/packet repaints above
+    // rebuild the pre-turn card row WITHOUT enter animations (the screen's
+    // enter set is one-shot), so the hand swap that carries them must be
+    // the final rebuild of the dispatch.
+    if (handChanged) this.emitHandChanged();
   }
 
   /** 49b — the one `run:cacheChanged` emit site: an authoritative copy of

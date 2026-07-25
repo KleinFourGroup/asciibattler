@@ -531,6 +531,11 @@ export interface GameEvents extends Record<string, unknown> {
       name: string;
       kind: EncounterKind;
     };
+    /** 65e — the folded per-turn draw amount (`Run.effectiveDrawAmount`),
+     *  for the pre-turn "Draw: N" chip (the §65 shape-lock's transparency
+     *  surface). May differ from `hand.length` (a roster smaller than the
+     *  draw fields everyone; a packet draw grows the hand past it). */
+    drawAmount: number;
     map: {
       layoutId: string | null;
       gridW: number;

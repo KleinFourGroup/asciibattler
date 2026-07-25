@@ -1233,3 +1233,60 @@ the existing hype pick-a-card arming contract with zero UI wiring).
   the hand-authored JSON first try.
 - fuzz:smoke 278 green — the reward-table content shifts stay within
   the invariant pins (the §61c/§64 precedent). 2303→2309 main.
+
+### 65d-dial — the forced-draw lever + the A/B launch (2026-07-25)
+
+`4225c32` — `RunConfig.drawAmountAdd` (programmatic + the fuzz
+`--draw-add=<n>`, run mode only — the 60c bitsMultiplier shape
+verbatim): injected into `effectiveRunStats` as one extra `drawAmount`
+add-modifier, so the deal AND the Option-B budget basis both move — a
+FORCED persistent fold, deliberately unlike a transient packet draw.
+0/absent = no injection (the identity fast path + byte-identity hold;
+fuzz:smoke 279 green with the new drawAddArg pin). NOT persisted; the
+65d test pins the rehydrate-resets-to-0 discipline.
+
+- Harness audit finding: the §59 `pickPacketFire` seam is VECTOR-gated
+  (only scored arms carrying `fireWeights` fire packets) — the
+  realistic arm fires none, so a max-hand read via packet STACKING is
+  §68's (the scope guard already says packet-economy tuning is). The
+  65d A/B is therefore the SYMMETRIC question only: does a bigger
+  persistent hand (fold + Option-B budget scaling together) move the
+  band?
+- Protocol: paired same-seed, seeds 1–40, `--strategy=greedy
+  --searcher --audition --redraw=level:2 --empower=level:hi`, arms
+  base / `--draw-add=2` / `--draw-add=4`, local (~36s/run → ~75 min).
+  A DESIGN probe, not a §60e-grade balance read (the §60c interim-read
+  label applies; §68 re-anchors everything).
+- ⚠ 47e watch: arms 2–3 compile post-65e code (the 65e commit landed
+  mid-batch). The 65e delta is event-layer only (emit order + a
+  payload field, no RNG/stream touch) — PROVEN at collection time by
+  re-running 2 base seeds at HEAD and diffing their summary rows.
+
+### 65e — the render tail (2026-07-25)
+
+`cb71b93` — the draw/discard motion + the "Draw: N" chip (the
+shape-lock's transparency surface), landed while the A/B runs.
+
+- The chip: `turn:starting` gained `drawAmount` (the folded
+  `effectiveDrawAmount`); the screen anchors it above the Draw Pile
+  button — fixed, non-interactive, dimmed amber. Correctly does NOT
+  move on a packet draw (verified: Surge → hand 8, chip stays 6).
+- The motion: enter = a rise/fade CSS animation with a 45ms stagger,
+  applied via a ONE-SHOT enter set computed by identity diff (payload
+  hand entries are references into `run.team` — a stable card key);
+  exit = the outgoing card cloned at its screen rect, fixed-position,
+  falling toward the discard corner (animationend + a 600ms safety
+  timeout — backgrounded tabs throttle animations). Redraw = exit+
+  enter per swapped slot; Surge = appended enters; Cull = the
+  two-pointer walk finds the spliced-out card.
+- **One real bug caught by browser-verify:** the enter animation was
+  being WIPED — `run:cacheChanged`/`run:packetUsed` repaints landed
+  after the hand swap and rebuilt the row without the (already
+  consumed) enter set. Fix in Run: the hand emit goes LAST in
+  `handleUsePacket` (`handChanged` flag), so the hand swap is the
+  dispatch's final rebuild. Stream-neutral (fuzz:smoke 279 unchanged).
+- Eval-verified end to end on the dev preview (chip text/position ·
+  6 staggered deal delays · exactly 2 Surge enters · 1 fixed Cull exit
+  clone · hand 8→7 · zero console errors). Screenshot unavailable
+  (backgrounded-pane throttle — the known HANDOFF limitation); the
+  SUBJECTIVE feel read is the user's, natively, per the render policy.

@@ -166,9 +166,11 @@ animation/transition (render tail, eyeball-verified).
 - [x] **65c** — the hand-op packets ✅ 2026-07-25 (`ce7ff15`): Surge +
   Cull live, exclusion pin landed, last-card guard added; worklog §65c.
 - [ ] **65d** — the max-hand A/B (forced-draw dial) → user call →
-  the deck.json cap knob at the draw sites.
+  the deck.json cap knob at the draw sites. *Dial landed ✅ 2026-07-25
+  (`4225c32`); the 3-arm paired A/B is running; worklog §65d-dial.*
 - [ ] **65e** — the draw/discard animation + the "Draw: N" pre-turn
-  chip (render tail, eyeball-verified natively).
+  chip (render tail). *Landed ✅ 2026-07-25 (`cb71b93`), eval-verified
+  end to end; awaiting the NATIVE feel read (the user's); worklog §65e.*
 
 ## Phase 66 — Boss forewarning
 

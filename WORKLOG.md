@@ -1290,3 +1290,39 @@ shape-lock's transparency surface), landed while the A/B runs.
   clone · hand 8→7 · zero console errors). Screenshot unavailable
   (backgrounded-pane throttle — the known HANDOFF limitation); the
   SUBJECTIVE feel read is the user's, natively, per the render policy.
+
+### 65d — the A/B verdict + the cap (2026-07-25)
+
+The batch (3 arms × 40 paired seeds, local, ~2.5h wall — see the
+process note below): **base 50.0% (avgHop 8.85) · +2 draw 67.5%
+(9.53) · +4 draw 60.0% (9.32)**. Paired flips vs base: +2 = 6 w→l /
+13 l→w (+7 net, borderline at this seed count) · +4 = 5 w→l / 9 l→w.
+The 47e stream-neutrality check passed byte-identical (2 base seeds
+re-run at HEAD after the mid-batch 65e commit — every column equal).
+
+- **The finding:** bigger symmetric hands favor the player EVEN under
+  the Option-B budget coupling (+10–17pts) — the action-economy
+  density on a fixed board outruns the scaled wave. Design-probe
+  grade (greedy arm, no packet fires, §60c interim-read label).
+- **The open question (user):** +4 reading BELOW +2 (8 w→l / 5 l→w
+  between them) — noise, or does fielding the whole roster genuinely
+  underperform (draw variance dead, the deck mechanic disabled)?
+  Filed as a §68 absorbed thread; re-read at protocol-v2 grade.
+- **DECIDED (USER): cap = 8** (`deck.json maxHandSize`), the
+  provisional-data call with a revisit rider on record. `ba3898e`:
+  the cap clamps INSIDE `effectiveDrawAmount` (one basis for deal +
+  budget — the K2 lesson), the `drawCards` op partial-draws to the
+  cap and REJECTS at a full hand (the last-card-guard sibling,
+  consuming nothing). Pre-cap tests reworked: the exhaustion-contract
+  cases moved to a 5-unit roster (where exhaustion, not the cap,
+  binds); the overdraw pins now saturate at the cap.
+- fuzz:smoke 279 green — the cap is INERT for every existing run (no
+  shipped fold exceeds 6; the bot arms fire no packets). 2310→2314
+  main.
+- **Process note (user-filed):** a batch this size belonged on the
+  hcloud box (§62's launcher exists for exactly this) — local wall
+  was ~2.5h vs the box's demonstrated ~18min at `--jobs=8` for
+  comparable work. Crafting the RULE is subtle (this batch's estimate
+  said 75min; draw-heavy arms fight longer battles, and concurrent
+  pre-commit suites stole CPU) — filed to retro/scratchpad.md for the
+  round-boundary distillation rather than legislated mid-phase.

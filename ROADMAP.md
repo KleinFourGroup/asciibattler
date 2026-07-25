@@ -165,9 +165,10 @@ animation/transition (render tail, eyeball-verified).
   unchanged); worklog §65b.
 - [x] **65c** — the hand-op packets ✅ 2026-07-25 (`ce7ff15`): Surge +
   Cull live, exclusion pin landed, last-card guard added; worklog §65c.
-- [ ] **65d** — the max-hand A/B (forced-draw dial) → user call →
-  the deck.json cap knob at the draw sites. *Dial landed ✅ 2026-07-25
-  (`4225c32`); the 3-arm paired A/B is running; worklog §65d-dial.*
+- [x] **65d** — the max-hand cap ✅ DECIDED + landed 2026-07-25 (USER:
+  **cap 8**, off the A/B — base 50.0 / +2 67.5 / +4 60.0; revisit
+  rider on record; the +2-vs-+4 noise question → §68): dial `4225c32`,
+  cap `ba3898e`; worklog §65d-dial + §65d.
 - [ ] **65e** — the draw/discard animation + the "Draw: N" pre-turn
   chip (render tail). *Landed ✅ 2026-07-25 (`cb71b93`), eval-verified
   end to end; awaiting the NATIVE feel read (the user's); worklog §65e.*
@@ -226,8 +227,10 @@ pass: initial-tier assignment tuning (§61's design round, now with data),
 new daemon/packet prices + the port per-tier multiplier, the absorbed
 threads (port goods-vs-hop value · the banshee-comp underperformance ·
 the **ronin/reaver buff look** — the 61d flavor-over-power call made
-their weakness a named goal; force-comp probes per §60c, worklog §61d),
-and the boss wall re-check per character.
+their weakness a named goal; force-comp probes per §60c, worklog §61d ·
+the **+2-vs-+4 draw non-monotonicity** — noise or real, re-read at
+protocol-v2 grade; worklog §65d), and the boss wall re-check per
+character.
 
 - **Depends on:** everything; §62's launcher for the batch tail.
 - **Risk:** high — the round's largest measurement surface ("I just

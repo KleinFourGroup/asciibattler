@@ -21,4 +21,18 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 ## Cluster 4 — Drafting & Identity (opened 2026-07-21)
 
-*(no entries yet)*
+- **Batch sizing: when does a batch belong on the box?** (user-filed at
+  §65d, 2026-07-25). The 65d A/B (3 arms × 40 searcher seeds) ran local
+  and took ~2.5h wall vs the box's demonstrated ~18min at `--jobs=8`
+  for comparable work (§57h). The subtlety in crafting a rule: the
+  pre-launch estimate said ~75min and was wrong for two reasons that
+  only showed up mid-flight — draw-heavy arms fight LONGER battles
+  (per-seed cost is arm-dependent, not constant), and concurrent
+  pre-commit suites stole CPU from the batch. Candidate shapes for the
+  distillation: (a) a wall-clock trigger ("estimate > ~30min → box"),
+  (b) a shape trigger ("any multi-arm × ≥40-seed searcher batch →
+  box"), (c) an in-flight escape hatch ("if a local batch blows 2× its
+  estimate, kill + re-run on the box" — determinism makes the restart
+  free). Note (c) needs care: killing arm N mid-batch orphans nothing
+  (57g), but the estimate-blown signal arrived HOURS in. Decide at the
+  round boundary, not mid-phase.

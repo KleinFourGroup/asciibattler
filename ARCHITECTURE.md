@@ -218,8 +218,11 @@ src/
                              # resolveInstantHooks (encounterStart/encounterEnd, filter-gates-before-chance) +
                              # battleRulesFor (47f: compiles battle-domain hooks → sim BattleRule[] data, riding
                              # BattleEncounter) + daemonRedrawHook/daemonEmpowerHook
-    runStats.ts              # 47a: the run-stat vocabulary — RunStatKey (bitsGain, cacheSize) + foldRunStats
-                             # (foldEffects mirrored: adds→mults, identity-on-empty; NO rounding — read site rounds)
+    runStats.ts              # 47a: the run-stat vocabulary — RunStatKey + foldRunStats (foldEffects mirrored:
+                             # adds→mults, identity-on-empty; NO rounding — read site rounds). 64a–c: keys are
+                             # bitsGain, cacheSize, recruitOfferSize (64a — base CONFIG-DERIVED from recruitment
+                             # .json), the four rarityWeight* tiers (64b — the no-commons mult-0 seam), and
+                             # portLegendaryOffers (64c — count of tier-forced port slots, base 0)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
@@ -237,7 +240,10 @@ src/
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
     NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3)|elite (W2 scatter) + dump; T2: per-sector length override
     sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks
-    Recruitment.ts           # rollOffer: distinct archetypes from the full pool (F1); per-card level (post-G5)
+    Recruitment.ts           # rollOffer (61c: per-slot tier-roll + weighted within-tier pick, 2 draws/slot,
+                             # dupes legal; 63b/c: character pools + weight overrides; 64b: folded tier
+                             # weights param; 64c: per-slot forcedTiers, empty-pool degrade) + per-card
+                             # level (post-G5) + draftPoolsFor + recruitLevelBonus
     rewards.ts               # 48b: rollRewards — the pure reward roller (chance tests + weighted sampling w/ owned-daemon
                              # exclusion; bits {min,max} on the separate bits stream) + RewardPortion (49c: + the packet
                              # member — packets sample with NO exclusion, duplicates legal; a full cache resolves at ACCEPT)

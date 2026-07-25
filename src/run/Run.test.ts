@@ -4137,6 +4137,46 @@ describe('64c — Idol of Portunus (guaranteed port legendary)', () => {
   });
 });
 
+describe('64d — the drafting-daemon matrix (all three stacked × each character)', () => {
+  const all = ['cornucopia', 'patricians-seal', 'portunus'].map((id) => daemonById(id)!);
+  const commons = new Set<string>(DRAFTABLE_BY_TIER.common);
+  const legendaries = new Set<string>(DRAFTABLE_BY_TIER.legendary);
+  // The Cornucopia's authored bonus, derived (the 64a discipline).
+  const rule0 = all[0]!.rules![0]!;
+  const offerBonus = rule0.kind === 'modifier' ? rule0.value : 0;
+
+  it('every effect holds simultaneously under every character', () => {
+    for (const id of [DEFAULT_CHARACTER_ID, 'priest', 'gambler']) {
+      const character = characterById(id)!;
+      // Seed one via config, append the rest (the addDaemon acquisition path
+      // — exactly how a run collects them from rewards/ports).
+      const { run, bus } = freshRunWithBus(90, { character, daemon: all[0]! });
+      for (const d of all.slice(1)) run.addDaemon(d);
+
+      // 64a — the offer grows by the Cornucopia's bonus…
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      winEncounter(bus);
+      declineAllRewards(run);
+      const offer = run.currentOffer ?? [];
+      expect(offer).toHaveLength(RECRUITMENT.defaultOfferSize + offerBonus);
+      // …64b — with no commons, and nothing character-blacklisted (63c).
+      for (const u of offer) {
+        expect(commons.has(u.archetype)).toBe(false);
+        expect(character.blacklist).not.toContain(u.archetype);
+      }
+      run.dispatch({ kind: 'passRecruit' });
+
+      // 64c at the port — shelf count untouched (the 64a scope pin), slot 0
+      // legendary (Portunus), no commons on the shelf (the Seal, inherited).
+      dockAtPort(run, bus);
+      const units = run.portStock!.units;
+      expect(units).toHaveLength(PRICES.portStock.units);
+      expect(legendaries.has(units[0]!.template.archetype)).toBe(true);
+      for (const slot of units) expect(commons.has(slot.template.archetype)).toBe(false);
+    }
+  });
+});
+
 /**
  * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
  * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn

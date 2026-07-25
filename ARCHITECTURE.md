@@ -223,7 +223,8 @@ src/
                              # bitsGain, cacheSize, recruitOfferSize (64a — base CONFIG-DERIVED from recruitment
                              # .json), the four rarityWeight* tiers (64b — the no-commons mult-0 seam),
                              # portLegendaryOffers (64c — count of tier-forced port slots, base 0), and
-                             # drawAmount (65a — per-turn draw, base = deck.json handSize; read ≥1-clamped)
+                             # drawAmount (65a — per-turn draw, base = deck.json handSize; read clamped to
+                             # [1, deck.json maxHandSize] — the 65d user-signed cap, one basis for deal + budget)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)

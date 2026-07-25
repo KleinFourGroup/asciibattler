@@ -4194,8 +4194,9 @@ describe('65a — drawAmount (the variable draw fold)', () => {
     expect(freshRunWithBus(7, { daemon: drawIdol(1) }).run.effectiveDrawAmount).toBe(
       Math.floor(BASE + 1),
     );
+    // 65d — the cap is the outermost clamp (a big mult saturates at it).
     expect(freshRunWithBus(7, { daemon: drawIdol(1.5, 'mult') }).run.effectiveDrawAmount).toBe(
-      Math.floor(BASE * 1.5),
+      Math.min(DECK.maxHandSize, Math.floor(BASE * 1.5)),
     );
   });
 
@@ -4215,8 +4216,21 @@ describe('65a — drawAmount (the variable draw fold)', () => {
     expect(base.hand).toBe(Math.min(base.roster, BASE));
   });
 
-  it('a draw amount past the roster simply fields everyone (the H5 exhaustion contract)', () => {
+  it('65d — an overdrawn fold saturates at the cap, not the roster', () => {
     const { run } = freshRunWithBus(31, { daemon: drawIdol(100) });
+    expect(run.effectiveDrawAmount).toBe(DECK.maxHandSize);
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    expect(run.hand).toHaveLength(Math.min(run.team.length, DECK.maxHandSize));
+  });
+
+  it('a draw amount past a SMALL roster simply fields everyone (the H5 exhaustion contract)', () => {
+    // A roster below the cap, so exhaustion (not the 65d cap) is what stops
+    // the deal: five mercenaries against an overdrawn fold.
+    const roster = Array.from({ length: 5 }, () => ({
+      archetype: 'mercenary' as const,
+      level: 1,
+    }));
+    const { run } = freshRunWithBus(31, { daemon: drawIdol(100), startingRoster: roster });
     run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
     expect(run.hand).toHaveLength(run.team.length);
     expect(run.drawPile).toHaveLength(0);
@@ -4284,9 +4298,9 @@ describe('65b — the budget seam consumes the draw fold (Option B)', () => {
     }
   });
 
-  it('the basis stays roster-clamped under an overdrawn fold', () => {
+  it('the basis clamps under an overdrawn fold — 65d: at the cap, below the roster', () => {
     const { run, enemies, basis } = turn1(drawIdol(100));
-    expect(basis).toBe(run.team.length);
+    expect(basis).toBe(Math.min(run.team.length, DECK.maxHandSize));
     expect(enemies).toHaveLength(Math.round(ref.countFactor * basis));
   });
 });
@@ -4322,17 +4336,22 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
   });
 
   it('stops early on a fully dealt deck — consume-on-fire stands (the patch-at-full-health precedent)', () => {
-    const { run } = gatedToFirstTurnIntro(2, null);
-    run.addPacket('draw-two');
-    run.addPacket('draw-two');
-    run.addPacket('draw-two');
-    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-    expect(run.hand).toHaveLength(run.team.length); // everyone fielded, no dupes
+    // A roster below the 65d cap, so EXHAUSTION (not the cap) is what the
+    // Surge hits: five units are all dealt at turn start, the deck is dry,
+    // and a fired Surge draws zero — but still consumes (order of
+    // consumption IS order of effect).
+    const roster = Array.from({ length: 5 }, () => ({
+      archetype: 'mercenary' as const,
+      level: 1,
+    }));
+    const { run } = gatedToFirstTurnIntro(2, null, { startingRoster: roster });
+    expect(run.hand).toHaveLength(5); // everyone fielded, deck dry
     expect(run.drawPile).toHaveLength(0);
+    run.addPacket('draw-two');
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    expect(run.hand).toHaveLength(5); // nothing to draw
     expect(run.discardPile).toHaveLength(0); // turn 1 — nothing to reshuffle
-    expect(run.cache).toEqual([]); // all three consumed regardless
+    expect(run.cache).toEqual([]); // consumed regardless
   });
 
   it('cull sends the targeted card to the discard, no refill', () => {
@@ -4403,6 +4422,38 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     // draws are pure advantage by design — worklog §65-shape-lock).
     const enemies = run.currentEncounter!.enemyTeam;
     expect(enemies).toHaveLength(Math.round(HAND_RELATIVE_REF.countFactor * basis));
+  });
+});
+
+describe('65d — the max hand size (user-signed cap, deck.json)', () => {
+  // Shipped-config sanity: a cap below the base draw would clamp every
+  // deal — schema-legal, but the SHIPPED config must never do it.
+  it('the shipped cap admits the base draw', () => {
+    expect(DECK.maxHandSize).toBeGreaterThanOrEqual(DECK.handSize);
+  });
+
+  it('a Surge fired at a FULL hand rejects, consuming nothing (the last-card-guard sibling)', () => {
+    // drawAmountAdd lifts the deal to the cap exactly (8 = 6 + 2 shipped).
+    const { run } = gatedToFirstTurnIntro(8, null, {
+      drawAmountAdd: DECK.maxHandSize - DECK.handSize,
+    });
+    expect(run.hand).toHaveLength(DECK.maxHandSize);
+    run.addPacket('draw-two');
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    expect(run.hand).toHaveLength(DECK.maxHandSize); // unchanged
+    expect(run.cache).toEqual(['draw-two']); // NOT consumed
+  });
+
+  it('a Surge that reaches the cap mid-draw partial-draws and consumes (the patch precedent)', () => {
+    // One below the cap: the two-card Surge deals exactly one.
+    const { run } = gatedToFirstTurnIntro(8, null, {
+      drawAmountAdd: DECK.maxHandSize - DECK.handSize - 1,
+    });
+    expect(run.hand).toHaveLength(DECK.maxHandSize - 1);
+    run.addPacket('draw-two');
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    expect(run.hand).toHaveLength(DECK.maxHandSize);
+    expect(run.cache).toEqual([]); // consumed — order of consumption IS effect
   });
 });
 

@@ -1706,9 +1706,16 @@ export class Run {
    * fields at least one card — a pathological mult-0 modifier must not zero
    * the hand into a soft-lock. Transient packet draws (65c) bypass this fold
    * by design (the Option-B split, worklog §65-shape-lock).
+   * 65d — clamped ABOVE by `DECK.maxHandSize` (user-signed at 8 off the
+   * A/B). The cap lives HERE, not in `drawHand`, so the deal and the
+   * Option-B budget basis move together under a capped fold (the K2
+   * desync lesson: one basis, every reader).
    */
   get effectiveDrawAmount(): number {
-    return Math.max(1, Math.floor(this.effectiveRunStats().drawAmount));
+    return Math.max(
+      1,
+      Math.min(DECK.maxHandSize, Math.floor(this.effectiveRunStats().drawAmount)),
+    );
   }
 
   /**
@@ -1830,6 +1837,10 @@ export class Run {
     // empty team at beginTurn (a self-inflicted instant loss shaped like a
     // misclick) — reject like any other illegal target, consuming nothing.
     if (effect.op === 'discardCards' && this.hand.length <= 1) return;
+    // 65d — validate-first, the sibling guard: a draw fired at a FULL hand
+    // (≥ the cap) can deal nothing — reject rather than consume a dead
+    // packet. A mid-draw cap arrival still partial-draws (below).
+    if (effect.op === 'drawCards' && this.hand.length >= DECK.maxHandSize) return;
     let handChanged = false;
     switch (effect.op) {
       case 'applyBuff':
@@ -1883,6 +1894,7 @@ export class Run {
         // consume-on-fire stands regardless (the patch-at-full-health
         // precedent: order of consumption IS order of effect).
         for (let i = 0; i < effect.count; i++) {
+          if (this.hand.length >= DECK.maxHandSize) break; // 65d — the cap
           const card = this.drawCard();
           if (card === undefined) break;
           this.hand.push(card);

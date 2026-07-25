@@ -60,6 +60,15 @@ import deckJson from '../../config/deck.json';
 
 const DeckSchema = z.object({
   handSize: z.number().int().positive(),
+  /** 65d — the MAX hand size (user-signed at 8 off the A/B: +2 draw read
+   *  +17.5pts even under the Option-B budget coupling, +4 read BELOW +2 —
+   *  bigger symmetric hands favor the player, and unbounded transient
+   *  Surge-stacking has no other brake; revisit rider on record). The cap
+   *  clamps INSIDE `Run.effectiveDrawAmount` — so the deal and the enemy-
+   *  budget basis stay coupled (the K2 desync lesson) — and stops/rejects
+   *  the `drawCards` packet op at the read site. A cap below `handSize` is
+   *  schema-legal and simply clamps the base deal (odd but coherent). */
+  maxHandSize: z.number().int().positive(),
   redraw: z.object({
     enabled: z.boolean(),
     redrawsPerTurn: z.number().int().nonnegative(),

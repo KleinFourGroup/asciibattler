@@ -82,6 +82,7 @@ export type RunModeArgs = Pick<
   | 'k'
   | 'kTelemetry'
   | 'bitsMultiplier'
+  | 'drawAdd'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -117,6 +118,7 @@ export function runRunCli(args: RunModeArgs): void {
     forcedLayoutId?: string;
     forcedEncounterId?: string;
     bitsMultiplier?: number;
+    drawAmountAdd?: number;
   } = {};
   if (args.hops !== undefined) runConfig.hopCount = args.hops;
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
@@ -129,6 +131,15 @@ export function runRunCli(args: RunModeArgs): void {
       bail(`--bits-multiplier must be a positive number (got ${args.bitsMultiplier})`);
     }
     runConfig.bitsMultiplier = args.bitsMultiplier;
+  }
+  // 65d — `--draw-add=<n>` rides the RunConfig drawAmountAdd lever (a
+  // nonzero integer; the fold's read site clamps the RESULT ≥ 1, but a
+  // non-integer or zero here is a flag typo worth failing loudly on).
+  if (args.drawAdd !== undefined) {
+    if (!Number.isInteger(args.drawAdd) || args.drawAdd === 0) {
+      bail(`--draw-add must be a nonzero integer (got ${args.drawAdd})`);
+    }
+    runConfig.drawAmountAdd = args.drawAdd;
   }
   if (Object.keys(runConfig).length > 0) harnessOptions = { runConfig };
   // J4 — drive a fixed objective strategy in every battle (default none =

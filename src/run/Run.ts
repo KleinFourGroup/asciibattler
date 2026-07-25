@@ -647,6 +647,11 @@ export class Run {
    *  finalizes); OFF = any pending grant, `passGrant` no-ops. NOT persisted
    *  (the X1 RunConfig discipline — a rehydrate re-reads shipped config). */
   private readonly passIsFinal: boolean;
+  /** 65d — the forced-draw A/B dial (`RunConfig.drawAmountAdd`), injected
+   *  into `effectiveRunStats` as one extra `drawAmount` add-modifier. 0 =
+   *  absent (no modifier → the fold identity fast path holds). NOT
+   *  persisted (the X1 RunConfig discipline — a rehydrate resets to 0). */
+  private readonly drawAmountAdd: number;
   /** T2 — the sector-selection meta-DAG the run walks (default: the shipped
    *  `SECTOR_MAP`; a `RunConfig.sectorMap` overrides it for tests). Not
    *  persisted — a RunConfig input, reconstructable; a rehydrate resets it to
@@ -968,6 +973,8 @@ export class Run {
     this.turnGrants = disabledTurnGrants();
     // 49d — the finality toggle: override ?? deck.json. Pure of RNG.
     this.passIsFinal = config?.passIsFinal ?? DECK.grantQueue.passIsFinal;
+    // 65d — the forced-draw dial. Pure of RNG.
+    this.drawAmountAdd = config?.drawAmountAdd ?? 0;
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
     // X1/48f — resolve the per-run difficulty lever (override ?? difficulty.json
@@ -1579,6 +1586,12 @@ export class Run {
    */
   private effectiveRunStats(): Readonly<Record<RunStatKey, number>> {
     const mods: RunStatModifier[] = [];
+    // 65d — the forced-draw A/B dial folds like a daemon modifier, so the
+    // deal AND the Option-B budget basis both see it. 0 = no injection —
+    // the identity fast path (and byte-identity) hold.
+    if (this.drawAmountAdd !== 0) {
+      mods.push({ stat: 'drawAmount', op: 'add', value: this.drawAmountAdd });
+    }
     for (const daemon of this.daemons) {
       for (const rule of daemon.rules ?? []) {
         if (rule.kind === 'modifier') mods.push(rule);
@@ -3090,6 +3103,7 @@ export class Run {
       runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
       turnGrants: TurnGrants;
       passIsFinal: boolean;
+      drawAmountAdd: number;
       sectorMap: SectorMap;
     };
     const m = run as unknown as Mut;
@@ -3097,6 +3111,8 @@ export class Run {
     m.subscriptions = [];
     // RunConfig isn't persisted; a restored run uses normal procedural rolls.
     m.forcedLayoutId = null;
+    // 65d — same: the forced-draw dial resets (a RunConfig input).
+    m.drawAmountAdd = 0;
     // X2 — same: a rehydrated run drops the forced-encounter isolation.
     m.forcedEncounterId = null;
     // X1 — RunConfig isn't persisted either, so re-resolve the difficulty lever

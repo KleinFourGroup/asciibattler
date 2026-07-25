@@ -140,6 +140,17 @@ export interface RunConfig {
    */
   readonly startingBits?: number;
   /**
+   * 65d — a per-run ADDITIVE `drawAmount` override (the max-hand A/B dial):
+   * folded into `effectiveRunStats` exactly like a daemon `modifier` rule,
+   * so the turn deal AND the enemy-budget basis (Option B) both see it — a
+   * FORCED persistent fold, deliberately unlike a transient packet draw.
+   * Programmatic + the fuzz `--draw-add=<n>` flag (run mode); no URL form
+   * (the bitsMultiplier discipline). Unset / 0 → no modifier is injected,
+   * so the default path keeps the fold's identity fast path (byte-identical
+   * — the G1 determinism contract). NOT persisted (a RunConfig input).
+   */
+  readonly drawAmountAdd?: number;
+  /**
    * 49d — override the grant-queue finality toggle
    * (`deck.json#grantQueue.passIsFinal`) for this run, so tests/fuzz can
    * exercise BOTH modes without config edits. Programmatic-only; unset → the

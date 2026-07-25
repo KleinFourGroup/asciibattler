@@ -123,6 +123,12 @@ export interface CliArgs {
   // fixed operating point). Run mode's runConfig wiring consumes it; other
   // modes ignore it per the flags-are-global grammar note above.
   bitsMultiplier?: number;
+  // 65d — the forced-draw dial (`--draw-add=<n>`): exposes the RunConfig
+  // `drawAmountAdd` lever to RUN MODE ONLY (the max-hand A/B — a persistent
+  // fold arm, so the deal AND the Option-B budget basis both move). Run
+  // mode's runConfig wiring consumes it; other modes ignore it per the
+  // flags-are-global grammar note above.
+  drawAdd?: number;
   // 59d — the top-K perturb-and-reselect refinement stage: `--refine`
   // enables it after the base `--search` (defaults K=3 · 8 perturbs ·
   // ±0.15 box-scale, the kickoff lock); the three dial flags override.
@@ -224,6 +230,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--bits-multiplier':
         if (v !== undefined) args.bitsMultiplier = Number(v);
+        break;
+      case '--draw-add':
+        if (v !== undefined) args.drawAdd = Number(v);
         break;
       case '--jobs':
         args.jobs = Number(v);

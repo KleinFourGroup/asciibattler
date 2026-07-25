@@ -4371,6 +4371,24 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     expect(run.cache).toEqual(['discard-one']); // nothing consumed on the reject
   });
 
+  it('65d — the forced-draw dial folds like a daemon modifier (deal + budget basis together)', () => {
+    const { run } = gatedToFirstTurnIntro(7, null, {
+      drawAmountAdd: 2,
+      forcedEncounterId: HAND_RELATIVE_REF.id,
+    });
+    const base = RUN_STAT_BASES.drawAmount;
+    expect(run.effectiveDrawAmount).toBe(Math.floor(base + 2));
+    expect(run.hand).toHaveLength(Math.min(run.team.length, base + 2));
+    run.dispatch({ kind: 'advanceTurn' });
+    const basis = Math.min(run.team.length, run.effectiveDrawAmount);
+    expect(run.currentEncounter!.enemyTeam).toHaveLength(
+      Math.round(HAND_RELATIVE_REF.countFactor * basis),
+    );
+    // NOT persisted (the X1 RunConfig discipline): a rehydrate resets to 0.
+    const restored = Run.fromJSON(run.toJSON(), new EventBus<GameEvents>());
+    expect(restored.effectiveDrawAmount).toBe(Math.floor(base));
+  });
+
   it('the Option-B exclusion pin: a fired draw packet grows the hand but NOT the enemy-budget basis', () => {
     const { run } = gatedToFirstTurnIntro(6, null, {
       forcedEncounterId: HAND_RELATIVE_REF.id,

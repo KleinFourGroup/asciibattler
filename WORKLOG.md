@@ -1057,3 +1057,58 @@ parse-time legality ✅ (modifier rules ride the existing
 z.enum(RUN_STAT_KEYS) — no new matrix rows needed, which WAS the
 design) · prices authored ✅ (30/35/25, tuned §68). No snapshot bump
 (v38/v34 hold, as predicted round-wide).
+
+## Phase 65 — Hand & draw size
+
+### 65-kickoff — the code-reality audit (2026-07-25)
+
+Surfaces surveyed as they exist post-§64: the deck config + draw path,
+the enemy-budget seam (both lineages), the §64 run-stat/op-pool
+substrate, the packet fire path, and the PreTurnScreen render tail.
+
+- **The draw path is ONE read site.** `Run.drawHand()` loops to
+  `DECK.handSize` (Run.ts ~2910); `drawCard()` is already factored out
+  (K3) with the reshuffle inside it — so both the variable draw amount
+  (65a) and a draw-N packet op (65c) land on existing seams. The
+  per-turn cycle (`drawTurnHand`: discard prev hand → draw) and the
+  redraw path never re-consult `handSize`.
+- **The budget seam is TWO read sites, both static `DECK.handSize`:**
+  `playerTeamLevel` (enemyBudget.ts:43 — the RANDOM lineage; production
+  no longer routes here, only the fuzz arena + spawn-overflow) and
+  `WaveContext.handSize` (Run.ts:1926 — the authored production path,
+  recomputed PER TURN at `beginTurn`). The difficulty.ts "past desync"
+  is the K2-exposed H5 bug: the count basis read the roster while the
+  budget basis read the hand — the regression shape to pin at 65b is
+  count-basis == budget-basis, whatever the basis becomes.
+- **The daemon half is zero new vocabulary** — the §64 pattern
+  verbatim: `drawAmount` joins `RUN_STAT_KEYS` (base config-derived
+  from `DECK.handSize`, the 64a discipline) + a floored/clamped
+  `effectiveDrawAmount` read site; the daemon `ModifierRuleSchema`
+  rides `z.enum(RUN_STAT_KEYS)` automatically.
+- **The packet ops are packet-ONLY pool extensions** (the
+  ApplyBuff/InjectRule precedent — authored in packets.ts, not
+  daemons.ts): `drawCards` (target `none`, preTurn) and `discardCards`
+  (target `unit` via handIndex — the applyBuff preTurn targeting
+  contract). A daemon-hook reading of draw makes no sense (the
+  modifier IS the daemon channel), so the op×target×context matrices
+  just grow two rows.
+- **The hand-mutation UI path exists:** `turn:handRedrawn` already
+  carries the full hand + both piles and `PreTurnScreen.updateHand`
+  rebuilds in place — a grown/shrunk hand rides the same shape. The
+  animation (65e) is a render tail on that rebuild.
+- **Serialization prediction: NO snapshot bump** (v38/v34 hold). The
+  hand + piles serialize since H5; the fold is derived
+  (derive-don't-cache); a packet draw mutates the already-serialized
+  hand directly. No per-turn transient draw state needs to persist
+  under the proposed design — the roadmap's v39 rider stays §66's.
+- **Risk flag for the max-hand A/B (65d):** the realistic bot arm does
+  not fire packets (§60c prospective; §68 owns the arm extension), so
+  a cap never binds under the default arm — the A/B needs a forced
+  dial (forced draw amount or a forced packet-fire policy) to produce
+  a read. Budgeted into the 65d cut.
+- **Cosmetic non-action:** deck.json's `redraw.maxCardsPerTurn` (6) is
+  documented as "= handSize", but daemon grants author their own
+  budgets since L1 — no coupling to fix.
+
+Budget-basis options + the cut proposed for shape-lock in the session
+message; decision + rationale land here when the user calls it.

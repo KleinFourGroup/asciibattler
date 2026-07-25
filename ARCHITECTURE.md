@@ -221,8 +221,9 @@ src/
     runStats.ts              # 47a: the run-stat vocabulary — RunStatKey + foldRunStats (foldEffects mirrored:
                              # adds→mults, identity-on-empty; NO rounding — read site rounds). 64a–c: keys are
                              # bitsGain, cacheSize, recruitOfferSize (64a — base CONFIG-DERIVED from recruitment
-                             # .json), the four rarityWeight* tiers (64b — the no-commons mult-0 seam), and
-                             # portLegendaryOffers (64c — count of tier-forced port slots, base 0)
+                             # .json), the four rarityWeight* tiers (64b — the no-commons mult-0 seam),
+                             # portLegendaryOffers (64c — count of tier-forced port slots, base 0), and
+                             # drawAmount (65a — per-turn draw, base = deck.json handSize; read ≥1-clamped)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)

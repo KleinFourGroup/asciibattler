@@ -17,6 +17,7 @@
  */
 
 import { RECRUITMENT } from '../config/recruitment';
+import { DECK } from '../config/deck';
 
 /** The launch run-stat keys (content-driven — grown when content demands).
  *  A tuple so the config layer's zod enum and this type share one source. */
@@ -24,6 +25,7 @@ export const RUN_STAT_KEYS = [
   'bitsGain',
   'cacheSize',
   'recruitOfferSize',
+  'drawAmount',
   'rarityWeightCommon',
   'rarityWeightUncommon',
   'rarityWeightRare',
@@ -44,6 +46,12 @@ export const RUN_STAT_BASES: Readonly<Record<RunStatKey, number>> = {
    *  unit count is deliberately NOT this stat (spec: "the post-encounter
    *  pool from three to four" — `PRICES.portStock.units` is untouched). */
   recruitOfferSize: RECRUITMENT.defaultOfferSize,
+  /** 65a — cards drawn into the hand each turn (the H5 `DECK.handSize`,
+   *  promoted to a foldable stat; base config-derived — one source of
+   *  truth). PERSISTENT draw modifiers land here (daemons); the transient
+   *  packet draws (65c) mutate the hand directly and never touch this
+   *  fold — the Option-B budget-basis split (worklog §65-shape-lock). */
+  drawAmount: DECK.handSize,
   /** 64b — the global tier weights, promoted to run stats (the no-commons
    *  shape-lock: Patrician's Seal is a `mult 0` fold on the common weight;
    *  the fold's max(0,·) clamp keeps a folded weight legal for the sampler).

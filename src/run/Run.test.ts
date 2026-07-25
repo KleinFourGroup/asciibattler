@@ -4177,6 +4177,52 @@ describe('64d — the drafting-daemon matrix (all three stacked × each characte
   });
 });
 
+describe('65a — drawAmount (the variable draw fold)', () => {
+  // Base pinned config-derived in runStats.test.ts (= DECK.handSize); read
+  // through the fold record here so a tuning edit keeps these honest.
+  const BASE = RUN_STAT_BASES.drawAmount;
+  /** A bespoke draw idol (no draw daemon ships in §65 — packets only). */
+  const drawIdol = (value: number, op: 'add' | 'mult' = 'add'): DaemonConfig => ({
+    id: 'test-draw',
+    name: 'Test Draw',
+    description: 'draw modifier',
+    rules: [{ kind: 'modifier', stat: 'drawAmount', op, value }],
+  });
+
+  it('effectiveDrawAmount folds over the config base and floors at the read site', () => {
+    expect(freshRunWithBus(7, { daemon: null }).run.effectiveDrawAmount).toBe(Math.floor(BASE));
+    expect(freshRunWithBus(7, { daemon: drawIdol(1) }).run.effectiveDrawAmount).toBe(
+      Math.floor(BASE + 1),
+    );
+    expect(freshRunWithBus(7, { daemon: drawIdol(1.5, 'mult') }).run.effectiveDrawAmount).toBe(
+      Math.floor(BASE * 1.5),
+    );
+  });
+
+  it('clamps at one — a pathological mult-0 cannot zero the hand into a soft-lock', () => {
+    expect(freshRunWithBus(7, { daemon: drawIdol(0, 'mult') }).run.effectiveDrawAmount).toBe(1);
+  });
+
+  it('a +1 idol deals one extra card into the turn-1 hand (baseline unchanged without it)', () => {
+    const dealt = (seed: number, daemon: DaemonConfig | null) => {
+      const { run } = freshRunWithBus(seed, { daemon });
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      return { hand: run.hand.length, roster: run.team.length };
+    };
+    const plus = dealt(31, drawIdol(1));
+    expect(plus.hand).toBe(Math.min(plus.roster, BASE + 1));
+    const base = dealt(31, null);
+    expect(base.hand).toBe(Math.min(base.roster, BASE));
+  });
+
+  it('a draw amount past the roster simply fields everyone (the H5 exhaustion contract)', () => {
+    const { run } = freshRunWithBus(31, { daemon: drawIdol(100) });
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    expect(run.hand).toHaveLength(run.team.length);
+    expect(run.drawPile).toHaveLength(0);
+  });
+});
+
 /**
  * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
  * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn

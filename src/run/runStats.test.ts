@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { RUN_STAT_BASES, foldRunStats, type RunStatModifier } from './runStats';
 import { RECRUITMENT } from '../config/recruitment';
+import { DECK } from '../config/deck';
 
 const mod = (
   stat: RunStatModifier['stat'],
@@ -89,6 +90,12 @@ describe('foldRunStats (47a — the run-stat fold vocabulary)', () => {
     const folded = foldRunStats(RUN_STAT_BASES, [mod('rarityWeightCommon', 'mult', 0)]);
     expect(folded.rarityWeightCommon).toBe(0);
     expect(folded.rarityWeightUncommon).toBe(RUN_STAT_BASES.rarityWeightUncommon);
+  });
+
+  // 65a — the deck.json discipline: the draw-amount base must track
+  // DECK.handSize, so a hand-size tuning edit can never desync the fold.
+  it('65a: drawAmount base derives from deck.json handSize', () => {
+    expect(RUN_STAT_BASES.drawAmount).toBe(DECK.handSize);
   });
 
   // 64c — a design literal, not config-derived: zero forced slots is the

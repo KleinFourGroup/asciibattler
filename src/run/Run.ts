@@ -693,7 +693,8 @@ export class Run {
   private runTriggers!: TriggerDispatcher<RunTriggerContextMap, Run>;
   /**
    * H5 — the card deck (draw → hand → discard), holding `rosterIndex` values.
-   * Each turn draws up to `DECK.handSize` cards into `hand` (only the hand
+   * Each turn draws up to `effectiveDrawAmount` cards into `hand` (65a — the
+   * fold over the H5 `DECK.handSize` base; only the hand
    * fights), reshuffling `discardPile` back into `drawPile` when it empties; the
    * fought hand recycles to `discardPile` at the next turn's start. Encounter-
    * SCOPED: rebuilt + reshuffled from the current roster at every encounter
@@ -1679,6 +1680,19 @@ export class Run {
    */
   get effectivePortLegendaryOffers(): number {
     return Math.floor(this.effectiveRunStats().portLegendaryOffers);
+  }
+
+  /**
+   * 65a — the per-turn draw amount: the `drawAmount` run-stat fold (base =
+   * `DECK.handSize`, config-derived) read at call time and FLOORED here (the
+   * fold contract — the fold never rounds; the read site does). Clamped ≥1:
+   * the roster can't be emptied (see `removeRosterUnit`), so a turn always
+   * fields at least one card — a pathological mult-0 modifier must not zero
+   * the hand into a soft-lock. Transient packet draws (65c) bypass this fold
+   * by design (the Option-B split, worklog §65-shape-lock).
+   */
+  get effectiveDrawAmount(): number {
+    return Math.max(1, Math.floor(this.effectiveRunStats().drawAmount));
   }
 
   /**
@@ -2901,15 +2915,17 @@ export class Run {
   }
 
   /**
-   * H5 — draw up to `DECK.handSize` cards from the deck. Pulls from the end of
+   * H5 — draw the turn's hand from the deck. Pulls from the end of
    * `drawPile`; when it empties mid-draw, the `discardPile` is shuffled back in
    * and drawing continues. Stops early only when BOTH piles are exhausted (a
-   * roster smaller than `handSize` simply fields everyone). Returns the drawn
-   * `rosterIndex` values; the caller seats them in `this.hand`.
+   * roster smaller than the draw amount simply fields everyone). Returns the
+   * drawn `rosterIndex` values; the caller seats them in `this.hand`.
+   * 65a — the target is `effectiveDrawAmount` (the fold; base = the H5
+   * `DECK.handSize`), so persistent daemon modifiers move it.
    */
   private drawHand(): number[] {
     const hand: number[] = [];
-    while (hand.length < DECK.handSize) {
+    while (hand.length < this.effectiveDrawAmount) {
       const card = this.drawCard();
       if (card === undefined) break; // deck fully dealt this turn
       hand.push(card);

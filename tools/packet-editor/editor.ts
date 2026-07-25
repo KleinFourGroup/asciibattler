@@ -201,6 +201,11 @@ function defaultEffect(op: PacketOp): WorkingEffect {
       };
     case 'healPool':
       return { op: 'healPool', amount: 3 };
+    // 65c — the hand ops.
+    case 'drawCards':
+      return { op: 'drawCards', count: 2 };
+    case 'discardCards':
+      return { op: 'discardCards' };
   }
 }
 
@@ -292,6 +297,24 @@ function buildEffectForm(): void {
       break;
     case 'injectRule':
       buildRuleForm(effect);
+      break;
+    // 65c — the hand ops.
+    case 'drawCards':
+      effectFormEl.appendChild(
+        numField('cards drawn (into this turn\'s hand)', effect.count, 1, (v) => {
+          effect.count = Math.max(1, Math.trunc(v));
+          refreshDerived();
+        }),
+      );
+      break;
+    case 'discardCards':
+      effectFormEl.appendChild(
+        el(
+          'p',
+          'hint',
+          'No knobs: discards the one targeted hand card (a count axis waits for content that demands it).',
+        ),
+      );
       break;
   }
 }
@@ -670,6 +693,12 @@ function describeEffect(effect: WorkingEffect): string {
         .join(', ');
       return `on ${r.on}${gate ? ` (${gate})` : ''}: ${what} — for the ${effect.duration}`;
     }
+    // 65c — the hand ops (transient: the drawAmount fold — and with it the
+    // enemy-budget basis — is untouched by design).
+    case 'drawCards':
+      return `draw ${effect.count} extra card(s) into this turn's hand (instant)`;
+    case 'discardCards':
+      return `send the targeted hand card to the discard — no refill (instant)`;
   }
 }
 

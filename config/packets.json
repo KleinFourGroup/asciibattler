@@ -90,6 +90,22 @@
       }
     },
     {
+      "id": "draw-two",
+      "name": "Surge",
+      "description": "Surge the deck: draw two extra cards into this turn's hand.",
+      "usableIn": ["preTurn"],
+      "target": "none",
+      "effect": { "op": "drawCards", "count": 2 }
+    },
+    {
+      "id": "discard-one",
+      "name": "Cull",
+      "description": "Cull one drawn card: send it to the discard, no refill.",
+      "usableIn": ["preTurn"],
+      "target": "unit",
+      "effect": { "op": "discardCards" }
+    },
+    {
       "id": "miner",
       "name": "Miner",
       "description": "Install a miner: for the rest of the run, each kill mines 2 bits.",

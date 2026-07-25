@@ -546,6 +546,10 @@ export interface GameEvents extends Record<string, unknown> {
    * plus the decremented redraw availability, so the pre-turn screen swaps
    * its card row + control state in place. Only ever fires during
    * `turn-intro` (the command is phase-gated), i.e. only on the live path.
+   * 65c — also fired by the packet hand ops (`drawCards` grows the hand,
+   * `discardCards` shrinks it): the event is now "the pre-turn hand
+   * changed", whatever moved it (`Run.emitHandChanged` is the one emit
+   * site). The hand length may DIFFER from the drawn size.
    *
    * K4 — also carries `empowerMagnitudes` (the K4 badge column, parallel to
    * the NEW hand): a refill can seat an already-empowered card, and the old

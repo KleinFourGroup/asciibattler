@@ -64,6 +64,13 @@ function effectLines(effect: PacketEffect): string[] {
           effect.redrawsPerTurn,
         )}, "maxCardsPerTurn": ${JSON.stringify(effect.maxCardsPerTurn)} }`,
       ];
+    // 65c — the hand ops (flat, inline like healPool).
+    case 'drawCards':
+      return [
+        `      "effect": { "op": "drawCards", "count": ${JSON.stringify(effect.count)} }`,
+      ];
+    case 'discardCards':
+      return ['      "effect": { "op": "discardCards" }'];
     case 'applyBuff': {
       const lines = [
         '      "effect": {',

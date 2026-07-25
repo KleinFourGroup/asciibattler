@@ -29,6 +29,18 @@
  *                     trigger exists — kickoff audit finding #1).
  * - `healPool`      — instant run-domain heal (the daemon op, fired
  *                     actively).
+ * - `drawCards`     — 65c: draw `count` extra cards into THIS turn's hand,
+ *                     immediately (preTurn only — there is no hand at the
+ *                     map). TRANSIENT by design: the cards join `Run.hand`
+ *                     directly and the `drawAmount` fold is untouched, so
+ *                     the enemy-budget basis never sees a packet draw (the
+ *                     Option-B split, worklog §65-shape-lock). Stops early
+ *                     on a fully dealt deck (the H5 exhaustion contract).
+ * - `discardCards`  — 65c: send the TARGETED hand card to the discard; the
+ *                     hand shrinks (no refill — that's what distinguishes
+ *                     it from a redraw). One card per fire (the authored
+ *                     packet is "discard one"); a count axis waits for
+ *                     content that demands it.
  *
  * The (op × target × context) legality matrix is enforced at parse time
  * (the 47b `RuleSchema` discipline) and EXPORTED (`PACKET_OP_TARGET` /
@@ -100,11 +112,25 @@ const InjectRuleOpSchema = z.object({
   duration: z.enum(['encounter', 'run']),
 });
 
+// 65c — the hand ops (packet-only pool extensions, the ApplyBuff/InjectRule
+// precedent). Instant (no duration axis — a draw/discard persists as hand
+// state, nothing expires).
+const DrawCardsOpSchema = z.object({
+  op: z.literal('drawCards'),
+  count: z.number().int().positive(),
+});
+
+const DiscardCardsOpSchema = z.object({
+  op: z.literal('discardCards'),
+});
+
 const PacketEffectSchema = z.discriminatedUnion('op', [
   ApplyBuffOpSchema,
   GrantRedrawsOpSchema,
   InjectRuleOpSchema,
   HealPoolOpSchema,
+  DrawCardsOpSchema,
+  DiscardCardsOpSchema,
 ]);
 
 type PacketOpKey = z.infer<typeof PacketEffectSchema>['op'];
@@ -116,6 +142,8 @@ export const PACKET_OP_TARGET = {
   grantRedraws: 'none',
   injectRule: 'none',
   healPool: 'none',
+  drawCards: 'none',
+  discardCards: 'unit',
 } as const satisfies Record<PacketOpKey, PacketTargetKind>;
 
 /** The op → legal-contexts matrix (same one-source rule). Content-driven:
@@ -126,6 +154,9 @@ export const PACKET_OP_CONTEXTS = {
   grantRedraws: ['preTurn'],
   injectRule: ['preTurn'],
   healPool: ['preTurn', 'outOfBattle'],
+  // 65c — hand ops are preTurn-ONLY: there is no hand at the map.
+  drawCards: ['preTurn'],
+  discardCards: ['preTurn'],
 } as const satisfies Record<PacketOpKey, readonly UseContext[]>;
 
 const PacketSchema = z
@@ -196,7 +227,9 @@ export type PacketEffect =
   | { op: 'applyBuff'; buff: EmpowerConfig['buff']; duration: 'encounter' }
   | { op: 'grantRedraws'; redrawsPerTurn: number; maxCardsPerTurn: number }
   | { op: 'injectRule'; rule: BattleRule; duration: 'encounter' | 'run' }
-  | { op: 'healPool'; amount: number };
+  | { op: 'healPool'; amount: number }
+  | { op: 'drawCards'; count: number }
+  | { op: 'discardCards' };
 
 export interface PacketConfig {
   id: string;
@@ -235,6 +268,10 @@ function normalizeEffect(raw: RawPacket['effect']): PacketEffect {
     }
     case 'healPool':
       return { op: 'healPool', amount: raw.amount };
+    case 'drawCards':
+      return { op: 'drawCards', count: raw.count };
+    case 'discardCards':
+      return { op: 'discardCards' };
   }
 }
 

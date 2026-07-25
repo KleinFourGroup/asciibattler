@@ -4223,6 +4223,30 @@ describe('65a — drawAmount (the variable draw fold)', () => {
   });
 });
 
+// A hand-relative reference encounter, DERIVED from the catalog (no
+// hardcoded id to drift): first wave plain (unwrapping the catalog's
+// standard loop{forever} shell), count hand-relative, budget
+// mean-relative, uncapped — both resolver axes read the seam directly.
+// Shared by the 65b seam pins and the 65c transient-exclusion pin.
+const HAND_RELATIVE_REF = ENCOUNTERS.flatMap((e) => {
+  const first = e.waves[0];
+  const entry = first?.kind === 'loop' ? first.body[0] : first;
+  return e.kind === 'normal' &&
+    entry !== undefined &&
+    entry.kind === 'wave' &&
+    entry.spec.count.kind === 'hand' &&
+    entry.spec.levelBudget.kind === 'mean' &&
+    entry.spec.levelCap === undefined
+    ? [
+        {
+          id: e.id,
+          countFactor: entry.spec.count.factor,
+          budgetFactor: entry.spec.levelBudget.factor,
+        },
+      ]
+    : [];
+})[0]!;
+
 describe('65b — the budget seam consumes the draw fold (Option B)', () => {
   const drawIdol = (value: number): DaemonConfig => ({
     id: 'test-draw',
@@ -4231,28 +4255,7 @@ describe('65b — the budget seam consumes the draw fold (Option B)', () => {
     rules: [{ kind: 'modifier', stat: 'drawAmount', op: 'add', value }],
   });
 
-  // A hand-relative reference encounter, DERIVED from the catalog (no
-  // hardcoded id to drift): first wave plain (unwrapping the catalog's
-  // standard loop{forever} shell), count hand-relative, budget
-  // mean-relative, uncapped — both resolver axes read the seam directly.
-  const ref = ENCOUNTERS.flatMap((e) => {
-    const first = e.waves[0];
-    const entry = first?.kind === 'loop' ? first.body[0] : first;
-    return e.kind === 'normal' &&
-      entry !== undefined &&
-      entry.kind === 'wave' &&
-      entry.spec.count.kind === 'hand' &&
-      entry.spec.levelBudget.kind === 'mean' &&
-      entry.spec.levelCap === undefined
-      ? [
-          {
-            id: e.id,
-            countFactor: entry.spec.count.factor,
-            budgetFactor: entry.spec.levelBudget.factor,
-          },
-        ]
-      : [];
-  })[0]!;
+  const ref = HAND_RELATIVE_REF;
 
   /** Enter a forced hand-relative encounter; read the resolved turn-1 wave. */
   const turn1 = (daemon: DaemonConfig | null) => {
@@ -4285,6 +4288,103 @@ describe('65b — the budget seam consumes the draw fold (Option B)', () => {
     const { run, enemies, basis } = turn1(drawIdol(100));
     expect(basis).toBe(run.team.length);
     expect(enemies).toHaveLength(Math.round(ref.countFactor * basis));
+  });
+});
+
+describe('65c — the hand-op packets (drawCards / discardCards)', () => {
+  // Catalog-derived count (the balance-proof discipline — never hardcode
+  // what packets.json authors).
+  const drawCount = (() => {
+    const p = packetById('draw-two');
+    if (p === undefined || p.effect.op !== 'drawCards') {
+      throw new Error("test fixture: 'draw-two' must be a drawCards packet");
+    }
+    return p.effect.count;
+  })();
+
+  it('draw-two grows the hand by its authored count, straight off the draw pile', () => {
+    const { run, bus } = gatedToFirstTurnIntro(1, null);
+    run.addPacket('draw-two');
+    const handBefore = run.hand.length;
+    const pileBefore = run.drawPile.length;
+    const swaps: GameEvents['turn:handRedrawn'][] = [];
+    bus.on('turn:handRedrawn', (e) => swaps.push(e));
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    expect(run.hand).toHaveLength(handBefore + drawCount);
+    expect(run.drawPile).toHaveLength(pileBefore - drawCount);
+    expect(run.cache).toEqual([]);
+    // The repaint channel: one hand-changed emit, payload parallel to the
+    // GROWN hand (the badge column included — a length the K3/K4 consumers
+    // never saw before 65c).
+    expect(swaps).toHaveLength(1);
+    expect(swaps[0]!.hand).toHaveLength(handBefore + drawCount);
+    expect(swaps[0]!.empowerMagnitudes).toHaveLength(handBefore + drawCount);
+  });
+
+  it('stops early on a fully dealt deck — consume-on-fire stands (the patch-at-full-health precedent)', () => {
+    const { run } = gatedToFirstTurnIntro(2, null);
+    run.addPacket('draw-two');
+    run.addPacket('draw-two');
+    run.addPacket('draw-two');
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    expect(run.hand).toHaveLength(run.team.length); // everyone fielded, no dupes
+    expect(run.drawPile).toHaveLength(0);
+    expect(run.discardPile).toHaveLength(0); // turn 1 — nothing to reshuffle
+    expect(run.cache).toEqual([]); // all three consumed regardless
+  });
+
+  it('cull sends the targeted card to the discard, no refill', () => {
+    const { run } = gatedToFirstTurnIntro(3, null);
+    run.addPacket('discard-one');
+    const handBefore = [...run.hand];
+    const target = handBefore[2]!;
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 2 });
+    expect(run.hand).toEqual([...handBefore.slice(0, 2), ...handBefore.slice(3)]);
+    expect(run.discardPile).toEqual([target]);
+    expect(run.cache).toEqual([]);
+  });
+
+  it('rejects at the validation gate: missing/bad handIndex, and the map context', () => {
+    const gated = gatedToFirstTurnIntro(4, null);
+    gated.run.addPacket('discard-one');
+    gated.run.dispatch({ kind: 'usePacket', cacheIndex: 0 }); // missing handIndex
+    gated.run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 99 }); // out of range
+    expect(gated.run.cache).toEqual(['discard-one']);
+    // preTurn-only ops reject at the map (there is no hand there).
+    const { run } = freshRunWithBus(4, { daemon: null });
+    run.addPacket('draw-two');
+    run.addPacket('discard-one');
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    run.dispatch({ kind: 'usePacket', cacheIndex: 1, rosterIndex: 0 });
+    expect(run.cache).toEqual(['draw-two', 'discard-one']);
+  });
+
+  it('the last-card guard: culling down to one card, the final fire rejects (no empty hand)', () => {
+    const { run } = gatedToFirstTurnIntro(5, null);
+    for (let i = 0; i < 6; i++) run.addPacket('discard-one');
+    for (let i = 0; i < 5; i++) run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
+    expect(run.hand).toHaveLength(1);
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
+    expect(run.hand).toHaveLength(1); // rejected — the hand cannot empty
+    expect(run.cache).toEqual(['discard-one']); // nothing consumed on the reject
+  });
+
+  it('the Option-B exclusion pin: a fired draw packet grows the hand but NOT the enemy-budget basis', () => {
+    const { run } = gatedToFirstTurnIntro(6, null, {
+      forcedEncounterId: HAND_RELATIVE_REF.id,
+    });
+    run.addPacket('draw-two');
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    const basis = Math.min(run.team.length, run.effectiveDrawAmount);
+    expect(run.hand.length).toBe(basis + drawCount); // non-vacuous: hand ≠ basis
+    run.dispatch({ kind: 'advanceTurn' });
+    // The wave resolved AFTER the hand grew — and priced against the FOLD,
+    // not the fielded hand (the 65b seam reads effectiveDrawAmount; packet
+    // draws are pure advantage by design — worklog §65-shape-lock).
+    const enemies = run.currentEncounter!.enemyTeam;
+    expect(enemies).toHaveLength(Math.round(HAND_RELATIVE_REF.countFactor * basis));
   });
 });
 

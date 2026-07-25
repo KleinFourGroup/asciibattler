@@ -29,7 +29,9 @@
     "byId": {
       "miner": 40,
       "shield": 10,
-      "venom": 25
+      "venom": 25,
+      "draw-two": 20,
+      "discard-one": 8
     }
   },
   "daemons": {

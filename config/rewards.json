@@ -5,7 +5,8 @@
       "entries": [
         { "kind": "bits", "weight": 1, "min": 8, "max": 15 },
         { "kind": "packet", "weight": 0.25, "packet": "patch" },
-        { "kind": "packet", "weight": 0.25, "packet": "shield" }
+        { "kind": "packet", "weight": 0.25, "packet": "shield" },
+        { "kind": "packet", "weight": 0.25, "packet": "discard-one" }
       ]
     },
     {
@@ -13,7 +14,8 @@
       "entries": [
         { "kind": "bits", "weight": 1, "min": 20, "max": 35 },
         { "kind": "packet", "weight": 0.5, "packet": "reroute" },
-        { "kind": "packet", "weight": 0.5, "packet": "shield" }
+        { "kind": "packet", "weight": 0.5, "packet": "shield" },
+        { "kind": "packet", "weight": 0.5, "packet": "draw-two" }
       ]
     },
     {

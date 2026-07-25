@@ -1782,6 +1782,9 @@ export class Run {
     // targets a HAND position (the redraw/empower click contract), out-of-
     // battle a roster slot. Target-less packets ignore both fields.
     let targetSlot: number | null = null;
+    // 65c — hand ops need the POSITION, not just the slot (discard splices
+    // the hand). Set only on the preTurn unit-target path.
+    let targetHandIndex: number | null = null;
     if (packet.target === 'unit') {
       if (context === 'preTurn') {
         if (
@@ -1793,6 +1796,7 @@ export class Run {
           return;
         }
         targetSlot = this.hand[handIndex]!;
+        targetHandIndex = handIndex;
       } else {
         if (
           rosterIndex === undefined ||
@@ -1806,6 +1810,10 @@ export class Run {
       }
     }
     const effect = packet.effect;
+    // 65c — validate-first: discarding the LAST hand card would field an
+    // empty team at beginTurn (a self-inflicted instant loss shaped like a
+    // misclick) — reject like any other illegal target, consuming nothing.
+    if (effect.op === 'discardCards' && this.hand.length <= 1) return;
     switch (effect.op) {
       case 'applyBuff':
         // The same builder as the empower path (magnitude 1, endOfTurn seed
@@ -1849,6 +1857,28 @@ export class Run {
         break;
       case 'healPool':
         this.executeInstantOps([effect]);
+        break;
+      case 'drawCards':
+        // 65c — the TRANSIENT draw: cards join the hand directly, the
+        // `drawAmount` fold (and with it the enemy-budget basis) untouched
+        // by design (the Option-B split, worklog §65-shape-lock). Stops
+        // early on a fully dealt deck (the H5 exhaustion contract) —
+        // consume-on-fire stands regardless (the patch-at-full-health
+        // precedent: order of consumption IS order of effect).
+        for (let i = 0; i < effect.count; i++) {
+          const card = this.drawCard();
+          if (card === undefined) break;
+          this.hand.push(card);
+        }
+        this.emitHandChanged();
+        break;
+      case 'discardCards':
+        // 65c — send the targeted card to the discard; the hand SHRINKS
+        // (no refill — that's what distinguishes it from a redraw). The
+        // discarded card recycles via the normal H5 reshuffle.
+        this.discardPile.push(this.hand[targetHandIndex!]!);
+        this.hand.splice(targetHandIndex!, 1);
+        this.emitHandChanged();
         break;
     }
     // Consume + repaint: the splice emits the shrunk cache; run:packetUsed
@@ -2306,15 +2336,24 @@ export class Run {
     for (const pos of positions) this.discardPile.push(this.hand[pos]!);
     for (const pos of positions) this.hand[pos] = this.drawCard()!;
     grant.used += 1;
+    this.emitHandChanged();
+  }
+
+  /**
+   * The one `turn:handRedrawn` emit site — the full re-derived hand state
+   * (hand + both piles + grants + the K4 badge column), so the pre-turn
+   * screen swaps everything in place from the payload. Fired by the K3
+   * redraw and (65c) the packet hand ops — any pre-turn hand mutation.
+   * R2 — the piles re-send because the mutation moved cards between them.
+   * K4 — the badge column re-derives: a refill may seat an already-empowered
+   * card, and old positions no longer line up after a splice.
+   */
+  private emitHandChanged(): void {
     this.bus.emit('turn:handRedrawn', {
       hand: this.hand.map((idx) => this.team[idx]!),
-      // R2 — the redraw moved cards between hand/draw/discard; re-send the piles
-      // so the pre-turn pile views reflect the swap.
       drawPile: this.resolvePileForDisplay(this.drawPile),
       discardPile: this.resolvePileForDisplay(this.discardPile),
       grants: this.grantViews(),
-      // K4 — the refill may seat an already-empowered card (and the old
-      // positions no longer line up), so the badge column re-derives here.
       empowerMagnitudes: this.empowerMagnitudes(),
     });
   }

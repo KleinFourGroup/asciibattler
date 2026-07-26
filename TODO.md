@@ -151,6 +151,18 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   `setIf` + a summary line in
   [tools/run-config/launcher.ts](tools/run-config/launcher.ts).
 
+- [ ] **Revisit the 53g human-fixture test's purpose.** The engine-era guard
+  has kept
+  [tests/gauntlet/humanFixture.test.ts](tests/gauntlet/humanFixture.test.ts)
+  `it.skipIf`-skipped since 56b (2026-07-15) — it's the standing "1 skipped"
+  in every test run. The skip was designed as "waiting on a fixture
+  re-recorded on the current engine," but there may be no human
+  remeasurement for some time (the §68 protocol-v2 step decides whether a
+  new human baseline is even wanted for the three-character world). Decide:
+  re-record at the next human gauntlet, or retire the replay test to
+  archive/BALANCE citations and keep only the fixture-shape test. Harmless
+  meanwhile. Surfaced by the user 2026-07-26 (worklog §66 era).
+
 - [ ] **A true chaos fuzz driver (random legal `RunCommand` dispatch).** The
   fuzz harness has fully evolved into a *balance* harness: the `random`
   strategy randomizes only 2 of the ~10 decision surfaces `Run` exposes

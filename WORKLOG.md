@@ -1517,3 +1517,43 @@ As audited, with one finding that IMPROVED the round's prediction:
   save/load reproduces the exact boss + board · both shipped bosses
   X2-force at pre-roll · kind-mismatch fallthrough · unknown-id
   rejection. 2319→2326 main; 279 fuzz:smoke unchanged.
+
+### 66b — the forewarning surface (2026-07-26, `d8d354f`; feel-read signed)
+
+The shape-lock's three calls, rendered: `Run.bossForewarning` (the
+display pair — catalog boss name + layout name, null = procedural; the
+"Uncharted Ground" label deliberately lives in MapScreen, not Run —
+flavor is view voice, the run reports identity) → the banner splits
+into `.map-banner-title` + a NEON_RED `.map-banner-boss` sub-line
+("BOSS: THE BANDIT KING — DESERT FORTRESS", 13px under the 22px amber,
+0.85 opacity — a notice, not an alarm; red rhymes with the `!` node),
+and the boss node names its fight on hover. MapScene feeds the getter
+like `currentSectorTitle` (same always-available contract — the pair
+exists from sector entry).
+
+Verification split per TESTING.md: one run-layer pin (name from the
+catalog; null layoutName on the G1 forced-procedural arm) headless;
+the UI browser-verified on dev-preview via computed styles + DOM
+(screenshots wouldn't composite in the backgrounded pane): both label
+branches live ("Desert Fortress" named / "Uncharted Ground"
+procedural — the latter seed incidentally rolling the OTHER boss,
+demonstrating pre-roll variety), hover title set, zero console
+errors, and the DOM line cross-checked against the live run's
+`bossEncounterId`/`bossEncounterMap` — display provably matches
+truth. Native feel-read signed same-day ("looks perfect").
+
+### 66-close — the phase verdict (2026-07-26, user-signed)
+
+All five exit criteria met: forewarning visible from sector start
+(66b, feel-read) · mid-sector save/load reproduces the exact boss +
+board (66a pin — the FULL board, exceeding the criterion) ·
+determinism green on the new stream (the board + fuzz:smoke through
+the hook, twice) · smoke re-pins dispositioned as ZERO NEEDED with
+the narrowed-break proof on record (the deliberate-commitment
+criterion satisfied by documentation rather than churn) · the v39
+ledger entry written. Scope guards held: boss nodes only, no layout
+preview. Two cuts, two commits, one day. Carried out: the 53g
+human-fixture revisit (TODO, user-surfaced mid-phase — the standing
+"1 skipped" needs a purpose decision if no human remeasurement
+comes soon). 2319→2327 main (+1 66b getter pin) · 279 fuzz:smoke
+untouched.

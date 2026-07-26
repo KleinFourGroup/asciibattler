@@ -158,32 +158,24 @@ worklog §65-kickoff–§65f.
   the 65e feel read) ✅ (`7916e64` + `0e66ced` + `4ef20e9`), native
   feel-read signed; worklog §65f.
 
-## Phase 66 — Boss forewarning
+## Phase 66 — Boss forewarning ✅ CLOSED 2026-07-26 (user-signed)
 
-**Charter:** boss encounter + layout pre-rolled at sector start
-(**RunSnapshot v38→v39**; serialize the `{bossEncounterId,
-bossEncounterMap}` pair — the portStock pending-offer precedent), surfaced
-on the sector map (net-new but small UI; the node divs + banner are the
-hooks). Identity + layout ONLY — waves still resolve at fight time.
+**Outcome:** the sector-start pre-roll pair `{bossEncounterId,
+bossEncounterMap}` (**RunSnapshot v38→v39**; the FULL board baked, so
+save/load reproduces the exact battlefield) rolled on the sector-entry
+fork at both seams and consumed at the boss node, surfaced as the
+banner sub-line + boss-node hover title ("Uncharted Ground" for
+procedural, layout name shown — revisit trigger: playtest "too easy"
+feedback). The predicted stream break landed NARROWER than planned:
+pre-boss content stays seed-identical, zero smoke re-pins needed. All
+five exit criteria met in two cuts, one day. Detail: worklog
+§66-kickoff–§66-close.
 
-- **Depends on:** ordering only (the deliberate second stream break, last
-  before the measurement tail).
-- **Risk:** high on measurement (every seed re-rolls; all seed-pinned
-  baselines shift), low on code.
-- **Exit criteria:** boss identity + layout visible on the map from
-  sector start; a mid-sector save/load reproduces the exact boss;
-  determinism suite green on the NEW stream; smoke re-pins committed
-  deliberately; v39 ledger entry.
-- **Scope guards:** boss nodes only (no elite/normal pre-roll); no layout
-  PREVIEW rendering (name/identity display, not a minimap).
 - [x] **66a** — the pre-roll core ✅ 2026-07-26 (`f9b44f7`): v38→v39;
   the stream break landed NARROWER than predicted (pre-boss content
   seed-identical; zero smoke re-pins needed); worklog §66a.
-- [ ] **66b** — the forewarning surface: a `Run.bossForewarning` getter →
-  a banner sub-line ("Boss: \<name\> — \<layout\>"; procedural =
-  "Uncharted Ground", USER) + a boss-node hover title; layout name shown
-  (USER — revisit trigger: playtest "too easy" feedback); native
-  feel-read signs.
+- [x] **66b** — the forewarning surface ✅ 2026-07-26 (`d8d354f`),
+  native feel-read signed; worklog §66b.
 
 ## Phase 67 — The second sector
 

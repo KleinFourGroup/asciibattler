@@ -199,10 +199,9 @@ first time.
   the transition; forewarning re-rolls per sector.
 - **Scope guards:** ONE new sector; no new encounter/layout mechanics
   (content from existing catalogs; new catalog ENTRIES are fine).
-- [ ] **67a** — the sector-transition gate, headless-core-first: a real
-  `sectorCleared` phase + continue command + `sector:cleared` emit
-  (**RunSnapshot v39→v40 predicted**); kills the Game-layer reward-strand
-  path; harness taught; headless pins.
+- [x] **67a** — the sector-transition gate ✅ 2026-07-26 (`69bf027`):
+  v39→v40 as predicted; shipped-content byte-neutral (the gate sits past
+  the shipped sink — zero re-pins); worklog §67a.
 - [ ] **67b** — SectorClearedScene/Screen (GameOverScene clone) + Game
   routing; browser-verified + user feel-read.
 - [ ] **67c** — "The Deep End" lands: the sectors.json entry + the

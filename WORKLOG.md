@@ -1679,3 +1679,34 @@ Three conversations, all resolved same-day.
   seed-identical" audit nicety at 67c — accepted, §68 re-anchors.
 - The catalog entries + the manifest re-pin (+4 ids, Spreaders
   elite) land in the kickoff commit, unpooled-inert until 67c.
+
+### 67a — the sector-transition gate (2026-07-26, `69bf027`)
+
+As shape-locked, v39→v40. `RunPhase` gains `sectorCleared`;
+`advanceSector` swaps the sector state FIRST (the defeat/complete
+shape — the screen will show a settled run), then lands on the gate
+and emits `sector:cleared {clearedSectorTitle, nextSectorTitle}` (the
+cleared title captured pre-swap — by emit time the run only knows the
+successor; the next title mirrors the live getter, the 66b contract).
+`dismissSectorCleared` releases to 'map'; Game forwards it with the
+standard `phase === 'map'` fallback swap (the scene lands at 67b);
+the harness dismisses it headlessly (a new phase case its
+`satisfies never` guard forced — the gate is now exercised in every
+future multi-sector fuzz run, one of the fork-(b) arguments made
+structural).
+
+- **Shipped-content BYTE-NEUTRAL, zero re-pins:** the change sits
+  entirely past the sink in the shipped one-node DAG — no RNG
+  behavior differs anywhere reachable, so the full suite only moved
+  where the two sector-walk pins were deliberately flipped to drive
+  the gate, and fuzz:smoke passed 279/279 untouched. The round's
+  remaining content break arrives at 67c (the DAG edge), as cut.
+- Pins: the flipped advance test now asserts the gate + the emit
+  payload (config-derived titles) + the 66a re-roll across the
+  advance (fresh board reference) + the dismiss release; new pins
+  for the outside-phase silent no-op and the mid-gate save/load
+  RE-SHOWING the gate (the fork's restore-fidelity argument, proven
+  headlessly). Three literal v39 pins → v40. 2327→2329 main.
+- 67c fallout noted at build time: the `fromJSON` comment "the
+  shipped DAG is a single sink, so a save is never taken mid-walk"
+  (~3362) goes stale when the edge lands — on the 67c list.

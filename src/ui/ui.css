@@ -1218,6 +1218,62 @@ body {
   color: #000;
 }
 
+/* 67b — the sector-cleared screen: the gameover-screen chrome vocabulary
+   (opaque black, mono, amber button), but its own accent story — an amber
+   heading (a milestone, not the run's end: green stays reserved for Run
+   Complete) with a green "Next:" line pointing forward. */
+
+.sectorcleared-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  font-family: var(--font-mono);
+}
+
+.sectorcleared-heading {
+  font-size: 42px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #ffb000; /* TERMINAL_AMBER */
+}
+
+.sectorcleared-subtext {
+  font-size: 14px;
+  color: #664600; /* DARK_TERMINAL_AMBER */
+  /* Dim against black (the gameover--complete subtext trick): lift so it
+     reads without competing with the heading. */
+  filter: brightness(1.6);
+}
+
+.sectorcleared-next {
+  font-size: 14px;
+  color: #33ff00; /* TERMINAL_GREEN — the road ahead */
+}
+
+.sectorcleared-button {
+  margin-top: 16px;
+  background: transparent;
+  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  color: #ffb000;
+  padding: 10px 24px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.sectorcleared-button:hover {
+  background: #ffb000;
+  color: #000;
+}
+
 /* Character select (63e). The run's first screen when no ?character= pins
    the choice. Functional, not art-directed (the §63 scope guard) — the
    gameover-screen chrome vocabulary: opaque black, mono, amber borders. */

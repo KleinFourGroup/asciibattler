@@ -20,6 +20,7 @@ import { PortScene } from './scenes/PortScene';
 import { BitsOverlay } from './ui/BitsOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { GameOverScene } from './scenes/GameOverScene';
+import { SectorClearedScene } from './scenes/SectorClearedScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
 import { characterById, type CharacterConfig } from './config/characters';
 import { PreTurnScene } from './scenes/PreTurnScene';
@@ -243,6 +244,12 @@ export class Game implements RunDispatcher {
     this.bus.on('port:entered', () => this.swap(new PortScene()));
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
+    // 67b — the between-sector beat (the 67a gate's screen). Titles ride the
+    // payload: the cleared sector is gone from Run by emit time, so no getter
+    // can name it (the GameOverScene fixed-at-construction shape).
+    this.bus.on('sector:cleared', (e) =>
+      this.swap(new SectorClearedScene(e.clearedSectorTitle, e.nextSectorTitle)),
+    );
 
     // H4b — the turn-gate screens. These only fire when `run.pauseAtTurnGates`
     // is on (Game sets it in createRun); the headless loop never emits them.
@@ -283,6 +290,9 @@ export class Game implements RunDispatcher {
     this.bus.on('recruit:offered', () => this.audio.play('recruit'));
     this.bus.on('run:victory', () => this.audio.play('win'));
     this.bus.on('run:defeated', () => this.audio.play('lose'));
+    // 67b — the sector-cleared beat shares the win sting (a victory moment,
+    // just not the last one). Revisit at the feel-read if it wants its own.
+    this.bus.on('sector:cleared', () => this.audio.play('win'));
 
     // J3 — one page-lifetime keydown sink for every rebindable hotkey. On
     // `window` (not the canvas) so a binding fires without the play area being

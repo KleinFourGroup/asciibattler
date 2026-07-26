@@ -545,6 +545,43 @@ export interface GameEvents extends Record<string, unknown> {
   };
 
   /**
+   * 65f — ONE card moved into the hand off the draw pile (the `drawCard()`
+   * chokepoint — the deal, a redraw refill, and a Surge all emit here).
+   * A presentation CUE, not authoritative state: the swap events
+   * (`turn:starting` / `turn:handRedrawn`) remain the truth the UI
+   * reconciles to; these cues exist so the pile chips can pulse SERIALLY,
+   * one per card (the §65f deck-transaction feel), and so audio can ride
+   * per-card later. Counts are the piles AFTER this card moved. Emits draw
+   * no RNG and serialize nothing.
+   */
+  'deck:cardDrawn': {
+    drawPile: number;
+    discardPile: number;
+  };
+
+  /**
+   * 65f — ONE card moved to the discard pile (the turn-start hand recycle,
+   * a redraw send-off, or a Cull). Same cue-not-truth contract as
+   * `deck:cardDrawn`. The recycle fires with no screen up — harmless.
+   */
+  'deck:cardDiscarded': {
+    drawPile: number;
+    discardPile: number;
+  };
+
+  /**
+   * 65f — the discard pile was shuffled back into the draw pile (the H5
+   * cycle, inside `drawCard()` when the draw pile runs dry mid-draw). ONE
+   * event for the whole flip — the shuffle is one conceptual action (the
+   * §65f shape-lock: a single distinct pulse, not a serial tick-down).
+   * Counts are post-flip, pre-pop (`discardPile` is always 0).
+   */
+  'deck:reshuffled': {
+    drawPile: number;
+    discardPile: number;
+  };
+
+  /**
    * K3 — a `redrawCards` command landed at the pre-turn gate: the selected
    * cards went to the discard and fresh draws took their hand positions.
    * Carries the FULL new hand (same draw-order contract as `turn:starting`)

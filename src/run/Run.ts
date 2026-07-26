@@ -1576,7 +1576,9 @@ export class Run {
    * the deck draw earlier in wall-clock doesn't shift it.
    */
   private drawTurnHand(): void {
-    this.discardPile.push(...this.hand);
+    // 65f — per-card through the discard chokepoint (the recycle cues fire
+    // with no gate screen up — harmless, and honest at the one emit site).
+    for (const idx of this.hand) this.discardCard(idx);
     this.hand = this.drawHand();
   }
 
@@ -1905,7 +1907,7 @@ export class Run {
         // 65c — send the targeted card to the discard; the hand SHRINKS
         // (no refill — that's what distinguishes it from a redraw). The
         // discarded card recycles via the normal H5 reshuffle.
-        this.discardPile.push(this.hand[targetHandIndex!]!);
+        this.discardCard(this.hand[targetHandIndex!]!);
         this.hand.splice(targetHandIndex!, 1);
         handChanged = true;
         break;
@@ -2367,7 +2369,7 @@ export class Run {
     });
     if (rejection !== null) return;
     const positions = [...handIndices].sort((a, b) => a - b);
-    for (const pos of positions) this.discardPile.push(this.hand[pos]!);
+    for (const pos of positions) this.discardCard(this.hand[pos]!);
     for (const pos of positions) this.hand[pos] = this.drawCard()!;
     grant.used += 1;
     this.emitHandChanged();
@@ -3016,6 +3018,20 @@ export class Run {
   }
 
   /**
+   * 65f — discard ONE card (the `drawCard` mirror): push to the discard
+   * pile + the per-card cue, so every discard route (the turn-start hand
+   * recycle, a redraw send-off, a Cull) emits from one site. Cue-not-truth
+   * (the events.ts contract); draws no RNG.
+   */
+  private discardCard(rosterIndex: number): void {
+    this.discardPile.push(rosterIndex);
+    this.bus.emit('deck:cardDiscarded', {
+      drawPile: this.drawPile.length,
+      discardPile: this.discardPile.length,
+    });
+  }
+
+  /**
    * K3 — draw ONE card (factored out of `drawHand`, byte-identical pop +
    * reshuffle order, so the turn draw is unchanged): pop from `drawPile`,
    * reshuffling the discard back in when it's empty (the only RNG draw in the
@@ -3028,8 +3044,22 @@ export class Run {
       this.drawPile = this.discardPile;
       this.discardPile = [];
       shuffleInPlace(this.drawPile, this.deckRng);
+      // 65f — the reshuffle cue (one event for the whole flip; post-flip,
+      // pre-pop counts). Cue-not-truth: see the events.ts contract.
+      this.bus.emit('deck:reshuffled', {
+        drawPile: this.drawPile.length,
+        discardPile: 0,
+      });
     }
-    return this.drawPile.pop();
+    // The pile is guaranteed non-empty here (the guard above returned or
+    // reshuffled), so the pop always yields a card.
+    const card = this.drawPile.pop()!;
+    // 65f — the per-card draw cue (post-pop counts; cue-not-truth).
+    this.bus.emit('deck:cardDrawn', {
+      drawPile: this.drawPile.length,
+      discardPile: this.discardPile.length,
+    });
+    return card;
   }
 
   toJSON(): RunSnapshot {

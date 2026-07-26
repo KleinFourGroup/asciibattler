@@ -4457,6 +4457,103 @@ describe('65d — the max hand size (user-signed cap, deck.json)', () => {
   });
 });
 
+describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffled)', () => {
+  type Cue = { kind: 'drawn' | 'discarded' | 'reshuffled'; drawPile: number; discardPile: number };
+  /** Subscribe a cue recorder to all three deck events. */
+  const record = (bus: EventBus<GameEvents>): Cue[] => {
+    const cues: Cue[] = [];
+    bus.on('deck:cardDrawn', (e) => cues.push({ kind: 'drawn', ...e }));
+    bus.on('deck:cardDiscarded', (e) => cues.push({ kind: 'discarded', ...e }));
+    bus.on('deck:reshuffled', (e) => cues.push({ kind: 'reshuffled', ...e }));
+    return cues;
+  };
+
+  it('the turn-1 deal cues one drawn per card, counts descending, nothing else', () => {
+    const { run, bus } = freshRunWithBus(9, { daemon: null });
+    run.pauseAtTurnGates = true;
+    const cues = record(bus);
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    const dealt = run.hand.length;
+    const roster = run.team.length;
+    expect(cues).toHaveLength(dealt); // no recycle, no reshuffle at turn 1
+    cues.forEach((cue, i) => {
+      expect(cue).toEqual({ kind: 'drawn', drawPile: roster - 1 - i, discardPile: 0 });
+    });
+  });
+
+  it('a Cull cues exactly one discarded; a Surge cues its drawn count', () => {
+    const { run, bus } = gatedToFirstTurnIntro(9, null);
+    run.addPacket('discard-one');
+    run.addPacket('draw-two');
+    const cues = record(bus);
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
+    expect(cues).toEqual([
+      { kind: 'discarded', drawPile: run.team.length - DECK.handSize, discardPile: 1 },
+    ]);
+    cues.length = 0;
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    expect(cues.map((c) => c.kind)).toEqual(['drawn', 'drawn']);
+  });
+
+  it('a redraw cues all its discards, then all its refills (the K3 two-loop order)', () => {
+    const { run, bus } = gatedToFirstTurnIntro(9, null);
+    run.addPacket('reroute'); // grants 1 redraw action, ≤2 cards
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    const cues = record(bus);
+    run.dispatch({ kind: 'redrawCards', handIndices: [0, 1], grantIndex: 0 });
+    expect(cues.map((c) => c.kind)).toEqual(['discarded', 'discarded', 'drawn', 'drawn']);
+  });
+
+  it('the reshuffle interposes exactly where the pile runs dry, as ONE cue', () => {
+    // The packet dance to a dry pile: 4 Culls (hand 6→2, discard 4, pile 4),
+    // two Surges (hand →6, pile →0), then a third Surge forces the flip.
+    const { run, bus } = gatedToFirstTurnIntro(9, null);
+    for (let i = 0; i < 4; i++) run.addPacket('discard-one');
+    run.addPacket('draw-two');
+    run.addPacket('draw-two');
+    for (let i = 0; i < 4; i++) run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    expect(run.drawPile).toHaveLength(0);
+    expect(run.discardPile).toHaveLength(4);
+    run.addPacket('draw-two');
+    const cues = record(bus);
+    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    expect(cues).toEqual([
+      { kind: 'reshuffled', drawPile: 4, discardPile: 0 },
+      { kind: 'drawn', drawPile: 3, discardPile: 0 },
+      { kind: 'drawn', drawPile: 2, discardPile: 0 },
+    ]);
+    expect(run.hand).toHaveLength(DECK.maxHandSize);
+  });
+
+  it('the turn-start recycle cues per-card discards (no screen up — still honest)', () => {
+    // Drive to turn 2: a non-decisive chip leaves the encounter running, so
+    // startNextTurn recycles the fought hand through the discard chokepoint.
+    const { run, bus } = freshRunWithBus(9, { daemon: null });
+    run.pauseAtTurnGates = true;
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    const fought = run.hand.length;
+    run.dispatch({ kind: 'advanceTurn' });
+    const cues = record(bus);
+    // A drawn turn with tiny chip — the pools survive, the encounter
+    // continues; the gate advance runs startNextTurn (recycle + deal).
+    chipTurn(bus, { player: 1, enemy: 1 });
+    run.dispatch({ kind: 'advanceTurn' });
+    // The organic turn-2 sequence with a 10-roster: the fought 6 recycle
+    // per-card, the 4 remaining deal, the pile runs dry, ONE reshuffle
+    // flips the 6 recycled back, and the deal finishes.
+    expect(cues.map((c) => c.kind)).toEqual([
+      ...Array.from({ length: fought }, () => 'discarded' as const),
+      ...Array.from({ length: run.team.length - fought }, () => 'drawn' as const),
+      'reshuffled',
+      ...Array.from({ length: 2 * fought - run.team.length }, () => 'drawn' as const),
+    ]);
+    const discards = cues.filter((c) => c.kind === 'discarded');
+    expect(discards[fought - 1]!.discardPile).toBe(fought);
+  });
+});
+
 /**
  * H4 — emit a `battle:ended` whose PLAYER survivors chip the enemy pool by
  * `HEALTH.enemyHealthMax`, guaranteeing the encounter is won in this one turn

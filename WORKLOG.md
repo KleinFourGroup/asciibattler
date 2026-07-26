@@ -1410,3 +1410,77 @@ out: the +2-vs-+4 non-monotonicity question + the ronin-sibling
 threads (§68) · the batch-sizing rule (scratchpad, round boundary).
 2296→2319 main · fuzz:smoke 278→279 (the drawAddArg pin) · every
 mid-phase commit byte-identity-proven where it claimed to be.
+
+## Phase 66 — Boss forewarning
+
+### 66-kickoff — the code-reality audit (2026-07-26)
+
+Surfaces surveyed as they exist post-§65: the selection resolver, the
+two sector-entry seams, the fight-time consumption site, the snapshot
+codec, and the map-screen UI hooks.
+
+- **The selection resolver is already pure and injectable.**
+  `selectEncounter(sector, {hop, nodeKind}, rng, resolve, forced?)`
+  (selection.ts) takes everything as parameters — the pre-roll calls it
+  at sector start with `{hop: length-1, nodeKind: 'boss'}` and ANY rng;
+  zero resolver changes. The X2 `forcedEncounterId` short-circuit is a
+  parameter too, so the dev isolation flag composes at the pre-roll
+  site for free (one boss node per sector ⇒ pre-roll-time forcing is
+  behaviorally identical to fight-time forcing).
+- **Exactly two sector-entry seams, both already forking a
+  `sectorRng`:** the Run constructor (~892: `pickStartSector` +
+  `generateNodeMap`) and `advanceSector` (~2691, same pair). The
+  pre-roll rides the SAME fork, drawing after the node-map draws —
+  the one-fork-per-sector-entry shape is preserved and the stream
+  break (accepted at the round kickoff) is confined to these seams.
+- **`EncounterMap` is plain serializable JSON and already a snapshot
+  field** (`{layoutId, gridW, gridH, terrainSeed, theme}`, in
+  RunSnapshot since K3.5). Serializing `bossEncounterMap` is the same
+  shape verbatim; `bossEncounterId` follows the `selectedEncounterId`
+  def-resolved discipline (unknown id on load = hard reject). The
+  charter's portStock pending-offer precedent confirms the pattern but
+  the mechanics are even simpler here (no per-slot state).
+- **The full map can be pre-built, not just the layout id** — reusing
+  `buildEncounterMap` at the pre-roll site bakes terrainSeed + theme +
+  the G1 `forcedLayoutId` override + the gotcha-#49 always-draw
+  discipline in one call. Save/load then reproduces the exact BOARD,
+  not merely the layout identity — exceeding the exit criterion at
+  negative cost.
+- **Fight-time consumption is one branch in `beginEncounter`** (~1354):
+  at a boss node, skip the `mapRng` fork + selection + build and
+  consume the stored pair. Branching on node kind is
+  deterministic-safe (kind is serialized state, not a mid-path
+  conditional draw — #49 does not apply across node kinds).
+- **Migration is a non-event:** `fromJSON` hard-rejects any version
+  mismatch (no ladder, ~3144) — v39 is a bump + the ledger comment.
+  Save/load is deferred to Cluster 6 anyway (spec).
+- **The UI hooks are exactly as the charter guessed.** MapScreen is a
+  pure view fed by MapScene from Run getters (`currentSectorTitle`
+  precedent); the boss node div already carries a `.boss` class + `!`
+  glyph. A forewarning getter on Run (encounter name + layout name via
+  `getLayout(id)?.name`; procedural = layoutId null needs a display
+  label) + one new `show()` arg covers it. No event/command changes.
+- **Fallout prediction:** every seed re-rolls (the sectorRng draw
+  count changes at sector entry) — fuzz-smoke pins re-pin in the SAME
+  commit as the core change (the pre-commit hook runs fuzz:smoke on
+  `src/run/` edits, so the re-pin cannot trail). Determinism suite +
+  save/load pins re-assert on the new stream. WorldSnapshot v34
+  untouched (run-layer only), per the round prediction.
+
+Cut + open UI questions proposed for shape-lock in the session
+message; resolutions land here when the user calls them.
+
+### 66-shape-lock — the three UI calls (2026-07-26, USER)
+
+All three open questions resolved in one pass; the two-commit cut
+approved as proposed.
+
+- **Placement: the top-bar banner** — a forewarning line under the
+  sector title ("exactly what I had in mind"), plus the boss-node
+  hover title.
+- **Procedural label: "Uncharted Ground"** (flavor over the literal).
+- **Layout name: SHOWN.** Forewarning displays boss name + layout
+  name from sector start. Named revisit trigger: if playtest feedback
+  says it makes planning too easy, drop the layout name to
+  boss-identity-only — the pre-roll bakes the board either way, so
+  the revisit is a 66b-sized UI change, not a mechanics change.

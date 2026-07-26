@@ -172,6 +172,12 @@ animation/transition (render tail, eyeball-verified).
 - [ ] **65e** — the draw/discard animation + the "Draw: N" pre-turn
   chip (render tail). *Landed ✅ 2026-07-25 (`cb71b93`), eval-verified
   end to end; awaiting the NATIVE feel read (the user's); worklog §65e.*
+- [ ] **65f** — the deck-transaction feel (inserted 2026-07-25 off the
+  user's 65e playtest read — the pile SIDE was the actual gap): the
+  `deck:cardDrawn`/`cardDiscarded`/`reshuffled` cue stream + the serial
+  pile-pulse player. *Landed ✅ (`7916e64` core + `0e66ced` UI),
+  sequence-pinned headlessly + eval-verified; awaiting the same native
+  feel read; worklog §65f.*
 
 ## Phase 66 — Boss forewarning
 

@@ -1326,3 +1326,54 @@ re-run at HEAD after the mid-batch 65e commit — every column equal).
   said 75min; draw-heavy arms fight longer battles, and concurrent
   pre-commit suites stole CPU) — filed to retro/scratchpad.md for the
   round-boundary distillation rather than legislated mid-phase.
+
+### 65f — the deck-transaction feel (2026-07-25)
+
+Inserted off the user's 65e playtest read: the hand motion helped but
+the diagnosis moved — the PILE side is where card-game feel lives
+(draw pulses per card, counts ticking serially; the reshuffle as its
+own beat). Two commits, headless-core-first.
+
+`7916e64` — **the cue stream**: `deck:cardDrawn` / `deck:cardDiscarded`
+/ `deck:reshuffled`, emitted at the two chokepoints (`drawCard()` —
+already THE single draw site since K3; a new `discardCard()` mirror
+unifying the recycle/redraw/Cull pushes). The design call, argued and
+user-signed: per-card EVENTS beat UI reconstruction (a shadow copy of
+the deck cycle would silently lie the day the rules change — one
+chokepoint, one truth) and beat one array-payload event (house
+`subject:verbed` style; audio can ride per-pulse later). Contract:
+**cue-not-truth** — the swap events stay authoritative; cues are
+presentation feed. Reshuffle = ONE cue by design (a single distinct
+pulse; serially ticking a 15-card flip would be dead air). Stream-
+neutral (no RNG, nothing serialized; fuzz:smoke 279 unchanged). Five
+sequence pins incl. the organic turn-2 story (recycle ×6 · draw ×4 ·
+reshuffle · draw ×2) and the reshuffle interposing exactly where the
+pile runs dry. 2314→2319 main.
+
+`0e66ced` — **the serial player**: Game (page-lifetime) buffers cues
+(the deal's fire before `turn:starting` mounts the scene — a
+scene-scoped subscription can never see them; `battle:started` clears
+the buffer), hands them to PreTurnScene at swap; gate-time cues
+forward live. The screen plays the queue at a 130ms cadence: each
+`drawn` reveals its card (animation-delay synced to the pulse) + the
+draw chip pulses + the displayed count ticks; each `discarded`
+releases its exit GHOST (clones now hold in place until their cue) +
+the discard chip pulses; `reshuffled` = both chips, a distinct cyan
+two-beat shake, counts flipping together. Counts ride displayed
+OVERRIDES on the pile buttons' getCount thunks and reconcile to the
+authoritative piles when the schedule drains. **Fight ▸ stays live**
+(user-signed): advancing hides the screen, which clears timers and
+sweeps ghosts — the fast-forward is free.
+
+- **Browser-verify caught the real bug again** (the 65e sibling): the
+  intermediate `run:cacheChanged`/`run:packetUsed` repaints consumed
+  the cue queue early and the final hand-swap repaint CANCELLED the
+  fresh schedule, stranding the count overrides. Fix:
+  `playCuesOnNextRefresh` — only the hand-swap refresh (show /
+  updateHand) consumes cues or touches the schedule.
+- Eval-verified end to end: the deal at 0/130/…/650ms with the chip
+  pre-seeded to the pre-sequence count (·10 on a 4-card pile — the
+  narrative, not the truth, until it reconciles); the sampled
+  reshuffle story (reshuffle flash + 0→4/4→0 flip, then 4→3→2 serial
+  draw pulses, settling authoritative); zero console errors. The
+  native feel read (65e + 65f together) is the user's.

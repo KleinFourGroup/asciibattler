@@ -1557,3 +1557,125 @@ human-fixture revisit (TODO, user-surfaced mid-phase — the standing
 "1 skipped" needs a purpose decision if no human remeasurement
 comes soon). 2319→2327 main (+1 66b getter pin) · 279 fuzz:smoke
 untouched.
+
+## Phase 67 — The second sector
+
+### 67-kickoff — the code-reality audit (2026-07-26)
+
+Surfaces surveyed: the sector walk + DAG config, the `advanceSector`
+carry-across path, the Game-layer scene routing, the GameOverScene
+clone precedent, the wave resolver's difficulty basis, and the
+content catalogs sector 2 draws from.
+
+- **The predicted first-reach bug is real, located, and worse than a
+  cosmetic gap: the Game layer HANGS at the transition.**
+  `advanceSector()` (Run.ts ~2807) swaps the sector state and lands
+  on `phase = 'map'` with **no bus emit** — deliberate T2 deferral
+  ("the live scene refresh … is deferred with the multi-sector
+  content"). The Game layer's reward route relies on the now-false
+  invariant "no silent-map path exists off a won encounter"
+  (Game.ts ~427): a non-sink boss win whose LAST gate is a reward
+  resolution strands the RewardScreen with the run silently on the
+  new map. (The dismissPromotion route would catch it by accident
+  via its `phase === 'map'` fallback — but skips any sector-cleared
+  moment.) The transition machinery must land BEFORE the DAG edge
+  makes it reachable.
+- **The cleared-screen shape fork.** (a) *Presentation-only*: Run
+  emits `sector:cleared {…}` at the end of `advanceSector` (payload:
+  cleared + next sector titles); Game swaps to a SectorClearedScene
+  (GameOverScene clone — variant-at-construction, screen +
+  dispatcher + audio); its continue button swaps to MapScene locally
+  (the run is already at 'map'/pre-root — no new command). **No
+  serialized-union touch → RunSnapshot v39 HOLDS.** A save during
+  the screen restores onto the new sector's map — acceptable,
+  presentation-class. (b) *A real serialized gate* ('sectorCleared'
+  phase + a command): buys a re-shown screen on restore at the cost
+  of v39→v40 + command surface. Recommendation: (a).
+- **The DAG edge is stream-neutral for sector-1 CONTENT but flips
+  run OUTCOMES.** `pickOne`/`pickWeighted` zero-draw singletons
+  (#111): `sources` stays the singleton `["start"]` and node sector
+  lists stay singletons, so every existing draw is untouched —
+  sector-1 content stays seed-identical. But moving `sinks` to the
+  new node means the first boss win no longer ends the run: run
+  length ~doubles, win rates drop. Fallout surface: any main-suite
+  pin that exercises the SHIPPED sector map's victory path, and
+  fuzz:smoke runtime/reads (smoke pins are invariants — the 61c/66a
+  lesson — but the wall-clock cost roughly doubles per full run).
+  The §68 re-anchor absorbs the measurement shift by charter.
+- **Forewarning re-rolls per sector ALREADY** — 66a put the pre-roll
+  on `advanceSector`'s fork, headless-pinned. That exit criterion is
+  pre-met headlessly; only the native look remains.
+- **Difficulty auto-scales on the enemy side.** Wave level budgets
+  are `factor × roster central level × hand size` (wave.ts), so
+  "same encounters" stay level-matched against the bigger sector-2
+  roster. What does NOT scale: fixed health pools and the player's
+  accrued daemons/bits/draft — sector 2 on identical content reads
+  somewhat easier. A §68 concern by charter; new catalog ENTRIES
+  (bigger pools, minHop re-gates) are the sanctioned in-phase lever.
+- **Content surfaces:** sector 2 = one `sectors.json` entry (the T3
+  sector editor authors it; the DAG stays hand-edited JSON by
+  design). Available: 6 themes (grassland taken; barren / volcanic /
+  tundra / desert / swamp free) · 12 layouts (all in the-start's
+  pool today) · encounter catalog 8 normal + 3 elite + 2 boss, all
+  currently pooled in the-start. Hops reset per sector, so minHop
+  gates re-apply naturally. The kind-consistency + pool-coverage
+  guards (sectors.ts load-time + config tests) run automatically on
+  the new entry.
+
+Design forks + the proposed cut posed for shape-lock in the session
+message; the content design round (the charter's user decision
+point) resolves here when called.
+
+### 67-shape-lock — the gate flip, the identity lock, the content round (2026-07-26, USER)
+
+Three conversations, all resolved same-day.
+
+- **The transition-gate fork FLIPPED on the deeper look — (b), a real
+  `sectorCleared` phase + continue command (v39→v40 predicted).** The
+  kickoff summary undersold (b); the user pushed; the re-audit found
+  two facts that reversed the recommendation: (1) option (a)'s
+  synchronous `sector:cleared` emit gets CLOBBERED by the Game
+  layer's `if (phase === 'map') swap(MapScene)` fallbacks — the fix
+  would be the one place routing can't trust the phase; (2) the
+  GameOverScene precedent actually supports (b): `run:defeated` /
+  `run:victory` are backed by real phases (`'defeat'`/`'complete'`) —
+  under (a) the clone would be the only full-screen beat with no
+  phase. Supporting: the bump is nearly free pre-Cluster-6, restore
+  re-shows the beat when save/load ships, the gate is the seam for
+  any future between-sector mechanics, and the harness must consume
+  the new command (the transition exercised headlessly forever).
+- **The identity conversation (user-initiated): "dark fantasy on a
+  haunted terminal," locked into DESIGN.md §Aesthetic.** The
+  resolution: the terminal UI + fantasy cast is the roguelike
+  heritage look, unified by the run layer's computing vocabulary
+  (sector/port/packet/daemon/bits/cache — a voyage through a
+  machine); the nautical register is a kept pun; the Lovecraft pull
+  is honored as MOOD (sectors shade darker/occult) without period
+  tech — the rifleman-class archetypes deferred to Cluster 5 as
+  sector-identity content (a draftable archetype drags
+  rarity/draft/price/§68 surface; even enemy-only was kept out of
+  §67 to protect the round tail).
+- **The content round: "The Deep End" (USER-signed), swamp theme,
+  length 11** (kept equal to The Start). Strategy:
+  author-new-plus-migrate BEAT copy-and-retune (a copied catalog is
+  13 hand-applied per-sector difficulty knobs that drift forever +
+  doubles the §68 isolation surface; content carries the difficulty
+  instead — enemy LEVELS auto-scale, so the non-scaling knobs are
+  pool/count/comp). The user authored FOUR encounters (Infernal
+  Column · Plague Victims · Miscreants · Plague Spreaders — the
+  plague storyline; Spreaders is the first non-boss stages-grammar
+  content). Review caught two convention deviations, both confirmed
+  mistakes and fixed: Plague Victims had NO rewards (→ bits-small
+  @1, the normal convention); Spreaders paid bits-small@1 +
+  daemon-cache@1 (→ bits-large@1 + cache@0.35 — a guaranteed cache
+  would out-pay every elite faucet). Pools seeded 8→10 (user call:
+  intent legible in the authored numbers; §68 still owns the tune).
+  Migration: elementalTrio + plagueDoctors + darkMagicPosse move
+  over at minHop 0; artillery + adventurer-with-guards SHARED by
+  reference (pool entries are references — no copies);
+  brigands/highwaymen stay behind as act-1 identity. Both bosses
+  reused (forewarning already varies per sector); same 12-layout
+  pool. Noted out loud: the migration kills the "sector-1 stays
+  seed-identical" audit nicety at 67c — accepted, §68 re-anchors.
+- The catalog entries + the manifest re-pin (+4 ids, Spreaders
+  elite) land in the kickoff commit, unpooled-inert until 67c.

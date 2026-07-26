@@ -84,6 +84,19 @@ For MVP, *every node was a battle node*. Since then: **rest** nodes (G3, a non-c
 
 ## Aesthetic
 
+**World identity (locked at the §67 kickoff, 2026-07-26): dark fantasy on a
+haunted terminal.** The three threads that felt like a tug are one identity:
+fantasy-units-on-a-CRT is the roguelike lineage's native look (Rogue/NetHack
+heritage, modernized with synthwave neon), and the run layer's vocabulary —
+*sectors, ports, packets, daemons, bits, cache* — is computing language, so
+the run reads as a voyage through a machine. The nautical resonance ("port,"
+sector charts as sea maps) is a deliberate pun, kept. Sectors shade darker as
+the run goes: act 1 is mundane brigand country, act 2 ("The Deep End," swamp)
+turns occult — the cosmic-horror *mood* without period technology. Named
+deferrals: 1920s-register archetypes (riflemen etc.) are Cluster-5 sector-
+identity content, not a rider; the Roman daemon naming keeps fading out.
+Rationale: WORKLOG §67-shape-lock.
+
 **Reference palette** (from the user's previous game; serves as the starting vocabulary, not a hard constraint):
 
 | Color | Use |

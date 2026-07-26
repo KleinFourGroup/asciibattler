@@ -190,13 +190,30 @@ first time.
   exercises it fresh).
 - **Risk:** low-medium — the carry-across path is built + headless-tested
   but has never run in shipped play; expect first-reach bugs.
-- **Decision point:** the sector CONTENT design round (user).
+- **Decision point:** the sector CONTENT design round (user) — ✅ DECIDED
+  2026-07-26: "The Deep End" (swamp, length 11), four user-authored
+  encounters + the minHop-4 migration; identity locked into DESIGN.md
+  §Aesthetic; rationale worklog §67-shape-lock.
 - **Exit criteria:** a full two-sector run completes natively
   (user-verified); the coverage guards pass; the cleared screen shows at
   the transition; forewarning re-rolls per sector.
 - **Scope guards:** ONE new sector; no new encounter/layout mechanics
   (content from existing catalogs; new catalog ENTRIES are fine).
-- [ ] *(cut at phase kickoff)*
+- [ ] **67a** — the sector-transition gate, headless-core-first: a real
+  `sectorCleared` phase + continue command + `sector:cleared` emit
+  (**RunSnapshot v39→v40 predicted**); kills the Game-layer reward-strand
+  path; harness taught; headless pins.
+- [ ] **67b** — SectorClearedScene/Screen (GameOverScene clone) + Game
+  routing; browser-verified + user feel-read.
+- [ ] **67c** — "The Deep End" lands: the sectors.json entry + the
+  sector-map node/edge/sinks flip (the transition becomes reachable);
+  pools = 4 new + migrated elementalTrio/plagueDoctors/darkMagicPosse
+  (minHop→0) + shared artillery/adventurer-with-guards + both bosses +
+  the 12-layout pool; shipped-map test fallout dispositioned; coverage
+  guards green. (The new catalog entries + manifest re-pin landed in the
+  kickoff commit.)
+- [ ] **67d** — the exit criterion: a full two-sector native run (user) +
+  the close ritual.
 
 ## Phase 68 — Balance protocol v2 + the balance pass (round close)
 

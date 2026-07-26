@@ -99,6 +99,11 @@ describe('encounters schema', () => {
       'elementalTrio',
       'banditQueen',
       'plagueDoctors',
+      // §67 — "The Deep End" content (user-authored at the kickoff; pooled at 67c).
+      'infernalColumn',
+      'plagueVictims',
+      'miscreants',
+      'plagueSpreaders',
     ]);
     // Every `kind` value is now exercised by shipped content: the road fights are
     // `normal`, the lone `boss` is the terminal fight, the `elite` detours are
@@ -109,6 +114,7 @@ describe('encounters schema', () => {
       'brigand-champions': 'elite',
       'warband-vanguard': 'elite',
       'darkMagicPosse': 'elite',
+      'plagueSpreaders': 'elite',
     };
     for (const e of ENCOUNTERS) {
       expect(e.kind).toBe(expectedKind[e.id] ?? 'normal');

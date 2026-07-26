@@ -536,5 +536,142 @@
         ]
       }
     ]
+  },
+  {
+    "id": "infernalColumn",
+    "name": "Infernal Column",
+    "description": "A squad of \"peacekeepers\" sent to quell the bandit problems, by any means necessary.",
+    "healthPool": 10,
+    "kind": "normal",
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } }
+    ],
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 1.5 },
+              "units": [
+                { "archetype": "mercenary", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "reaver", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "plagueVictims",
+    "name": "Plague Victims",
+    "description": "A swarm of the barely living, protected by a few doctors.  If only they weren't aggressive...",
+    "healthPool": 10,
+    "kind": "normal",
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } }
+    ],
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 2 },
+              "units": [
+                { "archetype": "healer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "ghoul", "count": { "kind": "weight", "weight": 4 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "miscreants",
+    "name": "Miscreants",
+    "description": "It's a swarm of thieves, but why the warlock?",
+    "healthPool": 10,
+    "kind": "normal",
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } }
+    ],
+    "waves": [
+      {
+        "kind": "loop",
+        "repeat": "forever",
+        "body": [
+          {
+            "kind": "wave",
+            "spec": {
+              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "count": { "kind": "hand", "factor": 2 },
+              "units": [
+                { "archetype": "rogue", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "warlock", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "plagueSpreaders",
+    "name": "Plague Spreaders",
+    "description": "The source of the mysterious plague!",
+    "healthPool": 10,
+    "kind": "elite",
+    "rewards": [
+      { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "daemon-cache", "trigger": { "chance": 0.35 } }
+    ],
+    "waves": [
+      {
+        "kind": "stages",
+        "stages": [
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.5 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.25 },
+                  "count": { "kind": "hand", "factor": 1.25 },
+                  "units": [
+                    { "archetype": "mercenary", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "corrupter", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1 },
+                  "count": { "kind": "hand", "factor": 0.75 },
+                  "units": [
+                    { "archetype": "shaman", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

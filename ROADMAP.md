@@ -205,13 +205,12 @@ first time.
 - [x] **67b** — the sector-cleared screen ✅ 2026-07-26 (`9f7d940`):
   eval-verified end to end; native feel-read rides the 67d two-sector
   run (the gate is unreachable until 67c); worklog §67b.
-- [ ] **67c** — "The Deep End" lands: the sectors.json entry + the
-  sector-map node/edge/sinks flip (the transition becomes reachable);
-  pools = 4 new + migrated elementalTrio/plagueDoctors/darkMagicPosse
-  (minHop→0) + shared artillery/adventurer-with-guards + both bosses +
-  the 12-layout pool; shipped-map test fallout dispositioned; coverage
-  guards green. (The new catalog entries + manifest re-pin landed in the
-  kickoff commit.)
+- [x] **67c** — "The Deep End" lands ✅ 2026-07-26 (`a9c49b6`): the DAG
+  edge live, browser-verified through the real routing; scope inserted
+  mid-cut (USER): the `hopCount`/`sectorHops` dial split — the smoke
+  timeout exposed that "short run" fixtures had silently become
+  short-act-1-plus-full-act-2; preset adoption of `sectorHops` → §68;
+  worklog §67c.
 - [ ] **67d** — the exit criterion: a full two-sector native run (user) +
   the close ritual.
 

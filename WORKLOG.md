@@ -1734,3 +1734,49 @@ the new sector's map.
   pane (the 66b limitation); the native feel-read is the user's.
 - UI-only: no snapshot/pin movement (2329 main + 279 smoke hold);
   ARCHITECTURE's tree gained both files.
+
+### 67c — "The Deep End" lands + the run-shape dials (2026-07-26, `a9c49b6`)
+
+The content landing as shape-locked — the-deep-end (swamp, length 11,
+the full 12-layout pool; pools = the four kickoff entries + the
+migrated minHop-4 trio front-loaded + shared artillery/adventurer +
+both bosses by reference; The Start slims to brigand country) and the
+start → deep-end DAG flip. Sector-1 seed-identity died here as
+accepted (the migration changes the-start's pool arrays). One own-pin
+catch: the Deep End "no gates" pin flagged a copy-pasted `minHop: 0`
+on banditQueen — redundant, dropped.
+
+**The mid-cut fork (USER-signed): the run-shape dial split.** The
+hook rejected the first commit — `perDaemonStats` blew its 90s
+timeout, and the root cause was semantic, not perf: `hopCount` only
+shapes sector 1, so every "short run" fixture in the measurement
+stack (ten SHORT fixtures, balanceSweep quick/medium, gauntlet
+cells, search presets, `--hops`) had silently become "short act 1 +
+FULL act 2." Surfaced as a fork; the user split the semantics:
+
+- **`hopCount` = the bounded SINGLE-sector probe** — its terminal is
+  the run terminal; the walk never advances. Every existing consumer
+  keeps its pre-67c meaning, wall clock, and historical
+  comparability (isolation reads, the commit hook).
+- **`sectorHops` = the shortened FULL-walk dial** (NEW) — every
+  sector's map is exactly N hops (override, not cap) while the DAG
+  still sinks: the cheap two-act balance read (`--sector-hops=4` =
+  a 4+4 run). Exposed via RunConfig + `?sectorHops=` + the fuzz
+  `--sector-hops`; balanceSweep/search preset adoption deferred to
+  §68's protocol step by scope call.
+- Refinements applied: mutually exclusive (construction throws loud
+  — no silent precedence), neither persists (the forcedLayoutId
+  restore discipline), and the determinism short-run test reverted
+  to become the hopCount integration pin.
+
+Fallout dispositioned: shipped-map pins flipped (the sectorMap shape
+pin, both sector pool pins + a new Deep End pin, three terminal-win
+routes), three new dial pins, the 67a-flagged stale fromJSON comment
+rewritten. Browser-verified end to end through the REAL Game
+routing: terminal win → post-turn gate → rewards → Sector Cleared
+(real payload titles) → Press on → The Deep End at pre-root with the
+forewarning RE-ROLLED (Queen/River → King/Fetid Pond) → a new-pool
+battle (elementalTrio; its strafingFunnel roll kept the authored
+tundra theme — the T2 hand-authored-keeps-identity rule, procedural
+rolls inherit swamp). Zero console errors. 2330→2333 main; smoke
+279 green with the daemon test back under budget.

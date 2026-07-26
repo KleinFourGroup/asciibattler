@@ -130,54 +130,33 @@ Detail: worklog §64-kickoff–§64d.
 - [x] **64c** — Idol of Portunus ✅ 2026-07-24 (`757b7b0`); worklog §64c.
 - [x] **64d** — close ✅ 2026-07-25 (`59c052e`); worklog §64d.
 
-## Phase 65 — Hand & draw size
+## Phase 65 — Hand & draw size ✅ CLOSED 2026-07-25 (user-signed)
 
-**Charter:** draw amount becomes a variable (default 6) settable by
-daemons and packets; the `drawCards` / `discardCards` ops in the shared
-pool; the draw-two + discard-one packets; the draw/discard
-animation/transition (render tail, eyeball-verified).
+**Outcome:** draw amount is a first-class mechanic end to end, in one
+day and six cuts — the `drawAmount` run-stat fold (base = deck.json;
+**cap 8 USER-SIGNED** off the 3-arm paired A/B: base 50.0 / +2 67.5 /
++4 60.0 — bigger symmetric hands beat the Option-B coupling; the
++2-vs-+4 noise question → §68) · **Option B at the budget seam**
+(`min(roster, effectiveDrawAmount)`, transient packet draws excluded
+by design — pure advantage) · the packet-only `drawCards`/
+`discardCards` ops + **Surge/Cull** · the `--draw-add` harness dial ·
+the full render tail (the "Draw: N" chip, enter/exit motion, the 65f
+`deck:*` cue stream + serial pile pulses, the recycle prefix cut on
+the feel read). **NO snapshot bump** (v38/v34 hold, as the kickoff
+predicted); the batch-sizing process note → scratchpad. Detail:
+worklog §65-kickoff–§65f.
 
-- **Depends on:** nothing hard (op-pool patterns shared with §64).
-- **Risk:** medium-high — the enemy-budget coupling (`min(roster,
-  DECK.handSize)` is the budget basis TODAY; difficulty.ts records a past
-  desync bug here).
-- **Decision points:** (1) ✅ DECIDED 2026-07-25 (kickoff design session)
-  — **Option B, the folded basis**: the budget seam reads
-  `min(roster, effectiveDrawAmount)` (persistent daemon fold only;
-  transient packet draws deliberately excluded); transparency = the
-  "Draw: N" pre-turn chip + the coupling sentence in future draw-daemon
-  card text (rationale worklog §65-shape-lock); (2) max hand size — A/B
-  on the harness (needs a forced-draw dial — the bot arm fires no
-  packets), then user call.
-- **Exit criteria:** both packets exercised headlessly; the budget
-  decision implemented + tested; persistent modifiers via run-stat fold
-  (derived, unserialized) proven; any per-turn draw state that must
-  serialize lands with its predicted bump (a v39 rider at §66 if timing
-  aligns, else its own); animation browser-verified.
-- **Scope guards:** two packets only; no packet-economy tuning (§68).
-- **Kickoff prediction (2026-07-25):** NO snapshot bump — hand/piles
-  serialize since H5, the fold is derived, packet draws mutate the
-  already-serialized hand (audit, worklog §65-kickoff).
-- [x] **65a** — the `drawAmount` run stat ✅ 2026-07-25 (`aa3c8c4`):
-  byte-identity proven (fuzz:smoke 278 unchanged); worklog §65a.
-- [x] **65b** — Option B at the `WaveContext` seam ✅ 2026-07-25
-  (`ccb5270`): desync pin landed; byte-identical (fuzz:smoke 278
-  unchanged); worklog §65b.
-- [x] **65c** — the hand-op packets ✅ 2026-07-25 (`ce7ff15`): Surge +
-  Cull live, exclusion pin landed, last-card guard added; worklog §65c.
-- [x] **65d** — the max-hand cap ✅ DECIDED + landed 2026-07-25 (USER:
-  **cap 8**, off the A/B — base 50.0 / +2 67.5 / +4 60.0; revisit
-  rider on record; the +2-vs-+4 noise question → §68): dial `4225c32`,
-  cap `ba3898e`; worklog §65d-dial + §65d.
-- [ ] **65e** — the draw/discard animation + the "Draw: N" pre-turn
-  chip (render tail). *Landed ✅ 2026-07-25 (`cb71b93`), eval-verified
-  end to end; awaiting the NATIVE feel read (the user's); worklog §65e.*
-- [ ] **65f** — the deck-transaction feel (inserted 2026-07-25 off the
-  user's 65e playtest read — the pile SIDE was the actual gap): the
-  `deck:cardDrawn`/`cardDiscarded`/`reshuffled` cue stream + the serial
-  pile-pulse player. *Landed ✅ (`7916e64` core + `0e66ced` UI),
-  sequence-pinned headlessly + eval-verified; awaiting the same native
-  feel read; worklog §65f.*
+- [x] **65a** — the `drawAmount` fold ✅ (`aa3c8c4`); worklog §65a.
+- [x] **65b** — Option B at the `WaveContext` seam + the desync pin ✅
+  (`ccb5270`); worklog §65b.
+- [x] **65c** — Surge + Cull ✅ (`ce7ff15`); worklog §65c.
+- [x] **65d** — the cap, USER cap 8 off the A/B ✅ (`4225c32` +
+  `ba3898e`); worklog §65d-dial + §65d.
+- [x] **65e** — the render tail ✅ (`cb71b93`), native feel-read
+  signed 2026-07-25; worklog §65e.
+- [x] **65f** — the deck-cue stream + serial pile pulses (inserted off
+  the 65e feel read) ✅ (`7916e64` + `0e66ced` + `4ef20e9`), native
+  feel-read signed; worklog §65f.
 
 ## Phase 66 — Boss forewarning
 

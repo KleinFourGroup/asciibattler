@@ -1389,3 +1389,24 @@ sweeps ghosts — the fast-forward is free.
   stays honest, no pin moves. Verified on a driven turn-2: opens
   straight on the deal (card 0 at 0ms, discard pre-seeded ·6), the
   mid-deal reshuffle keeps its beat (the 520ms gap), reconciles ·4/·0.
+  `4ef20e9`; the user's native verdict on the whole tail: "It feels
+  so good now."
+
+**Phase verdict (2026-07-25, user-signed):** six cuts in one day, all
+exit criteria met — both packets exercised headlessly ✅ (plus the
+transient-exclusion pin through the REAL fire path) · the budget
+decision implemented + pinned ✅ (Option B; count-basis==budget-basis
+structural + consumer-side) · persistent modifiers via the fold,
+derived and unserialized ✅ · NO per-turn draw state needed to
+serialize — the kickoff's no-bump prediction HELD (v38/v34) · the
+animation browser-verified ✅ (twice over: the eval loop caught two
+real event-ordering bugs the headless layer structurally cannot see —
+the enter-wipe and the cue-consumption race). Both decision points
+resolved by the user on data (Option B at kickoff; cap 8 off the
+A/B). One findings-driven insertion (65f — the user's playtest moved
+the diagnosis from the hand to the PILE side; the instruments
+working). Scope guards held: two packets, no economy tuning. Carried
+out: the +2-vs-+4 non-monotonicity question + the ronin-sibling
+threads (§68) · the batch-sizing rule (scratchpad, round boundary).
+2296→2319 main · fuzz:smoke 278→279 (the drawAddArg pin) · every
+mid-phase commit byte-identity-proven where it claimed to be.

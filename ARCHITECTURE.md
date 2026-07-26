@@ -527,6 +527,7 @@ action:phase            { unitId; actionId; phase; targetId?; targetCell? }     
 run:started             { seed: number }
 run:victory             { }
 run:defeated            { }
+sector:cleared          { clearedSectorTitle; nextSectorTitle }                     # 67a: a non-sink sector terminal cleared — emitted from advanceSector AFTER the state swap (phase lands on sectorCleared); the cleared title rides the payload, the next mirrors currentSectorTitle
 run:bitsChanged         { bits: number; delta: number }                             # 47e: the balance moved (bits = new total, delta = post-clamp change); emitted only on a real change from Run.addBits; the §48 overlay's feed
 run:cacheChanged        { packetIds: string[]; size: number }                       # 49b: the cache changed — a packet added/discarded, OR addDaemon moved the DERIVED capacity (size = the folded effectiveCacheSize); the 49f chip+modal's feed
 run:packetUsed          { packetId; context; playerHealth; grants; empowerMagnitudes }  # 49e: a usePacket fired (consume-on-fire; the paired run:cacheChanged carries the shrunk cache) — post-effect health + the re-derived queue/badge column for the 49f strip
@@ -568,6 +569,7 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   sellPacket              { cacheIndex: number }   # 50d: sell one held packet while docked — refund = ⌊price × sellFraction⌋ via RAW addBits (NEVER gainBits — the fold-loop mint)
   payToRemoveUnit         { rosterIndex: number }   # 50d: pay the flat unitRemovalPrice, remove through the removeRosterUnit chokepoint (all six roster-parallel structures); last unit irremovable
   dismissPromotion        { }     # E4: dismiss the PromotionScene
+  dismissSectorCleared    { }     # 67a: release the sectorCleared gate back to 'map' (the sector already advanced — state-first, the defeat/complete shape); silent no-op outside the gate
   acceptReward            { index: number; swapCacheIndex?: number }   # 48b: accept ONE pending reward portion (bits settle via gainBits; a daemon joins ownership immediately); 49c: swapCacheIndex = the slot to discard when a packet portion meets a FULL cache
   declineReward           { index: number }   # 48b: decline ONE pending reward portion (declinable-per-portion, passRecruit's sibling)
   advanceTurn             { }     # H4b: resume from a turn gate (pre/post-turn screen)

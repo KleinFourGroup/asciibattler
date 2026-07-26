@@ -116,6 +116,12 @@ import type { Archetype } from '../sim/archetypes';
 // a port is a map node, not a post-battle phase). Left via the `leavePort`
 // command back to 'map'. Minimal at 50c; §50d rolls stock on entry and adds
 // the buy/sell commands.
+// 67a adds `sectorCleared` — entered from `advanceSector` when a NON-SINK
+// sector terminal is cleared (the sector state has already swapped; the gate
+// is the between-sector beat). A real phase rather than a bare event so the
+// Game layer's phase-checking routes stay truthful and a mid-gate restore
+// re-shows the screen (the defeat/complete precedent — every full-screen
+// beat is phase-backed). Left via `dismissSectorCleared` back to 'map'.
 export type RunPhase =
   | 'map'
   | 'port'
@@ -125,6 +131,7 @@ export type RunPhase =
   | 'reward'
   | 'promotion'
   | 'recruit'
+  | 'sectorCleared'
   | 'defeat'
   | 'complete';
 
@@ -397,8 +404,13 @@ export interface BattleEncounter {
  *  node-map draws and consumed by the boss node's `beginEncounter` (which
  *  no longer forks/rolls — the round's second deliberate stream break,
  *  confined to the boss fight and downstream). A v38 save has no pair for
- *  its boss node to consume → reject. */
-const RUN_SCHEMA_VERSION = 39;
+ *  its boss node to consume → reject.
+ *  67a: bumped 39→40. The sector-transition gate: `RunPhase` gains
+ *  `sectorCleared` — `advanceSector` lands there (emitting `sector:cleared`)
+ *  instead of silently on 'map', and the `dismissSectorCleared` command
+ *  releases back to 'map'. The serialized phase union widened → flat reject
+ *  per the version discipline (a v39 save predates the gate). */
+const RUN_SCHEMA_VERSION = 40;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -1132,6 +1144,9 @@ export class Run {
         break;
       case 'dismissPromotion':
         this.handleDismissPromotion();
+        break;
+      case 'dismissSectorCleared':
+        this.handleDismissSectorCleared();
         break;
       case 'acceptReward':
         this.handleAcceptReward(command.index, command.swapCacheIndex);
@@ -2798,13 +2813,15 @@ export class Run {
    * root is the next pick. The player pool + roster + deck carry across
    * unchanged (the carry-across decision); only the map + sector cursor reset.
    *
-   * Built for the future N-sector content — the SHIPPED single-sector run never
-   * reaches here (its terminal is a sink → run:victory). The live scene refresh
-   * for a mid-run sector swap (a between-sector banner, the map re-render) is
-   * deferred with the multi-sector content; headlessly this is a clean
-   * battle→map transition onto a fresh map.
+   * 67a — lands on the `sectorCleared` gate (emitting `sector:cleared`), not
+   * silently on 'map': state swaps FIRST (the defeat/complete shape — the
+   * screen shows a settled run), then the gate holds until
+   * `dismissSectorCleared` releases to the new sector's map. The cleared
+   * sector's title is captured pre-swap for the emit — by emit time the run
+   * only knows the successor.
    */
   private advanceSector(): void {
+    const clearedSectorTitle = this.currentSectorTitle;
     const sectorRng = this.rng.fork();
     const next = pickNextSector(this.sectorMap, this.currentSectorNodeId, sectorRng);
     this.currentSectorNodeId = next.sectorNodeId;
@@ -2819,6 +2836,21 @@ export class Run {
     // first encounter. visitedNodes are node ids from the OLD map — clear them.
     this.currentNodeId = PRE_ROOT_NODE_ID;
     this.visitedNodes.clear();
+    this.phase = 'sectorCleared';
+    this.bus.emit('sector:cleared', {
+      clearedSectorTitle,
+      nextSectorTitle: this.currentSectorTitle,
+    });
+  }
+
+  /**
+   * 67a — release the sector-cleared gate back to the (new) sector's map. The
+   * sector state already swapped in `advanceSector`; this only flips the
+   * phase (the leavePort shape — Game's `phase === 'map'` fallback swaps the
+   * scene). A silent no-op outside the gate.
+   */
+  private handleDismissSectorCleared(): void {
+    if (this.phase !== 'sectorCleared') return;
     this.phase = 'map';
   }
 

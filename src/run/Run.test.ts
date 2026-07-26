@@ -2726,7 +2726,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(39); // 66a — the boss forewarning pair
+      expect(wire.schemaVersion).toBe(40); // 67a — the sector-transition gate
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -2905,7 +2905,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(39); // 66a — the boss forewarning pair
+      expect(wire.schemaVersion).toBe(40); // 67a — the sector-transition gate
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3231,7 +3231,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(39); // 66a — the boss forewarning pair
+      expect(wire.schemaVersion).toBe(40); // 67a — the sector-transition gate
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -3420,32 +3420,46 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { sectorMap: TWO_SECTOR_MAP });
       expect(run.currentSectorNodeId).toBe('a');
       const teamBefore = run.team;
+      const bossMapBefore = run.bossEncounterMap;
       run.playerHealth = 33; // a sentinel to prove the pool carries across
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       let victories = 0;
       bus.on('run:victory', () => victories++);
+      const cleared: GameEvents['sector:cleared'][] = [];
+      bus.on('sector:cleared', (e) => cleared.push(e));
       winEncounter(bus);
-      // Advanced — NOT won — onto a fresh map at the pre-root start.
+      // Advanced — NOT won — landing on the 67a gate with the state already
+      // swapped and the emit carrying both titles (the fixture's nodes share
+      // one sector, so both read the same config-derived title).
       expect(victories).toBe(0);
+      expect(run.phase).toBe('sectorCleared');
+      const title = getSector('the-start')!.title;
+      expect(cleared).toEqual([{ clearedSectorTitle: title, nextSectorTitle: title }]);
       expect(run.currentSectorNodeId).toBe('b');
-      expect(run.phase).toBe('map');
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
       expect(run.visitedNodes.size).toBe(0);
       expect(run.nodeMap.terminalId).toBeGreaterThanOrEqual(0);
+      // 66a — the forewarning pair re-rolled at the sector entry (a fresh
+      // board object, not the old sector's reference).
+      expect(run.bossEncounterMap).not.toBe(bossMapBefore);
       // Carry-across: same roster reference + the run-wide pool survive.
       expect(run.team).toBe(teamBefore);
       expect(run.playerHealth).toBe(33);
+      // The dismiss releases the gate onto the new sector's map.
+      run.dispatch({ kind: 'dismissSectorCleared' });
+      expect(run.phase).toBe('map');
     });
 
     it('clearing the final sector terminal (a sink) completes the run', () => {
       const { run, bus } = freshRunWithBus(1, { sectorMap: TWO_SECTOR_MAP });
-      // Advance through sector a → b.
+      // Advance through sector a → b (through the 67a gate).
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       winEncounter(bus);
+      run.dispatch({ kind: 'dismissSectorCleared' });
       expect(run.currentSectorNodeId).toBe('b');
-      // Now clear b's terminal — b is a sink → victory.
+      // Now clear b's terminal — b is a sink → victory, no gate.
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       let victories = 0;
@@ -3453,6 +3467,30 @@ describe('Run', () => {
       winEncounter(bus);
       expect(run.phase).toBe('complete');
       expect(victories).toBe(1);
+    });
+
+    it('dismissSectorCleared outside the gate is a silent no-op (67a)', () => {
+      const { run } = freshRunWithBus(1);
+      expect(run.phase).toBe('map');
+      run.dispatch({ kind: 'dismissSectorCleared' });
+      expect(run.phase).toBe('map');
+    });
+
+    it('a mid-gate save/load restores the sectorCleared phase and dismisses cleanly (67a)', () => {
+      const { run, bus } = freshRunWithBus(1, { sectorMap: TWO_SECTOR_MAP });
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      winEncounter(bus);
+      expect(run.phase).toBe('sectorCleared');
+      const snap = JSON.parse(JSON.stringify(run.toJSON())) as ReturnType<Run['toJSON']>;
+      const restored = Run.fromJSON(snap, new EventBus<GameEvents>());
+      // The gate is phase-backed (the 67a fork's whole point): a restore
+      // lands ON the gate, not silently past it.
+      expect(restored.phase).toBe('sectorCleared');
+      expect(restored.currentSectorNodeId).toBe('b');
+      restored.dispatch({ kind: 'dismissSectorCleared' });
+      expect(restored.phase).toBe('map');
+      expect(restored.currentNodeId).toBe(PRE_ROOT_NODE_ID);
     });
 
     it('rejects a pre-T2 (v19) snapshot', () => {

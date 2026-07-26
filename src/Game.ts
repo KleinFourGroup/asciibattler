@@ -419,6 +419,17 @@ export class Game implements RunDispatcher {
         // nothing to swap explicitly here.
         run.dispatch(command);
         break;
+      case 'dismissSectorCleared':
+        // 67a — release the between-sector gate; Run falls back to 'map' on
+        // the NEW sector with no event emit, so swap explicitly (the
+        // chooseRecruit / dismissPromotion pattern). The SectorClearedScene
+        // that dispatches this lands at 67b — until then the gate is only
+        // reachable headlessly (the shipped DAG has no non-sink terminal).
+        run.dispatch(command);
+        if (run.phase === 'map') {
+          this.swap(new MapScene());
+        }
+        break;
       case 'acceptReward':
       case 'declineReward':
         // 48c — resolve one reward portion. Mid-offer the RewardScreen

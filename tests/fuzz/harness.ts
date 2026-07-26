@@ -865,6 +865,14 @@ export function runOne(
         run.dispatch({ kind: 'dismissPromotion' });
         break;
       }
+      case 'sectorCleared': {
+        // 67a — the between-sector gate: nothing to decide headlessly (the
+        // sector state already swapped in advanceSector), just release it;
+        // the next iteration lands on the new sector's map. Not a hop —
+        // no node is entered.
+        run.dispatch({ kind: 'dismissSectorCleared' });
+        break;
+      }
       case 'recruit': {
         const offer = run.currentOffer!;
         const idx = strategy.pickRecruit(offer, run, strategyRng);

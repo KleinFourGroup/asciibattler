@@ -390,6 +390,16 @@ export interface GameEvents extends Record<string, unknown> {
   'run:started': { seed: number };
   'run:victory': Record<string, never>;
   'run:defeated': Record<string, never>;
+  /**
+   * 67a — a (non-sink) sector terminal was cleared and the run advanced to
+   * the successor sector. Emitted from `advanceSector` AFTER the state swap
+   * (phase lands on `sectorCleared`), so the cleared sector's title rides
+   * the payload (the run only knows the successor by emit time) while
+   * `nextSectorTitle` mirrors the live `currentSectorTitle` getter. Game
+   * swaps to the sector-cleared screen (67b); the `dismissSectorCleared`
+   * command releases the gate back to 'map'.
+   */
+  'sector:cleared': { clearedSectorTitle: string; nextSectorTitle: string };
 
   /**
    * 47e — the run's bits balance changed. `bits` is the new balance

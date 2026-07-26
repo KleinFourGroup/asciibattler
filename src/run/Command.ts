@@ -34,6 +34,13 @@ export type RunCommand =
    */
   | { readonly kind: 'dismissPromotion' }
   /**
+   * 67a — dismiss the sector-cleared gate (the between-sector screen). The
+   * sector already advanced in `advanceSector` (state-first, the
+   * defeat/complete shape); this releases the run back to 'map' on the NEW
+   * sector at pre-root. A silent no-op outside the `sectorCleared` phase.
+   */
+  | { readonly kind: 'dismissSectorCleared' }
+  /**
    * 50c — undock from a port node (spec §Ports): the run holds in the
    * serialized `port` phase from docking (`enterNode` on a port) until this
    * lands, then returns to 'map' (the hop was consumed on entry — the

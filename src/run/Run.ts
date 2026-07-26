@@ -389,8 +389,16 @@ export interface BattleEncounter {
  *  from the character def; the daemonRng fork survives for grant flips, so
  *  its stream position advances differently from v37). A v37 save has no
  *  characterId and its daemon/pool provenance predates the character model
- *  → reject. */
-const RUN_SCHEMA_VERSION = 38;
+ *  → reject.
+ *  66a: bumped 38→39. Boss forewarning: adds the sector-start pre-roll pair
+ *  `bossEncounterId` (BY ID, def-resolved on load — an unknown id
+ *  hard-rejects) + `bossEncounterMap` (the fully-built board, the K3.5
+ *  EncounterMap shape), rolled on the sector-entry `sectorRng` AFTER the
+ *  node-map draws and consumed by the boss node's `beginEncounter` (which
+ *  no longer forks/rolls — the round's second deliberate stream break,
+ *  confined to the boss fight and downstream). A v38 save has no pair for
+ *  its boss node to consume → reject. */
+const RUN_SCHEMA_VERSION = 39;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -494,6 +502,13 @@ export interface RunSnapshot {
   currentSectorId: string;
   currentSectorNodeId: string;
   nodeMap: NodeMap;
+  /** 66a (v39): the sector's pre-rolled boss — the forewarning pair. The
+   *  encounter BY ID (def-resolved on load, an unknown id hard-rejects —
+   *  the daemonIds discipline) + its fully-built battlefield (the K3.5
+   *  `EncounterMap` shape). Rolled once per sector entry on the sector
+   *  fork; never null — every sector's terminal is a boss. */
+  bossEncounterId: string;
+  bossEncounterMap: EncounterMap;
   team: UnitTemplate[];
   /** H3: per-roster-slot deployment counter, parallel to `team`. */
   deploymentCounts: number[];
@@ -793,6 +808,18 @@ export class Run {
    * re-derivable per turn, so a mid-encounter restore must carry it.
    */
   encounterMap: EncounterMap | null;
+  /**
+   * 66a — the sector's pre-rolled boss (the forewarning pair): the boss
+   * encounter BY ID + its fully-built battlefield, rolled once per sector
+   * entry (`rollBossForSector` on the sector-entry `sectorRng`, after the
+   * node-map draws) and consumed by the boss node's `beginEncounter`
+   * (which skips its own roll). Never null — every sector's terminal is a
+   * boss, and the selection coverage guard warrants a boss pool at every
+   * hop. Persisted (v39) so a mid-sector restore forewarns AND fights the
+   * exact same board.
+   */
+  bossEncounterId: string;
+  bossEncounterMap: EncounterMap;
   currentNodeId: number;
   phase: RunPhase = 'map';
   /**
@@ -889,11 +916,24 @@ export class Run {
     // generation begins at the identical stream position as the pre-T2 run —
     // and "The Start" (length 11 == HOP_COUNT) reproduces the same map.
     this.sectorMap = config?.sectorMap ?? SECTOR_MAP;
+    // G1/X2→66a — the two force flags resolve BEFORE the first fork: the
+    // boss pre-roll below honors both, and resolution is pure of RNG (no
+    // draw), so hoisting them from the config tail doesn't perturb the
+    // fork alignment.
+    this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
+    this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
     const sectorRng = this.rng.fork();
     const start = pickStartSector(this.sectorMap, sectorRng);
     this.currentSectorNodeId = start.sectorNodeId;
     this.currentSectorId = start.sectorId;
     this.nodeMap = generateNodeMap(sectorRng, config, this.currentSectorLength());
+    // 66a — pre-roll the sector's boss (the forewarning pair) on the SAME
+    // sector fork, after the node-map draws. The parent `this.rng` fork
+    // count is untouched, so every pre-boss stream stays seed-identical —
+    // the deliberate stream break surfaces only at the boss fight itself.
+    const bossRoll = this.rollBossForSector(sectorRng);
+    this.bossEncounterId = bossRoll.bossEncounterId;
+    this.bossEncounterMap = bossRoll.bossEncounterMap;
     const teamRng = this.rng.fork();
     // 63c — the starting roster comes from the character def (an explicit
     // `startingRoster` override still wins — the kickoff precedence fork).
@@ -975,8 +1015,8 @@ export class Run {
     this.passIsFinal = config?.passIsFinal ?? DECK.grantQueue.passIsFinal;
     // 65d — the forced-draw dial. Pure of RNG.
     this.drawAmountAdd = config?.drawAmountAdd ?? 0;
-    this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
-    this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
+    // (66a — forcedLayoutId/forcedEncounterId moved to the constructor head:
+    // the boss pre-roll reads them.)
     // X1/48f — resolve the per-run difficulty lever (override ?? difficulty.json
     // default). Pure of RNG, so it doesn't perturb the fork alignment.
     this.difficultyMultipliers = resolveDifficultyMultipliers({
@@ -1352,23 +1392,51 @@ export class Run {
    * persists across encounters.
    */
   private beginEncounter(): void {
-    // V1 — select this node's encounter + its battlefield from the current
-    // sector's pools via the keyed `selectEncounter` resolver (replaces U3's
-    // hold-the-single-reproduction). ONE `mapRng` fork drives BOTH the selection
-    // draws (encounter + layout pick) and the map build below — so the parent
-    // stream is forked once per encounter, as before. The selected encounter
-    // seeds the per-encounter pool + owns the wave grammar; the cursor starts fresh.
-    const mapRng = this.rng.fork();
-    const selection = selectEncounter(
-      this.currentSector(),
-      { hop: this.currentHop, nodeKind: this.kindOf(this.currentNodeId) },
-      mapRng,
-      getEncounter,
-      this.forcedEncounterId ?? undefined,
-    );
-    this.selectedEncounter = selection.encounter;
+    // 66a — a boss node CONSUMES the sector-start pre-roll (the forewarning
+    // pair) instead of rolling: no `mapRng` fork, no selection/build draws —
+    // the fight is exactly the forewarned board. Branching on node kind is
+    // deterministic-safe (kind is serialized state, not a mid-path
+    // conditional draw — gotcha #49 governs draws within one path, not
+    // across node kinds). The id def-resolves at fight time (hot-reload
+    // safe; fromJSON re-validated it), loud on a catalog miss.
+    if (this.kindOf(this.currentNodeId) === 'boss') {
+      const boss = getEncounter(this.bossEncounterId);
+      if (boss === undefined) {
+        throw new Error(
+          `Run.beginEncounter: pre-rolled boss "${this.bossEncounterId}" not in the catalog`,
+        );
+      }
+      this.selectedEncounter = boss;
+      this.encounterMap = this.bossEncounterMap;
+    } else {
+      // V1 — select this node's encounter + its battlefield from the current
+      // sector's pools via the keyed `selectEncounter` resolver (replaces U3's
+      // hold-the-single-reproduction). ONE `mapRng` fork drives BOTH the
+      // selection draws (encounter + layout pick) and the map build — so the
+      // parent stream is forked once per non-boss encounter, as before.
+      const mapRng = this.rng.fork();
+      const selection = selectEncounter(
+        this.currentSector(),
+        { hop: this.currentHop, nodeKind: this.kindOf(this.currentNodeId) },
+        mapRng,
+        getEncounter,
+        this.forcedEncounterId ?? undefined,
+      );
+      this.selectedEncounter = selection.encounter;
+      // K3.5 / V1 — build the encounter's ONE battlefield for the layout
+      // chosen by selection (the terrain-seed + procedural-side draws ride
+      // the SAME `mapRng`, contiguous after the encounter/layout picks;
+      // gotcha #49's always-draw discipline preserved in `buildEncounterMap`).
+      // Stream-order note: the map build moved ahead of the deck rebuild at
+      // 66a — cross-stream ordering (`mapRng` vs `deckRng`) is not draw-order
+      // significant, so this is byte-identical to the pre-66a sequence.
+      this.encounterMap = this.buildEncounterMap(selection.layoutId, mapRng);
+    }
+    // The selected encounter seeds the per-encounter pool + owns the wave
+    // grammar; the cursor starts fresh (both branches above set the
+    // encounter + map, so the non-null assertion is structural).
     this.waveCursor = null;
-    this.enemyHealth = this.selectedEncounter.healthPool;
+    this.enemyHealth = this.selectedEncounter!.healthPool;
     this.turnIndex = 0;
     // H5 — rebuild + shuffle the draw deck from the CURRENT roster (so a
     // freshly recruited card is in the deck); hand + discard start empty. The
@@ -1380,21 +1448,14 @@ export class Run {
     // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
     // `beginTurn` records the deployed hand.
     this.resetDeploymentCounts();
-    // K3.5 / V1 — build the encounter's ONE battlefield for the layout chosen by
-    // selection above (pre-K3.5 these rolls lived per-turn in `beginTurn`). The
-    // terrain-seed + procedural-side draws ride the SAME `mapRng` as selection,
-    // contiguous after the encounter/layout picks. Gotcha #49's always-draw
-    // discipline (the G1 forced-layout override still consumes the same draws) is
-    // preserved in `buildEncounterMap`.
-    this.encounterMap = this.buildEncounterMap(selection.layoutId, mapRng);
     // Browser-only diagnostic (moved from `beginTurn`): confirm the layout
     // picker hits the full library across a session. Gated on `typeof window`
     // so the fuzz harness + vitest don't spam.
     if (typeof window !== 'undefined') {
       console.log(
         '[layout]',
-        this.encounterMap.layoutId ?? 'procedural',
-        `${this.encounterMap.gridW}x${this.encounterMap.gridH}`,
+        this.encounterMap!.layoutId ?? 'procedural',
+        `${this.encounterMap!.gridW}x${this.encounterMap!.gridH}`,
         `hop ${this.currentHop}`,
       );
     }
@@ -1415,6 +1476,37 @@ export class Run {
     // does; a chance-gated hook here would draw off `daemonRng`).
     this.executeInstantOps(resolveInstantHooks(this.daemons, 'encounterStart', {}, this.daemonRng));
     this.startNextTurn();
+  }
+
+  /**
+   * 66a — roll the sector's boss forewarning pair: the boss encounter via the
+   * same keyed `selectEncounter` a fight-time roll would use (at the ACTUAL
+   * terminal hop — `nodeMap.hops.length - 1`, which tracks a `hopCount`
+   * override where `sector.length` wouldn't) + its fully-built battlefield
+   * via `buildEncounterMap` (so the G1 forced-layout override and the #49
+   * always-draw discipline apply at pre-roll exactly as they would at fight
+   * time). Draws ride the caller's sector-entry `sectorRng`, contiguous after
+   * the node-map draws; the X2 forced-encounter flag short-circuits inside
+   * `selectEncounter` (one boss node per sector makes pre-roll-time forcing
+   * behaviorally identical to fight-time forcing). Called from the
+   * constructor and `advanceSector` only — the two sector-entry seams.
+   */
+  private rollBossForSector(sectorRng: RNG): {
+    bossEncounterId: string;
+    bossEncounterMap: EncounterMap;
+  } {
+    const bossHop = this.nodeMap.hops.length - 1;
+    const selection = selectEncounter(
+      this.currentSector(),
+      { hop: bossHop, nodeKind: 'boss' },
+      sectorRng,
+      getEncounter,
+      this.forcedEncounterId ?? undefined,
+    );
+    return {
+      bossEncounterId: selection.encounter.id,
+      bossEncounterMap: this.buildEncounterMap(selection.layoutId, sectorRng),
+    };
   }
 
   /**
@@ -2693,6 +2785,11 @@ export class Run {
     this.currentSectorNodeId = next.sectorNodeId;
     this.currentSectorId = next.sectorId;
     this.nodeMap = generateNodeMap(sectorRng, undefined, this.currentSectorLength());
+    // 66a — the NEW sector's boss pre-rolls on the same fork (forewarning is
+    // sector-scoped: it re-rolls at every sector entry, same as at run start).
+    const bossRoll = this.rollBossForSector(sectorRng);
+    this.bossEncounterId = bossRoll.bossEncounterId;
+    this.bossEncounterMap = bossRoll.bossEncounterMap;
     // Back to the pre-root start: the new sector's root is selected like any
     // first encounter. visitedNodes are node ids from the OLD map — clear them.
     this.currentNodeId = PRE_ROOT_NODE_ID;
@@ -3095,6 +3192,10 @@ export class Run {
       currentSectorId: this.currentSectorId,
       currentSectorNodeId: this.currentSectorNodeId,
       nodeMap: this.nodeMap,
+      // 66a — the forewarning pair: plain JSON, never mutated after the
+      // roll, so it rides by reference (the encounterMap discipline).
+      bossEncounterId: this.bossEncounterId,
+      bossEncounterMap: this.bossEncounterMap,
       team: this.team.slice(),
       deploymentCounts: this.deploymentCounts.slice(),
       // K1 — deep-copy each slot's effect list (effects are mutated in place on
@@ -3208,6 +3309,17 @@ export class Run {
     m.currentSectorId = snap.currentSectorId;
     m.currentSectorNodeId = snap.currentSectorNodeId;
     m.nodeMap = snap.nodeMap;
+    // 66a — re-validate the pre-rolled boss id against the catalog (the
+    // daemonIds discipline: an unknown id is a hard reject, never a silent
+    // re-roll — silently re-rolling would contradict the forewarning the
+    // player already saw). The board restores as-is (plain JSON).
+    if (getEncounter(snap.bossEncounterId) === undefined) {
+      throw new Error(
+        `Run.fromJSON: unknown boss encounter id '${snap.bossEncounterId}' (not in the catalog)`,
+      );
+    }
+    m.bossEncounterId = snap.bossEncounterId;
+    m.bossEncounterMap = snap.bossEncounterMap;
     m.team = snap.team.slice();
     m.deploymentCounts = snap.deploymentCounts.slice();
     // K1 — restore the encounter-effect store (deep copy) + a fresh dispatcher

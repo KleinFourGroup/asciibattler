@@ -2726,7 +2726,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(38); // 63c — characterId
+      expect(wire.schemaVersion).toBe(39); // 66a — the boss forewarning pair
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -2905,7 +2905,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(38); // 63c — characterId
+      expect(wire.schemaVersion).toBe(39); // 66a — the boss forewarning pair
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3231,7 +3231,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(38); // 63c — characterId
+      expect(wire.schemaVersion).toBe(39); // 66a — the boss forewarning pair
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -4551,6 +4551,96 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
     ]);
     const discards = cues.filter((c) => c.kind === 'discarded');
     expect(discards[fought - 1]!.discardPile).toBe(fought);
+  });
+});
+
+/**
+ * 66a — boss forewarning: the sector-start pre-roll pair
+ * `{bossEncounterId, bossEncounterMap}`, rolled on the sector-entry fork and
+ * consumed by the boss node's `beginEncounter`. These pin the exit criteria:
+ * the pair exists from construction, is seed-deterministic, the boss fight IS
+ * the forewarned board, and a mid-sector save/load reproduces it exactly.
+ */
+describe('boss forewarning (66a) — the sector-start pre-roll', () => {
+  it('pre-rolls a boss-kind encounter + a fully-built board at construction', () => {
+    const run = new Run(1, new EventBus<GameEvents>());
+    const boss = getEncounter(run.bossEncounterId);
+    expect(boss).toBeDefined();
+    expect(boss!.kind).toBe('boss');
+    // A realized board, not a pending pick: dimensions + theme + terrain
+    // seed all baked (the K3.5 EncounterMap shape).
+    const map = run.bossEncounterMap;
+    expect(map.gridW).toBeGreaterThan(0);
+    expect(map.gridH).toBeGreaterThan(0);
+    expect(THEMES).toContain(map.theme);
+    expect(Number.isInteger(map.terrainSeed)).toBe(true);
+    if (map.layoutId !== null) {
+      expect(getLayout(map.layoutId)).toBeDefined();
+    }
+  });
+
+  it('is seed-deterministic (same seed → the same pair)', () => {
+    const a = new Run(7, new EventBus<GameEvents>());
+    const b = new Run(7, new EventBus<GameEvents>());
+    expect(b.bossEncounterId).toBe(a.bossEncounterId);
+    expect(b.bossEncounterMap).toEqual(a.bossEncounterMap);
+  });
+
+  it('the boss fight consumes the pre-roll: the fight IS the forewarned board', () => {
+    // hopCount 2 → root (hop 0, normal) -> terminal boss (hop 1).
+    const { run, bus } = freshRunWithBus(1, { hopCount: 2 });
+    const forewarnedId = run.bossEncounterId;
+    const forewarnedMap = run.bossEncounterMap;
+    // Clear the root battle + its recruit so the boss becomes the frontier.
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    winEncounter(bus);
+    acceptAllRewards(run);
+    run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.terminalId });
+    expect(run.phase).toBe('battle');
+    expect(run.selectedEncounter!.id).toBe(forewarnedId);
+    expect(run.encounterMap).toEqual(forewarnedMap);
+  });
+
+  it('a mid-sector save/load reproduces the exact forewarned boss + board', () => {
+    const { run, bus } = freshRunWithBus(3, { hopCount: 2 });
+    // Save mid-sector: after the root battle's recruit, before the boss.
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    winEncounter(bus);
+    acceptAllRewards(run);
+    run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
+    const snap = JSON.parse(JSON.stringify(run.toJSON())) as ReturnType<Run['toJSON']>;
+    const restored = Run.fromJSON(snap, new EventBus<GameEvents>());
+    expect(restored.bossEncounterId).toBe(run.bossEncounterId);
+    expect(restored.bossEncounterMap).toEqual(run.bossEncounterMap);
+    // And the restored run FIGHTS exactly what it forewarned.
+    restored.dispatch({ kind: 'enterNode', nodeId: restored.nodeMap.terminalId });
+    expect(restored.phase).toBe('battle');
+    expect(restored.selectedEncounter!.id).toBe(run.bossEncounterId);
+    expect(restored.encounterMap).toEqual(run.bossEncounterMap);
+  });
+
+  it('the X2 forced-encounter flag lands at pre-roll (a boss-kind force is honored)', () => {
+    // Both shipped bosses force cleanly — proving the short-circuit runs at
+    // sector start, not fight time (ids from the catalog, not hardcoded
+    // composition: the loop derives nothing about their contents).
+    for (const id of ['bandit-king', 'banditQueen']) {
+      const run = new Run(1, new EventBus<GameEvents>(), { forcedEncounterId: id });
+      expect(run.bossEncounterId).toBe(id);
+    }
+  });
+
+  it('a NORMAL-kind forced encounter leaves the boss pre-roll on the pool roll (X2 kind-mismatch)', () => {
+    const run = new Run(1, new EventBus<GameEvents>(), { forcedEncounterId: 'brigands' });
+    expect(getEncounter(run.bossEncounterId)!.kind).toBe('boss');
+  });
+
+  it('fromJSON hard-rejects an unknown boss encounter id (the daemonIds discipline)', () => {
+    const { run } = freshRunWithBus(1);
+    const snap = { ...run.toJSON(), bossEncounterId: 'no-such-boss' };
+    expect(() => Run.fromJSON(snap, new EventBus<GameEvents>())).toThrow(
+      /unknown boss encounter id/,
+    );
   });
 });
 

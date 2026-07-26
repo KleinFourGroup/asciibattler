@@ -1710,3 +1710,27 @@ structural).
 - 67c fallout noted at build time: the `fromJSON` comment "the
   shipped DAG is a single sink, so a save is never taken mid-walk"
   (~3362) goes stale when the edge lands — on the 67c list.
+
+### 67b — the sector-cleared screen (2026-07-26, `9f7d940`)
+
+The GameOverScene clone, as shape-locked: SectorClearedScreen/Scene
+with the titles fixed at construction from the `sector:cleared`
+payload (the cleared sector is unnameable from Run getters by emit
+time — the payload design earning its keep), Game wiring
+(event → scene swap + the shared win sting — its own sting is a
+named feel-read revisit), and the chrome: the gameover vocabulary
+with an AMBER heading — a deliberate accent call: green stays
+reserved for Run Complete, so the mid-run milestone reads as
+"milestone," not "victory" — plus a TERMINAL_GREEN "Next: <sector>"
+line pointing forward, and "Press on" → `dismissSectorCleared` →
+the new sector's map.
+
+- Browser-verified on dev-preview (the gate is unreachable in
+  shipped play until 67c, so the emit was driven via the
+  `__game.bus` dev handle): copy + computed styles (amber 42px
+  heading, green next-line), the scene swap to SectorClearedScene,
+  the button flow landing on MapScene with phase 'map', zero
+  console errors. Screenshot uncompositable in the backgrounded
+  pane (the 66b limitation); the native feel-read is the user's.
+- UI-only: no snapshot/pin movement (2329 main + 279 smoke hold);
+  ARCHITECTURE's tree gained both files.

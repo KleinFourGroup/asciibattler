@@ -202,8 +202,9 @@ first time.
 - [x] **67a** — the sector-transition gate ✅ 2026-07-26 (`69bf027`):
   v39→v40 as predicted; shipped-content byte-neutral (the gate sits past
   the shipped sink — zero re-pins); worklog §67a.
-- [ ] **67b** — SectorClearedScene/Screen (GameOverScene clone) + Game
-  routing; browser-verified + user feel-read.
+- [x] **67b** — the sector-cleared screen ✅ 2026-07-26 (`9f7d940`):
+  eval-verified end to end; native feel-read rides the 67d two-sector
+  run (the gate is unreachable until 67c); worklog §67b.
 - [ ] **67c** — "The Deep End" lands: the sectors.json entry + the
   sector-map node/edge/sinks flip (the transition becomes reachable);
   pools = 4 new + migrated elementalTrio/plagueDoctors/darkMagicPosse

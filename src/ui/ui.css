@@ -320,11 +320,27 @@ body {
   border: 1px solid #ffb000; /* TERMINAL_AMBER */
   color: #ffb000;
   font-family: var(--font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+  text-align: center; /* 66b — the two banner lines center as a stack */
+}
+
+.map-banner-title {
   font-size: 22px; /* 51e — a step above the chip scale (user call) */
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  white-space: nowrap;
-  pointer-events: none;
+}
+
+/* 66b — the boss forewarning sub-line: the sector's pre-rolled boss + board,
+   visible from sector start. NEON_RED to rhyme with the `!` boss node it
+   forewarns (dimmed vs the node glyph — a notice, not an alarm). */
+.map-banner-boss {
+  margin-top: 4px;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ff3131; /* NEON_RED */
+  opacity: 0.85;
 }
 
 .map-edges {

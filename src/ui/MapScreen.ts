@@ -40,6 +40,20 @@ const KIND_GLYPH: Record<NodeKind, string> = {
  */
 const HOP_PX = 90;
 
+/**
+ * 66b — the boss forewarning pair as the map displays it: the pre-rolled
+ * boss's display name + its board's layout name (`null` = procedural, which
+ * THIS layer renders as "Uncharted Ground" — the flavor label is view voice,
+ * the run reports only identity). Shape matches `Run.bossForewarning`.
+ */
+export interface BossForewarning {
+  readonly name: string;
+  readonly layoutName: string | null;
+}
+
+/** 66b — the display label for a procedural boss board (user-named). */
+const UNCHARTED_LABEL = 'Uncharted Ground';
+
 export class MapScreen {
   private readonly mount: HTMLElement;
   private readonly dispatcher: RunDispatcher;
@@ -60,9 +74,10 @@ export class MapScreen {
     visited: ReadonlySet<number> = new Set(),
     roster: readonly UnitTemplate[] = [],
     sectorTitle = '',
+    forewarning: BossForewarning | null = null,
   ): void {
     this.hide();
-    this.container = this.render(map, currentNodeId, visited, roster, sectorTitle);
+    this.container = this.render(map, currentNodeId, visited, roster, sectorTitle, forewarning);
     this.container.classList.add('screen-fade');
     this.mount.appendChild(this.container);
     // Center the current node in the viewport. Reading offsetTop forces the
@@ -91,6 +106,7 @@ export class MapScreen {
     visited: ReadonlySet<number>,
     roster: readonly UnitTemplate[],
     sectorTitle: string,
+    forewarning: BossForewarning | null,
   ): HTMLDivElement {
     const frontier = new Set<number>();
     if (currentNodeId === PRE_ROOT_NODE_ID) {
@@ -142,7 +158,19 @@ export class MapScreen {
     if (sectorTitle) {
       const banner = document.createElement('div');
       banner.className = 'map-banner';
-      banner.textContent = sectorTitle;
+      const title = document.createElement('div');
+      title.className = 'map-banner-title';
+      title.textContent = sectorTitle;
+      banner.appendChild(title);
+      // 66b — the boss forewarning sub-line: the sector-start pre-roll,
+      // surfaced from the moment the map first shows (the StS-style plan-ahead
+      // read). Rides inside the banner so the two lines share one chrome.
+      if (forewarning) {
+        const boss = document.createElement('div');
+        boss.className = 'map-banner-boss';
+        boss.textContent = `Boss: ${forewarning.name} — ${forewarning.layoutName ?? UNCHARTED_LABEL}`;
+        banner.appendChild(boss);
+      }
       container.appendChild(banner);
     }
 
@@ -189,6 +217,11 @@ export class MapScreen {
       div.textContent = KIND_GLYPH[node.kind];
       div.dataset.nodeId = String(node.id);
       div.classList.add(node.kind);
+      // 66b — the boss node names its forewarned fight on hover (the banner
+      // sub-line carries the always-visible copy; this is the spatial anchor).
+      if (node.kind === 'boss' && forewarning) {
+        div.title = `${forewarning.name} — ${forewarning.layoutName ?? UNCHARTED_LABEL}`;
+      }
 
       if (node.id === currentNodeId) {
         div.classList.add('current');

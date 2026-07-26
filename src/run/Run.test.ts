@@ -4642,6 +4642,23 @@ describe('boss forewarning (66a) — the sector-start pre-roll', () => {
       /unknown boss encounter id/,
     );
   });
+
+  it('bossForewarning reports the display pair (66b): catalog name, layout name, null = procedural', () => {
+    const run = new Run(1, new EventBus<GameEvents>());
+    const fw = run.bossForewarning;
+    expect(fw.name).toBe(getEncounter(run.bossEncounterId)!.name);
+    if (run.bossEncounterMap.layoutId === null) {
+      expect(fw.layoutName).toBeNull();
+    } else {
+      expect(fw.layoutName).toBe(getLayout(run.bossEncounterMap.layoutId)!.name);
+    }
+    // The G1 forced-procedural arm always reports a null layout name — the
+    // view's "Uncharted Ground" branch (the label itself is UI voice, so the
+    // run-layer contract is just the null).
+    const proc = new Run(1, new EventBus<GameEvents>(), { forcedLayoutId: FORCE_PROCEDURAL });
+    expect(proc.bossEncounterMap.layoutId).toBeNull();
+    expect(proc.bossForewarning.layoutName).toBeNull();
+  });
 });
 
 /**

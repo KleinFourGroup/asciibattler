@@ -1535,6 +1535,31 @@ export class Run {
   }
 
   /**
+   * 66b — the forewarning display pair for the sector map: the pre-rolled
+   * boss's display name + its board's layout name (`null` = a procedural
+   * board — the VIEW renders its own "Uncharted Ground" label; flavor text
+   * lives in the UI layer, not the run). Like `currentSectorTitle`, always
+   * available (the pair is rolled at sector entry, before any node is
+   * entered). Def-resolved at read time (hot-reload safe), loud on a
+   * catalog miss (the `beginEncounter` discipline); a retired layout id
+   * degrades to the raw id rather than throwing — the board still exists
+   * (it's baked), only its display name is gone.
+   */
+  get bossForewarning(): { name: string; layoutName: string | null } {
+    const boss = getEncounter(this.bossEncounterId);
+    if (boss === undefined) {
+      throw new Error(
+        `Run.bossForewarning: pre-rolled boss "${this.bossEncounterId}" not in the catalog`,
+      );
+    }
+    const layoutId = this.bossEncounterMap.layoutId;
+    return {
+      name: boss.name,
+      layoutName: layoutId === null ? null : (getLayout(layoutId)?.name ?? layoutId),
+    };
+  }
+
+  /**
    * U3 — the active encounter's enemy health-pool MAXIMUM. Per-encounter now
    * (`encounter.healthPool`), replacing the global `HEALTH.enemyHealthMax`; falls
    * back to the global outside an encounter (defensive — readers only consult it

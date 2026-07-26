@@ -24,6 +24,9 @@ export class MapScene implements Scene {
       run.visitedNodes,
       run.team,
       run.currentSectorTitle,
+      // 66b — the boss forewarning (pre-rolled at sector entry, so it's
+      // always available — same contract as currentSectorTitle).
+      run.bossForewarning,
     );
   }
 

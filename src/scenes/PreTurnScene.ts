@@ -14,7 +14,7 @@
  * K4 — same forwarding for `turn:unitEmpowered` (badge + budget refresh).
  */
 
-import { PreTurnScreen } from '../ui/PreTurnScreen';
+import { PreTurnScreen, type DeckCue } from '../ui/PreTurnScreen';
 import type { GameEvents } from '../core/events';
 import { requireRun, type Scene, type SceneContext } from './Scene';
 
@@ -22,16 +22,29 @@ export class PreTurnScene implements Scene {
   private screen: PreTurnScreen | null = null;
   private unsubscribes: Array<() => void> = [];
 
-  constructor(private readonly info: GameEvents['turn:starting']) {}
+  // 65f — `dealCues` is the deal's deck-cue sequence, buffered by Game (the
+  // cues fire before this scene exists — see Game's wiring comment).
+  constructor(
+    private readonly info: GameEvents['turn:starting'],
+    private readonly dealCues: readonly DeckCue[] = [],
+  ) {}
 
   mount(ctx: SceneContext): void {
     this.screen = new PreTurnScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
     // 49f — the cache thunk feeds the at-will packet row (read live at
     // render time, the CardListButton getUnits pattern).
     const run = requireRun(ctx);
-    this.screen.show(this.info, run.team, () => run.cache);
+    this.screen.show(this.info, run.team, () => run.cache, this.dealCues);
     this.unsubscribes = [
       ctx.bus.on('turn:handRedrawn', (payload) => this.screen?.updateHand(payload)),
+      // 65f — gate-time deck cues (redraw / Surge / Cull) queue on the
+      // screen; they always precede the hand-swap event in the same
+      // dispatch, which is what plays them.
+      ctx.bus.on('deck:cardDrawn', (e) => this.screen?.enqueueCue({ kind: 'drawn', ...e })),
+      ctx.bus.on('deck:cardDiscarded', (e) =>
+        this.screen?.enqueueCue({ kind: 'discarded', ...e }),
+      ),
+      ctx.bus.on('deck:reshuffled', (e) => this.screen?.enqueueCue({ kind: 'reshuffled', ...e })),
       ctx.bus.on('turn:unitEmpowered', (payload) => this.screen?.updateEmpower(payload)),
       // 49f — a packet fire at this gate (strip row or cache modal)
       // refreshes grants/badges/pools in place; a Pass advances the strip's

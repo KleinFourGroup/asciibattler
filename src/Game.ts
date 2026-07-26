@@ -23,6 +23,7 @@ import { GameOverScene } from './scenes/GameOverScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
 import { characterById, type CharacterConfig } from './config/characters';
 import { PreTurnScene } from './scenes/PreTurnScene';
+import type { DeckCue } from './ui/PreTurnScreen';
 import { PostTurnScene } from './scenes/PostTurnScene';
 import { AudioPlayer } from './audio/AudioPlayer';
 import { PlaybackSpeed } from './ui/PlaybackSpeed';
@@ -85,6 +86,10 @@ export class Game implements RunDispatcher {
    * The HUD owns the per-battle button + hotkey that cycle it.
    */
   private readonly playback = new PlaybackSpeed();
+  /** 65f — the deck-cue buffer (page-lifetime): the deal's per-card cues
+   *  fire before `turn:starting` mounts the scene, so Game buffers them and
+   *  hands the sequence over at swap time (see the wiring comment). */
+  private readonly deckCues: DeckCue[] = [];
   /**
    * J3 — the page-lifetime keybinding registry. Owns the single `window`
    * keydown listener (attached in the constructor); per-battle consumers (the
@@ -253,7 +258,20 @@ export class Game implements RunDispatcher {
     // BattleScene's clock spins harmlessly through the outro, and nothing
     // else can swap until `advanceTurn` (which the outcome screen hasn't
     // offered yet) — swap() cancels the timer anyway, defensively.
-    this.bus.on('turn:starting', (info) => this.swap(new PreTurnScene(info)));
+    // 65f — the deck-cue buffer: the deal's per-card cues fire DURING
+    // `startNextTurn`, before `turn:starting` mounts the scene, so a
+    // scene-scoped subscription can never see them. Game (page-lifetime)
+    // buffers them and hands the deal sequence to the scene at swap time;
+    // `battle:started` clears the buffer (any cue after it belongs to the
+    // NEXT turn's recycle+deal — gate-time cues the mounted scene consumed
+    // live are flushed with it).
+    this.bus.on('deck:cardDrawn', (e) => this.deckCues.push({ kind: 'drawn', ...e }));
+    this.bus.on('deck:cardDiscarded', (e) => this.deckCues.push({ kind: 'discarded', ...e }));
+    this.bus.on('deck:reshuffled', (e) => this.deckCues.push({ kind: 'reshuffled', ...e }));
+    this.bus.on('battle:started', () => {
+      this.deckCues.length = 0;
+    });
+    this.bus.on('turn:starting', (info) => this.swap(new PreTurnScene(info, this.deckCues.splice(0))));
     this.bus.on('turn:resolved', (info) =>
       this.swapAfter(TURN_OUTRO_MS, () => new PostTurnScene(info)),
     );

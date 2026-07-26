@@ -78,6 +78,19 @@ import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { CardListButton } from './CardListModal';
 
+/**
+ * 65f — one deck-transaction cue (the `deck:*` event stream): buffered by
+ * Game for the deal (the cues fire before `turn:starting` mounts the
+ * scene) and forwarded live by PreTurnScene for gate-time actions. The
+ * screen queues them and plays the pile pulses SERIALLY on its own clock;
+ * the swap payloads stay authoritative (cue-not-truth — events.ts).
+ */
+export interface DeckCue {
+  readonly kind: 'drawn' | 'discarded' | 'reshuffled';
+  readonly drawPile: number;
+  readonly discardPile: number;
+}
+
 export class PreTurnScreen {
   private container: HTMLDivElement | null = null;
   // K3 — the live hand + redraw budget (swapped by `updateHand`), the selected
@@ -123,6 +136,25 @@ export class PreTurnScreen {
   // = the initial deal, staggered). Consumed once, then cleared — refreshes
   // driven by non-hand events (cache/grant changes) must not replay it.
   private enterPositions: Set<number> | 'all' | null = null;
+  // 65f — the queued deck cues (seeded by `show` from Game's deal buffer,
+  // appended live by PreTurnScene at the gate), the serial-pulse timers,
+  // the transient displayed-count overrides (null = authoritative), the
+  // exit clones awaiting their cue, and named pile-button refs.
+  private pendingCues: DeckCue[] = [];
+  // 65f — cues are consumed ONLY by the refresh that carries the hand swap
+  // (show / updateHand). The intermediate repaints of the same dispatch
+  // (run:cacheChanged / run:packetUsed fire BEFORE the hand emit) must
+  // neither consume the queue nor cancel a playing schedule — the first
+  // browser-verify caught exactly that: an early refresh consumed the cues
+  // and the final one killed the freshly scheduled timers, stranding the
+  // count overrides at their pre-sequence values.
+  private playCuesOnNextRefresh = false;
+  private cueTimers: number[] = [];
+  private displayedDraw: number | null = null;
+  private displayedDiscard: number | null = null;
+  private exitClones: HTMLElement[] = [];
+  private drawPileButton: CardListButton | null = null;
+  private discardPileButton: CardListButton | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -134,6 +166,7 @@ export class PreTurnScreen {
     info: GameEvents['turn:starting'],
     roster: readonly UnitTemplate[],
     getCache: () => readonly string[],
+    dealCues: readonly DeckCue[] = [],
   ): void {
     this.hide();
     this.roster = roster;
@@ -144,6 +177,10 @@ export class PreTurnScreen {
     this.discardPile = info.discardPile;
     this.drawAmount = info.drawAmount;
     this.enterPositions = 'all'; // 65e — the initial deal animates in, staggered
+    // 65f — the deal's cue sequence (recycle discards · draws · a possible
+    // reshuffle), buffered by Game since the scene wasn't mounted yet.
+    this.pendingCues = [...dealCues];
+    this.playCuesOnNextRefresh = true;
     this.grants = info.grants;
     this.empowerMagnitudes = info.empowerMagnitudes;
     // 49d — denial is per idol per hook kind: the idol authors the hook but
@@ -172,8 +209,19 @@ export class PreTurnScreen {
   }
 
   hide(): void {
+    // 65f — kill the pulse schedule FIRST (its callbacks touch the buttons
+    // disposed below), drop the count overrides, and sweep any exit clones
+    // still awaiting their cue.
+    this.clearCueTimers();
+    this.displayedDraw = null;
+    this.displayedDiscard = null;
+    for (const clone of this.exitClones) clone.remove();
+    this.exitClones = [];
+    this.pendingCues = [];
     for (const button of this.cardListButtons) button.dispose();
     this.cardListButtons = [];
+    this.drawPileButton = null;
+    this.discardPileButton = null;
     if (this.container) {
       fadeOutAndRemove(this.container);
       this.container = null;
@@ -181,6 +229,14 @@ export class PreTurnScreen {
     this.handWrap = null;
     this.poolsEl = null;
     this.armedPacketIndex = null;
+  }
+
+  /** 65f — a live deck cue landed at the gate (PreTurnScene forwards the
+   *  `deck:*` events): queue it for the swap event that follows in the same
+   *  dispatch (the cues always precede `turn:handRedrawn` — Run emits the
+   *  hand swap LAST). */
+  enqueueCue(cue: DeckCue): void {
+    this.pendingCues.push(cue);
   }
 
   /**
@@ -218,6 +274,7 @@ export class PreTurnScreen {
     }
     this.animateExits(exits);
     this.enterPositions = enter.size > 0 ? enter : null;
+    this.playCuesOnNextRefresh = true; // 65f — this IS the hand-swap refresh
 
     this.hand = payload.hand;
     // R2 — the redraw shuffled cards between piles; refresh the stored copies so
@@ -247,17 +304,134 @@ export class PreTurnScreen {
       if (!(node instanceof HTMLElement)) continue;
       const rect = node.getBoundingClientRect();
       const clone = node.cloneNode(true) as HTMLElement;
-      clone.classList.add('preturn-card-exit');
+      // 65f — the clone holds as a static GHOST (fixed, in place) until its
+      // discard cue fires in the serial schedule; `beginExit` starts the
+      // fall. scheduleCueSequence pairs clones to cues in creation order.
+      clone.classList.add('preturn-card-ghost');
       clone.style.left = `${rect.left}px`;
       clone.style.top = `${rect.top}px`;
       clone.style.width = `${rect.width}px`;
       this.mount.appendChild(clone);
-      // animationend is the normal path; the timeout is the safety net (a
-      // backgrounded tab can throttle animations indefinitely).
-      const remove = (): void => clone.remove();
-      clone.addEventListener('animationend', remove, { once: true });
-      setTimeout(remove, 600);
+      this.exitClones.push(clone);
     }
+  }
+
+  /** 65f — start a ghost clone's exit fall + arrange its removal
+   *  (animationend is the normal path; the timeout is the safety net — a
+   *  backgrounded tab can throttle animations indefinitely). */
+  private beginExit(clone: HTMLElement): void {
+    clone.classList.add('preturn-card-exit');
+    const remove = (): void => clone.remove();
+    clone.addEventListener('animationend', remove, { once: true });
+    setTimeout(remove, 600);
+  }
+
+  private clearCueTimers(): void {
+    for (const timer of this.cueTimers) clearTimeout(timer);
+    this.cueTimers = [];
+  }
+
+  /** 65f — repaint just the two pile chips (their `getCount` thunks read
+   *  the displayed overrides while a pulse schedule is playing). */
+  private refreshPileButtons(): void {
+    this.drawPileButton?.refresh();
+    this.discardPileButton?.refresh();
+  }
+
+  /** 65f — one chip pulse: retrigger the CSS animation via class removal +
+   *  a forced reflow. */
+  private pulse(button: CardListButton | null, cls: string): void {
+    const el = button?.el;
+    if (!el) return;
+    el.classList.remove('card-list-button--pulse', 'card-list-button--reshuffle');
+    void el.offsetWidth; // reflow — restart the animation
+    el.classList.add(cls);
+  }
+
+  /**
+   * 65f — play the queued deck cues SERIALLY (the §65f shape-lock: one
+   * pulse per card, counts ticking one by one; the reshuffle is a single
+   * distinct pulse). Runs at the end of every `refreshHand`:
+   * - each `drawn` cue reveals its entering card (animation-delay synced
+   *   to the pulse cadence) and pulses the draw chip;
+   * - each `discarded` cue releases its exit ghost and pulses the discard
+   *   chip;
+   * - `reshuffled` pulses BOTH chips once with the distinct flash.
+   * The displayed counts ride overrides and reconcile to the authoritative
+   * piles when the schedule drains. Fight ▸ stays LIVE throughout — the
+   * user-signed fast-forward: advancing hides the screen, which clears the
+   * timers and sweeps the ghosts (never make the player wait for theater).
+   * No cues queued → the 65e quick stagger + immediate exits (the
+   * empower/cache refreshes and any diff the cues didn't cover).
+   */
+  private scheduleCueSequence(enteringNodes: readonly HTMLElement[]): void {
+    const cues = this.pendingCues;
+    this.pendingCues = [];
+    this.clearCueTimers();
+    const clones = this.exitClones;
+    this.exitClones = [];
+
+    if (cues.length === 0) {
+      enteringNodes.forEach((node, i) => {
+        node.style.animationDelay = `${i * 45}ms`;
+      });
+      for (const clone of clones) this.beginExit(clone);
+      return;
+    }
+
+    const CADENCE = 130;
+    // Seed the displayed counts at the PRE-sequence values, reconstructed
+    // from the first cue's post-move counts.
+    const first = cues[0]!;
+    if (first.kind === 'drawn') {
+      this.displayedDraw = first.drawPile + 1;
+      this.displayedDiscard = first.discardPile;
+    } else if (first.kind === 'discarded') {
+      this.displayedDraw = first.drawPile;
+      this.displayedDiscard = first.discardPile - 1;
+    } else {
+      this.displayedDraw = 0;
+      this.displayedDiscard = first.drawPile;
+    }
+    this.refreshPileButtons();
+
+    let drawnIdx = 0;
+    let discardIdx = 0;
+    cues.forEach((cue, k) => {
+      const t = k * CADENCE;
+      if (cue.kind === 'drawn') {
+        const node = enteringNodes[drawnIdx++];
+        if (node) node.style.animationDelay = `${t}ms`;
+      }
+      const clone = cue.kind === 'discarded' ? clones[discardIdx++] : undefined;
+      this.cueTimers.push(
+        window.setTimeout(() => {
+          this.displayedDraw = cue.drawPile;
+          this.displayedDiscard = cue.discardPile;
+          if (cue.kind === 'reshuffled') {
+            this.pulse(this.drawPileButton, 'card-list-button--reshuffle');
+            this.pulse(this.discardPileButton, 'card-list-button--reshuffle');
+          } else if (cue.kind === 'drawn') {
+            this.pulse(this.drawPileButton, 'card-list-button--pulse');
+          } else {
+            this.pulse(this.discardPileButton, 'card-list-button--pulse');
+          }
+          if (clone) this.beginExit(clone);
+          this.refreshPileButtons();
+        }, t),
+      );
+    });
+    // Defensive: a clone the cues didn't cover exits immediately (a diff
+    // the cue stream doesn't narrate must not leave a frozen ghost).
+    for (let i = discardIdx; i < clones.length; i++) this.beginExit(clones[i]!);
+    // Reconcile: overrides off, authoritative counts back.
+    this.cueTimers.push(
+      window.setTimeout(() => {
+        this.displayedDraw = null;
+        this.displayedDiscard = null;
+        this.refreshPileButtons();
+      }, cues.length * CADENCE + 200),
+    );
   }
 
   /**
@@ -332,6 +506,25 @@ export class PreTurnScreen {
     // read their stored copies at click time (refreshed by `updateHand`).
     // 51e — the face labels carry live counts ("Draw Pile · 12"), re-read
     // via refresh() wherever the stored pile copies swap (updateHand).
+    // 65f — the pile buttons get named refs (the pulse targets), and their
+    // counts read the schedule's displayed overrides while a serial pulse
+    // sequence plays (null = the authoritative pile).
+    this.drawPileButton = new CardListButton(this.mount, this.audio, {
+      text: 'Draw Pile',
+      title: 'Draw Pile',
+      position: 'draw',
+      getUnits: () => this.drawPile,
+      getCount: () => this.displayedDraw ?? this.drawPile.length,
+      emptyText: 'The draw pile is empty.',
+    });
+    this.discardPileButton = new CardListButton(this.mount, this.audio, {
+      text: 'Discard Pile',
+      title: 'Discard Pile',
+      position: 'discard',
+      getUnits: () => this.discardPile,
+      getCount: () => this.displayedDiscard ?? this.discardPile.length,
+      emptyText: 'The discard pile is empty.',
+    });
     this.cardListButtons = [
       new CardListButton(this.mount, this.audio, {
         text: 'Roster',
@@ -341,22 +534,8 @@ export class PreTurnScreen {
         getCount: () => this.roster.length,
         emptyText: 'No units in your roster.',
       }),
-      new CardListButton(this.mount, this.audio, {
-        text: 'Draw Pile',
-        title: 'Draw Pile',
-        position: 'draw',
-        getUnits: () => this.drawPile,
-        getCount: () => this.drawPile.length,
-        emptyText: 'The draw pile is empty.',
-      }),
-      new CardListButton(this.mount, this.audio, {
-        text: 'Discard Pile',
-        title: 'Discard Pile',
-        position: 'discard',
-        getUnits: () => this.discardPile,
-        getCount: () => this.discardPile.length,
-        emptyText: 'The discard pile is empty.',
-      }),
+      this.drawPileButton,
+      this.discardPileButton,
     ];
     for (const button of this.cardListButtons) panel.appendChild(button.el);
 
@@ -495,16 +674,18 @@ export class PreTurnScreen {
     cards.className = 'preturn-hand-cards';
     const buffSummary = this.buffSummary;
     // 65e — the one-shot enter set (the initial deal, a redraw refill, a
-    // Surge draw): entering cards animate in with a small stagger.
+    // Surge draw). 65f: the entering nodes are collected in reveal order
+    // and handed to the cue scheduler, which syncs each card's delay to
+    // its `drawn` pulse (falling back to the quick stagger when no cues
+    // are queued).
     const entering = this.enterPositions;
     this.enterPositions = null;
-    let enterOrdinal = 0;
+    const enteringNodes: HTMLElement[] = [];
     this.hand.forEach((unit, pos) => {
       const card = renderHandCard(unit, this.empowerMagnitudes[pos] ?? 0, buffSummary);
       if (entering === 'all' || (entering !== null && entering.has(pos))) {
         card.classList.add('preturn-card-enter');
-        card.style.animationDelay = `${enterOrdinal * 45}ms`;
-        enterOrdinal++;
+        enteringNodes.push(card);
       }
       if (selectable) {
         card.classList.add('unit-card--clickable');
@@ -514,6 +695,17 @@ export class PreTurnScreen {
       cards.appendChild(card);
     });
     wrap.appendChild(cards);
+    // 65f — the serial pile-pulse schedule plays ONLY on the hand-swap
+    // refresh; intermediate repaints (cache/grant/empower) leave the queue
+    // and any playing schedule alone (see the playCuesOnNextRefresh doc).
+    if (this.playCuesOnNextRefresh) {
+      this.playCuesOnNextRefresh = false;
+      this.scheduleCueSequence(enteringNodes);
+    } else {
+      enteringNodes.forEach((node, i) => {
+        node.style.animationDelay = `${i * 45}ms`;
+      });
+    }
 
     // The armed-packet banner (hype's pick-a-card state) outranks the
     // strip's own hints — it's the transient, user-initiated mode.

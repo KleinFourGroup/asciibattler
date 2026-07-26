@@ -2459,13 +2459,18 @@ body {
   }
 }
 
-/* A card leaving the hand (a redraw send-off / a Cull): the fixed-position
-   clone falls toward the discard corner and fades. The live row has already
-   rebuilt underneath it — this is pure send-off theater. */
-.preturn-card-exit {
+/* 65f — a departing card's GHOST: the fixed-position clone holding in place
+   until its discard cue fires in the serial schedule (the live row has
+   already rebuilt underneath it — pure send-off theater). */
+.preturn-card-ghost {
   position: fixed;
   z-index: 30;
   pointer-events: none;
+}
+
+/* A card leaving the hand (a redraw send-off / a Cull): the ghost falls
+   toward the discard corner and fades once its cue releases it. */
+.preturn-card-exit {
   animation: preturn-card-exit 0.28s ease-in forwards;
 }
 @keyframes preturn-card-exit {
@@ -2476,6 +2481,48 @@ body {
   to {
     opacity: 0;
     transform: translateY(26px);
+  }
+}
+
+/* 65f — the pile-chip pulses (the serial deck-transaction feel): one brief
+   flash per card moved; the reshuffle gets its own two-beat cyan shake on
+   BOTH chips (one conceptual action — a single distinct pulse by design). */
+.card-list-button--pulse {
+  animation: chip-pulse 0.18s ease-out;
+}
+@keyframes chip-pulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.1);
+    border-color: #ffb000; /* TERMINAL_AMBER */
+    color: #fff;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.card-list-button--reshuffle {
+  animation: chip-reshuffle 0.4s ease-in-out;
+}
+@keyframes chip-reshuffle {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  30% {
+    transform: rotate(-3deg) scale(1.08);
+    border-color: #15f4ee; /* FLOURESCENT_BLUE */
+    color: #15f4ee;
+  }
+  70% {
+    transform: rotate(3deg) scale(1.08);
+    border-color: #15f4ee;
+    color: #15f4ee;
+  }
+  100% {
+    transform: rotate(0) scale(1);
   }
 }
 

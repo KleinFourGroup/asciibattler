@@ -176,13 +176,9 @@ hooks). Identity + layout ONLY — waves still resolve at fight time.
   deliberately; v39 ledger entry.
 - **Scope guards:** boss nodes only (no elite/normal pre-roll); no layout
   PREVIEW rendering (name/identity display, not a minimap).
-- [ ] **66a** — the pre-roll core: `{bossEncounterId, bossEncounterMap}`
-  rolled on the existing `sectorRng` fork at both sector-entry seams
-  (constructor + `advanceSector`; X2/G1 force flags honored at pre-roll;
-  the FULL board pre-built via `buildEncounterMap`), boss-node
-  `beginEncounter` consumes the pair; **RunSnapshot v38→v39** + ledger;
-  save/load + determinism + force-flag pins; smoke re-pins in the SAME
-  commit (the pre-commit hook forces it).
+- [x] **66a** — the pre-roll core ✅ 2026-07-26 (`f9b44f7`): v38→v39;
+  the stream break landed NARROWER than predicted (pre-boss content
+  seed-identical; zero smoke re-pins needed); worklog §66a.
 - [ ] **66b** — the forewarning surface: a `Run.bossForewarning` getter →
   a banner sub-line ("Boss: \<name\> — \<layout\>"; procedural =
   "Uncharted Ground", USER) + a boss-node hover title; layout name shown

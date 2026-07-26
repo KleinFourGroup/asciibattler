@@ -1484,3 +1484,36 @@ approved as proposed.
   says it makes planning too easy, drop the layout name to
   boss-identity-only — the pre-roll bakes the board either way, so
   the revisit is a 66b-sized UI change, not a mechanics change.
+
+### 66a — the pre-roll core (2026-07-26, `f9b44f7`)
+
+As audited, with one finding that IMPROVED the round's prediction:
+
+- **The stream break landed narrower than the roadmap predicted.** The
+  pre-roll rides `sectorRng` after the node-map draws, and the boss
+  node's `beginEncounter` no longer forks `this.rng` — but nothing
+  consumes the parent stream after a terminal fight in the shipped
+  single-sector world. Net: node maps, teams, offers, and ALL pre-boss
+  content stay seed-identical; only the boss fight's content (and
+  anything downstream, i.e. nothing shipped) shifts. Proven by the
+  board, not argued: the full suite's only failures were the three
+  literal `schemaVersion = 38` pins, and fuzz:smoke passed 279/279
+  untouched — **zero re-pins needed** (the 61c lesson again: smoke
+  pins are invariants, not content). The §68 measurement re-anchor
+  cost just shrank accordingly — boss-wall reads shift per seed,
+  everything upstream doesn't.
+- **The force flags hoisted to the constructor head** (pure of RNG, so
+  fork alignment is untouched) — `rollBossForSector` reuses
+  `selectEncounter` + `buildEncounterMap` verbatim, so X2
+  forced-encounter and G1 forced-layout semantics apply at pre-roll
+  exactly as they did at fight time, and the #49 always-draw
+  discipline comes along for free.
+- **v39:** the pair serializes like `encounterMap` (plain JSON,
+  by-reference); `fromJSON` re-validates the id against the catalog
+  (hard reject — silently re-rolling would contradict a forewarning
+  the player already saw). Ledger entry written.
+- **Seven new pins** (Run.test.ts §66a): pre-roll shape ·
+  seed-determinism · the fight consumes the pair · mid-sector
+  save/load reproduces the exact boss + board · both shipped bosses
+  X2-force at pre-roll · kind-mismatch fallthrough · unknown-id
+  rejection. 2319→2326 main; 279 fuzz:smoke unchanged.

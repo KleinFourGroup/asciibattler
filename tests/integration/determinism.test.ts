@@ -114,6 +114,9 @@ describe('determinism: RunConfig (G1)', () => {
   });
 
   it('a forced short run resolves deterministically to completion', () => {
+    // 67c — `hopCount` is the bounded SINGLE-SECTOR probe dial (the sector's
+    // terminal is the run terminal, even on the shipped two-sector DAG), so
+    // this doubles as the integration pin for that semantic.
     const config: RunConfig = { hopCount: 1, forcedLayoutId: LAYOUT_IDS[0]! };
     const first = driveForcedRun(7, config);
     const second = driveForcedRun(7, config);

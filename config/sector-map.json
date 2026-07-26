@@ -1,6 +1,9 @@
 {
-  "nodes": [{ "id": "start", "sectors": ["the-start"] }],
-  "edges": [],
+  "nodes": [
+    { "id": "start", "sectors": ["the-start"] },
+    { "id": "deep-end", "sectors": ["the-deep-end"] }
+  ],
+  "edges": [{ "from": "start", "to": "deep-end" }],
   "sources": ["start"],
-  "sinks": ["start"]
+  "sinks": ["deep-end"]
 }

@@ -61,6 +61,7 @@ export interface CliArgs {
   range2?: string;
   tier?: string;
   hops?: number;
+  sectorHops?: number;
   roster?: string;
   dryRun: boolean;
   // H7c parallelism — fan the per-point vector search across N child processes.
@@ -224,6 +225,11 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--hops':
         args.hops = Number(v);
+        break;
+      case '--sector-hops':
+        // 67c — the shortened FULL-WALK dial (every sector's map = N hops,
+        // the DAG still sinks); --hops stays the single-sector probe.
+        args.sectorHops = Number(v);
         break;
       case '--roster':
         if (v !== undefined) args.roster = v;

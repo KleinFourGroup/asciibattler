@@ -902,6 +902,22 @@ export class Run {
    */
   private readonly difficultyMultipliers: DifficultyMultipliers;
 
+  /**
+   * 67c — the two dev run-SHAPE dials (mutually exclusive; construction
+   * throws on both). Neither is persisted (RunConfig discipline — a
+   * rehydrated run runs unbounded, the forcedLayoutId precedent):
+   * - `singleSectorRun` (set by `RunConfig.hopCount`): the bounded-probe
+   *   semantic — the current sector's terminal IS the run terminal; the
+   *   sector walk never advances. Every harness `SHORT` fixture, the
+   *   commit-hook smoke tier, and isolation probes mean THIS.
+   * - `sectorHopsOverride` (set by `RunConfig.sectorHops`): the cheap
+   *   full-walk semantic — every sector's node-map is exactly N hops
+   *   (an override, not a cap) while the DAG still walks to its real
+   *   sink. The quick multi-sector balance-read dial.
+   */
+  private readonly singleSectorRun: boolean;
+  private readonly sectorHopsOverride: number | undefined;
+
   private readonly bus: EventBus<GameEvents>;
   private subscriptions: Array<() => void> = [];
 
@@ -934,6 +950,17 @@ export class Run {
     // fork alignment.
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
+    // 67c — the run-shape dials resolve here too (pure of RNG). `hopCount`
+    // says "a bounded SINGLE-sector probe"; `sectorHops` says "walk the full
+    // DAG on shortened sectors" — together they contradict, so fail loud
+    // rather than pick a silent precedence.
+    if (config?.hopCount !== undefined && config?.sectorHops !== undefined) {
+      throw new Error(
+        'Run: hopCount (single-sector probe) and sectorHops (shortened full walk) are mutually exclusive',
+      );
+    }
+    this.singleSectorRun = config?.hopCount !== undefined;
+    this.sectorHopsOverride = config?.sectorHops;
     const sectorRng = this.rng.fork();
     const start = pickStartSector(this.sectorMap, sectorRng);
     this.currentSectorNodeId = start.sectorNodeId;
@@ -1537,7 +1564,9 @@ export class Run {
 
   /** T2 — the active sector's node-map hop count (NodeMap.generate length). */
   private currentSectorLength(): number {
-    return this.currentSector().length;
+    // 67c — `sectorHops` overrides EVERY sector's length (both sector-entry
+    // seams route through here); the authored length is the default.
+    return this.sectorHopsOverride ?? this.currentSector().length;
   }
 
   /**
@@ -2768,10 +2797,11 @@ export class Run {
     if (this.currentNodeId === this.nodeMap.terminalId) {
       // T2 — a sector terminal was cleared. At a sector-DAG sink the run is WON;
       // otherwise advance to a successor sector (carrying the player pool +
-      // roster — a sector is a chapter of one run, not a fresh run). Only "The
-      // Start" ships (its DAG node is both source and sink), so the non-sink
-      // branch is built + headless-tested but never reached in shipped play.
-      if (isSectorSink(this.sectorMap, this.currentSectorNodeId)) {
+      // roster — a sector is a chapter of one run, not a fresh run). 67c: the
+      // shipped DAG is start → deep-end, so the non-sink branch is live play.
+      // A `hopCount`-bounded probe treats ITS terminal as the run terminal
+      // (the single-sector semantic) — the walk never advances.
+      if (isSectorSink(this.sectorMap, this.currentSectorNodeId) || this.singleSectorRun) {
         this.phase = 'complete';
         this.bus.emit('run:victory', {});
       } else {
@@ -3308,6 +3338,8 @@ export class Run {
       subscriptions: Array<() => void>;
       forcedLayoutId: string | null;
       forcedEncounterId: string | null;
+      singleSectorRun: boolean;
+      sectorHopsOverride: number | undefined;
       difficultyMultipliers: DifficultyMultipliers;
       runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
       turnGrants: TurnGrants;
@@ -3324,6 +3356,10 @@ export class Run {
     m.drawAmountAdd = 0;
     // X2 — same: a rehydrated run drops the forced-encounter isolation.
     m.forcedEncounterId = null;
+    // 67c — same: the run-shape dials are RunConfig inputs; a rehydrated run
+    // is unbounded (full-length sectors, the walk runs to its real sink).
+    m.singleSectorRun = false;
+    m.sectorHopsOverride = undefined;
     // X1 — RunConfig isn't persisted either, so re-resolve the difficulty lever
     // to the shipped difficulty.json defaults (an overridden run can't be saved
     // mid-flight today; a future difficulty system would persist its own source).
@@ -3360,8 +3396,12 @@ export class Run {
     m.turnGrants = snap.turnGrants.map((g) => ({ ...g }));
     m.passIsFinal = DECK.grantQueue.passIsFinal;
     // T2 — RunConfig (incl. a sectorMap override) isn't persisted; a restored
-    // run walks the shipped DAG. The shipped DAG is a single sink, so a save is
-    // never taken mid-walk of a multi-node graph — the fallback is exact.
+    // run walks the shipped DAG. 67c: the shipped DAG is multi-node now, so a
+    // snapshot taken under a FIXTURE map can rehydrate onto sector-node ids the
+    // shipped map doesn't know (`currentSectorNodeId` isn't re-validated here).
+    // Fine for shipped play — its saves always come from SECTOR_MAP — and the
+    // real save/load story (incl. whether the map itself persists) is
+    // Cluster 6's.
     m.sectorMap = SECTOR_MAP;
     m.currentSectorId = snap.currentSectorId;
     m.currentSectorNodeId = snap.currentSectorNodeId;

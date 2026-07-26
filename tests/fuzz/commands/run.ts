@@ -68,6 +68,7 @@ export type RunModeArgs = Pick<
   | 'layout'
   | 'encounter'
   | 'hops'
+  | 'sectorHops'
   | 'roster'
   | 'objective'
   | 'redraw'
@@ -114,6 +115,7 @@ export function runRunCli(args: RunModeArgs): void {
     : undefined;
   const runConfig: {
     hopCount?: number;
+    sectorHops?: number;
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
     forcedEncounterId?: string;
@@ -121,6 +123,9 @@ export function runRunCli(args: RunModeArgs): void {
     drawAmountAdd?: number;
   } = {};
   if (args.hops !== undefined) runConfig.hopCount = args.hops;
+  // 67c — the shortened full-walk dial (mutually exclusive with --hops; Run
+  // throws loud on both, so no silent precedence here either).
+  if (args.sectorHops !== undefined) runConfig.sectorHops = args.sectorHops;
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
   if (layout !== undefined) runConfig.forcedLayoutId = layout;
   if (encounter !== undefined) runConfig.forcedEncounterId = encounter;

@@ -520,11 +520,13 @@ describe('Run', () => {
       // invariant anymore. Per-card independence is pinned in Recruitment.test.
     });
 
-    it('winning at the terminal node routes to complete (not recruit)', () => {
+    it('winning at the terminal node routes to the sector gate (not recruit)', () => {
       const { run, bus } = freshRunWithBus(1);
       // Force currentNodeId to the terminal so the next battle's win is the
       // final one. Manual state surgery is acceptable for this targeted
       // test — driving a full run is the browser-verify path.
+      // 67c: The Start's terminal is no longer a sink, so the win lands on
+      // the 67a gate; sink completion is pinned in the sector-walk suite.
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       let victoryCount = 0;
@@ -532,8 +534,8 @@ describe('Run', () => {
       bus.on('run:victory', () => victoryCount++);
       bus.on('recruit:offered', () => offeredCount++);
       winEncounter(bus);
-      expect(run.phase).toBe('complete');
-      expect(victoryCount).toBe(1);
+      expect(run.phase).toBe('sectorCleared');
+      expect(victoryCount).toBe(0);
       expect(offeredCount).toBe(0);
       expect(run.currentOffer).toBeNull();
     });
@@ -700,7 +702,7 @@ describe('Run', () => {
       expect(run.currentOffer).toHaveLength(3);
     });
 
-    it('dismissPromotion at the terminal node routes to complete (not recruit)', () => {
+    it('dismissPromotion at the terminal node routes to the sector gate (not recruit)', () => {
       const { run, bus } = freshLvl1RunWithBus(1);
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
@@ -711,8 +713,10 @@ describe('Run', () => {
       winEncounter(bus, [{ unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: xpToNext(1) }]);
       expect(run.phase).toBe('promotion');
       run.dispatch({ kind: 'dismissPromotion' });
-      expect(run.phase).toBe('complete');
-      expect(victoryCount).toBe(1);
+      // 67c: the terminal win exits the promotion into the 67a gate (The
+      // Start's terminal stopped being a sink) — still never a recruit.
+      expect(run.phase).toBe('sectorCleared');
+      expect(victoryCount).toBe(0);
       expect(offerCount).toBe(0);
     });
 
@@ -3393,7 +3397,7 @@ describe('Run', () => {
     it('opens on a source DAG node + the shipped sector', () => {
       const { run } = freshRunWithBus(1);
       expect(run.currentSectorId).toBe('the-start');
-      expect(run.currentSectorNodeId).toBe('start'); // the shipped one-node DAG
+      expect(run.currentSectorNodeId).toBe('start'); // the shipped DAG's one source
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
     });
 
@@ -3404,16 +3408,26 @@ describe('Run', () => {
       expect(run.currentSectorTitle).toBe(getSector('the-start')!.title);
     });
 
-    it('the shipped single-node DAG (source == sink) completes at the terminal', () => {
+    it('the shipped DAG (67c: start → deep-end) gates at the first terminal, completes at the second', () => {
       const { run, bus } = freshRunWithBus(1);
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       let victories = 0;
       bus.on('run:victory', () => victories++);
       winEncounter(bus);
+      // The Start's terminal is no longer a sink — the 67a gate, then act two.
+      expect(victories).toBe(0);
+      expect(run.phase).toBe('sectorCleared');
+      run.dispatch({ kind: 'dismissSectorCleared' });
+      expect(run.currentSectorNodeId).toBe('deep-end');
+      expect(run.currentSectorId).toBe('the-deep-end');
+      expect(run.currentSectorTitle).toBe(getSector('the-deep-end')!.title);
+      // Clear the second terminal — deep-end IS the sink → the run completes.
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      winEncounter(bus);
       expect(run.phase).toBe('complete');
       expect(victories).toBe(1);
-      expect(run.currentSectorNodeId).toBe('start'); // never advanced
     });
 
     it('clearing a non-sink terminal advances to the successor sector, carrying roster + pool', () => {
@@ -3491,6 +3505,47 @@ describe('Run', () => {
       restored.dispatch({ kind: 'dismissSectorCleared' });
       expect(restored.phase).toBe('map');
       expect(restored.currentNodeId).toBe(PRE_ROOT_NODE_ID);
+    });
+
+    it('hopCount is the SINGLE-sector probe dial (67c): its terminal completes the run on the shipped DAG', () => {
+      const { run, bus } = freshRunWithBus(1, { hopCount: 2 });
+      expect(run.nodeMap.hops.length).toBe(2);
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      let victories = 0;
+      bus.on('run:victory', () => victories++);
+      winEncounter(bus);
+      // No gate, no advance — the probe's terminal IS the run terminal.
+      expect(run.phase).toBe('complete');
+      expect(victories).toBe(1);
+      expect(run.currentSectorNodeId).toBe('start');
+    });
+
+    it('sectorHops is the shortened FULL-WALK dial (67c): every sector maps to N hops, the DAG still sinks', () => {
+      const { run, bus } = freshRunWithBus(1, { sectorHops: 3 });
+      expect(run.nodeMap.hops.length).toBe(3); // overrides the authored 11
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      winEncounter(bus);
+      // Still walks the DAG: the gate, then act two — ALSO 3 hops.
+      expect(run.phase).toBe('sectorCleared');
+      run.dispatch({ kind: 'dismissSectorCleared' });
+      expect(run.currentSectorId).toBe('the-deep-end');
+      expect(run.nodeMap.hops.length).toBe(3);
+      // And the sink completes as normal.
+      run.currentNodeId = run.nodeMap.terminalId;
+      run.phase = 'battle';
+      let victories = 0;
+      bus.on('run:victory', () => victories++);
+      winEncounter(bus);
+      expect(run.phase).toBe('complete');
+      expect(victories).toBe(1);
+    });
+
+    it('hopCount + sectorHops together throw loud at construction (67c)', () => {
+      expect(() => new Run(1, new EventBus<GameEvents>(), { hopCount: 2, sectorHops: 3 })).toThrow(
+        /mutually exclusive/,
+      );
     });
 
     it('rejects a pre-T2 (v19) snapshot', () => {
@@ -3804,8 +3859,10 @@ describe('Run', () => {
       // W — the boss node draws from the sector's boss pool, not the normal pool.
       expect(run.selectedEncounter!.kind).toBe('boss');
 
-      // And a win at the boss completes the run (existing terminal path). The
-      // boss pool is deeper than the default, so chip its actual pool to drain it.
+      // And a win at the boss completes the run: a `hopCount` probe is
+      // SINGLE-sector (67c), so its terminal is the run terminal even on the
+      // shipped two-sector DAG. The boss pool is deeper than the default, so
+      // chip its actual pool to drain it.
       winEncounter(bus, [], run.enemyHealthPoolMax);
       // 48f — boss rewards fire BEFORE run:victory (uniform on terminal wins,
       // per the shape-lock); resolve them to reach the completion.

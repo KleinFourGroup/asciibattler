@@ -53,6 +53,8 @@ describe('sectors config — the shipped catalog', () => {
     // V1 pooled the launch catalog into The Start's fight pool; V2 commit C added
     // the grammar-demo encounters; W1 pooled the boss, W2 the two elites. Wb4 split
     // the pool by kind — each list ungated/uniform (filtered by node kind, not hop).
+    // 67c — the minHop-4 back-half entries (elementalTrio/plagueDoctors/
+    // darkMagicPosse) MIGRATED to The Deep End: act 1 is brigand country now.
     expect(start!.encounters.normal.map((e) => e.encounterId)).toEqual([
       'brigands',
       'highwaymen',
@@ -60,17 +62,44 @@ describe('sectors config — the shipped catalog', () => {
       'artillery',
       'ronin-vs-mages',
       'adventurer-with-guards',
-      // §33 — the §29-archetype showcase normals (hop-gated to the back half).
-      'elementalTrio',
-      'plagueDoctors',
     ]);
     expect(start!.encounters.elite.map((e) => e.encounterId)).toEqual([
       'brigand-champions',
       'warband-vanguard',
-      // §33 — darkMagicPosse reclassified normal→elite (its ~6.1 fits the elite band).
-      'darkMagicPosse',
     ]);
     expect(start!.encounters.boss.map((e) => e.encounterId)).toEqual(['bandit-king', 'banditQueen']);
+  });
+
+  it('ships "The Deep End" (67c): swamp act two — the occult pool, ungated from hop 0', () => {
+    const deep = getSector('the-deep-end');
+    expect(deep).toBeDefined();
+    expect(deep!.theme).toBe('swamp');
+    // Same act length as The Start (the shape-lock call: equal acts).
+    expect(deep!.length).toBe(getSector('the-start')!.length);
+    // The full layout pool, same as act 1 (re-weighting is a §68 lever).
+    const ids = deep!.layouts.map((e) => e.layoutId);
+    expect(ids).toContain(PROCEDURAL_LAYOUT_ID);
+    for (const layoutId of LAYOUT_IDS) expect(ids).toContain(layoutId);
+    // The 67-kickoff pools: the four user-authored entries + the migrated
+    // minHop-4 trio (front-loaded — hops reset per sector, so no gates) +
+    // the two shared mid-tier normals + both bosses by reference.
+    expect(deep!.encounters.normal.map((e) => e.encounterId)).toEqual([
+      'infernalColumn',
+      'plagueVictims',
+      'miscreants',
+      'elementalTrio',
+      'plagueDoctors',
+      'artillery',
+      'adventurer-with-guards',
+    ]);
+    expect(deep!.encounters.elite.map((e) => e.encounterId)).toEqual([
+      'plagueSpreaders',
+      'darkMagicPosse',
+    ]);
+    expect(deep!.encounters.boss.map((e) => e.encounterId)).toEqual(['bandit-king', 'banditQueen']);
+    expect(
+      Object.values(deep!.encounters).every((pool) => pool.every((e) => e.minHop === undefined)),
+    ).toBe(true);
   });
 
   it('getSector returns undefined for an unknown id', () => {

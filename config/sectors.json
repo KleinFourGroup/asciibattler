@@ -26,18 +26,55 @@
         { "encounterId": "deserters" },
         { "encounterId": "artillery" },
         { "encounterId": "ronin-vs-mages" },
-        { "encounterId": "adventurer-with-guards" },
-        { "encounterId": "elementalTrio", "minHop": 4 },
-        { "encounterId": "plagueDoctors", "minHop": 4 }
+        { "encounterId": "adventurer-with-guards" }
       ],
       "elite": [
         { "encounterId": "brigand-champions" },
-        { "encounterId": "warband-vanguard" },
-        { "encounterId": "darkMagicPosse", "minHop": 4 }
+        { "encounterId": "warband-vanguard" }
       ],
       "boss": [
         { "encounterId": "bandit-king" },
         { "encounterId": "banditQueen", "minHop": 0 }
+      ]
+    }
+  },
+  {
+    "id": "the-deep-end",
+    "title": "The Deep End",
+    "description": "Where the charts run out. A drowned, fetid second act — the occult half of the catalog moves in, and the plague has a source.",
+    "length": 11,
+    "theme": "swamp",
+    "layouts": [
+      { "layoutId": "procedural", "weight": 2 },
+      { "layoutId": "labyrinth" },
+      { "layoutId": "river" },
+      { "layoutId": "endlessCorridors" },
+      { "layoutId": "junctionAmbush" },
+      { "layoutId": "strafingFunnel" },
+      { "layoutId": "spiralFireLife" },
+      { "layoutId": "isthmus" },
+      { "layoutId": "icebergs" },
+      { "layoutId": "desertFortress" },
+      { "layoutId": "fetidPond" },
+      { "layoutId": "rubbleQuarry" }
+    ],
+    "encounters": {
+      "normal": [
+        { "encounterId": "infernalColumn" },
+        { "encounterId": "plagueVictims" },
+        { "encounterId": "miscreants" },
+        { "encounterId": "elementalTrio" },
+        { "encounterId": "plagueDoctors" },
+        { "encounterId": "artillery" },
+        { "encounterId": "adventurer-with-guards" }
+      ],
+      "elite": [
+        { "encounterId": "plagueSpreaders" },
+        { "encounterId": "darkMagicPosse" }
+      ],
+      "boss": [
+        { "encounterId": "bandit-king" },
+        { "encounterId": "banditQueen" }
       ]
     }
   }

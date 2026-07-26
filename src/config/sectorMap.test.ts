@@ -11,14 +11,18 @@ import { SECTOR_IDS } from './sectors';
 const REAL_SECTOR = SECTOR_IDS[0]!; // a definitionally-valid sector id
 
 describe('sector-map config — the shipped DAG', () => {
-  it('parses to a one-node DAG with source == sink', () => {
-    expect(SECTOR_MAP.nodes.length).toBe(1);
-    expect(SECTOR_MAP.edges.length).toBe(0);
-    expect(SECTOR_MAP.sources).toEqual(SECTOR_MAP.sinks);
-    const only = SECTOR_MAP.nodes[0]!;
-    expect(SECTOR_MAP.sources).toContain(only.id);
-    // its sector is real (caught by the schema, asserted here for legibility)
-    for (const id of only.sectors) expect(SECTOR_IDS).toContain(id);
+  it('parses to the 67c two-node chain: start → deep-end', () => {
+    expect(SECTOR_MAP.nodes.map((n) => n.id)).toEqual(['start', 'deep-end']);
+    expect(SECTOR_MAP.edges).toEqual([{ from: 'start', to: 'deep-end' }]);
+    expect(SECTOR_MAP.sources).toEqual(['start']);
+    expect(SECTOR_MAP.sinks).toEqual(['deep-end']);
+    // Every candidate sector is real (caught by the schema, asserted here for
+    // legibility) — and both node lists are singletons, so the whole walk is
+    // zero-entropy (gotcha #111: node-map generation stays unperturbed).
+    for (const node of SECTOR_MAP.nodes) {
+      expect(node.sectors.length).toBe(1);
+      for (const id of node.sectors) expect(SECTOR_IDS).toContain(id);
+    }
   });
 });
 

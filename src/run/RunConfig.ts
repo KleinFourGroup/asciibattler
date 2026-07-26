@@ -40,8 +40,24 @@ export interface RunConfig {
    * Total hops including root + terminal (default
    * `config/nodemap.json#hopCount` = 11). A *playable* run needs >= 2 (root
    * + a terminal boss fight); `hopCount: 2` is the minimal one-battle run.
+   *
+   * 67c — setting this makes the run a bounded SINGLE-SECTOR probe: the
+   * sector's terminal IS the run terminal (the sector walk never advances) —
+   * the isolation/smoke semantic every `SHORT` harness fixture means. For a
+   * shortened run that still walks the whole sector DAG, use `sectorHops`.
+   * Mutually exclusive with `sectorHops` (construction throws on both).
    */
   readonly hopCount?: number;
+  /**
+   * 67c — the shortened FULL-WALK dial: every sector's node-map is exactly
+   * this many hops (an override of each sector's authored `length`, not a
+   * cap) while the DAG still walks to its real sink — `sectorHops: 4` on the
+   * shipped start → deep-end chain is a 4+4-hop two-act run. The cheap
+   * multi-sector balance-read shape. URL form: `sectorHops=4`. Mutually
+   * exclusive with `hopCount`; not persisted (a rehydrated run restores
+   * authored lengths).
+   */
+  readonly sectorHops?: number;
   /**
    * Replace the rolled starting roster with these archetypes, each at a chosen
    * level (dev / playtest). Supersedes the old `?roster=` override. URL form:
@@ -166,6 +182,7 @@ export interface RunConfig {
 export const RUN_CONFIG_PARAMS = {
   seed: 'seed',
   hops: 'hops',
+  sectorHops: 'sectorHops',
   roster: 'roster',
   layout: 'layout',
   encounter: 'encounter',
@@ -266,6 +283,8 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (seed !== undefined) config.seed = seed;
   const hopCount = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.hops));
   if (hopCount !== undefined) config.hopCount = hopCount;
+  const sectorHops = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.sectorHops));
+  if (sectorHops !== undefined) config.sectorHops = sectorHops;
   const startingRoster = parseRoster(params.get(RUN_CONFIG_PARAMS.roster));
   if (startingRoster !== undefined) config.startingRoster = startingRoster;
   const forcedLayoutId = parseLayout(params.get(RUN_CONFIG_PARAMS.layout));
@@ -305,6 +324,9 @@ export function runConfigToQueryString(config: RunConfig): string {
   if (config.seed !== undefined) params.set(RUN_CONFIG_PARAMS.seed, String(config.seed));
   if (config.hopCount !== undefined) {
     params.set(RUN_CONFIG_PARAMS.hops, String(config.hopCount));
+  }
+  if (config.sectorHops !== undefined) {
+    params.set(RUN_CONFIG_PARAMS.sectorHops, String(config.sectorHops));
   }
   if (config.startingRoster && config.startingRoster.length > 0) {
     params.set(

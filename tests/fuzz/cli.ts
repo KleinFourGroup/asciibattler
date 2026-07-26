@@ -20,6 +20,10 @@
  *   # run is that fight). The boss fields only at its node kind, so --hops=2 puts the
  *   # terminal boss node one step in:
  *   npm run fuzz -- --encounter=bandit-king --hops=2 --roster=mercenary:6,archer:6,mage:6 --per-encounter
+ *   # 67c — --hops=N is a bounded SINGLE-sector probe (the sector terminal ends the
+ *   # run); --sector-hops=N instead shortens EVERY sector's map while still walking
+ *   # the full DAG (a cheap two-act read). Mutually exclusive.
+ *   npm run fuzz -- --sector-hops=4   # 4+4-hop start→deep-end runs
  *   npm run fuzz -- --layout=junctionAmbush --per-hop   # force ONE layout (clean full sample)
  *   npm run fuzz -- --layout=procedural --per-hop       # force PROCEDURAL maps every battle (M6 isolate)
  *

@@ -177,9 +177,19 @@ export class PreTurnScreen {
     this.discardPile = info.discardPile;
     this.drawAmount = info.drawAmount;
     this.enterPositions = 'all'; // 65e — the initial deal animates in, staggered
-    // 65f — the deal's cue sequence (recycle discards · draws · a possible
-    // reshuffle), buffered by Game since the scene wasn't mounted yet.
-    this.pendingCues = [...dealCues];
+    // 65f — the deal's cue sequence, buffered by Game since the scene
+    // wasn't mounted yet. The LEADING discarded cues are the previous
+    // turn's hand recycling — its epilogue, not this turn's story — so the
+    // playback drops them (the user's turn-2 feel read): the screen opens
+    // with the discard count already at its post-recycle value and the
+    // narrative starts at the deal. The recycle is always a strict prefix
+    // (drawTurnHand discards before it draws); a mid-DEAL reshuffle stays,
+    // and on a dry-pile turn the sequence now OPENS on the reshuffle
+    // flash. Presentation policy only — the Run's cue stream stays honest
+    // at the chokepoint.
+    const deal = [...dealCues];
+    while (deal[0]?.kind === 'discarded') deal.shift();
+    this.pendingCues = deal;
     this.playCuesOnNextRefresh = true;
     this.grants = info.grants;
     this.empowerMagnitudes = info.empowerMagnitudes;

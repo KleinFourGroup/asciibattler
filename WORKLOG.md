@@ -1377,3 +1377,15 @@ sweeps ghosts — the fast-forward is free.
   reshuffle story (reshuffle flash + 0→4/4→0 flip, then 4→3→2 serial
   draw pulses, settling authoritative); zero console errors. The
   native feel read (65e + 65f together) is the user's.
+- **Feel-read amendment (USER, same day): the recycle prefix is CUT
+  from the playback.** Turn 2+ opened on the previous hand's discard
+  ticks — the previous turn's epilogue narrated at the start of
+  yours. Option A of three (drop it — the StS convention; the screen
+  opens with the discard count already post-recycle) beat B (collapse
+  to one beat — still someone else's ending) and C (play it on the
+  post-turn screen — real scope, empty moment). Presentation policy
+  only: `show()` drops the deal buffer's leading `discarded` run (the
+  recycle is a strict prefix by construction); the Run's cue stream
+  stays honest, no pin moves. Verified on a driven turn-2: opens
+  straight on the deal (card 0 at 0ms, discard pre-seeded ·6), the
+  mid-deal reshuffle keeps its beat (the 520ms gap), reconciles ·4/·0.

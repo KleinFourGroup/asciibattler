@@ -250,11 +250,11 @@ edits re-scan the non-vacuousness canaries (61d precedent).
   `sectorHops` through search/sweep/shard (suppression semantics) +
   the `--grant` seam (inert grants byte-identical — pinned); main
   2333→2338, smoke 284→287; worklog §68b.
-- [ ] **68c** — protocol v2 into BALANCE.md + the executable board:
-  per-character doctrine, the consumption contract, the new-mechanic
-  shipping checklist, rollout arbitration named the sanctioned
-  direction; `balance:board` driver + diff-vs-signed-sheet
-  auto-flag report.
+- [x] **68c** — protocol v2 + the executable board ✅ 2026-07-27
+  (`f7c8738`): the v2 section + consumption table + checklist into
+  BALANCE.md; `balance:board` plan/run/report vs signed-sheet.json
+  (signed-grade FAILs, reference-grade WARNs); the interstitial
+  META-ROADMAP'd; smoke 287→298; worklog §68c.
 - [ ] **68d** — the re-baseline batches (box): Soldier continuity vs
   the §60e 62.5 anchor, then Priest/Gambler; the +2-vs-+4 re-read
   rides. ⛔ Decision point: user signs the per-character bands.

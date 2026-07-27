@@ -94,6 +94,16 @@ they happen:
   the WHCA\*/flow-field gate **decided NO on data**. Detail: the
   [PATHING.md](PATHING.md) run-log + BALANCE.md §46b; the riders it hands
   Cluster 3 are carried by the HANDOFF 🧭 Cursor (the single live-status home).
+- **PLANNED — Run-layer rollout arbitration (between Clusters 4 and 5;
+  user-signed at the §68 shape-lock, 2026-07-27)** — the §57 lesson applied to
+  the run layer: port buys / daemon picks / packet fires / redraws enumerate
+  candidates and let truncated rollouts arbitrate, retiring the §60c
+  consumption treadmill BY CONSTRUCTION (a new mechanic is consumed because
+  the rollout measures it — no scorer dims to author or get wrong). A
+  §57-sized build (truncation/caching design needed). Rationale + the
+  sequencing ask (land BEFORE Cluster 5's events content — choice trees are
+  the hand-scorer worst case): BALANCE.md "Protocol v2 → the sanctioned
+  direction" + worklog §68-shape-lock.
 
 ---
 

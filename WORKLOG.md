@@ -2074,3 +2074,53 @@ messages, a `--count=2 --sector-hops=3 --grant=portunus,patch` batch
 runs clean, and a sharded `--search --sector-hops=2 --jobs=2`
 completes end to end (the ShardJob round-trip). 2333→2338 main;
 smoke 284→287.
+
+### 68c — protocol v2 + the executable board (2026-07-27, `f7c8738`)
+
+**The board** ([tests/fuzz/board/](tests/fuzz/board/)): the doctrine
+instrument set as DATA (board.ts — five §60e-continuity instruments:
+the two posture vectors, the fire-ablated control + its Δ check, the
+two forced-boss probes; all extended-arm, in-sample seeds,
+`--hops=11` = the continuity shape, explicit Soldier) + the signed
+sheet as an ARTIFACT (signed-sheet.json — the §60e numbers with
+provenance; 68d re-signs it per character). Three modes:
+`balance:board -- --plan` (prints the batch commands — the BOX path;
+box-batch.sh stays the only box driver, the plan is what you feed
+it) · `--run` (sequential local spawns of the real fuzz CLI, each
+into `output/board/<id>/`) · `--report` (diff every summary.csv vs
+the sheet; exit 1 on FAIL). Design calls worth keeping: the board
+RUNS the fuzz CLI rather than reimplementing it (an instrument is an
+argv); checks carry a GRADE — `signed` FAILs, `reference` (an
+observed §60e value ± tolerance) only WARNs — so the board is honest
+about what the user actually signed vs what was merely measured; at
+68c everything but the in-sample win band is reference-grade BY
+DESIGN (the §60e sheet was signed on the pre-67 world — the board is
+the form 68d fills in). The wall metric derives via the §60e
+arithmetic (defeats among terminal-hop arrivals; N/A when nothing
+won, never a fake verdict). Pure layer fully pinned (11 tests:
+csv-by-header-name parse, the wall arithmetic, FAIL-vs-WARN grades,
+the Δ check + missing-side N/A, the balance-proof signed-band
+derivation); the runner shell stays untested per the commands/
+discipline. Verified live: `--plan` emits the five real commands;
+a toy 2-run batch → `--report` correctly FAILed the signed band,
+WARNed the drift rows, flagged the four missing instruments, exit 1.
+
+**Protocol v2 into BALANCE.md** (a new §68 section between "What
+changed" and "The signal", + three surgical touchpoints): the
+per-character doctrine (per-batch isolation · Soldier = continuity
+anchor · the --roster/--daemon precedence-trap labeling rule · run
+SHAPE as part of a read's label, --hops=11 vs the two-act walk) ·
+the §60c consumption contract formalized as a per-mechanism TABLE
+(what consumes what, since when — daemons stay forced-arm/grant-pair
+BY DESIGN, the port scorer's blindness now a labeled fact) · the
+realized-value instrument doctrine · **the new-mechanic shipping
+checklist** (isolation dial / consumption story / value hook /
+board-impact prediction — cut at phase kickoff like the union-bump
+prediction) · the executable-board commands + the amendment rule
+("every fix re-runs the full board" now executes) · **the sanctioned
+direction**: run-layer rollout arbitration, named + META-ROADMAP'd
+as the planned Cluster-4→5 interstitial with the D-before-events
+sequencing ask. Touchpoints: the funnel gains the two-act note, the
+bot-margin caveat points at v2, Commands gains --sector-hops /
+--grant / balance:board. 2338 main; smoke 287→298 (the 11 board
+pins).

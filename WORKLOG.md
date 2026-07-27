@@ -1780,3 +1780,36 @@ battle (elementalTrio; its strafingFunnel roll kept the authored
 tundra theme — the T2 hand-authored-keeps-identity rule, procedural
 rolls inherit swamp). Zero console errors. 2330→2333 main; smoke
 279 green with the daemon test back under budget.
+
+### 67d + 67-close — the native run + the phase verdict (2026-07-26, user-signed)
+
+The user's native two-sector run: **the transition beat ✓** (boss win
+→ rewards → the Sector Cleared screen → Press on → the new map) and
+**act-two identity ✓** (swamp palette, the plague-thread encounters,
+banner + re-rolled forewarning) — but the run DIED at Infernal
+Column before reaching the deep-end boss.
+
+- **The exit criterion AMENDED (user-signed):** "a full two-sector
+  run completes natively" was proving the multi-sector plumbing —
+  and every new seam WAS exercised natively (the gate, the screen,
+  the carry-across, the per-sector re-roll, the new pools). The
+  unreached tail (deep-end sink → Run Complete) is code-identical
+  to the pre-67 terminal path and headless-pinned twice, so the
+  completion verify moves to §68, post-tuning.
+- **The finding is the §68 input, not a 67 fix:** Infernal Column
+  (mercs 3 / reavers 1 / archers 1 at 1.5×hand, budget 1.25, pool
+  10) reads way too hard in situ. NOT tuned here — the §60 doctrine:
+  never tune a rolled encounter from a pooled read; §68
+  force-isolates it (`--encounter=infernalColumn` + the new
+  `--sector-hops` two-act read) before any number moves.
+- Other criteria: coverage guards ✓ (the board, twice through the
+  hook) · the cleared screen at the transition ✓ (native) ·
+  forewarning re-rolls per sector ✓ (native + the 66a pin). Scope
+  guards held: one new sector, zero new mechanics (the dial split is
+  instrument shape, not game mechanics).
+
+**Phase verdict:** four cuts, four commits, one day, all user-signed.
+v39→v40 (the gate); 2327→2333 main; smoke 279 green throughout. The
+round's remaining work is §68 — the protocol v2 + balance pass, now
+carrying three named 67 handoffs: the Infernal Column read, the
+native completion verify, and `sectorHops` preset adoption.

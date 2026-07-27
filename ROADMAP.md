@@ -177,42 +177,30 @@ five exit criteria met in two cuts, one day. Detail: worklog
 - [x] **66b** — the forewarning surface ✅ 2026-07-26 (`d8d354f`),
   native feel-read signed; worklog §66b.
 
-## Phase 67 — The second sector
+## Phase 67 — The second sector ✅ CLOSED 2026-07-26 (user-signed)
 
-**Charter:** a second demo sector (content design round decides its
-shape — anticipated "largely the same as the current one"), the
-sector-map DAG grows its first edge (hand-edited JSON, editor-unowned by
-design), and the sector-cleared screen (a run-cleared clone —
-GameOverScene precedent) since the transition becomes reachable for the
-first time.
+**Outcome:** act two shipped in four cuts, one day — the `sectorCleared`
+phase gate (**v39→v40**; the audit-located reward-strand hang killed
+before first reach) · the cleared screen (GameOverScene clone,
+amber-milestone accent) · **"The Deep End"** (swamp, length 11; the four
+user-authored encounters + the migrated minHop-4 trio front-loaded; The
+Start slims to brigand country; world identity locked into DESIGN.md) ·
+⭐ the USER-signed run-shape dial split (`hopCount` = bounded
+single-sector probe · `sectorHops` = shortened full-walk read). Exit
+criteria: three met natively; the full-completion criterion AMENDED
+(user-signed) — the native run died at Infernal Column, so the
+completion verify + the too-hard read ride §68 (force-isolate first).
+Detail: worklog §67-kickoff–§67-close.
 
-- **Depends on:** §66 (forewarning displays per-sector; the new sector
-  exercises it fresh).
-- **Risk:** low-medium — the carry-across path is built + headless-tested
-  but has never run in shipped play; expect first-reach bugs.
-- **Decision point:** the sector CONTENT design round (user) — ✅ DECIDED
-  2026-07-26: "The Deep End" (swamp, length 11), four user-authored
-  encounters + the minHop-4 migration; identity locked into DESIGN.md
-  §Aesthetic; rationale worklog §67-shape-lock.
-- **Exit criteria:** a full two-sector run completes natively
-  (user-verified); the coverage guards pass; the cleared screen shows at
-  the transition; forewarning re-rolls per sector.
-- **Scope guards:** ONE new sector; no new encounter/layout mechanics
-  (content from existing catalogs; new catalog ENTRIES are fine).
-- [x] **67a** — the sector-transition gate ✅ 2026-07-26 (`69bf027`):
-  v39→v40 as predicted; shipped-content byte-neutral (the gate sits past
-  the shipped sink — zero re-pins); worklog §67a.
-- [x] **67b** — the sector-cleared screen ✅ 2026-07-26 (`9f7d940`):
-  eval-verified end to end; native feel-read rides the 67d two-sector
-  run (the gate is unreachable until 67c); worklog §67b.
-- [x] **67c** — "The Deep End" lands ✅ 2026-07-26 (`a9c49b6`): the DAG
-  edge live, browser-verified through the real routing; scope inserted
-  mid-cut (USER): the `hopCount`/`sectorHops` dial split — the smoke
-  timeout exposed that "short run" fixtures had silently become
-  short-act-1-plus-full-act-2; preset adoption of `sectorHops` → §68;
-  worklog §67c.
-- [ ] **67d** — the exit criterion: a full two-sector native run (user) +
-  the close ritual.
+- [x] **67a** — the gate ✅ (`69bf027`): v39→v40; shipped-content
+  byte-neutral; worklog §67a.
+- [x] **67b** — the cleared screen ✅ (`9f7d940`): eval-verified;
+  worklog §67b.
+- [x] **67c** — The Deep End + the dial split ✅ (`a9c49b6`): the DAG
+  edge live, browser-verified through the real routing; worklog §67c.
+- [x] **67d** — the native run + close ✅: transition + act-two identity
+  verified natively; completion → §68 by the amended criterion;
+  worklog §67d.
 
 ## Phase 68 — Balance protocol v2 + the balance pass (round close)
 
@@ -229,8 +217,12 @@ threads (port goods-vs-hop value · the banshee-comp underperformance ·
 the **ronin/reaver buff look** — the 61d flavor-over-power call made
 their weakness a named goal; force-comp probes per §60c, worklog §61d ·
 the **+2-vs-+4 draw non-monotonicity** — noise or real, re-read at
-protocol-v2 grade; worklog §65d), and the boss wall re-check per
-character.
+protocol-v2 grade; worklog §65d · the three §67 handoffs: the
+**Infernal Column too-hard read** (the 67d native run died there —
+force-isolate before tuning), the **native two-sector completion
+verify** (the amended §67 exit criterion, post-tuning), and
+`sectorHops` **preset adoption** for the two-act instruments; worklog
+§67c–§67d), and the boss wall re-check per character.
 
 - **Depends on:** everything; §62's launcher for the batch tail.
 - **Risk:** high — the round's largest measurement surface ("I just

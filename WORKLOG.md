@@ -2124,3 +2124,28 @@ sequencing ask. Touchpoints: the funnel gains the two-act note, the
 bot-margin caveat points at v2, Commands gains --sector-hops /
 --grant / balance:board. 2338 main; smoke 287→298 (the 11 board
 pins).
+
+### 68d-batches — the re-baseline campaign (2026-07-27, box session)
+
+The 13-batch plan ran start to finish in one ~1.5h box session
+(launch → sequential box-batch launches with sentinel watchers →
+fetch → destroy; every batch exit 0, sha-stamped). One availability
+detour: cx43 was Hetzner-dry across ALL locations (the §62 doctrine
+held — location fell back automatically, the TYPE substitution went
+to the user, who picked **cpx42** after the cost math: ~4× rate on
+~pennies loses to an evening of blocked round time). The cpx42's AMD
+cores ran batches in ~5–6min vs the cx43's ~18min reference —
+the 4h projection became ~1.25h, so the pricier box cost LESS in
+total. Hardware noted in the run log per the parity doctrine.
+
+Numbers + findings: **BALANCE.md run-log 2026-07-27** (the two-act
+cliff · the continuity drift · Gambler −6/−5 · the byte-identical
+draw arms · the boss-order flip · the finalHop instrument gap). The
+process worked exactly as 68c intended: the board's first real
+report IS the re-baseline diff (2 FAIL high, 5 WARN), and the
++2-vs-+4 thread died not by measurement but by SHA — two
+deterministically byte-identical batches proved the signed cap had
+already foreclosed the question (determinism as an instrument, the
+cheapest strong proof again). Band signing = the pending §68d
+decision point; the proposal + the user's call land in the next
+entry.

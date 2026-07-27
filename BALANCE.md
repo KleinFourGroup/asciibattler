@@ -1771,3 +1771,63 @@ deltas. The pre-X H7c→O log lives at
   - All sheet reads are STRATEGY-TIER (the extended realistic arm) per
     the §52 metric doctrine. Batches `20260721-{001819,002746}-
     c677545`, summary sha256 3dcee678 / 1f8810fc.
+- **2026-07-27 — §68d THE RE-BASELINE CAMPAIGN (13 batches, one box
+  session): the post-67 world re-measured per character + the first
+  executable-board report.** HEAD `5c55fa0`, box cpx42 (8 AMD cores —
+  the cx43 was Hetzner-dry across all locations; hardware noted per
+  the parity doctrine: byte-identity is per (commit, toolchain), CPU
+  vendor exercised no effect). Extended arm throughout, in-sample
+  seeds 1–40, `--jobs=8`. Batches `20260727-{151846,152414,152924,
+  153442,153957,154520,155031,155549,160102,160617,161301,161944,
+  163151}-5c55fa0`; shas in the fetch log + `output/box-batches/`.
+  | batch (shape) | win% | wall% | tx% | bank | fires |
+  |---|---|---|---|---|---|
+  | soldier-regen (hops=11) | **85.0** | 8.1 | 0 | 68.3 | 2.98 |
+  | soldier-55pre (hops=11) | **75.0** | 18.9 | 40 | 49.9 | 0 |
+  | fire-ablated (hops=11) | 72.5 | 21.6 | 0 | 66.6 | 0 |
+  | wall-king forced (hops=11) | 72.5 | 21.6 | 0 | 68.0 | 2.98 |
+  | wall-queen forced (hops=11) | 65.0 | 29.7 | 0 | 67.3 | 2.98 |
+  | priest-regen (hops=11) | 80.0 | 13.5 | 0 | 66.5 | 2.90 |
+  | priest-55pre (hops=11) | 77.5 | 13.9 | 38 | 51.1 | 0 |
+  | gambler-regen (hops=11) | 70.0 | 12.5 | 0 | 60.0 | 2.98 |
+  | gambler-55pre (hops=11) | 62.5 | 24.2 | 38 | 45.2 | 0 |
+  | draw+2 ≡ cap (hops=11) | 80.0 | 5.9 | 0 | 63.4 | 2.65 |
+  | **walk-regen (11+11)** | **7.5** | 66.7 | 0 | 109.2 | 5.65 |
+  | **walk-55pre (11+11)** | **25.0** | 54.5 | 50 | 61.3 | 0 |
+  - **The continuity shape reads 10–18pt HIGH of the §60e band**
+    (85/75 vs 60–67) and the act-1 wall COLLAPSED (8–19% vs 30–35):
+    the predicted post-stream-shift drift, compounded by the 68a fire
+    fixes (fires 1.93→2.98/run; the fire channel Δ reads +12.5 vs the
+    +5 reference off the ablated control).
+  - **⭐ THE TWO-ACT CLIFF: the real (11+11) game reads 7.5% (firer) /
+    25.0% (shopper).** 37/37 and 29/30 defeats are IN ACT 2, spread
+    across the WHOLE Deep End (no minHop gates, uniform pools — the
+    67d native death was representative, not anecdotal). The posture
+    split FLIPS in act two: the shopper's 50% tx + spent-down bank
+    (61 vs the firer's 109 hoard) buys act-2 survival at 3× the
+    firer's rate. Per-encounter attribution (Infernal Column's share
+    included) = §68e telemetry work, force-isolate first.
+  - **Per-character paired deltas (vs Soldier, same seeds):** Priest
+    ≈ parity (net −2 regen / +1 55pre — inside noise; the healer +
+    shaman-blacklist trades wash); **Gambler reads −6/−5 net flips,
+    direction-consistent in both postures** — the ronin start + 3×
+    rogue weighting is a real handicap at the current tuning
+    (coherent with §61d's flavor-over-power call).
+  - **The +2-vs-+4 draw question CLOSED BY CONSTRUCTION:** the +2 and
+    +4 batches are BYTE-IDENTICAL (sha `1cd3a856` both) — the 65d
+    user-signed cap 8 clamps inside `effectiveDrawAmount`, so
+    +4 ≡ +2 ≡ the cap. The remaining live question (base 85 vs
+    cap-hand 80, net −2 paired flips, inside noise) is a design
+    preference, not a balance defect.
+  - **The per-boss order FLIPPED:** King 72.5 / Queen 65.0 forced
+    (both inside the §60e reference tolerances) — the Queen now reads
+    HARDER, reversing §60e's inversion; the banshee-comp observation
+    stays open with the sign reversed.
+  - **Instrument gap filed:** summary.csv `finalHop` resets per
+    sector — a two-act read can't split acts without leaning on
+    `battlesPlayed` (act attribution above used battles ≥13). A
+    per-sector hop label is 68e prep work.
+  - Board report (the first real one): 2 FAIL (the signed 60–67 band,
+    breached HIGH by both postures) · 5 WARN — exactly the drift
+    picture the re-baseline exists to re-sign. Signing: pending
+    (the §68d decision point).

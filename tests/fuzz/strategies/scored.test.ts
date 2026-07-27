@@ -409,6 +409,7 @@ import type { EncounterKind } from '../../../src/config/encounters';
 import type { NodeKind } from '../../../src/run/NodeMap';
 import { packetById } from '../../../src/config/packets';
 import { HEALTH } from '../../../src/config/health';
+import { DECK } from '../../../src/config/deck';
 
 function zeroFire(): FireWeights {
   return { bias: { normal: 0, elite: 0, boss: 0 }, cachePressure: 0 };
@@ -556,6 +557,56 @@ describe('scored packet-fire policy (59c)', () => {
       });
       expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({
         cacheIndex: 0,
+      });
+    });
+  });
+
+  describe('the 68a firability guards + discard polarity (the heal guard siblings)', () => {
+    // Balance-proof: the hand cap derives from the config, never hardcoded.
+    const cap = DECK.maxHandSize;
+    const eager = { ...zeroFire(), bias: { normal: 1, elite: 1, boss: 1 } };
+    /** A team of n cards with power = slot index + 1, every slot in hand —
+     *  max power at the LAST hand slot, min at the first, by construction. */
+    const fullHand = (n: number) => {
+      const team = Array.from({ length: n }, (_v, i) => meleeWithPower(i + 1));
+      return { team, hand: team.map((_t, i) => i) };
+    };
+
+    it('a full hand SKIPS draw-two and the next usable packet gets the slot (the wedge pin)', () => {
+      const run = fireRun({ kind: 'normal', cache: ['draw-two', 'shield'], ...fullHand(cap) });
+      expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({
+        cacheIndex: 1,
+        handIndex: cap - 1,
+      });
+    });
+
+    it('one below the cap fires draw-two (a partial draw still lands)', () => {
+      const run = fireRun({ kind: 'normal', cache: ['draw-two'], ...fullHand(cap - 1) });
+      expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({
+        cacheIndex: 0,
+      });
+    });
+
+    it('discard-one targets the MIN-power card (a discard sheds, not buffs)', () => {
+      const team = [meleeWithPower(9), meleeWithPower(3), meleeWithPower(5)];
+      const run = fireRun({ kind: 'normal', cache: ['discard-one'], team, hand: [0, 1, 2] });
+      expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({
+        cacheIndex: 0,
+        handIndex: 1,
+      });
+    });
+
+    it('a one-card hand SKIPS discard-one (Run rejects it — the wedge pin)', () => {
+      const run = fireRun({ kind: 'normal', cache: ['discard-one'], ...fullHand(1) });
+      expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toBeNull();
+    });
+
+    it('a two-card hand fires discard-one at the weaker card (the boundary)', () => {
+      const team = [meleeWithPower(9), meleeWithPower(3)];
+      const run = fireRun({ kind: 'normal', cache: ['discard-one'], team, hand: [0, 1] });
+      expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({
+        cacheIndex: 0,
+        handIndex: 1,
       });
     });
   });

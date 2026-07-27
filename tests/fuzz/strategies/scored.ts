@@ -22,6 +22,7 @@ import { ALL_ARCHETYPES, type Archetype } from '../../../src/sim/archetypes';
 import type { EncounterKind } from '../../../src/config/encounters';
 import { packetById, type UseContext } from '../../../src/config/packets';
 import { HEALTH } from '../../../src/config/health';
+import { DECK } from '../../../src/config/deck';
 import { minMax, norm, type MinMax } from '../scoring';
 import { STAT_KEYS } from './policies';
 import type { FuzzStrategy, PacketFire, PortBuy } from '../Strategy';
@@ -335,6 +336,18 @@ function maxPowerIndex(units: readonly UnitTemplate[]): number | null {
   return best;
 }
 
+/** Min-`power` slot index (lowest index ties) — the discard polarity (68a): a
+ *  `discardCards` sheds the WEAKEST card; the max heuristic above was written
+ *  for buffs and silently inverted the discard. */
+function minPowerIndex(units: readonly UnitTemplate[]): number | null {
+  if (units.length === 0) return null;
+  let best = 0;
+  for (let i = 1; i < units.length; i++) {
+    if (units[i]!.stats.power < units[best]!.stats.power) best = i;
+  }
+  return best;
+}
+
 /**
  * One ask of the 59a fire loop: fire the first context-usable held packet
  * while `bias[kind] + cachePressure × cacheFill` is STRICTLY positive, else
@@ -344,7 +357,10 @@ function maxPowerIndex(units: readonly UnitTemplate[]): number | null {
  * keys on the current encounter; outOfBattle on the frontier's worst
  * battle-kind (nothing battle-shaped ahead → no fire). Packet choice is
  * acquisition order (lowest cache index); unit-target packets aim at the
- * max-`power` hand card (preTurn) / roster unit (outOfBattle).
+ * max-`power` hand card (preTurn) / roster unit (outOfBattle) — except
+ * `discardCards`, which sheds the MIN-power card (68a). 68a also mirrors the
+ * Run firability guards (drawCards at cap / discardCards at hand ≤ 1) so an
+ * unfirable packet never wedges the harness fire loop.
  */
 function pickPacketFireScored(context: UseContext, run: Run, fire: FireWeights): PacketFire | null {
   const kind =
@@ -366,9 +382,18 @@ function pickPacketFireScored(context: UseContext, run: Run, fire: FireWeights):
     if (packet.effect.op === 'healPool' && HEALTH.playerHealthMax - run.playerHealth < packet.effect.amount) {
       continue;
     }
+    // 68a — the heal guard's siblings: Run.usePacket validate-before-mutate
+    // rejects a drawCards at a full hand and a discardCards at hand ≤ 1
+    // (consuming nothing), and the harness fire loop reads "cache didn't
+    // shrink" as stop-asking — so one unfirable packet at the head of the
+    // cache would silently block every later fire that turn. Mirror the Run
+    // guards (Run.usePacket) so the policy only proposes fires that land.
+    if (packet.effect.op === 'drawCards' && run.hand.length >= DECK.maxHandSize) continue;
+    if (packet.effect.op === 'discardCards' && run.hand.length <= 1) continue;
     if (packet.target === 'unit') {
       if (context === 'preTurn') {
-        const handIndex = maxPowerIndex(run.hand.map((slot) => run.team[slot]!));
+        const pick = packet.effect.op === 'discardCards' ? minPowerIndex : maxPowerIndex;
+        const handIndex = pick(run.hand.map((slot) => run.team[slot]!));
         if (handIndex === null) continue;
         return { cacheIndex, handIndex };
       }

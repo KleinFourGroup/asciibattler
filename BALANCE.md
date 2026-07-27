@@ -30,6 +30,98 @@ with **authored encounters** (a frozen JSON catalog). So three things move:
 **Keep the bones, swap the lever.** The signal, funnel, tiers, train/test split,
 tune-against-a-stable-baseline, and the bot-is-a-lower-bound caveat all still apply.
 
+## Protocol v2 (§68) — the three-character re-anchor
+
+Everything above and below still holds; v2 ADDS the doctrine the Cluster-4
+world needs (three characters, rarity-weighted drafting, two sectors, draw
+mechanics) and mechanizes the parts of the old protocol that lived in prose.
+
+### The per-character doctrine
+
+- **Per-batch isolation, never mixed batches** (the 68 shape-lock): a batch
+  forces ONE character (`--character=<id>`, explicit-Soldier default) and its
+  outputs are labeled with it. No per-character reporter bucketing exists or
+  is needed — the batch IS the bucket.
+- **The Soldier is the continuity anchor**: every historical number (§52,
+  §53g, §57h, §60e) was measured on the implicit pre-63 Soldier, so
+  cross-round comparisons run Soldier-only. Priest/Gambler get their own
+  signed bands at the §68d re-anchor (the §60e signing precedent); until a
+  band is signed per character, a Priest/Gambler read is exploratory.
+- ⚠ **The precedence trap**: `--roster` REPLACES the character's roster and
+  `--daemon=<id>` its daemon (only blacklist + weight overrides survive) —
+  so a force-comp probe on a character is partially character-blind. Every
+  such read says so ("Gambler-minus-roster") in its log line.
+- **Run shape**: `--hops=11` is the CONTINUITY shape (the pre-67 full
+  length, now a bounded single-sector probe — what the historical numbers
+  mean). The post-67 canonical full game is the two-act walk (11+11);
+  `--sector-hops=N` is the cheap two-act read (N+N). A read's shape is part
+  of its label; never compare across shapes without saying so.
+
+### The consumption contract (§60c, formalized)
+
+A balance read on a mechanic counts ONLY when the measuring arm demonstrably
+consumes it — "the bot had access" is not consumption (the §60c grant-dead
+catch; re-taught twice by 68a's Cull inversion + fire-loop wedge). The
+current consumption story, per mechanism:
+
+| Mechanism | Consumed by | Since |
+|---|---|---|
+| redraw / empower grants | `--redraw=level:2 --empower=level:hi` policies | §60c |
+| battle commands | the audition searcher (`--searcher --audition`) | §57 |
+| packet fires (incl. Surge/Cull) | the fire-group vectors + the 68a polarity/firability fixes | 68a |
+| characters | `--character=<id>` per-batch isolation | §63d/68 |
+| draw size | `--draw-add=<n>` (the persistent-fold arm) | §65d |
+| daemons (incl. the §64 drafting three) | **forced arms** (`--daemon=<id>`) or `--grant` pairs — the port scorer buys blind BY DESIGN (flat value) | 68 |
+| any acquirable's price/value | `--grant=<id>` paired same-seed arms → realized marginal value | 68b |
+
+**The realized-value instrument**: `--grant=<id>` (run mode) hands the run
+any daemon/packet/unit free at construction; an inert grant is byte-identical
+(pinned), so `with − without` on paired seeds IS the item's realized value.
+Price against that, never against paper value (the Mars lesson).
+
+**The new-mechanic shipping checklist** — every future mechanic ships with
+(cut at its phase kickoff, like the snapshot-bump prediction):
+1. its **forced/isolation dial** (the `--encounter=` analog),
+2. its **consumption story** (which arm reads it — or an explicit
+   "grant-dead until X" label on every interim read),
+3. its **realized-value hook** (grantable via `--grant`? earn sites
+   source-labeled?),
+4. its **board-impact prediction** (which board rows move, which re-sign).
+
+### The executable board
+
+The signed sheet is now an ARTIFACT the machine checks, not prose you
+remember: [tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.json)
+(the user-signed numbers + provenance) + the instrument set in
+[tests/fuzz/board/board.ts](tests/fuzz/board/board.ts).
+
+- `npm run balance:board -- --plan [--jobs=N]` — print the batch commands
+  (the box path: feed them to box-batch.sh; push first).
+- `npm run balance:board -- --run [--only=a,b] [--jobs=N]` — run locally
+  (⚠ the full board is ~5 searcher batches — prefer the box).
+- `npm run balance:board -- --report` — diff every summary.csv vs the sheet:
+  **FAIL** = a signed-band breach · **WARN** = reference drift (an observed
+  §60e value ± tolerance, not a verdict) · exit 1 on any FAIL.
+
+**The amendment rule executes**: "every fix re-runs the full board" (§54e)
+now means `--plan` → the box → `--report` stamped with HEAD + batch id into
+the run log. At 68c all per-instrument checks except the in-sample win band
+are reference-grade — §68d flips them to signed as the user signs
+per-character bands (the board is the form the re-anchor fills in).
+
+### The sanctioned direction — run-layer rollout arbitration
+
+The §57 lesson (stop encoding judgment; let cheap rollouts arbitrate)
+applied to the run layer: port buys, daemon picks, packet fires, and redraws
+enumerate candidates and roll out a truncated horizon (K=2-style). This
+retires the consumption contract's treadmill BY CONSTRUCTION — a new
+mechanic is consumed because the rollout measures its effect, no scorer dims
+to author or get wrong. **Status: the next interstitial round** (user-signed
+at the 68 shape-lock; a §57-sized build — truncation/caching design needed).
+Until it lands, the hand-written scored policies are the CHEAP TIER and
+their known blindness (flat daemon value, no draft-quality attribution) is
+labeled on every read they anchor.
+
 ## The signal (gradient first — unchanged)
 
 - **best-achievable** = max over searched strategy-weight vectors of the outcome
@@ -185,6 +277,13 @@ Tiers size the *per-point* search (total = points × tier). **Time-estimate-firs
 time point 1 and project before committing (point 1 is often the cheapest corner →
 re-time mid-sweep).
 
+> **68b — the two-act variants:** post-67 "full length" means the two-act walk
+> (11+11); the tier table's hop counts are single-sector probe lengths and
+> `--hops=11` is the CONTINUITY shape (see Protocol v2). `--sector-hops=N`
+> gives an N+N two-act read at any tier (run / search / sweep, `--jobs`-safe)
+> and SUPPRESSES the tier's own hop count. Which instruments flip to two-act
+> defaults is a §68d/e signing decision, not a plumbing default.
+
 | tier      | vectors | train seeds | hops       | typical use             |
 |-----------|---------|-------------|------------|-------------------------|
 | quick     | 50      | 8           | 4          | single-config check     |
@@ -229,7 +328,11 @@ re-time mid-sweep).
   bot-realism round closes the gap, treat every ABSOLUTE win-rate target as
   bot-anchored (relative reads — gradients, bands, deltas — stay valid).
   *(§57h halved this: the audition-searcher arm reads ~60% vs human ~80 — see the
-  🧭 Cursor doctrine; the §60e re-anchor sheet carries the signed targets.)*
+  🧭 Cursor doctrine; the §60e re-anchor sheet carries the signed targets. 68c:
+  this caveat is single-character prose — the per-character doctrine, the
+  consumption contract, and the executable board that supersede its workflow
+  live in **Protocol v2 (§68)** above; the sheet itself is now
+  machine-checked via `balance:board`.)*
 - **Probes arbitrate, cells attribute (§55/§56 doctrine, promoted 2026-07-21):**
   the per-cell spot-check board is an ATTRIBUTION instrument — cell boards are
   volatile at 3-seed granularity under engine changes (§56e-pre: ~42% of probe
@@ -275,6 +378,14 @@ re-time mid-sweep).
   per wave, keyed by encounter id; the other two pre-built).
 - `--seed-offset=N` — base the eval seeds past the tuned range (the config-overfit
   holdout); run / search / sweep. *(built — X2c)*
+- `--sector-hops=N` — the N+N two-act read (67c semantics); run / search /
+  sweep incl. `--jobs` shard children; suppresses preset hop counts; excludes
+  `--hops` (flag-level bail). *(built — 68b)*
+- `--grant=<id>[,<id>…]` — hand the run any daemon/packet/unit free at
+  construction (run mode; inert grants byte-identical). The paired
+  marginal-value instrument — see Protocol v2. *(built — 68b)*
+- `npm run balance:board -- --plan | --run | --report` — the executable board
+  (the doctrine instrument set diffed vs the signed sheet). *(built — 68c)*
 
 ---
 

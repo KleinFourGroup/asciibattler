@@ -246,10 +246,10 @@ edits re-scan the non-vacuousness canaries (61d precedent).
 - [x] **68a** — the fire-policy consumption fixes ✅ 2026-07-27
   (`91db3dd`): Cull polarity + the firability guards, policy-side;
   smoke 279→284; worklog §68a.
-- [ ] **68b** — instrument plumbing: `sectorHops` → search presets /
-  sweep tiers / ShardJob (jobs byte-identity pin extends) + the
-  kind-agnostic `--grant=<id>` seam (daemon|packet|unit) for paired
-  marginal-value arms.
+- [x] **68b** — instrument plumbing ✅ 2026-07-27 (`904007c`):
+  `sectorHops` through search/sweep/shard (suppression semantics) +
+  the `--grant` seam (inert grants byte-identical — pinned); main
+  2333→2338, smoke 284→287; worklog §68b.
 - [ ] **68c** — protocol v2 into BALANCE.md + the executable board:
   per-character doctrine, the consumption contract, the new-mechanic
   shipping checklist, rollout arbitration named the sanctioned

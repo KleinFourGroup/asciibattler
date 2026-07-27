@@ -2028,3 +2028,49 @@ buff" — and silently inverted the discard). No behavior change for
 any packet the §60e instrument vectors previously fired: the guards
 only bite where Run would have REJECTED, i.e. fires that never
 landed. fuzz:smoke 279→284; main suite untouched at 2333.
+
+### 68b — instrument plumbing (2026-07-27, `904007c`)
+
+**The `sectorHops` half.** The dial now reaches `--search` and
+`--balance-sweep` (incl. their `--jobs` shard children — the ShardJob
+schema gained the field, which is what had blocked any PARALLEL
+two-act sweep). Two semantics locked in the plumbing: (1) `--hops` /
+`--sector-hops` exclusivity moved up to a FLAG-level bail (previously
+run mode relied on Run's construction throw mid-batch); (2)
+`sectorHops` SUPPRESSES the preset/tier's own `hopCount` — a quick
+tier's `hopCount: 4` must not silently flatten a requested two-act
+read back to one sector (the suppression is pinned at
+`harnessOptionsFor`, now exported for exactly that test). Preset
+DEFAULTS deliberately unchanged — flipping an instrument to two-act
+is a §68d/e measurement decision, not plumbing. Run mode itself
+needed zero changes for `--jobs` (parallel.ts is argv pass-through
+by design — "every future run-mode flag for free"). The two dev
+tools (run-config CLI, sweep GUI) still speak `hopCount`; filed as a
+TODO rather than stretched into this cut.
+
+**The `--grant` half — the paired marginal-value instrument.**
+`RunConfig.grants` + `--grant=<id>[,…]` (run mode only; loud
+kind-probe validation in `grantsFromArgs`, and a flag-level bail on
+search/sweep/arena — the --scripts discipline: silently ignoring a
+WITH-arm flag would mislabel the batch). Kind-agnostic by catalog
+probe: daemon | packet | unit archetype. The load-bearing design
+property: **daemon/packet grants draw NOTHING and unit grants level
+off the abandoned `teamRng` CHILD stream** — never the parent — so
+the parent fork ladder (per-turn waves, offers) is untouched and an
+INERT grant leaves the whole run byte-identical (pinned). That's
+what makes the instrument honest: a grant-dead item reads ~zero
+delta instead of fork-shifted noise. Grants apply in order (a
+cache-size daemon before packets raises the capacity they're checked
+against), duplicates legal (a second-copy value probe), full cache /
+unknown id throw loud. Applied at the constructor TAIL through the
+real chokepoints (`appendRosterUnit` for the parallel structures;
+direct pushes where the public seams' emits mean nothing
+pre-subscribe). NOT persisted — granted state rides the existing
+daemons/cache/team unions, so **v40/v34 hold as the kickoff
+predicted**.
+
+Verified live beyond the pins: the three bails fire with the right
+messages, a `--count=2 --sector-hops=3 --grant=portunus,patch` batch
+runs clean, and a sharded `--search --sector-hops=2 --jobs=2`
+completes end to end (the ShardJob round-trip). 2333→2338 main;
+smoke 284→287.

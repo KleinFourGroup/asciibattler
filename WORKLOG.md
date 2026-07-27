@@ -2009,3 +2009,22 @@ balance; spec-dependent, recorded for the C5 spec conversation; the
   prediction — cut at phase kickoff like the union-bump prediction.
   Turns the §60c lesson from doctrine-you-remember into
   checklist-you-run.
+
+### 68a — the fire-policy consumption fixes (2026-07-27, `91db3dd`)
+
+Headless-first: the five regression pins written BEFORE the fix, and
+4/5 failed exactly as the audit predicted (draw-two at cap returned
+the wedge fire; discard-one fired at a one-card hand; both polarity
+reads aimed at max power — the fifth is the below-cap boundary pin,
+green pre-fix by design). The fix is POLICY-side by design: the
+harness loop's "cache didn't shrink → stop asking" stays the correct
+never-spin backstop, and `pickPacketFireScored` now (1) mirrors the
+`Run.usePacket` validate-before-mutate guards — `drawCards` at
+`DECK.maxHandSize`, `discardCards` at hand ≤1, both derived from the
+config module per the balance-proof rule — and (2) keys the
+unit-target polarity per op (`minPowerIndex` for `discardCards`; the
+max heuristic was written for buffs — "the biggest chipper gets the
+buff" — and silently inverted the discard). No behavior change for
+any packet the §60e instrument vectors previously fired: the guards
+only bite where Run would have REJECTED, i.e. fires that never
+landed. fuzz:smoke 279→284; main suite untouched at 2333.

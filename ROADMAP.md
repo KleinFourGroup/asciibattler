@@ -243,9 +243,9 @@ amendments; rollout arbitration = the next interstitial, built there
 not here).** Snapshot prediction: **v40/v34 HOLD** all phase; content
 edits re-scan the non-vacuousness canaries (61d precedent).
 
-- [ ] **68a** — the fire-policy consumption fixes: Cull polarity
-  (min-power) + firability guards (the heal-guard siblings) + wedge
-  regression pins. Harness-only; prerequisite for any §65 read.
+- [x] **68a** — the fire-policy consumption fixes ✅ 2026-07-27
+  (`91db3dd`): Cull polarity + the firability guards, policy-side;
+  smoke 279→284; worklog §68a.
 - [ ] **68b** — instrument plumbing: `sectorHops` → search presets /
   sweep tiers / ShardJob (jobs byte-identity pin extends) + the
   kind-agnostic `--grant=<id>` seam (daemon|packet|unit) for paired

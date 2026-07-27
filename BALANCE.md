@@ -1829,5 +1829,16 @@ deltas. The pre-X H7c→O log lives at
     per-sector hop label is 68e prep work.
   - Board report (the first real one): 2 FAIL (the signed 60–67 band,
     breached HIGH by both postures) · 5 WARN — exactly the drift
-    picture the re-baseline exists to re-sign. Signing: pending
-    (the §68d decision point).
+    picture the re-baseline exists to re-sign.
+  - **⭐ SIGNED (user, 2026-07-27, `2004c94`) — THE §68d SHEET
+    (supersedes §60e):** act-1 rows = drift references at observed
+    ±8 · the DESIGN band = the two-act shape, declared **55–70**,
+    signs at the §68e/f post-tuning verify · the **30–35 wall
+    target migrates to the deep-end terminal** · **CHARACTER PARITY
+    = a signed design principle** (similar difficulty, differing
+    playstyle — DESIGN.md §Run structure; the Gambler −6/−5 is a
+    DEFECT, provisional pending the §68f ronin/reaver buff) · the
+    act-2 posture flip + boss-order flip accepted as observations.
+    The machine copy: tests/fuzz/board/signed-sheet.json; the signed
+    report reads 0 FAIL · 4 WARN (all four = the two-act rows, the
+    68e/f queue).

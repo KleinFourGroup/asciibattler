@@ -2149,3 +2149,42 @@ already foreclosed the question (determinism as an instrument, the
 cheapest strong proof again). Band signing = the pending §68d
 decision point; the proposal + the user's call land in the next
 entry.
+
+### 68d-signing — the amended sheet, USER-SIGNED (2026-07-27, `2004c94`)
+
+Four items proposed; items 1–3 signed as proposed, item 4 AMENDED by
+the user before signing — and the amendment surfaced a design
+principle that existed nowhere in the docs:
+
+1. **Act-1 continuity rows → drift references** at observed ±8pt
+   (paired-noise width); the §60e 60–67 signed band retires with its
+   world.
+2. **The design-target band moves to the two-act shape**: declared
+   55–70 now, SIGNS at the §68e/f post-tuning verify (act 2 is
+   launch-rough by design — signing today would bless an untuned
+   sector).
+3. **The 30–35 wall target migrates to the deep-end terminal** (act
+   1's boss is the on-ramp now; its collapsed wall is accepted).
+4. **⭐ CHARACTER PARITY IS A SIGNED DESIGN PRINCIPLE** (user: "my
+   goal is similar difficulty with differing playstyles — which I
+   don't think I've ever explicitly said"). My draft had read the
+   Gambler's −6/−5 as a plausible "hard character" feature; the user
+   corrected it to a DEFECT to close (target: within ~±5 paired
+   noise of Soldier). Repair sequence: the 68f ronin/reaver buff
+   first (the Gambler starts with a ronin + drafts rogues 3× — note
+   rogue itself reads fine, the ronin is the dead weight) → re-run
+   the two Gambler board rows → residual gap = character-level
+   tuning (user call). The Gambler rows carry a PROVISIONAL
+   annotation until that re-read. The principle is now written where
+   it can't be un-said: **DESIGN.md §Run structure** + the sheet's
+   `characterParity` field.
+
+Mechanics: signed-sheet.json rewritten to the v2 schema (provenance ·
+parity principle · the declared two-act target · deep-end wall ·
+per-character act-1 refs · refreshed posture/economy refs at 68d
+observed); buildBoard reworked to 11 instruments (5 soldier
+continuity + 4 character parity detectors + 2 two-act design-target
+rows); board pins 11→14. The signed report over the full campaign:
+**every drift ref PASSes at its signed value, 0 FAIL, and the ONLY
+warns are the four two-act rows — the 68e/f work-queue rendered as a
+report.** Smoke 298→301.

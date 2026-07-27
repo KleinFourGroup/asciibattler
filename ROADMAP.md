@@ -247,17 +247,15 @@ edits re-scan the non-vacuousness canaries (61d precedent).
   (`91db3dd`): Cull polarity + the firability guards, policy-side;
   smoke 279→284; worklog §68a.
 - [x] **68b** — instrument plumbing ✅ 2026-07-27 (`904007c`):
-  `sectorHops` through search/sweep/shard (suppression semantics) +
-  the `--grant` seam (inert grants byte-identical — pinned); main
-  2333→2338, smoke 284→287; worklog §68b.
+  `sectorHops` through search/sweep/shard + the `--grant` seam
+  (inert grants byte-identical, pinned); worklog §68b.
 - [x] **68c** — protocol v2 + the executable board ✅ 2026-07-27
-  (`f7c8738`): the v2 section + consumption table + checklist into
-  BALANCE.md; `balance:board` plan/run/report vs signed-sheet.json
-  (signed-grade FAILs, reference-grade WARNs); the interstitial
-  META-ROADMAP'd; smoke 287→298; worklog §68c.
-- [ ] **68d** — the re-baseline batches (box): Soldier continuity vs
-  the §60e 62.5 anchor, then Priest/Gambler; the +2-vs-+4 re-read
-  rides. ⛔ Decision point: user signs the per-character bands.
+  (`f7c8738`): the v2 section into BALANCE.md; `balance:board`
+  plan/run/report vs signed-sheet.json; worklog §68c.
+- [x] **68d** — the re-baseline ✅ 2026-07-27 (`09f09d2` + `2004c94`,
+  USER-SIGNED): 13 box batches; the two-act cliff · Gambler −6/−5 ·
+  ⭐ character parity = a signed design principle (DESIGN.md);
+  BALANCE run-log 2026-07-27 + worklog §68d-batches/-signing.
 - [ ] **68e** — the Deep End read: force-isolate Infernal Column +
   per-encounter telemetry over the new pools; tune (minHop gates /
   comp weights / budget — the sector is uniform-from-hop-0); full

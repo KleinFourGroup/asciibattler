@@ -80,6 +80,8 @@ For MVP, *every node was a battle node*. Since then: **rest** nodes (G3, a non-c
 
 **Difficulty curve (CHECKPOINT 6, retuned at E1):** The enemy team in every battle is sized at `playerTeam.length - 1`, with composition ~60% melee / 40% ranged. The first battle is therefore 5v4 in the player's favor, but every recruit grows the enemy too, so the team-size advantage stays a constant +1 and doesn't snowball. Enemy `constitution` is scaled by `1 + 0.05 × destinationFloor` — E1 moved the scaling knob from post-derive `maxHp` to the stat itself, so `deriveStats` continues to be the single source of truth for HP. Player and enemy stat baselines otherwise share the same archetype config. E3 replaces this with per-floor `enemyLevelPerFloor` driving a full `scaleStats` pass.
 
+**Starting characters (§63):** three characters — Soldier / Priest / Gambler — each owning a starting roster, a starting daemon, draft-blacklist additions, and within-tier draft weights. The character is the *playstyle* axis of a run. **Design principle (user-signed 2026-07-27, §68d): characters are similar in DIFFICULTY, differing in PLAYSTYLE** — a measured cross-character win-rate gap beyond paired noise (~±5pt at 40 seeds) is a tuning defect to close, never a "hard mode" to embrace. (The Gambler's −6/−5 read is the open case, pending the §68f ronin/reaver buff.)
+
 **Defeat:** Full run reset. A new seed is rolled and a fresh map is generated.
 
 ## Aesthetic

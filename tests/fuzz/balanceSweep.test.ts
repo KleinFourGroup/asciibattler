@@ -16,6 +16,7 @@ import {
   buildGrid,
   resolveKnob,
   runBalanceSweep,
+  harnessOptionsFor,
   type SweepCoord,
   type SweepPoint,
 } from './balanceSweep';
@@ -146,6 +147,21 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     expect(seenHops).toBe(11);
   });
 
+  it('68b: passes sectorHopsOverride through to the measured config (the two-act dial)', async () => {
+    let seen: number | undefined;
+    await runBalanceSweep({
+      knobs: [{ path: 'difficulty.budgetFactor', range: { min: 0.5, max: 0.5, steps: 1 } }],
+      preset: PRESETS.quick,
+      samplerSeed: 1,
+      sectorHopsOverride: 4,
+      measurePoint: (coord, cfg) => {
+        seen = cfg.sectorHopsOverride;
+        return fakePoint(coord);
+      },
+    });
+    expect(seen).toBe(4);
+  });
+
   it('passes forcedLayoutId through to the measured config (the N2 procedural isolate)', async () => {
     let seen: string | undefined = 'unset';
     await runBalanceSweep({
@@ -192,6 +208,30 @@ describe('runBalanceSweep orchestration (injected measurePoint)', () => {
     });
     expect(result.points).toHaveLength(1);
     expect(result.gridSize).toBe(5);
+  });
+});
+
+describe('68b — harnessOptionsFor + the two-act dial', () => {
+  it('sectorHops suppresses BOTH hop sources (tier default AND hopOverride) and lands in runConfig', () => {
+    const opts = harnessOptionsFor(
+      PRESETS.quick, // its own hopCount is 4 — must NOT leak through
+      11, // an explicit hopOverride — must not leak either (the dials are exclusive in Run)
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      4,
+    );
+    expect(opts.runConfig).toEqual({ sectorHops: 4 });
+  });
+
+  it('without sectorHops the tier/override hop logic is unchanged', () => {
+    expect(harnessOptionsFor(PRESETS.quick).runConfig).toEqual({ hopCount: 4 });
+    expect(harnessOptionsFor(PRESETS.quick, 11).runConfig).toEqual({ hopCount: 11 });
   });
 });
 

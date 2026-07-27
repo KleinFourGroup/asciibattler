@@ -27,6 +27,9 @@ import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
 import { FORCE_PROCEDURAL } from '../../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../../src/sim/layouts';
 import { ENCOUNTER_IDS } from '../../../src/config/encounters';
+import { daemonById } from '../../../src/config/daemons';
+import { packetById } from '../../../src/config/packets';
+import { ALL_ARCHETYPES } from '../../../src/sim/archetypes';
 
 export interface CliArgs {
   count: number;
@@ -62,6 +65,9 @@ export interface CliArgs {
   tier?: string;
   hops?: number;
   sectorHops?: number;
+  // 68b — the kind-agnostic grant list (comma-separated daemon/packet/unit
+  // ids), run mode only: the paired marginal-value instrument's WITH arm.
+  grant?: string;
   roster?: string;
   dryRun: boolean;
   // H7c parallelism — fan the per-point vector search across N child processes.
@@ -231,6 +237,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         // the DAG still sinks); --hops stays the single-sector probe.
         args.sectorHops = Number(v);
         break;
+      case '--grant':
+        if (v !== undefined) args.grant = v;
+        break;
       case '--roster':
         if (v !== undefined) args.roster = v;
         break;
@@ -315,6 +324,17 @@ export function parseArgs(argv: readonly string[]): CliArgs {
           throw new Error(`Unknown flag: ${raw}`);
         }
     }
+  }
+  // 68b — the two run-shape dials contradict (single-sector probe vs
+  // shortened full walk); bail at the flag level rather than letting the
+  // first Run construction throw mid-batch.
+  if (args.hops !== undefined && args.sectorHops !== undefined) {
+    throw new Error('--hops (single-sector probe) and --sector-hops (full walk) are mutually exclusive');
+  }
+  // 68b — --grant is run-mode-only (the --scripts discipline below: silent
+  // ignoring would label a batch as a WITH arm while measuring the control).
+  if (args.grant !== undefined && (args.search || args.balanceSweep || args.arena)) {
+    throw new Error('--grant is not supported in --search/--balance-sweep/--arena (run mode only)');
   }
   // §55 pre-gate — --scripts is run-mode-only until a mode needs it: a search
   // or sweep silently ignoring it would measure the OLD bot under a flag that
@@ -453,6 +473,31 @@ export function encounterFromArgs(args: Pick<CliArgs, 'encounter'>): string | un
     bail(`Unknown encounter: ${args.encounter} (choices: ${ENCOUNTER_IDS.join(', ')})`);
   }
   return args.encounter;
+}
+
+/** 68b — resolve + VALIDATE the `--grant` flag into a `RunConfig.grants`
+ *  list (comma-separated daemon / packet / unit-archetype ids), or
+ *  `undefined` when absent. **Bails loudly on an unknown id** with the kind
+ *  probes named (the layoutFromArgs discipline) — Run would throw at first
+ *  construction anyway, but a batch should die at the flag, not mid-run.
+ *  Run mode only (parseArgs enforces). */
+export function grantsFromArgs(args: Pick<CliArgs, 'grant'>): readonly string[] | undefined {
+  if (args.grant === undefined) return undefined;
+  const ids = args.grant
+    .split(',')
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+  if (ids.length === 0) bail('--grant needs at least one id (daemon, packet, or unit archetype)');
+  for (const id of ids) {
+    const known =
+      daemonById(id) !== undefined ||
+      packetById(id) !== undefined ||
+      (ALL_ARCHETYPES as readonly string[]).includes(id);
+    if (!known) {
+      bail(`Unknown grant id: ${id} (not a daemon, packet, or unit archetype)`);
+    }
+  }
+  return ids;
 }
 
 /** 59e — resolve the searcher flags into the `rolloutSearch` harness arm:

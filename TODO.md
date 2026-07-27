@@ -20,6 +20,13 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Polish / pre-launch
 
+- [ ] **`--sector-hops` in the run-config tool + sweep GUI.** 68b plumbed
+  the two-act dial through the fuzz CLI's run/search/sweep (+ shard
+  children); the two dev tools (`tools/run-config/cli.ts` `--hops`,
+  `tools/sweep-gui`) still speak `hopCount` only. Cheap adoption when
+  either tool is next touched; the fuzz CLI covers all measurement
+  needs meanwhile. Noted 2026-07-27.
+
 - [ ] **Fleeing-enemy threat tell (UI).** Parked at the §58 close
   (2026-07-19, user call): a player-facing "that unit can't reach/harm
   you" read — the derived reachability math (§58's unbuilt sensor)

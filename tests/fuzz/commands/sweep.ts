@@ -51,6 +51,7 @@ export type SweepModeArgs = Pick<
   | 'samplerSeed'
   | 'seedOffset'
   | 'hops'
+  | 'sectorHops'
   | 'roster'
   | 'layout'
   | 'encounter'
@@ -104,7 +105,12 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
 
   const jobs = args.jobs !== undefined ? Math.max(1, Math.floor(args.jobs)) : 1;
   const gridSize = knobs.reduce((acc, k) => acc * k.range.steps, 1);
-  const hopNote = args.hops !== undefined ? ` hops=${args.hops}` : '';
+  const hopNote =
+    args.sectorHops !== undefined
+      ? ` sectorHops=${args.sectorHops}`
+      : args.hops !== undefined
+        ? ` hops=${args.hops}`
+        : '';
   const rosterNote = rosterOverride
     ? ` roster=[${rosterOverride.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
@@ -128,6 +134,7 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
     samplerSeed,
     seedOffset: args.seedOffset,
     hopOverride: args.hops,
+    sectorHopsOverride: args.sectorHops,
     rosterOverride,
     forcedLayoutId,
     forcedEncounterId,

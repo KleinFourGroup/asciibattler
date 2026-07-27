@@ -209,6 +209,15 @@ export interface BalanceSweepConfig {
    */
   readonly hopOverride?: number | undefined;
   /**
+   * 68b — the 67c shortened-full-walk dial (`--sector-hops`): every sector's
+   * map is exactly N hops while the DAG still sinks — the cheap TWO-ACT sweep
+   * shape. Mutually exclusive with `hopOverride` (parseArgs bails on both
+   * flags); when set it also SUPPRESSES the tier's own single-sector
+   * `hopCount`, so a preset default can't silently flatten a requested
+   * two-act read back to one sector. Undefined = the tier's normal length.
+   */
+  readonly sectorHopsOverride?: number | undefined;
+  /**
    * Force the starting roster (archetype + level per slot) for every run at every
    * grid point. The way to evaluate an archetype the optimizer rarely RECRUITS:
    * plant it on the roster so it's fielded from hop 1, then read its
@@ -299,7 +308,7 @@ function baselineWin(name: string, seeds: readonly number[], opts: HarnessOption
  *  applied — so the search, baselines, and telemetry re-run all share one run
  *  length, roster, (J4) objective proclivity, and (K3c3/K4c3) redraw/empower
  *  policies. */
-function harnessOptionsFor(
+export function harnessOptionsFor(
   preset: SearchPreset,
   hopOverride?: number,
   roster?: readonly RosterEntry[],
@@ -310,15 +319,21 @@ function harnessOptionsFor(
   character?: CharacterSelection,
   forcedLayoutId?: string,
   forcedEncounterId?: string,
+  sectorHops?: number,
 ): HarnessOptions {
-  const hopCount = hopOverride ?? preset.hopCount;
+  // 68b — sectorHops (the two-act dial) suppresses BOTH hop sources: the
+  // dials are exclusive in Run, and the tier's hopCount default must not
+  // silently flatten a requested two-act read.
+  const hopCount = sectorHops !== undefined ? undefined : (hopOverride ?? preset.hopCount);
   const runConfig: {
     hopCount?: number;
+    sectorHops?: number;
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
     forcedEncounterId?: string;
   } = {};
   if (hopCount !== undefined) runConfig.hopCount = hopCount;
+  if (sectorHops !== undefined) runConfig.sectorHops = sectorHops;
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
   if (forcedLayoutId !== undefined) runConfig.forcedLayoutId = forcedLayoutId;
   if (forcedEncounterId !== undefined) runConfig.forcedEncounterId = forcedEncounterId;
@@ -358,6 +373,7 @@ async function defaultMeasurePoint(
     config.character,
     config.forcedLayoutId,
     config.forcedEncounterId,
+    config.sectorHopsOverride,
   );
   const jobs = Math.max(1, Math.floor(config.jobs ?? 1));
 
@@ -373,7 +389,12 @@ async function defaultMeasurePoint(
       vectors,
       seeds: trainSeeds,
       knobs: coord,
-      hopCount: config.hopOverride ?? preset.hopCount,
+      // 68b — the same suppression as harnessOptionsFor: sectorHops wins.
+      hopCount:
+        config.sectorHopsOverride !== undefined
+          ? undefined
+          : (config.hopOverride ?? preset.hopCount),
+      sectorHops: config.sectorHopsOverride,
       roster: config.rosterOverride,
       forcedLayoutId: config.forcedLayoutId,
       forcedEncounterId: config.forcedEncounterId,

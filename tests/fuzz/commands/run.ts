@@ -47,6 +47,7 @@ import {
   daemonFromArgs,
   empowerFromArgs,
   encounterFromArgs,
+  grantsFromArgs,
   layoutFromArgs,
   objectiveFromArgs,
   redrawFromArgs,
@@ -84,6 +85,7 @@ export type RunModeArgs = Pick<
   | 'kTelemetry'
   | 'bitsMultiplier'
   | 'drawAdd'
+  | 'grant'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -121,6 +123,7 @@ export function runRunCli(args: RunModeArgs): void {
     forcedEncounterId?: string;
     bitsMultiplier?: number;
     drawAmountAdd?: number;
+    grants?: readonly string[];
   } = {};
   if (args.hops !== undefined) runConfig.hopCount = args.hops;
   // 67c — the shortened full-walk dial (mutually exclusive with --hops; Run
@@ -146,6 +149,10 @@ export function runRunCli(args: RunModeArgs): void {
     }
     runConfig.drawAmountAdd = args.drawAdd;
   }
+  // 68b — `--grant=<id>[,<id>…]` hands the run items free at construction
+  // (the paired marginal-value WITH arm; ids validated loud in grantsFromArgs).
+  const grants = grantsFromArgs(args);
+  if (grants !== undefined) runConfig.grants = grants;
   if (Object.keys(runConfig).length > 0) harnessOptions = { runConfig };
   // J4 — drive a fixed objective strategy in every battle (default none =
   // byte-identical to the pre-J4 fuzz path; the baselines stay put).

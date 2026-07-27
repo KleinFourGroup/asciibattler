@@ -22,8 +22,19 @@
  *   npm run fuzz -- --encounter=bandit-king --hops=2 --roster=mercenary:6,archer:6,mage:6 --per-encounter
  *   # 67c — --hops=N is a bounded SINGLE-sector probe (the sector terminal ends the
  *   # run); --sector-hops=N instead shortens EVERY sector's map while still walking
- *   # the full DAG (a cheap two-act read). Mutually exclusive.
+ *   # the full DAG (a cheap two-act read). Mutually exclusive (flag-level bail).
+ *   # 68b — --sector-hops also reaches --search and --balance-sweep (incl. their
+ *   # --jobs shard children); it SUPPRESSES the preset/tier's own hopCount.
  *   npm run fuzz -- --sector-hops=4   # 4+4-hop start→deep-end runs
+ *   npm run fuzz -- --search --sector-hops=4 --jobs=8
+ *
+ *   # 68b — --grant=<id>[,<id>…] hands the run items FREE at construction (any
+ *   # daemon / packet / unit-archetype id; unknown ids bail loud; run mode only).
+ *   # The paired marginal-value instrument: same seeds with vs without → the
+ *   # item's realized value. Inert daemon/packet grants leave the run stream
+ *   # byte-identical, so a grant-dead item reads ~zero rather than noise.
+ *   npm run fuzz -- --count=80 --searcher --audition --grant=portunus
+ *   npm run fuzz -- --count=80 --searcher --audition --grant=draw-two,discard-one
  *   npm run fuzz -- --layout=junctionAmbush --per-hop   # force ONE layout (clean full sample)
  *   npm run fuzz -- --layout=procedural --per-hop       # force PROCEDURAL maps every battle (M6 isolate)
  *

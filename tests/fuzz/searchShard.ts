@@ -47,6 +47,9 @@ export interface ShardJob {
   // under exactOptionalPropertyTypes that permits both absent AND explicit
   // undefined, which is what the literal at `evaluateVectorsSharded` provides.
   readonly hopCount?: number | undefined;
+  /** 68b — the 67c shortened-full-walk dial (mutually exclusive with
+   *  `hopCount`; the caller resolves exclusivity before building jobs). */
+  readonly sectorHops?: number | undefined;
   readonly roster?: readonly RosterEntry[] | undefined;
   /** M6/N2 — the forced layout id / `procedural` sentinel the child's runs use
    *  (plain string, round-trips the job file), or undefined for the normal roll. */
@@ -193,6 +196,8 @@ export interface ShardedEvalParams {
   // `undefined` for "none" by the sweep/search callers, which exactOptional
   // forbids on a bare optional. Mirrors ShardJob above.
   readonly hopCount?: number | undefined;
+  /** 68b — the shortened-full-walk dial (or none; excludes `hopCount`). */
+  readonly sectorHops?: number | undefined;
   readonly roster?: readonly RosterEntry[] | undefined;
   /** M6/N2 — the forced layout id / `procedural` sentinel (or none). */
   readonly forcedLayoutId?: string | undefined;
@@ -229,6 +234,7 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
     seeds,
     knobs,
     hopCount,
+    sectorHops,
     roster,
     forcedLayoutId,
     forcedEncounterId,
@@ -251,6 +257,7 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
       knobs,
       seeds,
       hopCount,
+      sectorHops,
       roster,
       forcedLayoutId,
       forcedEncounterId,

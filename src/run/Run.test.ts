@@ -208,6 +208,48 @@ describe('Run', () => {
     });
   });
 
+  describe('68b — construction grants (the marginal-value seam)', () => {
+    it('grants a daemon by id on top of the character daemon', () => {
+      const run = new Run(1, new EventBus<GameEvents>(), { grants: ['portunus'] });
+      expect(run.daemons.map((d) => d.id)).toContain('portunus');
+      // The character's own daemon is untouched — a grant ADDS, never replaces.
+      expect(run.daemons.length).toBe(2);
+    });
+
+    it('grants a packet into the cache', () => {
+      const run = new Run(1, new EventBus<GameEvents>(), { grants: ['patch'] });
+      expect(run.cache).toEqual(['patch']);
+    });
+
+    it('grants a unit at the recruit starting level through the roster chokepoint', () => {
+      const bare = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), { grants: ['rogue'] });
+      expect(run.team).toHaveLength(bare.team.length + 1);
+      const granted = run.team[run.team.length - 1]!;
+      expect(granted.archetype).toBe('rogue');
+      expect(granted.level).toBe(RECRUITMENT.startingLevel);
+      // 50d — the parallel structures grew with the roster (the chokepoint proof).
+      const parallel = run as unknown as { deploymentCounts: number[] };
+      expect(parallel.deploymentCounts).toHaveLength(run.team.length);
+    });
+
+    it('an inert daemon/packet grant leaves the run stream byte-identical (the paired-arm contract)', () => {
+      const bare = new Run(7, new EventBus<GameEvents>());
+      const granted = new Run(7, new EventBus<GameEvents>(), {
+        grants: ['patch', 'portunus'],
+      });
+      expect(granted.nodeMap).toEqual(bare.nodeMap);
+      expect(granted.team).toEqual(bare.team);
+      expect(granted.bossEncounterId).toBe(bare.bossEncounterId);
+    });
+
+    it('throws loud on an unknown id', () => {
+      expect(() => new Run(1, new EventBus<GameEvents>(), { grants: ['no-such-thing'] })).toThrow(
+        /not a daemon, packet, or unit archetype/,
+      );
+    });
+  });
+
   describe('determinism', () => {
     it('same seed → same nodeMap and same starting team', () => {
       const a = new Run(42, new EventBus<GameEvents>());

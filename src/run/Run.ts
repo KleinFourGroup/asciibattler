@@ -41,7 +41,7 @@
 
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents, PromotionInfo } from '../core/events';
-import { glyphForArchetype } from '../sim/archetypes';
+import { glyphForArchetype, ALL_ARCHETYPES } from '../sim/archetypes';
 import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
@@ -1063,6 +1063,12 @@ export class Run {
       levelBudget: config?.levelBudgetMultiplier,
       bits: config?.bitsMultiplier,
     });
+    // 68b — the grant seam, applied LAST (every store it appends to exists,
+    // and the fork ladder above is complete). Daemon/packet grants draw
+    // nothing; a unit grant levels off the abandoned `teamRng` CHILD stream
+    // — never the parent — so an inert grant leaves the run byte-identical
+    // and no grant shifts the per-turn parent forks (the G1 contract).
+    for (const id of config?.grants ?? []) this.applyGrant(id, teamRng);
     // S2 — the run begins at the virtual pre-root position (no node entered
     // yet); the root is the sole frontier, so it's selected as the first
     // encounter like any other node.
@@ -1070,6 +1076,36 @@ export class Run {
     this.visitedNodes = new Set<number>();
     this.subscribe();
     bus.emit('run:started', { seed });
+  }
+
+  /**
+   * 68b — apply one construction grant (`RunConfig.grants`): resolve the id
+   * by catalog probe — daemon, then packet, then unit archetype — and add it
+   * through the same stores the real acquisition seams use. Direct pushes
+   * rather than `addDaemon`/`addPacket` (their `cache:changed` emits mean
+   * nothing pre-subscribe, and the constructor pattern is direct init);
+   * `appendRosterUnit` IS used — it's the parallel-structure chokepoint.
+   * A full cache and an unknown id both throw: loud beats a silently
+   * missing arm in a paired batch.
+   */
+  private applyGrant(id: string, unitLevelRng: RNG): void {
+    const daemon = daemonById(id);
+    if (daemon !== undefined) {
+      this.daemons.push(daemon);
+      return;
+    }
+    if (packetById(id) !== undefined) {
+      if (!this.cacheHasRoom) {
+        throw new Error(`Run: grant '${id}' overflows the cache (size ${this.effectiveCacheSize})`);
+      }
+      this.cache.push(id);
+      return;
+    }
+    if ((ALL_ARCHETYPES as readonly string[]).includes(id)) {
+      this.appendRosterUnit(rollUnit(id as Archetype, unitLevelRng, STARTING_LEVEL));
+      return;
+    }
+    throw new Error(`Run: grant id '${id}' is not a daemon, packet, or unit archetype`);
   }
 
   /** 63c — resolve the character's starting daemon from the catalog. Parse

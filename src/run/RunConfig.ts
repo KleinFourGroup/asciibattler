@@ -173,6 +173,23 @@ export interface RunConfig {
    * shipped config. Pure of RNG; NOT persisted (the X1 discipline above).
    */
   readonly passIsFinal?: boolean;
+  /**
+   * 68b — the kind-agnostic grant seam (the paired marginal-value
+   * instrument): hand the run these items FREE at construction, so a
+   * same-seed with/without pair reads an item's realized value. Each id
+   * resolves by catalog probe — daemon | packet | unit archetype — and an
+   * unknown id throws loud at construction. Applied IN ORDER (a cache-size
+   * daemon granted before packets raises the capacity those packets are
+   * checked against). Duplicates are legal (the addDaemon discipline — a
+   * second copy is a meaningful value probe for stacking rules). Daemon and
+   * packet grants draw NOTHING (an inert grant leaves the whole run stream
+   * byte-identical); a unit grant levels off the abandoned team child
+   * stream, so the parent fork alignment holds either way (G1).
+   * Programmatic + the fuzz `--grant` flag (run mode); no URL form (the
+   * drawAmountAdd discipline). NOT persisted — granted state serializes
+   * through the existing daemons/cache/team unions.
+   */
+  readonly grants?: readonly string[];
 }
 
 /**

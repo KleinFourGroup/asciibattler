@@ -33,11 +33,15 @@ export function runEvalShardCli(args: EvalShardModeArgs): void {
 
   const runConfig: {
     hopCount?: number;
+    sectorHops?: number;
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
     forcedEncounterId?: string;
   } = {};
   if (job.hopCount !== undefined) runConfig.hopCount = job.hopCount;
+  // 68b — the shortened-full-walk dial (the caller resolved exclusivity
+  // vs hopCount before building jobs; Run would throw loud on both anyway).
+  if (job.sectorHops !== undefined) runConfig.sectorHops = job.sectorHops;
   if (job.roster && job.roster.length > 0) runConfig.startingRoster = job.roster;
   if (job.forcedLayoutId !== undefined) runConfig.forcedLayoutId = job.forcedLayoutId;
   if (job.forcedEncounterId !== undefined) runConfig.forcedEncounterId = job.forcedEncounterId;

@@ -58,6 +58,7 @@ export type SearchModeArgs = Pick<
   | 'seedOffset'
   | 'jobs'
   | 'hops'
+  | 'sectorHops'
   | 'roster'
   | 'layout'
   | 'encounter'
@@ -101,8 +102,15 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   // via --strategy). Both ride RunConfig's validated parser; the hop count
   // falls back to the preset's when --hops is absent (behaviour-preserving).
   const searchParams = new URLSearchParams();
-  const hopCount = args.hops ?? preset.hopCount;
+  // 68b — `--sector-hops` (the 67c shortened-full-walk dial) SUPPRESSES the
+  // preset's single-sector hopCount: the two dials are mutually exclusive
+  // (parseArgs bails on both flags; Run throws on both fields), and a preset
+  // default must not silently turn a requested two-act read back into a
+  // single-sector probe.
+  const sectorHops = args.sectorHops;
+  const hopCount = sectorHops !== undefined ? undefined : (args.hops ?? preset.hopCount);
   if (hopCount !== undefined) searchParams.set('hops', String(hopCount));
+  if (sectorHops !== undefined) searchParams.set('sectorHops', String(sectorHops));
   if (args.roster) searchParams.set('roster', args.roster);
   // M6/N2 — force one layout (or `procedural`) across the searched runs, so the
   // overnight verify (stage 5) can hold out on the procedural maps too. Validated
@@ -147,7 +155,12 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
     : null;
   const baseTopK = refine ? Math.max(1, refine.topK) : 1;
 
-  const hopNote = hopCount !== undefined ? ` hops=${hopCount}` : ' hops=full';
+  const hopNote =
+    sectorHops !== undefined
+      ? ` sectorHops=${sectorHops}`
+      : hopCount !== undefined
+        ? ` hops=${hopCount}`
+        : ' hops=full';
   const rosterNote = runConfig.startingRoster
     ? ` roster=[${runConfig.startingRoster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}]`
     : '';
@@ -181,6 +194,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       seeds: trainSeeds,
       knobs: {},
       hopCount,
+      sectorHops,
       roster: runConfig.startingRoster,
       forcedLayoutId: runConfig.forcedLayoutId,
       forcedEncounterId: runConfig.forcedEncounterId,
@@ -245,6 +259,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
                 seeds,
                 knobs: {},
                 hopCount,
+                sectorHops,
                 roster: runConfig.startingRoster,
                 forcedLayoutId: runConfig.forcedLayoutId,
                 forcedEncounterId: runConfig.forcedEncounterId,

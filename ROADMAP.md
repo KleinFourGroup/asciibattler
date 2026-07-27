@@ -237,4 +237,38 @@ verify** (the amended §67 exit criterion, post-tuning), and
   spec · scratchpad sweep · memory sweep · caps re-check).
 - **Scope guards:** no new mechanics in the close; playtest-driven
   insertions go through the legal-mutation gate.
-- [ ] *(cut at phase kickoff)*
+**Cut (2026-07-27, shape-lock user-signed — worklog §68-kickoff +
+§68-shape-lock, incl. the four fork resolutions + the overhaul
+amendments; rollout arbitration = the next interstitial, built there
+not here).** Snapshot prediction: **v40/v34 HOLD** all phase; content
+edits re-scan the non-vacuousness canaries (61d precedent).
+
+- [ ] **68a** — the fire-policy consumption fixes: Cull polarity
+  (min-power) + firability guards (the heal-guard siblings) + wedge
+  regression pins. Harness-only; prerequisite for any §65 read.
+- [ ] **68b** — instrument plumbing: `sectorHops` → search presets /
+  sweep tiers / ShardJob (jobs byte-identity pin extends) + the
+  kind-agnostic `--grant=<id>` seam (daemon|packet|unit) for paired
+  marginal-value arms.
+- [ ] **68c** — protocol v2 into BALANCE.md + the executable board:
+  per-character doctrine, the consumption contract, the new-mechanic
+  shipping checklist, rollout arbitration named the sanctioned
+  direction; `balance:board` driver + diff-vs-signed-sheet
+  auto-flag report.
+- [ ] **68d** — the re-baseline batches (box): Soldier continuity vs
+  the §60e 62.5 anchor, then Priest/Gambler; the +2-vs-+4 re-read
+  rides. ⛔ Decision point: user signs the per-character bands.
+- [ ] **68e** — the Deep End read: force-isolate Infernal Column +
+  per-encounter telemetry over the new pools; tune (minHop gates /
+  comp weights / budget — the sector is uniform-from-hop-0); full
+  board re-run after.
+- [ ] **68f** — tiers & prices: ronin/reaver force-comp probes + buff
+  (reaver ≡ adventurer, corrupter ≡ mage in stats); ⛔ tier
+  reassignments (user); rarity multiplier + daemon/packet prices
+  dispositioned off the realized-value table.
+- [ ] **68g** — per-character boss re-check + the native two-sector
+  completion verify (the amended §67 criterion, user).
+- [ ] **68h** — the round-close ritual: archive (post-60-*) ·
+  scratchpad distillation (incl. the batch-sizing rule) · the
+  instrument-retirement sweep · memory sweep · caps re-size ·
+  cursor flip.

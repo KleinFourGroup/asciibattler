@@ -1813,3 +1813,199 @@ v39→v40 (the gate); 2327→2333 main; smoke 279 green throughout. The
 round's remaining work is §68 — the protocol v2 + balance pass, now
 carrying three named 67 handoffs: the Infernal Column read, the
 native completion verify, and `sectorHops` preset adoption.
+
+## Phase 68 — Balance protocol v2 + the balance pass
+
+### 68-kickoff — the code-reality audit (2026-07-27)
+
+Two-track audit (harness-arm surface · config/tuning surface) ahead of
+the cut. The headline: **the extended arm consumes NONE of the four new
+mechanics as a measurable signal yet**, and two of the consumption gaps
+are live bugs, not just missing dials.
+
+**The harness-arm surface (what the bot consumes today):**
+
+- **`--character` works but nothing varies or reports it.** The flag
+  forces one character across run/search/sweep/shard (explicit-Soldier
+  default, characterSelection.ts); there is NO multi-character mode and
+  NO per-character bucketing in reporters.ts (`perDaemonStats` exists,
+  no character analog) — a mixed batch couldn't be split. Its own file
+  comment says "per-character measurement doctrine lands at §68."
+  Precedence trap for protocol writing: `--roster` erases the
+  character's roster and `--daemon=<id>` erases its daemon (only
+  blacklist/weightOverrides survive) — forced-comp probes on a
+  character are therefore partially character-blind, say so per read.
+- **The drafting daemons are bought blind and their payoff is
+  structurally invisible to the fitness signal.** Port scorer gives
+  every daemon one flat `port.daemonValue` (its own doc: "idols aren't
+  unit-scorable"), ties broken by stock-slot order; the no-`port`-group
+  fallback buys every affordable daemon in slot order; reward grants
+  accept portion 0 blindly. All three §64 daemons pay off through
+  draft-pool QUALITY, which no scorer attributes back. Cheap path
+  exists today: `--daemon=cornucopia|patricians-seal|portunus` forced
+  arms parse fine (daemonSelection accepts any catalog id).
+- **⚠ The fire policy mis-handles BOTH §65 packets — the §60c heal
+  guard's failure class, twice re-instantiated** (scored.ts
+  `pickPacketFireScored`): (1) **Cull is inverted** — `target:'unit'`
+  routes through `maxPowerIndex(hand)`, a heuristic written for buffs,
+  so the policy discards the BEST card in hand; (2) **no firability
+  guards** — a Surge at a full hand (Run rejects, consumes nothing) or
+  a Cull at hand ≤1 leaves the cache un-shrunk, and the harness fire
+  loop reads that as "stop asking" → one wedged packet at cache slot 0
+  silently blocks every later fire that turn. Also: the shipped
+  default scored vector has NO `fire` group at all — only the
+  59-regen-class instrument vectors fire packets, so any §65
+  consumption read rides those two vectors and NEEDS the fixes first.
+- **`--sector-hops` reaches run mode only.** Search presets
+  (`SearchPreset.hopCount`), balanceSweep tiers (`hopOverride`), the
+  ShardJob schema (blocks any parallel two-act sweep), gauntlet cells,
+  the run-config tool, and the sweep GUI all still speak
+  `hopCount`/`--hops` — ten sites cataloged. `--draw-add` and
+  `--bits-multiplier` are likewise run-mode-only: the extended arm
+  can be neither searched nor swept with any Cluster-4 dial engaged.
+- **`--encounter` DOES compose with the walk** (applyForcedEncounter
+  is sector-agnostic; forces at both selection sites incl. the §66
+  boss pre-roll; layout still rolls from the local sector pool) — so
+  `--encounter=infernalColumn --sector-hops=4` is well-defined, but it
+  flattens the sector-to-sector delta: isolation tool, not a two-act
+  instrument. `--draw-add` is the persistent-fold arm by design
+  (moves deal AND Option-B budget basis); the searcher itself has no
+  agentic draw/discard — hand levers are `--redraw` + the fire policy.
+
+**The config/tuning surface (what the pass will move):**
+
+- **The 61d flavor debt in numeric form:** reaver's
+  baseStats/growthRates are BYTE-IDENTICAL to adventurer (one tier up,
+  2× the effective price); corrupter is stat-identical to mage;
+  ronin's entire 1.5× premium over mercenary is STR 7-vs-6 + LCK
+  14-vs-3. The buff work has concrete targets, not vibes.
+- **The "port per-tier multiplier" DOES NOT EXIST.** The port inherits
+  the one base `units.rarityMultiplier` (1/1.5/2/3, prices.json — its
+  schema comment already says "TUNED only at the §68 balance pass")
+  plus stock jitter 0.15; the only port-side rarity machinery is
+  Portunus's `portLegendaryOffers` count stat. The roadmap line names
+  a knob §68 would have to BUILD — that's a shape-lock fork, not a
+  tuning item.
+- **Infernal Column, the too-hard suspect, is structurally exposed:**
+  comp is WEIGHTS not fixed counts (merc 3 / reaver 1 / archer 1 =
+  sampling shares), count 1.5×hand (9 bodies at base hand, 12 at cap),
+  budget factor 1.25 — and it sits UNGATED (no minHop, no weight, no
+  layout filter) as a hop-0-eligible entry of the Deep End normal
+  pool. Cheap first hypothesis: an act-two-entry roster meets a
+  9-body merc-heavy wall on any of 12 layouts. In fact NOTHING in the
+  Deep End carries a minHop (the migrated trio's gates were dropped at
+  67c) — the whole sector is uniform-from-hop-0.
+- **Prices as-landed:** drafting daemons 30/35/25 vs elder range
+  25–40, all ten at weight 1 in both daemon tables; Surge 20 / Cull 8
+  are the only packets in the BITS tables (the common-drop pair; Cull
+  = cheapest item in the book, below shield 10). Draft weights
+  6/3/2/1 (recruitment.json) over the signed 5/3/3/2 population.
+- **The Gambler is the stress-test character** — starts with a ronin
+  AND boosts rogue 3×; concentrates the ronin/reaver and
+  rarity-weight questions in one identity. Priest = minerva +
+  shaman-blacklist + mage 0.25; Soldier = mars, vanilla (the
+  continuity anchor by construction).
+- **Protocol v2's landing zone:** BALANCE.md "Per-kind target bands"
+  (:165) is still 8 lines of DATA-FIRST placeholders; the 5-step loop
+  has no character step; the ~50pt bot-margin caveat is written
+  single-character with the §57h halving as an annotation. Everything
+  above the run log (:281) is fair game per the exit criterion.
+
+Findings → the cut: the protocol step splits into BUILD (the fire-policy
+fixes + instrument plumbing) then DOC (v2 into BALANCE.md) then
+MEASURE (the re-baseline), because the §60c contract is unmeetable
+until the arm can actually fire the new packets and walk two acts in
+sweep/search modes.
+
+### 68-shape-lock — the cut + the overhaul conversation (2026-07-27, USER)
+
+**Forks resolved (all four USER):** (1) per-character measurement =
+per-batch isolation — one forced character per batch, zero reporter
+build (mixed batches don't exist); (2) the "port per-tier multiplier"
+= tune the shared 1/1.5/2/3 table first, build a port-scoped seam only
+if the data demands divergence (collides with the no-new-mechanics
+scope guard otherwise); (3) drafting-daemon valuation = forced arms
+(`--daemon=<id>` parses today) — TENTATIVE, per-daemon scorer dims
+"would just blow the cost up" (user); the long-term answer is the
+rollout-arbitration item below; (4) 68a = fixes-only, the shipped
+default vector keeps no fire group (changing it would silently move
+every historical comparison).
+
+**The overhaul conversation** (user invited it: the balance scheme "has
+gotten so large that it's hard to keep in my head" — great time to
+overhaul). Diagnosis presented as two diseases: the §60c consumption
+TREADMILL (every mechanic needs hand-taught dims; the authoring step
+has produced a bug every time — grant-dead §60c, now the Cull
+inversion) and the BOOKKEEPING problem (the signed sheet is prose
+nothing executes). Adopted now-tier (folded into the cut):
+
+- **The executable board** → 68c: a `balance:board` driver runs the
+  pinned doctrine instrument set and emits a diff-vs-signed-sheet
+  report (band green/red, stamped HEAD + batch id) with off-band /
+  flat-gradient auto-flagging. Protocol v2 becomes partly executable
+  instead of prose; "re-run the full board" becomes a command.
+- **The catalog-driven marginal-value instrument** → 68b: a generic
+  `--grant=<id>` (any daemon|packet|unit free at run start — KIND-
+  AGNOSTIC by design, see the C5 floats below) + paired same-seed
+  with/without arms → a regenerated REALIZED-VALUE table per round.
+  Mechanizes "price against realized value"; the fork-3 long-term
+  answer without scorer dims.
+- **The instrument-retirement sweep** → 68h: stamp each instrument
+  doctrine / niche / deprecated (the pile: scripts arm, k-telemetry,
+  objective strategies, coverage bot, the 53g human fixtures).
+
+**Next-round tier — run-layer ROLLOUT ARBITRATION = THE NEW
+INTERSTITIAL ROUND (user-signed, enthusiastically):** the §57 lesson
+applied to the run layer — port buys / daemon picks / packet fires /
+redraws enumerate candidates and let truncated rollouts arbitrate
+(K=2, horizon ≈ end of next battle). Kills the treadmill BY
+CONSTRUCTION: a new mechanic is consumed because the rollout measures
+its effect, no dims. §57-sized build (rollout cost needs the
+truncation/caching design). Protocol v2 names it the sanctioned
+direction, hand-scorers demote to the cheap tier; the phase itself is
+the Cluster-4→5 interstitial. Skip-tier recorded honestly: surrogate
+models (variance-bound at ±5–8pt/40 seeds, not grid-bound — machinery
+trust-cost loses) · ML/RL bot (rollout search gets most of the benefit
+while staying deterministic and byte-diffable).
+
+**The Cluster-5 forward-design floats** (user asked what would make the
+C5 content — new archetypes, neutral camps, StS-style events — cheap to
+balance; spec-dependent, recorded for the C5 spec conversation; the
+§68 deliverables are only the checklist + the META pointer):
+
+- **The ops-grammar ask (the key one):** spec EVENT OUTCOMES as ops
+  over the existing §47 run vocabulary (grants, addBits, roster
+  append/remove — the gotcha-#118 chokepoints). Then events compose
+  from tested primitives, serialization is free, the realized-value
+  table prices a choice as a BUNDLE of known item values, and even a
+  dumb interim policy can score choices from that table. Near-zero
+  cost at spec time, expensive to retrofit.
+- **Sequencing: the rollout-arbitration interstitial lands BEFORE the
+  events balance pass** (ideally before events ship) — choice trees
+  are the worst case for hand-scorer dims and the poster child for
+  arbitration. If events ship first: an explicit dumb default policy
+  + a forced-choice dial + an `--event=<id>` isolation analog of
+  `--encounter`, so reads exist pre-arbitration.
+- **Camps:** route loot through the 51a source-labeled earn fold →
+  bits-per-hop-by-source works day one; DON'T teach the battle
+  searcher loot value (its fitness is battle-scoped; mid-battle loot
+  pays off in the economy layer) — ship a paired `--camps=always|
+  never` dial and measure realized camp value; keep camp income out
+  of (or labeled in) pool-damage accounting so the tuning metric
+  stays clean. Variance note: swingy outcomes widen batch sizes —
+  prefer many-small over few-huge where design allows.
+- **New archetypes:** mostly cheap already (per-archetype telemetry,
+  `--roster` force-comp, balance-proof tests derive from config). Two
+  real costs: the scored-vector DIM SPACE shifts (frozen instrument
+  vectors don't know the new archetype — make vector loading
+  schema-tolerant with loud defaults, budget a re-search at
+  introduction); tier assignment leans on the realized-value table
+  (a measurement, not a debate).
+- **The procedural capstone → protocol v2 gains the NEW-MECHANIC
+  SHIPPING CHECKLIST:** every mechanic ships with (a) its forced/
+  isolation dial, (b) its consumption story (which arm reads it, or
+  an explicit "grant-dead until X" label), (c) its realized-value
+  hook (grantable? labeled earn source?), (d) its board-impact
+  prediction — cut at phase kickoff like the union-bump prediction.
+  Turns the §60c lesson from doctrine-you-remember into
+  checklist-you-run.

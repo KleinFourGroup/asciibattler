@@ -75,55 +75,77 @@ describe('evaluateBoard', () => {
     bossWall: 0.32,
     transactionRate: 0.02,
     terminalBank: 70,
-    firesPerRun: 1.8,
+    firesPerRun: 2.9,
   });
 
-  it('an in-band regen read PASSes every check (signed and reference)', () => {
-    const report = evaluateBoard(board, new Map([['regen', metricsAt(0.62)]]));
+  it('an at-reference regen read PASSes every check', () => {
+    const report = evaluateBoard(board, new Map([['regen', metricsAt(0.84)]]));
     const regen = report.rows.filter((r) => r.instrument === 'regen');
     expect(regen.length).toBeGreaterThan(0);
     expect(regen.every((r) => r.status === 'PASS')).toBe(true);
     expect(report.fails).toBe(0);
   });
 
-  it('a signed-band breach FAILs; a reference drift only WARNs', () => {
-    const offBand = { ...metricsAt(0.4), transactionRate: 0.5 };
-    const report = evaluateBoard(board, new Map([['regen', offBand]]));
-    const byMetric = new Map(
-      report.rows.filter((r) => r.instrument === 'regen').map((r) => [r.metric, r.status]),
-    );
-    expect(byMetric.get('winRate')).toBe('FAIL'); // signed 60–67
-    expect(byMetric.get('transactionRate')).toBe('WARN'); // reference ~0
+  it('grade semantics: signed FAILs outside its band, reference only WARNs', () => {
+    // The REAL board is all-reference until the two-act target signs
+    // (the 68d design) — pin the FAIL path on a synthetic signed check.
+    const synthetic = {
+      ...board,
+      instruments: [
+        {
+          id: 'synth',
+          title: 'synthetic signed check',
+          args: [],
+          strategyRow: 'x',
+          checks: [
+            { metric: 'winRate' as const, grade: 'signed' as const, min: 0.5, max: 0.6, source: 's' },
+            { metric: 'transactionRate' as const, grade: 'reference' as const, min: 0, max: 0.1, source: 'r' },
+          ],
+        },
+      ],
+      deltas: [],
+    };
+    const report = evaluateBoard(synthetic, new Map([['synth', { ...metricsAt(0.9), transactionRate: 0.5 }]]));
+    const byMetric = new Map(report.rows.map((r) => [r.metric, r.status]));
+    expect(byMetric.get('winRate')).toBe('FAIL');
+    expect(byMetric.get('transactionRate')).toBe('WARN');
     expect(report.fails).toBe(1);
+    expect(report.warns).toBe(1);
+  });
+
+  it('post-68d the real board carries NO signed-grade checks (all drift refs until the two-act signing)', () => {
+    const signed = board.instruments.flatMap((i) => i.checks).filter((c) => c.grade === 'signed');
+    expect(signed).toEqual([]);
   });
 
   it('the fire-channel delta reads regen − ablated and a missing side is N/A', () => {
     const withBoth = evaluateBoard(
       board,
       new Map([
-        ['regen', metricsAt(0.62)],
-        ['fire-ablated', metricsAt(0.57)],
+        ['regen', metricsAt(0.85)],
+        ['fire-ablated', metricsAt(0.725)],
       ]),
     );
     const delta = withBoth.rows.find((r) => r.instrument === 'fire-channel');
-    expect(delta?.value).toBeCloseTo(0.05);
+    expect(delta?.value).toBeCloseTo(0.125);
     expect(delta?.status).toBe('PASS');
 
-    const missingSide = evaluateBoard(board, new Map([['regen', metricsAt(0.62)]]));
+    const missingSide = evaluateBoard(board, new Map([['regen', metricsAt(0.85)]]));
     expect(missingSide.rows.find((r) => r.instrument === 'fire-channel')?.status).toBe('N/A');
     expect(missingSide.missing).toContain('fire-ablated');
   });
 
-  it('a null wall (no wins) is N/A, not a verdict', () => {
-    const noWins = { ...metricsAt(0.62), bossWall: null };
-    const report = evaluateBoard(board, new Map([['regen', noWins]]));
-    const wall = report.rows.find((r) => r.instrument === 'regen' && r.metric === 'bossWall');
+  it('a null wall (no wins) is N/A, not a verdict — pinned on the walk row that carries the wall check', () => {
+    const noWins = { ...metricsAt(0.6), bossWall: null };
+    const report = evaluateBoard(board, new Map([['walk-regen', noWins]]));
+    const wall = report.rows.find((r) => r.instrument === 'walk-regen' && r.metric === 'bossWall');
     expect(wall?.status).toBe('N/A');
   });
 });
 
 describe('the board definition itself', () => {
   const board = buildBoard();
+  const sheet = loadSignedSheet();
 
   it('every instrument runs the extended arm with an explicit character (the batch names its arm)', () => {
     for (const inst of board.instruments) {
@@ -133,13 +155,30 @@ describe('the board definition itself', () => {
     }
   });
 
-  it('signed-grade checks derive from signed-sheet.json (balance-proof — never hardcoded)', () => {
-    const sheet = loadSignedSheet();
-    const signed = board.instruments.flatMap((i) => i.checks).filter((c) => c.grade === 'signed');
-    expect(signed.length).toBeGreaterThan(0);
-    for (const c of signed) {
-      expect(c.min).toBe(sheet.winRateInSample.min);
-      expect(c.max).toBe(sheet.winRateInSample.max);
+  it('the per-character drift refs derive from signed-sheet.json (balance-proof — never hardcoded)', () => {
+    const winRefOf = (id: string): { min: number; max: number } | undefined =>
+      board.instruments.find((i) => i.id === id)?.checks.find((c) => c.metric === 'winRate');
+    expect(winRefOf('regen')?.min).toBeCloseTo(sheet.act1WinRefs.soldier.regen - 0.08);
+    expect(winRefOf('priest-55pre')?.max).toBeCloseTo(sheet.act1WinRefs.priest.pre55 + 0.08);
+    expect(winRefOf('gambler-regen')?.min).toBeCloseTo(sheet.act1WinRefs.gambler.regen - 0.08);
+  });
+
+  it('the gambler rows carry the PROVISIONAL annotation (parity pending 68f)', () => {
+    for (const id of ['gambler-regen', 'gambler-55pre']) {
+      const win = board.instruments.find((i) => i.id === id)?.checks.find((c) => c.metric === 'winRate');
+      expect(win?.source).toContain('PROVISIONAL');
+    }
+  });
+
+  it('the walk rows carry the declared two-act target + the migrated deep-end wall band', () => {
+    for (const id of ['walk-regen', 'walk-55pre']) {
+      const inst = board.instruments.find((i) => i.id === id)!;
+      expect(inst.args).not.toContain('--hops=11');
+      const win = inst.checks.find((c) => c.metric === 'winRate')!;
+      expect(win.min).toBe(sheet.twoActTargetWinRate.min);
+      expect(win.max).toBe(sheet.twoActTargetWinRate.max);
+      const wall = inst.checks.find((c) => c.metric === 'bossWall')!;
+      expect(wall.min).toBe(sheet.deepEndWallTarget.min);
     }
   });
 

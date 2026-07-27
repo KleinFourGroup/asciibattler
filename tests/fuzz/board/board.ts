@@ -15,20 +15,23 @@
  *   same way a local run does.
  *
  * - **Check grades are honest about what's signed.** `signed` = a
- *   user-signed band (FAIL when outside); `reference` = the sheet's
- *   observed value ± a tolerance (WARN when outside — a drift tell, not a
- *   verdict). At 68c every per-instrument check except the in-sample
- *   win-rate band is reference-grade: the §60e sheet was signed on the
- *   PRE-67 single-sector world, and the whole point of the 68d re-baseline
- *   is to re-sign these numbers per character. 68d flips grades/values in
- *   signed-sheet.json — the board is the form 68d fills in.
+ *   user-signed band (FAIL when outside); `reference` = an observed value
+ *   ± a tolerance (WARN when outside — a drift tell, not a verdict).
+ *   **Post-68d (user-signed 2026-07-27) the whole board is
+ *   reference-grade BY DESIGN**: the act-1 rows are DRIFT DETECTORS
+ *   pinned at the 68d observed values (±8pt paired noise), and the
+ *   DESIGN band lives on the two-act shape — declared 55–70 at 68d, to
+ *   be SIGNED (flipped to `signed` grade) at the post-tuning verify once
+ *   §68e/f land. The §60e 60–67 act-1 band is retired with its world.
  *
- * - **The v1 instrument shape is the §60e CONTINUITY shape**: in-sample
- *   seeds 1..40, `--hops=11` (the pre-67 full length, now the bounded
- *   single-sector probe), the extended realistic arm, explicit Soldier.
- *   The post-67 canonical "full game" (the two-act walk) gets its own
- *   instruments when 68d signs their bands — don't silently re-shape a
- *   continuity instrument.
+ * - **Instrument shapes are part of the label** (Protocol v2): the act-1
+ *   rows are `--hops=11` (the §60e continuity shape, a bounded
+ *   single-sector probe); the `walk-*` rows are the full two-act walk —
+ *   the canonical post-67 game. In-sample seeds 1..40, the extended
+ *   realistic arm, one forced character per instrument. Character parity
+ *   is a signed design principle (DESIGN.md §Run structure): the
+ *   per-character rows exist to catch parity drift, and the Gambler rows
+ *   are PROVISIONAL pending the §68f ronin/reaver buff.
  */
 
 import { readFileSync } from 'node:fs';
@@ -45,12 +48,21 @@ export interface SheetBand {
 export interface SignedSheet {
   /** Provenance line printed on every report (who signed, where, when). */
   readonly signedAt: string;
-  readonly winRateInSample: SheetBand;
-  readonly bossWallTarget: SheetBand;
-  readonly terminalBank: SheetBand;
-  readonly heldOutWinRate: number;
-  readonly shopperTransactionRate: number;
+  /** The 68d-signed design principle the per-character rows enforce. */
+  readonly characterParity: string;
+  /** The DESIGN target for the two-act shape — declared at 68d, flips to
+   *  `signed` grade at the §68e/f post-tuning verify. */
+  readonly twoActTargetWinRate: SheetBand;
+  /** The migrated 30–35 wall target — now the DEEP-END terminal's. */
+  readonly deepEndWallTarget: SheetBand;
+  /** Act-1 continuity drift references (68d observed; ±8pt paired noise). */
+  readonly act1WinRefs: Readonly<
+    Record<'soldier' | 'priest' | 'gambler', { readonly regen: number; readonly pre55: number }>
+  >;
+  readonly gamblerNote: string;
+  readonly bankRefs: { readonly firer: number; readonly shopper: number };
   readonly firerFiresPerRun: number;
+  readonly shopperTransactionRate: number;
   readonly fireChannelDelta: number;
   readonly forcedKingWinRegen: number;
   readonly forcedQueenWinRegen: number;
@@ -110,91 +122,121 @@ export interface Board {
   readonly sheet: SignedSheet;
 }
 
-/** The extended realistic arm (§60c doctrine) + the 68c continuity shape. */
+/** The extended realistic arm (§60c doctrine) + the instrument shapes. */
 const ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=level:hi'];
-const SHAPE = ['--count=40', '--hops=11', '--character=soldier'];
+const ACT1 = ['--count=40', '--hops=11']; // the §60e continuity shape
+const WALK = ['--count=40']; // the canonical two-act walk (no hop dial)
 const REGEN = '--strategy=tests/fuzz/fixtures/59-regen-vector.json';
 const PRE55 = '--strategy=tests/fuzz/fixtures/55pre-vector.json';
 const ABLATED = '--strategy=tests/fuzz/fixtures/60-fire-ablated-vector.json';
+/** 68d — the paired-noise width the act-1 drift references carry. */
+const WIN_TOL = 0.08;
+const BANK_TOL = 15;
 
 function ref(metric: MetricKey, value: number, tol: number, source: string): BoardCheck {
   return { metric, grade: 'reference', min: value - tol, max: value + tol, source };
 }
 
+/** One act-1 posture instrument for a character (the drift-detector rows). */
+function act1Posture(
+  character: 'soldier' | 'priest' | 'gambler',
+  posture: 'regen' | 'pre55',
+  sheet: SignedSheet,
+): BoardInstrument {
+  const vector = posture === 'regen' ? REGEN : PRE55;
+  const strategyRow = posture === 'regen' ? 'scored:59-regen-vector' : 'scored:55pre-vector';
+  const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
+  const winSource = `68d drift ref (act-1 observed ±8)${provisional}`;
+  const checks: BoardCheck[] = [
+    ref('winRate', sheet.act1WinRefs[character][posture], WIN_TOL, winSource),
+  ];
+  // The posture-economy references ride the SOLDIER rows only — the
+  // character rows are parity detectors, one number each.
+  if (character === 'soldier' && posture === 'regen') {
+    checks.push(
+      ref('terminalBank', sheet.bankRefs.firer, BANK_TOL, '68d: the firer banks ~68'),
+      ref('firesPerRun', sheet.firerFiresPerRun, 1.0, '68d: 2.98 fires/run post-68a'),
+      ref('transactionRate', 0, 0.1, '§60e posture split (accepted): the firer buys ~never'),
+    );
+  }
+  if (character === 'soldier' && posture === 'pre55') {
+    checks.push(
+      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '68d: the shopper spends down to ~50'),
+      ref('transactionRate', sheet.shopperTransactionRate, 0.15, '§60e/68d: tx ~40% shopper'),
+      ref('firesPerRun', 0, 0.5, '§60e posture split (accepted): the shopper fires ~never'),
+    );
+  }
+  const id = character === 'soldier' ? posture.replace('pre55', '55pre') : `${character}-${posture.replace('pre55', '55pre')}`;
+  return {
+    id,
+    title: `${character} ${posture === 'regen' ? 'firer' : 'shopper'} (act-1 drift ref)`,
+    args: [...ACT1, `--character=${character}`, vector, ...ARM],
+    strategyRow,
+    checks,
+  };
+}
+
+/** One two-act walk instrument — the DESIGN-target rows (target declared at
+ *  68d, flips to `signed` at the §68e/f post-tuning verify). */
+function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstrument {
+  const vector = posture === 'regen' ? REGEN : PRE55;
+  return {
+    id: `walk-${posture.replace('pre55', '55pre')}`,
+    title: `two-act ${posture === 'regen' ? 'firer' : 'shopper'} (the design-target shape)`,
+    args: [...WALK, '--character=soldier', vector, ...ARM],
+    strategyRow: posture === 'regen' ? 'scored:59-regen-vector' : 'scored:55pre-vector',
+    checks: [
+      {
+        metric: 'winRate',
+        grade: 'reference',
+        min: sheet.twoActTargetWinRate.min,
+        max: sheet.twoActTargetWinRate.max,
+        source: '68d DECLARED design target 55–70 — signs at the post-tuning verify',
+      },
+      {
+        metric: 'bossWall',
+        grade: 'reference',
+        min: sheet.deepEndWallTarget.min,
+        max: sheet.deepEndWallTarget.max,
+        source: '68d: the 30–35 wall target migrated to the deep-end terminal',
+      },
+    ],
+  };
+}
+
 export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
-  const winBand: BoardCheck = {
-    metric: 'winRate',
-    grade: 'signed',
-    min: sheet.winRateInSample.min,
-    max: sheet.winRateInSample.max,
-    source: '§60e signed: in-sample 60–67',
-  };
-  const wallRef: BoardCheck = {
-    metric: 'bossWall',
-    grade: 'reference',
-    min: sheet.bossWallTarget.min,
-    max: sheet.bossWallTarget.max,
-    source: '§60e band 30–35 (measured 26–33, accepted — reference until 68d)',
-  };
-  const bankRef: BoardCheck = {
-    metric: 'terminalBank',
-    grade: 'reference',
-    min: sheet.terminalBank.min,
-    max: sheet.terminalBank.max,
-    source: '§60e: bank 60–85 idle-high accepted',
-  };
   const instruments: BoardInstrument[] = [
-    {
-      id: 'regen',
-      title: 'the firer posture (59-regen vector)',
-      args: [...SHAPE, REGEN, ...ARM],
-      strategyRow: 'scored:59-regen-vector',
-      checks: [
-        winBand,
-        wallRef,
-        bankRef,
-        ref('firesPerRun', sheet.firerFiresPerRun, 1.0, '§60e: 1.93 fires/run guard-timed'),
-        ref('transactionRate', 0, 0.1, '§60e: the firer buys ~never (posture split accepted)'),
-      ],
-    },
-    {
-      id: '55pre',
-      title: 'the shopper posture (55pre vector)',
-      args: [...SHAPE, PRE55, ...ARM],
-      strategyRow: 'scored:55pre-vector',
-      checks: [
-        winBand,
-        wallRef,
-        bankRef,
-        ref('transactionRate', sheet.shopperTransactionRate, 0.15, '§60e: tx ~40% at the shopper'),
-        ref('firesPerRun', 0, 0.5, '§60e: the shopper fires ~never (posture split accepted)'),
-      ],
-    },
+    act1Posture('soldier', 'regen', sheet),
+    act1Posture('soldier', 'pre55', sheet),
     {
       id: 'fire-ablated',
       title: 'the fire-channel control (60 ablated vector)',
-      args: [...SHAPE, ABLATED, ...ARM],
+      args: [...ACT1, '--character=soldier', ABLATED, ...ARM],
       strategyRow: 'scored:60-fire-ablated-vector',
       checks: [],
     },
     {
       id: 'wall-king',
       title: 'forced Bandit King (regen vector)',
-      args: [...SHAPE, '--encounter=bandit-king', REGEN, ...ARM],
+      args: [...ACT1, '--character=soldier', '--encounter=bandit-king', REGEN, ...ARM],
       strategyRow: 'scored:59-regen-vector',
-      checks: [
-        ref('winRate', sheet.forcedKingWinRegen, 0.1, '§60e per-boss: King 65.0 (regen)'),
-      ],
+      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '68d per-boss: King 72.5 (regen)')],
     },
     {
       id: 'wall-queen',
       title: 'forced Bandit Queen (regen vector)',
-      args: [...SHAPE, '--encounter=banditQueen', REGEN, ...ARM],
+      args: [...ACT1, '--character=soldier', '--encounter=banditQueen', REGEN, ...ARM],
       strategyRow: 'scored:59-regen-vector',
       checks: [
-        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '§60e per-boss: Queen 70.0 (regen)'),
+        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '68d per-boss: Queen 65.0 (regen) — the order FLIPPED vs §60e'),
       ],
     },
+    act1Posture('priest', 'regen', sheet),
+    act1Posture('priest', 'pre55', sheet),
+    act1Posture('gambler', 'regen', sheet),
+    act1Posture('gambler', 'pre55', sheet),
+    walkPosture('regen', sheet),
+    walkPosture('pre55', sheet),
   ];
   const deltas: BoardDelta[] = [
     {
@@ -206,7 +248,7 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
       grade: 'reference',
       min: sheet.fireChannelDelta - 0.05,
       max: sheet.fireChannelDelta + 0.05,
-      source: '§60e: fire ≈ +5pt guard-timed, non-stacking',
+      source: '68d: fire Δ +12.5 post-68a (was §60e +5)',
     },
   ];
   return { instruments, deltas, sheet };

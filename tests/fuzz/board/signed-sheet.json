@@ -1,12 +1,18 @@
 {
-  "signedAt": "2026-07-21, BALANCE §60e (user-signed) — pre-67 single-sector world; §68d re-signs per character",
-  "winRateInSample": { "min": 0.6, "max": 0.67 },
-  "bossWallTarget": { "min": 0.3, "max": 0.35 },
-  "terminalBank": { "min": 60, "max": 85 },
-  "heldOutWinRate": 0.625,
+  "signedAt": "2026-07-27, §68d (user-signed) — the post-67 re-anchor: act-1 rows are DRIFT REFERENCES (observed ±8pt paired noise), the DESIGN band lives on the two-act shape",
+  "characterParity": "characters are similar in DIFFICULTY, differing in PLAYSTYLE (DESIGN.md §Run structure) — cross-character gaps beyond ~±5pt are defects; Gambler parity pending §68f",
+  "twoActTargetWinRate": { "min": 0.55, "max": 0.7 },
+  "deepEndWallTarget": { "min": 0.3, "max": 0.35 },
+  "act1WinRefs": {
+    "soldier": { "regen": 0.85, "pre55": 0.75 },
+    "priest": { "regen": 0.8, "pre55": 0.775 },
+    "gambler": { "regen": 0.7, "pre55": 0.625 }
+  },
+  "gamblerNote": "PROVISIONAL — parity pending the §68f ronin/reaver buff; re-sign after the re-read",
+  "bankRefs": { "firer": 68.3, "shopper": 49.9 },
+  "firerFiresPerRun": 2.98,
   "shopperTransactionRate": 0.4,
-  "firerFiresPerRun": 1.93,
-  "fireChannelDelta": 0.05,
-  "forcedKingWinRegen": 0.65,
-  "forcedQueenWinRegen": 0.7
+  "fireChannelDelta": 0.125,
+  "forcedKingWinRegen": 0.725,
+  "forcedQueenWinRegen": 0.65
 }

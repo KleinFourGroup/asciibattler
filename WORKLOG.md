@@ -2339,3 +2339,36 @@ destroyed at close; ~3.5h total across the three sessions.
 Carried to 68f: miscreants + Column re-reads post-buff · the
 elite-risk-blind node picker (→ the rollout-arbitration
 interstitial) · the two-act signing.
+
+## Phase 68f — tiers & prices
+
+### 68f-probes — the twin-swap force-comp ladder (2026-07-28)
+
+Step-zero audit confirmed the card's premise byte-for-byte: reaver's
+baseStats/growthRates identical to adventurer's, corrupter's to
+mage's, ronin's 1.5× premium = STR+1/LCK+11 — with all the actual
+differentiation living in the weapons (cleaver = katana-grade might
++ bleed; vial = zero-windup unscaled AoE + poison vs bolt's 1.5s
+scaled windup). Probe design: ×3-amplified twin-swap pairs
+(`X,X,X,archer,healer`) on the Soldier anchor, hops=11 L1 regen
+posture, seeds 1–40 — amplification lifts a one-slot delta above
+the ±5–8pt paired noise at the cost of realism; only within-pair
+deltas are read (cross-pair comps differ structurally).
+
+**A wrong-arm miss worth remembering:** the first six batches ran
+`--searcher --audition --redraw --empower` WITHOUT a run-layer
+`--strategy` vector — run mode quietly swept the pure-random/greedy
+baselines. The tell was the summary.csv `strategy` column; the fix
+is board.ts's ARM composition (posture vector + searcher flags).
+~53 min of box time discarded. The doctrine string "the extended
+arm" has always MEANT vector+flags in run mode — but no doc said so
+explicitly until now (BALANCE run-log note added).
+
+Findings (BALANCE 2026-07-28 §68f): ronin realized-NEGATIVE
+(−17.5pt, +8 deaths/run — the durability discount, not the crit
+premium, decides); reaver ≈ adventurer (+2.5pt noise, −6.9 deaths
+real; the weapon carries the slot, not the rare premium); corrupter
+already ABOVE mage (+15pt — and vial being `scaling:"none"` makes
+its magic-10 statline dead weight: an identity defect, not a power
+one). Buff proposal drafted for user signing; box held for the
+post-buff re-runs.

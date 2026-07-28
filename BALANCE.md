@@ -1948,3 +1948,55 @@ deltas. The pre-X H7c→O log lives at
     (shopper) vs the migrated 30–35 target — the shopper's Queen
     problem is a named §68f/g input. Report:
     tests/fuzz/output/board/board-report.txt.
+- **2026-07-28 — §68f THE TWIN-SWAP FORCE-COMP PROBES (6 batches, one
+  box session): the ronin/reaver/corrupter realized-value read.** HEAD
+  `6dae3ed`, box cpx42 fsn1 (`abox-20260728-172557`). Label: **hops=11
+  · L1 triple-twin · regen posture · Soldier-minus-roster** (the
+  `--roster` precedence trap makes these character-blind; Soldier is
+  the vanilla anchor). Arm = `--strategy=…/59-regen-vector.json` + the
+  extended searcher flags; seeds 1–40, `--jobs=8`. Design: each probe
+  forces THREE copies of the twin in an otherwise-identical 5-slot
+  comp (`X,X,X,archer,healer`) — ×3-amplifies a one-slot delta above
+  the ±5–8pt paired noise; within-pair deltas are clean, CROSS-pair
+  comparisons are confounded (melee vs backline triples) and unused.
+  Batches `20260728-{182138,182512,182922,183347,183738,184107}-6dae3ed`.
+  ⚠ A first six-batch pass ran the searcher flags WITHOUT the
+  run-layer vector — run mode swept the pure-random/greedy baselines
+  (the summary.csv `strategy` column is the tell); discarded, ~53 min.
+  The run-mode extended arm is `--strategy=<posture vector>` + the
+  searcher flags (board.ts ARM composition), not the searcher flags
+  alone.
+  | arm | win | ΔfinalHop | deaths/run | paired Δwin vs twin |
+  |---|---|---|---|---|
+  | mercenary ×3 (control) | 85.0% | 9.55 | 35.0 | — |
+  | ronin ×3 | 67.5% | 9.38 | 43.0 | **−17.5pt** (flips 2↑/9↓) |
+  | adventurer ×3 (control) | 77.5% | 9.53 | 45.5 | — |
+  | reaver ×3 | 80.0% | 9.40 | 38.6 | **+2.5pt** (5↑/4↓, −6.9 deaths) |
+  | mage ×3 (control) | 17.5% | 6.30 | 38.3 | — |
+  | corrupter ×3 | 32.5% | 7.63 | 35.4 | **+15.0pt** (10↑/4↓) |
+  - **⭐ RONIN IS REALIZED-NEGATIVE at 1.5× the price:** −17.5pt and
+    +8.0 deaths/run vs the mercenary it replaces. The mechanics agree:
+    the LCK-14 premium buys crit 0.34-vs-0.08 at L1 (katana critBase
+    0.2 + `luck·0.01`, ×2.0), but katana might 4-vs-5 nearly cancels
+    the STR edge (11-vs-11 base damage) while CON 20-vs-22 · DEF
+    3-vs-4 · growth CON 0.7-vs-0.8 compound a durability deficit the
+    death count shows is the axis that matters. Offense premium,
+    durability discount, uncommon price.
+  - **Reaver ≈ adventurer** (+2.5pt, within paired noise; the −6.9
+    deaths/run is a real texture edge — bleed ends fights sooner):
+    cleaver (might 4 · 0.65 · +bleed) roughly carries whip's slot but
+    NOT the rare 2×-vs-1.5× premium. The stat-clone debt is the
+    whole gap.
+  - **Corrupter > mage (+15.0pt, beyond paired noise):** vial's
+    zero-windup release beats bolt's 1.5s scaled windup, and poison
+    compounds — note vial is `scaling:"none"` (might 2 flat), so
+    corrupter's magic-10 statline is nearly DEAD WEIGHT; its realized
+    value is all weapon. The rare premium is real for corrupter
+    already; the defect is identity (a wasted primary stat), not
+    power.
+  - ⚠ Absolute levels on the mage/corrupter pair (17.5/32.5% vs 85%
+    control) show the backline-triple operating point is STRESSED
+    (one-frontline comps collapse); the within-pair delta stays
+    clean but magnitude extrapolation to realistic comps needs the
+    single-slot follow-up if it matters to a signing. Buff proposal +
+    the user's call: the next entry.

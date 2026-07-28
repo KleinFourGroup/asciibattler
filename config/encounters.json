@@ -558,7 +558,7 @@
               "count": { "kind": "hand", "factor": 1 },
               "units": [
                 { "archetype": "mercenary", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "reaver", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "reaver", "count": { "kind": "weight", "weight": 0.5 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
             }

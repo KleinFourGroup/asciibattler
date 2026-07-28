@@ -220,9 +220,11 @@ describe('fuzz reporters', () => {
     ];
     const stats = perHopStats(results);
     expect(stats.length).toBeGreaterThan(0);
-    // Hops are sorted ascending; battle counts sum to all battles played.
-    const hops = stats.map((s) => s.hop);
-    expect([...hops].sort((a, b) => a - b)).toEqual(hops);
+    // Rows are sorted (sector, hop) lexicographic (68e — hop numbering resets
+    // per sector, so plain hop-ascending only held while no fixture seed ever
+    // cleared sector 1); battle counts sum to all battles played.
+    const keys = stats.map((s) => [s.sector, s.hop]);
+    expect([...keys].sort((a, b) => a[0]! - b[0]! || a[1]! - b[1]!)).toEqual(keys);
     const totalBattles = results.reduce((acc, r) => acc + r.battles.length, 0);
     expect(stats.reduce((acc, s) => acc + s.battles, 0)).toBe(totalBattles);
     for (const s of stats) {

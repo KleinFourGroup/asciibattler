@@ -54,6 +54,10 @@ import type { RunTelemetry } from './telemetry';
 export type RunOutcome = 'complete' | 'defeat' | 'hang' | 'aborted';
 
 export interface BattleResult {
+  /** 68e — the 0-based sector ordinal in the walk (counted off `sector:cleared`;
+   *  0 for every single-sector run). Hop numbering resets per sector, so act
+   *  attribution keys on (sector, hop) — never bare hop. */
+  sector: number;
   hop: number;
   worldSeed: number;
   /** X2 — the authored encounter selected onto this node (`Encounter.id`). One
@@ -103,7 +107,15 @@ export interface RunResult {
    *  ownership no longer identifies the arm. */
   daemonId: string | null;
   outcome: RunOutcome;
+  /** `run.currentHop` at run end — PER-SECTOR (resets at every sector
+   *  transition). Read it together with `sectorsCleared`: the walk position at
+   *  death is (sectorsCleared, finalHopReached), lexicographic. */
   finalHopReached: number;
+  /** 68e — `sector:cleared` transitions the run made (0 = died/completed in
+   *  the first sector; a completed two-act walk reads 1 — the sink sector's
+   *  clear is the run completion, not a transition). The finalHop-gap fix:
+   *  act attribution no longer leans on `battlesPlayed`. */
+  sectorsCleared: number;
   totalTicks: number;
   finalTeamSize: number;
   /** 50g — purchases the port buy policy made across the run (all three
@@ -353,6 +365,14 @@ export function runOne(
   const bus = new EventBus<GameEvents>();
   const battles: BattleResult[] = [];
   const recruits: RecruitChoice[] = [];
+  // 68e — the walk ordinal. Incremented on every sector transition (the 67a
+  // `sector:cleared` emit fires AFTER the state swap, and always BEFORE the
+  // successor sector's first battle:started), so `sectorsCleared` IS the
+  // 0-based sector index of whatever battle starts next.
+  let sectorsCleared = 0;
+  bus.on('sector:cleared', () => {
+    sectorsCleared++;
+  });
   // H7c — opt-in mechanism telemetry. Null (and zero overhead) by default.
   const telemetry = options.telemetry ? new TelemetryAccumulator() : null;
 
@@ -395,6 +415,7 @@ export function runOne(
         : null;
     unitTeams = new Map();
     currentBattle = {
+      sector: sectorsCleared,
       hop: run.currentHop,
       worldSeed,
       // X2 — the authored encounter id (set in `beginEncounter` before this
@@ -457,6 +478,7 @@ export function runOne(
       for (const a of xpAwards) telemetry.recordXp(a.unitId, a.xpGained);
       if (survivorPower) {
         telemetry.recordTurnChip(
+          currentBattle.sector,
           currentBattle.hop,
           currentBattle.encounterId,
           survivorPower.player,
@@ -481,6 +503,7 @@ export function runOne(
         : {};
     battles.push({
       ...kFlips,
+      sector: currentBattle.sector,
       hop: currentBattle.hop,
       worldSeed: currentBattle.worldSeed,
       encounterId: currentBattle.encounterId,
@@ -561,6 +584,7 @@ export function runOne(
         totalTicks,
         portPurchases,
         packetsFired,
+        sectorsCleared,
         telemetry,
       );
     }
@@ -583,6 +607,7 @@ export function runOne(
             totalTicks,
             portPurchases,
             packetsFired,
+            sectorsCleared,
             telemetry,
           );
         }
@@ -741,6 +766,7 @@ export function runOne(
           const cb = currentBattle as PartialBattle | null;
           if (cb) {
             battles.push({
+              sector: cb.sector,
               hop: cb.hop,
               worldSeed: cb.worldSeed,
               encounterId: cb.encounterId,
@@ -766,6 +792,7 @@ export function runOne(
             totalTicks,
             portPurchases,
             packetsFired,
+            sectorsCleared,
             telemetry,
           );
         }
@@ -907,11 +934,13 @@ export function runOne(
     totalTicks,
     portPurchases,
     packetsFired,
+    sectorsCleared,
     telemetry,
   );
 }
 
 interface PartialBattle {
+  sector: number;
   hop: number;
   worldSeed: number;
   encounterId: string;
@@ -947,6 +976,7 @@ function finalize(
   totalTicks: number,
   portPurchases: number,
   packetsFired: number,
+  sectorsCleared: number,
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   // Fold in the recruit log + final roster composition (player-side, already
@@ -963,6 +993,7 @@ function finalize(
     daemonId: startingDaemonId,
     outcome,
     finalHopReached: run.currentHop,
+    sectorsCleared,
     totalTicks,
     finalTeamSize: run.team.length,
     portPurchases,
@@ -984,6 +1015,7 @@ function aborted(
   totalTicks: number,
   portPurchases: number,
   packetsFired: number,
+  sectorsCleared: number,
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   return finalize(
@@ -997,6 +1029,7 @@ function aborted(
     totalTicks,
     portPurchases,
     packetsFired,
+    sectorsCleared,
     telemetry,
   );
 }

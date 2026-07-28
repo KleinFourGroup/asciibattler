@@ -38,6 +38,9 @@ const CSV_HEADER = [
   'finalBits',
   // 59a — same append-last rule; the fire seam's non-vacuous proof.
   'packetsFired',
+  // 68e — same append-last rule; the finalHop-gap fix. `finalHop` above stays
+  // PER-SECTOR — a walk read splits acts on (sectorsCleared, finalHop).
+  'sectorsCleared',
 ].join(',');
 
 export function renderSummaryCsv(results: readonly RunResult[]): string {
@@ -72,6 +75,7 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
         r.portPurchases,
         r.finalBits,
         r.packetsFired,
+        r.sectorsCleared,
       ].join(','),
     );
   }
@@ -195,7 +199,9 @@ export function renderFailureTrace(result: RunResult): string {
   lines.push(`# Fuzz failure — seed ${result.seed} (${result.strategyName})`);
   lines.push('');
   lines.push(`- **Outcome:** ${result.outcome}`);
-  lines.push(`- **Final hop reached:** ${result.finalHopReached}`);
+  lines.push(
+    `- **Final hop reached:** ${result.finalHopReached} (sector ${result.sectorsCleared})`,
+  );
   lines.push(`- **Total ticks:** ${result.totalTicks}`);
   lines.push(`- **Final team size:** ${result.finalTeamSize}`);
   lines.push(`- **Port purchases / final bits:** ${result.portPurchases} / ${result.finalBits}`);
@@ -257,15 +263,21 @@ function stddev(xs: readonly number[]): number {
 }
 
 export interface HopStats {
+  /** 68e — the 0-based sector ordinal; the funnel row key is (sector, hop)
+   *  because hop numbering resets per sector. 0 everywhere on single-sector
+   *  shapes, so pre-68e reads are unchanged. */
+  sector: number;
   hop: number;
-  /** RUNS that reached this hop (`finalHopReached >= hop`) — the survival
-   *  funnel denominator. (NOT battle count — hops have multiple waves under the
-   *  H4/H5 pool+deck system, so battles ≠ runs.) */
+  /** RUNS that reached this (sector, hop) — walk position lexicographic:
+   *  cleared a later sector, or ended in this one at `finalHopReached >= hop`.
+   *  The survival funnel denominator. (NOT battle count — hops have multiple
+   *  waves under the H4/H5 pool+deck system, so battles ≠ runs.) */
   runsReached: number;
-  /** RUNS that ENDED on this hop (`outcome !== 'complete' && finalHopReached
-   *  === hop`) — the true loss-hop histogram. Σ over hops = total non-wins.
-   *  This is run-level (a lost wave only chips the pool); use it, not wave losses,
-   *  to answer "where do runs die." */
+  /** RUNS that ENDED on this (sector, hop) (`outcome !== 'complete' &&
+   *  sectorsCleared === sector && finalHopReached === hop`) — the true
+   *  loss-hop histogram. Σ over rows = total non-wins. This is run-level (a
+   *  lost wave only chips the pool); use it, not wave losses, to answer
+   *  "where do runs die." */
   runsDied: number;
   /** `runsDied / runsReached` — the conditional run-death rate GIVEN you reached
    *  this hop. A high hop-1 value vs later hops = a front-loaded "hop-1
@@ -296,23 +308,32 @@ export interface HopStats {
  * `battles` column is the sample size; weight your read by it.
  */
 export function perHopStats(results: readonly RunResult[]): HopStats[] {
-  const byHop = new Map<number, BattleResult[]>();
+  // 68e — rows key on (sector, hop): hop numbering resets per sector, so a
+  // bare-hop funnel would merge act-1 hop N with act-2 hop N.
+  const byHop = new Map<string, BattleResult[]>();
   for (const r of results) {
     for (const b of r.battles) {
-      const arr = byHop.get(b.hop);
+      const key = `${b.sector}:${b.hop}`;
+      const arr = byHop.get(key);
       if (arr) arr.push(b);
-      else byHop.set(b.hop, [b]);
+      else byHop.set(key, [b]);
     }
   }
-  return [...byHop.keys()]
-    .sort((a, b) => a - b)
-    .map((hop) => {
-      const bs = byHop.get(hop)!;
-      const runsReached = results.filter((r) => r.finalHopReached >= hop).length;
+  return [...byHop.values()]
+    .map((bs) => ({ sector: bs[0]!.sector, hop: bs[0]!.hop, bs }))
+    .sort((a, b) => a.sector - b.sector || a.hop - b.hop)
+    .map(({ sector, hop, bs }) => {
+      const runsReached = results.filter(
+        (r) =>
+          r.sectorsCleared > sector ||
+          (r.sectorsCleared === sector && r.finalHopReached >= hop),
+      ).length;
       const runsDied = results.filter(
-        (r) => r.outcome !== 'complete' && r.finalHopReached === hop,
+        (r) =>
+          r.outcome !== 'complete' && r.sectorsCleared === sector && r.finalHopReached === hop,
       ).length;
       return {
+        sector,
         hop,
         runsReached,
         runsDied,
@@ -336,6 +357,7 @@ export function renderPerHopAnalysis(results: readonly RunResult[]): string {
   const rows = perHopStats(results);
   const totalBattles = results.reduce((acc, r) => acc + r.battles.length, 0);
   const header = [
+    'Sec',
     'Hop',
     'Runs',
     'Died',
@@ -352,6 +374,7 @@ export function renderPerHopAnalysis(results: readonly RunResult[]): string {
     'E.spread',
   ];
   const cell = (rs: HopStats): string[] => [
+    String(rs.sector),
     String(rs.hop),
     String(rs.runsReached),
     String(rs.runsDied),
@@ -371,7 +394,9 @@ export function renderPerHopAnalysis(results: readonly RunResult[]): string {
   const fmt = (cells: string[]) => cells.map((c, i) => c.padStart(widths[i]!)).join('  ');
   const lines: string[] = [];
   lines.push(`### Per-hop team analysis (${totalBattles} battles across ${results.length} runs)`);
-  lines.push('Runs = runs that REACHED this hop · Died = runs that ENDED here (run-level)');
+  lines.push(
+    'Sec = sector ordinal (hop numbering resets per sector) · Runs = runs that REACHED this (sector, hop) · Died = runs that ENDED here (run-level)',
+  );
   lines.push('Died% = Died/Runs (this hop’s conditional run-death rate — the funnel)');
   lines.push('Waves = battles fought here (multiple/hop) · Dths/wv = mean player deaths per wave');
   lines.push('P = player, E = enemy · avgLv/medLv = mean/median unit level (pooled)');
@@ -669,19 +694,23 @@ export function perEncounterStats(results: readonly RunResult[]): EncounterStats
 
   for (const r of results) {
     for (const b of r.battles) ensure(b.encounterId).battles.push(b);
-    // Pool instances: group THIS run's chips by hop (one node visit = one hop =
-    // one instance); the encounter id is constant within a hop group.
+    // Pool instances: group THIS run's chips by (sector, hop) — one node visit
+    // = one instance; the encounter id is constant within the group. 68e: the
+    // key carries the sector because hop numbering RESETS per sector — bare-hop
+    // keying merged act-1 hop N with act-2 hop N and mis-attributed the act-2
+    // chips to the act-1 encounter (the walk-collision pin).
     const chips = r.telemetry?.poolChips ?? [];
-    const byHop = new Map<number, { encounterId: string; taken: number; dealt: number }>();
+    const byHop = new Map<string, { encounterId: string; taken: number; dealt: number }>();
     for (const c of chips) {
       const taken = c.enemy * chipMult; // enemy survivors chip the PLAYER pool
       const dealt = c.player * chipMult; // player survivors chip the ENEMY pool
-      const g = byHop.get(c.hop);
+      const key = `${c.sector}:${c.hop}`;
+      const g = byHop.get(key);
       if (g) {
         g.taken += taken;
         g.dealt += dealt;
       } else {
-        byHop.set(c.hop, { encounterId: c.encounterId, taken, dealt });
+        byHop.set(key, { encounterId: c.encounterId, taken, dealt });
       }
       const e = ensure(c.encounterId);
       e.poolWaves += 1;

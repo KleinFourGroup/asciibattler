@@ -2188,3 +2188,34 @@ rows); board pins 11→14. The signed report over the full campaign:
 **every drift ref PASSes at its signed value, 0 FAIL, and the ONLY
 warns are the four two-act rows — the 68e/f work-queue rendered as a
 report.** Smoke 298→301.
+
+### 68e-prep — sector-aware telemetry (2026-07-27)
+
+The filed finalHop instrument gap, closed — and the step-zero audit
+found it was WORSE than filed: beyond `finalHopReached` resetting per
+sector, `perEncounterStats` grouped pool-chip instances by BARE hop,
+so in a two-act walk act-1 hop N and act-2 hop N collided into one
+instance and the act-2 encounter's chips were silently attributed to
+the act-1 encounter (its own row read instances=0). The 68d campaign
+was unaffected — its walk rows were summary-level (no `--telemetry`)
+— but the 68e per-encounter read would have ridden exactly this path.
+
+Headless-first: the collision pin written against the OLD API failed
+red exactly as predicted (act2enc instances 0, chips absorbed) before
+the fix. The shape: `BattleResult.sector` + `PoolChip.sector` (the
+0-based walk ordinal; the harness counts `sector:cleared` emits — the
+67a event fires after the state swap and before the successor's first
+`battle:started`, so the counter IS the next battle's sector index) ·
+`RunResult.sectorsCleared` (+ summary.csv `sectorsCleared`,
+append-last rule; `finalHop` stays per-sector — a walk read splits on
+the pair) · `perEncounterStats` instances re-keyed `(sector, hop)` ·
+`perHopStats`/HopStats rows re-keyed `(sector, hop)` with
+reach/death LEXICOGRAPHIC on walk position (the funnel now renders
+the two-act cliff per act natively; renderer gains a Sec column).
+`recordTurnChip` takes sector as a required FIRST param — no silent
+default that could mislabel a future call site. Pins: the collision
+red-pin (now green with labels), the real 2+2 walk integration pin
+(labels monotone, sectorsCleared == last battle's sector, chip/battle
+sector sets aligned, non-vacuous transition guard), the lexicographic
+funnel pin. Smoke 301→304; main 2338 untouched; v40/v34 hold (test
+instrument shape only, nothing serialized).

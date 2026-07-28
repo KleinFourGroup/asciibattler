@@ -69,6 +69,10 @@ export interface ArchetypeTelemetry {
  *  the PLAYER pool (the X balance metric — player pool damage TAKEN). See
  *  `resolveTurn` in Run.ts. */
 export interface PoolChip {
+  /** 68e — the 0-based sector ordinal in the walk (counted off `sector:cleared`;
+   *  0 for every single-sector run). Hop numbering RESETS per sector, so the
+   *  per-encounter instance key is (sector, hop), never bare hop. */
+  sector: number;
   hop: number;
   /** X2 — the authored encounter this turn belongs to (`Encounter.id`); the
    *  per-encounter pool-damage rollup key. */
@@ -160,9 +164,16 @@ export class TelemetryAccumulator {
   }
 
   /** One turn resolved — record both sides' pool chip, tagged with the turn's
-   *  hop + encounter id (the per-encounter rollup key). */
-  recordTurnChip(hop: number, encounterId: string, player: number, enemy: number): void {
-    this.poolChips.push({ hop, encounterId, player, enemy });
+   *  sector + hop + encounter id (the per-encounter rollup key; sector first
+   *  because hop numbering resets per sector — 68e). */
+  recordTurnChip(
+    sector: number,
+    hop: number,
+    encounterId: string,
+    player: number,
+    enemy: number,
+  ): void {
+    this.poolChips.push({ sector, hop, encounterId, player, enemy });
   }
 
   /**

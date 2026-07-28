@@ -27,6 +27,7 @@ import {
   renderEncounterAnalysis,
 } from './reporters';
 import { TelemetryAccumulator } from './telemetry';
+import type { Archetype } from '../../src/sim/archetypes';
 import type { RunTelemetry } from './telemetry';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
 import { HEALTH } from '../../src/config/health';
@@ -112,6 +113,36 @@ describe('fuzz harness', () => {
     const recruitsDiffer = JSON.stringify(random.recruits) !== JSON.stringify(greedy.recruits);
     expect(recruitsDiffer || random.strategyName !== greedy.strategyName).toBe(true);
   });
+
+  it('a two-act walk labels battles + chips with the sector ordinal (68e)', () => {
+    // sectorHops: 2 → a 2+2 walk over the shipped start → deep-end chain. The
+    // overpowered fixture roster makes clearing act 1 essentially certain —
+    // the vacuousness guard below (a transition actually happened) depends on
+    // it, so if a future balance change flakes this pin, raise the levels,
+    // not the assertions.
+    const roster = (['mercenary', 'mercenary', 'archer', 'archer', 'healer'] as const).map(
+      (archetype): { archetype: Archetype; level: number } => ({ archetype, level: 10 }),
+    );
+    const result = runOne(11, makeStrategy('greedy')!, {
+      telemetry: true,
+      runConfig: { sectorHops: 2, startingRoster: roster },
+    });
+    // Labels are structurally consistent regardless of outcome: monotone
+    // non-decreasing from 0, and the run ends in the sector of its last battle.
+    expect(result.battles.length).toBeGreaterThan(0);
+    expect(result.battles[0]!.sector).toBe(0);
+    for (let i = 1; i < result.battles.length; i++) {
+      expect(result.battles[i]!.sector).toBeGreaterThanOrEqual(result.battles[i - 1]!.sector);
+    }
+    expect(result.sectorsCleared).toBe(result.battles[result.battles.length - 1]!.sector);
+    // Non-vacuous: the walk actually crossed into act 2.
+    expect(result.sectorsCleared).toBeGreaterThanOrEqual(1);
+    // Pool chips carry the same label (the per-encounter instance key) and
+    // stay aligned with the battle records' sectors.
+    const chipSectors = new Set(result.telemetry!.poolChips.map((c) => c.sector));
+    const battleSectors = new Set(result.battles.map((b) => b.sector));
+    expect(chipSectors).toEqual(battleSectors);
+  });
 });
 
 describe('fuzz reporters', () => {
@@ -123,6 +154,8 @@ describe('fuzz reporters', () => {
     expect(lines[0]).toContain('seed');
     expect(lines[0]).toContain('strategy');
     expect(lines[0]).toContain('outcome');
+    // 68e — the append-last walk column (the finalHop-gap fix).
+    expect(lines[0]!.endsWith('sectorsCleared')).toBe(true);
     // Row count of comma-separated fields must match the header.
     const headerCols = lines[0]!.split(',').length;
     for (const row of lines.slice(1)) {
@@ -194,6 +227,7 @@ describe('fuzz reporters', () => {
       winner: 'player' | 'enemy',
       playerDeaths: number,
     ): BattleResult => ({
+      sector: 0,
       hop,
       worldSeed: 0,
       encounterId: 'fixture',
@@ -217,6 +251,7 @@ describe('fuzz reporters', () => {
       daemonId: null,
       outcome,
       finalHopReached,
+      sectorsCleared: 0,
       totalTicks: 0,
       finalTeamSize: 5,
       portPurchases: 0,
@@ -253,6 +288,63 @@ describe('fuzz reporters', () => {
     expect(stats.reduce((acc, s) => acc + s.runsDied, 0)).toBe(1);
   });
 
+  it('per-hop funnel rows split by sector, reach/death lexicographic (68e)', () => {
+    // Act-1 hop 1 and act-2 hop 1 are separate funnel rows: a run that cleared
+    // act 1 "reached" every act-1 row regardless of its (reset) finalHop, and
+    // deaths attribute to the (sector, hop) walk position.
+    const battle = (sector: number, hop: number): BattleResult => ({
+      sector,
+      hop,
+      worldSeed: 0,
+      encounterId: 'fixture',
+      layoutId: null,
+      winner: 'player',
+      ticks: 1,
+      playerDeaths: 0,
+      enemyDeaths: 0,
+      playerTeamSize: 5,
+      enemyTeamSize: 8,
+      playerLevels: [1],
+      enemyLevels: [1],
+    });
+    const run = (
+      battles: BattleResult[],
+      outcome: 'complete' | 'defeat',
+      sectorsCleared: number,
+      finalHopReached: number,
+    ): RunResult => ({
+      seed: 0,
+      strategyName: 'syn',
+      daemonId: null,
+      outcome,
+      finalHopReached,
+      sectorsCleared,
+      totalTicks: 0,
+      finalTeamSize: 5,
+      portPurchases: 0,
+      packetsFired: 0,
+      finalBits: 0,
+      battles,
+      recruits: [],
+    });
+    // Run A walks act 1 (hops 1–2), crosses, dies at act-2 hop 1.
+    const runA = run([battle(0, 1), battle(0, 2), battle(1, 1)], 'defeat', 1, 1);
+    // Run B dies at act-1 hop 1 — the SAME bare hop number as A's death.
+    const runB = run([battle(0, 1)], 'defeat', 0, 1);
+    const stats = perHopStats([runA, runB]);
+    const rowKey = (s: { sector: number; hop: number }) => `${s.sector}:${s.hop}`;
+    expect(stats.map(rowKey)).toEqual(['0:1', '0:2', '1:1']); // sorted, no merge
+    const act1hop1 = stats.find((s) => rowKey(s) === '0:1')!;
+    const act1hop2 = stats.find((s) => rowKey(s) === '0:2')!;
+    const act2hop1 = stats.find((s) => rowKey(s) === '1:1')!;
+    expect(act1hop1.runsReached).toBe(2);
+    expect(act1hop1.runsDied).toBe(1); // B only — A's death is act-2's
+    expect(act1hop2.runsReached).toBe(1); // A (cleared a later sector)
+    expect(act1hop2.runsDied).toBe(0);
+    expect(act2hop1.runsReached).toBe(1);
+    expect(act2hop1.runsDied).toBe(1); // A
+  });
+
   it('per-layout stats group by layout with wave win rate, deaths, and sizes', () => {
     const b = (
       layoutId: string | null,
@@ -261,6 +353,7 @@ describe('fuzz reporters', () => {
       playerDeaths: number,
       enemyTeamSize: number,
     ): BattleResult => ({
+      sector: 0,
       hop,
       worldSeed: 0,
       encounterId: 'fixture',
@@ -281,6 +374,7 @@ describe('fuzz reporters', () => {
         daemonId: null,
         outcome: 'complete',
         finalHopReached: 2,
+        sectorsCleared: 0,
         totalTicks: 0,
         finalTeamSize: 5,
         portPurchases: 0,
@@ -335,6 +429,7 @@ describe('fuzz reporters', () => {
     // hop within a run) and per WAVE (a turn).
     const m = HEALTH.chipMultiplier;
     const eb = (hop: number, encounterId: string, winner: 'player' | 'enemy'): BattleResult => ({
+      sector: 0,
       hop,
       worldSeed: 0,
       encounterId,
@@ -352,7 +447,7 @@ describe('fuzz reporters', () => {
       chips: ReadonlyArray<{ hop: number; encounterId: string; player: number; enemy: number }>,
     ): RunTelemetry => {
       const acc = new TelemetryAccumulator();
-      for (const c of chips) acc.recordTurnChip(c.hop, c.encounterId, c.player, c.enemy);
+      for (const c of chips) acc.recordTurnChip(0, c.hop, c.encounterId, c.player, c.enemy);
       return acc.finish([], []);
     };
     const results: RunResult[] = [
@@ -362,6 +457,7 @@ describe('fuzz reporters', () => {
         daemonId: null,
         outcome: 'complete',
         finalHopReached: 2,
+        sectorsCleared: 0,
         totalTicks: 0,
         finalTeamSize: 5,
         portPurchases: 0,
@@ -381,6 +477,7 @@ describe('fuzz reporters', () => {
         daemonId: null,
         outcome: 'complete',
         finalHopReached: 1,
+        sectorsCleared: 0,
         totalTicks: 0,
         finalTeamSize: 5,
         portPurchases: 0,
@@ -412,8 +509,46 @@ describe('fuzz reporters', () => {
     expect(renderEncounterAnalysis(results)).toContain('Per-encounter difficulty');
   });
 
+  it('per-encounter instance grouping splits same-hop chips across sectors (68e)', () => {
+    // The walk-collision pin: a two-act run resets hop numbering per sector,
+    // so act-1 hop 2 and act-2 hop 2 are DIFFERENT node visits. Pre-68e the
+    // instance grouper keyed by bare hop — the act-2 encounter's chips landed
+    // inside the act-1 encounter's instance (act2 read instances=0, act1
+    // absorbed its pool damage).
+    const m = HEALTH.chipMultiplier;
+    const acc = new TelemetryAccumulator();
+    acc.recordTurnChip(0, 2, 'act1enc', 1, 3); // act-1 sector, hop 2
+    acc.recordTurnChip(1, 2, 'act2enc', 1, 9); // act-2 sector, SAME hop number
+    const results: RunResult[] = [
+      {
+        seed: 0,
+        strategyName: 'syn',
+        daemonId: null,
+        outcome: 'defeat',
+        finalHopReached: 2,
+        sectorsCleared: 1,
+        totalTicks: 0,
+        finalTeamSize: 5,
+        portPurchases: 0,
+        packetsFired: 0,
+        finalBits: 0,
+        battles: [],
+        recruits: [],
+        telemetry: acc.finish([], []),
+      },
+    ];
+    const stats = perEncounterStats(results);
+    const act1 = stats.find((s) => s.encounter === 'act1enc')!;
+    const act2 = stats.find((s) => s.encounter === 'act2enc')!;
+    expect(act1.instances).toBe(1);
+    expect(act2.instances).toBe(1);
+    expect(act1.poolDmgTaken).toBeCloseTo(3 * m);
+    expect(act2.poolDmgTaken).toBeCloseTo(9 * m);
+  });
+
   it('per-encounter degrades gracefully with telemetry off (outcome cols only)', () => {
     const eb = (encounterId: string): BattleResult => ({
+      sector: 0,
       hop: 1,
       worldSeed: 0,
       encounterId,
@@ -434,6 +569,7 @@ describe('fuzz reporters', () => {
         daemonId: null,
         outcome: 'complete',
         finalHopReached: 1,
+        sectorsCleared: 0,
         totalTicks: 0,
         finalTeamSize: 5,
         portPurchases: 0,

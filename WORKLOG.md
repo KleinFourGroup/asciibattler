@@ -2263,3 +2263,22 @@ Both new instruments carried the read: the sector-split funnel
 (deaths per act, per hop) and the round-tripped per-encounter table
 over a walk. Tune proposal → the §68e decision point (next entry);
 the box stays up for the re-isolation + board re-run.
+
+### 68e-tune — the signed Deep End tune (2026-07-28, USER-SIGNED)
+
+Signed as proposed, plus the elite isolation rider: (1) **minHop
+gates** — infernalColumn 6 ("peacekeepers sent to quell the bandit
+problems" arrive as the late-act escalation), miscreants 3; the
+sector's uniform-from-hop-0 shape ends here by design. (2) **count
+trims** — infernalColumn hand×1.5→×1.0 (the 9-body merc wall thins
+to 6 at base hand; budget 1.25 KEPT — it stays the sector's hard
+normal, target ≈3–5/instance), miscreants hand×2→×1.5 (still a
+swarm; the fixed warlock stays). (3) NO change: plagueDoctors
+(band-legal), the occult migrants, artillery/adventurer, both bosses.
+(4) **The elites get isolation batches** (user rider) — run PRE-board
+on the tuned config so a possible elite trim costs one board run,
+not two. Chore folded per the run-log note: the failure-trace battle
+table gains Sec + Encounter columns (walk-death forensics no longer
+reconstruct from aggregates). Verify chain: re-isolate the two tuned
+entries + both walk postures + the two elite isolations (6 batches)
+→ elite verdict (user if a trim is indicated) → the full board.

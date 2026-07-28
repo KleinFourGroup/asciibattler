@@ -60,9 +60,9 @@
     ],
     "encounters": {
       "normal": [
-        { "encounterId": "infernalColumn" },
+        { "encounterId": "infernalColumn", "minHop": 6 },
         { "encounterId": "plagueVictims" },
-        { "encounterId": "miscreants" },
+        { "encounterId": "miscreants", "minHop": 3 },
         { "encounterId": "elementalTrio" },
         { "encounterId": "plagueDoctors" },
         { "encounterId": "artillery" },

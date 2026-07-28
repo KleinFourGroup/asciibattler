@@ -209,16 +209,18 @@ export function renderFailureTrace(result: RunResult): string {
   lines.push('');
   lines.push('## Battles');
   lines.push('');
+  // 68e — Sec + Encounter columns: the walk-death forensics the §68e read had
+  // to reconstruct from aggregates (traces predate X2's encounterId).
   lines.push(
-    '| Hop | Layout | Winner | Ticks | Player deaths | Enemy deaths | Player size | Enemy size |',
+    '| Sec | Hop | Encounter | Layout | Winner | Ticks | Player deaths | Enemy deaths | Player size | Enemy size |',
   );
   lines.push(
-    '|----:|:-------|:-------|------:|--------------:|-------------:|------------:|-----------:|',
+    '|----:|----:|:----------|:-------|:-------|------:|--------------:|-------------:|------------:|-----------:|',
   );
   for (const b of result.battles) {
     const layout = b.layoutId ?? 'procedural';
     lines.push(
-      `| ${b.hop} | ${layout} | ${b.winner} | ${b.ticks} | ${b.playerDeaths} | ${b.enemyDeaths} | ${b.playerTeamSize} | ${b.enemyTeamSize} |`,
+      `| ${b.sector} | ${b.hop} | ${b.encounterId} | ${layout} | ${b.winner} | ${b.ticks} | ${b.playerDeaths} | ${b.enemyDeaths} | ${b.playerTeamSize} | ${b.enemyTeamSize} |`,
     );
   }
   lines.push('');

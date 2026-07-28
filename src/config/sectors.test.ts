@@ -70,7 +70,7 @@ describe('sectors config — the shipped catalog', () => {
     expect(start!.encounters.boss.map((e) => e.encounterId)).toEqual(['bandit-king', 'banditQueen']);
   });
 
-  it('ships "The Deep End" (67c): swamp act two — the occult pool, ungated from hop 0', () => {
+  it('ships "The Deep End" (67c, gates 68e): swamp act two — the occult pool, two signed hop gates', () => {
     const deep = getSector('the-deep-end');
     expect(deep).toBeDefined();
     expect(deep!.theme).toBe('swamp');
@@ -97,9 +97,18 @@ describe('sectors config — the shipped catalog', () => {
       'darkMagicPosse',
     ]);
     expect(deep!.encounters.boss.map((e) => e.encounterId)).toEqual(['bandit-king', 'banditQueen']);
-    expect(
-      Object.values(deep!.encounters).every((pool) => pool.every((e) => e.minHop === undefined)),
-    ).toBe(true);
+    // 68e (user-signed): the uniform-from-hop-0 shape ended at the tune —
+    // the two isolation-pinned defects carry gates; everything else stays
+    // ungated. (67c shipped the pool fully ungated; the §68e read is why.)
+    const gates = new Map(deep!.encounters.normal.map((e) => [e.encounterId, e.minHop]));
+    expect(gates.get('infernalColumn')).toBe(6);
+    expect(gates.get('miscreants')).toBe(3);
+    for (const [id, gate] of gates) {
+      if (id !== 'infernalColumn' && id !== 'miscreants') expect(gate).toBeUndefined();
+    }
+    for (const pool of [deep!.encounters.elite, deep!.encounters.boss]) {
+      expect(pool.every((e) => e.minHop === undefined)).toBe(true);
+    }
   });
 
   it('getSector returns undefined for an unknown id', () => {

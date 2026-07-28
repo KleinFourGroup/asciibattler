@@ -638,6 +638,8 @@ describe('fuzz reporters', () => {
     const md = renderFailureTrace(synthetic);
     expect(md).toContain('# Fuzz failure');
     expect(md).toContain('## Battles');
+    // 68e — the walk-forensics columns.
+    expect(md).toContain('| Sec | Hop | Encounter |');
     expect(md).toContain('## Recruits');
     expect(failureFilename(synthetic)).toMatch(/seed1-defeat\.md$/);
   });

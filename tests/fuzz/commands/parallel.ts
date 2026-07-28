@@ -141,8 +141,8 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
   }
 
   // Mirror run.ts's failures/ semantics: wipe, then adopt every shard's traces
-  // (filenames are `${strategy}-seed${seed}-${outcome}.md` — unique per run,
-  // so cross-shard collisions are impossible).
+  // (filenames are `${slug(strategy)}-seed${seed}-${outcome}.md` — unique per
+  // run, so cross-shard collisions are impossible).
   const failuresDir = join(args.outDir, 'failures');
   if (existsSync(failuresDir)) rmSync(failuresDir, { recursive: true, force: true });
   mkdirSync(failuresDir, { recursive: true });

@@ -239,9 +239,18 @@ export function renderFailureTrace(result: RunResult): string {
   return lines.join('\n');
 }
 
-/** Slugify a result for use in a filename. Stable across reruns. */
+/**
+ * Slugify a result for use in a filename. Stable across reruns. Characters
+ * illegal in NTFS filenames are replaced with '-' — scored strategies are
+ * named `scored:<weights-file>`, and on Windows the raw colon makes
+ * writeFileSync silently create an alternate data stream named "scored"
+ * instead of a real .md trace (observed in the §68e local dose-response
+ * runs; Linux was unaffected). summary.csv keeps the unsanitized name —
+ * only the filename is slugged.
+ */
 export function failureFilename(result: RunResult): string {
-  return `${result.strategyName}-seed${result.seed}-${result.outcome}.md`;
+  const strategy = result.strategyName.replace(/[<>:"/\\|?*]/g, '-');
+  return `${strategy}-seed${result.seed}-${result.outcome}.md`;
 }
 
 // ── Per-hop team analysis (G4 balance telemetry) ─────────────────────────────

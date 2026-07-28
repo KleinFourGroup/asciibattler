@@ -643,4 +643,19 @@ describe('fuzz reporters', () => {
     expect(md).toContain('## Recruits');
     expect(failureFilename(synthetic)).toMatch(/seed1-defeat\.md$/);
   });
+
+  it('failureFilename sanitizes NTFS-illegal characters in the strategy name', () => {
+    // Scored strategies are named `scored:<file>` — on Windows a raw colon
+    // makes writeFileSync create an alternate data stream named "scored"
+    // instead of a real .md trace (§68e). Pin: no illegal chars survive.
+    const result = runOne(1, makeStrategy('pure-random')!);
+    const synthetic = {
+      ...result,
+      strategyName: 'scored:59-regen-vector',
+      outcome: 'defeat' as const,
+    };
+    const name = failureFilename(synthetic);
+    expect(name).toBe('scored-59-regen-vector-seed1-defeat.md');
+    expect(name).not.toMatch(/[<>:"/\\|?*]/);
+  });
 });

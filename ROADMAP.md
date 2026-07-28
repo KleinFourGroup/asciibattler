@@ -256,10 +256,11 @@ edits re-scan the non-vacuousness canaries (61d precedent).
   USER-SIGNED): 13 box batches; the two-act cliff · Gambler −6/−5 ·
   ⭐ character parity = a signed design principle (DESIGN.md);
   BALANCE run-log 2026-07-27 + worklog §68d-batches/-signing.
-- [ ] **68e** — the Deep End read: force-isolate Infernal Column +
-  per-encounter telemetry over the new pools; tune (minHop gates /
-  comp weights / budget — the sector is uniform-from-hop-0); full
-  board re-run after.
+- [x] **68e** — the Deep End read ✅ 2026-07-28 (`ddf2293`→`dae5ad7`,
+  tunes USER-SIGNED ×2): the cliff = two defective entries → gates
+  6/3 + count trims + the spreaders stage-1 trim; ⚠ the
+  elite-censoring caveat + `--first-node=elite`; board 0 FAIL ·
+  4 WARN (two-act rows sign post-68f). BALANCE 2026-07-28 + worklog.
 - [ ] **68f** — tiers & prices: ronin/reaver force-comp probes + buff
   (reaver ≡ adventurer, corrupter ≡ mage in stats); ⛔ tier
   reassignments (user); rarity multiplier + daemon/packet prices

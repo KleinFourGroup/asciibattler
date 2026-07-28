@@ -2320,3 +2320,22 @@ one roster point (state it in the label); taken/wave + wave-win stay
 the cross-checks. Windows rider caught mid-experiment: NTFS ADS
 colon-filename trap (gotcha #119) — fixed in a parallel session
 (`b6c8328`).
+
+### 68e-verify + close — the paired elite reads, walk v3, the board (2026-07-28)
+
+The new shape earned its keep on its first outing: at the FRESH
+operating point the pair separates hugely (spreaders 18.1 CENSORED at
+the full-pool ceiling vs darkMagic 5.9 genuinely band-scale); at the
+ACT-2-ENTRY point (L8 ×6 roster) they CONVERGE (10.6 vs 9.7, runWin
+25 vs 26/40) — the trim landed at the roster point where players
+actually meet the encounter, and the fresh-roster asymmetry stands
+as a documented design property of the summon marathon. Walk
+death-share halved (26%→13%). Walk v3: 30.0/20.0. The board: **0
+FAIL · 4 WARN** — act 1 undisturbed by all three Deep End changes,
+the four WARNs = the two-act rows that sign post-68f, plus the new
+deep-end wall reads (36.8/57.9 vs 30–35) naming the shopper's Queen
+problem as a 68f/g input. Numbers: BALANCE 2026-07-28. Box
+destroyed at close; ~3.5h total across the three sessions.
+Carried to 68f: miscreants + Column re-reads post-buff · the
+elite-risk-blind node picker (→ the rollout-arbitration
+interstitial) · the two-act signing.

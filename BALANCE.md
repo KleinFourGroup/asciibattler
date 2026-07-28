@@ -1892,3 +1892,59 @@ deltas. The pre-X H7c→O log lives at
     leaned on per-encounter + the funnel instead; trace columns are
     68e-tune-commit chores. Tune proposal + the user's call: the
     next entry.
+- **2026-07-28 — §68e THE TUNE + VERIFY (user-signed ×2) + ⚠ THE
+  ELITE-CENSORING CAVEAT + the board re-run (0 FAIL · 4 WARN).**
+  HEADs `36bb95f` (gates+trims+spreaders) → `dae5ad7` (the first-node
+  dial); box cpx42 throughout; extended arm, Soldier, seeds 1–40.
+  - **Signed tune 1 (`36bb95f`):** infernalColumn minHop 6 + count
+    ×1.5→×1.0 · miscreants minHop 3 + count ×2→×1.5. Isolation
+    (gate-blind A/B): 11.56→6.59 and 9.31→6.59 pool-HP/inst. The
+    act-2 ENTRY SHOCK died (walk-regen act-2 hops 0–1: 6 deaths →
+    0); walk-regen 7.5→25.0%.
+  - **Signed tune 2 (`29d2c99`):** plagueSpreaders STAGE-1 count
+    ×1.25→×1.0 + budget 1.25→1.0 (stage 2 untouched). The five-point
+    dose-response that picked the lever falsified both stage-2
+    hypotheses and surfaced the caveat below; decision metrics were
+    taken/WAVE (5.58→4.20), waveWin (32→37%), and walk death-share.
+  - **⚠ PROTOCOL CAVEAT (permanent): per-instance pool damage is
+    RIGHT-CENSORED for elites.** An instance records at most the
+    ARRIVAL pool (`playerHealthMax` 20); forced elites sample
+    sparsely (~0.6 inst/run) and mostly terminally, so the mean pins
+    to arrival pool, not encounter strength (five configs read flat
+    15.7–18.2 while enemy-deaths/wave swung 6.7↔30.7). The metric
+    stays honest for NORMALS (many instances, mostly non-terminal).
+    Elite reads use: taken/WAVE · waveWin · walk death-share · and
+    the de-censored shape below. SHAPE + ROSTER ARE PART OF THE
+    LABEL.
+  - **The de-censored elite shape (user-proposed, `dae5ad7`):**
+    `--hops=2 --first-node=elite --encounter=<id>` (+ `--roster` for
+    a stated operating point) — the root node is stamped elite
+    (zero-draw post-generation stamp), giving 40 full-pool
+    instances/batch. The paired reads at dae5ad7:
+    | operating point | spreaders (tuned) | darkMagicPosse |
+    |---|---|---|
+    | fresh L1 (full pool 20) | 18.1/inst · 30/40 die (CENSORED) | 5.9/inst · 8/40 die |
+    | act-2-entry L8 ×6 | 10.6/inst · runWin 25/40 | 9.7/inst · runWin 26/40 |
+    **At the roster point where players meet them, the two elites
+    read AT PARITY** — the trim landed; the fresh-roster asymmetry
+    (the summon marathon punishes underleveled teams hardest) stands
+    as a documented property, acceptable because spreaders is
+    Deep-End-only. Walk death-share: spreaders 26%→13% of all
+    deaths.
+  - **Walk v3 (post-all-tunes):** regen 12/40 = 30.0% · 55pre 8/40 =
+    20.0%. Death-share now: Queen 14/60 (the DESIGNED terminal wall)
+    · miscreants 12/60 (held for the post-68f re-read, per signing)
+    · spreaders 8/60 · Column 5/60 (gated). The residual 55–70 gap
+    is the §68f agenda (roster-side buffs) + the noted bot gap: the
+    node picker doesn't weigh elite risk (suicides into detours a
+    human would skip) — filed for the rollout-arbitration
+    interstitial.
+  - **The board (11 instruments, batches `20260728-*-dae5ad7`): 0
+    FAIL · 4 WARN** — every act-1 drift ref, parity row, posture
+    split, forced-boss probe, and the fire channel PASS at signed
+    values (the Deep End tunes left act 1 untouched); the 4 WARNs
+    are the two-act rows awaiting the §68f post-tuning signing.
+    New: the deep-end terminal wall reads 36.8 (firer) / 57.9
+    (shopper) vs the migrated 30–35 target — the shopper's Queen
+    problem is a named §68f/g input. Report:
+    tests/fuzz/output/board/board-report.txt.

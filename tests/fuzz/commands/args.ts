@@ -52,6 +52,9 @@ export interface CliArgs {
   // X2 — force ONE authored encounter across every matching-kind node
   // (`--encounter=<id>`) for a clean per-encounter isolation sample.
   encounter?: string;
+  // 68e — stamp the first sector's root node kind (`--first-node=elite`): the
+  // full-pool elite isolation shape (pairs with --hops=2 --encounter=<elite>).
+  firstNode?: string;
   // H7b — random-search mode (`--search`).
   search: boolean;
   preset?: string;
@@ -201,6 +204,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--encounter':
         if (v !== undefined) args.encounter = v;
+        break;
+      case '--first-node':
+        if (v !== undefined) args.firstNode = v;
         break;
       case '--search':
         args.search = true;

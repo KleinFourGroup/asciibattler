@@ -141,6 +141,12 @@
  *   npm run fuzz -- --count=120 --searcher --jobs=8
  *   npm run fuzz -- --count=40 --encounter=infernalColumn --per-encounter --jobs=8
  *
+ *   # 68e — the FULL-POOL elite isolation shape: stamp the root node elite
+ *   # (--first-node=elite, zero extra RNG draws) so the forced elite is the
+ *   # run's FIRST fight — de-censors the per-instance pool metric (a sparse
+ *   # terminal elite instance records arrival pool, not encounter strength):
+ *   npm run fuzz -- --count=40 --hops=2 --first-node=elite --encounter=plagueSpreaders --per-encounter --jobs=8
+ *
  *   # K3c3 — drive a FIXED redraw policy through the same three modes (default
  *   # none = turn gates stay off, byte-identical baselines). Inline forms
  *   # random:<k> / level:<k> (toss k random / k lowest-level cards per turn;

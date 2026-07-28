@@ -470,6 +470,39 @@ describe('NodeMap.generate', () => {
     });
   });
 
+  describe('node kinds (68e — the first-node stamp)', () => {
+    it('stamps the root elite and changes NOTHING else (zero-draw, same seed)', () => {
+      // The dial is a post-generation stamp: structure, edges, and every
+      // other node's kind must be byte-identical to the dial being absent —
+      // that's what makes it safe on the seed→map mapping.
+      for (let s = 0; s < 50; s++) {
+        const plain = generate(new RNG(s));
+        const stamped = generate(new RNG(s), { firstNodeKind: 'elite' });
+        expect(nodeById(stamped, stamped.rootId).kind).toBe('elite');
+        expect(stamped.rootId).toBe(plain.rootId);
+        expect(stamped.edges).toEqual(plain.edges);
+        expect(stamped.hops).toEqual(plain.hops);
+        for (const n of plain.nodes) {
+          if (n.id === plain.rootId) continue;
+          expect(nodeById(stamped, n.id).kind).toBe(n.kind);
+        }
+      }
+    });
+
+    it('hopCount 2: root elite + terminal boss — the full-pool isolation shape', () => {
+      const map = generate(new RNG(7), { firstNodeKind: 'elite', hopCount: 2 });
+      expect(nodeById(map, map.rootId).kind).toBe('elite');
+      expect(nodeById(map, map.terminalId).kind).toBe('boss');
+      expect(map.nodes).toHaveLength(2);
+    });
+
+    it('hopCount 1 degenerate: boss wins the stamp (root == terminal)', () => {
+      const map = generate(new RNG(7), { firstNodeKind: 'elite', hopCount: 1 });
+      expect(map.rootId).toBe(map.terminalId);
+      expect(nodeById(map, map.rootId).kind).toBe('boss');
+    });
+  });
+
   describe('dump', () => {
     it('renders root, terminal, hops, and edges', () => {
       const map = generate(new RNG(1));

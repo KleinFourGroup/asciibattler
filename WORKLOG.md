@@ -2282,3 +2282,41 @@ table gains Sec + Encounter columns (walk-death forensics no longer
 reconstruct from aggregates). Verify chain: re-isolate the two tuned
 entries + both walk postures + the two elite isolations (6 batches)
 → elite verdict (user if a trim is indicated) → the full board.
+
+### 68e-tune2 — the spreaders trim + THE CENSORING FINDING (2026-07-28, USER-SIGNED)
+
+The elite trim went through a five-point dose-response that falsified
+BOTH stage hypotheses before landing: per-instance pool damage sat
+flat (15.7–18.2) across every config while the uncensored covariates
+swung freely (enemy deaths/wave 6.7↔30.7 — proof the knobs were
+live). Diagnosis: **the per-instance pool metric is RIGHT-CENSORED
+for elites** — an instance can't record more damage than the arrival
+pool, forced elites sample sparsely (~0.6 instances/run) and mostly
+terminally, so the mean pins to "average arrival pool" instead of
+encounter strength. The same metric ranked the NORMALS honestly
+(many instances, mostly non-terminal — one capped observation
+diluted by seven clean ones). The trap: the metric had just worked
+on the normals, so the flat elite read looked like dead knobs, not a
+saturated ruler; the covariate swing broke the tie. Decision metrics
+for the trim: taken/WAVE (−25%), wave-win (32→37%), walk death-share
+(26% of ALL walk deaths — the single largest killer, as an optional
+detour). USER-SIGNED: stage-1 count ×1.25→×1.0 + budget 1.25→1.0,
+stage 2 untouched (`29d2c99`).
+
+**The de-censored shape (user-proposed, built same session):**
+rather than switching metrics, control the ARRIVAL state — the X2d
+boss-read pattern extended to elites. Elites never scatter onto hop
+0 (the kind passes run f ∈ [2, n−2]), so a new dev dial stamps the
+first sector's root node: `--first-node=elite` /
+`RunConfig.firstNodeKind` / `?firstNode=elite`. A POST-generation
+stamp with zero extra RNG draws — structure + every other kind
+placement byte-identical (pinned across 50 seeds); boss wins the
+hopCount-1 degenerate. The doctrine elite shape is now
+`--hops=2 --first-node=elite --encounter=<elite>`: one full-pool
+fresh-arrival instance per seed, 40 clean instances/batch, cheaper
+than the 11-hop shape. Caveats that stay written: still censored if
+the elite out-damages a FULL pool (pair with --roster); the read is
+one roster point (state it in the label); taken/wave + wave-win stay
+the cross-checks. Windows rider caught mid-experiment: NTFS ADS
+colon-filename trap (gotcha #119) — fixed in a parallel session
+(`b6c8328`).

@@ -84,6 +84,20 @@ export interface RunConfig {
    */
   readonly forcedEncounterId?: string;
   /**
+   * 68e — stamp the FIRST sector's ROOT node with this kind after generation
+   * (dev/isolation dial). The one supported value is `'elite'`: paired with
+   * `hopCount: 2` + `forcedEncounterId`, the run's first fight is the forced
+   * elite met at FULL pool — the X2d boss-read shape extended to elites,
+   * which de-censors the per-instance pool metric (the §68e finding: sparse
+   * terminal elite instances record arrival pool, not encounter strength).
+   * Zero extra RNG draws (a post-generation stamp), so the map structure and
+   * every other kind placement are byte-identical to the dial being absent.
+   * Applies to the first sector's map only (sector advances regenerate
+   * without the config, by design). Ignored when the root IS the terminal
+   * (`hopCount: 1` — boss wins). URL form: `firstNode=elite`. NOT persisted.
+   */
+  readonly firstNodeKind?: 'elite';
+  /**
    * Override the middle-hop max width (default
    * `config/nodemap.json#middleWidthMax`). Clamped up to the hop's minimum
    * width by the generator, so a too-small value just pins to the minimum.
@@ -203,6 +217,7 @@ export const RUN_CONFIG_PARAMS = {
   roster: 'roster',
   layout: 'layout',
   encounter: 'encounter',
+  firstNode: 'firstNode',
   width: 'width',
   daemon: 'daemon',
   character: 'character',
@@ -308,6 +323,9 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (forcedLayoutId !== undefined) config.forcedLayoutId = forcedLayoutId;
   const forcedEncounterId = parseEncounter(params.get(RUN_CONFIG_PARAMS.encounter));
   if (forcedEncounterId !== undefined) config.forcedEncounterId = forcedEncounterId;
+  // 68e — the only supported stamp is 'elite'; other values dropped (the
+  // `layout=` unknown-token discipline).
+  if (params.get(RUN_CONFIG_PARAMS.firstNode) === 'elite') config.firstNodeKind = 'elite';
   const mapMaxWidth = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.width));
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
   const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));
@@ -358,6 +376,9 @@ export function runConfigToQueryString(config: RunConfig): string {
   }
   if (config.forcedEncounterId !== undefined) {
     params.set(RUN_CONFIG_PARAMS.encounter, config.forcedEncounterId);
+  }
+  if (config.firstNodeKind !== undefined) {
+    params.set(RUN_CONFIG_PARAMS.firstNode, config.firstNodeKind);
   }
   if (config.mapMaxWidth !== undefined) {
     params.set(RUN_CONFIG_PARAMS.width, String(config.mapMaxWidth));

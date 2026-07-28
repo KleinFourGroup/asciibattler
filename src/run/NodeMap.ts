@@ -309,16 +309,27 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
   // the single node is tagged `boss` — the player's one fight IS the boss, and
   // the map renderer shows its `!` kind glyph (S2 dropped the root `@`-override,
   // so the glyph just follows the kind). No special-case needed.
+  // 68e — the first-node stamp: a dev/isolation dial that marks the ROOT as
+  // the given kind AFTER every scatter pass, with ZERO extra draws — the map
+  // structure and every other kind placement stay byte-identical to the dial
+  // being absent. Boss wins on the hopCount===1 degenerate (root == terminal).
+  // Rationale: elites never scatter onto hop 0 (the passes run f ∈ [2, n-2]),
+  // so the full-pool elite isolation shape (`?hops=2&firstNode=elite`) needs
+  // the stamp — see RunConfig.firstNodeKind.
+  const rootId = hops[0]![0]!;
+  const firstNodeStamp = config?.firstNodeKind;
   const kindedNodes: MapNode[] = nodes.map((n) =>
     n.id === bossId
       ? { ...n, kind: 'boss' }
-      : restIds.has(n.id)
-        ? { ...n, kind: 'rest' }
-        : eliteIds.has(n.id)
-          ? { ...n, kind: 'elite' }
-          : portIds.has(n.id)
-            ? { ...n, kind: 'port' }
-            : n,
+      : firstNodeStamp !== undefined && n.id === rootId
+        ? { ...n, kind: firstNodeStamp }
+        : restIds.has(n.id)
+          ? { ...n, kind: 'rest' }
+          : eliteIds.has(n.id)
+            ? { ...n, kind: 'elite' }
+            : portIds.has(n.id)
+              ? { ...n, kind: 'port' }
+              : n,
   );
 
   return {

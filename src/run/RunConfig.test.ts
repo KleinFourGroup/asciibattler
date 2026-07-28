@@ -126,6 +126,18 @@ describe('RunConfig parsing', () => {
     expect(parseRunConfig(new URLSearchParams(query))).toEqual(original);
   });
 
+  it('68e: parses `firstNode=elite`, drops anything else (the layout= discipline)', () => {
+    expect(cfg('firstNode=elite').firstNodeKind).toBe('elite');
+    expect(cfg('firstNode=boss').firstNodeKind).toBeUndefined();
+    expect(cfg('firstNode=Elite').firstNodeKind).toBeUndefined();
+    expect(cfg('').firstNodeKind).toBeUndefined();
+  });
+
+  it('68e: round-trips firstNode through the query string', () => {
+    const original = cfg('firstNode=elite&hops=2');
+    expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
+  });
+
   it('parses `bits=` as a nonnegative integer, 0 included (47e)', () => {
     expect(cfg('bits=100').startingBits).toBe(100);
     expect(cfg('bits=0').startingBits).toBe(0);

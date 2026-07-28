@@ -69,6 +69,7 @@ export type RunModeArgs = Pick<
   | 'emitResults'
   | 'layout'
   | 'encounter'
+  | 'firstNode'
   | 'hops'
   | 'sectorHops'
   | 'roster'
@@ -122,6 +123,7 @@ export function runRunCli(args: RunModeArgs): void {
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
     forcedEncounterId?: string;
+    firstNodeKind?: 'elite';
     bitsMultiplier?: number;
     drawAmountAdd?: number;
     grants?: readonly string[];
@@ -133,6 +135,15 @@ export function runRunCli(args: RunModeArgs): void {
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
   if (layout !== undefined) runConfig.forcedLayoutId = layout;
   if (encounter !== undefined) runConfig.forcedEncounterId = encounter;
+  // 68e — `--first-node=elite`: the full-pool elite isolation shape (pairs
+  // with --hops=2 --encounter=<elite>). Only 'elite' exists; anything else is
+  // a typo worth failing loudly on.
+  if (args.firstNode !== undefined) {
+    if (args.firstNode !== 'elite') {
+      bail(`--first-node: the only supported stamp is "elite" (got "${args.firstNode}")`);
+    }
+    runConfig.firstNodeKind = 'elite';
+  }
   // 60c — `--bits-multiplier=<f>` rides the 48f RunConfig lever (finite,
   // > 0; anything else is a flag typo worth failing loudly on).
   if (args.bitsMultiplier !== undefined) {

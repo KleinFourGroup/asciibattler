@@ -114,6 +114,24 @@ describe('fuzz harness', () => {
     expect(recruitsDiffer || random.strategyName !== greedy.strategyName).toBe(true);
   });
 
+  it('the full-pool elite isolation shape fields the forced elite at hop 0 (68e)', () => {
+    // --hops=2 --first-node=elite --encounter=<elite>: the root is stamped
+    // elite and the force composes with it, so the run's FIRST fight is the
+    // elite met at full pool — the de-censored per-instance read shape.
+    const result = runOne(3, makeStrategy('greedy')!, {
+      telemetry: true,
+      runConfig: { hopCount: 2, firstNodeKind: 'elite', forcedEncounterId: 'plagueSpreaders' },
+    });
+    expect(result.battles.length).toBeGreaterThan(0);
+    const first = result.battles[0]!;
+    expect(first.hop).toBe(0);
+    expect(first.sector).toBe(0);
+    expect(first.encounterId).toBe('plagueSpreaders');
+    for (const b of result.battles) {
+      if (b.hop === 0) expect(b.encounterId).toBe('plagueSpreaders');
+    }
+  });
+
   it('a two-act walk labels battles + chips with the sector ordinal (68e)', () => {
     // sectorHops: 2 → a 2+2 walk over the shipped start → deep-end chain. The
     // overpowered fixture roster makes clearing act 1 essentially certain —

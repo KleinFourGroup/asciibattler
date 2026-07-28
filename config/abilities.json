@@ -337,8 +337,8 @@
         "phase": "impact",
         "op": {
           "kind": "damage",
-          "scaling": "none",
-          "might": 2,
+          "scaling": "magic",
+          "might": 0,
           "accuracy": 0.6,
           "critBase": 0,
           "critable": false,

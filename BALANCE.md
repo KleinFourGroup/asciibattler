@@ -2034,3 +2034,28 @@ deltas. The pre-X H7c→O log lives at
     vial config; the Gambler re-sign waits for the settled re-run.
   - Disposition (pending user): ronin+reaver KEEP · vial iteration
     within (b) vs revert-to-(a) · a Column comp trim — next entry.
+- **2026-07-28 — §68f VIAL ITERATION 1 + THE COLUMN TRIM RE-READ (4
+  batches).** HEAD `335a2d0` (USER-SIGNED: vial windup 1s scaled +
+  cooldown 2.5→4 · infernalColumn reaver weight 1→0.5), box cpx42,
+  batches `20260728-23*-335a2d0`. Same labels as the campaign entry.
+  - **Corrupter twin: +80.0 → +42.5pt vs mage** (52.5% vs 10.0%,
+    flips 18↑/1↓; deaths 30.0). HALVED but still ~3× the rare-grade
+    exemplar (reaver's +15) — vial retains full-ring AoE + poison +
+    a shorter-value cycle than bolt even at cd 4. Player-side still
+    too hot.
+  - **plagueDoctors: 8.90 → 3.27 taken/inst, runWin 7.5→22.5%** —
+    back to band-adjacent (pre-change 2.42/37.5%): a hard-normal
+    read, no longer a killer. The enemy-side wreck is largely
+    repaired by the same dials.
+  - **⚠ infernalColumn: 8.13 → 8.10 — the weight trim DID NOTHING.**
+    Sampling share 20%→11% did not move taken/inst, which
+    undercuts the "reaver echo" attribution (or the budget-conserving
+    wave mean-factor redistributes the trimmed share into
+    higher-level mercs). Column sits at ~8.1 vs the 6.59 tune point;
+    it stays minHop-6 gated (68e walk death-share 5/60), so the
+    SETTLED walk/board read arbitrates whether 8.1-as-hard-normal is
+    acceptable — no further blind comp surgery.
+  - Proposal (pending user): vial ITERATION 2 = bolt-parity shape —
+    windup 1→1.5 + `ringMultiplier: 0.5` (cd stays 4), poison + the
+    cadence as the whole differentiator; per the signed rule this is
+    the LAST within-(b) attempt before revert-to-(a).

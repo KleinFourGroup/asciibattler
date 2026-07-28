@@ -2398,3 +2398,29 @@ the re-sign explicitly waits.
 
 Iteration proposal drafted (within-b weapon re-tune vs revert) —
 the user's call; next entry carries the disposition.
+
+### 68f-tune2 — vial iteration 1 + the Column trim (2026-07-28)
+
+Both signed in one turn; landed as `335a2d0` after two pre-commit
+blocks worth recording. (1) The attack-editor byte-faithful
+round-trip rejected `4.0`/`1.0` literals — the formatter's canonical
+JSON emits `4`/`1`. (2) More interesting: the buffed units let a
+BASELINE fixture seed clear sector 1 for the first time, exposing a
+stale single-sector pin in the per-hop harness test ("hops sorted
+ascending") — 68e's `perHopStats` has always sorted (sector,hop)
+sector-major, and the pin only held because no baseline bot had
+ever entered act 2. Re-pinned to the lexicographic invariant in the
+tune commit. Also: twice this session a `cmd | tail` pipeline
+swallowed a nonzero exit (the pipeline reports tail's status), making
+a blocked commit look green until `git log` said otherwise — echo
+the exit code explicitly on gate commands (scratchpad note).
+
+The re-read (BALANCE 2026-07-28 iteration entry): corrupter twin
+halved +80→+42.5pt (still ~3× rare-grade); plagueDoctors repaired
+(8.90→3.27, a hard normal); the Column weight trim did NOTHING
+(8.13→8.10) — the reaver-echo attribution is now suspect (or the
+budget-conserving mean-factor just re-spends the trimmed share);
+Column's disposition moves to the settled walk/board read rather
+than more blind comp surgery. Vial iteration 2 (bolt-parity windup
+1.5 + ring 0.5, the LAST within-(b) attempt per the signed rule)
+proposed to the user.

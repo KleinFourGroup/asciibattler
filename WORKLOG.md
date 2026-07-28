@@ -2241,3 +2241,25 @@ gains the 68e-prep `sector` column it missed — sector leads the row.
 Pinned: a second parallelRun.test.ts scenario — serial vs `--jobs=2`
 with all three analyses, every CSV byte-identical, no stray
 results.json without the flag. Smoke 304→305.
+
+### 68e-read — the Deep End campaign (2026-07-28, box session)
+
+The user-approved 10-batch plan ran start to finish (~55 min on a
+fresh cpx42 — cx43 dry across all locations again; the standing 68d
+type call applied without a new detour). Batch 1 outran the 600s
+foreground window (a walk shape with telemetry ≈ 2× an act-1 batch) —
+moved to background cleanly, the remaining nine ran from a sequential
+driver script with per-batch sha logging, every exit 0.
+
+Numbers + findings: **BALANCE.md run-log 2026-07-28**. The headline:
+the two-act cliff is NOT a uniform-sector problem — it decomposes
+into TWO defective pool entries (infernalColumn 0% isolated run-win /
+11.6 pool-HP-per-instance vs the ≈3 band; miscreants 5% / 9.3), both
+ungated at hop 0, while the rest of the Deep End reads at-or-below
+the brigands control. plagueDoctors' scarier in-isolation run-win
+turned out to be length-compounding, per-instance band-legal — the
+force-isolate doctrine caught what a pooled read would have smeared.
+Both new instruments carried the read: the sector-split funnel
+(deaths per act, per hop) and the round-tripped per-encounter table
+over a walk. Tune proposal → the §68e decision point (next entry);
+the box stays up for the re-isolation + board re-run.

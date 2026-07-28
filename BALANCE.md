@@ -1842,3 +1842,53 @@ deltas. The pre-X H7c→O log lives at
     The machine copy: tests/fuzz/board/signed-sheet.json; the signed
     report reads 0 FAIL · 4 WARN (all four = the two-act rows, the
     68e/f queue).
+- **2026-07-28 — §68e THE DEEP END READ (10 batches, one box session):
+  per-encounter attribution over the new pools + the force-isolation
+  ladder.** HEAD `afb86a4`, box cpx42 fsn1 (cx43 Hetzner-dry across all
+  locations AGAIN — the standing 68d type call applied). Extended arm,
+  Soldier, in-sample seeds 1–40, `--jobs=8`; first production use of
+  the 68e-prep sector-split funnel + the prep2 `--per-*`×`--jobs`
+  round-trip. Batches `20260728-{011840,012944,013603,013813,014313,
+  014902,015224,015610,020129,020433}-afb86a4`; shas in the driver log
+  + `output/box-batches/`.
+  - **In-situ walk postures reproduce 68d exactly** (firer 3/40 =
+    7.5% · shopper 10/40 = 25.0%) — and the sector-split funnel
+    decomposes the cliff: act 1 loses 6/40 (firer), then act 2 kills
+    across ALL 11 hops (conditional death 15–50% firer, 7–33%
+    shopper; the shopper's act-2 rates run ~half the firer's — the
+    posture flip localized to act 2).
+  - **The isolation ladder (`--hops=11 --encounter=<id>`, regen arm;
+    control = brigands 72.5% win · 0.85 pool-HP/instance; historical
+    normal band ≈3):**
+    | encounter | run win | taken/inst |
+    |---|---|---|
+    | infernalColumn | **0.0%** | **11.56** |
+    | miscreants | **5.0%** | **9.31** |
+    | plagueDoctors | 37.5% | 2.42 |
+    | brigands (control) | 72.5% | 0.85 |
+    | elementalTrio | 75.0% | 0.64 |
+    | artillery | 80.0% | 1.08 |
+    | adventurer-with-guards | 82.5% | 0.53 |
+    | plagueVictims | 85.0% | 0.00 |
+  - **⭐ THE CLIFF DECOMPOSES INTO TWO DEFECTIVE ENTRIES, NOT A
+    UNIFORM SECTOR:** infernalColumn (~4× band isolated, and STILL
+    11.1/8.3 per instance in situ against developed act-2 rosters —
+    over-band at every roster strength) and miscreants (~3× band,
+    9.3 isolated / 8.3 in-situ-firer). Both sit ungated at hop 0.
+    plagueDoctors is BAND-LEGAL per instance (2.42) — its 37.5%
+    isolated run-win is length-compounding (734 waves, healer
+    sustain), not per-fight overreach; no change indicated. The
+    migrated occult + shared entries all read at-or-below control.
+  - **The elites are hot in situ but unisolated**: plagueSpreaders
+    16.4 taken/inst (n=11) · darkMagicPosse 16.7 (n=3) vs the
+    historical elite band ≈6 — flagged as a watch; isolation batches
+    are a user call (elites are optional detours by the W2 map
+    construction).
+  - **Queen > King persists in situ** (7.9/8.0 vs 3.0/4.3 across the
+    two postures) — consistent with the 68d forced-boss flip; the
+    deep-end wall target measures at the board re-run.
+  - Instrument notes: the failure-trace battle table carries neither
+    encounterId nor sector (pre-X2 format) — death-cause forensics
+    leaned on per-encounter + the funnel instead; trace columns are
+    68e-tune-commit chores. Tune proposal + the user's call: the
+    next entry.

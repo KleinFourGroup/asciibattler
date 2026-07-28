@@ -2372,3 +2372,29 @@ already ABOVE mage (+15pt — and vial being `scaling:"none"` makes
 its magic-10 statline dead weight: an identity defect, not a power
 one). Buff proposal drafted for user signing; box held for the
 post-buff re-runs.
+
+### 68f-buff + campaign — the signed buffs land ×2, vial overshoots (2026-07-28)
+
+All three buffs USER-SIGNED in one turn: ronin durability parity,
+the reaver bruiser statline, and corrupter option (b) — the
+principled vial magic-scaling — explicitly as an experiment with a
+revert-to-(a) escape hatch ("see how much it wrecks encounter
+balance; minor → tweak budgets, disaster → revert"). Landed as
+`a5a8391`; the 14-batch campaign (twins ×6, isolations ×4, act-1
+board rows ×4) ran the same box session.
+
+The verdicts (numbers: BALANCE 2026-07-28 §68f campaign entry):
+ronin and reaver both LAND cleanly (+5.0pt / +15.0pt vs their twins,
+death counts collapsing — the durability-axis diagnosis was right).
+Vial (b) overshoots hugely on BOTH sides: the corrupter arm jumps to
+the top of the whole board (+80pt vs mage, 32↑/0↓ flips), and
+enemy-side the corrupter-×3 comp turns plagueDoctors from band-legal
+into ~3.7× band (runWin 37.5→7.5%). The reaver echo also pushes
+infernalColumn 6.59→8.13 (+23%). Act-1 controls all drift ~−5pt
+(tankier enemy ronin, plausibly), soldier-regen reads an anomalous
+70 (−15 vs ref) that needs a settled-config re-read, and the
+Gambler parity read is polluted until the vial config settles —
+the re-sign explicitly waits.
+
+Iteration proposal drafted (within-b weapon re-tune vs revert) —
+the user's call; next entry carries the disposition.

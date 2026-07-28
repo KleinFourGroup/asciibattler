@@ -2000,3 +2000,37 @@ deltas. The pre-X H7c→O log lives at
     clean but magnitude extrapolation to realistic comps needs the
     single-slot follow-up if it matters to a signing. Buff proposal +
     the user's call: the next entry.
+- **2026-07-28 — §68f THE POST-BUFF CAMPAIGN (14 batches): ronin/reaver
+  LAND · vial (b) OVERSHOOTS · the enemy-side echoes.** HEAD `a5a8391`
+  (the USER-SIGNED buffs: ronin CON 22/DEF 4/growth 0.8 · reaver
+  bruiser statline CON 24/STR 8/DEF 4, EVA 11→5 · vial scaling
+  none→magic, might 2→0 = corrupter option b), box cpx42, batches
+  `20260728-{2050…2144}-a5a8391`. Same twin-swap label as the probe
+  entry; isolations = the 68e ladder shape + `--per-encounter`.
+  - **Twins post-buff (paired vs twin · vs own pre-buff arm):** ronin
+    67.5→**85.0%** = **+5.0pt vs merc** (was −17.5; deaths 43.0→35.1)
+    — LANDED, uncommon-worthy. Reaver 80.0→**87.5%** = **+15.0pt vs
+    adventurer**, −16.8 deaths (was +2.5 noise) — LANDED, rare-grade.
+    Corrupter 32.5→**92.5%** = **+80.0pt vs mage (flips 32↑/0↓)**,
+    deaths 35.4→15.5 — the top arm on the whole board: vial (b)
+    as-tuned OVERSHOOTS badly (magic-scaled, no windup, 2.5s cd, full
+    ring, + poison).
+  - **Isolation re-reads (taken/inst vs the 68e post-tune points):**
+    brigands control 0.85→0.85 (77.5% run win — act-1 baseline
+    stable) · miscreants 6.59→6.25 (stable, the held read) ·
+    **infernalColumn 6.59→8.13** (+23% — the reaver echo through its
+    comp weight; runWin 0% gate-blind) · **plagueDoctors 2.42→8.90,
+    runWin 37.5→7.5%** (the corrupter-×3 echo: band-legal → ~3.7×
+    band — vial's blast radius, not plagueDoctors' own numbers).
+  - **Act-1 board rows @a5a8391:** soldier-regen **70.0** (ref 85,
+    −15 = beyond ±8 — ⚠ anomalous; the twin controls all drifted
+    ~−5pt [merc 85→80 · adventurer 77.5→72.5 · mage 17.5→12.5],
+    consistent with a small global uptick from tankier enemy ronin in
+    The Start's pools, but −15 needs a settled-config re-read before
+    any disposition) · soldier-55pre 72.5 (ref 75, in-tol) ·
+    gambler-regen 65.0 / gambler-55pre **80.0** (ref 62.5, +17.5 —
+    the buffed ronin start-unit + rogue drafts working). **Parity
+    gaps: regen −5.0 · 55pre +7.5** — read POLLUTED by the unsettled
+    vial config; the Gambler re-sign waits for the settled re-run.
+  - Disposition (pending user): ronin+reaver KEEP · vial iteration
+    within (b) vs revert-to-(a) · a Column comp trim — next entry.

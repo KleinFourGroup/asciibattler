@@ -36,3 +36,16 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   free). Note (c) needs care: killing arm N mid-batch orphans nothing
   (57g), but the estimate-blown signal arrived HOURS in. Decide at the
   round boundary, not mid-phase.
+
+- **A flat outcome metric is only evidence after a covariate moved**
+  (§68e, 2026-07-28). Five plagueSpreaders dose points read taken/inst
+  flat (15.7–18.2) and the first instinct was "dead knobs" — because
+  the SAME metric had just ranked the normals correctly. What broke
+  the tie: enemy-deaths/wave swung 6.7↔30.7 across the same points, so
+  the treatment was live and the RULER was saturated (right-censoring;
+  BALANCE 2026-07-28 caveat). Distillation candidate: before declaring
+  a knob dead OR a metric trustworthy, check one uncensored covariate
+  moved; "the metric worked on the last read" is not evidence it works
+  on this population's sampling shape. Rider: the user's fix (control
+  the arrival state — `--first-node=elite`) beat metric-switching:
+  prefer de-censoring the DESIGN over patching the estimator.

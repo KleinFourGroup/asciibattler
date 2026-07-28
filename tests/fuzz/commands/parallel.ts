@@ -23,10 +23,15 @@
  * with the H7c sweep sharding (searchShard.ts).
  *
  * Loud bails, not silent wrongness: `--seed` (a single pinned seed — nothing
- * to split) and the aggregate analyses `--per-hop`/`--per-layout`/
- * `--per-encounter` (their CSVs are cross-run aggregates a textual merge
- * can't reproduce; run those serially, or add RunResult round-tripping if
- * they ever need jobs). The serial console's per-strategy stats table is NOT
+ * to split) and `--k-telemetry` (a bespoke cross-run aggregate + print; run it
+ * serially). The aggregate analyses `--per-hop`/`--per-layout`/
+ * `--per-encounter` DO compose with --jobs since 68e via RunResult
+ * round-tripping: each shard also dumps results.json (`--emit-results`,
+ * injected here), the parent re-orders the merged results exactly as
+ * mergeSummaries orders rows (strategy-major, chunk order within — so
+ * float-sum order matches a serial run), and then runs run.ts's OWN
+ * writeAggregateAnalyses over them — parity by shared code path, pinned in
+ * parallelRun.test.ts. The serial console's per-strategy stats table is NOT
  * reproduced here — only file outputs carry the byte contract; the parent
  * prints raw per-strategy outcome counts read straight from the merged CSV.
  */
@@ -45,6 +50,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chunkVectors, retryAsync } from '../searchShard';
 import { bail, range, type CliArgs } from './args';
+import { writeAggregateAnalyses } from './run';
+import type { RunResult } from '../harness';
 
 export type ParallelRunArgs = Pick<
   CliArgs,
@@ -56,6 +63,7 @@ export type ParallelRunArgs = Pick<
   | 'perHop'
   | 'perLayout'
   | 'perEncounter'
+  | 'emitResults'
   | 'kTelemetry'
 >;
 
@@ -64,7 +72,7 @@ const CLI_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', 'cli.ts');
 /** Flags the parent OWNS: stripped from the pass-through argv and re-issued
  *  per chunk. Everything else (arm flags, --strategy, --hops, --roster, …)
  *  flows to the children verbatim. */
-const PARTITION_FLAGS = ['--jobs', '--count', '--seed-offset', '--out'];
+const PARTITION_FLAGS = ['--jobs', '--count', '--seed-offset', '--out', '--emit-results'];
 
 /** Same retry budget as searchShard: a big batch spawns many children, and
  *  Windows intermittently fails a fresh spawn under load (0xC0000142). */
@@ -76,9 +84,8 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
   if (args.seed !== undefined) {
     bail('--jobs: --seed pins a SINGLE seed — nothing to split. Drop --jobs, or use --count/--seed-offset for a range.');
   }
-  if (args.perHop || args.perLayout || args.perEncounter) {
-    bail('--jobs: the aggregate analyses (--per-hop / --per-layout / --per-encounter) are cross-run aggregates the shard merge cannot reproduce — run them serially.');
-  }
+  // 68e — the aggregate analyses ride RunResult round-tripping (see header).
+  const wantsAggregates = args.perHop || args.perLayout || args.perEncounter;
   // 57g.5 — same shape: k-flips.csv + the aggregate print are cross-run
   // outputs the textual merge doesn't reproduce. The K arm runs serially
   // (detached on the box via box-batch.sh — its natural home).
@@ -100,11 +107,12 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
 
   rmSync(shardsDir, { recursive: true, force: true });
   mkdirSync(shardsDir, { recursive: true });
+  const needResults = wantsAggregates || args.emitResults;
   const shardDirs = chunks.map((_, i) => join(shardsDir, `shard-${i}`));
   await Promise.all(
     chunks.map((chunk, i) =>
       retryAsync(
-        () => spawnShardOnce(chunk, i, passthrough, shardDirs[i]),
+        () => spawnShardOnce(chunk, i, passthrough, shardDirs[i], needResults),
         SHARD_ATTEMPTS,
         async (attempt, err) => {
           process.stderr.write(
@@ -121,6 +129,16 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
 
   const merged = mergeSummaries(shardDirs);
   writeFileSync(join(args.outDir, 'summary.csv'), merged);
+
+  // 68e — the aggregate analyses over the round-tripped results (must run
+  // before the shardsDir wipe below — the shard results.json files live there).
+  if (needResults) {
+    const mergedResults = mergeResults(shardDirs);
+    if (args.emitResults) {
+      writeFileSync(join(args.outDir, 'results.json'), JSON.stringify(mergedResults));
+    }
+    writeAggregateAnalyses(args, mergedResults);
+  }
 
   // Mirror run.ts's failures/ semantics: wipe, then adopt every shard's traces
   // (filenames are `${strategy}-seed${seed}-${outcome}.md` — unique per run,
@@ -150,12 +168,14 @@ function spawnShardOnce(
   index: number,
   passthrough: readonly string[],
   shardDir: string,
+  emitResults: boolean,
 ): Promise<void> {
   const argv = [
     ...passthrough,
     `--count=${chunkSeeds.length}`,
     `--seed-offset=${chunkSeeds[0] - 1}`,
     `--out=${shardDir}`,
+    ...(emitResults ? ['--emit-results'] : []),
   ];
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['--import', 'tsx', CLI_PATH, ...argv], {
@@ -173,6 +193,10 @@ function spawnShardOnce(
       }
       if (!existsSync(join(shardDir, 'summary.csv'))) {
         reject(new Error(`run shard ${index} exited 0 but wrote no summary.csv\n${stderr}`));
+        return;
+      }
+      if (emitResults && !existsSync(join(shardDir, 'results.json'))) {
+        reject(new Error(`run shard ${index} exited 0 but wrote no results.json\n${stderr}`));
         return;
       }
       resolve();
@@ -209,6 +233,33 @@ function mergeSummaries(shardDirs: readonly string[]): string {
     );
   }
   return [perShard[0].header, ...mergedRows].join('\n') + '\n';
+}
+
+/** 68e — reassemble the serial `allResults` array from the shard results.json
+ *  dumps: the SAME regroup as `mergeSummaries` (strategy-major by first
+ *  appearance, chunk order within a strategy), so aggregate float summation
+ *  runs in serial order and the analysis CSVs come out byte-identical. */
+function mergeResults(shardDirs: readonly string[]): RunResult[] {
+  const perShard = shardDirs.map(
+    (d) => JSON.parse(readFileSync(join(d, 'results.json'), 'utf8')) as RunResult[],
+  );
+  const order: string[] = [];
+  for (const r of perShard[0]) {
+    if (!order.includes(r.strategyName)) order.push(r.strategyName);
+  }
+  const merged: RunResult[] = [];
+  for (const s of order) {
+    for (const shard of perShard) {
+      for (const r of shard) if (r.strategyName === s) merged.push(r);
+    }
+  }
+  const total = perShard.reduce((acc, s) => acc + s.length, 0);
+  if (merged.length !== total) {
+    bail(
+      `--jobs results merge lost runs (${merged.length}/${total}) — shard strategy sets diverged; shards left in place for inspection.`,
+    );
+  }
+  return merged;
 }
 
 /** Raw per-strategy outcome counts from the merged CSV (columns: seed,

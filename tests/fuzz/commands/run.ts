@@ -66,6 +66,7 @@ export type RunModeArgs = Pick<
   | 'perHop'
   | 'perLayout'
   | 'perEncounter'
+  | 'emitResults'
   | 'layout'
   | 'encounter'
   | 'hops'
@@ -240,6 +241,13 @@ export function runRunCli(args: RunModeArgs): void {
 
   writeFileSync(join(args.outDir, 'summary.csv'), renderSummaryCsv(allResults));
 
+  // 68e — the shard protocol: dump the full results so a --jobs parent can
+  // recompute the aggregate analyses over the merged batch (RunResult is plain
+  // data end to end, so JSON round-trips it exactly — including telemetry).
+  if (args.emitResults) {
+    writeFileSync(join(args.outDir, 'results.json'), JSON.stringify(allResults));
+  }
+
   // 57g.5 — the prefix instrument's outputs: an aggregate line + a SIDE CSV
   // (k-flips.csv; summary.csv's schema is untouched — no parity risk).
   if (args.kTelemetry) {
@@ -272,49 +280,7 @@ export function runRunCli(args: RunModeArgs): void {
     );
   }
 
-  if (args.perHop) {
-    process.stdout.write('\n' + renderPerHopAnalysis(allResults));
-    const stats = perHopStats(allResults);
-    const header =
-      'hop,runsReached,runsDied,deathRate,battles,avgPlayerDeaths,playerSize,playerAvgLevel,playerMedianLevel,playerLevelSpread,' +
-      'enemySize,enemyAvgLevel,enemyMedianLevel,enemyLevelSpread';
-    const rows = stats.map((s) =>
-      [
-        s.hop,
-        s.runsReached,
-        s.runsDied,
-        s.deathRate.toFixed(4),
-        s.battles,
-        s.avgPlayerDeaths.toFixed(3),
-        s.playerSize.toFixed(3),
-        s.playerAvgLevel.toFixed(3),
-        s.playerMedianLevel.toFixed(3),
-        s.playerLevelSpread.toFixed(3),
-        s.enemySize.toFixed(3),
-        s.enemyAvgLevel.toFixed(3),
-        s.enemyMedianLevel.toFixed(3),
-        s.enemyLevelSpread.toFixed(3),
-      ].join(','),
-    );
-    writeFileSync(join(args.outDir, 'per-hop.csv'), [header, ...rows].join('\n') + '\n');
-  }
-
-  if (args.perLayout) {
-    process.stdout.write('\n' + renderLayoutAnalysis(allResults));
-    writeFileSync(join(args.outDir, 'per-layout.csv'), renderLayoutCsv(perLayoutStats(allResults)));
-    writeFileSync(
-      join(args.outDir, 'per-layout-hop.csv'),
-      renderLayoutHopCsv(perLayoutHopStats(allResults)),
-    );
-  }
-
-  if (args.perEncounter) {
-    process.stdout.write('\n' + renderEncounterAnalysis(allResults));
-    writeFileSync(
-      join(args.outDir, 'per-encounter.csv'),
-      renderEncounterCsv(perEncounterStats(allResults)),
-    );
-  }
+  writeAggregateAnalyses(args, allResults);
 
   let failuresWritten = 0;
   for (const r of allResults) {
@@ -353,6 +319,62 @@ export function runRunCli(args: RunModeArgs): void {
   process.stdout.write(
     `Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`,
   );
+}
+
+/**
+ * 68e — the aggregate analyses (print + CSV), factored out so the --jobs
+ * parent runs the SAME code path over its merged results that a serial run
+ * runs over `allResults` — parity by construction, not by mirrored rendering.
+ */
+export function writeAggregateAnalyses(
+  args: Pick<CliArgs, 'outDir' | 'perHop' | 'perLayout' | 'perEncounter'>,
+  allResults: readonly RunResult[],
+): void {
+  if (args.perHop) {
+    process.stdout.write('\n' + renderPerHopAnalysis(allResults));
+    const stats = perHopStats(allResults);
+    // 68e — sector leads (the walk ordinal; hop numbering resets per sector).
+    const header =
+      'sector,hop,runsReached,runsDied,deathRate,battles,avgPlayerDeaths,playerSize,playerAvgLevel,playerMedianLevel,playerLevelSpread,' +
+      'enemySize,enemyAvgLevel,enemyMedianLevel,enemyLevelSpread';
+    const rows = stats.map((s) =>
+      [
+        s.sector,
+        s.hop,
+        s.runsReached,
+        s.runsDied,
+        s.deathRate.toFixed(4),
+        s.battles,
+        s.avgPlayerDeaths.toFixed(3),
+        s.playerSize.toFixed(3),
+        s.playerAvgLevel.toFixed(3),
+        s.playerMedianLevel.toFixed(3),
+        s.playerLevelSpread.toFixed(3),
+        s.enemySize.toFixed(3),
+        s.enemyAvgLevel.toFixed(3),
+        s.enemyMedianLevel.toFixed(3),
+        s.enemyLevelSpread.toFixed(3),
+      ].join(','),
+    );
+    writeFileSync(join(args.outDir, 'per-hop.csv'), [header, ...rows].join('\n') + '\n');
+  }
+
+  if (args.perLayout) {
+    process.stdout.write('\n' + renderLayoutAnalysis(allResults));
+    writeFileSync(join(args.outDir, 'per-layout.csv'), renderLayoutCsv(perLayoutStats(allResults)));
+    writeFileSync(
+      join(args.outDir, 'per-layout-hop.csv'),
+      renderLayoutHopCsv(perLayoutHopStats(allResults)),
+    );
+  }
+
+  if (args.perEncounter) {
+    process.stdout.write('\n' + renderEncounterAnalysis(allResults));
+    writeFileSync(
+      join(args.outDir, 'per-encounter.csv'),
+      renderEncounterCsv(perEncounterStats(allResults)),
+    );
+  }
 }
 
 /** Resolve the `--strategy` flag: a `*.json` file path (a scored-strategy weight

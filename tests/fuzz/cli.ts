@@ -134,10 +134,12 @@
  *
  *   # 57f2 — run-mode parallelism: fan a measurement batch's seed range across
  *   # N child processes (summary.csv + failure traces byte-identical to serial —
- *   # pinned by parallelRun.test.ts; --seed and the --per-* analyses bail loudly;
- *   # sized for the box: 8 cores → --jobs=8):
+ *   # pinned by parallelRun.test.ts; --seed and --k-telemetry bail loudly;
+ *   # sized for the box: 8 cores → --jobs=8). 68e — the --per-* analyses
+ *   # compose (shard results.json round-trip; CSVs byte-identical to serial):
  *   npm run fuzz -- --count=120 --scripts --jobs=8
  *   npm run fuzz -- --count=120 --searcher --jobs=8
+ *   npm run fuzz -- --count=40 --encounter=infernalColumn --per-encounter --jobs=8
  *
  *   # K3c3 — drive a FIXED redraw policy through the same three modes (default
  *   # none = turn gates stay off, byte-identical baselines). Inline forms

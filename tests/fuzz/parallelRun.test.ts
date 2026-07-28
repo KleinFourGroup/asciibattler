@@ -59,4 +59,38 @@ describe('run-mode --jobs parity', () => {
       rmSync(scratch, { recursive: true, force: true });
     }
   }, 420_000);
+
+  it('68e — the aggregate analyses compose with --jobs, CSVs byte-identical to serial', () => {
+    // The RunResult round-trip contract: shards dump results.json, the parent
+    // regroups strategy-major (mergeSummaries order — serial float summation)
+    // and runs run.ts's own writeAggregateAnalyses. Every analysis CSV must
+    // match a serial run of the same flags byte for byte.
+    const scratch = mkdtempSync(join(tmpdir(), 'fuzz-jobs-aggregates-'));
+    const flags = ['--per-hop', '--per-layout', '--per-encounter'];
+    try {
+      const serialDir = join(scratch, 'serial');
+      const parallelDir = join(scratch, 'parallel');
+      runCli(flags, serialDir);
+      runCli([...flags, '--jobs=2'], parallelDir);
+
+      for (const f of [
+        'summary.csv',
+        'per-hop.csv',
+        'per-layout.csv',
+        'per-layout-hop.csv',
+        'per-encounter.csv',
+      ]) {
+        expect(
+          readFileSync(join(parallelDir, f), 'utf8'),
+          `${f} diverged from serial`,
+        ).toBe(readFileSync(join(serialDir, f), 'utf8'));
+      }
+      // The round-trip is internal: no results.json lands in the out dir
+      // unless --emit-results was asked for, and the shard scratch is gone.
+      expect(existsSync(join(parallelDir, 'results.json'))).toBe(false);
+      expect(existsSync(join(parallelDir, 'shards'))).toBe(false);
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }, 420_000);
 });

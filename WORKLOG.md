@@ -2219,3 +2219,25 @@ red-pin (now green with labels), the real 2+2 walk integration pin
 sector sets aligned, non-vacuous transition guard), the lexicographic
 funnel pin. Smoke 301→304; main 2338 untouched; v40/v34 hold (test
 instrument shape only, nothing serialized).
+
+### 68e-prep2 — --per-\* × --jobs via RunResult round-tripping (2026-07-27)
+
+The batch-launch pre-flight caught the blocker the 68d plan never hit:
+`--per-encounter`/`--per-hop`/`--per-layout` BAIL under `--jobs`
+(57f2's honest "cross-run aggregates a textual merge can't reproduce"),
+so every batch in the user-approved read plan would have run serially —
+~40 min each instead of ~5, a 6–8h box session instead of ~1h. Built
+the extension the 57f2 comment itself sanctioned ("add RunResult
+round-tripping if they ever need jobs"): shards dump results.json
+(`--emit-results`, an internal parent-injected flag), the parent
+regroups the merged results EXACTLY as mergeSummaries orders rows
+(strategy-major by first appearance, chunk order within — so aggregate
+float summation runs in serial order), then calls run.ts's own
+`writeAggregateAnalyses` — the aggregate block factored out of the
+serial path, so parity holds by shared code path, not mirrored
+rendering. `--k-telemetry`'s bail stays (bespoke aggregate, not
+needed). Also folded: the per-hop.csv writer (run.ts, not reporters)
+gains the 68e-prep `sector` column it missed — sector leads the row.
+Pinned: a second parallelRun.test.ts scenario — serial vs `--jobs=2`
+with all three analyses, every CSV byte-identical, no stray
+results.json without the flag. Smoke 304→305.

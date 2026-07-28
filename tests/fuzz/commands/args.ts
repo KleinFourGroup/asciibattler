@@ -37,6 +37,11 @@ export interface CliArgs {
   strategy?: string;
   outDir: string;
   perHop: boolean;
+  // 68e — internal shard-protocol flag (`--emit-results`): run mode also dumps
+  // its full RunResult[] to results.json. Injected by the --jobs parent so it
+  // can recompute the aggregate analyses over the merged results — never set
+  // by hand (the file is big and nothing else reads it).
+  emitResults: boolean;
   // Per-layout difficulty breakdown (`--per-layout`) + force one layout across
   // every battle (`--layout=<id>`) for a clean full-sample isolate.
   perLayout: boolean;
@@ -150,6 +155,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     count: 20,
     outDir: defaultOutDir(),
     perHop: false,
+    emitResults: false,
     perLayout: false,
     perEncounter: false,
     search: false,
@@ -180,6 +186,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--per-hop':
         args.perHop = true;
+        break;
+      case '--emit-results':
+        args.emitResults = true;
         break;
       case '--per-layout':
         args.perLayout = true;

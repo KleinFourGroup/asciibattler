@@ -645,8 +645,8 @@
               {
                 "kind": "wave",
                 "spec": {
-                  "levelBudget": { "kind": "mean", "factor": 1.25 },
-                  "count": { "kind": "hand", "factor": 1.25 },
+                  "levelBudget": { "kind": "mean", "factor": 1 },
+                  "count": { "kind": "hand", "factor": 1 },
                   "units": [
                     { "archetype": "mercenary", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
                     { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },

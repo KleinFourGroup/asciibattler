@@ -2313,3 +2313,23 @@ deltas. The pre-X H7c→O log lives at
     raises from the draft sheet are WITHDRAWN — n=80 doesn't
     support premiums. The surviving price proposal: portunus 25→20
     · cornucopia 30→25 · ALL ELSE HOLD.
+- **2026-07-29 — §68g THE PER-CHARACTER BOSS LADDER (6 batches,
+  `3d06aee`): parity holds at the walls too — no per-character boss
+  defect.** Regen arm, hops=11 forced-boss shape (the terminal is
+  the forced boss), seeds 1–40. Batches `20260729-*-3d06aee`.
+  | character | King | Queen |
+  |---|---|---|
+  | soldier | 65.0% | 57.5% |
+  | priest | 72.5% | 62.5% |
+  | gambler | 67.5% | 57.5% |
+  - **Cross-character spread: King ≤7.5pt · Queen ≤5.0pt** — inside
+    paired noise; the parity principle measures TRUE at the
+    forced-boss shape. Queen > King in difficulty for every
+    character (the 68d order-flip, now per-character-confirmed).
+  - Soldier's rows reproduce the settled board EXACTLY (65.0/57.5)
+    across the price commit — the firer never buys, so the price
+    changes leave its stream untouched (consistency receipt).
+  - **What remains open is SHARED, not per-character:** the
+    walk-shape deep-end wall (58.8/45.5% terminal death-share vs
+    the 30–35 target) — the 68g decision point, informed by the
+    user's native completion run (in progress).

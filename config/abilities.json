@@ -320,12 +320,11 @@
   "vial": {
     "id": "vial",
     "name": "Vial",
-    "cooldownSeconds": 4,
+    "cooldownSeconds": 2.5,
     "rangeCells": 5,
     "minRangeCells": 2,
-    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 0.5 },
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
     "timeline": [
-      { "phase": "windup", "seconds": 1.5, "scalesWithSpeed": true },
       { "phase": "release", "seconds": 0 },
       { "phase": "travel", "seconds": 0.5 },
       { "phase": "impact", "seconds": 0 },
@@ -338,8 +337,8 @@
         "phase": "impact",
         "op": {
           "kind": "damage",
-          "scaling": "magic",
-          "might": 0,
+          "scaling": "none",
+          "might": 2,
           "accuracy": 0.6,
           "critBase": 0,
           "critable": false,

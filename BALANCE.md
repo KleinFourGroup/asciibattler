@@ -2247,3 +2247,36 @@ deltas. The pre-X H7c→O log lives at
     taken/inst — band-legal (softer than shot 1's 25.0/3.17).
   - Mage disposition: CON 18→20 SHIPPED (experiment-blessed);
     presented for the morning ratification with the price sheet.
+- **2026-07-29 — §68f THE SETTLED-CONFIG FULL BOARD (11 instruments,
+  `faf9a0e`): 0 FAIL · 7 WARN — ⭐ CHARACTER PARITY ACHIEVED · the
+  act-1 refs re-baseline ~15pt down · the two-act band stays open ·
+  ⚠ THE FIRE CHANNEL COLLAPSED (n=80 confirm).** Batches
+  `20260729-04/05*-faf9a0e`; report:
+  tests/fuzz/output/board/board-report.txt.
+  - **⭐ PARITY (same-commit, all six act-1 rows):** soldier 65.0/65.0
+    · priest 72.5/70.0 · gambler 62.5/70.0 — cross-character spread
+    ±5pt on both postures. **The Gambler defect (68d −6/−5,
+    PROVISIONAL) is REPAIRED** — the ronin-start repair sequence
+    worked as designed. The DESIGN principle (similar difficulty,
+    differing playstyle) measures TRUE at the settled config.
+  - **The act-1 drift refs moved as a body** (soldier rows 65/65 vs
+    refs 85/75): four enemy-side buff echoes accumulated. These are
+    drift REFERENCES, so the proposal is a RE-SIGN at settled
+    values (65/65 · 72.5/70 · 62.5/70 ±8), not a chase back to 85.
+    The posture split itself held (bank/fires/tx all PASS).
+  - **Two-act walk rows: 17.5 (regen) / 30.0 (55pre)** vs the
+    55–70 DESIGN band; deep-end terminal wall 58.8/45.5 vs 30–35.
+    The roster buffs did NOT close the two-act gap (68e walk v3 was
+    30.0/20.0 — statistically indistinguishable) — the deep end
+    itself is the wall; carried to §68g as the named input.
+  - Forced-wall probes PASS (King 65.0 · Queen 57.5, single-sector).
+  - **⚠ THE FIRE CHANNEL: Δ +1.3pt paired at n=80** (regen 62.5 vs
+    ablated 61.3, flips 8↑/7↓; the 68d ref was +12.5, §60e +5).
+    CONFIRMED collapse, not noise: fires still happen (3.01/run)
+    but no longer convert — the buffed roster wins the fights fires
+    used to swing. The §60e "fire +5" channel doctrine is
+    INVALIDATED at the settled config and needs a re-sign or a
+    fire-policy investigation. Note the apparent tension with
+    venom-grant +12.5 (n=40): a marginal EXTRA strong packet vs the
+    average fire portfolio — both can be true; flagged for the
+    §65d-adjacent re-read rather than force-reconciled tonight.

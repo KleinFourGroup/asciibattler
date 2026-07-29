@@ -2451,6 +2451,25 @@ the probe entry pre-registered) is running as this is written;
 soldier-regen's −13pt drift is confirmed real (70.0/72.5 twice)
 and firer-specific, suspect = tankier enemy ronin in The Start.
 
+### 68f-overnight — the designated solo session (2026-07-29, ~23:00→05:30 UTC)
+
+The user granted overnight autonomy at logoff ("full permission to
+keep the box up and run any other balance experiments") with the
+price sheet explicitly reserved for morning signature. The night's
+arc, each campaign logged in BALANCE as it landed: the grant table
+firer half → the posture-gap catch → the shopper half (all packets
+grant-dead there; portunus dead BOTH postures) → the combined price
+disposition DRAFT → the mage experiment (shot 1 double-overshoot:
+SPD is a ~30pt/point dial via the scaled windup; shot 2 CON-only
+LANDS at −12.5, zero enemy echo) → the settled-config full board
+(0 FAIL · 7 WARN · ⭐ character parity ±5 achieved, the Gambler
+defect repaired) → the n=80 fire-channel confirm (the §60e fire
+channel is DEAD at the settled config — a doctrine-level finding).
+Discipline held: every commit+push in the gaps between drivers;
+zero parity refusals after the ladder lesson; nothing in
+prices.json touched. The morning signing agenda is the board
+report + the BALANCE draft dispositions.
+
 ### 68f-ladder — the single-slot verdict + two ops lessons (2026-07-29)
 
 The realism ladder (BALANCE 2026-07-29) closes the buff question:

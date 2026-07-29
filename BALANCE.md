@@ -2234,3 +2234,16 @@ deltas. The pre-X H7c→O log lives at
     reverted to 4** — durability without the cadence shift; re-read
     next entry. If it misses the band, full revert + carry the mage
     finding to the user.
+- **2026-07-29 — §68f MAGE SHOT 2 (`fc7ee63`): LANDS — KEEP CON
+  20/SPD 4.** 3 batches `20260729-04*-fc7ee63`.
+  - **Control snapped back to exactly 77.5%** (the d9f1d85 point) —
+    the SPD revert erased the whole −25 enemy echo; SPD was the
+    entire crater, CON+2's enemy echo ≈ 0.
+  - **Mage slot −12.5 vs control** (5↑/10↓; was −20.0 pre-buff) —
+    at the noise edge of the uncommon exemplar (adventurer −7.5).
+    The residual gap stays: magic growth 0.35 pays past L1, and any
+    deeper buff re-opens the enemy echo (ronin-vs-mages is a Start
+    staple). ronin-vs-mages iso post-shot-2: 37.5% runWin · 2.69
+    taken/inst — band-legal (softer than shot 1's 25.0/3.17).
+  - Mage disposition: CON 18→20 SHIPPED (experiment-blessed);
+    presented for the morning ratification with the price sheet.

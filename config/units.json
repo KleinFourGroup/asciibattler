@@ -241,7 +241,7 @@
     "rarity": "uncommon",
     "damageStat": "magic",
     "baseStats": {
-      "constitution": 18,
+      "constitution": 20,
       "strength": 0,
       "ranged": 0,
       "magic": 10,
@@ -249,7 +249,7 @@
       "defense": 0,
       "precision": 5,
       "evasion": 5,
-      "speed": 4,
+      "speed": 5,
       "mobility": 1,
       "power": 1
     },

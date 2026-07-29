@@ -2216,3 +2216,21 @@ deltas. The pre-X H7c→O log lives at
     units.rarityMultiplier 1/1.5/2/3 HOLD (post-buff, ronin sits at
     the uncommon exemplar and reaver/corrupter read genuinely
     rare-grade; mage is a unit defect, not a multiplier defect).
+- **2026-07-29 — §68f MAGE SHOT 1 (CON 20 + SPD 5, `3e6e96b`): DOUBLE
+  OVERSHOOT — SPD is the too-hot dial.** 3 batches
+  `20260729-03*-3e6e96b` (control · mage slot · ronin-vs-mages iso).
+  - **The enemy echo dominates**: the mage-FREE merc-slot control
+    collapsed 77.5→52.5% across the commit — enemy mages (the
+    ronin-vs-mages troops, a Start staple) got ~−25pt deadlier from
+    SPD 4→5 alone (`scalesWithSpeed` windup + attack cadence both
+    quicken). Forced iso: runWin 25.0% · 3.17 taken/inst · instWin
+    0.746 (no pre-buff iso pair — first read).
+  - **Player-side overcorrected**: mage slot +12.5 vs same-commit
+    control (9↑/4↓; was −20.0) — ABOVE the merc slot and the
+    uncommon exemplar band (≈−7.5). One point of SPD ≈ a ~30pt
+    player-side swing at L1: bolt's scaled windup makes speed the
+    strongest single dial in the statline.
+  - **Shot 2 (the vial-precedent last shot): CON 18→20 only, SPD
+    reverted to 4** — durability without the cadence shift; re-read
+    next entry. If it misses the band, full revert + carry the mage
+    finding to the user.

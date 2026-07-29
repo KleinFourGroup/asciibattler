@@ -2059,3 +2059,49 @@ deltas. The pre-X H7c→O log lives at
     windup 1→1.5 + `ringMultiplier: 0.5` (cd stays 4), poison + the
     cadence as the whole differentiator; per the signed rule this is
     the LAST within-(b) attempt before revert-to-(a).
+- **2026-07-29 — §68f VIAL ITERATION 2 → THE (b) VERDICT: REVERTED TO
+  (a), per the signed rule.** HEAD `b5de059` (USER-SIGNED: windup
+  1→1.5 + ring 0.5, cd 4 — full bolt-parity shape), 3 batches
+  `20260729-00{0818,1213,1525}-b5de059`.
+  - Corrupter twin **+42.5 → +32.5pt** (45.0 vs mage 12.5, 14↑/1↓) —
+    still ~2× rare-grade with the damage op at literal bolt parity.
+  - plagueDoctors **overshot DOWNWARD**: 57.5% runWin · 1.79
+    taken/inst vs the 2.42/37.5% pre-experiment baseline — the slow
+    cadence guts ENEMY corrupters faster than it tames player ones.
+  - **The mechanism finding: poison application RATE, not the damage
+    op, is vial's real currency on both sides** — the (b) dials
+    can't isolate it (a rate nerf hits enemy corrupters harder
+    because their value is all DoT pressure; player corrupters bank
+    the scaled hit too). (b) executed its two signed shots → REVERT.
+- **2026-07-29 — §68f THE (a) LANDING + SETTLE CAMPAIGN (8 batches):
+  vial byte-restored, the reshape lands HOT in the lab shape; the
+  act-1 drift is real; Gambler parity re-read swings.** HEAD
+  `ebd95be` (vial verified byte-identical to pre-experiment via
+  `git diff 6dae3ed` = empty; corrupter reshape CON 21/DEF 2/SPD 5,
+  magic 10→6, growth 0.35→0.15), batches `20260729-00*-ebd95be`.
+  - **Corrupter twin (a): +45.0pt** (57.5 vs mage 12.5, 19↑/1↓) —
+    HOTTER than pre-experiment (+15) with the vial untouched: in the
+    ×3-amplified backline comp, durability+speed is the binding
+    constraint (three surviving corrupters = three poison spreaders;
+    SPD 4→5 also quickens the attack-cooldown axis). ⚠ AMPLIFIED-
+    SHAPE READ — the single-slot realism ladder (next entry) is the
+    arbiter for whether (a) is actually hot in real comps.
+  - plagueDoctors back to **3.84 taken/inst · 27.5% runWin**
+    (baseline 2.42/37.5) — the vial revert restored the shape; the
+    +1.4 residual is (a)'s tankier enemy corrupters. Band-adjacent,
+    hard-normal; disposition with the (a) verdict.
+  - infernalColumn settled: **8.28** (≈ the 8.1 plateau; the trim
+    stays a no-op) — the walk/board read remains the arbiter.
+  - **soldier-regen 72.5** (second read; was 70.0 at a5a8391 vs ref
+    85) — the act-1 regen drift is REAL, not a one-off: two
+    independent reads ~−13pt. The 55pre row sits AT ref (75.0).
+    Firer-posture-specific; suspect = the tankier enemy ronin in The
+    Start (ronin-vs-mages, brigand-champions) hurting the
+    fight-heavy posture. NOT dispositioned — needs its own probe or
+    a deliberate re-sign at the settled config.
+  - **Gambler rows swung again**: regen 62.5 / 55pre 57.5 → gaps
+    −10.0 / −17.5 (was −5.0/+7.5 at a5a8391). Cross-commit absolute
+    comparisons at 40 seeds are effectively UNPAIRED (config edits
+    reshuffle draft/encounter streams), so these single reads are
+    NOT a parity verdict — the re-sign needs paired same-commit
+    reads at the settled config, larger n if the swing persists.

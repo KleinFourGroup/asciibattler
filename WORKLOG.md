@@ -2424,3 +2424,29 @@ Column's disposition moves to the settled walk/board read rather
 than more blind comp surgery. Vial iteration 2 (bolt-parity windup
 1.5 + ring 0.5, the LAST within-(b) attempt per the signed rule)
 proposed to the user.
+
+### 68f-tune3/4 — (b)'s second shot, the revert, the (a) landing (2026-07-29)
+
+Iteration 2 (user-signed, `b5de059`) took vial to literal
+bolt-parity and the twin still read +32.5pt while plagueDoctors
+overshot downward — the mechanism finding worth keeping: **poison
+application rate is vial's real currency on both sides**, and no
+damage-op dial isolates it (a cadence nerf guts enemy corrupters —
+pure DoT pressure — faster than it tames player ones, who bank the
+scaled hit as compensation). Per the pre-signed disaster rule, (b)
+ended there: `ebd95be` byte-restores vial (verified: `git diff
+6dae3ed -- config/abilities.json` empty) and lands (a)'s reshape
+instead.
+
+The settle campaign then surprised twice (BALANCE 2026-07-29):
+(a)'s durability/speed turns out to be the BINDING constraint in
+the amplified backline shape (+45pt — hotter than the +15
+pre-experiment baseline, with vial untouched), and the character
+rows swung beyond what cross-commit 40-seed absolutes can support
+(gambler-55pre 80→57.5 across two config steps). Discipline note
+promoted into the read: cross-commit absolute comparisons are
+effectively unpaired — same-commit paired reads or bigger n for
+any parity verdict. The single-slot realism ladder (the arbiter
+the probe entry pre-registered) is running as this is written;
+soldier-regen's −13pt drift is confirmed real (70.0/72.5 twice)
+and firer-specific, suspect = tankier enemy ronin in The Start.

@@ -2470,6 +2470,25 @@ zero parity refusals after the ladder lesson; nothing in
 prices.json touched. The morning signing agenda is the board
 report + the BALANCE draft dispositions.
 
+### 68f-close — user-signed 2026-07-29
+
+The morning session collected the signatures the overnight work
+queued: act-1 refs re-signed (parity ±5 verified, the Gambler
+provisional cleared), mage CON 20 ratified, prices dispositioned
+(portunus 20 / cornucopia 25 / all else HOLD after the n=80 walkback
+withdrew the venom/shield raises), the fire channel re-signed ≈0
+with repair deferred to the rollout-arbitration interstitial, and
+supply inflation declined on the flat dose-response (the user's
+question, answered with a curve: buys +69%, wins flat). Board at
+close: 0 FAIL · 4 WARN (the two-act rows, 68g's inputs). A morning
+exchange worth keeping: the n=40→n=80 signal flips are INSTRUMENT
+sampling noise, not policy-weight variance — n and paired design
+fix noise, rollout arbitration fixes bias, and the interstitial's
+real gift to measurement is decision-granularity value telemetry
+(hundreds of decisions per 40-seed batch) — added to that round's
+spec inputs. Cursor flipped to 68g; the box stays up for its
+batches (user-designated).
+
 ### 68f-ladder — the single-slot verdict + two ops lessons (2026-07-29)
 
 The realism ladder (BALANCE 2026-07-29) closes the buff question:

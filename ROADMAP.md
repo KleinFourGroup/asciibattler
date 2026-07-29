@@ -261,10 +261,11 @@ edits re-scan the non-vacuousness canaries (61d precedent).
   6/3 + count trims + the spreaders stage-1 trim; ⚠ the
   elite-censoring caveat + `--first-node=elite`; board 0 FAIL ·
   4 WARN (two-act rows sign post-68f). BALANCE 2026-07-28 + worklog.
-- [ ] **68f** — tiers & prices: ronin/reaver force-comp probes + buff
-  (reaver ≡ adventurer, corrupter ≡ mage in stats); ⛔ tier
-  reassignments (user); rarity multiplier + daemon/packet prices
-  dispositioned off the realized-value table.
+- [x] **68f** — tiers & prices ✅ 2026-07-29 (`3009803`→`f7ae26e`):
+  four buffs LANDED, ⭐ parity ±5 ACHIEVED; the realized-value table
+  (n=80 floor); prices portunus 20/cornucopia 25 else HOLD; refs
+  re-signed; ⚠ fire channel ≈0 (→ interstitial); board 0 FAIL/4
+  WARN. BALANCE 2026-07-28/29 + worklog §68f.
 - [ ] **68g** — per-character boss re-check + the native two-sector
   completion verify (the amended §67 criterion, user).
 - [ ] **68h** — the round-close ritual: archive (post-60-*) ·

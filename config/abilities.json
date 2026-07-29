@@ -323,9 +323,9 @@
     "cooldownSeconds": 4,
     "rangeCells": 5,
     "minRangeCells": 2,
-    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies", "ringMultiplier": 0.5 },
     "timeline": [
-      { "phase": "windup", "seconds": 1, "scalesWithSpeed": true },
+      { "phase": "windup", "seconds": 1.5, "scalesWithSpeed": true },
       { "phase": "release", "seconds": 0 },
       { "phase": "travel", "seconds": 0.5 },
       { "phase": "impact", "seconds": 0 },

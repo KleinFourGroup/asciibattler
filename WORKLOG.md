@@ -2470,6 +2470,31 @@ zero parity refusals after the ladder lesson; nothing in
 prices.json touched. The morning signing agenda is the board
 report + the BALANCE draft dispositions.
 
+## Phase 68g — boss re-check + the native verify
+
+### 68g — closed 2026-07-29 (user-signed)
+
+The per-character forced-boss ladder (BALANCE 2026-07-29): parity
+holds at both walls — spread ≤7.5pt King / ≤5.0pt Queen across the
+three characters, Queen > King for all three. No per-character boss
+defect exists; the open item was always the SHARED walk-shape wall
+height.
+
+The native completion verify: **the user beat the Queen twice** —
+the amended §67 exit criterion is MET with margin (the 67d run died
+at hop-0 Infernal Column; the 68e gates + 68f buffs turned that
+into two full completions). Feel-read: the Queen "feels reasonably
+good"; the residual worry is the final band being "a bit much."
+
+**Decision (user): walk-wall rework DEFERRED to the
+rollout-arbitration interstitial.** Rationale: the interstitial
+raises the bot ceiling, which moves the walk numbers — tuning the
+wall against the current bot would be redone work; the human read
+says nothing is broken; per-character parity means any tune is a
+single shared knob when it comes. The board's four two-act WARNs
+stand deliberately as the inherited marker. Box destroyed at the
+68g close (relaunch is a pure function of commit hash if needed).
+
 ### 68f-close — user-signed 2026-07-29
 
 The morning session collected the signatures the overnight work

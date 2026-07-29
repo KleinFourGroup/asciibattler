@@ -238,10 +238,9 @@ verify** (the amended §67 exit criterion, post-tuning), and
 - **Scope guards:** no new mechanics in the close; playtest-driven
   insertions go through the legal-mutation gate.
 **Cut (2026-07-27, shape-lock user-signed — worklog §68-kickoff +
-§68-shape-lock, incl. the four fork resolutions + the overhaul
-amendments; rollout arbitration = the next interstitial, built there
-not here).** Snapshot prediction: **v40/v34 HOLD** all phase; content
-edits re-scan the non-vacuousness canaries (61d precedent).
+§68-shape-lock; rollout arbitration = the next interstitial, built
+there not here).** Snapshot prediction: **v40/v34 HOLD** all phase;
+content edits re-scan the non-vacuousness canaries (61d precedent).
 
 - [x] **68a** — the fire-policy consumption fixes ✅ 2026-07-27
   (`91db3dd`): Cull polarity + the firability guards, policy-side;
@@ -257,17 +256,17 @@ edits re-scan the non-vacuousness canaries (61d precedent).
   ⭐ character parity = a signed design principle (DESIGN.md);
   BALANCE run-log 2026-07-27 + worklog §68d-batches/-signing.
 - [x] **68e** — the Deep End read ✅ 2026-07-28 (`ddf2293`→`dae5ad7`,
-  tunes USER-SIGNED ×2): the cliff = two defective entries → gates
-  6/3 + count trims + the spreaders stage-1 trim; ⚠ the
-  elite-censoring caveat + `--first-node=elite`; board 0 FAIL ·
-  4 WARN (two-act rows sign post-68f). BALANCE 2026-07-28 + worklog.
+  tunes ×2): the cliff = two defective entries → gates 6/3 + trims;
+  ⚠ elite-censoring + `--first-node=elite`; board 0 FAIL/4 WARN.
+  BALANCE 2026-07-28 + worklog.
 - [x] **68f** — tiers & prices ✅ 2026-07-29 (`3009803`→`f7ae26e`):
-  four buffs LANDED, ⭐ parity ±5 ACHIEVED; the realized-value table
-  (n=80 floor); prices portunus 20/cornucopia 25 else HOLD; refs
-  re-signed; ⚠ fire channel ≈0 (→ interstitial); board 0 FAIL/4
-  WARN. BALANCE 2026-07-28/29 + worklog §68f.
-- [ ] **68g** — per-character boss re-check + the native two-sector
-  completion verify (the amended §67 criterion, user).
+  four buffs, ⭐ parity ±5; the value table (n=80 floor); prices
+  portunus 20/cornucopia 25 else HOLD; refs re-signed; ⚠ fire
+  channel ≈0 (→ interstitial). BALANCE + worklog §68f.
+- [x] **68g** — boss re-check + native verify ✅ 2026-07-29: parity
+  at both walls (≤7.5); the §67 criterion MET ×2; walk-wall rework
+  DEFERRED to the interstitial (user-signed, the board WARNs =
+  the marker). BALANCE + worklog §68g.
 - [ ] **68h** — the round-close ritual: archive (post-60-*) ·
   scratchpad distillation (incl. the batch-sizing rule) · the
   instrument-retirement sweep · memory sweep · caps re-size ·

@@ -151,6 +151,23 @@ The spec itself still gets authored AT the kickoff in the user's voice
 first cut), audited against code reality first, per the spec-first
 protocol.
 
+### The instrument registry (the 68h retirement sweep, 2026-07-29, USER-SIGNED)
+
+Every measurement instrument carries a stamp so a fresh session knows what
+anchors reads vs what merely still exists. **doctrine** = the standing kit
+(default arms, board rows, the re-anchor machinery); **niche** = kept and
+valid for its stated purpose, opt-in, NEVER a default balance anchor;
+**deprecated** = do not use (none needed the stamp at this sweep).
+
+| Instrument | Stamp | Purpose / re-open trigger |
+|---|---|---|
+| the realistic-bot arm (`--searcher --audition --redraw=level:2 --empower=level:hi` + the §68 dials) · the executable board · `--grant` pairs · `--character` isolation · `--draw-add` · paired same-seed A/Bs · the `--per-*` telemetry | **doctrine** | the consumption table above is the authoritative list; the board runs it |
+| `--scripts` arm (§54 traffic scripts) | **niche** | leave-one-out script ablation only; superseded as the skill anchor by the audition searcher (§57h) |
+| `--k-telemetry` (§57 per-seed K evaluation) | **niche** | re-open only if the locked K=2 is ever re-tuned |
+| `--objective` strategies (arena proclivity menu + `best-objective.json`) | **niche** | arena-only proclivity probe; never a run-layer balance input |
+| coverage bot (`--objective=coverage`) | **niche** | crash/churn coverage; kept separate from measurement (the O5 separation) |
+| 53g human fixtures | **niche** (replay test RETIRED at 68h) | the fixture + shape test stay ([tests/gauntlet/humanFixture.test.ts](tests/gauntlet/humanFixture.test.ts)); the ~80% human ceiling stays citable (§53g); a future human gauntlet re-records on the then-current engine and re-opens replay regression |
+
 ## The signal (gradient first — unchanged)
 
 - **best-achievable** = max over searched strategy-weight vectors of the outcome

@@ -2535,3 +2535,28 @@ session: `cmd | tail` reports tail's exit (a blocked commit looked
 green), and the driver's `EXIT=$?` logged box-batch's exit 0 on a
 parity REFUSAL — the `fetched →` line count is the reliable
 completion signal for any driver log.
+
+## Phase 68h — the round-close ritual
+
+### 68h-1 — the instrument-retirement sweep (2026-07-29, user-signed)
+
+The registry landed in BALANCE §Protocol v2 ("The instrument
+registry"): doctrine / niche / deprecated stamps for the whole
+measurement kit. The kickoff's named pile all read **niche** —
+`--scripts` (ablation only, skill-anchor role superseded §57h),
+`--k-telemetry` (dormant unless K=2 re-tunes), the `--objective`
+strategies (arena-only), the coverage bot (crash coverage, the O5
+separation) — and nothing needed the deprecated stamp: every
+superseded instrument retains a stated niche purpose. The doctrine
+row points at the consumption table rather than duplicating it (one
+fact, one home).
+
+The 53g human-fixture decision (TODO, user-signed here): the replay
+test is RETIRED — deleted from
+[tests/gauntlet/humanFixture.test.ts](tests/gauntlet/humanFixture.test.ts),
+which keeps the fixture-shape guard; the fixture file stays (BALANCE
+§53g/§54 cite it). Rationale: skipped since 56b with no re-record in
+sight, and the rollout-arbitration interstitial moves the bot ceiling
+anyway — a future human gauntlet re-records on the then-current
+engine and re-opens replay regression naturally. Test count:
+2344→2343 (the standing "1 skipped" is gone).

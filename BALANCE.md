@@ -2140,3 +2140,40 @@ deltas. The pre-X H7c→O log lives at
     radius note: bolt is enemy-shared (ronin-vs-mages, the occult
     pools), a weapon buff moves encounters; a stat buff (CON/SPD)
     is player-and-enemy-mage only.
+- **2026-07-29 — §68f THE GRANT REALIZED-VALUE TABLE, FIRER HALF (13
+  batches): the daemon book reads flat-to-modest · venom/shield the
+  real win movers · ⚠ the POSTURE GAP governs the economy items.**
+  HEAD `93e37f3`, batches `20260729-01/02*-93e37f3`. Label: **hops=11
+  · REGEN/firer posture · Soldier · paired vs the no-grant baseline
+  (72.5% win · 66.8 bits · 2.92 fires)**. `identical` = seeds with
+  byte-equal (win,bits,hop,fired) — the grant-dead tell.
+  | item | price | Δwin | flips | Δbits | identical |
+  |---|---|---|---|---|---|
+  | mars | 40 | +7.5 | 8↑/5↓ | +0.9 | 20/40 |
+  | janus | 32 | +5.0 | 8↑/6↓ | −1.6 | 16/40 |
+  | mercury | 30 | 0.0 | 5↑/5↓ | −3.6 | 19/40 |
+  | fortuna | 25 | +5.0 | 8↑/6↓ | −1.0 | 18/40 |
+  | cornucopia | 30 | 0.0 | 6↑/6↓ | −3.7 | 12/40 |
+  | patricians-seal | 35 | +7.5 | 10↑/7↓ | −1.1 | 14/40 |
+  | portunus | 25 | 0.0 | 0↑/0↓ | +0.1 | **39/40** |
+  | miner | 40 | 0.0 | 0↑/0↓ | **+266.2** | 0/40 |
+  | shield | 10 | +7.5 | **3↑/0↓** | +1.7 | 1/40 |
+  | venom | 25 | **+12.5** | 7↑/2↓ | +4.5 | 2/40 |
+  | draw-two | 20 | **−5.0** | 6↑/8↓ | +0.1 | 2/40 |
+  | discard-one | 8 | 0.0 | 6↑/6↓ | −2.3 | 5/40 |
+  - **⚠ THIS IS HALF A TABLE — the firer buys ~never** (§60e posture
+    split), so every economy-channel item is structurally censored
+    here: portunus is grant-DEAD in-posture (39/40 identical — a
+    port daemon never fires for a bot that never ports) and miner's
+    +266 bits never convert (the firer doesn't spend). NO price
+    disposition off this half alone; the 55pre/shopper complement
+    runs next (same config, same seeds).
+  - Daemon win-deltas all sit at-or-inside the ±5–8 paired noise
+    (+0 to +7.5) — consistent with §60's flat-value finding even
+    when demonstrably consumed; the flips columns are weak. The
+    combat packets are the genuine movers: venom +12.5 (7↑/2↓) and
+    shield +7.5 with a CLEAN sign (3↑/0↓) at price 10.
+  - **draw-two reads sign-NEGATIVE (−5.0, 6↑/8↓)** in the firer
+    posture — the §65d +2-vs-+4 non-monotonicity thread gains a
+    protocol-v2-grade data point: a free draw-two is not obviously
+    good. Not noise-separable at n=40; noted for the §65d re-read.

@@ -68,6 +68,7 @@ describe('computeMetrics', () => {
 
 describe('evaluateBoard', () => {
   const board = buildBoard();
+  const sheet = loadSignedSheet();
 
   const metricsAt = (winRate: number): InstrumentMetrics => ({
     runs: 40,
@@ -79,7 +80,9 @@ describe('evaluateBoard', () => {
   });
 
   it('an at-reference regen read PASSes every check', () => {
-    const report = evaluateBoard(board, new Map([['regen', metricsAt(0.84)]]));
+    // Balance-proof: the at-reference value comes FROM the sheet, so a
+    // legitimate re-sign moves this test with it (the 68f re-sign lesson).
+    const report = evaluateBoard(board, new Map([['regen', metricsAt(sheet.act1WinRefs.soldier.regen)]]));
     const regen = report.rows.filter((r) => r.instrument === 'regen');
     expect(regen.length).toBeGreaterThan(0);
     expect(regen.every((r) => r.status === 'PASS')).toBe(true);
@@ -163,10 +166,10 @@ describe('the board definition itself', () => {
     expect(winRefOf('gambler-regen')?.min).toBeCloseTo(sheet.act1WinRefs.gambler.regen - 0.08);
   });
 
-  it('the gambler rows carry the PROVISIONAL annotation (parity pending 68f)', () => {
+  it("the gambler rows carry the sheet's parity annotation (balance-proof: whatever gamblerNote says)", () => {
     for (const id of ['gambler-regen', 'gambler-55pre']) {
       const win = board.instruments.find((i) => i.id === id)?.checks.find((c) => c.metric === 'winRate');
-      expect(win?.source).toContain('PROVISIONAL');
+      expect(win?.source).toContain(sheet.gamblerNote);
     }
   });
 

@@ -122,6 +122,35 @@ Until it lands, the hand-written scored policies are the CHEAP TIER and
 their known blindness (flat daemon value, no draft-quality attribution) is
 labeled on every read they anchor.
 
+**The §68 accumulated brief (consolidated at the 68g close — the spec
+session's input list; details in the dated run-log entries):**
+
+1. **The fire channel reads ≈0 at the settled config** (n=80, 2026-07-29)
+   — fire-decision quality owns the repair; per-packet: hype/overclock
+   sign-negative (scorer mistiming), patch the one clean positive, the
+   rest marginal.
+2. **Buy quality, not supply, binds the shop**: the bits dose-response is
+   flat (×2 supply → buys +69%, wins ~flat) — the port scorer's
+   flat-value blindness proven consequential.
+3. ⭐ **Decision-level value telemetry is a FIRST-CLASS instrument goal**:
+   log per-candidate rollout deltas → per-item realized value at decision
+   granularity (hundreds of decisions per 40-seed batch vs the n=80
+   run-level floor). The measurement payoff may rival the play payoff.
+4. **The elite-risk-blind node picker** (68e) — node choice joins the
+   arbitrated-decision list (suicides into optional detours).
+5. **The walk-wall + two-act band re-read runs AFTER the ceiling moves**
+   (68g deferral, user-signed) — the board's four two-act WARNs are the
+   inherited marker; deep-end wall 58.8/45.5 vs 30–35 at handoff.
+6. **The draw-two / +2-vs-+4 non-monotonicity** (§65d + the 68f sign-flip
+   reads) — re-read at decision grade.
+7. **Noise-vs-bias doctrine** for every pre/post comparison: n fixes
+   sampling noise (n=80 floor), arbitration fixes bias — don't conflate.
+
+The spec itself still gets authored AT the kickoff in the user's voice
+(goals, appetite, v1 scope — e.g., whether node-picking ships in the
+first cut), audited against code reality first, per the spec-first
+protocol.
+
 ## The signal (gradient first — unchanged)
 
 - **best-achievable** = max over searched strategy-weight vectors of the outcome

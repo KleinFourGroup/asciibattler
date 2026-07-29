@@ -2560,3 +2560,20 @@ sight, and the rollout-arbitration interstitial moves the bot ceiling
 anyway — a future human gauntlet re-records on the then-current
 engine and re-opens replay regression naturally. Test count:
 2344→2343 (the standing "1 skipped" is gone).
+
+### 68h-2 — the scratchpad distillation (2026-07-29, user-signed)
+
+The fourth sweep. Both Cluster-4 entries PROMOTED, none merely
+archived: the batch-sizing rule → AGENTS (shapes b+c signed — the
+shape trigger "any multi-arm × ≥40-seed searcher batch → the box" +
+the 2×-estimate kill-and-rerun hatch; the wall-clock-estimate shape
+(a) rejected because the §65d estimate failed for mid-flight-only
+reasons, so an estimate trigger inherits exactly the error it's
+meant to prevent) · the flat-metric/censoring lesson → BALANCE
+§Caveats (check an uncensored covariate before declaring a knob dead;
+prefer de-censoring the design over patching the estimator). The two
+68f-ladder ops lessons rode along into AGENTS as the box-driver-ops
+bullet (commit+push before launching a driver; pipeline exit-code
+masking / the `fetched →` completion signal). Originals + disposition:
+[archive/retro-scratchpad-cluster-4.md](archive/retro-scratchpad-cluster-4.md);
+the scratchpad is reset for the interstitial.

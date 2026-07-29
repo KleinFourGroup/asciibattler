@@ -149,6 +149,24 @@ kickoff — has its own section below.)
   BEFORE re-launching a "lost" batch; a fresh watcher loop polling for
   the output artifact re-attaches. Determinism makes the worst case a
   pure time cost.
+- **Batch sizing (the 68h rule, user-signed): any multi-arm ×
+  ≥40-seed searcher batch goes to the measurement box, not local** —
+  plus the in-flight hatch: a local batch that blows 2× its estimate
+  gets killed and re-run on the box (determinism makes the restart
+  free; killing mid-batch orphans nothing, 57g). Deliberately a SHAPE
+  trigger, not a wall-clock estimate: the §65d local batch (~2.5h vs
+  the box's ~18min) missed its estimate 2× for reasons only visible
+  mid-flight — per-seed cost is arm-dependent (draw-heavy arms fight
+  longer battles) and concurrent pre-commit suites steal CPU — so an
+  estimate-based trigger inherits exactly the error that burned us.
+- **Box-driver ops (the 68f lessons): commit+push BEFORE launching a
+  batch driver, never mid-flight** — the launch parity gate correctly
+  refuses every batch after a local HEAD flip (it caught the 68f
+  docs commit; five arms re-ran clean). And don't trust exit codes
+  through a pipeline: `cmd | tail` reports *tail's* exit (a blocked
+  commit looked green), and a driver's logged `EXIT=$?` can record
+  box-batch's exit 0 on a parity REFUSAL — the `fetched →` line count
+  is the reliable completion signal for any driver log.
 - **Stop preview servers (and other background processes) before
   ending the session.** If you called `preview_start`, call
   `preview_stop` before signing off. Vite spawns child Node processes

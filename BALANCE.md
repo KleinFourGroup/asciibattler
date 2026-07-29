@@ -392,6 +392,17 @@ re-time mid-sweep).
   leashed engage, not focus-mode — 3/197; "artillery" by capability needed
   reach 6, not 4). Check what the human actually does before encoding an
   assumption into a script or scorer.
+- **A flat metric is only evidence after an uncensored covariate moved
+  (§68e, promoted 2026-07-29):** before declaring a knob dead OR a metric
+  trustworthy, check that at least one uncensored covariate responded. The
+  five-point plagueSpreaders dose-response read taken/inst flat (15.7–18.2)
+  while enemy-deaths/wave swung 6.7↔30.7 across the same points — the
+  treatment was live and the RULER was right-censored (the per-instance
+  pool-damage arrival-pin, the 2026-07-28 elite-censoring caveat). "The
+  metric worked on the last read" says nothing about this population's
+  sampling shape. And when censoring is the problem, prefer de-censoring
+  the DESIGN (control the arrival state — the `--first-node=elite`
+  precedent) over patching the estimator.
 
 ## Parallelism + the dwm leak (unchanged, environmental)
 

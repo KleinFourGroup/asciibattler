@@ -107,3 +107,9 @@ one-liners:
   deferred walk-wall/two-act re-read consumes — flipping the default
   immediately would leave the move inferred instead of measured. Extra
   box batches absorbed by the 68h sizing rule.
+
+**The roadmap shape-lock (same day)** — Phases 69–72 approved as
+proposed (seam → sites → instruments → agenda; ordering rationale in
+the ROADMAP header). ROADMAP_MAX_LINES re-sized 500→320 at authoring
+(the C4 re-size precedent). Round-level snapshot prediction recorded:
+World v34 / Run v40 hold — everything is bot/harness-side.

@@ -2280,3 +2280,36 @@ deltas. The pre-X H7c→O log lives at
     venom-grant +12.5 (n=40): a marginal EXTRA strong packet vs the
     average fire portfolio — both can be true; flagged for the
     §65d-adjacent re-read rather than force-reconciled tonight.
+- **2026-07-29 — §68f THE SUPPLY DOSE-RESPONSE + THE PER-PACKET
+  ATTRIBUTION (14 batches, `a7ac843`): supply does NOT convert · no
+  packet carries the channel · the n=40 packet signals were noise.**
+  Batches `20260729-12/13/14*-a7ac843`. ⭐ Determinism receipt: the
+  fresh n=80 regen baseline sha `feb477ac` is BYTE-IDENTICAL to the
+  faf9a0e run's (config-identical commits, docs/test-only deltas) —
+  the cross-commit pairing is proven valid, not assumed.
+  - **Supply (shopper, ×1.0/1.25/1.5/2.0):** bits 47.2→60.3→73.0→
+    98.0 and buys/run 0.55→0.57→0.70→0.93 — the dial WORKS — but
+    wins 65.0/65.0/65.0/67.5 (×1.25 = ZERO win flips vs baseline;
+    ×2.0 = one). **Supply does not convert: the shop's inventory
+    value, not affordability, is the binding constraint** —
+    consistent with the flat daemon table. Bit-reward inflation is
+    NOT the fix; the deeper fix is inventory value / buy quality
+    (→ the rollout-arbitration interstitial).
+  - **Per-packet grants at n=80 (paired vs 62.5% baseline):** patch
+    +7.5 (6↑/0↓ — the one clean positive; 29/80 identical = often
+    unconsumed) · discard-one +5.0 · venom +3.8 · draw-two +3.8 ·
+    reroute +3.8 · shield −1.3 · hype −5.0 (9↑/13↓) · overclock
+    −6.3 (7↑/12↓) · miner 0.0 with +261.9 bits (the pure engine,
+    win-neutral both reads). **No packet carries strong value; the
+    portfolio hovers ±6 around zero with hype/overclock weakly
+    negative — the channel is dead by a thousand marginal fires,
+    not one broken packet.** Scorer timing on the negative pair is
+    interstitial material.
+  - **⚠ n=40 vs n=80 (the batch-sizing rule, quantified):** venom
+    +12.5→+3.8 · shield +7.5 (3↑/0↓)→−1.3 · draw-two −5.0→+3.8
+    (SIGN FLIP). Single-item grant deltas at n=40 are coin-flip
+    territory; **n=80 is the floor for per-item value reads**
+    (protocol note). Consequence: the venom 25→30 and shield 10→12
+    raises from the draft sheet are WITHDRAWN — n=80 doesn't
+    support premiums. The surviving price proposal: portunus 25→20
+    · cornucopia 30→25 · ALL ELSE HOLD.

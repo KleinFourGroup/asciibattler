@@ -122,15 +122,17 @@ describe('evaluateBoard', () => {
   });
 
   it('the fire-channel delta reads regen − ablated and a missing side is N/A', () => {
+    // Balance-proof: the ablated side sits exactly one signed delta below
+    // regen, so a re-signed fireChannelDelta moves this test with the sheet.
     const withBoth = evaluateBoard(
       board,
       new Map([
         ['regen', metricsAt(0.85)],
-        ['fire-ablated', metricsAt(0.725)],
+        ['fire-ablated', metricsAt(0.85 - sheet.fireChannelDelta)],
       ]),
     );
     const delta = withBoth.rows.find((r) => r.instrument === 'fire-channel');
-    expect(delta?.value).toBeCloseTo(0.125);
+    expect(delta?.value).toBeCloseTo(sheet.fireChannelDelta);
     expect(delta?.status).toBe('PASS');
 
     const missingSide = evaluateBoard(board, new Map([['regen', metricsAt(0.85)]]));

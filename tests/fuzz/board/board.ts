@@ -248,7 +248,7 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
       grade: 'reference',
       min: sheet.fireChannelDelta - 0.05,
       max: sheet.fireChannelDelta + 0.05,
-      source: '68d: fire Δ +12.5 post-68a (was §60e +5)',
+      source: '68f re-sign (user, 2026-07-29): the channel reads ≈0 at the settled config (n=80) — was 68d +12.5 / §60e +5; repair → the rollout-arbitration interstitial',
     },
   ];
   return { instruments, deltas, sheet };

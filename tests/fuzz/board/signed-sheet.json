@@ -12,7 +12,7 @@
   "bankRefs": { "firer": 68.3, "shopper": 49.9 },
   "firerFiresPerRun": 2.98,
   "shopperTransactionRate": 0.4,
-  "fireChannelDelta": 0.125,
+  "fireChannelDelta": 0,
   "forcedKingWinRegen": 0.725,
   "forcedQueenWinRegen": 0.65
 }

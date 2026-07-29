@@ -2450,3 +2450,25 @@ any parity verdict. The single-slot realism ladder (the arbiter
 the probe entry pre-registered) is running as this is written;
 soldier-regen's −13pt drift is confirmed real (70.0/72.5 twice)
 and firer-specific, suspect = tankier enemy ronin in The Start.
+
+### 68f-ladder — the single-slot verdict + two ops lessons (2026-07-29)
+
+The realism ladder (BALANCE 2026-07-29) closes the buff question:
+all three signed buffs are KEEPERS at realistic operating points —
+ronin lands exactly on adventurer (the uncommon exemplar), reaver
+reads rare-grade in both shapes, and corrupter's scary +45 was the
+triple-poison-engine lab artifact (+2.5 single-slot). The ladder's
+surprise is MAGE at −20 vs a merc slot — the book's true weak
+unit, out of the signed scope, escalated to the user as a new
+finding.
+
+Two ops lessons for the 68h distillation: (1) committing docs
+MID-DRIVER flips local HEAD and the wrapper's launch parity gate
+correctly refuses every subsequent batch — commit+push BEFORE
+launching a driver, never during (the gate caught it; five arms
+re-ran clean at the docs-only commit, config-identical so the
+control pairs across). (2) Two masking bugs in my own harness this
+session: `cmd | tail` reports tail's exit (a blocked commit looked
+green), and the driver's `EXIT=$?` logged box-batch's exit 0 on a
+parity REFUSAL — the `fetched →` line count is the reliable
+completion signal for any driver log.

@@ -2105,3 +2105,38 @@ deltas. The pre-X H7c→O log lives at
     reshuffle draft/encounter streams), so these single reads are
     NOT a parity verdict — the re-sign needs paired same-commit
     reads at the settled config, larger n if the swing persists.
+- **2026-07-29 — §68f THE SINGLE-SLOT REALISM LADDER (6 batches): (a)
+  is SANE in real comps · ronin = the uncommon exemplar · reaver
+  rare-grade in both shapes · ⭐ MAGE READS −20 (new defect).**
+  Control @`ebd95be` + 5 arms @`d9f1d85` (docs-only delta,
+  config-identical; the mid-ladder parity refusal is a worklog
+  note), batches `20260729-01*`. Shape: `merc,merc,X,archer,healer`,
+  hops=11 L1 regen posture — the realistic one-slot read
+  pre-registered by the probe entry as the amplified shape's
+  arbiter.
+  | X | win | Δ vs merc slot |
+  |---|---|---|
+  | mercenary (control) | 77.5% | — |
+  | ronin | 70.0% | −7.5 |
+  | adventurer | 70.0% | −7.5 |
+  | reaver | 82.5% | **+5.0** |
+  | mage | 57.5% | **−20.0** |
+  | corrupter | 80.0% | +2.5 |
+  - **Corrupter (a): the +45 amplified read was the LAB ARTIFACT**
+    (three surviving poison engines compound; one doesn't). In a
+    realistic comp (a)-corrupter ≈ a merc slot and ~+22 over the
+    mage slot — rare-grade sane. Corrupter-stacked comps stay a
+    spike the draft weights price (a specific rare ≈5.6% of offers).
+  - **Ronin lands AT adventurer** (−7.5 both): the signed buff put
+    it exactly at the uncommon exemplar's realized value. Paired
+    with the amplified +5-vs-merc read, ronin ∈ [−7.5, +5] ≈ parity.
+  - **Reaver +5 single-slot / +15 amplified** — rare-grade in both
+    shapes, the cleanest landing of the three.
+  - **⭐ Mage −20.0 (5↑/13↓) is the book's real weak slot** — an
+    uncommon at 1.5× price reading far below common merc: squishy
+    CON 18 behind a 1.5s scaled windup at L1. OUT OF the signed 68f
+    buff scope (the card named ronin/reaver/corrupter) — flagged as
+    a NEW FINDING for the user: quick repair rider vs carry. Blast
+    radius note: bolt is enemy-shared (ronin-vs-mages, the occult
+    pools), a weapon buff moves encounters; a stat buff (CON/SPD)
+    is player-and-enemy-mage only.

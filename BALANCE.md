@@ -2177,3 +2177,42 @@ deltas. The pre-X H7c→O log lives at
     posture — the §65d +2-vs-+4 non-monotonicity thread gains a
     protocol-v2-grade data point: a free draw-two is not obviously
     good. Not noise-separable at n=40; noted for the §65d re-read.
+- **2026-07-29 — §68f THE GRANT TABLE, SHOPPER HALF (13 batches) +
+  the combined disposition draft.** HEAD `0859a97` (docs-only =
+  config-identical to the firer half), batches
+  `20260729-02/03*-0859a97`. Label: **hops=11 · 55pre/shopper ·
+  Soldier · paired vs the no-grant baseline (75.0% win · 49.0 bits ·
+  0.57 buys)**.
+  | item | price | Δwin | flips | identical |
+  |---|---|---|---|---|
+  | mars | 40 | +7.5 | 7↑/4↓ | 26/40 |
+  | janus | 32 | 0.0 | 5↑/5↓ | 24/40 |
+  | mercury | 30 | +5.0 | 5↑/3↓ | 24/40 |
+  | fortuna | 25 | 0.0 | 2↑/2↓ | 32/40 |
+  | cornucopia | 30 | **−12.5** | 5↑/10↓ | 23/40 |
+  | patricians-seal | 35 | +5.0 | 7↑/5↓ | 25/40 |
+  | portunus | 25 | 0.0 | 0↑/0↓ | **39/40** |
+  | every packet | — | 0.0 | 0↑/0↓ | **39/40** |
+  - **The posture split closes the loop on §60e**: the shopper fires
+    ~never, so ALL SIX packets are grant-dead in this posture
+    (39/40 identical each) — miner's +266-bit engine included. A
+    packet's realized value exists ONLY through the fire channel;
+    miner's bits→wins conversion is structurally impossible for
+    both current arms (non-stacking channels, accepted at §60e) —
+    its realized value is a LOWER BOUND with that label.
+  - **portunus: realized ≈ 0 in BOTH postures** (39/40 identical
+    twice — even the shopper's 0.57 buys/run barely engage it).
+  - **mars is the book's one consistent daemon** (+7.5 in both
+    postures); cornucopia the one sign-negative (−12.5 shopper,
+    flat firer) — watch or trim.
+  - **THE COMBINED DISPOSITION DRAFT (user signs in the morning):**
+    portunus 25→20 (bot-realized 0 is a lower bound; port-heavy
+    human lines keep some value) · cornucopia 30→25 ·
+    venom 25→30 (+12.5, the book's strongest fire) · shield 10→12
+    (clean-sign +7.5, the best value/bit) · ALL OTHERS HOLD (mars
+    40 earns its top slot; janus/mercury/fortuna/seal flat-modest at
+    a defensible ladder; miner 40 + draw-two 20 HOLD with labels —
+    hybrid-channel dependency and the §65d flag respectively) ·
+    units.rarityMultiplier 1/1.5/2/3 HOLD (post-buff, ronin sits at
+    the uncommon exemplar and reaver/corrupter read genuinely
+    rare-grade; mage is a unit defect, not a multiplier defect).

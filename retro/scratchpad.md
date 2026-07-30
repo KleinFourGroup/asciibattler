@@ -22,6 +22,19 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 ---
 
-## The rollout-arbitration interstitial (not yet opened)
+## The rollout-arbitration interstitial
 
-*(No entries yet — the round opens at its spec session.)*
+- **First-consumer combinations surface latent seams; control-probe the
+  OLD path before assuming the new code is at fault.** The 69b walker's
+  first run crashed in `attritionRead` — a scratchpad repro + a `runOne`
+  CONTROL probe with the same flag combination (searcher-sans-audition ×
+  empower) proved the crash was a latent shipped bug (`2023b6d`), not a
+  walker bug, in one step. The §70 site wiring will keep crossing
+  never-run combinations — same drill each time. (Worklog §69; the
+  chaos-driver TODO carries the instrument-shaped version.)
+- **A perfect-pairing pin can invalidate a spec'd methodology — build
+  the pin first.** 69d's inert≡null test (margins EXACTLY 0) disproved
+  resolution 5's inert-grant ε probe before 69f built it; the amended
+  two-sided design (zero-control + broken-pairing floor) fell straight
+  out. Cheap contract tests on the substrate pay for themselves at the
+  methodology layer. (Worklog §69f.)

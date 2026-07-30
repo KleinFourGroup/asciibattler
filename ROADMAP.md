@@ -28,30 +28,18 @@ Run v40 HOLD all round — everything lands bot/harness-side; no
 serialized union is touched. A phase cut that contradicts this must say
 so loudly at its kickoff.
 
-## Phase 69 — the run-clone seam + the arbitration core
+## Phase 69 — the run-clone seam + the arbitration core ✅ CLOSED 2026-07-30, user-signed
 
-Charter: `cloneRunForRollout` (all eight serialized RNG streams
-re-seeded + a fresh bus — the 57d clairvoyance guard verbatim), the
-run-layer driver + evaluator (CRN seed sets shared across candidates,
-the null arm, the LOCKED terminal score: pool-delta + death-dominant +
-the swept-λ seam), decision-log emission built into the driver from day
-one, and the inert-candidate A/A methodology that derives ε from the
-CRN paired-margin noise floor. Headless-first; no decision site wired.
-
-- Risk: **MEDIUM-HIGH** — the caching design and rollout-cost pricing
-  live here; unknown until the kickoff bench (a `benchRollout` analog
-  for run-layer rollouts) lands.
-- Decision points: the cost read → confirms the five-site scope or
-  triggers the appetite hatch (user call) · the A/A-derived ε
-  methodology sign-off (per-site values land with their sites in §70,
-  never silently baked).
-- Exit criteria: arbitration determinism pinned by test (same seed +
-  config → same decisions) · the cost model written to the worklog ·
-  the A/A methodology proven on at least one site's context · fuzz
-  baselines byte-untouched (everything is opt-in).
-- Scope guard: no strategy chokepoint is rewired this phase.
-
-The cut (kicked off 2026-07-30, user-signed; audit + rationale: WORKLOG §69):
+The full arbitration substrate landed bot/harness-side in six commits +
+one fix-first repair: the eight-stream clone seam · the horizon walker
+(tier dial) · the cost model (clone ~0 ms, recursion 1–2× not ~20×;
+**five-site scope + no-cache SIGNED**) · the resolution-4 evaluator
+(inert≡null pinned) · the driver + built-in decision log (**arbitration
+determinism pinned — the exit criterion**) · the **AMENDED A/A ε
+methodology SIGNED** (zero-control + broken-pairing floor; ε 3.43
+fresh / 0.54 mid — per-site+depth floors for §70) · the latent §54×K4
+sensor crash found + fixed (`2023b6d`). All four exit criteria met;
+v34/v40 held; baselines byte-untouched. Detail: WORKLOG §69.
 
 - [x] 69a — `cloneRunForRollout` ✅ `11e95ea` — six contract tests, fuzz
       baselines byte-untouched, no bump (as predicted).
@@ -67,10 +55,10 @@ The cut (kicked off 2026-07-30, user-signed; audit + rationale: WORKLOG §69):
 - [x] 69e — driver core + decision log ✅ — arbitration determinism
       PINNED (the exit criterion); ties→NULL/ε/argmax mechanism-pinned
       via the evaluator seam.
-- [x] 69f — the A/A ε methodology ✅ — AMENDED (the inert probe measures
-      exactly 0 by the 69d pin; the floor = broken-pairing null-arm A/A,
-      control kept) + proven on two contexts (ε≈3.4 fresh / 0.54
-      mid-act); **sign-off = the listed decision point, pending**
+- [x] 69f — the A/A ε methodology ✅ `2f604c4` — AMENDED (the inert probe
+      measures exactly 0 by the 69d pin; the floor = broken-pairing
+      null-arm A/A, control kept) + proven on two contexts (ε≈3.4
+      fresh / 0.54 mid-act); **methodology SIGNED, user, 2026-07-30**
       (WORKLOG §69).
 
 ## Phase 70 — the decision sites

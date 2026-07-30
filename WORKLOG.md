@@ -286,3 +286,15 @@ walker-vs-realized divergence.
   their floors read at more than one depth — noted for the site
   wiring). Methodology sign-off = the listed decision point, user call
   pending.
+
+**Phase 69 CLOSED (2026-07-30, user-signed ×2 — the amended ε
+methodology + the phase close).** All four exit criteria met
+(arbitration determinism pinned · the cost model signed · the A/A
+methodology proven on two contexts · fuzz baselines byte-untouched,
+307→334 purely additive); the round-level snapshot prediction held
+(World v34 / Run v40, no bump — every commit bot/harness-side). Six
+landing commits (`11e95ea` `d75eab9` `ed8b81e` `c4c3581` `a065360`
+`2f604c4`) + the fix-first sensor repair (`2023b6d`). The ROADMAP
+section demoted per the §60f rule; two process notes to the scratchpad
+(the control-probe drill; pin-before-methodology). NEXT: the §70 phase
+kickoff.

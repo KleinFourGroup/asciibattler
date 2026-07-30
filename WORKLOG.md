@@ -113,3 +113,67 @@ proposed (seam → sites → instruments → agenda; ordering rationale in
 the ROADMAP header). ROADMAP_MAX_LINES re-sized 500→320 at authoring
 (the C4 re-size precedent). Round-level snapshot prediction recorded:
 World v34 / Run v40 hold — everything is bot/harness-side.
+
+## Phase 69 — the run-clone seam + the arbitration core
+
+**Kickoff (2026-07-30).** Pre-flight green: 2343 tests / 150 files, 0
+skipped (matches the Cursor pin). The code-reality audit — a day after
+the spec-session audit, so focused on what the *build* touches:
+
+1. **The 57d template ports mechanically.** `Run.toJSON` serializes
+   exactly eight named streams ([Run.ts:3285](../src/run/Run.ts)) and
+   `fromJSON(snap, bus)` already takes a fresh bus — `cloneRunForRollout`
+   is a wire round-trip + eight forks off one seed stream.
+2. **The real new machinery is the run-forward WALKER, and it can't
+   reuse `runOne`.** The harness battle machinery (harness.ts:400–748)
+   is bus-handler closures over `runOne` locals (battle:started builds
+   the World + spawns; the phase switch walks map/turn-intro/battle).
+   §69 writes a purpose-built ~100-line walker (bus wiring + phase walk
+   to the horizon; none of the telemetry/abort/arm bookkeeping).
+   Intermediate run decisions inside a horizon resolve via the scored
+   cheap policies — made explicit in the walker's contract.
+3. **Horizon detection is free**: count `battle:ended` on the clone's
+   bus (1 for preTurn contexts, "end of next battle" for out-of-battle).
+4. **The ε A/A substrate exists as advertised**: `RunConfig.grants`
+   daemon/packet grants draw nothing — byte-identical run stream
+   ([RunConfig.ts:199](../src/run/RunConfig.ts)).
+5. **benchRollout is battle-layer only** → `benchRunRollout` is a new
+   sibling needing clone + walker first; the cost read lands at 69c, as
+   early as the machinery allows (front-loads the appetite-hatch call).
+6. **Snapshot prediction confirmed at step grain**: every step is
+   bot/harness-side, v34/v40 hold, no step touches harness.ts, fuzz
+   baselines byte-untouched.
+
+**Three calls, user-signed at the shape-lock:**
+
+- **Placement**: the clone seam in `src/bot/` mirroring `rollout.ts`
+  (the RolloutSearchDriver harness-only-but-src/bot precedent); the
+  walker/evaluator/driver in `tests/fuzz/rollout/` — they import the
+  scored strategies + redraw/empower policies, which are test-side.
+- **The cheap inner tier defaults to `traffic`** on a
+  bare|traffic|searcher dial: RNG-free, deterministic, meaningfully
+  less dumb than bare at near-bare cost. The bench prices all three;
+  §71's flip-rate instrument arbitrates cheap-vs-searcher (the lock).
+- **Caching design DEFERRED to the 69c bench read** — no cache in v1
+  unless the numbers demand it (don't-abstract-for-hypotheticals; the
+  bench is precisely the data that would justify one). If 69c comes
+  back ugly, the caching design happens BEFORE the appetite-hatch call,
+  since a cheap cache might save the five-site scope.
+
+**The harness-monolith question (user, at the shape-lock): does
+`runOne` need urgent refactoring? Verdict: NO — watch, don't refactor.**
+(a) It's harness code, not shipped code — the mess costs developer
+friction, not correctness. (b) Its draw sequences are byte-pinned by
+the fuzz baselines / frozen-anchor doctrine, so any restructure is a
+behavior-equivalence surgery (worktree-pinned diff oracle, the 47e
+protocol) with zero behavioral payoff — inside a round whose scope
+guard is literally "no harness surgery." (c) The walker actively should
+NOT share code with it: coupling would make every future walker tweak a
+baseline threat, and walker fidelity needn't be exact — bias shared
+across candidates cancels under CRN (the same argument that justified
+the cheap inner tier). (d) The risk worth naming is DIFFERENTIAL drift
+(walker bias that differs *between* candidates — CRN can't cancel
+that); §71's decision telemetry + flip-rate instrument are the
+detectors. Re-open triggers pre-registered in TODO.md: a third
+run-walk consumer (rule of three), or §71 showing systematic
+walker-vs-realized divergence.

@@ -179,5 +179,20 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   invariant + snapshot round-trip per phase transition. Surfaced by the
   user at the §59 kickoff (2026-07-19, worklog §59); out of §59 scope.
 
+- [ ] **`runOne` / rollout-walker deliberate duplication — divergence
+  watch.** Filed at the §69 kickoff (2026-07-30, user question). The
+  run-layer rollout walker (§69b, `tests/fuzz/rollout/`) re-implements
+  `runOne`'s battle wiring + phase walk (~100 lines) rather than sharing
+  code — DELIBERATE: `runOne`'s draw sequences are byte-pinned by the
+  fuzz baselines / frozen-anchor doctrine, so coupling would make every
+  walker tweak a baseline threat; and walker fidelity needn't be exact
+  (CRN shares bias across candidates). NOT urgent — verdict + full
+  rationale in WORKLOG §69. **Re-open triggers (pre-registered):** (1) a
+  third consumer of the run-walk pattern appears (rule of three), or
+  (2) §71 decision telemetry shows systematic walker-vs-realized
+  divergence biasing candidates *differentially*. If either fires, the
+  refactor is a behavior-equivalence surgery — worktree-pinned diff
+  oracle required (the 47e protocol).
+
 - [x] **`--seed-offset` for a true config-overfit holdout.** Shipped in X2 (`--seed-offset=N` across run/sweep/search, `tests/fuzz/`) — the overnight verify can run on never-tuned seeds. *(Found already-done during the 2026-07-06 TODO demotion pass; X2 landed it without checking this off.)*
 - [x] **Catch doc-tree drift automatically.** Done 2026-06-07: ARCHITECTURE.md holds the single canonical tree; [tests/docs.test.ts](tests/docs.test.ts) parses it on every `npm test` (+ caps HANDOFF line counts).

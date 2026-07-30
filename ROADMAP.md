@@ -51,6 +51,27 @@ CRN paired-margin noise floor. Headless-first; no decision site wired.
   baselines byte-untouched (everything is opt-in).
 - Scope guard: no strategy chokepoint is rewired this phase.
 
+The cut (kicked off 2026-07-30, user-signed; audit + rationale: WORKLOG §69):
+
+- [ ] 69a — `cloneRunForRollout` (src/bot): wire round-trip + all eight
+      streams re-seeded off one seed stream + fresh bus (the 57d guard
+      verbatim); clairvoyance + determinism tests. No bump.
+- [ ] 69b — the rollout walker (tests/fuzz/rollout/): cloned Run →
+      horizon (N `battle:ended`s), inner-tier dial (bare|traffic|searcher,
+      traffic default), scored policies for intermediate decisions. No bump.
+- [ ] 69c — `benchRunRollout` + the cost model → worklog. **DECISION
+      POINT (user): five-site scope vs the appetite hatch; the caching
+      design rides this read.**
+- [ ] 69d — terminal score + evaluator: pool-delta + death-dominant
+      (+ completion) + the swept-λ seam (default 0); bits/roster deltas
+      as telemetry columns, never score terms. CRN-pairing tests.
+- [ ] 69e — driver core + the in-memory decision log (site, context,
+      candidates, per-candidate means, chosen, margin vs null).
+      Determinism pinned: same seed + config → same decisions.
+- [ ] 69f — the A/A ε methodology on one synthetic port-buy context
+      (inert candidates → paired-margin floor → ε ≈ 2σ); write-up to
+      the worklog; per-site values land with their sites in §70.
+
 ## Phase 70 — the decision sites
 
 Charter: wire the five sites through the existing strategy chokepoints,

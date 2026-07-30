@@ -243,8 +243,46 @@ walker-vs-realized divergence.
     rule) but comfortably feasible; even full-searcher-tier sampling
     for the §71 flip-rate read is affordable.
 
-  **PROPOSED verdict (the decision point, user call pending): the
-  five-site scope STANDS — no appetite hatch; NO cache in v1** (clone
-  cost nil; the only class worth ever building — rollout-result sharing
-  across provably non-perturbing candidates, the port-ask case — waits
-  for §71 profiling, per don't-abstract-for-hypotheticals).
+  **Verdict SIGNED (user, 2026-07-30): the five-site scope STANDS — no
+  appetite hatch; NO cache in v1** (clone cost nil; the only class worth
+  ever building — rollout-result sharing across provably non-perturbing
+  candidates, the port-ask case — waits for §71 profiling, per
+  don't-abstract-for-hypotheticals).
+- **69d landed** (`c4c3581`) — the resolution-4 score (dominance
+  constants derived from `HEALTH.playerHealthMax`; pool delta SIGNED so
+  rest-heals score positive; λ default 0 with bits/roster deltas always
+  in the breakdowns) + the evaluator over CRN PAIRS (cloneSeed +
+  policySeed, both off the caller's stream — the walker's independence
+  contract). The keystone pin: **a byte-inert apply scores IDENTICALLY
+  to the null arm** — paired margins of inert candidates are exactly
+  zero by construction.
+- **69e landed** (`a065360`) — `RunArbitrationDriver`: the 57f decide
+  loop site-agnostic (CRN pairs off the driver's own stream · null arm +
+  strict-ε · argmax first-wins), with the DECISION LOG built in
+  (RunDecisionRecord: site, (sectorId, hop) with the #110 pre-root
+  guard, labels null-first, full per-candidate results, chosen, margin,
+  ε). **Arbitration determinism PINNED — the phase exit criterion.**
+  Mechanics pinned via an injected-evaluator seam (the selectByScore
+  inert-seam precedent); per-call ε override ready for §70's per-site
+  floors.
+- **69f — the A/A ε methodology, AMENDED by the 69d finding + proven on
+  two contexts.** The spec's sketch (inert grants as the A/A probe)
+  measures EXACTLY ZERO by construction — the 69d pin: byte-inert
+  candidates keep CRN pairing perfect, so their margins carry no noise
+  at all, and an ε derived from them would be 0 and guard nothing. The
+  amended two-sided methodology ([epsilonAA.ts](../tests/fuzz/rollout/epsilonAA.ts)):
+  the byte-inert read survives as the CONTROL (must margin exactly 0 —
+  proves the floor read measures luck-resample noise, not estimator
+  slop), and THE FLOOR is the null arm evaluated under DISJOINT fresh
+  pair sets — equal true value, pairing FULLY broken, margins paired
+  two-by-two, **ε ≈ 2σ**. A real candidate's noise sits between the
+  control's 0 and this floor (trajectories share a prefix until the
+  state divergence bites), so 2σ is conservative. First numbers
+  ([readEpsilonAA.ts](../tests/fuzz/rollout/readEpsilonAA.ts), K=2,
+  traffic, M=20 margins, out-of-battle class): **fresh hop-1 σ=1.717 →
+  ε≈3.43 pool-HP · mid-act (5 battles in) σ=0.269 → ε≈0.54 · control
+  exactly 0 at both.** The 6× spread across depth VINDICATES the
+  per-site/per-context derivation (and suggests §70 sites may want
+  their floors read at more than one depth — noted for the site
+  wiring). Methodology sign-off = the listed decision point, user call
+  pending.

@@ -67,9 +67,11 @@ The cut (kicked off 2026-07-30, user-signed; audit + rationale: WORKLOG §69):
 - [x] 69e — driver core + decision log ✅ — arbitration determinism
       PINNED (the exit criterion); ties→NULL/ε/argmax mechanism-pinned
       via the evaluator seam.
-- [ ] 69f — the A/A ε methodology on one synthetic port-buy context
-      (inert candidates → paired-margin floor → ε ≈ 2σ); write-up to
-      the worklog; per-site values land with their sites in §70.
+- [x] 69f — the A/A ε methodology ✅ — AMENDED (the inert probe measures
+      exactly 0 by the 69d pin; the floor = broken-pairing null-arm A/A,
+      control kept) + proven on two contexts (ε≈3.4 fresh / 0.54
+      mid-act); **sign-off = the listed decision point, pending**
+      (WORKLOG §69).
 
 ## Phase 70 — the decision sites
 

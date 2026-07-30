@@ -53,12 +53,11 @@ CRN paired-margin noise floor. Headless-first; no decision site wired.
 
 The cut (kicked off 2026-07-30, user-signed; audit + rationale: WORKLOG §69):
 
-- [ ] 69a — `cloneRunForRollout` (src/bot): wire round-trip + all eight
-      streams re-seeded off one seed stream + fresh bus (the 57d guard
-      verbatim); clairvoyance + determinism tests. No bump.
-- [ ] 69b — the rollout walker (tests/fuzz/rollout/): cloned Run →
-      horizon (N `battle:ended`s), inner-tier dial (bare|traffic|searcher,
-      traffic default), scored policies for intermediate decisions. No bump.
+- [x] 69a — `cloneRunForRollout` ✅ `11e95ea` — six contract tests, fuzz
+      baselines byte-untouched, no bump (as predicted).
+- [x] 69b — the rollout walker ✅ — both contexts + determinism pinned;
+      surfaced + fixed the latent §54×K4 sensor crash fix-first
+      (`2023b6d`); no bump (WORKLOG §69).
 - [ ] 69c — `benchRunRollout` + the cost model → worklog. **DECISION
       POINT (user): five-site scope vs the appetite hatch; the caching
       design rides this read.**

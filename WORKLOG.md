@@ -177,3 +177,43 @@ that); §71's decision telemetry + flip-rate instrument are the
 detectors. Re-open triggers pre-registered in TODO.md: a third
 run-walk consumer (rule of three), or §71 showing systematic
 walker-vs-realized divergence.
+
+**The build (2026-07-30).**
+
+- **69a landed** (`11e95ea`) — `cloneRunForRollout` + the six contract
+  tests; fuzz baselines byte-untouched, v34/v40 hold, as predicted.
+- **69b's first run surfaced a LATENT pre-existing crash** — the
+  walker's traffic/searcher tiers died on
+  `statusDef: no definition for status id 'empowered'`
+  ([sensors.ts](../src/bot/sensors.ts) `attritionRead`, unguarded
+  catalog lookup over unit effects). The probe chain: a scratchpad
+  repro pinned the effect to a spawned player unit carrying the Mars
+  empower buff → a `runOne` CONTROL with `--searcher` (no audition) +
+  `--empower=level:hi` **crashed identically** → so this was a live
+  harness bug, not a walker bug. Why it stayed latent: plain K1
+  stat-fold effects (fatigued/empowered/warded) deliberately have no
+  `STATUS_DEFS` entry ([statusBehavior.ts](../src/sim/statusBehavior.ts));
+  the traffic anchor arms never ran WITH empower, and the doctrine
+  searcher arm always rode `--audition`, whose nominate channel skips
+  `evaluate()` — attritionRead never met an empowered unit until the
+  walker's cheap tier crossed the two. **Fixed fix-first** (`2023b6d`):
+  tolerant `STATUS_DEFS` lookup (a def-less fold buff is never a DoT) +
+  a regression pin. Anchor-arm draw sequences untouched (they never
+  reached the changed branch); fuzz:smoke green. Exactly the class of
+  latent seam the §69 divergence watch expected — surfaced on day one,
+  by construction (the walker exercises real combinations the arms
+  never did).
+- **69b landed** — [walker.ts](../tests/fuzz/rollout/walker.ts):
+  horizon = a `battle:ended` count, which DISSOLVES the spec's
+  current-vs-next-battle distinction (both are `horizonBattles: 1` from
+  their clone contexts); gates always ON in the clone (H4b RNG-aligned)
+  so the run pauses at turn gates instead of auto-cascading mid-emit;
+  one-walk-per-clone; the `policySeed` independence contract documented
+  in the header (passing the rolloutSeed itself would collide fork #1
+  of the policy stream with the clone's re-seeded `rng` — draw-free
+  under today's default policies, but the contract guards a drawing
+  policy); a node-clear horizon, if the node-choice site ever wants
+  one, extends the stop condition in one named place. Six tests: both
+  cut-mandated contexts, determinism (identical WalkResult +
+  byte-identical final snapshot), seed divergence, the tier dial
+  (bare/searcher), the maxHops safety bound.

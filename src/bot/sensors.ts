@@ -32,7 +32,7 @@ import {
 } from '../sim/occupancy';
 import { tileDef, type TileKind } from '../sim/TileGrid';
 import type { StatusDef } from '../sim/effects/statusSchema';
-import { statusDef } from '../config/statuses';
+import { statusDef, STATUS_DEFS } from '../config/statuses';
 import { TILES_CONFIG } from '../config/tiles';
 import { secondsToTicks } from '../config';
 
@@ -549,8 +549,22 @@ export function armiesInContact(world: World, team: ObjectiveTeam): boolean {
 
 export function attritionRead(world: World, team: ObjectiveTeam): AttritionRead {
   const sum = (units: Unit[]) => units.reduce((acc, u) => acc + u.effectiveStats.power, 0);
+  // Unit effects are NOT all catalog statuses: plain stat-fold buffs (the
+  // K1 class — fatigued/empowered/warded, statusBehavior.ts) deliberately
+  // have no STATUS_DEFS entry, so the lookup must tolerate a def-less key
+  // (a fold buff is never a DoT). The throwing statusDef() here was a
+  // latent §54×K4 crash: it only fired when a sensor-driven battle tier
+  // met an empowered unit — the doctrine arm's audition nominators skip
+  // evaluate(), so the 69b walker's cheap tier was the first to cross the
+  // two (worklog §69).
   const dots = (units: Unit[]) =>
-    units.filter((u) => u.effects.some((e) => statusHarms(statusDef(e.key)))).length;
+    units.filter(
+      (u) =>
+        u.effects.some((e) => {
+          const def = STATUS_DEFS[e.key];
+          return def !== undefined && statusHarms(def);
+        }),
+    ).length;
   const own = livingUnits(world, team);
   const enemy = livingUnits(world, opposingTeam(team));
   return {

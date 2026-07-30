@@ -229,6 +229,26 @@ describe('attritionRead', () => {
     expect(read.enemyDotCount).toBe(1); // burn = damage periodic
     expect(read.ownDotCount).toBe(0); // rejuvenate = heal periodic, not a DoT
   });
+
+  it('tolerates a def-less plain fold effect (empowered/warded — the K1 class) — the 69b latent-crash regression', () => {
+    // Plain stat-fold buffs deliberately have no STATUS_DEFS entry
+    // (statusBehavior.ts); the Mars empower puts one on a battle unit, and
+    // the old throwing statusDef() lookup crashed any non-audition sensor
+    // read over it (worklog §69). A def-less effect is never a DoT.
+    const world = makeWorld();
+    const empowered = spawn(world, 'player', { x: 1, y: 1 });
+    empowered.addEffect({
+      key: 'empowered',
+      magnitude: 1,
+      lifetime: { kind: 'endOfTurn' },
+      merge: 'add',
+      mods: { strength: { add: 4 } },
+    });
+    spawn(world, 'enemy', { x: 10, y: 10 });
+    const read = attritionRead(world, 'player');
+    expect(read.ownDotCount).toBe(0);
+    expect(read.enemyDotCount).toBe(0);
+  });
 });
 
 describe('armiesInContact', () => {

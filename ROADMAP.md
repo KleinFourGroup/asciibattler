@@ -58,15 +58,15 @@ The cut (kicked off 2026-07-30, user-signed; audit + rationale: WORKLOG §69):
 - [x] 69b — the rollout walker ✅ — both contexts + determinism pinned;
       surfaced + fixed the latent §54×K4 sensor crash fix-first
       (`2023b6d`); no bump (WORKLOG §69).
-- [ ] 69c — `benchRunRollout` + the cost model → worklog. **DECISION
-      POINT (user): five-site scope vs the appetite hatch; the caching
-      design rides this read.**
-- [ ] 69d — terminal score + evaluator: pool-delta + death-dominant
-      (+ completion) + the swept-λ seam (default 0); bits/roster deltas
-      as telemetry columns, never score terms. CRN-pairing tests.
-- [ ] 69e — driver core + the in-memory decision log (site, context,
-      candidates, per-candidate means, chosen, margin vs null).
-      Determinism pinned: same seed + config → same decisions.
+- [x] 69c — `benchRunRollout` + the cost model ✅ `ed8b81e` — **DECIDED,
+      USER-SIGNED 2026-07-30: five-site scope STANDS (no hatch) · NO
+      cache in v1** (clone cost negligible; WORKLOG §69).
+- [x] 69d — terminal score + evaluator ✅ `c4c3581` — resolution-4 lock,
+      dominance config-derived; inert-apply ≡ null-arm pinned (the 69f
+      foundation).
+- [x] 69e — driver core + decision log ✅ — arbitration determinism
+      PINNED (the exit criterion); ties→NULL/ε/argmax mechanism-pinned
+      via the evaluator seam.
 - [ ] 69f — the A/A ε methodology on one synthetic port-buy context
       (inert candidates → paired-margin floor → ε ≈ 2σ); write-up to
       the worklog; per-site values land with their sites in §70.

@@ -217,3 +217,34 @@ walker-vs-realized divergence.
   cut-mandated contexts, determinism (identical WalkResult +
   byte-identical final snapshot), seed divergence, the tier dial
   (bare/searcher), the maxHops safety bound.
+- **69c — the bench + THE COST MODEL** (2026-07-30;
+  [benchRunRollout.ts](../tests/fuzz/rollout/benchRunRollout.ts), run
+  via `npx tsx`). Three depths: fresh hop-1 / 5-battle mid / 16-battle
+  late-act-1 — a genuine act-2 state was UNREACHABLE because the cheap
+  tier DIED at 8/12/19 battles on three of four trajectories (an
+  incidental re-confirmation of the wall this interstitial exists to
+  re-read, measured by a brand-new instrument). The numbers:
+  - **Clone cost 0.03–0.05 ms — negligible at every depth.** The battle
+    sim is ~100% of rollout cost. This kills the main caching
+    motivation outright.
+  - **Per-rollout (horizonBattles: 1)**: traffic 42–235 ms (the fresh
+    hop-1 battle is the heavy end, ~500 ticks; mid/late states run
+    40–60 ms) · bare 14–206 ms · searcher 16–454 ms.
+  - **The recursion multiplier is 1–2× traffic, NOT the feared ~20×** —
+    searcher searches are cadence-gated (4 s) and the searcher often
+    ends battles faster; the spec's cost fork was priced against a
+    worst case that doesn't materialize at run grain.
+  - **Projections at K=2** (labeled assumptions in the bench source:
+    ~776 rollouts/act over the seven arbitration surfaces, candidate
+    counts + 27 turns/act estimated until §71 measures them): traffic
+    ~33–182 s/act → **~1.2–6.7 min per arbitrated two-act run**
+    (worst-case bound; realistic ~2–3 min).
+  - A 40-seed arbitrated arm ≈ **1.5–2.5 h** → box territory (the 68h
+    rule) but comfortably feasible; even full-searcher-tier sampling
+    for the §71 flip-rate read is affordable.
+
+  **PROPOSED verdict (the decision point, user call pending): the
+  five-site scope STANDS — no appetite hatch; NO cache in v1** (clone
+  cost nil; the only class worth ever building — rollout-result sharing
+  across provably non-perturbing candidates, the port-ask case — waits
+  for §71 profiling, per don't-abstract-for-hypotheticals).

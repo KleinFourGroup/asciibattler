@@ -178,6 +178,11 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   strategy arms, driven off its own forked stream, asserting the occupancy
   invariant + snapshot round-trip per phase transition. Surfaced by the
   user at the §59 kickoff (2026-07-19, worklog §59); out of §59 scope.
+  **Evidence (2026-07-30, §69b):** the rollout walker's first run surfaced
+  a latent §54×K4 sensor crash (`2023b6d`) purely by being a NEW
+  combination consumer (non-audition battle tier × empowered unit) — no
+  arm had ever crossed the two. A chaos/combination sweep is the
+  instrument that finds this class on purpose instead of by accident.
 
 - [ ] **`runOne` / rollout-walker deliberate duplication — divergence
   watch.** Filed at the §69 kickoff (2026-07-30, user question). The

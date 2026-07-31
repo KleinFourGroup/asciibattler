@@ -650,3 +650,35 @@ the 200s child timeout: 8 runs @hops=3 ≈ 200s vs 4 runs @hops=2 ≈ 19s
 A 4-run hops=2 probe wrote 208 candidate rows — the sidecar is dense
 even on tiny batches; the 40-seed 71d batch will carry thousands of
 rows (fine: it's a sidecar, grep/spreadsheet-bound).
+
+**71b landed (2026-07-31) — the per-item decision-grade aggregate.**
+The reading machinery over the 71a rows, one aggregation code path
+with two entry doors: `decisionRowsOf(results)` (the serial CLI, in
+memory) and `parseDecisionsCsv` (read-back — board instrument dirs,
+fetched box batches; quote-aware, columns resolved by header NAME so
+append-last extensions never break old readers). `itemKeyOf(site,
+label)` strips INSTANCE noise (prices, hand/roster positions, node
+ids) so decisions about the same item pool — unknown sites fall back
+to the raw label (graceful degradation). `perItemDecisionStats` joins
+every candidate row to ITS OWN decision's null-arm score (Δ =
+candidate mean − null mean, the paired-luck margin; NOT the record's
+best-challenger marginVsNull) → per (site, item): n, picked, Pick%,
+meanΔ, Δ|picked. Surfaces: the fuzz CLI prints the table for any
+batch carrying logs (serial-console-only, the 68e file-contract
+discipline — a --jobs/box batch re-derives from the sidecar), and
+`balance:board --report` appends a per-item section for any
+instrument dir carrying decisions.csv (renders nothing today — the
+board arms are pre-arbitration until §72 flips the default; the
+machinery is what ships). Live-proofed on a 4-run probe: 34 decisions,
+four items, sane values (patch preTurn picked 100% at Δ=2.0;
+laverna's decline never beat ε — accept-all held). One semantics
+catch from the probe, doc'd honestly rather than papered over: on
+multi-instance sites n counts candidate INSTANCES, not decisions
+(168 'empower' instances across 34 decisions — every hand position
+pools into the one item), so empower's Pick% is per-instance; on the
+sites the BALANCE reads care about (port slots, daemons, packets,
+node kinds) instances ≡ decisions and the two readings coincide. The
+n=80 floor rides the table itself (sub-floor rows marked ·,
+DIRECTIONAL). renderTable gained a leftCols param (Site + Item both
+left-aligned); four unit tests (key extraction · csv round-trip incl.
+quoted labels · null-join pooling math · the floor marker).

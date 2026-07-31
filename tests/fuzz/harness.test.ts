@@ -17,6 +17,12 @@ import {
   aggregate,
   renderSummaryCsv,
   renderDecisionsCsv,
+  decisionRowsOf,
+  parseDecisionsCsv,
+  perItemDecisionStats,
+  itemKeyOf,
+  renderDecisionAnalysis,
+  PER_ITEM_N_FLOOR,
   renderFailureTrace,
   failureFilename,
   perHopStats,
@@ -321,6 +327,129 @@ describe('fuzz reporters', () => {
       },
     ]);
     expect(renderSummaryCsv([withLog])).toBe(renderSummaryCsv([plain]));
+  });
+
+  // ── 71b — the per-item decision-grade aggregate ────────────────────────────
+
+  it('71b — itemKeyOf strips instance noise per site, raw-label fallback elsewhere', () => {
+    expect(itemKeyOf('portBuy', 'buy daemon:janus @3')).toBe('daemon:janus');
+    expect(itemKeyOf('portBuy', 'buy unit:archer:L2 @2')).toBe('unit:archer:L2');
+    expect(itemKeyOf('packetFire:preTurn', 'fire patch@hand:1')).toBe('patch');
+    expect(itemKeyOf('packetFire:outOfBattle', 'fire surge')).toBe('surge');
+    expect(itemKeyOf('rewardDaemon', 'decline daemon:mars')).toBe('daemon:mars');
+    expect(itemKeyOf('grant:redraw', 'redraw level:2 [0,2]')).toBe('level:2');
+    expect(itemKeyOf('grant:empower', 'empower hand:3')).toBe('empower');
+    expect(itemKeyOf('nodeChoice', 'enterNode:4 (elite)')).toBe('elite');
+    // Unknown site / unmatched shape → the raw label (graceful degradation).
+    expect(itemKeyOf('futureSite', 'do something:weird @9')).toBe('do something:weird @9');
+  });
+
+  it('71b — parseDecisionsCsv round-trips the sidecar, quoted labels included', () => {
+    const decisions: RunDecisionRecord[] = [
+      {
+        site: 'grant:redraw',
+        sectorId: 'the-start',
+        hop: 1,
+        labels: ['null', 'redraw level:2 [0,2]'],
+        results: [
+          { score: -1.25, perSeed: [breakdown(-1.5), breakdown(-1)] },
+          { score: 2.5, perSeed: [breakdown(2), breakdown(3)] },
+        ],
+        chosenIndex: 1,
+        marginVsNull: 3.75,
+        epsilon: 1.101,
+      },
+    ];
+    const fixture = [bareResult(5, decisions)];
+    const parsed = parseDecisionsCsv(renderDecisionsCsv(fixture));
+    const direct = decisionRowsOf(fixture);
+    expect(parsed).toHaveLength(direct.length);
+    for (let i = 0; i < parsed.length; i++) {
+      const p = parsed[i]!;
+      const d = direct[i]!;
+      // Identity + label fields byte-exact (the quote round-trip); scores
+      // survive at the csv's 3-decimal precision.
+      expect([p.seed, p.strategy, p.decision, p.site, p.sector, p.hop, p.candidate]).toEqual([
+        d.seed, d.strategy, d.decision, d.site, d.sector, d.hop, d.candidate,
+      ]);
+      expect(p.label).toBe(d.label);
+      expect(p.chosen).toBe(d.chosen);
+      expect(p.score).toBeCloseTo(d.score, 3);
+      expect(p.epsilon).toBeCloseTo(d.epsilon, 3);
+    }
+  });
+
+  it('71b — perItemDecisionStats pools instances by item with per-decision null joins', () => {
+    // The same item at two docks (different prices — instance noise) plus a
+    // one-off item; null-arm scores differ per decision, so the deltas must
+    // join to the RIGHT null.
+    const decisions: RunDecisionRecord[] = [
+      {
+        site: 'portBuy',
+        sectorId: 'the-start',
+        hop: 6,
+        labels: ['null', 'buy daemon:janus @3', 'buy unit:archer:L2 @2'],
+        results: [
+          { score: -2, perSeed: [breakdown(-2), breakdown(-2)] },
+          { score: 4, perSeed: [breakdown(4), breakdown(4)] },
+          { score: -3, perSeed: [breakdown(-3), breakdown(-3)] },
+        ],
+        chosenIndex: 1,
+        marginVsNull: 6,
+        epsilon: 3.145,
+      },
+      {
+        site: 'portBuy',
+        sectorId: 'the-deep-end',
+        hop: 6,
+        labels: ['null', 'buy daemon:janus @4'],
+        results: [
+          { score: 1, perSeed: [breakdown(1), breakdown(1)] },
+          { score: 2, perSeed: [breakdown(2), breakdown(2)] },
+        ],
+        chosenIndex: 0, // null stood (margin 1 < ε)
+        marginVsNull: 1,
+        epsilon: 3.145,
+      },
+    ];
+    const stats = perItemDecisionStats(decisionRowsOf([bareResult(2, decisions)]));
+    const janus = stats.find((s) => s.item === 'daemon:janus')!;
+    // Two instances pooled across docks: deltas 4−(−2)=6 and 2−1=1.
+    expect(janus.n).toBe(2);
+    expect(janus.picked).toBe(1);
+    expect(janus.pickRate).toBeCloseTo(0.5, 10);
+    expect(janus.meanDelta).toBeCloseTo(3.5, 10);
+    expect(janus.meanDeltaPicked).toBeCloseTo(6, 10);
+    const archer = stats.find((s) => s.item === 'unit:archer:L2')!;
+    expect(archer.n).toBe(1);
+    expect(archer.picked).toBe(0);
+    expect(archer.meanDelta).toBeCloseTo(-1, 10);
+    // Sorted: within the site, bigger samples first.
+    expect(stats[0]!.item).toBe('daemon:janus');
+  });
+
+  it('71b — renderDecisionAnalysis marks sub-floor samples and counts decisions', () => {
+    const decisions: RunDecisionRecord[] = [
+      {
+        site: 'portBuy',
+        sectorId: 'the-start',
+        hop: 6,
+        labels: ['null', 'buy daemon:janus @3'],
+        results: [
+          { score: 0, perSeed: [breakdown(0), breakdown(0)] },
+          { score: 5, perSeed: [breakdown(5), breakdown(5)] },
+        ],
+        chosenIndex: 1,
+        marginVsNull: 5,
+        epsilon: 3.145,
+      },
+    ];
+    const out = renderDecisionAnalysis(decisionRowsOf([bareResult(4, decisions)]));
+    expect(out).toContain('1 decisions across 1 arbitrated runs');
+    expect(out).toContain('daemon:janus');
+    // n=1 is under the floor → the directional marker rides the n column.
+    expect(out).toContain('1·');
+    expect(out).toContain(`n=${PER_ITEM_N_FLOOR} floor`);
   });
 
   it('aggregates win rate and hop stats', () => {

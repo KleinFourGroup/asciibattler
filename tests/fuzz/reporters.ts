@@ -165,6 +165,256 @@ export function renderDecisionsCsv(results: readonly RunResult[]): string {
   return lines.join('\n') + '\n';
 }
 
+// ── Per-item decision-grade analysis (71b) ───────────────────────────────────
+
+/** One parsed sidecar row — the aggregate-relevant column subset, shared by
+ *  both entry paths (in-memory RunResults vs a read-back decisions.csv, e.g.
+ *  a box batch or a board instrument dir). NB the csv path carries 3-decimal
+ *  rounded scores; per-item means from the two paths can differ in the 4th
+ *  decimal — irrelevant at the pool-HP scale the read operates on. */
+export interface DecisionRow {
+  seed: number;
+  strategy: string;
+  /** 0-based decide order within the run — with seed+strategy, the decision
+   *  identity (the join key to the decision's null-arm row). */
+  decision: number;
+  site: string;
+  sector: string;
+  hop: number;
+  /** Index within the decision's candidate set; 0 = the null arm. */
+  candidate: number;
+  label: string;
+  chosen: boolean;
+  score: number;
+  marginVsNull: number;
+  epsilon: number;
+}
+
+/** Flatten in-memory results into rows (the serial CLI's entry path). */
+export function decisionRowsOf(results: readonly RunResult[]): DecisionRow[] {
+  const rows: DecisionRow[] = [];
+  for (const r of results) {
+    if (!r.decisions) continue;
+    r.decisions.forEach((d, decision) => {
+      d.results.forEach((res, candidate) => {
+        rows.push({
+          seed: r.seed,
+          strategy: r.strategyName,
+          decision,
+          site: d.site,
+          sector: d.sectorId,
+          hop: d.hop,
+          candidate,
+          label: d.labels[candidate]!,
+          chosen: candidate === d.chosenIndex,
+          score: res.score,
+          marginVsNull: d.marginVsNull,
+          epsilon: d.epsilon,
+        });
+      });
+    });
+  }
+  return rows;
+}
+
+/** Quote-aware split of one csv line (the labels are RFC4180-quoted when
+ *  comma-bearing — see csvField above; no other column ever quotes). */
+function splitCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]!;
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cur += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ',') {
+      fields.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  fields.push(cur);
+  return fields;
+}
+
+/** Parse a decisions.csv back into rows (the read-back entry path: board
+ *  instrument dirs, fetched box batches). Columns are resolved by header
+ *  name, so append-last extensions never break old readers. */
+export function parseDecisionsCsv(csv: string): DecisionRow[] {
+  const lines = csv.split('\n').filter((l) => l.length > 0);
+  if (lines.length === 0) return [];
+  const header = splitCsvLine(lines[0]!);
+  const col = (name: string): number => {
+    const i = header.indexOf(name);
+    if (i < 0) throw new Error(`decisions.csv: missing column '${name}'`);
+    return i;
+  };
+  const c = {
+    seed: col('seed'),
+    strategy: col('strategy'),
+    decision: col('decision'),
+    site: col('site'),
+    sector: col('sector'),
+    hop: col('hop'),
+    candidate: col('candidate'),
+    label: col('label'),
+    chosen: col('chosen'),
+    score: col('score'),
+    marginVsNull: col('marginVsNull'),
+    epsilon: col('epsilon'),
+  };
+  return lines.slice(1).map((line) => {
+    const f = splitCsvLine(line);
+    return {
+      seed: Number(f[c.seed]),
+      strategy: f[c.strategy]!,
+      decision: Number(f[c.decision]),
+      site: f[c.site]!,
+      sector: f[c.sector]!,
+      hop: Number(f[c.hop]),
+      candidate: Number(f[c.candidate]),
+      label: f[c.label]!,
+      chosen: f[c.chosen] === '1',
+      score: Number(f[c.score]),
+      marginVsNull: Number(f[c.marginVsNull]),
+      epsilon: Number(f[c.epsilon]),
+    };
+  });
+}
+
+/**
+ * The per-item grouping key: strip INSTANCE noise (prices, target/position
+ *  indices, node ids) from a candidate label so decisions about the same
+ *  ITEM pool — that's what "per-item realized value at decision grade"
+ *  aggregates over. Unknown sites/label shapes fall back to the raw label
+ *  (graceful degradation: a future site aggregates per-label until it earns
+ *  a key rule here).
+ */
+export function itemKeyOf(site: string, label: string): string {
+  let m: RegExpExecArray | null;
+  if (site === 'portBuy' && (m = /^buy (.+) @\d+$/.exec(label))) return m[1]!;
+  if (site.startsWith('packetFire:') && (m = /^fire ([^@]+)/.exec(label))) return m[1]!;
+  if (site === 'rewardDaemon' && (m = /^decline (.+)$/.exec(label))) return m[1]!;
+  if (site === 'grant:redraw' && (m = /^redraw (level:\d+)/.exec(label))) return m[1]!;
+  if (site === 'grant:empower' && label.startsWith('empower hand:')) return 'empower';
+  if (site === 'nodeChoice' && (m = /^enterNode:\d+ \((.+)\)$/.exec(label))) return m[1]!;
+  return label;
+}
+
+export interface ItemDecisionStats {
+  site: string;
+  item: string;
+  /** Candidate INSTANCES pooled (the sample size — the n=80 floor applies
+   *  to any signed read off this row). For single-instance sites — port
+   *  slots, daemons, packets, node kinds — this equals decisions; a
+   *  multi-instance site pools every instance (all of a decision's `empower
+   *  hand:K` candidates land in the one 'empower' item), so its n runs
+   *  ahead of its decision count and its pickRate is per-instance. */
+  n: number;
+  /** Instances that WON the ε gate (≤1 per decision — the driver picks one). */
+  picked: number;
+  pickRate: number;
+  /** Mean of (candidate score − the SAME decision's null-arm score) — the
+   *  paired-luck per-item margin, pool-HP units. NOT `marginVsNull` (that's
+   *  the decision's best-challenger margin, repeated on every row). */
+  meanDelta: number;
+  /** The margin conditioned on winning — the realized value of the picks. */
+  meanDeltaPicked: number;
+}
+
+/** Pool candidate rows by (site, item) with per-decision null-arm joins.
+ *  Sorted site asc, then n desc, then item — the biggest samples first
+ *  within each site. */
+export function perItemDecisionStats(rows: readonly DecisionRow[]): ItemDecisionStats[] {
+  const nullScores = new Map<string, number>();
+  for (const r of rows) {
+    if (r.candidate === 0) nullScores.set(`${r.seed}|${r.strategy}|${r.decision}`, r.score);
+  }
+  const buckets = new Map<string, { site: string; item: string; deltas: number[]; pickedDeltas: number[] }>();
+  for (const r of rows) {
+    if (r.candidate === 0) continue;
+    const nullScore = nullScores.get(`${r.seed}|${r.strategy}|${r.decision}`);
+    if (nullScore === undefined) continue; // orphan row — malformed input
+    const item = itemKeyOf(r.site, r.label);
+    const key = `${r.site}|${item}`;
+    let b = buckets.get(key);
+    if (!b) {
+      b = { site: r.site, item, deltas: [], pickedDeltas: [] };
+      buckets.set(key, b);
+    }
+    const delta = r.score - nullScore;
+    b.deltas.push(delta);
+    if (r.chosen) b.pickedDeltas.push(delta);
+  }
+  return [...buckets.values()]
+    .map((b) => ({
+      site: b.site,
+      item: b.item,
+      n: b.deltas.length,
+      picked: b.pickedDeltas.length,
+      pickRate: b.deltas.length === 0 ? 0 : b.pickedDeltas.length / b.deltas.length,
+      meanDelta: mean(b.deltas),
+      meanDeltaPicked: mean(b.pickedDeltas),
+    }))
+    .sort((a, b) => a.site.localeCompare(b.site) || b.n - a.n || a.item.localeCompare(b.item));
+}
+
+/** The n=80 floor for per-item value reads (BALANCE doctrine) — rows under
+ *  it are directional, not signable. */
+export const PER_ITEM_N_FLOOR = 80;
+
+/** Render the per-item decision-value table (the 71b read). */
+export function renderDecisionAnalysis(rows: readonly DecisionRow[]): string {
+  const stats = perItemDecisionStats(rows);
+  const decisions = new Set(
+    rows.filter((r) => r.candidate === 0).map((r) => `${r.seed}|${r.strategy}|${r.decision}`),
+  ).size;
+  const runs = new Set(rows.map((r) => `${r.seed}|${r.strategy}`)).size;
+  const lines: string[] = [];
+  lines.push(`### Per-item decision value (${decisions} decisions across ${runs} arbitrated runs)`);
+  lines.push(
+    'Δ = candidate rollout mean − the SAME decision’s null-arm mean (paired-luck margin, pool-HP',
+  );
+  lines.push(
+    '  units) · Δ|picked = that margin over the decisions this item WON (realized value of picks).',
+  );
+  lines.push(
+    'n = candidate INSTANCES (equals decisions except on multi-instance sites — empower pools',
+  );
+  lines.push(
+    `  every hand position, so its Pick% is per-instance). n < ${PER_ITEM_N_FLOOR} (marked ·) is DIRECTIONAL — the n=${PER_ITEM_N_FLOOR} floor.`,
+  );
+  lines.push('');
+  lines.push(
+    renderTable(
+      ['Site', 'Item', 'n', 'Picked', 'Pick%', 'meanΔ', 'Δ|picked'],
+      stats.map((s) => [
+        s.site,
+        s.item,
+        `${s.n}${s.n < PER_ITEM_N_FLOOR ? '·' : ''}`,
+        String(s.picked),
+        (s.pickRate * 100).toFixed(0),
+        s.meanDelta.toFixed(2),
+        s.picked === 0 ? '—' : s.meanDeltaPicked.toFixed(2),
+      ]),
+      2, // Site + Item both left-aligned (two label columns)
+    ),
+  );
+  return lines.join('\n') + '\n';
+}
+
 /**
  * L1c3 — per-daemon aggregate buckets, keyed by the carried/forced idol id
  * (`'none'` for daemon-less runs), sorted by key for stable output. 63c —
@@ -596,11 +846,16 @@ export function perLayoutHopStats(results: readonly RunResult[]): LayoutHopStats
     .sort((a, b) => a.layout.localeCompare(b.layout) || a.hop - b.hop);
 }
 
-/** Fixed-width table: left-align column 0 (labels), right-align the rest. */
-function renderTable(header: readonly string[], rows: readonly string[][]): string {
+/** Fixed-width table: left-align the first `leftCols` columns (labels),
+ *  right-align the rest (numbers). */
+function renderTable(
+  header: readonly string[],
+  rows: readonly string[][],
+  leftCols = 1,
+): string {
   const widths = header.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i]!.length)));
   const fmt = (cells: readonly string[]) =>
-    cells.map((c, i) => (i === 0 ? c.padEnd(widths[i]!) : c.padStart(widths[i]!))).join('  ');
+    cells.map((c, i) => (i < leftCols ? c.padEnd(widths[i]!) : c.padStart(widths[i]!))).join('  ');
   return [fmt(header), ...rows.map(fmt)].join('\n');
 }
 

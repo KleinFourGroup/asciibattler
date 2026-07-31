@@ -133,12 +133,11 @@ flip-rate is shadow-only, all three user-signed at the kickoff):
       long format; `writeDecisionsSidecar` shared serial/`--jobs`);
       byte-identity + summary-untouched pinned; no bump (as predicted).
       Detail: WORKLOG §71.
-- [ ] 71b — the per-item decision-grade aggregate (site × item label:
-      n · accept rate · mean margin vs null; n-floor-aware) as a pure
-      reporter fn; the fuzz CLI prints it for arbitrated batches and
-      `balance:board --report` renders it for any instrument dir
-      carrying decisions.csv (no new board instruments — run-alongside
-      is §72's). No bump.
+- [x] 71b — the per-item decision-grade aggregate ✅ — landed as cut
+      (itemKeyOf instance-noise stripping · per-decision null joins ·
+      n = candidate instances, floor-marked; CLI print + board
+      sections); live-proofed on a probe batch. No bump (as
+      predicted). Detail: WORKLOG §71.
 - [ ] 71c — the flip-rate instrument: a flag on the arbitrated arm
       that shadow-evaluates every decision under both tiers with
       shared CRN pairs (live decisions stay cheap — the §57g own-arm

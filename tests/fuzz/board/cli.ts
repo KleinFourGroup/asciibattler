@@ -29,6 +29,7 @@ import {
   type Board,
   type InstrumentMetrics,
 } from './board';
+import { parseDecisionsCsv, renderDecisionAnalysis } from '../reporters';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FUZZ_CLI = join(HERE, '..', 'cli.ts');
@@ -104,7 +105,20 @@ function report(board: Board, dir: string): { text: string; fails: number } {
     metrics.set(inst.id, computeMetrics(rows));
   }
   const evaluated = evaluateBoard(board, metrics);
-  return { text: renderReport(evaluated, board), fails: evaluated.fails };
+  let text = renderReport(evaluated, board);
+  // 71b — the per-item decision-grade sections: any instrument dir carrying a
+  // decisions.csv (an arbitrated arm ran there) gets its read appended to the
+  // report. Today's board arms are all pre-arbitration (the default flips at
+  // §72), so this renders nothing until an arbitrated instrument lands — the
+  // reading machinery is what §71 ships.
+  for (const inst of board.instruments) {
+    const decisionsPath = join(dir, inst.id, 'decisions.csv');
+    if (!existsSync(decisionsPath)) continue;
+    text +=
+      `\n## ${inst.id} — per-item decision value\n\n` +
+      renderDecisionAnalysis(parseDecisionsCsv(readFileSync(decisionsPath, 'utf8')));
+  }
+  return { text, fails: evaluated.fails };
 }
 
 function main(): void {

@@ -26,6 +26,8 @@ import {
   aggregate,
   renderSummaryCsv,
   renderDecisionsCsv,
+  decisionRowsOf,
+  renderDecisionAnalysis,
   renderFailureTrace,
   failureFilename,
   renderPerHopAnalysis,
@@ -364,6 +366,14 @@ export function runRunCli(args: RunModeArgs): void {
   // the arm was explicitly chosen (a forced arm prints its single bucket).
   if (daemon !== undefined || perDaemonStats(allResults).length > 1) {
     process.stdout.write(renderDaemonAnalysis(allResults) + '\n');
+  }
+  // 71b — the per-item decision-grade read, printed whenever the batch carries
+  // decision logs (i.e. the arbitrated arm ran). Serial-console-only, like the
+  // per-strategy stats table — the file contract is decisions.csv itself, and
+  // a --jobs/box batch re-derives this read from the sidecar (board --report,
+  // or parseDecisionsCsv by hand).
+  if (allResults.some((r) => r.decisions !== undefined)) {
+    process.stdout.write(renderDecisionAnalysis(decisionRowsOf(allResults)) + '\n');
   }
   process.stdout.write(
     `Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`,

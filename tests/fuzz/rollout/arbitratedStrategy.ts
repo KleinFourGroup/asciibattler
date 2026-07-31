@@ -26,15 +26,21 @@
  * margins ~0 and FAILS the strict-ε gate; the always-on bitsDelta
  * telemetry keeps spend-happy drift visible (resolution 4).
  *
- * Un-landed sites (70b–70e) DELEGATE to the base strategy — the arm is
+ * Fire-site semantics (70b): per-packet candidates with nominator-picked
+ * targets, both 49e contexts, legality guards mirrored, the 60c heal
+ * guard deliberately dropped — see arbitratePacketFire's header.
+ *
+ * Un-landed sites (70c–70e) DELEGATE to the base strategy — the arm is
  * exactly "the scored nominator + arbitration where landed", so its
  * behavior converges on site landings, never on refactors.
  */
 
 import { RNG } from '../../../src/core/RNG';
 import type { PortStock, Run } from '../../../src/run/Run';
-import type { FuzzStrategy, PortBuy } from '../Strategy';
-import { scoredStrategy } from '../strategies/scored';
+import { packetById, type UseContext } from '../../../src/config/packets';
+import { DECK } from '../../../src/config/deck';
+import type { FuzzStrategy, PacketFire, PortBuy } from '../Strategy';
+import { scoredStrategy, maxPowerIndex, minPowerIndex } from '../strategies/scored';
 import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
 import {
   RunArbitrationDriver,
@@ -55,24 +61,35 @@ import type { InnerTier } from './walker';
 const DRIVER_SEED_OFFSET = 0x70a1;
 
 /**
- * 70a — the port-site ε floor. The kickoff planned a two-depth band (the
- * 69f 6× σ spread), but the read came back single-depth: the map places
- * ports MID-ACT, so both derivation contexts docked at hop 6 — the port
- * site has one depth class in act 1, and act-2 docks are unreadable on
- * the cheap tier today (the 69c mortality wall; re-read at §72 when the
- * ceiling moves). Pinned to the CONSERVATIVE of the two same-depth
- * trajectory samples (readEpsilonAA, K=2 · traffic · M=20 margins ·
- * 2026-07-30: σ=1.923 → ε=3.845 fresh-trajectory dock, σ=1.117 →
- * ε=2.234 warmed-trajectory dock; both controls exactly 0). Numbers +
- * rationale: WORKLOG §70. Kept behind a function seam so a §71/72
- * depth-aware refinement never touches call sites.
+ * The per-site ε floors — THE v1 DERIVATION RULE (unified at 70b, the
+ * 70a pin amended to match; WORKLOG §70): one FLAT floor per site
+ * class, ε = 2σ of the POOLED A/A margins across that class's read
+ * contexts (readEpsilonAA, K=2 · traffic · M=20 margins per context ·
+ * 2026-07-30; every control exactly 0). The kickoff's depth-banding
+ * died on the data twice — ports read single-depth (both docks hop 6),
+ * and TRUE map states show NO depth trend (σ 1.1–2.0 at every depth;
+ * the 69f "0.54 mid-act" low read was a turn-outcome GATE state, a
+ * different class — relabeled in readEpsilonAA). Noise is
+ * state-dependent, not depth-monotone: a state-conditioned ε is a §71
+ * candidate once decisions.csv shows where it concentrates. Each floor
+ * sits behind a function seam so that refinement never touches call
+ * sites (any future hop read must pre-root-guard — gotcha #110).
+ *
+ *   port docks:  σ 1.923 / 1.117            → pooled σ 1.573 → ε 3.145
+ *   map class:   σ 1.717 / 1.561 / 1.139 / 1.994 → pooled σ 1.632 → ε 3.265
+ *   preTurn:     σ 0.779 / 0.000 (a dominated current-battle horizon
+ *                has nothing left to vary)  → pooled σ 0.551 → ε 1.101
  */
-export const PORT_BUY_EPSILON = 3.845;
+export const PORT_BUY_EPSILON = 3.145;
+export const FIRE_OUTOFBATTLE_EPSILON = 3.265;
+export const FIRE_PRETURN_EPSILON = 1.101;
 
 export function portBuyEpsilon(_run: Run): number {
-  // Single band today; the run param is the seam for a depth-aware
-  // refinement (any future hop read must pre-root-guard — gotcha #110).
   return PORT_BUY_EPSILON;
+}
+
+export function packetFireEpsilon(context: UseContext, _run: Run): number {
+  return context === 'preTurn' ? FIRE_PRETURN_EPSILON : FIRE_OUTOFBATTLE_EPSILON;
 }
 
 export interface ArbitratedConfig {
@@ -83,8 +100,9 @@ export interface ArbitratedConfig {
   readonly k?: number;
   /** Resolution 3's recursion dial (default 'traffic'; `--arbitrate-tier`). */
   readonly innerTier?: InnerTier;
-  /** Per-site ε override; default = the depth-banded floors above. */
+  /** Per-site ε overrides; default = the pinned floors above. */
   readonly portBuyEpsilon?: number;
+  readonly packetFireEpsilon?: number;
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
   /** Test seam, threaded to the driver (the selectByScore precedent). */
@@ -118,15 +136,12 @@ export function makeArbitratedStrategy(
     pickRecruit: (offer, run, rng) => base.pickRecruit(offer, run, rng),
     pickPortBuy: (stock, run, _rng) =>
       arbitratePortBuy(driver, stock, run, config.portBuyEpsilon),
-    // 70b will arbitrate fires; until then the base's method (when it has
-    // one) passes through UNWRAPPED — presence flips the harness turn
-    // gates (59a), so mirroring presence keeps the arm's gate behavior
-    // identical to its base.
-    ...(base.pickPacketFire !== undefined
-      ? {
-          pickPacketFire: base.pickPacketFire.bind(base),
-        }
-      : {}),
+    // 70b — the fire site is LANDED: always defined, both contexts. NB
+    // presence flips the harness turn gates ON (59a) — the arbitrated arm
+    // therefore always rides the gated path (RNG-aligned, H4b; the
+    // doctrine arm ran gated anyway via --redraw/--empower).
+    pickPacketFire: (context, run, _rng) =>
+      arbitratePacketFire(driver, context, run, config.packetFireEpsilon),
   };
 }
 
@@ -176,4 +191,85 @@ function arbitratePortBuy(
     epsilon: epsilonOverride ?? portBuyEpsilon(run),
   });
   return winner === null ? null : buys[challengers.indexOf(winner)]!;
+}
+
+/**
+ * 70b — one ask of the fire loop, arbitrated (both 49e contexts; site
+ * strings 'packetFire:preTurn' / 'packetFire:outOfBattle' — the two
+ * classes carry different ε floors and §71 reads them separately).
+ *
+ * Candidates are per-PACKET, not per-target: unit-target packets aim at
+ * the scored heuristic's pick (max-power hand card / roster unit;
+ * discardCards sheds min-power — the 68a polarity), keeping candidate
+ * sets small (the nominator role). Guards mirrored from the scored
+ * policy are LEGALITY only — context usability, tile targets (no launch
+ * context out of battle), the 68a drawCards/discardCards firability
+ * pair (a rejected dispatch consumes nothing and the harness loop reads
+ * "cache didn't shrink" as stop-asking, so proposing one would wedge
+ * the whole turn's fires). The 60c heal guard is deliberately DROPPED:
+ * whether a partially-clamped patch is worth firing is now the
+ * rollout's question — a wasted fire margins ~0 and fails the strict-ε
+ * gate, which is the fire-channel repair working by construction
+ * instead of by hand-authored timing rules.
+ *
+ * Duplicate packet ids collapse to their lowest cache index (identical
+ * candidates would burn rollouts to measure an exact tie; acquisition
+ * order matches the cheap policy's scan). The null arm = bank
+ * everything this ask; inside the rollout the walker's default strategy
+ * never fires, so null banks the cache through the horizon — the same
+ * live-vs-rollout coherence as the port site's one-forced-buy rule.
+ */
+function arbitratePacketFire(
+  driver: RunArbitrationDriver,
+  context: UseContext,
+  run: Run,
+  epsilonOverride: number | undefined,
+): PacketFire | null {
+  const challengers: RunDecisionCandidate[] = [];
+  const fires: PacketFire[] = [];
+  const seen = new Set<string>();
+
+  for (let cacheIndex = 0; cacheIndex < run.cache.length; cacheIndex++) {
+    const packet = packetById(run.cache[cacheIndex]!);
+    if (packet === undefined || !packet.usableIn.includes(context)) continue;
+    if (packet.target === 'tile') continue;
+    if (packet.effect.op === 'drawCards' && run.hand.length >= DECK.maxHandSize) continue;
+    if (packet.effect.op === 'discardCards' && run.hand.length <= 1) continue;
+    if (seen.has(packet.id)) continue;
+    seen.add(packet.id);
+
+    if (packet.target === 'unit') {
+      if (context === 'preTurn') {
+        const pick = packet.effect.op === 'discardCards' ? minPowerIndex : maxPowerIndex;
+        const handIndex = pick(run.hand.map((slot) => run.team[slot]!));
+        if (handIndex === null) continue;
+        challengers.push({
+          label: `fire ${packet.id}@hand:${handIndex}`,
+          apply: ({ run: clone }) => clone.dispatch({ kind: 'usePacket', cacheIndex, handIndex }),
+        });
+        fires.push({ cacheIndex, handIndex });
+      } else {
+        const rosterIndex = maxPowerIndex(run.team);
+        if (rosterIndex === null) continue;
+        challengers.push({
+          label: `fire ${packet.id}@roster:${rosterIndex}`,
+          apply: ({ run: clone }) =>
+            clone.dispatch({ kind: 'usePacket', cacheIndex, rosterIndex }),
+        });
+        fires.push({ cacheIndex, rosterIndex });
+      }
+    } else {
+      challengers.push({
+        label: `fire ${packet.id}`,
+        apply: ({ run: clone }) => clone.dispatch({ kind: 'usePacket', cacheIndex }),
+      });
+      fires.push({ cacheIndex });
+    }
+  }
+
+  if (challengers.length === 0) return null;
+  const winner = driver.decide(`packetFire:${context}`, run, challengers, {
+    epsilon: epsilonOverride ?? packetFireEpsilon(context, run),
+  });
+  return winner === null ? null : fires[challengers.indexOf(winner)]!;
 }

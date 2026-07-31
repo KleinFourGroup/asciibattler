@@ -30,11 +30,20 @@ import { EventBus } from '../../../src/core/EventBus';
 import type { GameEvents } from '../../../src/core/events';
 import { Run } from '../../../src/run/Run';
 import type { RunSnapshot } from '../../../src/run/Run';
+import { packetById, type UseContext } from '../../../src/config/packets';
+import { DECK } from '../../../src/config/deck';
+import { HEALTH } from '../../../src/config/health';
 import { cloneRunForRollout } from '../../../src/bot/runRollout';
 import { walkToHorizon } from './walker';
 import type { CandidateApply, RunCandidateResult, RunRolloutSpec } from './evaluator';
 import type { FuzzStrategy, PortBuy } from '../Strategy';
-import { makeArbitratedStrategy, PORT_BUY_EPSILON } from './arbitratedStrategy';
+import { maxPowerIndex, minPowerIndex } from '../strategies/scored';
+import {
+  makeArbitratedStrategy,
+  PORT_BUY_EPSILON,
+  FIRE_PRETURN_EPSILON,
+  FIRE_OUTOFBATTLE_EPSILON,
+} from './arbitratedStrategy';
 
 const SEED = 20260730;
 
@@ -169,12 +178,13 @@ describe('arbitrated port buys — mechanism pins (injected evaluator)', () => {
     }
   });
 
-  it('un-landed sites delegate to the base; pickPacketFire presence mirrors the base', () => {
+  it('un-landed sites delegate to the base; landed sites never consult it', () => {
     const run = docked();
     const base: FuzzStrategy = {
       name: 'fake-base',
       pickNextNode: vi.fn((frontier: readonly number[]) => frontier[0]!),
       pickRecruit: vi.fn(() => null),
+      pickPacketFire: vi.fn(() => null),
     };
     const arm = makeArbitratedStrategy(SEED, { base, evaluate: sequenceEvaluator([]) });
     expect(arm.name).toBe('arbitrated:fake-base');
@@ -182,17 +192,128 @@ describe('arbitrated port buys — mechanism pins (injected evaluator)', () => {
     expect(base.pickNextNode).toHaveBeenCalledOnce();
     expect(arm.pickRecruit([], run, null as never)).toBeNull();
     expect(base.pickRecruit).toHaveBeenCalledOnce();
-    expect(arm.pickPacketFire).toBeUndefined(); // base has none → arm has none
-
-    const fire = vi.fn(() => null);
-    const withFire = makeArbitratedStrategy(SEED, {
-      base: { ...base, pickPacketFire: fire },
-      evaluate: sequenceEvaluator([]),
-    });
-    expect(withFire.pickPacketFire).toBeDefined();
-    expect(withFire.pickPacketFire!('preTurn', run, null as never)).toBeNull();
-    expect(fire).toHaveBeenCalledOnce();
+    // 70b — the fire site is LANDED: always defined (gates always on for
+    // the arm), arbitrated, and the base's own method is never consulted.
+    expect(arm.pickPacketFire).toBeDefined();
+    const bare = new Run(SEED, new EventBus<GameEvents>()); // empty cache
+    expect(arm.pickPacketFire!('outOfBattle', bare, null as never)).toBeNull();
+    expect(arm.driver.decisions).toHaveLength(0); // no candidates → not a decision
+    expect(base.pickPacketFire).not.toHaveBeenCalled();
   });
+});
+
+describe('arbitrated packet fires — mechanism pins (injected evaluator)', () => {
+  /** A grants-stocked run (68b — free items at construction, zero draws). */
+  function grantedRun(grants: readonly string[]): Run {
+    return new Run(SEED, new EventBus<GameEvents>(), { grants });
+  }
+
+  /** Park a grants-stocked fresh run at turn-intro (gates on → enter the
+   *  root) — the preTurn fire context. */
+  function atTurnIntro(grants: readonly string[]): Run {
+    const run = grantedRun(grants);
+    run.pauseAtTurnGates = true;
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    if (run.phase !== 'turn-intro') {
+      throw new Error(`atTurnIntro: expected turn-intro, got ${run.phase}`);
+    }
+    return run;
+  }
+
+  /** The test's independent restatement of the fire-enumeration spec. */
+  function expectedFireLabels(run: Run, context: UseContext): string[] {
+    const labels: string[] = [];
+    const seen = new Set<string>();
+    for (const id of run.cache) {
+      const p = packetById(id)!;
+      if (!p.usableIn.includes(context) || p.target === 'tile' || seen.has(p.id)) continue;
+      if (p.effect.op === 'drawCards' && run.hand.length >= DECK.maxHandSize) continue;
+      if (p.effect.op === 'discardCards' && run.hand.length <= 1) continue;
+      seen.add(p.id);
+      if (p.target === 'unit') {
+        if (context === 'preTurn') {
+          const pick = p.effect.op === 'discardCards' ? minPowerIndex : maxPowerIndex;
+          const h = pick(run.hand.map((slot) => run.team[slot]!));
+          if (h === null) continue;
+          labels.push(`fire ${p.id}@hand:${h}`);
+        } else {
+          const r = maxPowerIndex(run.team);
+          if (r === null) continue;
+          labels.push(`fire ${p.id}@roster:${r}`);
+        }
+      } else {
+        labels.push(`fire ${p.id}`);
+      }
+    }
+    return labels;
+  }
+
+  it('preTurn: enumerates per-packet candidates with nominator targets; site + default ε in the record', () => {
+    const run = atTurnIntro(['patch', 'hype', 'discard-one']);
+    const expected = expectedFireLabels(run, 'preTurn');
+    expect(expected.length).toBeGreaterThan(0);
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: sequenceEvaluator(Array(expected.length + 1).fill(0)),
+    });
+    expect(arm.pickPacketFire!('preTurn', run, null as never)).toBeNull(); // all-tie → bank
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.site).toBe('packetFire:preTurn');
+    expect(rec.labels).toEqual(['null', ...expected]);
+    expect(rec.epsilon).toBe(FIRE_PRETURN_EPSILON);
+  });
+
+  it('the 60c heal guard is DROPPED: patch is a candidate at a FULL pool (the rollout judges it now)', () => {
+    const run = atTurnIntro(['patch']);
+    expect(run.playerHealth).toBe(HEALTH.playerHealthMax); // full — the cheap policy would skip
+    const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator([0, 0]) });
+    arm.pickPacketFire!('preTurn', run, null as never);
+    expect(arm.driver.decisions[0]!.labels).toContain('fire patch');
+  });
+
+  it('duplicate packet ids collapse to one candidate (lowest cache index)', () => {
+    const run = atTurnIntro(['patch', 'patch']);
+    expect(run.cache.filter((id) => id === 'patch')).toHaveLength(2);
+    const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator([0, 0]) });
+    arm.pickPacketFire!('preTurn', run, null as never);
+    expect(arm.driver.decisions[0]!.labels).toEqual(['null', 'fire patch']);
+  });
+
+  it('outOfBattle: context filtering + roster targeting; the winner maps back to the PacketFire', () => {
+    const run = grantedRun(['patch', 'hype', 'overclock']); // hype is preTurn-only
+    const expected = expectedFireLabels(run, 'outOfBattle');
+    expect(expected).toHaveLength(2); // patch + overclock@roster
+    const rosterTarget = maxPowerIndex(run.team)!;
+    expect(expected).toContain(`fire overclock@roster:${rosterTarget}`);
+    // Make overclock (the last challenger) win by a floor-clearing margin.
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: sequenceEvaluator([0, 0, 1000]),
+    });
+    const fire = arm.pickPacketFire!('outOfBattle', run, null as never)!;
+    expect(fire).not.toBeNull();
+    expect(fire.rosterIndex).toBe(rosterTarget);
+    expect(run.cache[fire.cacheIndex]).toBe('overclock');
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.site).toBe('packetFire:outOfBattle');
+    expect(rec.epsilon).toBe(FIRE_OUTOFBATTLE_EPSILON);
+    expect(rec.chosenIndex).toBe(2);
+  });
+});
+
+describe('arbitrated packet fires — integration (real evaluator)', () => {
+  it('SITE DETERMINISM: same runSeed + same turn-intro state ⇒ same fire + deep-equal log', () => {
+    const decide = () => {
+      const run = new Run(SEED, new EventBus<GameEvents>(), { grants: ['patch', 'hype'] });
+      run.pauseAtTurnGates = true;
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      const arm = makeArbitratedStrategy(SEED, { k: 1 });
+      const fire = arm.pickPacketFire!('preTurn', run, null as never);
+      return { fire, record: arm.driver.decisions[0]! };
+    };
+    const a = decide();
+    const b = decide();
+    expect(a.fire).toEqual(b.fire);
+    expect(a.record).toEqual(b.record);
+  }, 120_000);
 });
 
 describe('arbitrated port buys — integration (real evaluator)', () => {

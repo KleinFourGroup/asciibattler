@@ -379,6 +379,52 @@ the conservative of the two same-depth trajectory samples — behind a
 `portBuyEpsilon(run)` function seam so a §71/72 depth-aware refinement
 (act-2 docks, once the ceiling moves) never touches call sites.
 
+**70b landed (2026-07-30) — packet fires, both contexts.** The site:
+per-PACKET candidates with nominator-picked targets (max-power hand/
+roster unit; discardCards sheds min-power — the 68a polarity), sites
+`packetFire:preTurn` / `packetFire:outOfBattle` (separate ε floors,
+§71 reads them apart); duplicate packet ids collapse to the lowest
+cache index; legality guards mirrored (context usability · tile ·
+the 68a drawCards/discardCards firability pair). **The 60c heal guard
+is deliberately DROPPED** — whether a partially-clamped patch is worth
+firing is now the rollout's question (a wasted fire margins ~0 and
+fails strict-ε): the fire-channel repair working by construction
+instead of by hand-authored timing rules; pinned by the
+patch-at-full-pool candidate test. The arm now always defines
+`pickPacketFire` → always rides the gated path (H4b-aligned). Five new
+tests (enumeration restatement · heal-guard drop · dedupe · winner→
+PacketFire mapping · preTurn site determinism, real evaluator); 68b
+grants = the deterministic cache fixtures.
+
+**The 70b ε findings — TWO amendments, both data-forced:**
+
+1. **The 69f "mid-act map" context was a MISLABEL** — `walkToHorizon(N
+   battles)` parks at the `turn-outcome` GATE, not the map (the enterNode
+   no-op exposed it when the preTurn prep tried to build on it). The
+   famous 0.539 "mid-act map" floor was a gate-state read — a different
+   class (one forced dispatch from resolution, hence the low noise).
+   readEpsilonAA now stages TRUE map states via the `stopAtPhase: 'map'`
+   walker hook (widened from 'port') and keeps the old context, honestly
+   relabeled, for the 69f cross-reference. The §69 worklog numbers stand
+   as recorded history; the class insight ("6× depth spread") does NOT —
+   see 2.
+2. **Depth-banding died on the data twice, so the v1 rule is now
+   UNIFORM: one FLAT floor per site class, ε = 2σ of the POOLED A/A
+   margins across that class's read contexts.** TRUE map states show no
+   depth trend (σ 1.717 / 1.561 / 1.139 / 1.994 at hop-1 / 2 / 3 / 5
+   battles — state-dependent, not depth-monotone); ports read
+   single-depth (70a). Pins (readEpsilonAA 2026-07-30, K=2 · traffic ·
+   M=20/context, all controls exactly 0): **map class (outOfBattle
+   fires, node choice later) pooled σ 1.632 → ε=3.265 · preTurn class
+   pooled σ 0.551 → ε=1.101** (fresh turn-intro σ 0.779; mid-act
+   turn-intro σ EXACTLY 0 — a dominated current-battle horizon has
+   nothing left to vary, confirming preTurn as the quiet class) ·
+   **port re-pinned 3.845 → ε=3.145** (same data, the derivation rule
+   unified — the 70a "conservative max-of-two" was ad hoc). A
+   state-conditioned ε (noise tracks what's AHEAD, not hops elapsed) is
+   a named §71 candidate once decisions.csv shows where noise
+   concentrates.
+
 **A port-site semantics note (the 70a design detail, decided at
 kickoff):** each ask of the ask-until-null loop arbitrates ONE forced
 buy — candidate = "buy slot X now", null = "stop here". Inside the

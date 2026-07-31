@@ -326,8 +326,10 @@ function worstFrontierKind(run: Run): EncounterKind | null {
 
 /** Max-`power` slot index (lowest index ties) — the unit-target heuristic:
  *  `power` chips the pools, so the biggest chipper gets the buff. One field
- *  read, deterministic, no scorer machinery. */
-function maxPowerIndex(units: readonly UnitTemplate[]): number | null {
+ *  read, deterministic, no scorer machinery. Exported at 70b: the
+ *  arbitrated fire site keeps it as the TARGET nominator (candidates are
+ *  per-packet, not per-position — the spec's nominator role). */
+export function maxPowerIndex(units: readonly UnitTemplate[]): number | null {
   if (units.length === 0) return null;
   let best = 0;
   for (let i = 1; i < units.length; i++) {
@@ -338,8 +340,9 @@ function maxPowerIndex(units: readonly UnitTemplate[]): number | null {
 
 /** Min-`power` slot index (lowest index ties) — the discard polarity (68a): a
  *  `discardCards` sheds the WEAKEST card; the max heuristic above was written
- *  for buffs and silently inverted the discard. */
-function minPowerIndex(units: readonly UnitTemplate[]): number | null {
+ *  for buffs and silently inverted the discard. Exported at 70b with its
+ *  sibling above. */
+export function minPowerIndex(units: readonly UnitTemplate[]): number | null {
   if (units.length === 0) return null;
   let best = 0;
   for (let i = 1; i < units.length; i++) {

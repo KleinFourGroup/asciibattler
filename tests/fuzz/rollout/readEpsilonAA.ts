@@ -15,6 +15,7 @@ import { EventBus } from '../../../src/core/EventBus';
 import type { GameEvents } from '../../../src/core/events';
 import { RNG } from '../../../src/core/RNG';
 import { Run } from '../../../src/run/Run';
+import { PRE_ROOT_NODE_ID } from '../../../src/run/NodeMap';
 import { cloneRunForRollout } from '../../../src/bot/runRollout';
 import { walkToHorizon } from './walker';
 import { deriveEpsilonAA } from './epsilonAA';
@@ -38,10 +39,52 @@ function read(label: string, live: Run, rngSeed: number): void {
 // Context 1: fresh hop-1 map (the early out-of-battle shape).
 read('fresh hop-1 map (out-of-battle class)', new Run(SEED, new EventBus<GameEvents>()), 11);
 
-// Context 2: a mid-act map state (advanced 5 battles on the cheap tier).
-const mid = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), 777);
-walkToHorizon(mid, { horizonBattles: 5, policySeed: 424242, maxHops: 80 });
-read('mid-act map (out-of-battle class, 5 battles in)', mid.run, 12);
+// 70b — TRUE map states after N battles. A battle-count walk parks at
+// 'turn-outcome' (the gate), NOT the map — the 69f "mid-act map" context
+// was really that gate state (relabeled below, kept for the 69f
+// cross-reference). The map-phase class (the outOfBattle fire / node
+// sites' real context) needs the second stage: a fresh clone walked to
+// stopAtPhase 'map'.
+const gate5 = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), 777);
+walkToHorizon(gate5, { horizonBattles: 5, policySeed: 424242, maxHops: 80 });
+read('post-battle turn-outcome, 5 battles in (the 69f "mid-act map" context, relabeled)', gate5.run, 12);
+
+function mapStateAfter(battles: number): Run {
+  const s = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), 777 + battles);
+  walkToHorizon(s, { horizonBattles: battles, policySeed: 424242 + battles, maxHops: 80 });
+  const m = cloneRunForRollout(s.run, 999 + battles);
+  walkToHorizon(m, { horizonBattles: 9999, policySeed: 313 + battles, maxHops: 80, stopAtPhase: 'map' });
+  if (m.run.phase !== 'map') {
+    throw new Error(`mapStateAfter(${battles}): expected map, got ${m.run.phase}`);
+  }
+  return m.run;
+}
+read('map after 2 battles (out-of-battle class)', mapStateAfter(2), 15);
+read('map after 3 battles (out-of-battle class)', mapStateAfter(3), 16);
+read('map after 5 battles (out-of-battle class)', mapStateAfter(5), 19);
+
+// 70b — the PRETURN class (turn-intro, horizon = end of the CURRENT
+// battle) at two depths: gates on, enter the next frontier node from a
+// TRUE map state, and the run parks at 'turn-intro' — the clone context
+// of every preTurn site (fires now; redraw/empower at 70d).
+function parkAtTurnIntro(battles: number): Run {
+  const state =
+    battles === 0
+      ? cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), 555).run
+      : mapStateAfter(battles);
+  state.pauseAtTurnGates = true;
+  const frontier =
+    state.currentNodeId === PRE_ROOT_NODE_ID
+      ? [state.nodeMap.rootId]
+      : state.nodeMap.edges.filter((e) => e.from === state.currentNodeId).map((e) => e.to);
+  state.dispatch({ kind: 'enterNode', nodeId: frontier[0]! });
+  if (state.phase !== 'turn-intro') {
+    throw new Error(`parkAtTurnIntro: expected turn-intro, got ${state.phase}`);
+  }
+  return state;
+}
+read('fresh turn-intro (preTurn class, hop 1)', parkAtTurnIntro(0), 17);
+read('mid-act turn-intro (preTurn class, 5 battles in)', parkAtTurnIntro(5), 18);
 
 // 70a — Contexts 3/4: the PORT-BUY site's REAL context (docked, phase
 // 'port') at two depths. Prep: warm the run `warmupBattles` forward on

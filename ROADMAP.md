@@ -92,9 +92,11 @@ Cut shape-locked 2026-07-30, all four kickoff calls user-approved
       determinism pinned; ε=3.845 (the port site read SINGLE-depth —
       ports sit mid-act; WORKLOG §70); baselines byte-identical
       (fuzz:smoke 340). No bump (as predicted).
-- [ ] 70b — packet fires, both contexts (nominator-trimmed candidates
-      w/ heuristic targets, 68a guards mirrored; the preTurn ε context
-      added to readEpsilonAA). No bump.
+- [x] 70b — packet fires, both contexts ✅ — 60c heal guard DROPPED
+      (rollouts judge now); ε rule UNIFIED to pooled-per-class flat
+      floors (preTurn 1.101 / outOfBattle 3.265 / port re-pinned
+      3.145) + the 69f "mid-act map" context exposed as a turn-outcome
+      mislabel (WORKLOG §70). No bump (as predicted).
 - [ ] 70c — daemon picks: the ADDITIVE `pickReward?` chokepoint
       (absent = accept-all byte-for-byte) + arbitrated accept/decline;
       port-lane daemon picks already ride 70a. No bump.

@@ -125,6 +125,35 @@ kFlip-prefix pattern) run on a sampled batch.
   value reads · the flip-rate read is signed · `summary.csv` columns
   unchanged (the sidecar is additive).
 
+Cut 2026-07-31 (shape-locked; audit findings + schema rationale in
+WORKLOG §71 — long-format sidecar, decisions ride `RunResult`,
+flip-rate is shadow-only, all three user-signed at the kickoff):
+
+- [ ] 71a — the log rides out + the sidecar: optional
+      `RunResult.decisions` harvested post-`runOne` (the `--jobs`
+      parent inherits it via the 68e results.json round-trip);
+      `renderDecisionsCsv` — long format, one row per
+      (seed, decision, candidate) incl. the null arm, mean score +
+      mean breakdown components, no per-pair columns. Exit: sidecar
+      byte-identical serial-vs-`--jobs`; summary.csv pinned unchanged
+      by test. No bump (bot/harness-side).
+- [ ] 71b — the per-item decision-grade aggregate (site × item label:
+      n · accept rate · mean margin vs null; n-floor-aware) as a pure
+      reporter fn; the fuzz CLI prints it for arbitrated batches and
+      `balance:board --report` renders it for any instrument dir
+      carrying decisions.csv (no new board instruments — run-alongside
+      is §72's). No bump.
+- [ ] 71c — the flip-rate instrument: a flag on the arbitrated arm
+      that shadow-evaluates every decision under both tiers with
+      shared CRN pairs (live decisions stay cheap — the §57g own-arm
+      caveat honored by construction); per-site flips →
+      `tier-flips.csv` + stdout aggregate (the k-flips.csv shape). No
+      bump.
+- [ ] 71d — the measurement: one 40-seed arbitrated doctrine-arm box
+      batch → per-item value reads to BALANCE; one sampled dual-tier
+      batch → the flip-rate read; closes at the user-signed flip-rate
+      verdict (the phase decision point).
+
 ## Phase 72 — the balance agenda
 
 Charter: the run-alongside board cycle (box batches; the scored arm

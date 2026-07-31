@@ -571,3 +571,58 @@ notes to the scratchpad (the `-e` probe wedge; banding-dies-twice →
 uniform derivation). NEXT: the §71 phase kickoff (telemetry reporting +
 instruments — the decisions.csv sidecar, board integration, the
 flip-rate read).
+
+## Phase 71 — telemetry reporting + instruments
+
+**Kickoff (2026-07-31) — the code-reality audit + the shape-lock.**
+Audit findings, cut into ROADMAP §71 same-day (user-signed):
+
+1. **The §70 claim held: the decision log is reporter-ready.**
+   `RunDecisionRecord` (rollout/driver.ts) already carries the full
+   spec list — site, sectorId, hop, labels, per-candidate results with
+   means AND per-pair breakdowns, chosenIndex, marginVsNull, ε — as
+   plain JSON data, exposed per-seed via `ArbitratedRunStrategy.driver
+   .decisions`. §71 needs no driver change at all.
+2. **The one real gap: the log dies at the end of each run.** The CLI
+   constructs the per-seed arm inline at the `runOne` call and
+   discards it — nothing harvests `driver.decisions`, and `RunResult`
+   doesn't carry decisions. That second half matters because `--jobs`
+   composition rides ENTIRELY on RunResult round-tripping through
+   results.json (the 68e shard protocol). DECIDED: harvest into an
+   optional `RunResult.decisions` post-`runOne` — `--jobs` then works
+   for free (the parent's merged results carry it), the sidecar
+   writer stays a pure reporter function, and summary.csv is untouched
+   by construction (the exit criterion).
+3. **The flip-rate read cannot literally reuse the §57g prefix
+   trick.** kFlip re-derived decisions at K-prefixes WITHIN one
+   batch's rollouts — free, prefixes being subsets. Cheap-vs-searcher
+   changes the rollout itself, so each sampled decision is evaluated
+   TWICE with the same CRN pairs (once per tier), disagreements
+   counted. What carries over: the telemetry-is-its-own-arm doctrine
+   (honored here as SHADOW-ONLY — live decisions stay cheap-tier, so
+   the telemetry never perturbs the batch), the side-CSV shape
+   (k-flips.csv), per-site counting. The 69c bench pre-priced
+   dual-tier sampling as affordable.
+4. **Board + box plumbing already friendly.** The board only reads
+   files from instrument out-dirs, and `box-batch.sh fetch` scp's the
+   WHOLE batch dir — decisions.csv rides home with zero driver
+   changes. §71 adds the per-item READING machinery only; no new
+   board instruments (run-alongside is §72's charter).
+5. **Pre-registered watches re-confirmed in this log:** the
+   state-conditioned ε candidate must earn its way in FROM
+   decisions.csv; the DP-tail decision point stays open pending this
+   phase's telemetry; the 69c bench's candidate-count / turns-per-act
+   estimates were labeled "until §71 measures them" — the sidecar
+   yields those numbers for free.
+
+**Schema decisions (shape-locked, user-signed 2026-07-31):** the
+sidecar is LONG format — one row per (seed, decision, candidate),
+null arm always present at candidateIndex 0 — with mean score + mean
+breakdown components (poolDelta / deathPenalty / tailBonus /
+bitsDelta) and NO per-pair columns (full breakdowns stay reachable
+via `--emit-results` results.json). Decisions attach to `RunResult`
+rather than a separate per-run artifact. The flip-rate instrument is
+shadow-only, not a separate full arm.
+
+**Round predictions re-affirmed at the cut:** World v34 / Run v40
+hold (everything bot/harness-side); fuzz:smoke grows additively.

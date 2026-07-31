@@ -503,8 +503,43 @@ frontier, hunted deterministically, decision logged + deep-equal
 across two constructions). ε: the map class floor
 (`NODE_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON = 3.265` — same clone
 context + horizon). `pickRecruit` alone still delegates (resolution 2:
-recruit/pass OUT for v1). Five new tests + the evaluator tail pin;
-fuzz:smoke 355→361 expected at commit.
+recruit/pass OUT for v1). Four new site tests + the evaluator tail
+pin; fuzz:smoke 355→360 at commit (the entry's original 361
+prediction miscounted — corrected at 70f).
+
+**70f — the exit verify (2026-07-31).**
+[verifyArbitratedRuns.ts](../tests/fuzz/rollout/verifyArbitratedRuns.ts)
+(kept as a re-runnable artifact) drove 16 FULL arbitrated runs — both
+canonical shapes × 8 seeds (two per shape with forced janus+mars
+grants so the grant sites engage regardless of character daemons),
+bare-selector battles (site liveness is run-layer; strength is the
+searcher's business). **ALL SEVEN SITE COUNTERS LIVE, 660 decisions
+logged, every run terminal without a wedge** (3 complete / 13 defeat —
+the bare tier losing is expected): portBuy 4 · packetFire:preTurn 186
+· packetFire:outOfBattle 31 · rewardDaemon 5 (natural elite-drop
+daemons, no surgery needed at run grain) · grant:redraw 59 ·
+grant:empower 321 · nodeChoice 54. Per-run decision volume 12–89 —
+the goal-2 density promise (hundreds of decisions per small batch) is
+already visible. **Full-dress doctrine-arm runs (searcher battles,
+`--searcher --audition --arbitrate`, both default bases wrapped): 8
+runs across both shapes, ZERO hangs, 50% win rate per arm,
+~1.6–6.8 min per run — inside the 69c projection band (~1.2–6.7 min);
+a 40-seed arbitrated box arm stays ~2 h territory as priced.**
+
+**The per-site ε table (the exit criterion; the unified pooled-σ rule,
+readEpsilonAA 2026-07-30/31, K=2 · traffic · M=20/context · every
+byte-inert control exactly 0):**
+
+| context class | per-context σ | pooled σ | ε = 2σ | sites |
+|---|---|---|---|---|
+| port dock | 1.923 / 1.117 | 1.573 | **3.145** | portBuy |
+| map | 1.717 / 1.561 / 1.139 / 1.994 | 1.632 | **3.265** | packetFire:outOfBattle · nodeChoice |
+| turn-intro (preTurn) | 0.779 / 0.000 | 0.551 | **1.101** | packetFire:preTurn · grant:redraw · grant:empower |
+| reward gate | 1.059 / 1.734 | 1.437 | **2.873** | rewardDaemon |
+
+Baseline byte-identity: fuzz:smoke green at every §70 commit
+(307→334→340→345→350→355→360 across the phase, all additive; the
+anchor arms never define the new chokepoints).
 
 **A port-site semantics note (the 70a design detail, decided at
 kickoff):** each ask of the ask-until-null loop arbitrates ONE forced

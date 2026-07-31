@@ -112,9 +112,10 @@ Cut shape-locked 2026-07-30, all four kickoff calls user-approved
       doctrine arm); null pick pinned to the base nominator; ε=3.265
       (map class); elite-detour exercised (WORKLOG §70). No bump (as
       predicted).
-- [ ] 70f — the exit verify: full arbitrated runs on both canonical
-      shapes, five sites live; baseline byte-identity re-check; the
-      per-site ε table → worklog.
+- [x] 70f — the exit verify ✅ — 16 bare-tier runs: ALL SEVEN site
+      counters live, 660 decisions, zero wedges; 8 full-dress searcher
+      runs: zero hangs, ~1.6–6.8 min/run (the 69c band); ε table +
+      byte-identity trail → WORKLOG §70.
 
 ## Phase 71 — telemetry reporting + instruments
 

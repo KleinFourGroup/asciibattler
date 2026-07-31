@@ -97,9 +97,11 @@ Cut shape-locked 2026-07-30, all four kickoff calls user-approved
       floors (preTurn 1.101 / outOfBattle 3.265 / port re-pinned
       3.145) + the 69f "mid-act map" context exposed as a turn-outcome
       mislabel (WORKLOG §70). No bump (as predicted).
-- [ ] 70c — daemon picks: the ADDITIVE `pickReward?` chokepoint
-      (absent = accept-all byte-for-byte) + arbitrated accept/decline;
-      port-lane daemon picks already ride 70a. No bump.
+- [x] 70c — daemon picks ✅ — `pickReward?` landed (absent ≡ hardwired
+      pinned by identical-RunResult); polarity FLIPPED at this site
+      (null=accept, challenger=decline — hysteresis protects the
+      incumbent); reward-gate ε=2.873 pooled (WORKLOG §70). No bump
+      (as predicted).
 - [ ] 70d — redraw/empower: the additive grant-walk chokepoint;
       level-policy nominators k∈{0,1,2} / per-position empower. No
       bump.

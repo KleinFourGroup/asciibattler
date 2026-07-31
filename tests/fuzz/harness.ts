@@ -800,20 +800,23 @@ export function runOne(
       }
       case 'reward': {
         // 48b: headless policy — accept EVERYTHING, front to back. No
-        // strategy seam and no policy draws yet (acceptance is
-        // deterministic): bits exercise the `gainBits` settle, daemons the
-        // `addDaemon` acquisition seam. A §50-style purchase-policy arm can
-        // upgrade this to a real decision later.
+        // policy draws (acceptance is deterministic): bits exercise the
+        // `gainBits` settle, daemons the `addDaemon` acquisition seam.
         // 49c: one refinement — a packet portion against a FULL cache is
         // DECLINED (the kickoff lock: accept-if-room; a swap policy would
         // need a value model the harness doesn't have). Still deterministic,
         // still zero draws.
+        // 70c: the strategy seam the 48b comment promised — an OPTIONAL
+        // `pickReward` decides the head portion (the §70 daemon-pick site
+        // rides it); ABSENT = the hardwired policy above, byte for byte.
         const portion = run.pendingRewards![0]!;
-        if (portion.kind === 'packet' && !run.cacheHasRoom) {
-          run.dispatch({ kind: 'declineReward', index: 0 });
-        } else {
-          run.dispatch({ kind: 'acceptReward', index: 0 });
-        }
+        const accept =
+          strategy.pickReward !== undefined
+            ? strategy.pickReward(portion, run, strategyRng)
+            : !(portion.kind === 'packet' && !run.cacheHasRoom);
+        run.dispatch(
+          accept ? { kind: 'acceptReward', index: 0 } : { kind: 'declineReward', index: 0 },
+        );
         break;
       }
       case 'port': {

@@ -33,16 +33,20 @@ import type { RunSnapshot } from '../../../src/run/Run';
 import { packetById, type UseContext } from '../../../src/config/packets';
 import { DECK } from '../../../src/config/deck';
 import { HEALTH } from '../../../src/config/health';
+import type { RewardPortion } from '../../../src/run/rewards';
 import { cloneRunForRollout } from '../../../src/bot/runRollout';
+import { runOne } from '../harness';
 import { walkToHorizon } from './walker';
 import type { CandidateApply, RunCandidateResult, RunRolloutSpec } from './evaluator';
 import type { FuzzStrategy, PortBuy } from '../Strategy';
-import { maxPowerIndex, minPowerIndex } from '../strategies/scored';
+import { maxPowerIndex, minPowerIndex, scoredStrategy } from '../strategies/scored';
+import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
 import {
   makeArbitratedStrategy,
   PORT_BUY_EPSILON,
   FIRE_PRETURN_EPSILON,
   FIRE_OUTOFBATTLE_EPSILON,
+  REWARD_DAEMON_EPSILON,
 } from './arbitratedStrategy';
 
 const SEED = 20260730;
@@ -297,6 +301,105 @@ describe('arbitrated packet fires — mechanism pins (injected evaluator)', () =
     expect(rec.epsilon).toBe(FIRE_OUTOFBATTLE_EPSILON);
     expect(rec.chosenIndex).toBe(2);
   });
+});
+
+describe('the pickReward chokepoint (70c) — harness contracts', () => {
+  const scored = () => scoredStrategy('reward-pin', DEFAULT_SCORED_WEIGHTS);
+  const SHORT = { runConfig: { hopCount: 3 } };
+
+  it('ABSENT vs a hardwired-mirror pickReward ⇒ byte-identical RunResult (and the seam IS consulted)', () => {
+    const withoutSeam = runOne(41, scored(), SHORT);
+    const mirror = vi.fn(
+      (p: RewardPortion, run: Run) => !(p.kind === 'packet' && !run.cacheHasRoom),
+    );
+    const withSeam = runOne(41, { ...scored(), pickReward: mirror }, SHORT);
+    expect(mirror).toHaveBeenCalled(); // every battle victory offers at least bits
+    expect(withSeam).toEqual(withoutSeam);
+  }, 120_000);
+});
+
+describe('arbitrated daemon rewards — mechanism pins (injected evaluator)', () => {
+  /** A real reward-gate state with a daemon portion spliced in at the
+   *  head (snapshot surgery — daemon drops are elite/boss-gated at 35%,
+   *  too rare to hunt; rollRewards' own header blesses synthetic
+   *  inputs). 'portunus' is port-lane-only, so the run never owns it. */
+  function rewardStateWithDaemonHead(): Run {
+    const clone = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), SEED + 9);
+    walkToHorizon(clone, {
+      horizonBattles: 9999,
+      policySeed: SEED + 10,
+      maxHops: 80,
+      stopAtPhase: 'reward',
+    });
+    if (clone.run.phase !== 'reward') {
+      throw new Error(`fixture: expected reward, got ${clone.run.phase}`);
+    }
+    const snap = clone.run.toJSON();
+    snap.pendingRewards = [
+      { kind: 'daemon', daemonId: 'portunus' },
+      ...(snap.pendingRewards ?? []),
+    ];
+    return Run.fromJSON(snap, new EventBus<GameEvents>());
+  }
+
+  it('a daemon head portion arbitrates: polarity flipped (null=accept, challenger=decline), site + ε pinned', () => {
+    const run = rewardStateWithDaemonHead();
+    const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator([0, 0]) });
+    // Tie → the null arm (ACCEPT) stands.
+    expect(arm.pickReward!(run.pendingRewards![0]!, run, null as never)).toBe(true);
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.site).toBe('rewardDaemon');
+    expect(rec.labels).toEqual(['null', 'decline daemon:portunus']);
+    expect(rec.epsilon).toBe(REWARD_DAEMON_EPSILON);
+  });
+
+  it('a decline that clears ε wins → the portion is refused', () => {
+    const run = rewardStateWithDaemonHead();
+    const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator([0, 1000]) });
+    expect(arm.pickReward!(run.pendingRewards![0]!, run, null as never)).toBe(false);
+    expect(arm.driver.decisions[0]!.chosenIndex).toBe(1);
+  });
+
+  it('non-daemon portions mirror the hardwired policy with NO arbitration', () => {
+    const run = rewardStateWithDaemonHead();
+    const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator([]) });
+    expect(arm.pickReward!({ kind: 'bits', base: 10 }, run, null as never)).toBe(true);
+    expect(arm.pickReward!({ kind: 'packet', packetId: 'patch' }, run, null as never)).toBe(true);
+    // A full cache (size 6 today — derived, not assumed: fill to capacity)
+    const full = new Run(SEED, new EventBus<GameEvents>(), {
+      grants: Array(new Run(SEED, new EventBus<GameEvents>()).effectiveCacheSize).fill('patch'),
+    });
+    expect(full.cacheHasRoom).toBe(false);
+    expect(arm.pickReward!({ kind: 'packet', packetId: 'patch' }, full, null as never)).toBe(false);
+    expect(arm.driver.decisions).toHaveLength(0); // none of the above logged
+  });
+});
+
+describe('arbitrated daemon rewards — integration (real evaluator)', () => {
+  it('SITE DETERMINISM: same runSeed + same reward state ⇒ same verdict + deep-equal log', () => {
+    const decide = () => {
+      const clone = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), SEED + 9);
+      walkToHorizon(clone, {
+        horizonBattles: 9999,
+        policySeed: SEED + 10,
+        maxHops: 80,
+        stopAtPhase: 'reward',
+      });
+      const snap = clone.run.toJSON();
+      snap.pendingRewards = [
+        { kind: 'daemon', daemonId: 'portunus' },
+        ...(snap.pendingRewards ?? []),
+      ];
+      const run = Run.fromJSON(snap, new EventBus<GameEvents>());
+      const arm = makeArbitratedStrategy(SEED, { k: 1 });
+      const verdict = arm.pickReward!(run.pendingRewards![0]!, run, null as never);
+      return { verdict, record: arm.driver.decisions[0]! };
+    };
+    const a = decide();
+    const b = decide();
+    expect(a.verdict).toBe(b.verdict);
+    expect(a.record).toEqual(b.record);
+  }, 120_000);
 });
 
 describe('arbitrated packet fires — integration (real evaluator)', () => {

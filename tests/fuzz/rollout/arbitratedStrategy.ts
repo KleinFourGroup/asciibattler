@@ -30,13 +30,19 @@
  * targets, both 49e contexts, legality guards mirrored, the 60c heal
  * guard deliberately dropped — see arbitratePacketFire's header.
  *
- * Un-landed sites (70c–70e) DELEGATE to the base strategy — the arm is
+ * Reward-site semantics (70c): daemon portions arbitrate with the
+ * polarity FLIPPED (null = accept, challenger = decline — hysteresis
+ * protects the incumbent accept-all); everything else mirrors the
+ * hardwired policy — see arbitrateReward's header.
+ *
+ * Un-landed sites (70d–70e) DELEGATE to the base strategy — the arm is
  * exactly "the scored nominator + arbitration where landed", so its
  * behavior converges on site landings, never on refactors.
  */
 
 import { RNG } from '../../../src/core/RNG';
 import type { PortStock, Run } from '../../../src/run/Run';
+import type { RewardPortion } from '../../../src/run/rewards';
 import { packetById, type UseContext } from '../../../src/config/packets';
 import { DECK } from '../../../src/config/deck';
 import type { FuzzStrategy, PacketFire, PortBuy } from '../Strategy';
@@ -79,10 +85,12 @@ const DRIVER_SEED_OFFSET = 0x70a1;
  *   map class:   σ 1.717 / 1.561 / 1.139 / 1.994 → pooled σ 1.632 → ε 3.265
  *   preTurn:     σ 0.779 / 0.000 (a dominated current-battle horizon
  *                has nothing left to vary)  → pooled σ 0.551 → ε 1.101
+ *   reward gate: σ 1.059 / 1.734            → pooled σ 1.437 → ε 2.873
  */
 export const PORT_BUY_EPSILON = 3.145;
 export const FIRE_OUTOFBATTLE_EPSILON = 3.265;
 export const FIRE_PRETURN_EPSILON = 1.101;
+export const REWARD_DAEMON_EPSILON = 2.873;
 
 export function portBuyEpsilon(_run: Run): number {
   return PORT_BUY_EPSILON;
@@ -90,6 +98,10 @@ export function portBuyEpsilon(_run: Run): number {
 
 export function packetFireEpsilon(context: UseContext, _run: Run): number {
   return context === 'preTurn' ? FIRE_PRETURN_EPSILON : FIRE_OUTOFBATTLE_EPSILON;
+}
+
+export function rewardDaemonEpsilon(_run: Run): number {
+  return REWARD_DAEMON_EPSILON;
 }
 
 export interface ArbitratedConfig {
@@ -103,6 +115,7 @@ export interface ArbitratedConfig {
   /** Per-site ε overrides; default = the pinned floors above. */
   readonly portBuyEpsilon?: number;
   readonly packetFireEpsilon?: number;
+  readonly rewardDaemonEpsilon?: number;
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
   /** Test seam, threaded to the driver (the selectByScore precedent). */
@@ -142,6 +155,10 @@ export function makeArbitratedStrategy(
     // doctrine arm ran gated anyway via --redraw/--empower).
     pickPacketFire: (context, run, _rng) =>
       arbitratePacketFire(driver, context, run, config.packetFireEpsilon),
+    // 70c — the daemon-pick site (reward lane; the port lane rides
+    // pickPortBuy above).
+    pickReward: (portion, run, _rng) =>
+      arbitrateReward(driver, portion, run, config.rewardDaemonEpsilon),
   };
 }
 
@@ -272,4 +289,46 @@ function arbitratePacketFire(
     epsilon: epsilonOverride ?? packetFireEpsilon(context, run),
   });
   return winner === null ? null : fires[challengers.indexOf(winner)]!;
+}
+
+/**
+ * 70c — the reward lane of the daemon-pick site. ONLY daemon portions
+ * arbitrate; bits and packet portions mirror the hardwired 48b/49c
+ * policy verbatim (accept, except a packet against a full cache), so
+ * the arm differs from the anchor policy at daemon portions alone.
+ *
+ * THE POLARITY FLIPS HERE, deliberately: at every other site the null
+ * arm is the abstention and the challenger acts — at this one the null
+ * arm CARRIES the acquisition (the walker's reward case accepts the
+ * pending daemon on every null rollout) and the single challenger is
+ * `declineReward`. Hysteresis therefore protects the INCUMBENT
+ * accept-all policy: a decline must prove the daemon actively HARMS
+ * the run by > ε within the horizon — the correct frame for a free
+ * permanent asset whose value the one-battle horizon can only
+ * under-count (the recruit-censoring lesson, kickoff resolution 2;
+ * accept-by-default is the bias-safe side). The decision log's margin
+ * is per-daemon draft attribution either way — goal 2 rides on the
+ * record, not on declines happening.
+ */
+function arbitrateReward(
+  driver: RunArbitrationDriver,
+  portion: RewardPortion,
+  run: Run,
+  epsilonOverride: number | undefined,
+): boolean {
+  if (portion.kind !== 'daemon') {
+    return !(portion.kind === 'packet' && !run.cacheHasRoom);
+  }
+  const decline = driver.decide(
+    'rewardDaemon',
+    run,
+    [
+      {
+        label: `decline daemon:${portion.daemonId}`,
+        apply: ({ run: clone }) => clone.dispatch({ kind: 'declineReward', index: 0 }),
+      },
+    ],
+    { epsilon: epsilonOverride ?? rewardDaemonEpsilon(run) },
+  );
+  return decline === null;
 }

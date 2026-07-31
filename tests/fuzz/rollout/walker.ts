@@ -97,15 +97,15 @@ export interface WalkOptions {
   /** Safety bound on node entries — a walker must never out-walk its
    *  horizon by more than the map between battles. */
   readonly maxHops?: number;
-  /** 70a/70b — stop the walk the moment the run ENTERS this phase
+  /** 70a/70b/70c — stop the walk the moment the run ENTERS this phase
    *  (checked at the loop top, before the phase is acted on; returns
    *  outcome 'horizon'). The ε-context prep hook: readEpsilonAA parks a
-   *  run at a port dock or a TRUE map state with it (pass a large
-   *  horizonBattles; NB a fresh clone already at the stop phase returns
-   *  immediately — stage battle-count walks and phase walks on separate
-   *  clones). This is the header's "extend the stop condition in one
-   *  named place" seam. */
-  readonly stopAtPhase?: 'port' | 'map';
+   *  run at a port dock, a TRUE map state, or a reward gate with it
+   *  (pass a large horizonBattles; NB a fresh clone already at the stop
+   *  phase returns immediately — stage battle-count walks and phase
+   *  walks on separate clones). This is the header's "extend the stop
+   *  condition in one named place" seam. */
+  readonly stopAtPhase?: 'port' | 'map' | 'reward';
 }
 
 export interface WalkResult {

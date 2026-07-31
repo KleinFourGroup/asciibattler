@@ -86,6 +86,30 @@ function parkAtTurnIntro(battles: number): Run {
 read('fresh turn-intro (preTurn class, hop 1)', parkAtTurnIntro(0), 17);
 read('mid-act turn-intro (preTurn class, 5 battles in)', parkAtTurnIntro(5), 18);
 
+// 70c — the REWARD class (post-victory reward gate, horizon = end of
+// the NEXT battle) at two depths: the daemon-pick site's real context.
+// Same two-stage prep as the map class (a battle-count walk parks at
+// turn-outcome; a fresh clone then walks to stopAtPhase 'reward' — the
+// reward gate sits between turn-outcome and the map).
+function rewardStateAfter(battles: number): Run {
+  let from: Run;
+  if (battles === 0) {
+    from = new Run(SEED, new EventBus<GameEvents>());
+  } else {
+    const s = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), 777 + battles);
+    walkToHorizon(s, { horizonBattles: battles, policySeed: 424242 + battles, maxHops: 80 });
+    from = s.run;
+  }
+  const r = cloneRunForRollout(from, 1111 + battles);
+  walkToHorizon(r, { horizonBattles: 9999, policySeed: 616 + battles, maxHops: 80, stopAtPhase: 'reward' });
+  if (r.run.phase !== 'reward') {
+    throw new Error(`rewardStateAfter(${battles}): expected reward, got ${r.run.phase}`);
+  }
+  return r.run;
+}
+read('first reward gate (reward class, 1 battle in)', rewardStateAfter(0), 20);
+read('mid-act reward gate (reward class, 5+ battles in)', rewardStateAfter(5), 21);
+
 // 70a — Contexts 3/4: the PORT-BUY site's REAL context (docked, phase
 // 'port') at two depths. Prep: warm the run `warmupBattles` forward on
 // the cheap tier, then walk with the stopAtPhase hook until it docks

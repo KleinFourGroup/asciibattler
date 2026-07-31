@@ -425,6 +425,32 @@ grants = the deterministic cache fixtures.
    a named §71 candidate once decisions.csv shows where noise
    concentrates.
 
+**70c landed (2026-07-31) — daemon picks (the `pickReward?`
+chokepoint).** The first approved additive harness touch: an optional
+`FuzzStrategy.pickReward(portion, run, rng)` decides the head
+`pendingRewards[0]` (true=accept / false=decline; both consume, no
+wedge); ABSENT = the hardwired 48b/49c policy byte-for-byte — pinned by
+the strongest cheap test available (same seed, absent vs a
+hardwired-mirror seam → `toEqual`-identical RunResult, seam
+consultation spied). The arm arbitrates DAEMON portions only —
+**the polarity FLIPS at this site**: the null arm CARRIES the
+acquisition (the walker's reward case accepts on every null rollout)
+and the single challenger is `declineReward`, so hysteresis protects
+the incumbent accept-all and a decline must prove the daemon actively
+HARMS by > ε within the horizon. That's the bias-safe frame for a free
+permanent asset the one-battle horizon can only under-count (the
+recruit-censoring lesson, resolution 2) — and the decision log's
+margin is per-daemon draft attribution EITHER way (goal 2 rides the
+record, not declines). Bits/packet portions mirror hardwired with no
+arbitration. The port lane of the daemon site was already live (70a
+port buys). ε: the reward-gate class read at two depths (σ 1.059 /
+1.734, controls 0) → pooled **ε=2.873**; readEpsilonAA's
+`stopAtPhase` prep widened to 'reward'. Fixtures: daemon drops are
+elite/boss-gated (35% daemon-cache) — too rare to hunt, so tests
+splice a daemon portion into a real reward snapshot (rollRewards'
+header blesses synthetic inputs; 'portunus' is port-lane-only, never
+pre-owned). Five new tests; fuzz:smoke 345→350 expected at commit.
+
 **A port-site semantics note (the 70a design detail, decided at
 kickoff):** each ask of the ask-until-null loop arbitrates ONE forced
 buy — candidate = "buy slot X now", null = "stop here". Inside the

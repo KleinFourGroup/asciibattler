@@ -17,6 +17,7 @@
 
 import type { RNG } from '../../src/core/RNG';
 import type { Run, PortStock } from '../../src/run/Run';
+import type { RewardPortion } from '../../src/run/rewards';
 import type { UseContext } from '../../src/config/packets';
 import type { UnitTemplate } from '../../src/sim/Unit';
 
@@ -65,4 +66,14 @@ export interface FuzzStrategy {
    * the pre-§59 harness behavior, and the anchor arms' permanent policy.
    */
   pickPacketFire?(context: UseContext, run: Run, rng: RNG): PacketFire | null;
+  /**
+   * 70c — OPTIONAL reward-portion decision, asked for the HEAD portion
+   * (`pendingRewards[0]`) each time the harness visits the reward phase:
+   * `true` accepts, `false` declines. Both dispatches consume the
+   * portion, so the reward loop always progresses — no wedge risk.
+   * ABSENT = the hardwired 48b/49c policy (accept everything, decline a
+   * packet portion against a full cache); the anchor arms never define
+   * this, so their draw sequences and the fuzz baselines are untouched.
+   */
+  pickReward?(portion: RewardPortion, run: Run, rng: RNG): boolean;
 }

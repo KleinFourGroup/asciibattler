@@ -556,3 +556,18 @@ greedily: each landed buy re-arbitrates against the mutated stock/bits
 resolution 4 — a useless buy margins ~0 and FAILS the strict-ε gate,
 and the always-on bitsDelta telemetry columns keep any spend-happy
 drift visible.
+
+**Phase 70 CLOSED (2026-07-31, user-signed).** All three exit criteria
+met (all-sites-live full runs on both shapes · baselines byte-identical
+throughout · the per-site ε table above) and the round-level snapshot
+prediction held (World v34 / Run v40 — every commit bot/harness-side).
+Seven commits: the kickoff docs (`498a23b`) + six landings (`d946bf6`
+70a · `f89031a` 70b · `3a51c03` 70c · `62e53b4` 70d · `64752b2` 70e ·
+`aa6a07a` 70f); fuzz:smoke 334→360 purely additive, 2350 main green at
+every gate. The two approved ADDITIVE chokepoints (`pickReward?` /
+`pickGrantAction?`) are the phase's only harness touches, both pinned
+absent≡hardwired. ROADMAP §70 demoted per the §60f rule; two process
+notes to the scratchpad (the `-e` probe wedge; banding-dies-twice →
+uniform derivation). NEXT: the §71 phase kickoff (telemetry reporting +
+instruments — the decisions.csv sidecar, board integration, the
+flip-rate read).

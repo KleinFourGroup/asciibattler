@@ -61,32 +61,22 @@ v34/v40 held; baselines byte-untouched. Detail: WORKLOG §69.
       fresh / 0.54 mid-act); **methodology SIGNED, user, 2026-07-30**
       (WORKLOG §69).
 
-## Phase 70 — the decision sites
+## Phase 70 — the decision sites ✅ CLOSED 2026-07-31, user-signed
 
-Charter: wire the five sites through the existing strategy chokepoints,
-one commit per site — port buys + packet fires (both contexts) FIRST,
-then daemon picks (reward accept + the port lane), redraw/empower, and
-node choice with the DP-tail bootstrap (the existing path DP as the
-value estimate at the truncation). The recursion dial is plumbed on
-every site but defaults cheap; each site's ε floor lands with it.
-
-- Depends: §69 (the seam + driver + score are the substrate).
-- Risk: **MEDIUM** — no harness surgery needed (the kickoff audit's
-  finding), but each site has a candidate-enumeration design detail
-  (fire targeting variants, buy-loop caching, the DP-tail weighting).
-  Kickoff amendment (2026-07-30): two sites need ADDITIVE optional
-  chokepoints (reward-accept + the grant walk) — approved under the
-  scope guard, absent = byte-identical (WORKLOG §70 finding 1).
-- Decision points: the node-choice DP-tail shape if the naive bootstrap
-  misbehaves on the elite-detour cases.
-- Exit criteria: the arbitrated arm completes full runs on BOTH
-  canonical shapes (`--hops=11` and the two-act walk) with all five
-  sites live · anchor-arm draw sequences and fuzz baselines
-  byte-identical (arbitration is opt-in) · per-site ε values recorded
-  in the worklog.
-
-Cut shape-locked 2026-07-30, all four kickoff calls user-approved
-(rationale + audit: WORKLOG §70):
+All five sites live on the arbitrated arm in six commits, opt-in end
+to end: port buys + the scaffold (`--arbitrate`, per-seed factory,
+decision log built in) · packet fires ×2 contexts (**the 60c heal
+guard RETIRED — the fire-channel repair by construction**) · daemon
+picks via the ADDITIVE `pickReward?` (polarity flipped: null=accept) ·
+redraw/empower via the ADDITIVE `pickGrantAction?` (rollout grant
+policies off) · node choice w/ the DP-tail bootstrap (tail INERT on
+the doctrine arm — default path weights all 0). **ε floors UNIFIED to
+pooled-per-class flat** (port 3.145 / map 3.265 / preTurn 1.101 /
+reward 2.873) after depth-banding died on the data twice. Exit verify:
+all seven site counters live over 16 full runs (660 decisions, zero
+wedges) + 8 full-dress searcher runs zero hangs inside the 69c cost
+band; baselines byte-identical throughout; v34/v40 held. Detail:
+WORKLOG §70.
 
 - [x] 70a — port buys + the arbitrated-arm scaffold ✅ — site
       determinism pinned; ε=3.845 (the port site read SINGLE-depth —

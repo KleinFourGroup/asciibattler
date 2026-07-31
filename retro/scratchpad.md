@@ -38,3 +38,19 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   two-sided design (zero-control + broken-pairing floor) fell straight
   out. Cheap contract tests on the substrate pay for themselves at the
   methodology layer. (Worklog §69f.)
+- **Inline `npx tsx -e` probes can wedge silently at spawn on Windows
+  (~0 CPU forever, no output, no crash) — scratch probes go in real
+  `.ts` files.** The 70a second-dock probe sat 28 min at 0.7s CPU; the
+  §57g CPU-vs-wall test caught it, and the same probe as a file ran
+  fine. Zero work lost (the probe was refine-only), but a
+  depended-on probe would have stalled the step. (Worklog §70, 70a.)
+- **Hand-authored banding died on the data twice in ONE phase — derive
+  floor/threshold rules uniformly and let telemetry earn any
+  conditioning.** The 70a port floor planned two depth bands (single
+  depth in reality: ports sit mid-act); the 70b map-class sweep killed
+  depth-banding outright (σ state-dependent, not depth-monotone — and
+  exposed the 69f "mid-act map" context as a turn-outcome gate-state
+  mislabel). The unified pooled-per-class flat rule replaced both; a
+  state-conditioned ε is now a NAMED §71 candidate that must earn its
+  way in from decisions.csv, not from a plausible axis. (Worklog §70,
+  70a/70b.)

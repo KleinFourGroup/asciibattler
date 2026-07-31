@@ -415,6 +415,96 @@ export function renderDecisionAnalysis(rows: readonly DecisionRow[]): string {
   return lines.join('\n') + '\n';
 }
 
+// ── The tier-flip instrument (71c) ───────────────────────────────────────────
+
+/** Per-(seed, strategy, site) flip counts from the shadow-judged decisions.
+ *  Only records carrying `shadowChosenIndex` count — a mixed batch (or a
+ *  shadow-off arm) contributes nothing. */
+export interface TierFlipRow {
+  seed: number;
+  strategy: string;
+  site: string;
+  /** Shadow-judged decisions at this site. */
+  decisions: number;
+  /** Decisions where the shadow tier chose a DIFFERENT arm. */
+  flips: number;
+}
+
+export function tierFlipRows(results: readonly RunResult[]): TierFlipRow[] {
+  const rows: TierFlipRow[] = [];
+  for (const r of results) {
+    if (!r.decisions) continue;
+    const bySite = new Map<string, { decisions: number; flips: number }>();
+    for (const d of r.decisions) {
+      if (d.shadowChosenIndex === undefined) continue;
+      let b = bySite.get(d.site);
+      if (!b) {
+        b = { decisions: 0, flips: 0 };
+        bySite.set(d.site, b);
+      }
+      b.decisions++;
+      if (d.shadowChosenIndex !== d.chosenIndex) b.flips++;
+    }
+    for (const site of [...bySite.keys()].sort()) {
+      const b = bySite.get(site)!;
+      rows.push({ seed: r.seed, strategy: r.strategyName, site, ...b });
+    }
+  }
+  return rows;
+}
+
+/** The k-flips.csv shape, tier-flavored: one row per (seed, strategy, site). */
+export function renderTierFlipsCsv(results: readonly RunResult[]): string {
+  const lines = ['seed,strategy,site,decisions,flips'];
+  for (const r of tierFlipRows(results)) {
+    lines.push([r.seed, csvField(r.strategy), r.site, r.decisions, r.flips].join(','));
+  }
+  return lines.join('\n') + '\n';
+}
+
+/** The stdout aggregate — per-site totals + the overall line (the §57g
+ *  K-prefix instrument's print shape). The verdict question this feeds:
+ *  validate the cheap inner tier, or name WHERE recursion gets paid — so
+ *  sites are sorted most-flippy-first. */
+export function renderTierFlipAnalysis(results: readonly RunResult[]): string {
+  const totals = new Map<string, { decisions: number; flips: number }>();
+  let decisions = 0;
+  let flips = 0;
+  for (const row of tierFlipRows(results)) {
+    let t = totals.get(row.site);
+    if (!t) {
+      t = { decisions: 0, flips: 0 };
+      totals.set(row.site, t);
+    }
+    t.decisions += row.decisions;
+    t.flips += row.flips;
+    decisions += row.decisions;
+    flips += row.flips;
+  }
+  const pct = (f: number, n: number) => (n === 0 ? '—' : `${((100 * f) / n).toFixed(1)}%`);
+  const lines: string[] = [];
+  lines.push('### Tier-flip instrument (primary vs shadow inner tier)');
+  lines.push('Flip = the shadow tier chose a different arm for the same decision under the same');
+  lines.push('  CRN pairs and ε. Sorted most-flippy-first — where recursion would get paid.');
+  lines.push('');
+  lines.push(
+    renderTable(
+      ['Site', 'Decisions', 'Flips', 'Flip%'],
+      [...totals.entries()]
+        .sort(
+          (a, b) =>
+            b[1].flips / Math.max(1, b[1].decisions) - a[1].flips / Math.max(1, a[1].decisions) ||
+            b[1].decisions - a[1].decisions ||
+            a[0].localeCompare(b[0]),
+        )
+        .map(([site, t]) => [site, String(t.decisions), String(t.flips), pct(t.flips, t.decisions)]),
+    ),
+  );
+  lines.push('');
+  lines.push(`  overall: ${flips}/${decisions} (${pct(flips, decisions)})`);
+  return lines.join('\n') + '\n';
+}
+
 /**
  * L1c3 — per-daemon aggregate buckets, keyed by the carried/forced idol id
  * (`'none'` for daemon-less runs), sorted by key for stable output. 63c —

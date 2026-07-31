@@ -50,7 +50,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chunkVectors, retryAsync } from '../searchShard';
 import { bail, range, type CliArgs } from './args';
-import { writeAggregateAnalyses, writeDecisionsSidecar } from './run';
+import { writeAggregateAnalyses, writeDecisionsSidecar, writeTierFlips } from './run';
 import type { RunResult } from '../harness';
 
 export type ParallelRunArgs = Pick<
@@ -143,6 +143,7 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
     }
     writeAggregateAnalyses(args, mergedResults);
     writeDecisionsSidecar(args.outDir, mergedResults);
+    writeTierFlips(args.outDir, mergedResults);
   }
 
   // Mirror run.ts's failures/ semantics: wipe, then adopt every shard's traces

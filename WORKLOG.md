@@ -682,3 +682,32 @@ n=80 floor rides the table itself (sub-floor rows marked ·,
 DIRECTIONAL). renderTable gained a leftCols param (Site + Item both
 left-aligned); four unit tests (key extraction · csv round-trip incl.
 quoted labels · null-join pooling math · the floor marker).
+
+**71c landed (2026-07-31) — the flip-rate instrument.** The §57g kFlip
+lesson, tier-flavored: `--flip-telemetry[=<tier>]` (bare flag =
+'searcher', the resolution-3 cheap-vs-recursive read; the value form
+exists for cheap cross-tier reads + test sizing — validated in args:
+requires --arbitrate, real tier, must differ from the primary or the
+read is vacuously flip-free). The mechanism sits in the DRIVER: when
+`shadowTier` is set, every decide re-judges the full arm set —
+including its own null — under the shadow tier with the SAME CRN
+pairs and the same ε rule, and records `shadowChosenIndex` on the
+RunDecisionRecord. SHADOW-ONLY by construction: the live decision
+never reads it, and the pairs are the driver's entire RNG draw
+(derived before either tier evaluates), so a shadowed batch decides
+byte-identically to an unshadowed one — pinned by a two-decide
+sequence test (records deep-equal modulo the shadow field). Outputs:
+`tier-flips.csv` (seed,strategy,site,decisions,flips — the k-flips
+shape) via `writeTierFlips` shared serial/`--jobs` (the 71a sidecar
+discipline; rides the same results.json round-trip), + a stdout
+aggregate sorted most-flippy-first ("where recursion would get
+paid"). The record field deliberately does NOT become a decisions.csv
+column — the sidecar schema holds; deep digs read `--emit-results`.
+Pins: 4 driver tests (flip recorded · agreement + shadow-off-no-field
+· shadow honors ε against its OWN null · non-perturbation) + the
+reporter fixture test + the parity case extended (tier-flips.csv
+byte-identical serial-vs-jobs; traffic shadow on bare primary keeps
+it ~60 s). Live probe (bare primary vs traffic shadow, 4 short runs):
+4/34 flips (11.8%), ALL at grant:empower — even the two cheap tiers
+disagree exactly where candidate sets are dense, a plausibility nod
+for the 71d searcher read.

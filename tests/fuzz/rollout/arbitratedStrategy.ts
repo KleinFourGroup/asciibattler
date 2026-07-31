@@ -146,6 +146,10 @@ export interface ArbitratedConfig {
   readonly k?: number;
   /** Resolution 3's recursion dial (default 'traffic'; `--arbitrate-tier`). */
   readonly innerTier?: InnerTier;
+  /** 71c — the flip-rate instrument's shadow tier (`--flip-telemetry`):
+   *  every decision is re-judged under this tier with the same CRN pairs,
+   *  shadow-only (the live decision never reads it). */
+  readonly shadowTier?: InnerTier;
   /** Per-site ε overrides; default = the pinned floors above. */
   readonly portBuyEpsilon?: number;
   readonly packetFireEpsilon?: number;
@@ -181,6 +185,7 @@ export function makeArbitratedStrategy(
       ...(config.bitsLambda !== undefined ? { bitsLambda: config.bitsLambda } : {}),
     },
     ...(config.evaluate !== undefined ? { evaluate: config.evaluate } : {}),
+    ...(config.shadowTier !== undefined ? { shadowTier: config.shadowTier } : {}),
   });
 
   return {

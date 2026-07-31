@@ -159,6 +159,13 @@ export interface CliArgs {
   // dial (default traffic); requires --arbitrate.
   arbitrate: boolean;
   arbitrateTier?: string;
+  // 71c — the flip-rate instrument (`--flip-telemetry[=<tier>]`): shadow-
+  // judge every arbitrated decision under a second inner tier with the same
+  // CRN pairs and count disagreements (tier-flips.csv + a stdout aggregate).
+  // Bare flag = 'searcher' (the resolution-3 cheap-vs-recursive read); the
+  // value form exists for cheap cross-tier reads and test sizing. Requires
+  // --arbitrate; must differ from the primary tier.
+  flipTelemetry?: string;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -346,6 +353,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--arbitrate':
         args.arbitrate = true;
         break;
+      case '--flip-telemetry':
+        args.flipTelemetry = v ?? 'searcher';
+        break;
       case '--arbitrate-tier':
         if (v !== undefined) args.arbitrateTier = v;
         break;
@@ -422,6 +432,25 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     if (!['bare', 'traffic', 'searcher'].includes(args.arbitrateTier)) {
       throw new Error(
         `--arbitrate-tier must be bare|traffic|searcher (got '${args.arbitrateTier}')`,
+      );
+    }
+  }
+  // 71c — the flip-rate instrument's guards: arbitrate-only, a real tier,
+  // and a shadow that actually differs from the primary (an equal pair
+  // would measure zero flips by construction and label the batch wrong).
+  if (args.flipTelemetry !== undefined) {
+    if (!args.arbitrate) {
+      throw new Error('--flip-telemetry requires --arbitrate (it shadows the arbitrated arm)');
+    }
+    if (!['bare', 'traffic', 'searcher'].includes(args.flipTelemetry)) {
+      throw new Error(
+        `--flip-telemetry must be bare|traffic|searcher (got '${args.flipTelemetry}')`,
+      );
+    }
+    const primary = args.arbitrateTier ?? 'traffic';
+    if (args.flipTelemetry === primary) {
+      throw new Error(
+        `--flip-telemetry=${args.flipTelemetry} equals the primary tier (${primary}) — the read would be vacuously flip-free`,
       );
     }
   }

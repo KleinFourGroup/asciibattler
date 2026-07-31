@@ -28,6 +28,9 @@ import {
   renderDecisionsCsv,
   decisionRowsOf,
   renderDecisionAnalysis,
+  renderTierFlipsCsv,
+  renderTierFlipAnalysis,
+  tierFlipRows,
   renderFailureTrace,
   failureFilename,
   renderPerHopAnalysis,
@@ -95,6 +98,7 @@ export type RunModeArgs = Pick<
   | 'grant'
   | 'arbitrate'
   | 'arbitrateTier'
+  | 'flipTelemetry'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -253,6 +257,10 @@ export function runRunCli(args: RunModeArgs): void {
       ? makeArbitratedStrategy(seed, {
           base: strategy,
           ...(arbitrateTier !== undefined ? { innerTier: arbitrateTier } : {}),
+          // 71c — the shadow tier (validated in args.ts: a real tier ≠ primary).
+          ...(args.flipTelemetry !== undefined
+            ? { shadowTier: args.flipTelemetry as InnerTier }
+            : {}),
         })
       : strategy;
 
@@ -290,6 +298,8 @@ export function runRunCli(args: RunModeArgs): void {
   // 71a — the decision-grade sidecar (additive: summary.csv columns are
   // untouched). Shared with the --jobs parent — parity by code path, 68e.
   writeDecisionsSidecar(args.outDir, allResults);
+  // 71c — the tier-flip sidecar, same discipline (written iff shadow ran).
+  writeTierFlips(args.outDir, allResults);
 
   // 68e — the shard protocol: dump the full results so a --jobs parent can
   // recompute the aggregate analyses over the merged batch (RunResult is plain
@@ -375,6 +385,10 @@ export function runRunCli(args: RunModeArgs): void {
   if (allResults.some((r) => r.decisions !== undefined)) {
     process.stdout.write(renderDecisionAnalysis(decisionRowsOf(allResults)) + '\n');
   }
+  // 71c — the flip-rate aggregate, printed whenever the shadow ran.
+  if (tierFlipRows(allResults).length > 0) {
+    process.stdout.write(renderTierFlipAnalysis(allResults) + '\n');
+  }
   process.stdout.write(
     `Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`,
   );
@@ -389,6 +403,16 @@ export function runRunCli(args: RunModeArgs): void {
 export function writeDecisionsSidecar(outDir: string, results: readonly RunResult[]): void {
   if (!results.some((r) => r.decisions !== undefined)) return;
   writeFileSync(join(outDir, 'decisions.csv'), renderDecisionsCsv(results));
+}
+
+/**
+ * 71c — write tier-flips.csv iff any decision was shadow-judged (the
+ * `--flip-telemetry` arm). Same shared-code-path contract as the decisions
+ * sidecar: the --jobs parent calls this over its merged results.
+ */
+export function writeTierFlips(outDir: string, results: readonly RunResult[]): void {
+  if (tierFlipRows(results).length === 0) return;
+  writeFileSync(join(outDir, 'tier-flips.csv'), renderTierFlipsCsv(results));
 }
 
 /**

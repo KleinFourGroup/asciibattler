@@ -102,15 +102,24 @@ describe('run-mode --jobs parity', () => {
     // parsing is last-wins over the helper's defaults) size the batch to
     // arbitrated-run costs: 8 runs at --hops=3 sat AT the 200s child
     // timeout; 4 runs at --hops=2 measure ~19s serial.
+    // 71c rides along: the traffic shadow on a bare primary keeps the dual-
+    // tier cost near-bare (the 69c pricing) while making tier-flips.csv
+    // non-vacuously present for the parity check below.
     const scratch = mkdtempSync(join(tmpdir(), 'fuzz-jobs-decisions-'));
-    const flags = ['--count=2', '--hops=2', '--arbitrate', '--arbitrate-tier=bare'];
+    const flags = [
+      '--count=2',
+      '--hops=2',
+      '--arbitrate',
+      '--arbitrate-tier=bare',
+      '--flip-telemetry=traffic',
+    ];
     try {
       const serialDir = join(scratch, 'serial');
       const parallelDir = join(scratch, 'parallel');
       runCli(flags, serialDir);
       runCli([...flags, '--jobs=2'], parallelDir);
 
-      for (const f of ['summary.csv', 'decisions.csv']) {
+      for (const f of ['summary.csv', 'decisions.csv', 'tier-flips.csv']) {
         expect(
           readFileSync(join(parallelDir, f), 'utf8'),
           `${f} diverged from serial`,

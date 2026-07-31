@@ -119,6 +119,99 @@ describe('RunArbitrationDriver — mechanism pins (injected evaluator)', () => {
   });
 });
 
+describe('RunArbitrationDriver — the 71c shadow tier (flip-rate instrument)', () => {
+  /** A tier-aware fake: scores keyed by `${label}` per inner tier ('base'
+   *  when the spec carries none) — the flip fixture. */
+  function tierEvaluator(tables: Record<string, Record<string, number>>) {
+    return (
+      _live: Run,
+      apply: CandidateApply | null,
+      spec: RunRolloutSpec,
+    ): RunCandidateResult => {
+      const label = apply === null ? 'null' : (apply as unknown as { label: string }).label;
+      const tier = spec.innerTier ?? 'base';
+      const score = tables[tier]?.[label];
+      if (score === undefined) throw new Error(`tierEvaluator: no score for '${label}'@${tier}`);
+      return { score, perSeed: [] };
+    };
+  }
+
+  it('records the shadow decision; a tier disagreement is a flip', () => {
+    // Primary (base): a wins by 5. Shadow (traffic): a is worthless → null.
+    const evaluate = tierEvaluator({
+      base: { null: 0, a: 5 },
+      traffic: { null: 0, a: 0 },
+    });
+    const driver = new RunArbitrationDriver(new RNG(1), { evaluate, shadowTier: 'traffic' });
+    const chosen = driver.decide('test', liveRun(7), [tagged('a')]);
+    // The live decision NEVER reads the shadow (shadow-only telemetry).
+    expect(chosen?.label).toBe('a');
+    const rec = driver.decisions[0]!;
+    expect(rec.chosenIndex).toBe(1);
+    expect(rec.shadowChosenIndex).toBe(0); // ≠ chosenIndex — a flip
+  });
+
+  it('agreement records the same index; shadow-off records no field', () => {
+    const table = { null: 0, a: 5 };
+    const shadowed = new RunArbitrationDriver(new RNG(1), {
+      evaluate: tierEvaluator({ base: table, traffic: table }),
+      shadowTier: 'traffic',
+    });
+    shadowed.decide('test', liveRun(7), [tagged('a')]);
+    expect(shadowed.decisions[0]!.shadowChosenIndex).toBe(1);
+
+    const plain = new RunArbitrationDriver(new RNG(1), {
+      evaluate: tierEvaluator({ base: table }),
+    });
+    plain.decide('test', liveRun(7), [tagged('a')]);
+    expect('shadowChosenIndex' in plain.decisions[0]!).toBe(false);
+  });
+
+  it('the shadow judges under the SAME ε rule (its own null, hysteresis intact)', () => {
+    // Shadow margin 0.2 ≤ ε 0.25 → shadow null stands while primary flips.
+    const evaluate = tierEvaluator({
+      base: { null: 0, a: 5 },
+      traffic: { null: 1, a: 1.2 },
+    });
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      epsilon: 0.25,
+      shadowTier: 'traffic',
+    });
+    driver.decide('test', liveRun(7), [tagged('a')]);
+    expect(driver.decisions[0]!.chosenIndex).toBe(1);
+    expect(driver.decisions[0]!.shadowChosenIndex).toBe(0);
+  });
+
+  it('shadow evaluation never perturbs the primary stream (byte-equal decide sequence)', () => {
+    // Two sequential decides on same-seeded drivers, one shadowed: chosen
+    // labels + records must match modulo the shadow field — the pairs are
+    // the whole RNG draw and they precede either tier's evaluation.
+    const tables = {
+      base: { null: 0, a: 5, b: 2 },
+      traffic: { null: 9, a: 0, b: 0 },
+    };
+    const run = <T>(shadow: boolean): { labels: (string | null)[]; records: T[] } => {
+      const driver = new RunArbitrationDriver(new RNG(42), {
+        evaluate: tierEvaluator(tables),
+        ...(shadow ? { shadowTier: 'traffic' as const } : {}),
+      });
+      const labels = [
+        driver.decide('s1', liveRun(7), [tagged('a')])?.label ?? null,
+        driver.decide('s2', liveRun(7), [tagged('a'), tagged('b')])?.label ?? null,
+      ];
+      const records = driver.decisions.map(
+        ({ shadowChosenIndex: _s, ...rest }) => rest as T,
+      );
+      return { labels, records };
+    };
+    const shadowed = run(true);
+    const plain = run(false);
+    expect(shadowed.labels).toEqual(plain.labels);
+    expect(shadowed.records).toEqual(plain.records);
+  });
+});
+
 describe('RunArbitrationDriver — integration (real evaluator)', () => {
   const CONFIG = { rollout: { horizonBattles: 1 } };
 

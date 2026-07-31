@@ -42,6 +42,7 @@ import {
   type RunRolloutPair,
   type RunRolloutSpec,
 } from './evaluator';
+import type { InnerTier } from './walker';
 
 /** One enumerated candidate: a stable label (the log's vocabulary — e.g.
  *  'buy daemon:portunus', 'fire patch@roster:2') + the apply closure. */
@@ -64,6 +65,13 @@ export interface RunDecisionRecord {
   /** Best challenger mean − null mean (negative: every challenger lost). */
   readonly marginVsNull: number;
   readonly epsilon: number;
+  /** 71c — the SHADOW tier's decision for the same candidate set under the
+   *  same CRN pairs and ε rule. Present ONLY when the flip-rate instrument
+   *  ran (`shadowTier` set); a value ≠ `chosenIndex` is a tier flip.
+   *  Telemetry-only: the live decision is always `chosenIndex`. Not a
+   *  decisions.csv column — tier-flips.csv carries the per-site counts, and
+   *  the full field stays reachable via `--emit-results`. */
+  readonly shadowChosenIndex?: number;
 }
 
 export interface RunArbitrationConfig {
@@ -78,6 +86,14 @@ export interface RunArbitrationConfig {
   /** Test seam (the selectByScore inert-seam precedent): inject a fake
    *  evaluator to pin the decide mechanics without driving battles. */
   readonly evaluate?: typeof evaluateRunCandidate;
+  /** 71c — the flip-rate instrument: when set, every decide ALSO evaluates
+   *  the full arm set under this inner tier — same CRN pairs (paired luck),
+   *  same ε rule — and records the shadow decision on the log. SHADOW-ONLY
+   *  (the §57g own-arm doctrine): the live decision never reads it, and the
+   *  driver's RNG stream is untouched (pairs are derived once, before
+   *  either tier evaluates), so a shadowed batch decides byte-identically
+   *  to an unshadowed one. */
+  readonly shadowTier?: InnerTier;
 }
 
 export class RunArbitrationDriver {
@@ -86,6 +102,7 @@ export class RunArbitrationDriver {
   private readonly epsilon: number;
   private readonly rollout: RunArbitrationConfig['rollout'];
   private readonly evaluate: typeof evaluateRunCandidate;
+  private readonly shadowTier: InnerTier | undefined;
 
   /** The in-memory decision log, append-only in decide order. */
   readonly decisions: RunDecisionRecord[] = [];
@@ -96,6 +113,7 @@ export class RunArbitrationDriver {
     this.epsilon = config.epsilon ?? 0;
     this.rollout = config.rollout;
     this.evaluate = config.evaluate ?? evaluateRunCandidate;
+    this.shadowTier = config.shadowTier;
   }
 
   /**
@@ -156,6 +174,28 @@ export class RunArbitrationDriver {
     });
 
     const wins = bestIdx >= 0 && bestScore > nullResult.score + epsilon;
+
+    // 71c — the shadow pass: the SAME pairs and ε rule under the shadow
+    // tier, run AFTER the primary loop (evaluations never consume driver
+    // RNG — the pairs above are the whole stream draw, so a shadowed batch
+    // decides byte-identically to an unshadowed one).
+    let shadowChosenIndex: number | undefined;
+    if (this.shadowTier !== undefined) {
+      const shadowSpec: RunRolloutSpec = { ...spec, innerTier: this.shadowTier };
+      const shadowNull = this.evaluate(live, null, shadowSpec);
+      let sBestIdx = -1;
+      let sBestScore = -Infinity;
+      challengers.forEach((c, i) => {
+        const r = this.evaluate(live, c.apply, shadowSpec);
+        if (r.score > sBestScore) {
+          sBestScore = r.score;
+          sBestIdx = i;
+        }
+      });
+      const sWins = sBestIdx >= 0 && sBestScore > shadowNull.score + epsilon;
+      shadowChosenIndex = sWins ? sBestIdx + 1 : 0;
+    }
+
     this.decisions.push({
       site,
       sectorId: live.currentSectorId,
@@ -165,6 +205,7 @@ export class RunArbitrationDriver {
       chosenIndex: wins ? bestIdx + 1 : 0,
       marginVsNull: bestScore - nullResult.score,
       epsilon,
+      ...(shadowChosenIndex !== undefined ? { shadowChosenIndex } : {}),
     });
     return wins ? challengers[bestIdx]! : null;
   }

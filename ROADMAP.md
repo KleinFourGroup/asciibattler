@@ -138,12 +138,12 @@ flip-rate is shadow-only, all three user-signed at the kickoff):
       n = candidate instances, floor-marked; CLI print + board
       sections); live-proofed on a probe batch. No bump (as
       predicted). Detail: WORKLOG §71.
-- [ ] 71c — the flip-rate instrument: a flag on the arbitrated arm
-      that shadow-evaluates every decision under both tiers with
-      shared CRN pairs (live decisions stay cheap — the §57g own-arm
-      caveat honored by construction); per-site flips →
-      `tier-flips.csv` + stdout aggregate (the k-flips.csv shape). No
-      bump.
+- [x] 71c — the flip-rate instrument ✅ — landed as cut
+      (`--flip-telemetry[=<tier>]`, shadow-only on the driver, same
+      pairs + ε; non-perturbation pinned byte-equal; tier-flips.csv
+      shared serial/`--jobs`); live-proofed (bare-vs-traffic 4/34
+      flips @ grant:empower). No bump (as predicted). Detail: WORKLOG
+      §71.
 - [ ] 71d — the measurement: one 40-seed arbitrated doctrine-arm box
       batch → per-item value reads to BALANCE; one sampled dual-tier
       batch → the flip-rate read; closes at the user-signed flip-rate

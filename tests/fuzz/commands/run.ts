@@ -11,7 +11,7 @@ import { runOne } from '../harness';
 import { parseScriptsSpec } from '../scriptSubset';
 import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
-import { makeArbitratedStrategy } from '../rollout/arbitratedStrategy';
+import { makeArbitratedStrategy, type ArbitratedRunStrategy } from '../rollout/arbitratedStrategy';
 import type { InnerTier } from '../rollout/walker';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
 import {
@@ -25,6 +25,7 @@ import { loadWeightsFile } from '../strategies/scoredWeights';
 import {
   aggregate,
   renderSummaryCsv,
+  renderDecisionsCsv,
   renderFailureTrace,
   failureFilename,
   renderPerHopAnalysis,
@@ -261,7 +262,15 @@ export function runRunCli(args: RunModeArgs): void {
       `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}…\n`,
     );
     for (const s of seeds) {
-      const r = runOne(s, strategyFor(s, strategy), harnessOptions);
+      const seedStrategy = strategyFor(s, strategy);
+      const r = runOne(s, seedStrategy, harnessOptions);
+      // 71a — harvest the arm's decision log AFTER the run (the driver is
+      // per-seed state, discarded with the strategy instance otherwise).
+      // Attached to the RunResult so `--jobs` inherits it via the 68e
+      // results.json round-trip with no extra protocol.
+      if (args.arbitrate) {
+        r.decisions = (seedStrategy as ArbitratedRunStrategy).driver.decisions;
+      }
       allResults.push(r);
       // 57g QoL — one progress line per run, to STDERR (stdout stays the
       // parseable stats stream): a 60–90 min serial batch is observable
@@ -275,6 +284,10 @@ export function runRunCli(args: RunModeArgs): void {
   }
 
   writeFileSync(join(args.outDir, 'summary.csv'), renderSummaryCsv(allResults));
+
+  // 71a — the decision-grade sidecar (additive: summary.csv columns are
+  // untouched). Shared with the --jobs parent — parity by code path, 68e.
+  writeDecisionsSidecar(args.outDir, allResults);
 
   // 68e — the shard protocol: dump the full results so a --jobs parent can
   // recompute the aggregate analyses over the merged batch (RunResult is plain
@@ -355,6 +368,17 @@ export function runRunCli(args: RunModeArgs): void {
   process.stdout.write(
     `Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`,
   );
+}
+
+/**
+ * 71a — write decisions.csv iff any result carries a decision log (the
+ * arbitrated arm's harvest above; a mixed or non-arbitrated batch writes
+ * nothing). Exported for the --jobs parent — the same code path over the
+ * merged results, byte-parity by construction (the 68e discipline).
+ */
+export function writeDecisionsSidecar(outDir: string, results: readonly RunResult[]): void {
+  if (!results.some((r) => r.decisions !== undefined)) return;
+  writeFileSync(join(outDir, 'decisions.csv'), renderDecisionsCsv(results));
 }
 
 /**

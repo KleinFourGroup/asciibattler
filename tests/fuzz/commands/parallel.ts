@@ -50,7 +50,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chunkVectors, retryAsync } from '../searchShard';
 import { bail, range, type CliArgs } from './args';
-import { writeAggregateAnalyses } from './run';
+import { writeAggregateAnalyses, writeDecisionsSidecar } from './run';
 import type { RunResult } from '../harness';
 
 export type ParallelRunArgs = Pick<
@@ -65,6 +65,7 @@ export type ParallelRunArgs = Pick<
   | 'perEncounter'
   | 'emitResults'
   | 'kTelemetry'
+  | 'arbitrate'
 >;
 
 const CLI_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', 'cli.ts');
@@ -107,7 +108,10 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
 
   rmSync(shardsDir, { recursive: true, force: true });
   mkdirSync(shardsDir, { recursive: true });
-  const needResults = wantsAggregates || args.emitResults;
+  // 71a — an arbitrated batch needs the round-trip too: decisions ride
+  // RunResult, and the parent writes decisions.csv over the merged results
+  // (the serial writer's own code path — byte parity by construction).
+  const needResults = wantsAggregates || args.emitResults || args.arbitrate;
   const shardDirs = chunks.map((_, i) => join(shardsDir, `shard-${i}`));
   await Promise.all(
     chunks.map((chunk, i) =>
@@ -138,6 +142,7 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
       writeFileSync(join(args.outDir, 'results.json'), JSON.stringify(mergedResults));
     }
     writeAggregateAnalyses(args, mergedResults);
+    writeDecisionsSidecar(args.outDir, mergedResults);
   }
 
   // Mirror run.ts's failures/ semantics: wipe, then adopt every shard's traces

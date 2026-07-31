@@ -93,4 +93,39 @@ describe('run-mode --jobs parity', () => {
       rmSync(scratch, { recursive: true, force: true });
     }
   }, 420_000);
+
+  it('71a — the decisions.csv sidecar composes with --jobs, byte-identical to serial', () => {
+    // The arbitrated arm's decision log rides RunResult through the 68e
+    // round-trip; the parent writes decisions.csv via the serial writer's own
+    // code path. Bare inner tier keeps the rollout cost test-sized — the
+    // sidecar's shape is tier-independent — and the seed/hop overrides (arg
+    // parsing is last-wins over the helper's defaults) size the batch to
+    // arbitrated-run costs: 8 runs at --hops=3 sat AT the 200s child
+    // timeout; 4 runs at --hops=2 measure ~19s serial.
+    const scratch = mkdtempSync(join(tmpdir(), 'fuzz-jobs-decisions-'));
+    const flags = ['--count=2', '--hops=2', '--arbitrate', '--arbitrate-tier=bare'];
+    try {
+      const serialDir = join(scratch, 'serial');
+      const parallelDir = join(scratch, 'parallel');
+      runCli(flags, serialDir);
+      runCli([...flags, '--jobs=2'], parallelDir);
+
+      for (const f of ['summary.csv', 'decisions.csv']) {
+        expect(
+          readFileSync(join(parallelDir, f), 'utf8'),
+          `${f} diverged from serial`,
+        ).toBe(readFileSync(join(serialDir, f), 'utf8'));
+      }
+      // Non-vacuous: the arm actually logged decisions (a header-only sidecar
+      // would make the byte-identity above prove nothing).
+      const lines = readFileSync(join(serialDir, 'decisions.csv'), 'utf8').trim().split('\n');
+      expect(lines.length).toBeGreaterThan(1);
+      expect(lines[0]!.startsWith('seed,strategy,decision,site')).toBe(true);
+      // The round-trip stays internal here too.
+      expect(existsSync(join(parallelDir, 'results.json'))).toBe(false);
+      expect(existsSync(join(parallelDir, 'shards'))).toBe(false);
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }, 420_000);
 });

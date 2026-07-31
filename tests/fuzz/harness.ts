@@ -50,6 +50,7 @@ import { characterConfigFor, DEFAULT_CHARACTER_SELECTION } from './characterSele
 import type { CharacterSelection } from './characterSelection';
 import { TelemetryAccumulator } from './telemetry';
 import type { RunTelemetry } from './telemetry';
+import type { RunDecisionRecord } from './rollout/driver';
 
 export type RunOutcome = 'complete' | 'defeat' | 'hang' | 'aborted';
 
@@ -140,6 +141,15 @@ export interface RunResult {
    * (a new optional field doesn't alter the existing summary.csv columns).
    */
   telemetry?: RunTelemetry;
+  /**
+   * 71a — the run's arbitration decision log, harvested by the CLI from the
+   * per-seed arbitrated arm's driver AFTER `runOne` returns (the harness
+   * itself never touches it — arbitration is a strategy concern). Present
+   * ONLY on `--arbitrate` runs; plain JSON data end to end, so it rides the
+   * 68e results.json round-trip and `--jobs` composition needs no extra
+   * protocol. summary.csv never reads it (the sidecar is additive).
+   */
+  decisions?: readonly RunDecisionRecord[];
 }
 
 export interface HarnessOptions {

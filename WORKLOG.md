@@ -626,3 +626,27 @@ shadow-only, not a separate full arm.
 
 **Round predictions re-affirmed at the cut:** World v34 / Run v40
 hold (everything bot/harness-side); fuzz:smoke grows additively.
+
+**71a landed (2026-07-31) — the log rides out + the decisions.csv
+sidecar.** Exactly the audit's shape: `RunResult.decisions?` (plain
+JSON data, type-only import — the harness never touches it; the CLI
+harvests `driver.decisions` from the per-seed arm AFTER `runOne`),
+`renderDecisionsCsv` in reporters (18 columns, LONG format — one row
+per (seed, decision, candidate), null arm always candidate 0; means
+only, per-pair breakdowns stay in `--emit-results`), and one shared
+`writeDecisionsSidecar(outDir, results)` called by the serial path and
+the `--jobs` parent — parity by code path (the 68e discipline), with
+`needResults` widened so `--arbitrate --jobs` round-trips results even
+without aggregate flags (the audit's silent-skip gap). Labels are
+RFC4180-quoted ONLY when comma-bearing (redraw position lists) — every
+other column stays byte-identical to a naive join. Pins: three
+reporter unit tests (long-format shape + chosen flags + tailBonus
+blank/populated · minimal quoting is load-bearing · summary.csv
+byte-unaffected by an attached log — the exit criterion) + the
+end-to-end `--jobs` parity case (serial ≡ parallel decisions.csv,
+non-vacuous, sized to arbitrated-run costs after the first cut sat AT
+the 200s child timeout: 8 runs @hops=3 ≈ 200s vs 4 runs @hops=2 ≈ 19s
+— an incidental fresh datapoint for the 69c cost model at bare tier).
+A 4-run hops=2 probe wrote 208 candidate rows — the sidecar is dense
+even on tiny batches; the 40-seed 71d batch will carry thousands of
+rows (fine: it's a sidecar, grep/spreadsheet-bound).

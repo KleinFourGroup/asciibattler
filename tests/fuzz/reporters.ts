@@ -82,6 +82,89 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
   return lines.join('\n') + '\n';
 }
 
+// ── The decisions.csv sidecar (71a) ──────────────────────────────────────────
+
+/** RFC4180-style quoting, applied only when the field needs it (comma or
+ *  quote) — redraw labels carry commas (`redraw level:2 [0,2]`), and minimal
+ *  quoting keeps every other column byte-identical to a naive join. */
+function csvField(s: string): string {
+  return /[",]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+const DECISIONS_CSV_HEADER = [
+  'seed',
+  'strategy',
+  // 0-based decide order within the run (the driver log is append-only).
+  'decision',
+  'site',
+  'sector',
+  'hop',
+  // Index into the decision's candidate set; 0 is ALWAYS the null arm.
+  'candidate',
+  'label',
+  // 1 on exactly one row per decision (the chosen candidate; 0 = null stood).
+  'chosen',
+  // Mean over the CRN pairs — what the driver compared.
+  'score',
+  // Mean breakdown components over the pairs (the resolution-4 columns).
+  'poolDmgTaken',
+  'deathFrac',
+  'completeFrac',
+  'bitsDelta',
+  'rosterDelta',
+  // Blank unless the site carried a tailScore (node choice, searched vectors).
+  'tailBonus',
+  // Decision-level (repeated on each of the decision's rows): best challenger
+  // mean − null mean, and the ε it was judged against.
+  'marginVsNull',
+  'epsilon',
+].join(',');
+
+/**
+ * 71a — the decision-grade sidecar: LONG format, one row per
+ * (seed, decision, candidate) including the null arm at candidate 0, so a
+ * spreadsheet filter on any column slices the batch without reshaping.
+ * Means only — the full per-pair breakdowns stay reachable via
+ * `--emit-results` results.json (the shape-lock call). Results without a
+ * decision log (non-arbitrated arms) contribute no rows, so the writer can
+ * run over a mixed batch unconditionally.
+ */
+export function renderDecisionsCsv(results: readonly RunResult[]): string {
+  const lines: string[] = [DECISIONS_CSV_HEADER];
+  for (const r of results) {
+    if (!r.decisions) continue;
+    r.decisions.forEach((d, decisionIndex) => {
+      d.results.forEach((res, candidate) => {
+        const per = res.perSeed;
+        const tailPresent = per.some((p) => p.tailBonus !== undefined);
+        lines.push(
+          [
+            r.seed,
+            csvField(r.strategyName),
+            decisionIndex,
+            d.site,
+            d.sectorId,
+            d.hop,
+            candidate,
+            csvField(d.labels[candidate]!),
+            candidate === d.chosenIndex ? 1 : 0,
+            res.score.toFixed(3),
+            mean(per.map((p) => p.poolDamageTaken)).toFixed(3),
+            mean(per.map((p) => (p.died ? 1 : 0))).toFixed(2),
+            mean(per.map((p) => (p.completed ? 1 : 0))).toFixed(2),
+            mean(per.map((p) => p.bitsDelta)).toFixed(2),
+            mean(per.map((p) => p.rosterDelta)).toFixed(2),
+            tailPresent ? mean(per.map((p) => p.tailBonus ?? 0)).toFixed(3) : '',
+            d.marginVsNull.toFixed(3),
+            d.epsilon.toFixed(3),
+          ].join(','),
+        );
+      });
+    });
+  }
+  return lines.join('\n') + '\n';
+}
+
 /**
  * L1c3 — per-daemon aggregate buckets, keyed by the carried/forced idol id
  * (`'none'` for daemon-less runs), sorted by key for stable output. 63c —

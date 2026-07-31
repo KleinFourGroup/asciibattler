@@ -16,6 +16,7 @@ import { makeStrategy } from './strategies/registry';
 import {
   aggregate,
   renderSummaryCsv,
+  renderDecisionsCsv,
   renderFailureTrace,
   failureFilename,
   perHopStats,
@@ -32,6 +33,8 @@ import type { RunTelemetry } from './telemetry';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
 import { HEALTH } from '../../src/config/health';
 import { ENCOUNTERS, getEncounter } from '../../src/config/encounters';
+import type { RunDecisionRecord } from './rollout/driver';
+import type { RunScoreBreakdown } from './rollout/evaluator';
 
 describe('fuzz harness', () => {
   it('completes a single run without throwing', () => {
@@ -179,6 +182,145 @@ describe('fuzz reporters', () => {
     for (const row of lines.slice(1)) {
       expect(row.split(',')).toHaveLength(headerCols);
     }
+  });
+
+  // ── 71a — the decisions.csv sidecar ────────────────────────────────────────
+
+  /** Minimal RunResult literal — the sidecar only reads seed/strategyName/
+   *  decisions, but the full required shape keeps the fixture honest. */
+  const bareResult = (seed: number, decisions?: readonly RunDecisionRecord[]): RunResult => ({
+    seed,
+    strategyName: 'arbitrated:scored',
+    daemonId: null,
+    outcome: 'defeat',
+    finalHopReached: 2,
+    sectorsCleared: 0,
+    totalTicks: 100,
+    finalTeamSize: 3,
+    portPurchases: 0,
+    finalBits: 0,
+    packetsFired: 0,
+    battles: [],
+    recruits: [],
+    ...(decisions !== undefined ? { decisions } : {}),
+  });
+
+  const breakdown = (score: number, extra?: Partial<RunScoreBreakdown>): RunScoreBreakdown => ({
+    score,
+    poolDamageTaken: -score,
+    died: false,
+    completed: false,
+    bitsDelta: 0,
+    rosterDelta: 0,
+    ...extra,
+  });
+
+  it('71a — decisions.csv is long-format with the null arm at candidate 0', () => {
+    const decisions: RunDecisionRecord[] = [
+      {
+        site: 'portBuy',
+        sectorId: 'the-start',
+        hop: 6,
+        labels: ['null', 'buy daemon:janus @3', 'buy unit:archer:L2 @2'],
+        results: [
+          { score: -4, perSeed: [breakdown(-3), breakdown(-5)] },
+          { score: 1.5, perSeed: [breakdown(2, { bitsDelta: -3 }), breakdown(1, { bitsDelta: -3 })] },
+          { score: -6, perSeed: [breakdown(-6, { died: true }), breakdown(-6)] },
+        ],
+        chosenIndex: 1,
+        marginVsNull: 5.5,
+        epsilon: 3.145,
+      },
+      {
+        site: 'nodeChoice',
+        sectorId: 'the-start',
+        hop: 0,
+        labels: ['null', 'enterNode:4 (elite)'],
+        results: [
+          { score: 2, perSeed: [breakdown(2, { tailBonus: 8 }), breakdown(2, { tailBonus: 8 })] },
+          { score: 1, perSeed: [breakdown(1, { tailBonus: 4 }), breakdown(1, { tailBonus: 4 })] },
+        ],
+        chosenIndex: 0,
+        marginVsNull: -1,
+        epsilon: 3.265,
+      },
+    ];
+    const csv = renderDecisionsCsv([bareResult(7, decisions)]);
+    const lines = csv.trim().split('\n');
+    // Header + 3 candidate rows (decision 0) + 2 candidate rows (decision 1).
+    expect(lines).toHaveLength(6);
+    expect(lines[0]!.startsWith('seed,strategy,decision,site,sector,hop,candidate,label,chosen')).toBe(
+      true,
+    );
+    expect(lines[0]!.endsWith('marginVsNull,epsilon')).toBe(true);
+    // Every decision's candidate 0 is the null arm; exactly one chosen=1 row
+    // per decision when a challenger won, zero when null stood.
+    const rows = lines.slice(1).map((l) => l.split(','));
+    expect(rows[0]![6]).toBe('0');
+    expect(rows[0]![7]).toBe('null');
+    const chosenFlags = rows.map((r) => r[8]);
+    expect(chosenFlags).toEqual(['0', '1', '0', '1', '0']);
+    // The mean-of-booleans column: candidate 2's pair died once → 0.50.
+    expect(rows[2]![11]).toBe('0.50');
+    // tailBonus: blank on the port decision, populated on the node decision.
+    expect(rows[0]![15]).toBe('');
+    expect(rows[3]![15]).toBe('8.000');
+    // Decision-level columns repeat on each of the decision's rows.
+    expect(rows[0]![16]).toBe('5.500');
+    expect(rows[1]![16]).toBe('5.500');
+    expect(rows[4]![17]).toBe('3.265');
+  });
+
+  it('71a — comma-bearing labels are RFC4180-quoted and only when needed', () => {
+    const decisions: RunDecisionRecord[] = [
+      {
+        site: 'grant:redraw',
+        sectorId: 'the-start',
+        hop: 1,
+        labels: ['null', 'redraw level:2 [0,2]'],
+        results: [
+          { score: 0, perSeed: [breakdown(0), breakdown(0)] },
+          { score: 2, perSeed: [breakdown(2), breakdown(2)] },
+        ],
+        chosenIndex: 1,
+        marginVsNull: 2,
+        epsilon: 1.101,
+      },
+    ];
+    const csv = renderDecisionsCsv([bareResult(3, decisions)]);
+    expect(csv).toContain('"redraw level:2 [0,2]"');
+    // The null label stays unquoted (minimal quoting).
+    const nullRow = csv.trim().split('\n')[1]!;
+    expect(nullRow).toContain(',null,');
+    // Header column count matches every row when parsed with quote awareness:
+    // the quoted label contains exactly one comma, so a naive split yields
+    // header+1 fields — the quoting is load-bearing, not cosmetic.
+    const header = csv.split('\n')[0]!;
+    const challengerRow = csv.trim().split('\n')[2]!;
+    expect(challengerRow.split(',')).toHaveLength(header.split(',').length + 1);
+  });
+
+  it('71a — a batch with no decision logs renders header-only, and summary.csv ignores decisions', () => {
+    expect(renderDecisionsCsv([bareResult(1)]).trim().split('\n')).toHaveLength(1);
+    // The additive contract: attaching a decision log must not perturb a
+    // single summary.csv byte (the §71 exit criterion).
+    const plain = bareResult(9);
+    const withLog = bareResult(9, [
+      {
+        site: 'portBuy',
+        sectorId: 'the-start',
+        hop: 6,
+        labels: ['null', 'buy daemon:mars @3'],
+        results: [
+          { score: 0, perSeed: [breakdown(0), breakdown(0)] },
+          { score: 5, perSeed: [breakdown(5), breakdown(5)] },
+        ],
+        chosenIndex: 1,
+        marginVsNull: 5,
+        epsilon: 3.145,
+      },
+    ]);
+    expect(renderSummaryCsv([withLog])).toBe(renderSummaryCsv([plain]));
   });
 
   it('aggregates win rate and hop stats', () => {

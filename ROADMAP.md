@@ -129,14 +129,10 @@ Cut 2026-07-31 (shape-locked; audit findings + schema rationale in
 WORKLOG §71 — long-format sidecar, decisions ride `RunResult`,
 flip-rate is shadow-only, all three user-signed at the kickoff):
 
-- [ ] 71a — the log rides out + the sidecar: optional
-      `RunResult.decisions` harvested post-`runOne` (the `--jobs`
-      parent inherits it via the 68e results.json round-trip);
-      `renderDecisionsCsv` — long format, one row per
-      (seed, decision, candidate) incl. the null arm, mean score +
-      mean breakdown components, no per-pair columns. Exit: sidecar
-      byte-identical serial-vs-`--jobs`; summary.csv pinned unchanged
-      by test. No bump (bot/harness-side).
+- [x] 71a — the log rides out + the sidecar ✅ — landed as cut (18-col
+      long format; `writeDecisionsSidecar` shared serial/`--jobs`);
+      byte-identity + summary-untouched pinned; no bump (as predicted).
+      Detail: WORKLOG §71.
 - [ ] 71b — the per-item decision-grade aggregate (site × item label:
       n · accept rate · mean margin vs null; n-floor-aware) as a pure
       reporter fn; the fuzz CLI prints it for arbitrated batches and

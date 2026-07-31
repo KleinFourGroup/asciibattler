@@ -298,3 +298,71 @@ landing commits (`11e95ea` `d75eab9` `ed8b81e` `c4c3581` `a065360`
 section demoted per the §60f rule; two process notes to the scratchpad
 (the control-probe drill; pin-before-methodology). NEXT: the §70 phase
 kickoff.
+
+## Phase 70 — the decision sites
+
+**Kickoff (2026-07-30).** Shape-locked same day, all four calls
+user-approved. The code-reality audit (a day after §69's, so focused on
+the site chokepoints as the build meets them):
+
+1. **Three of five sites have ready chokepoints; two don't.** Port buys
+   / packet fires / node choice are existing (optional) `FuzzStrategy`
+   methods receiving the live `Run` ([Strategy.ts](../tests/fuzz/Strategy.ts))
+   — arbitration slots straight in. Reward-accept is HARDWIRED in the
+   harness (accept-all / decline-packet-at-full-cache, the 48b/49c
+   policy — harness.ts `'reward'` case) and redraw/empower are PURE
+   SELECTORS (`selectRedrawPositions(hand, pool, …)` never sees the
+   `Run`), consumed directly by the grant walk. So §70 adds TWO
+   additive optional chokepoints in the 59a pattern — `pickReward?`
+   (70c) and a grant-walk hook (70d), absent = today's behavior
+   byte-for-byte. Flagged loudly against the ROADMAP's "no harness
+   surgery" risk note; **APPROVED under the scope guard** (additive
+   opt-in chokepoints, not surgery; the absent-method byte-identity
+   pin is the safety story).
+2. **The arbitrated strategy must be per-run stateful** — `runMany`
+   reuses ONE strategy instance across seeds, and the arm carries a
+   driver RNG + the decision log. Ships as a per-seed factory
+   (`makeArbitratedStrategy(runSeed, config)`, driver seed derived
+   from the run seed) with the log exposed for §71's csv reporter.
+   `scoredStrategy` is stateless so this never mattered before.
+3. **The driver seam is ready as-designed** (per-call ε override,
+   implicit null arm, labels = the log vocabulary). Rollout-internal
+   run decisions stay on the scored cheap tier (the walker contract) —
+   no run-layer recursion; the recursion dial is purely the battle
+   `innerTier`.
+4. **Node choice has no legal "do nothing"** — **null = the scored
+   nominator's pick** (the walker resolves it), challengers = the
+   other frontier nodes (APPROVED). `makeBestScore` is module-private
+   in scored.ts → export at 70e; its units are path-weights, not
+   pool-HP — the tail weighting stays the phase's pre-registered
+   decision point.
+5. **ε floors: per site at TWO depths on the site's REAL context
+   class** (APPROVED) — 69f read only the out-of-battle *map-phase*
+   class; the port site needs a docked-phase read and
+   redraw/empower/preTurn-fire need the preTurn class added to
+   readEpsilonAA. Values pin as constants the arm defaults to + land
+   here (the exit criterion).
+6. **Snapshot prediction confirmed at step grain**: every step is
+   bot/harness-side; World v34 / Run v40 hold; fuzz baselines stay
+   byte-identical (arbitration is opt-in everywhere).
+
+**The cut** (approved 2026-07-30; scaffold rides 70a — no separate
+plumbing commit, APPROVED): 70a port buys + scaffold · 70b packet
+fires · 70c daemon picks · 70d redraw/empower · 70e node choice ·
+70f exit verify. Checkbox one-liners in ROADMAP §70.
+
+**A port-site semantics note (the 70a design detail, decided at
+kickoff):** each ask of the ask-until-null loop arbitrates ONE forced
+buy — candidate = "buy slot X now", null = "stop here". Inside the
+rollout the walker's port handler must NOT re-shop the current dock
+(that would let the cheap policy buy the candidate under the null arm
+and zero the margin while the LIVE loop stops buying — a live-vs-
+rollout divergence): the rollout strategy carries no `pickPortBuy`, so
+every clone leaves the dock right after the applied candidate (null =
+leave immediately). Future ports inside the horizon go unshopped under
+EVERY arm — shared bias, cancels under CRN. Multi-buy value emerges
+greedily: each landed buy re-arbitrates against the mutated stock/bits
+(the 59a idiom unchanged). At λ=0 spending is score-free by
+resolution 4 — a useless buy margins ~0 and FAILS the strict-ε gate,
+and the always-on bitsDelta telemetry columns keep any spend-happy
+drift visible.

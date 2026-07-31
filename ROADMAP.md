@@ -74,6 +74,9 @@ every site but defaults cheap; each site's ε floor lands with it.
 - Risk: **MEDIUM** — no harness surgery needed (the kickoff audit's
   finding), but each site has a candidate-enumeration design detail
   (fire targeting variants, buy-loop caching, the DP-tail weighting).
+  Kickoff amendment (2026-07-30): two sites need ADDITIVE optional
+  chokepoints (reward-accept + the grant walk) — approved under the
+  scope guard, absent = byte-identical (WORKLOG §70 finding 1).
 - Decision points: the node-choice DP-tail shape if the naive bootstrap
   misbehaves on the elite-detour cases.
 - Exit criteria: the arbitrated arm completes full runs on BOTH
@@ -81,6 +84,29 @@ every site but defaults cheap; each site's ε floor lands with it.
   sites live · anchor-arm draw sequences and fuzz baselines
   byte-identical (arbitration is opt-in) · per-site ε values recorded
   in the worklog.
+
+Cut shape-locked 2026-07-30, all four kickoff calls user-approved
+(rationale + audit: WORKLOG §70):
+
+- [ ] 70a — port buys + the arbitrated-arm scaffold
+      (`arbitratedStrategy.ts` per-seed factory, `--arbitrate` +
+      `--arbitrate-tier`; candidates = affordable unsold slots per ask;
+      the port-context ε floor at two depths). No bump.
+- [ ] 70b — packet fires, both contexts (nominator-trimmed candidates
+      w/ heuristic targets, 68a guards mirrored; the preTurn ε context
+      added to readEpsilonAA). No bump.
+- [ ] 70c — daemon picks: the ADDITIVE `pickReward?` chokepoint
+      (absent = accept-all byte-for-byte) + arbitrated accept/decline;
+      port-lane daemon picks already ride 70a. No bump.
+- [ ] 70d — redraw/empower: the additive grant-walk chokepoint;
+      level-policy nominators k∈{0,1,2} / per-position empower. No
+      bump.
+- [ ] 70e — node choice w/ the DP-tail bootstrap (null = the scored
+      nominator's pick; `makeBestScore` exported; the elite-detour
+      case exercised). No bump.
+- [ ] 70f — the exit verify: full arbitrated runs on both canonical
+      shapes, five sites live; baseline byte-identity re-check; the
+      per-site ε table → worklog.
 
 ## Phase 71 — telemetry reporting + instruments
 
